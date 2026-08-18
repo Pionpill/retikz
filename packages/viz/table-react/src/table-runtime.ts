@@ -2,15 +2,10 @@ import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
 import type { AssertEqual, ValueOf } from '@retikz/foundation';
 import type { LayoutProps } from '@retikz/react';
-import type {
-  LowerTablesOptions,
-  ManualTableInput,
-  TableDetailColumnInput,
-  TableLayoutManifest,
-} from '@retikz/table';
+import type { LowerTablesOptions, ManualTableInput, TableDetailColumnInput, TableLayoutManifest } from '@retikz/table';
 import type { InputDetailTable, InputManualTable, InputTable, InputTableVariant } from '@retikz/table-vanilla';
 
-import { assertNonEmptyString as assertFoundationNonEmptyString } from '@retikz/foundation';
+import { assertNonEmptyString } from '@retikz/foundation';
 import { inputTableFromIR, InputTableKind } from '@retikz/table-vanilla';
 
 import type { DetailTableProps } from './DetailTable';
@@ -19,6 +14,7 @@ import type { TableCommonProps, TableLayoutHostProps, TableProps } from './Table
 
 import { buildDetailColumns } from './components/build-detail-columns';
 import { buildManualStructure } from './components/build-manual-structure';
+import { RetikzTableReactError } from './error';
 
 /** React Table runtime 的入口类型 */
 export const ReactTableRuntimeKind = {
@@ -72,15 +68,6 @@ void _assertTableLayoutHostPropKeys;
 
 const EMPTY_COMPOSITES: ReadonlyArray<AnyCompositeDefinition> = Object.freeze([]);
 const EMPTY_DATASETS: ExternalDatasets = Object.freeze({});
-
-/** 校验 Table React 的字符串输入并保留 adapter 错误文本 */
-const assertTableReactNonEmptyString = (value: string, message: string): void => {
-  try {
-    assertFoundationNonEmptyString(value, 'Table React value');
-  } catch {
-    throw new Error(message);
-  }
-};
 
 /** 三个 React Table 组件共享的规范化运行时输入 */
 export type ReactTableRuntime = Readonly<{
@@ -140,15 +127,17 @@ const validateHostStyleMigration = (props: AnyTableProps): void => {
     styleTokens?: unknown;
   };
   if (Object.hasOwn(plainProps, 'style')) {
-    throw new Error(
+    throw new RetikzTableReactError(
       'table react: top-level style is unsupported; use containerStyle for host CSS and theme for Core Theme',
     );
   }
   if (Object.hasOwn(plainProps, 'themeMode')) {
-    throw new Error('table react: top-level themeMode is unsupported; use theme.mode for Core Theme');
+    throw new RetikzTableReactError('table react: top-level themeMode is unsupported; use theme.mode for Core Theme');
   }
   if (Object.hasOwn(plainProps, 'styleTokens')) {
-    throw new Error('table react: top-level styleTokens is unsupported; use tableThemeTokens for Table tokens');
+    throw new RetikzTableReactError(
+      'table react: top-level styleTokens is unsupported; use tableThemeTokens for Table tokens',
+    );
   }
 };
 
@@ -157,12 +146,12 @@ const detailColumnsOf = (props: DetailTableProps): Array<TableDetailColumnInput>
   const structure = props as Pick<DetailTableProps, 'columns' | 'children'>;
   if (structure.columns !== undefined) {
     if (structure.children !== undefined) {
-      throw new Error('table react: DetailTable columns cannot be mixed with DetailColumn children');
+      throw new RetikzTableReactError('table react: DetailTable columns cannot be mixed with DetailColumn children');
     }
     return structure.columns;
   }
   if (structure.children === undefined) {
-    throw new Error('table react: DetailTable requires columns or DetailColumn children');
+    throw new RetikzTableReactError('table react: DetailTable requires columns or DetailColumn children');
   }
   return buildDetailColumns(structure.children);
 };
@@ -172,12 +161,12 @@ const manualStructureOf = (props: ManualTableProps): Pick<ManualTableInput, 'row
   const structure = props as Pick<ManualTableProps, 'rows' | 'rowKinds' | 'children'>;
   if (structure.children !== undefined) {
     if (structure.rows !== undefined || structure.rowKinds !== undefined) {
-      throw new Error('table react: ManualTable Row children cannot be mixed with rows or rowKinds');
+      throw new RetikzTableReactError('table react: ManualTable Row children cannot be mixed with rows or rowKinds');
     }
     return buildManualStructure(structure.children);
   }
   if (structure.rows === undefined) {
-    throw new Error('table react: ManualTable requires rows or Row children');
+    throw new RetikzTableReactError('table react: ManualTable requires rows or Row children');
   }
   return {
     rows: structure.rows,
@@ -253,11 +242,12 @@ export const resolveReactTableRuntime = (
   }
 
   if (options.embedded) {
-    if (table.input.id === undefined) throw new Error(`table react: embedded ${kind} Table spec id must be non-empty`);
-    assertTableReactNonEmptyString(table.input.id, `table react: embedded ${kind} Table spec id must be non-empty`);
+    if (table.input.id === undefined)
+      throw new RetikzTableReactError(`table react: embedded ${kind} Table spec id must be non-empty`);
+    assertNonEmptyString(table.input.id, `table react embedded ${kind} Table spec id`);
     const unsupportedProps = unsupportedEmbeddedPropsOf(props);
     if (unsupportedProps.length > 0) {
-      throw new Error(
+      throw new RetikzTableReactError(
         `table react: embedded Table does not support standalone props: ${unsupportedProps.join(', ')}; move them to the outer <Layout>`,
       );
     }

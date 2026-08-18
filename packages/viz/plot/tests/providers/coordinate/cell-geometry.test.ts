@@ -9,7 +9,7 @@ import { z } from 'zod';
 import type { Cell, CoordinateFrame, IntervalContext, PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { CartesianCoordinateFrame } from '../../../src/providers';
-import type { IRPlotIntervalMark, IRPlot } from '../../../src/schemas';
+import type { IRPlot, IRPlotIntervalMark } from '../../../src/schemas';
 
 import {
   cellGeometryAnchor,

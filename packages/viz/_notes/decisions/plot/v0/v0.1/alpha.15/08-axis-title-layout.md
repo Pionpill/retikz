@@ -85,7 +85,7 @@ type AxisTitle = {
 - `title.anchor.align` 使用 core Node 的 `align`；`anchor.baseline` 保留为 schema 契约，等待 core 文本基线能力后再完整生效。
 - `title.layout` 使用确定性的 padding 与 label band 估算，为后续 arrow endpoint、旋转 label band 和 title overflow 避让保留兼容入口。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - Observable Plot 风格的 `labelArrow` / 方向箭头。
 - axis title ellipsis、wrap、text truncation。

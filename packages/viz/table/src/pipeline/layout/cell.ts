@@ -2,6 +2,7 @@ import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
 import type { TableTrackLayout } from './types';
 
+import { RetikzTableError } from '../../error';
 import { deepFreeze } from '../../shared';
 
 /** Cell 几何计算支持的轴向对齐值 */
@@ -57,13 +58,13 @@ export type ComputeTableCellTranslationInput = Readonly<{
 
 const assertFiniteNonnegative = (value: number, name: string): void => {
   if (!Number.isFinite(value) || value < 0) {
-    throw new Error(`table: ${name} must be a finite nonnegative number`);
+    throw new RetikzTableError(`table: ${name} must be a finite nonnegative number`);
   }
 };
 
 const validateBoundsRect = (rect: BoundsRect, name: string): void => {
   if (!Number.isFinite(rect.x) || !Number.isFinite(rect.y)) {
-    throw new Error(`table: ${name} must have finite x and y`);
+    throw new RetikzTableError(`table: ${name} must have finite x and y`);
   }
   assertFiniteNonnegative(rect.width, `${name} width`);
   assertFiniteNonnegative(rect.height, `${name} height`);
@@ -79,10 +80,10 @@ const validatePadding = (padding: Readonly<BoundsInsets>): void => {
 const validateTrackLayouts = (tracks: ReadonlyArray<TableTrackLayout>, axis: string): void => {
   tracks.forEach((track, index) => {
     if (track.index !== index) {
-      throw new Error(`table: ${axis} track ${index} has non-canonical index ${track.index}`);
+      throw new RetikzTableError(`table: ${axis} track ${index} has non-canonical index ${track.index}`);
     }
     if (!Number.isFinite(track.offset)) {
-      throw new Error(`table: ${axis} track ${index} offset must be finite`);
+      throw new RetikzTableError(`table: ${axis} track ${index} offset must be finite`);
     }
     assertFiniteNonnegative(track.size, `${axis} track ${index} size`);
   });
@@ -90,13 +91,13 @@ const validateTrackLayouts = (tracks: ReadonlyArray<TableTrackLayout>, axis: str
 
 const validateStartAndSpan = (start: number, span: number, count: number, axis: string): void => {
   if (!Number.isInteger(start) || start < 0) {
-    throw new Error(`table: ${axis}Index must be a nonnegative integer`);
+    throw new RetikzTableError(`table: ${axis}Index must be a nonnegative integer`);
   }
   if (!Number.isInteger(span) || span <= 0) {
-    throw new Error(`table: ${axis}Span must be a positive integer`);
+    throw new RetikzTableError(`table: ${axis}Span must be a positive integer`);
   }
   if (start + span > count) {
-    throw new Error(`table: ${axis} span range exceeds ${count} tracks`);
+    throw new RetikzTableError(`table: ${axis} span range exceeds ${count} tracks`);
   }
 };
 
@@ -110,7 +111,7 @@ const alignmentAnchor = (start: number, size: number, alignment: TableCellAlignm
     case 'end':
       return start + size;
     default:
-      throw new Error(`table: ${name} must be start, center, or end`);
+      throw new RetikzTableError(`table: ${name} must be start, center, or end`);
   }
 };
 
@@ -124,7 +125,7 @@ export const computeTableCellOuterSize = (
   const width = allocationBounds.width + padding.left + padding.right;
   const height = allocationBounds.height + padding.top + padding.bottom;
   if (!Number.isFinite(width) || !Number.isFinite(height)) {
-    throw new Error('table: Cell outer size must be finite');
+    throw new RetikzTableError('table: Cell outer size must be finite');
   }
   return deepFreeze({ width, height });
 };
@@ -178,7 +179,7 @@ export const computeTableCellTranslation = (input: ComputeTableCellTranslationIn
     alignmentAnchor(input.contentBox.y, input.contentBox.height, input.verticalAlign, 'verticalAlign') -
     alignmentAnchor(input.allocationBounds.y, input.allocationBounds.height, input.verticalAlign, 'verticalAlign');
   if (!Number.isFinite(x) || !Number.isFinite(y)) {
-    throw new Error('table: Cell translation must contain finite x and y');
+    throw new RetikzTableError('table: Cell translation must contain finite x and y');
   }
   return deepFreeze({ x, y });
 };

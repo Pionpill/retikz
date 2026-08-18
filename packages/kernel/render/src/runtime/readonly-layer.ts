@@ -1,5 +1,7 @@
 import type { Scene, ScenePrimitive } from '@retikz/core';
 
+import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
+
 /** Render 在主图之后执行的领域中立只读 Scene 图层 */
 export type RenderReadonlyLayer = Readonly<{
   /** 单帧内唯一的资源命名空间 key */
@@ -18,7 +20,10 @@ const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.ha
 /** 递归拒绝只读图层 primitive 树中的公共身份、元数据与动画语义 */
 const assertPrimitiveHasNoPublicRuntimeSemantics = (primitive: ScenePrimitive): void => {
   if (hasOwn(primitive, 'id') || hasOwn(primitive, 'meta') || hasOwn(primitive, 'animations')) {
-    throw new Error('Render readonly layer Scene must not contain public id, meta, or animation fields');
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.Runtime,
+      'Render readonly layer Scene must not contain public id, meta, or animation fields',
+    );
   }
   if (primitive.type === 'group') {
     for (const child of primitive.children) assertPrimitiveHasNoPublicRuntimeSemantics(child);
@@ -36,28 +41,43 @@ const deepFreeze = <T>(value: T): T => {
 export const validateReadonlyLayers = (
   input: ReadonlyArray<RenderReadonlyLayer>,
 ): ReadonlyArray<RenderReadonlyLayer> => {
-  if (!Array.isArray(input)) throw new Error('Render readonly layers must be an array');
+  if (!Array.isArray(input))
+    throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Render readonly layers must be an array');
   if (input.length === 0) return EMPTY_READONLY_LAYERS;
   const keys = new Set<string>();
   for (const layer of input) {
-    if (typeof layer !== 'object' || layer === null) throw new Error('Render readonly layer must be an object');
+    if (typeof layer !== 'object' || layer === null)
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Render readonly layer must be an object');
     if (typeof layer.key !== 'string' || layer.key.trim().length === 0) {
-      throw new Error('Render readonly layer key must be a non-empty string');
+      throw new RetikzRenderError(
+        RetikzRenderErrorCode.Runtime,
+        'Render readonly layer key must be a non-empty string',
+      );
     }
-    if (keys.has(layer.key)) throw new Error(`Duplicate Render readonly layer key "${layer.key}"`);
+    if (keys.has(layer.key))
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, `Duplicate Render readonly layer key "${layer.key}"`);
     keys.add(layer.key);
     if (
       !Array.isArray(layer.transform) ||
       layer.transform.length !== 6 ||
       !layer.transform.every((value: unknown) => typeof value === 'number' && Number.isFinite(value))
     ) {
-      throw new Error(`Render readonly layer "${layer.key}" transform must contain six finite numbers`);
+      throw new RetikzRenderError(
+        RetikzRenderErrorCode.Runtime,
+        `Render readonly layer "${layer.key}" transform must contain six finite numbers`,
+      );
     }
     if (typeof layer.scene !== 'object' || layer.scene === null || !Array.isArray(layer.scene.primitives)) {
-      throw new Error(`Render readonly layer "${layer.key}" Scene is invalid`);
+      throw new RetikzRenderError(
+        RetikzRenderErrorCode.Runtime,
+        `Render readonly layer "${layer.key}" Scene is invalid`,
+      );
     }
     if (hasOwn(layer.scene, 'animations')) {
-      throw new Error(`Render readonly layer "${layer.key}" Scene must not contain root animation fields`);
+      throw new RetikzRenderError(
+        RetikzRenderErrorCode.Runtime,
+        `Render readonly layer "${layer.key}" Scene must not contain root animation fields`,
+      );
     }
     for (const primitive of layer.scene.primitives) assertPrimitiveHasNoPublicRuntimeSemantics(primitive);
   }

@@ -12,6 +12,7 @@ import {
   createRuntimeProgramRegistry,
   createRuntimeSession,
   defineRuntimeCommitParticipant,
+  RetikzRuntimeErrorCode,
   RuntimeProgramPhase,
 } from '@retikz/runtime';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -1055,7 +1056,7 @@ describe('builtin retained renderers', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_PARTICIPANT_COMMIT_FAILED',
+        code: RetikzRuntimeErrorCode.ParticipantCommitFailed,
         cause: expect.objectContaining({ message: 'old dblclick removal rejected' }),
       }),
     );
@@ -1091,14 +1092,14 @@ describe('builtin retained renderers', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#22c55e'))],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantRollbackFailed }));
     expect(host.innerHTML).toBe(committedMarkup);
     expect(() =>
       session.update({
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#3b82f6'))],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantRollbackFailed }));
     expect(() => session.dispose()).not.toThrow();
   });
 
@@ -1197,7 +1198,7 @@ describe('builtin retained renderers', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_PARTICIPANT_COMMIT_FAILED',
+        code: RetikzRuntimeErrorCode.ParticipantCommitFailed,
         cause: expect.objectContaining({ message: 'candidate dblclick registration rejected' }),
       }),
     );
@@ -1251,7 +1252,7 @@ describe('builtin retained renderers', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED',
+        code: RetikzRuntimeErrorCode.ParticipantRollbackFailed,
         cause: expect.objectContaining({
           trigger: expect.objectContaining({
             cause: expect.objectContaining({ message: 'candidate dblclick registration rejected' }),
@@ -1307,7 +1308,7 @@ describe('builtin retained renderers', () => {
           }),
         ],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_ROLLBACK_FAILED' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantRollbackFailed }));
 
     expect(() => session.dispose()).not.toThrow();
     host.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));

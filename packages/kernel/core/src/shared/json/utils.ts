@@ -1,16 +1,21 @@
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+
 /** 校验并复制 JSON-safe plain data，返回 detached deeply immutable value */
 export const cloneAndFreezeJson = <T>(value: T, path = 'value'): T => {
   const ancestors = new Set<object>();
   const clone = (input: unknown, currentPath: string): unknown => {
     if (input === null || typeof input === 'string' || typeof input === 'boolean') return input;
     if (typeof input === 'number') {
-      if (!Number.isFinite(input)) throw new Error(`${currentPath} must contain only finite JSON numbers`);
+      if (!Number.isFinite(input))
+        throw new RetikzCoreError(RetikzCoreErrorCode.Json, `${currentPath} must contain only finite JSON numbers`);
       return input;
     }
-    if (typeof input !== 'object') throw new Error(`${currentPath} must be JSON-safe plain data`);
-    if (ancestors.has(input)) throw new Error(`${currentPath} must not contain cyclic references`);
+    if (typeof input !== 'object')
+      throw new RetikzCoreError(RetikzCoreErrorCode.Json, `${currentPath} must be JSON-safe plain data`);
+    if (ancestors.has(input))
+      throw new RetikzCoreError(RetikzCoreErrorCode.Json, `${currentPath} must not contain cyclic references`);
     if (Object.getOwnPropertySymbols(input).length > 0) {
-      throw new Error(`${currentPath} must not contain symbol keys`);
+      throw new RetikzCoreError(RetikzCoreErrorCode.Json, `${currentPath} must not contain symbol keys`);
     }
 
     ancestors.add(input);
@@ -18,13 +23,19 @@ export const cloneAndFreezeJson = <T>(value: T, path = 'value'): T => {
       if (Array.isArray(input)) {
         const propertyNames = Object.getOwnPropertyNames(input);
         if (propertyNames.length !== input.length + 1) {
-          throw new Error(`${currentPath} must not contain sparse items or extra array properties`);
+          throw new RetikzCoreError(
+            RetikzCoreErrorCode.Json,
+            `${currentPath} must not contain sparse items or extra array properties`,
+          );
         }
         const output: Array<unknown> = [];
         for (let index = 0; index < input.length; index += 1) {
           const descriptor = Object.getOwnPropertyDescriptor(input, String(index));
           if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-            throw new Error(`${currentPath}[${index}] must be an enumerable JSON data item`);
+            throw new RetikzCoreError(
+              RetikzCoreErrorCode.Json,
+              `${currentPath}[${index}] must be an enumerable JSON data item`,
+            );
           }
           output.push(clone(descriptor.value, `${currentPath}[${index}]`));
         }
@@ -33,13 +44,19 @@ export const cloneAndFreezeJson = <T>(value: T, path = 'value'): T => {
 
       const prototype = Object.getPrototypeOf(input);
       if (prototype !== Object.prototype && prototype !== null) {
-        throw new Error(`${currentPath} must contain only plain objects and arrays`);
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Json,
+          `${currentPath} must contain only plain objects and arrays`,
+        );
       }
       const output = Object.create(null) as Record<string, unknown>;
       for (const key of Object.getOwnPropertyNames(input)) {
         const descriptor = Object.getOwnPropertyDescriptor(input, key);
         if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-          throw new Error(`${currentPath}.${key} must be an enumerable JSON data property`);
+          throw new RetikzCoreError(
+            RetikzCoreErrorCode.Json,
+            `${currentPath}.${key} must be an enumerable JSON data property`,
+          );
         }
         output[key] = clone(descriptor.value, `${currentPath}.${key}`);
       }

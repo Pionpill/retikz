@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { defineCellFormatter } from '../../contract';
+import { RetikzTableError } from '../../error';
 
 /** 把 boolean 映射为显式标签的内置 formatter */
 export const BOOLEAN_CELL_FORMATTER = defineCellFormatter({
@@ -12,7 +13,7 @@ export const BOOLEAN_CELL_FORMATTER = defineCellFormatter({
   }),
   format: ({ value }, options) => {
     if (value === null) return options.nullText ?? null;
-    if (typeof value !== 'boolean') throw new Error('boolean formatter requires a boolean or null value');
+    if (typeof value !== 'boolean') throw new RetikzTableError('boolean formatter requires a boolean or null value');
     return value ? (options.trueText ?? 'true') : (options.falseText ?? 'false');
   },
 });

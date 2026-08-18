@@ -483,6 +483,34 @@ describe('preview controls definition', () => {
         presentation: 'overlay',
         controls: [{ kind: 'color', id: 'fill', label: 'Fill', defaultValue: 'red' }],
       }),
-    ).toThrow('Preview color control "fill" defaultValue must be a #RRGGBB hex color.');
+    ).toThrow(
+      'Preview color control "fill" defaultValue must be a #RRGGBB hex color, currentColor, or enabled contrast value.',
+    );
+  });
+
+  it('颜色控件始终接受 currentColor', () => {
+    expect(() =>
+      definePreviewControls({
+        presentation: 'overlay',
+        controls: [{ kind: 'color', id: 'fill', label: 'Fill', defaultValue: 'currentColor' }],
+      }),
+    ).not.toThrow();
+  });
+
+  it('仅在 contrast 开启时接受 contrast 默认值', () => {
+    expect(() =>
+      definePreviewControls({
+        presentation: 'overlay',
+        controls: [{ kind: 'color', id: 'textColor', label: 'Text color', defaultValue: 'contrast', contrast: true }],
+      }),
+    ).not.toThrow();
+    expect(() =>
+      definePreviewControls({
+        presentation: 'overlay',
+        controls: [{ kind: 'color', id: 'fill', label: 'Fill', defaultValue: 'contrast' }],
+      }),
+    ).toThrow(
+      'Preview color control "fill" defaultValue must be a #RRGGBB hex color, currentColor, or enabled contrast value.',
+    );
   });
 });

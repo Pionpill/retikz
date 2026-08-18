@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CoordinateFrame, IntervalContext, PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotIntervalMark, IRPlot } from '../../../src/schemas';
+import type { IRPlot, IRPlotIntervalMark } from '../../../src/schemas';
 
 import { type Cell } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';

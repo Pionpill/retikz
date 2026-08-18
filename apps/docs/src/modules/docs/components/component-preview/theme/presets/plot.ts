@@ -5,9 +5,9 @@ import {
   definePlotThemeStyle,
   LegendSymbolFit,
   PlotColorScheme,
-  PlotThemeTokenResolutionSchema,
   PlotShapePaletteSchema,
   PlotThemeToken,
+  PlotThemeTokenResolutionSchema,
 } from '@retikz/plot';
 
 import { PreviewThemeStyle } from '../constants';

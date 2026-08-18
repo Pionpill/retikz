@@ -45,16 +45,11 @@ export const GuideDimension = { X: 'x', Y: 'y' } as const; // 定位维度（非
 3. **独立 guide 也救不了「特殊网格」**：独立 `GridGuide` 仍带 `dimension`（还是平行线族），表达不了点阵网格（x×y 配对）或六边形 / 斜线网格（非轴向）——这些本不属于 grid 概念。装饰性底纹走 **core pattern**（Kernel 能力），数据空间区域强调走未来 **reference-area 原语**（mark 家族）。「数据空间点名某处画特殊东西」= mark/annotation，「轴派生的规则线」= guide，两者不混。
 4. **「只要网格不要轴线」** = 「一根只显示网格的轴」，靠关闭该 axis 的轴线/刻度/标签子开关表达（归属仍是 axis）。alpha.2 先只给 `grid` 布尔。
 
-### 被否决的选项
-
-- **B：guide 内嵌 coordinate（`coordinate.axes`）** —— 对 facet（coordinate scope 化）更天然（轴随坐标系复制），但与「guide 一等」「子组件 DSL」张力大，且 alpha.2 单坐标系下两者等价。否决：facet 真正落地时在顶层数组方案上加 `guide.coordinate` 引用即可，非破坏，不必现在内嵌换来 DSL 张力。
-- **独立 `GridGuide` union 成员（Observable Plot 风格）** —— 强调 grid 是独立视觉层，但独立成员换不来特殊网格能力、却要背刻度同源歧义与去重补丁。否决，grid 收为 `axis.grid` 子属性。
-
 ### 已知代价
 
 未来若要「网格密度 ≠ 轴刻度密度」（minor grid），需在 axis 内加 major/minor 刻度体系（主流库亦如此），而非再开独立 grid——方向一致，不算欠债。`grid` 先做 `boolean`，留升级成样式对象（`grid?: { stroke, dash, opacity }`）空间，非破坏。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **刻度算法（auto-tick）** → [ADR-02](./02-d3-scale.md)；**轴/网格画在哪（plot area / margin）** → [ADR-03](./03-plot-area-layout.md)；**guide → core IR 的 lowering** → [ADR-04](./04-guide-lowering.md)；**`<Axis>` 子组件 / 默认自动出 / `bare`** → [ADR-05](./05-guide-bindings-dsl.md)。
 - **轴标题（title）**：alpha.2 不含（要额外占 margin + 富排版）；留后续（非破坏加 `title?`）。`tickLabels`（非 `label`）命名即为给未来轴标题让出 `label` 一词。

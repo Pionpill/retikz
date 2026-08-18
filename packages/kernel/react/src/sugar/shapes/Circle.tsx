@@ -3,6 +3,7 @@ import type { FC } from 'react';
 
 import type { AngleInput, BoxAdjustmentProps, PathVisualProps, ShapeBox } from './shape-helpers';
 
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { Path } from '../../kernel/components';
 import { Step } from '../../kernel/components';
 import {
@@ -77,7 +78,8 @@ export const Circle: FC<CircleProps> = props => {
     const fit = props.fit ?? 'contain';
     radius = (fit === 'cover' ? Math.max(width, height) : Math.min(width, height)) / 2;
   } else {
-    throw new Error(
+    throw new RetikzReactError(
+      RetikzReactErrorCode.Sugar,
       '<Circle> needs one of { center, radius }, { center, diameter }, { from, to }, { corner1, corner2 }, or { box }',
     );
   }

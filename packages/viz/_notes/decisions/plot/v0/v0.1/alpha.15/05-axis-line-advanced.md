@@ -143,7 +143,7 @@ Theme 不接收 `line.arrow`、`line.extent` 或 `placement.origin`。这些字�
 
 core 已经具备稳定 `dashOffset` / stroke dash offset 能力。plot 不需要在 ADR-05 里为 axis line 单独设计 `dashOffset`，而应按 ADR-02 把它作为普通 `GuideLineStyleSchema` 字段接入 axis line、tick line、grid line、legend 可描边部件与 theme line style。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - polar / ternary / custom coordinate 的 axis arrow 方向定义。
 - 自动把 scale domain 扩展到 origin。

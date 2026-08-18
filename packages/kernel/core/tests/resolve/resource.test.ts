@@ -1,13 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type {
-  ClipDefinition,
-  ClipResolveContext,
-  ClipShape,
-  MarkerPrimitive,
-  PatternDefinition,
-} from '../../src/contract';
+import type { ClipDefinition, ClipResolveContext, MarkerPrimitive, PatternDefinition } from '../../src/contract';
 import type { IRClip, IRPaint, IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -16,6 +10,7 @@ import { defineClip, definePattern } from '../../src/contract';
 import { resolveClipRegistry } from '../../src/providers/clip';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { resolveClip, resolvePaint } from '../../src/resolve/resource';
+import { JsonObjectSchema } from '../../src/schemas';
 
 const round = createRound(3);
 
@@ -119,7 +114,7 @@ describe('resolve/resource paint', () => {
 });
 
 describe('resolve/resource clip', () => {
-  const polygonResolve = vi.fn((spec: { points: Array<[number, number]> }) => ({
+  const polygonResolve = vi.fn((spec: { kind: 'polygon'; points: Array<[number, number]> }) => ({
     kind: 'polygon' as const,
     points: spec.points,
   }));
@@ -130,6 +125,18 @@ describe('resolve/resource clip', () => {
       points: z.array(z.tuple([z.number(), z.number()])).min(3),
     }),
     resolve: polygonResolve,
+    shapeSchema: z.strictObject({
+      kind: z.literal('polygon'),
+      points: z.array(z.tuple([z.number(), z.number()])).min(3),
+    }),
+    lower: shape => ({
+      commands: [
+        { kind: 'move', to: shape.points[0] },
+        ...shape.points.slice(1).map(to => ({ kind: 'line' as const, to })),
+        { kind: 'close' },
+      ],
+      fillRule: 'nonzero',
+    }),
   });
 
   it('binds clip definition and parsed params without invoking provider', () => {
@@ -157,21 +164,30 @@ describe('resolve/resource clip', () => {
   });
 
   it('keeps recursive clip resolution in the bound registry closure', () => {
-    const leafResolve = vi.fn((spec: { radius: number }) => ({
-      kind: 'circle' as const,
-      cx: 0,
-      cy: 0,
-      r: spec.radius,
+    const leafResolve = vi.fn((spec: { kind: 'leaf'; radius: number }) => ({
+      kind: 'leaf' as const,
+      radius: spec.radius,
     }));
     const leaf = defineClip({
       kind: 'leaf',
       schema: z.strictObject({ kind: z.literal('leaf'), radius: z.number().positive() }),
       resolve: leafResolve,
+      shapeSchema: z.strictObject({ kind: z.literal('leaf'), radius: z.number().positive() }),
+      lower: shape => ({
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [shape.radius, 0] },
+          { kind: 'line', to: [shape.radius, shape.radius] },
+          { kind: 'line', to: [0, shape.radius] },
+          { kind: 'close' },
+        ],
+        fillRule: 'nonzero',
+      }),
     });
     const wrapperResolve = vi.fn(
-      (spec: { child: { kind: 'leaf'; radius: number } }, context: ClipResolveContext): ClipShape => ({
-        kind: 'compound',
-        children: [context.resolve(spec.child as IRClip)],
+      (spec: { kind: 'wrapper'; child: { kind: 'leaf'; radius: number } }, context: ClipResolveContext) => ({
+        kind: 'wrapper' as const,
+        child: context.resolve(spec.child as IRClip),
       }),
     );
     const wrapper = defineClip({
@@ -181,6 +197,11 @@ describe('resolve/resource clip', () => {
         child: z.strictObject({ kind: z.literal('leaf'), radius: z.number().positive() }),
       }),
       resolve: wrapperResolve,
+      shapeSchema: z.strictObject({
+        kind: z.literal('wrapper'),
+        child: z.intersection(z.object({ kind: z.string().min(1) }), JsonObjectSchema),
+      }),
+      lower: (shape, context) => context.lower(shape.child),
     });
     const clips = resolveClipRegistry([wrapper, leaf]);
     const resolution = resolveClip(
@@ -211,7 +232,16 @@ describe('resolve/resource clip', () => {
     const resource = scene.resources?.find(item => item.kind === 'clip');
     expect(resource).toMatchObject({
       kind: 'clip',
-      shape: { kind: 'compound', children: [{ kind: 'circle', r: 3 }] },
+      path: {
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [3, 0] },
+          { kind: 'line', to: [3, 3] },
+          { kind: 'line', to: [0, 3] },
+          { kind: 'close' },
+        ],
+        fillRule: 'nonzero',
+      },
     });
     expect(wrapperResolve).toHaveBeenCalledTimes(1);
     expect(leafResolve).toHaveBeenCalledTimes(1);

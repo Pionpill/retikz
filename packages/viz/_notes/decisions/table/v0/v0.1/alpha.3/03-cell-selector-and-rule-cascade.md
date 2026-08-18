@@ -146,31 +146,7 @@ const rules = [
 - source-kind vocabulary 必须由无依赖 owner 统一提供，避免 structure/rule/lineage 各自定义
 - manifest 后续公开 matched rule indices 与 leaf winner source
 
-## 测试策略摘要
-
-- schema/predicate 证明闭合输入、AND/OR、origin、payload/value domain、null、边界与不 coercion
-- cascade 证明声明顺序、显式清除、字段/逐侧 merge、immutable inputs 与 stale trace 清理
-- pipeline 证明 value/content 失败语义、canonical identity/order 和 raw-value 选择
-- structure/adapter parity 证明 manual、detail、custom、React、Vanilla、SSR 共享同一语义
-
-详细 case、路径、命令和正式证据位于对应 ignored mirror plan 的 `TEST_CONTRACT.md`。
-
-## 能力完备性与架构验证
-
-- **所属能力域**：Tabular Visualization Complete / Rules、Cell Semantics、Presentation
-- **问题归属**：selector 读取 Table canonical identity，属于 Table 而非 Data/Core/adapter
-- **内部闭环**：selector → ordered rules → final refs/appearance → formatter/presentation/layout → lineage
-- **扩展边界**：selector/predicate 闭合；开放行为继续经过 formatter/presentation/scale definitions
-- **结论**：扩展 Table Rules 域，不建立 adapter selector 或 renderer 反查机制
-
-## 被否决方案
-
-- 函数 predicate 或整行 datum callback：破坏 JSON IR 与 SSR
-- specificity 自动排序：未来增加 selector 字段会隐式改变旧表优先级
-- 任意 deep merge：无法稳定定义 structured paint、tuple、array 与 discriminated union
-- 从 Core primitive 反查 Cell：lowering 后已丢失 Table 语义 identity
-
-## 不在本 ADR 范围
+## 长期边界
 
 - nested Boolean selector、regex、locale compare 与任意函数 predicate
 - hover/selected/active 等 runtime state selector

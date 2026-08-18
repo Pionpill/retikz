@@ -32,7 +32,7 @@ ADR-01 把 frame 泛化成 N 通道、x/y 转可选后，ternary2D（三元图�
 - **core**：无新依赖（三角点 / 三角边 / 网格下沉 core Node/Path）。
 - **对外 API**：`coordinate="ternary2D"` + a/b/c props（ADR-04）；纯新增。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - ternary + line / area（顺延需求驱动）/ interval / sector（fail-loud）。
 - ternary 等值线 / 密度 → 顺延。

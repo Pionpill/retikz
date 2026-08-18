@@ -8,13 +8,7 @@ import type {
 } from '@retikz/data';
 import type { ValueOf } from '@retikz/foundation';
 
-import type {
-  IRPlotChannel,
-  IRPlotMarkOperation,
-  IRPlotScaleOperation,
-  IRPlot,
-  LegendChannelValue,
-} from '../schemas';
+import type { IRPlot, IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation, LegendChannelValue } from '../schemas';
 import type { DimensionRole } from './coordinate';
 import type { ChannelScaleResolution, ChannelScaleResolveContext } from './scale';
 

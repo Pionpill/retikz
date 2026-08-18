@@ -1,9 +1,10 @@
-﻿import { isFiniteNumber } from '@retikz/math';
+import { isFiniteNumber } from '@retikz/math';
 
 import type { DataFieldTypeMap, ParsedFieldValue } from '../../contract';
 import type { DataFieldTypeValue } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 
+import { RetikzDataError } from '../../error';
 import { DataFieldType } from '../../schemas';
 import { coerceValue } from './coerce';
 import { resolveFieldPath } from './field';
@@ -68,7 +69,7 @@ export const validateBoundData = (rows: Array<ExternalRow>, fieldTypes: DataFiel
       else invalidCount += 1;
     }
     if (!valid) {
-      throw new Error(
+      throw new RetikzDataError(
         `data: field "${logical}" has no valid values in the sampled data: ${invalidCount}/${limit} invalid, ${missingCount}/${limit} missing (check fieldMaps / dataset)`,
       );
     }
@@ -88,7 +89,7 @@ export const assertAllValuesValid = (normalized: Array<ExternalRow>, fieldTypes:
         isMissingRaw(value) || (typeof value === 'number' && Number.isNaN(value))
           ? 'missing or invalid'
           : `invalid value ${JSON.stringify(value)}`;
-      throw new Error(`data: field "${logical}" has ${shown} at row ${index} (invalid:'error')`);
+      throw new RetikzDataError(`data: field "${logical}" has ${shown} at row ${index} (invalid:'error')`);
     }
   }
 };

@@ -15,18 +15,28 @@ import { point, vector2 } from '@retikz/math';
 import type { IRRibbonDirection } from '../types';
 import type { RibbonSegment, RibbonSegmentInput } from './types';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
+
 const LENGTH_SUBDIVISIONS = 16;
 
 const assertCursor = (cursor: IRPosition | undefined, command: PathCommand): IRPosition => {
   if (cursor !== undefined) return cursor;
-  throw new Error(`Ribbon centerline command "${command.kind}" has no current point; start with a move step.`);
+  throw new RetikzStandardError({
+    code: RetikzStandardErrorCode.GeometryInvalid,
+    message: `Ribbon centerline command "${command.kind}" has no current point; start with a move step.`,
+    details: { command: command.kind },
+  });
 };
 
 /** 校验并归一化 ribbon 方向向量；零向量或非有限值直接报错 */
 export const normalizeVector = (vector: Vector2, source: string): Vector2 => {
   const normalized = vector2.normalizeOrNull(vector);
   if (normalized === null) {
-    throw new Error(`Ribbon ${source} direction must be a finite nonzero vector.`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.GeometryInvalid,
+      message: `Ribbon ${source} direction must be a finite nonzero vector.`,
+      details: { source, vector },
+    });
   }
   return normalized;
 };
@@ -80,10 +90,13 @@ export const directionToTangent = (
   }
   try {
     return normalizeVector(polar.toPosition(direction), source);
-  } catch {
-    throw new Error(
-      `Ribbon ${source} direction PolarPosition cannot use a string origin; use an angle or explicit vector instead.`,
-    );
+  } catch (cause) {
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.GeometryInvalid,
+      message: `Ribbon ${source} direction PolarPosition cannot use a string origin; use an angle or explicit vector instead.`,
+      details: { source },
+      cause,
+    });
   }
 };
 
@@ -121,7 +134,11 @@ export const commandsToSegmentInputs = (
       case 'move':
         moveCount += 1;
         if (moveCount > 1) {
-          throw new Error(`Ribbon ${source} must be a single open subpath; multiple move commands are not supported.`);
+          throw new RetikzStandardError({
+            code: RetikzStandardErrorCode.GeometryInvalid,
+            message: `Ribbon ${source} must be a single open subpath; multiple move commands are not supported.`,
+            details: { moveCount, source },
+          });
         }
         cursor = command.to;
         break;
@@ -200,7 +217,11 @@ export const commandsToSegmentInputs = (
         break;
       }
       case 'close':
-        throw new Error(`Ribbon ${source} must be open; close/cycle is not supported.`);
+        throw new RetikzStandardError({
+          code: RetikzStandardErrorCode.GeometryInvalid,
+          message: `Ribbon ${source} must be open; close/cycle is not supported.`,
+          details: { command: command.kind, source },
+        });
     }
   }
   return inputs;
@@ -321,7 +342,11 @@ export const segmentsFromCommands = ({
   const segments = segmentInputsToSegments(inputs, endpointTangents);
   const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);
   if (!Number.isFinite(totalLength) || totalLength <= 0) {
-    throw new Error(`Ribbon ${source} has zero length; at least one nonzero segment is required.`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.GeometryInvalid,
+      message: `Ribbon ${source} has zero length; at least one nonzero segment is required.`,
+      details: { source, totalLength },
+    });
   }
   return { segments, totalLength };
 };

@@ -30,7 +30,7 @@ ADR-01~06 让 `@retikz/plot` 能「Plot IR + 数据 → core IR → 渲染」，
 
 plot-react / plot-vanilla 跟 `@retikz/plot` 同版本线，三包 **lockstep 同改同发**——绑定层依赖 plot 本体的公开 API，版本须锁步。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **React 组合 DSL（`<LineMark>` / `<PointMark>` + builder + 自动推断 scale/coordinate）** → ADR-08。
 - **交互（tooltip / hover / 事件回调 / 水合）** → v0.3。

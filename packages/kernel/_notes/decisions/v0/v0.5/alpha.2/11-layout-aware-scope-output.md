@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-04
-- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-08：Layout proposal / probe contract](./08-layout-proposal-probe-contract.md) · [ADR-09：Inherited Theme context](./09-inherited-theme-context.md) · [ADR-10：Core atomic contracts](./10-core-atomic-contracts.md) · [Standard presentation composite reuse](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/10-presentation-composite-reuse.md) · [能力完备性与模块边界](../../../../../../../notes/architecture/capability-design.md)
+- 关联：[ADR-08](./08-layout-proposal-probe-contract.md) · [ADR-09](./09-inherited-theme-context.md) · [ADR-10](./10-core-atomic-contracts.md)
 
 ## 背景与目标
 
@@ -104,37 +104,7 @@ authored Scope 的 graphic cascade、四个 default channel、`resetStyle` 和 `
 - 外部扩展与下游闭环：现有 `CompositeDefinition` / registry 继续承载内置与自定义 Composite；layout-aware callback 通过同一个 probe、replay、namespace、provider、Scene、manifest 与 diagnostics 主链消费，不新增 Scope registry 或 renderer 分支
 - 不支持边界：不把 replay token 持久化为 IR，不支持跨 compile 重放，不用 Core 统一领域默认，不为 DOM / renderer 回读或 adapter 私有测量提供旁路
 
-## 架构验证
-
-- 是否可由现有能力组合：可以。普通 Scope schema、style frame、Theme context、namespace / identity、bounds、clip、placement 和 ADR-08 的 probe / replay 已具备所需基础；本 ADR 统一其公开入口和输出边界
-- math / core / render / adapter 责任切分：math 保持纯几何；Core 校验和编排 Scope、probe、replay 及 Scene / manifest；render 不读取 authored Scope；adapter 只转换 authoring，不复制 Scope contract
-- 是否需要新 IR / contract / registry：需要新增可复用的 Core Scope props schema/type 和 layout-aware Scope output contract；不新增顶层 IR、Scene primitive、provider family 或 registry
-- Scene / manifest / renderer / diagnostics 如何闭环：authored Scope 继续输出普通 Core group / primitive；replay 只在同一次 compile 中提交 transaction，并沿既有 occurrence、identity、artifact、z-index、clip resource 与 warning / error 路径落地
-- provenance / locator / Interaction Readiness 是否适用：保留现有 compile occurrence、Scope identity、artifact 与 metadata 落点；本 ADR 不发明领域 provenance 或交互状态
-- 结论：下沉并扩展 Core 当前 Composition contract；Standard 组合并消费，不在上层补齐缺口
-
-## 能力完备性检查
-
-- 所属能力面：Drawing Complete 的 Scope / Composition 输入与 layout-aware child output
-- 内部表达链路：`ScopePropsSchema` → `IRScope` / `CompositeCompileScopeProps` → 普通 Scope orchestration 与 Core probe / replay → Scene / manifest
-- 外部扩展链路：内置与自定义 Composite 均经同一 `CompositeDefinition` registry、compile environment、provider、namespace 和 diagnostics；Scope props fragment 不创建新的扩展点
-- 下游执行 / adapter 等价性：SVG / Canvas 继续消费相同 Scene；React、Vanilla 与 headless 输入使用同一 authored Scope 和 replay contract
-- 不支持边界与诊断：不允许上层接受后丢弃 Scope 字段，不允许用 replay wrapper 扩张普通 Scope 语义；缺失的通用能力必须回到 Core 继续补齐
-- 本轮结论：扩展 Core 当前 Composition 域，作为 Standard Scope-backed composite 和其它 Tier 2 lower reuse 的前置 capability；不移动到 Standard 或 renderer
-
-## 被否决方案
-
-- **继续只暴露结构属性**：会让 layout-aware Composite 不能复用普通 Scope 的完整公共能力，持续制造字段漂移
-- **把样式、placement 和 identity 加到 replay wrapper**：把 authored 语义与 compile-local submission 混在一起，破坏 namespace、style cascade 和 nested bounds
-- **由 Standard / adapter 手写 style、transform 或 clip 合并**：形成平行 Core 逻辑，无法保证普通 child、nested Composite 与 replay child 等价
-- **每个 replay child 外包一层带用户 identity 的 Scope**：会改变 occurrence、namespace、z-order、artifact 与重复 id 语义，并生成未声明的身份
-- **新增 renderer primitive 或 Scope registry**：Core 现有 group、Composite registry 和 compile transaction 已足够，新增旁路会破坏依赖方向
-
-## 测试策略摘要
-
-需要 schema / public-type 证据证明 Scope fragment 与完整 Scope 的合法、非法、默认值和 JSON round-trip 等价；需要 Core contract / compile 证据证明 authored props、普通 child、nested Composite 和 replay child 共享 style/theme、identity、placement、bounds、z-order、metadata、animation 与两类 clip 语义；需要 failure / adversarial 证据证明 wrapper 窄职责、one-use replay、空 Scope、重复 identity、未解析 placement 和 nested definition failure；需要 React / Vanilla parity 与 renderer Scene parity 证据，但不以 renderer 回读替代 Core contract。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Standard Axes、Grid、Frame、Legend 的领域字段、排版、lattice、Frame header 与 Legend artifact 设计
 - Plot、Table、Gantt 或其它 Tier 2 的实际迁移

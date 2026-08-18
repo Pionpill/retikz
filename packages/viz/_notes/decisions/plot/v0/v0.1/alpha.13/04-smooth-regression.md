@@ -24,9 +24,3 @@ trend line / regression line 是 plot grammar 的基础统计能力，但不应�
 - 不输出 confidence band；置信区间需要后续独立统计 contract。
 
 `PathMark` 消费 smooth 输出绘制趋势线，保持 stat = transform、geom = mark。
-
-## 被否决方案
-
-- 新增 `RegressionMark` / `SmoothMark`：会把统计和图形绑定。
-- 第一版支持 loess / polynomial / confidence band：范围过大，难以在 alpha.13 做可靠 contract。
-- 静默跳过退化 group：统计错误应可诊断，而不是生成看似正常的空线。

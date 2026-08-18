@@ -40,6 +40,7 @@ import type {
   VanillaRetainedRuntimeOptions,
 } from '../runtime/types';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import { DEFAULT_ID_PREFIX, VanillaViewMode } from '../runtime/constants';
 import { captureVanillaRuntimeOptions } from '../runtime/runtime-options';
 import { assertStaticMountRuntimeExcluded } from '../runtime/static-mount-options';
@@ -66,7 +67,7 @@ const mountStaticCanvas = (
   options: StaticMountCanvasOptions | RawStaticMountCanvasOptions,
 ): StaticCanvasView | StaticRawCanvasView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
-    throw new Error('mountCanvas: container must be a DOM Element.');
+    throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountCanvas: container must be a DOM Element.');
   }
 
   const canvas = document.createElement('canvas');
@@ -320,7 +321,7 @@ const mountStaticCanvas = (
     mode: VanillaViewMode.Static,
     root: canvas,
     update(next: RenderInput) {
-      if (disposed) throw new Error('mountCanvas: view already disposed.');
+      if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountCanvas: view already disposed.');
       renderInto(next);
       // renderInto 已换 currentScene；按新 scene 重建存活水合，使 onEvent 动画 trigger 反映新图
       rebindHydrations();
@@ -360,7 +361,7 @@ const mountRetainedCanvas = (
   runtimeOptions: VanillaRetainedRuntimeOptions,
 ): RetainedCanvasView => {
   if (typeof Element === 'undefined' || !(container instanceof Element)) {
-    throw new Error('mountCanvas: container must be a DOM Element.');
+    throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'mountCanvas: container must be a DOM Element.');
   }
   const canvas = document.createElement('canvas');
   const output = options.output ?? {};

@@ -1,24 +1,31 @@
-import { assertNonEmptyString as assertFoundationNonEmptyString } from '@retikz/foundation';
+import { assertNonEmptyString } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { JsonValue } from '../../schemas';
 import type { CompositeDefinition } from './types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+
 /** 把 composite registration schema 规范化为可读取 provider key 的对象分支 */
 const objectSchemasOf = (schema: z.ZodType): Array<z.ZodObject> => {
   if (schema instanceof z.ZodObject) return [schema];
   if (!(schema instanceof z.ZodUnion)) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
       'defineComposite: schema must be a ZodObject or a ZodUnion of ZodObject variants extending CompositeBaseSchema.',
     );
   }
   if (schema.options.length === 0) {
-    throw new Error('defineComposite: schema union must contain at least one ZodObject option.');
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
+      'defineComposite: schema union must contain at least one ZodObject option.',
+    );
   }
 
   return schema.options.map((option, index) => {
     if (!(option instanceof z.ZodObject)) {
-      throw new Error(
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Contract,
         `defineComposite: schema union option ${index} must be a ZodObject extending CompositeBaseSchema.`,
       );
     }
@@ -26,15 +33,11 @@ const objectSchemasOf = (schema: z.ZodType): Array<z.ZodObject> => {
   });
 };
 
-/** 校验 schema literal 字段并保留 Composite 的原有错误文本 */
-const isNonEmptyLiteralString = (value: unknown, message: string): value is string => {
+/** 校验 schema literal 字符串并直接保留 Foundation 原子错误 */
+const isNonEmptyLiteralString = (value: unknown, label: string): value is string => {
   if (typeof value !== 'string') return false;
-  try {
-    assertFoundationNonEmptyString(value, 'defineComposite schema literal');
-    return true;
-  } catch {
-    throw new Error(message);
-  }
+  assertNonEmptyString(value, label);
+  return true;
 };
 
 /** 从 composite 对象分支中读取并校验共同 namespace / type literal */
@@ -44,8 +47,8 @@ const literalValueOf = (schema: z.ZodType, field: 'namespace' | 'type'): string 
     const node = object.shape[field];
     const path = objects.length === 1 ? `schema.${field}` : `schema union option ${index}.${field}`;
     const message = `defineComposite: ${path} must be a non-empty z.literal string.`;
-    if (!(node instanceof z.ZodLiteral) || !isNonEmptyLiteralString(node.value, message)) {
-      throw new Error(message);
+    if (!(node instanceof z.ZodLiteral) || !isNonEmptyLiteralString(node.value, `defineComposite: ${path}`)) {
+      throw new RetikzCoreError(RetikzCoreErrorCode.Contract, message);
     }
     return node.value;
   });
@@ -53,7 +56,8 @@ const literalValueOf = (schema: z.ZodType, field: 'namespace' | 'type'): string 
   for (let index = 1; index < values.length; index += 1) {
     const value = values[index];
     if (value !== expected) {
-      throw new Error(
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Contract,
         `defineComposite: schema union option ${index} ${field} literal "${value}" does not match option 0 literal "${expected}".`,
       );
     }
@@ -82,21 +86,31 @@ export const defineComposite = <
   const hasExpand = typeof definition.expand === 'function';
   const hasCompile = typeof definition.compile === 'function';
   if (hasExpand === hasCompile) {
-    throw new Error('defineComposite: exactly one of expand or compile must be provided.');
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
+      'defineComposite: exactly one of expand or compile must be provided.',
+    );
   }
   const runtimeArtifactSchema = definition.artifactSchema;
   if (hasExpand && runtimeArtifactSchema !== undefined) {
-    throw new Error('defineComposite: artifactSchema is only valid for the compile branch.');
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
+      'defineComposite: artifactSchema is only valid for the compile branch.',
+    );
   }
   const namespace = literalValueOf(definition.schema, 'namespace');
   const type = literalValueOf(definition.schema, 'type');
   if (definition.namespace !== namespace) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
       `defineComposite: declared namespace "${definition.namespace}" does not match schema literal "${namespace}".`,
     );
   }
   if (definition.type !== type) {
-    throw new Error(`defineComposite: declared type "${definition.type}" does not match schema literal "${type}".`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
+      `defineComposite: declared type "${definition.type}" does not match schema literal "${type}".`,
+    );
   }
   return definition;
 };

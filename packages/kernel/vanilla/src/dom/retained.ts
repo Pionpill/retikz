@@ -33,6 +33,7 @@ import type {
   VanillaRetainedRuntimeOptions,
 } from '../runtime/types';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import { InputLayerCache } from '../normalize';
 import { createEmptyInputRuntimeMetaSnapshot } from '../normalize/scene/runtime-meta';
 import { createDomProcessingController } from '../processing/internal/controller';
@@ -273,7 +274,8 @@ const createRenderParticipantFactory = (
   return Object.freeze({
     factory,
     read: () => {
-      if (active === undefined) throw new Error('Vanilla DOM retained renderer is unavailable');
+      if (active === undefined)
+        throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'Vanilla DOM retained renderer is unavailable');
       return active.read();
     },
     updateConfig: input => active?.updateConfig(input) ?? Object.freeze([]),
@@ -341,7 +343,8 @@ const createRetainedProcessingControllerImplementation = (
     },
     hydrate: (hydrateOptions: HydrateOptions): HydrationHandle => {
       const registration = nextRegistration;
-      if (!Number.isSafeInteger(registration)) throw new Error('Vanilla retained hydration registration overflow');
+      if (!Number.isSafeInteger(registration))
+        throw new RetikzVanillaError(RetikzVanillaErrorCode.Dom, 'Vanilla retained hydration registration overflow');
       const contribution = Object.freeze({ registration, handlers: captureHydrationHandlers(hydrateOptions.handlers) });
       const previousHandlers = handlerContributions;
       handlerContributions = Object.freeze([...handlerContributions, contribution]);

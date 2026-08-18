@@ -208,41 +208,11 @@ line formation、freeze/redistribute、line cross metrics、distribution 和 pla
 
 规范 JSON/Vanilla 输入使用 `children: IRFlexLayoutItem[]`；React `LayoutItem` 的 `itemKey` 转换为 JSON `key`，具体 adapter 由 ADR-06 冻结。
 
-## 被否决的方案
-
-- 完整复制 CSS Flexbox：order、auto margin、writing mode 等增加复杂度但不服务当前绘图消费方
-- 单次 natural measurement 后缩放 primitive：文本重排、fixed geometry 和 baseline 都会错误
-- grow/shrink 不设 freeze loop：item 命中 min/max 后剩余空间无法守恒
-- reverse 同时反转 paint order：布局方向变化不应无意改变 overlay/overflow 的视觉层级
-- stretch 直接改 transform scale：会改变描边、文字和视觉 bounds 语义
-- 保存跨 compile flex state：alpha.2 是静态确定性布局，不引入增量 solver
-
-## 影响
-
-- 新增 `standard.flexLayout` layout-aware Composite、factory、Definition与公共类型
-- 不改变 Core、renderer 或 alpha.1 composite
-- React/Vanilla 与 docs 接线在 alpha.3 ADR-06 统一修改
-- 公开 FlexLayout 间距契约使用 `gap`；旧 `columnGap` / `rowGap` 写法需要迁移，不提供兼容别名
-
-## 能力完备性检查
-
-- 所属能力域与能力面：Drawing Complete 上层的一维通用 Box layout
-- 解决的问题：任意 IRChild 的线性分配、换行和跨轴对齐
-- 主责包与协作包：Standard 主责 schema/solver/definition；Core 主责 probe/replay；adapter 等价 authoring
-- 是否可由现有能力组合：Core 机制可组合，但一维 solver 是 Standard 新能力
-- 是否需要下沉到依赖能力域：否
-- 内部表达链路：Flex schema → contextual probes → pure line solver → Scope/replay
-- 外部扩展链路：Flex 语义闭合，不设 provider registry；custom child 通过 Core registry 同路消费
-- 下游执行 / adapter 等价性：输出既有 transform/clip Scene；React/Vanilla 生成同一 IR
-- 不支持边界与诊断：非法 factor/minmax/kind、无界 fill与最终 selected failure fail-loud
-- 本轮结论：扩展 Standard 当前能力域
-
-## 不在本 ADR 范围
+## 长期边界
 
 - CSS order、auto margin、writing mode、visibility collapse
 - percentage/calc basis、aspect-ratio negotiation
 - masonry、二维 track、全局 collision
-- artifact payload、React/Vanilla 最终接线和 docs 页面
 
 ## 遗留风险
 

@@ -29,7 +29,7 @@ Layout Inspector 支持三个入口：
 | 范围            | React                                 | Vanilla                            | 语义                                           |
 | --------------- | ------------------------------------- | ---------------------------------- | ---------------------------------------------- |
 | 整张图          | `<Layout inspect={{ layout: true }}>` | mount / SSR options 的 `inspect`   | 选择所有已注册且带 inspector 的布局 occurrence |
-| authored 子树   | `<Scope inspect={{ layout: true }}>`  | `InputScope.inspect`         | 只作用于该 Scope 的 authored 后代              |
+| authored 子树   | `<Scope inspect={{ layout: true }}>`  | `InputScope.inspect`               | 只作用于该 Scope 的 authored 后代              |
 | 当前 occurrence | `<FlexLayout inspect>` 等             | `flexLayout('id', input, true)` 等 | 只选择当前容器，不传播给 nested layout         |
 
 求值顺序固定为 Layout → 最近的 Scope → 当前组件。对象字段逐项稀疏合并，nested `bounds` 也逐字段合并；canonical 默认值只在最终求值时填充一次。
@@ -170,20 +170,10 @@ retained 中修改 inspection options 可以完整重新 compile，但单次 com
 
 本 ADR 不修改 authored Core / Standard IR schema。`0.x` 阶段不为旧 custom renderer 或手写 `CompileResult` 保留别名：它们需要补 `inspectionCapability` 和 `inspection` 字段。Scene-only renderer 调用继续可用，语义等价于 `inspection: null`。
 
-## 被否决的方案
-
-- **只提供全局入口**：无法单独观察一个组件，也不能表达 Scope 子树边界
-- **把 `inspect` 写入 IR**：开发状态会污染持久化、diff 与 AI 生成契约
-- **Standard 或 adapter 自己叠一层 Scene**：会复制 Core occurrence / transform 语义，并让 SVG、Canvas、SSR 和 retained 分叉
-- **从最终 Scene 反推布局**：无法可靠区分 slot、allocation、visual、track、line 与 anchor
-- **让 inspector 重跑 solver**：辅助层可能与最终 replay 漂移，也会让 option-only 更新产生第二轮布局
-- **用 renderer callback 或 CSS 主题注入**：破坏 renderer-neutral 契约，并把命中与水合隔离交给调用方
-- **建立独立 inspector registry**：内置与自定义会走两条注册和解析路径
-
 ## 遗留边界
 
-- Plot、Table、Gantt 与其它 Tier 2 的 inspector 或布局适配由各自 milestone 决定
-- 本轮不提供 selection、hover、drag handle、布局修改、history、viewport toolbar 或 DevTools 面板
+- Plot、Table、Gantt 与其它 Tier 2 的 inspector 或布局适配由各自 owner 决定
+- 不提供 selection、hover、drag handle、布局修改、history、viewport toolbar 或 DevTools 面板
 - 不提供用户主题、CSS 注入、持久化 inspect 配置、跨 compile inspector cache 或 inspection 增量 patch
-- option-only 更新允许完整 compile；后续只有在 profiling 证明必要时再设计 solver / artifact cache
-- Vanilla LayoutItem 内直接嵌套 embed 仍需独立的递归 lowering 与贡献合并设计；自动示例转换也不承诺展平这类 nested component-local inspection sidecar
+- inspection 选项更新仍需遵循单次 compile 的布局与 frame 原子性；不建立跨 compile cache
+- Vanilla LayoutItem 内直接嵌套 embed 不改变当前递归 lowering 与贡献合并边界

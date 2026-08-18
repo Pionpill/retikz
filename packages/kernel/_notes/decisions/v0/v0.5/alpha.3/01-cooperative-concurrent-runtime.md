@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-07-26
-- 关联：[alpha.3 roadmap](./roadmap.md) · [alpha.2 Transaction ADR](../alpha.2/03-program-transaction-lifecycle.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [包拓扑](../../../../../../../notes/architecture/package-topology.md)
+- 关联：[alpha.2 Transaction ADR](../alpha.2/03-program-transaction-lifecycle.md)
 
 ## 背景
 
@@ -84,18 +84,6 @@ Chunkable work 只能在显式 cooperative boundary 让出，并在每个 bounda
 2. capability opt-in 让现有与第三方 Program 保持正确默认值，同时允许重任务渐进采用 chunk / Worker。
 3. scheduler 只协调时间、取消和 commit，不理解 Core、Plot、Table 或 renderer payload。
 
-## 测试设计
-
-- 高频 revision、同 key supersede 与不同优先级下，只有基于 current revision 的完整 candidate 能提交。
-- Blocking 完成后取消、chunk boundary 取消、offload late result 都不能越过 commit gate。
-- 同一 Program 的 blocking、chunkable、offloadable 结果与 full oracle 可观察等价。
-- compile-time/runtime验证 execution与 Program的 artifact input/private read泛型绑定；initial/update选择正确run/update work或encoder，缺失update能力按规则fallback。
-- offload encoder能读取声明依赖并只输出 structured-clone-safe payload；把 CandidateView/token/cache/函数放入 payload时prepare前具名拒绝。
-- 无宿主 capability、requireCapability、Worker crash、decode error 与 dispose 路径具有确定 outcome 和 diagnostic。
-- React / Vanilla 接入不同宿主 scheduler 时共享 revision、取消、fallback 与 commit 语义。
-
-详细矩阵见 ignored `notes/plans/kernel-v0.5-performance/TEST_CONTRACT_ALPHA3_ADR_01.md`。
-
 ## 公开影响
 
 - `@retikz/runtime` 新增 scheduler host、task handle、priority、cancellation、chunkable 与 offload executor contract。
@@ -103,19 +91,7 @@ Chunkable work 只能在显式 cooperative boundary 让出，并在每个 bounda
 - `@retikz/vanilla` 注入浏览器或自定义 scheduler host；无调度宿主时仍可使用 alpha.2 同步入口。
 - alpha.3 不保证所有 Program 可中断；未声明 capability 的 blocking 是明确兼容和正确性 fallback。
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Drawing 的运行时基础，同时为 Data / Visualization 提供跨领域调度契约。
-- 解决的问题：控制 prepare 的主线程占用、优先级与过期工作，同时保留原子 semantic commit。
-- 主责包与协作包：runtime 拥有 scheduler / task / commit gate；Program owner 拥有 chunk/offload 实现；adapter 注入宿主；renderer 不参与 semantic scheduling。
-- 是否可由现有能力组合：alpha.2 已有 candidate 与 revision，但没有让出、取消或 host capability，需要扩展 runtime，不应在 React / Vanilla 局部补丁。
-- 内部表达链路：scheduled update → isolated candidate → capability prepare → cancellation/revision validation → serialized atomic commit。
-- 外部扩展链路：第三方 Program capability 与 offload executor 通过同一 definition registry 注入；缺省 blocking。
-- define-registry：Program collection 沿用 alpha.2 registry；offload executor 是新增开放能力，使用 `RuntimeOffloadExecutorDefinition`、define helper、内置与自定义合并和统一 key dispatch。
-- 下游执行 / adapter 等价性：React / Vanilla 只映射 host scheduling；相同输入产生相同 commit outcome。
-- 不支持边界与诊断：blocking 不承诺可抢占；capability 缺失、fallback、取消浪费和 stale result 全部进入 trace。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 把所有 Core / Tier 2 Program 改为 chunkable 或 offloadable。
 - Scene 的 progressive materialization、renderer batch 与 hit-test 状态。
@@ -124,39 +100,4 @@ Chunkable work 只能在显式 cooperative boundary 让出，并在每个 bounda
 
 ---
 
-## 实现契约
-
-### Level
-
-`red`：扩展公共 Runtime Program / session 契约，并改变 React / Vanilla 更新执行方式。
-
-### Schema 改动
-
-无 IR / Scene schema 改动。Transfer payload 是执行期 contract，不写入 IR 或 Scene。
-
-### 文件 scope
-
-- `packages/kernel/runtime/src/{contract,scheduler,session,offload}/**`
-- `packages/kernel/runtime/src/index.ts`
-- `packages/kernel/runtime/tests/{scheduler,session,offload}/**`
-- `packages/kernel/react/src/kernel/runtime/**`
-- `packages/kernel/vanilla/src/runtime/**`
-- `packages/kernel/{react,vanilla}/tests/**concurrent**`
-- `apps/docs/src/modules/docs/contents/kernel/packages/runtime/**`
-
-### 测试象限
-
-**Happy path**：blocking schedule；chunk 多次 yield；offload success；不同优先级；串行 commit。
-
-**边界**：空 Program；零 chunk；同步完成；同 revision 多任务；safe-integer revision 上界前一值。
-
-**错误路径**：取消；stale base；Worker crash；decode error；chunk throw；缺 capability；dispose 后 schedule。
-
-**交互**：同 key supersede；高优先级在 boundary 前置；React unmount；Vanilla dispose；第三方 executor 同路。
-
-### 依赖的现有元素
-
-- alpha.2 `RuntimeSession` / candidate transaction / `RuntimeProgram`——直接扩展，不复制状态机。
-- Core incremental Program——blocking oracle 与首个 chunk/offload consumer。
-- React commit lifecycle、Vanilla view lifecycle——只作为 scheduler host 和取消接线。
-- benchmark trace——记录最长 blocking、yield、取消浪费、fallback 与 commit cost。
+执行期的 Transfer payload 不写入 IR 或 Scene；Concurrent 复用 alpha.2 的 Program、candidate transaction 与 commit gate。React 与 Vanilla 只提供 scheduler host 和生命周期接线，Runtime 不引入领域或框架依赖

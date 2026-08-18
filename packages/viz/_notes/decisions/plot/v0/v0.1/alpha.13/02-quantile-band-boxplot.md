@@ -22,9 +22,3 @@ boxplot 由现有 mark 组合表达：
 - `IntervalMark` 表达箱体或分位带。
 - `ReferenceMark` 表达 whisker / median / baseline。
 - `PointMark` 表达 outside selector 选出的原始离群点。
-
-## 被否决方案
-
-- 新增 `BoxPlotMark` 或 `BoxPlot` preset：会绕开 stat = transform / geom = mark 的 grammar 方向。
-- reducer 直接输出可渲染图元：统计层不应该知道 mark 或 core IR。
-- selector 输出聚合行：离群点必须保留原始 datum identity。

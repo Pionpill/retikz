@@ -69,7 +69,7 @@ type CoordinateComposition = {
 3. `start/end` 使用 fraction，避免在 schema 中固化像素测量；实际尺寸由 lowering 根据 plotArea 计算。
 4. 自定义 coordinate 可通过 roles 加入 scaffold，不需要内置白名单。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不做高层 composite / chart preset；这里只提供 plot primitive。
 - 不做自动环宽 / lane 高度分配算法；本 ADR 使用显式 fraction。

@@ -86,7 +86,7 @@ import { Scope } from '@retikz/react';
 
 ### 裁剪与层级
 
-`clip` 使用 Scope 局部坐标，并把裁剪结果作为渲染无关的 Scene 资源交给下游。面板展示五种 Core 基础裁剪和一种从 Standard 注入的 `compound` 组合裁剪；需要业务 kind 时再注册[自定义裁剪区](/kernel/components/layout/custom-clip)。
+`clip` 使用 Scope 局部坐标，并把裁剪结果作为渲染无关的 Scene 资源交给下游。面板展示 Core 的 `rect`，以及从 Standard 两级注入的 `circle` / `ellipse` / `polygon` / `path` / `compound`；需要业务 operation 或几何 kind 时再注册[自定义裁剪区](/kernel/components/layout/custom-clip)。
 
 <ComponentPreview files="scope-clip" size="xs" previewClassName="!p-3 !pt-[52px]" />
 
@@ -229,8 +229,8 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
     {
       label: 'clip 解析与资源注册',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 343,
-      endLine: 390,
+      startLine: 238,
+      endLine: 328,
     },
   ]}
 />
@@ -248,7 +248,7 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
 | `id`             | `string`                                | —             | 把 Scope 包络注册成外部可引用句柄                                                              |
 | `localNamespace` | `boolean`                               | `false`       | 隔离内部 id；`scope.id` 仍对外可见                                                             |
 | `boundingShape`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | `scope.id` 的矩形或圆形包络                                                                    |
-| `clip`           | `IRClip`                            | —             | Scope 局部坐标中的内置或自定义裁剪区                                                           |
+| `clip`           | `IRClip`                                | —             | Scope 局部坐标中的内置或自定义裁剪区                                                           |
 | `zIndex`         | `number`（整数）                        | `0`           | Scope 整体在父层的稳定栈序                                                                     |
 | `meta`           | `Record<string, JSON 值>`               | —             | 透传到 GroupPrim，不参与布局或继承                                                             |
 | `animations`     | `Array<IRAnimationTrack>`               | —             | Scope 整体动画，不下传 children                                                                |
@@ -261,7 +261,7 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
 | 属性                                                            | 类型                               | 默认值  | 描述                              |
 | --------------------------------------------------------------- | ---------------------------------- | ------- | --------------------------------- |
 | `color`                                                         | `string`                           | —       | 跨元素级联的主色                  |
-| `stroke` / `fill`                                               | `string` \| `IRPaint`          | —       | 跨元素逐字段级联的描边与填充      |
+| `stroke` / `fill`                                               | `string` \| `IRPaint`              | —       | 跨元素逐字段级联的描边与填充      |
 | `strokeWidth` / opacity 字段                                    | `number`                           | —       | 线宽与逐字段级联的透明度          |
 | `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | 对应默认值对象                     | —       | 四类元素各自独立的默认通道        |
 | `resetStyle`                                                    | `boolean` \| `Array<StyleChannel>` | `false` | 全部或按通道切断外层 Scope 的继承 |

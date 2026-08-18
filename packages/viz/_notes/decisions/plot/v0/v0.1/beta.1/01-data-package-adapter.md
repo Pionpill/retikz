@@ -22,12 +22,6 @@ beta.1 直接采用破坏式迁移。现有 `<Plot data model dataTransforms>`�
 3. channel / label / mark-local 组合 helper 留在 plot，并基于 data 包的字段解析和格式化能力实现。
 4. plot-react / plot-vanilla 需要数据类型时直接依赖 `@retikz/data`。
 
-## 被否决选项
-
-- **plot 继续拥有数据实现**：会让 chart / table 等宿主重复实现或反向依赖 plot。
-- **plot 顶层兼容转发 data API**：会扩大 plot 公共面，让 owner 边界长期模糊。
-- **保留深导入 shim**：会为未承诺入口制造兼容负担，阻碍 beta 阶段结构收敛。
-
 ## 公开契约与兼容性
 
 plot 入口保持 plot 自身 API：
@@ -52,12 +46,6 @@ import { lowerPlots, type IRPlot, type IRPlotTransform } from '@retikz/plot';
 plot package 已新增 `@retikz/data` dependency。plot schema、lowering pipeline、source field collection、locator、scale / channel / mark provider 相关数据读取路径已改为消费 data 包。plot public barrel 删除 data-only 类型和 helper 转发，plot-react / plot-vanilla 的 data 类型来源也改为直接依赖 data。
 
 plot-only transform 的 schema 和 provider 回归 plot，由 [ADR-02](./02-plot-transform-registration.md) 记录；data 内置能力边界由 [data ADR-02](../../../../data/v0/v0.1/beta.1/02-shared-provider-boundary.md) 记录。
-
-## 验证
-
-- plot lowering 使用 data 包后，transform / field / format / provenance 行为保持通过测试。
-- plot 顶层不再 re-export data-only surface，并由 public barrel 边界测试覆盖。
-- plot-react 与 plot-vanilla 通过直接 data dependency 完成类型检查与 adapter 测试。
 
 ## 遗留风险
 

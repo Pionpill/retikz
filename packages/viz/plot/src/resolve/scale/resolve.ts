@@ -14,6 +14,7 @@ import type { IRPlotMarkOperation, IRPlotScale, IRPlotScaleOperation } from '../
 import type { ScaleResolveContext } from './types';
 
 import { isBuiltinScaleOperation } from '../../contract';
+import { RetikzPlotError } from '../../error';
 import { safeExtent } from '../../providers';
 import { isBuiltinMark, PathClosureKind, PlotMark, PlotScale } from '../../schemas';
 import { resolvePaddedDomain } from './domain';
@@ -28,7 +29,7 @@ export const resolveScaleDefinition = (
 ): AnyScaleDefinition => {
   const def = context.registry.get(operation.type);
   if (def === undefined) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: scale type "${operation.type}" is not registered; pass a ScaleDefinition via options.scaleDefinitions`,
     );
   }
@@ -88,7 +89,7 @@ const resolveBuiltinPositionOperation = (
       const sourceDomain = operation.domain ?? safeExtent(numericValues);
       const exponent = operation.exponent ?? 2;
       if (!Number.isInteger(exponent) && (sourceDomain[0] < 0 || sourceDomain[1] < 0)) {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: pow scale "${operation.name}" with non-integer exponent ${exponent} requires a non-negative domain (got [${sourceDomain[0]}, ${sourceDomain[1]}])`,
         );
       }
@@ -177,7 +178,7 @@ export const resolvePositionScale = (
 ): PositionScale => {
   const def = resolveScaleDefinition(operation, context);
   if (def.family !== 'position') {
-    throw new Error(
+    throw new RetikzPlotError(
       `resolvePositionScale: ${operation.type} scale "${operation.name}" cannot drive a positional (x/y) channel; color scales bind the color channel only`,
     );
   }
@@ -198,12 +199,12 @@ export const resolveChannelScale = (
 ): ChannelScaleResolution => {
   const def = resolveScaleDefinition(operation, scaleContext);
   if (def.family !== 'channel') {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: scale "${operation.name}" of type "${operation.type}" is not a color scale (color channels bind ordinal / sequential / diverging / quantize / threshold / quantile)`,
     );
   }
   if (options.checkFieldCompatible !== false && !def.isFieldCompatible(context.fieldType)) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: color scale "${operation.name}" (${operation.type}) is incompatible with a ${context.fieldType ?? 'untyped'} field`,
     );
   }
@@ -224,7 +225,7 @@ export const assertScaleFieldCompatible = (
   const def = context.registry.get(scaleType);
   if (def === undefined || def.family !== 'position') return;
   if (!def.isFieldCompatible(fieldType)) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: coordinate.${role} scale "${scaleName}" (${scaleType}) is incompatible with ${fieldType} field`,
     );
   }
@@ -249,7 +250,7 @@ export const assertBaselineScaleCompatible = (
           (mark.closure?.kind === PathClosureKind.Baseline || mark.closure?.kind === PathClosureKind.Stack))),
   );
   if (hasBaselineMark) {
-    throw new Error(
+    throw new RetikzPlotError(
       `nonlinear continuous scale (${valueScaleType}) cannot be used with interval/area/path closure because their baseline participates in the value axis; use a linear value scale or an open point/line mark`,
     );
   }

@@ -4,6 +4,7 @@ import type { InputTable } from '@retikz/table-vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
+import { RetikzFoundationError } from '@retikz/foundation';
 import { Layout, ThemeProvider } from '@retikz/react';
 import {
   createDetailTableIR,
@@ -301,13 +302,14 @@ describe('Table React components', () => {
         </Layout>,
       ),
     ).toThrow(/embedded.*id.*non-empty/i);
-    expect(() =>
+    const renderBlankId = () =>
       renderToStaticMarkup(
         <Layout>
           <ManualTable id={'\u2003'} rows={[[null]]} />
         </Layout>,
-      ),
-    ).toThrowError('table react: embedded manual Table spec id must be non-empty');
+      );
+    expect(renderBlankId).toThrowError(RetikzFoundationError);
+    expect(renderBlankId).toThrowError('table react embedded manual Table spec id must be a non-empty string.');
     expect(() =>
       renderToStaticMarkup(
         <Layout>

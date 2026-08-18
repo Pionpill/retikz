@@ -4,6 +4,7 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { defineCellVisualScale } from '../../contract';
+import { RetikzTableError } from '../../error';
 
 const NonNullScalarSchema = ScalarValueSchema.refine(value => value !== null, {
   message: 'ordinal domain values must not be null',
@@ -39,7 +40,7 @@ export const ORDINAL_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
     if (domain.length === 0) return undefined;
     const availableRange = options.range ?? context.categoricalColors;
     if (availableRange.length < domain.length) {
-      throw new Error(`ordinal-color range requires at least ${domain.length} colors`);
+      throw new RetikzTableError(`ordinal-color range requires at least ${domain.length} colors`);
     }
     const range = availableRange.slice(0, domain.length);
     const colors = new Map(domain.map((value, index) => [value, range[index]]));

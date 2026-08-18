@@ -1,6 +1,7 @@
 import type { AnyChannelDefinition } from '../../contract';
 import type { BuiltinTextChannelOptions } from './features';
 
+import { RetikzPlotError } from '../../error';
 import { createBuiltinPaintChannels, createBuiltinTextChannels, DELIVERY_CHANNELS } from './features';
 
 /**
@@ -72,7 +73,7 @@ export const resolveChannelRegistry = (options: ChannelRegistryOptions = {}): Ch
   const definitions: Array<AnyChannelDefinition> = [];
   const addDefinition = (def: AnyChannelDefinition): void => {
     if (def.channel.trim() === '') {
-      throw new Error('lowerPlots: channel definition must use a non-empty channel name');
+      throw new RetikzPlotError('lowerPlots: channel definition must use a non-empty channel name');
     }
     definitions.push(def);
     if (!registry.has(def.channel)) registry.set(def.channel, def);
@@ -82,10 +83,10 @@ export const resolveChannelRegistry = (options: ChannelRegistryOptions = {}): Ch
   }
   for (const def of options.custom ?? []) {
     if (BUILTIN_CHANNEL_NAMES.has(def.channel)) {
-      throw new Error(`lowerPlots: custom channel "${def.channel}" collides with a built-in channel name`);
+      throw new RetikzPlotError(`lowerPlots: custom channel "${def.channel}" collides with a built-in channel name`);
     }
     if (definitions.some(registered => registered.channel === def.channel)) {
-      throw new Error(`lowerPlots: duplicate custom channel registration: "${def.channel}"`);
+      throw new RetikzPlotError(`lowerPlots: duplicate custom channel registration: "${def.channel}"`);
     }
     addDefinition(def);
   }

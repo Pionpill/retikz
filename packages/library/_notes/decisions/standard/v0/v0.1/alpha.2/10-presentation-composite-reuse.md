@@ -107,33 +107,7 @@ Legend 的 layout-aware compile 遵循 Core ADR-11：
 - 外部扩展与下游闭环：四个 composite 继续通过 Core `CompositeDefinition` registry 和显式 compile options 接入；Legend sample 的自定义 composite 由同一 Core registry 提供。下游接收 Core Scene / manifest、Standard artifact 与 adapter parity，不通过 Standard 私有发现或包根副作用注册
 - 不支持边界：本 ADR 不自动迁移 Plot / Table / Gantt，不新增 renderer-specific presentation，不从 Scene 反推领域语义，不把领域数据模型下沉到 Core，也不提供 DOM / renderer measurement、全局停靠、碰撞、分页或交互 runtime
 
-## 架构验证
-
-- 是否可由现有能力组合：Axes / Grid / Frame 可以由 Core Scope、Path、Node、RectangleStep 与现有 Standard style fragments 组合；Legend 可以由 Core ADR-08 的 probe / replay 与 Standard shared Box/Flex/Overlay engine 组合。Core ADR-11 是 Legend 完整 root Scope surface 的前置 capability
-- math / core / render / adapter 责任切分：lattice / 领域坐标和排版规则留在 Standard；通用 geometry / Path / Node / Scope / layout transaction 留在 Core / Math；render 只执行 Scene；React / Vanilla 只转换 authoring
-- 是否需要新 IR / contract / registry：需要扩展四个 Standard schema 以组合 Core Scope props，并把现有 lower shape 冻结为稳定 root contract；不新增 parallel IR、renderer primitive、lower registry 或 sample registry
-- Scene / manifest / renderer / diagnostics 如何闭环：root Scope、Path、Node、RectangleStep 和 replay 通过 canonical Core compile 输出既有 Scene / manifest；Standard artifact 只保存自身的 layout / Legend domain vocabulary；Core 处理 identity、namespace、resources、clip、z-order 与 diagnostics
-- provenance / locator / Interaction Readiness 是否适用：Core occurrence、Frame authored identity、Legend item / tick key 和 host occurrence 继续分层；Standard 不复制 Plot / Table lineage，也不把 root id 误用为领域 locator
-- 结论：扩展 Standard 当前 Presentation 域并补齐 Core ADR-11 的消费面；所有可 lower 的公共能力直接复用 lower owner，不上移领域语义，不在 adapter / renderer 旁路补齐
-
-## 能力完备性检查
-
-- 能力链路：Standard domain schema / definition → Core Scope / Path / Node / RectangleStep 或 Box / replay contract → canonical compile → Scene / manifest / artifact / diagnostics → React / Vanilla parity → 双语 docs
-- 内置与自定义：四个 Standard definition 继续使用 Core 唯一 composite registry；Legend 的 nested sample / custom composite 依赖显式注入，内置与自定义走同一 resolver、provider、probe、replay 和 diagnostics
-- lower surface：所有公开 root Scope props、border style、generated Core child 的已开放字段必须有直接 lower、明确领域转换或显式拒绝；没有“schema 接受但 pipeline 忽略”的隐含例外
-- 阶段结论：本 ADR 是 alpha.2 的 Proposed architecture change。Core ADR-11、Standard ADR-10 与 Legend ADR-09 必须共同通过 Architecture Gate 并经人工确认后才允许实现；在此之前不把 presentation reuse 称为完成或 publish-ready
-
-## 被否决方案
-
-- **继续返回 Path / Node 数组**：无法表达共享 Scope 的 transform、style、clip、identity、z-order、metadata、animation 与 bounds
-- **每个 composite 复制一份 Scope / Path / Node schema 或 lower 算法**：新增 Core 字段、默认值、诊断和 renderer 行为时必然漂移
-- **把 Frame border style 留在 root 顶层或复用 root Scope style 作为 border style**：两个 owner 竞争同一字段，无法区分组级 cascade 与 border Path 显式样式
-- **Grid 继续手写矩形 move / line / cycle**：维护第二套 Core rectangle geometry，绕开 RectangleStep 的 canonical compile 和后续 capability
-- **把 Legend 的 placement / style / identity 放进 replay wrapper**：破坏 authored Scope 与 compile-local replay 的职责边界，并让 empty / nested / clip 语义依赖 Standard 私有实现
-- **由 Vanilla occurrence 或 React key 生成 Standard root id**：把宿主生命周期错误地提升为持久化 identity
-- **为 Plot / Table 提前迁移而扩大本 ADR**：会把领域 API、provenance 和产品排期混入 Standard presentation 的通用契约
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Plot、Table、Gantt 或其它 Tier 2 的真实领域迁移、公开 API 与 artifact 变化
 - Axes / Grid 的全新数学模型、自动布局、碰撞避让或交互语义

@@ -3,6 +3,7 @@ import type { FC } from 'react';
 
 import type { PathVisualProps } from './shape-helpers';
 
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { Path } from '../../kernel/components';
 import { Step } from '../../kernel/components';
 import { pickPathVisual, requireXY } from './shape-helpers';
@@ -44,7 +45,8 @@ export const Rectangle: FC<RectangleProps> = props => {
     from = c1;
     to = [c1[0] + props.width, c1[1] + props.height];
   } else {
-    throw new Error(
+    throw new RetikzReactError(
+      RetikzReactErrorCode.Sugar,
       '<Rectangle> 需要 { corner1, corner2 } / { center, width, height } / { center, side } / { corner1, width, height } 之一',
     );
   }

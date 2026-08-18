@@ -84,7 +84,7 @@ type IRPlotAxisGuide = {
 3. 明确“不测量文字”，保持 lowering 纯计算和 renderer-agnostic。
 4. `AxisGuide.title` 放在 guide 上，因为 title 属于某根 axis，而不是 coordinate scope。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不做自动文字测量和 label collision avoidance。
 - 不做自由 dashboard layout、inset、legend packer。

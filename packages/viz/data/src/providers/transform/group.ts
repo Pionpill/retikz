@@ -8,6 +8,7 @@ import type {
 import type { ExternalRow } from '../../shared';
 
 import { type TransformContext } from '../../contract';
+import { RetikzDataError } from '../../error';
 import { resolveFieldPath } from '../data';
 import { applyReducerOperation, applySelectorOperation, reducerOutputFields } from '../statistics';
 import { groupRowsByFields } from './shared';
@@ -30,11 +31,11 @@ const assertReducerOutputFields = (
   for (const metric of metrics) {
     for (const field of reducerOutputFields(metric, context.statisticsReducerRegistry)) {
       if (constraints.reservedFields?.has(field) === true) {
-        throw new Error(
+        throw new RetikzDataError(
           `data: reducer output field "${field}" must not collide with ${constraints.reservedLabel ?? 'a reserved output field'}`,
         );
       }
-      if (seen.has(field)) throw new Error(`data: duplicate reducer output field "${field}"`);
+      if (seen.has(field)) throw new RetikzDataError(`data: duplicate reducer output field "${field}"`);
       seen.add(field);
     }
   }

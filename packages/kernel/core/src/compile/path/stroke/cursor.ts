@@ -1,6 +1,5 @@
 import type { Transform } from '../../../contract';
-import type { CanonicalStep } from '../../../resolve/path';
-import type { PathTargetView } from '../../../resolve/path';
+import type { CanonicalStep, PathTargetView } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
 
 import { CompileWarningCode } from '../../constants';

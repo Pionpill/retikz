@@ -2,49 +2,49 @@ import { RetikzError } from '@retikz/foundation';
 
 import type { RuntimeDiagnostic } from '../diagnostic';
 import type { RuntimeProgramId } from '../identity';
-import type { RuntimeOwnerErrorCode } from './constants';
+import type { RetikzRuntimeOwnerErrorCode } from './constants';
 import type {
-  RuntimeErrorCodeValue,
-  RuntimeOwnerErrorCodeValue,
+  RetikzRuntimeErrorCodeValue,
+  RetikzRuntimeOwnerErrorCodeValue,
   RuntimeOwnerLifecycleDiagnostic,
   RuntimeOwnerPhaseValue,
 } from './types';
 
-import { RuntimeErrorCode } from './constants';
+import { RetikzRuntimeErrorCode } from './constants';
 
 type RuntimeOwnerLifecycleErrorCode = Extract<
-  RuntimeOwnerErrorCodeValue,
-  | typeof RuntimeOwnerErrorCode.CaptureFailed
-  | typeof RuntimeOwnerErrorCode.CollectIdentitiesFailed
-  | typeof RuntimeOwnerErrorCode.ReadFailed
-  | typeof RuntimeOwnerErrorCode.CompareFailed
-  | typeof RuntimeOwnerErrorCode.ChangeSetValidationFailed
+  RetikzRuntimeOwnerErrorCodeValue,
+  | typeof RetikzRuntimeOwnerErrorCode.CaptureFailed
+  | typeof RetikzRuntimeOwnerErrorCode.CollectIdentitiesFailed
+  | typeof RetikzRuntimeOwnerErrorCode.ReadFailed
+  | typeof RetikzRuntimeOwnerErrorCode.CompareFailed
+  | typeof RetikzRuntimeOwnerErrorCode.ChangeSetValidationFailed
 >;
 
-type RuntimeOwnerRegistryErrorCode = Extract<
-  RuntimeOwnerErrorCodeValue,
-  | typeof RuntimeOwnerErrorCode.Duplicate
-  | typeof RuntimeOwnerErrorCode.Unknown
-  | typeof RuntimeOwnerErrorCode.TokenInvalid
+type RetikzRuntimeOwnerRegistryErrorCode = Extract<
+  RetikzRuntimeOwnerErrorCodeValue,
+  | typeof RetikzRuntimeOwnerErrorCode.Duplicate
+  | typeof RetikzRuntimeOwnerErrorCode.Unknown
+  | typeof RetikzRuntimeOwnerErrorCode.TokenInvalid
 >;
 
-type RuntimeErrorDetails = Readonly<{
+type RetikzRuntimeErrorDetails = Readonly<{
   phase: string;
   owner?: string;
   program?: RuntimeProgramId;
   diagnostics: ReadonlyArray<RuntimeDiagnostic>;
 }>;
 
-type RuntimeOwnerErrorDetails = Readonly<{
+type RetikzRuntimeOwnerErrorDetails = Readonly<{
   owner: string;
   phase: RuntimeOwnerPhaseValue;
   diagnostics: ReadonlyArray<RuntimeOwnerLifecycleDiagnostic>;
 }>;
 
 /** Runtime 公共契约或 transaction 失败的结构化错误 */
-export class RuntimeError extends RetikzError<RuntimeErrorCodeValue, RuntimeErrorDetails> {
+export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCodeValue, RetikzRuntimeErrorDetails> {
   /** 稳定错误分类 */
-  readonly code: RuntimeErrorCodeValue;
+  readonly code: RetikzRuntimeErrorCodeValue;
   /** 发生失败的 Runtime 阶段 */
   readonly phase: string;
   /** 原始错误或无效输入 */
@@ -58,8 +58,9 @@ export class RuntimeError extends RetikzError<RuntimeErrorCodeValue, RuntimeErro
 
   /** 创建保留稳定 code、context 与 secondary diagnostics 的 Runtime 错误 */
   constructor(input: {
-    code: RuntimeErrorCodeValue;
+    code: RetikzRuntimeErrorCodeValue;
     phase: string;
+    message?: string;
     cause?: unknown;
     owner?: string;
     program?: RuntimeProgramId;
@@ -74,11 +75,11 @@ export class RuntimeError extends RetikzError<RuntimeErrorCodeValue, RuntimeErro
     };
     super({
       code: input.code,
-      message: `${input.code}: Runtime failed during ${input.phase}`,
+      message: input.message ?? `${input.code}: Runtime failed during ${input.phase}`,
       details,
       cause: input.cause,
     });
-    this.name = 'RuntimeError';
+    this.name = 'RetikzRuntimeError';
     this.code = input.code;
     this.phase = input.phase;
     this.cause = input.cause;
@@ -89,7 +90,10 @@ export class RuntimeError extends RetikzError<RuntimeErrorCodeValue, RuntimeErro
 }
 
 /** owner lifecycle callback 失败的稳定错误 */
-export class RuntimeOwnerError extends RetikzError<RuntimeOwnerLifecycleErrorCode, RuntimeOwnerErrorDetails> {
+export class RetikzRuntimeOwnerError extends RetikzError<
+  RuntimeOwnerLifecycleErrorCode,
+  RetikzRuntimeOwnerErrorDetails
+> {
   /** 稳定错误分类 */
   readonly code: RuntimeOwnerLifecycleErrorCode;
   /** 发生失败的 owner */
@@ -116,7 +120,7 @@ export class RuntimeOwnerError extends RetikzError<RuntimeOwnerLifecycleErrorCod
       details: { owner: input.owner, phase: input.phase, diagnostics },
       cause: input.cause,
     });
-    this.name = 'RuntimeOwnerError';
+    this.name = 'RetikzRuntimeOwnerError';
     this.code = input.code;
     this.owner = input.owner;
     this.phase = input.phase;
@@ -126,23 +130,26 @@ export class RuntimeOwnerError extends RetikzError<RuntimeOwnerLifecycleErrorCod
 }
 
 /** owner registry token 或 key 违反契约时的稳定错误 */
-export class RuntimeOwnerRegistryError extends RetikzError<RuntimeOwnerRegistryErrorCode, Readonly<{ owner: string }>> {
+export class RetikzRuntimeOwnerRegistryError extends RetikzError<
+  RetikzRuntimeOwnerRegistryErrorCode,
+  Readonly<{ owner: string }>
+> {
   /** 稳定错误分类 */
-  readonly code: RuntimeOwnerRegistryErrorCode;
+  readonly code: RetikzRuntimeOwnerRegistryErrorCode;
   /** 关联的 owner key */
   readonly owner: string;
   /** 原始错误或无效输入 */
   override readonly cause: unknown;
 
   /** 创建 registry contract 错误 */
-  constructor(code: RuntimeOwnerRegistryErrorCode, owner: string, cause?: unknown) {
+  constructor(code: RetikzRuntimeOwnerRegistryErrorCode, owner: string, cause?: unknown) {
     super({
       code,
       message: `${code}: invalid runtime owner "${owner}"`,
       details: { owner },
       cause,
     });
-    this.name = 'RuntimeOwnerRegistryError';
+    this.name = 'RetikzRuntimeOwnerRegistryError';
     this.code = code;
     this.owner = owner;
     this.cause = cause;
@@ -150,12 +157,12 @@ export class RuntimeOwnerRegistryError extends RetikzError<RuntimeOwnerRegistryE
 }
 
 /** Runtime identity 结构或 owner 约束无效时的稳定错误 */
-export class RuntimeIdentityError extends RetikzError<
-  typeof RuntimeErrorCode.IdentityInvalid,
+export class RetikzRuntimeIdentityError extends RetikzError<
+  typeof RetikzRuntimeErrorCode.IdentityInvalid,
   Readonly<{ owner: string }>
 > {
   /** identity 的稳定错误分类 */
-  readonly code = RuntimeErrorCode.IdentityInvalid;
+  readonly code = RetikzRuntimeErrorCode.IdentityInvalid;
   /** 关联的 owner 值 */
   readonly owner: string;
   /** 原始错误或无效输入 */
@@ -164,12 +171,12 @@ export class RuntimeIdentityError extends RetikzError<
   /** 创建 identity contract 错误 */
   constructor(owner: string, cause?: unknown) {
     super({
-      code: RuntimeErrorCode.IdentityInvalid,
-      message: `${RuntimeErrorCode.IdentityInvalid}: invalid runtime identity for owner "${owner}"`,
+      code: RetikzRuntimeErrorCode.IdentityInvalid,
+      message: `${RetikzRuntimeErrorCode.IdentityInvalid}: invalid runtime identity for owner "${owner}"`,
       details: { owner },
       cause,
     });
-    this.name = 'RuntimeIdentityError';
+    this.name = 'RetikzRuntimeIdentityError';
     this.owner = owner;
     this.cause = cause;
   }

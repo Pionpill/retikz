@@ -24,6 +24,15 @@ export const curvePlaygroundControls = definePreviewControls({
           ],
         },
         {
+          kind: 'point',
+          id: CurvePlaygroundControlId.ControlPoint,
+          label: 'Control point',
+          defaultValue: [-25, 15],
+          min: [-150, -80],
+          max: [150, 80],
+          step: 5,
+        },
+        {
           kind: 'range',
           id: CurvePlaygroundControlId.Tension,
           label: 'tension',
@@ -40,7 +49,7 @@ export const curvePlaygroundControls = definePreviewControls({
 /** Stable state, presets, and API coverage for the English curve playground */
 export const previewControlContract = {
   controls: curvePlaygroundControls,
-  canonicalValues: { pointSet: 'uneven', tension: 1 },
+  canonicalValues: { pointSet: 'uneven', controlPoint: [-25, 15], tension: 1 },
   presets: [
     { id: 'uneven', label: 'Uneven spacing', values: { pointSet: 'uneven', tension: 1 } },
     { id: 'zigzag', label: 'Zigzag', values: { pointSet: 'zigzag', tension: 0.7 } },

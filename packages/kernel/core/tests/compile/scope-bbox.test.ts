@@ -4,6 +4,7 @@ import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import type { NodeLayout } from '../../src/compile/node';
 import type { TextMeasurer } from '../../src/compile/text';
 
+import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { boxInsets } from '../../src/compile/node';
 import { createScopeRectangleLayout } from '../../src/compile/node';
@@ -131,7 +132,7 @@ describe('scope.id bbox happy path', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
     // g bbox 中心 ≈ (40, 30)（A、B、C 4 角 AABB 的中心：x 范围含 A.left~B.right、y 范围含 A.top~C.bottom）；
     // orbit = (40 + 200, 30) = (240, 30)；end 经 boundary clip 后 x 接近 240
     const end = lineTo(topPath(compiled.primitives));
@@ -270,7 +271,7 @@ describe('scope.id bbox happy path', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'POLAR_ORIGIN_UNRESOLVED')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.PolarOriginUnresolved)).toHaveLength(0);
     // g bbox 中心 ≈ (30, 0)，orbit = (30, 0) + (100, 0) = (130, 0)
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -303,7 +304,7 @@ describe('scope.id bbox happy path', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'AT_TARGET_UNRESOLVED')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.AtTargetUnresolved)).toHaveLength(0);
     // g 中心 ≈ (20, 0)，follower = (20 + 80, 0) = (100, 0)
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -335,7 +336,7 @@ describe('scope.id bbox happy path', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'OFFSET_BASE_UNRESOLVED')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.OffsetBaseUnresolved)).toHaveLength(0);
     // g 中心 ≈ (20, 0)，anchor-pt = (30, 0)
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -393,7 +394,7 @@ describe('scope.id bbox 边界', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'OFFSET_BASE_UNRESOLVED')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.OffsetBaseUnresolved)).toHaveLength(0);
     // g bbox 退化为 (50, 50) 0×0 → rel = (50+10, 50) = (60, 50)
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -420,7 +421,7 @@ describe('scope.id bbox 边界', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'OFFSET_BASE_UNRESOLVED')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.OffsetBaseUnresolved)).toHaveLength(0);
     // rel = (0 + 25, 0) = (25, 0)
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -487,7 +488,7 @@ describe('scope.id bbox 错误路径', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
-    const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
+    const dups = warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId);
     expect(dups.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -512,7 +513,7 @@ describe('scope.id bbox 错误路径', () => {
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     const end = lineTo(topPath(compiled.primitives));
-    expect(warnings.filter(w => w.code === 'DUPLICATE_NODE_ID')).toHaveLength(1);
+    expect(warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(1);
     expect(end).toBeDefined();
     expect(Math.abs(end![0])).toBeLessThan(30);
   });
@@ -524,7 +525,7 @@ describe('scope.id bbox 错误路径', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
-    const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
+    const dups = warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId);
     expect(dups.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -545,7 +546,7 @@ describe('scope.id bbox 错误路径', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
-    const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
+    const dups = warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId);
     expect(dups.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -556,7 +557,7 @@ describe('scope.id bbox 错误路径', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     expect(() => compileToScene(ir, { onWarn: w => warnings.push(w) }).scene).not.toThrow();
-    const dups = warnings.filter(w => w.code === 'DUPLICATE_NODE_ID');
+    const dups = warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId);
     expect(dups.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -621,7 +622,7 @@ describe('scope.id bbox 交互', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
     // 4 个 node 旋转 45 后中心仍在距原点 50 的位置；bbox 中心 ≈ (0, 0)；端点 boundary clip 后不应离 (0,0) 过远
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
@@ -666,7 +667,7 @@ describe('scope.id bbox 交互', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
     // outer.right 与 inner.right 都应有 x 接近 150（C 全局位置）
     const paths = compiled.primitives.filter(p => p.type === 'path');
     expect(paths.length).toBeGreaterThanOrEqual(2);
@@ -707,7 +708,7 @@ describe('scope.id bbox 交互', () => {
       nodeDistance: 200,
       onWarn: w => warnings.push(w),
     }).scene;
-    expect(warnings.filter(w => w.code === 'AT_TARGET_UNRESOLVED')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.AtTargetUnresolved)).toHaveLength(0);
     // g 中心 ≈ (20, 0)，distance 200 → follower 中心 (220, 0)
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();

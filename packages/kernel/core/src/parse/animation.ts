@@ -1,5 +1,6 @@
 import type { IRAnimationOrigin, IRAnimationTrack } from '../schemas';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { AnimationProperty } from '../schemas';
 
 /** preset 公共可调项（各 preset 在此之上加专有项；默认值由各 preset 给） */
@@ -117,7 +118,7 @@ export const colorShift = (opts: ColorShiftOptions): IRAnimationTrack => {
   // 运行时守 JS 调用方漏传（类型已要求必填，故读为可空视图以做防御校验）
   const { from, to } = opts as { from?: string | null; to?: string | null };
   if (from == null || to == null) {
-    throw new Error('colorShift: `from` and `to` colors are required.');
+    throw new RetikzCoreError(RetikzCoreErrorCode.Parse, 'colorShift: `from` and `to` colors are required.');
   }
   return {
     property: (opts.channel ?? 'fill') === 'stroke' ? AnimationProperty.Stroke : AnimationProperty.Fill,
@@ -145,7 +146,10 @@ export const cameraTo = (opts: CameraToOptions): IRAnimationTrack => {
     to?: [number, number, number, number] | null;
   };
   if (from == null || to == null) {
-    throw new Error('cameraTo: `from` and `to` viewBox [x, y, w, h] are required.');
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Parse,
+      'cameraTo: `from` and `to` viewBox [x, y, w, h] are required.',
+    );
   }
   return {
     property: AnimationProperty.ViewBox,

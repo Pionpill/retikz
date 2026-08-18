@@ -1,16 +1,16 @@
-﻿# ADR-03：out/in 曲线 + self-loop / 路径整体变换 / 中段 marking（三搭车项）
+# ADR-03：out/in 曲线 + self-loop / 路径整体变换 / 中段 marking（三搭车项）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.8 plan §第三~五部分](./roadmap.md) · tikz-gap-analysis §2 Path / §3 Step（历史分析已删除） · 本 milestone [ADR-01](./01-arrow-definition.md)（marking 复用 arrow marker）/ [ADR-02](./02-path-generator-definition.md) · [alpha.1 Scope transform](../alpha.1)（路径变换复用）
+- 关联： · tikz-gap-analysis §2 Path / §3 Step（历史分析已删除） · 本 milestone [ADR-01](./01-arrow-definition.md)（marking 复用 arrow marker）/ [ADR-02](./02-path-generator-definition.md) · [alpha.1 Scope transform](../alpha.1)（路径变换复用）
 
-> **定位**：三项都是低成本搭车项，复用既有机器（bend→cubic / `GroupPrim.transforms` / `geometry/segment.ts`），不与两个注册面（ADR-01/02）互相阻塞。合一篇 ADR、按需插入实现。
+> 这些能力共享既有路径几何、变换与标记契约
 
 ## 背景
 
 - **out/in + self-loop**：`bend` step 原只有 `bendDirection` + `bendAngle`，编译成 cubic 近似，缺任意出 / 入射角、缺自环（`from == to` 同 node bend 画不出）。
-- **路径整体变换**：`PathSchema` 原无 transform 字段——单 path 旋转 / 缩放须包 `<Scope transforms>`。变换机器现成：`GroupPrim.transforms`（`core/src/primitive/group.ts`）+ `applyTransformChain`。
-- **中段 marking**：沿路径 t 处放图形。几何现成：`core/src/geometry/segment.ts` 给全 7 段类型 `*SegmentSample(seg, t) → { point, tangent }`（闭式 O(1)），`sloped` step label 已在用。原只能放文字 label。
+- **路径整体变换**：`PathSchema` 原无 transform 字段——单 path 旋转 / 缩放须包 `<Scope transforms>`。变换机器现成：`GroupPrim.transforms`（）+ `applyTransformChain`。
+- **中段 marking**：沿路径 t 处放图形。几何现成： 给全 7 段类型 `*SegmentSample(seg, t) → { point, tangent }`（闭式 O(1)），`sloped` step label 已在用。原只能放文字 label。
 
 ## 决策（三项各自）
 
@@ -32,13 +32,13 @@
 - 编译：对每个 mark 调 `*SegmentSample(seg, pos)` 取 `{ point, tangent }`，产按 tangent 定向的 marker primitive（复用 ADR-01 arrow marker / `MarkerPrimitive`）。
 - **不做**：真弧长参数化（`pos` 按段参数，沿用 label 同款便宜模型）；任意小图形 mark（留扩展，首批仅 arrow）。marking 计入 layout（避免远端 mark 被裁）。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **ArrowDefinition / MarkerPrimitive**→ [ADR-01](./01-arrow-definition.md)（marking 复用其 marker）。
 - **decorations（snake/coil）/ intersections / 真弧长参数化**：学术 / 装饰，跳过。
 
 ---
 
-> **实现指针**：level `yellow`（叠加 IR 字段 + compile，复用既有 bend→cubic / `GroupPrim` / `segment.ts`，不动注册面 / primitive 契约根本），纯叠加字段、零破坏。真源以代码为准——`BendStepSchema` out/in/looseness（`core/src/ir/path/step.ts`）、`PathSchema` rotate/scale/marks（`core/src/ir/path/path.ts`）、out/in→cubic + self-loop / path transform 包 GroupPrim / marks 调 segment.ts 产 marker（`core/src/compile/path/`）、变换机器（`core/src/primitive/group.ts` `applyTransformChain`）、采样（`core/src/geometry/segment.ts`）。测试在 `core/tests/compile/{path-outin-loop,path-transform,path-marks}.test.ts` 与 `core/tests/schemas/path/path-visual.schema.test.ts`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 待决策点）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `7141a9b0`；压缩前完整施工蓝图 = `git show 7141a9b0^:_notes/decisions/core/v0/v0.2/alpha.8/03-curve-transform-marking.md`。
+已实现本 ADR 的核心决策。兼容性：零破坏；其余默认行为、失败语义与公开契约以正文为准。

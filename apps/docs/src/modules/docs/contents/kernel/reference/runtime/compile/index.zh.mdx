@@ -50,6 +50,7 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 | --------------- | ------------------------ | ------- | ----------------------------------------------------------------------------------------- |
 | `padding`       | `number`                 | `10`    | layout 外围留白，单位为 user units                                                        |
 | `precision`     | `number`                 | `2`     | 输出 Scene 图元坐标、结构化 path command 与 layout 数值的小数位；内部几何保持 double 精度 |
+| `maxClipDepth`  | `number`                 | `32`    | 完整 Clip Definition 的 resolve 与 lower 共享递归边预算；超限或 active cycle 会失败       |
 | `nodeDistance`  | `number`                 | `24`    | `AtPosition` 未写 `distance` 时使用的默认距离                                             |
 | `labelDistance` | `number`                 | `12`    | `Node.label.distance` 未设置时，节点边界到旋转后标签视觉框的默认净距；必须为有限非负数    |
 | `fontSize`      | `number`                 | `16`    | 默认字号；同时作为字号 preset 与 `rem` 的根字号，不改变显式数字字号                       |
@@ -57,17 +58,17 @@ description: IR 到 Scene 的编译入口、布局选项、文字度量与 warni
 
 ### 扩展注册表
 
-| Option           | Type                                     | Default       | 说明                                                                                                                                                     |
-| ---------------- | ---------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shapes`         | `ReadonlyArray<ShapeDefinition>`         | Core 基础集合 | 注入自定义或 Standard 可选节点形状。见 [形状扩展](/library/standard/extension/shape)                                                                     |
-| `boundaries`     | `ReadonlyArray<BoundaryDefinition>`      | 内置集合      | 追加自定义连接面。见 [自定义连接面](/kernel/components/node/custom-boundary)                                                                             |
-| `clips`          | `ReadonlyArray<ClipDefinition>`          | Core 基础集合 | 注入自定义或 Standard 组合裁剪。见 [裁剪扩展](/library/standard/extension/clip)                                                                          |
-| `arrows`         | `ReadonlyArray<ArrowDefinition>`         | Core 基础集合 | 注入自定义或 Standard 可选箭头。见 [箭头扩展](/library/standard/extension/arrow)                                                                         |
-| `patterns`       | `ReadonlyArray<PatternDefinition>`       | 内置集合      | 追加自定义填充图案。见 [自定义图案](/kernel/components/effects/custom-pattern)                                                                           |
-| `pathGenerators` | `ReadonlyArray<PathGeneratorDefinition>` | 无            | 注入自定义路径生成器；Core 没有默认项。见 [路径生成器](/kernel/components/draw/path-generator)                                                           |
-| `pathKinds`      | `ReadonlyArray<PathKindDefinition>`      | 内置集合      | 追加自定义或可选 Standard path kind provider。见[自定义路径](/kernel/components/draw/custom-path)与[Standard Ribbon](/library/standard/extension/ribbon) |
+| Option           | Type                                     | Default       | 说明                                                                                                                                                           |
+| ---------------- | ---------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shapes`         | `ReadonlyArray<ShapeDefinition>`         | Core 基础集合 | 注入自定义或 Standard 可选节点形状。见 [形状扩展](/library/standard/extension/shape)                                                                           |
+| `boundaries`     | `ReadonlyArray<BoundaryDefinition>`      | 内置集合      | 追加自定义连接面。见 [自定义连接面](/kernel/components/node/custom-boundary)                                                                                   |
+| `clips`          | `ReadonlyArray<ClipDefinition>`          | Core `rect`   | 注入同时拥有 spec、shape 校验与 lowering 的完整裁剪定义。见[自定义裁剪区](/kernel/components/layout/custom-clip)与[裁剪扩展](/library/standard/extension/clip) |
+| `arrows`         | `ReadonlyArray<ArrowDefinition>`         | Core 基础集合 | 注入自定义或 Standard 可选箭头。见 [箭头扩展](/library/standard/extension/arrow)                                                                               |
+| `patterns`       | `ReadonlyArray<PatternDefinition>`       | 内置集合      | 追加自定义填充图案。见 [自定义图案](/kernel/components/effects/custom-pattern)                                                                                 |
+| `pathGenerators` | `ReadonlyArray<PathGeneratorDefinition>` | 无            | 注入自定义路径生成器；Core 没有默认项。见 [路径生成器](/kernel/components/draw/path-generator)                                                                 |
+| `pathKinds`      | `ReadonlyArray<PathKindDefinition>`      | 内置集合      | 追加自定义或可选 Standard path kind provider。见[自定义路径](/kernel/components/draw/custom-path)与[Standard Ribbon](/library/standard/extension/ribbon)       |
 
-传入的 definitions 会与对应 Core 基础集合合并；空 key 或与同次已注册项重名都会立即抛错，不会覆盖已有 provider。Standard 可选内容也走同一条合并与诊断路径。
+传入的 definitions 会与对应 Core 基础集合合并；空 key 或与同次已注册项重名都会立即抛错，不会覆盖已有 provider。`clips` 中每个完整 definition 使用同一个 kind 绑定 spec schema、shape schema、resolve 与 lower，并降低为 canonical path。Core 默认只含 `rect`，其余五种官方裁剪从 `@retikz/standard/clip` 显式装配，并走同一条合并与诊断路径。
 
 ### Theme token owner registry
 
@@ -369,8 +370,8 @@ selector 字段全部精确匹配。`owner` 只匹配声明者；`within` 按顺
     {
       label: 'failure ownership 与受控 raise',
       path: 'packages/kernel/core/src/compile/probe-failure.ts',
-      startLine: 154,
-      endLine: 208,
+      startLine: 61,
+      endLine: 115,
     },
     {
       label: '延迟解析 path 并回填原始输出位置',

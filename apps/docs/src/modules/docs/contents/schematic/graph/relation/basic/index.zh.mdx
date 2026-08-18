@@ -1,0 +1,58 @@
+---
+title: Relation 基础用法
+description: 用 Core Path 的 Step children 连接 Entity，并为路径添加 label 与常见路由步骤。
+---
+
+`Relation` 是 Graph 中表达显式关系的元素。基础用法直接使用 React 的 `<Step>` children，把起点、路径步骤和终点写成 Core Path 作者语法
+
+## 用法
+
+```tsx
+import { Layout, Step } from '@retikz/react';
+import { Entity, Relation } from '@retikz/graph-react';
+```
+
+```tsx
+<Layout width={420} height={160}>
+  <Entity id="start" role="terminal" position={[24, 56]}>
+    Start
+  </Entity>
+  <Entity id="step" role="stage" position={[220, 56]}>
+    Step
+  </Entity>
+  <Relation id="start-to-step" role="flow">
+    <Step kind="move" to="start" />
+    <Step to="step" label={{ text: 'next' }} />
+  </Relation>
+</Layout>
+```
+
+Relation 的 `id` 是 authored identity；每条路径至少从一个 `move` step 开始，再使用目标、坐标或其它 Core step 表达路径
+
+## 例子
+
+### Step 路径与 label
+
+Step 可以直接 target Entity，也可以 target 坐标；label 写在需要标注的具体 step 上。`fold`、polyline 等路由步骤仍然遵循 Core Path 约束
+
+<ComponentPreview files="relation-routing" size="lg" caption="对比直线、折线路由和带 label 的 Step" />
+
+### 默认箭头
+
+省略 `marks` 时，Relation 默认添加位于终点的箭头。显式 `marks` 会完整覆盖默认值，因此 `marks: []` 可以关闭箭头
+
+## API 参考
+
+| 属性            | 类型                      | 默认值      | 描述                                       |
+| --------------- | ------------------------- | ----------- | ------------------------------------------ |
+| `id`            | `string`                  | —           | 稳定的 authored identity                   |
+| `role`          | `RelationRoleValue`       | —           | 关系语义，只保留在 Graph IR                |
+| `children`      | `Array<IRStep>`           | —           | canonical Core Path Step 序列              |
+| `marks?`        | Core Path mark placements | 终点箭头    | 显式数组覆盖默认值；`[]` 关闭箭头          |
+| Core Path props | Core stroke Path props    | Core 默认值 | label、stroke、fill、transform 等沿用 Path |
+
+## 相关
+
+- [Relation 扩展用法](/schematic/graph/relation/extension)：Draw way、直接 IR 与 Vanilla
+- [Entity 基础用法](/schematic/graph/entity/basic)：创建可被 target 的对象
+- [Core Path](/kernel/components/draw/overview)：Relation 使用的底层路径契约

@@ -1,6 +1,8 @@
 import type { FlexLayoutItemInput, GridLayoutItemInput, OverlayLayoutItemInput } from '@retikz/layout';
 import type { InputChild, InputEmbedContext, InputEmbedContribution } from '@retikz/vanilla';
 
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
+
 type LayoutItem = FlexLayoutItemInput | GridLayoutItemInput | OverlayLayoutItemInput;
 type CoreProviderContribution = InputEmbedContribution['providerDependencies'];
 type InputEmbedAuthoringSites = NonNullable<InputEmbedContribution['authoringSites']>;
@@ -15,7 +17,13 @@ export const normalizeLayoutItems = <TItem extends LayoutItem>(
   authoringSites: InputEmbedAuthoringSites;
 }> => {
   const normalizeChildren = context.normalizeChildren;
-  if (normalizeChildren === undefined) throw new Error('Layout inputs require Kernel Vanilla normalizeScene.');
+  if (normalizeChildren === undefined) {
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.AuthoringInvalid,
+      message: 'Layout inputs require Kernel Vanilla normalizeScene.',
+      details: { operation: 'normalizeLayoutItems' },
+    });
+  }
   const items: Array<TItem> = [];
   const roots: Array<CoreProviderContribution['roots'][number]> = [];
   const providers: Array<CoreProviderContribution['providers'][number]> = [];
@@ -25,7 +33,11 @@ export const normalizeLayoutItems = <TItem extends LayoutItem>(
     const { child, ...item } = input;
     const normalized = normalizeChildren([child]);
     if (normalized.children.length !== 1) {
-      throw new Error('Layout LayoutItem must normalize to exactly one Core child');
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.AuthoringInvalid,
+        message: 'Layout LayoutItem must normalize to exactly one Core child',
+        details: { childCount: normalized.children.length },
+      });
     }
     roots.push(...normalized.providerDependencies.roots);
     providers.push(...normalized.providerDependencies.providers);

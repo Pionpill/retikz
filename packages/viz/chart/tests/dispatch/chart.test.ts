@@ -1,3 +1,4 @@
+import { isRetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
 const base = {
@@ -32,13 +33,14 @@ describe('Chart type dispatch', () => {
   });
 
   it.each(['scatter', 'unknown'])('rejects non-Base type %s at the type field', async type => {
-    const { bindChart, ChartResolveErrorCode } = await import('../../src/_chart/dispatch');
+    const { bindChart, RetikzChartResolveErrorCode } = await import('../../src/_chart/dispatch');
 
     try {
       bindChart({ ...base, type });
       expect.unreachable('bindChart should reject an unknown type');
     } catch (error) {
-      expect(error).toMatchObject({ code: ChartResolveErrorCode.UnknownType, path: ['type'] });
+      expect(isRetikzError(error)).toBe(true);
+      expect(error).toMatchObject({ code: RetikzChartResolveErrorCode.UnknownType, path: ['type'] });
     }
   });
 });

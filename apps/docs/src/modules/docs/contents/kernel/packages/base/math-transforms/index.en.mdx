@@ -1,0 +1,101 @@
+---
+title: Transforms
+description: Use @retikz/math to calculate between a shape's local coordinates, world coordinates, and two-dimensional affine transforms.
+---
+
+When a shape moves or rotates, the points that describe the shape can stay the same. A coordinate transform moves a point from the shape's own coordinate system into the coordinate system of the whole canvas, or converts it back again.
+
+This page starts with the common case of local and world coordinates, then introduces two-dimensional affine matrices for composing translation, scaling, and rotation. On a first read, start with the first section and come back to affine matrices when you need them.
+
+## Contents
+
+### Local and world coordinates
+
+Imagine a shape with its own orientation inside a larger canvas. The canvas has a fixed coordinate system, while the shape has another one: its center is the local origin, and its local `x` and `y` axes rotate with the shape.
+
+| Coordinate system | Origin and axes                                 | Common use                            |
+| ----------------- | ----------------------------------------------- | ------------------------------------- |
+| Local             | Origin at the shape center; axes rotate with it | Describe vertices, anchors, and edges |
+| World             | Origin and axes fixed to the whole canvas       | Draw shapes and relate them to others |
+
+In the diagram, the dashed lines are the fixed world axes, while the orange shape and orange axes belong to the same local coordinate system. Adjust the shape center, rotation, and local point in the control panel to see the same local point produce different world coordinates.
+
+<ComponentPreview
+  files="coordinate-spaces"
+  size="md"
+  caption="Adjust the shape center, rotation, and local point to see the world point move"
+/>
+
+`CenteredShape` describes this local coordinate system using a center and a rotation: `x` and `y` are the shape center in world coordinates, and `rotate` is the rotation in radians. `Math.PI / 4` is 45°; in screen coordinates, positive angles increase clockwise.
+
+```ts
+const shape: CenteredShape = { x: 100, y: 60, rotate: Math.PI / 4 };
+const world = localToWorld(shape, [20, 0]); // approximately [114.1, 74.1]
+const local = worldToLocal(shape, world); // approximately [20, 0]
+```
+
+`[20, 0]` is not a fixed canvas position. It means “20 units to the right of the shape center” in the shape's own coordinates. `localToWorld` rotates that point with the shape and then adds the shape center; `worldToLocal` performs the reverse operation.
+
+Choose the function from the data you already have:
+
+| Known data                          | Result you need               | Function       |
+| ----------------------------------- | ----------------------------- | -------------- |
+| A local vertex, anchor, or boundary | Its position on the canvas    | `localToWorld` |
+| A canvas mouse or hit-test point    | Its position inside the shape | `worldToLocal` |
+
+The two functions are inverses. Both return a new point and leave the input tuple unchanged.
+
+#### API reference
+
+| API             | Category | Purpose                                                    |
+| --------------- | -------- | ---------------------------------------------------------- |
+| `CenteredShape` | Type     | Describes a shape center in world coordinates and rotation |
+| `localToWorld`  | Method   | Convert a shape-local point into world coordinates         |
+| `worldToLocal`  | Method   | Convert a world point into shape-local coordinates         |
+
+### Two-dimensional affine matrices
+
+When a transform is more than “rotate around a shape center”—for example, when it also includes scaling, reflection, or shear—or when several transforms need to be composed, use a two-dimensional affine matrix. Think of it as a recipe for calculating a new point: give it `[x, y]`, and it produces `[x', y']`.
+
+The first four values change direction and size; the final two values translate the result:
+
+| Part           | Intuitive role                                   |
+| -------------- | ------------------------------------------------ |
+| `[a, b, c, d]` | Combine rotation, scaling, reflection, and shear |
+| `[e, f]`       | Move the result to a new position                |
+
+`AffineMatrix` follows the common SVG / Canvas `[a, b, c, d, e, f]` order. For a point, the calculation is:
+
+```text
+x' = a × x + c × y + e
+y' = b × x + d × y + f
+```
+
+For example, these matrices first scale the horizontal coordinate by 2 and the vertical coordinate by 3, then move the result right by 10 and down by 20:
+
+```ts
+const translate: AffineMatrix = [1, 0, 0, 1, 10, 20];
+const scale: AffineMatrix = [2, 0, 0, 3, 0, 0];
+const matrix = multiplyAffine(translate, scale);
+
+applyAffine(matrix, [4, 5]); // [18, 35]: scale first, then translate
+```
+
+In `multiplyAffine(outer, inner)`, `inner` is the inner transform applied first, and `outer` is the outer transform applied afterward. The example therefore scales first and translates second; swapping the arguments changes the result.
+
+Choose between the two capabilities this way: use `localToWorld` / `worldToLocal` for local points around a shape center; use `AffineMatrix`, `multiplyAffine`, and `applyAffine` for arbitrary linear changes or multi-step transform chains.
+
+#### API reference
+
+| API               | Category | Purpose                                                     |
+| ----------------- | -------- | ----------------------------------------------------------- |
+| `AffineMatrix`    | Type     | Represents a 2D affine matrix in `[a, b, c, d, e, f]` order |
+| `AFFINE_IDENTITY` | Constant | Represents the identity matrix, which changes nothing       |
+| `multiplyAffine`  | Method   | Compose two transforms: inner first, outer second           |
+| `applyAffine`     | Method   | Map a point using the affine-matrix formula                 |
+
+## Related
+
+- [Base packages overview](/kernel/packages/base)
+- [Geometric primitives](/kernel/packages/base/math-primitives)
+- [Geometric algorithms](/kernel/packages/base/math-algorithms)

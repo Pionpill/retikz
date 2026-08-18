@@ -39,7 +39,7 @@ const PointSets = {
 } satisfies Record<CurveValues['pointSet'], Array<Position>>;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const points = PointSets[values.pointSet];
+  const points = PointSets[values.pointSet].map((point, index) => (index === 2 ? values.controlPoint : point));
   const segments = curve.catmullRomToCubic(points, values.tension);
 
   return (
@@ -52,7 +52,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         ))}
       </Path>
       {points.map((point, index) => (
-        <Circle key={`${point[0]}-${point[1]}-${index}`} center={point} radius={4} fill="dodgerblue" stroke="none" />
+        <Circle
+          key={`${point[0]}-${point[1]}-${index}`}
+          center={point}
+          radius={4}
+          fill={index === 2 ? 'seagreen' : 'dodgerblue'}
+          stroke="none"
+        />
       ))}
     </Layout>
   );
@@ -60,7 +66,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
 export const previewSource = controlledPreview.source;
 
-/** 直接渲染 math 返回的 CubicSegment，并保留 knot 折线作为参照 */
+/** 直接渲染 math 返回的 CubicSegment，并保留可移动 knot 与折线参照 */
 const Demo: FC = controlledPreview.Component;
 
 export default Demo;

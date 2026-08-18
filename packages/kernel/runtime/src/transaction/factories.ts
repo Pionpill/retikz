@@ -9,7 +9,7 @@ import type {
 } from '../owner';
 import type { RuntimeOwnerInput, RuntimeOwnerUpdate, RuntimeSnapshot } from './types';
 
-import { RuntimeError } from '../error';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 
 /** command 私有保存的 owner 输入与 lifecycle 入口 */
 export type RuntimeOwnerCommandExecutor = Readonly<{
@@ -62,7 +62,7 @@ export const isRuntimeRevision = (value: unknown): value is RuntimeRevision =>
 /** 把已验证 safe integer 转成 Runtime 内部 revision */
 export const createRuntimeRevision = (value: number): RuntimeRevision => {
   if (!isRuntimeRevision(value)) {
-    throw new RuntimeError({ code: 'RUNTIME_REVISION_INVALID', phase: 'revision', cause: value });
+    throw new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: 'revision', cause: value });
   }
   return value;
 };
@@ -70,10 +70,10 @@ export const createRuntimeRevision = (value: number): RuntimeRevision => {
 /** 为非空 transaction 创建下一 revision，并在 safe integer 上界前 fail-loud */
 export const createNextRuntimeRevision = (current: RuntimeRevision): RuntimeRevision => {
   if (!isRuntimeRevision(current)) {
-    throw new RuntimeError({ code: 'RUNTIME_REVISION_INVALID', phase: 'revision', cause: current });
+    throw new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: 'revision', cause: current });
   }
   if (current === Number.MAX_SAFE_INTEGER) {
-    throw new RuntimeError({ code: 'RUNTIME_REVISION_EXHAUSTED', phase: 'revision', cause: current });
+    throw new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionExhausted, phase: 'revision', cause: current });
   }
   return createRuntimeRevision(current + 1);
 };
@@ -88,10 +88,18 @@ export const createRuntimeChangeSet = <TChange>(
   changes: ReadonlyArray<TChange>,
 ): RuntimeChangeSet<TChange> => {
   if (!isRuntimeRevision(baseRevision)) {
-    throw new RuntimeError({ code: 'RUNTIME_REVISION_INVALID', phase: 'revision', cause: baseRevision });
+    throw new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.RevisionInvalid,
+      phase: 'revision',
+      cause: baseRevision,
+    });
   }
   if (!Array.isArray(changes)) {
-    throw new RuntimeError({ code: 'RUNTIME_CHANGESET_INVALID', phase: 'change-set', cause: changes });
+    throw new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.ChangeSetInvalid,
+      phase: 'change-set',
+      cause: changes,
+    });
   }
   const changeSet = Object.freeze({
     baseRevision,
@@ -133,8 +141,8 @@ const createRuntimeOwnerCommandExecutor = <TInput, TValue, TRead, TChange>(
       revision: RuntimeRevision,
     ): RuntimeSnapshot<TRead> => {
       if (requestedOwner !== owner) {
-        throw new RuntimeError({
-          code: 'RUNTIME_OWNER_COMMAND_INVALID',
+        throw new RetikzRuntimeError({
+          code: RetikzRuntimeErrorCode.OwnerCommandInvalid,
           phase: 'snapshot',
           owner: requestedOwner.key,
           cause: requestedOwner,
@@ -146,8 +154,8 @@ const createRuntimeOwnerCommandExecutor = <TInput, TValue, TRead, TChange>(
       requestedOwner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
     ): RuntimeChangeSet<TChange> | undefined => {
       if (requestedOwner !== owner) {
-        throw new RuntimeError({
-          code: 'RUNTIME_OWNER_COMMAND_INVALID',
+        throw new RetikzRuntimeError({
+          code: RetikzRuntimeErrorCode.OwnerCommandInvalid,
           phase: 'change-set',
           owner: requestedOwner.key,
           cause: requestedOwner,
@@ -178,8 +186,8 @@ export const createRuntimeOwnerUpdate = <TInput, TValue, TRead, TChange>(
   changeSet?: RuntimeChangeSet<TChange>,
 ): RuntimeOwnerUpdate => {
   if (changeSet !== undefined && !isRuntimeChangeSet(changeSet)) {
-    throw new RuntimeError({
-      code: 'RUNTIME_CHANGESET_INVALID',
+    throw new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.ChangeSetInvalid,
       phase: 'change-set',
       owner: owner.key,
       cause: changeSet,
@@ -198,9 +206,20 @@ export const getRuntimeOwnerCommandExecutor = (
 ): RuntimeOwnerCommandExecutor => {
   const candidate: unknown = command;
   if (typeof candidate !== 'object' || candidate === null || !runtimeOwnerCommands.has(candidate)) {
-    throw new RuntimeError({ code: 'RUNTIME_OWNER_COMMAND_INVALID', phase: 'command', cause: command });
+    throw new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.OwnerCommandInvalid,
+      phase: 'command',
+      cause: command,
+    });
   }
   const executor = runtimeOwnerCommandExecutors.get(command);
-  if (executor === undefined) throw new Error('runtime owner command: missing executor');
+  if (executor === undefined) {
+    throw new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.InternalInvariant,
+      message: 'runtime owner command: missing executor',
+      phase: 'owner-command',
+      cause: command,
+    });
+  }
   return executor;
 };

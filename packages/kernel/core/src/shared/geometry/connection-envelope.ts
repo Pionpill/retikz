@@ -2,6 +2,8 @@ import type { Position } from '@retikz/math';
 
 import type { Rect } from './rect';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+
 /** 规则连接面包络种类 */
 type ConnectionEnvelopeKind = 'circle' | 'ellipse' | 'rectangle';
 
@@ -11,7 +13,10 @@ type ConnectionEnvelope = { halfWidth: number; halfHeight: number };
 /** 校验点集包络不是单点，并返回稳定的等轴退化 fallback */
 const positiveRadius = (radius: number): number => {
   if (!Number.isFinite(radius) || radius <= 0) {
-    throw new Error('connection envelope is degenerate: expected at least one positive half-axis');
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Geometry,
+      'connection envelope is degenerate: expected at least one positive half-axis',
+    );
   }
   return radius;
 };

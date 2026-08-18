@@ -8,6 +8,7 @@ import type {
 } from '../../contract';
 
 import { defineCompileObserver } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 
 type RuntimeObserverEntry = Readonly<{
   definition: CompileObserverDefinition;
@@ -49,12 +50,18 @@ export const createCompileObservationRuntime = (
   const entries: Array<RuntimeObserverEntry> = definitions.map((definition, index) => {
     const normalized = defineCompileObserver(definition);
     if (seen.has(normalized.key)) {
-      throw new Error(`observeCompileToScene: duplicate observer key '${normalized.key}' at index ${index}.`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
+        `observeCompileToScene: duplicate observer key '${normalized.key}' at index ${index}.`,
+      );
     }
     seen.add(normalized.key);
     const session: unknown = normalized.createSession();
     if (!isCompileObserverSession(session)) {
-      throw new Error(`observeCompileToScene: observer '${normalized.key}' created an invalid session.`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
+        `observeCompileToScene: observer '${normalized.key}' created an invalid session.`,
+      );
     }
     return { definition: normalized, session };
   });
@@ -67,7 +74,10 @@ export const createCompileObservationRuntime = (
       for (const entry of entries) {
         const value = entry.session.select(Object.freeze({ owner: site.owner, sourcePath: site.sourcePath }));
         if (typeof value !== 'boolean') {
-          throw new Error(`observeCompileToScene: observer '${entry.definition.key}' select() must return boolean.`);
+          throw new RetikzCoreError(
+            RetikzCoreErrorCode.Compile,
+            `observeCompileToScene: observer '${entry.definition.key}' select() must return boolean.`,
+          );
         }
         if (value) selected.push(entry.definition.key);
       }
@@ -80,7 +90,11 @@ export const createCompileObservationRuntime = (
     ): void => {
       for (const key of keys) {
         const entry = byKey.get(key);
-        if (entry === undefined) throw new Error(`observeCompileToScene: unknown selected observer key '${key}'.`);
+        if (entry === undefined)
+          throw new RetikzCoreError(
+            RetikzCoreErrorCode.Compile,
+            `observeCompileToScene: unknown selected observer key '${key}'.`,
+          );
         entry.session.observe(observation, context);
       }
     },

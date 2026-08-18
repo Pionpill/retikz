@@ -3,6 +3,7 @@ import type { ProviderCollection } from '../../providers/registry';
 import type { IRJsonObject, IRNode, IRShapeRef, JsonValue } from '../../schemas';
 import type { ShapeResolution } from './types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { providerDefinitionOf } from '../../providers/registry';
 import { BuiltinShape, JsonObjectSchema } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
@@ -41,7 +42,10 @@ const resolveNodeShapePreset = (shape: IRNode['shape']): NodeShapePresetResoluti
     const rawParams = ref.params ?? {};
     const unsupported = Object.keys(rawParams).filter(key => key !== 'aspectRatio');
     if (unsupported.length > 0) {
-      throw new Error(`Diamond shape only accepts aspectRatio; received ${unsupported.join(', ')}`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Resolve,
+        `Diamond shape only accepts aspectRatio; received ${unsupported.join(', ')}`,
+      );
     }
     return { type: 'polygon', params: { sides: 4, rotate: 0, ...rawParams } };
   }

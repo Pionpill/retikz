@@ -32,7 +32,7 @@ export type CoordinateType = ValueOf<typeof PlotCoordinate>;
 - 位置 scale 绑定归 coordinate（本方案）vs channel 自带 `scale`（Vega-Lite 风格）是宜现在定死的分叉——若改为 channel 持有，将是 ADR-05 的破坏性改动。
 - 非位置通道（color / size 等自带 scale）留 alpha.3 在 channel 上加 `scale` 字段**非破坏接入**，与「位置 scale 归 coordinate」并存不矛盾。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **polar2D / linear1D coordinate** → alpha.4 / 后续。
 - **坐标系投影几何 / extent 推断 / 引用完整性校验** → ADR-06 lowering（及 alpha.4 几何）。

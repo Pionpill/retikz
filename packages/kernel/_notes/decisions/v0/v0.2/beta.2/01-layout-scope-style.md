@@ -2,10 +2,10 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-31
-- 落地日期：2026-06-01（yellow；react kernel + 测试 + 文档；core 零改动）
-- 关联：[v0 roadmap](../../roadmap.md) · [`flow-beta` SKILL](../../../../../../../.agents/skills/flow-beta/SKILL.md)（**本 ADR 是对其"beta 不开新功能 ADR"的有意破例**）· `<Scope>`（复用其级联语义）
+- 落地日期：2026-06-01
+- 关联：[v0 roadmap](../../roadmap.md)（**本 ADR 是对其"beta 不开新功能 ADR"的有意破例**）· `<Scope>`（复用其级联语义）
 
-> ⚠️ **流程破例说明**：给 `LayoutProps` 加公开级联样式 props 属于"新增公开 API / 新功能"，按 `flow-beta` 规则应推到下一个 alpha 窗口。2026-05-31 由维护者决定在 v0.2-beta.2 内有意破例接入——理由：改动小、纯增量（非破坏）、且把高频样板（每张图都套一层根 `<Scope>`）一次性消掉，收益明确。记录在案以保审计 trail 完整。
+该 ADR 记录的是已确认的公开增量能力；流程判断不属于长期决策内容
 
 ## 背景 / 约束
 
@@ -24,7 +24,7 @@
 理由：
 
 1. **复用 `IRScope`，不重复 schema**——根样式与 scope 样式本就是同一组通道，否决方案 B 的字段重复违"不重复 schema"惯例。
-2. **yellow 而非 red**——改动只落 `react/src/kernel/`，不动 core IR / compile，blast radius 最小。
+2. **yellow 而非 red**——改动只落 ，不动 core IR / compile，blast radius 最小。
 3. **round-trip 稳定**——编译出的 IR 是标准 `IRScope` 节点，`unbuilder` 已支持反推，无需新增反向逻辑。
 4. **AI 友好**——`<Layout nodeDefault={...}>` 与手写 `<Layout><Scope nodeDefault={...}>` 编译出完全一致的 IR；LLM 不需学一套"根专用样式字段"。
 
@@ -35,18 +35,13 @@
 - **仅按需包 scope**：无任一样式 prop 时保持 `buildIR(children)` 原样、不包空 scope，避免无谓改变 IR 形态与 round-trip。
 - **props 类型抽共享**：样式 props 抽成共享类型，`ScopeProps` 与 `LayoutProps` 复用，避免两处漂移。
 
-### 被否决的选项
-
-- **B：IR 根 `SceneSchema` 直接挂样式默认字段**——red 改动（动 core `ir/scene.ts` + `compile/**`）；IR 多出一套与 `IRScope` 重复的通道（两处定义易漂移）；compile 要新增"根 cascade"路径与 scope cascade 并行维护。
-- **C：不改 Layout，仅文档化 `<Layout><Scope>` 惯例**——零代码但不满足"让 Layout 直接支持"的诉求，样板与挂载点不直观问题都还在。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - **Layout 暴露 `transforms` / `clip`**（全图变换 / 裁剪）：根容器层语义另议，推后单独评估。
 - **重写现有示例去掉根 `<Scope>`**：document 阶段按需做，不在实现 scope 内。
 
 ---
 
-> **实现指针**：level `yellow`（仅动 `react/src/kernel/**`：`Layout.tsx` 加样式 props + 按需包合成 `<Scope>`、`_fields.ts` 共享 `ScopeStyleProps`、`Scope.tsx` 复用该类型、`builder.ts` 的 `wrapRootScope` 合成函数；不动 core IR / compile，复用既有 `IRScope` 与 cascade），`LayoutProps` 新增**可选** props 纯增量、非破坏。真源以代码为准——`Layout.tsx` / `Scope.tsx` / `_fields.ts` / `builder.ts`（`packages/kernel/react/src/kernel/`）。测试在 `react/tests/kernel/layout-scope-style.test.tsx`。DSL 表面 + "全图默认样式"用法见文档站 layout/overview 组件页。完整原文（选项 A/B/C 详情 / DSL 等价示例 / 待决策点 / 文件 scope（含 ComponentPreview 偏离白名单）/ 测试象限）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `b1bf10a1`；压缩前完整施工蓝图 = `git show b1bf10a1^:_notes/decisions/core/v0/v0.2/beta.2/01-layout-scope-style.md`。
+已实现本 ADR 的核心决策。兼容性：非破坏；其余默认行为、失败语义与公开契约以正文为准。

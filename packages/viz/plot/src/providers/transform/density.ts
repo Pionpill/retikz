@@ -5,6 +5,7 @@ import { isFiniteNumber } from '@retikz/math';
 
 import type { IRPlotDensityTransform } from '../../schemas';
 
+import { RetikzPlotError } from '../../error';
 import { DensityBandwidthKind } from '../../schemas';
 
 const DEFAULT_DENSITY_SAMPLE_COUNT = 64;
@@ -31,7 +32,7 @@ const quantileOfSorted = (sorted: Array<number>, p: number): number => {
 
 const silvermanBandwidthOf = (sortedValues: Array<number>): number => {
   if (sortedValues.length < 2) {
-    throw new Error(
+    throw new RetikzPlotError(
       'lowerPlots: density transform with Silverman bandwidth requires at least two finite samples; pass an explicit bandwidth for single-value groups',
     );
   }
@@ -40,7 +41,7 @@ const silvermanBandwidthOf = (sortedValues: Array<number>): number => {
   const robustScale = iqr > 0 ? Math.min(stdDev, iqr / 1.34) : stdDev;
   const bandwidth = 0.9 * robustScale * sortedValues.length ** (-1 / 5);
   if (!isFiniteNumber(bandwidth) || bandwidth <= 0) {
-    throw new Error(
+    throw new RetikzPlotError(
       'lowerPlots: density transform could not compute a positive Silverman bandwidth; values may be identical, pass an explicit bandwidth',
     );
   }
@@ -91,7 +92,7 @@ export const applyDensity = (
   groupRowsByFields(rows, operation.groupBy).flatMap(group => {
     const sortedValues = finiteFieldValuesOf(group.rows, operation.field).sort((a, b) => a - b);
     if (sortedValues.length === 0) {
-      throw new Error(`lowerPlots: density transform field "${operation.field}" has no finite values`);
+      throw new RetikzPlotError(`lowerPlots: density transform field "${operation.field}" has no finite values`);
     }
     const bandwidth = bandwidthOf(operation, sortedValues);
     const extent = sampleExtentOf(operation, sortedValues, bandwidth);

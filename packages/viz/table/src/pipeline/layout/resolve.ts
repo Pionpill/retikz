@@ -1,6 +1,7 @@
 import type { IRTableLayout, IRTableTrackOverride, IRTableTrackSize } from '../../schemas';
 import type { ResolvedTableLayout, ResolvedTableTrackSize } from './types';
 
+import { RetikzTableError } from '../../error';
 import { TableLayoutSchema, TableTrackOverridesSchema, TableTrackSizeKind, TableTrackSizeSchema } from '../../schemas';
 import { DEFAULT_TABLE_COLUMN_WIDTH, DEFAULT_TABLE_ROW_HEIGHT, DEFAULT_TABLE_TRACK_GAP } from '../../shared';
 
@@ -32,13 +33,15 @@ export const resolveTableTrackSizes = (
   const indexes = new Set<number>();
   for (const override of overrides) {
     if (!Number.isInteger(override.index) || override.index < 0) {
-      throw new Error(`table: track override index ${String(override.index)} must be a nonnegative integer`);
+      throw new RetikzTableError(`table: track override index ${String(override.index)} must be a nonnegative integer`);
     }
     if (indexes.has(override.index)) {
-      throw new Error(`table: duplicate track override index ${override.index}`);
+      throw new RetikzTableError(`table: duplicate track override index ${override.index}`);
     }
     if (override.index >= defaults.length) {
-      throw new Error(`table: track override index ${override.index} is out of range for ${defaults.length} tracks`);
+      throw new RetikzTableError(
+        `table: track override index ${override.index} is out of range for ${defaults.length} tracks`,
+      );
     }
     indexes.add(override.index);
   }

@@ -47,7 +47,7 @@ roadmap P2-1 决定：alpha.4 的 ADR-01~04 是 core-internal（IR + lowering，
 3. **coordinate 决定几何，组件不冗余**：`<BarMark>` 不分 cartesian/polar 两个组件——coordinate 切换即变几何（守 (i)，用户心智简单）。
 4. **文档同改动集**：用户可见改动与文档一体呈现（AGENTS.md 硬规则）。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - core plot IR / lowering（ADR-01~04 已落）。
 - legend / 交互（tooltip/hover，留 v0.3）/ facet。

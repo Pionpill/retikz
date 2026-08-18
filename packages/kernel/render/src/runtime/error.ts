@@ -3,7 +3,7 @@ import type { ValueOf } from '@retikz/foundation';
 import { RetikzError } from '@retikz/foundation';
 
 /** Retained Render 领域错误码 */
-export const RetainedRenderErrorCode = {
+export const RetikzRetainedRenderErrorCode = {
   SceneTopologyInvalid: 'SCENE_TOPOLOGY_INVALID',
   ScenePatchInvalid: 'SCENE_PATCH_INVALID',
   ScenePatchSnapshotMismatch: 'SCENE_PATCH_SNAPSHOT_MISMATCH',
@@ -18,12 +18,12 @@ export const RetainedRenderErrorCode = {
 } as const;
 
 /** Retained Render 领域错误码取值 */
-export type RetainedRenderErrorCodeValue = ValueOf<typeof RetainedRenderErrorCode>;
+export type RetikzRetainedRenderErrorCodeValue = ValueOf<typeof RetikzRetainedRenderErrorCode>;
 
 /** Retained Render 领域错误构造参数 */
-export type RetainedRenderErrorOptions = Readonly<{
+export type RetikzRetainedRenderErrorOptions = Readonly<{
   /** 稳定错误码 */
-  code: RetainedRenderErrorCodeValue;
+  code: RetikzRetainedRenderErrorCodeValue;
   /** 原始失败原因 */
   cause?: unknown;
   /** 可选开发者信息 */
@@ -35,27 +35,30 @@ export type RetainedRenderErrorOptions = Readonly<{
 const EMPTY_RETAINED_RENDER_DETAILS = Object.freeze({});
 
 /** Scene Patch、retained renderer 与 retained runtime 的具名领域错误 */
-export class RetainedRenderError extends RetikzError<RetainedRenderErrorCodeValue, Readonly<Record<string, unknown>>> {
+export class RetikzRetainedRenderError extends RetikzError<
+  RetikzRetainedRenderErrorCodeValue,
+  Readonly<Record<string, unknown>>
+> {
   /** 稳定错误码 */
-  readonly code: RetainedRenderErrorCodeValue;
+  readonly code: RetikzRetainedRenderErrorCodeValue;
 
   /** 原始失败原因 */
   override readonly cause?: unknown;
 
   /** 创建具名 Retained Render 错误 */
-  constructor(options: RetainedRenderErrorOptions) {
+  constructor(options: RetikzRetainedRenderErrorOptions) {
     super({
       code: options.code,
       message: options.message ?? options.code,
       details: options.details ?? EMPTY_RETAINED_RENDER_DETAILS,
       cause: options.cause,
     });
-    this.name = 'RetainedRenderError';
+    this.name = 'RetikzRetainedRenderError';
     this.code = options.code;
     this.cause = options.cause;
   }
 }
 
 /** 判断动态值是否为 Retained Render 领域错误 */
-export const isRetainedRenderError = (value: unknown): value is RetainedRenderError =>
-  value instanceof RetainedRenderError;
+export const isRetikzRetainedRenderError = (value: unknown): value is RetikzRetainedRenderError =>
+  value instanceof RetikzRetainedRenderError;

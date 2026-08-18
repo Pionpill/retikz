@@ -164,6 +164,10 @@ export type PreviewColorControlField = {
   id: string;
   label: string;
   defaultValue: string;
+  /** 是否在颜色 toggle 中展示 Node 的自动对比色选项
+   * @default false
+   */
+  contrast?: boolean;
 };
 
 /** 范围预览控件字段 */

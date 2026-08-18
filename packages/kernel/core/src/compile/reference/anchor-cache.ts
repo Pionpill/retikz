@@ -1,13 +1,15 @@
 import type { Position } from '@retikz/math';
 
-import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve/node';
+import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { SideValue } from '../../shared';
 import type { NodeLayout } from '../node';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+
 type AnchorLayout = NodeLayout | NodeReferenceView;
 
-import { boundaryKey } from '../../resolve/node';
+import { boundaryKey } from '../../resolve';
 import { isAnchor } from '../../shared';
 import { anchorOf, angleBoundaryOf } from '../node';
 import { snapshotProviderPosition } from '../scene-primitive';
@@ -38,10 +40,16 @@ const computeAnchor = (
 const computeEdgePoint = (layout: AnchorLayout, side: SideValue, fraction: number): IRPosition => {
   const { edgePoint } = layout.shapeDef;
   if (!edgePoint) {
-    throw new Error(`shape '${layout.shapeName}' does not support side anchors ({ side, fraction })`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `shape '${layout.shapeName}' does not support side anchors ({ side, fraction })`,
+    );
   }
   if (layout.rect.width === 0 && layout.rect.height === 0) {
-    throw new Error(`{ side, fraction } is not meaningful on a zero-size target (shape '${layout.shapeName}')`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `{ side, fraction } is not meaningful on a zero-size target (shape '${layout.shapeName}')`,
+    );
   }
   const raw = edgePoint(layout.rect, side, fraction, layout.shapeParams ?? {});
   return positionToIR(snapshotProviderPosition(`Shape '${layout.shapeName}' edgePoint`, raw));

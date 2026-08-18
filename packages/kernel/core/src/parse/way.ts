@@ -22,6 +22,7 @@ import type {
 } from '../schemas';
 import type { Side } from '../shared';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { AxisLineTargetSchema, FoldStepVia } from '../schemas';
 import { parseSideAlias } from './anchor-alias';
 import { parseTargetSugar } from './target-sugar';
@@ -209,7 +210,10 @@ const wayOperatorNamesOf = (item: WayItem): Array<string> => {
 const assertSingleWayOperator = (item: WayItem): void => {
   const names = wayOperatorNamesOf(item);
   if (names.length > 1) {
-    throw new Error(`parseWay: object contains multiple Way operators: ${names.join(', ')}`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Parse,
+      `parseWay: object contains multiple Way operators: ${names.join(', ')}`,
+    );
   }
 };
 
@@ -241,7 +245,10 @@ const desugarRelativeItem = (item: WayItem): WayItem => {
   if (type === DrawWay.Relative) {
     return { relative: candidate.position };
   }
-  throw new Error(`parseWay: WayRelativeItem.type must be DrawWay.Relative or DrawWay.Accumulate`);
+  throw new RetikzCoreError(
+    RetikzCoreErrorCode.Parse,
+    `parseWay: WayRelativeItem.type must be DrawWay.Relative or DrawWay.Accumulate`,
+  );
 };
 
 type ClassifiedWayItem =
@@ -295,9 +302,9 @@ const parseFollowingTarget = (
   endError: string,
   nextError: (next: WayItem) => string,
 ): IRTarget => {
-  if (index + 1 >= way.length) throw new Error(endError);
+  if (index + 1 >= way.length) throw new RetikzCoreError(RetikzCoreErrorCode.Parse, endError);
   const next = way[index + 1];
-  if (isWayOperator(next)) throw new Error(nextError(next));
+  if (isWayOperator(next)) throw new RetikzCoreError(RetikzCoreErrorCode.Parse, nextError(next));
   return parseTargetSugar(desugarRelativeItem(next));
 };
 
@@ -313,7 +320,10 @@ const buildViaStep = (
       : (() => {
           const result = WayFoldOpSchema.safeParse(item);
           if (!result.success) {
-            throw new Error(`parseWay: invalid fold operator: ${result.error.issues[0]?.message ?? 'invalid object'}`);
+            throw new RetikzCoreError(
+              RetikzCoreErrorCode.Parse,
+              `parseWay: invalid fold operator: ${result.error.issues[0]?.message ?? 'invalid object'}`,
+            );
           }
           return result.data;
         })();
@@ -430,7 +440,8 @@ const axisLineTargetOf = (item: WayAxisLineOp): IRAxisLineTarget => {
   const parsed = parseTargetSugar(raw);
   const result = AxisLineTargetSchema.safeParse(parsed);
   if (!result.success) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Parse,
       'parseWay: axis-line target must resolve to a Cartesian position or NodeTarget; polar, relative, offset, and between targets are not supported',
       { cause: result.error },
     );
@@ -455,7 +466,7 @@ const buildAxisLineStep = (item: WayAxisLineOp, label: IRStepLabel | undefined):
  */
 export const parseWay = (way: WayDSL): Array<IRStep> => {
   if (way.length < 2) {
-    throw new Error('parseWay: way must contain at least 2 items');
+    throw new RetikzCoreError(RetikzCoreErrorCode.Parse, 'parseWay: way must contain at least 2 items');
   }
   const out: Array<IRStep> = [];
 
@@ -468,11 +479,17 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
   };
 
   if (isWayLabelOp(way[0])) {
-    throw new Error(`parseWay: way[0] must be a target (move start), got label operator`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Parse,
+      `parseWay: way[0] must be a target (move start), got label operator`,
+    );
   }
   const rawMove = targetOf(way[0]);
   if (rawMove === null) {
-    throw new Error(`parseWay: way[0] must be a target (move start), got operator`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Parse,
+      `parseWay: way[0] must be a target (move start), got operator`,
+    );
   }
   const moveTarget: IRTarget = parseTargetSugar(rawMove);
   const moveStep: IRMoveStep = { type: 'step', kind: 'move', to: moveTarget };
@@ -483,7 +500,10 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
     switch (classified.kind) {
       case 'label':
         if (pendingLabel) {
-          throw new Error(`parseWay: label operator at index ${index} cannot directly follow another label operator`);
+          throw new RetikzCoreError(
+            RetikzCoreErrorCode.Parse,
+            `parseWay: label operator at index ${index} cannot directly follow another label operator`,
+          );
         }
         pendingLabel = normalizeLabel(classified.item.label);
         index += 1;
@@ -494,7 +514,10 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
         break;
       case 'cycle':
         if (pendingLabel) {
-          throw new Error(`parseWay: cycle step cannot carry a label (label operator at index ${index - 1})`);
+          throw new RetikzCoreError(
+            RetikzCoreErrorCode.Parse,
+            `parseWay: cycle step cannot carry a label (label operator at index ${index - 1})`,
+          );
         }
         out.push({ type: 'step', kind: 'cycle' });
         index += 1;
@@ -519,7 +542,10 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
     }
   }
   if (pendingLabel) {
-    throw new Error(`parseWay: label operator at end of way must be followed by a step`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Parse,
+      `parseWay: label operator at end of way must be followed by a step`,
+    );
   }
   return out;
 };

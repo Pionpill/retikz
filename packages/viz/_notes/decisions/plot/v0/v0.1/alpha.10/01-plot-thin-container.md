@@ -36,12 +36,7 @@ PlotSchema.colors: z.array(z.string().min(1)).min(1).optional()
 - **Breaking（alpha 间）**：`<Plot>` 不再自动补 x/y 轴；`bare` / `scaleX` / `scaleY` 从 DSL props 删除。迁移路径为显式加 `<Axis>`、用 `<Scale>` 替代旧 scale prop。
 - 依赖默认轴的文档 demo 需补 `<Axis>`。
 
-## 被否决的选项
-
-- **保留 `bare` 作为「只画数据层」开关**：薄 Plot 默认态已等价表达该语义，保留 `bare` 会形成第二套忽略显式 guide / margin 的并行模式。
-- **新增 `<Grid>` 组件**：网格语义归并入 `<Axis grid>`，避免拆出独立 guide 实体。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 不实现 `<Chart>`、不下沉 chart 装饰模块（开箱即用装饰留待 v0.2 `<Chart>` 复用 `decorateDefaultGuides`）。
 - 不新增 `<Grid>`。

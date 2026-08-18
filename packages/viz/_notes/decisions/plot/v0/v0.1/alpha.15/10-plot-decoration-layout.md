@@ -84,7 +84,7 @@ type LayoutPlacement =
 4. 文案按所有权放置：scale-bound 归 guide，datum-bound 归 mark / annotation，plot-level static text 归 labels，避免 `guide` 成为所有文本的垃圾桶。
 5. 分阶段边带布局比通用 constraint solver 更可测、更确定，也更适合当前 alpha 阶段的实现复杂度。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - renderer 真实文本测量。当前仍用 deterministic estimate；未来可加 compile option measurement hook，但不能进入 IR。
 - 文本 ellipsis / wrap 的完整排版算法；当前只承诺 `hide` / `flush` / `shift` 子集。

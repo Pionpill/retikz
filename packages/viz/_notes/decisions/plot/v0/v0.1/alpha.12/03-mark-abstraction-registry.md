@@ -46,7 +46,7 @@
 - 为 ADR-04 的 React / Vanilla / docs 表面收敛提供底层语义。
 - 为 ADR-08 的公开自定义 mark registry 铺平内部结构。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 公开自定义 mark 的完整 schema / runtime 注入契约由 [ADR-08](./08-mark-custom-registry.md) 处理。
 - chart 层的 stacked / grouped / percent 等高层 preset 不进 plot IR。

@@ -13,6 +13,8 @@ import { AxisLineTargetSchema, parseTargetSugar, parseWay, THICKNESS_TO_WIDTH } 
 
 import type { InputAxisLineTarget, InputPath, InputStep, InputTarget } from './types';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
+
 /** 从路径箭头细节生成单端 Source IR 标记 */
 const arrowMarkFromDetail = (detail: InputPath['arrowDetail'], endpoint: 'start' | 'end'): IRArrowMark => {
   const base = detail ?? {};
@@ -61,9 +63,13 @@ const normalizeAxisLineTarget = (input: InputAxisLineTarget): IRAxisLineTarget =
   const target = normalizeTarget(input);
   const result = AxisLineTargetSchema.safeParse(target);
   if (!result.success) {
-    throw new Error('normalizePath: axis-line target must resolve to a Cartesian position or NodeTarget', {
-      cause: result.error,
-    });
+    throw new RetikzVanillaError(
+      RetikzVanillaErrorCode.Normalize,
+      'normalizePath: axis-line target must resolve to a Cartesian position or NodeTarget',
+      {
+        cause: result.error,
+      },
+    );
   }
   return result.data;
 };
@@ -125,7 +131,7 @@ const normalizeStep = (input: InputStep): IRStep => {
 const normalizePathChildren = (children: ReadonlyArray<IRStep>): Array<IRStep> => {
   const selfContainedRectangle = children.length === 1 && children[0]?.kind === 'rectangle';
   if (children.length < 2 && !selfContainedRectangle) {
-    throw new Error('normalizePath: path requires at least 2 steps');
+    throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, 'normalizePath: path requires at least 2 steps');
   }
   if (selfContainedRectangle || children[0]?.kind === 'move') return [...children];
 
@@ -154,12 +160,15 @@ export const normalizePath = (input: InputPath): IRPath => {
   void _arrowDetail;
   void _marks;
   if (way !== undefined && children !== undefined) {
-    throw new Error('normalizePath: use either way or children, not both');
+    throw new RetikzVanillaError(
+      RetikzVanillaErrorCode.Normalize,
+      'normalizePath: use either way or children, not both',
+    );
   }
   const authoredChildren =
     way === undefined ? (children === undefined ? undefined : children.map(normalizeStep)) : parseWay(way);
   if (authoredChildren === undefined) {
-    throw new Error('normalizePath: path requires way or children');
+    throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, 'normalizePath: path requires way or children');
   }
   const normalizedChildren = normalizePathChildren(authoredChildren);
   const marks = normalizePathMarks(input);

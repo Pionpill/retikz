@@ -276,8 +276,9 @@ const LAYOUT_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GridLayoutInputEmbedAdapter',
   'OverlayLayoutInputEmbedAdapter',
 ];
-const GRAPH_HELPER_ORDER: ReadonlyArray<string> = ['container', 'entity', 'relation'];
+const GRAPH_HELPER_ORDER: ReadonlyArray<string> = ['graph', 'container', 'entity', 'relation'];
 const GRAPH_ADAPTER_ORDER: ReadonlyArray<string> = [
+  'GraphInputEmbedAdapter',
   'ContainerInputEmbedAdapter',
   'EntityInputEmbedAdapter',
   'RelationInputEmbedAdapter',
@@ -295,7 +296,11 @@ export type StandardPreviewDefinitionName =
 export type LayoutPreviewDefinitionName = 'FlexLayoutDefinition' | 'GridLayoutDefinition' | 'OverlayLayoutDefinition';
 
 /** docs 预览能够显式注入的 Graph definition 名 */
-export type GraphPreviewDefinitionName = 'ContainerDefinition' | 'EntityDefinition' | 'RelationDefinition';
+export type GraphPreviewDefinitionName =
+  | 'GraphDefinition'
+  | 'ContainerDefinition'
+  | 'EntityDefinition'
+  | 'RelationDefinition';
 
 const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefinitionName>> = {
   grid: 'GridDefinition',
@@ -312,6 +317,7 @@ const LAYOUT_DEFINITION_BY_KIND: Readonly<Record<string, LayoutPreviewDefinition
 };
 
 const GRAPH_DEFINITION_BY_KIND: Readonly<Record<string, GraphPreviewDefinitionName>> = {
+  graph: 'GraphDefinition',
   container: 'ContainerDefinition',
   entity: 'EntityDefinition',
   relation: 'RelationDefinition',
@@ -334,6 +340,9 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     const sections = record.sections as ReadonlyArray<{ child: IRChild }> | undefined;
     sections?.forEach(section => owned.push(section.child));
     return owned;
+  }
+  if (child.namespace === 'graph' && child.type === 'graph') {
+    return [...((record.children as ReadonlyArray<IRChild> | undefined) ?? [])];
   }
   if (child.namespace === 'graph' && ['entity', 'relation'].includes(child.type)) return [];
   if (child.namespace !== 'standard' || child.type !== 'legend') return [];
@@ -376,6 +385,10 @@ export const collectPreviewDefinitions = (
   if (LAYOUT_HELPER_ORDER.some(kind => layoutAdapterKinds.has(kind))) {
     LAYOUT_HELPER_ORDER.forEach(kind => providedLayoutKinds.add(kind));
   }
+  const providedGraphKinds = new Set(graphAdapterKinds);
+  if (graphAdapterKinds.has('graph')) {
+    GRAPH_HELPER_ORDER.forEach(kind => providedGraphKinds.add(kind));
+  }
   const visit = (child: IRChild): void => {
     if ('namespace' in child) {
       if (child.namespace === 'standard') {
@@ -401,7 +414,7 @@ export const collectPreviewDefinitions = (
         if (definitionName === undefined) {
           throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
         }
-        if (!graphAdapterKinds.has(child.type)) graph.add(definitionName);
+        if (!providedGraphKinds.has(child.type)) graph.add(definitionName);
       } else {
         throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
       }
@@ -575,6 +588,12 @@ const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =>
   ctx.graphHelpers.add(record.type);
   ctx.graphAdapters.add(adapterName);
   const generatedId = `preview-${record.type}-${count}`;
+  if (record.type === 'graph') {
+    const graphChildren = (record as typeof record & { children: ReadonlyArray<IRChild> }).children;
+    const input = rewriteGraphInput(record.type, stripKeys(record, ['namespace', 'type', 'id', 'children']), ctx);
+    const childrenCode = childListCode(graphChildren, indent, ctx);
+    return `graph(${formatString(generatedId)}, ${formatObject({ ...input, children: '__GRAPH_CHILDREN__' }, indent).replace("'__GRAPH_CHILDREN__'", childrenCode)})`;
+  }
   const input = rewriteGraphInput(record.type, stripKeys(record, ['namespace', 'type', 'id']), ctx);
   return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
 };

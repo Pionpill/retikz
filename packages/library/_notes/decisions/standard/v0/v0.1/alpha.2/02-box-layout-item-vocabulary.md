@@ -132,36 +132,7 @@ const itemInput = {
 } satisfies FlexLayoutItemInput;
 ```
 
-## 被否决的方案
-
-- 复制 CSS box-sizing、auto margin、负 margin 和 margin collapse：浏览器兼容历史不服务确定性绘图布局
-- 用 width/height/minWidth 等平铺字段：轴策略与 min/max 组合难以形成闭合 union，错误路径不清楚
-- 让 `fill` 在无界空间默认为零或自然尺寸：同一输入会因宿主是否提供 available size产生隐式语义
-- 省略 item key并只用数组 index：插入/reorder 后 artifact identity 漂移
-- 建立可注册 LayoutDefinition：三种容器是闭合的官方 Composite，自定义容器直接使用 Core `defineComposite`
-- 用 visual bounds 做 size contribution：阴影、描边等视觉外溢会反向改变结构布局
-
-## 影响
-
-- 新增 Standard 公共 layout shared schema、常量与派生类型；纯 solver helper 只在 private internal barrel 共享
-- 不新增 Core IR、Scene primitive、renderer contract、compile option 或 registry
-- ADR-03～05 必须复用这些 schema/规范化函数，不能复制默认值
-- 公开 IR 是 alpha.2 新能力，不迁移 alpha.1 `Grid`、`Axes` 或 `Frame`
-
-## 能力完备性检查
-
-- 所属能力域与能力面：Drawing Complete 上层的通用静态 Box layout vocabulary
-- 解决的问题：三种容器共享一致的 JSON 输入、尺寸与坐标不变量
-- 主责包与协作包：Standard 主责 schema/纯几何；Core 提供 IRChild、spacing、proposal/replay；adapter 只转换 authoring
-- 是否可由现有能力组合：Core 提供底层机制，但不拥有这些上层容器字段，需要扩展 Standard
-- 是否需要下沉到依赖能力域：否；没有新的通用 Core 机制
-- 内部表达链路：strict schema → canonical spacing/size → container-specific solver → Core replay
-- 外部扩展链路：闭合 vocabulary 不需要 registry；第三方布局通过 Core CompositeDefinition 自定义
-- 下游执行 / adapter 等价性：React/Vanilla 都产生相同 Standard IR；renderer 只执行已有 transform/clip
-- 不支持边界与诊断：无界 fill、非法数值、重复 key、kind mismatch fail-loud
-- 本轮结论：扩展 Standard 当前能力域
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Flex grow/shrink/wrap、Grid track、Overlay anchor/position
 - auto margin、negative margin、margin collapse、percentage、calc、writing mode

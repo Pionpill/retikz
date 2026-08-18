@@ -9,8 +9,12 @@ import {
   StandardArrowProviders,
 } from '../src/arrow';
 import {
+  CircleClipDefinition,
+  CircleClipProvider,
   CompoundClipDefinition,
   CompoundClipProvider,
+  EllipseClipDefinition,
+  EllipseClipProvider,
   PathClipDefinition,
   PathClipProvider,
   PolygonClipDefinition,
@@ -53,15 +57,26 @@ describe('Standard extension collections', () => {
   });
 
   it('groups all Standard clip definitions and providers', () => {
-    expect(StandardClipDefinitions).toEqual([CompoundClipDefinition, PolygonClipDefinition, PathClipDefinition]);
-    expect(StandardClipProviders).toEqual([CompoundClipProvider, PolygonClipProvider, PathClipProvider]);
+    expect(StandardClipDefinitions).toEqual([
+      CircleClipDefinition,
+      EllipseClipDefinition,
+      PolygonClipDefinition,
+      PathClipDefinition,
+      CompoundClipDefinition,
+    ]);
+    expect(StandardClipProviders).toEqual([
+      CircleClipProvider,
+      EllipseClipProvider,
+      PolygonClipProvider,
+      PathClipProvider,
+      CompoundClipProvider,
+    ]);
   });
 
   it('keeps every provider paired with its Definition', () => {
     const pairs = [
       [StandardShapeProviders, StandardShapeDefinitions],
       [StandardArrowProviders, StandardArrowDefinitions],
-      [StandardClipProviders, StandardClipDefinitions],
     ] as const;
 
     for (const [providers, definitions] of pairs) {
@@ -70,5 +85,10 @@ describe('Standard extension collections', () => {
         expect(provider.makeDefinition({})).toBe(definitions[index]);
       });
     }
+
+    expect(StandardClipProviders).toHaveLength(StandardClipDefinitions.length);
+    StandardClipProviders.forEach((provider, index) => {
+      expect(provider.makeDefinition({})).toBe(StandardClipDefinitions[index]);
+    });
   });
 });

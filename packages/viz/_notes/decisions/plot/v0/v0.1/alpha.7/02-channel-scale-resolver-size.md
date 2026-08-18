@@ -79,7 +79,7 @@ export const PointEncodingSchema = EncodingSchema.extend({
 
 注册表对外开放时沿用 core 的**「配置 / 数据 / 函数」三分**（plot-design §6）——自定义通道定义**带函数、经 `CompileOptions` / `lowerPlots` options 运行时注入、不进 JSON IR**（IR 按通道名引用，函数定义运行时给），与 core 自定义 `shape`（IR 写名、几何函数注入）同构。硬约束：任何非位置通道终须 lower 到 core 已有视觉属性（fill / stroke / strokeWidth / opacity / shape 参数…），不能凭空发明 core 不识别的视觉效果（那要先补 core）。**现在就要任意视觉控制**的用户掉到 **Kernel**（`<Node>` / `<Path>`，直接写 core IR）——retikz 版的「Vega-Lite → Vega」逃生舱。本轮**只留接缝、不开放注册**。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **size 作用于 line(strokeWidth) / bar(width) / area / sector**（① S1 范围外）→ 顺延。
 - **categorical → 离散 size 档**（D1）→ 顺延 / 需求驱动；本轮仅 continuous→size。

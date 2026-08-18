@@ -20,6 +20,7 @@ import type { RuntimePrimitiveMetadataTable } from '../../../src/compile/orchest
 
 import {
   compileToScene,
+  CompileWarningCode,
   CompositeBaseSchema,
   CoreOwnerDefinition,
   defineComposite,
@@ -505,7 +506,10 @@ describe('Core compile warning collection', () => {
       { composites: [replaying], onWarn: warning => warnings.push(warning) },
     );
 
-    expect(warnings.map(warning => warning.code)).toEqual(['PATH_TOO_SHORT', 'DUPLICATE_NODE_ID']);
+    expect(warnings.map(warning => warning.code)).toEqual([
+      CompileWarningCode.PathTooShort,
+      CompileWarningCode.DuplicateNodeId,
+    ]);
   });
 
   it('把较早 replay 后发生的 replay late duplicate 排在后一个 placement', () => {
@@ -542,7 +546,10 @@ describe('Core compile warning collection', () => {
       { composites: [replaying], onWarn: warning => warnings.push(warning) },
     );
 
-    expect(warnings.map(warning => warning.code)).toEqual(['PATH_TOO_SHORT', 'DUPLICATE_NODE_ID']);
+    expect(warnings.map(warning => warning.code)).toEqual([
+      CompileWarningCode.PathTooShort,
+      CompileWarningCode.DuplicateNodeId,
+    ]);
   });
 
   it('selected replay 内按 scopeChild occurrence 排列延迟 Path 与 duplicate warning', () => {
@@ -580,7 +587,10 @@ describe('Core compile warning collection', () => {
       { composites: [replaying], onWarn: warning => warnings.push(warning) },
     );
 
-    expect(warnings.map(warning => warning.code)).toEqual(['PATH_TOO_SHORT', 'DUPLICATE_NODE_ID']);
+    expect(warnings.map(warning => warning.code)).toEqual([
+      CompileWarningCode.PathTooShort,
+      CompileWarningCode.DuplicateNodeId,
+    ]);
   });
 
   it('把 selected replay warning 重映射到 placement occurrence 后再排序', () => {
@@ -622,9 +632,9 @@ describe('Core compile warning collection', () => {
     );
 
     expect(warnings.map(warning => warning.code)).toEqual([
-      'UNRESOLVED_NODE_REFERENCE',
-      'PATH_TOO_SHORT',
-      'PATH_TOO_SHORT',
+      CompileWarningCode.UnresolvedNodeReference,
+      CompileWarningCode.PathTooShort,
+      CompileWarningCode.PathTooShort,
     ]);
   });
 
@@ -661,9 +671,9 @@ describe('Core compile warning collection', () => {
     );
 
     expect(warnings.map(warning => warning.code)).toEqual([
-      'UNRESOLVED_NODE_REFERENCE',
-      'PATH_TOO_SHORT',
-      'COMPOSITE_NOT_REGISTERED',
+      CompileWarningCode.UnresolvedNodeReference,
+      CompileWarningCode.PathTooShort,
+      CompileWarningCode.CompositeNotRegistered,
     ]);
   });
 

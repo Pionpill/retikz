@@ -14,7 +14,7 @@ describe('docs search index frontmatter', () => {
     const index = await loadSearchIndex();
 
     expect(index['/viz/chart/points/scatter']?.zh?.headings).toEqual(
-      expect.arrayContaining(['Chart authoring', 'Presentation', 'Runtime styles', 'Plot extensions']),
+      expect.arrayContaining(['Chart 编写', '整图展示', '运行时样式', 'Plot extensions']),
     );
     expect(index['/viz/chart/points/scatter']?.en?.headings).toEqual(
       expect.arrayContaining([

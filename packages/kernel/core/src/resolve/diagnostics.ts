@@ -1,11 +1,22 @@
+import { RetikzError } from '@retikz/foundation';
+
 import type { CompileOccurrenceLocator } from '../contract';
+
+import { RetikzCoreErrorCode } from '../error';
 
 const layoutProbeRecoverableErrors = new WeakSet<object>();
 const compositeContractErrors = new WeakSet<object>();
 const additionalFatalProbeErrors = new WeakSet<object>();
 
 /** layout probe 内可被 solver 丢弃或选中提升的 candidate failure */
-export class LayoutProbeRecoverableError extends Error {
+export class RetikzLayoutProbeRecoverableError extends RetikzError<
+  typeof RetikzCoreErrorCode.LayoutProbeRecoverable,
+  Readonly<{
+    detail: string;
+    providerKey?: string;
+    occurrence?: CompileOccurrenceLocator;
+  }>
+> {
   /** 不包含 provider / occurrence 外壳的稳定原始诊断详情 */
   readonly detail: string;
 
@@ -20,9 +31,18 @@ export class LayoutProbeRecoverableError extends Error {
     options: ErrorOptions &
       Readonly<{ detail?: string; providerKey?: string; occurrence?: CompileOccurrenceLocator }> = {},
   ) {
-    super(message, options);
-    this.name = 'LayoutProbeRecoverableError';
-    this.detail = options.detail ?? message;
+    const detail = options.detail ?? message;
+    super({
+      code: RetikzCoreErrorCode.LayoutProbeRecoverable,
+      message,
+      details: {
+        detail,
+        ...(options.providerKey === undefined ? {} : { providerKey: options.providerKey }),
+        ...(options.occurrence === undefined ? {} : { occurrence: options.occurrence }),
+      },
+      cause: options.cause,
+    });
+    this.detail = detail;
     this.providerKey = options.providerKey;
     this.occurrence = options.occurrence;
     layoutProbeRecoverableErrors.add(this);
@@ -30,20 +50,27 @@ export class LayoutProbeRecoverableError extends Error {
 }
 
 /** author callback、provider output 或 opaque handle 违反公开 Composite contract */
-export class CompositeContractError extends Error {
+export class RetikzCompositeContractError extends RetikzError<
+  typeof RetikzCoreErrorCode.CompositeContractViolation,
+  Readonly<Record<string, never>>
+> {
   public constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = 'CompositeContractError';
+    super({
+      code: RetikzCoreErrorCode.CompositeContractViolation,
+      message,
+      details: Object.freeze({}),
+      cause: options?.cause,
+    });
     compositeContractErrors.add(this);
   }
 }
 
 /** 通过模块私有 identity brand 判断 recoverable error，不读取 unknown value */
-export const isLayoutProbeRecoverableError = (error: unknown): error is LayoutProbeRecoverableError =>
+export const isRetikzLayoutProbeRecoverableError = (error: unknown): error is RetikzLayoutProbeRecoverableError =>
   error !== null && typeof error === 'object' && layoutProbeRecoverableErrors.has(error);
 
 /** 通过模块私有 identity brand 判断 public contract error，不读取 unknown value */
-export const isCompositeContractError = (error: unknown): error is CompositeContractError =>
+export const isRetikzCompositeContractError = (error: unknown): error is RetikzCompositeContractError =>
   error !== null && typeof error === 'object' && compositeContractErrors.has(error);
 
 /** 注册必须穿透 layout probe recoverable boundary 的领域错误 */

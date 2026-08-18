@@ -5,6 +5,7 @@ import { isValidElement } from 'react';
 
 import type { DetailColumnProps } from './detail-column';
 
+import { RetikzTableReactError } from '../error';
 import { visitTableChildren } from './child-traversal';
 import { DetailColumn } from './detail-column';
 
@@ -17,12 +18,12 @@ export const buildDetailColumns = (children: ReactNode): Array<TableDetailColumn
   const columns: Array<TableDetailColumnInput> = [];
   visitTableChildren(children, child => {
     if (!isDetailColumnElement(child) || Object.hasOwn(child.props, 'children')) {
-      throw new Error('table react: DetailTable children only accept DetailColumn');
+      throw new RetikzTableReactError('table react: DetailTable children only accept DetailColumn');
     }
     columns.push({ ...child.props });
   });
   if (columns.length === 0) {
-    throw new Error('table react: DetailTable children require at least one DetailColumn');
+    throw new RetikzTableReactError('table react: DetailTable children require at least one DetailColumn');
   }
   return columns;
 };

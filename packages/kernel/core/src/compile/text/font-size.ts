@@ -1,5 +1,6 @@
 import type { FontSizePresetValue, IRFont } from '../../schemas';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { WebFontSizeRatio } from '../../schemas';
 
 export type ResolveFontSizeContext = {
@@ -13,10 +14,16 @@ export type ResolveFontSizeContext = {
 export const resolveFontSize = (size: IRFont['size'] | undefined, context: ResolveFontSizeContext): number => {
   const { rootFontSize, inheritedFontSize } = context;
   if (!Number.isFinite(rootFontSize) || rootFontSize <= 0) {
-    throw new Error(`CompileOptions.fontSize must be a positive finite number; received ${rootFontSize}.`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `CompileOptions.fontSize must be a positive finite number; received ${rootFontSize}.`,
+    );
   }
   if (!Number.isFinite(inheritedFontSize) || inheritedFontSize <= 0) {
-    throw new Error(`resolveFontSize: inherited font size must be positive and finite; received ${inheritedFontSize}.`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `resolveFontSize: inherited font size must be positive and finite; received ${inheritedFontSize}.`,
+    );
   }
   if (size === undefined) return inheritedFontSize;
   if (typeof size === 'number') return size;
@@ -25,5 +32,5 @@ export const resolveFontSize = (size: IRFont['size'] | undefined, context: Resol
   }
   if (size.endsWith('rem')) return Number.parseFloat(size) * rootFontSize;
   if (size.endsWith('em')) return Number.parseFloat(size) * inheritedFontSize;
-  throw new Error(`resolveFontSize: unsupported font size '${size}'.`);
+  throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `resolveFontSize: unsupported font size '${size}'.`);
 };

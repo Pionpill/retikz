@@ -68,8 +68,9 @@
     "react-dom": ">=18"
   },
   "dependencies": {
+    "@retikz/foundation": "workspace:^",
     "@retikz/graph": "workspace:*",
-    "@retikz/graph-vanilla": "workspace:^",
+    "@retikz/graph-vanilla": "workspace:*",
     "@retikz/react": "workspace:^",
     "@retikz/vanilla": "workspace:^"
   },

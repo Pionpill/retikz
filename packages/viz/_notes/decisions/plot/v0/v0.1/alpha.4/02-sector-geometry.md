@@ -88,7 +88,7 @@ export const SectorMarkSchema = z.object({
 3. **累积守 transform 分层**：与 stack 同构、复用同一 op，杜绝 mark 内建 transform 的重复与破裂。
 4. **interval 与 sector 分工清晰**：半径编码值（玫瑰）vs 角度编码值（饼图）是两种语义，各归 interval / sector，不靠魔法参数混用。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - polar guide（角向 / 径向轴网格）→ ADR-04。
 - 连续 mark（line/area polar、area mark、closed/雷达）→ ADR-03。

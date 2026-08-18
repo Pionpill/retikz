@@ -4,6 +4,8 @@ import { arcEndPoint } from '@retikz/math';
 
 import type { DimensionRole } from './types';
 
+import { RetikzPlotError } from '../../error';
+
 /** polar 段内采样：相邻顶点间在 [θ, r] 空间插入的固定中间点数（每段定额，连续角轴弯弧） */
 export const RETIKZ_POLAR_SEGMENT_SAMPLES = 16;
 
@@ -36,7 +38,7 @@ export type CellGeometry =
  */
 export const cellInterval = (cell: Cell, role: DimensionRole): [number, number] => {
   const interval = cell.intervals[role];
-  if (interval === undefined) throw new Error(`lowerPlots: cell is missing "${role}" interval`);
+  if (interval === undefined) throw new RetikzPlotError(`lowerPlots: cell is missing "${role}" interval`);
   return interval;
 };
 

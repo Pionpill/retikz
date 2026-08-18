@@ -1,9 +1,9 @@
 import type { Section } from './types';
 
 import { aboutSection } from './about';
-import { schematicSection } from './schematic';
 import { kernelSection } from './kernel';
 import { librarySection } from './library';
+import { schematicSection } from './schematic';
 import { vizSection } from './viz';
 
 /** 按 :moduleId 查对应的 sections；未实装的模块返回空数组。 */

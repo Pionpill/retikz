@@ -53,7 +53,7 @@ export const PlotScale = {
 2. **L1 最薄且 fail-loud**：bar/area 的 baseline 0 是结构语义，不是改个数能绕过；与其默默产 NaN/-∞，不如清晰报错，后续真有 log 柱需求再做 L2（显式正 baseline）。
 3. **沿 LinearScale 风格 + d3-scale**：复用已有 scale lowering 路径（alpha.2 起 d3-scale），新增成本集中在 schema + 选型分支。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **symlog**（跨零/负值的对数兜底）——需求驱动，本轮 log 遇非正值 fail-loud。
 - **L2**：bar/area + log 配显式正 baseline——本轮 L1 直接拒绝。

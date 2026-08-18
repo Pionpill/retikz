@@ -14,7 +14,7 @@ import type {
 } from '../../contract';
 import type { ProvenanceContext } from '../../contract';
 import type { CoordinateResolveContext } from '../../resolve/coordinate';
-import type { IRPlotMark, IRPlotMarkOperation, IRPlot } from '../../schemas';
+import type { IRPlot, IRPlotMark, IRPlotMarkOperation } from '../../schemas';
 import type { LowerPlotsOptions, MarkDataView } from '../expand';
 
 import { cellGeometryAnchor, isRenderableCellGeometry } from '../../contract';

@@ -2,12 +2,18 @@ import type { RibbonWidthResolution } from '../resolve';
 import type { CanonicalRibbonSampling } from '../types';
 import type { RibbonLike } from './types';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
+
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 
 /** 校验宽度函数输出：ribbon 宽度必须是有限且非负的数 */
 export const assertFiniteWidth = (width: number, source: string): number => {
   if (!Number.isFinite(width) || width < 0) {
-    throw new Error(`Ribbon width ${source} produced ${String(width)}; width must be a finite nonnegative number.`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.GeometryInvalid,
+      message: `Ribbon width ${source} produced ${String(width)}; width must be a finite nonnegative number.`,
+      details: { source, width },
+    });
   }
   return width;
 };
@@ -60,10 +66,25 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
   const profile = resolution.definition;
   const params = resolution.params;
   if (profile === undefined || params === undefined) {
-    throw new Error(`Ribbon width profile '${width.name}' has no resolving-phase provider binding.`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.ResolutionInvalid,
+      message: `Ribbon width profile '${width.name}' has no resolving-phase provider binding.`,
+      details: { profile: width.name },
+    });
   }
   return offset => {
-    const rawWidth = profile.widthAt({ offset, length: totalLength, params });
+    let rawWidth: number;
+    try {
+      rawWidth = profile.widthAt({ offset, length: totalLength, params });
+    } catch (cause) {
+      if (cause instanceof RetikzStandardError) throw cause;
+      throw new RetikzStandardError({
+        code: RetikzStandardErrorCode.ResolutionInvalid,
+        message: `Ribbon width profile '${width.name}' widthAt failed at offset ${String(offset)}.`,
+        details: { length: totalLength, offset, profile: width.name },
+        cause,
+      });
+    }
     return assertFiniteWidth(rawWidth, `profile "${width.name}" at offset ${offset}`);
   };
 };
@@ -79,14 +100,22 @@ export const centerlineWidthFunction = (
 ): ((offset: number) => number) => {
   if (ribbon.width !== undefined) {
     if (widthResolution === undefined) {
-      throw new Error('Ribbon width has no resolving-phase provider binding.');
+      throw new RetikzStandardError({
+        code: RetikzStandardErrorCode.ResolutionInvalid,
+        message: 'Ribbon width has no resolving-phase provider binding.',
+        details: { width: ribbon.width },
+      });
     }
     return widthFunction(widthResolution, totalLength);
   }
   const startWidth = ribbon.start.width;
   const endWidth = ribbon.end.width;
   if (startWidth === undefined || endWidth === undefined) {
-    throw new Error('Centerline ribbon requires either top-level `width` or both `start.width` and `end.width`.');
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: 'Centerline ribbon requires either top-level `width` or both `start.width` and `end.width`.',
+      details: { hasEndWidth: endWidth !== undefined, hasStartWidth: startWidth !== undefined },
+    });
   }
   const mode = ribbon.interpolation;
   return offset =>
@@ -118,7 +147,11 @@ export const resolveSampleCount = (
 /** 校验采样点数量，避免过少无法形成轮廓或过多造成异常开销 */
 export const assertSampleCount = (samples: number): number => {
   if (!Number.isInteger(samples) || samples < 2 || samples > 512) {
-    throw new Error(`Ribbon samples must be an integer in [2, 512]; got ${String(samples)}.`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: `Ribbon samples must be an integer in [2, 512]; got ${String(samples)}.`,
+      details: { samples },
+    });
   }
   return samples;
 };

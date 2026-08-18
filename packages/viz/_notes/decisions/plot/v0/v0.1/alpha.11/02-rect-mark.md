@@ -32,12 +32,7 @@ React sugar `<RectMark>` 与 `<BarMark>` / `<PointMark>` 同风格：`x` / `y` /
 3. **secondary band 是新增的最小能力面**——rect 唯一的新 scale 要求是「y 轴也得是 band scale」（取 `frame.secondary.bandwidth`）。`PositionScale.bandwidth` 机制现成（band 返回 `bandwidth()`、连续返回 0），rect 只需在 lowering 显式要求 secondary `bandwidth > 0`，否则 fail-loud。
 4. **守 §8.1 可连接性**：每格是可连接 Node（cartesian2D 出 rectangle Node，`boundaryPoint` / compass anchor），可被 `<Path>` / `<Node>` 连接标注，不退裸 Path。
 
-## 被否决选项
-
-- **给 rect 单独写一套几何 / 装配分支**：否决，理由见决策理由 1（重新拆开 ADR-01 收敛的 mark × coord 分支矩阵，违 plot-design §8.3）。
-- **缺 color 时 fail-loud**：否决。选「回退默认填充」——缺 color 回退 `DEFAULT_FILL`（`currentColor`，与 interval/point 缺 color 一致），产出无值的纯网格可作底格 / 占位再叠 point / text；不为 rect 单开 fail 语义。是否升级为 warn 留 Theme / 校验阶段。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - **binned heatmap / 显式区间边**（`x0Field`/`x1Field`/`y0Field`/`y1Field` + bin transform）：连续轴分箱热图需显式区间字段描述每格边界，cell 的 primary/secondary 直接来自 `coordinate(x0)..coordinate(x1)`。但 bin transform（连续→箱）是独立能力，未落地前显式区间边无数据来源；双 band 已覆盖 heatmap / 混淆矩阵 / 日历图主场景。gate 于 bin transform，留后续 ADR；该批字段不在本轮 schema。
 - **polar2D 环格 rect**（角度 band × 半径 band）：装配路径坐标系无关可复用，但需为 polar 单独补「角度 band × 半径 band → cell」构造（secondary 也须 band），与 ADR-01「无 cell 构造即 fail-loud」一致，不自动获得。v1 仅 cartesian2D（heatmap 绝对主场景），polar 环格后续按需。

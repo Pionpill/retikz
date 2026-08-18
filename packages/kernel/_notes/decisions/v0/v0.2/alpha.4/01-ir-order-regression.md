@@ -2,9 +2,9 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.4 plan](./roadmap.md) · [v0.2 总计划 §alpha.1 收尾遗留 / §alpha.4 设计预想](../roadmap.md) · [alpha.1 ADR-01 Scope IR/compile](../alpha.1/01-scope-ir-and-compile.md) · [alpha.1 ADR-02 nodeIndex/anchor 解析](../alpha.1/02-node-index-anchor-resolution.md) · [v0.1-alpha.5 ADR-01 Scene PathPrim/GroupPrim 结构化](../../v0.1/alpha.5/01-scene-primitive-structured.md)
+- 关联： · [v0.2 总计划 §alpha.1 收尾遗留 / §alpha.4 设计预想](../roadmap.md) · [alpha.1 ADR-01 Scope IR/compile](../alpha.1/01-scope-ir-and-compile.md) · [alpha.1 ADR-02 nodeIndex/anchor 解析](../alpha.1/02-node-index-anchor-resolution.md) · [v0.1-alpha.5 ADR-01 Scene PathPrim/GroupPrim 结构化](../../v0.1/alpha.5/01-scene-primitive-structured.md)
 
-> **范围**：修 alpha.1 重写 compile 管线（`NameStack` + 两遍扫描）时退化的「z-order 严格 = IR 声明顺序」。本段是同段 emit 增强（zIndex / 文本 Node 包 g / label rotate）与 alpha.5 Grid 底纹 sugar 的硬前置，故先落。
+> **目标**：修 alpha.1 重写 compile 管线（`NameStack` + 两遍扫描）时退化的「z-order 严格 = IR 声明顺序」。本段是同段 emit 增强（zIndex / 文本 Node 包 g / label rotate）与 alpha.5 Grid 底纹 sugar 的硬前置，故先落。
 
 ## 背景 / 约束
 
@@ -14,7 +14,7 @@
 - **坐标仍正确、但破坏下游硬前提**：同段「显式 zIndex」的核心算法是「先按 IR 顺序、再按 zIndex 稳定排序」，IR 顺序基线失效则稳定排序无从谈起；alpha.5 Grid 底纹靠 IR 顺序埋在最底层，path 顶到末尾会把底纹翻到最上层。
 - **TikZ z-order 严格 = 绘制（声明）顺序**——本回归是偏离 TikZ 习惯，修复即回归对齐。
 
-## 决策：占位槽回填 + 按 `scopeChain` 分流（选项 A）
+## 决策：占位槽回填 + 按 `scopeChain` 分流
 
 Pass 1 path 分支在 sink 里 push 一个**编译期占位 primitive** 记住位置；Pass 2 解析出真 primitive 后按引用 `indexOf` 定位再 `splice` 替换（0..N 个）。node 路径零改动。按 path 所属 scope 的累积 transform 链 `scopeChain` 分两种落点：
 
@@ -35,18 +35,13 @@ Pass 1 path 分支在 sink 里 push 一个**编译期占位 primitive** 记住�
 - **scope 内 `resolvePendingPaths(innerPaths)` 必须早于 `isPrunable` 判定**（硬约束）：否则「scope 只有 path」时占位尚未回填、`innerSink.length` 误判为空 → transform-free scope 被错误 prune。
 - **末端无残留校验无条件执行（守 Scene 契约）**：「输出无 placeholder」是 `compileToScene` 返回 `Scene` 的公开契约；每 push 占位计数 +1、每 splice 替换 -1，返回前断言归零、非零即抛——生产构建也跑（O(1)）。dev mode 仅额外递归定位**哪个** placeholder 残留、附 IR locator，差别只在诊断详尽度。
 
-### 被否决的选项
+## 长期边界
 
-- **B：占位类型改 sink 元素 wrapper（`Array<ScenePrimitive | PathSlot>` + 末端 flatten）** —— 机制同 A、正确性等价，但 `GroupPrim.children` threading 处处需 cast、额外维护 flatten 逻辑，改动面更大无收益（YAGNI）。
-- **C：path 端点改用 scope 局部坐标、所有 path 都进 `GroupPrim.children`** —— 能从根上恢复**含 transformed scope** 的完整 z-order、无 hoist 限制，但要改 `emitPathPrimitive` 端点坐标系，与 alpha.1 ADR-02「path 端点解析为全局坐标」相悖，牵动跨 scope anchor 引用 / `.north` 投影 / 数字角度等一整套已 Accepted 语义，是坐标系层面的重设计，体量远超 bug 修复。留未来单独 ADR。
-
-## 不在本 ADR 范围
-
-- **transformed scope 内 path 的完整 z-order**（选项 C）：本块维持现有 hoist（path 落在其所属 scope 的 `GroupPrim` 之前）保端点坐标正确；彻底方案留未来坐标系 ADR。同段显式 zIndex 只能覆盖部分 stacking 诉求，不替代坐标系层面修复——ADR-02 显式承认此限制。
+- **transformed scope 内 path 的完整 z-order**：本块维持现有 hoist（path 落在其所属 scope 的 `GroupPrim` 之前）保端点坐标正确；彻底方案留未来坐标系 ADR。同段显式 zIndex 只能覆盖部分 stacking 诉求，不替代坐标系层面修复——ADR-02 显式承认此限制。
 - **顶层 / scope `primitives` 之外的 stacking 机制（显式 zIndex）** → 同段 [ADR-02](./02-explicit-zindex.md)。
 
 ---
 
-> **实现指针**：level `red`（动 `core/src/compile/compile.ts` 管线）、非 breaking（无 schema / IR / 公开类型 / 导出变化，占位 `PathPlaceholder` / `InternalScenePrimitive` 模块私有不泄漏）。真源以代码为准——`compileToScene` / `PendingPath` / `resolvePendingPaths`（`core/src/compile/compile.ts`）；`ScenePrimitive` 公开 union（`core/src/primitive`）不变。测试在 `core/tests/compile/z-order.test.ts`（顶层交错同序 / transform-free scope 内同序 / 单 path 回填 / scope 仅 path 不被 prune / 解析失败删占位 / 占位不泄漏 / transformed scope path 仍 hoist 锁定），既有 `scope-bbox` / `shape-baseline-snapshot` 等快照随回填核对更新。完整原文（选项详情 / 决策细节 7 条 / DSL 示例 / 测试象限 9 case / 文件 scope）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `a21a9d6b`；压缩前完整施工蓝图 = `git show a21a9d6b^:_notes/decisions/core/v0/v0.2/alpha.4/01-ir-order-regression.md`。
+已实现本 ADR 的核心决策。兼容性：非 breaking（无 schema / IR / 公开类型 / 导出变化，占位 `PathPlaceholder` / `InternalScenePrimitive` 模块私有不泄漏）；其余默认行为、失败语义与公开契约以正文为准。

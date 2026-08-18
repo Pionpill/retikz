@@ -1,0 +1,50 @@
+import type { PreviewControlContract } from '@/modules/docs/preview';
+
+import { definePreviewControls } from '@/modules/docs/preview';
+
+/** terminal playground 使用的稳定字段 id */
+export const EntityTerminalControlId = {
+  Color: 'color',
+  Variant: 'variant',
+  Content: 'content',
+} as const;
+
+/** terminal playground 的中文属性面板 */
+export const entityTerminalControls = definePreviewControls({
+  presentation: 'panel',
+  title: '实体：终点',
+  sections: [
+    {
+      label: '视觉与内容',
+      controls: [
+        { kind: 'color', id: EntityTerminalControlId.Color, label: '颜色', defaultValue: 'currentColor' },
+        {
+          kind: 'select',
+          id: EntityTerminalControlId.Variant,
+          label: '视觉变体',
+          defaultValue: 'default',
+          options: [
+            { value: 'default', label: '默认' },
+            { value: 'fill', label: '填充' },
+            { value: 'mixed', label: '混合' },
+          ],
+        },
+        {
+          kind: 'text',
+          id: EntityTerminalControlId.Content,
+          label: '内部内容',
+          defaultValue: 'Start',
+          placeholder: '输入节点内容',
+          multiline: true,
+        },
+      ],
+    },
+  ],
+});
+
+/** terminal playground 的稳定文档契约 */
+export const previewControlContract = {
+  controls: entityTerminalControls,
+  canonicalValues: { color: 'currentColor', variant: 'default', content: 'Start' },
+  relatedApis: ['Node.color', 'Entity.variant', 'Node.children'],
+} satisfies PreviewControlContract;

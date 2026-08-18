@@ -1,5 +1,6 @@
 import type { CssColorValue, NonEmptyReadonlyArray, ResolvedThemeColors, ThemeModeValue } from '../../shared';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { ThemeMode } from '../../shared';
 
 type CoreSemanticColors = Readonly<{
@@ -60,7 +61,8 @@ const categoricalTones: Readonly<Record<ThemeModeValue, ReadonlyArray<Categorica
 };
 
 const freezeCategorical = (palette: ReadonlyArray<CssColorValue>): NonEmptyReadonlyArray<CssColorValue> => {
-  if (palette.length === 0) throw new Error('Core categorical palette must not be empty.');
+  if (palette.length === 0)
+    throw new RetikzCoreError(RetikzCoreErrorCode.Provider, 'Core categorical palette must not be empty.');
   return Object.freeze([...palette]) as NonEmptyReadonlyArray<CssColorValue>;
 };
 

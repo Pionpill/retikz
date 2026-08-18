@@ -13,6 +13,8 @@ import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 
 import type { IRPlotBinTransform, IRPlotRelateTransform } from '../../schemas';
 
+import { RetikzPlotError } from '../../error';
+
 /** bin 默认输出字段名，对齐 IntervalMark 的区间消费方 */
 const DEFAULT_BIN_START_FIELD = 'binStart';
 const DEFAULT_BIN_END_FIELD = 'binEnd';
@@ -39,7 +41,7 @@ const binEdges = (operation: IRPlotBinTransform, values: Array<number>): Array<n
     operation.thresholds !== undefined,
   ].filter(Boolean).length;
   if (strategies > 1) {
-    throw new Error(
+    throw new RetikzPlotError(
       'lowerPlots: bin transform strategies count / step / thresholds are mutually exclusive; set at most one',
     );
   }

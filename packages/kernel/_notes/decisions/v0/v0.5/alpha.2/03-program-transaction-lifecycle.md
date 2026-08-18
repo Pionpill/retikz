@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-07-26
 - 接受日期：2026-07-27
-- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-02](./02-runtime-identity-owner-registry.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md)
+- 关联：[ADR-02](./02-runtime-identity-owner-registry.md) · [ADR-04](./04-incremental-core-compile.md)
 
 ## 背景
 
@@ -286,14 +286,12 @@ Program lifecycle primary code固定为 `RUNTIME_PROGRAM_RUN_FAILED`、`RUNTIME_
 
 Renderer commit participant、prepare/commit/rollback token、不可恢复 rollback与 broken Session均留给 ADR-05；它们不是本 ADR 已接受的 Runtime API或状态。
 
-## 最终实现与验证
+## 最终结果
 
 - `@retikz/runtime` 公开 typed Program Definition/registry、同步 Session、revision-bound transaction、CandidateView、observer 与 diagnostic queue。
 - initial full、incremental、bailout、fallback 和 empty Program 共用同一稳定拓扑执行；candidate 在 publish 前隔离，成功后一次切换 revision。
 - artifact 与 owner value 按 acquire/rollback/retire/dispose 路径 exactly-once 管理；primary error 保持 code/cause，secondary lifecycle failure 进入 immutable diagnostics。
-- 自动化验证覆盖 graph/cycle/undeclared dependency、stale base、multi-owner ChangeSet、revision exhaustion、callback phase failure、rollback、observer reentry、资源所有权和 compile-time generic lookup。
-- 类型与自动化验证已覆盖同步 transaction、泛型 lookup、资源所有权、错误优先级和诊断队列。
-- Runtime package/session 中英文文档、执行逻辑图和 alpha.2 changelog 已同步当前同步事务合同。
+- 同步 transaction、泛型 lookup、资源所有权、错误优先级和诊断队列均复用上述公开合同
 
 ## 公开影响
 
@@ -301,17 +299,7 @@ Renderer commit participant、prepare/commit/rollback token、不可恢复 rollb
 - React / Vanilla 后续接线必须持有相同 session contract；本 ADR 不暴露 adapter API 或框架 lane。
 - 不修改 IR / Scene；不提供 concurrent API。
 
-## 能力完备性检查
-
-- 所属能力域：跨领域 Runtime transaction。
-- 主责包：runtime 拥有 graph/lifecycle/revision；领域 owner 拥有 value/change/Program。
-- 内部表达：完整 next Snapshot → read-only candidate → Program → atomic pointer publish。
-- 外部扩展：builtin/custom Program 同一 define/registry/dispatch。
-- define-registry：完整适用；owner 必须来自 ADR-02 registry。
-- 下游闭环：ADR-04 提供 Core Program，ADR-05 接入 renderer participant 并让 React/Vanilla 共用 Session。
-- 阶段结论：扩展 runtime；scheduler/Worker 延后 alpha.3。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Core invalidation / contribution；Scene Patch / DOM/Canvas。
 - Priority、cancel、Promise task、Worker、generation、history。

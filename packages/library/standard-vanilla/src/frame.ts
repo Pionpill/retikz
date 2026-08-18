@@ -7,7 +7,14 @@ import type {
 } from '@retikz/standard';
 import type { InputChild, InputEmbed, InputEmbedAdapter, InputEmbedContribution, InputNode } from '@retikz/vanilla';
 
-import { createFrame, FrameDescriptionSchema, FrameProvider, FrameTitleSchema } from '@retikz/standard';
+import {
+  createFrame,
+  FrameDescriptionSchema,
+  FrameProvider,
+  FrameTitleSchema,
+  RetikzStandardError,
+  RetikzStandardErrorCode,
+} from '@retikz/standard';
 
 import { StandardFrameEmbedKind } from './constants';
 
@@ -55,11 +62,20 @@ export const FrameInputEmbedAdapter: InputEmbedAdapter<InputFrame> = {
   lower: (props, context) => {
     const { children, headers, id, ...input } = props;
     const normalizeChildren = context.normalizeChildren;
-    if (normalizeChildren === undefined)
-      throw new Error('Standard Frame inputs require Kernel Vanilla normalizeScene.');
+    if (normalizeChildren === undefined) {
+      throw new RetikzStandardError({
+        code: RetikzStandardErrorCode.AuthoringInvalid,
+        message: 'Standard Frame inputs require Kernel Vanilla normalizeScene.',
+        details: { operation: 'FrameInputEmbedAdapter' },
+      });
+    }
     const normalizedChildren = normalizeChildren(children);
     if (!normalizedChildren.children.every(isFrameNode)) {
-      throw new Error('Standard Frame only accepts direct Node children.');
+      throw new RetikzStandardError({
+        code: RetikzStandardErrorCode.AuthoringInvalid,
+        message: 'Standard Frame only accepts direct Node children.',
+        details: { childCount: normalizedChildren.children.length },
+      });
     }
     const frameChildren = normalizedChildren.children.filter(isFrameNode);
     const title =
@@ -68,7 +84,11 @@ export const FrameInputEmbedAdapter: InputEmbedAdapter<InputFrame> = {
         : (() => {
             const normalized = normalizeChildren([headers.title]);
             if (normalized.children.length !== 1 || !isFrameNode(normalized.children[0])) {
-              throw new Error('Standard Frame title must normalize to exactly one Core Node.');
+              throw new RetikzStandardError({
+                code: RetikzStandardErrorCode.AuthoringInvalid,
+                message: 'Standard Frame title must normalize to exactly one Core Node.',
+                details: { childCount: normalized.children.length, header: 'title' },
+              });
             }
             return headerInputOf(normalized.children[0]);
           })();
@@ -78,7 +98,11 @@ export const FrameInputEmbedAdapter: InputEmbedAdapter<InputFrame> = {
         : (() => {
             const normalized = normalizeChildren([headers.description]);
             if (normalized.children.length !== 1 || !isFrameNode(normalized.children[0])) {
-              throw new Error('Standard Frame description must normalize to exactly one Core Node.');
+              throw new RetikzStandardError({
+                code: RetikzStandardErrorCode.AuthoringInvalid,
+                message: 'Standard Frame description must normalize to exactly one Core Node.',
+                details: { childCount: normalized.children.length, header: 'description' },
+              });
             }
             return headerInputOf(normalized.children[0]);
           })();

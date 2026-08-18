@@ -11,6 +11,7 @@ import type { IRPlotMarkOperation } from '../../schemas';
 import type { ChannelResolveContext } from './types';
 
 import { ChannelDefinitionKind } from '../../contract';
+import { RetikzPlotError } from '../../error';
 import { BUILTIN_CHANNEL_NAMES } from '../../providers';
 import { resolveMarkOperation } from '../mark';
 
@@ -24,7 +25,7 @@ const assertChannelDelivery = (definition: AnyChannelDefinition): void => {
       definition.kind === ChannelDefinitionKind.Path) &&
     typeof definition.deliver !== 'function'
   ) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: custom ${definition.kind} channel "${definition.channel}" must provide deliver (how its resolved value lands on the core ${definition.kind})`,
     );
   }
@@ -54,12 +55,12 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
   const channelKinds = operationResolution.definition.channelKinds?.(operation as never);
   for (const channel of Object.keys(extensionChannelsOf(mark))) {
     if (BUILTIN_CHANNEL_NAMES.has(channel)) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: encoding.channels.${channel} collides with a built-in channel; use the named mark property instead`,
       );
     }
     if (!context.channelRegistry.has(channel)) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: channel "${channel}" is not registered; pass a ChannelDefinition via options.channelDefinitions`,
       );
     }

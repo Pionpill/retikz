@@ -11,6 +11,7 @@ import type {
 } from '../../contract';
 import type { ResolvedTableCellPlan } from '../rule';
 
+import { RetikzTableError } from '../../error';
 import { cellFormatterDefinitionOf, resolveCellFormatterRegistry } from '../../providers';
 import { TableCellPayloadKind, TableCellPayloadSchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
@@ -46,7 +47,7 @@ const formatCell = (
   }
 
   if (plan.kind !== TableCellPayloadKind.Value) {
-    throw new Error(`table: formatter plan for Cell "${cell.id}" kind differs`);
+    throw new RetikzTableError(`table: formatter plan for Cell "${cell.id}" kind differs`);
   }
   const name = plan.formatter.name;
   const prefix = `table: formatter "${name}" for cell "${cell.id}"`;
@@ -67,7 +68,7 @@ const formatCell = (
       formatterName: name,
     });
   } catch (error) {
-    throw new Error(`${prefix}: ${errorMessageOf(error)}`, { cause: error });
+    throw new RetikzTableError(`${prefix}: ${errorMessageOf(error)}`, { cause: error });
   }
 };
 
@@ -82,11 +83,11 @@ export type FormatTableOptions = Readonly<{
 /** 校验 formatter plans 与 canonical Cells 同长、同序、同 identity / kind */
 const assertPlanAlignment = (model: SemanticTableModel, plans: ReadonlyArray<ResolvedTableCellPlan>): void => {
   if (model.cells.length !== plans.length)
-    throw new Error('table: formatter plan Cell count differs from semantic model');
+    throw new RetikzTableError('table: formatter plan Cell count differs from semantic model');
   model.cells.forEach((cell, index) => {
     const plan = plans[index];
-    if (plan.cellId !== cell.id) throw new Error(`table: formatter plan Cell ${index} identity differs`);
-    if (plan.kind !== cell.payload.kind) throw new Error(`table: formatter plan Cell ${index} kind differs`);
+    if (plan.cellId !== cell.id) throw new RetikzTableError(`table: formatter plan Cell ${index} identity differs`);
+    if (plan.kind !== cell.payload.kind) throw new RetikzTableError(`table: formatter plan Cell ${index} kind differs`);
   });
 };
 

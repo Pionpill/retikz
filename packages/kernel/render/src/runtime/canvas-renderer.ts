@@ -1,6 +1,7 @@
 import type { RuntimeScenePrimitive, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
 import type { RuntimeIdentity, RuntimePreparedCommit } from '@retikz/runtime';
 
+import { RetikzError } from '@retikz/foundation';
 import { runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { AnimationControls, IdClockRegistry } from '../animation';
@@ -21,6 +22,7 @@ import {
   sceneHasAutoplayTrigger,
 } from '../animation';
 import { hitTest, renderFrameToCanvas, renderToCanvas } from '../canvas';
+import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import {
   collectCanvasVisibleAnimationIds,
   createCanvasIdAnimationControls,
@@ -152,7 +154,10 @@ type CanvasAnimationState = Readonly<{
 }>;
 
 /** Canvas visibility 注册与初次清理同时失败时的错误 */
-class CanvasVisibilitySetupError extends Error {
+class RetikzCanvasVisibilitySetupError extends RetikzError<
+  typeof RetikzRenderErrorCode.CanvasVisibilitySetupFailed,
+  Readonly<{ cleanupCause: unknown }>
+> {
   /** 原始 visibility listener 注册失败 */
   override readonly cause: unknown;
 
@@ -161,15 +166,22 @@ class CanvasVisibilitySetupError extends Error {
 
   /** 创建保留 primary setup cause 的 visibility 错误 */
   constructor(cause: unknown, cleanupCause: unknown) {
-    super('Canvas visibility setup and cleanup failed', { cause });
-    this.name = 'CanvasVisibilitySetupError';
+    super({
+      code: RetikzRenderErrorCode.CanvasVisibilitySetupFailed,
+      message: 'Canvas visibility setup and cleanup failed',
+      details: { cleanupCause },
+      cause,
+    });
     this.cause = cause;
     this.cleanupCause = cleanupCause;
   }
 }
 
 /** Canvas animation 构建失败且清理仍失败时的可恢复错误 */
-class CanvasAnimationSetupError extends Error {
+class RetikzCanvasAnimationSetupError extends RetikzError<
+  typeof RetikzRenderErrorCode.CanvasAnimationSetupFailed,
+  Readonly<{ cleanupCause: unknown; state: CanvasAnimationState }>
+> {
   /** 原始 animation 构建失败 */
   override readonly cause: unknown;
 
@@ -181,8 +193,12 @@ class CanvasAnimationSetupError extends Error {
 
   /** 创建保留 primary setup cause 与可重试 state 的错误 */
   constructor(cause: unknown, cleanupCause: unknown, state: CanvasAnimationState) {
-    super('Canvas animation setup and cleanup failed', { cause });
-    this.name = 'CanvasAnimationSetupError';
+    super({
+      code: RetikzRenderErrorCode.CanvasAnimationSetupFailed,
+      message: 'Canvas animation setup and cleanup failed',
+      details: { cleanupCause, state },
+      cause,
+    });
     this.cause = cause;
     this.cleanupCause = cleanupCause;
     this.state = state;
@@ -190,7 +206,10 @@ class CanvasAnimationSetupError extends Error {
 }
 
 /** Canvas clock candidate 与内部恢复同时失败时的可重试错误 */
-class CanvasAnimationCommitRecoveryError extends Error {
+class RetikzCanvasAnimationCommitRecoveryError extends RetikzError<
+  typeof RetikzRenderErrorCode.CanvasAnimationCommitRecoveryFailed,
+  Readonly<{ rollbackCause: unknown; retryRollback: () => void }>
+> {
   /** 原始 candidate clock 切换失败 */
   override readonly cause: unknown;
 
@@ -202,8 +221,12 @@ class CanvasAnimationCommitRecoveryError extends Error {
 
   /** 创建保留 trigger primary 与 rollback 重试入口的错误 */
   constructor(cause: unknown, rollbackCause: unknown, retryRollback: () => void) {
-    super('Canvas animation clock replacement and recovery failed', { cause });
-    this.name = 'CanvasAnimationCommitRecoveryError';
+    super({
+      code: RetikzRenderErrorCode.CanvasAnimationCommitRecoveryFailed,
+      message: 'Canvas animation clock replacement and recovery failed',
+      details: { rollbackCause, retryRollback },
+      cause,
+    });
     this.cause = cause;
     this.rollbackCause = rollbackCause;
     this.retryRollback = retryRollback;
@@ -245,7 +268,7 @@ const createCanvasAnimationCleanupQueue = (): CanvasAnimationCleanupQueue => {
 const recoverCanvasAnimationSetupFailure = (
   cause: unknown,
 ): Readonly<{ cause: unknown; state: CanvasAnimationState }> | undefined => {
-  if (!(cause instanceof CanvasAnimationSetupError)) return undefined;
+  if (!(cause instanceof RetikzCanvasAnimationSetupError)) return undefined;
   return Object.freeze({ cause: cause.cause, state: cause.state });
 };
 
@@ -643,7 +666,11 @@ const createIncrementalBitmap = (
   bitmap.width = host.width;
   bitmap.height = host.height;
   const context = bitmap.getContext('2d');
-  if (context === null) throw new Error('Canvas retained renderer cannot acquire an incremental 2D context');
+  if (context === null)
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.Runtime,
+      'Canvas retained renderer cannot acquire an incremental 2D context',
+    );
   context.save();
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.beginPath();
@@ -678,7 +705,11 @@ const createIncrementalBitmap = (
   rollback.width = region.width;
   rollback.height = region.height;
   const rollbackContext = rollback.getContext('2d');
-  if (rollbackContext === null) throw new Error('Canvas retained renderer cannot capture the dirty rollback region');
+  if (rollbackContext === null)
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.Runtime,
+      'Canvas retained renderer cannot capture the dirty rollback region',
+    );
   rollbackContext.drawImage(
     committedBitmap,
     region.x,
@@ -696,7 +727,8 @@ const createIncrementalBitmap = (
 /** 把候选 bitmap 同步交换到 host */
 const paintBitmap = (host: HTMLCanvasElement, bitmap: HTMLCanvasElement | undefined): void => {
   const context = host.getContext('2d');
-  if (context === null) throw new Error('Canvas retained renderer cannot acquire a 2D context');
+  if (context === null)
+    throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas retained renderer cannot acquire a 2D context');
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.clearRect(0, 0, host.width, host.height);
   if (bitmap !== undefined) context.drawImage(bitmap, 0, 0);
@@ -710,7 +742,11 @@ const paintBitmapRegion = (
   sourceKind: 'full' | 'region',
 ): void => {
   const context = target.getContext('2d');
-  if (context === null) throw new Error('Canvas retained renderer cannot acquire a dirty 2D context');
+  if (context === null)
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.Runtime,
+      'Canvas retained renderer cannot acquire a dirty 2D context',
+    );
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.clearRect(region.x, region.y, region.width, region.height);
   const sourceX = sourceKind === 'full' ? region.x : 0;
@@ -734,7 +770,11 @@ const captureBitmap = (host: HTMLCanvasElement): HTMLCanvasElement => {
   bitmap.width = host.width;
   bitmap.height = host.height;
   const context = bitmap.getContext('2d');
-  if (context === null) throw new Error('Canvas retained renderer cannot capture the committed bitmap');
+  if (context === null)
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.Runtime,
+      'Canvas retained renderer cannot capture the committed bitmap',
+    );
   context.drawImage(host, 0, 0);
   return bitmap;
 };
@@ -773,7 +813,8 @@ const createCanvasHydration = (
     path: ReadonlyArray<number>,
   ): Scene['primitives'][number] => {
     const topology = topologyByPath.get(path.join('.'));
-    if (topology === undefined) throw new Error('Canvas hydration topology is incomplete');
+    if (topology === undefined)
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas hydration topology is incomplete');
     const publicId = topology.publicId ?? publicIdByOwner.get(topology.semanticOwner);
     return {
       ...(primitive as unknown as Scene['primitives'][number]),
@@ -793,7 +834,8 @@ const createCanvasHydration = (
   const stamp = (primitive: RuntimeScenePrimitive, path: ReadonlyArray<number>): Scene['primitives'][number] => {
     const token = path.join('.');
     const topology = topologyByPath.get(token);
-    if (topology === undefined) throw new Error('Canvas hydration topology is incomplete');
+    if (topology === undefined)
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas hydration topology is incomplete');
     targets.set(
       token,
       Object.freeze({
@@ -853,7 +895,8 @@ const createCanvasAnimationOccurrenceIndex = (
   const publicIdByOwner = createSemanticOwnerPublicIdMap(snapshot.topology);
   for (const node of snapshot.topology) {
     const token = previous?.tokenByIdentity.get(node.identity) ?? allocateToken();
-    if (!tokenByIdentity.set(node.identity, token)) throw new Error('Canvas animation topology has duplicate identity');
+    if (!tokenByIdentity.set(node.identity, token))
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas animation topology has duplicate identity');
     tokenByPath.set(node.primitivePath.join('.'), token);
     const publicId = node.publicId ?? publicIdByOwner.get(node.semanticOwner);
     if (publicId !== undefined) {
@@ -864,7 +907,8 @@ const createCanvasAnimationOccurrenceIndex = (
   }
   const stamp = (primitive: RuntimeScenePrimitive, path: ReadonlyArray<number>): Scene['primitives'][number] => {
     const token = tokenByPath.get(path.join('.'));
-    if (token === undefined) throw new Error('Canvas animation topology is incomplete');
+    if (token === undefined)
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas animation topology is incomplete');
     return {
       ...(primitive as unknown as Scene['primitives'][number]),
       id: token,
@@ -1058,7 +1102,7 @@ const createCanvasAnimation = (
         teardown();
         if (visibleTeardown === teardown) visibleTeardown = undefined;
       } catch (cleanupCause) {
-        throw new CanvasVisibilitySetupError(cause, cleanupCause);
+        throw new RetikzCanvasVisibilitySetupError(cause, cleanupCause);
       }
       throw cause;
     }
@@ -1219,7 +1263,11 @@ const createCanvasAnimation = (
           candidateRegistry.restartTimeline(nextToken, candidateTime);
           const node = nextSnapshot.topology.find(item => runtimeIdentityEquals(item.identity, change.identity));
           const primitive = node === undefined ? undefined : primitiveAtPath(nextSnapshot, node.primitivePath);
-          if (primitive === undefined) throw new Error('Canvas animation occurrence topology is incomplete');
+          if (primitive === undefined)
+            throw new RetikzRenderError(
+              RetikzRenderErrorCode.Runtime,
+              'Canvas animation occurrence topology is incomplete',
+            );
           const duration = primitiveAnimationDurationMs(primitive);
           candidateTimelineEndByToken.set(nextToken, duration === null ? null : candidateTime + duration);
           restartedAutoplay ||= runtimeAnimationsHaveAutoplay(primitive.animations);
@@ -1270,7 +1318,7 @@ const createCanvasAnimation = (
             try {
               retryRollback();
             } catch (rollbackCause) {
-              throw new CanvasAnimationCommitRecoveryError(cause, rollbackCause, retryRollback);
+              throw new RetikzCanvasAnimationCommitRecoveryError(cause, rollbackCause, retryRollback);
             }
             throw cause;
           }
@@ -1314,11 +1362,11 @@ const createCanvasAnimation = (
     bindVisibility();
     if (sceneHasAutoplayTrigger(scene)) clock.play();
   } catch (cause) {
-    const setupCause = cause instanceof CanvasVisibilitySetupError ? cause.cause : cause;
+    const setupCause = cause instanceof RetikzCanvasVisibilitySetupError ? cause.cause : cause;
     try {
       state.dispose();
     } catch (cleanupCause) {
-      throw new CanvasAnimationSetupError(setupCause, cleanupCause, state);
+      throw new RetikzCanvasAnimationSetupError(setupCause, cleanupCause, state);
     }
     throw setupCause;
   }
@@ -1520,7 +1568,7 @@ export const createBuiltinCanvasRetainedRenderer = (
             try {
               rollbackAnimationRebind = animationCandidate?.commit();
             } catch (cause) {
-              if (cause instanceof CanvasAnimationCommitRecoveryError) {
+              if (cause instanceof RetikzCanvasAnimationCommitRecoveryError) {
                 retryAnimationCommitRollback = cause.retryRollback;
                 throw cause.cause;
               }
@@ -1659,7 +1707,8 @@ export const createBuiltinCanvasRetainedRenderer = (
     prepareMount: (frame, config) => prepare(undefined, frame, config),
     prepare: (patch, frame, config) => prepare(patch, frame, config),
     read: () => {
-      if (currentSnapshot === undefined) throw new Error('Canvas retained renderer is not committed');
+      if (currentSnapshot === undefined)
+        throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas retained renderer is not committed');
       return Object.freeze({
         frame: Object.freeze({ primary: currentSnapshot, layers: currentLayers }),
         ...(currentAnimation === undefined ? {} : { animation: currentAnimation.controls }),

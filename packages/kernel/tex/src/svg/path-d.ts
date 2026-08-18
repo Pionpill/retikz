@@ -3,6 +3,8 @@ import type { AffineMatrix } from '@retikz/math';
 
 import { applyAffine } from '@retikz/math';
 
+import { RetikzTexError, RetikzTexErrorCode } from '../error';
+
 /** 把一个点经矩阵变换 + 归一化函数（viewBox 平移 + 缩放）映射成最终用户坐标 */
 export type PointMapper = (x: number, y: number) => [number, number];
 
@@ -28,7 +30,7 @@ export const parsePathD = (d: string): Array<PathCommand> => {
   const num = (): number => {
     const t = tokens[i++];
     const n = Number(t);
-    if (Number.isNaN(n)) throw new Error(`Invalid number in path d: ${t}`);
+    if (Number.isNaN(n)) throw new RetikzTexError(RetikzTexErrorCode.Svg, `Invalid number in path d: ${t}`);
     return n;
   };
   while (i < tokens.length) {
@@ -37,7 +39,7 @@ export const parsePathD = (d: string): Array<PathCommand> => {
       cmd = t;
       i++;
     } else if (cmd === '') {
-      throw new Error('Path d starts with a number');
+      throw new RetikzTexError(RetikzTexErrorCode.Svg, 'Path d starts with a number');
     } else if (cmd === 'M' || cmd === 'm') {
       // 隐式后续坐标对在 M 后视作 L
       cmd = cmd === 'M' ? 'M' : 'm';
@@ -170,7 +172,7 @@ export const parsePathD = (d: string): Array<PathCommand> => {
         break;
       }
       default:
-        throw new Error(`Unsupported path command: ${cmd}`);
+        throw new RetikzTexError(RetikzTexErrorCode.Svg, `Unsupported path command: ${cmd}`);
     }
     lastCmd = cmd;
   }

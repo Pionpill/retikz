@@ -1,11 +1,6 @@
-export type { RuntimeDiagnostic, RuntimeDiagnosticCodeValue, RuntimeDiagnosticPhaseValue } from './diagnostic';
-export { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from './diagnostic';
-export type { RuntimeErrorCodeValue, RuntimeOwnerExecutionResult, RuntimeOwnerLifecycleDiagnostic } from './error';
-export type { RuntimeOwnerErrorCodeValue, RuntimeOwnerPhaseValue } from './error';
-export { RuntimeErrorCode, RuntimeOwnerErrorCode, RuntimeOwnerPhase } from './error';
-export { RuntimeError, RuntimeIdentityError, RuntimeOwnerError, RuntimeOwnerRegistryError } from './error';
-export type { RuntimeIdentity, RuntimeIdentityLookup, RuntimeProgramId } from './identity';
-export { createRuntimeIdentity, createRuntimeIdentityLookup, runtimeIdentityEquals } from './identity';
+export * from './diagnostic';
+export * from './error';
+export * from './identity';
 export type {
   RuntimeChangeSet,
   RuntimeOwnedValueDefinitionInput,
@@ -42,8 +37,7 @@ export type {
   RuntimeProgramRegistryInput,
 } from './registry';
 export { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from './registry';
-export type { RuntimeSession, RuntimeSessionOptions, RuntimeUpdateStrategyValue } from './session';
-export { createRuntimeSession, RuntimeUpdateStrategy } from './session';
+export * from './session';
 export * from './trace';
 export type {
   RuntimeOwnerInput,

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRPosition, IRScene, ScenePrimitive } from '../../src';
 
+import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { applyTransformChain, inverseTransformChain } from '../../src/compile/transform';
 
@@ -597,7 +598,7 @@ describe('交互场景', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'OFFSET_BASE_UNRESOLVED')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.OffsetBaseUnresolved)).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // B 全局：A_global=(0,0); inverseRotate90 → A_local=(0,0); +(10,0)=(10,0); applyRotate90 → (0, 10)

@@ -1,10 +1,14 @@
-import { isRetainedRenderError, RetainedRenderError, RetainedRenderErrorCode } from '@retikz/render/runtime';
+import {
+  isRetikzRetainedRenderError,
+  RetikzRetainedRenderError,
+  RetikzRetainedRenderErrorCode,
+} from '@retikz/render/runtime';
 
 import type { RetainedVanillaUpdateOptions } from './types';
 
 const invalidUpdateOptions = (cause: unknown): never => {
-  throw new RetainedRenderError({
-    code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid,
+  throw new RetikzRetainedRenderError({
+    code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid,
     cause,
     message:
       'Vanilla retained update options must match the renderer backend, use closed plain-data records, and cannot change Canvas DPR',
@@ -95,7 +99,7 @@ export const captureRetainedUpdateOptions = (
     if (canvas !== undefined) assertClosedRecord(canvas, new Set(['animationProperties']));
     return cloneAndFreeze(input);
   } catch (cause) {
-    if (isRetainedRenderError(cause)) throw cause;
+    if (isRetikzRetainedRenderError(cause)) throw cause;
     return invalidUpdateOptions(cause);
   }
 };

@@ -9,6 +9,7 @@ import {
   createRuntimeSession,
   defineRuntimeCommitParticipant,
   defineRuntimeOwner,
+  RetikzRuntimeErrorCode,
 } from '../../src';
 
 const defineCounterOwner = (key: string) =>
@@ -52,13 +53,13 @@ describe('runtime session participant preflight', () => {
     const base = { owners, programs, initialSnapshots: [createRuntimeOwnerInput(owner, 1)] };
 
     expect(() => createRuntimeSession({ ...base, participants: {} } as unknown as RuntimeSessionOptions)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_TOKEN_INVALID' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantTokenInvalid }),
     );
     expect(() => createRuntimeSession({ ...base, participants: [{} as RuntimeCommitParticipantToken] })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_TOKEN_INVALID' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantTokenInvalid }),
     );
     expect(() => createRuntimeSession({ ...base, participants: [first, second] })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DUPLICATE' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDuplicate }),
     );
     expect(disposeCalls).toBe(0);
   });
@@ -73,10 +74,10 @@ describe('runtime session participant preflight', () => {
     const base = { owners, programs, initialSnapshots: [createRuntimeOwnerInput(owner, 1)] };
 
     expect(() => createRuntimeSession({ ...base, participants: [invalid] })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DEPENDENCY_INVALID' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDependencyInvalid }),
     );
     expect(() => createRuntimeSession({ ...base, participants: [duplicate] })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DEPENDENCY_INVALID' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDependencyInvalid }),
     );
 
     const validOwners = createRuntimeOwnerRegistry({ builtins: [foreign] });
@@ -107,7 +108,7 @@ describe('runtime session participant preflight', () => {
     const first = create([owned]);
 
     expect(() => create([fresh, owned])).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_ALREADY_OWNED' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantAlreadyOwned }),
     );
 
     const retry = create([fresh]);
@@ -130,7 +131,7 @@ describe('runtime session participant preflight', () => {
     });
 
     expect(() => session.participant(foreign as RuntimeCommitParticipant<{ key: string }>)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_UNKNOWN' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantUnknown }),
     );
     session.dispose();
   });

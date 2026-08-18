@@ -45,7 +45,7 @@ export type TransformType = ValueOf<typeof DataTransform>;
 
 DSL 表面（`<BarMark stack>` 自动装配 stack transform）见 [ADR-07](./07-bindings-dsl.md) 与[文档站](https://pionpill.github.io/retikz/)。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **filter / aggregate / bin / normalize / cumulative / dodge transform** → 后续（dodge 的并排是 [ADR-05](./05-relation.md) 的 mark 几何，非 transform）。
 - **groupBy 独立 op**（需 aggregate 才有意义）→ 后续。

@@ -1,9 +1,10 @@
-﻿import { isFiniteNumber } from '@retikz/math';
+import { isFiniteNumber } from '@retikz/math';
 
 import type { DataFieldTypeMap } from '../../contract';
 import type { DataFieldTypeValue, DataSortOrderValue, IRDataModel } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 
+import { RetikzDataError } from '../../error';
 import { DataFieldType, DataSortOrder } from '../../schemas';
 
 /**
@@ -130,14 +131,14 @@ export const resolveFieldTypes = (
     const declaredTypeMap: DataFieldTypeMap = new Map();
     for (const field of model) {
       if (declaredNameMap.has(field.name)) {
-        throw new Error(`data: duplicate field "${field.name}" in data.model`);
+        throw new RetikzDataError(`data: duplicate field "${field.name}" in data.model`);
       }
       declaredNameMap.add(field.name);
       if (field.type !== undefined) declaredTypeMap.set(field.name, field.type);
     }
     for (const field of sourceFields) {
       if (!declaredNameMap.has(field)) {
-        throw new Error(
+        throw new RetikzDataError(
           `data: unknown field "${field}" (data.model is declared; all referenced source fields must be listed)`,
         );
       }

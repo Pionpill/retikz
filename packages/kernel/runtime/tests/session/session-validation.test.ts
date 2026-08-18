@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { RuntimeOwnerUpdate } from '../../src/transaction';
 
+import { RetikzRuntimeErrorCode } from '../../src';
 import { defineRuntimeOwner } from '../../src/owner';
 import { defineRuntimeProgram, RuntimeProgramKind } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
@@ -28,7 +29,7 @@ describe('runtime session validation', () => {
         programs,
         initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_REGISTRY_MISMATCH' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.RegistryMismatch }));
     expect(capture).not.toHaveBeenCalled();
   });
 
@@ -44,14 +45,14 @@ describe('runtime session validation', () => {
         programs,
         initialSnapshots: [createRuntimeOwnerInput(first, 1)],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_INITIAL_OWNER_MISMATCH' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.InitialOwnerMismatch }));
     expect(() =>
       createRuntimeSession({
         owners,
         programs,
         initialSnapshots: [createRuntimeOwnerInput(first, 1), createRuntimeOwnerInput(first, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_INITIAL_OWNER_MISMATCH' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.InitialOwnerMismatch }));
   });
 
   it('按固定顺序拒绝 stale base、伪 command 与 mismatched ChangeSet base', () => {
@@ -71,13 +72,13 @@ describe('runtime session validation', () => {
         baseRevision: 1 as ReturnType<typeof session.revision>,
         owners: [forged],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_REVISION_STALE' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.RevisionStale }));
     expect(() =>
       session.update({
         baseRevision: session.revision(),
         owners: [forged],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_OWNER_COMMAND_INVALID' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.OwnerCommandInvalid }));
     const mismatched = createRuntimeOwnerUpdate(
       owner,
       2,
@@ -88,19 +89,19 @@ describe('runtime session validation', () => {
         baseRevision: session.revision(),
         owners: [mismatched, forged],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_OWNER_COMMAND_INVALID' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.OwnerCommandInvalid }));
     expect(() =>
       session.update({
         baseRevision: session.revision(),
         owners: [mismatched, createRuntimeOwnerUpdate(owner, 3)],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_OWNER_COMMAND_INVALID' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.OwnerCommandInvalid }));
     expect(() =>
       session.update({
         baseRevision: session.revision(),
         owners: [mismatched],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_CHANGESET_REVISION_MISMATCH' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ChangeSetRevisionMismatch }));
     expect(capture).toHaveBeenCalledTimes(1);
   });
 
@@ -124,7 +125,7 @@ describe('runtime session validation', () => {
         programs,
         initialSnapshots: [createRuntimeOwnerInput(declared, 1), createRuntimeOwnerInput(hidden, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_UNDECLARED_DEPENDENCY' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.UndeclaredDependency }));
   });
 
   it('CandidateView 拒绝读取已注册但未声明的 Program artifact', () => {
@@ -154,7 +155,7 @@ describe('runtime session validation', () => {
         programs,
         initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_UNDECLARED_DEPENDENCY' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.UndeclaredDependency }));
   });
 
   it('重复 dispose no-op，并在 disposed 后拒绝 read/update', () => {
@@ -168,9 +169,11 @@ describe('runtime session validation', () => {
     });
 
     session.dispose();
-    expect(() => session.snapshot(owner)).toThrowError(expect.objectContaining({ code: 'RUNTIME_SESSION_DISPOSED' }));
+    expect(() => session.snapshot(owner)).toThrowError(
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.SessionDisposed }),
+    );
     expect(() => session.update({ baseRevision: session.revision(), owners: [] })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_SESSION_DISPOSED' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.SessionDisposed }),
     );
     expect(session.revision()).toBe(0);
     expect(() => session.dispose()).not.toThrow();

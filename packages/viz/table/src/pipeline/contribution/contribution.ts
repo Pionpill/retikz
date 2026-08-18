@@ -1,7 +1,9 @@
+import { assertNonEmptyString } from '@retikz/foundation';
+
 import type { LowerTablesOptions } from '../types';
 import type { TableRuntimeContribution, TableRuntimeContributionInput } from './types';
 
-import { assertTableNonEmptyString } from '../../shared';
+import { RetikzTableError } from '../../error';
 import { createTableNestedDefinitionProvider, createTableProvider } from './provider';
 
 /** 把任意 JSON 字符串编码为稳定且无碰撞的 runtime reference 片段 */
@@ -35,11 +37,13 @@ const snapshotLowerOptions = (input: LowerTablesOptions): LowerTablesOptions =>
 
 /** 创建供 React 与 Vanilla 宿主统一聚合的 Table runtime contribution */
 export const createTableRuntimeContribution = (input: TableRuntimeContributionInput): TableRuntimeContribution => {
-  assertTableNonEmptyString(input.reference, 'table: runtime contribution reference must be non-empty');
+  assertNonEmptyString(input.reference, 'table runtime contribution reference');
   const runtimeReference = `@@retikz/table/runtime/${encodeRuntimeReference(input.reference)}`;
   const data = input.data ?? {};
   if (Object.hasOwn(data, runtimeReference)) {
-    throw new Error(`table: runtime contribution dataset conflict for reserved reference "${runtimeReference}"`);
+    throw new RetikzTableError(
+      `table: runtime contribution dataset conflict for reserved reference "${runtimeReference}"`,
+    );
   }
 
   const tableProvider = createTableProvider(data, runtimeReference, snapshotLowerOptions(input.lowerOptions ?? {}));

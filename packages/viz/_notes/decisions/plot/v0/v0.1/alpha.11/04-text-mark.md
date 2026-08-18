@@ -61,7 +61,7 @@ text mark 的位置投影复用 point 同源路径（坐标系无关）。差别
 3. **JSON IR 约束下的三层 + 运行时一层**：声明层 `field` / `value` / `format` 都 JSON 安全、AI 可生成、可序列化往返；完全自定义走运行时 `resolveLabel` 逃生舱。
 4. **text 内容是独立通道、不藏进 type**：符合 §3.6「非位置通道」与 encoding「字段 / 常量显式」原则。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **宿主解析机制**（已拍板归此处避免歧义）：曾考虑 `<TextMark>` 独立声明后 lowering 期按 datum 身份跨 mark 匹配回宿主 Node——脆且歧义（多 mark 同位、键冲突），**已否决**。最终采「label 作为宿主 mark 自己的通道」就地填 `label`，`<TextMark>` 只承担无宿主自由文本，不承担「标注别的 mark」。
 - **标签碰撞 / 防重叠（declutter）**：推后。纯函数 lowering 无文字度量（§13），自动避让依赖字体 metrics、不可序列化，是后续 + 性能专项。

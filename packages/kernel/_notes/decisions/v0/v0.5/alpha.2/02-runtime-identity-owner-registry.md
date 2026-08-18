@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-07-26
 - 接受日期：2026-07-27
-- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-01](./01-performance-observability-baseline.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [包拓扑](../../../../../../../notes/architecture/package-topology.md)
+- 关联：[ADR-01](./01-performance-observability-baseline.md) · [ADR-03](./03-program-transaction-lifecycle.md)
 
 ## 背景
 
@@ -173,14 +173,11 @@ Private executor的 `prepare/compare/validateChangeSet`成功返回 `RuntimeOwne
 2. Runtime 只验证结构和生命周期，不理解 Core、Plot、Table 的 value / change。
 3. 把 owner 从 transaction 拆开后，可独立证明类型恢复、identity 唯一性和 mutable alias 隔离。
 
-## 最终实现与验证
-
+## 最终结果
 - `@retikz/runtime` 公开结构化 identity、typed Owner Definition、owned value executor 与统一 Owner registry。
 - builtin/custom owner 复用同一 define、merge、resolve 和重复 key 诊断；Runtime 只验证结构与生命周期，不读取领域 value/change 语义。
 - capture/read/equals/dispose、identity collector 与 registry 均使用稳定错误 code/phase，并在失败时保持 candidate 隔离和剩余资源清理。
-- 自动化验证覆盖 Unicode/特殊 segment、owner mismatch、duplicate path、mutable alias、异构 typed registry、动态 string lookup 拒绝和 lifecycle failure。
-- 类型与自动化验证已覆盖公共泛型恢复、registry dispatch、identity 校验、只读隔离和生命周期失败路径。
-- 中英文 Runtime package 文档与 alpha.2 changelog 已同步 identity、Owner Definition、registry 和生命周期边界。
+- Owner registry、identity 与生命周期复用同一 typed contract 和稳定错误分类。
 
 ## 公开影响
 
@@ -188,18 +185,7 @@ Private executor的 `prepare/compare/validateChangeSet`成功返回 `RuntimeOwne
 - 不修改 Core IR / Scene；不新增 React prop 或 Vanilla spec 字段。
 - Core、Render 与真实 Tier 2 consumer 通过 Definition 接入，不把领域 schema 移入 runtime。
 
-## 能力完备性检查
-
-- 所属能力域与能力面：跨 Drawing / Data / Visualization 的零领域运行时基础。
-- 解决的问题：稳定 owner、identity、完整 Snapshot 和 owner value 生命周期。
-- 主责包与协作包：runtime 拥有结构契约；领域包拥有 value/change/identity 派生。
-- 内部表达链路：input → capture → identity validation → read-only Snapshot → dispose。
-- 外部扩展链路：内置和第三方 owner 统一 Definition / define / registry / resolve。
-- define-registry：完整适用，重复 key 无优先级覆盖。
-- 下游闭环：ADR-03 消费 registry 构造 transaction；ADR-04 Core owner、ADR-05 Render identity topology复用。
-- 不支持边界与诊断：不提供 Program、session、history、scheduler 或 renderer state；本轮结论为下沉到 runtime。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Program graph、candidate transaction、revision commit 和 observer。
 - Core contribution / Scene Patch / retained renderer。

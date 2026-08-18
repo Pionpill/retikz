@@ -6,6 +6,7 @@ import { PlotGuide, PlotMark, PointMarkSchema } from '@retikz/plot';
 import type { ChartRecipeSource, ChartRecipeStyleContext } from '../../_shared';
 
 import { chartRecipeId } from '../../_shared';
+import { RetikzChartError } from '../../error';
 import { createChartAxisGuides, createChartCartesian2D, createChartPlot, plotMarkValueOf } from './plot';
 
 type PointChartMarkPatch = {
@@ -44,7 +45,7 @@ const strictVisualChannelOf = (channel: {
     return { field: channel.field, ...(channel.scale === undefined ? {} : { scale: channel.scale }) };
   }
   if (channel.value !== undefined) return { value: channel.value };
-  throw new Error('Chart visual channel requires a field or constant value');
+  throw new RetikzChartError('Chart visual channel requires a field or constant value');
 };
 
 /** 从 Point Chart 输入生成完整 Plot */

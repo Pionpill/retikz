@@ -11,6 +11,7 @@ import type { ChartThemeStyleDefinition } from './definition';
 
 import { ChartThemeToken } from '../../_shared/style';
 import { ChartResolvedThemeTokensSchema, ChartThemeTokenOverridesSchema } from '../../_shared/style';
+import { RetikzChartError } from '../../error';
 import { getDefaultChartThemePreset } from './catalog';
 import { resolveChartThemeStyleRegistry } from './registry';
 
@@ -36,7 +37,7 @@ export const resolveChartStyle = (
   const styles = resolveChartThemeStyleRegistry(chartThemeStyles);
   const definition = style === undefined ? undefined : styles.get(style);
   if (style !== undefined && definition === undefined)
-    throw new Error(`Chart theme style '${style}' is not registered.`);
+    throw new RetikzChartError(`Chart theme style '${style}' is not registered.`);
   const baseline =
     definition === undefined ? getDefaultChartThemePreset(effectiveTheme.mode) : definition.resolve(effectiveTheme);
   const overrides = ChartThemeTokenOverridesSchema.parse(spec.chartThemeTokens ?? {});

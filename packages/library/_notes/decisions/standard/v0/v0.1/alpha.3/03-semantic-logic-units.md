@@ -2,7 +2,7 @@
 
 - 状态：Superseded（由 [Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 取代；2026-08-15）
 - 决策日期：2026-08-01；2026-08-08 简化为 Core Node sugar
-- 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-frame.md)
+- 关联：[alpha.3 roadmap](./roadmap-graph-history.md) · [ADR-01](./01-logic-diagram-profile.md) · [ADR-02](./02-headless-logic-frame.md)
 - 后继：[Graph alpha.1 ADR-01](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/01-graph-package-family.md) 已把四个 Core Node sugar 统一迁入 `GraphNode.role`；迁移不改变其 Core Node 等价语义
 
 ## 背景与目标
@@ -56,15 +56,7 @@ canonical 输出统一为 `IRNode`，顶层 `type` 始终为 `'node'`。不再�
 - Core：Node schema、文本、shape、boundary、布局与 Scene
 - GraphFrame / GraphConnector / Callout：各自 composite 能力，不由 GraphNode 复制
 
-## 验证策略
-
-- Schema：四种固定 shape、默认值、职责 describe、Node props 和错误输入
-- Factory：输出 `type: 'node'`、无 namespace/appearance/content、JSON 可序列化
-- React：字符串 children、`<Text>` children、与 Core Node 等价、无 semantic Definition
-- Vanilla：builder 直接返回 Node、保留原始 id、无 semantic adapter
-- Integration：GraphNode 可作为 GraphFrame、GraphConnector、Callout 的普通 Core child
-
-## 不在本 ADR 范围
+## 长期边界
 
 - GraphFrame 的区域布局与 artifact
 - Connector / Callout 的 routing、placement、leader 与 artifact

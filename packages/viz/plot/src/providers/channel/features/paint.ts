@@ -11,6 +11,7 @@ import type { ChannelPaletteContext } from '../../../contract';
 import type { IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation } from '../../../schemas';
 
 import { ChannelDefinitionKind, isBuiltinScaleOperation } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import { PlotScale } from '../../../schemas';
 
 /** 颜色通道 definition 的名称、取值与图例配置 */
@@ -29,7 +30,7 @@ const parsePaintConstant = (channelName: string, value: unknown, allowPaintSpec:
     const result = PaintSchema.safeParse(value);
     if (result.success) return result.data;
   }
-  throw new Error(
+  throw new RetikzPlotError(
     `lowerPlots: constant ${channelName} channel must be a CSS color string${allowPaintSpec ? ' or core IRPaint' : ''}`,
   );
 };
@@ -63,7 +64,7 @@ export const makeColorChannelDefinition = (
         (colorFieldType === DataFieldType.Continuous || colorFieldType === DataFieldType.Temporal) &&
         channel.scale === undefined
       ) {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: continuous/temporal ${options.channel} field "${field}" requires an explicit sequential/diverging/quantize/threshold/quantile color scale reference`,
         );
       }
@@ -71,7 +72,9 @@ export const makeColorChannelDefinition = (
       if (channel.scale !== undefined) {
         const found = scaleByName.get(channel.scale);
         if (!found)
-          throw new Error(`lowerPlots: ${options.channel} channel references unknown scale "${channel.scale}"`);
+          throw new RetikzPlotError(
+            `lowerPlots: ${options.channel} channel references unknown scale "${channel.scale}"`,
+          );
         scaleOperation = found;
       } else {
         scaleOperation = { type: PlotScale.Ordinal, name: `__${options.channel}_${field}` };

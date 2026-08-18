@@ -62,28 +62,7 @@ const PlotThemeToken = {
 - 外部扩展与下游闭环：自定义 Plot style、local token 与结构化 `plotTheme` 继续经过同一 resolver、mapping 和 lowering 主链，SVG 与 Canvas 只执行最终 Core IR
 - 不支持边界：本轮不增加 background border、pattern preset、圆形 polar surface 或多层 surface token
 
-## 架构验证
-
-- 是否可由现有能力组合：可以；既有 Plot theme contract、resolved Plot area 和 Core rectangle node 足以闭环
-- Data / Plot / Table / Chart / Standard / Core 责任切分：该能力只依赖 Plot 的布局结果并下沉 Core；不改变 Data、Table、Standard 或 renderer 责任，Chart 继续拥有外围 canvas
-- 是否需要新 IR / contract / registry：不需要；这是既有闭合 token vocabulary 和 theme 字段的语义收敛，自定义 style 继续复用现有 `PlotThemeStyleDefinition` registry
-- pipeline / lowering / renderer / diagnostics 如何闭环：theme resolver 从 `plotArea.fill` 产出 background paint，lowering 以有效 Plot area 生成底层背景节点，Core 与 renderer 按现有 paint 语义执行，非法输入沿现有 schema 与 token 诊断失败
-- provenance / lineage / locator 是否适用：背景不表达 datum 或数据 lineage；facet panel 与 Plot area 的既有 identity 保持不变
-- 结论：用现有 Visualization Complete 能力组合表达，并修正既有 consumer 的空间范围
-
-## 被否决方案
-
-- 继续填充整个 Plot 外框：会把 axis、legend 与 facet 间隙误当成绘图区，并侵入 Chart canvas 语义
-- 把背景放进 `axis` theme：绘图区表面不是轴线、刻度、网格或轴文字的视觉属性
-- 保留顶层 `background`：无法让结构化 theme 按 `plotArea`、`axis`、`legend` 等职能模块组织，也与 `plot.area.fill` token 层级不一致
-- 使用 `plotArea.background`：`plotArea` 已限定视觉角色，内部使用实际 paint 属性 `fill` 能与 flat token 一一对应，并为同层其它视觉属性保留一致命名
-- 依赖宿主 CSS 或 renderer 清屏色：无法进入 renderer-neutral Core IR，也不能保证 SVG、Canvas、headless 与导出结果等价
-
-## 测试策略摘要
-
-需要 schema 与 token contract 证据锁定 `plotArea.fill`、paint 约束和旧名称拒绝；resolver 与 inspection 证据锁定结构化输入和 flat token 的同义映射；pipeline 证据锁定普通 Plot 与 facet panel 的有效绘图区几何、透明外围和背景层级；adapter 与 docs 证据锁定 React、Vanilla 和用户示例使用同一公开契约。关键不变量是 fill 永远不越过对应 Plot area，且缺省或 `none` 不生成可见背景。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Chart canvas、title、subtitle、caption、source 或其它 presentation surface
 - renderer 清屏色、宿主 CSS 背景与导出页面背景

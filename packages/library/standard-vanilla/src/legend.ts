@@ -7,7 +7,7 @@ import type {
   InputEmbedContribution,
 } from '@retikz/vanilla';
 
-import { createLegend, LegendProvider } from '@retikz/standard';
+import { createLegend, LegendProvider, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
 
 import { StandardLegendEmbedKind } from './constants';
 
@@ -49,10 +49,20 @@ const normalizeLegendSlot = (
   collected: CollectedLegendSlots,
 ) => {
   const normalizeChildren = context.normalizeChildren;
-  if (normalizeChildren === undefined) throw new Error('Standard Legend inputs require Kernel Vanilla normalizeScene.');
+  if (normalizeChildren === undefined) {
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: 'Standard Legend inputs require Kernel Vanilla normalizeScene.',
+      details: { operation: 'LegendInputEmbedAdapter' },
+    });
+  }
   const normalized = normalizeChildren([child]);
   if (normalized.children.length !== 1) {
-    throw new Error(`${label} must normalize to exactly one IRChild.`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: `${label} must normalize to exactly one IRChild.`,
+      details: { childCount: normalized.children.length, label },
+    });
   }
   collected.roots.push(...normalized.providerDependencies.roots);
   collected.providers.push(...normalized.providerDependencies.providers);

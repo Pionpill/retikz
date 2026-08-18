@@ -1,6 +1,7 @@
-﻿import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
+import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
 
 import { compileToScene, defineBoundary, defineClip } from '@retikz/core';
+import { RetikzRetainedRenderErrorCode } from '@retikz/render/runtime';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -52,12 +53,29 @@ const circleFrameClip = (): ClipDefinition =>
       inner: z.number().positive(),
     }),
     resolve: spec => ({
-      kind: 'compound',
-      fillRule: 'evenodd',
-      children: [
-        { kind: 'circle', cx: spec.cx, cy: spec.cy, r: spec.outer },
-        { kind: 'circle', cx: spec.cx, cy: spec.cy, r: spec.inner },
+      kind: 'circleFrame',
+      cx: spec.cx,
+      cy: spec.cy,
+      outer: spec.outer,
+      inner: spec.inner,
+    }),
+    shapeSchema: z.strictObject({
+      kind: z.literal('circleFrame'),
+      cx: z.number(),
+      cy: z.number(),
+      outer: z.number().positive(),
+      inner: z.number().positive(),
+    }),
+    lower: shape => ({
+      commands: [
+        { kind: 'move', to: [shape.cx + shape.outer, shape.cy] },
+        { kind: 'arc', center: [shape.cx, shape.cy], radius: shape.outer, startAngle: 0, endAngle: 360 },
+        { kind: 'close' },
+        { kind: 'move', to: [shape.cx + shape.inner, shape.cy] },
+        { kind: 'arc', center: [shape.cx, shape.cy], radius: shape.inner, startAngle: 0, endAngle: 360 },
+        { kind: 'close' },
       ],
+      fillRule: 'evenodd',
     }),
   });
 
@@ -114,10 +132,10 @@ describe('@retikz/vanilla renderToSvgString', () => {
       },
     };
     expect(() => renderToSvgString(nodeIr, mountOptions as unknown as RenderToStringOptions)).toThrowError(
-      expect.objectContaining({ code: 'RETAINED_RUNTIME_INPUT_INVALID' }),
+      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
     expect(() => renderToSvgString(nodeIr, { ignored: true } as unknown as RenderToStringOptions)).toThrowError(
-      expect.objectContaining({ code: 'RETAINED_RUNTIME_INPUT_INVALID' }),
+      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
   });
   it('passes boundary providers to compile options', () => {
@@ -127,7 +145,9 @@ describe('@retikz/vanilla renderToSvgString', () => {
 
   it('passes clip providers to compile options', () => {
     expect(() => renderToSvgString(clipIr)).toThrow(/options\.clips/i);
-    const svg = renderToSvgString(clipIr, { compile: { clips: [circleFrameClip()] } });
+    const svg = renderToSvgString(clipIr, {
+      compile: { clips: [circleFrameClip()] },
+    });
     expect(svg).toContain('<clipPath');
     expect(svg).toContain('clip-rule="evenodd"');
   });

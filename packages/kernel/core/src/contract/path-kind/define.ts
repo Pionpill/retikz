@@ -1,7 +1,9 @@
-import { assertNonEmptyString as assertFoundationNonEmptyString } from '@retikz/foundation';
+import { assertNonEmptyString } from '@retikz/foundation';
 
 import type { IRPathBase, JsonValue } from '../../schemas';
 import type { AnyPathKindDefinition, PathKindDefinition } from './types';
+
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 
 /** 保留普通与带 owner output Path kind 两个互斥分支的定义入口 */
 type DefinePathKind = {
@@ -20,16 +22,11 @@ type DefinePathKind = {
  */
 const definePathKindImplementation = (input: unknown): unknown => {
   const definition = input as AnyPathKindDefinition;
-  const message = 'definePathKind: name must be a non-empty string.';
-  try {
-    assertFoundationNonEmptyString(definition.name, 'definePathKind name');
-  } catch {
-    throw new Error(message);
-  }
+  assertNonEmptyString(definition.name, 'definePathKind: name');
   const record = definition as unknown as Readonly<Record<string, unknown>>;
   const schema = record.schema;
   if (schema === null || typeof schema !== 'object' || typeof Reflect.get(schema, 'parse') !== 'function') {
-    throw new Error('definePathKind: schema must be a Zod schema.');
+    throw new RetikzCoreError(RetikzCoreErrorCode.Contract, 'definePathKind: schema must be a Zod schema.');
   }
   const ownerOutput = record.ownerOutput;
   if (ownerOutput !== undefined) {
@@ -38,7 +35,10 @@ const definePathKindImplementation = (input: unknown): unknown => {
       typeof ownerOutput !== 'object' ||
       typeof Reflect.get(ownerOutput, 'schema') !== 'object'
     ) {
-      throw new Error('definePathKind: ownerOutput.schema must be a Zod schema.');
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Contract,
+        'definePathKind: ownerOutput.schema must be a Zod schema.',
+      );
     }
   }
   return definition;

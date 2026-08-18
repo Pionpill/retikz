@@ -1,8 +1,10 @@
 import type {
   ContainerCreateOptions,
-  ContainerRegionCreateOptions,
-  ContainerSectionCreateOptions,
+  ContainerRegion,
+  ContainerSection,
   EntityCreateOptions,
+  GraphCreateOptions,
+  GraphDefinitionOptions,
   IRRelation,
   RelationCreateOptions,
 } from '@retikz/graph';
@@ -20,21 +22,61 @@ import {
   ContainerProvider,
   createContainer,
   createEntity,
+  createGraph,
   createGraphProviders,
   createRelation,
   EntityProvider,
+  GraphProvider,
   RelationProvider,
 } from '@retikz/graph';
 
-import { ContainerEmbedKind, EntityEmbedKind,RelationEmbedKind } from './constants';
+import { ContainerEmbedKind, EntityEmbedKind, GraphEmbedKind, RelationEmbedKind } from './constants';
+import { RetikzGraphVanillaError, RetikzGraphVanillaErrorCode } from './errors';
+
+type GraphCompositeProvider = ReturnType<typeof createGraphProviders>[number];
+
+const DEFAULT_GRAPH_PROVIDERS = createGraphProviders();
+
+const sameProviderKey = (left: GraphCompositeProvider['key'], right: GraphCompositeProvider['key']): boolean =>
+  left.capability === 'composite' &&
+  right.capability === 'composite' &&
+  left.namespace === right.namespace &&
+  left.type === right.type;
+
+/** 收集一个 Graph provider 根节点的完整可达 catalog */
+const providerClosure = (
+  root: GraphCompositeProvider,
+  providers: ReadonlyArray<GraphCompositeProvider>,
+): Array<GraphCompositeProvider> => {
+  const output: Array<GraphCompositeProvider> = [];
+  const visited = new Set<GraphCompositeProvider>();
+  const visit = (provider: GraphCompositeProvider): void => {
+    if (visited.has(provider)) return;
+    visited.add(provider);
+    output.push(provider);
+    for (const dependency of provider.dependencies) {
+      const candidate = providers.find(entry => sameProviderKey(entry.key, dependency));
+      if (candidate === undefined) {
+        throw new RetikzGraphVanillaError({
+          code: RetikzGraphVanillaErrorCode.ProviderDependencyMissing,
+          message: `Graph provider catalog is missing dependency '${dependency.capability}'.`,
+          details: { dependency: dependency.capability },
+        });
+      }
+      visit(candidate);
+    }
+  };
+  visit(root);
+  return output;
+};
 
 /** Container region 的 framework-neutral authoring 输入 */
-export type InputContainerRegion = Omit<ContainerRegionCreateOptions, 'child'> & {
+export type InputContainerRegion = Omit<ContainerRegion, 'child'> & {
   child: InputChild;
 };
 
 /** Container section 的 framework-neutral authoring 输入 */
-export type InputContainerSection = Omit<ContainerSectionCreateOptions, 'child'> & {
+export type InputContainerSection = Omit<ContainerSection, 'child'> & {
   child: InputChild;
 };
 
@@ -44,6 +86,18 @@ export type InputContainer = Omit<ContainerCreateOptions, 'id' | 'header' | 'sec
   id?: string;
   header?: InputContainerRegion;
   sections?: ReadonlyArray<InputContainerSection>;
+};
+
+/** Graph presentation root 的 framework-neutral authoring 输入 */
+export type InputGraph = Omit<GraphCreateOptions, 'id' | 'children'> & {
+  /** 当前 Graph authoring assembly 使用的 Entity role definitions */
+  entityRoles?: GraphDefinitionOptions['entityRoles'];
+  /** 当前 Graph authoring assembly 使用的 Entity variant definitions */
+  entityVariants?: GraphDefinitionOptions['entityVariants'];
+  /** 当前 Graph authoring assembly 使用的 Graph Theme style definitions */
+  graphThemeStyles?: GraphDefinitionOptions['graphThemeStyles'];
+  /** 按 authored 顺序归一化的 Graph / Core children */
+  children: ReadonlyArray<InputChild>;
 };
 
 /** Entity 的 authoring 输入，embed id 提供稳定身份 */
@@ -74,10 +128,20 @@ const normalizeGraphChild = (
   collected: CollectedInputDependencies,
 ) => {
   const normalizeChildren = context.normalizeChildren;
-  if (normalizeChildren === undefined) throw new Error('Graph slot inputs require Kernel Vanilla normalizeScene.');
+  if (normalizeChildren === undefined) {
+    throw new RetikzGraphVanillaError({
+      code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,
+      message: 'Graph slot inputs require Kernel Vanilla normalizeScene.',
+      details: { label },
+    });
+  }
   const normalized = normalizeChildren([child]);
   if (normalized.children.length !== 1) {
-    throw new Error(`${label} must normalize to exactly one Core child.`);
+    throw new RetikzGraphVanillaError({
+      code: RetikzGraphVanillaErrorCode.NormalizedChildCountInvalid,
+      message: `${label} must normalize to exactly one Core child.`,
+      details: { label, expectedCount: 1, receivedCount: normalized.children.length },
+    });
   }
   collected.roots.push(...normalized.providerDependencies.roots);
   collected.providers.push(...normalized.providerDependencies.providers);
@@ -91,7 +155,7 @@ const normalizeContainerRegion = (
   label: string,
   context: InputEmbedContext,
   collected: CollectedInputDependencies,
-): ContainerRegionCreateOptions => ({
+): ContainerRegion => ({
   ...input,
   child: normalizeGraphChild(input.child, label, context, collected),
 });
@@ -101,9 +165,60 @@ const normalizeContainerSection = (
   input: InputContainerSection,
   context: InputEmbedContext,
   collected: CollectedInputDependencies,
-): ContainerSectionCreateOptions => ({
+): ContainerSection => ({
   ...input,
   child: normalizeGraphChild(input.child, `ContainerSection '${input.key}'`, context, collected),
+});
+
+/** Graph presentation root 的 InputEmbed adapter */
+export const GraphInputEmbedAdapter: InputEmbedAdapter<InputGraph> = {
+  kind: GraphEmbedKind,
+  lower: (props, context) => {
+    const normalizeChildren = context.normalizeChildren;
+    if (normalizeChildren === undefined) {
+      throw new RetikzGraphVanillaError({
+        code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,
+        message: 'Graph inputs require Kernel Vanilla normalizeScene.',
+        details: { label: 'Graph' },
+      });
+    }
+    const { entityRoles, entityVariants, graphThemeStyles, children, ...input } = props;
+    const hasCustomOptions =
+      entityRoles !== undefined || entityVariants !== undefined || graphThemeStyles !== undefined;
+    const configuredProviders = hasCustomOptions
+      ? createGraphProviders({ entityRoles, entityVariants, graphThemeStyles })
+      : DEFAULT_GRAPH_PROVIDERS;
+    const provider = configuredProviders.find(candidate => sameProviderKey(candidate.key, GraphProvider.key));
+    if (provider === undefined) {
+      throw new RetikzGraphVanillaError({
+        code: RetikzGraphVanillaErrorCode.ProviderMissing,
+        message: 'Graph provider catalog is missing the Graph provider.',
+        details: { provider: GraphEmbedKind },
+      });
+    }
+    const normalized = normalizeChildren(children);
+    const providers = normalized.providerDependencies.providers.map(candidate => {
+      const defaultProvider = DEFAULT_GRAPH_PROVIDERS.find(entry => sameProviderKey(entry.key, candidate.key));
+      const configuredProvider = configuredProviders.find(entry => sameProviderKey(entry.key, candidate.key));
+      return candidate === defaultProvider && configuredProvider !== undefined ? configuredProvider : candidate;
+    });
+    return {
+      node: createGraph({ ...input, id: context.id, children: [...normalized.children] }),
+      providerDependencies: {
+        roots: [provider.key, ...normalized.providerDependencies.roots],
+        providers: [...providerClosure(provider, configuredProviders), ...providers],
+      },
+      ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
+    };
+  },
+};
+
+/** 创建 Graph presentation root 的 authoring embed 节点 */
+export const graph = (id: string, input: InputGraph): InputEmbed<InputGraph> => ({
+  type: 'embed',
+  kind: GraphEmbedKind,
+  id,
+  props: input,
 });
 
 /** 将框架收集的 Core Node 输入收敛为 Entity 输入 */
@@ -114,14 +229,30 @@ const normalizeEntity = <TInput extends Record<string, unknown>>(
   const { authoringNode, ...base } = input as TInput & { authoringNode?: InputNode };
   if (authoringNode === undefined) return base;
   const normalizeChildren = context.normalizeChildren;
-  if (normalizeChildren === undefined) throw new Error('Entity inputs require Kernel Vanilla normalizeScene.');
+  if (normalizeChildren === undefined) {
+    throw new RetikzGraphVanillaError({
+      code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,
+      message: 'Entity inputs require Kernel Vanilla normalizeScene.',
+      details: { label: 'Entity' },
+    });
+  }
   const normalized = normalizeChildren([authoringNode]);
   if (
     normalized.children.length !== 1 ||
     normalized.children[0].type !== 'node' ||
     'namespace' in normalized.children[0]
   ) {
-    throw new Error('Entity must normalize to exactly one Core Node.');
+    throw new RetikzGraphVanillaError({
+      code: RetikzGraphVanillaErrorCode.NormalizedNodeInvalid,
+      message: 'Entity must normalize to exactly one Core Node.',
+      details: {
+        label: 'Entity',
+        expectedType: 'node',
+        receivedType: normalized.children[0]?.type ?? 'none',
+        expectedCount: 1,
+        receivedCount: normalized.children.length,
+      },
+    });
   }
   const { type: _type, id: _id, ...node } = normalized.children[0];
   void _type;
@@ -134,10 +265,26 @@ const createEmbeddedRelation = (id: string, input: InputRelation, context: Input
   if ('authoringPath' in input) {
     const { authoringPath, ...base } = input;
     const normalizeChildren = context.normalizeChildren;
-    if (normalizeChildren === undefined) throw new Error('Relation inputs require Kernel Vanilla normalizeScene.');
+    if (normalizeChildren === undefined) {
+      throw new RetikzGraphVanillaError({
+        code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,
+        message: 'Relation inputs require Kernel Vanilla normalizeScene.',
+        details: { label: 'Relation' },
+      });
+    }
     const normalized = normalizeChildren([authoringPath]);
     if (normalized.children.length !== 1 || normalized.children[0].type !== 'path') {
-      throw new Error('Relation must normalize to exactly one Core Path.');
+      throw new RetikzGraphVanillaError({
+        code: RetikzGraphVanillaErrorCode.NormalizedPathInvalid,
+        message: 'Relation must normalize to exactly one Core Path.',
+        details: {
+          label: 'Relation',
+          expectedType: 'path',
+          receivedType: normalized.children[0]?.type ?? 'none',
+          expectedCount: 1,
+          receivedCount: normalized.children.length,
+        },
+      });
     }
     return createRelation({
       ...base,
@@ -170,7 +317,7 @@ export const ContainerInputEmbedAdapter: InputEmbedAdapter<InputContainer> = {
       }),
       providerDependencies: {
         roots: [ContainerProvider.key, ...collected.roots],
-        providers: [ContainerProvider, ...collected.providers],
+        providers: [...providerClosure(ContainerProvider, DEFAULT_GRAPH_PROVIDERS), ...collected.providers],
       },
       ...(collected.authoringSites.length === 0 ? {} : { authoringSites: collected.authoringSites }),
     };
@@ -190,7 +337,10 @@ export const EntityInputEmbedAdapter: InputEmbedAdapter<InputEntity> = {
   kind: EntityEmbedKind,
   lower: (props, context) => ({
     node: createEntity({ ...normalizeEntity(props, context), id: context.id }),
-    providerDependencies: { roots: [EntityProvider.key], providers: [EntityProvider] },
+    providerDependencies: {
+      roots: [EntityProvider.key],
+      providers: providerClosure(EntityProvider, DEFAULT_GRAPH_PROVIDERS),
+    },
   }),
 };
 
@@ -207,7 +357,10 @@ export const RelationInputEmbedAdapter: InputEmbedAdapter<InputRelation> = {
   kind: RelationEmbedKind,
   lower: (props, context) => ({
     node: createEmbeddedRelation(context.id, props, context),
-    providerDependencies: { roots: [RelationProvider.key], providers: [RelationProvider] },
+    providerDependencies: {
+      roots: [RelationProvider.key],
+      providers: providerClosure(RelationProvider, DEFAULT_GRAPH_PROVIDERS),
+    },
   }),
 };
 
@@ -219,32 +372,16 @@ export const relation = (id: string, input: InputRelation): InputEmbed<InputRela
   props: input,
 });
 
-type GraphCompositeProvider = ReturnType<typeof createGraphProviders>[number];
-
-/** 用指定 composite provider 配置并擦除一个 Vanilla adapter 的具体 props 类型 */
-const configureVanillaAdapter = <TProps>(
-  adapter: InputEmbedAdapter<TProps>,
-  provider: GraphCompositeProvider,
-): InputEmbedAdapter<unknown> => ({
+/** 擦除一个 Vanilla adapter 的具体 props 类型，供统一 adapter 集合消费 */
+const eraseVanillaAdapter = <TProps>(adapter: InputEmbedAdapter<TProps>): InputEmbedAdapter<unknown> => ({
   kind: adapter.kind,
-  lower: (props, context) => {
-    const contribution = adapter.lower(props as TProps, context);
-    return {
-      ...contribution,
-      providerDependencies: {
-        roots: [provider.key, ...contribution.providerDependencies.roots.slice(1)],
-        providers: [provider, ...contribution.providerDependencies.providers.slice(1)],
-      },
-    };
-  },
+  lower: (props, context) => adapter.lower(props as TProps, context),
 });
 
 /** 创建可一次性传给 Vanilla normalize 的完整 Graph adapter 集合 */
-export const createGraphVanillaAdapters = (): Array<InputEmbedAdapter<unknown>> => {
-  const [containerProvider, entityProvider, relationProvider] = createGraphProviders();
-  return [
-    configureVanillaAdapter(ContainerInputEmbedAdapter, containerProvider),
-    configureVanillaAdapter(EntityInputEmbedAdapter, entityProvider),
-    configureVanillaAdapter(RelationInputEmbedAdapter, relationProvider),
-  ];
-};
+export const createGraphVanillaAdapters = (): Array<InputEmbedAdapter<unknown>> => [
+  eraseVanillaAdapter(GraphInputEmbedAdapter),
+  eraseVanillaAdapter(ContainerInputEmbedAdapter),
+  eraseVanillaAdapter(EntityInputEmbedAdapter),
+  eraseVanillaAdapter(RelationInputEmbedAdapter),
+];

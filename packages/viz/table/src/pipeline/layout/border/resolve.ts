@@ -2,6 +2,7 @@ import type { TableBorderContribution } from '../../../contract/manifest';
 import type { ResolvedTableBorderAtom, TableBorderAtom } from './types';
 
 import { TableBorderContributionSchema } from '../../../contract/manifest';
+import { RetikzTableError } from '../../../error';
 import { deepFreeze } from '../../../shared';
 import { tableBorderSourceOrderKey } from './types';
 
@@ -23,14 +24,14 @@ const compareContributions = (left: TableBorderContribution, right: TableBorderC
 const validateAtomGeometry = (atom: TableBorderAtom): void => {
   const values = [atom.start.x, atom.start.y, atom.end.x, atom.end.y];
   if (!values.every(Number.isFinite)) {
-    throw new Error(`table: Border Graph atom "${atom.key}" geometry must be finite`);
+    throw new RetikzTableError(`table: Border Graph atom "${atom.key}" geometry must be finite`);
   }
   const valid =
     atom.orientation === 'horizontal'
       ? atom.start.y === atom.end.y && atom.end.x >= atom.start.x
       : atom.start.x === atom.end.x && atom.end.y >= atom.start.y;
   if (!valid) {
-    throw new Error(`table: Border Graph atom "${atom.key}" must be a positive ${atom.orientation} segment`);
+    throw new RetikzTableError(`table: Border Graph atom "${atom.key}" must be a positive ${atom.orientation} segment`);
   }
 };
 
@@ -63,26 +64,28 @@ export const resolveTableBorderAtoms = (
   const seenAtomKeys = new Set<string>();
   const resolved = [...atoms].sort(compareAtoms).map(atom => {
     if (seenAtomKeys.has(atom.key)) {
-      throw new Error(`table: duplicate Border Graph atom key "${atom.key}"`);
+      throw new RetikzTableError(`table: duplicate Border Graph atom key "${atom.key}"`);
     }
     seenAtomKeys.add(atom.key);
     validateAtomGeometry(atom);
     if (atom.contributors.length === 0) {
-      throw new Error(`table: Border Graph atom "${atom.key}" must have at least one contributor`);
+      throw new RetikzTableError(`table: Border Graph atom "${atom.key}" must have at least one contributor`);
     }
     const contributors = atom.contributors
       .map(raw => {
         const parsed = TableBorderContributionSchema.parse(raw);
         const expectedSourceOrderKey = tableBorderSourceOrderKey(parsed.source);
         if (parsed.sourceOrderKey !== expectedSourceOrderKey) {
-          throw new Error(`table: Border contribution sourceOrderKey must equal "${expectedSourceOrderKey}"`);
+          throw new RetikzTableError(
+            `table: Border contribution sourceOrderKey must equal "${expectedSourceOrderKey}"`,
+          );
         }
         const expectedKey = `${expectedSourceOrderKey}@${atom.key}`;
         if (parsed.key !== expectedKey) {
-          throw new Error(`table: Border contribution key must equal "${expectedKey}"`);
+          throw new RetikzTableError(`table: Border contribution key must equal "${expectedKey}"`);
         }
         if (seenContributionKeys.has(parsed.key)) {
-          throw new Error(`table: duplicate Border contribution key "${parsed.key}"`);
+          throw new RetikzTableError(`table: duplicate Border contribution key "${parsed.key}"`);
         }
         seenContributionKeys.add(parsed.key);
         return parsed;

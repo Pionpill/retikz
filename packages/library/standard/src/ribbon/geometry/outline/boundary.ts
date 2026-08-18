@@ -4,6 +4,7 @@ import { isFinitePoint } from '@retikz/math';
 
 import type { RibbonSegment } from '../types';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../../errors';
 import { sampleAtDistance } from '../centerline';
 
 export type BoundaryOutlineCommandsInput = {
@@ -36,7 +37,11 @@ export const boundaryOutlineCommands = ({
     const u: IRPosition = [round(upperPoint[0]), round(upperPoint[1])];
     const l: IRPosition = [round(lowerPoint[0]), round(lowerPoint[1])];
     if (!isFinitePoint(u) || !isFinitePoint(l)) {
-      throw new Error('Ribbon boundary sampling produced a non-finite coordinate.');
+      throw new RetikzStandardError({
+        code: RetikzStandardErrorCode.GeometryInvalid,
+        message: 'Ribbon boundary sampling produced a non-finite coordinate.',
+        details: { lower: l, offset, upper: u },
+      });
     }
     upperPoints.push(u);
     lowerPoints.push(l);
