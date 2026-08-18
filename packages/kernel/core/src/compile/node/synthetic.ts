@@ -2,6 +2,7 @@ import { circle } from '@retikz/math';
 
 import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry/index';
+import type { PositionTargetResolveContext } from '../../resolve/position';
 import type { IRJsonObject, IRNode, IRPosition } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { NodeLayout } from './types';
@@ -9,10 +10,19 @@ import type { NodeLayout } from './types';
 import { BUILTIN_BOUNDARIES } from '../../providers/boundary';
 import { BUILTIN_SHAPES } from '../../providers/shape';
 import { resolveNode } from '../../resolve';
-import { NamespaceStack } from '../namespace';
+import { DEFAULT_NODE_DISTANCE } from '../constants';
 import { fallbackMeasurer } from '../text';
 import { applyTransformChain } from '../transform';
 import { layoutNode } from './layout';
+
+/** synthetic Node 只消费字面量坐标，因此使用无引用的恒等 position context */
+const SYNTHETIC_POSITION_CONTEXT: PositionTargetResolveContext = {
+  nodeDistance: DEFAULT_NODE_DISTANCE,
+  lookupReference: () => undefined,
+  toLocal: point => [point[0], point[1]],
+  toWorld: point => [point[0], point[1]],
+  pointOfNodeTarget: (_target, reference) => [reference.node.rect.x, reference.node.rect.y],
+};
 
 /** synthetic layout 构造使用的 shape / boundary 注册表 */
 export type SyntheticLayoutRegistryContext = {
@@ -89,7 +99,7 @@ const resolveSyntheticLayout = (
   });
   const layout = layoutNode(resolution, {
     measureText: fallbackMeasurer,
-    namespaceStack: new NamespaceStack(),
+    positionContext: SYNTHETIC_POSITION_CONTEXT,
   });
   return {
     ...layout,

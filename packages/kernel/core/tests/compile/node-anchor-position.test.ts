@@ -372,7 +372,16 @@ describe('Node anchor-to-anchor position fail-loud', () => {
             {
               type: 'scope',
               id: 'open',
-              children: [{ type: 'node', id: 'current', position: { kind: 'anchor', target: { id: 'open' } } }],
+              children: [
+                {
+                  type: 'node',
+                  id: 'current',
+                  position: {
+                    kind: 'anchor',
+                    target: { id: 'open', anchor: 'right', boundary: 'missing-boundary' },
+                  },
+                },
+              ],
             },
           ]),
         ).scene,

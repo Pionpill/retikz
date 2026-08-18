@@ -1,15 +1,13 @@
 import type { LayoutAxisProposal, Transform } from '../../contract';
-import type { BoundaryReferenceResolver, CanonicalNode, NodeResolution } from '../../resolve';
+import type { CanonicalNode, NodeResolution } from '../../resolve';
+import type { PositionTargetResolveContext } from '../../resolve/position';
 import type { IRAnchorPosition, IRPosition } from '../../schemas';
-import type { NamespaceStack } from '../namespace';
-import type { ResolveBetweenGlobal } from '../position';
 import type { TextMeasurer } from '../text';
 import type { CompileWarningCodeValue } from '../warning';
 import type { NodeLayout, TexLoweringContext } from './types';
 
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { boundaryKey } from '../../resolve';
 import {
   isFatalProbeError,
   isRetikzLayoutProbeRecoverableError,
@@ -17,10 +15,10 @@ import {
   RetikzLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
+import { resolvePosition, resolvePositionTargetWorld } from '../../resolve/position';
 import { CenterAnchor } from '../../shared';
 import { DEG_TO_RAD } from '../../shared/geometry';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE } from '../constants';
-import { resolvePosition } from '../position';
 import { resolveAnchorRefUncached } from '../reference';
 import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '../scene-primitive';
 import { resolveFontSize } from '../text';
@@ -59,9 +57,8 @@ const placeAnchorPositionedLayout = (
   node: CanonicalNode,
   position: IRAnchorPosition,
   provisional: NodeLayout,
-  namespaceStack: NamespaceStack,
+  positionContext: PositionTargetResolveContext,
   scopeChain: ReadonlyArray<Transform>,
-  resolveExplicitBoundary?: BoundaryReferenceResolver,
 ): NodeLayout => {
   if (node.id !== undefined && node.id === position.target.id) {
     throw new RetikzCoreError(
@@ -69,48 +66,32 @@ const placeAnchorPositionedLayout = (
       `Node anchor position cannot reference itself ('${node.id}')`,
     );
   }
-  const targetEntry = namespaceStack.lookupEntry(position.target.id);
-  if (targetEntry === undefined) {
+  const reference = positionContext.lookupReference(position.target.id);
+  if (reference === undefined) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
       `Cannot resolve anchor position target '${position.target.id}'; it is undefined or defined later in the IR`,
     );
   }
-  if (targetEntry.state === 'scope-placeholder') {
+  if (reference.state === 'scope-placeholder') {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
       `Cannot resolve anchor position target '${position.target.id}'; the referenced Scope is still being laid out`,
     );
   }
-
-  const targetAnchor = position.target.anchor ?? CenterAnchor.Center;
-  const targetBoundary = position.target.boundary ?? targetEntry.layout.boundary;
-  const explicitTargetBoundary =
-    position.target.boundary !== undefined &&
-    position.target.boundary !== 'shape' &&
-    boundaryKey(position.target.boundary) !== boundaryKey(targetEntry.layout.boundary)
-      ? resolveExplicitBoundary?.(position.target.boundary, {
-          visualDef: targetEntry.layout.shapeDef,
-          visualParams: targetEntry.layout.shapeParams ?? {},
-          irPath: targetEntry.layout.irPath,
-        })
-      : undefined;
-  const targetPointBase = resolveAnchorRefUncached(
-    targetEntry.layout,
-    targetAnchor,
-    targetBoundary,
-    explicitTargetBoundary,
-  );
-  const targetPoint: IRPosition = position.target.offset
-    ? [targetPointBase[0] + position.target.offset[0], targetPointBase[1] + position.target.offset[1]]
-    : targetPointBase;
-
+  const target = resolvePositionTargetWorld(position.target, positionContext);
+  if (target.referencePoint === null) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `Cannot resolve anchor position target '${position.target.id}'; it is undefined or defined later in the IR`,
+    );
+  }
   const projected =
     scopeChain.length === 0
       ? { ...provisional, rect: { ...provisional.rect } }
       : projectLayoutToGlobal(provisional, scopeChain);
   const selfPoint = resolveAnchorRefUncached(projected, position.selfAnchor ?? CenterAnchor.Center, node.boundary);
-  const deltaGlobal: IRPosition = [targetPoint[0] - selfPoint[0], targetPoint[1] - selfPoint[1]];
+  const deltaGlobal: IRPosition = [target.referencePoint[0] - selfPoint[0], target.referencePoint[1] - selfPoint[1]];
   const deltaLocal = localDeltaOf(deltaGlobal, [projected.rect.x, projected.rect.y], scopeChain);
 
   return {
@@ -128,20 +109,14 @@ const placeAnchorPositionedLayout = (
 export type LayoutNodeContext = {
   /** 文本测量函数 */
   measureText: TextMeasurer;
-  /** id 查询栈 */
-  namespaceStack: NamespaceStack;
-  /** 相对定位默认距离 */
-  nodeDistance?: number;
+  /** Position/Target Source IR 确定化上下文 */
+  positionContext: PositionTargetResolveContext;
   /** 节点 label 默认距离 */
   labelDistance?: number;
   /** preset 与 rem 字号解析的根字号 */
   rootFontSize?: number;
   /** 当前 scope 累积 transform */
   scopeChain?: ReadonlyArray<Transform>;
-  /** Path / layout target 显式连接面解析回调 */
-  resolveExplicitBoundary?: BoundaryReferenceResolver;
-  /** between target 的全局点解析函数 */
-  resolveBetweenGlobal?: ResolveBetweenGlobal;
   /** TeX 降级上下文 */
   texLowering?: TexLoweringContext;
   /** 当前 node 的 compile warning 分发函数 */
@@ -154,13 +129,10 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
   const { node, shape: shapeResolution, boundary: boundaryResolution } = resolution;
   const {
     measureText,
-    namespaceStack,
-    nodeDistance,
+    positionContext,
     labelDistance = DEFAULT_LABEL_DISTANCE,
     rootFontSize = DEFAULT_FONT_SIZE,
     scopeChain = [],
-    resolveExplicitBoundary,
-    resolveBetweenGlobal,
     texLowering,
     warn,
     allocationWidthProposal,
@@ -325,7 +297,7 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
     anchorPosition = node.position;
     center = [0, 0];
   } else {
-    center = resolvePosition(node.position, { namespaceStack, nodeDistance, scopeChain, resolveBetweenGlobal });
+    center = resolvePosition(node.position, positionContext)?.localPoint ?? null;
   }
   if (!center) {
     throw new RetikzCoreError(
@@ -411,6 +383,6 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
     labels: layoutNodeLabels(provisional, measuredLabels),
   };
   return anchorPosition
-    ? placeAnchorPositionedLayout(node, anchorPosition, resolved, namespaceStack, scopeChain, resolveExplicitBoundary)
+    ? placeAnchorPositionedLayout(node, anchorPosition, resolved, positionContext, scopeChain)
     : resolved;
 };

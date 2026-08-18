@@ -48,4 +48,13 @@ describe('resolve source structure', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('keeps position resolve independent from compile orchestration', () => {
+    const offenders = sourceFiles('src/resolve/position')
+      .filter(path => /from\s+['"][^'"]*compile|NamespaceStack|CompileContext|TraversalFrame/u.test(source(path)))
+      .map(path => relative(root, resolve(root, path)).replace(/\\/gu, '/'));
+
+    expect(offenders).toEqual([]);
+    expect(source('src/resolve/index.ts')).not.toContain("export * from './position';");
+  });
 });

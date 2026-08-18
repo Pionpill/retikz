@@ -28,7 +28,8 @@ import type {
   SpatialHandleOwner,
   Transform,
 } from '../../contract';
-import type { BoundaryReferenceResolver, PathResolution } from '../../resolve';
+import type { BoundaryReferenceResolver, PathResolution, PathTargetResolver, TargetResolution } from '../../resolve';
+import type { PositionTargetResolveContext } from '../../resolve/position';
 import type {
   IRChild,
   IRPathBase,
@@ -84,6 +85,7 @@ import {
   safeErrorMessage,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
+import { resolvePosition, resolvePositionTargetWorld } from '../../resolve/position';
 import { parseProviderPayload } from '../../resolve/provider-payload';
 import { resolveClip as resolveClipValue } from '../../resolve/resource';
 import { ScopeBoundingShape } from '../../schemas';
@@ -107,7 +109,6 @@ import {
 } from '../node';
 import { emitPathPrimitive } from '../path';
 import { emitLabelPrimitive } from '../path';
-import { resolvePosition } from '../position';
 import {
   createLayoutChildFailure,
   enrichLayoutProbeError,
@@ -143,7 +144,8 @@ import {
   withCompileWarningOccurrence,
 } from './diagnostics';
 import { cloneLayoutProposal, resolveLayoutSlotSize } from './layout-proposal';
-import { bindPathTarget, localPointOfTarget, pathTargetViewOf, refPointOfTarget } from './path-target';
+import { bindPathTarget, pathTargetViewOf, targetKeyOf } from './path-target';
+import { createPositionResolveContext } from './position-context';
 import {
   collectPlaceholderLocators,
   makePathPlaceholder,
@@ -250,20 +252,35 @@ export const compileChildrenToPrimitives = (
       irPath: referenceContext.irPath,
     });
 
-  const resolveBetweenGlobal = (
-    between: Parameters<typeof refPointOfTarget>[0],
-    namespaceStack: Parameters<typeof refPointOfTarget>[1],
-    scopeChain: Parameters<typeof refPointOfTarget>[2],
-  ) => refPointOfTarget(between, namespaceStack, scopeChain, resolveExplicitBoundary);
+  /** 从当前 traversal 状态投影 resolver 所需的窄位置上下文 */
+  const positionContextOf = (scopeChain: ReadonlyArray<Transform>): PositionTargetResolveContext =>
+    createPositionResolveContext({
+      namespaceStack: runtime.state.namespaceStack,
+      nodeDistance: runtime.context.nodeDistance,
+      scopeChain,
+      resolveExplicitBoundary,
+    });
 
-  /** resolve 阶段唯一接触 NamespaceStack 的 target binding 能力 */
-  const targetResolver = {
-    pointOfTarget: (target: IRTarget, chain: ReadonlyArray<Transform>) =>
-      localPointOfTarget(target, runtime.state.namespaceStack, chain, resolveExplicitBoundary),
-    refPointOfTarget: (target: IRTarget, chain: ReadonlyArray<Transform>) =>
-      refPointOfTarget(target, runtime.state.namespaceStack, chain, resolveExplicitBoundary),
-    bindTarget: (target: IRTarget, chain: ReadonlyArray<Transform>) =>
-      bindPathTarget(target, runtime.state.namespaceStack, chain, resolveExplicitBoundary),
+  /** 为单次 Path resolve 创建复用 binding 的 target resolver，避免重复 provider lookup */
+  const createPathTargetResolver = (): PathTargetResolver => {
+    const bindingsByScope = new WeakMap<ReadonlyArray<Transform>, Map<string, TargetResolution | null>>();
+    const bindingOf = (target: IRTarget, chain: ReadonlyArray<Transform>): TargetResolution | null => {
+      let bindings = bindingsByScope.get(chain);
+      if (bindings === undefined) {
+        bindings = new Map();
+        bindingsByScope.set(chain, bindings);
+      }
+      const key = targetKeyOf(target);
+      if (bindings.has(key)) return bindings.get(key) ?? null;
+      const binding = bindPathTarget(target, positionContextOf(chain));
+      bindings.set(key, binding);
+      return binding;
+    };
+    return {
+      pointOfTarget: (target, chain) => bindingOf(target, chain)?.point ?? null,
+      refPointOfTarget: (target, chain) => bindingOf(target, chain)?.referencePoint ?? null,
+      bindTarget: bindingOf,
+    };
   };
 
   /** 校验并脱离 PathKind provider 返回的 primitive 与 bounds point */
@@ -344,6 +361,7 @@ export const compileChildrenToPrimitives = (
   const emitPathKindPrimitive = (
     pendingPath: PendingPathEmission,
     resolution: PathResolution,
+    targetResolver: PathTargetResolver,
   ): PathKindCompileResult | null => {
     const { path, irPath, scopeChain } = pendingPath;
     const targetWarn = (code: string, message: string, node?: { irPath?: string }): void =>
@@ -552,6 +570,7 @@ export const compileChildrenToPrimitives = (
     try {
       for (const pendingPath of pendingPaths) {
         try {
+          const targetResolver = createPathTargetResolver();
           const resolution = resolvePathValue(pendingPath.path, {
             styleStack: pendingPath.styleStack,
             scopeChain: pendingPath.scopeChain,
@@ -564,7 +583,7 @@ export const compileChildrenToPrimitives = (
             irPath: pendingPath.irPath,
           });
           const result = withWarningOccurrence(pendingPath.occurrence, () =>
-            emitPathKindPrimitive(pendingPath, resolution),
+            emitPathKindPrimitive(pendingPath, resolution, targetResolver),
           );
           const rawPrimitives = result?.primitives ?? [];
           const primitives = runtime.state.identityTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
@@ -628,13 +647,10 @@ export const compileChildrenToPrimitives = (
       { ...resolvedNode, node: canonicalNode },
       {
         measureText: runtime.context.measureText,
-        namespaceStack: runtime.state.namespaceStack,
-        nodeDistance: runtime.context.nodeDistance,
+        positionContext: positionContextOf(scopeChain),
         labelDistance: runtime.context.labelDistance,
         rootFontSize: runtime.context.rootFontSize,
         scopeChain,
-        resolveExplicitBoundary,
-        resolveBetweenGlobal,
         warn,
         ...(frame.childProposal?.x === undefined ? {} : { allocationWidthProposal: frame.childProposal.x }),
         texLowering: {
@@ -688,13 +704,8 @@ export const compileChildrenToPrimitives = (
   const registerCoordinateChild = (child: CoordinateChild, index: number, frame: TraversalFrame): void => {
     const { scopeChain, locatorPrefix, layoutSink } = frame;
     const coordinateIrPath = `${locatorPrefix}children[${index}].coordinate`;
-    const localCenter = resolvePosition(child.position, {
-      namespaceStack: runtime.state.namespaceStack,
-      nodeDistance: runtime.context.nodeDistance,
-      scopeChain,
-      resolveBetweenGlobal,
-    });
-    if (!localCenter) {
+    const localCenter = resolvePosition(child.position, positionContextOf(scopeChain))?.localPoint;
+    if (localCenter === undefined) {
       throw new RetikzLayoutProbeRecoverableError(
         `Cannot resolve position for coordinate ${child.id}; polar.origin or at.of may reference an undefined node`,
       );
@@ -780,21 +791,21 @@ export const compileChildrenToPrimitives = (
         `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}: self target is not allowed`,
       );
     }
-    const entry = runtime.state.namespaceStack.lookupEntry(target.id);
-    if (entry === undefined || entry.state !== 'resolved') {
+    const positionContext = positionContextOf(frame.scopeChain);
+    const reference = positionContext.lookupReference(target.id);
+    if (reference === undefined || reference.state !== 'resolved') {
       throw new RetikzLayoutProbeRecoverableError(
         `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}: target must be defined and fully resolved before this Scope`,
       );
     }
-    const world = resolveBetweenGlobal(target, runtime.state.namespaceStack, frame.scopeChain);
-    if (world === null) {
+    const resolution = resolvePositionTargetWorld(target, positionContext);
+    if (resolution.referencePoint === null) {
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
         `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}`,
       );
     }
-    const parentPoint = frame.scopeChain.length === 0 ? world : inverseTransformChain(world, frame.scopeChain);
-    return assertFinitePlacementPoint(parentPoint, 'scope placement target');
+    return assertFinitePlacementPoint(positionContext.toLocal(resolution.referencePoint), 'scope placement target');
   };
 
   /** 从当前 Scope 的固有 child layouts 创建 rectangle / circle synthetic envelope */
@@ -884,10 +895,7 @@ export const compileChildrenToPrimitives = (
     const loweredOwn =
       preliminaryTransforms ??
       lowerScopeTransforms(child.transforms ?? [], {
-        namespaceStack: runtime.state.namespaceStack,
-        nodeDistance: runtime.context.nodeDistance,
-        scopeChain: frame.scopeChain,
-        resolveBetweenGlobal,
+        positionContext: positionContextOf(frame.scopeChain),
         intrinsicLayout,
         onUnresolved: transform => {
           failedTransform = transform;
@@ -938,10 +946,7 @@ export const compileChildrenToPrimitives = (
 
     let failedTransform: IRTransform | undefined;
     const transforms = lowerScopeTransforms(child.transforms ?? [], {
-      namespaceStack: runtime.state.namespaceStack,
-      nodeDistance: runtime.context.nodeDistance,
-      scopeChain: frame.scopeChain,
-      resolveBetweenGlobal,
+      positionContext: positionContextOf(frame.scopeChain),
       onUnresolved: transform => {
         failedTransform = transform;
       },

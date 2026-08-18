@@ -2,8 +2,8 @@ import type { Transform } from '../../../contract';
 import type { CanonicalStep, PathTargetView } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
 
+import { nodeIdFromResolvableTarget } from '../../../resolve/position';
 import { CompileWarningCode } from '../../constants';
-import { nodeIdFromResolvableTarget } from '../../position';
 import { pointOfTarget } from '../host';
 
 /** 具有普通目标点、可作为后续 step 前驱的 path step */

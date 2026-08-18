@@ -4,6 +4,7 @@ import type { IRNode } from '../../../src/schemas';
 
 import { NamespaceStack } from '../../../src/compile/namespace';
 import { angleBoundaryOf, boundaryPointOf, layoutNode } from '../../../src/compile/node';
+import { createPositionResolveContext } from '../../../src/compile/orchestration/position-context';
 import { resolveAnchor } from '../../../src/compile/reference';
 import * as core from '../../../src/index';
 import { resolveBoundaryRegistry } from '../../../src/providers/boundary';
@@ -69,7 +70,10 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
       irPath: 'node',
       warn: () => {},
     });
-    return layoutNode(resolution, { measureText, namespaceStack });
+    return layoutNode(resolution, {
+      measureText,
+      positionContext: createPositionResolveContext({ namespaceStack, nodeDistance: 24 }),
+    });
   })();
 
 describe('boundary-aware boundary/canonical', () => {

@@ -1,6 +1,7 @@
 import { boundsCenter, boundsOf } from '@retikz/math';
 
 import type { Transform } from '../contract';
+import type { PositionTargetResolveContext } from '../resolve/position';
 import type {
   IRAtPosition,
   IRBetweenPosition,
@@ -11,32 +12,24 @@ import type {
   PolarPosition,
 } from '../schemas';
 import type { Rect } from '../shared/geometry';
-import type { NamespaceStack } from './namespace';
 import type { NodeLayout } from './node';
-import type { ResolveBetweenGlobal } from './position';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
+import { resolvePosition } from '../resolve/position';
 import { Anchor } from '../shared';
 import { rect as rectOps } from '../shared/geometry';
 import { outerRectOf } from './node';
-import { resolvePosition } from './position';
 import { RetikzCompileInvariantError } from './probe-failure';
 import { resolveAnchorRefUncached } from './reference';
 
 /** scope transform lowering 所需的编译上下文 */
 export type LowerScopeTransformsContext = {
-  /** id 查询栈 */
-  namespaceStack: NamespaceStack;
-  /** 相对定位默认距离 */
-  nodeDistance?: number;
-  /** between 端点的全局坐标解析器 */
-  resolveBetweenGlobal?: ResolveBetweenGlobal;
+  /** Position Source IR 确定化上下文 */
+  positionContext: PositionTargetResolveContext;
   /** transform 引用解析失败时的回调 */
   onUnresolved?: (failed: IRTransform) => void;
   /** pivot 解析使用的 Scope 固有包络 layout */
   intrinsicLayout?: NodeLayout;
-  /** 当前 Scope 父 frame 到 world 的累计 transform */
-  scopeChain?: ReadonlyArray<Transform>;
 };
 
 /** 断言 self point / placement 计算结果是可发布的有限坐标 */
@@ -72,14 +65,7 @@ export const lowerScopeTransforms = (
   transforms: ReadonlyArray<IRTransform>,
   context: LowerScopeTransformsContext,
 ): Array<Transform> | null => {
-  const {
-    namespaceStack,
-    nodeDistance,
-    resolveBetweenGlobal,
-    onUnresolved,
-    intrinsicLayout,
-    scopeChain = [],
-  } = context;
+  const { positionContext, onUnresolved, intrinsicLayout } = context;
   const out: Array<Transform> = [];
   for (const t of transforms) {
     switch (t.kind) {
@@ -89,7 +75,7 @@ export const lowerScopeTransforms = (
       case 'polar-translate': {
         const polar: PolarPosition = { angle: t.angle, radius: t.radius };
         if (t.origin !== undefined) polar.origin = t.origin;
-        const resolved = resolvePosition(polar, { namespaceStack, nodeDistance, scopeChain });
+        const resolved = resolvePosition(polar, positionContext)?.localPoint;
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -100,7 +86,7 @@ export const lowerScopeTransforms = (
       case 'at-translate': {
         const at: IRAtPosition = { direction: t.direction, of: t.of };
         if (t.distance !== undefined) at.distance = t.distance;
-        const resolved = resolvePosition(at, { namespaceStack, nodeDistance, scopeChain });
+        const resolved = resolvePosition(at, positionContext)?.localPoint;
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -113,7 +99,7 @@ export const lowerScopeTransforms = (
           of: t.of,
           offset: t.offset ?? [0, 0],
         };
-        const resolved = resolvePosition(off, { namespaceStack, nodeDistance, scopeChain });
+        const resolved = resolvePosition(off, positionContext)?.localPoint;
         if (!resolved) {
           onUnresolved?.(t);
           return null;
@@ -123,12 +109,7 @@ export const lowerScopeTransforms = (
       }
       case 'between-translate': {
         const between: IRBetweenPosition = { between: t.between, fraction: t.fraction };
-        const resolved = resolvePosition(between, {
-          namespaceStack,
-          nodeDistance,
-          scopeChain,
-          resolveBetweenGlobal,
-        });
+        const resolved = resolvePosition(between, positionContext)?.localPoint;
         if (!resolved) {
           onUnresolved?.(t);
           return null;

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { NamespaceStack } from '../../src/compile/namespace';
 import { boundaryPointOf, layoutNode } from '../../src/compile/node';
+import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { resolveAnchor } from '../../src/compile/reference';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
@@ -25,7 +26,10 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
     irPath: 'node',
     warn: () => {},
   });
-  return layoutNode(resolution, { measureText, namespaceStack: new NamespaceStack() });
+  return layoutNode(resolution, {
+    measureText,
+    positionContext: createPositionResolveContext({ namespaceStack: new NamespaceStack(), nodeDistance: 24 }),
+  });
 };
 
 describe('NodeLayout boundary / shapes', () => {

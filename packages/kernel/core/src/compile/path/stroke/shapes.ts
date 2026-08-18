@@ -8,6 +8,7 @@ import type { StrokeCursor } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import { nodeIdFromResolvableTarget } from '../../../resolve/position';
 import {
   arcSegmentSample,
   circleSegmentSample,
@@ -19,7 +20,6 @@ import {
   rectPerimeterSample,
 } from '../../../shared/geometry';
 import { CompileWarningCode } from '../../constants';
-import { nodeIdFromResolvableTarget } from '../../position';
 import { clipTarget, isAutoBoundaryTarget, pointOfTarget, samePoint } from '../host';
 import { lowerGeneratorStepToCommands } from './lower';
 
