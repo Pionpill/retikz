@@ -149,30 +149,7 @@ const encodings = [
 - resolved Cell plan 与 manifest 增加 encoding lineage，manifest 保存同次 resolution 产生的 descriptor seed
 - `@retikz/table` 使用 `d3-scale` 完成内置 sequential / threshold 求值，不依赖 Plot
 
-## 测试策略摘要
-
-- schema / registry 证明唯一 id、闭合 channel、scale ref、strict descriptor 与 custom extension
-- provider contract 证明三种内置 scale 的 auto / explicit domain、null、类型、range、threshold 与 equal-domain 边界
-- pipeline 证明单次 resolution、order、rule precedence、appearance 与 descriptor 来源一致
-- parity 证明 manual / detail / custom、direct / React / Vanilla / SSR 和 JSON round-trip 一致
-
-## 能力完备性与架构验证
-
-- **所属能力域**：Tabular Visualization Complete / Presentation、Visual Encoding、Traceability
-- **问题归属**：Cell 数据到 Table appearance 的映射属于 Table；通用 Legend 呈现属于 Standard
-- **内部闭环**：encoding → scale registry → single resolution → appearance + descriptor seed
-- **外部扩展**：builtin / custom scale 经过同一 registry；custom Definition 对 evaluator 与 descriptor 的语义一致性负责
-- **结论**：扩展 Table Visual Encoding，组合 Core color 与 Standard Legend，不建立 Plot 依赖
-
-## 被否决方案
-
-- 复用 Plot scale：造成 Table → Plot 领域依赖
-- Cell evaluator 与 descriptor 由两个 callback 分别生成：产生两个 resolution 生命周期
-- 由 Table 抽样任意 evaluator 推断 Legend：有限抽样不能证明完整映射
-- 自动生成 Legend：缺少作者 opt-in 与稳定 identity
-- 自定义 channel registry：alpha.3 只有两个真实 appearance consumer
-
-## 不在本 ADR 范围
+## 长期边界
 
 - size、symbol、opacity、data bar、sparkline 与内容结构 encoding
 - 跨 Cell Plot scale / axis / guide 协调

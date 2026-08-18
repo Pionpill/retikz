@@ -1,10 +1,10 @@
 import type {
+  IRPlot,
   IRPlotAxisGuide,
   IRPlotCoordinateOperation,
   IRPlotGuide,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
-  IRPlot,
 } from '@retikz/plot';
 
 import { PlotCoordinate, PlotGuide, PlotMark, PlotScale } from '@retikz/plot';
@@ -17,6 +17,8 @@ import type {
   NormalizedPlotBindings,
   PlotBindingsNormalizationContext,
 } from './input';
+
+import { RetikzPlotVanillaError } from '../../error';
 
 type Composition = NonNullable<IRPlot['composition']>;
 type CoordinateView = NonNullable<Composition['views']>[number];
@@ -76,7 +78,9 @@ const withGuideScope = (guide: InputPlotGuide, coordinateView: string | undefine
 const assertMarkBindingCompatibility = (mark: InputPlotMark): void => {
   const ownsAxisBinding = Object.hasOwn(mark, 'xAxisId') || Object.hasOwn(mark, 'yAxisId');
   if (ownsAxisBinding && !isPositionMark(mark)) {
-    throw new Error(`${ERROR_PREFIX} axis binding is only supported on path, point, and interval marks`);
+    throw new RetikzPlotVanillaError(
+      `${ERROR_PREFIX} axis binding is only supported on path, point, and interval marks`,
+    );
   }
   const bindings = [
     mark.xAxisId !== undefined ? 'xAxisId' : undefined,
@@ -85,11 +89,11 @@ const assertMarkBindingCompatibility = (mark: InputPlotMark): void => {
     mark.trackId !== undefined ? 'trackId' : undefined,
   ].filter((binding): binding is string => binding !== undefined);
   if (bindings.length > 1) {
-    throw new Error(`${ERROR_PREFIX} mark has multiple binding props: ${bindings.join(', ')}`);
+    throw new RetikzPlotVanillaError(`${ERROR_PREFIX} mark has multiple binding props: ${bindings.join(', ')}`);
   }
   const binding = bindings.at(0);
   if (mark.coordinateView !== undefined && binding !== undefined) {
-    throw new Error(`${ERROR_PREFIX} mark cannot set both coordinateView and ${binding}`);
+    throw new RetikzPlotVanillaError(`${ERROR_PREFIX} mark cannot set both coordinateView and ${binding}`);
   }
 };
 
@@ -101,14 +105,14 @@ const assertGuideBindingCompatibility = (guide: InputPlotGuide): void => {
     guide.trackId !== undefined ? 'trackId' : undefined,
   ].filter((binding): binding is string => binding !== undefined);
   if (bindings.length > 1) {
-    throw new Error(`${ERROR_PREFIX} guide has multiple binding props: ${bindings.join(', ')}`);
+    throw new RetikzPlotVanillaError(`${ERROR_PREFIX} guide has multiple binding props: ${bindings.join(', ')}`);
   }
   const binding = bindings.at(0);
   if (binding !== undefined && !isAxisGuide(guide)) {
-    throw new Error(`${ERROR_PREFIX} ${binding} binding is only supported on axis guides`);
+    throw new RetikzPlotVanillaError(`${ERROR_PREFIX} ${binding} binding is only supported on axis guides`);
   }
   if (isAxisGuide(guide) && guide.coordinateView !== undefined && binding !== undefined) {
-    throw new Error(`${ERROR_PREFIX} guide cannot set both coordinateView and ${binding}`);
+    throw new RetikzPlotVanillaError(`${ERROR_PREFIX} guide cannot set both coordinateView and ${binding}`);
   }
 };
 
@@ -322,12 +326,12 @@ const buildTopologyComposition = (
   for (const scaffoldInput of scaffolds) {
     const scaffold = normalizeScaffold(scaffoldInput, coordinate);
     if (scaffoldSpecs.some(candidate => candidate.id === scaffold.id)) {
-      throw new Error(`${ERROR_PREFIX} duplicate scaffold id "${scaffold.id}"`);
+      throw new RetikzPlotVanillaError(`${ERROR_PREFIX} duplicate scaffold id "${scaffold.id}"`);
     }
     scaffoldSpecs.push(scaffold);
     for (const track of scaffold.tracks) {
       if (trackViewById.has(track.id)) {
-        throw new Error(`${ERROR_PREFIX} duplicate track id "${track.id}" across scaffold bindings`);
+        throw new RetikzPlotVanillaError(`${ERROR_PREFIX} duplicate track id "${track.id}" across scaffold bindings`);
       }
       const view = track.view ?? track.id;
       trackViewById.set(track.id, view);
@@ -337,7 +341,8 @@ const buildTopologyComposition = (
 
   for (const facetInput of facets) {
     const facet = normalizeFacet(facetInput);
-    if (facetViewById.has(facet.id)) throw new Error(`${ERROR_PREFIX} duplicate facet id "${facet.id}"`);
+    if (facetViewById.has(facet.id))
+      throw new RetikzPlotVanillaError(`${ERROR_PREFIX} duplicate facet id "${facet.id}"`);
     facetViewById.set(facet.id, facet.view);
     facetSpecs.push(facet);
     views.push({ id: facet.view, coordinate: fillCoordinateScaleBindings(coordinate, coordinate) });
@@ -345,7 +350,9 @@ const buildTopologyComposition = (
 
   const defaultView = views.at(0)?.id ?? scaffoldSpecs[0]?.tracks[0]?.view;
   if (defaultView === undefined) {
-    throw new Error(`${ERROR_PREFIX} topology binding requires at least one facet or scaffold declaration`);
+    throw new RetikzPlotVanillaError(
+      `${ERROR_PREFIX} topology binding requires at least one facet or scaffold declaration`,
+    );
   }
 
   return {
@@ -378,12 +385,14 @@ const normalizeTopologyBindings = (
     marks: marks.map(mark => {
       if (mark.facetId !== undefined) {
         const view = facetViewById.get(mark.facetId);
-        if (view === undefined) throw new Error(`${ERROR_PREFIX} missing facet for facetId "${mark.facetId}"`);
+        if (view === undefined)
+          throw new RetikzPlotVanillaError(`${ERROR_PREFIX} missing facet for facetId "${mark.facetId}"`);
         return withMarkScope(mark, view);
       }
       if (mark.trackId !== undefined) {
         const view = trackViewById.get(mark.trackId);
-        if (view === undefined) throw new Error(`${ERROR_PREFIX} missing track for trackId "${mark.trackId}"`);
+        if (view === undefined)
+          throw new RetikzPlotVanillaError(`${ERROR_PREFIX} missing track for trackId "${mark.trackId}"`);
         return withMarkScope(mark, view);
       }
       return stripMarkBindings(mark);
@@ -391,18 +400,20 @@ const normalizeTopologyBindings = (
     guides: guides.map(guide => {
       if (guide.facetId !== undefined) {
         const view = facetViewById.get(guide.facetId);
-        if (view === undefined) throw new Error(`${ERROR_PREFIX} missing facet for facetId "${guide.facetId}"`);
+        if (view === undefined)
+          throw new RetikzPlotVanillaError(`${ERROR_PREFIX} missing facet for facetId "${guide.facetId}"`);
         return withGuideScope(guide, view);
       }
       if (guide.trackId !== undefined) {
         const view = trackViewById.get(guide.trackId);
-        if (view === undefined) throw new Error(`${ERROR_PREFIX} missing track for trackId "${guide.trackId}"`);
+        if (view === undefined)
+          throw new RetikzPlotVanillaError(`${ERROR_PREFIX} missing track for trackId "${guide.trackId}"`);
         return withGuideScope(guide, view);
       }
       if (guide.scaffoldId !== undefined) {
         const view = scaffoldDefaultViewById.get(guide.scaffoldId);
         if (view === undefined) {
-          throw new Error(`${ERROR_PREFIX} missing scaffold for scaffoldId "${guide.scaffoldId}"`);
+          throw new RetikzPlotVanillaError(`${ERROR_PREFIX} missing scaffold for scaffoldId "${guide.scaffoldId}"`);
         }
         return withGuideScope(guide, view);
       }
@@ -420,7 +431,7 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
   guides.forEach(assertGuideBindingCompatibility);
 
   if (facets.length > 0 && scaffolds.length > 0) {
-    throw new Error(`${ERROR_PREFIX} facets and scaffolds cannot be mixed in one Plot`);
+    throw new RetikzPlotVanillaError(`${ERROR_PREFIX} facets and scaffolds cannot be mixed in one Plot`);
   }
 
   const hasXAxisBinding = marks.some(mark => mark.xAxisId !== undefined);
@@ -432,12 +443,12 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
   const hasTopologyDeclarations = facets.length > 0 || scaffolds.length > 0;
 
   if (hasAxisBinding && (hasTopologyBinding || hasTopologyDeclarations)) {
-    throw new Error(`${ERROR_PREFIX} multiple binding modes are not supported in one Plot`);
+    throw new RetikzPlotVanillaError(`${ERROR_PREFIX} multiple binding modes are not supported in one Plot`);
   }
 
   if (hasTopologyBinding || hasTopologyDeclarations) {
     if (composition !== undefined) {
-      throw new Error(`${ERROR_PREFIX} composition cannot be mixed with facet/scaffold binding sugar`);
+      throw new RetikzPlotVanillaError(`${ERROR_PREFIX} composition cannot be mixed with facet/scaffold binding sugar`);
     }
     const effectiveCoordinate = coordinate ?? { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
     return normalizeTopologyBindings(marks, guides, scales, effectiveCoordinate, facets, scaffolds);
@@ -460,7 +471,7 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
 
   const effectiveCoordinate = coordinate ?? { type: PlotCoordinate.Cartesian2D, x: AUTO_X, y: AUTO_Y };
   if (effectiveCoordinate.type !== PlotCoordinate.Cartesian2D) {
-    throw new Error(`${ERROR_PREFIX} axis id binding only supports cartesian2D coordinates`);
+    throw new RetikzPlotVanillaError(`${ERROR_PREFIX} axis id binding only supports cartesian2D coordinates`);
   }
 
   const axes = guides.filter(isAxisGuide);
@@ -471,10 +482,13 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
   const seenBindingScopeIds = new Map<string, string>();
   for (const axis of axes) {
     if (axis.id === undefined) continue;
-    if (axis.id.length === 0) throw new Error(`${ERROR_PREFIX} axis id must be non-empty when using axis id binding`);
+    if (axis.id.length === 0)
+      throw new RetikzPlotVanillaError(`${ERROR_PREFIX} axis id must be non-empty when using axis id binding`);
     const duplicateKey = `${axis.dimension}:${axis.id}`;
     if (seenAxisKeys.has(duplicateKey)) {
-      throw new Error(`${ERROR_PREFIX} duplicate axis id "${axis.id}" for dimension "${axis.dimension}"`);
+      throw new RetikzPlotVanillaError(
+        `${ERROR_PREFIX} duplicate axis id "${axis.id}" for dimension "${axis.dimension}"`,
+      );
     }
     seenAxisKeys.add(duplicateKey);
     axesById.set(axis.id, axis);
@@ -483,7 +497,7 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
     if ((axis.dimension === 'x' && hasXAxisBinding) || (axis.dimension === 'y' && hasYAxisBinding)) {
       const previousDimension = seenBindingScopeIds.get(axis.id);
       if (previousDimension !== undefined && previousDimension !== axis.dimension) {
-        throw new Error(
+        throw new RetikzPlotVanillaError(
           `${ERROR_PREFIX} axis id "${axis.id}" cannot be reused across dimensions when using axis id binding`,
         );
       }
@@ -495,26 +509,32 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
   const referencedYAxisIds: Array<string> = [];
   for (const mark of marks) {
     if (mark.xAxisId !== undefined) {
-      if (mark.xAxisId.length === 0) throw new Error(`${ERROR_PREFIX} xAxisId must be a non-empty string`);
+      if (mark.xAxisId.length === 0)
+        throw new RetikzPlotVanillaError(`${ERROR_PREFIX} xAxisId must be a non-empty string`);
       if (mark.xAxisId !== DEFAULT_AXIS_SCOPE) {
         if (xAxesById.has(mark.xAxisId)) {
           if (!referencedXAxisIds.includes(mark.xAxisId)) referencedXAxisIds.push(mark.xAxisId);
         } else if (axesById.has(mark.xAxisId)) {
-          throw new Error(`${ERROR_PREFIX} xAxisId "${mark.xAxisId}" must reference an axis with dimension "x"`);
+          throw new RetikzPlotVanillaError(
+            `${ERROR_PREFIX} xAxisId "${mark.xAxisId}" must reference an axis with dimension "x"`,
+          );
         } else {
-          throw new Error(`${ERROR_PREFIX} missing x axis for xAxisId "${mark.xAxisId}"`);
+          throw new RetikzPlotVanillaError(`${ERROR_PREFIX} missing x axis for xAxisId "${mark.xAxisId}"`);
         }
       }
     }
     if (mark.yAxisId !== undefined) {
-      if (mark.yAxisId.length === 0) throw new Error(`${ERROR_PREFIX} yAxisId must be a non-empty string`);
+      if (mark.yAxisId.length === 0)
+        throw new RetikzPlotVanillaError(`${ERROR_PREFIX} yAxisId must be a non-empty string`);
       if (mark.yAxisId !== DEFAULT_AXIS_SCOPE) {
         if (yAxesById.has(mark.yAxisId)) {
           if (!referencedYAxisIds.includes(mark.yAxisId)) referencedYAxisIds.push(mark.yAxisId);
         } else if (axesById.has(mark.yAxisId)) {
-          throw new Error(`${ERROR_PREFIX} yAxisId "${mark.yAxisId}" must reference an axis with dimension "y"`);
+          throw new RetikzPlotVanillaError(
+            `${ERROR_PREFIX} yAxisId "${mark.yAxisId}" must reference an axis with dimension "y"`,
+          );
         } else {
-          throw new Error(`${ERROR_PREFIX} missing y axis for yAxisId "${mark.yAxisId}"`);
+          throw new RetikzPlotVanillaError(`${ERROR_PREFIX} missing y axis for yAxisId "${mark.yAxisId}"`);
         }
       }
     }
@@ -550,7 +570,9 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
     ]);
     for (const axisId of [...xAxisIds, ...yAxisIds]) {
       if (!viewIds.has(axisId)) {
-        throw new Error(`${ERROR_PREFIX} axis id "${axisId}" requires an explicit composition view with the same id`);
+        throw new RetikzPlotVanillaError(
+          `${ERROR_PREFIX} axis id "${axisId}" requires an explicit composition view with the same id`,
+        );
       }
     }
   }
@@ -568,7 +590,7 @@ export const normalizePlotBindings = (context: PlotBindingsNormalizationContext)
     if (guide.dimension === 'y' && !hasYAxisBinding) return stripGuideBindings(guide);
     const coordinateView = guide.id ?? DEFAULT_AXIS_SCOPE;
     if (guide.coordinateView !== undefined && guide.coordinateView !== coordinateView) {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         `${ERROR_PREFIX} ${guide.dimension} axis "${guide.id ?? '<anonymous>'}" cannot set coordinateView different from its bound coordinate view`,
       );
     }

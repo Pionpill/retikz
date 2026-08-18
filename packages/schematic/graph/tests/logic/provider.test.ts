@@ -110,7 +110,12 @@ describe('Graph provider assembly', () => {
           providers: Graph.createGraphProviders({ entityRoles: [second] }),
         },
       ]),
-    ).toThrow(/Entity role 'service'.*different definition object/i);
+    ).toThrowError(
+      expect.objectContaining({
+        code: Graph.RetikzGraphErrorCode.DefinitionConflict,
+        details: { capability: 'entityRoles', key: 'service' },
+      }),
+    );
   });
 
   it('does not leak one provider assembly registry into the next', () => {
@@ -130,6 +135,11 @@ describe('Graph provider assembly', () => {
 
     expect(() =>
       lowerIRToKernel(sceneOf([Graph.createEntity({ id: 'service', role: 'service', position })]), defaults),
-    ).toThrow(/Entity role 'service' is not registered/);
+    ).toThrowError(
+      expect.objectContaining({
+        code: Graph.RetikzGraphErrorCode.DefinitionNotRegistered,
+        details: expect.objectContaining({ capability: 'Entity role', key: 'service' }),
+      }),
+    );
   });
 });

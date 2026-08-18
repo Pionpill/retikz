@@ -1,10 +1,16 @@
 import type { IRScene } from '@retikz/core';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { compileInspectionToScene, createInspectorRegistry, defineInspector, InspectionCompileError } from '../../src';
+import {
+  compileInspectionToScene,
+  createInspectorRegistry,
+  defineInspector,
+  RetikzInspectionCompileError,
+} from '../../src';
 
 const key = { namespace: 'test', name: 'artifact' };
 const owner = { kind: 'composite' as const, namespace: 'demo', type: 'artifact' };
@@ -139,8 +145,9 @@ describe('Inspection compile driver', () => {
       compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
       throw new Error('expected compile to fail');
     } catch (error) {
-      expect(error).toBeInstanceOf(InspectionCompileError);
-      expect((error as InspectionCompileError).origin).toMatchObject({
+      expect(error).toBeInstanceOf(RetikzInspectionCompileError);
+      expect(error).toBeInstanceOf(RetikzError);
+      expect((error as RetikzInspectionCompileError).origin).toMatchObject({
         stage: 'output',
         outputIndex: 0,
         inspector: key,
@@ -165,12 +172,12 @@ describe('Inspection compile driver', () => {
     ]);
     expect(() =>
       compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } }),
-    ).toThrow(InspectionCompileError);
+    ).toThrow(RetikzInspectionCompileError);
     expect(callbacks).toBe(0);
     try {
       compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
     } catch (error) {
-      expect((error as InspectionCompileError).origin).toMatchObject({ stage: 'subject', inspector: key });
+      expect((error as RetikzInspectionCompileError).origin).toMatchObject({ stage: 'subject', inspector: key });
     }
   });
 
@@ -200,8 +207,8 @@ describe('Inspection compile driver', () => {
       compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [primaryWithId] } });
       throw new Error('expected compile to fail');
     } catch (error) {
-      expect(error).toBeInstanceOf(InspectionCompileError);
-      expect((error as InspectionCompileError).origin).toMatchObject({ stage: 'fragment', outputIndex: 0 });
+      expect(error).toBeInstanceOf(RetikzInspectionCompileError);
+      expect((error as RetikzInspectionCompileError).origin).toMatchObject({ stage: 'fragment', outputIndex: 0 });
     }
   });
 

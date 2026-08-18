@@ -16,29 +16,29 @@ const roundedRectClipSchema = z.strictObject({
 
 type RoundedRectClip = z.infer<typeof roundedRectClipSchema>;
 
-const roundedRectClip: ClipDefinition = defineClip<RoundedRectClip>({
+const roundedRectClip: ClipDefinition = defineClip<RoundedRectClip, RoundedRectClip>({
   kind: 'rounded-rect',
   schema: roundedRectClipSchema,
-  resolve: spec => {
-    const x = spec.x;
-    const y = spec.y;
-    const right = spec.x + spec.width;
-    const bottom = spec.y + spec.height;
-    const radius = Math.min(spec.radius, spec.width / 2, spec.height / 2);
+  resolve: spec => spec,
+  shapeSchema: roundedRectClipSchema,
+  lower: shape => {
+    const right = shape.x + shape.width;
+    const bottom = shape.y + shape.height;
+    const radius = Math.min(shape.radius, shape.width / 2, shape.height / 2);
     const commands: Array<PathCommand> = [
-      { kind: 'move', to: [x + radius, y] },
-      { kind: 'line', to: [right - radius, y] },
-      { kind: 'quad', control: [right, y], to: [right, y + radius] },
+      { kind: 'move', to: [shape.x + radius, shape.y] },
+      { kind: 'line', to: [right - radius, shape.y] },
+      { kind: 'quad', control: [right, shape.y], to: [right, shape.y + radius] },
       { kind: 'line', to: [right, bottom - radius] },
       { kind: 'quad', control: [right, bottom], to: [right - radius, bottom] },
-      { kind: 'line', to: [x + radius, bottom] },
-      { kind: 'quad', control: [x, bottom], to: [x, bottom - radius] },
-      { kind: 'line', to: [x, y + radius] },
-      { kind: 'quad', control: [x, y], to: [x + radius, y] },
+      { kind: 'line', to: [shape.x + radius, bottom] },
+      { kind: 'quad', control: [shape.x, bottom], to: [shape.x, bottom - radius] },
+      { kind: 'line', to: [shape.x, shape.y + radius] },
+      { kind: 'quad', control: [shape.x, shape.y], to: [shape.x + radius, shape.y] },
       { kind: 'close' },
     ];
 
-    return { kind: 'path', commands };
+    return { commands, fillRule: 'nonzero' };
   },
 });
 

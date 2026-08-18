@@ -24,7 +24,7 @@ import type {
 } from './types';
 
 import { INSPECTION_OBSERVER_KEY } from './constants';
-import { InspectionCompileError, wrapInspectionError } from './diagnostics';
+import { RetikzInspectionCompileError, wrapInspectionError } from './diagnostics';
 import { cloneAndFreezeInspectionJson, normalizeInspectorOutput, sealInspectionScene } from './output';
 import { admitInspectionSelection, resolveInspectionSelection, selectionMayRequestSite } from './selection';
 
@@ -84,7 +84,9 @@ const completeInspection = (
         occurrenceMatches(entry.observation.occurrence, request.occurrence),
     );
     if (capture === undefined)
-      throw new InspectionCompileError('Inspection complete failed: observation is missing', { stage: 'complete' });
+      throw new RetikzInspectionCompileError('Inspection complete failed: observation is missing', {
+        stage: 'complete',
+      });
     let subject: JsonValue;
     try {
       subject = cloneAndFreezeInspectionJson(
@@ -126,7 +128,7 @@ const completeInspection = (
         throw wrapInspectionError(outputOriginFor('output', item.request, outputIndex), cause);
       }
     } catch (cause) {
-      if (cause instanceof InspectionCompileError) throw cause;
+      if (cause instanceof RetikzInspectionCompileError) throw cause;
       throw wrapInspectionError(originFor('inspect', item.request), cause);
     }
     for (const [outputIndex, child] of output.entries()) {
@@ -193,17 +195,21 @@ export const resolveInspectionObserverOutput = (
 ): InspectionCompileResult => {
   const matches = observerOutputs.filter(output => output.key === INSPECTION_OBSERVER_KEY);
   if (matches.length !== 1) {
-    throw new InspectionCompileError('Inspection complete failed: expected exactly one observer output', {
+    throw new RetikzInspectionCompileError('Inspection complete failed: expected exactly one observer output', {
       stage: 'complete',
     });
   }
   const value = matches[0]?.value;
   if (value === null || typeof value !== 'object') {
-    throw new InspectionCompileError('Inspection complete failed: invalid observer output', { stage: 'complete' });
+    throw new RetikzInspectionCompileError('Inspection complete failed: invalid observer output', {
+      stage: 'complete',
+    });
   }
   const output = value as InspectionObserverOutput;
   if (!Array.isArray(output.diagnostics) || !('inspection' in output)) {
-    throw new InspectionCompileError('Inspection complete failed: invalid observer output', { stage: 'complete' });
+    throw new RetikzInspectionCompileError('Inspection complete failed: invalid observer output', {
+      stage: 'complete',
+    });
   }
   return Object.freeze({ primary, inspection: output.inspection, diagnostics: output.diagnostics });
 };

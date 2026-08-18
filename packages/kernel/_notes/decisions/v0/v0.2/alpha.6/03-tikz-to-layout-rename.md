@@ -2,9 +2,9 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.6 plan §第二部分](./roadmap.md) · [v0.1-beta.2 ADR-02 `<TikZ>` 组件化](../../v0.1/beta.2/02-tikz-to-tikz-component.md) · 本 milestone [ADR-01](./01-structured-target-anchor.md)（同窗口 system prompt / 白名单同步）
+- 关联： · [v0.1-beta.2 ADR-02 `<TikZ>` 组件化](../../v0.1/beta.2/02-tikz-to-tikz-component.md) · 本 milestone [ADR-01](./01-structured-target-anchor.md)（同窗口 system prompt / 白名单同步）
 
-> **范围**：顶层渲染容器 `<TikZ>` 改主名 `<Layout>`（保留 deprecated alias），同步 AST 白名单 + system prompt + docs。与 ADR-01 同属"DSL 表达力整理"，共用白名单 / system prompt 改动面，并入一次同步。
+> **目标**：顶层渲染容器 `<TikZ>` 改主名 `<Layout>`（保留 deprecated alias），同步 AST 白名单 + system prompt + docs。与 ADR-01 同属"DSL 表达力整理"，共用白名单 / system prompt 改动面，并入一次同步。
 
 ## 背景 / 约束
 
@@ -30,18 +30,13 @@
 - **system prompt `to` 字段分两层**（与 ADR-01 对象唯一对齐）：结构化 IR / JSON 速查段 `to` **只列对象** `{ id, anchor?, offset? }` + 坐标形态、**无字符串节点引用**（core 已删 `z.string()`，写了会诱导 LLM 生成 core 拒收的 IR）；字符串 shorthand（`to="A.north"`）只在 JSX / Draw DSL 段注明、属 React DSL sugar 非 IR 契约。
 - docs 240+ 处机械 codemod，保留一页演示 deprecated alias。
 
-### 被否决的选项
-
-- **B：直接改名、不留 alias**——所有用户代码 + 171 demo 立刻断；改名是"纯命名整理"、留 alias 成本极低收益明显（与 ADR-01 target 那种契约必要破坏不同）。
-- **C：双名长期并存、不标 deprecated**——词汇表分裂、新用户不知用哪个、无迁移信号；alias 应是迁移桥而非永久双名。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 结构化 Target/Anchor → ADR-01；`{side,t}` 几何 → ADR-02。
 - codemod 工具是否随 npm 包发给用户（rc 前再拍）；kernel marker displayName（`@retikz/Node` 等）不改名。
 
 ---
 
-> **实现指针**：level `red`（动 `react/src/index.ts` 公开主名）、向后兼容 additive（`TikZ` deprecated alias，渲染行为零变化）。真源以代码为准——`Layout`/`LayoutProps` + `TikZ`/`TikZProps` alias + `isProductionEnv` 守卫（`react/src/kernel/Layout.tsx`，原 `TikZ.tsx`）、`react/src/{kernel/index,index}.ts` 导出、AST 白名单 `COMPONENT_REGISTRY`（`apps/docs/src/lib/jsx-to-ir/parser.ts`）、system prompt 双语列举 + `to` 对象形态（`apps/docs/src/layout/ai-chat/context.ts`）。测试在 `react/tests/kernel/`（Layout-public-api / tikz-alias）与 `apps/docs/tests/`。完整施工契约（codemod 范围 / 计数口径 / 测试象限）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `e6db894b`；压缩前完整施工蓝图 = `git show e6db894b^:_notes/decisions/core/v0/v0.2/alpha.6/03-tikz-to-layout-rename.md`。
+已实现本 ADR 的核心决策。兼容性：向后兼容 additive（`TikZ` deprecated alias，渲染行为零变化）；其余默认行为、失败语义与公开契约以正文为准。

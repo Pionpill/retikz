@@ -20,8 +20,8 @@
 - [`decisions/standard/v0/v0.1/alpha.1/roadmap.md`](./decisions/standard/v0/v0.1/alpha.1/roadmap.md)：首批 Grid / Axes / Frame ADR 索引
 - [`decisions/standard/v0/v0.1/alpha.2/roadmap.md`](./decisions/standard/v0/v0.1/alpha.2/roadmap.md)：通用 Box Layout 与 Legend 规划
 - [`decisions/standard/v0/v0.1/alpha.2/09-generic-legend.md`](./decisions/standard/v0/v0.1/alpha.2/09-generic-legend.md)：Plot / Table / 直接作者复用的通用 Legend ADR
-- [`decisions/standard/v0/v0.1/alpha.3/roadmap.md`](./decisions/standard/v0/v0.1/alpha.3/roadmap.md)：已迁入 Graph 的历史逻辑图组件 milestone
-- [`decisions/standard/v0/v0.1/alpha.4/roadmap.md`](./decisions/standard/v0/v0.1/alpha.4/roadmap.md)：Standard 移除 Layout owner 的迁移记录
+- [`decisions/standard/v0/v0.1/alpha.3/roadmap.md`](./decisions/standard/v0/v0.1/alpha.3/roadmap.md)：Standard 横向绘图拓展合并发布 milestone
+- [`decisions/standard/v0/v0.1/alpha.3/roadmap-graph-history.md`](./decisions/standard/v0/v0.1/alpha.3/roadmap-graph-history.md)：已迁入 Graph 的历史逻辑图组件 milestone
 
 roadmap 只安排能力顺序；既有 package / release group 以 Accepted ADR 与当前实现为准。Standard 历史布局 ADR 原地保留，当前 owner、namespace 与公开入口以 Layout alpha.1 ADR 为准。
 

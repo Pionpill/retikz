@@ -43,7 +43,7 @@
 - **stack vs dodge**：bar 有 `series` 时 `stack` prop true → 堆叠、否则 dodge（默认）。不引第三态。
 - **混合 mark 的 x scale 冲突**：同一 `<Plot>` 既有 `<BarMark>`（要 band x）又有 `<LineMark>`（连续 x）——以 BarMark 优先（band），line 落在 band 中心（band 的 `coordinate` 居中，line 连各类别中心，合理）。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **`<Scale>` 完全显式 scale 声明子组件、per-mark scale hint、双 x scale** → 后续。
 - **legend 组件 / 图例** → 后续（[ADR-04](./04-color-scale.md) 已划走）。

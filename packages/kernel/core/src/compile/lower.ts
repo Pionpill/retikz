@@ -1,6 +1,7 @@
 import type { IRScene } from '../schemas';
 import type { LoweredIRScene, LowerIRToKernelOptions } from './types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { resolveCompositeRegistry, resolveThemeStyleRegistry } from '../providers';
 import { lowerComposites } from './orchestration';
 
@@ -15,6 +16,9 @@ export const lowerIRToKernel = (ir: IRScene, options: LowerIRToKernelOptions = {
     maxDepth: options.maxCompositeDepth,
     onWarn: () => undefined,
     onUnregistered: (key, path) => {
-      throw new Error(`lowerIRToKernel: composite '${key}' is not registered at ${path}.`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
+        `lowerIRToKernel: composite '${key}' is not registered at ${path}.`,
+      );
     },
   });

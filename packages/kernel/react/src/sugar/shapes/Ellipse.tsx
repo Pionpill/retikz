@@ -3,6 +3,7 @@ import type { FC } from 'react';
 
 import type { AngleInput, BoxAdjustmentProps, PathVisualProps, ShapeBox } from './shape-helpers';
 
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { Path } from '../../kernel/components';
 import { Step } from '../../kernel/components';
 import {
@@ -67,7 +68,8 @@ export const Ellipse: FC<EllipseProps> = props => {
     center = boxCenter(normalized);
     [radiusX, radiusY] = boxSize(normalized).map(value => value / 2) as [number, number];
   } else {
-    throw new Error(
+    throw new RetikzReactError(
+      RetikzReactErrorCode.Sugar,
       '<Ellipse> needs one of { center, radius }, { center, diameterX, diameterY }, { corner1, corner2 }, or { box }',
     );
   }

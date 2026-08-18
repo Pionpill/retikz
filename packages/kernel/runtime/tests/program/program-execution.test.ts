@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { RuntimeDiagnosticCode } from '../../src';
 import { defineRuntimeOwner } from '../../src/owner';
 import {
   defineRuntimeProgram,
@@ -343,7 +344,7 @@ describe('runtime Program execution', () => {
     expect(result.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(result.diagnostics).toEqual([
       expect.objectContaining({
-        code: 'RUNTIME_CHANGESET_FALLBACK',
+        code: RuntimeDiagnosticCode.ChangeSetFallback,
         severity: 'warning',
         owner: 'counter',
       }),

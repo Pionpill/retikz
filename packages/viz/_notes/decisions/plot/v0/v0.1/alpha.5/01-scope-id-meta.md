@@ -104,7 +104,7 @@ meta = {
 - **guide id 默认形 + axis-only 用户句柄**：见上表 guide 行（用户 `guide.id` 仅挂 axis 层、grid 恒结构 id）。
 - **datum-id 注册器提升到 plot 级**：原实现每 mark 各自建注册器，同图多个 datum-bearing mark（如 point + bar）+ 同 `datumIdField` 会各自生成 `<plotId>.datum.<值>` → 同命名空间撞 id。改为 **plot 级共享注册器**（`expandPlot` 建一次、贯穿所有 mark），跨 mark 重复 id 同样 **fail loud**（与单 mark 内重复一致）——一个 plot 内多 datum mark 想绑 id 须用不同字段/值消歧。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **datum locator 正向解析**：[ADR-02](./02-datum-locator.md)（本 ADR 只抽出共用 frame 构造）。
 - **反向 hit-test（屏幕坐标 → datum）/ 事件回调**：v0.3 交互。

@@ -5,16 +5,19 @@ import { describe, expect, it } from 'vitest';
 import { buildClipDef } from '../../../src/svg/builders/clip-defs';
 
 describe('buildClipDef', () => {
-  it('把 compound 子形状累积为一个遵循 fillRule 的 path', () => {
+  it('把 canonical clip path 物化为一个遵循 fillRule 的 SVG path', () => {
     const resource: ClipResource = {
       kind: 'clip',
       id: 'clip-1',
-      shape: {
-        kind: 'compound',
+      path: {
         fillRule: 'evenodd',
-        children: [
-          { kind: 'circle', cx: -5, cy: 0, r: 10 },
-          { kind: 'circle', cx: 5, cy: 0, r: 10 },
+        commands: [
+          { kind: 'move', to: [5, 0] },
+          { kind: 'arc', center: [-5, 0], radius: 10, startAngle: 0, endAngle: 360 },
+          { kind: 'close' },
+          { kind: 'move', to: [15, 0] },
+          { kind: 'arc', center: [5, 0], radius: 10, startAngle: 0, endAngle: 360 },
+          { kind: 'close' },
         ],
       },
     };
@@ -30,5 +33,31 @@ describe('buildClipDef', () => {
         },
       },
     ]);
+  });
+
+  it('close 后的 arc 从声明起点建立新子路径', () => {
+    const resource: ClipResource = {
+      kind: 'clip',
+      id: 'clip-1',
+      path: {
+        fillRule: 'nonzero',
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [1, 0] },
+          { kind: 'close' },
+          { kind: 'arc', center: [5, 5], radius: 2, startAngle: 0, endAngle: 180 },
+        ],
+      },
+    };
+
+    const definition = buildClipDef(resource, 'scene-clip-1');
+
+    expect(definition.children?.[0]).toEqual({
+      tag: 'path',
+      attrs: {
+        d: 'M 0 0 L 1 0 Z M 7 5 A 2 2 0 0 1 3 5',
+        'clip-rule': 'nonzero',
+      },
+    });
   });
 });

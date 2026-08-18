@@ -11,6 +11,7 @@ import type {
 import type { IRPlotMarkOperation, PlotMarkValue } from '../../schemas';
 
 import { extractMarkType } from '../../contract';
+import { RetikzPlotError } from '../../error';
 import { PlotMark } from '../../schemas';
 import {
   intervalMarkDefinition,
@@ -52,7 +53,7 @@ export const resolveMarkRegistry = (custom?: ReadonlyArray<AnyMarkDefinition>): 
   for (const def of custom ?? []) {
     const type = extractMarkType(def.schema);
     if (registry.has(type)) {
-      throw new Error(`lowerPlots: duplicate mark registration: "${type}"`);
+      throw new RetikzPlotError(`lowerPlots: duplicate mark registration: "${type}"`);
     }
     registry.set(type, def);
   }

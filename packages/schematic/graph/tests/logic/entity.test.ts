@@ -130,8 +130,11 @@ describe('Entity canonical semantic IR', () => {
   });
 
   it('fails loudly when an open role is not registered', () => {
-    expect(() => lowerNode(Graph.createEntity({ id: 'unknown', role: 'service', position }))).toThrow(
-      /Entity role 'service'.*not registered|not registered.*service/i,
+    expect(() => lowerNode(Graph.createEntity({ id: 'unknown', role: 'service', position }))).toThrowError(
+      expect.objectContaining({
+        code: Graph.RetikzGraphErrorCode.DefinitionNotRegistered,
+        details: expect.objectContaining({ capability: 'Entity role', key: 'service' }),
+      }),
     );
   });
 });
@@ -214,10 +217,40 @@ describe('EntityVariant lowering', () => {
     });
   });
 
+  it('wraps a custom variant callback failure and preserves its cause', () => {
+    const cause = new Error('variant callback failed');
+    const failing = Graph.defineEntityVariant({
+      variant: 'failing',
+      resolve: () => {
+        throw cause;
+      },
+    });
+    const composites = Graph.createGraphDefinitions({ entityVariants: [failing] });
+
+    expect(() =>
+      lowerNode(
+        Graph.createEntity({ id: 'failing', role: 'stage', position, variant: 'failing' }),
+        ThemeMode.Light,
+        composites,
+      ),
+    ).toThrowError(
+      expect.objectContaining({
+        code: Graph.RetikzGraphErrorCode.DefinitionCallbackFailed,
+        cause,
+        details: expect.objectContaining({ capability: 'entity-variant', key: 'failing' }),
+      }),
+    );
+  });
+
   it('fails loudly when an open variant is not registered', () => {
     expect(() =>
       lowerNode(Graph.createEntity({ id: 'unknown-variant', role: 'stage', position, variant: 'muted' })),
-    ).toThrow(/Entity variant 'muted'.*not registered|not registered.*muted/i);
+    ).toThrowError(
+      expect.objectContaining({
+        code: Graph.RetikzGraphErrorCode.DefinitionNotRegistered,
+        details: expect.objectContaining({ capability: 'Entity variant', key: 'muted' }),
+      }),
+    );
   });
 
   it('does not leak Graph semantic fields into the lowered Core Node', () => {

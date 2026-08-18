@@ -2,20 +2,17 @@
 
 - 状态：Accepted
 - 决策日期：2026-07-11
-- 完成日期：2026-07-11
-- 关联：[data v0.1-beta.2 roadmap](./roadmap.md) · [data v0.1 roadmap](../roadmap.md) · [data v0 roadmap](../../roadmap.md) · [plot-design.md §3.1 Data / §3.3 Transform](../../../../../architecture/plot-design.md)
+- 关联：[data v0.1-beta.2 roadmap](./roadmap.md) · [data v0.1 roadmap](../roadmap.md)
 
-## 背景
+## 背景与目标
 
-`@retikz/data` 的公开 schema 派生类型曾沿用 `FieldDef`、`DataModel`、`DataRef`、`Transform` 等迁移前名称，既未表达 JSON IR 真源，也无法与 core、plot 等 owner 的同概念类型自然区分。仅增加无 owner 的 `IR` 前缀仍会让 data `IRTransform` 与 core `IRTransform` 冲突。
+`@retikz/data` 的公开 schema 派生类型曾沿用 `FieldDef`、`DataModel`、`DataRef`、`Transform` 等迁移前名称，既未表达 JSON IR 真源，也无法与 core、plot 的同概念类型自然区分。只增加无 owner 的 `IR` 前缀仍会使 data 与 core 的 `IRTransform` 冲突。
 
-本次只修正 TypeScript 公共命名；JSON schema、字段、判别值、默认语义、registry、provider 与 pipeline 行为均不改变。
+本 ADR 只修正 TypeScript 公共命名；JSON schema、字段、判别值、默认语义、registry、provider 与 pipeline 行为不变。
 
-## 决策
+## 核心决策与公开契约
 
-data 拥有的 schema 派生公开类型统一使用 `IRDataXxx`。旧名直接删除，不保留 deprecated alias。const object 派生的 `XxxValue`、runtime-only 的 `ExternalRow` / `ExternalDatasets` / `DataFieldTypeMap`，以及 contract 层的 `XxxDefinition` / `XxxContext` 保持原名。
-
-公开迁移表：
+data 拥有的 schema 派生公开类型统一使用 `IRDataXxx`，旧名直接删除，不保留 deprecated alias。const object 派生的 `XxxValue`、runtime-only 的 `ExternalRow` / `ExternalDatasets` / `DataFieldTypeMap`，以及 contract 层的 `XxxDefinition` / `XxxContext` 保持原名。plot 自有 schema 派生类型使用 `IRPlotXxx`，不由本 ADR 重命名。
 
 | 旧名                                   | 新名                                         |
 | -------------------------------------- | -------------------------------------------- |
@@ -37,32 +34,16 @@ data 拥有的 schema 派生公开类型统一使用 `IRDataXxx`。旧名直接�
 | `BuiltinTransform`                     | `IRDataBuiltinTransform`                     |
 | `Transform`                            | `IRDataTransform`                            |
 
-plot 自己拥有的 schema 派生类型使用 `IRPlotXxx`；本 ADR 只迁移 plot 对 data 类型的消费，不重命名 plot 自有类型。
+`IR` 表示类型来自 JSON schema，而 `Data` 前缀表示 owner，避免跨包同名导出与消费方 import alias。
 
-理由：
+## 行为、兼容性与失败语义
 
-1. `IR` 明确类型来自 JSON schema，而不是 runtime definition、registry 或外部宿主数据。
-2. `Data` owner 前缀避免跨包同名导出和消费方 import alias。
-3. `0.x` 阶段直接删除错误旧名，避免兼容 alias 长期扩大公共面。
+这是 TypeScript-only breaking rename：外部 TypeScript 消费方必须按迁移表改名，不获得 legacy alias。运行时 schema、序列化结果、registry、provider 与数据处理行为不变；不存在运行时双读或兼容路径。
 
-## 被否决选项
+## 最终实现
 
-- **只增加无 owner 的 `IR` 前缀**：仍会与 core 及未来 viz 包冲突。
-- **只迁移少量入口类型**：会留下同源却不同规则的 reducer、selector 与 annotate 类型。
-- **保留 deprecated alias**：会让旧名继续进入自动补全、文档和新代码。
-- **同时重命名 plot 全部 IR 类型**：超出 data owner 收口范围。
+data 包及其消费方已使用 `IRDataXxx`；plot 的 data 类型消费可以与 core 的 `IRTransform` 在同一消费方共存。类型仍直接由对应 Zod schema 推导，旧类型名不再由 data 包根或消费方导入、导出。
 
-## 不在本 ADR 范围
+## 遗留风险
 
-- 不重命名 Zod schema、JSON 字段、kind 或运行时导出。
-- 不处理 runtime-only 类型的 owner 搬迁。
-- 不统一 plot 自有 schema 派生类型。
-
-## 验证
-
-- 每个 `IRDataXxx` 继续直接由对应 Zod schema 推导，core `IRTransform` 与 data `IRDataTransform` 可在同一消费方无 alias 共存。
-- data 包根与消费方不再导入或重导出旧类型名；Data、Plot、adapter 与 docs 的类型与迁移契约保持一致。
-
-## 遗留风险与兼容性
-
-这是 TypeScript-only breaking rename；运行时 schema、序列化结果与数据处理行为不变。外部 TypeScript 消费方必须按迁移表改名，且不会获得 legacy alias；完整迁移说明保留在文档站 changelog。除消费方改名外，无待兼容的运行时风险。
+该变更的剩余影响仅是外部 TypeScript 源码需要完成命名迁移；运行时与持久化数据不需要迁移。

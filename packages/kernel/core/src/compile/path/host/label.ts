@@ -1,8 +1,8 @@
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../../contract';
-import type { CanonicalGeometryLabel } from '../../../resolve/path';
+import type { CanonicalGeometryLabel } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
-import type { TextFont, LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
+import type { LineLayoutContext, LowerTex, TextFont, TextMeasurer } from '../../text';
 import type { CompileWarningCodeValue } from '../../warning';
 
 import { RAD_TO_DEG } from '../../../shared/geometry';

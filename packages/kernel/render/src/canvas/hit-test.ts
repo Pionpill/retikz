@@ -1,4 +1,4 @@
-import type { ClipShape, Scene, ScenePrimitive } from '@retikz/core';
+import type { Scene, SceneClipPath, ScenePrimitive } from '@retikz/core';
 
 import { applyTransform, buildClipPath, buildPath, DEG_TO_RAD, roundedRectPath } from './path-geometry';
 
@@ -90,11 +90,10 @@ const hitPrim = (
 };
 
 /** 点是否落在 group 的裁剪区内（无裁剪 → 恒 true；裁剪资源缺失 → 按不裁处理） */
-const insideClip = (ctx: CanvasRenderingContext2D, shape: ClipShape | undefined, point: HitPoint): boolean => {
-  if (shape === undefined) return true;
-  buildClipPath(ctx, shape);
-  const fillRule = shape.kind === 'path' || shape.kind === 'compound' ? shape.fillRule : undefined;
-  return fillRule === undefined ? ctx.isPointInPath(point.x, point.y) : ctx.isPointInPath(point.x, point.y, fillRule);
+const insideClip = (ctx: CanvasRenderingContext2D, path: SceneClipPath | undefined, point: HitPoint): boolean => {
+  if (path === undefined) return true;
+  buildClipPath(ctx, path);
+  return ctx.isPointInPath(point.x, point.y, path.fillRule);
 };
 
 /**
@@ -108,7 +107,7 @@ export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions)
   if (ctx === null) return null;
   const strokeTolerance = options?.strokeTolerance;
   const clipResources = new Map(
-    (scene.resources ?? []).flatMap(r => (r.kind === 'clip' ? [[r.id, r.shape] as const] : [])),
+    (scene.resources ?? []).flatMap(r => (r.kind === 'clip' ? [[r.id, r.path] as const] : [])),
   );
 
   // 逆 z-order：后画的在上，先测最后画的；命中即返回最近 id-bearing 祖先 id。
@@ -117,8 +116,8 @@ export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions)
     if (prim.type === 'group') {
       ctx.save();
       for (const transform of prim.transforms ?? []) applyTransform(ctx, transform);
-      const shape = prim.clipRef !== undefined ? clipResources.get(prim.clipRef) : undefined;
-      if (!insideClip(ctx, shape, point)) {
+      const path = prim.clipRef !== undefined ? clipResources.get(prim.clipRef) : undefined;
+      if (!insideClip(ctx, path, point)) {
         ctx.restore();
         return null;
       }

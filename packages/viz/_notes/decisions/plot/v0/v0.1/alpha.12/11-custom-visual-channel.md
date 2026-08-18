@@ -40,7 +40,7 @@ visual channel 完成“内置 / 自定义同机制”的收敛。自定义通�
 
 这为后续 path / scope 通道、对象值通道、legend 扩展留下统一入口。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 自定义通道 legend。
 - path / scope channel 内置 coverage。

@@ -1,5 +1,5 @@
 import type { TextLine } from '../../../contract';
-import type { TextFont, LaidLine, LineLayoutContext, TextMeasurer } from '../../text';
+import type { LaidLine, LineLayoutContext, TextFont, TextMeasurer } from '../../text';
 import type { NodeTextLayoutContext } from '../types';
 
 import { layoutInlineLine, normalizeTextMetrics, resolveFontSize, resolveLineRunsWithWarning } from '../../text';

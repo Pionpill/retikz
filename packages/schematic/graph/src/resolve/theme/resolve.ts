@@ -3,6 +3,7 @@ import type { ResolvedTheme } from '@retikz/core';
 import type { GraphThemeStyleDefinition } from '../../contract';
 import type { GraphThemeResolution } from './types';
 
+import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { getDefaultGraphThemePreset } from '../../providers';
 import { GraphEntityThemeTokenRulesSchema, GraphThemeTokenResolutionSchema } from '../../schemas';
 
@@ -14,13 +15,24 @@ export const resolveGraphTheme = (
   if (theme.style === undefined) return { tokens: getDefaultGraphThemePreset(theme), tokenRules: [] };
   const definition = styles.get(theme.style);
   if (definition === undefined) {
-    throw new Error(
-      `Graph theme style '${theme.style}' is not registered. Inject it through the graphThemeStyles option.`,
-    );
+    throw new RetikzGraphError({
+      code: RetikzGraphErrorCode.DefinitionNotRegistered,
+      message: `Graph theme style '${theme.style}' is not registered. Inject it through the graphThemeStyles option.`,
+      details: { capability: 'graph-theme-style', key: theme.style, availableKeys: [...styles.keys()] },
+    });
   }
-  const resolution = definition.resolve(theme);
-  return {
-    tokens: GraphThemeTokenResolutionSchema.parse(resolution.tokens),
-    tokenRules: GraphEntityThemeTokenRulesSchema.parse(resolution.tokenRules ?? []),
-  };
+  try {
+    const resolution = definition.resolve(theme);
+    return {
+      tokens: GraphThemeTokenResolutionSchema.parse(resolution.tokens),
+      tokenRules: GraphEntityThemeTokenRulesSchema.parse(resolution.tokenRules ?? []),
+    };
+  } catch (cause) {
+    throw new RetikzGraphError({
+      code: RetikzGraphErrorCode.DefinitionCallbackFailed,
+      message: `Graph theme style '${theme.style}' resolution failed.`,
+      details: { capability: 'graph-theme-style', key: theme.style },
+      cause,
+    });
+  }
 };

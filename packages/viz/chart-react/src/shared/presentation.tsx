@@ -6,7 +6,7 @@ import type {
 import type { IRFont, IRLine, IRNode, IRTextBlock } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
-import { ChartPresentationPreset } from '@retikz/chart';
+import { ChartPresentationPreset, RetikzChartError } from '@retikz/chart';
 import { Text } from '@retikz/react';
 import { createElement, Fragment, isValidElement } from 'react';
 
@@ -88,17 +88,19 @@ const textLinesOf = (children: ReactNode): Array<ChartTextLine> => {
       lines.push(line);
       return;
     }
-    throw new Error('chart react: presentation marker children accept only strings, Fragment, or Text');
+    throw new RetikzChartError('chart react: presentation marker children accept only strings, Fragment, or Text');
   };
   append(children);
-  if (lines.length === 0) throw new Error('chart react: presentation marker requires at least one text line');
+  if (lines.length === 0)
+    throw new RetikzChartError('chart react: presentation marker requires at least one text line');
   return lines;
 };
 
 const textBlockOf = (children: ReactNode): IRTextBlock => {
   const lines = textLinesOf(children);
   const first = lines.at(0);
-  if (first === undefined) throw new Error('chart react: presentation marker requires at least one text line');
+  if (first === undefined)
+    throw new RetikzChartError('chart react: presentation marker requires at least one text line');
   return lines.length === 1 && typeof first === 'string' ? first : lines;
 };
 

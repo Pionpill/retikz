@@ -1,67 +1,25 @@
 # ADR-04：stroke paint 支持
 
-- 状态：Accepted（2026-06-23 完工）
+- 状态：Accepted（已实现）
 - 决策日期：2026-06-23
-- 关联：[core v0.2-alpha.7 ADR-01 Paint 基础](../../v0.2/alpha.7/01-paint-basics.md) · `packages/kernel/core/src/compile/paint.ts`
+- 关联：[core Paint 基础](../../v0.2/alpha.7/01-paint-basics.md)
 
 ## 背景
 
-core 已有 renderer-agnostic paint 基础：`IRPaint` / `PaintValue` / `SceneResource` 能把 linearGradient、radialGradient、pattern、image 收进 Scene 资源表，再由 SVG / Canvas renderer 物化。这个能力此前主要用于 `fill`，而 path / node / scope 的 `stroke` 仍偏向纯色字符串。
-
-plot 和后续图形能力需要渐变描边，例如 line mark 按屏幕方向或数据语义使用渐变。这个语义不应由 plot 绕过 core 去拼 SVG `url(#...)` 或 renderer 私有 mask；core 应把描边 paint 做成与填充 paint 同级的底层能力。
+IRPaint 与 SceneResource 已能让 fill 使用渐变、pattern 和 image，但 stroke 仍偏向纯色。描边 paint 应与填充 paint 共享同一 renderer-agnostic 资源模型，避免 Tier 2 自己拼 renderer 私有引用。
 
 ## 决策
 
-把支持描边的 IR 与 Scene primitive 的 `stroke` 从纯字符串扩展为 `string | IRPaint` / `PaintValue`：
+- Path、Node、Scope 的 stroke 接受 string | IRPaint；PathPrim、RectPrim、EllipsePrim 的 stroke 使用 PaintValue
+- compile 对 fill 和 stroke 共用 paint registry；IRPaint 进入 Scene.resources 去重表并由 primitive 写 resourceRef，纯色字符串保持原样
+- SVG 将 stroke resourceRef 解析为 url(#...) 和 paint defs；Canvas 解析为 CanvasGradient/CanvasPattern 后描边
+- path stroke 为 IRPaint 且 arrow 未显式纯色时 fail-loud，要求 arrow 给出 color；已有显式 arrow color 时，path 可继续使用 gradient stroke，marker 使用该纯色
+- Scope 的 stroke paint 可按既有级联语义传给内部 Node/Path；文字仍不在本 ADR 的渐变 stroke 范围
 
-- `Path.stroke`、`Node.stroke`、`Scope.stroke` 接受 IRPaint。
-- `PathPrim.stroke`、`RectPrim.stroke`、`EllipsePrim.stroke` 使用 `PaintValue`。
-- 编译期复用同一 paint registry：IRPaint 无论出现在 `fill` 还是 `stroke`，都进入 `Scene.resources` 去重表，并在 primitive 上写 `resourceRef`。
-- 纯色字符串保持原样，不进入资源表。
-- SVG renderer 对 stroke resourceRef 输出 `stroke="url(#...)"` 并生成对应 paint defs。
-- Canvas renderer 对 stroke resourceRef 解析为 CanvasGradient / CanvasPattern 后描边。
+## 兼容性与实现结果
 
-arrow marker 继承是唯一需要限制的交互：当 path stroke 是 IRPaint 且 arrow 未显式提供纯色时，compile 走 fail-loud，提示用户给 arrow 显式 color；已有显式 arrow color 时，path 可继续使用 gradient stroke，marker 使用该纯色。
+纯色 stroke 完全兼容，结构化 stroke 只扩大合法输入；core、render、React 和 Vanilla 已完成同一 paint 资源路径。
 
-## 理由
+## 遗留风险
 
-1. fill / stroke 都是 paint 通道，类型和资源模型应对称。
-2. Tier 2 不应绕开 core 自造 renderer 私有渐变描边语义。
-3. 复用现有 paint registry、SVG defs、Canvas paint resolver，新增能力集中在 stroke 接入点。
-4. 纯色 stroke 完全兼容，只有合法输入范围扩大。
-5. arrow marker 的显式纯色限制避免把 resourceRef 偷塞进 marker-local 上下文。
-
-## 影响
-
-- core schema：`Path.stroke`、`Node.stroke`、`Scope.stroke` 接受 `IRPaint`。
-- Scene primitive：path / rect / ellipse 的 `stroke` 变为 `PaintValue`。
-- compile：paint resolver 泛化为 fill / stroke 共用；scope stroke IRPaint 可级联到内部 node/path。
-- render：SVG / Canvas stroke paint 与 fill paint 对齐。
-- React / Vanilla：Node / Path / Scope props 和 builder 透传结构化 stroke paint。
-- docs：Path、Node、Scope、Scene primitive、schema reference 增加 stroke paint 示例和 API 说明。
-
-## 不在本 ADR 范围
-
-- plot 的 `encoding.stroke.gradient` 具体 API。
-- 沿路径数据值变化的分段 / 采样策略。
-- 任意 mark mask / clip paint composition。
-- 文字 fill / stroke 的渐变 paint。
-- WebGL / shader 后端。
-
-## 实现指针
-
-实现以当前代码和测试为准，重点见：
-
-- `packages/kernel/core/src/schemas/{node,scope,path/path}.ts`
-- `packages/kernel/core/src/primitive/{path,rect,ellipse}.ts`
-- `packages/kernel/core/src/compile/paint.ts`
-- `packages/kernel/core/src/compile/node.ts`
-- `packages/kernel/core/src/compile/path/index.ts`
-- `packages/kernel/render/src/svg/builders/prim.ts`
-- `packages/kernel/render/src/canvas/draw-scene.ts`
-- `packages/kernel/core/tests/ir/paint.test.ts`
-- `packages/kernel/core/tests/compile/paint.test.ts`
-- `packages/kernel/render/tests/draw.test.ts`
-- `packages/kernel/react/tests/render/paint-defs.test.tsx`
-
-> 压缩前完整施工蓝图：`git show 63220f823d012744b29551f0a4bf38ff269b0c7e:_notes/decisions/core/v0/v0.4/alpha.5/04-stroke-paint.md`
+plot 的 encoding.stroke.gradient、沿路径分段采样、文字 paint、mask/clip composition 和 WebGL shader 不属于本契约。

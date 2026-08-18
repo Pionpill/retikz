@@ -43,7 +43,7 @@ v0.1 的 viz 三包采用 lockstep 发布，plot 本体、React adapter、Vanill
 - React / Vanilla / docs 与 plot IR 同步到抽象 mark 心智模型。
 - v0.2 chart 层的价值转向 axes / legends / grid / theme / layout / presets，而不是补底层 mark 的平行能力。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - IR 与 lowering 的抽象重写由 ADR-03 负责。
 - chart preset 层不在本里程碑内。

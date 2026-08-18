@@ -2,6 +2,7 @@ import type { ArcPathCommand, EllipseArcPathCommand, PathCommand } from '@retikz
 
 import { DEFAULT_EPSILON } from '@retikz/math';
 
+import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import { commandArcStart, commandArcSweep, commandEndpoint, ellipseArcPointAt } from '../shared';
 
 type ArcCommand = ArcPathCommand | EllipseArcPathCommand;
@@ -76,35 +77,41 @@ export const buildPathD = (
   const tokens: Array<string> = [];
   let cursor: Point | null = null;
   let subpathStart: Point | null = null;
+  let activeSubpath = false;
   for (const cmd of commands) {
     switch (cmd.kind) {
       case 'move':
         tokens.push(`M ${round(cmd.to[0])} ${round(cmd.to[1])}`);
         cursor = cmd.to;
         subpathStart = cmd.to;
+        activeSubpath = true;
         break;
       case 'line':
         tokens.push(`L ${round(cmd.to[0])} ${round(cmd.to[1])}`);
         cursor = cmd.to;
+        activeSubpath = true;
         break;
       case 'quad':
         tokens.push(`Q ${round(cmd.control[0])} ${round(cmd.control[1])} ${round(cmd.to[0])} ${round(cmd.to[1])}`);
         cursor = cmd.to;
+        activeSubpath = true;
         break;
       case 'cubic':
         tokens.push(
           `C ${round(cmd.control1[0])} ${round(cmd.control1[1])} ${round(cmd.control2[0])} ${round(cmd.control2[1])} ${round(cmd.to[0])} ${round(cmd.to[1])}`,
         );
         cursor = cmd.to;
+        activeSubpath = true;
         break;
       case 'close':
         tokens.push('Z');
         cursor = subpathStart;
+        activeSubpath = false;
         break;
       case 'arc':
       case 'ellipseArc': {
         const startPt = commandArcStart(cmd);
-        if (cursor === null) {
+        if (!activeSubpath || cursor === null) {
           tokens.push(`M ${round(startPt[0])} ${round(startPt[1])}`);
           subpathStart = startPt;
         } else if (!pointsEqual(cursor, startPt)) {
@@ -113,12 +120,16 @@ export const buildPathD = (
         const arcTokens = ellipseArcTokens(cmd, round);
         for (const t of arcTokens) tokens.push(t);
         cursor = commandEndpoint(cmd);
+        activeSubpath = true;
         break;
       }
       default: {
         // exhaustive 防御：新增 kind 必须在此扩展
         const exhaustive: never = cmd;
-        throw new Error(`buildPathD: unknown PathCommand kind: ${String((exhaustive as { kind: string }).kind)}`);
+        throw new RetikzRenderError(
+          RetikzRenderErrorCode.Svg,
+          `buildPathD: unknown PathCommand kind: ${String((exhaustive as { kind: string }).kind)}`,
+        );
       }
     }
   }

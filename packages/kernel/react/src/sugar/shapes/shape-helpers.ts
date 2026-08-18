@@ -1,5 +1,7 @@
 import type { PathProps } from '../../kernel/components';
 
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
+
 /**
  * sugar 组件共用的视觉 props
  */
@@ -52,7 +54,8 @@ export const requireXY = (value: unknown, sugarName: string, propName: string): 
   if (Array.isArray(value) && value.length === 2 && typeof value[0] === 'number' && typeof value[1] === 'number') {
     return [value[0], value[1]];
   }
-  throw new Error(
+  throw new RetikzReactError(
+    RetikzReactErrorCode.Sugar,
     `<${sugarName}> prop ${propName} must be a literal [x, y] coordinate. Node ids, polar coordinates, and relative coordinates are not allowed here.`,
   );
 };
@@ -96,7 +99,10 @@ export const normalizeShapeBox = (value: ShapeBox, sugarName: string, propName: 
   const origin: [number, number] =
     'origin' in value ? requireXY(value.origin, sugarName, `${propName}.origin`) : [value.x, value.y];
   if (!Number.isFinite(value.width) || value.width <= 0 || !Number.isFinite(value.height) || value.height <= 0) {
-    throw new Error(`<${sugarName}> ${propName}.width and ${propName}.height must be positive numbers`);
+    throw new RetikzReactError(
+      RetikzReactErrorCode.Sugar,
+      `<${sugarName}> ${propName}.width and ${propName}.height must be positive numbers`,
+    );
   }
   return {
     left: origin[0],
@@ -122,11 +128,14 @@ export const adjustShapeBox = (
 ): NormalizedShapeBox => {
   const { inset, outset } = props;
   if (inset !== undefined && outset !== undefined) {
-    throw new Error(`<${sugarName}> cannot accept inset and outset at the same time`);
+    throw new RetikzReactError(
+      RetikzReactErrorCode.Sugar,
+      `<${sugarName}> cannot accept inset and outset at the same time`,
+    );
   }
   const delta = outset ?? (inset !== undefined ? -inset : 0);
   if (!Number.isFinite(delta)) {
-    throw new Error(`<${sugarName}> inset / outset must be finite numbers`);
+    throw new RetikzReactError(RetikzReactErrorCode.Sugar, `<${sugarName}> inset / outset must be finite numbers`);
   }
   const adjusted = {
     left: box.left - delta,
@@ -135,7 +144,7 @@ export const adjustShapeBox = (
     bottom: box.bottom + delta,
   };
   if (adjusted.right <= adjusted.left || adjusted.bottom <= adjusted.top) {
-    throw new Error(`<${sugarName}> inset / outset would collapse the box`);
+    throw new RetikzReactError(RetikzReactErrorCode.Sugar, `<${sugarName}> inset / outset would collapse the box`);
   }
   return adjusted;
 };
@@ -207,12 +216,16 @@ export const resolveAngles = (
     (startAngle !== undefined ? 1 : 0) + (endAngle !== undefined ? 1 : 0) + (sweepAngle !== undefined ? 1 : 0);
   if (given === 0) {
     if (required) {
-      throw new Error(`<${sugarName}> requires angles: provide any two of startAngle / endAngle / sweepAngle`);
+      throw new RetikzReactError(
+        RetikzReactErrorCode.Sugar,
+        `<${sugarName}> requires angles: provide any two of startAngle / endAngle / sweepAngle`,
+      );
     }
     return undefined;
   }
   if (given !== 2) {
-    throw new Error(
+    throw new RetikzReactError(
+      RetikzReactErrorCode.Sugar,
       `<${sugarName}> angle inputs must provide exactly two of startAngle / endAngle / sweepAngle; got ${given}`,
     );
   }

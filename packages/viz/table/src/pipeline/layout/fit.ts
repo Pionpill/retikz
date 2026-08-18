@@ -2,6 +2,7 @@ import type { BoundsRect } from '@retikz/math';
 
 import type { TableCellTranslation } from './cell';
 
+import { RetikzTableError } from '../../error';
 import { deepFreeze } from '../../shared';
 
 /** Cell 内容 fit 计算支持的策略 */
@@ -27,14 +28,14 @@ const validateBoundsRect = (rect: BoundsRect, name: string): void => {
     !Number.isFinite(rect.x + rect.width) ||
     !Number.isFinite(rect.y + rect.height)
   ) {
-    throw new Error(`table: Cell ${name} must have finite coordinates and nonnegative dimensions`);
+    throw new RetikzTableError(`table: Cell ${name} must have finite coordinates and nonnegative dimensions`);
   }
 };
 
 /** 验证 fit scale 两轴均为有限非负数 */
 const validateScale = (scale: TableCellFitScale): void => {
   if (!Number.isFinite(scale.x) || !Number.isFinite(scale.y) || scale.x < 0 || scale.y < 0) {
-    throw new Error('table: Cell fit scale must contain finite nonnegative x and y');
+    throw new RetikzTableError('table: Cell fit scale must contain finite nonnegative x and y');
   }
 };
 
@@ -73,7 +74,7 @@ export const computeTableCellFitScale = (
       break;
     }
     default:
-      throw new Error('table: Cell fit must be none, contain, cover, or stretch');
+      throw new RetikzTableError('table: Cell fit must be none, contain, cover, or stretch');
   }
 
   validateScale(scale);
@@ -89,7 +90,7 @@ export const projectTableCellBounds = (
   validateBoundsRect(bounds, 'bounds');
   validateScale(scale);
   if (!Number.isFinite(translation.x) || !Number.isFinite(translation.y)) {
-    throw new Error('table: Cell bounds translation must contain finite x and y');
+    throw new RetikzTableError('table: Cell bounds translation must contain finite x and y');
   }
   const projected = {
     x: bounds.x * scale.x + translation.x,

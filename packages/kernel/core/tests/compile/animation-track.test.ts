@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRAnimationTrack, IRScene, ScenePrimitive } from '../../src';
 
-import { AnimationTrackSchema, NodeDefaultSchema, PathDefaultSchema, SceneSchema } from '../../src';
+import { AnimationTrackSchema, CompileWarningCode, NodeDefaultSchema, PathDefaultSchema, SceneSchema } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
@@ -247,7 +247,7 @@ describe('compile 校验：viewBox ⇔ 根', () => {
     const c = collector();
     const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA] }]), c).scene
       .primitives;
-    expect(c.warnings.some(w => w.code === 'ANIMATION_INVALID_PROPERTY')).toBe(true);
+    expect(c.warnings.some(w => w.code === CompileWarningCode.AnimationInvalidProperty)).toBe(true);
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toBeUndefined();
   });
 
@@ -256,13 +256,13 @@ describe('compile 校验：viewBox ⇔ 根', () => {
     const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA, FADE] }]), c)
       .scene.primitives;
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toEqual([FADE]);
-    expect(c.warnings.filter(w => w.code === 'ANIMATION_INVALID_PROPERTY')).toHaveLength(1);
+    expect(c.warnings.filter(w => w.code === CompileWarningCode.AnimationInvalidProperty)).toHaveLength(1);
   });
 
   it('scene 根非 viewBox track → warn + drop（Scene.animations 省略）', () => {
     const c = collector();
     const built = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0] }], { animations: [FADE] }), c).scene;
-    expect(c.warnings.some(w => w.code === 'ANIMATION_INVALID_PROPERTY')).toBe(true);
+    expect(c.warnings.some(w => w.code === CompileWarningCode.AnimationInvalidProperty)).toBe(true);
     expect(built.animations).toBeUndefined();
   });
 });

@@ -9,6 +9,7 @@ import type {
   ResolvedInspectionRequest,
 } from './types';
 
+import { RetikzInspectionError, RetikzInspectionErrorCode } from '../error';
 import { inspectorRegistryKey } from '../providers';
 import { INSPECTION_SCOPE_PALETTE, INSPECTION_WARNING_COLOR } from './constants';
 import { selectionOrigin, wrapInspectionError } from './diagnostics';
@@ -21,11 +22,15 @@ const isRecord = (value: unknown): value is Readonly<Record<PropertyKey, unknown
 
 /** 在访问 locator 字段前校验 selection target 的运行时结构 */
 const readSelectionTarget = (value: unknown): InspectionSelectionTarget => {
-  if (!isRecord(value)) throw new Error('Inspection selection target must be an object');
+  if (!isRecord(value))
+    throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, 'Inspection selection target must be an object');
   if (value.kind === 'scene') return value as InspectionSelectionTarget;
   if (value.kind === 'subtree' && typeof value.sourcePath === 'string') return value as InspectionSelectionTarget;
   if (value.kind !== 'self' || !isRecord(value.locator)) {
-    throw new Error('Inspection selection target must identify scene, subtree, or self');
+    throw new RetikzInspectionError(
+      RetikzInspectionErrorCode.Compile,
+      'Inspection selection target must identify scene, subtree, or self',
+    );
   }
   if (value.locator.kind === 'authored' && typeof value.locator.sourcePath === 'string') {
     return value as InspectionSelectionTarget;
@@ -45,7 +50,10 @@ const readSelectionTarget = (value: unknown): InspectionSelectionTarget => {
   ) {
     return value as InspectionSelectionTarget;
   }
-  throw new Error('Inspection self target must provide a valid authored or occurrence locator');
+  throw new RetikzInspectionError(
+    RetikzInspectionErrorCode.Compile,
+    'Inspection self target must provide a valid authored or occurrence locator',
+  );
 };
 
 /** Core canonical occurrence preorder 的包内等价比较器 */
@@ -120,18 +128,25 @@ const collectAuthoredPaths = (ir: IRScene) => {
 const validateTarget = (target: InspectionSelectionTarget, paths: ReturnType<typeof collectAuthoredPaths>): void => {
   if (target.kind === 'scene') return;
   if (target.kind === 'subtree') {
-    if (!paths.subtree.has(target.sourcePath)) throw new Error(`Invalid inspection subtree '${target.sourcePath}'`);
+    if (!paths.subtree.has(target.sourcePath))
+      throw new RetikzInspectionError(
+        RetikzInspectionErrorCode.Compile,
+        `Invalid inspection subtree '${target.sourcePath}'`,
+      );
     return;
   }
   if (target.locator.kind === 'authored' && !paths.self.has(target.locator.sourcePath)) {
-    throw new Error(`Invalid inspection self locator '${target.locator.sourcePath}'`);
+    throw new RetikzInspectionError(
+      RetikzInspectionErrorCode.Compile,
+      `Invalid inspection self locator '${target.locator.sourcePath}'`,
+    );
   }
   if (
     target.locator.kind === 'authored' &&
     target.locator.occurrenceIndex !== undefined &&
     (!Number.isSafeInteger(target.locator.occurrenceIndex) || target.locator.occurrenceIndex < 0)
   ) {
-    throw new Error('Invalid inspection authored occurrence index');
+    throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, 'Invalid inspection authored occurrence index');
   }
 };
 
@@ -142,7 +157,10 @@ export const admitInspectionSelection = (
   selection: InspectionSelection,
 ): ReadonlyArray<IndexedRule> => {
   if (!isRecord(selection) || !Array.isArray(selection.rules)) {
-    throw wrapInspectionError(selectionOrigin(0, null), new Error('Inspection selection rules must be an array'));
+    throw wrapInspectionError(
+      selectionOrigin(0, null),
+      new RetikzInspectionError(RetikzInspectionErrorCode.Compile, 'Inspection selection rules must be an array'),
+    );
   }
   const paths = collectAuthoredPaths(ir);
   const requestKeys = new Set<string>();
@@ -150,18 +168,27 @@ export const admitInspectionSelection = (
     Array.from(selection.rules, (rule, index) => {
       let target: InspectionSelectionTarget | null = null;
       try {
-        if (!isRecord(rule)) throw new Error('Inspection selection rule must be an object');
+        if (!isRecord(rule))
+          throw new RetikzInspectionError(
+            RetikzInspectionErrorCode.Compile,
+            'Inspection selection rule must be an object',
+          );
         target = readSelectionTarget(rule.target);
-        if (rule.kind !== 'request' && rule.kind !== 'barrier') throw new Error('Unknown inspection selection rule');
+        if (rule.kind !== 'request' && rule.kind !== 'barrier')
+          throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, 'Unknown inspection selection rule');
         const admittedRule = rule as InspectionSelectionRule;
         if (admittedRule.kind === 'barrier' && target.kind === 'self') {
-          throw new Error('Inspection barrier cannot target self');
+          throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, 'Inspection barrier cannot target self');
         }
         validateTarget(target, paths);
         if (admittedRule.kind === 'request') {
           const definition = registry.require(admittedRule.inspector);
           const duplicateKey = `${targetKey(target)}\u0000${inspectorRegistryKey(admittedRule.inspector)}`;
-          if (requestKeys.has(duplicateKey)) throw new Error('Duplicate inspection target and Inspector key');
+          if (requestKeys.has(duplicateKey))
+            throw new RetikzInspectionError(
+              RetikzInspectionErrorCode.Compile,
+              'Duplicate inspection target and Inspector key',
+            );
           requestKeys.add(duplicateKey);
           if (admittedRule.value !== false) {
             definition.optionsInputSchema.parse(admittedRule.value === true ? {} : admittedRule.value);
@@ -241,9 +268,16 @@ export const resolveInspectionSelection = ({
       targetMatches(rule.target, observation, orderedObservations, definition.owner),
     );
     try {
-      if (matches.length === 0) throw new Error('Explicit self target has no final owner output');
+      if (matches.length === 0)
+        throw new RetikzInspectionError(
+          RetikzInspectionErrorCode.Compile,
+          'Explicit self target has no final owner output',
+        );
       if (!matches.some(observation => ownerEquals(observation.owner, definition.owner))) {
-        throw new Error('Explicit self target owner does not match Inspector owner');
+        throw new RetikzInspectionError(
+          RetikzInspectionErrorCode.Compile,
+          'Explicit self target owner does not match Inspector owner',
+        );
       }
     } catch (cause) {
       throw wrapInspectionError(selectionOrigin(index, rule.target), cause);

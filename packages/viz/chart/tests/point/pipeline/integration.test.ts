@@ -1,6 +1,11 @@
 import type { ExternalDatasets } from '@retikz/data';
 
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import {
+  compileToScene,
+  resolveCoreProviderDependencies,
+  resolveDefaultCoreThemeColors,
+  ThemeMode,
+} from '@retikz/core';
 import { FlexLayoutProvider } from '@retikz/layout';
 import { createPlotProviderContribution } from '@retikz/plot';
 import { SurfaceProvider } from '@retikz/standard';
@@ -8,7 +13,8 @@ import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
 
 import { ChartProvider } from '../../../src';
-import { resolvePointChart } from '../../../src/point';
+import { resolveChart } from '../../../src/_chart/resolve';
+import { ScatterChartRecipe, ScatterChartSchema } from '../../../src/point';
 
 const datasets: ExternalDatasets = {
   rows: [
@@ -17,22 +23,44 @@ const datasets: ExternalDatasets = {
   ],
 };
 
-const chart = resolvePointChart(
+const chart = resolveChart(
+  ScatterChartRecipe.bind(
+    ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'scatter',
+      id: 'sales',
+      presentation: {
+        children: [
+          {
+            kind: 'preset',
+            key: 'chart.presentation.subtitle',
+            preset: 'subtitle',
+            text: 'Two observations',
+          },
+          {
+            kind: 'preset',
+            key: 'chart.presentation.title',
+            preset: 'title',
+            text: 'Sales',
+          },
+          { kind: 'plot', key: 'chart.plot' },
+          {
+            kind: 'preset',
+            key: 'chart.presentation.source',
+            preset: 'source',
+            text: 'Internal',
+          },
+        ],
+      },
+      plot: { data: { reference: 'rows' } },
+      config: { encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+    }),
+  ),
   {
-    namespace: 'chart',
-    type: 'scatter',
-    id: 'sales',
-    data: { reference: 'rows' },
-    encoding: { x: { field: 'x' }, y: { field: 'y' } },
-  },
-  undefined,
-  {},
-  {
-    presentation: [
-      { preset: 'subtitle', position: 'top', text: 'Two observations' },
-      { preset: 'title', position: 'top', text: 'Sales' },
-      { preset: 'source', position: 'bottom', text: 'Internal' },
-    ],
+    theme: {
+      mode: ThemeMode.Light,
+      colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
+    },
   },
 ).chart;
 
@@ -58,7 +86,7 @@ describe('canonical Chart provider and compile integration', () => {
       ['standard', 'surface'],
       ['layout', 'flexLayout'],
       ['plot', 'plot'],
-      ['chart', 'chart'],
+      ['chart', 'base'],
     ]);
   });
 
@@ -86,7 +114,7 @@ describe('canonical Chart provider and compile integration', () => {
 
     expect(result.scene.primitives.length).toBeGreaterThan(0);
     expect(surface?.ownerPath.map(({ namespace, type, instanceId }) => ({ namespace, type, instanceId }))).toEqual([
-      { namespace: 'chart', type: 'chart', instanceId: 'sales' },
+      { namespace: 'chart', type: 'base', instanceId: 'sales' },
       { namespace: 'standard', type: 'surface', instanceId: 'sales' },
     ]);
     expect(surface?.key).toBe('surface');

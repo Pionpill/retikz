@@ -35,7 +35,7 @@ export const PlotScale = { Linear: 'linear', Band: 'band', Point: 'point', Ordin
 - **nice 默认不开**（沿用 linear，不悄改 domain）；用户 `nice:true` 才取整到时间边界。
 - **time 不作 band-like（按月分桶的柱）**：「时间分箱柱」要 bin transform；time 仅作连续轴配折线 / 散点，柱的 x 用 band（类别串，即便类别是 "Jan"/"Feb"）。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **自定义时间 parse pattern / 自定义 tick interval / 自定义时间格式（d3-time-format）** → 后续（按需显式引 d3-time-format）。
 - **本地时区轴（scaleTime / `local?`）** → 后续可选。

@@ -32,12 +32,6 @@ plot 自行注册的 transform：
 
 plot schema 必须避免 data external passthrough 抢先接住 plot-only kind：`stack` / `bin` / `density` 等 plot 内置 kind 必须经过 plot 闭合 schema 校验。
 
-## 被否决选项
-
-- **把 plot-only transform 留在 data 默认集合**：会污染 data 公共 API 和 schema 描述。
-- **在 plot lowering 中写 kind 分支特例**：会绕开统一 registry，破坏自定义 transform、provenance 和错误路径一致性。
-- **删除 plot-only transform**：会直接丢失当前 plot 的统计图层和 relation 能力。
-
 ## 公开契约与兼容性
 
 plot 用户继续在 plot spec 中使用 data transform 与 plot transform 的组合：
@@ -68,13 +62,6 @@ compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lo
 plot 已新增 `schemas/transform` 与 `providers/transform` 子域，承载 plot-only transform 常量、schema、类型、definition 和 implementation。`resolvePlotTransformRegistry` 组合 data 内置 transform 与 plot 内置 transform，并用于 root transform、mark-local transform、lowering、locator 和 source field collection。
 
 data 的默认内置集合已按 [data ADR-02](../../../../data/v0/v0.1/beta.1/02-shared-provider-boundary.md) 收窄，plot-only transform 不再污染 data 包。
-
-## 验证
-
-- plot 默认 lowering 能执行 `summarize -> stack` 等 data + plot transform 链。
-- `density`、`smooth`、`bin`、`relate` 等 plot-only transform 通过 plot 内置 registry 执行。
-- mark-local transform、scale domain、locator provenance 使用同一 plot registry。
-- schema 能拒绝无效 plot-only transform 形态，避免被 data external passthrough 接住。
 
 ## 遗留风险
 

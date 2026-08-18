@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import * as runtime from '../../src';
+import { RetikzRuntimeErrorCode } from '../../src';
 
 describe('runtime commit participant definition', () => {
   it('从 Runtime 公共入口提供 nominal participant definition helper', () => {
@@ -73,7 +74,9 @@ describe('runtime commit participant definition', () => {
     expect(Object.isFrozen(participant.tracePhases[0]?.outcomes)).toBe(true);
 
     const define = runtime.defineRuntimeCommitParticipant as (input: unknown) => unknown;
-    expect(() => define(null)).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_TOKEN_INVALID' }));
+    expect(() => define(null)).toThrowError(
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantTokenInvalid }),
+    );
     expect(() =>
       define({
         key: '',
@@ -85,6 +88,6 @@ describe('runtime commit participant definition', () => {
         read: () => ({}),
         dispose: () => undefined,
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_TOKEN_INVALID' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantTokenInvalid }));
   });
 });

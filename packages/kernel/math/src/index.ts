@@ -1,3 +1,4 @@
+export * from './algorithms';
 export * from './constants';
-export * from './curve';
-export * from './geometry';
+export * from './primitives';
+export * from './transforms';

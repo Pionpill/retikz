@@ -1,13 +1,22 @@
+import type { ValueOf } from './types';
+
 /** Retikz 结构化领域错误的基础构造参数 */
 export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<Record<string, unknown>>> = Readonly<{
+  /** 结构化错误的分类代码 */
   code: TCode;
+  /** 面向调用方的错误消息 */
   message: string;
+  /** 与错误代码关联的结构化错误详情 */
   details: TDetails;
+  /** 导致当前错误的原始异常或值 */
   cause?: unknown;
 }>;
 
 /** Retikz 结构化领域错误的基础骨架 */
-export class RetikzError<TCode extends string, TDetails extends Readonly<Record<string, unknown>>> extends Error {
+export class RetikzError<
+  TCode extends string = string,
+  TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
+> extends Error {
   readonly code: TCode;
   readonly details: TDetails;
   readonly cause?: unknown;
@@ -21,6 +30,38 @@ export class RetikzError<TCode extends string, TDetails extends Readonly<Record<
   }
 }
 
+/** Foundation 包稳定错误码 */
+export const RetikzFoundationErrorCode = {
+  /** 未被更精确分类覆盖的 Foundation 错误 */
+  Default: 'FOUNDATION_ERROR',
+  /** 字符串为空或只包含空白 */
+  NonEmptyStringRequired: 'FOUNDATION_NON_EMPTY_STRING_REQUIRED',
+} as const;
+
+/** Foundation 包稳定错误码取值 */
+export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
+
+/** Foundation 原子契约失败的统一结构化错误 */
+export class RetikzFoundationError<
+  TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue,
+  TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
+> extends RetikzError<TCode, TDetails> {
+  /** 使用默认错误码创建 Foundation 错误 */
+  constructor(message: string);
+  /** 使用结构化参数创建 Foundation 错误 */
+  constructor(options: RetikzErrorOptions<TCode, TDetails>);
+  constructor(optionsOrMessage: RetikzErrorOptions<TCode, TDetails> | string) {
+    super(
+      typeof optionsOrMessage === 'string'
+        ? {
+            code: RetikzFoundationErrorCode.Default as TCode,
+            message: optionsOrMessage,
+            details: Object.freeze({}) as TDetails,
+          }
+        : optionsOrMessage,
+    );
+  }
+}
+
 /** 判断动态值是否继承自 Retikz 结构化领域错误 */
-export const isRetikzError = (value: unknown): value is RetikzError<string, Readonly<Record<string, unknown>>> =>
-  value instanceof RetikzError;
+export const isRetikzError = (value: unknown): value is RetikzError => value instanceof RetikzError;

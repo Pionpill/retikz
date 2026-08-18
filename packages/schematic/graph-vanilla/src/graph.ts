@@ -31,6 +31,7 @@ import {
 } from '@retikz/graph';
 
 import { ContainerEmbedKind, EntityEmbedKind, GraphEmbedKind, RelationEmbedKind } from './constants';
+import { RetikzGraphVanillaError, RetikzGraphVanillaErrorCode } from './errors';
 
 type GraphCompositeProvider = ReturnType<typeof createGraphProviders>[number];
 
@@ -56,7 +57,11 @@ const providerClosure = (
     for (const dependency of provider.dependencies) {
       const candidate = providers.find(entry => sameProviderKey(entry.key, dependency));
       if (candidate === undefined) {
-        throw new Error(`Graph provider catalog is missing dependency '${dependency.capability}'.`);
+        throw new RetikzGraphVanillaError({
+          code: RetikzGraphVanillaErrorCode.ProviderDependencyMissing,
+          message: `Graph provider catalog is missing dependency '${dependency.capability}'.`,
+          details: { dependency: dependency.capability },
+        });
       }
       visit(candidate);
     }
@@ -123,10 +128,20 @@ const normalizeGraphChild = (
   collected: CollectedInputDependencies,
 ) => {
   const normalizeChildren = context.normalizeChildren;
-  if (normalizeChildren === undefined) throw new Error('Graph slot inputs require Kernel Vanilla normalizeScene.');
+  if (normalizeChildren === undefined) {
+    throw new RetikzGraphVanillaError({
+      code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,
+      message: 'Graph slot inputs require Kernel Vanilla normalizeScene.',
+      details: { label },
+    });
+  }
   const normalized = normalizeChildren([child]);
   if (normalized.children.length !== 1) {
-    throw new Error(`${label} must normalize to exactly one Core child.`);
+    throw new RetikzGraphVanillaError({
+      code: RetikzGraphVanillaErrorCode.NormalizedChildCountInvalid,
+      message: `${label} must normalize to exactly one Core child.`,
+      details: { label, expectedCount: 1, receivedCount: normalized.children.length },
+    });
   }
   collected.roots.push(...normalized.providerDependencies.roots);
   collected.providers.push(...normalized.providerDependencies.providers);
@@ -160,7 +175,13 @@ export const GraphInputEmbedAdapter: InputEmbedAdapter<InputGraph> = {
   kind: GraphEmbedKind,
   lower: (props, context) => {
     const normalizeChildren = context.normalizeChildren;
-    if (normalizeChildren === undefined) throw new Error('Graph inputs require Kernel Vanilla normalizeScene.');
+    if (normalizeChildren === undefined) {
+      throw new RetikzGraphVanillaError({
+        code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,
+        message: 'Graph inputs require Kernel Vanilla normalizeScene.',
+        details: { label: 'Graph' },
+      });
+    }
     const { entityRoles, entityVariants, graphThemeStyles, children, ...input } = props;
     const hasCustomOptions =
       entityRoles !== undefined || entityVariants !== undefined || graphThemeStyles !== undefined;
@@ -168,7 +189,13 @@ export const GraphInputEmbedAdapter: InputEmbedAdapter<InputGraph> = {
       ? createGraphProviders({ entityRoles, entityVariants, graphThemeStyles })
       : DEFAULT_GRAPH_PROVIDERS;
     const provider = configuredProviders.find(candidate => sameProviderKey(candidate.key, GraphProvider.key));
-    if (provider === undefined) throw new Error('Graph provider catalog is missing the Graph provider.');
+    if (provider === undefined) {
+      throw new RetikzGraphVanillaError({
+        code: RetikzGraphVanillaErrorCode.ProviderMissing,
+        message: 'Graph provider catalog is missing the Graph provider.',
+        details: { provider: GraphEmbedKind },
+      });
+    }
     const normalized = normalizeChildren(children);
     const providers = normalized.providerDependencies.providers.map(candidate => {
       const defaultProvider = DEFAULT_GRAPH_PROVIDERS.find(entry => sameProviderKey(entry.key, candidate.key));
@@ -202,14 +229,30 @@ const normalizeEntity = <TInput extends Record<string, unknown>>(
   const { authoringNode, ...base } = input as TInput & { authoringNode?: InputNode };
   if (authoringNode === undefined) return base;
   const normalizeChildren = context.normalizeChildren;
-  if (normalizeChildren === undefined) throw new Error('Entity inputs require Kernel Vanilla normalizeScene.');
+  if (normalizeChildren === undefined) {
+    throw new RetikzGraphVanillaError({
+      code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,
+      message: 'Entity inputs require Kernel Vanilla normalizeScene.',
+      details: { label: 'Entity' },
+    });
+  }
   const normalized = normalizeChildren([authoringNode]);
   if (
     normalized.children.length !== 1 ||
     normalized.children[0].type !== 'node' ||
     'namespace' in normalized.children[0]
   ) {
-    throw new Error('Entity must normalize to exactly one Core Node.');
+    throw new RetikzGraphVanillaError({
+      code: RetikzGraphVanillaErrorCode.NormalizedNodeInvalid,
+      message: 'Entity must normalize to exactly one Core Node.',
+      details: {
+        label: 'Entity',
+        expectedType: 'node',
+        receivedType: normalized.children[0]?.type ?? 'none',
+        expectedCount: 1,
+        receivedCount: normalized.children.length,
+      },
+    });
   }
   const { type: _type, id: _id, ...node } = normalized.children[0];
   void _type;
@@ -222,10 +265,26 @@ const createEmbeddedRelation = (id: string, input: InputRelation, context: Input
   if ('authoringPath' in input) {
     const { authoringPath, ...base } = input;
     const normalizeChildren = context.normalizeChildren;
-    if (normalizeChildren === undefined) throw new Error('Relation inputs require Kernel Vanilla normalizeScene.');
+    if (normalizeChildren === undefined) {
+      throw new RetikzGraphVanillaError({
+        code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,
+        message: 'Relation inputs require Kernel Vanilla normalizeScene.',
+        details: { label: 'Relation' },
+      });
+    }
     const normalized = normalizeChildren([authoringPath]);
     if (normalized.children.length !== 1 || normalized.children[0].type !== 'path') {
-      throw new Error('Relation must normalize to exactly one Core Path.');
+      throw new RetikzGraphVanillaError({
+        code: RetikzGraphVanillaErrorCode.NormalizedPathInvalid,
+        message: 'Relation must normalize to exactly one Core Path.',
+        details: {
+          label: 'Relation',
+          expectedType: 'path',
+          receivedType: normalized.children[0]?.type ?? 'none',
+          expectedCount: 1,
+          receivedCount: normalized.children.length,
+        },
+      });
     }
     return createRelation({
       ...base,

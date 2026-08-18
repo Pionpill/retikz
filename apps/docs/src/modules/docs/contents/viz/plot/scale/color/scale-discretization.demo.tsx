@@ -1,4 +1,4 @@
-import type { IRPlotScale, IRPlot } from '@retikz/plot';
+import type { IRPlot, IRPlotScale } from '@retikz/plot';
 
 import { Plot } from '@retikz/plot-react';
 

@@ -1,8 +1,8 @@
 # ADR-18：以 Core provider graph 聚合可复用绘图能力依赖
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-11
-- 关联：[v0.5 roadmap](../roadmap.md) · [alpha.2 roadmap](./roadmap.md) · [Core Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Standard provider 子入口](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.4/02-core-minimal-builtins-and-standard-provider-entrypoints.md)
+- 关联：[Standard provider 子入口](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.3/08-core-minimal-builtins-and-standard-provider-entrypoints.md)
 
 ## 背景与目标
 

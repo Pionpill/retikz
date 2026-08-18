@@ -1,14 +1,16 @@
 import type { PlotLineageOptions, PlotRowValueOptions } from '../../contract';
 import type { EffectivePlotLineageOptions } from './types';
 
+import { RetikzPlotError } from '../../error';
+
 /** 校验 rowValues，避免默认记录整行 */
 const resolvePlotRowValueOptions = (value: false | PlotRowValueOptions | undefined): false | PlotRowValueOptions => {
   if (value === undefined || value === false) return false;
   if (!Number.isInteger(value.maxRows) || value.maxRows < 1) {
-    throw new Error('plot lineage: rowValues.maxRows must be a positive integer');
+    throw new RetikzPlotError('plot lineage: rowValues.maxRows must be a positive integer');
   }
   if (!Array.isArray(value.fields) || value.fields.length === 0) {
-    throw new Error('plot lineage: rowValues.fields must be a non-empty field whitelist');
+    throw new RetikzPlotError('plot lineage: rowValues.fields must be a non-empty field whitelist');
   }
   return { maxRows: value.maxRows, fields: [...value.fields] };
 };

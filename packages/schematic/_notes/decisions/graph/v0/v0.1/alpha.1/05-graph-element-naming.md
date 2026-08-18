@@ -2,7 +2,6 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-16
-- 关联：[alpha.1 roadmap](./roadmap.md) · [Graph v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
 ## 背景与目标
 
@@ -34,17 +33,10 @@ const GraphType = {
 - `GraphElementType` 迁移为 `GraphType`
 - `graphNodeVariant` 迁移为 `entityVariant`
 
-### 目录 owner
+### Owner 边界
 
-`packages/schematic/graph/src` 只保留 `entity/`、`relation/`、`container/`、`shared/` 四个 owner 目录。Entity / Relation / Container 专属契约归各自 owner；shared 只保留 Graph namespace 与 GraphType 等真正跨 owner 的词汇。旧目录不提供 re-export、alias 或 shim
+Graph 内部只保留 `entity`、`relation`、`container` 与 `shared` 四个 owner。Entity / Relation / Container 专属契约归各自 owner；shared 只保留 Graph namespace 与 GraphType 等真正跨 owner 的词汇。旧名称不提供 re-export、alias 或 shim
 
 ### 兼容性与边界
 
 这是 `0.x` 阶段的 breaking naming migration。旧名称、旧 discriminator、旧 adapter kind、旧 docs route 与旧 schema registry 标识直接删除，不提供 deprecated export、migration、fallback 或双轨输入。Graph release group、包名、namespace、字段语义、默认值、lowering、Layout composition 与 renderer-neutral 输出保持不变
-
-## 不在本 ADR 范围
-
-- GraphModel、GraphDocument、端口、全局关系集合、自动布局、routing、Editor 或新的领域 role
-- `@retikz/layout` 的布局类型、artifact 或 `LayoutItem` 命名
-- 已完成 milestone 的历史 ADR、历史 changelog 与已发布版本事实
-- commit、push、tag、publish 与具体测试 case

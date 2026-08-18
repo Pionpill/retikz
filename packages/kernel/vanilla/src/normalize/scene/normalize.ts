@@ -23,6 +23,7 @@ import type {
   NormalizedInputScene,
 } from './types';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import { normalizeNode } from '../node';
 import { normalizePath } from '../path';
 import { normalizeScopeWithChildren } from '../scope';
@@ -93,7 +94,10 @@ const registerIdentity = (
   if (id === undefined) return;
   const key = ctx.identityFrame.length === 0 ? id : `${ctx.identityFrame}/${id}`;
   if (ctx.identityIndex.has(key)) {
-    throw new Error(`normalizeScene: duplicate identity "${id}" at ${path.join(' > ')}`);
+    throw new RetikzVanillaError(
+      RetikzVanillaErrorCode.Normalize,
+      `normalizeScene: duplicate identity "${id}" at ${path.join(' > ')}`,
+    );
   }
   ctx.identityIndex.set(key, path);
   ctx.parentIndex.set(key, parentId);
@@ -232,7 +236,10 @@ const normalizeEmbeddedChildren = (
 const normalizeEmbed = (input: AnyInputEmbed, ctx: NormalizeContext): IRChild => {
   const adapter = ctx.adapters?.find(entry => entry.kind === input.kind);
   if (adapter === undefined) {
-    throw new Error(`normalizeScene: embed "${input.id}" uses kind "${input.kind}" but no adapter was provided`);
+    throw new RetikzVanillaError(
+      RetikzVanillaErrorCode.Normalize,
+      `normalizeScene: embed "${input.id}" uses kind "${input.kind}" but no adapter was provided`,
+    );
   }
   const reusedEmbedIdentity: ReusedEmbedIdentity = { id: input.id, used: false };
   const context: InputEmbedContext = {
@@ -363,7 +370,10 @@ const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
     );
   }
   if (input.type === undefined && 'children' in input) {
-    throw new Error('normalizeScene: child with an empty children array must declare type');
+    throw new RetikzVanillaError(
+      RetikzVanillaErrorCode.Normalize,
+      'normalizeScene: child with an empty children array must declare type',
+    );
   }
   if (isInputNode(input)) return normalizeNode(input);
   return input;
@@ -372,7 +382,10 @@ const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
 /** 将 InputScene 一次性归一为唯一 Source IR、contribution 与 runtime metadata */
 export const normalizeScene = (scene: InputScene, options: InputNormalizeOptions = {}): NormalizedInputScene => {
   if ('children' in scene && 'layers' in scene) {
-    throw new Error('normalizeScene: scene cannot contain both children and layers');
+    throw new RetikzVanillaError(
+      RetikzVanillaErrorCode.Normalize,
+      'normalizeScene: scene cannot contain both children and layers',
+    );
   }
   const layers = asLayerStack(scene);
   const contributions: Array<CoreProviderContribution> = [];
@@ -387,7 +400,10 @@ export const normalizeScene = (scene: InputScene, options: InputNormalizeOptions
 
   for (const [order, layer] of layers.entries()) {
     if (layerIds.has(layer.id)) {
-      throw new Error(`normalizeScene: duplicate identity "${layer.id}" at layer "${layer.id}"`);
+      throw new RetikzVanillaError(
+        RetikzVanillaErrorCode.Normalize,
+        `normalizeScene: duplicate identity "${layer.id}" at layer "${layer.id}"`,
+      );
     }
     layerIds.add(layer.id);
     const context: NormalizeContext = {

@@ -198,13 +198,10 @@ type CellProps = CellSharedProps &
 
 具体行为、不变量、反例和最低测试层见 ignored `notes/plans/table-react-composition-api/TEST_CONTRACT.md`。
 
-## 最终实现与验证
-
+## 最终结果
 `@retikz/table-react` 已公开 `DetailColumn`、`Row` 与 `Cell` marker。`DetailTable` 支持完整 `columns` props 或 `DetailColumn` children，`ManualTable` 支持完整 `cells` / `rowKinds` props 或 `Row` / `Cell` children；两组来源均互斥，并通过 `resolveReactTableRuntime()` 进入同一 spec、standalone 与 embedded runtime。
 
 marker traversal 保留 Fragment、数组与条件空节点中的有效声明顺序；Cell scalar children、显式 value 和 content 归一为既有 JSON-safe payload。未知 element、双来源、维度越界和非法 ReactNode 均 fail-loud，ReactNode 本身不进入 Table IR。
-
-验证覆盖 marker 与 props 等价、根属性保留、payload 边界、稀疏 manual 行、错误 grammar、standalone / embedded 同源、manifest 与公开导出。Table React 的 ESLint、TypeScript、build 与 4 个测试文件 / 26 项测试通过；Table 双语 7 页完整性检查和 docs TypeScript 通过。
 
 ## 影响
 
@@ -216,21 +213,7 @@ marker traversal 保留 Fragment、数组与条件空节点中的有效声明顺
 - `@retikz/table-react` README 与 apps/docs 的明细表、表格模型/API 示例同步展示 props / children 两种写法；zh / en 同步
 - alpha.1 ADR-06 的 JSX DSL 非目标由本 ADR supersede，其余绑定与 adapter 决策继续有效
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Tabular Visualization Complete / React authoring adapter 表面
-- 解决的问题：让 React 用户用小而明确的声明组件组织既有 detail/manual 输入，不改变 Table 领域模型
-- 主责包与协作包：`@retikz/table` 继续主责 schema、plain authoring 与 pipeline；`@retikz/table-react` 主责 children traversal 和 runtime 接线；Vanilla 维持 plain authoring
-- 是否可由现有能力组合：可以；children 完全折叠为现有 `TableDetailColumnInput`、`IRTableCell` 与两个 create helper
-- 是否需要下沉到 data / core / math：不需要；不新增数据处理、IR、测量或 renderer 能力
-- 内部表达链路：React props / marker children → detail/manual 窄 builder → `createXxxTableIR()` → 现有 runtime / lowering
-- 外部扩展链路：custom structure 继续走通用 `<Table spec>` 与 definitions；本 ADR 不为 custom kind 自动生成 React marker
-- pipeline / lowering 与下游消费：无变化；standalone 与 embedded 都消费同一个规范 spec
-- React / Vanilla adapter 等价性：两侧最终 IRTable 和 lowering 等价；JSX traversal 是 React-only authoring sugar，Vanilla plain input 已具备完整能力，因此无需镜像组件层级
-- provenance / lineage / locator 是否适用：不改变现有 Cell source、manifest 或 identity；Data transform / lineage 延期到 roadmap 对应 milestone
-- 不支持边界与本轮结论：能力由现有 Table contract 组合表达，新增内容上移到 React adapter，不扩展 Table 能力域
-
-## 不在本 ADR 范围
+## 长期边界
 
 - `<Transform>`、`dataTransforms` 或 `sourceIndex` 语义调整；是否提供这些 API 由后续 Data 消费 ADR 决定
 - Data aggregate 与 lineage；按 v0.1 roadmap 在 alpha.4 接入，但不由本 React authoring ADR 定义

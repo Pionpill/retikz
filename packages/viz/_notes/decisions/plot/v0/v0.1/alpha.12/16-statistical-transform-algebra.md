@@ -46,7 +46,7 @@ transform 仍是唯一统计入口；mark 只消费 transform 后的 rows。内�
 - React / Vanilla 的 transform 表面接受新 operation，并透传统计子算子 definitions。
 - docs 的 transform 章节需要改写为统计代数视角，并展示 root / mark-local transform 中的用法。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不引入表达式语言或函数进入 IRPlot。
 - 不做 named data view、join、facet scoped dataset。

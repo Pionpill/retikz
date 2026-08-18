@@ -1,8 +1,8 @@
 import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { normalizeChartPresentation, resolveChartPresentation } from '../../../src/base/presentation';
-import { getDefaultChartThemePreset } from '../../../src/base/style/catalog';
+import { normalizeChartPresentation, resolveChartPresentation } from '../../../src/_chart/presentation';
+import { getDefaultChartThemePreset } from '../../../src/_chart/style/catalog';
 
 const plot = PlotSchema.parse({
   namespace: 'plot',

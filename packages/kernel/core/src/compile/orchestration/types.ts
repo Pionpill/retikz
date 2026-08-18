@@ -19,7 +19,7 @@ import type {
   SpatialHandleOwner,
   Transform,
 } from '../../contract';
-import type { StyleResolveFrame } from '../../resolve/style';
+import type { StyleResolveFrame } from '../../resolve';
 import type { IRChild, IRPathBase, IRPosition, JsonValue, ResolvedDropShadow } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';

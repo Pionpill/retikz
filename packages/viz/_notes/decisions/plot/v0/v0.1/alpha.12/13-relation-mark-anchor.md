@@ -39,7 +39,7 @@ ADR-03/04 早期草稿曾规划 `LinkMark` / `link` 作为 `ribbon` 的替代，
 - React 新增 `<RelationMark>`，并给 Point / Path / Interval props 增加 `anchorId`。
 - core 不改动；只消费 core Coordinate、Path、NodeTarget、StepLabel 等既有能力。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不实现 Sankey / alluvial 流带布局；未来可另立 FlowMark / RibbonMark。
 - 不实现 AnnotationMark / CalloutMark，只预留 PlotTargetRef。

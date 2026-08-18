@@ -5,6 +5,7 @@ import { parseWay } from '@retikz/core';
 
 import type { IRRelation, RelationSchema } from '../../schemas';
 
+import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { RelationSchema as RelationIRSchema } from '../../schemas';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 
@@ -31,7 +32,11 @@ export const createRelation = (input: RelationCreateOptions): IRRelation => {
   const hasChildren = children !== undefined;
   const hasWay = way !== undefined;
   if (hasChildren === hasWay) {
-    throw new Error('Relation requires exactly one of `children` or `way`.');
+    throw new RetikzGraphError({
+      code: RetikzGraphErrorCode.RelationInputInvalid,
+      message: 'Relation requires exactly one of `children` or `way`.',
+      details: { capability: 'relation-authoring', reason: 'exactly-one-source-required' },
+    });
   }
 
   return RelationIRSchema.parse({

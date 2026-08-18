@@ -2,9 +2,9 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.5 plan §IR 改动清单 / §`<Arc>` / §`<Sector>`](./roadmap.md) · [本 milestone ADR-04 sugar 设计约定](./04-sugar-conventions.md)
+- 关联： · [本 milestone ADR-04 sugar 设计约定](./04-sugar-conventions.md)
 
-> **范围**：给 `arc` step 补显式圆心与椭圆弧能力，让 `<Arc>` / `<Sector>` 能画椭圆弧、扇形 wedge 不再被隐式圆心坑。
+> **目标**：给 `arc` step 补显式圆心与椭圆弧能力，让 `<Arc>` / `<Sector>` 能画椭圆弧、扇形 wedge 不再被隐式圆心坑。
 
 ## 背景 / 约束
 
@@ -15,7 +15,7 @@
 
 ## 决策：arc 加可选显式 `center` + radiusX / radiusY
 
-`center` 缺省仍取 `prev.anchor`（**完全向后兼容**），给了就用显式值——圆心不再隐式依赖 step 顺序。alpha.5 本就要改 arc schema 加 radiusX/radiusY，顺带加 center 边际成本最小。最终字段见 `core/src/ir/path/step.ts`（`ArcStepSchema`）。
+`center` 缺省仍取 `prev.anchor`（**完全向后兼容**），给了就用显式值——圆心不再隐式依赖 step 顺序。alpha.5 本就要改 arc schema 加 radiusX/radiusY，顺带加 center 边际成本最小。最终字段见 （`ArcStepSchema`）。
 
 显式 center 让 `<Sector>` 能用**现有 compile 语义就成立**的干净 wedge（无需改 cycle 分支）：
 
@@ -38,17 +38,12 @@ move(arcStart)          // 起点 = 弧起点；arcStart = center + polar(radius
 - **角度约定**：沿用 `geometry/arc.ts`（SVG y-down，0=+x，角增 = 屏幕顺时针）；椭圆弧端点 = `[cx + rx·cosθ, cy + ry·sinθ]`（参数角，非真实极角）。
 - **圆弧走 `emitArc`、椭圆弧走 `emitEllipseArc`，不统一**：`radius` 分支沿用现有 `emitArc`（`arc` PathCommand，现有圆弧图逐字节不变），`radiusX/radiusY` 走 `emitEllipseArc`（`ellipseArc` PathCommand）。统一会改动现有圆弧命令表示、触发快照漂移，故刻意分流。
 
-### 被否决的选项
-
-- **B：`move→arc→line→cycle` 纯 sugar 不改 IR** —— 强依赖 arc 的 startSegment / cycle 内部行为收 wedge，须测试验证，脆。
-- **C：新增专门 `sector` step** —— 语义最清晰但 IR 表面最大、工作量最多；扇形并非高频到值得独占一个 step。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - circlePath / ellipsePath 部分裁剪（[ADR-02](./02-partial-circle-ellipse.md)）；矩形 step（[ADR-03](./03-rectangle-step.md)）。
 
 ---
 
-> **实现指针**：level `red`（动 `core/src/ir/**` schema + `compile/**` + `geometry/**`）、additive 零破坏（新字段 optional，现有 `radius`-only arc 输出逐字节不变）。真源以代码为准——`ArcStepSchema` / `IRArcStep`（`core/src/ir/path/step.ts`）、arc 分支圆心 / 半径分流（`core/src/compile/path/index.ts`）、端点 / bbox 推广 rx/ry（`core/src/geometry/arc.ts`）、`<Arc>` / `<Sector>` props（`react/src/kernel/Step.tsx` + `builder.ts`）。测试在 `core/tests/compile/arc-center-elliptical.test.ts` + `core/tests/geometry/`。完整原文（Schema 改动表 / 文件 scope / 测试象限）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `b99e7294`；压缩前完整施工蓝图 = `git show b99e7294^:_notes/decisions/core/v0/v0.2/alpha.5/01-arc-center-and-elliptical.md`。
+已实现本 ADR 的核心决策。兼容性：additive 零破坏（新字段 optional，现有 `radius`-only arc 输出逐字节不变）；其余默认行为、失败语义与公开契约以正文为准。

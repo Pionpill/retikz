@@ -1,5 +1,6 @@
 import type { GridAutoFlowValue, GridOverlapValue, IRGridPlacement } from './types';
 
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS, GridAutoFlow, GridOverlap } from './constants';
 
 /** Grid placement solver 接受的 authored item 摘要 */
@@ -37,10 +38,18 @@ type OccupiedRect = Readonly<{
 /** 在任何加法前校验单轴 start/span 不超过 track guard */
 const guardedEnd = (start: number, span: number, axis: 'column' | 'row', key: string): number => {
   if (!Number.isSafeInteger(start) || start < 0 || !Number.isSafeInteger(span) || span <= 0) {
-    throw new Error(`GridLayout item '${key}' has invalid ${axis} start or span`);
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.PlacementInvalid,
+      message: `GridLayout item '${key}' has invalid ${axis} start or span`,
+      details: { axis, key, span, start },
+    });
   }
   if (start > GRID_LAYOUT_MAX_TRACKS_PER_AXIS - span) {
-    throw new Error(`GridLayout item '${key}' exceeds the ${axis} track guard`);
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.PlacementInvalid,
+      message: `GridLayout item '${key}' exceeds the ${axis} track guard`,
+      details: { axis, key, span, start, trackGuard: GRID_LAYOUT_MAX_TRACKS_PER_AXIS },
+    });
   }
   return start + span;
 };
@@ -75,10 +84,18 @@ export const resolveGridPlacements = (
   }>,
 ): ResolvedGridPlacements => {
   if (options.explicitColumns < 1 || options.explicitColumns > GRID_LAYOUT_MAX_TRACKS_PER_AXIS) {
-    throw new Error('GridLayout explicit column count is outside the track guard');
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.PlacementInvalid,
+      message: 'GridLayout explicit column count is outside the track guard',
+      details: { axis: 'column', count: options.explicitColumns, trackGuard: GRID_LAYOUT_MAX_TRACKS_PER_AXIS },
+    });
   }
   if (options.explicitRows < 0 || options.explicitRows > GRID_LAYOUT_MAX_TRACKS_PER_AXIS) {
-    throw new Error('GridLayout explicit row count is outside the track guard');
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.PlacementInvalid,
+      message: 'GridLayout explicit row count is outside the track guard',
+      details: { axis: 'row', count: options.explicitRows, trackGuard: GRID_LAYOUT_MAX_TRACKS_PER_AXIS },
+    });
   }
   let columnCount = options.explicitColumns;
   let rowCount = Math.max(options.explicitRows, 1);
@@ -88,7 +105,11 @@ export const resolveGridPlacements = (
   const register = (placement: ResolvedGridPlacement, allowOverlap = false): void => {
     const rect = rectOf(placement);
     if (!allowOverlap && firstOverlap(rect, occupied) !== undefined) {
-      throw new Error(`GridLayout item '${placement.key}' overlaps an occupied explicit area`);
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.PlacementInvalid,
+        message: `GridLayout item '${placement.key}' overlaps an occupied explicit area`,
+        details: { key: placement.key, phase: 'explicit-placement' },
+      });
     }
     occupied.push(rect);
     resolved[placement.sourceIndex] = Object.freeze(placement);
@@ -214,7 +235,13 @@ export const resolveGridPlacements = (
     rowCount,
     items: Object.freeze(
       resolved.map(value => {
-        if (value === undefined) throw new Error('GridLayout placement did not resolve every item');
+        if (value === undefined) {
+          throw new RetikzLayoutError({
+            code: RetikzLayoutErrorCode.PlacementInvalid,
+            message: 'GridLayout placement did not resolve every item',
+            details: { phase: 'resolution' },
+          });
+        }
         return value;
       }),
     ),

@@ -35,6 +35,7 @@ import type {
 } from '../../../schemas';
 
 import { defineScale } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import {
   BandScaleSchema,
   LinearScaleSchema,
@@ -83,7 +84,7 @@ export const resolveLogScale = (
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
   if (def.domain && (def.domain[0] <= 0 || def.domain[1] <= 0)) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: log scale "${def.name}" domain must be strictly positive (got [${def.domain[0]}, ${def.domain[1]}])`,
     );
   }
@@ -112,7 +113,7 @@ export const resolvePowScale = (
 ): D3ScaleContinuousNumeric<number, number> => {
   const exponent = def.exponent ?? 2;
   if (def.domain && !Number.isInteger(exponent) && (def.domain[0] < 0 || def.domain[1] < 0)) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: pow scale "${def.name}" with non-integer exponent ${exponent} requires a non-negative domain (got [${def.domain[0]}, ${def.domain[1]}])`,
     );
   }
@@ -137,7 +138,7 @@ export const resolveSqrtScale = (
   fallbackRange: readonly [number, number],
 ): D3ScaleContinuousNumeric<number, number> => {
   if (def.domain && (def.domain[0] < 0 || def.domain[1] < 0)) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: sqrt scale "${def.name}" domain must be non-negative (got [${def.domain[0]}, ${def.domain[1]}])`,
     );
   }

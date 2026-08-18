@@ -1,8 +1,8 @@
 # ADR-02：GraphNode 使用 GraphNodeVariant
 
-- 状态：Superseded by ADR-06
+- 状态：Superseded by [ADR-06](./06-graph-entity-registry-theme.md)
 - 决策日期：2026-08-15
-- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-graph-package-family.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
+- 替代原因：ADR-06 将 role、variant 与 Graph presentation theme 改为 Graph-owned 的开放 registry 与 scope；本 ADR 的闭合词汇和固定 recipe 仅作为既有内置行为的历史来源保留
 
 > 本 ADR 废弃“逻辑节点接入 Viz / Core Theme Style”的方案。GraphNode 的视觉变体由 Graph 自己拥有，最终仍投影为普通 Core Node paint
 
@@ -73,4 +73,4 @@ GraphNode authored IR 保留 `namespace`、`type: 'graphNode'`、`role` 与 `var
 - 缺少或未知 role、variant fail-loud，不回退到其它 role 或 `default`
 - 直接 JSON、React 与 Vanilla 对同一输入必须产生相同的 role、shape、paint 与 lower 结果
 - 旧 Theme Style、旧组件名称、旧 namespace、旧导出和旧路由不提供 alias、migration、fallback 或双轨
-- 本 ADR 不定义 GraphConnector 的 role recipe；GraphConnector 仅复用自己的闭合 role 与 Core Path lowering
+- GraphConnector 不消费 GraphNode 的 variant recipe，仅复用自己的闭合 role 与 Core Path lowering。Graph 的 role、variant 与 presentation theme 在 Graph lowering 边界消费，不进入 Core Scene 或 renderer

@@ -34,7 +34,7 @@ polar1D 复用 alpha.4 `createPolarFrame` / `projectPolar` + 角向轴，不重�
 - **core**：无新依赖（刻记 / 圆周点下沉 core Node/Path）。
 - **对外 API**：`coordinate="cartesian1D"|"polar1D"`（ADR-04）；纯新增。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - histogram / 分箱 → alpha.12（一维只出空间底座）。
 - 1D + line / area / interval / sector → fail-loud（point 为主）；line 需求驱动。

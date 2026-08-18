@@ -12,6 +12,7 @@ import type {
 import type { RuntimePrimitiveMetadataTable } from '../orchestration';
 
 import { CORE_OWNER_KEY } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 
 /** 递归冻结 Program 新创建且尚未对外暴露的 plain output */
 export const freezeProgramOutput = <T>(value: T): T => {
@@ -41,7 +42,10 @@ const createFullTopology = (
       const primitivePath = Object.freeze([...parentPath, order]);
       const record = metadata.get(primitive as Scene['primitives'][number]);
       if (record === undefined) {
-        throw new Error(`createFullSceneRuntimeSnapshot: missing primitive identity at ${primitivePath.join('.')}`);
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Compile,
+          `createFullSceneRuntimeSnapshot: missing primitive identity at ${primitivePath.join('.')}`,
+        );
       }
       topology.push(
         Object.freeze({

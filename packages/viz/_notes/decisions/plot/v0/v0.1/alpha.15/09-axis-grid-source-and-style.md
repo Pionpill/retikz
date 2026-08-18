@@ -71,7 +71,7 @@ type AxisGridLineStyle = GuideLineStyle & {
 
 全局 grid layer / z-order 由 ADR-12 负责。axis grid 独立 layer 覆盖、data-driven per-line style 与 custom coordinate grid surface 不在本 ADR 范围。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - axis.grid.layer 覆盖。默认 grid 层级已由 ADR-12 固定；若要单独调整某条轴的 grid zIndex，需扩展 grid 自身的 layer 字段。
 - data-driven / per-line style encoding，例如按 index 或 value 给不同 grid line 着色。

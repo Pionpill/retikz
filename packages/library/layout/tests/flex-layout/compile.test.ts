@@ -576,7 +576,7 @@ describe('FlexLayout compile contract', () => {
     expect(groupsOf(result.output.scene.primitives).some(group => group.clipRef !== undefined)).toBe(true);
     expect(
       (result.output.scene.resources ?? []).some(
-        resource => resource.kind === 'clip' && resource.shape.kind === 'path',
+        resource => resource.kind === 'clip' && resource.path.commands.length > 0,
       ),
     ).toBe(true);
   });

@@ -1,4 +1,6 @@
-import type { ClipShape, PathCommand, Transform } from '@retikz/core';
+import type { PathCommand, SceneClipPath, Transform } from '@retikz/core';
+
+import { commandArcStart } from '../shared';
 
 export const DEG_TO_RAD = Math.PI / 180;
 
@@ -79,9 +81,22 @@ export const pathCommand = (ctx: CanvasRenderingContext2D, command: PathCommand)
   }
 };
 
+/** 重放结构化路径，并让 inactive subpath 上的弧从其声明起点开始 */
+const replayPathCommands = (ctx: CanvasRenderingContext2D, commands: ReadonlyArray<PathCommand>): void => {
+  let activeSubpath = false;
+  for (const command of commands) {
+    if ((command.kind === 'arc' || command.kind === 'ellipseArc') && !activeSubpath) {
+      const start = commandArcStart(command);
+      ctx.moveTo(start[0], start[1]);
+    }
+    pathCommand(ctx, command);
+    activeSubpath = command.kind !== 'close';
+  }
+};
+
 export const buildPath = (ctx: CanvasRenderingContext2D, commands: ReadonlyArray<PathCommand>): void => {
   ctx.beginPath();
-  for (const command of commands) pathCommand(ctx, command);
+  replayPathCommands(ctx, commands);
 };
 
 export const applyTransform = (ctx: CanvasRenderingContext2D, transform: Transform): void => {
@@ -106,40 +121,12 @@ export const applyTransform = (ctx: CanvasRenderingContext2D, transform: Transfo
   }
 };
 
-export const buildClipPath = (ctx: CanvasRenderingContext2D, shape: ClipShape): void => {
+export const buildClipPath = (ctx: CanvasRenderingContext2D, path: SceneClipPath): void => {
   ctx.beginPath();
-  const append = (s: ClipShape): void => {
-    switch (s.kind) {
-      case 'rect':
-        ctx.rect(s.x, s.y, s.width, s.height);
-        break;
-      case 'circle':
-        ctx.arc(s.cx, s.cy, s.r, 0, Math.PI * 2);
-        break;
-      case 'ellipse':
-        ctx.ellipse(s.cx, s.cy, s.rx, s.ry, 0, 0, Math.PI * 2);
-        break;
-      case 'polygon':
-        s.points.forEach((pt, i) => (i === 0 ? ctx.moveTo(pt[0], pt[1]) : ctx.lineTo(pt[0], pt[1])));
-        ctx.closePath();
-        break;
-      case 'path':
-        for (const command of s.commands) pathCommand(ctx, command);
-        break;
-      case 'compound':
-        for (const child of s.children) append(child);
-        break;
-    }
-  };
-  append(shape);
+  replayPathCommands(ctx, path.commands);
 };
 
-const clipFillRule = (shape: ClipShape): CanvasFillRule | undefined =>
-  shape.kind === 'path' || shape.kind === 'compound' ? shape.fillRule : undefined;
-
-export const applyClip = (ctx: CanvasRenderingContext2D, shape: ClipShape): void => {
-  buildClipPath(ctx, shape);
-  const fillRule = clipFillRule(shape);
-  if (fillRule === undefined) ctx.clip();
-  else ctx.clip(fillRule);
+export const applyClip = (ctx: CanvasRenderingContext2D, path: SceneClipPath): void => {
+  buildClipPath(ctx, path);
+  ctx.clip(path.fillRule);
 };

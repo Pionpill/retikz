@@ -2,9 +2,9 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-14
-- 关联：[v0.1-beta.2 plan TODO-3](./roadmap.md) · [beta.1 ADR-01 renderer-neutral core](../beta.1/01-core-comments-renderer-neutral.md)
+- 关联： · [beta.1 ADR-01 renderer-neutral core](../beta.1/01-core-comments-renderer-neutral.md)
 
-> **范围**：把 core 拆分 sub-path 的 helper 从 `splitSubPathsForMarkers` 改为 `splitSubPathsForEndpointArrows`，注释不再以 SVG marker 解释，回归端点箭头的中性语义。
+> **目标**：把 core 拆分 sub-path 的 helper 从 `splitSubPathsForMarkers` 改为 `splitSubPathsForEndpointArrows`，注释不再以 SVG marker 解释，回归端点箭头的中性语义。
 
 ## 背景 / 约束
 
@@ -13,7 +13,7 @@
 
 ## 决策：改名为 `splitSubPathsForEndpointArrows`
 
-helper 命名与注释改为 endpoint arrows / path endpoints 语义；core 输出的是 `arrowStart` / `arrowEnd` 端点箭头规格，不是 renderer marker。代码：`core/src/compile/path/split.ts`。
+helper 命名与注释改为 endpoint arrows / path endpoints 语义；core 输出的是 `arrowStart` / `arrowEnd` 端点箭头规格，不是 renderer marker。
 
 理由：
 
@@ -23,17 +23,13 @@ helper 命名与注释改为 endpoint arrows / path endpoints 语义；core 输�
 
 决策细节：注释改为「多 sub-path + 有端点箭头时，仅首段保留 `arrowStart`，末段保留 `arrowEnd`」；测试标题不再写 SVG marker，只断言首末端箭头归属；React/SVG renderer 仍可把 `arrowStart` / `arrowEnd` 翻译成 SVG marker。
 
-### 被否决的选项
-
-- **B：保持 `splitSubPathsForMarkers`** —— 实现成本为零，但继续让 core compile 层看起来依赖 SVG marker 模型。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 改变 sub-path 拆分行为（仅命名 / 注释收敛）。
 - React renderer 的 marker id / marker dedup 行为。
 
 ---
 
-> **实现指针**：level `green`（仅改 core 内部 helper 命名与注释，IR / Scene / 运行时不变）。真源以代码为准——`splitSubPathsForEndpointArrows`（`core/src/compile/path/split.ts`，经 `core/src/compile/path/index.ts` 调用）。测试在 `core/tests/compile/`（`path.test.ts` / `path-stability.adversarial.test.ts`）。完整原文（实现契约 / 测试象限 9 case）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `f3282d91`；压缩前完整施工蓝图 = `git show f3282d91^:_notes/decisions/core/v0/v0.1/beta.2/03-endpoint-arrow-split-neutral.md`。
+已实现本 ADR 的核心决策。兼容性：正文所列默认行为与既有契约保持兼容；其余默认行为、失败语义与公开契约以正文为准。

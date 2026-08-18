@@ -20,9 +20,9 @@ Most consumers get common drawing helpers through `@retikz/core`'s re-exports: `
 多数绘图代码可使用 `@retikz/core` 转出的 `DEFAULT_EPSILON`、`point`、`vector2`、`localToWorld` 与 `worldToLocal`；math 的 `lerp` 在 core 中名为 `lerpPoint`。`Position` / `Vector2` 类型、仿射矩阵、外接范围、椭圆、圆弧、求交、包围、多边形、凸包和曲线应直接从 `@retikz/math` 导入。
 
 ```ts
-import { point, intersect, triangle, circle, convexHull } from '@retikz/math';
+import { intersect, triangle, circle, convexHull, vector2 } from '@retikz/math';
 
-point.cross([1, 0], [0, 1]); // 1
+vector2.cross([1, 0], [0, 1]); // 1
 intersect.lineLine({ a1: [0, 0], a2: [2, 2], b1: [0, 2], b2: [2, 0] }); // [1, 1]
 triangle.circumCircle([0, 0], [4, 0], [0, 3]); // { center: [2, 1.5], radius: 2.5 }
 circle.minimalEnclosing([
@@ -53,13 +53,13 @@ The affine tuple follows the SVG / Canvas `[a,b,c,d,e,f]` order. `multiplyAffine
 | Local/world transforms | `CenteredShape`, `localToWorld`, `worldToLocal`                                                                                                                                                                                                 |
 | Affine matrices        | `AffineMatrix`, `AFFINE_IDENTITY`, `multiplyAffine`, `applyAffine`                                                                                                                                                                              |
 | Bounds                 | `AxisAlignedBounds`, `BoundsRect`, `BoundsHalfAxes`, `BoundsInsets`, `boundsOf`, `mergeBounds`, `boundsToRect`, `rectToBounds`, `isFiniteBoundsRect`, `isPositiveBoundsRect`, `boundsCenter`, `boundsHalfAxes`, `expandBounds`, `boundsCorners` |
-| Arc primitives         | `ArcAngleInRangeInput`, `ArcBoundingPointsInput`, `RayArcInput`, `EllipseArcPointInput`, `EllipseArcBoundingPointsInput`, `arcEndPoint`, `arcAngleInRange`, `rayArc`, `ellipseArcPoint`, `arcBoundingPoints`, `ellipseArcBoundingPoints`        |
+| Arc primitives         | `ArcAngleInRangeInput`, `ArcBoundingPointsInput`, `EllipseArcPointInput`, `EllipseArcBoundingPointsInput`, `arcEndPoint`, `arcAngleInRange`, `ellipseArcPoint`, `arcBoundingPoints`, `ellipseArcBoundingPoints`                                 |
 | Ellipse helpers        | `Ellipse`, `CenteredBox`, `EllipseCircumscribeMode`, `ellipse`                                                                                                                                                                                  |
-| Intersections          | `LineLineInput`, `LineCircleInput`, `CircleCircleInput`, `intersect.lineLine`, `intersect.lineCircle`, `intersect.circleCircle`, `intersect.segmentSegment`                                                                                     |
+| Intersections          | `LineLineInput`, `LineCircleInput`, `CircleCircleInput`, `RayArcInput`, `intersect.lineLine`, `intersect.lineCircle`, `intersect.circleCircle`, `intersect.segmentSegment`, `rayArc`                                                            |
 | Enclosing / algorithms | `Circle`, `circle.minimalEnclosing`, `triangle.inCircle`, `triangle.circumCircle`, `polygon.containsPoint`, `convexHull`                                                                                                                        |
 | Curves                 | `CubicSegment`, `curve.catmullRomToCubic`                                                                                                                                                                                                       |
 
-`rayArc` returns scalar parameters `s` for the general equation `origin + s * dir`, sorted ascending and filtered to positive forward hits. `dir` does not need to be unit length; a zero direction returns `[]`. The `intersect.*` helpers return coordinate points instead, so `rayArc` stays on the arc primitive API.
+The `rayArc` intersection algorithm returns scalar parameters `s` for the general equation `origin + s * dir`, sorted ascending and filtered to positive forward hits. `dir` does not need to be unit length; a zero direction returns `[]`. The `intersect.*` helpers return coordinate points instead.
 
 ## Docs
 

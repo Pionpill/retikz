@@ -6,6 +6,7 @@ import { isFinitePoint, vector2 } from '@retikz/math';
 import type { RibbonAlignmentValue } from '../../types';
 import type { RibbonCrossSection } from '../types';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../../errors';
 import { alignTangentNormal, blendTangent } from '../centerline';
 
 const ENDPOINT_DIRECTION_BLEND_SPAN = 0.18;
@@ -62,7 +63,11 @@ export const ribbonCrossSection = ({
     round(sample.point[1] - normal[1] * rightOffset),
   ];
   if (!isFinitePoint(left) || !isFinitePoint(right)) {
-    throw new Error('Ribbon sampling produced a non-finite coordinate; check width profile output.');
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.GeometryInvalid,
+      message: 'Ribbon sampling produced a non-finite coordinate; check width profile output.',
+      details: { left, right, sample: sample.point, width },
+    });
   }
   return {
     center: [round(sample.point[0]), round(sample.point[1])],

@@ -1,8 +1,9 @@
-﻿import { isFiniteNumber } from '@retikz/math';
+import { isFiniteNumber } from '@retikz/math';
 
 import type { FieldFormatDefinition } from '../../contract';
 
 import { defineFieldFormat } from '../../contract';
+import { RetikzDataError } from '../../error';
 import { DataFieldType } from '../../schemas';
 import { createReadonlyMap } from '../../shared/collections';
 import { coerceValue } from '../data';
@@ -133,10 +134,10 @@ export const resolveFormatRegistry = (
   const registry = new Map(BUILTIN_FORMAT_REGISTRY);
   for (const def of custom ?? []) {
     if (def.name.length === 0) {
-      throw new Error('data: field format name must be a non-empty string');
+      throw new RetikzDataError('data: field format name must be a non-empty string');
     }
     if (registry.has(def.name)) {
-      throw new Error(`data: duplicate field format registration: "${def.name}"`);
+      throw new RetikzDataError(`data: duplicate field format registration: "${def.name}"`);
     }
     registry.set(def.name, def);
   }

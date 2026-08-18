@@ -1,49 +1,49 @@
 ---
 title: 自定义裁剪区
-description: 自定义裁剪区通过 ClipDefinition 与统一 registry 扩展 Scope 的 clip.kind，同时保持 IR 为 JSON，并把结果收敛为渲染无关的 Scene ClipResource。
+description: 用一个完整 ClipDefinition 定义裁剪 spec、JSON-safe shape 与路径 lowering，并通过 Core 或 Layout 的 clips 入口注入
 ---
 
-当业务需要可复用的命名裁剪原语时，用 `ClipDefinition` 定义它，再通过 `CompileOptions.clips` 或 `<Layout clips>` 注入。下面的 `rounded-rect` 从 Definition、注册到 `<Scope clip>` 构成一条完整可运行链路。
+`ClipDefinition` 同时拥有裁剪输入与几何 lowering。下面的圆角矩形只注册一个 definition，SVG、Canvas、visual bounds 与 hit-test 最终都消费同一份 `SceneClipPath`。
 
 <ComponentPreview files="clip-registry" size="md" />
 
 ## 适用边界
 
-自定义 clip 解决「现有 `clip.kind` 无法表达业务词汇」的问题，不是所有裁剪的默认写法。
+| 需求                             | 选择                                                            |
+| -------------------------------- | --------------------------------------------------------------- |
+| 一次性矩形                       | 直接写 Core 内置 `rect` clip spec                               |
+| 圆、椭圆、多边形、路径或组合区域 | 从 [裁剪扩展](/library/standard/extension/clip) 注入 Definition |
+| 新的静态二维裁剪                 | 定义一个完整 `ClipDefinition` 并降低为 `SceneClipPath`          |
+| renderer 专属 mask / filter 行为 | 不属于 Clip；另建明确的后端能力                                 |
 
-| 需求                             | 选择                                                                |
-| -------------------------------- | ------------------------------------------------------------------- |
-| 一次性矩形、圆或椭圆             | 直接写 Core 内置 clip spec                                          |
-| 多边形或路径裁剪                 | 从 [裁剪扩展](/library/standard/extension/clip) 装配对应 Definition |
-| 多个区域组合                     | 从 [裁剪扩展](/library/standard/extension/clip) 装配 `compound`     |
-| 跨图复用的业务裁剪原语           | 注册自定义 `ClipDefinition`                                         |
-| renderer 专属 mask / filter 行为 | 不属于 Clip Registry                                                |
-
-IR 只保存带 `kind` 的 JSON-safe spec；函数、Zod schema 与缓存都留在宿主注入的 Definition 中。自定义 provider 的输出必须是 Scene 已支持的 clip shape，不能借此创建平行渲染协议。
+IR 只保存带 `kind` 的 JSON-safe clip spec。`resolve` 产出的 `ClipShape` 也是 JSON-safe snapshot；Zod schema、callback、ReactNode、Canvas 对象和 SVG 字符串都不能进入 IR 或 Scene。
 
 ## 定义能力
 
-`kind` 是稳定 registry key，`schema` 校验完整 spec，`resolve` 把合法输入收敛为内置 `ClipShape`。完整圆角路径命令可在上方 demo 的源码视图中复制。
+一个 definition 使用同一个 `kind` 绑定 spec schema、shape schema、解析与 lowering：
 
 ```ts
-const roundedRectClip = defineClip({
+const roundedRectClip = defineClip<RoundedRectClip, RoundedRectClip>({
   kind: 'rounded-rect',
   schema: roundedRectClipSchema,
-  resolve: spec => ({
-    kind: 'path',
-    commands: buildRoundedRectCommands(spec),
+  resolve: spec => spec,
+  shapeSchema: roundedRectClipSchema,
+  lower: shape => ({
+    commands: buildRoundedRectCommands(shape),
+    fillRule: 'nonzero',
   }),
 });
 ```
 
-`resolve(spec, context)` 还可使用：
+`resolve(spec, context)` 可以用 `context.round(value)` 采用当前编译精度，也可以用 `context.resolve(otherSpec)` 递归解析另一段 clip。`lower(shape, context)` 可以使用相同的 `round`，或通过 `context.lower(otherShape)` 组合当前 registry 中已注册的 shape。
 
-- `context.round(value)`：按当前编译精度稳定舍入
-- `context.resolve(otherSpec)`：让组合 provider 重新走同一 registry 解析另一段 clip spec
+definition、spec schema 结果与 shape schema 结果的 `kind` 必须一致。若多个 kind 需要复用几何，可以共享普通 helper，但每个可独立装配的裁剪仍拥有自己的完整 definition。
+
+`lower` 必须返回至少含一个绘制段的结构化路径。Core 不自动闭合开放路径，也不接受 raw SVG `d`、Canvas callback 或非有限数值。
 
 ## 注入宿主
 
-Core 与 React 只是两个注入入口，消费的是同一份 Definition：
+直接调用 Core 时只注入 `clips`：
 
 ```ts
 const { scene } = compileToScene(ir, {
@@ -51,127 +51,102 @@ const { scene } = compileToScene(ir, {
 });
 ```
 
+React `<Layout>` 转交同一个 Core option，不建立 adapter 私有 registry：
+
 ```tsx
 <Layout clips={[roundedRectClip]}>
-  <Scope
-    clip={{
-      kind: 'rounded-rect',
-      x: -150,
-      y: -72,
-      width: 300,
-      height: 144,
-      radius: 36,
-    }}
-  >
+  <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
     {/* clipped children */}
   </Scope>
 </Layout>
 ```
 
-`<Layout>` 只把 `clips` 转交给 Core compile options；它不在 React adapter 内维护另一份自定义 clip 表。
+通过 provider graph 装配时，一个 `{ capability: 'clip', name: kind }` provider 直接创建完整 definition。显式 `clips` 仍作为最终 Definition 通道参与同 key 冲突检查。
 
 ## 执行机制
 
-内置与自定义 Definition 先合并为一个 registry，之后都按 `clip.kind` 查找、校验和解析。Scene 与 renderer 无需知道 Definition 来自内置包还是宿主。
+内置、Standard 与第三方裁剪经过同一个 registry：
 
 <ComponentPreview files="clip-registry-flow" size="sm" hideCode />
 
-装配 `CompoundClipDefinition` 后，`compound.children` 也通过 `context.resolve` 回到这条路径，因此一个 compound clip 可以混合 Core 内置、其他 Standard 或自定义 kind。解析后的 shape 会去重并注册成稳定 `clipRef`，由 Scope 的 `GroupPrim` 引用。
+1. `clip.kind` 在 Clip registry 中找到完整 definition，`schema` 校验 spec 后调用 `resolve`
+2. `resolve` 输出复制为 JSON snapshot，再由同一 definition 的 `shapeSchema` 校验
+3. `lower` 产出结构化路径，Core 规范字段顺序、精度、`-0`、path grammar 与显式 `fillRule`
+4. canonical path 去重后写入 `{ kind: 'clip', id, path }`，`GroupPrim.clipRef` 只保存 id
+
+renderer、visual bounds 和 hit-test 不解释自定义 kind，也不接收 Definition。Core 默认只保留完整 `rect` definition；Standard 从 `@retikz/standard/clip` 提供其余五种官方实现。
 
 <SourceLinks
   sources={[
     {
-      label: '合并内置与自定义 Clip Definition',
-      path: 'packages/kernel/core/src/providers/clip/registry.ts',
-      startLine: 1,
-      endLine: 12,
+      label: '完整 ClipDefinition 作者契约',
+      path: 'packages/kernel/core/src/contract/clip/types.ts',
+      startLine: 31,
+      endLine: 76,
     },
     {
-      label: '查找、校验与解析 clip spec',
+      label: '单一 registry 的解析、lowering 与 canonical path',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 343,
-      endLine: 377,
+      startLine: 245,
+      endLine: 344,
     },
     {
-      label: 'React clips public prop',
+      label: 'React clips 注入',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 288,
-      endLine: 289,
-    },
-    {
-      label: 'React clips compile option 注入',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 503,
-      endLine: 510,
+      startLine: 187,
+      endLine: 193,
     },
   ]}
 />
 
 ## 错误与限制
 
-| 情况                                         | 结果                                                     |
-| -------------------------------------------- | -------------------------------------------------------- |
-| 空字符串 key                                 | Definition / registry 立即拒绝                           |
-| 与已注册的 Core、Standard 或自定义 kind 重名 | 注册时报 duplicate clip registration                     |
-| 自定义数组内重复 key                         | 注册时报同样的 duplicate 错误                            |
-| 未注册的 `clip.kind`                         | 编译报错，并提示通过 `options.clips` 注入                |
-| spec 不符合 `schema`                         | 编译报错，保留 provider key、IR path 与 Zod cause        |
-| `resolve` 返回非法 shape                     | 后续 Scene 契约无法成立；Definition 作者必须返回合法形状 |
+| 情况                                           | 结果                                                                  |
+| ---------------------------------------------- | --------------------------------------------------------------------- |
+| 空字符串 key                                   | `defineClip` 立即拒绝                                                 |
+| 重复 kind                                      | registry 报 definition conflict，不覆盖已有项                         |
+| 未注册的 `clip.kind`                           | 报 kind，并提示通过 `options.clips` 注入                              |
+| definition / spec / shape kind 不一致          | 在 `lower` 前作为 provider contract violation 失败                    |
+| spec 或 shape 不符合 schema                    | 报 provider key、对应 schema 阶段与校验 cause                         |
+| callback 输出函数、cycle、非法 path 或非有限值 | fail-loud，不被 layout probe 静默吞掉                                 |
+| 递归超过 `maxClipDepth`                        | 失败；默认共享 32 条 resolve/lower 边预算，active object cycle 也失败 |
 
-自定义 clip 的参数必须 JSON 可序列化。不要把函数、ReactNode、class 实例或 renderer 对象放进 spec。
+复合 shape 将 child commands 按 authored order 累积成一个 path，并使用外层 `fillRule`；它不是逐 child 的几何交集。需要交集时使用嵌套 `<Scope clip>`。
 
 ## API 参考
 
-除单独标注的 React 注入 prop 外，本节类型、函数与常量均从 `@retikz/core` 导入。
+除 `<Layout>` props 来自 `@retikz/react` 外，以下公开类型、函数和常量均从 `@retikz/core` 导入。
 
 ### 导出概览
 
-- `defineClip<TClip>(definition)`：定义自定义 clip，校验 `kind` 非空，并保留具体 clip 输入的类型推断
-- `ClipLike`：自定义 clip spec 的最小形态，只要求提供字符串 `kind`
-- `ClipDefinitionInput<TClip>`：Definition 作者侧的泛型输入契约，让 `schema` 与 `resolve` 使用同一种 clip 输入类型
-- `ClipDefinition`：registry 存储和消费的统一 Definition 形态，具体 spec 类型已擦除
-- `ClipResolveContext`：传给 `resolve` 的运行时上下文，提供统一精度取整和递归 clip 解析
-- `BUILTIN_CLIPS`：Core 自带的三项只读 Definition 集合，既可遍历，也可通过 `.rect` 等名称索引
-- `BuiltinClipProviderName`：全部内置 clip key 的类型联合
-- `resolveClipRegistry(clips?)`：合并内置与自定义 Definition，并统一检查空 key 和重复注册；普通使用无需直接调用
-- `CompileOptions.clips`：从 Core 编译入口注入自定义 Definition
-- `<Layout clips>`（`@retikz/react`）：从 React 宿主注入同一份 Definition
+- definition：`defineClip`、`ClipDefinitionInput`、`ClipDefinition`
+- context：`ClipResolveContext`、`ClipLowerContext`
+- 数据与输出：`ClipShape`、`SceneClipPath`、`ClipResource`
+- registry：`BUILTIN_CLIPS`、`resolveClipRegistry`
+- 注入：`CompileOptions.clips`、`<Layout clips>`
 
 ### ClipDefinition
 
-`ClipDefinitionInput<TClip>` 是作者侧的强类型输入；`defineClip` 返回的 `ClipDefinition` 是 registry 使用的统一形态。两者拥有相同字段：
+| 字段          | 类型                                                          | 必填 | 描述                                          |
+| ------------- | ------------------------------------------------------------- | ---- | --------------------------------------------- |
+| `kind`        | `TClip['kind'] & TShape['kind']`                              | 是   | 唯一 registry key，与 spec 和 shape kind 一致 |
+| `schema`      | `ZodType<TClip>`                                              | 是   | 校验完整 JSON-safe spec                       |
+| `resolve`     | `(clip: TClip, context: ClipResolveContext) => TShape`        | 是   | 解析为同 kind 的 JSON-safe `ClipShape`        |
+| `shapeSchema` | `ZodType<TShape>`                                             | 是   | 校验完整 shape snapshot                       |
+| `lower`       | `(shape: TShape, context: ClipLowerContext) => SceneClipPath` | 是   | 降低为后端无关结构化路径                      |
 
-| 字段      | 类型                                                      | 必填 | 描述                                                                  |
-| --------- | --------------------------------------------------------- | ---- | --------------------------------------------------------------------- |
-| `kind`    | `TClip['kind']`                                           | 是   | 非空 registry key，必须与 IR 中的 `clip.kind` 一致                    |
-| `schema`  | `ZodType<TClip>`                                          | 是   | 校验完整的 JSON-safe clip 输入，并为 `resolve` 提供合法输入           |
-| `resolve` | `(clip: TClip, context: ClipResolveContext) => ClipShape` | 是   | 把合法 clip 输入收敛为 Scene 已支持的裁剪形状，不得输出 renderer 对象 |
+### SceneClipPath
 
-### BUILTIN_CLIPS
-
-`BUILTIN_CLIPS` 不是字符串枚举，而是带名称索引的只读 `ClipDefinition` 数组。可以遍历全部 Definition，也可以用 `BUILTIN_CLIPS.rect` 直接取得某一项；IR 中仍写对应的 `kind` 字符串。
-
-| 名称索引                | IR `kind` | spec 字段                   | 含义             |
-| ----------------------- | --------- | --------------------------- | ---------------- |
-| `BUILTIN_CLIPS.rect`    | `rect`    | `x`, `y`, `width`, `height` | 轴对齐矩形裁剪区 |
-| `BUILTIN_CLIPS.circle`  | `circle`  | `cx`, `cy`, `r`             | 圆形裁剪区       |
-| `BUILTIN_CLIPS.ellipse` | `ellipse` | `cx`, `cy`, `rx`, `ry`      | 椭圆裁剪区       |
-
-<SourceLinks
-  sources={[
-    {
-      label: '内置 Clip Definition 与名称索引',
-      path: 'packages/kernel/core/src/providers/clip/definitions.ts',
-      startLine: 21,
-      endLine: 74,
-    },
-  ]}
-/>
+| 字段       | 类型                       | 必填 | 描述                                             |
+| ---------- | -------------------------- | ---- | ------------------------------------------------ |
+| `commands` | `Array<PathCommand>`       | 是   | 非空、有绘制段的结构化命令；合法开放路径保持开放 |
+| `fillRule` | `'nonzero'` \| `'evenodd'` | 是   | canonical 输出始终显式存在                       |
 
 ## 相关
 
-- [Scope](/kernel/components/layout/scope)：使用 `<Scope clip>` 并理解局部坐标边界
-- [Layout](/kernel/components/layout/overview)：统一能力注入入口
-- [裁剪扩展](/library/standard/extension/clip)：装配官方组合裁剪
-- [编译选项](/kernel/reference/runtime/compile)：Core 侧 `CompileOptions.clips`
-- [运行时扩展](/kernel/reference/runtime/extensions)：所有 Definition / registry 能力的总索引
+- [Scope](/kernel/components/layout/scope)：使用 `<Scope clip>` 与局部坐标
+- [Layout](/kernel/components/layout/overview)：React `clips` 注入入口
+- [裁剪扩展](/library/standard/extension/clip)：官方 circle / ellipse / polygon / path / compound definitions
+- [编译选项](/kernel/reference/runtime/compile)：Core `clips` 与递归上限
+- [场景原语](/kernel/reference/runtime/scene-primitive)：renderer 消费的 canonical clip resource
+- [运行时扩展](/kernel/reference/runtime/extensions)：Definition / registry 能力总索引

@@ -1,13 +1,17 @@
 import type { IRJsonObject } from '../../schemas';
 import type { SpatialHandleDeclaration } from './types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { cloneAndFreezeJson } from '../../shared/json';
 
 const declarationFields = new Set(['key', 'role', 'bounds', 'tags', 'payload']);
 const boundsFields = new Set(['x', 'y', 'width', 'height']);
 
 const fail = (owner: string, detail: string): never => {
-  throw new Error(`${owner} returned an invalid spatial handle declaration: ${detail}.`);
+  throw new RetikzCoreError(
+    RetikzCoreErrorCode.Contract,
+    `${owner} returned an invalid spatial handle declaration: ${detail}.`,
+  );
 };
 
 const requireRecord = (owner: string, value: unknown, detail: string): Record<string, unknown> => {

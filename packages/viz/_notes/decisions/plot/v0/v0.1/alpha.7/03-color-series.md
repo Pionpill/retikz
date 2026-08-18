@@ -52,7 +52,7 @@ if (mark.series && colorField && !colorConstantWithinSeries(...)) throw new Erro
 2. **真通道名副其实**：连续/temporal color fail-loud，杜绝数值字段被错当分类调色；连续色阶按计划留 alpha.8。
 3. **locator 安全**：隐式拆等价显式 series，alpha.5 接通的 datum 定位不被新行为破坏。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **连续色阶**（sequential / diverging color scale）→ alpha.8（本轮连续/temporal color fail-loud）。
 - **legend**（由 color/series 派生图例）→ alpha.8。

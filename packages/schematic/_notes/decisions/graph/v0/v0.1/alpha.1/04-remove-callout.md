@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-10
-- 关联：[alpha.1 roadmap](./roadmap.md) · [Graph v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md) · [alpha.1 ADR-01](./01-graph-package-family.md) · [alpha.1 ADR-03](./03-semantic-ir-lightweight-lowering.md)
+- 关联：[alpha.1 ADR-01](./01-graph-package-family.md) · [alpha.1 ADR-03](./03-semantic-ir-lightweight-lowering.md)
 
 ## 背景与目标
 
@@ -61,45 +61,6 @@ GraphFrame 与共享布局 artifact 仍按自己的现有契约存在；只被 C
 - compatibility：这是 `0.x` breaking removal。不存在 alias、migration、fallback、自动转换为 Node / label 或新旧双轨
 - existing capabilities：GraphFrame、GraphNode、GraphConnector、Core Node relative position、Node label 与 Path target 行为不变
 
-## 功能与包边界
+## 长期边界
 
-- 所属能力域与能力面：Diagram Graph Complete；元素准入、semantic identity、authoring parity、diagnostics 与 docs discoverability
-- 解决的问题：避免在缺少真实场景时把一个猜测性的标注模型固化成 Graph 长期契约
-- 主责包与协作包：Graph 主责决定哪些图式元素具备稳定语义；Core / Standard 继续拥有通用 Node、Path、target 与 layout，不因 Callout 删除而缩减
-- 内部表达链路：本轮删除 Callout 链路，不建立替代 schema、Definition、registry 或 lowering
-- 外部扩展链路：Callout 是被撤回的闭合内置元素，因此 define-registry 不适用；第三方仍可在自己的 namespace 定义 composite，不获得或依赖 Graph Callout 约定
-- 下游执行：renderer 仍只消费 Core Scene；React / Vanilla / docs 同步移除对应入口，不留下仅在单一宿主成立的残余能力
-- 不支持边界：Graph 当前不拥有通用 annotation、leader routing、目标附属内容、自动避障、全局注释管理或 annotation model
-- 本轮结论：明确不支持并撤回当前契约；未来需求重新进入 Alpha 设计，而不是把现有实现标记为 deferred
-
-## 架构验证
-
-- 问题归属：撤回动作发生在拥有 Callout semantic identity 的 Graph，不修改 Core / Standard 的通用绘图能力，也不把 Graph 语义下沉
-- 内部表达：现有 Callout 虽能产生 Scene，但其 schema 与 layout-aware pipeline 建立在未验证字段组合上；视觉可运行不能证明领域契约成立
-- 外部扩展：删除闭合内置元素后不存在需要保留的 Callout registry；第三方 composite 继续走 Core 自有 contract，不与本 ADR 建立双轨
-- define-registry：本 ADR 不新增或保留开放标注能力，因此无需 Definition / provider / registry；若未来建立开放 annotation capability，必须在新的 owner 决策中重新检查
-- 端到端闭环：semantic IR、Definition、React、Vanilla、tests、docs 与当前架构同步删除，防止只删实现却残留可发现 API
-- 边界与阶段：这是 alpha `0.x` 的公开能力收敛，可以直接 breaking removal；未来需求必须重新证明语义身份与完整链路
-- 长期结论：Graph 元素准入由真实问题和稳定不变量决定，不因已有代码、迁移历史或可能复用而保留尚未成立的能力
-
-## 被否决方案
-
-- 把 Callout 轻量下沉为 Core Node：仍需猜测文本、任意 child、target、placement 与 identity 的关系，只是减少实现代码，没有解决语义不确定性
-- 保留 Node + 可选 Path leader：继续冻结 leader 是否属于 Callout、端点如何连接与多元素 identity，缺少场景依据
-- 保留现有 layout-aware composite：以实现已经存在代替能力准入，持续维护无明确消费者的 shell、artifact 与 adapter 闭环
-- 仅隐藏文档但保留代码：形成不可发现却仍需维护的公共 schema 与导出，不能真正收紧契约
-- 标记 deprecated 或保留别名：`0.x` 阶段没有兼容要求，残余入口会让未来设计被旧字段绑架
-- 立即设计 annotation model：当前没有 GraphModel、全局注释管理或编辑场景输入，不应为删除局部元素而提前扩张上层能力
-
-## 测试策略摘要
-
-需要公共导出与类型证据确认三个 Graph 包不再暴露 Callout；schema 与 composite 证据确认稳定判别集合、内置 Definition 与 adapter namespace 已移除；负向编译证据确认旧 `graph:callout` 不会静默转换为 Node；回归证据确认 GraphFrame、基础单元与 GraphConnector 的 canonical IR、lowering 和 renderer 输出不受影响；docs 证据确认路由、导航、schema registry、preview 转换与双语页面不再发现 Callout，同时不存在失效的当前站内链接。
-
-## 不在本 ADR 范围
-
-- 新 annotation、note、label、badge、leader 或 target-attached content 语法
-- GraphModel、Graph annotation collection、端口、自动布局、routing、避障或 Editor 状态
-- Core Node relative position、Node label、Path target、Scope placement 或 Standard OverlayLayout 的行为变化
-- GraphFrame、GraphNode 与 GraphConnector 的公开字段、默认值或 lowering
-- 重写已 supersede 的 Standard ADR、历史 changelog 或已发布版本事实
-- 具体文件清单、私有 helper、测试 case、验证命令、commit、push、tag 与 publish
+Graph 当前不拥有通用 annotation、leader routing、目标附属内容、自动避障、全局注释管理或 annotation model。Core Node relative position、Node label、Path target、Scope placement、GraphFrame 与其它稳定 Graph 元素的行为不因本次删除改变；未来标注需求必须以新的语义身份和公开契约重新决策

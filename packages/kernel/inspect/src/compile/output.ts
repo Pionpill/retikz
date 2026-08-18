@@ -4,40 +4,56 @@ import { ChildSchema } from '@retikz/core';
 
 import type { InspectorOutput } from '../contract';
 
+import { RetikzInspectionError, RetikzInspectionErrorCode } from '../error';
+
 /** 校验、脱离并深冻结 JSON-safe plain data */
 export const cloneAndFreezeInspectionJson = <T>(value: T, label: string): T => {
   const ancestors = new Set<object>();
   const clone = (input: unknown, path: string): unknown => {
     if (input === null || typeof input === 'string' || typeof input === 'boolean') return input;
     if (typeof input === 'number') {
-      if (!Number.isFinite(input)) throw new Error(`${path} must contain finite JSON numbers`);
+      if (!Number.isFinite(input))
+        throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, `${path} must contain finite JSON numbers`);
       return input;
     }
-    if (typeof input !== 'object') throw new Error(`${path} must be JSON-safe plain data`);
-    if (ancestors.has(input)) throw new Error(`${path} must not contain cycles`);
-    if (Object.getOwnPropertySymbols(input).length > 0) throw new Error(`${path} must not contain symbol keys`);
+    if (typeof input !== 'object')
+      throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, `${path} must be JSON-safe plain data`);
+    if (ancestors.has(input))
+      throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, `${path} must not contain cycles`);
+    if (Object.getOwnPropertySymbols(input).length > 0)
+      throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, `${path} must not contain symbol keys`);
     ancestors.add(input);
     try {
       if (Array.isArray(input)) {
         if (Object.getOwnPropertyNames(input).length !== input.length + 1) {
-          throw new Error(`${path} must be a dense JSON array without extra properties`);
+          throw new RetikzInspectionError(
+            RetikzInspectionErrorCode.Compile,
+            `${path} must be a dense JSON array without extra properties`,
+          );
         }
         return Object.freeze(
           input.map((child, index) => {
-            if (!(index in input)) throw new Error(`${path} must be dense; missing index ${index}`);
+            if (!(index in input))
+              throw new RetikzInspectionError(
+                RetikzInspectionErrorCode.Compile,
+                `${path} must be dense; missing index ${index}`,
+              );
             return clone(child, `${path}[${index}]`);
           }),
         );
       }
       const prototype = Object.getPrototypeOf(input);
       if (prototype !== Object.prototype && prototype !== null) {
-        throw new Error(`${path} must contain plain objects`);
+        throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, `${path} must contain plain objects`);
       }
       const output = Object.create(null) as Record<string, unknown>;
       for (const key of Object.getOwnPropertyNames(input)) {
         const descriptor = Object.getOwnPropertyDescriptor(input, key);
         if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-          throw new Error(`${path}.${key} must be an enumerable JSON data property`);
+          throw new RetikzInspectionError(
+            RetikzInspectionErrorCode.Compile,
+            `${path}.${key} must be an enumerable JSON data property`,
+          );
         }
         output[key] = clone(descriptor.value, `${path}.${key}`);
       }
@@ -53,7 +69,11 @@ export const cloneAndFreezeInspectionJson = <T>(value: T, label: string): T => {
 export const normalizeInspectorOutput = (output: InspectorOutput): ReadonlyArray<IRChild> => {
   const values = Array.isArray(output) ? output : [output];
   for (let index = 0; index < values.length; index += 1) {
-    if (!(index in values)) throw new Error(`Inspector output must be dense; missing output index ${index}`);
+    if (!(index in values))
+      throw new RetikzInspectionError(
+        RetikzInspectionErrorCode.Compile,
+        `Inspector output must be dense; missing output index ${index}`,
+      );
   }
   return Object.freeze(
     values.map((value, index) => {

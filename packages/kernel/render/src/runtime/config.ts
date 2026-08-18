@@ -7,7 +7,7 @@ import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
 import type { HydrationHandlers } from '../hydration';
 
 import { RetikzEvent } from '../hydration';
-import { isRetainedRenderError, RetainedRenderError, RetainedRenderErrorCode } from './error';
+import { isRetikzRetainedRenderError, RetikzRetainedRenderError, RetikzRetainedRenderErrorCode } from './error';
 import { cloneAndFreezeRuntimeValue, isPlainObject, runtimeStructuralEquals } from './shared';
 
 /** Render runtime config 的固定 owner key */
@@ -61,7 +61,7 @@ export type RenderRuntimeConfigInput = Readonly<{
 export type RenderRuntimeConfig = RuntimeDeepReadonly<RenderRuntimeConfigInput>;
 
 const invalidRuntimeInput = (cause: unknown): never => {
-  throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRuntimeInputInvalid, cause });
+  throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid, cause });
 };
 
 /** 只从 own data descriptors 捕获稠密数组，避免继承方法或 accessor 参与校验 */
@@ -280,7 +280,7 @@ const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeCon
     };
     return cloneAndFreezeRuntimeValue(normalized);
   } catch (cause) {
-    if (isRetainedRenderError(cause)) throw cause;
+    if (isRetikzRetainedRenderError(cause)) throw cause;
     return invalidRuntimeInput(cause);
   }
 };

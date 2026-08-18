@@ -84,34 +84,13 @@ Academic、Vibrant 与 Clean 不新增端点 rule，继续使用基础 `false`�
 - 外部扩展与下游闭环：自定义 Plot style 和 Plot-local Axis rule 使用同一 canonical token；解析后映射为原生 Axis theme，再由既有 guide merge 写入 ADR-09 的 guide 字段，最终沿同一 Plot lowering 输出 Core Path。
 - 不支持边界：按 ThemeMode 改变端点策略、按 start / end 分别控制、minor grid 自动端点、端点专用样式、按 scale family 新增 selector 或由 token 创建 Axis / grid。
 
-## 架构验证
-
-- 是否可由现有能力组合：guide 字段已存在，但当前 Theme token 与原生 Axis theme 均无法携带该默认；必须扩展 Plot-owned Theme contract，不能只组合现有视觉字段。
-- Data / Plot / Table / Chart / Standard / Core 责任切分：该能力依赖 Plot Axis、grid 与 effective PositionScale，归 Plot；其它包不新增字段或分支。
-- 是否需要新 IR / contract / registry；不采用 registry 时的理由：扩展既有 Plot Theme token 与原生 theme schema，不新增 guide IR、definition family 或 registry。行为是闭合 boolean 默认，不构成可替换算法族。
-- pipeline / lowering / renderer / diagnostics 如何闭环：Theme resolver 产生 dimension-adjusted token，映射并合并到 Axis guide；ADR-09 lowering 消费最终字段，Core 与 renderer 无感执行；错误由 Theme schema 在边界诊断。
-- provenance / lineage / locator 是否适用：Theme inspection 继续记录 token source 与 rule source；Scene provenance、datum lineage 与 locator 不因默认来源变化而新增 identity。
-- 结论：扩展当前 Plot Theme / Guide 能力域，并复用既有 token rule、native theme、guide merge 与 lowering 闭环。
-
-## 被否决方案
-
-- 在 guide lowering 中判断 `ThemeStyle.Neutral`：绕过 token source、inspection、custom style 与显式覆盖，并把 provider 决策泄漏到 pipeline。
-- 只在内建 preset 增加私有 `includeDomain` 字段：现有 style definition 没有该契约，自定义 style 与用户覆盖无法复用，形成内建专用旁路。
-- 由 Chart recipe 给 Axis guide 写入字段：direct Plot 与 Chart 内部 Plot 将产生不同 ThemeStyle 语义，且 Chart 会复制 Plot guide 默认。
-- 让 `axis.grid.enabled` 隐式同时表示端点：把两个可独立覆盖的语义绑定在一个 boolean 中，用户无法保留网格但关闭端点。
-- 修改 scale 的 start / end tick 或 domain：会改变 Axis ticks、labels 和 mark 投影，超出只补主网格端点的目标。
-
-## 测试策略摘要
-
-需要 schema 与 JSON 证据锁定新 token、原生 theme 字段、strict object 和错误类型；需要 preset、resolver 与 inspection 证据锁定 Neutral x / y 默认、其它 style 基础值、source 路径和覆盖优先级；需要 guide merge 与 lowering 证据锁定 token 不创建 grid、局部 false 优先、端点只影响 major grid 且继续遵循 ADR-09；需要 React / Vanilla 等价性和双语文档证据证明三种 authoring 共享同一公开契约。
-
 ## 最终结果与遗留边界
 
 `axis.grid.includeDomain` 已贯通完整与稀疏 token map、Axis dimension rule、原生 Plot Theme、inspection 和 guide merge。Neutral 的既有 x / y Axis 默认同时启用 major grid 与 domain 端点，其余内建风格保持关闭；端点 token 自身不创建 grid，局部 guide boolean 继续最终优先。
 
 完整 resolved token map 必须包含该 boolean，自定义 Plot style 缺失时 fail-loud；稀疏 token、Axis rule 与原生 Theme 允许省略字段，但拒绝显式 `undefined`、未知字段和错误类型。端点追加、投影去重、density 顺序与 minor overlap 继续完全由 ADR-09 的既有 lowering 决定。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 改变 Academic、Vibrant 或 Clean 的端点默认。
 - 把所有 guide 结构字段开放为 Theme token。

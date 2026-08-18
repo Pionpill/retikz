@@ -51,7 +51,6 @@ type IRTable = {
 package scaffold 同时完成首阶段仓库治理接入；ADR-01 先以单成员建立 group，ADR-06 在 adapter package 出现的同一改动中扩成最终三成员，避免 release-group 配置引用尚不存在的 package：
 
 - `scripts/release-groups.config.mjs` 注册 feature group `table` 与 `@retikz/table`
-- 根 `lint:viz`、`typecheck:viz`、`test:viz`、`coverage:viz` 先加入 `@retikz/table`
 - `scripts/check-release-groups.test.mjs` 先验证 Table feature group；最终三包同组依赖测试由 ADR-06 扩展
 - `packages/viz/AGENTS.md` 与 `notes/architecture/capability-design.md` 从“未来 Table”更新为已建立的 Table 能力域、主责包与协作包
 
@@ -81,11 +80,9 @@ const spec: IRTable = {
 };
 ```
 
-## 实现摘要与验证
+## 最终结果
 
 `@retikz/table` 已以 `TableSchema` 和 `IRTable` 建立 `table.table` composite 根契约，外部数据继续通过 `DataReference` 与 runtime datasets 注入。三个 Table 包已纳入同一 `table` release group、viz 校验脚本与发布产物预算。
-
-验证覆盖 manual/detail 根节点、根判别字段、data 与 structure 的共现约束、JSON-safe metadata，以及 release-group / package boundary。非法根形态均在 schema 或 pipeline 入口 fail-loud。
 
 ## 影响
 
@@ -96,21 +93,7 @@ const spec: IRTable = {
 - 用户文档入口与可运行 demo 由 ADR-06 在 alpha.1 闭环时统一建立；本 ADR 未单独形成可运行用户能力
 - ⚠️ 新公开 package 尚无兼容负担，但字段一旦人工确认即成为 v0.1 alpha 契约
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Tabular Visualization Complete / 根 IR 与 Data Consumption
-- 解决的问题：为所有 Table 结构提供统一、可序列化、可 lowering 的根入口
-- 主责包与协作包：`@retikz/table` 主责；Data 提供引用，Core 提供 composite
-- 是否可由现有能力组合：Core composite 与 DataReference 可复用，但 Table 根语义必须扩展当前域
-- 是否需要下沉：不修改 Data / Core；任意内容测量另由 alpha.2 gating
-- 内部表达链路：TableSchema → structure/layout schema → table pipeline
-- 外部扩展链路：structure 字段进入 ADR-02 Definition / registry
-- pipeline / lowering 与下游消费：ADR-05 注册 `lowerTables`，renderer 只接收 Core IR
-- React / Vanilla adapter 等价性：ADR-06 消费同一 IRTable
-- provenance / lineage / locator：根 id / data reference 从首版保留；完整 artifact 在 alpha.6
-- 本轮结论：扩展 Table 域；不在 adapter 或 renderer 建立根模型
-
-## 不在本 ADR 范围
+## 长期边界
 
 - manual/detail 具体字段与 SemanticTableModel
 - Cell presentation、layout、lowering 与 adapter

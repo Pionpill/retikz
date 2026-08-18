@@ -73,6 +73,61 @@ const eslintConfig = [
     },
   },
   {
+    name: '@retikz/production-error-contract',
+    files: ['packages/*/*/src/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', '**/__tests__/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'NewExpression[callee.name=/^(?:Error|RangeError|TypeError|SyntaxError|AggregateError|EvalError|ReferenceError|URIError)$/]',
+          message: 'Retikz production source must create RetikzError or one of its subclasses.',
+        },
+        {
+          selector:
+            'CallExpression[callee.name=/^(?:Error|RangeError|TypeError|SyntaxError|AggregateError|EvalError|ReferenceError|URIError)$/]',
+          message: 'Retikz production source must create RetikzError or one of its subclasses.',
+        },
+        {
+          selector:
+            "NewExpression[callee.object.name='globalThis'][callee.property.name=/^(?:Error|RangeError|TypeError|SyntaxError|AggregateError|EvalError|ReferenceError|URIError)$/]",
+          message: 'Retikz production source must not bypass the RetikzError hierarchy through globalThis.Error.',
+        },
+        {
+          selector:
+            "CallExpression[callee.object.name='globalThis'][callee.property.name=/^(?:Error|RangeError|TypeError|SyntaxError|AggregateError|EvalError|ReferenceError|URIError)$/]",
+          message: 'Retikz production source must not bypass the RetikzError hierarchy through globalThis.Error.',
+        },
+        {
+          selector:
+            "ClassDeclaration[superClass.name=/^(?:Error|RangeError|TypeError|SyntaxError|AggregateError|EvalError|ReferenceError|URIError)$/]:not([id.name='RetikzError'])",
+          message: 'Only RetikzError may directly extend the native Error class.',
+        },
+        {
+          selector:
+            'ClassExpression[superClass.name=/^(?:Error|RangeError|TypeError|SyntaxError|AggregateError|EvalError|ReferenceError|URIError)$/]',
+          message: 'Only the named RetikzError class may directly extend the native Error class.',
+        },
+        {
+          selector:
+            "ClassDeclaration[id.name=/Error$/]:not([id.name='RetikzError']):not([id.name=/^Retikz[A-Z][A-Za-z0-9]*Error$/])",
+          message: 'Retikz error classes must use the RetikzXxxError naming form.',
+        },
+        {
+          selector:
+            'ClassDeclaration[superClass.name=/^Retikz[A-Za-z0-9]*Error$/]:not([id.name=/^Retikz(?:[A-Z][A-Za-z0-9]*)?Error$/])',
+          message: 'Retikz error subclasses must use the RetikzXxxError naming form.',
+        },
+        {
+          selector:
+            'ClassExpression[superClass.name=/^Retikz[A-Za-z0-9]*Error$/]:not([id.name=/^Retikz(?:[A-Z][A-Za-z0-9]*)?Error$/])',
+          message: 'Retikz error subclasses must use the RetikzXxxError naming form.',
+        },
+      ],
+    },
+  },
+  {
     name: '@retikz/react',
     files: ['**/*.{jsx,tsx}'],
     languageOptions,

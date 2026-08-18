@@ -5,6 +5,7 @@ import type { CanvasNodeImageFormat, RenderSceneToImageOptions } from './types';
 
 import { drawScene } from '../canvas';
 import { createCssColorNormalizer, sceneFitMatrix } from '../canvas/internal';
+import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 
 type NapiCanvas = {
   width: number;
@@ -26,7 +27,10 @@ const MIME_BY_FORMAT: Record<CanvasNodeImageFormat, string> = {
 
 const assertPositiveFinite = (name: string, value: number): void => {
   if (!Number.isFinite(value) || value <= 0) {
-    throw new Error(`renderSceneToImage: ${name} must be a positive finite number.`);
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.CanvasNode,
+      `renderSceneToImage: ${name} must be a positive finite number.`,
+    );
   }
 };
 
@@ -38,8 +42,16 @@ const getDevicePixelRatio = (options: RenderSceneToImageOptions): number => {
 };
 
 const assertSceneLayout = (scene: Scene): void => {
-  if (!Number.isFinite(scene.layout.x)) throw new Error('renderSceneToImage: scene.layout.x must be a finite number.');
-  if (!Number.isFinite(scene.layout.y)) throw new Error('renderSceneToImage: scene.layout.y must be a finite number.');
+  if (!Number.isFinite(scene.layout.x))
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.CanvasNode,
+      'renderSceneToImage: scene.layout.x must be a finite number.',
+    );
+  if (!Number.isFinite(scene.layout.y))
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.CanvasNode,
+      'renderSceneToImage: scene.layout.y must be a finite number.',
+    );
   assertPositiveFinite('scene.layout.width', scene.layout.width);
   assertPositiveFinite('scene.layout.height', scene.layout.height);
 };
@@ -49,7 +61,8 @@ const loadCanvas = async (): Promise<NapiCanvasModule> => {
     const packageName = '@napi-rs/canvas';
     return (await import(packageName)) as NapiCanvasModule;
   } catch (error) {
-    throw new Error(
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.CanvasNode,
       'renderSceneToImage: install optional peer dependency @napi-rs/canvas to use @retikz/render/canvas-node.',
       { cause: error },
     );
@@ -74,7 +87,10 @@ const encodeCanvas = async (
   if (typeof canvas.toBuffer === 'function') {
     return canvas.toBuffer(MIME_BY_FORMAT[format], quality);
   }
-  throw new Error('renderSceneToImage: @napi-rs/canvas canvas does not expose encode() or toBuffer().');
+  throw new RetikzRenderError(
+    RetikzRenderErrorCode.CanvasNode,
+    'renderSceneToImage: @napi-rs/canvas canvas does not expose encode() or toBuffer().',
+  );
 };
 
 /**
@@ -92,7 +108,11 @@ export const renderSceneToImage = async (scene: Scene, options: RenderSceneToIma
   const bitmapHeight = Math.max(1, Math.ceil(options.height * devicePixelRatio));
   const canvas = canvasApi.createCanvas(bitmapWidth, bitmapHeight);
   const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('renderSceneToImage: unable to acquire 2d canvas context.');
+  if (!ctx)
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.CanvasNode,
+      'renderSceneToImage: unable to acquire 2d canvas context.',
+    );
 
   if (options.background !== undefined) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);

@@ -9,10 +9,11 @@ import type {
   CoreProviderKey,
 } from '../../../src';
 
-import { defineArrow, defineComposite, defineShape, resolveCoreProviderDependencies } from '../../../src';
+import { defineArrow, defineClip, defineComposite, defineShape, resolveCoreProviderDependencies } from '../../../src';
 
 const shapeKey = (name: string): CoreProviderKey => ({ capability: 'shape', name });
 const arrowKey = (name: string): CoreProviderKey => ({ capability: 'arrow', name });
+const clipKey = (name: string): CoreProviderKey => ({ capability: 'clip', name });
 const compositeKey = (namespace: string, type: string): CoreProviderKey => ({
   capability: 'composite',
   namespace,
@@ -44,10 +45,26 @@ const arrowDefinitionOf = (name: string) =>
     emit: () => [],
   });
 
+const clipDefinitionOf = (name: string) =>
+  defineClip({
+    kind: name,
+    schema: z.strictObject({ kind: z.literal(name) }),
+    resolve: () => ({ kind: name, size: 4 }),
+    shapeSchema: z.strictObject({ kind: z.literal(name), size: z.number().positive() }),
+    lower: shape => ({
+      commands: [
+        { kind: 'move', to: [0, 0] },
+        { kind: 'line', to: [shape.size, shape.size] },
+      ],
+      fillRule: 'nonzero',
+    }),
+  });
+
 const definitionOf = (key: CoreProviderKey): AnyCoreProviderDefinition => {
   if (key.capability === 'composite') return compositeDefinitionOf(key.namespace, key.type);
   if (key.capability === 'shape') return shapeDefinitionOf(key.name);
   if (key.capability === 'arrow') return arrowDefinitionOf(key.name);
+  if (key.capability === 'clip') return clipDefinitionOf(key.name);
   throw new Error(`unsupported test capability ${key.capability}`);
 };
 
@@ -191,6 +208,47 @@ describe('resolveCoreProviderDependencies', () => {
     });
     expect(resolved.shapes?.map(definition => definition.name)).toEqual(['cross']);
     expect(resolved.arrows?.map(definition => definition.name)).toEqual(['cross']);
+  });
+
+  it('materializes one complete custom clip provider without a shape dependency', () => {
+    const key = clipKey('ticket');
+    const definition = clipDefinitionOf('ticket');
+    const maker = vi.fn(() => definition);
+
+    const resolved = resolveCoreProviderDependencies({
+      contributions: [contributionOf([key], [providerOf(key, { makeDefinition: maker })])],
+    });
+
+    expect(maker).toHaveBeenCalledTimes(1);
+    expect(resolved).toEqual({ clips: [definition] });
+  });
+
+  it('rejects an operation-only clip object at the provider definition boundary', () => {
+    const key = clipKey('legacyClip');
+    const operationOnly = {
+      kind: 'legacyClip',
+      schema: z.strictObject({ kind: z.literal('legacyClip') }),
+      resolve: () => ({ kind: 'legacyClip' }),
+    } as unknown as AnyCoreProviderDefinition;
+
+    expect(() =>
+      resolveCoreProviderDependencies({
+        contributions: [contributionOf([key], [providerOf(key, { makeDefinition: () => operationOnly })])],
+      }),
+    ).toThrow(/unrecognized definition capability/i);
+  });
+
+  it('rejects a second explicit complete definition at the same clip key', () => {
+    const key = clipKey('ticket');
+    const providerDefinition = clipDefinitionOf('ticket');
+    const explicitDefinition = clipDefinitionOf('ticket');
+
+    expect(() =>
+      resolveCoreProviderDependencies({
+        contributions: [contributionOf([key], [providerOf(key, { makeDefinition: () => providerDefinition })])],
+        definitions: { clips: [explicitDefinition] },
+      }),
+    ).toThrow(/definition.*conflict.*clip:ticket/i);
   });
 
   it('rejects conflicting maker references and ordered dependency declarations before any maker runs', () => {

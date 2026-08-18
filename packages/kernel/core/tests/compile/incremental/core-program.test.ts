@@ -12,6 +12,8 @@ import {
   PerformanceTraceOutcome,
   PerformanceTracePhase,
   PerformanceTraceUnit,
+  RetikzRuntimeErrorCode,
+  RuntimeDiagnosticCode,
   RuntimeProgramKind,
   RuntimeProgramPhase,
 } from '@retikz/runtime';
@@ -29,6 +31,7 @@ import type {
 import {
   BUILTIN_SHAPES,
   compileToScene,
+  CompileWarningCode,
   CompositeBaseSchema,
   CORE_OWNER_KEY,
   CORE_PROGRAM_ID,
@@ -183,7 +186,7 @@ describe('Core Runtime Program initial full run', () => {
     const artifact = session.artifact(program).value;
 
     expect(result.outcome).toBe(RuntimeProgramKind.Fallback);
-    expect(result.diagnostics).toEqual([expect.objectContaining({ code: 'RUNTIME_CHANGESET_FALLBACK' })]);
+    expect(result.diagnostics).toEqual([expect.objectContaining({ code: RuntimeDiagnosticCode.ChangeSetFallback })]);
     expect(artifact.patch?.operations).toEqual([
       expect.objectContaining({ kind: 'replaceScene', snapshot: artifact.snapshot }),
     ]);
@@ -593,7 +596,7 @@ describe('Core Runtime Program observed output', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_PROGRAM_RUN_FAILED',
+        code: RetikzRuntimeErrorCode.ProgramRunFailed,
         cause: expect.objectContaining({ message: 'observer completion failed' }),
       }),
     );
@@ -792,7 +795,7 @@ describe('Core Runtime Program full fallback update', () => {
     expect(result.outcome).toBe(RuntimeProgramKind.Fallback);
     expect(result.diagnostics).toEqual([
       {
-        code: 'CORE_CHANGESET_MISMATCH',
+        code: CompileWarningCode.ChangeSetMismatch,
         phase: RuntimeProgramPhase.Update,
         severity: 'warning',
         message: 'Core ChangeSet does not match the previous and next canonical Snapshots; using full fallback',
@@ -847,7 +850,7 @@ describe('Core Runtime Program full fallback update', () => {
       ],
     });
 
-    expect(result.diagnostics).toEqual([expect.objectContaining({ code: 'CORE_CHANGESET_MISMATCH' })]);
+    expect(result.diagnostics).toEqual([expect.objectContaining({ code: CompileWarningCode.ChangeSetMismatch })]);
   });
 
   it.each([
@@ -895,7 +898,7 @@ describe('Core Runtime Program full fallback update', () => {
         ],
       });
 
-      expect(result.diagnostics).toEqual([expect.objectContaining({ code: 'CORE_CHANGESET_MISMATCH' })]);
+      expect(result.diagnostics).toEqual([expect.objectContaining({ code: CompileWarningCode.ChangeSetMismatch })]);
     },
   );
 
@@ -930,7 +933,7 @@ describe('Core Runtime Program full fallback update', () => {
       ],
     });
 
-    expect(result.diagnostics).toEqual([expect.objectContaining({ code: 'CORE_CHANGESET_MISMATCH' })]);
+    expect(result.diagnostics).toEqual([expect.objectContaining({ code: CompileWarningCode.ChangeSetMismatch })]);
   });
 
   it('mismatch 后 full fallback 失败时不发布 diagnostic 或替换 committed artifact', () => {

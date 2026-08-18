@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { point, vector2 } from '@retikz/math';
+import { vector2 } from '@retikz/math';
 import { Draw, Layout, Node } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -13,12 +13,12 @@ const Origin: [number, number] = [0, 0];
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const unit = vector2.fromAngleDegrees(values.angle);
-  const vector = point.scale(unit, values.length);
+  const vector = vector2.scale(unit, values.length);
   const normal = vector2.normal(vector);
-  const vectorEnd = point.add(Origin, vector);
-  const normalEnd = point.add(Origin, normal);
-  const vectorLabel = point.add(point.scale(vector, 0.62), point.scale(vector2.normalize(normal), -16));
-  const normalLabel = point.add(point.scale(normal, 0.62), point.scale(vector2.normalize(vector), 26));
+  const vectorEnd = vector2.add(Origin, vector);
+  const normalEnd = vector2.add(Origin, normal);
+  const vectorLabel = vector2.add(vector2.scale(vector, 0.62), vector2.scale(vector2.normalize(normal), -16));
+  const normalLabel = vector2.add(vector2.scale(normal, 0.62), vector2.scale(vector2.normalize(vector), 26));
 
   return (
     <Layout width={400} height={280} viewBox={{ x: -170, y: -145, width: 340, height: 290 }}>

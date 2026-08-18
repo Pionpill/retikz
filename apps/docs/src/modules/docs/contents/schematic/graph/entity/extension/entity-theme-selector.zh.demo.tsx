@@ -16,8 +16,8 @@ import { Layout } from '@retikz/react';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import {
-  entityThemeSelectorControls,
   EntityThemeSelectorControlId,
+  entityThemeSelectorControls,
   previewControlContract,
 } from './entity-theme-selector.controls';
 

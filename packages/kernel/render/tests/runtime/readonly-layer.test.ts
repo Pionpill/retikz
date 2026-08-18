@@ -25,7 +25,7 @@ const makeLayer = (overrides: Partial<RenderReadonlyLayer> = {}): RenderReadonly
 describe('readonly render layer contract', () => {
   it('does not expose or retain the removed inspection-specific Render contract', () => {
     expect('RetainedRendererInspectionCapability' in runtime).toBe(false);
-    expect('RetainedRendererInspectionUnsupported' in runtime.RetainedRenderErrorCode).toBe(false);
+    expect('RetainedRendererInspectionUnsupported' in runtime.RetikzRetainedRenderErrorCode).toBe(false);
     expect(existsSync(fileURLToPath(new URL('../../src/svg/builders/inspection.ts', import.meta.url)))).toBe(false);
     expect(existsSync(fileURLToPath(new URL('../../src/canvas/draw-inspection.ts', import.meta.url)))).toBe(false);
   });

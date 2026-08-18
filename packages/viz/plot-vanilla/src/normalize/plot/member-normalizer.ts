@@ -31,6 +31,7 @@ import type {
 import type { InputPlotScale } from './input-scales';
 import type { StyleSugarContext } from './style-sugar';
 
+import { RetikzPlotVanillaError } from '../../error';
 import {
   buildMarkLabel,
   canonicalGeometryLabel,
@@ -68,13 +69,10 @@ const facetDimensionOf = (
   return typeof dimension === 'string' ? { field: dimension } : dimension;
 };
 
-const scaffoldTracksOf = (
-  scaffoldId: string,
-  propTracks: Array<ScaffoldTrack> | undefined,
-): Array<ScaffoldTrack> => {
+const scaffoldTracksOf = (scaffoldId: string, propTracks: Array<ScaffoldTrack> | undefined): Array<ScaffoldTrack> => {
   const tracks = [...(propTracks ?? [])];
   if (tracks.length === 0) {
-    throw new Error(`buildPlotIR: <Scaffold id="${scaffoldId}"> requires at least one track`);
+    throw new RetikzPlotVanillaError(`buildPlotIR: <Scaffold id="${scaffoldId}"> requires at least one track`);
   }
   return tracks;
 };
@@ -140,7 +138,7 @@ export const applyDeclaration = (
     return;
   }
   if (declaration.kind === 'track') {
-    throw new Error('buildPlotIR: <Track> must be declared inside <Scaffold>');
+    throw new RetikzPlotVanillaError('buildPlotIR: <Track> must be declared inside <Scaffold>');
   }
   if (declaration.kind === 'path-mark') {
     const props = child.props as InputPlotPathMark;
@@ -347,12 +345,12 @@ export const applyDeclaration = (
     const direction = rawDirection ?? 'vertical';
     const arrangementGroup = group ?? series;
     if (percent === true && explicitArrangement !== undefined && explicitArrangement !== 'normalize-stack') {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark percent> cannot be mixed with an arrangement other than "normalize-stack"',
       );
     }
     if (stackOffset !== undefined && explicitArrangement === 'normalize-stack') {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark stackOffset> cannot be mixed with arrangement="normalize-stack"; use percent for percentage stacks',
       );
     }
@@ -390,7 +388,7 @@ export const applyDeclaration = (
         stack !== undefined ||
         explicitBounds !== undefined
       ) {
-        throw new Error(
+        throw new RetikzPlotVanillaError(
           'buildPlotIR: <IntervalMark angle> is the polar pie/donut form; do not mix it with x/y/x0/x1/width/direction/stack/bounds',
         );
       }
@@ -422,12 +420,12 @@ export const applyDeclaration = (
     // 显式 bounds（heatmap 双 band / 高级）：直接落 IR；band bound → 强制对应轴 band scale
     if (explicitBounds !== undefined) {
       if (rawDirection !== undefined) {
-        throw new Error(
+        throw new RetikzPlotVanillaError(
           'buildPlotIR: <IntervalMark direction> cannot be mixed with explicit bounds; encode the orientation through bounds directly',
         );
       }
       if (width !== undefined) {
-        throw new Error(
+        throw new RetikzPlotVanillaError(
           'buildPlotIR: <IntervalMark width> cannot be mixed with explicit bounds; use bounds.<role>={kind:"proportional"} directly',
         );
       }
@@ -464,49 +462,53 @@ export const applyDeclaration = (
     const histogram = x0 !== undefined && x1 !== undefined;
     const proportional = width !== undefined;
     if (proportional && histogram) {
-      throw new Error('buildPlotIR: <IntervalMark width> cannot be mixed with x0/x1 histogram bounds');
+      throw new RetikzPlotVanillaError('buildPlotIR: <IntervalMark width> cannot be mixed with x0/x1 histogram bounds');
     }
     if (proportional && arrangement !== undefined) {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark width> cannot be mixed with arrangement/stack/percent/group/series; use precomputed extent bounds for custom layouts',
       );
     }
     if (proportional && stackOffset !== undefined) {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark width> cannot be mixed with stackOffset; use precomputed extent bounds for custom layouts',
       );
     }
     if (proportional && (group !== undefined || series !== undefined)) {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark width> cannot be mixed with group or series; use color for visual grouping',
       );
     }
     if (histogram && direction === 'horizontal') {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark direction="horizontal"> cannot be mixed with x0/x1 histogram bounds',
       );
     }
     if (histogram && arrangement !== undefined) {
-      throw new Error('buildPlotIR: <IntervalMark arrangement> cannot be mixed with x0/x1 histogram bounds');
+      throw new RetikzPlotVanillaError(
+        'buildPlotIR: <IntervalMark arrangement> cannot be mixed with x0/x1 histogram bounds',
+      );
     }
     if ((x0 === undefined) !== (x1 === undefined)) {
-      throw new Error('buildPlotIR: <IntervalMark> x0 / x1 must be set together for continuous-interval bars');
+      throw new RetikzPlotVanillaError(
+        'buildPlotIR: <IntervalMark> x0 / x1 must be set together for continuous-interval bars',
+      );
     }
     if (!histogram && !proportional && x === undefined) {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark> requires x for categorical bars, x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form',
       );
     }
     const valueField = direction === 'horizontal' ? x : y;
     if (valueField === undefined) {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark> requires the value field on y (vertical) or x (horizontal), or use angle for the polar pie/donut form',
       );
     }
     const colorEnc = colorChannel(color, series ?? group);
     const categoryField = direction === 'horizontal' ? y : x;
     if (!histogram && !proportional && categoryField === undefined) {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark> requires the category field on x (vertical) or y (horizontal), x0/x1 for histogram, width for proportional bars, or angle for the polar pie/donut form',
       );
     }
@@ -517,7 +519,7 @@ export const applyDeclaration = (
       ...(arrangement === 'dodge' && arrangementGroup !== undefined ? { group: arrangementGroup } : {}),
     };
     if ((arrangement === 'stack' || arrangement === 'normalize-stack') && arrangementGroup === undefined) {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         'buildPlotIR: <IntervalMark arrangement="stack"> requires group or series to identify stacked segments',
       );
     }
@@ -628,7 +630,7 @@ export const applyDeclaration = (
     } = child.props as InputPlotAxis;
     if (scale !== undefined) {
       if (dimension !== 'x' && dimension !== 'y') {
-        throw new Error(
+        throw new RetikzPlotVanillaError(
           `buildPlotIR: <Axis scale> only supports built-in x / y dimensions; custom coordinate role "${dimension}" must provide its scale through CoordinateDefinition`,
         );
       }

@@ -206,25 +206,7 @@ LayoutItem中的foreign Tier 2 React embeddable若产生额外contribution必须
 
 三个Vanilla adapter同样精确使用namespace `standard.layout`、同一个Vanilla包模块级`makeVanillaStandardLayoutComposites`引用与空datasets；maker每次返回 `[FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]` Array 副本并保持 Flex / Grid / Overlay 顺序。React与Vanilla只需各自在本包内共享稳定引用，不要求跨包函数identity相同。`StandardVanillaAdapters`在现有Grid/Axes/Frame后追加三项。Vanilla nested layout child只能是`createFlexLayout/createGridLayout/createOverlayLayout`返回的canonical IRChild；`InputEmbed`只允许出现在宿主spec traversal层，不能塞进Layout item的JSON `child`。plain input/factory直接使用Standard schema；adapter不保存DOM、renderer或layout state。
 
-foreign/custom canonical IR child的definitions仍由宿主compile options显式提供，Standard不扫描IR猜测registry。测试必须分别证明nested Standard只产生一组family definitions、foreign/custom IR加宿主definitions可compile，以及重复family definition仍由Core权威诊断。
-
-### 文档闭环
-
-新增双语组件页与真实demo：
-
-- `/standard/layout/flex-layout`：grow/shrink/wrap/baseline/overflow
-- `/standard/layout/grid-layout`：tracks/span/auto-placement/fraction/nested
-- `/standard/layout/overlay-layout`：aligned/positioned/anchor/participation/paint order
-
-同步：
-
-- Standard composite分组页、introduction和get-start
-- direct-definition-loading 页的 Definition 注入、adapter 数组与宿主边界
-- schema registry/API表、sidebar/data/i18n、source links
-- Standard v0.1 changelog草稿
-- 一个nested三容器示例、一个typedartifact headless示例、一个overflow/clip对比
-
-文档不修改Plot/Table/Gantt页面，也不公开这些包未来选择哪种container。
+foreign/custom canonical IR child 的 definitions 仍由宿主 compile options 显式提供，Standard 不扫描 IR 猜测 registry；重复 family definition 继续由 Core 权威诊断。
 
 ## DSL / API 表面
 
@@ -253,38 +235,7 @@ const flexValue = FlexLayoutArtifactSchema.parse(flex?.value);
 
 `composites` 直接接收通用 Definition 数组，因此只判断 envelope type 不会让 `value` 在 TypeScript 中自动收窄；headless 调用方使用公开 payload schema 解析，或直接携带精确 Definition tuple 取得 `CompositeArtifactOf` 类型。
 
-## 被否决的方案
-
-- 只返回Scene不提供artifact：Tier 2会重新推导slot/track/overflow，形成第二真源
-- artifact保存solver对象或replay token：不可序列化且泄漏compile-local能力
-- 把item key拼成全局path：nested owner和Core occurrence职责混淆
-- 为布局新建 registry 或 compile runtime：Core 的 `CompileOptions.composites` 已足够
-- React读取React key作为IR identity：key不是普通prop，SSR/转换路径也不稳定
-- LayoutItem允许多个children并隐式生成items：无法给每项稳定key和per-item策略
-- React静默接受foreign Tier 2 nested contribution：会得到IR但缺definition/dataset，错误延迟到compile
-- adapter或renderer回读artifact修正layout：artifact是输出，不是第二轮求解输入
-
-## 影响
-
-- 修改三种definition以声明typed artifact
-- 扩展 Standard 根导出与三包 authoring 表面
-- 新增用户可见文档、demo、API表与changelog
-- 不改变Core、renderer或其它Tier 2公开契约
-
-## 能力完备性检查
-
-- 所属能力域与能力面：Standard通用布局的可观察产物、加载与跨入口闭环
-- 解决的问题：让布局语义可持久化authoring、可组合注册、可诊断compile并由headless调用方读取
-- 主责包与协作包：Standard主责 artifact / schema / Definition；Core主责 envelope / registry；React / Vanilla 主责等价 authoring；docs 主责用户证据
-- 是否可由现有能力组合：复用 Core typed artifact 与 `CompileOptions.composites`，同时扩展 Standard adapter / docs
-- 是否需要下沉到依赖能力域：否；foreignTier2 React nesting若未来通用化需独立上移到Core React ADR
-- 内部表达链路：canonicalIR → definition/solver → typedartifact + Scene
-- 外部扩展链路：custom child / Composite 继续 Core registry；Standard Definition 与第三方 Definition 同路
-- 下游执行 / adapter 等价性：directJSON、React、Vanilla产出相同IR并得到等价Scene/artifact
-- 不支持边界与诊断：foreignTier2 nested JSX明确拒绝；IR+显式definitions仍完整支持
-- 本轮结论：组合现有Core能力并扩展Standard跨入口闭环
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Plot/Table/Gantt适配或领域artifact/provenance
 - 通用nestedTier2 React contribution协议修改

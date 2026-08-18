@@ -38,6 +38,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExtern
 import type { ScopeStyleProps } from '../protocol';
 import type { LayoutRuntimeOptions } from './runtime-options';
 
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { usePrefersReducedMotion } from '../../render/animation';
 import { ProcessingResultHost } from '../../render/processing-result';
 import { browserMeasurer } from '../../render/text';
@@ -419,7 +420,7 @@ export const Layout: FC<LayoutProps> = props => {
       irFromProp ??
       reactInput?.scene ??
       (() => {
-        throw new Error('[retikz] <Layout> requires ir or children');
+        throw new RetikzReactError(RetikzReactErrorCode.Kernel, '[retikz] <Layout> requires ir or children');
       })();
     const mergedTheme = mergeThemeOverlays(ambientTheme, base.theme, theme);
     const themed =

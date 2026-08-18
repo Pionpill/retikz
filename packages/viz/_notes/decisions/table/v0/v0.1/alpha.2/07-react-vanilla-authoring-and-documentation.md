@@ -71,8 +71,7 @@ Reference 覆盖 track variants / overrides、Cell span/layout、fit/overflow、
 - Detail header/body layout、span-aware markers、animation 与同次 manifest observer 成为正式公开能力
 - 不新增 Data Transform、Group/Pivot grammar 或 embedded 局部 observer
 
-## 最终实现与验证
-
+## 最终结果
 实现集中在 React `Table.tsx`、`table-runtime.ts`、`table-view.tsx`、marker builders，以及 Vanilla runtime / adapter。Table 双语文档、demo、schema registry、ApiValues 与 README 已同步。
 
 正式测试覆盖 props/marker 深等、span occupancy、host prop tuple、embedded presence diagnostics、onManifest commit 时序与去重、nested/repeated id exact root、Vanilla compile options、顶层 composites 拒绝、SSR / embedded composites 与 package boundaries。Table、React、Vanilla 与 docs 类型检查、测试、docs integrity、zh/en 浏览器和 390px 窄屏均通过。

@@ -1,4 +1,5 @@
 import type {
+  IRPlot,
   IRPlotCoordinateOperation,
   IRPlotGuide,
   IRPlotIntervalMark,
@@ -6,7 +7,6 @@ import type {
   IRPlotPathMark,
   IRPlotPointMark,
   IRPlotScaleOperation,
-  IRPlot,
 } from '@retikz/plot';
 
 type PlotComposition = NonNullable<IRPlot['composition']>;

@@ -7,6 +7,7 @@ import * as LayoutIR from '@retikz/layout';
 import * as LayoutInspectIR from '@retikz/layout/inspect';
 import * as IRPlot from '@retikz/plot';
 import * as StandardIR from '@retikz/standard';
+import * as StandardClipIR from '@retikz/standard/clip';
 import { RibbonPathOptionsSchema } from '@retikz/standard/ribbon';
 import * as IRTable from '@retikz/table';
 
@@ -98,12 +99,12 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   ClipSchema: { schema: IR.ClipSchema, label: 'Clip', url: '/kernel/reference/schema/scope#clip' },
   RectClipSchema: { schema: IR.RectClipSchema, label: 'RectClip', url: '/kernel/reference/schema/scope#rectclip' },
   CircleClipSchema: {
-    schema: IR.CircleClipSchema,
+    schema: StandardClipIR.CircleClipSchema,
     label: 'CircleClip',
     url: '/kernel/reference/schema/scope#circleclip',
   },
   EllipseClipSchema: {
-    schema: IR.EllipseClipSchema,
+    schema: StandardClipIR.EllipseClipSchema,
     label: 'EllipseClip',
     url: '/kernel/reference/schema/scope#ellipseclip',
   },

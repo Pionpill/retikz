@@ -1,8 +1,10 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
 import type { IRDataReducerOperation, IRDataSelectorOperation } from '../schemas';
 import type { ExternalRow } from '../shared';
 import type { TransformContext } from './transform';
+
+import { RetikzDataError } from '../error';
 
 /**
  * 统计 reducer 运行时定义。
@@ -85,11 +87,11 @@ export type AnyRowSelectorDefinition = {
  */
 export const extractStatisticOperation = (schema: z.ZodType): string => {
   if (!(schema instanceof z.ZodObject)) {
-    throw new Error('data: statistic registration schema must be a ZodObject with a literal kind field');
+    throw new RetikzDataError('data: statistic registration schema must be a ZodObject with a literal kind field');
   }
   const kindSchema = schema.shape.kind;
   if (!(kindSchema instanceof z.ZodLiteral) || typeof kindSchema.value !== 'string' || kindSchema.value.length === 0) {
-    throw new Error('data: statistic registration schema must declare kind as a non-empty z.literal string');
+    throw new RetikzDataError('data: statistic registration schema must declare kind as a non-empty z.literal string');
   }
   return kindSchema.value;
 };

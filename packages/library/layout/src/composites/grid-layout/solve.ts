@@ -6,6 +6,7 @@ import type { LayoutInsets, LayoutRect } from '../internal';
 import type { LayoutAlignmentValue } from '../shared';
 import type { IRGridTrack } from './types';
 
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import { compensatedLayoutSum } from '../internal';
 import { LayoutAlignment } from '../shared';
 
@@ -37,7 +38,11 @@ export const materializeGridTracks = (
   count: number,
 ): ReadonlyArray<IRGridTrack> => {
   if (!Number.isSafeInteger(count) || count < explicit.length) {
-    throw new Error('GridLayout resolved track count cannot be smaller than the explicit track count');
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.SolverInvariant,
+      message: 'GridLayout resolved track count cannot be smaller than the explicit track count',
+      details: { count, explicitCount: explicit.length },
+    });
   }
   return Object.freeze(Array.from({ length: count }, (_, index) => explicit[index] ?? implicit));
 };
@@ -67,7 +72,13 @@ export const gridSpanRange = (
 ): Readonly<{ start: number; size: number }> => {
   const first = tracks.at(start);
   const last = tracks.at(start + span - 1);
-  if (first === undefined || last === undefined) throw new Error('GridLayout span is outside resolved tracks');
+  if (first === undefined || last === undefined) {
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.SolverInvariant,
+      message: 'GridLayout span is outside resolved tracks',
+      details: { start, span, trackCount: tracks.length },
+    });
+  }
   return Object.freeze({ start: first.start, size: last.start + last.size - first.start });
 };
 

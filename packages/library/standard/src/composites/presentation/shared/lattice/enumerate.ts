@@ -1,5 +1,7 @@
 import type { LatticeOptions, LatticeValue } from './types';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../../../errors';
+
 /** 单轴 lowering 允许生成的最大格点数 */
 export const MAX_LATTICE_VALUES_PER_AXIS = 10_000;
 
@@ -24,7 +26,13 @@ export const getLatticeRangeError = ({ min, max, spacing, origin }: LatticeOptio
 export const enumerateLattice = (options: LatticeOptions): Array<LatticeValue> => {
   const { min, max, spacing, origin, includeBoundary } = options;
   const rangeError = getLatticeRangeError(options);
-  if (rangeError !== undefined) throw new RangeError(rangeError);
+  if (rangeError !== undefined) {
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.SchemaInvariant,
+      message: rangeError,
+      details: { max: options.max, min: options.min, origin: options.origin, spacing: options.spacing },
+    });
+  }
 
   const firstIndex = Math.ceil((min - origin) / spacing);
   const lastIndex = Math.floor((max - origin) / spacing);

@@ -184,13 +184,13 @@ A pre-publish failure rolls back and disposes in reverse order while preserving 
 
 A Program warning belongs to the candidate. It reaches the result and queue only after the candidate artifact publishes successfully; a compile or transaction failure discards the warning with the candidate.
 
-When initial `createRuntimeSession()` fails, there is no Session queue; secondary diagnostics are only available on the thrown error. For failed updates, that call's `RuntimeError.diagnostics` entries append to the existing queue in the same order. The next drain matches the error entries item-for-item only when the queue was empty beforehand.
+When initial `createRuntimeSession()` fails, there is no Session queue; secondary diagnostics are only available on the thrown error. For failed updates, that call's `RetikzRuntimeError.diagnostics` entries append to the existing queue in the same order. The next drain matches the error entries item-for-item only when the queue was empty beforehand.
 
 `session.dispose()` does not throw when participant cleanup fails. It first attempts every participant in reverse order, retires Programs and Owners exactly once, then retries only the failed participants in the same call. Remaining failures enter the queue as `RUNTIME_PARTICIPANT_DISPOSE_FAILED`; later dispose calls retry only those pending entries and never rerun successful cleanup.
 
 ## Key Stable Errors
 
-This table lists the codes most often encountered through Session APIs; it is not the complete `RuntimeErrorCode` set. Program graph/token, Owner command, ChangeSet envelope, and ownership-alias failures also use dedicated stable codes.
+This table lists the codes most often encountered through Session APIs; it is not the complete `RetikzRuntimeErrorCode` set. Program graph/token, Owner command, ChangeSet envelope, and ownership-alias failures also use dedicated stable codes.
 
 | Code                                  | Meaning                                                     |
 | ------------------------------------- | ----------------------------------------------------------- |
@@ -239,7 +239,7 @@ The original callback error is only stored in `cause`. Stable code, phase, Owner
 | `createRuntimeOwnerInput`        | Create a complete initial Owner command                                   |
 | `createRuntimeOwnerUpdate`       | Create a complete Owner update command                                    |
 | `createRuntimeSession`           | Create revision 0 and execute the initial full transaction                |
-| `RuntimeError`                   | Expose stable code, phase, cause, context, and secondary diagnostics      |
+| `RetikzRuntimeError`             | Expose stable code, phase, cause, context, and secondary diagnostics      |
 
 <SourceLinks
   sources={[

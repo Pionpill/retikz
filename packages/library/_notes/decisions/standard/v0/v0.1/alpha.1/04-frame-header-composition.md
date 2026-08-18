@@ -85,14 +85,6 @@ React 公开独立 `<Frame>`, `<FrameTitle>` 与 `<FrameDescription>`。header p
 
 Vanilla 公开 `frame()`、`frameTitle()` 与 `frameDescription()`；两个 header builder 只生成 JSON-safe Node-like input，不注册独立 composite。React 与 Vanilla 贡献同一 `FrameDefinition`，直接 IR 通过 `composites: [FrameDefinition]` 接入
 
-## 被否决的方案
-
-- 保留 Path label 作为标题：无法承载 Node-like 语义与工具链 identity
-- 新增 `FrameBorder`：边框是 Frame 成立所必需的外观，不形成独立能力
-- Frame 私有文本测量或 position：会复制 Core Node layout 与 anchor contract
-- 开放任意 header layout registry：alpha.1 只有两个封闭排列策略，没有扩展证据
-- 为 ADR-03 保留 alias：v0.x 优先收敛正确公开契约，不保留 `label`、嵌套 `border` 或旧 `gap` 桥接
-
 ## 公开影响与兼容性
 
 - BREAKING：删除 `IRFrame.label` / React `label`，迁移为 Title；删除嵌套 `border`，视觉字段提升到 Frame 顶层
@@ -101,13 +93,11 @@ Vanilla 公开 `frame()`、`frameTitle()` 与 `frameDescription()`；两个 head
 - React 新增 `FrameTitle` / `FrameDescription`；Vanilla 新增对应 builder
 - renderer 仍只消费普通 Scope、Path、Node 与 text Scene primitives
 
-## 最终实现与验证摘要
+## 最终实现结果
 
 - Standard 已实现 Node schema 复用、默认样式、两种 header anchor 链、box padding、圆角、稳定派生 id 与保留 id 诊断
 - React / Vanilla 对同一 Frame input 生成等价 IR；React 对重复 part、非法 child 与独立 part fail-loud
 - 双语 Frame 页面、默认 / 横向 / 纵向 demo、controls、API 表、AI JSX parser 与 `GraphFrame` dogfood 已同步
-- schema、lowering、Node 字段透传、z-index、scale / rotate / margin、圆角、错误路径与跨 composite 组合均有自动化证据
-- Standard 三包及 docs 的 lint、类型检查、测试与 build 已在 alpha.1 收尾验证通过
 
 ## 遗留边界
 

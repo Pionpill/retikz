@@ -26,10 +26,3 @@ plot mark label 改为 host-inferred schema：用户在 mark 上写 `label`，�
 - mark lowering 遇到 label 字段与实际 host 不匹配时 fail-loud。
 
 该设计让 plot 只负责数据绑定和宿主分派，core 继续是 label 布局语义的唯一来源。内置 mark 使用共享 resolver；自定义 mark 可复用同一 schema 并自行选择 host。
-
-## 被否决方案
-
-- 给用户暴露 label `kind`：内置 mark 已知宿主，重复声明会制造无效组合。
-- 保留 flat label props 进入 IRPlot schema：结构化 label 才能完整承载 core label contract；旧 sugar 如存在也只能在 React adapter 内转换。
-- 让 PathMark.label 表示顶点级标签：path host label 与 vertex label 是不同语义，后者应另开字段或 ADR。
-- 用 PointMark 模拟说明文字：文字会脱离真实图元 host、locator 与 provenance。

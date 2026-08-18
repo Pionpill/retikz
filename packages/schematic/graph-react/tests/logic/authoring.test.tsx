@@ -13,7 +13,15 @@ import { normalizeScene } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { Container, ContainerHeader, ContainerSection, Entity, Graph, Relation } from '../../src';
+import {
+  Container,
+  ContainerHeader,
+  ContainerSection,
+  Entity,
+  Graph,
+  Relation,
+  RetikzGraphReactErrorCode,
+} from '../../src';
 
 /** 经 React JSX 到 Vanilla Input 的唯一 authoring 链路归一化 */
 const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) => {
@@ -218,7 +226,7 @@ describe('Graph React Relation authoring', () => {
           createElement(Step, { to: 'target' }),
         ),
       ),
-    ).toThrow(/children|way/i);
+    ).toThrowError(expect.objectContaining({ code: RetikzGraphReactErrorCode.RelationInputInvalid }));
   });
 
   it('keeps Container and Relation provider roots on their unified definitions', () => {

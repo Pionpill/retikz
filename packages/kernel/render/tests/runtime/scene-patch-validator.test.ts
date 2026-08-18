@@ -11,7 +11,7 @@ import {
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
-import { RetainedRenderErrorCode } from '../../src/runtime';
+import { RetikzRetainedRenderErrorCode } from '../../src/runtime';
 import { runtimeStructuralEquals } from '../../src/runtime/shared';
 import { validateScenePatch, validateSceneRuntimeSnapshot } from '../../src/runtime/validator';
 
@@ -76,6 +76,81 @@ const createRectSnapshot = (revision: number, identifiers: ReadonlyArray<string>
 };
 
 describe('Scene Patch validator', () => {
+  it('接受 canonical clip path，并在 full snapshot 拒绝旧 shape 与 malformed path', () => {
+    const valid = createRectSnapshot(0, ['a']);
+    const canonical: SceneRuntimeSnapshot = {
+      ...valid,
+      scene: {
+        ...valid.scene,
+        resources: [
+          {
+            kind: 'clip',
+            id: 'clip-1',
+            path: {
+              commands: [
+                { kind: 'move', to: [0, 0] },
+                { kind: 'line', to: [10, 10] },
+              ],
+              fillRule: 'nonzero',
+            },
+          },
+        ],
+      },
+    };
+    expect(() => validateSceneRuntimeSnapshot(canonical)).not.toThrow();
+
+    for (const resource of [
+      { kind: 'clip', id: 'clip-1', shape: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 } },
+      {
+        kind: 'clip',
+        id: 'clip-1',
+        path: { commands: [{ kind: 'line', to: [10, 10] }], fillRule: 'nonzero' },
+      },
+    ]) {
+      const invalid = {
+        ...valid,
+        scene: { ...valid.scene, resources: [resource] },
+      } as unknown as SceneRuntimeSnapshot;
+      expect(() => validateSceneRuntimeSnapshot(invalid)).toThrowError(
+        expect.objectContaining({ code: RetikzRetainedRenderErrorCode.SceneTopologyInvalid }),
+      );
+    }
+  });
+
+  it('在 setResources 与 replaceScene 边界拒绝旧 clip shape', () => {
+    const current = createRectSnapshot(0, ['a']);
+    const next = createRectSnapshot(1, ['a']);
+    const oldResources = [{ kind: 'clip', id: 'clip-1', shape: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 } }];
+
+    expect(() =>
+      validateScenePatch(
+        current,
+        {
+          baseRevision: current.revision,
+          nextRevision: next.revision,
+          operations: [{ kind: 'setResources', resources: oldResources }],
+        } as unknown as ScenePatch,
+        next,
+      ),
+    ).toThrowError(expect.objectContaining({ code: RetikzRetainedRenderErrorCode.ScenePatchInvalid }));
+
+    const invalidReplacement = {
+      ...next,
+      scene: { ...next.scene, resources: oldResources },
+    } as unknown as SceneRuntimeSnapshot;
+    expect(() =>
+      validateScenePatch(
+        current,
+        {
+          baseRevision: current.revision,
+          nextRevision: next.revision,
+          operations: [{ kind: 'replaceScene', snapshot: invalidReplacement }],
+        },
+        invalidReplacement,
+      ),
+    ).toThrowError(expect.objectContaining({ code: RetikzRetainedRenderErrorCode.SceneTopologyInvalid }));
+  });
+
   it('接受 Core canonical incremental Patch 与 config-only empty Patch', () => {
     const { current, next, patch } = createIncrementalPair();
     expect(() => validateSceneRuntimeSnapshot(current)).not.toThrow();
@@ -108,7 +183,7 @@ describe('Scene Patch validator', () => {
     } as SceneRuntimeSnapshot;
 
     expect(() => validateSceneRuntimeSnapshot(invalid)).toThrowError(
-      expect.objectContaining({ code: RetainedRenderErrorCode.SceneTopologyInvalid }),
+      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.SceneTopologyInvalid }),
     );
   });
 
@@ -116,11 +191,11 @@ describe('Scene Patch validator', () => {
     const { current, next, patch } = createIncrementalPair();
     expect(() =>
       validateScenePatch(current, { ...patch, nextRevision: (next.revision + 1) as typeof next.revision }, next),
-    ).toThrowError(expect.objectContaining({ code: RetainedRenderErrorCode.ScenePatchRevisionMismatch }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRetainedRenderErrorCode.ScenePatchRevisionMismatch }));
 
     expect(() =>
       validateScenePatch(current, { ...patch, operations: [{ kind: 'unknown' }] } as unknown as ScenePatch, next),
-    ).toThrowError(expect.objectContaining({ code: RetainedRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRetainedRenderErrorCode.ScenePatchInvalid }));
 
     expect(() =>
       validateScenePatch(
@@ -134,7 +209,7 @@ describe('Scene Patch validator', () => {
         },
         next,
       ),
-    ).toThrowError(expect.objectContaining({ code: RetainedRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRetainedRenderErrorCode.ScenePatchInvalid }));
   });
 
   it('拒绝 operation 固定顺序错误与 Patch/next coherence 漏项', () => {
@@ -152,7 +227,7 @@ describe('Scene Patch validator', () => {
         },
         next,
       ),
-    ).toThrowError(expect.objectContaining({ code: RetainedRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRetainedRenderErrorCode.ScenePatchInvalid }));
 
     const mismatchingNext: SceneRuntimeSnapshot = {
       ...next,
@@ -162,7 +237,7 @@ describe('Scene Patch validator', () => {
       },
     };
     expect(() => validateScenePatch(current, patch, mismatchingNext)).toThrowError(
-      expect.objectContaining({ code: RetainedRenderErrorCode.ScenePatchSnapshotMismatch }),
+      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.ScenePatchSnapshotMismatch }),
     );
   });
 
@@ -252,11 +327,11 @@ describe('Scene Patch validator', () => {
       sparseGroupSnapshot,
     ]) {
       expect(() => validateSceneRuntimeSnapshot(snapshot)).toThrowError(
-        expect.objectContaining({ code: RetainedRenderErrorCode.SceneTopologyInvalid }),
+        expect.objectContaining({ code: RetikzRetainedRenderErrorCode.SceneTopologyInvalid }),
       );
     }
     expect(() => validateScenePatch(valid, null as unknown as ScenePatch, valid)).toThrowError(
-      expect.objectContaining({ code: RetainedRenderErrorCode.ScenePatchInvalid }),
+      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.ScenePatchInvalid }),
     );
 
     const next = { ...valid, revision: 1 as SceneRuntimeSnapshot['revision'] };
@@ -271,7 +346,7 @@ describe('Scene Patch validator', () => {
         },
         next,
       ),
-    ).toThrowError(expect.objectContaining({ code: RetainedRenderErrorCode.ScenePatchInvalid }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRetainedRenderErrorCode.ScenePatchInvalid }));
     expect(runtimeStructuralEquals(Array(1), [undefined])).toBe(false);
   });
 

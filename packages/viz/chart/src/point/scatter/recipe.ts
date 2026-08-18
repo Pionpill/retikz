@@ -1,27 +1,25 @@
 import { MarkValueKind } from '@retikz/plot';
 
-import type { ChartRecipe } from '../recipe';
+import type { ChartRecipe } from '../../_shared';
 import type { IRScatterChart } from './schema';
 
+import { bindChartRecipe } from '../../_shared';
 import { PointChartType } from '../constants';
-import { createPointChartSeed, ScatterPointPatchSchema, validatePointChartCore } from '../shared';
+import { createPointChartPlot } from '../shared';
 import { ScatterChartSchema } from './schema';
-
-const scatterPointPatchPaths = Object.keys(ScatterPointPatchSchema.shape).filter(path => path !== 'encoding');
 
 const scatterRecipeOptions = {
   type: PointChartType.Scatter,
-  patchPaths: scatterPointPatchPaths,
   finalSizeFieldOf: (spec: IRScatterChart): { field: string; scale?: string } | undefined => {
-    if (spec.mark?.encoding?.text !== undefined) return undefined;
-    if (spec.mark?.size?.kind === MarkValueKind.Field) {
+    if (spec.config.mark?.encoding?.text !== undefined) return undefined;
+    if (spec.config.mark?.size?.kind === MarkValueKind.Field) {
       return {
-        field: spec.mark.size.value,
-        ...(spec.mark.size.scale === undefined ? {} : { scale: spec.mark.size.scale }),
+        field: spec.config.mark.size.value,
+        ...(spec.config.mark.size.scale === undefined ? {} : { scale: spec.config.mark.size.scale }),
       };
     }
-    if (spec.mark?.size !== undefined) return undefined;
-    const authoredSize = spec.encoding.size;
+    if (spec.config.mark?.size !== undefined) return undefined;
+    const authoredSize = spec.config.encoding.size;
     return authoredSize?.field === undefined
       ? undefined
       : {
@@ -31,10 +29,9 @@ const scatterRecipeOptions = {
   },
 };
 
-/** Scatter canonical type 的内建 recipe */
+/** Scatter 具体类型的内建解析方案 */
 export const ScatterChartRecipe: ChartRecipe<IRScatterChart> = {
   type: PointChartType.Scatter,
   schema: ScatterChartSchema,
-  createSeed: (spec, style) => createPointChartSeed(spec, style, scatterRecipeOptions),
-  validateCore: (spec, plotSpec) => validatePointChartCore(spec, plotSpec, scatterRecipeOptions),
+  bind: spec => bindChartRecipe(spec, (value, style) => createPointChartPlot(value, style, scatterRecipeOptions)),
 };

@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-07-26
-- 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-01](./01-cooperative-concurrent-runtime.md) · [ADR-02](./02-progressive-materialization.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md)
+- 关联：[ADR-01](./01-cooperative-concurrent-runtime.md) · [ADR-02](./02-progressive-materialization.md)
 
 ## 背景
 
@@ -66,16 +66,6 @@ Operation 输入必须先经过 definition parser；单批任一 operation 无�
 2. 接受时 revision compare + squash 防止 LLM 静默覆盖生成期间的用户修改。
 3. Generic definition 让 Core 与 Tier 2 各自拥有领域 operation，Runtime 不成为 LLM 或万能 Patch 引擎。
 
-## 测试设计
-
-- 多批 append 后每个 draft revision 都是完整合法 Snapshot，失败批次不改变上一 draft。
-- accept 只产生一次正式 Runtime commit；cancel 不产生正式 revision；batch log 与 renderer batch 不进入正式 history。
-- current revision 改变时 append / accept fail-loud 到 conflicted，不自动覆盖或 rebase。
-- checkpoint pause/resume、duplicate batch、invalid operation、cancel in-flight 与 dispose 路径可恢复且无泄漏。
-- Core 内置 definition、Tier 2 fixture 与第三方 definition 使用相同 registry / parse / apply / validate / diff 链路。
-
-详细矩阵见 ignored `notes/plans/kernel-v0.5-performance/TEST_CONTRACT_ALPHA3_ADR_03.md`。
-
 ## 公开影响
 
 - `@retikz/runtime` 新增 GenerationDefinition registry、draft branch、checkpoint、accept/cancel contract。
@@ -83,19 +73,7 @@ Operation 输入必须先经过 definition parser；单批任一 operation 无�
 - React / Vanilla 只负责选择正式或 draft view source、呈现状态和生命周期。
 - 公共 API 不 import 任何模型 SDK，不接收 prompt、token stream、message 或 tool-call 对象。
 
-## 能力完备性检查
-
-- 所属能力域与能力面：跨领域 Runtime transaction；Core / Tier 2 各自拥有 generation operation 语义。
-- 解决的问题：让外部生成器分批提交合法 draft、可恢复取消，并在接受时压缩为一个正式更新。
-- 主责包与协作包：runtime 拥有 branch/session/checkpoint；owner definition 拥有 operation/validation/diff；adapter 展示 draft；renderer 只物化。
-- 是否可由现有能力组合：普通 Runtime transaction 会推进正式 current，不具备隔离 draft 与 squash，需要扩展 runtime，但不改变 Core Scene 原子性。
-- 内部表达链路：owner read → typed draft snapshot → unknown batch parse → isolated draft apply/validate → draft commit → optional preview → typed snapshot-to-input + revision-checked squash accept。
-- 外部扩展链路：第三方 owner 提供同一 GenerationDefinition；没有 Core/Tier 2 白名单或 Runtime switch。
-- define-registry：这是开放领域语义，必须提供 `GenerationDefinition`、`defineGeneration`、内置 + 自定义 registry merge 与统一 key dispatch；重复 key fail-loud。
-- 下游执行 / adapter 等价性：draft Snapshot 通过普通 Program 编译；React/Vanilla 共享 accept/cancel/conflict 语义。
-- 不支持边界与诊断：不解析 token、不自动修复、不自动 rebase；batch、parse、validation、conflict 与 squash outcome 可 trace。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 模型调用、prompt、tokenizer、tool schema、聊天 UI、agent loop 或供应商 SDK。
 - 自动 merge/rebase、协作、CRDT、正式 undo/redo store 或持久 generation 服务。
@@ -104,42 +82,4 @@ Operation 输入必须先经过 definition parser；单批任一 operation 无�
 
 ---
 
-## 实现契约
-
-### Level
-
-`red`：新增公共 Runtime session / registry 与 Core generation operation contract。
-
-### Schema 改动
-
-无 Core IR / Scene schema 字段改动。Core generation operation 是 runtime 输入 contract；owner 如需跨进程 checkpoint，另提供严格 JSON schema / codec。
-
-### 文件 scope
-
-- `packages/kernel/runtime/src/generation/**`
-- `packages/kernel/runtime/src/{contract,registry,session}/**`
-- `packages/kernel/runtime/src/index.ts`
-- `packages/kernel/core/src/contract/generation/**`
-- `packages/kernel/core/src/index.ts`
-- `packages/kernel/{runtime,core}/tests/**generation**`
-- `packages/kernel/react/src/kernel/runtime/**`
-- `packages/kernel/vanilla/src/runtime/**`
-- `packages/kernel/{react,vanilla}/tests/**generation**`
-- `apps/docs/src/modules/docs/contents/kernel/packages/{runtime,core,react,vanilla}/**`
-
-### 测试象限
-
-**Happy path**：多批 append；pause/checkpoint/resume；draft preview；accept squash；cancel。
-
-**边界**：空 batch；单批；重复 stable identity update；move；remove missing identity；opaque in-memory checkpoint。
-
-**错误路径**：parse error；apply/validate throw；duplicate batch/key；stale base；current conflict；cancel in-flight；dispose。
-
-**交互**：draft + progressive view 正交；Core/Tier 2/custom definitions 同路；React/Vanilla parity；accept 后 renderer 切正式 source。
-
-### 依赖的现有元素
-
-- alpha.2 Runtime Snapshot / ChangeSet / transaction——正式 branch 与 squash commit。
-- ADR-01 scheduler——append prepare、取消与 stale result gate。
-- ADR-02 materialization——只负责 draft revision 的显示节奏。
-- Core incremental Program / qualified identity——draft 编译与稳定 operation target。
+Generation 复用 alpha.2 的 Runtime Snapshot、ChangeSet、transaction、scheduler 和 Core stable identity；materialization 只负责 draft revision 的显示节奏，不改变 generation 的 draft 或正式提交语义

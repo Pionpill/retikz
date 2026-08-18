@@ -1,5 +1,6 @@
 import type { IRNodeTarget } from '../schemas';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { parseAnchorAlias, SupportedAnchorSugarNames } from './anchor-alias';
 
 /** 纯数字识别 `A.30` / `A.-45` / `A.180.5` */
@@ -9,7 +10,8 @@ const DECIMAL_NUMBER_RE = /^-?\d+\.\d+$/;
 /** 字符串节点 ref shorthand → NodeTarget 对象 */
 export const parseNodeTarget = (s: string): IRNodeTarget => {
   if (DECIMAL_NUMBER_RE.test(s)) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Parse,
       `parseNodeTarget: '${s}' looks like a numeric coordinate; use [x, y] for coordinates or object form for ids containing '.'`,
     );
   }
@@ -18,7 +20,7 @@ export const parseNodeTarget = (s: string): IRNodeTarget => {
   // 空 id（`''` / `'.top'`）fail-fast——否则产出 NodeTargetSchema 非法的 `{ id: '' }`，
   // 流到 compile 会误报"undefined node id ''"（拼写错误被当成缺节点）
   if (id.length === 0) {
-    throw new Error(`parseNodeTarget: empty node id in '${s}'`);
+    throw new RetikzCoreError(RetikzCoreErrorCode.Parse, `parseNodeTarget: empty node id in '${s}'`);
   }
   if (dot < 0) return { id };
   const tail = s.slice(dot + 1);
@@ -27,7 +29,8 @@ export const parseNodeTarget = (s: string): IRNodeTarget => {
   }
   const anchor = parseAnchorAlias(tail);
   if (anchor === undefined) {
-    throw new Error(
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Parse,
       `parseNodeTarget: unknown anchor '${tail}' in '${s}' (supports: ${SupportedAnchorSugarNames.join(', ')}); for ids containing '.' or shape-specific anchors, use the object form { id, anchor }`,
     );
   }

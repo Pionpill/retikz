@@ -5,6 +5,7 @@ import type { IRTableStructureOperation } from '../../schemas';
 import type { NormalizeTableStructureOptions } from './types';
 
 import { TableStructureOutputSchema } from '../../contract/structure';
+import { RetikzTableError } from '../../error';
 import { resolveTableStructureRegistry, tableStructureDefinitionOf } from '../../providers';
 import {
   TableCellFit,
@@ -70,6 +71,6 @@ export const normalizeTableStructure = (
     validateTableStructureOutput(output, parsedOperation, context);
     return createSemanticTableModel(output);
   } catch (error) {
-    throw new Error(`${prefix}: ${errorMessageOf(error)}`, { cause: error });
+    throw new RetikzTableError(`${prefix}: ${errorMessageOf(error)}`, { cause: error });
   }
 };

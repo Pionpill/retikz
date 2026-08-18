@@ -2,9 +2,9 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.8 plan §第二部分补](./roadmap.md) · tikz-gap-analysis §1 填充（历史分析已删除） · 本 milestone [ADR-01 ArrowDefinition](./01-arrow-definition.md)（复用 `MarkerPrimitive` emit + emit-in-compile 落点）· [alpha.7 ADR-04 pattern/image](../alpha.7/04-pattern-image-deferred.md)（pattern motif 固定 enum，本篇开放）
+- 关联： · tikz-gap-analysis §1 填充（历史分析已删除） · 本 milestone [ADR-01 ArrowDefinition](./01-arrow-definition.md)（复用 `MarkerPrimitive` emit + emit-in-compile 落点）· [alpha.7 ADR-04 pattern/image](../alpha.7/04-pattern-image-deferred.md)（pattern motif 固定 enum，本篇开放）
 
-> **前置依赖**：复用 ADR-01 的 `MarkerPrimitive` 窄子集 + emit-in-compile 落点（compile 调 emit、adapter 物化），故排在 ArrowDefinition 之后。
+> 该能力复用既有的 renderer-neutral 资源与编译契约
 
 ## 背景
 
@@ -13,7 +13,7 @@
 
 ## 决策：`PatternDefinition` + `CompileOptions.patterns`，内置 3 降注册项，emit-in-compile
 
-`pattern.shape` 由 `z.enum(['lines','dots','grid'])` 开放为 `z.string().min(1)`（对齐 alpha.3 node.shape / ADR-01 arrow.shape）；未注册名编译期 throw。`CompileOptions.patterns?: Record<string, PatternDefinition>`，有效表 = `{ ...BUILTIN_PATTERNS, ...patterns }`，同名覆盖发 warn（`PATTERN_OVERRIDES_BUILTIN`，仿 `SHAPE_OVERRIDES_BUILTIN`）。内置 3 motif（lines / dots / grid）迁进 `core/src/patterns/`（仿 `shapes/` / `arrows/`），降注册项无特权。`PatternDefinition` / `PatternEmitContext` 为 TS type（运行时注入、不进 IR）；签名真源见 `core/src/patterns/types.ts`。
+`pattern.shape` 由 `z.enum(['lines','dots','grid'])` 开放为 `z.string().min(1)`（对齐 alpha.3 node.shape / ADR-01 arrow.shape）；未注册名编译期 throw。`CompileOptions.patterns?: Record<string, PatternDefinition>`，有效表 = `{ ...BUILTIN_PATTERNS, ...patterns }`，同名覆盖发 warn（`PATTERN_OVERRIDES_BUILTIN`，仿 `SHAPE_OVERRIDES_BUILTIN`）。内置 3 motif（lines / dots / grid）迁进 （仿 `shapes/` / `arrows/`），降注册项无特权。`PatternDefinition` / `PatternEmitContext` 为 TS type（运行时注入、不进 IR）；签名真源见 。
 
 理由：
 
@@ -31,12 +31,7 @@
 - **dedup 不变**：`createPaintRegistry` 仍按 `JSON.stringify(spec)` 去重；同 pattern spec → 1 资源 1 tile（tile 由 spec + registry 确定，确定性）。
 - **内置 3 迁移 + 回归**：lines / dots / grid 迁成 PatternDefinition，物化几何与旧 switch 逐一等价。
 
-### 被否决的选项
-
-- **B：emit 在 react adapter 调（查 registry 物化 `<pattern>`）**——`patterns` 注册表数据流与 shapes / arrows（喂 compile）不一致（要喂 render），未注册名校验移到 render，Canvas adapter 要各自重调。与本 milestone ADR-01 emit-in-compile 取向不符。
-- **C：不开放，保持 alpha.7 固定 enum**——无法自定义 motif，用户明确要补。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - **ArrowDefinition / MarkerPrimitive**→ [ADR-01](./01-arrow-definition.md)（本篇复用）。
 - **image paint**（非 motif，spec 驱动，不进 pattern 注册面）。
@@ -44,6 +39,6 @@
 
 ---
 
-> **实现指针**：level `red`（动 `ir/paint.ts` shape 开放 + 新 `patterns/` 注册面 + `primitive/paint.ts` `SceneResource.tile` + `compile/**` registry + CompileOptions + `react/render` 物化 + 公开导出），向后兼容非 breaking（`pattern.shape` 从 3 枚举扩为 string，旧字面量仍合法；内置 3 行为零回归）。真源以代码为准——`PatternDefinition` / `PatternEmitContext` + `BUILTIN_PATTERNS`（`core/src/patterns/{types,index}.ts`）、`pattern.shape` 开放 + 名类型（`core/src/ir/paint.ts`）、`ResolvedPatternTile` + `SceneResource.tile`（`core/src/primitive/paint.ts`）、`createPaintRegistry` 查表 + emit 产 tile（`core/src/compile/paint.ts`）、`CompileOptions.patterns` + 合并 + warn code（`core/src/compile/compile.ts`）、物化（`react/src/render/paintDefs.tsx`）、`<Layout patterns>`（`react/src/kernel/Layout.tsx`）、公开导出（core+react `index.ts`）。测试在 `core/tests/patterns/`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / 待决策点）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `7141a9b0`；压缩前完整施工蓝图 = `git show 7141a9b0^:_notes/decisions/core/v0/v0.2/alpha.8/04-pattern-definition.md`。
+已实现本 ADR 的核心决策。兼容性：向后兼容非 breaking（`pattern.shape` 从 3 枚举扩为 string，旧字面量仍合法；内置 3 行为零回归）；其余默认行为、失败语义与公开契约以正文为准。

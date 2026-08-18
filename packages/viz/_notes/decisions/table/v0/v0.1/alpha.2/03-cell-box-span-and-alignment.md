@@ -68,8 +68,7 @@ spanning Cell box 覆盖全部轨道及其内部 gaps。content box 由 Cell box
 - alpha.1 的单点 `contentCenter` 被 Cell box、content box、source bounds 与 translation 取代，不保留兼容字段
 - `visualBounds` 不参与 contribution；fit / overflow 后的可见范围由 ADR-04 与 ADR-06 的 manifest 表达
 
-## 最终实现与验证
-
+## 最终结果
 实现落在 Table schema、Structure normalize、`layout/span.ts`、`layout/cell.ts` 与 layout transaction；Core spacing helper 由已发布 Kernel 提供。React marker builder 使用同一 occupancy 语义预占未来行。
 
 正式测试覆盖 schema round-trip、默认值、越界/重叠/跨 row-kind、deterministic span propagation、gap、padding、非零 source bounds、三种对齐及 marker 等价。关键证据位于 `tests/layout/{span,cell-layout}.test.ts`、`tests/structure/normalize.test.ts`、`tests/pipeline/layout-transaction.test.ts` 与 React `tests/components/authoring.test.tsx`。

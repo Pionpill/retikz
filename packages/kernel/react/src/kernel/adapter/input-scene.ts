@@ -17,6 +17,7 @@ import { Children, createElement, Fragment, isValidElement } from 'react';
 import type { CoordinateProps, NodeProps, PathProps, ScopeProps, StepProps, TextProps } from '../components';
 import type { ScopeStyleProps } from '../protocol';
 
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { Scope } from '../components';
 import {
   createInputEmbedProps,
@@ -485,7 +486,8 @@ const readSceneChildren = (children: ReactNode, context: InputContext): Readonly
       }
       if (typeof child.type === 'function') {
         if (isClassComponent(child.type)) {
-          throw new Error(
+          throw new RetikzReactError(
+            RetikzReactErrorCode.Kernel,
             `[retikz] <Layout> children 含类组件 <${componentLabel(child.type)}>。Kernel / Sugar 组件必须是函数组件`,
           );
         }

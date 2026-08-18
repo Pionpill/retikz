@@ -5,6 +5,8 @@ import type { ReactElement, ReactNode } from 'react';
 import { createInputScene, Node, Path } from '@retikz/react';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
+import { RetikzGraphReactError, RetikzGraphReactErrorCode } from '../errors';
+
 /** 由 React 收集、等待 Vanilla adapter 在根 Scene traversal 中归一化的 authoring 子项 */
 export type CollectedAuthoringChild = Readonly<{
   child: InputChild;
@@ -48,11 +50,21 @@ export const collectSingleChild = (
   embedIdPrefix: string,
 ): CollectedAuthoringChild => {
   const nodes = flattenAuthoringNodes(children);
-  if (nodes.length !== 1) throw new Error(`${label} must contain exactly one authoring child.`);
+  if (nodes.length !== 1) {
+    throw new RetikzGraphReactError({
+      code: RetikzGraphReactErrorCode.AuthoringChildCountInvalid,
+      message: `${label} must contain exactly one authoring child.`,
+      details: { label, expectedCount: 1, receivedCount: nodes.length },
+    });
+  }
   const input = createInputScene(nodes[0], { embedIdPrefix });
   const childrenInput = input.scene.children;
   if (childrenInput === undefined || childrenInput.length !== 1) {
-    throw new Error(`${label} must contain exactly one authoring child.`);
+    throw new RetikzGraphReactError({
+      code: RetikzGraphReactErrorCode.AuthoringChildCountInvalid,
+      message: `${label} must contain exactly one authoring child.`,
+      details: { label, expectedCount: 1, receivedCount: childrenInput?.length ?? 0 },
+    });
   }
   return { child: childrenInput[0], adapters: input.adapters };
 };
@@ -69,11 +81,19 @@ export const collectSemanticNodeInput = <TInput extends Readonly<Record<string, 
   const nodeInput = createInputScene(createElement(Node, input as unknown as NodeProps, children), { embedIdPrefix });
   const childrenInput = nodeInput.scene.children;
   if (childrenInput === undefined || childrenInput.length !== 1) {
-    throw new Error('Graph semantic unit must contain exactly one Core Node authoring input.');
+    throw new RetikzGraphReactError({
+      code: RetikzGraphReactErrorCode.SemanticNodeInvalid,
+      message: 'Graph semantic unit must contain exactly one Core Node authoring input.',
+      details: { expectedType: 'node', expectedCount: 1, receivedCount: childrenInput?.length ?? 0 },
+    });
   }
   const child = childrenInput[0];
   if (child.type !== 'node' || 'namespace' in child) {
-    throw new Error('Graph semantic unit must contain exactly one Core Node authoring input.');
+    throw new RetikzGraphReactError({
+      code: RetikzGraphReactErrorCode.SemanticNodeInvalid,
+      message: 'Graph semantic unit must contain exactly one Core Node authoring input.',
+      details: { expectedType: 'node', receivedType: child.type, expectedCount: 1, receivedCount: 1 },
+    });
   }
   const { id: _id, ...base } = input;
   void _id;
@@ -91,7 +111,11 @@ export const collectRelationPath = (
   const pathInput = createInputScene(createElement(Path, null, children), { embedIdPrefix });
   const childrenInput = pathInput.scene.children;
   if (childrenInput === undefined || childrenInput.length !== 1) {
-    throw new Error('Relation children must contain one Core Path authoring input.');
+    throw new RetikzGraphReactError({
+      code: RetikzGraphReactErrorCode.RelationPathInvalid,
+      message: 'Relation children must contain one Core Path authoring input.',
+      details: { expectedType: 'path', expectedCount: 1, receivedCount: childrenInput?.length ?? 0 },
+    });
   }
   return { child: childrenInput[0] as InputPath, adapters: pathInput.adapters };
 };

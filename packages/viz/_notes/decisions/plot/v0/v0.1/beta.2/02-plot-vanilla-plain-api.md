@@ -56,24 +56,11 @@ const spec = plot({
 
 普通 SSR 继续使用 `plot()` + `renderPlot()`；与其它 Tier1 / Tier2 内容组合时使用 `embedPlot()` + `PlotInputEmbedAdapter`，并把 adapter 传给 Vanilla processing。两条路径消费同一 `IRPlot`，datasets 始终与 Plot IR 分离。
 
-## 被否决选项
-
-- **保留 builder 或兼容 alias**：会继续暴露第二套可变作者模型，并扩大 0.x 公共面。
-- **React / Vanilla 各自维护 normalization**：相同 Plot binding 会继续产生漂移。
-- **让 `renderPlot()` 包装 `figure(embedPlot(...))`**：lineage side output 尚不属于 Kernel Tier2 contribution，强行统一会扩大 Kernel API 或重复 lowering。
-- **在 beta 冻结 cache / patch API**：依赖失效和增量物化尚未验证，应留给 v0.2 单独设计。
-
 ## 兼容性与遗留风险
 
 这是 Vanilla authoring 的 breaking 迁移；Plot IR schema、lowering 几何、Scene schema、React JSX API 与 `renderPlot()` 行为不变。外部 Vanilla 消费方必须把链式 builder 改为 plain `plot({ marks, guides, facets, scaffolds })`。增量更新与 lineage 重复 lowering 是已明确延期的性能能力，不构成 v0.1-beta.2 契约。
 
-## 验证
-
-- Plot contract 锁定 canonical schema 输出、输入不变性、显式 scale、多轴、facet / scaffold、非法字段存在性与统一错误语义。
-- React / Vanilla 锁定 facet、scaffold、多轴和冲突输入 parity；Vanilla 另覆盖 plain object、SSR / lineage、Tier2 adapter、identity 与缺失 dataset。
-- Plot、Plot React、Plot Vanilla 与 docs 的类型检查、定向测试和文档迁移在实现收尾时通过。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 不修改 Plot IR、Core IR 或 Scene schema。
 - 不新增 mark、guide、scale、coordinate 或 transform 能力。

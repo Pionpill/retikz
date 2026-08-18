@@ -9,13 +9,21 @@ import {
   LayoutIntrinsicMode,
   NaturalLayoutProposal,
 } from '@retikz/core';
+import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { IRTable, TableCompileArtifact } from '../../src';
 
-import { compileTable, lowerTables, TABLE_NAMESPACE, TableComposite, TableSchema } from '../../src';
-import { resolveTableTransaction } from '../../src/pipeline/layout';
+import {
+  compileTable,
+  lowerTables,
+  RetikzTableErrorCode,
+  TABLE_NAMESPACE,
+  TableComposite,
+  TableSchema,
+} from '../../src';
+import { resolveTableTransaction, RetikzTableTransactionStageError } from '../../src/pipeline/layout';
 import { CLEAN_TABLE_THEME_TOKENS } from '../fixtures/clean-theme-tokens';
 
 const tableArtifactsOf = (artifacts: ReturnType<typeof compileTable>['artifacts']): Array<TableCompileArtifact> =>
@@ -36,6 +44,19 @@ const errorChainOf = (error: unknown): Array<Error> => {
 };
 
 describe('Table layout transaction', () => {
+  it('uses the shared Retikz error contract for stage context', () => {
+    const cause = new Error('intrinsic failed');
+    const error = new RetikzTableTransactionStageError('intrinsic Cell layout', cause, 'orders', 'total');
+
+    expect(error).toBeInstanceOf(RetikzError);
+    expect(error).toMatchObject({
+      name: 'RetikzTableTransactionStageError',
+      code: RetikzTableErrorCode.TransactionStageFailed,
+      cause,
+      details: { stage: 'intrinsic Cell layout', tableId: 'orders', cellId: 'total' },
+    });
+  });
+
   it('solves span-aware tracks and publishes complete Cell boxes in canonical order', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,

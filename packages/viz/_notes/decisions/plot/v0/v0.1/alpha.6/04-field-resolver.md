@@ -53,7 +53,7 @@ export type LowerPlotsOptions = {
 - **`parse` 单独出现需类型来源**：`{ parse }` 无 `type` 的合理语义是「类型沿用 model、只换解析」。**无 model 时类型来源不清**（自定义日期 parse 成 epoch number 会被误当 continuous）→ 要求：`{ parse }` 单独出现必须有 model 声明该字段；否则必须同时给 `type`，违反 fail-loud。
 - **覆盖后的类型贯穿下游**：`resolveField.type` 盖类型后，`assertScaleFieldCompatible` 等用的是**覆盖后**的类型（实现时注意取值时序，别拿 model 旧类型校验）。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **声明式 `format` 词表**（`{ name, type:'temporal', format:'epoch-s'|'YYYY/MM/DD' }`，可序列化、LLM 友好、进 model/IR）——互补线，单独 ADR。
 - **per-value 分类**（`(field, value) => FieldType` 内容嗅探）——见决策理由 1，不做。

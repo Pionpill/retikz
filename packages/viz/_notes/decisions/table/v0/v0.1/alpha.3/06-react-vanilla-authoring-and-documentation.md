@@ -125,30 +125,7 @@ React runtime rows 与 `containerStyle` 不进入 IRTable；其余 authoring inp
 - Standard 拥有 Legend/Flex；Core/renderer 不读取 adapter 私有语义
 - docs 只展示真实 contract，不成为行为真源
 
-## 测试策略摘要
-
-- authoring parity 证明 framework-neutral、React、Vanilla 产生 schema-equal IR
-- public / runtime guards 证明 style / containerStyle、manual Cell union 与 Presentation ABI
-- contribution / SSR 证明四类 definitions、冲突、freeze 与无 DOM 执行
-- manifest parity 证明 direct / React / Vanilla / SSR 使用同一 artifact contract、occurrence 与 diagnostics
-- docs integrity/browser 证明 schema、SourceLink、demo、README/changelog 与真实输出一致
-
-## 能力完备性与架构验证
-
-- **所属能力域**：Tabular Visualization Complete / authoring、runtime、docs 闭环
-- **问题归属**：Table contract 位于主包，adapters 只等价暴露，docs 只说明真实行为
-- **内部闭环**：authoring → exact IRTable → shared contribution → Table / Core pipeline → artifacts / manifest；Standard Legend join 由 alpha.6 ADR-01 后续扩展
-- **外部扩展**：custom definitions 在 direct/React/Vanilla/SSR 使用同一 contract 与 conflicts
-- **结论**：组合既有 adapters 与 docs，不新增 adapter-only Table capability
-
-## 被否决方案
-
-- 为每个 root field 再建通用 `<Table>` props：产生第二套 authoring contract
-- 保留双义 React `style` overload：JS 与 TS 都无法稳定区分领域 preset 和 host CSS
-- adapter-local callback/theme/Legend：破坏 JSON、SSR 与跨入口等价性
-- 每个 adapter 自行 join artifacts：重复领域逻辑且容易跨 occurrence 误接
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 新表格类型、group/pivot/matrix、多层 header
 - editor、selection、virtual scroll、async state

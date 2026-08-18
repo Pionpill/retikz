@@ -2,6 +2,8 @@ import { isFiniteNumber } from '@retikz/math';
 
 import type { IRPlotDomainPadding } from '../../schemas';
 
+import { RetikzPlotError } from '../../error';
+
 /** 可按连续值域规则扩展的 position scale 族 */
 export type PositionDomainFamily = 'linear' | 'time' | 'log' | 'pow' | 'sqrt' | 'symlog' | 'radial';
 
@@ -30,7 +32,9 @@ export type ResolvePaddedDomainOptions = {
 const finiteDomain = (domain: readonly [number, number], scaleName: string): [number, number] => {
   const [lo, hi] = domain;
   if (!isFiniteNumber(lo) || !isFiniteNumber(hi)) {
-    throw new Error(`lowerPlots: scale "${scaleName}" domain must contain finite numbers (got [${lo}, ${hi}])`);
+    throw new RetikzPlotError(
+      `lowerPlots: scale "${scaleName}" domain must contain finite numbers (got [${lo}, ${hi}])`,
+    );
   }
   return [lo, hi];
 };
@@ -52,7 +56,7 @@ const defaultSingleValueSpan = (value: number): number => Math.max(Math.abs(valu
 
 const assertStrictlyPositive = (domain: readonly [number, number], scaleName: string, label: string): void => {
   if (domain[0] <= 0 || domain[1] <= 0) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: log scale "${scaleName}" ${label} domain must be strictly positive (got [${domain[0]}, ${domain[1]}])`,
     );
   }
@@ -65,7 +69,7 @@ const assertNonNegative = (
   label: string,
 ): void => {
   if (domain[0] < 0 || domain[1] < 0) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: ${family} scale "${scaleName}" ${label} domain must be non-negative (got [${domain[0]}, ${domain[1]}])`,
     );
   }

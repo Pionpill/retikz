@@ -1,8 +1,8 @@
-﻿# ADR-02：clip 裁切（renderer-agnostic ClipResource + clipRef，复用 alpha.7 资源表）
+# ADR-02：clip 裁切（renderer-agnostic ClipResource + clipRef，复用 alpha.7 资源表）
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.9 plan §第二部分](./roadmap.md) · tikz-gap-analysis §6 Scene（历史分析已删除） · [alpha.7 ADR-01 Paint](../alpha.7/01-paint-basics.md)（`SceneResource` discriminated 资源表 + adapter 物化范式）· [alpha.1 Scope](../alpha.1)（裁剪作用域挂点）· 本 milestone [ADR-01](./01-partway-absolute-target.md) / [ADR-03](./03-viewbox-override.md)
+- 关联： · tikz-gap-analysis §6 Scene（历史分析已删除） · [alpha.7 ADR-01 Paint](../alpha.7/01-paint-basics.md)（`SceneResource` discriminated 资源表 + adapter 物化范式）· [alpha.1 Scope](../alpha.1)（裁剪作用域挂点）· 本 milestone [ADR-01](./01-partway-absolute-target.md) / [ADR-03](./03-viewbox-override.md)
 
 ## 背景 / 约束
 
@@ -22,17 +22,12 @@ core 产 renderer-agnostic 的 `ClipResource`（`{ kind:'clip', id, region }`，
 
 设计细节（具体决策）：
 
-- **clip region 坐标系 = scope-local**（评审 P2 已写死）：`Scope.clip` 的 `region` 用 scope 局部坐标，随该 Scope 的 `transforms` 一起生效（与组内子元素同坐标系）；adapter SVG 物化 `<clipPath>` 设 `clipPathUnits="userSpaceOnUse"` + 必要 transform，保证裁剪区与被裁内容同系。**不**用 world-space region（否则与 scope transform 脱钩）。
+- **clip region 坐标系 = scope-local**：`Scope.clip` 的 `region` 用 scope 局部坐标，随该 Scope 的 `transforms` 一起生效（与组内子元素同坐标系）；adapter SVG 物化 `<clipPath>` 设 `clipPathUnits="userSpaceOnUse"` + 必要 transform，保证裁剪区与被裁内容同系。**不**用 world-space region（否则与 scope transform 脱钩）。
 - **裁剪源形态**：首批 `rect`（x/y/w/h）+ `path`（PathCommand 区域）。
 - **clip 不改 layout 包围盒**：裁剪是视觉裁切，不缩 bbox；与 ADR-03 viewBox 各自独立。
 - **嵌套 clip**：scope 套 scope 各带 clip → 交集（SVG clipPath 嵌套天然交集）。
 
-### 被否决的选项
-
-- **B：core 直接产 `<clipPath>` primitive**——违 `scene.ts` 渲染无关契约（SVG-only 泄漏进 core）。否决。
-- **C：仅单 primitive 级 clip（不做 Scope 级）**——"裁一组元素"是最常用场景，单 primitive 级覆盖面窄。Scope 级优先，单 primitive 级作可选叠加。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - **单 primitive 级 clip**（`primitive.clipRef`）：首批只做 Scope/Group 级。
 - **shape 引用裁剪**（引用某 node shape 边界当裁剪区，如裁成圆形头像）：留扩展。
@@ -41,6 +36,6 @@ core 产 renderer-agnostic 的 `ClipResource`（`{ kind:'clip', id, region }`，
 
 ---
 
-> **实现指针**：level `red`（动 `primitive/scene.ts` 的 `SceneResource` clip 分支 + `clipRef` + `ir/scope.ts` clip 字段 + `compile/**` scope.clip → clipRef + 资源收集 + react adapter 物化），向后兼容纯叠加、零破坏。真源以代码为准——`ClipResource` / `ClipRegion` / `clipRef`（`core/src/primitive/clip.ts`、`core/src/primitive/scene.ts`）、`ScopeSchema.clip`（`core/src/ir/scope.ts`）、scope.clip 编译 + 资源去重（`core/src/compile/clip.ts`）、`<clipPath>` 物化（`react/src/render/clipDefs.tsx`，引用 `renderPrim.tsx` / `svgToReact.ts`）。测试在 `core/tests/ir/clip.schema.test.ts`、`core/tests/compile/clip*.test.ts`、`react/tests/render/clipDefs*.test.tsx`。DSL 表面见文档站 clip 概念页。完整原文（选项 A/B/C 详情 / 评审 P1/P2 坑位 / Schema 改动表 / 文件 scope / 测试象限）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `133ad7c1`；压缩前完整施工蓝图 = `git show 133ad7c1^:_notes/decisions/core/v0/v0.2/alpha.9/02-clip.md`。
+已实现本 ADR 的核心决策。兼容性：向后兼容纯叠加、零破坏；其余默认行为、失败语义与公开契约以正文为准。

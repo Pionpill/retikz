@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-07-29
 - 接受日期：2026-07-30
-- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-06](./06-box-layout-composite-contract.md) · [alpha.1 ADR-07](../alpha.1/07-layout-aware-composite.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Standard Box Layout roadmap](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/roadmap.md)
+- 关联：[ADR-06](./06-box-layout-composite-contract.md) · [alpha.1 ADR-07](../alpha.1/07-layout-aware-composite.md)
 
 ## 背景
 
@@ -320,10 +320,6 @@ if (minimum.kind === LayoutChildProbeKind.Failed) {
 
 React 与 Vanilla 继续通过现有 compile options 注入完全相同的 Composite definitions；相同 IR、definitions、providers 与 options 必须产生等价 Scene、artifact 与 diagnostics。
 
-## 测试策略摘要
-
-验证覆盖 proposal 公共类型与严格 runtime 校验、plain / mixed / TeX / fixed geometry 的求值边界、nested Composite 的 slot / bounds / guide / failure / replay 链路、discarded transaction 零可观察、第三方 provider 与 Core fatal error 分类、wrapper 坐标顺序、Table consumer 行为等价和 renderer-neutral oracle。所有 failure、handle 与 replay 的误用必须保持 occurrence-aware fail-loud。
-
 ## 影响与 breaking migration
 
 ⚠️ BREAKING：
@@ -345,32 +341,9 @@ React 与 Vanilla 继续通过现有 compile options 注入完全相同的 Compo
 
 当前仓内 Table 是实际 compile-time consumer，随 Core contract 迁移并以既有 Scene / manifest 证明行为未漂移。proposal、resolved slot、allocation bounds 与 visual bounds 四量模型足以承载 Standard 的 Box、Flex、Grid 与 Overlay 输入输出，但不实现 solver，也不改变其领域所有权。
 
-用户可见 public API 与行为必须同步 Core README、Composite 概念页、Compile Reference、Extension Reference、Scene visual-bounds 说明、双语 demo 与 v0.5 changelog。Standard roadmap 中旧的 intrinsic / maxWidth Gate 描述由 Standard owner 在消费复核时同步。
+下游 consumer 必须按 breaking contract 迁移 proposal、probe outcome、guides 与 failure raising；Standard 继续拥有自己的 solver 语义
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Drawing Complete 的 Constraint / Layout 与 Composition
-- 解决的问题：让任意 `IRChild` 在完整 Core compile 环境中接受上下文化双轴 proposal，并返回 resolved slot、真实 bounds、guides 或可隔离失败
-- 主责包与协作包：`@retikz/core` 主责；`@retikz/math` 提供既有 bounds / transform 纯计算；Standard 与 Table 作为 Tier 2 consumer；render、React、Vanilla 维持既有执行和接线
-- 是否可由现有能力组合：扩展现有 layout-aware Composite transaction 即可，不需要新 IR、Scene primitive、registry 或 pipeline
-- 是否需要下沉到依赖能力域：否；只有通用纯 guide transform helper 确有跨包复用时才另行评估下沉 math，本 ADR 不预建
-- 内部表达链路：runtime contract -> proposal validator -> existing child dispatch / layout -> isolated transaction -> resolved / failed outcome -> replay / raise
-- 外部扩展链路：内置与第三方 child 继续经同一 Composite definition、registry、provider resolver、compile options 与 traversal；proposal 是现有 definition callback 的闭合 runtime contract，天然不适用独立 define-registry
-- 下游执行 / adapter 等价性：Scene schema 与 renderer 不变；React / Vanilla 继续注入相同 definitions；Standard / Table 只消费公共 Core contract
-- 不支持边界与诊断：不支持 DOM / renderer 测量、CSS 完整 intrinsic sizing、异步 probe、跨 compile cache、solver registry或领域 slot policy；非法 proposal、selected failure 与 token misuse 都有 occurrence-aware diagnostics
-- 本轮结论：扩展当前 Drawing Complete 能力域并补齐 contract、compile、consumer、tests 与 docs 闭环
-
-## 被否决的方案
-
-- **保留旧 constraint 并新增 `probeChild()`**：会长期保留两套 child measurement、slot 与 nested propagation 语义
-- **新建 layout registry 或 compile pipeline**：会复制 Composite registry、provider / namespace / resource 环境与 replay transaction
-- **删除 `slotSize`**：range 与 intrinsic proposal 不包含最终 resolved allocation，fixed geometry refusal 也无法同时表达父级分配与真实占用
-- **把 Flex / Grid / Overlay slot 规则放进 Core**：通用 child proposal 求值不拥有 line、track、alignment 或 overflow policy
-- **把 failure 当 warning 或捕获任意错误后返回空 bounds**：会丢失因果链并把失败伪装为合法零尺寸
-- **从 primitive 或 visual bounds 反推 baseline**：无法覆盖 nested Composite、custom provider 与真实文本排版语义
-- **非零旋转后保留猜测 guide**：旋转后的 guide 不能用原维度的单一 x / y scalar 正确表达
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Flex line formation、grow / shrink、wrap、free-space distribution
 - Grid track、fraction、span、auto-placement、subgrid 或 masonry
@@ -393,12 +366,6 @@ React 与 Vanilla 继续通过现有 compile options 注入完全相同的 Compo
 - replay / runtime Scope output 在提交前递归完成 whole-tree preflight，包含 wrapper 与 nested Scope clip；预检成功后统一消费 handle 与 token，避免部分提交
 - first / last baseline 来自同次真实 text metrics；translate 与轴保持 scale 可传播，无法继续表示为单一轴标量的 guide 被省略
 - Table consumer 已迁移到完整 proposal / probe contract；React `<Text>` 与内置 contour provider 同步移除显式 `undefined`，保证相关 authoring / provider output 保持 JSON-safe
-
-## 验证摘要
-
-正式证据覆盖 public types、strict runtime validation、plain / mixed / TeX / fixed geometry、non-monotonic custom shape feedback、guide 传播、transaction isolation、hostile provider、whole-tree preflight、三层 nested Composite、Table consumer、incremental fallback、trace 与 React JSON-safe authoring。
-
-验证以 public contract、CompileResult、Scene、bounds、guides、artifacts 与下游 consumer 等价性为证据，不把历史 coverage 或单个 renderer 像素结果当作契约结论。
 
 ## 遗留风险与后续
 

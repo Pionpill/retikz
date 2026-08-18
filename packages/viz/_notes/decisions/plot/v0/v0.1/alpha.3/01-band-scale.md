@@ -40,7 +40,7 @@ export type ScaleType = ValueOf<typeof PlotScale>;
 - **band 刻度忽略 `tickCount`**：每类别一刻度（落 band 中心），不做抽稀。类别过多的 thinning / 旋转标签留后续（非破坏）。
 - **类型不匹配不强校验**：band 绑数值字段 / linear 绑分类字段，lowering 以「按 scale.type 走对应域推断」为准，不匹配时产出退化（空域 → d3 行为），强校验留给 data model（后续）。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **柱几何 / baseline**（bar 怎么画）→ [ADR-02](./02-interval-mark.md)。
 - **分组（dodge：band 内切子带）/ 堆叠** → [ADR-05](./05-relation.md)。

@@ -133,11 +133,8 @@ const scene = compileToScene({ version: 1, type: 'scene', children: [tableSpec] 
 const { node, manifest } = lowerTableWithArtifacts(tableSpec, { sales: rows });
 ```
 
-## 实现摘要与验证
-
+## 最终结果
 `resolveTable()` 已串联根校验、structure、presentation、layout、emit 与 manifest；`lowerTables()` 通过 Core composite 返回普通渲染节点，`lowerTableWithArtifacts()` 通过显式调用返回同一算法生成的 node 与递归冻结 manifest。bounds sentinel、局部命名空间、根 id 与 Cell source meta 均已落地。
-
-验证覆盖 manual/detail、空表与 gap bounds、stable id、Cell translation、nested composite、普通 lowering 与 artifact node 等价、manifest/layout 一致、错误诊断、所有权隔离和重复调用确定性。
 
 当前 artifact/manifest 消费仍会与普通 composite 渲染分别调用一次 Table resolve；这是显式 sidecar 不穿过 Core 隐藏状态的成本。Definition 保持纯且确定可保证结果一致，后续若优化重复计算，必须继续维持无全局 side channel 的边界。
 
@@ -148,21 +145,7 @@ const { node, manifest } = lowerTableWithArtifacts(tableSpec, { sales: rows });
 - adapter 能通过普通 composite API 渲染，并按需通过 artifact API取得 sidecar
 - alpha.6 在不改变普通 renderer 路径的前提下扩展 lineage / locator
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Tabular Visualization Complete / Lowering and Traceability
-- 解决的问题：把 Table 模型确定性转换为 Core IR，并保留最小语义几何映射
-- 主责包与协作包：Table 主责；Core 执行 composite 与 Scene compile
-- 是否可由现有能力组合：复用 Core composite，但 Table lowering 与 manifest 必须扩展当前域
-- 是否需要下沉：无；不改变 Core composite 返回值
-- 内部表达链路：resolveTable → model/presentation/layout → emit
-- 外部扩展链路：options definitions → provider resolver → same pipeline
-- pipeline / lowering 与下游消费：Core compile 消费 node；宿主持有 sidecar
-- React / Vanilla adapter 等价性：ADR-06 都使用 lowerTables / artifact API
-- provenance / lineage / locator：minimal manifest 现在闭环；完整 lineage/locator 明确 alpha.6
-- 本轮结论：扩展 Table lowering；不采用 renderer 特判或隐藏 artifact side channel
-
-## 不在本 ADR 范围
+## 长期边界
 
 - background、border、clip、span、fragment
 - per-Cell Core id 与外部 anchor

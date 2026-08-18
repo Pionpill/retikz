@@ -2,9 +2,9 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-13
-- 关联：[v0.1-beta.1 plan TODO-14](./roadmap.md)
+- 关联：
 
-> **范围**：把 path / position 编译里 20+ 处 silent `return null`（引用未定义节点 id / step < 2 / anchor 解析失败 / OffsetPosition / AtPosition / polar origin 解析失败等）补一道可观察通道——可选 `CompileOptions.onWarn` callback，不传时 dev 默认 `console.warn`、生产静默。保留"path 解析失败 path 消失"的现状行为，仅在沉默处补告警。
+> **目标**：把 path / position 编译里 20+ 处 silent `return null`（引用未定义节点 id / step < 2 / anchor 解析失败 / OffsetPosition / AtPosition / polar origin 解析失败等）补一道可观察通道——可选 `CompileOptions.onWarn` callback，不传时 dev 默认 `console.warn`、生产静默。保留"path 解析失败 path 消失"的现状行为，仅在沉默处补告警。
 
 ## 背景 / 约束
 
@@ -13,7 +13,7 @@
 
 ## 决策：引入可选 `onWarn` callback + 默认 dev `console.warn`
 
-所有 silent `return null` 点前先调 `options.onWarn?.(warning)`；`onWarn` 不传时按 `process.env.NODE_ENV` 自动选 dev `console.warn` / production 静默。被否决的备选：(B) 默认 throw / 不可关 console.warn——可能破坏依赖"silent fail = path 该消失"的用户代码；(C) 不动——调试体验持续最差、违背可诊断性要求。
+所有 silent `return null` 点前先调 `options.onWarn?.(warning)`；`onWarn` 不传时按 `process.env.NODE_ENV` 自动选 dev `console.warn` / production 静默。
 
 理由：可选 callback = 完全非破坏（不传时行为等价 + dev 暴露问题）；`CompileWarning.code` 机器可读让用户可分支处理；`path` 字段 IR locator 让用户定位到具体 JSX child；不引入 throw 路径。
 
@@ -25,7 +25,7 @@
 - **不加 `globalThis` hook**——API 表面最小；要 production 警告自传 `onWarn`。
 - **`onWarn` 同步调用**，按 silent fail 发生顺序触发；`compileToScene(ir)` 与 `compileToScene(ir, {})` 等价。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - `compileToScene` 主入口外的合法 fallback（如 `parseTargetSugar` 返回原 input）——不属 silent fail 范畴。
 - builder 端 2 处 silent skip（non-string `<Text>` children / 多 `<EdgeLabel>` 取首）——builder 跑在 compile 之前、不在 compileToScene 链路，onWarn 不适用，另议。
@@ -33,6 +33,6 @@
 
 ---
 
-> **实现指针**：level `red`（动 `compileToScene` 公开 API：新增 `CompileWarning` type export + `CompileOptions.onWarn` 字段），非 breaking（superset 扩张 + 默认行为等价）。用户用法见文档站「参考 / 渲染 / 编译选项」。真源以代码为准——`CompileWarning` / `CompileOptions.onWarn` / 默认 warn dispatcher（`core/src/compile/compile.ts`，经 `core/src/index.ts` 导出），silent fail 点加 onWarn 调用在 `core/src/compile/path/` 与 `position`。测试见 `core/tests/compile/`（happy / 边界 dev-vs-prod / 多 warning 顺序）。完整原文（完整 code 列表 / DSL 示例 / 文件 scope）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `ea674f3f`；压缩前完整施工蓝图 = `git show ea674f3f^:_notes/decisions/core/v0/v0.1/beta.1/08-compile-on-warn-collector.md`。
+已实现本 ADR 的核心决策。兼容性：非 breaking（superset 扩张 + 默认行为等价）；其余默认行为、失败语义与公开契约以正文为准。

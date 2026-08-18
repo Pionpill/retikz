@@ -1,5 +1,7 @@
 import type { FC, ReactNode } from 'react';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
+
 /** Standard Legend 标题 marker 的属性 */
 export type LegendTitleProps = Readonly<{
   /** 转换为唯一标题 IRChild 的 React element */
@@ -34,28 +36,44 @@ export type LegendTickProps = Readonly<{
 
 /** 声明 Legend 标题，只能作为 Legend 的直接 child */
 export const LegendTitle: FC<LegendTitleProps> = () => {
-  throw new Error('LegendTitle must be used as a direct child of Legend.');
+  throw new RetikzStandardError({
+    code: RetikzStandardErrorCode.AuthoringInvalid,
+    message: 'LegendTitle must be used as a direct child of Legend.',
+    details: { component: 'LegendTitle' },
+  });
 };
 
 LegendTitle.displayName = 'LegendTitle';
 
 /** 声明 Legend 离散条目，只能作为 items Legend 的直接 child */
 export const LegendItem: FC<LegendItemProps> = () => {
-  throw new Error('LegendItem must be used as a direct child of Legend.');
+  throw new RetikzStandardError({
+    code: RetikzStandardErrorCode.AuthoringInvalid,
+    message: 'LegendItem must be used as a direct child of Legend.',
+    details: { component: 'LegendItem' },
+  });
 };
 
 LegendItem.displayName = 'LegendItem';
 
 /** 声明 Legend 连续样本，只能作为 ramp Legend 的直接 child */
 export const LegendRamp: FC<LegendRampProps> = () => {
-  throw new Error('LegendRamp must be used as a direct child of Legend.');
+  throw new RetikzStandardError({
+    code: RetikzStandardErrorCode.AuthoringInvalid,
+    message: 'LegendRamp must be used as a direct child of Legend.',
+    details: { component: 'LegendRamp' },
+  });
 };
 
 LegendRamp.displayName = 'LegendRamp';
 
 /** 声明 Legend 连续刻度，只能作为 ramp Legend 的直接 child */
 export const LegendTick: FC<LegendTickProps> = () => {
-  throw new Error('LegendTick must be used as a direct child of Legend.');
+  throw new RetikzStandardError({
+    code: RetikzStandardErrorCode.AuthoringInvalid,
+    message: 'LegendTick must be used as a direct child of Legend.',
+    details: { component: 'LegendTick' },
+  });
 };
 
 LegendTick.displayName = 'LegendTick';

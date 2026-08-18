@@ -59,7 +59,7 @@ contour 不是引擎自动产物，而是**曲线 frame 在自己的 `projectCel
 - **cell 描述空间 = scale 输出空间**（像素 / 度 / 半径），而非数据值区间——因为柱宽来自 `bandwidth`、cartesian 柱高来自 `coordinate(baseline)..coordinate(value)`，本就是输出空间量。
 - **每边采样密度**：复用 `RETIKZ_POLAR_SEGMENT_SAMPLES`（16）量级常量，曲边每边采样、直边每边 1 段；单常量起步，按需再开旋钮。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **rect / rule / text / ribbon mark** 本体：各自 alpha.11 ADR（02–05）。rect 是本契约的下一个消费者（双维 band cell，cartesian 下仍走 rect 快路）。
 - **production 曲线坐标系出柱的具体例子**（拱形 x 轴 / 螺旋等给 `projectCell` 的实现）：gate 于具体 custom frame 落地，需求驱动。本 ADR 只交付契约 + cartesian2D/polar2D 内建 `projectCell` + `densifyCellContour` helper + 测试专用曲线 frame 验证 contour 全链路。

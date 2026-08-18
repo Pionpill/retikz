@@ -1,25 +1,47 @@
+import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { resolvePointChart } from '../../src/point';
+import { resolveChart } from '../../src/_chart/resolve';
+import { ScatterChartRecipe, ScatterChartSchema } from '../../src/point';
+
+const resolve = (input: unknown) =>
+  resolveChart(ScatterChartRecipe.bind(ScatterChartSchema.parse(input)), {
+    theme: {
+      mode: ThemeMode.Light,
+      colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
+    },
+  });
 
 describe('Scatter Chart resolution', () => {
-  it('resolves typed input to one canonical chart.chart over a complete IRPlot', () => {
-    const result = resolvePointChart(
-      {
-        namespace: 'chart',
-        type: 'scatter',
-        id: 'sales',
-        data: { reference: 'rows' },
-        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+  it('resolves typed input to one canonical chart.base over a complete IRPlot', () => {
+    const result = resolve({
+      namespace: 'chart',
+      type: 'scatter',
+      id: 'sales',
+      presentation: {
+        children: [
+          {
+            kind: 'preset',
+            key: 'chart.presentation.title',
+            preset: 'title',
+            text: 'Sales',
+          },
+          { kind: 'plot', key: 'chart.plot' },
+          {
+            kind: 'preset',
+            key: 'chart.presentation.source',
+            preset: 'source',
+            text: 'Internal',
+          },
+        ],
       },
-      undefined,
-      {},
-      { title: 'Sales', source: 'Internal' },
-    );
+      plot: { data: { reference: 'rows' } },
+      config: { encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+    });
 
     expect(result.chart).toMatchObject({
       namespace: 'chart',
-      type: 'chart',
+      type: 'base',
       id: 'sales',
       plot: {
         namespace: 'plot',
@@ -34,15 +56,17 @@ describe('Scatter Chart resolution', () => {
   });
 
   it('keeps authored point channels and required x/y recipe members', () => {
-    const plot = resolvePointChart({
+    const plot = resolve({
       namespace: 'chart',
       type: 'scatter',
-      data: { reference: 'rows' },
-      encoding: {
-        x: { field: 'x' },
-        y: { field: 'y' },
-        color: { field: 'region' },
-        size: { field: 'weight' },
+      plot: { data: { reference: 'rows' } },
+      config: {
+        encoding: {
+          x: { field: 'x' },
+          y: { field: 'y' },
+          color: { field: 'region' },
+          size: { field: 'weight' },
+        },
       },
     }).plotSpec;
 

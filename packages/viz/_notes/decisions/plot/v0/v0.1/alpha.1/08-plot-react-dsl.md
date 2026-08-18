@@ -41,7 +41,7 @@ ADR-07 的 `<Plot spec={…} data={…}/>` 要求用户手写整份 IRPlot 对�
 - 需要 scale 配置（domain / nice / log…）时 alpha.3 再加显式 `<Scale>` / `<Cartesian2D>` 组件或 mark 上的 scale props（非破坏）。
 - vanilla 链式 builder（`plot(rows).line({…}).point({…}).toSVG()`）本 ADR 不含、留后续；vanilla 当前用 ADR-07 的 `renderPlot(spec, data)`。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **显式 `<Scale>` / `<Cartesian2D>` 组件、scale 配置 props、非位置通道（color/size）** → alpha.3（届时 DSL 加对应组件/props，非破坏）。
 - **常量通道 DSL 形态、多数据集 / per-mark data** → 后续。

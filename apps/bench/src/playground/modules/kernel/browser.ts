@@ -10,7 +10,7 @@ import {
   PerformanceTraceUnit,
   RuntimeUpdateStrategy,
 } from '@retikz/runtime';
-import { mountCanvas, mountSvg, VanillaViewMode } from '@retikz/vanilla';
+import { mountCanvas, mountSvg, VanillaViewMode } from '@retikz/vanilla/dom';
 
 import type { LabOutcomeValue, LabPolicyIdValue, LabPolicyResult } from './model';
 import type { KernelLabPolicyExecutor, KernelLabPolicyInput } from './run-kernel-lab';

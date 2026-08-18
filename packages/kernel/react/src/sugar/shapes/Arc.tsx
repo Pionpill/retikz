@@ -5,6 +5,7 @@ import type { FC } from 'react';
 import type { DslTarget } from '../../kernel/components';
 import type { AngleInput, PathVisualProps } from './shape-helpers';
 
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { Path } from '../../kernel/components';
 import { Step } from '../../kernel/components';
 import { pickPathVisual, resolveAngles } from './shape-helpers';
@@ -30,7 +31,7 @@ export type ArcProps = PathVisualProps &
  */
 export const Arc: FC<ArcProps> = props => {
   const angles = resolveAngles(props, 'Arc', true);
-  if (!angles) throw new Error('<Arc> 需给角度');
+  if (!angles) throw new RetikzReactError(RetikzReactErrorCode.Sugar, '<Arc> 需给角度');
   const { startAngle, endAngle } = angles;
   const center = props.center;
   const radius = props.radius;

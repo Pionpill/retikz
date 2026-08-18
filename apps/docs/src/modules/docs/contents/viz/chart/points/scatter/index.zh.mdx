@@ -42,7 +42,9 @@ usage: distribution
     },
   ]}
 >
-  本页的基础与收入-寿命示例使用 `@retikz/chart-react/point` 的 `ScatterChart`。Chart 在图内处理标题、副标题、来源和注记；颜色图例仍是 Plot 的 guide 扩展，因此由 `Legend` 负责。生育率示例保留 Plot authoring，用来专门观察分类通道与图例的关系。
+  Scatter 使用精确的 `ScatterChartSchema`，同时遵循 Chart 一致的字段布局。它通过 `config` 接收 x/y 等专属编码，并隐含生成主 `Point` 图元、二维比例尺和坐标；`plot` 继续接收 Plot 拥有的数据、变换、图例和其它显式扩展。
+
+本页的基础与收入-寿命示例使用 `@retikz/chart-react/point` 的 `ScatterChart`。`/point` 只负责多入口导入与文件组织，组件仍进入统一 Chart 解析和适配主链。Chart 在图内处理标题、副标题、来源和注记；颜色图例仍是 Plot 的辅助元素扩展，因此由 `Legend` 负责。生育率示例保留 Plot 编写方式，用来专门观察分类通道与图例的关系。
 
 {/* @include viz/chart/shared-api */}
 

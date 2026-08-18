@@ -71,7 +71,7 @@ DSL：
 - **文档站**：`grammar/data` 补「分类顺序」段（顺带说明「有序类别 = 给 order」，替代旧 ordinal 心智）。
 - **core**：无。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **scale 级显式 `domain`**（band/point 直接给域数组）——更低层覆盖，留后续，避免与 FieldDef.order 双真源。
 - **顺序色板 / 有序图例**（sequential palette、ordered legend 渲染）——order 给了「有序」信号，但消费它的视觉能力属 alpha.7+ 通道/图例工作。

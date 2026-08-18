@@ -1,5 +1,6 @@
 import type { IRTarget } from '../schemas';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { parseNodeTarget } from './node-target';
 
 /** TikZ 风格相对偏移字面量正则：捕获 `+` / `++` 前缀 + dx / dy 数值 */
@@ -18,7 +19,10 @@ export const parseTargetSugar = (input: unknown): IRTarget => {
   const match = input.match(RELATIVE_OFFSET_RE);
   if (!match) {
     if (RELATIVE_LIKE_RE.test(input)) {
-      throw new Error(`parseTargetSugar: invalid relative offset '${input}'; expected '+x,y' or '++x,y'`);
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Parse,
+        `parseTargetSugar: invalid relative offset '${input}'; expected '+x,y' or '++x,y'`,
+      );
     }
     return parseNodeTarget(input);
   }

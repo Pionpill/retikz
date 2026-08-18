@@ -39,7 +39,7 @@ plot channel coverage 以 core IR 既有能力为边界，但只纳入稳定 sca
 - core 不改动；plot 只消费 core 既有 IRNode / IRPath / IRScope 属性。
 - 对象值、数组值和布局相关 node 字段继续推迟，避免扩大 `ChannelValue = string | number` 契约。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不把 `ChannelValue` 扩到 object / array / boolean。
 - 不做数据驱动 IRPaint、Font、DropShadow、ArrowDetail、AnimationTrack。

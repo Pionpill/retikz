@@ -3,6 +3,7 @@ import { boundsCenter, boundsOf, isFinitePoint } from '@retikz/math';
 import type { Transform } from '../../../contract';
 import type { IRPathScale, IRPosition, IRTransform } from '../../../schemas';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { applyTransformChain } from '../../transform';
 
 /** 一组点的 axis-aligned 包围盒中心 */
@@ -67,7 +68,10 @@ export const projectPathTransformPoints = (
   const transformedPoints = points.map(p => applyTransformChain(p, transforms));
   // scale × 坐标可能把 finite 输入放大溢出成 Infinity；非 finite 会污染 layout（round-trip 失真）
   if (!transformedPoints.every(isFinitePoint)) {
-    throw new Error('Path rotate / scale produced a non-finite coordinate (scale too large); use a smaller scale.');
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      'Path rotate / scale produced a non-finite coordinate (scale too large); use a smaller scale.',
+    );
   }
   return transformedPoints;
 };

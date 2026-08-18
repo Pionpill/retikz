@@ -1,6 +1,7 @@
 import type { AnyInspectorDefinition, InspectorKey } from '../../contract';
 
 import { normalizeInspectorDefinition } from '../../contract';
+import { RetikzInspectionError, RetikzInspectionErrorCode } from '../../error';
 import { BUILTIN_INSPECTORS } from './definitions';
 
 /** Inspector Definition 的 immutable registry */
@@ -23,7 +24,10 @@ export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorD
     const candidate = normalizeInspectorDefinition(definition);
     const key = inspectorRegistryKey(candidate);
     if (entries.has(key)) {
-      throw new Error(`Duplicate Inspector key '${candidate.namespace}/${candidate.name}' at index ${index}`);
+      throw new RetikzInspectionError(
+        RetikzInspectionErrorCode.Registry,
+        `Duplicate Inspector key '${candidate.namespace}/${candidate.name}' at index ${index}`,
+      );
     }
     entries.set(key, candidate);
     return candidate;
@@ -35,7 +39,11 @@ export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorD
     get,
     require: (key: InspectorKey): AnyInspectorDefinition => {
       const definition = get(key);
-      if (definition === undefined) throw new Error(`Inspector '${key.namespace}/${key.name}' is not registered`);
+      if (definition === undefined)
+        throw new RetikzInspectionError(
+          RetikzInspectionErrorCode.Registry,
+          `Inspector '${key.namespace}/${key.name}' is not registered`,
+        );
       return definition;
     },
   });

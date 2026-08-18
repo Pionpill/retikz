@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-07-26
 - 接受日期：2026-07-28
-- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-03](./03-program-transaction-lifecycle.md) · [ADR-05](./05-scene-patch-retained-renderer.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md)
+- 关联：[ADR-03](./03-program-transaction-lifecycle.md) · [ADR-05](./05-scene-patch-retained-renderer.md)
 
 ## 背景
 
@@ -80,24 +80,6 @@ Program trace 使用固定的 `update/ir-child` 与 `update/scene-change`：
 - 安全局部更新报告 `incremental`，并记录 reused / changed child 与 Patch operation 数
 - full fallback 报告 `fallback`，Scene Patch 只含一个 `replaceScene`
 
-## 被否决的方案
-
-### 让 Runtime 推断 Core Diff
-
-否决。Runtime 不拥有 Node、Scope、引用、资源或 Composite 语义，领域失效必须由 Core 决定。
-
-### 只比较最终 Scene
-
-否决。它可以减少 renderer commit，却不能形成 Core Program、稳定 identity、ChangeSet 校验或编译期复用边界。
-
-### 未证明安全时继续局部拼装
-
-否决。资源 id、warning 顺序、artifact locator、namespace 和引用依赖都可能使局部结果偏离完整编译；无法证明时必须 fallback。
-
-### 在本 ADR 内承诺通用 contribution engine
-
-否决作为本次 Accepted 边界。现有实现只对单 root Node fill 更新形成了完整等价证据；Path、Scope、资源、artifact、diagnostic 与 Tier 2 嵌套需要新的测试矩阵和独立收口，不能由设计草案代替交付事实。
-
 ## 最终实现
 
 - Core owner 与 Program 接入 Runtime typed registry、Snapshot 和 transaction
@@ -108,11 +90,7 @@ Program trace 使用固定的 `update/ir-child` 与 `update/scene-change`：
 - full fallback 产生完整 Snapshot 和独占 `replaceScene` Patch
 - 单 root Node fill 变化使用 committed Scene 作为安全 contribution cache，产生局部 `update` Patch
 - public artifact、warning、Runtime diagnostic 与 trace 通道保持分离
-- Core 中英文运行时文档说明完整入口、public artifact、identity、ChangeSet、局部子集与 fallback
-
-## 验证
-
-验证覆盖 full oracle、公共类型、options 隔离、warning / 失败隔离、canonical topology、stable / nested Diff、ChangeSet mismatch、full fallback 与单 Node fill 局部更新。局部路径始终与 fresh `compileToScene()` 对账，并锁定 trace 与 Patch operation；引用 position、自定义 shape 和无法证明安全的变化保持保守 fallback。
+- Core 入口、public artifact、identity、ChangeSet、局部子集与 fallback 复用同一 Runtime contract
 
 ## 公开影响与兼容性
 

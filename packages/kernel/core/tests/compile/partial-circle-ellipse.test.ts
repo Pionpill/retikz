@@ -1,8 +1,9 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
+import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { close, ellipseArc, line, move } from '../helpers/path-command-factory';
 
@@ -185,7 +186,7 @@ describe('错误 / 回退（sugar+compile 而非 safeParse）', () => {
     );
     const cmds = findPathPrim(compileToScene(ir, { onWarn: w => warnings.push(w.code) }).scene.primitives).commands;
     expect(cmds).toEqual([move([10, 0]), ellipseArc([0, 0], 10, 10, 0, 360)]);
-    expect(warnings).toContain('PARTIAL_ARC_NEEDS_BOTH_ANGLES');
+    expect(warnings).toContain(CompileWarningCode.PartialArcNeedsBothAngles);
   });
 
   it("有角度 + closed:'closed' → warn 回退 chord", () => {
@@ -196,6 +197,6 @@ describe('错误 / 回退（sugar+compile 而非 safeParse）', () => {
     );
     const cmds = findPathPrim(compileToScene(ir, { onWarn: w => warnings.push(w.code) }).scene.primitives).commands;
     expect(cmds).toEqual([move([10, 0]), ellipseArc([0, 0], 10, 10, 0, 180), close()]);
-    expect(warnings).toContain('PARTIAL_ARC_CLOSED_INVALID');
+    expect(warnings).toContain(CompileWarningCode.PartialArcClosedInvalid);
   });
 });

@@ -196,7 +196,7 @@ describe('collectShowcasePages', () => {
   });
 
   it.each([
-    ['zh', ['## Chart authoring', '## Presentation', '## Plot extensions']],
+    ['zh', ['## Chart 编写', '## 整图展示', '## Plot extensions']],
     ['en', ['## Chart authoring', '## Presentation', '## Plot extensions']],
   ] as const)('内联展开 %s Scatter 的独有与共享 API，并保持可编译', async (lang, expectedHeadings) => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
@@ -208,7 +208,7 @@ describe('collectShowcasePages', () => {
 
     expect(ordered.every(index => index >= 0)).toBe(true);
     expect(ordered).toEqual([...ordered].sort((left, right) => left - right));
-    expect(expanded).toContain('`IRChart`');
+    expect(expanded).toContain('`IRBaseChart`');
     expect(expanded).toContain('`ChartProvider`');
     expect(expanded).toContain('`ChartTitle`');
     expect(expanded).not.toMatch(/IRChartShared|createChartComposites|MarkValueProp|NodeShapeChannelValue/);
@@ -219,7 +219,7 @@ describe('collectShowcasePages', () => {
   });
 
   it.each([
-    ['zh', ['## 尺寸与面积', '## Point Mark']],
+    ['zh', ['## 尺寸与面积', '## Point 图元']],
     ['en', ['## Size and Area', '## Point Mark']],
   ] as const)('%s Bubble 先说明尺寸语义，再复用共享 API', async (lang, expectedHeadings) => {
     const source = readFileSync(bubbleContentPath(lang), 'utf8');
@@ -279,12 +279,12 @@ describe('collectShowcasePages', () => {
   it.each(['zh', 'en'] as const)('%s 共享 API 只陈述当前 Chart 公开契约', lang => {
     const source = readFileSync(sharedApiContentPath(lang), 'utf8');
 
-    expect(source).toContain('`IRChart`');
+    expect(source).toContain('`IRBaseChart`');
     expect(source).toContain('`ChartProvider`');
     expect(source).toContain('`ChartTitle`');
     expect(source).toContain('`chartThemeStyles`');
     expect(source).toContain('`plotThemeStyles`');
-    expect(source).toMatch(lang === 'zh' ? /静态 adapter/u : /static adapter/u);
+    expect(source).toMatch(lang === 'zh' ? /静态适配层/u : /static adapter/u);
     expect(source).not.toMatch(/IRChartShared|createChartComposites/);
   });
 

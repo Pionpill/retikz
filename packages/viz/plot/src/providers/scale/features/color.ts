@@ -1,4 +1,4 @@
-﻿import { inferCategoryDomain } from '@retikz/data';
+import { inferCategoryDomain } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 import {
@@ -21,6 +21,7 @@ import type {
 import type { ColorScaleEvaluator, ColorSchemeResolver } from '../shared';
 
 import { defineScale } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import {
   DivergingColorScaleSchema,
   OrdinalScaleSchema,
@@ -86,12 +87,12 @@ export const resolveSequentialColorScale = (
 ): ColorScaleEvaluator => {
   const [lo, hi] = def.domain ?? safeExtent(values);
   if (def.domain && !(isFiniteNumber(def.domain[0]) && isFiniteNumber(def.domain[1]))) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: sequential color scale "${def.name}" domain endpoints must be finite numbers (got [${def.domain[0]}, ${def.domain[1]}])`,
     );
   }
   if (def.domain && def.domain[0] >= def.domain[1]) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: sequential color scale "${def.name}" domain must satisfy min < max (got [${def.domain[0]}, ${def.domain[1]}])`,
     );
   }
@@ -125,12 +126,12 @@ export const resolveDivergingColorScale = (
   if (def.domain) {
     [low, mid, high] = def.domain;
     if (!(isFiniteNumber(low) && isFiniteNumber(mid) && isFiniteNumber(high))) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: diverging color scale "${def.name}" domain endpoints must be finite numbers (got [${low}, ${mid}, ${high}])`,
       );
     }
     if (!(low < mid && mid < high)) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: diverging color scale "${def.name}" domain must satisfy low < mid < high (got [${low}, ${mid}, ${high}])`,
       );
     }
@@ -170,7 +171,7 @@ export const resolveQuantizeColorScale = (
   resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
 ): ColorScaleEvaluator => {
   if (def.range && def.count !== undefined && def.range.length !== def.count) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: quantize color scale "${def.name}" range length (${def.range.length}) must equal count (${def.count}) when both are given`,
     );
   }
@@ -193,14 +194,14 @@ export const resolveThresholdColorScale = (
 ): ColorScaleEvaluator => {
   for (let index = 1; index < def.breakpoints.length; index++) {
     if (!(def.breakpoints[index - 1] < def.breakpoints[index])) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: threshold color scale "${def.name}" breakpoints must be strictly ascending (got [${def.breakpoints.join(', ')}])`,
       );
     }
   }
   const binCount = def.breakpoints.length + 1;
   if (def.range && def.range.length !== binCount) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: threshold color scale "${def.name}" range length (${def.range.length}) must equal breakpoints.length + 1 (${binCount})`,
     );
   }
@@ -222,7 +223,7 @@ export const resolveQuantileColorScale = (
   resolveScheme: ColorSchemeResolver = builtinColorSchemeInterpolator,
 ): ColorScaleEvaluator => {
   if (def.range && def.count !== undefined && def.range.length !== def.count) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: quantile color scale "${def.name}" range length (${def.range.length}) must equal count (${def.count}) when both are given`,
     );
   }

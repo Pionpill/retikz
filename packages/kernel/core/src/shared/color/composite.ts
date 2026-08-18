@@ -1,3 +1,4 @@
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { parseStaticCssColor } from './parse';
 
 /** 把归一化 sRGB 通道格式化为两位小写十六进制 */
@@ -12,18 +13,30 @@ const formatChannel = (channel: number): string =>
  */
 export const compositeOpaqueColor = (foreground: string, backdrop: string, weight: number): `#${string}` => {
   if (!Number.isFinite(weight) || weight < 0 || weight > 1) {
-    throw new Error('compositeOpaqueColor: weight must be a finite number in [0, 1].');
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Color,
+      'compositeOpaqueColor: weight must be a finite number in [0, 1].',
+    );
   }
   const parsedForeground = parseStaticCssColor(foreground);
   if (parsedForeground === null) {
-    throw new Error(`compositeOpaqueColor: unsupported static foreground '${foreground}'.`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Color,
+      `compositeOpaqueColor: unsupported static foreground '${foreground}'.`,
+    );
   }
   const parsedBackdrop = parseStaticCssColor(backdrop);
   if (parsedBackdrop === null) {
-    throw new Error(`compositeOpaqueColor: unsupported static backdrop '${backdrop}'.`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Color,
+      `compositeOpaqueColor: unsupported static backdrop '${backdrop}'.`,
+    );
   }
   if (parsedBackdrop.a !== 1) {
-    throw new Error(`compositeOpaqueColor: backdrop '${backdrop}' must be opaque.`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Color,
+      `compositeOpaqueColor: backdrop '${backdrop}' must be opaque.`,
+    );
   }
   const alpha = parsedForeground.a * weight;
   const red = parsedForeground.r * alpha + parsedBackdrop.r * (1 - alpha);
