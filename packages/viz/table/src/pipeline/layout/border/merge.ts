@@ -2,6 +2,7 @@ import type { ResolvedTableBorderLine } from '../../../contract/manifest';
 import type { ResolvedTableBorderAtom, TableBorderEdge, TableBorderVertex } from './types';
 
 import { TableBorderContributionSchema } from '../../../contract/manifest';
+import { RetikzTableError } from '../../../error';
 import { deepFreeze } from '../../../shared';
 
 /** 递归比较 JSON-safe style，忽略对象属性插入顺序 */
@@ -60,12 +61,12 @@ const compareVisibleAtoms = (left: ResolvedTableBorderAtom, right: ResolvedTable
 /** 把单个可见 atom 转成未合并 edge */
 const edgeOf = (atom: ResolvedTableBorderAtom): TableBorderEdge => {
   if (atom.winner.kind !== 'line') {
-    throw new Error(`table: visible Border Graph atom "${atom.key}" must have a line winner`);
+    throw new RetikzTableError(`table: visible Border Graph atom "${atom.key}" must have a line winner`);
   }
   const contributors = atom.contributors.map(contribution => TableBorderContributionSchema.parse(contribution));
   const winner = contributors.find(contribution => contribution.key === atom.winner.key);
   if (winner?.kind !== 'line') {
-    throw new Error(`table: visible Border Graph atom "${atom.key}" winner must match its contributors`);
+    throw new RetikzTableError(`table: visible Border Graph atom "${atom.key}" winner must match its contributors`);
   }
   return {
     key: `m:${atom.orientation}:${atom.key}:${atom.key}`,
@@ -83,7 +84,7 @@ export const mergeTableBorderAtoms = (
   mode: 'collapse' | 'separate',
 ): ReadonlyArray<TableBorderEdge> => {
   if (!isTableBorderMode(mode)) {
-    throw new Error('table: Border Graph mode must be collapse or separate');
+    throw new RetikzTableError('table: Border Graph mode must be collapse or separate');
   }
   const visible = atoms.filter(atom => atom.visible).sort(compareVisibleAtoms);
   const perpendicularVertices = new Map<'horizontal' | 'vertical', Set<string>>([

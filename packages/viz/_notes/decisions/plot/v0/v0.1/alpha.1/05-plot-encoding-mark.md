@@ -40,7 +40,7 @@ export type MarkType = ValueOf<typeof PlotMark>;
 - **`field` 路径语法**：schema 仍是非空字符串、语义是 accessor；`['k']` 转义、字段名含点号歧义、多层解析规则归 ADR-06。alpha.1 schema 即接受路径形态（与扁平名同为字符串，非破坏）。
 - **mark `meta`**：alpha.1 mark 只放 `id`、根放 `meta`，alpha.5 再按需补（datum locator 可能需要）。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **interval(bar) / area / sector / rule / text mark** → alpha.3。
 - **非位置通道（color / size / shape）及其 channel `scale` 字段** → alpha.3。

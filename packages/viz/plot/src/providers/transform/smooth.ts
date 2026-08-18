@@ -5,6 +5,8 @@ import { isFiniteNumber } from '@retikz/math';
 
 import type { IRPlotSmoothTransform } from '../../schemas';
 
+import { RetikzPlotError } from '../../error';
+
 const DEFAULT_SMOOTH_SAMPLE_COUNT = 64;
 
 type SmoothPair = {
@@ -29,13 +31,13 @@ const finitePairsOf = (rows: Array<ExternalRow>, xField: string, yField: string)
 
 const linearModelOf = (pairs: Array<SmoothPair>): LinearModel => {
   if (pairs.length < 2) {
-    throw new Error('lowerPlots: smooth transform with linear method requires at least two finite x/y pairs');
+    throw new RetikzPlotError('lowerPlots: smooth transform with linear method requires at least two finite x/y pairs');
   }
   const meanX = pairs.reduce((sum, pair) => sum + pair.x, 0) / pairs.length;
   const meanY = pairs.reduce((sum, pair) => sum + pair.y, 0) / pairs.length;
   const varianceX = pairs.reduce((sum, pair) => sum + (pair.x - meanX) ** 2, 0);
   if (!isFiniteNumber(varianceX) || varianceX <= 0) {
-    throw new Error(
+    throw new RetikzPlotError(
       'lowerPlots: smooth transform linear regression x variance is zero; vertical lines cannot be fitted',
     );
   }
@@ -43,7 +45,7 @@ const linearModelOf = (pairs: Array<SmoothPair>): LinearModel => {
   const slope = covarianceXY / varianceX;
   const intercept = meanY - slope * meanX;
   if (!isFiniteNumber(slope) || !isFiniteNumber(intercept)) {
-    throw new Error('lowerPlots: smooth transform linear regression produced non-finite coefficients');
+    throw new RetikzPlotError('lowerPlots: smooth transform linear regression produced non-finite coefficients');
   }
   return { intercept, slope };
 };

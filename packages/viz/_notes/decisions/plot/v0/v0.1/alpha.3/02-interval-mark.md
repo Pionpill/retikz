@@ -39,7 +39,7 @@ export const PlotMark = { Point: 'point', Line: 'line', Interval: 'interval' } a
 - **柱描边**：默认 `strokeWidth:0`（纯填充柱，主流默认）；描边 / 圆角（`roundedCorners`）留后续样式字段。
 - **柱宽是否减 padding**：柱宽直接用 `bandwidth`（band scale 的 paddingInner 已在 [ADR-01](./01-band-scale.md) 留出柱间缝）；bar 层不再二次缩。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **分组（dodge）/ 堆叠（stack）柱、多系列** → [ADR-05](./05-relation.md)。
 - **颜色编码（按字段着色）** → [ADR-04](./04-color-scale.md)（本 ADR 柱统一 currentColor）。

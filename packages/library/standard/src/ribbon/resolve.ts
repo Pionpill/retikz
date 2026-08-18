@@ -12,6 +12,8 @@ import type {
   IRRibbonWidth,
 } from './types';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../errors';
+
 /** Ribbon 宽度在 compile 阶段绑定的 profile 与参数 */
 export type RibbonWidthResolution = Readonly<{
   width: CanonicalRibbonWidth;
@@ -71,7 +73,11 @@ export const resolveRibbonWidth = (
 
   const definition = profiles.get(width.name);
   if (definition === undefined) {
-    throw new Error(`Unknown Ribbon width profile '${width.name}' at ${irPath}.`);
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.ResolutionInvalid,
+      message: `Unknown Ribbon width profile '${width.name}' at ${irPath}.`,
+      details: { name: width.name, path: irPath },
+    });
   }
   const paramsPath = `${irPath}.params`;
   const rawParams = width.params ?? {};
@@ -80,7 +86,12 @@ export const resolveRibbonWidth = (
     const parsed = definition.paramsSchema?.parse(rawParams) ?? JsonObjectSchema.parse(rawParams);
     params = JsonObjectSchema.parse(parsed);
   } catch (cause) {
-    throw new Error(`Ribbon width profile '${width.name}' params are invalid at ${paramsPath}.`, { cause });
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.ResolutionInvalid,
+      message: `Ribbon width profile '${width.name}' params are invalid at ${paramsPath}.`,
+      details: { name: width.name, path: paramsPath },
+      cause,
+    });
   }
   return { width, definition, params, requiresSampling: true };
 };

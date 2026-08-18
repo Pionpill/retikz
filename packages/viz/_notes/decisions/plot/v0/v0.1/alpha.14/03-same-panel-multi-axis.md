@@ -65,7 +65,7 @@ type IRPlotAxisGuide = {
 4. 使用 ADR-01 的 `coordinateScope`，mark / guide / locator 都能共享同一个 scope identity。
 5. axis placement 不是裸四方向字段，避免把 cartesian 的 left/right/top/bottom 泄漏到 ternary / polar / custom coordinate。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不做 axis title、label 避让、side gutter / edge gutter 自动分配；ADR-05 处理。
 - 不做非线性双轴数学换算提示；用户显式给两套 scale，retikz 不推断单位关系。

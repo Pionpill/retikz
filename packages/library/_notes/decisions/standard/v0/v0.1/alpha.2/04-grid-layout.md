@@ -237,43 +237,12 @@ overflow=clip 使用 container allocation Scope clip；clip不改变 tracks。ne
 </GridLayout>
 ```
 
-## 被否决的方案
-
-- 复用 `standard.grid`：可视格线和child排版是不同持久化语义
-- 完整 CSS Grid：named line/area、percentage、subgrid、dense/writing mode不在当前闭环
-- 使用 1-based line index：当前 IR、artifact、Table canonical index均采用零基
-- fraction 在无界轴取无限或零：两者都不能表达稳定 intrinsic contribution
-- 多 span按 authored item顺序直接修改 tracks：reorder会无意改变相同约束的几何
-- 无上限 fixed-point双轴迭代：custom child可非单调或振荡，无法证明终止
-- 从 Table 复制 track schema/solver：Standard不依赖领域包；Table后续自行选择是否适配公共容器
-
-## 影响
-
-- 新增 `standard.gridLayout`，不修改现有 `standard.grid`
-- 新增公开 track/item/container schema、factory 和 Definition
-- 不依赖或修改 Table；不把 track solver下沉Core
-- adapter 和 docs 由 alpha.3 ADR-06 统一接线
-
-## 能力完备性检查
-
-- 所属能力域与能力面：Drawing Complete 上层的二维通用 Box layout
-- 解决的问题：任意 IRChild 的二维 track allocation、span和自动放置
-- 主责包与协作包：Standard 主责 schema/solver；Core 主责 probe/replay；adapter等价authoring
-- 是否可由现有能力组合：Core提供机制，但track语义需要扩展Standard
-- 是否需要下沉到依赖能力域：否；纯算术当前只有Standard消费，不提前进入Math
-- 内部表达链路：Grid schema → placement → contextual contributions → track solver → Core replay
-- 外部扩展链路：Grid语义闭合；custom child通过Core registry同路
-- 下游执行 / adapter 等价性：输出既有transform/clip Scene；React/Vanilla生成同一IR
-- 不支持边界与诊断：dense/subgrid/vertical writing延期；overflow、overlap、track guard和selected failure可诊断
-- 本轮结论：扩展Standard当前能力域
-
-## 不在本 ADR 范围
+## 长期边界
 
 - named lines/areas、negative line、percentage/calc、subgrid、masonry、dense
 - vertical writing mode或任意双向fixed-point
 - Table border/cell/data/manifest语义
 - track animation、interactive resize、virtualization
-- artifact payload、最终adapter和docs接线
 
 ## 遗留风险
 

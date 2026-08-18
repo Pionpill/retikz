@@ -101,7 +101,7 @@ const spec = plotBuilder({ data, scales: [] })
 4. 只先做 `yAxisId`，避免一次性设计 x/y overlay 矩阵、facet binding、track binding 过度展开。
 5. Vanilla builder 也支持同一 sugar 字段，保持 authoring surface 对等；但字段在 builder 输出前消失，不污染 IR。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不新增 `xAxisId`。
 - 不设计 facet sugar，例如 `facetBy`、`facet={{ column: ... }}`。

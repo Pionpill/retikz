@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PointChartSchema, PointChartType } from '../../src/point';
+import { PointChartType } from '../../src/point';
 import {
   ConnectedPathPatchSchema,
   ConnectedPointPatchSchema,
@@ -10,11 +10,15 @@ import {
 const minimalConnectedScatter = {
   namespace: 'chart',
   type: 'connected-scatter',
-  data: { reference: 'rows' },
-  encoding: {
-    x: { field: 'amount' },
-    y: { field: 'margin' },
-    order: 'month',
+  plot: {
+    data: { reference: 'rows' },
+  },
+  config: {
+    encoding: {
+      x: { field: 'amount' },
+      y: { field: 'margin' },
+      order: 'month',
+    },
   },
 } as const;
 
@@ -77,7 +81,6 @@ describe('Connected Scatter Chart schema', () => {
 
     expect(PointChartType.ConnectedScatter).toBe('connected-scatter');
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
-    expect(PointChartSchema.parse(minimalConnectedScatter)).toEqual(parsed);
   });
 
   it.each([
@@ -91,19 +94,33 @@ describe('Connected Scatter Chart schema', () => {
     expect(
       ConnectedScatterChartSchema.parse({
         ...minimalConnectedScatter,
-        encoding: { ...minimalConnectedScatter.encoding, ...encoding },
-      }).encoding,
+        config: {
+          ...minimalConnectedScatter.config,
+          encoding: { ...minimalConnectedScatter.config.encoding, ...encoding },
+        },
+      }).config.encoding,
     ).toMatchObject(encoding);
   });
 
   it.each([
     ['missing order', { x: { field: 'amount' }, y: { field: 'margin' } }],
-    ['empty order', { ...minimalConnectedScatter.encoding, order: '' }],
-    ['constant color with scale', { ...minimalConnectedScatter.encoding, color: { value: '#2563eb', scale: 'color' } }],
-    ['mixed color branches', { ...minimalConnectedScatter.encoding, color: { field: 'group', value: '#2563eb' } }],
-    ['unknown encoding key', { ...minimalConnectedScatter.encoding, unknown: 'field' }],
+    ['empty order', { ...minimalConnectedScatter.config.encoding, order: '' }],
+    [
+      'constant color with scale',
+      { ...minimalConnectedScatter.config.encoding, color: { value: '#2563eb', scale: 'color' } },
+    ],
+    [
+      'mixed color branches',
+      { ...minimalConnectedScatter.config.encoding, color: { field: 'group', value: '#2563eb' } },
+    ],
+    ['unknown encoding key', { ...minimalConnectedScatter.config.encoding, unknown: 'field' }],
   ])('rejects %s', (_label, encoding) => {
-    expect(() => ConnectedScatterChartSchema.parse({ ...minimalConnectedScatter, encoding })).toThrow();
+    expect(() =>
+      ConnectedScatterChartSchema.parse({
+        ...minimalConnectedScatter,
+        config: { ...minimalConnectedScatter.config, encoding },
+      }),
+    ).toThrow();
   });
 
   it('keeps the point patch as the Scatter allowlist without layer', () => {
@@ -169,10 +186,13 @@ describe('Connected Scatter Chart schema', () => {
     expect(() =>
       ConnectedScatterChartSchema.parse({
         ...minimalConnectedScatter,
-        coordinate: { type: 'cartesian2D' },
-        composition: {
-          defaultView: 'main',
-          views: [{ id: 'main', coordinate: { type: 'cartesian2D' } }],
+        plot: {
+          ...minimalConnectedScatter.plot,
+          coordinate: { type: 'cartesian2D' },
+          composition: {
+            defaultView: 'main',
+            views: [{ id: 'main', coordinate: { type: 'cartesian2D' } }],
+          },
         },
       }),
     ).toThrow(/cannot use coordinate and composition together/);

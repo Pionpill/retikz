@@ -41,7 +41,7 @@ export type FieldType = ValueOf<typeof DataFieldType>;
 4. **`model` 可选**：给了增强（校验 / 推类型 / LLM 友好），不给保持最小 spec 可跑。
 5. **`FieldType` 先放全集**：alpha.1 lowering 只用 quantitative，其余先入 schema（纯枚举、零成本），非破坏待后续消费。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **`field` 路径语法的 schema**（点路径字符串）→ ADR-05；**路径解析 / 标量抽取 / `model` 一致性校验 / `ref` 解析 / 空数据 / 外部数据运行时校验** → ADR-06 lowering。
 - **transform（filter / sort / groupBy / stack / flatten）** → alpha.3。

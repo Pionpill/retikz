@@ -36,7 +36,7 @@ ADR-01~05 定了 Plot IR（配置）但**零行为**。本 ADR 落「逻辑」�
 - **point/line 默认样式**：alpha.1 给最简默认（黑色描边/填充、strokeWidth 1）；主题 / config 层留后续。
 - **domain 推断含 null / 非数**：跳过 null；非有限值经 `onWarn` 警告并丢弃该点，不抛断编译。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **guide（轴 / 网格）** → alpha.2；本 ADR 产「无轴」散点 / 折线。
 - **band / time scale、bar / area mark、polar** → alpha.3 / alpha.4。

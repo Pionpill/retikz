@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-16
-- 关联：[v0.2-alpha.1 plan](./roadmap.md) · [本 milestone ADR-01](./01-scope-ir-and-compile.md) · [本 milestone ADR-02](./02-node-index-anchor-resolution.md) · [本 milestone ADR-04](./04-relative-position-in-scope.md)
+- 关联： · [本 milestone ADR-01](./01-scope-ir-and-compile.md) · [本 milestone ADR-02](./02-node-index-anchor-resolution.md) · [本 milestone ADR-04](./04-relative-position-in-scope.md)
 
 ## 背景 / 约束
 
@@ -25,14 +25,7 @@
 - **rotate 下默认 axis-aligned 全局 bbox**："取所有 layout 4 角求 AABB"的自然实现，与 TikZ 默认一致；rotation-aware 留后续。
 - **synthetic layout 不发 ScenePrimitive**：只进 NameStack（compile 内部数据），不影响渲染输出；scope 视觉表达仍是 GroupPrim（ADR-01）。
 
-### 被否决的选项
-
-- **B：单独 `<Fit id of={['A','B','C']}>` 组件，scope 不带 id** —— scope 职责单一，但用户须知道 scope 内每个 node id 才能 fit、维护成本高；TikZ 也是把 bbox 计算挂在 scope 选项上而非单独构造。
-- **C：用户加 `<Coordinate>` 占位表达 scope 代表点** —— 零新机制，但失去"画到 scope 边缘"的能力（coordinate 是 0×0 无边界）、用户得手算坐标。
-
-选 A 核心理由：直接对应 `local bounding box=name`（TikZ 用户可迁移）；scope.id 已是 ADR-01 字段，设值即激活、不引入第二字段 / 组件（YAGNI + 一字段一职责）；synthetic layout 是 rectangle shape，复用现有 anchor 路径无新代码。v0.2 alpha.1 只 rectangle，自定义 boundingShape（circle / ellipse 包络）待 ShapeRegistry 落地后另开 ADR。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - scope id 冲突检测的命名空间归属 → [ADR-02](./02-node-index-anchor-resolution.md)。
 - scope.id 自定义 boundingShape（rectangle 以外）→ ShapeRegistry 落地后另开 ADR。
@@ -42,6 +35,6 @@
 
 ---
 
-> **实现指针**：level `red`（动 compile，无 schema 改动——`scope.id` 字段 schema 在 ADR-01；synthetic layout 是 compile 内部数据、不动公开 API）、非 breaking。真源以代码为准——`computeScopeBoundingBox` / `registerScopeAsLayout`（`core/src/compile/scope.ts`，构造方式参考 `coordinateAsLayout`）、Pass 1 scope 子树结束时注册（`core/src/compile/compile.ts`）；synthetic layout 复用 `NodeLayout` 类型（`core/src/compile/node.ts`）+ `rect.anchor()` / `boundaryPoint()`（`core/src/geometry/rect.ts`）；path / position 引用 scope.id 走与普通 rectangle node 同一路径（`compile/path/*`、`resolvePosition` 不改）。测试在 `core/tests/compile/scope-bbox.test.ts`。完整施工契约（5 项决策细节 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `da448234`；压缩前完整施工蓝图 = `git show da448234^:_notes/decisions/core/v0/v0.2/alpha.1/03-scope-id-bounding-box.md`。
+已实现本 ADR 的核心决策。兼容性：非 breaking；其余默认行为、失败语义与公开契约以正文为准。

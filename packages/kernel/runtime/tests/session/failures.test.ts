@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { RuntimeSession } from '../../src/session';
 
-import { RuntimeError } from '../../src/error';
+import { RetikzRuntimeErrorCode, RuntimeDiagnosticCode } from '../../src';
+import { RetikzRuntimeError } from '../../src/error';
 import { defineRuntimeOwner } from '../../src/owner';
 import { defineRuntimeProgram, RuntimeProgramKind, RuntimeProgramPhase } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
@@ -10,9 +11,9 @@ import { createRuntimeSession } from '../../src/session';
 import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
 
 describe('runtime session failure isolation', () => {
-  it('initial Program run throw 即使伪造 RuntimeError 仍固定映射，并反向释放已捕获 owner', () => {
-    const cause = new RuntimeError({
-      code: 'RUNTIME_REVISION_STALE',
+  it('initial Program run throw 即使伪造 RetikzRuntimeError 仍固定映射，并反向释放已捕获 owner', () => {
+    const cause = new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.RevisionStale,
       phase: 'forged-run',
       diagnostics: [
         {
@@ -57,11 +58,11 @@ describe('runtime session failure isolation', () => {
       thrown = error;
     }
 
-    expect(thrown).toBeInstanceOf(RuntimeError);
-    if (!(thrown instanceof RuntimeError)) throw new Error('expected RuntimeError');
+    expect(thrown).toBeInstanceOf(RetikzRuntimeError);
+    if (!(thrown instanceof RetikzRuntimeError)) throw new Error('expected RetikzRuntimeError');
     expect(thrown).toEqual(
       expect.objectContaining({
-        code: 'RUNTIME_PROGRAM_RUN_FAILED',
+        code: RetikzRuntimeErrorCode.ProgramRunFailed,
         phase: 'run',
         program: { owner: 'counter', key: 'program' },
         cause,
@@ -71,9 +72,9 @@ describe('runtime session failure isolation', () => {
     expect(dispose).toHaveBeenCalledTimes(1);
   });
 
-  it('update callback throw 即使伪造 RuntimeError 仍固定映射并回滚 candidate', () => {
-    const cause = new RuntimeError({
-      code: 'RUNTIME_REVISION_STALE',
+  it('update callback throw 即使伪造 RetikzRuntimeError 仍固定映射并回滚 candidate', () => {
+    const cause = new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.RevisionStale,
       phase: 'forged-update',
       diagnostics: [
         {
@@ -123,11 +124,11 @@ describe('runtime session failure isolation', () => {
       thrown = error;
     }
 
-    expect(thrown).toBeInstanceOf(RuntimeError);
-    if (!(thrown instanceof RuntimeError)) throw new Error('expected RuntimeError');
+    expect(thrown).toBeInstanceOf(RetikzRuntimeError);
+    if (!(thrown instanceof RetikzRuntimeError)) throw new Error('expected RetikzRuntimeError');
     expect(thrown).toEqual(
       expect.objectContaining({
-        code: 'RUNTIME_PROGRAM_UPDATE_FAILED',
+        code: RetikzRuntimeErrorCode.ProgramUpdateFailed,
         phase: RuntimeProgramPhase.Update,
         program: { owner: 'counter', key: 'program' },
         cause,
@@ -159,7 +160,7 @@ describe('runtime session failure isolation', () => {
       },
     });
     const owners = createRuntimeOwnerRegistry({ builtins: [declared, hidden] });
-    let replayed: RuntimeError | undefined;
+    let replayed: RetikzRuntimeError | undefined;
     const program = defineRuntimeProgram<number, number, number, number>({
       id: { owner: 'declared', key: 'program' },
       owners: [declared],
@@ -172,7 +173,7 @@ describe('runtime session failure isolation', () => {
           try {
             view.snapshot(hidden);
           } catch (error) {
-            if (!(error instanceof RuntimeError)) throw error;
+            if (!(error instanceof RetikzRuntimeError)) throw error;
             replayed = error;
           }
           return { kind: RuntimeProgramKind.Incremental, artifact: 2 };
@@ -204,11 +205,11 @@ describe('runtime session failure isolation', () => {
       thrown = error;
     }
 
-    expect(thrown).toBeInstanceOf(RuntimeError);
-    if (!(thrown instanceof RuntimeError)) throw new Error('expected RuntimeError');
+    expect(thrown).toBeInstanceOf(RetikzRuntimeError);
+    if (!(thrown instanceof RetikzRuntimeError)) throw new Error('expected RetikzRuntimeError');
     expect(thrown).toEqual(
       expect.objectContaining({
-        code: 'RUNTIME_PROGRAM_UPDATE_FAILED',
+        code: RetikzRuntimeErrorCode.ProgramUpdateFailed,
         phase: RuntimeProgramPhase.Update,
         program: { owner: 'declared', key: 'program' },
         cause: replayed,
@@ -257,7 +258,7 @@ describe('runtime session failure isolation', () => {
           () => activeSession.diagnostics(),
         ];
         for (const call of reentrantCalls) {
-          expect(call).toThrowError(expect.objectContaining({ code: 'RUNTIME_SESSION_REENTRANT' }));
+          expect(call).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.SessionReentrant }));
         }
         expect(activeSession.revision()).toBe(1);
         throw observerCause;
@@ -294,7 +295,7 @@ describe('runtime session failure isolation', () => {
     expect(result.revision).toBe(1);
     expect(result.diagnostics).toEqual([
       expect.objectContaining({
-        code: 'RUNTIME_PROGRAM_OBSERVER_FAILED',
+        code: RuntimeDiagnosticCode.ProgramObserverFailed,
         phase: 'observe',
         severity: 'error',
         program: { owner: 'counter', key: 'a' },
@@ -375,7 +376,7 @@ describe('runtime session failure isolation', () => {
     expect(session.diagnostics()).toEqual([
       observedPrefixes[0]?.[0],
       expect.objectContaining({
-        code: 'RUNTIME_PROGRAM_OBSERVER_FAILED',
+        code: RuntimeDiagnosticCode.ProgramObserverFailed,
         phase: 'observe',
         cause: observerCause,
         program: { owner: 'counter', key: 'a' },

@@ -55,7 +55,7 @@ radial axis（radius 维）:
 3. **frame 单点拥有杜绝伪并行**：guide 不自算圆心 / 半径，全取 ADR-01 frame——04 与 02/03 真并行。
 4. **复用 core Path arc**：同心环 / 弧轴用 core 既有 `arc` step，不在 plot 造曲线机制。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - mark 几何（sector / 连续）→ ADR-02 / 03；frame / layout 决策 → ADR-01。
 - authoring 表面 + docs → ADR-05。

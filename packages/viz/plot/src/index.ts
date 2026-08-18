@@ -1,4 +1,5 @@
 export * from './contract';
+export * from './error';
 export type { LowerPlotsOptions, PlotLineageLowerOptions } from './pipeline';
 export {
   createPlotLineageLocator,

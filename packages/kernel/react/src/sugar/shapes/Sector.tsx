@@ -5,6 +5,7 @@ import type { FC, ReactElement } from 'react';
 import type { DslTarget } from '../../kernel/components';
 import type { AngleInput, PathVisualProps } from './shape-helpers';
 
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { Path } from '../../kernel/components';
 import { Step } from '../../kernel/components';
 import { pickPathVisual, polarXY, requireXY, resolveAngles } from './shape-helpers';
@@ -37,7 +38,7 @@ export type SectorProps = PathVisualProps &
  */
 export const Sector: FC<SectorProps> = props => {
   const angles = resolveAngles(props, 'Sector', true);
-  if (!angles) throw new Error('<Sector> 需给角度');
+  if (!angles) throw new RetikzReactError(RetikzReactErrorCode.Sugar, '<Sector> 需给角度');
   const { startAngle, endAngle } = angles;
 
   const { radius } = props;

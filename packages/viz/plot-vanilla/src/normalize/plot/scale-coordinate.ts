@@ -12,6 +12,8 @@ import type {
 } from './contracts';
 import type { InputPlotPositionScaleType, InputPlotScale, InputPlotScaleDimension } from './input-scales';
 
+import { RetikzPlotVanillaError } from '../../error';
+
 const AUTO_X = '__x';
 const AUTO_Y = '__y';
 const AUTO_ANGLE = '__angle';
@@ -97,7 +99,7 @@ export const buildPositionScale = (
     default: {
       // 穷尽守卫：新增 InputPlotPositionScaleType 未在此映射时 never 编译报错，杜绝静默回退 linear
       const exhaustive: never = type;
-      throw new Error(`buildPlotIR: unsupported position scale type "${String(exhaustive)}"`);
+      throw new RetikzPlotVanillaError(`buildPlotIR: unsupported position scale type "${String(exhaustive)}"`);
     }
   }
 };
@@ -105,7 +107,7 @@ export const buildPositionScale = (
 /** cartesian x scale 类型：含 <IntervalMark> 或 <IntervalMark> → band；否则按 <Scale dimension="x"> 或缺省 linear */
 export const buildCartesianXScale = (forceBand: boolean, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (forceBand && explicit !== undefined && explicit.type !== 'band') {
-    throw new Error(
+    throw new RetikzPlotVanillaError(
       'buildPlotIR: <IntervalMark> (bar / heatmap) requires a band x scale; omit <Scale dimension="x" /> or set type="band"',
     );
   }
@@ -116,7 +118,7 @@ export const buildCartesianXScale = (forceBand: boolean, explicit: InputPlotScal
 /** cartesian y（值轴）scale 类型：含 <IntervalMark>（heatmap 双 band）→ band；否则按 <Scale dimension="y"> 或缺省 linear；log / sqrt 由 lowering L1 守住仅 point/line */
 export const buildCartesianYScale = (hasRect: boolean, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (hasRect && explicit !== undefined && explicit.type !== 'band') {
-    throw new Error(
+    throw new RetikzPlotVanillaError(
       'buildPlotIR: <IntervalMark> (heatmap) requires a band y scale; omit <Scale dimension="y" /> or set type="band"',
     );
   }
@@ -130,12 +132,12 @@ export const buildCartesianYScale = (hasRect: boolean, explicit: InputPlotScale 
  */
 export const buildAngleScale = (collected: Collected, explicit: InputPlotScale | undefined): IRPlotScale => {
   if (collected.hasBar && explicit !== undefined && explicit.type !== 'band') {
-    throw new Error(
+    throw new RetikzPlotVanillaError(
       'buildPlotIR: <IntervalMark> in polar coordinates requires a band angle scale; omit <Scale dimension="x" /> or set type="band"',
     );
   }
   if (collected.hasSector && explicit !== undefined && explicit.type !== 'linear') {
-    throw new Error(
+    throw new RetikzPlotVanillaError(
       'buildPlotIR: <IntervalMark angle> requires a linear angle scale; omit <Scale dimension="angle" /> or use type="linear"',
     );
   }
@@ -185,12 +187,14 @@ export const collectExplicitScales = (
   for (const scale of declared) {
     const role = scaleRoleOf(scale.dimension, coordKind);
     if (role === undefined) {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         `buildPlotIR: ${coordKind} coordinate system does not support scale dimension "${scale.dimension}" (valid dimensions: ${valid.join(', ') || 'none'})`,
       );
     }
     if (out[role] !== undefined) {
-      throw new Error(`buildPlotIR: duplicate scale for "${role}" role (dimension "${scale.dimension}")`);
+      throw new RetikzPlotVanillaError(
+        `buildPlotIR: duplicate scale for "${role}" role (dimension "${scale.dimension}")`,
+      );
     }
     out[role] = scale;
   }

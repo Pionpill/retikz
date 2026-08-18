@@ -2,6 +2,7 @@ import type { Position } from '@retikz/math';
 
 import type { SharedPolarPosition } from '../position';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { isPositionTuple } from '../position';
 import { DEG_TO_RAD, RAD_TO_DEG } from './angle';
 
@@ -25,7 +26,8 @@ export const polar = {
     if (!p.origin) {
       origin = [0, 0];
     } else if (typeof p.origin === 'string') {
-      throw new Error(
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Geometry,
         'polar.toPosition: cannot resolve string origin (node id) without node context; use the Scene compiler',
       );
     } else if (isPositionTuple(p.origin)) {

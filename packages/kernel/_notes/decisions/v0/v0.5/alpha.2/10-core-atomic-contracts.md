@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-08-03
 - 接受日期：2026-08-04
-- 关联：[alpha.2 roadmap](./roadmap.md) · [原子契约与组合设计](../../../../../../../notes/architecture/atomic-contract-design.md) · [能力完备性与模块边界](../../../../../../../notes/architecture/capability-design.md) · [Core 绘图完备设计](../../../../architecture/core-drawing-complete.md) · [Schema 设计](../../../../../../../notes/architecture/schema-design.md)
+- 关联：[ADR-11](./11-layout-aware-scope-output.md)
 
 ## 背景与目标
 
@@ -147,61 +147,10 @@ Tier 2 / Tier 3 在表达与 Core 同义的绘图字段时必须消费 Core 原�
 - 外部扩展与下游闭环：自定义 Path kind、shape、paint、marker 等仍通过现有 Definition / registry / compile contract；fragment 只描述数据契约，不创建新的扩展注册点。Core 输出现有 Scene / manifest，render、React、Vanilla 与 headless consumer 继续消费同一产物
 - 不支持边界：不提供按场景加载的全量 capability bundle，不把 Standard composite 或 Chart / Plot / Table preset 下沉到 Core，不以 fragment 取代完整 Path 编译，不承诺 Core 统一所有领域的 style token
 
-## 架构验证
-
-- 是否可由现有能力组合：可以。现有 Core 已有完整 Path、style、font、paint、stroke、Scene 和 compile 链路；本决策首先整理命名契约和复用边界，不增加平行 IR 或第二条 lowering 管线
-- math / core / render / adapter 责任切分：math 继续拥有无绘图语义的纯几何；Core 拥有 JSON IR、通用图形语义和 Scene contract；render 只执行 Scene；React / Vanilla 只做等价 authoring 与宿主接线；Tier 2 / Tier 3 在 Core 之上组合并 lowering
-- 是否需要新 IR / contract / registry：需要补充可复用的 Core schema / type fragment；不需要新的 IR 字段、顶层实体、definition 或 registry。fragment 是封闭的 JSON 数据契约，provider / kind 的开放性继续由现有 registry 承载
-- Scene / manifest / renderer / diagnostics 如何闭环：完整 Path 仍编译成现有 renderer-neutral Scene 与 manifest；本轮不改变 Scene 类型。任何不支持或非法组合继续由 Core diagnostics 或 renderer capability 诊断，不由 Tier 2 / Tier 3 静默改写
-- provenance / locator / Interaction Readiness 是否适用：本 ADR 不新增 locator 或 interaction 语义。`id`、`meta`、z-order 和已有 provenance / manifest 信息继续由现有 Core instance / Scene contract 传递；原子 fragment 不得复制这些索引字段
-- 结论：下沉稳定绘图原子契约，保留完整 Core contract；Tier 2 / Tier 3 组合、收窄并拥有领域语义；不新增 capability / preset bundle
-
-## 能力完备性检查
-
-- 所属能力域与能力面：Drawing Complete 的 Style / Resource 与 Composition 输入契约
-- 解决的问题：让多个上层可以通过统一 Core 原子语义表达和复用图形，不再依赖大型 schema 的偶然投影或重复 style vocabulary
-- 主责包与协作包：`@retikz/core` 主责；math、runtime、render、Standard、Plot、Chart、Table、React / Vanilla 按各自边界协作
-- 是否可由现有能力组合：完整 Path、Scene、definition / registry 和 compile 已存在；新增的是可复用的命名契约边界
-- 是否需要下沉到依赖能力域：style、paint、stroke、font 与 Path fragment 等稳定绘图语义应留在 Core；纯几何算法仍留在 math；Standard / Plot / Chart / Table 的领域组合不下沉
-- 内部表达链路：Core schema / type fragment → 完整 Core IR → 既有 contract / provider / registry → compile / lowering → Scene / manifest
-- 外部扩展链路：开放 provider 继续走既有 Definition / registry；第三方 Tier 2 / Tier 3 组合 Core fragment，不因原子化获得绕过 Core compile 的私有路径
-- 下游执行 / adapter 等价性：Scene 形态和 renderer 执行语义保持不变；React、Vanilla、headless 入口写入或消费同一 JSON / IR 与 Scene contract
-- 不支持边界与诊断：不支持领域 preset、领域 layout、交互状态和 renderer 私有 style；未知字段、非法跨 fragment 组合和未声明不适用例外的未消费字段必须 fail-loud 或产生既有可观察诊断
-- 本轮结论：下沉 Core 原子契约，扩展当前 Drawing Complete 域的可组合表达；上层领域组合保留在 owner 包，不新增平行能力
-
-## 绘图完备性检查
-
-- 能力面与解决的问题：通用 Style / Resource 与 Path composition 的原子 schema/type 表达，消除多个上层重复定义绘图语义的缺口
-- 是否属于 Drawing Complete：属于。它增强 JSON-safe、renderer-neutral 的 Core 图形表达，不引入数据、布局、renderer 或宿主语义
-- 主责包与协作包：Core 主责；math、render、Standard、各 Tier 2 / Tier 3 与 adapters 协作
-- 是否可由现有能力组合：可以由现有 Path、style、Scene 和 compile 组合，首轮不新增 provider 能力
-- math / core / render / adapter 的责任切分：保持现有边界，不把 fragment 验证或默认值复制到 renderer / adapter
-- 是否需要新 IR / contract / registry：补充 schema / type fragment export；不新增 IR 字段、顶层 IR、registry、Scene type fragment 或 renderer contract
-- Scene / manifest 如何承载：沿现有完整 Path 和 Scene primitive 输出，不改变 manifest 的 identity、metadata、z-order 或 locator 语义
-- renderer 实现或诊断降级：renderer 继续按现有 Scene capability 执行；不支持能力沿既有诊断降级，不从 fragment 推导 renderer 私有行为
-- React / Vanilla 如何等价暴露：两个 adapter 继续构造同一完整 Core JSON / IR；原子 schema/type 由 Core 公开，不在 adapter 建立平行 style / path schema
-- Interaction Readiness 是否适用：仅保持既有 id、meta、provenance 和 manifest 传递，不新增交互语义
-- 不支持边界与本轮结论：不支持全量 preset / capability bundle 和领域语义下沉；本轮结论为在 Core 下沉稳定原子契约，并由 Tier 2 / Tier 3 按需组合
-
-## 被否决方案
-
-- 删除所有 `pick` / `omit`：否决。Frame、Chart recipe、Table border 等投影表达了 owner-specific 禁用字段、默认值或领域边界，机械删除会把领域语义错误地下沉
-- 把 `StandardPathStrokeStyle` 直接下沉为 Core bundle：否决。Standard 组合包含自己的呈现用途和字段选择，Core 应提供原子 stroke / paint 语义而不是 Standard composite
-- 保留各 Tier 2 的重复 paint / opacity / dash / shadow / blend mode 定义：否决。相同的 Core 叶子必须只有一个语义真源，否则 schema 与 lowering 会持续漂移
-- 把每个字段都拆成独立顶层 API：否决。字段数量不是原子边界；没有独立不变量或复用语义的字段会增加公共面和认知成本
-- 建立 Core capability / preset 加载 bundle：否决。用户消费的是按需组合的公开契约和 Definition，bundle 不增加新的 IR、registry 或 compile 语义
-
-## 最终实现与验证
-
+## 最终结果
 Core 已公开严格的 style / Path fragment 与字体、文字、描边 value leaf，并以同一叶子 schema 实例重组既有 Font、Node、Stroke、style、Path 与 Scope 默认聚合。Standard 与 Plot 的直接完整 Path 投影已迁移为按 owner 语义组合原子 fragment；Chart、Table、compile、Scene、renderer 与 adapter 保持原有边界和行为
 
-验证覆盖原子字段集合、strict 失败、数值边界、JSON 往返、公开类型推导、兼容聚合与完整 Path refinement、`PathDefaultSchema` 的 stroke / ribbon 分流、Scene 输出、Standard / Plot 消费，以及中英文 schema reference。未发现遗留的能力或兼容性风险；其它上层 owner 只有在直接重复同义 Core 词汇时才按独立里程碑迁移
-
-## 测试策略摘要
-
-需要锁定以下证据层：原子 fragment 与 value leaf 的 JSON-safe、strict unknown-field 或数值 / 枚举边界，以及公开类型关系；既有聚合 schema 的合法 / 非法输入集合等价，并复用同一 leaf schema 实例；完整 Path 组合后的跨字段 refinement 与 parse 等价；`Scope.pathDefault` 对 stroke path / ribbon 的 kind-specific 继承子集等价；Core compile、Scene / manifest 和 renderer 输出无变化；Standard 与 Plot 的直接消费迁移后 schema、lowering 和 patch 结果等价；Chart、Table 与 React / Vanilla 通过现有 owner 链路保持行为等价；公共 export、schema registry 与中英文 API 文档同步。还需证明除兼容聚合已明示的 kind-specific 不适用字段外，合法输入不会在 schema 通过后于 lowering、merge、inspection 或 manifest 阶段被静默丢弃
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 新增 Path kind、shape、paint、marker、effect 或 renderer capability
 - Box、Flex、Grid、Overlay 等领域布局算法及 Standard layout defaults

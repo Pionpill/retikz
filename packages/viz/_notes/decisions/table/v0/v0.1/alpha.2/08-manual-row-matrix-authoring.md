@@ -51,13 +51,6 @@ type ManualTableCellSource = {
 
 marker 模式至少需要一个 Cell 才能推导列数；全空表格必须使用 props 模式的显式 null matrix。marker `<Cell>` 的 null value 仍表示真实 value null，因为 marker 本身已经证明该位置存在 Cell。
 
-## 被否决的选项
-
-- 保留 addressed list 并新增二维 sugar：会形成两个公开真源，长期维护重复校验、空槽语义与迁移分支
-- 接受 ragged rows 并自动补齐：持久化拓扑不再自描述，错误输入会静默改变列数
-- 让 React / Vanilla 自行计算地址：会把 Table 语义复制到 adapter，并使 JSON、React 与 Vanilla 的验证结果漂移
-- 继续显式声明 dimensions：尺寸可从矩阵无损推导，只会保留重复信息和不一致状态
-
 ## 兼容性
 
 这是 0.x 阶段的 breaking change，不保留兼容别名或宽 union：
@@ -77,15 +70,6 @@ detail/custom Structure、Definition registry、canonical output、presentation�
 - `@retikz/table-react` 的 props 和 marker authoring 产出相同 rows；marker width 由实际 occupancy 推导
 - `@retikz/table-vanilla` 保持共享 constructor 的薄封装
 - package README 与双语模型、contract、runtime 文档同步 rows、null sentinel、真实 null scalar 和迁移后的公共 API
-
-## 验证
-
-- `@retikz/table`：19 个测试文件、209 个测试通过
-- `@retikz/table-react`：4 个测试文件、31 个测试通过
-- `@retikz/table-vanilla`：5 个测试文件、14 个测试通过
-- 三个包及 docs 的 ESLint、`tsc --noEmit` 通过；docs integrity 7 个页面通过
-- 额外覆盖矩形校验、null 语义、span occupancy、adapter parity、JSON round-trip、layout/manifest source 与旧 API 拒绝路径
-- 双语模型、contract 和 runtime 页面已在真实浏览器验证 Source/IR tabs、schema、TOC、翻译与 console
 
 ## 遗留风险
 

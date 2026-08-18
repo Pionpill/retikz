@@ -2,7 +2,7 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-24
-- 关联：[v0.2-alpha.7 plan §第一部分](./roadmap.md) · tikz-gap-analysis §1 Node（历史分析已删除） · [alpha.2 样式继承](../alpha.2)（`fill` 级联）· 下游 [alpha.8 ADR-01 ArrowDefinition](../alpha.8)（复用 `PaintValue.contextStroke`）· [alpha.9 ADR-02 clip](../alpha.9)（复用 `SceneResource` 资源表）· 本 milestone [ADR-02](./02-max-text-width.md) / [ADR-03](./03-pin.md) / [ADR-04](./04-pattern-image-deferred.md)
+- 关联： · tikz-gap-analysis §1 Node（历史分析已删除） · [alpha.2 样式继承](../alpha.2)（`fill` 级联）· 下游 [alpha.8 ADR-01 ArrowDefinition](../alpha.8)（复用 `PaintValue.contextStroke`）· [alpha.9 ADR-02 clip](../alpha.9)（复用 `SceneResource` 资源表）· 本 milestone [ADR-02](./02-max-text-width.md) / [ADR-03](./03-pin.md) / [ADR-04](./04-pattern-image-deferred.md)
 
 > **跨段契约**：本 ADR 定下的 `PaintValue` 词汇表与 `SceneResource` 资源表是 alpha.7–9 共享的地基——alpha.8 arrow 颜色继承用 `PaintValue.contextStroke`，alpha.9 clip 把 `ClipResource` 加进同一 `SceneResource` 表。
 
@@ -13,7 +13,7 @@
 
 ## 决策：primitive `fill` 升 `PaintValue` union + Scene 级 `SceneResource` discriminated 资源表
 
-核心数据结构（字面即决策，完整定义见 `core/src/primitive/paint.ts`）：
+核心数据结构（字面即决策，完整定义见 ）：
 
 ```ts
 // PaintValue —— 任何 paint 属性的取值，fill / stroke 共用（不绑定 fill，alpha.8 arrow stroke 也用）
@@ -45,16 +45,11 @@ type SceneResource = { kind: 'paint'; id: string; spec: IRPaint };
 - **纯色与 `var()` 不进资源表**：`fill` 是 `string` 时不收集；`var(--x)` 仍走 react inline style。
 - **scope 级联 IRPaint**：alpha.2 的 `fill` 级联默认值若是 `IRPaint`，继承链解析后再进资源收集（去重兜底）。
 
-### 被否决的选项
-
-- **B：primitive `fill: string` + 新增 `fillRef?: string` 双字段**——两字段互斥需编译期 invariant；alpha.8 的 `contextStroke` 无处安放（又得加第三字段 / 魔法字符串），比 union 啰嗦。
-- **C：core 直接产 `<defs>` primitive**——违反 `scene.ts` 渲染无关契约（SVG-only 泄漏 core），Canvas / PDF adapter 无法消费。
-
 ### 资源 id 策略（偏离 ADR 原"内容 hash"倾向）
 
 实现选**递增首见序**（`paint-1` / `paint-2`…，`Map<jsonKey, id>` 去重），而非 ADR 原倾向的内容 hash：首见序对同一 IR 同样确定性（SSR / CSR 一致），且短、可读、无 hash 依赖；跨 SVG 唯一性由 react adapter 加 `useId` 前缀解决，hash 的"跨编译稳定"优势在 scene-local id 场景用不上。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **pattern / image** → [ADR-04](./04-pattern-image-deferred.md)（复用本 ADR 基建实现，实现期由 deferred 提升到 alpha.7 一并做）。
 - **maxTextWidth** → [ADR-02](./02-max-text-width.md)；**pin** → [ADR-03](./03-pin.md)。
@@ -64,6 +59,6 @@ type SceneResource = { kind: 'paint'; id: string; spec: IRPaint };
 
 ---
 
-> **实现指针**：level `red`（动 IR fill union + primitive 契约 + compile 资源收集 + core/react 公开导出）、additive 非 breaking（`fill` 类型扩张，`string` 仍合法；消费 Scene 的 adapter 需处理 `PaintValue`，本仓 react 同步改）。真源以代码为准——`PaintSchema` / `GradientStopSchema` / `IRPaint`（`core/src/ir/paint.ts`）、`PaintValue` / `SceneResource`（`core/src/primitive/paint.ts`，经 `primitive/scene.ts` re-export）、资源收集 / 去重 / 派 id（`core/src/compile/paint.ts` + `compile/{node,path,scope}.ts` 接入）、adapter 物化（`react/src/render/paintDefs.tsx` + `renderPrim.tsx` 按 `PaintValue` 分派）。测试在 `core/tests/{ir,compile}/paint.test.ts` 与 `react/tests/render/paintDefs.test.tsx`。完整施工契约（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `d0ae9bf2`；压缩前完整施工蓝图 = `git show d0ae9bf2^:_notes/decisions/core/v0/v0.2/alpha.7/01-paint-basics.md`。
+已实现本 ADR 的核心决策。兼容性：additive 非 breaking（`fill` 类型扩张，`string` 仍合法；消费 Scene 的 adapter 需处理 `PaintValue`，本仓 react 同步改）；其余默认行为、失败语义与公开契约以正文为准。

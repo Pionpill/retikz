@@ -20,25 +20,32 @@ description: 'Use when 发布或准备发布 retikz npm 包、核对发布版本
 
 发布组真源是 `scripts/release-groups.config.mjs`。每个可发布包的 `package.json` 必须声明 `retikz.domain`、`retikz.releaseGroup`、`retikz.layer`、`retikz.publishable`。若下表、skill 文本与配置或 manifest 不一致，先修配置 / manifest / skill 并运行 `pnpm run check:release-groups`。
 
-| 组       | 包                                                                                                                     | 发布顺序                                                     | tag                   |
-| -------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | --------------------- |
-| kernel   | `@retikz/math`, `@retikz/runtime`, `@retikz/core`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | math -> runtime -> core -> render -> react -> vanilla -> tex | `kernel-v<version>`   |
-| data     | `@retikz/data`                                                                                                         | data                                                         | `data-v<version>`     |
-| plot     | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                                           | plot -> plot-react -> plot-vanilla                           | `plot-v<version>`     |
-| chart    | `@retikz/chart`, `@retikz/chart-react`, `@retikz/chart-vanilla`                                                        | chart -> chart-react -> chart-vanilla                        | `chart-v<version>`    |
-| table    | `@retikz/table`, `@retikz/table-react`, `@retikz/table-vanilla`                                                        | table -> table-react -> table-vanilla                        | `table-v<version>`    |
-| standard | `@retikz/standard`, `@retikz/standard-react`, `@retikz/standard-vanilla`                                               | standard -> standard-react -> standard-vanilla               | `standard-v<version>` |
+| 发布单元 | 包                                                                                                                                                              | 发布顺序                                                                              | tag                   |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------- |
+| kernel   | `@retikz/foundation`, `@retikz/math`, `@retikz/runtime`, `@retikz/core`, `@retikz/inspect`, `@retikz/render`, `@retikz/react`, `@retikz/vanilla`, `@retikz/tex` | foundation -> math -> runtime -> core -> inspect -> render -> react -> vanilla -> tex | `kernel-v<version>`   |
+| layout   | `@retikz/layout`, `@retikz/layout-react`, `@retikz/layout-vanilla`                                                                                              | layout -> layout-react -> layout-vanilla                                              | `layout-v<version>`   |
+| standard | `@retikz/standard`, `@retikz/standard-react`, `@retikz/standard-vanilla`                                                                                        | standard -> standard-react -> standard-vanilla                                        | `standard-v<version>` |
+| graph    | `@retikz/graph`, `@retikz/graph-react`, `@retikz/graph-vanilla`                                                                                                 | graph -> graph-react -> graph-vanilla                                                 | `graph-v<version>`    |
+| diagram  | `@retikz/diagram`, `@retikz/diagram-react`, `@retikz/diagram-vanilla`                                                                                           | diagram -> diagram-react -> diagram-vanilla                                           | `diagram-v<version>`  |
+| data     | `@retikz/data`                                                                                                                                                  | data                                                                                  | `data-v<version>`     |
+| plot     | `@retikz/plot`, `@retikz/plot-react`, `@retikz/plot-vanilla`                                                                                                    | plot -> plot-react -> plot-vanilla                                                    | `plot-v<version>`     |
+| chart    | `@retikz/chart`, `@retikz/chart-react`, `@retikz/chart-vanilla`                                                                                                 | chart -> chart-react -> chart-vanilla                                                 | `chart-v<version>`    |
+| table    | `@retikz/table`, `@retikz/table-react`, `@retikz/table-vanilla`                                                                                                 | table -> table-react -> table-vanilla                                                 | `table-v<version>`    |
 
 不发布：`@retikz/docs`、`@retikz/eval` 是 private app。
 
-同组 lockstep：同组所有 publishable package 必须写同一个 version 并同次发布。不同发布组版本线独立。目录只表达 domain，不表达发布组；例如 `packages/viz/data` 与 `packages/viz/plot` 同属 viz 领域，但发布组独立。
+Kernel 是统一发布单元：九个 publishable package 必须写同一个 version，按表中顺序一次性全部发布，不得拆包、漏包或为单个 Kernel 包单独发版。
+
+其他发布单元仍按配置 lockstep：主包及其 React / Vanilla 适配包必须写同一个 version 并同次发布。不同发布单元版本线独立。目录只表达 domain，不表达发布单元；例如 `packages/viz/data` 与 `packages/viz/plot` 同属 viz 领域，但分别发布。
 
 ## Git tag 规范
 
-- 规范格式统一为 `<release-group>-v<version>`，其中 release group 必须是 `scripts/release-groups.config.mjs` 的键；tag 与 npm 发布组一一对应，不用 domain、目录名或单个包名代替。
-- Kernel、Plot、Chart 分别使用 `kernel-v<version>`、`plot-v<version>`、`chart-v<version>`。只有配置中存在对应 release group 且 `pnpm run check:release-groups` 通过后才能创建该组 tag。
+- Kernel 统一使用 `kernel-v<version>`，九个 Kernel 包共享一个 tag。
+- 其他发布单元使用主包名作为 tag 前缀：去掉 `@retikz/` scope 后写成 `<main-package>-v<version>`，例如 Plot 使用 `plot-v<version>`、Standard 使用 `standard-v<version>`。不得再叠加 domain 或其他分组前缀。
+- 主包及其 React / Vanilla 适配包共享一个 tag；不得为 `plot-react`、`plot-vanilla` 等适配包分别打 tag。
+- tag 必须对应 `scripts/release-groups.config.mjs` 中完整的发布单元；只有 `pnpm run check:release-groups` 通过后才能创建。
 - 历史 Kernel 裸 `v<version>` tag 保持原样，不得迁移或补打同版本前缀 tag；新版本从本规范生效后改用 `kernel-v<version>`。
-- 必须创建 annotated tag：`git tag -a <release-group>-v<version> -m "<release-group> <version>"`，不得创建 lightweight tag。
+- 必须创建 annotated tag：`git tag -a <tag-prefix>-v<version> -m "<tag-prefix> <version>"`，不得创建 lightweight tag。
 - tag 只指向已提交且工作树干净的发布提交；创建前确认组内版本、npm registry 连续性，以及本地和远端均不存在同名 tag。
 - 已发布 tag 不得移动、复用、删除或强制覆盖；tag 名冲突时停止并让用户决定新版本。
 - 汇报 tag 状态时必须分别说明本地是否存在、远端是否存在和各自指向；“本地已创建”不等于“已 push”。
@@ -54,8 +61,8 @@ description: 'Use when 发布或准备发布 retikz npm 包、核对发布版本
 
 改文件前先向用户确认：
 
-- 发布组：`kernel` / `data` / `plot` / `table` / `standard`；
-- 目标版本、npm dist-tag，以及按 `<release-group>-v<version>` 推导的 git tag；
+- 发布单元：以 `scripts/release-groups.config.mjs` 为准；
+- 目标版本、npm dist-tag，以及按 Kernel 特例或主包名规则推导的 git tag；
 - 包列表与每个包的 `old -> target`；
 - `apps/docs/src/modules/docs/data/changelog/*.ts` 中对应 release 文件的 note 范围；
 - 是否需要同步 module badge 或 roadmap milestone 状态。
@@ -174,7 +181,7 @@ rg --files packages | rg 'packages/.*/src/.*\.(d\.ts|d\.ts\.map|js)$'
 2. 按根 AGENTS 的 commit 格式提交，常用 `🔖 <scope>: 发布 <version>` 或 `🔖 <scope>: 准备发布 <version>`。
 3. 确认 HEAD 中发布组每个包都是目标版本。
 4. 确认 `git status --short` 没有意外发布文件改动。
-5. 再次确认本地和远端不存在同名 tag，创建 annotated tag：`git tag -a <release-group>-v<version> -m "<release-group> <version>"`。
+5. 再次确认本地和远端不存在同名 tag，按 Kernel 特例或主包名规则创建 annotated tag：`git tag -a <tag-prefix>-v<version> -m "<tag-prefix> <version>"`。
 6. 确认 npm 登录：`npm whoami --registry=https://registry.npmjs.org/`。
 7. 按组内顺序发布：
 
@@ -197,7 +204,7 @@ pnpm --filter @retikz/<pkg> publish --access public --tag <tag> --no-git-checks 
 
 ## 快速清单
 
-- [ ] 目标版本、发布组、dist-tag、`<release-group>-v<version>` git tag 已确认。
+- [ ] 目标版本、发布单元、dist-tag、按 Kernel 特例或主包名规则生成的 git tag 已确认。
 - [ ] release group 存在于 `scripts/release-groups.config.mjs`；未配置的发布组没有提前创建 tag。
 - [ ] 已按 npm registry 校验版本连续性。
 - [ ] `scripts/release-groups.config.mjs`、`package.json` 的 `retikz` 元信息和目标发布组一致。

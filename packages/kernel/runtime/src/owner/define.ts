@@ -1,7 +1,7 @@
 import type { RuntimeIdentity } from '../identity';
 import type { RuntimeChangeSet, RuntimeOwnerDefinition, RuntimeOwnerDefinitionInput, RuntimeOwnerToken } from './types';
 
-import { RuntimeOwnerRegistryError } from '../error';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode, RetikzRuntimeOwnerRegistryError } from '../error';
 
 const runtimeOwnerTokens = new WeakSet<object>();
 const runtimeOwnerExecutors = new WeakMap<object, RuntimeOwnerErasedExecutor>();
@@ -31,7 +31,7 @@ export const defineRuntimeOwner = <TInput, TValue, TRead, TChange>(
   input: RuntimeOwnerDefinitionInput<TInput, TValue, TRead, TChange>,
 ): RuntimeOwnerDefinition<TInput, TValue, TRead, TChange> => {
   if (input.key.length === 0) {
-    throw new RuntimeOwnerRegistryError('RUNTIME_OWNER_TOKEN_INVALID', input.key, input);
+    throw new RetikzRuntimeOwnerRegistryError(RetikzRuntimeErrorCode.TokenInvalid, input.key, input);
   }
   const { capture, read, equals, dispose } = input.value;
   const token = Object.freeze({ key: input.key }) as RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>;
@@ -54,6 +54,13 @@ export const hasRuntimeOwnerToken = (value: object): boolean => runtimeOwnerToke
 /** 读取 define 时创建的 callback 擦除视图，仅供 registry 建立 token/executor 配对 */
 export const getRuntimeOwnerDefinitionExecutor = (definition: RuntimeOwnerToken): RuntimeOwnerErasedExecutor => {
   const executor = runtimeOwnerExecutors.get(definition);
-  if (executor === undefined) throw new Error(`runtime owner definition: missing executor for "${definition.key}"`);
+  if (executor === undefined) {
+    throw new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.InternalInvariant,
+      message: `runtime owner definition: missing executor for "${definition.key}"`,
+      phase: 'owner-definition',
+      cause: definition,
+    });
+  }
   return executor;
 };

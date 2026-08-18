@@ -1,55 +1,25 @@
-# ADR-04：rectangle/polygon——rectangle 参数化（roundedCorners 入 params）+ regular polygon，diamond 收为 polygon 别名
+# ADR-04：rectangle/polygon 参数化与 diamond preset
 
 - 状态：Accepted
 - 决策日期：2026-06-06
-- 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · 依赖：[ADR-01 shape 参数化机制](./01-shape-params-generalization.md)（nested params + defineShape + 双护栏） · 文档页：`apps/docs/src/contents/kernel/components/shapes/rectangle-polygon/`
-
-> **依赖 ADR-01**：按 01 接口实现；与 02/03/05 并发。rectangle / polygon 是**文本容器形状**——`circumscribe` 从文本内框（`innerHalfWidth/Height`）推外接，params 只调形态（边数 / 圆角 / 自旋），尺寸仍由内框 + `minimumSize` 驱动（区别于 sector / star 的 params-半径驱动）。
+- 关联：[ADR-01 shape 参数化机制](./01-shape-params-generalization.md)
 
 ## 背景
 
-- rectangle 的 `roundedCorners` 现为 `Node` 顶层字段（「only effective on rectangle」）——形状专属参数错放顶层，[ADR-01](./01-shape-params-generalization.md) 要消除的反模式，本 ADR 迁入 rectangle params。
-- core 无 regular polygon；现有 `diamond` 本质是 4-gon，与 polygon 几何重复（当前 preset 首顶点方向按 live code 为 0°）。
+roundedCorners 是 rectangle 专属字段却位于 Node 顶层；diamond 又是 4-gon 的重复几何。Core 还缺少 regular polygon。
 
-## 决策：rectangle 参数化 + regular polygon 新增，diamond 收为 polygon preset 别名
+## 决策
 
-```ts
-// rectangle —— roundedCorners 从 Node 顶层迁入 params（文本容器，尺寸仍由内框驱动）
-export const rectangle = defineShape({
-  paramsSchema: z.strictObject({
-    roundedCorners: z.number().finite().nonnegative().optional().describe('Corner radius in user units; 0 / omitted = sharp corners.'),
-  }),
-  circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),   // identity（现状）
-  // boundaryPoint / anchor / edgePoint / emit 复用现有 rectangle 几何 + roundedCorners
-});
+- rectangle 的 params 为可选 roundedCorners >= 0；它仍是文本容器，circumscribe 由内容内框和 minimumSize 决定
+- polygon 的 params 为 sides >= 3 和可选 rotate；顶点落在能容纳内容的外接圆上，rotate 决定首顶点方向并与 Node.rotate 组合
+- diamond 规范化为 polygon 的 sides: 4, rotate: 0 preset；显式 diamond 参数可表达 aspectRatio，缺省或 1 保持正菱形
+- polygon、diamond 的连接和 anchor 使用同一 polygon 几何，position 为 AABB 中心
+- 迁移期间 rectangle 的 params.roundedCorners 优先于顶层 Node.roundedCorners；未提供 params 时保留顶层值，以兼容既有输入
 
-// regular polygon —— sides 顶点落外接圆，rotate 定起始角
-export const polygon = defineShape({
-  paramsSchema: z.strictObject({
-    sides: z.number().int().min(3).describe('Number of sides of the regular polygon (≥3).'),
-    rotate: z.number().finite().optional().describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
-  }),
-  circumscribe: (hw, hh, p) => /* 能容纳内框的正 p.sides 边形外接圆 → 其 AABB 半轴 */,
-  // boundaryPoint：中心向 toward 射线 ∩ 多边形边；anchor：顶点 / 边中点 / 命名 anchor
-});
-// diamond ≡ { type: 'polygon', params: { sides: 4, rotate: 0 } }
-// shape: 'diamond'（裸 string）在 compile/node.ts 规范化为上式
-// shape: { type: 'diamond', params: { aspectRatio } } 可生成扁菱形；aspectRatio = width / height
-```
+## 兼容性与实现结果
 
-- **polygon emit**：`sides` 个顶点在外接圆（circumscribe 派生半径）上、按 `rotate` 定起始角，连成闭合 path；`position` = AABB 中心（正多边形对称，= 内框中心，自然对齐 [ADR-01](./01-shape-params-generalization.md) 的 AABB 中心约束）。
-- **rectangle**：现有几何复用，仅 `roundedCorners` 从顶层挪进 params。
-- diamond 几何不再独立实现，走 polygon `sides:4, rotate:0`；四边形可选 `aspectRatio` 调整宽高比，缺省或 `1` 保持正菱形。
+裸 rectangle、diamond 写法和原有合法 Node 行为保持兼容；polygon 为新增能力，roundedCorners 的归位和 diamond preset 已实现。
 
-**`roundedCorners` 迁移**：params.roundedCorners 优先；迁移期顶层 `Node.roundedCorners` 仍生效（回退、标 deprecated）。最终删顶层待兼容窗口后另议（超本 ADR）。
+## 遗留风险
 
-理由：单一 polygon 几何覆盖 diamond；roundedCorners 归位；与 circle→ellipse、preset 别名一致。
-
-## 不在本 ADR 范围
-
-- ShapeDefinition 接口（[ADR-01](./01-shape-params-generalization.md)）。
-- 顶层 `roundedCorners` 最终删除（迁移期并存；删除待兼容窗口）。
-- 非正多边形 / 任意点列 polygon（仅 regular polygon）。
-
-> 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / Schema 改动 / 文件 scope / 测试象限 / 依赖现有元素）+ DSL 示例 + 影响清单见本文件封板前全文。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 62562f1d:_notes/decisions/core/v0/v0.3/alpha.4/04-rectangle-polygon.md`（封板全文）。
+顶层 roundedCorners 仍是兼容字段，未来若删除必须另行给出明确的 breaking 迁移决定；非正多边形不属于本契约。

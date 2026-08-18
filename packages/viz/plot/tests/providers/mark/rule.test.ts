@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 import type { Cell, CoordinateFrame, PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlotReferenceMark, IRPlot } from '../../../src/schemas';
+import type { IRPlot, IRPlotReferenceMark } from '../../../src/schemas';
 
 import { createCoordinateFrame, defineCoordinate, densifyCellContour } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';

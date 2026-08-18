@@ -74,16 +74,7 @@ Core 正式测试覆盖：
 - Core 继续负责通用 child layout / replay / artifact，Table 只负责轨道、Cell box、fit、border 与 manifest payload
 - 本 ADR 本身不修改产品代码、schema 或用户文档；后续用户可见 Table 能力仍须同步 zh / en
 
-## 能力完备性检查
-
-- 能力域：Tabular Visualization Complete / Layout，依赖 Drawing Complete / layout-aware composite
-- 主责：Core 拥有通用 child layout、bounds、replay 与 artifact；Table 拥有二维布局策略
-- 表达链路：Core `layoutChild` → Table solver / Cell policy → compile-local scope / replay → Scene + artifact
-- 扩展链路：内置与自定义 composite 共享 `defineComposite` / registry / dispatch
-- adapter：React / Vanilla 只接线，不复制布局算法或二次 compile
-- 结论：接受现有 Core 组合能力；不新增 Table 私有 fallback
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 修改 Core contract、compile、React 或 Vanilla 产品代码
 - Table track schema、solver、span、border、fit / overflow / clip、manifest payload 和 authoring 的具体设计

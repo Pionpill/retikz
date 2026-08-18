@@ -10,6 +10,7 @@ import type {
 } from '../../contract';
 import type { PresentTableOptions, ResolvedTableCellPresentationInput } from './types';
 
+import { RetikzTableError } from '../../error';
 import { resolveCellPresentationRegistry } from '../../providers';
 import { TableCellAppearanceSchema, TableCellPayloadKind, TablePresentationRefSchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
@@ -54,7 +55,7 @@ const defaultCarrierOf = (
     return deepFreeze({ kind: TableCellPayloadKind.Content, cellId: formatted.cellId, appearance });
   }
   if (semantic.payload.kind !== TableCellPayloadKind.Value) {
-    throw new Error(`table: presentation Cell "${formatted.cellId}" kind differs from semantic model`);
+    throw new RetikzTableError(`table: presentation Cell "${formatted.cellId}" kind differs from semantic model`);
   }
   return deepFreeze({
     kind: TableCellPayloadKind.Value,
@@ -70,26 +71,26 @@ const resolvePresentationCarriers = (
   cells: PresentTableOptions['cells'],
 ): ReadonlyArray<ResolvedTableCellPresentationInput> => {
   if (model.semantic.cells.length !== model.cells.length) {
-    throw new Error('table: presentation Cell count differs from semantic model');
+    throw new RetikzTableError('table: presentation Cell count differs from semantic model');
   }
   if (cells !== undefined && cells.length !== model.cells.length) {
-    throw new Error('table: presentation carrier Cell count differs from formatted model');
+    throw new RetikzTableError('table: presentation carrier Cell count differs from formatted model');
   }
   return deepFreeze(
     model.cells.map((formatted, index) => {
       const semantic = model.semantic.cells[index];
       if (semantic.id !== formatted.cellId || semantic.payload.kind !== formatted.kind) {
-        throw new Error(`table: presentation Cell ${index} identity differs from formatted model`);
+        throw new RetikzTableError(`table: presentation Cell ${index} identity differs from formatted model`);
       }
       const carrier =
         cells === undefined
           ? defaultCarrierOf(formatted, semantic)
           : ResolvedTableCellPresentationInputSchema.parse(cells[index]);
       if (carrier.cellId !== formatted.cellId) {
-        throw new Error(`table: presentation carrier Cell ${index} identity differs from formatted model`);
+        throw new RetikzTableError(`table: presentation carrier Cell ${index} identity differs from formatted model`);
       }
       if (carrier.kind !== formatted.kind) {
-        throw new Error(`table: presentation carrier Cell ${index} kind differs from formatted model`);
+        throw new RetikzTableError(`table: presentation carrier Cell ${index} kind differs from formatted model`);
       }
       return carrier;
     }),
@@ -117,7 +118,7 @@ export const presentTable = (model: FormattedTableModel, options: PresentTableOp
       carrier.kind !== TableCellPayloadKind.Value ||
       semantic.payload.kind !== TableCellPayloadKind.Value
     ) {
-      throw new Error(`table: presentation Cell ${index} kind differs from formatted model`);
+      throw new RetikzTableError(`table: presentation Cell ${index} kind differs from formatted model`);
     }
     const appearance = carrier.appearance;
     const content = applyTableCellContentStyle(

@@ -219,6 +219,7 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.pkgGroupBase',
         children: [
           { id: 'foundation', label: 'kernel.pkgFoundation', difficulty: DocDifficulty.Internals },
+          { id: 'math-transforms', label: 'kernel.pkgMathTransforms', difficulty: DocDifficulty.Internals },
           { id: 'math-primitives', label: 'kernel.pkgMathPrimitives', difficulty: DocDifficulty.Internals },
           { id: 'math-algorithms', label: 'kernel.pkgMathAlgorithms', difficulty: DocDifficulty.Internals },
         ],

@@ -1,0 +1,89 @@
+---
+title: Relation Extended Usage
+description: Reuse Relation's canonical Path contract across direct IR, Draw ways, and the Vanilla entry point.
+---
+
+When React `<Step>` children are not the only authoring entry, Relation still stores one canonical IR. Draw ways normalize to Steps at the entry point, direct IR uses canonical `children`, and the Vanilla adapter enters the same Definition lowering path
+
+## Extension boundary
+
+Use extended Relation usage when you generate JSON-safe graph data, reuse Draw's way DSL, or assemble a figure from Vanilla. It does not provide automatic routing, obstacle avoidance, a parallel route model, or Relation-specific geometry
+
+## Draw ways
+
+`way` is author input and is not part of `RelationSchema`. The factory, React, or Vanilla entry point normalizes it through Core `parseWay()` into canonical `children`; exactly one of `children` and `way` must be supplied
+
+```ts
+import { DrawWay } from '@retikz/core';
+import { createRelation } from '@retikz/graph';
+
+const relation = createRelation({
+  id: 'edge',
+  role: 'flow',
+  way: ['start', DrawWay.Hv, 'step'],
+});
+```
+
+Supplying both or neither entry fails loudly; persisted data keeps only `children`
+
+## Direct IR and Definition injection
+
+Direct JSON must use the canonical Step sequence and explicitly inject `RelationDefinition`, or use the complete Graph Definition set
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { createGraphDefinitions, createRelation } from '@retikz/graph';
+
+const relation = createRelation({
+  id: 'edge',
+  role: 'flow',
+  children: [
+    { kind: 'move', to: 'start' },
+    { kind: 'line', to: 'step', label: { text: 'next' } },
+  ],
+});
+
+const scene = compileToScene(
+  { version: 1, type: 'scene', children: [relation] },
+  { composites: createGraphDefinitions() },
+);
+```
+
+`role` stays in Graph IR and is not copied implicitly into Path `meta` or a Scene primitive
+
+## Vanilla adapter
+
+Vanilla uses an embed id for authoring. `RelationInputEmbedAdapter` derives the canonical `id` internally and enters the same Relation Definition path
+
+```ts
+import { RelationInputEmbedAdapter, relation } from '@retikz/graph-vanilla';
+
+const embed = relation('edge', { role: 'flow', way: ['start', 'step'] });
+const adapters = [RelationInputEmbedAdapter];
+```
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit this section when diagnosing authoring normalization, Definitions, or Core Path boundaries."
+/>
+
+`RelationDefinition` removes only the Graph namespace, semantic `type`, and authored-only `role`, then passes every other field to a Core stroke Path while preserving the authored `id`. Targets, labels, marks, strokes, transforms, and diagnostics therefore follow Core Path instead of a second Relation-specific semantic path
+
+## API Reference
+
+| API                         | Package                 | Purpose                                                  |
+| --------------------------- | ----------------------- | -------------------------------------------------------- |
+| `createRelation()`          | `@retikz/graph`         | Creates and normalizes Relation IR                       |
+| `createGraphDefinitions()`  | `@retikz/graph`         | Creates the Graph Definition set for direct IR           |
+| `RelationInputEmbedAdapter` | `@retikz/graph-vanilla` | Embeds Relation input into Core compilation              |
+| `relation()`                | `@retikz/graph-vanilla` | Creates a Relation embed with an authored id             |
+| `way?: WayDSL`              | Relation author input   | Draw authoring syntax mutually exclusive with `children` |
+
+## Related
+
+- [Relation Basic Usage](/schematic/graph/relation/basic): React Steps, targets, and labels
+- [Entity Extended Usage](/schematic/graph/entity/extension): the matching direct IR and adapter entry points
+- [Core paths](/kernel/components/draw/overview): canonical Steps and renderer-agnostic output

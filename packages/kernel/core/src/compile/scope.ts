@@ -15,11 +15,12 @@ import type { NamespaceStack } from './namespace';
 import type { NodeLayout } from './node';
 import type { ResolveBetweenGlobal } from './position';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { Anchor } from '../shared';
 import { rect as rectOps } from '../shared/geometry';
 import { outerRectOf } from './node';
 import { resolvePosition } from './position';
-import { CompileInvariantError } from './probe-failure';
+import { RetikzCompileInvariantError } from './probe-failure';
 import { resolveAnchorRefUncached } from './reference';
 
 /** scope transform lowering 所需的编译上下文 */
@@ -41,7 +42,7 @@ export type LowerScopeTransformsContext = {
 /** 断言 self point / placement 计算结果是可发布的有限坐标 */
 const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition => {
   if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
-    throw new Error(`${label} must resolve to a finite point`);
+    throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `${label} must resolve to a finite point`);
   }
   return point;
 };
@@ -54,7 +55,9 @@ export const resolveScopeSelfPoint = (point: IRScopeSelfPoint, intrinsicLayout: 
   if (point === 'origin') return [0, 0];
   if (Array.isArray(point)) return assertFiniteScopePoint([point[0], point[1]], 'scope self point');
   if (intrinsicLayout === undefined) {
-    throw new CompileInvariantError('internal: intrinsic Scope layout is required to resolve an anchor self point');
+    throw new RetikzCompileInvariantError(
+      'internal: intrinsic Scope layout is required to resolve an anchor self point',
+    );
   }
   return assertFiniteScopePoint(resolveAnchorRefUncached(intrinsicLayout, point), 'scope self point');
 };

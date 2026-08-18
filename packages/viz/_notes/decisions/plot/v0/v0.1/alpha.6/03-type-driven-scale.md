@@ -46,7 +46,7 @@
 3. **fail-loud 不强转**：字段类型与 scale 不兼容通常表示 spec 错误，静默强转会产生无意义图。
 4. **guide 与 scale 同源**：guide 只消费已经解析的 scale 与字段类型，不维护平行推断。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 具体 scale definition / registry，由 alpha.12 的 scale registry 决策承接。
 - legend、tick layout 与 theme 由后续 guide / theme ADR 承接。

@@ -1,42 +1,43 @@
-## Chart authoring
+## Chart 编写
 
-`@retikz/chart` 将完整 Plot 配方与可选的图表叙事信息归一为 `IRChart`。`IRChart` 是 JSON 可序列化的 canonical IR；`ChartProvider` 是它唯一的 composite provider。应用通常通过 React 或 Vanilla adapter authoring，不需要自行组装 provider。
+所有 Chart 入口都遵循一致的字段布局，但不共享一个公开的 `ChartSchema` union。`BaseChartSchema` 与每个封装类型的精确 schema 都固定 `namespace: 'chart'`，用精确 `type` 表明解析逻辑；`plot` 保存 Plot 拥有的输入，封装类型的 `config` 保存该类型独有的配置，`presentation` 保存整图展示。
 
-| 入口                    | 适用场景                                                | 结果                                                |
-| ----------------------- | ------------------------------------------------------- | --------------------------------------------------- |
-| `Chart`                 | 已有完整 IRPlot，或需要以 Plot JSX 扩展图表主体       | 基础 Chart authoring                                |
-| `ScatterChart`          | 两个连续字段的散点比较                                  | 内置 Scatter recipe 与 Plot 扩展入口                |
-| `BubbleChart`           | 在二维位置外再编码一个定量面积                          | 内置 Bubble recipe 与 Plot 扩展入口                 |
-| `ConnectedScatterChart` | 以连线观察同一序列在二维空间中的演变                    | 内置 Connected Scatter recipe 与 Plot 扩展入口      |
-| `resolvePointChart` | framework-neutral 的 Point typed authoring 或 JSON 集成 | 将 Point typed 输入解析为 `IRChart` 与完整 IRPlot |
+精确 schema 解析后会绑定对应 recipe；所有 recipe 最终都由 `resolveChart` 产出 `IRBaseChart`，因此 Core 只消费 `chart.base`，不会按 Scatter、Bubble 等类型分裂执行入口。
 
-根入口只保留所有 Chart family 共用的基础能力：React 从 `@retikz/chart-react` 导入 `Chart` 和 presentation marker，Vanilla 从 `@retikz/chart-vanilla` 导入 `createChart` 与 `renderChart`。Point family 的 typed API 从对应 `/point` 入口导入：`@retikz/chart/point` 提供 schema 与 `resolvePointChart`，`@retikz/chart-react/point` 提供 `ScatterChart`、`BubbleChart` 与 `ConnectedScatterChart`，`@retikz/chart-vanilla/point` 提供 `createScatterChart`、`createBubbleChart` 与 `createConnectedScatterChart`。每个 `/point` 入口也包含其基础入口导出。
+| 入口                    | 适用场景                           | 对应 Chart `type`   |
+| ----------------------- | ---------------------------------- | ------------------- |
+| `Chart`                 | 显式描述完整 Plot                  | `base`              |
+| `ScatterChart`          | 比较两个连续字段                   | `scatter`           |
+| `BubbleChart`           | 在二维位置外再编码一个定量面积     | `bubble`            |
+| `ConnectedScatterChart` | 观察同一有序序列在二维空间中的演变 | `connected-scatter` |
 
-typed Chart 的 `data` 是行数组，`encoding` 描述 recipe 需要的字段；`mark` 使用 JSON-safe mark value，例如 `{ kind: 'constant', value: 10 }`。额外的轴、图例、mark、scale 或 transform 仍沿用 Plot 的公开 authoring 能力。
+“点图”用于文档导航、源码归置和多入口导入，三个包继续保留对应的 `/point` 公共入口：`@retikz/chart/point` 提供具体类型的数据结构，`@retikz/chart-react/point` 提供 `ScatterChart`、`BubbleChart` 与 `ConnectedScatterChart`，`@retikz/chart-vanilla/point` 提供 `createScatterChart`、`createBubbleChart` 与 `createConnectedScatterChart`。这个目录边界不形成 `PointChartSchema`、Point 专属解析器或适配主链；每个入口绑定自己的精确 schema，之后统一使用 `resolveChart` 与 Chart 适配契约。
 
-## Presentation
+封装类型把独有字段放在 `config` 中。例如 Scatter 的 `config.encoding` 提供 x/y，Bubble 再提供 size，Connected Scatter 再提供 order；主图元的局部调整也属于 `config`。数据、变换、比例尺、坐标、辅助元素与显式附加图元统一放在 `plot` 中，并继续沿用 Plot 的公开契约。
 
-`title`、`subtitle`、`source` 和 `note` 是 Chart 的 shorthand。未使用 marker 时，标题和副标题出现在 Plot 上方，注记和来源出现在 Plot 下方；同一侧的 shorthand 采用固定默认顺序。它们由 Chart 默认 token 提供样式，并与 Plot 一起进入同一个 Flex 布局。
+## 整图展示
 
-| React marker    | 对应 shorthand | 作用                         |
-| --------------- | -------------- | ---------------------------- |
-| `ChartTitle`    | `title`        | 图表主题或可观察结论         |
-| `ChartSubtitle` | `subtitle`     | 范围、年份、样本、单位或方法 |
-| `ChartSource`   | `source`       | 数据集与会影响理解的数据处理 |
-| `ChartNote`     | `note`         | 读图限制、口径提示或补充说明 |
+`title`、`subtitle`、`source` 和 `note` 是 Chart 的简写。未使用标记时，标题和副标题出现在 Plot 上方，注记和来源出现在 Plot 下方；同一侧的简写采用固定默认顺序。它们由 Chart 默认主题令牌提供样式，并与 Plot 一起进入同一个 Flex 布局。
 
-把 marker 作为 `Chart` 或 `XxxChart` 的直接 child；透明 `Fragment` 可用于分组。一个 marker 覆盖同名 shorthand，且每种 preset 最多出现一次。marker 按 JSX 出现顺序布局：例如上方的 `ChartSubtitle` 再 `ChartTitle` 会先显示副标题，图后依次写 `ChartSource`、`ChartNote` 则会按来源、注记显示。
+| React 标记      | 对应简写   | 作用                         |
+| --------------- | ---------- | ---------------------------- |
+| `ChartTitle`    | `title`    | 图表主题或可观察结论         |
+| `ChartSubtitle` | `subtitle` | 范围、年份、样本、单位或方法 |
+| `ChartSource`   | `source`   | 数据集与会影响理解的数据处理 |
+| `ChartNote`     | `note`     | 读图限制、口径提示或补充说明 |
 
-marker 的 children 目前只接受字符串、透明 `Fragment` 和 Core `Text`。多个 `Text` 可形成多行，并可分别提供字体、填充色或透明度。`position="top"` 与 `position="bottom"` 只在 authoring 期决定它位于 Plot 的哪一侧；canonical `IRChart` 只保留最终的 presentation children 顺序。
+把标记作为 `Chart` 或 `XxxChart` 的直接子节点；透明 `Fragment` 可用于分组。一个标记覆盖同名简写，且每种预设最多出现一次。标记按 JSX 出现顺序布局：例如上方的 `ChartSubtitle` 再 `ChartTitle` 会先显示副标题，图后依次写 `ChartSource`、`ChartNote` 则会按来源、注记显示。
 
-三个 typed factory 接受与 React 相同的 shorthand；需要自定义位置或顺序时，传入按顺序排列的 plain `presentation` records。record 的 `text` 是字符串或 JSON-safe Core TextBlock，不能传入 React 对象。
+标记的子节点目前只接受字符串、透明 `Fragment` 和 Core `Text`。多个 `Text` 可形成多行，并可分别提供字体、填充色或透明度。`position="top"` 与 `position="bottom"` 只在编写阶段决定它位于 Plot 的哪一侧；归一后的 Base Chart 只保留最终的展示子节点顺序。
 
-## Runtime styles
+各类型创建函数接受与 React 相同的简写；需要自定义位置或顺序时，传入按顺序排列的普通 `presentation` 记录。记录的 `text` 是字符串或可 JSON 序列化的 Core `TextBlock`，不能传入 React 对象。
 
-命名 style 必须同时由 Core、Chart 与 Plot 提供同名 definition。`<Layout>` 的静态 adapter 会把当前已解析的 Core Theme 与继承的 Core definitions 传给嵌入 Chart，因此 standalone 与 embedded 的 recipe 默认值一致。`themeStyles` 只配置 standalone Chart 自行创建的 Layout；嵌入 Chart 的命名 Core definition 必须放在父 `<Layout>`。Chart 与 Plot owner definition 可用 `chartThemeStyles`、`plotThemeStyles` 直接传给 Chart；standalone 子树也可用 `ChartThemeProvider` 与 `PlotThemeProvider` 注入。Vanilla 在 `createChart()` 或 typed factory 时一并传入 `theme` 与 `themeStyles`；它们会随返回的 authoring result 保留，`renderChart()` 在一次 compile 中消费该结果。需要补充 Core definitions 或其它编译选项时，传入 `renderChart()` 的 `compile`；它不接受会产生额外 layers 或 diagnostics 的 `compileDriver`。基础 `createChart()` 的 Plot definition 仍放在 `lowerOptions.plotThemeStyles`，以复用完整 Plot runtime options。
+## 运行时样式
+
+命名样式必须同时由 Core、Chart 与 Plot 提供同名定义。`<Layout>` 的静态适配层会把当前已解析的 Core 主题与继承的 Core 定义传给嵌入 Chart，因此独立与嵌入场景下的类型方案默认值一致。`themeStyles` 只配置独立 Chart 自行创建的 Layout；嵌入 Chart 的命名 Core 定义必须放在父 `<Layout>`。Chart 与 Plot 所属的定义可用 `chartThemeStyles`、`plotThemeStyles` 直接传给 Chart；独立子树也可用 `ChartThemeProvider` 与 `PlotThemeProvider` 注入。Vanilla 在调用 `createChart()` 或各类型创建函数时一并传入 `theme` 与 `themeStyles`；它们会随返回的编写结果保留，`renderChart()` 在一次编译中消费该结果。需要补充 Core 定义或其它编译选项时，传入 `renderChart()` 的 `compile`；它不接受会产生额外图层或诊断的 `compileDriver`。基础 `createChart()` 的 Plot 定义仍放在 `lowerOptions.plotThemeStyles`，以复用完整的 Plot 运行时选项。
 
 ## Plot extensions
 
-Chart 负责封闭 recipe、图表叙事和 canonical composition；Plot 继续负责坐标、比例尺、轴、legend、mark、annotation、transform 和交互语义。因此 `Legend`、`Axis` 或附加 mark 可以与 Chart marker 一起作为 typed Chart children 使用，但它们不是 presentation item。
+Chart 负责按 `type` 解释 `config`、组织整图展示和完成 Chart 组合；Plot 继续负责坐标、比例尺、轴、图例、图元、标注、变换和交互语义。因此 `Legend`、`Axis` 或附加图元可以与 Chart 标记一起使用，但它们不是整图展示项。
 
-adapter 会把 `SurfaceProvider`、`FlexLayoutProvider`、Plot provider 与 `ChartProvider` 作为一次 contribution 组装。这样标题、副标题、Plot、来源和注记能共同布局，同时 Plot 仍保留自己的 guide、lowering 与诊断路径。
+适配层会把 `SurfaceProvider`、`FlexLayoutProvider`、Plot 提供者与 `ChartProvider` 作为一次依赖贡献组装。这样标题、副标题、Plot、来源和注记能共同布局，同时 Plot 仍保留自己的辅助元素、下沉与诊断路径。

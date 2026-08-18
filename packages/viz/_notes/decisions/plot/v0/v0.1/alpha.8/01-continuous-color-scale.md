@@ -70,7 +70,7 @@ export const PlotScale = {
 3. **拆两成员**：sequential / diverging 语义不同（单调 vs 有中点），分开判别比「一个 type + midpoint 开关」对 LLM 与 `.describe` 都更清晰；diverging 复用 sequential 的 interpolator 机制、只是三段 domain。
 4. **守 mark 边界**：line/area 连续色 fail-loud，不偷偷做半成品 path gradient。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **离散化 scale**（quantize / threshold / quantile）→ [ADR-02](./02-discretization-scale.md)（复用本 ADR scheme/range）。
 - **legend**（连续色带 ramp）→ [ADR-03](./03-legend-guide.md)。

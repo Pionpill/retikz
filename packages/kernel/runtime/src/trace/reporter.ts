@@ -7,6 +7,7 @@ import type {
   RuntimeTraceReporter,
 } from './types';
 
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import {
   PerformanceTraceOutcome,
   PerformanceTracePhase as PerformanceTracePhaseConstants,
@@ -21,6 +22,14 @@ const isValidCount = (value: number): boolean => Number.isSafeInteger(value) && 
 
 const isPerformanceTracePhase = (value: unknown): value is PerformanceTracePhaseValue =>
   performanceTracePhases.has(value);
+
+const traceDefinitionError = (message: string, cause: unknown): RetikzRuntimeError =>
+  new RetikzRuntimeError({
+    code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
+    phase: 'trace-definition',
+    message,
+    cause,
+  });
 
 /** 为 phase 与 unit 组合生成无碰撞 definition key */
 const traceDefinitionKey = (phase: PerformanceTracePhaseValue, unit: PerformanceTraceRecord['unit']): string =>
@@ -54,28 +63,37 @@ const normalizePhaseDefinitions = (
   definitions: ReadonlyArray<RuntimeTracePhaseDefinition>,
 ): ReadonlyMap<string, RuntimeTracePhaseDefinition> => {
   if (!Array.isArray(definitions)) {
-    throw new Error('createRuntimeTraceReporter: phases must be an array');
+    throw traceDefinitionError('createRuntimeTraceReporter: phases must be an array', definitions);
   }
 
   const byKey = new Map<string, RuntimeTracePhaseDefinition>();
   for (const definition of definitions) {
     if (!performanceTracePhases.has(definition.phase)) {
-      throw new Error('createRuntimeTraceReporter: invalid phase');
+      throw traceDefinitionError('createRuntimeTraceReporter: invalid phase', definition);
     }
     if (!performanceTraceUnits.has(definition.unit)) {
-      throw new Error(`createRuntimeTraceReporter: phase "${definition.phase}" has an invalid unit`);
+      throw traceDefinitionError(
+        `createRuntimeTraceReporter: phase "${definition.phase}" has an invalid unit`,
+        definition,
+      );
     }
     if (!Array.isArray(definition.outcomes) || definition.outcomes.length === 0) {
-      throw new Error(`createRuntimeTraceReporter: phase "${definition.phase}" has no outcomes`);
+      throw traceDefinitionError(`createRuntimeTraceReporter: phase "${definition.phase}" has no outcomes`, definition);
     }
     if (
       definition.outcomes.some((outcome: PerformanceTraceRecord['outcome']) => !performanceTraceOutcomes.has(outcome))
     ) {
-      throw new Error(`createRuntimeTraceReporter: phase "${definition.phase}" has an invalid outcome`);
+      throw traceDefinitionError(
+        `createRuntimeTraceReporter: phase "${definition.phase}" has an invalid outcome`,
+        definition,
+      );
     }
     const key = traceDefinitionKey(definition.phase, definition.unit);
     if (byKey.has(key)) {
-      throw new Error(`createRuntimeTraceReporter: duplicate phase/unit "${definition.phase}/${definition.unit}"`);
+      throw traceDefinitionError(
+        `createRuntimeTraceReporter: duplicate phase/unit "${definition.phase}/${definition.unit}"`,
+        definition,
+      );
     }
     byKey.set(key, Object.freeze({ ...definition, outcomes: Object.freeze([...definition.outcomes]) }));
   }
@@ -98,10 +116,10 @@ export const createRuntimeTraceReporter = <const TOwner extends string>(
   const owner = input.owner;
   const sink = input.sink;
   if (typeof owner !== 'string' || owner.length === 0) {
-    throw new Error('createRuntimeTraceReporter: owner must not be empty');
+    throw traceDefinitionError('createRuntimeTraceReporter: owner must not be empty', owner);
   }
   if (typeof sink !== 'function') {
-    throw new Error('createRuntimeTraceReporter: sink must be a function');
+    throw traceDefinitionError('createRuntimeTraceReporter: sink must be a function', sink);
   }
 
   const definitions = normalizePhaseDefinitions(input.phases);

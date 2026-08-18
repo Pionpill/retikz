@@ -91,7 +91,9 @@ describe('Standard Legend renderer boundary', () => {
         ),
       }),
     );
-    const react = LegendSchema.parse(normalizeScene(reactInput.scene, { adapters: reactInput.adapters }).ir.children[0]);
+    const react = LegendSchema.parse(
+      normalizeScene(reactInput.scene, { adapters: reactInput.adapters }).ir.children[0],
+    );
     const vanillaInput = scene({ children: [legend('legend', input)] });
     const vanilla = LegendSchema.parse(
       normalizeScene(vanillaInput, { adapters: [LegendInputEmbedAdapter] }).ir.children[0],
@@ -109,15 +111,15 @@ describe('Standard Legend renderer boundary', () => {
   });
 
   it('renders one lowered Core Scene through SVG and Canvas without renderer-side Legend knowledge', () => {
-    const scene = compileLegendScene();
+    const compiledScene = compileLegendScene();
     const calls: Array<string> = [];
-    const svg = renderToSvgString(scene, { idPrefix: 'legend' });
+    const svg = renderToSvgString(compiledScene, { idPrefix: 'legend' });
 
-    expect(() => drawScene(recordingContext(calls), scene)).not.toThrow();
+    expect(() => drawScene(recordingContext(calls), compiledScene)).not.toThrow();
     expect(svg).toContain('<svg');
     expect(svg).toContain('<path');
     expect(svg).toContain('Flow');
-    expect(JSON.stringify(scene)).not.toContain('standard.legend');
+    expect(JSON.stringify(compiledScene)).not.toContain('standard.legend');
     expect(calls.length).toBeGreaterThan(0);
   });
 });

@@ -1,6 +1,6 @@
 # v0.5 路线总计划
 
-> 状态：`v0.5.0-alpha.1` 已完成 Accepted 收尾；`v0.5.0-alpha.2` 的 ADR-01～10、ADR-12、ADR-14、ADR-16～17 已 Accepted，ADR-11、ADR-15、ADR-18～20 为 Proposed，ADR-13 已 Superseded；alpha.3 已进入 Proposed 设计，承接 Concurrent + generation；alpha.4 仅登记 Headless Interaction 候选边界。
+> 状态：`v0.5.0-alpha.1` 已完成 Accepted 收尾；`v0.5.0-alpha.2` 的 ADR-02～12、ADR-14～20、ADR-22 已 Accepted，ADR-01、ADR-13、ADR-21 已 Superseded；alpha.3 已进入 Proposed 设计，承接 Concurrent + generation；alpha.4 仅登记 Headless Interaction 候选边界。
 >
 > 每条 Proposed ADR 必须按 `flow-alpha` 独立完成能力完备性、包边界、define-registry、测试契约与端到端闭环检查，不能因共用同一 milestone 跳过 Gate。
 

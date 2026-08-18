@@ -2,7 +2,6 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-15
-- 关联：[alpha.1 roadmap](./roadmap.md) · [Graph v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
 ## 背景
 
@@ -64,10 +63,6 @@ GraphNode 与 GraphConnector 使用 Core composite Definition 的普通 `expand`
 
 直接 JSON、React 与 Vanilla 必须进入同一 Graph factory、Definition、provider 与 Core compile 主链。adapter 不复制 schema、默认值、variant recipe、路径 parser 或布局逻辑
 
-## 不在本 ADR 范围
+## 长期边界
 
-- GraphModel、GraphDocument、GraphGeometry、Flow、Editor、selection、viewport 与 history
-- 自动布局、自动 routing、避障、命中测试与交互状态
-- UML、State、actor、lifeline 等新领域元素
-- Graph 自定义 element registry、主题 registry 或兼容别名
-- push、tag、publish 与 release 执行
+Graph 只拥有通用图式元素的语义与呈现，不拥有 GraphModel、GraphDocument、自动布局、routing、Editor 状态或 renderer 机制。上层 Diagram、Flow、UML 等领域能力通过新的 owner 与 ADR 建立，不反向扩张本 package family；旧入口不提供兼容别名

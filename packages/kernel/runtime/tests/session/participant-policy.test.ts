@@ -9,6 +9,7 @@ import {
   defineRuntimeCommitParticipant,
   defineRuntimeOwner,
   defineRuntimeProgram,
+  RetikzRuntimeErrorCode,
   RuntimeProgramKind,
 } from '../../src';
 
@@ -302,11 +303,11 @@ describe('runtime session participant revision policy', () => {
     expect(ownerDisposeCalls).toBe(1);
     expect(artifactDisposeCalls).toBe(1);
     expect(session.diagnostics()).toEqual([
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: trigger, owner: 'b' }),
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED', cause: trigger, owner: 'b' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: trigger, owner: 'b' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: trigger, owner: 'b' }),
     ]);
     expect(() => session.participant(first)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_SESSION_DISPOSED' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.SessionDisposed }),
     );
     expect(() => session.dispose()).not.toThrow();
     expect(calls).toEqual(['b', 'a', 'b', 'b']);

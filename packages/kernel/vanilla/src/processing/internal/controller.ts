@@ -9,7 +9,7 @@ import {
   createRuntimeSession,
   defineRuntimeCommitParticipant,
   defineRuntimeOwner,
-  RuntimeError,
+  RetikzRuntimeError,
 } from '@retikz/runtime';
 
 import type {
@@ -26,6 +26,7 @@ import type {
 } from '../types';
 import type { InternalProcessingController, ProcessingTransactionParticipantFactory } from './types';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import {
   commitVanillaCompileOutput,
   createVanillaCompileDriverSession,
@@ -41,7 +42,10 @@ const VanillaCompileDriverRevisionOwnerDefinition = defineRuntimeOwner<number, n
   value: {
     capture: value => {
       if (!Number.isSafeInteger(value) || value < 0) {
-        throw new Error('Vanilla compile driver revision must be a non-negative safe integer');
+        throw new RetikzVanillaError(
+          RetikzVanillaErrorCode.Processing,
+          'Vanilla compile driver revision must be a non-negative safe integer',
+        );
       }
       return value;
     },
@@ -56,7 +60,7 @@ const PROCESSING_RESULT_PARTICIPANT_KEY = '@retikz/vanilla:processing-result' as
 /** 返回 Runtime 包装错误中最接近 Core 编译诊断的根因 */
 const processingCause = (cause: unknown): unknown => {
   let current = cause;
-  while (current instanceof RuntimeError && current.cause !== undefined) current = current.cause;
+  while (current instanceof RetikzRuntimeError && current.cause !== undefined) current = current.cause;
   return current;
 };
 
@@ -84,7 +88,11 @@ const restoreVanillaCompileDriverSession = (
   compileSession: VanillaCompileDriverSession,
 ): void => {
   const restored = createVanillaCompileDriverSession(compileDriver, input);
-  if (restored !== compileSession) throw new Error('Vanilla compile driver restore changed session identity');
+  if (restored !== compileSession)
+    throw new RetikzVanillaError(
+      RetikzVanillaErrorCode.Processing,
+      'Vanilla compile driver restore changed session identity',
+    );
 };
 
 /** 以同一 Runtime revision 冻结全部 processing 公共结果 */
@@ -193,7 +201,8 @@ const createRetainedProcessingState = (
       });
     },
     read: () => {
-      if (participantResult === undefined) throw new Error('Vanilla processing result is unavailable');
+      if (participantResult === undefined)
+        throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Vanilla processing result is unavailable');
       return participantResult;
     },
     dispose: () => {
@@ -244,7 +253,10 @@ const createRetainedProcessingState = (
       try {
         const nextCompileSession = createVanillaCompileDriverSession(compileDriver, nextDriverInput);
         if (nextCompileSession !== compileSession) {
-          throw new Error('Vanilla compile driver must preserve its session for a retained processing controller');
+          throw new RetikzVanillaError(
+            RetikzVanillaErrorCode.Processing,
+            'Vanilla compile driver must preserve its session for a retained processing controller',
+          );
         }
         const nextCompositeRevision = definitions.changed ? compositeRevision + 1 : compositeRevision;
         const nextCompileDriverRevision = hasCustomCompileDriver ? compileDriverRevision + 1 : compileDriverRevision;
@@ -278,14 +290,23 @@ const createRetainedProcessingState = (
         try {
           restoreVanillaCompileDriverSession(compileDriver, previousDriverInput, compileSession);
         } catch (restoreCause) {
-          throw new Error('Vanilla compile driver input rollback failed', { cause: restoreCause });
+          throw new RetikzVanillaError(
+            RetikzVanillaErrorCode.Processing,
+            'Vanilla compile driver input rollback failed',
+            {
+              cause: restoreCause,
+            },
+          );
         }
         throw cause;
       }
     },
     updateParticipant: revision => {
       if (transactionParticipant?.updateParticipant === undefined) {
-        throw new Error('createProcessingController: participant configuration is unavailable');
+        throw new RetikzVanillaError(
+          RetikzVanillaErrorCode.Processing,
+          'createProcessingController: participant configuration is unavailable',
+        );
       }
       participantPrepared = prepared;
       participantRevision = revision;
@@ -363,7 +384,7 @@ const createProcessingController = (
   };
 
   const assertActive = (): void => {
-    if (disposed) throw new Error('Processing controller is disposed');
+    if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Processing controller is disposed');
   };
 
   return Object.freeze({
@@ -383,14 +404,21 @@ const createProcessingController = (
         try {
           const candidateCompileSession = createVanillaCompileDriverSession(compileDriver, nextDriverInput);
           if (candidateCompileSession !== compileSession) {
-            throw new Error('Vanilla compile driver must preserve its session for a retained processing controller');
+            throw new RetikzVanillaError(
+              RetikzVanillaErrorCode.Processing,
+              'Vanilla compile driver must preserve its session for a retained processing controller',
+            );
           }
           candidate = createState(next, nextDriverInput, current.revision + 1, transactionParticipantFactory);
         } catch (cause) {
           try {
             restoreVanillaCompileDriverSession(compileDriver, previous.driverInput(), compileSession);
           } catch (restoreCause) {
-            const rollbackCause = new Error('Vanilla compile driver input rollback failed', { cause: restoreCause });
+            const rollbackCause = new RetikzVanillaError(
+              RetikzVanillaErrorCode.Processing,
+              'Vanilla compile driver input rollback failed',
+              { cause: restoreCause },
+            );
             diagnostics.push(rollbackCause);
             throw rollbackCause;
           }

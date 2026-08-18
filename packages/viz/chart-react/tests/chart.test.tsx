@@ -2,14 +2,13 @@ import type { IRPlot } from '@retikz/plot';
 
 import { ChartProvider, defineChartThemeStyle } from '@retikz/chart';
 import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
-import { PointChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import { defineThemeStyle } from '@retikz/core';
 import { definePlotThemeStyle, getDefaultPlotThemePreset, PlotProviderKey } from '@retikz/plot';
 import { Layout, Scope, Text } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { getDefaultChartThemePreset } from '../../chart/src/base/style';
+import { getDefaultChartThemePreset } from '../../chart/src/_chart/style';
 import { Chart, ChartNote, ChartSource, ChartSubtitle, ChartTitle } from '../src';
 import { ScatterChart } from '../src/point';
 
@@ -85,7 +84,7 @@ describe('<Chart>', () => {
 
     expect(contribution.node).toMatchObject({
       namespace: 'chart',
-      type: 'chart',
+      type: 'base',
       plot,
       presentation: {
         children: [
@@ -119,8 +118,7 @@ describe('<Chart>', () => {
     });
 
     expect(input).not.toHaveProperty('chart');
-    expect(input.plot).not.toHaveProperty('namespace');
-    expect(input.plot).not.toHaveProperty('type');
+    expect(input.bound.type).toBe('base');
     expect(ChartInputEmbedAdapter.lower(input, contextOf('income-life')).node).toMatchObject({
       presentation: { children: [{ preset: 'title', text: 'Marker title' }, { key: 'chart.plot' }] },
     });
@@ -160,11 +158,11 @@ describe('<Chart>', () => {
       encoding: { x: { field: 'income' }, y: { field: 'life' } },
       title: 'Income and life expectancy',
     });
-    const contribution = PointChartInputEmbedAdapter.lower(input, contextOf('income-life'));
+    const contribution = ChartInputEmbedAdapter.lower(input, contextOf('income-life'));
 
     expect(contribution.node).toMatchObject({
       namespace: 'chart',
-      type: 'chart',
+      type: 'base',
       plot: { data: { reference: 'chart.data' } },
       presentation: { children: [{ preset: 'title' }, { key: 'chart.plot' }] },
     });
@@ -183,12 +181,12 @@ describe('<Chart>', () => {
       onCompileResult: () => undefined,
     });
 
-    expect(input.input).not.toHaveProperty('runtime');
-    expect(input.input).not.toHaveProperty('animate');
-    expect(input.input).not.toHaveProperty('snapshotAt');
-    expect(input.input).not.toHaveProperty('animationRef');
-    expect(input.input).not.toHaveProperty('onArtifacts');
-    expect(input.input).not.toHaveProperty('onCompileResult');
+    expect(input).not.toHaveProperty('runtime');
+    expect(input).not.toHaveProperty('animate');
+    expect(input).not.toHaveProperty('snapshotAt');
+    expect(input).not.toHaveProperty('animationRef');
+    expect(input).not.toHaveProperty('onArtifacts');
+    expect(input).not.toHaveProperty('onCompileResult');
   });
 
   it('keeps Core Theme resolution in the enclosing Vanilla processing context', () => {
@@ -201,8 +199,8 @@ describe('<Chart>', () => {
       plotThemeStyles: [brandPlotTheme],
     });
 
-    expect(PointChartInputEmbedAdapter.lower(input, contextOf('income-life'))).toMatchObject({
-      node: { type: 'scope', children: [{ namespace: 'chart', type: 'chart' }] },
+    expect(ChartInputEmbedAdapter.lower(input, contextOf('income-life'))).toMatchObject({
+      node: { type: 'scope', children: [{ namespace: 'chart', type: 'base' }] },
       providerDependencies: { roots: [ChartProvider.key] },
     });
   });
@@ -237,7 +235,7 @@ describe('<Chart>', () => {
     expect(contribution.node).toMatchObject({
       type: 'scope',
       transforms: [{ kind: 'translate', x: 10, y: 0 }],
-      children: [{ namespace: 'chart', type: 'chart', id: 'sales' }],
+      children: [{ namespace: 'chart', type: 'base', id: 'sales' }],
     });
     expect(contribution.node).not.toHaveProperty('id');
   });

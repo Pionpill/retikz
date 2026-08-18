@@ -4,6 +4,8 @@ import { createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runt
 
 import type { HydrationController } from '../hydration';
 
+import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
+
 /** 判断动态值是否为普通对象 */
 export const isPlainObject = (value: object): boolean => {
   const prototype = Object.getPrototypeOf(value);
@@ -77,7 +79,8 @@ export const createRuntimeIdentityMap = <TValue>(
     return true;
   };
   for (const [identity, value] of entries) {
-    if (!set(identity, value)) throw new Error('Runtime identity map received a duplicate identity');
+    if (!set(identity, value))
+      throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Runtime identity map received a duplicate identity');
   }
   return Object.freeze({ get, has: identity => get(identity) !== undefined, set, delete: remove });
 };
@@ -135,19 +138,29 @@ export const createPublicIdPrimitivePathMap = (
 export const cloneAndFreezeRuntimeValue = <T>(value: T, ancestors = new WeakSet<object>()): T => {
   if (typeof value !== 'object' || value === null) return value;
   if (!Array.isArray(value) && !isPlainObject(value)) return value;
-  if (ancestors.has(value)) throw new Error('Render runtime config must not contain cyclic plain data');
+  if (ancestors.has(value))
+    throw new RetikzRenderError(
+      RetikzRenderErrorCode.Runtime,
+      'Render runtime config must not contain cyclic plain data',
+    );
   ancestors.add(value);
   let copied: unknown;
   if (Array.isArray(value)) {
     const keys = Reflect.ownKeys(value);
     if (keys.length !== value.length + 1 || keys.some(key => typeof key !== 'string')) {
-      throw new Error('Render runtime config arrays must be dense data-property arrays');
+      throw new RetikzRenderError(
+        RetikzRenderErrorCode.Runtime,
+        'Render runtime config arrays must be dense data-property arrays',
+      );
     }
     const array: Array<unknown> = [];
     for (let index = 0; index < value.length; index += 1) {
       const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
       if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-        throw new Error('Render runtime config arrays must be dense data-property arrays');
+        throw new RetikzRenderError(
+          RetikzRenderErrorCode.Runtime,
+          'Render runtime config arrays must be dense data-property arrays',
+        );
       }
       array.push(cloneAndFreezeRuntimeValue(descriptor.value, ancestors));
     }
@@ -157,7 +170,10 @@ export const cloneAndFreezeRuntimeValue = <T>(value: T, ancestors = new WeakSet<
     for (const key of Reflect.ownKeys(value)) {
       const descriptor = Object.getOwnPropertyDescriptor(value, key);
       if (typeof key !== 'string' || descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-        throw new Error('Render runtime config objects must contain enumerable data properties');
+        throw new RetikzRenderError(
+          RetikzRenderErrorCode.Runtime,
+          'Render runtime config objects must contain enumerable data properties',
+        );
       }
       Object.defineProperty(record, key, {
         value: cloneAndFreezeRuntimeValue(descriptor.value, ancestors),
@@ -239,7 +255,7 @@ export const createHydrationCleanupQueue = (): HydrationCleanupQueue => {
 export const recoverHydrationSetupFailure = (
   cause: unknown,
 ): Readonly<{ cause: unknown; controller: HydrationController }> | undefined => {
-  if (!(cause instanceof Error) || cause.name !== 'HydrationControllerSetupError') return undefined;
+  if (!(cause instanceof Error) || cause.name !== 'RetikzHydrationControllerSetupError') return undefined;
   const controller = Reflect.get(cause, 'controller');
   if (
     typeof controller !== 'object' ||

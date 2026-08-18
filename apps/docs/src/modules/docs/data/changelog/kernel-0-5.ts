@@ -32,8 +32,8 @@ export const kernelV05: Release = {
             en: 'BREAKING: blank semantics and additive error surface',
           },
           content: {
-            zh: 'Runtime identity 的空 owner / path segment 现在 fail-loud，并由 `RuntimeIdentityError` 保留原始 rejected value 为 `cause`。Runtime、Render、Plot declaration 与 Chart resolution 错误保留既有 constructor、文本、字段、`instanceof` 和 recovery，同时增加 owner `details` 与统一 own `cause`。',
-            en: 'Runtime identity owners and path segments now fail loudly when blank, and `RuntimeIdentityError` keeps the rejected value as `cause`. Runtime, Render, Plot declaration, and Chart resolution errors preserve constructors, text, fields, `instanceof`, and recovery while adding owner details and a unified own `cause`.',
+            zh: 'Runtime identity 的空 owner / path segment 现在 fail-loud，并由 `RetikzRuntimeIdentityError` 保留原始 rejected value 为 `cause`。Runtime、Render、Plot declaration 与 Chart resolution 错误保留既有 constructor、文本、字段、`instanceof` 和 recovery，同时增加 owner `details` 与统一 own `cause`。',
+            en: 'Runtime identity owners and path segments now fail loudly when blank, and `RetikzRuntimeIdentityError` keeps the rejected value as `cause`. Runtime, Render, Plot declaration, and Chart resolution errors preserve constructors, text, fields, `instanceof`, and recovery while adding owner details and a unified own `cause`.',
           },
         },
       ],

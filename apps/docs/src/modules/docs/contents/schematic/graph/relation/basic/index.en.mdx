@@ -1,0 +1,58 @@
+---
+title: Relation Basic Usage
+description: Connect Entity values with Core Path Step children, labels, and common route steps.
+---
+
+`Relation` expresses an explicit relationship in Graph. Basic usage uses React `<Step>` children directly, so the start, route steps, and target follow Core Path authoring syntax
+
+## Usage
+
+```tsx
+import { Layout, Step } from '@retikz/react';
+import { Entity, Relation } from '@retikz/graph-react';
+```
+
+```tsx
+<Layout width={420} height={160}>
+  <Entity id="start" role="terminal" position={[24, 56]}>
+    Start
+  </Entity>
+  <Entity id="step" role="stage" position={[220, 56]}>
+    Step
+  </Entity>
+  <Relation id="start-to-step" role="flow">
+    <Step kind="move" to="start" />
+    <Step to="step" label={{ text: 'next' }} />
+  </Relation>
+</Layout>
+```
+
+Relation's `id` is its authored identity. Each path starts with a `move` step, then uses targets, coordinates, or other Core steps to describe the route
+
+## Examples
+
+### Step routes and labels
+
+Steps can target Entity values or coordinates, and a label belongs on the step it annotates. Fold and polyline routes continue to follow the Core Path contract
+
+<ComponentPreview files="relation-routing" size="lg" caption="Compare straight, folded, and labelled Step routes." />
+
+### Default arrow
+
+When `marks` is omitted, Relation adds an arrow at the terminal position. An explicit `marks` array fully replaces the default, so `marks: []` disables the arrow
+
+## API Reference
+
+| Prop            | Type                      | Default        | Description                                                      |
+| --------------- | ------------------------- | -------------- | ---------------------------------------------------------------- |
+| `id`            | `string`                  | —              | Stable authored identity                                         |
+| `role`          | `RelationRoleValue`       | —              | Relation semantics retained only in Graph IR                     |
+| `children`      | `Array<IRStep>`           | —              | Canonical Core Path Step sequence                                |
+| `marks?`        | Core Path mark placements | terminal arrow | Explicit arrays replace the default; `[]` disables the arrow     |
+| Core Path props | Core stroke Path props    | Core defaults  | Reuses labels, stroke, fill, transforms, and related Path fields |
+
+## Related
+
+- [Relation Extended Usage](/schematic/graph/relation/extension): Draw ways, direct IR, and Vanilla
+- [Entity Basic Usage](/schematic/graph/entity/basic): create targetable subjects
+- [Core paths](/kernel/components/draw/overview): the lower-level path contract Relation uses

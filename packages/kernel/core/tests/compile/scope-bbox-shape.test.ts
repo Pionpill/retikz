@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
 import type { NodeLayout } from '../../src/compile/node';
 
+import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { boxInsets } from '../../src/compile/node';
 import { createScopeCircleLayout } from '../../src/compile/node';
@@ -110,7 +111,7 @@ describe('scope boundingShape="circle" 集成测试', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
-    expect(warnings.filter(w => w.code === 'UNRESOLVED_NODE_REFERENCE')).toHaveLength(0);
+    expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
     const end = lineTo(topPath(compiled.primitives));
     expect(end).toBeDefined();
     // 从 right 方向入射，x 应 > 0（MEC 中心偏右侧）

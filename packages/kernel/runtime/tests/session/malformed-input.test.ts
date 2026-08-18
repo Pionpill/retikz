@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { RuntimeProgramDefinitionInput } from '../../src/program';
 import type { RuntimeSessionUpdate } from '../../src/transaction';
 
+import { RetikzRuntimeErrorCode, RuntimeDiagnosticCode } from '../../src';
 import { defineRuntimeOwner } from '../../src/owner';
 import { defineRuntimeProgram, RuntimeProgramKind, RuntimeProgramPhase } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
@@ -25,10 +26,10 @@ describe('runtime session malformed JavaScript input', () => {
     const create = createRuntimeSession as (value: unknown) => unknown;
 
     expect(() => create(null)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_REGISTRY_MISMATCH', phase: 'session-create' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.RegistryMismatch, phase: 'session-create' }),
     );
     expect(() => create({ owners: {}, programs: {} })).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_REGISTRY_MISMATCH', phase: 'session-create' }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.RegistryMismatch, phase: 'session-create' }),
     );
   });
 
@@ -47,7 +48,7 @@ describe('runtime session malformed JavaScript input', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_UPDATE_STRATEGY_INVALID',
+        code: RetikzRuntimeErrorCode.UpdateStrategyInvalid,
         phase: 'session-create',
       }),
     );
@@ -106,7 +107,7 @@ describe('runtime session malformed JavaScript input', () => {
 
     expect(() => create(options)).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_UPDATE_STRATEGY_INVALID',
+        code: RetikzRuntimeErrorCode.UpdateStrategyInvalid,
         phase: 'session-create',
       }),
     );
@@ -125,10 +126,10 @@ describe('runtime session malformed JavaScript input', () => {
     const update = session.update as (value: unknown) => unknown;
 
     expect(() => update(null)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_REVISION_INVALID', phase: RuntimeProgramPhase.Update }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: RuntimeProgramPhase.Update }),
     );
     expect(() => update('invalid')).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_REVISION_INVALID', phase: RuntimeProgramPhase.Update }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: RuntimeProgramPhase.Update }),
     );
   });
 
@@ -158,7 +159,7 @@ describe('runtime session malformed JavaScript input', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_PROGRAM_RUN_FAILED',
+        code: RetikzRuntimeErrorCode.ProgramRunFailed,
         phase: 'run',
         program: { owner: 'counter', key: 'program' },
         cause: null,
@@ -198,7 +199,7 @@ describe('runtime session malformed JavaScript input', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_PROGRAM_RUN_FAILED',
+        code: RetikzRuntimeErrorCode.ProgramRunFailed,
         phase: 'run',
         cause: getterCause,
       }),
@@ -294,7 +295,7 @@ describe('runtime session malformed JavaScript input', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_PROGRAM_UPDATE_FAILED',
+        code: RetikzRuntimeErrorCode.ProgramUpdateFailed,
         phase: RuntimeProgramPhase.Update,
         program: { owner: 'counter', key: 'program' },
         cause: testCase.result,
@@ -315,7 +316,7 @@ describe('runtime session malformed JavaScript input', () => {
     const malformed = { baseRevision: session.revision() } as unknown as RuntimeSessionUpdate;
 
     expect(() => session.update(malformed)).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_OWNER_COMMAND_INVALID', phase: RuntimeProgramPhase.Update }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.OwnerCommandInvalid, phase: RuntimeProgramPhase.Update }),
     );
   });
 
@@ -357,7 +358,7 @@ describe('runtime session malformed JavaScript input', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        code: 'RUNTIME_PROGRAM_UPDATE_FAILED',
+        code: RetikzRuntimeErrorCode.ProgramUpdateFailed,
         phase: RuntimeProgramPhase.Update,
       }),
     );
@@ -435,7 +436,7 @@ describe('runtime session malformed JavaScript input', () => {
     });
 
     expect(session.diagnostics()).toEqual([
-      expect.objectContaining({ code: 'RUNTIME_TRACE_INVALID_RECORD', severity: 'error' }),
+      expect.objectContaining({ code: RuntimeDiagnosticCode.TraceInvalidRecord, severity: 'error' }),
     ]);
   });
 });

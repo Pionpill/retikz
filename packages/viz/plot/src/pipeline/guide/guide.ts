@@ -20,6 +20,7 @@ import type { IRPlotAxisGuide, LegendChannelValue, LegendOrientValue, LegendPosi
 import type { Rect } from '../../shared';
 
 import { guideLayerId, guideLayerMeta } from '../../contract';
+import { RetikzPlotError } from '../../error';
 import { defaultOriginAxisTickSideOf } from '../../providers';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import {
@@ -96,7 +97,7 @@ const hasCartesianOnlyAxisLineGeometry = (guide: IRPlotAxisGuide): boolean => {
 
 const assertNoCartesianOnlyAxisLineGeometry = (guide: IRPlotAxisGuide): void => {
   if (hasCartesianOnlyAxisLineGeometry(guide)) {
-    throw new Error('lowerPlots: axis line arrow and data extent are only supported for cartesian axes');
+    throw new RetikzPlotError('lowerPlots: axis line arrow and data extent are only supported for cartesian axes');
   }
 };
 
@@ -770,7 +771,7 @@ const cartesianAxisSideFromEdge = (edge: string): CartesianAxisSide => {
     edge !== AxisCardinalSide.Bottom &&
     edge !== AxisCardinalSide.Left
   ) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: cartesian axis edge placement must be one of top, right, bottom, or left (got "${edge}")`,
     );
   }
@@ -779,10 +780,14 @@ const cartesianAxisSideFromEdge = (edge: string): CartesianAxisSide => {
 
 const assertCartesianAxisSideCompatible = (side: CartesianAxisSide, isX: boolean): void => {
   if (isX && side !== AxisCardinalSide.Top && side !== AxisCardinalSide.Bottom) {
-    throw new Error(`lowerPlots: cartesian x axis only supports top or bottom side placement (got "${side}")`);
+    throw new RetikzPlotError(
+      `lowerPlots: cartesian x axis only supports top or bottom side placement (got "${side}")`,
+    );
   }
   if (!isX && side !== AxisCardinalSide.Left && side !== AxisCardinalSide.Right) {
-    throw new Error(`lowerPlots: cartesian y axis only supports left or right side placement (got "${side}")`);
+    throw new RetikzPlotError(
+      `lowerPlots: cartesian y axis only supports left or right side placement (got "${side}")`,
+    );
   }
 };
 
@@ -799,10 +804,10 @@ const cartesianAxisSideOf = (guide: IRPlotAxisGuide, isX: boolean): CartesianAxi
         : placement.side;
   if (placement.kind === AxisPlacementKind.Origin) {
     if (isX && side !== AxisCardinalSide.Top && side !== AxisCardinalSide.Bottom) {
-      throw new Error(`lowerPlots: cartesian x origin axis tickSide must be top or bottom (got "${side}")`);
+      throw new RetikzPlotError(`lowerPlots: cartesian x origin axis tickSide must be top or bottom (got "${side}")`);
     }
     if (!isX && side !== AxisCardinalSide.Left && side !== AxisCardinalSide.Right) {
-      throw new Error(`lowerPlots: cartesian y origin axis tickSide must be left or right (got "${side}")`);
+      throw new RetikzPlotError(`lowerPlots: cartesian y origin axis tickSide must be left or right (got "${side}")`);
     }
   }
   assertCartesianAxisSideCompatible(side, isX);
@@ -1428,7 +1433,7 @@ export const lowerCustomAxis = (
 ): LoweredGuide => {
   assertNoCartesianOnlyAxisLineGeometry(guide);
   if (guide.placement?.kind === AxisPlacementKind.Origin) {
-    throw new Error('lowerPlots: origin axis placement is only supported for cartesian axes');
+    throw new RetikzPlotError('lowerPlots: origin axis placement is only supported for cartesian axes');
   }
   const scale = frame.roleScales?.[guide.dimension];
   if (!scale) return { gridLayer: null, axisLayer: null };
@@ -1561,7 +1566,7 @@ export const lowerGuide = (guide: IRPlotAxisGuide, ctx: GuideContext, context?: 
     assertNoCartesianOnlyAxisLineGeometry(guide);
   }
   if (guide.placement?.kind === AxisPlacementKind.Origin && ctx.frame) {
-    throw new Error('lowerPlots: origin axis placement is only supported for cartesian axes');
+    throw new RetikzPlotError('lowerPlots: origin axis placement is only supported for cartesian axes');
   }
   if (ctx.frame) {
     return isPrimaryDimension(guide.dimension)

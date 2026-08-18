@@ -53,11 +53,6 @@ Scope { localNamespace: true, children: [...] }   // 旧结构，单图零回归
 - React `<Plot>` 同时承载 standalone 与嵌入两套行为。
 - 嵌入能力依赖 core-react embeddable 机制先行落地。
 
-## 被否决的选项
-
-- **新增 plot 级 `<Plots>` / `<Figure>` 容器**：core `<Layout>` 已是组合容器、`Scope` 已提供 transform 与 id anchor，再造一层平行容器违背「组合真源是 core IR」。
-- **写死 plot 的 Layout 收纳逻辑**：应做通用 Tier 2 贡献机制，避免 core-react 耦合具体子组件。
-
 ## 不在本 ADR 范围 / 未来兼容性
 
 - series / datum 级外部 anchor、相对摆位、布局托管、非矩形 panel bbox 留给后续 milestone。

@@ -38,7 +38,7 @@ scale 轴从“内置分支 + 局部补丁”收敛为 definition registry。后
 
 这也为 ADR-10 / ADR-11 的 visual channel registry 铺路：scale 管 domain 到归一化数学，visual channel 管输出空间与落点。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 自定义 visual channel 的 delivery；由 ADR-11 处理。
 - React `<Scale>` 对所有 custom type 的声明糖完全放开。

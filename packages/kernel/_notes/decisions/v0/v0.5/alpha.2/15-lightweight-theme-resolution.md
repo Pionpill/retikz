@@ -1,8 +1,8 @@
 # ADR-15：轻量 Theme IR 与可扩展 Style 解析
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-08
-- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-09：可继承 Theme IR 与 Composite 编译上下文](./09-inherited-theme-context.md) · [ADR-13：Theme Token Namespace Context 与共享颜色](./13-theme-token-namespace-context.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Visualization Complete](../../../../../../viz/_notes/architecture/plot-visualization-complete.md)
+- 关联：[ADR-09](./09-inherited-theme-context.md) · [ADR-13](./13-theme-token-namespace-context.md)
 - Supersedes：ADR-13 中将 namespaced token bag、Theme token Definition / Contribution 与其 registry 写入 Core Theme IR 的决策。ADR-09 的 Scene / Scope 继承、Composite context、probe / replay 与 adapter 等价性继续有效
 
 ## 背景与目标
@@ -99,30 +99,7 @@ type ThemeTokenSourceValue = ValueOf<typeof ThemeTokenSource>;
 - 外部扩展与下游闭环：自定义 style 在 Core 和每个实际消费它的领域 owner 中注册同名 definition。应用级 preset 负责组合这些 owner-local definitions，但不建立跨 owner definition 或 registry；Core composite context 提供 resolved Theme，Plot / Chart / Table 将解析后的正式输入下沉既有 Core / Standard 链路。未来 owner 若需消费开放 style，必须新增其 owner-local definition 与同样的注册闭环，不复用既有领域 token contract
 - 不支持边界：不支持通过 Scope 下发任意 token key、以一个 Core definition 携带领域 token、未注册领域时的 neutral fallback、Definition 覆盖内置 style、动态 mode 注册、远程 Theme loader、Theme lineage、交互状态和动画 token
 
-## 架构验证
-
-- 是否可由现有能力组合：不能完全由现有能力组合。ADR-09 已提供 Scene / Scope Theme 继承和 Composite context，Plot / Chart / Table 已各有 owner-local token resolver；缺口是闭合 selector 与硬编码 preset 没有统一的 runtime definition / registry。该 ADR 扩展现有 Theme、Plot、Chart 与 Table 域，不新建平行 IR 或 renderer 分支
-- math / core / render / adapter 责任切分：Math 与 Runtime 不解释 Theme；Core 解析 selector、Core registry 与 shared colors；Plot / Chart / Table 各自解析 token；Render 不读取 Theme；React / Vanilla 只将相同 runtime definitions 转交 owner 入口
-- 是否需要新 IR / contract / registry：需要 Core、Plot、Chart 与 Table 四个 owner-local Definition / registry contract；不新增 token IR 或跨 owner token registry
-- Scene / manifest / renderer / diagnostics 如何闭环：Scene / Scope 只持有 selector，Composite 读取完整 effective Theme，owner resolver 物化正式样式输入，最终 Scene 只含已物化 primitive。Core 与 owner registry 在各自可定位的消费边界报告缺失 definition；renderer 无需理解 Theme
-- provenance / locator / Interaction Readiness 是否适用：现有 Theme locator、Scope traversal、probe / replay 与 incremental snapshot 继续使用轻量 selector；本 ADR 不新增 interaction 语义
-- 结论：扩展既有 Core / Plot / Chart / Table 能力域，按 owner 补齐 definition / registry / resolver / consumer 链路；不下沉领域 token，也不恢复 token bag
-
-## 被否决方案
-
-- 保留 generic sparse token bag：稀疏性无法阻止完整 map 进入 IR，仍无法保证 snapshot 体积与领域边界
-- 仅开放 Core `ThemeStyleDefinition`：Plot / Chart / Table 仍会在闭合 preset 查找处断链，或被迫回退到不匹配的内置视觉默认值
-- 把 Plot / Chart / Table token resolver 放入 Core definition：会让 Core 反向依赖领域 vocabulary，并把独立 owner 的发布和演进耦合在一个定义中
-- 缺少领域 definition 时回退 neutral：配置遗漏会静默产生混合视觉人格，不能表达用户为该 style 定义的领域 token
-- 把 Academic、Vibrant、Clean 留在发布包内置集合：展示型 preset 会让每个视觉 owner 的默认产物、测试与维护矩阵持续扩张，并把应用选择错误地升级为所有使用者的基础能力
-- 由 Core 提供跨 owner preset bundle：会让 Core 反向依赖领域 definition，并破坏 owner-local registry 边界；应用只能组合 definitions，不能定义新的统一 resolver
-- 让 Zod schema 在 parse 时生成 token：schema 应只定义 JSON 输入合法性，不能读取 registry、领域 preset 或 runtime context
-
-## 测试策略摘要
-
-需要 schema / type 证据证明 Theme 只接受轻量 selector、允许非空自定义 style 并拒绝 token bag；Core contract / provider / compile 证据证明内置与自定义 Core definition 同路、Scene / Scope 继承、缺失 definition 诊断及 probe / replay 一致；Plot、Chart 与 Table contract / provider / resolver 证据证明同名 custom style 解析各自 token、保持局部 override 优先级，并缺失 owner definition 时 fail-loud；inspection / manifest 证据证明 `inherit | local` 与稳定 path 保留来源；adapter parity 证据证明 React、Vanilla、plain JSON、standalone 与 embedded lowering 传递同一套 definitions；docs 证据说明跨 owner 注册要求与不持久化边界。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 跨领域的 Scope token override、命名 Theme loader、Theme lineage、交互状态和动画 token
 - 任意用户定义 `mode`、style inheritance 策略、Definition 覆盖 / 叠加、按局部 selector 自动发现 definition

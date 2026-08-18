@@ -1,6 +1,7 @@
-﻿import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
+import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
 
 import { compileToScene, defineBoundary, defineClip } from '@retikz/core';
+import { RetikzRetainedRenderErrorCode } from '@retikz/render/runtime';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -131,10 +132,10 @@ describe('@retikz/vanilla renderToSvgString', () => {
       },
     };
     expect(() => renderToSvgString(nodeIr, mountOptions as unknown as RenderToStringOptions)).toThrowError(
-      expect.objectContaining({ code: 'RETAINED_RUNTIME_INPUT_INVALID' }),
+      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
     expect(() => renderToSvgString(nodeIr, { ignored: true } as unknown as RenderToStringOptions)).toThrowError(
-      expect.objectContaining({ code: 'RETAINED_RUNTIME_INPUT_INVALID' }),
+      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
   });
   it('passes boundary providers to compile options', () => {

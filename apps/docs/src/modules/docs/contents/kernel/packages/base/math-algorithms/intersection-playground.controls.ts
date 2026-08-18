@@ -12,7 +12,7 @@ export const IntersectionControlId = {
 
 /** 求交算法分支对应的共享显示条件 */
 export const IntersectionVisibleWhen = {
-  LineLine: { controlId: IntersectionControlId.Kind, oneOf: ['lineLine'] },
+  LineLine: { controlId: IntersectionControlId.Kind, oneOf: ['lineLine', 'segmentSegment'] },
   Circle: { controlId: IntersectionControlId.Kind, oneOf: ['lineCircle', 'circleCircle'] },
 } as const;
 
@@ -31,6 +31,7 @@ export const intersectionPlaygroundControls = definePreviewControls({
           defaultValue: 'lineCircle',
           options: [
             { value: 'lineLine', label: '直线与直线' },
+            { value: 'segmentSegment', label: '线段与线段' },
             { value: 'lineCircle', label: '直线与圆' },
             { value: 'circleCircle', label: '圆与圆' },
           ],
@@ -78,11 +79,22 @@ export const intersectionPlaygroundControls = definePreviewControls({
 export const previewControlContract = {
   controls: intersectionPlaygroundControls,
   canonicalValues: { kind: 'lineCircle', offset: 25, angle: 65, radius: 70 },
+  presetSelector: { label: '场景', customLabel: '自定义' },
   presets: [
     {
       id: 'crossing-lines',
       label: '相交直线',
       values: { kind: 'lineLine', offset: 10, angle: 65, radius: 70 },
+    },
+    {
+      id: 'line-intersection-beyond-strokes',
+      label: '显示段外的直线交点',
+      values: { kind: 'lineLine', offset: 75, angle: 25, radius: 70 },
+    },
+    {
+      id: 'disjoint-segments',
+      label: '不相交线段',
+      values: { kind: 'segmentSegment', offset: 75, angle: 25, radius: 70 },
     },
     {
       id: 'parallel-lines',
@@ -100,5 +112,5 @@ export const previewControlContract = {
       values: { kind: 'circleCircle', offset: 70, angle: 65, radius: 55 },
     },
   ],
-  relatedApis: ['intersect.lineLine', 'intersect.lineCircle', 'intersect.circleCircle'],
+  relatedApis: ['intersect.lineLine', 'intersect.segmentSegment', 'intersect.lineCircle', 'intersect.circleCircle'],
 } satisfies PreviewControlContract;

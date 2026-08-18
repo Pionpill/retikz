@@ -1,68 +1,45 @@
 import { describe, expect, it } from 'vitest';
 
-import { ChartSharedSchema } from '../../../src/base/schemas';
+import { BaseChartSchema } from '../../../src';
 import { BubbleChartSchema } from '../../../src/point/bubble';
 import { ConnectedScatterChartSchema } from '../../../src/point/connected-scatter';
 import { ScatterChartSchema } from '../../../src/point/scatter';
 
-const base = {
-  data: { reference: 'd' },
-} as const;
+const plot = { data: { reference: 'd' } } as const;
 
 describe('Chart theme token ownership', () => {
-  it('删除 spec-local style/themeMode 并只接受 Chart-owned style token', () => {
-    expect(ChartSharedSchema.safeParse({ ...base, style: 'clean' }).success).toBe(false);
-    expect(ChartSharedSchema.safeParse({ ...base, themeMode: 'dark' }).success).toBe(false);
-    expect(ChartSharedSchema.safeParse({ ...base, styleTokens: { 'chart.padding': 8 } }).success).toBe(false);
-    expect(ChartSharedSchema.safeParse({ ...base, theme: { palette: {} } }).success).toBe(false);
-    expect(
-      ChartSharedSchema.safeParse({
-        ...base,
-        chartThemeTokens: {
-          'chart.axis.enabled': false,
-          'chart.axis.grid.enabled': false,
-          'chart.legend.enabled': true,
-        },
-      }).success,
-    ).toBe(true);
-    expect(
-      ChartSharedSchema.safeParse({ ...base, chartThemeTokens: { 'plot.palette.series': ['#2563eb'] } }).success,
-    ).toBe(false);
-  });
-
-  it('接受独立的 Plot token 转发入口并拒绝旧 palette namespace', () => {
-    expect(
-      ChartSharedSchema.safeParse({
-        ...base,
+  it('keeps Chart tokens at the Chart root and Plot tokens inside plot', () => {
+    const scatter = {
+      namespace: 'chart',
+      type: 'scatter',
+      chartThemeTokens: { 'chart.axis.enabled': false },
+      plot: {
+        ...plot,
         plotThemeTokens: { 'plot.palette.series': ['#2563eb'] },
-      }).success,
-    ).toBe(true);
-    expect(
-      ChartSharedSchema.safeParse({ ...base, plotThemeTokens: { 'data.palette.series': ['#2563eb'] } }).success,
-    ).toBe(false);
-    expect(
-      ChartSharedSchema.safeParse({ ...base, plotStyleTokens: { 'plot.palette.series': ['#2563eb'] } }).success,
-    ).toBe(false);
+      },
+      config: { encoding: { x: { field: 'x' }, y: { field: 'y' } } },
+    } as const;
+
+    expect(ScatterChartSchema.safeParse(scatter).success).toBe(true);
+    expect(ScatterChartSchema.safeParse({ ...scatter, plotThemeTokens: scatter.plot.plotThemeTokens }).success).toBe(
+      false,
+    );
+    expect(ScatterChartSchema.safeParse({ ...scatter, plot: { ...plot, chartThemeTokens: {} } }).success).toBe(false);
   });
 
-  it('让每个 strict Chart variant 拒绝 spec-local style 与 themeMode', () => {
+  it('lets every exact schema reject legacy style and themeMode fields', () => {
     const variants = [
       [
         ScatterChartSchema,
-        {
-          namespace: 'chart',
-          type: 'scatter',
-          data: { reference: 'd' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
-        },
+        { namespace: 'chart', type: 'scatter', plot, config: { encoding: { x: { field: 'x' }, y: { field: 'y' } } } },
       ],
       [
         BubbleChartSchema,
         {
           namespace: 'chart',
           type: 'bubble',
-          data: { reference: 'd' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' }, size: { field: 'size' } },
+          plot,
+          config: { encoding: { x: { field: 'x' }, y: { field: 'y' }, size: { field: 'size' } } },
         },
       ],
       [
@@ -70,8 +47,8 @@ describe('Chart theme token ownership', () => {
         {
           namespace: 'chart',
           type: 'connected-scatter',
-          data: { reference: 'd' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' }, order: 'order' },
+          plot,
+          config: { encoding: { x: { field: 'x' }, y: { field: 'y' }, order: 'order' } },
         },
       ],
     ] as const;
@@ -82,10 +59,21 @@ describe('Chart theme token ownership', () => {
     }
   });
 
-  it.each(['data.palette.series', 'axis.enabled', 'axis.grid.enabled', 'legend.enabled'])(
-    '拒绝 Chart chartThemeTokens 中的非 canonical key：%s',
-    token => {
-      expect(ChartSharedSchema.safeParse({ ...base, chartThemeTokens: { [token]: true } }).success).toBe(false);
-    },
-  );
+  it('keeps Base strict and rejects config', () => {
+    const base = {
+      namespace: 'chart',
+      type: 'base',
+      plot: {
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'd' },
+        scales: [{ type: 'linear', name: 'x' }],
+        coordinate: { type: 'cartesian1D', x: 'x' },
+        marks: [{ type: 'point', encoding: { x: { field: 'x', scale: 'x' } } }],
+      },
+    } as const;
+
+    expect(BaseChartSchema.safeParse(base).success).toBe(true);
+    expect(BaseChartSchema.safeParse({ ...base, config: {} }).success).toBe(false);
+  });
 });

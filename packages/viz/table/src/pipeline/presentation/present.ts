@@ -6,6 +6,7 @@ import type { AnyCellPresentationDefinition, CellPresentationInput } from '../..
 import type { IRTableCellContentStyle, IRTablePresentationRef } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 
+import { RetikzTableError } from '../../error';
 import { cellPresentationDefinitionOf } from '../../providers';
 import { deepFreeze } from '../../shared';
 
@@ -43,6 +44,6 @@ export const presentCellValue = (
     const guardedOptions = deepFreeze(JsonObjectSchema.parse(parsedOptions));
     return parsePresentedChild(definition.present(input, guardedOptions as never));
   } catch (error) {
-    throw new Error(`${prefix}: ${errorMessageOf(error)}`, { cause: error });
+    throw new RetikzTableError(`${prefix}: ${errorMessageOf(error)}`, { cause: error });
   }
 };

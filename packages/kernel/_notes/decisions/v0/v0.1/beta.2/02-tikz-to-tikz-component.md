@@ -2,9 +2,9 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-14
-- 关联：[v0.1-beta.2 plan TODO-2](./roadmap.md) · [AGENTS.md Kernel / Sugar / Tier 2 分层](../../../../../../../AGENTS.md)
+- 关联：
 
-> **范围**：把顶层 React 容器从 `Tikz` / `TikzProps` 改为品牌一致的 `TikZ` / `TikZProps`（尾 `Z` 大写），不保留 alias。
+> **目标**：把顶层 React 容器从 `Tikz` / `TikzProps` 改为品牌一致的 `TikZ` / `TikZProps`（尾 `Z` 大写），不保留 alias。
 
 ## 背景 / 约束
 
@@ -21,12 +21,7 @@
 2. `TikZ` 与原品牌一致，公开 API 表意更准确。
 3. 不保留 alias 可避免 docs / autocomplete / LLM 示例继续扩散旧写法。
 
-### 被否决的选项
-
-- **B：新增 `TikZ`、保留 `Tikz` deprecated alias** —— 对用户更平滑，但把旧命名带进 rc 前最后窗口，文档和类型 hover 长期出现两个顶层容器名。
-- **C：保持 `Tikz`** —— 无迁移成本，但错过 beta 改名窗口。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 新增 `<Scope>` / `<Group>` / 其他 Kernel 组件。
 - 修改顶层容器 props 语义或默认值。
@@ -35,6 +30,6 @@
 
 ---
 
-> **实现指针**：level `red`（改 `@retikz/react` 公开组件名 + props 类型名，影响所有 docs demo；运行时管线不变）。本 ADR 落地后顶层容器又经后续改名为 `<Layout>`，当前真源以代码为准——`react/src/kernel/Layout.tsx`（组件 + props 类型）、`react/src/kernel/index.ts` / `react/src/index.ts`（public export）、`react/src/kernel/_displayNames.ts` / `builder.ts`（display-name 判断）。测试在 `react/tests/kernel/`。完整原文（实现契约 / Schema 改动表 / 测试象限）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `f3282d91`；压缩前完整施工蓝图 = `git show f3282d91^:_notes/decisions/core/v0/v0.1/beta.2/02-tikz-to-tikz-component.md`。
+已实现本 ADR 的核心决策。兼容性：正文所列公开契约变更按 breaking 迁移；其余默认行为、失败语义与公开契约以正文为准。

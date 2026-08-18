@@ -1,12 +1,12 @@
 import type { IRJsonObject } from '@retikz/core';
 import type { ExternalRow, IRDataModel, IRDataReference } from '@retikz/data';
 import type {
+  IRPlot,
   IRPlotCoordinateOperation,
   IRPlotGuide,
   IRPlotMark,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
-  IRPlot,
   IRPlotTransform,
 } from '@retikz/plot';
 

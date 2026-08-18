@@ -44,5 +44,5 @@ export const previewControlContract = {
     { id: 'diagonal', label: 'Diagonal', values: { angle: -45, length: 110 } },
     { id: 'obtuse', label: 'Obtuse', values: { angle: 135, length: 90 } },
   ],
-  relatedApis: ['point.add', 'point.scale', 'vector2.fromAngleDegrees', 'vector2.normal'],
+  relatedApis: ['vector2.add', 'vector2.scale', 'vector2.fromAngleDegrees', 'vector2.normal'],
 } satisfies PreviewControlContract;

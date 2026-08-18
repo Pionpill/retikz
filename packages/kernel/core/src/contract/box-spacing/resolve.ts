@@ -2,6 +2,8 @@ import type { BoundsInsets } from '@retikz/math';
 
 import type { IRBoxSpacing } from '../../schemas';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+
 /** 构造四边同值的 spacing 结果 */
 const boxInsets = (value: number): BoundsInsets => ({
   top: value,
@@ -16,7 +18,10 @@ const boxInsets = (value: number): BoundsInsets => ({
  */
 export const resolveBoxSpacing = (value: number | IRBoxSpacing | undefined, fallback: number): BoundsInsets => {
   if (!Number.isFinite(fallback) || fallback < 0) {
-    throw new Error('resolveBoxSpacing: fallback must be a finite non-negative number');
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
+      'resolveBoxSpacing: fallback must be a finite non-negative number',
+    );
   }
   if (typeof value === 'number') {
     return boxInsets(value);

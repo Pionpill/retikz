@@ -6,13 +6,14 @@ import type { AnyMarkDefinition, CoordinateFrame, FieldCollector, IntervalContex
 import type { IRPlotMark, IRPlotMarkOperation } from '../../schemas';
 import type { MarkOperationResolution, MarkResolveContext } from './types';
 
+import { RetikzPlotError } from '../../error';
 import { cellAnchor, roleAnchor } from '../../providers';
 
 /** 查找 mark definition；未注册 type 会给出上下文明确的 fail-loud 诊断 */
 export const resolveMarkDefinition = (mark: IRPlotMarkOperation, context: MarkResolveContext): AnyMarkDefinition => {
   const definition = context.registry.get(mark.type);
   if (definition === undefined) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: mark type "${mark.type}" is not registered; pass a MarkDefinition via options.markDefinitions`,
     );
   }

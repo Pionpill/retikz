@@ -2,117 +2,45 @@
 
 - 状态：Accepted
 - 决策日期：2026-07-23
-- 接受日期：2026-07-26
-- 关联：[alpha.1 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [ADR-01 Node 锚点定位](./01-node-anchor-position.md)
+- 关联：[ADR-01](./01-node-anchor-position.md)
 
 ## 背景
 
-Scope 只能绕局部原点变换，上层必须知道子图原点与尺寸，才能把其中心、边或角对齐外部目标；rotate / scale 也无法绑定最终内容包络。该能力需要在 Core 中统一处理固有布局、self point、transform 与最终 placement，不能由 parser 或 renderer 补丁实现。
+Scope 需要按自身内容包络的中心、边或角对齐外部 target，并让 rotate / scale 绑定最终包络；该语义必须在 Core 中统一处理固有布局、self point、transform 和 placement，不能由 parser 或 renderer 补丁实现
 
 ## 决策
 
-### 公开契约
+公开结构为：
 
 ```ts
 type IRScopeSelfPoint = 'origin' | IRAnchorRef | IRPosition;
 type IRScopePlacementTarget = IRPosition | IRNodeTarget;
-
-type IRScopePlacement = {
-  target: IRScopePlacementTarget;
-  selfAnchor?: IRScopeSelfPoint;
-};
-
-type IRScope = {
-  placement?: IRScopePlacement;
-};
-
-type IRRotateTransform = {
-  kind: 'rotate';
-  degrees: number;
-  pivot?: IRScopeSelfPoint;
-};
-
-type IRScaleTransform = {
-  kind: 'scale';
-  x: number;
-  y?: number;
-  pivot?: IRScopeSelfPoint;
-};
+type IRScopePlacement = { target: IRScopePlacementTarget; selfAnchor?: IRScopeSelfPoint };
+type IRScope = { placement?: IRScopePlacement };
+type IRRotateTransform = { kind: 'rotate'; degrees: number; pivot?: IRScopeSelfPoint };
+type IRScaleTransform = { kind: 'scale'; x: number; y?: number; pivot?: IRScopeSelfPoint };
 ```
 
-- `IRScopeSelfPoint` 的 `'origin'` 是固有局部 `[0, 0]`；`IRAnchorRef` 覆盖标准 anchor、数字角度和 `{ side, fraction }`；`IRPosition` 是显式局部坐标。
-- `placement.selfAnchor` 缺省 `center`；`pivot` 缺省 `origin`；`scale.y` 缺省 `x`。
-- `placement.target` 只接受父坐标系 `IRPosition` 或此前完成的 Node / Coordinate / Scope `IRNodeTarget`。target anchor 缺省 `center`，offset 保持世界 user-units；Polar、Offset、Between 和 path-relative target 被 schema 拒绝。
-- `ScopePlacementSchema`、`ScopeSelfPointSchema` 和 Scope 字段均为 strict / 闭合契约。`schemas/scope-point` 是 self point 的无环 owner，由 Scope 与 Transform 单向复用。
-- pivot 只能引用当前 Scope 的 self point，不能引用外部 id。IR rotate 与 scale 使用 `pivot`；Scene rotate 的 `cx` / `cy` 是 lowering 产物。非原点 scale pivot lower 为 translate / scale 组合，不扩展 Scene。
-- React `ScopeProps` 等价暴露该契约；Vanilla `scope()` 直接接收 `IRScope`，不增加平行 helper 或物化默认值。
+`placement.selfAnchor` 缺省 center，pivot 缺省 origin，`scale.y` 缺省 x。Target 只接受父坐标系 position 或 traversal 之前完成的 Node / Coordinate / Scope；target anchor 缺省 center，offset 保持世界 user-units。Polar、relative、between、path-relative target 被拒绝。Self point schema strict，Scope 与 Transform 共享同一 owner
 
-### 包络
+Pivot 只能引用当前 Scope 的 self point；Scene rotate 的 `cx/cy` 是 lowering 结果，非原点 scale pivot lower 为 translate / scale 组合，不扩展 Scene。React 与 Vanilla 暴露同一 IR，不提供 adapter shorthand
 
-- rectangle 使用 children `outerRect` 在固有局部坐标系中的角点 AABB，包含 Node margin；`boundingShape: 'circle'` 使用同一组角点的最小外接圆，不重复测量。
-- 空 Scope 的 origin、center、边、角和数字角度均退化为 `[0, 0]`；`{ side, fraction }` 保持零尺寸 fail-loud。
-- shape-specific anchor 继续走现有 shape / boundary resolver；不新增 bbox、anchor 或 transform registry。
+### 包络与求值顺序
 
-### 求值顺序
+Rectangle 使用包含 Node margin 的 children outerRect 角点 AABB；circle 使用同一角点的最小外接圆。空 Scope 的 origin、center、边、角和数字角度退化到 `[0, 0]`，`{ side, fraction }` 仍对零尺寸 fail-loud
 
-1. 在 parent frame 冻结 `placement.target`，只读取 traversal 当前点以前已完成且可见的实体；建立当前 Scope placeholder 与固有局部帧，own placement / transforms 不进入该帧。
-2. children 完成局部布局与 descendant transforms，形成只供当前 Scope 收尾的 intrinsic snapshot；Scene children 不烘焙 own transform。
-3. 从 child outerRect 计算固有 rectangle / circle envelope，并在其上解析所有 pivot。
-4. lower own transforms。数组第 0 项最外层、最后一项最先作用；rotate pivot lower 为 Scene `cx/cy`，scale pivot `[px, py]` 展开为 `[translate(px,py), scale, translate(-px,-py)]`。
-5. 把 own chain 应用于固有包络，在 transformed envelope 上解析 `placement.selfAnchor`；target 投影到 parent frame 后求 delta，并把 placement translate prepend 到 chain 第 0 项。无 placement 时不生成该项。
-6. own chain 与 ancestor chain 组合后，只发布最终 Group、namespace、observer、target 与 auto viewBox 几何；intrinsic snapshot 不注册，children 不重复应用 own chain。
+1. 在 parent frame 冻结 target，登记 Scope placeholder，建立不含自身 placement / transform 的 intrinsic frame
+2. 编译 children 并形成局部 snapshot，计算包络和 self points
+3. 解析所有 pivot，按 transform 数组语义 lower own chain
+4. 在 transformed envelope 上解析 placement self anchor，计算 parent-frame delta，并把 placement translate 放到 chain 最外层
+5. 组合 ancestor chain，只发布最终 Group、namespace、observer、target、bbox 和 viewBox 几何；intrinsic snapshot 不注册，children 不重复应用 own chain
 
-placement 不反向改变 pivot。既有 Scope placeholder + pending path 仍可让 children 引用最终 Scope bbox。
+### 失败与兼容性
 
-### 错误契约
+Forward、self、descendant、未完成 placeholder、cycle、非 finite point 和未注册 boundary / anchor 同步 fail-loud，不拓扑排序或 fallback。Uniform、non-uniform、negative scale 合法；zero scale 可作纯视觉 transform，但需要跨该 chain 反投影时抛 non-invertible scope transform。无 placement / pivot 的 Scope 保持原点变换语义，空 Scope 仍是合法 resolved target
 
-- forward、self、descendant、未完成 placeholder 和引用 cycle 同步抛错，不拓扑排序或 fallback。
-- 非 finite pivot、target、placement 结果同步抛错；未定义 target、未注册 boundary 和不支持的 anchor 沿用现有诊断。
-- uniform、non-uniform、negative scale 均合法，rotate 沿用屏幕 y-down 角度约定。zero scale 可作纯视觉 transform；需要跨该 chain 反投影时抛 `non-invertible scope transform`。
+`IRScope.placement`、`ScopeProps.placement` 和 transform `pivot` 是 additive API；IR rotate / scale 统一使用 pivot，Scene contract 不变
 
-## DSL
+## 最终结果与遗留边界
 
-```tsx
-<Scope
-  id="legend"
-  placement={{
-    target: { id: 'panel', anchor: 'top-right' },
-    selfAnchor: 'top-left',
-  }}
-  transforms={[
-    { kind: 'scale', x: 1.2, pivot: 'center' },
-    { kind: 'rotate', degrees: 12, pivot: [8, 12] },
-  ]}
->
-  {children}
-</Scope>
-```
-
-## 被否决的方案
-
-- 保留 rotate `cx/cy` 再增加 self pivot：形成两套重叠语义。
-- 把 self anchor 塞进 `polar-translate.origin`：混淆自身点与外部 target，且拿不到最终包络。
-- renderer 重算 pivot：会分裂 SVG / Canvas、namespace 与 viewBox 的几何真源。
-- 允许 pivot 引用任意 id 或新增 self-anchor registry：前者引入循环求解，后者重复现有 anchor / shape / boundary 扩展链。
-
-## 公开影响
-
-- `IRScope.placement`、`ScopeProps.placement` 与 transform `pivot` 是 additive API。
-- IR rotate 与 scale 统一使用 `pivot`；Scene contract 不变。
-- 无 placement / pivot 的 Scope 保持原点变换语义；空 Scope 仍是合法 resolved target。
-- transform array 顺序不变；pivot 展开和 placement prepend 由数值测试锁定。
-- zero scale 在需要反投影时 fail-loud。
-
-## 最终实现与验证摘要
-
-- Core 新增 strict Scope self point / placement schema，并以 children 固有包络、pivot transforms、最终 placement 的两阶段顺序完成 lowering。
-- namespace、observer、GroupPrim、bbox 与自动 viewBox 共用最终 Scope 几何；不可逆反投影、forward/self/descendant reference 均 fail-loud。
-- React `ScopeProps` / builder / unbuilder 与 Vanilla plain spec 直接复用同一 IR，没有 adapter 私有 shorthand。
-- Scope 组件页、schema reference 与交互 demo 已完成 zh / en 同步。
-- 正式验证覆盖 schema、compile、adapter、renderer 与 docs，并通过 JSON round-trip、非 finite、Unicode id、负缩放、深层嵌套与 `-0` 等对抗用例，最终无 BLOCKING。
-
-## 遗留边界
-
-- 不支持自动布局、碰撞避让、通用约束求解或 forward-reference 拓扑排序。
-- Node anchor-to-anchor 仍由 ADR-01 独立拥有，Scope placement 不建立第二套 target 或 bbox registry。
-- non-uniform scale + rotate 的 projected Rect 精度边界保持现状。
+Scope 的固有包络、pivot、最终 placement、namespace、bbox、observer 与 auto viewBox 已共享同一几何真源。不提供自动布局、碰撞避让、通用约束求解、forward-reference 拓扑排序；非均匀 scale + rotate 继续受 projected Rect 精度边界限制

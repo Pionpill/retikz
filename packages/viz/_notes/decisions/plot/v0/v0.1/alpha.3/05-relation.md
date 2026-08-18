@@ -52,7 +52,7 @@ export type ArrangementType = ValueOf<typeof PlotArrangement>;
 - **对 core**：无（多系列仍下沉 Scope/Node/Path，不依赖 core 新能力）；多系列子 Scope 为 alpha.5「按系列命中」预留结构（仅埋点）。
 - **被依赖**：[ADR-07](./07-bindings-dsl.md) 的 `series` / `stack` / `dodge` props + 多系列 demo / 文档（在该 ADR 阶段补）。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **横向柱（y 分类）、负值 / 百分比 / 居中堆叠（streamgraph / normalize）** → 后续。
 - **stack transform 本身**（算 y0/y1）→ [ADR-03](./03-transform.md)；本 ADR 只消费。

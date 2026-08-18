@@ -20,7 +20,9 @@ import type {
 import type { CoreProgramArtifact, CoreProgramArtifactInput, CoreProgramRead } from './types';
 
 import { CoreOwnerDefinition } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { compileCoreSnapshot } from '../compile';
+import { CompileWarningCode } from '../constants';
 import { formatCompileWarning } from '../warning';
 import { coreChangeSetMatchesSnapshots, createCoreSnapshotIndex } from './diff';
 import { copyCoreProgramOptions } from './options';
@@ -94,7 +96,10 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
       freezeProgramOutput(compiled.result);
       freezeProgramOutput(compiled.diagnostics);
       if (compiled.primitiveMetadata === undefined) {
-        throw new Error('createCoreProgram: full compile did not produce Runtime primitive metadata');
+        throw new RetikzCoreError(
+          RetikzCoreErrorCode.Compile,
+          'createCoreProgram: full compile did not produce Runtime primitive metadata',
+        );
       }
       const snapshot = createFullSceneRuntimeSnapshot(
         compiled.result.scene,
@@ -159,7 +164,7 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
           kind: RuntimeProgramKind.Fallback,
           diagnostics: [
             {
-              code: 'CORE_CHANGESET_MISMATCH',
+              code: CompileWarningCode.ChangeSetMismatch,
               phase: RuntimeProgramPhase.Update,
               message: 'Core ChangeSet does not match the previous and next canonical Snapshots; using full fallback',
             },

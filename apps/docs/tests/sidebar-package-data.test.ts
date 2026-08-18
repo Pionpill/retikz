@@ -25,6 +25,7 @@ describe('Kernel 包侧栏数据', () => {
         'kernel.pkgGroupBase',
         [
           ['foundation', 'kernel.pkgFoundation'],
+          ['math-transforms', 'kernel.pkgMathTransforms'],
           ['math-primitives', 'kernel.pkgMathPrimitives'],
           ['math-algorithms', 'kernel.pkgMathAlgorithms'],
         ],

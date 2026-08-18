@@ -23,6 +23,15 @@ export const graphV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-08-16',
+          summary: {
+            zh: '新增可选 Graph presentation root、开放 Entity role / variant Definition registry、Graph Theme token selector，以及 assembly-local provider 装配。',
+            en: 'Adds the optional Graph presentation root, open Entity role and variant Definition registries, Graph Theme token selectors, and assembly-local provider wiring.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.3',
           date: '2026-08-10',
           summary: {
@@ -69,6 +78,15 @@ export const graphV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-08-16',
+          summary: {
+            zh: '新增 `<Graph>` 多 children authoring 与四 adapter factory；配置后的 factory 可为一次 processing normalization 注入自定义 Graph definitions。',
+            en: 'Adds multi-child `<Graph>` authoring and a four-adapter factory whose configured form injects custom Graph definitions into one processing normalization.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.3',
           date: '2026-08-10',
           summary: {
@@ -114,6 +132,15 @@ export const graphV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.5',
+          date: '2026-08-16',
+          summary: {
+            zh: '新增 `graph()`、`GraphInputEmbedAdapter` 与四 adapter factory，并让嵌套 children 共用同一组 configured providers。',
+            en: 'Adds `graph()`, `GraphInputEmbedAdapter`, and a four-adapter factory while sharing one configured provider set across nested children.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.3',
           date: '2026-08-10',

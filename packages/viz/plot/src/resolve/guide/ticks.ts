@@ -13,6 +13,7 @@ import type {
   IRPlotGuideTickSource,
 } from '../../schemas';
 
+import { RetikzPlotError } from '../../error';
 import { AxisTickDensityKind, GuideTickIntervalKind, GuideTickTimeUnit } from '../../schemas';
 
 const MAX_INTERVAL_TICKS = 10_000;
@@ -25,7 +26,7 @@ const normalizeExplicitTick = (scale: PositionScale, value: string | number): IR
   if (scale.tickKind === 'time') {
     const stamp = coerceTimestamp(value);
     if (stamp === null) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: time guide tick value must be an epoch millisecond or ISO-like string (got "${value}")`,
       );
     }
@@ -33,7 +34,7 @@ const normalizeExplicitTick = (scale: PositionScale, value: string | number): IR
   }
   if (scale.tickKind === undefined) return value;
   if (typeof value !== 'number') {
-    throw new Error(`lowerPlots: numeric guide tick value must be a number (got "${value}")`);
+    throw new RetikzPlotError(`lowerPlots: numeric guide tick value must be a number (got "${value}")`);
   }
   return value;
 };
@@ -54,14 +55,14 @@ const intervalDomain = (scale: PositionScale): [number, number] => {
   const start = Number(domain[0]);
   const end = Number(domain[domain.length - 1]);
   if (!Number.isFinite(start) || !Number.isFinite(end)) {
-    throw new Error('lowerPlots: fixed guide tick interval requires a finite scale domain');
+    throw new RetikzPlotError('lowerPlots: fixed guide tick interval requires a finite scale domain');
   }
   return start <= end ? [start, end] : [end, start];
 };
 
 const numberIntervalTicks = (scale: PositionScale, step: number, anchor: number | undefined): Array<number> => {
   if (scale.tickKind !== 'number') {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: number guide tick interval requires a numeric scale (got "${scale.tickKind ?? 'unknown'}")`,
     );
   }
@@ -72,10 +73,12 @@ const numberIntervalTicks = (scale: PositionScale, step: number, anchor: number 
   const epsilon = Math.abs(step) * DEFAULT_EPSILON;
   for (let value = first; value <= hi + epsilon; value += step) {
     if (values.length >= MAX_INTERVAL_TICKS) {
-      throw new Error(`lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`);
+      throw new RetikzPlotError(
+        `lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`,
+      );
     }
     if (values.length > 0 && value === values[values.length - 1]) {
-      throw new Error('lowerPlots: guide tick interval step is too small to make numeric progress');
+      throw new RetikzPlotError('lowerPlots: guide tick interval step is too small to make numeric progress');
     }
     values.push(Number(value.toFixed(12)));
   }
@@ -118,14 +121,14 @@ const timeIntervalTicks = (
   anchor: string | number | undefined,
 ): Array<number> => {
   if (scale.tickKind !== 'time') {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: time guide tick interval requires a time scale (got "${scale.tickKind ?? 'unknown'}")`,
     );
   }
   const [lo, hi] = intervalDomain(scale);
   const anchorStamp = anchor === undefined ? lo : coerceTimestamp(anchor);
   if (anchorStamp === null) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: time guide tick interval anchor must be an epoch millisecond or ISO-like string (got "${anchor}")`,
     );
   }
@@ -133,22 +136,26 @@ const timeIntervalTicks = (
   let guard = 0;
   while (value > lo) {
     if (guard >= MAX_INTERVAL_TICKS) {
-      throw new Error(`lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`);
+      throw new RetikzPlotError(
+        `lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`,
+      );
     }
     const previous = value;
     value = addTimeInterval(value, unit, -step);
     if (value === previous) {
-      throw new Error('lowerPlots: guide tick interval step is too small to make time progress');
+      throw new RetikzPlotError('lowerPlots: guide tick interval step is too small to make time progress');
     }
     guard += 1;
   }
   while (addTimeInterval(value, unit, step) <= lo) {
     if (guard >= MAX_INTERVAL_TICKS) {
-      throw new Error(`lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`);
+      throw new RetikzPlotError(
+        `lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`,
+      );
     }
     const next = addTimeInterval(value, unit, step);
     if (next === value) {
-      throw new Error('lowerPlots: guide tick interval step is too small to make time progress');
+      throw new RetikzPlotError('lowerPlots: guide tick interval step is too small to make time progress');
     }
     value = next;
     guard += 1;
@@ -156,12 +163,14 @@ const timeIntervalTicks = (
   const values: Array<number> = [];
   while (value <= hi) {
     if (values.length >= MAX_INTERVAL_TICKS) {
-      throw new Error(`lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`);
+      throw new RetikzPlotError(
+        `lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`,
+      );
     }
     if (value >= lo) values.push(value);
     const next = addTimeInterval(value, unit, step);
     if (next === value) {
-      throw new Error('lowerPlots: guide tick interval step is too small to make time progress');
+      throw new RetikzPlotError('lowerPlots: guide tick interval step is too small to make time progress');
     }
     value = next;
     guard += 1;
@@ -175,7 +184,7 @@ const categoryIntervalTicks = (
   offset: number | undefined,
 ): Array<string | number> => {
   if (scale.tickKind !== 'category') {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: category guide tick interval requires a category scale (got "${scale.tickKind ?? 'unknown'}")`,
     );
   }
@@ -184,7 +193,9 @@ const categoryIntervalTicks = (
     .filter((value): value is string | number => typeof value === 'string' || typeof value === 'number')
     .filter((_, index) => index >= (offset ?? 0) && (index - (offset ?? 0)) % step === 0);
   if (values.length > MAX_INTERVAL_TICKS) {
-    throw new Error(`lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`);
+    throw new RetikzPlotError(
+      `lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`,
+    );
   }
   return values;
 };

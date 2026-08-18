@@ -1,4 +1,4 @@
-﻿import type { AnyTransformDefinition } from '../../contract';
+import type { AnyTransformDefinition } from '../../contract';
 import type {
   IRDataAnnotateTransform,
   IRDataSelectTransform,
@@ -7,6 +7,7 @@ import type {
 } from '../../schemas';
 
 import { defineTransform, extractTransformKind } from '../../contract';
+import { RetikzDataError } from '../../error';
 import {
   AnnotateTransformSchema,
   SelectTransformSchema,
@@ -97,7 +98,7 @@ export const resolveTransformRegistry = (
   for (const def of custom ?? []) {
     const kind = extractTransformKind(def.schema);
     if (registry.has(kind)) {
-      throw new Error(`data: duplicate transform registration: "${kind}"`);
+      throw new RetikzDataError(`data: duplicate transform registration: "${kind}"`);
     }
     registry.set(kind, def);
   }

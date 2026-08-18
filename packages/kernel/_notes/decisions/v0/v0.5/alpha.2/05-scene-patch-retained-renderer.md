@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-07-26
 - 接受日期：2026-07-29
-- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-04](./04-incremental-core-compile.md) · [ADR-03](./03-program-transaction-lifecycle.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md)
+- 关联：[ADR-03](./03-program-transaction-lifecycle.md) · [ADR-04](./04-incremental-core-compile.md)
 
 ## 背景
 
@@ -99,15 +99,6 @@ Resource以canonical descriptor与candidate/committed consumer set staging，新
 
 `VanillaLayerCache`在alpha.2只作为未来失效优化的metadata hint：Vanilla把layer metadata保留在`runtimeMeta`，并折叠为`RenderRuntimeConfig.cachePolicy`；Render只校验和冻结该字段，SVG/Canvas renderer尚不消费它，也不启用auto/static/dynamic复用。该hint不改变画面、hit-test或transaction行为；真正的layer fingerprint、复用与等价性门禁留给后续独立contract。Kernel不会为提前启用复用而建立Vanilla layer到Core identity的平行映射。
 
-## 被否决的方案
-
-- **从裸 Scene 或DOM猜 synthetic identity**：无法证明anonymous/duplicate/multi-primitive owner的稳定映射，也会让renderer成为第二真源
-- **React继续声明SVG descendants并由effect patch**：形成reconciliation与renderer双写，hydration和rollback无法原子
-- **无效Patch统一replace**：会掩盖Core/第三方contract缺陷，使错误输入看似成功
-- **participant在publish后现场read renderer**：read失败会留下logical与view分裂，且无法原子切换多个participant cache
-- **Vanilla按layer index建立私有topology**：让Render反向依赖adapter语义，并与Core identity产生平行机制
-- **为旧static update保留同名兼容桥接**：retained/static mode需要在类型和运行时明确判别；0.x阶段直接采用正确边界
-
 ## 公开契约与兼容性
 
 - Core新增runtime-only Scene snapshot/topology/Patch contract，不修改持久IR/Scene schema
@@ -117,14 +108,6 @@ Resource以canonical descriptor与candidate/committed consumer set staging，新
 - Vanilla IR/plain spec mount返回retained view并支持transactional update/diagnostics；预编译Scene继续static full render
 - 这是0.x公开行为调整，不提供旧写法别名或平行协议
 
-## 性能边界
-
-确定性门禁固定5000实体的Core full/single update、SVG/Canvas initial/entity/group/fallback与dispose live handles，并同时验证Scene/DOM/pixel oracle、Patch/trace基数、未变SVG identity、Canvas index与`liveHandles=0`。Wall-clock不能替代确定性证据；确定性检查不依赖timing runner硬件信息。
-
-Timing只在完整environment fingerprint一致时比较。`bench:report`与`bench:update-baseline`进入timing路径后惰性采集一次runner环境，同次命令和完整重跑复用该快照。Fingerprint覆盖expected Node 24.x、lockfile Chromium、1440×900、DPR 1、动画关闭、Arial、en-US/UTC、5次warm-up/30 samples，以及实际Node/browser和runner机器identity。Runner identity包含显式id或hostname、platform/architecture、CPU model集合、逻辑处理器数与总内存；browser另记录`hardwareConcurrency`，避免不同机器共享绝对wall-clock baseline；timing路径的必需硬件字段不可用时fail-loud。Tracked baseline只含12个5000规模场景；median/p95不得超过同场景baseline 1.20×，max超过2.00×会触发一次同fingerprint完整重跑。
-
-相对p95上界冻结为：Core entity update/initial 0.50×；SVG entity/group 0.25×/0.50×；Canvas entity/group 1.50×/1.25×；SVG/Canvas replace fallback与同一`none` factory initial分别2.00×/2.50×。Fingerprint不匹配、重跑fingerprint漂移或连续unstable都不能形成PASS；baseline只能由显式命令生成候选并经人工审查。
-
 ## 最终实现
 
 - Runtime participant lifecycle、ownership、diagnostics、trace、read cache与rollback/broken envelope已实现
@@ -132,12 +115,7 @@ Timing只在完整environment fingerprint一致时比较。`bench:report`与`ben
 - Render完成validator、capability fallback、lineage、内置SVG/Canvas retained transaction、resource/hydration/animation与Canvas dirty-region路径
 - React完成host-shell、SSR adopt、StrictMode、commit后callback/ref与诊断出口
 - Vanilla完成retained/static判别、atomic update、composite callback transaction、runtimeMeta/artifact与hydration contribution
-- Bench完成5000 deterministic fixture、真实dispose probe、runner/hardware环境fingerprint、tracked timing baseline与机器门禁
-- Core、Runtime、Render、React、Vanilla双语文档已同步
-
-## 验证摘要
-
-验证覆盖 Runtime participant 生命周期与 rollback、Core Patch 与完整 Snapshot 等价、SVG/Canvas capability fallback 和原子提交、React/Vanilla session 生命周期、resource/hydration/animation 同步切换、确定性工作量与固定环境 timing budget，以及中英文文档和真实页面行为。
+- Bench 提供 deterministic work-count 与独立 timing 报告；计时不进入产品契约
 
 ## 遗留边界
 

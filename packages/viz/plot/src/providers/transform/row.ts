@@ -11,6 +11,7 @@ import type {
   StackOffsetValue,
 } from '../../schemas';
 
+import { RetikzPlotError } from '../../error';
 import { JitterAxis, NormalizeBasis, StackOffset } from '../../schemas';
 
 /** 默认堆叠下界 / 上界输出字段名，对齐 IntervalMark 的 y0Field / y1Field 默认值 */
@@ -64,7 +65,7 @@ export const applyStack = (rows: Array<ExternalRow>, operation: IRPlotStackTrans
     const out = new Map<ExternalRow, [number, number]>();
 
     if (offset === StackOffset.Normalize && values.some(value => value < 0)) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: stack transform offset "normalize" does not support negative values in field "${operation.y}"; use offset "diverging" for signed data`,
       );
     }
@@ -132,7 +133,7 @@ export const applyNormalize = (rows: Array<ExternalRow>, operation: IRPlotNormal
   for (const row of rows) {
     const value = resolveFieldPath(row, operation.field);
     if (isFiniteNumber(value) && value < 0) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: normalize transform does not support negative values in field "${operation.field}"; handle signed data before normalization`,
       );
     }
@@ -162,7 +163,7 @@ export const applyDeriveInterval = (
   const baseline = operation.baseline ?? 0;
   const twoField = operation.startFrom !== undefined && operation.endFrom !== undefined;
   if (!twoField && operation.from === undefined) {
-    throw new Error(
+    throw new RetikzPlotError(
       'lowerPlots: derive-interval transform requires either `from` (baseline->value) or both `startFrom` and `endFrom`',
     );
   }

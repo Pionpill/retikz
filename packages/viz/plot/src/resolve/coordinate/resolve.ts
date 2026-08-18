@@ -5,18 +5,19 @@ import { DataFieldType, FieldOrderMode, resolveFieldPath } from '@retikz/data';
 
 import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
 import type {
+  IRPlot,
   IRPlotAxisGuide,
   IRPlotChannel,
   IRPlotCoordinateOperation,
   IRPlotIntervalMark,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
-  IRPlot,
 } from '../../schemas';
 import type { CategoryOrder } from '../scale';
 import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from './types';
 
 import { isBuiltinScaleOperation } from '../../contract';
+import { RetikzPlotError } from '../../error';
 import {
   buildProportionalIntervals,
   channelValue,
@@ -40,7 +41,7 @@ export const resolveCoordinateDefinition = (
 ): AnyCoordinateDefinition => {
   const definition = context.coordinateRegistry.get(operation.type);
   if (definition === undefined) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: coordinate type "${operation.type}" is not registered; pass a CoordinateDefinition via options.coordinates`,
     );
   }
@@ -150,7 +151,7 @@ const assertKnownPositionEncodingRoles = (
     for (const key of Object.keys(encoding)) {
       if (NON_POSITION_ENCODING_KEYS.has(key)) continue;
       if (!roleSet.has(key)) {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: ${coordinateType} coordinate system does not support encoding role "${key}" on ${mark.type} marks (valid roles: ${roles.join(', ')})`,
         );
       }
@@ -170,7 +171,7 @@ const assertValidGuideDimensions = (
   const valid = roles;
   for (const guide of axisGuides) {
     if (!valid.includes(guide.dimension)) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: ${coordinateType} coordinate system does not support axis dimension "${guide.dimension}" (valid dimensions: ${valid.join(', ')})`,
       );
     }
@@ -198,7 +199,7 @@ const assertRequiredPositionChannels = (
       for (const channel of required) {
         if (!intervalBoundConsumesRoleChannel(mark, channel)) continue;
         if (encoding[channel] === undefined) {
-          throw new Error(
+          throw new RetikzPlotError(
             `lowerPlots: ${coordinateType} coordinate system requires the "${channel}" position channel on ${mark.type} marks, but it is missing`,
           );
         }
@@ -209,7 +210,7 @@ const assertRequiredPositionChannels = (
     const encoding = mark.encoding as Record<string, IRPlotChannel | undefined>;
     for (const channel of required) {
       if (encoding[channel] === undefined) {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: ${coordinateType} coordinate system requires the "${channel}" position channel on ${mark.type} marks, but it is missing`,
         );
       }
@@ -249,7 +250,7 @@ export const resolveCoordinateFrame = (
     context.roleMarkDataViews?.[role] ?? markDataViews;
   const coordinateOperation = context.coordinate ?? node.coordinate;
   if (coordinateOperation === undefined) {
-    throw new Error('lowerPlots: default coordinate view is not registered');
+    throw new RetikzPlotError('lowerPlots: default coordinate view is not registered');
   }
   const coordinateDefinition = resolveCoordinateDefinition(coordinateOperation, { coordinateRegistry });
   const roles = coordinateDefinition.roles;
@@ -370,7 +371,7 @@ export const resolveCoordinateFrame = (
       if (order === undefined || order === FieldOrderMode.Appearance) continue;
       const type = fieldTypes.get(channel.field);
       if (type !== undefined && type !== DataFieldType.Categorical) {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: field "${channel.field}" has order but its type is ${type}, not categorical; order only applies to categorical fields`,
         );
       }
@@ -379,7 +380,7 @@ export const resolveCoordinateFrame = (
     if (found.length === 0) return undefined;
     const distinct = [...new Set(found.map(order => JSON.stringify(order)))];
     if (distinct.length > 1) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: coordinate.${role} binds fields with conflicting orders; give the scale an explicit domain`,
       );
     }
@@ -400,7 +401,7 @@ export const resolveCoordinateFrame = (
     let def: IRPlotScaleOperation;
     if (scaleName !== undefined) {
       const found = scaleByName.get(scaleName);
-      if (!found) throw new Error(`lowerPlots: coordinate.${role} references unknown scale "${scaleName}"`);
+      if (!found) throw new RetikzPlotError(`lowerPlots: coordinate.${role} references unknown scale "${scaleName}"`);
       if (node.data.model !== undefined) {
         for (const type of types)
           assertScaleFieldCompatible(role, found.type, type, scaleName, { registry: scaleRegistry });
@@ -409,7 +410,7 @@ export const resolveCoordinateFrame = (
     } else {
       const distinct = [...new Set(types)];
       if (distinct.length > 1) {
-        throw new Error(
+        throw new RetikzPlotError(
           `lowerPlots: coordinate.${role} omitted but its bound fields have mixed types [${distinct.join(', ')}]; declare an explicit scale`,
         );
       }
@@ -430,7 +431,7 @@ export const resolveCoordinateFrame = (
   const roleChannelOf = (role: DimensionRole) => {
     const def = positionChannels.get(role);
     if (def === undefined) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: ${coordinateOperation.type} coordinate system does not support encoding role "${role}" (valid roles: ${roles.join(', ')})`,
       );
     }
@@ -477,7 +478,7 @@ export const resolveCoordinateFrame = (
     marks: node.marks,
   });
   if (resolution.frame.type !== coordinateOperation.type) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: coordinate definition "${coordinateOperation.type}" returned frame type "${resolution.frame.type}"; frame type must match the registered coordinate type`,
     );
   }
@@ -485,7 +486,7 @@ export const resolveCoordinateFrame = (
     resolution.frame.roles.length !== roles.length ||
     resolution.frame.roles.some((role, index) => role !== roles[index])
   ) {
-    throw new Error(
+    throw new RetikzPlotError(
       `lowerPlots: coordinate definition "${coordinateOperation.type}" returned frame roles [${resolution.frame.roles.join(', ')}]; frame roles must match definition roles [${roles.join(', ')}]`,
     );
   }

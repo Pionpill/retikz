@@ -25,6 +25,7 @@ import type {
 } from './types';
 
 import { TableCellPlanSourceKind, TableCellPlanSourceSchema, TableLegendDescriptorSchema } from '../../contract';
+import { RetikzTableError } from '../../error';
 import { resolveCellVisualScaleRegistry } from '../../providers';
 import { resolveCellVisualScale } from '../../providers/encoding';
 import {
@@ -227,10 +228,12 @@ const applyRule = (plan: MutablePlan, rule: IRTableCellRule, ruleIndex: number):
   const source = { kind: TableCellPlanSourceKind.RootRule, ruleIndex } as const;
   if (plan.kind === TableCellPayloadKind.Content) {
     if (rule.formatter !== undefined) {
-      throw new Error(`table: rule ${ruleIndex} matched content Cell "${plan.cellId}" and cannot override formatter`);
+      throw new RetikzTableError(
+        `table: rule ${ruleIndex} matched content Cell "${plan.cellId}" and cannot override formatter`,
+      );
     }
     if (rule.presentation !== undefined) {
-      throw new Error(
+      throw new RetikzTableError(
         `table: rule ${ruleIndex} matched content Cell "${plan.cellId}" and cannot override presentation`,
       );
     }
@@ -284,7 +287,7 @@ export const resolveTableCellPlans = (
         if (color === undefined) return;
         const plan = plans[candidate.index];
         if (plan.kind !== TableCellPayloadKind.Value)
-          throw new Error('table: internal encoding candidate kind differs');
+          throw new RetikzTableError('table: internal encoding candidate kind differs');
         applyEncodingColor(plan, encoding, color);
         cellIds.push(candidate.cell.id);
       });

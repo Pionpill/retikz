@@ -11,6 +11,7 @@ import type { TableBorderEdge, TableLayout } from '../layout';
 import type { ResolvedTableCellPlan, ResolvedTableEncoding } from '../rule';
 
 import { TableLayoutManifestSchema } from '../../contract';
+import { RetikzTableError } from '../../error';
 import { TableThemeTokenKeySchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
 
@@ -33,7 +34,7 @@ export type BuildTableManifestContext = Readonly<{
 }>;
 
 const alignmentError = (detail: string): never => {
-  throw new Error(`table: internal cell alignment: ${detail}`);
+  throw new RetikzTableError(`table: internal cell alignment: ${detail}`);
 };
 
 /** 从 canonical model 与布局构造 detached、递归冻结的 manifest */

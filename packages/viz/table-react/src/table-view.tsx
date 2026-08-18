@@ -12,6 +12,7 @@ import { useCallback, useMemo, useRef } from 'react';
 
 import type { ReactTableRuntime } from './table-runtime';
 
+import { RetikzTableReactError } from './error';
 import { useTableThemeStyles } from './theme-context';
 
 /** standalone Table 运行时交给 Layout 的内部 InputEmbed 组件属性 */
@@ -93,7 +94,7 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     (artifacts: ReadonlyArray<CompileArtifact>): void => {
       const matches = artifacts.filter(isRootTableArtifact);
       if (matches.length !== 1) {
-        throw new Error(
+        throw new RetikzTableReactError(
           `table react: standalone Table expected exactly one root table.table artifact, received ${matches.length}`,
         );
       }

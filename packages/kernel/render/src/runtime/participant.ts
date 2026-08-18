@@ -33,7 +33,7 @@ import type {
 import type { RuntimeIdentityMap } from './shared';
 
 import { RenderRuntimeOwnerDefinition } from './config';
-import { isRetainedRenderError, RetainedRenderError, RetainedRenderErrorCode } from './error';
+import { isRetikzRetainedRenderError, RetikzRetainedRenderError, RetikzRetainedRenderErrorCode } from './error';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from './readonly-layer';
 import { getRetainedRendererExecutor, isCanvasHost, isRetainedRenderer, isSvgHost } from './renderer';
 import { createRuntimeIdentityMap, isPlainObject, runtimeStructuralEquals } from './shared';
@@ -194,8 +194,8 @@ const validatePreparedToken = (token: RuntimePreparedCommit): RuntimePreparedCom
     typeof Reflect.get(candidate, 'rollback') !== 'function' ||
     typeof Reflect.get(candidate, 'dispose') !== 'function'
   ) {
-    throw new RetainedRenderError({
-      code: RetainedRenderErrorCode.RetainedRendererPrepareFailed,
+    throw new RetikzRetainedRenderError({
+      code: RetikzRetainedRenderErrorCode.RetainedRendererPrepareFailed,
       cause: token,
     });
   }
@@ -206,16 +206,16 @@ const callRendererPrepare = (callback: () => RuntimePreparedCommit): RuntimePrep
   try {
     return validatePreparedToken(callback());
   } catch (cause) {
-    if (isRetainedRenderError(cause)) throw cause;
-    throw new RetainedRenderError({
-      code: RetainedRenderErrorCode.RetainedRendererPrepareFailed,
+    if (isRetikzRetainedRenderError(cause)) throw cause;
+    throw new RetikzRetainedRenderError({
+      code: RetikzRetainedRenderErrorCode.RetainedRendererPrepareFailed,
       cause,
     });
   }
 };
 
 const invalidRendererRead = (cause: unknown): never => {
-  throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInvalid, cause });
+  throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid, cause });
 };
 
 const findPropertyDescriptor = (value: object, key: PropertyKey): PropertyDescriptor | undefined => {
@@ -244,7 +244,7 @@ const captureAnimationState = <TValue extends number | boolean>(
       const value = read();
       return validate(value) ? value : invalidRendererRead({ controls, key, value });
     } catch (cause) {
-      if (isRetainedRenderError(cause)) throw cause;
+      if (isRetikzRetainedRenderError(cause)) throw cause;
       return invalidRendererRead(cause);
     }
   };
@@ -312,15 +312,18 @@ const normalizeRendererReadUnsafe = (
 ): RetainedRendererRead => {
   const candidate: unknown = value;
   if (lineage === undefined || typeof candidate !== 'object' || candidate === null) {
-    throw new RetainedRenderError({
-      code: RetainedRenderErrorCode.ScenePatchSnapshotMismatch,
+    throw new RetikzRetainedRenderError({
+      code: RetikzRetainedRenderErrorCode.ScenePatchSnapshotMismatch,
       cause: value,
     });
   }
   const rawFrame: unknown = Reflect.get(candidate, 'frame');
   const animation = Reflect.get(candidate, 'animation') as AnimationControls | undefined;
   if (typeof rawFrame !== 'object' || rawFrame === null) {
-    throw new RetainedRenderError({ code: RetainedRenderErrorCode.ScenePatchSnapshotMismatch, cause: value });
+    throw new RetikzRetainedRenderError({
+      code: RetikzRetainedRenderErrorCode.ScenePatchSnapshotMismatch,
+      cause: value,
+    });
   }
   const frame = rawFrame as RenderFrameSnapshot;
   validateSceneRuntimeSnapshot(frame.primary);
@@ -328,8 +331,8 @@ const normalizeRendererReadUnsafe = (
     !sceneRuntimeSnapshotEquals(frame.primary, lineage.primary) ||
     !runtimeStructuralEquals(frame.layers, lineage.layers)
   ) {
-    throw new RetainedRenderError({
-      code: RetainedRenderErrorCode.ScenePatchSnapshotMismatch,
+    throw new RetikzRetainedRenderError({
+      code: RetikzRetainedRenderErrorCode.ScenePatchSnapshotMismatch,
       cause: { expected: lineage, received: frame },
     });
   }
@@ -347,14 +350,14 @@ const normalizeRendererRead = (
   try {
     return normalizeRendererReadUnsafe(value, lineage, animationControlsCache);
   } catch (cause) {
-    if (isRetainedRenderError(cause)) throw cause;
-    throw new RetainedRenderError({ code: RetainedRenderErrorCode.ScenePatchSnapshotMismatch, cause });
+    if (isRetikzRetainedRenderError(cause)) throw cause;
+    throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.ScenePatchSnapshotMismatch, cause });
   }
 };
 
 const invalidInput = (cause: unknown): never => {
-  throw new RetainedRenderError({
-    code: RetainedRenderErrorCode.RetainedRenderParticipantInputInvalid,
+  throw new RetikzRetainedRenderError({
+    code: RetikzRetainedRenderErrorCode.RetainedRenderParticipantInputInvalid,
     cause,
   });
 };
@@ -453,7 +456,7 @@ const captureOptions = <TComposites extends ReadonlyArray<AnyCompositeDefinition
   try {
     return captureOptionsUnsafe(options);
   } catch (cause) {
-    if (isRetainedRenderError(cause)) throw cause;
+    if (isRetikzRetainedRenderError(cause)) throw cause;
     return invalidInput(cause);
   }
 };
@@ -465,8 +468,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
   const captured = captureOptions(options);
   const owner = Object.freeze({});
   const previousLease = captured.rendererLease;
-  const leaseState =
-    previousLease === undefined ? undefined : retainedRenderParticipantLeases.get(previousLease);
+  const leaseState = previousLease === undefined ? undefined : retainedRenderParticipantLeases.get(previousLease);
   let renderer: RetainedRenderer;
   if (leaseState !== undefined) {
     renderer = leaseState.renderer;
@@ -486,8 +488,8 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
         });
       }
     } catch (cause) {
-      if (isRetainedRenderError(cause)) throw cause;
-      throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInvalid, cause });
+      if (isRetikzRetainedRenderError(cause)) throw cause;
+      throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid, cause });
     }
   }
   const validRenderer =
@@ -501,14 +503,17 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
         disposeFailure = cause;
       }
     }
-    throw new RetainedRenderError({
-      code: RetainedRenderErrorCode.RetainedRendererInvalid,
+    throw new RetikzRetainedRenderError({
+      code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid,
       cause: disposeFailure === undefined ? renderer : Object.freeze({ renderer, disposeFailure }),
     });
   }
   const executor = getRetainedRendererExecutor(renderer);
   if (executor === undefined) {
-    throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInvalid, cause: renderer });
+    throw new RetikzRetainedRenderError({
+      code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid,
+      cause: renderer,
+    });
   }
   const lease =
     previousLease ??
@@ -519,7 +524,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
     })();
   const currentLeaseState = retainedRenderParticipantLeases.get(lease);
   if (currentLeaseState === undefined) {
-    throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInvalid, cause: lease });
+    throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid, cause: lease });
   }
   const previousFrame =
     previousLease === undefined
@@ -554,7 +559,9 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
     validateReadonlyLayers(captured.resolveReadonlyLayers?.(output) ?? EMPTY_READONLY_LAYERS);
   const assertReadonlyLayersSupported = (frame: RenderFrameSnapshot): void => {
     if (frame.layers.length === 0 || renderer.readonlyLayerCapability === 'supported') return;
-    throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererReadonlyLayerUnsupported });
+    throw new RetikzRetainedRenderError({
+      code: RetikzRetainedRenderErrorCode.RetainedRendererReadonlyLayerUnsupported,
+    });
   };
   const participant = defineRuntimeCommitParticipant<RetainedRendererRead>({
     key: captured.backend === 'svg' ? RETAINED_SVG_PARTICIPANT_KEY : RETAINED_CANVAS_PARTICIPANT_KEY,
@@ -591,7 +598,9 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
           ) ||
             !runtimeStructuralEquals(validateReadonlyLayers(captured.expectedInitialFrame.layers), frame.layers))
         ) {
-          throw new RetainedRenderError({ code: RetainedRenderErrorCode.RetainedRendererInitialFrameMismatch });
+          throw new RetikzRetainedRenderError({
+            code: RetikzRetainedRenderErrorCode.RetainedRendererInitialFrameMismatch,
+          });
         }
         assertReadonlyLayersSupported(frame);
         const rendererToken =
@@ -632,7 +641,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
         });
       }
       if (committedFrame === undefined) {
-        throw new RetainedRenderError({ code: RetainedRenderErrorCode.ScenePatchRevisionMismatch });
+        throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.ScenePatchRevisionMismatch });
       }
       const hasCandidateCoreSnapshot = core.snapshot.revision === candidate.candidateRevision;
       const next = hasCandidateCoreSnapshot

@@ -1,0 +1,94 @@
+---
+title: Container 扩展用法
+description: 在 Entity 继承、嵌套 recipe、直接 IR 与 Vanilla 输入中复用 Container 的组合契约。
+---
+
+基础外壳适合单个局部结构；当 Container 需要承载 Entity、嵌套其它 Container 或脱离 JSX 生成时，仍复用同一份 header / sections canonical child 契约
+
+## 扩展边界
+
+Container 扩展用法解决区域组合、Entity 变体继承、嵌套容器和非 React 输入。它不负责自动布局策略、图拓扑、自动路由或独立的几何引擎
+
+## Entity 变体继承
+
+`entityVariant` 只为后代 Entity 提供默认值，不改变 Container 外壳或 divider。嵌套 Container 会覆盖外层作用域，实体显式 `variant` 优先，`variant="default"` 可以重置继承值
+
+```tsx
+import { Container, ContainerSection, Entity } from '@retikz/graph-react';
+
+<Container id="order" entityVariant="secondary">
+  <ContainerSection sectionKey="input">
+    <Entity id="load" role="stage" position={[0, 0]} />
+  </ContainerSection>
+  <ContainerSection sectionKey="important">
+    <Entity id="validate" role="stage" position={[0, 0]} variant="primary" />
+  </ContainerSection>
+</Container>;
+```
+
+## 跨元素组合
+
+Container 可以容纳 Core child、Entity、Relation 的其它组合或嵌套 Container。下面的 Process recipe 只是文档中的组合示例，不会新增 package export
+
+<ComponentPreview
+  files="process-recipe"
+  size="lg"
+  caption="观察 Container、Entity 与 Relation 如何组成一个 Process recipe"
+/>
+
+## 直接 IR 与 Definition 注入
+
+直接 IR 使用与 JSX 相同的 JSON-safe child 契约，并显式注入 `ContainerDefinition`。区域 child 可以是 Node、Path、Entity、其它 composite 或嵌套 Container
+
+```ts
+import { createContainer, ContainerDefinition } from '@retikz/graph';
+
+const block = createContainer({
+  id: 'order',
+  header: { child: { type: 'node', position: [0, 0], text: 'Order' } },
+  sections: [{ key: 'body', child: { type: 'node', position: [0, 0], text: 'Body' } }],
+});
+
+const compile = { composites: [ContainerDefinition] };
+```
+
+如果 child 中包含 Entity 或 Relation，还需要同时注入对应 Definition；完整 Graph 集合可以用 `createGraphDefinitions()` 提供
+
+## Vanilla adapter
+
+Vanilla 用 embed id 编写 Container，adapter 会在内部派生 canonical `id`，并将实际使用的子元素接入相同的 Definition 路径
+
+```ts
+import { ContainerInputEmbedAdapter, container } from '@retikz/graph-vanilla';
+
+const embed = container('order', {
+  sections: [{ key: 'body', child: { type: 'node', position: [0, 0], text: 'Body' } }],
+});
+const adapters = [ContainerInputEmbedAdapter];
+```
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="需要理解区域测量、divider 或 compile artifact 时再回来阅读。"
+/>
+
+编译器为 header 与 sections 创建合成的 column FlexLayout 区域，再把 Flex artifact 投影为 Container artifact。区域 child 仍进入同一条 Core compile 主链；外壳和 divider 是视觉投影，不会成为第二套 authored graph
+
+## API 参考
+
+| 属性                  | 类型                       | 默认值                             | 说明                                |
+| --------------------- | -------------------------- | ---------------------------------- | ----------------------------------- |
+| `entityVariant?`      | `string`                   | 省略                               | 后代 Entity 的已注册默认变体        |
+| `size?`               | `LayoutSizeInput`          | content allocation                 | 外层 allocation 策略                |
+| `appearance?`         | `ContainerAppearanceInput` | 中性 shell、圆角 `8`、divider 开启 | 外壳、divider、圆角与 stacking 外观 |
+| `createContainer()`   | `@retikz/graph`            | —                                  | 创建规范 Container IR               |
+| `ContainerDefinition` | `@retikz/graph`            | —                                  | 将 Container IR 接入编译            |
+
+## 相关
+
+- [Container 基础用法](/schematic/graph/container/basic)：外壳、header、section 与基础布局参数
+- [Entity 扩展用法](/schematic/graph/entity/extension)：Entity 的作用域与直接 IR
+- [Relation 扩展用法](/schematic/graph/relation/extension)：关系组合与 Definition

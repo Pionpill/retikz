@@ -1,5 +1,6 @@
 import type { ResolvedTableTrackSize, TableTrackContribution } from './types';
 
+import { RetikzTableError } from '../../error';
 import { TableTrackSizeKind } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { solveTableTracks } from './track';
@@ -56,19 +57,19 @@ type SpanGrowthCandidate = Readonly<{
 
 const assertFiniteNonnegative = (value: number, name: string): void => {
   if (!Number.isFinite(value) || value < 0) {
-    throw new Error(`table: ${name} must be a finite nonnegative number`);
+    throw new RetikzTableError(`table: ${name} must be a finite nonnegative number`);
   }
 };
 
 const validateConstraint = (constraint: TableSpanConstraint, trackCount: number): void => {
   if (!Number.isInteger(constraint.startIndex) || constraint.startIndex < 0) {
-    throw new Error(`table: span Cell "${constraint.cellId}" startIndex must be a nonnegative integer`);
+    throw new RetikzTableError(`table: span Cell "${constraint.cellId}" startIndex must be a nonnegative integer`);
   }
   if (!Number.isInteger(constraint.length) || constraint.length <= 0) {
-    throw new Error(`table: span Cell "${constraint.cellId}" length must be a positive integer`);
+    throw new RetikzTableError(`table: span Cell "${constraint.cellId}" length must be a positive integer`);
   }
   if (constraint.startIndex + constraint.length > trackCount) {
-    throw new Error(`table: span Cell "${constraint.cellId}" range exceeds ${trackCount} tracks`);
+    throw new RetikzTableError(`table: span Cell "${constraint.cellId}" range exceeds ${trackCount} tracks`);
   }
   assertFiniteNonnegative(constraint.requiredOuterSize, `span Cell "${constraint.cellId}" requiredOuterSize`);
 };

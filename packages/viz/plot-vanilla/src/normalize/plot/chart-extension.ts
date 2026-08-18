@@ -18,7 +18,7 @@ import type {
 import type { InputPlotScale } from './input-scales';
 
 import { normalizePlotBindings } from './bindings';
-import { PlotDeclarationError, PlotDeclarationErrorCode } from './errors';
+import { RetikzPlotDeclarationError, RetikzPlotDeclarationErrorCode } from './errors';
 import { buildPositionScale, collectExplicitScales, coordinateTypeOf } from './scale-coordinate';
 import { assembledTransformsOf } from './topology';
 
@@ -46,8 +46,8 @@ const throwDuplicateDeclarationSource = (
   declaration: PlotAuthoringDeclaration,
   conflictingPath: PlotDeclarationPath,
 ): never => {
-  throw new PlotDeclarationError(
-    PlotDeclarationErrorCode.DuplicateDeclarationSource,
+  throw new RetikzPlotDeclarationError(
+    RetikzPlotDeclarationErrorCode.DuplicateDeclarationSource,
     declaration.path,
     conflictingPath,
   );
@@ -62,9 +62,9 @@ export const assertChartExtensionCollection = (
     if (declaration.kind === 'unsupported') {
       const code =
         declaration.props.valueKind === 'function'
-          ? PlotDeclarationErrorCode.NonSerializableExtension
-          : PlotDeclarationErrorCode.UnsupportedChartChild;
-      throw new PlotDeclarationError(code, declaration.path);
+          ? RetikzPlotDeclarationErrorCode.NonSerializableExtension
+          : RetikzPlotDeclarationErrorCode.UnsupportedChartChild;
+      throw new RetikzPlotDeclarationError(code, declaration.path);
     }
   }
 
@@ -88,8 +88,8 @@ export const assertChartExtensionCollection = (
     throwDuplicateDeclarationSource(markDeclaration, context.marks.path);
   }
   if (context.coordinate !== undefined && context.composition !== undefined) {
-    throw new PlotDeclarationError(
-      PlotDeclarationErrorCode.DuplicateDeclarationSource,
+    throw new RetikzPlotDeclarationError(
+      RetikzPlotDeclarationErrorCode.DuplicateDeclarationSource,
       context.composition.path,
       context.coordinate.path,
     );

@@ -165,7 +165,7 @@ type IRPlotAxisGuide = {
 4. lowering 先规范化单坐标 shorthand 为默认 `view`，再按 `arrangements` 生成 facet panels / tracks 的派生 view。
 5. scale domain 收集阶段应用 `resolve.scale`；guide lowering 阶段应用 `resolve.axis` 与 `resolve.grid`；mark lowering 阶段只消费已经确定的 view binding。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不设计 chart preset 或 `<Chart>` 高层封装。
 - 不设计 tooltip / brush / linked highlighting。

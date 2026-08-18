@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { RetikzRuntimeErrorCode } from '../../src';
 import { defineRuntimeOwner } from '../../src/owner';
 import { defineRuntimeProgram, RuntimeProgramKind } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
@@ -51,7 +52,7 @@ describe('runtime session rollback', () => {
           createRuntimeOwnerInput(third, 3),
         ],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_OWNER_CAPTURE_FAILED', cause }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.CaptureFailed, cause }));
     expect(retired).toEqual(['b:2', 'a:1']);
   });
 
@@ -91,7 +92,7 @@ describe('runtime session rollback', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(first, 2), createRuntimeOwnerUpdate(second, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_OWNER_CAPTURE_FAILED', cause }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.CaptureFailed, cause }));
     expect(retired).toEqual(['a:2']);
     expect(session.revision()).toBe(0);
     expect(session.snapshot(first)).toEqual({ revision: 0, value: 1 });
@@ -198,7 +199,7 @@ describe('runtime session rollback', () => {
           createRuntimeOwnerUpdate(thirdOwner, 2),
         ],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PROGRAM_UPDATE_FAILED', cause }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ProgramUpdateFailed, cause }));
     expect(retired).toEqual(['artifact:b:2', 'artifact:a:2', 'owner:c:2', 'owner:b:2', 'owner:a:2']);
     expect(session.revision()).toBe(0);
     expect(session.snapshot(firstOwner)).toEqual({ revision: 0, value: 1 });

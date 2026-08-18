@@ -4,6 +4,7 @@ import type { LayoutAlignmentValue } from '../shared';
 import type { FlexMainItem } from './flex-engine';
 import type { LayoutRect } from './geometry';
 
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import { solveGridTracks } from '../grid-layout/tracks';
 import { LayoutAlignment, LayoutDistribution } from '../shared';
 import { compensatedLayoutSum } from './distribution';
@@ -208,7 +209,11 @@ export const resolvePairedFlowIntrinsicMainProfile = (
   options: PairedFlowOptions & Readonly<{ items: ReadonlyArray<PairedFlowItem> }>,
 ): Readonly<{ minimum: number; natural: number }> => {
   if (!Number.isFinite(options.pairGap) || options.pairGap < 0) {
-    throw new Error('Paired flow pair gap must be finite and non-negative');
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'Paired flow pair gap must be finite and non-negative',
+      details: { pairGap: options.pairGap },
+    });
   }
   const mainGap = options.direction === 'horizontal' ? options.gap.column : options.gap.row;
   const mainItems = mainItemsOf(options.items, options.direction, options.pairGap);
@@ -282,7 +287,11 @@ export const resolvePairedFlowPlan = (
   options: PairedFlowOptions & Readonly<{ items: ReadonlyArray<PairedFlowItem> }>,
 ): PairedFlowPlan => {
   if (!Number.isFinite(options.pairGap) || options.pairGap < 0) {
-    throw new Error('Paired flow pair gap must be finite and non-negative');
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: 'Paired flow pair gap must be finite and non-negative',
+      details: { pairGap: options.pairGap },
+    });
   }
   const origin = options.origin ?? { x: 0, y: 0 };
   const mainGap = options.direction === 'horizontal' ? options.gap.column : options.gap.row;
@@ -369,7 +378,13 @@ export const resolvePairedFlowPlan = (
 
   const slots = Object.freeze(
     slotsBySource.map(slot => {
-      if (slot === undefined) throw new Error('Paired flow failed to place an authored item');
+      if (slot === undefined) {
+        throw new RetikzLayoutError({
+          code: RetikzLayoutErrorCode.PipelineInvariant,
+          message: 'Paired flow failed to place an authored item',
+          details: { phase: 'placement' },
+        });
+      }
       return slot;
     }),
   );

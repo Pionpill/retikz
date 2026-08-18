@@ -1,5 +1,7 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+
 /** provider registry 解析输入：内置项、自定义项和 key 提取规则 */
 export type ProviderRegistryOptions<TDefinition> = {
   /** 能力名称，用于错误信息 */
@@ -82,7 +84,7 @@ export const resolveProviderRegistry = <TDefinition>({
     const key = keyOf(definition);
     assertProviderKey(capability, key);
     if (registry.has(key)) {
-      throw new Error(`duplicate ${capability} registration: "${key}"`);
+      throw new RetikzCoreError(RetikzCoreErrorCode.Provider, `duplicate ${capability} registration: "${key}"`);
     }
     registry.set(key, definition);
   }
@@ -90,7 +92,7 @@ export const resolveProviderRegistry = <TDefinition>({
     const key = keyOf(definition);
     assertProviderKey(capability, key);
     if (registry.has(key)) {
-      throw new Error(`duplicate ${capability} registration: "${key}"`);
+      throw new RetikzCoreError(RetikzCoreErrorCode.Provider, `duplicate ${capability} registration: "${key}"`);
     }
     registry.set(key, definition);
   }
@@ -106,7 +108,8 @@ export const providerDefinitionOf = <TDefinition>(
     ? registry.find(item => item.name === key)
     : (registry as ReadonlyMap<string, TDefinition>).get(key);
   if (definition !== undefined) return definition;
-  throw new Error(
+  throw new RetikzCoreError(
+    RetikzCoreErrorCode.Provider,
     `Unknown ${capability} '${key}'; available: ${registeredNames(registry)}. Pass a definition via options.${optionName}.`,
   );
 };

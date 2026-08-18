@@ -29,7 +29,7 @@ const scatterContributionOf = (chart: ReactElement) =>
   });
 
 describe('Chart-native Scatter presentation', () => {
-  it('documents the complete public typed Chart family for React and Vanilla in both languages', () => {
+  it('documents the complete public multi-entry Chart APIs for React and Vanilla in both languages', () => {
     for (const locale of ['zh', 'en']) {
       const content = readFileSync(
         new URL(`../../src/modules/docs/contents/viz/chart/_includes/shared-api.${locale}.mdx`, import.meta.url),
@@ -52,7 +52,7 @@ describe('Chart-native Scatter presentation', () => {
       const contribution = scatterContributionOf(chart);
       expect(contribution.node).toMatchObject({
         namespace: 'chart',
-        type: 'chart',
+        type: 'base',
         plot: { data: { reference: 'chart.data' } },
         presentation: {
           children: [
@@ -74,7 +74,7 @@ describe('Chart-native Scatter presentation', () => {
       const contribution = scatterContributionOf(chart);
       expect(contribution.node).toMatchObject({
         namespace: 'chart',
-        type: 'chart',
+        type: 'base',
         plot: { data: { reference: 'chart.data' } },
         presentation: {
           children: [

@@ -52,7 +52,7 @@ RibbonMarkSchema = {
 - **把 sankey 布局塞进 ribbon mark**：会让本应干净的几何 primitive 背上启发式算法的不确定性，且与 plot 既有 `transform` 层（stack / dodge）职责重叠。布局是 Statistics / layout 职责，ribbon 只消费布局产物。否决，划出范围。
 - **node id 端点产 core `NodeTarget`**：id 只有 core compile 期解析坐标，lowering 期无坐标，`NodeTarget` 不足以算半宽偏移与四角。不在 plot 层造一个解析不出坐标的半成品。降级为后续方向。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - **node id 端点 / 跨 scope ribbon connector**（连接不同 facet / inset 的具名 core node）：端点几何需已解析屏幕坐标，而 `{ node }` 端点在 plot lowering 期还没坐标。正确做法是 **core 级高阶 path / shape 在 compile 期解析坐标后再生成曲带**，或另起 ADR；本决策的 ribbon 只支持字段端点。
 - **sankey 布局算法**（节点排布 / 流量堆叠顺序 / 交叉最小化）：归 Statistics / 独立 layout（alpha.12+）。本 ADR 最重要的范围切割——布局与画带解耦。

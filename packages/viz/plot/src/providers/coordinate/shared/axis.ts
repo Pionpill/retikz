@@ -1,5 +1,6 @@
 import type { AxisCardinalSideValue, IRPlotAxisGuide } from '../../../schemas';
 
+import { RetikzPlotError } from '../../../error';
 import { AxisCardinalSide, AxisPlacementKind } from '../../../schemas';
 
 /**
@@ -26,7 +27,7 @@ export const assertUniqueAxisDimension = (
   for (const guide of guides) {
     const role = roleOf(guide.dimension);
     if (seen.has(role)) {
-      throw new Error(
+      throw new RetikzPlotError(
         `lowerPlots: duplicate axis for "${role}" role (dimension "${guide.dimension}"); one axis per positional role`,
       );
     }
@@ -58,7 +59,9 @@ export const assertUniqueAxisPlacement = (
   for (const guide of guides) {
     const key = axisPlacementKeyOf(guide, roleOf);
     if (seen.has(key)) {
-      throw new Error(`lowerPlots: duplicate axis for placement "${key}"; one axis per coordinate role and placement`);
+      throw new RetikzPlotError(
+        `lowerPlots: duplicate axis for placement "${key}"; one axis per coordinate role and placement`,
+      );
     }
     seen.add(key);
   }

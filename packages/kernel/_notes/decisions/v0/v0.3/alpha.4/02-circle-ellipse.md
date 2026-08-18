@@ -1,55 +1,26 @@
-# ADR-02：circle/ellipse——circle 收为 ellipse 的 `equal` circumscribe preset 别名
+# ADR-02：circle 作为 ellipse 的 equal preset
 
 - 状态：Accepted
 - 决策日期：2026-06-06
-- 关联：[v0.3-alpha.4 roadmap](./roadmap.md) · 依赖：[ADR-01 shape 参数化机制](./01-shape-params-generalization.md)（nested params + defineShape + 双护栏） · 文档页：`apps/docs/src/contents/kernel/components/shapes/circle-ellipse/`
-
-> **依赖 ADR-01**：按 01 冻结的 `defineShape<TParams>` + nested `{type, params}` + 双护栏实现 ellipse 的 `paramsSchema` + 几何；与 03/04/05 并发、互不依赖。
+- 关联：[ADR-01 shape 参数化机制](./01-shape-params-generalization.md)
 
 ## 背景
 
-`circle` 与 `ellipse` 现为两个独立内置 shape，但 `boundaryPoint` / `anchor` / `edgePoint` / `emit` 几何，circle 就是 ellipse 的 `rx=ry` 退化。唯一实质差异在 `circumscribe`（`node.ts:10` 注释）：
+circle 与 ellipse 的 boundaryPoint、anchor、edgePoint 和 emit 几何相同；差异只在 circumscribe：circle 使用等轴的内框对角线半长，ellipse 对两个轴分别乘以 √2。保留两套实现会造成几何重复。
 
-- circle：`r = √(innerHalfW² + innerHalfH²)`——等轴（正圆，半径=内框对角线半长）
-- ellipse：`rx = innerHalfW×√2, ry = innerHalfH×√2`——各轴独立（比例）
+## 决策
 
-两套几何冗余。
+ellipse 的参数 schema 增加 circumscribe 策略：
 
-## 决策：ellipse 参数化 `circumscribe`，circle 降为 preset 别名
+- proportional（默认）按轴分别以 √2 扩展，保持 ellipse 行为
+- equal 使两个半轴都为 hypot(innerHalfWidth, innerHalfHeight)，表达正圆
 
-ellipse 的 `paramsSchema` 加外接策略参数；circle 不再有独立几何，编译期规范化为 ellipse 的 `equal` preset。
+circle 不再拥有独立几何，compile 将裸 shape circle 规范化为 type ellipse、params { circumscribe: equal }。shape: circle 和 shape: ellipse 两种旧写法都保留；其他几何函数只实现一次。
 
-```ts
-// packages/kernel/core/src/shapes/ellipse.ts —— 经 defineShape，nested params
-export const ellipse = defineShape({
-  paramsSchema: z.strictObject({
-    circumscribe: z
-      .enum(['proportional', 'equal'])
-      .optional()
-      .describe(
-        'Circumscription policy from the inner content box: "proportional" (per-axis ×√2, ellipse) or "equal" (isotropic, circle: r = diagonal half-length). Default "proportional".',
-      ),
-  }),
-  circumscribe: (hw, hh, params) =>
-    params.circumscribe === 'equal'
-      ? { halfWidth: Math.hypot(hw, hh), halfHeight: Math.hypot(hw, hh) } // 等轴
-      : { halfWidth: hw * Math.SQRT2, halfHeight: hh * Math.SQRT2 }, // 比例（现状）
-  // boundaryPoint / anchor / edgePoint / emit 复用现有 ellipse 几何（不分支）
-  // ...
-});
-// circle ≡ { type: 'ellipse', params: { circumscribe: 'equal' } }
-// shape: 'circle'（裸 string）在 compile/node.ts 规范化为上式
-```
+## 兼容性与实现结果
 
-- 几何 `boundaryPoint` / `anchor` / `edgePoint` / `emit` 只留 ellipse 一套（现有实现复用，不读 `params`）。
-- `shape:'circle'` 与 `shape:'ellipse'` 两种裸 string 写法都保留；`circle` 规范化为 `{type:'ellipse', params:{circumscribe:'equal'}}`。
+既有 circle/ellipse 字符串写法和连接语义保持兼容，circle 已作为 ellipse preset 实现。
 
-理由：单一几何实现 + 旧写法兼容；与 [ADR-04](./04-rectangle-polygon.md) diamond→polygon、[ADR-01](./01-shape-params-generalization.md) preset 别名思路一致。
+## 遗留风险
 
-## 不在本 ADR 范围
-
-- ShapeDefinition 接口（[ADR-01](./01-shape-params-generalization.md)）。
-- 其他形状（03/04/05）。
-
-> 实现指针：最终 schema / 类型 / 行为以代码为准；完整施工契约（Level / Schema 改动 / 文件 scope / 测试象限 / 依赖现有元素）+ DSL 示例 + 影响清单见本文件封板前全文。
-> 🔖 本文件压缩前完整施工蓝图 = `git show 62562f1d:_notes/decisions/core/v0/v0.3/alpha.4/02-circle-ellipse.md`（封板全文）。
+其他形状的 preset 别名应继续复用单一几何实现，不应重新建立同义注册项。

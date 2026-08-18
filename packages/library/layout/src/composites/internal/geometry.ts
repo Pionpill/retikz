@@ -5,6 +5,7 @@ import { resolveBoxSpacing } from '@retikz/core';
 
 import type { IRLayoutAxisSize, LayoutAlignmentValue } from '../shared';
 
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import { LayoutAlignment, LayoutAxisSizeKind } from '../shared';
 
 /** Layout solver 使用的有限非负矩形 */
@@ -39,14 +40,24 @@ export type ResolvedLayoutAxisSize = Readonly<{
 
 /** 校验 solver 中间数值是有限非负数 */
 const finiteNonNegative = (value: number, label: string): number => {
-  if (!Number.isFinite(value) || value < 0) throw new Error(`${label} must be finite and non-negative`);
+  if (!Number.isFinite(value) || value < 0) {
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: `${label} must be finite and non-negative`,
+      details: { label, value },
+    });
+  }
   return value;
 };
 
 /** 校验布局矩形的坐标有限且尺寸有限非负 */
 const finiteLayoutRect = (rect: LayoutRect, label: string): LayoutRect => {
   if (!Number.isFinite(rect.x) || !Number.isFinite(rect.y)) {
-    throw new Error(`${label} origin must be finite`);
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.GeometryInvalid,
+      message: `${label} origin must be finite`,
+      details: { label, x: rect.x, y: rect.y },
+    });
   }
   finiteNonNegative(rect.width, `${label} width`);
   finiteNonNegative(rect.height, `${label} height`);
@@ -94,7 +105,11 @@ export const resolveLayoutAxisSize = (input: ResolveLayoutAxisSizeInput): Resolv
 
   if (input.policy.kind === LayoutAxisSizeKind.Fill) {
     if (finiteAvailable === undefined) {
-      throw new Error(`Layout fill requires a finite parent allocation on ${input.axis}`);
+      throw new RetikzLayoutError({
+        code: RetikzLayoutErrorCode.GeometryInvalid,
+        message: `Layout fill requires a finite parent allocation on ${input.axis}`,
+        details: { axis: input.axis, policy: input.policy.kind },
+      });
     }
     return { allocationSize: clampAuthoredSize(finiteAvailable, input.policy), finiteAvailable };
   }

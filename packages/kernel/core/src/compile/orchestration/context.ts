@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   AnyCompositeDefinition,
   AnyPathKindDefinition,
   ArrowDefinition,
@@ -15,6 +15,7 @@ import type { CompileOptions } from '../types';
 import type { CompileWarningInput } from '../warning';
 import type { CompileObservationRuntime } from './observation';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { resolveArrowRegistry } from '../../providers/arrow';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
 import { resolveClipRegistry } from '../../providers/clip';
@@ -24,7 +25,7 @@ import { resolvePathKindRegistry } from '../../providers/path-kind';
 import { resolvePatternRegistry } from '../../providers/pattern';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { resolveThemeStyleRegistry } from '../../providers/theme';
-import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve/theme';
+import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from '../constants';
 import { createClipRegistry, createPaintRegistry, DEFAULT_MAX_CLIP_DEPTH } from '../resource';
 import { createRound, DEFAULT_PRECISION } from '../scene';
@@ -102,7 +103,10 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
   const round = createRound(options.precision ?? DEFAULT_PRECISION);
   const labelDistance = options.labelDistance ?? DEFAULT_LABEL_DISTANCE;
   if (!Number.isFinite(labelDistance) || labelDistance < 0) {
-    throw new Error(`CompileOptions.labelDistance '${labelDistance}' must be a non-negative finite number`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `CompileOptions.labelDistance '${labelDistance}' must be a non-negative finite number`,
+    );
   }
 
   const defaultWarnDispatcher = (warning: CompileWarningInput): void => {
@@ -114,7 +118,10 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
   const clips = resolveClipRegistry(options.clips);
   const maxClipDepth = options.maxClipDepth ?? DEFAULT_MAX_CLIP_DEPTH;
   if (!Number.isSafeInteger(maxClipDepth) || maxClipDepth < 0) {
-    throw new Error(`CompileOptions.maxClipDepth '${maxClipDepth}' must be a non-negative safe integer`);
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `CompileOptions.maxClipDepth '${maxClipDepth}' must be a non-negative safe integer`,
+    );
   }
   const patterns = resolvePatternRegistry(options.patterns);
   const composites = resolveCompositeRegistry(options.composites);

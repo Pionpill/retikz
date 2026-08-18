@@ -57,5 +57,3 @@ arc/circle/ellipse 是 infix 形状算子：**以上一项为圆心、不消耗�
 
 - 无需新增页面；ComponentPreview 代码视图自然体现。
 - 仍不支持的冷门结构，注释要写「此结构无 vanilla way sugar，请切换 IR 视图」，而非模糊的 `unsupported`。
-
-> 实现指针：way 算子字段名以 `parseWay.ts` 当前导出为准；上方对照表按本 ADR 落定时的 `WayArcOp`/`WayCircleOp`/`WayEllipseOp` 形态。

@@ -1,9 +1,10 @@
-﻿import type { DataFieldTypeValue, IRDataScalarValue } from '@retikz/data';
+import type { DataFieldTypeValue, IRDataScalarValue } from '@retikz/data';
 
 import { z } from 'zod';
 
 import type { IRPlotScale, IRPlotScaleOperation } from '../schemas';
 
+import { RetikzPlotError } from '../error';
 import { BUILTIN_SCALE_TYPES } from '../schemas';
 
 /** 刻度值 + 标签集（axis 与同维 grid 复用同一份） */
@@ -145,11 +146,13 @@ export type AnyScaleDefinition =
  */
 export const extractScaleType = (schema: z.ZodType): string => {
   if (!(schema instanceof z.ZodObject)) {
-    throw new Error('lowerPlots: scale registration schema must be a ZodObject with a literal type field');
+    throw new RetikzPlotError('lowerPlots: scale registration schema must be a ZodObject with a literal type field');
   }
   const typeSchema = schema.shape.type;
   if (!(typeSchema instanceof z.ZodLiteral) || typeof typeSchema.value !== 'string' || typeSchema.value.length === 0) {
-    throw new Error('lowerPlots: scale registration schema must declare type as a non-empty z.literal string');
+    throw new RetikzPlotError(
+      'lowerPlots: scale registration schema must declare type as a non-empty z.literal string',
+    );
   }
   return typeSchema.value;
 };

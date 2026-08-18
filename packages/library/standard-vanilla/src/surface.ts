@@ -1,7 +1,7 @@
 import type { SurfaceInput } from '@retikz/standard';
 import type { InputChild, InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
-import { createSurface, SurfaceProvider } from '@retikz/standard';
+import { createSurface, RetikzStandardError, RetikzStandardErrorCode, SurfaceProvider } from '@retikz/standard';
 import { PathClipProvider } from '@retikz/standard/clip';
 
 import { StandardSurfaceEmbedKind } from './constants';
@@ -26,11 +26,20 @@ export const SurfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface> = {
   lower: (props, context) => {
     const { child, id, ...input } = props;
     const normalizeChildren = context.normalizeChildren;
-    if (normalizeChildren === undefined)
-      throw new Error('Standard Surface inputs require Kernel Vanilla normalizeScene.');
+    if (normalizeChildren === undefined) {
+      throw new RetikzStandardError({
+        code: RetikzStandardErrorCode.AuthoringInvalid,
+        message: 'Standard Surface inputs require Kernel Vanilla normalizeScene.',
+        details: { operation: 'SurfaceInputEmbedAdapter' },
+      });
+    }
     const normalized = normalizeChildren([child]);
     if (normalized.children.length !== 1) {
-      throw new Error('Standard Surface requires exactly one normalized child.');
+      throw new RetikzStandardError({
+        code: RetikzStandardErrorCode.AuthoringInvalid,
+        message: 'Standard Surface requires exactly one normalized child.',
+        details: { childCount: normalized.children.length },
+      });
     }
     return {
       node: createSurface({

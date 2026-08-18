@@ -1,6 +1,6 @@
 import type { ExternalRow } from '@retikz/data';
 
-import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlot } from '../../schemas';
+import type { IRPlot, IRPlotAxisGuide, IRPlotCoordinateOperation } from '../../schemas';
 import type { CoordinateArrangementKind, CoordinateViewPlacementKind } from '../../schemas';
 
 /** Plot composition schema 的消费态 */

@@ -5,7 +5,7 @@ import {
   ChartPresentationPreset,
   ChartPresentationSchema,
   ChartPresentationTextSchema,
-} from '../../../src/base/presentation';
+} from '../../../src/_shared/presentation';
 
 describe('canonical Chart presentation schema', () => {
   it('exposes exactly four presets and fixed keys', () => {

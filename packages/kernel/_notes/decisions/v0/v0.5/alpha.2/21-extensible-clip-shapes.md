@@ -2,7 +2,7 @@
 
 - 状态：Superseded（由 [ADR-22](./22-single-clip-definition.md) 取代）
 - 决策日期：2026-08-16
-- 关联：[alpha.2 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Standard alpha.4 ADR-05](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.4/05-standard-clip-shapes.md) · [Core v0.4 alpha.7 ADR-06](../../v0.4/alpha.7/06-clip-provider-contract.md)
+- 关联：[ADR-22](./22-single-clip-definition.md) · [Standard alpha.3 ADR-11](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.3/11-standard-clip-shapes.md) · [Core v0.4 alpha.7 ADR-06](../../v0.4/alpha.7/06-clip-provider-contract.md)
 
 ## 背景与目标
 
@@ -124,6 +124,6 @@ Core 的 canonical path 只有一个 fill rule，因此复合裁剪的稳定语�
 
 ## 实施结论与最终边界
 
-本决策已完成：两级 Definition / registry、开放且 JSON-safe 的 ClipShape、canonical `SceneClipPath`、provider dependency、递归保护、Scene resource、visual bounds、SVG / Canvas / hit-test 消费以及 React / Vanilla contribution 传递已形成同一闭环。验证覆盖公开契约、provider graph、确定性与 precision、递归与失败语义、Scene / ScenePatch 校验、跨 renderer 等价、adapter 等价及下游兼容性。
+本决策已完成：两级 Definition / registry、开放且 JSON-safe 的 ClipShape、canonical `SceneClipPath`、provider dependency、递归保护、Scene resource、visual bounds、SVG / Canvas / hit-test 消费以及 React / Vanilla contribution 传递已形成同一闭环，公开契约与下游兼容性保持一致。
 
 最终 owner 已按 Standard ADR-05 收敛：Core 默认只保留 `rect` operation 与 shape definition；`circle`、`ellipse`、`polygon`、`path`、`compound` 的完整实现由 `@retikz/standard/clip` 显式提供。Layout 以 Core `rect` 表达 allocation clip，不依赖 Standard；其它调用方按实际需求同时装配 operation 与 shape definitions/providers。

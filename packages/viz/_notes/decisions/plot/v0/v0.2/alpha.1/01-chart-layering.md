@@ -188,57 +188,21 @@ Token map 是闭合数据，不执行代码、不按名称 dispatch，因此本 
 
 ## 功能与包边界
 
-| Owner                    | 拥有                                                                                | 不拥有                                                |
-| ------------------------ | ----------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `@retikz/plot`           | Plot token vocabulary、preset、resolver、mapping、inspection 与 lowering            | Chart presentation、Canonical Type、Core Theme 继承   |
+| Owner                    | 拥有                                                                              | 不拥有                                                |
+| ------------------------ | --------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `@retikz/plot`           | Plot token vocabulary、preset、resolver、mapping、inspection 与 lowering          | Chart presentation、Canonical Type、Core Theme 继承   |
 | `@retikz/chart`          | IRChart、封闭 recipe、Chart presentation / recipe token、resolution 与 inspection | Plot token、Plot registry / lowering、Standard solver |
-| `@retikz/standard`       | 去除领域词汇后的 presentation、layout、surface 与通用绘图 composite                 | Plot guide / palette、Chart type                      |
-| `@retikz/core`           | Theme style / mode、继承、Composite context、Core IR 与 Scene compile               | 领域 preset、Plot / Chart token、领域 cascade         |
-| React / Vanilla adapters | 等价 authoring、datasets / definitions 注入与 runtime 接线                          | 新 token、adapter-only preset、不同 merge             |
-| renderer                 | 执行已物化的统一 Scene                                                              | preset 选择、token 解析、Chart / Plot 特判            |
+| `@retikz/standard`       | 去除领域词汇后的 presentation、layout、surface 与通用绘图 composite               | Plot guide / palette、Chart type                      |
+| `@retikz/core`           | Theme style / mode、继承、Composite context、Core IR 与 Scene compile             | 领域 preset、Plot / Chart token、领域 cascade         |
+| React / Vanilla adapters | 等价 authoring、datasets / definitions 注入与 runtime 接线                        | 新 token、adapter-only preset、不同 merge             |
+| renderer                 | 执行已物化的统一 Scene                                                            | preset 选择、token 解析、Chart / Plot 特判            |
 
 Chart 需要新的可视化语法能力时，先补 Plot schema / contract / provider / pipeline 闭环；需要通用 presentation 或布局时消费 Standard；需要 renderer-neutral 图形底座时下沉 Core / Math。当前代码位置、单个 type 需求或 adapter 展示能力不能改变所有权。
 
-## 架构验证与能力完备性检查
-
-- 所属能力域与能力面：Visualization Complete 的 Guide、Scale / Palette、Layer / Lowering 与 Chart consumption boundary
-- 解决的问题：让 Plot 在任何宿主中独立解析领域主题，并阻止 Chart 复制 Plot 视觉语义
-- 主责包与协作包：Plot 主责；Chart、Standard、Core 与 adapters 协作
-- 是否可由现有能力组合：既有 `IRPlotTheme`、guide / scale schema、Plot lowering 与 Core effective Theme 可作为主链，但需要扩展 Plot-owned token contract 与 preset resolver
-- 是否需要下沉：Theme environment 已由 Core 提供；token value atom 继续复用 Core / Plot schema，不新增 Core 领域词汇
-- 内部表达链路：effective Theme 与 IRPlot token / theme 输入解析为正式 guide、palette、label 与 surface 配置，再沿既有 Plot lowering 下沉
-- 外部扩展链路：token vocabulary 闭合且不采用 registry；自定义 Mark、Scale、Coordinate、Channel 等能力仍沿 Plot define-registry，scheme name 继续沿 built-in + `options.colorSchemes` 的现有 resolver 扩展并在 Plot lowering 中诊断
-- 下游闭环：Chart 产生完整 IRPlot，Plot 统一解析，Standard 处理通用呈现，Core / renderer 执行已物化结果；adapter 不建立旁路
-- provenance / locator：Plot 的 identity、provenance、locator 与空间 handle 保持原 owner；theme inspection 作为独立可解释 sidecar，不改写数据 lineage
-- 本轮结论：扩展 Visualization Complete，并把已倒置的 Plot token 所有权从 Chart 收回 Plot
-
-## 被否决方案
-
-- 保留 Chart 统一 token catalog，再为直接 Plot 增加第二套 preset：会形成两个 Plot 视觉真源
-- 把所有领域 token 汇总进 Core Theme：会让 Core 拥有 Plot / Chart / Table 领域词汇和巨型 schema
-- 在每个领域 spec 重复 `style` / `mode`：会绕开 Scene / Scope 继承并使嵌套结果不一致
-- 让 Chart 把 resolved Plot theme 完全物化后再交给 Plot：会遮蔽 Plot token 来源，使直接 Plot 与 nested Plot 的 inspection 和默认链分叉
-- 让 adapter、CSS 或 renderer 根据 preset 名称补默认：会破坏 JSON、React、Vanilla 与 renderer parity
-- 恢复早期无 IRChart 的 IRPlot 装饰 helper：无法承载封闭 type identity、核心 recipe、presentation 与结构化 inspection
-
-## 测试策略摘要
-
-需要以下稳定证据层：
-
-- schema / type 证明 Plot token 的 sparse、resolved 与 preset 复用单一字段契约，未知 key、错误 value 与缺失 required token fail-loud
-- provider / pipeline 证明四 style × 两 mode 完整、cascade 确定、每个 token 都有正式 consumer，consumer 不按 preset 名称分支
-- Core / Composite 集成证明 Scene / Scope Theme 继承进入直接 Plot 与 Chart 内部 Plot，并保持相同 IRPlot 的 Plot 结果等价
-- Chart resolution 证明 recipe 核心不变量与主题默认正交，Chart 只消费 Plot 公开 token / resolver
-- inspection 证明 effective environment、token 来源、原生覆盖和 owner mapping 可解释
-- React / Vanilla / JSON 与 renderer parity 证明 adapter、SVG、Canvas 不维护独立主题默认
-- 兼容性证据证明 `neutral + light` 保持当前 Plot 默认，显式 `colors`、`IRPlotTheme`、guide 与 scale 配置优先级稳定
-- docs / API catalog 证明 canonical key、value contract、默认来源、cascade 与 Chart 的 `plotStyleTokens` 转发面和公开 schema 同步
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Chart Canonical Type 清单、recipe 字段和 presentation 精确契约；由 Chart 路线维护
 - Plot interaction state token、hover、selected、tooltip、brush 与 animation
 - Table、Geo 或其它领域的 token vocabulary 与 preset 具体值
 - 自定义主题命名、继承、动态加载、远程分发或 theme registry
 - Standard surface / Legend composite 的具体布局和实现迁移
-- 实现文件、执行顺序、测试 case、命令与 commit 切分

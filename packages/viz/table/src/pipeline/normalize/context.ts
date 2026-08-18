@@ -4,6 +4,7 @@ import { DataReferenceSchema, resolveFieldPath, resolveFieldTypes, ScalarValueSc
 
 import type { TableStructureContext } from '../../contract/structure';
 
+import { RetikzTableError } from '../../error';
 import { deepFreeze } from '../../shared';
 
 /** 构造不暴露原始 row 对象的 Structure Definition context */
@@ -20,7 +21,7 @@ export const createTableStructureContext = (
 
   const parsedData = DataReferenceSchema.parse(data);
   if (!Object.hasOwn(datasets, parsedData.reference)) {
-    throw new Error(`dataset "${parsedData.reference}" not found in provided datasets`);
+    throw new RetikzTableError(`dataset "${parsedData.reference}" not found in provided datasets`);
   }
   const rows = datasets[parsedData.reference];
   const sourceIndices = deepFreeze(rows.map((_, index) => index));
@@ -28,13 +29,13 @@ export const createTableStructureContext = (
 
   const resolveScalarField = (sourceIndex: number, field: string): IRDataScalarValue | undefined => {
     if (!Number.isInteger(sourceIndex) || sourceIndex < 0 || sourceIndex >= rows.length) {
-      throw new Error(`sourceIndex ${sourceIndex} is outside dataset "${parsedData.reference}"`);
+      throw new RetikzTableError(`sourceIndex ${sourceIndex} is outside dataset "${parsedData.reference}"`);
     }
     const value = resolveFieldPath(rows[sourceIndex], field);
     if (value === undefined) return undefined;
     const scalar = ScalarValueSchema.safeParse(value);
     if (!scalar.success) {
-      throw new Error(`field "${field}" at sourceIndex ${sourceIndex} must resolve to a JSON scalar value`, {
+      throw new RetikzTableError(`field "${field}" at sourceIndex ${sourceIndex} must resolve to a JSON scalar value`, {
         cause: scalar.error,
       });
     }

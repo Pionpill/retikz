@@ -14,7 +14,7 @@ This package is ESM-only and requires Node.js 24 or newer.
 
 ## Root imports
 
-Foundation exposes exactly thirteen root exports. Its only production dependency is Zod:
+Foundation exposes exactly fourteen root exports. Its only production dependency is Zod:
 
 ```ts
 import {
@@ -27,6 +27,7 @@ import {
   PositiveIntegerSchema,
   PositiveNumberSchema,
   RetikzError,
+  RetikzFoundationError,
 } from '@retikz/foundation';
 import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf } from '@retikz/foundation';
 ```

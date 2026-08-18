@@ -35,13 +35,13 @@ description: Use when the active main model is explicitly gpt-5.6-sol and an app
 
 Sol 负责 source of truth、计划、验收标准、任务拆分、依赖、集成验证与 finding 裁决。owning flow 允许主 agent 实现时，Sol 可以直接处理未委派文件；本 skill 不为维持“纯调度”而强制派 Luna。
 
-只有已确认计划把实现阶段交给 Luna 时才调度 worker。给 worker 明确的输入、输出、文件所有权、依赖和验证命令，并声明它不是仓库中唯一工作者，不得回滚或覆盖他人改动。依赖连续的步骤和返修优先复用原 worker；新 worker 只用于新的独立任务。
+只有已确认计划把实现阶段交给 Luna 时才调度 worker。给 worker 明确的输入、输出、文件所有权和依赖，并声明它不是仓库中唯一工作者，不得回滚或覆盖他人改动。worker 只完成分配的实现并报告改动文件、已知风险与待验证点，不运行 ESLint、TypeScript 类型检查、测试或构建；这些命令由 Sol 在整合该波改动后统一执行。依赖连续的步骤和返修优先复用原 worker；新 worker 只用于新的独立任务。
 
 ## 并发实现
 
 详细 plan 中不存在任务依赖、文件所有权重叠、共享 barrel / manifest / lockfile / schema / registry / 生成产物写入时，才允许同一波并发 Luna。任一共享写入都视为依赖边，相关任务串行或合并给一个 worker；不把共享集成文件留给 Sol 作为并发补丁。
 
-每波结束后由 Sol 核对跨文件改动、所有权与验证证据。冲突或共享状态污染使该波失效，后续改为串行。
+每波结束后由 Sol 核对跨文件改动与所有权，并统一运行受影响范围的格式化、ESLint、类型检查、测试和构建。冲突或共享状态污染使该波失效，后续改为串行。
 
 ## Review 角色映射
 

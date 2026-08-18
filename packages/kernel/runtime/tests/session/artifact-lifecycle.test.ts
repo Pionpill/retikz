@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { RuntimeProgramArtifactDefinitionInput } from '../../src/program';
 
+import { RetikzRuntimeErrorCode } from '../../src';
 import { defineRuntimeOwner } from '../../src/owner';
 import { defineRuntimeProgram, RuntimeProgramKind } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
@@ -32,7 +33,7 @@ describe('runtime Program artifact lifecycle', () => {
   }> = [
     {
       name: 'capture',
-      expectedCode: 'RUNTIME_ARTIFACT_CAPTURE_FAILED',
+      expectedCode: RetikzRuntimeErrorCode.ArtifactCaptureFailed,
       expectedPhase: 'artifact-capture',
       artifact: (cause: Error, dispose: (artifact: Artifact) => void) => ({
         capture: () => {
@@ -46,7 +47,7 @@ describe('runtime Program artifact lifecycle', () => {
     },
     {
       name: 'private read',
-      expectedCode: 'RUNTIME_ARTIFACT_PROGRAM_READ_FAILED',
+      expectedCode: RetikzRuntimeErrorCode.ArtifactProgramReadFailed,
       expectedPhase: 'artifact-program-read',
       artifact: (cause: Error, dispose: (artifact: Artifact) => void) => ({
         capture: (value: number) => Object.freeze({ value }),
@@ -60,7 +61,7 @@ describe('runtime Program artifact lifecycle', () => {
     },
     {
       name: 'public read',
-      expectedCode: 'RUNTIME_ARTIFACT_PUBLIC_READ_FAILED',
+      expectedCode: RetikzRuntimeErrorCode.ArtifactPublicReadFailed,
       expectedPhase: 'artifact-public-read',
       artifact: (cause: Error, dispose: (artifact: Artifact) => void) => ({
         capture: (value: number) => Object.freeze({ value }),
@@ -125,7 +126,7 @@ describe('runtime Program artifact lifecycle', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(owner, shared)],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_OWNER_OWNERSHIP_ALIAS' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.OwnerOwnershipAlias }));
     expect(session.snapshot(owner)).toEqual({ revision: 0, value: 1 });
     expect(ownerDispose).not.toHaveBeenCalled();
   });
@@ -160,7 +161,7 @@ describe('runtime Program artifact lifecycle', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(owner, shared)],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_OWNER_OWNERSHIP_ALIAS' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.OwnerOwnershipAlias }));
     expect(readCount).toBe(1);
     expect(ownerDispose).not.toHaveBeenCalled();
     expect(session.snapshot(owner)).toEqual({ revision: 0, value: 1 });
@@ -204,7 +205,7 @@ describe('runtime Program artifact lifecycle', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(owner, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_ARTIFACT_OWNERSHIP_ALIAS' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ArtifactOwnershipAlias }));
     expect(session.artifact(program)).toEqual({ revision: 0, value: 1 });
     expect(artifactDispose).not.toHaveBeenCalled();
   });
@@ -257,7 +258,7 @@ describe('runtime Program artifact lifecycle', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(owner, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_ARTIFACT_OWNERSHIP_ALIAS' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ArtifactOwnershipAlias }));
     expect(programReadCount).toBe(1);
     expect(publicReadCount).toBe(1);
     expect(artifactDispose).not.toHaveBeenCalled();

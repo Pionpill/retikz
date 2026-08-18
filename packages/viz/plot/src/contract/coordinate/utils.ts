@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 import type { CellProjectableCoordinate, CoordinateFrame } from './types';
 
+import { RetikzPlotError } from '../../error';
+
 /**
  * 判断坐标帧是否支持 cell 类几何投影。
  * @description interval、reference band 等 mark 先构造逻辑 Cell，再要求 frame.projectCell 把 Cell 投成 rect / sector / contour。
@@ -19,11 +21,15 @@ export const hasProjectCell = (coordinate: CoordinateFrame): coordinate is CellP
  */
 export const extractCoordinateType = (schema: z.ZodType): string => {
   if (!(schema instanceof z.ZodObject)) {
-    throw new Error('lowerPlots: coordinate registration schema must be a ZodObject with a literal type field');
+    throw new RetikzPlotError(
+      'lowerPlots: coordinate registration schema must be a ZodObject with a literal type field',
+    );
   }
   const typeSchema = schema.shape.type;
   if (!(typeSchema instanceof z.ZodLiteral) || typeof typeSchema.value !== 'string' || typeSchema.value.length === 0) {
-    throw new Error('lowerPlots: coordinate registration schema must declare type as a non-empty z.literal string');
+    throw new RetikzPlotError(
+      'lowerPlots: coordinate registration schema must declare type as a non-empty z.literal string',
+    );
   }
   return typeSchema.value;
 };

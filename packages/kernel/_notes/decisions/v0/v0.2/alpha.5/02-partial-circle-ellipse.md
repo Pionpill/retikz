@@ -2,9 +2,9 @@
 
 - 状态：Accepted（已实现）
 - 决策日期：2026-05-23
-- 关联：[v0.2-alpha.5 plan §`<Circle>` / §`<Ellipse>`](./roadmap.md) · [本 milestone ADR-01 arc](./01-arc-center-and-elliptical.md)（部分弧几何同源）
+- 关联： · [本 milestone ADR-01 arc](./01-arc-center-and-elliptical.md)（部分弧几何同源）
 
-> **范围**：让 `circlePath` / `ellipsePath` 能画半圆 / 1/4 椭圆 / 弓形（部分裁剪），而非只能整圆 / 整椭圆。
+> **目标**：让 `circlePath` / `ellipsePath` 能画半圆 / 1/4 椭圆 / 弓形（部分裁剪），而非只能整圆 / 整椭圆。
 
 ## 背景 / 约束
 
@@ -15,7 +15,7 @@
 - **不给角度** → 整圆 / 整椭圆（原行为，逐字节不变）。
 - **给角度** → 部分弧，按 `closed` 模式收尾。
 
-字段定型见 `core/src/ir/path/step.ts`（`CirclePathStepSchema` / `EllipsePathStepSchema`）。
+字段定型见 （`CirclePathStepSchema` / `EllipsePathStepSchema`）。
 
 **`sweepAngle` 不进 IR**：与 `arc` step 一致（arc 也只有 startAngle / endAngle），「三键（start/end/sweep）求二」是 sugar 层便利，解析后只塞 startAngle / endAngle 进 IR。保持 IR 紧凑 + 与 arc 命名一致。
 
@@ -48,12 +48,12 @@
 
 三模式 bbox 都不能再用整圆四点（partial 只取区间内 90°·k 轴向点 + 端点）；full 维持原行为，整圆 / 整椭圆输出逐字节不变。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 扇形 wedge（经圆心闭合）—— `<Sector>` 形态，见 [ADR-01](./01-arc-center-and-elliptical.md)。
 
 ---
 
-> **实现指针**：level `red`（动 `core/src/ir/**` + `compile/**` + `geometry/**`）、additive 零破坏（新字段 optional，整圆 / 整椭圆输出不变）。真源以代码为准——`CirclePathStepSchema` / `EllipsePathStepSchema`（`core/src/ir/path/step.ts`）、按角度与 closed 分流（`core/src/compile/path/index.ts`，`emitEllipseArc` 推广到 start..end 部分 sweep）、部分 outline / bbox（`core/src/geometry/{circle,ellipse}.ts`）、两 step 变体 props（`react/src/kernel/Step.tsx` + `builder.ts`）。测试在 `core/tests/compile/partial-circle-ellipse.test.ts` + `core/tests/geometry/`。完整原文（Schema 改动表 / pen 语义全表 / 测试象限）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `b99e7294`；压缩前完整施工蓝图 = `git show b99e7294^:_notes/decisions/core/v0/v0.2/alpha.5/02-partial-circle-ellipse.md`。
+已实现本 ADR 的核心决策。兼容性：additive 零破坏（新字段 optional，整圆 / 整椭圆输出不变）；其余默认行为、失败语义与公开契约以正文为准。

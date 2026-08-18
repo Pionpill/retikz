@@ -1,5 +1,7 @@
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
+
 /** React 收集父级为嵌入组件输入工厂提供的稳定上下文 */
 export type ReactInputEmbedContext = Readonly<{
   /** 当前嵌入组件在 Scene 中的稳定 identity */
@@ -38,7 +40,10 @@ export const resolveInputEmbedAdapter = (type: unknown): AnyInputEmbedAdapter | 
     const adapter = candidate.inputEmbedAdapter;
     if (typeof adapter === 'object') return adapter;
     const name = candidate.displayName ?? candidate.name ?? '匿名组件';
-    throw new Error(`[retikz] <${name}> 标记了 isTier2Embeddable 但未提供 inputEmbedAdapter`);
+    throw new RetikzReactError(
+      RetikzReactErrorCode.Kernel,
+      `[retikz] <${name}> 标记了 isTier2Embeddable 但未提供 inputEmbedAdapter`,
+    );
   }
 
   return null;

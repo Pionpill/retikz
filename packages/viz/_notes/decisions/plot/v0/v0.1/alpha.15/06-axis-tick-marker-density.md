@@ -174,7 +174,7 @@ type PlotAxisTheme = {
 
 因此“底部 x 轴三角刻度朝上”使用 `orientation: 'inward'`。triangle 的默认旋转不额外改变，避免破坏 top / left / right 轴和 custom shape 的既有方向规则。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 自动文字测量、tick label 防重叠、自动旋转、label-only 抽稀或任何 tickLabels 新字段。
 - minor ticks / major ticks 双层刻度。

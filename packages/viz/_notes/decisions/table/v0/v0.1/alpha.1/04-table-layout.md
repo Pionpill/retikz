@@ -112,11 +112,9 @@ const spec = {
 };
 ```
 
-## 实现摘要与验证
+## 最终结果
 
 `resolveTableLayout()` 与 `layoutTable()` 已形成纯固定轨道布局边界，manual、detail 与 custom structure 都只按 canonical row semantics 计算 track、Cell box、content center 与 Table bounds，不读取内容或 renderer。
-
-验证覆盖默认值、header/body 行高、gap、单格与多轨道、零行/零列退化 bounds、非法有限性和正负约束，以及输入不变性与重复计算确定性。
 
 ## 影响
 
@@ -125,21 +123,7 @@ const spec = {
 - alpha.2 将扩展 track sizing / span / border / bounds-aware content placement / fit / overflow，但保持 `TableLayout` 作为布局到 lowering 的边界
 - alpha.1 不提供 padding、start/end alignment、wrap、baseline、span 或 border
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Tabular Visualization Complete / Constraint Layout 最小闭环
-- 解决的问题：从 SemanticTableModel 得到 renderer-agnostic 确定二维几何
-- 主责包与协作包：Table 主责；Core 只消费 lowering 后 IR
-- 是否可由现有能力组合：Core Grid/Sugar 不含 Table semantics，需 Table layout；通用测量尚不可组合
-- 是否需要下沉：alpha.2 若需任意 IRChild measurement，先下沉 Core contract
-- 内部表达链路：layout schema → resolve defaults → layoutTable → TableLayout
-- 外部扩展链路：不采用 registry；solver 是全局正确性不变量
-- pipeline / lowering 与下游消费：ADR-05 只消费 TableLayout
-- React / Vanilla adapter 等价性：layout 全在 core Table package
-- provenance / lineage / locator：TableLayout 保留 stable cellId；完整 locator 延后
-- 本轮结论：当前域闭合实现 fixed layout；auto/span/border 与通用 composite 的测量、fit、overflow 明确延期 alpha.2
-
-## 不在本 ADR 范围
+## 长期边界
 
 - auto/fraction/fitContent/minmax 与 per-column size
 - 内容 intrinsic / constrained measurement、换行、padding、bounds-aware alignment、baseline

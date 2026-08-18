@@ -50,9 +50,9 @@ describe('SCHEMA_REGISTRY', () => {
         schema: SurfaceSchema,
         url: '/library/standard/composite/surface#surfaceschema',
       },
-      ContainerSchema: { schema: ContainerSchema, url: '/schematic/graph/frame/graph-frame' },
-      EntitySchema: { schema: EntitySchema, url: '/schematic/graph/base/code' },
-      RelationSchema: { schema: RelationSchema, url: '/schematic/graph/base/connector' },
+      ContainerSchema: { schema: ContainerSchema, url: '/schematic/graph/container/basic' },
+      EntitySchema: { schema: EntitySchema, url: '/schematic/graph/entity/basic' },
+      RelationSchema: { schema: RelationSchema, url: '/schematic/graph/relation/basic' },
     });
   });
 

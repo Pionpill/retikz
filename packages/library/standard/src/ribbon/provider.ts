@@ -4,6 +4,7 @@ import { assertNonEmptyString } from '@retikz/foundation';
 
 import type { RibbonWidthProfileDefinition } from './profile-types';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../errors';
 import { BUILTIN_RIBBON_WIDTH_PROFILES } from './bulge';
 import { createRibbonPathKindDefinition } from './definition';
 
@@ -16,7 +17,11 @@ const profileDatasetsOf = (
   for (const profile of profiles) {
     assertNonEmptyString(profile.name, 'Ribbon width profile name');
     if (Object.hasOwn(datasets, profile.name) && datasets[profile.name] !== profile) {
-      throw new Error(`Ribbon width profile '${profile.name}' is defined more than once.`);
+      throw new RetikzStandardError({
+        code: RetikzStandardErrorCode.RegistryConflict,
+        message: `Ribbon width profile '${profile.name}' is defined more than once.`,
+        details: { name: profile.name },
+      });
     }
     datasets[profile.name] = profile;
   }

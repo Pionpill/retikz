@@ -4,7 +4,7 @@
 - 决策日期：2026-05-12
 - 关联：[v0 roadmap §v0.1.0-alpha.5](../../roadmap.md) · [alpha.4 ADR-01](../alpha.4/01-node-at-positioning.md) · [alpha.4 ADR-02](../alpha.4/02-coordinate-placeholder.md)
 
-> **范围**：补"相对某基准点偏移 `(dx, dy)`"这一最直白的相对定位（对应 TikZ `calc` 的 `($(A)+(30,10)$)`），现有三种 position 形态都表达不了。
+> **目标**：补"相对某基准点偏移 `(dx, dy)`"这一最直白的相对定位（对应 TikZ `calc` 的 `($(A)+(30,10)$)`），现有三种 position 形态都表达不了。
 
 ## 背景 / 约束
 
@@ -19,8 +19,6 @@
 - `Position` 笛卡尔 `[x,y]`——直接坐标基准、无需预定义、无前向引用概念；
 - `PolarPosition`——递归极坐标基准（"基于 (A + 极坐标偏移) 再加 (dx,dy)"）。
 
-代码：`core/src/ir/position/offset-position.ts`、`core/src/compile/position.ts`（分 string/Position/PolarPosition 三路）、`core/src/compile/path.ts`（target 复用 `resolvePosition`）。
-
 理由：
 
 1. **schema 字段不重叠优于字段重叠**（AGENTS.md 惯例）。
@@ -33,17 +31,12 @@
 - 字段名 `offset`（dx/dy 直觉强），**不复用** path `RelativeTarget.relative` 同名——两者基准点不同（命名节点/笛卡尔/polar vs 前步终点）。
 - 前向引用规则与 polar `origin`/at `of` 一致：仅当 `of` 是 string 或嵌套 polar 内 string origin 时要求先定义；`of` 为笛卡尔时无前向引用概念。
 
-### 被否决的选项
+## 长期边界
 
-- **B：扩 `AtPosition.distance` 兼接 `[dx,dy]`**——direction + 二维 offset 同字段角色冲突、语义混淆、`.describe` 难写清"二选一"，schema 内字段重叠是已知坏模式。
-- **C：不加、让用户算 `[A.x+dx, A.y+dy]`**——失去意图表达，codec 反推不出 `calc`，LLM 生成不直观。
-
-## 不在本 ADR 范围
-
-- 链式 offset 深度不设上限（与 polar nested origin 一致）；`AtPosition.distance` 扩二元组（选项 B 已否决）；OffsetPosition 的字符串 sugar（`of`+`offset` 难用单字符串表达，保持对象形态，未来另开 ADR）。
+- 链式 offset 深度不设上限（与 polar nested origin 一致）；`AtPosition.distance` 扩二元组；OffsetPosition 的字符串 sugar（`of`+`offset` 难用单字符串表达，保持对象形态，未来另开 ADR）。
 
 ---
 
-> **实现指针**：level `red`、additive。真源以代码为准——`OffsetPositionSchema`/`IROffsetPosition`（`core/src/ir/position/offset-position.ts`）、union 扩入 `core/src/ir/{node,coordinate}.ts` + `core/src/ir/path/target.ts`、`resolvePosition` 分支（`core/src/compile/position.ts`）、target 解析复用（`core/src/compile/path.ts`）。测试在 `core/tests/compile/`。完整原文（of 三态 DSL 示例 / 测试象限 22 case）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `8a8f2f5a`；压缩前完整施工蓝图 = `git show 8a8f2f5a^:_notes/decisions/core/v0/v0.1/alpha.5/04-position-offset.md`。
+已实现本 ADR 的核心决策。兼容性：additive；其余默认行为、失败语义与公开契约以正文为准。

@@ -6,6 +6,7 @@ import { createElement } from 'react';
 
 import type { NodeProps, ScopeProps } from '../components';
 
+import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { Coordinate, Node, Path, Scope, Step } from '../components';
 import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS } from './fields';
 
@@ -160,7 +161,10 @@ const stepToElement = (step: IRStep, key: number): ReactNode => {
 
 /** discriminated union 兜底；编译期保证穷举，运行时给出明确错误 */
 const assertNever = (x: never): never => {
-  throw new Error(`convertIRToReactNode: unknown IR child type: ${JSON.stringify(x)}`);
+  throw new RetikzReactError(
+    RetikzReactErrorCode.Kernel,
+    `convertIRToReactNode: unknown IR child type: ${JSON.stringify(x)}`,
+  );
 };
 
 /** 单个 IR child → 对应 Kernel element；走 discriminated union 穷举 */
@@ -212,6 +216,6 @@ export const convertIRToReactNode = (ir: IRScene, options: ConvertIRToReactNodeO
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.startsWith('convertIRToReactNode:')) throw error;
-    throw new Error(`convertIRToReactNode: ${message}`, { cause: error });
+    throw new RetikzReactError(RetikzReactErrorCode.Kernel, `convertIRToReactNode: ${message}`, { cause: error });
   }
 };

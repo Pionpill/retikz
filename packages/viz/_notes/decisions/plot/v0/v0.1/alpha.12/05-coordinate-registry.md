@@ -39,7 +39,7 @@ v0.1 stable 的内置坐标集合为 `cartesian2D`、`polar2D`、`cartesian1D` �
 - `@retikz/plot` 公开 `defineCoordinate`、`CoordinateDefinition`、`CoordinateResolveContext`、`CoordinateResolution`、`CoordinateOp`。
 - core IR 不变；coordinate 只消费并产出 plot runtime frame。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 不新增具体长尾坐标系。
 - 不把高级 layout helper 纳入公开 context。

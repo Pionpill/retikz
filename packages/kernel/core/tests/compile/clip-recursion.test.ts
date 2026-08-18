@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { ClipShape, IRClip, IRScene, PathCommand } from '../../src';
 
 import { compileToScene, CompositeBaseSchema, defineClip, defineComposite, PathCommandSchema } from '../../src';
-import { CompositeContractError } from '../../src/resolve/diagnostics';
+import { RetikzCompositeContractError } from '../../src/resolve/diagnostics';
 
 const clippedIr = (clip: IRClip): IRScene => ({
   version: 1,
@@ -157,7 +157,7 @@ describe('clip failure boundaries', () => {
     });
 
     expect(() => compileToScene(clippedIr({ kind: 'malformed' }), { clips: [malformed] })).toThrow(
-      CompositeContractError,
+      RetikzCompositeContractError,
     );
   });
 });

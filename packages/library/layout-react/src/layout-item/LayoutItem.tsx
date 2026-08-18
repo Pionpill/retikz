@@ -2,6 +2,8 @@ import type { FlexLayoutItemInput, GridLayoutItemInput, OverlayLayoutItemInput }
 import type { InputEmbedContribution } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
+
 type IRChild = InputEmbedContribution['node'];
 
 type LayoutItemChildSource =
@@ -27,7 +29,11 @@ export type OverlayLayoutItemProps = Omit<OverlayLayoutItemInput, 'child' | 'key
 export type LayoutItemProps = FlexLayoutItemProps | GridLayoutItemProps | OverlayLayoutItemProps;
 
 const LayoutItemComponent: FC<LayoutItemProps> = () => {
-  throw new Error('Layout LayoutItem must be a direct child of FlexLayout, GridLayout, or OverlayLayout');
+  throw new RetikzLayoutError({
+    code: RetikzLayoutErrorCode.AuthoringInvalid,
+    message: 'Layout LayoutItem must be a direct child of FlexLayout, GridLayout, or OverlayLayout',
+    details: { component: 'LayoutItem' },
+  });
 };
 
 /** 只由 Layout 布局容器静态读取的语义 item 组件 */

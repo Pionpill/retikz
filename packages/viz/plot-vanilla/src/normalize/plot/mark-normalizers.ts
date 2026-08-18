@@ -21,6 +21,7 @@ import type {
 } from './input-marks';
 import type { StyleSugarContext } from './style-sugar';
 
+import { RetikzPlotVanillaError } from '../../error';
 import {
   extensionChannelEncoding,
   nodeStylePropsOf,
@@ -94,7 +95,9 @@ export const recordResolveLabel = (
 ): void => {
   if (resolveLabel === undefined) return;
   if (id === undefined) {
-    throw new Error('buildPlotIR: resolveLabel needs a mark id to be injected at runtime; set the mark id prop');
+    throw new RetikzPlotVanillaError(
+      'buildPlotIR: resolveLabel needs a mark id to be injected at runtime; set the mark id prop',
+    );
   }
   into.resolveLabels[id] = resolveLabel;
 };
@@ -113,10 +116,10 @@ export const canonicalReferenceLabel = (
   const hasNodeOnlyField = entries.some(entry => 'keepUpright' in entry || 'pin' in entry || 'rotate' in entry);
   const hasGeometryOnlyField = entries.some(entry => 'side' in entry || 'sloped' in entry);
   if (usesNodeHost && hasGeometryOnlyField) {
-    throw new Error('buildPlotIR: reference band / region expects node label fields');
+    throw new RetikzPlotVanillaError('buildPlotIR: reference band / region expects node label fields');
   }
   if (!usesNodeHost && hasNodeOnlyField) {
-    throw new Error('buildPlotIR: reference line expects geometry label fields');
+    throw new RetikzPlotVanillaError('buildPlotIR: reference line expects geometry label fields');
   }
   return label;
 };
@@ -171,32 +174,32 @@ export const collectReference = (
   const hasY = y !== undefined;
   if (region) {
     if (!hasX || !hasY || xTo === undefined || yTo === undefined) {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         'buildPlotIR: <ReferenceMark kind="region"> requires x, xTo, y, and yTo to define a bounded reference area',
       );
     }
     if (extentField !== undefined || extentToField !== undefined) {
-      throw new Error(
+      throw new RetikzPlotVanillaError(
         'buildPlotIR: <ReferenceMark kind="region"> does not support extentField / extentToField; set x/xTo/y/yTo bounds directly',
       );
     }
   } else if (hasX === hasY) {
-    throw new Error(
+    throw new RetikzPlotVanillaError(
       'buildPlotIR: <ReferenceMark> must bind exactly one of x (vertical) or y (horizontal); set one, not both / neither',
     );
   }
   if (!region && hasX && yTo !== undefined) {
-    throw new Error(
+    throw new RetikzPlotVanillaError(
       'buildPlotIR: <ReferenceMark> binds x (vertical) but sets yTo; the band upper bound must match the bound dimension (use xTo)',
     );
   }
   if (!region && hasY && xTo !== undefined) {
-    throw new Error(
+    throw new RetikzPlotVanillaError(
       'buildPlotIR: <ReferenceMark> binds y (horizontal) but sets xTo; the band upper bound must match the bound dimension (use yTo)',
     );
   }
   if ((extentField === undefined) !== (extentToField === undefined)) {
-    throw new Error(
+    throw new RetikzPlotVanillaError(
       'buildPlotIR: <ReferenceMark> extentField / extentToField must be set together (a partial-length span needs both start and end)',
     );
   }

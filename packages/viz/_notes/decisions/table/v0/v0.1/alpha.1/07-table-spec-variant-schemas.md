@@ -176,21 +176,7 @@ LLM 生成明细表时优先提供 `DetailTableSchema`；只有允许生成多�
 - 持久化 JSON 不新增字段，不需要数据迁移或兼容别名
 - Table 与 Core 不同 release group；Table alpha.1 修订版发布前，必须依赖已包含 union composite contract 的 Core 版本
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Tabular Visualization Complete / 根 IR、Structure 与 authoring contract；协作涉及 Drawing Complete / Composition 的 composite registration contract
-- 解决的问题：让每个基础 Table structure 的根字段约束可由 schema、TypeScript、JSON Schema 与 LLM 直接理解，同时保留统一 pipeline
-- 主责包与协作包：`@retikz/table` 主责 Table schema、派生类型和 helper；`@retikz/core` 主责通用 composite union registration；React / Vanilla 只等价暴露；docs 展示公开契约
-- 是否可由现有能力组合：Table 复用现有 structure、DataReference、layout 与 lowering；当前 Core 只能注册单 object schema，无法直接组合 canonical union
-- 是否需要下沉到 data / core / math：需要把“共同 namespace/type 的 object union 可注册为一个 composite”下沉到 Core contract；不修改 Data、Math、Core IR、Scene 或 renderer
-- 内部表达链路：精确 Table spec schema → `TableSchema` union → Core `defineComposite()` 提取共同 key → 现有 structure registry / normalize → presentation / layout / lowering
-- 外部扩展链路：custom structure 继续通过 `defineTableStructure()`、自定义精确 structure schema、registry 与统一 pipeline；根 schema 只校验可选 DataReference，provider 在 `build(context.data)` 中 fail-loud 检查自身数据要求；本 ADR 不为每个 custom provider 生成新的 canonical 根 schema
-- pipeline / lowering 与下游消费：Core 仍只注册 `table.table` + `TableSchema`；union 的所有 object 分支声明同一 key，所有变体进入同一 `normalizeTableStructure()` 与后续阶段
-- React / Vanilla adapter 等价性：窄 sugar 使用对应精确 helper，通用入口使用 `IRTable`；两边不拥有另一套 schema
-- provenance / lineage / locator 是否适用：不改变现有 id、data reference、Cell source、manifest 或 locator 语义
-- 不支持边界与本轮结论：扩展 Table schema 契约的精确度，并先下沉补齐 Core 的通用 union composite registration；不增加 Tier 3、平行 IR、根 type 或自定义 provider 专属根 union
-
-## 不在本 ADR 范围
+## 长期边界
 
 - 实现 pivot、matrix、group、hierarchy、summary 或 transpose
 - 修改 structure Definition / registry、SemanticTableModel、layout、presentation、lowering 或 manifest 语义
@@ -198,13 +184,6 @@ LLM 生成明细表时优先提供 `DetailTableSchema`；只有允许生成多�
 - 引入 TypeScript interface 作为第二份 IR 真源
 - 新增根级 `kind` / `variant` 字段或改变持久化 JSON
 - 接受 namespace/type 不一致、非 object option 或经过任意 wrapper 后无法静态提取 registry key 的 composite union
-
-## 验证结果
-
-- Core、Table、Table React、Table Vanilla 的 `test:changed` 全部通过，覆盖 object-union registration、精确 schema、authoring helper、adapter parity 与统一 lowering
-- 四个受影响包的 `tsc --noEmit` 通过；定向 ESLint 与 Prettier 通过
-- 对 Core 与 Table 的补充边界测试覆盖 wrapper / nested union 拒绝、空 literal、JSON Schema 三分支、manual 不可满足 data schema、保留 kind 与错误 path；补充测试运行后已删除
-- docs 完整性检查、docs `tsc --noEmit`、生产构建与中英文页面检查通过；三个 schema 均能渲染且无 `Unknown schema` 或控制台告警
 
 ## 遗留风险
 

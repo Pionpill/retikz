@@ -120,7 +120,7 @@ Theme 可以给 `tickLabels.layout` 提供视觉默认，但不能把 `tickLabel
 
 `layout:false` 仍表示关闭自动旋转、隐藏和边界处理，但如果用户显式写了 `tickLabels.rotate`，固定旋转会继续生效，并同样使用端点对齐。非 cartesian axis 没有传入 `sideNormal`，因此端点对齐保持 no-op；单个 tick label 也不能因为无需避让而跳过 fixed rotate。
 
-## 不在本 ADR 范围
+## 长期边界
 
 - ellipsis / wrap / text truncation。
 - renderer 真实文本测量。

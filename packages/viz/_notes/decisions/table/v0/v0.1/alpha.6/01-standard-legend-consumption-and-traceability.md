@@ -177,32 +177,7 @@ const spec = {
 - manifest 增加 legend lineage，compile result 增加同次 artifact links
 - Table 与 Standard release group 不 lockstep，但本能力进入实现前必须能消费稳定的 Standard Legend / Flex 公共契约
 
-## 测试策略摘要
-
-- mapping contract 证明 ordinal/threshold/continuous 到 Standard items/ramp、label/sample 与 stable key 的映射
-- Definition contract 证明 direct/transitive/duplicate/conflicting Definition 语义
-- composition contract 证明 JSON-safe body boundary、right/bottom、多 Legend、gap/alignment、无 descriptor 与 Standard-only layout
-- artifact contract 证明 Legend Flex item key 等于 `legendId`，nested replay 后的 Core link occurrence 可查询同次 Standard typed artifact，不预测 probe/replay index
-- parity 证明 direct/React/Vanilla/SSR 的 Scene、artifacts、manifest 与 lineage 等价
-
-## 能力完备性与架构验证
-
-- **所属能力域**：Table Visual Encoding/Traceability 与 Standard Drawing Presentation/Box Layout
-- **问题归属**：Table 解析 descriptor/placement/lineage，Standard 负责通用 Legend 与外围布局，Core 负责 occurrence-safe artifact link
-- **内部闭环**：Table body composite + descriptor → Standard Legend / Flex input → Core Scene / artifacts → Table lineage + artifact links
-- **外部扩展**：builtin / custom Table scale 产出的合法 descriptor 进入同一链路；其它领域复用同一 Standard definitions
-- **结论**：组合 Standard 与 Core，Table 不新增通用布局、artifact 副本或 renderer 能力
-
-## 被否决方案
-
-- Table-local Legend：复制 Standard 的跨领域组件与 artifact
-- Table-local dock/Flex solver：复制通用 Box Layout 与 measurement/replay
-- 把 Table callback-local replay handle 塞入 Flex IR：破坏 JSON-safe IR 与 callback-local ownership
-- 从 probe/replay index 预测 occurrence：依赖内部遍历顺序，不能形成稳定 artifact contract
-- adapter 各自 join artifacts：跨入口会产生不同 occurrence 与错误语义
-- 从 Cell 内 Plot 自动收集 Legend：越过通用 `IRChild` 边界并建立 Plot 特判
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Standard Legend/Flex/Grid/Overlay 的 schema、solver、style、artifact 或 adapter 定义
 - Core artifact-link 公共契约的具体 schema 与实现

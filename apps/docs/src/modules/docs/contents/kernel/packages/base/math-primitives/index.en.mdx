@@ -1,175 +1,96 @@
 ---
 title: Primitives
-description: Construct and transform points, vectors, bounds, ellipses, and arcs with @retikz/math.
+description: Construct points, vectors, bounds, ellipses, and arcs with @retikz/math.
 ---
 
-Primitives answer what a coordinate is and where it goes after a transform. Every API on this page works on plain data without IR or a renderer, and none mutates its input tuples.
+Primitives describe points, vectors, and basic geometric shapes. `@retikz/math` focuses only on mathematical and geometric relationships.
 
-```ts
-import { applyAffine, boundsOf, ellipse, point, vector2, type Position } from '@retikz/math';
-```
+## Install
 
-## Points and vectors
+<PackageManagerInstall packages="@retikz/math" />
 
-Both `Position` and `Vector2` are `[number, number]`. `point` provides addition, subtraction, scaling, dot and cross products, distance, and directed movement. `vector2` adds angle construction, normalization, and normals.
+## Contents
 
-`DEFAULT_EPSILON = 1e-9` is the default tolerance for several degeneracy checks in the package. `isFiniteNumber` rejects `NaN` and both infinities, while `isInfiniteNumber` accepts only the infinities; `isFinitePoint` accepts only an array of exactly two finite coordinates.
+### Vector operations
 
-```ts
-const origin: Position = [0, 0];
-const direction = vector2.fromAngleDegrees(-30);
-const end = point.along(origin, direction, 120);
-const normal = point.scale(vector2.normal(direction), 50);
+2D geometric data can represent either a coordinate point or a vector: a point describes a position, while a vector describes direction and displacement. `Position` and `Vector2` both use the `[x, y]` form, but the method group should match the meaning of the data.
 
-point.dot(direction, normal); // approximately 0
-point.distance(origin, end); // 120
-```
+| Member     | Category     | Purpose                                                                                                                      |
+| ---------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `Position` | Type         | Represents a 2D coordinate point in `[x, y]` form                                                                            |
+| `Vector2`  | Type         | Represents a 2D vector in `[x, y]` form                                                                                      |
+| `point`    | Method group | Provides point distance, movement along a vector, movement toward a target, and equality                                     |
+| `vector2`  | Method group | Provides vector addition, subtraction, scaling, dot and cross products, length, normalization, angle conversion, and normals |
 
-Change the angle and length to see that the vector and its left-hand normal stay perpendicular. `normalize` defaults to `[1, 0]` for zero length, while `normalizeOrNull` returns `null` for zero-length or non-finite vectors.
+Change the angle and length to see that the vector and its left-hand normal stay perpendicular.
 
 <ComponentPreview files="vector-normal" size="sm" caption="A vector and its left-hand normal" />
 
-`point.shiftToward(p, target, distance)` moves a point toward a target and leaves it in place when both points coincide. `point.equal` uses strict coordinate equality without a tolerance. `lerp(a, b, t)` does not clamp `t`: values from `0` to `1` interpolate, and values outside that range extrapolate.
+#### API reference
 
-## Coordinate transforms
+| API                                                                                  | Category | Purpose                                    |
+| ------------------------------------------------------------------------------------ | -------- | ------------------------------------------ |
+| `Position`, `Vector2`                                                                | Type     | 2D coordinate-point and vector types       |
+| `point.distance`, `point.along`, `point.against`, `point.shiftToward`, `point.equal` | Method   | Point distance, movement, and equality     |
+| `vector2.add`, `vector2.sub`, `vector2.scale`, `vector2.dot`, `vector2.cross`        | Method   | Vector arithmetic and dot/cross products   |
+| `vector2.length`, `vector2.normalize`, `vector2.normalizeOrNull`                     | Method   | Vector length and normalization            |
+| `vector2.fromAngleDegrees`, `vector2.normal`                                         | Method   | Construct vectors and compute left normals |
+| `lerp`                                                                               | Method   | Linearly interpolate between two points    |
 
-`localToWorld` and `worldToLocal` convert between a shape's local coordinates and world coordinates. A shape has a center and an optional rotation in radians.
+### Bounds calculations
 
-```ts
-const shape = { x: 100, y: 60, rotate: Math.PI / 4 };
-const world = localToWorld(shape, [20, 0]);
-const local = worldToLocal(shape, world); // approximately [20, 0]
-```
+Bounds calculations find the axis-aligned rectangle occupied by a set of geometry. Although the calculation directly consumes a set of `Position` points, general shapes such as ellipses and arcs can first derive boundary candidates and then join the same bounds calculation.
 
-With zero rotation, the transform is translation only. Otherwise it rotates about the shape center. The functions are inverses, making them useful for moving connection, boundary, and hit-test coordinates into one coordinate system.
+The demo adds the arc's boundary candidates to the point set, so the dashed rectangle covers the three points and the arc. Change a point coordinate or either arc angle to observe the bounds update in real time.
 
-## Affine matrices
+<ComponentPreview
+  files="bounds-playground"
+  size="sm"
+  caption="Change a point coordinate or arc angle to see how the points and arc jointly affect the axis-aligned bounds"
+/>
 
-Use the `AffineMatrix` tuple and its two closed operations when a complete translation, scale, or rotation chain must be shared across packages. The tuple follows the SVG / Canvas `[a,b,c,d,e,f]` order:
+#### API reference
 
-```text
-x' = a*x + c*y + e
-y' = b*x + d*y + f
-```
+| API                                                                 | Category | Purpose                                       |
+| ------------------------------------------------------------------- | -------- | --------------------------------------------- |
+| `AxisAlignedBounds`, `BoundsRect`, `BoundsHalfAxes`, `BoundsInsets` | Type     | Bounds, rectangle, half-axis, and inset types |
+| `boundsOf`, `mergeBounds`                                           | Method   | Construct or merge bounds                     |
+| `boundsToRect`, `rectToBounds`                                      | Method   | Convert between bounds and rectangles         |
+| `isFiniteBoundsRect`, `isPositiveBoundsRect`                        | Method   | Validate rectangle bounds                     |
+| `boundsCenter`, `boundsHalfAxes`                                    | Method   | Derive a bounds center and half-axes          |
+| `expandBounds`, `boundsCorners`                                     | Method   | Expand bounds and derive four corners         |
 
-`multiplyAffine(outer, inner)` returns `outer × inner`, so it applies `inner` to a point first and `outer` second. The arguments are not interchangeable.
-
-```ts
-import { AFFINE_IDENTITY, applyAffine, multiplyAffine, type AffineMatrix } from '@retikz/math';
-
-const translate: AffineMatrix = [1, 0, 0, 1, 10, 20];
-const scale: AffineMatrix = [2, 0, 0, 3, 0, 0];
-const matrix = multiplyAffine(translate, scale);
-
-applyAffine(matrix, [4, 5]); // [18, 35]: scale first, then translate
-```
-
-`AFFINE_IDENTITY` is frozen at runtime and can be shared safely among consumers. Both operations return new tuples without mutating their inputs; ordinary results are not additionally frozen. This layer only performs JavaScript number operations. It does not parse transform strings or check whether a matrix is finite, invertible, or a similarity transform; callers own those policies.
-
-## Bounds
-
-`boundsOf` derives axis-aligned bounds from points. `mergeBounds` combines two optional bounds, while the remaining helpers convert among bounds, rectangles, centers, half-axes, and corners.
-
-```ts
-const bounds = boundsOf([
-  [10, 20],
-  [80, -5],
-  [45, 30],
-]);
-
-if (bounds) {
-  const center = boundsCenter(bounds);
-  const expanded = expandBounds(bounds, { left: 8, right: 8, top: 4, bottom: 4 });
-}
-```
-
-`boundsOf([])` and `mergeBounds(undefined, undefined)` return `undefined`. The caller deliberately chooses whether empty geometry should be skipped, given fallback bounds, or treated as an error.
-
-`boundsToRect` / `rectToBounds` convert between min/max bounds and a top-left-plus-size rectangle. `isFiniteBoundsRect` requires all four fields to be finite, while `isPositiveBoundsRect` additionally requires strictly positive width and height. `boundsCorners` always returns top-left, top-right, bottom-left, then bottom-right.
-
-## Ellipses and arcs
+### Ellipses and arcs
 
 **Ellipse boundaries.** `ellipse` covers centers, inscribed and circumscribed ellipses, containment, and the boundary point toward a target.
 
-```ts
-const value = { x: 20, y: 10, rx: 80, ry: 40, rotate: Math.PI / 6 };
-
-ellipse.contains(value, [20, 10]); // true; the boundary is included
-ellipse.boundaryPoint(value, [160, 10]);
-ellipse.inscribedInBox({ x: 0, y: 0, width: 160, height: 80 });
-ellipse.circumscribedHalfAxes({ halfWidth: 80, halfHeight: 40 }, 'proportional');
-```
-
-The default `proportional` mode of `circumscribedHalfAxes` preserves the inner box's aspect ratio, while `equal` returns an equal-axis circle enclosing the box. `contains` returns `false` for a zero semi-axis. `boundaryPoint` returns the center for a degenerate ellipse or a target at its center, avoiding non-finite coordinates.
-
 **Circular and elliptical arcs.** Angles follow SVG coordinates: y points down, `0°` points along +x, `90°` along +y, and positive angles increase clockwise on screen.
 
-```ts
-const end = arcEndPoint([0, 0], 40, 90); // [0, 40]
-const candidates = arcBoundingPoints({
-  center: [0, 0],
-  radius: 40,
-  startAngleDeg: 20,
-  endAngleDeg: 220,
-});
-```
+<ComponentPreview
+  files="ellipse-arc-playground"
+  size="sm"
+  caption="Adjust the radii and angles to compare the shapes and their bounds"
+/>
 
 `arcEndPoint` / `ellipseArcPoint` select a curve point. An ellipse's `angleDeg` is a parameter angle and does not necessarily equal the polar angle observed from its center. `arcAngleInRange` uses the sign of `startAngleDeg → endAngleDeg`: positive spans run clockwise on screen and negative spans run counter-clockwise.
 
-`arcBoundingPoints` / `ellipseArcBoundingPoints` return endpoints plus axis extrema in the numeric angular interval. They accept no extra `sweep` field and do not de-duplicate candidates. Elliptical-arc helpers only handle axis-aligned ellipses; compute a rotated ellipse in local space, then map it to world space with the coordinate-transform helpers.
+`arcBoundingPoints` / `ellipseArcBoundingPoints` derive endpoints and axis-extrema candidates for bounds. Elliptical-arc helpers only handle axis-aligned ellipses; compute a rotated ellipse in local space, then map it to world space with the [coordinate transforms](/kernel/packages/base/math-transforms).
 
-<ComponentAlert
-  title="rayArc returns parameters, not points"
-  description="Each result is a positive scalar s from origin + s·dir, sorted in ascending order. Substitute s back into the equation to obtain a hit point; intersect.* on the Algorithms page returns coordinates directly."
-/>
+#### API reference
 
-## API summary
+| API                                                                                                       | Category | Purpose                                                                  |
+| --------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------ |
+| `Ellipse`, `CenteredBox`, `EllipseCircumscribeMode`                                                       | Type     | Ellipse, centered-box, and circumscription types                         |
+| `ellipse.center`, `ellipse.inscribedInBox`, `ellipse.circumscribedHalfAxes`                               | Method   | Derive an ellipse center, inscribed ellipse, and circumscribed half-axes |
+| `ellipse.contains`, `ellipse.boundaryPoint`                                                               | Method   | Test containment and find a boundary point                               |
+| `ArcBoundingPointsInput`, `ArcAngleInRangeInput`, `EllipseArcPointInput`, `EllipseArcBoundingPointsInput` | Type     | Circular- and elliptical-arc input types                                 |
+| `arcEndPoint`, `ellipseArcPoint`                                                                          | Method   | Select a point on a circular or elliptical arc                           |
+| `arcBoundingPoints`, `ellipseArcBoundingPoints`                                                           | Method   | Derive arc boundary candidates                                           |
+| `arcAngleInRange`                                                                                         | Method   | Test whether an angle lies in a directed interval                        |
 
-| Group             | Public types / values                                                                                     | Key behavior                                                                 |
-| ----------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Numbers           | `Position`, `Vector2`, `DEFAULT_EPSILON`, `point`, `vector2`, `lerp`, three numeric guards                | Pure functions; explicit zero-length fallback; lerp extrapolates             |
-| Transforms        | `CenteredShape`, `localToWorld`, `worldToLocal`                                                           | Rotate about center and convert between local and world space                |
-| Affine matrices   | `AffineMatrix`, `AFFINE_IDENTITY`, `multiplyAffine`, `applyAffine`                                        | Fixed tuple order; inner before outer; inputs stay unchanged                 |
-| Bounds            | Four bounds types plus derivation, merge, conversion, guard, center, half-axis, expansion, corner helpers | Empty point sets and all-empty merges return `undefined`                     |
-| Ellipses and arcs | `Ellipse`, `CenteredBox`, `ellipse`, five arc input types, and point / interval / ray / bbox helpers      | Elliptical arcs are axis-aligned only; bbox candidates are not de-duplicated |
+## Related
 
-<SourceLinks
-  sources={[
-    {
-      label: 'Point and vector implementation',
-      path: 'packages/kernel/math/src/geometry/point.ts',
-      startLine: 1,
-      endLine: 88,
-    },
-    {
-      label: 'Coordinate transform implementation',
-      path: 'packages/kernel/math/src/geometry/transform.ts',
-      startLine: 1,
-      endLine: 37,
-    },
-    {
-      label: 'Affine matrix implementation',
-      path: 'packages/kernel/math/src/geometry/affine.ts',
-      startLine: 1,
-      endLine: 26,
-    },
-    {
-      label: 'Bounds implementation',
-      path: 'packages/kernel/math/src/geometry/bounds.ts',
-      startLine: 1,
-      endLine: 131,
-    },
-    {
-      label: 'Ellipse implementation',
-      path: 'packages/kernel/math/src/geometry/ellipse.ts',
-      startLine: 1,
-      endLine: 73,
-    },
-    {
-      label: 'Arc implementation',
-      path: 'packages/kernel/math/src/geometry/arc.ts',
-      startLine: 1,
-      endLine: 199,
-    },
-  ]}
-/>
+- [Base packages overview](/kernel/packages/base)
+- [Foundation](/kernel/packages/base/foundation)
+- [Coordinate transforms](/kernel/packages/base/math-transforms)
+- [Geometric algorithms](/kernel/packages/base/math-algorithms)

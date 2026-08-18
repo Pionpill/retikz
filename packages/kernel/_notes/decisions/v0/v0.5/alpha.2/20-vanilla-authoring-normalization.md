@@ -1,8 +1,8 @@
 # ADR-20：Vanilla 统一 Authoring 与框架无关处理
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-13
-- 关联：[alpha.2 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [包职能设计](../../../../../../../notes/architecture/package-responsibility-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
+- 关联：[ADR-03](./03-program-transaction-lifecycle.md) · [ADR-05](./05-scene-patch-retained-renderer.md)
 
 ## 背景与目标
 
@@ -103,28 +103,7 @@ Core `parseXxx` 仍是另一条边界：它接受 unknown、序列化 JSON、字
 - 外部扩展与下游闭环：Tier 2 的 Vanilla 包遵循同一模式，拥有本领域 `InputXxx -> Plot / Tier 2 IR`，将其以 `InputEmbed` 接入 `InputScene` 并复用 Vanilla 处理链；其 React 包只将 JSX 映射到该 Vanilla Input 和结果桥接。Core Composite contribution 仍交给既有 Core resolver，不新增 adapter 私有 registry
 - 不支持边界：本 ADR 不把 Vanilla plain spec 变为持久化格式，不让 DOM 子入口进入 Vanilla 根入口，也不让 Core 依赖 Vanilla 或任一框架包。它不让 React 直接拥有或调用命令式 DOM mount；React 仅映射 Vanilla 结果到自身宿主
 
-## 架构验证
-
-- 是否可由现有能力组合：不能。现有 Vanilla 已有 InputScene normalize、compile driver 与 retained session，但 Node / Path / Scope helpers 直接使用 IR，React 仍直接组装 IR 并复制 compile driver、session 与 retained renderer 编排；仅靠约定无法删除平行 owner 路径
-- math / core / render / adapter 责任切分：Math 不变；Core 保持 IR 与编译语义；Vanilla 下沉作者输入并拥有 framework-neutral processing；Vanilla DOM 承担命令式浏览器 materializer；React 只保留框架转换与宿主桥接；Render 不改
-- 是否需要新 IR / contract / registry；不采用 registry 的理由：不需要新 IR 或 registry。Input normalize 是闭合的作者侧语法转换，能力扩展仍先由 Core IR / Definition contract 建立，再由 Vanilla 适配，不存在由第三方运行时发现 Input normalizer 的需求
-- Scene / manifest / renderer / diagnostics 如何闭环：Vanilla 以单次 `normalizeScene` 得到既有 IR、embed 的有效 Scope Theme 与 Core resolver 所需的显式 contribution 后交给 Core，并把同 revision 的 Scene、artifact、manifest、diagnostics 和只读 layers 作为 processing result 交给 DOM 或框架桥接；DOM 在 session 创建前提供固定 Render participant，因此 Core、result 与 renderer 一次 transaction 成功才提交，失败保持前一结果与宿主帧；renderer 无 Input 认知，React 只订阅该结果并映射自己的 host
-- provenance / locator / Interaction Readiness 是否适用：既有 Vanilla / React authored site 与 hydration 收集必须保持来源等价；本 ADR 不新增 target、behavior、intent 或 interaction contract
-- 结论：上移。将 framework-neutral authoring normalize 与 processing 从 Core / React 上移到 API 基础包 Vanilla，保持领域语义留在 Core
-
-## 被否决方案
-
-- React 与 Vanilla 继续各自维护 builder、compile driver 或 session：每个新字段、简写和框架包都会复制 IR 组装与处理语义，无法证明跨入口一致
-- Core 保留 `*Input` 与 normalize：Core 将同时拥有持久化 IR 和框架通用作者语法，迫使所有新框架依赖或复制 Core authoring helper，违反包边界
-- 新建独立 platform 包：当前 Vanilla 已是无框架、SSR 与 runtime API 基础包，再增加一层只会产生无消费者的中转包
-- 让 React 直接导入 Core schema 并在 builder 内做最小转换：这只是现状的命名收敛，不能消除第二套 Input-to-IR 路径
-- 让 Core parser 反向依赖 Vanilla：会破坏 Core 的独立性，使非 adapter 领域 owner 无法复用文本 / DSL parser
-
-## 测试策略摘要
-
-测试必须证明每个 Input 简写、显式 `0` / `false` 与完整 Source IR 形式得到等价 IR；直接 children 与等价 Layer / Embed 的唯一 `InputScene` 路径也必须得到同一 IR contribution 顺序。Core schema / parser 仍是 unknown 与序列化输入的唯一校验边界。Vanilla helper、`InputScene` 与 React JSX 的 adapter parity 必须覆盖相同领域输入、同一错误语义、同一 Core Scene 与同 revision 的只读 processing result；controller 的成功 revision、失败保持、订阅、更新、释放与静态 Scene 边界必须可观察。DOM retained 测试必须证明 Render participant 与 processing result 原子提交：renderer prepare 失败时不发布新 result/revision、不替换宿主帧，成功更新继续保留 patch、hydration、动画与节点 identity。公开表面测试必须断言 Core 不再导出 authoring Input、Vanilla 公开对应 Input / normalizer / processing API 与 DOM 子入口、React 对 Vanilla 的依赖方向成立且不再拥有 driver / session / retained renderer 编排。React 特有 children / Fragment / Sugar 行为继续以 React adapter 测试覆盖，不能借此复制 Vanilla normalizer 或处理链断言。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - Core Source IR、Canonical、compile 默认值、theme 解析或 Scene / renderer 语义
 - Plot、Table、Graph 等领域包的完整 Input 与 framework processing 迁移；它们各自的 Vanilla / framework 包在对应领域 ADR 中采用本链路。为移除 Core `IR*Input` 而必须处理的无消费 Tier 2 输入别名只可删除或改回其 schema-derived IR 类型，不借本 ADR 新增 Plot authoring API

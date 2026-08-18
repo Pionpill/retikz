@@ -2,6 +2,7 @@ import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
 import type { InputEmbed } from '@retikz/vanilla';
 
+import { assertNonEmptyString } from '@retikz/foundation';
 import { PLOT_NAMESPACE } from '@retikz/plot';
 import { embed } from '@retikz/vanilla';
 
@@ -9,7 +10,6 @@ import type { InputPlot } from '../normalize/plot';
 import type { InputPlotEmbed, PlotSource } from './types';
 
 import { normalizePlot } from '../normalize/plot';
-import { assertPlotVanillaNonEmptyString } from '../shared';
 
 /** 从 plain authoring input 创建 Plot Source IR */
 export const plot = (input: InputPlot): IRPlot => normalizePlot(input);
@@ -25,7 +25,7 @@ export const embedPlot = (
   datasets: ExternalDatasets,
   lowerOptions?: LowerPlotsOptions,
 ): InputEmbed<InputPlotEmbed> => {
-  assertPlotVanillaNonEmptyString(id, 'plot vanilla: embed id must be non-empty');
+  assertNonEmptyString(id, 'plot vanilla embed id');
   return embed(PLOT_NAMESPACE, id, {
     ...source,
     datasets,

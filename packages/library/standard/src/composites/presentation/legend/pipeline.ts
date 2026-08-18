@@ -46,6 +46,7 @@ import type {
   LegendRampArtifact,
 } from './types';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../../errors';
 import { LegendContentKind, LegendDirection } from './constants';
 import { pairedFlowItemsOf } from './providers';
 import { createLegendRampStructure, translateLegendRampStructure } from './providers';
@@ -301,7 +302,13 @@ const compileLegendRamp = (
   node: IRLegend,
   context: LayoutCompositeCompileContext,
 ): LayoutCompositeCompileResult<LegendRampArtifact> => {
-  if (node.content.kind !== LegendContentKind.Ramp) throw new Error('Expected Legend ramp content');
+  if (node.content.kind !== LegendContentKind.Ramp) {
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.PipelineInvariant,
+      message: 'Expected Legend ramp content',
+      details: { contentKind: node.content.kind },
+    });
+  }
   const authoredScopeProps = authoredScopePropsOf(node);
   const ramp = node.content;
   let nextOccurrence = 0;

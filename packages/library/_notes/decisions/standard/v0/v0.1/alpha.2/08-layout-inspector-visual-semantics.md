@@ -2,10 +2,8 @@
 
 - 状态：Superseded
 - 日期：2026-07-31
-- Level：red
-- 范围：Core inspection DTO 与 plane assembly、Render SVG / Canvas inspection theme、Standard Layout artifact 与 inspector、双语文档
+- 替代：[Kernel ADR-12](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/12-extensible-inspector-content.md) 取代专用 Inspector DTO 与 renderer 主题路径；[Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) 接管 Layout owner
 - 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-07](./07-layout-inspector.md) · [Kernel ADR-12](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/12-extensible-inspector-content.md) · [Core Drawing Complete](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
-- 计划 owner 迁移：[Layout alpha.1 ADR-01](../../../../layout/v0/v0.1/alpha.1/01-layout-package-family.md) 接管当前 Layout Inspector package owner；本 ADR 保持既有 Superseded 历史状态
 
 ## 取代关系
 
@@ -233,20 +231,6 @@ spacing boundary、box outline 与 family structure 共享同一共线归一化�
 
 不保留旧 tone alias、可选 `colorScope` 或缺失 `spacing` 的兼容分支。
 
-## 能力完备性检查
-
-- 所属能力域与能力面：Drawing Complete 的 Primitive / Scene 执行协作面，以及 Standard 通用 Layout artifact / inspector
-- 解决的问题：让多个最终 layout occurrence 的辅助层可归属，用后端中立语义准确且可独立配置地表达 margin、padding、gap 与 distributed spacing
-- 主责包与协作包：Core 拥有 inspection DTO 与 occurrence colorScope；Render 拥有 palette 与 SVG / Canvas 物化；Standard 拥有 layout spacing artifact 与 role lowering
-- 是否可由现有能力组合：现有 rect fill 与 tone 无法表达 pattern / occurrence identity，Flex / Grid artifact 也无法区分固定 gap 与 distributed space，需要扩展当前域
-- 是否需要下沉到依赖能力域：需要先扩展 Core inspection DTO；不新增主 Scene primitive、IR 或 renderer-specific字段
-- 内部表达链路：Standard solver/placement → typed spacing artifact → inspector primitive → Core plane assembly → Render shared theme → SVG / Canvas
-- 外部扩展链路：custom layout 继续在同一 `CompositeDefinition.inspector` 返回公开 primitive；Core 统一校验与赋 colorScope，custom renderer 继续消费同一 InspectionPlane
-- define-registry：不新增开放 provider 种类；pattern 是闭合 DTO vocabulary，palette 是 Render 内部有限主题，沿用既有 CompositeDefinition registry 与 renderer capability
-- 下游执行 / adapter 等价性：React / Vanilla 继续通过现有 `inspect` 对象等价暴露新增字段；两者从同一次 Core compile 获得相同 plane，SVG / Canvas 共享 resolver 与 hatch geometry
-- 不支持边界与诊断：不提供 CSS theme 注入、用户 palette、交互选择、拖拽手柄、pattern registry 或增量 inspection patch；非法 DTO / artifact fail-loud
-- 本轮结论：先下沉扩展 Drawing Complete 的 inspection DTO，再由 Standard 当前 Layout 能力消费
-
 ## 依赖现有元素
 
 - ADR-07 的 `CompositeDefinition.inspector`、InspectionPlane、final occurrence 排序与 static / retained frame
@@ -255,17 +239,7 @@ spacing boundary、box outline 与 family structure 共享同一共线归一化�
 - Flex `resolveFlexSpaceDistribution()` 与 Grid final track geometry
 - Render 既有 SVG descriptor、Canvas frame transform 与 hit-test 隔离
 
-## 被否决的方案
-
-- 继续用 tone 为 role 上色：nested occurrence 仍无法归属，颜色同时承担两套语义
-- 用正交网格表达 gap：会与 Grid track 视觉冲突；使用与 padding 反向的单向 diagonal hatch
-- 由 Standard 展开 hatch line primitive：纹理密度和 plane 体积泄漏到上游
-- 从 `sourcePath` 或 Scope 深度推导颜色：把 authored 字符串格式或 adapter 树形态变成 renderer 契约
-- 只修 Flex 而保留 Grid track 空白推断：Grid content distribution 仍会被错误标为固定 gap
-- 为 pattern 新建 registry：闭合的四种 runtime-only presentation 不具备第三方 provider 需求
-- 继续让 bounds 同时控制 spacing ring、让 `gaps` 同时控制 fixed gap 与 distributed space：无法形成显示 content outline、内部结构线与固定 gap 的稳定推荐态
-
-## 不在本 ADR 范围
+## 长期边界
 
 - selection、hover、drag handle、编辑历史、viewport toolbar 或 DevTools 面板
 - 用户自定义 palette、CSS theme、pattern definition / registry 或 renderer 回调

@@ -5,11 +5,11 @@ import { describe, expect, it } from 'vitest';
 import type { Section, SubPage } from '@/modules/docs/data';
 
 import {
-  schematicSection,
   DocDifficulty,
   isDocDifficultyVisible,
   kernelSection,
   librarySection,
+  schematicSection,
   vizSection,
 } from '@/modules/docs/data';
 import { filterSectionsByDifficulty, flattenLeaves } from '@/modules/docs/layout';

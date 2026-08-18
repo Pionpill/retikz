@@ -6,6 +6,8 @@ import { point } from '@retikz/math';
 
 import type { IRRibbonArcCap, IRRibbonCap, RibbonAlignmentValue } from '../types';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
+
 const ARC_CAP_POINT_COUNT = 8;
 
 export type RoundedArcPointsInput = {
@@ -63,9 +65,11 @@ type AssertArcCapRadiusInput = {
 export const assertArcCapRadius = ({ actual, expected, endpoint, side }: AssertArcCapRadiusInput): void => {
   const tolerance = Math.max(0.01, Math.abs(expected) * 1e-4);
   if (Math.abs(actual - expected) > tolerance) {
-    throw new Error(
-      `Ribbon ${endpoint} arc cap radius must reach the ${side} side point; expected ${String(expected)}, got ${String(actual)}.`,
-    );
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.GeometryInvalid,
+      message: `Ribbon ${endpoint} arc cap radius must reach the ${side} side point; expected ${String(expected)}, got ${String(actual)}.`,
+      details: { actual, endpoint, expected, side },
+    });
   }
 };
 
@@ -81,8 +85,13 @@ const pointOfCapCenter = (center: IRPosition | PolarPosition): IRPosition => {
   if (isPositionTuple(center)) return center;
   try {
     return polar.toPosition(center);
-  } catch {
-    throw new Error('Ribbon arc cap center must use a Cartesian position or a PolarPosition without a node origin.');
+  } catch (cause) {
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.GeometryInvalid,
+      message: 'Ribbon arc cap center must use a Cartesian position or a PolarPosition without a node origin.',
+      details: { center },
+      cause,
+    });
   }
 };
 

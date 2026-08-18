@@ -71,7 +71,7 @@ border stroke 的可见范围进入 Table `visualOverflowBounds`，但不进入 
 - manifest 新增 `borders`，包含稳定 edge、Path locator 与每个 atom 的 provenance
 - border 不进入 Kernel IR；lowering 后仍只有 Core Path 与 JSON-safe meta
 
-## 最终实现与验证
+## 最终结果
 
 实现位于 `schemas/border`、`pipeline/layout/border/{build,resolve,merge}.ts`、lower emit 与 manifest contract。transaction 对 Border Scope layout 失败补充明确 stage、Table id 与原始 cause。
 

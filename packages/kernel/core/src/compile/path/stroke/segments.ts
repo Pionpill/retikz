@@ -1,13 +1,13 @@
 import { isFinitePoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { CanonicalStep } from '../../../resolve/path';
-import type { PathTargetView } from '../../../resolve/path';
+import type { CanonicalStep, PathTargetView } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { PathCommandEmitter } from './commands';
 import type { StrokePreviousTarget } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import {
   bendControlPoints,
   cubicSegmentSample,
@@ -111,7 +111,10 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
         ? outInControlPoints(fromReference, currentAnchor, step.outAngle ?? 0, step.inAngle ?? 180, step.looseness)
         : bendControlPoints(fromReference, currentAnchor, step.bendDirection ?? 'left', step.bendAngle ?? 30);
     if (!isFinitePoint(control1) || !isFinitePoint(control2)) {
-      throw new Error('Bend produced a non-finite control point (looseness / angle too large); use smaller values.');
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
+        'Bend produced a non-finite control point (looseness / angle too large); use smaller values.',
+      );
     }
     const fromClip = penOverride ?? clipTarget(previous.step.to, control1, targetContext);
     const toClip = clipTarget(step.to, control2, targetContext);

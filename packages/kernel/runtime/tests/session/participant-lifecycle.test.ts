@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuntimeError, RuntimeSession, RuntimeSessionOptions } from '../../src';
+import type { RetikzRuntimeError, RuntimeSession, RuntimeSessionOptions } from '../../src';
 
 import {
   createRuntimeOwnerInput,
@@ -10,6 +10,7 @@ import {
   createRuntimeSession,
   defineRuntimeCommitParticipant,
   defineRuntimeOwner,
+  RetikzRuntimeErrorCode,
   RuntimeProgramPhase,
 } from '../../src';
 
@@ -154,13 +155,13 @@ describe('runtime session participant lifecycle', () => {
       });
     const session = create();
 
-    expect(create).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_ALREADY_OWNED' }));
+    expect(create).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantAlreadyOwned }));
     expect(disposeCalls).toBe(0);
 
     session.dispose();
 
     expect(disposeCalls).toBe(1);
-    expect(create).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_ALREADY_OWNED' }));
+    expect(create).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantAlreadyOwned }));
     expect(disposeCalls).toBe(1);
   });
 
@@ -193,10 +194,10 @@ describe('runtime session participant lifecycle', () => {
       });
 
     expect(create).toThrowError(
-      expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_PREPARE_FAILED', cause: trigger }),
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantPrepareFailed, cause: trigger }),
     );
     expect(disposeCalls).toBe(1);
-    expect(create).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_ALREADY_OWNED' }));
+    expect(create).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantAlreadyOwned }));
     expect(disposeCalls).toBe(1);
   });
 
@@ -250,7 +251,7 @@ describe('runtime session participant lifecycle', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(owner, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_READ_FAILED', cause: trigger }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantReadFailed, cause: trigger }));
     expect(calls).toEqual(['commit', 'read', 'rollback', 'token-dispose']);
     expect(session.revision()).toBe(0);
     expect(session.snapshot(owner)).toEqual({ revision: 0, value: 1 });
@@ -307,7 +308,7 @@ describe('runtime session participant lifecycle', () => {
         baseRevision: session.revision(),
         owners: [createRuntimeOwnerUpdate(owner, 2)],
       }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_READ_FAILED', owner: 'b' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantReadFailed, owner: 'b' }));
     expect(session.participant(first)).toBe(oldFirst);
     expect(session.participant(second)).toBe(oldSecond);
     expect(session.participant(first)).toEqual({ value: 1 });
@@ -318,14 +319,14 @@ describe('runtime session participant lifecycle', () => {
     const owner = defineCounterOwner();
     const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
     const programs = createRuntimeProgramRegistry({ owners });
-    const reentryErrors: Array<RuntimeError> = [];
+    const reentryErrors: Array<RetikzRuntimeError> = [];
     const sessionRef: { current?: RuntimeSession } = {};
     let participantRead: Readonly<{ value: number }> = Object.freeze({ value: 1 });
     const captureReentry = (callback: () => void): void => {
       try {
         callback();
       } catch (cause) {
-        reentryErrors.push(cause as RuntimeError);
+        reentryErrors.push(cause as RetikzRuntimeError);
       }
     };
     const participant = defineRuntimeCommitParticipant({
@@ -375,10 +376,10 @@ describe('runtime session participant lifecycle', () => {
     });
 
     expect(reentryErrors.map(error => error.code)).toEqual([
-      'RUNTIME_SESSION_REENTRANT',
-      'RUNTIME_SESSION_REENTRANT',
-      'RUNTIME_SESSION_REENTRANT',
-      'RUNTIME_SESSION_REENTRANT',
+      RetikzRuntimeErrorCode.SessionReentrant,
+      RetikzRuntimeErrorCode.SessionReentrant,
+      RetikzRuntimeErrorCode.SessionReentrant,
+      RetikzRuntimeErrorCode.SessionReentrant,
     ]);
     expect(session.participant(participant)).toEqual({ value: 2 });
     session.dispose();
@@ -395,7 +396,7 @@ describe('runtime session participant lifecycle', () => {
       try {
         callback();
       } catch (cause) {
-        reentryCodes.push((cause as RuntimeError).code);
+        reentryCodes.push((cause as RetikzRuntimeError).code);
       }
     };
     const participant = defineRuntimeCommitParticipant({
@@ -427,9 +428,9 @@ describe('runtime session participant lifecycle', () => {
 
     expect(() =>
       session.update({ baseRevision: session.revision(), owners: [createRuntimeOwnerUpdate(owner, 2)] }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_READ_FAILED' }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantReadFailed }));
     session.dispose();
-    expect(reentryCodes).toEqual(['RUNTIME_SESSION_REENTRANT', 'RUNTIME_SESSION_REENTRANT']);
+    expect(reentryCodes).toEqual([RetikzRuntimeErrorCode.SessionReentrant, RetikzRuntimeErrorCode.SessionReentrant]);
   });
 
   it('immutable read 与 candidate mutable state 无 alias，rollback 后旧 nested reference/content 不变', () => {
@@ -488,7 +489,9 @@ describe('runtime session participant lifecycle', () => {
 
     expect(() =>
       session.update({ baseRevision: session.revision(), owners: [createRuntimeOwnerUpdate(owner, 2)] }),
-    ).toThrowError(expect.objectContaining({ code: 'RUNTIME_PARTICIPANT_READ_FAILED', owner: 'b-follower' }));
+    ).toThrowError(
+      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantReadFailed, owner: 'b-follower' }),
+    );
     expect(session.participant(participant)).toBe(oldRead);
     expect(session.participant(participant).values).toBe(oldValues);
     expect(oldRead).toEqual({ values: [1] });

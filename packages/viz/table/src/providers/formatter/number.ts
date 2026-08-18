@@ -2,6 +2,7 @@ import { formatLocale } from 'd3-format';
 import { z } from 'zod';
 
 import { defineCellFormatter } from '../../contract';
+import { RetikzTableError } from '../../error';
 
 const TABLE_NUMBER_LOCALE = formatLocale({
   decimal: '.',
@@ -22,7 +23,7 @@ export const NUMBER_CELL_FORMATTER = defineCellFormatter({
   }),
   format: ({ value }, options) => {
     if (value === null) return options.nullText ?? null;
-    if (typeof value !== 'number') throw new Error('number formatter requires a number or null value');
+    if (typeof value !== 'number') throw new RetikzTableError('number formatter requires a number or null value');
     return TABLE_NUMBER_LOCALE.format(options.specifier ?? '~g')(value);
   },
 });

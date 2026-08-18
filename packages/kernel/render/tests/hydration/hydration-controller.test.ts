@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { isRetikzError } from '@retikz/foundation';
 import { createRuntimeIdentity } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -250,9 +251,10 @@ describe('Hydration 控制器', () => {
     }
 
     expect(failure).toBeInstanceOf(Error);
+    expect(isRetikzError(failure)).toBe(true);
     expect(failure).toEqual(
       expect.objectContaining({
-        name: 'HydrationControllerSetupError',
+        name: 'RetikzHydrationControllerSetupError',
         cause: setupCause,
         cleanupCause,
       }),

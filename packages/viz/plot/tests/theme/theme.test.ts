@@ -3,7 +3,7 @@ import type { IRNode, IRPath, IRScope, ScenePrimitive } from '@retikz/core';
 import { compileToScene, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlotAxisGuide, IRPlot } from '../../src/schemas';
+import type { IRPlot, IRPlotAxisGuide } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline';
 import {

@@ -94,5 +94,3 @@ render 层吃**已编译 Scene**（边界最小、与 `drawScene` 同层）。�
 - 写清安装可选依赖（`pnpm add @napi-rs/canvas`）。
 - 写清 Node 导出与浏览器 `canvas.toBlob` 的边界与用途差异。
 - 写清字体注册（`GlobalFonts.register`）与文本度量的服务端限制。
-
-> 实现指针：最终入口名 / 子路径 / 选项以代码为准；上方 `renderSceneToImage` 为设计草案命名。

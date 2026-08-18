@@ -3,7 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-08-06
 - 接受日期：2026-08-07
-- 关联：[alpha.2 roadmap](./roadmap.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md) · [Standard Layout Inspector ADR-07](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/07-layout-inspector.md) · [Standard Inspector 视觉语义 ADR-08](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/08-layout-inspector-visual-semantics.md)
+- 关联：[Standard Layout Inspector ADR-07](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/07-layout-inspector.md) · [Standard Inspector 视觉语义 ADR-08](../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.2/08-layout-inspector-visual-semantics.md)
 
 ## 背景与目标
 
@@ -424,40 +424,7 @@ selection admission 失败使用 `stage: 'selection'` 并保留原始 rule index
 - 外部扩展与下游闭环：第三方 owner 通过 Core Definition 发布稳定产物，第三方 Inspector 在 Inspect registry 独立注册，两者经 Inspector key、owner selector、subject schema、final occurrence、普通 IR 与隔离片段编译闭环
 - 不支持边界：Inspector 不能修改主图、跨平面引用、获得 renderer / DOM 句柄、返回未注册 JSON、持久化 UI 状态或建立第二套绘图 IR
 
-## 架构验证
-
-- 是否可由现有能力组合：现有 typed artifact、Path settled command、occurrence、Theme/style context 与普通 IR compile 已提供大部分底座；需要把它们抽象为无 Inspector 词汇的公开观测与隔离片段能力
-- math / core / render / adapter 责任切分：Math 不新增职责；Core 观测与编译；Render 执行普通图层；adapter 注入可选编译驱动；Inspect 与领域子入口拥有辅助语义
-- 是否需要新 IR / contract / registry：不新增持久化 IR；Core 新增 observer 与 owner output contract；Inspect 新增独立 Inspector registry。内置与自定义 Inspector 同路，独立 registry 不再与 owner Definition 注册混合
-- Scene / manifest / renderer / diagnostics 如何闭环：最终 owner output → Core observation → Inspect registry / selection → 普通 IR → Core isolated fragment → Inspect plane → Render normal layers。主 manifest 不包含辅助 identity，inspection-specific diagnostics 由 Inspect 拥有
-- provenance / locator / Interaction Readiness 是否适用：Core 提供 final occurrence 与 replay provenance；Inspect entry 保留 owner + occurrence。辅助 Scene 不进入交互 target；未来可编辑控制点必须另建稳定 identity 与编辑事务
-- 结论：把 Inspector 上移为可选 Kernel 扩展包，只把领域中立观测和片段编译能力下沉到 Core
-
-## 能力完备性检查
-
-- 所属能力面：Drawing Complete 的 compile / provenance / Composition 扩展协作面
-- 内部表达链路：owner Definition 产物 → final observation → isolated fragment compile → 普通 Scene
-- 外部扩展链路：Core observer 与 Inspect registry 都显式注入、无全局状态；内置和第三方使用同一路径
-- 下游执行 / adapter 等价性：Inspect 提供共享编译驱动，Render 执行普通只读图层，React / Vanilla 只做等价宿主接线
-- 不支持边界与诊断：Core 不拥有 Inspector 选项、palette、plane 或领域实现；未安装 Inspect 时不存在隐式降级或默认注册
-- 本轮结论：扩展 Core 的领域中立观测底座，并新增可选 `@retikz/inspect` 协作包形成完整闭环
-
-## 被否决方案
-
-- **继续内置在 Core**：每增加一种领域 Inspector 都会扩大基础编译、renderer 和 adapter 公共面，无法兑现可选能力边界
-- **使用 `@retikz/core/inspect` 子入口**：源码可以拆分，但发布依赖与包使命仍属于 Core，Standard 和领域包也会继续把 Inspector 当成 Core 默认能力
-- **只把视觉 helper 移出 Core**：Definition、selection、plane 和 frame 仍会让 Core / Render 依赖 Inspector，不能解决所有权与打包边界
-- **Inspector 继续挂载 owner Definition**：未安装 Inspect 时 owner contract 仍携带可选字段，Core 仍需验证、解析和执行 Inspector
-- **从最终 Scene 反推 subject**：会丢失 layout artifact、Path 命令来源和 probe/replay 关系，也无法支持稳定的第三方 owner output
-- **让每个领域发布独立 Inspector npm 包**：会形成大量薄包和版本关系；领域实现优先使用现有包的 `/inspect` 子入口
-- **把辅助 IR 合并进主 Scene**：会改变 viewBox、资源、identity、patch、hit-test 与持久化语义
-- **让 Render 解释任意 Inspector payload**：会建立第二套 renderer 协议并使 SVG、Canvas 与第三方 renderer 分叉
-
-## 测试策略摘要
-
-测试按 Core 观测契约、Inspect 注册与选择、Render 只读图层、React / Vanilla 宿主等价性及 Standard 可选入口五层验证。重点不变量是最终 occurrence、按需产物、主图隔离、失败原子性、宿主模式等价与根入口不加载可选依赖；具体案例与命令由实施期测试契约维护
-
-## 最终实现与验证
+## 最终结果
 
 Core 已收敛为领域中立的所属者产物、最终 occurrence 观测与隔离片段编译底座；Inspector 的定义、注册、选择、诊断、辅助平面、内置 Path 实现及宿主驱动均由可选 `@retikz/inspect` 提供。Render 只执行普通只读 Scene 图层，Standard 三包通过显式 `/inspect` 子入口提供布局辅助能力，基础入口不加载可选依赖
 
@@ -465,7 +432,7 @@ Core 已收敛为领域中立的所属者产物、最终 occurrence 观测与隔
 
 当前真实限制是贡献内部 Scope 尚无独立 subtree locator，因此无法无歧义定位时会明确失败；Path 的全图与 Scope 批量策略、Inspector 增量更新及交互式控制点仍留待后续能力设计
 
-## 不在本 ADR 范围
+## 长期边界
 
 - 控制点选择、hover、拖拽、键盘操作、吸附、history、编辑事务或跨 compile 稳定 handle identity
 - 全图 / Scope 级 Path Inspector 批量策略，以及 Plot、Chart、Table、Gantt 等具体领域 Inspector

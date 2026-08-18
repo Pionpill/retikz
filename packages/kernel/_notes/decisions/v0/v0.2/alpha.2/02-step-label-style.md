@@ -6,7 +6,7 @@
 
 ## 背景
 
-`StepLabelSchema`（`core/src/ir/path/step.ts`）原只有 `text` / `position` / `side` 三字段；渲染时 `compile/path/label.ts` 把 `fill: 'currentColor'` **硬编码** —— 所有边标注一律跟主题色（黑/白），**无法与所标注的线段同色**。给彩色函数线配标注时尤其违和：标签全是 currentColor 一片黑，读者得对照线色反推归属。
+`StepLabelSchema`（）原只有 `text` / `position` / `side` 三字段；渲染时 `compile/path/label.ts` 把 `fill: 'currentColor'` **硬编码** —— 所有边标注一律跟主题色（黑/白），**无法与所标注的线段同色**。给彩色函数线配标注时尤其违和：标签全是 currentColor 一片黑，读者得对照线色反推归属。
 
 对照 `NodeLabelSchema`（node 边挂标签）已有 `textColor` / `opacity` / `font`，StepLabel（path 段标注）缺这套、两类 label 样式能力不对称。
 
@@ -14,7 +14,7 @@
 
 ## 决策：StepLabel 加 `textColor` / `opacity` / `font`，对齐 NodeLabel
 
-三字段加在 `StepLabelSchema` 末尾、全 optional（`text`/`position`/`side` 不动）；`compile/path/label.ts` 把硬编码 fill / fontSize 改为回退链。schema 见 `core/src/ir/path/step.ts`，回退链见 `core/src/compile/path/label.ts`。
+三字段加在 `StepLabelSchema` 末尾、全 optional（`text`/`position`/`side` 不动）；`compile/path/label.ts` 把硬编码 fill / fontSize 改为回退链。schema 见 ，回退链见 。
 
 理由：
 
@@ -30,12 +30,7 @@
 - **labelDefault 通道**：由 [ADR-01](./01-scope-style-inheritance.md) 定义（node label 与 step label 共享）；本 ADR 只定义 StepLabel 如何消费它。
 - **`resetStyle=['label']` 不切宿主跟随**：屏障只忽略外层 `labelDefault`（scope 继承轴），StepLabel 仍跟宿主 path 已解析主色（实例-host 轴非 scope 继承），label 不成孤岛（详 ADR-01）。
 
-### 被否决的选项
-
-- **B：只加 `textColor`，不加 `opacity` / `font`** —— 最小改动解决"标签同色"主诉求，但与 NodeLabel 三字段不对称；`font`（小一号字）、`opacity`（淡化次要标注）是真实需求，分两次开窗反复回填 reference + 文档。三字段同源、一次性补成本最低。
-- **C：不加字段，让用户用 `<Node>` 当标注** —— 丢失 StepLabel 的 `position`（沿段归一化定位）/ `side`（法向偏移 / sloped），用户得手算位置，与"边标注"语义背离。
-
-## 不在本 ADR 范围
+## 长期边界
 
 - **scope `labelDefault` 字段定义** → [ADR-01](./01-scope-style-inheritance.md)（本 ADR 只消费）。
 - **NodeLabel 样式字段**：已有，不动。
@@ -44,6 +39,6 @@
 
 ---
 
-> **实现指针**：level `red`（动 `ir/**` step schema + `compile/**` label 回退链）、additive 零破坏（三字段加在末尾、全 optional，不给时回退 currentColor）。真源以代码为准 —— `StepLabelSchema` 加 `textColor`/`opacity`/`font`（`core/src/ir/path/step.ts`，8 个含 label 的 step variant 自动获得）、fill/font 回退链 + 消费 scope labelDefault（`core/src/compile/path/label.ts`）；测试在 `core/tests/ir/step-label.schema.test.ts` 与 `core/tests/compile/path-label-style.test.ts`。完整原文（Schema 改动表 / 文件 scope / 测试象限 / DSL 表面）见本文件 git 历史。
+## 最终实现结果
 
-> 🔖 封板压缩 commit `5d1ed4ca`；压缩前完整施工蓝图 = `git show 5d1ed4ca^:_notes/decisions/core/v0/v0.2/alpha.2/02-step-label-style.md`。
+已实现本 ADR 的核心决策。兼容性：additive 零破坏（三字段加在末尾、全 optional，不给时回退 currentColor）；其余默认行为、失败语义与公开契约以正文为准。

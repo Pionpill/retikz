@@ -513,17 +513,17 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   ContainerSchema: {
     schema: GraphIR.ContainerSchema,
     label: 'Container',
-    url: '/schematic/graph/frame/graph-frame',
+    url: '/schematic/graph/container/basic',
   },
   EntitySchema: {
     schema: GraphIR.EntitySchema,
     label: 'Entity',
-    url: '/schematic/graph/base/code',
+    url: '/schematic/graph/entity/basic',
   },
   RelationSchema: {
     schema: GraphIR.RelationSchema,
     label: 'Relation',
-    url: '/schematic/graph/base/connector',
+    url: '/schematic/graph/relation/basic',
   },
   TableSchema: {
     schema: IRTable.TableSchema,
