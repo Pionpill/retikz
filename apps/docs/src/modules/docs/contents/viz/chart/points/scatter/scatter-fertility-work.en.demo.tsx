@@ -1,6 +1,8 @@
 import type { FC } from 'react';
 
-import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
+import { Axis, Legend } from '@retikz/plot-react';
+
+import { ScatterChart } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -12,30 +14,35 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const encoding = values[SCATTER_FERTILITY_WORK_CONTROL_IDS.encoding];
 
   return (
-    <Plot
+    <ScatterChart
       data={fertilityWorkData}
-      model={[
+      dataModel={[
         { name: 'fertilityRate', type: 'continuous' },
         { name: 'femaleLaborParticipation', type: 'continuous' },
         { name: 'incomeGroup', type: 'categorical' },
       ]}
+      encoding={{
+        x: { field: 'fertilityRate' },
+        y: { field: 'femaleLaborParticipation' },
+        ...(encoding === 'color' ? { color: { field: 'incomeGroup' } } : {}),
+        ...(encoding === 'shape' ? { shape: { field: 'incomeGroup' } } : {}),
+      }}
+      mark={{
+        size: { kind: 'constant', value: 4.5 },
+        opacity: { kind: 'constant', value: 0.65 },
+      }}
+      title="Fertility and female labor participation"
+      subtitle="186 economies in 2022; x shows births per woman and y shows female labor-force participation among people aged 15+ (%)"
+      source="World Bank: SP.DYN.TFRT.IN, SL.TLF.CACT.FE.ZS, and income-group metadata; economies with all three observations"
       width={800}
       height={400}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
-      <PointMark
-        x="fertilityRate"
-        y="femaleLaborParticipation"
-        color={encoding === 'color' ? 'incomeGroup' : undefined}
-        shape={encoding === 'shape' ? 'incomeGroup' : undefined}
-        size={4.5}
-        opacity={0.65}
-      />
-      <Axis dimension="x" title="Total fertility rate (births per woman)" />
-      <Axis dimension="y" title="Female labor force participation (%)" />
+      <Axis dimension="x" title="Total fertility rate (births per woman)" grid />
+      <Axis dimension="y" title="Female labor force participation (%)" grid />
       {encoding === 'color' ? <Legend channel="color" title="World Bank income group" position="right" /> : null}
       {encoding === 'shape' ? <Legend channel="shape" title="World Bank income group" position="right" /> : null}
-    </Plot>
+    </ScatterChart>
   );
 });
 

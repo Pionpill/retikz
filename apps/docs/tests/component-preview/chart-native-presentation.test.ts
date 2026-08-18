@@ -66,7 +66,7 @@ describe('Chart-native Scatter presentation', () => {
     }
   });
 
-  it('preserves the authored headless-marker order for the Gapminder example', () => {
+  it('normalizes the Chart presentation shorthand order for the Gapminder example', () => {
     for (const source of [incomeLifeExpectancyZhPreviewSource, incomeLifeExpectancyEnPreviewSource]) {
       const chart = canonicalScatterChartOf(source);
 
@@ -78,11 +78,11 @@ describe('Chart-native Scatter presentation', () => {
         plot: { data: { reference: 'chart.data' } },
         presentation: {
           children: [
-            { key: 'chart.presentation.subtitle', preset: 'subtitle' },
             { key: 'chart.presentation.title', preset: 'title' },
+            { key: 'chart.presentation.subtitle', preset: 'subtitle' },
             { key: 'chart.plot' },
-            { key: 'chart.presentation.source', preset: 'source' },
             { key: 'chart.presentation.note', preset: 'note' },
+            { key: 'chart.presentation.source', preset: 'source' },
           ],
         },
       });

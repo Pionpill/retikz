@@ -1,6 +1,7 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import type { IRShapeValue } from '@retikz/core';
 
+import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
@@ -35,9 +36,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 
 const shapeOf = (node: IRNode): IRShapeValue | undefined => node.shape;
 
-const pointSpec = (
-  shape: { kind: 'field'; value: string } | { kind: 'constant'; value: string } | undefined,
-): IRPlot =>
+const pointSpec = (shape: { kind: 'field'; value: string } | { kind: 'constant'; value: string } | undefined): IRPlot =>
   PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -69,6 +68,22 @@ describe('shape channel 类别映射', () => {
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'g' }), { d: data }));
     expect(PLOT_SHAPE_PALETTE).toHaveLength(8);
     expect(nodes.map(shapeOf)).toEqual([...PLOT_SHAPE_PALETTE, PLOT_SHAPE_PALETTE[0]]);
+  });
+
+  it('shape_palette_compiles_with_core_shape_providers', () => {
+    const data = [
+      { x: 0, y: 0, g: 'A' },
+      { x: 1, y: 1, g: 'B' },
+      { x: 2, y: 2, g: 'C' },
+      { x: 3, y: 3, g: 'D' },
+    ];
+    const spec = pointSpec({ kind: 'field', value: 'g' });
+    const [definition] = lowerPlots({ d: data }, cartOpts);
+
+    expect(
+      () =>
+        compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: [definition], padding: 0 }).scene,
+    ).not.toThrow();
   });
 
   it('plotTheme_shape_palette_preserves_structured_refs', () => {
