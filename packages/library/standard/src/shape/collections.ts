@@ -5,10 +5,18 @@ import {
   ContourShapeProvider,
   CrossShapeDefinition,
   CrossShapeProvider,
+  CylinderShapeDefinition,
+  CylinderShapeProvider,
+  HexagonShapeDefinition,
+  HexagonShapeProvider,
+  ParallelogramShapeDefinition,
+  ParallelogramShapeProvider,
   SectorShapeDefinition,
   SectorShapeProvider,
   StarShapeDefinition,
   StarShapeProvider,
+  TrapezoidShapeDefinition,
+  TrapezoidShapeProvider,
 } from './definitions';
 
 /** Standard 提供的全部可选形状 Definition */
@@ -17,6 +25,10 @@ export const StandardShapeDefinitions: ReadonlyArray<ShapeDefinition> = [
   CrossShapeDefinition,
   SectorShapeDefinition,
   StarShapeDefinition,
+  TrapezoidShapeDefinition,
+  ParallelogramShapeDefinition,
+  HexagonShapeDefinition,
+  CylinderShapeDefinition,
 ];
 
 /** Standard 提供的全部形状 Provider */
@@ -25,4 +37,8 @@ export const StandardShapeProviders: ReadonlyArray<CoreDependencyProvider> = [
   CrossShapeProvider,
   SectorShapeProvider,
   StarShapeProvider,
+  TrapezoidShapeProvider,
+  ParallelogramShapeProvider,
+  HexagonShapeProvider,
+  CylinderShapeProvider,
 ];
