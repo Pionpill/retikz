@@ -1,4 +1,8 @@
-import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
+import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point';
+import type { IRPlot } from '@retikz/plot';
+
+import { ChartInputEmbedAdapter, createChart } from '@retikz/chart-vanilla';
+import { createScatterChart } from '@retikz/chart-vanilla/point';
 import { describe, expect, it } from 'vitest';
 
 import { Chart } from '../src';
@@ -57,5 +61,52 @@ describe('Chart React InputEmbed routing', () => {
     expect(bubble).toMatchObject({ bound: { type: 'bubble' } });
     expect(connected).toMatchObject({ bound: { type: 'connected-scatter' } });
     expect(scatter).not.toHaveProperty('type');
+  });
+
+  it('produces the same Base and Scatter adapter inputs as Vanilla authoring', () => {
+    const plot = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'people' },
+      scales: [
+        { type: 'linear', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+    } satisfies IRPlot;
+    const datasets = { people: [{ x: 0, y: 1 }] };
+    const reactBase = inputOf(Chart, { spec: plot, data: datasets, title: 'People' });
+    const vanillaBase = createChart({ plot: { spec: plot }, datasets, title: 'People' });
+    const pointInput = {
+      data: datasets.people,
+      width: 640,
+      height: 360,
+      title: 'People',
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    } satisfies CreateScatterChartInput;
+    const reactScatter = inputOf(ScatterChart, pointInput);
+    const vanillaScatter = createScatterChart(pointInput);
+    const style = {
+      axisEnabled: true,
+      axisGridEnabled: true,
+      legendEnabled: true,
+      seriesColor: '#2563eb',
+    };
+
+    expect(reactBase.bound).toMatchObject({
+      type: vanillaBase.input.bound.type,
+      base: vanillaBase.input.bound.base,
+      plot: vanillaBase.input.bound.plot,
+    });
+    expect(reactBase.bound.createPlot(style)).toEqual(vanillaBase.input.bound.createPlot(style));
+    expect(reactBase.datasets).toEqual(vanillaBase.input.datasets);
+    expect(reactScatter.bound).toMatchObject({
+      type: vanillaScatter.input.bound.type,
+      base: vanillaScatter.input.bound.base,
+      plot: vanillaScatter.input.bound.plot,
+    });
+    expect(reactScatter.bound.createPlot(style)).toEqual(vanillaScatter.input.bound.createPlot(style));
+    expect(reactScatter.datasets).toEqual(vanillaScatter.input.datasets);
   });
 });

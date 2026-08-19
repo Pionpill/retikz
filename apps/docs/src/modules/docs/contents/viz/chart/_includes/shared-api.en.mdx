@@ -2,6 +2,8 @@
 
 Every Chart entry follows the same field layout, but there is no public `ChartSchema` union. `BaseChartSchema` and each packaged type's exact schema fix `namespace: 'chart'` and an exact `type`; `plot` stores Plot-owned input, packaged types keep their unique configuration in `config`, and `presentation` stores chart-wide narrative content.
 
+The three packages divide responsibility by stage. `@retikz/chart` owns only Source IR, exact schemas, recipes, resolution, and canonical presentation. Plain `InputChart`, `normalizeChart`, presentation records, and factories belong to `@retikz/chart-vanilla`. `@retikz/chart-react` only converts JSX and props into those Vanilla inputs before calling the matching normalizer. React and Vanilla therefore do not maintain separate Source IR assembly rules.
+
 After an exact schema parses, its matching recipe binds the value. Every recipe then resolves through `resolveChart` to `IRBaseChart`, so Core consumes only `chart.base` rather than a separate execution entry for Scatter, Bubble, or another packaged type.
 
 | Entry                   | Use it when                                                | Chart `type`        |
@@ -11,7 +13,7 @@ After an exact schema parses, its matching recipe binds the value. Every recipe 
 | `BubbleChart`           | You add a quantitative area to two-dimensional position    | `bubble`            |
 | `ConnectedScatterChart` | You trace one ordered series through two-dimensional space | `connected-scatter` |
 
-Scatter & Points remains a documentation, source-organization, and multi-entry import boundary. The three packages keep their `/point` entries: `@retikz/chart/point` exposes concrete type schemas, `@retikz/chart-react/point` exposes `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart`, and `@retikz/chart-vanilla/point` exposes `createScatterChart`, `createBubbleChart`, and `createConnectedScatterChart`. This directory boundary does not introduce a `PointChartSchema`, a Point-specific resolver, or a separate adapter path; each entry binds its exact schema and then converges on `resolveChart` and the Chart adapter contract.
+Scatter & Points remains a documentation, source-organization, and multi-entry import boundary. Import Base Chart capabilities from each package root; the matching `/point` entry exposes only Point typed contracts and does not re-export the root. `@retikz/chart/point` fully exports each concrete type's schema, IR, recipe, and owned mark/component patch contracts; `@retikz/chart-react/point` exposes `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart`; and `@retikz/chart-vanilla/point` exposes exact `InputXxxChart`, `normalizeXxxChart`, and `createXxxChart` APIs. This directory boundary does not introduce a `PointChartSchema`, a Point-specific resolver, or a separate adapter path; each entry binds its exact schema and then converges on `resolveChart` and the Chart adapter contract.
 
 A packaged type stores its unique fields under `config`. Scatter supplies x/y through `config.encoding`, Bubble adds size, and Connected Scatter adds order; local adjustments to the primary mark also belong to `config`. Data, transforms, scales, coordinates, guides, and explicit additional marks live under `plot` and continue to use Plot's public contracts.
 

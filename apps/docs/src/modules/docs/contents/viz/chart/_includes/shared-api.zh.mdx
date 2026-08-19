@@ -2,6 +2,8 @@
 
 所有 Chart 入口都遵循一致的字段布局，但不共享一个公开的 `ChartSchema` union。`BaseChartSchema` 与每个封装类型的精确 schema 都固定 `namespace: 'chart'`，用精确 `type` 表明解析逻辑；`plot` 保存 Plot 拥有的输入，封装类型的 `config` 保存该类型独有的配置，`presentation` 保存整图展示。
 
+三个包按阶段划分职责：`@retikz/chart` 只拥有 Source IR、精确 schema、recipe、resolve 与 canonical presentation；plain `InputChart`、`normalizeChart`、展示记录和创建函数属于 `@retikz/chart-vanilla`；`@retikz/chart-react` 只把 JSX 与 props 转换为同一套 Vanilla Input，再复用对应 normalizer。React 与 Vanilla 因而不会各自维护一套 Source IR 组装规则。
+
 精确 schema 解析后会绑定对应 recipe；所有 recipe 最终都由 `resolveChart` 产出 `IRBaseChart`，因此 Core 只消费 `chart.base`，不会按 Scatter、Bubble 等类型分裂执行入口。
 
 | 入口                    | 适用场景                           | 对应 Chart `type`   |
@@ -11,7 +13,7 @@
 | `BubbleChart`           | 在二维位置外再编码一个定量面积     | `bubble`            |
 | `ConnectedScatterChart` | 观察同一有序序列在二维空间中的演变 | `connected-scatter` |
 
-“点图”用于文档导航、源码归置和多入口导入，三个包继续保留对应的 `/point` 公共入口：`@retikz/chart/point` 提供具体类型的数据结构，`@retikz/chart-react/point` 提供 `ScatterChart`、`BubbleChart` 与 `ConnectedScatterChart`，`@retikz/chart-vanilla/point` 提供 `createScatterChart`、`createBubbleChart` 与 `createConnectedScatterChart`。这个目录边界不形成 `PointChartSchema`、Point 专属解析器或适配主链；每个入口绑定自己的精确 schema，之后统一使用 `resolveChart` 与 Chart 适配契约。
+“点图”用于文档导航、源码归置和多入口导入。基础 Chart 能力从三个包各自的根入口导入；对应的 `/point` 公共入口只公开 Point typed contract，不转发根入口：`@retikz/chart/point` 完整导出各具体类型的 schema、IR、recipe 与 owned mark/component patch 契约，`@retikz/chart-react/point` 提供 `ScatterChart`、`BubbleChart` 与 `ConnectedScatterChart`，`@retikz/chart-vanilla/point` 提供精确的 `InputXxxChart`、`normalizeXxxChart` 与 `createXxxChart`。这个目录边界不形成 `PointChartSchema`、Point 专属解析器或适配主链；每个入口绑定自己的精确 schema，之后统一使用 `resolveChart` 与 Chart 适配契约。
 
 封装类型把独有字段放在 `config` 中。例如 Scatter 的 `config.encoding` 提供 x/y，Bubble 再提供 size，Connected Scatter 再提供 order；主图元的局部调整也属于 `config`。数据、变换、比例尺、坐标、辅助元素与显式附加图元统一放在 `plot` 中，并继续沿用 Plot 的公开契约。
 

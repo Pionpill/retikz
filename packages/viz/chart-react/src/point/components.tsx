@@ -1,18 +1,18 @@
 import type { BoundChart, IRBaseChart } from '@retikz/chart';
 import type { IRBubbleChart, IRConnectedScatterChart, IRScatterChart } from '@retikz/chart/point';
+import type { InputChartPresentation } from '@retikz/chart-vanilla';
+import type { InputScatterChart } from '@retikz/chart-vanilla/point';
 import type { ExternalRow } from '@retikz/data';
 import type { FC, ReactNode } from 'react';
 
-import { DEFAULT_CHART_DATA_REFERENCE, normalizeChartPresentation } from '@retikz/chart';
-import {
-  BubbleChartRecipe,
-  BubbleChartSchema,
-  ConnectedScatterChartRecipe,
-  ConnectedScatterChartSchema,
-  ScatterChartRecipe,
-  ScatterChartSchema,
-} from '@retikz/chart/point';
+import { BubbleChartRecipe, ConnectedScatterChartRecipe, ScatterChartRecipe } from '@retikz/chart/point';
 import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
+import {
+  DEFAULT_CHART_DATA_REFERENCE,
+  normalizeBubbleChart,
+  normalizeConnectedScatterChart,
+  normalizeScatterChart,
+} from '@retikz/chart-vanilla/point';
 import { resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import { createElement, useMemo } from 'react';
@@ -48,9 +48,11 @@ export type BubbleChartProps = TypedChartCommonProps & IRBubbleChart['config'];
 export type ConnectedScatterChartProps = TypedChartCommonProps & IRConnectedScatterChart['config'];
 
 type TypedRecipe<TSource extends TypedChartSource> = Readonly<{
-  parse: (input: unknown) => TSource;
+  normalize: (source: TypedChartNormalizeCommon, config: TSource['config']) => TSource;
   bind: (source: TSource) => BoundChart;
 }>;
+
+type TypedChartNormalizeCommon = InputChartPresentation & Pick<InputScatterChart, 'id' | 'chartThemeTokens' | 'plot'>;
 
 /** 从 Chart 根属性组装可由 Chart 适配器使用的根 Scope */
 const createChartPanelInput = (props: TypedChartCommonProps): BoundChartAuthoring['panel'] => {
@@ -80,7 +82,6 @@ const createChartPanelInput = (props: TypedChartCommonProps): BoundChartAuthorin
 const createTypedChartInput = <TSource extends TypedChartSource>(
   props: TypedChartCommonProps,
   config: TSource['config'],
-  type: TSource['type'],
   recipe: TypedRecipe<TSource>,
 ): BoundChartAuthoring => {
   const {
@@ -154,31 +155,28 @@ const createTypedChartInput = <TSource extends TypedChartSource>(
     ...(guides === undefined ? {} : { guides: { value: guides, path: ['props', 'guides'] } }),
     ...(marks === undefined ? {} : { marks: { value: marks, path: ['props', 'marks'] } }),
   });
-  const presentation = normalizeChartPresentation({
-    title,
-    subtitle,
-    note,
-    source,
-    ...(split.presentation.length === 0 ? {} : { presentation: split.presentation }),
-  });
-  const spec = recipe.parse({
-    namespace: 'chart',
-    type,
-    ...(id === undefined ? {} : { id }),
-    ...(chartThemeTokens === undefined ? {} : { chartThemeTokens }),
-    ...(presentation === undefined ? {} : { presentation }),
-    plot: {
-      data: {
-        reference,
-        ...(dataModel === undefined ? {} : { model: dataModel }),
+  const spec = recipe.normalize(
+    {
+      ...(id === undefined ? {} : { id }),
+      ...(chartThemeTokens === undefined ? {} : { chartThemeTokens }),
+      ...(title === undefined ? {} : { title }),
+      ...(subtitle === undefined ? {} : { subtitle }),
+      ...(note === undefined ? {} : { note }),
+      ...(source === undefined ? {} : { source }),
+      ...(split.presentation.length === 0 ? {} : { presentation: split.presentation }),
+      plot: {
+        data: {
+          reference,
+          ...(dataModel === undefined ? {} : { model: dataModel }),
+        },
+        ...plotFields,
+        ...extension.fragment,
+        ...(typeof width === 'number' ? { width } : {}),
+        ...(typeof height === 'number' ? { height } : {}),
       },
-      ...plotFields,
-      ...extension.fragment,
-      ...(width === undefined ? {} : { width }),
-      ...(height === undefined ? {} : { height }),
     },
     config,
-  });
+  );
   const panel = createChartPanelInput(props);
   return {
     bound: recipe.bind(spec),
@@ -263,19 +261,27 @@ const createTypedChartComponent = <TProps extends TypedChartCommonProps>(
 /** Scatter 具体类型的 Chart React 组件 */
 export const ScatterChart = createTypedChartComponent<ScatterChartProps>('ScatterChart', props => {
   const { encoding, mark, ...common } = props;
-  return createTypedChartInput(common, { encoding, ...(mark === undefined ? {} : { mark }) }, 'scatter', {
-    parse: value => ScatterChartSchema.parse(value),
-    bind: spec => ScatterChartRecipe.bind(spec),
-  });
+  return createTypedChartInput<IRScatterChart>(
+    common,
+    { encoding, ...(mark === undefined ? {} : { mark }) },
+    {
+      normalize: (source, config) => normalizeScatterChart({ ...source, ...config }),
+      bind: spec => ScatterChartRecipe.bind(spec),
+    },
+  );
 });
 
 /** Bubble 具体类型的 Chart React 组件 */
 export const BubbleChart = createTypedChartComponent<BubbleChartProps>('BubbleChart', props => {
   const { encoding, mark, ...common } = props;
-  return createTypedChartInput(common, { encoding, ...(mark === undefined ? {} : { mark }) }, 'bubble', {
-    parse: value => BubbleChartSchema.parse(value),
-    bind: spec => BubbleChartRecipe.bind(spec),
-  });
+  return createTypedChartInput<IRBubbleChart>(
+    common,
+    { encoding, ...(mark === undefined ? {} : { mark }) },
+    {
+      normalize: (source, config) => normalizeBubbleChart({ ...source, ...config }),
+      bind: spec => BubbleChartRecipe.bind(spec),
+    },
+  );
 });
 
 /** Connected Scatter 具体类型的 Chart React 组件 */
@@ -283,16 +289,15 @@ export const ConnectedScatterChart = createTypedChartComponent<ConnectedScatterC
   'ConnectedScatterChart',
   props => {
     const { encoding, mark, components, ...common } = props;
-    return createTypedChartInput(
+    return createTypedChartInput<IRConnectedScatterChart>(
       common,
       {
         encoding,
         ...(mark === undefined ? {} : { mark }),
         ...(components === undefined ? {} : { components }),
       },
-      'connected-scatter',
       {
-        parse: value => ConnectedScatterChartSchema.parse(value),
+        normalize: (source, config) => normalizeConnectedScatterChart({ ...source, ...config }),
         bind: spec => ConnectedScatterChartRecipe.bind(spec),
       },
     );

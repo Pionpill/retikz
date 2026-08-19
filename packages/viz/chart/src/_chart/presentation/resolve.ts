@@ -18,11 +18,6 @@ import type { IRChartResolvedThemeTokens } from '../../_shared/style';
 import { ChartPresentationPreset } from '../../_shared/presentation';
 import { ChartThemeToken } from '../../_shared/style';
 
-/** 确定展示结构到 Layout / Core 子项的解析结果 */
-export type ResolvedChartPresentation = {
-  content: IRChild;
-};
-
 type PresentationPresetTokenKeys = {
   foreground: keyof IRChartResolvedThemeTokens;
   fontSize: keyof IRChartResolvedThemeTokens;
@@ -104,12 +99,8 @@ export const resolveChartPresentation = (
   presentation: IRChartPresentation | undefined,
   plot: IRPlot,
   tokens: IRChartResolvedThemeTokens,
-): ResolvedChartPresentation => {
-  if (presentation === undefined) {
-    return {
-      content: plot,
-    };
-  }
+): IRChild => {
+  if (presentation === undefined) return plot;
 
   const items = presentation.children.map(
     item =>
@@ -120,14 +111,12 @@ export const resolveChartPresentation = (
         child: item.kind === 'plot' ? plot : presetNode(item, tokens),
       }) satisfies FlexLayoutItemInput,
   );
-  return {
-    content: createFlexLayout({
-      direction: FlexLayoutDirection.Column,
-      wrap: FlexLayoutWrap.NoWrap,
-      gap: { column: 0, row: tokens[ChartThemeToken.ChartGap] },
-      justifyContent: LayoutDistribution.Start,
-      alignContent: LayoutDistribution.Start,
-      children: items,
-    }),
-  };
+  return createFlexLayout({
+    direction: FlexLayoutDirection.Column,
+    wrap: FlexLayoutWrap.NoWrap,
+    gap: { column: 0, row: tokens[ChartThemeToken.ChartGap] },
+    justifyContent: LayoutDistribution.Start,
+    alignContent: LayoutDistribution.Start,
+    children: items,
+  });
 };

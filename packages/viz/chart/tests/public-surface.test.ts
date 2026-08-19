@@ -1,7 +1,7 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type { IRBaseChart, IRChartPresentation } from '../src';
-import type { PointChartTypeValue } from '../src/point';
+import type { IRBubblePointPatch, IRScatterPointPatch, PointChartTypeValue } from '../src/point';
 
 import * as chart from '../src';
 import * as point from '../src/point';
@@ -16,6 +16,7 @@ describe('@retikz/chart public surface', () => {
     });
     expect(chart.ChartProvider.key).toEqual({ capability: 'composite', namespace: 'chart', type: 'base' });
     expect(chart).toHaveProperty('ChartDefinition');
+    expect(chart).not.toHaveProperty('createChartDefinition');
     expect(chart).toHaveProperty('BaseChartSchema');
     expect(chart).not.toHaveProperty('ChartSchema');
     expect(chart).not.toHaveProperty('IRChart');
@@ -34,12 +35,25 @@ describe('@retikz/chart public surface', () => {
     expect(chart).not.toHaveProperty('createChartComposites');
     expect(chart).not.toHaveProperty('ChartCaption');
     expect(chart).not.toHaveProperty('ChartCredit');
+    expect(chart).not.toHaveProperty('createChart');
+    expect(chart).not.toHaveProperty('normalizeChartPresentation');
+    expect(chart).not.toHaveProperty('ChartPresentationPosition');
+    expect(chart).not.toHaveProperty('DEFAULT_CHART_DATA_REFERENCE');
+    expect(chart).not.toHaveProperty('chartIssuePathOf');
+    expect(chart).not.toHaveProperty('invalidChartSchemaError');
+    expect(chart).not.toHaveProperty('createChartRecipePlot');
+    expect(chart).not.toHaveProperty('bindChartRecipe');
+    expect(chart).not.toHaveProperty('chartRecipeOf');
+    expect(chart).not.toHaveProperty('ChartDispatchSchema');
+    expect(chart).not.toHaveProperty('resolveChartPresentation');
+    expect(chart).not.toHaveProperty('resolveChartThemeStyleRegistry');
+    expect(chart).not.toHaveProperty('resolveChartStyle');
   });
 
-  it('exports the Point family together with the base Chart contract from its subpath', () => {
-    expect(point.BaseChartSchema).toBe(chart.BaseChartSchema);
-    expect(point.ChartDefinition).toBe(chart.ChartDefinition);
-    expect(point.BaseChartType).toEqual({ Base: 'base' });
+  it('exports only the Point family contract from its subpath', () => {
+    expect(point).not.toHaveProperty('BaseChartSchema');
+    expect(point).not.toHaveProperty('ChartDefinition');
+    expect(point).not.toHaveProperty('BaseChartType');
     expect(point.PointChartType).toEqual({
       Scatter: 'scatter',
       Bubble: 'bubble',
@@ -53,6 +67,10 @@ describe('@retikz/chart public surface', () => {
     expect(point).toHaveProperty('ScatterChartRecipe');
     expect(point).toHaveProperty('BubbleChartRecipe');
     expect(point).toHaveProperty('ConnectedScatterChartRecipe');
+    expect(point).toHaveProperty('BubblePointPatchSchema');
+    expect(point).toHaveProperty('ScatterPointPatchSchema');
+    expectTypeOf<IRBubblePointPatch>().toMatchTypeOf<IRBubblePointPatch | IRScatterPointPatch>();
+    expectTypeOf<IRScatterPointPatch>().toMatchTypeOf<IRBubblePointPatch | IRScatterPointPatch>();
     expect(point).not.toHaveProperty('resolvePointChart');
   });
 

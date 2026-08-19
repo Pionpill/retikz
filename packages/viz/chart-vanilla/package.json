@@ -79,6 +79,7 @@
     "@retikz/chart": "workspace:*",
     "@retikz/core": "workspace:^",
     "@retikz/data": "workspace:^",
+    "@retikz/foundation": "workspace:^",
     "@retikz/layout": "workspace:^",
     "@retikz/plot": "workspace:^",
     "@retikz/plot-vanilla": "workspace:^",

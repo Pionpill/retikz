@@ -44,6 +44,7 @@ Chart 封装完备要求：Base Chart 能承载完整 Plot；每个封装 type �
 - [ ] presentation 恰好包含一个 Plot placeholder
 - [ ] title、subtitle、note、source 各至多一次并保持 authored order
 - [ ] marker/plain-record `position` 在 authoring 后消失
+- [ ] presentation Input 与 normalize 只由 Chart Vanilla 拥有，React marker 映射到同一 Input
 - [ ] 文本复用 Core TextBlock，布局复用 Layout Flex，外框复用 Standard Surface
 - [ ] Chart 与 Plot token owner 分离，不复制 Plot theme resolver
 - [ ] Core effective Theme、Chart definitions 与 Plot definitions 在 standalone/embedded 路径一致
@@ -52,10 +53,10 @@ Chart 封装完备要求：Base Chart 能承载完整 Plot；每个封装 type �
 ## 6. Adapter 与入口完备
 
 - [ ] 根只公开 `<Chart />` / `createChart()` 等 Base API
-- [ ] family subpath re-export Base，并增加具体 `<XxxChart />` / `createXxxChart()`
+- [ ] family subpath 只增加具体 `<XxxChart />` / `createXxxChart()`，不转发 Base API
 - [ ] 每个组件/工厂拥有精确 props/input，不接受通用 `type`
-- [ ] 不导出 `InputChart`、Point input union 或 Point 专属 adapter
-- [ ] 每个入口精确 parse + bind，运行时共享已绑定 Chart adapter
+- [ ] Vanilla 根导出精确 `InputChart` / `normalizeChart`，family 只增加逐类型 Input/normalize，不导出 Point input union 或 Point 专属 adapter
+- [ ] React 只构造 Vanilla Input 并调用同一 normalize；Source IR 绑定后由运行时共享唯一 Chart adapter
 - [ ] datasets、Plot lower options、Chart/Plot/Core Theme definitions 和宿主 Scope 保真传递
 - [ ] React、Vanilla、JSON 对等输入生成等价 `IRBaseChart` 与 IRPlot
 

@@ -1,7 +1,9 @@
 import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import { normalizeChartPresentation, resolveChartPresentation } from '../../../src/_chart/presentation';
+import type { IRChartPresentation } from '../../../src/_shared/presentation';
+
+import { resolveChartPresentation } from '../../../src/_chart/presentation';
 import { getDefaultChartThemePreset } from '../../../src/_chart/style/catalog';
 
 const plot = PlotSchema.parse({
@@ -14,62 +16,34 @@ const plot = PlotSchema.parse({
 });
 const tokens = getDefaultChartThemePreset('light');
 
-describe('Chart presentation authoring and resolution', () => {
-  it('keeps explicit marker order and lets markers fully override shorthand', () => {
-    const presentation = normalizeChartPresentation({
-      title: 'Shorthand title',
-      subtitle: 'Shorthand subtitle',
-      note: 'Shorthand note',
-      source: 'Shorthand source',
-      presentation: [
-        { preset: 'subtitle', position: 'top', text: 'Explicit subtitle' },
-        { preset: 'title', position: 'top', text: 'Explicit title' },
-        { preset: 'source', position: 'bottom', text: 'Explicit source' },
-        { preset: 'note', position: 'bottom', text: 'Explicit note' },
+describe('Chart presentation resolution', () => {
+  it('maps canonical order directly to Flex children', () => {
+    const presentation = {
+      children: [
+        { kind: 'preset', key: 'chart.presentation.subtitle', preset: 'subtitle', text: 'Subtitle' },
+        { kind: 'preset', key: 'chart.presentation.title', preset: 'title', text: 'Title' },
+        { kind: 'plot', key: 'chart.plot' },
+        { kind: 'preset', key: 'chart.presentation.source', preset: 'source', text: 'Source' },
+        { kind: 'preset', key: 'chart.presentation.note', preset: 'note', text: 'Note' },
       ],
-    });
-
-    expect(presentation?.children.map(item => (item.kind === 'plot' ? 'plot' : item.preset))).toEqual([
-      'subtitle',
-      'title',
-      'plot',
-      'source',
-      'note',
-    ]);
-  });
-
-  it('uses shorthand defaults and maps canonical order directly to Flex children', () => {
-    const presentation = normalizeChartPresentation({
-      title: 'Title',
-      subtitle: 'Subtitle',
-      note: 'Note',
-      source: 'Source',
-    });
+    } satisfies IRChartPresentation;
     const resolved = resolveChartPresentation(presentation, plot, tokens);
 
-    expect(presentation?.children.map(item => item.key)).toEqual([
-      'chart.presentation.title',
+    expect(presentation.children.map(item => item.key)).toEqual([
       'chart.presentation.subtitle',
+      'chart.presentation.title',
       'chart.plot',
-      'chart.presentation.note',
       'chart.presentation.source',
+      'chart.presentation.note',
     ]);
-    expect(resolved.content).toMatchObject({
+    expect(resolved).toMatchObject({
       namespace: 'layout',
       type: 'flexLayout',
-      children: presentation?.children.map(item => ({ key: item.key })),
+      children: presentation.children.map(item => ({ key: item.key })),
     });
   });
 
-  it('keeps a bare Plot when no presentation was authored and rejects duplicate explicit presets', () => {
-    expect(resolveChartPresentation(undefined, plot, tokens).content).toBe(plot);
-    expect(() =>
-      normalizeChartPresentation({
-        presentation: [
-          { preset: 'title', text: 'A' },
-          { preset: 'title', text: 'B' },
-        ],
-      }),
-    ).toThrow(/at most once/i);
+  it('keeps a bare Plot when no presentation exists', () => {
+    expect(resolveChartPresentation(undefined, plot, tokens)).toBe(plot);
   });
 });

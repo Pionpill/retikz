@@ -186,8 +186,15 @@ export const vizV01: Release = {
         {
           label: { zh: '单一 Chart 主链', en: 'One canonical Chart path' },
           content: {
-            zh: '基础 Chart 与已实现 typed Chart 在完整 IRPlot 后汇合为 `IRChart`，由单一 `chart.chart` provider 组合 Standard Surface、可选 Flex presentation 与唯一 Plot body；不再存在 DOM-only 标题或按 adapter 分叉的执行路径。',
-            en: 'Base Chart and implemented typed Charts converge on `IRChart` after producing a complete IRPlot. One `chart.chart` provider composes Standard Surface, optional Flex presentation, and the sole Plot body; there is no DOM-only title or adapter-specific execution path.',
+            zh: '基础 Chart 与已实现 typed Chart 在完整 IRPlot 后汇合为 `IRBaseChart`，由单一 `chart.base` provider 组合 Standard Surface、可选 Flex presentation 与唯一 Plot body；不再存在 DOM-only 标题或按 adapter 分叉的执行路径。',
+            en: 'Base Chart and implemented typed Charts converge on `IRBaseChart` after producing a complete IRPlot. One `chart.base` provider composes Standard Surface, optional Flex presentation, and the sole Plot body; there is no DOM-only title or adapter-specific execution path.',
+          },
+        },
+        {
+          label: { zh: '核心包只拥有 canonical 契约', en: 'Canonical-only core package' },
+          content: {
+            zh: '`@retikz/chart` 根入口只公开 Base Source IR、resolve、canonical presentation 与样式契约；`/point` 只从各精确类型 owner 完整导出其 schema、IR、recipe 与 owned patch，不转发根入口。plain Input、normalizer 和创建入口统一由 `@retikz/chart-vanilla` 拥有。',
+            en: 'The `@retikz/chart` root exposes only Base Source IR, resolution, canonical presentation, and style contracts. Its `/point` entry exports only each exact type owner’s schema, IR, recipe, and owned patches without re-exporting the root. `@retikz/chart-vanilla` owns plain inputs, normalizers, and creation APIs.',
           },
         },
         {
@@ -230,8 +237,8 @@ export const vizV01: Release = {
         {
           label: { zh: '基础与 typed JSX authoring', en: 'Base and typed JSX authoring' },
           content: {
-            zh: '`Chart` 保留完整 Plot authoring；`ScatterChart`、`BubbleChart` 与 `ConnectedScatterChart` 先生成各自 recipe 的完整 IRPlot，再进入同一 Chart 主链。',
-            en: '`Chart` preserves complete Plot authoring. `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart` first create each recipe’s complete IRPlot, then enter the same Chart path.',
+            zh: '`Chart` 保留完整 Plot authoring；`ScatterChart`、`BubbleChart` 与 `ConnectedScatterChart` 把 JSX / props 转为精确 Vanilla Input，并调用对应 normalizer 后进入同一 Chart 主链。基础 API 从根入口导入，typed API 从 `/point` 导入，两个入口不互相转发。',
+            en: '`Chart` preserves complete Plot authoring. `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart` convert JSX / props into exact Vanilla inputs and call the matching normalizer before entering the shared Chart path. Import Base APIs from the root and typed APIs from `/point`; neither entry re-exports the other.',
           },
         },
       ],
@@ -259,8 +266,8 @@ export const vizV01: Release = {
         {
           label: { zh: 'Plain-data 与单次编译', en: 'Plain data and one compile' },
           content: {
-            zh: '`createChart` 及 typed helpers 返回 canonical Chart 与完整 contribution；`renderChart` 在一次 Core compile 中合并可用 Theme、composite 与 compile 输入，并返回生成 SVG 的同一 compile result。',
-            en: '`createChart` and typed helpers return canonical Chart plus its complete contribution. `renderChart` merges applicable Theme, composites, and compile input in one Core compile, returning the same compile result that produces its SVG.',
+            zh: '根入口公开 `InputChart` / `normalizeChart`，`/point` 只公开精确的 `InputXxxChart` / `normalizeXxxChart` / `createXxxChart`，两个入口不互相转发；创建函数返回 canonical Chart 与完整 contribution，`renderChart` 从同一次 Core compile 生成 SVG 与 compile result。',
+            en: 'The root exposes `InputChart` / `normalizeChart`, while `/point` exposes only exact `InputXxxChart` / `normalizeXxxChart` / `createXxxChart` APIs, with neither entry re-exporting the other. Factories return a canonical Chart plus its complete contribution, and `renderChart` produces its SVG and compile result from the same Core compile.',
           },
         },
       ],

@@ -1,14 +1,13 @@
-import type {
-  ChartPresentationAuthoringRecord,
-  ChartPresentationFlexItem,
-  ChartPresentationPresetValue,
-} from '@retikz/chart';
+import type { ChartPresentationFlexItem, ChartPresentationPresetValue } from '@retikz/chart';
+import type { InputChartPresentationRecord } from '@retikz/chart-vanilla';
 import type { IRFont, IRLine, IRNode, IRTextBlock } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
-import { ChartPresentationPreset, RetikzChartError } from '@retikz/chart';
+import { ChartPresentationPreset } from '@retikz/chart';
 import { Text } from '@retikz/react';
 import { createElement, Fragment, isValidElement } from 'react';
+
+import { RetikzChartReactError } from '../error';
 
 /** Chart marker 中支持的整行 Text authoring */
 export type ChartTextAuthoring = ReactNode;
@@ -88,11 +87,11 @@ const textLinesOf = (children: ReactNode): Array<ChartTextLine> => {
       lines.push(line);
       return;
     }
-    throw new RetikzChartError('chart react: presentation marker children accept only strings, Fragment, or Text');
+    throw new RetikzChartReactError('chart react: presentation marker children accept only strings, Fragment, or Text');
   };
   append(children);
   if (lines.length === 0)
-    throw new RetikzChartError('chart react: presentation marker requires at least one text line');
+    throw new RetikzChartReactError('chart react: presentation marker requires at least one text line');
   return lines;
 };
 
@@ -100,14 +99,14 @@ const textBlockOf = (children: ReactNode): IRTextBlock => {
   const lines = textLinesOf(children);
   const first = lines.at(0);
   if (first === undefined)
-    throw new RetikzChartError('chart react: presentation marker requires at least one text line');
+    throw new RetikzChartReactError('chart react: presentation marker requires at least one text line');
   return lines.length === 1 && typeof first === 'string' ? first : lines;
 };
 
 const recordOf = (
   preset: ChartPresentationPresetValue,
   props: ChartPresentationMarkerProps,
-): ChartPresentationAuthoringRecord => {
+): InputChartPresentationRecord => {
   const {
     children,
     position,
@@ -144,13 +143,13 @@ const recordOf = (
 };
 
 export type ChartPresentationMarkerSplit = {
-  presentation: Array<ChartPresentationAuthoringRecord>;
+  presentation: Array<InputChartPresentationRecord>;
   plotChildren: ReactNode;
 };
 
 /** 从透明 Fragment 中按出现顺序抽取 marker，同时保留其余 Plot React tree 的位置 */
 export const splitPresentationMarkers = (children: ReactNode): ChartPresentationMarkerSplit => {
-  const presentation: Array<ChartPresentationAuthoringRecord> = [];
+  const presentation: Array<InputChartPresentationRecord> = [];
   const visit = (value: ReactNode): ReactNode => {
     if (Array.isArray(value)) return value.map(visit);
     if (!isValidElement(value)) return value;

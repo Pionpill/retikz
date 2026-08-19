@@ -1,7 +1,7 @@
 import { ChannelSchema, PointEncodingSchema, PointMarkSchema, SizeChannelSchema } from '@retikz/plot';
 import { z } from 'zod';
 
-import { omitUndefinedProperties } from '../../_shared';
+import { stripUndefinedProperties } from '../../_shared';
 
 const ChannelFieldSchema = ChannelSchema.shape.field.unwrap();
 const ChannelScaleSchema = ChannelSchema.shape.scale;
@@ -26,7 +26,7 @@ const StrictColorConstantChannelSchema = z
 export const StrictColorChannelSchema = z
   .union([StrictColorFieldChannelSchema, StrictColorConstantChannelSchema])
   .describe('Strict color channel with exactly one field or string constant branch')
-  .overwrite(omitUndefinedProperties);
+  .overwrite(stripUndefinedProperties);
 
 /** Point 类型共用的严格字段尺寸通道 */
 export const StrictSizeFieldChannelSchema = z
@@ -36,7 +36,7 @@ export const StrictSizeFieldChannelSchema = z
     value: z.never().optional().describe('Unavailable constant branch key accepted only when explicitly undefined'),
   })
   .describe('Field-bound numeric size channel')
-  .overwrite(omitUndefinedProperties);
+  .overwrite(stripUndefinedProperties);
 
 const StrictSizeConstantChannelSchema = z
   .strictObject({
@@ -52,7 +52,7 @@ const StrictSizeConstantChannelSchema = z
 export const StrictSizeChannelSchema = z
   .union([StrictSizeFieldChannelSchema, StrictSizeConstantChannelSchema])
   .describe('Strict size channel with exactly one field or non-negative constant branch')
-  .overwrite(omitUndefinedProperties);
+  .overwrite(stripUndefinedProperties);
 
 /** Point 主标记允许各封装类型局部覆盖的表现字段 */
 export const PointMarkPatchFields = PointMarkSchema.omit({

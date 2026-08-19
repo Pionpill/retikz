@@ -1,7 +1,7 @@
 import { ChannelSchema, OpacityChannelSchema, ShapeChannelSchema } from '@retikz/plot';
 import { z } from 'zod';
 
-import { CHART_NAMESPACE, ChartCommonFieldShape, ChartPlotSchema, omitUndefinedProperties } from '../../_shared';
+import { CHART_NAMESPACE, ChartCommonFieldShape, ChartPlotSchema, stripUndefinedProperties } from '../../_shared';
 import { PointChartType } from '../constants';
 import {
   PointEncodingPatchBaseSchema,
@@ -23,7 +23,7 @@ export const ScatterPointPatchSchema = z
     ),
   })
   .describe('Strict visual patch for a Scatter primary Point mark')
-  .overwrite(omitUndefinedProperties);
+  .overwrite(stripUndefinedProperties);
 
 export const ScatterChartConfigSchema = z.strictObject({
   encoding: z
@@ -48,7 +48,7 @@ export const ScatterChartSchema = z
     config: ScatterChartConfigSchema,
   })
   .describe('Scatter Chart Source IR')
-  .overwrite(omitUndefinedProperties);
+  .overwrite(stripUndefinedProperties);
 
 export type IRScatterChart = z.infer<typeof ScatterChartSchema>;
 

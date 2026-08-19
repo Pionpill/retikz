@@ -1,21 +1,19 @@
-import type {
-  ChartPresentationAuthoringRecord,
-  ChartPresentationShorthand,
-  ChartThemeStyleDefinition,
-  IRBaseChart,
-} from '@retikz/chart';
+import type { ChartThemeStyleDefinition, IRBaseChart } from '@retikz/chart';
 import type { CompileResult, IRScene, ThemeStyleDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { LowerPlotsOptions } from '@retikz/plot';
 import type { PlotSource } from '@retikz/plot-vanilla';
 import type { RenderToStringOptions } from '@retikz/vanilla';
 
-import { BaseChartRecipe, CHART_NAMESPACE, createChart as createBaseChart, RetikzChartError } from '@retikz/chart';
+import { BaseChartRecipe, CHART_NAMESPACE } from '@retikz/chart';
 import { plotIROf } from '@retikz/plot-vanilla';
 import { embed, renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
 
+import type { InputChartPresentation } from '../normalize/chart';
 import type { BoundChartAuthoring, ChartAuthoringResult } from '../shared/types';
 
+import { RetikzChartVanillaError } from '../error';
+import { normalizeChart } from '../normalize/chart';
 import { chartContributionOf } from '../shared';
 import { ChartInputEmbedAdapter } from './adapter';
 
@@ -41,16 +39,13 @@ export type CreateChartInput = Readonly<{
   /** 创建时解析 Chart 的根 Core 主题样式定义 */
   themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
 }> &
-  ChartPresentationShorthand & {
-    /** 按编写顺序排列的展示记录 */
-    presentation?: ReadonlyArray<ChartPresentationAuthoringRecord>;
-  };
+  InputChartPresentation;
 
 /** 从完整 Plot 编写输入创建 Base Chart */
 export const createChart = (input: CreateChartInput): ChartAuthoringResult => {
   const { plot, datasets, lowerOptions, chartThemeStyles, theme, themeStyles, ...chartAuthoring } = input;
   const spec = plotIROf(plot);
-  const chart = createBaseChart({ ...chartAuthoring, plot: spec });
+  const chart = normalizeChart({ ...chartAuthoring, plot: spec });
   const bound: BoundChartAuthoring = {
     bound: BaseChartRecipe.bind(chart),
     datasets,
@@ -75,7 +70,7 @@ export type RenderChartResult = Readonly<{
 /** 通过一次 Core 编译将 Chart 编写结果渲染为 SVG */
 export const renderChart = (input: ChartAuthoringResult, options: RenderChartOptions = {}): RenderChartResult => {
   if (Object.hasOwn(options, 'compileDriver')) {
-    throw new RetikzChartError('Vanilla compile drivers require authored IR or a plain figure spec');
+    throw new RetikzChartVanillaError('Vanilla compile drivers require authored IR or a plain figure spec');
   }
   const { compile: compileOptions, ...renderOptions } = options;
   const {
@@ -104,7 +99,7 @@ export const renderChart = (input: ChartAuthoringResult, options: RenderChartOpt
     },
   );
   if (result.compileResult === undefined) {
-    throw new RetikzChartError('chart vanilla: InputScene processing must produce a Core compile result');
+    throw new RetikzChartVanillaError('chart vanilla: InputScene processing must produce a Core compile result');
   }
   const svg = renderToSvgString(result.scene, renderOptions);
   return { svg, compileResult: result.compileResult };

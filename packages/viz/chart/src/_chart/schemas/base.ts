@@ -1,7 +1,7 @@
 import { PlotSchema } from '@retikz/plot';
 import { z } from 'zod';
 
-import { BaseChartType, CHART_NAMESPACE, ChartCommonFieldShape, omitUndefinedProperties } from '../../_shared';
+import { BaseChartType, CHART_NAMESPACE, ChartCommonFieldShape, stripUndefinedProperties } from '../../_shared';
 
 export const BaseChartSchema = z
   .strictObject({
@@ -11,6 +11,6 @@ export const BaseChartSchema = z
     plot: PlotSchema.describe('Complete Plot Source IR owned by the Base Chart'),
   })
   .describe('Base Chart Source IR')
-  .overwrite(omitUndefinedProperties);
+  .overwrite(stripUndefinedProperties);
 
 export type IRBaseChart = z.infer<typeof BaseChartSchema>;

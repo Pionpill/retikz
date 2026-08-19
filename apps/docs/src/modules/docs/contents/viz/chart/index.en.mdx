@@ -40,6 +40,8 @@ The `type` determines how `config` is interpreted and how `plot` is completed. F
 
 Groups such as Scatter & Points organize documentation, source files, and multi-entry imports, but they do not introduce another schema or runtime family. Scatter, Bubble, and Connected Scatter remain available from the `/point` entries. Unknown JSON uses `type` to select one exact schema, binds the parsed value internally, and resolves every type to `IRBaseChart`.
 
+`@retikz/chart` exposes only Source IR, schemas, recipes, resolution, and canonical presentation. Plain authoring APIs such as `InputChart`, `normalizeChart`, presentation records, and factories belong to `@retikz/chart-vanilla`. React entries convert JSX and props into the same Vanilla inputs and call those normalizers instead of assembling Chart Source IR directly.
+
 Use Plot APIs when you need to extend the drawing grammar, and use Chart when you need to organize Plot semantics into a chart type. Chart then provides these shared capabilities:
 
 | Capability              | Responsibility                                                                      | Typical entry                                                  |

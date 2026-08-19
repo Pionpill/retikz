@@ -2,14 +2,15 @@ import type { IRBaseChart } from '@retikz/chart';
 import type { PlotDslProps, PlotIRProps, PlotProps } from '@retikz/plot-react';
 import type { FC, ReactNode } from 'react';
 
-import { BaseChartRecipe, createChart as createBaseChart, RetikzChartError } from '@retikz/chart';
-import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
+import { BaseChartRecipe } from '@retikz/chart';
+import { ChartInputEmbedAdapter, normalizeChart } from '@retikz/chart-vanilla';
 import { resolvePlotAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import { createElement, useMemo } from 'react';
 
 import type { ChartCommonProps, InputEmbeddableChartComponent } from '../shared';
 
+import { RetikzChartReactError } from '../error';
 import { hasPlotChild, splitPresentationMarkers, useChartThemeStyles } from '../shared';
 
 export type {
@@ -128,7 +129,7 @@ const createChartInput = (props: Readonly<Record<string, unknown>>): BoundChartA
   void _theme;
   const split = splitPresentationMarkers(children);
   if (isIRProps(chartProps) && hasPlotChild(split.plotChildren)) {
-    throw new RetikzChartError('chart react: Chart spec mode only accepts presentation markers as children');
+    throw new RetikzChartReactError('chart react: Chart spec mode only accepts presentation markers as children');
   }
   const resolvedPlotProps = isIRProps(chartProps)
     ? ({ ...plotProps, width: _width, height: _height, children: undefined } as PlotProps)
@@ -140,7 +141,7 @@ const createChartInput = (props: Readonly<Record<string, unknown>>): BoundChartA
         children: split.plotChildren,
       } as PlotProps);
   const plot = resolvePlotAuthoring(resolvedPlotProps);
-  const chart = createBaseChart({
+  const chart = normalizeChart({
     ...(id === undefined ? {} : { id }),
     ...(chartThemeTokens === undefined ? {} : { chartThemeTokens }),
     plot: plot.spec,

@@ -80,6 +80,7 @@
     "@retikz/chart-vanilla": "workspace:*",
     "@retikz/core": "workspace:^",
     "@retikz/data": "workspace:^",
+    "@retikz/foundation": "workspace:^",
     "@retikz/plot": "workspace:^",
     "@retikz/plot-react": "workspace:^",
     "@retikz/react": "workspace:^"

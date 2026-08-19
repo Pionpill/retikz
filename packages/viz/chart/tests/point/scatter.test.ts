@@ -6,8 +6,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { IRScatterPointPatch } from '../../src/point/scatter';
 
 import { PointChartType } from '../../src/point';
-import { ScatterPointPatchSchema } from '../../src/point/scatter';
-import { ScatterChartSchema } from '../../src/point/scatter';
+import { ScatterChartSchema, ScatterPointPatchSchema } from '../../src/point/scatter';
 import { StrictColorChannelSchema, StrictSizeChannelSchema } from '../../src/point/shared';
 
 const minimalScatter = {

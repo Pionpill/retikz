@@ -1,7 +1,7 @@
 import { ChannelSchema, PathMarkSchema, PointMarkSchema } from '@retikz/plot';
 import { z } from 'zod';
 
-import { CHART_NAMESPACE, ChartCommonFieldShape, ChartPlotSchema, omitUndefinedProperties } from '../../_shared';
+import { CHART_NAMESPACE, ChartCommonFieldShape, ChartPlotSchema, stripUndefinedProperties } from '../../_shared';
 import { PointChartType } from '../constants';
 import { StrictColorChannelSchema } from '../shared';
 
@@ -97,7 +97,7 @@ export const ConnectedScatterChartSchema = z
     config: ConnectedScatterChartConfigSchema,
   })
   .describe('Connected Scatter Chart Source IR')
-  .overwrite(omitUndefinedProperties);
+  .overwrite(stripUndefinedProperties);
 
 /** Connected Scatter 可 JSON 序列化的精确源 IR */
 export type IRConnectedScatterChart = z.infer<typeof ConnectedScatterChartSchema>;

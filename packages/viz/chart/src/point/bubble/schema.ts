@@ -5,8 +5,8 @@ import {
   CHART_NAMESPACE,
   ChartCommonFieldShape,
   ChartPlotSchema,
-  normalizeUndefinedObjectInput,
-  omitUndefinedProperties,
+  stripUndefinedObjectProperties,
+  stripUndefinedProperties,
 } from '../../_shared';
 import { PointChartType } from '../constants';
 import {
@@ -19,7 +19,7 @@ import {
 
 const BubblePointChannelsPatchSchema = z
   .preprocess(
-    normalizeUndefinedObjectInput,
+    stripUndefinedObjectProperties,
     PointExtensionChannelsSchema.superRefine((channels, context) => {
       if (Object.hasOwn(channels, 'size')) {
         context.addIssue({
@@ -50,7 +50,7 @@ export const BubblePointPatchSchema = z
     ),
   })
   .describe('Strict visual patch for a Bubble primary Point glyph')
-  .overwrite(omitUndefinedProperties);
+  .overwrite(stripUndefinedProperties);
 
 export const BubbleChartConfigSchema = z.strictObject({
   encoding: z
@@ -75,7 +75,7 @@ export const BubbleChartSchema = z
     config: BubbleChartConfigSchema,
   })
   .describe('Bubble Chart Source IR')
-  .overwrite(omitUndefinedProperties);
+  .overwrite(stripUndefinedProperties);
 
 export type IRBubbleChart = z.infer<typeof BubbleChartSchema>;
 

@@ -4,8 +4,7 @@ import type { ChartRecipe } from '../../src/_shared';
 import type { IRScatterChart } from '../../src/point/scatter';
 
 import { chartRecipeOf } from '../../src/_shared';
-import { ScatterChartSchema } from '../../src/point/scatter';
-import { ScatterChartRecipe } from '../../src/point/scatter/recipe';
+import { ScatterChartRecipe, ScatterChartSchema } from '../../src/point/scatter';
 
 const scatter = {
   namespace: 'chart',

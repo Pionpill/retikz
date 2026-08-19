@@ -4,12 +4,7 @@ import { FontSchema, NodeSchema, TextBlockSchema } from '@retikz/core';
 import { FlexLayoutItemSchema } from '@retikz/layout';
 import { z } from 'zod';
 
-import {
-  CHART_PRESENTATION_ITEM_KEY_BY_PRESET,
-  ChartPresentationItemKey,
-  ChartPresentationPosition,
-  ChartPresentationPreset,
-} from './constants';
+import { CHART_PRESENTATION_ITEM_KEY_BY_PRESET, ChartPresentationItemKey, ChartPresentationPreset } from './constants';
 
 /** 判断 Core TextBlock 是否包含至少一个非空文本或公式叶节点 */
 const hasTextContent = (block: IRTextBlock): boolean => {
@@ -107,12 +102,3 @@ export const ChartPresentationSchema = z
       presets.add(item.preset);
     });
   });
-
-/** 不依赖框架的展示编写记录 */
-export const ChartPresentationAuthoringRecordSchema = z.strictObject({
-  preset: z.enum(ChartPresentationPreset),
-  position: z.enum(ChartPresentationPosition).optional(),
-  text: ChartPresentationTextSchema,
-  ...ChartPresentationTextStyleShape,
-  ...ChartPresentationFlexItemSchema.shape,
-});

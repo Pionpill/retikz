@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ChartRecipeStyleContext } from '../../src/_shared';
 
-import { ScatterChartSchema } from '../../src/point/scatter';
-import { ScatterChartRecipe } from '../../src/point/scatter/recipe';
+import { ScatterChartRecipe, ScatterChartSchema } from '../../src/point/scatter';
 
 const visibleStyle: ChartRecipeStyleContext = {
   axisEnabled: true,

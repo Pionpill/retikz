@@ -99,7 +99,7 @@ Chart type catalog 封闭且静态，不提供 `defineChart` 或开放 type regi
 
 ## 6. Presentation 与 Theme
 
-presentation 属于 Chart 根，不属于 Plot 或 type 核心配方。Canonical presentation 只包含一个 Plot placeholder，以及 title、subtitle、note、source 四类可选 TextBlock preset。React marker 与 Vanilla plain record 的 `position` 只在 authoring normalization 中决定 Plot 前后顺序，不进入 Source IR。
+presentation 属于 Chart 根，不属于 Plot 或 type 核心配方。Canonical presentation 只包含一个 Plot placeholder，以及 title、subtitle、note、source 四类可选 TextBlock preset。Vanilla 拥有 plain record、shorthand 与 presentation normalize；React marker 只映射为同一 Vanilla Input。`position` 只在 authoring normalization 中决定 Plot 前后顺序，不进入 Source IR。
 
 Chart 只拥有 canvas、presentation 与 recipe-default token。Plot theme token、native `plotTheme`、palette、guide 与 label style 由 Plot owner 解析。Core Scene/Scope Theme 提供有效 style/mode；同名 style 缺少 Chart 或 Plot definition 时必须 fail-loud。
 
@@ -111,9 +111,9 @@ API 按具体组件/工厂公开，不暴露通用 type selector：
 - Point entry：`<ScatterChart />`、`<BubbleChart />`、`<ConnectedScatterChart />`
 - Point entry：`createScatterChart()`、`createBubbleChart()`、`createConnectedScatterChart()`
 
-每个 typed 组件/工厂拥有精确 props/input；不存在 `<Chart type="bubble" />`、`createChart({ type: 'bubble' })`、`InputChart` 或 Point union。各 adapter 在精确 schema parse 后直接调用匹配 recipe `bind`，运行时共享只消费已绑定 Chart 的内部 adapter。
+Vanilla 根公开精确 `InputChart` / `normalizeChart` 与 `createChart`；Point 子入口公开逐类型 `InputXxxChart` / `normalizeXxxChart` 与 factory，不建立接受通用 `type` 的 Input 或 Point union。React 组件把 props 和 markers 映射为这些 Vanilla Input，并调用同一 normalize；Source IR 随后直接绑定匹配 recipe，运行时共享只消费已绑定 Chart 的内部 adapter。
 
-`/point` 是文档导航、源码归置与多入口导入边界，不是 schema 或解析逻辑层级。根入口公开 Base 能力；family subpath re-export 根入口并增加该 family 的具体 API。
+`/point` 是文档导航、源码归置与多入口导入边界，不是 schema 或解析逻辑层级。根入口公开 Base 能力；family subpath 只公开该 family 的具体 API，不转发根入口。
 
 ## 8. 源码结构
 
@@ -122,9 +122,12 @@ chart/src/
   _chart/       Base、dispatch、resolve、presentation、style、provider
   _shared/      constants、Plot schema projection、recipe contracts、纯复用
   point/        scatter、bubble、connected-scatter 具体实现与入口
+
+chart-vanilla/src/
+  normalize/    Base 与逐类型 Input、presentation shorthand 和 Input-to-IR 组装
 ```
 
-`_shared` 不依赖 `_chart` 或 family；family 只消费 `_shared`，不导入 `_chart`。`_chart` 的封闭 dispatch 可静态登记具体 recipe。
+`_shared` 不依赖 `_chart` 或 family；family 只消费 `_shared`，不导入 `_chart`。`_chart` 的封闭 dispatch 可静态登记具体 recipe。Chart React 依赖 Chart Vanilla 的公开 normalize，不建立平行 Chart Source IR builder。
 
 ## 9. 非目标
 

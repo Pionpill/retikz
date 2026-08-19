@@ -5,9 +5,9 @@ import { PlotGuide, PlotMark, PointMarkSchema } from '@retikz/plot';
 
 import type { ChartRecipeSource, ChartRecipeStyleContext } from '../../_shared';
 
-import { chartRecipeId } from '../../_shared';
+import { chartRecipeId, createChartRecipePlot } from '../../_shared';
 import { RetikzChartError } from '../../error';
-import { createChartAxisGuides, createChartCartesian2D, createChartPlot, plotMarkValueOf } from './plot';
+import { createPointChartAxisGuides, createPointChartCartesian2D, pointChartMarkValueOf } from './plot';
 
 type PointChartMarkPatch = {
   encoding?: object;
@@ -54,16 +54,18 @@ export const createPointChartPlot = <TVariant extends PointChartRecipeSource>(
   style: ChartRecipeStyleContext,
   options: PointChartRecipeOptions<TVariant>,
 ): IRPlot => {
-  const cartesian = createChartCartesian2D(options.type);
+  const cartesian = createPointChartCartesian2D(options.type);
   const coordinateView = spec.plot.composition?.defaultView;
   const encoding = spec.config.encoding;
   const generatedMark = {
     type: PlotMark.Point,
     id: chartRecipeId(options.type, 'mark.main'),
-    ...(encoding.color === undefined ? {} : { color: plotMarkValueOf(strictVisualChannelOf(encoding.color)) }),
-    ...(encoding.size === undefined ? {} : { size: plotMarkValueOf(strictVisualChannelOf(encoding.size)) }),
-    ...(encoding.opacity === undefined ? {} : { opacity: plotMarkValueOf(strictVisualChannelOf(encoding.opacity)) }),
-    ...(encoding.shape === undefined ? {} : { shape: plotMarkValueOf(strictVisualChannelOf(encoding.shape)) }),
+    ...(encoding.color === undefined ? {} : { color: pointChartMarkValueOf(strictVisualChannelOf(encoding.color)) }),
+    ...(encoding.size === undefined ? {} : { size: pointChartMarkValueOf(strictVisualChannelOf(encoding.size)) }),
+    ...(encoding.opacity === undefined
+      ? {}
+      : { opacity: pointChartMarkValueOf(strictVisualChannelOf(encoding.opacity)) }),
+    ...(encoding.shape === undefined ? {} : { shape: pointChartMarkValueOf(strictVisualChannelOf(encoding.shape)) }),
     ...(coordinateView === undefined ? {} : { coordinateView }),
     encoding: { x: encoding.x, y: encoding.y },
   };
@@ -75,7 +77,7 @@ export const createPointChartPlot = <TVariant extends PointChartRecipeSource>(
       ...(spec.config.mark?.encoding ?? {}),
     },
   });
-  const axisGuides = createChartAxisGuides(options.type, style, coordinateView);
+  const axisGuides = createPointChartAxisGuides(options.type, style, coordinateView);
   const finalSizeField = options.finalSizeFieldOf(spec);
   const sizeGuide: IRPlotGuide | undefined =
     style.legendEnabled && finalSizeField !== undefined
@@ -86,7 +88,7 @@ export const createPointChartPlot = <TVariant extends PointChartRecipeSource>(
         }
       : undefined;
 
-  return createChartPlot(spec, {
+  return createChartRecipePlot(spec, {
     scales: [...cartesian.scales],
     coordinate: cartesian.coordinate,
     marks: [mark],

@@ -23,9 +23,15 @@ describe('Chart semantic source layout', () => {
     expect(paths.some(path => path.startsWith('_chart/'))).toBe(true);
     expect(paths.some(path => path.startsWith('_shared/'))).toBe(true);
     expect(paths.some(path => path.startsWith('point/'))).toBe(true);
+    expect(paths).toContain('_shared/recipe/plot.ts');
+    expect(paths).toContain('_shared/schemas/json.ts');
     expect(paths).toContain('point/shared/schema.ts');
     expect(paths).toContain('point/shared/plot.ts');
     expect(paths).toContain('point/shared/recipe.ts');
+    expect(paths).not.toContain('_shared/normalize.ts');
+    expect(paths).toContain('point/bubble/index.ts');
+    expect(paths).toContain('point/scatter/index.ts');
+    expect(paths).toContain('point/connected-scatter/index.ts');
     expect(paths).not.toContain('_shared/schemas/point.ts');
     expect(paths).not.toContain('_shared/recipe/point.ts');
     expect(paths).not.toContain('point/shared/plot-seed.ts');

@@ -3,8 +3,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { IRBubblePointPatch } from '../../src/point/bubble';
 
 import { PointChartType } from '../../src/point';
-import { BubblePointPatchSchema } from '../../src/point/bubble';
-import { BubbleChartSchema } from '../../src/point/bubble';
+import { BubbleChartSchema, BubblePointPatchSchema } from '../../src/point/bubble';
 import { StrictSizeFieldChannelSchema } from '../../src/point/shared';
 
 const minimalBubble = {

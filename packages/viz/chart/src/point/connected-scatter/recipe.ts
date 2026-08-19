@@ -6,14 +6,14 @@ import { PathMarkSchema, PlotGuide, PlotMark, PlotScale, PointMarkSchema } from 
 import type { ChartRecipe, ChartRecipeStyleContext } from '../../_shared';
 import type { IRConnectedScatterChart } from './schema';
 
-import { bindChartRecipe, chartRecipeId } from '../../_shared';
+import { bindChartRecipe, chartRecipeId, createChartRecipePlot } from '../../_shared';
 import { PointChartType } from '../constants';
-import { createChartAxisGuides, createChartCartesian2D, createChartPlot, plotMarkValueOf } from '../shared';
+import { createPointChartAxisGuides, createPointChartCartesian2D, pointChartMarkValueOf } from '../shared';
 import { ConnectedScatterChartSchema } from './schema';
 
 /** 从 Connected Scatter 输入生成完整 Plot */
 const createConnectedScatterPlot = (spec: IRConnectedScatterChart, style: ChartRecipeStyleContext): IRPlot => {
-  const cartesian = createChartCartesian2D(PointChartType.ConnectedScatter);
+  const cartesian = createPointChartCartesian2D(PointChartType.ConnectedScatter);
   const coordinateView = spec.plot.composition?.defaultView;
   const authoredColor = spec.config.encoding.color;
   const authoredSeries = spec.config.encoding.series;
@@ -27,24 +27,24 @@ const createConnectedScatterPlot = (spec: IRConnectedScatterChart, style: ChartR
   if (authoredColor?.field !== undefined) {
     colorScaleName = authoredColor.scale ?? chartRecipeId(PointChartType.ConnectedScatter, 'scale.color');
     const fieldColor = { field: authoredColor.field, scale: colorScaleName };
-    pointColor = plotMarkValueOf(fieldColor);
+    pointColor = pointChartMarkValueOf(fieldColor);
     connectionColor = fieldColor;
     connectionSeries ??= authoredColor.field;
     if (authoredColor.scale === undefined) colorScale = { type: PlotScale.Ordinal, name: colorScaleName };
   } else if (authoredColor?.value !== undefined) {
     const constantColor = { value: authoredColor.value };
-    pointColor = plotMarkValueOf(constantColor);
-    connectionStroke = plotMarkValueOf(constantColor);
+    pointColor = pointChartMarkValueOf(constantColor);
+    connectionStroke = pointChartMarkValueOf(constantColor);
   } else if (authoredSeries !== undefined) {
     colorScaleName = chartRecipeId(PointChartType.ConnectedScatter, 'scale.series-color');
     const fieldColor = { field: authoredSeries, scale: colorScaleName };
-    pointColor = plotMarkValueOf(fieldColor);
+    pointColor = pointChartMarkValueOf(fieldColor);
     connectionColor = fieldColor;
     colorScale = { type: PlotScale.Ordinal, name: colorScaleName };
   } else {
     const paletteColor = { value: style.seriesColor };
-    pointColor = plotMarkValueOf(paletteColor);
-    connectionStroke = plotMarkValueOf(paletteColor);
+    pointColor = pointChartMarkValueOf(paletteColor);
+    connectionStroke = pointChartMarkValueOf(paletteColor);
   }
 
   const generatedConnection = {
@@ -76,13 +76,13 @@ const createConnectedScatterPlot = (spec: IRConnectedScatterChart, style: ChartR
     ...generatedPoints,
     ...(spec.config.mark ?? {}),
   });
-  const axisGuides = createChartAxisGuides(PointChartType.ConnectedScatter, style, coordinateView);
+  const axisGuides = createPointChartAxisGuides(PointChartType.ConnectedScatter, style, coordinateView);
   const colorGuide: IRPlotGuide | undefined =
     style.legendEnabled && spec.plot.guides === undefined && colorScaleName !== undefined
       ? { type: PlotGuide.Legend, channel: 'color', scale: colorScaleName }
       : undefined;
 
-  return createChartPlot(spec, {
+  return createChartRecipePlot(spec, {
     scales: [...cartesian.scales, ...(colorScale === undefined ? [] : [colorScale])],
     coordinate: cartesian.coordinate,
     marks: [connection, points],

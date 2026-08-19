@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ChartRecipeStyleContext } from '../../src/_shared';
 
-import { BubbleChartSchema } from '../../src/point/bubble';
-import { BubbleChartRecipe } from '../../src/point/bubble/recipe';
+import { BubbleChartRecipe, BubbleChartSchema } from '../../src/point/bubble';
 
 const visibleStyle: ChartRecipeStyleContext = {
   axisEnabled: true,

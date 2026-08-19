@@ -40,6 +40,8 @@ Plot 是基于 GoG（Grammar of Graphics，图形语法）的纵向能力扩展�
 
 “点图”等分组用于文档导航、源码归置和多入口导入，但不形成额外的数据结构或运行时分组。Scatter、Bubble 与 Connected Scatter 继续从 `/point` 入口导入；未知 JSON 由 `type` 选择对应 schema，解析后绑定为内部 Chart，再统一解析成 `IRBaseChart`。
 
+`@retikz/chart` 只公开 Source IR、schema、recipe、resolve 和 canonical presentation。plain authoring 的 `InputChart`、`normalizeChart`、展示记录与创建函数由 `@retikz/chart-vanilla` 拥有；React 入口把 JSX 与 props 转成相同的 Vanilla Input 后调用这些 normalizer，不直接拼装 Chart Source IR。
+
 需要扩展图形语法时使用 Plot 的 API；需要把 Plot 语义组织成某种图表类型时使用 Chart，并在此基础上提供以下共用能力：
 
 | 能力         | 负责什么                                                    | 典型入口                                             |

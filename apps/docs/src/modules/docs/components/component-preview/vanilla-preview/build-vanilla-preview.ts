@@ -1,5 +1,5 @@
-import type { ChartPresentationAuthoringRecord, IRBaseChart } from '@retikz/chart';
-import type { CreateChartInput } from '@retikz/chart-vanilla';
+import type { IRBaseChart } from '@retikz/chart';
+import type { CreateChartInput, InputChartPresentationRecord } from '@retikz/chart-vanilla';
 import type { IRChild } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
@@ -661,7 +661,7 @@ const buildDatasetImportCode = (
 };
 
 /** 从确定形态的子项恢复仅供 Vanilla 辅助函数使用的编写顺序与上下分区 */
-const chartPresentationRecords = (chart: IRBaseChart): Array<ChartPresentationAuthoringRecord> | undefined => {
+const chartPresentationRecords = (chart: IRBaseChart): Array<InputChartPresentationRecord> | undefined => {
   const children = chart.presentation?.children;
   if (children === undefined) return undefined;
   const plotIndex = children.findIndex(item => item.kind === 'plot');

@@ -21,14 +21,14 @@ export const createChartDefinition = (
     schema: BaseChartSchema,
     expand: (chart, context) => {
       const style = resolveChartStyle(context.theme, chart, chartThemeStyles);
-      const presentation = resolveChartPresentation(chart.presentation, chart.plot, style.tokens);
+      const content = resolveChartPresentation(chart.presentation, chart.plot, style.tokens);
       return {
         children: [
           createSurface({
             namespace: 'standard',
             type: 'surface',
             ...(chart.id === undefined ? {} : { id: chart.id }),
-            child: presentation.content,
+            child: content,
             padding: style.tokens[ChartThemeToken.ChartPadding],
             background: { fill: style.tokens[ChartThemeToken.ChartCanvasFill] },
           }),
