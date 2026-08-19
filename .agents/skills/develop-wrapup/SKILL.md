@@ -47,10 +47,11 @@ Contract 偏差通常涉及承诺取舍；1 轮后仍不一致时，halt 给人�
 
 ## ADR 长期一致性
 
-ADR 从 Proposed 起就应是长期功能与架构记录。收尾不执行“施工蓝图压缩”，只做一致性对账：
+ADR 从 Proposed 起就应是长期功能与架构记录，不采用“先提交施工蓝图、发布前再清理”的工作方式。转为 Accepted 时仍必须逐段执行压缩审计，确保最终文本只保留长期决策：
 
 - 对账 ADR 的核心决策、基础数据结构 / 公开契约、默认 / 失败语义与兼容性，以及 reviewed plan 的功能边界和架构检查是否与最终实现一致。
-- 补充简短最终实现摘要、验证层级与真实遗留风险；不写具体文件、私有命名、业务步骤、测试 case、命令或 commit 历史。
+- 补充简短最终实现摘要与真实遗留风险；不写具体文件、私有命名、业务步骤、验证过程、测试 case、命令或 commit 历史。
+- `Proposed` -> `Accepted` 必须在同一改动中删除、压缩或迁出非长期内容，不得只更新状态或追加完工摘要；仍服务执行的材料进入 ignored plan，其余直接删除
 - 若发现 Proposed ADR 已混入设计检查或施工细节，把仍服务当前执行的内容迁回镜像 plan 后再更新状态；不要把膨胀全文保存在 Proposed commit 或等待发布阶段清理。审计历史 Accepted ADR 时，若 ignored plan 已丢失，只清除或重述不属于长期契约的内容，不要求从 git 历史复原临时执行材料。
 - 若最终行为改变了公开契约、能力归属或功能边界，不能用收尾摘要掩盖；回到 ADR 修订、Architecture Gate 和必要的 Plan Gate。
 - plan、测试矩阵、状态与 review 记录始终 ignored，不因 ADR Accepted 而提交。
@@ -59,7 +60,7 @@ ADR 从 Proposed 起就应是长期功能与架构记录。收尾不执行“施
 
 收到人工确认后再改最终状态文件：
 
-- alpha：确认 ADR 为长期形态并与最终行为一致，再将 `Proposed` -> `Accepted`，补完工摘要；对应 roadmap 勾选或标完成；changelog 写入最终稿。
+- alpha：逐段压缩 ADR 并确认其与最终行为一致，在同一改动中将 `Proposed` -> `Accepted`、补完工摘要；对应 roadmap 勾选或标完成；changelog 写入最终稿。
 - beta：roadmap TODO 标完成并记录 commit；breaking / visible 按需写 changelog；不改 ADR 状态。
 
 这些文件可按逻辑分块提交。每块提交前展示文件清单和建议 message；没有当前对话授权不提交。
