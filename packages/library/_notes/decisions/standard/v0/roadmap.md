@@ -2,7 +2,7 @@
 
 > 图式语义后继：[Graph v0 roadmap](../../../../../schematic/_notes/decisions/graph/v0/roadmap.md) 独立演进；排版布局后继：[Layout v0 roadmap](../../layout/v0/roadmap.md) 独立演进；Standard 只保留跨领域绘图拓展能力
 
-> 更新于 2026-08-18。本文件记录 `@retikz/standard`、`@retikz/standard-react` 与 `@retikz/standard-vanilla` 的 v0 总体路线。具体 milestone 见对应 `v0.*/roadmap.md`，长期边界见 [`standard-library-design.md`](../../../architecture/standard-library-design.md)。
+> 更新于 2026-08-19。本文件记录 `@retikz/standard`、`@retikz/standard-react` 与 `@retikz/standard-vanilla` 的 v0 总体路线。具体 milestone 见对应 `v0.*/roadmap.md`，长期边界见 [`standard-library-design.md`](../../../architecture/standard-library-design.md)。
 
 ## 定位
 
@@ -25,7 +25,7 @@ v0.1 建立 Standard 三包的首个完整闭环，覆盖：
 - alpha.2 曾验证 Flex、GridLayout、Overlay 等排版能力；合并发布前已将其迁入独立 [Layout v0.1](../../layout/v0/v0.1/roadmap.md) owner
 - 由 Plot、Table 与直接作者共同消费的通用 Legend 呈现
 - alpha.3 在完成 Layout owner 迁移后，为 Chart canvas、Table panel 与一般面板提供单一任意 child 的 renderer-neutral Surface；完整 Scope、布局和空间透明继续复用 Core / Layout
-- alpha.4 根据直接作者与 Graph 的真实消费继续扩展 Standard Shape / Arrow 子入口，增加参数化梯形、平行四边形、流程图六边形、圆柱及 bar / crow-foot 端点 Marker；正六边形继续复用 Core polygon，菱形 Marker 继续复用 Standard 既有能力
+- alpha.4 根据直接作者与 Graph 的真实消费继续扩展 Standard Shape / Arrow 子入口，增加参数化梯形、平行四边形、长六边形、圆柱及 bar / crow-foot / Kite / Square 端点 Marker与 open 变体；正六边形继续复用 Core polygon，菱形 Marker 采用 TikZ 扁菱形比例
 - React / Vanilla 等价 authoring、JSON-safe 语义输入、Core lowering、诊断、测试与双语文档
 - alpha.3 曾验证逻辑图外壳、语义节点、连接与 Callout；这些图式元素现由 [Graph v0](../../../../../schematic/_notes/decisions/graph/v0/roadmap.md) 独立拥有，当前入口统一为 `GraphFrame`、`GraphNode` 与 `GraphConnector`
 
