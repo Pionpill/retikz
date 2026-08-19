@@ -26,11 +26,13 @@ export type CanonicalNodeLabelBoundaryPosition = Omit<IRNodeLabelBoundaryPositio
 };
 
 /** 展开静态位置与放置默认值后的节点标签 */
-export type CanonicalNodeLabel = Omit<IRNodeLabel, 'position' | 'placement'> & {
+export type CanonicalNodeLabel = Omit<IRNodeLabel, 'position' | 'placement' | 'distance'> & {
   /** 标签附着位置 */
   position: NodeLabelPositionValue | number | CanonicalNodeLabelBoundaryPosition;
   /** 标签相对附着点的放置方向 */
   placement: NodeLabelPlacementValue;
+  /** 标签到节点边界的距离 */
+  distance: number;
 };
 
 /** 展开 Node 紧凑写法与静态默认值后的完整内部形态 */
@@ -157,4 +159,6 @@ export type NodeResolveContext = {
   irPath: string;
   /** compile warning 分发函数 */
   warn: (code: string, message: string) => void;
+  /** 节点标签缺省距离 */
+  labelDistance: number;
 };

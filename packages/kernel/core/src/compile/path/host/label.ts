@@ -1,20 +1,14 @@
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../../contract';
-import type { CanonicalGeometryLabel } from '../../../resolve';
+import type { CanonicalFont, CanonicalGeometryLabel } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
-import type { LineLayoutContext, LowerTex, TextFont, TextMeasurer } from '../../text';
+import type { LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
 import type { CompileWarningCodeValue } from '../../warning';
 
+import { resolveFont, resolveTextLine } from '../../../resolve';
 import { RAD_TO_DEG } from '../../../shared/geometry';
 import { DEFAULT_FONT_SIZE } from '../../constants';
-import {
-  combineOpacity,
-  layoutInlineLine,
-  normalizeTextMetrics,
-  resolveFontSize,
-  resolveLineRunsWithWarning,
-  toAlphabeticBaselineY,
-} from '../../text';
+import { combineOpacity, layoutInlineLine, normalizeTextMetrics, toAlphabeticBaselineY } from '../../text';
 
 /** 边标注默认行高 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
@@ -65,14 +59,14 @@ export const emitLabelPrimitive = (
     placement: placementCtx,
   } = context;
   // label.font / textColor / opacity 已由 resolve/style 解析（fold scope labelDefault + 宿主 path 主色）
-  const fontSize = resolveFontSize(label.font?.size, {
+  const font: CanonicalFont = resolveFont(label.font, {
     rootFontSize,
-    inheritedFontSize: rootFontSize,
+    inheritedFont: { size: rootFontSize },
   });
-  const fontFamily = label.font?.family;
-  const fontWeight = label.font?.weight;
-  const fontStyle = label.font?.style;
-  const font: TextFont = { size: fontSize, family: fontFamily, weight: fontWeight, style: fontStyle };
+  const fontSize = font.size;
+  const fontFamily = font.family;
+  const fontWeight = font.weight;
+  const fontStyle = font.style;
   const side = label.side;
   const sloped = label.sloped === true;
   const sideDistance = label.distance;
@@ -82,12 +76,14 @@ export const emitLabelPrimitive = (
   const labelOpacity = combineOpacity(label.opacity, hostOpacity);
 
   const gatingOn = texCtx?.gatingOn ?? false;
-  const resolved = resolveLineRunsWithWarning(label.text, {
+  const resolved = resolveTextLine(label.text, {
+    rootFontSize,
+    inheritedFont: font,
     gatingOn,
     warn: texCtx?.warn ?? ((): void => {}),
     warningMessage: 'Unbalanced `$` in edge label; the trailing fragment is kept literal.',
   });
-  const isMixed = resolved.hasMath || typeof label.text === 'object';
+  const isMixed = resolved.mixed;
 
   // 含公式：走混排布局（逐 run TextPrim / glyph group），按 side 求行起点与基线
   if (isMixed) {
@@ -95,7 +91,6 @@ export const emitLabelPrimitive = (
       measureText,
       lowerTex: texCtx?.lowerTex,
       font,
-      rootFontSize,
       color: label.textColor,
       opacity: labelOpacity,
       warn: texCtx?.warn ?? ((): void => {}),
@@ -159,7 +154,7 @@ export const emitLabelPrimitive = (
   }
 
   // 纯文本：维持既有 TextPrim 路径（gating 时用反转义后的文字，否则原字符串、零回归）
-  const text = resolved.runs.map(r => ('text' in r ? r.text : '')).join('');
+  const text = resolved.plainText;
   const lineHeight = fontSize * LABEL_LINE_HEIGHT_FACTOR;
   const m = normalizeTextMetrics(measureText(text, font));
   const measuredWidth = m.width;
