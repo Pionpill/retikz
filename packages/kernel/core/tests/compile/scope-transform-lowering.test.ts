@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import type { NodeLayout } from '../../src/compile/node';
+import type { Transform } from '../../src/contract';
+import type { PositionResolveContext } from '../../src/resolve/position';
 import type { IRTransform } from '../../src/schemas';
 
 import { NamespaceStack } from '../../src/compile/namespace';
 import { boxInsets } from '../../src/compile/node';
+import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { lowerScopeTransforms } from '../../src/compile/scope';
 import { projectLayoutToGlobal } from '../../src/compile/transform';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
@@ -59,11 +62,23 @@ const layoutForProjection = (): NodeLayout => ({
   },
 });
 
+type LowerOptions = Omit<Parameters<typeof lowerScopeTransforms>[1], 'positionContext'> &
+  Readonly<{
+    nodeDistance?: number;
+    scopeChain?: ReadonlyArray<Transform>;
+    resolveBetweenGlobal?: PositionResolveContext['resolveBetweenWorld'];
+  }>;
+
 const lower = (
   transforms: ReadonlyArray<IRTransform>,
   namespaceStack: NamespaceStack = new NamespaceStack(),
-  options: Omit<Parameters<typeof lowerScopeTransforms>[1], 'namespaceStack'> = {},
-) => lowerScopeTransforms(transforms, { namespaceStack, ...options });
+  options: LowerOptions = {},
+) => {
+  const { nodeDistance = 24, scopeChain, resolveBetweenGlobal, ...rest } = options;
+  const base = createPositionResolveContext({ namespaceStack, nodeDistance, scopeChain });
+  const positionContext = { ...base, resolveBetweenWorld: resolveBetweenGlobal };
+  return lowerScopeTransforms(transforms, { positionContext, ...rest });
+};
 
 describe('lowerScopeTransforms 5 translate 变体', () => {
   it('translate 直接透传', () => {

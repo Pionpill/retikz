@@ -1,8 +1,10 @@
 import type { TextLine } from '../../../contract';
+import type { CanonicalFont } from '../../../resolve';
 import type { LaidLine, LineLayoutContext, TextFont, TextMeasurer } from '../../text';
 import type { NodeTextLayoutContext } from '../types';
 
-import { layoutInlineLine, normalizeTextMetrics, resolveFontSize, resolveLineRunsWithWarning } from '../../text';
+import { resolveTextLine } from '../../../resolve';
+import { layoutInlineLine, normalizeTextMetrics } from '../../text';
 import { measureMinimumTextWidth, wrapText } from './text';
 
 /** 节点正文布局输入 */
@@ -61,8 +63,16 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
   const texGatingOn = texLowering?.lowerTex !== undefined;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
   if (rawLines) {
+    const scaledBlockFont: CanonicalFont = {
+      size: fontSize,
+      family: fontFamily,
+      weight: fontWeight,
+      style: fontStyle,
+    };
     const resolved = rawLines.map(spec =>
-      resolveLineRunsWithWarning(spec, {
+      resolveTextLine(spec, {
+        rootFontSize,
+        inheritedFont: scaledBlockFont,
         gatingOn: texGatingOn,
         warn: inlineWarn,
         warningMessage: 'Unbalanced `$` in node text; the trailing fragment is kept literal.',
@@ -76,7 +86,6 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
         measureText,
         lowerTex: texLowering?.lowerTex,
         font: blockFont,
-        rootFontSize,
         color: node.textColor,
         opacity: node.opacity,
         warn: inlineWarn,
@@ -108,21 +117,26 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
         metricsByText.set(text, measured);
         return measured;
       };
-      const plainLines = rawLines.map((spec, li) => {
-        const text = resolved[li].runs.map(r => ('text' in r ? r.text : '')).join('');
-        const lineObj = typeof spec === 'object' && !('runs' in spec) ? spec : undefined;
-        const lineFont = lineObj?.font;
-        const lineFontSize =
-          lineFont?.size !== undefined
-            ? resolveFontSize(lineFont.size, { rootFontSize, inheritedFontSize: baseFontSize })
-            : undefined;
+      const plainLines = rawLines.map(spec => {
+        const line = resolveTextLine(spec, {
+          rootFontSize,
+          inheritedFont: {
+            size: baseFontSize,
+            family: fontFamily,
+            weight: fontWeight,
+            style: fontStyle,
+          },
+          gatingOn: texGatingOn,
+        });
+        const lineStyle = line.style;
+        const lineFontSize = lineStyle?.fontSize;
         const font: TextFont = {
           size: lineFontSize !== undefined ? lineFontSize * fontScale : fontSize,
-          family: lineFont?.family ?? fontFamily,
-          weight: lineFont?.weight ?? fontWeight,
-          style: lineFont?.style ?? fontStyle,
+          family: lineStyle?.fontFamily ?? fontFamily,
+          weight: lineStyle?.fontWeight ?? fontWeight,
+          style: lineStyle?.fontStyle ?? fontStyle,
         };
-        return { text, lineObj, lineFont, lineFontSize, font };
+        return { text: line.plainText, lineStyle, lineFontSize, font };
       });
       const intrinsicMinimumWidth = minimumTextWidth
         ? plainLines.reduce(
@@ -149,7 +163,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
       lines = [];
       textBaselineOffsets = [];
       let firstPlainBaselineOffset: number | undefined;
-      for (const { text, lineObj, lineFont, lineFontSize, font } of plainLines) {
+      for (const { text, lineStyle, lineFontSize, font } of plainLines) {
         const hardLines = text.split('\n');
         const physical = hardLines.flatMap(hardLine =>
           wrappingWidth !== undefined
@@ -162,13 +176,13 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
           firstPlainBaselineOffset ??= (lineHeight - (m.ascent + m.descent)) / 2 + m.ascent;
           textBaselineOffsets.push(firstPlainBaselineOffset + lines.length * lineHeight);
           const out: TextLine = { text: ptext };
-          if (lineObj) {
-            if (lineObj.fill !== undefined) out.fill = lineObj.fill;
-            if (lineObj.opacity !== undefined) out.opacity = lineObj.opacity;
+          if (lineStyle !== undefined) {
+            if (lineStyle.fill !== undefined) out.fill = lineStyle.fill;
+            if (lineStyle.opacity !== undefined) out.opacity = lineStyle.opacity;
             if (lineFontSize !== undefined) out.fontSize = lineFontSize * fontScale;
-            if (lineFont?.family !== undefined) out.fontFamily = lineFont.family;
-            if (lineFont?.weight !== undefined) out.fontWeight = lineFont.weight;
-            if (lineFont?.style !== undefined) out.fontStyle = lineFont.style;
+            if (lineStyle.fontFamily !== undefined) out.fontFamily = lineStyle.fontFamily;
+            if (lineStyle.fontWeight !== undefined) out.fontWeight = lineStyle.fontWeight;
+            if (lineStyle.fontStyle !== undefined) out.fontStyle = lineStyle.fontStyle;
           }
           lines.push(out);
         }

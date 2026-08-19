@@ -328,6 +328,20 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
     expect(glyphs.every(node => node.strokeWidth === 0)).toBe(true);
   });
 
+  it('shape_legend_glyphs_use_the_mark_fill_color', () => {
+    const outer = expandOf(shapeLegendSpec(), { d: ORDINAL_ROWS });
+    const legend = findLegendLayer(outer);
+    const mark = findMarkLayer(outer);
+    expect(legend).toBeDefined();
+    expect(mark).toBeDefined();
+
+    const glyphs = swatchNodesOf(legend as IRScope);
+    const markFill = mark?.nodeDefault?.fill;
+
+    expect(markFill).toBeDefined();
+    expect(glyphs.every(node => node.fill === markFill)).toBe(true);
+  });
+
   it('shape_legend_symbol_size_style_controls_glyph_box', () => {
     const outer = expandOf(shapeLegendSpec({ style: { symbolSize: 18 } }), { d: ORDINAL_ROWS });
     const legend = findLegendLayer(outer);

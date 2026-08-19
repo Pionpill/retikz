@@ -1,19 +1,12 @@
-import type {
-  AnyCompositeDefinition,
-  CompositeExpandContext,
-  CompositeExpandResult,
-  ThemeStyleDefinition,
-} from '../../contract';
+import type { AnyCompositeDefinition, ThemeStyleDefinition } from '../../contract';
 import type { IRChild, IRScene } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { LoweredIRScene } from '../types';
 import type { CompileWarningInput } from '../warning';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve';
-import { parseProviderPayload } from '../../resolve/provider-payload';
+import { bindComposite, DEFAULT_RESOLVED_THEME, resolveComposite, resolveTheme } from '../../resolve';
 import { CompileWarningCode } from '../constants';
-import { RetikzCompileInvariantError } from '../probe-failure';
 import { validateExpandCompositeOutput } from './composite-output';
 
 /** composite 嵌套展开最大深度 */
@@ -29,19 +22,6 @@ type LowerOptions = {
    * @default DEFAULT_MAX_COMPOSITE_DEPTH (32)
    */
   maxDepth?: number;
-};
-
-type CallableExpandDefinition = {
-  schema: AnyCompositeDefinition['schema'];
-  expand: (node: unknown, context: CompositeExpandContext) => CompositeExpandResult;
-};
-
-/** 只在紧邻 schema parse 的边界恢复已擦除 expand callback */
-const callableExpandDefinition = (definition: AnyCompositeDefinition): CallableExpandDefinition => {
-  if (definition.expand === undefined) {
-    throw new RetikzCompileInvariantError('internal: callableExpandDefinition received a layout-aware composite');
-  }
-  return definition as unknown as CallableExpandDefinition;
 };
 
 const lowerCompositeTree = (
@@ -61,9 +41,9 @@ const lowerCompositeTree = (
 
   const expandChild = (child: IRChild, depth: number, path: string, theme: ResolvedTheme): Array<IRChild> => {
     if ('namespace' in child) {
-      const key = `${child.namespace}.${child.type}`;
-      const definition = registry.get(key);
-      if (!definition) {
+      const binding = bindComposite(child, registry);
+      const { key } = binding;
+      if (binding.kind === 'unregistered') {
         onUnregistered?.(key, path);
         onWarn({
           code: CompileWarningCode.CompositeNotRegistered,
@@ -78,22 +58,14 @@ const lowerCompositeTree = (
           `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${maxDepth} levels at ${path} (cyclic or runaway expand?)`,
         );
       }
-      if (definition.expand === undefined) {
+      if (binding.kind === 'compile') {
         throw new RetikzCoreError(
           RetikzCoreErrorCode.Compile,
           `lowerIRToKernel: composite '${key}' at ${path} requires layout-aware compile and cannot be lowered without the full compile environment.`,
         );
       }
-      const callable = callableExpandDefinition(definition);
-      const parsed = parseProviderPayload({
-        capability: 'composite',
-        providerName: key,
-        irPath: path,
-        payloadName: 'payload',
-        schema: callable.schema,
-        value: child,
-      });
-      const produced = callable.expand(parsed, Object.freeze({ theme }));
+      const resolution = resolveComposite(binding, path);
+      const produced = resolution.expand(resolution.node, Object.freeze({ theme }));
       const result = validateExpandCompositeOutput(`Composite '${key}' at ${path}`, produced);
       if ((result.spatialHandles?.length ?? 0) > 0) {
         throw new RetikzCoreError(

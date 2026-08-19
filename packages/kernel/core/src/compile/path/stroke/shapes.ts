@@ -8,6 +8,7 @@ import type { StrokeCursor } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import { nodeIdFromResolvableTarget } from '../../../resolve/position';
 import {
   arcSegmentSample,
   circleSegmentSample,
@@ -19,7 +20,6 @@ import {
   rectPerimeterSample,
 } from '../../../shared/geometry';
 import { CompileWarningCode } from '../../constants';
-import { nodeIdFromResolvableTarget } from '../../position';
 import { clipTarget, isAutoBoundaryTarget, pointOfTarget, samePoint } from '../host';
 import { lowerGeneratorStepToCommands } from './lower';
 
@@ -61,7 +61,7 @@ export const isStrokeShapeStep = (step: CanonicalStep): step is StrokeShapeStep 
 
 /** 将 partial circle/ellipse 的 closed 选项规范化 */
 const resolvePartialClosed = (
-  closed: 'closed' | 'chord' | 'open' | 'sector' | undefined,
+  closed: 'closed' | 'chord' | 'open' | 'sector',
   index: number,
   warn: LowerShapeStepContext['warn'],
 ): 'chord' | 'open' | 'sector' => {

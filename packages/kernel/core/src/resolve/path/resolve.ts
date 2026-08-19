@@ -63,6 +63,17 @@ const canonicalizeStep = (step: IRStep): CanonicalStep => {
     }
   }
   if (step.kind === 'smooth') return { ...step, label, tension: step.tension ?? 1 };
+  if (step.kind === 'bend') {
+    return {
+      ...step,
+      label,
+      bendDirection: step.bendDirection ?? 'left',
+      bendAngle: step.bendAngle ?? 30,
+    };
+  }
+  if (step.kind === 'circlePath' || step.kind === 'ellipsePath') {
+    return { ...step, label, closed: step.closed ?? 'chord' };
+  }
   return { ...step, label };
 };
 

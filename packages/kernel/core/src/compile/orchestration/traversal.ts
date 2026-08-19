@@ -9,7 +9,6 @@ import type {
   CompileOwnerOutputPublisher,
   CompositeCompileChild,
   CompositeCompileScopeProps,
-  CompositeExpandResult,
   CompositeReplay,
   CompositeReplayWrapper,
   EmitStroke,
@@ -28,7 +27,8 @@ import type {
   SpatialHandleOwner,
   Transform,
 } from '../../contract';
-import type { BoundaryReferenceResolver, PathResolution } from '../../resolve';
+import type { BoundaryReferenceResolver, PathResolution, PathTargetResolver, TargetResolution } from '../../resolve';
+import type { PositionTargetResolveContext } from '../../resolve/position';
 import type {
   IRChild,
   IRPathBase,
@@ -46,7 +46,6 @@ import type { CompileWarningCodeValue, CompileWarningInput } from '../warning';
 import type { CompileContext } from './context';
 import type { InternalScenePrimitive } from './primitive';
 import type {
-  CallableLayoutCompositeDefinition,
   CompositeCompileOwner,
   CompositeReplayMaterializeContext,
   CompositeReplayTransaction,
@@ -69,8 +68,10 @@ import type {
 import { LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import {
+  bindComposite,
   createStyleResolveFrame,
   resolveBoundaryReference,
+  resolveComposite,
   resolveNode,
   resolvePath as resolvePathValue,
   resolveStrokePathProviders,
@@ -84,7 +85,7 @@ import {
   safeErrorMessage,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
-import { parseProviderPayload } from '../../resolve/provider-payload';
+import { resolvePosition, resolvePositionTargetWorld } from '../../resolve/position';
 import { resolveClip as resolveClipValue } from '../../resolve/resource';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
@@ -107,7 +108,6 @@ import {
 } from '../node';
 import { emitPathPrimitive } from '../path';
 import { emitLabelPrimitive } from '../path';
-import { resolvePosition } from '../position';
 import {
   createLayoutChildFailure,
   enrichLayoutProbeError,
@@ -143,7 +143,8 @@ import {
   withCompileWarningOccurrence,
 } from './diagnostics';
 import { cloneLayoutProposal, resolveLayoutSlotSize } from './layout-proposal';
-import { bindPathTarget, localPointOfTarget, pathTargetViewOf, refPointOfTarget } from './path-target';
+import { bindPathTarget, pathTargetViewOf, targetKeyOf } from './path-target';
+import { createPositionResolveContext } from './position-context';
 import {
   collectPlaceholderLocators,
   makePathPlaceholder,
@@ -250,20 +251,35 @@ export const compileChildrenToPrimitives = (
       irPath: referenceContext.irPath,
     });
 
-  const resolveBetweenGlobal = (
-    between: Parameters<typeof refPointOfTarget>[0],
-    namespaceStack: Parameters<typeof refPointOfTarget>[1],
-    scopeChain: Parameters<typeof refPointOfTarget>[2],
-  ) => refPointOfTarget(between, namespaceStack, scopeChain, resolveExplicitBoundary);
+  /** 从当前 traversal 状态投影 resolver 所需的窄位置上下文 */
+  const positionContextOf = (scopeChain: ReadonlyArray<Transform>): PositionTargetResolveContext =>
+    createPositionResolveContext({
+      namespaceStack: runtime.state.namespaceStack,
+      nodeDistance: runtime.context.nodeDistance,
+      scopeChain,
+      resolveExplicitBoundary,
+    });
 
-  /** resolve 阶段唯一接触 NamespaceStack 的 target binding 能力 */
-  const targetResolver = {
-    pointOfTarget: (target: IRTarget, chain: ReadonlyArray<Transform>) =>
-      localPointOfTarget(target, runtime.state.namespaceStack, chain, resolveExplicitBoundary),
-    refPointOfTarget: (target: IRTarget, chain: ReadonlyArray<Transform>) =>
-      refPointOfTarget(target, runtime.state.namespaceStack, chain, resolveExplicitBoundary),
-    bindTarget: (target: IRTarget, chain: ReadonlyArray<Transform>) =>
-      bindPathTarget(target, runtime.state.namespaceStack, chain, resolveExplicitBoundary),
+  /** 为单次 Path resolve 创建复用 binding 的 target resolver，避免重复 provider lookup */
+  const createPathTargetResolver = (): PathTargetResolver => {
+    const bindingsByScope = new WeakMap<ReadonlyArray<Transform>, Map<string, TargetResolution | null>>();
+    const bindingOf = (target: IRTarget, chain: ReadonlyArray<Transform>): TargetResolution | null => {
+      let bindings = bindingsByScope.get(chain);
+      if (bindings === undefined) {
+        bindings = new Map();
+        bindingsByScope.set(chain, bindings);
+      }
+      const key = targetKeyOf(target);
+      if (bindings.has(key)) return bindings.get(key) ?? null;
+      const binding = bindPathTarget(target, positionContextOf(chain));
+      bindings.set(key, binding);
+      return binding;
+    };
+    return {
+      pointOfTarget: (target, chain) => bindingOf(target, chain)?.point ?? null,
+      refPointOfTarget: (target, chain) => bindingOf(target, chain)?.referencePoint ?? null,
+      bindTarget: bindingOf,
+    };
   };
 
   /** 校验并脱离 PathKind provider 返回的 primitive 与 bounds point */
@@ -344,6 +360,7 @@ export const compileChildrenToPrimitives = (
   const emitPathKindPrimitive = (
     pendingPath: PendingPathEmission,
     resolution: PathResolution,
+    targetResolver: PathTargetResolver,
   ): PathKindCompileResult | null => {
     const { path, irPath, scopeChain } = pendingPath;
     const targetWarn = (code: string, message: string, node?: { irPath?: string }): void =>
@@ -552,6 +569,7 @@ export const compileChildrenToPrimitives = (
     try {
       for (const pendingPath of pendingPaths) {
         try {
+          const targetResolver = createPathTargetResolver();
           const resolution = resolvePathValue(pendingPath.path, {
             styleStack: pendingPath.styleStack,
             scopeChain: pendingPath.scopeChain,
@@ -564,7 +582,7 @@ export const compileChildrenToPrimitives = (
             irPath: pendingPath.irPath,
           });
           const result = withWarningOccurrence(pendingPath.occurrence, () =>
-            emitPathKindPrimitive(pendingPath, resolution),
+            emitPathKindPrimitive(pendingPath, resolution, targetResolver),
           );
           const rawPrimitives = result?.primitives ?? [];
           const primitives = runtime.state.identityTracker?.materializePrimitives(rawPrimitives) ?? rawPrimitives;
@@ -615,6 +633,7 @@ export const compileChildrenToPrimitives = (
       round: runtime.context.round,
       irPath: nodeIrPath,
       warn,
+      labelDistance: runtime.context.labelDistance,
     });
     const canonicalNode = {
       ...resolvedNode.node,
@@ -628,13 +647,9 @@ export const compileChildrenToPrimitives = (
       { ...resolvedNode, node: canonicalNode },
       {
         measureText: runtime.context.measureText,
-        namespaceStack: runtime.state.namespaceStack,
-        nodeDistance: runtime.context.nodeDistance,
-        labelDistance: runtime.context.labelDistance,
+        positionContext: positionContextOf(scopeChain),
         rootFontSize: runtime.context.rootFontSize,
         scopeChain,
-        resolveExplicitBoundary,
-        resolveBetweenGlobal,
         warn,
         ...(frame.childProposal?.x === undefined ? {} : { allocationWidthProposal: frame.childProposal.x }),
         texLowering: {
@@ -688,13 +703,8 @@ export const compileChildrenToPrimitives = (
   const registerCoordinateChild = (child: CoordinateChild, index: number, frame: TraversalFrame): void => {
     const { scopeChain, locatorPrefix, layoutSink } = frame;
     const coordinateIrPath = `${locatorPrefix}children[${index}].coordinate`;
-    const localCenter = resolvePosition(child.position, {
-      namespaceStack: runtime.state.namespaceStack,
-      nodeDistance: runtime.context.nodeDistance,
-      scopeChain,
-      resolveBetweenGlobal,
-    });
-    if (!localCenter) {
+    const localCenter = resolvePosition(child.position, positionContextOf(scopeChain))?.localPoint;
+    if (localCenter === undefined) {
       throw new RetikzLayoutProbeRecoverableError(
         `Cannot resolve position for coordinate ${child.id}; polar.origin or at.of may reference an undefined node`,
       );
@@ -780,21 +790,21 @@ export const compileChildrenToPrimitives = (
         `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}: self target is not allowed`,
       );
     }
-    const entry = runtime.state.namespaceStack.lookupEntry(target.id);
-    if (entry === undefined || entry.state !== 'resolved') {
+    const positionContext = positionContextOf(frame.scopeChain);
+    const reference = positionContext.lookupReference(target.id);
+    if (reference === undefined || reference.state !== 'resolved') {
       throw new RetikzLayoutProbeRecoverableError(
         `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}: target must be defined and fully resolved before this Scope`,
       );
     }
-    const world = resolveBetweenGlobal(target, runtime.state.namespaceStack, frame.scopeChain);
-    if (world === null) {
+    const resolution = resolvePositionTargetWorld(target, positionContext);
+    if (resolution.referencePoint === null) {
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
         `Cannot resolve scope placement target '${target.id}' at ${scopeIrPath}`,
       );
     }
-    const parentPoint = frame.scopeChain.length === 0 ? world : inverseTransformChain(world, frame.scopeChain);
-    return assertFinitePlacementPoint(parentPoint, 'scope placement target');
+    return assertFinitePlacementPoint(positionContext.toLocal(resolution.referencePoint), 'scope placement target');
   };
 
   /** 从当前 Scope 的固有 child layouts 创建 rectangle / circle synthetic envelope */
@@ -884,10 +894,7 @@ export const compileChildrenToPrimitives = (
     const loweredOwn =
       preliminaryTransforms ??
       lowerScopeTransforms(child.transforms ?? [], {
-        namespaceStack: runtime.state.namespaceStack,
-        nodeDistance: runtime.context.nodeDistance,
-        scopeChain: frame.scopeChain,
-        resolveBetweenGlobal,
+        positionContext: positionContextOf(frame.scopeChain),
         intrinsicLayout,
         onUnresolved: transform => {
           failedTransform = transform;
@@ -938,10 +945,7 @@ export const compileChildrenToPrimitives = (
 
     let failedTransform: IRTransform | undefined;
     const transforms = lowerScopeTransforms(child.transforms ?? [], {
-      namespaceStack: runtime.state.namespaceStack,
-      nodeDistance: runtime.context.nodeDistance,
-      scopeChain: frame.scopeChain,
-      resolveBetweenGlobal,
+      positionContext: positionContextOf(frame.scopeChain),
       onUnresolved: transform => {
         failedTransform = transform;
       },
@@ -1223,16 +1227,6 @@ export const compileChildrenToPrimitives = (
       width: Object.is(width, -0) ? 0 : (width as number),
       height: Object.is(height, -0) ? 0 : (height as number),
     });
-  };
-
-  /** 只在 definition schema parse 后恢复 erased layout callback */
-  const callableLayoutDefinition = (
-    definition: NonNullable<ReturnType<typeof runtime.context.composites.get>>,
-  ): CallableLayoutCompositeDefinition => {
-    if (definition.compile === undefined) {
-      throw new RetikzCompileInvariantError('internal: callableLayoutDefinition received an expand composite');
-    }
-    return definition as unknown as CallableLayoutCompositeDefinition;
   };
 
   const remapPaint = (paint: PaintValue | undefined, ids: ReadonlyMap<string, string>): PaintValue | undefined => {
@@ -1720,10 +1714,10 @@ export const compileChildrenToPrimitives = (
     compositeDepth: number,
     semanticOwner?: RuntimeSemanticOwner,
   ): void => {
-    const key = `${child.namespace}.${child.type}`;
     const compositeIrPath = `${frame.locatorPrefix}children[${index}]`;
-    const definition = runtime.context.composites.get(key);
-    if (definition === undefined) {
+    const binding = bindComposite(child, runtime.context.composites);
+    const { key } = binding;
+    if (binding.kind === 'unregistered') {
       if (options.probe === true) {
         throw new RetikzLayoutProbeRecoverableError(
           `No composite registered for '${key}' at ${formatCompileOccurrence(occurrence)}`,
@@ -1743,15 +1737,8 @@ export const compileChildrenToPrimitives = (
         `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${runtime.context.maxCompositeDepth} levels at ${occurrence.sourcePath}`,
       );
     }
-    const parsed = parseProviderPayload({
-      capability: 'composite',
-      providerName: key,
-      irPath: occurrence.sourcePath,
-      payloadName: 'payload',
-      schema: definition.schema,
-      value: child,
-    });
-    const parsedId = (parsed as Record<string, unknown>).id;
+    const resolution = resolveComposite(binding, occurrence.sourcePath);
+    const parsedId = (resolution.node as Record<string, unknown>).id;
     const spatialOwner: SpatialHandleOwner = Object.freeze({
       namespace: child.namespace,
       type: child.type,
@@ -1759,11 +1746,8 @@ export const compileChildrenToPrimitives = (
       occurrence: freezeOccurrence(occurrence),
     });
     const spatialOwnerPath = Object.freeze([...frame.spatialOwnerPath, spatialOwner]);
-    if (definition.expand !== undefined) {
-      const callable = definition as unknown as {
-        expand: (node: unknown, context: Readonly<{ theme: TraversalFrame['theme'] }>) => CompositeExpandResult;
-      };
-      const produced = callable.expand(parsed, Object.freeze({ theme: frame.theme }));
+    if (resolution.kind === 'expand') {
+      const produced = resolution.expand(resolution.node, Object.freeze({ theme: frame.theme }));
       const expanded = validateExpandCompositeOutput(`Composite '${key}'`, produced);
       for (const declaration of expanded.spatialHandles ?? []) {
         frame.spatialHandleSink.push({
@@ -1793,7 +1777,7 @@ export const compileChildrenToPrimitives = (
       }
       return;
     }
-    const callable = callableLayoutDefinition(definition);
+    const callable = resolution;
     const observationOwner = Object.freeze({
       kind: 'composite' as const,
       namespace: child.namespace,
@@ -1922,7 +1906,7 @@ export const compileChildrenToPrimitives = (
     };
 
     try {
-      callbackResult = callable.compile(parsed, {
+      callbackResult = callable.compile(callable.node, {
         theme: frame.theme,
         proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
         layoutChild: (nextChild, proposal) => {
@@ -1995,7 +1979,7 @@ export const compileChildrenToPrimitives = (
           `${owner.label} returned an invalid compile result; children must be an array.`,
         );
       }
-      const result = callbackResult as ReturnType<CallableLayoutCompositeDefinition['compile']>;
+      const result = callbackResult as ReturnType<typeof callable.compile>;
       const resultChildren = result.children;
       const resultAllocationBounds = result.allocationBounds;
       const resultAlignmentGuides = result.alignmentGuides;
@@ -2042,8 +2026,8 @@ export const compileChildrenToPrimitives = (
         }
         compositeArtifact = freezeCompileArtifact({
           kind: 'composite',
-          namespace: definition.namespace,
-          type: definition.type,
+          namespace: callable.namespace,
+          type: callable.type,
           occurrence,
           value: frozenArtifact,
         });

@@ -186,6 +186,15 @@ describe('compile source structure', () => {
     }
   });
 
+  it('position Source IR determination is owned by resolve', () => {
+    expect(() => source('src/compile/position.ts')).toThrow();
+    expect(source('src/compile/node/layout.ts')).toContain("from '../../resolve/position'");
+    expect(source('src/compile/scope.ts')).toContain("from '../resolve/position'");
+    expect(source('src/compile/orchestration/traversal.ts')).toContain("from '../../resolve/position'");
+    expect(source('src/compile/path/stroke/cursor.ts')).not.toContain("from '../../position'");
+    expect(source('src/compile/path/stroke/shapes.ts')).not.toContain("from '../../position'");
+  });
+
   it('node synthetic layout resolves through the canonical node path', () => {
     const text = source('src/compile/node/synthetic.ts');
     expect(text).toContain('resolveNode(');

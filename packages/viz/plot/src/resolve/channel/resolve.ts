@@ -72,7 +72,17 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
   const pathDeliveries: Array<PathChannelDelivery> = [];
   const descriptors: Array<ScaleDescriptor> = [];
   const registerDescriptor = (descriptor: ScaleDescriptor | undefined): void => {
-    if (descriptor !== undefined) descriptors.push(descriptor);
+    if (descriptor === undefined) return;
+    descriptors.push(
+      descriptor.channel === 'shape'
+        ? {
+            ...descriptor,
+            ...(typeof defaults.fill === 'string'
+              ? { defaultColor: defaults.fill }
+              : { defaultColor: defaults.color as string }),
+          }
+        : descriptor,
+    );
   };
   const definitionContext = definitionContextOf(context);
 

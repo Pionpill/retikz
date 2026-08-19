@@ -156,6 +156,8 @@ export type ScaleDescriptor = {
   domain: ReadonlyArray<IRDataScalarValue>;
   /** 值域：色串 / 半径 / 不透明度 / shape 名 */
   range: ReadonlyArray<JsonValue>;
+  /** 未绑定分类颜色时，mark 使用的有效默认颜色 */
+  defaultColor?: string;
   /** 绑定字段名；常量通道无字段 */
   field?: string;
   /** 绑定字段类型；常量 / 类型未知时省略 */

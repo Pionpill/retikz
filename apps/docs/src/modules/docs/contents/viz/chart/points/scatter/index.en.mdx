@@ -26,7 +26,7 @@ usage: distribution
         files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
         controls: { name: 'scatter-fertility-work' },
         size: 'xxl',
-        caption: 'Switch income-group color or shape encoding; the legend follows the active Plot channel.',
+        caption: 'Switch income-group color or shape encoding; the legend follows the active Chart channel.',
       },
     },
     {
@@ -37,14 +37,14 @@ usage: distribution
         files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
         controls: { name: 'scatter-income-life-expectancy' },
         size: 'xxl',
-        caption: 'Subtitle, title, source, and note enter the chart in marker order; the right-hand legend explains continent color.',
+        caption: 'Title, subtitle, note, and source enter the chart in Chart presentation order; the right-hand legend explains continent color.',
       },
     },
   ]}
 >
   Scatter uses the exact `ScatterChartSchema` while following Chart's consistent field layout. Its `config` supplies type-specific encodings such as x/y and implicitly creates the primary Point mark, two-dimensional scales, and coordinate; `plot` continues to receive Plot-owned data, transforms, legends, and other explicit extensions.
 
-The basic and income-life-expectancy examples use `ScatterChart` from `@retikz/chart-react/point`. The `/point` entry only organizes imports and source files; the component still enters the shared Chart resolution and adapter mainline. Chart owns the title, subtitle, source, and note inside the chart. A color legend remains a Plot-owned guide extension, so it is authored with `Legend`. The fertility example intentionally stays on Plot authoring to focus on the connection between categorical channels and legends.
+All examples on this page use `ScatterChart` from `@retikz/chart-react/point`. The `/point` entry only organizes imports and source files; the component still enters the shared Chart resolution and adapter mainline. Chart owns the title, subtitle, source, and note inside the chart. Axes, grids, and color or shape legends remain Plot-owned guide extensions, so they are authored with `Axis` and `Legend`.
 
 {/* @include viz/chart/shared-api */}
 

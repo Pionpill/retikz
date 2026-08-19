@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
-import { TargetSchema } from '../../src/schemas';
+import { defineBoundary, definePathKind } from '../../src/contract';
+import { PathSchema, TargetSchema } from '../../src/schemas';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   const p = prims.find((x): x is PathPrim => x.type === 'path');
@@ -173,6 +175,51 @@ describe('OffsetPosition: step.to compile resolve', () => {
       const [ex, ey] = lastLineEnd(pathPrim);
       expect(ex).toBeCloseTo(-5);
       expect(ey).toBeCloseTo(20);
+    });
+
+    it('custom PathKind 重解析复用单次 binding，且 pending Path 之间隔离缓存', () => {
+      let parseCount = 0;
+      const countedBoundary = defineBoundary({
+        name: 'counted',
+        paramsSchema: z.strictObject({}).superRefine(() => {
+          parseCount += 1;
+        }),
+        boundaryPoint: rect => [rect.x, rect.y],
+      });
+      const countedStroke = definePathKind({
+        name: 'counted-stroke',
+        schema: PathSchema.extend({ kind: z.literal('counted-stroke') }),
+        compile: context => context.emitStroke(context.path),
+      });
+      const target = { id: 'A', boundary: { type: 'counted', params: {} } } as const;
+      const ir: IRScene = {
+        version: 1,
+        type: 'scene',
+        children: [
+          { type: 'node', id: 'A', position: [0, 0] },
+          {
+            type: 'path',
+            kind: 'counted-stroke',
+            children: [
+              { type: 'step', kind: 'move', to: [100, 0] },
+              { type: 'step', kind: 'line', to: target },
+            ],
+          },
+          {
+            type: 'path',
+            kind: 'counted-stroke',
+            children: [
+              { type: 'step', kind: 'move', to: [-100, 0] },
+              { type: 'step', kind: 'line', to: target },
+            ],
+          },
+        ],
+      };
+
+      expect(
+        () => compileToScene(ir, { boundaries: [countedBoundary], pathKinds: [countedStroke] }).scene,
+      ).not.toThrow();
+      expect(parseCount).toBe(2);
     });
   });
 

@@ -31,6 +31,7 @@ const resolve = (source: IRNode, styleFrames: ReadonlyArray<StyleResolveFrame> =
     round: value => value,
     irPath: 'node',
     warn: () => {},
+    labelDistance: 12,
   });
 
 describe('resolveNode', () => {
@@ -103,6 +104,7 @@ describe('resolveNode', () => {
         text: 'x',
         position: 'top',
         placement: 'outside',
+        distance: 12,
         textColor: 'blue',
         opacity: 0.5,
         font: { family: 'default', size: 10, weight: 'bold' },
@@ -112,7 +114,7 @@ describe('resolveNode', () => {
 
   it('fills canonical label defaults without replacing explicit zero or false values', () => {
     expect(resolve(node({ label: { text: 'default' } })).node.label).toEqual([
-      { text: 'default', position: 'top', placement: 'outside' },
+      { text: 'default', position: 'top', placement: 'outside', distance: 12 },
     ]);
 
     expect(
@@ -142,7 +144,7 @@ describe('resolveNode', () => {
 
   it('fills the boundary label fraction when its position omits one', () => {
     expect(resolve(node({ label: { text: 'boundary', position: { boundary: 'right' } } })).node.label).toEqual([
-      { text: 'boundary', position: { boundary: 'right', fraction: 0.5 }, placement: 'outside' },
+      { text: 'boundary', position: { boundary: 'right', fraction: 0.5 }, placement: 'outside', distance: 12 },
     ]);
   });
 
