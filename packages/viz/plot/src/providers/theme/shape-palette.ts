@@ -5,7 +5,7 @@ export const PLOT_SHAPE_PALETTE = PlotShapePaletteSchema.parse([
   'circle',
   'rectangle',
   'diamond',
-  'cross',
+  { type: 'polygon', params: { sides: 4, rotate: 45 } },
   { type: 'polygon', params: { sides: 3, rotate: -90 } },
   { type: 'polygon', params: { sides: 3, rotate: 90 } },
   { type: 'polygon', params: { sides: 5, rotate: -90 } },
