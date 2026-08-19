@@ -12,6 +12,7 @@ description: 为所有包提供可复用的类型工具、Zod 标量 schema、�
 ```ts
 import {
   assertNonEmptyString,
+  assertPositiveNumber,
   NonBlankStringSchema,
   NormalizedFractionSchema,
   PositiveNumberSchema,
@@ -73,15 +74,18 @@ NormalizedFractionSchema.parse(0.5);
 
 ### 断言工具
 
-`assertNonEmptyString(value, label)` 的参数已经由调用方约束为 `string`。它拒绝空串和运行时标准空白串，非空内容原样通过并返回 `void`。
+`assertNonEmptyString(value, label)` 和 `assertPositiveNumber(value, label)` 的参数分别已经由调用方约束为 `string` 和 `number`。前者拒绝空串和运行时标准空白串，后者拒绝 `0`、负数和非有限数；成功时都返回 `void`。
 
 ```ts
 assertNonEmptyString('layer/main', 'owner');
 // ''、' '、'\t'、'\n' 和 Unicode 空白都会抛出：
 // owner must be a non-empty string.
+assertPositiveNumber(1.5, 'SVG font size');
+// 0、负数、Infinity、-Infinity 和 NaN 都会抛出：
+// SVG font size must be a positive finite number.
 ```
 
-失败时会直接抛出 `RetikzFoundationError`：`code` 固定为 `FOUNDATION_NON_EMPTY_STRING_REQUIRED`，`details` 保留 `label` 和原始 `value`，`cause` 同样指向被拒绝的值。它不是 `unknown` 类型收窄器；需要 schema 结果时直接使用 `NonBlankStringSchema`，调用方也不应捕获后把同一原子失败重复包装成领域错误。
+失败时会直接抛出 `RetikzFoundationError`：字符串断言的 `code` 为 `FOUNDATION_NON_EMPTY_STRING_REQUIRED`，正数断言的 `code` 为 `FOUNDATION_POSITIVE_NUMBER_REQUIRED`；`details` 都保留 `label` 和原始 `value`，`cause` 同样指向被拒绝的值。它们都不是 `unknown` 类型收窄器；需要 schema 结果时直接使用对应 schema，调用方也不应捕获后把同一原子失败重复包装成领域错误。
 
 ### 错误处理
 
@@ -128,10 +132,10 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       endLine: 12,
     },
     {
-      label: '非空字符串断言实现',
+      label: '标量断言实现',
       path: 'packages/kernel/foundation/src/assert.ts',
       startLine: 1,
-      endLine: 14,
+      endLine: 26,
     },
     {
       label: '标量 schema 测试',
@@ -146,10 +150,10 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       endLine: 67,
     },
     {
-      label: '非空断言测试',
+      label: '标量断言测试',
       path: 'packages/kernel/foundation/tests/assert.test.ts',
       startLine: 1,
-      endLine: 39,
+      endLine: 75,
     },
     {
       label: '结构化错误测试',

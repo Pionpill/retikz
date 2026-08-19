@@ -7,6 +7,10 @@ description: 用 @retikz/math 在图形的局部坐标、画布的世界坐标�
 
 本页先介绍最常见的局部坐标与世界坐标，再介绍可以连续组合平移、缩放和旋转的二维仿射矩阵。第一次阅读时，可以先看懂前一节，再按需要使用仿射矩阵。
 
+## 安装
+
+<PackageManagerInstall packages="@retikz/math" />
+
 ## 内容
 
 ### 局部坐标与世界坐标
@@ -81,14 +85,18 @@ applyAffine(matrix, [4, 5]); // [18, 35]：先缩放，再平移
 
 可以这样选择两种能力：只需要围绕图形中心处理局部点时，使用 `localToWorld` / `worldToLocal`；需要表达任意线性变化或组合多步变换时，使用 `AffineMatrix`、`multiplyAffine` 和 `applyAffine`。
 
+如果需要在消费仿射矩阵前检查它是否由有限数值组成且可逆，可以使用 `isFiniteNonSingularAffine`。对于描边等要求保持统一缩放的场景，可以使用 `getAffineSimilarityScale` 获取缩放因子；矩阵不是相似变换时会返回 `undefined`。
+
 #### API 参考
 
-| API               | 类别 | 作用                                         |
-| ----------------- | ---- | -------------------------------------------- |
-| `AffineMatrix`    | 类型 | 按 `[a, b, c, d, e, f]` 顺序表示二维仿射矩阵 |
-| `AFFINE_IDENTITY` | 常量 | 表示不改变点位置的单位矩阵                   |
-| `multiplyAffine`  | 方法 | 按“先内层、后外层”的顺序组合两个变换         |
-| `applyAffine`     | 方法 | 按仿射矩阵公式把一个点映射到新的坐标         |
+| API                         | 类别 | 作用                                                 |
+| --------------------------- | ---- | ---------------------------------------------------- |
+| `AffineMatrix`              | 类型 | 按 `[a, b, c, d, e, f]` 顺序表示二维仿射矩阵         |
+| `AFFINE_IDENTITY`           | 常量 | 表示不改变点位置的单位矩阵                           |
+| `multiplyAffine`            | 方法 | 按“先内层、后外层”的顺序组合两个变换                 |
+| `applyAffine`               | 方法 | 按仿射矩阵公式把一个点映射到新的坐标                 |
+| `isFiniteNonSingularAffine` | 方法 | 判断矩阵是否由有限数值组成且可逆                     |
+| `getAffineSimilarityScale`  | 方法 | 获取相似变换的统一缩放因子，不符合时返回 `undefined` |
 
 ## 相关
 

@@ -1,7 +1,6 @@
 /// <reference lib="dom" />
 
 // @vitest-environment jsdom
-import type { LowerTex } from '@retikz/core';
 import type { Root } from 'react-dom/client';
 
 import { createElement, Fragment } from 'react';
@@ -17,6 +16,8 @@ vi.mock('../../src/mathjax', async importOriginal => ({
   ...(await importOriginal<typeof MathJaxModule>()),
   createMathJaxEngine: createMathJaxEngineMock,
 }));
+
+import type { MathJaxLowerTexState } from '../../src/react';
 
 import { useLowerTex } from '../../src/react';
 
@@ -50,8 +51,8 @@ afterEach(async () => {
 
 describe('useLowerTex', () => {
   it('共享初始化失败不会被无诊断回调的首个订阅者吞掉', async () => {
-    const installError = new Error('@retikz/tex: install the optional peer dependency "mathjax-full".');
-    createMathJaxEngineMock.mockRejectedValueOnce(installError);
+    const initializationError = new Error('@retikz/tex: failed to initialize MathJax.');
+    createMathJaxEngineMock.mockRejectedValueOnce(initializationError);
     const diagnostics: Array<{ kind: string; message: string }> = [];
     const SilentProbe = () => {
       useLowerTex();
@@ -65,15 +66,15 @@ describe('useLowerTex', () => {
     await mount(createElement(Fragment, null, createElement(SilentProbe), createElement(DiagnosticProbe)));
 
     expect(createMathJaxEngineMock).toHaveBeenCalledTimes(1);
-    expect(diagnostics).toEqual([{ kind: 'engine-error', source: '', message: installError.message }]);
+    expect(diagnostics).toEqual([{ kind: 'engine-error', source: '', message: initializationError.message }]);
   });
 
   it('共享初始化失败只报告一次原始错误，后续挂载会重试', async () => {
-    const installError = new Error('@retikz/tex: install the optional peer dependency "mathjax-full".');
+    const initializationError = new Error('@retikz/tex: failed to initialize MathJax.');
     const engine = { convert: vi.fn(() => '<svg />') };
-    createMathJaxEngineMock.mockRejectedValueOnce(installError).mockResolvedValueOnce(engine);
+    createMathJaxEngineMock.mockRejectedValueOnce(initializationError).mockResolvedValueOnce(engine);
     const diagnostics: Array<{ kind: string; message: string }> = [];
-    const values: Array<LowerTex | undefined> = [];
+    const values: Array<MathJaxLowerTexState> = [];
     const Probe = () => {
       values.push(useLowerTex({ onDiagnostic: diagnostic => diagnostics.push(diagnostic) }));
       return null;
@@ -82,13 +83,17 @@ describe('useLowerTex', () => {
     const failedRoot = await mount(createElement(Fragment, null, createElement(Probe), createElement(Probe)));
 
     expect(createMathJaxEngineMock).toHaveBeenCalledTimes(1);
-    expect(diagnostics).toEqual([{ kind: 'engine-error', source: '', message: installError.message }]);
+    expect(diagnostics).toEqual([{ kind: 'engine-error', source: '', message: initializationError.message }]);
+    expect(values.at(-1)).toMatchObject({
+      status: 'error',
+      diagnostic: { kind: 'engine-error', source: '', message: initializationError.message },
+    });
 
     await act(() => failedRoot.unmount());
     roots.delete(failedRoot);
     await mount(createElement(Probe));
 
     expect(createMathJaxEngineMock).toHaveBeenCalledTimes(2);
-    expect(typeof values.at(-1)).toBe('function');
+    expect(values.at(-1)).toMatchObject({ status: 'ready', lowerTex: expect.any(Function) });
   });
 });

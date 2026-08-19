@@ -12,6 +12,7 @@ description: Reusable type utilities, Zod scalar schemas, non-empty string asser
 ```ts
 import {
   assertNonEmptyString,
+  assertPositiveNumber,
   NonBlankStringSchema,
   NormalizedFractionSchema,
   PositiveNumberSchema,
@@ -73,15 +74,18 @@ NormalizedFractionSchema.parse(0.5);
 
 ### Assertion utilities
 
-`assertNonEmptyString(value, label)` expects a value already narrowed to `string`. It rejects empty and runtime-standard whitespace-only strings, passes non-empty content unchanged, and returns `void`.
+`assertNonEmptyString(value, label)` and `assertPositiveNumber(value, label)` expect values already narrowed to `string` and `number`. The first rejects empty and runtime-standard whitespace-only strings; the second rejects `0`, negative, and non-finite numbers. Both return `void` on success.
 
 ```ts
 assertNonEmptyString('layer/main', 'owner');
 // '', ' ', '\t', '\n', and Unicode whitespace throw:
 // owner must be a non-empty string.
+assertPositiveNumber(1.5, 'SVG font size');
+// 0, negative, Infinity, -Infinity, and NaN throw:
+// SVG font size must be a positive finite number.
 ```
 
-Failures directly throw `RetikzFoundationError`: its `code` is `FOUNDATION_NON_EMPTY_STRING_REQUIRED`, its `details` retain the `label` and original `value`, and its `cause` points to the rejected value. It is not an `unknown` type guard; use `NonBlankStringSchema` when a schema result is required, and do not catch and redundantly wrap the same atomic failure as a domain error.
+Failures directly throw `RetikzFoundationError`: the string assertion uses `FOUNDATION_NON_EMPTY_STRING_REQUIRED`, while the positive-number assertion uses `FOUNDATION_POSITIVE_NUMBER_REQUIRED`. Both retain the `label` and original `value` in `details`, and point `cause` to the rejected value. Neither assertion is an `unknown` type guard; use the corresponding schema when a schema result is required, and do not catch and redundantly wrap the same atomic failure as a domain error.
 
 ### Error handling
 
@@ -128,10 +132,10 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       endLine: 12,
     },
     {
-      label: 'Non-empty string assertion',
+      label: 'Scalar assertion implementation',
       path: 'packages/kernel/foundation/src/assert.ts',
       startLine: 1,
-      endLine: 14,
+      endLine: 26,
     },
     {
       label: 'Scalar schema tests',
@@ -146,10 +150,10 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       endLine: 67,
     },
     {
-      label: 'Non-empty assertion tests',
+      label: 'Scalar assertion tests',
       path: 'packages/kernel/foundation/tests/assert.test.ts',
       startLine: 1,
-      endLine: 39,
+      endLine: 75,
     },
     {
       label: 'Structured error tests',

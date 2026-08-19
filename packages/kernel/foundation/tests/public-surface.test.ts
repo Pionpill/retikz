@@ -2,7 +2,7 @@ import * as foundation from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
 describe('foundation public surface', () => {
-  it('exports only the eleven runtime symbols from its root', () => {
+  it('exports only the twelve runtime symbols from its root', () => {
     expect(Object.keys(foundation).sort()).toEqual(
       [
         'NonBlankStringSchema',
@@ -15,6 +15,7 @@ describe('foundation public surface', () => {
         'RetikzFoundationError',
         'RetikzFoundationErrorCode',
         'assertNonEmptyString',
+        'assertPositiveNumber',
         'isRetikzError',
       ].sort(),
     );
