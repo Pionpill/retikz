@@ -70,8 +70,8 @@ const Diagram = () => {
     {
       label: '公式字形进入 Scene 路径图元',
       path: 'packages/kernel/core/src/compile/text/layout.ts',
-      startLine: 241,
-      endLine: 269,
+      startLine: 169,
+      endLine: 224,
     },
   ]}
 />
@@ -198,15 +198,15 @@ const svg = renderToSvgString(spec, { compile: { lowerTex } });
   sources={[
     {
       label: '字符串 sugar 的启用与未闭合分隔符处理',
-      path: 'packages/kernel/core/src/compile/text/inline.ts',
-      startLine: 40,
-      endLine: 88,
+      path: 'packages/kernel/core/src/resolve/text/inline.ts',
+      startLine: 28,
+      endLine: 72,
     },
     {
       label: '缺失 lowerer 与无效公式的 warning 分支',
       path: 'packages/kernel/core/src/compile/text/layout.ts',
-      startLine: 159,
-      endLine: 187,
+      startLine: 102,
+      endLine: 139,
     },
     {
       label: 'TeX lowering 的缓存键与失败结果',
