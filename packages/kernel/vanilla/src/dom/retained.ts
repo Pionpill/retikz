@@ -289,13 +289,10 @@ const createRetainedProcessingControllerImplementation = (
   const fixedOptions = captureRetainedMountOptions(options.options);
   const { devicePixelRatio: _devicePixelRatio, ...initialCanvas } = fixedOptions.canvas ?? {};
   void _devicePixelRatio;
-  const initialMutableOptions = captureRetainedUpdateOptions(
-    {
-      animation: fixedOptions.animation ?? {},
-      ...(options.backend === 'canvas' ? { canvas: initialCanvas } : {}),
-    },
-    options.backend,
-  );
+  const initialMutableOptions = captureRetainedUpdateOptions({
+    animation: fixedOptions.animation ?? {},
+    ...(options.backend === 'canvas' ? { canvas: initialCanvas } : {}),
+  });
   let state: RetainedSessionState = Object.freeze({
     animation: initialMutableOptions.animation ?? {},
     canvas: ('canvas' in initialMutableOptions ? initialMutableOptions.canvas : undefined) ?? {},
@@ -326,7 +323,7 @@ const createRetainedProcessingControllerImplementation = (
 
   return Object.freeze({
     update: (next, updateOptions = {}) => {
-      const captured = captureRetainedUpdateOptions(updateOptions, options.backend);
+      const captured = captureRetainedUpdateOptions(updateOptions);
       const previousState = state;
       state = Object.freeze({
         animation: captured.animation ?? state.animation,

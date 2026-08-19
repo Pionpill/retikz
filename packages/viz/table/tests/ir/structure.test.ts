@@ -55,20 +55,13 @@ describe('Table structure schema', () => {
     expect(TableStructureSchema.parse(JSON.parse(JSON.stringify(detail)))).toEqual(detail);
   });
 
-  it('rejects empty, undefined, holey, and removed manual structures', () => {
+  it('rejects empty, undefined, and holey manual structures', () => {
     const holeyRow = Array<unknown>(1);
 
     expect(() => ManualTableStructureSchema.parse({ kind: 'manual', rows: [] })).toThrow();
     expect(() => ManualTableStructureSchema.parse({ kind: 'manual', rows: [[], []] })).toThrow();
     expect(() => ManualTableStructureSchema.parse({ kind: 'manual', rows: [[undefined]] })).toThrow();
     expect(() => ManualTableStructureSchema.parse({ kind: 'manual', rows: [holeyRow] })).toThrow();
-    expect(() => ManualTableStructureSchema.parse({ kind: 'manual', rows: 1, columns: 1, cells: [] })).toThrow();
-    expect(() =>
-      ManualTableStructureSchema.parse({
-        kind: 'manual',
-        rows: [[{ address: { row: 0, column: 0 }, payload: { kind: 'value', value: 1 } }]],
-      }),
-    ).toThrow();
   });
 
   it('rejects ragged rows and reports the offending row path', () => {

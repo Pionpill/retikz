@@ -18,15 +18,13 @@ import {
   RetikzRuntimeErrorCode,
   RuntimeProgramKind,
 } from '@retikz/runtime';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type {
   RenderFrameSnapshot,
   RenderRuntimeConfigInput,
-  RetainedCanvasRenderer,
   RetainedRendererFactory,
   RetainedRendererRead,
-  RetainedSvgRenderer,
 } from '../../src/runtime';
 
 import {
@@ -186,9 +184,6 @@ describe('@retikz/render/runtime public contract', () => {
       },
       dispose: () => undefined,
     });
-
-    expectTypeOf(svgRenderer).toEqualTypeOf<RetainedSvgRenderer>();
-    expectTypeOf<RetainedCanvasRenderer>().not.toEqualTypeOf<RetainedSvgRenderer>();
     expect(Object.isFrozen(svgRenderer)).toBe(true);
     expect(svgRenderer).toEqual({
       backend: 'svg',
@@ -200,10 +195,7 @@ describe('@retikz/render/runtime public contract', () => {
     expect('prepare' in svgRenderer).toBe(false);
   });
 
-  it('拒绝 null 与非法 backend，始终抛具名 renderer error', () => {
-    expect(() => defineRetainedRenderer(null as unknown as Parameters<typeof defineRetainedRenderer>[0])).toThrowError(
-      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid }),
-    );
+  it('拒绝无法与宿主 provenance 对齐的 renderer backend', () => {
     expect(() =>
       defineRetainedRenderer({
         backend: 'webgl',

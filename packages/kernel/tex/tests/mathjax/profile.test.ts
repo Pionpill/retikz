@@ -63,14 +63,10 @@ describe('[mathjax-profile] public profile', () => {
   );
 
   it(
-    '单独请求 extension 会加载 configuration，未知 runtime 值会 fail loud',
+    '单独请求 extension 会加载 configuration',
     async () => {
       const engine = await createMathJaxEngine({ extensions: ['cancel'] });
       expect(engine.convert(String.raw`\cancel{x}`, { display: false })).not.toContain('data-mml-node="merror"');
-
-      await expect(createMathJaxEngine({ extensions: ['extpfeil' as never] })).rejects.toThrow(
-        /Unknown MathJax extension: extpfeil/,
-      );
     },
     TIMEOUT,
   );

@@ -538,7 +538,7 @@ describe('Path generator step — JSON round-trip & zod 校验', () => {
   });
 });
 
-describe('definePathGenerator — 注册时 best-effort 元校验', () => {
+describe('definePathGenerator', () => {
   it('合法 def 直通返回原对象', () => {
     const def = definePathGenerator({
       name: 'def',
@@ -547,25 +547,5 @@ describe('definePathGenerator — 注册时 best-effort 元校验', () => {
     });
     expect(typeof def.generate).toBe('function');
     expect(def.paramsSchema).toBeDefined();
-  });
-
-  it('paramsSchema 非 zod schema → 注册时 throw', () => {
-    expect(() =>
-      definePathGenerator({
-        name: 'badParams',
-        paramsSchema: {} as unknown as z.ZodType<Record<string, never>>,
-        generate: ({ from }) => [{ kind: 'line', to: from }],
-      }),
-    ).toThrow(/paramsSchema/);
-  });
-
-  it('generate 非函数 → 注册时 throw', () => {
-    expect(() =>
-      definePathGenerator({
-        name: 'badGenerate',
-        paramsSchema: z.object({}),
-        generate: undefined as unknown as () => Array<PathCommand>,
-      }),
-    ).toThrow(/generate/);
   });
 });

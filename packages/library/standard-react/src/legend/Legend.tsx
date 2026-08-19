@@ -4,7 +4,7 @@ import type { InputLegend } from '@retikz/standard-vanilla';
 import type { FC, ReactNode } from 'react';
 
 import { withInputEmbedAdapters } from '@retikz/react';
-import { LegendContentKind, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
+import { LegendContentKind } from '@retikz/standard';
 import { LegendInputEmbedAdapter } from '@retikz/standard-vanilla';
 
 import type { StandardEmbeddableComponent } from '../shared';
@@ -82,13 +82,6 @@ const createRampLegend = (props: LegendRampFormProps, context: ReactInputEmbedCo
 
 /** 将 Legend marker children 组装为 Standard Vanilla Input */
 const createLegendInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
-  if ('content' in props || 'title' in props || !('kind' in props)) {
-    throw new RetikzStandardError({
-      code: RetikzStandardErrorCode.AuthoringInvalid,
-      message: 'React Legend uses marker children with an explicit kind; content and title props are not supported.',
-      details: { fields: ['content', 'title'], hasKind: 'kind' in props },
-    });
-  }
   const collected =
     (props as LegendProps).kind === LegendContentKind.Items
       ? createItemsLegend(props as LegendItemsFormProps, context)

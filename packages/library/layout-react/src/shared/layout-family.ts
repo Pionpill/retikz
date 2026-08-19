@@ -44,16 +44,7 @@ const resolveLayoutItemChild = (
   /** React 子树需要注册到根 Scene 的 Vanilla adapter */
   adapters: ReadonlyArray<AnyInputEmbedAdapter>;
 }> => {
-  const hasIR = props.ir !== undefined;
-  const hasChildren = props.children !== undefined;
-  if (hasIR === hasChildren) {
-    throw new RetikzLayoutError({
-      code: RetikzLayoutErrorCode.AuthoringInvalid,
-      message: 'Layout LayoutItem requires exactly one of children or ir',
-      details: { component: 'LayoutItem', fields: ['children', 'ir'] },
-    });
-  }
-  if (hasIR) return Object.freeze({ child: props.ir, adapters: [] });
+  if (props.ir !== undefined) return Object.freeze({ child: props.ir, adapters: [] });
 
   const input = createInputScene(props.children, { embedIdPrefix });
   const children = input.scene.children;

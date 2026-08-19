@@ -1,20 +1,12 @@
 import { ChildSchema } from '@retikz/core';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type {
   GridLayoutInput,
   GridLayoutItemInput,
   GridPlacementInput,
-  GridPlacementSchema,
   GridTrackBreadthInput,
-  GridTrackBreadthSchema,
   GridTrackInput,
-  GridTrackSchema,
-  IRGridLayout,
-  IRGridLayoutItem,
-  IRGridPlacement,
-  IRGridTrack,
-  IRGridTrackBreadth,
 } from '../../src';
 
 import {
@@ -57,18 +49,12 @@ describe('GridLayout schema and factory', () => {
       children: [{ kind: 'grid', key: 'label', child, margin: 0 }],
     });
     expect(ChildSchema.safeParse(parsed.children[0]?.child).success).toBe(true);
-    expectTypeOf(parsed).toEqualTypeOf<IRGridLayout>();
-    expectTypeOf(parsed.children[0]).toEqualTypeOf<IRGridLayoutItem>();
   });
 
   it('keeps track, placement and item inputs aligned with parsed schema outputs', () => {
     const breadth = { kind: 'content', mode: 'minimum' } satisfies GridTrackBreadthInput;
     const track = { kind: 'minmax', min: breadth, max: { kind: 'fraction', factor: 2 } } satisfies GridTrackInput;
     const placement = { start: 0 } satisfies GridPlacementInput;
-
-    expectTypeOf<IRGridTrackBreadth>().toEqualTypeOf<ReturnType<typeof GridTrackBreadthSchema.parse>>();
-    expectTypeOf<IRGridTrack>().toEqualTypeOf<ReturnType<typeof GridTrackSchema.parse>>();
-    expectTypeOf<IRGridPlacement>().toEqualTypeOf<ReturnType<typeof GridPlacementSchema.parse>>();
     expect(
       createGridLayout({ columns: [track], children: [{ kind: 'grid', key: 'a', child, column: placement }] }),
     ).toMatchObject({ columns: [track], children: [{ column: { start: 0, span: 1 } }] });

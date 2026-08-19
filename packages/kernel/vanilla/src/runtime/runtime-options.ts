@@ -1,5 +1,4 @@
 import { RetikzRetainedRenderError, RetikzRetainedRenderErrorCode } from '@retikz/render/runtime';
-import { RuntimeUpdateStrategy } from '@retikz/runtime';
 
 import type { VanillaRetainedRuntimeOptions, VanillaRuntimeOptions } from './types';
 
@@ -32,27 +31,13 @@ export const captureVanillaRuntimeOptions = (options: object): VanillaRuntimeOpt
     const prototype = Object.getPrototypeOf(runtime);
     if (prototype !== Object.prototype && prototype !== null) return invalidRuntimeOptions(runtime);
     const mode = readDataProperty(runtime, 'mode') ?? VanillaViewMode.Retained;
-    const updateStrategyDescriptor = Object.getOwnPropertyDescriptor(runtime, 'updateStrategy');
-    const rendererFactoryDescriptor = Object.getOwnPropertyDescriptor(runtime, 'rendererFactory');
     const updateStrategy = readDataProperty(runtime, 'updateStrategy');
     const rendererFactory = readDataProperty(runtime, 'rendererFactory');
     if (mode === VanillaViewMode.Static) {
-      if (updateStrategyDescriptor !== undefined || rendererFactoryDescriptor !== undefined) {
-        return invalidRuntimeOptions(runtime);
-      }
       return Object.freeze({ mode });
     }
-    if (
-      mode !== VanillaViewMode.Retained ||
-      (updateStrategy !== undefined &&
-        updateStrategy !== RuntimeUpdateStrategy.Auto &&
-        updateStrategy !== RuntimeUpdateStrategy.Full) ||
-      (rendererFactory !== undefined && typeof rendererFactory !== 'function')
-    ) {
-      return invalidRuntimeOptions(runtime);
-    }
     return Object.freeze({
-      mode,
+      mode: VanillaViewMode.Retained,
       ...(updateStrategy === undefined ? {} : { updateStrategy }),
       ...(rendererFactory === undefined ? {} : { rendererFactory }),
     }) as VanillaRetainedRuntimeOptions;

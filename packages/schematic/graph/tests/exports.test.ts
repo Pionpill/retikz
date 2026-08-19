@@ -71,12 +71,12 @@ describe('@retikz/graph package boundary', () => {
     expect(graphExports.defineGraphThemeStyle).toBeTypeOf('function');
   });
 
-  it('keeps implementation shapes private and rejects the old namespace', () => {
+  it('keeps implementation shapes private and rejects a foreign namespace', () => {
     expect('NonBlankStringSchema' in graphExports).toBe(false);
     expect(graphExports.ContainerSpacingSchema).toBeDefined();
     expect(graphExports.ContainerNeutralStyleSchema).toBeDefined();
     expect(() =>
-      graphExports.EntitySchema.parse({ namespace: 'notation', type: 'entity', id: 'legacy', role: 'stage' }),
+      graphExports.EntitySchema.parse({ namespace: 'foreign', type: 'entity', id: 'invalid', role: 'stage' }),
     ).toThrow();
   });
 });

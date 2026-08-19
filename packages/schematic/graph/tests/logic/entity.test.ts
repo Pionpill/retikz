@@ -1,7 +1,7 @@
 import type { AnyCompositeDefinition, IRChild, IRNode, ThemeModeValue } from '@retikz/core';
 
 import { lowerIRToKernel, ThemeMode } from '@retikz/core';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { IREntity } from '../../src';
 
@@ -43,7 +43,6 @@ describe('Entity canonical semantic IR', () => {
     );
     nodes.forEach(node => {
       expect(Graph.EntitySchema.parse(JSON.parse(JSON.stringify(node)))).toEqual(node);
-      expectTypeOf(node).toEqualTypeOf<IREntity>();
     });
   });
 

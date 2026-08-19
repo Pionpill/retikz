@@ -241,13 +241,6 @@ describe('Table track sizing', () => {
         gap: 0,
       }),
     ).toThrow(/weight/i);
-    expect(() =>
-      solveTableTracks({
-        tracks: [{ kind: 'unknown' }] as unknown as ReadonlyArray<ResolvedTableTrackSize>,
-        contributions: [],
-        gap: 0,
-      }),
-    ).toThrow(/kind/i);
   });
 
   it('returns detached immutable deterministic sizes without mutating inputs', () => {

@@ -277,21 +277,7 @@ describe('AxesSchema', () => {
     if (!unknownField.success) expect(unknownField.error.issues[0]?.path).toEqual([]);
   });
 
-  it('rejects the removed top-level grid, originLabel, and false-axis forms', () => {
-    const legacyGrid = AxesSchema.safeParse({
-      namespace: 'standard',
-      type: 'axes',
-      x: { extent: 20 },
-      y: { extent: 20 },
-      grid: { spacing: 10 },
-    });
-    const legacyOriginLabel = AxesSchema.safeParse({
-      namespace: 'standard',
-      type: 'axes',
-      x: { extent: 20 },
-      y: { extent: 20 },
-      originLabel: '0',
-    });
+  it('rejects false-axis forms', () => {
     const falseAxis = AxesSchema.safeParse({
       namespace: 'standard',
       type: 'axes',
@@ -299,8 +285,6 @@ describe('AxesSchema', () => {
       y: { extent: 20 },
     });
 
-    expect(legacyGrid.success).toBe(false);
-    expect(legacyOriginLabel.success).toBe(false);
     expect(falseAxis.success).toBe(false);
   });
 });

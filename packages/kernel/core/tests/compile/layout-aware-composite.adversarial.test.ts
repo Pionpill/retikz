@@ -3530,40 +3530,7 @@ describe('layout-aware composite replay ownership', () => {
 });
 
 describe('layout-aware composite artifacts and lowering errors', () => {
-  it('requires exactly one expand or compile branch at runtime', () => {
-    const schema = CompositeBaseSchema.extend({
-      namespace: z.literal('test'),
-      type: z.literal('invalidBranch'),
-    });
-
-    expect(() =>
-      defineComposite({
-        namespace: 'test',
-        type: 'invalidBranch',
-        schema,
-        expand: () => ({ children: [] }),
-        compile: () => ({ children: [] }),
-      } as never),
-    ).toThrow(/exactly one of expand or compile/i);
-    expect(() =>
-      defineComposite({
-        namespace: 'test',
-        type: 'invalidBranch',
-        schema,
-      } as never),
-    ).toThrow(/exactly one of expand or compile/i);
-  });
-
-  it('rejects artifacts without a schema and schema-mismatched payloads', () => {
-    const missingSchema = defineComposite({
-      namespace: 'test',
-      type: 'missingArtifactSchema',
-      schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('missingArtifactSchema'),
-      }),
-      compile: () => ({ children: [], artifact: { leaked: true } }) as never,
-    });
+  it('rejects schema-mismatched artifact payloads', () => {
     const mismatched = defineComposite({
       namespace: 'test',
       type: 'mismatchedArtifact',
@@ -3578,11 +3545,6 @@ describe('layout-aware composite artifacts and lowering errors', () => {
       }),
     });
 
-    expect(() =>
-      compileToScene(sceneOf({ namespace: 'test', type: 'missingArtifactSchema' }), {
-        composites: [missingSchema],
-      }),
-    ).toThrow(/artifactSchema/i);
     expect(() =>
       compileToScene(sceneOf({ namespace: 'test', type: 'mismatchedArtifact' }), {
         composites: [mismatched],

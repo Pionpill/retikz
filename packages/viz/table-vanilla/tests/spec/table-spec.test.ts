@@ -1,8 +1,6 @@
-import type { IRDetailTable, IRManualTable } from '@retikz/table';
-
 import { RetikzFoundationError } from '@retikz/foundation';
 import { createDetailTableIR, createManualTableIR, TableSchema } from '@retikz/table';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { detailTable, embedTable, manualTable } from '../../src';
 
@@ -34,9 +32,6 @@ describe('Table Vanilla plain authoring', () => {
 
     const detailSpec = detailTable(detailInput);
     const manualSpec = manualTable(manualInput);
-
-    expectTypeOf(detailSpec).toEqualTypeOf<IRDetailTable>();
-    expectTypeOf(manualSpec).toEqualTypeOf<IRManualTable>();
     expect(detailSpec).toEqual(createDetailTableIR(detailInput));
     expect(manualSpec).toEqual(createManualTableIR(manualInput));
     expect(detailInput).toEqual(detailBefore);

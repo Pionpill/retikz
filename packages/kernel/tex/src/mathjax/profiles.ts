@@ -1,22 +1,10 @@
 import type { MathJaxEngineOptions, MathJaxExtensionValue, ResolvedMathJaxEngineOptions } from './types';
 
-import { RetikzTexError, RetikzTexErrorCode } from '../error';
 import { MATHJAX_EXTENSION_ORDER, MATHJAX_MATH_EXTENSIONS, MathJaxProfile } from './constants';
-
-const EXTENSION_SET = new Set<string>(MATHJAX_EXTENSION_ORDER);
-const PROFILE_SET = new Set<string>(Object.values(MathJaxProfile));
 
 /** 规范化 profile、扩展顺序、内部依赖与共享键 */
 export const resolveMathJaxEngineOptions = (options?: MathJaxEngineOptions): ResolvedMathJaxEngineOptions => {
   const profile = options?.profile ?? MathJaxProfile.Base;
-  if (!PROFILE_SET.has(profile)) {
-    throw new RetikzTexError(RetikzTexErrorCode.MathJax, `Unknown MathJax profile: ${String(profile)}`);
-  }
-  for (const extension of options?.extensions ?? []) {
-    if (!EXTENSION_SET.has(extension)) {
-      throw new RetikzTexError(RetikzTexErrorCode.MathJax, `Unknown MathJax extension: ${String(extension)}`);
-    }
-  }
   const requested = new Set<MathJaxExtensionValue>(
     profile === MathJaxProfile.Math ? MATHJAX_MATH_EXTENSIONS : undefined,
   );

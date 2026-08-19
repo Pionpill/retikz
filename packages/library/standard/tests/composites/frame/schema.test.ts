@@ -104,7 +104,7 @@ describe('FrameSchema', () => {
     });
   });
 
-  it('rejects empty body, missing header text, negative spacing, and removed legacy fields precisely', () => {
+  it('rejects empty body, missing header text, invalid spacing, and unknown nested fields precisely', () => {
     const cases = [
       {
         input: { namespace: 'standard', type: 'frame', id: 'group', children: [] },
@@ -129,10 +129,6 @@ describe('FrameSchema', () => {
       {
         input: { namespace: 'standard', type: 'frame', id: 'group', headerDirection: 'diagonal', children: [node] },
         path: ['headerDirection'],
-      },
-      {
-        input: { namespace: 'standard', type: 'frame', id: 'group', label: 'legacy', children: [node] },
-        path: [],
       },
       {
         input: {

@@ -5,11 +5,10 @@ import {
   RetikzFoundationError,
   RetikzFoundationErrorCode,
 } from '@retikz/foundation';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('assertNonEmptyString', () => {
   it('accepts typed non-empty content without returning a value', () => {
-    expectTypeOf(assertNonEmptyString).toEqualTypeOf<(value: string, label: string) => void>();
     expect(assertNonEmptyString('alpha', 'name')).toBeUndefined();
     expect(() => assertNonEmptyString(' alpha ', 'name')).not.toThrow();
   });

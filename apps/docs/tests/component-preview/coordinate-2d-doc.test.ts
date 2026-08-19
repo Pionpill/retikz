@@ -1,5 +1,6 @@
 import type { FC, ReactNode } from 'react';
 
+import { PlotSchema } from '@retikz/plot';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -12,7 +13,7 @@ import {
   coordinateCartesianControls,
   previewControlContract as cartesianContract,
 } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-cartesian.controls';
-import * as CartesianDemoModule from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-cartesian.demo';
+import { renderCoordinateCartesian } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-cartesian.demo';
 import {
   coordinateCartesianControls as englishCoordinateCartesianControls,
   previewControlContract as englishCartesianContract,
@@ -21,13 +22,13 @@ import {
   coordinatePolarControls,
   previewControlContract as polarContract,
 } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-polar.controls';
-import * as PolarDemoModule from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-polar.demo';
+import { renderCoordinatePolar } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-polar.demo';
 import {
   coordinatePolarControls as englishCoordinatePolarControls,
   previewControlContract as englishPolarContract,
 } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-polar.en.controls';
 
-type PreviewRender = (values: Record<string, unknown>) => ReactNode;
+type PreviewRender<TValues extends object> = (values: TValues) => ReactNode;
 
 const cartesianCanonicalValues = {
   markType: 'point',
@@ -37,11 +38,6 @@ const cartesianCanonicalValues = {
   marginLeft: 24,
   showGrid: true,
 } as const;
-
-const renderCoordinateCartesian = (CartesianDemoModule as unknown as { renderCoordinateCartesian?: PreviewRender })
-  .renderCoordinateCartesian;
-const renderCoordinatePolar = (PolarDemoModule as unknown as { renderCoordinatePolar?: PreviewRender })
-  .renderCoordinatePolar;
 
 const fieldContractOf = (definition: PreviewControlsDefinition) =>
   getPreviewControlFields(definition).map(field => ({
@@ -54,20 +50,19 @@ const fieldContractOf = (definition: PreviewControlsDefinition) =>
     optionValues: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
   }));
 
-const previewOf = (render: PreviewRender | undefined, values: Record<string, unknown>) => {
+const previewOf = <TValues extends object>(render: PreviewRender<TValues> | undefined, values: TValues) => {
   if (render === undefined) return undefined;
   const Preview: FC = () => render(values);
   return { Preview, ir: buildPreviewIR(Preview).ir };
 };
 
-const plotMarkOf = (render: PreviewRender | undefined, values: Record<string, unknown>) => {
-  const plot = previewOf(render, values)?.ir.children[0] as unknown as
-    | { marks?: Array<{ type?: string; closed?: boolean }> }
-    | undefined;
-  return plot?.marks?.[0];
+const plotMarkOf = <TValues extends object>(render: PreviewRender<TValues> | undefined, values: TValues) => {
+  const plot = PlotSchema.safeParse(previewOf(render, values)?.ir.children[0]);
+  const mark = plot.success ? plot.data.marks[0] : undefined;
+  return mark === undefined ? undefined : { type: mark.type, closed: mark.type === 'path' ? mark.closed : undefined };
 };
 
-const markupOf = (render: PreviewRender | undefined, values: Record<string, unknown>) => {
+const markupOf = <TValues extends object>(render: PreviewRender<TValues> | undefined, values: TValues) => {
   const preview = previewOf(render, values);
   return preview === undefined ? '' : renderToStaticMarkup(createElement(preview.Preview));
 };

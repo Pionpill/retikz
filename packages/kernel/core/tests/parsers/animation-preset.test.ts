@@ -228,25 +228,6 @@ describe('opts 覆盖', () => {
   });
 });
 
-describe('必填校验', () => {
-  it('colorShift 缺 from/to → throw', () => {
-    expect(() => colorShift({ to: '#fff' } as never)).toThrow();
-    expect(() => colorShift({ from: '#000' } as never)).toThrow();
-  });
-  it('colorShift from/to 为 null（无类型 JS 调用方）→ throw', () => {
-    expect(() => colorShift({ from: null, to: '#fff' } as never)).toThrow();
-    expect(() => colorShift({ from: '#000', to: null } as never)).toThrow();
-  });
-  it('cameraTo 缺 from/to → throw', () => {
-    expect(() => cameraTo({ to: [0, 0, 1, 1] } as never)).toThrow();
-    expect(() => cameraTo({ from: [0, 0, 1, 1] } as never)).toThrow();
-  });
-  it('cameraTo from/to 为 null（无类型 JS 调用方）→ throw', () => {
-    expect(() => cameraTo({ from: null, to: [0, 0, 1, 1] } as never)).toThrow();
-    expect(() => cameraTo({ from: [0, 0, 1, 1], to: null } as never)).toThrow();
-  });
-});
-
 describe('loop / stagger', () => {
   it('loop 叠加 iterations:infinite（+ direction）', () => {
     expect(loop(fadeIn())).toEqual({ ...fadeIn(), iterations: 'infinite' });

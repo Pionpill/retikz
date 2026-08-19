@@ -12,60 +12,41 @@ import {
 } from '../../../resolve/diagnostics';
 import { withProviderOutputValidationBoundary } from '../../scene-primitive';
 
-/** 校验 generator 命令并返回只含 canonical 字段的 detached command */
-const parseGeneratedCommand = (name: string, command: unknown): PathCommand => {
+/** 校验 generator 命令的不变量并返回只含 canonical 字段的 detached command */
+const snapshotGeneratedCommand = (name: string, command: PathCommand): PathCommand => {
   const bad = (detail: string): never => {
     throw new RetikzCompositeContractError(`path generator '${name}' produced a ${detail}.`);
   };
-  if (command === null || typeof command !== 'object' || Array.isArray(command)) {
-    return bad(`invalid path command`);
-  }
-  const candidate = command as Record<PropertyKey, unknown>;
-  const kind = candidate.kind;
-  if (typeof kind !== 'string') {
-    return bad(`command with unknown kind '${String(kind)}'`);
-  }
+  const kind = command.kind;
   const invalidPoint = (): never => bad(`non-finite coordinate in a '${kind}' command`);
-  const finitePoint = (value: unknown): IRPosition => {
-    if (!Array.isArray(value)) return invalidPoint();
-    const length = value.length;
-    const x = value[0];
-    const y = value[1];
-    const point = [x, y];
-    if (length !== 2 || !isFinitePoint(point)) return invalidPoint();
+  const finitePoint = (value: IRPosition): IRPosition => {
+    if (!isFinitePoint(value)) return invalidPoint();
+    const point: IRPosition = [value[0], value[1]];
     return point;
-  };
-  const optionalDirection = (value: unknown): boolean | undefined => {
-    if (value === undefined) return undefined;
-    if (typeof value !== 'boolean') return bad(`invalid '${kind}' command`);
-    return value;
   };
   switch (kind) {
     case 'move': {
-      const to = finitePoint(candidate.to);
+      const to = finitePoint(command.to);
       return { kind: 'move', to };
     }
     case 'line': {
-      const to = finitePoint(candidate.to);
+      const to = finitePoint(command.to);
       return { kind: 'line', to };
     }
     case 'quad': {
-      const control = finitePoint(candidate.control);
-      const to = finitePoint(candidate.to);
+      const control = finitePoint(command.control);
+      const to = finitePoint(command.to);
       return { kind: 'quad', control, to };
     }
     case 'cubic': {
-      const control1 = finitePoint(candidate.control1);
-      const control2 = finitePoint(candidate.control2);
-      const to = finitePoint(candidate.to);
+      const control1 = finitePoint(command.control1);
+      const control2 = finitePoint(command.control2);
+      const to = finitePoint(command.to);
       return { kind: 'cubic', control1, control2, to };
     }
     case 'arc': {
-      const center = finitePoint(candidate.center);
-      const radius = candidate.radius;
-      const startAngle = candidate.startAngle;
-      const endAngle = candidate.endAngle;
-      const counterClockwise = optionalDirection(candidate.counterClockwise);
+      const center = finitePoint(command.center);
+      const { radius, startAngle, endAngle, counterClockwise } = command;
       if (!isFiniteNumber(radius) || radius <= 0 || !isFiniteNumber(startAngle) || !isFiniteNumber(endAngle)) {
         return bad(`invalid 'arc' command`);
       }
@@ -79,13 +60,8 @@ const parseGeneratedCommand = (name: string, command: unknown): PathCommand => {
       };
     }
     case 'ellipseArc': {
-      const center = finitePoint(candidate.center);
-      const radiusX = candidate.radiusX;
-      const radiusY = candidate.radiusY;
-      const rotation = candidate.rotation;
-      const startAngle = candidate.startAngle;
-      const endAngle = candidate.endAngle;
-      const counterClockwise = optionalDirection(candidate.counterClockwise);
+      const center = finitePoint(command.center);
+      const { radiusX, radiusY, rotation, startAngle, endAngle, counterClockwise } = command;
       if (
         !isFiniteNumber(radiusX) ||
         radiusX <= 0 ||
@@ -110,8 +86,10 @@ const parseGeneratedCommand = (name: string, command: unknown): PathCommand => {
     }
     case 'close':
       return { kind: 'close' };
-    default:
-      return bad(`command with unknown kind '${kind}'`);
+    default: {
+      const exhaustive: never = command;
+      return exhaustive;
+    }
   }
 };
 
@@ -141,7 +119,7 @@ export const lowerGeneratorStepToCommands = (args: {
     if (resolved) resolvedTargets[key] = resolved;
   }
 
-  let produced: unknown;
+  let produced: Array<PathCommand>;
   try {
     produced = def.generate({
       from,
@@ -156,12 +134,7 @@ export const lowerGeneratorStepToCommands = (args: {
       providerKey: `path-generator:${resolution.name}`,
     });
   }
-  return withProviderOutputValidationBoundary(`path generator '${resolution.name}'`, () => {
-    if (!Array.isArray(produced)) {
-      throw new RetikzCompositeContractError(
-        `path generator '${resolution.name}' must return an array of path commands; got ${produced === null ? 'null' : typeof produced}.`,
-      );
-    }
-    return Array.from(produced, command => parseGeneratedCommand(resolution.name, command));
-  });
+  return withProviderOutputValidationBoundary(`path generator '${resolution.name}'`, () =>
+    Array.from(produced, command => snapshotGeneratedCommand(resolution.name, command)),
+  );
 };

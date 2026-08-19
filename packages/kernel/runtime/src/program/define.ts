@@ -16,7 +16,6 @@ import type {
 
 import { RuntimeDiagnosticCode } from '../diagnostic';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
-import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../trace';
 
 /** Program prepare 完成但尚未发布的 artifact 与双层 read cache */
 export type RuntimePreparedProgramArtifact<TArtifact, TProgramRead, TPublicRead> = Readonly<{
@@ -77,9 +76,6 @@ export type RuntimeProgramErasedExecutor = Readonly<{
 
 const runtimeProgramTokens = new WeakSet<object>();
 const runtimeProgramExecutors = new WeakMap<object, RuntimeProgramErasedExecutor>();
-const tracePhases: ReadonlySet<unknown> = new Set(Object.values(PerformanceTracePhase));
-const traceUnits: ReadonlySet<unknown> = new Set(Object.values(PerformanceTraceUnit));
-const traceOutcomes: ReadonlySet<unknown> = new Set(Object.values(PerformanceTraceOutcome));
 
 /** 创建 artifact dispose 失败的非致命诊断 */
 const artifactDisposeDiagnostic = (program: RuntimeProgramToken, cause: unknown): RuntimeDiagnostic =>
@@ -100,45 +96,22 @@ const invalidProgram = (
 ) => new RetikzRuntimeError({ code, phase: 'program-definition', cause });
 
 /** 校验并复制 Program 的 trace declarations */
-const copyTracePhases = (value: unknown): ReadonlyArray<RuntimeTracePhaseDefinition> => {
-  if (!Array.isArray(value)) {
-    throw new RetikzRuntimeError({
-      code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
-      phase: 'program-definition',
-      cause: value,
-    });
-  }
-  const definitions: ReadonlyArray<unknown> = value;
+const copyTracePhases = (
+  definitions: ReadonlyArray<RuntimeTracePhaseDefinition>,
+): ReadonlyArray<RuntimeTracePhaseDefinition> => {
   const seen = new Set<string>();
-  const copied = definitions.map(candidate => {
-    if (typeof candidate !== 'object' || candidate === null) {
-      throw new RetikzRuntimeError({
-        code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
-        phase: 'program-definition',
-        cause: candidate,
-      });
-    }
-    const phase: unknown = Reflect.get(candidate, 'phase');
-    const unit: unknown = Reflect.get(candidate, 'unit');
-    const outcomesCandidate: unknown = Reflect.get(candidate, 'outcomes');
-    const outcomes: ReadonlyArray<unknown> = Array.isArray(outcomesCandidate) ? outcomesCandidate : [];
+  const copied = definitions.map(definition => {
+    const { phase, unit, outcomes } = definition;
     const key = `${String(phase)}\u0000${String(unit)}`;
-    if (
-      !tracePhases.has(phase) ||
-      !traceUnits.has(unit) ||
-      !Array.isArray(outcomesCandidate) ||
-      outcomesCandidate.length === 0 ||
-      outcomes.some(outcome => !traceOutcomes.has(outcome)) ||
-      seen.has(key)
-    ) {
+    if (outcomes.length === 0 || seen.has(key)) {
       throw new RetikzRuntimeError({
         code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
         phase: 'program-definition',
-        cause: candidate,
+        cause: definition,
       });
     }
     seen.add(key);
-    return Object.freeze({ phase, unit, outcomes: Object.freeze([...outcomes]) }) as RuntimeTracePhaseDefinition;
+    return Object.freeze({ phase, unit, outcomes: Object.freeze([...outcomes]) });
   });
   return Object.freeze(copied);
 };
@@ -147,39 +120,9 @@ const copyTracePhases = (value: unknown): ReadonlyArray<RuntimeTracePhaseDefinit
 export const defineRuntimeProgram = <TArtifactInput, TArtifact, TProgramRead, TPublicRead = TProgramRead>(
   input: RuntimeProgramDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead>,
 ): RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead> => {
-  const candidate: unknown = input;
-  if (typeof candidate !== 'object' || candidate === null)
-    throw invalidProgram(RetikzRuntimeErrorCode.ProgramTokenInvalid, input);
-  const id: unknown = Reflect.get(candidate, 'id');
-  const owner: unknown = typeof id === 'object' && id !== null ? Reflect.get(id, 'owner') : undefined;
-  const key: unknown = typeof id === 'object' && id !== null ? Reflect.get(id, 'key') : undefined;
-  if (
-    typeof id !== 'object' ||
-    id === null ||
-    typeof owner !== 'string' ||
-    owner.length === 0 ||
-    typeof key !== 'string' ||
-    key.length === 0
-  ) {
-    throw invalidProgram(RetikzRuntimeErrorCode.ProgramIdInvalid, id);
-  }
-  if (!Array.isArray(input.owners) || !Array.isArray(input.programs)) {
-    throw invalidProgram(RetikzRuntimeErrorCode.ProgramTokenInvalid, input);
-  }
-  const artifactCandidate: unknown = Reflect.get(candidate, 'artifact');
-  if (
-    typeof artifactCandidate !== 'object' ||
-    artifactCandidate === null ||
-    typeof Reflect.get(artifactCandidate, 'capture') !== 'function' ||
-    typeof Reflect.get(artifactCandidate, 'readForProgram') !== 'function' ||
-    typeof Reflect.get(artifactCandidate, 'read') !== 'function' ||
-    (Reflect.get(artifactCandidate, 'dispose') !== undefined &&
-      typeof Reflect.get(artifactCandidate, 'dispose') !== 'function') ||
-    typeof input.run !== 'function' ||
-    (input.update !== undefined && typeof input.update !== 'function') ||
-    (input.observeCommit !== undefined && typeof input.observeCommit !== 'function')
-  ) {
-    throw invalidProgram(RetikzRuntimeErrorCode.ProgramTokenInvalid, input);
+  const { owner, key } = input.id;
+  if (owner.length === 0 || key.length === 0) {
+    throw invalidProgram(RetikzRuntimeErrorCode.ProgramIdInvalid, input.id);
   }
   const { capture, readForProgram, read, dispose } = input.artifact;
   const { run, update, observeCommit } = input;

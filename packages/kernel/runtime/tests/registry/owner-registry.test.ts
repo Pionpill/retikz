@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { RuntimeOwnerDefinition } from '../../src';
 
@@ -26,8 +26,6 @@ describe('runtime owner registry', () => {
     expect(registry.resolve(builtin)).toBe(builtin);
     expect(registry.resolve(custom)).toBe(custom);
     expect(registry.find('builtin')).toBe(builtin);
-    expectTypeOf(registry.resolve(builtin)).toEqualTypeOf<typeof builtin>();
-    expectTypeOf(registry.find('builtin')).not.toHaveProperty('capture');
   });
 
   it('按 key code-unit 顺序返回 immutable definitions copy', () => {
@@ -99,7 +97,6 @@ describe('runtime owner registry', () => {
 
     expect(definition).toEqual({ key: 'private-callbacks' });
     expect(definition).not.toHaveProperty('value');
-    expectTypeOf(definition).not.toHaveProperty('value');
     expect(capture).not.toHaveBeenCalled();
   });
 

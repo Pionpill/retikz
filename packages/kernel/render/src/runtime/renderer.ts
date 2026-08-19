@@ -182,34 +182,10 @@ export type DefineRetainedRenderer = {
 };
 
 const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): RetainedRenderer => {
-  const candidate: unknown = input;
-  if (typeof candidate !== 'object' || candidate === null) {
-    throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid, cause: input });
-  }
-  const backend = Reflect.get(candidate, 'backend');
-  const host = Reflect.get(candidate, 'host');
-  const capability = Reflect.get(candidate, 'capability');
-  const readonlyLayerCapability = Reflect.get(candidate, 'readonlyLayerCapability');
-  const prepareMount = Reflect.get(candidate, 'prepareMount');
-  const prepare = Reflect.get(candidate, 'prepare');
-  const read = Reflect.get(candidate, 'read');
-  const dispose = Reflect.get(candidate, 'dispose');
-  const validHost = backend === 'svg' ? isSvgHost(host) : backend === 'canvas' && isCanvasHost(host);
-  const validCapability = Object.values(RetainedRendererCapability).includes(
-    capability as RetainedRendererCapabilityValue,
-  );
-  const validReadonlyLayerCapability = Object.values(RetainedRendererReadonlyLayerCapability).includes(
-    readonlyLayerCapability as RetainedRendererReadonlyLayerCapabilityValue,
-  );
-  if (
-    !validHost ||
-    !validCapability ||
-    !validReadonlyLayerCapability ||
-    typeof prepareMount !== 'function' ||
-    typeof prepare !== 'function' ||
-    typeof read !== 'function' ||
-    typeof dispose !== 'function'
-  ) {
+  const { backend, host, capability, readonlyLayerCapability, prepareMount, prepare, read, dispose } = input;
+  const runtimeBackend: unknown = backend;
+  const validHost = runtimeBackend === 'svg' ? isSvgHost(host) : runtimeBackend === 'canvas' && isCanvasHost(host);
+  if (!validHost) {
     throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid, cause: input });
   }
   const token = Object.freeze({
@@ -228,20 +204,20 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
     Object.freeze({
       prepareMount: (...arguments_) => {
         assertLive();
-        return (prepareMount as RetainedRendererDefinitionBase['prepareMount'])(...arguments_);
+        return prepareMount(...arguments_);
       },
       prepare: (...arguments_) => {
         assertLive();
-        return (prepare as RetainedRendererDefinitionBase['prepare'])(...arguments_);
+        return prepare(...arguments_);
       },
       read: () => {
         assertLive();
-        return (read as RetainedRendererDefinitionBase['read'])();
+        return read();
       },
       dispose: () => {
         if (state === 'disposed') return;
         state = 'disposing';
-        (dispose as RetainedRendererDefinitionBase['dispose'])();
+        dispose();
         state = 'disposed';
       },
     }),

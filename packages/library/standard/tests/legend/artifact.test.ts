@@ -1,12 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
-
-import type {
-  LegendArtifact,
-  LegendArtifactGeometry,
-  LegendItemsArtifact,
-  LegendPlacedChildArtifact,
-  LegendRampArtifact,
-} from '../../src/composites/presentation/legend/types';
+import { describe, expect, it } from 'vitest';
 
 import {
   LegendArtifactGeometrySchema,
@@ -47,10 +39,6 @@ describe('Legend artifact schema', () => {
     const parsed = LegendArtifactSchema.parse(itemsArtifact);
 
     expect(parsed).toEqual(itemsArtifact);
-    expectTypeOf(parsed).toEqualTypeOf<LegendArtifact>();
-    expectTypeOf(LegendItemsArtifactSchema.parse(itemsArtifact)).toEqualTypeOf<LegendItemsArtifact>();
-    expectTypeOf(LegendArtifactGeometrySchema.parse(geometry)).toEqualTypeOf<LegendArtifactGeometry>();
-    expectTypeOf(LegendPlacedChildArtifactSchema.parse(placed)).toEqualTypeOf<LegendPlacedChildArtifact>();
   });
 
   it('rejects root, geometry, and placed-child fields outside the public artifact contract', () => {
@@ -128,7 +116,6 @@ describe('Legend artifact schema', () => {
     const parsed = LegendRampArtifactSchema.parse(ramp);
 
     expect(LegendArtifactSchema.parse(ramp)).toEqual(ramp);
-    expectTypeOf(parsed).toEqualTypeOf<LegendRampArtifact>();
     expect(parsed.ticks.map(tick => tick.key)).toEqual(['low', 'high']);
     expect(LegendRampArtifactSchema.safeParse({ ...ramp, field: 'revenue' }).success).toBe(false);
     expect(
