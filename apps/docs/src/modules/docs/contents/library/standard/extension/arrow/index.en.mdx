@@ -1,14 +1,14 @@
 ---
 title: Arrow Extensions
-description: Import diamond arrows on demand from @retikz/standard/arrow, then pass their Definitions through the React or Vanilla compile entry point.
+description: Import Diamond, Kite, Square, bar, and crow-foot endpoints on demand from @retikz/standard/arrow, then pass their Definitions through the React or Vanilla compile entry point.
 ---
 
 Arrow extensions build on Core's basic arrows and add more optional content:
 
-| Package          | Provided content                                                   |
-| ---------------- | ------------------------------------------------------------------ |
-| `core`           | `normal`, `open`, `stealth`, `openStealth`, `circle`, `openCircle` |
-| `standard/arrow` | `diamond`, `openDiamond`                                           |
+| Package          | Provided content                                                                        |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| `core`           | `normal`, `open`, `stealth`, `openStealth`, `circle`, `openCircle`                      |
+| `standard/arrow` | `diamond`, `openDiamond`, `kite`, `openKite`, `square`, `openSquare`, `bar`, `crowFoot` |
 
 ## Usage
 
@@ -58,15 +58,41 @@ Path IR stores only an arrow name and JSON-safe configuration. If the name has n
 
 ## Examples
 
-The overview places two peer-level single-direction arrows side by side in each row: a solid marker on the left and its hollow counterpart on the right, so you can compare shapes without changing the path.
+The overview keeps path length and style fixed while comparing the eight Standard endpoint markers in two columns.
 
-<ComponentPreview files="arrow-gallery" size="xs" />
+<ComponentPreview files="arrow-gallery" size="sm" />
 
 ### Diamond arrows
 
-`diamond` and `openDiamond` provide filled and hollow diamond endpoints for aggregation, convergence, or relationships that should be distinct from ordinary triangular arrows.
+`diamond` and `openDiamond` use flat 2:1 proportions and provide filled and hollow endpoints. The solid form uses arrow fill, while the open form is stroke-only.
 
 <ComponentPreview files="diamond-arrows" size="sm" />
+
+### Kite arrows
+
+`kite` and `openKite` place their shoulders at one quarter of the default length, producing an asymmetric contour stretched toward the tip. They share Diamond's solid/open paint rules but are not symmetric diamonds; inject `KiteArrowDefinition` or `OpenKiteArrowDefinition` on demand.
+
+### Square arrows
+
+`square` and `openSquare` have equal default length and width, while explicit `length` and `width` can still stretch them independently. The open form moves its contour inside the marker bounds before stroking instead of reusing the solid outer edge; their Definitions are `SquareArrowDefinition` and `OpenSquareArrowDefinition`.
+
+All three families reuse Core's marker host, start/end placement, path shrink, and `arrowDetail` visual parameters. Explicit `length` and `width` only stretch the frozen default local contours.
+
+### Bar endpoint
+
+`bar` draws an open line perpendicular to the path tangent at the authored endpoint. It inherits the path stroke, but its name does not impose domain meanings such as “blocked” or “inhibited”; consumers assign those meanings.
+
+<ComponentPreview files="bar-arrow" size="sm" />
+
+The path body overlaps the marker contact edge by half of its own stroke width, then the marker paints over the joint. This avoids antialiasing seams without letting the line pass through the bar. `length` controls marker size along the path, `width` controls the bar span, and `lineWidth` controls the marker stroke.
+
+### Crow-foot endpoint
+
+`crowFoot` explicitly draws three open rays from the path contact point. Relationship diagrams may use it for multiplicity, but Standard defines only reusable geometry and does not bind it to cardinality.
+
+<ComponentPreview files="crow-foot-arrow" size="sm" />
+
+All three rays belong to the marker, and the path body shrinks to the junction. `length`, `width`, `lineWidth`, `color`, and `opacity` continue to use Core's `arrowDetail` contract; start, end, reversed routes, and double endpoints share the same placement algorithm.
 
 ## Related
 

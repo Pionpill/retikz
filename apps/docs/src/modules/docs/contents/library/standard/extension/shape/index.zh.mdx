@@ -5,10 +5,10 @@ description: 从 @retikz/standard/shape 按需引入可选节点形状，并分�
 
 形状扩展在 Core 提供的基础形状之上，补充了更多可选内容：
 
-| 包名             | 提供内容                                                               |
-| ---------------- | ---------------------------------------------------------------------- |
-| `core`           | `rectangle` — 矩形、`ellipse` — 椭圆、`polygon` — 多边形               |
-| `standard/shape` | `cross` — 十字形、`sector` — 扇形、`star` — 星形、`contour` — 任意轮廓 |
+| 包名             | 提供内容                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| `core`           | `rectangle` — 矩形、`ellipse` — 椭圆、`polygon` — 多边形                                  |
+| `standard/shape` | `cross`、`sector`、`star`、`contour`、`trapezoid`、`parallelogram`、`hexagon`、`cylinder` |
 
 ## 用法
 
@@ -53,9 +53,9 @@ const svg = renderToSvgString(input, {
 
 ## 例子
 
-下面首先给出一个列表，介绍几个扩展形状。四个形状在同一坐标系内横向排列，便于先比较基本外观，再进入各自的几何参数。
+下面先并列八个扩展形状，便于比较基本外观，再进入各自的几何参数。
 
-<ComponentPreview files="shape-gallery" size="sm" />
+<ComponentPreview files="shape-gallery" size="md" />
 
 ### 十字形
 
@@ -69,6 +69,68 @@ const svg = renderToSvgString(input, {
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | `width?`  | `number \| { default: number; horizontal?: number; vertical?: number }`                                                               | 水平臂与垂直臂宽度；数字同时应用于两个轴向 |
 | `height?` | `number \| { default: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }` | 四个方向高度，并支持轴向和 default 回退    |
+
+### 梯形
+
+`trapezoid` 用 `shortSide` 选择短边，并用短边与相对长边的比例控制收窄程度。内容外接会为斜边和圆角留出空间；比例为 `1` 时退化为矩形。
+
+<ComponentPreview files="trapezoid-example" size="sm" />
+
+#### API
+
+节点注入 `TrapezoidShapeDefinition`，参数类型为 `TrapezoidShapeParams`：
+
+| 字段              | 类型                                     | 说明                                           |
+| ----------------- | ---------------------------------------- | ---------------------------------------------- |
+| `shortSide?`      | `'top' \| 'right' \| 'bottom' \| 'left'` | 短边方向；默认为 `top`                         |
+| `shortSideRatio?` | `number`                                 | 短边与相对长边之比，范围 `(0, 1]`；默认 `0.72` |
+| `cornerRadius?`   | `number`                                 | 非负圆角半径；默认为 `0`                       |
+
+### 平行四边形
+
+`parallelogram` 通过斜边方向和角度控制水平错位。角度是斜边与水平边的夹角；`90` 度时轮廓退化为矩形，纵向形态可继续使用 Node 旋转。
+
+<ComponentPreview files="parallelogram-example" size="sm" />
+
+#### API
+
+节点注入 `ParallelogramShapeDefinition`，参数类型为 `ParallelogramShapeParams`：
+
+| 字段              | 类型                | 说明                                  |
+| ----------------- | ------------------- | ------------------------------------- |
+| `slantDirection?` | `'left' \| 'right'` | 顶边错位方向；默认为 `right`          |
+| `slantAngle?`     | `number`            | 斜边角度，范围 `(0, 90]`；默认为 `70` |
+| `cornerRadius?`   | `number`            | 非负圆角半径；默认为 `0`              |
+
+### 长六边形
+
+`hexagon` 是可独立调整宽高的长六边形：上下边保持水平，左右各保留一个侧向顶点。它不是 Core 正多边形 `polygon { sides: 6 }` 的别名。
+
+<ComponentPreview files="hexagon-example" size="sm" />
+
+#### API
+
+节点注入 `HexagonShapeDefinition`，参数类型为 `HexagonShapeParams`：
+
+| 字段             | 类型     | 说明                                                    |
+| ---------------- | -------- | ------------------------------------------------------- |
+| `shoulderRatio?` | `number` | 单侧斜肩深度与总宽度之比，范围 `(0, 0.5)`；默认为 `0.2` |
+| `cornerRadius?`  | `number` | 非负圆角半径；默认为 `0`                                |
+
+### 圆柱形
+
+`cylinder` 用一个闭合外轮廓和一条端盖分隔弧表达圆柱。`capDepth` 会在内容区两端预留空间；分隔弧只参与描边，不会成为第二个节点或连接边界，也不会挖空近端端盖的填充。
+
+<ComponentPreview files="cylinder-example" size="sm" />
+
+#### API
+
+节点注入 `CylinderShapeDefinition`，参数类型为 `CylinderShapeParams`：
+
+| 字段        | 类型                         | 说明                        |
+| ----------- | ---------------------------- | --------------------------- |
+| `axis?`     | `'vertical' \| 'horizontal'` | 主轴方向；默认为 `vertical` |
+| `capDepth?` | `number`                     | 非负端盖深度；默认为 `8`    |
 
 ### 扇形
 

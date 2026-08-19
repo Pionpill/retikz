@@ -1,4 +1,4 @@
-import type { IRNode, IRPath, IRScope } from '@retikz/core';
+import type { IRNode, IRPath, IRScope, IRShapeValue } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
@@ -79,6 +79,37 @@ const categoryColorChannel = defineNodeChannel<string>({
   },
   deliver: (node, value) => {
     node.fill = value;
+  },
+});
+
+/** 自定义 symbol 通道：只提供形状 descriptor，验证图例缺省颜色的主题色板回退 */
+const symbolLegendChannel = defineNodeChannel<IRShapeValue>({
+  channel: 'symbolCode',
+  output: { outputKind: 'symbol', palette: ['circle', 'diamond'] },
+  legend: 'symbol',
+  resolve: ctx => mark => {
+    const binding = extensionChannelsOf(mark).symbolCode;
+    if (binding?.field === undefined) return undefined;
+    const field = binding.field;
+    const domain = [...new Set(ctx.rows.map(row => String(row[field])))];
+    const shapes: Array<IRShapeValue> = ['circle', 'diamond'];
+    const shapeByCategory = new Map(
+      domain.map((category, index) => [category, shapes[index % shapes.length]] as const),
+    );
+    return {
+      resolver: row => shapeByCategory.get(String(row[field])),
+      descriptor: {
+        channel: 'symbolCode',
+        scaleType: 'ordinal',
+        domain,
+        range: shapes,
+        field,
+        fieldType: ctx.fieldTypes.get(field),
+      },
+    };
+  },
+  deliver: (node, value) => {
+    node.shape = value;
   },
 });
 
@@ -381,6 +412,28 @@ describe('custom node channel registry', () => {
           .map(node => node.fill)
       : [];
     expect(fills).toEqual(['#dc2626', '#2563eb']);
+  });
+
+  it('symbol_legend_without_default_color_uses_the_first_series_color', () => {
+    const symbolRows = [
+      { x: 0, y: 0, kind: 'A' },
+      { x: 1, y: 1, kind: 'B' },
+    ];
+    const spec = PlotSchema.parse({
+      ...scatterSpec({ symbolCode: { field: 'kind' } }),
+      guides: [{ type: 'legend', channel: 'symbolCode' }],
+    });
+    const root = expandOf(spec, { d: symbolRows }, opts([symbolLegendChannel]));
+    const legend = scopesOf(root).find(scope => scope.id === 'legend.symbolCode');
+    const mark = scopesOf(root).find(scope => scope.nodeDefault?.shape === 'circle');
+    const fills = legend
+      ? nodesOf(legend)
+          .filter(node => node.text === undefined)
+          .map(node => node.fill)
+      : [];
+
+    expect(mark?.nodeDefault?.fill).toBeDefined();
+    expect(fills).toEqual([mark?.nodeDefault?.fill, mark?.nodeDefault?.fill]);
   });
 
   it('custom_channel_legend_rejects_incompatible_output_kind', () => {
