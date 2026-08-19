@@ -24,6 +24,8 @@ import { RetikzCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';
 
 const ARROW_GEOMETRY_BASE_SIZE = 10;
+/** 主路径进入 marker 接触边的描边宽度比例 */
+const ARROW_PATH_CONTACT_OVERLAP = 0.5;
 
 /** 解析 path kind provider */
 export const resolvePathKind = (path: IRPathBase, context: PathResolveContext, irPath: string): PathKindResolution => {
@@ -141,7 +143,8 @@ export const resolveArrowMark = (mark: IRArrowMark, context: PathResolveContext)
     resolvedLength,
     resolvedWidth,
     boundaryOuterInset,
-    shrink: ((tipX - contactX) * resolvedLength) / baseSize,
+    // 主路径用 butt cap 绘制；向 marker 内覆盖半个自身描边宽度，避免相切边界分别抗锯齿后出现缝隙
+    shrink: ((tipX - contactX) * resolvedLength) / baseSize - ARROW_PATH_CONTACT_OVERLAP,
   };
   if (!Number.isFinite(geometry.shrink)) {
     throw new RetikzCompositeContractError(
