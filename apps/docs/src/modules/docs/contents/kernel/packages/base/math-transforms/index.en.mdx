@@ -7,6 +7,10 @@ When a shape moves or rotates, the points that describe the shape can stay the s
 
 This page starts with the common case of local and world coordinates, then introduces two-dimensional affine matrices for composing translation, scaling, and rotation. On a first read, start with the first section and come back to affine matrices when you need them.
 
+## Install
+
+<PackageManagerInstall packages="@retikz/math" />
+
 ## Contents
 
 ### Local and world coordinates
@@ -85,14 +89,18 @@ In `multiplyAffine(outer, inner)`, `inner` is the inner transform applied first,
 
 Choose between the two capabilities this way: use `localToWorld` / `worldToLocal` for local points around a shape center; use `AffineMatrix`, `multiplyAffine`, and `applyAffine` for arbitrary linear changes or multi-step transform chains.
 
+When a consumer needs to check a matrix before using it, `isFiniteNonSingularAffine` verifies that it contains finite values and is invertible. For cases such as stroke scaling that require one uniform scale, `getAffineSimilarityScale` returns the scale factor and returns `undefined` for other matrices.
+
 #### API reference
 
-| API               | Category | Purpose                                                     |
-| ----------------- | -------- | ----------------------------------------------------------- |
-| `AffineMatrix`    | Type     | Represents a 2D affine matrix in `[a, b, c, d, e, f]` order |
-| `AFFINE_IDENTITY` | Constant | Represents the identity matrix, which changes nothing       |
-| `multiplyAffine`  | Method   | Compose two transforms: inner first, outer second           |
-| `applyAffine`     | Method   | Map a point using the affine-matrix formula                 |
+| API                         | Category | Purpose                                                                   |
+| --------------------------- | -------- | ------------------------------------------------------------------------- |
+| `AffineMatrix`              | Type     | Represents a 2D affine matrix in `[a, b, c, d, e, f]` order               |
+| `AFFINE_IDENTITY`           | Constant | Represents the identity matrix, which changes nothing                     |
+| `multiplyAffine`            | Method   | Compose two transforms: inner first, outer second                         |
+| `applyAffine`               | Method   | Map a point using the affine-matrix formula                               |
+| `isFiniteNonSingularAffine` | Method   | Check that a matrix has finite values and is invertible                   |
+| `getAffineSimilarityScale`  | Method   | Get the uniform scale of a similarity transform, or `undefined` otherwise |
 
 ## Related
 
