@@ -59,7 +59,7 @@ The default `base` profile keeps MathJax minimal. `math` adds `ams`, `newcommand
 | `createLowerTex`        | `(engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex`         | Adapts an engine and caches deterministic results by source, display mode, font size, and host color. |
 | `useLowerTex`           | `(options?: MathJaxLowerTexOptions) => LowerTex \| undefined`               | React hook from `@retikz/tex/react`; shares engines by canonical configuration.                       |
 
-Parser helpers such as `parseMathJaxSvg`, `parsePathD`, and `parseTransform` are implementation details and are not exported from the root package entry.
+SVG lowering helpers such as `parsePathD` and `parseTransform` are implementation details and are not exported from the root package entry.
 
 ## Failure semantics
 

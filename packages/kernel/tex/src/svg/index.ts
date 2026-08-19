@@ -1,3 +1,1 @@
-export * from './matrix';
-export * from './parse-svg';
-export * from './path-d';
+export * from './lower-mathjax-svg';
