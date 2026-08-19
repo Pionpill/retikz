@@ -42,7 +42,7 @@ const bracket = defineArrow({
 });
 ```
 
-`emit` uses `baseSize` local coordinates. `lineContactX` tells the path body where to stop, while `tipX` describes the visual tip. Hollow arrows also account for `lineWidth` and `outerInset` when compensating the outer outline.
+`emit` uses `baseSize` local coordinates. `lineContactX` defines the marker's path-contact baseline; Core lets the path overlap that baseline by half of its own stroke width before the marker paints over the joint. `tipX` describes the visual tip. Hollow arrows also account for `lineWidth` and `outerInset` when compensating the outer outline.
 
 ## Inject into the host
 
@@ -79,16 +79,22 @@ The `fill` / `stroke` values passed to `emit` are `MarkerFill`. Without an expli
       endLine: 13,
     },
     {
-      label: 'Arrow lookup, visual overrides, and marker validation',
-      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
-      startLine: 68,
-      endLine: 127,
+      label: 'Arrow lookup, visual overrides, and shrink resolution',
+      path: 'packages/kernel/core/src/resolve/path/provider.ts',
+      startLine: 103,
+      endLine: 151,
     },
     {
-      label: 'Sizing, contextStroke, shrinking, and marker emission',
+      label: 'contextStroke, marker validation, and materialization',
       path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
-      startLine: 147,
-      endLine: 243,
+      startLine: 18,
+      endLine: 82,
+    },
+    {
+      label: 'Path endpoint shrink application',
+      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
+      startLine: 151,
+      endLine: 204,
     },
   ]}
 />
@@ -103,7 +109,7 @@ The `fill` / `stroke` values passed to `emit` are `MarkerFill`. Without an expli
 | Invalid `baseSize`, contact, or dimensions | Compile rejects invalid marker sizing                           |
 | Unknown primitive or non-finite geometry   | Marker validation prevents invalid Scene output                 |
 | Recursive arrows, clips, or text in marker | The narrow `MarkerPrimitive` contract rejects them              |
-| Path uses an IRPaint stroke            | Marker cannot inherit a resource paint; set a solid arrow color |
+| Path uses an IRPaint stroke                | Marker cannot inherit a resource paint; set a solid arrow color |
 
 MarkerPrimitive allows only `path`, `ellipse`, `rect`, and groups containing the same subset. Do not return SVG `<marker>` elements, Canvas objects, text layout, or external paint resource references.
 

@@ -48,4 +48,52 @@ describe('resolve source structure', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('keeps position resolve independent from compile orchestration', () => {
+    const offenders = sourceFiles('src/resolve/position')
+      .filter(path => /from\s+['"][^'"]*compile|NamespaceStack|CompileContext|TraversalFrame/u.test(source(path)))
+      .map(path => relative(root, resolve(root, path)).replace(/\\/gu, '/'));
+
+    expect(offenders).toEqual([]);
+    expect(source('src/resolve/index.ts')).not.toContain("export * from './position';");
+  });
+
+  it('keeps composite provider binding in resolve', () => {
+    expect(source('src/resolve/index.ts')).toContain("export * from './composite';");
+
+    const lower = source('src/compile/orchestration/composite.ts');
+    const traversal = source('src/compile/orchestration/traversal.ts');
+    expect(lower).not.toContain('parseProviderPayload');
+    expect(lower).not.toContain('registry.get(');
+    expect(traversal).not.toContain('parseProviderPayload');
+    expect(traversal).not.toContain('runtime.context.composites.get(');
+  });
+
+  it('keeps text Source IR determination in resolve', () => {
+    expect(source('src/resolve/index.ts')).toContain("export * from './text';");
+
+    const compileText = sourceFiles('src/compile/text').map(source).join('\n');
+    const nodeLayout = [
+      source('src/compile/node/layout.ts'),
+      source('src/compile/node/content/layout.ts'),
+      source('src/compile/node/label/layout.ts'),
+    ].join('\n');
+    const pathLabel = source('src/compile/path/host/label.ts');
+    expect(compileText).not.toContain('parseInlineRuns');
+    expect(compileText).not.toContain('resolveFontSize');
+    expect(nodeLayout).not.toContain('resolveLineRunsWithWarning');
+    expect(nodeLayout).not.toContain('resolveFontSize');
+    expect(pathLabel).not.toContain('resolveLineRunsWithWarning');
+    expect(pathLabel).not.toContain('resolveFontSize');
+  });
+
+  it('keeps Scope translate Source IR determination in position resolve', () => {
+    const scope = source('src/compile/scope.ts');
+    expect(scope).toContain('resolveTransformTranslation');
+    expect(scope).not.toContain('resolvePosition(');
+    expect(scope).not.toContain('IRAtPosition');
+    expect(scope).not.toContain('IRBetweenPosition');
+    expect(scope).not.toContain('IROffsetPosition');
+    expect(scope).not.toContain('PolarPosition');
+  });
 });

@@ -10,8 +10,6 @@ import type {
   CompositeReplay,
   CompositeReplayWrapper,
   LayoutAlignmentGuide,
-  LayoutCompositeCompileContext,
-  LayoutCompositeCompileResult,
   LayoutProposal,
   ScenePrimitive,
   SceneResource,
@@ -439,12 +437,4 @@ export type PendingCompileObservation = {
   theme: ResolvedTheme;
   /** owner occurrence 捕获的完整样式栈 */
   styleStack: ReadonlyArray<StyleResolveFrame>;
-};
-
-/** 紧邻 schema parse 后可调用的 layout-aware composite 形态 */
-export type CallableLayoutCompositeDefinition = {
-  namespace: string;
-  type: string;
-  artifactSchema?: { parse: (value: unknown) => JsonValue };
-  compile: (node: unknown, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<JsonValue>;
 };

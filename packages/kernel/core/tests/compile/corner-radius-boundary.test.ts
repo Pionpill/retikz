@@ -5,6 +5,7 @@ import type { ContourSegment } from '../../src/shared/geometry/path';
 
 import { NamespaceStack } from '../../src/compile/namespace';
 import { boundaryPointOf, layoutNode } from '../../src/compile/node';
+import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
@@ -28,8 +29,12 @@ const layoutSquare = (node: IRNode) => {
     round: value => value,
     irPath: 'node',
     warn: () => {},
+    labelDistance: 12,
   });
-  return layoutNode(resolution, { measureText, namespaceStack: new NamespaceStack() });
+  return layoutNode(resolution, {
+    measureText,
+    positionContext: createPositionResolveContext({ namespaceStack: new NamespaceStack(), nodeDistance: 24 }),
+  });
 };
 
 /** 40×40 正方轮廓的 4 条 CW Line 段（用于独立复算 fillet 弧，断言边界端点落弧上） */

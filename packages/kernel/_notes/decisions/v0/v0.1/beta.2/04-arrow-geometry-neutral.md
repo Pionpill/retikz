@@ -22,7 +22,7 @@ core 定义箭头形状几何的单一来源（中性字段命名），core shri
 - `lineContactX`：路径线段应接触箭头尾部 / 凹口的位置（存静态 base，不含 lineWidth 调整）。
 - `defaultLength` / `defaultWidth`：默认尺寸；`hollow` 标志：空心箭头丢 fill、描边主导、启用 lineWidth，并对 `lineContactX` 减 `lineWidth/2`。
 
-core `computeShrink` 由 `(tipX - lineContactX) * effectiveLength / baseSize` 计算，注释不再用 SVG `refX`；React/SVG renderer 把同一份几何映射到 SVG marker 的 `viewBox` / `refX` / path data，SVG-specific 常量名只允许出现在 。
+core 的 shrink 以 `(tipX - lineContactX) * effectiveLength / baseSize` 为几何基准，并保留半个主路径描边宽度的 marker 内覆盖，避免相切边界分别抗锯齿后出现缝隙；React/SVG renderer 把同一份几何映射到 SVG marker 的 `viewBox` / `refX` / path data
 
 理由：
 
@@ -32,11 +32,11 @@ core `computeShrink` 由 `(tipX - lineContactX) * effectiveLength / baseSize` �
 
 ## 长期边界
 
-- 新增公共 export 或 schema 字段（本 ADR 为内部几何组织，若需新增字段应 halt 重评范围）。
-- 改变现有箭头 shrink 数值（目标是运行时等价）。
+- 本能力保持内部几何组织，不新增公共 export 或 schema 字段；若需新增字段应 halt 重评范围
+- Definition 字段、marker 尺寸以及 `tipX` / `lineContactX` 的接触语义保持不变；core shrink 在几何基准上扣除半个主路径描边宽度，使路径进入 marker 内部并由 marker 覆盖接头
 
 ---
 
 ## 最终实现结果
 
-已实现本 ADR 的核心决策。兼容性：正文所列默认行为与既有契约保持兼容；其余默认行为、失败语义与公开契约以正文为准。
+已实现本 ADR 的核心决策。Definition 与 marker 几何契约保持不变；core shrink 在既有接触几何上增加半个主路径描边宽度的覆盖，以消除 renderer 抗锯齿产生的可见接缝

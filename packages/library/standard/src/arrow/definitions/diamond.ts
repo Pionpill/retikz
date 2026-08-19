@@ -12,9 +12,9 @@ export const DiamondArrowDefinition = defineArrow({
   emit: context => [
     filledPath(context, [
       [0, 5],
-      [5, 0],
+      [5, 2.5],
       [10, 5],
-      [5, 10],
+      [5, 7.5],
     ]),
   ],
 });
@@ -38,9 +38,9 @@ export const OpenDiamondArrowDefinition = defineArrow({
       context,
       [
         [1, 5],
-        [5, 1],
+        [5, 3],
         [9, 5],
-        [5, 9],
+        [5, 7],
       ],
       { strokeLinejoin: 'round' },
     ),

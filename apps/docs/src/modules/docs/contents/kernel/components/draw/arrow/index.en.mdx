@@ -77,9 +77,9 @@ Explicit element fields win over the path master color and Scope arrow defaults.
     },
     {
       label: 'Scope defaults and path master-color resolution',
-      path: 'packages/kernel/core/src/compile/style/arrow.ts',
+      path: 'packages/kernel/core/src/resolve/style/arrow.ts',
       startLine: 35,
-      endLine: 87,
+      endLine: 97,
     },
     {
       label: 'arrow definition lookup and marker materialization',
@@ -92,7 +92,7 @@ Explicit element fields win over the path master color and Scope arrow defaults.
 
 ### Why the path body becomes shorter
 
-The arrow tip remains at the original endpoint. The compiler uses the definition's tip and line-contact points to shorten the path body in the opposite direction, making the stroke stop at the arrow's tail. This prevents a line from crossing a hollow outline or showing through a solid or translucent arrow.
+The arrow tip remains at the original endpoint. The compiler uses the definition's tip and line-contact points to shorten the path body in the opposite direction, while letting the stroke overlap the contact edge by half of its own width before the marker paints over the joint. This removes antialiasing seams without letting the line cross a hollow outline or show through a solid or translucent arrow.
 
 The shrink distance changes with `length × scale × strokeWidth`; hollow shapes also include `lineWidth` in the contact position. When an endpoint references a Node and is clipped to its boundary automatically, compile adds an outer-outline compensation so a hollow arrow does not press into the node boundary.
 
@@ -100,9 +100,9 @@ The shrink distance changes with `length × scale × strokeWidth`; hollow shapes
   sources={[
     {
       label: 'arrow contact point and shrink calculation',
-      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
-      startLine: 147,
-      endLine: 177,
+      path: 'packages/kernel/core/src/resolve/path/provider.ts',
+      startLine: 120,
+      endLine: 148,
     },
     {
       label: 'path endpoint shrink orchestration',
@@ -153,18 +153,18 @@ A multi-node path can become several subpaths during compile, but the start arro
 
 `arrowDetail` carries 8 visual fields + optional `start` / `end` sub-objects. The `start` / `end` sub-objects use the same field set (non-recursive) and merge field-by-field into the top-level defaults:
 
-| Field       | Type                                                    | Default                      | Description                                                                                                                                                                           |
-| ----------- | ------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Field       | Type                                                    | Default                      | Description                                                                                                                                                                                    |
+| ----------- | ------------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `shape`     | <ApiValues name="BuiltinArrowShape" /> \| `string`      | `'stealth'`                  | Core basic arrows are `normal` / `open` / `stealth` / `openStealth` / `circle` / `openCircle`; optional Standard and custom names register through `<Layout arrows>` / `CompileOptions.arrows` |
-| `scale`     | `number > 0`                                            | `1`                          | Uniform scale factor; multiplied **after** `length` / `width` (`length=10, scale=1.5` → effective 15)                                                                                 |
-| `length`    | `number ≥ 0`                                            | `6`                          | Arrow length along the path direction (user units)                                                                                                                                    |
-| `width`     | `number ≥ 0`                                            | `6`                          | Arrow width perpendicular to the path (user units)                                                                                                                                    |
-| `color`     | `string`                                                | —                            | Stroke color override; default inherits the path stroke color                                                                                                                         |
-| `fill`      | `string`                                                | `color` or path stroke color | Fill color override; **silent no-op on hollow shapes** (written value is dropped)                                                                                                     |
-| `opacity`   | `number ∈ [0, 1]`                                       | —                            | Arrow-only opacity; default inherits path opacity                                                                                                                                     |
-| `lineWidth` | `number ≥ 0`                                            | `1.5`                        | Stroke width for hollow shapes; ignored on solid shapes                                                                                                                               |
-| `start`     | `IRArrowEndDetail` (same field set, no `start` / `end`) | —                            | Start-end override (only effective when `arrow` includes the start: `'<-'` / `'<->'`)                                                                                                 |
-| `end`       | `IRArrowEndDetail` (same field set, no `start` / `end`) | —                            | End-end override (only effective when `arrow` includes the end: `'->'` / `'<->'`)                                                                                                     |
+| `scale`     | `number > 0`                                            | `1`                          | Uniform scale factor; multiplied **after** `length` / `width` (`length=10, scale=1.5` → effective 15)                                                                                          |
+| `length`    | `number ≥ 0`                                            | `6`                          | Arrow length along the path direction (user units)                                                                                                                                             |
+| `width`     | `number ≥ 0`                                            | `6`                          | Arrow width perpendicular to the path (user units)                                                                                                                                             |
+| `color`     | `string`                                                | —                            | Stroke color override; default inherits the path stroke color                                                                                                                                  |
+| `fill`      | `string`                                                | `color` or path stroke color | Fill color override; **silent no-op on hollow shapes** (written value is dropped)                                                                                                              |
+| `opacity`   | `number ∈ [0, 1]`                                       | —                            | Arrow-only opacity; default inherits path opacity                                                                                                                                              |
+| `lineWidth` | `number ≥ 0`                                            | `1.5`                        | Stroke width for hollow shapes; ignored on solid shapes                                                                                                                                        |
+| `start`     | `IRArrowEndDetail` (same field set, no `start` / `end`) | —                            | Start-end override (only effective when `arrow` includes the start: `'<-'` / `'<->'`)                                                                                                          |
+| `end`       | `IRArrowEndDetail` (same field set, no `start` / `end`) | —                            | End-end override (only effective when `arrow` includes the end: `'->'` / `'<->'`)                                                                                                              |
 
 ## Related
 

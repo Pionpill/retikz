@@ -5,10 +5,10 @@ description: Import optional node shapes on demand from @retikz/standard/shape, 
 
 Shape extensions build on Core's basic shapes and add more optional content:
 
-| Package          | Provided content                     |
-| ---------------- | ------------------------------------ |
-| `core`           | `rectangle`, `ellipse`, `polygon`    |
-| `standard/shape` | `cross`, `sector`, `star`, `contour` |
+| Package          | Provided content                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| `core`           | `rectangle`, `ellipse`, `polygon`                                                         |
+| `standard/shape` | `cross`, `sector`, `star`, `contour`, `trapezoid`, `parallelogram`, `hexagon`, `cylinder` |
 
 ## Usage
 
@@ -53,9 +53,9 @@ When an IR shape is neither a Core default nor registered in this invocation's `
 
 ## Examples
 
-The list below introduces several extension shapes. The four shapes share one coordinate system so you can compare their basic appearances before exploring each shape's own geometry.
+The overview below places all eight extension shapes in one coordinate system before each shape exposes its own geometry controls.
 
-<ComponentPreview files="shape-gallery" size="sm" />
+<ComponentPreview files="shape-gallery" size="md" />
 
 ### Cross
 
@@ -69,6 +69,68 @@ Use `shape={{ type: 'cross', params }}` and inject `CrossShapeDefinition`. A sca
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | `width?`  | `number \| { default: number; horizontal?: number; vertical?: number }`                                                               | Horizontal and vertical arm widths; scalar applies to both |
 | `height?` | `number \| { default: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }` | Four arm heights with axis and default fallbacks           |
+
+### Trapezoid
+
+`trapezoid` selects its short side with `shortSide` and controls the taper through the short-to-opposite-side ratio. Content circumscription reserves room for slanted and rounded corners; ratio `1` degenerates to a rectangle.
+
+<ComponentPreview files="trapezoid-example" size="sm" />
+
+#### API
+
+Inject `TrapezoidShapeDefinition`; its parameters have type `TrapezoidShapeParams`:
+
+| Field             | Type                                     | Description                                               |
+| ----------------- | ---------------------------------------- | --------------------------------------------------------- |
+| `shortSide?`      | `'top' \| 'right' \| 'bottom' \| 'left'` | Short-side direction; defaults to `top`                   |
+| `shortSideRatio?` | `number`                                 | Short/opposite-side ratio in `(0, 1]`; defaults to `0.72` |
+| `cornerRadius?`   | `number`                                 | Non-negative corner radius; defaults to `0`               |
+
+### Parallelogram
+
+`parallelogram` controls horizontal offset through a slant direction and angle. The angle is measured between a slanted side and a horizontal edge; `90` degrees degenerates to a rectangle. Use Node rotation for a vertical form.
+
+<ComponentPreview files="parallelogram-example" size="sm" />
+
+#### API
+
+Inject `ParallelogramShapeDefinition`; its parameters have type `ParallelogramShapeParams`:
+
+| Field             | Type                | Description                                    |
+| ----------------- | ------------------- | ---------------------------------------------- |
+| `slantDirection?` | `'left' \| 'right'` | Top-edge offset direction; defaults to `right` |
+| `slantAngle?`     | `number`            | Side angle in `(0, 90]`; defaults to `70`      |
+| `cornerRadius?`   | `number`            | Non-negative corner radius; defaults to `0`    |
+
+### Elongated hexagon
+
+`hexagon` is an independently resizable elongated hexagon with horizontal top/bottom edges and one lateral tip on each side. It is not an alias for Core's regular `polygon { sides: 6 }`.
+
+<ComponentPreview files="hexagon-example" size="sm" />
+
+#### API
+
+Inject `HexagonShapeDefinition`; its parameters have type `HexagonShapeParams`:
+
+| Field            | Type     | Description                                                                   |
+| ---------------- | -------- | ----------------------------------------------------------------------------- |
+| `shoulderRatio?` | `number` | One shoulder's depth divided by total width, in `(0, 0.5)`; defaults to `0.2` |
+| `cornerRadius?`  | `number` | Non-negative corner radius; defaults to `0`                                   |
+
+### Cylinder
+
+`cylinder` uses one closed outer contour plus one cap-divider arc. `capDepth` reserves content room at both ends; the divider is stroke-only, does not become a second node or connection boundary, and does not cut a hole out of the near cap's fill.
+
+<ComponentPreview files="cylinder-example" size="sm" />
+
+#### API
+
+Inject `CylinderShapeDefinition`; its parameters have type `CylinderShapeParams`:
+
+| Field       | Type                         | Description                             |
+| ----------- | ---------------------------- | --------------------------------------- |
+| `axis?`     | `'vertical' \| 'horizontal'` | Main axis; defaults to `vertical`       |
+| `capDepth?` | `number`                     | Non-negative cap depth; defaults to `8` |
 
 ### Sector
 

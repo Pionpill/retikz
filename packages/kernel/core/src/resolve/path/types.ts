@@ -43,7 +43,14 @@ type CompleteCanonicalStep<TStep extends IRStep> = TStep extends {
     : WithCanonicalStepLabel<TStep>
   : TStep extends { kind: 'smooth' }
     ? Omit<WithCanonicalStepLabel<TStep>, 'tension'> & { tension: number }
-    : WithCanonicalStepLabel<TStep>;
+    : TStep extends { kind: 'bend' }
+      ? Omit<WithCanonicalStepLabel<TStep>, 'bendDirection' | 'bendAngle'> & {
+          bendDirection: NonNullable<TStep['bendDirection']>;
+          bendAngle: number;
+        }
+      : TStep extends { kind: 'circlePath' | 'ellipsePath' }
+        ? Omit<WithCanonicalStepLabel<TStep>, 'closed'> & { closed: NonNullable<TStep['closed']> }
+        : WithCanonicalStepLabel<TStep>;
 
 /** 展开折线、平滑路径与标签静态默认值后的路径步骤 */
 export type CanonicalStep = CompleteCanonicalStep<IRStep>;
