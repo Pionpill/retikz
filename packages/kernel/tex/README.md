@@ -22,17 +22,17 @@ import { Layout, Node } from '@retikz/react';
 import { useLowerTex } from '@retikz/tex/react';
 
 export const Diagram = () => {
-  const lowerTex = useLowerTex({ profile: 'math' });
+  const lowerTexState = useLowerTex({ profile: 'math' });
 
   return (
-    <Layout lowerTex={lowerTex}>
+    <Layout lowerTex={lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined}>
       <Node position={[0, 0]}>{'$\\frac{a}{b}=c$'}</Node>
     </Layout>
   );
 };
 ```
 
-`useLowerTex()` starts MathJax asynchronously and returns `LowerTex | undefined`. Engines are shared by canonical `profile` / `extensions`; switching configuration clears the old lowerer until the new engine is ready. Pass `onDiagnostic` to observe startup and lowering failures.
+`useLowerTex()` starts MathJax asynchronously and returns a `MathJaxLowerTexState`. Use `lowerTex` only in the `ready` state; `loading` means the engine is still initializing, while `error` provides the startup diagnostic. Engines are shared by the effective extension set, so equivalent profile / extension shorthand reuses one engine; switching that set clears the old lowerer until the new engine is ready. Pass `onDiagnostic` to observe startup and lowering failures.
 
 ## Vanilla / core injection
 
@@ -50,14 +50,15 @@ The default `base` profile keeps MathJax minimal. `math` adds `ams`, `newcommand
 
 ## API
 
-| API                     | Type                                                                        | Description                                                                                           |
-| ----------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `createMathJaxEngine`   | `(options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>`             | Dynamically imports the optional MathJax stack and selected configurations.                           |
-| `createMathJaxLowerTex` | `(options?: MathJaxLowerTexOptions) => Promise<LowerTex>`                   | Creates the built-in engine and lowerer in one step.                                                  |
-| `MathJaxEngineOptions`  | `{ profile?: 'base' \| 'math'; extensions?: Array<MathJaxExtensionValue> }` | Selects a built-in profile and optional extensions.                                                   |
-| `MathJaxSvgEngine`      | `{ convert(tex, options): string }`                                         | Minimal engine contract consumed by this package. Custom engines can implement it directly.           |
-| `createLowerTex`        | `(engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex`         | Adapts an engine and caches deterministic results by source, display mode, font size, and host color. |
-| `useLowerTex`           | `(options?: MathJaxLowerTexOptions) => LowerTex \| undefined`               | React hook from `@retikz/tex/react`; shares engines by canonical configuration.                       |
+| API                     | Type                                                                        | Description                                                                                                   |
+| ----------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `createMathJaxEngine`   | `(options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>`             | Dynamically imports the optional MathJax stack and selected configurations.                                   |
+| `createMathJaxLowerTex` | `(options?: MathJaxLowerTexOptions) => Promise<LowerTex>`                   | Creates the built-in engine and lowerer in one step.                                                          |
+| `MathJaxEngineOptions`  | `{ profile?: 'base' \| 'math'; extensions?: Array<MathJaxExtensionValue> }` | Selects a built-in profile and optional extensions.                                                           |
+| `MathJaxSvgEngine`      | `{ convert(tex, options): string }`                                         | Minimal engine contract consumed by this package. Custom engines can implement it directly.                   |
+| `createLowerTex`        | `(engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex`         | Adapts an engine and caches deterministic results by source, display mode, font size, and host color.         |
+| `useLowerTex`           | `(options?: MathJaxLowerTexOptions) => MathJaxLowerTexState`                | React hook from `@retikz/tex/react`; shares engines by effective extensions and reports initialization state. |
+| `MathJaxLowerTexState`  | `loading` \| `ready` \| `error`                                             | `ready` provides `lowerTex`; `error` provides the startup diagnostic.                                         |
 
 SVG lowering helpers such as `parsePathD` and `parseTransform` are implementation details and are not exported from the root package entry.
 
