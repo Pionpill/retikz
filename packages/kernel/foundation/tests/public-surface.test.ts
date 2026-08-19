@@ -3,6 +3,7 @@ import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf } from '@reti
 import * as foundation from '@retikz/foundation';
 import {
   assertNonEmptyString,
+  assertPositiveNumber,
   isRetikzError,
   RetikzError,
   RetikzFoundationError,
@@ -11,7 +12,7 @@ import {
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 describe('foundation public surface', () => {
-  it('exports only the eleven runtime symbols from its root', () => {
+  it('exports only the twelve runtime symbols from its root', () => {
     expect(Object.keys(foundation).sort()).toEqual(
       [
         'NonBlankStringSchema',
@@ -24,10 +25,12 @@ describe('foundation public surface', () => {
         'RetikzFoundationError',
         'RetikzFoundationErrorCode',
         'assertNonEmptyString',
+        'assertPositiveNumber',
         'isRetikzError',
       ].sort(),
     );
     expectTypeOf(assertNonEmptyString).toBeFunction();
+    expectTypeOf(assertPositiveNumber).toBeFunction();
     expectTypeOf(RetikzError).toBeConstructibleWith({ code: 'CODE', message: 'message', details: {} });
     expectTypeOf(RetikzFoundationError).toBeConstructibleWith({
       code: RetikzFoundationErrorCode.Default,
