@@ -1,58 +1,75 @@
 import type { FC } from 'react';
 
 import { Draw, Layout, Node } from '@retikz/react';
-import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/standard/arrow';
-import { Fragment } from 'react';
+import {
+  BarArrowDefinition,
+  CrowFootArrowDefinition,
+  DiamondArrowDefinition,
+  KiteArrowDefinition,
+  OpenDiamondArrowDefinition,
+  OpenKiteArrowDefinition,
+  OpenSquareArrowDefinition,
+  SquareArrowDefinition,
+} from '@retikz/standard/arrow';
 
-const rows = [
-  { solid: 'normal', open: 'open' },
-  { solid: 'diamond', open: 'openDiamond' },
+const entries = [
+  { shape: 'diamond', column: 0, row: 0 },
+  { shape: 'openDiamond', column: 0, row: 1 },
+  { shape: 'kite', column: 0, row: 2 },
+  { shape: 'openKite', column: 0, row: 3 },
+  { shape: 'square', column: 1, row: 0 },
+  { shape: 'openSquare', column: 1, row: 1 },
+  { shape: 'bar', column: 1, row: 2 },
+  { shape: 'crowFoot', column: 1, row: 3 },
 ] as const;
 
-/** 将 Core 实心箭头与 Standard 空心箭头按行并列对照 */
+/** 分两列展示 Standard 的八个可选端点 marker */
 const Demo: FC = () => {
   const detail = { color: '#ea580c', scale: 1, lineWidth: 1.5 };
 
   return (
     <Layout
-      width={480}
-      height={110}
-      viewBox={{ x: -20, y: -110, width: 500, height: 110 }}
-      arrows={[DiamondArrowDefinition, OpenDiamondArrowDefinition]}
+      width={700}
+      height={230}
+      viewBox={{ x: 0, y: -85, width: 700, height: 170 }}
+      arrows={[
+        DiamondArrowDefinition,
+        OpenDiamondArrowDefinition,
+        KiteArrowDefinition,
+        OpenKiteArrowDefinition,
+        SquareArrowDefinition,
+        OpenSquareArrowDefinition,
+        BarArrowDefinition,
+        CrowFootArrowDefinition,
+      ]}
     >
-      {rows.map((row, index) => {
-        const y = -52 + index * 34;
-        return (
-          <Fragment key={row.solid}>
-            <Draw
-              way={[
-                [30, y],
-                [190, y],
-              ]}
-              arrow="->"
-              arrowDetail={{ ...detail, end: { ...detail, shape: row.solid } }}
-              stroke="#94a3b8"
-              strokeWidth={2}
-            />
-            <Draw
-              way={[
-                [270, y],
-                [430, y],
-              ]}
-              arrow="->"
-              arrowDetail={{ ...detail, end: { ...detail, shape: row.open } }}
-              stroke="#94a3b8"
-              strokeWidth={2}
-            />
-          </Fragment>
-        );
+      {entries.map(({ shape, column, row }) => {
+        const x = column * 340;
+        const y = -60 + row * 40;
+        return [
+          <Node
+            key={`${shape}-label`}
+            position={[65 + x, y]}
+            fill="none"
+            stroke="none"
+            font={{ size: 12 }}
+            textColor="gray"
+          >
+            {shape}
+          </Node>,
+          <Draw
+            key={`${shape}-draw`}
+            way={[
+              [130 + x, y],
+              [300 + x, y],
+            ]}
+            arrow="->"
+            arrowDetail={{ ...detail, end: { ...detail, shape } }}
+            stroke="#94a3b8"
+            strokeWidth={2}
+          />,
+        ];
       })}
-      <Node position={[110, -82]} align="middle" fill="none" stroke="none" font={{ size: 12 }} textColor="gray">
-        solid
-      </Node>
-      <Node position={[350, -82]} align="middle" fill="none" stroke="none" font={{ size: 12 }} textColor="gray">
-        open
-      </Node>
     </Layout>
   );
 };

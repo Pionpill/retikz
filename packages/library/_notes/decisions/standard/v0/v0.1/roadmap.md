@@ -1,6 +1,6 @@
 # Standard v0.1 Roadmap
 
-> 状态：alpha.1～alpha.3 已完成，alpha.4 规划中。关联：[Standard v0 roadmap](../roadmap.md) · [Standard Drawing Library 设计](../../../../architecture/standard-library-design.md) · [能力完备性总纲](../../../../../../../notes/architecture/capability-design.md) · [Core Drawing Complete](../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
+> 状态：alpha.1～alpha.4 已完成，beta.1 尚未开始。关联：[Standard v0 roadmap](../roadmap.md) · [Standard Drawing Library 设计](../../../../architecture/standard-library-design.md) · [能力完备性总纲](../../../../../../../notes/architecture/capability-design.md) · [Core Drawing Complete](../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
 >
 > 图式语义后继：[Graph v0.1 roadmap](../../../../../../schematic/_notes/decisions/graph/v0/v0.1/roadmap.md) 已把 alpha.3 元素迁入 Diagram。布局后继：[Layout v0.1 roadmap](../../../layout/v0/v0.1/roadmap.md) 已在 alpha.1 接管排版布局
 >
@@ -16,7 +16,7 @@
 6. 建立可由直接作者、Plot 与 Table 复用的通用 Legend 呈现；领域包保留 scale、visual encoding、formatter、provenance 与交互解析，Standard 统一 Legend schema、layout-aware compile 与领域无关 artifact
 7. alpha.3 验证 headless `GraphFrame`、统一 `GraphNode`、`GraphConnector` 与 Callout 后，将这些图式契约迁入 Graph
 8. alpha.3 合并 Layout v0.1 alpha.1 的 owner 迁移，提供单一任意 `IRChild` 的 renderer-neutral Surface，并以独立能力子入口接管可选 Shape、Arrow、Clip 与 Ribbon
-9. alpha.4 根据直接作者与 Graph 的真实消费补齐参数化梯形、平行四边形、流程图六边形、圆柱以及 bar / crow-foot 端点 Marker，继续复用 Core Shape / Arrow host 与按需 provider 装配
+9. alpha.4 根据直接作者与 Graph 的真实消费补齐参数化梯形、平行四边形、长六边形、圆柱以及 bar / crow-foot / Kite / Square 端点 Marker与 open 变体，继续复用 Core Shape / Arrow host 与按需 provider 装配
 
 ## 能力边界
 
@@ -36,7 +36,7 @@
 | [alpha.1](./alpha.1/roadmap.md) | **首批 Tier 2 composite、包初始化与 Definition 接入** | 三个 package manifest、Grid / Axes / Frame 的 schema / definition / lowering / React / Vanilla authoring、Grid 迁移、直接 Core Definition 注入、Vanilla adapter 数组、双语 docs / migration / changelog | 首批 composite 的输入、Core definition 注册与跨 adapter 等价证据；确认无全局注册、Core 不反向依赖 Standard，且按项 definitions 进入同一 Core option 路径 |
 | [alpha.2](./alpha.2/roadmap.md) | **通用 Box Layout 与 Legend**                         | Flex、Grid、Overlay、LayoutItem、layout artifact 与 inspector；领域无关 Legend items / ramp、任意 IRChild sample、typed artifact、直接 Definition 接入与 React / Vanilla authoring                      | Core layout-aware composite 主链；Legend 复用 Box Layout，领域包保留解析、provenance / locator 与交互                                                    |
 | [alpha.3](./alpha.3/roadmap.md) | **语义逻辑图历史与横向绘图拓展合并发布**              | 保留 Graph 历史迁移记录，并完成 Layout owner 迁移、任意 child Surface、可选 Shape / Arrow / Clip providers、Sector 统一、五种 ClipShape 与 Standard Ribbon Path Kind 完整迁移                           | Graph 历史见 `roadmap-graph-history.md`；ADR-07～10、ADR-12 Accepted，ADR-11 Superseded                                                                  |
-| [alpha.4](./alpha.4/roadmap.md) | **参数化图式 Shape 与端点 Marker**                    | 梯形、平行四边形、流程图六边形、圆柱 Shape，bar / crow-foot Marker，正六边形 / 菱形既有能力复用，Graph 等 Tier 2 的按需 provider consumption                                                            | ADR-01 冻结 params、几何不变量、子入口与 Core / Standard / Graph 边界；Architecture Gate 后人工确认                                                      |
+| [alpha.4](./alpha.4/roadmap.md) | **参数化图式 Shape 与端点 Marker**                    | 梯形、平行四边形、长六边形、圆柱 Shape，bar / crow-foot / Kite / Square Marker与 open 变体，TikZ 扁菱形，Graph 等 Tier 2 的按需 provider consumption                                                    | ADR-01 Accepted；Definition/provider、测试、双语文档与真实页面闭环                                                                                       |
 | beta.1                          | **收口与发布准备**                                    | public API 审查、Definition 组合与冲突诊断、tree-shaking / side-effect、adversarial tests、双语 docs、release / package checks                                                                          | Beta completeness audit；alpha completeness 全部闭环且无其它 Kernel 迁移遗留                                                                             |
 
 ## Standard Definition 接入机制
