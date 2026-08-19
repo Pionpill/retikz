@@ -9,7 +9,6 @@ import type {
   CompileOwnerOutputPublisher,
   CompositeCompileChild,
   CompositeCompileScopeProps,
-  CompositeExpandResult,
   CompositeReplay,
   CompositeReplayWrapper,
   EmitStroke,
@@ -47,7 +46,6 @@ import type { CompileWarningCodeValue, CompileWarningInput } from '../warning';
 import type { CompileContext } from './context';
 import type { InternalScenePrimitive } from './primitive';
 import type {
-  CallableLayoutCompositeDefinition,
   CompositeCompileOwner,
   CompositeReplayMaterializeContext,
   CompositeReplayTransaction,
@@ -70,8 +68,10 @@ import type {
 import { LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import {
+  bindComposite,
   createStyleResolveFrame,
   resolveBoundaryReference,
+  resolveComposite,
   resolveNode,
   resolvePath as resolvePathValue,
   resolveStrokePathProviders,
@@ -86,7 +86,6 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import { resolvePosition, resolvePositionTargetWorld } from '../../resolve/position';
-import { parseProviderPayload } from '../../resolve/provider-payload';
 import { resolveClip as resolveClipValue } from '../../resolve/resource';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
@@ -634,6 +633,7 @@ export const compileChildrenToPrimitives = (
       round: runtime.context.round,
       irPath: nodeIrPath,
       warn,
+      labelDistance: runtime.context.labelDistance,
     });
     const canonicalNode = {
       ...resolvedNode.node,
@@ -648,7 +648,6 @@ export const compileChildrenToPrimitives = (
       {
         measureText: runtime.context.measureText,
         positionContext: positionContextOf(scopeChain),
-        labelDistance: runtime.context.labelDistance,
         rootFontSize: runtime.context.rootFontSize,
         scopeChain,
         warn,
@@ -1230,16 +1229,6 @@ export const compileChildrenToPrimitives = (
     });
   };
 
-  /** 只在 definition schema parse 后恢复 erased layout callback */
-  const callableLayoutDefinition = (
-    definition: NonNullable<ReturnType<typeof runtime.context.composites.get>>,
-  ): CallableLayoutCompositeDefinition => {
-    if (definition.compile === undefined) {
-      throw new RetikzCompileInvariantError('internal: callableLayoutDefinition received an expand composite');
-    }
-    return definition as unknown as CallableLayoutCompositeDefinition;
-  };
-
   const remapPaint = (paint: PaintValue | undefined, ids: ReadonlyMap<string, string>): PaintValue | undefined => {
     if (paint === undefined || typeof paint === 'string' || paint.kind === 'contextStroke') return paint;
     const id = ids.get(paint.id);
@@ -1725,10 +1714,10 @@ export const compileChildrenToPrimitives = (
     compositeDepth: number,
     semanticOwner?: RuntimeSemanticOwner,
   ): void => {
-    const key = `${child.namespace}.${child.type}`;
     const compositeIrPath = `${frame.locatorPrefix}children[${index}]`;
-    const definition = runtime.context.composites.get(key);
-    if (definition === undefined) {
+    const binding = bindComposite(child, runtime.context.composites);
+    const { key } = binding;
+    if (binding.kind === 'unregistered') {
       if (options.probe === true) {
         throw new RetikzLayoutProbeRecoverableError(
           `No composite registered for '${key}' at ${formatCompileOccurrence(occurrence)}`,
@@ -1748,15 +1737,8 @@ export const compileChildrenToPrimitives = (
         `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${runtime.context.maxCompositeDepth} levels at ${occurrence.sourcePath}`,
       );
     }
-    const parsed = parseProviderPayload({
-      capability: 'composite',
-      providerName: key,
-      irPath: occurrence.sourcePath,
-      payloadName: 'payload',
-      schema: definition.schema,
-      value: child,
-    });
-    const parsedId = (parsed as Record<string, unknown>).id;
+    const resolution = resolveComposite(binding, occurrence.sourcePath);
+    const parsedId = (resolution.node as Record<string, unknown>).id;
     const spatialOwner: SpatialHandleOwner = Object.freeze({
       namespace: child.namespace,
       type: child.type,
@@ -1764,11 +1746,8 @@ export const compileChildrenToPrimitives = (
       occurrence: freezeOccurrence(occurrence),
     });
     const spatialOwnerPath = Object.freeze([...frame.spatialOwnerPath, spatialOwner]);
-    if (definition.expand !== undefined) {
-      const callable = definition as unknown as {
-        expand: (node: unknown, context: Readonly<{ theme: TraversalFrame['theme'] }>) => CompositeExpandResult;
-      };
-      const produced = callable.expand(parsed, Object.freeze({ theme: frame.theme }));
+    if (resolution.kind === 'expand') {
+      const produced = resolution.expand(resolution.node, Object.freeze({ theme: frame.theme }));
       const expanded = validateExpandCompositeOutput(`Composite '${key}'`, produced);
       for (const declaration of expanded.spatialHandles ?? []) {
         frame.spatialHandleSink.push({
@@ -1798,7 +1777,7 @@ export const compileChildrenToPrimitives = (
       }
       return;
     }
-    const callable = callableLayoutDefinition(definition);
+    const callable = resolution;
     const observationOwner = Object.freeze({
       kind: 'composite' as const,
       namespace: child.namespace,
@@ -1927,7 +1906,7 @@ export const compileChildrenToPrimitives = (
     };
 
     try {
-      callbackResult = callable.compile(parsed, {
+      callbackResult = callable.compile(callable.node, {
         theme: frame.theme,
         proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
         layoutChild: (nextChild, proposal) => {
@@ -2000,7 +1979,7 @@ export const compileChildrenToPrimitives = (
           `${owner.label} returned an invalid compile result; children must be an array.`,
         );
       }
-      const result = callbackResult as ReturnType<CallableLayoutCompositeDefinition['compile']>;
+      const result = callbackResult as ReturnType<typeof callable.compile>;
       const resultChildren = result.children;
       const resultAllocationBounds = result.allocationBounds;
       const resultAlignmentGuides = result.alignmentGuides;
@@ -2047,8 +2026,8 @@ export const compileChildrenToPrimitives = (
         }
         compositeArtifact = freezeCompileArtifact({
           kind: 'composite',
-          namespace: definition.namespace,
-          type: definition.type,
+          namespace: callable.namespace,
+          type: callable.type,
           occurrence,
           value: frozenArtifact,
         });

@@ -29,6 +29,7 @@ const layoutSquare = (node: IRNode) => {
     round: value => value,
     irPath: 'node',
     warn: () => {},
+    labelDistance: 12,
   });
   return layoutNode(resolution, {
     measureText,

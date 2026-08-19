@@ -61,7 +61,7 @@ export const isStrokeShapeStep = (step: CanonicalStep): step is StrokeShapeStep 
 
 /** 将 partial circle/ellipse 的 closed 选项规范化 */
 const resolvePartialClosed = (
-  closed: 'closed' | 'chord' | 'open' | 'sector' | undefined,
+  closed: 'closed' | 'chord' | 'open' | 'sector',
   index: number,
   warn: LowerShapeStepContext['warn'],
 ): 'chord' | 'open' | 'sector' => {

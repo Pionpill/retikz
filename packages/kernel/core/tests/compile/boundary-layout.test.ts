@@ -25,6 +25,7 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
     round: value => value,
     irPath: 'node',
     warn: () => {},
+    labelDistance: 12,
   });
   return layoutNode(resolution, {
     measureText,

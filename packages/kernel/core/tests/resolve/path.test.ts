@@ -44,6 +44,33 @@ describe('resolvePath', () => {
     >();
     expectTypeOf<Extract<CanonicalStep, { kind: 'fold'; via: '-|-' | '|-|' }>['fraction']>().toEqualTypeOf<number>();
     expectTypeOf<Extract<CanonicalStep, { kind: 'smooth' }>['tension']>().toEqualTypeOf<number>();
+    expectTypeOf<Extract<CanonicalStep, { kind: 'bend' }>['bendDirection']>().toEqualTypeOf<'left' | 'right'>();
+    expectTypeOf<Extract<CanonicalStep, { kind: 'bend' }>['bendAngle']>().toEqualTypeOf<number>();
+    expectTypeOf<Extract<CanonicalStep, { kind: 'circlePath' }>['closed']>().toEqualTypeOf<
+      'closed' | 'chord' | 'open' | 'sector'
+    >();
+    expectTypeOf<Extract<CanonicalStep, { kind: 'ellipsePath' }>['closed']>().toEqualTypeOf<
+      'closed' | 'chord' | 'open' | 'sector'
+    >();
+  });
+
+  it('expands bend and shape close defaults while preserving explicit values', () => {
+    const canonical = resolvePathWithBuiltinProviders(
+      path({
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'bend', to: [10, 0] },
+          { type: 'step', kind: 'bend', to: [20, 0], bendDirection: 'right', bendAngle: -15 },
+          { type: 'step', kind: 'circlePath', radius: 5, startAngle: 0, endAngle: 90 },
+          { type: 'step', kind: 'ellipsePath', radius: { x: 5, y: 3 }, closed: 'open' },
+        ],
+      }),
+    );
+
+    expect(canonical.path.children![1]).toMatchObject({ kind: 'bend', bendDirection: 'left', bendAngle: 30 });
+    expect(canonical.path.children![2]).toMatchObject({ kind: 'bend', bendDirection: 'right', bendAngle: -15 });
+    expect(canonical.path.children![3]).toMatchObject({ kind: 'circlePath', closed: 'chord' });
+    expect(canonical.path.children![4]).toMatchObject({ kind: 'ellipsePath', closed: 'open' });
   });
 
   it('expands fold and smooth static defaults without changing geometry inputs', () => {
@@ -142,6 +169,34 @@ describe('resolvePath', () => {
           points: [[20, 20]],
           tension: 1,
           label: { text: 'smooth', position: 0.5, side: 'top', distance: 4 },
+        },
+      ],
+    });
+
+    expect(compileToScene(sceneWith(compact)).scene).toEqual(compileToScene(sceneWith(expanded)).scene);
+  });
+
+  it('compiles compact bend and partial-shape defaults like their explicit forms', () => {
+    const compact = path({
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'bend', to: [10, 0] },
+        { type: 'step', kind: 'circlePath', radius: 5, startAngle: 0, endAngle: 90 },
+        { type: 'step', kind: 'ellipsePath', radius: { x: 6, y: 3 }, startAngle: 0, endAngle: 180 },
+      ],
+    });
+    const expanded = path({
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'bend', to: [10, 0], bendDirection: 'left', bendAngle: 30 },
+        { type: 'step', kind: 'circlePath', radius: 5, startAngle: 0, endAngle: 90, closed: 'chord' },
+        {
+          type: 'step',
+          kind: 'ellipsePath',
+          radius: { x: 6, y: 3 },
+          startAngle: 0,
+          endAngle: 180,
+          closed: 'chord',
         },
       ],
     });

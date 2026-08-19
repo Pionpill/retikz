@@ -109,7 +109,7 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
     const [control1, control2] =
       step.outAngle !== undefined || step.inAngle !== undefined
         ? outInControlPoints(fromReference, currentAnchor, step.outAngle ?? 0, step.inAngle ?? 180, step.looseness)
-        : bendControlPoints(fromReference, currentAnchor, step.bendDirection ?? 'left', step.bendAngle ?? 30);
+        : bendControlPoints(fromReference, currentAnchor, step.bendDirection, step.bendAngle);
     if (!isFinitePoint(control1) || !isFinitePoint(control2)) {
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,

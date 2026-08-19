@@ -16,15 +16,14 @@ import {
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import { resolvePosition, resolvePositionTargetWorld } from '../../resolve/position';
+import { resolveFont, resolveTextLineHeight } from '../../resolve/text';
 import { CenterAnchor } from '../../shared';
 import { DEG_TO_RAD } from '../../shared/geometry';
-import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE } from '../constants';
+import { DEFAULT_FONT_SIZE } from '../constants';
 import { resolveAnchorRefUncached } from '../reference';
 import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '../scene-primitive';
-import { resolveFontSize } from '../text';
 import { inverseTransformChain, isTransformChainInvertible, projectLayoutToGlobal } from '../transform';
 import { layoutNodeContent } from './content/layout';
-import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { layoutNodeLabels, measureNodeLabels } from './label/layout';
 
 /** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */
@@ -111,8 +110,6 @@ export type LayoutNodeContext = {
   measureText: TextMeasurer;
   /** Position/Target Source IR 确定化上下文 */
   positionContext: PositionTargetResolveContext;
-  /** 节点 label 默认距离 */
-  labelDistance?: number;
   /** preset 与 rem 字号解析的根字号 */
   rootFontSize?: number;
   /** 当前 scope 累积 transform */
@@ -130,7 +127,6 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
   const {
     measureText,
     positionContext,
-    labelDistance = DEFAULT_LABEL_DISTANCE,
     rootFontSize = DEFAULT_FONT_SIZE,
     scopeChain = [],
     texLowering,
@@ -143,14 +139,15 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
   const fontScale = Math.min(sx, sy);
   const { name: shapeName, definition: shapeDef, params: shapeParams } = shapeResolution;
 
-  const baseFontSize = resolveFontSize(node.font?.size, {
+  const baseFont = resolveFont(node.font, {
     rootFontSize,
-    inheritedFontSize: rootFontSize,
+    inheritedFont: { size: rootFontSize },
   });
+  const baseFontSize = baseFont.size;
   const fontSize = baseFontSize * fontScale;
-  const fontFamily = node.font?.family;
-  const fontWeight = node.font?.weight;
-  const fontStyle = node.font?.style;
+  const fontFamily = baseFont.family;
+  const fontWeight = baseFont.weight;
+  const fontStyle = baseFont.style;
   // spacing 受 node scale 影响。
   const padding = node.padding;
   const paddingLeft = padding.left * sx;
@@ -164,7 +161,7 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
     bottom: marginSpacing.bottom * sy,
     left: marginSpacing.left * sx,
   };
-  const lineHeight = (node.lineHeight ?? baseFontSize * DEFAULT_LINE_HEIGHT_FACTOR) * sy;
+  const lineHeight = resolveTextLineHeight(node.lineHeight, baseFontSize) * sy;
   const align = node.align;
 
   // 折行阈值受 x 缩放。
@@ -318,7 +315,6 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
     node,
     measureText,
     texLowering,
-    labelDistance,
     baseFontSize,
     rootFontSize,
     fontScale,

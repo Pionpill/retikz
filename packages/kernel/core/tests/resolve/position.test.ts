@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../../src/resolve';
 import type { PositionReferenceView, PositionTargetResolveContext } from '../../src/resolve/position';
-import type { IRNodeTarget, IRPosition } from '../../src/schemas';
+import type { IRNodeTarget, IRPosition, IRTransform } from '../../src/schemas';
 
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
-import { resolvePosition, resolvePositionTarget } from '../../src/resolve/position';
+import { resolvePosition, resolvePositionTarget, resolveTransformTranslation } from '../../src/resolve/position';
 
 const rectangleBoundary: BoundaryReferenceResolution = {
   name: 'rectangle',
@@ -104,5 +104,39 @@ describe('resolvePositionTarget', () => {
       point: null,
       referencePoint: null,
     });
+  });
+});
+
+describe('resolveTransformTranslation', () => {
+  it('resolves every translate transform through the position owner', () => {
+    const base = contextOf([reference('A', [120, 80]), reference('B', [140, 100])]);
+    const context: PositionTargetResolveContext = {
+      ...base,
+      resolveBetweenWorld: between => {
+        const fraction = between.fraction;
+        return [120 + (140 - 120) * fraction, 80 + (100 - 80) * fraction];
+      },
+    };
+    const transforms: Array<Extract<IRTransform, { kind: `${string}translate` }>> = [
+      { kind: 'translate', x: 3, y: 4 },
+      { kind: 'polar-translate', origin: [10, 20], angle: 0, radius: 5 },
+      { kind: 'at-translate', direction: 'right', of: 'A', distance: 10 },
+      { kind: 'offset-translate', of: 'A' },
+      { kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.25 },
+    ];
+
+    expect(transforms.map(transform => resolveTransformTranslation(transform, context)?.localPoint)).toEqual([
+      [3, 4],
+      [15, 20],
+      [30, 30],
+      [20, 30],
+      [25, 35],
+    ]);
+  });
+
+  it('returns null when a transform reference cannot be resolved', () => {
+    expect(
+      resolveTransformTranslation({ kind: 'at-translate', direction: 'top', of: 'missing' }, contextOf()),
+    ).toBeNull();
   });
 });
