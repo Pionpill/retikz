@@ -2,6 +2,7 @@ import type { IRScope } from '@retikz/core';
 import type { IRShapeValue, JsonValue } from '@retikz/core';
 import type { DataFieldTypeValue } from '@retikz/data';
 
+import { categoricalColorAt } from '@retikz/core';
 import { DataFieldType } from '@retikz/data';
 
 import type { AnyChannelDefinition, AnyScaleDefinition, PositionScale } from '../../contract';
@@ -429,7 +430,7 @@ export const buildLegendLayers = (
         label: showLabels ? String(category) : '',
         shape: descriptor.range[index] as IRShapeValue,
         symbolSize: style.symbolSize,
-        color: 'currentColor',
+        color: descriptor.defaultColor ?? categoricalColorAt(resolvedTheme.palette.series, 0),
       }));
       return lowerLegend({ ...base, form: 'swatch', title, entries });
     }

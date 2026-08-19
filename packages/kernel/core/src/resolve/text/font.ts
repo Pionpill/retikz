@@ -1,17 +1,14 @@
 import type { FontSizePresetValue, IRFont } from '../../schemas';
+import type { CanonicalFont, FontResolveContext, FontSizeResolveContext } from './types';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { WebFontSizeRatio } from '../../schemas';
 
-export type ResolveFontSizeContext = {
-  /** preset 与 rem 的根字号 */
-  rootFontSize: number;
-  /** em 与缺省值继承的当前字号 */
-  inheritedFontSize: number;
-};
+/** 文本默认行高系数 */
+export const DEFAULT_TEXT_LINE_HEIGHT_FACTOR = 1.2;
 
-/** 把 IR 字号输入解析为 compile 阶段消费的 number */
-export const resolveFontSize = (size: IRFont['size'] | undefined, context: ResolveFontSizeContext): number => {
+/** 把 IR 字号确定为布局消费的数值 */
+export const resolveFontSize = (size: IRFont['size'] | undefined, context: FontSizeResolveContext): number => {
   const { rootFontSize, inheritedFontSize } = context;
   if (!Number.isFinite(rootFontSize) || rootFontSize <= 0) {
     throw new RetikzCoreError(
@@ -34,3 +31,18 @@ export const resolveFontSize = (size: IRFont['size'] | undefined, context: Resol
   if (size.endsWith('em')) return Number.parseFloat(size) * inheritedFontSize;
   throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `resolveFontSize: unsupported font size '${size}'.`);
 };
+
+/** 按字段继承并确定字体 */
+export const resolveFont = (source: IRFont | undefined, context: FontResolveContext): CanonicalFont => ({
+  size: resolveFontSize(source?.size, {
+    rootFontSize: context.rootFontSize,
+    inheritedFontSize: context.inheritedFont.size,
+  }),
+  family: source?.family ?? context.inheritedFont.family,
+  weight: source?.weight ?? context.inheritedFont.weight,
+  style: source?.style ?? context.inheritedFont.style,
+});
+
+/** 补齐文本行高默认值 */
+export const resolveTextLineHeight = (source: number | undefined, inheritedFontSize: number): number =>
+  source ?? inheritedFontSize * DEFAULT_TEXT_LINE_HEIGHT_FACTOR;

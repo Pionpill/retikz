@@ -1,8 +1,7 @@
 import type { FC } from 'react';
 
-import { ChartNote, ChartSource, ChartSubtitle, ChartTitle, ScatterChart } from '@retikz/chart-react/point';
-import { Legend } from '@retikz/plot-react';
-import { Text } from '@retikz/react';
+import { ScatterChart } from '@retikz/chart-react/point';
+import { Axis, Legend } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -22,17 +21,16 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       size: { kind: 'constant', value: values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointSize] },
       opacity: { kind: 'constant', value: values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointOpacity] },
     }}
+    title="Higher income generally coincides with longer life expectancy"
+    subtitle="Gapminder 2007; 142 countries; x shows GDP per capita (inflation-adjusted US$) and y shows life expectancy at birth (years)"
+    source="Gapminder: country cross-section for 2007; color encodes continent"
+    note="This same-year comparison describes association, not causation"
     width={800}
     height={400}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <ChartSubtitle>
-      <Text font={{ weight: 'bold' }}>Gapminder 2007</Text>
-      <Text>142 countries; GDP per capita (inflation-adjusted US$) and life expectancy at birth (years)</Text>
-    </ChartSubtitle>
-    <ChartTitle>Higher income generally coincides with longer life expectancy</ChartTitle>
-    <ChartSource>Gapminder: country cross-section for 2007; color encodes continent</ChartSource>
-    <ChartNote>This same-year comparison describes association, not causation</ChartNote>
+    <Axis dimension="x" grid />
+    <Axis dimension="y" grid />
     <Legend channel="color" title="Continent" position="right" />
   </ScatterChart>
 ));

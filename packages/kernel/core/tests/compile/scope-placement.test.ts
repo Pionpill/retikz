@@ -192,7 +192,15 @@ describe('Scope placement 两阶段布局', () => {
         {
           type: 'scope',
           id: 'outer',
-          children: [{ type: 'scope', placement: { target: { id: 'outer' } }, children: [] }],
+          children: [
+            {
+              type: 'scope',
+              placement: {
+                target: { id: 'outer', anchor: 'right', boundary: 'missing-boundary' },
+              },
+              children: [],
+            },
+          ],
         },
       ],
     ],

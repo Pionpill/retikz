@@ -68,11 +68,13 @@ const expandNodeLabelPosition = (position: IRNodeLabel['position']): CanonicalNo
 const expandNodeLabel = (
   label: IRNodeLabel,
   labelDefault: ReturnType<typeof resolveEffectiveLabelDefault>,
+  labelDistance: number,
 ): CanonicalNodeLabel => {
   const normalized: CanonicalNodeLabel = {
     ...label,
     position: expandNodeLabelPosition(label.position),
     placement: label.placement ?? 'outside',
+    distance: label.distance ?? labelDistance,
   };
   const defaultTextColor = labelDefault.textColor ?? labelDefault.color;
   if (normalized.textColor === undefined && defaultTextColor !== undefined) normalized.textColor = defaultTextColor;
@@ -102,17 +104,19 @@ const expandNodeLabel = (
 const expandNodeLabels = (
   label: IRNode['label'],
   labelDefault: ReturnType<typeof resolveEffectiveLabelDefault>,
+  labelDistance: number,
 ): CanonicalNode['label'] =>
   label === undefined
     ? undefined
     : Array.isArray(label)
-      ? label.map(item => expandNodeLabel(item, labelDefault))
-      : [expandNodeLabel(label, labelDefault)];
+      ? label.map(item => expandNodeLabel(item, labelDefault, labelDistance))
+      : [expandNodeLabel(label, labelDefault, labelDistance)];
 
 /** 将 Node 的持久化紧凑字段展开为布局可直接消费的完整形态 */
 const canonicalizeNode = (
   node: IRNode,
   labelDefault: ReturnType<typeof resolveEffectiveLabelDefault>,
+  labelDistance: number,
 ): CanonicalNode => {
   const { dashed, dotted, ...source } = node;
   return {
@@ -122,7 +126,7 @@ const canonicalizeNode = (
     minimumSize: expandBoxSize(node.minimumSize),
     scale: expandAxisScale(node.scale),
     text: expandNodeText(node.text),
-    label: expandNodeLabels(node.label, labelDefault),
+    label: expandNodeLabels(node.label, labelDefault, labelDistance),
     align: node.align ?? 'middle',
     rotate: node.rotate ?? 0,
     dashPattern: resolveDashPattern(node.dashPattern, dashed, dotted),
@@ -136,10 +140,10 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
   const effectiveLabelDefault = resolveEffectiveLabelDefault(context.styleFrames);
   const labelsMaterialized = {
     ...effectiveNode,
-    label: expandNodeLabels(effectiveNode.label, effectiveLabelDefault),
+    label: expandNodeLabels(effectiveNode.label, effectiveLabelDefault, context.labelDistance),
   };
   const contrastResolved = resolveNodeTextColor(labelsMaterialized, effectiveLabelDefault, context.warn);
-  const node = canonicalizeNode(contrastResolved, effectiveLabelDefault);
+  const node = canonicalizeNode(contrastResolved, effectiveLabelDefault, context.labelDistance);
   const shape = resolveNodeShape({
     node,
     shapes: context.shapes,

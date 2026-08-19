@@ -1,14 +1,12 @@
 import type { GroupPrim, PathPrim, ScenePrimitive, TextPrim } from '../../contract';
-import type { IRFont, IRLine } from '../../schemas';
+import type { CanonicalInlineRun } from '../../resolve';
 import type { CompileWarningCodeValue } from '../warning';
-import type { IRInlineRun } from './inline';
 import type { TextFont, TextMeasurer } from './metrics';
 import type { LoweredTexPaint, LoweredTexPath, LowerTex } from './tex';
 
-import { CompileWarningCode, DEFAULT_FONT_SIZE } from '../constants';
+import { isMathRun } from '../../resolve';
+import { CompileWarningCode } from '../constants';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
-import { resolveFontSize } from './font-size';
-import { isMathRun, parseInlineRuns } from './inline';
 import { normalizeTextMetrics } from './metrics';
 import { snapshotLoweredTex } from './tex';
 
@@ -24,8 +22,6 @@ export type LineLayoutContext = {
   lowerTex?: LowerTex;
   /** 块级字体 */
   font: TextFont;
-  /** preset 与 rem 字号解析的根字号 */
-  rootFontSize?: number;
   /**
    * 块级文字色
    * @default 'currentColor'
@@ -55,53 +51,6 @@ export type LaidLine = {
   isPlain: boolean;
   /** 把本行子图元放到行起点 */
   emit: (originX: number, baselineY: number, round: Round) => Array<ScenePrimitive>;
-};
-
-const mergeFont = (base: TextFont, override: IRFont | undefined, rootFontSize: number): TextFont => ({
-  size: resolveFontSize(override?.size, { rootFontSize, inheritedFontSize: base.size }),
-  family: override?.family ?? base.family,
-  weight: override?.weight ?? base.weight,
-  style: override?.style ?? base.style,
-});
-
-/** 解析一个 IRLine 为 run 序列：line-object 把行级样式折进各 run；字符串 / MixedLine 直解析 */
-export const resolveLineRuns = (
-  spec: IRLine,
-  gatingOn: boolean,
-): { runs: Array<IRInlineRun>; hasMath: boolean; warn: boolean } => {
-  if (typeof spec === 'string') return parseInlineRuns(spec, gatingOn);
-  if ('runs' in spec) {
-    return { runs: spec.runs, hasMath: spec.runs.some(isMathRun), warn: false };
-  }
-  const parsed = parseInlineRuns(spec.text, gatingOn);
-  const runs = parsed.runs.map(
-    (r): IRInlineRun =>
-      isMathRun(r)
-        ? { ...r, fill: r.fill ?? spec.fill, opacity: r.opacity ?? spec.opacity }
-        : {
-            ...r,
-            fill: r.fill ?? spec.fill,
-            opacity: r.opacity ?? spec.opacity,
-            font: r.font ?? spec.font,
-          },
-  );
-  return { runs, hasMath: parsed.hasMath, warn: parsed.warn };
-};
-
-/** resolveLineRuns 的诊断包装：保留各个宿主自定义的 warning 文案 */
-export const resolveLineRunsWithWarning = (
-  spec: IRLine,
-  context: {
-    gatingOn: boolean;
-    warn: (code: CompileWarningCodeValue, message: string) => void;
-    warningMessage: string;
-  },
-): { runs: Array<IRInlineRun>; hasMath: boolean; warn: boolean } => {
-  const resolved = resolveLineRuns(spec, context.gatingOn);
-  if (resolved.warn) {
-    context.warn(CompileWarningCode.TextTexParseError, context.warningMessage);
-  }
-  return resolved;
 };
 
 type TextPiece = {
@@ -151,8 +100,7 @@ const resolveTexPaint = (paint: LoweredTexPaint, hostColor: string | undefined):
 };
 
 /** 度量一行 inline run，并返回可 emit 的行布局 */
-export const layoutInlineLine = (runs: Array<IRInlineRun>, ctx: LineLayoutContext): LaidLine => {
-  const rootFontSize = ctx.rootFontSize ?? DEFAULT_FONT_SIZE;
+export const layoutInlineLine = (runs: Array<CanonicalInlineRun>, ctx: LineLayoutContext): LaidLine => {
   let x = 0;
   let ascent = 0;
   let descent = 0;
@@ -190,7 +138,7 @@ export const layoutInlineLine = (runs: Array<IRInlineRun>, ctx: LineLayoutContex
       });
       x += lowered.width;
     } else {
-      const font = mergeFont(ctx.font, run.font, rootFontSize);
+      const font = run.font;
       const m = normalizeTextMetrics(ctx.measureText(run.text, font));
       ascent = Math.max(ascent, m.ascent);
       descent = Math.max(descent, m.descent);

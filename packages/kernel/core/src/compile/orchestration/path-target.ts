@@ -1,35 +1,19 @@
-import type { Transform } from '../../contract';
-import type {
-  BoundaryReferenceResolution,
-  BoundaryReferenceResolver,
-  NodeReferenceView,
-  PathTargetView,
-  TargetResolution,
-} from '../../resolve';
+import type { NodeReferenceView, PathTargetView, TargetResolution } from '../../resolve';
+import type { PositionTargetResolveContext } from '../../resolve/position';
 import type {
   FoldStepViaValue,
-  IRBetweenPosition,
-  IRBoundary,
   IRNodeTarget,
   IRPosition,
   IRRelativeAccumulateTarget,
   IRRelativeTarget,
   IRTarget,
 } from '../../schemas';
-import type { NamespaceStack } from '../namespace';
-import type { NodeLayout } from '../node';
 
-import { boundaryKey } from '../../resolve';
+import { resolvePositionTarget } from '../../resolve/position';
 import { FoldStepVia } from '../../schemas';
-import {
-  isBetweenPositionLike,
-  isNodeTargetLike,
-  isRelativeAccumulateTargetLike,
-  isRelativeTargetLike,
-} from '../../shared';
-import { lerpPoint, point } from '../../shared/geometry';
+import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
+import { point } from '../../shared/geometry';
 import { boundaryPointOf } from '../node';
-import { resolvePosition } from '../position';
 import { resolveAnchorRef } from '../reference';
 import { applyTransformChain, inverseTransformChain } from '../transform';
 
@@ -40,9 +24,6 @@ const isNodeTarget = (t: IRTarget): t is IRNodeTarget => isNodeTargetLike(t);
 export const isAutoBoundaryTarget = (target: IRTarget): boolean =>
   isNodeTarget(target) && target.anchor === undefined && target.offset === undefined;
 
-/** 判断 target 是否为两端目标之间的比例点 */
-const isBetween = (t: IRTarget): t is IRBetweenPosition => isBetweenPositionLike(t);
-
 /** 判断 target 是否为进入 emit 前应被 path 游标归一化的相对端点 */
 const isRelative = (t: IRTarget): t is IRRelativeTarget | IRRelativeAccumulateTarget =>
   isRelativeTargetLike(t) || isRelativeAccumulateTargetLike(t);
@@ -50,105 +31,6 @@ const isRelative = (t: IRTarget): t is IRRelativeTarget | IRRelativeAccumulateTa
 /** 在世界坐标系叠加节点目标的 offset */
 const addOffset = (base: IRPosition, offset: IRNodeTarget['offset']): IRPosition =>
   offset ? [base[0] + offset[0], base[1] + offset[1]] : base;
-
-const explicitBoundaryResolutionOf = (
-  node: NodeLayout,
-  boundary: IRBoundary | undefined,
-  resolveExplicitBoundary?: BoundaryReferenceResolver,
-) =>
-  resolveExplicitBoundary !== undefined &&
-  boundary !== undefined &&
-  boundary !== 'shape' &&
-  boundaryKey(boundary) !== boundaryKey(node.boundary)
-    ? resolveExplicitBoundary(boundary, {
-        visualDef: node.shapeDef,
-        visualParams: node.shapeParams ?? {},
-        irPath: node.irPath,
-      })
-    : undefined;
-
-/**
- * 解析 target 的参考点
- * @description 参考点用于确定前后段方向、折角位置和非裁剪目标坐标。未指定 anchor 的 NodeTarget 取节点中心，不按连接面裁剪
- */
-export const refPointOfTarget = (
-  target: IRTarget,
-  namespaceStack: NamespaceStack,
-  scopeChain: ReadonlyArray<Transform> = [],
-  resolveExplicitBoundary?: BoundaryReferenceResolver,
-): IRPosition | null => {
-  // NodeTarget 的参考点是节点中心或显式 anchor，不随 toward 变化。
-  if (isNodeTarget(target)) {
-    const node = namespaceStack.lookup(target.id);
-    if (!node) return null;
-    const base =
-      target.anchor === undefined
-        ? ([node.rect.x, node.rect.y] as IRPosition)
-        : resolveAnchorRef(
-            node,
-            target.anchor,
-            target.boundary ?? node.boundary,
-            explicitBoundaryResolutionOf(node, target.boundary, resolveExplicitBoundary),
-          );
-    return addOffset(base, target.offset);
-  }
-  // between 端点允许递归，先解析到世界坐标再插值。
-  if (isBetween(target)) {
-    const a = refPointOfTarget(target.between[0], namespaceStack, scopeChain, resolveExplicitBoundary);
-    const b = refPointOfTarget(target.between[1], namespaceStack, scopeChain, resolveExplicitBoundary);
-    if (!a || !b) return null;
-    const mid = lerpPoint(a, b, target.fraction);
-    // 非 finite 参考点不能进入 Scene，返回 null 交由调用侧按未解析处理。
-    if (!Number.isFinite(mid[0]) || !Number.isFinite(mid[1])) return null;
-    return mid;
-  }
-  // relative 目标应已在进入 path emit 前预解析。
-  if (isRelative(target)) {
-    return null;
-  }
-  const local = resolvePosition(target, { namespaceStack, scopeChain });
-  if (!local) return null;
-  return scopeChain.length === 0 ? local : applyTransformChain(local, scopeChain);
-};
-
-/**
- * 把 target 解析到当前 scope 的局部坐标系
- * @description 节点 layout 保持全局坐标，解析后按累计 transform 反投影；字面量与相对位置沿用 scope 局部度量
- */
-export const localPointOfTarget = (
-  target: IRTarget,
-  namespaceStack: NamespaceStack,
-  scopeChain: ReadonlyArray<Transform> = [],
-  resolveExplicitBoundary?: BoundaryReferenceResolver,
-): IRPosition | null => {
-  if (isNodeTarget(target)) {
-    const node = namespaceStack.lookup(target.id);
-    if (!node) return null;
-    const base =
-      target.anchor === undefined
-        ? ([node.rect.x, node.rect.y] as IRPosition)
-        : resolveAnchorRef(
-            node,
-            target.anchor,
-            target.boundary ?? node.boundary,
-            explicitBoundaryResolutionOf(node, target.boundary, resolveExplicitBoundary),
-          );
-    const global = addOffset(base, target.offset);
-    return scopeChain.length === 0 ? global : inverseTransformChain(global, scopeChain);
-  }
-  if (isBetween(target)) {
-    const a = localPointOfTarget(target.between[0], namespaceStack, scopeChain, resolveExplicitBoundary);
-    const b = localPointOfTarget(target.between[1], namespaceStack, scopeChain, resolveExplicitBoundary);
-    if (!a || !b) return null;
-    const mid = lerpPoint(a, b, target.fraction);
-    if (!Number.isFinite(mid[0]) || !Number.isFinite(mid[1])) return null;
-    return mid;
-  }
-  if (isRelative(target)) {
-    return null;
-  }
-  return resolvePosition(target, { namespaceStack, scopeChain });
-};
 
 /**
  * 根据 fold step 的方向计算正交折角点
@@ -178,12 +60,8 @@ export const foldCornersOf = (
 
 /** target 裁剪解析所需上下文 */
 export type ClipForTargetContext = {
-  /** 节点 id 查询栈 */
-  namespaceStack: NamespaceStack;
-  /** 当前 scope 的累计 transform */
-  scopeChain?: ReadonlyArray<Transform>;
-  /** Path 显式 target boundary 的临时解析回调 */
-  resolveExplicitBoundary?: BoundaryReferenceResolver;
+  /** 当前 Path 所在 Scope 的 position resolver context */
+  positionContext: PositionTargetResolveContext;
 };
 
 /**
@@ -196,99 +74,36 @@ export const clipForTarget = (
   toward: IRPosition,
   context: ClipForTargetContext,
 ): IRPosition | null => {
-  const { namespaceStack, scopeChain = [], resolveExplicitBoundary } = context;
+  const { positionContext } = context;
   // NodeTarget 的裁剪端点可能随 toward 落在不同连接面位置。
   if (isNodeTarget(target)) {
-    const node = namespaceStack.lookup(target.id);
-    if (!node) return null;
+    const resolution = resolvePositionTarget(target, positionContext);
+    const node = resolution.reference?.node;
+    if (node === undefined) return null;
     const boundary = target.boundary ?? node.boundary;
-    const towardGlobal = scopeChain.length === 0 ? toward : applyTransformChain(toward, scopeChain);
+    const towardGlobal = positionContext.toWorld(toward);
     const base =
       target.anchor === undefined
-        ? boundaryPointOf(
-            node,
-            towardGlobal,
-            boundary,
-            explicitBoundaryResolutionOf(node, target.boundary, resolveExplicitBoundary),
-          )
-        : resolveAnchorRef(
-            node,
-            target.anchor,
-            boundary,
-            explicitBoundaryResolutionOf(node, target.boundary, resolveExplicitBoundary),
-          );
+        ? boundaryPointOf(node, towardGlobal, boundary, resolution.boundaryResolution)
+        : resolveAnchorRef(node, target.anchor, boundary, resolution.boundaryResolution);
     const global = addOffset(base, target.offset);
-    return scopeChain.length === 0 ? global : inverseTransformChain(global, scopeChain);
-  }
-  // between 是固定点，不参与连接面裁剪。
-  if (isBetween(target)) {
-    return localPointOfTarget(target, namespaceStack, scopeChain, resolveExplicitBoundary);
+    return positionContext.toLocal(global);
   }
   // relative 目标应已在进入 path emit 前预解析。
-  if (isRelative(target)) {
-    return null;
-  }
-  const local = resolvePosition(target, { namespaceStack, scopeChain });
-  if (!local) return null;
-  return local;
-};
-
-/** 将已完成 layout 的节点投影为 resolving/compile 共用的纯引用视图 */
-export const nodeReferenceViewOf = (node: NodeLayout): NodeReferenceView => ({
-  id: node.id,
-  shapeName: node.shapeName,
-  shapeDef: node.shapeDef,
-  shapeParams: { ...(node.shapeParams ?? {}) },
-  rect: { ...node.rect },
-  margin: { ...node.margin },
-  boundary: node.boundary,
-  boundaryResolution: node.boundaryResolution,
-  irPath: node.irPath,
-});
-
-const shapeBoundaryResolutionOf = (node: NodeReferenceView): BoundaryReferenceResolution => ({
-  name: node.shapeName,
-  definition: node.shapeDef,
-  params: node.shapeParams,
-  isShape: true,
-});
-
-const targetBoundaryResolutionOf = (
-  node: NodeReferenceView,
-  target: IRNodeTarget,
-  resolveExplicitBoundary?: BoundaryReferenceResolver,
-): BoundaryReferenceResolution | undefined => {
-  const boundary = target.boundary ?? node.boundary;
-  if (boundary === undefined || boundary === 'shape') return shapeBoundaryResolutionOf(node);
-  if (boundaryKey(boundary) === boundaryKey(node.boundary)) return node.boundaryResolution;
-  if (resolveExplicitBoundary === undefined) return undefined;
-  return resolveExplicitBoundary(boundary, {
-    visualDef: node.shapeDef,
-    visualParams: node.shapeParams,
-    irPath: node.irPath,
-  });
-};
-
-/** 在 resolving 阶段绑定 target，并把 NamespaceStack 依赖压缩成纯值 */
-export const bindPathTarget = (
-  target: IRTarget,
-  namespaceStack: NamespaceStack,
-  scopeChain: ReadonlyArray<Transform> = [],
-  resolveExplicitBoundary?: BoundaryReferenceResolver,
-): TargetResolution | null => {
   if (isRelative(target)) return null;
-  const localPoint = localPointOfTarget(target, namespaceStack, scopeChain, resolveExplicitBoundary);
-  const referencePoint = refPointOfTarget(target, namespaceStack, scopeChain, resolveExplicitBoundary);
-  if (!isNodeTarget(target)) return { target, point: localPoint, referencePoint };
-  const node = namespaceStack.lookup(target.id);
-  if (node === undefined) return { target, point: localPoint, referencePoint };
-  const nodeView = nodeReferenceViewOf(node);
+  return resolvePositionTarget(target, positionContext).point;
+};
+
+/** 在 resolving 阶段绑定 Path target，并压缩为既有公开 TargetResolution */
+export const bindPathTarget = (target: IRTarget, context: PositionTargetResolveContext): TargetResolution | null => {
+  if (isRelative(target)) return null;
+  const resolution = resolvePositionTarget(target, context);
   return {
     target,
-    point: localPoint,
-    referencePoint,
-    node: nodeView,
-    boundaryResolution: targetBoundaryResolutionOf(nodeView, target, resolveExplicitBoundary),
+    point: resolution.point,
+    referencePoint: resolution.referencePoint,
+    ...(resolution.reference === undefined ? {} : { node: resolution.reference.node }),
+    ...(resolution.boundaryResolution === undefined ? {} : { boundaryResolution: resolution.boundaryResolution }),
   };
 };
 

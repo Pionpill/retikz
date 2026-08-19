@@ -144,31 +144,49 @@ describe('compile path: arrow 箭头', () => {
   });
 
   it.each([
-    ['normal', 94], // shrink = length × scale = 6
-    ['stealth', 95.8], // shrink = 0.7 × length × scale = 4.2（V tip x=3，line 嵌进凹口）
-  ] as const)(
-    'Core 内置实心 shape %s 会缩短路径端点，避免线条透出 marker',
-    (shape, expectedEndX) => {
-      const ir: IRScene = {
-        version: 1,
-        type: 'scene',
-        children: [
-          {
-            type: 'path',
-            marks: arrowMarks('->', { shape }),
-            children: [
-              { type: 'step', kind: 'move', to: [0, 0] },
-              { type: 'step', kind: 'line', to: [100, 0] },
-            ],
-          },
-        ],
-      };
-      expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([
-        move([0, 0]),
-        line([expectedEndX, 0]),
-      ]);
-    },
-  );
+    ['normal', 94.5],
+    ['open', 95.25],
+    ['stealth', 96.3],
+    ['openStealth', 96.45],
+    ['circle', 94.5],
+    ['openCircle', 94.5],
+  ] as const)('Core 内置 shape %s 会让路径覆盖 marker 接触边半个描边宽度', (shape, expectedEndX) => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          marks: arrowMarks('->', { shape }),
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([expectedEndX, 0])]);
+  });
+
+  it('主路径描边变宽时仍向 marker 内覆盖半个自身描边宽度', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          strokeWidth: 4,
+          marks: arrowMarks('->', { shape: 'normal' }),
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([78, 0])]);
+  });
 
   it("arrowDetail 缺省时 shape 回退 'stealth'", () => {
     const ir: IRScene = {

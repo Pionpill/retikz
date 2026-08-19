@@ -29,6 +29,44 @@ export const standardV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.4',
+          date: '2026-08-19',
+          summary: {
+            zh: '补充四种可容纳内容的通用图式 Shape、八种 Standard 端点 marker，并修复圆柱近端端盖填充。',
+            en: 'Adds four content-bearing diagram Shapes, eight Standard endpoint markers, and correct near-cap fill for cylinders.',
+          },
+          items: [
+            {
+              label: { zh: '参数化图式 Shape', en: 'Parameterized diagram Shapes' },
+              content: {
+                zh: '`@retikz/standard/shape` 新增 trapezoid、parallelogram、默认肩部比例为 0.2 的长 hexagon 与 cylinder。四项都通过独立 Definition 与静态 provider 提供，并让内容外接、圆角、boundary、connection envelope 与缩放使用同一最终轮廓；Cylinder 端盖分隔弧不再挖空近端填充。',
+                en: '`@retikz/standard/shape` adds trapezoid, parallelogram, an elongated hexagon with a default 0.2 shoulder ratio, and cylinder. Each ships as its own Definition and static provider, with content circumscription, rounding, boundaries, connection envelopes, and scaling derived from the same final contour; the Cylinder cap divider no longer cuts a hole out of the near-cap fill.',
+              },
+            },
+            {
+              label: { zh: '开放描边端点', en: 'Open stroke endpoints' },
+              content: {
+                zh: '`@retikz/standard/arrow` 新增 bar 与 crowFoot。两者都继承路径描边、支持 Core 的 length、width、lineWidth、color 与 opacity，并在 start、end、反向和双端路径上沿用统一 marker 放置与 shrink。',
+                en: '`@retikz/standard/arrow` adds bar and crowFoot. Both inherit path strokes, support Core length, width, lineWidth, color, and opacity, and share marker placement and shrink across start, end, reversed, and double-ended paths.',
+              },
+            },
+            {
+              label: { zh: '几何端点补充', en: 'Additional geometry endpoints' },
+              content: {
+                zh: '`diamond` / `openDiamond` 改为 2:1 扁菱形，并新增 `kite` / `openKite` 与 `square` / `openSquare`。实心与空心版本分别使用 fill 与 stroke，同时继续复用 Core 的独立 length / width 缩放、line contact 与 Path shrink。',
+                en: '`diamond` and `openDiamond` now use flat 2:1 geometry, with new `kite` / `openKite` and `square` / `openSquare` pairs. Solid and open forms use fill and stroke respectively while reusing Core independent length/width scaling, line contact, and path shrink.',
+              },
+            },
+            {
+              label: { zh: '保持显式装载边界', en: 'Explicit loading boundary preserved' },
+              content: {
+                zh: '新能力只从 `/shape` 与 `/arrow` 子入口导出，并加入 owner-local Definition/provider 集合；Standard 根入口不聚合，也不引入全局注册或领域 role、kind、cardinality。',
+                en: 'The new capabilities are exported only from `/shape` and `/arrow` and join their owner-local Definition/provider collections. The Standard root does not aggregate them, and no global registration or domain role, kind, or cardinality is introduced.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.3',
           date: '2026-08-09',
           summary: {
