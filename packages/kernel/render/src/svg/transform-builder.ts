@@ -1,7 +1,5 @@
 import type { Transform } from '@retikz/core';
 
-import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
-
 /** 默认 round：保留 2 位小数，配 compile/scene/precision 的默认 */
 const defaultRound = (n: number) => Math.round(n * 100) / 100;
 
@@ -34,10 +32,7 @@ export const buildTransform = (
       }
       default: {
         const exhaustive: never = t;
-        throw new RetikzRenderError(
-          RetikzRenderErrorCode.Svg,
-          `buildTransform: unknown Transform kind: ${String((exhaustive as { kind: string }).kind)}`,
-        );
+        return exhaustive;
       }
     }
   }

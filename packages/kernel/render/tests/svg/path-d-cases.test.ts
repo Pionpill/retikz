@@ -193,11 +193,6 @@ describe('buildPathD: 边界 / 错误路径', () => {
     expect(buildPathD([])).toBe('');
   });
 
-  it('未识别 kind 抛错（exhaustive switch 防御）', () => {
-    const bad = [{ kind: 'unknown' as unknown as 'move', to: [0, 0] as [number, number] }] as Array<PathCommand>;
-    expect(() => buildPathD(bad)).toThrow();
-  });
-
   it('默认 round 保留 2 位小数（与 compile precision 一致），不传 round 时浮点噪声被裁掉', () => {
     const commands: Array<PathCommand> = [{ kind: 'move', to: [1.23456, 2.34567] }];
     expect(buildPathD(commands)).toBe('M 1.23 2.35');

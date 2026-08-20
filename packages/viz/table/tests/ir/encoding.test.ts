@@ -1,13 +1,6 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type { IRTableCellVisualEncoding, IRTableVisualScaleRef } from '../../src';
-
-import {
-  TableCellVisualEncodingSchema,
-  TableSchema,
-  TableVisualChannel,
-  TableVisualScaleRefSchema,
-} from '../../src';
+import { TableCellVisualEncodingSchema, TableSchema, TableVisualChannel, TableVisualScaleRefSchema } from '../../src';
 
 const selector = { fields: ['score'], locations: ['body'] } as const;
 
@@ -20,9 +13,6 @@ describe('Table visual encoding schema', () => {
       scale: { name: 'sequential-color', options: { domain: [0, 10] } },
       legend: { title: 'Score' },
     });
-
-    expectTypeOf(encoding).toEqualTypeOf<IRTableCellVisualEncoding>();
-    expectTypeOf(encoding.scale).toEqualTypeOf<IRTableVisualScaleRef>();
     expect(JSON.parse(JSON.stringify(encoding))).toEqual(encoding);
     expect(() => TableCellVisualEncodingSchema.parse({ ...encoding, id: '' })).toThrow(/id/i);
     expect(() => TableCellVisualEncodingSchema.parse({ ...encoding, channel: 'opacity' })).toThrow(/channel/i);

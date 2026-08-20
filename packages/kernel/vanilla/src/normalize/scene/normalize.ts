@@ -381,12 +381,6 @@ const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
 
 /** 将 InputScene 一次性归一为唯一 Source IR、contribution 与 runtime metadata */
 export const normalizeScene = (scene: InputScene, options: InputNormalizeOptions = {}): NormalizedInputScene => {
-  if ('children' in scene && 'layers' in scene) {
-    throw new RetikzVanillaError(
-      RetikzVanillaErrorCode.Normalize,
-      'normalizeScene: scene cannot contain both children and layers',
-    );
-  }
   const layers = asLayerStack(scene);
   const contributions: Array<CoreProviderContribution> = [];
   const identityIndex = new Map<string, Array<string>>();

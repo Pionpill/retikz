@@ -36,42 +36,50 @@ export const RetikzCoreErrorCode = {
 export type RetikzCoreErrorCodeValue = ValueOf<typeof RetikzCoreErrorCode>;
 
 /** Core 包错误的结构化构造参数 */
-export type RetikzCoreErrorOptions = Readonly<{
+export type RetikzCoreErrorOptions<
+  TCode extends RetikzCoreErrorCodeValue = RetikzCoreErrorCodeValue,
+  TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
+> = Readonly<{
   /** 稳定错误码 */
-  code: RetikzCoreErrorCodeValue;
+  code: TCode;
   /** 面向调用方的原始错误消息 */
   message: string;
   /** 失败上下文的结构化详情 */
-  details?: Readonly<Record<string, unknown>>;
+  details?: TDetails;
   /** 导致当前失败的原始异常或值 */
   cause?: unknown;
 }>;
 
-type RetikzCoreErrorCauseOptions = Readonly<Pick<RetikzCoreErrorOptions, 'details' | 'cause'>>;
+type RetikzCoreErrorCauseOptions<TDetails extends Readonly<Record<string, unknown>>> = Readonly<
+  Pick<RetikzCoreErrorOptions<RetikzCoreErrorCodeValue, TDetails>, 'details' | 'cause'>
+>;
 
-/** Core 包未被更精确错误类型覆盖的结构化错误 */
-export class RetikzCoreError extends RetikzError<RetikzCoreErrorCodeValue, Readonly<Record<string, unknown>>> {
+/** Core 包统一的结构化错误 */
+export class RetikzCoreError<
+  TCode extends RetikzCoreErrorCodeValue = RetikzCoreErrorCodeValue,
+  TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
+> extends RetikzError<TCode, TDetails> {
   /** 使用默认错误码创建 Core 错误 */
   constructor(message: string);
   /** 使用结构化参数创建 Core 错误 */
-  constructor(options: RetikzCoreErrorOptions);
+  constructor(options: RetikzCoreErrorOptions<TCode, TDetails>);
   /** 使用显式错误码创建 Core 错误 */
-  constructor(code: RetikzCoreErrorCodeValue, message: string, options?: RetikzCoreErrorCauseOptions);
+  constructor(code: TCode, message: string, options?: RetikzCoreErrorCauseOptions<TDetails>);
   constructor(
-    optionsOrMessageOrCode: RetikzCoreErrorOptions | string,
+    optionsOrMessageOrCode: RetikzCoreErrorOptions<TCode, TDetails> | string,
     message?: string,
-    causeOptions: RetikzCoreErrorCauseOptions = {},
+    causeOptions: RetikzCoreErrorCauseOptions<TDetails> = {},
   ) {
-    const options: RetikzCoreErrorOptions =
+    const options: RetikzCoreErrorOptions<TCode, TDetails> =
       typeof optionsOrMessageOrCode !== 'string'
         ? optionsOrMessageOrCode
         : message === undefined
-          ? { code: RetikzCoreErrorCode.Default, message: optionsOrMessageOrCode }
-          : { code: optionsOrMessageOrCode as RetikzCoreErrorCodeValue, message, ...causeOptions };
+          ? { code: RetikzCoreErrorCode.Default as TCode, message: optionsOrMessageOrCode }
+          : { code: optionsOrMessageOrCode as TCode, message, ...causeOptions };
     super({
       code: options.code,
       message: options.message,
-      details: options.details ?? Object.freeze({ code: options.code }),
+      details: options.details ?? (Object.freeze({ code: options.code }) as unknown as TDetails),
       cause: options.cause,
     });
   }

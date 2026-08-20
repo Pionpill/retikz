@@ -8,16 +8,42 @@ import { RetikzTexError, RetikzTexErrorCode } from '../error';
 /** 把一个点经矩阵变换 + 归一化函数（viewBox 平移 + 缩放）映射成最终用户坐标 */
 export type PointMapper = (x: number, y: number) => [number, number];
 
+/** MathJax SVG 字形解析实际支持的 Core 路径命令 */
+export type SvgPathCommand = Extract<PathCommand, { kind: 'move' | 'line' | 'quad' | 'cubic' | 'close' }>;
+
+const malformedPath = (message: string): never => {
+  throw new RetikzTexError(RetikzTexErrorCode.SvgMalformed, message);
+};
+
+const unsupportedPath = (message: string): never => {
+  throw new RetikzTexError(RetikzTexErrorCode.SvgUnsupported, message);
+};
+
+const tokenizePathData = (source: string): Array<string> => {
+  const tokens: Array<string> = [];
+  const tokenPattern = /[a-zA-Z]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/g;
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  while ((match = tokenPattern.exec(source)) !== null) {
+    const separator = source.slice(cursor, match.index);
+    if (!/^[\s,]*$/.test(separator)) malformedPath(`Malformed path d near: ${separator.trim()}`);
+    tokens.push(match[0]);
+    cursor = tokenPattern.lastIndex;
+  }
+  const trailing = source.slice(cursor);
+  if (!/^\s*$/.test(trailing)) malformedPath(`Malformed path d near: ${trailing.trim()}`);
+  return tokens;
+};
+
 /**
  * 解析 SVG path `d` 字符串为绝对坐标 `PathCommand[]`
  * @description 支持 M/m L/l H/h V/v C/c S/s Q/q T/t Z/z（字体字形常用集）；S/T 按 SVG 规范做控制点反射。
  *   不支持椭圆弧 A/a（字体字形不产生）——遇到则抛错（caller 据此降级）。坐标先在本地系产出，再由 caller 经
  *   `transformCommands` 应用矩阵 + viewBox 归一
  */
-export const parsePathD = (d: string): Array<PathCommand> => {
-  const tokens = d.match(/[a-zA-Z]|-?\d*\.?\d+(?:[eE][-+]?\d+)?/g);
-  if (!tokens) return [];
-  const out: Array<PathCommand> = [];
+export const parsePathD = (d: string): Array<SvgPathCommand> => {
+  const tokens = tokenizePathData(d);
+  const out: Array<SvgPathCommand> = [];
   let i = 0;
   let cmd = '';
   let cx = 0;
@@ -30,7 +56,7 @@ export const parsePathD = (d: string): Array<PathCommand> => {
   const num = (): number => {
     const t = tokens[i++];
     const n = Number(t);
-    if (Number.isNaN(n)) throw new RetikzTexError(RetikzTexErrorCode.Svg, `Invalid number in path d: ${t}`);
+    if (!Number.isFinite(n)) malformedPath(`Invalid number in path d: ${String(t)}`);
     return n;
   };
   while (i < tokens.length) {
@@ -39,13 +65,14 @@ export const parsePathD = (d: string): Array<PathCommand> => {
       cmd = t;
       i++;
     } else if (cmd === '') {
-      throw new RetikzTexError(RetikzTexErrorCode.Svg, 'Path d starts with a number');
+      malformedPath('Path d starts with a number');
     } else if (cmd === 'M' || cmd === 'm') {
       // 隐式后续坐标对在 M 后视作 L
       cmd = cmd === 'M' ? 'M' : 'm';
     }
-    const rel = cmd === cmd.toLowerCase();
-    switch (cmd.toUpperCase()) {
+    const activeCommand = cmd;
+    const rel = activeCommand === activeCommand.toLowerCase();
+    switch (activeCommand.toUpperCase()) {
       case 'M': {
         let x = num();
         let y = num();
@@ -169,22 +196,23 @@ export const parsePathD = (d: string): Array<PathCommand> => {
         out.push({ kind: 'close' });
         cx = startX;
         cy = startY;
+        cmd = '';
         break;
       }
       default:
-        throw new RetikzTexError(RetikzTexErrorCode.Svg, `Unsupported path command: ${cmd}`);
+        unsupportedPath(`Unsupported path command: ${activeCommand}`);
     }
-    lastCmd = cmd;
+    lastCmd = activeCommand;
   }
   return out;
 };
 
 /** 把命令里所有坐标点经 mapper 映射（矩阵变换 + viewBox 归一），返回新命令数组 */
 export const transformCommands = (
-  commands: ReadonlyArray<PathCommand>,
+  commands: ReadonlyArray<SvgPathCommand>,
   matrix: AffineMatrix,
   normalize: PointMapper,
-): Array<PathCommand> => {
+): Array<SvgPathCommand> => {
   const map = (x: number, y: number): [number, number] => {
     const [wx, wy] = applyAffine(matrix, [x, y]);
     return normalize(wx, wy);
@@ -204,7 +232,7 @@ export const transformCommands = (
           control2: map(c.control2[0], c.control2[1]),
           to: map(c.to[0], c.to[1]),
         };
-      default:
+      case 'close':
         return { kind: 'close' };
     }
   });

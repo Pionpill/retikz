@@ -5,6 +5,7 @@ import { createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runt
 import type { HydrationController } from '../hydration';
 
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import { recoverHydrationSetupFailure } from '../hydration/setup-failure';
 
 /** 判断动态值是否为普通对象 */
 export const isPlainObject = (value: object): boolean => {
@@ -251,18 +252,4 @@ export const createHydrationCleanupQueue = (): HydrationCleanupQueue => {
   return Object.freeze({ dispose, disposePending });
 };
 
-/** 从 hydration setup 双重失败中恢复 owner 必须重试清理的 controller 与 primary cause */
-export const recoverHydrationSetupFailure = (
-  cause: unknown,
-): Readonly<{ cause: unknown; controller: HydrationController }> | undefined => {
-  if (!(cause instanceof Error) || cause.name !== 'RetikzHydrationControllerSetupError') return undefined;
-  const controller = Reflect.get(cause, 'controller');
-  if (
-    typeof controller !== 'object' ||
-    controller === null ||
-    typeof Reflect.get(controller, 'dispose') !== 'function'
-  ) {
-    return undefined;
-  }
-  return Object.freeze({ cause: Reflect.get(cause, 'cause'), controller: controller as HydrationController });
-};
+export { recoverHydrationSetupFailure };

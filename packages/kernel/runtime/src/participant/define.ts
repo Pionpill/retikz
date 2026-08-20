@@ -24,31 +24,8 @@ const invalidParticipant = (cause: unknown) =>
 export const defineRuntimeCommitParticipant = <TRead>(
   input: RuntimeCommitParticipantDefinitionInput<TRead>,
 ): RuntimeCommitParticipant<TRead> => {
-  const candidate: unknown = input;
-  if (typeof candidate !== 'object' || candidate === null) throw invalidParticipant(input);
-  const keyCandidate: unknown = Reflect.get(candidate, 'key');
-  const owners: unknown = Reflect.get(candidate, 'owners');
-  const programs: unknown = Reflect.get(candidate, 'programs');
-  const revisionPolicy: unknown = Reflect.get(candidate, 'revisionPolicy');
-  const tracePhasesCandidate: unknown = Reflect.get(candidate, 'tracePhases');
-  const prepare: unknown = Reflect.get(candidate, 'prepare');
-  const read: unknown = Reflect.get(candidate, 'read');
-  const dispose: unknown = Reflect.get(candidate, 'dispose');
-  if (
-    typeof keyCandidate !== 'string' ||
-    keyCandidate.length === 0 ||
-    !Array.isArray(owners) ||
-    !Array.isArray(programs) ||
-    (revisionPolicy !== 'affected' && revisionPolicy !== 'continuous') ||
-    !Array.isArray(tracePhasesCandidate) ||
-    typeof prepare !== 'function' ||
-    typeof read !== 'function' ||
-    typeof dispose !== 'function'
-  ) {
-    throw invalidParticipant(input);
-  }
-  const key = input.key;
-  const tracePhases = input.tracePhases;
+  const { key, owners, programs, revisionPolicy, tracePhases, prepare, read, dispose } = input;
+  if (key.length === 0) throw invalidParticipant(input);
   try {
     createRuntimeTraceReporter({ owner: key, phases: tracePhases, sink: () => undefined });
   } catch (cause) {
@@ -70,7 +47,7 @@ export const defineRuntimeCommitParticipant = <TRead>(
     revisionPolicy,
     tracePhases: copiedTracePhases,
   }) as RuntimeCommitParticipant<TRead>;
-  participantExecutors.set(token, Object.freeze({ prepare, read, dispose }) as RuntimeCommitParticipantExecutor);
+  participantExecutors.set(token, Object.freeze({ prepare, read, dispose }));
   participantOwnership.set(token, 'unowned');
   runtimeCommitParticipants.add(token);
   return token;

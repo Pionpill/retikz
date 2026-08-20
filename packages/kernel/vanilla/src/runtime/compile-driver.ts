@@ -9,7 +9,6 @@ import type {
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
 import { compileToScene, observeCompileToScene } from '@retikz/core';
-import { RetikzError } from '@retikz/foundation';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '@retikz/render/runtime';
 
 import type { InputAuthoringSite } from '../normalize';
@@ -22,20 +21,14 @@ const EMPTY_OBSERVERS: ReadonlyArray<CompileObserverDefinition> = Object.freeze(
 const EMPTY_OBSERVER_OUTPUTS: ReadonlyArray<CompileObserverOutput> = Object.freeze([]);
 const EMPTY_DIAGNOSTICS: ReadonlyArray<never> = Object.freeze([]);
 
-/** 编译驱动解析边界的结构化错误，retained host 可据此保留上一帧 */
-export class RetikzVanillaCompileDriverError extends RetikzError<
-  typeof RetikzVanillaErrorCode.CompileDriverFailed,
-  Readonly<Record<string, never>>
-> {
-  constructor(message: string, options?: ErrorOptions) {
-    super({
-      code: RetikzVanillaErrorCode.CompileDriverFailed,
-      message,
-      details: Object.freeze({}),
-      cause: options?.cause,
-    });
-  }
-}
+/** 创建编译驱动解析边界错误，retained host 可据此保留上一帧 */
+const compileDriverError = (message: string, cause: unknown): RetikzVanillaError =>
+  new RetikzVanillaError({
+    code: RetikzVanillaErrorCode.CompileDriverFailed,
+    message,
+    details: Object.freeze({}),
+    cause,
+  });
 
 /** 创建 Vanilla 编译驱动 session 时可读取的领域中立宿主输入 */
 export type VanillaCompileDriverInput = Readonly<{
@@ -123,8 +116,8 @@ export const createVanillaCompileDriverSession = (
     NORMALIZED_VANILLA_COMPILE_SESSIONS.set(candidate, normalized);
     return normalized;
   } catch (cause) {
-    if (cause instanceof RetikzVanillaCompileDriverError) throw cause;
-    throw new RetikzVanillaCompileDriverError('Vanilla compile driver session creation failed', { cause });
+    if (cause instanceof RetikzVanillaError && cause.code === RetikzVanillaErrorCode.CompileDriverFailed) throw cause;
+    throw compileDriverError('Vanilla compile driver session creation failed', cause);
   }
 };
 
@@ -166,8 +159,8 @@ export const resolveVanillaCompileOutput = (
     sessionOutputs.set(coreOutput, normalized);
     return normalized;
   } catch (cause) {
-    if (cause instanceof RetikzVanillaCompileDriverError) throw cause;
-    throw new RetikzVanillaCompileDriverError('Vanilla compile driver resolve failed', { cause });
+    if (cause instanceof RetikzVanillaError && cause.code === RetikzVanillaErrorCode.CompileDriverFailed) throw cause;
+    throw compileDriverError('Vanilla compile driver resolve failed', cause);
   }
 };
 

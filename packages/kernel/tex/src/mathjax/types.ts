@@ -30,15 +30,3 @@ export type MathJaxEngineOptions = {
    */
   extensions?: Array<MathJaxExtensionValue>;
 };
-
-/** 规范化后的 MathJax 引擎配置 */
-export type ResolvedMathJaxEngineOptions = {
-  /** 配置档 */
-  profile: MathJaxProfileValue;
-  /** 按稳定顺序去重后的公开扩展 */
-  extensions: Array<MathJaxExtensionValue>;
-  /** 包含内部依赖的 MathJax package 顺序 */
-  packages: Array<string>;
-  /** 可用于共享引擎的稳定键 */
-  key: string;
-};

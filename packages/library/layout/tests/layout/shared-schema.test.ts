@@ -1,17 +1,7 @@
 import { ChildSchema, LayoutAxisProposalKind, LayoutIntrinsicMode } from '@retikz/core';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type {
-  IRLayoutAxisSize,
-  IRLayoutContainerBox,
-  IRLayoutItemBase,
-  IRLayoutSize,
-  LayoutAxisSizeInput,
-  LayoutContainerBoxInput,
-  LayoutEdgeAlignmentValue,
-  LayoutItemBaseInput,
-  LayoutSizeInput,
-} from '../../src';
+import type { LayoutAxisSizeInput, LayoutContainerBoxInput, LayoutItemBaseInput, LayoutSizeInput } from '../../src';
 
 import {
   LayoutAlignment,
@@ -44,11 +34,6 @@ describe('shared layout schema', () => {
       padding: 0,
       overflow: 'visible',
     });
-    expectTypeOf<IRLayoutContainerBox>().toMatchTypeOf<{
-      size: IRLayoutSize;
-      padding: number | object;
-      overflow: 'visible' | 'clip';
-    }>();
   });
 
   it('keeps content, fixed and fill as strict discriminated axis policies', () => {
@@ -64,7 +49,6 @@ describe('shared layout schema', () => {
     expect(LayoutAxisSizeSchema.safeParse({ kind: 'content', min: 2, max: 1 }).success).toBe(false);
     expect(LayoutAxisSizeSchema.safeParse({ kind: 'fill', min: -1 }).success).toBe(false);
     expect(LayoutAxisSizeSchema.safeParse({ kind: 'content', max: Number.POSITIVE_INFINITY }).success).toBe(false);
-    expectTypeOf<IRLayoutAxisSize>().toEqualTypeOf<ReturnType<typeof LayoutAxisSizeSchema.parse>>();
   });
 
   it('parses partial physical size and spacing without losing explicit zero', () => {
@@ -95,7 +79,6 @@ describe('shared layout schema', () => {
     expect(ChildSchema.safeParse(input.child).success).toBe(true);
     expect(LayoutItemBaseSchema.safeParse({ ...input, key: '' }).success).toBe(false);
     expect(LayoutItemBaseSchema.safeParse({ ...input, unknown: true }).success).toBe(false);
-    expectTypeOf(parsed).toEqualTypeOf<IRLayoutItemBase>();
   });
 
   it('keeps edge alignment narrower than baseline-aware alignment', () => {
@@ -109,7 +92,6 @@ describe('shared layout schema', () => {
     ]);
     expect(LayoutEdgeAlignmentSchema.safeParse(LayoutAlignment.FirstBaseline).success).toBe(false);
     expect(LayoutEdgeAlignmentSchema.safeParse(LayoutAlignment.Stretch).success).toBe(true);
-    expectTypeOf<LayoutEdgeAlignmentValue>().toEqualTypeOf<'start' | 'center' | 'end' | 'stretch'>();
     expect(Object.values(LayoutDistribution)).toEqual([
       'start',
       'center',

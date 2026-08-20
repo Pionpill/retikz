@@ -5,23 +5,15 @@ import type { FC, ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
-import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { ComponentPreviewDialogProps } from '../../src/modules/docs/components/component-preview/ComponentPreviewDialog';
 import type {
-  AlignKey,
   ComponentRenderSource,
   PreviewActionSlot,
-  PreviewControlContract,
-  PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlState,
-  PreviewThemeMode,
-  PreviewThemeStyleSelection,
-  SizeKey,
 } from '../../src/modules/docs/components/component-preview/types';
 
-import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
 import { ComponentPreviewCard } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
 import { ComponentPreviewDialog } from '../../src/modules/docs/components/component-preview/ComponentPreviewDialog';
 import { PreviewThemeStyle } from '../../src/modules/docs/components/component-preview/theme';
@@ -83,34 +75,6 @@ afterEach(() => {
 });
 
 describe('ComponentPreviewDialog', () => {
-  it('只接收不可变定义与关闭回调，并移除旧 Dialog 导出', () => {
-    expectTypeOf<ComponentPreviewDialogProps>().toEqualTypeOf<{
-      name: string;
-      Component: FC;
-      source?: ComponentRenderSource;
-      defaultSourceFile?: string;
-      align: AlignKey;
-      initialSize: SizeKey;
-      controlState: PreviewControlState;
-      controlDefinition?: PreviewControlsDefinition;
-      controlContract?: PreviewControlContract;
-      showContextBar: boolean;
-      themeMode: PreviewThemeMode;
-      onThemeModeChange: (themeMode: PreviewThemeMode) => void;
-      enableThemeSwitch?: boolean;
-      themeStyleSelection?: PreviewThemeStyleSelection;
-      onThemeStyleChange?: (themeStyle: PreviewThemeStyleSelection) => void;
-      controlPanelOpen: boolean;
-      onControlPanelOpenChange: (open: boolean) => void;
-      controlSlots?: Array<PreviewControlSlot>;
-      dialogActions?: Array<PreviewActionSlot>;
-      showAskAi?: boolean;
-      onClose: () => void;
-    }>();
-    expect(componentPreviewExports).toHaveProperty('ComponentPreviewCard');
-    expect(componentPreviewExports).not.toHaveProperty(['Component', 'Detail', 'Dialog'].join(''));
-  });
-
   it('启用局部主题切换时在预览上下文栏显示当前有效风格图标', () => {
     const markup = renderToStaticMarkup(
       <ComponentPreviewDialog

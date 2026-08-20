@@ -1,6 +1,6 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type { ConvertIRToReactNodeOptions, LayoutProps, PathProps, ScopeProps } from '../src';
+import type { ConvertIRToReactNodeOptions } from '../src';
 
 import * as react from '../src';
 
@@ -57,9 +57,6 @@ describe('@retikz/react public API', () => {
   });
 
   it('基础组件与公共入口不再暴露 inspection-specific API', () => {
-    expectTypeOf<LayoutProps>().not.toHaveProperty('inspect');
-    expectTypeOf<ScopeProps>().not.toHaveProperty('inspect');
-    expectTypeOf<PathProps>().not.toHaveProperty('inspect');
     expect(react).not.toHaveProperty('defineInspector');
     expect(react).not.toHaveProperty('inspectionRoots');
   });

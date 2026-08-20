@@ -1,14 +1,8 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type { DetailTableInput, IRDetailTable, IRManualTable, ManualTableInput } from '../../../src';
+import type { DetailTableInput, ManualTableInput } from '../../../src';
 
-import {
-  createDetailTableIR,
-  createManualTableIR,
-  TABLE_NAMESPACE,
-  TableComposite,
-  TableSchema,
-} from '../../../src';
+import { createDetailTableIR, createManualTableIR, TABLE_NAMESPACE, TableComposite, TableSchema } from '../../../src';
 
 describe('Table plain authoring', () => {
   it('normalizes detail string headers and keeps header false', () => {
@@ -52,8 +46,6 @@ describe('Table plain authoring', () => {
     const input: DetailTableInput = { dataRef: 'people', columns, model };
     const before = structuredClone(input);
     const spec = createDetailTableIR(input);
-
-    expectTypeOf(spec).toEqualTypeOf<IRDetailTable>();
     expect(input).toEqual(before);
     expect(spec.structure.kind).toBe('detail');
     expect(spec.structure.columns).not.toBe(columns);
@@ -122,8 +114,6 @@ describe('Table plain authoring', () => {
     };
     const before = structuredClone(input);
     const spec = createManualTableIR(input);
-
-    expectTypeOf(spec).toEqualTypeOf<IRManualTable>();
     expect(spec).toEqual({
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,

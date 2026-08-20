@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 
 import { CircleAlert, Info, TriangleAlert } from 'lucide-react';
 
@@ -15,7 +15,7 @@ export type ComponentAlertProps = {
   /** 提示标题。 */
   title: string;
   /** 提示正文。 */
-  description: string;
+  description: ReactNode;
 };
 
 const alertTypeClass: Record<ComponentAlertType, string> = {
@@ -45,7 +45,9 @@ export const ComponentAlert: FC<ComponentAlertProps> = props => {
     <Alert variant={type === 'error' ? 'destructive' : 'default'} className={cn('my-6', alertTypeClass[type])}>
       <Icon />
       <AlertTitle>{title}</AlertTitle>
-      <AlertDescription className={descriptionTypeClass[type]}>{description}</AlertDescription>
+      <AlertDescription className={descriptionTypeClass[type]}>
+        <span>{description}</span>
+      </AlertDescription>
     </Alert>
   );
 };

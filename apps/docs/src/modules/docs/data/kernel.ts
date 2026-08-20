@@ -237,7 +237,12 @@ export const kernelSection: Array<Section> = [
         id: 'extension',
         label: 'kernel.pkgGroupExtension',
         children: [
-          { id: 'tex', label: 'kernel.pkgTex', difficulty: DocDifficulty.Internals },
+          {
+            id: 'tex',
+            label: 'kernel.pkgTex',
+            difficulty: DocDifficulty.Internals,
+            meta: extensionGuide('kernel.tex'),
+          },
           {
             id: 'inspect',
             label: 'kernel.pkgInspect',

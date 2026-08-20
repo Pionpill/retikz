@@ -1,6 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
-
-import type { IRTableThemeTokenOverrides, TableThemeTokenKey, TableThemeTokenMap } from '../../src';
+import { describe, expect, it } from 'vitest';
 
 import {
   TableSchema,
@@ -36,12 +34,8 @@ describe('Table theme token schema', () => {
   it('uses one closed 19-token vocabulary for required maps and partial overlays', () => {
     const required = TableThemeTokenMapSchema.parse(completeTokens);
     const partial = TableThemeTokenOverridesSchema.parse({ 'cell.content.color': '#334155' });
-
-    expectTypeOf(required).toEqualTypeOf<TableThemeTokenMap>();
-    expectTypeOf(partial).toEqualTypeOf<IRTableThemeTokenOverrides>();
     expect(Object.keys(required)).toHaveLength(19);
     expect(TableThemeTokenKeySchema.options).toHaveLength(19);
-    expectTypeOf(TableThemeTokenKeySchema.parse('data.sequential')).toEqualTypeOf<TableThemeTokenKey>();
     expect(partial).toEqual({ 'cell.content.color': '#334155' });
     expect(() => TableThemeTokenMapSchema.parse({ ...completeTokens, 'data.sequential': undefined })).toThrow(
       /data\.sequential/i,

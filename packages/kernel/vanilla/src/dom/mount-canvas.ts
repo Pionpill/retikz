@@ -43,7 +43,6 @@ import type {
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import { DEFAULT_ID_PREFIX, VanillaViewMode } from '../runtime/constants';
 import { captureVanillaRuntimeOptions } from '../runtime/runtime-options';
-import { assertStaticMountRuntimeExcluded } from '../runtime/static-mount-options';
 import { createEmptyRuntimeMeta, toSceneResult } from '../runtime/to-scene';
 import { createRetainedProcessingController } from './retained';
 
@@ -430,7 +429,6 @@ export const mountCanvas: MountCanvas = ((
   options: StaticMountCanvasOptions | MountCanvasOptions = {},
 ): CanvasView => {
   if ('primitives' in input) {
-    assertStaticMountRuntimeExcluded(options);
     return mountStaticCanvas(container, input, options as StaticMountCanvasOptions);
   }
   const runtimeOptions = captureVanillaRuntimeOptions(options);

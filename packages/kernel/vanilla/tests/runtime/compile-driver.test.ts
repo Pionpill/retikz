@@ -12,9 +12,9 @@ import {
   createVanillaCompileDriverSession,
   defaultVanillaCompileDriver,
   resolveVanillaCompileOutput,
-  RetikzVanillaCompileDriverError,
+  RetikzVanillaError,
+  RetikzVanillaErrorCode,
 } from '../../src';
-import { RetikzVanillaErrorCode } from '../../src/error';
 
 const source: IRScene = {
   version: 1,
@@ -43,11 +43,16 @@ const observer: CompileObserverDefinition<string> = Object.freeze({
 describe('Vanilla compile driver', () => {
   it('uses the shared Retikz error contract', () => {
     const cause = new Error('driver cause');
-    const error = new RetikzVanillaCompileDriverError('driver failed', { cause });
+    const error = new RetikzVanillaError({
+      code: RetikzVanillaErrorCode.CompileDriverFailed,
+      message: 'driver failed',
+      details: Object.freeze({}),
+      cause,
+    });
 
     expect(error).toBeInstanceOf(RetikzError);
     expect(error).toMatchObject({
-      name: 'RetikzVanillaCompileDriverError',
+      name: 'RetikzVanillaError',
       code: RetikzVanillaErrorCode.CompileDriverFailed,
       message: 'driver failed',
       cause,
@@ -59,7 +64,12 @@ describe('Vanilla compile driver', () => {
     const input = Object.freeze({ instance: {}, source, authoringSites: Object.freeze([]), coreOptions: {} });
     const driver = { create: () => null } as unknown as VanillaCompileDriver;
 
-    expect(() => createVanillaCompileDriverSession(driver, input)).toThrow(RetikzVanillaCompileDriverError);
+    expect(() => createVanillaCompileDriverSession(driver, input)).toThrowError(
+      expect.objectContaining({
+        name: 'RetikzVanillaError',
+        code: RetikzVanillaErrorCode.CompileDriverFailed,
+      }),
+    );
   });
 
   it('默认 driver 使用普通 Core compile、空 observers、空 diagnostics 与冻结空 readonly layers', () => {
@@ -155,6 +165,11 @@ describe('Vanilla compile driver', () => {
         }),
     });
 
-    expect(() => resolveVanillaCompileOutput(session, coreOutput)).toThrow(RetikzVanillaCompileDriverError);
+    expect(() => resolveVanillaCompileOutput(session, coreOutput)).toThrowError(
+      expect.objectContaining({
+        name: 'RetikzVanillaError',
+        code: RetikzVanillaErrorCode.CompileDriverFailed,
+      }),
+    );
   });
 });

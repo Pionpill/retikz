@@ -422,7 +422,7 @@ describe('buildPreviewSource', () => {
   });
 
   it('结构非法但可解析的 IR 只保留源码诊断并阻断宿主消费', () => {
-    const malformedIR = {} as IRScene;
+    const malformedIR = {};
     const result = buildPreviewSource(createInput({ exportedPreviewIR: malformedIR }));
 
     expect(result.source?.react).toBeDefined();
@@ -437,11 +437,21 @@ describe('buildPreviewSource', () => {
       type: 'scene',
       version: 1,
       children: [null],
-    } as unknown as IRScene;
+    };
     const result = buildPreviewSource(createInput({ exportedPreviewIR: malformedIR }));
 
     expect(result.source?.ir?.files[0]?.code).toBe(formatIR(malformedIR));
     expect(result.source?.ir?.render).toBeUndefined();
+    expect(result.source?.vanilla?.files[0]?.code).toContain('// Failed to generate vanilla code:');
+    expect(result.previewIr).toBeNull();
+  });
+
+  it('不可序列化的动态 previewIR 进入源码诊断而不使预览崩溃', () => {
+    const result = buildPreviewSource(
+      createInput({ exportedPreviewIR: { type: 'scene', version: 1, children: [], meta: { value: 1n } } }),
+    );
+
+    expect(result.source?.ir?.files[0]?.code).toContain('// Failed to format IR export:');
     expect(result.source?.vanilla?.files[0]?.code).toContain('// Failed to generate vanilla code:');
     expect(result.previewIr).toBeNull();
   });

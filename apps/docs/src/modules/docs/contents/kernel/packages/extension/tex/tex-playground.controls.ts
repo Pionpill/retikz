@@ -5,11 +5,8 @@ import { definePreviewControls } from '@/modules/docs/preview';
 /** Tex playground 使用的稳定字段 id */
 export const TexPlaygroundControlId = {
   Source: 'source',
-  Profile: 'profile',
   DisplayMode: 'displayMode',
   FontSize: 'fontSize',
-  Shape: 'shape',
-  Padding: 'padding',
 } as const;
 
 /** Tex playground 预设使用的公式源码 */
@@ -21,16 +18,9 @@ f(x) &= ax^2 + bx + c\\
 f'(x) &= 2ax + b\\
 f''(x) &= 2a
 \end{array}`,
-  FramedContour: String.raw`\oint_C \vec{F} \cdot d\vec{r}`,
-  ColoredCancellation: String.raw`\color{crimson}{\cancel{x}} + \colorbox{gold}{y}`,
 } as const;
 
-/** 只有启用 Node 容器时才显示 padding */
-export const TexPlaygroundVisibleWhen = {
-  Padding: { controlId: TexPlaygroundControlId.Shape, oneOf: ['rectangle', 'circle'] },
-} as const;
-
-/** TeX 源码、度量与容器的中文属性面板 */
+/** TeX 源码与排版度量的中文属性面板 */
 export const texPlaygroundControls = definePreviewControls({
   presentation: 'panel',
   title: '公式',
@@ -45,16 +35,6 @@ export const texPlaygroundControls = definePreviewControls({
           defaultValue: TexPlaygroundFormula.DisplaySum,
           placeholder: String.raw`\frac{a}{b} = c`,
           multiline: true,
-        },
-        {
-          kind: 'select',
-          id: TexPlaygroundControlId.Profile,
-          label: '语法配置',
-          defaultValue: 'math',
-          options: [
-            { value: 'base', label: '基础' },
-            { value: 'math', label: '数学扩展' },
-          ],
         },
         {
           kind: 'select',
@@ -77,32 +57,6 @@ export const texPlaygroundControls = definePreviewControls({
         },
       ],
     },
-    {
-      label: '容器',
-      controls: [
-        {
-          kind: 'select',
-          id: TexPlaygroundControlId.Shape,
-          label: 'shape',
-          defaultValue: 'none',
-          options: [
-            { value: 'none', label: '无边框' },
-            { value: 'rectangle', label: '矩形' },
-            { value: 'circle', label: '圆形' },
-          ],
-        },
-        {
-          kind: 'range',
-          id: TexPlaygroundControlId.Padding,
-          label: 'padding',
-          defaultValue: 14,
-          min: 4,
-          max: 28,
-          step: 1,
-          visibleWhen: TexPlaygroundVisibleWhen.Padding,
-        },
-      ],
-    },
   ],
 });
 
@@ -111,11 +65,8 @@ export const previewControlContract = {
   controls: texPlaygroundControls,
   canonicalValues: {
     source: TexPlaygroundFormula.DisplaySum,
-    profile: 'math',
     displayMode: 'display',
     fontSize: 22,
-    shape: 'none',
-    padding: 14,
   },
   presetSelector: {
     label: '公式示例',
@@ -127,11 +78,8 @@ export const previewControlContract = {
       label: '行内质能方程',
       values: {
         source: TexPlaygroundFormula.InlineEnergy,
-        profile: 'base',
         displayMode: 'inline',
         fontSize: 24,
-        shape: 'none',
-        padding: 14,
       },
     },
     {
@@ -139,11 +87,8 @@ export const previewControlContract = {
       label: 'Display 求和',
       values: {
         source: TexPlaygroundFormula.DisplaySum,
-        profile: 'math',
         displayMode: 'display',
         fontSize: 22,
-        shape: 'none',
-        padding: 14,
       },
     },
     {
@@ -151,45 +96,10 @@ export const previewControlContract = {
       label: '多行导数',
       values: {
         source: TexPlaygroundFormula.MultilineDerivatives,
-        profile: 'base',
         displayMode: 'display',
         fontSize: 18,
-        shape: 'rectangle',
-        padding: 14,
-      },
-    },
-    {
-      id: 'framed-contour',
-      label: '带框环路积分',
-      values: {
-        source: TexPlaygroundFormula.FramedContour,
-        profile: 'base',
-        displayMode: 'display',
-        fontSize: 22,
-        shape: 'circle',
-        padding: 18,
-      },
-    },
-    {
-      id: 'colored-cancellation',
-      label: '彩色消去',
-      values: {
-        source: TexPlaygroundFormula.ColoredCancellation,
-        profile: 'math',
-        displayMode: 'display',
-        fontSize: 24,
-        shape: 'none',
-        padding: 14,
       },
     },
   ],
-  relatedApis: [
-    'MathJaxEngineOptions.profile',
-    'Node.text',
-    'IRTexContent.tex',
-    'IRTexContent.displayMode',
-    'Node.font',
-    'Node.shape',
-    'Node.padding',
-  ],
+  relatedApis: ['Node.text', 'IRTexContent.tex', 'IRTexContent.displayMode', 'Node.font'],
 } satisfies PreviewControlContract;

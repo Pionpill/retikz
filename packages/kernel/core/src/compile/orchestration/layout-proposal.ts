@@ -4,7 +4,7 @@ import type { LayoutAxisProposal, LayoutProposal } from '../../contract';
 import type { CompileOccurrenceLocator } from '../../contract';
 
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
-import { isRetikzCompositeContractError,RetikzCompositeContractError } from '../../resolve/diagnostics';
+import { createCompositeContractError, isCompositeContractError } from '../../resolve/diagnostics';
 import { formatCompileOccurrence } from '../artifact';
 
 /** 把负零规范化为稳定的正零 */
@@ -12,7 +12,7 @@ const canonicalizeZero = (value: number): number => (Object.is(value, -0) ? 0 : 
 
 /** 创建带 composite occurrence 的非法 proposal 错误 */
 const invalidProposal = (compositeKey: string, occurrence: CompileOccurrenceLocator, detail: string): never => {
-  throw new RetikzCompositeContractError(
+  throw createCompositeContractError(
     `Composite '${compositeKey}' at ${formatCompileOccurrence(occurrence)} called layoutChild with an invalid proposal; ${detail}.`,
   );
 };
@@ -123,7 +123,7 @@ export const cloneLayoutProposal = (
       y: cloneLayoutAxisProposal(y, 'y', compositeKey, occurrence),
     });
   } catch (cause) {
-    if (isRetikzCompositeContractError(cause)) throw cause;
+    if (isCompositeContractError(cause)) throw cause;
     return invalidProposal(compositeKey, occurrence, 'proposal validation failed');
   }
 };

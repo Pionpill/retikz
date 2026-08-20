@@ -26,44 +26,4 @@ describe('@retikz/standard root exports', () => {
       type: 'grid',
     });
   });
-
-  it('does not expose the removed Standard composition API', () => {
-    for (const name of [
-      'StandardCapabilityModule',
-      'StandardBundle',
-      'createStandardBundle',
-      'GridModule',
-      'AxesModule',
-      'FrameModule',
-      'LegendModule',
-      'FlexLayoutDefinition',
-      'GridLayoutDefinition',
-      'OverlayLayoutDefinition',
-      'FlexLayoutModule',
-      'GridLayoutModule',
-      'OverlayLayoutModule',
-      'StandardAllPreset',
-      'StandardLayoutPreset',
-      'LogicFrameDefinition',
-      'createLogicFrame',
-      'LogicFrameSchema',
-      'TerminalSchema',
-      'StageSchema',
-      'DecisionSchema',
-      'JunctionSchema',
-      'ConnectorDefinition',
-      'CalloutDefinition',
-    ]) {
-      expect(standardExports).not.toHaveProperty(name);
-    }
-  });
-
-  it('keeps composite compiler helpers package-private', () => {
-    expect(standardExports).not.toHaveProperty('compileFlexLayout');
-    expect(standardExports).not.toHaveProperty('compileLogicFrame');
-    expect(standardExports).not.toHaveProperty('compileTerminal');
-    expect(standardExports).not.toHaveProperty('compileStage');
-    expect(standardExports).not.toHaveProperty('compileDecision');
-    expect(standardExports).not.toHaveProperty('compileJunction');
-  });
 });

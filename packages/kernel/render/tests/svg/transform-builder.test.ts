@@ -71,11 +71,6 @@ describe('buildTransform: 边界 / 错误路径', () => {
     expect(buildTransform(undefined)).toBeUndefined();
   });
 
-  it('未识别 kind 抛错（exhaustive switch 防御）', () => {
-    const bad = [{ kind: 'unknown', x: 0, y: 0 } as unknown as Transform];
-    expect(() => buildTransform(bad)).toThrow();
-  });
-
   it('round 函数透传', () => {
     const transforms: Array<Transform> = [
       { kind: 'translate', x: 1.234, y: 2.345 },

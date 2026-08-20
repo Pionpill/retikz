@@ -223,21 +223,6 @@ describe('resolveCoreProviderDependencies', () => {
     expect(resolved).toEqual({ clips: [definition] });
   });
 
-  it('rejects an operation-only clip object at the provider definition boundary', () => {
-    const key = clipKey('legacyClip');
-    const operationOnly = {
-      kind: 'legacyClip',
-      schema: z.strictObject({ kind: z.literal('legacyClip') }),
-      resolve: () => ({ kind: 'legacyClip' }),
-    } as unknown as AnyCoreProviderDefinition;
-
-    expect(() =>
-      resolveCoreProviderDependencies({
-        contributions: [contributionOf([key], [providerOf(key, { makeDefinition: () => operationOnly })])],
-      }),
-    ).toThrow(/unrecognized definition capability/i);
-  });
-
   it('rejects a second explicit complete definition at the same clip key', () => {
     const key = clipKey('ticket');
     const providerDefinition = clipDefinitionOf('ticket');

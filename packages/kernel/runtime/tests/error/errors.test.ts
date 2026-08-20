@@ -3,16 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { RuntimeDiagnostic, RuntimeProgramId } from '../../src';
 
-import {
-  RetikzRuntimeError,
-  RetikzRuntimeErrorCode,
-  RetikzRuntimeIdentityError,
-  RetikzRuntimeOwnerError,
-  RetikzRuntimeOwnerErrorCode,
-  RetikzRuntimeOwnerRegistryError,
-  RuntimeDiagnosticCode,
-  RuntimeOwnerPhase,
-} from '../../src';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode, RuntimeDiagnosticCode, RuntimeOwnerPhase } from '../../src';
 
 const program: RuntimeProgramId = { owner: 'owner', key: 'program' };
 const diagnostics: ReadonlyArray<RuntimeDiagnostic> = [
@@ -91,27 +82,29 @@ describe('runtime structured errors', () => {
     expectOwnCause(error, cause);
   });
 
-  it('preserves RetikzRuntimeOwnerError compatibility and lifecycle details', () => {
+  it('uses RetikzRuntimeError for owner lifecycle failures', () => {
     const cause = new Error('dispose failed');
     const lifecycleDiagnostics = [
       {
         code: RuntimeDiagnosticCode.OwnerDisposeFailed,
         owner: 'owner',
         phase: RuntimeOwnerPhase.Retire,
+        severity: 'error',
         message: 'cleanup failed',
         cause,
       },
     ] as const;
-    const error = new RetikzRuntimeOwnerError({
-      code: RetikzRuntimeOwnerErrorCode.CaptureFailed,
+    const error = new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.CaptureFailed,
       owner: 'owner',
       phase: RuntimeOwnerPhase.Capture,
+      message: 'RUNTIME_OWNER_CAPTURE_FAILED: owner "owner" failed during capture',
       cause,
       diagnostics: lifecycleDiagnostics,
     });
 
-    expect(error).toBeInstanceOf(RetikzRuntimeOwnerError);
-    expect(error.name).toBe('RetikzRuntimeOwnerError');
+    expect(error).toBeInstanceOf(RetikzRuntimeError);
+    expect(error.name).toBe('RetikzRuntimeError');
     expect(error.code).toBe(RetikzRuntimeErrorCode.CaptureFailed);
     expect(error.message).toBe('RUNTIME_OWNER_CAPTURE_FAILED: owner "owner" failed during capture');
     expect(error.owner).toBe('owner');
@@ -126,29 +119,40 @@ describe('runtime structured errors', () => {
     expectOwnCause(error, cause);
   });
 
-  it('preserves RetikzRuntimeOwnerRegistryError compatibility when cause is omitted', () => {
-    const error = new RetikzRuntimeOwnerRegistryError(RetikzRuntimeOwnerErrorCode.Unknown, 'owner');
+  it('uses RetikzRuntimeError for owner registry failures', () => {
+    const error = new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.Unknown,
+      phase: 'owner-registry',
+      message: 'RUNTIME_OWNER_UNKNOWN: invalid runtime owner "owner"',
+      owner: 'owner',
+    });
 
-    expect(error).toBeInstanceOf(RetikzRuntimeOwnerRegistryError);
-    expect(error.name).toBe('RetikzRuntimeOwnerRegistryError');
+    expect(error).toBeInstanceOf(RetikzRuntimeError);
+    expect(error.name).toBe('RetikzRuntimeError');
     expect(error.code).toBe(RetikzRuntimeErrorCode.Unknown);
     expect(error.message).toBe('RUNTIME_OWNER_UNKNOWN: invalid runtime owner "owner"');
     expect(error.owner).toBe('owner');
-    expect(error.details).toEqual({ owner: 'owner' });
+    expect(error.details).toEqual({ owner: 'owner', phase: 'owner-registry', diagnostics: [] });
     expect(isRetikzError(error)).toBe(true);
     expectOwnCause(error, undefined);
   });
 
-  it('preserves RetikzRuntimeIdentityError compatibility and rejected value cause', () => {
+  it('uses RetikzRuntimeError for identity failures', () => {
     const rejectedValue = ' ';
-    const error = new RetikzRuntimeIdentityError('owner', rejectedValue);
+    const error = new RetikzRuntimeError({
+      code: RetikzRuntimeErrorCode.IdentityInvalid,
+      phase: 'identity',
+      message: 'RUNTIME_IDENTITY_INVALID: invalid runtime identity for owner "owner"',
+      owner: 'owner',
+      cause: rejectedValue,
+    });
 
-    expect(error).toBeInstanceOf(RetikzRuntimeIdentityError);
-    expect(error.name).toBe('RetikzRuntimeIdentityError');
+    expect(error).toBeInstanceOf(RetikzRuntimeError);
+    expect(error.name).toBe('RetikzRuntimeError');
     expect(error.code).toBe(RetikzRuntimeErrorCode.IdentityInvalid);
     expect(error.message).toBe('RUNTIME_IDENTITY_INVALID: invalid runtime identity for owner "owner"');
     expect(error.owner).toBe('owner');
-    expect(error.details).toEqual({ owner: 'owner' });
+    expect(error.details).toEqual({ owner: 'owner', phase: 'identity', diagnostics: [] });
     expect(isRetikzError(error)).toBe(true);
     expectOwnCause(error, rejectedValue);
   });

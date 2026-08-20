@@ -36,6 +36,8 @@ export const RetikzFoundationErrorCode = {
   Default: 'FOUNDATION_ERROR',
   /** 字符串为空或只包含空白 */
   NonEmptyStringRequired: 'FOUNDATION_NON_EMPTY_STRING_REQUIRED',
+  /** 数值不是严格大于零的有限数 */
+  PositiveNumberRequired: 'FOUNDATION_POSITIVE_NUMBER_REQUIRED',
 } as const;
 
 /** Foundation 包稳定错误码取值 */

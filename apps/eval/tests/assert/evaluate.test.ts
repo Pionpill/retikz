@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { evaluateAssertions } from '../../src/assert/evaluate';
 
-const scene = {
+const scene: Scene = {
   primitives: [
     { type: 'rect', x: 0, y: 0, width: 10, height: 10 },
     {
@@ -21,7 +21,7 @@ const scene = {
     },
   ],
   layout: { x: 0, y: 0, width: 10, height: 10 },
-} as unknown as Scene;
+};
 
 describe('evaluateAssertions', () => {
   it('逐条求值并保留 description', () => {

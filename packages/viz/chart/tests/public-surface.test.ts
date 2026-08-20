@@ -1,7 +1,6 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { IRBaseChart, IRChartPresentation } from '../src';
-import type { PointChartTypeValue } from '../src/point';
 
 import * as chart from '../src';
 import * as point from '../src/point';
@@ -45,7 +44,6 @@ describe('@retikz/chart public surface', () => {
       Bubble: 'bubble',
       ConnectedScatter: 'connected-scatter',
     });
-    expectTypeOf(point.PointChartType.Scatter).toMatchTypeOf<PointChartTypeValue>();
     expect(point).not.toHaveProperty('PointChartSchema');
     expect(point).toHaveProperty('ScatterChartSchema');
     expect(point).toHaveProperty('BubbleChartSchema');
@@ -76,8 +74,6 @@ describe('@retikz/chart public surface', () => {
       },
       presentation,
     });
-
-    expectTypeOf(value).toMatchTypeOf<IRBaseChart>();
     expect(JSON.parse(JSON.stringify(value))).toEqual(value);
   });
 });

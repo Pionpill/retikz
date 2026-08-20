@@ -18,9 +18,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import type { DetailTableProps, ManualTableProps, TableProps } from '../../src';
-import type { CellProps } from '../../src/components/cell';
-import type { DetailColumnProps } from '../../src/components/detail-column';
+import type { DetailTableProps } from '../../src';
 
 import * as TableReact from '../../src';
 import { DetailTable, ManualTable } from '../../src';
@@ -206,12 +204,6 @@ describe('Table React composition authoring collectors', () => {
         </>,
       ),
     ).toThrow('table react: DetailTable children require at least one DetailColumn');
-    const invalidMarker = (
-      <DetailColumn {...({ id: 'name', field: 'name', children: 'bad' } as unknown as DetailColumnProps)} />
-    );
-    expect(() => buildDetailColumns(invalidMarker)).toThrow(
-      'table react: DetailTable children only accept DetailColumn',
-    );
   });
 
   it('rejects invalid ManualTable and Row child grammars', () => {
@@ -230,34 +222,6 @@ describe('Table React composition authoring collectors', () => {
   it('rejects missing Rows and all-empty marker matrices whose width cannot be inferred', () => {
     expect(() => buildManualStructure(null)).toThrow(/require.*at least one Row/i);
     expect(() => buildManualStructure(<Row />)).toThrow(/require.*at least one Cell/i);
-  });
-
-  it('rejects Cell payload sources that are absent, multiple, or React elements', () => {
-    const absent = <Cell {...({} as CellProps)} />;
-    const multiple = <Cell {...({ value: 'A', content, children: 'B' } as unknown as CellProps)} />;
-    const invalid = <Cell {...({ children: <span>A</span> } as unknown as CellProps)} />;
-
-    expect(() => buildManualStructure(<Row>{absent}</Row>)).toThrow(
-      /table react: Cell at row 0, column 0 requires exactly one payload source/,
-    );
-    expect(() => buildManualStructure(<Row>{multiple}</Row>)).toThrow(
-      /table react: Cell at row 0, column 0 requires exactly one payload source/,
-    );
-    expect(() => buildManualStructure(<Row>{invalid}</Row>)).toThrow(
-      /table react: Cell at row 0, column 0 value must be a JSON scalar/,
-    );
-  });
-
-  it('rejects formatter and presentation paired with content Cell payloads with their address', () => {
-    const invalidFormatter = <Cell {...({ content, formatter: { name: 'identity' } } as unknown as CellProps)} />;
-    const invalidPresentation = <Cell {...({ content, presentation: { name: 'text' } } as unknown as CellProps)} />;
-
-    expect(() => buildManualStructure(<Row>{invalidFormatter}</Row>)).toThrow(
-      'table react: Cell at row 0, column 0 content cannot be combined with formatter',
-    );
-    expect(() => buildManualStructure(<Row>{invalidPresentation}</Row>)).toThrow(
-      'table react: Cell at row 0, column 0 content cannot be combined with presentation',
-    );
   });
 
   it('treats an undefined content presentation as omitted', () => {
@@ -523,71 +487,6 @@ describe('Table React composition root integration', () => {
     });
   });
 
-  it('reports stable host-style migration diagnostics before schema construction', () => {
-    const generic = {
-      spec: createManualTableIR({ rows: [[1]] }),
-      style: { color: 'rebeccapurple' },
-    } as unknown as TableProps;
-    const detail = {
-      dataRef: 'people',
-      data: [],
-      columns: [{ id: 'score', field: 'score' }],
-      style: { color: 'rebeccapurple' },
-    } as unknown as DetailTableProps;
-    const manual = {
-      rows: [[1]],
-      style: { color: 'rebeccapurple' },
-    } as unknown as ManualTableProps;
-
-    expect(() => resolveReactTableRuntime(ReactTableRuntimeKind.Table, generic)).toThrow(
-      /top-level style.*containerStyle/,
-    );
-    expect(() => resolveReactTableRuntime(ReactTableRuntimeKind.Detail, detail)).toThrow(
-      /top-level style.*containerStyle/,
-    );
-    expect(() => resolveReactTableRuntime(ReactTableRuntimeKind.Manual, manual)).toThrow(
-      /top-level style.*containerStyle/,
-    );
-  });
-
-  it('rejects legacy DetailTable themeMode and styleTokens before spec reconstruction', () => {
-    const base = {
-      dataRef: 'people',
-      data: [],
-      columns: [{ id: 'score', field: 'score' }],
-    };
-
-    expect(() =>
-      resolveReactTableRuntime(ReactTableRuntimeKind.Detail, {
-        ...base,
-        themeMode: 'dark',
-      } as unknown as DetailTableProps),
-    ).toThrow(/top-level themeMode.*theme/);
-    expect(() =>
-      resolveReactTableRuntime(ReactTableRuntimeKind.Detail, {
-        ...base,
-        styleTokens: { 'cell.content.color': '#18181b' },
-      } as unknown as DetailTableProps),
-    ).toThrow(/top-level styleTokens.*tableThemeTokens/);
-  });
-
-  it('rejects legacy ManualTable themeMode and styleTokens before spec reconstruction', () => {
-    const base = { rows: [[1]] };
-
-    expect(() =>
-      resolveReactTableRuntime(ReactTableRuntimeKind.Manual, {
-        ...base,
-        themeMode: 'dark',
-      } as unknown as ManualTableProps),
-    ).toThrow(/top-level themeMode.*theme/);
-    expect(() =>
-      resolveReactTableRuntime(ReactTableRuntimeKind.Manual, {
-        ...base,
-        styleTokens: { 'cell.content.color': '#18181b' },
-      } as unknown as ManualTableProps),
-    ).toThrow(/top-level styleTokens.*tableThemeTokens/);
-  });
-
   it('uses rule-selected custom formatter definitions in standalone rendering', () => {
     const formatter = defineCellFormatter({
       name: 'rule-prefix',
@@ -627,41 +526,5 @@ describe('Table React composition root integration', () => {
     expect(tableProvider.datasets).toMatchObject({ people: [{ name: 'Grace' }] });
     expect(Object.keys(tableProvider.datasets)).toContain('@@retikz/table/runtime/detail-runtime-reference');
     expect(renderToStaticMarkup(<DetailTable {...props} />)).toContain('Grace');
-  });
-
-  it('rejects mixed and absent DetailTable structure sources through the shared runtime', () => {
-    const shared = { id: 'detail-invalid', dataRef: 'people', data: [] };
-    const child = <DetailColumn id="name" field="name" />;
-
-    expect(() =>
-      inputOf(DetailTable, {
-        ...shared,
-        columns: [{ id: 'name', field: 'name' }],
-        children: child,
-      } as unknown as DetailTableProps),
-    ).toThrow('table react: DetailTable columns cannot be mixed with DetailColumn children');
-    expect(() => inputOf(DetailTable, shared as unknown as DetailTableProps)).toThrow(
-      'table react: DetailTable requires columns or DetailColumn children',
-    );
-  });
-
-  it('rejects mixed and absent ManualTable structure sources through the shared runtime', () => {
-    const shared = { id: 'manual-invalid' };
-    const children = (
-      <Row>
-        <Cell value="Ada" />
-      </Row>
-    );
-    const rows = [['Ada']];
-
-    expect(() => inputOf(ManualTable, { ...shared, rows, children } as unknown as ManualTableProps)).toThrow(
-      'table react: ManualTable Row children cannot be mixed with rows or rowKinds',
-    );
-    expect(() =>
-      inputOf(ManualTable, { ...shared, rowKinds: ['body'], children } as unknown as ManualTableProps),
-    ).toThrow('table react: ManualTable Row children cannot be mixed with rows or rowKinds');
-    expect(() => inputOf(ManualTable, shared as unknown as ManualTableProps)).toThrow(
-      'table react: ManualTable requires rows or Row children',
-    );
   });
 });

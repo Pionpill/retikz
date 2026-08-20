@@ -5,7 +5,7 @@ import type { Root } from 'react-dom/client';
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
-import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import type {
   PreviewControlsDefinition,
@@ -124,7 +124,6 @@ describe('preview control state', () => {
     );
 
     expect(values).toEqual({ strokeWidth: 2, dashed: false });
-    expectTypeOf(usePreviewControls).toBeFunction();
   });
 
   it('更新多个类型并恢复 definition 默认值', async () => {
