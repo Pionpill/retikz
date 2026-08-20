@@ -177,6 +177,22 @@ export const vizSection: Array<Section> = [
         },
       },
       {
+        id: 'model',
+        label: 'viz.chartModel',
+        children: [
+          { id: 'structure', label: 'viz.chartModelStructure', difficulty: DocDifficulty.Advanced },
+          { id: 'authoring', label: 'viz.chartModelAuthoring', difficulty: DocDifficulty.Advanced },
+          { id: 'presentation', label: 'viz.chartModelPresentation', difficulty: DocDifficulty.Advanced },
+          { id: 'plot', label: 'viz.chartModelPlot', difficulty: DocDifficulty.Advanced },
+        ],
+        meta: {
+          pageType: 'concept',
+          audience: 'integrator',
+          capability: 'chart.model',
+          sourceOfTruth: 'runtime',
+        },
+      },
+      {
         id: 'changelog',
         label: 'viz.changelog',
         children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
