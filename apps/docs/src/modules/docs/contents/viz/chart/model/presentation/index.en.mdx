@@ -1,0 +1,85 @@
+---
+title: Presentation
+description: Understand how titles, subtitles, notes, sources, and Plot normalize into stable order inside one Surface.
+---
+
+Chart-wide presentation explains what a graphic says, what scope it covers, where its data comes from, and what constraints affect interpretation. It belongs to Chart rather than one chart type, and it is distinct from Plot axes, legends, and annotations.
+
+## From authored order to canonical order
+
+This playground uses a real `Chart` instead of simulating layout with boxes. Title, subtitle, Plot, note, and source all enter one Surface. Enable the Flex overlay to inspect the content, slot, allocation, padding, line region, and gaps of the canonical children.
+
+<ComponentPreview
+  files={['chart-presentation-layout', 'chart-presentation-preview.tsx', 'chart-presentation.data.ts']}
+  size="lg"
+  caption="The overlay only reads the internal Flex artifact from this compile and never enters Chart IR. Turn it off to inspect the final content alone."
+/>
+
+`title`, `subtitle`, `note`, and `source` are convenient shorthands. Without markers or explicit records, they produce a fixed default order: title and subtitle above Plot, then note and source below it.
+
+| React marker    | Shorthand  | Default position | Typical content                             |
+| --------------- | ---------- | ---------------- | ------------------------------------------- |
+| `ChartTitle`    | `title`    | top              | Subject or primary conclusion               |
+| `ChartSubtitle` | `subtitle` | top              | Scope, year, sample, unit, or method        |
+| `ChartNote`     | `note`     | bottom           | Reading constraints or methodology details  |
+| `ChartSource`   | `source`   | bottom           | Dataset and processing that affects meaning |
+
+Use React markers or ordered Vanilla `presentation` records when text style, position, or order must be explicit. Markers must be direct Chart children, though transparent `Fragment` groups are accepted. Each preset appears at most once and overrides the matching shorthand. Authored marker order is preserved, so placing `ChartSubtitle` before `ChartTitle` changes the final order.
+
+## Presentation items are optional
+
+When `title`, `subtitle`, `note`, or `source` is absent, normalization creates no matching item. Plot and the remaining presentation content move into the stable order. Use the four switches below to compare the canonical order with each item present or absent.
+
+<ComponentPreview
+  files={['chart-presentation-visibility', 'chart-presentation-preview.tsx', 'chart-presentation.data.ts']}
+  size="lg"
+  caption="The four switches control whether each Chart shorthand exists; they do not hide generated text with opacity."
+/>
+
+## Authoring versus canonical representation
+
+`position: 'top' | 'bottom'` exists only in Vanilla and React authoring. It places a record before or after the Plot placeholder. Once `normalizeChartPresentation` creates canonical `presentation.children`, array order carries the layout and `position` is removed.
+
+Presentation text may be a string or a JSON-serializable Core `TextBlock`. React markers additionally accept strings, transparent `Fragment` groups, and Core `Text` children, then normalize them into the same text contract. Arbitrary React elements never enter IR.
+
+During resolution, Chart uses a Standard `Surface` as the chart-wide container and Flex ordering for presentation text and the single Plot placeholder. Chart theme tokens style the presets, while Plot continues to own its own axes, legends, and annotations.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Normalize shorthands, positions, and authored order',
+      path: 'packages/viz/chart-vanilla/src/normalize/chart/presentation.ts',
+      startLine: 15,
+      endLine: 73,
+    },
+    {
+      label: 'Normalize React presentation markers into Vanilla records',
+      path: 'packages/viz/chart-react/src/shared/presentation.tsx',
+      startLine: 37,
+      endLine: 162,
+    },
+    {
+      label: 'Resolve canonical presentation into Flex content',
+      path: 'packages/viz/chart/src/_chart/presentation/resolve.ts',
+      startLine: 60,
+      endLine: 113,
+    },
+  ]}
+/>
+
+## Related pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/model/authoring">
+    <span className="font-semibold">Authoring &amp; Resolution</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Place presentation input in the full pipeline.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/plot">
+    <span className="font-semibold">Plot Integration</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Separate chart-wide presentation from Plot guides.
+    </span>
+  </LinkedCard>
+</div>

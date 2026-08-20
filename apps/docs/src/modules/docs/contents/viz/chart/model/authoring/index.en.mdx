@@ -1,0 +1,75 @@
+---
+title: Authoring & Resolution
+description: Understand how React, Vanilla, and JSON produce exact Source IR that recipes and resolveChart converge into IRBaseChart.
+---
+
+Chart separates convenient authoring from stable execution. React and Vanilla normalize their input forms into exact Source IR. The entry for that exact type then binds the matching recipe and resolves it into one `IRBaseChart`.
+
+## One shared pipeline
+
+<ComponentPreview files="chart-authoring-pipeline" hideCode size="sm" />
+
+| Stage             | Owner                   | Result                                                    |
+| ----------------- | ----------------------- | --------------------------------------------------------- |
+| React props / JSX | `@retikz/chart-react`   | Converts to Vanilla Input instead of assembling Source IR |
+| Plain input       | `@retikz/chart-vanilla` | `normalizeXxxChart` produces exact serializable Source IR |
+| JSON              | Exact Chart schema      | Parses the Source IR of one type                          |
+| recipe bind       | Exact Chart entry       | Retains base fields and a deferred `createPlot`           |
+| resolve           | `resolveChart`          | Applies themes and the recipe, producing `IRBaseChart`    |
+
+JSON is an alternate input, not a schema bypass. A `base` input can use the root `bindChart` entry. For Point inputs, choose the exact schema and recipe matching `type` from `@retikz/chart/point`; for example, parse with `ScatterChartSchema`, then bind with `ScatterChartRecipe.bind`. The root `bindChart` is not a catch-all dispatcher for unknown types. Once bound, every type enters the same `resolveChart`, and Core consumes only `chart.base`.
+
+## Three packages, one stage each
+
+The root `@retikz/chart` entry exposes Base Chart Source IR, schema, recipe, `bindChart`, `resolveChart`, and canonical presentation. `@retikz/chart/point` exposes the exact IR, schema, and recipe for each Point Chart. Plain types such as `InputChart` and `InputScatterChart`, normalizers, and factory functions belong to `@retikz/chart-vanilla`. React components interpret JSX children and presentation markers before reusing the same normalizers, so React and Vanilla do not maintain parallel Source IR assembly rules.
+
+| Entry                   | `type`              | Import                      |
+| ----------------------- | ------------------- | --------------------------- |
+| `Chart` / `createChart` | `base`              | Package root                |
+| `ScatterChart`          | `scatter`           | `@retikz/chart-react/point` |
+| `BubbleChart`           | `bubble`            | `@retikz/chart-react/point` |
+| `ConnectedScatterChart` | `connected-scatter` | `@retikz/chart-react/point` |
+
+The Vanilla factories are `createScatterChart`, `createBubbleChart`, and `createConnectedScatterChart`, imported from `@retikz/chart-vanilla/point`. They return authoring results that preserve runtime theme data while reusing the shared Chart adapter and resolution pipeline for rendering.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Vanilla Base Chart normalization and factory',
+      path: 'packages/viz/chart-vanilla/src/_chart/index.ts',
+      startLine: 35,
+      endLine: 55,
+    },
+    {
+      label: 'Bind a recipe into BoundChart',
+      path: 'packages/viz/chart/src/_shared/recipe/recipe.ts',
+      startLine: 38,
+      endLine: 68,
+    },
+    {
+      label: 'Root bindChart accepts only Base Chart',
+      path: 'packages/viz/chart/src/_chart/dispatch/bind.ts',
+      startLine: 25,
+      endLine: 45,
+    },
+    {
+      label: 'Resolve every type into IRBaseChart',
+      path: 'packages/viz/chart/src/_chart/resolve/resolve.ts',
+      startLine: 17,
+      endLine: 46,
+    },
+  ]}
+/>
+
+## Related pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/model/structure">
+    <span className="font-semibold">Structure &amp; Types</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Review exact schemas and field ownership.</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/presentation">
+    <span className="font-semibold">Presentation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">See how shorthands become canonical order.</span>
+  </LinkedCard>
+</div>

@@ -1,0 +1,73 @@
+---
+title: Plot Integration
+description: Separate the Chart shell from Plot's drawing grammar, including how extensions and runtime themes cooperate.
+---
+
+Chart reuses Plot instead of wrapping a closed drawing result. A packaged type's recipe only supplies the Plot structure required by that type. Axes, legends, scales, transforms, additional marks, and annotations remain composable through public Plot contracts.
+
+## Two owners, one complete graphic
+
+<ComponentPreview files="chart-plot-ownership" hideCode size="md" />
+
+| Chart owns                              | Plot owns                                                 |
+| --------------------------------------- | --------------------------------------------------------- |
+| `namespace`, exact `type`, and `config` | data, transforms, scales, and coordinates                 |
+| title, subtitle, note, and source       | marks, axes, legends, and other guides                    |
+| canvas, chart Surface, and Chart theme  | Plot theme, grammar resolution, lowering, and diagnostics |
+
+When the Bubble recipe creates a primary Point mark from `config.encoding.size`, it is constructing Plot rather than implementing another Point system inside Chart. Axes, legends, and additional marks supplied through `plot` or React Plot children are still consumed by Plot schemas, providers, and pipelines. Base Chart supplies no recipe defaults and requires a complete explicit Plot.
+
+## Which side should an extension use?
+
+- Extend Plot when changing how data is drawn, such as adding a mark, channel, scale, coordinate, guide, or transform
+- Extend a Chart type when packaging a reusable set of Plot semantics, keeping unique parameters in `config`
+- Use Chart presentation for the complete graphic's subject, scope, source, or reading constraints
+- Keep coordinate explanations, legends, and data annotations in Plot guides and annotation capabilities
+
+This boundary prevents Chart types from copying the entire Plot API as the grammar grows, and prevents Plot from learning product-facing type names such as Scatter or Bubble.
+
+## Runtime theme cooperation
+
+Core, Chart, and Plot own separate Definition registries. A named style must be defined under all three owners when it affects all three; sharing the same name coordinates selection without merging ownership.
+
+In React, a standalone Chart can receive `themeStyles`, `chartThemeStyles`, and `plotThemeStyles`. When embedded in `<Layout>`, Core definitions come from the parent Layout while Chart and Plot definitions are still contributed by their matching providers. Vanilla factories preserve the same runtime theme input, and `renderChart()` consumes it in one compilation. Base `createChart()` keeps Plot definitions under `lowerOptions.plotThemeStyles` to reuse the complete Plot runtime options.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Merge user Plot with type recipe parts',
+      path: 'packages/viz/chart/src/_shared/recipe/plot.ts',
+      startLine: 8,
+      endLine: 20,
+    },
+    {
+      label: 'Chart provider contributes only Chart definitions and dependencies',
+      path: 'packages/viz/chart/src/_chart/provider.ts',
+      startLine: 50,
+      endLine: 85,
+    },
+    {
+      label: 'The adapter assembles Core, Chart, and Plot providers',
+      path: 'packages/viz/chart-vanilla/src/shared/contribution.ts',
+      startLine: 15,
+      endLine: 35,
+    },
+  ]}
+/>
+
+## Related pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/model/presentation">
+    <span className="font-semibold">Presentation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand narrative content and Surface owned by Chart.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot">
+    <span className="font-semibold">Plot</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Continue with marks, scales, coordinates, and guides.
+    </span>
+  </LinkedCard>
+</div>
