@@ -38,7 +38,7 @@ import type {
 import type { RuntimeSession, RuntimeSessionOptions } from './types';
 
 import { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from '../diagnostic';
-import { RetikzRuntimeError, RetikzRuntimeErrorCode, RetikzRuntimeOwnerError } from '../error';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import { createRuntimeOwnerExecutor } from '../owner';
 import {
   claimRuntimeCommitParticipants,
@@ -354,22 +354,12 @@ const withFailureDiagnostics = (cause: unknown, diagnostics: ReadonlyArray<Runti
       diagnostics,
     });
   }
-  if (cause instanceof RetikzRuntimeOwnerError) {
-    return new RetikzRuntimeError({
-      code: cause.code,
-      phase: cause.phase,
-      cause: cause.cause,
-      owner: cause.owner,
-      diagnostics,
-    });
-  }
   return cause;
 };
 
 /** 读取 primary error 已携带的 execution diagnostics */
 const errorDiagnostics = (cause: unknown): ReadonlyArray<RuntimeDiagnostic> => {
   if (cause instanceof RetikzRuntimeError) return cause.diagnostics;
-  if (cause instanceof RetikzRuntimeOwnerError) return cause.diagnostics.map(mapOwnerLifecycleDiagnostic);
   return Object.freeze([]);
 };
 

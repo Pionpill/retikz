@@ -6,8 +6,8 @@ import type { IRPosition } from '../../../schemas';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import {
-  RetikzCompositeContractError,
-  RetikzLayoutProbeRecoverableError,
+  createCompositeContractError,
+  createLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../../resolve/diagnostics';
 import { withProviderOutputValidationBoundary } from '../../scene-primitive';
@@ -15,7 +15,7 @@ import { withProviderOutputValidationBoundary } from '../../scene-primitive';
 /** 校验 generator 命令的不变量并返回只含 canonical 字段的 detached command */
 const snapshotGeneratedCommand = (name: string, command: PathCommand): PathCommand => {
   const bad = (detail: string): never => {
-    throw new RetikzCompositeContractError(`path generator '${name}' produced a ${detail}.`);
+    throw createCompositeContractError(`path generator '${name}' produced a ${detail}.`);
   };
   const kind = command.kind;
   const invalidPoint = (): never => bad(`non-finite coordinate in a '${kind}' command`);
@@ -129,7 +129,7 @@ export const lowerGeneratorStepToCommands = (args: {
       round,
     });
   } catch (e) {
-    throw new RetikzLayoutProbeRecoverableError(`path generator '${resolution.name}' threw: ${safeThrownDetail(e)}`, {
+    throw createLayoutProbeRecoverableError(`path generator '${resolution.name}' threw: ${safeThrownDetail(e)}`, {
       cause: e,
       providerKey: `path-generator:${resolution.name}`,
     });

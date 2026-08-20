@@ -47,10 +47,10 @@ import { NamespaceStack } from '../../src/compile/namespace';
 import { createCompileContext } from '../../src/compile/orchestration/context';
 import * as runtimeTopology from '../../src/compile/orchestration/runtime-topology';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
-import { normalizeLayoutProbeError, RetikzCompileInvariantError } from '../../src/compile/probe-failure';
+import { createCompileInvariantError, normalizeLayoutProbeError } from '../../src/compile/probe-failure';
 import { snapshotProviderPosition } from '../../src/compile/scene-primitive';
-import { RetikzCoreErrorCode } from '../../src/error';
-import { isRetikzLayoutProbeRecoverableError, RetikzCompositeContractError } from '../../src/resolve/diagnostics';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../src/error';
+import { isLayoutProbeRecoverableError } from '../../src/resolve/diagnostics';
 import { cloneAndFreezeJson } from '../../src/shared/json';
 import { arrowMarks } from '../helpers/arrow-marks';
 
@@ -492,7 +492,7 @@ describe('layout-aware composite constraints and bounds', () => {
       thrown = error;
     }
 
-    expect(thrown).toBeInstanceOf(RetikzCompositeContractError);
+    expect(thrown).toBeInstanceOf(RetikzCoreError);
     expect(thrown).toMatchObject({
       message: expect.stringMatching(/test\.hostileNestedProposal.*invalid proposal.*validation failed/i),
     });
@@ -980,10 +980,10 @@ describe('layout-aware composite constraints and bounds', () => {
   });
 
   it('lets branded Core invariants pierce the probe catch boundary', () => {
-    const invariant = new RetikzCompileInvariantError('forced namespace invariant');
+    const invariant = createCompileInvariantError('forced namespace invariant');
     expect(invariant).toBeInstanceOf(RetikzError);
     expect(invariant).toMatchObject({
-      name: 'RetikzCompileInvariantError',
+      name: 'RetikzCoreError',
       code: RetikzCoreErrorCode.CompileInvariantViolation,
     });
     const diff = vi.spyOn(NamespaceStack.prototype, 'diffTopFrame').mockImplementation(() => {
@@ -1032,7 +1032,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const context = createCompileContext(ir, { composites: [parent] });
 
     expect(() => compileChildrenToPrimitives(ir.children, context, { identityTracker: outer })).toThrow(
-      RetikzCompileInvariantError,
+      RetikzCoreError,
     );
     createProbeTracker.mockRestore();
   });
@@ -1055,7 +1055,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'invalidLayoutChildDiscriminatorParent' }), {
         composites: [parent],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('rejects an accessor-backed layoutChild input before the recoverable dispatch boundary', () => {
@@ -1081,7 +1081,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'hostileLayoutChildParent' }), {
         composites: [parent],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('rejects automatic allocation bounds whose transformed edges become non-finite', () => {
@@ -1109,7 +1109,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'nonFiniteAutomaticAllocationParent' }), {
         composites: [parent],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('does not downgrade malformed nested Composite output to a failed probe', () => {
@@ -1192,7 +1192,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'sparseProbeChildrenParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('does not downgrade an invalid nested Composite output child to a failed probe', () => {
@@ -1254,7 +1254,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'hostileCallbackResultParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('does not downgrade hostile nested replay wrapper reflection to a failed probe', () => {
@@ -1293,7 +1293,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'hostileReplayWrapperParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('reads a replay wrapper clip once before validation and detaches it', () => {
@@ -1359,7 +1359,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'sparseReplayWrapperTransformsParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('does not downgrade hostile nested runtime Scope props reflection to a failed probe', () => {
@@ -1399,7 +1399,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'hostileRuntimeScopePropsParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('does not downgrade sparse nested runtime Scope transforms to a failed probe', () => {
@@ -1429,7 +1429,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'sparseRuntimeScopeTransformsParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('does not downgrade sparse nested runtime Scope children to a failed probe', () => {
@@ -1459,7 +1459,7 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(sceneOf({ namespace: 'test', type: 'sparseRuntimeScopeChildrenParent' }), {
         composites: [malformed, parent],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('keeps detailed expanded child compilation on the existing dispatch path', () => {
@@ -1540,7 +1540,7 @@ describe('layout-aware composite constraints and bounds', () => {
         compileToScene(sceneOf({ namespace: 'test', type: `malformedExpand${variant}Parent` }), {
           composites: [expanded, parent],
         }),
-      ).toThrow(RetikzCompositeContractError);
+      ).toThrow(RetikzCoreError);
     },
   );
 
@@ -1653,7 +1653,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         measureText,
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it.each([
@@ -1721,7 +1721,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         lowerTex,
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it.each(['measureText', 'lowerTex'] as const)('keeps an ordinary %s execution throw recoverable', provider => {
@@ -1803,7 +1803,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         shapes: [hostileShape],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it.each([
@@ -1877,7 +1877,7 @@ describe('layout-aware composite constraints and bounds', () => {
         shapes: [hostileShape],
         boundaries: [hostileBoundary],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('keeps hostile Shape scaleParams output reflection fatal inside a discarded probe', () => {
@@ -1924,7 +1924,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         shapes: [hostileShape],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it.each([
@@ -2000,7 +2000,7 @@ describe('layout-aware composite constraints and bounds', () => {
         shapes: [hostileEnvelopeShape],
         boundaries: [hostileBoundary],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it.each([
@@ -2047,7 +2047,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         boundaries: [malformedBoundary],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('keeps hostile path-generator output iteration fatal inside a discarded probe', () => {
@@ -2089,7 +2089,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         pathGenerators: [hostileGenerator],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('keeps hostile PathKind compile output reflection fatal inside a discarded probe', () => {
@@ -2134,7 +2134,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         pathKinds: [hostilePathKind],
       }),
-    ).toThrow(RetikzCompositeContractError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('snapshots dynamic PathKind bounds points before validation and layout publication', () => {
@@ -2678,7 +2678,7 @@ describe('layout-aware composite constraints and bounds', () => {
       } catch (cause) {
         thrown = cause;
       }
-      expect(thrown).toBeInstanceOf(RetikzCompositeContractError);
+      expect(thrown).toBeInstanceOf(RetikzCoreError);
       expect((thrown as Error & { cause?: unknown }).cause).toBe(causes[variant]);
     }
   });
@@ -2748,7 +2748,7 @@ describe('layout-aware composite constraints and bounds', () => {
         composites: [parent],
         shapes: [farShape],
       }),
-    ).toThrow(RetikzCompileInvariantError);
+    ).toThrow(RetikzCoreError);
   });
 
   it('snapshots a dynamic Arrow marker primitive before validation and downstream use', () => {
@@ -2962,7 +2962,7 @@ describe('layout-aware composite constraints and bounds', () => {
         compileToScene(sceneOf({ type: 'node', position: [0, 0], shape: { type: shape.name, params: {} } }), {
           shapes: [shape],
         }),
-      ).toThrow(RetikzCompositeContractError);
+      ).toThrow(RetikzCoreError);
     }
   });
 
@@ -2987,7 +2987,7 @@ describe('layout-aware composite constraints and bounds', () => {
         compileToScene(sceneOf({ type: 'node', position: [0, 0], shape: { type: shape.name, params: {} } }), {
           shapes: [shape],
         }),
-      ).toThrow(RetikzCompositeContractError);
+      ).toThrow(RetikzCoreError);
       expect(() =>
         compileToScene(
           sceneOf({
@@ -3000,7 +3000,7 @@ describe('layout-aware composite constraints and bounds', () => {
           }),
           { arrows: [arrow] },
         ),
-      ).toThrow(RetikzCompositeContractError);
+      ).toThrow(RetikzCoreError);
     }
   });
 
@@ -3047,7 +3047,7 @@ describe('layout-aware composite constraints and bounds', () => {
     } catch (cause) {
       selected = cause;
     }
-    expect(isRetikzLayoutProbeRecoverableError(selected)).toBe(true);
+    expect(isLayoutProbeRecoverableError(selected)).toBe(true);
     expect(selected).toBeInstanceOf(RetikzError);
     expect((selected as Error & { cause?: unknown }).cause).toBe(hostileThrown.proxy);
   });
@@ -3113,7 +3113,7 @@ describe('layout-aware composite constraints and bounds', () => {
       selected = cause;
     }
     expect(prototypeTrapCalls).toBe(1);
-    expect(isRetikzLayoutProbeRecoverableError(selected)).toBe(true);
+    expect(isLayoutProbeRecoverableError(selected)).toBe(true);
     expect((selected as Error & { cause?: unknown }).cause).toBe(selfReturningProxy);
   });
 

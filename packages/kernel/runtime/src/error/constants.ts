@@ -14,8 +14,8 @@ export const RuntimeOwnerPhase = {
   Retire: 'retire',
 } as const;
 
-/** Runtime owner 的稳定错误码 */
-export const RetikzRuntimeOwnerErrorCode = {
+/** Runtime transaction、Program、registry、owner 与 participant 的稳定错误码 */
+export const RetikzRuntimeErrorCode = {
   /** owner definition 重复 */
   Duplicate: 'RUNTIME_OWNER_DUPLICATE',
   /** owner 不存在 */
@@ -34,11 +34,6 @@ export const RetikzRuntimeOwnerErrorCode = {
   CompareFailed: 'RUNTIME_OWNER_COMPARE_FAILED',
   /** owner change set 校验失败 */
   ChangeSetValidationFailed: 'RUNTIME_OWNER_CHANGESET_VALIDATION_FAILED',
-} as const;
-
-/** Runtime transaction、Program、registry 与 participant 的稳定错误码 */
-export const RetikzRuntimeErrorCode = {
-  ...RetikzRuntimeOwnerErrorCode,
   /** Runtime 内部不变量被破坏 */
   InternalInvariant: 'RUNTIME_INTERNAL_INVARIANT',
   /** Program identity 无效 */

@@ -1,12 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  RetikzRuntimeErrorCode,
-  RetikzRuntimeOwnerErrorCode,
-  RuntimeDiagnosticCode,
-  RuntimeDiagnosticPhase,
-  RuntimeOwnerPhase,
-} from '../../src';
+import * as runtime from '../../src';
+
+const { RetikzRuntimeErrorCode, RuntimeDiagnosticCode, RuntimeDiagnosticPhase, RuntimeOwnerPhase } = runtime;
 
 describe('runtime public surface', () => {
   it('公开稳定的 diagnostic 与 error const object', () => {
@@ -14,7 +10,11 @@ describe('runtime public surface', () => {
     expect(RuntimeDiagnosticCode.TraceSinkFailed).toBe(RuntimeDiagnosticCode.TraceSinkFailed);
     expect(RetikzRuntimeErrorCode.ProgramRunFailed).toBe(RetikzRuntimeErrorCode.ProgramRunFailed);
     expect(RetikzRuntimeErrorCode.InternalInvariant).toBe(RetikzRuntimeErrorCode.InternalInvariant);
-    expect(RetikzRuntimeOwnerErrorCode.CaptureFailed).toBe(RetikzRuntimeErrorCode.CaptureFailed);
+    expect(RetikzRuntimeErrorCode.CaptureFailed).toBe('RUNTIME_OWNER_CAPTURE_FAILED');
     expect(RuntimeOwnerPhase.Capture).toBe('capture');
+    expect(runtime).not.toHaveProperty('RetikzRuntimeOwnerError');
+    expect(runtime).not.toHaveProperty('RetikzRuntimeOwnerRegistryError');
+    expect(runtime).not.toHaveProperty('RetikzRuntimeIdentityError');
+    expect(runtime).not.toHaveProperty('RetikzRuntimeOwnerErrorCode');
   });
 });
