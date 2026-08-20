@@ -38,7 +38,7 @@ const contextOf = <TOptions extends IRJsonObject>(
   owner: InspectorContext<TOptions>['owner'],
 ): InspectorContext<TOptions> =>
   Object.freeze({
-    inspector: { namespace: 'layout', name: owner.kind === 'composite' ? owner.type : owner.name },
+    inspector: { namespace: 'layout', type: owner.kind === 'composite' ? owner.type : owner.name },
     owner,
     occurrence: { sourcePath: 'children[0]', expansionPath: [] },
     provenance: {

@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { createInspectorRegistry, defineInspector, resolveInspectionSelection } from '../../src';
 
 const owner = { kind: 'composite' as const, namespace: 'demo', type: 'box' };
-const key = { namespace: 'test', name: 'box' };
+const key = { namespace: 'test', type: 'box' };
 const definition = defineInspector({
   ...key,
   owner,
@@ -264,7 +264,7 @@ describe('Inspection selection', () => {
   });
 
   it('requires explicit self selection for every Path Inspector, including third-party definitions', () => {
-    const pathKey = { namespace: 'third-party', name: 'path-geometry' };
+    const pathKey = { namespace: 'third-party', type: 'path-geometry' };
     const pathDefinition = defineInspector({
       ...pathKey,
       owner: { kind: 'pathKind' as const, name: 'stroke' },

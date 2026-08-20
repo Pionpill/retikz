@@ -17,7 +17,7 @@ const assertValidOwner = (owner: AnyInspectorDefinition['owner']): void => {
 /** registry 与公开 define 共用的擦除后 Definition 校验 */
 export const normalizeInspectorDefinition = (definition: AnyInspectorDefinition): AnyInspectorDefinition => {
   assertNonEmptyString(definition.namespace, 'Inspector namespace');
-  assertNonEmptyString(definition.name, 'Inspector name');
+  assertNonEmptyString(definition.type, 'Inspector type');
   assertValidOwner(definition.owner);
   return Object.freeze({ ...definition, owner: Object.freeze({ ...definition.owner }) });
 };

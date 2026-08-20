@@ -9,7 +9,7 @@ import { GridLayoutInspectOptionsInputSchema, GridLayoutInspectOptionsSchema } f
 /** Grid 布局检查器的稳定注册键 */
 export const GRID_LAYOUT_INSPECTOR_KEY = Object.freeze({
   namespace: LAYOUT_INSPECTOR_NAMESPACE,
-  name: 'grid-layout',
+  type: 'grid-layout',
 });
 
 /** 从最终 Grid 布局产物生成辅助内容的检查器定义 */

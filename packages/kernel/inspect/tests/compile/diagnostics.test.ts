@@ -9,7 +9,7 @@ import { compileInspectionToScene, createInspectorRegistry, defineInspector } fr
 describe('Inspection diagnostics', () => {
   it('keeps fragment warnings in a deeply frozen stable diagnostic list', () => {
     const owner = { kind: 'composite' as const, namespace: 'demo', type: 'warning-owner' };
-    const key = { namespace: 'test', name: 'warning' };
+    const key = { namespace: 'test', type: 'warning' };
     const composite = defineComposite({
       namespace: owner.namespace,
       type: owner.type,

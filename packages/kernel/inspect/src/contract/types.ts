@@ -5,8 +5,8 @@ import type { ZodType } from 'zod';
 export type InspectorKey = Readonly<{
   /** Inspector 所属命名空间 */
   namespace: string;
-  /** 命名空间内名称 */
-  name: string;
+  /** 命名空间内类型 */
+  type: string;
 }>;
 
 /** Inspector 可返回的普通 Core IR child */
@@ -46,8 +46,8 @@ export type InspectorDefinition<
 > = Readonly<{
   /** registry namespace */
   namespace: string;
-  /** registry name */
-  name: string;
+  /** registry type */
+  type: string;
   /** 被观察的 Core owner */
   owner: CompileObservationOwner;
   /** Core owner output 之后的第二层 subject schema */
@@ -66,8 +66,8 @@ export type InspectorDefinition<
 export type AnyInspectorDefinition = Readonly<{
   /** registry namespace */
   namespace: string;
-  /** registry name */
-  name: string;
+  /** registry type */
+  type: string;
   /** 被观察的 Core owner */
   owner: CompileObservationOwner;
   /** 擦除后仍恢复 JSON-safe subject */

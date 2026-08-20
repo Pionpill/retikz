@@ -24,7 +24,7 @@ describe('Inspector definition', () => {
   it('preserves the frozen independent owner and option contracts', () => {
     const definition = defineInspector({
       namespace: 'test',
-      name: 'bounds',
+      type: 'bounds',
       owner: { kind: 'composite', namespace: 'demo', type: 'box' },
       subjectSchema: z.strictObject({ width: z.number() }),
       optionsInputSchema: z.strictObject({ color: z.string().optional() }),
@@ -34,20 +34,20 @@ describe('Inspector definition', () => {
       inspect: () => [],
     });
 
-    expect(definition).toMatchObject({ namespace: 'test', name: 'bounds' });
+    expect(definition).toMatchObject({ namespace: 'test', type: 'bounds' });
     expect(Object.isFrozen(definition)).toBe(true);
   });
 
   it.each([
     ['namespace', ' '],
-    ['name', '\u2003'],
+    ['type', '\u2003'],
   ] as const)('rejects a blank %s with the established error text', (field, value) => {
     const label = `Inspector ${field}`;
     expectFoundationNonEmptyError(
       () =>
         defineInspector({
           namespace: field === 'namespace' ? value : 'test',
-          name: field === 'name' ? value : 'bounds',
+          type: field === 'type' ? value : 'bounds',
           owner: { kind: 'pathKind', name: 'stroke' },
           subjectSchema: z.null(),
           optionsInputSchema: z.strictObject({}),
@@ -68,7 +68,7 @@ describe('Inspector definition', () => {
       () =>
         defineInspector({
           namespace: 'test',
-          name: 'invalid-owner',
+          type: 'invalid-owner',
           owner,
           subjectSchema: z.null(),
           optionsInputSchema: z.strictObject({}),

@@ -13,7 +13,7 @@ import {
   RetikzInspectErrorCode,
 } from '../../src';
 
-const key = { namespace: 'test', name: 'artifact' };
+const key = { namespace: 'test', type: 'artifact' };
 const owner = { kind: 'composite' as const, namespace: 'demo', type: 'artifact' };
 const composite = defineComposite({
   namespace: owner.namespace,

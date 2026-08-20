@@ -8,14 +8,14 @@ import { BUILTIN_INSPECTORS } from './definitions';
 export type InspectorRegistry = Readonly<{
   /** 输入顺序稳定的 definitions */
   definitions: ReadonlyArray<AnyInspectorDefinition>;
-  /** 按 namespace/name 查找定义 */
+  /** 按 namespace/type 查找定义 */
   get: (key: InspectorKey) => AnyInspectorDefinition | undefined;
-  /** 按 namespace/name 获取定义，缺失时 fail-loud */
+  /** 按 namespace/type 获取定义，缺失时 fail-loud */
   require: (key: InspectorKey) => AnyInspectorDefinition;
 }>;
 
 /** 把公开 Inspector key 转为无歧义的 registry 内部键 */
-export const inspectorRegistryKey = (key: InspectorKey): string => JSON.stringify([key.namespace, key.name]);
+export const inspectorRegistryKey = (key: InspectorKey): string => JSON.stringify([key.namespace, key.type]);
 
 /** 创建无全局状态的 Inspector registry */
 export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorDefinition>): InspectorRegistry => {
@@ -26,7 +26,7 @@ export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorD
     if (entries.has(key)) {
       throw new RetikzInspectError(
         RetikzInspectErrorCode.Registry,
-        `Duplicate Inspector key '${candidate.namespace}/${candidate.name}' at index ${index}`,
+        `Duplicate Inspector key '${candidate.namespace}/${candidate.type}' at index ${index}`,
       );
     }
     entries.set(key, candidate);
@@ -42,7 +42,7 @@ export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorD
       if (definition === undefined)
         throw new RetikzInspectError(
           RetikzInspectErrorCode.Registry,
-          `Inspector '${key.namespace}/${key.name}' is not registered`,
+          `Inspector '${key.namespace}/${key.type}' is not registered`,
         );
       return definition;
     },

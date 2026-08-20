@@ -289,14 +289,14 @@ export const resolveInspectionSelection = ({
       try {
         options = cloneAndFreezeInspectionJson(
           definition.optionsSchema.parse(input),
-          `Inspector '${definition.namespace}/${definition.name}' options`,
+          `Inspector '${definition.namespace}/${definition.type}' options`,
         );
       } catch (cause) {
         const last = requests.at(-1);
         throw wrapInspectionError(selectionOrigin(last?.index ?? 0, last?.rule.target ?? { kind: 'scene' }), cause);
       }
       pending.push({
-        inspector: Object.freeze({ namespace: definition.namespace, name: definition.name }),
+        inspector: Object.freeze({ namespace: definition.namespace, type: definition.type }),
         owner: observation.owner,
         occurrence: observation.occurrence,
         provenance: observation.provenance,

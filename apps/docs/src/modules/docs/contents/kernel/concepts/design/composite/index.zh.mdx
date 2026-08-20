@@ -190,7 +190,7 @@ type CardArtifact = z.infer<typeof CardArtifactSchema>;
 
 const CardInspector = defineInspector({
   namespace: 'demo',
-  name: 'card-bounds',
+  type: 'card-bounds',
   owner: { kind: 'composite', namespace: 'demo', type: 'card' },
   subjectSchema: CardArtifactSchema,
   optionsInputSchema: z.strictObject({}),

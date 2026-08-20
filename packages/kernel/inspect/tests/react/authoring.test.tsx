@@ -112,8 +112,8 @@ describe('@retikz/inspect/react authoring and driver', () => {
   it('counts composite owners structurally when namespace or type contains a colon', () => {
     const firstOwner = { kind: 'composite' as const, namespace: 'a:b', type: 'c' };
     const secondOwner = { kind: 'composite' as const, namespace: 'a', type: 'b:c' };
-    const firstKey = { namespace: 'fixture', name: 'first' };
-    const secondKey = { namespace: 'fixture', name: 'second' };
+    const firstKey = { namespace: 'fixture', type: 'first' };
+    const secondKey = { namespace: 'fixture', type: 'second' };
     const definitionFor = (key: typeof firstKey, owner: typeof firstOwner) =>
       defineInspector({
         ...key,

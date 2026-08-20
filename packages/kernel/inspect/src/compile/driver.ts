@@ -98,7 +98,7 @@ const completeInspection = (
     try {
       subject = cloneAndFreezeInspectionJson(
         definition.subjectSchema.parse(capture.observation.value),
-        `Inspector '${definition.namespace}/${definition.name}' subject`,
+        `Inspector '${definition.namespace}/${definition.type}' subject`,
       );
     } catch (cause) {
       throw wrapInspectionError(originFor('subject', request), cause);
