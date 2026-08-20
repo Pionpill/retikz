@@ -20,7 +20,6 @@ import {
   ThemeMode,
 } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
-import { RetikzError } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { PresentedTableModel, SemanticTableCell, TableLayoutManifest } from '../../contract';
@@ -116,27 +115,27 @@ const PresentedTableCellSchema = z.discriminatedUnion('kind', [
   }),
 ]);
 
-/** 标记 Table transaction 中失败的精确阶段与可用实体身份 */
-export class RetikzTableTransactionStageError extends RetikzError<
-  typeof RetikzTableErrorCode.TransactionStageFailed,
-  Readonly<{ stage: TableTransactionStage; tableId?: string; cellId?: string }>
-> {
-  constructor(stage: TableTransactionStage, cause: unknown, tableId?: string, cellId?: string) {
-    const table = tableId === undefined ? 'table' : `table "${tableId}"`;
-    const cell = cellId === undefined ? '' : `: Cell "${cellId}"`;
-    const message = cause instanceof Error ? cause.message : String(cause);
-    super({
-      code: RetikzTableErrorCode.TransactionStageFailed,
-      message: `${table}: ${stage}${cell}: ${message}`,
-      details: {
-        stage,
-        ...(tableId === undefined ? {} : { tableId }),
-        ...(cellId === undefined ? {} : { cellId }),
-      },
-      cause,
-    });
-  }
-}
+/** 创建 Table transaction 精确阶段错误 */
+const tableTransactionStageError = (
+  stage: TableTransactionStage,
+  cause: unknown,
+  tableId?: string,
+  cellId?: string,
+): RetikzTableError => {
+  const table = tableId === undefined ? 'table' : `table "${tableId}"`;
+  const cell = cellId === undefined ? '' : `: Cell "${cellId}"`;
+  const message = cause instanceof Error ? cause.message : String(cause);
+  return new RetikzTableError({
+    code: RetikzTableErrorCode.TransactionStageFailed,
+    message: `${table}: ${stage}${cell}: ${message}`,
+    details: {
+      stage,
+      ...(tableId === undefined ? {} : { tableId }),
+      ...(cellId === undefined ? {} : { cellId }),
+    },
+    cause,
+  });
+};
 
 /** 给选中 failure 的同一错误对象补充 Table 阶段上下文，保留 Core identity brand */
 const runTableTransactionStage = <T>(
@@ -148,7 +147,7 @@ const runTableTransactionStage = <T>(
   try {
     return run();
   } catch (error) {
-    const contextual = new RetikzTableTransactionStageError(stage, error, tableId, cellId);
+    const contextual = tableTransactionStageError(stage, error, tableId, cellId);
     if (error instanceof Error) {
       error.message = contextual.message;
       throw error;
