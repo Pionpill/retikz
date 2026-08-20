@@ -1,4 +1,5 @@
 import type { ChartPresentationAuthoringRecord, IRBaseChart } from '@retikz/chart';
+import type { IRBubbleChart, IRConnectedScatterChart, IRScatterChart } from '@retikz/chart/point';
 import type { CreateChartInput } from '@retikz/chart-vanilla';
 import type { IRChild } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
@@ -7,6 +8,7 @@ import type { IRTable } from '@retikz/table';
 import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 
 import { BaseChartSchema } from '@retikz/chart';
+import { BubbleChartSchema, ConnectedScatterChartSchema, ScatterChartSchema } from '@retikz/chart/point';
 import { createChart, renderChart } from '@retikz/chart-vanilla';
 import {
   ContainerDefinition,
@@ -124,7 +126,10 @@ const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOption
   });
   return {
     code: irToVanillaCode(preview.ir),
-    svg: renderToSvgString(input, { output: outputSize(preview) }),
+    svg: renderToSvgString(input, {
+      output: outputSize(preview),
+      ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
+    }),
   };
 };
 
@@ -547,7 +552,13 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
     ...definitionNames.layout.map(name => layoutDefinitionByName[name]),
     ...definitionNames.graph.map(name => graphDefinitionByName[name]),
   ];
-  const compile = definitions.length === 0 ? undefined : { composites: definitions };
+  const compile =
+    definitions.length === 0 && options.measureText === undefined
+      ? undefined
+      : {
+          ...(options.measureText === undefined ? {} : { measureText: options.measureText }),
+          ...(definitions.length === 0 ? {} : { composites: definitions }),
+        };
   return {
     code: irToVanillaCode(preview.ir),
     svg: renderToSvgString(input, {
@@ -660,8 +671,26 @@ const buildDatasetImportCode = (
   return { imports, expression };
 };
 
+type TypedChartSource = IRScatterChart | IRBubbleChart | IRConnectedScatterChart;
+
+/** 从 Source IR 识别确定形态的 Chart */
+const typedChartSourceOf = (source: CompositeChild): TypedChartSource | undefined => {
+  switch (source.type) {
+    case 'scatter':
+      return ScatterChartSchema.parse(source);
+    case 'bubble':
+      return BubbleChartSchema.parse(source);
+    case 'connected-scatter':
+      return ConnectedScatterChartSchema.parse(source);
+    default:
+      return undefined;
+  }
+};
+
 /** 从确定形态的子项恢复仅供 Vanilla 辅助函数使用的编写顺序与上下分区 */
-const chartPresentationRecords = (chart: IRBaseChart): Array<ChartPresentationAuthoringRecord> | undefined => {
+const chartPresentationRecords = (
+  chart: Pick<IRBaseChart, 'presentation'>,
+): Array<ChartPresentationAuthoringRecord> | undefined => {
   const children = chart.presentation?.children;
   if (children === undefined) return undefined;
   const plotIndex = children.findIndex(item => item.kind === 'plot');
@@ -672,6 +701,46 @@ const chartPresentationRecords = (chart: IRBaseChart): Array<ChartPresentationAu
     void _key;
     return [{ ...record, position: index < plotIndex ? ('top' as const) : ('bottom' as const) }];
   });
+};
+
+/** 将 typed Chart Source IR 还原为公开的精确 Vanilla 输入 */
+const typedChartAuthoringInput = (chart: TypedChartSource, datasets: ExternalDatasets): Record<string, unknown> => {
+  const { type, config, plot } = chart;
+  const common = Object.fromEntries(
+    Object.entries(chart).filter(([key]) => !['namespace', 'type', 'config', 'plot', 'presentation'].includes(key)),
+  );
+  const { data, ...plotInput } = plot;
+  const rows = datasets[data.reference];
+  const presentation = chartPresentationRecords(chart);
+  const shared = {
+    ...common,
+    ...plotInput,
+    data: rows,
+    dataRef: data.reference,
+    ...(data.model === undefined ? {} : { dataModel: data.model }),
+    ...(presentation === undefined ? {} : { presentation }),
+  };
+  switch (type) {
+    case 'scatter':
+      return {
+        ...shared,
+        encoding: config.encoding,
+        ...(config.mark === undefined ? {} : { mark: config.mark }),
+      };
+    case 'bubble':
+      return {
+        ...shared,
+        encoding: config.encoding,
+        ...(config.mark === undefined ? {} : { mark: config.mark }),
+      };
+    case 'connected-scatter':
+      return {
+        ...shared,
+        encoding: config.encoding,
+        ...(config.mark === undefined ? {} : { mark: config.mark }),
+        ...(config.components === undefined ? {} : { components: config.components }),
+      };
+  }
 };
 
 /** 将确定形态的 Chart 还原为公开的 Chart Vanilla 编写输入 */
@@ -691,7 +760,39 @@ const buildChartCode = (
   datasets: ExternalDatasets,
   preview: PreviewIR,
   options: BuildVanillaPreviewOptions,
+  source?: CompositeChild,
 ): string => {
+  const typedSource = source === undefined ? undefined : typedChartSourceOf(source);
+  if (typedSource !== undefined) {
+    const factoryByType = {
+      scatter: 'createScatterChart',
+      bubble: 'createBubbleChart',
+      'connected-scatter': 'createConnectedScatterChart',
+    } as const;
+    const factory = factoryByType[typedSource.type];
+    const datasetImport = buildDatasetImportCode(datasets, options);
+    const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
+    const dataCode = datasetImport === null ? `const datasets = ${formatVanillaValue(datasets)};\n\n` : '';
+    const dataReference = typedSource.plot.data.reference;
+    const importedDataset = options.datasetImports?.[dataReference]?.name;
+    const dataExpression =
+      importedDataset ?? `${datasetImport?.expression ?? 'datasets'}[${formatVanillaValue(dataReference)}]`;
+    const inputCode = formatVanillaValue({
+      ...typedChartAuthoringInput(typedSource, datasets),
+      data: '__DATASET__',
+      ...(options.theme === undefined ? {} : { theme: options.theme }),
+      themeStyles: '__CORE_THEME_STYLES__',
+      chartThemeStyles: '__CHART_THEME_STYLES__',
+      plotThemeStyles: '__PLOT_THEME_STYLES__',
+    })
+      .replace("'__DATASET__'", dataExpression)
+      .replace("'__CORE_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.core')
+      .replace("'__CHART_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.chart')
+      .replace("'__PLOT_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.plot');
+    const size = outputSize(preview);
+    const renderOptionsCode = Object.keys(size).length === 0 ? '' : `, ${formatVanillaValue({ output: size })}`;
+    return `import { ${factory}, renderChart } from '@retikz/chart-vanilla/point';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n${importCode}\n${dataCode}const chart = ${factory}(${inputCode});\n\nexport const svg = renderChart(chart${renderOptionsCode}).svg;\n`;
+  }
   const datasetImport = buildDatasetImportCode(datasets, options);
   const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
   const dataCode = datasetImport === null ? `const datasets = ${formatVanillaValue(datasets)};\n\n` : '';
@@ -721,6 +822,7 @@ const buildChartCode = (
 const buildChartPreview = (
   preview: PreviewIR,
   composite: CompositeChild,
+  source: CompositeChild,
   options: BuildVanillaPreviewOptions,
 ): VanillaPreviewArtifact => {
   const chart = BaseChartSchema.parse(composite);
@@ -740,11 +842,12 @@ const buildChartPreview = (
       lowerOptions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot },
     }),
     {
+      ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
       ...(Object.keys(size).length === 0 ? {} : { output: size }),
     },
   );
   return {
-    code: buildChartCode(chart, datasets, preview, options),
+    code: buildChartCode(chart, datasets, preview, options, source),
     svg: rendered.svg,
   };
 };
@@ -802,7 +905,11 @@ const buildTablePreview = (
   });
   return {
     code: buildTableCode(spec, resolvedDatasets, preview, options),
-    svg: renderToSvgString(input, { adapters: [TableInputEmbedAdapter], output: outputSize(preview) }),
+    svg: renderToSvgString(input, {
+      adapters: [TableInputEmbedAdapter],
+      output: outputSize(preview),
+      ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
+    }),
     replacePreviewRender: false,
   };
 };
@@ -812,27 +919,36 @@ export const buildVanillaPreview = (
   preview: PreviewIR,
   options: BuildVanillaPreviewOptions = {},
 ): VanillaPreviewArtifact => {
-  const composites = collectComposites(preview.ir.children);
+  const runtimeComposites = collectComposites(preview.ir.children);
+  const composites = collectComposites(preview.sourceIr.children);
+  const effectiveComposites = composites.length === 0 ? runtimeComposites : composites;
   try {
-    if (composites.length === 0) return buildCorePreview(preview, options);
-    const firstComposite = composites[0];
+    if (effectiveComposites.length === 0) return buildCorePreview(preview, options);
+    const firstComposite = effectiveComposites[0];
     if (
-      composites.every(
+      effectiveComposites.every(
         child => child.namespace === 'standard' || child.namespace === 'layout' || child.namespace === 'graph',
       )
     ) {
       return buildLibraryPreview(preview, options);
     }
-    if (composites.length === 1 && firstComposite.namespace === 'plot' && firstComposite.type === 'plot') {
+    if (effectiveComposites.length === 1 && firstComposite.namespace === 'plot' && firstComposite.type === 'plot') {
       return buildPlotPreview(preview, firstComposite, options);
     }
-    if (composites.length === 1 && firstComposite.namespace === 'chart' && firstComposite.type === 'base') {
-      return buildChartPreview(preview, firstComposite, options);
+    if (
+      effectiveComposites.length === 1 &&
+      firstComposite.namespace === 'chart' &&
+      (firstComposite.type === 'base' || typedChartSourceOf(firstComposite) !== undefined)
+    ) {
+      const runtimeChart = runtimeComposites.find(child => child.namespace === 'chart' && child.type === 'base');
+      if (runtimeChart === undefined)
+        return diagnostic('Cannot generate Vanilla preview: Chart runtime IR is missing.');
+      return buildChartPreview(preview, runtimeChart, firstComposite, options);
     }
-    if (composites.length === 1 && firstComposite.namespace === 'table' && firstComposite.type === 'table') {
+    if (effectiveComposites.length === 1 && firstComposite.namespace === 'table' && firstComposite.type === 'table') {
       return buildTablePreview(preview, firstComposite, options);
     }
-    const unsupported = composites.find(
+    const unsupported = effectiveComposites.find(
       child =>
         child.namespace !== 'standard' &&
         child.namespace !== 'layout' &&

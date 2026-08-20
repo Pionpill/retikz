@@ -100,9 +100,24 @@ describe('Chart-native Scatter presentation', () => {
       const vanilla = buildVanillaPreview(preview, { datasetImports: source.datasetImports });
 
       expect(vanilla.code).toContain(`import { countryScatterData } from '${datasetModule}';`);
-      expect(vanilla.code).toContain("from '@retikz/chart-vanilla'");
+      expect(vanilla.code).toContain("import { createScatterChart, renderChart } from '@retikz/chart-vanilla/point';");
+      expect(vanilla.code).not.toContain("from '@retikz/chart-vanilla';");
       expect(vanilla.svg).toContain('<svg');
     }
+  });
+
+  it('passes the preview text measurer into the Vanilla Chart compile path', () => {
+    const preview = buildPreviewIR(() => basicZhPreviewSource.canonicalRender?.() ?? null);
+    let measureCalls = 0;
+    const vanilla = buildVanillaPreview(preview, {
+      measureText: (text, font) => {
+        measureCalls += 1;
+        return { width: text.length * font.size, height: font.size };
+      },
+    });
+
+    expect(measureCalls).toBeGreaterThan(0);
+    expect(vanilla.svg).toContain('<svg');
   });
 
   it('renders a selected docs Chart theme style through the Vanilla preview path', () => {
