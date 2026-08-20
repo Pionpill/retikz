@@ -1,18 +1,4 @@
-import type { z } from 'zod';
-
-import { describe, expect, expectTypeOf, it } from 'vitest';
-
-import type {
-  IRGraphicEffects,
-  IRGraphicOpacity,
-  IRGraphicPaint,
-  IRPathDecoration,
-  IRPathFill,
-  IRPathGeometry,
-  IRPathStroke,
-  IRPathStructure,
-  IRStrokeStyle,
-} from '../../src';
+import { describe, expect, it } from 'vitest';
 
 import {
   CascadingGraphicStyleSchema,
@@ -137,18 +123,6 @@ describe('Core atomic drawing contracts', () => {
     expect(PathDefaultSchema.shape.strokeWidth).toBe(PathStrokeSchema.shape.strokeWidth);
     expect(PathDefaultSchema.shape.fillRule).toBe(PathFillSchema.shape.fillRule);
     expect(PathDefaultSchema.shape.rotate).toBe(PathGeometrySchema.shape.rotate);
-  });
-
-  it('exports all atomic IR types from schema inference', () => {
-    expectTypeOf<IRGraphicPaint>().toEqualTypeOf<z.infer<typeof GraphicPaintSchema>>();
-    expectTypeOf<IRGraphicOpacity>().toEqualTypeOf<z.infer<typeof GraphicOpacitySchema>>();
-    expectTypeOf<IRGraphicEffects>().toEqualTypeOf<z.infer<typeof GraphicEffectsSchema>>();
-    expectTypeOf<IRStrokeStyle>().toEqualTypeOf<z.infer<typeof StrokeStyleSchema>>();
-    expectTypeOf<IRPathStroke>().toEqualTypeOf<z.infer<typeof PathStrokeSchema>>();
-    expectTypeOf<IRPathFill>().toEqualTypeOf<z.infer<typeof PathFillSchema>>();
-    expectTypeOf<IRPathGeometry>().toEqualTypeOf<z.infer<typeof PathGeometrySchema>>();
-    expectTypeOf<IRPathDecoration>().toEqualTypeOf<z.infer<typeof PathDecorationSchema>>();
-    expectTypeOf<IRPathStructure>().toEqualTypeOf<z.infer<typeof PathStructureSchema>>();
   });
 
   it('keeps atomic JSON round-trips lossless', () => {

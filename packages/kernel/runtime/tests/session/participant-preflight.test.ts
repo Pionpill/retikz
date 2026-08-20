@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import type { RuntimeCommitParticipant, RuntimeCommitParticipantToken, RuntimeSessionOptions } from '../../src';
+import type { RuntimeCommitParticipant, RuntimeCommitParticipantToken } from '../../src';
 
 import {
   createRuntimeOwnerInput,
@@ -39,7 +39,7 @@ const defineParticipant = (
   });
 
 describe('runtime session participant preflight', () => {
-  it('拒绝非数组 options、伪 token 与重复 key，且不触碰 executor', () => {
+  it('拒绝重复 key，且不触碰 executor', () => {
     const owner = defineCounterOwner('counter');
     const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
     const programs = createRuntimeProgramRegistry({ owners });
@@ -52,16 +52,37 @@ describe('runtime session participant preflight', () => {
     });
     const base = { owners, programs, initialSnapshots: [createRuntimeOwnerInput(owner, 1)] };
 
-    expect(() => createRuntimeSession({ ...base, participants: {} } as unknown as RuntimeSessionOptions)).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantTokenInvalid }),
-    );
-    expect(() => createRuntimeSession({ ...base, participants: [{} as RuntimeCommitParticipantToken] })).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantTokenInvalid }),
-    );
     expect(() => createRuntimeSession({ ...base, participants: [first, second] })).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDuplicate }),
     );
     expect(disposeCalls).toBe(0);
+  });
+
+  it('拒绝 foreign module participant token', async () => {
+    const owner = defineCounterOwner('counter');
+    const owners = createRuntimeOwnerRegistry({ builtins: [owner] });
+    const programs = createRuntimeProgramRegistry({ owners });
+    vi.resetModules();
+    const { defineRuntimeCommitParticipant: defineForeignParticipant } = await import('../../src/participant/define');
+    const foreign = defineForeignParticipant({
+      key: 'foreign',
+      owners: [owner],
+      programs: [],
+      revisionPolicy: 'affected',
+      tracePhases: [],
+      prepare: () => Object.freeze({ commit: () => undefined, rollback: () => undefined, dispose: () => undefined }),
+      read: () => Object.freeze({ key: 'foreign' }),
+      dispose: () => undefined,
+    });
+
+    expect(() =>
+      createRuntimeSession({
+        owners,
+        programs,
+        initialSnapshots: [createRuntimeOwnerInput(owner, 1)],
+        participants: [foreign],
+      }),
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantTokenInvalid }));
   });
 
   it('拒绝 foreign 或重复 dependency，且 preflight 失败不消费 token', () => {

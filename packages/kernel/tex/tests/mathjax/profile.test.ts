@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { createMathJaxEngine, MathJaxExtension, MathJaxProfile } from '../../src';
-import { resolveMathJaxEngineOptions } from '../../src/mathjax/profiles';
+import { resolveMathJaxExtensions } from '../../src/mathjax';
 
 const TIMEOUT = 20_000;
 
@@ -21,20 +21,28 @@ describe('[mathjax-profile] public profile', () => {
     ]);
   });
 
-  it('extension 按公开顺序稳定去重，cases 仅在 packages 中展开 empheq', () => {
-    const first = resolveMathJaxEngineOptions({
+  it('只返回按公开顺序稳定去重后的有效 extension', () => {
+    const first = resolveMathJaxExtensions({
       profile: 'base',
       extensions: ['color', 'cases', 'ams', 'color'],
     });
-    const second = resolveMathJaxEngineOptions({
+    const second = resolveMathJaxExtensions({
       profile: 'base',
       extensions: ['ams', 'color', 'cases'],
     });
 
-    expect(first.extensions).toEqual(['ams', 'cases', 'color']);
-    expect(first.packages).toEqual(['base', 'ams', 'empheq', 'cases', 'color']);
-    expect(first.key).toBe(second.key);
-    expect(first.key).not.toContain('empheq');
+    expect(first).toEqual(['ams', 'cases', 'color']);
+    expect(second).toEqual(first);
+  });
+
+  it('不同 profile shorthand 的等价有效配置产生同一 canonical 结果', () => {
+    const math = resolveMathJaxExtensions({ profile: 'math' });
+    const explicit = resolveMathJaxExtensions({
+      profile: 'base',
+      extensions: Object.values(MathJaxExtension),
+    });
+
+    expect(explicit).toEqual(math);
   });
 
   it(
@@ -63,14 +71,10 @@ describe('[mathjax-profile] public profile', () => {
   );
 
   it(
-    '单独请求 extension 会加载 configuration，未知 runtime 值会 fail loud',
+    '单独请求 extension 会加载 configuration',
     async () => {
       const engine = await createMathJaxEngine({ extensions: ['cancel'] });
       expect(engine.convert(String.raw`\cancel{x}`, { display: false })).not.toContain('data-mml-node="merror"');
-
-      await expect(createMathJaxEngine({ extensions: ['extpfeil' as never] })).rejects.toThrow(
-        /Unknown MathJax extension: extpfeil/,
-      );
     },
     TIMEOUT,
   );

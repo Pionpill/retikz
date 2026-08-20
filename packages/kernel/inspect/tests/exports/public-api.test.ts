@@ -12,9 +12,12 @@ describe('@retikz/inspect public exports', () => {
         'createDefaultInspectorRegistry',
         'resolveInspectionSelection',
         'compileInspectionToScene',
+        'RetikzInspectError',
+        'RetikzInspectErrorCode',
         'STROKE_PATH_INSPECTOR',
       ]),
     );
+    expect(api).not.toHaveProperty('RetikzInspectionCompileError');
     expect(api).not.toHaveProperty('inspectionPlaneToReadonlyLayers');
   });
 
@@ -37,6 +40,7 @@ describe('@retikz/inspect public exports', () => {
     expect(root.trim().split(/\r?\n/)).toEqual([
       "export * from './compile';",
       "export * from './contract';",
+      "export * from './error';",
       "export * from './providers';",
     ]);
     expect(root).not.toContain('@retikz/render');

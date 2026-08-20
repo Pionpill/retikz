@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import type { AffineMatrix, Position } from '../../src';
 
-import { AFFINE_IDENTITY, applyAffine, multiplyAffine } from '../../src';
+import {
+  AFFINE_IDENTITY,
+  applyAffine,
+  getAffineSimilarityScale,
+  isFiniteNonSingularAffine,
+  multiplyAffine,
+} from '../../src';
 
 describe('二维仿射矩阵原子', () => {
   it('提供运行时不可变的 SVG / Canvas 单位矩阵', () => {
@@ -58,5 +64,19 @@ describe('二维仿射矩阵原子', () => {
     expect(output).not.toBe(input);
     expect(matrix).toEqual([2, 3, 5, 7, 11, 13]);
     expect(input).toEqual([17, 19]);
+  });
+
+  it('判断仿射矩阵的有限性与非奇异性', () => {
+    expect(isFiniteNonSingularAffine([2, 0, 0, 3, 10, 20])).toBe(true);
+    expect(isFiniteNonSingularAffine([1, 2, 2, 4, 0, 0])).toBe(false);
+    expect(isFiniteNonSingularAffine([Number.NaN, 0, 0, 1, 0, 0])).toBe(false);
+    expect(isFiniteNonSingularAffine([1, 0, 0, 1e-13, 0, 0])).toBe(false);
+  });
+
+  it('返回仿射相似变换的统一缩放因子', () => {
+    expect(getAffineSimilarityScale([2, 0, 0, -2, 10, 20])).toBe(2);
+    expect(getAffineSimilarityScale([0, 3, -3, 0, 0, 0])).toBe(3);
+    expect(getAffineSimilarityScale([2, 0, 0, 3, 0, 0])).toBeUndefined();
+    expect(getAffineSimilarityScale([1, 2, 2, 4, 0, 0])).toBeUndefined();
   });
 });

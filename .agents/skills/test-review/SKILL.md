@@ -70,6 +70,12 @@ docs 测试额外检查：
 
 ## 临时测试生命周期
 
+### TypeScript-only case
+
+- TypeScript 可完整表达的正负 assignability、互斥 union、必填字段、封闭 discriminant 与函数签名由生产声明和 workspace `tsc --noEmit` 负责，不编写独立测试。
+- 删除混合 Vitest 文件中的 `expectTypeOf` / `@ts-expect-error` 与仅为执行它们存在的 case，不迁移为 `*.typecheck.ts(x)` 或 ignored scratch。
+- 只有 schema、外部 `unknown`、值域、跨字段、回调或其它 TypeScript 无法证明的失败模式才保留 runtime 测试。
+
 - 临时 case 只放在受影响 workspace 的 `tests/_scratch/`，以复用真实 Vitest 配置且默认不会进入 Git。
 - 用 `pnpm temp:test -- --workspace <workspace-directory> --file <tests/_scratch/*.test.ts>` 运行；脚本会在成功或失败后删除文件与空的 `_scratch` 目录。只有人工连续调试时才传 `--keep`。
 - 只有确认了真实 bug、稳定公开契约或高风险边界时，才重写为具名正式测试并随修复提交。

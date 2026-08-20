@@ -1,5 +1,5 @@
 import type {
-  RetikzRuntimeOwnerErrorCodeValue,
+  RetikzRuntimeErrorCodeValue,
   RuntimeOwnerExecutionResult,
   RuntimeOwnerLifecycleDiagnostic,
   RuntimeOwnerPhaseValue,
@@ -10,13 +10,7 @@ import type { RuntimeOwnerErasedExecutor } from './define';
 import type { RuntimeChangeSet, RuntimeOwnerDefinition, RuntimeOwnerToken } from './types';
 
 import { RuntimeDiagnosticCode } from '../diagnostic';
-import {
-  RetikzRuntimeError,
-  RetikzRuntimeErrorCode,
-  RetikzRuntimeOwnerError,
-  RetikzRuntimeOwnerErrorCode,
-  RuntimeOwnerPhase,
-} from '../error';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode, RuntimeOwnerPhase } from '../error';
 import { createRuntimeIdentityLookup } from '../identity';
 import { getRuntimeOwnerRegistryExecutor } from '../registry';
 
@@ -63,6 +57,7 @@ const createDisposeDiagnostic = (owner: string, cause: unknown): RuntimeOwnerLif
     code: RuntimeDiagnosticCode.OwnerDisposeFailed,
     owner,
     phase: RuntimeOwnerPhase.Retire,
+    severity: 'error',
     message: cause instanceof Error ? cause.message : String(cause),
     cause,
   });
@@ -85,18 +80,26 @@ const disposeValue = <TInput, TValue, TRead, TChange>(
 /** 创建保留 primary cause 与 cleanup diagnostics 的 lifecycle error */
 const createLifecycleError = (
   code: Extract<
-    RetikzRuntimeOwnerErrorCodeValue,
-    | typeof RetikzRuntimeOwnerErrorCode.CaptureFailed
-    | typeof RetikzRuntimeOwnerErrorCode.CollectIdentitiesFailed
-    | typeof RetikzRuntimeOwnerErrorCode.ReadFailed
-    | typeof RetikzRuntimeOwnerErrorCode.CompareFailed
-    | typeof RetikzRuntimeOwnerErrorCode.ChangeSetValidationFailed
+    RetikzRuntimeErrorCodeValue,
+    | typeof RetikzRuntimeErrorCode.CaptureFailed
+    | typeof RetikzRuntimeErrorCode.CollectIdentitiesFailed
+    | typeof RetikzRuntimeErrorCode.ReadFailed
+    | typeof RetikzRuntimeErrorCode.CompareFailed
+    | typeof RetikzRuntimeErrorCode.ChangeSetValidationFailed
   >,
   owner: string,
   phase: RuntimeOwnerPhaseValue,
   cause: unknown,
   diagnostics: ReadonlyArray<RuntimeOwnerLifecycleDiagnostic> = [],
-): RetikzRuntimeOwnerError => new RetikzRuntimeOwnerError({ code, owner, phase, cause, diagnostics });
+): RetikzRuntimeError =>
+  new RetikzRuntimeError({
+    code,
+    owner,
+    phase,
+    message: `${code}: owner "${owner}" failed during ${phase}`,
+    cause,
+    diagnostics,
+  });
 
 /** 创建隔离 owner callback 失败与 dispose secondary diagnostics 的 executor */
 export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): RuntimeOwnerExecutor => {
@@ -150,7 +153,7 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
         value = executor.capture<TInput, TValue>(source);
       } catch (cause) {
         throw createLifecycleError(
-          RetikzRuntimeOwnerErrorCode.CaptureFailed,
+          RetikzRuntimeErrorCode.CaptureFailed,
           definition.key,
           RuntimeOwnerPhase.Capture,
           cause,
@@ -173,7 +176,7 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
         } catch (cause) {
           const diagnostics = disposeValue(definition, executor, value);
           throw createLifecycleError(
-            RetikzRuntimeOwnerErrorCode.CollectIdentitiesFailed,
+            RetikzRuntimeErrorCode.CollectIdentitiesFailed,
             definition.key,
             RuntimeOwnerPhase.CollectIdentities,
             cause,
@@ -188,7 +191,7 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
       } catch (cause) {
         const diagnostics = disposeValue(definition, executor, value);
         throw createLifecycleError(
-          RetikzRuntimeOwnerErrorCode.ReadFailed,
+          RetikzRuntimeErrorCode.ReadFailed,
           definition.key,
           RuntimeOwnerPhase.Read,
           cause,
@@ -214,7 +217,7 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
         return Object.freeze({ value: executor.equals(left.value, right.value), diagnostics: Object.freeze([]) });
       } catch (cause) {
         throw createLifecycleError(
-          RetikzRuntimeOwnerErrorCode.CompareFailed,
+          RetikzRuntimeErrorCode.CompareFailed,
           definition.key,
           RuntimeOwnerPhase.Compare,
           cause,
@@ -242,7 +245,7 @@ export const createRuntimeOwnerExecutor = (registry: RuntimeOwnerRegistry): Runt
       } catch (cause) {
         const diagnostics = retire(definition, candidate).diagnostics;
         throw createLifecycleError(
-          RetikzRuntimeOwnerErrorCode.ChangeSetValidationFailed,
+          RetikzRuntimeErrorCode.ChangeSetValidationFailed,
           definition.key,
           RuntimeOwnerPhase.ValidateChangeSet,
           cause,

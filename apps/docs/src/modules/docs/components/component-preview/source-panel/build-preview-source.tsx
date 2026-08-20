@@ -38,13 +38,15 @@ export type BuildPreviewSourceInput = {
   /** 同级 IR JSON 文件覆盖。 */
   irJsonOverride?: string;
   /** demo 模块显式导出的 IR。 */
-  exportedPreviewIR?: IRScene;
+  exportedPreviewIR?: unknown;
   /** 同级 Vanilla 文件源码覆盖。 */
   vanillaOverride?: string;
   /** Vanilla 模块显式导出的 SVG。 */
   vanillaSvg?: string;
   theme?: IRScene['theme'];
 };
+
+type UnvalidatedPreviewIR = Omit<PreviewIR, 'ir'> & { ir: unknown };
 
 /** 组件预览源码视图及宿主可安全消费的 IR。 */
 export type BuildPreviewSourceResult = {
@@ -92,12 +94,12 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
   });
   const extraSourceFiles = reactFiles.filter(file => !file.isMain);
 
-  let resolvedPreviewIr: PreviewIR | null = null;
+  let resolvedPreviewIr: UnvalidatedPreviewIR | null = null;
   let irJson = '';
   if (irJsonOverride !== undefined) {
     irJson = irJsonOverride.replace(/\n$/, '');
     try {
-      const ir = JSON.parse(irJson) as IRScene;
+      const ir: unknown = JSON.parse(irJson);
       resolvedPreviewIr = {
         ir,
         contributions: [],
@@ -114,7 +116,11 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
       width: undefined,
       height: undefined,
     };
-    irJson = formatIR(exportedPreviewIR);
+    try {
+      irJson = formatIR(exportedPreviewIR);
+    } catch (error) {
+      irJson = `// Failed to format IR export: ${errorMessage(error)}`;
+    }
   } else if (previewSource?.canonicalRender !== undefined) {
     try {
       resolvedPreviewIr = buildPreviewIR(previewSource.canonicalRender);
@@ -131,17 +137,17 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     }
   }
 
-  let previewIr = resolvedPreviewIr;
+  let previewIr: PreviewIR | null = null;
   let hasComposite = false;
   let structureError: unknown;
   if (resolvedPreviewIr !== null) {
     const validated = SceneSchema.safeParse(resolvedPreviewIr.ir);
     if (!validated.success) {
       structureError = validated.error;
-      previewIr = null;
     } else {
+      previewIr = { ...resolvedPreviewIr, ir: validated.data };
       try {
-        hasComposite = irHasComposite(resolvedPreviewIr.ir);
+        hasComposite = irHasComposite(previewIr.ir);
       } catch (error) {
         structureError = error;
         previewIr = null;
@@ -150,8 +156,8 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
   }
 
   const automaticVanilla =
-    resolvedPreviewIr !== null && structureError === undefined
-      ? buildVanillaPreview(resolvedPreviewIr, {
+    previewIr !== null && structureError === undefined
+      ? buildVanillaPreview(previewIr, {
           ...(previewSource?.datasetImports === undefined ? {} : { datasetImports: previewSource.datasetImports }),
           ...(theme === undefined ? {} : { theme }),
         })

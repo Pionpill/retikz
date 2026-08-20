@@ -2,7 +2,7 @@ import type { AnyCompositeDefinition, IRChild, IRNode, IRScene, Scene, ThemeStyl
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC, ReactElement, ReactNode } from 'react';
 
-import { compileToScene, lowerIRToKernel, ThemeMode } from '@retikz/core';
+import { compileToScene, lowerIRToKernel, NodeSchema, ScopeSchema, ThemeMode } from '@retikz/core';
 import {
   createEntity,
   createGraph,
@@ -55,8 +55,10 @@ const translated = (x: number, y: number, child: IRChild): IRChild => ({
 
 const collectNodes = (children: ReadonlyArray<IRChild>): Array<IRNode> =>
   children.flatMap(child => {
-    if (child.type === 'node' && 'position' in child) return [child as unknown as IRNode];
-    if (child.type === 'scope' && 'children' in child) return collectNodes(child.children as ReadonlyArray<IRChild>);
+    const node = NodeSchema.safeParse(child);
+    if (node.success) return [node.data];
+    const scope = ScopeSchema.safeParse(child);
+    if (scope.success) return collectNodes(scope.data.children);
     return [];
   });
 

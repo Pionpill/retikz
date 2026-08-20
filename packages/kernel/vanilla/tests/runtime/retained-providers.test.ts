@@ -8,7 +8,7 @@ import type {
 } from '@retikz/core';
 
 import { defineClip, PathBaseSchema, StrokePathOwnerOutputSchema } from '@retikz/core';
-import { RetikzRetainedRenderErrorCode } from '@retikz/render/runtime';
+import { RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -153,13 +153,13 @@ describe('retained Path Kind definitions', () => {
     } as unknown as ClipDefinition;
 
     expect(() => createRetainedProviderDefinitions({ clips: [operationOnly] })).toThrow(
-      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
   });
 
   it('rejects retained Clip kind, schema, shape schema, and field-set changes', () => {
     const retained = createRetainedProviderDefinitions({ clips: [createClipDefinition()] });
-    const invalid = expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid });
+    const invalid = expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid });
     const changedSchema = z.strictObject({
       kind: z.literal('retainedClip'),
       size: z.number().positive(),
@@ -221,7 +221,7 @@ describe('retained Path Kind definitions', () => {
       kind: z.literal('retained-fixture'),
       kindOptions: z.strictObject({ changed: z.boolean() }).optional(),
     });
-    const invalid = expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid });
+    const invalid = expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid });
     expect(() => retained.prepare({ pathKinds: [createDefinition(changedSchema)] })).toThrow(invalid);
     expect(() =>
       retained.prepare({ pathKinds: [createDefinition(pathKindSchema, initial.compile, 'renamed-fixture')] }),

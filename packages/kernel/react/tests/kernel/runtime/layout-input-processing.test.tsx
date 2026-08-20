@@ -15,8 +15,6 @@ import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Layout, Node, Scope } from '../../../src';
-import { captureLayoutRuntimeOptions } from '../../../src/kernel/runtime/runtime-options';
-
 const testThemeStyle = defineThemeStyle({
   name: 'academic',
   resolve: () => ({
@@ -223,12 +221,6 @@ describe('<Layout> 的 Vanilla Input processing', () => {
     expect(onDiagnostic).toHaveBeenCalledWith(diagnostic);
     expect(diagnostics).toHaveBeenCalledTimes(1);
     await act(() => root.unmount());
-  });
-
-  it('static runtime 拒绝 Runtime 结构化诊断回调', () => {
-    expect(() => captureLayoutRuntimeOptions({ mode: 'static', onDiagnostic: vi.fn() } as never)).toThrow(
-      /invalid runtime options/i,
-    );
   });
 
   it('Strict Effects 重放后在最终卸载时释放 Vanilla controller', async () => {

@@ -2,7 +2,6 @@ import type { ArcPathCommand, EllipseArcPathCommand, PathCommand } from '@retikz
 
 import { DEFAULT_EPSILON } from '@retikz/math';
 
-import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import { commandArcStart, commandArcSweep, commandEndpoint, ellipseArcPointAt } from '../shared';
 
 type ArcCommand = ArcPathCommand | EllipseArcPathCommand;
@@ -126,10 +125,7 @@ export const buildPathD = (
       default: {
         // exhaustive 防御：新增 kind 必须在此扩展
         const exhaustive: never = cmd;
-        throw new RetikzRenderError(
-          RetikzRenderErrorCode.Svg,
-          `buildPathD: unknown PathCommand kind: ${String((exhaustive as { kind: string }).kind)}`,
-        );
+        return exhaustive;
       }
     }
   }

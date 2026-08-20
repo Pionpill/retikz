@@ -94,13 +94,6 @@ export const createRuntimeChangeSet = <TChange>(
       cause: baseRevision,
     });
   }
-  if (!Array.isArray(changes)) {
-    throw new RetikzRuntimeError({
-      code: RetikzRuntimeErrorCode.ChangeSetInvalid,
-      phase: 'change-set',
-      cause: changes,
-    });
-  }
   const changeSet = Object.freeze({
     baseRevision,
     changes: Object.freeze([...changes]),
@@ -204,8 +197,7 @@ export const createRuntimeOwnerUpdate = <TInput, TValue, TRead, TChange>(
 export const getRuntimeOwnerCommandExecutor = (
   command: RuntimeOwnerInput | RuntimeOwnerUpdate,
 ): RuntimeOwnerCommandExecutor => {
-  const candidate: unknown = command;
-  if (typeof candidate !== 'object' || candidate === null || !runtimeOwnerCommands.has(candidate)) {
+  if (!runtimeOwnerCommands.has(command)) {
     throw new RetikzRuntimeError({
       code: RetikzRuntimeErrorCode.OwnerCommandInvalid,
       phase: 'command',

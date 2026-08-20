@@ -10,7 +10,7 @@ import type { InspectionCompileResult, InspectionDiagnostic, InspectionSelection
 import type { InspectorRegistry } from '../providers';
 
 import { createInspectionObserver, resolveInspectionObserverOutput } from '../compile';
-import { RetikzInspectionError, RetikzInspectionErrorCode } from '../error';
+import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 import { inspectionPlaneToReadonlyLayers } from '../render';
 import { inspectionRulesFromVanillaSite } from './authoring';
 
@@ -107,8 +107,8 @@ const resolveVanillaSelection = (
   const authoredRules = input.authoringSites.flatMap(site => {
     const siteRules = inspectionRulesFromVanillaSite(site);
     if (siteRules.length > 0 && isCollapsedContributionScope(site, input.authoringSites)) {
-      throw new RetikzInspectionError(
-        RetikzInspectionErrorCode.Vanilla,
+      throw new RetikzInspectError(
+        RetikzInspectErrorCode.Vanilla,
         'Inspect nested Scope inside an embeddable contribution cannot be located',
       );
     }
@@ -121,8 +121,8 @@ const resolveVanillaSelection = (
       }
       const definitionOwner = registry.require(rule.inspector).owner;
       if (owner !== undefined && !observationOwnerEquals(owner, definitionOwner)) {
-        throw new RetikzInspectionError(
-          RetikzInspectionErrorCode.Vanilla,
+        throw new RetikzInspectError(
+          RetikzInspectErrorCode.Vanilla,
           'Inspect self request owner does not match authored site owner',
         );
       }

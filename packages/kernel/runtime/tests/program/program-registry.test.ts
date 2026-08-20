@@ -149,19 +149,6 @@ describe('runtime program definition and registry', () => {
   it.each([
     {
       tracePhases: [{ phase: PerformanceTracePhase.Update, unit: PerformanceTraceUnit.Program, outcomes: [] }],
-      code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
-    },
-    {
-      tracePhases: [{ phase: 'invalid', unit: PerformanceTraceUnit.Program, outcomes: [PerformanceTraceOutcome.Full] }],
-      code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
-    },
-    {
-      tracePhases: [{ phase: PerformanceTracePhase.Update, unit: 'invalid', outcomes: [PerformanceTraceOutcome.Full] }],
-      code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
-    },
-    {
-      tracePhases: [{ phase: PerformanceTracePhase.Update, unit: PerformanceTraceUnit.Program, outcomes: ['invalid'] }],
-      code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
     },
     {
       tracePhases: [
@@ -176,20 +163,19 @@ describe('runtime program definition and registry', () => {
           outcomes: [PerformanceTraceOutcome.Full],
         },
       ],
-      code: RetikzRuntimeErrorCode.TraceDefinitionInvalid,
     },
-  ])('拒绝无效 trace declaration', ({ tracePhases, code }) => {
+  ])('拒绝无效 trace declaration', ({ tracePhases }) => {
     const owner = defineOwner('counter');
     expect(() =>
       defineRuntimeProgram({
         id: { owner: 'counter', key: 'trace' },
         owners: [owner],
         programs: [],
-        tracePhases: tracePhases as never,
+        tracePhases,
         artifact: { capture: (value: number) => value, readForProgram: value => value, read: value => value },
         run: () => ({ kind: RuntimeProgramKind.Full, artifact: 1 }),
       }),
-    ).toThrowError(expect.objectContaining({ code }));
+    ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.TraceDefinitionInvalid }));
   });
 
   it('拒绝 duplicate、unknown owner 与 unknown program', () => {

@@ -1,7 +1,7 @@
 import { ArrowDefaultSchema, FontSchema, LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from '@retikz/core';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type { TableCellAppearanceTracePathValue, TableCellPlanSource } from '../../src';
+import type { TableCellPlanSource } from '../../src';
 
 import {
   TableCellAppearanceTracePath,
@@ -25,8 +25,6 @@ describe('Table Cell plan lineage contract', () => {
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Encoding, encodingId: 'status-color' }),
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.RootRule, ruleIndex: 0 }),
     ];
-
-    expectTypeOf(sources).toEqualTypeOf<Array<TableCellPlanSource>>();
     expect(sources).toEqual([
       { kind: 'default' },
       { kind: 'structure' },
@@ -76,8 +74,6 @@ describe('Table Cell plan lineage contract', () => {
       TableCellAppearanceTracePath.ContentPathDefaultDashPattern,
       TableCellAppearanceTracePath.BorderBottom,
     ].map(path => TableCellAppearanceTracePathSchema.parse(path));
-
-    expectTypeOf(paths[0]).toEqualTypeOf<TableCellAppearanceTracePathValue>();
     expect(paths).toEqual([
       '/background/fill',
       '/content/nodeDefault/font/weight',

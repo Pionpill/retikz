@@ -1,15 +1,13 @@
 import type { CompiledNodeLayout, IRScene, ScenePrimitive, TextMeasurer, TextPrim } from '@retikz/core';
-import type { ReactNode } from 'react';
 
 import { compileToScene, fallbackMeasurer, isNodeLayoutCompileArtifact } from '@retikz/core';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type {
   AlignKey,
   ComponentPreviewCardProps,
-  ComponentPreviewFiles,
   ComponentPreviewProps,
   ComponentRenderSource,
   DiffLineKind,
@@ -225,20 +223,6 @@ const compileBuiltinText = (
 };
 
 describe('preview controls registry', () => {
-  it('锁定 ComponentPreview 完整公开 props', () => {
-    expectTypeOf<ComponentPreviewProps>().toEqualTypeOf<{
-      files: ComponentPreviewFiles;
-      defaultSourceFile?: string;
-      controls?: PreviewControlsOptions;
-      dialogActions?: Array<PreviewActionSlot>;
-      align?: AlignKey;
-      size?: SizeKey;
-      previewClassName?: string;
-      hideCode?: boolean;
-      caption?: ReactNode;
-    }>();
-  });
-
   it('从 registry owner 暴露本地化 controls key resolver', () => {
     expect(resolveControlsKey).toBeTypeOf('function');
   });

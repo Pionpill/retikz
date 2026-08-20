@@ -37,7 +37,6 @@ import type {
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import { DEFAULT_ID_PREFIX, VanillaViewMode } from '../runtime/constants';
 import { captureVanillaRuntimeOptions } from '../runtime/runtime-options';
-import { assertStaticMountRuntimeExcluded } from '../runtime/static-mount-options';
 import { createEmptyRuntimeMeta, toSceneResult } from '../runtime/to-scene';
 import { createRetainedProcessingController } from './retained';
 import { applyAttrs, svgNodeToDom } from './svg-dom';
@@ -206,7 +205,6 @@ export const mountSvg: MountSvg = ((
   options: StaticMountOptions | MountOptions = {},
 ): VanillaView => {
   if ('primitives' in input) {
-    assertStaticMountRuntimeExcluded(options);
     return mountStaticSvg(container, input, options as StaticMountOptions);
   }
   const runtimeOptions = captureVanillaRuntimeOptions(options);

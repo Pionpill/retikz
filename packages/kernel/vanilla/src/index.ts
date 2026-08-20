@@ -1,3 +1,4 @@
+export * from './error';
 export * from './normalize';
 export * from './processing';
 export * from './runtime/compile-driver';

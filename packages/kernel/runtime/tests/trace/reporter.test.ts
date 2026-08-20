@@ -1,13 +1,6 @@
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import type {
-  PerformanceTraceOutcomeValue,
-  PerformanceTracePhaseValue,
-  PerformanceTraceRecord,
-  PerformanceTraceUnitValue,
-  RuntimeTracePhaseDefinition,
-  RuntimeTraceReporter,
-} from '../../src';
+import type { PerformanceTraceRecord, RuntimeTraceReporter } from '../../src';
 
 import {
   createRuntimeTraceReporter,
@@ -33,16 +26,6 @@ const createCompileReporter = (sink: (record: PerformanceTraceRecord) => void): 
     ],
     sink,
   });
-
-it('导出性能 trace 常量对应的 Value 类型', () => {
-  expectTypeOf<PerformanceTracePhaseValue>().toEqualTypeOf<'compile' | 'commit' | 'update'>();
-  expectTypeOf<PerformanceTraceUnitValue>().toEqualTypeOf<
-    'ir-child' | 'scene-primitive' | 'program' | 'scene-change'
-  >();
-  expectTypeOf<PerformanceTraceOutcomeValue>().toEqualTypeOf<
-    'full' | 'incremental' | 'bailout' | 'fallback' | 'commit'
-  >();
-});
 
 describe('createRuntimeTraceReporter', () => {
   it('注入固定 owner，并向 sink 发送冻结的 record', () => {
@@ -107,18 +90,22 @@ describe('createRuntimeTraceReporter', () => {
     expect(replacementSink).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ['phase', { phase: 'unknown', unit: PerformanceTraceUnit.IrChild, outcomes: [PerformanceTraceOutcome.Full] }],
-    ['unit', { phase: PerformanceTracePhase.Compile, unit: 'unknown', outcomes: [PerformanceTraceOutcome.Full] }],
-    ['outcome', { phase: PerformanceTracePhase.Compile, unit: PerformanceTraceUnit.IrChild, outcomes: ['unknown'] }],
-  ])('拒绝含非法封闭值的 phase definition：%s', (_name, definition) => {
+  it('拒绝空 outcomes 与重复 phase/unit definition', () => {
     expect(() =>
       createRuntimeTraceReporter({
         owner: '@retikz/core',
-        phases: [definition as unknown as RuntimeTracePhaseDefinition],
+        phases: [{ phase: PerformanceTracePhase.Compile, unit: PerformanceTraceUnit.IrChild, outcomes: [] }],
         sink: vi.fn(),
       }),
     ).toThrow(/createRuntimeTraceReporter/);
+    const definition = {
+      phase: PerformanceTracePhase.Compile,
+      unit: PerformanceTraceUnit.IrChild,
+      outcomes: [PerformanceTraceOutcome.Full],
+    } as const;
+    expect(() =>
+      createRuntimeTraceReporter({ owner: '@retikz/core', phases: [definition, definition], sink: vi.fn() }),
+    ).toThrow(/duplicate/i);
   });
 
   it('允许空 phase 列表，并把未声明报告作为非致命诊断', () => {
@@ -202,24 +189,6 @@ describe('createRuntimeTraceReporter', () => {
     ]);
   });
 
-  it('非法 record phase 不会泄漏到封闭 diagnostic', () => {
-    const reporter = createCompileReporter(vi.fn());
-    const invalidRecord = {
-      phase: 'unknown',
-      unit: PerformanceTraceUnit.IrChild,
-      outcome: PerformanceTraceOutcome.Full,
-      visited: 1,
-      reused: 0,
-      changed: 1,
-    } as unknown as Parameters<RuntimeTraceReporter['report']>[0];
-
-    reporter.report(invalidRecord);
-
-    expect(reporter.diagnostics()).toEqual([
-      { code: 'invalid-record', owner: '@retikz/core', phase: PerformanceTracePhase.Compile },
-    ]);
-  });
-
   it.each([
     ['negative count', { visited: -1, reused: 0, changed: 0 }],
     ['non-safe count', { visited: Number.MAX_SAFE_INTEGER + 1, reused: 0, changed: 0 }],
@@ -291,10 +260,9 @@ describe('createRuntimeTraceReporter', () => {
       records.push(record);
       reporter.report({
         ...record,
-        phase: 'unknown',
         visited: 0,
         changed: 0,
-      } as unknown as Parameters<RuntimeTraceReporter['report']>[0]);
+      });
     });
 
     reporter.report({

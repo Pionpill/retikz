@@ -8,8 +8,8 @@ import type {
 import type { PaintResolution, PaintResolutionInput, PatternResolution } from '../../resolve/resource';
 
 import {
-  RetikzCompositeContractError,
-  RetikzLayoutProbeRecoverableError,
+  createCompositeContractError,
+  createLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import { validateMarkerPrimitives } from './marker-primitive';
@@ -59,7 +59,7 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
   if (style.verticalStyle !== undefined) ctx.verticalStyle = style.verticalStyle;
   if (style.lineStyleCycle !== undefined) ctx.lineStyleCycle = style.lineStyleCycle;
   if (typeof definition.emit !== 'function') {
-    throw new RetikzCompositeContractError(
+    throw createCompositeContractError(
       `Pattern '${spec.shape}' is missing an emit function (PatternDefinition.emit is required).`,
     );
   }
@@ -67,7 +67,7 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
   try {
     emitted = definition.emit(ctx);
   } catch (e) {
-    throw new RetikzLayoutProbeRecoverableError(`Pattern '${spec.shape}' emit failed: ${safeThrownDetail(e)}`, {
+    throw createLayoutProbeRecoverableError(`Pattern '${spec.shape}' emit failed: ${safeThrownDetail(e)}`, {
       cause: e,
       providerKey: `pattern:${spec.shape}`,
     });
@@ -76,7 +76,7 @@ const resolvePatternTile = (resolution: PatternResolution, round: (n: number) =>
   let emittedMotif = emitted;
   if (isPatternEmitResult(emitted)) {
     if (typeof emitted.tileSize !== 'number' || !Number.isFinite(emitted.tileSize) || emitted.tileSize <= 0) {
-      throw new RetikzCompositeContractError(
+      throw createCompositeContractError(
         `Pattern '${spec.shape}' emit returned an invalid tileSize (${String(emitted.tileSize)}); it must be a finite number greater than 0.`,
       );
     }

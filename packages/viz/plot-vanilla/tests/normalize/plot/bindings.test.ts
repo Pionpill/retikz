@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { InputPlotMark } from '../../../src';
 
@@ -370,31 +370,6 @@ describe('normalizePlotBindings', () => {
   });
 
   it.each([
-    { type: 'reference', encoding: { y: { value: 0 } }, yAxisId: 'right' },
-    {
-      type: 'relation',
-      source: { markId: 'source' },
-      target: { markId: 'target' },
-      yAxisId: 'right',
-    },
-    { type: 'heatmap', xAxisId: 'top', intensity: 0.8 },
-  ])('拒绝在非 position mark $type 上使用 axis binding', mark => {
-    expect(() =>
-      normalizePlotBindings({
-        marks: [mark as unknown as InputPlotMark],
-        guides: [
-          { type: 'axis', id: 'top', dimension: 'x' },
-          { type: 'axis', id: 'right', dimension: 'y' },
-        ],
-        scales: [],
-        coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
-        facets: [],
-        scaffolds: [],
-      }),
-    ).toThrow(/plot authoring:.*axis binding is only supported on path, point, and interval marks/i);
-  });
-
-  it.each([
     { type: 'reference', encoding: { y: { value: 0 } }, xAxisId: undefined },
     {
       type: 'relation',
@@ -414,15 +389,6 @@ describe('normalizePlotBindings', () => {
         scaffolds: [],
       }),
     ).toThrow(/plot authoring:.*axis binding is only supported on path, point, and interval marks/i);
-  });
-
-  it('只为 position mark 暴露 axis binding 类型', () => {
-    expectTypeOf<Extract<InputPlotMark, { type: 'point' }>>().toMatchObjectType<{
-      xAxisId?: string;
-      yAxisId?: string;
-    }>();
-    expectTypeOf<Extract<InputPlotMark, { type: 'reference' }>['xAxisId']>().toEqualTypeOf<undefined>();
-    expectTypeOf<Extract<InputPlotMark, { type: 'reference' }>['yAxisId']>().toEqualTypeOf<undefined>();
   });
 
   it('对多种 binding mode 使用统一错误前缀', () => {

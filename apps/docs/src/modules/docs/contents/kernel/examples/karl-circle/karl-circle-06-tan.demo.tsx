@@ -16,9 +16,9 @@ export const previewSource = {
 } satisfies PreviewSourceConfig;
 
 const Demo: FC = () => {
-  const lowerTex = useLowerTex();
+  const lowerTexState = useLowerTex();
   return (
-    <Layout width={600} height={360} lowerTex={lowerTex}>
+    <Layout width={600} height={360} lowerTex={lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined}>
       {/* 背景网格 */}
       <Grid
         bounds={{ start: [-100, -100], end: [100, 100] }}

@@ -25,8 +25,6 @@ export type {
   ResolveLabelMap,
   ScaffoldTrack,
 } from './contracts';
-export type { RetikzPlotDeclarationErrorCodeValue, RetikzPlotDeclarationErrorDetails } from './errors';
-export { RetikzPlotDeclarationError, RetikzPlotDeclarationErrorCode } from './errors';
 export type { InputPlot, InputPlotFacet, InputPlotGuide, InputPlotMark, InputPlotScaffold } from './input';
 export type { InputPlotFacetDimension, InputPlotTrack } from './input-composition';
 export type { InputPlotAxis, InputPlotLegend } from './input-guides';

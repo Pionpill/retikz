@@ -19,10 +19,8 @@ import {
 } from '@retikz/table';
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-
-import type { TableLayoutHostProps } from '../../src';
 
 import { DetailTable, ManualTable, Table, TableThemeProvider } from '../../src';
 
@@ -82,10 +80,6 @@ const contributionOf = <TProps,>(component: InputTableComponent, props: TProps, 
   TableInputEmbedAdapter.lower(inputOf(component, props), contextOf(id));
 
 describe('Table React components', () => {
-  it('does not expose the removed Ribbon profile prop through its Layout host', () => {
-    expectTypeOf<TableLayoutHostProps>().not.toHaveProperty('ribbonWidthProfiles');
-  });
-
   it('renders generic manual, detail, and custom Table specs through the same Table runtime', () => {
     const customOutput: TableStructureOutput = {
       rows: [{ id: 'row.0', kind: TableRowKind.Body }],

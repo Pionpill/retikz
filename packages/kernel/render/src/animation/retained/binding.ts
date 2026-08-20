@@ -1,9 +1,7 @@
-import { RetikzError } from '@retikz/foundation';
-
 import type { WaapiDescriptor } from '../../svg/animation';
 import type { AnimationControls } from '../runtime';
 
-import { RetikzRenderErrorCode } from '../../error';
+import { RetikzRenderError, RetikzRenderErrorCode } from '../../error';
 
 /** WAAPI 接管前的 inline transform style 快照 */
 type WaapiStyleBase = Readonly<{
@@ -33,33 +31,26 @@ type WaapiStyleOwnership = {
 
 const waapiStyleOwnerships = new WeakMap<SVGElement, WaapiStyleOwnership>();
 
-/** WAAPI binding 构建失败且初次清理也失败时的可恢复错误 */
-class RetikzWaapiBindingSetupError extends RetikzError<
-  typeof RetikzRenderErrorCode.WaapiBindingSetupFailed,
-  Readonly<{ cleanupCause: unknown; controls: AnimationControls }>
-> {
-  /** 原始 binding 构建失败 */
-  override readonly cause: unknown;
+const waapiBindingSetupFailures = new WeakMap<
+  RetikzRenderError,
+  Readonly<{ cause: unknown; controls: AnimationControls }>
+>();
 
-  /** 初次 best-effort cleanup 的首个失败 */
-  readonly cleanupCause: unknown;
-
-  /** 保留尚未清理资源的 controls，供 renderer 最终 dispose 重试 */
-  readonly controls: AnimationControls;
-
-  /** 创建保留 primary setup cause 与可重试 controls 的错误 */
-  constructor(cause: unknown, cleanupCause: unknown, controls: AnimationControls) {
-    super({
-      code: RetikzRenderErrorCode.WaapiBindingSetupFailed,
-      message: 'WAAPI binding setup and cleanup failed',
-      details: { cleanupCause, controls },
-      cause,
-    });
-    this.cause = cause;
-    this.cleanupCause = cleanupCause;
-    this.controls = controls;
-  }
-}
+/** 创建 WAAPI binding 构建与初次清理双重失败 */
+const createWaapiBindingSetupError = (
+  cause: unknown,
+  cleanupCause: unknown,
+  controls: AnimationControls,
+): RetikzRenderError => {
+  const error = new RetikzRenderError({
+    code: RetikzRenderErrorCode.WaapiBindingSetupFailed,
+    message: 'WAAPI binding setup and cleanup failed',
+    details: { cleanupCause, controls },
+    cause,
+  });
+  waapiBindingSetupFailures.set(error, Object.freeze({ cause, controls }));
+  return error;
+};
 
 /** 判断指定 inline style 当前是否由 retained WAAPI binding 接管 */
 export const isWaapiAnimationStyleOwned = (element: SVGElement, key: string): boolean =>
@@ -320,7 +311,7 @@ export const bindWaapiDescriptorElements = (
     try {
       disposeResources();
     } catch (cleanupCause) {
-      throw new RetikzWaapiBindingSetupError(cause, cleanupCause, controls);
+      throw createWaapiBindingSetupError(cause, cleanupCause, controls);
     }
     throw cause;
   }
@@ -332,10 +323,6 @@ export const bindWaapiDescriptorElements = (
 export const recoverWaapiBindingSetupFailure = (
   cause: unknown,
 ): Readonly<{ cause: unknown; controls: AnimationControls }> | undefined => {
-  if (!(cause instanceof Error) || cause.name !== 'RetikzWaapiBindingSetupError') return undefined;
-  const controls = Reflect.get(cause, 'controls');
-  if (typeof controls !== 'object' || controls === null || typeof Reflect.get(controls, 'dispose') !== 'function') {
-    return undefined;
-  }
-  return Object.freeze({ cause: Reflect.get(cause, 'cause'), controls: controls as AnimationControls });
+  if (!(cause instanceof RetikzRenderError)) return undefined;
+  return waapiBindingSetupFailures.get(cause);
 };

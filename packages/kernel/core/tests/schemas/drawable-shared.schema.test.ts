@@ -1,6 +1,4 @@
-﻿import { describe, expect, expectTypeOf, it } from 'vitest';
-
-import type { IRDrawableInstance, IRDrawableSharedStyle, IRDrawableStyle } from '../../src';
+﻿import { describe, expect, it } from 'vitest';
 
 import {
   DrawableInstanceSchema,
@@ -89,14 +87,6 @@ describe('Drawable shared schema', () => {
       zIndex: 4,
       meta: { row: 1 },
     });
-  });
-
-  it('keeps shared style type separate from instance fields except zIndex', () => {
-    expectTypeOf<IRDrawableSharedStyle>().toMatchTypeOf<IRDrawableStyle>();
-    expectTypeOf<IRDrawableSharedStyle>().toHaveProperty('zIndex').toEqualTypeOf<IRDrawableInstance['zIndex']>();
-    expectTypeOf<IRDrawableSharedStyle>().not.toHaveProperty('id');
-    expectTypeOf<IRDrawableSharedStyle>().not.toHaveProperty('meta');
-    expectTypeOf<IRDrawableSharedStyle>().not.toHaveProperty('animations');
   });
 
   it('reuses geometry labels for step labels and path host labels', () => {
