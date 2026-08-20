@@ -23,6 +23,7 @@ import type { RenderFrameSnapshot, RenderReadonlyLayer, RenderRuntimeConfigInput
 import { bindWaapiDescriptors } from '../../src/animation';
 import { bindWaapiDescriptorElements, isWaapiAnimationStyleOwned } from '../../src/animation/retained';
 import { renderToCanvas } from '../../src/canvas';
+import { RetikzRenderError, RetikzRenderErrorCode } from '../../src/error';
 import {
   builtinRetainedRendererFactory,
   createRetainedRenderParticipant,
@@ -2746,10 +2747,15 @@ describe('builtin retained renderers', () => {
       failure = cause;
     }
     expect(failure).toMatchObject({
+      name: 'RetikzRenderError',
+      code: RetikzRenderErrorCode.WaapiBindingSetupFailed,
       cause: expect.objectContaining({ message: 'binding setup rejected' }),
-      cleanupCause: expect.objectContaining({ message: 'setup cleanup rejected' }),
+      details: expect.objectContaining({
+        cleanupCause: expect.objectContaining({ message: 'setup cleanup rejected' }),
+      }),
     });
-    const controls = Reflect.get(failure as object, 'controls') as Readonly<{ dispose: () => void }>;
+    if (!(failure instanceof RetikzRenderError)) throw new Error('expected WAAPI setup error');
+    const controls = failure.details.controls as Readonly<{ dispose: () => void }>;
     expect(() => controls.dispose()).not.toThrow();
     expect(cancel).toHaveBeenCalledTimes(2);
   });
@@ -2795,10 +2801,15 @@ describe('builtin retained renderers', () => {
       failure = cause;
     }
     expect(failure).toMatchObject({
+      name: 'RetikzRenderError',
+      code: RetikzRenderErrorCode.WaapiBindingSetupFailed,
       cause: expect.objectContaining({ message: 'manual pause rejected' }),
-      cleanupCause: expect.objectContaining({ message: 'pause cleanup rejected' }),
+      details: expect.objectContaining({
+        cleanupCause: expect.objectContaining({ message: 'pause cleanup rejected' }),
+      }),
     });
-    const controls = Reflect.get(failure as object, 'controls') as Readonly<{ dispose: () => void }>;
+    if (!(failure instanceof RetikzRenderError)) throw new Error('expected WAAPI setup error');
+    const controls = failure.details.controls as Readonly<{ dispose: () => void }>;
     expect(() => controls.dispose()).not.toThrow();
     expect(cancel).toHaveBeenCalledTimes(2);
   });

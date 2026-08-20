@@ -5,7 +5,7 @@ import type { AnimationControls } from '../animation';
 import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';
 
-import { isRetikzRetainedRenderError, RetikzRetainedRenderError, RetikzRetainedRenderErrorCode } from './error';
+import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 
 /** Retained renderer 增量能力等级 */
 export const RetainedRendererCapability = {
@@ -186,7 +186,7 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
   const runtimeBackend: unknown = backend;
   const validHost = runtimeBackend === 'svg' ? isSvgHost(host) : runtimeBackend === 'canvas' && isCanvasHost(host);
   if (!validHost) {
-    throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid, cause: input });
+    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid, cause: input });
   }
   const token = Object.freeze({
     backend,
@@ -196,8 +196,7 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
   }) as RetainedRenderer;
   let state: 'live' | 'disposing' | 'disposed' = 'live';
   const assertLive = (): void => {
-    if (state !== 'live')
-      throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererDisposed });
+    if (state !== 'live') throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererDisposed });
   };
   retainedRendererExecutors.set(
     token,
@@ -230,8 +229,8 @@ const defineRetainedRendererImplementation = (input: RetainedRendererDefinitionI
   try {
     return defineRetainedRendererUnsafe(input);
   } catch (cause) {
-    if (isRetikzRetainedRenderError(cause)) throw cause;
-    throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid, cause });
+    if (isRetikzRenderError(cause)) throw cause;
+    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid, cause });
   }
 };
 

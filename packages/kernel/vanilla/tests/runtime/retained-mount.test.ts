@@ -9,7 +9,7 @@ import type {
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
 import { compileToScene, CompositeBaseSchema, defineComposite, resolveDefaultCoreThemeColors } from '@retikz/core';
-import { defineRetainedRenderer, RetikzRetainedRenderErrorCode } from '@retikz/render/runtime';
+import { defineRetainedRenderer, RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { RetikzRuntimeErrorCode } from '@retikz/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
@@ -459,7 +459,7 @@ describe('@retikz/vanilla retained mount', () => {
       compile: () => ({ children: [] }),
     });
     const retained = createRetainedCompositeDefinitions([first, second]);
-    const invalid = expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid });
+    const invalid = expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid });
 
     expect(() => retained.prepare([first])).toThrow(invalid);
     expect(() => retained.prepare([second, first])).toThrow(invalid);
@@ -489,7 +489,7 @@ describe('@retikz/vanilla retained mount', () => {
     const retained = createRetainedCompositeDefinitions([initial]);
 
     expect(() => retained.prepare([candidate])).toThrow(
-      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
   });
 
@@ -539,14 +539,14 @@ describe('@retikz/vanilla retained mount', () => {
 
     rejectNextPrepare = true;
     expect(() => view.update(source('#3b82f6'))).toThrowError(
-      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRendererPrepareFailed }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRendererPrepareFailed }),
     );
 
     expect(frames.at(-1)).toBe(committedFrame);
     expect(view.compileResult).toBe(committedCompileResult);
     expect(view.root.innerHTML).toBe(committedHtml);
     expect(view.diagnostics()).toEqual([
-      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRendererPrepareFailed }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRendererPrepareFailed }),
     ]);
 
     view.dispose();
@@ -667,7 +667,7 @@ describe('@retikz/vanilla retained mount', () => {
     const view = mountCanvas(container, source('#ef4444'));
 
     expect(() => view.update(source('#22c55e'), { canvas: { devicePixelRatio: 2 } } as never)).toThrow(
-      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
   });
 
@@ -682,14 +682,14 @@ describe('@retikz/vanilla retained mount', () => {
     });
 
     expect(() => view.update(source('#22c55e'), { animation: { easings } })).toThrow(
-      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
     expect(registryGetter).not.toHaveBeenCalled();
 
     const tuple = [0, 0, 1, 1];
     Object.defineProperty(tuple, Symbol('hidden'), { enumerable: true, value: true });
     expect(() => view.update(source('#22c55e'), { animation: { easings: { custom: tuple } } } as never)).toThrow(
-      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
     expect(view.root.innerHTML).toBe(committedHtml);
   });
@@ -802,7 +802,7 @@ describe('@retikz/vanilla retained mount', () => {
     const runtime = Object.defineProperty({}, 'mode', { enumerable: true, get: getter });
     const container = document.createElement('div');
     expect(() => mountSvg(container, source('#ef4444'), { runtime } as never)).toThrowError(
-      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
     expect(getter).not.toHaveBeenCalled();
     expect(container.children).toHaveLength(0);
@@ -810,7 +810,7 @@ describe('@retikz/vanilla retained mount', () => {
     const runtimeGetter = vi.fn(() => ({ mode: 'static' }));
     const options = Object.defineProperty({}, 'runtime', { enumerable: true, get: runtimeGetter });
     expect(() => mountSvg(container, source('#ef4444'), options as never)).toThrowError(
-      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
+      expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
     expect(runtimeGetter).not.toHaveBeenCalled();
     expect(container.children).toHaveLength(0);
