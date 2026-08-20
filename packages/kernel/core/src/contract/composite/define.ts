@@ -83,21 +83,6 @@ export const defineComposite = <
 >(
   definition: CompositeDefinition<TNode, TNamespace, TType, TArtifact> & TDefinition,
 ): TDefinition => {
-  const hasExpand = typeof definition.expand === 'function';
-  const hasCompile = typeof definition.compile === 'function';
-  if (hasExpand === hasCompile) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Contract,
-      'defineComposite: exactly one of expand or compile must be provided.',
-    );
-  }
-  const runtimeArtifactSchema = definition.artifactSchema;
-  if (hasExpand && runtimeArtifactSchema !== undefined) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Contract,
-      'defineComposite: artifactSchema is only valid for the compile branch.',
-    );
-  }
   const namespace = literalValueOf(definition.schema, 'namespace');
   const type = literalValueOf(definition.schema, 'type');
   if (definition.namespace !== namespace) {

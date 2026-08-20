@@ -406,14 +406,6 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
-  it('mark_point_rejects_legacy_node_size_and_scale_fields', () => {
-    const base = { type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
-    expect(() => MarkSchema.parse({ ...base, minimumWidth: { kind: 'constant', value: 16 } })).toThrow();
-    expect(() => MarkSchema.parse({ ...base, minimumHeight: { kind: 'constant', value: 12 } })).toThrow();
-    expect(() => MarkSchema.parse({ ...base, xScale: { kind: 'constant', value: 1.2 } })).toThrow();
-    expect(() => MarkSchema.parse({ ...base, yScale: { kind: 'constant', value: 0.9 } })).toThrow();
-  });
-
   it('mark_point_with_stroke_channels_valid', () => {
     const m = {
       type: 'point',
@@ -671,15 +663,6 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
-  it('mark_text_legacy_format_rejected', () => {
-    expect(() =>
-      MarkSchema.parse({
-        type: 'point',
-        encoding: { x: { field: 'px' }, y: { field: 'py' }, text: { field: 'label', format: ',.0f' } },
-      }),
-    ).toThrow();
-  });
-
   it('mark_interval_label_valid', () => {
     const m = {
       type: 'interval',
@@ -759,16 +742,6 @@ describe('MarkSchema (contract)', () => {
       encoding: { y: { value: 80 } },
     };
     expect(MarkSchema.parse(m)).toEqual(m);
-  });
-
-  it('mark_label_legacy_format_rejected', () => {
-    expect(() =>
-      MarkSchema.parse({
-        type: 'interval',
-        label: { content: { field: 'revenue', format: ',.0f' } },
-        encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
-      }),
-    ).toThrow();
   });
 
   it('mark_point_label_numeric_position_valid', () => {

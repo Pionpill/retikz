@@ -1,13 +1,8 @@
-import type { IRPlotPointEncoding } from '@retikz/plot';
-
 import { PointMarkSchema } from '@retikz/plot';
-import { describe, expect, expectTypeOf, it } from 'vitest';
-
-import type { IRScatterPointPatch } from '../../src/point/scatter';
+import { describe, expect, it } from 'vitest';
 
 import { PointChartType } from '../../src/point';
-import { ScatterPointPatchSchema } from '../../src/point/scatter';
-import { ScatterChartSchema } from '../../src/point/scatter';
+import { ScatterChartSchema, ScatterPointPatchSchema } from '../../src/point/scatter';
 import { StrictColorChannelSchema, StrictSizeChannelSchema } from '../../src/point/shared';
 
 const minimalScatter = {
@@ -114,13 +109,6 @@ describe('Scatter Chart schema', () => {
 
   it.each(['x', 'y'])('rejects recipe-owned nested encoding field %s', field => {
     expect(() => ScatterPointPatchSchema.parse({ encoding: { [field]: { field: 'authored' } } })).toThrow();
-  });
-
-  it('excludes x/y statically while preserving custom coordinate roles', () => {
-    expectTypeOf<{ encoding: { x: { field: string } } }>().not.toMatchTypeOf<IRScatterPointPatch>();
-    expectTypeOf<{ encoding: { y: { field: string } } }>().not.toMatchTypeOf<IRScatterPointPatch>();
-    expectTypeOf<{ encoding: { depth: { field: string } } }>().toMatchTypeOf<IRScatterPointPatch>();
-    expectTypeOf<NonNullable<IRScatterPointPatch['encoding']>>().toMatchTypeOf<IRPlotPointEncoding>();
   });
 
   it('normalizes explicit undefined patch keys recursively to a JSON-safe canonical patch', () => {

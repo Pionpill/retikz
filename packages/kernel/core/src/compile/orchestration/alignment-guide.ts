@@ -1,7 +1,7 @@
 import type { LayoutAlignmentGuide, Transform } from '../../contract';
 
 import { LayoutAlignmentGuideDimension } from '../../contract';
-import { RetikzCompositeContractError } from '../../resolve/diagnostics';
+import { createCompositeContractError } from '../../resolve/diagnostics';
 
 const canonicalNumber = (value: number): number => (Object.is(value, -0) ? 0 : value);
 
@@ -10,27 +10,27 @@ const guideKey = (guide: LayoutAlignmentGuide): string => `${guide.dimension}\u0
 /** 校验并分离一组 result-facing alignment guides */
 export const cloneAlignmentGuides = (guides: unknown, ownerLabel: string): ReadonlyArray<LayoutAlignmentGuide> => {
   if (!Array.isArray(guides)) {
-    throw new RetikzCompositeContractError(`${ownerLabel} returned invalid alignmentGuides; expected an array`);
+    throw createCompositeContractError(`${ownerLabel} returned invalid alignmentGuides; expected an array`);
   }
   const keys = new Set<string>();
   const cloned: Array<LayoutAlignmentGuide> = [];
   const guideCount = guides.length;
   for (let index = 0; index < guideCount; index += 1) {
     if (!Object.hasOwn(guides, index)) {
-      throw new RetikzCompositeContractError(
+      throw createCompositeContractError(
         `${ownerLabel} returned invalid alignment guide at index ${index}; sparse arrays are unsupported`,
       );
     }
     const guide: unknown = guides[index];
     if (guide === null || typeof guide !== 'object' || Array.isArray(guide)) {
-      throw new RetikzCompositeContractError(
+      throw createCompositeContractError(
         `${ownerLabel} returned invalid alignment guide at index ${index}; expected an object`,
       );
     }
     const input = guide as Record<string, unknown>;
     const unsupported = Object.keys(input).filter(key => !['name', 'dimension', 'position'].includes(key));
     if (unsupported.length > 0) {
-      throw new RetikzCompositeContractError(
+      throw createCompositeContractError(
         `${ownerLabel} returned invalid alignment guide at index ${index}; unsupported field(s): ${unsupported.join(', ')}`,
       );
     }
@@ -38,17 +38,17 @@ export const cloneAlignmentGuides = (guides: unknown, ownerLabel: string): Reado
     const dimension = input.dimension;
     const position = input.position;
     if (typeof name !== 'string') {
-      throw new RetikzCompositeContractError(
+      throw createCompositeContractError(
         `${ownerLabel} returned invalid alignment guide name at index ${index}; expected a string`,
       );
     }
     if (dimension !== LayoutAlignmentGuideDimension.X && dimension !== LayoutAlignmentGuideDimension.Y) {
-      throw new RetikzCompositeContractError(
+      throw createCompositeContractError(
         `${ownerLabel} returned invalid alignment guide dimension at index ${index}; expected x or y`,
       );
     }
     if (typeof position !== 'number' || !Number.isFinite(position)) {
-      throw new RetikzCompositeContractError(
+      throw createCompositeContractError(
         `${ownerLabel} returned invalid alignment guide position at index ${index}; expected finite number`,
       );
     }
@@ -59,7 +59,7 @@ export const cloneAlignmentGuides = (guides: unknown, ownerLabel: string): Reado
     });
     const key = guideKey(clonedGuide);
     if (keys.has(key)) {
-      throw new RetikzCompositeContractError(
+      throw createCompositeContractError(
         `${ownerLabel} returned duplicate alignment guide '${clonedGuide.dimension}:${clonedGuide.name}'`,
       );
     }

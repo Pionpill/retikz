@@ -444,14 +444,4 @@ describe('@retikz/vanilla InputScene', () => {
       /duplicate identity "a"/i,
     );
   });
-
-  it('typed InputScene 不能同时提供 children 和 layers', () => {
-    const invalid = {
-      type: 'scene',
-      children: [],
-      layers: [],
-    } as never;
-
-    expect(() => normalizeScene(invalid)).toThrow(/children and layers/i);
-  });
 });

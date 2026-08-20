@@ -1,14 +1,10 @@
-import {
-  isRetikzRetainedRenderError,
-  RetikzRetainedRenderError,
-  RetikzRetainedRenderErrorCode,
-} from '@retikz/render/runtime';
+import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '@retikz/render/runtime';
 
 import type { RetainedVanillaUpdateOptions } from './types';
 
 const invalidUpdateOptions = (cause: unknown): never => {
-  throw new RetikzRetainedRenderError({
-    code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid,
+  throw new RetikzRenderError({
+    code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid,
     cause,
     message:
       'Vanilla retained update options must match the renderer backend, use closed plain-data records, and cannot change Canvas DPR',
@@ -21,21 +17,12 @@ const isPlainRecord = (value: unknown): value is Record<PropertyKey, unknown> =>
   return prototype === Object.prototype || prototype === null;
 };
 
-/** 校验普通对象只含允许的可枚举 data properties */
-const assertClosedRecord: (
-  value: unknown,
-  allowedKeys: ReadonlySet<string>,
-) => asserts value is Record<string, unknown> = (value, allowedKeys) => {
+/** 校验普通对象只含可枚举 data properties */
+const assertDataRecord: (value: unknown) => asserts value is Record<string, unknown> = value => {
   if (!isPlainRecord(value)) return invalidUpdateOptions(value);
   for (const key of Reflect.ownKeys(value)) {
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
-    if (
-      typeof key !== 'string' ||
-      !allowedKeys.has(key) ||
-      descriptor === undefined ||
-      !descriptor.enumerable ||
-      !('value' in descriptor)
-    ) {
+    if (typeof key !== 'string' || descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
       invalidUpdateOptions(value);
     }
   }
@@ -87,19 +74,19 @@ const cloneAndFreeze = <T>(value: T, ancestors = new WeakSet<object>()): T => {
 };
 
 /** 校验并捕获 retained update 可变配置，避免后续 hydrate 读取用户可变别名 */
-export const captureRetainedUpdateOptions = (
-  input: unknown,
-  backend: 'svg' | 'canvas',
-): RetainedVanillaUpdateOptions => {
+export const captureRetainedUpdateOptions = (input: unknown): RetainedVanillaUpdateOptions => {
   try {
-    assertClosedRecord(input, new Set(backend === 'svg' ? ['animation'] : ['animation', 'canvas']));
+    assertDataRecord(input);
     const animation = input.animation;
     const canvas = input.canvas;
-    if (animation !== undefined) assertClosedRecord(animation, new Set(['enabled', 'snapshotAt', 'easings']));
-    if (canvas !== undefined) assertClosedRecord(canvas, new Set(['animationProperties']));
+    if (animation !== undefined) assertDataRecord(animation);
+    if (canvas !== undefined) {
+      assertDataRecord(canvas);
+      if (Object.hasOwn(canvas, 'devicePixelRatio')) return invalidUpdateOptions(canvas);
+    }
     return cloneAndFreeze(input);
   } catch (cause) {
-    if (isRetikzRetainedRenderError(cause)) throw cause;
+    if (isRetikzRenderError(cause)) throw cause;
     return invalidUpdateOptions(cause);
   }
 };

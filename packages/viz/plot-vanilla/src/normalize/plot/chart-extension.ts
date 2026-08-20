@@ -17,8 +17,8 @@ import type {
 } from './contracts';
 import type { InputPlotScale } from './input-scales';
 
+import { RetikzPlotVanillaError, RetikzPlotVanillaErrorCode } from '../../error';
 import { normalizePlotBindings } from './bindings';
-import { RetikzPlotDeclarationError, RetikzPlotDeclarationErrorCode } from './errors';
 import { buildPositionScale, collectExplicitScales, coordinateTypeOf } from './scale-coordinate';
 import { assembledTransformsOf } from './topology';
 
@@ -28,6 +28,24 @@ const AUTO_ANGLE = '__angle';
 const AUTO_RADIUS = '__radius';
 
 type Collected = NormalizationState;
+
+/** 创建携带稳定来源路径的 Plot declaration 错误 */
+const plotDeclarationError = (
+  code:
+    | typeof RetikzPlotVanillaErrorCode.NonSerializableExtension
+    | typeof RetikzPlotVanillaErrorCode.UnsupportedChartChild
+    | typeof RetikzPlotVanillaErrorCode.DuplicateDeclarationSource,
+  path: PlotDeclarationPath,
+  conflictingPath?: PlotDeclarationPath,
+): RetikzPlotVanillaError =>
+  new RetikzPlotVanillaError({
+    code,
+    message: `Plot declaration ${code} at ${JSON.stringify(path)}`,
+    details: {
+      path,
+      ...(conflictingPath === undefined ? {} : { conflictingPath }),
+    },
+  });
 
 const firstDeclarationOf = (
   collection: PlotDeclarationCollection,
@@ -46,11 +64,7 @@ const throwDuplicateDeclarationSource = (
   declaration: PlotAuthoringDeclaration,
   conflictingPath: PlotDeclarationPath,
 ): never => {
-  throw new RetikzPlotDeclarationError(
-    RetikzPlotDeclarationErrorCode.DuplicateDeclarationSource,
-    declaration.path,
-    conflictingPath,
-  );
+  throw plotDeclarationError(RetikzPlotVanillaErrorCode.DuplicateDeclarationSource, declaration.path, conflictingPath);
 };
 
 /** 校验 Chart extension 只能包含可序列化且来源唯一的显式声明 */
@@ -62,9 +76,9 @@ export const assertChartExtensionCollection = (
     if (declaration.kind === 'unsupported') {
       const code =
         declaration.props.valueKind === 'function'
-          ? RetikzPlotDeclarationErrorCode.NonSerializableExtension
-          : RetikzPlotDeclarationErrorCode.UnsupportedChartChild;
-      throw new RetikzPlotDeclarationError(code, declaration.path);
+          ? RetikzPlotVanillaErrorCode.NonSerializableExtension
+          : RetikzPlotVanillaErrorCode.UnsupportedChartChild;
+      throw plotDeclarationError(code, declaration.path);
     }
   }
 
@@ -88,8 +102,8 @@ export const assertChartExtensionCollection = (
     throwDuplicateDeclarationSource(markDeclaration, context.marks.path);
   }
   if (context.coordinate !== undefined && context.composition !== undefined) {
-    throw new RetikzPlotDeclarationError(
-      RetikzPlotDeclarationErrorCode.DuplicateDeclarationSource,
+    throw plotDeclarationError(
+      RetikzPlotVanillaErrorCode.DuplicateDeclarationSource,
       context.composition.path,
       context.coordinate.path,
     );

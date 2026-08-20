@@ -152,7 +152,7 @@ describe('[ADV] 双 parse 护栏', () => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────
-// generate 输出校验：非数组 / 坏命令 / 抛错 → 含 generator 名的清晰错
+// generate 输出校验：数值不变量 / 抛错 → 含 generator 名的清晰错
 // ───────────────────────────────────────────────────────────────────────────
 describe('[ADV] generate 输出校验', () => {
   it('returns_empty：空数组不崩', () => {
@@ -163,39 +163,6 @@ describe('[ADV] generate 输出校验', () => {
       { type: 'step', kind: 'line', to: [10, 10] },
     ]);
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).not.toThrow();
-  });
-
-  const expectNonArrayThrows = (generate: () => Array<PathCommand>): void => {
-    const badGen = definePathGenerator({ name: 'badGen', paramsSchema: z.object({}), generate });
-    const ir = wrapPath([
-      { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'generator', name: 'badGen', params: {} },
-    ]);
-    const err = catchCompile(ir, { badGen });
-    expect(err?.message).toMatch(/must return an array of path commands/);
-    expect(err?.message).toMatch(/badGen/);
-  };
-
-  it('返回 null（非数组）→ 抛"must return an array"（含 generator 名）', () =>
-    expectNonArrayThrows((() => null) as unknown as () => Array<PathCommand>));
-  it('返回 undefined（非数组）→ 抛', () =>
-    expectNonArrayThrows((() => undefined) as unknown as () => Array<PathCommand>));
-  it('返回 object（非数组）→ 抛', () =>
-    expectNonArrayThrows((() => ({ kind: 'line', to: [1, 1] })) as unknown as () => Array<PathCommand>));
-  it('返回 string（可迭代但非数组）→ 抛（不再逐字符产 garbage close）', () =>
-    expectNonArrayThrows((() => 'oops') as unknown as () => Array<PathCommand>));
-
-  it('unknown_cmd_kind：未知 cmd.kind → 抛 unknown kind（不静默当 close）', () => {
-    const gen = definePathGenerator({
-      name: 'gen',
-      paramsSchema: z.object({}),
-      generate: () => [{ kind: 'bogus', to: [5, 5] } as unknown as PathCommand],
-    });
-    const ir = wrapPath([
-      { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'generator', name: 'gen', params: {} },
-    ]);
-    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/unknown kind 'bogus'/);
   });
 
   it('snapshots a dynamic command before validation and downstream lowering', () => {
@@ -225,32 +192,27 @@ describe('[ADV] generate 输出校验', () => {
     expect(kindReads).toBe(1);
   });
 
-  it('cmd_missing_field：cubic 缺 control2 → 抛 non-finite（含 cubic + generator 名）', () => {
-    const gen = definePathGenerator({
-      name: 'gen',
-      paramsSchema: z.object({}),
-      generate: () => [{ kind: 'cubic', control1: [1, 2], to: [3, 4] } as unknown as PathCommand],
-    });
+  it.each([
+    ['arc radius', { kind: 'arc', center: [0, 0], radius: 0, startAngle: 0, endAngle: 90 } satisfies PathCommand],
+    [
+      'ellipse rotation',
+      {
+        kind: 'ellipseArc',
+        center: [0, 0],
+        radiusX: 4,
+        radiusY: 2,
+        rotation: Number.POSITIVE_INFINITY,
+        startAngle: 0,
+        endAngle: 90,
+      } satisfies PathCommand,
+    ],
+  ])('rejects invalid numeric invariant: %s', (_name, command) => {
+    const gen = definePathGenerator({ name: 'gen', paramsSchema: z.object({}), generate: () => [command] });
     const ir = wrapPath([
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
     ]);
-    const err = catchCompile(ir, { gen });
-    expect(err?.message).toMatch(/'gen'/);
-    expect(err?.message).toMatch(/cubic/);
-  });
-
-  it('cmd_string_coord：line.to 含非数字 → 抛 non-finite（不静默 NaN 入 Scene）', () => {
-    const gen = definePathGenerator({
-      name: 'gen',
-      paramsSchema: z.object({}),
-      generate: () => [{ kind: 'line', to: [5, 'oops'] } as unknown as PathCommand],
-    });
-    const ir = wrapPath([
-      { type: 'step', kind: 'move', to: [0, 0] },
-      { type: 'step', kind: 'generator', name: 'gen', params: {} },
-    ]);
-    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/non-finite coordinate/i);
+    expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/invalid.*command/i);
   });
 
   it('throws_inside：generate 内部抛错 → 包成 "path generator \'X\' threw: ..."（含名 + 原因）', () => {

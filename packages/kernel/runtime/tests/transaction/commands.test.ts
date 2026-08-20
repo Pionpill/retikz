@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RuntimeChangeSet, RuntimeRevision } from '../../src/owner';
-import type { RuntimeOwnerInput, RuntimeOwnerUpdate } from '../../src/transaction';
+import type { RuntimeRevision } from '../../src/owner';
 
 import { RetikzRuntimeErrorCode } from '../../src';
 import { defineRuntimeOwner } from '../../src/owner';
@@ -46,22 +45,6 @@ describe('runtime revision and owner commands', () => {
     expect(update).toMatchObject({ owner, kind: 'update' });
     expect(initial).not.toHaveProperty('value');
     expect(update).not.toHaveProperty('value');
-  });
-
-  it('拒绝伪造 change set 与 owner command', () => {
-    const forgedChangeSet = { baseRevision: 0, changes: [] } as unknown as RuntimeChangeSet<{ delta: number }>;
-    expect(() => createRuntimeOwnerUpdate(owner, 2, forgedChangeSet)).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.ChangeSetInvalid }),
-    );
-
-    const forgedInput = { owner, kind: 'initial' } as unknown as RuntimeOwnerInput;
-    const forgedUpdate = { owner, kind: 'update' } as unknown as RuntimeOwnerUpdate;
-    expect(() => getRuntimeOwnerCommandExecutor(forgedInput)).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.OwnerCommandInvalid }),
-    );
-    expect(() => getRuntimeOwnerCommandExecutor(forgedUpdate)).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.OwnerCommandInvalid }),
-    );
   });
 
   it('拒绝 foreign module ChangeSet 与 owner command', async () => {

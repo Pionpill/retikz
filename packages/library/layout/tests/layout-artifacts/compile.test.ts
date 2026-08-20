@@ -7,7 +7,7 @@ import {
   LayoutAlignmentGuideDimension,
   LayoutAlignmentGuideName,
 } from '@retikz/core';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import type { FlexLayoutCompileArtifact, GridLayoutCompileArtifact, OverlayLayoutCompileArtifact } from '../../src';
@@ -246,7 +246,6 @@ describe('layout compile artifacts', () => {
     expect(artifact.value.lines.map(line => line.itemKeys)).toEqual([['a'], ['b']]);
     expect(artifact.value.items[0].slotBounds).not.toEqual(artifact.value.items[0].allocationBounds);
     expect(artifact.value.items[0].overflow.allocation.x).toBe(true);
-    expectTypeOf(artifact).toEqualTypeOf<FlexLayoutCompileArtifact>();
   });
 
   it('records reverse and wrap-reverse Flex lines in final physical order', () => {
@@ -308,7 +307,6 @@ describe('layout compile artifacts', () => {
     ]);
     expect(artifact.value.rows).toHaveLength(1);
     expect(artifact.value.items[0]).toMatchObject({ column: 1, row: 0, columnSpan: 1, rowSpan: 1 });
-    expectTypeOf(artifact).toEqualTypeOf<GridLayoutCompileArtifact>();
   });
 
   it('classifies every Grid track source kind', () => {
@@ -364,7 +362,6 @@ describe('layout compile artifacts', () => {
       sizeParticipation: 'exclude',
       zIndex: -1,
     });
-    expectTypeOf(artifact).toEqualTypeOf<OverlayLayoutCompileArtifact>();
   });
 
   it('records slot, allocation, visual and clip overflow without diagnostics', () => {

@@ -5,8 +5,8 @@ import type { ArrowMarkResolution } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 
 import {
-  RetikzCompositeContractError,
-  RetikzLayoutProbeRecoverableError,
+  createCompositeContractError,
+  createLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../../resolve/diagnostics';
 import { validateMarkerPrimitives } from '../../resource';
@@ -19,7 +19,7 @@ const emitArrowMarkerPrimitives = (
   ctx: ArrowEmitContext,
 ): Array<MarkerPrimitive> => {
   if (typeof def.emit !== 'function') {
-    throw new RetikzCompositeContractError(
+    throw createCompositeContractError(
       `Arrow '${shape}' is missing an emit function (ArrowDefinition.emit is required).`,
     );
   }
@@ -27,7 +27,7 @@ const emitArrowMarkerPrimitives = (
   try {
     emitted = def.emit(ctx);
   } catch (e) {
-    throw new RetikzLayoutProbeRecoverableError(`Arrow '${shape}' emit failed: ${safeThrownDetail(e)}`, {
+    throw createLayoutProbeRecoverableError(`Arrow '${shape}' emit failed: ${safeThrownDetail(e)}`, {
       cause: e,
       providerKey: `arrow:${shape}`,
     });

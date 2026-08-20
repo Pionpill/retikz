@@ -17,7 +17,7 @@ const isDetailColumnElement = (child: ReactNode): child is ReactElement<DetailCo
 export const buildDetailColumns = (children: ReactNode): Array<TableDetailColumnInput> => {
   const columns: Array<TableDetailColumnInput> = [];
   visitTableChildren(children, child => {
-    if (!isDetailColumnElement(child) || Object.hasOwn(child.props, 'children')) {
+    if (!isDetailColumnElement(child)) {
       throw new RetikzTableReactError('table react: DetailTable children only accept DetailColumn');
     }
     columns.push({ ...child.props });

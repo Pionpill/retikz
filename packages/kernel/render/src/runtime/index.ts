@@ -1,6 +1,6 @@
+export * from '../error';
 export * from './builtin';
 export * from './config';
-export * from './error';
 export * from './frame';
 export * from './participant';
 export * from './readonly-layer';

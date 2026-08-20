@@ -38,7 +38,7 @@ import type {
 import type { RuntimeSession, RuntimeSessionOptions } from './types';
 
 import { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from '../diagnostic';
-import { RetikzRuntimeError, RetikzRuntimeErrorCode, RetikzRuntimeOwnerError } from '../error';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import { createRuntimeOwnerExecutor } from '../owner';
 import {
   claimRuntimeCommitParticipants,
@@ -354,22 +354,12 @@ const withFailureDiagnostics = (cause: unknown, diagnostics: ReadonlyArray<Runti
       diagnostics,
     });
   }
-  if (cause instanceof RetikzRuntimeOwnerError) {
-    return new RetikzRuntimeError({
-      code: cause.code,
-      phase: cause.phase,
-      cause: cause.cause,
-      owner: cause.owner,
-      diagnostics,
-    });
-  }
   return cause;
 };
 
 /** 读取 primary error 已携带的 execution diagnostics */
 const errorDiagnostics = (cause: unknown): ReadonlyArray<RuntimeDiagnostic> => {
   if (cause instanceof RetikzRuntimeError) return cause.diagnostics;
-  if (cause instanceof RetikzRuntimeOwnerError) return cause.diagnostics.map(mapOwnerLifecycleDiagnostic);
   return Object.freeze([]);
 };
 
@@ -754,10 +744,6 @@ const runProgram = (
 
 /** 创建同步 Snapshot transaction session */
 export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSession => {
-  const optionsCandidate: unknown = options;
-  if (typeof optionsCandidate !== 'object' || optionsCandidate === null) {
-    throw sessionError(RetikzRuntimeErrorCode.RegistryMismatch, 'session-create', optionsCandidate);
-  }
   let programOwners: RuntimeOwnerRegistry;
   try {
     programOwners = getRuntimeProgramOwnerRegistry(options.programs);
@@ -767,7 +753,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
   if (programOwners !== options.owners) {
     throw sessionError(RetikzRuntimeErrorCode.RegistryMismatch, 'session-create', options.programs);
   }
-  const updateStrategyDescriptor = Object.getOwnPropertyDescriptor(optionsCandidate, 'updateStrategy');
+  const updateStrategyDescriptor = Object.getOwnPropertyDescriptor(options, 'updateStrategy');
   if (updateStrategyDescriptor !== undefined && !Object.hasOwn(updateStrategyDescriptor, 'value')) {
     throw sessionError(RetikzRuntimeErrorCode.UpdateStrategyInvalid, 'session-create', updateStrategyDescriptor);
   }
@@ -775,11 +761,7 @@ export const createRuntimeSession = (options: RuntimeSessionOptions): RuntimeSes
   if (updateStrategy !== RuntimeUpdateStrategy.Auto && updateStrategy !== RuntimeUpdateStrategy.Full) {
     throw sessionError(RetikzRuntimeErrorCode.UpdateStrategyInvalid, 'session-create', updateStrategy);
   }
-  const participantCandidates: unknown = Reflect.get(optionsCandidate, 'participants');
-  if (participantCandidates !== undefined && !Array.isArray(participantCandidates)) {
-    throw sessionError(RetikzRuntimeErrorCode.ParticipantTokenInvalid, 'session-create', participantCandidates);
-  }
-  const participantsInput: ReadonlyArray<unknown> = participantCandidates ?? [];
+  const participantsInput = options.participants ?? [];
   const participantExecutors = new Map<RuntimeCommitParticipantToken, RuntimeCommitParticipantExecutor>();
   const participantKeys = new Set<string>();
   const participants: Array<RuntimeCommitParticipantToken> = [];

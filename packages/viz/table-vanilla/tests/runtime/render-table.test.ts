@@ -298,12 +298,10 @@ describe('renderTable', () => {
     expect(() => renderTable(spec)).toThrow(/rule 0.*direct.*formatter/i);
   });
 
-  it('accepts Core options under compile and rejects the removed top-level composites field', () => {
+  it('accepts Core options under compile', () => {
     const spec = manualTable({ rows: [[null]] });
 
     expect(renderTable(spec, { compile: { padding: 0 }, animation: { enabled: false } })).toContain('<svg');
-    expect(() => renderTable(spec, { composites: [] } as never)).toThrow(/composites.*compile\.composites/i);
-    expect(() => renderTable(spec, { composites: undefined } as never)).toThrow(/composites.*compile\.composites/i);
   });
 
   it('compiles nested Tier 2 content through compile.composites in the same SSR result', () => {

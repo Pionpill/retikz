@@ -70,6 +70,8 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 - AI / superpower / plugin 为长任务保上下文、做临时决策、审计或计划而生成的报告和计划默认不入库。
 - 这类文件放到 `.gitignore` 已覆盖的本地目录：`notes/reports/`、`notes/plans/`、任意 `**/_notes/reports/`、`**/_notes/plans/`；不要 stage / commit。
+- 正式测试只保留 tracked runtime case `tests/**/*.test.ts(x)`；TypeScript 可直接判断的类型关系由生产代码与 `tsc --noEmit` 负责，不编写独立测试；一次性探索 case 使用 ignored `tests/_scratch/*.test.ts(x)`。
+- 不得新增 `*.typecheck.ts(x)`，也不得在 runtime 测试中使用强转、`expectTypeOf` 或 `@ts-expect-error` 触发 TypeScript 已拒绝的字段、互斥 union、必填项或封闭判别分支。
 - 临时 Vitest case 只放受影响 workspace 的 `tests/_scratch/`。用 `pnpm temp:test -- --workspace <workspace-directory> --file <tests/_scratch/*.test.ts>` 运行；默认完成后自动删除，只有人工显式传 `--keep` 才保留。不要 `git add -f` 此目录。
 - 如果新流程需要新的临时产物目录，先征求用户确认并补 `.gitignore`，再写入该目录。
 

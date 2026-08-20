@@ -14,20 +14,40 @@ export const RetikzTableErrorCode = {
 export type RetikzTableErrorCodeValue = ValueOf<typeof RetikzTableErrorCode>;
 
 /** Table 包运行时错误的可选构造参数 */
-type RetikzTableErrorOptions = Readonly<{
+export type RetikzTableErrorOptions = Readonly<{
+  /** 稳定错误码 */
+  code: RetikzTableErrorCodeValue;
+  /** 面向调用方的错误消息 */
+  message?: string;
+  /** 失败上下文的结构化详情 */
+  details?: Readonly<Record<string, unknown>>;
   /** 导致当前错误的原始异常或值 */
   cause?: unknown;
 }>;
 
-/** Table 包未细分领域错误的统一结构化错误 */
-export class RetikzTableError extends RetikzError<RetikzTableErrorCodeValue, Readonly<{ message: string }>> {
-  /** 创建保留原始消息与 cause 的 Table 包错误 */
-  constructor(message: string, options?: RetikzTableErrorOptions) {
+type RetikzTableErrorCauseOptions = Readonly<Pick<RetikzTableErrorOptions, 'cause'>>;
+
+/** Table 包统一的结构化错误 */
+export class RetikzTableError extends RetikzError<RetikzTableErrorCodeValue, Readonly<Record<string, unknown>>> {
+  /** 使用默认错误码创建 Table 错误 */
+  constructor(message: string, options?: RetikzTableErrorCauseOptions);
+  /** 使用结构化参数创建 Table 错误 */
+  constructor(options: RetikzTableErrorOptions);
+  constructor(optionsOrMessage: RetikzTableErrorOptions | string, causeOptions: RetikzTableErrorCauseOptions = {}) {
+    const options: RetikzTableErrorOptions =
+      typeof optionsOrMessage === 'string'
+        ? {
+            code: RetikzTableErrorCode.Default,
+            message: optionsOrMessage,
+            details: { message: optionsOrMessage },
+            ...causeOptions,
+          }
+        : optionsOrMessage;
     super({
-      code: RetikzTableErrorCode.Default,
-      message,
-      details: { message },
-      cause: options?.cause,
+      code: options.code,
+      message: options.message ?? options.code,
+      details: options.details ?? Object.freeze({}),
+      cause: options.cause,
     });
   }
 }

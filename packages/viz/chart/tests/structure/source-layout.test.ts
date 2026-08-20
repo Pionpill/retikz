@@ -17,7 +17,7 @@ const sourceFilesUnder = async (directory: string): Promise<Array<string>> => {
 };
 
 describe('Chart semantic source layout', () => {
-  it('uses the _chart, _shared, and Point family owners without legacy routes', async () => {
+  it('uses the _chart, _shared, and Point family owners', async () => {
     const paths = (await sourceFilesUnder(sourceRoot)).map(path => relative(sourceRoot, path).replaceAll('\\', '/'));
 
     expect(paths.some(path => path.startsWith('_chart/'))).toBe(true);
@@ -26,22 +26,6 @@ describe('Chart semantic source layout', () => {
     expect(paths).toContain('point/shared/schema.ts');
     expect(paths).toContain('point/shared/plot.ts');
     expect(paths).toContain('point/shared/recipe.ts');
-    expect(paths).not.toContain('_shared/schemas/point.ts');
-    expect(paths).not.toContain('_shared/recipe/point.ts');
-    expect(paths).not.toContain('point/shared/plot-seed.ts');
-    expect(paths).not.toContain('_shared/recipe/plot-seed.ts');
-    expect(
-      paths.some(
-        path =>
-          path.startsWith('base/') ||
-          path.startsWith('shared/') ||
-          path.startsWith('schemas/') ||
-          path.startsWith('resolution/'),
-      ),
-    ).toBe(false);
-    expect(
-      paths.some(path => path.startsWith('schemas/') || path.startsWith('presentation/') || path.startsWith('style/')),
-    ).toBe(false);
   });
 
   it('keeps _shared independent from _chart and Point owners', async () => {

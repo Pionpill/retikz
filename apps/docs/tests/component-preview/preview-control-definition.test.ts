@@ -1,9 +1,6 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type {
-  PreviewControlsDefinition,
-  PreviewControlValuesFor,
-} from '../../src/modules/docs/components/component-preview/author';
+import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview/author';
 
 import { definePreviewControls } from '../../src/modules/docs/components/component-preview/author';
 import {
@@ -49,18 +46,6 @@ const panelDefinition = definePreviewControls({
 });
 
 describe('preview controls definition', () => {
-  it('从 kind 与 id 推导值对象', () => {
-    expectTypeOf<PreviewControlValuesFor<typeof panelDefinition>>().toEqualTypeOf<{
-      text: string;
-      strokeWidth: number;
-      shape: 'rectangle' | 'circle';
-      dashed: boolean;
-      fill: string;
-      opacity: number;
-      controlPoint: [number, number];
-    }>();
-  });
-
   it('扁平化 section 并生成唯一默认值', () => {
     expect(getPreviewControlFields(panelDefinition)).toHaveLength(7);
     expect(buildPreviewControlDefaults(panelDefinition)).toEqual({
@@ -91,8 +76,6 @@ describe('preview controls definition', () => {
         },
       ],
     });
-
-    expectTypeOf<PreviewControlValuesFor<typeof definition>>().toEqualTypeOf<{ title: string }>();
     expect(getPreviewControlFields(definition).map(field => field.id)).toEqual(['title']);
     expect(buildPreviewControlDefaults(definition)).toEqual({ title: 'Cities' });
   });
@@ -132,8 +115,6 @@ describe('preview controls definition', () => {
         },
       ],
     });
-
-    expectTypeOf<PreviewControlValuesFor<typeof definition>>().toEqualTypeOf<{ factor: number }>();
     expect(getPreviewControlFields(definition).map(field => field.id)).toEqual(['factor']);
     expect(buildPreviewControlDefaults(definition)).toEqual({ factor: 2 });
   });

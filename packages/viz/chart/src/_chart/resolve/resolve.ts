@@ -6,9 +6,8 @@ import { z } from 'zod';
 import type { BoundChart } from '../../_shared';
 import type { ChartResolution, ChartResolveContext } from './types';
 
-import { RetikzChartError } from '../../error';
+import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { invalidChartSchemaError } from '../dispatch/bind';
-import { RetikzChartResolveErrorCode } from '../dispatch/errors';
 import { BaseChartSchema } from '../schemas';
 import { resolveChartStyle } from '../style';
 import { chartRecipeStyleContextOf } from './style';
@@ -36,7 +35,7 @@ export const resolveChart = (chart: BoundChart, context: ChartResolveContext): C
   } catch (error) {
     if (error instanceof z.ZodError) {
       const rebased = new z.ZodError(error.issues.map(issue => ({ ...issue, path: ['plot', ...issue.path] })));
-      throw invalidChartSchemaError(RetikzChartResolveErrorCode.InvalidResolvedPlot, rebased, error);
+      throw invalidChartSchemaError(RetikzChartErrorCode.InvalidResolvedPlot, rebased, error);
     }
     throw error;
   }

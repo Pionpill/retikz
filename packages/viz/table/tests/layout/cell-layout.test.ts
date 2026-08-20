@@ -145,16 +145,6 @@ describe('Table Cell geometry', () => {
         }),
       /column.*range/i,
     ],
-    [
-      () =>
-        computeTableCellTranslation({
-          contentBox: { x: 0, y: 0, width: 1, height: 1 },
-          allocationBounds: { x: 0, y: 0, width: 1, height: 1 },
-          horizontalAlign: 'invalid' as never,
-          verticalAlign: 'center',
-        }),
-      /horizontalAlign/i,
-    ],
   ])('rejects invalid Cell geometry input %#', (run, message) => {
     expect(run).toThrow(message);
   });

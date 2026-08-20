@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { allText, flattenPrimitives } from '../../src/assert/primitives';
 
-const scene = {
+const scene: Scene = {
   primitives: [
     { type: 'rect', x: 0, y: 0, width: 10, height: 10 },
     {
@@ -27,7 +27,7 @@ const scene = {
     },
   ],
   layout: { x: 0, y: 0, width: 10, height: 10 },
-} as unknown as Scene;
+};
 
 describe('flattenPrimitives', () => {
   it('递归下钻 group 收齐全部原语', () => {

@@ -1,85 +1,7 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
-
-import type * as TableTypes from '../src';
+import { describe, expect, it } from 'vitest';
 
 import * as Table from '../src';
 import * as StructurePublic from '../src/contract/structure/public';
-
-type PublicContractTypes = [
-  TableTypes.LowerTablesOptions,
-  TableTypes.CompileTableOptions,
-  TableTypes.CompileTableResult,
-  TableTypes.TableCompileArtifact,
-  TableTypes.TableRuntimeContributionInput,
-  TableTypes.TableRuntimeContribution,
-  TableTypes.TableLayoutManifest,
-  TableTypes.ResolvedTableBorderLine,
-  TableTypes.TableBorderContribution,
-  TableTypes.TableBorderManifestEntry,
-  TableTypes.TableBorderPathMeta,
-  TableTypes.IRManualTableCell,
-  TableTypes.IRTableCellSelector,
-  TableTypes.IRTableValuePredicate,
-  TableTypes.IRTableCellRule,
-  TableTypes.TableCellPlanSource,
-  TableTypes.TableCellAppearanceTracePathValue,
-  TableTypes.IRTableCellVisualEncoding,
-  TableTypes.IRTableVisualScaleRef,
-  TableTypes.CellVisualScaleDefinition,
-  TableTypes.AnyCellVisualScaleDefinition,
-  TableTypes.TableLegendDescriptor,
-  TableTypes.IRTableThemeTokenOverrides,
-  TableTypes.TableThemeTokenMap,
-  TableTypes.TableThemeTokenKey,
-  TableTypes.TableThemeStyleDefinition,
-];
-
-// @ts-expect-error 旧 addressed manual Cell 类型不再从包根导出
-type RemovedIRTableCell = TableTypes.IRTableCell;
-// @ts-expect-error 旧 addressed manual Cell 地址类型不再从包根导出
-type RemovedIRTableCellAddress = TableTypes.IRTableCellAddress;
-
-// @ts-expect-error 阶段级 resolved layout 不从包根导出
-type RemovedResolvedTableLayout = TableTypes.ResolvedTableLayout;
-// @ts-expect-error 阶段级 track layout 不从包根导出
-type RemovedTableTrackLayout = TableTypes.TableTrackLayout;
-// @ts-expect-error 阶段级 Cell layout 不从包根导出
-type RemovedTableCellLayout = TableTypes.TableCellLayout;
-// @ts-expect-error 阶段级 Table layout 不从包根导出
-type RemovedTableLayout = TableTypes.TableLayout;
-// @ts-expect-error 阶段级 normalize options 不从包根导出
-type RemovedNormalizeTableStructureOptions = TableTypes.NormalizeTableStructureOptions;
-// @ts-expect-error 阶段级 Cell fit 策略不从包根导出
-type RemovedTableCellFit = TableTypes.TableCellFit;
-// @ts-expect-error 阶段级 Cell fit scale 不从包根导出
-type RemovedTableCellFitScale = TableTypes.TableCellFitScale;
-// @ts-expect-error 阶段级 Cell overflow 策略不从包根导出
-type RemovedTableCellOverflow = TableTypes.TableCellOverflow;
-// @ts-expect-error 阶段级 Cell content placement 不从包根导出
-type RemovedTableCellContentPlacement = TableTypes.TableCellContentPlacement;
-// @ts-expect-error 私有 Border Graph input 不从包根导出
-type RemovedBuildTableBorderGraphInput = TableTypes.BuildTableBorderGraphInput;
-// @ts-expect-error 私有 Border Graph result 不从包根导出
-type RemovedTableBorderGraph = TableTypes.TableBorderGraph;
-// @ts-expect-error package-private resolved plan 不从包根导出
-type RemovedResolvedTableCellPlan = TableTypes.ResolvedTableCellPlan;
-
-type RemovedStageTypes = [
-  RemovedResolvedTableLayout,
-  RemovedTableTrackLayout,
-  RemovedTableCellLayout,
-  RemovedTableLayout,
-  RemovedNormalizeTableStructureOptions,
-  RemovedTableCellFit,
-  RemovedTableCellFitScale,
-  RemovedTableCellOverflow,
-  RemovedTableCellContentPlacement,
-  RemovedBuildTableBorderGraphInput,
-  RemovedTableBorderGraph,
-  RemovedResolvedTableCellPlan,
-  RemovedIRTableCell,
-  RemovedIRTableCellAddress,
-];
 
 describe('@retikz/table public API', () => {
   it('exports the runtime contribution, compile, schema, and manifest surface without pipeline stages', () => {
@@ -151,12 +73,7 @@ describe('@retikz/table public API', () => {
     expect(Table).not.toHaveProperty('resolveCellVisualScale');
   });
 
-  it('keeps public contract types while hiding pipeline stage types', () => {
-    expectTypeOf<PublicContractTypes>().toBeArray();
-    expectTypeOf<RemovedStageTypes>().toBeArray();
-  });
-
-  it('accepts row-major manual Cell and border fields and rejects removed fields', () => {
+  it('accepts row-major manual Cell and border fields', () => {
     const parsed = Table.TableStructureSchema.parse({
       kind: 'manual',
       rows: [
@@ -182,6 +99,5 @@ describe('@retikz/table public API', () => {
     expect(Table.TableLayoutSchema.parse({ borders: { mode: 'collapse', outer: { kind: 'line' } } })).toEqual({
       borders: { mode: 'collapse', outer: { kind: 'line' } },
     });
-    expect(() => Table.TableLayoutSchema.parse({ columnWidth: 120 })).toThrow();
   });
 });

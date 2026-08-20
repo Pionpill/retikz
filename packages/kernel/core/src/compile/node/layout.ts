@@ -9,10 +9,10 @@ import type { NodeLayout, TexLoweringContext } from './types';
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import {
+  createCompositeContractError,
+  createLayoutProbeRecoverableError,
   isFatalProbeError,
-  isRetikzLayoutProbeRecoverableError,
-  RetikzCompositeContractError,
-  RetikzLayoutProbeRecoverableError,
+  isLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import { resolvePosition, resolvePositionTargetWorld } from '../../resolve/position';
@@ -207,15 +207,15 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
         shapeParams,
       );
     } catch (thrown) {
-      if (isFatalProbeError(thrown) || isRetikzLayoutProbeRecoverableError(thrown)) throw thrown;
-      throw new RetikzLayoutProbeRecoverableError(
+      if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
+      throw createLayoutProbeRecoverableError(
         `Shape '${shapeDef.name}' circumscribe failed: ${safeThrownDetail(thrown)}`,
         { cause: thrown, providerKey: `shape:${shapeDef.name}` },
       );
     }
     return withProviderOutputValidationBoundary(`Shape '${shapeDef.name}' circumscribe`, () => {
       if (raw === null || typeof raw !== 'object') {
-        throw new RetikzCompositeContractError(
+        throw createCompositeContractError(
           `Shape '${shapeDef.name}' returned invalid circumscribe geometry; halfWidth and halfHeight must be finite non-negative numbers`,
         );
       }
@@ -229,7 +229,7 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
         halfWidth < 0 ||
         halfHeight < 0
       ) {
-        throw new RetikzCompositeContractError(
+        throw createCompositeContractError(
           `Shape '${shapeDef.name}' returned invalid circumscribe geometry; halfWidth and halfHeight must be finite non-negative numbers`,
         );
       }

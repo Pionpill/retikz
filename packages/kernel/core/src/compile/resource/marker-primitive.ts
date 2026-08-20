@@ -1,6 +1,6 @@
 import type { MarkerPrimitive } from '../../contract';
 
-import { RetikzCompositeContractError } from '../../resolve/diagnostics';
+import { createCompositeContractError } from '../../resolve/diagnostics';
 import {
   assertProviderOutputDashPattern,
   assertProviderOutputFinite,
@@ -27,7 +27,7 @@ const ownDataValues = (value: object): Array<unknown> =>
 
 const visitNoFunction = (owner: string, value: unknown, seen: WeakSet<object>): void => {
   if (typeof value === 'function') {
-    throw new RetikzCompositeContractError(
+    throw createCompositeContractError(
       `${owner} emit produced a marker containing a function; markers must be plain JSON data.`,
     );
   }
@@ -49,7 +49,7 @@ export const assertNoFunction = (owner: string, value: unknown): void => {
 const visitFiniteNumbers = (owner: string, value: unknown, seen: WeakSet<object>): void => {
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) {
-      throw new RetikzCompositeContractError(
+      throw createCompositeContractError(
         `${owner} emit produced a marker with a non-finite number (${String(value)}); marker coordinates must be finite.`,
       );
     }
@@ -200,7 +200,7 @@ export const validateMarkerPrimitives = (owner: string, emitted: unknown): Array
       (typeof emitted !== 'object' && typeof emitted !== 'function') ||
       typeof (emitted as { [Symbol.iterator]?: unknown })[Symbol.iterator] !== 'function'
     ) {
-      throw new RetikzCompositeContractError(
+      throw createCompositeContractError(
         `${owner} emit failed output validation: expected an iterable of marker primitives.`,
       );
     }

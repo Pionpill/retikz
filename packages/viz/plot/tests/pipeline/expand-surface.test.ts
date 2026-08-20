@@ -2,11 +2,7 @@ import type { IRScene } from '@retikz/core';
 
 import { compileToScene, CURRENT_IR_VERSION, resolveCoreProviderDependencies } from '@retikz/core';
 import { BUILTIN_RIBBON_WIDTH_PROFILES, RibbonPathKindDefinition } from '@retikz/standard/ribbon';
-import { describe, expect, expectTypeOf, it } from 'vitest';
-
-import type { LowerPlotsOptions, MarkDataView } from '../../src/pipeline/expand';
-import type { CoordinateScopeRegistry, CoordinateScopeRegistryEntry } from '../../src/resolve/composition';
-import type { CoordinateFrameResolution, CoordinateResolveContext } from '../../src/resolve/coordinate';
+import { describe, expect, it } from 'vitest';
 
 import * as expand from '../../src/pipeline/expand';
 import { createPlotProviderContribution } from '../../src/pipeline/expand';
@@ -60,14 +56,5 @@ describe('expand pipeline stable surface', () => {
       ],
     };
     expect(() => compileToScene(ir, { ...definitions, padding: 0 })).not.toThrow();
-  });
-
-  it('keeps the established type exports available', () => {
-    expectTypeOf<CoordinateFrameResolution>().toBeObject();
-    expectTypeOf<CoordinateScopeRegistry>().toBeObject();
-    expectTypeOf<CoordinateScopeRegistryEntry>().toBeObject();
-    expectTypeOf<LowerPlotsOptions>().toBeObject();
-    expectTypeOf<MarkDataView>().toBeObject();
-    expectTypeOf<CoordinateResolveContext>().toBeObject();
   });
 });

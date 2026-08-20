@@ -71,7 +71,7 @@ parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 
 - parser 必须是纯函数：input -> output，无副作用。
 - parser 输出 IR 节点或 IR 片段，不输出 React props 或 adapter 私有结构。独立文本 / DSL grammar 可保留 parser 自有类型，但不得把它们命名为 `InputXxx` 或复用框架 authoring `IR*Input` 类型。
-- 解析失败用 `throw new Error('parseXxx: ...')`，消息开头标明解析器名。
+- 解析失败用 `RetikzCoreError` 与 `RetikzCoreErrorCode.Parse`，消息开头标明解析器名。
 
 ## 公开 API
 

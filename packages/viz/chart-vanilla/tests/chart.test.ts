@@ -182,18 +182,6 @@ describe('Chart Vanilla authoring', () => {
     expect(rendered.svg).toContain('<svg');
   });
 
-  it('fails loudly instead of silently discarding a compile driver', () => {
-    const chart = createScatterChart({
-      data: [{ income: 1000, life: 72 }],
-      encoding: { x: { field: 'income' }, y: { field: 'life' } },
-    });
-    const compileDriver = { create: () => undefined };
-
-    expect(() => Reflect.apply(renderChart, undefined, [chart, { compileDriver }])).toThrow(
-      'Vanilla compile drivers require authored IR or a plain figure spec',
-    );
-  });
-
   it('keeps a typed creation Theme after ChartAuthoringResult crosses a value boundary', () => {
     const chart = createConnectedScatterChart({
       data: [

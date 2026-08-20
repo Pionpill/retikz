@@ -9,7 +9,7 @@ import type {
 import type { ReactNode } from 'react';
 
 import { isRetikzError, RetikzError } from '@retikz/foundation';
-import { RetikzPlotDeclarationError, RetikzPlotDeclarationErrorCode } from '@retikz/plot-vanilla';
+import { RetikzPlotVanillaError, RetikzPlotVanillaErrorCode } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { resolvePlotExtensionAuthoring } from '../../../src';
@@ -30,7 +30,7 @@ const normalizeExtension = (
 
 const expectDeclarationError = (
   run: () => unknown,
-  code: RetikzPlotDeclarationError['code'],
+  code: RetikzPlotVanillaError['code'],
   path: PlotDeclarationPath,
   conflictingPath?: PlotDeclarationPath,
 ): void => {
@@ -40,11 +40,13 @@ const expectDeclarationError = (
   } catch (error) {
     thrown = error;
   }
-  expect(thrown).toBeInstanceOf(RetikzPlotDeclarationError);
+  expect(thrown).toBeInstanceOf(RetikzPlotVanillaError);
   expect(thrown).toMatchObject({
     code,
-    path,
-    ...(conflictingPath === undefined ? {} : { conflictingPath }),
+    details: {
+      path,
+      ...(conflictingPath === undefined ? {} : { conflictingPath }),
+    },
   });
 };
 
@@ -52,26 +54,27 @@ describe('Plot chart-extension declaration normalization', () => {
   it('preserves the declaration error contract and maps details without a cause', () => {
     const path = ['children', 0] as const;
     const conflictingPath = ['props', 'guides'] as const;
-    const error = new RetikzPlotDeclarationError(
-      RetikzPlotDeclarationErrorCode.DuplicateDeclarationSource,
-      path,
-      conflictingPath,
-    );
+    const error = new RetikzPlotVanillaError({
+      code: RetikzPlotVanillaErrorCode.DuplicateDeclarationSource,
+      message: 'Plot declaration duplicate-declaration-source at ["children",0]',
+      details: { path, conflictingPath },
+    });
 
-    expect(error).toBeInstanceOf(RetikzPlotDeclarationError);
+    expect(error).toBeInstanceOf(RetikzPlotVanillaError);
     expect(error).toBeInstanceOf(RetikzError);
     expect(isRetikzError(error)).toBe(true);
-    expect(error.name).toBe('RetikzPlotDeclarationError');
+    expect(error.name).toBe('RetikzPlotVanillaError');
     expect(error.message).toBe('Plot declaration duplicate-declaration-source at ["children",0]');
-    expect(error.code).toBe(RetikzPlotDeclarationErrorCode.DuplicateDeclarationSource);
-    expect(error.path).toBe(path);
-    expect(error.conflictingPath).toBe(conflictingPath);
+    expect(error.code).toBe(RetikzPlotVanillaErrorCode.DuplicateDeclarationSource);
     expect(error.details).toEqual({ path, conflictingPath });
     expect(error.details.path).toBe(path);
     expect(error.details.conflictingPath).toBe(conflictingPath);
     expect(Object.isFrozen(error.details)).toBe(false);
 
-    const omittedConflict = new RetikzPlotDeclarationError(RetikzPlotDeclarationErrorCode.UnsupportedChartChild, path);
+    const omittedConflict = new RetikzPlotVanillaError({
+      code: RetikzPlotVanillaErrorCode.UnsupportedChartChild,
+      details: { path },
+    });
     expect(omittedConflict.details).toEqual({ path });
     expect(Object.hasOwn(omittedConflict, 'cause')).toBe(true);
     expect(Object.getOwnPropertyNames(omittedConflict)).toContain('cause');

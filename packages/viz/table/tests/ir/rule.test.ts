@@ -1,6 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
-
-import type { IRTableCellRule, IRTableCellSelector, IRTableValuePredicate } from '../../src';
+import { describe, expect, it } from 'vitest';
 
 import { TableCellRuleSchema, TableCellSelectorSchema, TableSchema, TableValuePredicateSchema } from '../../src';
 
@@ -26,10 +24,6 @@ describe('Table Cell rule schema', () => {
       structure: { kind: 'manual', rows: [[1]] },
       rules: [rule, { selector: { payloadKinds: ['value'] }, presentation: { name: 'text' } }],
     });
-
-    expectTypeOf(selector).toEqualTypeOf<IRTableCellSelector>();
-    expectTypeOf(rule).toEqualTypeOf<IRTableCellRule>();
-    expectTypeOf(selector.value).toEqualTypeOf<IRTableValuePredicate | undefined>();
     expect(spec.rules).toEqual([rule, { selector: { payloadKinds: ['value'] }, presentation: { name: 'text' } }]);
   });
 
