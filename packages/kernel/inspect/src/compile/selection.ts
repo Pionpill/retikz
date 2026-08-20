@@ -1,4 +1,11 @@
-import type { CompileObservation, CompileObservationOwner, IRChild, IRJsonObject, IRScene } from '@retikz/core';
+import type {
+  CompileObservation,
+  CompileObservationOwner,
+  CompileOccurrenceLocator,
+  IRChild,
+  IRJsonObject,
+  IRScene,
+} from '@retikz/core';
 
 import type { InspectionAppearance } from '../contract';
 import type { InspectorRegistry } from '../providers';
@@ -17,43 +24,11 @@ import { cloneAndFreezeInspectionJson } from './output';
 
 type IndexedRule = Readonly<{ index: number; rule: InspectionSelectionRule }>;
 
-const isRecord = (value: unknown): value is Readonly<Record<PropertyKey, unknown>> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-/** 在访问 locator 字段前校验 selection target 的运行时结构 */
-const readSelectionTarget = (value: unknown): InspectionSelectionTarget => {
-  if (!isRecord(value))
-    throw new RetikzInspectError(RetikzInspectErrorCode.Compile, 'Inspection selection target must be an object');
-  if (value.kind === 'scene') return value as InspectionSelectionTarget;
-  if (value.kind === 'subtree' && typeof value.sourcePath === 'string') return value as InspectionSelectionTarget;
-  if (value.kind !== 'self' || !isRecord(value.locator)) {
-    throw new RetikzInspectError(
-      RetikzInspectErrorCode.Compile,
-      'Inspection selection target must identify scene, subtree, or self',
-    );
+/** 校验 occurrence locator 中无法由 TypeScript 表达的非负安全整数约束 */
+const validateOccurrenceLocator = (occurrence: CompileOccurrenceLocator): void => {
+  if (occurrence.expansionPath.some(segment => !Number.isSafeInteger(segment.index) || segment.index < 0)) {
+    throw new RetikzInspectError(RetikzInspectErrorCode.Compile, 'Invalid inspection occurrence locator');
   }
-  if (value.locator.kind === 'authored' && typeof value.locator.sourcePath === 'string') {
-    return value as InspectionSelectionTarget;
-  }
-  if (
-    value.locator.kind === 'occurrence' &&
-    isRecord(value.locator.occurrence) &&
-    typeof value.locator.occurrence.sourcePath === 'string' &&
-    Array.isArray(value.locator.occurrence.expansionPath) &&
-    value.locator.occurrence.expansionPath.every(
-      segment =>
-        isRecord(segment) &&
-        (segment.kind === 'probe' || segment.kind === 'replay') &&
-        Number.isSafeInteger(segment.index) &&
-        (segment.index as number) >= 0,
-    )
-  ) {
-    return value as InspectionSelectionTarget;
-  }
-  throw new RetikzInspectError(
-    RetikzInspectErrorCode.Compile,
-    'Inspection self target must provide a valid authored or occurrence locator',
-  );
 };
 
 /** Core canonical occurrence preorder 的包内等价比较器 */
@@ -132,14 +107,17 @@ const validateTarget = (target: InspectionSelectionTarget, paths: ReturnType<typ
       throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `Invalid inspection subtree '${target.sourcePath}'`);
     return;
   }
-  if (target.locator.kind === 'authored' && !paths.self.has(target.locator.sourcePath)) {
+  if (target.locator.kind === 'occurrence') {
+    validateOccurrenceLocator(target.locator.occurrence);
+    return;
+  }
+  if (!paths.self.has(target.locator.sourcePath)) {
     throw new RetikzInspectError(
       RetikzInspectErrorCode.Compile,
       `Invalid inspection self locator '${target.locator.sourcePath}'`,
     );
   }
   if (
-    target.locator.kind === 'authored' &&
     target.locator.occurrenceIndex !== undefined &&
     (!Number.isSafeInteger(target.locator.occurrenceIndex) || target.locator.occurrenceIndex < 0)
   ) {
@@ -153,42 +131,27 @@ export const admitInspectionSelection = (
   registry: InspectorRegistry,
   selection: InspectionSelection,
 ): ReadonlyArray<IndexedRule> => {
-  if (!isRecord(selection) || !Array.isArray(selection.rules)) {
-    throw wrapInspectionError(
-      selectionOrigin(0, null),
-      new RetikzInspectError(RetikzInspectErrorCode.Compile, 'Inspection selection rules must be an array'),
-    );
-  }
   const paths = collectAuthoredPaths(ir);
   const requestKeys = new Set<string>();
   return Object.freeze(
-    Array.from(selection.rules, (rule, index) => {
-      let target: InspectionSelectionTarget | null = null;
+    selection.rules.map((rule, index) => {
+      const target = rule.target;
       try {
-        if (!isRecord(rule))
-          throw new RetikzInspectError(RetikzInspectErrorCode.Compile, 'Inspection selection rule must be an object');
-        target = readSelectionTarget(rule.target);
-        if (rule.kind !== 'request' && rule.kind !== 'barrier')
-          throw new RetikzInspectError(RetikzInspectErrorCode.Compile, 'Unknown inspection selection rule');
-        const admittedRule = rule as InspectionSelectionRule;
-        if (admittedRule.kind === 'barrier' && target.kind === 'self') {
-          throw new RetikzInspectError(RetikzInspectErrorCode.Compile, 'Inspection barrier cannot target self');
-        }
         validateTarget(target, paths);
-        if (admittedRule.kind === 'request') {
-          const definition = registry.require(admittedRule.inspector);
-          const duplicateKey = `${targetKey(target)}\u0000${inspectorRegistryKey(admittedRule.inspector)}`;
+        if (rule.kind === 'request') {
+          const definition = registry.require(rule.inspector);
+          const duplicateKey = `${targetKey(target)}\u0000${inspectorRegistryKey(rule.inspector)}`;
           if (requestKeys.has(duplicateKey))
             throw new RetikzInspectError(
               RetikzInspectErrorCode.Compile,
               'Duplicate inspection target and Inspector key',
             );
           requestKeys.add(duplicateKey);
-          if (admittedRule.value !== false) {
-            definition.optionsInputSchema.parse(admittedRule.value === true ? {} : admittedRule.value);
+          if (rule.value !== false) {
+            definition.optionsInputSchema.parse(rule.value === true ? {} : rule.value);
           }
         }
-        return Object.freeze({ index, rule: admittedRule });
+        return Object.freeze({ index, rule });
       } catch (cause) {
         throw wrapInspectionError(selectionOrigin(index, target), cause);
       }

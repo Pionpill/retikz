@@ -3,15 +3,7 @@ import type { CompileObservation, IRScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { InspectionSelection } from '../../src';
-
-import {
-  createInspectorRegistry,
-  defineInspector,
-  resolveInspectionSelection,
-  RetikzInspectError,
-  RetikzInspectErrorCode,
-} from '../../src';
+import { createInspectorRegistry, defineInspector, resolveInspectionSelection } from '../../src';
 
 const owner = { kind: 'composite' as const, namespace: 'demo', type: 'box' };
 const key = { namespace: 'test', name: 'box' };
@@ -369,10 +361,24 @@ describe('Inspection selection', () => {
       },
     ],
     [
-      'barrier self target',
+      'invalid occurrence locator index',
       {
         rules: [
-          { kind: 'barrier', target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0]' } } },
+          {
+            kind: 'request',
+            inspector: key,
+            target: {
+              kind: 'self',
+              locator: {
+                kind: 'occurrence',
+                occurrence: {
+                  sourcePath: 'children[0].scope.children[0]',
+                  expansionPath: [{ kind: 'replay', index: -1 }],
+                },
+              },
+            },
+            value: true,
+          },
         ],
       },
     ],
@@ -382,31 +388,8 @@ describe('Inspection selection', () => {
         ir,
         registry,
         observations: [observation(0)],
-        selection: selection as unknown as InspectionSelection,
+        selection,
       }),
     ).toThrow();
-  });
-
-  it.each([
-    ['null rule', { rules: [null] }],
-    ['primitive rule', { rules: [1] }],
-    ['missing target', { rules: [{ kind: 'request', inspector: key, value: true }] }],
-    ['sparse rules', { rules: new Array(1) }],
-  ] as const)('wraps malformed %s as a selection error', (_label, selection) => {
-    let failure: unknown;
-    try {
-      resolveInspectionSelection({
-        ir,
-        registry,
-        observations: [observation(0)],
-        selection: selection as unknown as InspectionSelection,
-      });
-    } catch (cause) {
-      failure = cause;
-    }
-
-    expect(failure).toBeInstanceOf(RetikzInspectError);
-    expect((failure as RetikzInspectError).code).toBe(RetikzInspectErrorCode.CompileFailed);
-    expect((failure as RetikzInspectError).details.origin).toMatchObject({ stage: 'selection', ruleIndex: 0 });
   });
 });

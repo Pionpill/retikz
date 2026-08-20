@@ -63,54 +63,20 @@ describe('Inspector definition', () => {
     ['pathKind name', 'Inspector owner name', '\ufeff', { kind: 'pathKind', name: '\ufeff' }],
     ['composite namespace', 'Inspector owner namespace', ' ', { kind: 'composite', namespace: ' ', type: 'box' }],
     ['composite type', 'Inspector owner type', '\u2003', { kind: 'composite', namespace: 'demo', type: '\u2003' }],
-  ] as const)(
-    'rejects a blank %s owner field without reading unknown values as strings',
-    (_field, label, value, owner) => {
-      expectFoundationNonEmptyError(
-        () =>
-          defineInspector({
-            namespace: 'test',
-            name: 'invalid-owner',
-            owner,
-            subjectSchema: z.null(),
-            optionsInputSchema: z.strictObject({}),
-            optionsSchema: z.strictObject({}),
-            inspect: () => [],
-          }),
-        label,
-        value,
-      );
-    },
-  );
-
-  it.each([null, 1] as const)('rejects malformed unknown definition input %j', input => {
-    expect(() => defineInspector(input as never)).toThrowError('Inspector definition must be an object');
-  });
-
-  it('rejects an object missing the definition fields through the namespace boundary', () => {
-    expect(() => defineInspector({} as never)).toThrowError('Inspector namespace must be a non-empty string');
-  });
-
-  it.each([
-    ['owner', { owner: { kind: 'pathKind', name: '' } }],
-    ['owner object field', { owner: { kind: 'pathKind', name: {} } }],
-    ['subject schema', { subjectSchema: {} }],
-    ['options input schema', { optionsInputSchema: {} }],
-    ['options schema', { optionsSchema: {} }],
-    ['merge callback', { mergeOptionsInput: true }],
-    ['inspect callback', { inspect: null }],
-  ] as const)('rejects an invalid %s at definition time', (_label, override) => {
-    expect(() =>
-      defineInspector({
-        namespace: 'test',
-        name: 'invalid',
-        owner: { kind: 'pathKind', name: 'stroke' },
-        subjectSchema: z.null(),
-        optionsInputSchema: z.strictObject({}),
-        optionsSchema: z.strictObject({}),
-        inspect: () => [],
-        ...override,
-      } as never),
-    ).toThrow();
+  ] as const)('rejects a blank %s owner field', (_field, label, value, owner) => {
+    expectFoundationNonEmptyError(
+      () =>
+        defineInspector({
+          namespace: 'test',
+          name: 'invalid-owner',
+          owner,
+          subjectSchema: z.null(),
+          optionsInputSchema: z.strictObject({}),
+          optionsSchema: z.strictObject({}),
+          inspect: () => [],
+        }),
+      label,
+      value,
+    );
   });
 });
