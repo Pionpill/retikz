@@ -1,6 +1,5 @@
 import type { IRAnimationOrigin, IRAnimationTrack } from '../schemas';
 
-import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { AnimationProperty } from '../schemas';
 
 /** preset 公共可调项（各 preset 在此之上加专有项；默认值由各 preset 给） */
@@ -115,16 +114,11 @@ export type ColorShiftOptions = AnimationPresetOptions & {
 
 /** 变色：`fill|stroke` from→to（oklch 插值，由 renderer 端处理） */
 export const colorShift = (opts: ColorShiftOptions): IRAnimationTrack => {
-  // 运行时守 JS 调用方漏传（类型已要求必填，故读为可空视图以做防御校验）
-  const { from, to } = opts as { from?: string | null; to?: string | null };
-  if (from == null || to == null) {
-    throw new RetikzCoreError(RetikzCoreErrorCode.Parse, 'colorShift: `from` and `to` colors are required.');
-  }
   return {
     property: (opts.channel ?? 'fill') === 'stroke' ? AnimationProperty.Stroke : AnimationProperty.Fill,
     keyframes: [
-      { at: 0, value: from },
-      { at: 1, value: to },
+      { at: 0, value: opts.from },
+      { at: 1, value: opts.to },
     ],
     ...applyBase({ duration: 400, easing: 'ease-in-out' }, opts),
   };
@@ -140,22 +134,11 @@ export type CameraToOptions = AnimationPresetOptions & {
 
 /** 镜头：scene 根 `viewBox` from→to（挂 `<Layout animations>` / IR 根 `animations`） */
 export const cameraTo = (opts: CameraToOptions): IRAnimationTrack => {
-  // 运行时守 JS 调用方漏传（类型已要求必填，故读为可空视图以做防御校验）
-  const { from, to } = opts as {
-    from?: [number, number, number, number] | null;
-    to?: [number, number, number, number] | null;
-  };
-  if (from == null || to == null) {
-    throw new RetikzCoreError(
-      RetikzCoreErrorCode.Parse,
-      'cameraTo: `from` and `to` viewBox [x, y, w, h] are required.',
-    );
-  }
   return {
     property: AnimationProperty.ViewBox,
     keyframes: [
-      { at: 0, value: from },
-      { at: 1, value: to },
+      { at: 0, value: opts.from },
+      { at: 1, value: opts.to },
     ],
     ...applyBase({ duration: 800, easing: 'ease-in-out' }, opts),
   };

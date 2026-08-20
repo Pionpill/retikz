@@ -15,7 +15,7 @@ import { createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runt
 
 import type { RuntimeIdentityMap } from './shared';
 
-import { isRetikzRetainedRenderError, RetikzRetainedRenderError, RetikzRetainedRenderErrorCode } from './error';
+import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import { createRuntimeIdentityMap, runtimeStructuralEquals } from './shared';
 
 type MutableSceneNode = {
@@ -40,19 +40,19 @@ const isMutableSceneNode = (value: MutableSceneNode | MutableSceneRoot): value i
   'basePrimitive' in value;
 
 const topologyError = (cause: unknown): never => {
-  throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.SceneTopologyInvalid, cause });
+  throw new RetikzRenderError({ code: RetikzRenderErrorCode.SceneTopologyInvalid, cause });
 };
 
 const patchError = (cause: unknown): never => {
-  throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.ScenePatchInvalid, cause });
+  throw new RetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchInvalid, cause });
 };
 
 const mismatchError = (cause: unknown): never => {
-  throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.ScenePatchSnapshotMismatch, cause });
+  throw new RetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchSnapshotMismatch, cause });
 };
 
 const revisionError = (cause: unknown): never => {
-  throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.ScenePatchRevisionMismatch, cause });
+  throw new RetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchRevisionMismatch, cause });
 };
 
 const isDenseArray = (value: unknown, predicate: (item: unknown) => boolean): value is ReadonlyArray<unknown> => {
@@ -694,7 +694,7 @@ export const validateSceneRuntimeSnapshot = (snapshot: SceneRuntimeSnapshot): vo
   try {
     validateSceneRuntimeSnapshotInternal(snapshot);
   } catch (cause) {
-    if (isRetikzRetainedRenderError(cause)) throw cause;
+    if (isRetikzRenderError(cause)) throw cause;
     return topologyError(cause);
   }
 };
@@ -833,7 +833,7 @@ export const validateScenePatch = (
   try {
     validateScenePatchInternal(current, patch, next);
   } catch (cause) {
-    if (isRetikzRetainedRenderError(cause)) throw cause;
+    if (isRetikzRenderError(cause)) throw cause;
     return patchError(cause);
   }
 };

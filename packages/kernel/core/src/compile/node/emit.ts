@@ -5,9 +5,9 @@ import type { PaintResolver } from '../resource';
 import type { NodeLabelLayout, NodeLayout } from './types';
 
 import {
+  createLayoutProbeRecoverableError,
   isFatalProbeError,
-  isRetikzLayoutProbeRecoverableError,
-  RetikzLayoutProbeRecoverableError,
+  isLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
 import { validateMarkerPrimitives } from '../resource';
@@ -54,14 +54,11 @@ const emitNodeShapePrimitives = (
       layout.shapeParams ?? EMPTY_SHAPE_PARAMS,
     );
   } catch (thrown) {
-    if (isFatalProbeError(thrown) || isRetikzLayoutProbeRecoverableError(thrown)) throw thrown;
-    throw new RetikzLayoutProbeRecoverableError(
-      `Shape '${layout.shapeName}' emit failed: ${safeThrownDetail(thrown)}`,
-      {
-        cause: thrown,
-        providerKey: `shape:${layout.shapeName}`,
-      },
-    );
+    if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
+    throw createLayoutProbeRecoverableError(`Shape '${layout.shapeName}' emit failed: ${safeThrownDetail(thrown)}`, {
+      cause: thrown,
+      providerKey: `shape:${layout.shapeName}`,
+    });
   }
   return validateScenePrimitives(`Shape '${layout.shapeName}'`, emitted, validateMarkerPrimitives);
 };

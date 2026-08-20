@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { HydrationHandlers, HydrationTarget } from '../../src/hydration';
 import type { HydrationController } from '../../src/hydration';
 
+import { RetikzRenderError, RetikzRenderErrorCode } from '../../src/error';
 import { createHydrationController, locateSvg } from '../../src/hydration';
 
 /**
@@ -250,18 +251,19 @@ describe('Hydration 控制器', () => {
       failure = cause;
     }
 
-    expect(failure).toBeInstanceOf(Error);
+    expect(failure).toBeInstanceOf(RetikzRenderError);
     expect(isRetikzError(failure)).toBe(true);
     expect(failure).toEqual(
       expect.objectContaining({
-        name: 'RetikzHydrationControllerSetupError',
+        name: 'RetikzRenderError',
+        code: RetikzRenderErrorCode.HydrationControllerSetupFailed,
         cause: setupCause,
-        cleanupCause,
+        details: expect.objectContaining({ cleanupCause }),
       }),
     );
     expect(listeners.has('click')).toBe(true);
-    if (!(failure instanceof Error)) throw new Error('expected hydration setup error');
-    const controller = Reflect.get(failure, 'controller') as HydrationController;
+    if (!(failure instanceof RetikzRenderError)) throw new Error('expected hydration setup error');
+    const controller = failure.details.controller as HydrationController;
     expect(() => controller.dispose()).not.toThrow();
     expect(listeners.size).toBe(0);
   });

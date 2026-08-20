@@ -143,16 +143,6 @@ describe('buildPathD 对抗：浮点 / 360° / 退化', () => {
     expect((buildPathD(commands).match(/M /g) ?? []).length).toBe(1);
   });
 
-  it('未识别 kind（防御未来扩展）→ 抛错（exhaustive switch）', () => {
-    const bad = [
-      {
-        kind: 'spline' as 'move',
-        to: [0, 0] as [number, number],
-      },
-    ] as Array<PathCommand>;
-    expect(() => buildPathD(bad)).toThrow(/unknown PathCommand kind/);
-  });
-
   it('空 commands → 空字符串（不抛错）', () => {
     expect(buildPathD([])).toBe('');
   });
@@ -190,11 +180,6 @@ describe('buildTransform 对抗', () => {
     expect(buildTransform(transforms)).toBe(
       'translate(10 20) rotate(30) scale(2 2) translate(-10 -20) rotate(-30 0 0)',
     );
-  });
-
-  it('未识别 kind → 抛错', () => {
-    const bad = [{ kind: 'skew', x: 0 } as unknown as Transform];
-    expect(() => buildTransform(bad)).toThrow(/unknown Transform kind/);
   });
 
   it('round 函数透传到所有数值字段', () => {

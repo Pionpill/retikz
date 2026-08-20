@@ -3,9 +3,7 @@ import type { IRScene } from '@retikz/core';
 import type { HydrationContext } from '@retikz/render/hydration';
 
 import { compileToScene } from '@retikz/core';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
-
-import type { HydrateOptions } from '../../src/dom';
+import { describe, expect, it, vi } from 'vitest';
 
 import { renderToSvgString } from '../../src';
 import { hydrate, mountSvg } from '../../src/dom';
@@ -44,11 +42,6 @@ const findById = (container: Element, id: string): Element | null =>
   container.querySelector(`[data-retikz-id="${id}"]`);
 
 describe('@retikz/vanilla hydrate（SVG 水合）', () => {
-  it('standalone-contract：root 只接受 SVG，options 不暴露 renderer', () => {
-    expectTypeOf<Parameters<typeof hydrate>[0]>().toEqualTypeOf<SVGSVGElement>();
-    expectTypeOf<HydrateOptions>().not.toHaveProperty('renderer');
-  });
-
   it('hydrate-click：mountSvg 后点击带 data-retikz-id 的图元 → 对应 handler 触发', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

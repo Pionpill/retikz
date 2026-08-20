@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { MathJaxSvgEngine, TexLoweringDiagnostic } from '../../src';
 import type * as MathJaxModule from '../../src/mathjax';
+import type { MathJaxLowerTexState } from '../../src/react';
 
 const { createLowerTexMock, createMathJaxEngineMock } = vi.hoisted(() => ({
   createLowerTexMock: vi.fn(),
@@ -55,49 +56,49 @@ describe('useLowerTex lifecycle', () => {
 
   it('options A→B 立即清空旧 lowerer，且晚完成的 A 不覆盖 B', async () => {
     const resolvers = new Map<string, (engine: MathJaxSvgEngine) => void>();
-    createMathJaxEngineMock.mockImplementation((options?: { profile?: string }) => {
-      const profile = options?.profile ?? 'base';
+    createMathJaxEngineMock.mockImplementation((options?: { extensions?: Array<string> }) => {
+      const extension = options?.extensions?.[0] ?? 'base';
       return new Promise<MathJaxSvgEngine>(resolve => {
-        resolvers.set(profile, resolve);
+        resolvers.set(extension, resolve);
       });
     });
     const lowers = {
-      base: (() => null) as never,
-      math: (() => null) as never,
+      ams: (() => null) as never,
+      cancel: (() => null) as never,
     };
     createLowerTexMock.mockImplementation((engine: MathJaxSvgEngine) =>
-      engine.convert('', { display: false }) === 'base' ? lowers.base : lowers.math,
+      engine.convert('', { display: false }) === 'ams' ? lowers.ams : lowers.cancel,
     );
 
-    const values: Array<unknown> = [];
-    const Probe = ({ profile }: { profile: 'base' | 'math' }) => {
-      values.push(useLowerTex({ profile, extensions: profile === 'base' ? ['ams'] : ['cancel'] }));
+    const values: Array<MathJaxLowerTexState> = [];
+    const Probe = ({ extension }: { extension: 'ams' | 'cancel' }) => {
+      values.push(useLowerTex({ extensions: [extension] }));
       return null;
     };
     const container = document.createElement('div');
     const root = createRoot(container);
 
-    await act(() => root.render(createElement(Probe, { profile: 'base' })));
+    await act(() => root.render(createElement(Probe, { extension: 'ams' })));
     await act(async () => {
-      resolvers.get('base')?.({ convert: () => 'base' });
+      resolvers.get('ams')?.({ convert: () => 'ams' });
       await Promise.resolve();
     });
-    expect(values.at(-1)).toBe(lowers.base);
+    expect(values.at(-1)).toMatchObject({ status: 'ready', lowerTex: lowers.ams });
 
-    await act(() => root.render(createElement(Probe, { profile: 'math' })));
-    expect(values.at(-1)).toBeUndefined();
-
-    await act(async () => {
-      resolvers.get('math')?.({ convert: () => 'math' });
-      await Promise.resolve();
-    });
-    expect(values.at(-1)).toBe(lowers.math);
+    await act(() => root.render(createElement(Probe, { extension: 'cancel' })));
+    expect(values.at(-1)).toMatchObject({ status: 'loading' });
 
     await act(async () => {
-      resolvers.get('base')?.({ convert: () => 'late-base' });
+      resolvers.get('cancel')?.({ convert: () => 'cancel' });
       await Promise.resolve();
     });
-    expect(values.at(-1)).toBe(lowers.math);
+    expect(values.at(-1)).toMatchObject({ status: 'ready', lowerTex: lowers.cancel });
+
+    await act(async () => {
+      resolvers.get('ams')?.({ convert: () => 'late-ams' });
+      await Promise.resolve();
+    });
+    expect(values.at(-1)).toMatchObject({ status: 'ready', lowerTex: lowers.cancel });
     await act(() => root.unmount());
   });
 
@@ -131,6 +132,41 @@ describe('useLowerTex lifecycle', () => {
     expect(createLowerTexMock).toHaveBeenCalledTimes(1);
     expect(first).not.toHaveBeenCalled();
     expect(second).toHaveBeenCalledTimes(1);
+    await act(() => root.unmount());
+  });
+
+  it('等价的 profile shorthand 复用同一个 engine 与 lowerer', async () => {
+    createMathJaxEngineMock.mockResolvedValue({ convert: () => 'math' });
+    createLowerTexMock.mockReturnValue((() => null));
+    const extensions = [
+      'ams',
+      'newcommand',
+      'boldsymbol',
+      'braket',
+      'cancel',
+      'cases',
+      'centernot',
+      'mathtools',
+      'color',
+    ] as const;
+    const Probe = ({ shorthand }: { shorthand: boolean }) => {
+      useLowerTex(shorthand ? { profile: 'math' } : { profile: 'base', extensions: [...extensions] });
+      return null;
+    };
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(createElement(Probe, { shorthand: true }));
+      await Promise.resolve();
+    });
+    await act(async () => {
+      root.render(createElement(Probe, { shorthand: false }));
+      await Promise.resolve();
+    });
+
+    expect(createMathJaxEngineMock).toHaveBeenCalledTimes(1);
+    expect(createLowerTexMock).toHaveBeenCalledTimes(1);
     await act(() => root.unmount());
   });
 });

@@ -5,7 +5,7 @@ import type { AnimationControls } from '../animation';
 import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';
 
-import { isRetikzRetainedRenderError, RetikzRetainedRenderError, RetikzRetainedRenderErrorCode } from './error';
+import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 
 /** Retained renderer 增量能力等级 */
 export const RetainedRendererCapability = {
@@ -182,35 +182,11 @@ export type DefineRetainedRenderer = {
 };
 
 const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): RetainedRenderer => {
-  const candidate: unknown = input;
-  if (typeof candidate !== 'object' || candidate === null) {
-    throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid, cause: input });
-  }
-  const backend = Reflect.get(candidate, 'backend');
-  const host = Reflect.get(candidate, 'host');
-  const capability = Reflect.get(candidate, 'capability');
-  const readonlyLayerCapability = Reflect.get(candidate, 'readonlyLayerCapability');
-  const prepareMount = Reflect.get(candidate, 'prepareMount');
-  const prepare = Reflect.get(candidate, 'prepare');
-  const read = Reflect.get(candidate, 'read');
-  const dispose = Reflect.get(candidate, 'dispose');
-  const validHost = backend === 'svg' ? isSvgHost(host) : backend === 'canvas' && isCanvasHost(host);
-  const validCapability = Object.values(RetainedRendererCapability).includes(
-    capability as RetainedRendererCapabilityValue,
-  );
-  const validReadonlyLayerCapability = Object.values(RetainedRendererReadonlyLayerCapability).includes(
-    readonlyLayerCapability as RetainedRendererReadonlyLayerCapabilityValue,
-  );
-  if (
-    !validHost ||
-    !validCapability ||
-    !validReadonlyLayerCapability ||
-    typeof prepareMount !== 'function' ||
-    typeof prepare !== 'function' ||
-    typeof read !== 'function' ||
-    typeof dispose !== 'function'
-  ) {
-    throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid, cause: input });
+  const { backend, host, capability, readonlyLayerCapability, prepareMount, prepare, read, dispose } = input;
+  const runtimeBackend: unknown = backend;
+  const validHost = runtimeBackend === 'svg' ? isSvgHost(host) : runtimeBackend === 'canvas' && isCanvasHost(host);
+  if (!validHost) {
+    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid, cause: input });
   }
   const token = Object.freeze({
     backend,
@@ -220,28 +196,27 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
   }) as RetainedRenderer;
   let state: 'live' | 'disposing' | 'disposed' = 'live';
   const assertLive = (): void => {
-    if (state !== 'live')
-      throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererDisposed });
+    if (state !== 'live') throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererDisposed });
   };
   retainedRendererExecutors.set(
     token,
     Object.freeze({
       prepareMount: (...arguments_) => {
         assertLive();
-        return (prepareMount as RetainedRendererDefinitionBase['prepareMount'])(...arguments_);
+        return prepareMount(...arguments_);
       },
       prepare: (...arguments_) => {
         assertLive();
-        return (prepare as RetainedRendererDefinitionBase['prepare'])(...arguments_);
+        return prepare(...arguments_);
       },
       read: () => {
         assertLive();
-        return (read as RetainedRendererDefinitionBase['read'])();
+        return read();
       },
       dispose: () => {
         if (state === 'disposed') return;
         state = 'disposing';
-        (dispose as RetainedRendererDefinitionBase['dispose'])();
+        dispose();
         state = 'disposed';
       },
     }),
@@ -254,8 +229,8 @@ const defineRetainedRendererImplementation = (input: RetainedRendererDefinitionI
   try {
     return defineRetainedRendererUnsafe(input);
   } catch (cause) {
-    if (isRetikzRetainedRenderError(cause)) throw cause;
-    throw new RetikzRetainedRenderError({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid, cause });
+    if (isRetikzRenderError(cause)) throw cause;
+    throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid, cause });
   }
 };
 

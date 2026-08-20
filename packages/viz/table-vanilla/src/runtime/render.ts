@@ -5,8 +5,6 @@ import { renderToSvgString } from '@retikz/vanilla';
 
 import type { RenderTable, RenderTableArtifactOptions, RenderTableArtifactResult, RenderTableOptions } from './types';
 
-import { RetikzTableVanillaError } from '../error';
-
 /** 判断 renderTable 是否请求 artifact sidecar */
 const requestsArtifacts = (
   options: RenderTableOptions | RenderTableArtifactOptions,
@@ -17,9 +15,6 @@ const renderTableImpl = (
   spec: IRTable,
   options: RenderTableOptions | RenderTableArtifactOptions = {},
 ): string | RenderTableArtifactResult => {
-  if (Object.hasOwn(options, 'composites')) {
-    throw new RetikzTableVanillaError('table vanilla: top-level composites was removed; use compile.composites');
-  }
   const data = options.data ?? {};
   const lowerOptions = options.lowerOptions ?? {};
   const result = compileTable(spec, data, {

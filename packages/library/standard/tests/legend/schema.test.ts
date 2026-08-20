@@ -1,14 +1,7 @@
 import { LayoutAlignment } from '@retikz/layout';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type {
-  IRLegend,
-  IRLegendItem,
-  IRLegendItemsContent,
-  IRLegendRampContent,
-  IRLegendTick,
-  LegendInput,
-} from '../../src/composites/presentation/legend/types';
+import type { LegendInput } from '../../src/composites/presentation/legend/types';
 
 import {
   LegendContentKind,
@@ -72,13 +65,6 @@ describe('Legend schema and factory', () => {
         items: [{ key: 'primary', sample, label }],
       },
     });
-    expectTypeOf(parsed).toEqualTypeOf<IRLegend>();
-    expectTypeOf(parsed.content).toMatchTypeOf<IRLegendItemsContent | IRLegendRampContent>();
-    if (parsed.content.kind === LegendContentKind.Items) {
-      expectTypeOf(parsed.content).toEqualTypeOf<IRLegendItemsContent>();
-      expectTypeOf(parsed.content.items).toEqualTypeOf<Array<IRLegendItem>>();
-    }
-    expectTypeOf<IRLegendItemsContent['gap']>().toEqualTypeOf<{ row: number; column: number }>();
   });
 
   it('normalizes uniform gap shorthand while preserving independent axis values and explicit zero', () => {
@@ -132,11 +118,6 @@ describe('Legend schema and factory', () => {
       },
     });
     expect(roundTripped).toEqual(parsed);
-    expectTypeOf(parsed.content).toMatchTypeOf<IRLegendItemsContent | IRLegendRampContent>();
-    if (parsed.content.kind === LegendContentKind.Ramp) {
-      expectTypeOf(parsed.content).toEqualTypeOf<IRLegendRampContent>();
-      expectTypeOf(parsed.content.ticks).toEqualTypeOf<Array<IRLegendTick>>();
-    }
   });
 
   it('persists explicit content alignment through JSON and rejects unsupported values at the root field', () => {

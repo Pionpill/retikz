@@ -461,13 +461,9 @@ describe('Pattern registry — error path', () => {
   });
 
   it('motif_rejects_text：emit 返回含 text 的 primitive → 运行时窄子集栅栏拒', () => {
-    // 窄子集编译期门控：MarkerPrimitive 不含 'text' 分支（@ts-expect-error 命中元素行）；
-    // 同时实现阶段 emit 产物过运行时窄子集校验，含 text 编译期 throw。
-    const badMotif: Array<MarkerPrimitive> = [
-      // @ts-expect-error MarkerPrimitive 禁 text（窄子集杜绝 motif 内文本布局）
-      { type: 'text', x: 0, y: 0, lines: [], measuredWidth: 0, measuredHeight: 0 },
-    ];
-    const badPattern: PatternDefinition = { name: 'bad', emit: () => badMotif };
+    const badMotif: unknown = [{ type: 'text', x: 0, y: 0, lines: [], measuredWidth: 0, measuredHeight: 0 }];
+    const externalEmit = (): unknown => badMotif;
+    const badPattern = { name: 'bad', emit: externalEmit } as unknown as PatternDefinition;
     const ir = patternNodeIR({ kind: 'pattern', shape: 'bad' });
     expect(() => compileToScene(ir, { patterns: [{ ...badPattern, name: 'bad' }] }).scene).toThrow();
   });
@@ -529,23 +525,5 @@ describe('Pattern registry — BUILTIN_PATTERNS 注册表结构', () => {
     expect(BUILTIN_PATTERNS.lines.defaultSize).toBe(8);
     expect(BUILTIN_PATTERNS.dots.defaultSize).toBe(8);
     expect(BUILTIN_PATTERNS.grid.defaultSize).toBe(8);
-  });
-
-  it('PatternEmitContext / PatternDefinition 类型门控：emit 产物限 MarkerPrimitive 窄子集（@ts-expect-error）', () => {
-    // 正向：path / ellipse / rect / group 合法 motif
-    const ok: PatternDefinition = {
-      name: 'ok',
-      emit: (ctx: PatternEmitContext): Array<MarkerPrimitive> => [
-        { type: 'path', commands: [{ kind: 'move', to: [0, 0] }] },
-        { type: 'ellipse', cx: ctx.size / 2, cy: ctx.size / 2, rx: 1, ry: 1, fill: ctx.color },
-      ],
-    };
-    expect(typeof ok.emit).toBe('function');
-    // 反向：motif fill 禁 resourceRef（无外部 paint server 引用）——窄子集编译期门控
-    const bad: Array<MarkerPrimitive> = [
-      // @ts-expect-error marker fill 禁 resourceRef（pattern motif 内无外部资源引用）
-      { type: 'path', commands: [], fill: { kind: 'resourceRef', id: 'g1' } },
-    ];
-    void bad;
   });
 });

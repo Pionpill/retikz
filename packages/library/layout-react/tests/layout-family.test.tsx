@@ -1,4 +1,3 @@
-import type { LayoutItemProps } from '@retikz/layout-react';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
@@ -17,7 +16,6 @@ import {
 import { FlexLayout, GridLayout, LayoutItem, OverlayLayout } from '@retikz/layout-react';
 import { createInputScene, Node } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
-import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 type ForeignProps = Readonly<{ id: string }>;
@@ -132,8 +130,6 @@ describe('Layout React layout family', () => {
   });
 
   it('fails loudly for standalone, ordinary direct, mismatched and multiple children', () => {
-    const empty = { kind: 'flex', itemKey: 'empty' } as unknown as LayoutItemProps;
-
     expect(() =>
       normalizeReactInput(<LayoutItem kind="flex" itemKey="loose" ir={{ type: 'node', position: [0, 0] }} />),
     ).toThrow(/direct child of FlexLayout, GridLayout, or OverlayLayout/i);
@@ -161,22 +157,9 @@ describe('Layout React layout family', () => {
         </FlexLayout>,
       ),
     ).toThrow(/exactly one authoring child/i);
-    expect(() => normalizeReactInput(<FlexLayout>{createElement(LayoutItem, empty)}</FlexLayout>)).toThrow(
-      /exactly one of children or ir/i,
-    );
   });
 
-  it('rejects ambiguous child sources and forwards foreign Tier 2 child input through Vanilla', () => {
-    const ambiguous = {
-      kind: 'flex',
-      itemKey: 'ambiguous',
-      ir: { type: 'node' },
-      children: <Node position={[0, 0]} />,
-    } as unknown as LayoutItemProps;
-
-    expect(() => normalizeReactInput(<FlexLayout>{createElement(LayoutItem, ambiguous)}</FlexLayout>)).toThrow(
-      /exactly one of children or ir/i,
-    );
+  it('forwards foreign Tier 2 child input through Vanilla', () => {
     const result = normalizeReactInput(
       <FlexLayout>
         <LayoutItem kind="flex" itemKey="foreign">

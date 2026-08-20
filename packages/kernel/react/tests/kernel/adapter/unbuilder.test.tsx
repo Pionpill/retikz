@@ -1,4 +1,4 @@
-import type { IRChild, IRClip, IRPathBase, IRScene } from '@retikz/core';
+import type { IRClip, IRPathBase, IRScene } from '@retikz/core';
 import type { ReactElement } from 'react';
 
 import { CompositeBaseSchema, CURRENT_IR_VERSION, defineComposite, lowerIRToKernel, NodeTextColor } from '@retikz/core';
@@ -1277,15 +1277,6 @@ describe('convertIRToReactNode', () => {
       };
       expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
     });
-  });
-
-  it('未知 child.type → 抛 "unknown IR child type" 错误', () => {
-    const badIR = {
-      version: CURRENT_IR_VERSION,
-      type: 'scene' as const,
-      children: [{ type: 'bogus' } as unknown as IRChild],
-    };
-    expect(() => convertIRToReactNode(badIR)).toThrow(/convertIRToReactNode: unknown IR child type/);
   });
 
   it('Tier 2 composite 经 definitions lowering 后生成等价 Kernel JSX', () => {

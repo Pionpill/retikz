@@ -184,28 +184,27 @@ Definition authors primarily use the following three object contracts. Their gen
 | `RuntimeOwnerDefinitionInput<TInput, TValue, TRead, TChange>` | Definition author input<br />- `key: string`: global exact owner key<br />- `value: RuntimeOwnedValueDefinitionInput<TInput, TValue, TRead>`: value lifecycle contract<br />- `collectIdentities?: (value: TValue) => ReadonlyArray<RuntimeIdentity>`: optional complete identity collector<br />- `validateChangeSet?: (previous: TRead, next: TRead, changeSet: RuntimeChangeSet<TChange>) => 'valid' \| 'fallback'`: optional change-hint validator |
 | `RuntimeOwnerRegistryInput`                                   | Registry merge input<br />- `builtins?: ReadonlyArray<RuntimeOwnerToken>`: built-in Definitions<br />- `custom?: ReadonlyArray<RuntimeOwnerToken>`: third-party or upper-layer Definitions                                                                                                                                                                                                                                                             |
 
-| API / Type                         | Purpose                                           |
-| ---------------------------------- | ------------------------------------------------- |
-| `RuntimeIdentity`                  | Structured `{ owner, path }` identity             |
-| `createRuntimeIdentity`            | Validate, copy, and freeze an identity            |
-| `runtimeIdentityEquals`            | Compare owner and segments exactly                |
-| `RuntimeIdentityLookup`            | Validated identity lookup for one owner           |
-| `createRuntimeIdentityLookup`      | Validate uniqueness and build a sorted lookup     |
-| `RuntimeOwnedValueDefinitionInput` | Captured-value lifecycle field contract           |
-| `RuntimeOwnerDefinitionInput`      | Owner key, lifecycle, collector, and validator    |
-| `RuntimeOwnerToken`                | Opaque `{ key }` token returned by dynamic lookup |
-| `RuntimeOwnerDefinition`           | Opaque token retaining author generics            |
-| `defineRuntimeOwner`               | The only Definition author entry                  |
-| `RuntimeOwnerRegistryInput`        | Built-in/custom token collections                 |
-| `RuntimeOwnerRegistry`             | Typed resolve, dynamic find, and definitions      |
-| `createRuntimeOwnerRegistry`       | Merge built-in/custom tokens uniformly            |
-| `RuntimeOwnerLifecycleDiagnostic`  | Stable diagnostic for dispose secondary failure   |
-| `RetikzRuntimeOwnerError`          | Lifecycle primary error and secondary diagnostics |
-| `RetikzRuntimeIdentityError`       | Identity contract error                           |
-| `RetikzRuntimeOwnerRegistryError`  | Token, duplicate, and unknown registry error      |
-| `createRuntimeTraceReporter`       | Create an owner-bound trace reporter              |
-| `PerformanceTraceRecord`           | Phase work-count record                           |
-| `PerformanceTraceDiagnostic`       | Non-fatal trace diagnostic                        |
+| API / Type                         | Purpose                                                                 |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| `RuntimeIdentity`                  | Structured `{ owner, path }` identity                                   |
+| `createRuntimeIdentity`            | Validate, copy, and freeze an identity                                  |
+| `runtimeIdentityEquals`            | Compare owner and segments exactly                                      |
+| `RuntimeIdentityLookup`            | Validated identity lookup for one owner                                 |
+| `createRuntimeIdentityLookup`      | Validate uniqueness and build a sorted lookup                           |
+| `RuntimeOwnedValueDefinitionInput` | Captured-value lifecycle field contract                                 |
+| `RuntimeOwnerDefinitionInput`      | Owner key, lifecycle, collector, and validator                          |
+| `RuntimeOwnerToken`                | Opaque `{ key }` token returned by dynamic lookup                       |
+| `RuntimeOwnerDefinition`           | Opaque token retaining author generics                                  |
+| `defineRuntimeOwner`               | The only Definition author entry                                        |
+| `RuntimeOwnerRegistryInput`        | Built-in/custom token collections                                       |
+| `RuntimeOwnerRegistry`             | Typed resolve, dynamic find, and definitions                            |
+| `createRuntimeOwnerRegistry`       | Merge built-in/custom tokens uniformly                                  |
+| `RuntimeOwnerLifecycleDiagnostic`  | Stable diagnostic for dispose secondary failure                         |
+| `RetikzRuntimeError`               | The single Runtime error class with code, phase, cause, and diagnostics |
+| `RetikzRuntimeErrorCode`           | Stable identity, registry, owner, and transaction error codes           |
+| `createRuntimeTraceReporter`       | Create an owner-bound trace reporter                                    |
+| `PerformanceTraceRecord`           | Phase work-count record                                                 |
+| `PerformanceTraceDiagnostic`       | Non-fatal trace diagnostic                                              |
 
 `RuntimeRevision` and `RuntimeChangeSet<TChange>` come from synchronous Session factories. Do not assert or forge their envelopes. See [Programs & Synchronous Sessions](/kernel/packages/core/runtime-session) for Program, transaction, and Session APIs.
 

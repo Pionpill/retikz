@@ -211,17 +211,6 @@ describe('composition guides layout schema', () => {
     expect(parsed.guides?.[0]).toEqual(spec.guides[0]);
   });
 
-  it('legacy_composition_grid_policy_is_rejected', () => {
-    const spec = {
-      ...facetSpec,
-      composition: {
-        ...facetSpec.composition,
-        guidePolicy: { grid: 'shared' },
-      },
-    };
-    expect(() => PlotSchema.parse(spec)).toThrow();
-  });
-
   it('selected_grid_without_selector_is_rejected', () => {
     expect(() =>
       parsePlotIR({

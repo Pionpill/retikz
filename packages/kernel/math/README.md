@@ -41,9 +41,9 @@ convexHull([
 
 All functions are pure and side-effect-free; degenerate inputs return `null` (`triangle.*`) or `[]` (intersections) rather than throwing. Epsilon is naive (`DEFAULT_EPSILON = 1e-9`), tuned for drawing-scale coordinates.
 
-The affine tuple follows the SVG / Canvas `[a,b,c,d,e,f]` order. `multiplyAffine(outer, inner)` applies `inner` first; `AFFINE_IDENTITY` is frozen at runtime, while operation results are fresh unfrozen tuples. Affine helpers intentionally do not validate finite, invertible, or similarity-transform constraints.
+The affine tuple follows the SVG / Canvas `[a,b,c,d,e,f]` order. `multiplyAffine(outer, inner)` applies `inner` first; `AFFINE_IDENTITY` is frozen at runtime, while operation results are fresh unfrozen tuples. `multiplyAffine` and `applyAffine` intentionally do not validate finite, invertible, or similarity-transform constraints; use `isFiniteNonSingularAffine` and `getAffineSimilarityScale` when those predicates are needed.
 
-仿射六元组采用 SVG / Canvas 的 `[a,b,c,d,e,f]` 顺序。`multiplyAffine(outer, inner)` 先应用 `inner`；`AFFINE_IDENTITY` 在运行时冻结，普通运算结果则是新的未冻结 tuple。仿射 helper 刻意不检查有限性、可逆性或 similarity transform 约束。
+仿射六元组采用 SVG / Canvas 的 `[a,b,c,d,e,f]` 顺序。`multiplyAffine(outer, inner)` 先应用 `inner`；`AFFINE_IDENTITY` 在运行时冻结，普通运算结果则是新的未冻结 tuple。`multiplyAffine` 与 `applyAffine` 刻意不检查有限性、可逆性或 similarity transform 约束；需要这些判定时使用 `isFiniteNonSingularAffine` 与 `getAffineSimilarityScale`。
 
 ## Exports
 
@@ -51,7 +51,7 @@ The affine tuple follows the SVG / Canvas `[a,b,c,d,e,f]` order. `multiplyAffine
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Points / vectors       | `Position`, `Vector2`, `DEFAULT_EPSILON`, `isFiniteNumber`, `isFinitePoint`, `isInfiniteNumber`, `point`, `vector2`, `lerp`                                                                                                                     |
 | Local/world transforms | `CenteredShape`, `localToWorld`, `worldToLocal`                                                                                                                                                                                                 |
-| Affine matrices        | `AffineMatrix`, `AFFINE_IDENTITY`, `multiplyAffine`, `applyAffine`                                                                                                                                                                              |
+| Affine matrices        | `AffineMatrix`, `AFFINE_IDENTITY`, `multiplyAffine`, `applyAffine`, `isFiniteNonSingularAffine`, `getAffineSimilarityScale`                                                                                                                     |
 | Bounds                 | `AxisAlignedBounds`, `BoundsRect`, `BoundsHalfAxes`, `BoundsInsets`, `boundsOf`, `mergeBounds`, `boundsToRect`, `rectToBounds`, `isFiniteBoundsRect`, `isPositiveBoundsRect`, `boundsCenter`, `boundsHalfAxes`, `expandBounds`, `boundsCorners` |
 | Arc primitives         | `ArcAngleInRangeInput`, `ArcBoundingPointsInput`, `EllipseArcPointInput`, `EllipseArcBoundingPointsInput`, `arcEndPoint`, `arcAngleInRange`, `ellipseArcPoint`, `arcBoundingPoints`, `ellipseArcBoundingPoints`                                 |
 | Ellipse helpers        | `Ellipse`, `CenteredBox`, `EllipseCircumscribeMode`, `ellipse`                                                                                                                                                                                  |

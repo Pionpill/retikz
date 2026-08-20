@@ -1,7 +1,7 @@
 import { RetikzFoundationError, RetikzFoundationErrorCode } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
-import type { RetikzRuntimeIdentityError } from '../../src';
+import type { RetikzRuntimeError } from '../../src';
 
 import {
   createRuntimeIdentity,
@@ -25,7 +25,7 @@ describe('runtime identity', () => {
     '拒绝空 path 与稀疏 path',
     createInvalid => {
       expect(createInvalid).toThrowError(
-        expect.objectContaining<Partial<RetikzRuntimeIdentityError>>({ code: RetikzRuntimeErrorCode.IdentityInvalid }),
+        expect.objectContaining<Partial<RetikzRuntimeError>>({ code: RetikzRuntimeErrorCode.IdentityInvalid }),
       );
     },
   );
@@ -129,7 +129,7 @@ describe('runtime identity', () => {
     [createRuntimeIdentity('owner', ['a']), createRuntimeIdentity('owner', ['a'])],
   ])('拒绝 owner mismatch 与重复 segment path', (...identities) => {
     expect(() => createRuntimeIdentityLookup('owner', identities)).toThrowError(
-      expect.objectContaining<Partial<RetikzRuntimeIdentityError>>({ code: RetikzRuntimeErrorCode.IdentityInvalid }),
+      expect.objectContaining<Partial<RetikzRuntimeError>>({ code: RetikzRuntimeErrorCode.IdentityInvalid }),
     );
   });
 

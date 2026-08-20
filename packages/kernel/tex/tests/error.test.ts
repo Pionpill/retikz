@@ -10,10 +10,13 @@ describe('RetikzTexError', () => {
     expect(error.message).toBe('default failure');
   });
 
-  it('accepts an explicit code with a message', () => {
-    const error = new RetikzTexError(RetikzTexErrorCode.Svg, 'explicit failure');
+  it.each([RetikzTexErrorCode.SvgMalformed, RetikzTexErrorCode.SvgUnsupported])(
+    'accepts the explicit SVG code %s with a message',
+    code => {
+      const error = new RetikzTexError(code, 'explicit failure');
 
-    expect(error.code).toBe(RetikzTexErrorCode.Svg);
-    expect(error.message).toBe('explicit failure');
-  });
+      expect(error.code).toBe(code);
+      expect(error.message).toBe('explicit failure');
+    },
+  );
 });

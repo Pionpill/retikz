@@ -9,7 +9,8 @@ import {
   compileInspectionToScene,
   createInspectorRegistry,
   defineInspector,
-  RetikzInspectionCompileError,
+  RetikzInspectError,
+  RetikzInspectErrorCode,
 } from '../../src';
 
 const key = { namespace: 'test', name: 'artifact' };
@@ -145,9 +146,10 @@ describe('Inspection compile driver', () => {
       compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
       throw new Error('expected compile to fail');
     } catch (error) {
-      expect(error).toBeInstanceOf(RetikzInspectionCompileError);
+      expect(error).toBeInstanceOf(RetikzInspectError);
       expect(error).toBeInstanceOf(RetikzError);
-      expect((error as RetikzInspectionCompileError).origin).toMatchObject({
+      expect((error as RetikzInspectError).code).toBe(RetikzInspectErrorCode.CompileFailed);
+      expect((error as RetikzInspectError).details.origin).toMatchObject({
         stage: 'output',
         outputIndex: 0,
         inspector: key,
@@ -172,12 +174,12 @@ describe('Inspection compile driver', () => {
     ]);
     expect(() =>
       compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } }),
-    ).toThrow(RetikzInspectionCompileError);
+    ).toThrow(RetikzInspectError);
     expect(callbacks).toBe(0);
     try {
       compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
     } catch (error) {
-      expect((error as RetikzInspectionCompileError).origin).toMatchObject({ stage: 'subject', inspector: key });
+      expect((error as RetikzInspectError).details.origin).toMatchObject({ stage: 'subject', inspector: key });
     }
   });
 
@@ -207,8 +209,8 @@ describe('Inspection compile driver', () => {
       compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [primaryWithId] } });
       throw new Error('expected compile to fail');
     } catch (error) {
-      expect(error).toBeInstanceOf(RetikzInspectionCompileError);
-      expect((error as RetikzInspectionCompileError).origin).toMatchObject({ stage: 'fragment', outputIndex: 0 });
+      expect(error).toBeInstanceOf(RetikzInspectError);
+      expect((error as RetikzInspectError).details.origin).toMatchObject({ stage: 'fragment', outputIndex: 0 });
     }
   });
 

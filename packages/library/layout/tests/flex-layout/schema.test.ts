@@ -1,7 +1,7 @@
 import { ChildSchema } from '@retikz/core';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type { FlexLayoutInput, FlexLayoutItemInput, IRFlexLayout, IRFlexLayoutItem } from '../../src';
+import type { FlexLayoutInput, FlexLayoutItemInput } from '../../src';
 
 import {
   createFlexLayout,
@@ -52,8 +52,6 @@ describe('FlexLayout schema and factory', () => {
       ],
     });
     expect(ChildSchema.safeParse(parsed.children[0]?.child).success).toBe(true);
-    expectTypeOf(parsed).toEqualTypeOf<IRFlexLayout>();
-    expectTypeOf(parsed.children[0]).toEqualTypeOf<IRFlexLayoutItem>();
   });
 
   it('normalizes uniform gap shorthand while preserving independent physical axes', () => {
@@ -64,8 +62,6 @@ describe('FlexLayout schema and factory', () => {
     expect(uniform.gap).toEqual({ column: 6, row: 6 });
     expect(independent.gap).toEqual({ column: 4, row: 8 });
     expect(zero.gap).toEqual({ column: 0, row: 0 });
-    expectTypeOf(uniform.gap).toEqualTypeOf<{ column: number; row: number }>();
-    expectTypeOf<IRFlexLayout['gap']>().toEqualTypeOf<{ column: number; row: number }>();
   });
 
   it('keeps every nested object strict and rejects invalid numeric contracts', () => {

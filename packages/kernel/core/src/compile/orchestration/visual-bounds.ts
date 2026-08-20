@@ -8,7 +8,7 @@ import type { IRPosition, ResolvedDropShadow } from '../../schemas';
 import { DEG_TO_RAD } from '../../shared/geometry';
 import { CANONICAL_STROKE_MITER_LIMIT } from '../constants';
 import { buildMarkMarkerGroup } from '../path';
-import { RetikzCompileInvariantError } from '../probe-failure';
+import { createCompileInvariantError } from '../probe-failure';
 import { applyTransformChain } from '../transform';
 import { canonicalizeBoundsRect, expandBoundsForShadow } from './bounds';
 
@@ -292,7 +292,7 @@ const primitiveBounds = (
     if (primitive.clipRef !== undefined) {
       const resource = resources.get(primitive.clipRef);
       if (resource === undefined || resource.kind !== 'clip') {
-        throw new RetikzCompileInvariantError(
+        throw createCompileInvariantError(
           `Cannot resolve clip resource '${primitive.clipRef}' for canonical visual bounds`,
         );
       }
@@ -329,9 +329,7 @@ export const optionalVisualBoundsOfPrimitives = (
     output.width < 0 ||
     output.height < 0
   ) {
-    throw new RetikzCompileInvariantError(
-      'Canonical visual bounds and their derived edges must remain finite and valid',
-    );
+    throw createCompileInvariantError('Canonical visual bounds and their derived edges must remain finite and valid');
   }
   return canonicalizeBoundsRect(output);
 };

@@ -19,6 +19,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 - 上述设计还必须用 `test-contract` 把行为、可观察结果、不变量、反例与最低测试层写入 ignored 测试契约矩阵；覆盖率不能代替该矩阵。
 - 包不是功能收纳桶。每个发布包必须在就近 `AGENTS.md` 明确解决的问题、拥有的契约、不拥有的能力、输入与输出及缺口流向；新增能力只有在直接服务包使命、符合输入输出边界并能形成完整闭环时才能进入。实现方便、当前代码位置或单个消费方需求不能决定长期所有权。
 - 选择能完整满足当前需求的最简单方案；只在当前契约或已验证复用需求要求时抽象，不做预防性抽象，不增加没有当前消费者的配置层、扩展点或间接层。
+- 任何长期保存、跨层传递或对外暴露的状态、契约和中间结果，默认只保留独立事实源与下游必需字段；由现有字段可确定推导出的缓存 key、索引、展示或适配投影应由消费者按需计算，不重复写入源模型或公共契约。多个消费者确实共享且语义稳定时，才抽取命名明确的纯 helper
 - 跨越多层的能力先跑通一个最小端到端闭环，再按已验证需求逐层扩展；不得为尚未实现的复杂度提前拆除、替换或拆散已经可工作的路径。
 - 组件和模块保持单一关注点与清晰边界，分离数据、业务、编译、渲染和适配等职责；通过公开契约协作，避免跨层耦合和职责混杂。
 - 过时的 API、schema、实现和路径直接删除，不保留向后兼容；禁止添加兼容层、旧名别名、migration / fallback 逻辑或新旧双轨。
@@ -69,6 +70,8 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 - AI / superpower / plugin 为长任务保上下文、做临时决策、审计或计划而生成的报告和计划默认不入库。
 - 这类文件放到 `.gitignore` 已覆盖的本地目录：`notes/reports/`、`notes/plans/`、任意 `**/_notes/reports/`、`**/_notes/plans/`；不要 stage / commit。
+- 正式测试只保留 tracked runtime case `tests/**/*.test.ts(x)`；TypeScript 可直接判断的类型关系由生产代码与 `tsc --noEmit` 负责，不编写独立测试；一次性探索 case 使用 ignored `tests/_scratch/*.test.ts(x)`。
+- 不得新增 `*.typecheck.ts(x)`，也不得在 runtime 测试中使用强转、`expectTypeOf` 或 `@ts-expect-error` 触发 TypeScript 已拒绝的字段、互斥 union、必填项或封闭判别分支。
 - 临时 Vitest case 只放受影响 workspace 的 `tests/_scratch/`。用 `pnpm temp:test -- --workspace <workspace-directory> --file <tests/_scratch/*.test.ts>` 运行；默认完成后自动删除，只有人工显式传 `--keep` 才保留。不要 `git add -f` 此目录。
 - 如果新流程需要新的临时产物目录，先征求用户确认并补 `.gitignore`，再写入该目录。
 
@@ -152,7 +155,7 @@ Control: <human-directed|llm-autonomous>
 
 - TypeScript ESM；目录、文件、符号、enum、registry 和组件命名统一遵循 `standard-name`。
 - 内部代码依赖明确的 TypeScript 类型契约，不为纯 JavaScript 调用额外维护 `unknown`、`typeof`、`Array.isArray`、对象结构探测、重复 `throw` 或错误分支；纯 JavaScript 调用方自行负责类型校验。
-- `packages/**/src` 由 Retikz 主动创建的错误必须是 `RetikzError` 或其子类，自定义错误类统一命名为 `RetikzXxxError`；每个发布包优先只定义一个 `Retikz<Package>Error`，通过 code、message、details 与 cause 区分失败，只有调用方需要按 class 分支或存在额外稳定结构字段时才增加专用子类。生产源码不得创建原生 `Error`；第三方或用户回调异常在 Retikz API 边界包装为 owner 错误并原样保留为 `cause`，测试可用原生 `Error` 模拟外部失败。
+- `packages/**/src` 由 Retikz 主动创建的错误必须是 `RetikzError` 或其子类，自定义错误类统一命名为 `RetikzXxxError`；每个发布包一般只保留一个统一的 `Retikz<Package>Error`，通过 code、message、details 与 cause 区分失败。只有错误边界独立且调用方确实需要按 class 分支，或存在额外稳定结构字段时，才允许增加专用错误类型。生产源码不得创建原生 `Error`；第三方或用户回调异常在 Retikz API 边界包装为 owner 错误并原样保留为 `cause`，测试可用原生 `Error` 模拟外部失败。
 - JSON、持久化配置和其他类型不明确的外部输入只在 parse / schema 入口完成一次解析和校验；adapter 只将已类型化的 `InputXxx` 调度至 Vanilla API `normalizeXxx`。纵向领域 `resolveXxx` 只校验补全后才出现的领域不变量与真实上下文错误；不得在 normalize、resolve、lower 或 emit 重复 schema 已覆盖或明确 TypeScript 类型已保证的校验。内部只传递明确类型，不为纯 JavaScript 调度增加平行错误分支。
 - barrel 默认 `export * from './xxx'`，不要用 `export { ... } from './xxx'` 聚合；需要裁剪公共面、避免冲突或显式重命名时才用 named re-export。公共入口可按包内 AGENTS 要求显式导出。
 - 跨 owner 导入必须走目标 owner 的目录 barrel；带独立 barrel 的稳定子域可作为二级 owner（如 `shared/geometry`）；同 owner 内部可相邻导入，不从其它 owner deep import 到子文件。

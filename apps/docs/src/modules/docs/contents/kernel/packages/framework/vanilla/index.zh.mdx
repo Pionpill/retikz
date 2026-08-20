@@ -160,28 +160,30 @@ React 应用使用 [`@retikz/react`](/kernel/packages/framework/react) 收集 JS
 
 ## API 摘要
 
-| API                                  | 类型          | 说明                                                    |
-| ------------------------------------ | ------------- | ------------------------------------------------------- |
-| `scene` / `layer`                    | Input helper  | 构造 Scene 与具名 Layer                                 |
-| `node` / `coordinate` / `path`       | Input helper  | 构造 Core 图元或作者侧 Path 输入                        |
-| `scope` / `embed`                    | Input helper  | 构造作用域与 Tier 2 embed 输入                          |
-| `InputLayerCache`                    | const object  | Layer cache 提示                                        |
-| `InputScene` / `InputChild`          | type          | 框架无关的作者输入根与子项                              |
-| `InputLayer` / `InputNode`           | type          | Layer 与 Node 输入                                      |
-| `InputPath` / `InputScope`           | type          | 可带作者侧语法糖或载荷的路径和作用域输入                |
-| `InputEmbed`                         | type          | Tier 2 embed 输入                                       |
-| `InputEmbedAdapter`                  | type          | 将 `InputEmbed` 下沉为 Core contribution                |
-| `isInputScene` / `normalizeScene`    | normalization | 判别并归一 InputScene                                   |
-| `NormalizedInputScene`               | type          | IR、contributions、metadata 与作者来源                  |
-| `ProcessingSource`                   | type          | 可进入 processing 的 InputScene 或 IRScene              |
-| `ProcessingOptions`                  | type          | compile、adapter、driver 与 retained 更新策略           |
-| `ProcessingResult`                   | type          | 同 revision 的 Scene、artifacts、图层与 metadata        |
-| `createProcessingController`         | processing    | 无框架 retained processing controller                   |
-| `prepareStaticProcessing`            | processing    | 一次无生命周期 processing                               |
-| `renderToSvgString`                  | SSR           | 渲染 InputScene、IRScene 或 Scene 为 SVG 字符串         |
-| `mount` / `mountSvg` / `mountCanvas` | DOM           | 从 `@retikz/vanilla/dom` 挂载浏览器 view                |
-| `VanillaRuntimeOptions`              | type          | InputScene / IRScene 的 retained 或 static runtime 配置 |
-| `VanillaRetainedRuntimeOptions`      | type          | retained 模式、更新策略与可选 renderer factory          |
-| `VanillaStaticRuntimeOptions`        | type          | 只允许 `mode: 'static'` 的封闭配置                      |
-| `RetainedVanillaView`                | runtime       | IRScene / InputScene 的事务式 retained view             |
-| `StaticVanillaView`                  | runtime       | Scene、IRScene 或 InputScene 的完整重绘 view            |
+| API                                  | 类型          | 说明                                                     |
+| ------------------------------------ | ------------- | -------------------------------------------------------- |
+| `scene` / `layer`                    | Input helper  | 构造 Scene 与具名 Layer                                  |
+| `node` / `coordinate` / `path`       | Input helper  | 构造 Core 图元或作者侧 Path 输入                         |
+| `scope` / `embed`                    | Input helper  | 构造作用域与 Tier 2 embed 输入                           |
+| `InputLayerCache`                    | const object  | Layer cache 提示                                         |
+| `InputScene` / `InputChild`          | type          | 框架无关的作者输入根与子项                               |
+| `InputLayer` / `InputNode`           | type          | Layer 与 Node 输入                                       |
+| `InputPath` / `InputScope`           | type          | 可带作者侧语法糖或载荷的路径和作用域输入                 |
+| `InputEmbed`                         | type          | Tier 2 embed 输入                                        |
+| `InputEmbedAdapter`                  | type          | 将 `InputEmbed` 下沉为 Core contribution                 |
+| `isInputScene` / `normalizeScene`    | normalization | 判别并归一 InputScene                                    |
+| `NormalizedInputScene`               | type          | IR、contributions、metadata 与作者来源                   |
+| `ProcessingSource`                   | type          | 可进入 processing 的 InputScene 或 IRScene               |
+| `ProcessingOptions`                  | type          | compile、adapter、driver 与 retained 更新策略            |
+| `ProcessingResult`                   | type          | 同 revision 的 Scene、artifacts、图层与 metadata         |
+| `createProcessingController`         | processing    | 无框架 retained processing controller                    |
+| `prepareStaticProcessing`            | processing    | 一次无生命周期 processing                                |
+| `renderToSvgString`                  | SSR           | 渲染 InputScene、IRScene 或 Scene 为 SVG 字符串          |
+| `mount` / `mountSvg` / `mountCanvas` | DOM           | 从 `@retikz/vanilla/dom` 挂载浏览器 view                 |
+| `VanillaRuntimeOptions`              | type          | InputScene / IRScene 的 retained 或 static runtime 配置  |
+| `VanillaRetainedRuntimeOptions`      | type          | retained 模式、更新策略与可选 renderer factory           |
+| `VanillaStaticRuntimeOptions`        | type          | 只允许 `mode: 'static'` 的封闭配置                       |
+| `RetainedVanillaView`                | runtime       | IRScene / InputScene 的事务式 retained view              |
+| `StaticVanillaView`                  | runtime       | Scene、IRScene 或 InputScene 的完整重绘 view             |
+| `RetikzVanillaError`                 | error         | Vanilla 唯一错误类，通过 code、details 与 cause 区分失败 |
+| `RetikzVanillaErrorCode`             | const object  | normalize、processing、runtime、DOM 与 driver 稳定错误码 |

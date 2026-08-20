@@ -62,9 +62,7 @@ const validateResolvedTrack = (track: ResolvedTableTrackSize, index: number): vo
       }
       return;
     default:
-      throw new RetikzTableError(
-        `table: track ${index} has an invalid kind ${String((track as { kind?: unknown }).kind)}`,
-      );
+      return track satisfies never;
   }
 };
 

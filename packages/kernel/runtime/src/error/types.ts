@@ -1,13 +1,10 @@
 import type { ValueOf } from '@retikz/foundation';
 
 import type { RuntimeDiagnosticCode } from '../diagnostic';
-import type { RetikzRuntimeErrorCode, RetikzRuntimeOwnerErrorCode, RuntimeOwnerPhase } from './constants';
+import type { RetikzRuntimeErrorCode, RuntimeOwnerPhase } from './constants';
 
 /** Runtime owner 执行阶段 */
 export type RuntimeOwnerPhaseValue = ValueOf<typeof RuntimeOwnerPhase>;
-
-/** Runtime owner 的稳定错误分类 */
-export type RetikzRuntimeOwnerErrorCodeValue = ValueOf<typeof RetikzRuntimeOwnerErrorCode>;
 
 /** Runtime owner value 释放失败的非致命诊断 */
 export type RuntimeOwnerLifecycleDiagnostic = Readonly<{
@@ -17,6 +14,8 @@ export type RuntimeOwnerLifecycleDiagnostic = Readonly<{
   owner: string;
   /** 释放阶段 */
   phase: typeof RuntimeOwnerPhase.Retire;
+  /** lifecycle cleanup 固定为非致命 error diagnostic */
+  severity: 'error';
   /** 可读错误信息 */
   message: string;
   /** 原始错误 */

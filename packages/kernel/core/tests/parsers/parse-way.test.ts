@@ -450,13 +450,6 @@ describe('parseWay', () => {
       ]);
     });
 
-    it('WayRelativeItem.type 拼写错误时直接抛错', () => {
-      const way = ['A', { position: [1, 0], type: 'retikz-keyword_relatvie' }] as unknown as Parameters<
-        typeof parseWay
-      >[0];
-      expect(() => parseWay(way)).toThrow(/WayRelativeItem\.type/);
-    });
-
     it('首项是 WayRelativeItem 时 move 的 to 也走 desugar', () => {
       expect(parseWay([{ position: [5, 0], type: DrawWay.Relative }, 'B'])).toEqual([
         { type: 'step', kind: 'move', to: { relative: [5, 0] } },

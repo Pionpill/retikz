@@ -1,3 +1,4 @@
+import type { LowerTex } from '@retikz/core';
 import type { FC } from 'react';
 
 import { Layout, Node } from '@retikz/react';
@@ -14,24 +15,13 @@ export const previewControls = texPlaygroundControls;
 type TexPlaygroundValues = PreviewControlValuesFor<typeof texPlaygroundControls>;
 
 /** 使用给定 controls 值构造 TeX playground */
-const renderTexPlayground = (values: TexPlaygroundValues, lowerTex?: ReturnType<typeof useLowerTex>) => {
+const renderTexPlayground = (values: TexPlaygroundValues, lowerTex?: LowerTex) => {
   const delimiters = values.displayMode === 'display' ? '$$' : '$';
   const content = `${delimiters}${values.source}${delimiters}`;
-  const framed = values.shape !== 'none';
 
   return (
     <Layout width={400} height={260} viewBox={{ x: -210, y: -135, width: 420, height: 270 }} lowerTex={lowerTex}>
-      <Node
-        id="formula"
-        position={[0, 0]}
-        shape={framed ? values.shape : undefined}
-        padding={framed ? values.padding : 0}
-        fill={framed ? 'lightgray' : 'none'}
-        fillOpacity={framed ? 0.18 : undefined}
-        stroke={framed ? 'gray' : 'none'}
-        cornerRadius={values.shape === 'rectangle' ? 4 : undefined}
-        font={{ size: values.fontSize }}
-      >
+      <Node id="formula" position={[0, 0]} stroke="none" padding={0} font={{ size: values.fontSize }}>
         {content}
       </Node>
     </Layout>
@@ -42,11 +32,18 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
 export const previewSource = controlledPreview.source;
 
-/** 在固定取景中比较 TeX 源码、度量模式、字号与 Node 容器 */
+/** 在 MathJax 配置切换期间保留稳定取景，不把原始 TeX 当普通文本显示 */
+const renderTexPlaygroundLoading = () => (
+  <Layout width={400} height={260} viewBox={{ x: -210, y: -135, width: 420, height: 270 }} />
+);
+
+/** 在固定取景中比较 TeX 源码、度量模式与字号 */
 const Demo: FC = () => {
   const values = usePreviewControls(texPlaygroundControls);
-  const lowerTex = useLowerTex({ profile: values.profile });
-  return renderTexPlayground(values, lowerTex);
+  const lowerTexState = useLowerTex({ profile: 'math' });
+  return lowerTexState.status === 'ready'
+    ? renderTexPlayground(values, lowerTexState.lowerTex)
+    : renderTexPlaygroundLoading();
 };
 
 export default Demo;

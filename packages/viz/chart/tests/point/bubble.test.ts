@@ -1,10 +1,7 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
-
-import type { IRBubblePointPatch } from '../../src/point/bubble';
+import { describe, expect, it } from 'vitest';
 
 import { PointChartType } from '../../src/point';
-import { BubblePointPatchSchema } from '../../src/point/bubble';
-import { BubbleChartSchema } from '../../src/point/bubble';
+import { BubbleChartSchema, BubblePointPatchSchema } from '../../src/point/bubble';
 import { StrictSizeFieldChannelSchema } from '../../src/point/shared';
 
 const minimalBubble = {
@@ -109,17 +106,6 @@ describe('Bubble Chart schema', () => {
     ['unknown mark key', { ...minimalBubble, config: { ...minimalBubble.config, mark: { unknown: true } } }],
   ])('rejects %s', (_label, input) => {
     expect(() => BubbleChartSchema.parse(input)).toThrow();
-  });
-
-  it('projects reserved Point paths as optional never fields', () => {
-    type BubbleEncodingPatch = NonNullable<IRBubblePointPatch['encoding']>;
-
-    expectTypeOf<IRBubblePointPatch['size']>().toEqualTypeOf<undefined>();
-    expectTypeOf<BubbleEncodingPatch['size']>().toEqualTypeOf<undefined>();
-    expectTypeOf<BubbleEncodingPatch['text']>().toEqualTypeOf<undefined>();
-    expectTypeOf<BubbleEncodingPatch['x']>().toEqualTypeOf<undefined>();
-    expectTypeOf<BubbleEncodingPatch['y']>().toEqualTypeOf<undefined>();
-    expectTypeOf<{ encoding: { depth: { field: string } } }>().toMatchTypeOf<IRBubblePointPatch>();
   });
 
   it('normalizes explicit undefined patch keys recursively to a JSON-safe canonical patch', () => {

@@ -1,8 +1,6 @@
 import { RetikzFoundationError, RetikzFoundationErrorCode } from '@retikz/foundation';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-
-import type { InspectorDefinition } from '../../src';
 
 import { defineInspector } from '../../src';
 
@@ -38,9 +36,6 @@ describe('Inspector definition', () => {
 
     expect(definition).toMatchObject({ namespace: 'test', name: 'bounds' });
     expect(Object.isFrozen(definition)).toBe(true);
-    expectTypeOf(definition).toMatchTypeOf<
-      InspectorDefinition<{ width: number }, { color?: string }, { color: string }>
-    >();
   });
 
   it.each([

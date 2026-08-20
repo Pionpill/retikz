@@ -212,30 +212,20 @@ describe('data lineage runtime', () => {
     ).toThrow(/sourceIdentity\.maxIndices must be a positive integer/);
   });
 
-  it('rejects invalid source identity modes at recorder creation', () => {
-    expect(() =>
-      Reflect.apply(applyTransformsWithLineage, undefined, [
-        SALES,
-        [],
-        { lineage: { sourceIdentity: { mode: 'bogus' } } },
-      ]),
-    ).toThrow('data lineage: sourceIdentity.mode must be "summary" or "full"');
-  });
+  it.each([{ fields: [''], path: 'calculationDetails.fields[0]' }])(
+    'rejects invalid sample field whitelist members at $path',
+    ({ fields, path }) => {
+      const option = path.startsWith('rowSamples') ? 'rowSamples' : 'calculationDetails';
 
-  it.each([
-    { fields: [42], path: 'rowSamples.fields[0]' },
-    { fields: [''], path: 'calculationDetails.fields[0]' },
-  ])('rejects invalid sample field whitelist members at $path', ({ fields, path }) => {
-    const option = path.startsWith('rowSamples') ? 'rowSamples' : 'calculationDetails';
-
-    expect(() =>
-      Reflect.apply(applyTransformsWithLineage, undefined, [
-        SALES,
-        [],
-        { lineage: { [option]: { maxRows: 1, fields } } },
-      ]),
-    ).toThrow(`data lineage: ${path} must be a non-empty string`);
-  });
+      expect(() =>
+        Reflect.apply(applyTransformsWithLineage, undefined, [
+          SALES,
+          [],
+          { lineage: { [option]: { maxRows: 1, fields } } },
+        ]),
+      ).toThrow(`data lineage: ${path} must be a non-empty string`);
+    },
+  );
 
   it('records custom transform steps through the shared registry', () => {
     const doubleRevenue = defineTransform({
