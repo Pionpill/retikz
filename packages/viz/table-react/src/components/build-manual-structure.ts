@@ -1,8 +1,6 @@
-import type { IRDataScalarValue } from '@retikz/data';
 import type { IRManualTableCell, ManualTableInput, TableRowKindValue } from '@retikz/table';
 import type { ReactElement, ReactNode } from 'react';
 
-import { ScalarValueSchema } from '@retikz/data';
 import { TableRowKind } from '@retikz/table';
 import { isValidElement } from 'react';
 
@@ -25,51 +23,18 @@ const isRowElement = (child: ReactNode): child is ReactElement<RowProps, typeof 
 const isCellElement = (child: ReactNode): child is ReactElement<CellProps, typeof Cell> =>
   isValidElement(child) && child.type === Cell;
 
-/** 解析 Cell 的单一标量 payload 来源 */
-const parseScalarValue = (value: unknown, row: number, column: number): IRDataScalarValue => {
-  try {
-    return ScalarValueSchema.parse(value);
-  } catch (error) {
-    throw new RetikzTableReactError(`table react: Cell at row ${row}, column ${column} value must be a JSON scalar`, {
-      cause: error,
-    });
-  }
-};
-
 /** 把单个 Cell marker 转成 addressless manual Table Cell */
-const buildCell = (element: ReactElement<CellProps, typeof Cell>, row: number, column: number): IRManualTableCell => {
+const buildCell = (element: ReactElement<CellProps, typeof Cell>): IRManualTableCell => {
   const { children, value, content, formatter, presentation, ...fields } = element.props;
-  const hasChildren = Object.hasOwn(element.props, 'children');
-  const hasValue = Object.hasOwn(element.props, 'value');
-  const hasContent = Object.hasOwn(element.props, 'content');
-  if (Number(hasChildren) + Number(hasValue) + Number(hasContent) !== 1) {
-    throw new RetikzTableReactError(
-      `table react: Cell at row ${row}, column ${column} requires exactly one payload source`,
-    );
-  }
-  if (hasContent) {
-    if (formatter !== undefined) {
-      throw new RetikzTableReactError(
-        `table react: Cell at row ${row}, column ${column} content cannot be combined with formatter`,
-      );
-    }
-    if (presentation !== undefined) {
-      throw new RetikzTableReactError(
-        `table react: Cell at row ${row}, column ${column} content cannot be combined with presentation`,
-      );
-    }
-    if (content === undefined) {
-      throw new RetikzTableReactError(`table react: Cell at row ${row}, column ${column} content must be an IRChild`);
-    }
+  if (content !== undefined) {
     return {
       ...fields,
       content,
     };
   }
-  const scalar = parseScalarValue(hasValue ? value : children, row, column);
   return {
     ...fields,
-    value: scalar,
+    value: value === undefined ? children : value,
     ...(formatter === undefined ? {} : { formatter }),
     ...(presentation === undefined ? {} : { presentation }),
   };
@@ -136,7 +101,7 @@ export const buildManualStructure = (children: ReactNode): ManualStructureInput 
           occupancy[occupiedRow][occupiedColumn] = true;
         }
       }
-      entries.push({ row: rowIndex, column: columnIndex, cell: buildCell(cell, rowIndex, columnIndex) });
+      entries.push({ row: rowIndex, column: columnIndex, cell: buildCell(cell) });
       columnCount = Math.max(columnCount, columnIndex + columnSpan);
     });
   });

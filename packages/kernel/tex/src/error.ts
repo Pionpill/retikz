@@ -8,8 +8,10 @@ export const RetikzTexErrorCode = {
   Default: 'TEX_ERROR',
   /** MathJax 处理失败 */
   MathJax: 'TEX_MATHJAX_ERROR',
-  /** TeX SVG 处理失败 */
-  Svg: 'TEX_SVG_ERROR',
+  /** SVG 输入合法但当前 lowering 能力不支持 */
+  SvgUnsupported: 'TEX_SVG_UNSUPPORTED',
+  /** SVG 输入格式无效 */
+  SvgMalformed: 'TEX_SVG_MALFORMED',
 } as const;
 
 /** TeX 包稳定错误码取值 */
@@ -29,7 +31,7 @@ export type RetikzTexErrorOptions = Readonly<{
 
 type RetikzTexErrorCauseOptions = Readonly<Pick<RetikzTexErrorOptions, 'details' | 'cause'>>;
 
-/** TeX 包未被更精确错误类型覆盖的结构化错误 */
+/** TeX 包统一的结构化错误 */
 export class RetikzTexError extends RetikzError<RetikzTexErrorCodeValue, Readonly<Record<string, unknown>>> {
   /** 使用默认错误码创建 TeX 错误 */
   constructor(message: string);

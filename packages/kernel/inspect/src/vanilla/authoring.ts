@@ -4,7 +4,7 @@ import type { InputAuthoringSite } from '@retikz/vanilla';
 import type { InspectionSelectionRule } from '../compile';
 import type { InspectorKey } from '../contract';
 
-import { RetikzInspectionError, RetikzInspectionErrorCode } from '../error';
+import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 
 const INSPECTION_VANILLA_AUTHORING_TOKEN = Object.freeze({});
 
@@ -52,8 +52,8 @@ export const inspectionRulesFromVanillaSite = (site: InputAuthoringSite): Readon
         : ({ kind: 'self', locator: { kind: 'authored', sourcePath: site.sourcePath } } as const);
   if (authoring.input === false) {
     if (target.kind === 'self')
-      throw new RetikzInspectionError(
-        RetikzInspectionErrorCode.Vanilla,
+      throw new RetikzInspectError(
+        RetikzInspectErrorCode.Vanilla,
         'Inspect Vanilla barrier is only valid for figure or scope authoring',
       );
     return Object.freeze([Object.freeze({ kind: 'barrier', target })]);

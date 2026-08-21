@@ -160,28 +160,30 @@ React applications use [`@retikz/react`](/kernel/packages/framework/react) to co
 
 ## API summary
 
-| API                                  | Kind          | Description                                                |
-| ------------------------------------ | ------------- | ---------------------------------------------------------- |
-| `scene` / `layer`                    | Input helper  | Build a Scene input and named Layer                        |
-| `node` / `coordinate` / `path`       | Input helper  | Build Core primitives or authoring Path input              |
-| `scope` / `embed`                    | Input helper  | Build Scope and Tier 2 embed input                         |
-| `InputLayerCache`                    | const object  | Layer cache hint                                           |
-| `InputScene` / `InputChild`          | type          | Framework-neutral authoring root and children              |
-| `InputLayer` / `InputNode`           | type          | Layer and Node input                                       |
-| `InputPath` / `InputScope`           | type          | Path and Scope input with authoring sugar or payload       |
-| `InputEmbed`                         | type          | Tier 2 embed input                                         |
-| `InputEmbedAdapter`                  | type          | Lowers an `InputEmbed` to a Core contribution              |
-| `isInputScene` / `normalizeScene`    | normalization | Detect and normalize InputScene                            |
-| `NormalizedInputScene`               | type          | IR, contributions, metadata, and authoring provenance      |
-| `ProcessingSource`                   | type          | InputScene or IRScene accepted by processing               |
-| `ProcessingOptions`                  | type          | Compile, adapters, driver, and retained update strategy    |
-| `ProcessingResult`                   | type          | Same-revision Scene, artifacts, layers, and metadata       |
-| `createProcessingController`         | processing    | Framework-neutral retained processing controller           |
-| `prepareStaticProcessing`            | processing    | One lifecycle-free processing result                       |
-| `renderToSvgString`                  | SSR           | Render InputScene, IRScene, or Scene as an SVG string      |
-| `mount` / `mountSvg` / `mountCanvas` | DOM           | Mount a browser view from `@retikz/vanilla/dom`            |
-| `VanillaRuntimeOptions`              | type          | Retained or static runtime config for InputScene / IRScene |
-| `VanillaRetainedRuntimeOptions`      | type          | Retained mode, update strategy, optional renderer factory  |
-| `VanillaStaticRuntimeOptions`        | type          | Closed configuration permitting only `mode: 'static'`      |
-| `RetainedVanillaView`                | runtime       | Transactional retained view for IRScene / InputScene       |
-| `StaticVanillaView`                  | runtime       | Full-redraw view for Scene, IRScene, or InputScene         |
+| API                                  | Kind          | Description                                                                   |
+| ------------------------------------ | ------------- | ----------------------------------------------------------------------------- |
+| `scene` / `layer`                    | Input helper  | Build a Scene input and named Layer                                           |
+| `node` / `coordinate` / `path`       | Input helper  | Build Core primitives or authoring Path input                                 |
+| `scope` / `embed`                    | Input helper  | Build Scope and Tier 2 embed input                                            |
+| `InputLayerCache`                    | const object  | Layer cache hint                                                              |
+| `InputScene` / `InputChild`          | type          | Framework-neutral authoring root and children                                 |
+| `InputLayer` / `InputNode`           | type          | Layer and Node input                                                          |
+| `InputPath` / `InputScope`           | type          | Path and Scope input with authoring sugar or payload                          |
+| `InputEmbed`                         | type          | Tier 2 embed input                                                            |
+| `InputEmbedAdapter`                  | type          | Lowers an `InputEmbed` to a Core contribution                                 |
+| `isInputScene` / `normalizeScene`    | normalization | Detect and normalize InputScene                                               |
+| `NormalizedInputScene`               | type          | IR, contributions, metadata, and authoring provenance                         |
+| `ProcessingSource`                   | type          | InputScene or IRScene accepted by processing                                  |
+| `ProcessingOptions`                  | type          | Compile, adapters, driver, and retained update strategy                       |
+| `ProcessingResult`                   | type          | Same-revision Scene, artifacts, layers, and metadata                          |
+| `createProcessingController`         | processing    | Framework-neutral retained processing controller                              |
+| `prepareStaticProcessing`            | processing    | One lifecycle-free processing result                                          |
+| `renderToSvgString`                  | SSR           | Render InputScene, IRScene, or Scene as an SVG string                         |
+| `mount` / `mountSvg` / `mountCanvas` | DOM           | Mount a browser view from `@retikz/vanilla/dom`                               |
+| `VanillaRuntimeOptions`              | type          | Retained or static runtime config for InputScene / IRScene                    |
+| `VanillaRetainedRuntimeOptions`      | type          | Retained mode, update strategy, optional renderer factory                     |
+| `VanillaStaticRuntimeOptions`        | type          | Closed configuration permitting only `mode: 'static'`                         |
+| `RetainedVanillaView`                | runtime       | Transactional retained view for IRScene / InputScene                          |
+| `StaticVanillaView`                  | runtime       | Full-redraw view for Scene, IRScene, or InputScene                            |
+| `RetikzVanillaError`                 | error         | The single Vanilla error class; code, details, and cause distinguish failures |
+| `RetikzVanillaErrorCode`             | const object  | Stable normalize, processing, runtime, DOM, and driver error codes            |

@@ -28,12 +28,12 @@ export const kernelV05: Release = {
         },
         {
           label: {
-            zh: 'BREAKING：空白语义与错误 additive surface',
-            en: 'BREAKING: blank semantics and additive error surface',
+            zh: 'BREAKING：空白语义与包级错误收口',
+            en: 'BREAKING: blank semantics and package-level error consolidation',
           },
           content: {
-            zh: 'Runtime identity 的空 owner / path segment 现在 fail-loud，并由 `RetikzRuntimeIdentityError` 保留原始 rejected value 为 `cause`。Runtime、Render、Plot declaration 与 Chart resolution 错误保留既有 constructor、文本、字段、`instanceof` 和 recovery，同时增加 owner `details` 与统一 own `cause`。',
-            en: 'Runtime identity owners and path segments now fail loudly when blank, and `RetikzRuntimeIdentityError` keeps the rejected value as `cause`. Runtime, Render, Plot declaration, and Chart resolution errors preserve constructors, text, fields, `instanceof`, and recovery while adding owner details and a unified own `cause`.',
+            zh: 'Runtime identity 的空 owner / path segment 现在 fail-loud，并由 `RetikzRuntimeError` 的稳定 code 区分且保留 rejected value 为 `cause`。Runtime、Core、Render、Vanilla、Chart、Plot Vanilla 与 Table 各自只保留一个包级 Error；专用 constructor 与 `instanceof` 分支移除，调用方改按 code / details 判定，原始 cause 与内部 recovery 语义保持不变。',
+            en: 'Runtime identity owners and path segments now fail loudly through a stable `RetikzRuntimeError` code while preserving the rejected value as `cause`. Runtime, Core, Render, Vanilla, Chart, Plot Vanilla, and Table now keep one package-level Error each. Specialized constructors and `instanceof` branches are removed; callers branch on code and details, while original causes and internal recovery semantics remain intact.',
           },
         },
       ],

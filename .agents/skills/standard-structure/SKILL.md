@@ -56,6 +56,7 @@ shared/schemas <- Vanilla normalize
 ## 原子契约与组合
 
 - `shared`、`schemas` 与 `contract` 向上导出的公共内容，优先按稳定语义提供可独立复用的原子契约；上层包负责组合，不为单一消费方把组合结果下沉成底层 bundle
+- Canonical / normalized 结果及本层中间对象遵循根 AGENTS 的最小规范模型规则；缓存 key、索引、展示或适配投影等消费方派生信息不得倒灌回源模型或公共契约
 - 原子边界按可观察语义、不变量和扩展边界划分，不把每个字段机械拆成独立公共 API
 - 多个 Tier 2 反复从同一个大型底层 schema `pick` / `omit` 出相同字段子集时，先检查拥有该语义的下层是否缺少命名契约，再决定是否新增或复用原子 schema / type / contract
 - Tier 2 自己的默认值、禁用字段、输入收窄和领域组合仍留在 Tier 2；不要为了消除一次 `pick` 把消费方专属限制错误下沉

@@ -1,4 +1,3 @@
-import type { PerformanceTracePhaseValue } from './constants';
 import type {
   CreateRuntimeTraceReporterInput,
   PerformanceTraceDiagnostic,
@@ -8,20 +7,10 @@ import type {
 } from './types';
 
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
-import {
-  PerformanceTraceOutcome,
-  PerformanceTracePhase as PerformanceTracePhaseConstants,
-  PerformanceTraceUnit,
-} from './constants';
+import { PerformanceTraceOutcome } from './constants';
 import { notifyRuntimeTraceReporterDiagnostic, recordRuntimeTraceReporterDiagnosticDrain } from './internal';
 
-const performanceTracePhases: ReadonlySet<unknown> = new Set(Object.values(PerformanceTracePhaseConstants));
-const performanceTraceUnits: ReadonlySet<unknown> = new Set(Object.values(PerformanceTraceUnit));
-const performanceTraceOutcomes: ReadonlySet<unknown> = new Set(Object.values(PerformanceTraceOutcome));
 const isValidCount = (value: number): boolean => Number.isSafeInteger(value) && value >= 0;
-
-const isPerformanceTracePhase = (value: unknown): value is PerformanceTracePhaseValue =>
-  performanceTracePhases.has(value);
 
 const traceDefinitionError = (message: string, cause: unknown): RetikzRuntimeError =>
   new RetikzRuntimeError({
@@ -32,23 +21,13 @@ const traceDefinitionError = (message: string, cause: unknown): RetikzRuntimeErr
   });
 
 /** 为 phase 与 unit 组合生成无碰撞 definition key */
-const traceDefinitionKey = (phase: PerformanceTracePhaseValue, unit: PerformanceTraceRecord['unit']): string =>
+const traceDefinitionKey = (phase: PerformanceTraceRecord['phase'], unit: PerformanceTraceRecord['unit']): string =>
   `${phase.length}:${phase}${unit}`;
 
-const hasValidRecordShape = (record: unknown): record is Omit<PerformanceTraceRecord, 'owner'> => {
-  if (typeof record !== 'object' || record === null) return false;
-  return (
-    isPerformanceTracePhase(Reflect.get(record, 'phase')) &&
-    performanceTraceUnits.has(Reflect.get(record, 'unit')) &&
-    performanceTraceOutcomes.has(Reflect.get(record, 'outcome')) &&
-    typeof Reflect.get(record, 'visited') === 'number' &&
-    typeof Reflect.get(record, 'reused') === 'number' &&
-    typeof Reflect.get(record, 'changed') === 'number'
-  );
-};
-
-const isValidRecord = (record: unknown, definitions: ReadonlyMap<string, RuntimeTracePhaseDefinition>): boolean => {
-  if (!hasValidRecordShape(record)) return false;
+const isValidRecord = (
+  record: Omit<PerformanceTraceRecord, 'owner'>,
+  definitions: ReadonlyMap<string, RuntimeTracePhaseDefinition>,
+): boolean => {
   const definition = definitions.get(traceDefinitionKey(record.phase, record.unit));
   if (definition === undefined) return false;
   if (!definition.outcomes.includes(record.outcome)) return false;
@@ -62,31 +41,10 @@ const isValidRecord = (record: unknown, definitions: ReadonlyMap<string, Runtime
 const normalizePhaseDefinitions = (
   definitions: ReadonlyArray<RuntimeTracePhaseDefinition>,
 ): ReadonlyMap<string, RuntimeTracePhaseDefinition> => {
-  if (!Array.isArray(definitions)) {
-    throw traceDefinitionError('createRuntimeTraceReporter: phases must be an array', definitions);
-  }
-
   const byKey = new Map<string, RuntimeTracePhaseDefinition>();
   for (const definition of definitions) {
-    if (!performanceTracePhases.has(definition.phase)) {
-      throw traceDefinitionError('createRuntimeTraceReporter: invalid phase', definition);
-    }
-    if (!performanceTraceUnits.has(definition.unit)) {
-      throw traceDefinitionError(
-        `createRuntimeTraceReporter: phase "${definition.phase}" has an invalid unit`,
-        definition,
-      );
-    }
-    if (!Array.isArray(definition.outcomes) || definition.outcomes.length === 0) {
+    if (definition.outcomes.length === 0) {
       throw traceDefinitionError(`createRuntimeTraceReporter: phase "${definition.phase}" has no outcomes`, definition);
-    }
-    if (
-      definition.outcomes.some((outcome: PerformanceTraceRecord['outcome']) => !performanceTraceOutcomes.has(outcome))
-    ) {
-      throw traceDefinitionError(
-        `createRuntimeTraceReporter: phase "${definition.phase}" has an invalid outcome`,
-        definition,
-      );
     }
     const key = traceDefinitionKey(definition.phase, definition.unit);
     if (byKey.has(key)) {
@@ -100,26 +58,14 @@ const normalizePhaseDefinitions = (
   return byKey;
 };
 
-const resolveDiagnosticPhase = (
-  record: unknown,
-  definitions: ReadonlyMap<string, RuntimeTracePhaseDefinition>,
-): PerformanceTracePhaseValue => {
-  const phase = typeof record === 'object' && record !== null ? Reflect.get(record, 'phase') : undefined;
-  if (isPerformanceTracePhase(phase)) return phase;
-  return definitions.values().next().value?.phase ?? PerformanceTracePhaseConstants.Update;
-};
-
 /** 创建一个固定 owner 且失败隔离的同步 trace reporter */
 export const createRuntimeTraceReporter = <const TOwner extends string>(
   input: CreateRuntimeTraceReporterInput<TOwner>,
 ): RuntimeTraceReporter<TOwner> => {
   const owner = input.owner;
   const sink = input.sink;
-  if (typeof owner !== 'string' || owner.length === 0) {
+  if (owner.length === 0) {
     throw traceDefinitionError('createRuntimeTraceReporter: owner must not be empty', owner);
-  }
-  if (typeof sink !== 'function') {
-    throw traceDefinitionError('createRuntimeTraceReporter: sink must be a function', sink);
   }
 
   const definitions = normalizePhaseDefinitions(input.phases);
@@ -127,7 +73,7 @@ export const createRuntimeTraceReporter = <const TOwner extends string>(
   let reporting = false;
   const reporterRef: { current?: RuntimeTraceReporter<TOwner> } = {};
 
-  const appendDiagnostic = (code: PerformanceTraceDiagnostic['code'], phase: PerformanceTracePhaseValue): void => {
+  const appendDiagnostic = (code: PerformanceTraceDiagnostic['code'], phase: PerformanceTraceRecord['phase']): void => {
     const diagnostic = Object.freeze({ code, owner, phase });
     diagnostics.push(diagnostic);
     if (reporterRef.current !== undefined) {
@@ -136,7 +82,7 @@ export const createRuntimeTraceReporter = <const TOwner extends string>(
   };
 
   const report: RuntimeTraceReporter<TOwner>['report'] = record => {
-    const diagnosticPhase = resolveDiagnosticPhase(record, definitions);
+    const diagnosticPhase = record.phase;
     if (reporting) {
       appendDiagnostic('reentrant-report', diagnosticPhase);
       return;

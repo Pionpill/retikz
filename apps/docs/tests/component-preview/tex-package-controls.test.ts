@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import type {
@@ -38,18 +36,7 @@ describe('@retikz/tex package playground controls', () => {
     expect(texPlaygroundContract.controls.presentation).toBe('panel');
     expect(texPlaygroundEnContract.controls.presentation).toBe('panel');
     expect(enFields).toEqual(zhFields);
-    expect(zhFields.map(field => field.id)).toEqual([
-      'source',
-      'profile',
-      'displayMode',
-      'fontSize',
-      'shape',
-      'padding',
-    ]);
-    expect(zhFields.find(field => field.id === 'padding')?.visibleWhen).toEqual({
-      controlId: 'shape',
-      oneOf: ['rectangle', 'circle'],
-    });
+    expect(zhFields.map(field => field.id)).toEqual(['source', 'displayMode', 'fontSize']);
     expect(texPlaygroundEnContract.canonicalValues).toEqual(texPlaygroundContract.canonicalValues);
     expect(texPlaygroundContract.presetSelector).toEqual({
       label: '公式示例',
@@ -64,32 +51,17 @@ describe('@retikz/tex package playground controls', () => {
       'inline-energy',
       'display-sum',
       'multiline-derivatives',
-      'framed-contour',
-      'colored-cancellation',
     ]);
-    expect(texPlaygroundContract.presets.every(preset => Object.keys(preset.values).length === 6)).toBe(true);
+    expect(texPlaygroundContract.presets.every(preset => Object.keys(preset.values).length === 3)).toBe(true);
     expect(texPlaygroundContract.presets.find(preset => preset.id === 'display-sum')?.values).toEqual(
       texPlaygroundContract.canonicalValues,
     );
     expect(texPlaygroundContract.relatedApis).toEqual([
-      'MathJaxEngineOptions.profile',
       'Node.text',
       'IRTexContent.tex',
       'IRTexContent.displayMode',
       'Node.font',
-      'Node.shape',
-      'Node.padding',
     ]);
     expect(texPlaygroundEnContract.relatedApis).toEqual(texPlaygroundContract.relatedApis);
-  });
-
-  it('无边框状态显式关闭 Node 的 fill 与 stroke', () => {
-    const source = readFileSync(
-      resolve('src/modules/docs/contents/kernel/packages/extension/tex/tex-playground.demo.tsx'),
-      'utf8',
-    );
-
-    expect(source).toContain("fill={framed ? 'lightgray' : 'none'}");
-    expect(source).toContain("stroke={framed ? 'gray' : 'none'}");
   });
 });

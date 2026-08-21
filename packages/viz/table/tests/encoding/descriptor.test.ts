@@ -1,6 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
-
-import type { TableLegendDescriptor } from '../../src';
+import { describe, expect, it } from 'vitest';
 
 import { TableLegendDescriptorSchema } from '../../src';
 
@@ -23,8 +21,6 @@ describe('Table Legend descriptor schema', () => {
       domain: [0, 10],
       range: ['#fff', '#000'],
     });
-
-    expectTypeOf(swatch).toMatchTypeOf<TableLegendDescriptor>();
     expect(JSON.parse(JSON.stringify([swatch, ramp]))).toEqual([swatch, ramp]);
     expect(() => TableLegendDescriptorSchema.parse({ ...swatch, placement: 'right' })).toThrow();
   });

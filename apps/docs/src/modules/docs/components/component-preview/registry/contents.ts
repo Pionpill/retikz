@@ -1,4 +1,3 @@
-import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
 import type {
@@ -15,7 +14,7 @@ export type PreviewLoader<T> = () => Promise<T>;
 /** 单个 demo 模块对 ComponentPreview 暴露的导出。 */
 export type PreviewDemoModule = {
   default: FC;
-  previewIR?: IRScene;
+  previewIR?: unknown;
   previewControlContract?: PreviewControlContract;
   previewControls?: PreviewControlsDefinition;
   previewSource?: PreviewSourceConfig;

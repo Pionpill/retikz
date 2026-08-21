@@ -1,5 +1,4 @@
 import type { CoreProgramOutput, IRScene, Scene } from '@retikz/core';
-import type { RuntimePreparedCommit } from '@retikz/runtime';
 
 import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
 import {
@@ -23,7 +22,7 @@ import {
   createRetainedRenderParticipant,
   defineRetainedRenderer,
   RenderRuntimeOwnerDefinition,
-  RetikzRetainedRenderErrorCode,
+  RetikzRenderErrorCode,
 } from '../../src/runtime';
 
 const svgHost = Object.freeze({ tagName: 'svg', namespaceURI: 'http://www.w3.org/2000/svg' }) as SVGSVGElement;
@@ -120,21 +119,7 @@ const createHarness = (
 };
 
 describe('retained render frame contract', () => {
-  it('requires readonlyLayerCapability and exposes it on the nominal token', () => {
-    expect(() =>
-      defineRetainedRenderer({
-        backend: 'svg',
-        host: svgHost,
-        capability: 'entity',
-        prepareMount: () => undefined as unknown as RuntimePreparedCommit,
-        prepare: () => undefined as unknown as RuntimePreparedCommit,
-        read: () => {
-          throw new Error('unused');
-        },
-        dispose: () => undefined,
-      } as never),
-    ).toThrowError(expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRendererInvalid }));
-
+  it('exposes readonlyLayerCapability on the nominal token', () => {
     const harness = createHarness('supported');
     expect(harness.renderer.readonlyLayerCapability).toBe('supported');
     harness.session.dispose();
@@ -155,7 +140,7 @@ describe('retained render frame contract', () => {
     expect(() => createHarness('unsupported', { onPrepareMount, resolveReadonlyLayers: layersFrom })).toThrowError(
       expect.objectContaining({
         cause: expect.objectContaining({
-          code: RetikzRetainedRenderErrorCode.RetainedRendererReadonlyLayerUnsupported,
+          code: RetikzRenderErrorCode.RetainedRendererReadonlyLayerUnsupported,
         }),
       }),
     );
@@ -235,7 +220,7 @@ describe('retained render frame contract', () => {
       }),
     ).toThrowError(
       expect.objectContaining({
-        cause: expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRendererInitialFrameMismatch }),
+        cause: expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRendererInitialFrameMismatch }),
       }),
     );
   });

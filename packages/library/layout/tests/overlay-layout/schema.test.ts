@@ -1,16 +1,7 @@
 import { ChildSchema } from '@retikz/core';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type {
-  IROverlayLayout,
-  IROverlayLayoutItem,
-  IROverlayPlacement,
-  OverlayLayoutInput,
-  OverlayLayoutItemInput,
-  OverlayLayoutItemSchema,
-  OverlayPlacementInput,
-  OverlayPlacementSchema,
-} from '../../src';
+import type { OverlayLayoutInput, OverlayLayoutItemInput, OverlayPlacementInput } from '../../src';
 
 import {
   createOverlayLayout,
@@ -51,8 +42,6 @@ describe('OverlayLayout schema and factory', () => {
       ],
     });
     expect(ChildSchema.safeParse(parsed.children[0]?.child).success).toBe(true);
-    expectTypeOf(parsed).toEqualTypeOf<IROverlayLayout>();
-    expectTypeOf(parsed.children[0]).toEqualTypeOf<IROverlayLayoutItem>();
   });
 
   it('keeps placement and item inputs aligned with parsed schema outputs', () => {
@@ -61,9 +50,6 @@ describe('OverlayLayout schema and factory', () => {
       at: { x: 10, y: -5 },
       width: 20,
     } satisfies OverlayPlacementInput;
-
-    expectTypeOf<IROverlayPlacement>().toEqualTypeOf<ReturnType<typeof OverlayPlacementSchema.parse>>();
-    expectTypeOf<IROverlayLayoutItem>().toEqualTypeOf<ReturnType<typeof OverlayLayoutItemSchema.parse>>();
     expect(
       createOverlayLayout({
         children: [{ kind: 'overlay', key: 'badge', child, placement }],

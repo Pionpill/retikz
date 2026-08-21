@@ -536,7 +536,7 @@ describe('PreviewControlFieldInput', () => {
         min: [-100, -100],
         max: [100, 100],
       },
-      [] as unknown as PreviewControlValue,
+      'invalid',
     );
 
     expect(point.container.querySelector<HTMLInputElement>('[aria-label="Control x"]')?.value).toBe('10');

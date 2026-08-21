@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CHECKERS } from '../../src/assert/checkers';
 
-const scene = {
+const scene: Scene = {
   primitives: [
     { type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#f00', dashPattern: [4, 2] },
     { type: 'rect', x: 20, y: 0, width: 10, height: 10 },
@@ -26,11 +26,18 @@ const scene = {
         { kind: 'move', to: [0, 0] },
         { kind: 'line', to: [10, 0] },
       ],
-      arrowEnd: { shape: 'stealth' },
+      arrowEnd: {
+        shape: 'stealth',
+        baseSize: 8,
+        refX: 8,
+        markerWidth: 8,
+        markerHeight: 8,
+        marker: [],
+      },
     },
   ],
   layout: { x: 0, y: 0, width: 30, height: 10 },
-} as unknown as Scene;
+};
 
 describe('CHECKERS.textPresent', () => {
   it('contains 命中', () => {

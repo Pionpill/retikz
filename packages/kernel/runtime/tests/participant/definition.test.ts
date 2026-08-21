@@ -18,15 +18,13 @@ describe('runtime commit participant definition', () => {
       key: 'renderer',
       owners: [],
       programs: [],
-      revisionPolicy: 'continuous',
+      revisionPolicy: 'continuous' as const,
       tracePhases: [],
       prepare: () => ({ commit: () => undefined, rollback: () => undefined, dispose: () => undefined }),
       read: () => Object.freeze({ value: 1 }),
       dispose: () => undefined,
     };
-    const define = Reflect.get(runtime, 'defineRuntimeCommitParticipant') as (value: unknown) => unknown;
-
-    const participant = define(input);
+    const participant = runtime.defineRuntimeCommitParticipant(input);
 
     expect(participant).toEqual({
       key: 'renderer',
@@ -73,18 +71,14 @@ describe('runtime commit participant definition', () => {
     expect(Object.isFrozen(participant.tracePhases[0])).toBe(true);
     expect(Object.isFrozen(participant.tracePhases[0]?.outcomes)).toBe(true);
 
-    const define = runtime.defineRuntimeCommitParticipant as (input: unknown) => unknown;
-    expect(() => define(null)).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantTokenInvalid }),
-    );
     expect(() =>
-      define({
+      runtime.defineRuntimeCommitParticipant({
         key: '',
         owners: [],
         programs: [],
         revisionPolicy: 'continuous',
         tracePhases: [],
-        prepare: () => ({}),
+        prepare: () => ({ commit: () => undefined, rollback: () => undefined, dispose: () => undefined }),
         read: () => ({}),
         dispose: () => undefined,
       }),

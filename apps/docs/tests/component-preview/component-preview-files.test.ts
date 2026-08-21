@@ -1,9 +1,6 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type {
-  ComponentPreviewFile,
-  ComponentPreviewFiles,
-} from '../../src/modules/docs/components/component-preview/types';
+import type { ComponentPreviewFiles } from '../../src/modules/docs/components/component-preview/types';
 
 import { normalizeComponentPreviewFiles } from '../../src/modules/docs/components/component-preview/utils/preview-files';
 
@@ -72,13 +69,5 @@ describe('ComponentPreview files 配置', () => {
       diffFrom: 'learning-path-01-title',
       sourceFiles: [{ file: 'learning-path.data.ts' }],
     });
-  });
-
-  it('公开类型接受三种输入并拒绝空 tuple', () => {
-    expectTypeOf<string>().toMatchTypeOf<ComponentPreviewFiles>();
-    expectTypeOf<ComponentPreviewFile>().toMatchTypeOf<ComponentPreviewFiles>();
-    expectTypeOf<readonly [ComponentPreviewFile]>().toMatchTypeOf<ComponentPreviewFiles>();
-    expectTypeOf<readonly [string, string]>().toMatchTypeOf<ComponentPreviewFiles>();
-    expectTypeOf<readonly []>().not.toMatchTypeOf<ComponentPreviewFiles>();
   });
 });

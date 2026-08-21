@@ -11,7 +11,7 @@ import type { IRChild } from '../../schemas';
 import type { CompositeCompileOwner, CompositeCompileSession, CompositeRuntimeOutputChild } from './types';
 
 import { validateSpatialHandleDeclarations } from '../../contract';
-import { RetikzCompositeContractError } from '../../resolve/diagnostics';
+import { createCompositeContractError } from '../../resolve/diagnostics';
 import { ScopePropsSchema } from '../../schemas';
 import { cloneAndFreezeJson } from '../../shared/json';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
@@ -22,7 +22,7 @@ export const validateCompositeSpatialHandles = (owner: string, value: unknown) =
     return validateSpatialHandleDeclarations(owner, value);
   } catch (cause) {
     const detail = cause instanceof Error ? cause.message : String(cause);
-    throw new RetikzCompositeContractError(detail, { cause });
+    throw createCompositeContractError(detail, { cause });
   }
 };
 
@@ -49,7 +49,7 @@ const readThemeIssuePath = (error: unknown): string | undefined => {
 const snapshotCompositeCallbackChild = (owner: string, value: unknown, location: string): IRChild => {
   const snapshot = cloneAndFreezeJson(value, `${owner} ${location}`);
   if (snapshot === null || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
-    throw new RetikzCompositeContractError(
+    throw createCompositeContractError(
       `${owner} received an invalid ${location}; the value may be forged or belong to another compile session.`,
     );
   }
@@ -59,7 +59,7 @@ const snapshotCompositeCallbackChild = (owner: string, value: unknown, location:
   const isComposite =
     typeof child.namespace === 'string' && child.namespace.length > 0 && typeof type === 'string' && type.length > 0;
   if (!isBuiltin && !isComposite) {
-    throw new RetikzCompositeContractError(
+    throw createCompositeContractError(
       `${owner} received an invalid ${location}; the value may be forged or belong to another compile session.`,
     );
   }
@@ -78,15 +78,15 @@ export const snapshotCompositeLayoutChild = (owner: string, value: unknown, inde
 export const validateExpandCompositeOutput = (owner: string, produced: unknown): CompositeExpandResult =>
   withProviderOutputValidationBoundary(owner, () => {
     if (produced === null || typeof produced !== 'object' || Array.isArray(produced)) {
-      throw new RetikzCompositeContractError(`${owner} returned an invalid expand result; children must be an array.`);
+      throw createCompositeContractError(`${owner} returned an invalid expand result; children must be an array.`);
     }
     const raw = produced as Record<string, unknown>;
     const unsupported = Object.keys(raw).filter(field => !['children', 'spatialHandles'].includes(field));
     if (unsupported.length > 0) {
-      throw new RetikzCompositeContractError(`${owner} returned unsupported expand result field '${unsupported[0]}'.`);
+      throw createCompositeContractError(`${owner} returned unsupported expand result field '${unsupported[0]}'.`);
     }
     if (!Array.isArray(raw.children)) {
-      throw new RetikzCompositeContractError(`${owner} returned an invalid expand result; children must be an array.`);
+      throw createCompositeContractError(`${owner} returned an invalid expand result; children must be an array.`);
     }
     const children = Object.freeze(
       raw.children.map((value, index) => snapshotCompositeOutputChild(owner, value, index)),
@@ -94,7 +94,7 @@ export const validateExpandCompositeOutput = (owner: string, produced: unknown):
     const spatialHandles =
       raw.spatialHandles === undefined ? undefined : validateCompositeSpatialHandles(owner, raw.spatialHandles);
     if ((spatialHandles?.length ?? 0) > 0 && containsGeneratedSpatialScope(children)) {
-      throw new RetikzCompositeContractError(
+      throw createCompositeContractError(
         `${owner} cannot declare result-level spatial handles while its generated output contains a Scope with placement or transforms; use layout-aware Scope attachment.`,
       );
     }
@@ -104,7 +104,7 @@ export const validateExpandCompositeOutput = (owner: string, produced: unknown):
 /** 以普通 Scope props schema 校验并脱离完整 authored Scope props */
 const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): CompositeCompileScopeProps => {
   if (props === null || typeof props !== 'object' || Array.isArray(props)) {
-    throw new RetikzCompositeContractError(`${owner.label} received invalid runtime Scope props.`);
+    throw createCompositeContractError(`${owner.label} received invalid runtime Scope props.`);
   }
   let parsed: ReturnType<typeof ScopePropsSchema.parse>;
   try {
@@ -112,7 +112,7 @@ const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): Composit
   } catch (error) {
     const raw = props as Record<string, unknown>;
     const themeIssuePath = raw.theme === undefined ? undefined : readThemeIssuePath(error);
-    throw new RetikzCompositeContractError(
+    throw createCompositeContractError(
       themeIssuePath === undefined
         ? `${owner.label} received invalid or unsupported runtime Scope props.`
         : `${owner.label} received invalid runtime Scope ${themeIssuePath}.`,
@@ -125,12 +125,12 @@ const cloneScopeProps = (props: unknown, owner: CompositeCompileOwner): Composit
 /** 校验 replay wrapper 的已 lowering Scene transform 并复制为 detached value */
 const cloneReplayTransform = (value: unknown, owner: CompositeCompileOwner, index: number): Transform => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    throw new RetikzCompositeContractError(
+    throw createCompositeContractError(
       `${owner.label} received an invalid replay wrapper transform at index ${index}.`,
     );
   }
   const fail = (): never => {
-    throw new RetikzCompositeContractError(
+    throw createCompositeContractError(
       `${owner.label} received an invalid or non-finite replay wrapper transform at index ${index}.`,
     );
   };
@@ -176,27 +176,25 @@ const cloneReplayTransform = (value: unknown, owner: CompositeCompileOwner, inde
 const cloneReplayWrapper = (wrapper: unknown, owner: CompositeCompileOwner): CompositeReplayWrapper | undefined => {
   if (wrapper === undefined) return undefined;
   if (wrapper === null || typeof wrapper !== 'object' || Array.isArray(wrapper)) {
-    throw new RetikzCompositeContractError(`${owner.label} received an invalid replay wrapper.`);
+    throw createCompositeContractError(`${owner.label} received an invalid replay wrapper.`);
   }
   const raw = wrapper as Record<string, unknown>;
   const unsupportedKeys = Object.keys(raw).filter(key => !['transforms', 'clip'].includes(key));
   if (unsupportedKeys.length > 0) {
-    throw new RetikzCompositeContractError(
+    throw createCompositeContractError(
       `${owner.label} received unsupported replay wrapper fields: ${unsupportedKeys.map(key => `'${key}'`).join(', ')}.`,
     );
   }
   const rawTransforms = raw.transforms;
   const rawClip = raw.clip;
   if (rawTransforms !== undefined && !Array.isArray(rawTransforms)) {
-    throw new RetikzCompositeContractError(
-      `${owner.label} received invalid replay wrapper transforms; expected an array.`,
-    );
+    throw createCompositeContractError(`${owner.label} received invalid replay wrapper transforms; expected an array.`);
   }
   let parsed: ReturnType<typeof ScopePropsSchema.parse>;
   try {
     parsed = ScopePropsSchema.parse(rawClip === undefined ? {} : { clip: rawClip });
   } catch (error) {
-    throw new RetikzCompositeContractError(`${owner.label} received an invalid replay wrapper clip.`, { cause: error });
+    throw createCompositeContractError(`${owner.label} received an invalid replay wrapper clip.`, { cause: error });
   }
   const transforms =
     rawTransforms === undefined
@@ -217,14 +215,14 @@ export const createCompositeReplayChild = (
 ): CompositeCompileChild =>
   withProviderOutputValidationBoundary(owner.label, () => {
     if (result === null || typeof result !== 'object') {
-      throw new RetikzCompositeContractError(`${owner.label} received an invalid or forged layout result.`);
+      throw createCompositeContractError(`${owner.label} received an invalid or forged layout result.`);
     }
     const layoutResult = session.layoutResults.get(result);
     if (layoutResult === undefined) {
-      throw new RetikzCompositeContractError(`${owner.label} received an invalid or forged layout result.`);
+      throw createCompositeContractError(`${owner.label} received an invalid or forged layout result.`);
     }
     if (layoutResult.owner !== owner) {
-      throw new RetikzCompositeContractError(
+      throw createCompositeContractError(
         `${owner.label} received a layout result that does not belong to this composite callback.`,
       );
     }
@@ -249,14 +247,14 @@ export const createCompositeScopeChild = (
 ): CompositeCompileChild =>
   withProviderOutputValidationBoundary(owner.label, () => {
     if (!Array.isArray(children)) {
-      throw new RetikzCompositeContractError(`${owner.label} received invalid runtime Scope children.`);
+      throw createCompositeContractError(`${owner.label} received invalid runtime Scope children.`);
     }
     const clonedChildren = Array.from(children, (child: unknown, index) => {
       if (child !== null && typeof child === 'object') {
         const entry = session.outputChildren.get(child);
         if (entry !== undefined) {
           if (entry.owner !== owner) {
-            throw new RetikzCompositeContractError(
+            throw createCompositeContractError(
               `${owner.label} received an output child that does not belong to this composite callback.`,
             );
           }

@@ -4,7 +4,7 @@ import { ChildSchema } from '@retikz/core';
 
 import type { InspectorOutput } from '../contract';
 
-import { RetikzInspectionError, RetikzInspectionErrorCode } from '../error';
+import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 
 /** 校验、脱离并深冻结 JSON-safe plain data */
 export const cloneAndFreezeInspectionJson = <T>(value: T, label: string): T => {
@@ -13,29 +13,29 @@ export const cloneAndFreezeInspectionJson = <T>(value: T, label: string): T => {
     if (input === null || typeof input === 'string' || typeof input === 'boolean') return input;
     if (typeof input === 'number') {
       if (!Number.isFinite(input))
-        throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, `${path} must contain finite JSON numbers`);
+        throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `${path} must contain finite JSON numbers`);
       return input;
     }
     if (typeof input !== 'object')
-      throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, `${path} must be JSON-safe plain data`);
+      throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `${path} must be JSON-safe plain data`);
     if (ancestors.has(input))
-      throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, `${path} must not contain cycles`);
+      throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `${path} must not contain cycles`);
     if (Object.getOwnPropertySymbols(input).length > 0)
-      throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, `${path} must not contain symbol keys`);
+      throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `${path} must not contain symbol keys`);
     ancestors.add(input);
     try {
       if (Array.isArray(input)) {
         if (Object.getOwnPropertyNames(input).length !== input.length + 1) {
-          throw new RetikzInspectionError(
-            RetikzInspectionErrorCode.Compile,
+          throw new RetikzInspectError(
+            RetikzInspectErrorCode.Compile,
             `${path} must be a dense JSON array without extra properties`,
           );
         }
         return Object.freeze(
           input.map((child, index) => {
             if (!(index in input))
-              throw new RetikzInspectionError(
-                RetikzInspectionErrorCode.Compile,
+              throw new RetikzInspectError(
+                RetikzInspectErrorCode.Compile,
                 `${path} must be dense; missing index ${index}`,
               );
             return clone(child, `${path}[${index}]`);
@@ -44,14 +44,14 @@ export const cloneAndFreezeInspectionJson = <T>(value: T, label: string): T => {
       }
       const prototype = Object.getPrototypeOf(input);
       if (prototype !== Object.prototype && prototype !== null) {
-        throw new RetikzInspectionError(RetikzInspectionErrorCode.Compile, `${path} must contain plain objects`);
+        throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `${path} must contain plain objects`);
       }
       const output = Object.create(null) as Record<string, unknown>;
       for (const key of Object.getOwnPropertyNames(input)) {
         const descriptor = Object.getOwnPropertyDescriptor(input, key);
         if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-          throw new RetikzInspectionError(
-            RetikzInspectionErrorCode.Compile,
+          throw new RetikzInspectError(
+            RetikzInspectErrorCode.Compile,
             `${path}.${key} must be an enumerable JSON data property`,
           );
         }
@@ -70,8 +70,8 @@ export const normalizeInspectorOutput = (output: InspectorOutput): ReadonlyArray
   const values = Array.isArray(output) ? output : [output];
   for (let index = 0; index < values.length; index += 1) {
     if (!(index in values))
-      throw new RetikzInspectionError(
-        RetikzInspectionErrorCode.Compile,
+      throw new RetikzInspectError(
+        RetikzInspectErrorCode.Compile,
         `Inspector output must be dense; missing output index ${index}`,
       );
   }

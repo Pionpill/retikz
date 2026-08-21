@@ -1,47 +1,18 @@
-import { RetikzError } from '@retikz/foundation';
 import { runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { BuildContext, HydrationContext } from './context';
 import type { ElementHandlers, HydrationHandlers, Locate, RetikzEventValue } from './events';
 import type { HydrationTarget } from './events';
 
-import { RetikzRenderErrorCode } from '../error';
 import { noopAnimationControls } from './context';
 import { EVENT_DOM_TYPE, RetikzEvent } from './events';
+import { createHydrationSetupError } from './setup-failure';
 
 /** 水合控制器：根级委托 + enter/leave 合成 + dispose 解绑 */
 export type HydrationController = {
   /** 解绑所有根级 listener，之后事件不再触发 */
   dispose: () => void;
 };
-
-/** Hydration controller 注册失败且初次清理也失败时的可恢复错误 */
-class RetikzHydrationControllerSetupError extends RetikzError<
-  typeof RetikzRenderErrorCode.HydrationControllerSetupFailed,
-  Readonly<{ cleanupCause: unknown; controller: HydrationController }>
-> {
-  /** 原始 listener 注册失败 */
-  override readonly cause: unknown;
-
-  /** 初次反向清理失败 */
-  readonly cleanupCause: unknown;
-
-  /** 保留尚未解绑任务的 controller，供 owner rollback / dispose 重试 */
-  readonly controller: HydrationController;
-
-  /** 创建保留 primary setup cause 与可重试 controller 的错误 */
-  constructor(cause: unknown, cleanupCause: unknown, controller: HydrationController) {
-    super({
-      code: RetikzRenderErrorCode.HydrationControllerSetupFailed,
-      message: 'Hydration controller setup and cleanup failed',
-      details: { cleanupCause, controller },
-      cause,
-    });
-    this.cause = cause;
-    this.cleanupCause = cleanupCause;
-    this.controller = controller;
-  }
-}
 
 /** 收集 handlers 注册表中实际用到的 RetikzEventValue 集合（决定要在 root 上挂哪些 DOM listener） */
 const collectUsedEvents = (handlers: HydrationHandlers): Set<RetikzEventValue> => {
@@ -205,7 +176,7 @@ export const createHydrationController = (
     try {
       runTeardowns(teardowns, true);
     } catch (cleanupCause) {
-      throw new RetikzHydrationControllerSetupError(cause, cleanupCause, controller);
+      throw createHydrationSetupError(cause, cleanupCause, controller);
     }
     throw cause;
   }

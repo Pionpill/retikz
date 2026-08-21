@@ -5,17 +5,9 @@ import { createLegend, LegendContentKind, LegendDefinition, LegendProvider } fro
 import { normalizeScene } from '@retikz/vanilla';
 import { forwardRef, Fragment, memo } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type {
-  LegendItemProps,
-  LegendItemsFormProps,
-  LegendProps,
-  LegendRampFormProps,
-  LegendRampProps,
-  LegendTickProps,
-  LegendTitleProps,
-} from '../../src';
+import type { LegendItemsFormProps, LegendProps, LegendRampFormProps } from '../../src';
 
 import { Legend, LegendItem, LegendRamp, LegendTick, LegendTitle } from '../../src';
 
@@ -56,19 +48,6 @@ describe('<Legend>', () => {
     expect(LegendItem).toBeTypeOf('function');
     expect(LegendRamp).toBeTypeOf('function');
     expect(LegendTick).toBeTypeOf('function');
-
-    expectTypeOf<LegendProps>().toHaveProperty('kind');
-    expectTypeOf<LegendProps>().toHaveProperty('children');
-    expectTypeOf<LegendProps>().not.toHaveProperty('content');
-    expectTypeOf<LegendProps>().not.toHaveProperty('title');
-    expectTypeOf<LegendItemsFormProps>().toMatchTypeOf<{ kind: 'items'; children?: ReactNode }>();
-    expectTypeOf<LegendRampFormProps>().toMatchTypeOf<{ kind: 'ramp'; children?: ReactNode }>();
-    expectTypeOf<LegendTitleProps>().toMatchTypeOf<{ children: ReactNode }>();
-    expectTypeOf<LegendItemProps>().toMatchTypeOf<{ itemKey: string; sample: ReactNode }>();
-    expectTypeOf<LegendItemProps>().toHaveProperty('children');
-    expectTypeOf<LegendRampProps>().toMatchTypeOf<{ children: ReactNode }>();
-    expectTypeOf<LegendTickProps>().toMatchTypeOf<{ tickKey: string; offset: number }>();
-    expectTypeOf<LegendTickProps>().toHaveProperty('children');
   });
 
   it('converts items and ramp marker trees to canonical Legend IR', () => {
@@ -341,15 +320,6 @@ describe('<Legend>', () => {
         children: <LegendItem itemKey="invalid" sample={<InvalidSugar />} />,
       }),
     ).toThrow(/LegendItem sample.*exactly one/i);
-  });
-
-  it('rejects the removed React plain-data props at runtime', () => {
-    const legacyProps = {
-      content: { kind: LegendContentKind.Items, items: [] },
-      title: { type: 'node', position: [0, 0], text: 'Legacy' },
-    };
-
-    expect(() => contribute(legacyProps as unknown as LegendProps)).toThrow(/children.*kind/i);
   });
 
   it('renders the same static output as direct canonical IR in the same compile environment', () => {

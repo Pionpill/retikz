@@ -3,7 +3,7 @@ import type { LowerTex } from '@retikz/core';
 import type { MathJaxSvgEngine } from '../mathjax';
 import type { LowerTexOptions, TexLoweringResult } from './types';
 
-import { parseMathJaxSvgResult } from '../svg';
+import { lowerMathJaxSvg } from '../svg';
 
 /** 把同步 SVG engine 适配为 Core LowerTex，并缓存确定结果 */
 export const createLowerTex = (engine: MathJaxSvgEngine, options?: LowerTexOptions): LowerTex => {
@@ -26,7 +26,7 @@ export const createLowerTex = (engine: MathJaxSvgEngine, options?: LowerTexOptio
           cacheable: true,
         };
       } else {
-        result = parseMathJaxSvgResult(svg, style.fontSize, content.tex);
+        result = lowerMathJaxSvg(svg, style.fontSize, content.tex);
       }
     } catch (error) {
       result = {

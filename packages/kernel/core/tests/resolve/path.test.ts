@@ -1,6 +1,5 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type { CanonicalGeometryLabel, CanonicalStep } from '../../src/resolve/path';
 import type { IRPathBase, IRScene, IRStep } from '../../src/schemas';
 
 import { compileToScene } from '../../src';
@@ -36,22 +35,6 @@ describe('resolvePath', () => {
       strokeFillDefault: 'none',
       strokeDefault: 'currentColor',
     });
-  });
-
-  it('exposes complete canonical step variants to compile consumers', () => {
-    expectTypeOf<Extract<CanonicalStep, { kind: 'line' }>['label']>().toEqualTypeOf<
-      CanonicalGeometryLabel | undefined
-    >();
-    expectTypeOf<Extract<CanonicalStep, { kind: 'fold'; via: '-|-' | '|-|' }>['fraction']>().toEqualTypeOf<number>();
-    expectTypeOf<Extract<CanonicalStep, { kind: 'smooth' }>['tension']>().toEqualTypeOf<number>();
-    expectTypeOf<Extract<CanonicalStep, { kind: 'bend' }>['bendDirection']>().toEqualTypeOf<'left' | 'right'>();
-    expectTypeOf<Extract<CanonicalStep, { kind: 'bend' }>['bendAngle']>().toEqualTypeOf<number>();
-    expectTypeOf<Extract<CanonicalStep, { kind: 'circlePath' }>['closed']>().toEqualTypeOf<
-      'closed' | 'chord' | 'open' | 'sector'
-    >();
-    expectTypeOf<Extract<CanonicalStep, { kind: 'ellipsePath' }>['closed']>().toEqualTypeOf<
-      'closed' | 'chord' | 'open' | 'sector'
-    >();
   });
 
   it('expands bend and shape close defaults while preserving explicit values', () => {

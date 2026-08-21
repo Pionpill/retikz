@@ -1,7 +1,6 @@
 export { ChartDefinition } from './_chart/definition';
 export * from './_chart/dispatch/base';
 export { bindChart } from './_chart/dispatch/bind';
-export * from './_chart/dispatch/errors';
 export * from './_chart/provider';
 export * from './_chart/resolve';
 export * from './_chart/schemas/base';

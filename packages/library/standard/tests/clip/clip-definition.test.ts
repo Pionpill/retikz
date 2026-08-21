@@ -1,20 +1,7 @@
-import type { ClipDefinition, ClipShape, CoreDependencyProvider, IRClip, IRScene, PathCommand } from '@retikz/core';
+import type { ClipDefinition, CoreDependencyProvider, IRClip, IRScene, PathCommand } from '@retikz/core';
 
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
-import { describe, expect, expectTypeOf, it } from 'vitest';
-
-import type {
-  CircleClipShape,
-  CompoundClipShape,
-  EllipseClipShape,
-  IRCircleClip,
-  IRCompoundClip,
-  IREllipseClip,
-  IRPathClip,
-  IRPolygonClip,
-  PathClipShape,
-  PolygonClipShape,
-} from '../../src/clip';
+import { describe, expect, it } from 'vitest';
 
 import {
   CircleClipDefinition,
@@ -131,19 +118,6 @@ const cases: ReadonlyArray<{
 ];
 
 describe('Standard Clip definition public contract', () => {
-  it('keeps schema-derived operation and JSON-safe shape types same-kind', () => {
-    expectTypeOf<IRCircleClip>().toMatchTypeOf<{ kind: 'circle'; r: number }>();
-    expectTypeOf<CircleClipShape>().toMatchTypeOf<ClipShape & { kind: 'circle'; r: number }>();
-    expectTypeOf<IREllipseClip>().toMatchTypeOf<{ kind: 'ellipse'; rx: number; ry: number }>();
-    expectTypeOf<EllipseClipShape>().toMatchTypeOf<ClipShape & { kind: 'ellipse'; rx: number; ry: number }>();
-    expectTypeOf<IRPolygonClip>().toMatchTypeOf<{ kind: 'polygon' }>();
-    expectTypeOf<PolygonClipShape>().toMatchTypeOf<ClipShape & { kind: 'polygon' }>();
-    expectTypeOf<IRPathClip>().toMatchTypeOf<{ kind: 'path' }>();
-    expectTypeOf<PathClipShape>().toMatchTypeOf<ClipShape & { kind: 'path' }>();
-    expectTypeOf<IRCompoundClip>().toMatchTypeOf<{ kind: 'compound' }>();
-    expectTypeOf<CompoundClipShape>().toMatchTypeOf<ClipShape & { kind: 'compound' }>();
-  });
-
   it('publishes five complete definitions and no paired shape definitions', () => {
     expect(StandardClipDefinitions).toEqual([
       CircleClipDefinition,

@@ -3,7 +3,7 @@ import type { ValueOf } from '@retikz/foundation';
 import { RetikzError } from '@retikz/foundation';
 
 /** Inspect 包稳定错误码 */
-export const RetikzInspectionErrorCode = {
+export const RetikzInspectErrorCode = {
   /** 未被更精确分类覆盖的 Inspect 错误 */
   Default: 'INSPECTION_ERROR',
   /** 编译输出或选择无效 */
@@ -19,12 +19,12 @@ export const RetikzInspectionErrorCode = {
 } as const;
 
 /** Inspect 包稳定错误码取值 */
-export type RetikzInspectionErrorCodeValue = ValueOf<typeof RetikzInspectionErrorCode>;
+export type RetikzInspectErrorCodeValue = ValueOf<typeof RetikzInspectErrorCode>;
 
 /** Inspect 包错误的结构化构造参数 */
-export type RetikzInspectionErrorOptions = Readonly<{
+export type RetikzInspectErrorOptions = Readonly<{
   /** 稳定错误码 */
-  code: RetikzInspectionErrorCodeValue;
+  code: RetikzInspectErrorCodeValue;
   /** 面向调用方的原始错误消息 */
   message: string;
   /** 失败上下文的结构化详情 */
@@ -33,30 +33,27 @@ export type RetikzInspectionErrorOptions = Readonly<{
   cause?: unknown;
 }>;
 
-type RetikzInspectionErrorCauseOptions = Readonly<Pick<RetikzInspectionErrorOptions, 'details' | 'cause'>>;
+type RetikzInspectErrorCauseOptions = Readonly<Pick<RetikzInspectErrorOptions, 'details' | 'cause'>>;
 
-/** Inspect 包未被更精确错误类型覆盖的结构化错误 */
-export class RetikzInspectionError extends RetikzError<
-  RetikzInspectionErrorCodeValue,
-  Readonly<Record<string, unknown>>
-> {
+/** Inspect 包统一的结构化错误 */
+export class RetikzInspectError extends RetikzError<RetikzInspectErrorCodeValue, Readonly<Record<string, unknown>>> {
   /** 使用默认错误码创建 Inspect 错误 */
   constructor(message: string);
   /** 使用结构化参数创建 Inspect 错误 */
-  constructor(options: RetikzInspectionErrorOptions);
+  constructor(options: RetikzInspectErrorOptions);
   /** 使用显式错误码创建 Inspect 错误 */
-  constructor(code: RetikzInspectionErrorCodeValue, message: string, options?: RetikzInspectionErrorCauseOptions);
+  constructor(code: RetikzInspectErrorCodeValue, message: string, options?: RetikzInspectErrorCauseOptions);
   constructor(
-    optionsOrMessageOrCode: RetikzInspectionErrorOptions | string,
+    optionsOrMessageOrCode: RetikzInspectErrorOptions | string,
     message?: string,
-    causeOptions: RetikzInspectionErrorCauseOptions = {},
+    causeOptions: RetikzInspectErrorCauseOptions = {},
   ) {
-    const options: RetikzInspectionErrorOptions =
+    const options: RetikzInspectErrorOptions =
       typeof optionsOrMessageOrCode !== 'string'
         ? optionsOrMessageOrCode
         : message === undefined
-          ? { code: RetikzInspectionErrorCode.Default, message: optionsOrMessageOrCode }
-          : { code: optionsOrMessageOrCode as RetikzInspectionErrorCodeValue, message, ...causeOptions };
+          ? { code: RetikzInspectErrorCode.Default, message: optionsOrMessageOrCode }
+          : { code: optionsOrMessageOrCode as RetikzInspectErrorCodeValue, message, ...causeOptions };
     super({
       code: options.code,
       message: options.message,

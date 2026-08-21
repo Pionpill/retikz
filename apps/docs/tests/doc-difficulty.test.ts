@@ -40,23 +40,6 @@ const sections: Array<Section> = [
   },
 ];
 
-const branchWithoutDifficulty = {
-  id: 'group',
-  label,
-  children: [{ id: 'leaf', label }],
-} satisfies SubPage;
-
-// @ts-expect-error 分组节点不能声明阅读难度
-const branchWithDifficulty: SubPage = {
-  id: 'group',
-  label,
-  difficulty: DocDifficulty.Advanced,
-  children: [{ id: 'leaf', label }],
-};
-
-void branchWithoutDifficulty;
-void branchWithDifficulty;
-
 describe('document difficulty visibility', () => {
   it('keeps unmarked documents visible at every maximum difficulty', () => {
     expect(isDocDifficultyVisible(undefined, DocDifficulty.Beginner)).toBe(true);

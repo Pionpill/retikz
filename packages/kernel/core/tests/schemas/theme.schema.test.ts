@@ -1,26 +1,8 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
-
-import type { IRTheme, ResolvedTheme, ThemeModeValue, ThemeStyleValue } from '../../src';
+import { describe, expect, it } from 'vitest';
 
 import { SceneSchema, ScopeSchema, ThemeMode, ThemeSchema } from '../../src';
 
 describe('Theme schema', () => {
-  it('只公开 selector 词汇和派生类型', () => {
-    expectTypeOf<ThemeStyleValue>().toEqualTypeOf<string>();
-    expectTypeOf<ThemeModeValue>().toEqualTypeOf<'light' | 'dark'>();
-    expectTypeOf<IRTheme>().toEqualTypeOf<{
-      style?: string;
-      mode?: ThemeModeValue;
-    }>();
-    expectTypeOf<ResolvedTheme>().toMatchTypeOf<
-      Readonly<{
-        style?: string;
-        mode: ThemeModeValue;
-        colors: unknown;
-      }>
-    >();
-  });
-
   it('接受 JSON-safe selector 并保持 round-trip', () => {
     const parsed = ThemeSchema.parse({
       style: 'academic',

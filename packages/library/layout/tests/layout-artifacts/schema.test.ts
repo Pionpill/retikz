@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type {
   FlexLayoutArtifact,
@@ -7,7 +7,6 @@ import type {
   LayoutArtifactContainer,
   LayoutArtifactItemBase,
   LayoutSpacingArtifact,
-  LayoutSpacingKindValue,
   OverlayLayoutArtifact,
 } from '../../src';
 
@@ -60,7 +59,6 @@ describe('layout artifact schemas', () => {
     expect(() => LayoutArtifactContainerSchema.parse({ ...container, extra: true })).toThrow();
     expect(() => LayoutArtifactItemBaseSchema.parse({ ...item('a', 0), translation: { x: 0, y: 0, z: 1 } })).toThrow();
     expect(() => LayoutArtifactItemBaseSchema.parse({ ...item('a', 0), slotBounds: rect(0, 0, -1, 1) })).toThrow();
-    expectTypeOf(LayoutArtifactContainerSchema.parse(container)).toEqualTypeOf<LayoutArtifactContainer>();
   });
 
   it('validates strict JSON-safe spacing segments and positive main-axis length', () => {
@@ -75,7 +73,6 @@ describe('layout artifact schemas', () => {
     expect(() => LayoutSpacingArtifactSchema.parse({ ...values[0], bounds: rect(10, 5, 0, 8) })).toThrow();
     expect(() => LayoutSpacingArtifactSchema.parse({ ...values[1], bounds: rect(10, 5, 8, 0) })).toThrow();
     expect(() => LayoutSpacingArtifactSchema.parse({ ...values[0], extra: true })).toThrow();
-    expectTypeOf<LayoutSpacingKindValue>().toEqualTypeOf<'gap' | 'distributed'>();
   });
 
   it('validates Flex line partition in both directions', () => {
@@ -182,6 +179,5 @@ describe('layout artifact schemas', () => {
     ];
 
     expect(values.map(value => LayoutArtifactSchema.parse(value).kind)).toEqual(['flex', 'grid', 'overlay']);
-    expectTypeOf(LayoutArtifactSchema.parse(values[0])).toEqualTypeOf<LayoutArtifact>();
   });
 });

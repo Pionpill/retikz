@@ -50,11 +50,11 @@ const normalizeSampleOptions = (
   if (!Number.isInteger(value.maxRows) || value.maxRows < 1) {
     throw new RetikzDataError(`data lineage: ${label}.maxRows must be a positive integer`);
   }
-  if (!Array.isArray(value.fields) || value.fields.length === 0) {
+  if (value.fields.length === 0) {
     throw new RetikzDataError(`data lineage: ${label}.fields must be a non-empty field whitelist`);
   }
   value.fields.forEach((field, index) => {
-    if (typeof field !== 'string' || field.length === 0) {
+    if (field.length === 0) {
       throw new RetikzDataError(`data lineage: ${label}.fields[${index}] must be a non-empty string`);
     }
   });
@@ -69,11 +69,8 @@ const normalizeSourceIdentityOptions = (
   if (value === true || value === undefined) {
     return { mode: DataSourceIdentityMode.Summary, maxIndices: DEFAULT_SOURCE_IDENTITY_LIMIT };
   }
-  const mode: unknown = value.mode ?? DataSourceIdentityMode.Summary;
+  const mode = value.mode ?? DataSourceIdentityMode.Summary;
   const maxIndices = value.maxIndices ?? DEFAULT_SOURCE_IDENTITY_LIMIT;
-  if (mode !== DataSourceIdentityMode.Summary && mode !== DataSourceIdentityMode.Full) {
-    throw new RetikzDataError('data lineage: sourceIdentity.mode must be "summary" or "full"');
-  }
   if (!Number.isInteger(maxIndices) || maxIndices < 1) {
     throw new RetikzDataError('data lineage: sourceIdentity.maxIndices must be a positive integer');
   }

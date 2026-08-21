@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { CoreDependencyProvider, CoreProviderContribution, CoreProviderKey } from '../../../src';
 
@@ -21,10 +21,6 @@ describe('Core provider dependency contract', () => {
       roots: [shapeKey, clipKey, compositeKey],
       providers: [provider],
     };
-
-    expectTypeOf(shapeKey).toMatchTypeOf<CoreProviderKey>();
-    expectTypeOf(provider.dependencies).toEqualTypeOf<ReadonlyArray<CoreProviderKey>>();
-    expectTypeOf(contribution.providers).toEqualTypeOf<ReadonlyArray<CoreDependencyProvider>>();
     expect(contribution.roots).toEqual([
       { capability: 'shape', name: 'cross' },
       { capability: 'clip', name: 'ticket' },

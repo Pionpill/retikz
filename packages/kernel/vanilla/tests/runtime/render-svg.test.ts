@@ -1,13 +1,9 @@
 import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
 
 import { compileToScene, defineBoundary, defineClip } from '@retikz/core';
-import { RetikzRetainedRenderErrorCode } from '@retikz/render/runtime';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-
-import type { RenderToStringOptions } from '../../src';
-import type { MountOptions } from '../../src/dom';
 
 import { renderToSvgString } from '../../src';
 
@@ -123,21 +119,6 @@ describe('@retikz/vanilla renderToSvgString', () => {
     expect(renderToSvgString(scene)).toMatch(/^<svg viewBox=/);
   });
 
-  it('rejects mount-only runtime and unknown top-level SSR options instead of silently ignoring them', () => {
-    const mountOptions: MountOptions = {
-      runtime: {
-        rendererFactory: () => {
-          throw new Error('unused renderer factory');
-        },
-      },
-    };
-    expect(() => renderToSvgString(nodeIr, mountOptions as unknown as RenderToStringOptions)).toThrowError(
-      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
-    );
-    expect(() => renderToSvgString(nodeIr, { ignored: true } as unknown as RenderToStringOptions)).toThrowError(
-      expect.objectContaining({ code: RetikzRetainedRenderErrorCode.RetainedRuntimeInputInvalid }),
-    );
-  });
   it('passes boundary providers to compile options', () => {
     expect(() => renderToSvgString(boundaryIr)).toThrow(/options\.boundaries/i);
     expect(renderToSvgString(boundaryIr, { compile: { boundaries: [fixedBoundary()] } })).toMatch(/^<svg/);

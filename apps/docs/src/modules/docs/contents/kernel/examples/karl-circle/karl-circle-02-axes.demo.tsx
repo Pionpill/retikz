@@ -10,9 +10,9 @@ export const previewSource = {
 } satisfies PreviewSourceConfig;
 
 const Demo: FC = () => {
-  const lowerTex = useLowerTex();
+  const lowerTexState = useLowerTex();
   return (
-    <Layout width={600} height={360} lowerTex={lowerTex}>
+    <Layout width={600} height={360} lowerTex={lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined}>
       {/* 单位圆（半径 100px） */}
       <Circle center={[0, 0]} radius={100} lineCap="round" />
 

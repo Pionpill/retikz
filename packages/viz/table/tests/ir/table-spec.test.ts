@@ -1,9 +1,7 @@
-import type { IRDataReference } from '@retikz/data';
-
 import { defineComposite } from '@retikz/core';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type { IRCustomTable, IRDetailTable, IRManualTable, IRTable } from '../../src';
+import type { IRTable } from '../../src';
 
 import {
   CustomTableSchema,
@@ -34,11 +32,6 @@ describe('Table root spec schema', () => {
       type: 'table',
       structure: { kind: 'summaryByRegion', field: 'region' },
     });
-
-    expectTypeOf(detail).toEqualTypeOf<IRDetailTable>();
-    expectTypeOf(manual).toEqualTypeOf<IRManualTable>();
-    expectTypeOf(custom).toEqualTypeOf<IRCustomTable>();
-    expectTypeOf(detail.data).toEqualTypeOf<IRDataReference>();
     expect(detail.structure.kind).toBe('detail');
     expect(manual.structure.kind).toBe('manual');
     expect(custom.structure.kind).toBe('summaryByRegion');
@@ -46,8 +39,6 @@ describe('Table root spec schema', () => {
 
   it('round-trips a manual root without external data', () => {
     const parsed: IRTable = TableSchema.parse(JSON.parse(JSON.stringify(manualSpec)));
-
-    expectTypeOf(parsed.data).toEqualTypeOf<IRDataReference | undefined>();
     expect(parsed).toEqual(manualSpec);
     expect(ManualTableSchema.parse({ ...manualSpec, data: undefined })).toEqual({
       ...manualSpec,

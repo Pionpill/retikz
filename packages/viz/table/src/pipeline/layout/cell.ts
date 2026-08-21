@@ -102,7 +102,7 @@ const validateStartAndSpan = (start: number, span: number, count: number, axis: 
 };
 
 /** 按轴向对齐值选择矩形的 min、center 或 max anchor */
-const alignmentAnchor = (start: number, size: number, alignment: TableCellAlignment, name: string): number => {
+const alignmentAnchor = (start: number, size: number, alignment: TableCellAlignment): number => {
   switch (alignment) {
     case 'start':
       return start;
@@ -111,7 +111,7 @@ const alignmentAnchor = (start: number, size: number, alignment: TableCellAlignm
     case 'end':
       return start + size;
     default:
-      throw new RetikzTableError(`table: ${name} must be start, center, or end`);
+      return alignment satisfies never;
   }
 };
 
@@ -173,11 +173,11 @@ export const computeTableCellTranslation = (input: ComputeTableCellTranslationIn
   validateBoundsRect(input.contentBox, 'contentBox');
   validateBoundsRect(input.allocationBounds, 'allocationBounds');
   const x =
-    alignmentAnchor(input.contentBox.x, input.contentBox.width, input.horizontalAlign, 'horizontalAlign') -
-    alignmentAnchor(input.allocationBounds.x, input.allocationBounds.width, input.horizontalAlign, 'horizontalAlign');
+    alignmentAnchor(input.contentBox.x, input.contentBox.width, input.horizontalAlign) -
+    alignmentAnchor(input.allocationBounds.x, input.allocationBounds.width, input.horizontalAlign);
   const y =
-    alignmentAnchor(input.contentBox.y, input.contentBox.height, input.verticalAlign, 'verticalAlign') -
-    alignmentAnchor(input.allocationBounds.y, input.allocationBounds.height, input.verticalAlign, 'verticalAlign');
+    alignmentAnchor(input.contentBox.y, input.contentBox.height, input.verticalAlign) -
+    alignmentAnchor(input.allocationBounds.y, input.allocationBounds.height, input.verticalAlign);
   if (!Number.isFinite(x) || !Number.isFinite(y)) {
     throw new RetikzTableError('table: Cell translation must contain finite x and y');
   }

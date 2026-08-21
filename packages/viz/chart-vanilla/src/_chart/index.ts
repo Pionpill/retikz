@@ -69,9 +69,6 @@ export type RenderChartResult = Readonly<{
 
 /** 通过一次 Core 编译将 Chart 编写结果渲染为 SVG */
 export const renderChart = (input: ChartAuthoringResult, options: RenderChartOptions = {}): RenderChartResult => {
-  if (Object.hasOwn(options, 'compileDriver')) {
-    throw new RetikzChartVanillaError('Vanilla compile drivers require authored IR or a plain figure spec');
-  }
   const { compile: compileOptions, ...renderOptions } = options;
   const {
     composites: explicitComposites,

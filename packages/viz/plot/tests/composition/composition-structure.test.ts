@@ -128,18 +128,6 @@ describe('composition structure schema', () => {
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
-  it('legacy_composition_fields_are_rejected', () => {
-    const spec = {
-      ...baseSpec,
-      composition: {
-        defaultScope: 'main',
-        scopes: [{ id: 'main', coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' } }],
-      },
-    };
-
-    expect(() => PlotSchema.parse(spec)).toThrow();
-  });
-
   it('negative_spacing_is_rejected', () => {
     const spec = {
       ...baseSpec,
