@@ -1,4 +1,4 @@
-import type { AnyInspectorDefinition } from '../../contract';
+import type { AnyInspectorDefinition } from '../contract';
 
 import { STROKE_PATH_INSPECTOR } from './stroke-path';
 

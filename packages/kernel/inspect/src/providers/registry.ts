@@ -1,7 +1,7 @@
-import type { AnyInspectorDefinition, InspectorKey } from '../../contract';
+import type { AnyInspectorDefinition, InspectorKey } from '../contract';
 
-import { normalizeInspectorDefinition } from '../../contract';
-import { RetikzInspectError, RetikzInspectErrorCode } from '../../error';
+import { normalizeInspectorDefinition } from '../contract';
+import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 import { BUILTIN_INSPECTORS } from './definitions';
 
 /** Inspector Definition 的 immutable registry */
