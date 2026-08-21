@@ -7,11 +7,11 @@ description: Compile complete Core IR into a deterministic Scene, then publish c
 
 ## Theme environment
 
-Core exports `ThemeMode`, `ThemeSchema`, `ResolvedTheme`, and `ResolvedThemeColors`. `IRScene.theme` and `IRScope.theme` persist only sparse, JSON-safe `style` / `mode` selectors. Compile starts from the default light baseline, inherits through Scene → Scope, and passes a complete frozen `ResolvedTheme` to `CompositeDefinition.expand` and layout-aware `compile`.
+Core exports `ThemeMode`, `ThemeSchema`, `ResolvedTheme`, and `ResolvedThemeColors`. `IRScene.theme` and `IRScope.theme` persist only sparse, JSON-safe `style` / `mode` selectors. Compile starts from the default light baseline, inherits through Scene → Scope, and passes a complete frozen `ResolvedTheme` to `CompositeDefinition.expand`, layout-aware `compile`, and the observation context.
 
 Published packages do not provide named styles. Define a custom style with `defineThemeStyle` and inject it through compile `themeStyles`. Its resolver generates shared colors during resolution, so functions and complete token maps never enter IR, snapshots, or JSON. An unregistered name fails loudly.
 
-Core only propagates selectors and creates a detached, frozen `colors` view; it does not interpret domain tokens. `ResolvedTheme.colors` exposes shared semantic colors and the active categorical palette, whose values may repeat and are consumed with a stable modulo index. Core primitives, the final Scene, and renderers do not branch on Theme. See [Compile](/kernel/reference/runtime/compile#composites) for behavior and failures and [Scene](/kernel/reference/schema/scene#theme) for the schema.
+Core only propagates selectors and creates a detached, frozen `colors` view; it does not interpret domain tokens. `ResolvedTheme.colors` exposes shared semantic colors (`error`, `success`, `warning`, and the lower-emphasis auxiliary `guide`) and the active categorical palette, whose values may repeat and are consumed with a stable modulo index. Core primitives, the final Scene, and renderers do not branch on Theme. See [Compile](/kernel/reference/runtime/compile#composites) for behavior and failures and [Scene](/kernel/reference/schema/scene#theme) for the schema.
 
 Use `compositeOpaqueColor(foreground, backdrop, weight)` when a static color must be baked into an opaque backdrop at a fixed ratio. It parses static CSS colors, precomposes them with source-over sRGB, and returns lowercase six-digit hex. Dynamic colors and translucent backdrops fail loudly.
 
@@ -162,28 +162,28 @@ session.update({
 
 ## Public API
 
-| Export                                                         | Role                                                                          |
-| -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                           | Fixed identities for the Core document owner and compile Program              |
-| `CoreOwnerDefinition`                                          | Capture/read/equality Definition for complete IR Snapshots                    |
-| `ThemeStyle` / `ThemeMode` / `ThemeSchema`                     | Built-in Theme vocabulary, strict IR schema, and Scene / Scope inheritance    |
-| `IRTheme` / `ResolvedTheme` / `ResolvedThemeColors`            | Sparse persisted override, complete frozen environment, and shared color view |
-| `ThemeStyleDefinition` / `defineThemeStyle`                    | Define a runtime Core style resolver and inject it with `themeStyles`         |
-| `compositeOpaqueColor()`                                       | Precompose a static foreground at a fixed weight into opaque six-digit hex    |
-| `createCoreProgram(options, runtimeOptions?)`                  | Create a Runtime Program Definition while preserving composite artifacts      |
-| `CoreChange`                                                   | `add` / `update` / `remove` / `move` change-hint union                        |
-| `CoreProgramOptions<TComposites>`                              | Program-lifetime `CompileOptions` without `trace`                             |
-| `CoreProgramRuntimeOptions`                                    | Extra Runtime owners that invalidate Core without entering IR or Scene        |
-| `CoreProgramOutput<TComposites>`                               | Complete compile result and warnings                                          |
-| `CoreProgramPublicRead<TComposites>`                           | Public `output`, `snapshot`, and optional `patch`                             |
-| `CoreProgramDefinition<TComposites>`                           | Artifact-input, owned-artifact, and private/public read generic relationship  |
-| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch`         | Deeply readonly Scene and atomic Patch DTOs                                   |
-| `observeCompileToScene()`                                      | Run an explicit full compile with observer sessions                           |
-| `defineCompileObserver()` / `CompileObserverDefinition`        | Define a compile observation session and its stable key                       |
-| `CompileObservation` / `CompileObservationContext`             | Final owner output, occurrence, transform, and isolated fragment compiler     |
-| `CompileOwnerOutputDefinition` / `CompileOwnerOutputPublisher` | Declare and publish optional final Path-kind output                           |
-| `ObservedCompileResult` / `CompileObserverOutput`              | Primary compile result and domain-defined outputs in definition order         |
-| `RetikzCoreError` / `RetikzCoreErrorCode`                      | The single Core error class and stable parse, resolve, and compile codes      |
+| Export                                                         | Role                                                                                        |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                           | Fixed identities for the Core document owner and compile Program                            |
+| `CoreOwnerDefinition`                                          | Capture/read/equality Definition for complete IR Snapshots                                  |
+| `ThemeStyle` / `ThemeMode` / `ThemeSchema`                     | Built-in Theme vocabulary, strict IR schema, and Scene / Scope inheritance                  |
+| `IRTheme` / `ResolvedTheme` / `ResolvedThemeColors`            | Sparse persisted override, complete frozen environment, and shared color view               |
+| `ThemeStyleDefinition` / `defineThemeStyle`                    | Define a runtime Core style resolver and inject it with `themeStyles`                       |
+| `compositeOpaqueColor()`                                       | Precompose a static foreground at a fixed weight into opaque six-digit hex                  |
+| `createCoreProgram(options, runtimeOptions?)`                  | Create a Runtime Program Definition while preserving composite artifacts                    |
+| `CoreChange`                                                   | `add` / `update` / `remove` / `move` change-hint union                                      |
+| `CoreProgramOptions<TComposites>`                              | Program-lifetime `CompileOptions` without `trace`                                           |
+| `CoreProgramRuntimeOptions`                                    | Extra Runtime owners that invalidate Core without entering IR or Scene                      |
+| `CoreProgramOutput<TComposites>`                               | Complete compile result and warnings                                                        |
+| `CoreProgramPublicRead<TComposites>`                           | Public `output`, `snapshot`, and optional `patch`                                           |
+| `CoreProgramDefinition<TComposites>`                           | Artifact-input, owned-artifact, and private/public read generic relationship                |
+| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch`         | Deeply readonly Scene and atomic Patch DTOs                                                 |
+| `observeCompileToScene()`                                      | Run an explicit full compile with observer sessions                                         |
+| `defineCompileObserver()` / `CompileObserverDefinition`        | Define a compile observation session and its stable key                                     |
+| `CompileObservation` / `CompileObservationContext`             | Final owner output, occurrence, transform, occurrence Theme, and isolated fragment compiler |
+| `CompileOwnerOutputDefinition` / `CompileOwnerOutputPublisher` | Declare and publish optional final Path-kind output                                         |
+| `ObservedCompileResult` / `CompileObserverOutput`              | Primary compile result and domain-defined outputs in definition order                       |
+| `RetikzCoreError` / `RetikzCoreErrorCode`                      | The single Core error class and stable parse, resolve, and compile codes                    |
 
 ## Source
 

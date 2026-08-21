@@ -1,6 +1,7 @@
 import type { ZodType } from 'zod';
 
 import type { IRChild, JsonValue } from '../../schemas';
+import type { ResolvedTheme } from '../../shared';
 import type { CompileOccurrenceLocator } from '../occurrence';
 import type { Scene } from '../scene';
 
@@ -97,6 +98,8 @@ export type CompileObservation<TValue extends JsonValue = JsonValue> = Readonly<
 
 /** observer 在一次 observed compile 中使用的上下文 */
 export type CompileObservationContext = Readonly<{
+  /** 当前最终 occurrence 的完整、只读 Theme */
+  theme: ResolvedTheme;
   /** 在当前 occurrence 环境中编译隔离的普通 IR 片段 */
   compileFragment: (children: IRChild | ReadonlyArray<IRChild>) => CompiledSceneFragment;
 }>;

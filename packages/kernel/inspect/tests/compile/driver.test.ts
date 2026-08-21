@@ -1,6 +1,6 @@
 import type { IRScene } from '@retikz/core';
 
-import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -35,6 +35,44 @@ const selection = {
 };
 
 describe('Inspection compile driver', () => {
+  it('resolves appearance from the captured occurrence Theme', () => {
+    let appearance:
+      | {
+          colorScope: number;
+          scopeColor: string;
+          guideColor: string;
+          warningColor: string;
+        }
+      | undefined;
+    const themeStyle = defineThemeStyle({
+      name: 'inspect-brand',
+      resolve: () => ({
+        semantic: { error: '#error', success: '#success', warning: '#warning', guide: '#guide' },
+        categorical: ['#scope'],
+      }),
+    });
+    const registry = createInspectorRegistry([
+      defineInspector({
+        ...key,
+        owner,
+        subjectSchema: z.strictObject({ label: z.literal('settled') }),
+        optionsInputSchema: z.strictObject({}),
+        optionsSchema: z.strictObject({}),
+        inspect: (_subject, context) => {
+          appearance = context.appearance;
+          return [];
+        },
+      }),
+    ]);
+
+    compileInspectionToScene(
+      { ...ir, theme: { style: themeStyle.name } },
+      { registry, selection, compileOptions: { composites: [composite], themeStyles: [themeStyle] } },
+    );
+
+    expect(appearance).toEqual({ colorScope: 0, scopeColor: '#scope', guideColor: '#guide', warningColor: '#warning' });
+  });
+
   it('validates the subject and compiles each dense output into a sealed entry', () => {
     const registry = createInspectorRegistry([
       defineInspector({

@@ -13,6 +13,7 @@ const coreColors = (mode: 'light' | 'dark'): ResolvedThemeColors => ({
     error: mode === ThemeMode.Light ? '#aa0000' : '#ffaaaa',
     success: mode === ThemeMode.Light ? '#00aa00' : '#aaffaa',
     warning: mode === ThemeMode.Light ? '#aaaa00' : '#ffffaa',
+    guide: mode === ThemeMode.Light ? '#666666' : '#cccccc',
   },
   categorical: ['#336699'],
 });

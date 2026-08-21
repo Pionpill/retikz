@@ -101,7 +101,7 @@ describe('Inspection selection', () => {
       { label: 'nested', tone: 'scene' },
       { label: 'default', tone: 'reopened' },
     ]);
-    expect(resolved.map(request => request.appearance.colorScope)).toEqual([0, 1]);
+    expect(resolved.map(request => request.colorScope)).toEqual([0, 1]);
   });
 
   it('prevents reopening below a barrier', () => {

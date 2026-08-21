@@ -7,11 +7,11 @@ description: 把完整 Core IR 编译为确定性 Scene，并通过 Core Runtime
 
 ## Theme 环境
 
-Core 公开 `ThemeMode`、`ThemeSchema`、`ResolvedTheme` 与 `ResolvedThemeColors`。`IRScene.theme` 和 `IRScope.theme` 仅保存稀疏、JSON-safe 的 `style` / `mode` selector；compile 从默认 light 基线开始按 Scene → Scope 继承，并把完整、冻结的 `ResolvedTheme` 传给 `CompositeDefinition.expand` 与布局感知 `compile`。
+Core 公开 `ThemeMode`、`ThemeSchema`、`ResolvedTheme` 与 `ResolvedThemeColors`。`IRScene.theme` 和 `IRScope.theme` 仅保存稀疏、JSON-safe 的 `style` / `mode` selector；compile 从默认 light 基线开始按 Scene → Scope 继承，并把完整、冻结的 `ResolvedTheme` 传给 `CompositeDefinition.expand`、布局感知 `compile` 与 observation context。
 
 发布包不提供命名 style；自定义 style 用 `defineThemeStyle` 定义并经 compile 的 `themeStyles` 注入。style resolver 在解析期生成 shared colors，因此函数和完整 token map 不进入 IR、snapshot 或 JSON。未注册名称立即 fail-loud。
 
-Core 只负责传播 selector 并生成 detached/frozen `colors` 视图，不解释领域 token。`ResolvedTheme.colors` 提供 shared semantic colors 与当前 categorical palette；后者允许重复值，并由消费方按稳定 index 取余。Core primitive、最终 Scene 与 renderer 都不按 Theme 分支。契约和失败语义见[编译](/kernel/reference/runtime/compile#composite)，schema 见[场景](/kernel/reference/schema/scene#theme)。
+Core 只负责传播 selector 并生成 detached/frozen `colors` 视图，不解释领域 token。`ResolvedTheme.colors` 提供 shared semantic colors（包括 `error`、`success`、`warning` 与低强调辅助色 `guide`）以及当前 categorical palette；后者允许重复值，并由消费方按稳定 index 取余。Core primitive、最终 Scene 与 renderer 都不按 Theme 分支。契约和失败语义见[编译](/kernel/reference/runtime/compile#composite)，schema 见[场景](/kernel/reference/schema/scene#theme)。
 
 需要把静态颜色按固定比例落到不透明背景时，可使用 `compositeOpaqueColor(foreground, backdrop, weight)`。它解析静态 CSS color，以 source-over sRGB 预合成并返回小写六位 hex；动态颜色或非不透明 backdrop 会明确报错
 
@@ -162,28 +162,28 @@ session.update({
 
 ## 公开 API
 
-| 导出                                                           | 作用                                                           |
-| -------------------------------------------------------------- | -------------------------------------------------------------- |
-| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                           | Core document owner 与 compile Program 的固定 identity         |
-| `CoreOwnerDefinition`                                          | 完整 IR Snapshot 的 capture/read/equality Definition           |
-| `ThemeStyle` / `ThemeMode` / `ThemeSchema`                     | 内置 Theme 词汇、严格 IR schema 与 Scene / Scope 继承入口      |
-| `IRTheme` / `ResolvedTheme` / `ResolvedThemeColors`            | 稀疏持久化覆盖、完整冻结环境与 shared color view               |
-| `ThemeStyleDefinition` / `defineThemeStyle`                    | 定义运行时 Core style resolver，并经 `themeStyles` 注入        |
-| `compositeOpaqueColor()`                                       | 把静态前景色按固定权重预合成为不透明六位 hex                   |
-| `createCoreProgram(options, runtimeOptions?)`                  | 创建保留 composite artifact 泛型的 Runtime Program Definition  |
-| `CoreChange`                                                   | `add` / `update` / `remove` / `move` change hint union         |
-| `CoreProgramOptions<TComposites>`                              | `CompileOptions` 去掉 `trace` 后的 Program 生命周期配置        |
-| `CoreProgramRuntimeOptions`                                    | 声明只负责失效、不进入 IR / Scene 的额外 Runtime owners        |
-| `CoreProgramOutput<TComposites>`                               | 完整 compile result 与 warnings                                |
-| `CoreProgramPublicRead<TComposites>`                           | public `output` / `snapshot` / optional `patch`                |
-| `CoreProgramDefinition<TComposites>`                           | 保留 artifact input、owned artifact、private/public read 泛型  |
-| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch`         | deeply readonly Scene 与原子 Patch DTO                         |
-| `observeCompileToScene()`                                      | 显式执行带 observer sessions 的完整编译                        |
-| `defineCompileObserver()` / `CompileObserverDefinition`        | 定义一次编译期观测会话及其稳定 key                             |
-| `CompileObservation` / `CompileObservationContext`             | 最终所属者产物、occurrence、变换与隔离片段编译入口             |
-| `CompileOwnerOutputDefinition` / `CompileOwnerOutputPublisher` | Path kind 的按需最终产物声明与发布                             |
-| `ObservedCompileResult` / `CompileObserverOutput`              | 主编译结果与按 definition 顺序返回的领域自定义输出             |
-| `RetikzCoreError` / `RetikzCoreErrorCode`                      | Core 唯一错误类与可判定的 parse、resolve、compile 等稳定错误码 |
+| 导出                                                           | 作用                                                                  |
+| -------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `CORE_OWNER_KEY` / `CORE_PROGRAM_ID`                           | Core document owner 与 compile Program 的固定 identity                |
+| `CoreOwnerDefinition`                                          | 完整 IR Snapshot 的 capture/read/equality Definition                  |
+| `ThemeStyle` / `ThemeMode` / `ThemeSchema`                     | 内置 Theme 词汇、严格 IR schema 与 Scene / Scope 继承入口             |
+| `IRTheme` / `ResolvedTheme` / `ResolvedThemeColors`            | 稀疏持久化覆盖、完整冻结环境与 shared color view                      |
+| `ThemeStyleDefinition` / `defineThemeStyle`                    | 定义运行时 Core style resolver，并经 `themeStyles` 注入               |
+| `compositeOpaqueColor()`                                       | 把静态前景色按固定权重预合成为不透明六位 hex                          |
+| `createCoreProgram(options, runtimeOptions?)`                  | 创建保留 composite artifact 泛型的 Runtime Program Definition         |
+| `CoreChange`                                                   | `add` / `update` / `remove` / `move` change hint union                |
+| `CoreProgramOptions<TComposites>`                              | `CompileOptions` 去掉 `trace` 后的 Program 生命周期配置               |
+| `CoreProgramRuntimeOptions`                                    | 声明只负责失效、不进入 IR / Scene 的额外 Runtime owners               |
+| `CoreProgramOutput<TComposites>`                               | 完整 compile result 与 warnings                                       |
+| `CoreProgramPublicRead<TComposites>`                           | public `output` / `snapshot` / optional `patch`                       |
+| `CoreProgramDefinition<TComposites>`                           | 保留 artifact input、owned artifact、private/public read 泛型         |
+| `RuntimeScene` / `SceneRuntimeSnapshot` / `ScenePatch`         | deeply readonly Scene 与原子 Patch DTO                                |
+| `observeCompileToScene()`                                      | 显式执行带 observer sessions 的完整编译                               |
+| `defineCompileObserver()` / `CompileObserverDefinition`        | 定义一次编译期观测会话及其稳定 key                                    |
+| `CompileObservation` / `CompileObservationContext`             | 最终所属者产物、occurrence、变换、occurrence Theme 与隔离片段编译入口 |
+| `CompileOwnerOutputDefinition` / `CompileOwnerOutputPublisher` | Path kind 的按需最终产物声明与发布                                    |
+| `ObservedCompileResult` / `CompileObserverOutput`              | 主编译结果与按 definition 顺序返回的领域自定义输出                    |
+| `RetikzCoreError` / `RetikzCoreErrorCode`                      | Core 唯一错误类与可判定的 parse、resolve、compile 等稳定错误码        |
 
 ## 源码
 

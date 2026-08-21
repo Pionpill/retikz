@@ -34,7 +34,7 @@ describe('toSceneResult runtime metadata', () => {
     const themeStyle = defineThemeStyle({
       name: 'academic',
       resolve: () => ({
-        semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00' },
+        semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
         categorical: ['#112233'],
       }),
     });

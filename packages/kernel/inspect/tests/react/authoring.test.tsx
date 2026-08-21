@@ -41,7 +41,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
       </InspectLayout>,
     );
 
-    expect(retained).toContain('#2563eb');
+    expect(retained).toContain('hsl(210, 38%, 48%)');
     expect(normalizeEmptyElements(staticHtml)).toBe(normalizeEmptyElements(retained));
   });
 
@@ -74,7 +74,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
     );
 
     expect(html).not.toContain('data-retikz-readonly-layer');
-    expect(html).not.toContain('#2563eb');
+    expect(html).not.toContain('hsl(210, 38%, 48%)');
   });
 
   it('rejects a self request whose authored site owner does not match the Inspector owner', () => {
@@ -155,7 +155,16 @@ describe('@retikz/inspect/react authoring and driver', () => {
       coreOptions: {},
     });
     const observer = session.observers[0].createSession();
-    const context = { compileFragment: () => ({ scene: {}, artifacts: [], diagnostics: [] }) } as never;
+    const context = {
+      theme: {
+        mode: 'light',
+        colors: {
+          semantic: { error: '#error', success: '#success', warning: '#warning', guide: '#guide' },
+          categorical: ['#scope'],
+        },
+      },
+      compileFragment: () => ({ scene: {}, artifacts: [], diagnostics: [] }),
+    } as never;
     const occurrence = { sourcePath: 'children[0]', expansionPath: [] };
     observer.observe(
       {

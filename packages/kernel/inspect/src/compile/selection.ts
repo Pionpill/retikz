@@ -7,7 +7,6 @@ import type {
   IRScene,
 } from '@retikz/core';
 
-import type { InspectionAppearance } from '../contract';
 import type { InspectorRegistry } from '../providers';
 import type {
   InspectionSelection,
@@ -18,7 +17,6 @@ import type {
 
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 import { inspectorRegistryKey } from '../providers';
-import { INSPECTION_SCOPE_PALETTE, INSPECTION_WARNING_COLOR } from './constants';
 import { selectionOrigin, wrapInspectionError } from './diagnostics';
 import { cloneAndFreezeInspectionJson } from './output';
 
@@ -238,7 +236,7 @@ export const resolveInspectionSelection = ({
     }
   }
 
-  const pending: Array<Omit<ResolvedInspectionRequest, 'appearance'>> = [];
+  const pending: Array<Omit<ResolvedInspectionRequest, 'colorScope'>> = [];
   for (const observation of orderedObservations) {
     for (const definition of registry.definitions) {
       if (!ownerEquals(observation.owner, definition.owner)) continue;
@@ -309,17 +307,7 @@ export const resolveInspectionSelection = ({
       compareInspectionOccurrences(left.occurrence, right.occurrence) ||
       inspectorRegistryKey(left.inspector).localeCompare(inspectorRegistryKey(right.inspector)),
   );
-  return Object.freeze(
-    pending.map((request, colorScope) => {
-      const appearance: InspectionAppearance = Object.freeze({
-        colorScope,
-        scopeColor:
-          INSPECTION_SCOPE_PALETTE[colorScope % INSPECTION_SCOPE_PALETTE.length] ?? INSPECTION_SCOPE_PALETTE[0],
-        warningColor: INSPECTION_WARNING_COLOR,
-      });
-      return Object.freeze({ ...request, appearance });
-    }),
-  );
+  return Object.freeze(pending.map((request, colorScope) => Object.freeze({ ...request, colorScope })));
 };
 
 /** 判断 authored site 是否可能被 selection 选中，以保持 owner output 按需发布 */

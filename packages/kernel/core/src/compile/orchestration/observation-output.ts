@@ -58,6 +58,7 @@ export const dispatchCompileObservations = (
       }),
     });
     const observationContext: CompileObservationContext = Object.freeze({
+      theme: entry.theme,
       compileFragment: children => compileObservedFragment(entry, children, context),
     });
     runtime.dispatch(observation, entry.observerKeys, observationContext);

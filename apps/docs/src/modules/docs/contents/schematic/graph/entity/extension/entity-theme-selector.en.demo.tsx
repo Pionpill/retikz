@@ -30,6 +30,7 @@ const brandCoreTheme = defineThemeStyle({
       error: mode === ThemeMode.Light ? '#dc2626' : '#fca5a5',
       success: mode === ThemeMode.Light ? '#16a34a' : '#86efac',
       warning: mode === ThemeMode.Light ? '#ca8a04' : '#fde047',
+      guide: mode === ThemeMode.Light ? '#6b7280' : '#9ca3af',
     },
     categorical: ['#2563eb'],
   }),

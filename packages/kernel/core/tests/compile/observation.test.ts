@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import type { CompileObservation, CompileObserverDefinition, IRScene, LayoutChildProbeKindValue } from '../../src';
+import type {
+  CompileObservation,
+  CompileObservationContext,
+  CompileObserverDefinition,
+  IRScene,
+  LayoutChildProbeKindValue,
+} from '../../src';
 
 import * as core from '../../src';
 
@@ -176,6 +182,32 @@ describe('Core observed compile', () => {
     );
 
     expect(warnings).toHaveLength(1);
+  });
+
+  it('exposes the occurrence Theme through the observation context', () => {
+    let observedContext: CompileObservationContext | undefined;
+    const observer: CompileObserverDefinition = {
+      key: 'test/theme-context',
+      createSession: () => ({
+        select: () => true,
+        observe: (_observation, context) => {
+          observedContext = context;
+        },
+        complete: () => null,
+      }),
+    };
+
+    observedCompile(
+      { ...scene([{ namespace: 'test', type: 'observable' }]), theme: { mode: 'dark' } },
+      { composites: [observableComposite], padding: 0 },
+      [observer],
+    );
+
+    expect(observedContext?.theme).toMatchObject({
+      mode: 'dark',
+      colors: { semantic: { guide: 'hsl(215, 14%, 68%)' } },
+    });
+    expect(Object.isFrozen(observedContext?.theme)).toBe(true);
   });
 });
 

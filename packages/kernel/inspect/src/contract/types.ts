@@ -18,6 +18,8 @@ export type InspectionAppearance = Readonly<{
   colorScope: number;
   /** 由 canonical palette 派生的常规颜色 */
   scopeColor: string;
+  /** 当前 Theme 的低强调辅助颜色 */
+  guideColor: string;
   /** canonical warning 颜色 */
   warningColor: string;
 }>;

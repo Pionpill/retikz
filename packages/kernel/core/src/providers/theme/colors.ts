@@ -7,6 +7,7 @@ type CoreSemanticColors = Readonly<{
   error: CssColorValue;
   success: CssColorValue;
   warning: CssColorValue;
+  guide: CssColorValue;
 }>;
 
 type CategoricalTone = Readonly<{
@@ -91,6 +92,7 @@ const CORE_COLOR_PRESETS: Readonly<Record<ThemeModeValue, ResolvedThemeColors>> 
       error: 'hsl(0, 60%, 53%)',
       success: 'hsl(145, 45%, 42%)',
       warning: 'hsl(48, 75%, 42%)',
+      guide: 'hsl(215, 12%, 48%)',
     },
     createCategoricalPalette(ThemeMode.Light),
   ),
@@ -99,6 +101,7 @@ const CORE_COLOR_PRESETS: Readonly<Record<ThemeModeValue, ResolvedThemeColors>> 
       error: 'hsl(0, 65%, 70%)',
       success: 'hsl(145, 48%, 65%)',
       warning: 'hsl(50, 78%, 65%)',
+      guide: 'hsl(215, 14%, 68%)',
     },
     createCategoricalPalette(ThemeMode.Dark),
   ),

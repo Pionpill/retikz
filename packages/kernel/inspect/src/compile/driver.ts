@@ -10,7 +10,7 @@ import type {
   JsonValue,
 } from '@retikz/core';
 
-import { observeCompileToScene } from '@retikz/core';
+import { categoricalColorAt, observeCompileToScene } from '@retikz/core';
 
 import type { InspectorContext } from '../contract';
 import type { InspectorRegistry } from '../providers';
@@ -34,6 +34,18 @@ type InspectionObserverOutput = Readonly<{
   inspection: InspectionCompileResult['inspection'];
   diagnostics: ReadonlyArray<InspectionDiagnostic>;
 }>;
+
+/** 按当前 occurrence Theme 生成 Inspector callback 使用的冻结外观 */
+const inspectionAppearanceOf = (
+  colorScope: number,
+  theme: CompileObservationContext['theme'],
+): InspectorContext['appearance'] =>
+  Object.freeze({
+    colorScope,
+    scopeColor: categoricalColorAt(theme.colors.categorical, colorScope),
+    guideColor: theme.colors.semantic.guide,
+    warningColor: theme.colors.semantic.warning,
+  });
 
 /** 创建带结构化 origin 的 Inspect compile 失败 */
 const createInspectionCompileError = (message: string, origin: InspectionDiagnosticOrigin): RetikzInspectError =>
@@ -94,6 +106,7 @@ const completeInspection = (
     );
     if (capture === undefined)
       throw createInspectionCompileError('Inspection complete failed: observation is missing', { stage: 'complete' });
+    const appearance = inspectionAppearanceOf(request.colorScope, capture.context.theme);
     let subject: JsonValue;
     try {
       subject = cloneAndFreezeInspectionJson(
@@ -103,7 +116,7 @@ const completeInspection = (
     } catch (cause) {
       throw wrapInspectionError(originFor('subject', request), cause);
     }
-    return { request, definition, capture, subject };
+    return { request, definition, capture, subject, appearance };
   });
 
   const entries: Array<InspectionPlaneEntry> = [];
@@ -115,7 +128,7 @@ const completeInspection = (
       occurrence: item.request.occurrence,
       provenance: item.request.provenance,
       options: item.request.options,
-      appearance: item.request.appearance,
+      appearance: item.appearance,
     });
     let output: ReturnType<typeof normalizeInspectorOutput>;
     try {
@@ -150,7 +163,7 @@ const completeInspection = (
           inspector: item.request.inspector,
           owner: item.request.owner,
           occurrence: item.request.occurrence,
-          colorScope: item.request.appearance.colorScope,
+          colorScope: item.request.colorScope,
           scene,
           transform: item.capture.observation.transform,
         }),

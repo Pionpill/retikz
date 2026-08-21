@@ -75,7 +75,7 @@ describe('Plot theme resolver', () => {
         style: 'brand',
         mode: ThemeMode.Light,
         colors: {
-          semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+          semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706', guide: '#6b7280' },
           categorical: ['#core-categorical'],
         },
       },
@@ -114,7 +114,7 @@ describe('Plot theme resolver', () => {
           style: 'brand',
           mode: ThemeMode.Light,
           colors: {
-            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706', guide: '#6b7280' },
             categorical: ['#brand'],
           },
         },
@@ -126,7 +126,7 @@ describe('Plot theme resolver', () => {
         {
           mode: ThemeMode.Light,
           colors: {
-            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706', guide: '#6b7280' },
             categorical: ['#brand'],
           },
         },
@@ -140,7 +140,7 @@ describe('Plot theme resolver', () => {
           style: 'incomplete-brand',
           mode: ThemeMode.Light,
           colors: {
-            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706', guide: '#6b7280' },
             categorical: ['#brand'],
           },
         },
@@ -223,7 +223,7 @@ describe('Plot theme resolver', () => {
     const effectiveTheme: ResolvedTheme = {
       ...themeOf(undefined, ThemeMode.Dark),
       colors: {
-        semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+        semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706', guide: '#6b7280' },
         categorical: ['#effective-core'],
       },
     };

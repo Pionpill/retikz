@@ -428,7 +428,7 @@ describe('Container layout and artifact contract', () => {
 
   it('carries Container variant through a themed Core Scope and resolves the new Graph Theme baseline', () => {
     const colors = (mode: 'light' | 'dark'): ResolvedThemeColors => ({
-      semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00' },
+      semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
       categorical: [mode === ThemeMode.Light ? '#336699' : '#99ccff'],
     });
     const coreStyle = defineThemeStyle({ name: 'brand', resolve: ({ mode }) => colors(mode) });

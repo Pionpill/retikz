@@ -386,7 +386,7 @@ export const inspectLayoutArtifactBase = (
           vertical ? item.slotBounds.y : item.alignmentGuide.position,
           vertical ? item.alignmentGuide.position : item.slotBounds.x + item.slotBounds.width,
           vertical ? item.slotBounds.y + item.slotBounds.height : item.alignmentGuide.position,
-          appearance.scopeColor,
+          appearance.guideColor,
           true,
         ),
       );

@@ -25,7 +25,12 @@ const cases = [
       [34, 55],
       [40, 49],
     ],
-    { error: 'hsl(0, 60%, 53%)', success: 'hsl(145, 45%, 42%)', warning: 'hsl(48, 75%, 42%)' },
+    {
+      error: 'hsl(0, 60%, 53%)',
+      success: 'hsl(145, 45%, 42%)',
+      warning: 'hsl(48, 75%, 42%)',
+      guide: 'hsl(215, 12%, 48%)',
+    },
   ],
   [
     ThemeMode.Dark,
@@ -47,7 +52,12 @@ const cases = [
       [48, 59],
       [50, 61],
     ],
-    { error: 'hsl(0, 65%, 70%)', success: 'hsl(145, 48%, 65%)', warning: 'hsl(50, 78%, 65%)' },
+    {
+      error: 'hsl(0, 65%, 70%)',
+      success: 'hsl(145, 48%, 65%)',
+      warning: 'hsl(50, 78%, 65%)',
+      guide: 'hsl(215, 14%, 68%)',
+    },
   ],
 ] as const;
 

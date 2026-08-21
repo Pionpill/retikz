@@ -12,7 +12,7 @@ const testThemeStyles = ['academic', 'vibrant', 'clean'].map(name =>
   defineThemeStyle({
     name,
     resolve: () => ({
-      semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00' },
+      semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
       categorical: ['#112233'],
     }),
   }),

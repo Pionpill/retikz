@@ -23,6 +23,7 @@ export type ResolvedThemeColors = Readonly<{
     error: CssColorValue;
     success: CssColorValue;
     warning: CssColorValue;
+    guide: CssColorValue;
   }>;
   /** 当前生效的非空 categorical palette */
   categorical: NonEmptyReadonlyArray<CssColorValue>;

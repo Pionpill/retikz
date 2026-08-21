@@ -68,7 +68,7 @@ describe('Chart style resolution', () => {
         style: 'brand',
         mode: ThemeMode.Light,
         colors: {
-          semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+          semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706', guide: '#6b7280' },
           categorical: ['#core-categorical'],
         },
       },
@@ -83,7 +83,7 @@ describe('Chart style resolution', () => {
       style: 'brand',
       mode: ThemeMode.Light,
       colors: {
-        semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+        semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706', guide: '#6b7280' },
         categorical: ['#core-categorical'],
       },
     };

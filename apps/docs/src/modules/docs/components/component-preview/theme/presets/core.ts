@@ -128,16 +128,46 @@ const tonePresets: Record<ReferenceStyle, Record<ThemeModeValue, ReadonlyArray<T
 
 const semanticPresets: Record<ReferenceStyle, Record<ThemeModeValue, ResolvedThemeColors['semantic']>> = {
   academic: {
-    light: { error: 'hsl(0, 68%, 42%)', success: 'hsl(145, 50%, 32%)', warning: 'hsl(48, 80%, 38%)' },
-    dark: { error: 'hsl(0, 60%, 72%)', success: 'hsl(145, 50%, 68%)', warning: 'hsl(50, 75%, 70%)' },
+    light: {
+      error: 'hsl(0, 68%, 42%)',
+      success: 'hsl(145, 50%, 32%)',
+      warning: 'hsl(48, 80%, 38%)',
+      guide: 'hsl(215, 12%, 48%)',
+    },
+    dark: {
+      error: 'hsl(0, 60%, 72%)',
+      success: 'hsl(145, 50%, 68%)',
+      warning: 'hsl(50, 75%, 70%)',
+      guide: 'hsl(215, 14%, 68%)',
+    },
   },
   vibrant: {
-    light: { error: 'hsl(355, 80%, 57%)', success: 'hsl(145, 65%, 42%)', warning: 'hsl(50, 90%, 46%)' },
-    dark: { error: 'hsl(355, 78%, 72%)', success: 'hsl(145, 62%, 66%)', warning: 'hsl(50, 88%, 68%)' },
+    light: {
+      error: 'hsl(355, 80%, 57%)',
+      success: 'hsl(145, 65%, 42%)',
+      warning: 'hsl(50, 90%, 46%)',
+      guide: 'hsl(215, 12%, 48%)',
+    },
+    dark: {
+      error: 'hsl(355, 78%, 72%)',
+      success: 'hsl(145, 62%, 66%)',
+      warning: 'hsl(50, 88%, 68%)',
+      guide: 'hsl(215, 14%, 68%)',
+    },
   },
   clean: {
-    light: { error: 'hsl(0, 55%, 58%)', success: 'hsl(145, 38%, 47%)', warning: 'hsl(50, 62%, 47%)' },
-    dark: { error: 'hsl(0, 50%, 72%)', success: 'hsl(145, 38%, 68%)', warning: 'hsl(50, 60%, 68%)' },
+    light: {
+      error: 'hsl(0, 55%, 58%)',
+      success: 'hsl(145, 38%, 47%)',
+      warning: 'hsl(50, 62%, 47%)',
+      guide: 'hsl(215, 12%, 48%)',
+    },
+    dark: {
+      error: 'hsl(0, 50%, 72%)',
+      success: 'hsl(145, 38%, 68%)',
+      warning: 'hsl(50, 60%, 68%)',
+      guide: 'hsl(215, 14%, 68%)',
+    },
   },
 };
 

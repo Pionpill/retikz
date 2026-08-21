@@ -68,7 +68,7 @@ describe('stroke Path Inspector', () => {
         final: { sourcePath: 'children[0].path', expansionPath: [] },
       },
       options: { controlPoints: true, labels: false },
-      appearance: { colorScope: 0, scopeColor: '#2563eb', warningColor: '#dc2626' },
+      appearance: { colorScope: 0, scopeColor: '#2563eb', guideColor: '#6b7280', warningColor: '#dc2626' },
     };
     const output = STROKE_PATH_INSPECTOR.inspect(
       {
@@ -119,7 +119,7 @@ describe('stroke Path Inspector', () => {
           final: { sourcePath: 'children[0].path', expansionPath: [] },
         },
         options: { controlPoints: false, labels: true },
-        appearance: { colorScope: 0, scopeColor: '#2563eb', warningColor: '#dc2626' },
+        appearance: { colorScope: 0, scopeColor: '#2563eb', guideColor: '#6b7280', warningColor: '#dc2626' },
       },
     );
 

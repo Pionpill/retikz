@@ -7,7 +7,7 @@ import type {
   Scene,
 } from '@retikz/core';
 
-import type { InspectionAppearance, InspectorKey } from '../contract';
+import type { InspectorKey } from '../contract';
 
 /** Inspector selection 的目标 locator */
 export type InspectionSelectionTarget =
@@ -56,8 +56,8 @@ export type ResolvedInspectionRequest = Readonly<{
   provenance: Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>;
   /** canonical options */
   options: IRJsonObject;
-  /** 连续分配的 appearance */
-  appearance: InspectionAppearance;
+  /** request 级连续颜色序号 */
+  colorScope: number;
 }>;
 
 /** 一个辅助 Scene plane entry */
