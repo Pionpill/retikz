@@ -12,15 +12,15 @@ export type InspectorKey = Readonly<{
 /** Inspector 可返回的普通 Core IR child */
 export type InspectorOutput = IRChild | ReadonlyArray<IRChild>;
 
-/** Inspector callback 的稳定外观分配 */
-export type InspectionAppearance = Readonly<{
+/** Inspector callback 的稳定外观上下文 */
+export type InspectionAppearanceContext = Readonly<{
   /** resolved request 连续序号 */
   colorScope: number;
-  /** 由 canonical palette 派生的常规颜色 */
+  /** 由当前 Theme categorical palette 派生的常规颜色 */
   scopeColor: string;
   /** 当前 Theme 的低强调辅助颜色 */
   guideColor: string;
-  /** canonical warning 颜色 */
+  /** 当前 Theme 的 warning 颜色 */
   warningColor: string;
 }>;
 
@@ -36,8 +36,8 @@ export type InspectorContext<TOptions extends IRJsonObject = IRJsonObject> = Rea
   provenance: Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>;
   /** canonical JSON-safe options */
   options: TOptions;
-  /** callback 前分配的外观 */
-  appearance: InspectionAppearance;
+  /** callback 前分配的外观上下文 */
+  appearance: InspectionAppearanceContext;
 }>;
 
 /** 独立于 Core owner Definition 的 Inspector 定义 */

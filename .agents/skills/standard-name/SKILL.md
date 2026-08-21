@@ -15,6 +15,16 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 - `index.ts` 只用作目录 barrel：导出 owner 的稳定表面，不承载业务逻辑
 - `types.ts` 放导出或 owner 内共享类型，`constants.ts` 放稳定常量与 const object enum，`utils.ts` 只放没有更窄职责的纯 helper。只有一个调用点的 helper 与其 consumer 相邻
 - 概念在定义处命名。不得通过 import / export `as` 隐藏 owner 本应解决的命名冲突
+- 具名结构必须由符号自身显式表达语义角色，不能依赖字段名、目录或调用位置补足含义；字段与局部变量仍使用简洁的 `context`、`schema`、`diagnostic(s)`、`options`
+
+## 语义角色后缀
+
+| 角色                  | 必须使用的名称                               | 规则                                                                                            |
+| --------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| callback / 阶段上下文 | `XxxContext`、`XxxResolveContext` 等         | 完整上下文及作为其具名字段类型的上下文片段都以 `Context` 结尾，如 `InspectionAppearanceContext` |
+| 运行时 schema 值      | `XxxSchema`、可复用 shape 的 `XxxBaseSchema` | 只要符号承载运行时 parse / validation schema，就以 `Schema` 结尾                                |
+| 单条诊断记录          | `XxxDiagnostic`                              | diagnostics 集合元素的具名类型以 `Diagnostic` 结尾；集合字段或局部变量使用 `diagnostics`        |
+| 配置选项              | `XxxOptions`、`XxxOptionsInput`              | 完整选项以 `Options` 结尾；作者侧、稀疏或待解析输入以 `OptionsInput` 结尾                       |
 
 ## 分层目录与文件
 
@@ -57,11 +67,12 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 ## Review 清单
 
 1. 选定的 owner 是否匹配数据或行为，而不是当前 caller？
-2. 每个新增目录 / 文件名是否在分层表内，或存在更明确的领域名？
-3. Input / IR / Canonical / Definition 的命名是否匹配实际阶段与持久化边界？
-4. `parse`、Vanilla API `normalize` 与纵向领域 `resolve` 是否明确区分，且只有 resolver 产出 Canonical / Resolution？
-5. enum、provider collection、barrel、组件和 helper 是否符合规定形式？
-6. 局部别名、泛化 helper、旧名或平行类型是否掩盖了 owner 问题？
+2. 具名结构是否显式带有 `Context` / `Schema` / `Diagnostic` / `Options` 等真实角色后缀？
+3. 每个新增目录 / 文件名是否在分层表内，或存在更明确的领域名？
+4. Input / IR / Canonical / Definition 的命名是否匹配实际阶段与持久化边界？
+5. `parse`、Vanilla API `normalize` 与纵向领域 `resolve` 是否明确区分，且只有 resolver 产出 Canonical / Resolution？
+6. enum、provider collection、barrel、组件和 helper 是否符合规定形式？
+7. 局部别名、泛化 helper、旧名或平行类型是否掩盖了 owner 问题？
 
 ## 常见错误
 
@@ -70,3 +81,4 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 - 不得将 unknown 外部校验命名为 `normalize`，或将 context 解析命名为 `parse`
 - Core、Plot 等纵向领域包不得建立阶段级 `normalizeXxx` 或 `NormalizeContext`；纯 helper 使用准确动作名，数学值域 normalization 不受此分层限制
 - 已有明确阶段或领域名时，不得使用 `processXxx`、`handleXxx`、`doXxx`、`completeXxx` 或泛化 `ResolvedXxx`
+- 不得用 `Appearance`、`Issue`、`Settings` 等模糊名称省略结构实际承担的 `Context`、`Diagnostic`、`Options` 角色

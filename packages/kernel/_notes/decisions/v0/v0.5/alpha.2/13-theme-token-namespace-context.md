@@ -113,7 +113,7 @@ type ResolvedThemeColors = Readonly<{
 - 继承行为：Scene、外层 Scope 到内层 Scope 依次覆盖显式的 style、mode、namespace 和 token key；省略字段继续继承；第一版不提供 `resetTheme`、namespace reset 或单 token reset
 - 解析行为：Core shared colors 先由 style / mode 选择完整 preset，再叠加 inherited `core` token；领域 owner 在同一 effective Theme 上解析自己的 preset、shared color projection、namespace token、local token、native theme 与显式成员配置
 - 校验行为：Theme 与 contribution 必须是 plain JSON data；unknown namespace、同 namespace 的不同 definition identity、unknown key、非法 value、空 categorical array 和无法通过 owner schema 的 bag 都 fail-loud，诊断至少包含输入层以及 namespace / key 路径；同一冻结 definition 对象的重复聚合只去重一次
-- 消费行为：Core Inspector 对每个 occurrence 使用 `colorScope % palette.categorical.length` 取得 categorical scope color；warning 使用 `semantic.warning`；Standard 只消费 Core 提供的 `InspectionAppearance`，不读取 token bag、维护颜色数组或重新实现取余
+- 消费行为：Core Inspector 对每个 occurrence 使用 `colorScope % palette.categorical.length` 取得 categorical scope color；warning 使用 `semantic.warning`；Standard 只消费 Core 提供的 `InspectionAppearanceContext`，不读取 token bag、维护颜色数组或重新实现取余
 - 循环选择：Core 拥有“非空 categorical array + 非负稳定 index → index 取余后的颜色”这一领域中立 value contract；需要相同语义的 Plot / Table consumer 复用该 contract，Standard 不自行选择颜色
 - 编译行为：交给 Composite 的 context 是 detached、递归不可变的有效值；没有 Theme consumer 的 Core-only 图元保持既有输出；最终 Scene 只包含已物化样式，renderer 不读取 Theme、preset 或领域 token
 - 入口等价性：plain JSON、React、Vanilla、standalone、embedded 与 direct headless compile 使用同一 Theme IR、Definition registry、继承和失败语义
@@ -122,8 +122,8 @@ type ResolvedThemeColors = Readonly<{
 ## 功能与包边界
 
 - 所属能力域与解决的问题：Drawing Complete 的 Style / Resource、Composition 与跨层 inspection 环境；解决主题 token 无法跨 Scope 传播、跨 owner 校验和共享颜色闭环的问题
-- 主责包：`@retikz/core` 拥有 Theme IR、有效 context、继承 / sparse merge、ThemeTokenDefinition registry、owner schema runtime validation、Core shared colors 与 `InspectionAppearance`
-- 协作包：Plot、Chart、Table 等 owner 各自拥有 token vocabulary、preset、resolver、mapping、inspection 和局部 contribution helper；Standard 只消费已物化的领域无关输入与 `InspectionAppearance`；React / Vanilla 提供等价 authoring / contribution 聚合；Render 只执行 Scene
+- 主责包：`@retikz/core` 拥有 Theme IR、有效 context、继承 / sparse merge、ThemeTokenDefinition registry、owner schema runtime validation、Core shared colors 与 `InspectionAppearanceContext`
+- 协作包：Plot、Chart、Table 等 owner 各自拥有 token vocabulary、preset、resolver、mapping、inspection 和局部 contribution helper；Standard 只消费已物化的领域无关输入与 `InspectionAppearanceContext`；React / Vanilla 提供等价 authoring / contribution 聚合；Render 只执行 Scene
 - Core 不拥有：任何 Tier 2 token 类型或语义、领域 preset 具体值、named scheme、领域 mapping、Chart recipe、Table cell 规则、CSS theme 或 renderer 默认
 - 外部扩展与下游闭环：owner 以自己的 Definition、strict schema、typed helper、resolver、mapping 和正式 Core / Standard / manifest consumer 加入统一链路；standalone 或 headless 使用方显式提供需要的 definitions，adapter 只负责等价聚合，不创建旁路协议；schema-only token 不构成完成能力
 - 不支持边界：Core 不提供命名主题 loader、远程主题分发、领域 token 自动 lowering、跨领域完整 resolved map、Theme lineage 查询、交互状态 token 或 renderer-specific effect

@@ -156,7 +156,7 @@ declare const observeCompileToScene: (
 
 - `InspectorDefinition`、`defineInspector()`、注册表解析与重复 key 诊断
 - occurrence 选择、选项解析、继承与关闭策略
-- `InspectionOwner`、`InspectionAppearance`、`InspectionPlane` 与稳定排序
+- `InspectionOwner`、`InspectionAppearanceContext`、`InspectionPlane` 与稳定排序
 - canonical scope palette、warning color 与 appearance 分配
 - Inspector callback、普通 IR 输出规范化、隔离片段编译编排和 inspection-specific error origin
 - 主图结果与辅助平面的原子 `InspectionCompileResult`
@@ -184,7 +184,7 @@ type InspectorOutput = IRChild | ReadonlyArray<IRChild>;
 
 type InspectorKey = Readonly<{ namespace: string; name: string }>;
 
-type InspectionAppearance = Readonly<{
+type InspectionAppearanceContext = Readonly<{
   colorScope: number;
   scopeColor: string;
   warningColor: string;
@@ -196,7 +196,7 @@ type InspectorContext<TOptions extends IRJsonObject> = Readonly<{
   occurrence: CompileOccurrenceLocator;
   provenance: CompileObservationProvenance;
   options: TOptions;
-  appearance: InspectionAppearance;
+  appearance: InspectionAppearanceContext;
 }>;
 
 type InspectionPlaneEntry = Readonly<{
@@ -305,7 +305,7 @@ type ResolvedInspectionRequest = Readonly<{
   occurrence: CompileOccurrenceLocator;
   provenance: CompileObservationProvenance;
   options: IRJsonObject;
-  appearance: InspectionAppearance;
+  appearance: InspectionAppearanceContext;
 }>;
 ```
 

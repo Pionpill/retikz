@@ -77,11 +77,11 @@ Flex、Grid 与 Overlay Inspector 读取 Core 观测到的最终类型化 artifa
 
 辅助层用三条正交通道表达不同信息，不再用一种颜色同时暗示边界类别与嵌套层级：
 
-| 通道 | 表达内容            | 规则                                                                                                                                                                                                                    |
-| ---- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 颜色 | 最终布局 occurrence | Inspect 按最终请求顺序分配 `colorScope`；常规 occurrence 颜色来自当前 Core Theme 的 categorical palette，guide / anchor 使用 `semantic.guide`，溢出 warning 使用 `semantic.warning`，并通过 `InspectionAppearance` 暴露 |
-| 纹理 | 空间语义            | Layout 用普通 `lines` pattern paint 表达：margin 与固定 gap 为 `-45°` 的 `/`，padding 为 `45°` 的 `\`；size 为 12、lineWidth 为 1，三者不铺底色                                                                         |
-| 线型 | 几何类别            | 容器、内容、item box、Flex line、Grid track/cell/span、Overlay placement 与 alignment guide 统一使用虚线；anchor crosshair 使用实线                                                                                     |
+| 通道 | 表达内容            | 规则                                                                                                                                                                                                                           |
+| ---- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 颜色 | 最终布局 occurrence | Inspect 按最终请求顺序分配 `colorScope`；常规 occurrence 颜色来自当前 Core Theme 的 categorical palette，guide / anchor 使用 `semantic.guide`，溢出 warning 使用 `semantic.warning`，并通过 `InspectionAppearanceContext` 暴露 |
+| 纹理 | 空间语义            | Layout 用普通 `lines` pattern paint 表达：margin 与固定 gap 为 `-45°` 的 `/`，padding 为 `45°` 的 `\`；size 为 12、lineWidth 为 1，三者不铺底色                                                                                |
+| 线型 | 几何类别            | 容器、内容、item box、Flex line、Grid track/cell/span、Overlay placement 与 alignment guide 统一使用虚线；anchor crosshair 使用实线                                                                                            |
 
 同一个 occurrence 的普通辅助图元共享颜色；嵌套容器按各自最终 occurrence 取得 categorical 颜色。颜色数组循环使用，因此颜色只用于快速归属，精确身份仍由 occurrence locator 表达。guide / anchor 使用低强调的 Theme semantic 颜色，溢出警告是普通半透明 fill，辅助标签也是普通 Node。
 
