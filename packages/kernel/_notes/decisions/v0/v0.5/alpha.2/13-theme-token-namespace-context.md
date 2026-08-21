@@ -95,12 +95,15 @@ type IRCoreThemeTokenOverrides = Readonly<{
   'palette.categorical'?: NonEmptyReadonlyArray<CssColorValue>;
 }>;
 
+type CoreSemanticColors = Readonly<{
+  error: CssColorValue;
+  success: CssColorValue;
+  warning: CssColorValue;
+  guide: CssColorValue;
+}>;
+
 type ResolvedThemeColors = Readonly<{
-  semantic: Readonly<{
-    error: CssColorValue;
-    success: CssColorValue;
-    warning: CssColorValue;
-  }>;
+  semantic: CoreSemanticColors;
   categorical: NonEmptyReadonlyArray<CssColorValue>;
 }>;
 ```
@@ -113,7 +116,7 @@ type ResolvedThemeColors = Readonly<{
 - 继承行为：Scene、外层 Scope 到内层 Scope 依次覆盖显式的 style、mode、namespace 和 token key；省略字段继续继承；第一版不提供 `resetTheme`、namespace reset 或单 token reset
 - 解析行为：Core shared colors 先由 style / mode 选择完整 preset，再叠加 inherited `core` token；领域 owner 在同一 effective Theme 上解析自己的 preset、shared color projection、namespace token、local token、native theme 与显式成员配置
 - 校验行为：Theme 与 contribution 必须是 plain JSON data；unknown namespace、同 namespace 的不同 definition identity、unknown key、非法 value、空 categorical array 和无法通过 owner schema 的 bag 都 fail-loud，诊断至少包含输入层以及 namespace / key 路径；同一冻结 definition 对象的重复聚合只去重一次
-- 消费行为：Core Inspector 对每个 occurrence 使用 `colorScope % palette.categorical.length` 取得 categorical scope color；warning 使用 `semantic.warning`；Standard 只消费 Core 提供的 `InspectionAppearanceContext`，不读取 token bag、维护颜色数组或重新实现取余
+- 消费行为：Core Inspector 对每个 occurrence 使用 `colorScope % palette.categorical.length` 取得 categorical scope color；warning 与 guide 分别使用 `semanticColors.warning`、`semanticColors.guide`；Standard 只消费 Core 提供的 `InspectionAppearanceContext`，不读取 token bag、维护颜色数组或重新实现取余
 - 循环选择：Core 拥有“非空 categorical array + 非负稳定 index → index 取余后的颜色”这一领域中立 value contract；需要相同语义的 Plot / Table consumer 复用该 contract，Standard 不自行选择颜色
 - 编译行为：交给 Composite 的 context 是 detached、递归不可变的有效值；没有 Theme consumer 的 Core-only 图元保持既有输出；最终 Scene 只包含已物化样式，renderer 不读取 Theme、preset 或领域 token
 - 入口等价性：plain JSON、React、Vanilla、standalone、embedded 与 direct headless compile 使用同一 Theme IR、Definition registry、继承和失败语义

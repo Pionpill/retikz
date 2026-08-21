@@ -1,14 +1,13 @@
-import type { CssColorValue, NonEmptyReadonlyArray, ResolvedThemeColors, ThemeModeValue } from '../../shared';
+import type {
+  CoreSemanticColors,
+  CssColorValue,
+  NonEmptyReadonlyArray,
+  ResolvedThemeColors,
+  ThemeModeValue,
+} from '../../shared';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { ThemeMode } from '../../shared';
-
-type CoreSemanticColors = Readonly<{
-  error: CssColorValue;
-  success: CssColorValue;
-  warning: CssColorValue;
-  guide: CssColorValue;
-}>;
 
 type CategoricalTone = Readonly<{
   saturation: number;

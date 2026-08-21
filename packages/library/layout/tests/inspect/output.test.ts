@@ -46,7 +46,11 @@ const contextOf = <TOptions extends IRJsonObject>(
       final: { sourcePath: 'children[0]', expansionPath: [] },
     },
     options,
-    appearance: { colorScope: 0, scopeColor: '#2563eb', guideColor: '#6b7280', warningColor: '#dc2626' },
+    appearance: {
+      colorScope: 0,
+      scopeColor: '#2563eb',
+      semanticColors: { error: '#ef4444', success: '#16a34a', warning: '#dc2626', guide: '#6b7280' },
+    },
   });
 
 const ordinaryChildren = (value: unknown): Array<IRChild> => {

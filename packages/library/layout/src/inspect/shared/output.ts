@@ -373,7 +373,7 @@ export const inspectLayoutArtifactBase = (
         kind: 'area',
         role: 'layout.overflow',
         rect: item.visualBounds,
-        fill: appearance.warningColor,
+        fill: appearance.semanticColors.warning,
         opacity: LayoutInspectionWarningOpacity,
       });
     }
@@ -386,7 +386,7 @@ export const inspectLayoutArtifactBase = (
           vertical ? item.slotBounds.y : item.alignmentGuide.position,
           vertical ? item.alignmentGuide.position : item.slotBounds.x + item.slotBounds.width,
           vertical ? item.slotBounds.y + item.slotBounds.height : item.alignmentGuide.position,
-          appearance.guideColor,
+          appearance.semanticColors.guide,
           true,
         ),
       );

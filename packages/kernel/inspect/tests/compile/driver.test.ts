@@ -40,8 +40,12 @@ describe('Inspection compile driver', () => {
       | {
           colorScope: number;
           scopeColor: string;
-          guideColor: string;
-          warningColor: string;
+          semanticColors: {
+            error: string;
+            success: string;
+            warning: string;
+            guide: string;
+          };
         }
       | undefined;
     const themeStyle = defineThemeStyle({
@@ -70,7 +74,12 @@ describe('Inspection compile driver', () => {
       { registry, selection, compileOptions: { composites: [composite], themeStyles: [themeStyle] } },
     );
 
-    expect(appearance).toEqual({ colorScope: 0, scopeColor: '#scope', guideColor: '#guide', warningColor: '#warning' });
+    expect(appearance).toEqual({
+      colorScope: 0,
+      scopeColor: '#scope',
+      semanticColors: { error: '#error', success: '#success', warning: '#warning', guide: '#guide' },
+    });
+    expect(Object.isFrozen(appearance?.semanticColors)).toBe(true);
   });
 
   it('validates the subject and compiles each dense output into a sealed entry', () => {

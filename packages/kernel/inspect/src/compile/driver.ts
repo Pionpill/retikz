@@ -43,8 +43,12 @@ const inspectionAppearanceOf = (
   Object.freeze({
     colorScope,
     scopeColor: categoricalColorAt(theme.colors.categorical, colorScope),
-    guideColor: theme.colors.semantic.guide,
-    warningColor: theme.colors.semantic.warning,
+    semanticColors: Object.freeze({
+      error: theme.colors.semantic.error,
+      success: theme.colors.semantic.success,
+      warning: theme.colors.semantic.warning,
+      guide: theme.colors.semantic.guide,
+    }),
   });
 
 /** 创建带结构化 origin 的 Inspect compile 失败 */

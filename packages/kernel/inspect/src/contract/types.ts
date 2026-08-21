@@ -1,4 +1,12 @@
-import type { CompileObservationOwner, CompileOccurrenceLocator, IRChild, IRJsonObject, JsonValue } from '@retikz/core';
+import type {
+  CompileObservationOwner,
+  CompileOccurrenceLocator,
+  CoreSemanticColors,
+  CssColorValue,
+  IRChild,
+  IRJsonObject,
+  JsonValue,
+} from '@retikz/core';
 import type { ZodType } from 'zod';
 
 /** Inspector registry 的公开复合键 */
@@ -17,11 +25,9 @@ export type InspectionAppearanceContext = Readonly<{
   /** resolved request 连续序号 */
   colorScope: number;
   /** 由当前 Theme categorical palette 派生的常规颜色 */
-  scopeColor: string;
-  /** 当前 Theme 的低强调辅助颜色 */
-  guideColor: string;
-  /** 当前 Theme 的 warning 颜色 */
-  warningColor: string;
+  scopeColor: CssColorValue;
+  /** 当前 Core Theme 的共享语义颜色 */
+  semanticColors: CoreSemanticColors;
 }>;
 
 /** Inspector callback 读取的最终 occurrence 上下文 */
