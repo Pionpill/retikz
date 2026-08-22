@@ -9,7 +9,7 @@ export const createLayoutInspectionSelection = <TOptions extends IRJsonObject>(
 ): LayoutInspectionSelection =>
   Object.freeze({
     rules: Object.freeze([
-      Object.freeze({ kind: 'request', inspector: input.inspector, target: input.target, value: input.value }),
+      Object.freeze({ kind: 'request', inspector: input.inspector, target: input.target, options: input.options }),
     ] satisfies Array<InspectionSelectionRule>),
   });
 

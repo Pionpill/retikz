@@ -1,4 +1,4 @@
-import { arcAngleInRange, rayArc } from '@retikz/math';
+import { intersectRayWithArc, isAngleWithinArcSweep } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { ContourSegment } from '../../../../src/shared/geometry/path';
@@ -37,12 +37,12 @@ describe('filletContour 大坐标相对容差（G6）', () => {
   });
 });
 
-describe('rayArc：射线 ∩ 圆弧 + 角度区间过滤', () => {
+describe('intersectRayWithArc：射线 ∩ 圆弧 + 角度区间过滤', () => {
   it('命中区间内的弧', () => {
     // 单位圆右半弧 [-90,90]，从原点朝 +x → 命中 [1,0]
-    const hits = rayArc({
+    const hits = intersectRayWithArc({
       origin: [0, 0],
-      dir: [1, 0],
+      direction: [1, 0],
       center: [0, 0],
       radius: 1,
       startAngleDeg: -90,
@@ -54,9 +54,9 @@ describe('rayArc：射线 ∩ 圆弧 + 角度区间过滤', () => {
 
   it('交点在角度区间外不计', () => {
     // 圆右半弧 [-90,90]，朝 -x 的交点 [-1,0] 角=180 不在区间 → 空
-    const hits = rayArc({
+    const hits = intersectRayWithArc({
       origin: [0, 0],
-      dir: [-1, 0],
+      direction: [-1, 0],
       center: [0, 0],
       radius: 1,
       startAngleDeg: -90,
@@ -66,26 +66,33 @@ describe('rayArc：射线 ∩ 圆弧 + 角度区间过滤', () => {
   });
 
   it('整圆（span≥360）任意方向命中', () => {
-    const hits = rayArc({ origin: [0, 0], dir: [0, 1], center: [0, 0], radius: 5, startAngleDeg: 0, endAngleDeg: 360 });
+    const hits = intersectRayWithArc({
+      origin: [0, 0],
+      direction: [0, 1],
+      center: [0, 0],
+      radius: 5,
+      startAngleDeg: 0,
+      endAngleDeg: 360,
+    });
     expect(hits[0]).toBeCloseTo(5);
   });
 });
 
-describe('arcAngleInRange', () => {
+describe('isAngleWithinArcSweep', () => {
   it('CW 区间含端点', () => {
-    expect(arcAngleInRange({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 45 })).toBe(true);
-    expect(arcAngleInRange({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 0 })).toBe(true);
-    expect(arcAngleInRange({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 90 })).toBe(true);
-    expect(arcAngleInRange({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 135 })).toBe(false);
+    expect(isAngleWithinArcSweep({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 45 })).toBe(true);
+    expect(isAngleWithinArcSweep({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 0 })).toBe(true);
+    expect(isAngleWithinArcSweep({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 90 })).toBe(true);
+    expect(isAngleWithinArcSweep({ startAngleDeg: 0, endAngleDeg: 90, angleDeg: 135 })).toBe(false);
   });
   it('CCW 区间（end<start）', () => {
-    expect(arcAngleInRange({ startAngleDeg: 90, endAngleDeg: 0, angleDeg: 45 })).toBe(true);
-    expect(arcAngleInRange({ startAngleDeg: 90, endAngleDeg: 0, angleDeg: -45 })).toBe(false);
+    expect(isAngleWithinArcSweep({ startAngleDeg: 90, endAngleDeg: 0, angleDeg: 45 })).toBe(true);
+    expect(isAngleWithinArcSweep({ startAngleDeg: 90, endAngleDeg: 0, angleDeg: -45 })).toBe(false);
   });
   it('跨 360°', () => {
-    expect(arcAngleInRange({ startAngleDeg: 270, endAngleDeg: 450, angleDeg: 360 })).toBe(true);
-    expect(arcAngleInRange({ startAngleDeg: 270, endAngleDeg: 450, angleDeg: 0 })).toBe(true);
-    expect(arcAngleInRange({ startAngleDeg: 270, endAngleDeg: 450, angleDeg: 180 })).toBe(false);
+    expect(isAngleWithinArcSweep({ startAngleDeg: 270, endAngleDeg: 450, angleDeg: 360 })).toBe(true);
+    expect(isAngleWithinArcSweep({ startAngleDeg: 270, endAngleDeg: 450, angleDeg: 0 })).toBe(true);
+    expect(isAngleWithinArcSweep({ startAngleDeg: 270, endAngleDeg: 450, angleDeg: 180 })).toBe(false);
   });
 });
 

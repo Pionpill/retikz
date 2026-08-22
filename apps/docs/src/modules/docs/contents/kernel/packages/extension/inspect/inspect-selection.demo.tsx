@@ -36,7 +36,7 @@ const Curve: FC<CurveProps> = props => {
 
   return inspect ? (
     <InspectPath
-      request={{ inspector: STROKE_PATH_INSPECTOR_KEY, value: { controlPoints, labels } }}
+      request={{ inspector: STROKE_PATH_INSPECTOR_KEY, options: { controlPoints, labels } }}
       stroke="dimgray"
       strokeWidth={3}
     >

@@ -50,7 +50,7 @@ describe('stroke Path Inspector', () => {
             kind: 'request',
             inspector: STROKE_PATH_INSPECTOR_KEY,
             target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].path' } },
-            value: { labels: true },
+            options: { labels: true },
           },
         ],
       },
@@ -63,7 +63,7 @@ describe('stroke Path Inspector', () => {
     const result = compileInspectionToScene(ir, {
       registry: createDefaultInspectorRegistry(),
       selection: {
-        rules: [{ kind: 'request', inspector: STROKE_PATH_INSPECTOR_KEY, target: { kind: 'scene' }, value: true }],
+        rules: [{ kind: 'request', inspector: STROKE_PATH_INSPECTOR_KEY, target: { kind: 'scene' }, options: true }],
       },
     });
     expect(result.inspection).toBeNull();

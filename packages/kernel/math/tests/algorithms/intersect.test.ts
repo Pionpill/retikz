@@ -8,12 +8,12 @@ describe('intersect', () => {
     expect(intersect.lineLine({ a1: [0, 0], a2: [1, 0], b1: [0, 1], b2: [1, 1] })).toBeNull();
   });
   it('lineCircle：割线 2 交点 / 相离 0', () => {
-    const hits = intersect.lineCircle({ origin: [-5, 0], dir: [1, 0], center: [0, 0], radius: 2 });
+    const hits = intersect.lineCircle({ origin: [-5, 0], direction: [1, 0], center: [0, 0], radius: 2 });
     expect(hits.map(h => h[0]).sort((a, b) => a - b)).toEqual([-2, 2]);
-    expect(intersect.lineCircle({ origin: [0, 5], dir: [1, 0], center: [0, 0], radius: 2 })).toEqual([]);
+    expect(intersect.lineCircle({ origin: [0, 5], direction: [1, 0], center: [0, 0], radius: 2 })).toEqual([]);
   });
   it('lineCircle：等价短方向向量不改变交点', () => {
-    const hits = intersect.lineCircle({ origin: [-5, 0], dir: [1e-6, 0], center: [0, 0], radius: 2 });
+    const hits = intersect.lineCircle({ origin: [-5, 0], direction: [1e-6, 0], center: [0, 0], radius: 2 });
     const xs = hits.map(hit => hit[0]).sort((a, b) => a - b);
 
     expect(xs).toHaveLength(2);
@@ -21,7 +21,9 @@ describe('intersect', () => {
     expect(xs[1]).toBeCloseTo(2, 9);
   });
   it('lineCircle：退化方向向量返回空结果', () => {
-    expect(intersect.lineCircle({ origin: [-5, 0], dir: [DEFAULT_EPSILON, 0], center: [0, 0], radius: 2 })).toEqual([]);
+    expect(
+      intersect.lineCircle({ origin: [-5, 0], direction: [DEFAULT_EPSILON, 0], center: [0, 0], radius: 2 }),
+    ).toEqual([]);
   });
   it('circleCircle：相交 2 点', () => {
     const hits = intersect.circleCircle({ centerA: [0, 0], radiusA: 2, centerB: [3, 0], radiusB: 2 });

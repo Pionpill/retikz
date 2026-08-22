@@ -3,8 +3,10 @@ import type { InspectionDiagnosticOrigin, InspectionSelectionTarget } from './ty
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 
 /** 创建 selection admission 的结构化 origin */
-export const selectionOrigin = (ruleIndex: number, target: InspectionSelectionTarget | null) =>
-  Object.freeze({ stage: 'selection' as const, ruleIndex, target });
+export const createInspectionSelectionDiagnosticOrigin = (
+  ruleIndex: number,
+  target: InspectionSelectionTarget | null,
+) => Object.freeze({ stage: 'selection' as const, ruleIndex, target });
 
 /** 用 Inspect origin 包装任意同步失败 */
 export const wrapInspectionError = (origin: InspectionDiagnosticOrigin, cause: unknown): RetikzInspectError => {

@@ -30,7 +30,7 @@ const flexInput = (first: string, second: string): InputFlexLayout => ({
 });
 
 const fig = scene({
-  authoring: createInspectionVanillaAuthoring({ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: true }),
+  authoring: createInspectionVanillaAuthoring({ inspector: FLEX_LAYOUT_INSPECTOR_KEY, options: true }),
   viewBox: { x: 0, y: 0, width: 520, height: 190 },
   children: [
     scope({ transforms: [{ kind: 'translate', x: 20, y: 34 }] }, [

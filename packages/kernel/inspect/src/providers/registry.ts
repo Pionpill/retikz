@@ -1,6 +1,6 @@
 import type { AnyInspectorDefinition, InspectorKey } from '../contract';
 
-import { normalizeInspectorDefinition } from '../contract';
+import { sealInspectorDefinition } from '../contract';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 import { BUILTIN_INSPECTORS } from './definitions';
 
@@ -15,27 +15,28 @@ export type InspectorRegistry = Readonly<{
 }>;
 
 /** 把公开 Inspector key 转为无歧义的 registry 内部键 */
-export const inspectorRegistryKey = (key: InspectorKey): string => JSON.stringify([key.namespace, key.type]);
+export const formatInspectorRegistryKey = (key: InspectorKey): string => JSON.stringify([key.namespace, key.type]);
 
 /** 创建无全局状态的 Inspector registry */
 export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorDefinition>): InspectorRegistry => {
-  const entries = new Map<string, AnyInspectorDefinition>();
-  const normalized = definitions.map((definition, index) => {
-    const candidate = normalizeInspectorDefinition(definition);
-    const key = inspectorRegistryKey(candidate);
-    if (entries.has(key)) {
+  const definitionsByKey = new Map<string, AnyInspectorDefinition>();
+  const sealedDefinitions = definitions.map((definition, index) => {
+    const candidateDefinition = sealInspectorDefinition(definition);
+    const definitionKey = formatInspectorRegistryKey(candidateDefinition);
+    if (definitionsByKey.has(definitionKey)) {
       throw new RetikzInspectError(
         RetikzInspectErrorCode.Registry,
-        `Duplicate Inspector key '${candidate.namespace}/${candidate.type}' at index ${index}`,
+        `Duplicate Inspector key '${candidateDefinition.namespace}/${candidateDefinition.type}' at index ${index}`,
       );
     }
-    entries.set(key, candidate);
-    return candidate;
+    definitionsByKey.set(definitionKey, candidateDefinition);
+    return candidateDefinition;
   });
-  const frozen = Object.freeze(normalized);
-  const get = (key: InspectorKey): AnyInspectorDefinition | undefined => entries.get(inspectorRegistryKey(key));
+  const frozenDefinitions = Object.freeze(sealedDefinitions);
+  const get = (key: InspectorKey): AnyInspectorDefinition | undefined =>
+    definitionsByKey.get(formatInspectorRegistryKey(key));
   return Object.freeze({
-    definitions: frozen,
+    definitions: frozenDefinitions,
     get,
     require: (key: InspectorKey): AnyInspectorDefinition => {
       const definition = get(key);

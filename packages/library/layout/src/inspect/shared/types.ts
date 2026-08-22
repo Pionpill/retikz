@@ -20,7 +20,7 @@ export type CreateLayoutInspectionSelectionInput<TOptions extends IRJsonObject =
   /** 整张图、子树或组件自身 */
   target: LayoutInspectionSelectionScope;
   /** 稀疏选项；true 使用默认值，false 关闭当前范围 */
-  value: false | true | TOptions;
+  options: false | true | TOptions;
 }>;
 
 /** 可直接交给编译驱动的 Layout 布局检查器选择结果 */

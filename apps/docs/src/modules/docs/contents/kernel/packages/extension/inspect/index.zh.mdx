@@ -38,7 +38,7 @@ const registry = createDefaultInspectorRegistry();
   <InspectPath
     request={{
       inspector: STROKE_PATH_INSPECTOR_KEY,
-      value: { controlPoints: true, labels: true },
+      options: { controlPoints: true, labels: true },
     }}
   >
     <Step kind="move" to={[0, 0]} />
@@ -64,7 +64,7 @@ const input = scene({
     path('curve', {
       authoring: createInspectionVanillaAuthoring({
         inspector: STROKE_PATH_INSPECTOR_KEY,
-        value: { labels: true },
+        options: { labels: true },
       }),
       way: [
         [0, 0],
@@ -261,7 +261,7 @@ Inspect 只观察最终结果，不参与布局求解，也不会改变主图。
 | 结构                                | 字段与含义                                                                |
 | ----------------------------------- | ------------------------------------------------------------------------- |
 | `InspectionSelection`               | `rules: ReadonlyArray<InspectionSelectionRule>`。一次编译的完整运行时选择 |
-| `InspectionSelectionRule` request   | `inspector`、`target`、`value`。选择检查器并传入开关或稀疏选项            |
+| `InspectionSelectionRule` request   | `inspector`、`target`、`options`。选择检查器并传入开关或稀疏选项          |
 | `InspectionSelectionRule` barrier   | `target`。只允许整图或编排子树，并阻止后代重新开启任何检查器              |
 | `InspectionSelectionTarget` scene   | `{ kind: 'scene' }`。匹配整张图                                           |
 | `InspectionSelectionTarget` subtree | `{ kind: 'subtree', sourcePath }`。匹配一个编排子树                       |

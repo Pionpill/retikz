@@ -1,4 +1,4 @@
-import { arcEndPoint } from '@retikz/math';
+import { pointAtArcAngle } from '@retikz/math';
 
 import type { IRPosition, IRResolvablePosition } from '../../schemas';
 import type { PositionResolution, PositionResolveContext } from './types';
@@ -78,5 +78,5 @@ export const resolvePosition = (
   const origin =
     position.origin === undefined ? resolutionOfLocal([0, 0], context) : resolvePosition(position.origin, context);
   if (origin === null) return null;
-  return resolutionOfLocal(arcEndPoint(origin.localPoint, position.radius, position.angle), context);
+  return resolutionOfLocal(pointAtArcAngle(origin.localPoint, position.radius, position.angle), context);
 };

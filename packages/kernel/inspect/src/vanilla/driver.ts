@@ -6,15 +6,15 @@ import type {
   VanillaCompileOutput,
 } from '@retikz/vanilla';
 
-import type { InspectionCompileResult, InspectionDiagnostic, InspectionSelection } from '../compile';
 import { isCompileObservationOwnerEqual } from '@retikz/core';
 
+import type { InspectionCompileResult, InspectionDiagnostic, InspectionSelection } from '../compile';
 import type { InspectorRegistry } from '../providers';
 
 import { createInspectionObserver, resolveInspectionObserverOutput } from '../compile';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 import { inspectionPlaneToReadonlyLayers } from '../render';
-import { inspectionRulesFromVanillaSite } from './authoring';
+import { inspectionSelectionRulesFromVanillaSite } from './authoring';
 
 const EMPTY_SELECTION: InspectionSelection = { rules: [] };
 
@@ -24,7 +24,7 @@ type ObservationOwnerCounts = {
 };
 
 /** 按来源路径与结构化所属者取得当前实例序号并推进计数 */
-const takeObservationOwnerIndex = (
+const allocateObservationOwnerIndex = (
   countsBySourcePath: Map<string, ObservationOwnerCounts>,
   sourcePath: string,
   owner: CompileObservationOwner,
@@ -100,7 +100,7 @@ const resolveVanillaSelection = (
 ): InspectionSelection => {
   const occurrenceCounts = new Map<string, ObservationOwnerCounts>();
   const authoredRules = input.authoringSites.flatMap(site => {
-    const siteRules = inspectionRulesFromVanillaSite(site);
+    const siteRules = inspectionSelectionRulesFromVanillaSite(site);
     if (siteRules.length > 0 && isCollapsedContributionScope(site, input.authoringSites)) {
       throw new RetikzInspectError(
         RetikzInspectErrorCode.Vanilla,
@@ -109,7 +109,7 @@ const resolveVanillaSelection = (
     }
     const owner = site.owner;
     const occurrenceIndex =
-      owner === undefined ? undefined : takeObservationOwnerIndex(occurrenceCounts, site.sourcePath, owner);
+      owner === undefined ? undefined : allocateObservationOwnerIndex(occurrenceCounts, site.sourcePath, owner);
     return siteRules.map(rule => {
       if (rule.kind !== 'request' || rule.target.kind !== 'self' || rule.target.locator.kind !== 'authored') {
         return rule;

@@ -16,5 +16,5 @@ export const inspectOverlayLayout = (
   overlayLayout(
     id,
     input,
-    createInspectionVanillaAuthoring({ inspector: OVERLAY_LAYOUT_INSPECTOR_KEY, value: inspect }),
+    createInspectionVanillaAuthoring({ inspector: OVERLAY_LAYOUT_INSPECTOR_KEY, options: inspect }),
   );

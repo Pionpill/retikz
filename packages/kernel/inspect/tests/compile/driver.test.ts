@@ -29,7 +29,7 @@ const selection = {
       kind: 'request' as const,
       inspector: key,
       target: { kind: 'self' as const, locator: { kind: 'authored' as const, sourcePath: 'children[0]' } },
-      value: true as const,
+      options: true as const,
     },
   ],
 };
@@ -142,7 +142,7 @@ describe('Inspection compile driver', () => {
           kind: 'request' as const,
           inspector: key,
           target: { kind: 'self' as const, locator: { kind: 'authored' as const, sourcePath: 'children[0]' } },
-          value: true as const,
+          options: true as const,
         },
       ],
     };

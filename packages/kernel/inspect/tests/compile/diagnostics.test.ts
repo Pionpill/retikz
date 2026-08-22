@@ -36,7 +36,7 @@ describe('Inspection diagnostics', () => {
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: owner.namespace, type: owner.type }] };
     const result = compileInspectionToScene(ir, {
       registry,
-      selection: { rules: [{ kind: 'request', inspector: key, target: { kind: 'scene' }, value: true }] },
+      selection: { rules: [{ kind: 'request', inspector: key, target: { kind: 'scene' }, options: true }] },
       compileOptions: { composites: [composite] },
     });
     expect(result.diagnostics).toHaveLength(1);

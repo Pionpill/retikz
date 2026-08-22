@@ -11,7 +11,7 @@ export type Circle = { center: Position; radius: number };
  * 以两点连线为直径构造圆
  * @description 返回刚好经过 a / b 的最小圆；两点重合时半径为 0
  */
-const circleFrom2 = (a: Position, b: Position): Circle => ({
+const createCircleFromDiameterPoints = (a: Position, b: Position): Circle => ({
   center: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2],
   radius: vector2.length([a[0] - b[0], a[1] - b[1]]) / 2,
 });
@@ -20,23 +20,23 @@ const circleFrom2 = (a: Position, b: Position): Circle => ({
  * 以三点构造候选最小圆
  * @description 非共线时返回三角形外接圆；共线或近似共线时退化为三组两点直径圆中半径最大的圆
  */
-const circleFrom3 = (a: Position, b: Position, c: Position): Circle => {
-  const cc = triangle.circumCircle(a, b, c);
-  if (cc) return cc;
-  let best = circleFrom2(a, b);
-  const ac = circleFrom2(a, c);
-  const bc = circleFrom2(b, c);
-  if (ac.radius > best.radius) best = ac;
-  if (bc.radius > best.radius) best = bc;
-  return best;
+const createCircleFromThreePoints = (a: Position, b: Position, c: Position): Circle => {
+  const circumcircle = triangle.circumCircle(a, b, c);
+  if (circumcircle) return circumcircle;
+  let largestCircle = createCircleFromDiameterPoints(a, b);
+  const circleAC = createCircleFromDiameterPoints(a, c);
+  const circleBC = createCircleFromDiameterPoints(b, c);
+  if (circleAC.radius > largestCircle.radius) largestCircle = circleAC;
+  if (circleBC.radius > largestCircle.radius) largestCircle = circleBC;
+  return largestCircle;
 };
 
 /**
  * 判断点是否落在圆内或圆边界上
  * @description 使用 epsilon 扩张半径，抵消浮点误差对边界点的影响
  */
-const inCircle = (c: Circle, p: Position, epsilon: number): boolean =>
-  vector2.length([p[0] - c.center[0], p[1] - c.center[1]]) <= c.radius + epsilon;
+const isPointWithinCircle = (circle: Circle, point: Position, epsilon: number): boolean =>
+  vector2.length([point[0] - circle.center[0], point[1] - circle.center[1]]) <= circle.radius + epsilon;
 
 /** 圆相关几何算法 */
 export const circle = {
@@ -50,14 +50,14 @@ export const circle = {
     if (n === 0) return null;
     let c: Circle = { center: [points[0][0], points[0][1]], radius: 0 };
     for (let i = 1; i < n; i++) {
-      if (inCircle(c, points[i], epsilon)) continue;
+      if (isPointWithinCircle(c, points[i], epsilon)) continue;
       c = { center: [points[i][0], points[i][1]], radius: 0 };
       for (let j = 0; j < i; j++) {
-        if (inCircle(c, points[j], epsilon)) continue;
-        c = circleFrom2(points[i], points[j]);
+        if (isPointWithinCircle(c, points[j], epsilon)) continue;
+        c = createCircleFromDiameterPoints(points[i], points[j]);
         for (let k = 0; k < j; k++) {
-          if (inCircle(c, points[k], epsilon)) continue;
-          c = circleFrom3(points[i], points[j], points[k]);
+          if (isPointWithinCircle(c, points[k], epsilon)) continue;
+          c = createCircleFromThreePoints(points[i], points[j], points[k]);
         }
       }
     }

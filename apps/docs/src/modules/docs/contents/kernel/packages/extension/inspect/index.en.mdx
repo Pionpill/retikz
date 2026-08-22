@@ -38,7 +38,7 @@ const registry = createDefaultInspectorRegistry();
   <InspectPath
     request={{
       inspector: STROKE_PATH_INSPECTOR_KEY,
-      value: { controlPoints: true, labels: true },
+      options: { controlPoints: true, labels: true },
     }}
   >
     <Step kind="move" to={[0, 0]} />
@@ -64,7 +64,7 @@ const input = scene({
     path('curve', {
       authoring: createInspectionVanillaAuthoring({
         inspector: STROKE_PATH_INSPECTOR_KEY,
-        value: { labels: true },
+        options: { labels: true },
       }),
       way: [
         [0, 0],
@@ -261,7 +261,7 @@ When requests exist, additional work comes from observing selected owners, invok
 | Structure                           | Fields and meaning                                                                                    |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `InspectionSelection`               | `rules: ReadonlyArray<InspectionSelectionRule>`. Complete runtime selection for one compile           |
-| `InspectionSelectionRule` request   | `inspector`, `target`, `value`. Select an Inspector with a switch or sparse options                   |
+| `InspectionSelectionRule` request   | `inspector`, `target`, `options`. Select an Inspector with a switch or sparse options                 |
 | `InspectionSelectionRule` barrier   | `target`. Valid for a scene or authored subtree and prevents descendants from reopening any Inspector |
 | `InspectionSelectionTarget` scene   | `{ kind: 'scene' }`. Match the whole scene                                                            |
 | `InspectionSelectionTarget` subtree | `{ kind: 'subtree', sourcePath }`. Match one authored subtree                                         |

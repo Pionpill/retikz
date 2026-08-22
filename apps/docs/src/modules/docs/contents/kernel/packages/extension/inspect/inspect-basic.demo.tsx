@@ -21,7 +21,7 @@ const Curve: FC<{ inspect?: boolean }> = props => {
     <InspectPath
       request={{
         inspector: STROKE_PATH_INSPECTOR_KEY,
-        value: { controlPoints: true, labels: true },
+        options: { controlPoints: true, labels: true },
       }}
       stroke="dimgray"
       strokeWidth={3}

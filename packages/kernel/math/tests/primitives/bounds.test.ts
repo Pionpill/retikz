@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  boundsCenter,
-  boundsCorners,
-  boundsHalfAxes,
   boundsOf,
   boundsToRect,
+  centerOfBounds,
+  cornersOfBounds,
   expandBounds,
+  halfAxesOfBounds,
   isFiniteBoundsRect,
   isPositiveBoundsRect,
   mergeBounds,
@@ -27,8 +27,8 @@ describe('bounds geometry helpers', () => {
 
     if (bounds === undefined) throw new Error('Expected non-empty bounds.');
     expect(bounds).toEqual({ minX: -4, minY: -3, maxX: 8, maxY: 5 });
-    expect(boundsCenter(bounds)).toEqual([2, 1]);
-    expect(boundsHalfAxes(bounds)).toEqual({ halfWidth: 6, halfHeight: 4 });
+    expect(centerOfBounds(bounds)).toEqual([2, 1]);
+    expect(halfAxesOfBounds(bounds)).toEqual({ halfWidth: 6, halfHeight: 4 });
   });
 
   it('expands bounds by per-side insets', () => {
@@ -45,7 +45,7 @@ describe('bounds geometry helpers', () => {
   it('returns bounds corners in stable reading order', () => {
     const bounds = { minX: -4, minY: -3, maxX: 8, maxY: 5 };
 
-    expect(boundsCorners(bounds)).toEqual([
+    expect(cornersOfBounds(bounds)).toEqual([
       [-4, -3],
       [8, -3],
       [-4, 5],

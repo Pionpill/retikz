@@ -17,7 +17,14 @@ import {
   worldToLocal,
 } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { arcBoundingPoints, arcEndPoint, boundsCenter, boundsHalfAxes, boundsOf, DEFAULT_EPSILON } from '@retikz/math';
+import {
+  boundsOf,
+  centerOfBounds,
+  collectArcBoundingCandidates,
+  DEFAULT_EPSILON,
+  halfAxesOfBounds,
+  pointAtArcAngle,
+} from '@retikz/math';
 import { z } from 'zod';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
@@ -64,11 +71,21 @@ const computeSectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
   const apex: Position = [0, 0];
   const candidates: Array<Position> = innerRadius === 0 ? [apex] : [];
   candidates.push(
-    ...arcBoundingPoints({ center: apex, radius: outerRadius, startAngleDeg: range.start, endAngleDeg: range.end }),
+    ...collectArcBoundingCandidates({
+      center: apex,
+      radius: outerRadius,
+      startAngleDeg: range.start,
+      endAngleDeg: range.end,
+    }),
   );
   if (innerRadius > 0) {
     candidates.push(
-      ...arcBoundingPoints({ center: apex, radius: innerRadius, startAngleDeg: range.start, endAngleDeg: range.end }),
+      ...collectArcBoundingCandidates({
+        center: apex,
+        radius: innerRadius,
+        startAngleDeg: range.start,
+        endAngleDeg: range.end,
+      }),
     );
   }
   const bounds = boundsOf(candidates);
@@ -79,7 +96,7 @@ const computeSectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
       details: { candidateCount: candidates.length, shape: 'sector' },
     });
   }
-  const aabbCenter = boundsCenter(bounds);
+  const aabbCenter = centerOfBounds(bounds);
   const apexOffset: Position = [-aabbCenter[0], -aabbCenter[1]];
   const sweepRadians = (range.end - range.start) * DEG_TO_RAD;
   const midAngleRadians = range.mid * DEG_TO_RAD;
@@ -102,7 +119,7 @@ const computeSectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
   ];
   return {
     range,
-    aabbHalfAxes: boundsHalfAxes(bounds),
+    aabbHalfAxes: halfAxesOfBounds(bounds),
     apexOffset,
     centroidOffset: [centroidLocal[0] - aabbCenter[0], centroidLocal[1] - aabbCenter[1]],
     boundaryOriginOffset: [boundaryOriginLocal[0] - aabbCenter[0], boundaryOriginLocal[1] - aabbCenter[1]],
@@ -110,7 +127,8 @@ const computeSectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
 };
 
 /** 根据半径和角度计算 Sector 圆心局部极坐标点 */
-const sectorPolarPoint = (radius: number, angleDegrees: number): Position => arcEndPoint([0, 0], radius, angleDegrees);
+const sectorPolarPoint = (radius: number, angleDegrees: number): Position =>
+  pointAtArcAngle([0, 0], radius, angleDegrees);
 
 /** 将 Sector 圆心局部点转换为世界坐标 */
 const toWorld = (rect: Rect, apexOffset: Position, localFromApex: Position): Position =>

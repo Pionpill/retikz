@@ -14,8 +14,8 @@ const assertValidOwner = (owner: AnyInspectorDefinition['owner']): void => {
   assertNonEmptyString(owner.type, 'Inspector owner type');
 };
 
-/** registry 与公开 define 共用的擦除后 Definition 校验 */
-export const normalizeInspectorDefinition = (definition: AnyInspectorDefinition): AnyInspectorDefinition => {
+/** 校验并冻结 registry 与公开 define 共用的擦除后 Definition */
+export const sealInspectorDefinition = (definition: AnyInspectorDefinition): AnyInspectorDefinition => {
   assertNonEmptyString(definition.namespace, 'Inspector namespace');
   assertNonEmptyString(definition.type, 'Inspector type');
   assertValidOwner(definition.owner);
@@ -30,7 +30,7 @@ export const defineInspector = <
 >(
   definition: InspectorDefinition<TSubject, TOptionsInput, TResolvedOptions>,
 ): InspectorDefinition<TSubject, TOptionsInput, TResolvedOptions> => {
-  return normalizeInspectorDefinition(definition) as unknown as InspectorDefinition<
+  return sealInspectorDefinition(definition) as unknown as InspectorDefinition<
     TSubject,
     TOptionsInput,
     TResolvedOptions

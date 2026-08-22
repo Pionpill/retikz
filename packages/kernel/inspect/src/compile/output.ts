@@ -66,19 +66,19 @@ export const cloneAndFreezeInspectionJson = <T>(value: T, label: string): T => {
 };
 
 /** callback output 做 JSON-safe 脱离、dense 校验与 Core child schema 恢复 */
-export const normalizeInspectorOutput = (output: InspectorOutput): ReadonlyArray<IRChild> => {
-  const values = Array.isArray(output) ? output : [output];
-  for (let index = 0; index < values.length; index += 1) {
-    if (!(index in values))
+export const snapshotInspectorOutput = (output: InspectorOutput): ReadonlyArray<IRChild> => {
+  const outputValues = Array.isArray(output) ? output : [output];
+  for (let index = 0; index < outputValues.length; index += 1) {
+    if (!(index in outputValues))
       throw new RetikzInspectError(
         RetikzInspectErrorCode.Compile,
         `Inspector output must be dense; missing output index ${index}`,
       );
   }
   return Object.freeze(
-    values.map((value, index) => {
-      const detached = cloneAndFreezeInspectionJson(value, `Inspector output ${index}`);
-      return cloneAndFreezeInspectionJson(ChildSchema.parse(detached), `Inspector output ${index}`);
+    outputValues.map((outputValue, index) => {
+      const detachedOutput = cloneAndFreezeInspectionJson(outputValue, `Inspector output ${index}`);
+      return cloneAndFreezeInspectionJson(ChildSchema.parse(detachedOutput), `Inspector output ${index}`);
     }),
   );
 };

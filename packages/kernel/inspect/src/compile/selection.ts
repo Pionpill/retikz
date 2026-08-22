@@ -18,8 +18,8 @@ import type {
 } from './types';
 
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
-import { inspectorRegistryKey } from '../providers';
-import { selectionOrigin, wrapInspectionError } from './diagnostics';
+import { formatInspectorRegistryKey } from '../providers';
+import { createInspectionSelectionDiagnosticOrigin, wrapInspectionError } from './diagnostics';
 import { cloneAndFreezeInspectionJson } from './output';
 
 type IndexedRule = Readonly<{ index: number; rule: InspectionSelectionRule }>;
@@ -47,35 +47,35 @@ const formatTargetKey = (target: InspectionSelectionTarget): string => {
 
 /** 收集 IR 中可用于选择的作者节点路径与子树路径 */
 const collectAuthoredPaths = (ir: IRScene) => {
-  const self = new Set<string>();
-  const subtree = new Set<string>();
+  const selfPaths = new Set<string>();
+  const subtreePaths = new Set<string>();
   const visit = (child: IRChild, basePath: string): void => {
     if ('namespace' in child) {
-      self.add(basePath);
-      subtree.add(basePath);
+      selfPaths.add(basePath);
+      subtreePaths.add(basePath);
       return;
     }
     if (child.type === 'path') {
-      self.add(`${basePath}.path`);
+      selfPaths.add(`${basePath}.path`);
       return;
     }
     if (child.type !== 'scope') return;
     const scopePath = `${basePath}.scope`;
-    subtree.add(scopePath);
+    subtreePaths.add(scopePath);
     child.children.forEach((nested, index) => visit(nested, `${scopePath}.children[${index}]`));
   };
   ir.children.forEach((child, index) => visit(child, `children[${index}]`));
-  return { self, subtree };
+  return { selfPaths, subtreePaths };
 };
 
 /** 断言 Inspect 选择目标对应当前 IR 且包含合法的实例定位信息 */
 const assertSelectionTarget = (
   target: InspectionSelectionTarget,
-  paths: ReturnType<typeof collectAuthoredPaths>,
+  authoredPaths: ReturnType<typeof collectAuthoredPaths>,
 ): void => {
   if (target.kind === 'scene') return;
   if (target.kind === 'subtree') {
-    if (!paths.subtree.has(target.sourcePath))
+    if (!authoredPaths.subtreePaths.has(target.sourcePath))
       throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `Invalid inspection subtree '${target.sourcePath}'`);
     return;
   }
@@ -83,7 +83,7 @@ const assertSelectionTarget = (
     assertOccurrenceLocator(target.locator.occurrence);
     return;
   }
-  if (!paths.self.has(target.locator.sourcePath)) {
+  if (!authoredPaths.selfPaths.has(target.locator.sourcePath)) {
     throw new RetikzInspectError(
       RetikzInspectErrorCode.Compile,
       `Invalid inspection self locator '${target.locator.sourcePath}'`,
@@ -103,36 +103,36 @@ export const admitInspectionSelection = (
   registry: InspectorRegistry,
   selection: InspectionSelection,
 ): ReadonlyArray<IndexedRule> => {
-  const paths = collectAuthoredPaths(ir);
+  const authoredPaths = collectAuthoredPaths(ir);
   const requestKeys = new Set<string>();
   return Object.freeze(
     selection.rules.map((rule, index) => {
       const target = rule.target;
       try {
-        assertSelectionTarget(target, paths);
+        assertSelectionTarget(target, authoredPaths);
         if (rule.kind === 'request') {
           const definition = registry.require(rule.inspector);
-          const duplicateKey = `${formatTargetKey(target)}\u0000${inspectorRegistryKey(rule.inspector)}`;
+          const duplicateKey = `${formatTargetKey(target)}\u0000${formatInspectorRegistryKey(rule.inspector)}`;
           if (requestKeys.has(duplicateKey))
             throw new RetikzInspectError(
               RetikzInspectErrorCode.Compile,
               'Duplicate inspection target and Inspector key',
             );
           requestKeys.add(duplicateKey);
-          if (rule.value !== false) {
-            definition.optionsInputSchema.parse(rule.value === true ? {} : rule.value);
+          if (rule.options !== false) {
+            definition.optionsInputSchema.parse(rule.options === true ? {} : rule.options);
           }
         }
         return Object.freeze({ index, rule });
       } catch (cause) {
-        throw wrapInspectionError(selectionOrigin(index, target), cause);
+        throw wrapInspectionError(createInspectionSelectionDiagnosticOrigin(index, target), cause);
       }
     }),
   );
 };
 
 /** 判断选择目标是否匹配某个最终观察结果 */
-const isTargetMatches = (
+const doesTargetMatchObservation = (
   target: InspectionSelectionTarget,
   observation: CompileObservation,
   observations: ReadonlyArray<CompileObservation>,
@@ -149,7 +149,7 @@ const isTargetMatches = (
   if (locator.kind === 'occurrence') return isCompileOccurrenceEqual(observation.occurrence, locator.occurrence);
   if (observation.occurrence.sourcePath !== locator.sourcePath) return false;
   if (locator.occurrenceIndex === undefined) return true;
-  const selected = observations
+  const selectedObservation = observations
     .filter(
       candidate =>
         candidate.occurrence.sourcePath === locator.sourcePath &&
@@ -157,11 +157,14 @@ const isTargetMatches = (
     )
     .sort((left, right) => compareInspectionOccurrences(left.occurrence, right.occurrence))
     .at(locator.occurrenceIndex);
-  return selected !== undefined && isCompileOccurrenceEqual(observation.occurrence, selected.occurrence);
+  return (
+    selectedObservation !== undefined &&
+    isCompileOccurrenceEqual(observation.occurrence, selectedObservation.occurrence)
+  );
 };
 
 /** 判断场景或子树封锁规则是否覆盖指定作者路径 */
-const barrierContainsSourcePath = (
+const doesBarrierContainSourcePath = (
   target: Extract<InspectionSelectionTarget, { kind: 'scene' | 'subtree' }>,
   sourcePath: string,
 ): boolean =>
@@ -179,60 +182,62 @@ export const resolveInspectionSelection = ({
   selection: InspectionSelection;
   observations: ReadonlyArray<CompileObservation>;
 }>): ReadonlyArray<ResolvedInspectionRequest> => {
-  const admitted = admitInspectionSelection(ir, registry, selection);
+  const admittedRules = admitInspectionSelection(ir, registry, selection);
   const orderedObservations = [...observations].sort((left, right) =>
     compareInspectionOccurrences(left.occurrence, right.occurrence),
   );
-  for (const { index, rule } of admitted) {
-    if (rule.kind !== 'request' || rule.target.kind !== 'self' || rule.value === false) continue;
+  for (const { index, rule } of admittedRules) {
+    if (rule.kind !== 'request' || rule.target.kind !== 'self' || rule.options === false) continue;
     const sourcePath =
       rule.target.locator.kind === 'authored'
         ? rule.target.locator.sourcePath
         : rule.target.locator.occurrence.sourcePath;
     if (
-      admitted.some(
+      admittedRules.some(
         ({ rule: candidate }) =>
-          candidate.kind === 'barrier' && barrierContainsSourcePath(candidate.target, sourcePath),
+          candidate.kind === 'barrier' && doesBarrierContainSourcePath(candidate.target, sourcePath),
       )
     ) {
       continue;
     }
     const definition = registry.require(rule.inspector);
-    const matches = orderedObservations.filter(observation =>
-      isTargetMatches(rule.target, observation, orderedObservations, definition.owner),
+    const matchingObservations = orderedObservations.filter(observation =>
+      doesTargetMatchObservation(rule.target, observation, orderedObservations, definition.owner),
     );
     try {
-      if (matches.length === 0)
+      if (matchingObservations.length === 0)
         throw new RetikzInspectError(RetikzInspectErrorCode.Compile, 'Explicit self target has no final owner output');
-      if (!matches.some(observation => isCompileObservationOwnerEqual(observation.owner, definition.owner))) {
+      if (
+        !matchingObservations.some(observation => isCompileObservationOwnerEqual(observation.owner, definition.owner))
+      ) {
         throw new RetikzInspectError(
           RetikzInspectErrorCode.Compile,
           'Explicit self target owner does not match Inspector owner',
         );
       }
     } catch (cause) {
-      throw wrapInspectionError(selectionOrigin(index, rule.target), cause);
+      throw wrapInspectionError(createInspectionSelectionDiagnosticOrigin(index, rule.target), cause);
     }
   }
 
-  const pending: Array<Omit<ResolvedInspectionRequest, 'colorScope'>> = [];
+  const pendingRequests: Array<Omit<ResolvedInspectionRequest, 'colorScope'>> = [];
   for (const observation of orderedObservations) {
     for (const definition of registry.definitions) {
       if (!isCompileObservationOwnerEqual(observation.owner, definition.owner)) continue;
-      const matching = admitted.filter(({ rule }) =>
-        isTargetMatches(rule.target, observation, orderedObservations, definition.owner),
+      const matchingRules = admittedRules.filter(({ rule }) =>
+        doesTargetMatchObservation(rule.target, observation, orderedObservations, definition.owner),
       );
-      if (matching.some(({ rule }) => rule.kind === 'barrier')) continue;
-      const requests = matching
+      if (matchingRules.some(({ rule }) => rule.kind === 'barrier')) continue;
+      const requests = matchingRules
         .filter(
           (entry): entry is IndexedRule & { rule: Extract<InspectionSelectionRule, { kind: 'request' }> } =>
             entry.rule.kind === 'request' &&
-            inspectorRegistryKey(entry.rule.inspector) === inspectorRegistryKey(definition),
+            formatInspectorRegistryKey(entry.rule.inspector) === formatInspectorRegistryKey(definition),
         )
         .sort((left, right) => {
-          const rank = (target: InspectionSelectionTarget): number =>
+          const rankSelectionTarget = (target: InspectionSelectionTarget): number =>
             target.kind === 'scene' ? 0 : target.kind === 'subtree' ? 1 : 2;
-          const rankDifference = rank(left.rule.target) - rank(right.rule.target);
+          const rankDifference = rankSelectionTarget(left.rule.target) - rankSelectionTarget(right.rule.target);
           if (rankDifference !== 0) return rankDifference;
           if (left.rule.target.kind === 'subtree' && right.rule.target.kind === 'subtree') {
             const depthDifference = left.rule.target.sourcePath.length - right.rule.target.sourcePath.length;
@@ -241,38 +246,49 @@ export const resolveInspectionSelection = ({
           return left.index - right.index;
         });
       if (definition.owner.kind === 'pathKind' && !requests.some(entry => entry.rule.target.kind === 'self')) continue;
-      let active = false;
-      let input: IRJsonObject = {};
+      let isRequestActive = false;
+      let mergedOptionsInput: IRJsonObject = {};
       for (const entry of requests) {
         try {
-          if (entry.rule.value === false) {
-            active = false;
-            input = {};
+          if (entry.rule.options === false) {
+            isRequestActive = false;
+            mergedOptionsInput = {};
             continue;
           }
-          const local = definition.optionsInputSchema.parse(entry.rule.value === true ? {} : entry.rule.value);
-          const merge = definition.mergeOptionsInput as
-            | ((inherited: IRJsonObject, local: IRJsonObject) => IRJsonObject)
+          const localOptionsInput = definition.optionsInputSchema.parse(
+            entry.rule.options === true ? {} : entry.rule.options,
+          );
+          const mergeOptionsInput = definition.mergeOptionsInput as
+            | ((inheritedOptionsInput: IRJsonObject, localOptionsInput: IRJsonObject) => IRJsonObject)
             | undefined;
-          input = active && merge !== undefined ? merge(input, local) : local;
-          input = definition.optionsInputSchema.parse(input);
-          active = true;
+          mergedOptionsInput =
+            isRequestActive && mergeOptionsInput !== undefined
+              ? mergeOptionsInput(mergedOptionsInput, localOptionsInput)
+              : localOptionsInput;
+          mergedOptionsInput = definition.optionsInputSchema.parse(mergedOptionsInput);
+          isRequestActive = true;
         } catch (cause) {
-          throw wrapInspectionError(selectionOrigin(entry.index, entry.rule.target), cause);
+          throw wrapInspectionError(createInspectionSelectionDiagnosticOrigin(entry.index, entry.rule.target), cause);
         }
       }
-      if (!active) continue;
+      if (!isRequestActive) continue;
       let options: IRJsonObject;
       try {
         options = cloneAndFreezeInspectionJson(
-          definition.optionsSchema.parse(input),
+          definition.optionsSchema.parse(mergedOptionsInput),
           `Inspector '${definition.namespace}/${definition.type}' options`,
         );
       } catch (cause) {
-        const last = requests.at(-1);
-        throw wrapInspectionError(selectionOrigin(last?.index ?? 0, last?.rule.target ?? { kind: 'scene' }), cause);
+        const lastRequest = requests.at(-1);
+        throw wrapInspectionError(
+          createInspectionSelectionDiagnosticOrigin(
+            lastRequest?.index ?? 0,
+            lastRequest?.rule.target ?? { kind: 'scene' },
+          ),
+          cause,
+        );
       }
-      pending.push({
+      pendingRequests.push({
         inspector: Object.freeze({ namespace: definition.namespace, type: definition.type }),
         owner: observation.owner,
         occurrence: observation.occurrence,
@@ -281,24 +297,24 @@ export const resolveInspectionSelection = ({
       });
     }
   }
-  pending.sort(
+  pendingRequests.sort(
     (left, right) =>
       compareInspectionOccurrences(left.occurrence, right.occurrence) ||
-      inspectorRegistryKey(left.inspector).localeCompare(inspectorRegistryKey(right.inspector)),
+      formatInspectorRegistryKey(left.inspector).localeCompare(formatInspectorRegistryKey(right.inspector)),
   );
-  return Object.freeze(pending.map((request, colorScope) => Object.freeze({ ...request, colorScope })));
+  return Object.freeze(pendingRequests.map((request, colorScope) => Object.freeze({ ...request, colorScope })));
 };
 
 /** 判断作者站点是否可能命中选择规则，以便按需发布所属者产物 */
-export const selectionMayRequestSite = (
-  admitted: ReadonlyArray<IndexedRule>,
+export const canInspectionSelectionRequestSite = (
+  admittedRules: ReadonlyArray<IndexedRule>,
   registry: InspectorRegistry,
   owner: CompileObservationOwner,
   sourcePath: string,
 ): boolean =>
-  !admitted.some(({ rule }) => rule.kind === 'barrier' && barrierContainsSourcePath(rule.target, sourcePath)) &&
-  admitted.some(({ rule }) => {
-    if (rule.kind !== 'request' || rule.value === false) return false;
+  !admittedRules.some(({ rule }) => rule.kind === 'barrier' && doesBarrierContainSourcePath(rule.target, sourcePath)) &&
+  admittedRules.some(({ rule }) => {
+    if (rule.kind !== 'request' || rule.options === false) return false;
     const definition = registry.get(rule.inspector);
     if (definition === undefined || !isCompileObservationOwnerEqual(owner, definition.owner)) return false;
     if (definition.owner.kind === 'pathKind' && rule.target.kind !== 'self') return false;

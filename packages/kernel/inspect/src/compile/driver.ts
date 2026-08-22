@@ -31,8 +31,8 @@ import type {
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 import { INSPECTION_OBSERVER_KEY } from './constants';
 import { wrapInspectionError } from './diagnostics';
-import { cloneAndFreezeInspectionJson, normalizeInspectorOutput, sealInspectionScene } from './output';
-import { admitInspectionSelection, resolveInspectionSelection, selectionMayRequestSite } from './selection';
+import { cloneAndFreezeInspectionJson, sealInspectionScene, snapshotInspectorOutput } from './output';
+import { admitInspectionSelection, canInspectionSelectionRequestSite, resolveInspectionSelection } from './selection';
 
 type CapturedObservation = Readonly<{ observation: CompileObservation; context: CompileObservationContext }>;
 type InspectionObserverOutput = Readonly<{
@@ -64,11 +64,13 @@ const createInspectionCompileError = (message: string, origin: InspectionDiagnos
     details: { origin },
   });
 
-
-const originFor = (stage: 'subject' | 'inspect', request: ResolvedInspectionRequest): InspectionDiagnosticOrigin =>
+const createInspectionDiagnosticOrigin = (
+  stage: 'subject' | 'inspect',
+  request: ResolvedInspectionRequest,
+): InspectionDiagnosticOrigin =>
   Object.freeze({ stage, inspector: request.inspector, owner: request.owner, occurrence: request.occurrence });
 
-const outputOriginFor = (
+const createInspectionOutputDiagnosticOrigin = (
   stage: 'output' | 'fragment',
   request: ResolvedInspectionRequest,
   outputIndex: number,
@@ -81,93 +83,99 @@ const outputOriginFor = (
     outputIndex,
   });
 
-const completeInspection = (
+const compileInspectionObserverOutput = (
   ir: IRScene,
   registry: InspectorRegistry,
   selection: InspectionSelection,
   captured: ReadonlyArray<CapturedObservation>,
 ): InspectionObserverOutput => {
-  const requests = resolveInspectionSelection({
+  const resolvedRequests = resolveInspectionSelection({
     ir,
     registry,
     selection,
     observations: captured.map(entry => entry.observation),
   });
-  const prepared = requests.map(request => {
+  const preparedRequests = resolvedRequests.map(request => {
     const definition = registry.require(request.inspector);
-    const capture = captured.find(
+    const capturedObservation = captured.find(
       entry =>
         isCompileObservationOwnerEqual(entry.observation.owner, request.owner) &&
         isCompileOccurrenceEqual(entry.observation.occurrence, request.occurrence),
     );
-    if (capture === undefined)
+    if (capturedObservation === undefined)
       throw createInspectionCompileError('Inspection complete failed: observation is missing', { stage: 'complete' });
-    const appearance = inspectionAppearanceOf(request.colorScope, capture.context.theme);
+    const appearance = inspectionAppearanceOf(request.colorScope, capturedObservation.context.theme);
     let subject: JsonValue;
     try {
       subject = cloneAndFreezeInspectionJson(
-        definition.subjectSchema.parse(capture.observation.value),
+        definition.subjectSchema.parse(capturedObservation.observation.value),
         `Inspector '${definition.namespace}/${definition.type}' subject`,
       );
     } catch (cause) {
-      throw wrapInspectionError(originFor('subject', request), cause);
+      throw wrapInspectionError(createInspectionDiagnosticOrigin('subject', request), cause);
     }
-    return { request, definition, capture, subject, appearance };
+    return { request, definition, capturedObservation, subject, appearance };
   });
 
   const entries: Array<InspectionPlaneEntry> = [];
   const diagnostics: Array<InspectionDiagnostic> = [];
-  for (const item of prepared) {
+  for (const preparedRequest of preparedRequests) {
     const context: InspectorContext = Object.freeze({
-      inspectorKey: item.request.inspector,
-      owner: item.request.owner,
-      occurrence: item.request.occurrence,
-      provenance: item.request.provenance,
-      options: item.request.options,
-      appearance: item.appearance,
+      inspectorKey: preparedRequest.request.inspector,
+      owner: preparedRequest.request.owner,
+      occurrence: preparedRequest.request.occurrence,
+      provenance: preparedRequest.request.provenance,
+      options: preparedRequest.request.options,
+      appearance: preparedRequest.appearance,
     });
-    let output: ReturnType<typeof normalizeInspectorOutput>;
+    let outputChildren: ReturnType<typeof snapshotInspectorOutput>;
     try {
-      const inspect = item.definition.inspect as unknown as (
+      const inspect = preparedRequest.definition.inspect as unknown as (
         subject: JsonValue,
         context: InspectorContext,
-      ) => Parameters<typeof normalizeInspectorOutput>[0];
-      const callbackOutput = inspect(item.subject, context);
+      ) => Parameters<typeof snapshotInspectorOutput>[0];
+      const callbackOutput = inspect(preparedRequest.subject, context);
       try {
-        output = normalizeInspectorOutput(callbackOutput);
+        outputChildren = snapshotInspectorOutput(callbackOutput);
       } catch (cause) {
         const outputIndex = Array.isArray(callbackOutput)
           ? (Array.from({ length: callbackOutput.length }, (_, index) => index).find(
               index => !(index in callbackOutput),
             ) ?? 0)
           : 0;
-        throw wrapInspectionError(outputOriginFor('output', item.request, outputIndex), cause);
+        throw wrapInspectionError(
+          createInspectionOutputDiagnosticOrigin('output', preparedRequest.request, outputIndex),
+          cause,
+        );
       }
     } catch (cause) {
-      throw wrapInspectionError(originFor('inspect', item.request), cause);
+      throw wrapInspectionError(createInspectionDiagnosticOrigin('inspect', preparedRequest.request), cause);
     }
-    for (const [outputIndex, child] of output.entries()) {
+    for (const [outputIndex, child] of outputChildren.entries()) {
       let fragment: ReturnType<CompileObservationContext['compileFragment']>;
       try {
-        fragment = item.capture.context.compileFragment(child);
+        fragment = preparedRequest.capturedObservation.context.compileFragment(child);
       } catch (cause) {
-        throw wrapInspectionError(outputOriginFor('fragment', item.request, outputIndex), cause);
+        throw wrapInspectionError(
+          createInspectionOutputDiagnosticOrigin('fragment', preparedRequest.request, outputIndex),
+          cause,
+        );
       }
       const scene = sealInspectionScene(fragment.scene);
       entries.push(
         Object.freeze({
-          inspector: item.request.inspector,
-          owner: item.request.owner,
-          occurrence: item.request.occurrence,
-          colorScope: item.request.colorScope,
+          inspector: preparedRequest.request.inspector,
+          owner: preparedRequest.request.owner,
+          occurrence: preparedRequest.request.occurrence,
+          colorScope: preparedRequest.request.colorScope,
           scene,
-          transform: item.capture.observation.transform,
+          transform: preparedRequest.capturedObservation.observation.transform,
         }),
       );
       for (const diagnostic of fragment.diagnostics) {
         diagnostics.push(
           Object.freeze({
-            origin: outputOriginFor('fragment', item.request, outputIndex),
+            origin: createInspectionOutputDiagnosticOrigin('fragment', preparedRequest.request, outputIndex),
             cause: Object.freeze({ code: diagnostic.code, message: diagnostic.message, path: diagnostic.path }),
           }),
         );
@@ -186,18 +194,18 @@ export const createInspectionObserver = (
   selection: InspectionSelection,
 ): CompileObserverDefinition<InspectionObserverOutput> => {
   const capturedSelection = cloneAndFreezeInspectionJson(selection, 'Inspection selection');
-  const admitted = admitInspectionSelection(ir, registry, capturedSelection);
+  const admittedRules = admitInspectionSelection(ir, registry, capturedSelection);
   return Object.freeze({
     key: INSPECTION_OBSERVER_KEY,
     createSession: () => {
       const captured: Array<CapturedObservation> = [];
       return Object.freeze({
         select: (site: Readonly<{ owner: CompileObservation['owner']; sourcePath: string }>) =>
-          selectionMayRequestSite(admitted, registry, site.owner, site.sourcePath),
+          canInspectionSelectionRequestSite(admittedRules, registry, site.owner, site.sourcePath),
         observe: (observation: CompileObservation, context: CompileObservationContext) => {
           captured.push({ observation, context });
         },
-        complete: () => completeInspection(ir, registry, capturedSelection, captured),
+        complete: () => compileInspectionObserverOutput(ir, registry, capturedSelection, captured),
       });
     },
   });

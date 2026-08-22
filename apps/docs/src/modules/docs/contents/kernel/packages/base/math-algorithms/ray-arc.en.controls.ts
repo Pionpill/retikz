@@ -44,5 +44,5 @@ export const previewControlContract = {
     { id: 'one-hit', label: 'One intersection', values: { startAngle: 210, endAngle: 510 } },
     { id: 'reverse-sweep', label: 'Reverse sweep', values: { startAngle: 390, endAngle: 150 } },
   ],
-  relatedApis: ['RayArcInput', 'rayArc'],
+  relatedApis: ['RayArcIntersectionInput', 'intersectRayWithArc'],
 } satisfies PreviewControlContract;

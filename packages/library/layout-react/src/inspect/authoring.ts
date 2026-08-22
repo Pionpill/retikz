@@ -6,5 +6,5 @@ import { createInspectionVanillaAuthoring } from '@retikz/inspect/vanilla';
 /** 创建只作用于当前 Layout 布局实例的检查声明 */
 export const createLayoutReactAuthoring = (
   inspector: InspectorKey,
-  value: InspectionVanillaRequest['value'],
-): ReturnType<typeof createInspectionVanillaAuthoring> => createInspectionVanillaAuthoring({ inspector, value });
+  options: InspectionVanillaRequest['options'],
+): ReturnType<typeof createInspectionVanillaAuthoring> => createInspectionVanillaAuthoring({ inspector, options });

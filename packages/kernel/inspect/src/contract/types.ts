@@ -65,7 +65,7 @@ export type InspectorDefinition<
   /** sparse input 到 canonical options 的 schema */
   optionsSchema: ZodType<TResolvedOptions, TOptionsInput>;
   /** 多层 sparse input 的可选合并规则 */
-  mergeOptionsInput?: (inherited: TOptionsInput, local: TOptionsInput) => TOptionsInput;
+  mergeOptionsInput?: (inheritedOptionsInput: TOptionsInput, localOptionsInput: TOptionsInput) => TOptionsInput;
   /** 把 settled subject 转为普通 Core IR */
   inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => InspectorOutput;
 }>;
@@ -85,7 +85,7 @@ export type AnyInspectorDefinition = Readonly<{
   /** 擦除后仍恢复 JSON object options */
   optionsSchema: Readonly<{ parse: (value: unknown) => IRJsonObject }>;
   /** 具体 options 类型由调用前的 schema 恢复 */
-  mergeOptionsInput?: (inherited: never, local: never) => IRJsonObject;
+  mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => IRJsonObject;
   /** 具体 subject/context 类型由调用前的 schema 恢复 */
   inspect: (subject: never, context: never) => InspectorOutput;
 }>;

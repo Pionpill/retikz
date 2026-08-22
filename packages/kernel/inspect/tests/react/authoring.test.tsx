@@ -15,7 +15,7 @@ import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from 
 const registry = createInspectorRegistry(BUILTIN_INSPECTORS);
 
 const content = (
-  <InspectPath request={{ inspector: STROKE_PATH_INSPECTOR_KEY, value: { labels: true } }}>
+  <InspectPath request={{ inspector: STROKE_PATH_INSPECTOR_KEY, options: { labels: true } }}>
     <Step kind="move" to={[0, 0]} />
     <Step kind="cubic" control1={[10, 12]} control2={[20, 12]} to={[30, 0]} />
   </InspectPath>
@@ -100,7 +100,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
           sourcePath: 'children[0].path',
           owner: { kind: 'composite', namespace: 'fixture', type: 'box' },
           type: 'path',
-          authoring: createInspectionVanillaAuthoring({ inspector: STROKE_PATH_INSPECTOR_KEY, value: true }),
+          authoring: createInspectionVanillaAuthoring({ inspector: STROKE_PATH_INSPECTOR_KEY, options: true }),
         },
       ],
       coreOptions: {},
@@ -142,14 +142,14 @@ describe('@retikz/inspect/react authoring and driver', () => {
           sourcePath: 'children[0]',
           owner: firstOwner,
           type: 'first',
-          authoring: createInspectionVanillaAuthoring({ inspector: firstKey, value: true }),
+          authoring: createInspectionVanillaAuthoring({ inspector: firstKey, options: true }),
         },
         {
           kind: 'embeddable',
           sourcePath: 'children[0]',
           owner: secondOwner,
           type: 'second',
-          authoring: createInspectionVanillaAuthoring({ inspector: secondKey, value: true }),
+          authoring: createInspectionVanillaAuthoring({ inspector: secondKey, options: true }),
         },
       ],
       coreOptions: {},

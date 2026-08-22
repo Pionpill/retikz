@@ -9,7 +9,7 @@ import { BUILTIN_INSPECTORS, createInspectorRegistry, STROKE_PATH_INSPECTOR_KEY 
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '../../src/vanilla';
 
 const registry = createInspectorRegistry(BUILTIN_INSPECTORS);
-const request = Object.freeze({ inspector: STROKE_PATH_INSPECTOR_KEY, value: Object.freeze({ labels: true }) });
+const request = Object.freeze({ inspector: STROKE_PATH_INSPECTOR_KEY, options: Object.freeze({ labels: true }) });
 
 const content = (barrier = false) =>
   scene({

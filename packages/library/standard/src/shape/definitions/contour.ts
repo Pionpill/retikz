@@ -13,7 +13,7 @@ import {
   verticesToSegments,
 } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { boundsCenter, boundsHalfAxes, boundsOf } from '@retikz/math';
+import { boundsOf, centerOfBounds, halfAxesOfBounds } from '@retikz/math';
 import { z } from 'zod';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
@@ -42,7 +42,7 @@ const aabbCenterOf = (points: Array<Position>): Position => {
       details: { pointCount: points.length, shape: 'contour' },
     });
   }
-  return boundsCenter(bounds);
+  return centerOfBounds(bounds);
 };
 
 /** 归一化局部顶点 */
@@ -68,7 +68,7 @@ export const ContourShapeDefinition = defineShape<ContourShapeParams>({
         details: { pointCount: params.points.length, shape: 'contour' },
       });
     }
-    return boundsHalfAxes(bounds);
+    return halfAxesOfBounds(bounds);
   },
   circumscribeOffset: () => [0, 0],
   boundaryPoint: (rect, toward, params) => {

@@ -1,4 +1,4 @@
-import { arcEndPoint } from '@retikz/math';
+import { pointAtArcAngle } from '@retikz/math';
 
 import type { Transform } from '../../contract';
 import type { IRGeometryLabel, IRPathBase, IRPosition, IRStep, IRTarget } from '../../schemas';
@@ -171,7 +171,7 @@ const resolveSteps = (
         step.center === undefined ? undefined : resolve(step.center, `${prefix}.children[${index}].center`);
       out.push(center === undefined ? step : { ...step, center });
       if (previous && typeof step.radius === 'number' && step.center === undefined) {
-        previous = arcEndPoint(previous, step.radius, step.endAngle);
+        previous = pointAtArcAngle(previous, step.radius, step.endAngle);
       }
       continue;
     }
