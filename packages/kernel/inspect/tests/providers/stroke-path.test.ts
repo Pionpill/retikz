@@ -30,6 +30,10 @@ const ir: IRScene = {
 };
 
 describe('stroke Path Inspector', () => {
+  it('uses the Core package namespace for its registry key', () => {
+    expect(STROKE_PATH_INSPECTOR_KEY).toEqual({ namespace: 'core', type: 'stroke-path' });
+  });
+
   it('draws handles, control points, and optional labels from settled owner output', () => {
     const result = compileInspectionToScene(ir, {
       registry: createDefaultInspectorRegistry(),
@@ -60,7 +64,7 @@ describe('stroke Path Inspector', () => {
 
   it('continues control handles from arc endpoints and closed subpath starts', () => {
     const context = {
-      inspector: STROKE_PATH_INSPECTOR_KEY,
+      inspectorKey: STROKE_PATH_INSPECTOR_KEY,
       owner: { kind: 'pathKind' as const, name: 'stroke' },
       occurrence: { sourcePath: 'children[0].path', expansionPath: [] },
       provenance: {
@@ -115,7 +119,7 @@ describe('stroke Path Inspector', () => {
         transforms: [],
       },
       {
-        inspector: STROKE_PATH_INSPECTOR_KEY,
+        inspectorKey: STROKE_PATH_INSPECTOR_KEY,
         owner: { kind: 'pathKind', name: 'stroke' },
         occurrence: { sourcePath: 'children[0].path', expansionPath: [] },
         provenance: {

@@ -5,8 +5,8 @@ import { z } from 'zod';
 
 import { defineInspector } from '../contract';
 
-/** 内置 stroke Path Inspector key */
-export const STROKE_PATH_INSPECTOR_KEY = Object.freeze({ namespace: 'retikz', type: 'stroke-path' });
+/** 内置 Core stroke Path Inspector key */
+export const STROKE_PATH_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'stroke-path' });
 
 /** 内置 stroke Path Inspector sparse options schema */
 export const StrokePathInspectOptionsInputSchema = z

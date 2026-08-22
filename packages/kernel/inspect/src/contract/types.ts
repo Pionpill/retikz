@@ -33,7 +33,7 @@ export type InspectionAppearanceContext = Readonly<{
 /** Inspector callback 读取的最终 occurrence 上下文 */
 export type InspectorContext<TOptions extends IRJsonObject = IRJsonObject> = Readonly<{
   /** 当前 Inspector key */
-  inspector: InspectorKey;
+  inspectorKey: InspectorKey;
   /** 当前被观察的 Core owner */
   owner: CompileObservationOwner;
   /** 当前最终 occurrence */

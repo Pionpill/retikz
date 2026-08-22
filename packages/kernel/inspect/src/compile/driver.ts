@@ -127,7 +127,7 @@ const completeInspection = (
   const diagnostics: Array<InspectionDiagnostic> = [];
   for (const item of prepared) {
     const context: InspectorContext = Object.freeze({
-      inspector: item.request.inspector,
+      inspectorKey: item.request.inspector,
       owner: item.request.owner,
       occurrence: item.request.occurrence,
       provenance: item.request.provenance,
