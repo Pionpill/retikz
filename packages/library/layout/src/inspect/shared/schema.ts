@@ -1,3 +1,4 @@
+import { InspectionLabelsInputSchema, InspectionLabelsSchema } from '@retikz/inspect';
 import { z } from 'zod';
 
 /** 布局检查器边界选项的稀疏输入结构 */
@@ -22,7 +23,7 @@ export const BaseLayoutInspectOptionsInputSchema = z
     spacing: z.union([z.boolean(), LayoutInspectSpacingOptionsInputSchema]).optional().describe('Box spacing.'),
     overflow: z.boolean().optional().describe('Whether to shade overflowing content.'),
     alignmentGuides: z.boolean().optional().describe('Whether to draw alignment guides.'),
-    labels: z.boolean().optional().describe('Whether to draw item labels.'),
+    labels: InspectionLabelsInputSchema.describe('Whether to draw item labels.'),
   })
   .describe('Sparse shared options accepted by every Layout Inspector.');
 
@@ -51,7 +52,7 @@ export const resolveBaseLayoutInspectOptions = (options: z.input<typeof BaseLayo
     spacing: Object.freeze(spacing),
     overflow: options.overflow ?? true,
     alignmentGuides: options.alignmentGuides ?? true,
-    labels: options.labels ?? false,
+    labels: InspectionLabelsSchema.parse(options.labels),
   });
 };
 

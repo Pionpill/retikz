@@ -649,6 +649,9 @@ importers:
       '@retikz/foundation':
         specifier: workspace:*
         version: link:../foundation
+      '@retikz/math':
+        specifier: workspace:*
+        version: link:../math
       zod:
         specifier: 'catalog:'
         version: 4.4.3

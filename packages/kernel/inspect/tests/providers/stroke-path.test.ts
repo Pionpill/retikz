@@ -7,6 +7,8 @@ import {
   createDefaultInspectorRegistry,
   STROKE_PATH_INSPECTOR,
   STROKE_PATH_INSPECTOR_KEY,
+  StrokePathInspectOptionsInputSchema,
+  StrokePathInspectOptionsSchema,
 } from '../../src';
 
 const hasText = (primitives: ReadonlyArray<{ type: string; children?: ReadonlyArray<{ type: string }> }>): boolean =>
@@ -32,6 +34,11 @@ const ir: IRScene = {
 describe('stroke Path Inspector', () => {
   it('uses the Core package namespace for its registry key', () => {
     expect(STROKE_PATH_INSPECTOR_KEY).toEqual({ namespace: 'core', type: 'stroke-path' });
+  });
+
+  it('keeps sparse labels absent until canonical options apply the default', () => {
+    expect(StrokePathInspectOptionsInputSchema.parse({})).toEqual({});
+    expect(StrokePathInspectOptionsSchema.parse({})).toEqual({ controlPoints: true, labels: false });
   });
 
   it('draws handles, control points, and optional labels from settled owner output', () => {

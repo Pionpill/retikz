@@ -1,26 +1,12 @@
 import type { IRChild, IRPosition, PathCommand, StrokePathOwnerOutput } from '@retikz/core';
 
 import { StrokePathOwnerOutputSchema } from '@retikz/core';
-import { z } from 'zod';
 
 import { defineInspector } from '../contract';
+import { StrokePathInspectOptionsInputSchema, StrokePathInspectOptionsSchema } from '../schema';
 
 /** 内置 Core stroke Path Inspector key */
 export const STROKE_PATH_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'stroke-path' });
-
-/** 内置 stroke Path Inspector sparse options schema */
-export const StrokePathInspectOptionsInputSchema = z
-  .strictObject({
-    controlPoints: z.boolean().optional().describe('Whether control handles and points are visible.'),
-    labels: z.boolean().optional().describe('Whether control point labels are visible.'),
-  })
-  .describe('Sparse stroke Path Inspector options.');
-
-/** 内置 stroke Path Inspector canonical options schema */
-export const StrokePathInspectOptionsSchema = StrokePathInspectOptionsInputSchema.transform(value => ({
-  controlPoints: value.controlPoints ?? true,
-  labels: value.labels ?? false,
-})).describe('Canonical stroke Path Inspector options.');
 
 type ControlPoint = Readonly<{ position: IRPosition; label: string }>;
 type ControlHandle = Readonly<{ from: IRPosition; to: IRPosition }>;
