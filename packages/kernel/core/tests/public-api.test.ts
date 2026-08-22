@@ -43,4 +43,14 @@ describe('Core public API', () => {
     expect(core.THICKNESS_TO_WIDTH.thick).toBe(2);
     expect(core).not.toHaveProperty('parsePathThickness');
   });
+
+  it('公开 occurrence 展开路径的稳定阶段类别', () => {
+    expect(core.CompileExpansionKind).toEqual({
+      Expand: 'expand',
+      Output: 'output',
+      Probe: 'probe',
+      Replay: 'replay',
+      ScopeChild: 'scopeChild',
+    });
+  });
 });

@@ -84,17 +84,18 @@ subagent 必须避开主 agent 模型；不得派主 agent 同模型 subagent �
 
 仅当固定快照包含实现代码、diff、commit 或 public surface 时使用本节。ADR Gate 只使用上方“文档评审方向”与 `develop-completeness` rubric；Plan Gate 只检查 ADR 追溯与实施可执行性，不得用代码 rubric 反向要求 ADR / plan 固定 Zod 拼装或私有命名。
 
-代码评审把下列方向写进**每个**评审员的 prompt，保证各家可比、且贴合本仓规范。评审前把适用 `AGENTS.md` 关键规则随 prompt 一起给模型。按本轮代码范围与用户重点可取舍通用项，但**必查四项默认都要过**。
+代码评审把下列方向写进**每个**评审员的 prompt，保证各家可比、且贴合本仓规范。评审前把适用 `AGENTS.md` 关键规则随 prompt 一起给模型。按本轮代码范围与用户重点可取舍通用项，但**必查项默认都要过**。
 
 ### 必查（本仓高优先，重点盯）
 
-1. **是否符合 `AGENTS.md` 代码规范**——总纲，逐条对照。命名不缩写写全称（`direction` 不写 `dir`、`reference` 不写 `ref`、`background` 不写 `bg`…，TikZ/SVG/CSS 标准词如 `stroke`/`fill`/`cx` 除外）；目录与非组件文件使用 kebab-case，组件 / 类文件可使用 PascalCase；从目录 barrel import 不深入具体文件；数组用 `Array<T>` 不用 `T[]`；函数优先箭头；React 组件用 `FC` 注解 + 独立导出 `Props` 类型 + 在函数体内解构 props。
+1. **是否符合 `AGENTS.md` 代码规范**——总纲，逐条对照。命名不缩写写全称（`direction` 不写 `dir`、`reference` 不写 `ref`、`background` 不写 `bg`…，TikZ/SVG/CSS 标准词如 `stroke`/`fill`/`cx` 除外）；目录与非组件文件使用 kebab-case，组件 / 类文件可使用 PascalCase；从目录 barrel import 不深入具体文件；数组用 `Array<T>` 不用 `T[]`；函数优先箭头；React 组件用 `FC` 注解 + 独立导出 `Props` 类型 + 在函数体内解构 props。命名细则见 [`standard-name`](../standard-name/SKILL.md)。
 
 2. **代码是否 LLM 友好**——尤其 zod schema 描述与重要数据结构。每个 zod 字段都要有 `.describe(...)`（含顶层 object、`type`/`kind` 这类看似自描述的字段）；描述写**含义与用途**、不复述字段名、**全英文**、不中英混写——schema description 直接进 LLM tool definition，是给模型看的契约，必须完整无歧义。重要数据结构的命名与形状对模型是否自解释、模型能否据 description 自我纠错；schema 内部不写 JSDoc（说明全走 `.describe`），派生类型/常量/函数才写中文 JSDoc。
 
 3. **是否用 const 风格枚举，不裸用字符串**——可枚举的取值集 / discriminated union 判别字段，必须用 `as const` 对象 + 派生类型（`ValueOf`），**不用 TS `enum`**，也不要在代码里散落裸字符串字面量当枚举值。命名走 `DrawWay` 风格（PascalCase 域前缀 + 成员、`export` 暴露给用户）；union 成员写 `z.literal(X.Member)`，整体 `z.discriminatedUnion('type', [...])`；成员值保持干净判别串，使裸字面量（`{ type: 'point' }`）仍是有效第一形态。揪出「该用 const 枚举却散字符串」「仍用 TS `enum`」的地方（旧 `SCREAMING_SNAKE` 是遗留写法，新代码按 `DrawWay` 风格）。
 
 4. **数据结构是否可靠——非法状态不可表达**——有共现 / 互斥约束的字段，不能摊成一堆全可选字段。反例：`{ x?, y?, a?, b? }`，而语义要求 x、y 必须同时出现、a、b 必须同时出现。正确做法：① 拆成独立子结构再复合（`{ point: { x, y } }`）；② 互斥用 discriminated union 表达；③ 共现/条件约束用 zod `.refine` / `.superRefine` 校验——**保证只要通过 schema 校验，生成的对象就一定有效**。揪出「全可选 + 靠运行时假设字段成对出现」的脆弱结构，建议改成类型层面就排除非法组合（make illegal states unrepresentable）。
+5. **命名是否语义自解释**——按 [`standard-name`](../standard-name/SKILL.md) 重点检查：函数通常采用动宾短语，如 `resolvePath`、`formatName`、`isKeyEqual`；导出函数使用完整领域语义，私有 helper 可在上下文明确时简化。变量、参数和属性通常采用形容词或分类限定词 + 类别名，最后一个单词表达类别，布尔值使用谓词形式。发现问题时必须给出文件位置、误导原因和建议名称，不能只写“可以优化”。
 
 ### 通用代码 review 点
 

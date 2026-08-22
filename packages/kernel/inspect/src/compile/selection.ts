@@ -22,14 +22,14 @@ import { cloneAndFreezeInspectionJson } from './output';
 
 type IndexedRule = Readonly<{ index: number; rule: InspectionSelectionRule }>;
 
-/** 校验 occurrence locator 中无法由 TypeScript 表达的非负安全整数约束 */
-const validateOccurrenceLocator = (occurrence: CompileOccurrenceLocator): void => {
+/** 校验实例定位器中 TypeScript 无法表达的非负安全整数约束 */
+const assertOccurrenceLocator = (occurrence: CompileOccurrenceLocator): void => {
   if (occurrence.expansionPath.some(segment => !Number.isSafeInteger(segment.index) || segment.index < 0)) {
     throw new RetikzInspectError(RetikzInspectErrorCode.Compile, 'Invalid inspection occurrence locator');
   }
 };
 
-/** Core canonical occurrence preorder 的包内等价比较器 */
+/** 按 Core 的编译顺序比较两个实例定位器 */
 export const compareInspectionOccurrences = (
   left: CompileObservation['occurrence'],
   right: CompileObservation['occurrence'],
@@ -52,12 +52,14 @@ export const compareInspectionOccurrences = (
   );
 };
 
+/** 判断两个观察所属者是否相同 */
 const ownerEquals = (left: CompileObservationOwner, right: CompileObservationOwner): boolean =>
   left.kind === right.kind &&
   (left.kind === 'pathKind'
     ? right.kind === 'pathKind' && left.name === right.name
     : right.kind === 'composite' && left.namespace === right.namespace && left.type === right.type);
 
+/** 判断两个编译实例定位器是否完全相同 */
 const occurrenceEquals = (left: CompileObservation['occurrence'], right: CompileObservation['occurrence']): boolean =>
   left.sourcePath === right.sourcePath &&
   left.expansionPath.length === right.expansionPath.length &&
@@ -66,7 +68,8 @@ const occurrenceEquals = (left: CompileObservation['occurrence'], right: Compile
       segment.kind === right.expansionPath[index]?.kind && segment.index === right.expansionPath[index]?.index,
   );
 
-const targetKey = (target: InspectionSelectionTarget): string => {
+/** 将选择目标格式化为用于去重的稳定键 */
+const formatTargetKey = (target: InspectionSelectionTarget): string => {
   if (target.kind === 'scene') return 'scene';
   if (target.kind === 'subtree') return `subtree:${target.sourcePath}`;
   if (target.locator.kind === 'authored')
@@ -76,21 +79,22 @@ const targetKey = (target: InspectionSelectionTarget): string => {
     .join('/')}`;
 };
 
+/** 收集 IR 中可用于选择的作者节点路径与子树路径 */
 const collectAuthoredPaths = (ir: IRScene) => {
   const self = new Set<string>();
   const subtree = new Set<string>();
-  const visit = (child: IRChild, base: string): void => {
+  const visit = (child: IRChild, basePath: string): void => {
     if ('namespace' in child) {
-      self.add(base);
-      subtree.add(base);
+      self.add(basePath);
+      subtree.add(basePath);
       return;
     }
     if (child.type === 'path') {
-      self.add(`${base}.path`);
+      self.add(`${basePath}.path`);
       return;
     }
     if (child.type !== 'scope') return;
-    const scopePath = `${base}.scope`;
+    const scopePath = `${basePath}.scope`;
     subtree.add(scopePath);
     child.children.forEach((nested, index) => visit(nested, `${scopePath}.children[${index}]`));
   };
@@ -98,7 +102,11 @@ const collectAuthoredPaths = (ir: IRScene) => {
   return { self, subtree };
 };
 
-const validateTarget = (target: InspectionSelectionTarget, paths: ReturnType<typeof collectAuthoredPaths>): void => {
+/** 断言 Inspect 选择目标对应当前 IR 且包含合法的实例定位信息 */
+const assertSelectionTarget = (
+  target: InspectionSelectionTarget,
+  paths: ReturnType<typeof collectAuthoredPaths>,
+): void => {
   if (target.kind === 'scene') return;
   if (target.kind === 'subtree') {
     if (!paths.subtree.has(target.sourcePath))
@@ -106,7 +114,7 @@ const validateTarget = (target: InspectionSelectionTarget, paths: ReturnType<typ
     return;
   }
   if (target.locator.kind === 'occurrence') {
-    validateOccurrenceLocator(target.locator.occurrence);
+    assertOccurrenceLocator(target.locator.occurrence);
     return;
   }
   if (!paths.self.has(target.locator.sourcePath)) {
@@ -123,7 +131,7 @@ const validateTarget = (target: InspectionSelectionTarget, paths: ReturnType<typ
   }
 };
 
-/** 在 Core traversal 前完成 selection 结构、locator、registry 与 sparse options admission */
+/** 在 Core 遍历前校验选择结构、定位器、注册表与稀疏选项 */
 export const admitInspectionSelection = (
   ir: IRScene,
   registry: InspectorRegistry,
@@ -135,10 +143,10 @@ export const admitInspectionSelection = (
     selection.rules.map((rule, index) => {
       const target = rule.target;
       try {
-        validateTarget(target, paths);
+        assertSelectionTarget(target, paths);
         if (rule.kind === 'request') {
           const definition = registry.require(rule.inspector);
-          const duplicateKey = `${targetKey(target)}\u0000${inspectorRegistryKey(rule.inspector)}`;
+          const duplicateKey = `${formatTargetKey(target)}\u0000${inspectorRegistryKey(rule.inspector)}`;
           if (requestKeys.has(duplicateKey))
             throw new RetikzInspectError(
               RetikzInspectErrorCode.Compile,
@@ -157,7 +165,8 @@ export const admitInspectionSelection = (
   );
 };
 
-const targetMatches = (
+/** 判断选择目标是否匹配某个最终观察结果 */
+const isTargetMatches = (
   target: InspectionSelectionTarget,
   observation: CompileObservation,
   observations: ReadonlyArray<CompileObservation>,
@@ -181,14 +190,14 @@ const targetMatches = (
   return selected !== undefined && occurrenceEquals(observation.occurrence, selected.occurrence);
 };
 
-/** 判断 scene 或 subtree barrier 是否覆盖给定 authored source path */
+/** 判断场景或子树封锁规则是否覆盖指定作者路径 */
 const barrierContainsSourcePath = (
   target: Extract<InspectionSelectionTarget, { kind: 'scene' | 'subtree' }>,
   sourcePath: string,
 ): boolean =>
   target.kind === 'scene' || sourcePath === target.sourcePath || sourcePath.startsWith(`${target.sourcePath}.`);
 
-/** 对全部 final observations 求值 selection 并分配连续 appearance */
+/** 根据最终观察结果解析选择规则，并分配连续的外观颜色序号 */
 export const resolveInspectionSelection = ({
   ir,
   registry,
@@ -220,7 +229,7 @@ export const resolveInspectionSelection = ({
     }
     const definition = registry.require(rule.inspector);
     const matches = orderedObservations.filter(observation =>
-      targetMatches(rule.target, observation, orderedObservations, definition.owner),
+      isTargetMatches(rule.target, observation, orderedObservations, definition.owner),
     );
     try {
       if (matches.length === 0)
@@ -241,7 +250,7 @@ export const resolveInspectionSelection = ({
     for (const definition of registry.definitions) {
       if (!ownerEquals(observation.owner, definition.owner)) continue;
       const matching = admitted.filter(({ rule }) =>
-        targetMatches(rule.target, observation, orderedObservations, definition.owner),
+        isTargetMatches(rule.target, observation, orderedObservations, definition.owner),
       );
       if (matching.some(({ rule }) => rule.kind === 'barrier')) continue;
       const requests = matching
@@ -310,7 +319,7 @@ export const resolveInspectionSelection = ({
   return Object.freeze(pending.map((request, colorScope) => Object.freeze({ ...request, colorScope })));
 };
 
-/** 判断 authored site 是否可能被 selection 选中，以保持 owner output 按需发布 */
+/** 判断作者站点是否可能命中选择规则，以便按需发布所属者产物 */
 export const selectionMayRequestSite = (
   admitted: ReadonlyArray<IndexedRule>,
   registry: InspectorRegistry,

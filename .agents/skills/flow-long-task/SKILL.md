@@ -60,7 +60,7 @@ plan、实现阶段、阶段性 diff 和 commit 前 review 默认不使用 `cros
 
 长任务在计划已获得 commit 授权后，允许执行者按功能闭环、风险和验证边界自行拆分多个本地 commit；不得把全部功能、测试、文档和收尾改动堆进一个 commit。每个 commit 仍须精确 stage 并审计范围，push、tag、publish 继续单独授权。
 
-常规 reviewer 重点检查文件结构与依赖方向、命名 / barrel / JSDoc / 中文注释、计划偏差、测试弱化和 docs 遗漏。每个 checkpoint 使用单 reviewer，不为“更多视角”临时追加 agent。
+常规 reviewer 重点检查文件结构与依赖方向、命名 / barrel / JSDoc / 中文注释、计划偏差、测试弱化和 docs 遗漏。命名检查必须按 [`standard-name`](../standard-name/SKILL.md) 重点确认名称可推断用途：函数采用动宾短语，导出函数使用完整领域语义，私有 helper 仅在上下文明确时简化；变量、参数和属性采用形容词或分类限定词 + 类别名，布尔值使用谓词形式。每个 checkpoint 使用单 reviewer，不为“更多视角”临时追加 agent。
 
 ## 最终整体 Review
 

@@ -47,6 +47,15 @@ git status --short
 4. **schema / 数据结构 / AI 友好**：JSON 可序列化、zod `.describe` 完整与质量、const object enum、非法状态不可表达、同名同义。
 5. **文档一致性**：public API、props、IR 字段、默认值、demo、zh/en 是否与当前代码一致。纯内部范围可标不适用。
 
+## Subagent Review 命名重点
+
+只读 reviewer 必须把命名语义作为独立检查项，并按 [`standard-name`](../standard-name/SKILL.md) 对照：
+
+- 名称是否足以推断用途、数据类别和作用范围，尤其留意无上下文的 `base`、`data`、`value`、`item`、`target`、`result`、`key`
+- 函数是否采用动宾短语；导出函数是否包含完整领域语义，私有 helper 是否只在上下文明确时适度简化
+- 变量、参数和属性是否采用形容词或分类限定词 + 类别名，最后一个单词是否表达类别；布尔值是否使用可读的谓词形式
+- 发现命名不清时，必须报告具体位置、误导原因和建议名称，不得只写“可以优化”
+
 ## 分级
 
 - **BLOCKING**：真实 bug、非法状态、会阻碍后续设计收敛的结构问题。

@@ -65,7 +65,7 @@ import type {
   TraversalRuntime,
 } from './types';
 
-import { LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
+import { CompileExpansionKind, LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import {
   bindComposite,
@@ -1266,7 +1266,7 @@ export const compileChildrenToPrimitives = (
     sourcePath: parent.sourcePath,
     expansionPath: [
       ...parent.expansionPath,
-      { kind: 'replay', index },
+      { kind: CompileExpansionKind.Replay, index },
       ...child.expansionPath.slice(origin.expansionPath.length),
     ],
   });
@@ -1613,7 +1613,7 @@ export const compileChildrenToPrimitives = (
     frame: TraversalFrame,
     parentOccurrence: CompileOccurrenceLocator,
     ownerOccurrence: CompileOccurrenceLocator,
-    scopeSegment: 'output' | 'scopeChild',
+    scopeSegment: typeof CompileExpansionKind.Output | typeof CompileExpansionKind.ScopeChild,
     compositeDepth: number,
     owner: CompositeCompileOwner,
     prepared: PreparedCompositeOutputs,
@@ -1664,7 +1664,10 @@ export const compileChildrenToPrimitives = (
           if (!isCompositeOutputHandle(child)) {
             const childOccurrence: CompileOccurrenceLocator = {
               sourcePath: scopeOccurrence.sourcePath,
-              expansionPath: [...scopeOccurrence.expansionPath, { kind: 'scopeChild' as const, index: childIndex }],
+              expansionPath: [
+                ...scopeOccurrence.expansionPath,
+                { kind: CompileExpansionKind.ScopeChild, index: childIndex },
+              ],
             };
             compileChild(
               child,
@@ -1763,7 +1766,7 @@ export const compileChildrenToPrimitives = (
           expandedFrame,
           {
             sourcePath: occurrence.sourcePath,
-            expansionPath: [...occurrence.expansionPath, { kind: 'expand', index: outputIndex }],
+            expansionPath: [...occurrence.expansionPath, { kind: CompileExpansionKind.Expand, index: outputIndex }],
           },
           compositeDepth + 1,
           true,
@@ -1913,7 +1916,7 @@ export const compileChildrenToPrimitives = (
           );
           const probeOccurrence = freezeOccurrence({
             sourcePath: occurrence.sourcePath,
-            expansionPath: [...occurrence.expansionPath, { kind: 'probe', index: layoutProbeIndex }],
+            expansionPath: [...occurrence.expansionPath, { kind: CompileExpansionKind.Probe, index: layoutProbeIndex }],
           });
           layoutProbeIndex += 1;
           try {
@@ -2058,7 +2061,7 @@ export const compileChildrenToPrimitives = (
       if (!isCompositeOutputHandle(output)) {
         const outputOccurrence: CompileOccurrenceLocator = {
           sourcePath: occurrence.sourcePath,
-          expansionPath: [...occurrence.expansionPath, { kind: 'output', index: outputIndex }],
+          expansionPath: [...occurrence.expansionPath, { kind: CompileExpansionKind.Output, index: outputIndex }],
         };
         compileChild(
           output,
@@ -2160,7 +2163,10 @@ export const compileChildrenToPrimitives = (
       const occurrence = generatedScopeOccurrence
         ? {
             sourcePath: generatedScopeOccurrence.sourcePath,
-            expansionPath: [...generatedScopeOccurrence.expansionPath, { kind: 'scopeChild' as const, index: i }],
+            expansionPath: [
+              ...generatedScopeOccurrence.expansionPath,
+              { kind: CompileExpansionKind.ScopeChild, index: i },
+            ],
           }
         : useProvidedOccurrence && options.occurrence !== undefined && children.length === 1
           ? options.occurrence

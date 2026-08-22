@@ -43,7 +43,7 @@ export type InspectionSelectionRule =
       /** 请求生效的 scene、subtree 或 self 范围 */
       target: InspectionSelectionTarget;
       /** false 关闭该 Inspector，true 使用默认 options，对象提供 sparse options */
-      value: false | true | IRJsonObject;
+      value: boolean | IRJsonObject;
     }>
   | Readonly<{
       /** 封锁目标范围内的全部 Inspector，并阻止后代规则重新开启 */
