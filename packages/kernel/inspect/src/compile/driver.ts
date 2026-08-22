@@ -64,12 +64,14 @@ const createInspectionCompileError = (message: string, origin: InspectionDiagnos
     details: { origin },
   });
 
+/** 创建 subject 解析或 Inspector 回调失败时使用的诊断来源 */
 const createInspectionDiagnosticOrigin = (
   stage: 'subject' | 'inspect',
   request: ResolvedInspectionRequest,
 ): InspectionDiagnosticOrigin =>
   Object.freeze({ stage, inspector: request.inspector, owner: request.owner, occurrence: request.occurrence });
 
+/** 创建 Inspect 输出或 fragment 编译失败时使用的诊断来源 */
 const createInspectionOutputDiagnosticOrigin = (
   stage: 'output' | 'fragment',
   request: ResolvedInspectionRequest,
@@ -83,6 +85,7 @@ const createInspectionOutputDiagnosticOrigin = (
     outputIndex,
   });
 
+/** 将捕获的 observation 编译为 Inspect plane 与诊断结果 */
 const compileInspectionObserverOutput = (
   ir: IRScene,
   registry: InspectorRegistry,

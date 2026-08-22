@@ -1,6 +1,7 @@
 import type { IRChild, Scene, ScenePrimitive } from '@retikz/core';
 
 import { ChildSchema } from '@retikz/core';
+import { cloneAndFreezeJson } from '@retikz/foundation';
 
 import type { InspectorOutput } from '../contract';
 
@@ -8,61 +9,13 @@ import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 
 /** 校验、脱离并深冻结 JSON-safe plain data */
 export const cloneAndFreezeInspectionJson = <T>(value: T, label: string): T => {
-  const ancestors = new Set<object>();
-  const clone = (input: unknown, path: string): unknown => {
-    if (input === null || typeof input === 'string' || typeof input === 'boolean') return input;
-    if (typeof input === 'number') {
-      if (!Number.isFinite(input))
-        throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `${path} must contain finite JSON numbers`);
-      return input;
-    }
-    if (typeof input !== 'object')
-      throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `${path} must be JSON-safe plain data`);
-    if (ancestors.has(input))
-      throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `${path} must not contain cycles`);
-    if (Object.getOwnPropertySymbols(input).length > 0)
-      throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `${path} must not contain symbol keys`);
-    ancestors.add(input);
-    try {
-      if (Array.isArray(input)) {
-        if (Object.getOwnPropertyNames(input).length !== input.length + 1) {
-          throw new RetikzInspectError(
-            RetikzInspectErrorCode.Compile,
-            `${path} must be a dense JSON array without extra properties`,
-          );
-        }
-        return Object.freeze(
-          input.map((child, index) => {
-            if (!(index in input))
-              throw new RetikzInspectError(
-                RetikzInspectErrorCode.Compile,
-                `${path} must be dense; missing index ${index}`,
-              );
-            return clone(child, `${path}[${index}]`);
-          }),
-        );
-      }
-      const prototype = Object.getPrototypeOf(input);
-      if (prototype !== Object.prototype && prototype !== null) {
-        throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `${path} must contain plain objects`);
-      }
-      const output = Object.create(null) as Record<string, unknown>;
-      for (const key of Object.getOwnPropertyNames(input)) {
-        const descriptor = Object.getOwnPropertyDescriptor(input, key);
-        if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
-          throw new RetikzInspectError(
-            RetikzInspectErrorCode.Compile,
-            `${path}.${key} must be an enumerable JSON data property`,
-          );
-        }
-        output[key] = clone(descriptor.value, `${path}.${key}`);
-      }
-      return Object.freeze(output);
-    } finally {
-      ancestors.delete(input);
-    }
-  };
-  return clone(value, label) as T;
+  try {
+    return cloneAndFreezeJson(value, label);
+  } catch (cause) {
+    if (cause instanceof RetikzInspectError && cause.code === RetikzInspectErrorCode.Compile) throw cause;
+    const message = cause instanceof Error ? cause.message : String(cause);
+    throw new RetikzInspectError(RetikzInspectErrorCode.Compile, message, { cause });
+  }
 };
 
 /** callback output 做 JSON-safe 脱离、dense 校验与 Core child schema 恢复 */
