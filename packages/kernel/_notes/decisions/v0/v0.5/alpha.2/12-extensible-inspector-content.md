@@ -162,7 +162,7 @@ declare const observeCompileToScene: (
 - 主图结果与辅助平面的原子 `InspectionCompileResult`
 - 内置 stroke Path Inspector 及其控制点、控制柄与标签选项
 
-Inspector 独立注册，不再挂载到 `CompositeDefinition` 或 `PathKindDefinition`。注册键是 `namespace + name`，Core 观测所属者是 Definition 的独立目标字段；内置与第三方 Inspector 经过同一 `defineInspector()`、注册表、选项解析、callback 与输出编译路径。重复键 fail-loud，不使用内置白名单或 import 副作用覆盖
+Inspector 独立注册，不再挂载到 `CompositeDefinition` 或 `PathKindDefinition`。注册键是 `namespace + type`，其中 `namespace` 使用拥有该 Inspector 能力的包稳定短名：Core 能力使用 `core`，Layout 能力使用 `layout`，第三方能力使用其所属包短名，不使用统一 `retikz` 前缀；`type` 在该 namespace 内唯一。Core 观测所属者是 Definition 的独立目标字段；内置与第三方 Inspector 经过同一 `defineInspector()`、注册表、选项解析、callback 与输出编译路径。重复键 fail-loud，不使用内置白名单或 import 副作用覆盖
 
 ```ts
 type InspectorDefinition<
@@ -171,7 +171,7 @@ type InspectorDefinition<
   TResolvedOptions extends IRJsonObject,
 > = Readonly<{
   namespace: string;
-  name: string;
+  type: string;
   owner: CompileObservationOwner;
   subjectSchema: ZodType<TSubject>;
   optionsInputSchema: ZodType<TOptionsInput>;
@@ -182,7 +182,7 @@ type InspectorDefinition<
 
 type InspectorOutput = IRChild | ReadonlyArray<IRChild>;
 
-type InspectorKey = Readonly<{ namespace: string; name: string }>;
+type InspectorKey = Readonly<{ namespace: string; type: string }>;
 
 type InspectionAppearanceContext = Readonly<{
   colorScope: number;
@@ -191,7 +191,7 @@ type InspectionAppearanceContext = Readonly<{
 }>;
 
 type InspectorContext<TOptions extends IRJsonObject> = Readonly<{
-  inspector: InspectorKey;
+  inspectorKey: InspectorKey;
   owner: CompileObservationOwner;
   occurrence: CompileOccurrenceLocator;
   provenance: CompileObservationProvenance;
@@ -244,7 +244,7 @@ type InspectionCompileResult = Readonly<{
 }>;
 ```
 
-`namespace + name` 是 Inspector registry key，`owner` 是被观察的 Core 所属者。`subjectSchema` 在外部注册表恢复具体所属者产物类型，不替代 Core owner output schema。两者必须连续成功：Core 先保证所属者产物符合其 Definition 契约，Inspect 再保证该 Inspector 与目标所属者约定的 subject 一致
+`namespace + type` 是 Inspector registry key；`namespace` 表示拥有该 Inspector 能力的包，`owner` 是被观察的 Core 所属者，二者不是同一个字段。`subjectSchema` 在外部注册表恢复具体所属者产物类型，不替代 Core owner output schema。两者必须连续成功：Core 先保证所属者产物符合其 Definition 契约，Inspect 再保证该 Inspector 与目标所属者约定的 subject 一致
 
 `optionsInputSchema` 接受 runtime-only sparse input，`optionsSchema` 产出 JSON-safe canonical options。多层规则默认由更具体输入整体替换；需要稀疏合并的 Inspector 显式提供 `mergeOptionsInput()`，内置与第三方使用同一回调边界。合并结果必须再次经过 input schema 和 canonical schema，不能由 adapter 预先按内置 key 裁剪
 
