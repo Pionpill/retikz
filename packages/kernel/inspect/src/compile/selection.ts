@@ -7,6 +7,8 @@ import type {
   IRScene,
 } from '@retikz/core';
 
+import { compareCompileOccurrences, isCompileObservationOwnerEqual, isCompileOccurrenceEqual } from '@retikz/core';
+
 import type { InspectorRegistry } from '../providers';
 import type {
   InspectionSelection,
@@ -30,43 +32,7 @@ const assertOccurrenceLocator = (occurrence: CompileOccurrenceLocator): void => 
 };
 
 /** 按 Core 的编译顺序比较两个实例定位器 */
-export const compareInspectionOccurrences = (
-  left: CompileObservation['occurrence'],
-  right: CompileObservation['occurrence'],
-): number => {
-  const indexes = (sourcePath: string): Array<number> =>
-    Array.from(sourcePath.matchAll(/children\[(\d+)\]/g), match => Number(match[1]));
-  const compare = (a: ReadonlyArray<number>, b: ReadonlyArray<number>): number => {
-    for (let index = 0; index < Math.min(a.length, b.length); index += 1) {
-      const difference = a[index] - b[index];
-      if (difference !== 0) return difference;
-    }
-    return a.length - b.length;
-  };
-  return (
-    compare(indexes(left.sourcePath), indexes(right.sourcePath)) ||
-    compare(
-      left.expansionPath.map(segment => segment.index),
-      right.expansionPath.map(segment => segment.index),
-    )
-  );
-};
-
-/** 判断两个观察所属者是否相同 */
-const ownerEquals = (left: CompileObservationOwner, right: CompileObservationOwner): boolean =>
-  left.kind === right.kind &&
-  (left.kind === 'pathKind'
-    ? right.kind === 'pathKind' && left.name === right.name
-    : right.kind === 'composite' && left.namespace === right.namespace && left.type === right.type);
-
-/** 判断两个编译实例定位器是否完全相同 */
-const occurrenceEquals = (left: CompileObservation['occurrence'], right: CompileObservation['occurrence']): boolean =>
-  left.sourcePath === right.sourcePath &&
-  left.expansionPath.length === right.expansionPath.length &&
-  left.expansionPath.every(
-    (segment, index) =>
-      segment.kind === right.expansionPath[index]?.kind && segment.index === right.expansionPath[index]?.index,
-  );
+export const compareInspectionOccurrences = compareCompileOccurrences;
 
 /** 将选择目标格式化为用于去重的稳定键 */
 const formatTargetKey = (target: InspectionSelectionTarget): string => {
@@ -180,14 +146,18 @@ const isTargetMatches = (
     );
   }
   const locator = target.locator;
-  if (locator.kind === 'occurrence') return occurrenceEquals(observation.occurrence, locator.occurrence);
+  if (locator.kind === 'occurrence') return isCompileOccurrenceEqual(observation.occurrence, locator.occurrence);
   if (observation.occurrence.sourcePath !== locator.sourcePath) return false;
   if (locator.occurrenceIndex === undefined) return true;
   const selected = observations
-    .filter(candidate => candidate.occurrence.sourcePath === locator.sourcePath && ownerEquals(candidate.owner, owner))
+    .filter(
+      candidate =>
+        candidate.occurrence.sourcePath === locator.sourcePath &&
+        isCompileObservationOwnerEqual(candidate.owner, owner),
+    )
     .sort((left, right) => compareInspectionOccurrences(left.occurrence, right.occurrence))
     .at(locator.occurrenceIndex);
-  return selected !== undefined && occurrenceEquals(observation.occurrence, selected.occurrence);
+  return selected !== undefined && isCompileOccurrenceEqual(observation.occurrence, selected.occurrence);
 };
 
 /** 判断场景或子树封锁规则是否覆盖指定作者路径 */
@@ -234,7 +204,7 @@ export const resolveInspectionSelection = ({
     try {
       if (matches.length === 0)
         throw new RetikzInspectError(RetikzInspectErrorCode.Compile, 'Explicit self target has no final owner output');
-      if (!matches.some(observation => ownerEquals(observation.owner, definition.owner))) {
+      if (!matches.some(observation => isCompileObservationOwnerEqual(observation.owner, definition.owner))) {
         throw new RetikzInspectError(
           RetikzInspectErrorCode.Compile,
           'Explicit self target owner does not match Inspector owner',
@@ -248,7 +218,7 @@ export const resolveInspectionSelection = ({
   const pending: Array<Omit<ResolvedInspectionRequest, 'colorScope'>> = [];
   for (const observation of orderedObservations) {
     for (const definition of registry.definitions) {
-      if (!ownerEquals(observation.owner, definition.owner)) continue;
+      if (!isCompileObservationOwnerEqual(observation.owner, definition.owner)) continue;
       const matching = admitted.filter(({ rule }) =>
         isTargetMatches(rule.target, observation, orderedObservations, definition.owner),
       );
@@ -330,7 +300,7 @@ export const selectionMayRequestSite = (
   admitted.some(({ rule }) => {
     if (rule.kind !== 'request' || rule.value === false) return false;
     const definition = registry.get(rule.inspector);
-    if (definition === undefined || !ownerEquals(owner, definition.owner)) return false;
+    if (definition === undefined || !isCompileObservationOwnerEqual(owner, definition.owner)) return false;
     if (definition.owner.kind === 'pathKind' && rule.target.kind !== 'self') return false;
     if (rule.target.kind === 'scene') return true;
     if (rule.target.kind === 'subtree')

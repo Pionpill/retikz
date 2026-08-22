@@ -7,6 +7,8 @@ import type {
 } from '@retikz/vanilla';
 
 import type { InspectionCompileResult, InspectionDiagnostic, InspectionSelection } from '../compile';
+import { isCompileObservationOwnerEqual } from '@retikz/core';
+
 import type { InspectorRegistry } from '../providers';
 
 import { createInspectionObserver, resolveInspectionObserverOutput } from '../compile';
@@ -15,13 +17,6 @@ import { inspectionPlaneToReadonlyLayers } from '../render';
 import { inspectionRulesFromVanillaSite } from './authoring';
 
 const EMPTY_SELECTION: InspectionSelection = { rules: [] };
-
-/** 判断两个领域中立观察所属者是否相同 */
-const observationOwnerEquals = (left: CompileObservationOwner, right: CompileObservationOwner): boolean =>
-  left.kind === right.kind &&
-  (left.kind === 'pathKind'
-    ? right.kind === 'pathKind' && left.name === right.name
-    : right.kind === 'composite' && left.namespace === right.namespace && left.type === right.type);
 
 type ObservationOwnerCounts = {
   pathKinds: Map<string, number>;
@@ -120,7 +115,7 @@ const resolveVanillaSelection = (
         return rule;
       }
       const definitionOwner = registry.require(rule.inspector).owner;
-      if (owner !== undefined && !observationOwnerEquals(owner, definitionOwner)) {
+      if (owner !== undefined && !isCompileObservationOwnerEqual(owner, definitionOwner)) {
         throw new RetikzInspectError(
           RetikzInspectErrorCode.Vanilla,
           'Inspect self request owner does not match authored site owner',

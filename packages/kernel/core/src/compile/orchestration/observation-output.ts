@@ -3,8 +3,9 @@ import type { CompileContext } from './context';
 import type { CompileObservationRuntime } from './observation';
 import type { PendingCompileObservation } from './types';
 
+import { compareCompileOccurrences } from '../../contract';
 import { applyTransformChain } from '../transform';
-import { compareCompileOccurrences, freezeOccurrence } from './artifact';
+import { freezeOccurrence } from './artifact';
 import { compileObservedFragment } from './observation-fragment';
 
 /** 把 owner identity 转为同 occurrence 下的稳定排序键 */

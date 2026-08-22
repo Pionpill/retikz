@@ -10,7 +10,12 @@ import type {
   JsonValue,
 } from '@retikz/core';
 
-import { categoricalColorAt, observeCompileToScene } from '@retikz/core';
+import {
+  categoricalColorAt,
+  isCompileObservationOwnerEqual,
+  isCompileOccurrenceEqual,
+  observeCompileToScene,
+} from '@retikz/core';
 
 import type { InspectorContext } from '../contract';
 import type { InspectorRegistry } from '../providers';
@@ -59,19 +64,6 @@ const createInspectionCompileError = (message: string, origin: InspectionDiagnos
     details: { origin },
   });
 
-const ownerMatches = (left: CompileObservation['owner'], right: CompileObservation['owner']): boolean =>
-  left.kind === right.kind &&
-  (left.kind === 'pathKind'
-    ? right.kind === 'pathKind' && left.name === right.name
-    : right.kind === 'composite' && left.namespace === right.namespace && left.type === right.type);
-
-const occurrenceMatches = (left: CompileObservation['occurrence'], right: CompileObservation['occurrence']): boolean =>
-  left.sourcePath === right.sourcePath &&
-  left.expansionPath.length === right.expansionPath.length &&
-  left.expansionPath.every(
-    (segment, index) =>
-      segment.kind === right.expansionPath[index]?.kind && segment.index === right.expansionPath[index]?.index,
-  );
 
 const originFor = (stage: 'subject' | 'inspect', request: ResolvedInspectionRequest): InspectionDiagnosticOrigin =>
   Object.freeze({ stage, inspector: request.inspector, owner: request.owner, occurrence: request.occurrence });
@@ -105,8 +97,8 @@ const completeInspection = (
     const definition = registry.require(request.inspector);
     const capture = captured.find(
       entry =>
-        ownerMatches(entry.observation.owner, request.owner) &&
-        occurrenceMatches(entry.observation.occurrence, request.occurrence),
+        isCompileObservationOwnerEqual(entry.observation.owner, request.owner) &&
+        isCompileOccurrenceEqual(entry.observation.occurrence, request.occurrence),
     );
     if (capture === undefined)
       throw createInspectionCompileError('Inspection complete failed: observation is missing', { stage: 'complete' });
