@@ -1,4 +1,5 @@
 import { JsonObjectSchema, JsonValueSchema } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { PlotSchema } from '@retikz/plot';
 import { z } from 'zod';
 
@@ -18,11 +19,11 @@ export const ChartLayoutSchema = z
 /** 内部 erased recipe shell schema；仅用于推导通用 Source 类型 */
 const ChartRecipeShellSchema = z
   .object({
-    chartType: z.string().min(1).describe('Globally unique recipe key'),
+    chartType: NonBlankStringSchema.describe('Globally unique recipe key'),
     encodings: JsonObjectSchema.describe('Recipe-owned field-bound encoding roles'),
     properties: JsonObjectSchema.optional().describe('Recipe-owned constant properties'),
     marks: z
-      .array(z.object({ kind: z.string().min(1).describe('Registered Chart mark kind') }).catchall(JsonValueSchema))
+      .array(z.object({ kind: NonBlankStringSchema.describe('Registered Chart mark kind') }).catchall(JsonValueSchema))
       .optional()
       .describe('Ordered Chart marks'),
   })
@@ -32,8 +33,8 @@ const ChartRecipeShellSchema = z
 const ChartSourceShellSchema = z
   .strictObject({
     namespace: z.literal(CHART_NAMESPACE).describe('Chart namespace discriminator'),
-    type: z.string().min(1).describe('Registered Chart family discriminator'),
-    id: z.string().min(1).optional().describe('Optional Chart identity'),
+    type: NonBlankStringSchema.describe('Registered Chart family discriminator'),
+    id: NonBlankStringSchema.optional().describe('Optional Chart identity'),
     presentation: ChartPresentationSchema.optional(),
     theme: createChartThemeSchema(JsonObjectSchema).optional(),
     data: PlotSchema.shape.data.describe('Unique external dataset reference'),
@@ -69,7 +70,7 @@ export const createChartSourceSchema = <
   z.strictObject({
     namespace: z.literal(CHART_NAMESPACE).describe('Chart namespace discriminator'),
     type: z.literal(family).describe('Stable Chart family discriminator'),
-    id: z.string().min(1).optional().describe('Optional Chart identity'),
+    id: NonBlankStringSchema.optional().describe('Optional Chart identity'),
     presentation: ChartPresentationSchema.optional(),
     theme,
     data: PlotSchema.shape.data.describe('Unique external dataset reference'),

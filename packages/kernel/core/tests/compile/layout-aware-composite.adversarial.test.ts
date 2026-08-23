@@ -1,6 +1,6 @@
 import type { RuntimeRevision } from '@retikz/runtime';
 
-import { RetikzError } from '@retikz/foundation';
+import { NonBlankStringSchema, RetikzError } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -2345,7 +2345,7 @@ describe('layout-aware composite constraints and bounds', () => {
       resolve: () => cyclicClipShape,
       shapeSchema: z.strictObject({
         kind: z.literal('cyclicCompoundClip'),
-        children: z.array(z.intersection(z.object({ kind: z.string().min(1) }), JsonObjectSchema)),
+        children: z.array(z.intersection(z.object({ kind: NonBlankStringSchema }), JsonObjectSchema)),
       }),
       lower: () => ({
         commands: [

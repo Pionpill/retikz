@@ -2,6 +2,7 @@ import type { IRNode, IRScope } from '@retikz/core';
 import type { DataFieldTypeValue } from '@retikz/data';
 
 import { DataFieldType, defineTransform } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -26,7 +27,7 @@ const deriveSizeValueTransform = defineTransform({
       kind: z
         .literal(SizeChannelTestTransform.DeriveValue)
         .describe('Discriminator for the size channel test transform'),
-      as: z.string().min(1).describe('Output field receiving the derived value'),
+      as: NonBlankStringSchema.describe('Output field receiving the derived value'),
       value: z.union([z.string(), z.number()]).describe('Scalar value written to every output row'),
     })
     .describe('Test-only transform that writes a derived size field'),

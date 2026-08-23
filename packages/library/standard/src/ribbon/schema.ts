@@ -2,7 +2,12 @@ import { JsonObjectSchema } from '@retikz/core';
 import { PolarPositionSchema, PositionSchema, Vector2Schema } from '@retikz/core';
 import { AngleDegreesSchema } from '@retikz/core';
 import { StepSchema } from '@retikz/core';
-import { NonNegativeNumberSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
+import {
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  NormalizedFractionSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { IRRibbonDirection } from './types';
@@ -60,10 +65,9 @@ export const RibbonWidthStopsSchema = z
 export const RibbonWidthProfileSchema = z
   .object({
     kind: z.literal('profile').describe('Discriminator for registered width profiles.'),
-    name: z
-      .string()
-      .min(1)
-      .describe('Ribbon width profile name assembled from Standard profile definitions and provider contributions.'),
+    name: NonBlankStringSchema.describe(
+      'Ribbon width profile name assembled from Standard profile definitions and provider contributions.',
+    ),
     params: JsonObjectSchema.optional().describe('JSON-safe profile parameters.'),
   })
   .strict()

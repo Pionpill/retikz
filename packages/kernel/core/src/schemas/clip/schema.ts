@@ -1,4 +1,4 @@
-import { NonNegativeNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { IRClip } from './types';
@@ -23,7 +23,7 @@ const RESERVED_CLIP_KINDS = new Set(['rect']);
 const CustomClipSchema = z
   .intersection(
     z.object({
-      kind: z.string().min(1).describe('Custom clip discriminator registered through CompileOptions.clips.'),
+      kind: NonBlankStringSchema.describe('Custom clip discriminator registered through CompileOptions.clips.'),
     }),
     JsonObjectSchema,
   )

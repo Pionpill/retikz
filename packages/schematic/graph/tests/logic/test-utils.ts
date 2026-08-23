@@ -15,6 +15,7 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 const LogicTestNamespace = 'standard-logic-test';
@@ -22,7 +23,7 @@ const LogicTestNamespace = 'standard-logic-test';
 const ProbeLeafSchema = CompositeBaseSchema.extend({
   namespace: z.literal(LogicTestNamespace),
   type: z.literal('probe-leaf'),
-  id: z.string().min(1),
+  id: NonBlankStringSchema,
   minimumWidth: z.number().nonnegative().default(8),
   minimumHeight: z.number().nonnegative().default(6),
   naturalWidth: z.number().nonnegative().default(24),

@@ -1,5 +1,5 @@
 import { JsonObjectSchema } from '@retikz/core';
-import { NonNegativeNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { ReducerOperationKind, RESERVED_REDUCER_OPERATION_KINDS } from './constants';
@@ -9,7 +9,7 @@ import { reducerOutputFieldsOf } from './output-fields';
 const CountReducerOperationSchema = z
   .strictObject({
     kind: z.literal(ReducerOperationKind.Count).describe('Discriminator: count reducer'),
-    as: z.string().min(1).describe('Output field'),
+    as: NonBlankStringSchema.describe('Output field'),
   })
   .describe('Count reducer operation');
 
@@ -18,8 +18,8 @@ const createFieldReducerOperationSchema = <TKind extends string>(kind: TKind) =>
   z
     .strictObject({
       kind: z.literal(kind).describe('Discriminator: numeric reducer'),
-      field: z.string().min(1).describe('Numeric source field'),
-      as: z.string().min(1).describe('Output field'),
+      field: NonBlankStringSchema.describe('Numeric source field'),
+      as: NonBlankStringSchema.describe('Output field'),
     })
     .describe('Field reducer operation');
 
@@ -27,9 +27,9 @@ const createFieldReducerOperationSchema = <TKind extends string>(kind: TKind) =>
 const QuantileReducerOperationSchema = z
   .strictObject({
     kind: z.literal(ReducerOperationKind.Quantile).describe('Discriminator: quantile reducer'),
-    field: z.string().min(1).describe('Numeric source field'),
+    field: NonBlankStringSchema.describe('Numeric source field'),
     p: z.number().min(0).max(1).describe('Quantile probability'),
-    as: z.string().min(1).describe('Output field'),
+    as: NonBlankStringSchema.describe('Output field'),
   })
   .describe('Quantile reducer operation');
 
@@ -37,7 +37,7 @@ const QuantileReducerOperationSchema = z
 export const QuantileBandPointOutputSchema = z
   .strictObject({
     p: z.number().min(0).max(1).describe('Quantile probability'),
-    as: z.string().min(1).describe('Output field'),
+    as: NonBlankStringSchema.describe('Output field'),
   })
   .describe('Quantile-band point output');
 
@@ -61,17 +61,17 @@ export const QuantileBandWhiskerSchema = z
 /** quantile-band reducer 输出字段映射 schema；所有输出字段名必须唯一 */
 export const QuantileBandOutputsSchema = z
   .strictObject({
-    lower: z.string().min(1).describe('Lower boundary output field'),
-    upper: z.string().min(1).describe('Upper boundary output field'),
+    lower: NonBlankStringSchema.describe('Lower boundary output field'),
+    upper: NonBlankStringSchema.describe('Upper boundary output field'),
     points: z.array(QuantileBandPointOutputSchema).min(1).optional().describe('Additional quantile point outputs'),
-    spread: z.string().min(1).optional().describe('Spread output field'),
-    lowerFence: z.string().min(1).optional().describe('Lower fence output field'),
-    upperFence: z.string().min(1).optional().describe('Upper fence output field'),
-    whiskerMin: z.string().min(1).optional().describe('Lower whisker output field'),
-    whiskerMax: z.string().min(1).optional().describe('Upper whisker output field'),
-    min: z.string().min(1).optional().describe('Minimum output field'),
-    max: z.string().min(1).optional().describe('Maximum output field'),
-    count: z.string().min(1).optional().describe('Count output field'),
+    spread: NonBlankStringSchema.optional().describe('Spread output field'),
+    lowerFence: NonBlankStringSchema.optional().describe('Lower fence output field'),
+    upperFence: NonBlankStringSchema.optional().describe('Upper fence output field'),
+    whiskerMin: NonBlankStringSchema.optional().describe('Lower whisker output field'),
+    whiskerMax: NonBlankStringSchema.optional().describe('Upper whisker output field'),
+    min: NonBlankStringSchema.optional().describe('Minimum output field'),
+    max: NonBlankStringSchema.optional().describe('Maximum output field'),
+    count: NonBlankStringSchema.optional().describe('Count output field'),
   })
   .superRefine((outputs, ctx) => {
     const seen = new Map<string, Array<string | number>>();
@@ -109,7 +109,7 @@ export const QuantileBandOutputsSchema = z
 export const QuantileBandReducerOperationSchema = z
   .strictObject({
     kind: z.literal(ReducerOperationKind.QuantileBand).describe('Discriminator: quantile-band reducer'),
-    field: z.string().min(1).describe('Numeric source field'),
+    field: NonBlankStringSchema.describe('Numeric source field'),
     lowerP: z.number().min(0).max(1).describe('Lower quantile probability'),
     upperP: z.number().min(0).max(1).describe('Upper quantile probability'),
     outputs: QuantileBandOutputsSchema.describe('Output field names'),
@@ -137,13 +137,9 @@ export const BuiltinReducerOperationSchemas = Object.freeze({
 /** 外部统计 reducer operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供 */
 const ExternalReducerOperationSchema = z
   .looseObject({
-    kind: z
-      .string()
-      .min(1)
-      .refine(operationKind => !RESERVED_REDUCER_OPERATION_KINDS.has(operationKind), {
-        message: 'external reducer kind must not collide with a built-in reducer kind',
-      })
-      .describe('Discriminator: custom reducer kind'),
+    kind: NonBlankStringSchema.refine(operationKind => !RESERVED_REDUCER_OPERATION_KINDS.has(operationKind), {
+      message: 'external reducer kind must not collide with a built-in reducer kind',
+    }).describe('Discriminator: custom reducer kind'),
   })
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);

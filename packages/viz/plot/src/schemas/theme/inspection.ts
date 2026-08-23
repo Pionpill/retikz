@@ -1,4 +1,5 @@
 import { ThemeMode, ThemeTokenSource } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { PlotThemeToken } from './constants';
@@ -18,7 +19,7 @@ export const PlotThemeTokenSourceRecordSchema = z
   .strictObject({
     token: z.enum(PlotThemeToken).describe('Canonical Plot theme token'),
     kind: z.enum(ThemeTokenSource).describe('Winning Plot token source relation to the Plot owner'),
-    path: z.string().min(1).describe('Stable source path for this resolved Plot token'),
+    path: NonBlankStringSchema.describe('Stable source path for this resolved Plot token'),
   })
   .describe('Winning cascade source for one resolved Plot style token');
 
@@ -27,7 +28,7 @@ export const PlotThemeTokenRuleSourceRecordSchema = z
   .strictObject({
     rule: PlotAxisThemeTokenRuleSchema.describe('Axis theme token rule preserved in cascade order'),
     kind: z.literal(ThemeTokenSource.Local).describe('Rule authored by the Plot owner'),
-    path: z.string().min(1).describe('Stable source path for this Axis theme token rule'),
+    path: NonBlankStringSchema.describe('Stable source path for this Axis theme token rule'),
   })
   .describe('Ordered source record for one scoped Plot Axis theme token rule');
 
@@ -45,8 +46,8 @@ export const PlotPaletteResolutionSchema = z
     categorical: PlotColorPaletteSchema.describe('Resolved categorical palette'),
     series: PlotColorPaletteSchema.describe('Resolved mark and series palette'),
     sector: PlotColorPaletteSchema.describe('Resolved sector palette'),
-    sequential: z.string().min(1).describe('Resolved sequential scheme name'),
-    diverging: z.string().min(1).describe('Resolved diverging scheme name'),
+    sequential: NonBlankStringSchema.describe('Resolved sequential scheme name'),
+    diverging: NonBlankStringSchema.describe('Resolved diverging scheme name'),
     shape: PlotShapePaletteSchema.describe('Resolved categorical shape palette'),
   })
   .describe('Complete Plot palette after the domain theme cascade');
@@ -54,7 +55,7 @@ export const PlotPaletteResolutionSchema = z
 /** Plot-owned theme resolution 与 inspection 契约 */
 export const PlotThemeResolutionSchema = z
   .strictObject({
-    style: z.string().min(1).optional().describe('Optional Theme style selecting a host-injected Plot definition'),
+    style: NonBlankStringSchema.optional().describe('Optional Theme style selecting a host-injected Plot definition'),
     mode: z.enum(ThemeMode).describe('Effective Theme mode selecting Plot paints'),
     tokens: PlotThemeTokenResolutionSchema.describe('Complete resolved Plot theme token map'),
     tokenSources: z.array(PlotThemeTokenSourceRecordSchema).describe('Canonical one-source-per-token records'),

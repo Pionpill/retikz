@@ -2,6 +2,7 @@ import { compileToScene } from '@retikz/core';
 import { applyTransforms, coerceValue, defineTransform, normalizeRows, resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { readSourceIndex, tagSourceIndex } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -68,8 +69,8 @@ const inheritedRecord = <T>(key: string, value: T): Record<string, T> =>
 const doubleDefinition = defineTransform({
   schema: z.object({
     kind: z.literal('double'),
-    field: z.string().min(1),
-    as: z.string().min(1),
+    field: NonBlankStringSchema,
+    as: NonBlankStringSchema,
   }),
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],

@@ -1,6 +1,6 @@
 import { BoxSpacingSchema, ChildSchema } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
-import { NonNegativeNumberSchema, PositiveIntegerSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveIntegerSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableCellBordersSchema } from '../border';
@@ -92,7 +92,7 @@ export const TableCellPayloadSchema = z
   .describe('Table Cell payload: a scalar value presentation or direct Core child content.');
 
 const ManualTableCellSharedShape = {
-  id: z.string().min(1).optional().describe('Optional stable Cell id. Omitted fields use an address-derived id.'),
+  id: NonBlankStringSchema.optional().describe('Optional stable Cell id. Omitted fields use an address-derived id.'),
   location: TableCellLocationSchema.optional().describe(
     'Optional semantic location. Omitted fields derive from the containing row kind.',
   ),

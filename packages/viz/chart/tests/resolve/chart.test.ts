@@ -1,4 +1,5 @@
 import { DEFAULT_RESOLVED_THEME, NodeTextAlign, ThemeMode } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { PlotMark, PlotThemeToken, PointMarkSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -19,18 +20,18 @@ import { chartThemeDefinitionsOf, resolveChartProviderRegistry } from '../../src
 import { resolveSelectedChart } from '../../src/_chart/resolve';
 
 const encodingsSchema = z.strictObject({
-  x: z.string().min(1),
-  y: z.string().min(1),
-  color: z.string().min(1).optional(),
-  ignored: z.string().min(1).optional(),
-  markOnly: z.string().min(1).optional(),
+  x: NonBlankStringSchema,
+  y: NonBlankStringSchema,
+  color: NonBlankStringSchema.optional(),
+  ignored: NonBlankStringSchema.optional(),
+  markOnly: NonBlankStringSchema.optional(),
 });
 const propertiesSchema = z.strictObject({ opacity: z.number().min(0).max(1).optional() });
 const recipeThemeOverridesSchema = z.strictObject({
-  glyph: z.string().min(1).optional(),
+  glyph: NonBlankStringSchema.optional(),
   showGrid: z.boolean().optional(),
 });
-const recipeThemeResolutionSchema = z.strictObject({ glyph: z.string().min(1), showGrid: z.boolean() });
+const recipeThemeResolutionSchema = z.strictObject({ glyph: NonBlankStringSchema, showGrid: z.boolean() });
 const markSchema = z.strictObject({
   kind: z.literal('annotation'),
   override: z.boolean().optional(),

@@ -1,4 +1,9 @@
-import { NonNegativeNumberSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
+import {
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  NormalizedFractionSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { z } from 'zod';
 
 import { Side } from '../../../shared';
@@ -329,10 +334,9 @@ export const GeneratorStepSchema = z
       .describe(
         'Registered path generator segment. `name` selects a built-in or CompileOptions.pathGenerators provider; `params` is JSON input.',
       ),
-    name: z
-      .string()
-      .min(1)
-      .describe('Path generator provider name. Built-ins and custom CompileOptions.pathGenerators names are accepted.'),
+    name: NonBlankStringSchema.describe(
+      'Path generator provider name. Built-ins and custom CompileOptions.pathGenerators names are accepted.',
+    ),
     to: TargetSchema.optional().describe('Optional destination point passed to the generator as the segment end.'),
     params: JsonObjectSchema.describe(
       'JSON parameter object passed to the generator. The registered generator validates its own parameter fields.',

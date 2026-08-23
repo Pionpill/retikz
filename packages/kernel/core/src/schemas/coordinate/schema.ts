@@ -1,3 +1,4 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import {
@@ -11,10 +12,9 @@ import {
 export const CoordinateSchema = z
   .object({
     type: z.literal('coordinate').describe('Discriminator marking this child as a coordinate placeholder'),
-    id: z
-      .string()
-      .min(1)
-      .describe('Required unique id; the whole point of a coordinate is to be referenced by paths or other nodes'),
+    id: NonBlankStringSchema.describe(
+      'Required unique id; the whole point of a coordinate is to be referenced by paths or other nodes',
+    ),
     position: z
       .union([PositionSchema, PolarPositionSchema, AtPositionSchema, OffsetPositionSchema, BetweenPositionSchema])
       .describe('Coordinate position. Supports Cartesian, polar, at-position, offset, and between-position forms.'),

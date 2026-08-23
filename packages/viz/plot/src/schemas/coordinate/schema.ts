@@ -1,4 +1,5 @@
 ﻿import { JsonObjectSchema } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { BUILTIN_COORDINATE_TYPES, Cartesian1DOrientation, PlotCoordinate } from './constants';
@@ -8,16 +9,12 @@ export const Cartesian2DSchema = z
     type: z
       .literal(PlotCoordinate.Cartesian2D)
       .describe('Discriminator: 2D cartesian space, x horizontal / y vertical'),
-    x: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Scale name for the x (horizontal) channel; omit to derive a default scale from the bound field type'),
-    y: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Scale name for the y (vertical) channel; omit to derive a default scale from the bound field type'),
+    x: NonBlankStringSchema.optional().describe(
+      'Scale name for the x (horizontal) channel; omit to derive a default scale from the bound field type',
+    ),
+    y: NonBlankStringSchema.optional().describe(
+      'Scale name for the y (vertical) channel; omit to derive a default scale from the bound field type',
+    ),
   })
   .describe('2D cartesian coordinate system; owns the positional scale bindings for x and y');
 
@@ -26,20 +23,12 @@ export const Polar2DSchema = z
     type: z
       .literal(PlotCoordinate.Polar2D)
       .describe('Discriminator: 2D polar space, angle around the center / radius outward'),
-    angle: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Scale name for the angle role; omit to derive from the bound field type. Its range is set to [startAngle, endAngle] degrees at lowering',
-      ),
-    radius: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Scale name for the radius role; omit to derive from the bound field type. Its range is set to [innerRadius, outerRadius] units at lowering',
-      ),
+    angle: NonBlankStringSchema.optional().describe(
+      'Scale name for the angle role; omit to derive from the bound field type. Its range is set to [startAngle, endAngle] degrees at lowering',
+    ),
+    radius: NonBlankStringSchema.optional().describe(
+      'Scale name for the radius role; omit to derive from the bound field type. Its range is set to [innerRadius, outerRadius] units at lowering',
+    ),
     startAngle: z
       .number()
 
@@ -67,13 +56,9 @@ export const Cartesian1DSchema = z
       .describe(
         'Discriminator: 1D cartesian line; one position dimension, the other screen axis collapses to a fixed baseline',
       ),
-    x: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Scale name for the single position dimension; omit to derive a default scale from the bound field type. Scale-agnostic — supports linear / log / sqrt / time / band',
-      ),
+    x: NonBlankStringSchema.optional().describe(
+      'Scale name for the single position dimension; omit to derive a default scale from the bound field type. Scale-agnostic — supports linear / log / sqrt / time / band',
+    ),
     orientation: z
       .enum(Cartesian1DOrientation)
       .optional()
@@ -92,13 +77,9 @@ export const Polar1DSchema = z
       .describe(
         'Discriminator: 1D polar circle; one angular position dimension on a fixed-radius circle (cyclic / periodic data)',
       ),
-    angle: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Scale name for the single angular dimension; omit to derive from the bound field type. Its range is set to [startAngle, endAngle] degrees at lowering. Reuses the polar x→angle alias',
-      ),
+    angle: NonBlankStringSchema.optional().describe(
+      'Scale name for the single angular dimension; omit to derive from the bound field type. Its range is set to [startAngle, endAngle] degrees at lowering. Reuses the polar x→angle alias',
+    ),
     radius: z
       .number()
 
@@ -128,15 +109,11 @@ const RESERVED_CUSTOM_COORDINATE_TYPES = new Set<string>([...BUILTIN_COORDINATE_
 
 export const CustomCoordinateSchema = z
   .looseObject({
-    type: z
-      .string()
-      .min(1)
-      .refine(type => !RESERVED_CUSTOM_COORDINATE_TYPES.has(type), {
-        message: 'custom coordinate type must not collide with a built-in or reserved coordinate type',
-      })
-      .describe(
-        'Discriminator: custom coordinate operation type; must be a non-empty, non-built-in identifier registered through options.coordinates',
-      ),
+    type: NonBlankStringSchema.refine(type => !RESERVED_CUSTOM_COORDINATE_TYPES.has(type), {
+      message: 'custom coordinate type must not collide with a built-in or reserved coordinate type',
+    }).describe(
+      'Discriminator: custom coordinate operation type; must be a non-blank, non-built-in identifier registered through options.coordinates',
+    ),
   })
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);

@@ -1,4 +1,9 @@
-import { NonNegativeNumberSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
+import {
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  NormalizedFractionSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { z } from 'zod';
 
 import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';
@@ -100,7 +105,7 @@ export const PathDecorationSchema = z
 export const PathStructureSchema = z
   .strictObject({
     type: z.literal('path').describe('Discriminator marking this child as a path.'),
-    kind: z.string().min(1).optional().describe('Path kind provider name. Omitted means built-in `stroke`.'),
+    kind: NonBlankStringSchema.optional().describe('Path kind provider name. Omitted means built-in `stroke`.'),
     kindOptions: JsonObjectSchema.optional().describe(
       'JSON-safe option object consumed by the selected path kind provider.',
     ),
@@ -130,25 +135,25 @@ export const StrokePathSchema = PathBaseSchema.extend({
   children: z.array(z.unknown()).optional().describe('Sequence of source step actions for the stroke path.'),
 })
   .superRefine((path, ctx) => {
-  const kind = path.kind ?? PathKind.Stroke;
-  if (kind !== PathKind.Stroke) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['kind'],
-      message: 'Stroke path schema requires kind `stroke` or an omitted kind.',
-    });
-    return;
-  }
-  if (path.children === undefined) {
-    ctx.addIssue({ code: 'custom', path: ['children'], message: 'Stroke paths require `children` steps.' });
-  }
-  if (path.kindOptions !== undefined) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['kindOptions'],
-      message: '`kindOptions` is not valid for the built-in `stroke` path kind.',
-    });
-  }
+    const kind = path.kind ?? PathKind.Stroke;
+    if (kind !== PathKind.Stroke) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['kind'],
+        message: 'Stroke path schema requires kind `stroke` or an omitted kind.',
+      });
+      return;
+    }
+    if (path.children === undefined) {
+      ctx.addIssue({ code: 'custom', path: ['children'], message: 'Stroke paths require `children` steps.' });
+    }
+    if (path.kindOptions !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['kindOptions'],
+        message: '`kindOptions` is not valid for the built-in `stroke` path kind.',
+      });
+    }
   })
   .transform(path => path as z.infer<typeof PathBaseSchema>)
   .describe('Complete source subject schema for the built-in stroke path kind.');

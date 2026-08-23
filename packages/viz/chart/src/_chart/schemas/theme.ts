@@ -7,6 +7,7 @@ import {
   NodeTextAlign,
   PaintValueSchema,
 } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { LayoutContainerBoxSchema, LayoutGapSchema } from '@retikz/layout';
 import { PlotThemeTokenOverridesSchema } from '@retikz/plot';
 import { z } from 'zod';
@@ -73,10 +74,10 @@ const hasTokenSlice = (value: unknown): boolean =>
 export const createChartThemeSchema = <TRecipe extends z.ZodTypeAny>(recipe: TRecipe) =>
   z
     .union([
-      z.string().min(1).describe('Registered Chart theme name'),
+      NonBlankStringSchema.describe('Registered Chart theme name'),
       z
         .strictObject({
-          base: z.string().min(1).optional().describe('Registered base Chart theme name'),
+          base: NonBlankStringSchema.optional().describe('Registered base Chart theme name'),
           tokens: z
             .strictObject({
               chart: ChartThemeOverridesSchema.optional(),

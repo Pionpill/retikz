@@ -1,6 +1,7 @@
 ﻿import type { IRChild, LayoutCompositeCompileContext, ScenePrimitive } from '@retikz/core';
 
 import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -137,7 +138,7 @@ describe('Presented Table layout transaction', () => {
       schema: CompositeBaseSchema.extend({
         namespace: z.literal('fixture'),
         type: z.literal('styled-wrap-probe'),
-        contentId: z.string().min(1),
+        contentId: NonBlankStringSchema,
       }),
       compile: node => {
         return {

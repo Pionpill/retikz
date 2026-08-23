@@ -526,12 +526,12 @@ describe('Path generator step — JSON round-trip & zod 校验', () => {
     expect(PathSchema.safeParse(bad).success).toBe(false);
   });
 
-  it('zod 错误：generator step name 为空串 → schema 拒（min(1)）', () => {
+  it.each(['', '   '])('zod 错误：generator step name=%j 为空白字符串时 schema 拒绝', name => {
     const bad = {
       type: 'path',
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
-        { type: 'step', kind: 'generator', name: '', params: {} },
+        { type: 'step', kind: 'generator', name, params: {} },
       ],
     };
     expect(PathSchema.safeParse(bad).success).toBe(false);

@@ -1,4 +1,4 @@
-import { JsonObjectSchema } from '@retikz/core';
+import { CssColorSchema, JsonObjectSchema } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { MarkNodeLabelListSchema } from '@retikz/plot';
 import { z } from 'zod';
@@ -43,18 +43,12 @@ export const PointMarkEncodingSchema = z
  */
 export const PointPropertiesSchema = z
   .strictObject({
-    color: z.string().min(1).optional().describe('Constant point color'),
-    textColor: z.string().min(1).optional().describe('Constant point text color'),
+    color: CssColorSchema.optional().describe('Constant point color'),
+    textColor: CssColorSchema.optional().describe('Constant point text color'),
     size: z.number().finite().nonnegative().optional().describe('Constant point radius'),
-    shape: z.string().min(1).optional().describe('Constant point shape'),
-    fill: z
-      .union([z.string().min(1), JsonObjectSchema])
-      .optional()
-      .describe('Constant point fill paint'),
-    stroke: z
-      .union([z.string().min(1), JsonObjectSchema])
-      .optional()
-      .describe('Constant point stroke paint'),
+    shape: NonBlankStringSchema.optional().describe('Constant point shape'),
+    fill: z.union([CssColorSchema, JsonObjectSchema]).optional().describe('Constant point fill paint'),
+    stroke: z.union([CssColorSchema, JsonObjectSchema]).optional().describe('Constant point stroke paint'),
     strokeWidth: z.number().finite().nonnegative().optional().describe('Constant point stroke width'),
     fillOpacity: z.number().finite().min(0).max(1).optional().describe('Constant point fill opacity'),
     strokeOpacity: z.number().finite().min(0).max(1).optional().describe('Constant point stroke opacity'),
@@ -74,8 +68,8 @@ export const PointPropertiesSchema = z
     dashPattern: z.array(z.number().finite().nonnegative()).min(1).optional(),
     font: JsonObjectSchema.optional(),
     boundary: z.union([JsonObjectSchema, z.boolean()]).optional(),
-    shadow: z.union([z.string().min(1), JsonObjectSchema]).optional(),
-    blendMode: z.string().min(1).optional(),
+    shadow: z.union([NonBlankStringSchema, JsonObjectSchema]).optional(),
+    blendMode: NonBlankStringSchema.optional(),
     dx: z.number().finite().optional(),
     dy: z.number().finite().optional(),
     label: MarkNodeLabelListSchema.optional(),

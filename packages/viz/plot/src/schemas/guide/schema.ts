@@ -13,6 +13,7 @@ import {
   TextBlockSchema,
 } from '@retikz/core';
 import {
+  NonBlankStringSchema,
   NonNegativeIntegerSchema,
   NonNegativeNumberSchema,
   NormalizedFractionSchema,
@@ -73,7 +74,7 @@ const AxisEdgePlacementSchema = z
     kind: z
       .literal(AxisPlacementKind.Edge)
       .describe('Placement discriminator: place the axis on a coordinate-native edge'),
-    edge: z.string().min(1).describe('Coordinate-native edge id; interpreted by the active coordinate definition'),
+    edge: NonBlankStringSchema.describe('Coordinate-native edge id; interpreted by the active coordinate definition'),
     offset: NonNegativeNumberSchema.optional().describe(
       'Additional outward offset in user units for axes sharing the same native edge; omit = 0',
     ),
@@ -190,7 +191,7 @@ export const GuideTickIntervalSchema = z
         'Positive integer number of units between candidate ticks; omit = 1',
       ),
       anchor: z
-        .union([z.string().min(1), z.number()])
+        .union([NonBlankStringSchema, z.number()])
         .optional()
         .describe('Epoch millisecond or ISO-like alignment anchor; omit to align from the scale domain lower bound'),
     }),
@@ -222,11 +223,9 @@ export const GuideTickSourceSchema = z
 
 export const GuideTickLabelFormatSchema = z
   .strictObject({
-    format: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('d3-format specifier for numeric ticks or UTC d3-time-format specifier for time ticks'),
+    format: NonBlankStringSchema.optional().describe(
+      'd3-format specifier for numeric ticks or UTC d3-time-format specifier for time ticks',
+    ),
   })
   .describe('Shared guide tick label formatting options');
 
@@ -348,7 +347,7 @@ const AxisTickBuiltinShapeMarkSchema = z
 const AxisTickCustomShapeMarkSchema = z
   .strictObject({
     kind: z.literal(AxisTickMarkKind.Custom).describe('Custom core Node shape tick mark'),
-    shape: z.union([z.string().min(1), ShapeRefSchema]).describe('Core shape reference used by this tick mark'),
+    shape: z.union([NonBlankStringSchema, ShapeRefSchema]).describe('Core shape reference used by this tick mark'),
     ...AxisTickShapeMarkBase,
   })
   .describe('Custom shape tick mark configuration');
@@ -458,7 +457,7 @@ export const AxisTickLabelsSchema = z
     ...GuideTickLabelFormatSchema.shape,
     gap: AxisTickLabelGapSchema.optional().describe('Gap between tick end and tick label center, in user units'),
     rotate: z.number().optional().describe('Tick label rotation in degrees around the label center'),
-    anchor: z.string().min(1).optional().describe('Semantic text anchor hint reserved for theme/layout resolvers'),
+    anchor: NonBlankStringSchema.optional().describe('Semantic text anchor hint reserved for theme/layout resolvers'),
     layout: AxisTickLabelLayoutSchema.optional().describe(
       'Adaptive tick label rotation, hiding, and boundary handling',
     ),
@@ -625,7 +624,7 @@ const FacetTargetValueOrTupleSchema = z
 
 const FacetGridTargetSelectorSchema = z
   .strictObject({
-    arrangement: z.string().min(1).optional().describe('Facet arrangement id to match; omit to match any facet'),
+    arrangement: NonBlankStringSchema.optional().describe('Facet arrangement id to match; omit to match any facet'),
     row: FacetTargetValueOrTupleSchema.optional().describe('Facet row value to match; omit to match any row value'),
     column: FacetTargetValueOrTupleSchema.optional().describe(
       'Facet column value to match; omit to match any column value',
@@ -635,9 +634,11 @@ const FacetGridTargetSelectorSchema = z
 
 const TrackGridTargetSelectorSchema = z
   .strictObject({
-    arrangement: z.string().min(1).optional().describe('Track arrangement id to match; omit to match any track group'),
+    arrangement: NonBlankStringSchema.optional().describe(
+      'Track arrangement id to match; omit to match any track group',
+    ),
     id: z
-      .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+      .union([NonBlankStringSchema, z.array(NonBlankStringSchema).min(1)])
       .optional()
       .describe('Track id or ids to match; omit to match any track'),
   })
@@ -646,7 +647,7 @@ const TrackGridTargetSelectorSchema = z
 export const GuideTargetSelectorSchema = z
   .strictObject({
     view: z
-      .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+      .union([NonBlankStringSchema, z.array(NonBlankStringSchema).min(1)])
       .optional()
       .describe('Coordinate view id or ids to match'),
     facet: FacetGridTargetSelectorSchema.optional().describe('Facet panel target selector'),
@@ -738,18 +739,13 @@ export const AxisGuideSchema = z
     type: z
       .literal(PlotGuide.Axis)
       .describe('Discriminator: a coordinate axis (axis line + ticks + tick labels, with optional aligned grid lines)'),
-    dimension: z
-      .string()
-      .min(1)
-      .describe(
-        'Coordinate position role this axis visualizes; resolved against the active CoordinateDefinition.roles at lowering time, not a fixed screen orientation',
-      ),
-    id: z.string().min(1).optional().describe('Optional guide handle used as the axis scope id and anchor target'),
-    coordinateView: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Coordinate view id this axis is bound to; omit to use the plot composition default view'),
+    dimension: NonBlankStringSchema.describe(
+      'Coordinate position role this axis visualizes; resolved against the active CoordinateDefinition.roles at lowering time, not a fixed screen orientation',
+    ),
+    id: NonBlankStringSchema.optional().describe('Optional guide handle used as the axis scope id and anchor target'),
+    coordinateView: NonBlankStringSchema.optional().describe(
+      'Coordinate view id this axis is bound to; omit to use the plot composition default view',
+    ),
     layer: PlotLayerSchema.optional().describe(
       'Semantic plot layer override applied to the generated axis scope; axis grid keeps the grid layer',
     ),
@@ -769,7 +765,7 @@ export const AxisGuideSchema = z
       .optional()
       .describe('Axis tick labels; false hides labels, object styles and formats labels, omit = defaults'),
     title: z
-      .union([z.string().min(1), AxisTitleSchema])
+      .union([NonBlankStringSchema, AxisTitleSchema])
       .optional()
       .describe('Axis title text or styled text block rendered near this axis; omit for no title'),
     grid: z
@@ -790,19 +786,12 @@ export const LegendGuideSchema = z
       .describe(
         'Discriminator: a legend that visualizes a non-positional channel as swatches, a ramp, binned classes, or graduated symbols',
       ),
-    channel: z
-      .string()
-      .min(1)
-      .describe(
-        'Non-positional channel name this legend visualizes; resolved against the channel registry at lowering time',
-      ),
-    scale: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Disambiguating scale name when the channel is driven by more than one scale; omit when the channel has a single scale (more than one and omitted is a fail-loud error during lowering)',
-      ),
+    channel: NonBlankStringSchema.describe(
+      'Non-positional channel name this legend visualizes; resolved against the channel registry at lowering time',
+    ),
+    scale: NonBlankStringSchema.optional().describe(
+      'Disambiguating scale name when the channel is driven by more than one scale; omit when the channel has a single scale (more than one and omitted is a fail-loud error during lowering)',
+    ),
     layer: PlotLayerSchema.optional().describe('Semantic plot layer override applied to the generated legend scope'),
     title: LegendTitleTextSchema.optional().describe(
       'Legend title text block rendered above the entries; omit for no title',

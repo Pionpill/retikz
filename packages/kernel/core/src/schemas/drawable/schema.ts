@@ -1,3 +1,4 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { AnimationTrackSchema } from '../animation';
@@ -10,13 +11,9 @@ export const DrawableStyleSchema = GraphicStyleSchema.describe(
 
 export const DrawableInstanceSchema = z
   .object({
-    id: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.',
-      ),
+    id: NonBlankStringSchema.optional().describe(
+      'Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.',
+    ),
     meta: JsonObjectSchema.optional().describe(
       'Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.',
     ),

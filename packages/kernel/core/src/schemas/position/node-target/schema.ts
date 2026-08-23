@@ -1,4 +1,4 @@
-import { NormalizedFractionSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NormalizedFractionSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { Side } from '../../../shared';
@@ -16,10 +16,9 @@ export const BoundaryAnchorRefSchema = z
 
 export const AnchorRefSchema = z
   .union([
-    z
-      .string()
-      .min(1)
-      .describe('Named anchor: canonical anchor or shape-specific anchor. Unknown names fail at compile time.'),
+    NonBlankStringSchema.describe(
+      'Named anchor: canonical anchor or shape-specific anchor. Unknown names fail at compile time.',
+    ),
     AngleDegreesSchema.describe('Angle anchor in degrees (boundary point in that direction)'),
     BoundaryAnchorRefSchema,
   ])
@@ -29,7 +28,7 @@ export const AnchorRefSchema = z
 
 export const NodeTargetSchema = z
   .object({
-    id: z.string().min(1).describe('Referenced Node, Coordinate, or resolved Scope id.'),
+    id: NonBlankStringSchema.describe('Referenced Node, Coordinate, or resolved Scope id.'),
     anchor: AnchorRefSchema.optional().describe(
       'Optional target anchor. The meaning of omission is defined by the consuming position or path context.',
     ),

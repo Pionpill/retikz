@@ -1,5 +1,6 @@
 import { OpacitySchema, PaintValueSchema, ThemeMode, ThemeTokenSource } from '@retikz/core';
 import {
+  NonBlankStringSchema,
   NonNegativeIntegerSchema,
   NonNegativeNumberSchema,
   PositiveIntegerSchema,
@@ -40,7 +41,7 @@ export const TableBorderStyleTokenKeySchema = z
 const TableBorderStyleTokenProvenanceSchema = z.strictObject({
   key: TableBorderStyleTokenKeySchema.describe('Border style token mapped to this geometric source.'),
   source: z.enum(ThemeTokenSource).describe('Border token source relation to the Table owner.'),
-  path: z.string().min(1).describe('Stable effective Theme or IRTable source path.'),
+  path: NonBlankStringSchema.describe('Stable effective Theme or IRTable source path.'),
 });
 
 const TableBorderVertexSchema = z.strictObject({
@@ -66,7 +67,7 @@ export const ResolvedTableBorderLineSchema = z.strictObject({
 
 const TableCellBorderSourceSchema = z.strictObject({
   kind: z.literal('cell').describe('Discriminator for a Cell-side border source.'),
-  cellId: z.string().min(1).describe('Semantic Cell id retained for provenance.'),
+  cellId: NonBlankStringSchema.describe('Semantic Cell id retained for provenance.'),
   row: NonNegativeIntegerSchema.describe('Canonical origin row index.'),
   column: NonNegativeIntegerSchema.describe('Canonical origin column index.'),
   side: TableBorderSideSchema.describe('Physical Cell side that supplied the candidate.'),
@@ -91,12 +92,12 @@ export const TableBorderSourceSchema = z.union([
 ]);
 
 const TableBorderContributionBaseShape = {
-  key: z.string().min(1).describe('Transaction-unique contribution key.'),
+  key: NonBlankStringSchema.describe('Transaction-unique contribution key.'),
   source: TableBorderSourceSchema.describe('Canonical border candidate source.'),
   priority: TableBorderPrioritySchema.describe('Resolved finite conflict priority.'),
   specificity: z.union([z.literal(0), z.literal(1)]).describe('Default or Cell-side specificity rank.'),
   ownerSideRank: z.number().int().describe('Canonical physical owner-side rank.'),
-  sourceOrderKey: z.string().min(1).describe('Canonical source ordering key independent of Cell id.'),
+  sourceOrderKey: NonBlankStringSchema.describe('Canonical source ordering key independent of Cell id.'),
 };
 
 export const TableNoBorderContributionSchema = z.strictObject({
@@ -134,31 +135,31 @@ export const TableBorderContributionSchema = z.union([
 ]);
 
 export const TableBorderManifestAtomSchema = z.strictObject({
-  key: z.string().min(1).describe('Canonical atomic border key.'),
+  key: NonBlankStringSchema.describe('Canonical atomic border key.'),
   winner: TableBorderContributionSchema.describe('Resolved atom winner.'),
   contributors: z.array(TableBorderContributionSchema).min(1).describe('Canonical ordered atom contributors.'),
 });
 
 export const TableBorderManifestEntrySchema = z.strictObject({
-  edgeKey: z.string().min(1).describe('Canonical merged edge key.'),
+  edgeKey: NonBlankStringSchema.describe('Canonical merged edge key.'),
   orientation: TableBorderOrientationSchema.describe('Edge orientation.'),
   start: TableBorderVertexSchema.describe('Table-local edge start.'),
   end: TableBorderVertexSchema.describe('Table-local edge end.'),
   style: ResolvedTableBorderLineSchema.describe('Resolved emitted line style.'),
   atoms: z.array(TableBorderManifestAtomSchema).min(1).describe('Canonical atomic provenance in edge order.'),
-  pathId: z.string().min(1).optional().describe('Optional emitted Core Path id.'),
+  pathId: NonBlankStringSchema.optional().describe('Optional emitted Core Path id.'),
 });
 
 export const TableBorderPathMetaSchema = z.strictObject({
   kind: z.literal('tableBorder').describe('Discriminator for emitted Table border Path metadata.'),
-  tableId: z.string().min(1).optional().describe('Optional owning Table id.'),
-  edgeKey: z.string().min(1).describe('Canonical merged edge key.'),
-  atomicKeys: z.array(z.string().min(1)).min(1).describe('Canonical atomic keys represented by the Path.'),
+  tableId: NonBlankStringSchema.optional().describe('Optional owning Table id.'),
+  edgeKey: NonBlankStringSchema.describe('Canonical merged edge key.'),
+  atomicKeys: z.array(NonBlankStringSchema).min(1).describe('Canonical atomic keys represented by the Path.'),
 });
 
 export const TableBorderLocatorEntrySchema = z.strictObject({
-  edgeKey: z.string().min(1).describe('Canonical merged edge key.'),
-  pathId: z.string().min(1).optional().describe('Optional emitted Core Path id.'),
+  edgeKey: NonBlankStringSchema.describe('Canonical merged edge key.'),
+  pathId: NonBlankStringSchema.optional().describe('Optional emitted Core Path id.'),
 });
 
 const TableManifestBoundsSchema = z
@@ -172,7 +173,7 @@ const TableManifestBoundsSchema = z
 
 export const TableTrackManifestEntrySchema = z
   .strictObject({
-    id: z.string().min(1).describe('Stable semantic track id.'),
+    id: NonBlankStringSchema.describe('Stable semantic track id.'),
     index: NonNegativeIntegerSchema.describe('Canonical track index.'),
     offset: z.number().describe('Finite Table-local axis offset.'),
     size: NonNegativeNumberSchema.describe('Finite nonnegative track size.'),
@@ -181,9 +182,9 @@ export const TableTrackManifestEntrySchema = z
 
 export const TableCellManifestEntrySchema = z
   .strictObject({
-    cellId: z.string().min(1).describe('Stable semantic Cell id.'),
-    rowId: z.string().min(1).describe('Stable semantic row id.'),
-    columnId: z.string().min(1).describe('Stable semantic column id.'),
+    cellId: NonBlankStringSchema.describe('Stable semantic Cell id.'),
+    rowId: NonBlankStringSchema.describe('Stable semantic row id.'),
+    columnId: NonBlankStringSchema.describe('Stable semantic column id.'),
     rowIndex: NonNegativeIntegerSchema.describe('Canonical origin row index.'),
     columnIndex: NonNegativeIntegerSchema.describe('Canonical origin column index.'),
     span: z
@@ -201,10 +202,10 @@ export const TableCellManifestEntrySchema = z
     location: TableCellLocationSchema.describe('Semantic Cell location.'),
     roles: z.array(TableCellRoleSchema).min(1).describe('Semantic Cell roles.'),
     source: TableCellSourceSchema.optional().describe('Optional stable Cell source identity.'),
-    formatterName: z.string().min(1).optional().describe('Executed formatter name for value Cells.'),
-    presentationName: z.string().min(1).optional().describe('Executed presentation name for value Cells.'),
+    formatterName: NonBlankStringSchema.optional().describe('Executed formatter name for value Cells.'),
+    presentationName: NonBlankStringSchema.optional().describe('Executed presentation name for value Cells.'),
     matchedRuleIndices: z.array(NonNegativeIntegerSchema).describe('Ordered matched root rule indices.'),
-    encodingIds: z.array(z.string().min(1)).describe('Ordered visual encodings that produced a Cell color.'),
+    encodingIds: z.array(NonBlankStringSchema).describe('Ordered visual encodings that produced a Cell color.'),
     appearance: TableCellAppearanceSchema.describe('Resolved Cell appearance consumed by layout.'),
     appearanceTrace: z
       .array(
@@ -220,12 +221,14 @@ export const TableCellManifestEntrySchema = z
 const TableThemeTokenSourceRecordSchema = z.strictObject({
   key: TableThemeTokenKeySchema.describe('Canonical Table theme token key.'),
   source: z.enum(ThemeTokenSource).describe('Resolved token source relation to the Table owner.'),
-  path: z.string().min(1).describe('Stable effective Theme or IRTable source path.'),
+  path: NonBlankStringSchema.describe('Stable effective Theme or IRTable source path.'),
 });
 
 const TableManifestStyleSchema = z
   .strictObject({
-    style: z.string().min(1).optional().describe('Optional Core Theme style selecting a host-injected Table definition.'),
+    style: NonBlankStringSchema.optional().describe(
+      'Optional Core Theme style selecting a host-injected Table definition.',
+    ),
     themeMode: z.enum(ThemeMode).describe('Effective Core Theme mode selecting the Table style baseline.'),
     tokens: TableThemeTokenMapSchema.describe('Complete resolved Table theme token map.'),
     sources: z
@@ -340,7 +343,7 @@ const sameStringSequence = (left: ReadonlyArray<string>, right: ReadonlyArray<st
 
 export const TableLayoutManifestSchema = z
   .strictObject({
-    tableId: z.string().min(1).optional().describe('Optional public Table id.'),
+    tableId: NonBlankStringSchema.optional().describe('Optional public Table id.'),
     allocationBounds: TableManifestBoundsSchema.describe('Tracks and gaps allocation bounds.'),
     visualOverflowBounds: TableManifestBoundsSchema.describe('Visible Cell and border union in Table-local space.'),
     rows: z.array(TableTrackManifestEntrySchema).describe('Canonical row track geometry.'),
@@ -351,10 +354,10 @@ export const TableLayoutManifestSchema = z
     encodings: z
       .array(
         z.strictObject({
-          id: z.string().min(1).describe('Visual encoding id.'),
+          id: NonBlankStringSchema.describe('Visual encoding id.'),
           channel: z.enum(TableVisualChannel).describe('Encoding-owned Cell appearance channel.'),
-          scaleName: z.string().min(1).describe('Resolved visual scale definition name.'),
-          cellIds: z.array(z.string().min(1)).describe('Canonical Cells that received an encoding color.'),
+          scaleName: NonBlankStringSchema.describe('Resolved visual scale definition name.'),
+          cellIds: z.array(NonBlankStringSchema).describe('Canonical Cells that received an encoding color.'),
         }),
       )
       .describe('Ordered visual encoding manifest seed.'),

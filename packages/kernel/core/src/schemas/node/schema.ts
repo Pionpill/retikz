@@ -1,4 +1,9 @@
-import { NonNegativeNumberSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
+import {
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  NormalizedFractionSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { z } from 'zod';
 
 import { Side } from '../../shared';
@@ -165,11 +170,9 @@ export const NodeSchema = z
   .object({
     type: z.literal('node').describe('Discriminator marking this child as a node'),
     ...GraphicStyleSchema.shape,
-    id: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Optional unique id; required if any path needs to reference this node by string'),
+    id: NonBlankStringSchema.optional().describe(
+      'Optional unique id; required if any path needs to reference this node by string',
+    ),
     shape: ShapeValueSchema.optional().describe(
       'Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle.',
     ),

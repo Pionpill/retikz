@@ -1,5 +1,5 @@
 import { ClipFillRuleSchema, defineClip, JsonObjectSchema, PathCommandSchema, PositionSchema } from '@retikz/core';
-import { PositiveNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type {
@@ -18,7 +18,7 @@ import type {
 import { CircleClipSchema, CompoundClipSchema, EllipseClipSchema, PathClipSchema, PolygonClipSchema } from './schema';
 
 const OpenClipShapeSchema = z.intersection(
-  z.object({ kind: z.string().min(1).describe('Clip definition discriminator.') }),
+  z.object({ kind: NonBlankStringSchema.describe('Clip definition discriminator.') }),
   JsonObjectSchema,
 );
 

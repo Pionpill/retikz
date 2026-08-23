@@ -66,7 +66,7 @@ describe('Table theme token schema', () => {
     expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.background.fillOpacity': 2 })).toThrow();
     expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.content.font.weight': 'heavy' })).toThrow();
     expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.content.color': '  ' })).toThrow(
-      'Table style color must not be empty or whitespace.',
+      'String must contain at least one non-whitespace character.',
     );
     expect(TableThemeTokenOverridesSchema.parse({ 'data.categorical': ['#fff', '#fff'] })).toEqual({
       'data.categorical': ['#fff', '#fff'],

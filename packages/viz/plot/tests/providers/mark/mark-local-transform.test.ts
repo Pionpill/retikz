@@ -2,6 +2,7 @@ import type { IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 
 import { defineTransform } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -57,8 +58,8 @@ const groupPointSpec = (): IRPlot =>
 const doubleTransform = defineTransform({
   schema: z.object({
     kind: z.literal('double-local'),
-    field: z.string().min(1),
-    as: z.string().min(1),
+    field: NonBlankStringSchema,
+    as: NonBlankStringSchema,
   }),
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],

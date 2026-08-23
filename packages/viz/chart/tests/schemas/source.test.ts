@@ -1,3 +1,4 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -18,9 +19,9 @@ const FixtureRecipeThemeSchema = z.strictObject({
 const FixtureChartSchema = z.strictObject({
   chartType: z.literal('fixture'),
   encodings: z.strictObject({
-    x: z.string().min(1),
-    y: z.string().min(1),
-    color: z.string().min(1).optional(),
+    x: NonBlankStringSchema,
+    y: NonBlankStringSchema,
+    color: NonBlankStringSchema.optional(),
   }),
   properties: z
     .strictObject({
@@ -32,7 +33,7 @@ const FixtureChartSchema = z.strictObject({
     .array(
       z.strictObject({
         kind: z.literal('fixture-mark'),
-        encodings: z.strictObject({ color: z.string().min(1).optional() }).optional(),
+        encodings: z.strictObject({ color: NonBlankStringSchema.optional() }).optional(),
         properties: z.strictObject({ visible: z.boolean().optional() }).optional(),
       }),
     )
@@ -61,6 +62,10 @@ describe('Chart Source schema primitives', () => {
     const result = FixtureSourceSchema.safeParse({ ...minimalSource, type: 'line' });
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error.issues[0]?.path).toEqual(['type']);
+  });
+
+  it('rejects a whitespace-only authored id', () => {
+    expect(FixtureSourceSchema.safeParse({ ...minimalSource, id: '   ' }).success).toBe(false);
   });
 
   it('keeps the final root and recipe objects strict', () => {

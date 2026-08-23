@@ -1,3 +1,4 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -7,7 +8,7 @@ import * as scatter from '../src/point/scatter';
 
 const RecipeSchema = z.strictObject({
   chartType: z.literal('fixture'),
-  encodings: z.strictObject({ x: z.string().min(1), y: z.string().min(1) }),
+  encodings: z.strictObject({ x: NonBlankStringSchema, y: NonBlankStringSchema }),
   properties: z.strictObject({ visible: z.boolean().optional() }).optional(),
 });
 

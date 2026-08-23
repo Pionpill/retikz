@@ -1,5 +1,5 @@
 import { ThemeTokenSource } from '@retikz/core';
-import { NonNegativeIntegerSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeIntegerSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableCellAppearanceTracePath, TableCellPlanSourceKind } from './constants';
@@ -46,13 +46,13 @@ export const TableCellPlanSourceSchema = z
       kind: z.literal(TableCellPlanSourceKind.StyleToken).describe('Discriminator for a resolved Table token winner.'),
       tokenKey: TableThemeTokenKeySchema.describe('Appearance Table token that supplied the winning leaf.'),
       tokenSource: z.enum(ThemeTokenSource).describe('Winning token source relation to the Table owner.'),
-      tokenPath: z.string().min(1).describe('Stable effective Theme or IRTable source path.'),
+      tokenPath: NonBlankStringSchema.describe('Stable effective Theme or IRTable source path.'),
     }),
     z.strictObject({
       kind: z
         .literal(TableCellPlanSourceKind.Encoding)
         .describe('Discriminator for an ordered visual encoding winner.'),
-      encodingId: z.string().min(1).describe('Stable id of the winning Table visual encoding.'),
+      encodingId: NonBlankStringSchema.describe('Stable id of the winning Table visual encoding.'),
     }),
     z.strictObject({
       kind: z.literal(TableCellPlanSourceKind.RootRule).describe('Discriminator for an ordered root rule winner.'),

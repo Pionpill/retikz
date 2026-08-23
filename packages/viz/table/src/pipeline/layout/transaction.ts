@@ -20,6 +20,7 @@ import {
   ThemeMode,
 } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { PresentedTableModel, SemanticTableCell, TableLayoutManifest } from '../../contract';
@@ -99,17 +100,17 @@ type TableTransactionStage = 'intrinsic Cell layout' | 'constrained Cell layout'
 const PresentedTableCellSchema = z.discriminatedUnion('kind', [
   z.strictObject({
     kind: z.literal(TableCellPayloadKind.Value),
-    cellId: z.string().min(1),
+    cellId: NonBlankStringSchema,
     rawValue: ScalarValueSchema,
     value: ScalarValueSchema,
-    formatterName: z.string().min(1),
-    presentationName: z.string().min(1),
+    formatterName: NonBlankStringSchema,
+    presentationName: NonBlankStringSchema,
     appearance: TableCellAppearanceSchema,
     content: ChildSchema,
   }),
   z.strictObject({
     kind: z.literal(TableCellPayloadKind.Content),
-    cellId: z.string().min(1),
+    cellId: NonBlankStringSchema,
     appearance: TableCellAppearanceSchema,
     content: ChildSchema,
   }),

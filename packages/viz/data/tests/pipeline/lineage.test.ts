@@ -1,3 +1,4 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -231,8 +232,8 @@ describe('data lineage runtime', () => {
     const doubleRevenue = defineTransform({
       schema: z.object({
         kind: z.literal('double-revenue'),
-        field: z.string().min(1),
-        as: z.string().min(1),
+        field: NonBlankStringSchema,
+        as: NonBlankStringSchema,
       }),
       inputFields: operation => [operation.field],
       outputFields: operation => [operation.as],
@@ -358,8 +359,8 @@ describe('data lineage runtime', () => {
     const range = defineStatisticsReducer({
       schema: z.object({
         kind: z.literal('range'),
-        field: z.string().min(1),
-        as: z.string().min(1),
+        field: NonBlankStringSchema,
+        as: NonBlankStringSchema,
       }),
       inputFields: operation => [operation.field],
       outputFields: operation => [operation.as],

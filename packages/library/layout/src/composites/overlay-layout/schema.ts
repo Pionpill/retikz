@@ -1,4 +1,4 @@
-import { NonNegativeNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { LAYOUT_NAMESPACE } from '../../shared';
@@ -135,7 +135,7 @@ const OverlayLayoutArtifactBaseSchema = z.strictObject({
   kind: z.literal(LayoutItemKind.Overlay).describe('Discriminator for an OverlayLayout artifact payload.'),
   container: LayoutArtifactContainerSchema.describe('Resolved container geometry.'),
   items: z.array(OverlayLayoutArtifactItemSchema).describe('Items in authored source order.'),
-  paintOrder: z.array(z.string().min(1)).describe('All item keys in stable resolved paint order.'),
+  paintOrder: z.array(NonBlankStringSchema).describe('All item keys in stable resolved paint order.'),
 });
 
 /** 校验 Overlay artifact 的 authored identity 与完整 paint order */

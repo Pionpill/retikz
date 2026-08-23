@@ -1,9 +1,10 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { PlotAxisThemeTokenOverridesSchema } from './style';
 
 const PlotAxisThemeDimensionListSchema = z
-  .array(z.string().min(1))
+  .array(NonBlankStringSchema)
   .min(1)
   .superRefine((dimensions, context) => {
     const firstIndex = new Map<string, number>();
@@ -27,7 +28,7 @@ const PlotAxisThemeDimensionListSchema = z
 export const PlotAxisThemeTokenSelectorSchema = z
   .strictObject({
     dimension: z
-      .union([z.string().min(1), PlotAxisThemeDimensionListSchema])
+      .union([NonBlankStringSchema, PlotAxisThemeDimensionListSchema])
       .describe('One or more open Plot Axis dimensions selected by this rule'),
   })
   .describe('Dimension selector for one Plot Axis theme token rule');

@@ -1,6 +1,6 @@
 import { CompositeBaseSchema, JsonObjectSchema, TextBlockSchema } from '@retikz/core';
 import { DataReferenceSchema } from '@retikz/data';
-import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { CoordinateOperationSchema } from '../coordinate';
@@ -37,15 +37,15 @@ export const CompositionSpacingSchema = z
 export const CompositionResolveSchema = z
   .strictObject({
     scale: z
-      .record(z.string().min(1), z.enum(CompositionScaleResolve))
+      .record(NonBlankStringSchema, z.enum(CompositionScaleResolve))
       .optional()
       .describe('Per-coordinate-role scale resolution mode'),
     axis: z
-      .record(z.string().min(1), z.enum(CompositionAxisResolve))
+      .record(NonBlankStringSchema, z.enum(CompositionAxisResolve))
       .optional()
       .describe('Per-coordinate-role axis rendering mode'),
     grid: z
-      .record(z.string().min(1), z.enum(CompositionGridResolve))
+      .record(NonBlankStringSchema, z.enum(CompositionGridResolve))
       .optional()
       .describe('Per-coordinate-role default grid projection mode'),
   })
@@ -62,8 +62,8 @@ const CoordinateViewSlotPlacementSchema = z
     kind: z
       .literal(CoordinateViewPlacementKind.Slot)
       .describe('Placement kind: this view occupies a named arrangement slot'),
-    arrangement: z.string().min(1).describe('Arrangement id that owns this slot'),
-    slot: z.string().min(1).describe('Slot key this view occupies inside the arrangement'),
+    arrangement: NonBlankStringSchema.describe('Arrangement id that owns this slot'),
+    slot: NonBlankStringSchema.describe('Slot key this view occupies inside the arrangement'),
   })
   .describe('Arrangement slot coordinate view placement');
 
@@ -72,7 +72,7 @@ const CoordinateViewOverlayPlacementSchema = z
     kind: z
       .literal(CoordinateViewPlacementKind.Overlay)
       .describe('Placement kind: this view overlays another coordinate view'),
-    target: z.string().min(1).describe('Target coordinate view id this view overlays'),
+    target: NonBlankStringSchema.describe('Target coordinate view id this view overlays'),
     zIndex: z
       .number()
       .optional()
@@ -90,7 +90,7 @@ export const CoordinateViewPlacementSchema = z
 
 export const CoordinateViewSchema = z
   .strictObject({
-    id: z.string().min(1).describe('Stable coordinate view id referenced by marks and axis guides'),
+    id: NonBlankStringSchema.describe('Stable coordinate view id referenced by marks and axis guides'),
     coordinate: CoordinateOperationSchema.describe('Coordinate operation owned by this view'),
     placement: CoordinateViewPlacementSchema.optional().describe(
       'Optional placement of this coordinate view in the plot composition; omit means root placement during normalization',
@@ -112,7 +112,7 @@ const FacetLabelOverrideSchema = z
 
 const FacetDimensionSchema = z
   .strictObject({
-    field: z.string().min(1).describe('Data field path used to split rows into facet panels'),
+    field: NonBlankStringSchema.describe('Data field path used to split rows into facet panels'),
     order: z
       .array(FacetValueSchema)
       .optional()
@@ -149,8 +149,8 @@ const FacetHeaderSchema = z
 export const FacetArrangementSchema = z
   .strictObject({
     kind: z.literal(CoordinateArrangementKind.Facet).describe('Arrangement discriminator: data-driven facet panels'),
-    id: z.string().min(1).describe('Stable facet arrangement id used to derive panel view ids and provenance'),
-    view: z.string().min(1).describe('Template coordinate view used by generated facet panels'),
+    id: NonBlankStringSchema.describe('Stable facet arrangement id used to derive panel view ids and provenance'),
+    view: NonBlankStringSchema.describe('Template coordinate view used by generated facet panels'),
     row: FacetDimensionsSchema.optional().describe(
       'Facet row dimension or ordered row-dimension hierarchy; omit for a one-dimensional column facet',
     ),
@@ -167,11 +167,9 @@ export const FacetArrangementSchema = z
     coordinate: CoordinateOperationSchema.optional().describe(
       'Coordinate operation used by every generated panel; omit to inherit the template view coordinate',
     ),
-    viewIdTemplate: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Panel view id template supporting {arrangement}, {row}, {column}, and {panel} placeholders'),
+    viewIdTemplate: NonBlankStringSchema.optional().describe(
+      'Panel view id template supporting {arrangement}, {row}, {column}, and {panel} placeholders',
+    ),
   })
   .superRefine((facet, ctx) => {
     if (facet.row === undefined && facet.column === undefined) {
@@ -186,7 +184,7 @@ export const FacetArrangementSchema = z
 
 const ScaffoldTrackBandSchema = z
   .strictObject({
-    role: z.string().min(1).describe('Coordinate role localized into this track band'),
+    role: NonBlankStringSchema.describe('Coordinate role localized into this track band'),
     start: z.number().min(0).max(1).describe('Track band start fraction in arrangement-local coordinates'),
     end: z.number().min(0).max(1).describe('Track band end fraction in arrangement-local coordinates'),
   })
@@ -194,8 +192,8 @@ const ScaffoldTrackBandSchema = z
 
 export const TrackArrangementTrackSchema = z
   .strictObject({
-    id: z.string().min(1).describe('Stable track id within its track arrangement'),
-    view: z.string().min(1).optional().describe('Explicit coordinate view id for this track; omit to derive one'),
+    id: NonBlankStringSchema.describe('Stable track id within its track arrangement'),
+    view: NonBlankStringSchema.optional().describe('Explicit coordinate view id for this track; omit to derive one'),
     band: ScaffoldTrackBandSchema.describe('Local role band assigned to this track'),
     order: z.number().optional().describe('Optional track ordering hint; omit to use declaration order'),
     coordinate: CoordinateOperationSchema.optional().describe('Coordinate override for this track view'),
@@ -212,10 +210,10 @@ const TrackHeaderSchema = z
 export const TrackArrangementSchema = z
   .strictObject({
     kind: z.literal(CoordinateArrangementKind.Tracks).describe('Arrangement discriminator: shared coordinate tracks'),
-    id: z.string().min(1).describe('Stable track arrangement id used to derive track view ids and provenance'),
+    id: NonBlankStringSchema.describe('Stable track arrangement id used to derive track view ids and provenance'),
     coordinate: CoordinateOperationSchema.describe('Base coordinate operation owned by this track arrangement'),
     sharedRoles: z
-      .array(z.string().min(1))
+      .array(NonBlankStringSchema)
       .describe('Coordinate roles whose scale domain and range are shared across tracks'),
     frame: z
       .enum(ScaffoldFrameMode)
@@ -225,11 +223,9 @@ export const TrackArrangementSchema = z
     header: TrackHeaderSchema.optional().describe('Track label visibility'),
     resolve: CompositionResolveSchema.optional().describe('Track-local scale, axis, and grid resolution policy'),
     spacing: CompositionSpacingSchema.optional().describe('Track-local spacing override'),
-    viewIdTemplate: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Track view id template supporting {arrangement} and {track} placeholders'),
+    viewIdTemplate: NonBlankStringSchema.optional().describe(
+      'Track view id template supporting {arrangement} and {track} placeholders',
+    ),
   })
   .describe('Shared track arrangement that derives coordinate views for tracks');
 
@@ -239,7 +235,9 @@ export const CoordinateArrangementSchema = z
 
 export const CoordinateCompositionSchema = z
   .strictObject({
-    defaultView: z.string().min(1).describe('Coordinate view id used when a mark or axis guide omits coordinateView'),
+    defaultView: NonBlankStringSchema.describe(
+      'Coordinate view id used when a mark or axis guide omits coordinateView',
+    ),
     views: z
       .array(CoordinateViewSchema)
       .optional()
@@ -432,7 +430,7 @@ export const PlotSchema = CompositeBaseSchema.extend({
   type: z
     .literal(PlotComposite.Plot)
     .describe('Composite type within the plot namespace: the top-level grammar-of-graphics spec node'),
-  id: z.string().min(1).optional().describe('Optional plot handle used as the outer scope id and anchor target'),
+  id: NonBlankStringSchema.optional().describe('Optional plot handle used as the outer scope id and anchor target'),
   data: DataReferenceSchema.describe(
     'Data binding: a named reference to an externally-supplied dataset plus an optional data model. The dataset values never enter the IR; they are injected at compile time via lowerPlots(datasets).',
   ),

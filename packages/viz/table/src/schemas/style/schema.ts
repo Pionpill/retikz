@@ -1,21 +1,16 @@
 import { CssColorSchema, FontSchema, OpacitySchema, PaintValueSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableLineBorderSchema } from '../border';
 import { TableThemeToken } from './constants';
 
-const nonBlankColorSchema = CssColorSchema.refine(value => NonBlankStringSchema.safeParse(value).success, {
-  message: 'Table style color must not be empty or whitespace.',
-});
-
 export const TableThemeTokenBorderSchema = TableLineBorderSchema.omit({ priority: true }).describe(
   'Table theme border line without public conflict priority.',
 );
 
-const ScopeColorSchema = nonBlankColorSchema.nullable();
+const ScopeColorSchema = CssColorSchema.nullable();
 
-const categoricalColorsSchema = z.array(nonBlankColorSchema).min(1, {
+const categoricalColorsSchema = z.array(CssColorSchema).min(1, {
   message: 'Table categorical colors must be non-empty.',
 });
 
@@ -38,7 +33,7 @@ const TableThemeTokenShape = {
   [TableThemeToken.TableBorderVertical]: TableThemeTokenBorderSchema.nullable(),
   [TableThemeToken.ColumnHeaderBorderBottom]: TableThemeTokenBorderSchema.nullable(),
   [TableThemeToken.DataCategorical]: categoricalColorsSchema,
-  [TableThemeToken.DataSequential]: z.tuple([nonBlankColorSchema, nonBlankColorSchema]),
+  [TableThemeToken.DataSequential]: z.tuple([CssColorSchema, CssColorSchema]),
 } as const;
 
 const TableThemeTokenObjectSchema = z.strictObject(TableThemeTokenShape);

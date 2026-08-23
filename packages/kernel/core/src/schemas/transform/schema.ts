@@ -1,4 +1,4 @@
-import { NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { Anchor } from '../../shared';
@@ -18,7 +18,7 @@ const PolarTranslateSchema = z
   .object({
     kind: z.literal('polar-translate').describe('Discriminator for polar translate.'),
     origin: z
-      .union([z.string().min(1), PositionSchema, PolarPositionSchema])
+      .union([NonBlankStringSchema, PositionSchema, PolarPositionSchema])
       .optional()
       .describe(
         'Origin reference: node id string, Cartesian [x, y], or nested PolarPosition. Omitted fields use [0, 0].',
@@ -34,7 +34,7 @@ const AtTranslateSchema = z
   .object({
     kind: z.literal('at-translate').describe('Discriminator for direction-relative translate.'),
     direction: z.enum(Anchor).describe('Canonical direction enum (8 values, shared with AtPosition.direction).'),
-    of: z.string().min(1).describe('Referenced node id; must already be defined.'),
+    of: NonBlankStringSchema.describe('Referenced node id; must already be defined.'),
     distance: PositiveNumberSchema.optional().describe(
       'Distance along direction in user units. Omitted fields use CompileOptions.nodeDistance, then 24.',
     ),
@@ -45,7 +45,7 @@ const OffsetTranslateSchema = z
   .object({
     kind: z.literal('offset-translate').describe('Discriminator for offset-from-reference translate.'),
     of: z
-      .union([z.string().min(1), PositionSchema, PolarPositionSchema])
+      .union([NonBlankStringSchema, PositionSchema, PolarPositionSchema])
       .describe('Reference base point: node id string, Cartesian [x, y], or PolarPosition.'),
     offset: z
       .tuple([z.number(), z.number()])

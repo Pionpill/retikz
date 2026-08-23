@@ -1,5 +1,5 @@
 import { ScalarValueSchema } from '@retikz/data';
-import { NonNegativeIntegerSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeIntegerSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableCellSourceKind } from '../../shared';
@@ -84,9 +84,9 @@ export const TableValuePredicateSchema = z
   .describe('Closed predicate evaluated against a canonical raw Cell scalar.');
 
 const selectorShape = {
-  cellIds: uniqueArray(z.string().min(1), 'duplicate Cell id').optional().describe('Cell identity membership.'),
-  rowIds: uniqueArray(z.string().min(1), 'duplicate row id').optional().describe('Origin row identity membership.'),
-  columnIds: uniqueArray(z.string().min(1), 'duplicate column id')
+  cellIds: uniqueArray(NonBlankStringSchema, 'duplicate Cell id').optional().describe('Cell identity membership.'),
+  rowIds: uniqueArray(NonBlankStringSchema, 'duplicate row id').optional().describe('Origin row identity membership.'),
+  columnIds: uniqueArray(NonBlankStringSchema, 'duplicate column id')
     .optional()
     .describe('Origin column identity membership.'),
   rowIndices: uniqueArray(NonNegativeIntegerSchema, 'duplicate row index')
@@ -115,7 +115,7 @@ const selectorShape = {
   sourceKinds: uniqueArray(z.enum(TableCellSourceKind), 'duplicate Cell source kind')
     .optional()
     .describe('Canonical Cell source discriminator membership.'),
-  fields: uniqueArray(z.string().min(1), 'duplicate source field')
+  fields: uniqueArray(NonBlankStringSchema, 'duplicate source field')
     .optional()
     .describe('Field-source name membership; generated sources never match.'),
   payloadKinds: uniqueArray(z.enum(TableCellPayloadKind), 'duplicate payload kind')

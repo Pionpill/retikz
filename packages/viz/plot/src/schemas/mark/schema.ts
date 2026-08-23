@@ -8,7 +8,7 @@ import {
   PositionSchema,
   StepLabelSchema,
 } from '@retikz/core';
-import { AxisScaleSchema, BoxSizeSchema } from '@retikz/core';
+import { AxisScaleSchema, BoxSizeSchema, CssColorSchema } from '@retikz/core';
 import {
   BlendMode,
   BoundarySchema,
@@ -23,11 +23,17 @@ import {
   ShadowPreset,
   ShapeRefSchema,
 } from '@retikz/core';
-import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { RibbonPathOptionsSchema } from '@retikz/standard/ribbon';
 import { z } from 'zod';
 
-import { EncodingSchema, MarkGeometryLabelListSchema, MarkNodeLabelListSchema, PointEncodingSchema } from '../encoding';
+import {
+  EncodingSchema,
+  MarkChannelEncodingSchema,
+  MarkGeometryLabelListSchema,
+  MarkNodeLabelListSchema,
+  PointEncodingSchema,
+} from '../encoding';
 import { PlotLayerSchema } from '../layer';
 import { TransformSchema } from '../transform';
 import {
@@ -53,15 +59,13 @@ export const MarkTransformSchema = z
 export const RelationTransformSchema = MarkTransformSchema;
 
 const markBase = {
-  id: z.string().min(1).optional().describe('Optional mark handle used by generated scope and anchor targets'),
+  id: NonBlankStringSchema.optional().describe('Optional mark handle used by generated scope and anchor targets'),
   layer: PlotLayerSchema.optional().describe(
     'Semantic plot layer override applied to the outer mark scope; mark datum zIndex remains a separate style channel',
   ),
-  coordinateView: z
-    .string()
-    .min(1)
-    .optional()
-    .describe('Coordinate view id this mark is projected through; omit to use the plot composition default view'),
+  coordinateView: NonBlankStringSchema.optional().describe(
+    'Coordinate view id this mark is projected through; omit to use the plot composition default view',
+  ),
   transform: MarkTransformSchema.optional().describe(
     'Optional mark-local transform pipeline applied after the plot root transform',
   ),
@@ -69,28 +73,16 @@ const markBase = {
 
 export const AnchorIdSchema = z
   .strictObject({
-    prefix: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Optional id namespace under the current plot; defaults to the mark id, or mark.<index> when the mark has no id',
-      ),
-    field: z.string().min(1).optional().describe('Data field path whose value is slugged into the anchor id'),
-    template: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'JSON-safe id template supporting {plotId}, {markId}, {markIndex}, {index}, and {field:name} placeholders',
-      ),
-    generator: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Runtime generator key resolved from LowerPlotsOptions.anchorIdGenerators; the function itself is not stored in the IRPlot',
-      ),
+    prefix: NonBlankStringSchema.optional().describe(
+      'Optional id namespace under the current plot; defaults to the mark id, or mark.<index> when the mark has no id',
+    ),
+    field: NonBlankStringSchema.optional().describe('Data field path whose value is slugged into the anchor id'),
+    template: NonBlankStringSchema.optional().describe(
+      'JSON-safe id template supporting {plotId}, {markId}, {markIndex}, {index}, and {field:name} placeholders',
+    ),
+    generator: NonBlankStringSchema.optional().describe(
+      'Runtime generator key resolved from LowerPlotsOptions.anchorIdGenerators; the function itself is not stored in the IRPlot',
+    ),
   })
   .superRefine((spec, ctx) => {
     const count = [spec.field, spec.template, spec.generator].filter(value => value !== undefined).length;
@@ -114,7 +106,7 @@ const anchorTargetFields = {
 
 const DirectPlotTargetRefSchema = z
   .strictObject({
-    id: z.string().min(1).describe('Existing core Node / Coordinate id'),
+    id: NonBlankStringSchema.describe('Existing core Node / Coordinate id'),
     ...anchorTargetFields,
   })
   .describe('Direct core target reference by id');
@@ -129,7 +121,7 @@ const GeneratedAnchorPlotTargetRefSchema = z
 const ProjectedPlotTargetRefSchema = z
   .strictObject({
     project: z
-      .record(z.string().min(1), z.string().min(1))
+      .record(NonBlankStringSchema, NonBlankStringSchema)
       .describe('Coordinate-role to data-field map projected in the relation mark coordinate frame'),
     anchorId: AnchorIdSchema.optional().describe('Optional id rule for the generated projected Coordinate'),
     ...anchorTargetFields,
@@ -143,10 +135,9 @@ export const PlotTargetRefSchema = z
 const relationLabelTextSchema = z.union([
   StepLabelSchema.shape.text,
   z.strictObject({
-    field: z
-      .string()
-      .min(1)
-      .describe('Data field path resolved from the current relation row and stringified into StepLabel.text'),
+    field: NonBlankStringSchema.describe(
+      'Data field path resolved from the current relation row and stringified into StepLabel.text',
+    ),
   }),
 ]);
 
@@ -260,8 +251,8 @@ const markValueFieldVariant = (
 ): z.ZodObject<{ kind: z.ZodLiteral<'field'>; value: z.ZodString; scale: z.ZodOptional<z.ZodString> }> =>
   z.object({
     kind: z.literal(MarkValueKind.Field).describe('Field binding variant'),
-    value: z.string().min(1).describe(description),
-    scale: z.string().min(1).optional().describe('Optional scale name for this field-bound style value'),
+    value: NonBlankStringSchema.describe(description),
+    scale: NonBlankStringSchema.optional().describe('Optional scale name for this field-bound style value'),
   });
 
 const markValueSchema = <T extends z.ZodTypeAny>(
@@ -282,14 +273,14 @@ const markValueSchema = <T extends z.ZodTypeAny>(
     ])
     .describe(`${schemaDescription}: field-bound datum value or constant value`);
 
-const StylePaintSchema = z.union([z.string(), PaintSchema]);
+const StylePaintSchema = z.union([CssColorSchema, PaintSchema]);
 const StyleNumberSchema = z.number();
 const StyleNonnegativeNumberSchema = NonNegativeNumberSchema;
 const StylePositiveNumberSchema = PositiveNumberSchema;
 const StyleOpacitySchema = z.number().min(0).max(1);
 const StyleDashPatternSchema = z.array(StyleNonnegativeNumberSchema).min(1);
 const StyleShadowSchema = z.union([z.enum(ShadowPreset), DropShadowSchema]);
-const StyleShapeSchema = z.union([z.string().min(1), ShapeRefSchema]);
+const StyleShapeSchema = z.union([NonBlankStringSchema, ShapeRefSchema]);
 const StyleBlendModeSchema = z.enum(BlendMode);
 const StyleBoxSpacingSchema = z.union([StyleNonnegativeNumberSchema, BoxSpacingSchema]);
 const StyleAxisScaleSchema = z.union([StylePositiveNumberSchema, AxisScaleSchema]);
@@ -302,7 +293,7 @@ export const PointFillStyleSchema = markValueSchema(
   'point fill style value',
 );
 export const PointColorStyleSchema = markValueSchema(
-  z.string().min(1),
+  CssColorSchema,
   'Data field path bound to point color',
   'Constant point color',
   'point color value',
@@ -513,12 +504,9 @@ const PathStackClosureSchema = z
     kind: z
       .literal(PathClosureKind.Stack)
       .describe('Stack closure: return from the upper outline to a per-row baseline field'),
-    baselineField: z
-      .string()
-      .min(1)
-      .describe(
-        'Data field path for the lower boundary value, such as y0 from a stack transform; the upper boundary still comes from encoding.y',
-      ),
+    baselineField: NonBlankStringSchema.describe(
+      'Data field path for the lower boundary value, such as y0 from a stack transform; the upper boundary still comes from encoding.y',
+    ),
   })
   .describe(
     'Path stack closure: closes the upper outline against a per-row lower-bound field; set fill to render an area',
@@ -675,18 +663,12 @@ export const PointMarkSchema = z
 export const PathMarkSchema = z
   .object({
     type: z.literal(PlotMark.Path).describe('Discriminator: ordered points connected into a 1D path'),
-    order: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Data field driving connection order; omit for data array order (minimal relation)'),
-    series: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Series field: split records into one path per distinct value (multi-series); each series gets its own color via the color scale',
-      ),
+    order: NonBlankStringSchema.optional().describe(
+      'Data field driving connection order; omit for data array order (minimal relation)',
+    ),
+    series: NonBlankStringSchema.optional().describe(
+      'Series field: split records into one path per distinct value (multi-series); each series gets its own color via the color scale',
+    ),
     closed: z
       .boolean()
       .optional()
@@ -733,13 +715,9 @@ const BandBoundSchema = z
     kind: z
       .literal(IntervalBoundKind.Band)
       .describe('Band bound: center from the role position channel, width from the band scale bandwidth'),
-    group: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Series field that subdivides the band into equal sub-bands (grouped / dodge); omit for a full-width band',
-      ),
+    group: NonBlankStringSchema.optional().describe(
+      'Series field that subdivides the band into equal sub-bands (grouped / dodge); omit for a full-width band',
+    ),
   })
   .describe(
     'Band bound: a category band on this role (bar primary, heatmap axis, polar angle band); optional group → dodge sub-bands',
@@ -758,8 +736,8 @@ const SpanBoundSchema = z
 const ExtentBoundSchema = z
   .object({
     kind: z.literal(IntervalBoundKind.Extent).describe('Extent bound: an explicit interval read from two fields'),
-    from: z.string().min(1).describe('Lower-bound field (e.g. stack y0 / bin start / cumulative start angle)'),
-    to: z.string().min(1).describe('Upper-bound field (e.g. stack y1 / bin end / cumulative end angle)'),
+    from: NonBlankStringSchema.describe('Lower-bound field (e.g. stack y0 / bin start / cumulative start angle)'),
+    to: NonBlankStringSchema.describe('Upper-bound field (e.g. stack y1 / bin end / cumulative end angle)'),
   })
   .describe('Extent bound: explicit [from, to] field interval (histogram bin / stacked bar / cumulative pie angle)');
 
@@ -768,10 +746,9 @@ const ProportionalBoundSchema = z
     kind: z
       .literal(IntervalBoundKind.Proportional)
       .describe('Proportional bound: contiguous intervals whose widths are driven by a numeric field'),
-    field: z
-      .string()
-      .min(1)
-      .describe('Non-negative numeric field used to build contiguous proportional intervals along this role'),
+    field: NonBlankStringSchema.describe(
+      'Non-negative numeric field used to build contiguous proportional intervals along this role',
+    ),
   })
   .describe('Proportional bound: contiguous variable-width intervals along this role (variable-width bar / mosaic)');
 
@@ -791,7 +768,7 @@ export const IntervalBoundSchema = z
   ])
   .describe('Single-role interval bound source: band / span / extent / proportional / full');
 
-export const IntervalBoundsSchema = z
+const IntervalBoundsObjectSchema = z
   .object({
     x: IntervalBoundSchema.optional().describe(
       'Primary-role interval bound (coordinate maps x→primary: cartesian2D horizontal, polar2D angle); omit to infer from the scale (band scale → band)',
@@ -800,7 +777,11 @@ export const IntervalBoundsSchema = z
       'Secondary-role interval bound (coordinate maps y→secondary: cartesian2D vertical, polar2D radius); omit to infer (continuous scale → span from 0)',
     ),
   })
-  .catchall(IntervalBoundSchema)
+  .catchall(IntervalBoundSchema);
+
+export const IntervalBoundsSchema = z
+  .record(NonBlankStringSchema, z.unknown())
+  .pipe(IntervalBoundsObjectSchema)
   .describe(
     'Per-role interval bounds keyed by coordinate role; built-ins use x / y, custom coordinates may add role keys',
   );
@@ -812,13 +793,9 @@ export const IntervalMarkSchema = z
       .describe(
         'Discriminator: an orthogonal interval product projected to a segment / rectangle / sector / cell by the coordinate system',
       ),
-    series: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Series field: split records into multiple interval series (color grouping; sub-band grouping when bounds.x is a band with group)',
-      ),
+    series: NonBlankStringSchema.optional().describe(
+      'Series field: split records into multiple interval series (color grouping; sub-band grouping when bounds.x is a band with group)',
+    ),
     bounds: IntervalBoundsSchema.optional().describe(
       'Per-role interval bounds keyed by coordinate role; omit to infer from the coordinate role',
     ),
@@ -869,31 +846,23 @@ export const ReferenceMarkSchema = z
         'Reference form override. Set to region to require lower/upper bounds for every consumed coordinate role and fill the bounded reference cell; omit to infer line or one-axis band',
       ),
     yTo: z
-      .union([z.number(), z.string().min(1)])
+      .union([z.number(), NonBlankStringSchema])
       .optional()
       .describe(
         'Upper bound along y: number → constant, string → per-datum field. With encoding.y alone it creates a horizontal band y∈[y,yTo]; with kind=region it is the region y upper bound',
       ),
     xTo: z
-      .union([z.number(), z.string().min(1)])
+      .union([z.number(), NonBlankStringSchema])
       .optional()
       .describe(
         'Upper bound along x: number → constant, string → per-datum field. With encoding.x alone it creates a vertical band x∈[x,xTo]; with kind=region it is the region x upper bound',
       ),
-    extentField: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Per-datum partial-length reference/band: field giving the span start along the opposite axis (omit → span the full opposite domain). Pairs with extentToField',
-      ),
-    extentToField: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Per-datum partial-length reference/band: field giving the span end along the opposite axis (omit → span the full opposite domain). Pairs with extentField',
-      ),
+    extentField: NonBlankStringSchema.optional().describe(
+      'Per-datum partial-length reference/band: field giving the span start along the opposite axis (omit → span the full opposite domain). Pairs with extentToField',
+    ),
+    extentToField: NonBlankStringSchema.optional().describe(
+      'Per-datum partial-length reference/band: field giving the span end along the opposite axis (omit → span the full opposite domain). Pairs with extentField',
+    ),
     strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
       'Reference line stroke width: field-bound datum channel or constant core Path stroke width',
     ),
@@ -1030,10 +999,10 @@ export const RelationMarkSchema = z
     ...markBase,
     encoding: z
       .object({
-        color: PointEncodingSchema.shape.color
+        color: MarkChannelEncodingSchema.shape.color
           .optional()
           .describe('Optional relation color channel; delivered as core Path color'),
-        channels: EncodingSchema.shape.channels
+        channels: MarkChannelEncodingSchema.shape.channels
           .optional()
           .describe('Custom channel bindings consumed by mark / scope / path definitions'),
       })
@@ -1082,28 +1051,20 @@ export const MarkSchema = z
 
 export const CustomMarkSchema = z
   .looseObject({
-    type: z
-      .string()
-      .min(1)
-      .refine(type => !BUILTIN_MARK_TYPES.has(type), {
-        message: 'custom mark type must not collide with a built-in mark type',
-      })
-      .describe(
-        'Discriminator: custom mark type; must be a non-empty, non-built-in identifier registered through options.markDefinitions',
-      ),
+    type: NonBlankStringSchema.refine(type => !BUILTIN_MARK_TYPES.has(type), {
+      message: 'custom mark type must not collide with a built-in mark type',
+    }).describe(
+      'Discriminator: custom mark type; must be a non-blank, non-built-in identifier registered through options.markDefinitions',
+    ),
     transform: MarkTransformSchema.optional().describe(
       'Optional mark-local transform pipeline applied after the plot root transform',
     ),
     layer: PlotLayerSchema.optional().describe(
       'Semantic plot layer override applied to the outer custom mark output scope',
     ),
-    coordinateView: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Coordinate view id this custom mark is projected through; omit to use the plot composition default view',
-      ),
+    coordinateView: NonBlankStringSchema.optional().describe(
+      'Coordinate view id this custom mark is projected through; omit to use the plot composition default view',
+    ),
     encoding: EncodingSchema.optional().describe(
       'Position / non-position channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks',
     ),

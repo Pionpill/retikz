@@ -15,7 +15,7 @@ describe('Table formatter IR', () => {
     expect(reference).toEqual({ name: 'number' });
     expect(JSON.parse(JSON.stringify(reference))).toEqual(reference);
     expect(() => TableFormatterRefSchema.parse({ name: '  ' })).toThrow(
-      'Cell formatter provider name must contain non-whitespace characters.',
+      'String must contain at least one non-whitespace character.',
     );
     expect(() => TableFormatterRefSchema.parse({ name: 'number', options: [] })).toThrow();
     expect(() => TableFormatterRefSchema.parse({ name: 'number', unknown: true })).toThrow();
@@ -36,7 +36,7 @@ describe('Table formatter IR', () => {
       presentation: { name: 'text' },
     });
     expect(() => TableCellValuePayloadSchema.parse({ kind: 'value', value: 1, presentation: { name: '  ' } })).toThrow(
-      'Cell presentation provider name must contain non-whitespace characters.',
+      'String must contain at least one non-whitespace character.',
     );
   });
 

@@ -1,4 +1,5 @@
 ﻿import { JsonObjectSchema } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { DataSortOrder, DataTransform, RESERVED_TRANSFORM_KINDS, RowSelectorTie } from './constants';
@@ -9,13 +10,13 @@ import { BuiltinSelectorOperationSchemas, SelectorOperationSchema } from './sele
 export const SortTransformSchema = z
   .strictObject({
     kind: z.literal(DataTransform.Sort).describe('Discriminator: sort rows'),
-    field: z.string().min(1).describe('Sort field'),
+    field: NonBlankStringSchema.describe('Sort field'),
     order: z.enum(DataSortOrder).optional().describe('Sort direction; default ascending'),
   })
   .describe('Sort rows by one field');
 
 export const GroupBySchema = z
-  .array(z.string().min(1))
+  .array(NonBlankStringSchema)
   .optional()
   .describe('Group key fields; omitted or empty means one group');
 
@@ -45,7 +46,7 @@ export const SelectTransformSchema = z
     kind: z.literal(DataTransform.Select).describe('Discriminator: select transform'),
     groupBy: GroupBySchema,
     selector: SelectorOperationSchema.describe('Row selector'),
-    rankAs: z.string().min(1).optional().describe('One-based rank output field'),
+    rankAs: NonBlankStringSchema.optional().describe('One-based rank output field'),
   })
   .describe('Select representative rows per group');
 
@@ -75,7 +76,7 @@ const AnnotateSelectorOperationSchema = z
 export const AnnotateSelectorSchema = z
   .strictObject({
     selector: AnnotateSelectorOperationSchema.describe('Single-row selector'),
-    as: z.string().min(1).describe('Annotation output field'),
+    as: NonBlankStringSchema.describe('Annotation output field'),
   })
   .describe('Single-row selector annotation');
 
@@ -120,13 +121,9 @@ export const BuiltinTransformSchema = z
 
 const ExternalTransformSchema = z
   .looseObject({
-    kind: z
-      .string()
-      .min(1)
-      .refine(kind => !RESERVED_TRANSFORM_KINDS.has(kind), {
-        message: 'external transform kind must not collide with a built-in or removed transform kind',
-      })
-      .describe('Discriminator: custom transform kind'),
+    kind: NonBlankStringSchema.refine(kind => !RESERVED_TRANSFORM_KINDS.has(kind), {
+      message: 'external transform kind must not collide with a built-in or removed transform kind',
+    }).describe('Discriminator: custom transform kind'),
   })
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);

@@ -1,5 +1,5 @@
 import { CompositeBaseSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
-import { NonNegativeIntegerSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeIntegerSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { LAYOUT_NAMESPACE } from '../../shared';
@@ -138,7 +138,7 @@ const FlexLayoutArtifactItemSchema = LayoutArtifactItemBaseSchema.extend({
 const FlexLayoutLineArtifactSchema = z
   .strictObject({
     index: NonNegativeIntegerSchema.describe('Contiguous physical cross-axis line index.'),
-    itemKeys: z.array(z.string().min(1)).describe('Item keys in this line layout traversal order.'),
+    itemKeys: z.array(NonBlankStringSchema).describe('Item keys in this line layout traversal order.'),
     mainAxis: z.enum(LayoutAlignmentGuideDimension).describe('Physical main axis used for line item distribution.'),
     mainStart: z.number().describe('Finite main-axis line start in container allocation coordinates.'),
     mainSize: NonNegativeNumberSchema.describe('Finite non-negative main-axis line size.'),

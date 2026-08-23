@@ -5,6 +5,7 @@ import { compileToScene } from '@retikz/core';
 import { applyTransforms, defineTransform, extractTransformKind } from '@retikz/data';
 import { DataTransform } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -18,8 +19,8 @@ import { PlotSchema, PlotTransform } from '../../../src/schemas';
 const doubleDefinition = defineTransform({
   schema: z.object({
     kind: z.literal('double'),
-    field: z.string().min(1),
-    as: z.string().min(1),
+    field: NonBlankStringSchema,
+    as: NonBlankStringSchema,
   }),
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
@@ -33,9 +34,9 @@ const doubleDefinition = defineTransform({
 const groupSumDefinition = defineTransform({
   schema: z.object({
     kind: z.literal('group-sum'),
-    groupBy: z.string().min(1),
-    field: z.string().min(1),
-    as: z.string().min(1),
+    groupBy: NonBlankStringSchema,
+    field: NonBlankStringSchema,
+    as: NonBlankStringSchema,
   }),
   inputFields: operation => [operation.groupBy, operation.field],
   outputFields: operation => [operation.as],

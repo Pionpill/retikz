@@ -1,5 +1,5 @@
 import { ChildSchema, CompositeBaseSchema, ScopePropsSchema } from '@retikz/core';
-import { NonNegativeIntegerSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeIntegerSchema } from '@retikz/foundation';
 import {
   LayoutAlignment,
   LayoutArtifactContainerSchema,
@@ -29,7 +29,7 @@ const LegendGapSchema = z
 
 export const LegendItemSchema = z
   .strictObject({
-    key: z.string().min(1).describe('Container-local stable identity for this discrete legend item.'),
+    key: NonBlankStringSchema.describe('Container-local stable identity for this discrete legend item.'),
     sample: ChildSchema.describe('JSON-safe Core child that visually demonstrates the item.'),
     label: ChildSchema.optional().describe('Optional JSON-safe Core child explaining the sample.'),
   })
@@ -58,7 +58,7 @@ export const LegendItemsContentSchema = z
 
 export const LegendTickSchema = z
   .strictObject({
-    key: z.string().min(1).describe('Container-local stable identity for this continuous legend tick.'),
+    key: NonBlankStringSchema.describe('Container-local stable identity for this continuous legend tick.'),
     offset: z.number().min(0).max(1).describe('Normalized authored position along the sample main axis.'),
     label: ChildSchema.optional().describe('Optional JSON-safe Core child explaining the tick position.'),
   })
@@ -107,13 +107,6 @@ const refineLegendKeys = (
   const seenKeys = new Set<string>();
 
   entries.forEach((entry, index) => {
-    if (entry.key.trim().length === 0) {
-      context.addIssue({
-        code: 'custom',
-        path: ['content', pathPrefix, index, 'key'],
-        message: 'Legend item and tick keys must contain a non-whitespace character.',
-      });
-    }
     if (seenKeys.has(entry.key)) {
       context.addIssue({
         code: 'custom',
@@ -199,7 +192,7 @@ export const LegendPlacedChildArtifactSchema = LayoutArtifactItemBaseSchema.omit
 
 const LegendItemArtifactSchema = z
   .strictObject({
-    key: z.string().min(1).describe('Stable authored item identity.'),
+    key: NonBlankStringSchema.describe('Stable authored item identity.'),
     sourceIndex: NonNegativeIntegerSchema.describe('Zero-based authored item order.'),
     geometry: LegendArtifactGeometrySchema.describe('Union geometry of the sample and optional label.'),
     sample: LegendPlacedChildArtifactSchema.describe('Resolved sample placement.'),
@@ -222,7 +215,7 @@ export const LegendItemsArtifactSchema = z
 
 const LegendTickArtifactSchema = z
   .strictObject({
-    key: z.string().min(1).describe('Stable authored tick identity.'),
+    key: NonBlankStringSchema.describe('Stable authored tick identity.'),
     sourceIndex: NonNegativeIntegerSchema.describe('Zero-based authored tick order.'),
     anchor: z
       .strictObject({

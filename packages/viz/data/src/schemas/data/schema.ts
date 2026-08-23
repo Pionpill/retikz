@@ -1,12 +1,13 @@
-﻿import { z } from 'zod';
+﻿import { NonBlankStringSchema } from '@retikz/foundation';
+import { z } from 'zod';
 
 import { DataFieldType, FieldOrderMode } from './constants';
 
-export const FieldFormatSchema = z.string().min(1).describe('Field value-parsing format name; built-in or custom');
+export const FieldFormatSchema = NonBlankStringSchema.describe('Field value-parsing format name; built-in or custom');
 
 export const FieldDefinitionSchema = z
   .strictObject({
-    name: z.string().min(1).describe('Field name or dotted path'),
+    name: NonBlankStringSchema.describe('Field name or dotted path'),
     type: z.enum(DataFieldType).optional().describe('Field measurement type; omitted means infer from data'),
     format: FieldFormatSchema.optional().describe('Value-parsing format; omitted means default coercion'),
     order: z
@@ -35,7 +36,7 @@ export const DataModelSchema = z
 
 export const DataReferenceSchema = z
   .strictObject({
-    reference: z.string().min(1).describe('External dataset name; data values stay outside the IR'),
+    reference: NonBlankStringSchema.describe('External dataset name; data values stay outside the IR'),
     model: DataModelSchema.optional().describe('Optional field declarations'),
   })
   .describe('IR data binding by external dataset name');

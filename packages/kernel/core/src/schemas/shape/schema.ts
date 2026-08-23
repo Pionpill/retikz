@@ -1,15 +1,13 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { JsonObjectSchema } from '../json';
 
 export const ShapeRefSchema = z
   .strictObject({
-    type: z
-      .string()
-      .min(1)
-      .describe(
-        'Shape name; built-in or registered via CompileOptions.shapes. Unregistered names are rejected at compile time.',
-      ),
+    type: NonBlankStringSchema.describe(
+      'Shape name; built-in or registered via CompileOptions.shapes. Unregistered names are rejected at compile time.',
+    ),
     params: JsonObjectSchema.optional().describe(
       'JSON parameter object for parametric shapes. The registered shape validates its own parameter fields.',
     ),
@@ -18,5 +16,5 @@ export const ShapeRefSchema = z
 
 /** Core shape 值：裸 provider 名或带 JSON 参数的结构化引用 */
 export const ShapeValueSchema = z
-  .union([z.string().min(1), ShapeRefSchema])
-  .describe('Core shape value: a non-empty shape name or a structured shape reference.');
+  .union([NonBlankStringSchema, ShapeRefSchema])
+  .describe('Core shape value: a non-blank shape name or a structured shape reference.');

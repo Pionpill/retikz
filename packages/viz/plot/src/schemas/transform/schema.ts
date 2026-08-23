@@ -6,7 +6,12 @@ import {
   RESERVED_TRANSFORM_KINDS,
   SelectorOperationSchema,
 } from '@retikz/data';
-import { NonNegativeNumberSchema, PositiveIntegerSchema, PositiveNumberSchema } from '@retikz/foundation';
+import {
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  PositiveIntegerSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { z } from 'zod';
 
 import {
@@ -23,23 +28,19 @@ import {
 export const StackTransformSchema = z
   .object({
     kind: z.literal(PlotTransform.Stack).describe('Discriminator: cumulative stacking within each x group'),
-    x: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Grouping key field: rows sharing this value stack together (the categorical axis field); omit to accumulate all rows into a single cumulative chain (e.g. pie wedges)',
-      ),
-    y: z.string().min(1).describe('Numeric value field that is accumulated within each x group'),
-    groupBy: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Series field ordering segments within each stack (one segment per distinct value); omit to accumulate in data row order',
-      ),
-    startField: z.string().min(1).optional().describe('Output field for the lower bound of each segment; default "y0"'),
-    endField: z.string().min(1).optional().describe('Output field for the upper bound of each segment; default "y1"'),
+    x: NonBlankStringSchema.optional().describe(
+      'Grouping key field: rows sharing this value stack together (the categorical axis field); omit to accumulate all rows into a single cumulative chain (e.g. pie wedges)',
+    ),
+    y: NonBlankStringSchema.describe('Numeric value field that is accumulated within each x group'),
+    groupBy: NonBlankStringSchema.optional().describe(
+      'Series field ordering segments within each stack (one segment per distinct value); omit to accumulate in data row order',
+    ),
+    startField: NonBlankStringSchema.optional().describe(
+      'Output field for the lower bound of each segment; default "y0"',
+    ),
+    endField: NonBlankStringSchema.optional().describe(
+      'Output field for the upper bound of each segment; default "y1"',
+    ),
     offset: z
       .enum(StackOffset)
       .optional()
@@ -54,10 +55,9 @@ export const BinTransformSchema = z
     kind: z
       .literal(PlotTransform.Bin)
       .describe('Discriminator: bin a continuous field into discrete intervals (changes row count)'),
-    field: z
-      .string()
-      .min(1)
-      .describe('Continuous source field to bin; its value range is the binning domain unless extent is set'),
+    field: NonBlankStringSchema.describe(
+      'Continuous source field to bin; its value range is the binning domain unless extent is set',
+    ),
     count: PositiveIntegerSchema.optional().describe(
       'Target number of bins; mutually exclusive with step / thresholds; default 10 when no strategy is set',
     ),
@@ -79,8 +79,8 @@ export const BinTransformSchema = z
       .boolean()
       .optional()
       .describe('Round bin boundaries to human-friendly values (count strategy only); default true'),
-    startField: z.string().min(1).optional().describe('Output field for each bin lower edge; default "binStart"'),
-    endField: z.string().min(1).optional().describe('Output field for each bin upper edge; default "binEnd"'),
+    startField: NonBlankStringSchema.optional().describe('Output field for each bin lower edge; default "binStart"'),
+    endField: NonBlankStringSchema.optional().describe('Output field for each bin upper edge; default "binEnd"'),
     metrics: ReducerMetricsSchema.optional().describe(
       'Per-bin reducer metrics using shared reducer operations; default count as "binCount"',
     ),
@@ -93,7 +93,7 @@ export const EndpointProjectionSchema = z
   .strictObject({
     selector: SelectorOperationSchema.describe('Selector choosing the endpoint source row'),
     fields: z
-      .record(z.string().min(1), z.string().min(1))
+      .record(NonBlankStringSchema, NonBlankStringSchema)
       .refine(fields => Object.keys(fields).length > 0, { message: 'endpoint fields must not be empty' })
       .describe(
         'Output field suffix to source row field map; source outputs sourceX/sourceId, target outputs targetX/targetId',
@@ -108,13 +108,11 @@ export const PairMeasureOperationSchema = z
         op: z
           .literal(PairMeasureOperationKind.Difference)
           .describe('Pair measure discriminator: compute target minus source for one numeric field'),
-        field: z.string().min(1).describe('Numeric field read from the selected source and target rows'),
-        as: z.string().min(1).describe('Output field for the numeric difference'),
-        labelAs: z
-          .string()
-          .min(1)
-          .optional()
-          .describe('Optional output field for stringified label text derived from the difference'),
+        field: NonBlankStringSchema.describe('Numeric field read from the selected source and target rows'),
+        as: NonBlankStringSchema.describe('Output field for the numeric difference'),
+        labelAs: NonBlankStringSchema.optional().describe(
+          'Optional output field for stringified label text derived from the difference',
+        ),
         labelPrefix: z.string().optional().describe('Optional prefix for non-negative label text, commonly "+"'),
       })
       .describe('Difference pair measure operation'),
@@ -142,14 +140,11 @@ export const RelateTransformSchema = z
 export const NormalizeTransformSchema = z
   .object({
     kind: z.literal(PlotTransform.Normalize).describe('Discriminator: within-group percentage normalization'),
-    field: z
-      .string()
-      .min(1)
-      .describe(
-        'Non-negative numeric field whose within-group share is computed; finite negative values are rejected and non-finite values count as zero',
-      ),
+    field: NonBlankStringSchema.describe(
+      'Non-negative numeric field whose within-group share is computed; finite negative values are rejected and non-finite values count as zero',
+    ),
     groupBy: z
-      .array(z.string().min(1))
+      .array(NonBlankStringSchema)
       .min(1)
       .optional()
       .describe(
@@ -159,11 +154,9 @@ export const NormalizeTransformSchema = z
       .enum(NormalizeBasis)
       .optional()
       .describe("Output scale: 'fraction' -> share in [0,1], 'percent' -> share in [0,100]; default 'fraction'"),
-    as: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Output field for the normalized share; omit to overwrite the input field in place'),
+    as: NonBlankStringSchema.optional().describe(
+      'Output field for the normalized share; omit to overwrite the input field in place',
+    ),
   })
   .describe(
     'Normalize transform: divide each row value by its group sum, yielding a within-group share; row-preserving. Compose before a stack transform for percentage stacking',
@@ -172,37 +165,25 @@ export const NormalizeTransformSchema = z
 export const DeriveIntervalTransformSchema = z
   .object({
     kind: z.literal(PlotTransform.DeriveInterval).describe('Discriminator: per-row interval [start, end] derivation'),
-    from: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Value field driving a baseline-to-value interval (start = baseline, end = field value); omit only when using explicit startFrom / endFrom',
-      ),
+    from: NonBlankStringSchema.optional().describe(
+      'Value field driving a baseline-to-value interval (start = baseline, end = field value); omit only when using explicit startFrom / endFrom',
+    ),
     baseline: z
       .number()
       .optional()
       .describe(
         'Baseline the from-value interval starts at; default 0. Finite-only to keep the IR JSON round-trippable',
       ),
-    startFrom: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Explicit two-field mode: field giving the interval start (pairs with endFrom; takes precedence over from / baseline)',
-      ),
-    endFrom: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Explicit two-field mode: field giving the interval end (pairs with startFrom)'),
-    startField: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Output field for the interval start; default "y0" (matches interval/sector consumers)'),
-    endField: z.string().min(1).optional().describe('Output field for the interval end; default "y1"'),
+    startFrom: NonBlankStringSchema.optional().describe(
+      'Explicit two-field mode: field giving the interval start (pairs with endFrom; takes precedence over from / baseline)',
+    ),
+    endFrom: NonBlankStringSchema.optional().describe(
+      'Explicit two-field mode: field giving the interval end (pairs with startFrom)',
+    ),
+    startField: NonBlankStringSchema.optional().describe(
+      'Output field for the interval start; default "y0" (matches interval/sector consumers)',
+    ),
+    endField: NonBlankStringSchema.optional().describe('Output field for the interval end; default "y1"'),
   })
   .describe(
     'Derive-interval transform: per-row [start, end] from one value field (baseline-to-value) or two explicit fields; row-preserving. Distinct from stack (which accumulates across rows into a cumulative chain)',
@@ -217,16 +198,12 @@ export const JitterTransformSchema = z
       .describe(
         "Which positional field(s) to perturb; default 'x'. The jittered field MUST be a continuous numeric field (v1 jitter is a pre-scale offset in data units)",
       ),
-    xField: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Continuous numeric field jittered on the x axis; default "x". Read when axis is "x" or "both"'),
-    yField: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Continuous numeric field jittered on the y axis; default "y". Read when axis is "y" or "both"'),
+    xField: NonBlankStringSchema.optional().describe(
+      'Continuous numeric field jittered on the x axis; default "x". Read when axis is "x" or "both"',
+    ),
+    yField: NonBlankStringSchema.optional().describe(
+      'Continuous numeric field jittered on the y axis; default "y". Read when axis is "y" or "both"',
+    ),
     amount: NonNegativeNumberSchema.optional().describe(
       'Maximum absolute offset in DATA units added to each value pre-scale; offsets are drawn uniformly from [-amount, +amount]. Default 1. Data-space only',
     ),
@@ -265,11 +242,9 @@ export const DensityBandwidthSchema = z
 export const DensityTransformSchema = z
   .strictObject({
     kind: z.literal(PlotTransform.Density).describe('Discriminator: sample one-dimensional KDE density rows'),
-    field: z.string().min(1).describe('Continuous source field used as the one-dimensional KDE sample value'),
+    field: NonBlankStringSchema.describe('Continuous source field used as the one-dimensional KDE sample value'),
     groupBy: GroupBySchema,
-    bandwidth: DensityBandwidthSchema.optional().describe(
-      'KDE bandwidth strategy; default Silverman rule of thumb',
-    ),
+    bandwidth: DensityBandwidthSchema.optional().describe('KDE bandwidth strategy; default Silverman rule of thumb'),
     sampleCount: z
       .number()
       .int()
@@ -282,8 +257,8 @@ export const DensityTransformSchema = z
       .describe(
         'Optional density sampling extent [min, max]; omitted means observed extent padded by three bandwidths',
       ),
-    xAs: z.string().min(1).describe('Output field receiving each density sample position'),
-    densityAs: z.string().min(1).describe('Output field receiving each KDE density value'),
+    xAs: NonBlankStringSchema.describe('Output field receiving each density sample position'),
+    densityAs: NonBlankStringSchema.describe('Output field receiving each KDE density value'),
   })
   .superRefine((operation, ctx) => {
     if (operation.extent !== undefined && operation.extent[0] >= operation.extent[1]) {
@@ -327,12 +302,10 @@ export const SmoothMethodSchema = z
 export const SmoothTransformSchema = z
   .strictObject({
     kind: z.literal(PlotTransform.Smooth).describe('Discriminator: sample trend rows from a fitted smooth model'),
-    x: z.string().min(1).describe('Continuous source field used as the independent x value'),
-    y: z.string().min(1).describe('Continuous source field used as the dependent y value'),
+    x: NonBlankStringSchema.describe('Continuous source field used as the independent x value'),
+    y: NonBlankStringSchema.describe('Continuous source field used as the dependent y value'),
     groupBy: GroupBySchema,
-    method: SmoothMethodSchema.optional().describe(
-      'Smooth method; default ordinary least-squares linear regression',
-    ),
+    method: SmoothMethodSchema.optional().describe('Smooth method; default ordinary least-squares linear regression'),
     sampleCount: z
       .number()
       .int()
@@ -343,8 +316,8 @@ export const SmoothTransformSchema = z
       .tuple([z.number(), z.number()])
       .optional()
       .describe('Optional trend sampling extent [min, max]; omitted means the observed finite x range'),
-    xAs: z.string().min(1).describe('Output field receiving each trend sample x position'),
-    yAs: z.string().min(1).describe('Output field receiving each predicted y value'),
+    xAs: NonBlankStringSchema.describe('Output field receiving each trend sample x position'),
+    yAs: NonBlankStringSchema.describe('Output field receiving each predicted y value'),
   })
   .superRefine((operation, ctx) => {
     if (operation.extent !== undefined && operation.extent[0] >= operation.extent[1]) {
@@ -388,15 +361,14 @@ export const PlotBuiltinTransformSchema = z
 
 const ExternalTransformSchema = z
   .looseObject({
-    kind: z
-      .string()
-      .min(1)
-      .refine(kind => !RESERVED_TRANSFORM_KINDS.has(kind) && !BUILTIN_PLOT_TRANSFORM_KINDS.has(kind), {
+    kind: NonBlankStringSchema.refine(
+      kind => !RESERVED_TRANSFORM_KINDS.has(kind) && !BUILTIN_PLOT_TRANSFORM_KINDS.has(kind),
+      {
         message: 'external transform kind must not collide with a built-in or removed transform kind',
-      })
-      .describe(
-        'Discriminator: externally registered transform operation kind; must be a non-empty, non-reserved identifier registered through options.transformDefinitions',
-      ),
+      },
+    ).describe(
+      'Discriminator: externally registered transform operation kind; must be a non-blank, non-reserved identifier registered through options.transformDefinitions',
+    ),
   })
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);

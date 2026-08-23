@@ -1,4 +1,4 @@
-import { NonNegativeIntegerSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeIntegerSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { DeepReadonly } from '../../shared';
@@ -27,15 +27,15 @@ export const TableCellSourceSchema = z
       kind: z
         .literal(TableCellSourceKind.Field)
         .describe('Discriminator for a Cell derived from an external data field.'),
-      reference: z.string().min(1).describe('External dataset reference used by the Table root.'),
+      reference: NonBlankStringSchema.describe('External dataset reference used by the Table root.'),
       sourceIndex: NonNegativeIntegerSchema.describe('Stable source row index in the external dataset.'),
-      field: z.string().min(1).describe('Non-empty field name or dotted path read from the source row.'),
+      field: NonBlankStringSchema.describe('Non-blank field name or dotted path read from the source row.'),
     }),
     z.strictObject({
       kind: z
         .literal(TableCellSourceKind.Generated)
         .describe('Discriminator for content synthesized by a structure definition.'),
-      structureKind: z.string().min(1).describe('Structure provider kind that generated the Cell.'),
+      structureKind: NonBlankStringSchema.describe('Structure provider kind that generated the Cell.'),
     }),
   ])
   .describe('Runtime-only Table Cell source identity.');
@@ -46,7 +46,7 @@ export const TableStructureOutputSchema = z
     rows: z
       .array(
         z.strictObject({
-          id: z.string().min(1).describe('Stable row id supplied by the structure definition.'),
+          id: NonBlankStringSchema.describe('Stable row id supplied by the structure definition.'),
           kind: TableRowKindSchema.describe('Semantic row kind.'),
           sourceIndex: NonNegativeIntegerSchema.optional().describe(
             'Optional external source row index for a body row.',
@@ -57,15 +57,15 @@ export const TableStructureOutputSchema = z
     columns: z
       .array(
         z.strictObject({
-          id: z.string().min(1).describe('Stable column id supplied by the structure definition.'),
-          field: z.string().min(1).optional().describe('Optional external field bound to the column.'),
+          id: NonBlankStringSchema.describe('Stable column id supplied by the structure definition.'),
+          field: NonBlankStringSchema.optional().describe('Optional external field bound to the column.'),
         }),
       )
       .describe('Ordered canonical column candidates.'),
     cells: z
       .array(
         z.strictObject({
-          id: z.string().min(1).describe('Stable Cell id supplied by the structure definition.'),
+          id: NonBlankStringSchema.describe('Stable Cell id supplied by the structure definition.'),
           row: NonNegativeIntegerSchema.describe('Zero-based index into output rows.'),
           column: NonNegativeIntegerSchema.describe('Zero-based index into output columns.'),
           payload: TableCellPayloadSchema.describe('Validated Cell value or direct Core content.'),

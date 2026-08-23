@@ -1,3 +1,4 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { ThemeMode } from '../../shared';
@@ -61,7 +62,7 @@ const isPlainObjectContainer = (input: unknown): input is Record<string, unknown
 };
 
 const ThemeObjectSchema = z.strictObject({
-  style: z.string().min(1).optional().describe('Sparse visual personality name inherited from the enclosing Theme.'),
+  style: NonBlankStringSchema.optional().describe('Sparse visual personality name inherited from the enclosing Theme.'),
   mode: z.enum(ThemeMode).optional().describe('Sparse light or dark environment inherited from the enclosing Theme.'),
 });
 

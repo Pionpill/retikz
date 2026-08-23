@@ -1,14 +1,12 @@
-import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import { CssColorSchema } from '@retikz/core';
+import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { BUILTIN_SCALE_TYPES, PlotScale } from './constants';
 
-export const ColorSchemeNameSchema = z
-  .string()
-  .min(1)
-  .describe(
-    'Color scheme name: a built-in scheme (e.g. viridis / rdbu) or a custom name registered via options.colorSchemes. Validated as a non-empty string here; an unknown name fails loud at lowering. Interpolator functions never enter the IR — only the name string',
-  );
+export const ColorSchemeNameSchema = NonBlankStringSchema.describe(
+  'Color scheme name: a built-in scheme (e.g. viridis / rdbu) or a custom name registered via options.colorSchemes. Validated as a non-blank string here; an unknown name fails loud at lowering. Interpolator functions never enter the IR — only the name string',
+);
 
 export const CategoryValueSchema = z
   .union([z.string(), z.number()])
@@ -46,7 +44,7 @@ const ContinuousPositionDomainShape = {
 export const LinearScaleSchema = z
   .object({
     type: z.literal(PlotScale.Linear).describe('Discriminator: continuous linear scale'),
-    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
     domain: z
       .tuple([z.number(), z.number()])
       .optional()
@@ -66,7 +64,7 @@ export const BandScaleSchema = z
     type: z
       .literal(PlotScale.Band)
       .describe('Discriminator: categorical band scale; each category occupies one equal-width band'),
-    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
     domain: z
       .array(CategoryValueSchema)
       .optional()
@@ -97,7 +95,7 @@ export const PointScaleSchema = z
     type: z
       .literal(PlotScale.Point)
       .describe('Discriminator: categorical point scale; categories land on evenly spaced points (zero bandwidth)'),
-    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
     domain: z
       .array(CategoryValueSchema)
       .optional()
@@ -112,13 +110,13 @@ export const OrdinalScaleSchema = z
     type: z
       .literal(PlotScale.Ordinal)
       .describe('Discriminator: ordinal scale mapping a discrete domain to a discrete output range (typically colors)'),
-    name: z.string().min(1).describe('Scale name; referenced by a non-positional channel scale ref'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional channel scale ref'),
     domain: z
       .array(CategoryValueSchema)
       .optional()
       .describe('Ordered category list; omit to infer the distinct field values in data-encounter order at lowering'),
     range: z
-      .array(z.string())
+      .array(CssColorSchema)
       .optional()
       .describe(
         'Output values cycled across the domain (e.g. color strings); omit to use a default categorical color scheme',
@@ -129,7 +127,7 @@ export const OrdinalScaleSchema = z
 export const TimeScaleSchema = z
   .object({
     type: z.literal(PlotScale.Time).describe('Discriminator: continuous time scale over epoch-millisecond instants'),
-    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
     domain: z
       .tuple([z.number(), z.number()])
       .optional()
@@ -152,7 +150,7 @@ export const LogScaleSchema = z
     type: z
       .literal(PlotScale.Log)
       .describe('Discriminator: continuous logarithmic scale (domain must be strictly positive)'),
-    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
     domain: z
       .tuple([z.number(), z.number()])
       .optional()
@@ -175,7 +173,7 @@ export const LogScaleSchema = z
 export const PowScaleSchema = z
   .object({
     type: z.literal(PlotScale.Pow).describe('Discriminator: continuous power scale'),
-    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
     domain: z
       .tuple([z.number(), z.number()])
       .optional()
@@ -198,7 +196,7 @@ export const SqrtScaleSchema = z
     type: z
       .literal(PlotScale.Sqrt)
       .describe('Discriminator: continuous square-root scale (pow with exponent 0.5; area-perceptual)'),
-    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y or a size channel'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y or a size channel'),
     domain: z
       .tuple([z.number(), z.number()])
       .optional()
@@ -226,7 +224,7 @@ export const SymlogScaleSchema = z
       .describe(
         'Discriminator: continuous symmetric-log scale (linear near zero, logarithmic in the tails; admits zero and negative values)',
       ),
-    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
     domain: z
       .tuple([z.number(), z.number()])
       .optional()
@@ -259,7 +257,7 @@ export const RadialScaleSchema = z
       .describe(
         'Discriminator: continuous radial scale whose output radius is area-true (the square-root mapping that makes encoded area proportional to value)',
       ),
-    name: z.string().min(1).describe('Scale name; referenced by coordinate.x / coordinate.y or a polar radius role'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y or a polar radius role'),
     domain: z
       .tuple([z.number(), z.number()])
       .optional()
@@ -283,7 +281,7 @@ export const SequentialColorScaleSchema = z
     type: z
       .literal(PlotScale.Sequential)
       .describe('Discriminator: continuous sequential color scale (monotone quantity to a one-directional color band)'),
-    name: z.string().min(1).describe('Scale name; referenced by a non-positional color channel scale ref'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional color channel scale ref'),
     domain: z
       .tuple([z.number(), z.number()])
       .optional()
@@ -294,7 +292,7 @@ export const SequentialColorScaleSchema = z
       'Named color scheme to interpolate across the domain; a built-in name or a custom one registered via options.colorSchemes; omit to default to viridis at lowering. Overridden by range when both are given',
     ),
     range: z
-      .tuple([z.string(), z.string()])
+      .tuple([CssColorSchema, CssColorSchema])
       .optional()
       .describe(
         '[low, high] endpoint colors that override scheme; omit to derive endpoints from the named scheme at lowering',
@@ -313,7 +311,7 @@ export const DivergingColorScaleSchema = z
       .describe(
         'Discriminator: continuous diverging color scale (a quantity with a meaningful midpoint to a two-sided color band)',
       ),
-    name: z.string().min(1).describe('Scale name; referenced by a non-positional color channel scale ref'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional color channel scale ref'),
     domain: z
       .tuple([z.number(), z.number(), z.number()])
       .optional()
@@ -324,7 +322,7 @@ export const DivergingColorScaleSchema = z
       'Named diverging color scheme to interpolate around the midpoint; a built-in name or a custom one registered via options.colorSchemes; omit to default to rdbu at lowering. Overridden by range when both are given',
     ),
     range: z
-      .tuple([z.string(), z.string(), z.string()])
+      .tuple([CssColorSchema, CssColorSchema, CssColorSchema])
       .optional()
       .describe(
         '[low, mid, high] colors that override scheme; omit to derive the two-sided band from the named scheme at lowering',
@@ -343,7 +341,7 @@ export const QuantizeColorScaleSchema = z
       .describe(
         'Discriminator: quantize color scale (a continuous domain cut into equal-width bins, each bin a discrete color)',
       ),
-    name: z.string().min(1).describe('Scale name; referenced by a non-positional color channel scale ref'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional color channel scale ref'),
     domain: z
       .tuple([z.number(), z.number()])
       .optional()
@@ -362,7 +360,7 @@ export const QuantizeColorScaleSchema = z
       'Named color scheme sampled at count evenly spaced points to produce the discrete bin colors; a built-in name or a custom one registered via options.colorSchemes; omit to default to viridis at lowering. Overridden by range when both are given',
     ),
     range: z
-      .array(z.string())
+      .array(CssColorSchema)
       .min(2)
       .optional()
       .describe('Explicit discrete bin colors that override scheme; the array length is the bin count'),
@@ -378,7 +376,7 @@ export const ThresholdColorScaleSchema = z
       .describe(
         'Discriminator: threshold color scale (user-defined breakpoints cut the domain into bins, each bin a discrete color)',
       ),
-    name: z.string().min(1).describe('Scale name; referenced by a non-positional color channel scale ref'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional color channel scale ref'),
     breakpoints: z
       .array(z.number())
       .min(1)
@@ -389,7 +387,7 @@ export const ThresholdColorScaleSchema = z
       'Named color scheme sampled at breakpoints.length + 1 evenly spaced points to produce the discrete bin colors; a built-in name or a custom one registered via options.colorSchemes; omit to default to viridis at lowering. Overridden by range when both are given',
     ),
     range: z
-      .array(z.string())
+      .array(CssColorSchema)
       .min(2)
       .optional()
       .describe(
@@ -407,7 +405,7 @@ export const QuantileColorScaleSchema = z
       .describe(
         'Discriminator: quantile color scale (the data is cut at quantiles into bins of roughly equal sample count, each bin a discrete color)',
       ),
-    name: z.string().min(1).describe('Scale name; referenced by a non-positional color channel scale ref'),
+    name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional color channel scale ref'),
     count: z
       .number()
       .int()
@@ -420,7 +418,7 @@ export const QuantileColorScaleSchema = z
       'Named color scheme sampled at count evenly spaced points to produce the discrete bin colors; a built-in name or a custom one registered via options.colorSchemes; omit to default to viridis at lowering. Overridden by range when both are given',
     ),
     range: z
-      .array(z.string())
+      .array(CssColorSchema)
       .min(2)
       .optional()
       .describe('Explicit discrete bin colors that override scheme; the array length is the bin count'),
@@ -453,19 +451,14 @@ export const ScaleSchema = z
 
 export const CustomScaleSchema = z
   .looseObject({
-    type: z
-      .string()
-      .min(1)
-      .refine(type => !BUILTIN_SCALE_TYPES.has(type), {
-        message: 'custom scale type must not collide with a built-in scale type',
-      })
-      .describe(
-        'Discriminator: custom scale op type; any non-empty, non-built-in identifier registered through options.scaleDefinitions',
-      ),
-    name: z
-      .string()
-      .min(1)
-      .describe('Scale name; referenced by a coordinate role or a non-positional channel scale ref'),
+    type: NonBlankStringSchema.refine(type => !BUILTIN_SCALE_TYPES.has(type), {
+      message: 'custom scale type must not collide with a built-in scale type',
+    }).describe(
+      'Discriminator: custom scale op type; any non-blank, non-built-in identifier registered through options.scaleDefinitions',
+    ),
+    name: NonBlankStringSchema.describe(
+      'Scale name; referenced by a coordinate role or a non-positional channel scale ref',
+    ),
   })
   .describe(
     'Custom scale op: type is any non-built-in identifier plus a name; its config is validated at lowering time against the matching ScaleDefinition supplied via options.scaleDefinitions',

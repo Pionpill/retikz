@@ -1,5 +1,5 @@
 import { BoxSpacingSchema, CompositeBaseSchema, NodeSchema, RectangleStepSchema, ScopePropsSchema } from '@retikz/core';
-import { NonNegativeNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
@@ -29,7 +29,7 @@ const FrameBaseSchema = CompositeBaseSchema.extend({
   namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('frame').describe('Composite type for a bordered semantic group of Core nodes.'),
   ...ScopePropsSchema.shape,
-  id: z.string().min(1).describe('Stable identity for the lowered outer Scope.'),
+  id: NonBlankStringSchema.describe('Stable identity for the lowered outer Scope.'),
   localNamespace: ScopePropsSchema.shape.localNamespace.default(false),
   boundingShape: ScopePropsSchema.shape.boundingShape.default('rectangle'),
   border: FrameBorderSchema.default({ style: { stroke: 'currentColor', strokeWidth: 1 } }).describe(

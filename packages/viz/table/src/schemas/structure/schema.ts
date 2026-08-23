@@ -1,4 +1,5 @@
 import { JsonValueSchema } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { ManualTableCellSchema, TableCellLayoutSchema, TableCellPayloadSchema } from '../cell';
@@ -10,7 +11,7 @@ export const TableRowKindSchema = z.enum(TableRowKind).describe('Semantic kind o
 
 export const CustomTableStructureSchema = z
   .object({
-    kind: z.string().min(1).describe('Custom Table structure provider kind.'),
+    kind: NonBlankStringSchema.describe('Custom Table structure provider kind.'),
   })
   .catchall(JsonValueSchema)
   .superRefine((operation, context) => {
@@ -27,8 +28,8 @@ export const CustomTableStructureSchema = z
 
 export const TableDetailColumnSchema = z
   .strictObject({
-    id: z.string().min(1).describe('Stable detail column id.'),
-    field: z.string().min(1).describe('Data field name or dotted path read from each source row.'),
+    id: NonBlankStringSchema.describe('Stable detail column id.'),
+    field: NonBlankStringSchema.describe('Data field name or dotted path read from each source row.'),
     header: TableCellPayloadSchema.optional().describe(
       'Optional column header payload. Omitted fields present the column id as text.',
     ),

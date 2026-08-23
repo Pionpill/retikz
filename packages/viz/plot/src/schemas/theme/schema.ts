@@ -1,5 +1,5 @@
 import { PaintValueSchema } from '@retikz/core';
-import { NonNegativeNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import {
@@ -28,7 +28,7 @@ const ThemeAxisTickLabelsSchema = z
     z.strictObject({
       gap: NonNegativeNumberSchema.optional().describe('Default gap between tick end and tick label center'),
       rotate: z.number().optional().describe('Default tick label rotation in degrees around the label center'),
-      anchor: z.string().min(1).optional().describe('Default semantic anchor hint for tick labels'),
+      anchor: NonBlankStringSchema.optional().describe('Default semantic anchor hint for tick labels'),
       layout: AxisTickLabelLayoutSchema.optional().describe('Default tick label adaptive layout strategy'),
       ...GuideTextStyleSchema.shape,
     }),

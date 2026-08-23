@@ -1,3 +1,4 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type {
@@ -19,13 +20,13 @@ import { applyTableCellContentStyle, parsePresentedChild, presentCellValue } fro
 const ResolvedTableCellPresentationInputSchema = z.discriminatedUnion('kind', [
   z.strictObject({
     kind: z.literal(TableCellPayloadKind.Value),
-    cellId: z.string().min(1),
+    cellId: NonBlankStringSchema,
     presentation: TablePresentationRefSchema,
     appearance: TableCellAppearanceSchema,
   }),
   z.strictObject({
     kind: z.literal(TableCellPayloadKind.Content),
-    cellId: z.string().min(1),
+    cellId: NonBlankStringSchema,
     appearance: TableCellAppearanceSchema,
   }),
 ]);

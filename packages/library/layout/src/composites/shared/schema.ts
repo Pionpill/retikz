@@ -1,5 +1,5 @@
 import { BoxSpacingSchema, ChildSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
-import { NonNegativeIntegerSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeIntegerSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import {
@@ -85,7 +85,7 @@ export const LayoutDistributionSchema = z
 export const LayoutItemBaseSchema = z
   .strictObject({
     kind: z.enum(LayoutItemKind).describe('Discriminator selecting the owning Layout container.'),
-    key: z.string().min(1).describe('Container-local stable authored item identity.'),
+    key: NonBlankStringSchema.describe('Container-local stable authored item identity.'),
     child: ChildSchema.describe('JSON-safe Core child laid out by the container.'),
     margin: LayoutSpacingSchema.default(0).describe('Item margin outside the parent allocation slot.'),
   })
@@ -149,7 +149,7 @@ export const LayoutArtifactOverflowSchema = z
 
 export const LayoutArtifactAlignmentGuideSchema = z
   .strictObject({
-    name: z.string().min(1).describe('Alignment guide name selected for this item placement.'),
+    name: NonBlankStringSchema.describe('Alignment guide name selected for this item placement.'),
     position: z.number().describe('Finite translated guide position in container allocation coordinates.'),
     fallback: z.boolean().describe('Whether the selected position falls back to an allocation edge.'),
   })
@@ -157,7 +157,7 @@ export const LayoutArtifactAlignmentGuideSchema = z
 
 export const LayoutArtifactItemBaseSchema = z
   .strictObject({
-    key: z.string().min(1).describe('Container-local authored item identity.'),
+    key: NonBlankStringSchema.describe('Container-local authored item identity.'),
     sourceIndex: NonNegativeIntegerSchema.describe('Zero-based authored item order.'),
     marginBounds: LayoutArtifactRectSchema.describe('Assigned slot expanded by resolved item margins.'),
     slotBounds: LayoutArtifactRectSchema.describe('Final parent-assigned child slot without margins.'),

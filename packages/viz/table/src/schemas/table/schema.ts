@@ -1,5 +1,6 @@
 import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
 import { DataReferenceSchema } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableCellVisualEncodingSchema } from '../encoding';
@@ -14,7 +15,7 @@ const TableBaseSchema = CompositeBaseSchema.extend({
     .literal(TABLE_NAMESPACE)
     .describe('Tier 2 namespace that routes this node to the Table composite definition.'),
   type: z.literal(TableComposite.Table).describe('Composite type for the top-level Table specification.'),
-  id: z.string().min(1).optional().describe('Optional stable Table id used by the lowered root Scope.'),
+  id: NonBlankStringSchema.optional().describe('Optional stable Table id used by the lowered root Scope.'),
   layout: TableLayoutSchema.optional().describe(
     'Two-dimensional Table track, gap, and border layout options. Omitted fields use the pipeline defaults.',
   ),

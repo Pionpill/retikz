@@ -1,4 +1,9 @@
-import { NonNegativeNumberSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
+import {
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  NormalizedFractionSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { z } from 'zod';
 
 import { Anchor, CenterAnchor } from '../../shared';
@@ -6,7 +11,7 @@ import { JsonValueSchema } from '../json';
 import { AnimationDirection, AnimationFill, AnimationProperty, AnimationTrigger } from './constants';
 
 export const EasingSchema = z
-  .union([z.string().min(1), z.tuple([z.number(), z.number(), z.number(), z.number()])])
+  .union([NonBlankStringSchema, z.tuple([z.number(), z.number(), z.number(), z.number()])])
   .describe(
     'Easing curve: built-in easing name, custom easing name, or cubic-bezier tuple [x1, y1, x2, y2]. Omitted fields use linear easing.',
   );
@@ -27,7 +32,9 @@ export const KeyframeSchema = z
 
 export const EventTriggerSchema = z
   .object({
-    onEvent: z.string().min(1).describe('Runtime event name that starts playback. Only the event name enters the IR.'),
+    onEvent: NonBlankStringSchema.describe(
+      'Runtime event name that starts playback. Only the event name enters the IR.',
+    ),
   })
   .describe('Runtime event trigger descriptor.');
 
@@ -50,12 +57,9 @@ export const OriginSchema = z
 
 export const AnimationTrackSchema = z
   .object({
-    property: z
-      .string()
-      .min(1)
-      .describe(
-        'Animated property name. Built-ins have refined value types; custom names accept JSON values. viewBox is scene-root only.',
-      ),
+    property: NonBlankStringSchema.describe(
+      'Animated property name. Built-ins have refined value types; custom names accept JSON values. viewBox is scene-root only.',
+    ),
     keyframes: z
       .array(KeyframeSchema)
       .min(1)

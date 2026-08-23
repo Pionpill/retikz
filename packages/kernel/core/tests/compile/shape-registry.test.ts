@@ -265,7 +265,7 @@ describe('Shape registry — error path', () => {
     expect(() => compileToScene(ir).scene).toThrow(/ellipse, polygon, rectangle/);
   });
 
-  it('unknown_shape_string_in_schema_passes_validation: schema accepts any non-empty string', () => {
+  it('unknown_shape_string_in_schema_passes_validation: schema accepts any non-blank string', () => {
     expect(NodeSchema.safeParse({ type: 'node', shape: 'cloud', position: [0, 0] }).success).toBe(true);
     expect(NodeSchema.safeParse({ type: 'node', shape: '', position: [0, 0] }).success).toBe(false);
   });

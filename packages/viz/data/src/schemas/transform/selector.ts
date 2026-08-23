@@ -1,5 +1,10 @@
 import { JsonObjectSchema } from '@retikz/core';
-import { NonNegativeIntegerSchema, NonNegativeNumberSchema, PositiveIntegerSchema } from '@retikz/foundation';
+import {
+  NonBlankStringSchema,
+  NonNegativeIntegerSchema,
+  NonNegativeNumberSchema,
+  PositiveIntegerSchema,
+} from '@retikz/foundation';
 import { z } from 'zod';
 
 import { DataSortOrder, RESERVED_SELECTOR_OPERATION_KINDS, RowSelectorTie, SelectorOperationKind } from './constants';
@@ -7,7 +12,7 @@ import { DataSortOrder, RESERVED_SELECTOR_OPERATION_KINDS, RowSelectorTie, Selec
 /** row selector 排序规则 schema；用于 first / last / nth 等代表行选择 */
 export const OrderBySchema = z
   .strictObject({
-    field: z.string().min(1).describe('Order field'),
+    field: NonBlankStringSchema.describe('Order field'),
     order: z.enum(DataSortOrder).optional().describe('Sort direction; default ascending'),
   })
   .describe('Row ordering rule');
@@ -17,7 +22,7 @@ const createMinMaxSelectorOperationSchema = <TKind extends string>(kind: TKind) 
   z
     .strictObject({
       kind: z.literal(kind).describe('Discriminator: min/max row selector'),
-      by: z.string().min(1).describe('Numeric ranking field'),
+      by: NonBlankStringSchema.describe('Numeric ranking field'),
       tie: z.enum(RowSelectorTie).optional().describe('Tie-breaking strategy; default first'),
     })
     .describe('Min/max row selector operation');
@@ -40,7 +45,7 @@ const createTopBottomSelectorOperationSchema = <TKind extends string>(kind: TKin
   z
     .strictObject({
       kind: z.literal(kind).describe('Discriminator: top/bottom row selector'),
-      by: z.string().min(1).describe('Numeric ranking field'),
+      by: NonBlankStringSchema.describe('Numeric ranking field'),
       n: PositiveIntegerSchema.describe('Selected row count'),
       tie: z.enum(RowSelectorTie).optional().describe('Tie-breaking strategy; default first'),
     })
@@ -76,7 +81,7 @@ export const OutsideQuantileBandBoundarySchema = z
 export const OutsideQuantileBandSelectorOperationSchema = z
   .strictObject({
     kind: z.literal(SelectorOperationKind.OutsideQuantileBand).describe('Discriminator: outside-band selector'),
-    field: z.string().min(1).describe('Numeric source field'),
+    field: NonBlankStringSchema.describe('Numeric source field'),
     lowerP: z.number().min(0).max(1).describe('Lower quantile probability'),
     upperP: z.number().min(0).max(1).describe('Upper quantile probability'),
     boundary: OutsideQuantileBandBoundarySchema.optional().describe('Boundary strategy; default band'),
@@ -102,13 +107,9 @@ export const BuiltinSelectorOperationSchemas = Object.freeze({
 /** 外部 row selector operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供 */
 const ExternalSelectorOperationSchema = z
   .looseObject({
-    kind: z
-      .string()
-      .min(1)
-      .refine(operationKind => !RESERVED_SELECTOR_OPERATION_KINDS.has(operationKind), {
-        message: 'external selector kind must not collide with a built-in selector kind',
-      })
-      .describe('Discriminator: custom selector kind'),
+    kind: NonBlankStringSchema.refine(operationKind => !RESERVED_SELECTOR_OPERATION_KINDS.has(operationKind), {
+      message: 'external selector kind must not collide with a built-in selector kind',
+    }).describe('Discriminator: custom selector kind'),
   })
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);

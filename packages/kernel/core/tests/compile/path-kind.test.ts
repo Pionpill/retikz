@@ -1,3 +1,4 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -54,7 +55,7 @@ describe('Path kind registry', () => {
       name: 'highlight',
       schema: PathSchema.extend({
         kind: z.literal('highlight'),
-        kindOptions: z.strictObject({ stroke: z.string().min(1) }),
+        kindOptions: z.strictObject({ stroke: NonBlankStringSchema }),
       }),
       compile: context => {
         const base = context.emitStroke(context.path);
@@ -266,7 +267,7 @@ describe('Path kind registry', () => {
       name: 'highlight',
       schema: PathSchema.extend({
         kind: z.literal('highlight'),
-        kindOptions: z.strictObject({ stroke: z.string().min(1) }),
+        kindOptions: z.strictObject({ stroke: NonBlankStringSchema }),
       }),
       compile: context => context.emitStroke(context.path),
     });

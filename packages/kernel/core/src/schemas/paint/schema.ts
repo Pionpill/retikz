@@ -1,4 +1,9 @@
-import { NonNegativeIntegerSchema, NormalizedFractionSchema, PositiveNumberSchema } from '@retikz/foundation';
+import {
+  NonBlankStringSchema,
+  NonNegativeIntegerSchema,
+  NormalizedFractionSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { z } from 'zod';
 
 import { AngleDegreesSchema } from '../scalar';
@@ -110,12 +115,9 @@ export const PatternLineStyleCycleSchema = z
 export const PatternPaintSchema = z
   .object({
     kind: z.literal('pattern').describe('Discriminator for pattern paint.'),
-    shape: z
-      .string()
-      .min(1)
-      .describe(
-        'Pattern motif provider name. Built-ins are `lines`, `dots`, and `grid`; custom names must be registered via CompileOptions.patterns.',
-      ),
+    shape: NonBlankStringSchema.describe(
+      'Pattern motif provider name. Built-ins are `lines`, `dots`, and `grid`; custom names must be registered via CompileOptions.patterns.',
+    ),
     color: PatternLineStyleSchema.shape.color.describe('Motif color; any CSS color, defaults to `currentColor`'),
     background: CssColorSchema.optional().describe('Tile background fill; omitted = transparent'),
     size: PositiveNumberSchema.optional().describe(
@@ -150,7 +152,7 @@ export const PatternPaintSchema = z
 export const ImagePaintSchema = z
   .object({
     kind: z.literal('image').describe('Discriminator for image paint.'),
-    href: z.string().min(1).describe('Image URL (http(s) or data URI)'),
+    href: NonBlankStringSchema.describe('Image URL (http(s) or data URI)'),
     fit: z
       .enum(ImageFit)
       .optional()

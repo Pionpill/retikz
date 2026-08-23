@@ -5,22 +5,18 @@ import { z } from 'zod';
 
 import { TableVisualChannel } from '../../schemas';
 
-const descriptorColorSchema = CssColorSchema.refine(value => NonBlankStringSchema.safeParse(value).success, {
-  message: 'Table Legend descriptor color must not be empty or whitespace.',
-});
-
 const strictlyIncreasingEdges = (edges: ReadonlyArray<number>): boolean =>
   edges.every((edge, index) => index === 0 || edge > edges[index - 1]);
 
 export const TableLegendDescriptorSchema = z
   .strictObject({
-    encodingId: z.string().min(1).describe('Owning Table visual encoding id.'),
+    encodingId: NonBlankStringSchema.describe('Owning Table visual encoding id.'),
     channel: z.enum(TableVisualChannel).describe('Table Cell appearance channel described by this Legend.'),
-    scaleName: z.string().min(1).describe('Resolved Table visual scale definition name.'),
+    scaleName: NonBlankStringSchema.describe('Resolved Table visual scale definition name.'),
     title: z.string().optional().describe('Optional Table-owned Legend title.'),
     form: z.enum(['ramp', 'swatch']).describe('Ramp or swatch Legend representation.'),
     domain: z.array(ScalarValueSchema).describe('Detached resolved visual scale domain.'),
-    range: z.array(descriptorColorSchema).min(1).describe('Detached nonempty resolved color range.'),
+    range: z.array(CssColorSchema).min(1).describe('Detached nonempty resolved color range.'),
     edges: z.array(z.number()).optional().describe('Optional strictly increasing threshold edges.'),
   })
   .superRefine((descriptor, context) => {

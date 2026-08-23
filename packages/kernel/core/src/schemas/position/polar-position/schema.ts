@@ -1,3 +1,4 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type { SharedPolarPosition } from '../../../shared';
@@ -9,7 +10,7 @@ export const PolarPositionSchema: z.ZodType<SharedPolarPosition> = z.lazy(() =>
   z
     .object({
       origin: z
-        .union([z.string().min(1), PositionSchema, PolarPositionSchema])
+        .union([NonBlankStringSchema, PositionSchema, PolarPositionSchema])
         .optional()
         .describe(
           'Origin reference: node id string, Cartesian [x, y], or nested PolarPosition. Omitted fields use [0, 0].',

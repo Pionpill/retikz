@@ -1,3 +1,4 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
@@ -199,7 +200,7 @@ describe('resolve/resource clip', () => {
       resolve: wrapperResolve,
       shapeSchema: z.strictObject({
         kind: z.literal('wrapper'),
-        child: z.intersection(z.object({ kind: z.string().min(1) }), JsonObjectSchema),
+        child: z.intersection(z.object({ kind: NonBlankStringSchema }), JsonObjectSchema),
       }),
       lower: (shape, context) => context.lower(shape.child),
     });

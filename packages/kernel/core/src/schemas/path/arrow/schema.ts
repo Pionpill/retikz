@@ -1,14 +1,12 @@
-import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { CssColorSchema, OpacitySchema } from '../../style';
 export const ArrowEndDetailSchema = z
   .strictObject({
-    shape: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Arrow shape provider name. Built-ins and registered custom names are accepted.'),
+    shape: NonBlankStringSchema.optional().describe(
+      'Arrow shape provider name. Built-ins and registered custom names are accepted.',
+    ),
     scale: PositiveNumberSchema.optional().describe(
       'Uniform arrow-tip scale applied to both `length` and `width`. Defaults to 1.',
     ),

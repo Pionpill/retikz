@@ -1,3 +1,4 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { AnimationTrackSchema } from '../animation';
@@ -70,11 +71,9 @@ export const ScopePropsSchema = z
   .strictObject({
     ...CascadingGraphicStyleSchema.shape,
     theme: ThemeSchema.optional().describe('Sparse Theme override inherited by this Scope descendants.'),
-    id: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.'),
+    id: NonBlankStringSchema.optional().describe(
+      'Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.',
+    ),
     localNamespace: z
       .boolean()
       .optional()
