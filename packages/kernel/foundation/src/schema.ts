@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import type { OpenString, ValueOf } from './types';
+
 /** 非空白字符串 schema */
 export const NonBlankStringSchema = z
   .string()
@@ -7,6 +9,14 @@ export const NonBlankStringSchema = z
     message: 'String must contain at least one non-whitespace character.',
   })
   .describe('String containing at least one non-whitespace character.');
+
+/** 从已知 const object enum 建立保留提示的开放非空字符串 schema */
+export const createOpenStringSchema = <const TValues extends Readonly<Record<string, string>>>(
+  values: TValues,
+): z.ZodType<OpenString<ValueOf<TValues>>> =>
+  z
+    .union([z.enum(values), NonBlankStringSchema.min(1)])
+    .describe('Known string values or any custom string containing at least one non-whitespace character.');
 
 /** 正数 schema */
 export const PositiveNumberSchema = z.number().positive().describe('Finite number greater than zero.');

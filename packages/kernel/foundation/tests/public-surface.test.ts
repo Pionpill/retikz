@@ -1,8 +1,14 @@
+import type { AssertEqual, WithRequiredProperties } from '@retikz/foundation';
+
 import * as foundation from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
+type RequiredName = WithRequiredProperties<Readonly<{ name?: string; note?: string }>, 'name'>;
+
+const withRequiredPropertiesContract: AssertEqual<RequiredName, Readonly<{ name: string; note?: string }>> = true;
+
 describe('foundation public surface', () => {
-  it('exports only the twelve runtime symbols from its root', () => {
+  it('exports only the thirteen runtime symbols from its root', () => {
     expect(Object.keys(foundation).sort()).toEqual(
       [
         'NonBlankStringSchema',
@@ -16,9 +22,14 @@ describe('foundation public surface', () => {
         'RetikzFoundationErrorCode',
         'assertNonEmptyString',
         'assertPositiveNumber',
+        'createOpenStringSchema',
         'isRetikzError',
       ].sort(),
     );
+  });
+
+  it('exports WithRequiredProperties as a type-only root contract', () => {
+    expect(withRequiredPropertiesContract).toBe(true);
   });
 
   it.each(['types', 'schema', 'assert', 'error'])('rejects the %s subpath', async subpath => {

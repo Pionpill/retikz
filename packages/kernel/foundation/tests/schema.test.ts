@@ -1,4 +1,7 @@
+import type { AssertEqual, OpenString, ValueOf } from '@retikz/foundation';
+
 import {
+  createOpenStringSchema,
   NonBlankStringSchema,
   NonNegativeIntegerSchema,
   NonNegativeNumberSchema,
@@ -7,6 +10,18 @@ import {
   PositiveNumberSchema,
 } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
+
+const TestRole = {
+  Participant: 'participant',
+  Activity: 'activity',
+} as const;
+
+const TestRoleSchema = createOpenStringSchema(TestRole);
+const testRoleTypeIsOpenString: AssertEqual<
+  z.infer<typeof TestRoleSchema>,
+  OpenString<ValueOf<typeof TestRole>>
+> = true;
 
 describe('NonBlankStringSchema', () => {
   it('preserves non-blank input verbatim', () => {
@@ -15,6 +30,27 @@ describe('NonBlankStringSchema', () => {
 
   it.each(['', ' ', '\t', '\n', '\u00a0', '\u2003', '\ufeff'])('rejects blank value %j', value => {
     expect(NonBlankStringSchema.safeParse(value).success).toBe(false);
+  });
+});
+
+describe('createOpenStringSchema', () => {
+  it('preserves built-in and custom non-blank strings with an OpenString result type', () => {
+    expect(testRoleTypeIsOpenString).toBe(true);
+    expect(TestRoleSchema.parse(TestRole.Participant)).toBe(TestRole.Participant);
+    expect(TestRoleSchema.parse(' custom.role ')).toBe(' custom.role ');
+  });
+
+  it.each(['', ' ', '\t', '\n', '\u00a0', '\u2003', '\ufeff'])('rejects blank value %j', value => {
+    expect(TestRoleSchema.safeParse(value).success).toBe(false);
+  });
+
+  it('keeps built-in enum hints and an open non-empty string branch in JSON Schema', () => {
+    expect(z.toJSONSchema(TestRoleSchema)).toMatchObject({
+      anyOf: [
+        { type: 'string', enum: ['participant', 'activity'] },
+        { type: 'string', minLength: 1 },
+      ],
+    });
   });
 });
 

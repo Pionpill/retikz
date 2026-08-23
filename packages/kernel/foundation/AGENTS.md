@@ -5,7 +5,7 @@
 ## 包职责契约
 
 - **解决的问题**：为 Kernel、Standard、Viz 与其它跨领域包提供无领域的原子类型工具、基础 Zod 校验、typed non-empty string 不变量和可分类错误骨架
-- **拥有的契约**：既有类型、断言与错误契约，以及 `NonBlankStringSchema`、`PositiveNumberSchema`、`NonNegativeNumberSchema`、`PositiveIntegerSchema`、`NonNegativeIntegerSchema` 与 `NormalizedFractionSchema`
+- **拥有的契约**：`ValueOf`、`AssertEqual`、`OpenString`、`WithRequiredProperties` 等无领域类型工具，既有断言与错误契约，六个无领域标量 schema，以及从 const object enum 建立开放非空字符串 schema 的 `createOpenStringSchema(values)`
 - **不拥有的能力**：IR、对象或领域 schema、parser、geometry、Definition / registry、Diagnostic、renderer、host state、领域错误码或领域恢复语义
 - **输入与输出**：基础 schema 把 unknown 校验为不变形的 string / number；其余契约接收已收窄字符串或结构化错误基础字段，输出 `void` 或 Foundation 错误 class hierarchy；不创建图形数据
 - **缺口流向**：对象结构、IR 与领域校验留在对应 owner；IR / compile 进入 Core；执行 identity / transaction / diagnostic 进入 Runtime；renderer 与领域 details 留在各自 owner
@@ -16,7 +16,9 @@
 - 只提供根入口；`./types`、`./assert`、`./error` 与其它 subpath 不属于公开 API
 - `src/` 固定为 `types.ts`、`schema.ts`、`assert.ts`、`error.ts`、`index.ts`；不得新增 `shared`、`utils`、`helpers` 或领域目录
 - `index.ts` 只用 `export *` 聚合四个 owner 文件，不写业务逻辑、包装或重命名
-- `schema.ts` 只承载闭合的无领域 string / number 原子；禁止对象、数组、coercion、transform、default、catch、参数化 range factory、颜色、几何或领域 refinement
+- `types.ts` 只承载无领域、无运行时代码的 TypeScript 类型投影；不得引入领域模型、运行时 helper 或重复上层 owner 语义
+- `schema.ts` 只承载无领域 string / number 原子，以及唯一受限的 `createOpenStringSchema(values)`；禁止对象、数组、coercion、transform、default、catch、参数化 range factory、颜色、几何或领域 refinement
+- `createOpenStringSchema(values)` 只接受 const object enum，并组合已知 enum branch 与非空白开放字符串 branch；不得查询 registry、注入领域默认或收窄为闭合集合
 - `z.number()` 已拒绝非有限数；不得增加无行为差异的 finite schema 或 `.finite()`
 - `NonBlankStringSchema` 与 `assertNonEmptyString` 使用同一空白定义，均不 trim 或改写合法输入
 - `assertNonEmptyString` 只接受 `string`，拒绝空串与全空白内容；未知值的收窄和 owner 错误语义由调用方负责
