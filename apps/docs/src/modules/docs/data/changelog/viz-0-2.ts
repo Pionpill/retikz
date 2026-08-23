@@ -128,8 +128,8 @@ export const vizV02: Release = {
             {
               label: { zh: 'Chart 所有权边界调整', en: 'Chart ownership boundary adjusted' },
               content: {
-                zh: 'Chart 只拥有 `chartThemeTokens` 的 presentation/recipe namespace，并原样转发 Plot owner 的 `plotThemeTokens`、`plotThemeTokenRules` 与 `plotTheme`；Chart 与 Plot 通过各自 Definition 接入同一 Core registry。',
-                en: 'Chart owns only the `chartThemeTokens` presentation/recipe namespace and forwards Plot-owned `plotThemeTokens`, `plotThemeTokenRules`, and `plotTheme` unchanged. Chart and Plot enter the same Core registry through their respective Definitions.',
+                zh: 'Chart Theme 改为按 owner 分片：Source 的 `theme.tokens.chart` 只由 Chart shell 消费，`theme.tokens.plot` 交给 Plot，`theme.tokens.recipe` 由当前 chartType schema 校验并消费；运行时 Definition 仍通过各自 owner 接入同一 Core registry。',
+                en: 'Chart Theme is split by owner: Source `theme.tokens.chart` is consumed by the Chart shell, `theme.tokens.plot` by Plot, and `theme.tokens.recipe` is validated and consumed by the current chartType schema. Runtime Definitions still enter the shared Core registry through their respective owners.',
               },
             },
           ],

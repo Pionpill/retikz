@@ -23,7 +23,7 @@ const Demo: FC = () => (
         fillOpacity={0.08}
         cornerRadius={4}
       >
-        type + config
+        family + chart
       </Node>
       <Node
         id="chart-presentation"
@@ -43,7 +43,7 @@ const Demo: FC = () => (
         fillOpacity={0.08}
         cornerRadius={4}
       >
-        canvas + theme
+        layout + Chart Theme
       </Node>
     </LogicFigureFrame>
     <LogicFigureFrame id="plot-owner">

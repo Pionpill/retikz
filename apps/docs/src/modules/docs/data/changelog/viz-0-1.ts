@@ -179,29 +179,29 @@ export const vizV01: Release = {
       stableDate: null,
       version: 'v0.1',
       description: {
-        zh: 'Tier 3 Chart 封装层：以完整 IRPlot 为数据与图形主链，在其外组合整图 presentation，并保持 renderer-neutral 的 canonical Chart 结果。',
-        en: 'The Tier 3 Chart wrapper: it keeps complete IRPlot as the data-and-graphics path, composes whole-chart presentation around it, and preserves a renderer-neutral canonical Chart result.',
+        zh: 'Tier 3 Chart 封装层：以 family 与 chartType 组织精确 Chart Source，在其外组合整图 presentation，并把 Chart marks 与独立 Plot fragment 接入统一解析主链。',
+        en: 'The Tier 3 Chart wrapper: it routes exact Chart Source through family and chartType, composes whole-chart presentation, and joins Chart marks with independent Plot fragments in one resolution path.',
       },
       highlights: [
         {
-          label: { zh: '单一 Chart 主链', en: 'One canonical Chart path' },
+          label: { zh: '单一 Chart 主链', en: 'One Chart resolution path' },
           content: {
-            zh: '基础 Chart 与已实现 typed Chart 在完整 IRPlot 后汇合为 `IRBaseChart`，由单一 `chart.base` provider 组合 Standard Surface、可选 Flex presentation 与唯一 Plot body；不再存在 DOM-only 标题或按 adapter 分叉的执行路径。',
-            en: 'Base Chart and implemented typed Charts converge on `IRBaseChart` after producing a complete IRPlot. One `chart.base` provider composes Standard Surface, optional Flex presentation, and the sole Plot body; there is no DOM-only title or adapter-specific execution path.',
+            zh: 'Parser 先用根 `type` 识别 family，再用 `recipe.chartType` 选择精确 recipe；recipe 生成共享部分与内建 semantic mark，Chart marks、独立 `plotExtension` fragment、presentation 和 Theme owner slices 进入同一 renderer-neutral 解析主链。',
+            en: 'The parser identifies the root `type` family, then selects the exact recipe from `recipe.chartType`. The recipe produces shared parts and a built-in semantic mark; Chart marks, the independent `plotExtension` fragment, presentation, and Theme owner slices share one renderer-neutral resolution path.',
           },
         },
         {
-          label: { zh: '核心包只拥有 canonical 契约', en: 'Canonical-only core package' },
+          label: { zh: 'Chart 领域契约归位', en: 'Chart domain contracts aligned' },
           content: {
-            zh: '`@retikz/chart` 根入口只公开 Base Source IR、resolve、canonical presentation 与样式契约；`/point` 只从各精确类型 owner 完整导出其 schema、IR、recipe 与 owned patch，不转发根入口。plain Input、normalizer 和创建入口统一由 `@retikz/chart-vanilla` 拥有。',
-            en: 'The `@retikz/chart` root exposes only Base Source IR, resolution, canonical presentation, and style contracts. Its `/point` entry exports only each exact type owner’s schema, IR, recipe, and owned patches without re-exporting the root. `@retikz/chart-vanilla` owns plain inputs, normalizers, and creation APIs.',
+            zh: '`@retikz/chart` 根入口公开 Chart Source schema、parser、resolve、固定 presentation 与 Theme 契约；`/point` 汇总 Point family 的精确 schema、IR、recipe、layer 与常量。plain Input、normalizer 和创建入口统一由 `@retikz/chart-vanilla` 拥有。',
+            en: 'The `@retikz/chart` root exposes the Chart Source schema, parser, resolution, fixed presentation, and Theme contracts. Its `/point` entry collects the Point family’s exact schemas, IR types, recipes, layers, and constants. `@retikz/chart-vanilla` owns plain inputs, normalizers, and creation APIs.',
           },
         },
         {
           label: { zh: '有序图内说明', en: 'Ordered in-chart presentation' },
           content: {
-            zh: '`title`、`subtitle`、`source` 与 `note` 使用默认样式直接进入图内；React headless marker 与 Vanilla plain record 可按作者出现顺序排在 Plot 上下，且整体覆盖同名 shorthand。',
-            en: '`title`, `subtitle`, `source`, and `note` render inside the chart with default styling. React headless markers and Vanilla plain records can appear above or below the Plot in authored order and override a same-preset shorthand as a whole.',
+            zh: '`title`、`subtitle`、`note` 与 `source` 使用默认样式进入图内，并按固定 `title → subtitle → plot → note → source` 槽位布局；React marker 出现顺序和 JSON 属性顺序都不改变语义，同槽位重复会 fail-loud。',
+            en: '`title`, `subtitle`, `note`, and `source` render with default styling in fixed `title → subtitle → plot → note → source` slots. React marker order and JSON property order have no semantic effect, and duplicate slots fail loudly.',
           },
         },
       ],
@@ -210,15 +210,15 @@ export const vizV01: Release = {
           version: 'alpha.1',
           date: '2026-08-12',
           summary: {
-            zh: '首次公开基础 Chart 与有序 presentation，并以 Standard Surface 包装完整图表内容。',
-            en: 'First public base Chart and ordered presentation, wrapped as complete chart content by Standard Surface.',
+            zh: '首次公开 family / chartType Chart Source 与固定 presentation，并以 Standard Surface 包装完整图表内容。',
+            en: 'First public family / chartType Chart Source and fixed presentation, wrapped as complete chart content by Standard Surface.',
           },
           items: [
             {
               label: { zh: '图内 title、subtitle、source、note', en: 'In-chart title, subtitle, source, and note' },
               content: {
-                zh: '四类唯一 preset 支持默认属性与 JSON-safe canonical result；没有 presentation 时 Surface 直接包裹 Plot，有 presentation 时按 authored order 经 Flex 布局后再包裹。',
-                en: 'The four unique presets support default props and a JSON-safe canonical result. Without presentation Surface wraps Plot directly; with presentation it wraps authored-order Flex layout.',
+                zh: '四个可选 slot 支持默认属性与 JSON-safe Source；解析始终按 `title → subtitle → plot → note → source` 组织，缺少 slot 只省略对应内容。',
+                en: 'The four optional slots support default properties and JSON-safe Source. Resolution always uses `title → subtitle → plot → note → source`, omitting only absent slots.',
               },
             },
           ],
@@ -230,15 +230,15 @@ export const vizV01: Release = {
       stableDate: null,
       version: 'v0.1',
       description: {
-        zh: 'Chart 的 React authoring 与 runtime 绑定：提供基础 Chart、typed Chart 与受限的 headless presentation marker。',
-        en: 'React authoring and runtime bindings for Chart: base Chart, typed Charts, and constrained headless presentation markers.',
+        zh: 'Chart 的 React authoring 与 runtime 绑定：提供 Source mode、typed Chart 与受限的 headless presentation / layer marker。',
+        en: 'React authoring and runtime bindings for Chart: Source mode, typed Charts, and constrained headless presentation / layer markers.',
       },
       highlights: [
         {
           label: { zh: '基础与 typed JSX authoring', en: 'Base and typed JSX authoring' },
           content: {
-            zh: '`Chart` 保留完整 Plot authoring；`ScatterChart`、`BubbleChart` 与 `ConnectedScatterChart` 把 JSX / props 转为精确 Vanilla Input，并调用对应 normalizer 后进入同一 Chart 主链。基础 API 从根入口导入，typed API 从 `/point` 导入，两个入口不互相转发。',
-            en: '`Chart` preserves complete Plot authoring. `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart` convert JSX / props into exact Vanilla inputs and call the matching normalizer before entering the shared Chart path. Import Base APIs from the root and typed APIs from `/point`; neither entry re-exports the other.',
+            zh: '`Chart` 接收精确 Source 与 presentation marker；`ScatterChart` 把 JSX / props 转为带 `encodings`、`properties` 与 `marks` 的精确 Vanilla Input，并调用对应 normalizer 后进入同一 Chart 主链。通用 API 从根入口导入，typed API 从 `/point` 导入。',
+            en: '`Chart` accepts exact Source and presentation markers. `ScatterChart` converts JSX / props with `encodings`, `properties`, and `marks` into an exact Vanilla input before entering the shared Chart path. Generic APIs come from the root and typed APIs from `/point`.',
           },
         },
       ],
@@ -247,8 +247,8 @@ export const vizV01: Release = {
           version: 'alpha.1',
           date: '2026-08-12',
           summary: {
-            zh: 'React adapter 提供图内 presentation marker、基础 Chart 与首批 point-family Chart 入口。',
-            en: 'The React adapter adds in-chart presentation markers, base Chart, and the first point-family Chart entries.',
+            zh: 'React adapter 提供图内 presentation marker、Source mode 与首批 point-family typed Chart 入口。',
+            en: 'The React adapter adds in-chart presentation markers, Source mode, and the first point-family typed Chart entries.',
           },
           items: [],
         },
@@ -266,8 +266,8 @@ export const vizV01: Release = {
         {
           label: { zh: 'Plain-data 与单次编译', en: 'Plain data and one compile' },
           content: {
-            zh: '根入口公开 `InputChart` / `normalizeChart`，`/point` 只公开精确的 `InputXxxChart` / `normalizeXxxChart` / `createXxxChart`，两个入口不互相转发；创建函数返回 canonical Chart 与完整 contribution，`renderChart` 从同一次 Core compile 生成 SVG 与 compile result。',
-            en: 'The root exposes `InputChart` / `normalizeChart`, while `/point` exposes only exact `InputXxxChart` / `normalizeXxxChart` / `createXxxChart` APIs, with neither entry re-exporting the other. Factories return a canonical Chart plus its complete contribution, and `renderChart` produces its SVG and compile result from the same Core compile.',
+            zh: '根入口只提供 `ChartInput`、InputEmbed 与 `renderChart`；`/point` 公开精确的 `CreateXxxChartInput`、`normalizeXxxChart` 与 `createXxxChart`，具体 chartType provider 随 factory 安装；创建函数返回精简 Source、可嵌入 Input 与完整 contribution，`renderChart` 从同一次 Core compile 生成 SVG 与 compile result。',
+            en: 'The root exposes only `ChartInput`, InputEmbed, and `renderChart`, while `/point` exposes exact `CreateXxxChartInput`, `normalizeXxxChart`, and `createXxxChart` APIs; each factory installs its concrete chartType provider. Factories return concise Source, embeddable Input, and a complete contribution, while `renderChart` produces its SVG and compile result from the same Core compile.',
           },
         },
       ],

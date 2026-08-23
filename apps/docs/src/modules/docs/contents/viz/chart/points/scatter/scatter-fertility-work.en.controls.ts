@@ -33,7 +33,7 @@ export const scatterFertilityWorkControls = definePreviewControls({
       controls: [
         {
           kind: 'select',
-          id: SCATTER_FERTILITY_WORK_CONTROL_IDS.encoding,
+          id: SCATTER_FERTILITY_WORK_CONTROL_IDS.channel,
           label: 'Map to',
           defaultValue: 'color',
           options: [
@@ -50,7 +50,7 @@ export const scatterFertilityWorkControls = definePreviewControls({
 export const previewControlContract = {
   controls: scatterFertilityWorkControls,
   canonicalValues: {
-    [SCATTER_FERTILITY_WORK_CONTROL_IDS.encoding]: 'color',
+    [SCATTER_FERTILITY_WORK_CONTROL_IDS.channel]: 'color',
   },
-  relatedApis: ['PointMark.color', 'PointMark.shape', 'Legend.channel'],
+  relatedApis: ['ScatterChart.encodings', 'ScatterMark.properties'],
 } satisfies PreviewControlContract;

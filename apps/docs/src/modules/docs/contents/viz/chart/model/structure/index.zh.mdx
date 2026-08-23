@@ -1,151 +1,149 @@
 ---
 title: 结构与类型
-description: 从读者视角理解 Chart Source 的字段布局、类型差异与解析过程。
+description: 理解 Chart Source 的 family、chartType、精确 schema、marks 与 Plot 扩展边界。
 ---
 
-如果你只想描述“数据怎样映射成图形”，可以直接使用 Plot。当你已经知道要做散点图、气泡图或连接散点图时，Chart 提供带有默认语义的类型入口，减少需要记忆的配置，并统一处理标题、来源、画布与主题等整图能力。
-
-基于 `type` 的 Chart 封装更加容易上手，也更容易被 LLM 理解。等你熟悉 Plot 后，还可以以某个 Chart 类型生成的图形为基础，通过 `plot` 成员添加 Plot 内容，构造更复杂的图形。下面先用一份 Source 建立整体印象，再展开字段职责和解析过程。
+Chart Source 把“这是什么图”与“这张图如何完整呈现”分开。根 `type` 只负责稳定的 family 分类；嵌套 `recipe.chartType` 才选择全局唯一的 recipe。这样人类和 LLM 可以先发现 family，再只查看该 family 的精确 schema。
 
 ## 先看一份 Chart Source
 
-下面用 Scatter 作为例子。代码只保留字段关系，数据和展示项的具体内容用省略号表示：
+下面是一份 Point family 的 Scatter Source。它保留作者意图；recipe 生成的坐标、比例尺、guide 和内建 Plot mark 不会写回 Source。
 
 ```ts
 {
   namespace: 'chart',
-  type: 'scatter',
-  config: {
-    encoding: {
-      x: { field: 'height' },
-      y: { field: 'weight' },
-    },
-  },
-  plot: {
-    data: { /* Plot data */ },
-    // 这里还可以添加 Plot 的 transform、marks、guides 等内容
-  },
+  type: 'point',
+  id: 'weight-efficiency',
   presentation: {
-    children: [
-      { kind: 'preset', preset: 'title', /* ... */ },
-      { kind: 'plot', key: 'plot' },
-      { kind: 'preset', preset: 'source', /* ... */ },
+    title: '重量与效率',
+    subtitle: '按车型比较',
+    source: '示例车辆数据',
+  },
+  theme: 'clean',
+  data: { reference: 'rows' },
+  layout: { width: 640, height: 360 },
+  recipe: {
+    chartType: 'scatter',
+    encodings: {
+      x: 'weight',
+      y: 'efficiency',
+      color: 'group',
+    },
+    properties: { opacity: 0.82 },
+    marks: [
+      { kind: 'scatter', properties: { size: 5 } },
     ],
+  },
+  plotExtension: {
+    marks: [/* 额外的 Plot-owned mark，与 Chart marks 无关 */],
   },
 }
 ```
 
-这份输入表达的是：在 Chart 能力域中选择 `scatter`，用 `config` 说明 x/y 位置，再允许 `plot` 补充 Plot 侧内容；最后用 `presentation` 把生成的 Plot 放进一张有标题和来源的整图中。
+`encodings` 只写数据字段名，`properties` 只写常量。`recipe.marks` 是 Chart semantic marks，按数组顺序继承当前 Chart context；`plotExtension.marks` 是独立的 Plot 内容，不读取 Chart 的 encodings 或 properties。
 
-## 字段布局：职责速览
+## 根 shell 与嵌套 recipe envelope
 
-先用这张表定位每个字段，下面的小节再说明它的行为和边界：
+| 字段            | 含义                                                           | 所有者                   |
+| --------------- | -------------------------------------------------------------- | ------------------------ |
+| `namespace`     | 固定为 `chart`，声明能力域                                     | Chart                    |
+| `type`          | 稳定 family，用于发现和第一阶段路由                            | Chart                    |
+| `id`            | 可选的 Chart 唯一身份                                          | Chart / Core             |
+| `presentation`  | title、subtitle、note、source 四个固定槽位                     | Chart / Standard         |
+| `theme`         | 注册主题名，或带 `base` 与 owner token slices 的 authored 输入 | Chart、Plot、当前 recipe |
+| `data`          | 数据引用与可选数据模型                                         | Plot / Data              |
+| `layout`        | Chart 外部 border-box 的 `width` / `height`                    | Chart / Layout           |
+| `recipe`        | 当前 chartType 的精确 recipe payload                           | Chart                    |
+| `plotExtension` | 作者显式写入的 Plot-owned fragment                             | Plot                     |
 
-| 字段           | 主要职责                  | 典型承载内容                                                     |
-| -------------- | ------------------------- | ---------------------------------------------------------------- |
-| `namespace`    | 将输入路由到 Chart        | 固定值 `chart`                                                   |
-| `type`         | 选择精确 schema 和 recipe | `scatter`、`bubble` 等类型标识                                   |
-| `config`       | 表达类型专属意图          | x/y、size、order 以及类型允许的表现补丁                          |
-| `plot`         | 复用 Plot 并继续扩展      | data、transform、scales、coordinate、marks、guides、theme 与尺寸 |
-| `presentation` | 组织整图展示              | 标题、副标题、唯一的 Plot 占位、注释、来源及它们的顺序与布局     |
+`layout` 只分配整张 Chart Surface 的外部尺寸，不表示 Plot 的 facet、track、coordinate 或内部 plot area。完全控制底层绘图时直接使用 Plot；当前 Source 不提供 `type: 'base'` 特例。
 
-### `namespace`：声明能力域
+## family → chartType → exact schema
 
-`namespace: 'chart'` 是固定的判别字段。它告诉解析器：这不是直接交给 Plot 的输入，而是一份 Chart Source。它只负责选择能力域，不能代替 `type` 选择散点图或气泡图。
+family 是有限、稳定、面向发现的分类；chartType 是全局唯一 recipe key，每个 key 只属于一个 family。首批 Point family 的路由如下：
 
-### `type`：选择类型和默认语义
+| family (`type`) | chartType | 精确 schema 与核心差异                                           |
+| --------------- | --------- | ---------------------------------------------------------------- |
+| `point`         | `scatter` | `ScatterChartSchema`；x/y 必填，可选 color、size、opacity、shape |
 
-`type` 是精确的判别值。它同时决定使用哪一个 schema 检查输入，以及使用哪一个 recipe 生成默认 Plot 语义。也就是说，`type` 不只是给结果起名字：
+精确 schema 从 `@retikz/chart/point/scatter` 导入。`@retikz/chart/point` 是明确需要整个 Point family 时使用的聚合入口。
 
-| `type`              | `config` 中的核心输入                  | Chart 会补出的默认语义                      |
-| ------------------- | -------------------------------------- | ------------------------------------------- |
-| `base`              | 没有类型专属 `config`                  | 不补主图元；`plot` 必须自行描述完整图形     |
-| `scatter`           | x/y 位置，可选颜色、尺寸、透明度、形状 | Point 主图元、二维比例尺、坐标和默认 guides |
-| `bubble`            | x/y 位置与必需的 size 字段             | 在 Point 语义上增加定量尺寸映射和尺寸图例   |
-| `connected-scatter` | x/y 位置与必需的 order，可选 series    | 在 Point 语义上增加按顺序连接数据的路径     |
+每个 chartType 都有自己的 strict `XxxChartSchema`、`XxxChartEncodingsSchema`、`XxxChartPropertiesSchema` 与 recipe Theme schema。公共原子 schema 只按真实语义复用，不把所有 family 拼成一个宽 union。未知 chartType、family mismatch、未知字段和不匹配的 mark 都在 Source / provider 边界 fail-loud。
 
-Chart 不用一个宽泛的公开 union schema 猜测类型。每个精确 `type` 都有自己的 schema 和 recipe；这样错误会在对应入口被发现，类型默认行为也能保持清晰。
+Chart 不提供第三方 recipe Definition 注册入口。应用层负责维护动态 family / chartType catalog、按模块加载具体 schema 与 provider，并把 JSON 路由到对应的 `XxxChartSchema` 和 provider contribution；当前编译边界内的多个 provider 仍按 `chart.<family>` key 合并。需要表达尚未内建为 Chart chartType 的复杂图形时，直接使用 Plot。
 
-### `config`：表达类型专属意图
+## encodings、properties 与 marks
 
-`config` 只放当前 Chart 类型才有意义的输入。以 Point 类型为例，x/y 表达位置角色，颜色、尺寸、透明度和形状表达视觉通道；Bubble 的 `size` 是它独有的必需角色；Connected Scatter 的 `order` 决定连接路径的顺序，`series` 可以把数据分成多条独立路径。
+recipe 会把 Source 的 field-bound encodings 和 constant properties 传给自己的 semantic mark，再生成 Plot 正式 mark。两者映射到同一 slot 时，encoding 胜出；`false`、`0` 和空数组等 schema 允许的显式值不会被 truthy fallback 丢掉。
 
-因此，`config` 更像“我要画什么、关键字段是什么”，而不是一个可以放任意属性的样式对象。类型 recipe 会读取它，生成主 mark、比例尺、坐标和默认 guides。类型允许的 `mark` 或 `components` 补丁也属于 `config`，但仍必须遵守该类型的 schema。
+recipe 会显式声明自身实际消费的 slots，而不是把 schema 中所有可写字段都视为已消费。mark 的继承声明只在 Source 里确实出现对应 mark 时生效；一个字段若没有 recipe 或当前 authored marks 消费，会在该字段路径 fail-loud，不会静默丢失。
 
-### `plot`：复用 Plot 并保留扩展能力
+Chart mark 由 `{ kind, encodings?, properties? }` 组成。mark Definition 声明它可以继承哪些字段和属性。当前 Scatter 只接受 `scatter` mark，它可以继承 Point 的 x/y/color/size/opacity/shape 部分；mark 自带显式值只覆盖该 mark 的继承结果，不修改内建 semantic mark 或其它 mark。
 
-`plot` 是 Plot owner 的字段。它承载数据、数据变换、比例尺、坐标或 composition、marks、guides、主题和尺寸等 Plot 内容。Chart 类型 recipe 先根据 `config` 生成默认 Plot 部分，再把作者写在 `plot` 中的内容合并进去：作者可以补充 marks，也可以按 Plot 的规则提供或覆盖相应的 Plot 配置。
+```ts
+recipe: {
+  chartType: 'scatter',
+  encodings: { x: 'time', y: 'value', color: 'id' },
+  properties: { opacity: 0.8 },
+  marks: [
+    { kind: 'scatter', properties: { size: 4, opacity: 0.4 } },
+    { kind: 'scatter', properties: { size: 7 } },
+  ],
+}
+```
 
-这就是 Chart 和 Plot 的关系：Chart 提供易上手的类型默认值，Plot 仍然是表达复杂图形的底层能力。`plot` 不是绕过 Chart 的另一套输入；它是 Chart 允许作者向下扩展的 Plot 成员。
+上例中的 recipe 本身会生成一个内建 Point Plot mark；作者声明的两个 `scatter` mark 按顺序追加。若要连线，用户应在 `plotExtension.marks` 中写入 Plot-owned Path mark；它是完全独立的 Plot 内容，不会继承 Chart context。
 
-### `presentation`：组织整图展示
-
-`presentation` 描述 Chart 的整图展示结构，而不是绘图语法。它的 `children` 按顺序放置标题、副标题、唯一的 Plot 占位、注释和来源；其中 Plot 占位告诉 Chart 把已经解析完成的图形放到哪里。标题、来源、画布间距和主题等能力因此可以由 Chart 统一管理，不需要每个 Plot 自己重复实现。
-
-`presentation` 与 `plot` 的边界可以这样记：`plot` 决定“图形画什么”，`presentation` 决定“这张图怎样被阅读”。
-
-除了这些核心字段，Source 还可以带有 `id` 和 Chart 主题 token 等共享元数据。它们用于标识实例或调整 Chart 外层样式，不改变 `namespace`、`type`、`config`、`plot` 和 `presentation` 的职责分工。
-
-## 解析原理
-
-图中的管线从用户输入开始，最后得到一份可以交给统一 Chart 外层消费的 Plot。先不需要记住 `Source`、`IRPlot` 或 `Base Chart` 这些名称，只要按下面的步骤理解它发生了什么：
-
-<ComponentPreview files="chart-recipe-pipeline" hideCode size="sm" />
-
-1. **收集一份具体类型的输入**：React 或 Vanilla 入口接收用户配置，形成一份 Chart Source。Source 就是“描述要画什么”的结构化输入，里面保留了 `type`、`config` 和作者提供的 `plot`。
-2. **匹配类型并检查结构**：入口根据 `type` 找到对应的精确 schema 和 recipe，检查必需字段是否存在、字段形状是否正确。图中的 `match` 表示这一步。
-3. **读取类型配置并生成默认 Plot**：类型 recipe 绑定这份 Source，读取 `config`，生成该类型需要的主 mark、比例尺、坐标和默认 guides。这里的 recipe 可以理解为“把类型输入翻译成 Plot 默认部分的规则”。
-4. **合并作者的 Plot**：Chart 把类型默认部分和 `plot` 中作者声明的数据、变换、主题、尺寸及扩展图元合并。这样简单图形只需 `config`，复杂图形仍可通过 `plot` 继续表达。
-5. **验证并交给统一外层**：合并结果通过 Plot schema 后，成为完整的 `IRPlot`。IR 只是内部可序列化的中间表示；随后它和 `presentation` 一起放进统一的 Base Chart（代码中的 `IRBaseChart`），由 Chart 的整图定义继续处理。
-
-图中的 `Type Recipe`、`Plot Merge` 和 `IRPlot` 分别对应第 3、4、5 步。它们是解析过程中的内部角色，不是用户必须直接构造的另一套公开 API。所有具体 Chart 类型完成自己的 recipe 绑定后，都沿用同一条统一的 Chart 解析与下沉路径。
-
-<SourceLinks
-  sources={[
+```ts
+plotExtension: {
+  marks: [
     {
-      label: 'Scatter React 入口固定使用 Scatter recipe',
-      path: 'packages/viz/chart-react/src/point/components.tsx',
-      startLine: 261,
-      endLine: 270,
+      type: 'path',
+      order: 'time',
+      encoding: { x: { field: 'time' }, y: { field: 'value' } },
     },
-    {
-      label: '具体类型绑定并保留 createPlot',
-      path: 'packages/viz/chart/src/_shared/recipe/recipe.ts',
-      startLine: 59,
-      endLine: 72,
-    },
-    {
-      label: 'Point config 生成 Plot 默认语义',
-      path: 'packages/viz/chart/src/point/shared/recipe.ts',
-      startLine: 52,
-      endLine: 95,
-    },
-    {
-      label: '合并作者 Plot 字段',
-      path: 'packages/viz/chart/src/_shared/recipe/plot.ts',
-      startLine: 12,
-      endLine: 46,
-    },
-    {
-      label: '最终 Plot 候选校验',
-      path: 'packages/viz/chart/src/_chart/resolve/resolve.ts',
-      startLine: 29,
-      endLine: 43,
-    },
-  ]}
-/>
+  ],
+}
+```
+
+## presentation 与 Theme owner
+
+`presentation` 只有四个可选槽位。解析时始终按 `title → subtitle → plot → note → source` 组成固定内容；JSON 属性出现顺序、Vanilla 对象构造顺序和 React marker 出现顺序都没有语义。需要可组合自由顺序时，使用后续独立能力，不在当前 Source 中猜测。
+
+Theme 入口可以是注册主题名（如 `'clean'`），也可以是带 `base` 和 token slices 的 authored 对象：
+
+```ts
+theme: {
+  base: 'clean',
+  tokens: {
+    chart: { 'chart.gap': 12 },
+    plot: { /* 交给 Plot owner */ },
+    recipe: { axisGridEnabled: false },
+  },
+}
+```
+
+Chart shell 的 cascade 是 mode fallback → Core style chain → authored named/base chain → inline `tokens.chart`；当前 recipe 的 cascade 是 recipe fallback → Core style chain → authored chain → inline `tokens.recipe` → `properties` → `encodings`。Chart 只解析 canvas、padding 和 presentation token，Plot slice 由 Plot owner 消费，recipe slice 由当前 chartType 的精确 schema 校验。完整 resolved map 不写回 Source。
 
 ## 延伸阅读
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/chart/model/authoring">
-    <span className="font-semibold">编写与解析</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      继续看精确 Source 如何进入对应类型并完成解析。
-    </span>
+  <LinkedCard href="/viz/chart/model">
+    <span className="font-semibold">图形模型</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">从 Source 进入 recipe、resolve 与 Surface。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/plot">
+    <span className="font-semibold">与 Plot 协作</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">区分 Chart marks 与独立的 Plot marks。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/presentation">
+    <span className="font-semibold">整图展示</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查阅固定 presentation slots 与布局。</span>
   </LinkedCard>
   <LinkedCard href="/viz/chart/points">
-    <span className="font-semibold">点图</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">从具体类型观察 config 如何生成默认图形语义。</span>
+    <span className="font-semibold">点图 family</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      查看 Scatter 的精确 schema 与 authored marks。
+    </span>
   </LinkedCard>
 </div>

@@ -11,8 +11,6 @@ const copy = {
   subtitle: '示例范围 · 统一单位',
   note: '注：点位只用于说明整图布局',
   source: '来源：示例数据',
-  xAxis: '变量 x',
-  yAxis: '变量 y',
 };
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (

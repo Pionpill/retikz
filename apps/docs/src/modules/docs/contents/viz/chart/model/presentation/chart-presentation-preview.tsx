@@ -1,10 +1,10 @@
 import type { FlexLayoutInspectOptions } from '@retikz/layout/inspect';
 import type { FC } from 'react';
 
-import { Chart } from '@retikz/chart-react';
+import { ChartNote, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart } from '@retikz/chart-react/point/scatter';
 import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import { LayoutInspectLayout } from '@retikz/layout-react/inspect';
-import { Axis, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { chartPresentationData } from './chart-presentation.data';
@@ -15,8 +15,6 @@ export type ChartPresentationPreviewCopy = Readonly<{
   subtitle: string;
   note: string;
   source: string;
-  xAxis: string;
-  yAxis: string;
 }>;
 
 const inspectOptions = {
@@ -59,21 +57,19 @@ const visiblePresentation = {
   source: true,
 } satisfies ChartPresentationVisibility;
 
-/** 创建包含真实 Chart presentation 内容的 React authoring */
+/** 创建包含真实 Chart presentation 内容的 typed Point Chart authoring */
 const chartOf = (copy: ChartPresentationPreviewCopy, visibility: ChartPresentationVisibility) => (
-  <Chart
+  <ScatterChart
     data={chartPresentationData}
-    width={320}
-    height={180}
-    title={visibility.title ? copy.title : undefined}
-    subtitle={visibility.subtitle ? copy.subtitle : undefined}
-    note={visibility.note ? copy.note : undefined}
-    source={visibility.source ? copy.source : undefined}
+    encodings={{ x: 'x', y: 'y' }}
+    properties={{ size: 8 }}
+    layout={{ width: 320, height: 180 }}
   >
-    <PointMark x="x" y="y" size={8} />
-    <Axis dimension="x" title={copy.xAxis} />
-    <Axis dimension="y" title={copy.yAxis} />
-  </Chart>
+    {visibility.title ? <ChartTitle>{copy.title}</ChartTitle> : null}
+    {visibility.subtitle ? <ChartSubtitle>{copy.subtitle}</ChartSubtitle> : null}
+    {visibility.note ? <ChartNote>{copy.note}</ChartNote> : null}
+    {visibility.source ? <ChartSource>{copy.source}</ChartSource> : null}
+  </ScatterChart>
 );
 
 export type ChartPresentationLayoutPreviewProps = Readonly<{

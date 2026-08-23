@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
-import { ScatterChart } from '@retikz/chart-react/point';
-import { Axis, Legend } from '@retikz/plot-react';
+import { ChartNote, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart, ScatterMark } from '@retikz/chart-react/point/scatter';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -12,26 +12,27 @@ import { previewControlContract } from './scatter-income-life-expectancy.en.cont
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <ScatterChart
     data={countryScatterData}
-    encoding={{
-      x: { field: 'gdpPerCapita' },
-      y: { field: 'lifeExpectancy' },
-      color: { field: 'continent' },
+    encodings={{
+      x: 'gdpPerCapita',
+      y: 'lifeExpectancy',
+      color: 'continent',
     }}
-    mark={{
-      size: { kind: 'constant', value: values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointSize] },
-      opacity: { kind: 'constant', value: values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointOpacity] },
-    }}
-    title="Higher income generally coincides with longer life expectancy"
-    subtitle="Gapminder 2007; 142 countries; x shows GDP per capita (inflation-adjusted US$) and y shows life expectancy at birth (years)"
-    source="Gapminder: country cross-section for 2007; color encodes continent"
-    note="This same-year comparison describes association, not causation"
     width={800}
     height={400}
-    style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <Axis dimension="x" grid />
-    <Axis dimension="y" grid />
-    <Legend channel="color" title="Continent" position="right" />
+    <ChartTitle>Higher income generally coincides with longer life expectancy</ChartTitle>
+    <ChartSubtitle>
+      Gapminder 2007; 142 countries; x shows GDP per capita (inflation-adjusted US$) and y shows life expectancy at
+      birth (years)
+    </ChartSubtitle>
+    <ChartNote>This same-year comparison describes association, not causation</ChartNote>
+    <ChartSource>Gapminder: country cross-section for 2007; color encodes continent</ChartSource>
+    <ScatterMark
+      properties={{
+        size: values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointSize],
+        opacity: values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointOpacity],
+      }}
+    />
   </ScatterChart>
 ));
 

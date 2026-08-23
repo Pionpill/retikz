@@ -13,7 +13,7 @@ The site's Vibrant reference preset uses a light blue-gray Plot area in Light mo
 
 ## Extensible styles
 
-Define a runtime Plot preset with `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })`, then inject it through `plotThemeStyles` on `lowerPlots`, `<Plot>`, or `renderPlot()`; React subtrees may use the ambient `PlotThemeProvider`. `tokens` is the complete base map and optional `tokenRules` applies only to axes. The resolver and resolved output never enter `IRPlot`. Pass the same-named Core definition through `themeStyles` or the Core `ThemeProvider`, or Core or Plot fails loudly. Typed Chart authoring also needs the same-named Chart definition: pair `ChartThemeProvider` in React, or pass `chartThemeStyles` and `plotThemeStyles` to the Vanilla typed factory.
+Define a runtime Plot preset with `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })`, then inject it through `plotThemeStyles` on `lowerPlots`, `<Plot>`, or `renderPlot()`; React subtrees may use the ambient `PlotThemeProvider`. `tokens` is the complete base map and optional `tokenRules` applies only to axes. The resolver and resolved output never enter `IRPlot`. Pass the same-named Core definition through `themeStyles` or the Core `ThemeProvider`, or Core or Plot fails loudly. Typed Chart authoring injects Chart definitions through `<ChartThemeProvider themeDefinitions={...}>` in React or the Vanilla factory's `themeDefinitions`; `lowerOptions.plotThemeStyles` remains the Plot-only definition input.
 
 ## Cascade and atomic replacement
 
@@ -79,7 +79,7 @@ Core effective Theme
 | `style` / `mode`    | Effective Core Theme environment selecting the preset           |
 | `tokens`            | Complete token map after the cascade                            |
 | `tokenSources`      | One winning source and stable path for every canonical token    |
-| `tokenRules`        | Style and IRPlot Axis rules in effective cascade order      |
+| `tokenRules`        | Style and IRPlot Axis rules in effective cascade order          |
 | `authoredOverrides` | Record for the authored native `plotTheme` entry                |
 | `plotTheme`         | Complete mapped and validated native Plot theme                 |
 | `palette`           | Final palettes and schemes shared by scales, marks, and legends |

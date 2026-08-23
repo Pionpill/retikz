@@ -3,47 +3,47 @@ title: 图形模型
 description: 先理解为什么从 Chart 开始，再沿结构、编写、整图展示与 Plot 协作深入图形模型。
 ---
 
-Plot 是强大的底层图形语法：它描述数据如何通过图元、通道、比例尺、坐标和辅助元素被绘制，但也意味着使用者需要自己组合这些语法部件。如果目标是先表达一种完整图形，直接从 Plot 开始往往需要理解较多底层配置。
+Plot 是底层图形语法：它描述数据如何通过图元、通道、比例尺、坐标和辅助元素被绘制，但也意味着使用者需要自己组合这些语法部件。如果目标是先表达一种完整图形，直接从 Plot 开始往往需要理解较多底层配置。
 
-Chart 是建立在 Plot 之上的官方上层图形封装，解决的是“我想先使用一种图形类型”的问题：
+Chart 建立在 Plot 之上，解决的是“我想先使用一种图形类型”的问题：
 
-- **基于 `type` 的图形类型封装**：`ScatterChart`、`BubbleChart` 等类型直接表达用户想画的图形；Plot 则负责底层的图形语法，两者的抽象层级不同。
-- **更少的配置**：每个 `type` 都带有自己的默认解析逻辑，会根据类型配置补齐通常需要的主图元、比例尺和坐标等语义，使用者不必从零组装完整 Plot。
-- **官方提供的上层能力**：这些类型由 Retikz 官方 schema、recipe 和解析路径维护，既提供易用入口，也会统一收敛到基础 Chart 供后续编译。
+- **family → chartType 路由**：根 `type` 是便于发现的 family，`recipe.chartType` 决定具体 recipe。LLM 可以先判断 family，再查看该 family 的精确 schema。
+- **更少的配置**：recipe 会根据 `recipe.encodings` 与 `recipe.properties` 生成内建 semantic mark、比例尺、坐标和其它默认 Plot 语义。
+- **可继续扩展**：`recipe.marks` 注入能继承 Chart context 的 mark；`plotExtension` 保留独立 Plot fragment，不会把 Chart 变成第二套绘图语法。
 
-因此，基于 `type` 的 Chart 封装更容易上手，也更容易让 LLM 理解和生成。等你需要更复杂的图形时，仍可以以某个 Chart 类型为基础，通过它的 `plot` 成员补充轴、图例、附加图元、变换等 Plot 能力；这要求你进一步了解 Plot，但不必放弃 Chart 已经提供的类型语义和默认解析。
+因此 Chart 同时服务于人类编写、JSON 持久化和 LLM 生成。需要更细的 Plot 能力时，仍可直接使用 Plot，或把符合 Plot schema 的 fragment 写入 Chart Source 的 `plotExtension` 字段。
 
 <ComponentAlert
   type="tip"
   title="初次使用可以先跳过"
-  description="只想绘制散点图或气泡图时，直接从点图开始即可；需要理解字段归属、编写入口或扩展边界时再回到这里。"
+  description="只想绘制散点图时，直接从点图开始即可；需要理解 family、精确 schema 或扩展边界时再回到这里。"
 />
 
 ## 解析原理
 
 <ComponentPreview files="chart-model-pipeline" hideCode size="xs" />
 
-这张图可以先按“输入 → 类型规则 → 统一图形 → 输出”来理解。管线中的每一步只解决一个问题，下面先解释它对使用者意味着什么，再补充对应的术语：
+这张图可以先按“Source → recipe → Plot → Surface”来理解：
 
 1. **React / Vanilla：选择编写入口**
-   React 组件和 Vanilla 工厂是两种面向使用者的编写方式。它们负责接收你的数据、类型配置和展示选项，不要求你直接操作后面的编译阶段。
-2. **Exact Source IR：保存一种类型的完整描述**
-   Source IR 是图形的源描述，记录选定的 `type` 以及该类型需要的配置、`plot` 和整图展示内容。`Exact` 表示它使用当前类型自己的精确结构，而不是把所有 Chart 类型混成一个宽泛对象。
-3. **BoundChart：接入类型默认规则**
-   recipe 会读取这份源描述，并接入该类型自己的默认解析逻辑，例如补齐主图元、比例尺和坐标。这个中间结果叫 BoundChart，通常由系统产生，使用者不需要手动编写。
-4. **IRBaseChart：收敛为统一的基础图形**
-   `resolveChart` 会把带有类型规则的中间结果解析成 `IRBaseChart`。无论最初是 Scatter、Bubble 还是其它 Chart 类型，后续编译都可以使用同一种基础图形结构。
-5. **Surface + Plot：交给编译与绘制阶段**
-   Core 消费统一的 `IRBaseChart`，生成承载图形的 Surface，并继续交给 Plot 完成数据到图元、坐标和辅助元素的绘制。因此 Core 不需要分别认识每一种上层 Chart 类型。
+   React typed Chart 与 Vanilla 具体 chartType factory 进入同一套 Source 组装与适配主链；动态 JSON 路由由应用层选择具体入口。
+2. **Exact Chart Source：保存作者意图**
+   Source 记录 `namespace: 'chart'`、family `type`、`recipe.chartType`、字段绑定 `encodings`、常量 `properties`、可选 `marks` 与 `plotExtension`。它不写入 recipe 解析出的完整 Plot。
+3. **Schema：选择精确 schema**
+   应用层先按 family 与 recipe 选择对应的 strict schema，active provider 再校验整份 Source；未知字段、family mismatch 和不允许的 mark 直接失败。
+4. **Recipe + resolve：生成共享部分和内建 mark**
+   recipe 产生默认坐标系、guides 与 semantic mark，再把 Chart marks、独立 Plot fragment 和 owner-local Theme slices 交给各自 owner。
+5. **Plot + Surface：进入编译和绘制**
+   Plot 负责数据到图元、坐标和辅助元素的 lowering，Chart 用 Standard Surface 组织整图 presentation，最后交给 Core / renderer。
 
 ## 职责一览
 
-| 主题         | 负责什么                                           | 何时查阅                          |
-| ------------ | -------------------------------------------------- | --------------------------------- |
-| 结构与类型   | 解释 `namespace`、精确 `type` 及字段 owner         | 读写 JSON、选择 schema 或找边界   |
-| 编写与解析   | 串起 React、Vanilla、schema、recipe 与 `resolve`   | 排查入口差异或理解 canonical 过程 |
-| 整图展示     | 组织标题、副标题、Plot、注记与来源                 | 控制叙事顺序、文本样式或布局      |
-| 与 Plot 协作 | 区分图形外壳和绘图语法，并说明主题 provider 的配合 | 添加轴、图例、图元或运行时样式    |
+| 主题         | 负责什么                                          | 何时查阅                             |
+| ------------ | ------------------------------------------------- | ------------------------------------ |
+| 结构与类型   | 解释 family、chartType、精确 schema 与字段 owner  | 读写 JSON、选择 schema 或找边界      |
+| 编写与解析   | 串起 React、Vanilla、parser、recipe 与 `resolve`  | 排查入口差异或理解 Source 主链       |
+| 整图展示     | 组织 title、subtitle、Plot、note 与 source        | 控制固定槽位、文本样式或布局         |
+| 与 Plot 协作 | 区分 Chart marks、独立 Plot fragment 与主题 owner | 添加 Plot 图元、guide 或 composition |
 
 四个主题共享同一个边界：Chart 决定“这是什么图形、怎样形成完整整图”，Plot 决定“数据怎样通过图形语法被绘制”。类型目录和 `/point` 入口只组织源码与导入面，不新增运行时层级。
 
@@ -52,18 +52,26 @@ Chart 是建立在 Plot 之上的官方上层图形封装，解决的是“我�
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/viz/chart/model/structure">
     <span className="font-semibold">结构与类型</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">理解精确 schema、字段布局与类型目录边界。</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      理解 family、chartType、精确 schema 与 mark。
+    </span>
   </LinkedCard>
   <LinkedCard href="/viz/chart/model/authoring">
     <span className="font-semibold">编写与解析</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">理解多种输入如何收敛为同一个基础 Chart。</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      理解 React、Vanilla 与 JSON 如何进入同一主链。
+    </span>
   </LinkedCard>
   <LinkedCard href="/viz/chart/model/presentation">
     <span className="font-semibold">整图展示</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">理解标题、来源与 Plot 的顺序和布局。</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      理解固定 presentation slots 与 Surface 布局。
+    </span>
   </LinkedCard>
   <LinkedCard href="/viz/chart/model/plot">
     <span className="font-semibold">与 Plot 协作</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">理解 Chart 外壳与 Plot 绘图语法的职责分工。</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      理解 Chart marks、Plot fragment 与 Theme owner。
+    </span>
   </LinkedCard>
 </div>

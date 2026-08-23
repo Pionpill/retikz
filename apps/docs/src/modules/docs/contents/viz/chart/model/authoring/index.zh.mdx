@@ -1,62 +1,59 @@
 ---
 title: 编写与解析
-description: 理解 React、Vanilla 与 JSON 如何形成精确 Source IR，并经 recipe 和 resolveChart 收敛为 IRBaseChart。
+description: 理解 React、Vanilla 与 JSON 如何形成精确 Chart Source，并由 chartType recipe 统一解析。
 ---
 
-Chart 把“方便编写”与“稳定执行”分成两个阶段。React 和 Vanilla 负责把各自的输入形态规范化为精确 Source IR；对应类型的入口再绑定匹配的 recipe，并解析成统一的 `IRBaseChart`。
+Chart 把“方便编写”与“稳定执行”分成两个阶段。React 和 Vanilla 负责把各自的输入形态规范化为精确 Chart Source；解析入口先读取 family，再用 `recipe.chartType` 选择唯一 recipe。
 
 ## 一条共享主链
 
 <ComponentPreview files="chart-authoring-pipeline" hideCode size="sm" />
 
-| 阶段              | owner                   | 结果                                               |
-| ----------------- | ----------------------- | -------------------------------------------------- |
-| React props / JSX | `@retikz/chart-react`   | 转换为 Vanilla Input，不直接拼 Source IR           |
-| Plain input       | `@retikz/chart-vanilla` | `normalizeXxxChart` 生成精确、可序列化的 Source IR |
-| JSON              | 精确 Chart schema       | 解析对应类型的 Source IR                           |
-| recipe bind       | 精确 Chart 入口         | 保存基础字段与延迟的 `createPlot`                  |
-| resolve           | `resolveChart`          | 应用主题和 recipe，产出 `IRBaseChart`              |
+| 阶段              | owner                   | 结果                                              |
+| ----------------- | ----------------------- | ------------------------------------------------- |
+| React props / JSX | `@retikz/chart-react`   | 转换为 Vanilla Input，不直接拼 Source             |
+| Plain input       | `@retikz/chart-vanilla` | `normalizeXxxChart` 生成精确、可序列化的 Source   |
+| JSON              | 具体 chartType schema   | 应用层按 family 与 `chartType` 选择 strict schema |
+| recipe            | 当前 Chart provider     | 生成共享部分与内建 semantic mark                  |
+| resolve           | Chart resolver          | 合并 marks、Plot fragment、主题并交给 Plot        |
 
-JSON 是输入旁路，不跳过 schema。`base` 输入可以交给根入口的 `bindChart`；Point 输入则从 `@retikz/chart/point` 选择与 `type` 匹配的精确 schema 和 recipe，例如先用 `ScatterChartSchema` 解析，再用 `ScatterChartRecipe.bind` 绑定。根 `bindChart` 不负责未知类型的总分发。成功绑定后，各类型都进入同一个 `resolveChart`，Core 最终只消费 `chart.base`。
+JSON 是输入旁路，不跳过 schema。应用层先按 `type` 与 `recipe.chartType` 选择具体 schema，active provider 再确认 recipe 与 family 一致；未知 family、未知 recipe、未知字段和不允许的 mark 都 fail-loud。解析结果保留作者写下的 Source，recipe 产生的坐标、guide 和 Plot mark 只存在于后续解析阶段。
 
 ## 三套包，各自只做一段
 
-根 `@retikz/chart` 公开 Base Chart 的 Source IR、schema、recipe、`bindChart`、`resolveChart` 和 canonical presentation；`@retikz/chart/point` 公开各个 Point Chart 的精确 IR、schema 与 recipe。plain `InputChart`、`InputScatterChart`、`normalizeChart` 与对应创建函数属于 `@retikz/chart-vanilla`。React 组件解析 JSX 子节点和展示标记后，复用相同 normalizer，因此 React 与 Vanilla 不维护平行的 Source IR 组装规则。
+根 `@retikz/chart` 公开 Chart Source 的共享 schema、constants 与 Theme contract；具体 chartType 子路径公开自己的精确 schema 与 provider contribution。recipe / mark Definition 和 resolver 只属于包内实现契约，不是第三方扩展入口。plain `InputScatterChart`、`normalizeXxxChart` 与创建函数属于 `@retikz/chart-vanilla`。React typed Chart 解析 presentation marker 与 Chart mark 组件后，复用相同 normalizer，因此 React 与 Vanilla 不维护平行的 Source 组装规则。动态 family / chartType 路由由应用层负责。
 
-| 入口                    | 对应 `type`         | 导入位置                    |
-| ----------------------- | ------------------- | --------------------------- |
-| `Chart` / `createChart` | `base`              | 各包根入口                  |
-| `ScatterChart`          | `scatter`           | `@retikz/chart-react/point` |
-| `BubbleChart`           | `bubble`            | `@retikz/chart-react/point` |
-| `ConnectedScatterChart` | `connected-scatter` | `@retikz/chart-react/point` |
+| 入口           | 根 `type` | `recipe.chartType` | 导入位置                            |
+| -------------- | --------- | ------------------ | ----------------------------------- |
+| `ScatterChart` | `point`   | `scatter`          | `@retikz/chart-react/point/scatter` |
 
-Vanilla 的类型创建函数分别为 `createScatterChart`、`createBubbleChart` 与 `createConnectedScatterChart`，从 `@retikz/chart-vanilla/point` 导入。它们返回保留运行时主题信息的编写结果；最终渲染仍复用共享 Chart 适配与解析主链。
+Vanilla 的 `createScatterChart` 从 `@retikz/chart-vanilla/point/scatter` 导入。具体子路径只装载对应 chartType；family 根入口仅作为显式聚合入口。它返回保留运行时主题信息的编写结果；最终渲染仍复用共享 Chart 适配与解析主链。
 
 <SourceLinks
   sources={[
     {
-      label: 'Vanilla Base Chart 归一与创建入口',
-      path: 'packages/viz/chart-vanilla/src/_chart/index.ts',
-      startLine: 35,
+      label: 'Scatter Chart Vanilla 创建入口',
+      path: 'packages/viz/chart-vanilla/src/point/scatter/factory.ts',
+      startLine: 10,
+      endLine: 25,
+    },
+    {
+      label: 'active provider 选择 recipe',
+      path: 'packages/viz/chart/src/_chart/providers/resolve.ts',
+      startLine: 7,
+      endLine: 34,
+    },
+    {
+      label: 'recipe 与 Chart marks 进入解析主链',
+      path: 'packages/viz/chart/src/_chart/resolve/resolve.ts',
+      startLine: 9,
       endLine: 55,
     },
     {
-      label: 'recipe 绑定为 BoundChart',
-      path: 'packages/viz/chart/src/_shared/recipe/recipe.ts',
-      startLine: 38,
-      endLine: 68,
-    },
-    {
-      label: '根 bindChart 只接受 Base Chart',
-      path: 'packages/viz/chart/src/_chart/dispatch/bind.ts',
-      startLine: 25,
-      endLine: 45,
-    },
-    {
-      label: '统一解析为 IRBaseChart',
-      path: 'packages/viz/chart/src/_chart/resolve/resolve.ts',
-      startLine: 17,
-      endLine: 46,
+      label: 'React shared Chart 输入接线',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 35,
+      endLine: 78,
     },
   ]}
 />
@@ -70,6 +67,6 @@ Vanilla 的类型创建函数分别为 `createScatterChart`、`createBubbleChart
   </LinkedCard>
   <LinkedCard href="/viz/chart/model/presentation">
     <span className="font-semibold">整图展示</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">继续看展示简写怎样进入 canonical 顺序。</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">继续看固定 presentation 槽位。</span>
   </LinkedCard>
 </div>

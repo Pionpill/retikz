@@ -14,16 +14,19 @@ import type { Section } from '@/modules/docs/data';
 
 import { collectShowcasePages } from '@/modules/docs/components/showcase';
 import { vizSection } from '@/modules/docs/data';
-import { expandMdxIncludes } from '@/modules/docs/lib';
 
 const scatterContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/scatter/index.${lang}.mdx`);
 const scatterExamplePath = (filename: string) =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/scatter/${filename}`);
-const bubbleContentPath = (lang: 'zh' | 'en') =>
-  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/bubble/index.${lang}.mdx`);
-const sharedApiContentPath = (lang: 'zh' | 'en') =>
-  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/_includes/shared-api.${lang}.mdx`);
+const chartModelContentPath = (
+  page: 'index' | 'structure' | 'authoring' | 'presentation' | 'plot',
+  lang: 'zh' | 'en',
+) =>
+  resolve(
+    process.cwd(),
+    `src/modules/docs/contents/viz/chart/model/${page === 'index' ? '' : `${page}/`}index.${lang}.mdx`,
+  );
 const pointContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/plot/mark/point/index.${lang}.mdx`);
 const compositeConceptPath = (lang: 'zh' | 'en') =>
@@ -64,10 +67,7 @@ describe('collectShowcasePages', () => {
           {
             id: 'points',
             label: 'common.notFound',
-            children: [
-              { id: 'bubble', label: 'common.notFound', meta: showcaseMeta('scatter-points', 20) },
-              { id: 'scatter', label: 'common.notFound', meta: showcaseMeta('scatter-points', 10) },
-            ],
+            children: [{ id: 'scatter', label: 'common.notFound', meta: showcaseMeta('scatter-points', 10) }],
           },
           {
             id: 'intervals',
@@ -91,12 +91,6 @@ describe('collectShowcasePages', () => {
         label: 'common.notFound',
         metadata: showcaseMeta('scatter-points', 10).showcase,
       },
-      {
-        path: '/viz/chart/points/bubble',
-        segments: ['viz', 'chart', 'points', 'bubble'],
-        label: 'common.notFound',
-        metadata: showcaseMeta('scatter-points', 20).showcase,
-      },
     ]);
   });
 
@@ -106,27 +100,6 @@ describe('collectShowcasePages', () => {
       segments: ['viz', 'chart', 'points', 'scatter'],
       label: 'viz.chartScatter',
       metadata: { family: 'scatter-points', role: 'primary', preview: 'scatter-basic', order: 10 },
-    });
-  });
-
-  it('从实际 Viz 文档树收集平级 Bubble 概念预览', () => {
-    expect(collectShowcasePages('viz', vizSection)).toContainEqual({
-      path: '/viz/chart/points/bubble',
-      segments: ['viz', 'chart', 'points', 'bubble'],
-      label: 'viz.chartBubble',
-      metadata: { family: 'scatter-points', role: 'primary', preview: 'bubble-basic', order: 20 },
-    });
-
-    const chartSection = vizSection.find(section => section.id === 'chart');
-    const pointsPage = chartSection?.pages.find(page => page.id === 'points');
-    const bubblePage = pointsPage?.children?.find(page => page.id === 'bubble');
-
-    expect(bubblePage?.meta).toMatchObject({
-      pageType: 'concept',
-      audience: 'user',
-      capability: 'showcase.bubble',
-      sourceOfTruth: 'docs',
-      layout: 'showcase',
     });
   });
 
@@ -144,8 +117,8 @@ describe('collectShowcasePages', () => {
 
     const zh = readFileSync(scatterContentPath('zh'), 'utf8');
     const en = readFileSync(scatterContentPath('en'), 'utf8');
-    expect(zh).toContain('`@retikz/chart-react/point`');
-    expect(en).toContain('`@retikz/chart-react/point`');
+    expect(zh).toContain('`@retikz/chart-react/point/scatter`');
+    expect(en).toContain('`@retikz/chart-react/point/scatter`');
     expect(zh).toContain('`ScatterChart`');
     expect(en).toContain('`ScatterChart`');
     expect(zh).not.toContain('基于公开 Plot API 的非契约概念预览');
@@ -159,7 +132,7 @@ describe('collectShowcasePages', () => {
         label: 'common.notFound',
         pages: [
           { id: 'scatter', label: 'common.notFound', meta: showcaseMeta('scatter-points', 10) },
-          { id: 'bubble', label: 'common.notFound', meta: showcaseMeta('scatter-points', 10) },
+          { id: 'other', label: 'common.notFound', meta: showcaseMeta('scatter-points', 10) },
         ],
       },
     ];
@@ -195,64 +168,44 @@ describe('collectShowcasePages', () => {
     );
   });
 
-  it.each([
-    ['zh', ['## Chart 编写', '## 整图展示', '## Plot extensions']],
-    ['en', ['## Chart authoring', '## Presentation', '## Plot extensions']],
-  ] as const)('内联展开 %s Scatter 的独有与共享 API，并保持可编译', async (lang, expectedHeadings) => {
+  it.each(['zh', 'en'] as const)('Scatter %s 保留类型语义并链接共享模型', async lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
-    expect(source).toContain('{/* @include viz/chart/shared-api */}');
+    expect(source).not.toContain('@include viz/chart/shared-api');
+    expect(source).toContain('/viz/chart/model/authoring');
+    expect(source).toContain('/viz/chart/model/plot');
+    expect(source).not.toMatch(/IRChartShared|createChartComposites|MarkValueProp|NodeShapeChannelValue/);
 
-    const expanded = await expandMdxIncludes(source, lang);
-    const headings = Array.from(expanded.matchAll(/^##\s+(.+)$/gm), match => `## ${match[1]}`);
-    const ordered = expectedHeadings.map(heading => headings.indexOf(heading));
-
-    expect(ordered.every(index => index >= 0)).toBe(true);
-    expect(ordered).toEqual([...ordered].sort((left, right) => left - right));
-    expect(expanded).toContain('`IRBaseChart`');
-    expect(expanded).toContain('`ChartProvider`');
-    expect(expanded).toContain('`ChartTitle`');
-    expect(expanded).not.toMatch(/IRChartShared|createChartComposites|MarkValueProp|NodeShapeChannelValue/);
-
-    const compiled = String(await compile(expanded, compileOptions));
+    const compiled = String(await compile(source, compileOptions));
     expect(compiled).toContain('ShowcaseGallery');
     expect(compiled).toContain('h2');
   });
 
-  it.each([
-    ['zh', ['## 尺寸与面积', '## Point 图元']],
-    ['en', ['## Size and Area', '## Point Mark']],
-  ] as const)('%s Bubble 先说明尺寸语义，再复用共享 API', async (lang, expectedHeadings) => {
-    const source = readFileSync(bubbleContentPath(lang), 'utf8');
-    expect(source).toContain('{/* @include viz/chart/shared-api */}');
-    expect(source).toContain('family: scatter-points');
-    expect(source).toContain('usage: distribution');
-    expect(source).toContain("files: ['bubble-basic', 'bubble-basic.data.ts']");
-    expect(source).toContain("size: 'xxl'");
-    expect(source).not.toMatch(/BubbleChartIR|BubbleChartRecipe|@retikz\/chart-react|@retikz\/chart-vanilla/);
-
-    const expanded = await expandMdxIncludes(source, lang);
-    const headings = Array.from(expanded.matchAll(/^##\s+(.+)$/gm), match => `## ${match[1]}`);
-    const ordered = expectedHeadings.map(heading => headings.indexOf(heading));
-
-    expect(ordered.every(index => index >= 0)).toBe(true);
-    expect(ordered).toEqual([...ordered].sort((left, right) => left - right));
-    expect(source.match(/id: 'bubble-basic'/g)).toHaveLength(1);
-
-    const compiled = String(await compile(expanded, compileOptions));
-    expect(compiled).toContain('ShowcaseGallery');
-    expect(compiled).toContain('h2');
-  });
-
-  it.each(['zh', 'en'] as const)('Scatter %s 以基础散点为主，并保留两个真实数据使用示例', lang => {
+  it.each(['zh', 'en'] as const)('Scatter %s 以基础散点为主，并提供五个真实数据使用示例', lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
 
-    expect(source).not.toMatch(/scatter-bubble|Bubble encoding|气泡编码/);
     expect(source.match(/id: 'scatter-basic'/g)).toHaveLength(1);
     expect(source.match(/id: 'scatter-income-life-expectancy'/g)).toHaveLength(1);
     expect(source.match(/id: 'scatter-fertility-work'/g)).toHaveLength(1);
+    expect(source.match(/id: 'scatter-penguins-facet-jitter'/g)).toHaveLength(1);
+    expect(source.match(/id: 'scatter-world-cup-shots'/g)).toHaveLength(1);
     expect(source).toContain("files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts']");
     expect(source).toContain("controls: { name: 'scatter-income-life-expectancy' }");
   });
+
+  it.each(['scatter-penguins-facet-jitter', 'scatter-world-cup-shots'])(
+    '%s 提供数据、双语 demo 与双语 controls',
+    id => {
+      for (const filename of [
+        `${id}.data.ts`,
+        `${id}.controls.ts`,
+        `${id}.en.controls.ts`,
+        `${id}.zh.demo.tsx`,
+        `${id}.en.demo.tsx`,
+      ]) {
+        expect(existsSync(scatterExamplePath(filename)), filename).toBe(true);
+      }
+    },
+  );
 
   it('Scatter 生育率与女性劳动参与率示例提供完整的双语 preview 文件', () => {
     for (const filename of [
@@ -276,26 +229,36 @@ describe('collectShowcasePages', () => {
     }
   });
 
-  it.each(['zh', 'en'] as const)('%s 共享 API 只陈述当前 Chart 公开契约', lang => {
-    const source = readFileSync(sharedApiContentPath(lang), 'utf8');
+  it.each(['zh', 'en'] as const)('%s 图形模型分组覆盖四个共享主题且保持 MDX 可编译', async lang => {
+    const sources = {
+      index: readFileSync(chartModelContentPath('index', lang), 'utf8'),
+      structure: readFileSync(chartModelContentPath('structure', lang), 'utf8'),
+      authoring: readFileSync(chartModelContentPath('authoring', lang), 'utf8'),
+      presentation: readFileSync(chartModelContentPath('presentation', lang), 'utf8'),
+      plot: readFileSync(chartModelContentPath('plot', lang), 'utf8'),
+    };
 
-    expect(source).toContain('`IRBaseChart`');
-    expect(source).toContain('`ChartProvider`');
-    expect(source).toContain('`ChartTitle`');
-    expect(source).toContain('`chartThemeStyles`');
-    expect(source).toContain('`plotThemeStyles`');
-    expect(source).toMatch(lang === 'zh' ? /静态适配层/u : /static adapter/u);
-    expect(source).not.toMatch(/IRChartShared|createChartComposites/);
+    expect(sources.index).toContain('chart-model-pipeline');
+    expect(sources.structure).toContain('`ScatterChartSchema`');
+    expect(sources.structure).toContain('`@retikz/chart/point/scatter`');
+    expect(sources.structure).not.toContain('`ChartRuntimeOptions.familyDefinitions`');
+    expect(sources.authoring).toContain('`normalizeXxxChart`');
+    expect(sources.presentation).toContain('`ChartTitle`');
+    expect(sources.plot).toContain('`themeDefinitions`');
+    expect(sources.plot).toContain('`plotThemeStyles`');
+    expect(Object.values(sources).join('\n')).not.toMatch(/IRChartShared|createChartComposites/);
+
+    for (const source of Object.values(sources)) {
+      await expect(compile(source, compileOptions)).resolves.toBeTruthy();
+    }
   });
 
   it.each([
     ['zh', /负数.+报错/u],
     ['en', /negative.+error/iu],
-  ] as const)('%s 尺寸文档覆盖负数错误与 descriptor 来源', (lang, negativePattern) => {
-    const bubble = readFileSync(bubbleContentPath(lang), 'utf8');
+  ] as const)('%s 点图文档覆盖负数错误与 descriptor 来源', (lang, negativePattern) => {
     const point = readFileSync(pointContentPath(lang), 'utf8');
 
-    expect(bubble).toMatch(negativePattern);
     expect(point).toMatch(negativePattern);
     expect(point).toContain("path: 'packages/viz/plot/src/providers/channel/features/node.ts'");
   });

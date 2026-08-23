@@ -1,8 +1,7 @@
 import type { FC } from 'react';
 
-import { Axis, Legend } from '@retikz/plot-react';
-
-import { ScatterChart } from '@retikz/chart-react/point';
+import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart, ScatterMark } from '@retikz/chart-react/point/scatter';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -10,7 +9,7 @@ import { previewControlContract, SCATTER_FERTILITY_WORK_CONTROL_IDS } from './sc
 import { fertilityWorkData } from './scatter-fertility-work.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const encoding = values[SCATTER_FERTILITY_WORK_CONTROL_IDS.encoding];
+  const channel = values[SCATTER_FERTILITY_WORK_CONTROL_IDS.channel];
 
   return (
     <ScatterChart
@@ -20,27 +19,21 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         { name: 'femaleLaborParticipation', type: 'continuous' },
         { name: 'incomeGroup', type: 'categorical' },
       ]}
-      encoding={{
-        x: { field: 'fertilityRate' },
-        y: { field: 'femaleLaborParticipation' },
-        ...(encoding === 'color' ? { color: { field: 'incomeGroup' } } : {}),
-        ...(encoding === 'shape' ? { shape: { field: 'incomeGroup' } } : {}),
+      encodings={{
+        x: 'fertilityRate',
+        y: 'femaleLaborParticipation',
+        ...(channel === 'color' ? { color: 'incomeGroup' } : {}),
+        ...(channel === 'shape' ? { shape: 'incomeGroup' } : {}),
       }}
-      mark={{
-        size: { kind: 'constant', value: 4.5 },
-        opacity: { kind: 'constant', value: 0.65 },
-      }}
-      title="生育率与女性劳动参与率"
-      subtitle="186 个经济体，2022 年；横轴为每名女性生育数，纵轴为 15 岁及以上女性劳动参与率（%）"
-      source="世界银行：SP.DYN.TFRT.IN、SL.TLF.CACT.FE.ZS 与收入组元数据；仅保留三个字段均有观测的经济体"
       width={800}
       height={400}
-      style={{ maxWidth: '100%', height: 'auto' }}
     >
-      <Axis dimension="x" title="总和生育率（每名女性的生育数）" grid />
-      <Axis dimension="y" title="女性劳动参与率（%）" grid />
-      {encoding === 'color' ? <Legend channel="color" title="World Bank 收入组" position="right" /> : null}
-      {encoding === 'shape' ? <Legend channel="shape" title="World Bank 收入组" position="right" /> : null}
+      <ChartTitle>生育率与女性劳动参与率</ChartTitle>
+      <ChartSubtitle>186 个经济体，2022 年；横轴为每名女性生育数，纵轴为 15 岁及以上女性劳动参与率（%）</ChartSubtitle>
+      <ChartSource>
+        世界银行：SP.DYN.TFRT.IN、SL.TLF.CACT.FE.ZS 与收入组元数据；仅保留三个字段均有观测的经济体
+      </ChartSource>
+      <ScatterMark properties={{ size: 4.5, opacity: 0.65 }} />
     </ScatterChart>
   );
 });

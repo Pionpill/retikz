@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { ScatterChart } from '@retikz/chart-react/point';
+import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart, ScatterMark } from '@retikz/chart-react/point/scatter';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -11,21 +12,25 @@ import { previewControlContract } from './scatter-basic.en.controls';
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <ScatterChart
     data={countryScatterData}
-    encoding={{
-      x: { field: 'urbanPopulationShare' },
-      y: { field: 'internetUseShare' },
+    encodings={{
+      x: 'urbanPopulationShare',
+      y: 'internetUseShare',
     }}
-    mark={{
-      size: { kind: 'constant', value: values[SCATTER_BASIC_CONTROL_IDS.pointSize] },
-      opacity: { kind: 'constant', value: values[SCATTER_BASIC_CONTROL_IDS.pointOpacity] },
-    }}
-    title="Urbanization and Internet use"
-    subtitle="181 economies in 2023; both axes show the share of population (%)"
-    source="World Bank: SP.URB.TOTL.IN.ZS and IT.NET.USER.ZS; economies with observations for both indicators in 2023"
     width={800}
     height={400}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  />
+  >
+    <ChartTitle>Urbanization and Internet use</ChartTitle>
+    <ChartSubtitle>181 economies in 2023; both axes show the share of population (%)</ChartSubtitle>
+    <ChartSource>
+      World Bank: SP.URB.TOTL.IN.ZS and IT.NET.USER.ZS; economies with observations for both indicators in 2023
+    </ChartSource>
+    <ScatterMark
+      properties={{
+        size: values[SCATTER_BASIC_CONTROL_IDS.pointSize],
+        opacity: values[SCATTER_BASIC_CONTROL_IDS.pointOpacity],
+      }}
+    />
+  </ScatterChart>
 ));
 
 /** canonical 状态派生的稳定源码配置 */

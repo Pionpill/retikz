@@ -10,7 +10,7 @@ const nodeStyle = {
   lineHeight: 17,
 } as const;
 
-/** Chart 精确 Source 经类型 recipe 收敛为完整 IRPlot 的运行链路 */
+/** Chart Source 经 family / chartType recipe 进入 Plot 与 Surface 的运行链路 */
 const Demo: FC = () => (
   <Layout
     width={720}
@@ -21,25 +21,25 @@ const Demo: FC = () => (
     <Node id="source" position={[-285, 0]} stroke="darkorange" fill="darkorange" fillOpacity={0.08} {...nodeStyle}>
       <Text font={{ size: 14, weight: 'bold' }}>Chart Source</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        type + config + plot
+        family + chartType
       </Text>
     </Node>
     <Node id="recipe" position={[-95, 0]} stroke="dodgerblue" fill="dodgerblue" fillOpacity={0.08} {...nodeStyle}>
       <Text font={{ size: 14, weight: 'bold' }}>Type Recipe</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        bind + createPlot
+        exact schema
       </Text>
     </Node>
     <Node id="merge" position={[95, 0]} stroke="dodgerblue" fill="dodgerblue" fillOpacity={0.08} {...nodeStyle}>
       <Text font={{ size: 14, weight: 'bold' }}>Plot Merge</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        defaults + authored plot
+        semantic mark
       </Text>
     </Node>
     <Node id="plot" position={[285, 0]} stroke="darkviolet" fill="darkviolet" fillOpacity={0.08} {...nodeStyle}>
       <Text font={{ size: 14, weight: 'bold' }}>IRPlot</Text>
       <Text fill="gray" font={{ size: 12 }}>
-        PlotSchema.parse
+        marks + guides
       </Text>
     </Node>
 
@@ -65,7 +65,7 @@ const Demo: FC = () => (
         'recipe',
         {
           label: {
-            text: 'config',
+            text: 'resolve',
             position: 'midway',
             side: 'top',
             sloped: false,
@@ -82,7 +82,7 @@ const Demo: FC = () => (
         'merge',
         {
           label: {
-            text: 'validate',
+            text: 'lower',
             position: 'midway',
             side: 'top',
             sloped: false,

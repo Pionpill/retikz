@@ -11,8 +11,6 @@ const copy = {
   subtitle: 'Example scope · Common unit',
   note: 'Note: points only illustrate chart-wide layout',
   source: 'Source: example data',
-  xAxis: 'Variable x',
-  yAxis: 'Variable y',
 };
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (

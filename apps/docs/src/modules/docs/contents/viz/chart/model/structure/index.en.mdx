@@ -1,153 +1,155 @@
 ---
 title: Structure & Types
-description: Understand the Chart Source field layout, type differences, and parsing flow from a reader's perspective.
+description: Understand Chart Source families, chartType recipes, exact schemas, marks, and Plot extension boundaries.
 ---
 
-If you only need to describe how data maps to graphical elements, you can use Plot directly. When you already know that you want a scatter, bubble, or connected scatter chart, Chart provides a typed entry with useful defaults, reduces configuration, and handles chart-wide capabilities such as titles, sources, canvas, and theme consistently.
-
-The type-based Chart wrapper is easier to learn and easier for an LLM to understand. Once you are familiar with Plot, you can also use a type-generated chart as a starting point and add Plot members through `plot` to build a more complex figure. The next example establishes the overall shape before the field and parsing details.
+Chart Source separates “what kind of graphic is this?” from “how should the complete graphic be presented?” The root `type` is a stable family for discovery; nested `recipe.chartType` selects one globally unique recipe. People and LLMs can therefore discover a family first and inspect only that family's exact schema.
 
 ## Start with a Chart Source
 
-The following example uses Scatter. It keeps the field relationships and omits the exact data and presentation item contents:
+This Point-family Scatter Source preserves author intent. Coordinates, scales, guides, and recipe-generated Plot marks are resolved later and never written back into Source.
 
 ```ts
 {
   namespace: 'chart',
-  type: 'scatter',
-  config: {
-    encoding: {
-      x: { field: 'height' },
-      y: { field: 'weight' },
-    },
-  },
-  plot: {
-    data: { /* Plot data */ },
-    // Plot transforms, marks, guides, and other members can be added here
-  },
+  type: 'point',
+  id: 'weight-efficiency',
   presentation: {
-    children: [
-      { kind: 'preset', preset: 'title', /* ... */ },
-      { kind: 'plot', key: 'plot' },
-      { kind: 'preset', preset: 'source', /* ... */ },
+    title: 'Weight and efficiency',
+    subtitle: 'Compared by vehicle group',
+    source: 'Example vehicle data',
+  },
+  theme: 'clean',
+  data: { reference: 'rows' },
+  layout: { width: 640, height: 360 },
+  recipe: {
+    chartType: 'scatter',
+    encodings: {
+      x: 'weight',
+      y: 'efficiency',
+      color: 'group',
+    },
+    properties: { opacity: 0.82 },
+    marks: [
+      { kind: 'scatter', properties: { size: 5 } },
     ],
+  },
+  plotExtension: {
+    marks: [/* an independent Plot-owned mark */],
   },
 }
 ```
 
-This input says: select `scatter` in the Chart domain, use `config` to define the x/y roles, allow `plot` to extend the Plot side, and use `presentation` to place the generated Plot in a complete chart with a title and source.
+`encodings` contain field names and `properties` contain constants. `recipe.marks` are Chart semantic marks that inherit the current Chart context in authored array order; `plotExtension.marks` are independent Plot content and do not read Chart encodings or properties.
 
-## Field layout: responsibility at a glance
+## Root shell and nested recipe envelope
 
-Use this table to locate each field first; the subsections below then explain its behavior and boundary:
+| Field           | Meaning                                                     | Owner                       |
+| --------------- | ----------------------------------------------------------- | --------------------------- |
+| `namespace`     | Fixed `chart` capability namespace                          | Chart                       |
+| `type`          | Stable family for discovery and first-stage routing         | Chart                       |
+| `id`            | Optional unique Chart identity                              | Chart / Core                |
+| `presentation`  | Four fixed slots: title, subtitle, note, source             | Chart / Standard            |
+| `theme`         | Registered name, or authored `base` plus owner token slices | Chart, Plot, current recipe |
+| `data`          | Dataset reference and optional data model                   | Plot / Data                 |
+| `layout`        | Chart Surface border-box `width` / `height`                 | Chart / Layout              |
+| `recipe`        | Exact payload for the selected chartType recipe             | Chart                       |
+| `plotExtension` | Explicit Plot-owned fragment authored by the user           | Plot                        |
 
-| Field          | Primary responsibility                | Typical contents                                                      |
-| -------------- | ------------------------------------- | --------------------------------------------------------------------- |
-| `namespace`    | Route the input to Chart              | The fixed value `chart`                                               |
-| `type`         | Select the exact schema and recipe    | Type identifiers such as `scatter` and `bubble`                       |
-| `config`       | Express type-specific intent          | x/y, size, order, and allowed visual patches                          |
-| `plot`         | Reuse Plot and keep an extension path | Data, transforms, scales, coordinates, marks, guides, theme, and size |
-| `presentation` | Organize the complete-chart layout    | Title, subtitle, one Plot placeholder, note, source, and their order  |
+`layout` allocates the outer Chart Surface. It does not describe Plot facets, tracks, coordinates, guides, or an internal plot area. When you want complete low-level drawing control, use Plot directly; the current Source contract has no `type: 'base'` special case.
 
-### `namespace`: declare the capability domain
+## family → chartType → exact schema
 
-`namespace: 'chart'` is a fixed discriminator. It tells the parser that this is Chart Source rather than input intended directly for Plot. It only selects the capability domain; `type` is still responsible for choosing Scatter or Bubble.
+A family is finite, stable, and intended for discovery. A chartType is a globally unique recipe key; each key belongs to exactly one family. The first Point-family routes are:
 
-### `type`: select a type and its defaults
+| Family (`type`) | chartType | Exact schema and core difference                                                 |
+| --------------- | --------- | -------------------------------------------------------------------------------- |
+| `point`         | `scatter` | `ScatterChartSchema`; required x/y with optional color, size, opacity, and shape |
 
-`type` is the exact discriminator. It selects both the schema that checks the input and the recipe that generates the default Plot semantics. It is therefore more than a label:
+Import the exact schema from `@retikz/chart/point/scatter`. Use the aggregate `@retikz/chart/point` entry only when the application intentionally needs the whole Point family.
 
-| `type`              | Core inputs in `config`                                      | Default semantics supplied by Chart                                    |
-| ------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| `base`              | No type-specific `config`                                    | No primary mark is generated; `plot` must describe a complete figure   |
-| `scatter`           | x/y positions, with optional color, size, opacity, and shape | A Point mark, two-dimensional scales, a coordinate, and default guides |
-| `bubble`            | x/y positions and a required size field                      | A quantitative size mapping and size legend on top of Point semantics  |
-| `connected-scatter` | x/y positions and a required order, with optional series     | A path that connects data in order on top of Point semantics           |
+Every chartType owns a strict `XxxChartSchema`, `XxxChartEncodingsSchema`, `XxxChartPropertiesSchema`, and exact recipe Theme schema. Shared atoms are extracted only when the semantic invariant is genuinely shared; there is no wide union containing every family. Unknown chartTypes, family mismatches, unknown keys, and incompatible marks fail at the Source or provider boundary.
 
-Chart does not guess the type through one broad public union schema. Each exact `type` has its own schema and recipe, so errors are found at the relevant entry and the type's default behavior remains explicit.
+Chart does not provide a third-party recipe Definition registration entry. The application owns the dynamic family / chartType catalog, loads the concrete schema and provider it selects, and routes JSON to the matching `XxxChartSchema` and provider contribution; multiple providers from one family are still merged under `chart.<family>` only within the current compile boundary. For complex graphics that are not built-in Chart chartTypes, use Plot directly.
 
-### `config`: express type-specific intent
+## encodings, properties, and marks
 
-`config` contains inputs that are meaningful only for the current Chart type. For Point types, x/y define position roles, while color, size, opacity, and shape define visual channels. Bubble's `size` is its required quantitative role. Connected Scatter's `order` determines the connection path order, and `series` can split the data into independent paths.
+The recipe passes field-bound encodings and constant properties to its semantic mark, then emits official Plot marks. When both map to the same target slot, encoding wins; schema-valid explicit values such as `false`, `0`, and empty arrays are preserved rather than treated as missing.
 
-Think of `config` as “what am I drawing, and which fields define it,” rather than as an unrestricted style object. The type recipe reads it to generate the primary mark, scales, coordinate, and default guides. A type's allowed `mark` or `components` patches also belong in `config`, but they must still satisfy that type's schema.
+A recipe explicitly declares the slots its resolver actually consumes instead of treating every schema field as consumed. A mark inheritance declaration becomes active only when that mark is present in Source. If neither the recipe nor the current authored marks consume a field, Chart fails at that field path rather than silently dropping it.
 
-### `plot`: reuse Plot and keep an extension path
+A Chart mark has `{ kind, encodings?, properties? }`. Its Definition declares which fields and properties it may inherit. Scatter currently accepts only `scatter` marks, which can inherit Point x/y/color/size/opacity/shape. Explicit mark values override that mark's inherited result only; they do not modify the built-in semantic mark or another mark.
 
-`plot` belongs to Plot. It carries Plot data, transforms, scales, coordinates or composition, marks, guides, themes, and dimensions. A Chart type recipe first generates its default Plot parts from `config`, then merges the author's `plot` content into them. Authors can add marks and provide or override Plot configuration according to Plot's contracts.
+```ts
+recipe: {
+  chartType: 'scatter',
+  encodings: { x: 'time', y: 'value', color: 'id' },
+  properties: { opacity: 0.8 },
+  marks: [
+    { kind: 'scatter', properties: { size: 4, opacity: 0.4 } },
+    { kind: 'scatter', properties: { size: 7 } },
+  ],
+}
+```
 
-This is the boundary between Chart and Plot: Chart supplies approachable type defaults, while Plot remains the lower-level capability for complex figures. `plot` is not a second input system that bypasses Chart; it is the Plot member through which a Chart can be extended.
+The recipe itself also emits one built-in Point Plot mark; the two authored `scatter` marks are appended in order. To connect the points, write a Plot-owned Path mark in `plotExtension.marks`. It is independent Plot content and does not inherit Chart context.
 
-### `presentation`: organize the complete chart
-
-`presentation` describes the complete chart layout rather than plotting grammar. Its `children` arrange a title, subtitle, one Plot placeholder, note, and source in order. The Plot placeholder tells Chart where to place the already-parsed figure. Chart can therefore manage titles, sources, canvas spacing, and theme consistently instead of making each Plot implement them independently.
-
-Remember the boundary this way: `plot` decides “what the graphic draws,” while `presentation` decides “how the complete chart is read.”
-
-The Source can also carry shared metadata such as `id` and Chart theme tokens. These identify an instance or tune the Chart outer style; they do not change the responsibilities of `namespace`, `type`, `config`, `plot`, or `presentation`.
-
-## Parsing mechanics
-
-The pipeline starts with user input and ends with a Plot that the common Chart outer layer can consume. You do not need to know the names `Source`, `IRPlot`, or `Base Chart` in advance. Read the process as these steps:
-
-<ComponentPreview files="chart-recipe-pipeline" hideCode size="sm" />
-
-1. **Collect input for a concrete type**: A React or Vanilla entry receives user configuration and forms a Chart Source. Source means the structured input that describes what to draw; it preserves `type`, `config`, and the author's `plot`.
-2. **Match and check the type**: The entry finds the exact schema and recipe for `type`, then checks required fields and their shapes. The `match` label in the figure represents this step.
-3. **Read the type configuration and generate Plot defaults**: The type recipe binds the Source, reads `config`, and generates the primary mark, scales, coordinate, and default guides. A recipe is simply the rule that translates type input into default Plot parts.
-4. **Merge the authored Plot**: Chart combines those defaults with the data, transforms, theme, dimensions, and extension marks declared in `plot`. Simple charts can stop at `config`; complex charts can keep expressing themselves through `plot`.
-5. **Validate and hand off to the common outer layer**: The merged result passes the Plot schema and becomes a complete `IRPlot`. IR is just the internal serializable representation. It is then placed together with `presentation` in a common Base Chart (the code type is `IRBaseChart`) for Chart's complete-chart definition to process.
-
-In the figure, `Type Recipe`, `Plot Merge`, and `IRPlot` correspond to steps 3, 4, and 5. They are internal roles in the parsing process, not another public API that users must construct directly. Once each concrete Chart type has bound its recipe, all types reuse the same Chart resolution and lowering path.
-
-<SourceLinks
-  sources={[
+```ts
+plotExtension: {
+  marks: [
     {
-      label: 'The Scatter React entry fixes the Scatter recipe',
-      path: 'packages/viz/chart-react/src/point/components.tsx',
-      startLine: 261,
-      endLine: 270,
+      type: 'path',
+      order: 'time',
+      encoding: { x: { field: 'time' }, y: { field: 'value' } },
     },
-    {
-      label: 'Bind a concrete type and retain createPlot',
-      path: 'packages/viz/chart/src/_shared/recipe/recipe.ts',
-      startLine: 59,
-      endLine: 72,
-    },
-    {
-      label: 'Generate Plot defaults from Point config',
-      path: 'packages/viz/chart/src/point/shared/recipe.ts',
-      startLine: 52,
-      endLine: 95,
-    },
-    {
-      label: 'Merge authored Plot fields',
-      path: 'packages/viz/chart/src/_shared/recipe/plot.ts',
-      startLine: 12,
-      endLine: 46,
-    },
-    {
-      label: 'Validate the final Plot candidate',
-      path: 'packages/viz/chart/src/_chart/resolve/resolve.ts',
-      startLine: 29,
-      endLine: 43,
-    },
-  ]}
-/>
+  ],
+}
+```
+
+## presentation and Theme owners
+
+`presentation` contains four optional slots. Resolution always creates the fixed `title → subtitle → plot → note → source` content order; JSON property order, Vanilla object construction order, and React marker order have no semantic meaning. Free composition requires a later explicit capability and is not inferred from Source ordering.
+
+The Theme input can be a registered name such as `'clean'`, or an authored object with `base` and owner slices:
+
+```ts
+theme: {
+  base: 'clean',
+  tokens: {
+    chart: { 'chart.gap': 12 },
+    plot: { /* consumed by Plot */ },
+    recipe: { axisGridEnabled: false },
+  },
+}
+```
+
+The Chart-shell cascade is mode fallback → Core style chain → authored named/base chain → inline `tokens.chart`. The current recipe cascade is recipe fallback → Core style chain → authored chain → inline `tokens.recipe` → `properties` → `encodings`. Chart resolves canvas, padding, and presentation tokens; Plot owns its Plot slice, and the current chartType's exact schema validates its recipe slice. The complete resolved map is never written back into Source.
 
 ## Related pages
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/chart/model/authoring">
-    <span className="font-semibold">Authoring &amp; Resolution</span>
+  <LinkedCard href="/viz/chart/model">
+    <span className="font-semibold">Chart Model</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      See how an exact Source enters its type recipe and is resolved.
+      Trace Source through recipe, resolution, and Surface.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/plot">
+    <span className="font-semibold">Plot Integration</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Separate Chart marks from independent Plot marks.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/presentation">
+    <span className="font-semibold">Presentation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Reference fixed presentation slots and layout.
     </span>
   </LinkedCard>
   <LinkedCard href="/viz/chart/points">
-    <span className="font-semibold">Scatter &amp; Points</span>
+    <span className="font-semibold">Point family</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      See how config generates default chart semantics for concrete types.
+      Review Scatter's exact schema and authored marks.
     </span>
   </LinkedCard>
 </div>

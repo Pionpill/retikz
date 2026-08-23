@@ -65,5 +65,5 @@ export const previewControlContract = {
     [SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointSize]: 10,
     [SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointOpacity]: 0.82,
   },
-  relatedApis: ['PointMark.size', 'PointMark.opacity', 'Axis.scale'],
+  relatedApis: ['ScatterChart.encodings', 'ScatterMark.properties'],
 } satisfies PreviewControlContract;

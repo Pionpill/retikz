@@ -1,68 +1,68 @@
 ---
 title: Presentation
-description: Understand how titles, subtitles, notes, sources, and Plot normalize into stable order inside one Surface.
+description: Understand how titles, subtitles, notes, sources, and Plot occupy fixed slots inside one Surface.
 ---
 
 Chart-wide presentation explains what a graphic says, what scope it covers, where its data comes from, and what constraints affect interpretation. It belongs to Chart rather than one chart type, and it is distinct from Plot axes, legends, and annotations.
 
-## From authored order to canonical order
+## Fixed slots and canonical order
 
-This playground uses a real `Chart` instead of simulating layout with boxes. Title, subtitle, Plot, note, and source all enter one Surface. Enable the Flex overlay to inspect the content, slot, allocation, padding, line region, and gaps of the canonical children.
+This playground uses a real Point Chart instead of simulating layout with boxes. Title, subtitle, Plot, note, and source all enter one Surface. Enable the Flex overlay to inspect the content, slot, allocation, padding, line region, and gaps of the canonical children.
 
 <ComponentPreview
   files={['chart-presentation-layout', 'chart-presentation-preview.tsx', 'chart-presentation.data.ts']}
   size="lg"
-  caption="The overlay only reads the internal Flex artifact from this compile and never enters Chart IR. Turn it off to inspect the final content alone."
+  caption="The overlay only reads the internal Flex artifact from this compile and never enters Chart Source. Turn it off to inspect the final content alone."
 />
 
-`title`, `subtitle`, `note`, and `source` are convenient shorthands. Without markers or explicit records, they produce a fixed default order: title and subtitle above Plot, then note and source below it.
+`title`, `subtitle`, `note`, and `source` are four fixed slots. Resolution always uses `title → subtitle → plot → note → source`; omitting a slot only removes that item and never moves the others across the Plot boundary.
 
-| React marker    | Shorthand  | Default position | Typical content                             |
-| --------------- | ---------- | ---------------- | ------------------------------------------- |
-| `ChartTitle`    | `title`    | top              | Subject or primary conclusion               |
-| `ChartSubtitle` | `subtitle` | top              | Scope, year, sample, unit, or method        |
-| `ChartNote`     | `note`     | bottom           | Reading constraints or methodology details  |
-| `ChartSource`   | `source`   | bottom           | Dataset and processing that affects meaning |
+| React marker    | Source slot | Default position | Typical content                             |
+| --------------- | ----------- | ---------------- | ------------------------------------------- |
+| `ChartTitle`    | `title`     | top              | Subject or primary conclusion               |
+| `ChartSubtitle` | `subtitle`  | top              | Scope, year, sample, unit, or method        |
+| `ChartNote`     | `note`      | bottom           | Reading constraints or methodology details  |
+| `ChartSource`   | `source`    | bottom           | Dataset and processing that affects meaning |
 
-Use React markers or ordered Vanilla `presentation` records when text style, position, or order must be explicit. Markers must be direct Chart children, though transparent `Fragment` groups are accepted. Each preset appears at most once and overrides the matching shorthand. Authored marker order is preserved, so placing `ChartSubtitle` before `ChartTitle` changes the final order.
+React can provide the slots with the four markers; Vanilla and JSON use the `presentation` object directly. Markers must be direct Chart children, though transparent `Fragment` groups are accepted. Duplicating one marker fails loudly. Marker order, JSON property order, and Vanilla object construction order have no semantic meaning; free presentation order is not supported yet.
 
 ## Presentation items are optional
 
-When `title`, `subtitle`, `note`, or `source` is absent, normalization creates no matching item. Plot and the remaining presentation content move into the stable order. Use the four switches below to compare the canonical order with each item present or absent.
+When `title`, `subtitle`, `note`, or `source` is absent, normalization creates no matching item. Plot and the remaining presentation content still use the fixed order. Use the four switches below to compare the canonical result with each item present or absent.
 
 <ComponentPreview
   files={['chart-presentation-visibility', 'chart-presentation-preview.tsx', 'chart-presentation.data.ts']}
   size="lg"
-  caption="The four switches control whether each Chart shorthand exists; they do not hide generated text with opacity."
+  caption="The four switches control whether each Chart slot exists; they do not hide generated text with opacity."
 />
 
 ## Authoring versus canonical representation
 
-`position: 'top' | 'bottom'` exists only in Vanilla and React authoring. It places a record before or after the Plot placeholder. Once `normalizeChartPresentation` creates canonical `presentation.children`, array order carries the layout and `position` is removed.
+Authoring exposes only the four slot values; it does not need a separate `position` field. Resolution inserts the Plot placeholder at its fixed position and produces the Surface / Flex content in canonical order.
 
-Presentation text may be a string or a JSON-serializable Core `TextBlock`. React markers additionally accept strings, transparent `Fragment` groups, and Core `Text` children, then normalize them into the same text contract. Arbitrary React elements never enter IR.
+Presentation text may be a string or a JSON-serializable Core `TextBlock`. React markers additionally accept strings, transparent `Fragment` groups, and Core `Text` children, then normalize them into the same text contract. Arbitrary React elements never enter Source.
 
-During resolution, Chart uses a Standard `Surface` as the chart-wide container and Flex ordering for presentation text and the single Plot placeholder. Chart theme tokens style the presets, while Plot continues to own its own axes, legends, and annotations.
+During resolution, Chart uses a Standard `Surface` as the chart-wide container and Flex ordering for presentation text and the single Plot placeholder. Chart theme tokens style the slots, while Plot continues to own its own axes, legends, and annotations.
 
 <SourceLinks
   sources={[
     {
-      label: 'Normalize shorthands, positions, and authored order',
+      label: 'Normalize the four presentation slots',
       path: 'packages/viz/chart-vanilla/src/normalize/chart/presentation.ts',
-      startLine: 15,
-      endLine: 73,
+      startLine: 5,
+      endLine: 24,
     },
     {
-      label: 'Normalize React presentation markers into Vanilla records',
+      label: 'Normalize React markers into slots',
       path: 'packages/viz/chart-react/src/shared/presentation.tsx',
-      startLine: 37,
-      endLine: 162,
+      startLine: 9,
+      endLine: 127,
     },
     {
-      label: 'Resolve canonical presentation into Flex content',
-      path: 'packages/viz/chart/src/_chart/presentation/resolve.ts',
-      startLine: 60,
-      endLine: 113,
+      label: 'Resolve fixed order into Flex content',
+      path: 'packages/viz/chart/src/_chart/resolve/presentation.ts',
+      startLine: 65,
+      endLine: 130,
     },
   ]}
 />
