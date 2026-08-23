@@ -8,7 +8,7 @@ import type { IRPlot } from '../../../src/schemas';
 
 import * as plot from '../../../src';
 import { defineMark, defineNodeChannel, extractMarkType } from '../../../src/contract';
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { BUILTIN_MARKS, resolveMarkRegistry } from '../../../src/providers';
 import { BUILTIN_MARK_TYPES, EncodingSchema, MarkOperationSchema, PlotSchema } from '../../../src/schemas';
 
@@ -25,8 +25,7 @@ type DotMark = z.infer<typeof DotMarkSchema>;
 const BareMarkSchema = z.object({ type: z.literal('bare') });
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 /** 自定义 mark：记录被分派调用 + 读取的行数，返回一个可识别的空 layer scope */

@@ -14,11 +14,7 @@ import { resolvePlotTransformRegistry } from '../../../src/providers';
 import { PlotSchema } from '../../../src/schemas';
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
-const compile = (
-  spec: IRPlot,
-  datasets: Record<string, Array<Record<string, unknown>>>,
-  options?: LowerPlotsOptions,
-) =>
+const compile = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>, options?: LowerPlotsOptions) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) }).scene;
 
 const specWithModel = (reference = 'd'): IRPlot =>

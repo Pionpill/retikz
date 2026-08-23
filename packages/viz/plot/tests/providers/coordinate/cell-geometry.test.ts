@@ -18,7 +18,7 @@ import {
   densifyCellContour,
   RETIKZ_POLAR_SEGMENT_SAMPLES,
 } from '../../../src/contract';
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { buildIntervalContext } from '../../../src/providers';
 import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
@@ -40,8 +40,7 @@ const datumAnchor = (mark: IRPlotIntervalMark, row: ExternalRow, frame: Coordina
   resolveDatumAnchor(mark, row, frame, { registry: markRegistry }, context);
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope =>

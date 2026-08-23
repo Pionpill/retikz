@@ -9,7 +9,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 
 import { defineMark } from '../../../src/contract';
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
 import { EncodingSchema, PlotSchema, TransformSchema } from '../../../src/schemas';
@@ -27,8 +27,7 @@ type DotMark = z.infer<typeof DotMarkSchema>;
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>

@@ -8,7 +8,7 @@ import { z } from 'zod';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { BUILTIN_NODE_CHANNELS, SIZE_MAX_RADIUS, SIZE_MIN_RADIUS } from '../../../src/providers';
 import { PlotSchema } from '../../../src/schemas';
 
@@ -39,8 +39,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 const firstLayer = (

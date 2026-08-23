@@ -8,6 +8,7 @@ import type { LowerPlotsOptions } from '../../src/pipeline/expand';
 import type { IRPlot } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
+import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 
 /**
@@ -19,8 +20,7 @@ import { PlotSchema } from '../../src/schemas';
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 /**

@@ -9,7 +9,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 
 import { createPlotLocator } from '../../../src/pipeline';
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../../src/schemas';
 
 /**
@@ -74,8 +74,7 @@ const SALES = [
 
 /** 用 lowerPlots 把 spec 展成外层 plot scope */
 const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（无 guides 时即外层 plot scope 的第一个子 scope） */
