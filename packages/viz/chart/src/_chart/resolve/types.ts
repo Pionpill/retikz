@@ -1,21 +1,50 @@
-import type { ResolvedTheme } from '@retikz/core';
-import type { IRPlot, PlotThemeStyleDefinition } from '@retikz/plot';
+import type { IRChild, IRJsonObject, ResolvedTheme } from '@retikz/core';
+import type { IRPlot, IRPlotMarkOperation, IRPlotThemeTokenOverrides } from '@retikz/plot';
+import type { IRSurface } from '@retikz/standard';
 
-import type { IRBaseChart } from '../schemas';
-import type { ChartThemeStyleDefinition } from '../style';
+import type { ChartRecipeDefinition } from '../contract/recipe';
+import type { ChartThemeDefinition, ChartThemeResolution } from '../contract/theme';
+import type { IRChartSource } from '../schemas';
 
-/** Chart 解析器产出的唯一 Base 内部形态 */
-export type CanonicalChart = IRBaseChart;
-
-/** Chart 解析当前调用所需的窄上下文 */
-export type ChartResolveContext = Readonly<{
-  theme: ResolvedTheme;
-  chartThemeStyles?: ReadonlyArray<ChartThemeStyleDefinition>;
-  plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
+/** Chart presentation 的固定 slot 解析结果 */
+export type ChartPresentationResolution = Readonly<{
+  /** title → subtitle → plot → note → source 的最终内容 */
+  content: IRChild;
+  /** 包含 Chart shell padding 与 canvas 的 Standard Surface */
+  surface: IRSurface;
+  /** 外部 Chart border-box allocation；不写入 IRPlot */
+  layout?: IRChartSource['layout'];
+  /** 固定顺序的已消费 presentation slot 名称 */
+  slots: ReadonlyArray<'title' | 'subtitle' | 'plot' | 'note' | 'source'>;
 }>;
 
-/** Chart 解析后的 Base Chart 与完整 Plot */
+/** Chart resolve 的完整输出 */
 export type ChartResolution = Readonly<{
-  chart: CanonicalChart;
-  plotSpec: IRPlot;
+  /** 已经由 recipe 精确 schema parse 的 Source IR */
+  source: IRChartSource;
+  /** Theme owner slice cascade 的结果 */
+  theme: ChartThemeResolution;
+  /** 完整且经 PlotSchema 校验的 Plot IR */
+  plot: IRPlot;
+  /** 固定顺序的 presentation 与 Surface 结果 */
+  presentation: ChartPresentationResolution;
+}>;
+
+/** 已选定 recipe 与命名主题链的 Chart resolve context */
+export type SelectedChartResolveContext = Readonly<{
+  theme: ResolvedTheme;
+  recipe: ChartRecipeDefinition;
+  themeDefinitions: ReadonlyArray<ChartThemeDefinition>;
+}>;
+
+/** Mark slot 继承后的值；显式 mark payload 由 mark resolver 自己覆盖 */
+export type InheritedChartMarkSlots = Readonly<{
+  encodings: IRJsonObject;
+  properties: IRJsonObject;
+}>;
+
+/** Plot scaffold 与显式 fragment 的 mark 组合结果 */
+export type ChartMarkResolution = Readonly<{
+  marks: ReadonlyArray<IRPlotMarkOperation>;
+  plotThemeTokens?: IRPlotThemeTokenOverrides;
 }>;

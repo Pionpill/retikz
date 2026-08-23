@@ -1,97 +1,178 @@
-import type { JsonValue } from '@retikz/core';
-import type { IRPlot, IRPlotChannel, IRPlotGuide, IRPlotOpacityChannel, IRPlotShapeChannel } from '@retikz/plot';
+import type { IRJsonObject } from '@retikz/core';
+import type { IRPlotGuide, IRPlotMarkOperation, IRPlotScaleOperation } from '@retikz/plot';
 
 import { PlotGuide, PlotMark, PointMarkSchema } from '@retikz/plot';
 
-import type { ChartRecipeSource, ChartRecipeStyleContext } from '../../_shared';
+import type { ChartMarkResolveContext } from '../../_chart/contract/mark';
+import type { ChartRecipeResolution, ChartRecipeResolveContext } from '../../_chart/contract/recipe';
+import type { IRPointEncoding, IRPointProperties } from './schema';
 
-import { chartRecipeId, createChartRecipePlot } from '../../_shared';
-import { RetikzChartError } from '../../error';
-import { createPointChartAxisGuides, createPointChartCartesian2D, pointChartMarkValueOf } from './plot';
+import { RetikzChartError, RetikzChartErrorCode } from '../../error';
+import { pointAxisGuidesOf, pointCartesian2DOf, pointRecipeId } from './plot';
+import { PointRecipeThemeResolutionSchema } from './schema';
 
-type PointChartMarkPatch = {
-  encoding?: object;
+const invalidPoint = (message: string, path: ReadonlyArray<string | number>): RetikzChartError =>
+  new RetikzChartError({
+    code: RetikzChartErrorCode.InvalidChartIR,
+    message,
+    details: { path },
+  });
+
+/** 从已 parse 的 owner slice 读取必需字段 */
+export const requiredFieldOf = (values: IRJsonObject, name: string, path: ReadonlyArray<string | number>): string => {
+  const value = values[name];
+  if (typeof value !== 'string' || value.length === 0) throw invalidPoint(`Chart field "${name}" is required`, path);
+  return value;
 };
 
-type PointChartRecipeSource = ChartRecipeSource & {
-  config: {
-    encoding: {
-      x: IRPlotChannel;
-      y: IRPlotChannel;
-      color?: { field?: string; value?: JsonValue; scale?: string };
-      size?: { field?: string; value?: JsonValue; scale?: string };
-      opacity?: IRPlotOpacityChannel;
-      shape?: IRPlotShapeChannel;
-    };
-    mark?: PointChartMarkPatch;
-  };
-};
-
-/** Point 类型解析方案的类型标识与尺寸图例配置 */
-type PointChartRecipeOptions<TVariant extends PointChartRecipeSource> = {
-  /** 当前具体类型的稳定判别值 */
-  type: TVariant['type'];
-  /** 返回实际参与图元尺寸映射的最终字段；常量尺寸或文本模式返回 undefined */
-  finalSizeFieldOf: (spec: TVariant) => { field: string; scale?: string } | undefined;
-};
-
-/** 把 Plot 通道细化后的输出收窄为严格的字段或常量联合类型 */
-const strictVisualChannelOf = (channel: {
-  field?: string;
-  value?: JsonValue;
-  scale?: string;
-}): { field: string; scale?: string } | { value: JsonValue } => {
-  if (channel.field !== undefined) {
-    return { field: channel.field, ...(channel.scale === undefined ? {} : { scale: channel.scale }) };
+/** 将 Chart 字段 / 常量 slot 转为 Plot mark style value */
+export const markValueOf = (
+  encodings: IRJsonObject,
+  properties: IRJsonObject,
+  name: string,
+): IRJsonObject | undefined => {
+  if (Object.hasOwn(encodings, name)) {
+    const field = encodings[name];
+    if (typeof field !== 'string' || field.length === 0) {
+      throw invalidPoint(`Chart encoding "${name}" must be a non-empty field`, ['recipe', 'encodings', name]);
+    }
+    return { kind: 'field', value: field };
   }
-  if (channel.value !== undefined) return { value: channel.value };
-  throw new RetikzChartError('Chart visual channel requires a field or constant value');
+  if (Object.hasOwn(properties, name)) return { kind: 'constant', value: properties[name] };
+  return undefined;
 };
 
-/** 从 Point Chart 输入生成完整 Plot */
-export const createPointChartPlot = <TVariant extends PointChartRecipeSource>(
-  spec: TVariant,
-  style: ChartRecipeStyleContext,
-  options: PointChartRecipeOptions<TVariant>,
-): IRPlot => {
-  const cartesian = createPointChartCartesian2D(options.type);
-  const coordinateView = spec.plot.composition?.defaultView;
-  const encoding = spec.config.encoding;
-  const generatedMark = {
-    type: PlotMark.Point,
-    id: chartRecipeId(options.type, 'mark.main'),
-    ...(encoding.color === undefined ? {} : { color: pointChartMarkValueOf(strictVisualChannelOf(encoding.color)) }),
-    ...(encoding.size === undefined ? {} : { size: pointChartMarkValueOf(strictVisualChannelOf(encoding.size)) }),
-    ...(encoding.opacity === undefined
-      ? {}
-      : { opacity: pointChartMarkValueOf(strictVisualChannelOf(encoding.opacity)) }),
-    ...(encoding.shape === undefined ? {} : { shape: pointChartMarkValueOf(strictVisualChannelOf(encoding.shape)) }),
-    ...(coordinateView === undefined ? {} : { coordinateView }),
-    encoding: { x: encoding.x, y: encoding.y },
-  };
-  const mark = PointMarkSchema.parse({
-    ...generatedMark,
-    ...(spec.config.mark ?? {}),
-    encoding: {
-      ...generatedMark.encoding,
-      ...(spec.config.mark?.encoding ?? {}),
-    },
-  });
-  const axisGuides = createPointChartAxisGuides(options.type, style, coordinateView);
-  const finalSizeField = options.finalSizeFieldOf(spec);
-  const sizeGuide: IRPlotGuide | undefined =
-    style.legendEnabled && finalSizeField !== undefined
-      ? {
-          type: PlotGuide.Legend,
-          channel: 'size',
-          ...(finalSizeField.scale === undefined ? {} : { scale: finalSizeField.scale }),
-        }
-      : undefined;
+const copyConstantProperty = (target: IRJsonObject, properties: IRJsonObject, name: string): void => {
+  if (Object.hasOwn(properties, name)) target[name] = { kind: 'constant', value: properties[name] };
+};
 
-  return createChartRecipePlot(spec, {
-    scales: [...cartesian.scales],
-    coordinate: cartesian.coordinate,
-    marks: [mark],
-    guides: [...axisGuides, ...(sizeGuide === undefined ? [] : [sizeGuide])],
-  });
+const copyRawProperty = (target: IRJsonObject, properties: IRJsonObject, name: string): void => {
+  if (Object.hasOwn(properties, name)) target[name] = properties[name];
+};
+
+const pointVisualSlots = ['color', 'size', 'opacity', 'shape'] as const;
+
+const pointConstantPropertySlots: ReadonlyArray<keyof IRPointProperties> = [
+  'textColor',
+  'fill',
+  'stroke',
+  'strokeWidth',
+  'fillOpacity',
+  'strokeOpacity',
+  'rotate',
+  'minimumSize',
+  'zIndex',
+  'align',
+  'lineHeight',
+  'maxTextWidth',
+  'cornerRadius',
+  'scale',
+  'padding',
+  'margin',
+  'dashed',
+  'dotted',
+  'dashPattern',
+  'font',
+  'boundary',
+  'shadow',
+  'blendMode',
+  'dx',
+  'dy',
+  'label',
+];
+
+const pointRawPropertySlots: ReadonlyArray<keyof IRPointProperties> = ['dx', 'dy', 'label'];
+
+/** Plot Point mark resolver 实际读取的 encoding slots */
+export const pointEncodingSlots: ReadonlyArray<keyof IRPointEncoding> = ['x', 'y', ...pointVisualSlots];
+
+/** Plot Point mark resolver 实际读取的 property slots */
+export const pointPropertySlots: ReadonlyArray<keyof IRPointProperties> = [
+  ...pointVisualSlots,
+  ...pointConstantPropertySlots,
+];
+
+/** 把 Chart Point slots 解析为 Plot Point mark */
+export const resolvePointMark = (
+  encodings: IRJsonObject,
+  properties: IRJsonObject,
+  options: Readonly<{ chartType: string; id?: string; coordinateView?: string; includeId?: boolean }>,
+): IRPlotMarkOperation => {
+  const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
+  const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
+  const mark: IRJsonObject = {
+    type: PlotMark.Point,
+    encoding: { x: { field: x }, y: { field: y } },
+  };
+  if (options.includeId !== false) mark.id = options.id ?? pointRecipeId(options.chartType, 'mark.main');
+  if (options.coordinateView !== undefined) mark.coordinateView = options.coordinateView;
+
+  for (const name of pointVisualSlots) {
+    const value = markValueOf(encodings, properties, name);
+    if (value !== undefined) mark[name] = value;
+  }
+  for (const name of pointConstantPropertySlots) copyConstantProperty(mark, properties, name);
+  for (const name of pointRawPropertySlots) copyRawProperty(mark, properties, name);
+  return PointMarkSchema.parse(mark);
+};
+
+/** 已完成 theme fallback 的 Point recipe token */
+export const pointThemeOf = (
+  tokens: IRJsonObject,
+): Readonly<{ axisEnabled: boolean; axisGridEnabled: boolean; legendEnabled: boolean }> =>
+  PointRecipeThemeResolutionSchema.parse(tokens);
+
+/** 生成 Point recipe 的共享 scaffold 与 guide */
+export const pointResolutionOf = (
+  chartType: string,
+  theme: Readonly<{ axisEnabled: boolean; axisGridEnabled: boolean; legendEnabled: boolean }>,
+  marks: readonly [IRPlotMarkOperation, ...Array<IRPlotMarkOperation>],
+  options: Readonly<{
+    scales?: ReadonlyArray<IRPlotScaleOperation>;
+    guides?: ReadonlyArray<IRPlotGuide>;
+  }> = {},
+): ChartRecipeResolution => {
+  const cartesian = pointCartesian2DOf(chartType);
+  const scales = [...cartesian.scales, ...(options.scales ?? [])];
+  const guides = [...pointAxisGuidesOf(chartType, theme), ...(options.guides ?? [])];
+  return {
+    scaffold: {
+      scales: scales.map(value => ({ value, replaceable: true })),
+      spatial: { coordinate: cartesian.coordinate, replaceable: true },
+      guides: { value: guides, replaceable: true },
+    },
+    semanticMarks: marks,
+  };
+};
+
+/** 由 recipe context 提取通用 Point slot */
+export const pointSlotsOf = (
+  context: ChartRecipeResolveContext,
+): Readonly<{ encodings: IRJsonObject; properties: IRJsonObject }> => ({
+  encodings: context.encodings,
+  properties: context.properties,
+});
+
+/** 由 authored mark context 合并继承与显式 slot；显式值优先 */
+export const markSlotsOf = (
+  context: ChartMarkResolveContext,
+): Readonly<{ encodings: IRJsonObject; properties: IRJsonObject }> => ({
+  encodings: { ...context.inherited.encodings, ...objectOf(context.source, 'encodings') },
+  properties: { ...context.inherited.properties, ...objectOf(context.source, 'properties') },
+});
+
+const objectOf = (source: IRJsonObject, key: string): IRJsonObject => {
+  if (!Object.hasOwn(source, key)) return {};
+  const value = source[key];
+  if (value === null || Array.isArray(value) || typeof value !== 'object') return {};
+  return value;
+};
+
+/** 生成尺寸图例；size field 不存在时不创建 guide */
+export const sizeGuideOf = (
+  theme: Readonly<{ legendEnabled: boolean }>,
+  encodings: IRJsonObject,
+): IRPlotGuide | undefined => {
+  if (!theme.legendEnabled || typeof encodings.size !== 'string') return undefined;
+  return { type: PlotGuide.Legend, channel: 'size' };
 };

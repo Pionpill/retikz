@@ -12,6 +12,18 @@ export const RetikzChartErrorCode = {
   InvalidChartIR: 'invalid-chart-ir',
   /** Chart 解析后的 Plot 无效 */
   InvalidResolvedPlot: 'invalid-resolved-plot',
+  /** Chart family / chartType / mark Definition registry 冲突 */
+  InvalidRegistry: 'invalid-registry',
+  /** Definition key 重复 */
+  DuplicateDefinition: 'duplicate-definition',
+  /** Definition 依赖缺失 */
+  MissingDependency: 'missing-dependency',
+  /** Theme base 继承环 */
+  ThemeCycle: 'theme-cycle',
+  /** Source family 与 recipe family 不匹配 */
+  FamilyMismatch: 'family-mismatch',
+  /** Source 中未知 recipe / mark / theme key */
+  UnknownDefinition: 'unknown-definition',
 } as const;
 
 /** Chart 包稳定错误码取值 */

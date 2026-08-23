@@ -1,29 +1,46 @@
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import * as chart from '../src';
 import * as point from '../src/point';
 
 describe('@retikz/chart-vanilla public surface', () => {
-  it('keeps Point typed factories out of the base entry', () => {
-    expect(chart).toHaveProperty('createChart');
-    expect(chart).toHaveProperty('normalizeChart');
+  it('keeps only shared rendering primitives on the root entry', () => {
     expect(chart).toHaveProperty('renderChart');
-    expect(chart).not.toHaveProperty('createScatterChart');
-    expect(chart).not.toHaveProperty('createBubbleChart');
-    expect(chart).not.toHaveProperty('createConnectedScatterChart');
-    expect(chart).not.toHaveProperty('PointChartInputEmbedAdapter');
+    expect(chart).toHaveProperty('ChartInputEmbedAdapter');
+    expect(chart).not.toHaveProperty('createChart');
+    expect(chart).not.toHaveProperty('normalizeChart');
+    expect(chart).not.toHaveProperty('ChartProvider');
   });
 
-  it('exports only Point typed factories and normalizers from the Point entry', () => {
-    expect(point).not.toHaveProperty('createChart');
-    expect(point).not.toHaveProperty('renderChart');
-    expect(point).not.toHaveProperty('normalizeChart');
+  it('exports precise Point factories and normalizers from the Point entry', () => {
     expect(point.createScatterChart).toBeDefined();
-    expect(point.createBubbleChart).toBeDefined();
-    expect(point.createConnectedScatterChart).toBeDefined();
     expect(point.normalizeScatterChart).toBeDefined();
-    expect(point.normalizeBubbleChart).toBeDefined();
-    expect(point.normalizeConnectedScatterChart).toBeDefined();
-    expect(point).not.toHaveProperty('PointChartInputEmbedAdapter');
+    expect(point).not.toHaveProperty('createChart');
+    expect(point).not.toHaveProperty('normalizeChart');
+  });
+
+  it('publishes concrete chartType subpath entries', async () => {
+    const scatter = await import('../src/point/scatter');
+    expect(scatter.createScatterChart).toBeDefined();
+  });
+
+  it('keeps each concrete chartType closure independent from the Point barrel', async () => {
+    const cases = [{ chartType: 'scatter', files: ['index.ts', 'factory.ts', 'normalize.ts', 'types.ts'] }] as const;
+
+    for (const item of cases) {
+      const contents = (
+        await Promise.all(
+          item.files.map(file =>
+            readFile(fileURLToPath(new URL(`../src/point/${item.chartType}/${file}`, import.meta.url)), 'utf8'),
+          ),
+        )
+      ).join('\n');
+      expect(contents).not.toMatch(/from ['"][^'"]*\/point['"]/);
+      expect(contents).not.toContain("from '../index'");
+      expect(contents).not.toContain("from '../../normalize/point'");
+      expect(contents).toContain(`from '@retikz/chart/point/${item.chartType}'`);
+    }
   });
 });

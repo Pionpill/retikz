@@ -42,6 +42,10 @@
     "./point": {
       "types": "./src/point/index.ts",
       "default": "./src/point/index.ts"
+    },
+    "./point/scatter": {
+      "types": "./src/point/scatter/index.tsx",
+      "default": "./src/point/scatter/index.tsx"
     }
   },
   "publishConfig": {
@@ -58,6 +62,11 @@
         "types": "./dist/types/point/index.d.ts",
         "import": "./dist/point/index.js",
         "default": "./dist/point/index.js"
+      },
+      "./point/scatter": {
+        "types": "./dist/types/point/scatter/index.d.ts",
+        "import": "./dist/point/scatter/index.js",
+        "default": "./dist/point/scatter/index.js"
       }
     }
   },

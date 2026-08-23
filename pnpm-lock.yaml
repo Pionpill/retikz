@@ -1428,15 +1428,9 @@ importers:
       '@retikz/foundation':
         specifier: workspace:^
         version: link:../../kernel/foundation
-      '@retikz/layout':
-        specifier: workspace:^
-        version: link:../../library/layout
       '@retikz/plot':
         specifier: workspace:^
         version: link:../plot
-      '@retikz/plot-vanilla':
-        specifier: workspace:^
-        version: link:../plot-vanilla
       '@retikz/standard':
         specifier: workspace:^
         version: link:../../library/standard
@@ -1459,6 +1453,9 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.1)(jiti@2.6.1)(tsx@4.22.4)(yaml@2.8.4))
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
 
   packages/viz/data:
     dependencies:

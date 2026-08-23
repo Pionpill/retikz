@@ -1,56 +1,52 @@
-import { ChannelSchema, OpacityChannelSchema, ShapeChannelSchema } from '@retikz/plot';
 import { z } from 'zod';
 
-import { CHART_NAMESPACE, ChartCommonFieldShape, ChartPlotSchema, stripUndefinedProperties } from '../../_shared';
-import { PointChartType } from '../constants';
+import { createChartSourceSchema, createChartThemeSchema } from '../../_chart/schemas';
+import { ChartFamily, ChartType } from '../constants';
 import {
-  PointEncodingPatchBaseSchema,
-  PointMarkPatchFields,
-  StrictColorChannelSchema,
-  StrictSizeChannelSchema,
+  PointEncodingSchema,
+  PointMarkSchema,
+  PointPropertiesSchema,
+  PointRecipeThemeOverridesSchema,
+  PointRecipeThemeResolutionSchema,
 } from '../shared';
 
-const ScatterPointEncodingPatchSchema = PointEncodingPatchBaseSchema.describe(
-  'Point encoding patch excluding the Scatter-owned x and y position channels',
+/** Scatter recipe 的精确 field-bound encoding schema */
+export const ScatterChartEncodingsSchema = PointEncodingSchema.describe('Scatter Chart field-bound encodings');
+
+/** Scatter recipe 的精确 constant properties schema */
+export const ScatterChartPropertiesSchema = PointPropertiesSchema.describe('Scatter Chart constant properties');
+
+/** Scatter recipe 允许的有序 Chart mark schema */
+export const ScatterChartMarkSchema = z.strictObject(PointMarkSchema.shape).describe('Scatter Chart mark payload');
+
+/** Scatter recipe 的严格 recipe envelope */
+export const ScatterChartRecipeSchema = z
+  .strictObject({
+    chartType: z.literal(ChartType.Scatter).describe('Globally unique Scatter recipe key'),
+    encodings: ScatterChartEncodingsSchema,
+    properties: ScatterChartPropertiesSchema.optional(),
+    marks: z.array(ScatterChartMarkSchema).optional(),
+  })
+  .describe('Scatter Chart recipe payload');
+
+/** Scatter recipe 的稀疏主题 schema */
+export const ScatterChartThemeOverridesSchema = PointRecipeThemeOverridesSchema.describe(
+  'Scatter Chart recipe theme overrides',
 );
 
-/** Scatter 主点标记允许覆盖的封闭表现字段 */
-export const ScatterPointPatchSchema = z
-  .strictObject({
-    ...PointMarkPatchFields.shape,
-    encoding: ScatterPointEncodingPatchSchema.optional().describe(
-      'Optional Point encoding patch for non-spatial built-in channels and custom coordinate roles',
-    ),
-  })
-  .describe('Strict visual patch for a Scatter primary Point mark')
-  .overwrite(stripUndefinedProperties);
+/** Scatter recipe 的完整主题 schema */
+export const ScatterChartThemeResolutionSchema = PointRecipeThemeResolutionSchema.describe(
+  'Scatter Chart recipe theme resolution',
+);
 
-export const ScatterChartConfigSchema = z.strictObject({
-  encoding: z
-    .strictObject({
-      x: ChannelSchema.describe('Required primary position channel'),
-      y: ChannelSchema.describe('Required secondary position channel'),
-      color: StrictColorChannelSchema.optional().describe('Optional strict point color channel'),
-      size: StrictSizeChannelSchema.optional().describe('Optional strict point radius channel'),
-      opacity: OpacityChannelSchema.optional().describe('Optional Plot-owned point opacity channel'),
-      shape: ShapeChannelSchema.optional().describe('Optional Plot-owned categorical point shape channel'),
-    })
-    .describe('Required Scatter position roles and optional visual channels'),
-  mark: ScatterPointPatchSchema.optional().describe('Optional visual patch for the primary Point mark'),
-});
-
-export const ScatterChartSchema = z
-  .strictObject({
-    namespace: z.literal(CHART_NAMESPACE).describe('Chart namespace discriminator'),
-    type: z.literal(PointChartType.Scatter).describe('Scatter Chart type discriminator'),
-    ...ChartCommonFieldShape,
-    plot: ChartPlotSchema,
-    config: ScatterChartConfigSchema,
-  })
-  .describe('Scatter Chart Source IR')
-  .overwrite(stripUndefinedProperties);
+/** Scatter Chart 精确 Source schema */
+export const ScatterChartSchema = createChartSourceSchema(
+  ChartFamily.Point,
+  ScatterChartRecipeSchema,
+  createChartThemeSchema(ScatterChartThemeOverridesSchema).optional(),
+).describe('Scatter Chart Source IR');
 
 export type IRScatterChart = z.infer<typeof ScatterChartSchema>;
-
-/** Scatter 主点标记的表现字段局部配置 */
-export type IRScatterPointPatch = z.infer<typeof ScatterPointPatchSchema>;
+export type IRScatterChartRecipe = z.infer<typeof ScatterChartRecipeSchema>;
+export type IRScatterChartEncodings = z.infer<typeof ScatterChartEncodingsSchema>;
+export type IRScatterChartProperties = z.infer<typeof ScatterChartPropertiesSchema>;

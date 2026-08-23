@@ -1,2 +1,2 @@
-export * from './recipe';
+export * from './provider';
 export * from './schema';

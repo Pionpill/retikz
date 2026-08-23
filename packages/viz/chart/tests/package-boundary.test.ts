@@ -119,9 +119,7 @@ const publishablePackageExpectations = {
       '@retikz/core': 'workspace:^',
       '@retikz/data': 'workspace:^',
       '@retikz/foundation': 'workspace:^',
-      '@retikz/layout': 'workspace:^',
       '@retikz/plot': 'workspace:^',
-      '@retikz/plot-vanilla': 'workspace:^',
       '@retikz/standard': 'workspace:^',
       '@retikz/vanilla': 'workspace:^',
     },
@@ -141,6 +139,7 @@ describe('published Chart release-group boundaries', () => {
     expect(manifest.exports).toEqual({
       '.': { types: './src/index.ts', default: './src/index.ts' },
       './point': { types: './src/point/index.ts', default: './src/point/index.ts' },
+      './point/scatter': { types: './src/point/scatter/index.ts', default: './src/point/scatter/index.ts' },
     });
     expect(manifest.publishConfig?.exports).toEqual({
       '.': {
@@ -152,6 +151,11 @@ describe('published Chart release-group boundaries', () => {
         types: './dist/types/point/index.d.ts',
         import: './dist/point/index.js',
         default: './dist/point/index.js',
+      },
+      './point/scatter': {
+        types: './dist/types/point/scatter/index.d.ts',
+        import: './dist/point/scatter/index.js',
+        default: './dist/point/scatter/index.js',
       },
     });
   });
@@ -184,5 +188,21 @@ describe('published Chart release-group boundaries', () => {
       import: distPath,
       default: distPath,
     });
+  });
+
+  it.each([
+    ['React', publishablePackageExpectations.react, 'tsx'],
+    ['Vanilla', publishablePackageExpectations.vanilla, 'ts'],
+  ])('publishes concrete %s chartType source entries', async (_name, expectation, extension) => {
+    const manifest = await readManifest(expectation.manifest);
+    for (const chartType of ['scatter']) {
+      const sourcePath = `./src/point/${chartType}/index.${extension}`;
+      expect(manifest.exports?.[`./point/${chartType}`]).toEqual({ types: sourcePath, default: sourcePath });
+      expect(manifest.publishConfig?.exports?.[`./point/${chartType}`]).toEqual({
+        types: `./dist/types/point/${chartType}/index.d.ts`,
+        import: `./dist/point/${chartType}/index.js`,
+        default: `./dist/point/${chartType}/index.js`,
+      });
+    }
   });
 });
