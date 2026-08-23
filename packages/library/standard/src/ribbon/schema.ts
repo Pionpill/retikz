@@ -3,7 +3,7 @@ import { PolarPositionSchema, PositionSchema, Vector2Schema } from '@retikz/core
 import { AngleDegreesSchema } from '@retikz/core';
 import { StepSchema } from '@retikz/core';
 import {
-  NonBlankStringSchema,
+  createOpenStringSchema,
   NonNegativeNumberSchema,
   NormalizedFractionSchema,
   PositiveNumberSchema,
@@ -19,7 +19,13 @@ import {
   RibbonMode,
   RibbonTaperInterpolation,
   RibbonWidthInterpolation,
+  RibbonWidthProfile,
 } from './constants';
+
+/** Standard 内置 Ribbon profile 与自定义注册名共享的开放名称 schema */
+export const RibbonWidthProfileNameSchema = createOpenStringSchema(RibbonWidthProfile).describe(
+  'Ribbon width profile name assembled from Standard profile definitions and provider contributions.',
+);
 
 export const RibbonArcCapSchema = z
   .object({
@@ -65,9 +71,7 @@ export const RibbonWidthStopsSchema = z
 export const RibbonWidthProfileSchema = z
   .object({
     kind: z.literal('profile').describe('Discriminator for registered width profiles.'),
-    name: NonBlankStringSchema.describe(
-      'Ribbon width profile name assembled from Standard profile definitions and provider contributions.',
-    ),
+    name: RibbonWidthProfileNameSchema,
     params: JsonObjectSchema.optional().describe('JSON-safe profile parameters.'),
   })
   .strict()

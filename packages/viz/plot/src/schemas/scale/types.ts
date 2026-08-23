@@ -1,7 +1,7 @@
 import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
-import type { PlotScale } from './constants';
+import type { PlotColorScheme, PlotScale } from './constants';
 import type {
   BandScaleSchema,
   CategoryValueSchema,
@@ -27,6 +27,9 @@ import type {
 
 /** scale 类型 */
 export type PlotScaleValue = ValueOf<typeof PlotScale>;
+
+/** 内置命名配色方案名 */
+export type PlotColorSchemeValue = ValueOf<typeof PlotColorScheme>;
 
 /** 分类标量：类别取值 */
 export type IRPlotCategoryValue = z.infer<typeof CategoryValueSchema>;

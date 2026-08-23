@@ -1,7 +1,7 @@
 import type { ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
-import type { DataFieldType, FieldOrderMode } from './constants';
+import type { DataFieldFormat, DataFieldType, FieldOrderMode } from './constants';
 import type {
   DataModelSchema,
   DataReferenceSchema,
@@ -15,6 +15,9 @@ export type DataFieldTypeValue = ValueOf<typeof DataFieldType>;
 
 /** 分类字段顺序策略取值 */
 export type FieldOrderModeValue = ValueOf<typeof FieldOrderMode>;
+
+/** 内置字段值解析格式名取值 */
+export type DataFieldFormatValue = ValueOf<typeof DataFieldFormat>;
 
 /** 字段解析格式名：内置关键字或自定义注册名，运行时由 format registry 解析为 parser */
 export type FieldFormatValue = z.infer<typeof FieldFormatSchema>;

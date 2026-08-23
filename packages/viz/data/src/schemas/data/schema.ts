@@ -1,9 +1,11 @@
-﻿import { NonBlankStringSchema } from '@retikz/foundation';
+import { createOpenStringSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
-import { DataFieldType, FieldOrderMode } from './constants';
+import { DataFieldFormat, DataFieldType, FieldOrderMode } from './constants';
 
-export const FieldFormatSchema = NonBlankStringSchema.describe('Field value-parsing format name; built-in or custom');
+export const FieldFormatSchema = createOpenStringSchema(DataFieldFormat).describe(
+  'Field value-parsing format name; built-in or custom.',
+);
 
 export const FieldDefinitionSchema = z
   .strictObject({
@@ -19,11 +21,11 @@ export const FieldDefinitionSchema = z
 
 export const DataModelSchema = z
   .array(FieldDefinitionSchema)
-  .superRefine((fields, ctx) => {
+  .superRefine((fields, context) => {
     const names = new Set<string>();
     fields.forEach((field, index) => {
       if (names.has(field.name)) {
-        ctx.addIssue({
+        context.addIssue({
           code: 'custom',
           path: [index, 'name'],
           message: `duplicate data model field "${field.name}"`,

@@ -1,5 +1,5 @@
 import {
-  NonBlankStringSchema,
+  createOpenStringSchema,
   NonNegativeNumberSchema,
   NormalizedFractionSchema,
   PositiveNumberSchema,
@@ -15,6 +15,8 @@ import { GeometryLabelSchema, StepSchema } from '../step';
 import { PathFillRule, PathKind } from './constants';
 
 export const PathFillRuleSchema = z.enum(PathFillRule).describe('Path fill rule keyword.');
+
+const PathKindSchema = createOpenStringSchema(PathKind);
 
 export const PathAnisotropicScaleSchema = z
   .object({
@@ -105,7 +107,7 @@ export const PathDecorationSchema = z
 export const PathStructureSchema = z
   .strictObject({
     type: z.literal('path').describe('Discriminator marking this child as a path.'),
-    kind: NonBlankStringSchema.optional().describe('Path kind provider name. Omitted means built-in `stroke`.'),
+    kind: PathKindSchema.optional().describe('Path kind provider name. Omitted means built-in `stroke`.'),
     kindOptions: JsonObjectSchema.optional().describe(
       'JSON-safe option object consumed by the selected path kind provider.',
     ),

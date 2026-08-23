@@ -7,6 +7,7 @@ import type {
   PaintSchema,
   PatternLineStyleCycleSchema,
   PatternLineStyleSchema,
+  PatternShapeNameSchema,
 } from './schema';
 
 /** 渐变 stop 类型 */
@@ -40,4 +41,4 @@ export type BuiltinPatternName = PatternShapeValue;
  * @description 内置 `BuiltinPatternName`，或经 `CompileOptions.patterns` 注册的扩展 motif 名；
  *   `& {}` 让 IDE 仍对内置 3 名自动补全，同时接受任意非空字符串
  */
-export type PatternShapeName = BuiltinPatternName | (string & {});
+export type PatternShapeName = z.infer<typeof PatternShapeNameSchema>;

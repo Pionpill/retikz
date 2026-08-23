@@ -1,4 +1,5 @@
 import {
+  createOpenStringSchema,
   NonBlankStringSchema,
   NonNegativeNumberSchema,
   NormalizedFractionSchema,
@@ -8,10 +9,13 @@ import { z } from 'zod';
 
 import { Anchor, CenterAnchor } from '../../shared';
 import { JsonValueSchema } from '../json';
-import { AnimationDirection, AnimationFill, AnimationProperty, AnimationTrigger } from './constants';
+import { AnimationDirection, AnimationEasing, AnimationFill, AnimationProperty, AnimationTrigger } from './constants';
+
+const AnimationEasingNameSchema = createOpenStringSchema(AnimationEasing);
+const AnimationPropertySchema = createOpenStringSchema(AnimationProperty);
 
 export const EasingSchema = z
-  .union([NonBlankStringSchema, z.tuple([z.number(), z.number(), z.number(), z.number()])])
+  .union([AnimationEasingNameSchema, z.tuple([z.number(), z.number(), z.number(), z.number()])])
   .describe(
     'Easing curve: built-in easing name, custom easing name, or cubic-bezier tuple [x1, y1, x2, y2]. Omitted fields use linear easing.',
   );
@@ -57,7 +61,7 @@ export const OriginSchema = z
 
 export const AnimationTrackSchema = z
   .object({
-    property: NonBlankStringSchema.describe(
+    property: AnimationPropertySchema.describe(
       'Animated property name. Built-ins have refined value types; custom names accept JSON values. viewBox is scene-root only.',
     ),
     keyframes: z

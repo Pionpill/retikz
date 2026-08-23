@@ -1,11 +1,17 @@
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { createOpenStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { JsonObjectSchema } from '../json';
+import { BuiltinShape } from './constants';
+
+/** Core 内置 shape 与自定义注册名共享的开放名称 schema */
+export const ShapeNameSchema = createOpenStringSchema(BuiltinShape).describe(
+  'Shape name: a Core built-in or a custom name registered via CompileOptions.shapes.',
+);
 
 export const ShapeRefSchema = z
   .strictObject({
-    type: NonBlankStringSchema.describe(
+    type: ShapeNameSchema.describe(
       'Shape name; built-in or registered via CompileOptions.shapes. Unregistered names are rejected at compile time.',
     ),
     params: JsonObjectSchema.optional().describe(
@@ -16,5 +22,5 @@ export const ShapeRefSchema = z
 
 /** Core shape 值：裸 provider 名或带 JSON 参数的结构化引用 */
 export const ShapeValueSchema = z
-  .union([NonBlankStringSchema, ShapeRefSchema])
+  .union([ShapeNameSchema, ShapeRefSchema])
   .describe('Core shape value: a non-blank shape name or a structured shape reference.');

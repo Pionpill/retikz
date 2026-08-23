@@ -21,7 +21,7 @@ import {
   PathScaleSchema,
   PathThickness,
   ShadowPreset,
-  ShapeRefSchema,
+  ShapeValueSchema,
 } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { RibbonPathOptionsSchema } from '@retikz/standard/ribbon';
@@ -280,7 +280,7 @@ const StylePositiveNumberSchema = PositiveNumberSchema;
 const StyleOpacitySchema = z.number().min(0).max(1);
 const StyleDashPatternSchema = z.array(StyleNonnegativeNumberSchema).min(1);
 const StyleShadowSchema = z.union([z.enum(ShadowPreset), DropShadowSchema]);
-const StyleShapeSchema = z.union([NonBlankStringSchema, ShapeRefSchema]);
+const StyleShapeSchema = ShapeValueSchema;
 const StyleBlendModeSchema = z.enum(BlendMode);
 const StyleBoxSpacingSchema = z.union([StyleNonnegativeNumberSchema, BoxSpacingSchema]);
 const StyleAxisScaleSchema = z.union([StylePositiveNumberSchema, AxisScaleSchema]);

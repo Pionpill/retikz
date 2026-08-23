@@ -1,14 +1,9 @@
-import type { ValueOf } from '@retikz/foundation';
+import type { OpenString, ValueOf } from '@retikz/foundation';
 import type { z } from 'zod';
 
+import type { BuiltinShapeValue } from '../shape';
 import type { NodeTextAlign } from '../text';
-import type {
-  BuiltinShape,
-  NodeLabelPlacement,
-  NodeLabelPosition,
-  NodeLabelRotateMode,
-  NodeTextColor,
-} from './constants';
+import type { NodeLabelPlacement, NodeLabelPosition, NodeLabelRotateMode, NodeTextColor } from './constants';
 import type {
   AxisScaleSchema,
   BoxSizeSchema,
@@ -35,15 +30,11 @@ export type IRNodeLabel = z.infer<typeof NodeLabelSchema>;
 /** 节点：可定位的形状容器（矩形/圆/椭圆/菱形）+ 可选文本标签 */
 export type IRNode = z.infer<typeof NodeSchema>;
 
-/** 内置形状名联合，含由 Core 提供者参数化得到的 `circle` / `diamond` 预设 */
-export type BuiltinShapeValue = ValueOf<typeof BuiltinShape>;
-
 /**
  * 节点形状名：开放字符串
- * @description 内置 `BuiltinShapeValue`，或经 `CompileOptions.shapes` 注册的扩展 shape 名；
- *   `& {}` 让 IDE 仍对内置名称自动补全，同时接受任意非空字符串
+ * @description 内置 `BuiltinShapeValue`，或经 `CompileOptions.shapes` 注册的扩展 shape 名
  */
-export type NodeShape = BuiltinShapeValue | (string & {});
+export type NodeShape = OpenString<BuiltinShapeValue>;
 
 export type NodeTextAlignValue = ValueOf<typeof NodeTextAlign>;
 

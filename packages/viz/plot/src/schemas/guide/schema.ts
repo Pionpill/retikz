@@ -7,7 +7,7 @@ import {
   OpacitySchema,
   PaintValueSchema,
   PathLineCapSchema,
-  ShapeRefSchema,
+  ShapeValueSchema,
   StrokeWidthSchema,
   TextAlignSchema,
   TextBlockSchema,
@@ -347,7 +347,7 @@ const AxisTickBuiltinShapeMarkSchema = z
 const AxisTickCustomShapeMarkSchema = z
   .strictObject({
     kind: z.literal(AxisTickMarkKind.Custom).describe('Custom core Node shape tick mark'),
-    shape: z.union([NonBlankStringSchema, ShapeRefSchema]).describe('Core shape reference used by this tick mark'),
+    shape: ShapeValueSchema.describe('Core shape reference used by this tick mark'),
     ...AxisTickShapeMarkBase,
   })
   .describe('Custom shape tick mark configuration');

@@ -1,13 +1,18 @@
 import { JsonObjectSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { createOpenStringSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { TableCellSelectorSchema } from '../rule';
-import { TableVisualChannel } from './constants';
+import { TableCellVisualScale, TableVisualChannel } from './constants';
+
+/** Table 内置 visual scale 与自定义注册名共享的开放名称 schema */
+export const TableCellVisualScaleNameSchema = createOpenStringSchema(TableCellVisualScale).describe(
+  'Registered Table Cell visual scale definition name.',
+);
 
 export const TableVisualScaleRefSchema = z
   .strictObject({
-    name: NonBlankStringSchema.describe('Registered Table Cell visual scale definition name.'),
+    name: TableCellVisualScaleNameSchema,
     options: JsonObjectSchema.optional().describe('JSON-safe options parsed by the selected visual scale definition.'),
   })
   .describe('Reference to a registered Table Cell visual scale definition.');

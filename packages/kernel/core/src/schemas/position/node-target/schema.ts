@@ -1,7 +1,7 @@
-import { NonBlankStringSchema, NormalizedFractionSchema } from '@retikz/foundation';
+import { createOpenStringSchema, NonBlankStringSchema, NormalizedFractionSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
-import { Side } from '../../../shared';
+import { Anchor, CenterAnchor, Side } from '../../../shared';
 import { BoundarySchema } from '../../boundary';
 import { AngleDegreesSchema } from '../../scalar';
 
@@ -14,9 +14,11 @@ export const BoundaryAnchorRefSchema = z
   })
   .describe('Proportional point on the real shape boundary edge');
 
+const NamedAnchorRefSchema = createOpenStringSchema({ ...CenterAnchor, ...Anchor });
+
 export const AnchorRefSchema = z
   .union([
-    NonBlankStringSchema.describe(
+    NamedAnchorRefSchema.describe(
       'Named anchor: canonical anchor or shape-specific anchor. Unknown names fail at compile time.',
     ),
     AngleDegreesSchema.describe('Angle anchor in degrees (boundary point in that direction)'),

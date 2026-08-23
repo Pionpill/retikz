@@ -1,10 +1,17 @@
-import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import { createOpenStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
 import { CssColorSchema, OpacitySchema } from '../../style';
+import { BuiltinArrowShape } from './constants';
+
+/** Core 内置 arrow 与自定义注册名共享的开放名称 schema */
+export const ArrowShapeSchema = createOpenStringSchema(BuiltinArrowShape).describe(
+  'Arrow shape provider name: a Core built-in or a custom name registered via CompileOptions.arrows.',
+);
+
 export const ArrowEndDetailSchema = z
   .strictObject({
-    shape: NonBlankStringSchema.optional().describe(
+    shape: ArrowShapeSchema.optional().describe(
       'Arrow shape provider name. Built-ins and registered custom names are accepted.',
     ),
     scale: PositiveNumberSchema.optional().describe(

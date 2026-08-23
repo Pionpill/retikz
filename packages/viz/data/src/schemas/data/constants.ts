@@ -20,3 +20,19 @@ export const FieldOrderMode = {
   /** 按分类值降序排列；数值用数值比较，其余用字符串比较 */
   Descending: 'descending',
 } as const;
+
+/** 内置字段值解析格式名 */
+export const DataFieldFormat = {
+  /** temporal：严格 ISO（默认，等价不写 format） */
+  Iso: 'iso',
+  /** temporal：数值 / 数值串按 epoch 秒换算为毫秒 */
+  EpochSeconds: 'epochSeconds',
+  /** temporal：数值 / 数值串按 epoch 毫秒 */
+  EpochMillis: 'epochMillis',
+  /** temporal：严格 YYYY/MM/DD 斜杠日期 */
+  SlashDate: 'slashDate',
+  /** continuous：宽松数字串 */
+  NumberString: 'numberString',
+  /** continuous：百分比串 */
+  Percent: 'percent',
+} as const;

@@ -1,4 +1,5 @@
 import {
+  createOpenStringSchema,
   NonBlankStringSchema,
   NonNegativeIntegerSchema,
   NormalizedFractionSchema,
@@ -9,7 +10,12 @@ import { z } from 'zod';
 import { AngleDegreesSchema } from '../scalar';
 import { PathLineCapSchema, PathLineJoinSchema, StrokeDashOffsetSchema, StrokeDashPatternSchema } from '../stroke';
 import { CssColorSchema, OpacitySchema } from '../style';
-import { ImageFit } from './constants';
+import { ImageFit, PatternShape } from './constants';
+
+/** Core 内置 pattern motif 与自定义注册名共享的开放名称 schema */
+export const PatternShapeNameSchema = createOpenStringSchema(PatternShape).describe(
+  'Pattern motif provider name: a Core built-in or a custom name registered via CompileOptions.patterns.',
+);
 
 export const GradientStopSchema = z
   .object({
@@ -115,7 +121,7 @@ export const PatternLineStyleCycleSchema = z
 export const PatternPaintSchema = z
   .object({
     kind: z.literal('pattern').describe('Discriminator for pattern paint.'),
-    shape: NonBlankStringSchema.describe(
+    shape: PatternShapeNameSchema.describe(
       'Pattern motif provider name. Built-ins are `lines`, `dots`, and `grid`; custom names must be registered via CompileOptions.patterns.',
     ),
     color: PatternLineStyleSchema.shape.color.describe('Motif color; any CSS color, defaults to `currentColor`'),

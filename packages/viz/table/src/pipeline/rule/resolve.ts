@@ -31,8 +31,10 @@ import { resolveCellVisualScale } from '../../providers/encoding';
 import {
   TableBorderSchema,
   TableCellAppearanceSchema,
+  TableCellFormatter,
   TableCellLocation,
   TableCellPayloadKind,
+  TableCellPresentation,
   TableCellRuleSchema,
   TableCellVisualEncodingSchema,
   TableFormatterRefSchema,
@@ -185,8 +187,8 @@ const initialPlanOf = (cell: SemanticTableCell, options: ResolveTableCellPlansOp
   return {
     kind: TableCellPayloadKind.Value,
     ...(cell.id === undefined ? {} : { cellId: cell.id }),
-    formatter: TableFormatterRefSchema.parse(cell.payload.formatter ?? { name: 'identity' }),
-    presentation: TablePresentationRefSchema.parse(cell.payload.presentation ?? { name: 'text' }),
+    formatter: TableFormatterRefSchema.parse(cell.payload.formatter ?? { name: TableCellFormatter.Identity }),
+    presentation: TablePresentationRefSchema.parse(cell.payload.presentation ?? { name: TableCellPresentation.Text }),
     appearance: structuredClone(initial.appearance),
     trace: {
       formatter: cell.payload.formatter === undefined ? DEFAULT_SOURCE : STRUCTURE_SOURCE,

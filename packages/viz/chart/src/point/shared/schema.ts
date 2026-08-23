@@ -1,4 +1,5 @@
 import { CssColorSchema, JsonObjectSchema } from '@retikz/core';
+import { ShapeNameSchema } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { MarkNodeLabelListSchema } from '@retikz/plot';
 import { z } from 'zod';
@@ -46,7 +47,7 @@ export const PointPropertiesSchema = z
     color: CssColorSchema.optional().describe('Constant point color'),
     textColor: CssColorSchema.optional().describe('Constant point text color'),
     size: z.number().finite().nonnegative().optional().describe('Constant point radius'),
-    shape: NonBlankStringSchema.optional().describe('Constant point shape'),
+    shape: ShapeNameSchema.optional().describe('Constant point shape'),
     fill: z.union([CssColorSchema, JsonObjectSchema]).optional().describe('Constant point fill paint'),
     stroke: z.union([CssColorSchema, JsonObjectSchema]).optional().describe('Constant point stroke paint'),
     strokeWidth: z.number().finite().nonnegative().optional().describe('Constant point stroke width'),

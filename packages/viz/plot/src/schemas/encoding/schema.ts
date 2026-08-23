@@ -1,4 +1,5 @@
 ﻿import { CssColorSchema, GeometryLabelSchema, JsonValueSchema, NodeLabelSchema } from '@retikz/core';
+import { ShapeNameSchema } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { z } from 'zod';
 
@@ -109,7 +110,7 @@ export const ShapeChannelSchema = z
     field: NonBlankStringSchema.optional().describe(
       'Data path bound to shape; categorical, mapped to a built-in glyph palette',
     ),
-    value: NonBlankStringSchema.optional().describe(
+    value: ShapeNameSchema.optional().describe(
       'Constant glyph shape name: a core / registered node shape (mutually exclusive with field)',
     ),
   })

@@ -13,7 +13,12 @@ import type { PresentTableOptions, ResolvedTableCellPresentationInput } from './
 
 import { RetikzTableError } from '../../error';
 import { resolveCellPresentationRegistry } from '../../providers';
-import { TableCellAppearanceSchema, TableCellPayloadKind, TablePresentationRefSchema } from '../../schemas';
+import {
+  TableCellAppearanceSchema,
+  TableCellPayloadKind,
+  TableCellPresentation,
+  TablePresentationRefSchema,
+} from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { applyTableCellContentStyle, parsePresentedChild, presentCellValue } from './present';
 
@@ -66,7 +71,9 @@ const defaultCarrierOf = (
   return deepFreeze({
     kind: TableCellPayloadKind.Value,
     ...(formatted.cellId === undefined ? {} : { cellId: formatted.cellId }),
-    presentation: TablePresentationRefSchema.parse(semantic.payload.presentation ?? { name: 'text' }),
+    presentation: TablePresentationRefSchema.parse(
+      semantic.payload.presentation ?? { name: TableCellPresentation.Text },
+    ),
     appearance,
   });
 };

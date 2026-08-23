@@ -5,3 +5,10 @@ export const TableVisualChannel = {
   /** Cell 内容主颜色 */
   ContentColor: 'contentColor',
 } as const;
+
+/** Table 内置 Cell visual scale 名 */
+export const TableCellVisualScale = {
+  OrdinalColor: 'ordinal-color',
+  SequentialColor: 'sequential-color',
+  ThresholdColor: 'threshold-color',
+} as const;

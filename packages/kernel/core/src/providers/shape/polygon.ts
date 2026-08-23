@@ -6,8 +6,8 @@ import { z } from 'zod';
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
 import type { ContourSegment, Rect } from '../../shared';
 
-import { defineShape } from '../../contract';
-import { contourToPathCommands, contourToPathPrimitive, verticesToSegments } from '../../contract';
+import { contourToPathCommands, contourToPathPrimitive, defineShape, verticesToSegments } from '../../contract';
+import { BuiltinShape } from '../../schemas';
 import {
   boundaryFromContour,
   CenterAnchor,
@@ -145,7 +145,7 @@ const polygonVertices = (bounds: Rect, params: PolygonParams): Array<Position> =
  *   scaleParams 只缩 cornerRadius，不缩 sides / rotate。diamond 由 compile 解析为 polygon preset
  */
 export const polygon = defineShape<PolygonParams>({
-  name: 'polygon',
+  name: BuiltinShape.Polygon,
   paramsSchema: polygonParamsSchema,
   circumscribe: (hw, hh, params) => {
     if (isAspectRatioDiamond(params)) return diamondHalfAxesFor(hw, hh, params.aspectRatio);

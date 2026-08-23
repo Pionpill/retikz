@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { defineCellVisualScale } from '../../contract';
 import { RetikzTableError } from '../../error';
+import { TableCellVisualScale } from '../../schemas';
 
 const NonNullScalarSchema = ScalarValueSchema.refine(value => value !== null, {
   message: 'ordinal domain values must not be null',
@@ -25,7 +26,7 @@ const colorRangeSchema = z.array(CssColorSchema).min(1);
 
 /** 首次出现顺序的分类颜色 scale */
 export const ORDINAL_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
-  name: 'ordinal-color',
+  name: TableCellVisualScale.OrdinalColor,
   optionsSchema: z.strictObject({
     domain: uniqueDomainSchema.optional(),
     range: colorRangeSchema.optional(),

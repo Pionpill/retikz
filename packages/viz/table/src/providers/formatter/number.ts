@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { defineCellFormatter } from '../../contract';
 import { RetikzTableError } from '../../error';
+import { TableCellFormatter } from '../../schemas';
 
 const TABLE_NUMBER_LOCALE = formatLocale({
   decimal: '.',
@@ -16,7 +17,7 @@ const TABLE_NUMBER_LOCALE = formatLocale({
 
 /** 使用固定 locale 的内置 number formatter */
 export const NUMBER_CELL_FORMATTER = defineCellFormatter({
-  name: 'number',
+  name: TableCellFormatter.Number,
   optionsSchema: z.strictObject({
     specifier: z.string().optional(),
     nullText: z.string().optional(),

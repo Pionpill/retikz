@@ -1,10 +1,15 @@
 import { CssColorSchema } from '@retikz/core';
-import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import {
+  createOpenStringSchema,
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { z } from 'zod';
 
-import { BUILTIN_SCALE_TYPES, PlotScale } from './constants';
+import { BUILTIN_SCALE_TYPES, PlotColorScheme, PlotScale } from './constants';
 
-export const ColorSchemeNameSchema = NonBlankStringSchema.describe(
+export const ColorSchemeNameSchema = createOpenStringSchema(PlotColorScheme).describe(
   'Color scheme name: a built-in scheme (e.g. viridis / rdbu) or a custom name registered via options.colorSchemes. Validated as a non-blank string here; an unknown name fails loud at lowering. Interpolator functions never enter the IR — only the name string',
 );
 
