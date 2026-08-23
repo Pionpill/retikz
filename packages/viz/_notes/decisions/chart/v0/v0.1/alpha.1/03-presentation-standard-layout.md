@@ -1,6 +1,6 @@
 # ADR-03：Chart canonical presentation 与 adapter authoring
 
-- 状态：Accepted（2026-08-12；2026-08-19 按统一 Vanilla authoring 边界修订）
+- 状态：Superseded（2026-08-22，由 [ADR-09](./09-family-recipe-chart-schema.md) 替代；Vanilla normalize、React 复用 Vanilla 与 Standard presentation 边界已由 ADR-09 重述）
 - 决策日期：2026-08-11
 - 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-chart-infrastructure.md) · [ADR-02](./02-style-palette.md) · [Chart 总设计](../../../../../architecture/chart-design.md)
 - 替代：先前由 `@retikz/chart` 公开共享 authoring normalizer 与 `createChart` 的边界，以及更早的六 preset / 任意 child 草案
@@ -17,7 +17,7 @@ Chart 核心只应拥有持久化 Source IR、recipe、resolve 和 presentation 
 
 `@retikz/chart-vanilla` 拥有 Base 与逐类型 `InputXxx`、`normalizeXxx`、plain presentation records、`createChart`、逐类型 factory、SSR 与 runtime contribution。`normalizeXxx` 只把已类型化 authoring Input 组装为 Chart Source IR，不读取 datasets、Theme、registry、host、runtime 或 renderer context。
 
-`@retikz/chart-react` 把 props、Plot React authoring 和 presentation markers 映射为对应 Vanilla Input，并调用同一 `normalizeXxx`。React 不直接构造 Chart namespace、type、`plot` / `config` Source IR 外壳，也不复制 presentation 排序规则。
+`@retikz/chart-react` 把 props、Plot React authoring 和 presentation markers 映射为对应 Vanilla Input，并调用同一 `normalizeXxx`。React 不直接构造 Chart namespace、type、`plotExtension` / `config` Source IR 外壳，也不复制 presentation 排序规则。
 
 ## 基础数据结构与公开契约
 

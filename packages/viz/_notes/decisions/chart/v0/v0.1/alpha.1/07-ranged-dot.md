@@ -39,7 +39,7 @@ alpha.1 固定 horizontal 配方：category 绑定 y，start / end 绑定 x。re
 - 非空输入中，每行三类角色必须同时存在且可投影；任一缺失、null 或不可投影时整张 Chart 在 mark lowering 前 fail-loud，不留下孤立端点或省略 Relation
 - 完全空 rows 是合法空结果，三个核心 member 不产生 datum geometry，也不报 range-row 错误
 - color 通过 Plot encoding 同时作用于两个 Point 与 Relation；位置 scale 由 Plot 联合 projected fields 推断
-- 三个 marks、axes 与共同 view 必须满足二维 role contract；无法保持 semantic mark layer 的 composition fail-loud
+- 三个 marks、axes 与共同 view 必须满足二维 role contract；无法保持 semantic mark composition 时 fail-loud
 - 核心 marks、顺序、projected endpoints、Relation 层级、共同 view 或保留 identity 被破坏时 fail-loud
 
 ## 功能与包边界

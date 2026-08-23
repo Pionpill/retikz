@@ -1,77 +1,80 @@
-# ADR-04：Scatter 与 Bubble 平级 Canonical Types
+# ADR-04：Point family 的 Scatter recipe
 
-- 状态：Proposed（owner-local Plot quantitative size dependency 已满足；ADR-01 / ADR-03 的公开 capability gates 仍未解除）
-- 决策日期：2026-07-31
-- 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-01](./01-chart-infrastructure.md) · [ADR-03](./03-presentation-standard-layout.md)
+- 状态：Proposed
+- 决策日期：2026-08-22
+- 关联：[alpha.1 roadmap](./roadmap.md) · [Chart 总设计](../../../../../architecture/chart-design.md) · [Chart 封装完备设计](../../../../../architecture/chart-encapsulation-complete.md)
 
 ## 背景与目标
 
-Scatter 与 Bubble 在用户心智、公开 API、IRChart 判别值和文档入口上平级。Scatter 比较两个位置角色，Bubble 额外要求第三个定量尺寸角色并以面积表达量级。两者共享 Point Mark、scale、coordinate、guide 与 ChartCommon，但必须保留各自的 authored intent、稳定 identity、inspection 与 JSON round-trip。
+`scatter` 属于 `point` family，用二维位置表达观测值，并复用 Plot 的 Point、channel、scale、coordinate、guide、lowering 与 provenance 能力。Source 只暴露作者需要的字段绑定、常量 properties、可选 Chart marks 与显式 Plot fragment
 
-## 核心决策与基础数据结构
+本 ADR 冻结 Scatter 的 family 归属、Source shape、semantic mark、Chart mark contract 与失败边界。它不为 Chart 复制 Plot mark schema、scale 解析或 renderer 行为
 
-```ts
-type ScatterChartIR = ChartCommon & {
-  namespace: 'chart';
-  type: 'scatter';
-  encoding: {
-    x: IRPlotChannel;
-    y: IRPlotChannel;
-    color?: StrictColorChannel;
-    size?: StrictSizeChannel;
-    opacity?: IRPlotOpacityChannel;
-    shape?: IRPlotShapeChannel;
-  };
-  mark?: ScatterPointPatch;
-};
+## 决策：Point family 的精确 Scatter recipe
 
-type BubbleChartIR = ChartCommon & {
-  namespace: 'chart';
-  type: 'bubble';
-  encoding: {
-    x: IRPlotChannel;
-    y: IRPlotChannel;
-    size: StrictSizeFieldChannel;
-    color?: StrictColorChannel;
-    opacity?: IRPlotOpacityChannel;
-    shape?: IRPlotShapeChannel;
-  };
-  mark?: BubblePointPatch;
-};
-```
-
-两者分别进入封闭 `IRChart` union，各自固定生成一个 Point 主 Mark、二维 coordinate / composition root 以及 x / y axis 表现性 defaults。x / y 与主 Point identity 是共同核心；Bubble 的 size 是不可撤销的第三个定量 field role，按 Plot size channel 的面积感知语义解析。
+`point` 是 Source 根 `type`；具体 recipe key 写在 `recipe.chartType`：
 
 ```ts
-type StrictColorChannel = { field: string; scale?: string } | { value: string };
-type StrictSizeFieldChannel = { field: string; scale?: string };
-type StrictSizeChannel = StrictSizeFieldChannel | { value: number };
+type IRScatterChartRecipe = {
+  chartType: 'scatter';
+  encodings: IRScatterChartEncodings;
+  properties?: IRScatterChartProperties;
+  marks?: Array<IRPointMark>;
+};
+
+type IRScatterChart = z.infer<typeof ScatterChartSchema>;
 ```
 
-`StrictSizeChannel` 为 strict object；field branch 可引用 sqrt scale，value branch 要求非负有限数并拒绝 `scale`。Scatter 的 size 可缺省、绑定字段或使用常量，显式 `mark.size` 可按 Plot Point 契约覆盖最终值。Bubble 的 `encoding.size` 必须是 field branch，`mark` 与 nested encoding 均不得提供第二个 size 来源。
+最终 Source 由共享 strict root shell 与具名精确 recipe schema 组合后推导，不接受任意 `Record` payload。`encodings` 的值只能是非空字段名；`properties` 的值只能是当前 recipe schema 允许的常量。`plotExtension` 只保存作者显式声明的 Plot fragment，不保存 recipe 展开的 semantic mark 或 scaffold
 
-`ScatterPointPatch` 是 Plot Point Mark 的能力投影，排除 `type`、`id`、`transform`、`coordinateView` 及核心 x / y；Bubble 在此基础上排除所有 Point-local `size` 与会替换 glyph 的 `encoding.text`。patch 严格拒绝未知字段，应用顺序为 recipe visual encoding 后按 authored leaf 覆盖非核心字段，保留 x / y 与 type identity。Plot 新增的非核心、非 size 且不替换 glyph 的公开能力可沿同一投影进入。
+Scatter 要求 `encodings.x` 与 `encodings.y`，并可选 `color`、`size`、`opacity`、`shape` 等字段绑定。recipe 根据字段绑定、properties 与 recipe Theme 生成一个 Point semantic mark；默认坐标、scale、axes 与 legend 由 Point recipe 和 Plot owner 确定
 
-## 行为、默认值、失败语义与兼容性
+## semantic mark 与 Chart mark contract
 
-- 缺省使用 Cartesian2D；显式 Cartesian2D、Polar2D 或兼容自定义 coordinate 由 Plot registry 与 role projection 处理
-- `coordinate` 与 `composition` 互斥；active/default view 必须提供精确二维角色，Point 与 axes 属于同一 view
-- color 与其它视觉角色复用 Plot channel contract；位置 scale 由 Plot 根据 binding、data model 与显式 scale 解析
-- 最终 size 为 field 且 guides 缺省、`chart.legend.enabled` 为 true 时生成 size legend default；显式 guides 整体替换表现性 defaults
-- 最终 size 为 constant 时直接作为 Point 半径，不生成 field descriptor 或 size legend
-- Bubble 缺少 field-bound size、提供 constant size、提供第二个 size 来源或引用非 sqrt scale 时 fail-loud
-- Bubble size field 已知为 categorical、temporal 或其它非 quantitative 类型时 fail-loud；Chart 不预扫描 rows
-- quantitative size 的单行值缺失、null 或非有限时，Plot 在 Point 生成前跳过该 datum，不退化为默认尺寸 glyph；空集、全缺失或零值仍保留 field-bound descriptor、inspection 与可选 legend
-- 未知或非法 scale、负值、无法消歧的多个 size descriptor、缺 x / y、非法视觉值、非二维 coordinate、缺失 definition 或核心配方破坏均 fail-loud
+Scatter recipe 生成一个 Point semantic mark。semantic mark 的 identity、默认坐标、scale、guide、provenance、lineage 与 locator 属于 recipe / Plot 主链，不写回 Source
 
-JSON、React、Vanilla 保留两个 type 并生成等价 IRChart、IRPlot 与 composition；Bubble 不在 adapter 层改写成 Scatter。presentation 与 surface 继续复用 ADR-02 / ADR-03。
+Scatter 允许有序 `recipe.marks`，当前唯一合法 kind 为 `scatter`：
 
-## 功能与包边界
+- `scatter` mark 是额外的 Point authored Chart mark
+- mark 的 `encodings` 只接受可选字段绑定，`properties` 只接受常量
+- 省略的 slot 仅从 recipe binding 声明的 Chart context 继承；显式 mark payload 覆盖继承值
+- mark resolver 必须输出至少一个 Plot mark，并沿 Plot 正式 schema、resolve、lowering、identity、provenance、lineage、locator 与 diagnostics 主链消费
 
-Chart 拥有平级 variants、数据角色、核心 Point recipe identity 与 patch 边界；Plot 拥有 Point、channel、scale inference、coordinate / composition、axis guide、lowering 与 trace。Chart 不复制 Point、scale、guide、merge 或 lowering，也不建立 Chart registry。
+解析顺序固定为：
 
-## 当前实现结果与遗留风险
+```text
+Point semantic mark
+  -> recipe.marks 按 authored order 追加
+  -> plotExtension.marks 按 Plot order 最后追加
+```
 
-本 ADR 已冻结 Scatter / Bubble 的平级 type 语义、Bubble 必需 size contract、Point 能力投影、size legend 来源和失败语义；状态仍为 Proposed，公开 surface 依赖 ADR-01 / ADR-03 的 canonical Chart 闭环。
+`plotExtension.marks` 不继承 `recipe.encodings` 或 `recipe.properties`。它们是独立的 Plot authoring 内容；作者需要 Path 等非 Scatter 图元时通过该 Plot 出口显式添加，Chart 只负责将它们按 Plot contract 组合到最终结果
 
-长期风险集中在 Plot size channel 的 descriptor、scale identity、数据类型与逐行缺值语义必须保持单一 owner；Chart 不得通过局部推断、默认值或 adapter 旁路改变 Bubble 的 field-bound 核心。
+## properties、组件与 Theme
+
+component props 与 `recipe.properties` 共同调整内建 semantic recipe 的常量表现。React `ScatterMark` 表达额外 authored Scatter mark；它不改变 semantic mark，也不写入独立的配置对象。重复或不在直接 Chart mark 位置的 marker 必须 fail-loud
+
+Recipe Theme 只接受当前 Point recipe 的严格 token slice，并与 Chart shell、Plot owner 的 Theme slice 按统一 Theme cascade 合并。Theme 不能改变 `point` family、`scatter` chartType、数据角色、semantic mark 数量或 mark kind
+
+## 所有权与运行时扩展
+
+- Chart Point family 拥有 `scatter` 的 Source schema、properties schema、recipe Theme schema、recipe Definition 与 mark bindings
+- Plot 拥有 Point / Path mark、field channel、scale、guide、coordinate、missing-value delivery、lowering、provenance 与 locator
+- Point family module 拥有 family → recipes 的唯一声明；active provider registry 从精确 Definition 与 runtime contribution 派生当前编译边界的索引
+- React 与 Vanilla 只负责把组件或 typed input 组装为同一精确 Source；JSON、React、Vanilla 与 SSR 不各自实现 recipe dispatch 或默认解析
+
+## 失败语义
+
+以下情况必须在对应 owner 边界 fail-loud，并把 path 指向可修改的 Source 字段：
+
+- 未注册 `point` family、`scatter` chartType、mark kind 或 Theme
+- 缺少 `x` / `y`，空字段名，或将 constant 放入 `encodings`
+- 将字段绑定放入 `properties`，未知 property、未知 mark 字段或 mark schema 不匹配
+- mark resolver 没有生成 Plot mark，或 mark 试图改变 recipe scaffold、data、Theme、presentation、identity 或核心 coordinate 语义
+- 不兼容 Plot fragment、重复 identity、未知 provider dependency 或跨 family 的 chartType 冲突
+
+`false`、`0`、空数组和 schema 允许的空字符串是否有效由精确 schema 决定；resolver 不使用 truthy fallback，也不静默丢弃已接受但没有合法 consumer 的字段
+
+## Proposed 边界
+
+本 ADR 仍为 Proposed。接受前需要确认 Scatter 的精确 properties、recipe Theme、Point mark contract、Chart mark 组件位置与公开文档保持一致；其它 Point chartType 需各自建立 ADR 并通过 capability gate，不在本 ADR 增加新的 family、mark kind、Plot provider 或 adapter 旁路

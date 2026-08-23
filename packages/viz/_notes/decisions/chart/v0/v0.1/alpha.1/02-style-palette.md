@@ -1,6 +1,6 @@
 # ADR-02：Chart presentation token 与 Plot theme 转发
 
-- 状态：Proposed
+- 状态：Superseded（2026-08-22，由 [ADR-09](./09-family-recipe-chart-schema.md) 的三 owner Theme slice 与 Core mode / style cascade 替代）
 - 决策日期：2026-08-07
 - 关联：[alpha.1 roadmap](./roadmap.md) · [Chart 基础设施 ADR-01](./01-chart-infrastructure.md) · [Chart authoring ADR-03](./03-presentation-standard-layout.md) · [Plot 主题 ADR-01](../../../../plot/v0/v0.2/alpha.1/01-chart-layering.md) · [Plot inherited theme token ADR-02](../../../../plot/v0/v0.2/alpha.1/02-inherited-theme-token-scope.md)
 - Supersedes：Core ADR-15 已取代 ADR-13 的持久化 namespace bag、Theme token Definition / Contribution 与 Core token registry；本文采用轻量 selector、owner-local style definition 与本地 token 输入

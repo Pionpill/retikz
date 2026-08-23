@@ -1,6 +1,6 @@
 # ADR-01：Chart 基础设施与封闭 recipe 主链
 
-- 状态：Accepted（typed recipe 基础继续有效；基础 Chart、canonical IRChart、单一 `chart.chart` composite root 与公开 authoring 边界由 ADR-03 后续决策替代）
+- 状态：Superseded（2026-08-22，由 [ADR-09](./09-family-recipe-chart-schema.md) 替代；Chart → Plot 正式主链与精确 schema 原则已由 ADR-09 重述）
 - 决策日期：2026-07-31
 - 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-03](./03-presentation-standard-layout.md) · [Chart 总设计](../../../../../architecture/chart-design.md)
 
@@ -35,7 +35,7 @@ Chart type 是官方维护的封闭目录，不提供 `defineChart`、Chart regi
 - scale、空间根、guide 与 type patch 使用稳定语义目标解析，不依赖数组下标或内部声明偶然性
 - 表现性 guide defaults 可被显式 guides 替换；核心 transform、mark、数据角色和结构性 composition 不可撤销
 - 保留 ID 与用户 ID 冲突、重复目标、重复 scale、空间根冲突、缺失 capability 或核心配方破坏均 fail-loud
-- Chart 有 `id` 时，Plot identity 与 Chart identity 保持稳定关联；无 `id` 时由 compile occurrence 区分实例，不使用全局计数器
+- Chart `id` 只标识外层 Chart Surface，不隐式派生内部 Plot `id`；内部 Plot 由 compile occurrence 区分实例，不使用全局计数器
 - resolver 错误提供稳定 code、结构化 path 与适用的 target / conflicting identity / cause
 
 React 支持 spec 与 DSL authoring，Vanilla 支持 spec factory 与 runtime；两者调用同一 Chart schema / resolver，并生成与手写 JSON 等价的 IRChart 与 IRPlot。JSX children 只是 JSON-safe Plot extension 的 authoring sugar，不成为 adapter 私有能力。
@@ -56,4 +56,4 @@ Chart 保持空间透明：Plot 的 view、track、facet、plotArea、axis、ser
 
 typed recipe 基础仍由本 ADR拥有；基础 Chart、canonical `IRChart`、单一 `chart.chart` root 和公开 authoring 统一由 [ADR-03](./03-presentation-standard-layout.md) 取代，避免两套 Chart root contract 并存。
 
-长期风险是 Chart 的封装必须继续复用 Plot 的正式扩展与诊断链，并保持 Chart 包裹前后的 Plot identity、provenance、locator 与 lineage 连续；任何新的 type 不能借此建立 Chart 私有 registry 或 renderer 分支。
+长期风险是 Chart 的封装必须继续复用 Plot 的正式扩展与诊断链，并保持 Chart 包裹前后的 Plot 内部 handle、provenance、locator 与 lineage 连续；任何新的 type 不能借此建立 Chart 私有 registry 或 renderer 分支。
