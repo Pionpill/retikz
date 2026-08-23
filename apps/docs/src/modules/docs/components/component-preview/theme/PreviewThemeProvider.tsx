@@ -27,7 +27,7 @@ export const PreviewThemeProvider: FC<PreviewThemeProviderProps> = props => {
   return (
     <PreviewThemeDefinitionsContext.Provider value={PreviewThemeDefinitionBundle}>
       <ThemeProvider theme={resolvedTheme} themeStyles={PreviewThemeDefinitionBundle.core}>
-        <ChartThemeProvider chartThemeStyles={PreviewThemeDefinitionBundle.chart}>
+        <ChartThemeProvider themeDefinitions={PreviewThemeDefinitionBundle.chart}>
           <PlotThemeProvider plotThemeStyles={PreviewThemeDefinitionBundle.plot}>
             <TableThemeProvider tableThemeStyles={PreviewThemeDefinitionBundle.table}>{children}</TableThemeProvider>
           </PlotThemeProvider>

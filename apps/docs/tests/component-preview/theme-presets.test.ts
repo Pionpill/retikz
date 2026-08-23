@@ -6,7 +6,7 @@ import { relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
-  PreviewChartThemeStyles,
+  PreviewChartThemeDefinitions,
   PreviewCoreThemeStyles,
   PreviewPlotThemeStyles,
   PreviewTableThemeStyles,
@@ -25,7 +25,7 @@ describe('docs-owned theme presets', () => {
     for (const definitions of [
       PreviewCoreThemeStyles,
       PreviewPlotThemeStyles,
-      PreviewChartThemeStyles,
+      PreviewChartThemeDefinitions,
       PreviewTableThemeStyles,
     ]) {
       expect(definitions.map(definition => definition.name)).toEqual(expected);

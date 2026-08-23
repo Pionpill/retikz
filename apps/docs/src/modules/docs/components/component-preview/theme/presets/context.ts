@@ -1,11 +1,11 @@
-import type { ChartThemeStyleDefinition } from '@retikz/chart';
+import type { ChartThemeDefinition } from '@retikz/chart';
 import type { ThemeStyleDefinition } from '@retikz/core';
 import type { PlotThemeStyleDefinition } from '@retikz/plot';
 import type { TableThemeStyleDefinition } from '@retikz/table';
 
 import { createContext, useContext } from 'react';
 
-import { PreviewChartThemeStyles } from './chart';
+import { PreviewChartThemeDefinitions } from './chart';
 import { PreviewCoreThemeStyles } from './core';
 import { PreviewPlotThemeStyles } from './plot';
 import { PreviewTableThemeStyles } from './table';
@@ -14,7 +14,7 @@ import { PreviewTableThemeStyles } from './table';
 export type PreviewThemeDefinitions = Readonly<{
   core: ReadonlyArray<ThemeStyleDefinition>;
   plot: ReadonlyArray<PlotThemeStyleDefinition>;
-  chart: ReadonlyArray<ChartThemeStyleDefinition>;
+  chart: ReadonlyArray<ChartThemeDefinition>;
   table: ReadonlyArray<TableThemeStyleDefinition>;
 }>;
 
@@ -22,7 +22,7 @@ export type PreviewThemeDefinitions = Readonly<{
 export const PreviewThemeDefinitionBundle: PreviewThemeDefinitions = Object.freeze({
   core: PreviewCoreThemeStyles,
   plot: PreviewPlotThemeStyles,
-  chart: PreviewChartThemeStyles,
+  chart: PreviewChartThemeDefinitions,
   table: PreviewTableThemeStyles,
 });
 
