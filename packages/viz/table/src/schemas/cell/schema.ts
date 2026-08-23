@@ -92,7 +92,7 @@ export const TableCellPayloadSchema = z
   .describe('Table Cell payload: a scalar value presentation or direct Core child content.');
 
 const ManualTableCellSharedShape = {
-  id: NonBlankStringSchema.optional().describe('Optional stable Cell id. Omitted fields use an address-derived id.'),
+  id: NonBlankStringSchema.optional().describe('Optional stable Cell id.'),
   location: TableCellLocationSchema.optional().describe(
     'Optional semantic location. Omitted fields derive from the containing row kind.',
   ),

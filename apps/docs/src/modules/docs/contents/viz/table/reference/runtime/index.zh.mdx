@@ -92,8 +92,8 @@ Standalone 的 `theme` 写入根 Core Scene；embedded Table 不启动局部 com
     {
       label: 'React embedded Table 向外层宿主贡献运行时输入',
       path: 'packages/viz/table-react/src/table-runtime.ts',
-      startLine: 276,
-      endLine: 286,
+      startLine: 223,
+      endLine: 231,
     },
     {
       label: 'runtime contribution 合并并冻结复制后的容器',
@@ -110,7 +110,7 @@ Standalone 的 `theme` 写入根 Core Scene；embedded Table 不启动局部 com
 
 | 入口          | 核心输入                     | 结构 authoring                          |
 | ------------- | ---------------------------- | --------------------------------------- |
-| `Table`       | `spec`、可选 `data`          | 已构造的精确 IRTable                  |
+| `Table`       | `spec`、可选 `data`          | 已构造的精确 IRTable                    |
 | `DetailTable` | `dataRef`、`data`、`columns` | `columns` 或 `DetailColumn` children    |
 | `ManualTable` | 矩形 `rows`、可选 `rowKinds` | `rows` props 或 `Row` / `Cell` children |
 
@@ -135,17 +135,17 @@ standalone runtime 构造 canonical `children[0]` 根 Scene，并从 `Layout.onA
 
 ### Theme 输入
 
-| 输入                | 类型                              | 默认值 | 作用                                                              |
-| ------------------- | --------------------------------- | ------ | ----------------------------------------------------------------- |
-| `theme?`            | `IRScene['theme']`                | —      | standalone 根 Core Theme；embedded 时由外层 `<Layout theme>` 提供 |
-| `themeStyles?`      | `LayoutProps['themeStyles']`      | `[]`   | standalone Core style definitions；embedded 时由外层提供          |
-| `tableThemeTokens?` | `IRTable['tableThemeTokens']` | `{}`   | IRTable 局部 sparse token overlay，高于 Table style baseline    |
+| 输入                | 类型                          | 默认值 | 作用                                                              |
+| ------------------- | ----------------------------- | ------ | ----------------------------------------------------------------- |
+| `theme?`            | `IRScene['theme']`            | —      | standalone 根 Core Theme；embedded 时由外层 `<Layout theme>` 提供 |
+| `themeStyles?`      | `LayoutProps['themeStyles']`  | `[]`   | standalone Core style definitions；embedded 时由外层提供          |
+| `tableThemeTokens?` | `IRTable['tableThemeTokens']` | `{}`   | IRTable 局部 sparse token overlay，高于 Table style baseline      |
 
 `theme.style` / `theme.mode` 选择当前 Core 环境和同名 Table style definition。Core 的 `colors.categorical` 投影为 Table 的 `data.categorical`，再由 `tableThemeTokens` 覆盖同名叶；host `containerStyle` 仍只是 CSS，不进入这一 cascade。自定义 style 在 standalone 模式分别通过 `themeStyles` 与 `tableThemeStyles` 注入，也可在 React 子树中组合 Core `ThemeProvider` 与 `TableThemeProvider` ambient 注入；embedded 模式的 Core definition 由外层 Layout 提供。
 
 ### Embedded
 
-Table 作为父级 `<Layout>` child 时必须有非空稳定 id。datasets、Table definitions 与 `composites` 会贡献给外层宿主；局部 `onManifest` 和任一 standalone host prop 都会 fail-loud，并在同一错误中提示把字段移动到外层 `<Layout>`。宿主需要 artifact 时使用外层 `onArtifacts`。
+Table 作为父级 `<Layout>` child 时可以保持匿名；只有作者显式传入 `id` 时，才把它保留为 Table 模型与 lowering 后根 Scope 的身份。datasets、Table definitions 与 `composites` 会贡献给外层宿主；局部 `onManifest` 和任一 standalone host prop 都会 fail-loud，并在同一错误中提示把字段移动到外层 `<Layout>`。宿主需要 artifact 时使用外层 `onArtifacts`，并通过 compile occurrence 区分匿名或同 id 的实例。
 
 ## 自定义视觉比例尺
 

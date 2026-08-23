@@ -53,10 +53,13 @@ describe('Table layout-aware lowering', () => {
     expect(result.manifest).toMatchObject({
       tableId: 'people',
       allocationBounds: { x: 0, y: 0, width: 120, height: 32 },
-      rows: [{ id: 'row.0', index: 0, offset: 0, size: 32 }],
-      columns: [{ id: 'column.0', index: 0, offset: 0, size: 120 }],
-      cells: [{ cellId: 'cell.r0.c0', rowId: 'row.0', columnId: 'column.0' }],
+      rows: [{ index: 0, offset: 0, size: 32 }],
+      columns: [{ index: 0, offset: 0, size: 120 }],
+      cells: [{ rowIndex: 0, columnIndex: 0 }],
     });
+    expect(result.manifest.cells[0]).not.toHaveProperty('cellId');
+    expect(result.manifest.cells[0]).not.toHaveProperty('rowId');
+    expect(result.manifest.cells[0]).not.toHaveProperty('columnId');
   });
 
   it('uses extra composite definitions in the same Core environment', () => {

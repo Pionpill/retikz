@@ -42,8 +42,8 @@ describe('Table Cell content appearance', () => {
     };
     const presented = presentTable(formatted(), {
       cells: [
-        { kind: 'value', cellId: 'cell.r0.c0', presentation: { name: 'text' }, appearance: { content } },
-        { kind: 'content', cellId: 'cell.r0.c1', appearance: { content } },
+        { kind: 'value', presentation: { name: 'text' }, appearance: { content } },
+        { kind: 'content', appearance: { content } },
       ],
     });
 

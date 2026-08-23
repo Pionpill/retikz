@@ -67,7 +67,7 @@ export const ResolvedTableBorderLineSchema = z.strictObject({
 
 const TableCellBorderSourceSchema = z.strictObject({
   kind: z.literal('cell').describe('Discriminator for a Cell-side border source.'),
-  cellId: NonBlankStringSchema.describe('Semantic Cell id retained for provenance.'),
+  cellId: NonBlankStringSchema.optional().describe('Optional semantic Cell id retained for provenance.'),
   row: NonNegativeIntegerSchema.describe('Canonical origin row index.'),
   column: NonNegativeIntegerSchema.describe('Canonical origin column index.'),
   side: TableBorderSideSchema.describe('Physical Cell side that supplied the candidate.'),
@@ -173,7 +173,7 @@ const TableManifestBoundsSchema = z
 
 export const TableTrackManifestEntrySchema = z
   .strictObject({
-    id: NonBlankStringSchema.describe('Stable semantic track id.'),
+    id: NonBlankStringSchema.optional().describe('Optional stable semantic track id.'),
     index: NonNegativeIntegerSchema.describe('Canonical track index.'),
     offset: z.number().describe('Finite Table-local axis offset.'),
     size: NonNegativeNumberSchema.describe('Finite nonnegative track size.'),
@@ -182,9 +182,9 @@ export const TableTrackManifestEntrySchema = z
 
 export const TableCellManifestEntrySchema = z
   .strictObject({
-    cellId: NonBlankStringSchema.describe('Stable semantic Cell id.'),
-    rowId: NonBlankStringSchema.describe('Stable semantic row id.'),
-    columnId: NonBlankStringSchema.describe('Stable semantic column id.'),
+    cellId: NonBlankStringSchema.optional().describe('Optional stable semantic Cell id.'),
+    rowId: NonBlankStringSchema.optional().describe('Optional stable semantic row id.'),
+    columnId: NonBlankStringSchema.optional().describe('Optional stable semantic column id.'),
     rowIndex: NonNegativeIntegerSchema.describe('Canonical origin row index.'),
     columnIndex: NonNegativeIntegerSchema.describe('Canonical origin column index.'),
     span: z
@@ -302,7 +302,7 @@ const validateBorderStyleTokenProvenance = (
         : `table.border.${contribution.source.scope}`;
   } else {
     const source = contribution.source;
-    const cell = cells.find(candidate => candidate.cellId === source.cellId);
+    const cell = cells.find(candidate => candidate.rowIndex === source.row && candidate.columnIndex === source.column);
     if (
       source.side === 'bottom' &&
       cell?.location === 'columnHeader' &&
@@ -337,10 +337,6 @@ const validateBorderStyleTokenProvenance = (
   }
 };
 
-/** 判断两个字符串序列是否逐项相等 */
-const sameStringSequence = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
-  left.length === right.length && left.every((value, index) => value === right[index]);
-
 export const TableLayoutManifestSchema = z
   .strictObject({
     tableId: NonBlankStringSchema.optional().describe('Optional public Table id.'),
@@ -357,7 +353,9 @@ export const TableLayoutManifestSchema = z
           id: NonBlankStringSchema.describe('Visual encoding id.'),
           channel: z.enum(TableVisualChannel).describe('Encoding-owned Cell appearance channel.'),
           scaleName: NonBlankStringSchema.describe('Resolved visual scale definition name.'),
-          cellIds: z.array(NonBlankStringSchema).describe('Canonical Cells that received an encoding color.'),
+          cellIndices: z
+            .array(NonNegativeIntegerSchema)
+            .describe('Canonical Cell indices that received an encoding color.'),
         }),
       )
       .describe('Ordered visual encoding manifest seed.'),
@@ -403,14 +401,17 @@ export const TableLayoutManifestSchema = z
       });
     });
     manifest.encodings.forEach((encoding, encodingIndex) => {
-      const expectedCellIds = manifest.cells
-        .filter(cell => cell.encodingIds.includes(encoding.id))
-        .map(cell => cell.cellId);
-      if (!sameStringSequence(encoding.cellIds, expectedCellIds)) {
+      const expectedCellIndices = manifest.cells.flatMap((cell, cellIndex) =>
+        cell.encodingIds.includes(encoding.id) ? [cellIndex] : [],
+      );
+      if (
+        encoding.cellIndices.length !== expectedCellIndices.length ||
+        encoding.cellIndices.some((cellIndex, index) => cellIndex !== expectedCellIndices[index])
+      ) {
         context.addIssue({
           code: 'custom',
-          path: ['encodings', encodingIndex, 'cellIds'],
-          message: 'Manifest encoding Cell ids must match canonical Cell encoding lineage',
+          path: ['encodings', encodingIndex, 'cellIndices'],
+          message: 'Manifest encoding Cell indices must match canonical Cell encoding lineage',
         });
       }
     });
@@ -448,13 +449,6 @@ export const TableLayoutManifestSchema = z
       }
       descriptorEncodingIds.add(descriptor.encodingId);
     });
-    if (manifest.legendDescriptors.length > 0 && manifest.tableId === undefined) {
-      context.addIssue({
-        code: 'custom',
-        path: ['tableId'],
-        message: 'Table id is required when the manifest contains Legend descriptors',
-      });
-    }
     manifest.borders.forEach((border, borderIndex) => {
       border.atoms.forEach((atom, atomIndex) => {
         const contributionKeys = new Set(atom.contributors.map(contribution => contribution.key));

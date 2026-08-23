@@ -31,7 +31,6 @@ const TableBaseSchema = CompositeBaseSchema.extend({
 });
 
 type TableRootSemanticInput = Readonly<{
-  id?: string;
   encodings?: ReadonlyArray<Readonly<{ id: string; legend?: false | Readonly<{ title?: string }> }>>;
 }>;
 
@@ -43,9 +42,6 @@ const validateTableRoot = (spec: TableRootSemanticInput, context: z.RefinementCt
     }
     seen.add(encoding.id);
   });
-  if (spec.id === undefined && spec.encodings?.some(encoding => typeof encoding.legend === 'object')) {
-    context.addIssue({ code: 'custom', path: ['id'], message: 'Table root id is required for Legend descriptors' });
-  }
 };
 
 export const DetailTableSchema = TableBaseSchema.extend({

@@ -46,7 +46,7 @@ export const TableStructureOutputSchema = z
     rows: z
       .array(
         z.strictObject({
-          id: NonBlankStringSchema.describe('Stable row id supplied by the structure definition.'),
+          id: NonBlankStringSchema.optional().describe('Optional stable row id supplied by the structure definition.'),
           kind: TableRowKindSchema.describe('Semantic row kind.'),
           sourceIndex: NonNegativeIntegerSchema.optional().describe(
             'Optional external source row index for a body row.',
@@ -57,7 +57,9 @@ export const TableStructureOutputSchema = z
     columns: z
       .array(
         z.strictObject({
-          id: NonBlankStringSchema.describe('Stable column id supplied by the structure definition.'),
+          id: NonBlankStringSchema.optional().describe(
+            'Optional stable column id supplied by the structure definition.',
+          ),
           field: NonBlankStringSchema.optional().describe('Optional external field bound to the column.'),
         }),
       )
@@ -65,7 +67,7 @@ export const TableStructureOutputSchema = z
     cells: z
       .array(
         z.strictObject({
-          id: NonBlankStringSchema.describe('Stable Cell id supplied by the structure definition.'),
+          id: NonBlankStringSchema.optional().describe('Optional stable Cell id supplied by the structure definition.'),
           row: NonNegativeIntegerSchema.describe('Zero-based index into output rows.'),
           column: NonNegativeIntegerSchema.describe('Zero-based index into output columns.'),
           payload: TableCellPayloadSchema.describe('Validated Cell value or direct Core content.'),

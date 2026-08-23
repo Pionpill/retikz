@@ -96,11 +96,21 @@ type TableCellProbe = Readonly<{
 
 type TableTransactionStage = 'intrinsic Cell layout' | 'constrained Cell layout' | 'Border Scope layout';
 
+/** Table transaction 中稳定指向 canonical Cell 的地址 */
+type TableTransactionCellLocator = Readonly<{
+  /** 用户显式提供的可选 Cell identity */
+  id?: string;
+  /** canonical row index */
+  rowIndex: number;
+  /** canonical column index */
+  columnIndex: number;
+}>;
+
 /** Presented model 进入布局事务前的闭合 Cell 运行时合同 */
 const PresentedTableCellSchema = z.discriminatedUnion('kind', [
   z.strictObject({
     kind: z.literal(TableCellPayloadKind.Value),
-    cellId: NonBlankStringSchema,
+    cellId: NonBlankStringSchema.optional(),
     rawValue: ScalarValueSchema,
     value: ScalarValueSchema,
     formatterName: NonBlankStringSchema,
@@ -110,7 +120,7 @@ const PresentedTableCellSchema = z.discriminatedUnion('kind', [
   }),
   z.strictObject({
     kind: z.literal(TableCellPayloadKind.Content),
-    cellId: NonBlankStringSchema,
+    cellId: NonBlankStringSchema.optional(),
     appearance: TableCellAppearanceSchema,
     content: ChildSchema,
   }),
@@ -121,10 +131,15 @@ const tableTransactionStageError = (
   stage: TableTransactionStage,
   cause: unknown,
   tableId?: string,
-  cellId?: string,
+  cellLocator?: TableTransactionCellLocator,
 ): RetikzTableError => {
   const table = tableId === undefined ? 'table' : `table "${tableId}"`;
-  const cell = cellId === undefined ? '' : `: Cell "${cellId}"`;
+  const cell =
+    cellLocator === undefined
+      ? ''
+      : cellLocator.id === undefined
+        ? `: Cell ${cellLocator.rowIndex}:${cellLocator.columnIndex}`
+        : `: Cell "${cellLocator.id}" at ${cellLocator.rowIndex}:${cellLocator.columnIndex}`;
   const message = cause instanceof Error ? cause.message : String(cause);
   return new RetikzTableError({
     code: RetikzTableErrorCode.TransactionStageFailed,
@@ -132,7 +147,13 @@ const tableTransactionStageError = (
     details: {
       stage,
       ...(tableId === undefined ? {} : { tableId }),
-      ...(cellId === undefined ? {} : { cellId }),
+      ...(cellLocator === undefined
+        ? {}
+        : {
+            rowIndex: cellLocator.rowIndex,
+            columnIndex: cellLocator.columnIndex,
+            ...(cellLocator.id === undefined ? {} : { cellId: cellLocator.id }),
+          }),
     },
     cause,
   });
@@ -142,13 +163,13 @@ const tableTransactionStageError = (
 const runTableTransactionStage = <T>(
   stage: TableTransactionStage,
   tableId: string | undefined,
-  cellId: string | undefined,
+  cellLocator: TableTransactionCellLocator | undefined,
   run: () => T,
 ): T => {
   try {
     return run();
   } catch (error) {
-    const contextual = tableTransactionStageError(stage, error, tableId, cellId);
+    const contextual = tableTransactionStageError(stage, error, tableId, cellLocator);
     if (error instanceof Error) {
       error.message = contextual.message;
       throw error;
@@ -163,10 +184,10 @@ const resultOfTableProbe = (
   probe: LayoutChildProbe,
   stage: TableTransactionStage,
   tableId: string | undefined,
-  cellId: string | undefined,
+  cellLocator: TableTransactionCellLocator | undefined,
 ): LayoutChildResult => {
   if (probe.kind === LayoutChildProbeKind.Resolved) return probe.result;
-  return runTableTransactionStage(stage, tableId, cellId, () => context.raise(probe.failure));
+  return runTableTransactionStage(stage, tableId, cellLocator, () => context.raise(probe.failure));
 };
 
 const zeroBounds = (): BoundsRect => ({ x: 0, y: 0, width: 0, height: 0 });
@@ -193,13 +214,13 @@ const hasArea = (bounds: BoundsRect): boolean => bounds.width > 0 && bounds.heig
 
 /** 根据 canonical ids、sizes 与 gap 构造同序轨道几何 */
 const trackLayoutsOf = (
-  ids: ReadonlyArray<string>,
+  ids: ReadonlyArray<string | undefined>,
   sizes: ReadonlyArray<number>,
   gap: number,
 ): ReadonlyArray<TableTrackLayout> => {
   let offset = 0;
   return sizes.map((size, index) => {
-    const track = { id: ids[index], index, offset, size };
+    const track = { ...(ids[index] === undefined ? {} : { id: ids[index] }), index, offset, size };
     offset += size + (index < sizes.length - 1 ? gap : 0);
     return track;
   });
@@ -291,7 +312,14 @@ const contributionsOf = (
       direct.push({ trackIndex: startIndex, size });
       return [];
     }
-    return [{ cellId: cell.id, startIndex, length, requiredOuterSize: size }];
+    return [
+      {
+        ...(cell.id === undefined ? {} : { cellId: cell.id }),
+        startIndex,
+        length,
+        requiredOuterSize: size,
+      },
+    ];
   });
   return propagateTableSpanContributions({ tracks, contributions: direct, constraints, gap }).contributions;
 };
@@ -355,7 +383,7 @@ const cellOutputOf = (
   });
   const meta = {
     role: 'tableCell',
-    cellId: probe.semantic.id,
+    ...(probe.semantic.id === undefined ? {} : { cellId: probe.semantic.id }),
     rowIndex: probe.semantic.rowIndex,
     columnIndex: probe.semantic.columnIndex,
     span: { ...probe.semantic.span },
@@ -363,7 +391,8 @@ const cellOutputOf = (
     roles: [...probe.semantic.roles],
     ...(probe.semantic.source === undefined ? {} : { source: probe.semantic.source }),
   };
-  if (!placement.replayContent) return context.scope({ id: probe.semantic.id, meta }, []);
+  if (!placement.replayContent)
+    return context.scope({ ...(probe.semantic.id === undefined ? {} : { id: probe.semantic.id }), meta }, []);
   const replay = context.replay(probe.final);
   const transformed = context.scope(
     {
@@ -376,7 +405,7 @@ const cellOutputOf = (
   );
   return context.scope(
     {
-      id: probe.semantic.id,
+      ...(probe.semantic.id === undefined ? {} : { id: probe.semantic.id }),
       meta,
       ...(placement.clipBounds === undefined
         ? {}
@@ -413,15 +442,20 @@ export const resolvePresentedTableTransaction = (
   const manifestStyle = 'style' in manifestTheme ? manifestTheme.style : undefined;
   const tableThemeTokens = input.tableThemeTokens ?? resolveTableThemeTokens(manifestTheme);
 
-  const intrinsic = presented.cells.map(cell =>
-    resultOfTableProbe(
+  const intrinsic = presented.cells.map((cell, index) => {
+    const semanticCell = semantic.cells[index];
+    return resultOfTableProbe(
       context,
       context.layoutChild(cell.content, NaturalLayoutProposal),
       'intrinsic Cell layout',
       tableId,
-      cell.cellId,
-    ),
-  );
+      {
+        ...(semanticCell.id === undefined ? {} : { id: semanticCell.id }),
+        rowIndex: semanticCell.rowIndex,
+        columnIndex: semanticCell.columnIndex,
+      },
+    );
+  });
   const columnTracks = resolveTableTrackSizes(
     semantic.columns.map(() => resolved.columnSize),
     resolved.columns,
@@ -461,7 +495,11 @@ export const resolvePresentedTableTransaction = (
           }),
           'constrained Cell layout',
           tableId,
-          cell.id,
+          {
+            ...(cell.id === undefined ? {} : { id: cell.id }),
+            rowIndex: cell.rowIndex,
+            columnIndex: cell.columnIndex,
+          },
         )
       : intrinsic[index];
     return { semantic: cell, content: presentedCell.content, intrinsic: intrinsic[index], final };
@@ -516,7 +554,7 @@ export const resolvePresentedTableTransaction = (
           ? unionBounds(placement.visualOverflowBounds, box)
           : { ...box };
     return {
-      cellId: probe.semantic.id,
+      ...(probe.semantic.id === undefined ? {} : { cellId: probe.semantic.id }),
       box,
       contentBox,
       sourceAllocationBounds: { ...probe.final.allocationBounds },
@@ -530,7 +568,7 @@ export const resolvePresentedTableTransaction = (
     rows,
     columns,
     cells: semantic.cells.map((cell, index) => ({
-      cellId: cell.id,
+      ...(cell.id === undefined ? {} : { cellId: cell.id }),
       rowIndex: cell.rowIndex,
       columnIndex: cell.columnIndex,
       rowSpan: cell.span.rows,

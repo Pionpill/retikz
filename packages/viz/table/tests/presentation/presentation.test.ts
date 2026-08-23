@@ -14,7 +14,9 @@ const presentedCellOf = (
   cell: IRManualTableCell,
   presentationDefinitions?: ReadonlyArray<AnyCellPresentationDefinition>,
 ) => {
-  const formatted = formatDefaultTable(normalizeTableStructure({ kind: 'manual', rows: [[cell]] }));
+  const identifiedCell =
+    typeof cell === 'object' ? { ...cell, id: cell.id ?? 'cell.r0.c0' } : { id: 'cell.r0.c0', value: cell };
+  const formatted = formatDefaultTable(normalizeTableStructure({ kind: 'manual', rows: [[identifiedCell]] }));
   return presentTable(formatted, { presentationDefinitions }).cells[0];
 };
 
@@ -51,7 +53,7 @@ describe('Cell presentation registry', () => {
     const formatted = formatDefaultTable(
       normalizeTableStructure({
         kind: 'manual',
-        rows: [[{ value: 7, presentation: { name: 'badge', options: { prefix: '#' } } }]],
+        rows: [[{ id: 'cell.r0.c0', value: 7, presentation: { name: 'badge', options: { prefix: '#' } } }]],
       }),
     );
     const presented = presentTable(formatted, {
@@ -67,6 +69,35 @@ describe('Cell presentation registry', () => {
     });
 
     expect(presented.cells[0].content).toMatchObject({ text: '#7>7@cell.r0.c0:#fff4e5' });
+  });
+
+  it('passes canonical address without inventing identity for an anonymous Cell', () => {
+    let observed: unknown;
+    const inspect = defineCellPresentation({
+      name: 'anonymous-inspect',
+      optionsSchema: z.strictObject({}),
+      present: input => {
+        observed = input.context;
+        return { type: 'node', position: [0, 0], text: String(input.value) };
+      },
+    });
+    const formatted = formatDefaultTable(
+      normalizeTableStructure({
+        kind: 'manual',
+        rows: [[{ value: 'ok', presentation: { name: 'anonymous-inspect' } }]],
+      }),
+    );
+
+    const presented = presentTable(formatted, { presentationDefinitions: [inspect] });
+
+    expect(presented.cells[0]).not.toHaveProperty('cellId');
+    expect(observed).toEqual({
+      rowIndex: 0,
+      columnIndex: 0,
+      location: 'body',
+      roles: ['data'],
+      source: { kind: 'manual', row: 0, column: 0 },
+    });
   });
 
   it('validates omitted options as an empty object', () => {

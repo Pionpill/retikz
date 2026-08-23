@@ -29,7 +29,7 @@ const FrameBaseSchema = CompositeBaseSchema.extend({
   namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: z.literal('frame').describe('Composite type for a bordered semantic group of Core nodes.'),
   ...ScopePropsSchema.shape,
-  id: NonBlankStringSchema.describe('Stable identity for the lowered outer Scope.'),
+  id: NonBlankStringSchema.optional().describe('Optional stable identity for the compiled outer Scope.'),
   localNamespace: ScopePropsSchema.shape.localNamespace.default(false),
   boundingShape: ScopePropsSchema.shape.boundingShape.default('rectangle'),
   border: FrameBorderSchema.default({ style: { stroke: 'currentColor', strokeWidth: 1 } }).describe(
@@ -55,7 +55,8 @@ const FrameBaseSchema = CompositeBaseSchema.extend({
 type FrameRefinementInput = z.infer<typeof FrameBaseSchema>;
 
 const refineReservedIds = (frame: FrameRefinementInput, ctx: z.RefinementCtx): void => {
-  const reservedIds = new Set([frame.id, `${frame.id}/content`, `${frame.id}/title`, `${frame.id}/description`]);
+  if (frame.id === undefined) return;
+  const reservedIds = new Set([frame.id]);
   frame.children.forEach((child, index) => {
     if (child.id !== undefined && reservedIds.has(child.id)) {
       ctx.addIssue({

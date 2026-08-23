@@ -20,13 +20,13 @@ import { applyTableCellContentStyle, parsePresentedChild, presentCellValue } fro
 const ResolvedTableCellPresentationInputSchema = z.discriminatedUnion('kind', [
   z.strictObject({
     kind: z.literal(TableCellPayloadKind.Value),
-    cellId: NonBlankStringSchema,
+    cellId: NonBlankStringSchema.optional(),
     presentation: TablePresentationRefSchema,
     appearance: TableCellAppearanceSchema,
   }),
   z.strictObject({
     kind: z.literal(TableCellPayloadKind.Content),
-    cellId: NonBlankStringSchema,
+    cellId: NonBlankStringSchema.optional(),
     appearance: TableCellAppearanceSchema,
   }),
 ]);
@@ -34,9 +34,9 @@ const ResolvedTableCellPresentationInputSchema = z.discriminatedUnion('kind', [
 /** 从 canonical Cell 构造 detached、递归冻结的 presentation context */
 const presentationContextOf = (cell: SemanticTableCell): TableCellContext =>
   deepFreeze({
-    cellId: cell.id,
-    rowId: cell.rowId,
-    columnId: cell.columnId,
+    ...(cell.id === undefined ? {} : { cellId: cell.id }),
+    ...(cell.rowId === undefined ? {} : { rowId: cell.rowId }),
+    ...(cell.columnId === undefined ? {} : { columnId: cell.columnId }),
     rowIndex: cell.rowIndex,
     columnIndex: cell.columnIndex,
     location: cell.location,
@@ -53,20 +53,25 @@ const defaultCarrierOf = (
     ...(semantic.layout.borders === undefined ? {} : { borders: semantic.layout.borders }),
   });
   if (formatted.kind === TableCellPayloadKind.Content) {
-    return deepFreeze({ kind: TableCellPayloadKind.Content, cellId: formatted.cellId, appearance });
+    return deepFreeze({
+      kind: TableCellPayloadKind.Content,
+      ...(formatted.cellId === undefined ? {} : { cellId: formatted.cellId }),
+      appearance,
+    });
   }
   if (semantic.payload.kind !== TableCellPayloadKind.Value) {
-    throw new RetikzTableError(`table: presentation Cell "${formatted.cellId}" kind differs from semantic model`);
+    const cellLabel = formatted.cellId ?? `${semantic.rowIndex}:${semantic.columnIndex}`;
+    throw new RetikzTableError(`table: presentation Cell "${cellLabel}" kind differs from semantic model`);
   }
   return deepFreeze({
     kind: TableCellPayloadKind.Value,
-    cellId: formatted.cellId,
+    ...(formatted.cellId === undefined ? {} : { cellId: formatted.cellId }),
     presentation: TablePresentationRefSchema.parse(semantic.payload.presentation ?? { name: 'text' }),
     appearance,
   });
 };
 
-/** 校验 supplied carrier 与 formatted / semantic Cells 严格同序同 identity */
+/** 校验 supplied carrier 与 formatted / semantic Cells 同序，并校验显式 identity */
 const resolvePresentationCarriers = (
   model: FormattedTableModel,
   cells: PresentTableOptions['cells'],
@@ -109,7 +114,7 @@ export const presentTable = (model: FormattedTableModel, options: PresentTableOp
       const content = applyTableCellContentStyle(parsePresentedChild(formatted.content), carrier.appearance.content);
       return {
         kind: TableCellPayloadKind.Content,
-        cellId: formatted.cellId,
+        ...(formatted.cellId === undefined ? {} : { cellId: formatted.cellId }),
         appearance: carrier.appearance,
         content,
       };
@@ -137,7 +142,7 @@ export const presentTable = (model: FormattedTableModel, options: PresentTableOp
     );
     return {
       kind: TableCellPayloadKind.Value,
-      cellId: formatted.cellId,
+      ...(formatted.cellId === undefined ? {} : { cellId: formatted.cellId }),
       rawValue: formatted.rawValue,
       value: formatted.value,
       formatterName: formatted.formatterName,

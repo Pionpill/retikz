@@ -4,7 +4,6 @@ import type { InputTable } from '@retikz/table-vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
-import { RetikzFoundationError } from '@retikz/foundation';
 import { Layout, ThemeProvider } from '@retikz/react';
 import {
   createDetailTableIR,
@@ -288,22 +287,21 @@ describe('Table React components', () => {
     expect(svg).toContain('Lin');
   });
 
-  it('requires explicit unique ids and rejects onManifest in embedded mode', () => {
-    expect(() =>
+  it('allows anonymous embedded Tables while retaining explicit-id and host-prop diagnostics', () => {
+    expect(
       renderToStaticMarkup(
         <Layout>
           <Table spec={manualSpec()} />
         </Layout>,
       ),
-    ).toThrow(/embedded.*id.*non-empty/i);
+    ).toContain('Ada');
     const renderBlankId = () =>
       renderToStaticMarkup(
         <Layout>
           <ManualTable id={'\u2003'} rows={[[null]]} />
         </Layout>,
       );
-    expect(renderBlankId).toThrowError(RetikzFoundationError);
-    expect(renderBlankId).toThrowError('table react embedded manual Table spec id must be a non-empty string.');
+    expect(renderBlankId).toThrow(/id|non-whitespace/i);
     expect(() =>
       renderToStaticMarkup(
         <Layout>

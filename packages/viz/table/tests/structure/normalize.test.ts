@@ -23,7 +23,7 @@ describe('normalizeTableStructure', () => {
     expect(TableCellSourceKind).toEqual({ Manual: 'manual', Field: 'field', Generated: 'generated' });
   });
 
-  it('normalizes manual cells to stable canonical identity and semantics', () => {
+  it('normalizes manual cells without synthesizing identity', () => {
     const model = normalizeTableStructure({
       kind: 'manual',
       rows: [
@@ -34,18 +34,12 @@ describe('normalizeTableStructure', () => {
     });
 
     expect(model.rows).toEqual([
-      { id: 'row.0', index: 0, kind: TableRowKind.ColumnHeader },
-      { id: 'row.1', index: 1, kind: TableRowKind.Body },
+      { index: 0, kind: TableRowKind.ColumnHeader },
+      { index: 1, kind: TableRowKind.Body },
     ]);
-    expect(model.columns).toEqual([
-      { id: 'column.0', index: 0 },
-      { id: 'column.1', index: 1 },
-    ]);
+    expect(model.columns).toEqual([{ index: 0 }, { index: 1 }]);
     expect(model.cells).toEqual([
       {
-        id: 'cell.r0.c0',
-        rowId: 'row.0',
-        columnId: 'column.0',
         rowIndex: 0,
         columnIndex: 0,
         location: TableCellLocation.ColumnHeader,
@@ -63,9 +57,6 @@ describe('normalizeTableStructure', () => {
         source: { kind: 'manual', row: 0, column: 0 },
       },
       {
-        id: 'cell.r0.c1',
-        rowId: 'row.0',
-        columnId: 'column.1',
         rowIndex: 0,
         columnIndex: 1,
         location: TableCellLocation.ColumnHeader,
@@ -84,8 +75,6 @@ describe('normalizeTableStructure', () => {
       },
       {
         id: 'null-value',
-        rowId: 'row.1',
-        columnId: 'column.1',
         rowIndex: 1,
         columnIndex: 1,
         location: TableCellLocation.Body,
@@ -180,8 +169,8 @@ describe('normalizeTableStructure', () => {
     );
 
     expect(model.rows).toEqual([
-      { id: 'row.header', index: 0, kind: TableRowKind.ColumnHeader },
-      { id: 'row.0', index: 1, kind: TableRowKind.Body, sourceIndex: 0 },
+      { index: 0, kind: TableRowKind.ColumnHeader },
+      { index: 1, kind: TableRowKind.Body, sourceIndex: 0 },
     ]);
     expect(model.columns).toEqual([
       { id: 'name', index: 0, field: 'user.name' },
@@ -189,15 +178,16 @@ describe('normalizeTableStructure', () => {
       { id: 'active', index: 2, field: 'active' },
       { id: 'note', index: 3, field: 'note' },
     ]);
-    expect(model.cells.map(cell => cell.id)).toEqual([
-      'cell.header.cname',
-      'cell.header.cscore',
-      'cell.header.cactive',
-      'cell.header.cnote',
-      'cell.r0.cname',
-      'cell.r0.cscore',
-      'cell.r0.cactive',
-      'cell.r0.cnote',
+    expect(model.cells.map(cell => cell.id)).toEqual(Array.from({ length: 8 }, () => undefined));
+    expect(model.cells.map(cell => cell.columnId)).toEqual([
+      'name',
+      'score',
+      'active',
+      'note',
+      'name',
+      'score',
+      'active',
+      'note',
     ]);
     expect(model.cells[4]).toMatchObject({
       payload: { kind: 'value', value: 'Ada' },
@@ -216,9 +206,9 @@ describe('normalizeTableStructure', () => {
       { data: { reference: 'sales' }, datasets: { sales: [] } },
     );
 
-    expect(withoutHeader.rows).toEqual([{ id: 'row.0', index: 0, kind: 'body', sourceIndex: 0 }]);
+    expect(withoutHeader.rows).toEqual([{ index: 0, kind: 'body', sourceIndex: 0 }]);
     expect(withoutHeader.cells).toHaveLength(1);
-    expect(empty.rows).toEqual([{ id: 'row.header', index: 0, kind: 'columnHeader' }]);
+    expect(empty.rows).toEqual([{ index: 0, kind: 'columnHeader' }]);
     expect(empty.cells).toHaveLength(1);
   });
 

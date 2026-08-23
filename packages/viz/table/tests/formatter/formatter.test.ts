@@ -223,6 +223,33 @@ describe('formatted Table model', () => {
     }
   });
 
+  it('passes canonical address without inventing identity for an anonymous Cell', () => {
+    let observed: unknown;
+    const inspect = defineCellFormatter({
+      name: 'anonymous-inspect',
+      optionsSchema: z.strictObject({}),
+      format: input => {
+        observed = input.context;
+        return input.value;
+      },
+    });
+    const semantic = normalizeTableStructure({
+      kind: 'manual',
+      rows: [[{ value: 'ok', formatter: { name: 'anonymous-inspect' } }]],
+    });
+
+    const formatted = formatDefaultTable(semantic, [inspect]);
+
+    expect(formatted.cells[0]).not.toHaveProperty('cellId');
+    expect(observed).toEqual({
+      rowIndex: 0,
+      columnIndex: 0,
+      location: 'body',
+      roles: ['data'],
+      source: { kind: 'manual', row: 0, column: 0 },
+    });
+  });
+
   it('propagates detail body formatters independently from header payloads', () => {
     const semantic = normalizeTableStructure(
       {

@@ -29,7 +29,7 @@ describe('frame()', () => {
     expect(frameDescription({ text: '', opacity: 0.6 })).toEqual({ text: '', opacity: 0.6 });
   });
 
-  it('derives the Frame identity and canonical IR from the Vanilla embed id', () => {
+  it('keeps Vanilla embed identity separate from optional Frame model identity', () => {
     const embed = frame('definition-contract', input);
     const normalized = normalizeScene(scene({ children: [embed] }), { adapters: [FrameInputEmbedAdapter] });
 
@@ -37,12 +37,17 @@ describe('frame()', () => {
     expect(normalized.ir.children[0]).toMatchObject({
       namespace: 'standard',
       type: 'frame',
-      id: 'definition-contract/frame',
       padding: 12,
       title: { text: 'Contract', font: { family: 'serif' } },
       description: { text: 'One registry contract.', maxTextWidth: 220 },
       children: [{ type: 'node', position: [0, 0], text: 'A' }],
     });
+    expect(normalized.ir.children[0]).not.toHaveProperty('id');
+
+    const explicit = normalizeScene(scene({ children: [frame('runtime', { ...input, id: 'frame-model' })] }), {
+      adapters: [FrameInputEmbedAdapter],
+    });
+    expect(explicit.ir.children[0]).toHaveProperty('id', 'frame-model');
   });
 
   it('coexists with Grid and Axes and contributes all definitions once', () => {
@@ -62,8 +67,8 @@ describe('frame()', () => {
     expect(result.ir.children[2]).toMatchObject({
       namespace: 'standard',
       type: 'frame',
-      id: 'definition-contract/frame',
       children: [{ type: 'node', position: [0, 0], text: 'A' }],
     });
+    expect(result.ir.children[2]).not.toHaveProperty('id');
   });
 });

@@ -205,7 +205,7 @@ describe('Presented Table layout transaction', () => {
           ...context,
           layoutChild: (child, proposal) => {
             const cell = presented.cells.find(candidate => candidate.content === child);
-            if (cell !== undefined) layoutCalls.push({ cellId: cell.cellId, xKind: proposal.x.kind });
+            if (cell?.cellId !== undefined) layoutCalls.push({ cellId: cell.cellId, xKind: proposal.x.kind });
             return context.layoutChild(child, proposal);
           },
         };

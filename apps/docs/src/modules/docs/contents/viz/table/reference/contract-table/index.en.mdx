@@ -18,7 +18,7 @@ Base Table contracts define the top-level identity and Cell content shared by ev
 | `meta?`             | `IRJsonObject`                      | —              | JSON-safe metadata preserved by lowering                 |
 | `rules?`            | `Array<IRTableCellRule>`            | `[]`           | Declaration-ordered Cell overrides                       |
 | `encodings?`        | `Array<IRTableCellVisualEncoding>`  | `[]`           | Ordered raw-value mappings to color channels             |
-| `tableThemeTokens?` | `IRTableThemeTokenOverrides`        | `{}`           | Sparse Table token overlay for this IRTable            |
+| `tableThemeTokens?` | `IRTableThemeTokenOverrides`        | `{}`           | Sparse Table token overlay for this IRTable              |
 | `data?`             | `IRDataReference`                   | —              | Required by detail, forbidden by manual, optional custom |
 | `structure`         | `IRTableStructureOperation`         | —              | Detail, manual, or custom Structure                      |
 
@@ -39,6 +39,8 @@ An LLM or tool that emits one table type should retain its precise schema. Use `
 ## Cell content
 
 `IRManualTableCell` is the directly persistable non-null entry used inside manual `rows`. `string | number | boolean` are value shorthands; rich objects carry value/content, spans, layout, and semantic fields. `null` is the row-matrix empty-slot sentinel, not a Cell union member; use `{ value: null }` for a real null scalar.
+
+Rich entries may provide a stable `id`. When omitted, the Cell remains anonymous and later stages correlate it through canonical address and array order rather than materializing an address-derived id.
 
 ### ManualTableCellSchema
 

@@ -25,27 +25,25 @@ const detailSpec = (): IRDetailTable => ({
 });
 
 describe('Table Vanilla adapter', () => {
-  it('validates handwritten embed ids and namespaces the Table root identity', () => {
+  it('keeps runtime embed identity separate from optional Table model identity', () => {
     const anonymous = createManualTableIR({ rows: [[null]] });
     const named = createManualTableIR({ id: 'scores', rows: [[null]] });
 
-    expect(TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf('panel')).node).toMatchObject(
-      {
-        id: 'panel/table',
-      },
-    );
+    expect(
+      TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf('panel')).node,
+    ).not.toHaveProperty('id');
     expect(TableInputEmbedAdapter.lower({ table: inputTableFromIR(named) }, contextOf('panel')).node).toMatchObject({
-      id: 'panel/scores',
+      id: 'scores',
     });
     expect(() => TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf(''))).toThrowError(
       RetikzFoundationError,
     );
     expect(() => TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf(''))).toThrow(
-      'table vanilla embed id must be a non-empty string.',
+      'table runtime contribution reference must be a non-empty string.',
     );
   });
 
-  it('contextualizes only the Table id and preserves root authoring fields', () => {
+  it('preserves explicit Table identity and all root authoring fields', () => {
     const spec = createManualTableIR({
       id: 'scores',
       rows: [[98]],
@@ -66,7 +64,7 @@ describe('Table Vanilla adapter', () => {
       TableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('panel')).node,
     );
 
-    expect(lowered).toEqual({ ...spec, id: 'panel/scores' });
+    expect(lowered).toEqual(spec);
     expect(lowered.rules).toEqual(spec.rules);
     expect(lowered.encodings).toEqual(spec.encodings);
     expect(lowered.tableThemeTokens).toEqual(spec.tableThemeTokens);
@@ -136,7 +134,7 @@ describe('Table Vanilla adapter', () => {
       RetikzFoundationError,
     );
     expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrow(
-      'table vanilla embed id must be a non-empty string.',
+      'table runtime contribution reference must be a non-empty string.',
     );
     expect(() =>
       normalizeScene(scene([embedTable('same', spec), embedTable('same', spec)]), {

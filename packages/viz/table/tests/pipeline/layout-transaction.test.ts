@@ -49,8 +49,14 @@ describe('Table layout transaction', () => {
     const cause = new Error('intrinsic failed');
     const error = new RetikzTableError({
       code: RetikzTableErrorCode.TransactionStageFailed,
-      message: 'table "orders": intrinsic Cell layout: Cell "total": intrinsic failed',
-      details: { stage: 'intrinsic Cell layout', tableId: 'orders', cellId: 'total' },
+      message: 'table "orders": intrinsic Cell layout: Cell "total" at 2:3: intrinsic failed',
+      details: {
+        stage: 'intrinsic Cell layout',
+        tableId: 'orders',
+        cellId: 'total',
+        rowIndex: 2,
+        columnIndex: 3,
+      },
       cause,
     });
 
@@ -59,7 +65,13 @@ describe('Table layout transaction', () => {
       name: 'RetikzTableError',
       code: RetikzTableErrorCode.TransactionStageFailed,
       cause,
-      details: { stage: 'intrinsic Cell layout', tableId: 'orders', cellId: 'total' },
+      details: {
+        stage: 'intrinsic Cell layout',
+        tableId: 'orders',
+        cellId: 'total',
+        rowIndex: 2,
+        columnIndex: 3,
+      },
     });
   });
 
@@ -332,6 +344,7 @@ describe('Table layout transaction', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
+      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
       structure: {
         kind: 'manual',
         rows: [
@@ -498,6 +511,32 @@ describe('Table layout transaction', () => {
     expect(message).not.toContain("Layout child provider 'table.table'");
   });
 
+  it('locates anonymous intrinsic Cell layout failures by canonical address', () => {
+    const failing = defineComposite({
+      namespace: 'fixture',
+      type: 'anonymous-intrinsic-failure',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('fixture'),
+        type: z.literal('anonymous-intrinsic-failure'),
+      }),
+      compile: () => {
+        throw new Error('anonymous intrinsic failure');
+      },
+    });
+    const spec: IRTable = {
+      namespace: TABLE_NAMESPACE,
+      type: TableComposite.Table,
+      structure: {
+        kind: 'manual',
+        rows: [[null, { content: { namespace: 'fixture', type: 'anonymous-intrinsic-failure' } }]],
+      },
+    };
+
+    expect(() => compileTable(spec, {}, { theme: { mode: 'light' }, compile: { composites: [failing] } })).toThrow(
+      /intrinsic Cell layout: Cell 0:1:.*anonymous intrinsic failure/,
+    );
+  });
+
   it('keeps one leaf failure envelope when an outer solver raises a failed Table probe', () => {
     const rootCause = new Error('fixture nested Table failure');
     const failing = defineComposite({
@@ -613,6 +652,46 @@ describe('Table layout transaction', () => {
     ).toBe(true);
     expect(chain).toContain(rootCause);
     expect(chain.some(error => error.message.includes('children[0]'))).toBe(true);
+  });
+
+  it('locates anonymous constrained Cell layout failures by canonical address', () => {
+    const failing = defineComposite({
+      namespace: 'fixture',
+      type: 'anonymous-constrained-failure',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('fixture'),
+        type: z.literal('anonymous-constrained-failure'),
+      }),
+      compile: (_node, context) => {
+        if (context.proposal.x.kind === LayoutAxisProposalKind.Range) {
+          throw new Error('anonymous constrained failure');
+        }
+        return {
+          children: [
+            {
+              type: 'node',
+              position: [0, 0],
+              minimumSize: { width: 80, height: 20 },
+              padding: 0,
+            },
+          ],
+        };
+      },
+    });
+    const spec: IRTable = {
+      namespace: TABLE_NAMESPACE,
+      type: TableComposite.Table,
+      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
+      structure: {
+        kind: 'manual',
+        rows: [[{ layout: { wrap: true }, content: { namespace: 'fixture', type: 'anonymous-constrained-failure' } }]],
+      },
+      layout: { columnSize: { kind: 'fixed', value: 40 } },
+    };
+
+    expect(() => compileTable(spec, {}, { theme: { mode: 'light' }, compile: { composites: [failing] } })).toThrow(
+      /constrained Cell layout: Cell 0:0:.*anonymous constrained failure/,
+    );
   });
 
   it('associates Border Scope layout failures with the Table while preserving the cause', () => {

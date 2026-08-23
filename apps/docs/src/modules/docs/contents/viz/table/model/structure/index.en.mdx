@@ -27,23 +27,23 @@ In the figure, each input first passes its precise schema, then the shared Struc
 
 ## A Cell is a semantic unit
 
-A canonical Cell is more than its displayed value. It combines stable identity, two-dimensional position, semantics, content, and layout inputs:
+A canonical Cell is more than its displayed value. It combines optional authored identity, two-dimensional position, semantics, content, and layout inputs:
 
-| Dimension         | Main information                         | Downstream use                        |
-| ----------------- | ---------------------------------------- | ------------------------------------- |
-| Identity/position | `id`, row/column ids, zero-based indexes | Stable references and track placement |
-| Semantics         | `location`, `roles`                      | Header, body, and domain roles        |
-| Content           | value/content `payload`                  | Presentation input                    |
-| Layout input      | Resolved `span` and Cell layout          | Contributions, placement, borders     |
-| Provenance        | manual, field, or generated `source`     | Debugging, tracing, host mapping      |
+| Dimension         | Main information                                  | Downstream use                          |
+| ----------------- | ------------------------------------------------- | --------------------------------------- |
+| Identity/position | Optional `id`, row/column ids, zero-based indexes | Explicit references and track placement |
+| Semantics         | `location`, `roles`                               | Header, body, and domain roles          |
+| Content           | value/content `payload`                           | Presentation input                      |
+| Layout input      | Resolved `span` and Cell layout                   | Contributions, placement, borders       |
+| Provenance        | manual, field, or generated `source`              | Debugging, tracing, host mapping        |
 
-Rows and columns also retain stable ids and canonical indexes. Detail columns can preserve a field path, while body rows can preserve an external source index, so consumers do not have to infer record or field identity from rendered text.
+Rows, columns, and Cells always retain canonical indexes; authors or Structures may also provide stable ids. Detail columns can preserve a field path, while body rows can preserve an external source index, so consumers need not infer record or field identity from rendered text or generate ids for internal correlation.
 
 ## The Structure Definition boundary
 
 A custom Definition can read the immutable data context, field types, and scalar values, then return rows, columns, and Cells. Built-in and custom Definitions use the same registry, output guard, and normalization path.
 
-A Definition must stop at the semantic-model boundary. It may choose Cell identity, roles, payload, span, and layout inputs, but it cannot solve tracks, draw borders, or return renderer-specific objects. Invalid addresses, duplicate identities, out-of-range spans, or inconsistent semantics fail loudly during normalization.
+A Definition must stop at the semantic-model boundary. It may choose optional Cell identity, roles, payload, span, and layout inputs, but it cannot solve tracks, draw borders, or return renderer-specific objects. Invalid addresses, duplicate explicit identities, out-of-range spans, or inconsistent semantics fail loudly during normalization.
 
 <SourceLinks
   sources={[

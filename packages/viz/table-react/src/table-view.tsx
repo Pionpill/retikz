@@ -84,7 +84,6 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
       data: stableDatasets,
       lowerOptions: stableLowerOptions,
       composites,
-      preserveRootIdentity: true,
     }),
     [composites, stableDatasets, stableLowerOptions, stableTable],
   );

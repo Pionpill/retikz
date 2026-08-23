@@ -38,6 +38,7 @@ describe('FrameSchema', () => {
     });
     expect(parsed.border.cornerRadius).toBeUndefined();
     expect(FrameSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+    expect(FrameSchema.parse({ namespace: 'standard', type: 'frame', children: [node] })).not.toHaveProperty('id');
   });
 
   it('reuses the closed Node contract for title and description without accepting position', () => {
@@ -149,8 +150,7 @@ describe('FrameSchema', () => {
     });
   });
 
-  it('rejects explicit ids reserved by the Frame structure for body and header nodes', () => {
-    const reserved = ['group', 'group/content', 'group/title', 'group/description'];
+  it('reserves only the explicit root id and allows former generated suffixes', () => {
     const parts = [
       (id: string) => ({ children: [{ ...node, id }] }),
       (id: string) => ({ children: [node], title: { id, text: 'Title' } }),
@@ -158,16 +158,22 @@ describe('FrameSchema', () => {
     ];
 
     parts.forEach(makePart => {
-      reserved.forEach(id => {
-        const result = FrameSchema.safeParse({
+      const result = FrameSchema.safeParse({
+        namespace: 'standard',
+        type: 'frame',
+        id: 'group',
+        ...makePart('group'),
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues[0]?.path.at(-1)).toBe('id');
+      expect(
+        FrameSchema.safeParse({
           namespace: 'standard',
           type: 'frame',
           id: 'group',
-          ...makePart(id),
-        });
-        expect(result.success).toBe(false);
-        if (!result.success) expect(result.error.issues[0]?.path.at(-1)).toBe('id');
-      });
+          ...makePart('group/content'),
+        }).success,
+      ).toBe(true);
     });
   });
 });

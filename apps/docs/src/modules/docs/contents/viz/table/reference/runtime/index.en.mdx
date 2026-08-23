@@ -92,8 +92,8 @@ Standalone `theme` writes the root Core Scene Theme. An embedded Table does not 
     {
       label: 'React embedded Table runtime contribution to the outer host',
       path: 'packages/viz/table-react/src/table-runtime.ts',
-      startLine: 276,
-      endLine: 286,
+      startLine: 223,
+      endLine: 231,
     },
     {
       label: 'Runtime contribution merge and frozen copied containers',
@@ -108,11 +108,11 @@ Standalone `theme` writes the root Core Scene Theme. An embedded Table does not 
 
 `@retikz/table-react` exposes three roots: `Table` accepts a complete `IRTable`, `DetailTable` creates record-per-row specs, and `ManualTable` creates explicit-grid specs. All three share `TableCommonProps` and one runtime.
 
-| Entry         | Core input                              | Structure authoring                      |
-| ------------- | --------------------------------------- | ---------------------------------------- |
-| `Table`       | `spec`, optional `data`                 | An already constructed precise IRTable |
-| `DetailTable` | `dataRef`, `data`, and `columns`        | `columns` or `DetailColumn` children     |
-| `ManualTable` | Rectangular `rows`, optional `rowKinds` | `rows` props or `Row` / `Cell` children  |
+| Entry         | Core input                              | Structure authoring                     |
+| ------------- | --------------------------------------- | --------------------------------------- |
+| `Table`       | `spec`, optional `data`                 | An already constructed precise IRTable  |
+| `DetailTable` | `dataRef`, `data`, and `columns`        | `columns` or `DetailColumn` children    |
+| `ManualTable` | Rectangular `rows`, optional `rowKinds` | `rows` props or `Row` / `Cell` children |
 
 The two `ManualTable` authoring modes are mutually exclusive. Props mode forwards the persisted row-major structure. Marker mode derives width from the maximum occupied position, pads with `null`, and then uses the same `createManualTableIR()` and Table schema.
 
@@ -135,17 +135,17 @@ The five definition categories and composites merge by stable key and object ide
 
 ### Theme inputs
 
-| Input               | Type                              | Default | Purpose                                                                     |
-| ------------------- | --------------------------------- | ------- | --------------------------------------------------------------------------- |
-| `theme?`            | `IRScene['theme']`                | —       | Standalone root Core Theme; embedded mode uses the outer `<Layout theme>`   |
-| `themeStyles?`      | `LayoutProps['themeStyles']`      | `[]`    | Standalone Core style definitions; supplied by the outer host when embedded |
-| `tableThemeTokens?` | `IRTable['tableThemeTokens']` | `{}`    | Local IRTable token overlay above the Table style baseline                |
+| Input               | Type                          | Default | Purpose                                                                     |
+| ------------------- | ----------------------------- | ------- | --------------------------------------------------------------------------- |
+| `theme?`            | `IRScene['theme']`            | —       | Standalone root Core Theme; embedded mode uses the outer `<Layout theme>`   |
+| `themeStyles?`      | `LayoutProps['themeStyles']`  | `[]`    | Standalone Core style definitions; supplied by the outer host when embedded |
+| `tableThemeTokens?` | `IRTable['tableThemeTokens']` | `{}`    | Local IRTable token overlay above the Table style baseline                  |
 
 `theme.style` / `theme.mode` select the Core environment and the same-named Table style definition. Core `colors.categorical` projects into Table `data.categorical`, after which local `tableThemeTokens` can replace leaves. Host `containerStyle` remains CSS and is outside this cascade. Custom styles enter standalone mode through `themeStyles` and `tableThemeStyles`; React subtrees may instead combine the Core `ThemeProvider` with `TableThemeProvider`. In embedded mode the outer Layout supplies the Core definition.
 
 ### Embedded
 
-A Table used as a parent `<Layout>` child requires a non-empty stable id. Datasets, Table definitions, and `composites` contribute to the outer host. Local `onManifest` and every standalone host prop fail loudly in one diagnostic that asks callers to move them to the outer `<Layout>`. Use the host's `onArtifacts` when embedded artifacts are needed.
+A Table used as a parent `<Layout>` child may remain anonymous. Only an explicitly authored `id` is retained as the Table model and lowered root-Scope identity. Datasets, Table definitions, and `composites` contribute to the outer host. Local `onManifest` and every standalone host prop fail loudly in one diagnostic that asks callers to move them to the outer `<Layout>`. Use the host's `onArtifacts` for embedded artifacts and distinguish anonymous or repeated-id instances by compile occurrence.
 
 ## Custom Visual Scales
 

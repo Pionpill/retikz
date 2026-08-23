@@ -125,7 +125,7 @@ describe('renderTable', () => {
     expect(result.svg).toContain('#123456');
     expect(result.manifest).toMatchObject({
       style: { style: 'clean', themeMode: 'dark' },
-      encodings: [{ id: 'palette', scaleName: 'vanilla-palette', cellIds: ['cell.r0.c0'] }],
+      encodings: [{ id: 'palette', scaleName: 'vanilla-palette', cellIndices: [0] }],
       legendDescriptors: [
         {
           encodingId: 'palette',

@@ -9,18 +9,18 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table theme t
 
 `IRTable` 是 `IRDetailTable | IRManualTable | IRCustomTable` 的聚合类型。三个变体共享 `namespace + type`，再分别约束 `data` 与 `structure`。
 
-| 字段                | 类型                                | 默认值     | 描述                                   |
-| ------------------- | ----------------------------------- | ---------- | -------------------------------------- |
-| `namespace`         | `'table'`                           | —          | Tier 2 composite 命名空间              |
-| `type`              | <ApiValues name="TableComposite" /> | —          | 顶层 Table node type                   |
-| `id?`               | `string`                            | —          | 可选稳定 id                            |
-| `layout?`           | `IRTableLayout`                     | 轨道默认值 | 轨道、稀疏覆盖、gap 与 border          |
-| `meta?`             | `IRJsonObject`                      | —          | lowering 原样保留的 JSON-safe 元数据   |
-| `rules?`            | `Array<IRTableCellRule>`            | `[]`       | 按声明顺序应用的 Cell 覆盖             |
-| `encodings?`        | `Array<IRTableCellVisualEncoding>`  | `[]`       | 按顺序把原始值映射到颜色通道           |
-| `tableThemeTokens?` | `IRTableThemeTokenOverrides`        | `{}`       | 当前 IRTable 的稀疏 Table token 覆盖 |
-| `data?`             | `IRDataReference`                   | —          | detail 必需、manual 禁止、custom 可选  |
-| `structure`         | `IRTableStructureOperation`         | —          | detail、manual 或 custom Structure     |
+| 字段                | 类型                                | 默认值     | 描述                                  |
+| ------------------- | ----------------------------------- | ---------- | ------------------------------------- |
+| `namespace`         | `'table'`                           | —          | Tier 2 composite 命名空间             |
+| `type`              | <ApiValues name="TableComposite" /> | —          | 顶层 Table node type                  |
+| `id?`               | `string`                            | —          | 可选稳定 id                           |
+| `layout?`           | `IRTableLayout`                     | 轨道默认值 | 轨道、稀疏覆盖、gap 与 border         |
+| `meta?`             | `IRJsonObject`                      | —          | lowering 原样保留的 JSON-safe 元数据  |
+| `rules?`            | `Array<IRTableCellRule>`            | `[]`       | 按声明顺序应用的 Cell 覆盖            |
+| `encodings?`        | `Array<IRTableCellVisualEncoding>`  | `[]`       | 按顺序把原始值映射到颜色通道          |
+| `tableThemeTokens?` | `IRTableThemeTokenOverrides`        | `{}`       | 当前 IRTable 的稀疏 Table token 覆盖  |
+| `data?`             | `IRDataReference`                   | —          | detail 必需、manual 禁止、custom 可选 |
+| `structure`         | `IRTableStructureOperation`         | —          | detail、manual 或 custom Structure    |
 
 ### TableSchema
 
@@ -83,7 +83,7 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table theme t
   name="ManualTableCellSchema"
   description="manual rows 中的非空 Cell entry：标量简写或 addressless value/content rich object。"
   descriptions={{
-    id: '可选稳定 Cell id；省略时根据 Cell 地址派生。',
+    id: '可选稳定 Cell id；省略时保持匿名，并通过 canonical 地址和顺序参与后续阶段。',
     value: '交给 presentation provider 的 JSON scalar；可显式为 null。',
     formatter: 'value Cell 的可选 formatter provider 引用；省略时使用内置 identity。',
     presentation: 'value Cell 的可选 presentation provider 引用；省略时使用内置 text。',

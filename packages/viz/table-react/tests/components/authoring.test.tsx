@@ -496,7 +496,7 @@ describe('Table React composition root integration', () => {
     const output = renderToStaticMarkup(
       <ManualTable
         rows={[[7]]}
-        rules={[{ selector: { cellIds: ['cell.r0.c0'] }, formatter: { name: 'rule-prefix' } }]}
+        rules={[{ selector: { rowIndices: [0], columnIndices: [0] }, formatter: { name: 'rule-prefix' } }]}
         formatterDefinitions={[formatter]}
       />,
     );

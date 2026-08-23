@@ -16,7 +16,6 @@ describe('surface()', () => {
       createSurface({
         namespace: 'standard',
         type: 'surface',
-        id: 'panel/surface',
         padding: 4,
         child: { type: 'node', position: [0, 0], text: 'A' },
       }),
@@ -25,6 +24,13 @@ describe('surface()', () => {
       roots: [SurfaceProvider.key],
       providers: [SurfaceProvider, PathClipProvider],
     });
+    expect(normalized.ir.children[0]).not.toHaveProperty('id');
+
+    const explicit = normalizeScene(
+      scene({ children: [surface('runtime', { id: 'surface-model', padding: 4, child })] }),
+      { adapters: [SurfaceInputEmbedAdapter] },
+    );
+    expect(explicit.ir.children[0]).toHaveProperty('id', 'surface-model');
   });
 
   it('preserves explicit nested Tier-2 dependencies after Surface in authored order', () => {
@@ -49,10 +55,10 @@ describe('surface()', () => {
       createSurface({
         namespace: 'standard',
         type: 'surface',
-        id: 'panel/surface',
         child: { type: 'node', position: [0, 0] },
       }),
     );
+    expect(result.ir.children[0]).not.toHaveProperty('id');
     expect(JSON.stringify(result.ir)).not.toContain('providerDependencies');
   });
 });

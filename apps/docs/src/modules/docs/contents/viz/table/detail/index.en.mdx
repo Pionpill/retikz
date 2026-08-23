@@ -205,8 +205,8 @@ result.manifest;
     {
       label: 'React embedded entry rejects standalone props',
       path: 'packages/viz/table-react/src/table-runtime.ts',
-      startLine: 238,
-      endLine: 246,
+      startLine: 202,
+      endLine: 209,
     },
     {
       label: 'Vanilla returns the manifest sidecar when artifacts are requested',
@@ -229,13 +229,13 @@ result.manifest;
 | `children?`                      | `DetailTableProps['children']`                                            | —              | `DetailColumn` declarations in order; exclusive with `columns`                    |
 | `model?`                         | `DetailTableProps['model']`                                               | —              | Optional field model                                                              |
 | `header?`                        | `DetailTableProps['header']`                                              | `true`         | Whether to generate a column-header row                                           |
-| `id?`                            | `DetailTableProps['id']`                                                  | —              | Stable Table id; required inside a parent `Layout`                                |
+| `id?`                            | `DetailTableProps['id']`                                                  | —              | Optional stable Table id; omission stays anonymous in standalone and embedded use |
 | `layout?`                        | `DetailTableProps['layout']`                                              | track defaults | Default/indexed track sizes, gaps, and Table borders                              |
 | `rules?`                         | `DetailTableProps['rules']`                                               | `[]`           | Declaration-ordered formatter, presentation, or appearance overrides              |
 | `encodings?`                     | `DetailTableProps['encodings']`                                           | `[]`           | Maps selected value-Cell raw values to background or content colors               |
 | `theme?`                         | `DetailTableProps['theme']`                                               | —              | Standalone root Core Theme; embedded mode uses the outer `<Layout>`               |
-| `tableThemeTokens?`              | `DetailTableProps['tableThemeTokens']`                                    | `{}`           | Sparse IRTable token overlay above the Table style baseline                     |
-| `meta?`                          | `DetailTableProps['meta']`                                                | —              | JSON metadata stored in IRTable                                                 |
+| `tableThemeTokens?`              | `DetailTableProps['tableThemeTokens']`                                    | `{}`           | Sparse IRTable token overlay above the Table style baseline                       |
+| `meta?`                          | `DetailTableProps['meta']`                                                | —              | JSON metadata stored in IRTable                                                   |
 | `formatterDefinitions?`          | `DetailTableProps['formatterDefinitions']`                                | `[]`           | Custom Cell formatter definitions                                                 |
 | `structureDefinitions?`          | `DetailTableProps['structureDefinitions']`                                | `[]`           | Custom structure definitions                                                      |
 | `presentationDefinitions?`       | `DetailTableProps['presentationDefinitions']`                             | `[]`           | Custom Cell presentation definitions                                              |

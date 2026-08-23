@@ -48,7 +48,7 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
   resolve: (context: ChartRecipeResolveContext) => {
     const theme = pointThemeOf(context.recipeThemeTokens);
     const slots = pointSlotsOf(context);
-    const mark = resolvePointMark(slots.encodings, slots.properties, { chartType: ChartType.Scatter });
+    const mark = resolvePointMark(slots.encodings, slots.properties);
     const sizeGuide = sizeGuideOf(theme, slots.encodings);
     return pointResolutionOf(ChartType.Scatter, theme, [{ kind: ChartType.Scatter, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],

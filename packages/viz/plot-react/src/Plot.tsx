@@ -124,7 +124,6 @@ const createPlotInput = (props: Readonly<Record<string, unknown>>): InputPlotEmb
     spec,
     datasets,
     lowerOptions,
-    preserveRootIdentity: true,
     ...(panel === undefined ? {} : { panel }),
   };
 };

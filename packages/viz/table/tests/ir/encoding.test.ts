@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { TableCellVisualEncodingSchema, TableSchema, TableVisualChannel, TableVisualScaleRefSchema } from '../../src';
+import {
+  compileTable,
+  TableCellVisualEncodingSchema,
+  TableSchema,
+  TableVisualChannel,
+  TableVisualScaleRefSchema,
+} from '../../src';
 
 const selector = { fields: ['score'], locations: ['body'] } as const;
 
@@ -48,7 +54,7 @@ describe('Table visual encoding schema', () => {
     ).toThrow(/encoding id/i);
   });
 
-  it('requires an explicit root id only when a legend object is requested', () => {
+  it('allows an anonymous root to produce a Legend descriptor', () => {
     const base = {
       namespace: 'table',
       type: 'table',
@@ -56,13 +62,23 @@ describe('Table visual encoding schema', () => {
     };
     const encoding = { id: 'score', selector, channel: 'contentColor', scale: { name: 'ordinal-color' } };
 
-    expect(() => TableSchema.parse({ ...base, encodings: [{ ...encoding, legend: { title: 'Score' } }] })).toThrow(
-      /root id/i,
-    );
+    const anonymous = TableSchema.parse({ ...base, encodings: [{ ...encoding, legend: { title: 'Score' } }] });
+    expect(anonymous).not.toHaveProperty('id');
     expect(TableSchema.parse({ ...base, encodings: [{ ...encoding, legend: false }] })).not.toHaveProperty('id');
     expect(TableSchema.parse({ ...base, id: 'table-1', encodings: [{ ...encoding, legend: {} }] })).toHaveProperty(
       'id',
       'table-1',
     );
+    const compiled = compileTable(
+      {
+        ...anonymous,
+        data: { reference: 'scores' },
+        structure: { kind: 'detail', columns: [{ id: 'score', field: 'score' }] },
+      },
+      { scores: [{ score: 1 }] },
+      { compile: { padding: 0 } },
+    );
+    expect(compiled.manifest).not.toHaveProperty('tableId');
+    expect(compiled.manifest.legendDescriptors).toMatchObject([{ encodingId: 'score', title: 'Score' }]);
   });
 });
