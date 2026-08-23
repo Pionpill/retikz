@@ -1,8 +1,6 @@
 # @retikz/graph-react
 
-React authoring bindings for [`@retikz/graph`](../graph). The components
-preserve canonical Graph semantic IR and contribute the same Definitions
-used by direct IR and Vanilla hosts.
+React authoring bindings for [`@retikz/graph`](../graph). `<Graph>`, `<Entity>` and `<Relation>` are independent semantic components backed by the matching `@retikz/graph-vanilla` adapter. They produce the same compact Source IR as direct JSON authoring without generated ids or hidden Graph membership.
 
 ## Install
 
@@ -13,33 +11,41 @@ pnpm add @retikz/graph-react @retikz/graph @retikz/react react react-dom
 This package is ESM-only and requires Node.js 24 or newer.
 本包仅发布 ES modules，要求 Node.js 24 或更高版本。
 
+`<Graph>` can be a standalone Scene host:
+
 ```tsx
-import { Layout, Step } from '@retikz/react';
 import { Entity, Graph, Relation } from '@retikz/graph-react';
 
-<Layout>
-  <Graph id="workflow" entityVariant="mixed">
-    <Entity id="start" role="terminal" position={[0, 0]}>
-      Start
-    </Entity>
-    <Entity id="step" role="stage" position={[160, 0]}>
-      Process
-    </Entity>
-    <Relation id="edge" role="flow">
-      <Step kind="move" to="start" />
-      <Step to="step" />
-    </Relation>
+<Graph width={420} height={160}>
+  <Entity id="start" role="event" position={[80, 80]}>
+    Start
+  </Entity>
+  <Entity id="task" role="activity" position={[320, 80]}>
+    Process
+  </Entity>
+  <Relation role="flow" source={{ id: 'start' }} target={{ id: 'task' }} way={['start', 'task']} />
+</Graph>;
+```
+
+When Graph is placed inside an outer Layout, it contributes only its local Core Scope. Scope fields remain on Graph; standalone host fields belong to the outer Layout:
+
+```tsx
+import { Layout } from '@retikz/react';
+
+<Layout width={800} height={220}>
+  <Graph id="left" transforms={[{ kind: 'translate', x: 0, y: 0 }]}>
+    <Entity id="left-node" role="activity" position={[80, 80]} />
+  </Graph>
+  <Graph id="right" transforms={[{ kind: 'translate', x: 400, y: 0 }]}>
+    <Entity id="right-node" role="activity" position={[80, 80]} />
   </Graph>
 </Layout>;
 ```
 
-`Relation` accepts either Core `<Step>` children or a Core Draw `way`, never
-both. `Graph` accepts multiple authored children and lowers to a same-id Core
-Scope. Pass `entityRoles`, `entityVariants`, and `graphThemeStyles` directly to
-`<Graph>` when the subtree needs custom Definitions. The default `<Layout>` JSX
-path uses built-in Graph Definitions otherwise; custom definitions can also be
-rendered from direct IR with `createGraphDefinitions(options)`. Importing this
-package does not create global state.
+`theme`, Scope defaults, transforms, placement, clip, z-index, namespace and animations always belong to Graph Source. `graphTheme` carries Graph-local Entity and Relation rules. An embedded Graph rejects standalone-only fields such as `width`, renderer/runtime options and Definition arrays instead of ignoring them.
 
-See the [Graph documentation](https://pionpill.github.io/retikz/schematic/graph)
-for complete examples.
+Entity and Relation can also be direct Layout or Scope children. Their `id` is optional; omitting it draws the element without registering a Core reference target. Relation endpoints use Core `NodeTarget`, including `anchor`, `offset` and `boundary`.
+
+Entity children accept Node-compatible text only. Relation children accept Core `Step` declarations and are mutually exclusive with `route` and `way`. Pass custom Graph Definition options directly to Graph, Entity or Relation; those options configure provider datasets and never enter Source IR.
+
+See the [Graph documentation](https://pionpill.github.io/retikz/schematic/graph) for complete examples.

@@ -1,25 +1,30 @@
 import { NodeSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
-import { z as zod } from 'zod';
+import { createOpenStringSchema, NonBlankStringSchema } from '@retikz/foundation';
+import { z } from 'zod';
 
-import { GRAPH_NAMESPACE, GraphType } from '../../shared';
+import { EntityRole, GRAPH_NAMESPACE, GraphType } from '../../shared';
+import { GraphPredicateRefSchema } from '../predicate';
 
-export const EntityRoleSchema = NonBlankStringSchema.describe(
+export const EntityRoleSchema = createOpenStringSchema(EntityRole).describe(
   'Open Entity role key resolved by the configured Graph role registry.',
 );
 
-export const EntityVariantSchema = NonBlankStringSchema.describe('Open Entity variant key.');
+const EntityNodeShape = NodeSchema.omit({
+  type: true,
+  shape: true,
+  boundary: true,
+  padding: true,
+  cornerRadius: true,
+}).shape;
 
-/** Entity 的 JSON 安全规范模式 */
-export const EntitySchema = zod
+export const EntitySchema = z
   .strictObject({
-    namespace: zod.literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
-    type: zod.literal(GraphType.Entity).describe('Entity semantic element discriminator.'),
-    ...NodeSchema.omit({ type: true, id: true }).shape,
-    id: NonBlankStringSchema.describe('Stable authored Entity identity.'),
+    namespace: z.literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
+    type: z.literal(GraphType.Entity).describe('Entity Source record discriminator.'),
     role: EntityRoleSchema,
-    variant: EntityVariantSchema.optional().describe(
-      'Open Entity variant key; omitted values use the nearest Graph or Container scope, then default.',
-    ),
+    kind: NonBlankStringSchema.optional().describe('Open stable subtype key within the selected Entity role.'),
+    predicate: GraphPredicateRefSchema.optional().describe('Optional precise semantic predicate reference.'),
+    ...EntityNodeShape,
+    position: EntityNodeShape.position.optional().describe('Optional Core Node placement.'),
   })
-  .describe('Canonical JSON-safe Entity lowered to one Core Node.');
+  .describe('JSON-safe Graph Entity with role-owned structure and the non-structural Core Node surface.');

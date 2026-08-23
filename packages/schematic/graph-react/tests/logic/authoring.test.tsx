@@ -1,247 +1,541 @@
+import type { InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
+import type { FC } from 'react';
+
 import {
-  ContainerProvider,
   defineEntityRole,
-  EntityProvider,
-  GraphProvider,
+  defineGraphThemeStyle,
+  defineRelationRole,
+  EntityProviderKey,
   GraphProviderKey,
-  GraphThemeToken,
-  RelationProvider,
+  RelationProviderKey,
 } from '@retikz/graph';
-import { createGraphVanillaAdapters, entity as vanillaEntity, graph as vanillaGraph } from '@retikz/graph-vanilla';
 import { createInputScene, Node, Step, Text } from '@retikz/react';
-import { normalizeScene } from '@retikz/vanilla';
+import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import {
-  Container,
-  ContainerHeader,
-  ContainerSection,
-  Entity,
-  Graph,
-  Relation,
-  RetikzGraphReactErrorCode,
-} from '../../src';
+import type { GraphProps } from '../../src';
 
-/** 经 React JSX 到 Vanilla Input 的唯一 authoring 链路归一化 */
-const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) => {
-  const input = createInputScene(children);
+import { Entity, Graph, GraphThemeProvider, Relation, RetikzGraphReactErrorCode, useGraphThemeStyles } from '../../src';
+import { graphLayoutHostPropsOf } from '../../src/graph/authoring';
+
+const hostPropKeys = [
+  'authoring',
+  'compileDriver',
+  'handlers',
+  'runtime',
+  'width',
+  'height',
+  'viewBox',
+  'className',
+  'style',
+  'renderer',
+  'animate',
+  'snapshotAt',
+  'animationRef',
+  'easings',
+  'animationProperties',
+  'idPrefix',
+  'nodeDistance',
+  'fontSize',
+  'shapes',
+  'boundaries',
+  'clips',
+  'arrows',
+  'patterns',
+  'pathGenerators',
+  'pathKinds',
+  'composites',
+  'themeStyles',
+  'lowerTex',
+  'artifacts',
+  'onArtifacts',
+  'onCompileResult',
+] as const;
+
+const definitionOptionKeys = [
+  'entityRoles',
+  'entityKinds',
+  'entityPredicates',
+  'relationRoles',
+  'relationKinds',
+  'relationPredicates',
+  'graphThemeStyles',
+] as const;
+
+const decorationAdapter = {
+  kind: 'fixture.decoration',
+  lower: (_props: unknown, context: InputEmbedContext) => ({
+    node: { namespace: 'fixture', type: 'decoration', id: context.id },
+    providerDependencies: { roots: [], providers: [] },
+  }),
+} satisfies InputEmbedAdapter<unknown>;
+
+const Decoration = Object.assign((() => null) as FC<{ id: string }>, {
+  displayName: 'Decoration',
+  isTier2Embeddable: true as const,
+  inputEmbedAdapter: decorationAdapter,
+});
+
+const WrappedText: FC = () => createElement(Text, { children: 'Wrapped' });
+const WrappedRoute: FC = () =>
+  createElement(
+    Fragment,
+    null,
+    createElement(Step, { kind: 'move', to: 'source' }),
+    createElement(Step, { kind: 'line', to: 'target' }),
+  );
+
+const normalizeReact = (element: ReturnType<typeof createElement>) => {
+  const input = createInputScene(element);
   return normalizeScene(input.scene, { adapters: input.adapters });
 };
 
 describe('@retikz/graph-react package boundary', () => {
-  it('exports the Graph root and unified semantic components', async () => {
+  it('exposes Graph, Entity and Relation as independent embeddable components', async () => {
     const graphReact = await import('../../src');
 
-    expect(graphReact.Entity).toBeDefined();
-    expect(graphReact.Relation).toBeDefined();
-    expect(graphReact.Container).toBeDefined();
-    expect(graphReact.Graph).toBeDefined();
+    expect(Graph.inputEmbedAdapter.kind).toBe('graph.graph');
+    expect(Entity.inputEmbedAdapter.kind).toBe('graph.entity');
+    expect(Relation.inputEmbedAdapter.kind).toBe('graph.relation');
     expect(graphReact).not.toHaveProperty('createGraphReactAdapters');
-    expect(graphReact).not.toHaveProperty('Stage');
-    expect(graphReact).not.toHaveProperty('Terminal');
-    expect(graphReact).not.toHaveProperty('Decision');
-    expect(graphReact).not.toHaveProperty('Junction');
   });
 });
 
-describe('Graph React semantic authoring', () => {
-  it('keeps the Graph input adapter available while reading direct Graph options', () => {
-    expect(Graph.inputEmbedAdapter.kind).toBe('graph.graph');
-    expect(Entity.inputEmbedAdapter.kind).toBe('graph.entity');
-  });
-
-  it('keeps React Graph authoring equivalent to Vanilla with configured providers', () => {
-    const service = defineEntityRole({ role: 'service', shape: 'rectangle', padding: 6 });
-    const reactInput = createInputScene(
+describe('Entity and Relation React authoring', () => {
+  it('normalizes direct Entity and Relation children without a Graph parent or generated ids', () => {
+    const result = normalizeReact(
       createElement(
-        Graph,
-        {
-          id: 'workflow',
-          entityRoles: [service],
-          entityVariant: 'default',
-          graphThemeTokens: { [GraphThemeToken.EntityColor]: '#336699' },
-          graphThemeTokenRules: [
-            {
-              select: { role: 'service' },
-              tokens: { [GraphThemeToken.EntityStrokeWidth]: 2 },
-            },
-          ],
-        },
-        createElement(Entity, { id: 'service', role: 'service', position: [0, 0] }),
-        createElement(Entity, { id: 'stage', role: 'stage', position: [40, 0] }),
-      ),
-    );
-    const reactResult = normalizeScene(reactInput.scene, {
-      adapters: reactInput.adapters,
-    });
-    const vanillaResult = normalizeScene(
-      {
-        children: [
-          vanillaGraph('workflow', {
-            entityRoles: [service],
-            entityVariant: 'default',
-            graphThemeTokens: { [GraphThemeToken.EntityColor]: '#336699' },
-            graphThemeTokenRules: [
-              {
-                select: { role: 'service' },
-                tokens: { [GraphThemeToken.EntityStrokeWidth]: 2 },
-              },
-            ],
-            children: [
-              vanillaEntity('service', { role: 'service', position: [0, 0] }),
-              vanillaEntity('stage', { role: 'stage', position: [40, 0] }),
-            ],
-          }),
-        ],
-      },
-      { adapters: createGraphVanillaAdapters() },
-    );
-
-    expect(reactResult.ir).toEqual(vanillaResult.ir);
-    expect(reactResult.contributions[0]?.roots[0]).toEqual(GraphProviderKey);
-    expect(reactResult.contributions[0]?.providers).not.toContain(GraphProvider);
-    expect(reactResult.contributions[0]?.providers).not.toContain(EntityProvider);
-    expect(reactResult.contributions[0]?.providers).toContain(RelationProvider);
-  });
-
-  it('preserves a Container identity and inherited variant in semantic IR', () => {
-    const result = normalizeReactInput(
-      createElement(
-        Container,
-        { id: 'variant-frame', entityVariant: 'fill' },
-        createElement(ContainerSection, {
-          sectionKey: 'body',
-          children: createElement(Entity, { id: 'variant-node', role: 'stage', position: [0, 0] }),
+        Fragment,
+        null,
+        createElement(Node, { id: 'source', position: [0, 0] }),
+        createElement(Node, { id: 'target', position: [100, 0] }),
+        createElement(Entity, { role: 'participant', position: [0, 80] }, 'Preview'),
+        createElement(Relation, {
+          role: 'association',
+          source: { id: 'source' },
+          target: { id: 'target' },
+          dashPattern: [6, 2],
+          labels: [{ text: 'precise', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
         }),
       ),
     );
 
-    expect(result.ir.children[0]).toMatchObject({
-      namespace: 'graph',
-      type: 'container',
-      id: 'variant-frame',
-      entityVariant: 'fill',
-      sections: [
-        {
-          child: { namespace: 'graph', type: 'entity', id: 'variant-node', role: 'stage' },
-        },
-      ],
-    });
+    expect(result.ir.children).toEqual([
+      { type: 'node', id: 'source', position: [0, 0] },
+      { type: 'node', id: 'target', position: [100, 0] },
+      {
+        namespace: 'graph',
+        type: 'entity',
+        role: 'participant',
+        position: [0, 80],
+        text: 'Preview',
+      },
+      {
+        namespace: 'graph',
+        type: 'relation',
+        role: 'association',
+        source: { id: 'source' },
+        target: { id: 'target' },
+        dashPattern: [6, 2],
+        labels: [{ text: 'precise', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
+      },
+    ]);
+    expect(result.ir.children[2]).not.toHaveProperty('id');
+    expect(result.ir.children[3]).not.toHaveProperty('id');
+    expect(result.contributions.map(contribution => contribution.roots)).toEqual([
+      [EntityProviderKey],
+      [RelationProviderKey],
+    ]);
   });
 
-  it('keeps Entity text authoring equivalent to Core Node text authoring', () => {
-    const node = normalizeReactInput(
-      createElement(Entity, { id: 'stage', role: 'stage', position: [0, 0] }, 'Process'),
-    );
-    const terminal = normalizeReactInput(
-      createElement(Entity, { id: 'terminal', role: 'terminal', position: [0, 0] }, createElement(Text, null, 'Start')),
-    );
-
-    expect(node.ir.children[0]).toMatchObject({
-      namespace: 'graph',
-      type: 'entity',
-      role: 'stage',
-      id: 'stage',
-      text: 'Process',
-    });
-    expect(terminal.ir.children[0]).toMatchObject({
-      namespace: 'graph',
-      type: 'entity',
-      role: 'terminal',
-      id: 'terminal',
-      text: 'Start',
-    });
-    expect(node.contributions[0]).toEqual({ roots: [EntityProvider.key], providers: [EntityProvider] });
-  });
-
-  it('contributes one provider per unified semantic component', () => {
-    const result = normalizeReactInput(
+  it('normalizes Entity text and Relation Step wrappers through the Core authoring grammar', () => {
+    const result = normalizeReact(
       createElement(
         Fragment,
         null,
-        createElement(Entity, { id: 'decision', role: 'decision', position: [0, 0] }),
-        createElement(Entity, { id: 'junction', role: 'junction', position: [20, 0] }),
-      ),
-    );
-
-    expect(result.ir.children).toMatchObject([
-      { namespace: 'graph', type: 'entity', role: 'decision', id: 'decision' },
-      { namespace: 'graph', type: 'entity', role: 'junction', id: 'junction' },
-    ]);
-    expect(result.contributions.map(contribution => contribution.roots[0])).toEqual([
-      EntityProvider.key,
-      EntityProvider.key,
-    ]);
-  });
-});
-
-describe('Graph React Relation authoring', () => {
-  it('normalizes Core Step children to canonical Relation IR', () => {
-    const result = normalizeReactInput(
-      createElement(
-        Relation,
-        { id: 'relation', role: 'flow' },
-        createElement(Step, { kind: 'move', to: 'source' }),
-        createElement(Step, { kind: 'fold', via: '-|-', to: 'target' }),
-      ),
-    );
-
-    expect(result.ir.children[0]).toMatchObject({
-      namespace: 'graph',
-      type: 'relation',
-      id: 'relation',
-      role: 'flow',
-      children: [
-        { type: 'step', kind: 'move', to: { id: 'source' } },
-        { type: 'step', kind: 'fold', via: '-|-', to: { id: 'target' } },
-      ],
-    });
-    expect(result.contributions[0]).toEqual({
-      roots: [RelationProvider.key],
-      providers: [RelationProvider],
-    });
-  });
-
-  it('supports Draw way input and rejects mixing it with Step children', () => {
-    const result = normalizeReactInput(
-      createElement(Relation, { id: 'draw', role: 'flow', way: ['source', 'target'] }),
-    );
-
-    expect(result.ir.children[0]).toMatchObject({
-      namespace: 'graph',
-      type: 'relation',
-      role: 'flow',
-      children: [
-        { type: 'step', kind: 'move', to: { id: 'source' } },
-        { type: 'step', kind: 'line', to: { id: 'target' } },
-      ],
-    });
-    expect(() =>
-      normalizeReactInput(
+        createElement(Entity, { id: 'source', role: 'concept' }, createElement(WrappedText)),
+        createElement(Entity, { id: 'target', role: 'concept' }),
         createElement(
           Relation,
-          { id: 'mixed', role: 'flow', way: ['source', 'target'] },
+          { id: 'edge', role: 'association', source: { id: 'source' }, target: { id: 'target' } },
+          createElement(WrappedRoute),
+        ),
+      ),
+    );
+
+    expect(result.ir.children).toEqual([
+      { namespace: 'graph', type: 'entity', id: 'source', role: 'concept', text: 'Wrapped' },
+      { namespace: 'graph', type: 'entity', id: 'target', role: 'concept' },
+      {
+        namespace: 'graph',
+        type: 'relation',
+        id: 'edge',
+        role: 'association',
+        source: { id: 'source' },
+        target: { id: 'target' },
+        route: [
+          { type: 'step', kind: 'move', to: { id: 'source' } },
+          { type: 'step', kind: 'line', to: { id: 'target' } },
+        ],
+      },
+    ]);
+  });
+
+  it('rejects conflicting Entity text and Relation route authoring', () => {
+    expect(() => normalizeReact(createElement(Entity, { role: 'activity', text: 'prop' }, 'child'))).toThrowError(
+      expect.objectContaining({ code: RetikzGraphReactErrorCode.EntityInputInvalid }),
+    );
+    expect(() =>
+      normalizeReact(
+        createElement(
+          Relation,
+          {
+            role: 'flow',
+            source: { id: 'source' },
+            target: { id: 'target' },
+            way: ['source', 'target'],
+          },
           createElement(Step, { kind: 'move', to: 'source' }),
-          createElement(Step, { to: 'target' }),
+          createElement(Step, { kind: 'line', to: 'target' }),
         ),
       ),
     ).toThrowError(expect.objectContaining({ code: RetikzGraphReactErrorCode.RelationInputInvalid }));
   });
+});
 
-  it('keeps Container and Relation provider roots on their unified definitions', () => {
-    const frame = normalizeReactInput(
+describe('Graph Source and child authoring', () => {
+  it('preserves the complete Graph Scope surface and keeps Theme fields disjoint', () => {
+    const result = normalizeReact(
       createElement(
-        Container,
-        { id: 'frame' },
-        createElement(ContainerHeader, null, createElement(Node, { position: [0, 0], text: 'Header' })),
+        Graph,
+        {
+          id: 'architecture',
+          theme: { mode: 'dark' },
+          graphTheme: {
+            rules: [
+              {
+                type: 'entity',
+                selector: { role: 'participant' },
+                appearance: { fill: '#eef6ff' },
+              },
+            ],
+          },
+          localNamespace: true,
+          transforms: [{ kind: 'translate', x: 10, y: 20 }],
+          placement: { target: [30, 40], selfAnchor: 'center' },
+          color: '#0f172a',
+          stroke: '#334155',
+          fill: '#e2e8f0',
+          strokeWidth: 2,
+          opacity: 0.8,
+          fillOpacity: 0.7,
+          strokeOpacity: 0.9,
+          nodeDefault: { fill: 'white' },
+          pathDefault: { stroke: 'green' },
+          labelDefault: { font: { size: 10 } },
+          arrowDefault: { shape: 'stealth', scale: 1.5 },
+          resetStyle: ['path'],
+          zIndex: 2,
+          clip: { kind: 'rect', x: 0, y: 0, width: 220, height: 120 },
+          boundingShape: 'circle',
+          meta: { source: 'architecture-catalog' },
+          animations: [],
+        },
+        createElement(Node, { id: 'child', position: [0, 0] }),
       ),
     );
-    const connector = normalizeReactInput(
-      createElement(Relation, { id: 'connector', role: 'dependency', way: ['a', 'b'] }),
+
+    expect(result.ir.children).toEqual([
+      {
+        namespace: 'graph',
+        type: 'graph',
+        id: 'architecture',
+        theme: { mode: 'dark' },
+        graphTheme: {
+          rules: [
+            {
+              type: 'entity',
+              selector: { role: 'participant' },
+              appearance: { fill: '#eef6ff' },
+            },
+          ],
+        },
+        localNamespace: true,
+        transforms: [{ kind: 'translate', x: 10, y: 20 }],
+        placement: { target: [30, 40], selfAnchor: 'center' },
+        color: '#0f172a',
+        stroke: '#334155',
+        fill: '#e2e8f0',
+        strokeWidth: 2,
+        opacity: 0.8,
+        fillOpacity: 0.7,
+        strokeOpacity: 0.9,
+        nodeDefault: { fill: 'white' },
+        pathDefault: { stroke: 'green' },
+        labelDefault: { font: { size: 10 } },
+        arrowDefault: { shape: 'stealth', scale: 1.5 },
+        resetStyle: ['path'],
+        zIndex: 2,
+        clip: { kind: 'rect', x: 0, y: 0, width: 220, height: 120 },
+        boundingShape: 'circle',
+        meta: { source: 'architecture-catalog' },
+        animations: [],
+        children: [{ type: 'node', id: 'child', position: [0, 0] }],
+      },
+    ]);
+  });
+
+  it('uses generic child normalization for semantic and third-party embeds in author order', () => {
+    const result = normalizeReact(
+      createElement(
+        Graph,
+        null,
+        createElement(Node, { id: 'source', position: [0, 0] }),
+        createElement(Entity, { role: 'participant', position: [80, 0] }),
+        createElement(Decoration, { id: 'decoration' }),
+        createElement(Relation, {
+          role: 'association',
+          source: { id: 'source' },
+          target: { id: 'source' },
+        }),
+      ),
     );
 
-    expect(frame.contributions[0]?.roots[0]).toEqual(ContainerProvider.key);
-    expect(connector.contributions[0]?.roots[0]).toEqual(RelationProvider.key);
+    expect(result.ir.children).toEqual([
+      {
+        namespace: 'graph',
+        type: 'graph',
+        children: [
+          { type: 'node', id: 'source', position: [0, 0] },
+          { namespace: 'graph', type: 'entity', role: 'participant', position: [80, 0] },
+          { namespace: 'fixture', type: 'decoration', id: 'decoration' },
+          {
+            namespace: 'graph',
+            type: 'relation',
+            role: 'association',
+            source: { id: 'source' },
+            target: { id: 'source' },
+          },
+        ],
+      },
+    ]);
+    expect(result.contributions[0]?.roots).toEqual([GraphProviderKey, EntityProviderKey, RelationProviderKey]);
+  });
+
+  it('does not create a nested Scene when Graph is embedded', () => {
+    const result = normalizeReact(
+      createElement(Graph, null, createElement(Graph, null, createElement(Node, { position: [0, 0] }))),
+    );
+
+    expect(result.ir).toEqual({
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          namespace: 'graph',
+          type: 'graph',
+          children: [
+            {
+              namespace: 'graph',
+              type: 'graph',
+              children: [{ type: 'node', position: [0, 0] }],
+            },
+          ],
+        },
+      ],
+    });
+  });
+});
+
+describe('Graph standalone and embedded host classification', () => {
+  it('renders standalone Graph through exactly one Layout Scene host', () => {
+    const markup = renderToStaticMarkup(
+      createElement(
+        Graph,
+        { width: 240, height: 120 },
+        createElement(Entity, { role: 'participant', position: [80, 60] }, 'Service'),
+      ),
+    );
+
+    expect(markup.match(/<svg/g)).toHaveLength(1);
+  });
+
+  it('forwards the complete standalone host surface without consuming Source fields', () => {
+    const props = {
+      authoring: undefined,
+      compileDriver: undefined,
+      handlers: undefined,
+      runtime: undefined,
+      width: undefined,
+      height: undefined,
+      viewBox: undefined,
+      className: undefined,
+      style: undefined,
+      renderer: undefined,
+      animate: undefined,
+      snapshotAt: undefined,
+      animationRef: undefined,
+      easings: undefined,
+      animationProperties: undefined,
+      idPrefix: undefined,
+      nodeDistance: undefined,
+      fontSize: undefined,
+      shapes: undefined,
+      boundaries: undefined,
+      clips: undefined,
+      arrows: undefined,
+      patterns: undefined,
+      pathGenerators: undefined,
+      pathKinds: undefined,
+      composites: undefined,
+      themeStyles: undefined,
+      lowerTex: undefined,
+      artifacts: undefined,
+      onArtifacts: undefined,
+      onCompileResult: undefined,
+      theme: { mode: 'dark' as const },
+      animations: [],
+    } satisfies GraphProps;
+
+    const hostProps = graphLayoutHostPropsOf(props);
+    expect(Object.keys(hostProps)).toEqual(hostPropKeys);
+    for (const key of hostPropKeys) expect(hostProps[key]).toBe(props[key]);
+    expect(hostProps).not.toHaveProperty('theme');
+    expect(hostProps).not.toHaveProperty('animations');
+  });
+
+  it.each(hostPropKeys)('rejects embedded own host property %s including explicit undefined', key => {
+    const props: GraphProps = { [key]: undefined };
+
+    expect(() => normalizeReact(createElement(Graph, props))).toThrowError(
+      expect.objectContaining({ code: RetikzGraphReactErrorCode.GraphHostPropsInvalid }),
+    );
+  });
+});
+
+describe('Graph Definition options parity', () => {
+  it('keeps all options out of Source and compiles custom definitions through Graph, Entity and Relation', () => {
+    const entityRole = defineEntityRole({
+      role: 'custom-entity',
+      description: 'Custom Entity role',
+      shape: 'rectangle',
+      padding: 4,
+    });
+    const relationRole = defineRelationRole({
+      role: 'custom-relation',
+      description: 'Custom Relation role',
+      defaultDirection: 'none',
+      allowedDirections: ['none'],
+      directions: { none: { sourceMarker: false, targetMarker: false, dashPattern: false } },
+    });
+    const options = {
+      entityRoles: [entityRole],
+      entityKinds: [],
+      entityPredicates: [],
+      relationRoles: [relationRole],
+      relationKinds: [],
+      relationPredicates: [],
+      graphThemeStyles: [],
+    } as const;
+    const input = createInputScene(
+      createElement(
+        Fragment,
+        null,
+        createElement(Node, { id: 'direct-source', position: [0, 200] }),
+        createElement(Node, { id: 'direct-target', position: [100, 200] }),
+        createElement(
+          Graph,
+          options,
+          createElement(Entity, { id: 'graph-source', role: 'custom-entity', position: [0, 0] }),
+          createElement(Entity, { id: 'graph-target', role: 'custom-entity', position: [100, 0] }),
+          createElement(Relation, {
+            role: 'custom-relation',
+            source: { id: 'graph-source' },
+            target: { id: 'graph-target' },
+          }),
+        ),
+        createElement(Entity, {
+          ...options,
+          role: 'custom-entity',
+          position: [0, 100],
+        }),
+        createElement(Relation, {
+          ...options,
+          role: 'custom-relation',
+          source: { id: 'direct-source' },
+          target: { id: 'direct-target' },
+        }),
+      ),
+    );
+    const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+
+    for (const child of normalized.ir.children) {
+      for (const key of definitionOptionKeys) expect(child).not.toHaveProperty(key);
+    }
+    expect(() =>
+      processToStaticInputResult(input.scene, {
+        adapters: input.adapters,
+        compile: { padding: 0 },
+      }),
+    ).not.toThrow();
+  });
+});
+
+describe('GraphThemeProvider', () => {
+  it('merges ancestor and local definitions in declaration order', () => {
+    const parent = defineGraphThemeStyle({ name: 'parent', resolve: () => ({}) });
+    const local = defineGraphThemeStyle({ name: 'local', resolve: () => ({}) });
+    const Probe: FC = () => {
+      const styles = useGraphThemeStyles();
+      return createElement('span', null, styles?.map(style => style.name).join(','));
+    };
+
+    const markup = renderToStaticMarkup(
+      createElement(
+        GraphThemeProvider,
+        { graphThemeStyles: [parent] },
+        createElement(GraphThemeProvider, { graphThemeStyles: [local] }, createElement(Probe)),
+      ),
+    );
+
+    expect(markup).toContain('parent,local');
+  });
+
+  it('supplies ambient definitions to standalone Graph and keeps Graph props last', () => {
+    const ambient = defineGraphThemeStyle({ name: 'ambient', resolve: () => ({}) });
+    const brand = defineGraphThemeStyle({
+      name: 'brand',
+      resolve: () => ({ entity: { tokens: { stroke: '#2563eb', textColor: '#2563eb' } } }),
+    });
+    const coreBrand = {
+      name: 'brand',
+      resolve: () => ({
+        semantic: { error: '#dc2626', success: '#16a34a', warning: '#ca8a04' },
+        categorical: ['#2563eb'] as const,
+      }),
+    };
+
+    const markup = renderToStaticMarkup(
+      createElement(
+        GraphThemeProvider,
+        { graphThemeStyles: [ambient] },
+        createElement(
+          Graph,
+          {
+            theme: { style: 'brand' },
+            themeStyles: [coreBrand],
+            graphThemeStyles: [brand],
+            width: 240,
+            height: 120,
+          },
+          createElement(Entity, { role: 'activity', position: [80, 60] }, 'Service'),
+        ),
+      ),
+    );
+
+    expect(markup.match(/<svg/g)).toHaveLength(1);
+    expect(markup).toContain('#2563eb');
   });
 });

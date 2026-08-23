@@ -1,32 +1,32 @@
 import type { z } from 'zod';
 
-import type { GraphThemeToken } from './constants';
 import type {
   GraphEntityAppearanceTokenOverridesSchema,
-  GraphEntityThemeTokenRuleSchema,
-  GraphEntityThemeTokenRulesSchema,
-  GraphEntityThemeTokenSelectorSchema,
-  GraphThemeTokenOverridesSchema,
-  GraphThemeTokenResolutionSchema,
+  GraphEntityThemeRuleSchema,
+  GraphEntityThemeSelectorSchema,
+  GraphRelationThemeRuleSchema,
+  GraphRelationThemeSelectorSchema,
+  GraphThemeLayerSchema,
+  GraphThemeRuleSchema,
 } from './schema';
 
-/** Graph Theme token 的稳定 key */
-export type GraphThemeTokenValue = (typeof GraphThemeToken)[keyof typeof GraphThemeToken];
-
-/** Graph Theme token 的稀疏覆盖 IR */
-export type IRGraphThemeTokenOverrides = z.infer<typeof GraphThemeTokenOverridesSchema>;
-
-/** Entity variant 解析产生的稀疏外观 token 覆盖 IR */
+/** Entity 非结构化 appearance 字段的非空覆盖集合 */
 export type IRGraphEntityAppearanceTokenOverrides = z.infer<typeof GraphEntityAppearanceTokenOverridesSchema>;
 
-/** Graph Theme token 的完整解析结果 IR */
-export type IRGraphThemeTokenResolution = z.infer<typeof GraphThemeTokenResolutionSchema>;
+/** 匹配 Entity Canonical 语义的 Theme selector */
+export type IRGraphEntityThemeSelector = z.infer<typeof GraphEntityThemeSelectorSchema>;
 
-/** 按 Entity role 和 variant 筛选主题 token 的 selector IR */
-export type IRGraphEntityThemeTokenSelector = z.infer<typeof GraphEntityThemeTokenSelectorSchema>;
+/** Entity appearance rule */
+export type IRGraphEntityThemeRule = z.infer<typeof GraphEntityThemeRuleSchema>;
 
-/** 一条 Entity 主题 token 规则 IR */
-export type IRGraphEntityThemeTokenRule = z.infer<typeof GraphEntityThemeTokenRuleSchema>;
+/** 匹配 Relation Canonical 语义与方向的 Theme selector */
+export type IRGraphRelationThemeSelector = z.infer<typeof GraphRelationThemeSelectorSchema>;
 
-/** Entity 主题 token 规则列表 IR */
-export type IRGraphEntityThemeTokenRules = z.infer<typeof GraphEntityThemeTokenRulesSchema>;
+/** Relation appearance rule */
+export type IRGraphRelationThemeRule = z.infer<typeof GraphRelationThemeRuleSchema>;
+
+/** Graph Theme rule 判别联合 */
+export type IRGraphThemeRule = z.infer<typeof GraphThemeRuleSchema>;
+
+/** 至少包含一条 appearance rule 的 Graph-local Theme layer */
+export type IRGraphThemeLayer = z.infer<typeof GraphThemeLayerSchema>;

@@ -5,10 +5,52 @@ export const GRAPH_NAMESPACE = 'graph' as const;
 export const GraphType = {
   /** 承载 Graph 展示默认与领域主题的可选根作用域 */
   Graph: 'graph',
-  /** 包含分区内容的容器 */
-  Container: 'container',
   /** 表示图中具有关系语义的实体 */
   Entity: 'entity',
   /** 表示图式元素间关系的路径 */
   Relation: 'relation',
+} as const;
+
+/** Entity 的内置上位语义角色 */
+export const EntityRole = {
+  /** 主动参与、负责或提供能力的主体 */
+  Participant: 'participant',
+  /** 发生的工作、动作或转换过程 */
+  Activity: 'activity',
+  /** 发生点、边界或生命周期事件 */
+  Event: 'event',
+  /** 对象或系统持续存在的条件 */
+  State: 'state',
+  /** 具有语义的控制分叉、汇合或同步 */
+  Gateway: 'gateway',
+  /** 被使用、产生或存储的对象 */
+  Resource: 'resource',
+  /** 抽象知识对象 */
+  Concept: 'concept',
+} as const;
+
+/** Relation 的内置语义角色 */
+export const RelationRole = {
+  /** 一般关联关系 */
+  Association: 'association',
+  /** 依赖关系 */
+  Dependency: 'dependency',
+  /** 泛化关系 */
+  Generalization: 'generalization',
+  /** 流动关系 */
+  Flow: 'flow',
+  /** 影响关系 */
+  Influence: 'influence',
+} as const;
+
+/** Relation 的内置稳定 kind */
+export const RelationKind = {
+  /** UML 聚合关系 */
+  UmlAggregation: 'uml.aggregation',
+  /** UML 组合关系 */
+  UmlComposition: 'uml.composition',
+  /** UML 实现关系 */
+  UmlRealization: 'uml.realization',
+  /** Provenance 派生关系 */
+  ProvenanceDerivation: 'provenance.derivation',
 } as const;
