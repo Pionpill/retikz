@@ -1,13 +1,40 @@
-import type { ScenePrimitive } from '../../../contract';
+import type { PathCommand, ScenePrimitive } from '../../../contract';
 import type { CanonicalStep } from '../../../resolve';
 import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { SegmentSample } from '../../../shared/geometry';
 import type { LowerTex, TextMeasurer } from '../../text';
 
 import { emitLabelPrimitive } from '../host';
+import { sampleRoundedCommands } from './rounded-corners';
 
 /** stroke step 的几何采样函数 */
 export type StrokeSegmentSampler = (t: number) => SegmentSample;
+
+/** stroke 整体路径采样输入 */
+export type SampleStrokePathInput = {
+  commands: ReadonlyArray<PathCommand>;
+  segmentSamplers: ReadonlyArray<StrokeSegmentSampler>;
+  roundedCommands: boolean;
+  position: number;
+};
+
+/**
+ * 按整体路径位置采样 stroke 几何
+ * @description 倒角后按最终 commands 弧长采样，否则沿绘制段按声明顺序均分
+ */
+export const sampleStrokePath = ({
+  commands,
+  segmentSamplers,
+  roundedCommands,
+  position,
+}: SampleStrokePathInput): SegmentSample | undefined => {
+  if (segmentSamplers.length === 0) return undefined;
+  if (roundedCommands) return sampleRoundedCommands(commands, position);
+  const scaled = position * segmentSamplers.length;
+  const segmentIndex = Math.min(Math.floor(scaled), segmentSamplers.length - 1);
+  const localPosition = scaled - segmentIndex;
+  return segmentSamplers[segmentIndex](position === 1 ? 1 : localPosition);
+};
 
 /** stroke step label 与 mark 采样的共享收集器 */
 export type StrokeSamplingCollector = {
