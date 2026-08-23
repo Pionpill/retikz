@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import type {
+  CompileWarning,
   IRChild,
   IRScene,
   LayoutChildResult,
@@ -82,6 +83,80 @@ const sceneOf = (child: IRChild): IRScene => ({
 });
 
 describe('layout-aware composite', () => {
+  it('routes a composite warning through onWarn with the current Source locator', () => {
+    const definition = defineComposite({
+      namespace: 'test',
+      type: 'warning',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('warning'),
+      }),
+      compile: (_node, context) => {
+        context.warn('TEST_COMPOSITE_WARNING', 'Composite warning', 'recipe.marks[0].override');
+        return { children: [] };
+      },
+    });
+    const warnings: Array<CompileWarning> = [];
+
+    compileToScene(sceneOf({ namespace: 'test', type: 'warning' }), {
+      composites: [definition],
+      onWarn: warning => warnings.push(warning),
+    });
+
+    expect(warnings).toEqual([
+      expect.objectContaining({
+        code: 'TEST_COMPOSITE_WARNING',
+        message: 'Composite warning',
+        path: 'children[0].recipe.marks[0].override',
+      }),
+    ]);
+  });
+
+  it('keeps nested composite warnings transactional until the selected probe is replayed', () => {
+    const child = defineComposite({
+      namespace: 'test',
+      type: 'warningChild',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('warningChild'),
+      }),
+      compile: (_node, context) => {
+        context.warn('TEST_PROBE_WARNING', 'Probe warning');
+        return { children: [] };
+      },
+    });
+    const parent = defineComposite({
+      namespace: 'test',
+      type: 'warningParent',
+      schema: CompositeBaseSchema.extend({
+        namespace: z.literal('test'),
+        type: z.literal('warningParent'),
+        replay: z.boolean(),
+      }),
+      compile: (node, context) => {
+        const probe = context.layoutChild({ namespace: 'test', type: 'warningChild' }, NaturalLayoutProposal);
+        if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+        return { children: node.replay ? [context.replay(probe.result)] : [] };
+      },
+    });
+    const discardedWarnings: Array<CompileWarning> = [];
+    const replayedWarnings: Array<CompileWarning> = [];
+
+    compileToScene(sceneOf({ namespace: 'test', type: 'warningParent', replay: false }), {
+      composites: [child, parent],
+      onWarn: warning => discardedWarnings.push(warning),
+    });
+    compileToScene(sceneOf({ namespace: 'test', type: 'warningParent', replay: true }), {
+      composites: [child, parent],
+      onWarn: warning => replayedWarnings.push(warning),
+    });
+
+    expect(discardedWarnings).toEqual([]);
+    expect(replayedWarnings).toEqual([
+      expect.objectContaining({ code: 'TEST_PROBE_WARNING', message: 'Probe warning' }),
+    ]);
+  });
+
   it('measures intrinsic and constrained content, then replays the selected result without a third layout', () => {
     const measureText = vi.fn<TextMeasurer>(fixedMeasurer);
     const definition = createLayoutDefinition();

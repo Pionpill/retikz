@@ -29,7 +29,7 @@ export const PreviewThemeProvider: FC<PreviewThemeProviderProps> = props => {
     <PreviewThemeDefinitionsContext.Provider value={PreviewThemeDefinitionBundle}>
       <ThemeProvider theme={resolvedTheme} themeStyles={PreviewThemeDefinitionBundle.core}>
         <GraphThemeProvider graphThemeStyles={PreviewThemeDefinitionBundle.graph}>
-          <ChartThemeProvider chartThemeStyles={PreviewThemeDefinitionBundle.chart}>
+          <ChartThemeProvider themeDefinitions={PreviewThemeDefinitionBundle.chart}>
             <PlotThemeProvider plotThemeStyles={PreviewThemeDefinitionBundle.plot}>
               <TableThemeProvider tableThemeStyles={PreviewThemeDefinitionBundle.table}>{children}</TableThemeProvider>
             </PlotThemeProvider>

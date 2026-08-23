@@ -27,8 +27,9 @@ import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide
 import { datumAnchor } from '../../resolve/mark';
 import { isBuiltinMark, PlotGuide, PlotMark } from '../../schemas';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
-import { applyMarkTransforms, lowerPlots, prepareRows } from '../expand';
+import { applyMarkTransforms, prepareRows } from '../expand';
 import { legendReserveOf } from '../expand/legend';
+import { lowerPlot } from '../expand/lower';
 import { lowerCustomAxis, lowerGuide } from '../guide';
 import { createDatumIdRegistrar } from '../provenance';
 
@@ -246,15 +247,14 @@ export const createPlotLocator = (
   let renderEntriesCache: Array<RenderDatumEntry> | undefined;
   const renderEntries = (): Array<RenderDatumEntry> => {
     if (renderEntriesCache !== undefined) return renderEntriesCache;
-    const [definition] = lowerPlots(datasets, {
+    const expanded = lowerPlot(spec, datasets, {
       ...options,
       width,
       height,
       provenance: true,
       datumProvenance: true,
     });
-    const expanded = definition.expand(spec);
-    renderEntriesCache = expanded.children.flatMap(child => collectRenderDatumEntries(child));
+    renderEntriesCache = collectRenderDatumEntries(expanded);
     return renderEntriesCache;
   };
 

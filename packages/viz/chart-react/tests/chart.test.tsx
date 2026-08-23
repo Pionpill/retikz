@@ -1,259 +1,161 @@
-import type { IRPlot } from '@retikz/plot';
-
-import { ChartProvider, defineChartThemeStyle } from '@retikz/chart';
-import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
-import { defineThemeStyle } from '@retikz/core';
-import { definePlotThemeStyle, getDefaultPlotThemePreset, PlotProviderKey } from '@retikz/plot';
-import { Layout, Scope, Text } from '@retikz/react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { normalizeScatterChart } from '@retikz/chart-vanilla/point/scatter';
+import { Text } from '@retikz/react';
 import { describe, expect, it } from 'vitest';
 
-import { getDefaultChartThemePreset } from '../../chart/src/_chart/style';
-import { Chart, ChartNote, ChartSource, ChartSubtitle, ChartTitle } from '../src';
-import { ScatterChart } from '../src/point';
+import { ChartNote, ChartSource, ChartSubtitle, ChartTitle } from '../src';
+import { ScatterChart, ScatterMark } from '../src/point';
 
-const brandCoreTheme = defineThemeStyle({
-  name: 'brand',
-  resolve: () => ({
-    semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
-    categorical: ['#112233'],
-  }),
-});
-
-const brandChartTheme = defineChartThemeStyle({
-  name: 'brand',
-  resolve: theme => ({
-    ...getDefaultChartThemePreset(theme.mode),
-    'chart.canvas.fill': theme.mode === 'dark' ? '#111111' : '#f0f9ff',
-    'chart.axis.enabled': false,
-    'chart.axis.grid.enabled': false,
-  }),
-});
-
-const brandPlotTheme = definePlotThemeStyle({
-  name: 'brand',
-  resolve: theme => ({
-    tokens: { ...getDefaultPlotThemePreset(theme.mode), 'plot.palette.series': ['#7c3aed'] },
-    tokenRules: [],
-  }),
-});
-
-const plot: IRPlot = {
-  namespace: 'plot',
-  type: 'plot',
-  id: 'income-life',
-  data: { reference: 'countries' },
-  scales: [
-    { type: 'linear', name: 'x' },
-    { type: 'linear', name: 'y' },
-  ],
-  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'point', encoding: { x: { field: 'income' }, y: { field: 'life' } } }],
+type InputComponent<TInput> = {
+  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput;
 };
 
-/** 读取 React Chart 组件交给唯一 Vanilla adapter 的 authoring 输入 */
-const inputOf = <TInput,>(
-  component: { createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput },
-  props: Readonly<Record<string, unknown>>,
-): TInput => component.createInputEmbedProps(props);
+const inputOf = <TInput,>(component: InputComponent<TInput>, props: Readonly<Record<string, unknown>>): TInput =>
+  component.createInputEmbedProps(props);
 
-/** 创建 Chart Vanilla adapter 的嵌入上下文 */
-const contextOf = (id: string) => ({
-  id,
-  kind: 'chart',
-  layerId: 'default',
-  identityPath: ['default', id],
+const source = normalizeScatterChart({
+  id: 'people',
+  data: { reference: 'rows' },
+  encodings: { x: 'x', y: 'y' },
 });
 
-describe('<Chart>', () => {
-  it('normalizes marker order through the base Chart Vanilla adapter', () => {
-    const input = inputOf(Chart, {
-      spec: plot,
-      data: { countries: [] },
-      title: 'Income and life expectancy',
+describe('Typed Point Chart React authoring', () => {
+  it('normalizes presentation markers into fixed slots independent of JSX order', () => {
+    const input = inputOf(ScatterChart, {
+      data: [],
+      encodings: { x: 'x', y: 'y' },
       children: (
         <>
-          <ChartSubtitle>2023 estimates</ChartSubtitle>
-          <ChartTitle font={{ size: 20 }}>Income and life expectancy</ChartTitle>
-          <ChartSource>World Bank</ChartSource>
-          <ChartNote>Income is PPP-adjusted USD</ChartNote>
+          <ChartSource>Source</ChartSource>
+          <ChartSubtitle>Subtitle</ChartSubtitle>
+          <ChartTitle>
+            <Text font={{ weight: 'bold' }}>Title</Text>
+          </ChartTitle>
+          <ChartNote>Note</ChartNote>
         </>
       ),
     });
-    const contribution = ChartInputEmbedAdapter.lower(input, contextOf('income-life'));
 
-    expect(contribution.node).toMatchObject({
-      namespace: 'chart',
-      type: 'base',
-      plot,
-      presentation: {
-        children: [
-          { key: 'chart.presentation.subtitle', preset: 'subtitle' },
-          { key: 'chart.presentation.title', preset: 'title', text: 'Income and life expectancy', font: { size: 20 } },
-          { key: 'chart.plot' },
-          { key: 'chart.presentation.source', preset: 'source' },
-          { key: 'chart.presentation.note', preset: 'note' },
-        ],
-      },
-    });
-    expect(contribution.providerDependencies.roots).toEqual([ChartProvider.key]);
-    expect(contribution.providerDependencies.providers.map(provider => provider.key)).toEqual([
-      { capability: 'composite', namespace: 'standard', type: 'surface' },
-      { capability: 'clip', name: 'path' },
-      { capability: 'composite', namespace: 'layout', type: 'flexLayout' },
-      { capability: 'shape', name: 'sector' },
-      { capability: 'shape', name: 'contour' },
-      { capability: 'pathKind', name: 'ribbon' },
-      PlotProviderKey,
-      ChartProvider.key,
-    ]);
-  });
-
-  it('uses marker text as a whole-preset override of its shorthand', () => {
-    const input = inputOf(Chart, {
-      spec: plot,
-      data: { countries: [] },
-      title: 'Ignored shorthand',
-      children: <ChartTitle>Marker title</ChartTitle>,
-    });
-
-    expect(input).not.toHaveProperty('chart');
-    expect(input.bound.type).toBe('base');
-    expect(ChartInputEmbedAdapter.lower(input, contextOf('income-life')).node).toMatchObject({
-      presentation: { children: [{ preset: 'title', text: 'Marker title' }, { key: 'chart.plot' }] },
+    expect(input.source.presentation).toEqual({
+      title: [{ text: 'Title', font: { weight: 'bold' } }],
+      subtitle: 'Subtitle',
+      note: 'Note',
+      source: 'Source',
     });
   });
 
-  it('preserves separate Text children as styled presentation lines', () => {
-    const input = inputOf(Chart, {
-      spec: plot,
-      data: { countries: [] },
+  it('rejects duplicate presentation slots', () => {
+    expect(() =>
+      inputOf(ScatterChart, {
+        data: [],
+        encodings: { x: 'x', y: 'y' },
+        children: (
+          <>
+            <ChartTitle>First</ChartTitle>
+            <ChartTitle>Second</ChartTitle>
+          </>
+        ),
+      }),
+    ).toThrow(/may appear at most once/);
+  });
+
+  it('rejects non-text presentation payloads', () => {
+    expect(() =>
+      inputOf(ScatterChart, {
+        data: [],
+        encodings: { x: 'x', y: 'y' },
+        children: (
+          <ChartTitle>
+            <div>not text</div>
+          </ChartTitle>
+        ),
+      }),
+    ).toThrow(/accept only strings, Fragment, or Text/);
+  });
+
+  it('matches the precise Vanilla Source and preserves direct mark order', () => {
+    const input = inputOf(ScatterChart, {
+      data: [
+        { x: 1, y: 2 },
+        { x: 2, y: 4 },
+      ],
+      encodings: { x: 'x', y: 'y' },
+      properties: { opacity: 0.4 },
       children: (
-        <ChartSubtitle>
-          <Text font={{ weight: 'bold' }}>2007 countries</Text>
-          <Text fill="gray">GDP per capita and life expectancy</Text>
-        </ChartSubtitle>
+        <>
+          <ScatterMark override properties={{ opacity: 0.25 }} />
+          <ScatterMark properties={{ opacity: 0 }} />
+        </>
       ),
     });
 
-    expect(ChartInputEmbedAdapter.lower(input, contextOf('income-life')).node).toMatchObject({
-      presentation: {
-        children: [
-          {
-            preset: 'subtitle',
-            text: [
-              { text: '2007 countries', font: { weight: 'bold' } },
-              { text: 'GDP per capita and life expectancy', fill: 'gray' },
-            ],
-          },
-          { key: 'chart.plot' },
+    expect(input.source).toMatchObject({
+      type: 'point',
+      recipe: {
+        chartType: 'scatter',
+        properties: { opacity: 0.4 },
+        marks: [
+          { kind: 'scatter', override: true, properties: { opacity: 0.25 } },
+          { kind: 'scatter', properties: { opacity: 0 } },
         ],
       },
     });
   });
 
-  it('routes typed input to the Point Chart Vanilla adapter with its stable data reference', () => {
+  it('keeps component-level properties separate from child mark overrides', () => {
     const input = inputOf(ScatterChart, {
-      data: [{ income: 1000, life: 72 }],
-      encoding: { x: { field: 'income' }, y: { field: 'life' } },
-      title: 'Income and life expectancy',
+      data: [{ x: 1, y: 2 }],
+      encodings: { x: 'x', y: 'y' },
+      properties: { opacity: 0.4 },
+      marks: [{ kind: 'scatter', properties: { opacity: 0.2 } }],
+      children: <ScatterMark properties={{ opacity: 0 }} />,
     });
-    const contribution = ChartInputEmbedAdapter.lower(input, contextOf('income-life'));
-
-    expect(contribution.node).toMatchObject({
-      namespace: 'chart',
-      type: 'base',
-      plot: { data: { reference: 'chart.data' } },
-      presentation: { children: [{ preset: 'title' }, { key: 'chart.plot' }] },
-    });
-    expect(contribution.providerDependencies.roots).toEqual([ChartProvider.key]);
+    expect(input.source.recipe.properties).toEqual({ opacity: 0.4 });
+    expect(input.source.recipe.marks).toEqual([
+      { kind: 'scatter', properties: { opacity: 0.2 } },
+      { kind: 'scatter', properties: { opacity: 0 } },
+    ]);
   });
 
-  it('keeps Layout host props out of the typed Chart Vanilla input', () => {
+  it('matches Vanilla when ScatterMark requests semantic group override', () => {
     const input = inputOf(ScatterChart, {
-      data: [{ income: 1000, life: 72 }],
-      encoding: { x: { field: 'income' }, y: { field: 'life' } },
-      animate: false,
-      snapshotAt: 120,
-      runtime: { mode: 'static' },
-      animationRef: { current: null },
-      onArtifacts: () => undefined,
-      onCompileResult: () => undefined,
+      data: [{ x: 1, y: 2 }],
+      encodings: { x: 'x', y: 'y' },
+      children: <ScatterMark override properties={{ opacity: 0.25 }} />,
+    });
+    const vanilla = normalizeScatterChart({
+      data: { reference: 'chart.data' },
+      encodings: { x: 'x', y: 'y' },
+      marks: [{ kind: 'scatter', override: true, properties: { opacity: 0.25 } }],
     });
 
-    expect(input).not.toHaveProperty('runtime');
-    expect(input).not.toHaveProperty('animate');
-    expect(input).not.toHaveProperty('snapshotAt');
-    expect(input).not.toHaveProperty('animationRef');
-    expect(input).not.toHaveProperty('onArtifacts');
-    expect(input).not.toHaveProperty('onCompileResult');
+    expect(input.source).toEqual(vanilla);
   });
 
-  it('keeps Core Theme resolution in the enclosing Vanilla processing context', () => {
+  it('does not treat nested mark components as direct Chart marks', () => {
+    expect(() =>
+      inputOf(ScatterChart, {
+        data: [{ x: 1, y: 2 }],
+        encodings: { x: 'x', y: 'y' },
+        children: (
+          <section>
+            <ScatterMark />
+          </section>
+        ),
+      }),
+    ).toThrow(/only presentation markers or ScatterMark as direct children/);
+  });
+
+  it('keeps host width and height out of Source layout', () => {
     const input = inputOf(ScatterChart, {
-      data: [{ income: 1000, life: 72 }],
-      encoding: { x: { field: 'income' }, y: { field: 'life' } },
-      theme: { style: 'brand' },
-      themeStyles: [brandCoreTheme],
-      chartThemeStyles: [brandChartTheme],
-      plotThemeStyles: [brandPlotTheme],
+      data: [{ x: 1, y: 2 }],
+      encodings: { x: 'x', y: 'y' },
+      width: 640,
+      height: 360,
     });
-
-    expect(ChartInputEmbedAdapter.lower(input, contextOf('income-life'))).toMatchObject({
-      node: { type: 'scope', children: [{ namespace: 'chart', type: 'base' }] },
-      providerDependencies: { roots: [ChartProvider.key] },
-    });
+    expect(input.source).not.toHaveProperty('layout');
   });
 
-  it('resolves typed recipe topology from an enclosing Scope Theme through real Layout SSR', () => {
-    const markup = renderToStaticMarkup(
-      <Layout themeStyles={[brandCoreTheme]} runtime={{ mode: 'static' }}>
-        <Scope theme={{ style: 'brand' }}>
-          <ScatterChart
-            data={[{ income: 1000, life: 72 }]}
-            encoding={{ x: { field: 'income' }, y: { field: 'life' } }}
-            chartThemeStyles={[brandChartTheme]}
-            plotThemeStyles={[brandPlotTheme]}
-          />
-        </Scope>
-      </Layout>,
-    );
-
-    expect(markup).toContain('#f0f9ff');
-    expect(markup).toContain('#7c3aed');
+  it('keeps the legacy generic source only as a fixture, not as a public component', () => {
+    expect(source).toMatchObject({ type: 'point', recipe: { chartType: 'scatter' } });
   });
-
-  it('keeps an outer id on Chart when root transforms wrap the complete result', () => {
-    const input = inputOf(Chart, {
-      spec: plot,
-      data: { countries: [] },
-      id: 'sales',
-      x: 10,
-    });
-    const contribution = ChartInputEmbedAdapter.lower(input, contextOf('sales'));
-
-    expect(contribution.node).toMatchObject({
-      type: 'scope',
-      transforms: [{ kind: 'translate', x: 10, y: 0 }],
-      children: [{ namespace: 'chart', type: 'base', id: 'sales' }],
-    });
-    expect(contribution.node).not.toHaveProperty('id');
-  });
-});
-
-it('inherits Theme definitions through a real Layout before typed recipe resolution and keeps a child mode override', () => {
-  const markup = renderToStaticMarkup(
-    <Layout theme={{ style: 'brand' }} themeStyles={[brandCoreTheme]} runtime={{ mode: 'static' }}>
-      <ScatterChart
-        data={[{ income: 1000, life: 72 }]}
-        encoding={{ x: { field: 'income' }, y: { field: 'life' } }}
-        theme={{ mode: 'dark' }}
-        chartThemeStyles={[brandChartTheme]}
-        plotThemeStyles={[brandPlotTheme]}
-      />
-    </Layout>,
-  );
-
-  expect(markup).toContain('#111111');
-  expect(markup).toContain('#7c3aed');
 });

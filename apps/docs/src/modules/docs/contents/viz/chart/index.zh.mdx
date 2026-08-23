@@ -1,62 +1,21 @@
 ---
 title: Chart
-description: Chart 以统一结构封装 Plot，通过图表类型补齐绘图语义，并提供整图展示能力。
+description: Chart 在 Plot 之上组织具体图形类型，并提供标题、来源、画布和主题等整图能力。
 ---
 
-Plot 是基于 GoG（Grammar of Graphics，图形语法）的纵向能力扩展：沿着数据绑定、图元、通道、比例尺、坐标系、辅助元素和变换等语法维度，逐层补充“数据怎样被绘制”的能力。Chart 不再建立另一套绘图语法，而是在 Plot 之上按图表 `type` 做横向封装：把一个图形类型需要的 Plot 语义组合成完整图表，并补充整图展示。
+Chart 面向“完整图形”：根 `type` 是便于发现的 family，嵌套 `recipe.chartType` 选择具体 recipe。Chart 还提供标题、来源、画布与主题；Plot 持续拥有数据、图元、通道、比例尺、坐标、辅助元素与变换。Chart 不建立第二套图形语法。
 
-`chart` 始终是命名空间，表示这个实体拥有整图展示、Chart 主题和画布等 Chart 能力。`base`、`scatter`、`bubble` 等值才是 Chart 类型：`base` 直接使用显式 Plot 描述，其它类型通过内置解析逻辑补齐对应的 Plot 结构。
+| 层次  | 负责什么                                                     | 不负责什么                     |
+| ----- | ------------------------------------------------------------ | ------------------------------ |
+| Chart | family、chartType、Chart Source、整图展示、画布和 Theme      | 重新定义 Plot 的图元与编码语法 |
+| Plot  | 数据、变换、图元、通道、比例尺、坐标、轴、图例和其它辅助元素 | Scatter 等图形类型产品语义     |
 
-## Plot 与 Chart 的功能定位
+## 一个最小 Point Chart
 
-| 层次  | 功能定位                                                                 | 演进方向                                             |
-| ----- | ------------------------------------------------------------------------ | ---------------------------------------------------- |
-| Plot  | 沿图形语法维度纵向扩展：字段、图元、编码、比例尺、坐标系、辅助元素与变换 | 持续补充和深化 Plot 的绘图语义与可组合能力           |
-| Chart | 基于 Plot 按图表 `type` 横向组合成完整图表，不另建一套绘图语法           | 持续扩展图表类型与类型方案，同时复用 Plot 的绘图能力 |
-
-## 一致的 Chart 结构
-
-基础 Chart 与各封装 Chart 遵循同一套字段布局，但分别拥有精确 schema：`BaseChartSchema`、`ScatterChartSchema`、`BubbleChartSchema` 与 `ConnectedScatterChartSchema`。Chart 不公开一个把所有类型合并起来的 `ChartSchema`；`namespace + type` 只负责选择对应的精确 schema。
-
-```ts
-{
-  namespace: 'chart',
-  type: 'base' | 'scatter' | 'bubble' | 'connected-scatter',
-  plot: {
-    // Plot 拥有的数据、变换、比例尺、坐标、辅助元素与显式图元
-  },
-  config: {
-    // 封装 type 独有、由对应解析逻辑消费的配置；base 不使用
-  },
-  presentation: {
-    // Chart 拥有的标题、副标题、来源与注记
-  },
-}
-```
-
-`plot` 是唯一的 Plot 描述字段；其中的字段直接复用 Plot 契约。`config` 只存在于封装类型中，保存当前 `type` 独有的数据，例如 Scatter 的二维编码、Bubble 的尺寸编码或 Connected Scatter 的顺序角色。Base Chart 使用完整 `PlotSchema`，不包含 `config`。
-
-`type` 决定如何解释 `config` 并补齐 `plot`。例如 `bubble` 隐含使用 `Point` 图元，因此用户不必在 `plot.marks` 中重复声明主 `Point` 图元；用户仍可通过 `plot` 添加 Plot 拥有的轴、图例、额外图元、比例尺或变换。`base` 不提供这类隐含语义，要求显式 Plot 描述能够形成完整图形。
-
-“点图”等分组用于文档导航、源码归置和多入口导入，但不形成额外的数据结构或运行时分组。Scatter、Bubble 与 Connected Scatter 继续从 `/point` 入口导入；未知 JSON 由 `type` 选择对应 schema，解析后绑定为内部 Chart，再统一解析成 `IRBaseChart`。
-
-需要扩展图形语法时使用 Plot 的 API；需要把 Plot 语义组织成某种图表类型时使用 Chart，并在此基础上提供以下共用能力：
-
-| 能力         | 负责什么                                                    | 典型入口                                             |
-| ------------ | ----------------------------------------------------------- | ---------------------------------------------------- |
-| 图表类型封装 | 按 `type` 解释 `config`，并把缺省语义补入 `plot`            | `Chart`、`ScatterChart`、`BubbleChart`               |
-| Plot 扩展    | 在 Chart 中继续使用图元、辅助元素、比例尺和变换等 Plot 能力 | `plot` 字段与 `@retikz/plot-react` 的 Plot 子组件    |
-| 整图展示     | 表达整张图的主题、范围、数据来源和阅读限制                  | `title` / `subtitle` / `source` / `note`，或对应标记 |
-
-## 基础 Chart 能力
-
-`Chart` 组件对应 `type: 'base'`，提供所有 Chart 共用的基础能力：把显式 Plot 内容组织成完整图表，并提供整图展示。本节介绍基础 `Chart` 的 DSL 与 `spec` 两种编写入口；如果要使用带内置解析逻辑的图形类型，请参考[点图](/viz/chart/points)等其它目录下的文档。
-
-基础 React 入口来自 `@retikz/chart-react`。在 DSL 模式下，直接把 Plot 的图元、辅助元素等子组件和 Chart 展示标记放在 `Chart` 内：
+具体图形使用 typed Chart 入口。下面的 `ScatterChart` 会产生 `type: 'point'`、`recipe.chartType: 'scatter'` 的 Source；`encodings` 绑定字段，`properties` 写常量。
 
 ```tsx
-import { Axis, PointMark } from '@retikz/plot-react';
-import { Chart, ChartSource, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart } from '@retikz/chart-react/point/scatter';
 
 const rows = [
   { x: 1, y: 2 },
@@ -64,38 +23,33 @@ const rows = [
   { x: 3, y: 5 },
 ];
 
-<Chart data={rows} width={640} height={360}>
-  <PointMark x="x" y="y" />
-  <Axis dimension="x" title="X" />
-  <Axis dimension="y" title="Y" />
-  <ChartTitle>两个变量的关系</ChartTitle>
-  <ChartSource>示例数据</ChartSource>
-</Chart>;
+<ScatterChart
+  data={rows}
+  encodings={{ x: 'x', y: 'y' }}
+  properties={{ size: 8 }}
+  title="两个变量的关系"
+  source="示例数据"
+  layout={{ width: 640, height: 360 }}
+/>;
 ```
 
-如果已经有完整的 `IRPlot`，也可以使用 `spec` 模式：`<Chart spec={plotSpec} title="..." source="..." />`。此时 Plot 内容由 `spec` 提供，children 只用于放置 `ChartTitle`、`ChartSubtitle`、`ChartSource` 和 `ChartNote` 等展示标记；Plot 子组件应继续通过 Plot DSL 模式传入。
-
-`title`、`subtitle`、`source` 和 `note` 是标记的简写。需要自定义文字样式、位置或出现顺序时，使用标记；同一种标记在一张图中只使用一次。具体的展示顺序与文字子节点规则见各图表示例中的 Chart 编写说明。
+如果已经有符合当前精确 schema 的 JSON Source，应由应用层根据 `type` 与
+`recipe.chartType` 选择对应的具体入口或 compile adapter；Chart 不提供一个
+会动态加载所有 family 的 generic `<Chart source={...}>` 组件。需要直接组合轴、图例或独立 Plot mark 时，应把内容写入 Source 的 `plotExtension` fragment，或直接使用 Plot。
 
 <SourceLinks
   sources={[
     {
-      label: 'Chart React 导出基础 Chart 并接入共享适配器',
+      label: 'Chart 共享入口',
       path: 'packages/viz/chart-react/src/_chart/index.ts',
-      startLine: 223,
-      endLine: 232,
+      startLine: 1,
+      endLine: 11,
     },
     {
-      label: 'Chart 将 Plot 编写入口组装为 Base Chart 输入',
-      path: 'packages/viz/chart-react/src/_chart/index.ts',
-      startLine: 129,
-      endLine: 155,
-    },
-    {
-      label: 'Chart React 导出整图展示标记',
-      path: 'packages/viz/chart-react/src/_chart/index.ts',
-      startLine: 15,
-      endLine: 26,
+      label: 'Point Chart shared mark 组件',
+      path: 'packages/viz/chart-react/src/point/shared/marks.tsx',
+      startLine: 4,
+      endLine: 14,
     },
   ]}
 />
@@ -105,8 +59,12 @@ const rows = [
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/viz/chart/points">
     <span className="font-semibold">点图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">从散点图开始选择具体图形类型。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model">
+    <span className="font-semibold">图形模型</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      从散点图和气泡图开始，查看 Chart 类型、专属 `config` 与 Plot 扩展如何协作。
+      理解 family、chartType、marks、整图展示以及与 Plot 的协作边界。
     </span>
   </LinkedCard>
 </div>

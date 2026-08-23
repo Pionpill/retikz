@@ -1,21 +1,14 @@
-import type { ChartThemeStyleDefinition } from '@retikz/chart';
-import type { PlotThemeStyleDefinition } from '@retikz/plot';
-import type { LayoutProps, ScopeProps } from '@retikz/react';
+import type { ChartThemeDefinition } from '@retikz/chart';
+import type { InputChartPanel } from '@retikz/chart-vanilla';
+import type { LowerPlotsOptions } from '@retikz/plot';
+import type { LayoutProps } from '@retikz/react';
 import type { FC } from 'react';
 
-/** Chart 的四个 presentation shorthand */
-export type ChartPresentationProps = Readonly<{
-  /** Chart 标题 */
-  title?: string;
-  /** Chart 副标题 */
-  subtitle?: string;
-  /** Chart 注记 */
-  note?: string;
-  /** Chart 数据来源 */
-  source?: string;
-}>;
-
-/** Chart standalone 复用的 Layout host 字段。嵌入时 Core `themeStyles` 由父 Layout 提供 */
+/** Chart standalone 复用的 Layout 宿主字段
+ *
+ * Source 的 `layout` 属于 Chart border-box 分配；这里的 `width` / `height`
+ * 只控制 React renderer host，不能写回 Source
+ */
 export type ChartHostProps = Pick<
   LayoutProps,
   | 'width'
@@ -32,24 +25,25 @@ export type ChartHostProps = Pick<
   | 'onCompileResult'
 >;
 
-/** Chart 整图根的 Scope 字段 */
-export type ChartRootProps = Pick<ScopeProps, 'id' | 'transforms' | 'placement' | 'zIndex' | 'clip' | 'theme'> & {
-  /** x 方向外层平移 */
-  x?: number;
-  /** y 方向外层平移 */
-  y?: number;
-};
+/** Chart React 的宿主 Scope 输入
+ *
+ * `panel` 只包装 Chart 在父 Scope 中的变换、裁剪与主题；它与 Source
+ * 自身的 identity、Theme 和 layout 保持独立
+ */
+export type ChartPanelProps = Readonly<{
+  panel?: InputChartPanel;
+}>;
 
-/** Chart 与 Plot 的 runtime-only Theme definition 输入 */
-export type ChartRuntimeThemeProps = {
-  /** Chart-owned Theme definition；与同名 Core、Plot definition 一起完成 style resolution */
-  chartThemeStyles?: ReadonlyArray<ChartThemeStyleDefinition>;
-  /** Plot-owned Theme definition；供 Chart 内部 Plot lowering 使用 */
-  plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
-};
+/** Chart React 命名主题 Definition 输入 */
+export type ChartThemeDefinitionsProps = Readonly<{
+  /** 当前具体 chartType provider 可见的命名 Chart Theme Definition */
+  themeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
+  /** Plot lowering runtime options；不写入 Chart Source */
+  lowerOptions?: LowerPlotsOptions;
+}>;
 
-/** Chart 的 host、根和 presentation 公共字段 */
-export type ChartCommonProps = ChartHostProps & ChartRootProps & ChartPresentationProps & ChartRuntimeThemeProps;
+/** Chart React 组件共享的 host / panel / runtime 字段 */
+export type ChartCommonProps = ChartHostProps & ChartPanelProps & ChartThemeDefinitionsProps;
 
 /** 可嵌入 Chart React component 的静态 Vanilla Input 契约 */
 export type InputEmbeddableChartComponent<TProps, TInput, TAdapter> = FC<TProps> & {

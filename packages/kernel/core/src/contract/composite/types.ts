@@ -155,6 +155,13 @@ export type LayoutCompositeCompileContext = Readonly<{
   theme: ResolvedTheme;
   /** 当前 composite occurrence 从父级收到的完整双轴 proposal */
   proposal: LayoutProposal;
+  /**
+   * 从当前 composite Source occurrence 发出非致命编译 warning
+   * @param code 开放的机器可读 warning code
+   * @param message 面向调用方的英文消息
+   * @param subPath 相对当前 composite Source occurrence 的可选 jq-like 路径
+   */
+  warn: (code: string, message: string, subPath?: string) => void;
   /** 在完整 compile 环境中 probe 任意 child */
   layoutChild: (child: IRChild, proposal: LayoutProposal) => LayoutChildProbe;
   /**

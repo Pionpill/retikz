@@ -1,9 +1,9 @@
 ---
 title: '@retikz/foundation'
-description: Reusable type utilities, Zod scalar schemas, non-empty string assertions, and structured error primitives for all packages.
+description: Reusable type utilities, JSON and structurally readonly collection snapshots, Zod scalar schemas, non-empty string assertions, and structured error primitives for all packages.
 ---
 
-`@retikz/foundation` is a pure utility package that provides foundational capabilities for all packages, keeping shared types, scalar validation, blank-string semantics, and error shape in one place. Zod is its only production dependency.
+`@retikz/foundation` is a pure utility package that provides foundational capabilities for all packages, keeping shared types, JSON and structurally readonly collection snapshots, scalar validation, blank-string semantics, and error shape in one place. Zod is its only production dependency.
 
 ## Install and use
 
@@ -13,14 +13,23 @@ description: Reusable type utilities, Zod scalar schemas, non-empty string asser
 import {
   assertNonEmptyString,
   assertPositiveNumber,
+  cloneAndFreezeJson,
   createOpenStringSchema,
+  createReadonlyMap,
   NonBlankStringSchema,
   NormalizedFractionSchema,
   PositiveNumberSchema,
   RetikzError,
   RetikzFoundationError,
 } from '@retikz/foundation';
-import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf, WithRequiredProperties } from '@retikz/foundation';
+import type {
+  AssertEqual,
+  NonEmptyReadonlyArray,
+  OpenString,
+  RetikzErrorOptions,
+  ValueOf,
+  WithRequiredProperties,
+} from '@retikz/foundation';
 ```
 
 Developers usually do not need to use `@retikz/foundation` directly; it is a pure internal utility package created to share foundational capabilities across packages.
@@ -31,13 +40,13 @@ Developers usually do not need to use `@retikz/foundation` directly; it is a pur
       label: 'Foundation root entry',
       path: 'packages/kernel/foundation/src/index.ts',
       startLine: 1,
-      endLine: 4,
+      endLine: 6,
     },
     {
       label: 'Root-only and subpath contract tests',
       path: 'packages/kernel/foundation/tests/public-surface.test.ts',
       startLine: 1,
-      endLine: 37,
+      endLine: 43,
     },
   ]}
 />
@@ -46,7 +55,7 @@ Developers usually do not need to use `@retikz/foundation` directly; it is a pur
 
 ### Type utilities
 
-These utilities work only at compile time. They emit no runtime code and carry no IR or domain model.
+These five utilities work only at compile time. They emit no runtime code and carry no IR or domain model.
 
 | Export                            | Semantics                                                                  |
 | --------------------------------- | -------------------------------------------------------------------------- |
@@ -54,11 +63,36 @@ These utilities work only at compile time. They emit no runtime code and carry n
 | `AssertEqual<TActual, TExpected>` | Return `true` only for bidirectionally assignable types                    |
 | `OpenString<T>`                   | Keep built-in literal hints while accepting custom strings                 |
 | `WithRequiredProperties<T, TKey>` | Make only selected keys required while preserving other and readonly props |
+| `NonEmptyReadonlyArray<T>`        | Readonly array with at least one element                                   |
 
 For example, `name` becomes required while `note` remains optional:
 
 ```ts
 type Named = WithRequiredProperties<Readonly<{ name?: string; note?: string }>, 'name'>;
+```
+
+### Readonly collection snapshots
+
+`createReadonlyMap(entries)` copies input entries into an independent shallow snapshot. The result preserves native Map lookup, iteration, and insertion order without exposing `set`, `delete`, or `clear`; entry values retain their original identity and are not deep-copied or frozen.
+
+```ts
+const definition = { kind: 'point' };
+const source = new Map([['point', definition]]);
+const definitions = createReadonlyMap(source);
+
+source.clear();
+definitions.has('point'); // true
+```
+
+### JSON data snapshots
+
+`cloneAndFreezeJson(value, path)` validates JSON-safe plain data and returns a detached deeply frozen copy. Cycles, accessors, symbol keys, sparse arrays, extra array properties, non-finite numbers, and class instances throw `RetikzFoundationError`:
+
+```ts
+const snapshot = cloneAndFreezeJson({ filters: [{ field: 'age', value: 18 }] });
+
+Object.isFrozen(snapshot); // true
+Object.isFrozen(snapshot.filters); // true
 ```
 
 ### General contracts
@@ -150,6 +184,18 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       endLine: 15,
     },
     {
+      label: 'Readonly Map shallow snapshot implementation',
+      path: 'packages/kernel/foundation/src/collections.ts',
+      startLine: 1,
+      endLine: 27,
+    },
+    {
+      label: 'JSON deep-freeze snapshot implementation',
+      path: 'packages/kernel/foundation/src/json.ts',
+      startLine: 1,
+      endLine: 74,
+    },
+    {
       label: 'Scalar assertion implementation',
       path: 'packages/kernel/foundation/src/assert.ts',
       startLine: 1,
@@ -178,6 +224,18 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       path: 'packages/kernel/foundation/tests/error.test.ts',
       startLine: 8,
       endLine: 70,
+    },
+    {
+      label: 'Readonly Map shallow snapshot tests',
+      path: 'packages/kernel/foundation/tests/collections.test.ts',
+      startLine: 1,
+      endLine: 37,
+    },
+    {
+      label: 'JSON deep-freeze snapshot tests',
+      path: 'packages/kernel/foundation/tests/json.test.ts',
+      startLine: 1,
+      endLine: 73,
     },
   ]}
 />

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRPlot } from '../../src/schemas';
 
-import { lowerPlots } from '../../src/pipeline/expand';
+import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 
 const salesRows = [
@@ -50,8 +50,7 @@ const expandOf = (
   options: { width?: number; height?: number } = {},
   datasets: { sales: Array<Record<string, string | number>> } = { sales: salesRows },
 ): IRScope => {
-  const [definition] = lowerPlots(datasets, { width: options.width ?? 480, height: options.height ?? 300 });
-  return definition.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, { width: options.width ?? 480, height: options.height ?? 300 }) as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

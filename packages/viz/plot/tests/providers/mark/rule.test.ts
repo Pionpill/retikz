@@ -11,7 +11,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot, IRPlotReferenceMark } from '../../../src/schemas';
 
 import { createCoordinateFrame, defineCoordinate, densifyCellContour } from '../../../src/contract';
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
 import { resolveMarkOperation } from '../../../src/resolve/mark';
@@ -48,8 +48,7 @@ const HEIGHT = 400;
 const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 /** 连续 linear PositionScale 桩（bandwidth = 0） */

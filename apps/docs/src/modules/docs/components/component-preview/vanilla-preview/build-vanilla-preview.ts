@@ -1,6 +1,6 @@
-import type { ChartPresentationAuthoringRecord, IRBaseChart } from '@retikz/chart';
-import type { IRBubbleChart, IRConnectedScatterChart, IRScatterChart } from '@retikz/chart/point';
-import type { CreateChartInput } from '@retikz/chart-vanilla';
+import type { IRChartSource } from '@retikz/chart';
+import type { IRScatterChart } from '@retikz/chart/point/scatter';
+import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
@@ -8,9 +8,9 @@ import type { IRPlot } from '@retikz/plot';
 import type { IRTable } from '@retikz/table';
 import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 
-import { BaseChartSchema } from '@retikz/chart';
-import { BubbleChartSchema, ConnectedScatterChartSchema, ScatterChartSchema } from '@retikz/chart/point';
-import { createChart, renderChart } from '@retikz/chart-vanilla';
+import { ScatterChartSchema } from '@retikz/chart/point/scatter';
+import { renderChart } from '@retikz/chart-vanilla';
+import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { fallbackMeasurer } from '@retikz/core';
 import {
   EntityDefinition,
@@ -629,110 +629,57 @@ const buildDatasetImportCode = (
   return { imports, expression };
 };
 
-type TypedChartSource = IRScatterChart | IRBubbleChart | IRConnectedScatterChart;
+type TypedChartSource = IRScatterChart;
 
 /** 从 Source IR 识别确定形态的 Chart */
 const typedChartSourceOf = (source: CompositeChild): TypedChartSource | undefined => {
-  switch (source.type) {
+  if (source.namespace !== 'chart' || source.type !== 'point' || !('recipe' in source)) return undefined;
+  const chartType = (source as IRChartSource).recipe.chartType;
+  switch (chartType) {
     case 'scatter':
       return ScatterChartSchema.parse(source);
-    case 'bubble':
-      return BubbleChartSchema.parse(source);
-    case 'connected-scatter':
-      return ConnectedScatterChartSchema.parse(source);
     default:
       return undefined;
   }
 };
 
-/** 从确定形态的子项恢复仅供 Vanilla 辅助函数使用的编写顺序与上下分区 */
-const chartPresentationRecords = (
-  chart: Pick<IRBaseChart, 'presentation'>,
-): Array<ChartPresentationAuthoringRecord> | undefined => {
-  const children = chart.presentation?.children;
-  if (children === undefined) return undefined;
-  const plotIndex = children.findIndex(item => item.kind === 'plot');
-  return children.flatMap((item, index) => {
-    if (item.kind === 'plot') return [];
-    const { kind: _kind, key: _key, ...record } = item;
-    void _kind;
-    void _key;
-    return [{ ...record, position: index < plotIndex ? ('top' as const) : ('bottom' as const) }];
-  });
-};
-
 /** 将 typed Chart Source IR 还原为公开的精确 Vanilla 输入 */
 const typedChartAuthoringInput = (chart: TypedChartSource, datasets: ExternalDatasets): Record<string, unknown> => {
-  const { type, config, plot } = chart;
-  const common = Object.fromEntries(
-    Object.entries(chart).filter(([key]) => !['namespace', 'type', 'config', 'plot', 'presentation'].includes(key)),
-  );
-  const { data, ...plotInput } = plot;
+  const { data, recipe, presentation, ...root } = chart;
   const rows = datasets[data.reference];
-  const presentation = chartPresentationRecords(chart);
   const shared = {
-    ...common,
-    ...plotInput,
+    ...root,
     data: rows,
     dataRef: data.reference,
     ...(data.model === undefined ? {} : { dataModel: data.model }),
-    ...(presentation === undefined ? {} : { presentation }),
+    ...(presentation?.title === undefined ? {} : { title: presentation.title }),
+    ...(presentation?.subtitle === undefined ? {} : { subtitle: presentation.subtitle }),
+    ...(presentation?.note === undefined ? {} : { note: presentation.note }),
+    ...(presentation?.source === undefined ? {} : { source: presentation.source }),
+    encodings: recipe.encodings,
+    ...(recipe.properties === undefined ? {} : { properties: recipe.properties }),
+    ...(recipe.marks === undefined ? {} : { marks: recipe.marks }),
   };
-  switch (type) {
-    case 'scatter':
-      return {
-        ...shared,
-        encoding: config.encoding,
-        ...(config.mark === undefined ? {} : { mark: config.mark }),
-      };
-    case 'bubble':
-      return {
-        ...shared,
-        encoding: config.encoding,
-        ...(config.mark === undefined ? {} : { mark: config.mark }),
-      };
-    case 'connected-scatter':
-      return {
-        ...shared,
-        encoding: config.encoding,
-        ...(config.mark === undefined ? {} : { mark: config.mark }),
-        ...(config.components === undefined ? {} : { components: config.components }),
-      };
-  }
-};
-
-/** 将确定形态的 Chart 还原为公开的 Chart Vanilla 编写输入 */
-const chartAuthoringInput = (chart: IRBaseChart, datasets: ExternalDatasets): CreateChartInput => {
-  const presentation = chartPresentationRecords(chart);
-  return {
-    plot: { spec: chart.plot },
-    datasets,
-    ...(chart.id === undefined ? {} : { id: chart.id }),
-    ...(chart.chartThemeTokens === undefined ? {} : { chartThemeTokens: chart.chartThemeTokens }),
-    ...(presentation === undefined ? {} : { presentation }),
-  };
+  return shared;
 };
 
 const buildChartCode = (
-  chart: IRBaseChart,
+  chart: IRChartSource,
   datasets: ExternalDatasets,
   preview: PreviewIR,
   options: BuildVanillaPreviewOptions,
   source?: CompositeChild,
 ): string => {
-  const typedSource = source === undefined ? undefined : typedChartSourceOf(source);
+  const typedSource = typedChartSourceOf(chart);
   if (typedSource !== undefined) {
-    const factoryByType = {
-      scatter: 'createScatterChart',
-      bubble: 'createBubbleChart',
-      'connected-scatter': 'createConnectedScatterChart',
-    } as const;
-    const factory = factoryByType[typedSource.type];
+    const factory = 'createScatterChart';
+    const subpath = 'scatter';
     const datasetImport = buildDatasetImportCode(datasets, options);
     const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
     const dataCode = datasetImport === null ? `const datasets = ${formatVanillaValue(datasets)};\n\n` : '';
-    const dataReference = typedSource.plot.data.reference;
-    const importedDataset = options.datasetImports?.[dataReference]?.name;
+    const dataReference = typedSource.data.reference;
+    const datasetImportBinding = options.datasetImports?.[dataReference];
+    const importedDataset = datasetImportBinding === undefined ? undefined : datasetImportBinding.name;
     const dataExpression =
       importedDataset ?? `${datasetImport?.expression ?? 'datasets'}[${formatVanillaValue(dataReference)}]`;
     const inputCode = formatVanillaValue({
@@ -740,8 +687,8 @@ const buildChartCode = (
       data: '__DATASET__',
       ...(options.theme === undefined ? {} : { theme: options.theme }),
       themeStyles: '__CORE_THEME_STYLES__',
-      chartThemeStyles: '__CHART_THEME_STYLES__',
-      plotThemeStyles: '__PLOT_THEME_STYLES__',
+      themeDefinitions: '__CHART_THEME_STYLES__',
+      lowerOptions: { plotThemeStyles: '__PLOT_THEME_STYLES__' },
     })
       .replace("'__DATASET__'", dataExpression)
       .replace("'__CORE_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.core')
@@ -749,61 +696,35 @@ const buildChartCode = (
       .replace("'__PLOT_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.plot');
     const size = outputSize(preview);
     const renderOptionsCode = Object.keys(size).length === 0 ? '' : `, ${formatVanillaValue({ output: size })}`;
-    return `import { ${factory}, renderChart } from '@retikz/chart-vanilla/point';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n${importCode}\n${dataCode}const chart = ${factory}(${inputCode});\n\nexport const svg = renderChart(chart${renderOptionsCode}).svg;\n`;
+    return `import { renderChart } from '@retikz/chart-vanilla';\nimport { ${factory} } from '@retikz/chart-vanilla/point/${subpath}';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n${importCode}\n${dataCode}const chart = ${factory}(${inputCode});\n\nexport const svg = renderChart(chart${renderOptionsCode}).svg;\n`;
   }
-  const datasetImport = buildDatasetImportCode(datasets, options);
-  const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
-  const dataCode = datasetImport === null ? `const datasets = ${formatVanillaValue(datasets)};\n\n` : '';
-  const dataExpression = datasetImport?.expression ?? 'datasets';
-  const { datasets: _datasets, ...authoring } = chartAuthoringInput(chart, datasets);
-  void _datasets;
-  const inputCode = formatVanillaValue({
-    ...authoring,
-    datasets: '__DATASETS__',
-    ...(options.theme === undefined ? {} : { theme: options.theme }),
-    themeStyles: '__CORE_THEME_STYLES__',
-    chartThemeStyles: '__CHART_THEME_STYLES__',
-    lowerOptions: { plotThemeStyles: '__PLOT_THEME_STYLES__' },
-  })
-    .replace("'__DATASETS__'", dataExpression)
-    .replace("'__CORE_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.core')
-    .replace("'__CHART_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.chart')
-    .replace("'__PLOT_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.plot');
-  const size = outputSize(preview);
-  const renderOptions = {
-    ...(Object.keys(size).length === 0 ? {} : { output: size }),
-  };
-  const renderOptionsCode = Object.keys(renderOptions).length === 0 ? '' : `, ${formatVanillaValue(renderOptions)}`;
-  return `import { createChart, renderChart } from '@retikz/chart-vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n${importCode}\n${dataCode}const chart = createChart(${inputCode});\n\nexport const svg = renderChart(chart${renderOptionsCode}).svg;\n`;
+  return diagnostic(`Cannot generate Vanilla preview for unknown Chart Source type "${chart.type}".`).code;
 };
 
 const buildChartPreview = (
   preview: PreviewIR,
-  composite: CompositeChild,
   source: CompositeChild,
   options: BuildVanillaPreviewOptions,
 ): VanillaPreviewArtifact => {
-  const chart = BaseChartSchema.parse(composite);
-  const datasets = findPlotDataset(preview, chart.plot);
+  const chart = typedChartSourceOf(source);
+  if (chart === undefined) return diagnostic(`Cannot generate Vanilla preview for Chart Source "${source.type}".`);
+  const datasets = findProviderDataset(preview, 'plot', chart.data.reference, 'Chart');
   if (datasets === null) {
-    return diagnostic(
-      `Cannot generate Vanilla preview: Chart dataset "${chart.plot.data.reference}" was not captured.`,
-    );
+    return diagnostic(`Cannot generate Vanilla preview: Chart dataset "${chart.data.reference}" was not captured.`);
   }
   const size = outputSize(preview);
-  const rendered = renderChart(
-    createChart({
-      ...chartAuthoringInput(chart, datasets),
-      ...(options.theme === undefined ? {} : { theme: options.theme }),
-      themeStyles: PreviewThemeDefinitionBundle.core,
-      chartThemeStyles: PreviewThemeDefinitionBundle.chart,
-      lowerOptions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot },
-    }),
-    {
-      ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
-      ...(Object.keys(size).length === 0 ? {} : { output: size }),
-    },
-  );
+  const input = {
+    ...typedChartAuthoringInput(chart, datasets),
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    themeStyles: PreviewThemeDefinitionBundle.core,
+    themeDefinitions: PreviewThemeDefinitionBundle.chart,
+    lowerOptions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot },
+  };
+  const runtime = createScatterChart(input as CreateScatterChartInput);
+  const rendered = renderChart(runtime, {
+    ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
+    ...(Object.keys(size).length === 0 ? {} : { output: size }),
+  });
   return {
     code: buildChartCode(chart, datasets, preview, options, source),
     svg: rendered.svg,
@@ -896,12 +817,9 @@ export const buildVanillaPreview = (
     if (
       effectiveComposites.length === 1 &&
       firstComposite.namespace === 'chart' &&
-      (firstComposite.type === 'base' || typedChartSourceOf(firstComposite) !== undefined)
+      typedChartSourceOf(firstComposite) !== undefined
     ) {
-      const runtimeChart = runtimeComposites.find(child => child.namespace === 'chart' && child.type === 'base');
-      if (runtimeChart === undefined)
-        return diagnostic('Cannot generate Vanilla preview: Chart runtime IR is missing.');
-      return buildChartPreview(preview, runtimeChart, firstComposite, options);
+      return buildChartPreview(preview, firstComposite, options);
     }
     if (effectiveComposites.length === 1 && firstComposite.namespace === 'table' && firstComposite.type === 'table') {
       return buildTablePreview(preview, firstComposite, options);
@@ -912,7 +830,7 @@ export const buildVanillaPreview = (
         child.namespace !== 'layout' &&
         child.namespace !== 'graph' &&
         !(child.namespace === 'plot' && child.type === 'plot') &&
-        !(child.namespace === 'chart' && child.type === 'base') &&
+        !(child.namespace === 'chart' && typedChartSourceOf(child) !== undefined) &&
         !(child.namespace === 'table' && child.type === 'table'),
     );
     const child = unsupported ?? firstComposite;

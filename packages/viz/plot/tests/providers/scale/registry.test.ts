@@ -10,7 +10,7 @@ import type { IRPlot } from '../../../src/schemas';
 
 import * as plot from '../../../src';
 import { defineScale, extractScaleType } from '../../../src/contract';
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { BUILTIN_SCALES, linearPositionScale, resolveLinearScale, resolveScaleRegistry } from '../../../src/providers';
 import {
   assertBaselineScaleCompatible,
@@ -84,8 +84,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions,
 ): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 describe('scale registry（contract spec）', () => {

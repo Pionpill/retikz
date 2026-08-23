@@ -1,7 +1,22 @@
-import type { ExpandCompositeDefinition, IRChild, IRJsonObject, IRNode, IRScope, ResolvedTheme } from '@retikz/core';
+import type {
+  IRChild,
+  IRJsonObject,
+  IRNode,
+  IRScope,
+  LayoutAxisProposal,
+  LayoutCompositeDefinition,
+  ResolvedTheme,
+} from '@retikz/core';
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
 
-import { categoricalColorAt, defineComposite, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
+import {
+  categoricalColorAt,
+  defineComposite,
+  LayoutAxisProposalKind,
+  LayoutChildProbeKind,
+  resolveDefaultCoreThemeColors,
+  ThemeMode,
+} from '@retikz/core';
 import { applyTransforms, tagSourceIndex } from '@retikz/data';
 import { assertAllValuesValid, validateBoundData } from '@retikz/data';
 
@@ -122,16 +137,31 @@ const withFacetGuideContext = (
   return { ...scoped, id: `${plotId}.view.${slug(panelId)}.${localId}` };
 };
 
+const DEFAULT_PLOT_THEME: ResolvedTheme = {
+  mode: ThemeMode.Light,
+  colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
+};
+
+/** 根据父级 proposal 解析 Plot 单轴的最终 lowering 尺寸 */
+const resolvePlotAxisSize = (intrinsic: number, proposal: LayoutAxisProposal): number => {
+  if (proposal.kind === LayoutAxisProposalKind.Exact) return proposal.value;
+  if (proposal.kind === LayoutAxisProposalKind.Range) {
+    const bounded = Math.max(proposal.min, intrinsic);
+    return proposal.max === undefined ? bounded : Math.min(proposal.max, bounded);
+  }
+  return intrinsic;
+};
+
 /**
  * 把一个 Plot IR 根节点 + 外部数据下沉成一个 core Scope
  * @description 编排：校验 ref/scale → 收集轴值 → 建归一化 scale → 建投影器（resolveFrame）→ 各 mark 下沉 → 包 localNamespace Scope。
  *   root id → Scope.id（plot-design §8.1）；provenance 开 → 外层 Scope + 各层 / datum 带来源 meta + `<plotId>.` 内部 id
  */
-const expandPlot = (
+export const lowerPlot = (
   node: IRPlot,
   datasets: ExternalDatasets,
-  options: LowerPlotsOptions,
-  effectiveTheme: ResolvedTheme,
+  options: LowerPlotsOptions = {},
+  effectiveTheme: ResolvedTheme = DEFAULT_PLOT_THEME,
 ): IRChild => {
   // 自描述尺寸：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
   const width = node.width ?? options.width ?? DEFAULT_PLOT_WIDTH;
@@ -760,24 +790,27 @@ const expandPlot = (
  * 构造 plot 的 Tier 2 下沉逻辑，供 core `CompileOptions.composites` 注入
  * @description 数据闭进函数、不进 IR；返回的 CompositeDefinition 把 plot composite 节点展开成 core Scope/Node/Path
  */
-export const lowerPlots = (datasets: ExternalDatasets, options: LowerPlotsOptions = {}) =>
-  [
-    defineComposite({
-      namespace: PLOT_NAMESPACE,
-      type: 'plot',
-      schema: PlotSchema,
-      expand: (node: IRPlot, context?) => ({
-        children: [
-          expandPlot(
-            node,
-            datasets,
-            options,
-            context?.theme ?? {
-              mode: ThemeMode.Light,
-              colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
-            },
-          ),
-        ],
-      }),
-    }),
-  ] satisfies Array<ExpandCompositeDefinition<IRPlot, typeof PLOT_NAMESPACE, 'plot'>>;
+export const lowerPlots = (
+  datasets: ExternalDatasets,
+  options: LowerPlotsOptions = {},
+): Array<LayoutCompositeDefinition<IRPlot, typeof PLOT_NAMESPACE, 'plot'>> => [
+  defineComposite({
+    namespace: PLOT_NAMESPACE,
+    type: 'plot',
+    schema: PlotSchema,
+    compile: (node: IRPlot, context) => {
+      const intrinsicWidth = node.width ?? options.width ?? DEFAULT_PLOT_WIDTH;
+      const intrinsicHeight = node.height ?? options.height ?? DEFAULT_PLOT_HEIGHT;
+      const width = resolvePlotAxisSize(intrinsicWidth, context.proposal.x);
+      const height = resolvePlotAxisSize(intrinsicHeight, context.proposal.y);
+      const loweredNode: IRPlot = { ...node, width, height };
+      const child = lowerPlot(loweredNode, datasets, options, context.theme);
+      const probe = context.layoutChild(child, context.proposal);
+      if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+      return {
+        children: [context.replay(probe.result)],
+        allocationBounds: { x: 0, y: 0, width, height },
+      };
+    },
+  }),
+];

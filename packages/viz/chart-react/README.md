@@ -1,12 +1,14 @@
 # @retikz/chart-react
 
-React authoring for canonical Retikz Chart presentation and typed recipes.
+React authoring for family-aware Retikz Chart Source, presentation, and typed
+chartType recipes.
 
-The base entry, `@retikz/chart-react`, exports `Chart`, the four headless
-presentation markers, and `ChartThemeProvider` for Chart-owned named Theme
-definitions. Import `ScatterChart`, `BubbleChart`, and `ConnectedScatterChart`
-from `@retikz/chart-react/point`; that entry also includes every base export.
+The base entry, `@retikz/chart-react`, exports the four headless presentation
+markers and `ChartThemeProvider` for Chart-owned named Theme definitions. Import
+`ScatterChart` from `@retikz/chart-react/point`, or import its concrete component
+subpath. There is no generic `Chart` component.
 
-Each typed component has exact props and binds its matching Chart schema before
-the shared runtime adapter resolves it to Base Chart. There is no generic
-`<Chart type="..." />` API or Point-family input union.
+Each typed component has exact props and normalizes to its matching family /
+chartType Source before the shared runtime adapter enters the Chart provider
+pipeline. There is no generic `<Chart type="..." />` API, Source-mode component,
+or Point-family input union.

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   isPreviewThemeStyleDocument,
-  PreviewChartThemeStyles,
+  PreviewChartThemeDefinitions,
   PreviewCoreThemeStyles,
   PreviewGraphThemeStyles,
   PreviewPlotThemeStyles,
@@ -28,7 +28,7 @@ describe('docs-owned theme presets', () => {
     for (const definitions of [
       PreviewCoreThemeStyles,
       PreviewPlotThemeStyles,
-      PreviewChartThemeStyles,
+      PreviewChartThemeDefinitions,
       PreviewTableThemeStyles,
       PreviewGraphThemeStyles,
     ]) {

@@ -512,7 +512,7 @@ describe('GraphThemeProvider', () => {
     const coreBrand = {
       name: 'brand',
       resolve: () => ({
-        semantic: { error: '#dc2626', success: '#16a34a', warning: '#ca8a04' },
+        semantic: { error: '#dc2626', success: '#16a34a', warning: '#ca8a04', guide: '#6b7280' },
         categorical: ['#2563eb'] as const,
       }),
     };

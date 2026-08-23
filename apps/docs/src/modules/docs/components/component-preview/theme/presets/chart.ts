@@ -1,7 +1,6 @@
-import type { IRChartResolvedThemeTokens } from '@retikz/chart';
-import type { ResolvedTheme } from '@retikz/core';
+import type { IRChartThemeOverrides } from '@retikz/chart';
 
-import { ChartResolvedThemeTokensSchema, ChartThemeToken, defineChartThemeStyle } from '@retikz/chart';
+import { ChartThemeOverridesSchema, ChartThemeToken, defineChartTheme } from '@retikz/chart';
 import { NodeTextAlign } from '@retikz/core';
 
 import { PreviewThemeStyle } from '../constants';
@@ -19,8 +18,6 @@ const styles = {
       [11, 400, 15],
       [11, 400, 15],
     ],
-    light: { canvas: '#FFFFFF', slots: ['#111827', '#374151', '#6B7280', '#6B7280'] },
-    dark: { canvas: '#0F172A', slots: ['#F9FAFB', '#D1D5DB', '#94A3B8', '#94A3B8'] },
   },
   vibrant: {
     padding: 16,
@@ -32,8 +29,6 @@ const styles = {
       [11, 400, 15],
       [11, 500, 15],
     ],
-    light: { canvas: 'none', slots: ['#172B4D', '#425466', '#66788A', '#66788A'] },
-    dark: { canvas: 'none', slots: ['#FFFFFF', '#E2E8F0', '#94A3B8', '#94A3B8'] },
   },
   clean: {
     padding: 20,
@@ -45,55 +40,46 @@ const styles = {
       [11, 400, 16],
       [10, 500, 14],
     ],
-    light: { canvas: 'none', slots: ['#24231F', '#514F49', '#77736A', '#8A877F'] },
-    dark: { canvas: 'none', slots: ['#F2F0EA', '#D0CDC4', '#A7A39A', '#8E8A82'] },
   },
 } as const;
 
 const groups = [
   [
-    ChartThemeToken.ChartTitleForeground,
-    ChartThemeToken.ChartTitleFontSize,
-    ChartThemeToken.ChartTitleFontWeight,
-    ChartThemeToken.ChartTitleLineHeight,
-    ChartThemeToken.ChartTitleAlign,
+    ChartThemeToken.TitleFontSize,
+    ChartThemeToken.TitleFontWeight,
+    ChartThemeToken.TitleLineHeight,
+    ChartThemeToken.TitleAlign,
   ],
   [
-    ChartThemeToken.ChartSubtitleForeground,
-    ChartThemeToken.ChartSubtitleFontSize,
-    ChartThemeToken.ChartSubtitleFontWeight,
-    ChartThemeToken.ChartSubtitleLineHeight,
-    ChartThemeToken.ChartSubtitleAlign,
+    ChartThemeToken.SubtitleFontSize,
+    ChartThemeToken.SubtitleFontWeight,
+    ChartThemeToken.SubtitleLineHeight,
+    ChartThemeToken.SubtitleAlign,
   ],
   [
-    ChartThemeToken.ChartNoteForeground,
-    ChartThemeToken.ChartNoteFontSize,
-    ChartThemeToken.ChartNoteFontWeight,
-    ChartThemeToken.ChartNoteLineHeight,
-    ChartThemeToken.ChartNoteAlign,
+    ChartThemeToken.NoteFontSize,
+    ChartThemeToken.NoteFontWeight,
+    ChartThemeToken.NoteLineHeight,
+    ChartThemeToken.NoteAlign,
   ],
   [
-    ChartThemeToken.ChartSourceForeground,
-    ChartThemeToken.ChartSourceFontSize,
-    ChartThemeToken.ChartSourceFontWeight,
-    ChartThemeToken.ChartSourceLineHeight,
-    ChartThemeToken.ChartSourceAlign,
+    ChartThemeToken.SourceFontSize,
+    ChartThemeToken.SourceFontWeight,
+    ChartThemeToken.SourceLineHeight,
+    ChartThemeToken.SourceAlign,
   ],
 ] as const;
 
-const tokensOf = (style: ReferenceStyle, theme: ResolvedTheme): IRChartResolvedThemeTokens => {
+const tokensOf = (style: ReferenceStyle): IRChartThemeOverrides => {
   const preset = styles[style];
-  const paint = preset[theme.mode];
-  return ChartResolvedThemeTokensSchema.parse({
-    [ChartThemeToken.ChartCanvasFill]: paint.canvas,
-    [ChartThemeToken.ChartPadding]: preset.padding,
-    [ChartThemeToken.ChartGap]: preset.gap,
-    [ChartThemeToken.ChartFontFamily]: preset.fontFamily,
+  return ChartThemeOverridesSchema.parse({
+    [ChartThemeToken.Padding]: preset.padding,
+    [ChartThemeToken.Gap]: preset.gap,
+    [ChartThemeToken.FontFamily]: preset.fontFamily,
     ...Object.fromEntries(
-      groups.flatMap(([foreground, fontSize, fontWeight, lineHeight, align], index) => {
+      groups.flatMap(([fontSize, fontWeight, lineHeight, align], index) => {
         const [size, weight, height] = preset.typography[index];
         return [
-          [foreground, paint.slots[index]],
           [fontSize, size],
           [fontWeight, weight],
           [lineHeight, height],
@@ -101,15 +87,12 @@ const tokensOf = (style: ReferenceStyle, theme: ResolvedTheme): IRChartResolvedT
         ];
       }),
     ),
-    [ChartThemeToken.ChartAxisEnabled]: true,
-    [ChartThemeToken.ChartAxisGridEnabled]: true,
-    [ChartThemeToken.ChartLegendEnabled]: true,
   });
 };
 
 /** docs 维护的三个 Chart reference Theme definitions */
-export const PreviewChartThemeStyles = [
+export const PreviewChartThemeDefinitions = [
   PreviewThemeStyle.Academic,
   PreviewThemeStyle.Vibrant,
   PreviewThemeStyle.Clean,
-].map(style => defineChartThemeStyle({ name: style, resolve: theme => tokensOf(style, theme) }));
+].map(name => defineChartTheme({ name, tokens: { chart: tokensOf(name) } }));
