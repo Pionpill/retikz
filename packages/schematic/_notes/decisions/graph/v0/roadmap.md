@@ -1,16 +1,16 @@
 # Graph v0 Roadmap
 
-> 状态：Complete；v0.1 已完成 Graph presentation scope、Entity registry 与 Theme token 扩展链路。关联：[Schematic Graph 完备设计](../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md)
+> 状态：进行中；v0.1 的无 Variant Theme breaking revision 与可选 Graph context 已完成 ADR 确认，正在实施收敛。关联：[Schematic Graph 完备设计](../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md)
 
 ## 目标
 
-Graph v0 当前范围是 Schematic 领域的可复用图式元素 foundation：元素可以脱离全局关系模型独立绘制，也能被可选的 Graph presentation scope、未来 Graph 数据模型与 Diagram presentation 复用；所有能力通过 Layout、Standard 与 Core 的公开 contract 下沉。v0.1 不实现全局节点、关系、分组或端口模型，但这些通用关系契约的长期 owner 是 Graph，不另设悬空的 GraphModel owner；后续能力仍需新的 milestone ADR。
+Graph v0 当前范围是 Schematic 领域的可复用关系与图式 foundation：Entity 与 Relation 是可独立放入任意 Core 内容树的 semantic composite，并在各自 record 中组合 Graph 语义与 Core lower-facing 字段；Graph 是可选的 `graphTheme` 与局部 Scope 上下文。Relation endpoint 复用 Core NodeTarget 与 namespace，Graph 不建立成员集合、私有引用索引、平行 geometry / appearance model 或 Variant 视觉轴，也不拥有 Diagram 自动布局或 Editor document。
 
 ## 版本方向
 
-| 版本                      | 主题                          | 长期边界                                                                            |
-| ------------------------- | ----------------------------- | ----------------------------------------------------------------------------------- |
-| [v0.1](./v0.1/roadmap.md) | Package family 与首批图式元素 | 建立三包闭环、首批逻辑元素、可选展示作用域及 Entity registry / Theme token 扩展链路 |
+| 版本                      | 主题                                  | 长期边界                                                                                                                                  |
+| ------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| [v0.1](./v0.1/roadmap.md) | Graph package family 与最小 Source IR | 建立三包闭环、独立 Entity / Relation composite、可选 Graph context、Definition / registry / Theme、resolve / lowering 与 authoring parity |
 
 后续 UML、State 等元素按真实用例进入新的 minor / milestone；v0 roadmap 不预先冻结完整组件枚举。
 

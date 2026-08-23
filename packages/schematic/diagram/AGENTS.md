@@ -6,7 +6,7 @@
 
 `@retikz/diagram` 解决 Graph 关系数据如何按图示布局规则自动排列的问题。它单向消费 `@retikz/graph`，长期拥有 Diagram 布局意图、约束确定化、provider 编排、自动 routing 与以 Graph identity 对齐的几何结果。
 
-本包不拥有 Graph 节点、关系、分组、端口、presentation 或 Theme 契约，也不拥有 Editor 状态、renderer、DOM 或框架生命周期。移除 Schematic 领域词汇后仍成立且被多个领域复用的算法或几何能力应进入对应 Kernel / Library owner。
+本包不拥有 Graph 节点、关系、分组、presentation 或 Theme 契约，也不拥有 Editor 状态、renderer、DOM 或框架生命周期。Graph 当前没有端口契约；后续通用 endpoint / 局部连接点能力必须先由独立设计冻结。移除 Schematic 领域词汇后仍成立且被多个领域复用的算法或几何能力应进入对应 Kernel / Library owner。
 
 ## 输入与输出
 
