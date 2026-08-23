@@ -1,9 +1,9 @@
 ---
 title: '@retikz/foundation'
-description: 为所有包提供可复用的类型工具、Zod 标量 schema、非空字符串断言和结构化错误基础契约。
+description: 为所有包提供可复用的类型工具、结构只读集合快照、Zod 标量 schema、非空字符串断言和结构化错误基础契约。
 ---
 
-`@retikz/foundation` 是为所有包提供基础能力的纯工具模块，用于统一复用类型、标量校验、空白语义和错误骨架；Zod 是它唯一的 production dependency。
+`@retikz/foundation` 是为所有包提供基础能力的纯工具模块，用于统一复用类型、结构只读集合快照、标量校验、空白语义和错误骨架；Zod 是它唯一的 production dependency。
 
 ## 安装与使用
 
@@ -13,13 +13,14 @@ description: 为所有包提供可复用的类型工具、Zod 标量 schema、�
 import {
   assertNonEmptyString,
   assertPositiveNumber,
+  createReadonlyMap,
   NonBlankStringSchema,
   NormalizedFractionSchema,
   PositiveNumberSchema,
   RetikzError,
   RetikzFoundationError,
 } from '@retikz/foundation';
-import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf } from '@retikz/foundation';
+import type { AssertEqual, NonEmptyReadonlyArray, OpenString, RetikzErrorOptions, ValueOf } from '@retikz/foundation';
 ```
 
 开发者通常不需要直接使用 `@retikz/foundation`；它是一个为包之间复用基础能力而提供的纯内部工具包。
@@ -30,13 +31,13 @@ import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf } from '@reti
       label: 'Foundation 根入口',
       path: 'packages/kernel/foundation/src/index.ts',
       startLine: 1,
-      endLine: 4,
+      endLine: 5,
     },
     {
       label: '根入口与 subpath 契约测试',
       path: 'packages/kernel/foundation/tests/public-surface.test.ts',
       startLine: 1,
-      endLine: 26,
+      endLine: 28,
     },
   ]}
 />
@@ -45,13 +46,27 @@ import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf } from '@reti
 
 ### 类型工具
 
-这三个工具只在编译期工作，不产生运行时代码，也不表达任何 IR 或领域模型。
+这四个工具只在编译期工作，不产生运行时代码，也不表达任何 IR 或领域模型。
 
 | 导出                              | 语义                                     |
 | --------------------------------- | ---------------------------------------- |
 | `ValueOf<T>`                      | 取得对象所有 value 的联合类型            |
 | `AssertEqual<TActual, TExpected>` | 只有双向可赋值时才得到 `true`            |
 | `OpenString<T>`                   | 保留内置字面量提示，同时接受自定义字符串 |
+| `NonEmptyReadonlyArray<T>`        | 至少包含一个元素的只读数组               |
+
+### 只读集合快照
+
+`createReadonlyMap(entries)` 将输入条目复制为独立的浅快照。结果保持原生 Map 的查询、迭代和插入顺序，但不暴露 `set`、`delete` 或 `clear`；entry value 保持原对象身份，不会被深拷贝或冻结。
+
+```ts
+const definition = { kind: 'point' };
+const source = new Map([['point', definition]]);
+const definitions = createReadonlyMap(source);
+
+source.clear();
+definitions.has('point'); // true
+```
 
 ### 通用契约
 
@@ -129,7 +144,13 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       label: '类型工具实现',
       path: 'packages/kernel/foundation/src/types.ts',
       startLine: 1,
-      endLine: 12,
+      endLine: 15,
+    },
+    {
+      label: '只读 Map 浅快照实现',
+      path: 'packages/kernel/foundation/src/collections.ts',
+      startLine: 1,
+      endLine: 27,
     },
     {
       label: '标量断言实现',
@@ -160,6 +181,12 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       path: 'packages/kernel/foundation/tests/error.test.ts',
       startLine: 8,
       endLine: 70,
+    },
+    {
+      label: '只读 Map 浅快照测试',
+      path: 'packages/kernel/foundation/tests/collections.test.ts',
+      startLine: 1,
+      endLine: 37,
     },
   ]}
 />

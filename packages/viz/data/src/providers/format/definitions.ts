@@ -1,3 +1,4 @@
+import { createReadonlyMap } from '@retikz/foundation';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { FieldFormatDefinition } from '../../contract';
@@ -5,7 +6,6 @@ import type { FieldFormatDefinition } from '../../contract';
 import { defineFieldFormat } from '../../contract';
 import { RetikzDataError } from '../../error';
 import { DataFieldType } from '../../schemas';
-import { createReadonlyMap } from '../../shared/collections';
 import { coerceValue } from '../data';
 import { freezeDefinitions } from '../shared';
 import { DataFieldFormat } from './constants';
