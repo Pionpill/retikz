@@ -5,7 +5,7 @@ import type { IRChartSource } from '../schemas';
 import type { ChartResolution, SelectedChartResolveContext } from './types';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
-import { resolveChartMarks } from './marks';
+import { resolveChartMarks, resolveChartSemanticMarks } from './marks';
 import { resolveChartPlot } from './plot';
 import { resolveChartPresentation } from './presentation';
 import { resolveChartTheme } from './theme';
@@ -59,7 +59,13 @@ export const resolveSelectedChart = (source: IRChartSource, context: SelectedCha
 
   const markResolution = resolveChartMarks(source, recipe, theme.recipe);
   assertConsumedSlots(source, recipe.consumes, markResolution.consumption);
-  const plot = resolveChartPlot(source, recipeResolution, markResolution.marks, plotThemeTokensOf(theme, source));
+  const semanticMarkResolution = resolveChartSemanticMarks(recipeResolution, markResolution);
+  const plot = resolveChartPlot(
+    source,
+    recipeResolution,
+    semanticMarkResolution.marks,
+    plotThemeTokensOf(theme, source),
+  );
   const presentation = resolveChartPresentation(source, plot, theme.chart);
-  return { source, theme, plot, presentation };
+  return { source, theme, plot, warnings: semanticMarkResolution.warnings, presentation };
 };

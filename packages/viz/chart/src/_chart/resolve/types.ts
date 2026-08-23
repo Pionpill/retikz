@@ -1,5 +1,5 @@
 import type { IRChild, IRJsonObject, ResolvedTheme } from '@retikz/core';
-import type { IRPlot, IRPlotMarkOperation, IRPlotThemeTokenOverrides } from '@retikz/plot';
+import type { IRPlot } from '@retikz/plot';
 import type { IRSurface } from '@retikz/standard';
 
 import type { ChartRecipeDefinition } from '../contract/recipe';
@@ -26,8 +26,20 @@ export type ChartResolution = Readonly<{
   theme: ChartThemeResolution;
   /** 完整且经 PlotSchema 校验的 Plot IR */
   plot: IRPlot;
+  /** 需要由当前 compile occurrence 提交的非致命 Chart warning */
+  warnings: ReadonlyArray<ChartResolveWarning>;
   /** 固定顺序的 presentation 与 Surface 结果 */
   presentation: ChartPresentationResolution;
+}>;
+
+/** Chart resolve 产生、由 Core composite context 定位并提交的 warning */
+export type ChartResolveWarning = Readonly<{
+  /** 机器可读 Chart warning code */
+  code: string;
+  /** 面向调用方的英文消息 */
+  message: string;
+  /** 相对当前 Chart Source occurrence 的 jq-like 路径 */
+  subPath?: string;
 }>;
 
 /** 已选定 recipe 与命名主题链的 Chart resolve context */
@@ -41,10 +53,4 @@ export type SelectedChartResolveContext = Readonly<{
 export type InheritedChartMarkSlots = Readonly<{
   encodings: IRJsonObject;
   properties: IRJsonObject;
-}>;
-
-/** Plot scaffold 与显式 fragment 的 mark 组合结果 */
-export type ChartMarkResolution = Readonly<{
-  marks: ReadonlyArray<IRPlotMarkOperation>;
-  plotThemeTokens?: IRPlotThemeTokenOverrides;
 }>;

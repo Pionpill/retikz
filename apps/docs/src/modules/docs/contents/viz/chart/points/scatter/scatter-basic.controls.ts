@@ -65,5 +65,5 @@ export const previewControlContract = {
     [SCATTER_BASIC_CONTROL_IDS.pointSize]: 10,
     [SCATTER_BASIC_CONTROL_IDS.pointOpacity]: 0.82,
   },
-  relatedApis: ['ScatterChart.encodings', 'ScatterMark.properties'],
+  relatedApis: ['ScatterChart.encodings', 'ScatterMark.override', 'ScatterMark.properties'],
 } satisfies PreviewControlContract;

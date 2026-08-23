@@ -1,10 +1,15 @@
 import type { CoreProviderContribution, IRScene } from '@retikz/core';
 
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
-import { createPlotProviderContribution } from '@retikz/plot';
+import { createPlotProviderContribution, PointMarkSchema } from '@retikz/plot';
 import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
+import { ChartWarningCode } from '../../src';
+import { defineChartMark, defineChartRecipe } from '../../src/_chart/contract';
+import { createChartProviderContribution } from '../../src/_chart/providers';
+import { createChartSourceSchema } from '../../src/_chart/schemas';
 import { createScatterChartProviderContribution, ScatterChartSchema } from '../../src/point/scatter';
 
 const rows = [
@@ -46,6 +51,7 @@ describe('Chart providers through Core compile', () => {
             chartType: 'scatter',
             encodings: { x: 'x', y: 'y' },
             properties: { color: '#ef4444' },
+            marks: [{ kind: 'scatter', override: true, properties: { opacity: 0.5 } }],
           },
           plotExtension: {
             marks: [
@@ -61,11 +67,16 @@ describe('Chart providers through Core compile', () => {
       ],
     };
 
-    const result = compileToScene(scene, compileDefinitionsOf([createScatterChartProviderContribution()]));
+    const warnings: Array<{ code: string }> = [];
+    const result = compileToScene(scene, {
+      ...compileDefinitionsOf([createScatterChartProviderContribution()]),
+      onWarn: warning => warnings.push({ code: warning.code }),
+    });
 
     expect(result.scene.primitives).toHaveLength(1);
     expect(sceneIdsOf(result.scene.primitives)).toContain('scatter');
     expect(JSON.stringify(result.scene.primitives)).toContain('#2563eb');
+    expect(warnings).toEqual([]);
   });
 
   it('parses unknown JSON with the selected Scatter schema before compiling through its provider', () => {
@@ -104,6 +115,84 @@ describe('Chart providers through Core compile', () => {
         code: 'COMPOSITE_NOT_REGISTERED',
         message: expect.stringMatching(/chart\.point|scatter|provider/i),
       }),
+    ]);
+  });
+
+  it('appends an unmatched override and reports one Chart warning through Core', () => {
+    const markSchema = z.strictObject({ kind: z.literal('annotation'), override: z.boolean().optional() });
+    const sourceSchema = createChartSourceSchema(
+      'fixture',
+      z.strictObject({
+        chartType: z.literal('warning-fixture'),
+        encodings: z.strictObject({ x: z.string(), y: z.string() }),
+        marks: z.array(markSchema).optional(),
+      }),
+      z.undefined().optional(),
+    );
+    const annotation = defineChartMark({
+      kind: 'annotation',
+      schema: markSchema,
+      resolve: () => ({
+        marks: [
+          PointMarkSchema.parse({
+            type: 'point',
+            encoding: { x: { field: 'x' }, y: { field: 'y' } },
+            opacity: { kind: 'constant', value: 0.25 },
+          }),
+        ],
+      }),
+    });
+    const recipe = defineChartRecipe({
+      chartType: 'warning-fixture',
+      schema: sourceSchema,
+      theme: {
+        overridesSchema: z.strictObject({}),
+        resolutionSchema: z.strictObject({}),
+        fallback: {},
+      },
+      consumes: { encodings: ['x', 'y'], properties: [] },
+      marks: [{ definition: annotation, inherit: {} }],
+      resolve: () => ({
+        scaffold: {
+          scales: [],
+          spatial: { coordinate: { type: 'cartesian2D' }, replaceable: true },
+        },
+        semanticMarks: [
+          {
+            kind: 'semantic',
+            plotMarks: [
+              PointMarkSchema.parse({
+                type: 'point',
+                encoding: { x: { field: 'x' }, y: { field: 'y' } },
+              }),
+            ],
+          },
+        ],
+      }),
+    });
+    const source = sourceSchema.parse({
+      namespace: 'chart',
+      type: 'fixture',
+      data: { reference: 'scatter.rows' },
+      recipe: {
+        chartType: 'warning-fixture',
+        encodings: { x: 'x', y: 'y' },
+        marks: [{ kind: 'annotation', override: true }],
+      },
+    });
+    const warnings: Array<{ code: string; path: string }> = [];
+
+    const result = compileToScene(sceneOf(source), {
+      ...compileDefinitionsOf([createChartProviderContribution({ family: 'fixture', recipe })]),
+      onWarn: warning => warnings.push({ code: warning.code, path: warning.path }),
+    });
+
+    expect(result.scene.primitives).not.toHaveLength(0);
+    expect(warnings).toEqual([
+      {
+        code: ChartWarningCode.MarkOverrideTargetNotFound,
+        path: 'children[0].recipe.marks[0].override',
+      },
     ]);
   });
 });

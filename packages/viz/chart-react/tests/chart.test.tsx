@@ -82,7 +82,7 @@ describe('Typed Point Chart React authoring', () => {
       properties: { opacity: 0.4 },
       children: (
         <>
-          <ScatterMark properties={{ opacity: 0.25 }} />
+          <ScatterMark override properties={{ opacity: 0.25 }} />
           <ScatterMark properties={{ opacity: 0 }} />
         </>
       ),
@@ -94,7 +94,7 @@ describe('Typed Point Chart React authoring', () => {
         chartType: 'scatter',
         properties: { opacity: 0.4 },
         marks: [
-          { kind: 'scatter', properties: { opacity: 0.25 } },
+          { kind: 'scatter', override: true, properties: { opacity: 0.25 } },
           { kind: 'scatter', properties: { opacity: 0 } },
         ],
       },
@@ -114,6 +114,21 @@ describe('Typed Point Chart React authoring', () => {
       { kind: 'scatter', properties: { opacity: 0.2 } },
       { kind: 'scatter', properties: { opacity: 0 } },
     ]);
+  });
+
+  it('matches Vanilla when ScatterMark requests semantic group override', () => {
+    const input = inputOf(ScatterChart, {
+      data: [{ x: 1, y: 2 }],
+      encodings: { x: 'x', y: 'y' },
+      children: <ScatterMark override properties={{ opacity: 0.25 }} />,
+    });
+    const vanilla = normalizeScatterChart({
+      data: { reference: 'chart.data' },
+      encodings: { x: 'x', y: 'y' },
+      marks: [{ kind: 'scatter', override: true, properties: { opacity: 0.25 } }],
+    });
+
+    expect(input.source).toEqual(vanilla);
   });
 
   it('does not treat nested mark components as direct Chart marks', () => {

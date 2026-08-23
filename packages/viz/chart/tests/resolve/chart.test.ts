@@ -8,6 +8,7 @@ import type { ChartMarkResolveContext } from '../../src/_chart/contract';
 
 import {
   ChartThemeToken,
+  ChartWarningCode,
   createChartSourceSchema,
   createChartThemeSchema,
   defineChartTheme,
@@ -32,6 +33,7 @@ const recipeThemeOverridesSchema = z.strictObject({
 const recipeThemeResolutionSchema = z.strictObject({ glyph: z.string().min(1), showGrid: z.boolean() });
 const markSchema = z.strictObject({
   kind: z.literal('annotation'),
+  override: z.boolean().optional(),
   encodings: encodingsSchema.partial().optional(),
   properties: propertiesSchema.optional(),
 });
@@ -50,6 +52,11 @@ const sourceSchema = createChartSourceSchema(
 const semanticMark = PointMarkSchema.parse({
   type: PlotMark.Point,
   id: 'semantic',
+  encoding: { x: { field: 'x' }, y: { field: 'y' } },
+});
+const semanticSecondaryMark = PointMarkSchema.parse({
+  type: PlotMark.Point,
+  id: 'semantic-secondary',
   encoding: { x: { field: 'x' }, y: { field: 'y' } },
 });
 
@@ -97,7 +104,7 @@ const recipe = defineChartRecipe({
       },
       guides: { value: [], replaceable: true },
     },
-    semanticMarks: [semanticMark],
+    semanticMarks: [{ kind: 'semantic', plotMarks: [semanticMark] }],
   }),
 });
 
@@ -285,7 +292,7 @@ describe('Chart resolution', () => {
           spatial: { coordinate: { type: 'cartesian2D', x: 'x', y: 'x' }, replaceable: false },
           guides: { value: [], replaceable: false },
         },
-        semanticMarks: [semanticMark],
+        semanticMarks: [{ kind: 'semantic', plotMarks: [semanticMark] }],
       }),
     });
     const lockedRegistry = resolveChartProviderRegistry([
@@ -312,12 +319,111 @@ describe('Chart resolution', () => {
     expect(result.presentation.surface.id).toBe('demo');
     expect(result.plot.scales).toEqual([{ type: 'log', name: 'x' }]);
     expect(result.plot.marks.map(operation => operation.id)).toEqual(['semantic', 'mark', 'explicit']);
+    expect(result.warnings).toEqual([]);
     expect(result.presentation.slots).toEqual(['title', 'plot', 'note', 'source']);
     expect(result.presentation.layout).toEqual({ width: 640 });
     expect(inheritedContext?.inherited).toEqual({
       encodings: { x: 'amount', y: 'margin' },
       properties: { opacity: 0 },
     });
+  });
+
+  it('replaces a matching semantic group atomically at its original position', () => {
+    const overrideRecipe = defineChartRecipe({
+      ...recipe,
+      resolve: () => ({
+        scaffold: {
+          scales: [],
+          spatial: { coordinate: { type: 'cartesian2D' }, replaceable: true },
+        },
+        semanticMarks: [{ kind: 'annotation', plotMarks: [semanticMark, semanticSecondaryMark] }],
+      }),
+    });
+    const overrideRegistry = resolveChartProviderRegistry([
+      { family: 'point', recipe: overrideRecipe, themeDefinitions: [] },
+    ]);
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      recipe: { ...source.recipe, marks: [{ kind: 'annotation', override: true }] },
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, overrideRegistry);
+
+    expect(result.plot.marks.map(operation => operation.id)).toEqual(['mark', 'explicit']);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('appends an unmatched override and returns a stable compile warning', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      recipe: { ...source.recipe, marks: [{ kind: 'annotation', override: true }] },
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME);
+
+    expect(result.plot.marks.map(operation => operation.id)).toEqual(['semantic', 'mark', 'explicit']);
+    expect(result.warnings).toEqual([
+      {
+        code: ChartWarningCode.MarkOverrideTargetNotFound,
+        message: expect.stringMatching(/annotation|override|semantic/i),
+        subPath: 'recipe.marks[0].override',
+      },
+    ]);
+  });
+
+  it('rejects multiple authored overrides for the same kind', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      recipe: {
+        ...source.recipe,
+        marks: [
+          { kind: 'annotation', override: true },
+          { kind: 'annotation', override: true },
+        ],
+      },
+    });
+
+    expect(() => resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME)).toThrowError(
+      expect.objectContaining({
+        code: RetikzChartErrorCode.InvalidChartIR,
+        details: expect.objectContaining({ path: ['recipe', 'marks', 1, 'override'] }),
+      }),
+    );
+  });
+
+  it('rejects duplicate built-in semantic group kinds', () => {
+    const duplicateRecipe = defineChartRecipe({
+      ...recipe,
+      resolve: () => ({
+        scaffold: {
+          scales: [],
+          spatial: { coordinate: { type: 'cartesian2D' }, replaceable: true },
+        },
+        semanticMarks: [
+          { kind: 'semantic', plotMarks: [semanticMark] },
+          { kind: 'semantic', plotMarks: [semanticSecondaryMark] },
+        ],
+      }),
+    });
+    const duplicateRegistry = resolveChartProviderRegistry([
+      { family: 'point', recipe: duplicateRecipe, themeDefinitions: [] },
+    ]);
+
+    expect(() =>
+      resolveWithRegistry(
+        sourceSchema.parse({ ...source, theme: undefined }),
+        DEFAULT_RESOLVED_THEME,
+        duplicateRegistry,
+      ),
+    ).toThrowError(
+      expect.objectContaining({
+        code: RetikzChartErrorCode.InvalidResolvedPlot,
+        details: expect.objectContaining({ path: ['recipe', 'semanticMarks', 1, 'kind'] }),
+      }),
+    );
   });
 });
 
@@ -390,11 +496,16 @@ describe('Chart resolve parse boundary', () => {
             spatial: { coordinate: { type: 'cartesian2D' }, replaceable: true },
           },
           semanticMarks: [
-            PointMarkSchema.parse({
-              type: PlotMark.Point,
-              id: 'probe-semantic',
-              encoding: { x: { field: 'x' }, y: { field: 'y' } },
-            }),
+            {
+              kind: 'probe',
+              plotMarks: [
+                PointMarkSchema.parse({
+                  type: PlotMark.Point,
+                  id: 'probe-semantic',
+                  encoding: { x: { field: 'x' }, y: { field: 'y' } },
+                }),
+              ],
+            },
           ],
         };
       },

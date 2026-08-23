@@ -30,6 +30,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     </ChartSubtitle>
     <ChartSource>StatsBomb Open Data: competition 43, season 106; excludes two period-five shootout events</ChartSource>
     <ScatterMark
+      override
       properties={{
         size: values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointSize],
         stroke: '#f8fafc',

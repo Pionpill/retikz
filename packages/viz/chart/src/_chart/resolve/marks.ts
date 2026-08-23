@@ -2,15 +2,28 @@ import type { IRJsonObject } from '@retikz/core';
 import type { IRPlotMarkOperation } from '@retikz/plot';
 
 import type { ChartMarkBinding } from '../contract/mark';
-import type { ChartRecipeDefinition, ChartSlotConsumption } from '../contract/recipe';
+import type { ChartRecipeDefinition, ChartRecipeResolution, ChartSlotConsumption } from '../contract/recipe';
 import type { IRChartSource } from '../schemas';
-import type { InheritedChartMarkSlots } from './types';
+import type { ChartResolveWarning, InheritedChartMarkSlots } from './types';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
+import { ChartWarningCode } from '../../warning';
+
+type AuthoredChartMarkResolution = Readonly<{
+  kind: string;
+  index: number;
+  override: boolean;
+  plotMarks: ReadonlyArray<IRPlotMarkOperation>;
+}>;
 
 type ChartMarksResolution = Readonly<{
-  marks: ReadonlyArray<IRPlotMarkOperation>;
+  authoredMarks: ReadonlyArray<AuthoredChartMarkResolution>;
   consumption: ChartSlotConsumption;
+}>;
+
+type ChartSemanticMarksResolution = Readonly<{
+  marks: ReadonlyArray<IRPlotMarkOperation>;
+  warnings: ReadonlyArray<ChartResolveWarning>;
 }>;
 
 const invalidMark = (message: string, path: ReadonlyArray<string | number>, cause?: unknown): RetikzChartError =>
@@ -59,9 +72,10 @@ export const resolveChartMarks = (
   recipeTokens: IRJsonObject,
 ): ChartMarksResolution => {
   const authoredMarks = source.recipe.marks ?? [];
-  const marks: Array<IRPlotMarkOperation> = [];
+  const marks: Array<AuthoredChartMarkResolution> = [];
   const encodings = new Set<string>();
   const properties = new Set<string>();
+  const overrideIndices = new Map<string, number>();
   for (const [index, mark] of authoredMarks.entries()) {
     const kind = mark.kind;
     const binding = recipe.marks.find(candidate => candidate.definition.kind === kind);
@@ -72,12 +86,79 @@ export const resolveChartMarks = (
         details: { path: ['recipe', 'marks', index, 'kind'], kind },
       });
     }
+    const override = mark.override === true;
+    if (override) {
+      const previousIndex = overrideIndices.get(kind);
+      if (previousIndex !== undefined) {
+        throw invalidMark(`Chart mark "${kind}" can override its semantic group at most once`, [
+          'recipe',
+          'marks',
+          index,
+          'override',
+        ]);
+      }
+      overrideIndices.set(kind, index);
+    }
     binding.inherit.encodings?.forEach(slot => encodings.add(slot));
     binding.inherit.properties?.forEach(slot => properties.add(slot));
-    marks.push(...resolveOneMark(source, index, mark, binding, recipeTokens));
+    marks.push({ kind, index, override, plotMarks: resolveOneMark(source, index, mark, binding, recipeTokens) });
   }
   return {
-    marks,
+    authoredMarks: marks,
     consumption: { encodings: [...encodings], properties: [...properties] },
+  };
+};
+
+/** 按 Chart mark kind 合并内建 semantic groups 与 authored marks */
+export const resolveChartSemanticMarks = (
+  recipe: ChartRecipeResolution,
+  authored: ChartMarksResolution,
+): ChartSemanticMarksResolution => {
+  const semanticIndices = new Map<string, number>();
+  const groups = recipe.semanticMarks.map((group, index) => {
+    if (group.kind.length === 0) {
+      throw invalidMark('Chart semantic mark kind must be non-empty', ['recipe', 'semanticMarks', index, 'kind']);
+    }
+    if (group.plotMarks.length === 0) {
+      throw new RetikzChartError({
+        code: RetikzChartErrorCode.InvalidResolvedPlot,
+        message: `Chart semantic mark "${group.kind}" must produce at least one Plot mark`,
+        details: { path: ['recipe', 'semanticMarks', index, 'plotMarks'], kind: group.kind },
+      });
+    }
+    if (semanticIndices.has(group.kind)) {
+      throw new RetikzChartError({
+        code: RetikzChartErrorCode.InvalidResolvedPlot,
+        message: `Chart recipe produced duplicate semantic mark kind "${group.kind}"`,
+        details: { path: ['recipe', 'semanticMarks', index, 'kind'], kind: group.kind },
+      });
+    }
+    semanticIndices.set(group.kind, index);
+    return { kind: group.kind, plotMarks: [...group.plotMarks] };
+  });
+  const additions: Array<IRPlotMarkOperation> = [];
+  const warnings: Array<ChartResolveWarning> = [];
+
+  for (const mark of authored.authoredMarks) {
+    if (!mark.override) {
+      additions.push(...mark.plotMarks);
+      continue;
+    }
+    const semanticIndex = semanticIndices.get(mark.kind);
+    if (semanticIndex === undefined) {
+      additions.push(...mark.plotMarks);
+      warnings.push({
+        code: ChartWarningCode.MarkOverrideTargetNotFound,
+        message: `Chart mark "${mark.kind}" requested override, but the recipe produced no semantic mark group with that kind; the authored mark was appended.`,
+        subPath: `recipe.marks[${mark.index}].override`,
+      });
+      continue;
+    }
+    groups[semanticIndex] = { kind: mark.kind, plotMarks: [...mark.plotMarks] };
+  }
+
+  return {
+    marks: [...groups.flatMap(group => group.plotMarks), ...additions],
+    warnings,
   };
 };

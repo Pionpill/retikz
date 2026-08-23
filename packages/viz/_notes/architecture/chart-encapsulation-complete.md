@@ -59,7 +59,7 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 
 - [ ] shared scaffold 的 coordinate、axis、guide、facet、track 等结构及默认
 - [ ] built-in semantic mark 的输入、顺序、lower target 与诊断
-- [ ] semantic mark 可以确定性生成一个或多个 Plot mark，不被限制为单个 Plot mark
+- [ ] semantic mark 以唯一 kind 分组，每组可以确定性生成一个或多个 Plot mark，不被限制为单个 Plot mark
 - [ ] 生成的 Point / Path / Interval 等进入 Plot 正式 schema、resolve、lowering、identity、provenance、lineage、locator 与 diagnostics 主链
 - [ ] recipe fallback、named theme、inline theme、properties、encodings 的逐 slot 优先级唯一
 - [ ] `false`、`0`、空数组和 schema 允许的空字符串不被 truthy fallback 吞掉
@@ -73,8 +73,10 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 - [ ] 每个 mark Definition 只声明精确 payload 与到 Plot target 的显式映射，不反向列出 family 或 chartType
 - [ ] 每个 recipe 通过有序 binding 单向声明允许的 mark 与可继承的 encoding / property slot
 - [ ] 内建 Chart mark 通过同一 package-internal Definition / recipe binding / active registry 消费；Chart mark Definition 不是第三方扩展入口
-- [ ] mark 自身显式值只覆盖自身继承结果，不改写 built-in semantic mark 或其它 mark
-- [ ] authored marks 按数组顺序追加；身份冲突按正式 owner 规则 fail-loud
+- [ ] mark 自身显式值默认只覆盖自身继承结果；`override: true` 只原位替换同 kind built-in semantic group
+- [ ] 普通与未命中 override 的 authored marks 按数组顺序追加；身份冲突按正式 owner 规则 fail-loud
+- [ ] 同一 recipe 的内建 group kind 唯一，同一 Source 对同 kind 最多一个 override
+- [ ] override 未命中继续追加，并通过 Core compile warning 通道报告稳定 code 与 Source path
 - [ ] 未被当前 mark 接受的 slot 不向该 mark 传播
 - [ ] PointMark 等 Plot target 只有通过 Chart mark 入口时继承 Chart context
 - [ ] `plotExtension.marks` 保持完全显式、相互独立，不读取 Chart encodings / properties
@@ -115,7 +117,7 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 - [ ] 部分或完整 authored token mapping 使用同一字段形状；resolved token map 不写回 Source IR
 - [ ] 对象形式至少包含 base 或一个非空 token slice；空主题对象 fail-loud
 - [ ] Chart shell 的 `mode fallback < Core style chain < authored named/base chain < inline` 优先级稳定
-- [ ] built-in slot 使用 recipe fallback，随后 Core style chain < authored named/base chain < inline tokens < properties < encodings；authored mark 再以自身显式 payload 覆盖继承结果
+- [ ] built-in slot 使用 recipe fallback，随后 Core style chain < authored named/base chain < inline tokens < properties < encodings；authored mark 使用 inherited properties < inherited encodings < explicit properties < explicit encodings
 - [ ] named / inline slice 以顶层 token key 原子覆盖，最终 Chart shell 与 recipe token 分别通过完整 resolution schema
 - [ ] 不同 owner 只共享 Core value atom，不合并领域 token key 或 resolver
 - [ ] Plot slice 只作为 Plot owner 的 authored token 输入，位于 Plot Core style baseline 之后、显式 `plotExtension` fragment 之前

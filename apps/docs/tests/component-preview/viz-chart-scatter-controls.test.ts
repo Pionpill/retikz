@@ -172,6 +172,7 @@ describe('Viz Chart scatter controls', () => {
         },
       });
       expect(canonicalScatterMarkProps(source)).toMatchObject({
+        override: true,
         properties: { size: 10, opacity: 0.82 },
       });
     }
@@ -198,6 +199,7 @@ describe('Viz Chart scatter controls', () => {
         },
       });
       expect(canonicalScatterMarkProps(source)).toMatchObject({
+        override: true,
         properties: { size: 10, opacity: 0.82 },
       });
     }

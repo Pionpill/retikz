@@ -28,6 +28,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartNote>This same-year comparison describes association, not causation</ChartNote>
     <ChartSource>Gapminder: country cross-section for 2007; color encodes continent</ChartSource>
     <ScatterMark
+      override
       properties={{
         size: values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointSize],
         opacity: values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointOpacity],

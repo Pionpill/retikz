@@ -29,6 +29,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartNote>这是同年各国的横截面比较，不能据此推断因果关系</ChartNote>
     <ChartSource>Gapminder：2007 年国家截面；按大洲着色</ChartSource>
     <ScatterMark
+      override
       properties={{
         size: values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointSize],
         opacity: values[SCATTER_INCOME_LIFE_EXPECTANCY_CONTROL_IDS.pointOpacity],

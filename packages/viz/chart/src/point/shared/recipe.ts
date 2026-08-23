@@ -4,7 +4,11 @@ import type { IRPlotGuide, IRPlotMarkOperation, IRPlotScaleOperation } from '@re
 import { PlotGuide, PlotMark, PointMarkSchema } from '@retikz/plot';
 
 import type { ChartMarkResolveContext } from '../../_chart/contract/mark';
-import type { ChartRecipeResolution, ChartRecipeResolveContext } from '../../_chart/contract/recipe';
+import type {
+  ChartRecipeResolution,
+  ChartRecipeResolveContext,
+  ChartSemanticMarkResolution,
+} from '../../_chart/contract/recipe';
 import type { IRPointEncoding, IRPointProperties } from './schema';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
@@ -126,7 +130,7 @@ export const pointThemeOf = (
 export const pointResolutionOf = (
   chartType: string,
   theme: Readonly<{ axisEnabled: boolean; axisGridEnabled: boolean; legendEnabled: boolean }>,
-  marks: readonly [IRPlotMarkOperation, ...Array<IRPlotMarkOperation>],
+  semanticMarks: readonly [ChartSemanticMarkResolution, ...Array<ChartSemanticMarkResolution>],
   options: Readonly<{
     scales?: ReadonlyArray<IRPlotScaleOperation>;
     guides?: ReadonlyArray<IRPlotGuide>;
@@ -141,7 +145,7 @@ export const pointResolutionOf = (
       spatial: { coordinate: cartesian.coordinate, replaceable: true },
       guides: { value: guides, replaceable: true },
     },
-    semanticMarks: marks,
+    semanticMarks,
   };
 };
 
@@ -156,10 +160,16 @@ export const pointSlotsOf = (
 /** 由 authored mark context 合并继承与显式 slot；显式值优先 */
 export const markSlotsOf = (
   context: ChartMarkResolveContext,
-): Readonly<{ encodings: IRJsonObject; properties: IRJsonObject }> => ({
-  encodings: { ...context.inherited.encodings, ...objectOf(context.source, 'encodings') },
-  properties: { ...context.inherited.properties, ...objectOf(context.source, 'properties') },
-});
+): Readonly<{ encodings: IRJsonObject; properties: IRJsonObject }> => {
+  const explicitEncodings = objectOf(context.source, 'encodings');
+  const explicitProperties = objectOf(context.source, 'properties');
+  const encodings = { ...context.inherited.encodings };
+  for (const name of Object.keys(explicitProperties)) delete encodings[name];
+  return {
+    encodings: { ...encodings, ...explicitEncodings },
+    properties: { ...context.inherited.properties, ...explicitProperties },
+  };
+};
 
 const objectOf = (source: IRJsonObject, key: string): IRJsonObject => {
   if (!Object.hasOwn(source, key)) return {};

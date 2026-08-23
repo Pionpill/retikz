@@ -1,6 +1,6 @@
 # ADR-09：Chart family、recipe 与 mark Source IR
 
-- 状态：Accepted（2026-08-22；2026-08-23 修订 Source 根字段命名与按 chartType 装配边界）
+- 状态：Accepted（2026-08-22；2026-08-23 修订 Source 根字段命名、按 chartType 装配边界与 semantic mark override）
 - 决策日期：2026-08-21
 - 关联：[alpha.1 roadmap](./roadmap.md) · [Chart 总设计](../../../../../architecture/chart-design.md) · [Chart 封装完备设计](../../../../../architecture/chart-encapsulation-complete.md) · [ADR-01](./01-chart-infrastructure.md) · [ADR-02](./02-style-palette.md) · [ADR-03](./03-presentation-standard-layout.md)
 - 替代：ADR-01 的封闭 recipe 目录与无 Chart registry 决策；ADR-02 的 `chartThemeTokens` / Plot theme 转发字段；ADR-03 的公开 Base Chart、可编排 presentation children 与旧 Source shell
@@ -65,6 +65,7 @@ type IRChartThemeInput<TRecipeThemeTokens> =
 
 type IRChartMark<TKind extends string, TPayload extends IRJsonObject> = {
   kind: TKind;
+  override?: boolean;
 } & TPayload;
 
 type IRChartSource<
@@ -171,7 +172,12 @@ type ChartRecipeResolution = Readonly<{
     >;
     guides?: Readonly<{ value: ReadonlyArray<IRPlotGuide>; replaceable: boolean }>;
   }>;
-  semanticMarks: NonEmptyReadonlyArray<IRPlotMarkOperation>;
+  semanticMarks: NonEmptyReadonlyArray<
+    Readonly<{
+      kind: string;
+      plotMarks: NonEmptyReadonlyArray<IRPlotMarkOperation>;
+    }>
+  >;
 }>;
 
 type ChartMarkDefinition = Readonly<{
@@ -221,11 +227,27 @@ family → chartType 关系由目录、具体 schema 的 `type` literal 与应�
 
 `consumes` 显式声明 recipe resolver 自身会读取的根级 encoding / property slot，不能从 schema 全部字段自动推导；provider 汇合拒绝空名称和同一 owner 内的重复名称。recipe-local mark binding 的继承 slot 只在 Source 实际包含该 kind 的 authored mark 时成为 active consumer。Source 中任一 slot 若既不在 recipe `consumes` 中，也没有当前 authored mark 的 active binding 消费，必须定位到该 slot 并 fail-loud。
 
-recipe 的 `resolve` 只接收已经按最终精确 schema parse 的 recipe-owned encodings / properties、根 data / identity，以及已经完成 fallback / named / inline cascade 的 recipe token；它看不到 presentation、layout 或显式 `plotExtension` fragment，也不读取 adapter、DOM 或 renderer 状态。它输出 Plot-owned scaffold 与一个内建 semantic mark；scale 和 spatial / guide 的 `replaceable` 是显式 Plot fragment 能否替换 recipe scaffold 的唯一依据。semantic mark 至少生成一个 Plot mark，并允许按稳定顺序生成多个 Plot mark。
+recipe 的 `resolve` 只接收已经按最终精确 schema parse 的 recipe-owned encodings / properties、根 data / identity，以及已经完成 fallback / named / inline cascade 的 recipe token；它看不到 presentation、layout 或显式 `plotExtension` fragment，也不读取 adapter、DOM 或 renderer 状态。它输出 Plot-owned scaffold 与一个或多个内建 semantic mark 组；scale 和 spatial / guide 的 `replaceable` 是显式 Plot fragment 能否替换 recipe scaffold 的唯一依据。每个 semantic mark 组以 Chart mark `kind` 标识，并包含一个非空、有序 `plotMarks` 序列；同一 recipe 的内建组 `kind` 必须唯一。一个组可以原子地生成多个 Plot mark，不把一个 Chart mark 约束为单个 Plot mark。
 
-`ChartMarkDefinition.schema` 是包含 `kind` 的完整 strict mark schema，Definition 本身不认识任何 family 或 chartType。recipe 的有序 `marks` 是允许关系与继承规则的唯一真源；同一 recipe 内的 kind 必须唯一。Chart resolver 从当前 recipe binding 按 properties → encodings 的既定优先级构造 inherited context，没有列出的值不会进入 mark context。mark 自身 payload 在 mark resolver 内高于 inherited values，resolver 只能输出一个非空、有序 Plot mark 列表，不能改写 recipe scaffold、data、Theme 或 presentation。
+`ChartMarkDefinition.schema` 是包含 `kind` 与可选 `override` 的完整 strict mark schema，Definition 本身不认识任何 family 或 chartType。`override` 省略时不由 schema 物化 `false`，以保持 Source IR 只保存 authored intent；resolver 将省略与 `false` 视为追加，将 `true` 视为按 `kind` 覆盖 recipe 内建 semantic mark 组。recipe 的有序 `marks` 是允许关系与继承规则的唯一真源；同一 recipe 内的 binding kind 必须唯一。Chart resolver 从当前 recipe binding 按 properties → encodings 的既定优先级构造 inherited context，没有列出的值不会进入 mark context。mark 自身 payload 在 mark resolver 内高于所有 inherited values；mark 显式 properties 可以覆盖继承的同目标 encoding，mark 自身同时声明 property 与 encoding 时仍由 encoding 胜出。resolver 只能输出一个非空、有序 Plot mark 列表，不能改写 recipe scaffold、data、Theme 或 presentation。
 
-alpha.1 的 Point family 当前只内置 `scatter` Chart mark kind，并下沉为 Plot Point mark。它的 Source payload 使用可选的精确 `encodings` / `properties` slice，省略的 slot 才从当前 recipe 的同名 Chart context 继承，显式 mark slice 覆盖继承结果。mark encoding 仍只接受字段绑定，mark property 仍只接受常量；下沉前缺少目标 Plot mark 必需的位置角色必须 fail-loud。当前 Scatter 的内建 semantic mark 生成一个 Point；authored `recipe.marks` 随后按数组顺序追加。React 的 `ScatterMark` 是该 Source mark 的 marker，Vanilla 使用同形 plain mark input。作者需要 Path 等非 Scatter 图元时使用独立的 `plotExtension.marks`，不得通过 Scatter 的 Chart context 隐式继承。
+authored mark 的覆盖目标是完整 semantic mark 组，不是某个已生成 Plot mark 的数组下标或 `type`。`override: true` 命中同 kind 内建组时，解析后的 authored mark 输出在原位置整体替换该组的 `plotMarks`；没有命中时仍按 authored 顺序作为附加组生成，并通过 Core 正式 compile warning 通道报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`。同一 Source 对同一 kind 声明多个 `override: true` 必须 fail-loud，避免隐式 first-wins、last-wins 或跨 payload 合并。覆盖只改变 semantic mark 组，不改变 scaffold、data、Theme、presentation 或 `plotExtension`。
+
+Core 的 layout-aware composite compile context 必须提供领域中立的结构化 warning 入口，由当前 composite occurrence 补全 Source path 并进入既有 `CompileWarning` / `onWarn`、layout probe 与 replay 事务。Chart 拥有上述 Chart warning code 与消息，Core 只拥有传输、定位和生命周期；不得使用 `console.warn` 或建立 Chart 私有诊断队列。
+
+```ts
+type LayoutCompositeCompileContext = Readonly<{
+  warn: (code: CompileWarningCodeValue, message: string, subPath?: string) => void;
+}>;
+
+const ChartWarningCode = {
+  MarkOverrideTargetNotFound: 'CHART_MARK_OVERRIDE_TARGET_NOT_FOUND',
+} as const;
+```
+
+`ChartWarningCode` 作为公开 const object enum 从 Chart 包根导出，供 compile warning 消费方稳定判断；开放的 Core warning code 类型继续接受该领域 code，不把它复制进 `CompileWarningCode`。`subPath` 是相对当前 composite Source occurrence 的可选 jq-like 路径；Core 负责与当前路径组合，Chart 对未命中的 mark 传入 `recipe.marks[index].override`。warning 只在对应 compile 结果提交时对调用方可见，失败或丢弃的 probe 不得泄漏，replay 不得重复报告同一 warning。
+
+alpha.1 的 Point family 当前只内置 `scatter` Chart mark kind，并下沉为 Plot Point mark。它的 Source payload 使用可选的精确 `encodings` / `properties` slice，省略的 slot 才从当前 recipe 的 Chart context 继承，显式 mark slice 覆盖继承结果。mark encoding 仍只接受字段绑定，mark property 仍只接受常量；下沉前缺少目标 Plot mark 必需的位置角色必须 fail-loud。当前 Scatter 的内建 semantic mark 组使用 `kind: 'scatter'` 并生成一个 Point；authored `recipe.marks` 默认按数组顺序追加，`override: true` 时按上述通用契约替换该组。React 的 `ScatterMark` 是该 Source mark 的 marker，Vanilla 使用同形 plain mark input。作者需要 Path 等非 Scatter 图元时使用独立的 `plotExtension.marks`，不得通过 Scatter 的 Chart context 隐式继承。
 
 `ChartThemeDefinition` 是声明式 JSON-safe Definition，没有 resolve 回调；`base` 指向另一个已安装主题，`tokens.recipes` 按 chartType 保存专有 slice。当前 provider 汇合只诊断未知 base、继承环、重复 name、非法 Chart / Plot slice，以及当前 active recipe 的非法 token slice；没有全局 catalog 时不能把未激活的 recipe key 判断为未知，它们由安装该 chartType 的应用或后续 active provider 校验。inline `tokens.recipe` 始终由当前 recipe overrides schema 精确 parse。`tokens.plot` 直接复用 `IRPlotThemeTokenOverrides`，不复制 Plot Theme schema。
 
@@ -251,21 +273,21 @@ Chart 不再公开 generic `createChart()`、`normalizeChart()`、`<Chart source
 
 `encodings` 只保存当前 recipe 声明的 field-bound 数据角色，不接受常量；`properties` 只保存当前实例的常量表现或行为，不接受字段绑定。共享原子 schema 只按稳定语义、不变量和真实复用边界提取，每个 `XxxChartEncodingsSchema`、`XxxChartPropertiesSchema` 与 recipe Theme schema 仍保持精确、闭合。源于 Plot 且语义和值域完全一致的原子直接复用 Plot owner。
 
-recipe 解析结果包含 shared scaffold 与 built-in semantic mark。semantic mark 可以按稳定顺序生成一个或多个 Plot mark。`recipe.marks` 是有序的 Chart mark，每项以 `kind` 选择当前 recipe binding 中的精确 Definition；它只继承 binding 声明可消费的 encoding / property slot，mark 自身显式 payload 只覆盖自己的继承结果。生成的所有 mark 继续进入 Plot 正式 schema、resolve、lowering、identity、provenance、lineage、locator 与 diagnostics 主链。
+recipe 解析结果包含 shared scaffold 与按唯一 `kind` 标识的 built-in semantic mark 组。每个组可以按稳定顺序生成一个或多个 Plot mark。`recipe.marks` 是有序的 Chart mark，每项以 `kind` 选择当前 recipe binding 中的精确 Definition；它只继承 binding 声明可消费的 encoding / property slot，mark 自身显式 payload 覆盖自己的继承结果。默认 authored mark 作为附加组，`override: true` 则按 kind 原位替换内建组；生成的所有 Plot mark 继续进入 Plot 正式 schema、resolve、lowering、identity、provenance、lineage、locator 与 diagnostics 主链。
 
 ### 显式 `plotExtension` fragment 的组合语义
 
 `plotExtension` 只保存用户显式声明的 Plot-owned fragment，字段集合固定为 `transform / scales / plotThemeTokens / plotThemeTokenRules / plotTheme / coordinate / composition / marks / guides / meta`；它不允许重新声明 `namespace / type / id / data / width / height`。Chart 按下表构造唯一完整 `IRPlot`，构造后必须再经过 Plot 正式 schema 与 resolve，不能把 fragment 当作无约束对象 spread：
 
-| Plot 字段                    | 与 recipe / Chart 结果的组合语义                                                                                                                                                                    |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `transform`                  | authored transforms 保持数组顺序，先于 recipe-required transforms 执行；这是 Chart 数据进入 recipe 前的显式预处理，不提供隐式 post-recipe 阶段                                                      |
-| `scales`                     | 先保留 recipe scale 顺序；同名 authored scale 仅在对应 recipe scale `replaceable: true` 时整体替换，否则 fail-loud；新名字按 authored 顺序追加                                                      |
-| `coordinate` / `composition` | fragment 内二者互斥；只有 recipe spatial 声明 `replaceable: true` 才能整体替换，否则 fail-loud；省略时使用 recipe spatial                                                                           |
-| `guides`                     | authored `guides` 是整体替换，`[]` 表示明确关闭；只有 recipe guides 声明 `replaceable: true` 才允许替换，否则 fail-loud                                                                             |
-| `marks`                      | built-in semantic mark 在前，随后是 `recipe.marks`，最后按 authored 顺序追加 `plotExtension.marks`；后者完全独立且不继承 Chart context                                                              |
-| `meta`                       | 只保留 authored user meta；recipe provenance、lineage 与 diagnostics 使用正式内部结构，不混入同一自由 metadata bag                                                                                  |
-| Plot Theme                   | Core / Plot style baseline → named Chart Theme `tokens.plot` → inline Chart Theme `tokens.plot` → `plotExtension.plotThemeTokens` → `plotExtension.plotThemeTokenRules` → `plotExtension.plotTheme` |
+| Plot 字段                    | 与 recipe / Chart 结果的组合语义                                                                                                                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `transform`                  | authored transforms 保持数组顺序，先于 recipe-required transforms 执行；这是 Chart 数据进入 recipe 前的显式预处理，不提供隐式 post-recipe 阶段                                                               |
+| `scales`                     | 先保留 recipe scale 顺序；同名 authored scale 仅在对应 recipe scale `replaceable: true` 时整体替换，否则 fail-loud；新名字按 authored 顺序追加                                                               |
+| `coordinate` / `composition` | fragment 内二者互斥；只有 recipe spatial 声明 `replaceable: true` 才能整体替换，否则 fail-loud；省略时使用 recipe spatial                                                                                    |
+| `guides`                     | authored `guides` 是整体替换，`[]` 表示明确关闭；只有 recipe guides 声明 `replaceable: true` 才允许替换，否则 fail-loud                                                                                      |
+| `marks`                      | 先按 recipe 顺序保留 built-in semantic mark 组并应用命中的 authored override，再按 authored 顺序追加普通或未命中的 Chart mark，最后追加 `plotExtension.marks`；Plot extension 完全独立且不继承 Chart context |
+| `meta`                       | 只保留 authored user meta；recipe provenance、lineage 与 diagnostics 使用正式内部结构，不混入同一自由 metadata bag                                                                                           |
+| Plot Theme                   | Core / Plot style baseline → named Chart Theme `tokens.plot` → inline Chart Theme `tokens.plot` → `plotExtension.plotThemeTokens` → `plotExtension.plotThemeTokenRules` → `plotExtension.plotTheme`          |
 
 完整 Plot 的 `data` 始终取 Chart 根 `data`；Chart resolver 不为 Plot 根默认注入 `id`，避免在 Core 中无必要地创建 identity 相关模型状态；显式 Plot mark 的身份仍由 Plot 正式契约决定。直接写入 `plotExtension.marks` 的内容与 built-in semantic mark、`recipe.marks` 相互独立，不继承 Chart encodings / properties。完全需要底层控制时直接使用 Plot，不提供公开 `type: 'base'` Chart。
 
@@ -287,11 +309,11 @@ Theme 分为三个 owner slice：`tokens.chart` 只控制所有 Chart 共用的 
 
 ## 行为、失败语义与兼容性
 
-- 默认行为：built-in semantic mark 的单个目标 slot 按 `theme.fallback` → Core style theme chain → authored named/base chain → inline theme → properties → encodings 解析；authored Chart mark 按 mark schema default → resolved recipe theme → inherited properties → inherited encodings → mark 显式 payload 解析。properties 与 encodings 指向同一 slot 时 encoding 胜出；不存在覆盖整张 Chart 的无约束全局 spread
-- 默认行为：recipe 内建输出按 recipe 声明顺序生成，`recipe.marks` 按数组顺序追加，`plotExtension.marks` 再按 Plot 声明顺序作为独立内容进入 Plot。facet / track 由 composition owner 消费，不作为同名属性广播给普通 mark
+- 默认行为：built-in semantic mark 的单个目标 slot 按 `theme.fallback` → Core style theme chain → authored named/base chain → inline theme → properties → encodings 解析；authored Chart mark 按 mark schema default → resolved recipe theme → inherited properties → inherited encodings → mark 显式 properties → mark 显式 encodings 解析。mark 显式内容整体高于 inherited values，同一显式目标中仍由 encoding 胜出；不存在覆盖整张 Chart 的无约束全局 spread
+- 默认行为：recipe 内建组按 recipe 声明顺序生成；`recipe.marks` 省略 `override` 或为 `false` 时按数组顺序追加，为 `true` 时按唯一 kind 原位替换内建组。未命中的 override 仍追加并产生 compile warning；`plotExtension.marks` 再按 Plot 声明顺序作为独立内容进入 Plot。facet / track 由 composition owner 消费，不作为同名属性广播给普通 mark
 - 默认行为：presentation 固定按 `title → subtitle → plot → note → source` 生成。JSON 属性顺序、Vanilla 对象构造顺序和 React marker 顺序没有语义；缺失项省略，每类内容至多一个
 - 默认行为：LLM 与 schema registry 可以先列出 family，再列出应用已安装的 chartType，最后只展开所选具体 `XxxChartSchema`；该索引由应用维护，不由 Chart runtime 全局枚举
-- 失败与诊断：未安装 chartType、active recipe 冲突、family mismatch、未知 mark / theme、constant encoding、field-bound property、无 consumer 字段、当前 recipe 的未知 token、空主题对象、非法 Plot fragment 与 Definition 依赖缺失必须在各自 owner 边界 fail-loud，并把 path 指向用户可修改的 Source 字段
+- 失败与诊断：未安装 chartType、active recipe 冲突、family mismatch、未知 mark / theme、重复 semantic mark kind、同 kind 重复 `override: true`、constant encoding、field-bound property、无 consumer 字段、当前 recipe 的未知 token、空主题对象、非法 Plot fragment 与 Definition 依赖缺失必须在各自 owner 边界 fail-loud，并把 path 指向用户可修改的 Source 字段；未找到 override 目标不是错误，必须追加该 mark 并通过 Core `onWarn` 报告
 - 失败与诊断：`false`、`0`、空数组与空字符串是否有效由权威 schema 决定；resolver 不使用 truthy fallback，也不静默忽略 schema 已接受但没有合法 consumer 的字段
 - 兼容性 / breaking：直接删除根 `type = chartType`、旧 `config`、根 `width` / `height`、`chartThemeTokens` / `plotThemeTokens` 转发字段、公开 Base Chart、旧 presentation children / position 和静态封闭 recipe 分发。不保留 alias、fallback、migration、自动猜测或新旧双轨
 - 兼容性 / breaking：ADR-01 只继续保留 Chart lower 到 Plot 正式主链的原则；ADR-02 的 Proposed Theme 输入由本 ADR 完整替代；ADR-03 只继续保留 Source / Vanilla Input / React 边界和 Standard presentation lowering。ADR-04～08 的具体图表语义不在此处重新裁决，但其旧 Source shape 与配置标记必须在接受前重写

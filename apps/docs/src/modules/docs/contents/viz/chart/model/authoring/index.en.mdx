@@ -14,10 +14,12 @@ Chart separates convenient authoring from stable execution. React and Vanilla no
 | React props / JSX | `@retikz/chart-react`     | Converts to Vanilla Input                                     |
 | Plain input       | `@retikz/chart-vanilla`   | `normalizeXxxChart` produces exact Source                     |
 | JSON              | Concrete chartType schema | Application selects a strict schema by family and `chartType` |
-| recipe            | Active Chart provider     | Produces shared parts and the built-in mark                   |
-| resolve           | Chart resolver            | Merges marks, Plot fragments, and Theme inputs                |
+| recipe            | Active Chart provider     | Produces shared parts and kind-tagged semantic mark groups    |
+| resolve           | Chart resolver            | Merges marks by kind, Plot fragments, and Theme inputs        |
 
 JSON is an alternate input, not a schema bypass. The application selects the concrete schema from `type` and `recipe.chartType`, and the active provider confirms that the recipe belongs to the root family. Unknown families, recipes, fields, and incompatible marks fail loudly. The parsed Source preserves author intent; recipe-generated coordinates, guides, and Plot marks only exist in later resolution stages.
+
+Plain authored marks append in Source order. `override: true` replaces the complete built-in semantic group with the same kind in place. If no group matches, the mark still appends and Core reports a stable warning through `onWarn`. This merge belongs only to the Chart resolver; React, Vanilla, and the visible Source IR do not perform or expose it.
 
 ## Three packages, one stage each
 
@@ -46,8 +48,8 @@ The Vanilla factory `createScatterChart` comes from `@retikz/chart-vanilla/point
     {
       label: 'Resolve recipes and Chart marks',
       path: 'packages/viz/chart/src/_chart/resolve/resolve.ts',
-      startLine: 9,
-      endLine: 55,
+      startLine: 41,
+      endLine: 70,
     },
     {
       label: 'React shared Chart input wiring',

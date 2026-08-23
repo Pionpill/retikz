@@ -59,6 +59,9 @@ export const createChartDefinition = (
         });
       }
       const resolution = resolveChartFromProvider(source, { theme: context.theme, registry });
+      for (const warning of resolution.warnings) {
+        context.warn(warning.code, warning.message, warning.subPath);
+      }
       const proposal = chartProposalOf(source, context.proposal);
       const probe = context.layoutChild(resolution.presentation.surface, proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);

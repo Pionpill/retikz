@@ -20,6 +20,9 @@ describe('@retikz/chart public surface', () => {
     expect(chart).toHaveProperty('ChartThemeResolutionSchema');
     expect(chart).toHaveProperty('createChartSourceSchema');
     expect(chart).toHaveProperty('defineChartTheme');
+    expect(chart.ChartWarningCode).toEqual({
+      MarkOverrideTargetNotFound: 'CHART_MARK_OVERRIDE_TARGET_NOT_FOUND',
+    });
     expect(chart).not.toHaveProperty('defineChartRecipe');
     expect(chart).not.toHaveProperty('defineChartMark');
     expect(chart).not.toHaveProperty('ChartRecipeDefinition');

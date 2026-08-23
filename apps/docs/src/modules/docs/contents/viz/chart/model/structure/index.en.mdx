@@ -31,7 +31,7 @@ This Point-family Scatter Source preserves author intent. Coordinates, scales, g
     },
     properties: { opacity: 0.82 },
     marks: [
-      { kind: 'scatter', properties: { size: 5 } },
+      { kind: 'scatter', override: true, properties: { size: 5 } },
     ],
   },
   plotExtension: {
@@ -40,7 +40,7 @@ This Point-family Scatter Source preserves author intent. Coordinates, scales, g
 }
 ```
 
-`encodings` contain field names and `properties` contain constants. `recipe.marks` are Chart semantic marks that inherit the current Chart context in authored array order; `plotExtension.marks` are independent Plot content and do not read Chart encodings or properties.
+`encodings` contain field names and `properties` contain constants. `recipe.marks` are ordered Chart marks: they append by default, while `override: true` can replace a built-in semantic mark group by kind. `plotExtension.marks` are independent Plot content and do not read Chart encodings or properties.
 
 ## Root shell and nested recipe envelope
 
@@ -78,7 +78,7 @@ The recipe passes field-bound encodings and constant properties to its semantic 
 
 A recipe explicitly declares the slots its resolver actually consumes instead of treating every schema field as consumed. A mark inheritance declaration becomes active only when that mark is present in Source. If neither the recipe nor the current authored marks consume a field, Chart fails at that field path rather than silently dropping it.
 
-A Chart mark has `{ kind, encodings?, properties? }`. Its Definition declares which fields and properties it may inherit. Scatter currently accepts only `scatter` marks, which can inherit Point x/y/color/size/opacity/shape. Explicit mark values override that mark's inherited result only; they do not modify the built-in semantic mark or another mark.
+A Chart mark has `{ kind, override?, encodings?, properties? }`. Its Definition declares which fields and properties it may inherit. Scatter currently accepts only `scatter` marks, which can inherit Point x/y/color/size/opacity/shape. Omitting `override` or setting it to `false` appends a mark; `true` replaces the complete built-in group with the same kind in place. An explicit property outranks an inherited encoding, and an explicit encoding still wins when the mark declares both.
 
 ```ts
 recipe: {
@@ -86,13 +86,13 @@ recipe: {
   encodings: { x: 'time', y: 'value', color: 'id' },
   properties: { opacity: 0.8 },
   marks: [
-    { kind: 'scatter', properties: { size: 4, opacity: 0.4 } },
+    { kind: 'scatter', override: true, properties: { size: 4, opacity: 0.4 } },
     { kind: 'scatter', properties: { size: 7 } },
   ],
 }
 ```
 
-The recipe itself also emits one built-in Point Plot mark; the two authored `scatter` marks are appended in order. To connect the points, write a Plot-owned Path mark in `plotExtension.marks`. It is independent Plot content and does not inherit Chart context.
+The first authored `scatter` mark replaces the recipe's complete built-in group, and the second mark is then appended in authored order. A semantic group may contain multiple Plot marks, and override replaces that group atomically. If `override: true` finds no group with the same kind, the mark is still appended and `onWarn` receives `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`. To connect the points, write a Plot-owned Path mark in `plotExtension.marks`; it remains independent of Chart context.
 
 ```ts
 plotExtension: {

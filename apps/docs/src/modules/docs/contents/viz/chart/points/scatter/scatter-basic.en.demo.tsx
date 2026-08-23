@@ -25,6 +25,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       World Bank: SP.URB.TOTL.IN.ZS and IT.NET.USER.ZS; economies with observations for both indicators in 2023
     </ChartSource>
     <ScatterMark
+      override
       properties={{
         size: values[SCATTER_BASIC_CONTROL_IDS.pointSize],
         opacity: values[SCATTER_BASIC_CONTROL_IDS.pointOpacity],

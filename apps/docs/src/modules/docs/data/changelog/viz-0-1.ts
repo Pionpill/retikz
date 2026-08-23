@@ -204,6 +204,13 @@ export const vizV01: Release = {
             en: '`title`, `subtitle`, `note`, and `source` render with default styling in fixed `title → subtitle → plot → note → source` slots. React marker order and JSON property order have no semantic effect, and duplicate slots fail loudly.',
           },
         },
+        {
+          label: { zh: '语义 mark 原位覆盖', en: 'In-place semantic mark override' },
+          content: {
+            zh: 'Chart recipe 以唯一 `kind` 输出可包含多个 Plot marks 的 semantic groups；`recipe.marks[].override` 可原位整体替换同 kind group。未命中时仍追加并通过 Core `onWarn` 报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`。',
+            en: 'Chart recipes emit semantic groups with unique `kind` values, each able to contain multiple Plot marks. `recipe.marks[].override` atomically replaces a matching group in place; an unmatched override still appends and reports `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND` through Core `onWarn`.',
+          },
+        },
       ],
       subVersions: [
         {
@@ -219,6 +226,13 @@ export const vizV01: Release = {
               content: {
                 zh: '四个可选 slot 支持默认属性与 JSON-safe Source；解析始终按 `title → subtitle → plot → note → source` 组织，缺少 slot 只省略对应内容。',
                 en: 'The four optional slots support default properties and JSON-safe Source. Resolution always uses `title → subtitle → plot → note → source`, omitting only absent slots.',
+              },
+            },
+            {
+              label: { zh: 'ScatterMark 可覆盖隐式主散点', en: 'ScatterMark can override implicit points' },
+              content: {
+                zh: '`<ScatterMark override>` 与 plain `{ kind: "scatter", override: true }` 生成同一精确 Source，用于调整 recipe 隐式主散点而不重复绘制；普通 ScatterMark 继续追加额外散点。',
+                en: '`<ScatterMark override>` and plain `{ kind: "scatter", override: true }` produce the same exact Source, styling the recipe\'s implicit primary points without drawing duplicates; a plain ScatterMark still appends extra points.',
               },
             },
           ],

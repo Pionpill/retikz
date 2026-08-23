@@ -22,6 +22,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartSubtitle>181 个经济体，2023 年；横轴和纵轴均为人口占比（%）</ChartSubtitle>
     <ChartSource>世界银行：SP.URB.TOTL.IN.ZS、IT.NET.USER.ZS；仅保留两个指标均有 2023 年观测的经济体</ChartSource>
     <ScatterMark
+      override
       properties={{
         size: values[SCATTER_BASIC_CONTROL_IDS.pointSize],
         opacity: values[SCATTER_BASIC_CONTROL_IDS.pointOpacity],

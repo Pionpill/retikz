@@ -40,6 +40,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartSubtitle>Palmer Penguins; first 30 complete source-order records per species</ChartSubtitle>
     <ChartSource>Palmer Station Antarctica LTER; CC0; 342 of 344 rows have both measurements</ChartSource>
     <ScatterMark
+      override
       properties={{
         size: values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointSize],
         opacity: 0.72,

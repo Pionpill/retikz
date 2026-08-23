@@ -63,7 +63,7 @@ Point、Path、Interval 是 Plot 的 mark 能力。Cartesian、Polar 或其它�
 | `ranged-dot` | 起止数值角色与端点 / 连接语义                     | planned，等待 row atomicity capability        |
 | `strip`      | 分类位置、数据驱动 offset 与 Point                | planned，等待 Plot position-offset capability |
 
-Point family 的 recipe 只把 `encodings` 用于字段绑定，把 `properties` 用于常量配置。Scatter 的 semantic mark 生成 Point；`recipe.marks` 只接受可选的 `scatter` Chart mark，并按 authored 顺序追加；Path 等其它 Plot mark 通过 `plotExtension.marks` 最后追加，且不继承 Chart slots
+Point family 的 recipe 只把 `encodings` 用于字段绑定，把 `properties` 用于常量配置。Scatter 的 `scatter` semantic group 生成 Point；`recipe.marks` 只接受可选的 `scatter` Chart mark，默认按 authored 顺序追加，`override: true` 时原位替换该 group；Path 等其它 Plot mark 通过 `plotExtension.marks` 最后追加，且不继承 Chart slots
 
 ### 3.2 Line family：Line & Area
 
@@ -121,9 +121,9 @@ type ChartSource<TFamily extends string, TRecipe extends IRJsonObject, TRecipeTh
 
 ### 4.2 Mark、Plot 与顺序
 
-recipe 生成内建 semantic mark，并声明可用的 Chart mark binding、继承 slots 与 Plot scaffold。当前 Point family 只有 `scatter` Chart mark kind；mark 只继承 binding 明确声明的 encoding / property，显式 mark payload 覆盖继承值。Path 等非 Scatter 图元由作者通过 `plotExtension.marks` 显式添加
+recipe 生成按唯一 kind 分组的内建 semantic marks，并声明可用的 Chart mark binding、继承 slots 与 Plot scaffold。当前 Point family 只有 `scatter` Chart mark kind；mark 只继承 binding 明确声明的 encoding / property，显式 properties 高于 inherited encoding，显式 encoding 再胜出。`override: true` 只替换同 kind group，未命中时追加并 warning。Path 等非 Scatter 图元由作者通过 `plotExtension.marks` 显式添加
 
-解析顺序固定为：recipe semantic mark → `recipe.marks` authored mark → `plotExtension.marks` explicit Plot marks。Chart mark 与 semantic mark 均沿 Plot 正式 mark schema、resolve、lowering、identity、provenance、lineage、locator 与 diagnostics 主链消费；显式 `plotExtension.marks` 独立于 Chart context
+解析顺序固定为：recipe semantic groups → 应用命中的 authored overrides → 按 authored 顺序追加普通或未命中的 Chart marks → `plotExtension.marks` explicit Plot marks。Chart mark 与 semantic mark 均沿 Plot 正式 mark schema、resolve、lowering、identity、provenance、lineage、locator 与 diagnostics 主链消费；显式 `plotExtension.marks` 独立于 Chart context
 
 ### 4.3 Theme、presentation 与 layout
 

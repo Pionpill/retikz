@@ -104,14 +104,14 @@ export const resolveChartPlotGuides = (
 export const resolveChartPlot = (
   source: IRChartSource,
   recipe: ChartRecipeResolution,
-  chartMarkMarks: ReadonlyArray<IRPlot['marks'][number]>,
+  chartMarks: ReadonlyArray<IRPlot['marks'][number]>,
   plotThemeTokens: IRPlot['plotThemeTokens'],
 ): IRPlot => {
   const extension = source.plotExtension;
   const spatial = resolveChartPlotSpatial(recipe, extension);
   const guides = resolveChartPlotGuides(recipe, extension);
   const scales = resolveChartPlotScales(recipe, extension);
-  const marks = [...recipe.semanticMarks, ...chartMarkMarks, ...(extension?.marks ?? [])];
+  const marks = [...chartMarks, ...(extension?.marks ?? [])];
   const transforms = [...(extension?.transform ?? []), ...(recipe.scaffold.transform ?? [])];
 
   const candidate = {

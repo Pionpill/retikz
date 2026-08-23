@@ -11,7 +11,7 @@ alpha.1 要证明 Point family 可以在精确 Source、recipe、Plot lowering�
 1. root `type` 选择 `point` family，`recipe.chartType` 选择当前精确 recipe
 2. `recipe.encodings` 只保存字段名，`recipe.properties` 只保存常量，`recipe.marks` 只使用当前 recipe 允许的 `scatter` kind
 3. Scatter recipe 生成 Point semantic mark
-4. authored `recipe.marks` 按数组顺序追加，`plotExtension.marks` 最后追加且不继承 Chart slots
+4. authored `recipe.marks` 默认按数组顺序追加，`override: true` 按 kind 原位替换内建 semantic group；`plotExtension.marks` 最后追加且不继承 Chart slots
 5. Theme 使用 Chart、Plot、recipe 三个 owner slice，并按 Core mode / style、named/base chain、inline tokens 的固定顺序级联
 6. provider graph、Standard Surface 与 Plot 出口组成 renderer-neutral 的唯一结果；React、Vanilla、JSON 与 SSR 复用同一精确 Source、active provider 与 resolver 主链
 
@@ -55,8 +55,9 @@ chartType, encodings, properties?, marks?
 application-owned family / chartType route
   -> exact Source parse
   -> Theme cascade
-  -> recipe scaffold + semantic mark
-  -> authored Chart marks
+  -> recipe scaffold + semantic mark groups
+  -> apply matching authored overrides
+  -> append ordinary or unmatched Chart marks
   -> explicit Plot fragment
   -> complete Plot + fixed presentation / Surface composition
 ```
@@ -69,7 +70,7 @@ Scatter 的包内 Definition 与 concrete provider contribution 共同描述当�
 | --------- | -------------------------------------------------- | ------------- | -------- |
 | `scatter` | `x`、`y`；可选 Point field roles 与常量 properties | 一个 Point    | 已实现   |
 
-当前唯一已实现的 Scatter recipe 允许有序 `recipe.marks`，其中只有 `scatter` mark，用于表达额外 Point authored mark。mark 省略的 slot 只从当前 binding 声明的 Chart context 继承，显式 mark payload 覆盖继承值。React `ScatterMark` 是该 Chart mark 的 marker，Vanilla 使用同形 plain input；它不改变 semantic recipe，也不写入 Plot mark authoring surface。作者需要 Path 等非 Scatter 图元时通过 `plotExtension.marks` 显式添加
+当前唯一已实现的 Scatter recipe 允许有序 `recipe.marks`，其中只有 `scatter` mark。普通 mark 表达额外 Point authored mark；`override: true` 在原位置整体替换内建 `scatter` semantic group。mark 省略的 slot 只从当前 binding 声明的 Chart context 继承，显式 properties 高于 inherited encoding，显式 encoding 再胜出。React `ScatterMark` 是该 Chart mark 的 marker，Vanilla 使用同形 plain input；作者需要 Path 等非 Scatter 图元时通过 `plotExtension.marks` 显式添加
 
 component props 与 `recipe.properties` 都只调整内建 semantic recipe 的常量表现；React、Vanilla 与手写 JSON 最终必须得到同一 Source。Plot 的直接 `marks` 始终是最后追加的独立内容
 

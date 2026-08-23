@@ -50,7 +50,7 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
     const slots = pointSlotsOf(context);
     const mark = resolvePointMark(slots.encodings, slots.properties, { chartType: ChartType.Scatter });
     const sizeGuide = sizeGuideOf(theme, slots.encodings);
-    return pointResolutionOf(ChartType.Scatter, theme, [mark], {
+    return pointResolutionOf(ChartType.Scatter, theme, [{ kind: ChartType.Scatter, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
     });
   },

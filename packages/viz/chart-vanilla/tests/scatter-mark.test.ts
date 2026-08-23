@@ -8,7 +8,7 @@ describe('Chart mark Vanilla authoring', () => {
       data: { reference: 'rows' },
       encodings: { x: 'x', y: 'y' },
       marks: [
-        { kind: 'scatter', properties: { opacity: 0.25 } },
+        { kind: 'scatter', override: true, properties: { opacity: 0.25 } },
         { kind: 'scatter', properties: { opacity: 0.5 } },
       ],
       plotExtension: {
@@ -22,7 +22,10 @@ describe('Chart mark Vanilla authoring', () => {
       },
     });
 
-    expect(source.recipe.marks?.map(mark => mark.kind)).toEqual(['scatter', 'scatter']);
+    expect(source.recipe.marks).toEqual([
+      { kind: 'scatter', override: true, properties: { opacity: 0.25 } },
+      { kind: 'scatter', properties: { opacity: 0.5 } },
+    ]);
     expect(source.plotExtension?.marks).toEqual([
       {
         type: 'path',

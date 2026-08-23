@@ -9,15 +9,17 @@ Chart 把“方便编写”与“稳定执行”分成两个阶段。React 和 V
 
 <ComponentPreview files="chart-authoring-pipeline" hideCode size="sm" />
 
-| 阶段              | owner                   | 结果                                              |
-| ----------------- | ----------------------- | ------------------------------------------------- |
-| React props / JSX | `@retikz/chart-react`   | 转换为 Vanilla Input，不直接拼 Source             |
-| Plain input       | `@retikz/chart-vanilla` | `normalizeXxxChart` 生成精确、可序列化的 Source   |
-| JSON              | 具体 chartType schema   | 应用层按 family 与 `chartType` 选择 strict schema |
-| recipe            | 当前 Chart provider     | 生成共享部分与内建 semantic mark                  |
-| resolve           | Chart resolver          | 合并 marks、Plot fragment、主题并交给 Plot        |
+| 阶段              | owner                   | 结果                                                |
+| ----------------- | ----------------------- | --------------------------------------------------- |
+| React props / JSX | `@retikz/chart-react`   | 转换为 Vanilla Input，不直接拼 Source               |
+| Plain input       | `@retikz/chart-vanilla` | `normalizeXxxChart` 生成精确、可序列化的 Source     |
+| JSON              | 具体 chartType schema   | 应用层按 family 与 `chartType` 选择 strict schema   |
+| recipe            | 当前 Chart provider     | 生成共享部分与带 kind 的内建 semantic mark groups   |
+| resolve           | Chart resolver          | 按 kind 合并 marks、Plot fragment 与主题并交给 Plot |
 
 JSON 是输入旁路，不跳过 schema。应用层先按 `type` 与 `recipe.chartType` 选择具体 schema，active provider 再确认 recipe 与 family 一致；未知 family、未知 recipe、未知字段和不允许的 mark 都 fail-loud。解析结果保留作者写下的 Source，recipe 产生的坐标、guide 和 Plot mark 只存在于后续解析阶段。
+
+普通 authored mark 按 Source 顺序追加；`override: true` 会按 kind 原位替换完整内建 semantic group。未命中时 mark 仍追加，并由 Core 的 `onWarn` 接收稳定 warning；这套合并只发生在 Chart resolver，不进入 React、Vanilla 或可见 Source IR。
 
 ## 三套包，各自只做一段
 
@@ -46,8 +48,8 @@ Vanilla 的 `createScatterChart` 从 `@retikz/chart-vanilla/point/scatter` 导�
     {
       label: 'recipe 与 Chart marks 进入解析主链',
       path: 'packages/viz/chart/src/_chart/resolve/resolve.ts',
-      startLine: 9,
-      endLine: 55,
+      startLine: 41,
+      endLine: 70,
     },
     {
       label: 'React shared Chart 输入接线',

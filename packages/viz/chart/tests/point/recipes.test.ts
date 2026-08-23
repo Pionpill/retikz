@@ -24,9 +24,14 @@ describe('Point Chart recipe Definitions', () => {
     const result = resolve(ScatterChartDefinition, { x: 'amount', y: 'margin', size: 'weight' });
     expect(result.semanticMarks).toHaveLength(1);
     expect(result.semanticMarks[0]).toMatchObject({
-      type: 'point',
-      encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
-      size: { kind: 'field', value: 'weight' },
+      kind: 'scatter',
+      plotMarks: [
+        {
+          type: 'point',
+          encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
+          size: { kind: 'field', value: 'weight' },
+        },
+      ],
     });
     expect(result.scaffold.spatial).toMatchObject({ coordinate: { type: 'cartesian2D' } });
   });
@@ -66,13 +71,36 @@ describe('Point Chart marks', () => {
     const result = ScatterMarkDefinition.resolve({
       chartType: 'scatter',
       source: { kind: 'scatter', properties: { opacity: 0 } },
-      inherited: { encodings: { x: 'amount', y: 'margin' }, properties: { opacity: 0.5 } },
+      inherited: {
+        encodings: { x: 'amount', y: 'margin', opacity: 'opacityField' },
+        properties: { opacity: 0.5 },
+      },
       recipeThemeTokens: theme,
     });
     expect(result.marks[0]).toMatchObject({
       type: 'point',
       encoding: { x: { field: 'amount' }, y: { field: 'margin' } },
       opacity: { kind: 'constant', value: 0 },
+    });
+  });
+
+  it('lets an explicit mark encoding override both inherited encoding and explicit property', () => {
+    const result = ScatterMarkDefinition.resolve({
+      chartType: 'scatter',
+      source: {
+        kind: 'scatter',
+        encodings: { opacity: 'explicitOpacity' },
+        properties: { opacity: 0 },
+      },
+      inherited: {
+        encodings: { x: 'amount', y: 'margin', opacity: 'inheritedOpacity' },
+        properties: { opacity: 0.5 },
+      },
+      recipeThemeTokens: theme,
+    });
+
+    expect(result.marks[0]).toMatchObject({
+      opacity: { kind: 'field', value: 'explicitOpacity' },
     });
   });
 });

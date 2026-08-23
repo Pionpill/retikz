@@ -66,9 +66,9 @@ usage: distribution
 >
   Scatter 使用精确的 `ScatterChartSchema`。根 `type` 固定为 `point`，而 `recipe.chartType` 为 `scatter`；数据、尺寸、presentation 和 Theme 位于 Source 外层，字段绑定集中在 `recipe.encodings`，常量样式集中在 `recipe.properties`。
 
-本页示例统一使用 `@retikz/chart-react/point/scatter` 的 `ScatterChart`。recipe 会生成内建的 Scatter semantic mark、二维比例尺和默认 Plot 结构；`ScatterMark` 作为直接子级向 `recipe.marks` 注入额外 Chart-owned mark，并继承可消费的 encodings 与 properties。
+本页示例统一使用 `@retikz/chart-react/point/scatter` 的 `ScatterChart`。recipe 会生成内建的 `scatter` semantic mark group、二维比例尺和默认 Plot 结构；`ScatterMark` 作为直接子级写入 `recipe.marks` 并继承可消费的 encodings 与 properties。普通 `ScatterMark` 追加散点，`<ScatterMark override>` 则原位替换 recipe 隐式生成的完整 `scatter` group，适合只调整主散点样式而不重复绘制。
 
-`encodings` 只接受字段名，不能把常量写进数据通道；常量写入 `properties`。当二者映射到同一属性时，encoding 优先。Chart mark 自带的 `encodings` / `properties` 只覆盖该 mark 的继承结果，不会修改 recipe 的内建 semantic mark。需要轴、图例、分面、轨道或完全独立的 Plot 图元时，写入 Source 的 `plotExtension` fragment；它不继承 Chart context，也不是 `recipe.marks` 的别名。
+`encodings` 只接受字段名，不能把常量写进数据通道；常量写入 `properties`。recipe 根级同目标仍由 encoding 胜出；mark 的显式 property 可以覆盖 inherited encoding，mark 自己的显式 encoding 再胜出。override 未命中时 mark 仍会追加，并通过 `onWarn` 报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`。需要轴、图例、分面、轨道或完全独立的 Plot 图元时，写入 Source 的 `plotExtension` fragment；它不继承 Chart context，也不参与 semantic group override。
 
 ## 共享 Chart 规则
 

@@ -33,7 +33,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <ChartSource>
         世界银行：SP.DYN.TFRT.IN、SL.TLF.CACT.FE.ZS 与收入组元数据；仅保留三个字段均有观测的经济体
       </ChartSource>
-      <ScatterMark properties={{ size: 4.5, opacity: 0.65 }} />
+      <ScatterMark override properties={{ size: 4.5, opacity: 0.65 }} />
     </ScatterChart>
   );
 });

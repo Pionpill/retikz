@@ -71,12 +71,12 @@ type ChartSource<TEncodings, TProperties, TMark, TRecipeThemeTokens> = {
 
 ### 2.2 `recipe` 字段
 
-| 字段         | 必填 | 语义                                                                                         |
-| ------------ | ---- | -------------------------------------------------------------------------------------------- |
-| `chartType`  | 是   | 全局唯一的 recipe key，决定共享 scaffold、内建 semantic mark、精确 schema 与最终绘制效果     |
-| `encodings`  | 是   | 当前 recipe 允许的数据字段绑定；只接受 field-bound 值，不接受常量                            |
-| `properties` | 否   | 当前 recipe 的常量表现或行为配置；只包含该 chartType 明确拥有或消费的属性                    |
-| `marks`      | 否   | 在 Chart 上下文中追加的有序 mark；可以按 mark Definition 声明继承部分 encodings / properties |
+| 字段         | 必填 | 语义                                                                                                          |
+| ------------ | ---- | ------------------------------------------------------------------------------------------------------------- |
+| `chartType`  | 是   | 全局唯一的 recipe key，决定共享 scaffold、内建 semantic mark、精确 schema 与最终绘制效果                      |
+| `encodings`  | 是   | 当前 recipe 允许的数据字段绑定；只接受 field-bound 值，不接受常量                                             |
+| `properties` | 否   | 当前 recipe 的常量表现或行为配置；只包含该 chartType 明确拥有或消费的属性                                     |
+| `marks`      | 否   | 有序 Chart mark；默认追加，`override: true` 可按 kind 替换内建 semantic group，并按 Definition 声明继承 slots |
 
 ### 2.3 `plotExtension` 字段
 
@@ -174,7 +174,7 @@ Chart 共享稳定语义原子，不建立包含所有可选字段的宽 `Shared
 1. 共享 scaffold：coordinate、axis、guide、facet、track 等 Chart 需要补全的 Plot 结构
 2. built-in semantic mark：当前 chartType 的核心图元计划
 
-built-in semantic mark 不等于恰好一个 Plot mark。它可以 lower 为一个或多个 Plot mark，例如当前 Scatter semantic mark 生成 PointMark；未来的多 mark recipe 也必须按稳定顺序生成各自的 Plot mark。所有生成目标继续进入 Plot 正式 schema、resolve、lowering、identity、provenance、lineage、locator 与 diagnostics 主链。
+built-in semantic mark 不等于恰好一个 Plot mark。recipe 以唯一 `kind` 输出 semantic mark group，每组包含非空、有序的 Plot marks；例如当前 Scatter 的 `scatter` group 生成一个 PointMark，未来一个组也可以原子生成多个 Plot marks。所有生成目标继续进入 Plot 正式 schema、resolve、lowering、identity、provenance、lineage、locator 与 diagnostics 主链。
 
 ### 5.2 Chart marks
 
@@ -183,8 +183,10 @@ built-in semantic mark 不等于恰好一个 Plot mark。它可以 lower 为一�
 - mark Definition 只声明精确 payload schema 与如何映射到一个或多个 Plot mark，不反向认识 family 或 chartType
 - 当前 recipe 的有序 binding 单向声明允许哪些 mark，以及每个 mark 可消费哪些 encoding / property slot
 - 内建 Chart mark 使用同一 package-internal Definition / recipe binding 机制；Chart mark Definition 不是第三方扩展入口
-- mark 自身显式内容只覆盖该 mark 的继承结果，不改写 built-in semantic mark
-- recipe 内建 mark 按 recipe 声明顺序生成；authored marks 按数组顺序追加
+- mark 自身显式内容默认只覆盖该 mark 的继承结果；`override: true` 命中同 kind group 时在原位置整体替换其 Plot marks
+- recipe 内建 groups 按 recipe 声明顺序生成；普通和未命中的 authored marks 按数组顺序追加
+- 同一 recipe 的内建 group kind 必须唯一；同一 Source 对同 kind 最多声明一个 override
+- override 未命中时仍追加 authored mark，并由 Core compile warning 通道报告稳定 Chart warning code
 - PointMark 等 Plot target 只有通过 Chart mark 入口时才获得 Chart 继承；直接写入 `plotExtension.marks` 时保持纯 Plot 语义
 - 未被某个 mark 接受的 slot 不传递给该 mark；未被整张 Chart 的任何合法 consumer 接受的字段必须诊断
 
@@ -194,14 +196,14 @@ Chart mark 只负责高层继承与最小映射，不复制 Plot mark schema、s
 
 优先级按 consumer 和目标 slot 定义，不存在覆盖整张 Chart 的全局 last-wins：
 
-| 目标                        | 从低到高的来源                                                                                             |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Chart shell token           | mode fallback → Core style 同名主题链 → authored named / base 链 → inline `tokens.chart`                   |
-| built-in semantic mark slot | recipe fallback → Core style 同名主题链 → authored named / base 链 → inline theme → properties → encodings |
-| authored Chart mark slot    | mark schema default → resolved recipe theme → inherited properties → inherited encodings → mark 显式内容   |
-| Plot 单值结构               | recipe 默认 → 用户显式 `plotExtension` 值，前提是该字段允许替换                                            |
-| Plot 具名集合               | 按 Plot identity 合并；重复且不可合并时 fail-loud                                                          |
-| `plotExtension.marks`       | 按 Plot 顺序追加，与 built-in / Chart marks 相互独立                                                       |
+| 目标                        | 从低到高的来源                                                                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Chart shell token           | mode fallback → Core style 同名主题链 → authored named / base 链 → inline `tokens.chart`                                              |
+| built-in semantic mark slot | recipe fallback → Core style 同名主题链 → authored named / base 链 → inline theme → properties → encodings                            |
+| authored Chart mark slot    | mark schema default → resolved recipe theme → inherited properties → inherited encodings → mark 显式 properties → mark 显式 encodings |
+| Plot 单值结构               | recipe 默认 → 用户显式 `plotExtension` 值，前提是该字段允许替换                                                                       |
+| Plot 具名集合               | 按 Plot identity 合并；重复且不可合并时 fail-loud                                                                                     |
+| `plotExtension.marks`       | 按 Plot 顺序追加，与 semantic group override / Chart mark 继承相互独立                                                                |
 
 `false`、`0`、空数组与空字符串是否有效由各权威 schema 决定，resolver 不使用 truthy fallback。recipe 不得让表现默认撤销 chartType 的结构不变量。
 

@@ -37,19 +37,32 @@ describe('Scatter Chart exact Source schema', () => {
   });
 
   it('accepts ordered Scatter marks and rejects Path as a Chart mark', () => {
+    const parsed = ScatterChartSchema.parse({
+      ...scatter,
+      recipe: {
+        ...scatter.recipe,
+        properties: { size: 0, opacity: 0 },
+        marks: [
+          { kind: 'scatter', override: true, properties: { opacity: 0.25 } },
+          { kind: 'scatter', properties: { shape: 'circle' } },
+        ],
+      },
+    });
+
+    expect(parsed.recipe.marks).toHaveLength(2);
+    expect(parsed.recipe.marks?.[0]).toMatchObject({ kind: 'scatter', override: true });
+    expect(parsed.recipe.marks?.[1]).not.toHaveProperty('override');
+    expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
+
     expect(
-      ScatterChartSchema.parse({
+      ScatterChartSchema.safeParse({
         ...scatter,
         recipe: {
           ...scatter.recipe,
-          properties: { size: 0, opacity: 0 },
-          marks: [
-            { kind: 'scatter', properties: { opacity: 0.25 } },
-            { kind: 'scatter', properties: { shape: 'circle' } },
-          ],
+          marks: [{ kind: 'scatter', override: 'yes' }],
         },
-      }).recipe.marks,
-    ).toHaveLength(2);
+      }).success,
+    ).toBe(false);
 
     expect(
       ScatterChartSchema.safeParse({

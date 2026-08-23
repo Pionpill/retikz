@@ -49,8 +49,10 @@
 - 所有生成的 Point / Path / Interval 等继续进入 Plot 正式 schema、resolve、lowering、identity、provenance、lineage、locator 与 diagnostics 主链
 - `recipe.marks` 是 Chart authoring mark；mark Definition 只拥有唯一 kind、精确 payload schema 与到 Plot target 的解析能力
 - 每个 recipe 通过有序 binding 单向声明允许的 mark 及可继承的 encoding / property slot；不得在 mark Definition 维护按 chartType 展开的反向继承表
-- mark 自身显式内容只覆盖该 mark 的继承结果，不改写 built-in semantic mark 或其它 mark
-- recipe 内建 mark 按 recipe 顺序生成，`recipe.marks` 按数组顺序追加
+- mark 自身显式内容默认只覆盖该 mark 的继承结果；`override: true` 只按同 kind 原位替换完整 built-in semantic mark group
+- recipe 内建 semantic groups 按 recipe 顺序生成；普通和未命中的 `recipe.marks` 按 authored 顺序追加
+- 同一 recipe 的 semantic group kind 必须唯一；同一 Source 对同 kind 最多一个 `override: true`
+- override 未命中时仍追加该 mark，并通过 Core composite warning 通道报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`
 - PointMark 等 Plot target 只有通过 Chart mark 入口时继承 Chart context；`plotExtension.marks` 始终保持纯 Plot 语义
 - facet / track 由 composition owner 消费，不向普通 mark 广播
 - Chart 不通过同名字段 spread 传递 encodings / properties；每个 slot 必须有明确 owner、consumer、目标和失败行为
@@ -60,7 +62,7 @@
 ## 默认与优先级
 
 - built-in slot 按 recipe fallback → Core style theme chain → authored named/base chain → inline theme → properties → encodings 解析
-- authored Chart mark 按 mark schema default → resolved recipe theme → inherited properties → inherited encodings → mark 显式内容解析
+- authored Chart mark 按 mark schema default → resolved recipe theme → inherited properties → inherited encodings → mark 显式 properties → mark 显式 encodings 解析
 - properties 与 encodings 映射到同一目标 slot 时 encoding 胜出；不相关字段不得通过全局 last-wins 相互覆盖
 - `plotExtension.marks` 与 built-in / Chart marks 相加，不参与逐 slot 覆盖
 - `false`、`0`、空数组与 schema 允许的空字符串必须按字段存在性保留，不使用 truthy fallback

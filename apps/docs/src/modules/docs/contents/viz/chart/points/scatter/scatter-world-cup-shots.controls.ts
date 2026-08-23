@@ -66,5 +66,5 @@ export const previewControlContract = {
     [SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointSize]: 8,
     [SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointOpacity]: 0.9,
   },
-  relatedApis: ['ScatterChart.encodings', 'ScatterMark.properties'],
+  relatedApis: ['ScatterChart.encodings', 'ScatterMark.override', 'ScatterMark.properties'],
 } satisfies PreviewControlContract;

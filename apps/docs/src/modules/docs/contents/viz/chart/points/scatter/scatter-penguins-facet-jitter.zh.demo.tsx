@@ -42,6 +42,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartSubtitle>Palmer Penguins；每个物种按源文件顺序取前 30 条完整记录</ChartSubtitle>
     <ChartSource>Palmer Station Antarctica LTER；CC0；原始 344 行，342 行的喙长与鳍长完整</ChartSource>
     <ScatterMark
+      override
       properties={{
         size: values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointSize],
         opacity: 0.72,

@@ -27,7 +27,7 @@ const recipe = defineChartRecipe({
       scales: [],
       spatial: { coordinate: { type: 'cartesian2D' }, replaceable: true },
     },
-    semanticMarks: [{ type: 'point', encoding: {} }],
+    semanticMarks: [{ kind: 'fixture', plotMarks: [{ type: 'point', encoding: {} }] }],
   }),
 });
 

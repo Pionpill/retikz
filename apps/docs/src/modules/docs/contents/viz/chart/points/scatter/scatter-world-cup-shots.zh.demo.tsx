@@ -27,6 +27,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartSubtitle>32 次常规时间与加时赛射门；StatsBomb 120 × 80 坐标；圆点为起点，细线指向射门终点</ChartSubtitle>
     <ChartSource>StatsBomb Open Data：competition 43、season 106；排除 period 5 的 2 次点球大战事件</ChartSource>
     <ScatterMark
+      override
       properties={{
         size: values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointSize],
         stroke: '#f8fafc',

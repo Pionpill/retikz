@@ -56,5 +56,5 @@ export const previewControlContract = {
   canonicalValues: {
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.channel]: 'color',
   },
-  relatedApis: ['ScatterChart.encodings', 'ScatterMark.properties'],
+  relatedApis: ['ScatterChart.encodings', 'ScatterMark.override', 'ScatterMark.properties'],
 } satisfies PreviewControlContract;

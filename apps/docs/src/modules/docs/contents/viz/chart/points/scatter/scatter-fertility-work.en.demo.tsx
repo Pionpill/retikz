@@ -37,7 +37,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <ChartSource>
         World Bank: SP.DYN.TFRT.IN, SL.TLF.CACT.FE.ZS, and income-group metadata; economies with all three observations
       </ChartSource>
-      <ScatterMark properties={{ size: 4.5, opacity: 0.65 }} />
+      <ScatterMark override properties={{ size: 4.5, opacity: 0.65 }} />
     </ScatterChart>
   );
 });

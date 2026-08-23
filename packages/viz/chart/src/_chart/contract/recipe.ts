@@ -51,11 +51,19 @@ export type ChartRecipeScaffold = Readonly<{
 }>;
 
 /** Recipe semantic mark 与 scaffold 的确定解析结果 */
+export type ChartSemanticMarkResolution = Readonly<{
+  /** 当前内建语义 mark 对应的 Chart mark kind */
+  kind: string;
+  /** 当前语义 mark 原子生成的非空、有序 Plot mark 序列 */
+  plotMarks: NonEmptyReadonlyArray<IRPlotMarkOperation>;
+}>;
+
+/** Recipe semantic mark groups 与 scaffold 的确定解析结果 */
 export type ChartRecipeResolution = Readonly<{
   /** Recipe 生成的 Plot 公共结构 */
   scaffold: ChartRecipeScaffold;
-  /** 当前 chartType 的内建语义 mark 解析得到的非空 Plot mark 序列 */
-  semanticMarks: NonEmptyReadonlyArray<IRPlotMarkOperation>;
+  /** 当前 chartType 的内建语义 mark groups */
+  semanticMarks: NonEmptyReadonlyArray<ChartSemanticMarkResolution>;
 }>;
 
 /** Recipe resolver 的窄 typed context */

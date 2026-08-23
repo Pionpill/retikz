@@ -66,9 +66,9 @@ usage: distribution
 >
   Scatter uses the exact `ScatterChartSchema`. The root `type` is `point` and `recipe.chartType` is `scatter`; data, layout, presentation, and Theme stay in the Source shell, while field bindings live in `recipe.encodings` and constant styles live in `recipe.properties`.
 
-All examples on this page use `ScatterChart` from `@retikz/chart-react/point/scatter`. The recipe emits the built-in Scatter semantic mark, two-dimensional scales, and default Plot structure. A direct `ScatterMark` child injects an additional Chart-owned mark through `recipe.marks`, inheriting consumable encodings and properties.
+All examples on this page use `ScatterChart` from `@retikz/chart-react/point/scatter`. The recipe emits a built-in `scatter` semantic mark group, two-dimensional scales, and default Plot structure. A direct `ScatterMark` child writes `recipe.marks` and inherits consumable encodings and properties. A plain `ScatterMark` appends points; `<ScatterMark override>` replaces the complete implicit `scatter` group in place, which changes the primary point style without drawing a duplicate layer.
 
-`encodings` contain field names only; constants belong in `properties`. When both map to the same property, encoding wins. A mark's own `encodings` / `properties` override only that mark's inherited result and never mutate the recipe's built-in semantic mark. To add axes, legends, facets, tracks, or a completely independent Plot mark, write a Source `plotExtension` fragment; it does not inherit Chart context and is not an alias for `recipe.marks`.
+`encodings` contain field names only; constants belong in `properties`. At the recipe root, an encoding wins when both map to the same target. On an authored mark, an explicit property outranks an inherited encoding, and an explicit encoding wins again. An unmatched override still appends the mark and reports `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND` through `onWarn`. To add axes, legends, facets, tracks, or a completely independent Plot mark, write a Source `plotExtension` fragment; it neither inherits Chart context nor participates in semantic-group override.
 
 ## Shared Chart rules
 

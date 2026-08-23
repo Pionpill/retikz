@@ -104,6 +104,7 @@ export const PointRecipeThemeResolutionSchema = z
 export const PointMarkSchema = z
   .strictObject({
     kind: z.literal('scatter'),
+    override: z.boolean().optional().describe('Whether to replace the built-in semantic mark group with this kind'),
     encodings: PointMarkEncodingSchema.optional(),
     properties: PointPropertiesSchema.optional(),
   })
