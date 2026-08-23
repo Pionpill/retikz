@@ -12,7 +12,7 @@ const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.
 };
 
 describe('@retikz/graph package boundary', () => {
-  it('declares the Diagram Graph release metadata and one root export', () => {
+  it('declares the Graph release metadata and one root export', () => {
     expect(manifest).toMatchObject({
       name: '@retikz/graph',
       version: '0.1.0-alpha.1',
@@ -22,61 +22,109 @@ describe('@retikz/graph package boundary', () => {
     expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.']);
   });
 
-  it('exposes the Graph presentation root and three semantic elements without compatibility aliases', () => {
+  it('exposes one Graph semantic compile root and Source authoring surface', () => {
     expect(graphExports.GRAPH_NAMESPACE).toBe('graph');
-    expect(graphExports.ContainerDefinition).toBeDefined();
-    expect(graphExports.EntityDefinition).toBeDefined();
     expect(graphExports.GraphDefinition).toBeDefined();
     expect(graphExports.GraphProviderKey).toEqual({
       capability: 'composite',
       namespace: 'graph',
       type: 'graph',
     });
+    expect(graphExports.EntityDefinition).toBeDefined();
+    expect(graphExports.EntityProviderKey).toEqual({
+      capability: 'composite',
+      namespace: 'graph',
+      type: 'entity',
+    });
     expect(graphExports.RelationDefinition).toBeDefined();
-    expect(graphExports.EntitySchema).toBeDefined();
+    expect(graphExports.RelationProviderKey).toEqual({
+      capability: 'composite',
+      namespace: 'graph',
+      type: 'relation',
+    });
     expect(graphExports.GraphSchema).toBeDefined();
+    expect(graphExports.EntitySchema).toBeDefined();
+    expect(graphExports.RelationSchema).toBeDefined();
+    expect(graphExports).not.toHaveProperty('GraphChildSchema');
+    expect(graphExports).not.toHaveProperty('GraphContentChildSchema');
+    expect(graphExports).not.toHaveProperty('RelationEndpointSchema');
+    expect(graphExports.createEntity).toBeTypeOf('function');
+    expect(graphExports.createRelation).toBeTypeOf('function');
     expect(graphExports.createGraph).toBeTypeOf('function');
     expect(graphExports.createGraphDefinitions).toBeTypeOf('function');
     expect(graphExports.createGraphProviders).toBeTypeOf('function');
-    expect(graphExports.RetikzGraphError).toBeDefined();
-    expect(graphExports.RetikzGraphErrorCode.DefinitionDuplicate).toBe('GRAPH_DEFINITION_DUPLICATE');
-    expect(graphExports.GraphType).toEqual({
-      Graph: 'graph',
-      Container: 'container',
-      Entity: 'entity',
-      Relation: 'relation',
-    });
-    expect(graphExports).not.toHaveProperty('TerminalSchema');
-    expect(graphExports).not.toHaveProperty('StageSchema');
-    expect(graphExports).not.toHaveProperty('DecisionSchema');
-    expect(graphExports).not.toHaveProperty('JunctionSchema');
-    expect(graphExports).not.toHaveProperty('LogicFrameDefinition');
   });
 
-  it('exposes builtin role and variant vocabularies alongside their extension hooks', () => {
-    expect(graphExports.EntityVariant).toEqual({
-      Default: 'default',
-      Fill: 'fill',
-      Mixed: 'mixed',
+  it('does not expose split member wrappers or private continuation artifacts', () => {
+    expect(graphExports).not.toHaveProperty('GraphContinuationSchema');
+    expect(graphExports).not.toHaveProperty('GraphContinuationProvider');
+    expect(graphExports).not.toHaveProperty('GraphPresentationSchema');
+    expect(graphExports).not.toHaveProperty('AuthoredGraphGeometrySchema');
+    expect(graphExports).not.toHaveProperty('GraphEntityPresentationSchema');
+    expect(graphExports).not.toHaveProperty('AuthoredEntityGeometrySchema');
+    expect(graphExports).not.toHaveProperty('GraphRelationPresentationSchema');
+    expect(graphExports).not.toHaveProperty('AuthoredRelationGeometrySchema');
+    expect(graphExports).not.toHaveProperty('GraphPresentationChildSchema');
+    expect(graphExports).not.toHaveProperty('GraphThemeToken');
+    expect(graphExports).not.toHaveProperty('GraphEntityPortSchema');
+    expect(graphExports).not.toHaveProperty('GraphRelationLabelSchema');
+  });
+
+  it('exposes the three independent member vocabularies and extension hooks', () => {
+    expect(graphExports.EntityRole).toEqual({
+      Participant: 'participant',
+      Activity: 'activity',
+      Event: 'event',
+      State: 'state',
+      Gateway: 'gateway',
+      Resource: 'resource',
+      Concept: 'concept',
     });
     expect(graphExports.RelationRole).toEqual({
-      Flow: 'flow',
-      Branch: 'branch',
+      Association: 'association',
       Dependency: 'dependency',
-      Feedback: 'feedback',
+      Generalization: 'generalization',
+      Flow: 'flow',
+      Influence: 'influence',
     });
-    expect(graphExports).not.toHaveProperty('GraphThemeStyle');
-    expect(graphExports.defineEntityRole).toBeTypeOf('function');
-    expect(graphExports.defineEntityVariant).toBeTypeOf('function');
+    expect(graphExports.defineEntityPredicate).toBeTypeOf('function');
+    expect(graphExports.defineRelationPredicate).toBeTypeOf('function');
     expect(graphExports.defineGraphThemeStyle).toBeTypeOf('function');
+    expect(graphExports.GraphEntityAppearanceTokenOverridesSchema).toBeDefined();
+    expect(graphExports.GraphRelationStructureTokenOverridesSchema).toBeDefined();
+    expect(graphExports.GraphRelationAppearanceTokenOverridesSchema).toBeDefined();
+    for (const name of [
+      'EntityVariant',
+      'EntityVariantSchema',
+      'EntityVariantValue',
+      'EntityVariantDefinition',
+      'defineEntityVariant',
+      'resolveEntityVariantRegistry',
+      'BUILTIN_ENTITY_VARIANT_DEFINITIONS',
+      'RelationVariant',
+      'RelationVariantSchema',
+      'RelationVariantValue',
+      'RelationVariantDefinition',
+      'defineRelationVariant',
+      'resolveRelationVariantRegistry',
+      'BUILTIN_RELATION_VARIANT_DEFINITIONS',
+    ]) {
+      expect(graphExports).not.toHaveProperty(name);
+    }
   });
 
-  it('keeps implementation shapes private and rejects a foreign namespace', () => {
-    expect('NonBlankStringSchema' in graphExports).toBe(false);
-    expect(graphExports.ContainerSpacingSchema).toBeDefined();
-    expect(graphExports.ContainerNeutralStyleSchema).toBeDefined();
+  it('rejects the former namespace and does not register the former role vocabulary', () => {
     expect(() =>
-      graphExports.EntitySchema.parse({ namespace: 'foreign', type: 'entity', id: 'invalid', role: 'stage' }),
+      graphExports.EntitySchema.parse({ namespace: 'notation', type: 'entity', id: 'legacy', role: 'stage' }),
     ).toThrow();
+    expect(
+      graphExports.EntitySchema.parse({ namespace: 'graph', type: 'entity', id: 'legacy', role: 'stage' }),
+    ).toEqual({
+      namespace: 'graph',
+      type: 'entity',
+      id: 'legacy',
+      role: 'stage',
+    });
+    expect(graphExports.BUILTIN_ENTITY_ROLE_DEFINITIONS.some(definition => definition.role === 'stage')).toBe(false);
   });
 });

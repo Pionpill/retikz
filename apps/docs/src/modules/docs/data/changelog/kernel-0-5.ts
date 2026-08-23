@@ -13,10 +13,10 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
-          label: { zh: '十三个根导出，固定五文件结构', en: 'Thirteen root exports, five fixed source files' },
+          label: { zh: '十八个根导出，固定五文件结构', en: 'Eighteen root exports, five fixed source files' },
           content: {
-            zh: '`@retikz/foundation` 从根入口公开四个类型 / 错误契约、三个既有 runtime symbol 与六个非变换 Zod 标量 schema；source 与 tests 各固定五个文件，不提供 subpath、IR、对象 schema 或 Diagnostic。',
-            en: '`@retikz/foundation` exposes four type/error contracts, three existing runtime symbols, and six non-transforming Zod scalar schemas from its root. Source and tests each stay at five fixed files, with no subpaths, IR, object schemas, or Diagnostics.',
+            zh: '`@retikz/foundation` 从根入口公开五个 type-only 契约与十三个 runtime symbol，包括 `WithRequiredProperties<T, TKey>`、六个非变换 Zod 标量 schema 和 `createOpenStringSchema(values)`；source 与 tests 各固定五个文件，不提供 subpath、IR、对象 schema 或 Diagnostic。',
+            en: '`@retikz/foundation` exposes five type-only contracts and thirteen runtime symbols from its root, including `WithRequiredProperties<T, TKey>`, six non-transforming Zod scalar schemas, and `createOpenStringSchema(values)`. Source and tests each stay at five fixed files, with no subpaths, IR, object schemas, or Diagnostics.',
           },
         },
         {
@@ -58,6 +58,23 @@ export const kernelV05: Release = {
               content: {
                 zh: '`PathKindDefinition` 以独立 `name` 作为 registry identity，并通过完整 subject schema 恢复 typed path。自定义 kind 可复用路径物化、Stroke 输出、host label、appearance 与 precision 服务，不依赖 Ribbon 私有状态。',
                 en: '`PathKindDefinition` uses an independent `name` as registry identity and restores a typed Path through its complete subject schema. Custom kinds can reuse path materialization, Stroke emission, host labels, appearance, and precision without depending on Ribbon-private state.',
+              },
+            },
+          ],
+        },
+        {
+          version: 'alpha.3',
+          date: '2026-08-14',
+          summary: {
+            zh: '新增开放字符串 schema factory 与必填属性类型投影，统一无领域的开放词汇和结构收窄契约。',
+            en: 'Adds an open-string schema factory and a required-property type projection for shared domain-free vocabulary and structural narrowing contracts.',
+          },
+          items: [
+            {
+              label: { zh: 'Foundation 类型投影', en: 'Foundation type projection' },
+              content: {
+                zh: '`WithRequiredProperties<T, TKey>` 从 Foundation 根入口导出，只把指定 key 收窄为必填并保留其余属性；Graph Theme 直接复用该类型，不再维护私有副本。',
+                en: '`WithRequiredProperties<T, TKey>` is exported from the Foundation root, making only selected keys required while preserving all other properties. Graph Theme now consumes it directly instead of keeping a private copy.',
               },
             },
           ],

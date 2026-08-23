@@ -7,7 +7,7 @@ import type { PathBasePropsWithStrokeWidth } from './output';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { buildMarkMarkerGroup, markerContextStroke } from './marks';
-import { sampleRoundedCommands } from './rounded-corners';
+import { sampleStrokePath } from './sampling';
 import { emitEndpointArrowMark, emitMarkArrow } from './shrink';
 
 /** 端点箭头与中段 marks 分流结果 */
@@ -125,16 +125,9 @@ export const emitInlineMarkPrimitives = ({
   }
 
   const strokeWidth = baseProps.strokeWidth;
-  const segCount = segmentSamplers.length;
   for (const { pos, mark } of inlineMarks) {
-    const sample = roundedCommands
-      ? sampleRoundedCommands(commands, pos)
-      : (() => {
-          const scaled = pos * segCount;
-          const segIdx = Math.min(Math.floor(scaled), segCount - 1);
-          const localT = scaled - segIdx;
-          return segmentSamplers[segIdx](pos === 1 ? 1 : localT);
-        })();
+    const sample = sampleStrokePath({ commands, segmentSamplers, roundedCommands, position: pos });
+    if (sample === undefined) continue;
     const resolution = arrowResolutions.get(mark);
     if (resolution === undefined) {
       throw new RetikzCoreError(

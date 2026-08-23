@@ -39,8 +39,8 @@ export const standardV01: Release = {
             {
               label: { zh: '参数化图式 Shape', en: 'Parameterized diagram Shapes' },
               content: {
-                zh: '`@retikz/standard/shape` 新增 trapezoid、parallelogram、默认肩部比例为 0.2 的长 hexagon 与 cylinder。四项都通过独立 Definition 与静态 provider 提供，并让内容外接、圆角、boundary、connection envelope 与缩放使用同一最终轮廓；Cylinder 端盖分隔弧不再挖空近端填充。',
-                en: '`@retikz/standard/shape` adds trapezoid, parallelogram, an elongated hexagon with a default 0.2 shoulder ratio, and cylinder. Each ships as its own Definition and static provider, with content circumscription, rounding, boundaries, connection envelopes, and scaling derived from the same final contour; the Cylinder cap divider no longer cuts a hole out of the near-cap fill.',
+                zh: '`@retikz/standard/shape` 新增 trapezoid、parallelogram、默认单侧固定肩深为 12 user units 的长 hexagon 与 cylinder。Hexagon 的 `shoulderRatio` 已由 `shoulderDepth` 取代，使内容变宽时尖角不再同比增长。四项都通过独立 Definition 与静态 provider 提供，并让内容外接、圆角、boundary、connection envelope 与缩放使用同一最终轮廓；Cylinder 端盖分隔弧不再挖空近端填充。',
+                en: '`@retikz/standard/shape` adds trapezoid, parallelogram, an elongated hexagon with a fixed default shoulder depth of 12 user units per side, and cylinder. Hexagon replaces `shoulderRatio` with `shoulderDepth`, so its tips no longer grow with wider content. Each ships as its own Definition and static provider, with content circumscription, rounding, boundaries, connection envelopes, and scaling derived from the same final contour; the Cylinder cap divider no longer cuts a hole out of the near-cap fill.',
               },
             },
             {

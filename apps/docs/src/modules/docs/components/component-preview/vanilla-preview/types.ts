@@ -10,6 +10,8 @@ export type BuildVanillaPreviewOptions = {
   datasetImports?: Readonly<Record<string, PreviewDatasetImport>>;
   /** ComponentPreview 全局 ambient Theme，仅作用于动态生成的 SVG */
   theme?: IRScene['theme'];
+  /** 动态 SVG 使用的宿主文本度量；浏览器预览缺省读取当前页面字体 */
+  measureText?: TextMeasurer;
 };
 
 /** ComponentPreview 自动生成的 Vanilla 源码与真实 SVG。 */

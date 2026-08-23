@@ -162,7 +162,6 @@
     "graph": "Graph",
     "basicUsage": "Basic Usage",
     "extensionUsage": "Extended Usage",
-    "container": "Container",
     "entity": "Entity",
     "relation": "Relation",
     "graphApiReference": "Graph API Reference",

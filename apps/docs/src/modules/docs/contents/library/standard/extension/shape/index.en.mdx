@@ -104,7 +104,7 @@ Inject `ParallelogramShapeDefinition`; its parameters have type `ParallelogramSh
 
 ### Elongated hexagon
 
-`hexagon` is an independently resizable elongated hexagon with horizontal top/bottom edges and one lateral tip on each side. It is not an alias for Core's regular `polygon { sides: 6 }`.
+`hexagon` is an independently resizable elongated hexagon with horizontal top/bottom edges and one lateral tip on each side. `shoulderDepth` uses a fixed user-unit length, so longer content extends only the middle horizontal edges instead of enlarging the tips. It is not an alias for Core's regular `polygon { sides: 6 }`.
 
 <ComponentPreview files="hexagon-example" size="sm" />
 
@@ -112,10 +112,10 @@ Inject `ParallelogramShapeDefinition`; its parameters have type `ParallelogramSh
 
 Inject `HexagonShapeDefinition`; its parameters have type `HexagonShapeParams`:
 
-| Field            | Type     | Description                                                                   |
-| ---------------- | -------- | ----------------------------------------------------------------------------- |
-| `shoulderRatio?` | `number` | One shoulder's depth divided by total width, in `(0, 0.5)`; defaults to `0.2` |
-| `cornerRadius?`  | `number` | Non-negative corner radius; defaults to `0`                                   |
+| Field            | Type     | Description                                                                          |
+| ---------------- | -------- | ------------------------------------------------------------------------------------ |
+| `shoulderDepth?` | `number` | Fixed horizontal depth of each shoulder in non-negative user units; defaults to `12` |
+| `cornerRadius?`  | `number` | Non-negative corner radius; defaults to `0`                                          |
 
 ### Cylinder
 

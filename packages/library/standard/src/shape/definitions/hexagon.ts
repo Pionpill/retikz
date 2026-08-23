@@ -15,20 +15,24 @@ import {
 } from './_utils';
 
 const HexagonShapeParamsSchema = z.strictObject({
-  shoulderRatio: z.number().positive().lt(0.5).optional().describe('Horizontal shoulder depth divided by total width.'),
+  shoulderDepth: NonNegativeNumberSchema.optional().describe('Horizontal depth of each shoulder in user units.'),
   cornerRadius: NonNegativeNumberSchema.optional().describe('Uniform corner radius in user units.'),
 });
 
 /** Hexagon 形状参数 */
 export type HexagonShapeParams = z.infer<typeof HexagonShapeParamsSchema>;
 
-const shoulderRatioOf = (params: HexagonShapeParams): number => params.shoulderRatio ?? 0.2;
+const shoulderDepthOf = (params: HexagonShapeParams): number => params.shoulderDepth ?? 12;
+
+/** 将肩深限制在最终半宽内以保持顶点顺序 */
+const effectiveShoulderDepth = (halfWidth: number, params: HexagonShapeParams): number =>
+  Math.min(halfWidth, shoulderDepthOf(params));
 
 /** 根据最终外接矩形生成长六边形局部顶点 */
 const hexagonVertices =
   (params: HexagonShapeParams) =>
   (halfWidth: number, halfHeight: number): Array<Position> => {
-    const shoulderDepth = 2 * halfWidth * shoulderRatioOf(params);
+    const shoulderDepth = effectiveShoulderDepth(halfWidth, params);
     const innerX = halfWidth - shoulderDepth;
     return [
       [-innerX, -halfHeight],
@@ -45,8 +49,7 @@ export const HexagonShapeDefinition = defineShape<HexagonShapeParams>({
   name: StandardShapeName.Hexagon,
   paramsSchema: HexagonShapeParamsSchema,
   circumscribe: (innerHalfWidth, innerHalfHeight, params) => {
-    const ratio = shoulderRatioOf(params);
-    const sharp = { halfWidth: innerHalfWidth / (1 - 2 * ratio), halfHeight: innerHalfHeight };
+    const sharp = { halfWidth: innerHalfWidth + shoulderDepthOf(params), halfHeight: innerHalfHeight };
     return circumscribeRoundedPolygon(
       StandardShapeName.Hexagon,
       innerHalfWidth,
@@ -64,6 +67,7 @@ export const HexagonShapeDefinition = defineShape<HexagonShapeParams>({
     emitPolygon(bounds, style, round, params.cornerRadius, hexagonVertices(params)),
   scaleParams: (params, scaleX, scaleY) => ({
     ...params,
+    ...(params.shoulderDepth === undefined ? {} : { shoulderDepth: params.shoulderDepth * Math.sqrt(scaleX * scaleY) }),
     ...(params.cornerRadius === undefined ? {} : { cornerRadius: params.cornerRadius * Math.sqrt(scaleX * scaleY) }),
   }),
 });

@@ -1,36 +1,43 @@
 import type { AnyCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 
+import {
+  DiamondArrowProvider,
+  KiteArrowProvider,
+  OpenDiamondArrowProvider,
+  SquareArrowProvider,
+} from '@retikz/standard/arrow';
+import { CylinderShapeProvider, HexagonShapeProvider } from '@retikz/standard/shape';
+
 import type { GraphDefinitionOptions } from '../contract';
 
 import { resolveGraphDefinitionOptions } from '../providers';
-import { ContainerProvider, createContainerDefinitionFromOptions, createContainerProvider } from './container';
-import { createEntityDefinitionFromOptions, createEntityProvider, EntityProvider } from './entity';
-import { createGraphDefinitionFromOptions, createGraphProvider, GraphProvider } from './graph';
-import {
-  createGraphPresentationDefinition,
-  createGraphPresentationProvider,
-  GraphPresentationProvider,
-} from './presentation';
-import { RelationDefinition, RelationProvider } from './relation';
+import { createEntityDefinitionFromOptions } from './entity/definition';
+import { createEntityProvider, EntityProvider } from './entity/provider';
+import { createGraphDefinitionFromOptions } from './graph/definition';
+import { createGraphProvider, GraphProvider } from './graph/provider';
+import { createRelationDefinitionFromOptions } from './relation/definition';
+import { createRelationProvider, RelationProvider } from './relation/provider';
 
 /** 创建当前 Graph 包族的完整 composite definition 集合 */
 export const createGraphDefinitions = (options: GraphDefinitionOptions = {}): Array<AnyCompositeDefinition> => {
   const resolved = resolveGraphDefinitionOptions(options);
   return [
     createGraphDefinitionFromOptions(resolved),
-    createContainerDefinitionFromOptions(resolved),
     createEntityDefinitionFromOptions(resolved),
-    RelationDefinition,
-    createGraphPresentationDefinition(resolved),
+    createRelationDefinitionFromOptions(resolved),
   ];
 };
 
 const DEFAULT_GRAPH_PROVIDERS: ReadonlyArray<CoreDependencyProvider> = Object.freeze([
   GraphProvider,
-  ContainerProvider,
   EntityProvider,
   RelationProvider,
-  GraphPresentationProvider,
+  HexagonShapeProvider,
+  CylinderShapeProvider,
+  KiteArrowProvider,
+  SquareArrowProvider,
+  DiamondArrowProvider,
+  OpenDiamondArrowProvider,
 ]);
 
 /** 创建当前 Graph 包族的完整 composite dependency provider 集合 */
@@ -38,9 +45,13 @@ export const createGraphProviders = (options?: GraphDefinitionOptions): Readonly
   if (options === undefined) return DEFAULT_GRAPH_PROVIDERS;
   return Object.freeze([
     createGraphProvider(options),
-    createContainerProvider(options),
     createEntityProvider(options),
-    RelationProvider,
-    createGraphPresentationProvider(options),
+    createRelationProvider(options),
+    HexagonShapeProvider,
+    CylinderShapeProvider,
+    KiteArrowProvider,
+    SquareArrowProvider,
+    DiamondArrowProvider,
+    OpenDiamondArrowProvider,
   ]);
 };

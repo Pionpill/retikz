@@ -1,5 +1,5 @@
 import { AxisLineStepSchema, CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } from '@retikz/core';
-import { ContainerSchema, EntitySchema, RelationSchema } from '@retikz/graph';
+import { EntitySchema, RelationSchema } from '@retikz/graph';
 import { LayoutInspectSpacingOptionsInputSchema } from '@retikz/layout/inspect';
 import {
   CoordinateSchema as PlotCoordinateSchema,
@@ -50,9 +50,8 @@ describe('SCHEMA_REGISTRY', () => {
         schema: SurfaceSchema,
         url: '/library/standard/composite/surface#surfaceschema',
       },
-      ContainerSchema: { schema: ContainerSchema, url: '/schematic/graph/container/basic' },
-      EntitySchema: { schema: EntitySchema, url: '/schematic/graph/entity/basic' },
-      RelationSchema: { schema: RelationSchema, url: '/schematic/graph/relation/basic' },
+      EntitySchema: { schema: EntitySchema, url: '/schematic/graph/api-reference' },
+      RelationSchema: { schema: RelationSchema, url: '/schematic/graph/api-reference' },
     });
   });
 

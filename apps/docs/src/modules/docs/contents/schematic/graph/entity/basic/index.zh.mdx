@@ -1,103 +1,138 @@
 ---
 title: Entity 基础用法
-description: 用 role 和稳定的 id 表达终点、步骤、判断与汇合等图式对象。
+description: 用一个精简 record 编写节点语义、文本与位置，并在任意 Core child 位置独立使用。
 ---
 
-`Entity` 表示流程图中的具体对象，例如起点、处理步骤、判断和汇合点。它在图中承担节点职能，承载对象的名称或说明，并作为 `Relation` 的连接对象
+`Entity` 是带可选 Core identity 的语义节点。语义、文本与 Core Node-compatible 位置都直接写在同一个 record 中，最终独立 lower 为一个普通 Core `Node`。省略 `id` 时只绘制节点，不注册可被引用的 Core target
 
 ## 用法
 
 ```tsx
-import { Layout } from '@retikz/react';
 import { Entity } from '@retikz/graph-react';
+import { Layout } from '@retikz/react';
 ```
 
 ```tsx
 <Layout width={360} height={140}>
-  <Entity id="start" role="terminal" position={[24, 56]}>
-    Start
-  </Entity>
-  <Entity id="step" role="stage" variant="fill" position={[180, 56]}>
-    Process
+  <Entity id="task" role="activity" position={[180, 70]}>
+    处理订单
   </Entity>
 </Layout>
 ```
 
-`Entity` 基于 Core `Node` 封装，通过 `role` 明确对象在关系图中的职能，并通过 `variant` 选择视觉变体。它保留 Node 的位置、文本、尺寸和视觉能力；使用时提供稳定的 `id`、`role` 和 `position`，字符串 children 会成为节点文本
-
-Entity 的专有属性如下：
-
-| 属性      | 含义     | 用法                                                                 |
-| --------- | -------- | -------------------------------------------------------------------- |
-| `role`    | 图中职能 | 内置 `terminal`、`stage`、`decision`、`junction`，也可注册自定义 key |
-| `variant` | 视觉变体 | 内置 `default`、`fill`、`mixed`，也可注册自定义 key                  |
-
-Entity 同时继承 Core `Node` 的 `meta` 元信息字段。`meta` 只能保存 JSON-safe 对象，会随节点保留到输出的 Scene primitive，但不参与编译；LLM、检查器等工具可以从 IR 或 Scene 中读取其中携带的业务上下文。其它位置、文本、尺寸和视觉属性可直接传递给 Node
+`Entity` 可以直接放在 Layout、Scope、Graph 或其它接受 Core child 的位置。children 只接受字符串、数字、Fragment 或 Core `<Text>`，并写入直接 `text` 字段；任意绘图内容应作为它的 sibling，而不是 Entity child
 
 ## 例子
 
-`role` 是 Entity 最重要的属性。它定义 Entity 在整个流程图中的职能；使用时要根据对象的真实语义选择对应的 role，不要只按外观或随意选择。LLM 在生成或理解流程图时也会依赖这个明确的 role 含义。`variant` 只改变视觉表达，不能替代 `role`
+七个内置 role 只定义上位语义和基础 shape recipe。Graph **没有内置 Entity kind 或 predicate**；`kind` 与 `predicate.name` 只有先在当前 provider assembly 注册后才能使用。下文列出的 kind 和 params 都是领域扩展示例，不是可直接使用的内置值
 
-### terminal：起点与终点
+Entity 的整体外观统一由 Theme 管理。下面每个 demo 都允许精确调整实例颜色和文本；页面顶部的 Theme selector 统一切换 Academic、Vibrant、Clean 等整体视觉风格
 
-`terminal` 表示流程的开始或结束，适合表达用户进入流程、任务完成或流程退出等位置。不要用它表示普通的处理步骤
+### participant：参与主体
 
-<ComponentPreview
-  files="entity-terminal"
-  size="sm"
-  caption="调整 terminal 的颜色（支持 currentColor）、variant 和节点内部内容"
-/>
+`participant` 表示主动参与、负责或提供能力的主体。典型对象包括人员、团队、组织、外部系统和服务；如果对象描述的是被执行的工作，应使用 `activity`，如果只是被消费或保存的对象，应使用 `resource`
 
-### stage：处理步骤
-
-`stage` 表示流程中执行处理、动作或状态转换的步骤。它通常是流程的主体节点，内部内容应描述一个可执行的工作或阶段
+- **内置 kind / predicate：** 无
+- **可注册 kind 示例：** `participant.person`、`participant.team`、`participant.system`；这些只是全局唯一 key 的示例
+- **可控制 predicate params 示例：** 扩展可以用 `paramsSchema` 声明 `{ capacity: number, region: string }`，但内置 `participant` 不接受任何预设 params
 
 <ComponentPreview
-  files="entity-stage"
+  files="entity-participant"
   size="sm"
-  caption="调整 stage 的颜色（支持 currentColor）、variant 和节点内部内容"
+  caption="调整 participant 的默认描边、Graph Theme 主色和文本。"
 />
 
-### decision：条件判断
+### activity：工作与动作
 
-`decision` 表示根据条件选择不同后续路径的判断点。它描述的是分支依据，而不是分支执行后的处理结果
+`activity` 表示正在发生或需要执行的工作、动作和转换过程。典型对象包括任务、处理步骤、子流程和系统操作；持续存在的条件属于 `state`，瞬时发生点属于 `event`
+
+- **内置 kind / predicate：** 无
+- **可注册 kind 示例：** `activity.task`、`activity.subprocess`、`activity.operation`
+- **可控制 predicate params 示例：** 扩展可以声明 `{ retryable: boolean, slaMinutes: number }`，具体字段、默认值和范围完全由该 predicate 的 `paramsSchema` 决定
 
 <ComponentPreview
-  files="entity-decision"
+  files="entity-activity"
   size="sm"
-  caption="调整 decision 的颜色（支持 currentColor）、variant 和节点内部内容"
+  caption="查看实例显式 dashed 描边，并调整 activity 的精确颜色和文本。"
 />
 
-### junction：分叉与汇合点
+### event：发生点
 
-`junction` 表示多条关系汇入或从同一点分出的连接点，一般只承担拓扑作用；只有需要给连接点附加语义时才设置内部内容
+`event` 表示时间上的发生点、边界或生命周期事件。典型对象包括开始、结束、超时、消息到达和异常发生；它不表示持续执行的任务，也不表示持续成立的条件
 
-<ComponentPreview
-  files="entity-junction"
-  size="sm"
-  caption="调整 junction 的颜色（支持 currentColor）、variant 和节点内部内容"
+- **内置 kind / predicate：** 无
+- **可注册 kind 示例：** `event.start`、`event.end`、`event.timer`、`event.message`
+- **可控制 predicate params 示例：** 扩展可以声明 `{ interrupting: boolean, channel: string }`；Graph 只保存通过该 schema 的 JSON-safe params
+
+<ComponentPreview files="entity-event" size="sm" caption="调整 event 的默认描边、Graph Theme 主色和文本。" />
+
+### state：持续条件
+
+`state` 表示对象或系统在一段时间内持续存在的条件。典型对象包括等待中、已激活、已暂停和失败；触发状态变化的动作属于 `activity`，状态切换发生的时刻可以建模为 `event`
+
+- **内置 kind / predicate：** 无
+- **可注册 kind 示例：** `state.pending`、`state.active`、`state.failed`
+- **可控制 predicate params 示例：** 扩展可以声明 `{ severity: 'low' | 'high', terminal: boolean }`，枚举和值域由 `paramsSchema` 校验
+
+<ComponentPreview files="entity-state" size="sm" caption="调整 state 的默认描边、Graph Theme 主色和文本。" />
+
+### gateway：语义控制点
+
+`gateway` 表示有明确语义的分叉、汇合或同步控制点。典型对象包括互斥选择、并行拆分、并行汇合和多路同步；不要仅因为想要菱形外观就使用它，也不要用它代替参与者或业务资源
+
+- **内置 kind / predicate：** 无
+- **可注册 kind 示例：** `gateway.exclusive`、`gateway.parallel`、`gateway.inclusive`
+- **可控制 predicate params 示例：** 扩展可以声明 `{ mode: 'split' | 'merge', branches: number }`，例如用 params 驱动强调程度而不改变 gateway 的结构 recipe
+
+<ComponentPreview files="entity-gateway" size="sm" caption="调整 gateway 的默认描边、Graph Theme 主色和文本。" />
+
+### resource：被使用或保存的对象
+
+`resource` 表示被使用、产生、传递或存储的对象。典型对象包括文档、数据库、消息队列、数据集和制品；能够主动参与并提供能力的系统通常应建模为 `participant`
+
+- **内置 kind / predicate：** 无
+- **可注册 kind 示例：** `resource.document`、`resource.database`、`resource.queue`
+- **可控制 predicate params 示例：** 扩展可以声明 `{ mutable: boolean, replicas: number }`，并由 predicate resolver 把已校验参数映射为稀疏外观 token
+
+<ComponentPreview files="entity-resource" size="sm" caption="调整 resource 的默认描边、Graph Theme 主色和文本。" />
+
+### concept：抽象知识对象
+
+`concept` 表示不直接对应运行时实例的抽象知识对象。典型对象包括 class、claim、topic、domain concept 和规则；具体执行步骤使用 `activity`，可连接的运行主体使用 `participant`
+
+- **内置 kind / predicate：** 无
+- **可注册 kind 示例：** `concept.class`、`concept.claim`、`concept.topic`
+- **可控制 predicate params 示例：** 扩展可以声明 `{ confidence: number, source: string }`，但 params 仍只是该 predicate 的领域契约，不是 `concept` role 的固定字段
+
+<ComponentPreview files="entity-concept" size="sm" caption="调整 concept 的默认描边、Graph Theme 主色和文本。" />
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="需要持久化 Graph data、接入 Diagram 或排查 compile 输入时再回来阅读。"
 />
 
-### 试验场
+Entity Source record 只保存作者提供的字段。`id`、`text` 与 `position` 都可省略，不会产生空 wrapper、自动 id 或默认属性；省略 `id` 的 Entity 仍会按 role 绘制，但不会向 Core namespace 注册 target。role 在编译时提供 shape、boundary、padding、cornerRadius 与基础 minimum size；Theme 提供外观默认，Entity 显式 `color`、`fill`、`dashed`、`dashPattern`、`textColor` 等非结构 Node 字段最终覆盖 Theme
 
-综合试验场支持切换内置 `role` 和 `variant`，并可单独调整 Node 的主色、描边色与文本色，观察显式 Node 属性如何覆盖视觉变体
-
-<ComponentPreview files="entity-playground" size="lg" caption="切换 role、variant，并分别调整主色、描边色和文本色" />
+Entity 自己完成 registry lookup 并 lower 为普通 Core `Node`。Core、Scene 和 renderer 不解释 Entity role；Graph 只在存在时额外提供局部 Theme context，不是 Entity 的编译前提
 
 ## API 参考
 
-Entity 的特殊属性是 `role` 和 `variant`；其它位置、文本和视觉属性沿用 Core `Node` 契约
-
-| 属性            | 类型              | 默认值         | 描述                                       |
-| --------------- | ----------------- | -------------- | ------------------------------------------ |
-| `id`            | `string`          | —              | 稳定的 authored identity，也是 target 名称 |
-| `role`          | `string`          | —              | 选择已注册的 Entity role                   |
-| `variant?`      | `string`          | `default`      | 选择已注册的 Entity variant                |
-| `shape?`        | `NodeShapeInput`  | 由 `role` 决定 | 覆盖 role 提供的默认 shape                 |
-| Core Node props | Core `Node` props | Core 默认值    | 位置、文本、尺寸和视觉属性沿用 Node 契约   |
+| 属性         | 类型                                      | 默认值 | 描述                                               |
+| ------------ | ----------------------------------------- | ------ | -------------------------------------------------- |
+| `id?`        | `string`                                  | —      | 可选 Core target id；省略时不注册引用目标          |
+| `role`       | `string`                                  | —      | 已注册的开放语义角色 key                           |
+| `kind?`      | `string`                                  | —      | role 内已注册的稳定子类型                          |
+| `predicate?` | `{ name: string; params?: IRJsonObject }` | —      | 已注册 predicate 及其 JSON-safe 参数               |
+| `position?`  | `IRPosition`                              | —      | 直接复用 Core Node position language               |
+| `text?`      | `IRNode['text']`                          | —      | Node-compatible text                               |
+| `children?`  | Node-compatible text                      | —      | React authoring 的文本入口；不能承载任意绘图 child |
+| `meta?`      | `IRJsonObject`                            | —      | Graph 不解释的元信息                               |
 
 ## 相关
 
-- [Entity 扩展用法](/schematic/graph/entity/extension)：自定义 role、variant、Graph Theme selector 与注入
-- [Relation 基础用法](/schematic/graph/relation/basic)：用 Step 连接 Entity
-- [Container 基础用法](/schematic/graph/container/basic)：组织多个子内容
+- [Entity 扩展用法](/schematic/graph/entity/extension)：注册 role、kind、predicate 与 Theme style
+- [Relation 基础用法](/schematic/graph/relation/basic)：用 Core NodeTarget 连接任意命名目标
+- [Graph API 参考](/schematic/graph/api-reference)：查询最小 Source record 与 Theme schema

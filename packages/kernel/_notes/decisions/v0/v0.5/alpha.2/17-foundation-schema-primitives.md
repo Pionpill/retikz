@@ -10,13 +10,13 @@ Kernel、Standard、Graph、Data、Plot、Chart 与 Table 已反复定义相同�
 
 ADR-14 把 Foundation 冻结为零生产依赖且排除 Zod schema，因此这些无绘图、IR 或领域词汇的原子无法由最低层 owner 统一提供。继续把它们留在 Core 会迫使不应由 Drawing Complete 拥有的通用校验依附绘图包，继续由各领域复制则无法形成单一真源。
 
-本 ADR 修改 ADR-14 的零依赖与 schema 排除边界：Foundation 允许以 Zod 作为唯一生产依赖，并拥有一组闭合、非变换、无领域的 string / number schema 原子。目标是统一叶子约束与失败边界，同时保持完整对象、IR、领域 refinement、默认值和诊断仍由各自 owner 负责。
+本 ADR 修改 ADR-14 的零依赖与 schema 排除边界：Foundation 允许以 Zod 作为唯一生产依赖，并拥有一组非变换、无领域的 string / number schema 原子。后续补充唯一受限的开放字符串 schema factory，用于同时表达“已知内置词汇提示”和“允许任意非空白扩展 key”。目标是统一叶子约束与失败边界，同时保持完整对象、IR、registry lookup、领域 refinement、默认值和诊断仍由各自 owner 负责。
 
-## 决策：Foundation 只依赖 Zod 并拥有闭合基础 Schema 原子
+## 决策：Foundation 只依赖 Zod 并拥有基础 Schema 原子
 
 `@retikz/foundation` 继续位于 Kernel 拓扑最底层并随 kernel release group lockstep 发布，但不再承诺零生产依赖；Zod 是其唯一允许的生产依赖。Foundation 仍只提供包根入口，基础 schema 与既有类型、断言、错误契约从同一根入口直接公开，不建立 schema subpath。
 
-Foundation 只拥有能够脱离 Retikz 绘图、数据和领域词汇独立解释的非变换 string / number 原子。完整对象、数组组合、IR、颜色、几何、parser、默认值、领域 refinement 和诊断继续留在消费 owner。一个原子迁入 Foundation 后，旧 owner 删除同义定义和转发出口；字段 owner 通过组合、描述或收窄形成自己的完整契约。
+Foundation 只拥有能够脱离 Retikz 绘图、数据和领域词汇独立解释的非变换 string / number 原子。除闭合标量外，Foundation 只提供 `createOpenStringSchema(values)` 这一受限 factory：它接受 const object enum，把已知值分支与任意非空白字符串分支组合为开放 schema，不知道 registry、领域默认或 key 的业务含义。完整对象、数组组合、IR、颜色、几何、parser、默认值、领域 refinement 和诊断继续留在消费 owner。一个原子迁入 Foundation 后，旧 owner 删除同义定义和转发出口；字段 owner 通过组合、描述或收窄形成自己的完整契约。
 
 理由：
 
@@ -37,6 +37,9 @@ export declare const NonNegativeNumberSchema: ZodType<number>;
 export declare const PositiveIntegerSchema: ZodType<number>;
 export declare const NonNegativeIntegerSchema: ZodType<number>;
 export declare const NormalizedFractionSchema: ZodType<number>;
+export declare const createOpenStringSchema: <const TValues extends Readonly<Record<string, string>>>(
+  values: TValues,
+) => ZodType<OpenString<ValueOf<TValues>>>;
 ```
 
 各原子的稳定语义为：
@@ -47,8 +50,9 @@ export declare const NormalizedFractionSchema: ZodType<number>;
 - `PositiveIntegerSchema` 接受严格大于 0 的安全整数
 - `NonNegativeIntegerSchema` 接受大于等于 0 的安全整数
 - `NormalizedFractionSchema` 接受闭区间 `[0, 1]` 的有限 number，并从 Core 下沉到 Foundation 成为唯一真源
+- `createOpenStringSchema(values)` 接受 const object enum；运行时接受其中已知值或任意非空白自定义字符串，类型保留 `OpenString<ValueOf<typeof values>>`，JSON Schema 同时保留已知 enum branch 与开放非空字符串 branch
 
-这些 schema 不 coercion、不 transform、不注入 default / catch，也不冻结输出。Foundation 不再提供单独的 finite schema，因为基础 number schema 已拒绝 `NaN` 和正负无穷；不提供通用 range 或 non-empty array factory。
+这些 schema 不 coercion、不 transform、不注入 default / catch，也不冻结输出。开放字符串 factory 不 trim 合法输入、不查询 registry，也不把开放 key 变成闭合 enum。Foundation 不再提供单独的 finite schema，因为基础 number schema 已拒绝 `NaN` 和正负无穷；不提供通用 range 或 non-empty array factory。
 
 Foundation 不为这些闭合原子建立 Definition、registry 或 provider。它们没有内置与第三方实现差异；外部组合方直接消费同一 schema object，并在自己的完整 schema 中增加字段描述、默认值或更窄的领域约束。
 
@@ -63,21 +67,21 @@ Foundation 不为这些闭合原子建立 Definition、registry 或 provider。�
 ## 功能与包边界
 
 - 所属能力域与解决的问题：Kernel 基础契约层；解决跨 Drawing、Data、Visualization 与 adapter 的无领域叶子校验重复，不新增独立 Drawing / Data / Visualization 能力域
-- 主责包与协作包：Foundation 主责六个基础 schema；Core、Standard、Graph、Data、Plot、Chart、Table 与 adapter 只按真实消费直接依赖并组合，继续拥有完整 schema、默认值、领域 refinement 与错误包装
-- 拥有：无领域、非变换的 string / number Zod 原子及其稳定边界；Zod 是唯一生产依赖
+- 主责包与协作包：Foundation 主责六个基础 schema 与开放字符串 schema factory；Core、Standard、Graph、Data、Plot、Chart、Table 与 adapter 只按真实消费直接依赖并组合，继续拥有内置词汇、完整 schema、registry、默认值、领域 refinement 与错误包装
+- 拥有：无领域、非变换的 string / number Zod 原子、从 const object enum 组合开放非空字符串 schema 的受限 factory 及其稳定边界；Zod 是唯一生产依赖
 - 不拥有：对象 / 数组 schema、IR / JSON 数据模型、parser / coercion、颜色、几何、Definition / registry、provider、compile / lowering、Scene / manifest、Diagnostic、领域错误和恢复语义
-- 外部扩展与下游闭环：闭合原子无需动态扩展；完整 owner schema 直接组合 Foundation 原子并继续进入原有 contract、provider、pipeline、adapter、docs 与 schema registry 链路
-- 不支持边界：只因写法相似但具有不同开闭区间、空值、默认、唯一性、trim、错误文本或领域关系的约束不进入 Foundation；Foundation 不提供参数化 schema builder 或通用 validation utils
+- 外部扩展与下游闭环：闭合原子无需动态扩展；开放字符串 owner 传入自己的内置 const object enum，并继续由自己的 registry / resolver 校验实际注册状态；完整 owner schema 进入原有 contract、provider、pipeline、adapter、docs 与 schema registry 链路
+- 不支持边界：只因写法相似但具有不同开闭区间、空值、默认、唯一性、trim、错误文本或领域关系的约束不进入 Foundation；除 `createOpenStringSchema(values)` 外，Foundation 不提供参数化 schema builder 或通用 validation utils
 
 ## 完工摘要
 
-六个非变换标量 schema 已由 Foundation 根入口统一提供，Zod 是唯一生产依赖。Core 的归一化比例旧 owner 与 Graph 的非空白字符串旧公共出口均已移除；Kernel、Standard、Graph、Data、Plot、Chart 与 Table 只组合语义完全相同的叶子，领域对象、默认值、refinement、颜色与诊断边界保持在原 owner。
+六个非变换标量 schema 与一个受限开放字符串 schema factory 已由 Foundation 根入口统一提供，Zod 是唯一生产依赖。Core 的归一化比例旧 owner 与 Graph 的非空白字符串旧公共出口均已移除；Graph 用 owner 自有的内置词汇生成开放 schema，但 registry lookup、领域对象、默认值、refinement、颜色与诊断边界仍保持在原 owner。
 
 基础标量、消费方 schema 与 adapter 等价性保持一致；无已知遗留风险需要改变本 ADR 的公开契约或包边界。
 
 ## 长期边界
 
-- Foundation 对象、数组、IR、JSON-safe data、parser、coercion、transform、range factory、颜色或几何 schema
+- Foundation 对象、数组、IR、JSON-safe data、parser、coercion、transform、`createOpenStringSchema(values)` 之外的参数化 schema factory、颜色或几何 schema
 - 全仓机械替换 `z.string().min(1)`、non-empty array、positive / nonnegative 写法或领域运行时 guard
 - 修改 Scene、manifest、renderer、Definition / registry、compile / lowering 或领域默认值
 - 修复 React shape finite guard、Star 点数范围、Legend artifact key、Plot palette 空白颜色等独立行为问题

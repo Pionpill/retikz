@@ -4,9 +4,7 @@ import type { GraphDefinitionOptions } from '../../contract';
 
 import { createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
-import { ContainerProviderKey } from '../container';
 import { EntityProviderKey } from '../entity';
-import { GraphPresentationProviderKey } from '../presentation';
 import { RelationProviderKey } from '../relation';
 import { createGraphDefinitionFromOptions } from './definition';
 
@@ -25,12 +23,7 @@ const makeGraphDefinition: CoreDependencyProvider['makeDefinition'] = datasets =
 export const createGraphProvider = (options: GraphDefinitionOptions = {}): CoreDependencyProvider =>
   Object.freeze({
     key: GraphProviderKey,
-    dependencies: Object.freeze([
-      ContainerProviderKey,
-      EntityProviderKey,
-      RelationProviderKey,
-      GraphPresentationProviderKey,
-    ]),
+    dependencies: Object.freeze([EntityProviderKey, RelationProviderKey]),
     datasets: createGraphRuntimeDatasets(options),
     makeDefinition: makeGraphDefinition,
   });

@@ -10,3 +10,6 @@ export type AssertEqual<TActual, TExpected> = [TActual] extends [TExpected]
 
 /** 保留已知字符串提示，同时接受任意字符串 */
 export type OpenString<T extends string> = T | (string & {});
+
+/** 将指定属性收窄为必填，同时保留其余属性 */
+export type WithRequiredProperties<T, TKey extends keyof T> = T & Required<Pick<T, TKey>>;
