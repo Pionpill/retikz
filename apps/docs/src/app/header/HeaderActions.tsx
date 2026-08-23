@@ -113,7 +113,7 @@ export const HeaderActions: FC = () => {
 
   const ThemeIcon = theme === 'light' ? Sun : Moon;
   const themeLabel = theme === 'light' ? t('common.themeLight') : t('common.themeDark');
-  const showPreviewThemeStyle = isPreviewThemeStyleDocument(docLocation?.moduleId);
+  const showPreviewThemeStyle = isPreviewThemeStyleDocument(docLocation?.moduleId, docLocation?.sectionId);
 
   return (
     <TooltipProvider delayDuration={150}>

@@ -1,35 +1,39 @@
 ---
 title: Introduction
-description: Learn how Schematic separates reusable graph elements from automatic diagram capabilities, then start drawing through Graph.
+description: Learn how Graph reuses Core fields directly while future Diagram packages own automatic layout and routing.
 ---
 
-The Schematic group owns domain capabilities for what appears in a diagram, what each element means, and how relationships are organized. The current Graph package family provides independently drawable elements. Future Diagram capabilities can compose those elements when a figure needs global nodes, edges, topology, or automatic layout without changing their drawing contracts.
+The Schematic group owns domain capabilities for graph semantics, relationship models, and algorithmic layout. The current Graph package family provides persistent, independently drawable relationship records. Future Diagram packages compute layout and routing above it without copying Graph schemas
 
 ## Start with Graph
 
-Graph provides an optional `Graph` presentation root plus the three semantic elements `Container`, `Entity`, and `Relation`. Entity roles and variants support assembly-local Definition registries, with terminal, stage, decision, junction, and five visual levels built in; Relation roles distinguish flow, branch, dependency, and feedback. They reuse Core Scope, Node, Path, target, and Scene contracts plus Layout's generic containers. Graph does not copy geometry, renderer, or layout algorithms.
+Only `Graph` is a Tier 2 embed root. `Entity` and `Relation` are the two data-record and authoring-declaration families inside that root; ordinary Core content children are Graph-root decorations:
 
-| Package                 | Responsibility                                    | Use it when                                    |
-| ----------------------- | ------------------------------------------------- | ---------------------------------------------- |
-| `@retikz/graph`         | Schemas, factories, Definitions, lowering, and IR | Validating or persisting JSON and using Core   |
-| `@retikz/graph-react`   | React JSX authoring                               | Authoring inside `@retikz/react` `Layout`      |
-| `@retikz/graph-vanilla` | Builders, adapters, SSR, and mount authoring      | Authoring in browsers or scripts without React |
+- Entity stores optional identity, node semantics, and direct Core Node fields
+- Relation stores stable endpoints, direction, relationship semantics, and an optional route
+- Graph-root decorations store ordinary Core content without Graph semantics
 
-All three packages produce the same canonical IR. React and Vanilla provide authoring surfaces without duplicating schemas, defaults, or lowering.
+Entity and Relation each own independent `role → kind → predicate(params)`, Definition registry, and Theme selector contracts, then lower to ordinary Core/Layout output. Graph does not copy renderers, Scene, generic geometry, or layout algorithms
+
+| Package                 | Responsibility                                                   | Use it when                              |
+| ----------------------- | ---------------------------------------------------------------- | ---------------------------------------- |
+| `@retikz/graph`         | Source schemas, factories, Definitions, resolve, and lowering    | Validating/persisting JSON or using Core |
+| `@retikz/graph-react`   | Collects `<Graph>` JSX with standalone / embedded Layout hosting | React apps and Layout composition        |
+| `@retikz/graph-vanilla` | `InputGraph` normalization and the root panel adapter            | Authoring in browsers, SSR, or scripts   |
+
+All three packages produce the same `IRGraph`. React and Vanilla own authoring normalization only, not schemas, semantic defaults, or lowering
 
 ## Capability boundary
 
-Graph owns the meaning, visual defaults, and lowering path of each diagram element. It does not own:
+Graph owns reusable nodes, relations, identity, and directly authored drawing fields. It does not own:
 
-- A global `GraphModel`, node and edge collections, or topology constraints
-- Automatic layout, routing, obstacle avoidance, or collision search; those capabilities belong to the upper Diagram layer
-- Editor state such as selection, viewport, or history
-- Execution models for UML or state machines
-
-You can therefore draw local logical structure with Graph today and reuse the same elements inside a future Diagram capability.
+- Automatic layout, routing, obstacle avoidance, or compound-edge computation; Diagram owns these capabilities
+- Editor state such as selection, viewport, history, or transactions
+- Domain execution models for UML, workflows, or state machines
+- Renderer branches or parallel Scene / geometry systems
 
 ## Next steps
 
-- [Graph](/schematic/graph): browse current elements, responsibilities, and entry points
-- [Layout containers](/library/layout): arrange Container and semantic units
-- [Core components](/kernel/components): use the underlying Node, Path, Scope, and Layout capabilities
+- [Graph](/schematic/graph): understand the single Source root and two semantic member families
+- [Graph API Reference](/schematic/graph/api-reference): inspect the minimal Source schemas and public authoring entries
+- [Layout](/library/layout): use generic layout capabilities

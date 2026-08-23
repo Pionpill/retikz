@@ -3,6 +3,7 @@ import type { FC } from 'react';
 
 import { ChartSource, ChartTitle, ScatterChart } from '@retikz/chart-react/point';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
+import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout, Node } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
@@ -31,6 +32,14 @@ const StaticDemo: FC = () => (
     <Node id="box" position={[0, 0]}>
       A
     </Node>
+  </Layout>
+);
+
+const GraphSourceDemo: FC = () => (
+  <Layout width={100} height={50} viewBox={{ x: 0, y: 0, width: 100, height: 50 }}>
+    <Graph>
+      <Entity id="service" role="participant" position={[50, 25]} />
+    </Graph>
   </Layout>
 );
 
@@ -140,6 +149,16 @@ describe('buildPreviewSource', () => {
     expect(result.source?.vanilla?.files[0]?.code).toContain("from '@retikz/vanilla'");
     expect(result.source?.vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(result.source?.vanilla?.render?.('svg'))).toContain('<svg');
+  });
+
+  it('Graph IR 源码视图展示统一的外层 Scene', () => {
+    const result = buildPreviewSource(createInput({ Component: GraphSourceDemo }));
+    const irCode = result.source?.ir?.files[0]?.code ?? '';
+
+    expect(irCode).toContain('"type": "scene"');
+    expect(irCode).toContain('"version": 1');
+    expect(irCode).toContain('"namespace": "graph"');
+    expect(irCode).toContain('"type": "graph"');
   });
 
   it('为 Standard composite 自动生成 helper、Adapter 与真实 Vanilla SVG', () => {

@@ -145,9 +145,10 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     if (!validated.success) {
       structureError = validated.error;
     } else {
-      previewIr = { ...resolvedPreviewIr, ir: validated.data };
+      const validatedPreviewIr: PreviewIR = { ...resolvedPreviewIr, ir: validated.data };
+      previewIr = validatedPreviewIr;
       try {
-        hasComposite = irHasComposite(previewIr.ir);
+        hasComposite = irHasComposite(validatedPreviewIr.ir);
       } catch (error) {
         structureError = error;
         previewIr = null;

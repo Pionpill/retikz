@@ -1,6 +1,7 @@
 import type { IRScene } from '@retikz/core';
 
 import { parseWay } from '@retikz/core';
+import { GraphSchema } from '@retikz/graph';
 import { describe, expect, it } from 'vitest';
 
 import { irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
@@ -13,6 +14,31 @@ const ir = (children: IRScene['children'], viewBox?: IRScene['viewBox']): IRScen
 });
 
 describe('irToVanillaCode', () => {
+  it('graph-codegen：最小 Graph IR 不输出默认空 children', () => {
+    const code = irToVanillaCode(
+      ir([
+        GraphSchema.parse({
+          namespace: 'graph',
+          type: 'graph',
+        }),
+      ]),
+    );
+
+    expect(code).toContain("graph('preview-graph-1', { graphThemeStyles: PreviewThemeDefinitionBundle.graph })");
+    expect(code).not.toContain('children: []');
+
+    const explicitCode = irToVanillaCode(
+      ir([
+        GraphSchema.parse({
+          namespace: 'graph',
+          type: 'graph',
+          children: [],
+        }),
+      ]),
+    );
+    expect(explicitCode).toContain('children: []');
+  });
+
   it('import-header：恒定 vanilla import + scene 装配', () => {
     const code = irToVanillaCode(ir([{ type: 'node', id: 'a', position: [0, 0], text: 'A' }]));
     expect(code).toContain("from '@retikz/vanilla'");
@@ -375,85 +401,82 @@ describe('irToVanillaCode fallback', () => {
     expect(code).not.toMatch(/\binspect\b/);
   });
 
-  it('generates Graph helpers and adapters for unified semantic elements', () => {
+  it('只把完整 Graph root 转成 collocated graph() 输入', () => {
     const code = irToVanillaCode(
       ir([
         {
           namespace: 'graph',
-          type: 'entity',
-          id: 'start',
-          role: 'terminal',
-          position: [0, 0],
-          text: 'Start',
-        },
-        {
-          namespace: 'graph',
-          type: 'entity',
-          id: 'step',
-          role: 'stage',
-          position: [80, 0],
-          text: 'Step',
-        },
-        { namespace: 'graph', type: 'entity', role: 'decision', id: 'check', position: [160, 0], text: 'Check' },
-        { namespace: 'graph', type: 'entity', role: 'junction', id: 'join', position: [240, 0] },
-        {
-          namespace: 'graph',
-          type: 'relation',
-          id: 'edge',
-          role: 'flow',
+          type: 'graph',
+          id: 'workflow',
           children: [
-            { type: 'step', kind: 'move', to: { id: 'start' } },
-            { type: 'step', kind: 'line', to: { id: 'step' }, label: { text: 'next' } },
-          ],
-        },
-      ] as never),
-    );
-
-    expect(code).toContain("entity('preview-entity-1'");
-    expect(code).toContain("relation('preview-relation-1'");
-    expect(code).toContain("to: { id: 'preview-entity-1' }");
-    expect(code).toContain('EntityInputEmbedAdapter');
-    expect(code).toContain('RelationInputEmbedAdapter');
-    expect(code).toContain("from '@retikz/graph-vanilla'");
-    expect(code).not.toContain("RelationInputEmbedAdapter } from '@retikz/standard-vanilla'");
-    expect(code).not.toContain('TerminalDefinition');
-    expect(code).not.toContain('Unsupported Standard composite');
-  });
-
-  it('splits Standard and Graph imports while preserving forward composite targets', () => {
-    const code = irToVanillaCode(
-      ir([
-        {
-          namespace: 'graph',
-          type: 'relation',
-          id: 'edge',
-          role: 'flow',
-          children: [
-            { type: 'step', kind: 'move', to: { id: 'block' } },
-            { type: 'step', kind: 'line', to: { id: 'block' } },
-          ],
-        },
-        {
-          namespace: 'graph',
-          type: 'container',
-          id: 'block',
-          sections: [
+            { namespace: 'graph', type: 'entity', id: 'start', role: 'event', text: 'Start', position: [0, 0] },
+            { namespace: 'graph', type: 'entity', id: 'step', role: 'activity', text: 'Step', position: [80, 0] },
             {
-              key: 'body',
-              child: {
-                namespace: 'standard',
-                type: 'grid',
-                bounds: { start: [0, 0], end: [20, 20] },
-                line: { spacing: 10, includeBoundary: false },
-              },
+              namespace: 'graph',
+              type: 'relation',
+              id: 'edge',
+              source: { id: 'start' },
+              target: { id: 'step' },
+              role: 'flow',
+              route: [
+                { type: 'step', kind: 'move', to: { id: 'start' } },
+                { type: 'step', kind: 'line', to: { id: 'step' } },
+              ],
             },
           ],
         },
       ] as never),
     );
 
+    expect(code).toContain("graph('preview-graph-1'");
+    expect(code).toContain("id: 'start'");
+    expect(code).toContain("role: 'event'");
+    expect(code).toContain("text: 'Start'");
+    expect(code).toContain('position: [0, 0]');
+    expect(code).toContain("source: { id: 'start' }");
+    expect(code).toContain('GraphInputEmbedAdapter');
+    expect(code).not.toContain('EntityInputEmbedAdapter');
+    expect(code).not.toContain('RelationInputEmbedAdapter');
     expect(code).toContain("from '@retikz/graph-vanilla'");
-    expect(code).toContain("import { GridDefinition } from '@retikz/standard';");
-    expect(code.match(/to: \{ id: 'preview-container-1\/container' \}/g)).toHaveLength(2);
+    expect(code).not.toContain('EntityDefinition');
+    expect(code).not.toContain('RelationDefinition');
+  });
+
+  it('为 direct Entity、direct Relation 与 nested Graph 生成独立 Vanilla 入口且不合成 authored id', () => {
+    const code = irToVanillaCode(
+      ir([
+        { type: 'node', id: 'source', position: [0, 0] },
+        { type: 'node', id: 'target', position: [120, 0] },
+        { namespace: 'graph', type: 'entity', role: 'activity', position: [60, 70] },
+        {
+          namespace: 'graph',
+          type: 'relation',
+          role: 'association',
+          source: { id: 'source', anchor: 'right', offset: [2, -1], boundary: 'shape' },
+          target: { id: 'target', anchor: 'left', offset: [-2, 1], boundary: 'shape' },
+        },
+        {
+          namespace: 'graph',
+          type: 'graph',
+          children: [
+            {
+              namespace: 'graph',
+              type: 'graph',
+              children: [{ namespace: 'graph', type: 'entity', role: 'concept', position: [200, 70] }],
+            },
+          ],
+        },
+      ]),
+    );
+
+    expect(code).toContain("entity('preview-entity-1'");
+    expect(code).toContain("relation('preview-relation-1'");
+    expect(code.match(/graph\('preview-graph-/g)).toHaveLength(2);
+    expect(code).toContain('EntityInputEmbedAdapter');
+    expect(code).toContain('RelationInputEmbedAdapter');
+    expect(code).toContain('GraphInputEmbedAdapter');
+    expect(code).not.toContain("id: 'preview-entity-1'");
+    expect(code).not.toContain("id: 'preview-relation-1'");
+    expect(code).not.toContain("id: 'preview-graph-1'");
   });
 });

@@ -35,15 +35,17 @@ export const schematicSection: Array<Section> = [
         label: 'schematic.relation',
         children: [
           { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
-          { id: 'extension', label: 'schematic.extensionUsage', difficulty: DocDifficulty.Advanced },
-        ],
-      },
-      {
-        id: 'container',
-        label: 'schematic.container',
-        children: [
-          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
-          { id: 'extension', label: 'schematic.extensionUsage', difficulty: DocDifficulty.Advanced },
+          {
+            id: 'extension',
+            label: 'schematic.extensionUsage',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'graph.relation.registry',
+              sourceOfTruth: 'runtime',
+            },
+          },
         ],
       },
       { id: 'api-reference', label: 'schematic.graphApiReference' },
