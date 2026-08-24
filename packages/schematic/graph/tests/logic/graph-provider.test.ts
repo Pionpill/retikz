@@ -12,7 +12,7 @@ describe('Graph provider closure', () => {
     expect(resolved.composites?.map(definition => `${definition.namespace}.${definition.type}`).sort()).toEqual(
       ['graph.entity', 'graph.graph', 'graph.relation'].sort(),
     );
-    expect(resolved.shapes?.map(definition => definition.name).sort()).toEqual(['cylinder', 'hexagon']);
+    expect(resolved.shapes?.map(definition => definition.name).sort()).toEqual(['ellipticCapsule', 'hexagon']);
     expect(resolved.arrows?.map(definition => definition.name).sort()).toEqual(
       ['diamond', 'kite', 'openDiamond', 'square'].sort(),
     );

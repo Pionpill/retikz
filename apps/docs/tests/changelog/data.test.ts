@@ -121,7 +121,7 @@ describe('changelog data', () => {
     for (const block of release.packages) {
       const alpha = block.subVersions.find(version => version.version === 'alpha.7');
       expect(alpha?.date).toBe('2026-08-23');
-      expect(alpha?.items).toHaveLength(6);
+      expect(alpha?.items).toHaveLength(7);
     }
 
     expect(JSON.stringify(byPackage.get('@retikz/graph'))).toContain('IRGraph.children');
@@ -134,6 +134,7 @@ describe('changelog data', () => {
     expect(serialized).toContain('Theme only supplies defaults');
     expect(serialized).toContain('JSON Schema');
     expect(serialized).toContain('Graph `entityVariant`');
+    expect(serialized).toContain('`ellipticCapsule`');
     expect(serialized).toContain('Vibrant reference style');
     expect(serialized).toContain('Clean');
     expect(serialized).toContain('Core-compatible instance fields');

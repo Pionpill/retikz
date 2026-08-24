@@ -50,11 +50,7 @@ Entity 的整体外观统一由 Theme 管理。下面每个 demo 都允许精确
 - **可注册 kind 示例：** `activity.task`、`activity.subprocess`、`activity.operation`
 - **可控制 predicate params 示例：** 扩展可以声明 `{ retryable: boolean, slaMinutes: number }`，具体字段、默认值和范围完全由该 predicate 的 `paramsSchema` 决定
 
-<ComponentPreview
-  files="entity-activity"
-  size="sm"
-  caption="查看实例显式 dashed 描边，并调整 activity 的精确颜色和文本。"
-/>
+<ComponentPreview files="entity-activity" size="sm" caption="查看 activity 的默认实线描边，并调整精确颜色和文本。" />
 
 ### event：发生点
 
@@ -88,13 +84,17 @@ Entity 的整体外观统一由 Theme 管理。下面每个 demo 都允许精确
 
 ### resource：被使用或保存的对象
 
-`resource` 表示被使用、产生、传递或存储的对象。典型对象包括文档、数据库、消息队列、数据集和制品；能够主动参与并提供能力的系统通常应建模为 `participant`
+`resource` 表示被使用、产生、传递或存储的对象。典型对象包括文档、数据库、消息队列、数据集和制品；能够主动参与并提供能力的系统通常应建模为 `participant`。默认轮廓由上下两个半椭圆端和两侧直线闭合，顶部不会形成完整椭圆；对称的纵向 padding 让文本保持垂直居中
 
 - **内置 kind / predicate：** 无
 - **可注册 kind 示例：** `resource.document`、`resource.database`、`resource.queue`
 - **可控制 predicate params 示例：** 扩展可以声明 `{ mutable: boolean, replicas: number }`，并由 predicate resolver 把已校验参数映射为稀疏外观 token
 
-<ComponentPreview files="entity-resource" size="sm" caption="调整 resource 的默认描边、Graph Theme 主色和文本。" />
+<ComponentPreview
+  files="entity-resource"
+  size="sm"
+  caption="查看 resource 的半椭圆端轮廓，并调整 Graph Theme 主色和文本。"
+/>
 
 ### concept：抽象知识对象
 

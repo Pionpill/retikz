@@ -51,6 +51,13 @@ const graphMilestones: Array<SubVersion> = [
           en: '`GraphThemeStyleDefinition.resolve()` now returns sparse `GraphThemeStyleOverrides` relative to the default preset. Graph resolve fills omitted Entity / Relation tokens, retains default rules, and appends custom style rules after them.',
         },
       },
+      {
+        label: { zh: 'Entity role 轮廓调整', en: 'Entity role contour updates' },
+        content: {
+          zh: '`activity` 默认保持实线描边；`resource` 改用 Standard `ellipticCapsule`，由上下半椭圆端与两侧直线形成单一外轮廓，不再绘制 Cylinder 的内部端盖弧，并通过对称纵向 padding 让文本垂直居中。',
+          en: "`activity` keeps a solid outline by default. `resource` now uses Standard `ellipticCapsule`, forming one outer contour from two half-elliptic caps and straight sides without Cylinder's internal cap divider, with symmetric vertical padding keeping text vertically centered.",
+        },
+      },
     ],
   },
   {

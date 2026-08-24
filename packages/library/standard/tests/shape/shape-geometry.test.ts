@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   CylinderShapeDefinition,
+  EllipticCapsuleShapeDefinition,
   HexagonShapeDefinition,
   ParallelogramShapeDefinition,
   TrapezoidShapeDefinition,
@@ -178,6 +179,57 @@ describe('Standard container shape geometry', () => {
     expect(clamped.commands[1]).toMatchObject({ center: [0, 0], radiusX: 5, radiusY: 10 });
   });
 
+  it('emits a vertical elliptic capsule as one closed outer contour without a cap divider', () => {
+    expect(EllipticCapsuleShapeDefinition.circumscribe(20, 10, {})).toEqual({ halfWidth: 20, halfHeight: 18 });
+    expect(pathOf(EllipticCapsuleShapeDefinition, { x: 0, y: 0, width: 40, height: 36 }, {}).commands).toEqual([
+      { kind: 'move', to: [-20, -10] },
+      { kind: 'ellipseArc', center: [0, -10], radiusX: 20, radiusY: 8, startAngle: 180, endAngle: 360 },
+      { kind: 'line', to: [20, 10] },
+      { kind: 'ellipseArc', center: [0, 10], radiusX: 20, radiusY: 8, startAngle: 0, endAngle: 180 },
+      { kind: 'close' },
+    ]);
+  });
+
+  it('transposes the elliptic capsule and degenerates zero cap depth to a rectangle', () => {
+    const horizontal = { axis: 'horizontal', capDepth: 8 } as const;
+    expect(EllipticCapsuleShapeDefinition.circumscribe(20, 10, horizontal)).toEqual({
+      halfWidth: 28,
+      halfHeight: 10,
+    });
+    expect(pathOf(EllipticCapsuleShapeDefinition, { x: 0, y: 0, width: 56, height: 20 }, horizontal).commands).toEqual([
+      { kind: 'move', to: [-20, -10] },
+      {
+        kind: 'ellipseArc',
+        center: [-20, 0],
+        radiusX: 8,
+        radiusY: 10,
+        startAngle: 270,
+        endAngle: 90,
+        counterClockwise: true,
+      },
+      { kind: 'line', to: [20, 10] },
+      {
+        kind: 'ellipseArc',
+        center: [20, 0],
+        radiusX: 8,
+        radiusY: 10,
+        startAngle: 90,
+        endAngle: -90,
+        counterClockwise: true,
+      },
+      { kind: 'close' },
+    ]);
+    expect(
+      pathOf(EllipticCapsuleShapeDefinition, { x: 0, y: 0, width: 40, height: 36 }, { capDepth: 0 }).commands,
+    ).toEqual([
+      { kind: 'move', to: [-20, -18] },
+      { kind: 'line', to: [20, -18] },
+      { kind: 'line', to: [20, 18] },
+      { kind: 'line', to: [-20, 18] },
+      { kind: 'close' },
+    ]);
+  });
+
   it('expands rounded polygonal shapes until their content corners remain inside the final contour', () => {
     const sharp = TrapezoidShapeDefinition.circumscribe(36, 20, {});
     const roundedParams = { cornerRadius: 10 };
@@ -209,6 +261,9 @@ describe('Standard container shape geometry', () => {
     ).toEqual([30, 0]);
     expect(HexagonShapeDefinition.boundaryPoint({ x: 0, y: 0, width: 80, height: 20 }, [100, 0], {})).toEqual([40, 0]);
     expect(CylinderShapeDefinition.boundaryPoint({ x: 0, y: 0, width: 40, height: 36 }, [0, -100], {})).toEqual([
+      0, -18,
+    ]);
+    expect(EllipticCapsuleShapeDefinition.boundaryPoint({ x: 0, y: 0, width: 40, height: 36 }, [0, -100], {})).toEqual([
       0, -18,
     ]);
     expect(
@@ -245,6 +300,10 @@ describe('Standard container shape geometry', () => {
       axis: 'horizontal',
       capDepth: 24,
     });
+    expect(EllipticCapsuleShapeDefinition.scaleParams?.({ axis: 'horizontal', capDepth: 4 }, 4, 9)).toEqual({
+      axis: 'horizontal',
+      capDepth: 24,
+    });
   });
 
   it('rejects invalid params and non-finite derived geometry', () => {
@@ -253,6 +312,9 @@ describe('Standard container shape geometry', () => {
     expect(() => HexagonShapeDefinition.paramsSchema.parse({ shoulderRatio: 0.2 })).toThrow();
     expect(() => ParallelogramShapeDefinition.paramsSchema.parse({ slantAngle: 0 })).toThrow();
     expect(() => CylinderShapeDefinition.paramsSchema.parse({ capDepth: -1 })).toThrow();
+    expect(() => EllipticCapsuleShapeDefinition.paramsSchema.parse({ capDepth: -1 })).toThrow();
+    expect(() => EllipticCapsuleShapeDefinition.paramsSchema.parse({ capDepth: Number.POSITIVE_INFINITY })).toThrow();
+    expect(() => EllipticCapsuleShapeDefinition.paramsSchema.parse({ unknown: true })).toThrow();
     expect(() => TrapezoidShapeDefinition.paramsSchema.parse({ unknown: true })).toThrow();
     expect(() => TrapezoidShapeDefinition.circumscribe(10, 10, { shortSideRatio: Number.MIN_VALUE })).toThrowError(
       expect.objectContaining({ code: 'STANDARD_GEOMETRY_INVALID' }),

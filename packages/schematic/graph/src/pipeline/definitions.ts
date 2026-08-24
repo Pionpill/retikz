@@ -6,7 +6,7 @@ import {
   OpenDiamondArrowProvider,
   SquareArrowProvider,
 } from '@retikz/standard/arrow';
-import { CylinderShapeProvider, HexagonShapeProvider } from '@retikz/standard/shape';
+import { EllipticCapsuleShapeProvider, HexagonShapeProvider } from '@retikz/standard/shape';
 
 import type { GraphDefinitionOptions } from '../contract';
 
@@ -33,7 +33,7 @@ const DEFAULT_GRAPH_PROVIDERS: ReadonlyArray<CoreDependencyProvider> = Object.fr
   EntityProvider,
   RelationProvider,
   HexagonShapeProvider,
-  CylinderShapeProvider,
+  EllipticCapsuleShapeProvider,
   KiteArrowProvider,
   SquareArrowProvider,
   DiamondArrowProvider,
@@ -48,7 +48,7 @@ export const createGraphProviders = (options?: GraphDefinitionOptions): Readonly
     createEntityProvider(options),
     createRelationProvider(options),
     HexagonShapeProvider,
-    CylinderShapeProvider,
+    EllipticCapsuleShapeProvider,
     KiteArrowProvider,
     SquareArrowProvider,
     DiamondArrowProvider,

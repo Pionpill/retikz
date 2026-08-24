@@ -7,6 +7,8 @@ import {
   CrossShapeProvider,
   CylinderShapeDefinition,
   CylinderShapeProvider,
+  EllipticCapsuleShapeDefinition,
+  EllipticCapsuleShapeProvider,
   HexagonShapeDefinition,
   HexagonShapeProvider,
   ParallelogramShapeDefinition,
@@ -29,6 +31,7 @@ export const StandardShapeDefinitions: ReadonlyArray<ShapeDefinition> = [
   ParallelogramShapeDefinition,
   HexagonShapeDefinition,
   CylinderShapeDefinition,
+  EllipticCapsuleShapeDefinition,
 ];
 
 /** Standard 提供的全部形状 Provider */
@@ -41,4 +44,5 @@ export const StandardShapeProviders: ReadonlyArray<CoreDependencyProvider> = [
   ParallelogramShapeProvider,
   HexagonShapeProvider,
   CylinderShapeProvider,
+  EllipticCapsuleShapeProvider,
 ];

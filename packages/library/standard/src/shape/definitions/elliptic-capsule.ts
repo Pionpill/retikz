@@ -21,12 +21,12 @@ import {
   scaleEllipticCapParams,
 } from './_elliptic-cap';
 
-/** Cylinder 形状参数 */
-export type CylinderShapeParams = EllipticCapShapeParams;
+/** Elliptic Capsule 形状参数 */
+export type EllipticCapsuleShapeParams = EllipticCapShapeParams;
 
-/** 可选 Cylinder 形状 Definition */
-export const CylinderShapeDefinition = defineShape<CylinderShapeParams>({
-  name: StandardShapeName.Cylinder,
+/** 仅由闭合半椭圆端外轮廓组成的 Elliptic Capsule Definition */
+export const EllipticCapsuleShapeDefinition = defineShape<EllipticCapsuleShapeParams>({
+  name: StandardShapeName.EllipticCapsule,
   paramsSchema: EllipticCapShapeParamsSchema,
   circumscribe: circumscribeEllipticCaps,
   boundaryPoint: (bounds, toward, params) => localToWorld(bounds, ellipticCapLocalBoundary(bounds, toward, params)),
@@ -36,15 +36,15 @@ export const CylinderShapeDefinition = defineShape<CylinderShapeParams>({
   },
   connectionEnvelope: (bounds, kind) => boundsConnectionEnvelope(bounds, kind),
   *emit(bounds, style, round, params): Iterable<ScenePrimitive> {
-    yield contourToPathPrimitive(ellipticCapCommands(bounds, params, round, true), style);
+    yield contourToPathPrimitive(ellipticCapCommands(bounds, params, round, false), style);
   },
   scaleParams: scaleEllipticCapParams,
 });
 
-/** Cylinder 的静态 Core provider */
-export const CylinderShapeProvider: CoreDependencyProvider = Object.freeze({
-  key: { capability: 'shape', name: CylinderShapeDefinition.name },
+/** Elliptic Capsule 的静态 Core provider */
+export const EllipticCapsuleShapeProvider: CoreDependencyProvider = Object.freeze({
+  key: { capability: 'shape', name: EllipticCapsuleShapeDefinition.name },
   dependencies: [],
   datasets: {},
-  makeDefinition: () => CylinderShapeDefinition,
+  makeDefinition: () => EllipticCapsuleShapeDefinition,
 });
