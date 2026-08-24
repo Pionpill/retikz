@@ -7,7 +7,7 @@ import { DataTransform } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, object, string } from 'zod';
 
 import type { IRPlot } from '../../../src/schemas';
 
@@ -17,8 +17,8 @@ import { resolvePlotTransformRegistry } from '../../../src/providers';
 import { PlotSchema, PlotTransform } from '../../../src/schemas';
 
 const doubleDefinition = defineTransform({
-  schema: z.object({
-    kind: z.literal('double'),
+  schema: object({
+    kind: literal('double'),
     field: NonBlankStringSchema,
     as: NonBlankStringSchema,
   }),
@@ -32,8 +32,8 @@ const doubleDefinition = defineTransform({
 });
 
 const groupSumDefinition = defineTransform({
-  schema: z.object({
-    kind: z.literal('group-sum'),
+  schema: object({
+    kind: literal('group-sum'),
     groupBy: NonBlankStringSchema,
     field: NonBlankStringSchema,
     as: NonBlankStringSchema,
@@ -110,7 +110,7 @@ describe('transform registry (contract)', () => {
       /duplicate transform registration/i,
     );
     const builtinCollision = defineTransform({
-      schema: z.object({ kind: z.literal('sort') }),
+      schema: object({ kind: literal('sort') }),
       apply: rows => rows,
     });
     expect(() => resolvePlotTransformRegistry([builtinCollision])).toThrow(/duplicate transform registration/i);
@@ -118,11 +118,11 @@ describe('transform registry (contract)', () => {
 
   it('malformed_registration_schema_throws', () => {
     const nonObject: AnyTransformDefinition = {
-      schema: z.string(),
+      schema: string(),
       apply: rows => rows,
     };
     const missingLiteralKind: AnyTransformDefinition = {
-      schema: z.object({ kind: z.string() }),
+      schema: object({ kind: string() }),
       apply: rows => rows,
     };
     expect(() => resolvePlotTransformRegistry([nonObject])).toThrow(/ZodObject/i);

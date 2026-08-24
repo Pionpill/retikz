@@ -1,6 +1,6 @@
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
 import type { IRTable } from '../../src';
 
@@ -64,9 +64,9 @@ describe('Table layout-aware lowering', () => {
 
   it('uses extra composite definitions in the same Core environment', () => {
     const BadgeSchema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('badge'),
-      label: z.string(),
+      namespace: literal('fixture'),
+      type: literal('badge'),
+      label: string(),
     });
     const badge = defineComposite({
       namespace: 'fixture',
@@ -131,7 +131,7 @@ describe('Table layout-aware lowering', () => {
       structure: { kind: 'unknownStructure' },
     };
     const dataRequired = defineTableStructure({
-      schema: z.strictObject({ kind: z.literal('requiresData') }),
+      schema: strictObject({ kind: literal('requiresData') }),
       build: (_spec, context) => {
         if (context.data === undefined) throw new Error('external data is required');
         return { rows: [], columns: [], cells: [] };

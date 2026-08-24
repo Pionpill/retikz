@@ -6,7 +6,7 @@ import { RetikzFoundationError } from '@retikz/foundation';
 import { createManualTableIR, TableSchema } from '@retikz/table';
 import { embed, layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, string } from 'zod';
 
 import { embedTable, inputTableFromIR, TableInputEmbedAdapter } from '../../src';
 
@@ -108,9 +108,9 @@ describe('Table Vanilla adapter', () => {
 
   it('passes extra composites through the shared adapter contribution', () => {
     const schema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('badge'),
-      label: z.string(),
+      namespace: literal('fixture'),
+      type: literal('badge'),
+      label: string(),
     });
     const badge = defineComposite({
       namespace: 'fixture',

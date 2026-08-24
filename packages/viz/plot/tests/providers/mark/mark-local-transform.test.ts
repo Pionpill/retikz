@@ -1,10 +1,11 @@
 import type { IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
+import type { infer as ZodInfer } from 'zod';
 
 import { defineTransform } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { array, literal, looseObject, object } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
@@ -17,13 +18,13 @@ import { EncodingSchema, PlotSchema, TransformSchema } from '../../../src/schema
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const DotMarkSchema = z.looseObject({
-  type: z.literal('dot'),
+const DotMarkSchema = looseObject({
+  type: literal('dot'),
   encoding: EncodingSchema.optional(),
-  transform: z.array(TransformSchema).optional(),
+  transform: array(TransformSchema).optional(),
 });
 
-type DotMark = z.infer<typeof DotMarkSchema>;
+type DotMark = ZodInfer<typeof DotMarkSchema>;
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
@@ -56,8 +57,8 @@ const groupPointSpec = (): IRPlot =>
   });
 
 const doubleTransform = defineTransform({
-  schema: z.object({
-    kind: z.literal('double-local'),
+  schema: object({
+    kind: literal('double-local'),
     field: NonBlankStringSchema,
     as: NonBlankStringSchema,
   }),

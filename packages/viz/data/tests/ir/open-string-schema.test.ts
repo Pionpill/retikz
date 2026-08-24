@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { toJSONSchema } from 'zod';
 
 import { DataFieldFormat, FieldFormatSchema } from '../../src';
 
 describe('Data registry-backed open string schemas', () => {
   it('hints built-in formats while preserving custom provider names', () => {
-    expect(z.toJSONSchema(FieldFormatSchema)).toMatchObject({
+    expect(toJSONSchema(FieldFormatSchema)).toMatchObject({
       anyOf: [
         { type: 'string', enum: Object.values(DataFieldFormat) },
         { type: 'string', minLength: 1 },

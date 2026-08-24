@@ -1,5 +1,7 @@
+import type { ZodType } from 'zod';
+
 import { createReadonlyMap } from '@retikz/foundation';
-import { z } from 'zod';
+import { union, ZodError, ZodLiteral, ZodObject } from 'zod';
 
 import type { ChartRecipeDefinition, ChartThemeDefinition } from '../contract';
 import type { IRChartSource } from '../schemas';
@@ -27,9 +29,9 @@ const duplicateDefinition = (label: string, key: string): RetikzChartError =>
     details: { path: [label, key] },
   });
 
-const literalStringOf = (schema: z.ZodObject, field: string, path: ReadonlyArray<string | number>): string => {
+const literalStringOf = (schema: ZodObject, field: string, path: ReadonlyArray<string | number>): string => {
   const fieldSchema = schema.shape[field];
-  if (!(fieldSchema instanceof z.ZodLiteral) || typeof fieldSchema.value !== 'string') {
+  if (!(fieldSchema instanceof ZodLiteral) || typeof fieldSchema.value !== 'string') {
     throw invalidRegistry(`Chart recipe schema field "${field}" must be a string literal`, [...path, field]);
   }
   return fieldSchema.value;
@@ -41,7 +43,7 @@ const validateRecipeSchemaIdentity = (
   path: ReadonlyArray<string | number>,
 ): void => {
   const sourceSchema = recipe.schema;
-  if (!(sourceSchema instanceof z.ZodObject)) {
+  if (!(sourceSchema instanceof ZodObject)) {
     throw invalidRegistry('Chart recipe schema must be a strict Source object schema', path);
   }
   const namespace = literalStringOf(sourceSchema, 'namespace', path);
@@ -56,7 +58,7 @@ const validateRecipeSchemaIdentity = (
     throw invalidRegistry(`Chart recipe "${recipe.chartType}" schema family must match "${family}"`, [...path, 'type']);
   }
   const recipeSchema = sourceSchema.shape.recipe;
-  if (!(recipeSchema instanceof z.ZodObject)) {
+  if (!(recipeSchema instanceof ZodObject)) {
     throw invalidRegistry('Chart recipe schema field "recipe" must be an object schema', [...path, 'recipe']);
   }
   const schemaChartType = literalStringOf(recipeSchema, 'chartType', [...path, 'recipe']);
@@ -132,7 +134,7 @@ const validateRecipe = (recipe: ChartRecipeDefinition, family: string, index: nu
   try {
     recipe.theme.resolutionSchema.parse(recipe.theme.fallback);
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (error instanceof ZodError) {
       throw invalidRegistry(
         `Chart recipe "${recipe.chartType}" has an invalid theme fallback`,
         [...path, 'theme', 'fallback', ...zodPathOf(error.issues[0]?.path ?? [])],
@@ -182,10 +184,10 @@ export const resolveChartProviderRegistry = (
   validateChartThemeBases(themes);
 
   const schemas = [...recipes.values()].map(recipe => recipe.schema);
-  const schema: z.ZodType<IRChartSource> =
+  const schema: ZodType<IRChartSource> =
     schemas.length === 1
       ? schemas[0]
-      : z.union(schemas as [z.ZodType<IRChartSource>, z.ZodType<IRChartSource>, ...Array<z.ZodType<IRChartSource>>]);
+      : union(schemas as [ZodType<IRChartSource>, ZodType<IRChartSource>, ...Array<ZodType<IRChartSource>>]);
 
   return Object.freeze({
     family,

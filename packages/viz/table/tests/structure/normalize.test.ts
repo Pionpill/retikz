@@ -1,7 +1,7 @@
 ﻿import type { IRChild } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
 import type { TableStructureOutput } from '../../src';
 
@@ -249,7 +249,7 @@ describe('normalizeTableStructure', () => {
 
   it('dispatches custom structures and validates their output through the canonical guard', () => {
     const summary = defineTableStructure({
-      schema: z.strictObject({ kind: z.literal('summary'), label: z.string() }),
+      schema: strictObject({ kind: literal('summary'), label: string() }),
       build: spec => ({
         rows: [{ id: 'row.summary', kind: TableRowKind.Body }],
         columns: [{ id: 'column.summary' }],
@@ -275,7 +275,7 @@ describe('normalizeTableStructure', () => {
     });
 
     const invalid = defineTableStructure({
-      schema: z.strictObject({ kind: z.literal('invalid') }),
+      schema: strictObject({ kind: literal('invalid') }),
       build: () =>
         ({
           rows: [],
@@ -291,7 +291,7 @@ describe('normalizeTableStructure', () => {
 
   it('rejects missing, duplicate, built-in, and future-reserved structure definitions', () => {
     const extension = defineTableStructure({
-      schema: z.strictObject({ kind: z.literal('extension') }),
+      schema: strictObject({ kind: literal('extension') }),
       build: () => ({ rows: [], columns: [], cells: [] }),
     });
     const duplicate = defineTableStructure({ ...extension });
@@ -301,7 +301,7 @@ describe('normalizeTableStructure', () => {
 
     for (const kind of ['manual', 'detail', 'pivot', 'matrix', 'custom'] as const) {
       const reserved = defineTableStructure({
-        schema: z.strictObject({ kind: z.literal(kind) }),
+        schema: strictObject({ kind: literal(kind) }),
         build: () => ({ rows: [], columns: [], cells: [] }),
       });
       expect(() => resolveTableStructureRegistry([reserved])).toThrow(new RegExp(kind, 'i'));
@@ -315,7 +315,7 @@ describe('normalizeTableStructure', () => {
     });
     const custom = defineCellPresentation({
       name: 'upper',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: ({ value }) => ({ type: 'node', position: [0, 0], text: String(value).toUpperCase() }),
     });
     const semanticWithCustom = normalizeTableStructure({

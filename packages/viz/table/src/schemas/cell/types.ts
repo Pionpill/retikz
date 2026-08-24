@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type {
   TableCellFit,
@@ -41,19 +41,19 @@ export type TableCellFitValue = ValueOf<typeof TableCellFit>;
 export type TableCellOverflowValue = ValueOf<typeof TableCellOverflow>;
 
 /** Table Cell 矩形跨度 IR */
-export type IRTableCellSpan = z.infer<typeof TableCellSpanSchema>;
+export type IRTableCellSpan = ZodInfer<typeof TableCellSpanSchema>;
 
 /** Table Cell 布局策略 IR */
-export type IRTableCellLayout = z.infer<typeof TableCellLayoutSchema>;
+export type IRTableCellLayout = ZodInfer<typeof TableCellLayoutSchema>;
 
 /** Cell 内容 payload */
-export type IRTableCellPayload = z.infer<typeof TableCellPayloadSchema>;
+export type IRTableCellPayload = ZodInfer<typeof TableCellPayloadSchema>;
 
 /** 数据值 Cell payload */
-export type IRTableCellValuePayload = z.infer<typeof TableCellValuePayloadSchema>;
+export type IRTableCellValuePayload = ZodInfer<typeof TableCellValuePayloadSchema>;
 
 /** 直接内容 Cell payload */
-export type IRTableCellContentPayload = z.infer<typeof TableCellContentPayloadSchema>;
+export type IRTableCellContentPayload = ZodInfer<typeof TableCellContentPayloadSchema>;
 
 /** 显式 manual Table Cell */
-export type IRManualTableCell = z.infer<typeof ManualTableCellSchema>;
+export type IRManualTableCell = ZodInfer<typeof ManualTableCellSchema>;

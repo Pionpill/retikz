@@ -1,5 +1,5 @@
 import { CssColorSchema, FontSchema, OpacitySchema, PaintValueSchema } from '@retikz/core';
-import { z } from 'zod';
+import { array, record, strictObject, string, tuple, unknown } from 'zod';
 
 import { TableLineBorderSchema } from '../border';
 import { TableThemeToken } from './constants';
@@ -10,7 +10,7 @@ export const TableThemeTokenBorderSchema = TableLineBorderSchema.omit({ priority
 
 const ScopeColorSchema = CssColorSchema.nullable();
 
-const categoricalColorsSchema = z.array(CssColorSchema).min(1, {
+const categoricalColorsSchema = array(CssColorSchema).min(1, {
   message: 'Table categorical colors must be non-empty.',
 });
 
@@ -33,17 +33,17 @@ const TableThemeTokenShape = {
   [TableThemeToken.TableBorderVertical]: TableThemeTokenBorderSchema.nullable(),
   [TableThemeToken.ColumnHeaderBorderBottom]: TableThemeTokenBorderSchema.nullable(),
   [TableThemeToken.DataCategorical]: categoricalColorsSchema,
-  [TableThemeToken.DataSequential]: z.tuple([CssColorSchema, CssColorSchema]),
+  [TableThemeToken.DataSequential]: tuple([CssColorSchema, CssColorSchema]),
 } as const;
 
-const TableThemeTokenObjectSchema = z.strictObject(TableThemeTokenShape);
+const TableThemeTokenObjectSchema = strictObject(TableThemeTokenShape);
 
 export const TableThemeTokenKeySchema = TableThemeTokenObjectSchema.keyof().describe(
   'Closed Table theme token key vocabulary.',
 );
 
 const knownTokenKeys = new Set<string>(TableThemeTokenKeySchema.options);
-const themeTokenKeyPreflight = z.record(z.string(), z.unknown()).superRefine((tokens, context) => {
+const themeTokenKeyPreflight = record(string(), unknown()).superRefine((tokens, context) => {
   Object.keys(tokens)
     .filter(key => !knownTokenKeys.has(key))
     .sort()
@@ -71,8 +71,7 @@ export const TableThemeTokenOverridesSchema = themeTokenKeyPreflight
   })
   .describe('Partial strict Table theme token overlay.');
 
-export const TableThemeTokenPresetMapSchema = z
-  .strictObject(TableThemeTokenShape)
+export const TableThemeTokenPresetMapSchema = strictObject(TableThemeTokenShape)
   .omit({ [TableThemeToken.DataCategorical]: true })
   .describe('Complete Table preset map excluding the Core shared categorical projection.');
 

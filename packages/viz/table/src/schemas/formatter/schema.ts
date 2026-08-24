@@ -1,6 +1,6 @@
 import { JsonObjectSchema } from '@retikz/core';
 import { createOpenStringSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import { TableCellFormatter } from './constants';
 
@@ -9,9 +9,7 @@ export const TableCellFormatterNameSchema = createOpenStringSchema(TableCellForm
   'Exact registered Cell formatter provider name. Whitespace is preserved.',
 );
 
-export const TableFormatterRefSchema = z
-  .strictObject({
-    name: TableCellFormatterNameSchema,
-    options: JsonObjectSchema.optional().describe('JSON options validated by the selected formatter provider.'),
-  })
-  .describe('Reference to a registered Cell formatter provider and its JSON options.');
+export const TableFormatterRefSchema = strictObject({
+  name: TableCellFormatterNameSchema,
+  options: JsonObjectSchema.optional().describe('JSON options validated by the selected formatter provider.'),
+}).describe('Reference to a registered Cell formatter provider and its JSON options.');

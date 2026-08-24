@@ -1,6 +1,6 @@
 import { JsonObjectSchema } from '@retikz/core';
 import { createOpenStringSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import { TableCellPresentation } from './constants';
 
@@ -9,9 +9,7 @@ export const TableCellPresentationNameSchema = createOpenStringSchema(TableCellP
   'Exact registered Cell presentation provider name. Whitespace is preserved.',
 );
 
-export const TablePresentationRefSchema = z
-  .strictObject({
-    name: TableCellPresentationNameSchema,
-    options: JsonObjectSchema.optional().describe('JSON options validated by the selected presentation provider.'),
-  })
-  .describe('Reference to a registered Cell presentation provider and its JSON options.');
+export const TablePresentationRefSchema = strictObject({
+  name: TableCellPresentationNameSchema,
+  options: JsonObjectSchema.optional().describe('JSON options validated by the selected presentation provider.'),
+}).describe('Reference to a registered Cell presentation provider and its JSON options.');

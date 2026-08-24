@@ -10,7 +10,7 @@ import {
   NaturalLayoutProposal,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
 import type { IRPlot } from '../../src/schemas';
@@ -40,8 +40,8 @@ const plot = (): IRPlot =>
   });
 
 const ProposalParentSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('fixture'),
-  type: z.literal('proposal-parent'),
+  namespace: literal('fixture'),
+  type: literal('proposal-parent'),
   child: PlotSchema,
 });
 

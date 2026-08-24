@@ -18,7 +18,7 @@ import {
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
 import { DetailTable, ManualTable, Table, TableThemeProvider } from '../../src';
 
@@ -93,7 +93,7 @@ describe('Table React components', () => {
       ],
     };
     const customDefinition = defineTableStructure({
-      schema: z.strictObject({ kind: z.literal('fixture') }),
+      schema: strictObject({ kind: literal('fixture') }),
       build: () => customOutput,
     });
     const customSpec: IRTable = {
@@ -117,7 +117,7 @@ describe('Table React components', () => {
   it('keeps Table tokens, encodings, and custom visual scales equal in standalone and embedded runtimes', () => {
     const visualScale = defineCellVisualScale({
       name: 'react-palette',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       resolve: (_options, _values, context) => ({
         of: () => context.categoricalColors[0],
         legendForm: 'swatch',
@@ -171,7 +171,7 @@ describe('Table React components', () => {
   it('surfaces invalid custom Legend resolution diagnostics through the generic Table entry', () => {
     const invalid = defineCellVisualScale({
       name: 'react-invalid-legend',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       resolve: () =>
         ({
           of: () => 'red',
@@ -368,9 +368,9 @@ describe('Table React components', () => {
 
   it('passes nested composite definitions through standalone Table runtime', () => {
     const schema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('badge'),
-      label: z.string(),
+      namespace: literal('fixture'),
+      type: literal('badge'),
+      label: string(),
     });
     const badge: AnyCompositeDefinition = defineComposite({
       namespace: 'fixture',

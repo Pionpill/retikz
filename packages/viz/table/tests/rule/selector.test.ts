@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import type { IRTableCellSelector, SemanticTableCell } from '../../src';
 
@@ -91,7 +91,7 @@ describe('Table Cell selector matching', () => {
 
   it('keeps selector semantics independent from the structure provider', () => {
     const custom = defineTableStructure({
-      schema: z.strictObject({ kind: z.literal('fixture-structure') }),
+      schema: strictObject({ kind: literal('fixture-structure') }),
       build: () => ({
         rows: [{ id: 'row.0', kind: 'body' }],
         columns: [{ id: 'column.0' }],

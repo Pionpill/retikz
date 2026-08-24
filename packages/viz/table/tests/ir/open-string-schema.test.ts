@@ -1,5 +1,7 @@
+import type { ZodType } from 'zod';
+
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { toJSONSchema } from 'zod';
 
 import {
   TableCellFormatter,
@@ -10,8 +12,8 @@ import {
   TableCellVisualScaleNameSchema,
 } from '../../src';
 
-const expectOpenStringSchema = (schema: z.ZodType, values: ReadonlyArray<string>): void => {
-  expect(z.toJSONSchema(schema)).toMatchObject({
+const expectOpenStringSchema = (schema: ZodType, values: ReadonlyArray<string>): void => {
+  expect(toJSONSchema(schema)).toMatchObject({
     anyOf: [
       { type: 'string', enum: values },
       { type: 'string', minLength: 1 },

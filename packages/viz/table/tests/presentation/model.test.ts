@@ -1,5 +1,5 @@
 ﻿import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import type { CellPresentationInput } from '../../src';
 
@@ -36,7 +36,7 @@ describe('Presented Table model', () => {
     let observed: CellPresentationInput | undefined;
     const inspect = defineCellPresentation({
       name: 'inspect',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: input => {
         observed = input;
         return { type: 'node', position: [0, 0], text: String(input.value) };
@@ -79,7 +79,7 @@ describe('Presented Table model', () => {
     let observed: CellPresentationInput | undefined;
     const inspect = defineCellPresentation({
       name: 'inspect',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: input => {
         observed = input;
         return { type: 'node', position: [0, 0], text: String(input.value) };
@@ -125,7 +125,7 @@ describe('Presented Table model', () => {
     ];
     const inspect = defineCellPresentation({
       name: 'inspect',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: ({ value }) => ({ type: 'node', position: [0, 0], text: String(value) }),
     });
 

@@ -1,6 +1,6 @@
 import { resolveDefaultCoreThemeColors, ThemeMode, ThemeTokenSource } from '@retikz/core';
 import { assertPlainDataContainers } from '@retikz/foundation';
-import { z } from 'zod';
+import { custom } from 'zod';
 
 import type { TableThemeStyleDefinition } from '../../contract';
 import type { IRTableThemeTokenOverrides, TableThemeTokenKey } from '../../schemas';
@@ -32,13 +32,11 @@ const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
   return prototype === Object.prototype || prototype === null;
 };
 
-const TableThemeStyleProviderOutputSchema = z
-  .custom<Record<string, unknown>>(isPlainRecord, {
-    error: 'Table theme style definition must return a plain object.',
-  })
-  .pipe(TableThemeStyleTokenOverridesSchema);
+const TableThemeStyleProviderOutputSchema = custom<Record<string, unknown>>(isPlainRecord, {
+  error: 'Table theme style definition must return a plain object.',
+}).pipe(TableThemeStyleTokenOverridesSchema);
 
-const TableThemeStylePlainDataSchema = z.custom<unknown>(
+const TableThemeStylePlainDataSchema = custom<unknown>(
   value => {
     try {
       assertPlainDataContainers(value, 'Table theme style definition output');

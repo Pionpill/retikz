@@ -1,6 +1,6 @@
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, object } from 'zod';
 
 import type { DataLineageEvent, ExternalRow } from '../../src';
 
@@ -230,8 +230,8 @@ describe('data lineage runtime', () => {
 
   it('records custom transform steps through the shared registry', () => {
     const doubleRevenue = defineTransform({
-      schema: z.object({
-        kind: z.literal('double-revenue'),
+      schema: object({
+        kind: literal('double-revenue'),
         field: NonBlankStringSchema,
         as: NonBlankStringSchema,
       }),
@@ -357,8 +357,8 @@ describe('data lineage runtime', () => {
 
   it('uses calculation detail sampling only when explicitly enabled', () => {
     const range = defineStatisticsReducer({
-      schema: z.object({
-        kind: z.literal('range'),
+      schema: object({
+        kind: literal('range'),
         field: NonBlankStringSchema,
         as: NonBlankStringSchema,
       }),

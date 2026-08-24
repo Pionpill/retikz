@@ -21,7 +21,7 @@ import {
 } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { discriminatedUnion, literal, strictObject } from 'zod';
 
 import type { PresentedTableModel, SemanticTableCell, TableLayoutManifest } from '../../contract';
 import type { ResolvedTableThemeTokens } from '../../providers/style';
@@ -107,9 +107,9 @@ type TableTransactionCellLocator = Readonly<{
 }>;
 
 /** Presented model 进入布局事务前的闭合 Cell 运行时合同 */
-const PresentedTableCellSchema = z.discriminatedUnion('kind', [
-  z.strictObject({
-    kind: z.literal(TableCellPayloadKind.Value),
+const PresentedTableCellSchema = discriminatedUnion('kind', [
+  strictObject({
+    kind: literal(TableCellPayloadKind.Value),
     cellId: NonBlankStringSchema.optional(),
     rawValue: ScalarValueSchema,
     value: ScalarValueSchema,
@@ -118,8 +118,8 @@ const PresentedTableCellSchema = z.discriminatedUnion('kind', [
     appearance: TableCellAppearanceSchema,
     content: ChildSchema,
   }),
-  z.strictObject({
-    kind: z.literal(TableCellPayloadKind.Content),
+  strictObject({
+    kind: literal(TableCellPayloadKind.Content),
     cellId: NonBlankStringSchema.optional(),
     appearance: TableCellAppearanceSchema,
     content: ChildSchema,

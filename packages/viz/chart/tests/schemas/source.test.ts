@@ -1,6 +1,6 @@
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { array, boolean, literal, number, strictObject } from 'zod';
 
 import {
   ChartLayoutSchema,
@@ -11,33 +11,29 @@ import {
   createChartThemeSchema,
 } from '../../src';
 
-const FixtureRecipeThemeSchema = z.strictObject({
-  showAxes: z.boolean(),
-  pointSize: z.number().finite().optional(),
+const FixtureRecipeThemeSchema = strictObject({
+  showAxes: boolean(),
+  pointSize: number().finite().optional(),
 });
 
-const FixtureChartSchema = z.strictObject({
-  chartType: z.literal('fixture'),
-  encodings: z.strictObject({
+const FixtureChartSchema = strictObject({
+  chartType: literal('fixture'),
+  encodings: strictObject({
     x: NonBlankStringSchema,
     y: NonBlankStringSchema,
     color: NonBlankStringSchema.optional(),
   }),
-  properties: z
-    .strictObject({
-      size: z.number().finite().optional(),
-      visible: z.boolean().optional(),
-    })
-    .optional(),
-  marks: z
-    .array(
-      z.strictObject({
-        kind: z.literal('fixture-mark'),
-        encodings: z.strictObject({ color: NonBlankStringSchema.optional() }).optional(),
-        properties: z.strictObject({ visible: z.boolean().optional() }).optional(),
-      }),
-    )
-    .optional(),
+  properties: strictObject({
+    size: number().finite().optional(),
+    visible: boolean().optional(),
+  }).optional(),
+  marks: array(
+    strictObject({
+      kind: literal('fixture-mark'),
+      encodings: strictObject({ color: NonBlankStringSchema.optional() }).optional(),
+      properties: strictObject({ visible: boolean().optional() }).optional(),
+    }),
+  ).optional(),
 });
 
 const FixtureThemeSchema = createChartThemeSchema(FixtureRecipeThemeSchema).optional();

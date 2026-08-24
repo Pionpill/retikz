@@ -1,13 +1,13 @@
 import { ShapeNameSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { toJSONSchema } from 'zod';
 
 import { ShapeChannelSchema } from '../../src/schemas/encoding';
 import { ColorSchemeNameSchema, PlotColorScheme } from '../../src/schemas/scale';
 
 describe('Plot registry-backed open string schemas', () => {
   it('hints built-in color schemes while preserving custom resolver names', () => {
-    expect(z.toJSONSchema(ColorSchemeNameSchema)).toMatchObject({
+    expect(toJSONSchema(ColorSchemeNameSchema)).toMatchObject({
       anyOf: [
         { type: 'string', enum: Object.values(PlotColorScheme) },
         { type: 'string', minLength: 1 },
@@ -21,6 +21,6 @@ describe('Plot registry-backed open string schemas', () => {
   it('reuses the Core shape vocabulary for constant shape channels', () => {
     expect(ShapeChannelSchema.parse({ value: 'custom.glyph' })).toEqual({ value: 'custom.glyph' });
     expect(() => ShapeChannelSchema.parse({ value: '   ' })).toThrow();
-    expect(z.toJSONSchema(ShapeNameSchema)).toMatchObject({ anyOf: expect.any(Array) });
+    expect(toJSONSchema(ShapeNameSchema)).toMatchObject({ anyOf: expect.any(Array) });
   });
 });

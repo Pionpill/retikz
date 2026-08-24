@@ -11,7 +11,7 @@ import {
 import { readSourceIndex, readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, object } from 'zod';
 
 import { resolvePlotTransformRegistry } from '../../../src/providers';
 
@@ -211,8 +211,8 @@ describe('statistical transform algebra (contract)', () => {
 
   it('custom_stat_reducer_in_summarize', () => {
     const weightedMean = defineStatisticsReducer({
-      schema: z.object({
-        kind: z.literal('weighted-mean'),
+      schema: object({
+        kind: literal('weighted-mean'),
         field: NonBlankStringSchema,
         weight: NonBlankStringSchema,
         as: NonBlankStringSchema,
@@ -250,10 +250,10 @@ describe('statistical transform algebra (contract)', () => {
 
   it('custom_row_selector_in_select', () => {
     const nearest = defineRowSelector({
-      schema: z.object({
-        kind: z.literal('nearest'),
+      schema: object({
+        kind: literal('nearest'),
         field: NonBlankStringSchema,
-        target: z.number(),
+        target: number(),
       }),
       inputFields: operation => [operation.field],
       select: (rows, operation) => {

@@ -1,6 +1,6 @@
 import { ThemeMode, ThemeTokenSource } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { array, enum as zodEnum, literal, strictObject } from 'zod';
 
 import { PlotThemeToken } from './constants';
 import { PlotThemeSchema } from './schema';
@@ -15,59 +15,50 @@ const PLOT_INHERITED_COLOR_TOKENS = new Set<string>([
 ]);
 
 /** 单个 Plot token 的最终 cascade 来源 */
-export const PlotThemeTokenSourceRecordSchema = z
-  .strictObject({
-    token: z.enum(PlotThemeToken).describe('Canonical Plot theme token'),
-    kind: z.enum(ThemeTokenSource).describe('Winning Plot token source relation to the Plot owner'),
-    path: NonBlankStringSchema.describe('Stable source path for this resolved Plot token'),
-  })
-  .describe('Winning cascade source for one resolved Plot style token');
+export const PlotThemeTokenSourceRecordSchema = strictObject({
+  token: zodEnum(PlotThemeToken).describe('Canonical Plot theme token'),
+  kind: zodEnum(ThemeTokenSource).describe('Winning Plot token source relation to the Plot owner'),
+  path: NonBlankStringSchema.describe('Stable source path for this resolved Plot token'),
+}).describe('Winning cascade source for one resolved Plot style token');
 
 /** 单条 Axis theme token rule 的稳定来源记录 */
-export const PlotThemeTokenRuleSourceRecordSchema = z
-  .strictObject({
-    rule: PlotAxisThemeTokenRuleSchema.describe('Axis theme token rule preserved in cascade order'),
-    kind: z.literal(ThemeTokenSource.Local).describe('Rule authored by the Plot owner'),
-    path: NonBlankStringSchema.describe('Stable source path for this Axis theme token rule'),
-  })
-  .describe('Ordered source record for one scoped Plot Axis theme token rule');
+export const PlotThemeTokenRuleSourceRecordSchema = strictObject({
+  rule: PlotAxisThemeTokenRuleSchema.describe('Axis theme token rule preserved in cascade order'),
+  kind: literal(ThemeTokenSource.Local).describe('Rule authored by the Plot owner'),
+  path: NonBlankStringSchema.describe('Stable source path for this Axis theme token rule'),
+}).describe('Ordered source record for one scoped Plot Axis theme token rule');
 
 /** Plot native theme 的 authored 入口 */
-export const PlotThemeAuthoredOverrideRecordSchema = z
-  .strictObject({
-    kind: z.literal(ThemeTokenSource.Local).describe('Plot-authored override local to the Plot owner'),
-    path: z.enum(PLOT_THEME_AUTHORED_OVERRIDE_PATHS).describe('Stable authored Plot input path'),
-  })
-  .describe('Authored Plot override entry applied after Plot token overrides');
+export const PlotThemeAuthoredOverrideRecordSchema = strictObject({
+  kind: literal(ThemeTokenSource.Local).describe('Plot-authored override local to the Plot owner'),
+  path: zodEnum(PLOT_THEME_AUTHORED_OVERRIDE_PATHS).describe('Stable authored Plot input path'),
+}).describe('Authored Plot override entry applied after Plot token overrides');
 
 /** scale、mark 与 legend 共享的完整 Plot palette */
-export const PlotPaletteResolutionSchema = z
-  .strictObject({
-    categorical: PlotColorPaletteSchema.describe('Resolved categorical palette'),
-    series: PlotColorPaletteSchema.describe('Resolved mark and series palette'),
-    sector: PlotColorPaletteSchema.describe('Resolved sector palette'),
-    sequential: NonBlankStringSchema.describe('Resolved sequential scheme name'),
-    diverging: NonBlankStringSchema.describe('Resolved diverging scheme name'),
-    shape: PlotShapePaletteSchema.describe('Resolved categorical shape palette'),
-  })
-  .describe('Complete Plot palette after the domain theme cascade');
+export const PlotPaletteResolutionSchema = strictObject({
+  categorical: PlotColorPaletteSchema.describe('Resolved categorical palette'),
+  series: PlotColorPaletteSchema.describe('Resolved mark and series palette'),
+  sector: PlotColorPaletteSchema.describe('Resolved sector palette'),
+  sequential: NonBlankStringSchema.describe('Resolved sequential scheme name'),
+  diverging: NonBlankStringSchema.describe('Resolved diverging scheme name'),
+  shape: PlotShapePaletteSchema.describe('Resolved categorical shape palette'),
+}).describe('Complete Plot palette after the domain theme cascade');
 
 /** Plot-owned theme resolution 与 inspection 契约 */
-export const PlotThemeResolutionSchema = z
-  .strictObject({
-    style: NonBlankStringSchema.optional().describe('Optional Theme style selecting a host-injected Plot definition'),
-    mode: z.enum(ThemeMode).describe('Effective Theme mode selecting Plot paints'),
-    tokens: PlotThemeTokenResolutionSchema.describe('Complete resolved Plot theme token map'),
-    tokenSources: z.array(PlotThemeTokenSourceRecordSchema).describe('Canonical one-source-per-token records'),
-    tokenRules: z
-      .array(PlotThemeTokenRuleSourceRecordSchema)
-      .describe('Axis theme token rules preserved in effective cascade order'),
-    authoredOverrides: z
-      .array(PlotThemeAuthoredOverrideRecordSchema)
-      .describe('Authored native Plot theme inputs in cascade order'),
-    plotTheme: PlotThemeSchema.describe('Complete resolved native Plot theme'),
-    palette: PlotPaletteResolutionSchema.describe('Complete resolved Plot palette'),
-  })
+export const PlotThemeResolutionSchema = strictObject({
+  style: NonBlankStringSchema.optional().describe('Optional Theme style selecting a host-injected Plot definition'),
+  mode: zodEnum(ThemeMode).describe('Effective Theme mode selecting Plot paints'),
+  tokens: PlotThemeTokenResolutionSchema.describe('Complete resolved Plot theme token map'),
+  tokenSources: array(PlotThemeTokenSourceRecordSchema).describe('Canonical one-source-per-token records'),
+  tokenRules: array(PlotThemeTokenRuleSourceRecordSchema).describe(
+    'Axis theme token rules preserved in effective cascade order',
+  ),
+  authoredOverrides: array(PlotThemeAuthoredOverrideRecordSchema).describe(
+    'Authored native Plot theme inputs in cascade order',
+  ),
+  plotTheme: PlotThemeSchema.describe('Complete resolved native Plot theme'),
+  palette: PlotPaletteResolutionSchema.describe('Complete resolved Plot palette'),
+})
   .superRefine((resolution, context) => {
     const canonical = Object.values(PlotThemeToken);
     if (

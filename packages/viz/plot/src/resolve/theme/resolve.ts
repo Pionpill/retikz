@@ -2,7 +2,7 @@ import type { ResolvedTheme } from '@retikz/core';
 
 import { ThemeTokenSource } from '@retikz/core';
 import { assertPlainDataContainers } from '@retikz/foundation';
-import { z } from 'zod';
+import { custom, strictObject } from 'zod';
 
 import type { PlotThemeStyleDefinition } from '../../contract';
 import type { IRPlot, IRPlotThemeResolution, IRPlotThemeTokenResolution } from '../../schemas';
@@ -30,18 +30,16 @@ const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
   return prototype === Object.prototype || prototype === null;
 };
 
-const PlotThemeStyleOverridesSchema = z
-  .custom<Record<string, unknown>>(isPlainRecord, {
-    error: 'Plot theme style definition must return a plain object.',
-  })
-  .pipe(
-    z.strictObject({
-      tokens: PlotThemeTokenOverridesSchema.optional(),
-      tokenRules: PlotAxisThemeTokenRulesSchema.optional(),
-    }),
-  );
+const PlotThemeStyleOverridesSchema = custom<Record<string, unknown>>(isPlainRecord, {
+  error: 'Plot theme style definition must return a plain object.',
+}).pipe(
+  strictObject({
+    tokens: PlotThemeTokenOverridesSchema.optional(),
+    tokenRules: PlotAxisThemeTokenRulesSchema.optional(),
+  }),
+);
 
-const PlotThemeStylePlainDataSchema = z.custom<unknown>(
+const PlotThemeStylePlainDataSchema = custom<unknown>(
   value => {
     try {
       assertPlainDataContainers(value, 'Plot theme style definition output');

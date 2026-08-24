@@ -15,7 +15,7 @@ import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import type { DetailTableProps } from '../../src';
 
@@ -279,7 +279,7 @@ describe('Table React composition root integration', () => {
   it('preserves every DetailTable root prop in DetailColumn children mode', () => {
     const structureDefinitions = [
       defineTableStructure({
-        schema: z.strictObject({ kind: z.literal('root-props-structure') }),
+        schema: strictObject({ kind: literal('root-props-structure') }),
         build: () => ({
           rows: [{ id: 'row.0', kind: 'body' }],
           columns: [{ id: 'column.0' }],
@@ -290,14 +290,14 @@ describe('Table React composition root integration', () => {
     const presentationDefinitions = [
       defineCellPresentation({
         name: 'root-props-presentation',
-        optionsSchema: z.strictObject({}),
+        optionsSchema: strictObject({}),
         present: () => content,
       }),
     ];
     const formatterDefinitions = [
       defineCellFormatter({
         name: 'root-props-formatter',
-        optionsSchema: z.strictObject({}),
+        optionsSchema: strictObject({}),
         format: input => input.value,
       }),
     ];
@@ -314,8 +314,8 @@ describe('Table React composition root integration', () => {
       }),
     ];
     const compositeSchema = CompositeBaseSchema.extend({
-      namespace: z.literal('root-props'),
-      type: z.literal('content'),
+      namespace: literal('root-props'),
+      type: literal('content'),
     });
     const composites = [
       defineComposite({
@@ -489,7 +489,7 @@ describe('Table React composition root integration', () => {
   it('uses rule-selected custom formatter definitions in standalone rendering', () => {
     const formatter = defineCellFormatter({
       name: 'rule-prefix',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       format: input => `#${String(input.value)}`,
     });
     const output = renderToStaticMarkup(

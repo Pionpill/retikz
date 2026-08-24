@@ -4,7 +4,7 @@ import type { DataFieldTypeValue } from '@retikz/data';
 import { DataFieldType, defineTransform } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, strictObject, string, union } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
@@ -22,15 +22,11 @@ const SizeChannelTestTransform = {
 
 /** 为每行写入指定派生值，用于验证 transform 输出字段的最终类型推断 */
 const deriveSizeValueTransform = defineTransform({
-  schema: z
-    .strictObject({
-      kind: z
-        .literal(SizeChannelTestTransform.DeriveValue)
-        .describe('Discriminator for the size channel test transform'),
-      as: NonBlankStringSchema.describe('Output field receiving the derived value'),
-      value: z.union([z.string(), z.number()]).describe('Scalar value written to every output row'),
-    })
-    .describe('Test-only transform that writes a derived size field'),
+  schema: strictObject({
+    kind: literal(SizeChannelTestTransform.DeriveValue).describe('Discriminator for the size channel test transform'),
+    as: NonBlankStringSchema.describe('Output field receiving the derived value'),
+    value: union([string(), number()]).describe('Scalar value written to every output row'),
+  }).describe('Test-only transform that writes a derived size field'),
   outputFields: operation => [operation.as],
   apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: operation.value })),
 });

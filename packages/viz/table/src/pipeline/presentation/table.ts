@@ -1,5 +1,5 @@
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { discriminatedUnion, literal, strictObject } from 'zod';
 
 import type {
   FormattedTableCell,
@@ -22,15 +22,15 @@ import {
 import { deepFreeze } from '../../shared';
 import { applyTableCellContentStyle, parsePresentedChild, presentCellValue } from './present';
 
-const ResolvedTableCellPresentationInputSchema = z.discriminatedUnion('kind', [
-  z.strictObject({
-    kind: z.literal(TableCellPayloadKind.Value),
+const ResolvedTableCellPresentationInputSchema = discriminatedUnion('kind', [
+  strictObject({
+    kind: literal(TableCellPayloadKind.Value),
     cellId: NonBlankStringSchema.optional(),
     presentation: TablePresentationRefSchema,
     appearance: TableCellAppearanceSchema,
   }),
-  z.strictObject({
-    kind: z.literal(TableCellPayloadKind.Content),
+  strictObject({
+    kind: literal(TableCellPayloadKind.Content),
     cellId: NonBlankStringSchema.optional(),
     appearance: TableCellAppearanceSchema,
   }),

@@ -3,7 +3,7 @@ import type { ResolvedTheme } from '@retikz/core';
 import { JsonObjectSchema } from '@retikz/core';
 import { assertPlainDataContainers, NonBlankStringSchema } from '@retikz/foundation';
 import { PlotThemeTokenOverridesSchema } from '@retikz/plot';
-import { z } from 'zod';
+import { record, strictObject, ZodError } from 'zod';
 
 import type { ChartRecipeDefinition, ChartThemeDefinition } from '../contract';
 import type { IRChartSource } from '../schemas';
@@ -11,25 +11,21 @@ import type { IRChartSource } from '../schemas';
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { ChartThemeOverridesSchema } from '../schemas';
 
-const ChartThemeDefinitionEnvelopeSchema = z
-  .strictObject({
-    name: NonBlankStringSchema.describe('Registered Chart theme name'),
-    base: NonBlankStringSchema.optional().describe('Optional registered base Chart theme name'),
-    tokens: z
-      .strictObject({
-        chart: JsonObjectSchema.optional().describe('Sparse Chart shell token slice'),
-        plot: JsonObjectSchema.optional().describe('Sparse Plot token slice'),
-        recipes: z
-          .record(NonBlankStringSchema, JsonObjectSchema)
-          .optional()
-          .describe('Sparse recipe token slices keyed by chart type'),
-      })
+const ChartThemeDefinitionEnvelopeSchema = strictObject({
+  name: NonBlankStringSchema.describe('Registered Chart theme name'),
+  base: NonBlankStringSchema.optional().describe('Optional registered base Chart theme name'),
+  tokens: strictObject({
+    chart: JsonObjectSchema.optional().describe('Sparse Chart shell token slice'),
+    plot: JsonObjectSchema.optional().describe('Sparse Plot token slice'),
+    recipes: record(NonBlankStringSchema, JsonObjectSchema)
       .optional()
-      .describe('Owner-separated Chart theme token slices'),
+      .describe('Sparse recipe token slices keyed by chart type'),
   })
-  .describe('Registered Chart theme definition envelope');
+    .optional()
+    .describe('Owner-separated Chart theme token slices'),
+}).describe('Registered Chart theme definition envelope');
 
-const pathOf = (prefix: ReadonlyArray<string | number>, error: z.ZodError): ReadonlyArray<string | number> => {
+const pathOf = (prefix: ReadonlyArray<string | number>, error: ZodError): ReadonlyArray<string | number> => {
   const issue = error.issues.at(0);
   const issuePath = (issue?.path ?? []).map(segment => (typeof segment === 'symbol' ? String(segment) : segment));
   const unknownKey = issue?.code === 'unrecognized_keys' ? issue.keys.at(0) : undefined;
@@ -38,7 +34,7 @@ const pathOf = (prefix: ReadonlyArray<string | number>, error: z.ZodError): Read
     : [...prefix, ...issuePath, typeof unknownKey === 'symbol' ? String(unknownKey) : unknownKey];
 };
 
-const invalidThemeSlice = (path: ReadonlyArray<string | number>, error: z.ZodError): RetikzChartError =>
+const invalidThemeSlice = (path: ReadonlyArray<string | number>, error: ZodError): RetikzChartError =>
   new RetikzChartError({
     code: RetikzChartErrorCode.InvalidRegistry,
     message: 'Chart theme definition contains an invalid owner token slice',
@@ -46,7 +42,7 @@ const invalidThemeSlice = (path: ReadonlyArray<string | number>, error: z.ZodErr
     cause: error,
   });
 
-const invalidThemeDefinition = (error: z.ZodError): RetikzChartError =>
+const invalidThemeDefinition = (error: ZodError): RetikzChartError =>
   new RetikzChartError({
     code: RetikzChartErrorCode.InvalidRegistry,
     message: 'Chart theme definition has an invalid declaration envelope',
@@ -86,7 +82,7 @@ export const validateChartThemeDefinition = (
   try {
     ChartThemeDefinitionEnvelopeSchema.parse(theme);
   } catch (error) {
-    if (error instanceof z.ZodError) throw invalidThemeDefinition(error);
+    if (error instanceof ZodError) throw invalidThemeDefinition(error);
     throw error;
   }
   assertOptionalPropertyIsDefined(theme, 'base', ['themes', 'base']);
@@ -113,7 +109,7 @@ export const validateChartThemeDefinition = (
     try {
       ChartThemeOverridesSchema.parse(tokens.chart);
     } catch (error) {
-      if (error instanceof z.ZodError) throw invalidThemeSlice(['themes', theme.name, 'tokens', 'chart'], error);
+      if (error instanceof ZodError) throw invalidThemeSlice(['themes', theme.name, 'tokens', 'chart'], error);
       throw error;
     }
   }
@@ -121,7 +117,7 @@ export const validateChartThemeDefinition = (
     try {
       PlotThemeTokenOverridesSchema.parse(tokens.plot);
     } catch (error) {
-      if (error instanceof z.ZodError) throw invalidThemeSlice(['themes', theme.name, 'tokens', 'plot'], error);
+      if (error instanceof ZodError) throw invalidThemeSlice(['themes', theme.name, 'tokens', 'plot'], error);
       throw error;
     }
   }
@@ -131,7 +127,7 @@ export const validateChartThemeDefinition = (
     try {
       recipe.theme.overridesSchema.parse(tokensForRecipe);
     } catch (error) {
-      if (error instanceof z.ZodError) {
+      if (error instanceof ZodError) {
         throw invalidThemeSlice(['themes', theme.name, 'tokens', 'recipes', chartType], error);
       }
       throw error;

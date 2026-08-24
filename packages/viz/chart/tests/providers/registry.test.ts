@@ -1,23 +1,23 @@
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject, string, undefined as zodUndefined, ZodError } from 'zod';
 
 import { defineChartTheme, RetikzChartErrorCode } from '../../src';
 import { defineChartRecipe } from '../../src/_chart/contract';
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { createChartSourceSchema } from '../../src/_chart/schemas';
 
-const recipeSchema = z.strictObject({
-  chartType: z.literal('fixture'),
-  encodings: z.strictObject({ x: z.string(), y: z.string() }),
+const recipeSchema = strictObject({
+  chartType: literal('fixture'),
+  encodings: strictObject({ x: string(), y: string() }),
 });
-const sourceSchema = createChartSourceSchema('point', recipeSchema, z.undefined().optional());
+const sourceSchema = createChartSourceSchema('point', recipeSchema, zodUndefined().optional());
 const recipe = defineChartRecipe({
   chartType: 'fixture',
   schema: sourceSchema,
   theme: {
-    overridesSchema: z.strictObject({ accent: z.string().optional() }),
-    resolutionSchema: z.strictObject({ accent: z.string() }),
+    overridesSchema: strictObject({ accent: string().optional() }),
+    resolutionSchema: strictObject({ accent: string() }),
     fallback: { accent: '#000000' },
   },
   consumes: { encodings: ['x', 'y'], properties: [] },
@@ -187,7 +187,7 @@ describe('active Chart provider registry', () => {
     ).toThrowError(
       expect.objectContaining({
         code: RetikzChartErrorCode.InvalidRegistry,
-        cause: expect.any(z.ZodError),
+        cause: expect.any(ZodError),
       }),
     );
   });

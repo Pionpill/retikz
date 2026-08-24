@@ -4,7 +4,7 @@ import { defineTransform } from '@retikz/data';
 import { SOURCE_INDEX } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, object } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
@@ -24,8 +24,8 @@ type Datasets = Record<string, Array<Record<string, unknown>>>;
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const doubleDefinition = defineTransform({
-  schema: z.object({
-    kind: z.literal('double'),
+  schema: object({
+    kind: literal('double'),
     field: NonBlankStringSchema,
     as: NonBlankStringSchema,
   }),
@@ -39,8 +39,8 @@ const doubleDefinition = defineTransform({
 });
 
 const groupSumDefinition = defineTransform({
-  schema: z.object({
-    kind: z.literal('group-sum'),
+  schema: object({
+    kind: literal('group-sum'),
     groupBy: NonBlankStringSchema,
     field: NonBlankStringSchema,
     as: NonBlankStringSchema,

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { strictObject, string } from 'zod';
 
 import { defineCellFormatter } from '../../contract';
 import { RetikzTableError } from '../../error';
@@ -7,10 +7,10 @@ import { TableCellFormatter } from '../../schemas';
 /** 把 boolean 映射为显式标签的内置 formatter */
 export const BOOLEAN_CELL_FORMATTER = defineCellFormatter({
   name: TableCellFormatter.Boolean,
-  optionsSchema: z.strictObject({
-    trueText: z.string().optional(),
-    falseText: z.string().optional(),
-    nullText: z.string().optional(),
+  optionsSchema: strictObject({
+    trueText: string().optional(),
+    falseText: string().optional(),
+    nullText: string().optional(),
   }),
   format: ({ value }, options) => {
     if (value === null) return options.nullText ?? null;

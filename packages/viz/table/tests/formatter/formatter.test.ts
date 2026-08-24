@@ -1,8 +1,9 @@
 ﻿import type { IRJsonObject } from '@retikz/core';
+import type { ZodType } from 'zod';
 
 import { formatDefaultLocale } from 'd3-format';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { strictObject, string } from 'zod';
 
 import type { SemanticTableModel } from '../../src';
 
@@ -64,7 +65,7 @@ describe('Cell formatter registry', () => {
   it('dispatches built-in and custom definitions through the same registry', () => {
     const prefix = defineCellFormatter({
       name: 'prefix',
-      optionsSchema: z.strictObject({ prefix: z.string() }),
+      optionsSchema: strictObject({ prefix: string() }),
       format: ({ value, context }, options) => `${options.prefix}${String(value)}@${context.cellId}`,
     });
     const registry = resolveCellFormatterRegistry([prefix]);
@@ -78,7 +79,7 @@ describe('Cell formatter registry', () => {
     const formatterOf = (name: string) =>
       defineCellFormatter({
         name,
-        optionsSchema: z.strictObject({}),
+        optionsSchema: strictObject({}),
         format: ({ value }) => value,
       });
     const formatter = formatterOf('custom');
@@ -164,7 +165,7 @@ describe('formatted Table model', () => {
     let observed: unknown;
     const inspect = defineCellFormatter({
       name: 'inspect',
-      optionsSchema: z.strictObject({ suffix: z.string().default('!') }),
+      optionsSchema: strictObject({ suffix: string().default('!') }),
       format: (input, options) => {
         observed = input.context;
         return `${String(input.value)}${options.suffix}`;
@@ -188,12 +189,12 @@ describe('formatted Table model', () => {
 
     const nonJsonOptions = defineCellFormatter<IRJsonObject>({
       name: 'non-json-options',
-      optionsSchema: z.strictObject({}).transform(() => ({ run: () => 'x' })) as unknown as z.ZodType<IRJsonObject>,
+      optionsSchema: strictObject({}).transform(() => ({ run: () => 'x' })) as unknown as ZodType<IRJsonObject>,
       format: ({ value }) => value,
     });
     const invalidOutput = defineCellFormatter({
       name: 'invalid-output',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       format: () => ({ invalid: true }) as unknown as string,
     });
 
@@ -207,7 +208,7 @@ describe('formatted Table model', () => {
     const providerCause = new Error('provider failed');
     const thrown = defineCellFormatter({
       name: 'thrown',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       format: () => {
         throw providerCause;
       },
@@ -227,7 +228,7 @@ describe('formatted Table model', () => {
     let observed: unknown;
     const inspect = defineCellFormatter({
       name: 'anonymous-inspect',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       format: input => {
         observed = input.context;
         return input.value;
@@ -276,7 +277,7 @@ describe('formatted Table model', () => {
   it('passes the raw and formatted scalars into the presentation ABI', () => {
     const inspect = defineCellPresentation({
       name: 'inspect',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: ({ rawValue, value, context }) => ({
         type: 'node',
         position: [0, 0],

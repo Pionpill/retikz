@@ -8,7 +8,7 @@ import {
   defineTableThemeStyle,
 } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
 import { detailTable, manualTable, renderTable } from '../../src';
 
@@ -77,7 +77,7 @@ describe('renderTable', () => {
   it('passes formatter definitions through the shared lowering options in SSR', () => {
     const prefix = defineCellFormatter({
       name: 'prefix',
-      optionsSchema: z.strictObject({ prefix: z.string() }),
+      optionsSchema: strictObject({ prefix: string() }),
       format: ({ value }, options) => `${options.prefix}${String(value)}`,
     });
     const spec = manualTable({
@@ -90,7 +90,7 @@ describe('renderTable', () => {
   it('keeps Core Theme, Table tokens, encodings, and custom visual scales in Vanilla SSR artifacts', () => {
     const visualScale = defineCellVisualScale({
       name: 'vanilla-palette',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       resolve: (_options, _values, context) => ({
         of: () => context.categoricalColors[0],
         legendForm: 'swatch',
@@ -161,7 +161,7 @@ describe('renderTable', () => {
   it('surfaces invalid custom Legend resolution diagnostics through Vanilla SSR', () => {
     const invalid = defineCellVisualScale({
       name: 'vanilla-invalid-legend',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       resolve: () =>
         ({
           of: () => 'red',
@@ -191,7 +191,7 @@ describe('renderTable', () => {
     const observed: Array<CellPresentationInput> = [];
     const inspect = defineCellPresentation({
       name: 'inspect-appearance',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: input => {
         observed.push(input);
         return {
@@ -244,7 +244,7 @@ describe('renderTable', () => {
     const observed: Array<CellPresentationInput> = [];
     const inspect = defineCellPresentation({
       name: 'rule-inspect',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: input => {
         observed.push(input);
         return { type: 'node', position: [0, 0], text: String(input.value) };
@@ -303,9 +303,9 @@ describe('renderTable', () => {
 
   it('compiles nested Tier 2 content through compile.composites in the same SSR result', () => {
     const badgeSchema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('badge'),
-      label: z.string(),
+      namespace: literal('fixture'),
+      type: literal('badge'),
+      label: string(),
     });
     const badge = defineComposite({
       namespace: 'fixture',

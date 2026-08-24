@@ -1,7 +1,9 @@
+import type { RefinementCtx } from 'zod';
+
 import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
 import { DataReferenceSchema } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { array, literal, never, union } from 'zod';
 
 import { TableCellVisualEncodingSchema } from '../encoding';
 import { TableLayoutSchema } from '../layout';
@@ -11,18 +13,17 @@ import { TableThemeTokenOverridesSchema } from '../style';
 import { TABLE_NAMESPACE, TableComposite } from './constants';
 
 const TableBaseSchema = CompositeBaseSchema.extend({
-  namespace: z
-    .literal(TABLE_NAMESPACE)
-    .describe('Tier 2 namespace that routes this node to the Table composite definition.'),
-  type: z.literal(TableComposite.Table).describe('Composite type for the top-level Table specification.'),
+  namespace: literal(TABLE_NAMESPACE).describe(
+    'Tier 2 namespace that routes this node to the Table composite definition.',
+  ),
+  type: literal(TableComposite.Table).describe('Composite type for the top-level Table specification.'),
   id: NonBlankStringSchema.optional().describe('Optional stable Table id used by the lowered root Scope.'),
   layout: TableLayoutSchema.optional().describe(
     'Two-dimensional Table track, gap, and border layout options. Omitted fields use the pipeline defaults.',
   ),
   meta: JsonObjectSchema.optional().describe('Opaque JSON-safe metadata preserved by Table lowering.'),
-  rules: z.array(TableCellRuleSchema).optional().describe('Ordered root Cell rules applied by declaration order.'),
-  encodings: z
-    .array(TableCellVisualEncodingSchema)
+  rules: array(TableCellRuleSchema).optional().describe('Ordered root Cell rules applied by declaration order.'),
+  encodings: array(TableCellVisualEncodingSchema)
     .optional()
     .describe('Ordered Table Cell visual encodings. Omission is runtime-equivalent to an empty array.'),
   tableThemeTokens: TableThemeTokenOverridesSchema.optional().describe(
@@ -34,7 +35,7 @@ type TableRootSemanticInput = Readonly<{
   encodings?: ReadonlyArray<Readonly<{ id: string; legend?: false | Readonly<{ title?: string }> }>>;
 }>;
 
-const validateTableRoot = (spec: TableRootSemanticInput, context: z.RefinementCtx): void => {
+const validateTableRoot = (spec: TableRootSemanticInput, context: RefinementCtx): void => {
   const seen = new Set<string>();
   spec.encodings?.forEach((encoding, index) => {
     if (seen.has(encoding.id)) {
@@ -54,7 +55,7 @@ export const DetailTableSchema = TableBaseSchema.extend({
   .describe('JSON-safe detail Table composite specification bound to external data.');
 
 export const ManualTableSchema = TableBaseSchema.extend({
-  data: z.never().optional().describe('Manual Table specifications do not accept an external dataset reference.'),
+  data: never().optional().describe('Manual Table specifications do not accept an external dataset reference.'),
   structure: ManualTableStructureSchema.describe('Explicit row-major Cell matrix for this manual Table.'),
 })
   .superRefine(validateTableRoot)
@@ -69,6 +70,6 @@ export const CustomTableSchema = TableBaseSchema.extend({
   .superRefine(validateTableRoot)
   .describe('JSON-safe custom Table composite specification resolved by a structure definition.');
 
-export const TableSchema = z
-  .union([DetailTableSchema, ManualTableSchema, CustomTableSchema])
-  .describe('JSON-safe Table composite specification covering the supported precise root variants.');
+export const TableSchema = union([DetailTableSchema, ManualTableSchema, CustomTableSchema]).describe(
+  'JSON-safe Table composite specification covering the supported precise root variants.',
+);

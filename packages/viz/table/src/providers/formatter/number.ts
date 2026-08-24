@@ -1,5 +1,5 @@
 import { formatLocale } from 'd3-format';
-import { z } from 'zod';
+import { strictObject, string } from 'zod';
 
 import { defineCellFormatter } from '../../contract';
 import { RetikzTableError } from '../../error';
@@ -18,9 +18,9 @@ const TABLE_NUMBER_LOCALE = formatLocale({
 /** 使用固定 locale 的内置 number formatter */
 export const NUMBER_CELL_FORMATTER = defineCellFormatter({
   name: TableCellFormatter.Number,
-  optionsSchema: z.strictObject({
-    specifier: z.string().optional(),
-    nullText: z.string().optional(),
+  optionsSchema: strictObject({
+    specifier: string().optional(),
+    nullText: string().optional(),
   }),
   format: ({ value }, options) => {
     if (value === null) return options.nullText ?? null;
