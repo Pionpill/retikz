@@ -20,9 +20,8 @@ export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
 
     const hasHeader = spec.header !== false;
     const rows = [
-      ...(hasHeader ? [{ id: 'row.header', kind: TableRowKind.ColumnHeader }] : []),
+      ...(hasHeader ? [{ kind: TableRowKind.ColumnHeader }] : []),
       ...context.data.sourceIndices.map(sourceIndex => ({
-        id: `row.${sourceIndex}`,
         kind: TableRowKind.Body,
         sourceIndex,
       })),
@@ -31,7 +30,6 @@ export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
     const cells = [
       ...(hasHeader
         ? spec.columns.map((column, columnIndex) => ({
-            id: `cell.header.c${column.id}`,
             row: 0,
             column: columnIndex,
             payload: column.header ?? { kind: TableCellPayloadKind.Value, value: column.id },
@@ -48,7 +46,6 @@ export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
             throw new RetikzTableError(`sourceIndex ${sourceIndex} is missing detail field "${column.field}"`);
           }
           return {
-            id: `cell.r${sourceIndex}.c${column.id}`,
             row: bodyIndex + (hasHeader ? 1 : 0),
             column: columnIndex,
             payload: {

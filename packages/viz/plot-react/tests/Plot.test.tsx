@@ -7,7 +7,16 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import * as plotReact from '../src';
-import { Axis, IntervalMark, PathMark, Plot, PointMark, resolvePlotAuthoring, resolvePlotLineage } from '../src';
+import {
+  Axis,
+  IntervalMark,
+  PathMark,
+  Plot,
+  PointMark,
+  resolvePlotAuthoring,
+  resolvePlotLineage,
+  RetikzPlotReactErrorCode,
+} from '../src';
 
 type InputEmbeddablePlotComponent = {
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => { spec: IRPlot };
@@ -60,6 +69,43 @@ const geometry = (svg: string) => {
 };
 
 describe('<Plot spec data> 薄包装', () => {
+  it.each(['className', 'style', 'renderer', 'themeStyles', 'lineage', 'hostLineageMetadata', 'onLineage'])(
+    '拒绝 embedded Plot 自有的 standalone prop %s，包括显式 undefined',
+    standaloneProp => {
+      expect(() =>
+        (Plot as unknown as InputEmbeddablePlotComponent).createInputEmbedProps({
+          spec,
+          data,
+          [standaloneProp]: undefined,
+        }),
+      ).toThrowError(
+        expect.objectContaining({
+          name: 'RetikzPlotReactError',
+          code: RetikzPlotReactErrorCode.Default,
+          message: expect.stringMatching(/embedded Plot.*standalone.*outer.*Layout/i),
+        }),
+      );
+    },
+  );
+
+  it('用一个 SVG host 渲染 standalone/anonymous embedded Plot，并继承外层 Theme mode', () => {
+    const standalone = renderToStaticMarkup(
+      <Plot spec={spec} data={data} className="plot-host" style={{ maxWidth: 480 }} themeStyles={[]} />,
+    );
+    const embedded = renderToStaticMarkup(
+      <Layout theme={{ mode: 'dark' }}>
+        <Plot spec={spec} data={data} />
+      </Layout>,
+    );
+
+    expect(standalone.match(/<svg/g)).toHaveLength(1);
+    expect(standalone).toContain('class="plot-host"');
+    expect(embedded.match(/<svg/g)).toHaveLength(1);
+    expect(embedded).not.toContain('data-retikz-id');
+    expect(embedded).toContain('hsl(210, 50%, 60%)');
+    expect(embedded).not.toContain('hsl(210, 38%, 48%)');
+  });
+
   it('嵌入 Plot 向 Vanilla adapter 交付显式 direct IR source', () => {
     const input = (Plot as unknown as InputEmbeddablePlotComponent).createInputEmbedProps({ spec, data });
 

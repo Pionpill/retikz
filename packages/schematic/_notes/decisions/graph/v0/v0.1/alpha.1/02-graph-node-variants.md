@@ -1,8 +1,8 @@
 # ADR-02：GraphNode 使用 GraphNodeVariant
 
-- 状态：Superseded by [ADR-06](./06-graph-entity-registry-theme.md)
+- 状态：Superseded by [ADR-06](./06-graph-entity-registry-theme.md)（2026-08-23 breaking revision）
 - 决策日期：2026-08-15
-- 替代原因：ADR-06 将 role、variant 与 Graph presentation theme 改为 Graph-owned 的开放 registry 与 scope；本 ADR 的闭合词汇和固定 recipe 仅作为既有内置行为的历史来源保留
+- 替代原因：ADR-06 最终删除整条 Variant 视觉轴，统一由 Graph Theme style、`graphTheme` rules 与元素显式 appearance 表达视觉差异。本 ADR 的闭合词汇、继承和固定 recipe 仅作为迁移前历史保留，不代表现行 Source IR 或公开 API
 
 > 本 ADR 废弃“逻辑节点接入 Viz / Core Theme Style”的方案。GraphNode 的视觉变体由 Graph 自己拥有，最终仍投影为普通 Core Node paint
 

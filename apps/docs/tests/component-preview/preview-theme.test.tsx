@@ -3,6 +3,7 @@ import type { FC } from 'react';
 
 import { ScatterChart } from '@retikz/chart-react/point';
 import { ThemeMode } from '@retikz/core';
+import { Entity, Graph, Relation } from '@retikz/graph-react';
 import { useTheme } from '@retikz/react';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -11,6 +12,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   PreviewDetailTable,
+  PreviewEntity,
+  PreviewGraph,
+  PreviewGraphThemeStyles,
+  PreviewRelation,
   PreviewThemeProvider,
   PreviewThemeStyle,
   resolvePreviewTheme,
@@ -149,12 +154,36 @@ describe('ComponentPreview global theme', () => {
     expect(() =>
       renderToStaticMarkup(
         <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Vibrant, mode: ThemeMode.Light }}>
-          <ScatterChart
-            data={[{ income: 12000, life: 74 }]}
-            encoding={{ x: { field: 'income' }, y: { field: 'life' } }}
-          />
+          <ScatterChart data={[{ income: 12000, life: 74 }]} encodings={{ x: 'income', y: 'life' }} />
         </PreviewThemeProvider>,
       ),
     ).not.toThrow();
+  });
+
+  it('makes the selected Graph ThemeStyle available to standalone Graph previews', () => {
+    expect(() =>
+      renderToStaticMarkup(
+        <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Vibrant, mode: ThemeMode.Light }}>
+          <Graph width={240} height={120}>
+            <Entity id="source" role="activity" position={[60, 60]}>
+              Source
+            </Entity>
+            <Entity id="target" role="event" position={[180, 60]}>
+              Target
+            </Entity>
+            <Relation source={{ id: 'source' }} target={{ id: 'target' }} role="flow" />
+          </Graph>
+        </PreviewThemeProvider>,
+      ),
+    ).not.toThrow();
+  });
+
+  it('adds Graph definitions explicitly at every embedded Preview boundary', () => {
+    for (const component of [PreviewGraph, PreviewEntity, PreviewRelation]) {
+      const embedded = component.createInputEmbedProps?.({}, { id: 'preview', kind: component.inputEmbedAdapter.kind });
+      const record = embedded as Readonly<Record<string, unknown>>;
+      const options = (record.input as Readonly<Record<string, unknown>> | undefined) ?? record;
+      expect(options).toMatchObject({ graphThemeStyles: PreviewGraphThemeStyles });
+    }
   });
 });

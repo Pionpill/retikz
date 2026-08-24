@@ -1,5 +1,7 @@
+import type { ZodType } from 'zod';
+
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, strictObject } from 'zod';
 
 import type { ClipShape, SceneClipPath } from '../../src';
 
@@ -15,14 +17,14 @@ type TicketClipShape = ClipShape & {
   size: number;
 };
 
-const TicketClipSchema: z.ZodType<TicketClip> = z.strictObject({
-  kind: z.literal('ticket'),
-  size: z.number().positive(),
+const TicketClipSchema: ZodType<TicketClip> = strictObject({
+  kind: literal('ticket'),
+  size: number().positive(),
 });
 
-const TicketClipShapeSchema: z.ZodType<TicketClipShape> = z.strictObject({
-  kind: z.literal('ticket'),
-  size: z.number().positive(),
+const TicketClipShapeSchema: ZodType<TicketClipShape> = strictObject({
+  kind: literal('ticket'),
+  size: number().positive(),
 });
 
 describe('Clip definition contract', () => {
@@ -30,9 +32,9 @@ describe('Clip definition contract', () => {
     expect(() =>
       defineClip({
         kind,
-        schema: z.strictObject({ kind: z.literal(kind) }),
+        schema: strictObject({ kind: literal(kind) }),
         resolve: () => ({ kind }),
-        shapeSchema: z.strictObject({ kind: z.literal(kind) }),
+        shapeSchema: strictObject({ kind: literal(kind) }),
         lower: (): SceneClipPath => ({
           commands: [
             { kind: 'move', to: [0, 0] },

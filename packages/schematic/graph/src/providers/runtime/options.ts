@@ -1,25 +1,42 @@
 import type {
+  EntityKindDefinition,
+  EntityPredicateDefinition,
   EntityRoleDefinition,
-  EntityVariantDefinition,
   GraphDefinitionOptions,
   GraphThemeStyleDefinition,
+  RelationKindDefinition,
+  RelationPredicateDefinition,
+  RelationRoleDefinition,
 } from '../../contract';
 
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
-import { resolveEntityRoleRegistry, resolveEntityVariantRegistry } from '../entity';
+import { resolveEntityKindRegistry, resolveEntityPredicateRegistry, resolveEntityRoleRegistry } from '../entity';
+import {
+  resolveRelationKindRegistry,
+  resolveRelationPredicateRegistry,
+  resolveRelationRoleRegistry,
+} from '../relation';
 import { resolveGraphThemeStyleRegistry } from '../theme';
 
 type GraphDefinitionCollectionKey = keyof GraphDefinitionOptions;
 
 const definitionKeyOf = {
   entityRoles: (definition: EntityRoleDefinition) => definition.role,
-  entityVariants: (definition: EntityVariantDefinition) => definition.variant,
+  entityKinds: (definition: EntityKindDefinition) => definition.kind,
+  entityPredicates: (definition: EntityPredicateDefinition) => definition.name,
+  relationRoles: (definition: RelationRoleDefinition) => definition.role,
+  relationKinds: (definition: RelationKindDefinition) => definition.kind,
+  relationPredicates: (definition: RelationPredicateDefinition) => definition.name,
   graphThemeStyles: (definition: GraphThemeStyleDefinition) => definition.name,
 } as const;
 
 const definitionLabelOf = {
   entityRoles: 'Entity role',
-  entityVariants: 'Entity variant',
+  entityKinds: 'Entity kind',
+  entityPredicates: 'Entity predicate',
+  relationRoles: 'Relation role',
+  relationKinds: 'Relation kind',
+  relationPredicates: 'Relation predicate',
   graphThemeStyles: 'Graph theme style',
 } as const;
 
@@ -54,7 +71,11 @@ const mergeDefinitionCollection = <TKey extends GraphDefinitionCollectionKey>(
 /** 一次 Graph definition 装配共享的已解析 registries */
 export type ResolvedGraphDefinitionOptions = Readonly<{
   entityRoles: ReadonlyMap<string, EntityRoleDefinition>;
-  entityVariants: ReadonlyMap<string, EntityVariantDefinition>;
+  entityKinds: ReadonlyMap<string, EntityKindDefinition>;
+  entityPredicates: ReadonlyMap<string, EntityPredicateDefinition>;
+  relationRoles: ReadonlyMap<string, RelationRoleDefinition>;
+  relationKinds: ReadonlyMap<string, RelationKindDefinition>;
+  relationPredicates: ReadonlyMap<string, RelationPredicateDefinition>;
   graphThemeStyles: ReadonlyMap<string, GraphThemeStyleDefinition>;
 }>;
 
@@ -63,15 +84,29 @@ export const mergeGraphDefinitionOptions = (
   optionSets: ReadonlyArray<GraphDefinitionOptions>,
 ): GraphDefinitionOptions => ({
   entityRoles: mergeDefinitionCollection(optionSets, 'entityRoles'),
-  entityVariants: mergeDefinitionCollection(optionSets, 'entityVariants'),
+  entityKinds: mergeDefinitionCollection(optionSets, 'entityKinds'),
+  entityPredicates: mergeDefinitionCollection(optionSets, 'entityPredicates'),
+  relationRoles: mergeDefinitionCollection(optionSets, 'relationRoles'),
+  relationKinds: mergeDefinitionCollection(optionSets, 'relationKinds'),
+  relationPredicates: mergeDefinitionCollection(optionSets, 'relationPredicates'),
   graphThemeStyles: mergeDefinitionCollection(optionSets, 'graphThemeStyles'),
 });
 
 /** 一次性校验并解析 Graph definition options */
-export const resolveGraphDefinitionOptions = (
-  options: GraphDefinitionOptions = {},
-): ResolvedGraphDefinitionOptions => ({
-  entityRoles: resolveEntityRoleRegistry(options.entityRoles),
-  entityVariants: resolveEntityVariantRegistry(options.entityVariants),
-  graphThemeStyles: resolveGraphThemeStyleRegistry(options.graphThemeStyles),
-});
+export const resolveGraphDefinitionOptions = (options: GraphDefinitionOptions = {}): ResolvedGraphDefinitionOptions => {
+  const entityRoles = resolveEntityRoleRegistry(options.entityRoles);
+  const entityKinds = resolveEntityKindRegistry(options.entityKinds, entityRoles);
+  const entityPredicates = resolveEntityPredicateRegistry(options.entityPredicates, entityRoles, entityKinds);
+  const relationRoles = resolveRelationRoleRegistry(options.relationRoles);
+  const relationKinds = resolveRelationKindRegistry(options.relationKinds, relationRoles);
+  const relationPredicates = resolveRelationPredicateRegistry(options.relationPredicates, relationRoles, relationKinds);
+  return {
+    entityRoles,
+    entityKinds,
+    entityPredicates,
+    relationRoles,
+    relationKinds,
+    relationPredicates,
+    graphThemeStyles: resolveGraphThemeStyleRegistry(options.graphThemeStyles),
+  };
+};

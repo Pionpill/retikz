@@ -72,32 +72,30 @@ Axis title 与 tick label 带之间的距离使用 `AxisTitlePadding: 'axis.titl
 
 ## 决策：Style Definition 返回 Token 与规则
 
-Plot style definition 解析完整基础 token map，并可同时返回 Axis rules：
+Plot style definition 解析相对默认 preset 与默认 Axis rules 的稀疏覆盖：
 
 ```ts
-type ResolvedPlotThemeStyle = Readonly<{
-  tokens: IRPlotResolvedThemeTokens;
+type PlotThemeStyleOverrides = Readonly<{
+  tokens?: IRPlotThemeTokenOverrides;
   tokenRules?: ReadonlyArray<IRPlotAxisThemeTokenRule>;
 }>;
 
 type PlotThemeStyleDefinition = Readonly<{
   name: string;
-  resolve: (theme: ResolvedTheme) => ResolvedPlotThemeStyle;
+  resolve: (theme: ResolvedTheme) => PlotThemeStyleOverrides;
 }>;
 ```
 
-内建和自定义 definition 都返回该结构。原先直接返回 `IRPlotResolvedThemeTokens` 的 resolver 形态直接删除，不保留运行时探测或兼容分支。
+自定义 definition 只返回明确改变的 token 与追加规则。Plot resolver 始终先建立完整默认 tokens / rules，再合并 style tokens 并把 style rules 追加在默认 rules 后；`tokens` 与 `tokenRules` 都可以省略。runtime definition 输出中的显式 `undefined` token 在进入严格 schema 前按省略处理；持久化 `plotThemeTokens` / `plotThemeTokenRules` 仍拒绝显式 `undefined`。原先要求 definition 返回完整 token map 的形态直接删除，不保留完整 map 兼容分支。
 
-内建 style 的 Axis grid 规则为：
+默认与 docs reference style 的 Axis grid 规则为：
 
-| Style              | 基础值 | 规则                 |
-| ------------------ | ------ | -------------------- |
-| Neutral            | 关闭   | y dimension 开启     |
-| Academic reference | 关闭   | 无                   |
-| Vibrant reference  | 关闭   | x / y dimension 开启 |
-| Clean reference    | 关闭   | y dimension 开启     |
-
-Clean 还通过同一 rule 只为 x dimension 开启 `axis.line.enabled`；基础 `axis.tick.mark` 保持关闭，因此 x Axis 只有轴线与 label，不绘制 tick mark，y Axis line 继续关闭。
+| Style              | 默认基础值 | 默认规则                     | 追加 style 规则                       |
+| ------------------ | ---------- | ---------------------------- | ------------------------------------- |
+| Default            | 关闭       | x / y 开启并包含 domain 端点 | —                                     |
+| Academic reference | 关闭       | 同上                         | x / y 关闭且不包含端点                |
+| Vibrant reference  | 关闭       | 同上                         | x / y 开启但不包含端点                |
+| Clean reference    | 关闭       | 同上                         | x / y 先关闭，再只为 y 开启；不含端点 |
 
 Light / Dark 只改变 grid paint 等 mode-sensitive token，不改变哪些 dimension 启用 grid。
 
@@ -106,9 +104,9 @@ Light / Dark 只改变 grid paint 等 mode-sensitive token，不改变哪些 dim
 Axis guide 的有效视觉 token 按以下顺序解析：
 
 ```text
-Plot style 基础 tokens
-  -> Plot style 中匹配当前 dimension 的 tokenRules
-  -> Core effective Theme 的 inherited Plot projection
+mode / Core shared categorical 建立默认 Plot tokens 与 Axis rules
+  -> Plot style 稀疏 tokens
+  -> 追加 Plot style 中匹配当前 dimension 的 tokenRules
   -> local plotThemeTokens
   -> local plotThemeTokenRules 中匹配当前 dimension 的规则
   -> colors shorthand / native plotTheme
@@ -138,11 +136,11 @@ type IRPlotThemeResolution = Readonly<{
 ```
 
 - resolved `tokens` 继续表示不带 dimension 差异的完整基础 map，并保留 one-source-per-token 记录
-- `tokenRules` 按实际级联顺序记录 style rules 与 local rules；style definition 与 Plot-local 输入都属于当前 Plot owner 构建的 `local` source，稳定 path 分别定位入口
+- `tokenRules` 按实际级联顺序记录 default、style 与 local rules；三者都属于当前 Plot owner 构建的 `local` source，稳定 path 分别定位入口
 - Axis guide 消费时按当前 dimension 解析有效 Axis token；不能把某个 dimension 的胜出值伪装成全局 token 值
-- source path 区分 `$style/tokenRules/...` 与 `$spec/plotThemeTokenRules/...`，不通过值相等反推来源
+- source path 区分 `$default/.../tokenRules/...`、`$style/.../tokenRules/...` 与 `$spec/plotThemeTokenRules/...`，不通过值相等反推来源
 
-非法 selector、非 Axis token、未知 token、显式 `undefined` 与非法 token value 必须由 schema fail-loud。inspection 不承担 selector 容错或 fallback。
+持久化 rule 的非法 selector、非 Axis token、未知 token、显式 `undefined` 与非法 token value 必须由 schema fail-loud；runtime style definition 的 `undefined` token 已在该 schema 前按省略规范化。inspection 不承担 selector 容错或 fallback。
 
 ## 用户可观察行为
 

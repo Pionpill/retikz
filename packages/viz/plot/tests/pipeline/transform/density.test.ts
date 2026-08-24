@@ -3,7 +3,7 @@ import type { AnyTransformDefinition, ExternalRow, TransformContext } from '@ret
 import { applyTransforms as applyDataTransforms, collectTransformFields, defineTransform } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, object } from 'zod';
 
 import type { IRPlotTransform } from '../../../src/schemas';
 
@@ -254,7 +254,7 @@ describe('density transform behavior (contract)', () => {
 
   it('rejects custom transform registration collisions with density', () => {
     const collision = defineTransform({
-      schema: z.object({ kind: z.literal('density') }),
+      schema: object({ kind: literal('density') }),
       apply: inputRows => inputRows,
     });
 

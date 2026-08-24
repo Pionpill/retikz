@@ -4,7 +4,6 @@ import type { InputTable } from '@retikz/table-vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
-import { RetikzFoundationError } from '@retikz/foundation';
 import { Layout, ThemeProvider } from '@retikz/react';
 import {
   createDetailTableIR,
@@ -12,7 +11,6 @@ import {
   defineCellVisualScale,
   defineTableStructure,
   defineTableThemeStyle,
-  getDefaultTableThemePreset,
   TABLE_NAMESPACE,
   TableComposite,
   TableRowKind,
@@ -20,22 +18,20 @@ import {
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
 import { DetailTable, ManualTable, Table, TableThemeProvider } from '../../src';
 
 const cleanCoreTheme = defineThemeStyle({
   name: 'clean',
   resolve: () => ({
-    semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
     categorical: ['#112233'],
   }),
 });
 
 const cleanTableTheme = defineTableThemeStyle({
   name: 'clean',
-  resolve: theme => ({
-    ...getDefaultTableThemePreset(theme.mode),
+  resolve: () => ({
     'cell.background.fill': null,
     'cell.content.color': null,
     'cell.content.font.family': null,
@@ -97,7 +93,7 @@ describe('Table React components', () => {
       ],
     };
     const customDefinition = defineTableStructure({
-      schema: z.strictObject({ kind: z.literal('fixture') }),
+      schema: strictObject({ kind: literal('fixture') }),
       build: () => customOutput,
     });
     const customSpec: IRTable = {
@@ -121,7 +117,7 @@ describe('Table React components', () => {
   it('keeps Table tokens, encodings, and custom visual scales equal in standalone and embedded runtimes', () => {
     const visualScale = defineCellVisualScale({
       name: 'react-palette',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       resolve: (_options, _values, context) => ({
         of: () => context.categoricalColors[0],
         legendForm: 'swatch',
@@ -175,7 +171,7 @@ describe('Table React components', () => {
   it('surfaces invalid custom Legend resolution diagnostics through the generic Table entry', () => {
     const invalid = defineCellVisualScale({
       name: 'react-invalid-legend',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       resolve: () =>
         ({
           of: () => 'red',
@@ -288,22 +284,21 @@ describe('Table React components', () => {
     expect(svg).toContain('Lin');
   });
 
-  it('requires explicit unique ids and rejects onManifest in embedded mode', () => {
-    expect(() =>
+  it('allows anonymous embedded Tables while retaining explicit-id and host-prop diagnostics', () => {
+    expect(
       renderToStaticMarkup(
         <Layout>
           <Table spec={manualSpec()} />
         </Layout>,
       ),
-    ).toThrow(/embedded.*id.*non-empty/i);
+    ).toContain('Ada');
     const renderBlankId = () =>
       renderToStaticMarkup(
         <Layout>
           <ManualTable id={'\u2003'} rows={[[null]]} />
         </Layout>,
       );
-    expect(renderBlankId).toThrowError(RetikzFoundationError);
-    expect(renderBlankId).toThrowError('table react embedded manual Table spec id must be a non-empty string.');
+    expect(renderBlankId).toThrow(/id|non-whitespace/i);
     expect(() =>
       renderToStaticMarkup(
         <Layout>
@@ -373,9 +368,9 @@ describe('Table React components', () => {
 
   it('passes nested composite definitions through standalone Table runtime', () => {
     const schema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('badge'),
-      label: z.string(),
+      namespace: literal('fixture'),
+      type: literal('badge'),
+      label: string(),
     });
     const badge: AnyCompositeDefinition = defineComposite({
       namespace: 'fixture',

@@ -870,10 +870,18 @@ export const compileChildrenToPrimitives = (
     transformedLayout: NodeLayout,
     scopeTransforms: ReadonlyArray<Transform>,
   ): IRPosition => {
-    if (point === 'origin' || Array.isArray(point)) {
-      const intrinsicPoint: IRPosition = point === 'origin' ? [0, 0] : [point[0], point[1]];
+    if (typeof point === 'string') {
+      if (point !== 'origin') {
+        return assertFinitePlacementPoint(
+          resolveAnchorRefUncached(transformedLayout, point),
+          'scope placement selfAnchor',
+        );
+      }
+      return assertFinitePlacementPoint(applyTransformChain([0, 0], scopeTransforms), 'scope placement selfAnchor');
+    }
+    if (Array.isArray(point)) {
       return assertFinitePlacementPoint(
-        applyTransformChain(intrinsicPoint, scopeTransforms),
+        applyTransformChain([point[0], point[1]], scopeTransforms),
         'scope placement selfAnchor',
       );
     }
@@ -1909,6 +1917,12 @@ export const compileChildrenToPrimitives = (
       callbackResult = callable.compile(callable.node, {
         theme: frame.theme,
         proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
+        warn: (code, message, subPath) =>
+          runtime.context.onWarn({
+            code,
+            message,
+            path: subPath === undefined || subPath.length === 0 ? compositeIrPath : `${compositeIrPath}.${subPath}`,
+          }),
         layoutChild: (nextChild, proposal) => {
           const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
           const clonedChild = withProviderOutputValidationBoundary(owner.label, () =>

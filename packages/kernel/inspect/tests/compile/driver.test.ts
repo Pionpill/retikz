@@ -3,7 +3,7 @@ import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
 import {
   compileInspectionToScene,
@@ -18,8 +18,8 @@ const owner = { kind: 'composite' as const, namespace: 'demo', type: 'artifact' 
 const composite = defineComposite({
   namespace: owner.namespace,
   type: owner.type,
-  schema: CompositeBaseSchema.extend({ namespace: z.literal(owner.namespace), type: z.literal(owner.type) }),
-  artifactSchema: z.strictObject({ label: z.string() }),
+  schema: CompositeBaseSchema.extend({ namespace: literal(owner.namespace), type: literal(owner.type) }),
+  artifactSchema: strictObject({ label: string() }),
   compile: () => ({ artifact: { label: 'settled' }, children: [{ type: 'node', position: [0, 0], text: 'primary' }] }),
 });
 const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: owner.namespace, type: owner.type }] };
@@ -59,9 +59,9 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: z.strictObject({ label: z.literal('settled') }),
-        optionsInputSchema: z.strictObject({}),
-        optionsSchema: z.strictObject({}),
+        subjectSchema: strictObject({ label: literal('settled') }),
+        optionsInputSchema: strictObject({}),
+        optionsSchema: strictObject({}),
         inspect: (_subject, context) => {
           appearance = context.appearance;
           return [];
@@ -87,9 +87,9 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: z.strictObject({ label: z.literal('settled') }),
-        optionsInputSchema: z.strictObject({}),
-        optionsSchema: z.strictObject({}),
+        subjectSchema: strictObject({ label: literal('settled') }),
+        optionsInputSchema: strictObject({}),
+        optionsSchema: strictObject({}),
         inspect: (_subject, context) => [
           {
             type: 'node',
@@ -121,9 +121,9 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: z.strictObject({ label: z.string() }),
-        optionsInputSchema: z.strictObject({}),
-        optionsSchema: z.strictObject({}),
+        subjectSchema: strictObject({ label: string() }),
+        optionsInputSchema: strictObject({}),
+        optionsSchema: strictObject({}),
         inspect: (_subject, context) => {
           expect(context.appearance.colorScope).toBe(0);
           return [];
@@ -149,8 +149,8 @@ describe('Inspection compile driver', () => {
     const mutatingComposite = defineComposite({
       namespace: owner.namespace,
       type: owner.type,
-      schema: CompositeBaseSchema.extend({ namespace: z.literal(owner.namespace), type: z.literal(owner.type) }),
-      artifactSchema: z.strictObject({ label: z.string() }),
+      schema: CompositeBaseSchema.extend({ namespace: literal(owner.namespace), type: literal(owner.type) }),
+      artifactSchema: strictObject({ label: string() }),
       compile: () => {
         mutableSelection.rules.length = 0;
         return { artifact: { label: 'settled' }, children: [] };
@@ -160,9 +160,9 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: z.strictObject({ label: z.string() }),
-        optionsInputSchema: z.strictObject({}),
-        optionsSchema: z.strictObject({}),
+        subjectSchema: strictObject({ label: string() }),
+        optionsInputSchema: strictObject({}),
+        optionsSchema: strictObject({}),
         inspect: () => ({ type: 'node', position: [0, 0], text: 'captured' }),
       }),
     ]);
@@ -183,9 +183,9 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: z.strictObject({ label: z.string() }),
-        optionsInputSchema: z.strictObject({}),
-        optionsSchema: z.strictObject({}),
+        subjectSchema: strictObject({ label: string() }),
+        optionsInputSchema: strictObject({}),
+        optionsSchema: strictObject({}),
         inspect: () => sparse,
       }),
     ]);
@@ -210,9 +210,9 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: z.strictObject({ label: z.literal('different') }),
-        optionsInputSchema: z.strictObject({}),
-        optionsSchema: z.strictObject({}),
+        subjectSchema: strictObject({ label: literal('different') }),
+        optionsInputSchema: strictObject({}),
+        optionsSchema: strictObject({}),
         inspect: () => {
           callbacks += 1;
           return [];
@@ -235,9 +235,9 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: z.strictObject({ label: z.string() }),
-        optionsInputSchema: z.strictObject({}),
-        optionsSchema: z.strictObject({}),
+        subjectSchema: strictObject({ label: string() }),
+        optionsInputSchema: strictObject({}),
+        optionsSchema: strictObject({}),
         inspect: () => ({
           type: 'node',
           position: { kind: 'anchor', target: { id: 'primary-node' } },
@@ -266,9 +266,9 @@ describe('Inspection compile driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: z.strictObject({ label: z.string() }),
-        optionsInputSchema: z.strictObject({}),
-        optionsSchema: z.strictObject({}),
+        subjectSchema: strictObject({ label: string() }),
+        optionsInputSchema: strictObject({}),
+        optionsSchema: strictObject({}),
         inspect: () =>
           ({
             type: 'node',

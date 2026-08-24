@@ -2,8 +2,7 @@ import type { CssColorValue, NonEmptyReadonlyArray } from '@retikz/core';
 
 import type { IRPlotThemeTokenResolution } from '../../../schemas';
 
-import { PlotThemeToken } from '../../../schemas';
-import { PlotColorScheme } from '../../scale/shared';
+import { PlotColorScheme, PlotThemeToken } from '../../../schemas';
 import { PLOT_SHAPE_PALETTE } from '../shape-palette';
 
 type PalettePresetSource = Readonly<{

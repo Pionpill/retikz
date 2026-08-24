@@ -21,12 +21,12 @@ usage: distribution
     {
       id: 'scatter-fertility-work',
       title: 'Categorical encoding',
-      description: 'Compare fertility and female labor-force participation from a real World Bank country cross-section, then observe how a category drives the legend.',
+      description: 'Compare fertility and female labor-force participation from a real World Bank country cross-section, then switch between color and shape encoding.',
       preview: {
         files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
         controls: { name: 'scatter-fertility-work' },
         size: 'xxl',
-        caption: 'Switch income-group color or shape encoding; the legend follows the active Chart channel.',
+        caption: 'Switch income-group color or shape encoding to see the same field binding change the point expression.',
       },
     },
     {
@@ -37,15 +37,56 @@ usage: distribution
         files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
         controls: { name: 'scatter-income-life-expectancy' },
         size: 'xxl',
-        caption: 'Title, subtitle, note, and source enter the chart in Chart presentation order; the right-hand legend explains continent color.',
+        caption: 'Title, subtitle, note, and source occupy fixed presentation slots; color encodes continent.',
+      },
+    },
+    {
+      id: 'scatter-penguins-facet-jitter',
+      title: 'Jittered scatter',
+      description: 'Keep `ScatterChart` as the primary chart abstraction and configure deterministic horizontal jitter through `ScatterMark`.',
+      preview: {
+        files: ['scatter-penguins-facet-jitter', 'scatter-penguins-facet-jitter.data.ts'],
+        controls: { name: 'scatter-penguins-facet-jitter' },
+        size: 'xxl',
+        caption: 'A fixed seed keeps horizontal jitter reproducible in controls and source previews.',
+      },
+    },
+    {
+      id: 'scatter-world-cup-shots',
+      title: 'Spatial scatter',
+      description: 'Use `ScatterChart` for shot positions in StatsBomb coordinates, with outcome driving point color.',
+      preview: {
+        files: ['scatter-world-cup-shots', 'scatter-world-cup-shots.data.ts'],
+        controls: { name: 'scatter-world-cup-shots' },
+        size: 'xxl',
+        caption: 'Point positions preserve the spatial meaning of shots, while outcome drives color and readable point styling.',
       },
     },
   ]}
 >
-  Scatter uses the exact `ScatterChartSchema` while following Chart's consistent field layout. Its `config` supplies type-specific encodings such as x/y and implicitly creates the primary Point mark, two-dimensional scales, and coordinate; `plot` continues to receive Plot-owned data, transforms, legends, and other explicit extensions.
+  Scatter uses the exact `ScatterChartSchema`. The root `type` is `point` and `recipe.chartType` is `scatter`; data, layout, presentation, and Theme stay in the Source shell, while field bindings live in `recipe.encodings` and constant styles live in `recipe.properties`.
 
-All examples on this page use `ScatterChart` from `@retikz/chart-react/point`. The `/point` entry only organizes imports and source files; the component still enters the shared Chart resolution and adapter mainline. Chart owns the title, subtitle, source, and note inside the chart. Axes, grids, and color or shape legends remain Plot-owned guide extensions, so they are authored with `Axis` and `Legend`.
+All examples on this page use `ScatterChart` from `@retikz/chart-react/point/scatter`. The recipe emits a built-in `scatter` semantic mark group, two-dimensional scales, and default Plot structure. A direct `ScatterMark` child writes `recipe.marks` and inherits consumable encodings and properties. A plain `ScatterMark` appends points; `<ScatterMark override>` replaces the complete implicit `scatter` group in place, which changes the primary point style without drawing a duplicate layer.
 
-{/* @include viz/chart/shared-api */}
+`encodings` contain field names only; constants belong in `properties`. At the recipe root, an encoding wins when both map to the same target. On an authored mark, an explicit property outranks an inherited encoding, and an explicit encoding wins again. An unmatched override still appends the mark and reports `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND` through `onWarn`. To add axes, legends, facets, tracks, or a completely independent Plot mark, write a Source `plotExtension` fragment; it neither inherits Chart context nor participates in semantic-group override.
+
+## Shared Chart rules
+
+Scatter shares family / chartType routing, exact schemas, the authoring pipeline, fixed presentation slots, and Theme owner slices with every other Chart type. Refer to [Chart Model](/viz/chart/model) for those rules; this page stays focused on Scatter's two-dimensional position, categorical encoding, and mark semantics.
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/model/authoring">
+    <span className="font-semibold">Authoring &amp; Resolution</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Reference the React, Vanilla, schema, and recipe pipeline.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/plot">
+    <span className="font-semibold">Plot Integration</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Reference independent Plot fragments and owner boundaries.
+    </span>
+  </LinkedCard>
+</div>
 
 </ShowcaseGallery>

@@ -25,7 +25,7 @@ pipeline/     数据接入、结构规范化、呈现、布局、lowering 与 lo
 - 依赖方向为 `shared ← schemas ← contract ← providers ← pipeline`
 - `SemanticTableModel` 是长期公开扩展边界，但具体形状与写入协议由 ADR 决定
 - 具有算法 dispatch 的内置与自定义能力必须经过同一 Definition / registry，不写内置白名单分支
-- 闭合 Table theme token 不建立逐 token Definition / registry；owner-local style definition / registry 只负责完整 baseline，Core 继承颜色与 local `tableThemeTokens` 再经过同一 strict schema、leaf resolver 与消费链路，未知 token 或缺失同名 style definition fail-loud
+- 闭合 Table theme token 不建立逐 token Definition / registry；owner-local style definition / registry 只提供相对默认 preset 的稀疏覆盖，Core 继承颜色与 local `tableThemeTokens` 再经过同一 strict schema、leaf resolver 与消费链路，未知 token 或缺失同名 style definition fail-loud
 - Cell 是 Table 的语义与布局槽位，内容统一使用 Core `IRChild`，不建立平行内容 IR
 - 显式 Plot 等 Tier 2 Cell 走通用 `IRChild` 测量、放置和 composite lowering；不得在 Table 中按 namespace 特判
 - Table 可以消费 Data、Standard 与 Core，但不得依赖 Plot、React、DOM 或 renderer；alpha.3 visual encoding 只产生 Legend descriptor 与 manifest seed，领域 placement intent 与 lineage 仍由 Table 解析；Standard Legend / Flex 公共能力已存在，Table body composition 与 occurrence-safe artifact join 由 alpha.6 收口，禁止建立 Table 私有停靠、文字布局或 bounds-union solver

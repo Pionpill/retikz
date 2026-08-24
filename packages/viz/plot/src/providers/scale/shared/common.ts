@@ -27,10 +27,11 @@ import {
 } from 'd3-scale-chromatic';
 
 import type { TickSet } from '../../../contract';
-import type { PlotColorSchemeValue } from './types';
+import type { PlotColorSchemeValue } from '../../../schemas';
 
 import { RetikzPlotError } from '../../../error';
-import { BUILTIN_COLOR_SCHEMES, PlotColorScheme } from './constants';
+import { PlotColorScheme } from '../../../schemas';
+import { BUILTIN_COLOR_SCHEMES } from './constants';
 
 /** 默认目标刻度数（d3 ticks 的提示值，非硬约束——实际数量按 nice 区间取整定） */
 export const DEFAULT_TICK_COUNT = 5;

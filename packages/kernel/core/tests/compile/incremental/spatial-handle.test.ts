@@ -6,19 +6,19 @@ import {
   createRuntimeSession,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number } from 'zod';
 
 import type { IRScene } from '../../../src';
 
-import { CompositeBaseSchema,CoreOwnerDefinition, createCoreProgram, defineComposite } from '../../../src';
+import { CompositeBaseSchema, CoreOwnerDefinition, createCoreProgram, defineComposite } from '../../../src';
 
 const card = defineComposite({
   namespace: 'third',
   type: 'card',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('third'),
-    type: z.literal('card'),
-    width: z.number(),
+    namespace: literal('third'),
+    type: literal('card'),
+    width: number(),
   }),
   expand: node => ({
     children: [],

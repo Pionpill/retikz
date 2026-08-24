@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, strictObject } from 'zod';
 
 import type { AnyCompositeDefinition, IRComposite } from '../../src';
 
@@ -17,9 +17,9 @@ const expandDefinition = defineComposite({
   namespace: 'test',
   type: 'box',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('test'),
-    type: z.literal('box'),
-    value: z.number(),
+    namespace: literal('test'),
+    type: literal('box'),
+    value: number(),
   }),
   expand: node => ({ children: [{ type: 'node', position: [node.value, 0] }] }),
 });
@@ -28,11 +28,11 @@ const layoutDefinition = defineComposite({
   namespace: 'test',
   type: 'layout',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('test'),
-    type: z.literal('layout'),
-    value: z.number(),
+    namespace: literal('test'),
+    type: literal('layout'),
+    value: number(),
   }),
-  artifactSchema: z.strictObject({ value: z.number() }),
+  artifactSchema: strictObject({ value: number() }),
   compile: node => ({ children: [], artifact: { value: node.value } }),
 });
 

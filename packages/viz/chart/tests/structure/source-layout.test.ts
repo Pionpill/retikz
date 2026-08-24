@@ -17,36 +17,42 @@ const sourceFilesUnder = async (directory: string): Promise<Array<string>> => {
 };
 
 describe('Chart semantic source layout', () => {
-  it('uses the _chart, _shared, and Point family owners', async () => {
+  it('uses _chart providers and concrete Point chartType owners', async () => {
     const paths = (await sourceFilesUnder(sourceRoot)).map(path => relative(sourceRoot, path).replaceAll('\\', '/'));
 
-    expect(paths.some(path => path.startsWith('_chart/'))).toBe(true);
-    expect(paths.some(path => path.startsWith('_shared/'))).toBe(true);
-    expect(paths.some(path => path.startsWith('point/'))).toBe(true);
+    expect(paths.some(path => path.startsWith('_assembly/'))).toBe(false);
+    expect(paths.some(path => path.startsWith('_shared/'))).toBe(false);
+    expect(paths).toContain('_chart/providers/provider.ts');
+    expect(paths).toContain('_chart/providers/registry.ts');
+    expect(paths).toContain('_chart/providers/theme.ts');
+    expect(paths).toContain('_chart/providers/definition.ts');
+    expect(paths).toContain('_chart/resolve/resolve.ts');
+    expect(paths).toContain('_chart/schemas/source.ts');
+    expect(paths).toContain('point/constants.ts');
     expect(paths).toContain('point/shared/schema.ts');
-    expect(paths).toContain('point/shared/plot.ts');
-    expect(paths).toContain('point/shared/recipe.ts');
+    expect(paths).toContain('point/scatter/schema.ts');
+    expect(paths).toContain('point/scatter/recipe.ts');
+    expect(paths).toContain('point/scatter/provider.ts');
+    expect(paths).not.toContain('point/family.ts');
   });
 
-  it('keeps _shared independent from _chart and Point owners', async () => {
-    const sharedFiles = await sourceFilesUnder(join(sourceRoot, '_shared'));
-    const contents = await Promise.all(sharedFiles.map(path => readFile(path, 'utf8')));
-
-    expect(contents.some(content => /from ['"](?:\.\.\/)+(_chart|point)(?:\/|['"])/.test(content))).toBe(false);
+  it('keeps generic Chart owners independent from concrete families', async () => {
+    const files = await sourceFilesUnder(sourceRoot);
+    const normalizedPathOf = (path: string): string => relative(sourceRoot, path).replaceAll('\\', '/');
+    const chartFiles = files.filter(path => normalizedPathOf(path).startsWith('_chart/'));
+    const contents = (await Promise.all(chartFiles.map(path => readFile(path, 'utf8')))).join('\n');
+    expect(contents).not.toMatch(/from ['"][^'"]*\/point(?:\/|['"])/);
+    expect(contents).not.toMatch(/\bChartCatalog\b|\bChartFamilyDefinition\b|\bPointChartSchema\b/);
   });
 
-  it('keeps _chart dispatch independent from Point recipes', async () => {
-    const chartFiles = await sourceFilesUnder(join(sourceRoot, '_chart'));
-    const contents = await Promise.all(chartFiles.map(path => readFile(path, 'utf8')));
-
-    expect(contents.some(content => /from ['"][^'"]*\/point(?:\/|['"])/.test(content))).toBe(false);
-  });
-
-  it('lets the Point family consume only _shared through its owner barrel', async () => {
-    const pointFiles = await sourceFilesUnder(join(sourceRoot, 'point'));
-    const contents = await Promise.all(pointFiles.map(path => readFile(path, 'utf8')));
-
-    expect(contents.some(content => /from ['"].*\/_shared(?:\/|['"])/.test(content))).toBe(true);
-    expect(contents.some(content => /from ['"].*\/_chart(?:\/|['"])/.test(content))).toBe(false);
+  it('keeps family modules independent from provider lookup state', async () => {
+    const files = await sourceFilesUnder(sourceRoot);
+    const normalizedPathOf = (path: string): string => relative(sourceRoot, path).replaceAll('\\', '/');
+    const pointFiles = files.filter(path => normalizedPathOf(path).startsWith('point/'));
+    const pointContents = (await Promise.all(pointFiles.map(path => readFile(path, 'utf8')))).join('\n');
+    expect(pointContents).not.toMatch(
+      /from ['"][^'"]*_chart\/providers\/(?:registry|resolve|theme|definition)(?:\/|['"])/,
+    );
+    expect(pointContents).not.toMatch(/ChartFamilyDefinition|defineChartFamily|ChartCatalog/);
   });
 });

@@ -56,14 +56,12 @@ describe('Table layout manifest', () => {
       tableId: 'people',
       allocationBounds: { x: 0, y: 0, width: 90, height: 56 },
       rows: [
-        { id: 'row.header', index: 0, offset: 0, size: 30 },
-        { id: 'row.0', index: 1, offset: 32, size: 24 },
+        { index: 0, offset: 0, size: 30 },
+        { index: 1, offset: 32, size: 24 },
       ],
       columns: [{ id: 'name', index: 0, offset: 0, size: 90 }],
       cells: [
         {
-          cellId: 'cell.header.cname',
-          rowId: 'row.header',
           columnId: 'name',
           rowIndex: 0,
           columnIndex: 0,
@@ -75,8 +73,6 @@ describe('Table layout manifest', () => {
           source: { kind: 'generated', structureKind: 'detail' },
         },
         {
-          cellId: 'cell.r0.cname',
-          rowId: 'row.0',
           columnId: 'name',
           rowIndex: 1,
           columnIndex: 0,

@@ -236,6 +236,17 @@ describe('resolved Table Cell plans', () => {
     );
   });
 
+  it('diagnoses an anonymous direct content Cell by canonical address', () => {
+    const model = normalizeTableStructure({
+      kind: 'manual',
+      rows: [[{ content: { type: 'node', position: [0, 0], text: 'direct' } }]],
+    });
+
+    expect(() => resolvePlans(model, [{ selector: { rowIndices: [0] }, formatter: { name: 'identity' } }])).toThrow(
+      /rule 0.*content Cell 0:0.*formatter/i,
+    );
+  });
+
   it('makes formatTable consume the same strictly aligned value plan', () => {
     const model = modelOf();
     const plans = resolvePlans(model, [{ selector: { cellIds: ['value'] }, formatter: { name: 'identity' } }]);

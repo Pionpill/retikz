@@ -1,7 +1,7 @@
 import type { CompileObservation, IRScene } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { null as zodNull, number, strictObject, string } from 'zod';
 
 import { createInspectorRegistry, defineInspector, resolveInspectionSelection } from '../../src';
 
@@ -10,11 +10,12 @@ const key = { namespace: 'test', type: 'box' };
 const definition = defineInspector({
   ...key,
   owner,
-  subjectSchema: z.strictObject({ value: z.number() }),
-  optionsInputSchema: z.strictObject({ label: z.string().optional(), tone: z.string().optional() }),
-  optionsSchema: z
-    .strictObject({ label: z.string().optional(), tone: z.string().optional() })
-    .transform(value => ({ label: value.label ?? 'default', tone: value.tone ?? 'normal' })),
+  subjectSchema: strictObject({ value: number() }),
+  optionsInputSchema: strictObject({ label: string().optional(), tone: string().optional() }),
+  optionsSchema: strictObject({ label: string().optional(), tone: string().optional() }).transform(value => ({
+    label: value.label ?? 'default',
+    tone: value.tone ?? 'normal',
+  })),
   mergeOptionsInput: (inherited, local) => ({ ...inherited, ...local }),
   inspect: () => [],
 });
@@ -149,9 +150,9 @@ describe('Inspection selection', () => {
     const pathDefinition = defineInspector({
       ...key,
       owner: { kind: 'pathKind' as const, name: 'stroke' },
-      subjectSchema: z.null(),
-      optionsInputSchema: z.strictObject({}),
-      optionsSchema: z.strictObject({}),
+      subjectSchema: zodNull(),
+      optionsInputSchema: strictObject({}),
+      optionsSchema: strictObject({}),
       inspect: () => [],
     });
     const pathRegistry = createInspectorRegistry([pathDefinition]);
@@ -268,9 +269,9 @@ describe('Inspection selection', () => {
     const pathDefinition = defineInspector({
       ...pathKey,
       owner: { kind: 'pathKind' as const, name: 'stroke' },
-      subjectSchema: z.strictObject({ value: z.number() }),
-      optionsInputSchema: z.strictObject({}),
-      optionsSchema: z.strictObject({}),
+      subjectSchema: strictObject({ value: number() }),
+      optionsInputSchema: strictObject({}),
+      optionsSchema: strictObject({}),
       inspect: () => [],
     });
     const pathRegistry = createInspectorRegistry([pathDefinition]);

@@ -35,7 +35,6 @@ vi.mock('react-i18next', () => ({
         'common.showcaseApi': 'API',
         'common.showcaseFamilyEmpty': 'No other family members yet.',
         'viz.chartScatter': 'Scatter',
-        'viz.chartBubble': 'Bubble',
       })[key] ?? key,
   }),
 }));
@@ -130,23 +129,11 @@ describe('<ShowcaseTabs>', () => {
     expect(invalidContainer.textContent).toContain('Examples body');
   });
 
-  it('Scatter 与 Bubble 的 Family 只展示对方，不展示当前页面', () => {
+  it('没有其它 Point family 成员时显示空状态', () => {
     const scatterContainer = renderTabs('/viz/chart/points/scatter?tab=family');
 
-    expect(scatterContainer.textContent).toContain('Bubble');
-    expect(scatterContainer.textContent).not.toContain('No other family members yet.');
-    expect(scatterContainer.querySelector('a')?.getAttribute('href')).toBe('/viz/chart/points/bubble');
-    expect(scatterContainer.querySelector('[data-slot="showcase-family-preview"]')?.getAttribute('data-size')).toBe(
-      'xl',
-    );
-
-    act(() => roots.shift()?.unmount());
-    scatterContainer.remove();
-
-    const bubbleContainer = renderTabs('/viz/chart/points/bubble?tab=family');
-
-    expect(bubbleContainer.textContent).toContain('Scatter');
-    expect(bubbleContainer.textContent).not.toContain('Bubble');
-    expect(bubbleContainer.querySelector('a')?.getAttribute('href')).toBe('/viz/chart/points/scatter');
+    expect(scatterContainer.textContent).toContain('No other family members yet.');
+    expect(scatterContainer.querySelector('a')).toBeNull();
+    expect(scatterContainer.querySelector('[data-slot="showcase-family-preview"]')).toBeNull();
   });
 });

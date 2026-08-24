@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, object, string } from 'zod';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../src';
 
@@ -16,9 +16,9 @@ const labeledBox = defineComposite({
   namespace: 'example',
   type: 'labeledBox',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('example'),
-    type: z.literal('labeledBox'),
-    text: z.string(),
+    namespace: literal('example'),
+    type: literal('labeledBox'),
+    text: string(),
   }),
   expand: node => ({
     children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: node.text }],
@@ -30,13 +30,13 @@ describe('lowerComposites — adversarial', () => {
     const dupA = defineComposite({
       namespace: 'x',
       type: 'y',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('x'), type: z.literal('y') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('x'), type: literal('y') }),
       expand: () => ({ children: [] }),
     });
     const dupB = defineComposite({
       namespace: 'x',
       type: 'y',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('x'), type: z.literal('y') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('x'), type: literal('y') }),
       expand: () => ({ children: [] }),
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [] };
@@ -49,13 +49,13 @@ describe('lowerComposites — adversarial', () => {
     const first = defineComposite({
       namespace: 'standard',
       type: 'userExtensionA',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('standard'), type: z.literal('userExtensionA') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('standard'), type: literal('userExtensionA') }),
       expand: () => ({ children: [{ type: 'node', id: 'first', position: [0, 0], text: 'first' }] }),
     });
     const second = defineComposite({
       namespace: 'standard',
       type: 'userExtensionB',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('standard'), type: z.literal('userExtensionB') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('standard'), type: literal('userExtensionB') }),
       expand: () => ({ children: [{ type: 'node', id: 'second', position: [20, 0], text: 'second' }] }),
     });
     const ir: IRScene = {
@@ -75,7 +75,7 @@ describe('lowerComposites — adversarial', () => {
       defineComposite({
         namespace: 'invalid',
         type: 'invalid',
-        schema: z.string(),
+        schema: string(),
         expand: () => ({ children: [] }),
       }),
     ).toThrow(/ZodObject/);
@@ -86,7 +86,7 @@ describe('lowerComposites — adversarial', () => {
       defineComposite({
         namespace: 'm',
         type: 'a',
-        schema: z.object({ namespace: z.string(), type: z.string() }),
+        schema: object({ namespace: string(), type: string() }),
         expand: () => ({ children: [] }),
       }),
     ).toThrow(/literal/);
@@ -96,13 +96,13 @@ describe('lowerComposites — adversarial', () => {
     const aDef = defineComposite({
       namespace: 'm',
       type: 'a',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('m'), type: z.literal('a') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('m'), type: literal('a') }),
       expand: () => ({ children: [{ namespace: 'm', type: 'b' }] }),
     });
     const bDef = defineComposite({
       namespace: 'm',
       type: 'b',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('m'), type: z.literal('b') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('m'), type: literal('b') }),
       expand: () => ({ children: [{ namespace: 'm', type: 'a' }] }),
     });
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'm', type: 'a' }] };
@@ -154,7 +154,7 @@ describe('lowerComposites — adversarial', () => {
     const mixed = defineComposite({
       namespace: 'mix',
       type: 'pair',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('mix'), type: z.literal('pair') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('mix'), type: literal('pair') }),
       expand: () => ({
         children: [
           { type: 'node', id: 'kept', position: [0, 0], text: 'kept' },

@@ -14,4 +14,4 @@ Diagram v0 在 Graph 通用关系数据与图式呈现之上建立自动图示�
 
 后续 minor、布局类型与应用场景按真实用例继续规划；v0 roadmap 不预先冻结完整布局类型、约束或 provider 枚举。
 
-Diagram 单向依赖 Graph，不复制 Graph 的节点、关系、分组、端口、presentation、Theme 或 identity。Diagram 不拥有 Editor 状态、renderer、DOM 或框架生命周期；移除 Schematic 领域词汇后仍成立且经过真实复用验证的算法与几何能力进入对应 Kernel 或 Library owner。
+Diagram 单向依赖 Graph，不复制 Graph 的节点、关系、分组、presentation、Theme 或 identity。Graph 当前没有端口契约；后续通用 endpoint / 局部连接点能力必须先由独立设计冻结。Diagram 不拥有 Editor 状态、renderer、DOM 或框架生命周期；移除 Schematic 领域词汇后仍成立且经过真实复用验证的算法与几何能力进入对应 Kernel 或 Library owner。

@@ -31,8 +31,8 @@ export type TableBorderVertex = Readonly<{
 
 /** 单个 canonical Cell 的 Border Graph 输入 */
 export type TableBorderCellInput = Readonly<{
-  /** semantic Cell id */
-  cellId: string;
+  /** optional semantic Cell id */
+  cellId?: string;
   /** canonical origin row index */
   rowIndex: number;
   /** canonical origin column index */

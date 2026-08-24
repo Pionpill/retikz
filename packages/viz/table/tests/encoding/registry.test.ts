@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { strictObject, string } from 'zod';
 
 import { cellVisualScaleDefinitionOf, defineCellVisualScale, resolveCellVisualScaleRegistry } from '../../src';
 
 const customScale = (name: string) =>
   defineCellVisualScale({
     name,
-    optionsSchema: z.strictObject({ color: z.string().default('#123456') }),
+    optionsSchema: strictObject({ color: string().default('#123456') }),
     resolve: (options, values) => ({
       of: () => options.color,
       legendForm: 'swatch',

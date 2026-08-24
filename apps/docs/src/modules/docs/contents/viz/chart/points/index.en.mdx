@@ -3,16 +3,17 @@ title: Scatter & Points
 description: Show individual observations through point positions and relationships, then choose a point chart by its structure.
 ---
 
-Point charts use one or more data points as their visual subject. This group helps readers choose a chart by visual structure and remains a source-directory and `/point` multi-entry import boundary. It does not introduce a `PointChartSchema`, a Point-specific resolver, or a runtime dispatch layer. Start with Scatter when you only need to compare two continuous variables.
+Point charts use one or more data points as their visual subject. This group helps readers choose a chartType by visual structure and remains a source-directory and `/point` multi-entry import boundary. It does not introduce another Point resolver or runtime dispatch layer.
 
-Scatter and Bubble own `ScatterChartSchema` and `BubbleChartSchema`, respectively. They follow the same `namespace: 'chart'`, `plot`, and chart-wide presentation layout, while exact `type` and `config` contracts preserve their unique encodings. Bubble is not a styling pattern of Scatter, but a distinct type that requires a third quantitative size role.
+Scatter belongs to the `type: 'point'` family, with its exact schema and recipe selected by `recipe.chartType`. It shares root `data`, `layout`, `presentation`, `theme`, and `plotExtension`, while `recipe.encodings`, `recipe.properties`, and its built-in semantic mark preserve the chart's field roles and visual structure.
+
+Field ownership, the authoring pipeline, chart-wide presentation, and Plot extension rules shared by every type live under [Chart Model](/viz/chart/model). This section compares only the visual semantics unique to point chart types.
 
 ## Responsibilities
 
-| Chart                                    | Responsibility                                                           | Use it when                                             |
-| ---------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------- |
-| [Scatter](/viz/chart/points/scatter)     | Show the relationship between two continuous variables                   | Inspecting distributions, clusters, outliers, or trends |
-| [Bubble Chart](/viz/chart/points/bubble) | Add a third quantitative variable through area while preserving position | Comparing relationships and magnitude                   |
+| Chart                                | `chartType` | Use it when                                             |
+| ------------------------------------ | ----------- | ------------------------------------------------------- |
+| [Scatter](/viz/chart/points/scatter) | `scatter`   | Inspecting distributions, clusters, outliers, or trends |
 
 ## Pages
 
@@ -23,8 +24,10 @@ Scatter and Bubble own `ScatterChartSchema` and `BubbleChartSchema`, respectivel
       Compare two continuous variables, then add category or magnitude with color and size
     </span>
   </LinkedCard>
-  <LinkedCard href="/viz/chart/points/bubble">
-    <span className="font-semibold">Bubble Chart</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Add area encoding to a position relationship</span>
+  <LinkedCard href="/viz/chart/model">
+    <span className="font-semibold">Chart Model</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Reference structure and resolution rules shared by every Chart type
+    </span>
   </LinkedCard>
 </div>

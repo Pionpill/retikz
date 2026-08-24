@@ -75,16 +75,13 @@ describe('Plot Vanilla Tier2 adapter', () => {
     expect(PlotInputEmbedAdapter.lower(input, contextOf('panel')).node).toMatchObject({
       namespace: 'plot',
       type: 'plot',
-      id: 'panel/sales',
+      id: 'sales',
     });
   });
 
   it('显式 IRPlot source 直接复用原 IR 对象', () => {
     const spec = salesSpec('sales');
-    const contribution = PlotInputEmbedAdapter.lower(
-      { spec, datasets, preserveRootIdentity: true },
-      contextOf('panel'),
-    );
+    const contribution = PlotInputEmbedAdapter.lower({ spec, datasets }, contextOf('panel'));
 
     expect(contribution.node).toBe(spec);
   });
@@ -142,16 +139,16 @@ describe('Plot Vanilla Tier2 adapter', () => {
     expect(renderToSvgString(inputScene, { adapters: [PlotInputEmbedAdapter] })).not.toContain('lineage');
   });
 
-  it('从 embed id 派生 root identity 且不修改原 spec', () => {
+  it('保留显式 root identity 且不为匿名 spec 派生 id', () => {
     const named = salesSpec('sales');
     const anonymous = salesSpec();
 
     expect(PlotInputEmbedAdapter.lower({ spec: named, datasets }, contextOf('panel')).node).toMatchObject({
-      id: 'panel/sales',
+      id: 'sales',
     });
-    expect(PlotInputEmbedAdapter.lower({ spec: anonymous, datasets }, contextOf('panel')).node).toMatchObject({
-      id: 'panel/plot',
-    });
+    expect(PlotInputEmbedAdapter.lower({ spec: anonymous, datasets }, contextOf('panel')).node).not.toHaveProperty(
+      'id',
+    );
     expect(named.id).toBe('sales');
     expect(anonymous.id).toBeUndefined();
 
@@ -159,7 +156,6 @@ describe('Plot Vanilla Tier2 adapter', () => {
       {
         spec: salesSpec('sales'),
         datasets,
-        preserveRootIdentity: true,
         panel: {
           x: 24,
           y: 12,
@@ -219,16 +215,14 @@ describe('Plot Vanilla Tier2 adapter', () => {
     expect(() => renderToSvgString(inputScene, { adapters: [PlotInputEmbedAdapter] })).toThrow(/sales/i);
   });
 
-  it.each(['', '   ', '\u2003', '\ufeff'])('helper and adapter reject blank embed id %j with the Plot prefix', id => {
-    expect(() => embedPlot(id, { spec: salesSpec() }, datasets)).toThrowError(RetikzFoundationError);
-    expect(() => embedPlot(id, { spec: salesSpec() }, datasets)).toThrowError(
-      'plot vanilla embed id must be a non-empty string.',
-    );
-    expect(() => PlotInputEmbedAdapter.lower({ spec: salesSpec(), datasets }, contextOf(id))).toThrowError(
-      RetikzFoundationError,
-    );
-    expect(() => PlotInputEmbedAdapter.lower({ spec: salesSpec(), datasets }, contextOf(id))).toThrowError(
-      'plot vanilla embed id must be a non-empty string.',
-    );
-  });
+  it.each(['', '   ', '\u2003', '\ufeff'])(
+    'helper rejects blank runtime ids while the adapter does not copy them into model identity %j',
+    id => {
+      expect(() => embedPlot(id, { spec: salesSpec() }, datasets)).toThrowError(RetikzFoundationError);
+      expect(() => embedPlot(id, { spec: salesSpec() }, datasets)).toThrowError(
+        'plot vanilla embed id must be a non-empty string.',
+      );
+      expect(PlotInputEmbedAdapter.lower({ spec: salesSpec(), datasets }, contextOf(id)).node).not.toHaveProperty('id');
+    },
+  );
 });

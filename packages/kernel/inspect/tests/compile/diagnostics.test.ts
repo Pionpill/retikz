@@ -2,7 +2,7 @@ import type { IRScene } from '@retikz/core';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { boolean, literal, strictObject } from 'zod';
 
 import { compileInspectionToScene, createInspectorRegistry, defineInspector } from '../../src';
 
@@ -13,17 +13,17 @@ describe('Inspection diagnostics', () => {
     const composite = defineComposite({
       namespace: owner.namespace,
       type: owner.type,
-      schema: CompositeBaseSchema.extend({ namespace: z.literal(owner.namespace), type: z.literal(owner.type) }),
-      artifactSchema: z.strictObject({ ok: z.boolean() }),
+      schema: CompositeBaseSchema.extend({ namespace: literal(owner.namespace), type: literal(owner.type) }),
+      artifactSchema: strictObject({ ok: boolean() }),
       compile: () => ({ artifact: { ok: true }, children: [] }),
     });
     const registry = createInspectorRegistry([
       defineInspector({
         ...key,
         owner,
-        subjectSchema: z.strictObject({ ok: z.boolean() }),
-        optionsInputSchema: z.strictObject({}),
-        optionsSchema: z.strictObject({}),
+        subjectSchema: strictObject({ ok: boolean() }),
+        optionsInputSchema: strictObject({}),
+        optionsSchema: strictObject({}),
         inspect: () => ({
           type: 'path',
           children: [

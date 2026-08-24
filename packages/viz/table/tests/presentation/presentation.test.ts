@@ -1,7 +1,8 @@
 ﻿import type { IRChild, IRJsonObject } from '@retikz/core';
+import type { ZodType } from 'zod';
 
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { strictObject, string } from 'zod';
 
 import type { AnyCellPresentationDefinition, IRManualTableCell } from '../../src';
 
@@ -14,7 +15,9 @@ const presentedCellOf = (
   cell: IRManualTableCell,
   presentationDefinitions?: ReadonlyArray<AnyCellPresentationDefinition>,
 ) => {
-  const formatted = formatDefaultTable(normalizeTableStructure({ kind: 'manual', rows: [[cell]] }));
+  const identifiedCell =
+    typeof cell === 'object' ? { ...cell, id: cell.id ?? 'cell.r0.c0' } : { id: 'cell.r0.c0', value: cell };
+  const formatted = formatDefaultTable(normalizeTableStructure({ kind: 'manual', rows: [[identifiedCell]] }));
   return presentTable(formatted, { presentationDefinitions }).cells[0];
 };
 
@@ -39,7 +42,7 @@ describe('Cell presentation registry', () => {
   it('dispatches custom definitions with raw, formatted, context, and appearance input', () => {
     const badge = defineCellPresentation({
       name: 'badge',
-      optionsSchema: z.strictObject({ prefix: z.string() }),
+      optionsSchema: strictObject({ prefix: string() }),
       present: ({ rawValue, value, context, appearance }, options) => ({
         type: 'node',
         position: [0, 0],
@@ -51,7 +54,7 @@ describe('Cell presentation registry', () => {
     const formatted = formatDefaultTable(
       normalizeTableStructure({
         kind: 'manual',
-        rows: [[{ value: 7, presentation: { name: 'badge', options: { prefix: '#' } } }]],
+        rows: [[{ id: 'cell.r0.c0', value: 7, presentation: { name: 'badge', options: { prefix: '#' } } }]],
       }),
     );
     const presented = presentTable(formatted, {
@@ -69,10 +72,39 @@ describe('Cell presentation registry', () => {
     expect(presented.cells[0].content).toMatchObject({ text: '#7>7@cell.r0.c0:#fff4e5' });
   });
 
+  it('passes canonical address without inventing identity for an anonymous Cell', () => {
+    let observed: unknown;
+    const inspect = defineCellPresentation({
+      name: 'anonymous-inspect',
+      optionsSchema: strictObject({}),
+      present: input => {
+        observed = input.context;
+        return { type: 'node', position: [0, 0], text: String(input.value) };
+      },
+    });
+    const formatted = formatDefaultTable(
+      normalizeTableStructure({
+        kind: 'manual',
+        rows: [[{ value: 'ok', presentation: { name: 'anonymous-inspect' } }]],
+      }),
+    );
+
+    const presented = presentTable(formatted, { presentationDefinitions: [inspect] });
+
+    expect(presented.cells[0]).not.toHaveProperty('cellId');
+    expect(observed).toEqual({
+      rowIndex: 0,
+      columnIndex: 0,
+      location: 'body',
+      roles: ['data'],
+      source: { kind: 'manual', row: 0, column: 0 },
+    });
+  });
+
   it('validates omitted options as an empty object', () => {
     const empty = defineCellPresentation({
       name: 'empty',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: ({ value }, options) => ({
         type: 'node',
         position: [0, 0],
@@ -88,7 +120,7 @@ describe('Cell presentation registry', () => {
   it('rejects duplicate, built-in-conflicting, empty, and missing definitions', () => {
     const definition = defineCellPresentation({
       name: 'badge',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: () => ({ type: 'node', position: [0, 0] }),
     });
     const duplicate = defineCellPresentation({ ...definition });
@@ -106,17 +138,17 @@ describe('Cell presentation registry', () => {
   it('guards custom options and provider output at runtime', () => {
     const nonJsonOptions = defineCellPresentation<IRJsonObject>({
       name: 'non-json-options',
-      optionsSchema: z.strictObject({}).transform(() => ({ format: () => 'x' })) as unknown as z.ZodType<IRJsonObject>,
+      optionsSchema: strictObject({}).transform(() => ({ format: () => 'x' })) as unknown as ZodType<IRJsonObject>,
       present: () => ({ type: 'node', position: [0, 0] }),
     });
     const invalidOutput = defineCellPresentation({
       name: 'invalid-output',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: () => ({ type: 'unknown' }) as unknown as IRChild,
     });
     const nonJsonOutput = defineCellPresentation({
       name: 'non-json-output',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: () => ({ namespace: 'custom', type: 'child', render: () => 'x' }),
     });
 
@@ -139,7 +171,7 @@ describe('Cell presentation registry', () => {
     };
     const nested = defineCellPresentation({
       name: 'nested',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: () => nestedOutput,
     });
     const directContent = presentedCellOf({ content: direct }).content;

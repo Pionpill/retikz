@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
 import type {
   CompileObservation,
@@ -37,10 +37,10 @@ const observableComposite = core.defineComposite({
   namespace: 'test',
   type: 'observable',
   schema: core.CompositeBaseSchema.extend({
-    namespace: z.literal('test'),
-    type: z.literal('observable'),
+    namespace: literal('test'),
+    type: literal('observable'),
   }),
-  artifactSchema: z.strictObject({ label: z.string() }),
+  artifactSchema: strictObject({ label: string() }),
   compile: () => ({
     artifact: { label: 'settled' },
     children: [{ type: 'node', position: [0, 0], text: 'visible' }],
@@ -51,10 +51,10 @@ const probeReplayComposite = core.defineComposite({
   namespace: 'test',
   type: 'probeReplay',
   schema: core.CompositeBaseSchema.extend({
-    namespace: z.literal('test'),
-    type: z.literal('probeReplay'),
+    namespace: literal('test'),
+    type: literal('probeReplay'),
   }),
-  artifactSchema: z.strictObject({ chosen: z.string() }),
+  artifactSchema: strictObject({ chosen: string() }),
   compile: (_, context) => {
     context.layoutChild({ type: 'node', position: [0, 0], text: 'discarded' }, core.NaturalLayoutProposal);
     const selected = context.layoutChild(

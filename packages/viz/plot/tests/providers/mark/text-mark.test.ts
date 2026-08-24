@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../../src/schemas';
 
 /**
@@ -25,8 +25,7 @@ const expandOf = (
   datasets: Datasets,
   options: LowerPlotsOptions = { width: WIDTH, height: HEIGHT },
 ): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 /** 收集 scope 树内所有 node */

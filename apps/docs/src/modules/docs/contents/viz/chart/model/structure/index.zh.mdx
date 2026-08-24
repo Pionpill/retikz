@@ -1,0 +1,149 @@
+---
+title: 结构与类型
+description: 理解 Chart Source 的 family、chartType、精确 schema、marks 与 Plot 扩展边界。
+---
+
+Chart Source 把“这是什么图”与“这张图如何完整呈现”分开。根 `type` 只负责稳定的 family 分类；嵌套 `recipe.chartType` 才选择全局唯一的 recipe。这样人类和 LLM 可以先发现 family，再只查看该 family 的精确 schema。
+
+## 先看一份 Chart Source
+
+下面是一份 Point family 的 Scatter Source。它保留作者意图；recipe 生成的坐标、比例尺、guide 和内建 Plot mark 不会写回 Source。
+
+```ts
+{
+  namespace: 'chart',
+  type: 'point',
+  id: 'weight-efficiency',
+  presentation: {
+    title: '重量与效率',
+    subtitle: '按车型比较',
+    source: '示例车辆数据',
+  },
+  theme: 'clean',
+  data: { reference: 'rows' },
+  layout: { width: 640, height: 360 },
+  recipe: {
+    chartType: 'scatter',
+    encodings: {
+      x: 'weight',
+      y: 'efficiency',
+      color: 'group',
+    },
+    properties: { opacity: 0.82 },
+    marks: [
+      { kind: 'scatter', override: true, properties: { size: 5 } },
+    ],
+  },
+  plotExtension: {
+    marks: [/* 额外的 Plot-owned mark，与 Chart marks 无关 */],
+  },
+}
+```
+
+`encodings` 只写数据字段名，`properties` 只写常量。`recipe.marks` 是有序 Chart marks：默认追加，`override: true` 可按 kind 替换内建 semantic mark group；`plotExtension.marks` 是独立的 Plot 内容，不读取 Chart 的 encodings 或 properties。
+
+## 根 shell 与嵌套 recipe envelope
+
+| 字段            | 含义                                                           | 所有者                   |
+| --------------- | -------------------------------------------------------------- | ------------------------ |
+| `namespace`     | 固定为 `chart`，声明能力域                                     | Chart                    |
+| `type`          | 稳定 family，用于发现和第一阶段路由                            | Chart                    |
+| `id`            | 可选的 Chart 唯一身份                                          | Chart / Core             |
+| `presentation`  | title、subtitle、note、source 四个固定槽位                     | Chart / Standard         |
+| `theme`         | 注册主题名，或带 `base` 与 owner token slices 的 authored 输入 | Chart、Plot、当前 recipe |
+| `data`          | 数据引用与可选数据模型                                         | Plot / Data              |
+| `layout`        | Chart 外部 border-box 的 `width` / `height`                    | Chart / Layout           |
+| `recipe`        | 当前 chartType 的精确 recipe payload                           | Chart                    |
+| `plotExtension` | 作者显式写入的 Plot-owned fragment                             | Plot                     |
+
+`layout` 只分配整张 Chart Surface 的外部尺寸，不表示 Plot 的 facet、track、coordinate 或内部 plot area。完全控制底层绘图时直接使用 Plot；当前 Source 不提供 `type: 'base'` 特例。
+
+## family → chartType → exact schema
+
+family 是有限、稳定、面向发现的分类；chartType 是全局唯一 recipe key，每个 key 只属于一个 family。首批 Point family 的路由如下：
+
+| family (`type`) | chartType | 精确 schema 与核心差异                                           |
+| --------------- | --------- | ---------------------------------------------------------------- |
+| `point`         | `scatter` | `ScatterChartSchema`；x/y 必填，可选 color、size、opacity、shape |
+
+精确 schema 从 `@retikz/chart/point/scatter` 导入。`@retikz/chart/point` 是明确需要整个 Point family 时使用的聚合入口。
+
+每个 chartType 都有自己的 strict `XxxChartSchema`、`XxxChartEncodingsSchema`、`XxxChartPropertiesSchema` 与 recipe Theme schema。公共原子 schema 只按真实语义复用，不把所有 family 拼成一个宽 union。未知 chartType、family mismatch、未知字段和不匹配的 mark 都在 Source / provider 边界 fail-loud。
+
+Chart 不提供第三方 recipe Definition 注册入口。应用层负责维护动态 family / chartType catalog、按模块加载具体 schema 与 provider，并把 JSON 路由到对应的 `XxxChartSchema` 和 provider contribution；当前编译边界内的多个 provider 仍按 `chart.<family>` key 合并。需要表达尚未内建为 Chart chartType 的复杂图形时，直接使用 Plot。
+
+## encodings、properties 与 marks
+
+recipe 会把 Source 的 field-bound encodings 和 constant properties 传给自己的 semantic mark，再生成 Plot 正式 mark。两者映射到同一 slot 时，encoding 胜出；`false`、`0` 和空数组等 schema 允许的显式值不会被 truthy fallback 丢掉。
+
+recipe 会显式声明自身实际消费的 slots，而不是把 schema 中所有可写字段都视为已消费。mark 的继承声明只在 Source 里确实出现对应 mark 时生效；一个字段若没有 recipe 或当前 authored marks 消费，会在该字段路径 fail-loud，不会静默丢失。
+
+Chart mark 由 `{ kind, override?, encodings?, properties? }` 组成。mark Definition 声明它可以继承哪些字段和属性。当前 Scatter 只接受 `scatter` mark，它可以继承 Point 的 x/y/color/size/opacity/shape 部分。省略 `override` 或设为 `false` 时追加新 mark；设为 `true` 时按 kind 原位替换完整内建 group。显式 property 高于 inherited encoding，mark 自己同时声明 property 与 encoding 时仍由 encoding 胜出。
+
+```ts
+recipe: {
+  chartType: 'scatter',
+  encodings: { x: 'time', y: 'value', color: 'id' },
+  properties: { opacity: 0.8 },
+  marks: [
+    { kind: 'scatter', override: true, properties: { size: 4, opacity: 0.4 } },
+    { kind: 'scatter', properties: { size: 7 } },
+  ],
+}
+```
+
+上例中的第一个 `scatter` mark 替换 recipe 的完整内建 group，第二个 mark 再按 authored 顺序追加。一个 semantic group 可以包含多个 Plot marks，override 会将它们作为一个原子整体替换。若 `override: true` 没有命中同 kind group，该 mark 仍会追加，同时通过 `onWarn` 报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`。若要连线，用户应在 `plotExtension.marks` 中写入 Plot-owned Path mark；它是完全独立的 Plot 内容，不会继承 Chart context。
+
+```ts
+plotExtension: {
+  marks: [
+    {
+      type: 'path',
+      order: 'time',
+      encoding: { x: { field: 'time' }, y: { field: 'value' } },
+    },
+  ],
+}
+```
+
+## presentation 与 Theme owner
+
+`presentation` 只有四个可选槽位。解析时始终按 `title → subtitle → plot → note → source` 组成固定内容；JSON 属性出现顺序、Vanilla 对象构造顺序和 React marker 出现顺序都没有语义。需要可组合自由顺序时，使用后续独立能力，不在当前 Source 中猜测。
+
+Theme 入口可以是注册主题名（如 `'clean'`），也可以是带 `base` 和 token slices 的 authored 对象：
+
+```ts
+theme: {
+  base: 'clean',
+  tokens: {
+    chart: { 'chart.gap': 12 },
+    plot: { /* 交给 Plot owner */ },
+    recipe: { axisGridEnabled: false },
+  },
+}
+```
+
+Chart shell 的 cascade 是 mode fallback → Core style chain → authored named/base chain → inline `tokens.chart`；当前 recipe 的 cascade 是 recipe fallback → Core style chain → authored chain → inline `tokens.recipe` → `properties` → `encodings`。Chart 只解析 canvas、padding 和 presentation token，Plot slice 由 Plot owner 消费，recipe slice 由当前 chartType 的精确 schema 校验。完整 resolved map 不写回 Source。
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/model">
+    <span className="font-semibold">图形模型</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">从 Source 进入 recipe、resolve 与 Surface。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/plot">
+    <span className="font-semibold">与 Plot 协作</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">区分 Chart marks 与独立的 Plot marks。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/presentation">
+    <span className="font-semibold">整图展示</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查阅固定 presentation slots 与布局。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points">
+    <span className="font-semibold">点图 family</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      查看 Scatter 的精确 schema 与 authored marks。
+    </span>
+  </LinkedCard>
+</div>

@@ -1,32 +1,32 @@
 import type { IRNode, IRScope } from '@retikz/core';
+import type { infer as ZodInfer } from 'zod';
 
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, object, strictObject } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 
 import * as plot from '../../../src';
 import { defineMark, defineNodeChannel, extractMarkType } from '../../../src/contract';
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { BUILTIN_MARKS, resolveMarkRegistry } from '../../../src/providers';
 import { BUILTIN_MARK_TYPES, EncodingSchema, MarkOperationSchema, PlotSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
-const DotMarkSchema = z.strictObject({
-  type: z.literal('dot'),
-  strength: z.number().positive(),
+const DotMarkSchema = strictObject({
+  type: literal('dot'),
+  strength: number().positive(),
   encoding: EncodingSchema.optional(),
 });
 
-type DotMark = z.infer<typeof DotMarkSchema>;
+type DotMark = ZodInfer<typeof DotMarkSchema>;
 
-const BareMarkSchema = z.object({ type: z.literal('bare') });
+const BareMarkSchema = object({ type: literal('bare') });
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 /** 自定义 mark：记录被分派调用 + 读取的行数，返回一个可识别的空 layer scope */
@@ -120,7 +120,7 @@ describe('mark registry（contract：自定义 mark）', () => {
   });
 
   it('duplicate_mark_registration_throws（自定义撞内置）', () => {
-    const collide = defineMark({ schema: z.strictObject({ type: z.literal('point') }), lower: () => null });
+    const collide = defineMark({ schema: strictObject({ type: literal('point') }), lower: () => null });
     expect(() => resolveMarkRegistry([collide])).toThrow(/duplicate mark registration: "point"/);
   });
 

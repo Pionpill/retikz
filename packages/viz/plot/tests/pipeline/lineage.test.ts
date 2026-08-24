@@ -5,13 +5,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRPlot } from '../../src';
 
-import {
-  createPlotLineageLocator,
-  defineNodeChannel,
-  lowerPlots,
-  lowerPlotWithLineage,
-  PlotSchema,
-} from '../../src';
+import { createPlotLineageLocator, defineNodeChannel, lowerPlotWithLineage, PlotSchema } from '../../src';
+import { lowerPlot } from '../../src/pipeline/expand/lower';
 
 const SALES = [
   { region: 'East', month: 'Jan', revenue: 3 },
@@ -159,8 +154,7 @@ const scopeChildrenOf = (child: IRChild): Array<IRScope> => {
 
 describe('plot lineage runtime', () => {
   it('keeps lowerPlots shape unchanged when lineage API is not used', () => {
-    const [definition] = lowerPlots(datasets, { width: 480, height: 300 });
-    const result = definition.expand(pointSpec());
+    const result = { children: [lowerPlot(pointSpec(), datasets, { width: 480, height: 300 })] };
 
     expect(result.children).toHaveLength(1);
     expect(scopeChildrenOf(result.children[0]).some(scope => scope.meta?.source === 'plot')).toBe(false);
@@ -320,7 +314,7 @@ describe('plot lineage runtime', () => {
       transform: [{ kind: 'missing-transform' as const }],
     };
 
-    expect(() => lowerPlots(datasets)[0].expand(spec)).toThrow(/not registered/);
+    expect(() => lowerPlot(spec, datasets)).toThrow(/not registered/);
     expect(() => lowerPlotWithLineage(spec, datasets, { lineage: {} })).toThrow(/not registered/);
   });
 

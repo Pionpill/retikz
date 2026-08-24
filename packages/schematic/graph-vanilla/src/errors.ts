@@ -8,12 +8,6 @@ export const RetikzGraphVanillaErrorCode = {
   ProviderDependencyMissing: 'GRAPH_VANILLA_PROVIDER_DEPENDENCY_MISSING',
   /** 当前 adapter 未在 Kernel Vanilla normalizeScene 上下文中运行 */
   NormalizeSceneRequired: 'GRAPH_VANILLA_NORMALIZE_SCENE_REQUIRED',
-  /** normalizeScene 返回的 child 数量不符合 slot 契约 */
-  NormalizedChildCountInvalid: 'GRAPH_VANILLA_NORMALIZED_CHILD_COUNT_INVALID',
-  /** normalizeScene 返回的 child 不是要求的 Core Node */
-  NormalizedNodeInvalid: 'GRAPH_VANILLA_NORMALIZED_NODE_INVALID',
-  /** normalizeScene 返回的 child 不是要求的 Core Path */
-  NormalizedPathInvalid: 'GRAPH_VANILLA_NORMALIZED_PATH_INVALID',
   /** provider catalog 缺少 Graph 根 provider */
   ProviderMissing: 'GRAPH_VANILLA_PROVIDER_MISSING',
 } as const;

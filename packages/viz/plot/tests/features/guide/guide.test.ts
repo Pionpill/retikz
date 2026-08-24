@@ -9,6 +9,7 @@ import type { IRPlot } from '../../../src/schemas';
 
 import { createCoordinateFrame } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { lowerCustomAxis, lowerGuide } from '../../../src/pipeline/guide';
 import { PlotSchema } from '../../../src/schemas';
 
@@ -1166,8 +1167,7 @@ const guidedSpec = (guides: Array<unknown>): IRPlot =>
   });
 
 const expandOf = (spec: IRPlot): IRScope => {
-  const [def] = lowerPlots({ sales: SALES }, { width: 480, height: 300 });
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, { sales: SALES }, { width: 480, height: 300 }) as IRScope;
 };
 
 describe('lowerPlots guide orchestration (contract)', () => {

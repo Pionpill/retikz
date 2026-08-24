@@ -220,7 +220,7 @@ test('Foundation publish artifact is root-only and has only the Zod runtime depe
     await readFile(path.join(repoRoot, 'packages', 'kernel', 'foundation', 'package.json'), 'utf8'),
   );
 
-  assert.equal(manifest.version, '0.5.0-alpha.2');
+  assert.equal(manifest.version, '0.5.0-alpha.3');
   assert.equal(manifest.sideEffects, false);
   assert.deepEqual(Object.keys(manifest.exports), ['.']);
   assert.deepEqual(Object.keys(manifest.publishConfig.exports), ['.']);

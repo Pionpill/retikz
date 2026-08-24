@@ -1,31 +1,47 @@
-import type { IRNode, ResolvedTheme } from '@retikz/core';
+import type { IRJsonObject, IRNode } from '@retikz/core';
+import type { ZodType } from 'zod';
 
-import type { IRGraphEntityAppearanceTokenOverrides } from '../../schemas';
-
-/** Entity role 的语义几何默认定义 */
+/** Entity role 的语义与完整基础结构定义 */
 export type EntityRoleDefinition = Readonly<{
   /** 开放的 Entity role key */
   role: string;
-  /** 缺省 Core Node shape 与可选参数 */
+  /** 面向作者与工具的稳定语义说明 */
+  description: string;
+  /** role 独占的 Core Node shape */
   shape: NonNullable<IRNode['shape']>;
-  /** 缺省 Core Node padding */
+  /** 可选边界定义 */
+  boundary?: IRNode['boundary'];
+  /** role 独占的基础内边距 */
   padding: NonNullable<IRNode['padding']>;
-  /** 可选缺省 Core Node minimum size */
-  minimumSize?: NonNullable<IRNode['minimumSize']>;
+  /** 可选圆角半径 */
+  cornerRadius?: IRNode['cornerRadius'];
+  /** 可选基础最小尺寸 */
+  minimumSize?: IRNode['minimumSize'];
 }>;
 
-/** Entity variant recipe 可见的确定解析上下文 */
-export type EntityVariantResolveContext = Readonly<{
-  /** 当前 Entity 位置完整、只读的 Core Theme */
-  theme: ResolvedTheme;
-  /** 已按 Graph 级联确定并物化的 Entity 主色 */
-  color: string;
+/** Entity kind 的稳定语义子类型定义 */
+export type EntityKindDefinition = Readonly<{
+  /** 全局唯一的开放 Entity kind key */
+  kind: string;
+  /** kind 所属的 Entity role */
+  role: string;
+  /** 面向作者与工具的稳定语义说明 */
+  description: string;
 }>;
 
-/** Entity variant 的稀疏外观 recipe 定义 */
-export type EntityVariantDefinition = Readonly<{
-  /** 开放的 Entity variant key */
-  variant: string;
-  /** 根据当前 Theme 与最终主色解析稀疏外观 token */
-  resolve: (context: EntityVariantResolveContext) => IRGraphEntityAppearanceTokenOverrides;
+/** Entity predicate 作者侧的类型安全定义 */
+export type EntityPredicateDefinitionInput<TSchema extends ZodType<IRJsonObject>> = Readonly<{
+  /** 全局唯一的 predicate definition name */
+  name: string;
+  /** predicate 所属的 Entity role */
+  role: string;
+  /** 可选允许的 Entity kind keys；省略表示该 role 的全部 kind */
+  kinds?: ReadonlyArray<string>;
+  /** 面向作者与工具的稳定语义说明 */
+  description: string;
+  /** Source params 的 JSON object schema */
+  paramsSchema: TSchema;
 }>;
+
+/** Entity predicate registry 保存的参数擦除定义 */
+export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<IRJsonObject>>;

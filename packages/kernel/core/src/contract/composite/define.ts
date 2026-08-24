@@ -1,5 +1,7 @@
+import type { ZodType } from 'zod';
+
 import { assertNonEmptyString } from '@retikz/foundation';
-import { z } from 'zod';
+import { ZodLiteral, ZodObject, ZodUnion } from 'zod';
 
 import type { JsonValue } from '../../schemas';
 import type { CompositeDefinition } from './types';
@@ -7,9 +9,9 @@ import type { CompositeDefinition } from './types';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 
 /** 把 composite registration schema 规范化为可读取 provider key 的对象分支 */
-const objectSchemasOf = (schema: z.ZodType): Array<z.ZodObject> => {
-  if (schema instanceof z.ZodObject) return [schema];
-  if (!(schema instanceof z.ZodUnion)) {
+const objectSchemasOf = (schema: ZodType): Array<ZodObject> => {
+  if (schema instanceof ZodObject) return [schema];
+  if (!(schema instanceof ZodUnion)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Contract,
       'defineComposite: schema must be a ZodObject or a ZodUnion of ZodObject variants extending CompositeBaseSchema.',
@@ -23,7 +25,7 @@ const objectSchemasOf = (schema: z.ZodType): Array<z.ZodObject> => {
   }
 
   return schema.options.map((option, index) => {
-    if (!(option instanceof z.ZodObject)) {
+    if (!(option instanceof ZodObject)) {
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Contract,
         `defineComposite: schema union option ${index} must be a ZodObject extending CompositeBaseSchema.`,
@@ -41,13 +43,13 @@ const isNonEmptyLiteralString = (value: unknown, label: string): value is string
 };
 
 /** 从 composite 对象分支中读取并校验共同 namespace / type literal */
-const literalValueOf = (schema: z.ZodType, field: 'namespace' | 'type'): string => {
+const literalValueOf = (schema: ZodType, field: 'namespace' | 'type'): string => {
   const objects = objectSchemasOf(schema);
   const values = objects.map((object, index) => {
     const node = object.shape[field];
     const path = objects.length === 1 ? `schema.${field}` : `schema union option ${index}.${field}`;
     const message = `defineComposite: ${path} must be a non-empty z.literal string.`;
-    if (!(node instanceof z.ZodLiteral) || !isNonEmptyLiteralString(node.value, `defineComposite: ${path}`)) {
+    if (!(node instanceof ZodLiteral) || !isNonEmptyLiteralString(node.value, `defineComposite: ${path}`)) {
       throw new RetikzCoreError(RetikzCoreErrorCode.Contract, message);
     }
     return node.value;

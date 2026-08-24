@@ -1,254 +1,105 @@
 ---
 title: Entity Extensions
-description: Extend Entity themes, roles, and variants.
+description: Extend Entity roles, kinds, and predicates through independent Definition registries injected at the actual host.
 ---
 
-Entity extensions are useful for three needs: adding new semantic roles and geometry defaults, reusing an appearance recipe, or applying Entity styles by Theme, role, or variant. A Definition is active only in the assembly used by one compile or render operation, while persisted IR stores only `role`, `variant`, and JSON-safe parameters; reloading IR with custom keys requires the matching Definitions again
-
-## Custom extensions
-
-If only one Entity needs a change, use its Node props directly. Register a Definition when several Entities should share semantics, geometry defaults, or Theme rules. Graph extension points are split by responsibility: roles own geometry defaults, variants own Entity appearance, and Theme styles own token baselines and selector rules
-
-| API                       | Responsibility                                                                                                                     |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `defineEntityRole()`      | Registers a role key and geometry defaults such as `shape`, `padding`, and `minimumSize`; explicit Entity fields win independently |
-| `defineEntityVariant()`   | Registers a variant key and returns sparse `GraphThemeToken` values from `theme` and the materialized `color`; appearance only     |
-| `defineGraphThemeStyle()` | Registers a Graph Theme token baseline and selector rules paired with a same-name Core Theme style                                 |
-
-```ts
-import { defineThemeStyle, ThemeMode } from '@retikz/core';
-import {
-  defineEntityRole,
-  defineEntityVariant,
-  defineGraphThemeStyle,
-  getDefaultGraphThemePreset,
-  GraphThemeToken,
-} from '@retikz/graph';
-
-const brandCoreTheme = defineThemeStyle({
-  name: 'brand',
-  resolve: ({ mode }) => ({
-    semantic: {
-      error: mode === ThemeMode.Light ? '#dc2626' : '#fca5a5',
-      success: mode === ThemeMode.Light ? '#16a34a' : '#86efac',
-      warning: mode === ThemeMode.Light ? '#ca8a04' : '#fde047',
-      guide: mode === ThemeMode.Light ? '#6b7280' : '#9ca3af',
-    },
-    categorical: ['#2563eb'],
-  }),
-});
-
-const serviceRole = defineEntityRole({
-  role: 'service',
-  shape: { type: 'rectangle', params: { cornerRadius: 10 } },
-  padding: { x: 14, y: 8 },
-});
-
-const mutedVariant = defineEntityVariant({
-  variant: 'muted',
-  resolve: ({ color }) => ({
-    [GraphThemeToken.EntityTextForeground]: color,
-    [GraphThemeToken.EntityStroke]: 'none',
-    [GraphThemeToken.EntityFill]: color,
-    [GraphThemeToken.EntityFillOpacity]: 0.12,
-  }),
-});
-
-const brandGraphTheme = defineGraphThemeStyle({
-  name: 'brand',
-  resolve: theme => ({
-    tokens: {
-      ...getDefaultGraphThemePreset(theme),
-      [GraphThemeToken.EntityStrokeOpacity]: theme.mode === ThemeMode.Light ? 0.7 : 0.9,
-    },
-    tokenRules: [
-      {
-        select: { variant: 'muted' },
-        tokens: {
-          [GraphThemeToken.EntityFillOpacity]: theme.mode === ThemeMode.Light ? 0.2 : 0.3,
-        },
-      },
-    ],
-  }),
-});
-
-const options = {
-  entityRoles: [serviceRole],
-  entityVariants: [mutedVariant],
-  graphThemeStyles: [brandGraphTheme],
-};
-```
-
-A variant owns appearance only; it cannot change role, shape, or other geometry fields
-
-### Vanilla usage
-
-Vanilla authoring declares the Definitions for a Graph subtree directly on the `graph()` input. The Core Theme style is injected through Vanilla's `compile.themeStyles`; `createGraphVanillaAdapters()` only installs the Graph embed adapters:
-
-```ts
-import { renderToSvgString } from '@retikz/vanilla';
-import { createGraphVanillaAdapters, entity, graph } from '@retikz/graph-vanilla';
-
-const svg = renderToSvgString(
-  {
-    theme: { style: 'brand' },
-    children: [
-      graph('service-map', {
-        entityRoles: [serviceRole],
-        entityVariants: [mutedVariant],
-        graphThemeStyles: [brandGraphTheme],
-        children: [
-          entity('service', {
-            role: 'service',
-            variant: 'muted',
-            position: [0, 0],
-            text: 'Service',
-          }),
-        ],
-      }),
-    ],
-  },
-  {
-    adapters: createGraphVanillaAdapters(),
-    compile: { themeStyles: [brandCoreTheme] },
-  },
-);
-```
-
-### React usage
-
-React authoring follows the Core / Standard style: declare Definitions directly on `<Graph>` and provide the Core Theme style on the root `<Layout>`. The extension content is scoped to that Graph subtree and is not written to persisted IR:
-
-```tsx
-import { Layout } from '@retikz/react';
-import { Entity, Graph } from '@retikz/graph-react';
-
-const view = (
-  <Layout theme={{ style: 'brand' }} themeStyles={[brandCoreTheme]}>
-    <Graph
-      id="service-map"
-      entityRoles={[serviceRole]}
-      entityVariants={[mutedVariant]}
-      graphThemeStyles={[brandGraphTheme]}
-    >
-      <Entity id="service" role="service" variant="muted" position={[0, 0]}>
-        Service
-      </Entity>
-    </Graph>
-  </Layout>
-);
-```
-
-If you already have persisted IR, continue using `createGraphDefinitions(options)` and provide the matching Core `themeStyles`: `<Layout ir={scene} composites={createGraphDefinitions(options)} themeStyles={[brandCoreTheme]}>`. Definition functions belong to runtime assembly and never enter Graph IR; without the custom Definitions, the corresponding IR keys fail explicitly during lookup
-
-## Graph Theme selectors
-
-`defineGraphThemeStyle()` pairs with a Core Theme style of the same name. It returns a complete Graph token baseline followed by ordered `tokenRules`; an array within `role` or `variant` is OR, both selector fields together are AND, and a later matching rule replaces an earlier value for the same token
+Custom Entity semantics use the same Graph Source, registry, resolve, and lowering path as built-ins. Persisted IR stores only open keys and JSON-safe predicate params; Definitions are runtime capabilities and do not enter IR
 
 <ComponentPreview
-  files="entity-theme-selector"
+  files="entity-definition"
   size="md"
-  caption="Switch the Theme mode and global tokens, then select one Entity to observe the Theme style and local Graph rule cascade."
+  caption="Write status and critical controls into predicate params, then observe Theme rules select appearance from Canonical semantics."
 />
 
-A Graph root can also provide local `graphThemeTokens` and `graphThemeTokenRules`. Cascade order is Theme style baseline, variant, Theme style rules, outer-to-inner Graph layers, and finally explicit Entity fields
+## Extension boundary
+
+Register a Definition when several Entities share stable semantics or structure. Write one-off text directly as `text`, keep non-normative business data in `meta`, and keep other Core content as siblings in the same Layout, Scope, or Graph
+
+## Define the capability
+
+Entity owns three independent Definition families:
+
+| Definition              | Responsibility                                                                    |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `defineEntityRole`      | Defines primary semantics and complete shape, padding, and minimum-size structure |
+| `defineEntityKind`      | Defines a stable semantic subtype within one role                                 |
+| `defineEntityPredicate` | Validates JSON params with Zod                                                    |
+
+Each role owns its shape and base structure. Kinds and predicates do not duplicate that shape. Graph Theme rules match Canonical semantics to supply appearance defaults, and explicit non-structural Node appearance fields on Entity Source take final precedence
+
+## Predicate params loop
+
+The demo above registers a `service.availability` predicate. Its `paramsSchema` requires `status` to be `available`, `degraded`, or `offline` and `critical` to be a boolean. The two controls write those params directly into Entity Source:
+
+```tsx
+<Entity
+  role="service"
+  kind="service.gateway"
+  predicate={{
+    name: 'service.availability',
+    params: { status, critical },
+  }}
+/>
+```
+
+Graph parses params with the Definition's Zod schema before Theme selectors match the Canonical predicate. In the demo, Theme rules use `status` and `critical` to select color and stroke width. Without a registered predicate, an Entity has no predefined param names, defaults, or ranges
+
+## Inject into a host
+
+React can pass definitions directly to the `<Entity>` that consumes them. Use `<Graph>` when several descendants share the same definitions and local `graphTheme`:
+
+```tsx
+<Graph entityRoles={[serviceRole]} entityKinds={[gatewayKind]} entityPredicates={[availabilityPredicate]}>
+  <Entity
+    id="api"
+    role="service"
+    kind="service.gateway"
+    predicate={{ name: 'service.availability', params: { status: 'available', critical: false } }}
+    position={[180, 80]}
+  >
+    API gateway
+  </Entity>
+</Graph>
+```
+
+Vanilla can pass the same options to `entity(id, input)` or `graph(id, input)`. Both `EntityInputEmbedAdapter` and `GraphInputEmbedAdapter` contribute the matching provider closure. When compiling persisted IR directly, assemble the same definitions through `createGraphDefinitions(options)` or `createGraphProviders(options)`
 
 ## Execution model
 
-<ComponentAlert
-  type="tip"
-  title="Safe to skip on first reading"
-  description="Start with Definition and injection; return here when you need the registry, Theme resolution, or lowering boundaries."
-/>
-
-Entity schemas, Definition registries, Theme resolution, and lowering cooperate as shown below; only Core-consumable `Scope` and `Node` remain in the final Kernel IR
-
-<ComponentPreview
-  files="entity-lowering-flow"
-  size="xs"
-  hideCode
-  caption="Entity flows from Graph IR through registry, resolution, and lowering into Kernel IR"
-/>
-
-A themed Core `Scope` starts a new Graph Theme baseline: the effective variant continues inward, while outer Graph tokens and rules stop at the boundary. Unknown third-party composites remain opaque
+The current provider assembly merges built-in and custom definitions into local registries, validates `role → kind → predicate`, then applies matching Graph Theme appearance rules in order. Lowering overlays explicit non-structural Entity Node fields, writes role structure, and merges `minimumSize` per axis. The final Entity is still one ordinary Core `Node`
 
 <SourceLinks
   sources={[
+    { label: 'Entity Definition contracts', path: 'packages/schematic/graph/src/contract/entity/types.ts' },
+    { label: 'Entity registry and built-ins', path: 'packages/schematic/graph/src/providers/entity/registry.ts' },
     {
-      label: 'Entity role Definition contract',
-      path: 'packages/schematic/graph/src/contract/entity/types.ts',
-      startLine: 5,
-      endLine: 15,
-    },
-    {
-      label: 'Entity variant Definition contract',
-      path: 'packages/schematic/graph/src/contract/entity/types.ts',
-      startLine: 17,
-      endLine: 31,
-    },
-    {
-      label: 'Definition identity merge for one provider assembly',
-      path: 'packages/schematic/graph/src/providers/runtime/options.ts',
-      startLine: 26,
-      endLine: 66,
-    },
-    {
-      label: 'Entity token cascade and final lowering',
+      label: 'Entity structure and appearance resolve',
       path: 'packages/schematic/graph/src/resolve/entity/resolve.ts',
-      startLine: 62,
-      endLine: 137,
     },
-    {
-      label: 'Graph Theme style resolution',
-      path: 'packages/schematic/graph/src/resolve/theme/resolve.ts',
-      startLine: 9,
-      endLine: 25,
-    },
-    {
-      label: 'Graph presentation lowering and Theme Scope propagation',
-      path: 'packages/schematic/graph/src/pipeline/presentation/lower.ts',
-      startLine: 32,
-      endLine: 47,
-    },
+    { label: 'Entity-to-Core-Node lowering', path: 'packages/schematic/graph/src/pipeline/entity/lower.ts' },
   ]}
 />
 
-Execution fails loudly for invalid extension input:
+## Errors and limits
 
-- A blank custom key, a built-in collision, or different Definition objects sharing a key in one assembly fails immediately instead of using last-wins
-- An unregistered Entity role or variant, an unknown selector key, or a Core Theme style without a same-name Graph Theme style fails immediately
-- A custom role's `shape` is still resolved by the Core shape registry; Graph never substitutes rectangle for an unknown shape
-- `currentColor` materializes to `#000000` in Light mode or `#ffffff` in Dark mode before entering a variant recipe
-- Graph Theme selectors target Entity only; Relation, the Container shell, and third-party composites do not consume these tokens
+- Blank keys, duplicate keys, built-in key replacement, or different Definition objects competing for one key in an assembly fail loudly
+- An unregistered role / kind / predicate, role mismatch, or invalid predicate params fail loudly
+- Custom shapes remain Core Shape registry entries; a missing provider never falls back to a rectangle
+- Entity data, predicate params, and `meta` must be JSON-safe; functions, ReactNode values, and renderer resources cannot enter Source IR
+- `<Entity>` can be embedded independently, but its children remain Node-compatible text; other drawing content must be a sibling
 
-## API reference
+## API Reference
 
-### Public exports
-
-| Export                                                | Package                 | Purpose                                                            |
-| ----------------------------------------------------- | ----------------------- | ------------------------------------------------------------------ |
-| `defineEntityRole` / `EntityRoleDefinition`           | `@retikz/graph`         | Defines role geometry defaults                                     |
-| `defineEntityVariant` / `EntityVariantDefinition`     | `@retikz/graph`         | Defines a Theme-aware appearance recipe                            |
-| `defineGraphThemeStyle` / `GraphThemeStyleDefinition` | `@retikz/graph`         | Defines a Graph token baseline and selector rules                  |
-| `GraphThemeToken`                                     | `@retikz/graph`         | Names the eight Entity presentation tokens                         |
-| `createGraphDefinitions` / `createGraphProviders`     | `@retikz/graph`         | Assembles Definitions for direct compile or providers              |
-| `GraphProps`                                          | `@retikz/graph-react`   | Declares Definition options directly on `<Graph>`                  |
-| `InputGraph`                                          | `@retikz/graph-vanilla` | Declares Definition options directly on `graph()`                  |
-| `createGraphVanillaAdapters`                          | `@retikz/graph-vanilla` | Installs the Graph, Container, Entity, and Relation embed adapters |
-
-### Definitions and configuration
-
-| Contract                    | Fields                                                         | Semantics                                                                                             |
-| --------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `EntityRoleDefinition`      | `role`<br />`shape`<br />`padding`<br />`minimumSize?`         | Role key and overridable geometry defaults                                                            |
-| `EntityVariantDefinition`   | `variant`<br />`resolve(context)`                              | Variant key and sparse appearance-token recipe; context provides `theme` and the materialized `color` |
-| `GraphThemeStyleDefinition` | `name`<br />`resolve(theme)`                                   | Graph Theme resolver paired with a Core style; returns complete `tokens` and ordered `tokenRules`     |
-| `GraphDefinitionOptions`    | `entityRoles?`<br />`entityVariants?`<br />`graphThemeStyles?` | User Definitions shared by one assembly                                                               |
-
-`GraphThemeToken` covers primary color, text foreground, fill, stroke, stroke width, fill opacity, stroke opacity, and overall opacity. Common identifiers include `GraphThemeToken.EntityColor`, `GraphThemeToken.EntityTextForeground`, `GraphThemeToken.EntityFill`, `GraphThemeToken.EntityStroke`, and `GraphThemeToken.EntityOpacity`. Selector data stays in Graph IR; Definition functions exist only in runtime options
+| Public export                                              | Purpose                                        |
+| ---------------------------------------------------------- | ---------------------------------------------- |
+| `defineEntityRole` / `EntityRoleDefinition`                | Defines complete role structure and shape      |
+| `defineEntityKind` / `EntityKindDefinition`                | Defines a stable subtype within a role         |
+| `defineEntityPredicate` / `EntityPredicateDefinitionInput` | Defines a predicate with type-safe JSON params |
+| `EntityRole`                                               | Lists built-in open role keys                  |
+| `GraphThemeLayerSchema` / `IRGraphThemeLayer`              | Authors non-empty ordered appearance rules     |
+| `GraphDefinitionOptions`                                   | Assembles the three Entity Definition families |
 
 ## Related
 
-- [Entity Basic Usage](/schematic/graph/entity/basic): built-in roles, variants, and explicit appearance fields
-- [Graph API Reference](/schematic/graph/api-reference): Graph root, schemas, factories, and adapters
-- [Capability Loading](/library/standard/extension/capability-loading): the general Core provider-graph assembly boundary
+- [Entity Basic Usage](/schematic/graph/entity/basic): choose a built-in role and author text and position directly
+- [Graph API Reference](/schematic/graph/api-reference): inspect Source schemas and Graph Theme layers

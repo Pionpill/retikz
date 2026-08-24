@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRPlot } from '../../src/schemas';
 
-import { createPlotLocator, lowerPlots } from '../../src';
+import { createPlotLocator } from '../../src';
+import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 
 const weatherRows = [
@@ -98,11 +99,16 @@ const trackSpec = {
 const parsePlotIR = (spec: unknown): IRPlot => PlotSchema.parse(spec);
 
 const expandOf = (spec: IRPlot): IRScope => {
-  const [definition] = lowerPlots(
+  return lowerPlot(
+    spec,
     { weather: weatherRows },
-    { width: 480, height: 300, provenance: true, datumProvenance: true },
-  );
-  return definition.expand(spec).children[0] as IRScope;
+    {
+      width: 480,
+      height: 300,
+      provenance: true,
+      datumProvenance: true,
+    },
+  ) as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
@@ -181,11 +187,7 @@ describe('scope provenance surface lowering', () => {
 
 describe('scope provenance surface locator', () => {
   it('locator_by_coordinate_view_disambiguates_same_index', () => {
-    const locator = createPlotLocator(
-      parsePlotIR(overlaySpec),
-      { weather: weatherRows },
-      { width: 480, height: 300 },
-    );
+    const locator = createPlotLocator(parsePlotIR(overlaySpec), { weather: weatherRows }, { width: 480, height: 300 });
     const temp = locator.datum(0, { coordinateView: 'temp' });
     const rain = locator.datum(0, { coordinateView: 'rain' });
     expect(temp?.meta.coordinateView).toBe('temp');
@@ -209,11 +211,7 @@ describe('scope provenance surface locator', () => {
   });
 
   it('root_and_view_addresses_resolve', () => {
-    const locator = createPlotLocator(
-      parsePlotIR(overlaySpec),
-      { weather: weatherRows },
-      { width: 480, height: 300 },
-    );
+    const locator = createPlotLocator(parsePlotIR(overlaySpec), { weather: weatherRows }, { width: 480, height: 300 });
     expect(locator.resolve('weather.datum.0')?.meta.transformedIndex).toBe(0);
     expect(locator.resolve('weather.view.rain.datum.0')?.meta.coordinateView).toBe('rain');
     expect(locator.resolve('weather.scope.rain.datum.0')).toBeNull();

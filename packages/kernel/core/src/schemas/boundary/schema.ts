@@ -1,9 +1,11 @@
-import { z } from 'zod';
+import { createOpenStringSchema } from '@retikz/foundation';
+import { union } from 'zod';
 
-import { ShapeValueSchema } from '../shape';
+import { BuiltinShape, ShapeRefSchema } from '../shape';
+import { BoundaryKeyword } from './constants';
 
-export const BoundarySchema = z
-  .union([ShapeValueSchema])
-  .describe(
-    'Connection surface for edge endpoints and direction anchors. "shape" uses the visual shape; registered boundary providers override shape fallback.',
-  );
+const BoundaryNameSchema = createOpenStringSchema({ ...BuiltinShape, Self: BoundaryKeyword.Self });
+
+export const BoundarySchema = union([BoundaryNameSchema, ShapeRefSchema]).describe(
+  'Connection surface for edge endpoints and direction anchors. "shape" uses the visual shape; registered boundary providers override shape fallback.',
+);

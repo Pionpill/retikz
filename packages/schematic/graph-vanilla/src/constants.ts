@@ -1,11 +1,8 @@
-/** Container embed 的稳定 kind */
-export const ContainerEmbedKind = 'graph.container';
-
-/** Graph presentation root embed 的稳定 kind */
+/** Graph Source root embed 的稳定 kind */
 export const GraphEmbedKind = 'graph.graph';
 
-/** Entity embed 的稳定 kind */
+/** Entity Source embed 的稳定 kind */
 export const EntityEmbedKind = 'graph.entity';
 
-/** Relation embed 的稳定 kind */
+/** Relation Source embed 的稳定 kind */
 export const RelationEmbedKind = 'graph.relation';

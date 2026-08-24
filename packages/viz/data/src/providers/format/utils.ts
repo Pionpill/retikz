@@ -1,4 +1,4 @@
-import type { DataFieldFormatValue } from './types';
+import type { DataFieldFormatValue } from '../../schemas';
 
 import { BUILTIN_FIELD_FORMATS } from './constants';
 

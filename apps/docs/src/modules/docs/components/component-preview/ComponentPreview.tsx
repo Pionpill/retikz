@@ -72,7 +72,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
 
   const ctxSegments = useDemoLocationContext();
   const segments = useMemo(() => ctxSegments ?? (loc ? docPathSegments(loc) : null), [ctxSegments, loc]);
-  const enableThemeSwitch = isPreviewThemeStyleDocument(segments?.[0]);
+  const enableThemeSwitch = isPreviewThemeStyleDocument(segments?.[0], segments?.[1]);
   const controlsDisabled = controlOptions.name === false;
   const explicitControlsName = typeof controlOptions.name === 'string' ? controlOptions.name : null;
   const resourceRequest = useMemo(

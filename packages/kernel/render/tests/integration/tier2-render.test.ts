@@ -2,7 +2,7 @@ import type { IRScene } from '@retikz/core';
 
 import { compileToScene, CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, string } from 'zod';
 
 import { drawScene } from '../../src/canvas';
 import { renderToSvgString } from '../../src/svg';
@@ -15,9 +15,9 @@ const labeledBox = defineComposite({
   namespace: 'example',
   type: 'labeledBox',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('example'),
-    type: z.literal('labeledBox'),
-    text: z.string(),
+    namespace: literal('example'),
+    type: literal('labeledBox'),
+    text: string(),
   }),
   expand: (node, context) => ({
     children: [

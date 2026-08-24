@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { enum as zodEnum, literal, strictObject } from 'zod';
 
 import type {
   CompileResult,
@@ -90,8 +90,8 @@ const runNestedFixture = (): FixtureRun => {
     namespace: 'nested-gate',
     type: 'failing',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('nested-gate'),
-      type: z.literal('failing'),
+      namespace: literal('nested-gate'),
+      type: literal('failing'),
     }),
     compile: () => {
       dispatches.failing += 1;
@@ -103,13 +103,13 @@ const runNestedFixture = (): FixtureRun => {
     namespace: 'nested-gate',
     type: 'nested',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('nested-gate'),
-      type: z.literal('nested'),
+      namespace: literal('nested-gate'),
+      type: literal('nested'),
     }),
-    artifactSchema: z.strictObject({
-      role: z.literal('nested'),
-      x: z.enum(['intrinsic', 'range', 'exact']),
-      y: z.enum(['intrinsic', 'range', 'exact']),
+    artifactSchema: strictObject({
+      role: literal('nested'),
+      x: zodEnum(['intrinsic', 'range', 'exact']),
+      y: zodEnum(['intrinsic', 'range', 'exact']),
     }),
     compile: (_node, context) => {
       dispatches.nested += 1;
@@ -193,10 +193,10 @@ const runNestedFixture = (): FixtureRun => {
     namespace: 'nested-gate',
     type: 'parent',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('nested-gate'),
-      type: z.literal('parent'),
+      namespace: literal('nested-gate'),
+      type: literal('parent'),
     }),
-    artifactSchema: z.strictObject({ role: z.literal('parent') }),
+    artifactSchema: strictObject({ role: literal('parent') }),
     compile: (_node, context) => {
       dispatches.parent += 1;
       expect(context.proposal).toEqual({
@@ -324,8 +324,8 @@ describe('three-level layout proposal closure', () => {
       namespace: 'diagnostic-gate',
       type: 'leaf',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('diagnostic-gate'),
-        type: z.literal('leaf'),
+        namespace: literal('diagnostic-gate'),
+        type: literal('leaf'),
       }),
       compile: () => {
         throw rootCause;
@@ -335,8 +335,8 @@ describe('three-level layout proposal closure', () => {
       namespace: 'diagnostic-gate',
       type: 'nested',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('diagnostic-gate'),
-        type: z.literal('nested'),
+        namespace: literal('diagnostic-gate'),
+        type: literal('nested'),
       }),
       compile: (_node, context) => {
         const leafProbe = context.layoutChild({ namespace: 'diagnostic-gate', type: 'leaf' }, exactNaturalProposal);
@@ -348,8 +348,8 @@ describe('three-level layout proposal closure', () => {
       namespace: 'diagnostic-gate',
       type: 'parent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('diagnostic-gate'),
-        type: z.literal('parent'),
+        namespace: literal('diagnostic-gate'),
+        type: literal('parent'),
       }),
       compile: (_node, context) => {
         const nestedProbe = context.layoutChild({ namespace: 'diagnostic-gate', type: 'nested' }, minimumRangeProposal);

@@ -1,86 +1,149 @@
 ---
 title: Graph API Reference
-description: Look up the Graph presentation root, Entity, Relation, Container, Definition registries, Theme tokens, and three authoring entries.
+description: Look up the three independent Graph, Entity, and Relation Source composites, the Scope surface, and React/Vanilla adapters.
 ---
 
-`@retikz/graph` owns persisted Graph IR, Definitions, registries, resolve, and lowering. The React and Vanilla packages only normalize their authoring input into that same IR. Graph ultimately lowers to Core `Scope`, `Node`, and `Path` values
+`@retikz/graph` owns JSON-safe Source IR, Definition registries, resolve, and lowering. Graph, Entity, and Relation are independently compilable Tier 2 composites. Graph additionally reuses the complete Core Scope contract: it creates a Scene as a top-level React host and contributes only one local Scope when embedded
 
 ## Public exports
 
-| Capability | Graph                                                                                 | React                        | Vanilla                                                                      |
-| ---------- | ------------------------------------------------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------- |
-| Graph      | `GraphSchema`, `IRGraph`, `createGraph`, `GraphDefinition`, `GraphProviderKey`        | `Graph`                      | `graph`, `GraphInputEmbedAdapter`                                            |
-| Entity     | `EntitySchema`, `IREntity`, `createEntity`, `EntityDefinition`                        | `Entity`                     | `entity`, `EntityInputEmbedAdapter`                                          |
-| Relation   | `RelationSchema`, `IRRelation`, `createRelation`, `RelationDefinition`                | `Relation`                   | `relation`, `RelationInputEmbedAdapter`                                      |
-| Container  | `ContainerSchema`, `IRContainer`, `createContainer`, `ContainerDefinition`            | `Container`, markers         | `container`, `ContainerInputEmbedAdapter`                                    |
-| Extensions | Three `defineXxx` helpers, `GraphDefinitionOptions`, `GraphThemeToken`, registry APIs | —                            | —                                                                            |
-| Assembly   | `createGraphDefinitions`, `createGraphProviders`                                      | Declare options on `<Graph>` | Declare options on `graph()`; `createGraphVanillaAdapters` installs adapters |
+| Capability        | `@retikz/graph`                                                                                    | React                           | Vanilla                                                            |
+| ----------------- | -------------------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------ |
+| Graph             | `GraphSchema`, `IRGraph`, `createGraph`, `GraphDefinition`, `GraphProviderKey`                     | `Graph`, `GraphProps`           | `graph`, `GraphInputEmbedAdapter`, `GraphInputEmbedProps`          |
+| Entity            | `EntitySchema`, `IRGraphEntity`, `createEntity`, `EntityDefinition`, `EntityProviderKey`           | `Entity`, `EntityProps`         | `entity`, `EntityInputEmbedAdapter`, `EntityInputEmbedProps`       |
+| Relation          | `RelationSchema`, `IRGraphRelation`, `createRelation`, `RelationDefinition`, `RelationProviderKey` | `Relation`, `RelationProps`     | `relation`, `RelationInputEmbedAdapter`, `RelationInputEmbedProps` |
+| Open vocabularies | `EntityRole`, `RelationRole`, `RelationKind`, and their schemas                                    | —                               | —                                                                  |
+| Theme extension   | `GraphThemeStyleDefinition`, `GraphThemeStyleOverrides`, `defineGraphThemeStyle`                   | `graphThemeStyles` on all three | `graphThemeStyles` on all three adapters                           |
+| Assembly          | `GraphDefinitionOptions`, `createGraphDefinitions`, `createGraphProviders`                         | Options on all three            | `createGraphVanillaAdapters`                                       |
 
-`GraphType` exposes the four public discriminators `graph`, `container`, `entity`, and `relation`. Roles and variants are open non-blank strings; `EntityRole`, `EntityVariant`, and `RelationRole` still provide the built-in vocabularies
+## Graph Source composite
 
-## Graph presentation root
+Source IR stores authored facts only. Omitted `children`, positions, routes, text, Theme, and styles do not materialize empty objects, defaults, or generated ids. Graph owns no member collection; it only projects local Graph context to semantic descendants and preserves the complete ordered child tree
 
-`IRGraph` is an optional global presentation root. It creates a same-id Core Scope and supplies descendant Entities with a default variant, local tokens, and selector rules:
+<ZodSchema name="GraphSchema" />
 
-| Field                   | Type                           | Semantics                                 |
-| ----------------------- | ------------------------------ | ----------------------------------------- |
-| `namespace`             | `'graph'`                      | Graph owner                               |
-| `type`                  | `'graph'`                      | Presentation-root discriminator           |
-| `id?`                   | `string`                       | Core Scope id after lowering              |
-| `entityVariant?`        | `string`                       | Default variant for descendant Entities   |
-| `graphThemeTokens?`     | `IRGraphThemeTokenOverrides`   | Local tokens for this Graph scope         |
-| `graphThemeTokenRules?` | `IRGraphEntityThemeTokenRules` | Ordered rules by effective role / variant |
-| `children`              | `Array<IRChild>`               | Graph-owned or ordinary Core children     |
+Graph `children` directly uses Core `ChildSchema` and may mix Entity, Relation, Node, Coordinate, Path, Scope, and other composites in author order. Core Scope semantics remain intact for `theme`, style defaults, transforms, placement, clipping, bounding shape, animations, and `meta`. Only `graphTheme` is Graph-specific
 
-An explicit Entity `variant` wins over the nearest Graph or Container default, while explicit `default` resets an outer default. Nested Graph tokens merge field by field from outer to inner without leaking into siblings
+Entity role and Relation role / kind are open keys. Their schemas expose built-in const-object vocabularies as TypeScript and JSON Schema suggestions while still accepting arbitrary non-blank custom strings; registration is checked only during resolve. Entity kind and predicate name currently have no built-in vocabulary, so they remain ordinary non-blank strings
 
-## Entity input and Theme
+```json
+{
+  "namespace": "graph",
+  "type": "graph",
+  "nodeDefault": { "strokeWidth": 1.5 },
+  "children": [
+    {
+      "namespace": "graph",
+      "type": "entity",
+      "id": "start",
+      "role": "event",
+      "position": [80, 80]
+    },
+    {
+      "namespace": "graph",
+      "type": "relation",
+      "role": "flow",
+      "source": { "id": "start" },
+      "target": { "id": "task" }
+    },
+    { "type": "node", "id": "task", "position": [320, 80], "text": "Process" }
+  ]
+}
+```
 
-Entity reuses the applicable Core Node authoring surface. `id`, `role`, and `position` are required, while string children or `<Text>` become Node text. A role Definition supplies shape, padding, and optional minimum size; explicit Entity fields win independently
+See the [Scope schema](/kernel/reference/schema/scope) for nested field shapes and inheritance rules.
 
-Final primary color comes from the Graph Theme baseline, rules, layers, and Entity `color`. An omitted value or `currentColor` becomes black in Light mode or white in Dark mode before entering a variant Definition. Explicit Entity fields always have final priority for other appearance values
+## Entity schema
 
-`GraphThemeToken` contains:
+Entity keeps semantics and Core Node instance fields in one Source record. Every Node field is available except role-owned `type`, `shape`, `boundary`, `padding`, and `cornerRadius`. `id`, `position`, and `text` are optional. The current Core Theme and optional Graph Theme supply appearance defaults, while explicit Entity fields such as `fill`, `dashed`, and `textColor` take final precedence
 
-- `graph.entity.color`
-- `graph.entity.text.foreground`
-- `graph.entity.fill` / `graph.entity.stroke` / `graph.entity.strokeWidth`
-- `graph.entity.fillOpacity` / `graph.entity.strokeOpacity` / `graph.entity.opacity`
+<ZodSchema name="EntitySchema" />
 
-## Relation and Container
+Omitting `id` generates no internal id and registers no target in the Core namespace. The Entity is still drawable; provide an id only when references need one
 
-Canonical `IRRelation` JSON uses Core Step `children`. `createRelation`, React, and Vanilla also accept an authoring-only Core `WayDSL`, which normalizes to `children` at the boundary. Omitting `marks` adds a terminal arrow; an explicit `marks` value, including `[]`, completely replaces that default
+## Relation schema
 
-Container retains headers, sections, layout artifacts, and its `entityVariant` scope. The Container shell, dividers, and Relation do not consume Entity Theme tokens
+Relation keeps Core `IRNodeTarget` endpoints, semantics, complete Core Geometry Labels, and an optional Core route together. `RelationSchema` excludes only the discriminator and kind, `children` / `label`, arbitrary `marks`, and the fill family from `PathBaseSchema`; every other Core Path field is reused directly. Relation resolve performs no Graph membership validation. Core Path resolves Nodes, Coordinates, resolved Scopes, or targets published by upper composites and owns unresolved / duplicate-id diagnostics
 
-## Definition and provider assembly
+<ZodSchema name="RelationSchema" />
 
-Direct IR gets five composite Definitions from `createGraphDefinitions(options)`. A provider graph uses `GraphProviderKey` as its root and receives the complete dependency closure from `createGraphProviders(options)`:
+Theme is a source of Relation defaults, not a field whitelist. Explicit Relation Path paint, stroke, effect, dash, and transform fields take final precedence. The public `labels` type is `Array<IRGeometryLabel>`; each label's `textColor`, `opacity`, and individual font fields then override Relation label defaults
+
+The complete public type of `source` and `target` is `IRNodeTarget`:
+
+| Field       | Type               | Default                 | Description                                              |
+| ----------- | ------------------ | ----------------------- | -------------------------------------------------------- |
+| `id`        | `string`           | —                       | Node, Coordinate, resolved Scope, or composite target id |
+| `anchor?`   | `IRAnchorRef`      | consuming context       | Named, angle, or boundary-fraction anchor                |
+| `offset?`   | `[number, number]` | —                       | World-space offset applied after anchor resolution       |
+| `boundary?` | `IRBoundary`       | target default boundary | Per-endpoint connection-surface override                 |
+
+When `route` is omitted, lowering emits `move(source) → line(target)`. An explicit route uses `Array<IRGraphRelationRouteStep>`, retains the complete Core Position language, and cannot carry labels on route steps
+
+## Shared references and Graph Theme
+
+<ZodSchema name="GraphPredicateRefSchema" />
+
+<ZodSchema name="GraphThemeLayerSchema" />
+
+Core `theme` selects or overrides the general Theme. `graphTheme` stores only Graph-local ordered appearance rules. Entity rules may select by role, kind, or predicate, while Relation rules may additionally select by direction. A role owns complete structure, and a kind or predicate may contribute an allowed structural delta
+
+The `resolve(theme)` callback passed to `defineGraphThemeStyle()` returns `GraphThemeStyleOverrides` and only declares fields that differ from the mode-aware default preset. `entity`, `relation`, and their `tokens` and `rules` are all optional; an explicitly `undefined` known token in the runtime callback is treated as omitted. An explicit `tokens: {}` remains invalid because a token override must contain at least one field, and the returned value may contain only plain-data containers
 
 ```ts
-const options = {
-  entityRoles: [serviceRole],
-  entityVariants: [mutedVariant],
-  graphThemeStyles: [brandGraphTheme],
-};
+const compact = defineGraphThemeStyle({
+  name: 'compact',
+  resolve: () => ({
+    entity: { tokens: { strokeWidth: 1.5 } },
+  }),
+});
 
-const scene = compileToScene(ir, {
+const composites = createGraphDefinitions({ graphThemeStyles: [compact] });
+```
+
+Graph resolve materializes complete appearance in the following order, with each later source overriding only the fields it declares:
+
+1. Graph default preset tokens for the current Core Theme mode
+2. Sparse custom style tokens
+3. Default Graph rules
+4. Custom style rules
+5. Outer-to-inner Graph-local `graphTheme` rules
+6. Explicit Entity / Relation appearance fields
+
+Custom style rules append after the defaults. Omitting `rules` or returning `rules: []` never clears built-in rules. An unknown Core Theme style still requires a Graph Theme style Definition with the same name and fails loudly during resolve otherwise
+
+## React and Vanilla authoring
+
+React `<Graph>` collects arbitrary Core and Tier 2 children in author order. Entity children write direct `text`; Relation `<Step>` children write direct `route`. `<Entity>` and `<Relation>` may also appear directly in Layout, Scope, or any other Core-child position
+
+Standalone and embedded Graph share the same Source contract:
+
+```tsx
+<Graph width={420} height={160}>...</Graph>
+
+<Layout width={800} height={220}>
+  <Graph transforms={[{ kind: 'translate', x: 80, y: 40 }]}>...</Graph>
+</Layout>
+```
+
+Standalone `width`, `height`, `viewBox`, renderer, runtime, and DOM props belong to the Layout Scene host; move them to the outer Layout when Graph is embedded. `transforms`, `placement`, `zIndex`, and `clip` belong directly to `IRGraph`; there is no extra panel envelope
+
+Vanilla `normalizeGraph()`, `normalizeEntity()`, and `normalizeRelation()` perform factory validation, child normalization, and optional `way → route` sugar only. They neither split envelopes nor materialize defaults. `createGraphVanillaAdapters()` installs all three adapters
+
+The first argument of `graph(traversalId, input)`, `entity(traversalId, input)`, and `relation(traversalId, input)` is only a Vanilla authoring traversal id. It is not Source `id` and never writes or generates Graph, Entity, or Relation identity
+
+Definition options can be passed directly to all three React components or Vanilla adapters. Persisted IR uses the same definitions through either assembly entry:
+
+```ts
+const scene = compileToScene(sourceIR, {
   composites: createGraphDefinitions(options),
 });
 ```
 
-Repeated contributions with the same key and same Definition object are deduplicated; different objects sharing a key fail. Every registry is assembly-local and does not mutate module-global state
-
-## React and Vanilla
-
-`<Graph>` and `graph(id, input)` both accept multiple children and produce a same-id `IRGraph`. `entityRoles`, `entityVariants`, and `graphThemeStyles` are declared directly on the Graph authoring input: React carries them on `<Graph>`, while Vanilla carries them on `graph()`. `createGraphVanillaAdapters()` only installs the four Graph, Container, Entity, and Relation embed adapters
-
-The default `<Layout>` JSX path uses built-in definitions. For a custom role, variant, or Graph Theme style, declare the options directly on `<Graph>`; when you already have persisted IR, render it through `<Layout ir composites={createGraphDefinitions(options)}>`
+Registries are assembly-local. Different Definition objects competing for one key fail loudly; there is no last-wins behavior, module-global registration, or built-in whitelist dispatch
 
 ## Related
 
+- [Graph Overview](/schematic/graph)
 - [Entity Basic Usage](/schematic/graph/entity/basic)
-- [Entity Extensions](/schematic/graph/entity/extension)
-- [Relation](/schematic/graph/relation/basic)
-- [Container](/schematic/graph/container/basic)
-- [Definition Loading](/library/standard/extension/capability-loading)
+- [Relation Basic Usage](/schematic/graph/relation/basic)

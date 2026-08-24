@@ -6,7 +6,7 @@ import { fertilityWorkData, WORLD_BANK_FERTILITY_WORK_YEAR } from './scatter-fer
 
 /** 分类编码 Scatter playground 的稳定控件 id */
 export const SCATTER_FERTILITY_WORK_CONTROL_IDS = {
-  encoding: 'encoding',
+  channel: 'channel',
 } as const;
 
 /** 分类编码 Scatter 的中文控制面板 */
@@ -37,7 +37,7 @@ export const scatterFertilityWorkControls = definePreviewControls({
       controls: [
         {
           kind: 'select',
-          id: SCATTER_FERTILITY_WORK_CONTROL_IDS.encoding,
+          id: SCATTER_FERTILITY_WORK_CONTROL_IDS.channel,
           label: '映射到',
           defaultValue: 'color',
           options: [
@@ -54,7 +54,7 @@ export const scatterFertilityWorkControls = definePreviewControls({
 export const previewControlContract = {
   controls: scatterFertilityWorkControls,
   canonicalValues: {
-    [SCATTER_FERTILITY_WORK_CONTROL_IDS.encoding]: 'color',
+    [SCATTER_FERTILITY_WORK_CONTROL_IDS.channel]: 'color',
   },
-  relatedApis: ['PointMark.color', 'PointMark.shape', 'Legend.channel'],
+  relatedApis: ['ScatterChart.encodings', 'ScatterMark.override', 'ScatterMark.properties'],
 } satisfies PreviewControlContract;

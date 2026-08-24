@@ -1,32 +1,30 @@
 ---
 title: Relation
-description: Express explicit relationships with Core Path authoring syntax, then connect direct IR or Vanilla when needed.
+description: Store general Core endpoints, relation semantics, labels, and an optional route in one record.
 ---
 
-`Relation` connects authored identities in Graph. It reuses the Core Path contracts for Steps, targets, labels, and marks. Start with React `<Step>` children in basic usage, then move to Draw ways, direct IR, and Vanilla in extended usage
+Relation expresses who is related to whom. It uses Core NodeTarget to reference a Node, Coordinate, Scope, or target published by an upper composite, and stores source/target, role, direction, and optional kind/predicate. The route only describes how to draw the relationship and independently lowers to an ordinary Core Path. Graph is optional context rather than a member container
 
-## Responsibilities at a glance
+## Responsibilities
 
-| Content        | Covers                                        | Use it when                           |
-| -------------- | --------------------------------------------- | ------------------------------------- |
-| Basic usage    | Steps, targets, labels, and common routes     | You connect Entity values in React    |
-| Extended usage | Draw ways, canonical IR, Definitions, Vanilla | You use another authoring entry point |
+| Topic       | Responsibility                                      | Reach for it when                  |
+| ----------- | --------------------------------------------------- | ---------------------------------- |
+| Basic usage | Endpoints, direction, labels, and route authoring   | Connecting any named targets       |
+| Extensions  | Custom roles, kinds, predicates, and marker recipes | Building domain relation semantics |
 
 ## Chapters
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/schematic/graph/relation/basic">
     <span className="font-semibold">Basic usage</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Steps, targets, labels, and routes</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Stable endpoints, direction, and a direct route
+    </span>
   </LinkedCard>
   <LinkedCard href="/schematic/graph/relation/extension">
-    <span className="font-semibold">Extended usage</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Draw ways, direct IR, and Vanilla</span>
+    <span className="font-semibold">Extensions</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Relation Definitions and registry consumption
+    </span>
   </LinkedCard>
 </div>
-
-## Related
-
-- [Entity](/schematic/graph/entity): Graph subjects that Relation can target
-- [Container](/schematic/graph/container): use a Container id to connect the whole region
-- [Core paths](/kernel/components/draw/overview): the lower-level path contract Relation reuses

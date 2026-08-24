@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import type { PathCommand, ResolvedShapeStyle, ScenePrimitive, ShapeDefinition } from '../../../src/contract';
 import type { Rect } from '../../../src/shared/geometry/rect';
@@ -105,7 +105,7 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
   const createPolygonShape = (): ShapeDefinition =>
     defineShape({
       name: 'customPolygon',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: (hw, hh) => {
         const r = Math.sqrt(hw * hw + hh * hh);
         return { halfWidth: r, halfHeight: r };

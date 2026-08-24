@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { enum as zodEnum, number, strictObject } from 'zod';
 
 import type { BoundaryDefinition } from '../../contract';
 import type { BoundaryFitValue, BuiltinShapeValue } from '../../schemas';
@@ -10,13 +10,12 @@ import { BoundaryFit, BuiltinShape } from '../../schemas';
 import { defineBuiltinProviderArray } from '../registry/index';
 import { ellipseShape, rectangle } from '../shape';
 
-const builtinBoundaryParamsSchema = z.strictObject({
-  fit: z
-    .enum(BoundaryFit)
+const builtinBoundaryParamsSchema = strictObject({
+  fit: zodEnum(BoundaryFit)
     .optional()
     .default(BoundaryFit.Tight)
     .describe('How the regular boundary fits the visual shape: shape-aware tight envelope or AABB bounds.'),
-  gap: z.number().optional().default(0).describe('Signed user-unit gap added to the fitted radius or both half-axes.'),
+  gap: number().optional().default(0).describe('Signed user-unit gap added to the fitted radius or both half-axes.'),
 });
 
 type BuiltinBoundaryParams = { fit: BoundaryFitValue; gap: number };

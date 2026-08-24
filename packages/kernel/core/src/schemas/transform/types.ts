@@ -1,9 +1,9 @@
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type { TransformSchema } from './schema';
 
 /** IR 层 transform 类型——7 变体 discriminated union（5 translate + rotate + scale） */
-export type IRTransform = z.infer<typeof TransformSchema>;
+export type IRTransform = ZodInfer<typeof TransformSchema>;
 
 /** 笛卡尔 translate 子分支 */
 export type IRTranslateTransform = Extract<IRTransform, { kind: 'translate' }>;

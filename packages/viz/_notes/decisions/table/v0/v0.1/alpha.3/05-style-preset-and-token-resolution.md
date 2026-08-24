@@ -34,7 +34,7 @@ declare const defineTableThemeTokens: (
 ) => ThemeTokenContribution<'table', IRTableThemeTokenOverrides>;
 ```
 
-当前 Table 公开 owner-local style definition，并通过 Table registry 按 effective `style` 查找。Table standalone / embedded adapter 与 direct headless 入口注入同义的 Table style definitions；plain JSON 只持久化 selector 与 `tableThemeTokens`，Core 不静态导入 Table 语义。
+当前 Table 公开 owner-local style definition，并通过 Table registry 按 effective `style` 查找。Definition 只返回相对当前 mode 默认 preset 的稀疏 token 覆盖，不包含由 Core 投影的 `data.categorical`；runtime definition 显式返回 `undefined` 的 token 按省略处理，plain JSON 的 `tableThemeTokens` 仍严格拒绝该值。Table standalone / embedded adapter 与 direct headless 入口注入同义的 Table style definitions；plain JSON 只持久化 selector 与 `tableThemeTokens`，Core 不静态导入 Table 语义。
 
 ## 基础 token 与颜色主链
 
@@ -50,12 +50,13 @@ declare const defineTableThemeTokens: (
 
 ## 行为、默认值、失败语义与兼容性
 
-未声明 Theme 时使用 Core `neutral + light` effective environment，Table 使用对应的 Table preset。IRTable 不保存 style / mode identity，省略 `tableThemeTokens` 表示不添加局部 Table override，不产生第二份环境默认。
+未声明 Theme 时使用 Core 匿名 light effective environment，Table 使用对应的 mode 默认 preset。IRTable 不保存 style / mode identity，省略 `tableThemeTokens` 表示不添加局部 Table override，不产生第二份环境默认。
 
 Table 在当前 Core effective Theme 上按以下顺序解析：
 
 ```text
-Table style/mode preset
+Table mode-aware 默认 preset
+  < Table style 稀疏覆盖
   < shared categorical projection
   < local tableThemeTokens
   < ordered rules / visual encodings
@@ -66,7 +67,7 @@ Theme token、IRTable 与 encoding input 必须是 plain JSON-safe data。unknow
 
 这是 `0.x` 的破坏性迁移：`style` 与 `themeMode` 从 IRTable 删除，`styleTokens` 改为 `tableThemeTokens`，不保留 alias、双读或静默 bridge。React 局部 `theme` 等价于在 Table 外建立一层 Core Scope Theme；plain JSON 使用外层 `IRScope.theme` 表达同一局部作用域；Vanilla、React、SSR、standalone 与 embedded 使用同一 selector IR、Table style registry、cascade 和诊断语义。
 
-Table inspection 与 manifest 复用 Core `ThemeTokenSource`：style baseline 与 `tableThemeTokens` 为 `local`；Table resolver 将 Core `ResolvedTheme.colors.categorical` 投影为 Table-owned `data.categorical`，来源为 `inherit`，path 为 `$theme/colors/categorical`。`kind` 不编码 preset 或具体输入优先级；`$style/...`、`$theme/colors/categorical`、`$spec/tableThemeTokens/...` 等稳定 path 保留可诊断的 winning entry。
+Table inspection 与 manifest 复用 Core `ThemeTokenSource`：默认 preset、style 稀疏覆盖与 `tableThemeTokens` 为 `local`；Table resolver 将 Core `ResolvedTheme.colors.categorical` 投影为 Table-owned `data.categorical`，来源为 `inherit`，path 为 `$theme/colors/categorical`。`kind` 不编码 preset 或具体输入优先级；未被 style 覆盖的 token 使用 `$default/...`，显式 style token 使用 `$style/...`，再与 `$theme/colors/categorical`、`$spec/tableThemeTokens/...` 等稳定 path 共同保留可诊断的 winning entry。
 
 ## 功能与包边界
 

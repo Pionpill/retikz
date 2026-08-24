@@ -4,22 +4,14 @@ import { RetikzError } from '@retikz/foundation';
 
 /** Graph React package 的稳定错误码 */
 export const RetikzGraphReactErrorCode = {
-  /** authoring slot 的 child 数量不符合契约 */
-  AuthoringChildCountInvalid: 'GRAPH_REACT_AUTHORING_CHILD_COUNT_INVALID',
-  /** semantic Entity 未收到唯一 Core Node authoring input */
-  SemanticNodeInvalid: 'GRAPH_REACT_SEMANTIC_NODE_INVALID',
-  /** Relation children 未收到唯一 Core Path authoring input */
-  RelationPathInvalid: 'GRAPH_REACT_RELATION_PATH_INVALID',
-  /** ContainerHeader marker 重复 */
-  ContainerHeaderDuplicate: 'GRAPH_REACT_CONTAINER_HEADER_DUPLICATE',
-  /** Container marker child 类型不受支持 */
-  ContainerChildInvalid: 'GRAPH_REACT_CONTAINER_CHILD_INVALID',
-  /** Container marker children 与 props 同时提供 */
-  ContainerPropsConflict: 'GRAPH_REACT_CONTAINER_PROPS_CONFLICT',
-  /** Container marker 未作为直接 child 使用 */
-  ContainerMarkerParentRequired: 'GRAPH_REACT_CONTAINER_MARKER_PARENT_REQUIRED',
-  /** Relation children 与 way 同时提供 */
+  /** Entity children 超出 Node-compatible text */
+  EntityChildInvalid: 'GRAPH_REACT_ENTITY_CHILD_INVALID',
+  /** Entity canonical props 与 JSX sugar 冲突 */
+  EntityInputInvalid: 'GRAPH_REACT_ENTITY_INPUT_INVALID',
+  /** Relation route / way 与 JSX sugar 无效或冲突 */
   RelationInputInvalid: 'GRAPH_REACT_RELATION_INPUT_INVALID',
+  /** embedded Graph 错误接收 standalone Layout 宿主属性 */
+  GraphHostPropsInvalid: 'GRAPH_REACT_GRAPH_HOST_PROPS_INVALID',
 } as const;
 
 /** Graph React package 稳定错误码取值 */
@@ -29,8 +21,6 @@ export type RetikzGraphReactErrorCodeValue = ValueOf<typeof RetikzGraphReactErro
 export type RetikzGraphReactErrorDetails = Readonly<{
   /** 发生错误的 authoring slot 或 marker */
   label?: string;
-  /** 关联的 marker 名称 */
-  marker?: string;
   /** 期望的 child 类型 */
   expectedType?: string;
   /** 实际收到的 child 类型 */

@@ -1,7 +1,8 @@
 import type { IRChild } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
+import type { ZodType } from 'zod';
 
-import { z } from 'zod';
+import { ZodLiteral, ZodObject } from 'zod';
 
 import type { IRPlotMark, IRPlotMarkOperation } from '../schemas';
 import type { MarkLoweringContext } from './anchor';
@@ -43,7 +44,7 @@ export type IntervalContext = {
  */
 export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
   /** 完整 mark operation schema；必须含非空 `z.literal('type')` 供 registry 提取注册键 */
-  schema: z.ZodType<T>;
+  schema: ZodType<T>;
   /** 收集该 mark 额外引用的用户源字段；通用 encoding / label 字段由 data 层统一处理 */
   collectFields?: (mark: T, fields: FieldCollector) => void;
   /**
@@ -76,12 +77,12 @@ export const defineMark = <T extends IRPlotMarkOperation = IRPlotMark>(def: Mark
  * 从 mark definition schema 中提取 registry key。
  * @description schema 必须是含 `type: z.literal('<mark-type>')` 的 ZodObject；literal 值同时是 IR 判别串与 registry 唯一键
  */
-export const extractMarkType = (schema: z.ZodType): string => {
-  if (!(schema instanceof z.ZodObject)) {
+export const extractMarkType = (schema: ZodType): string => {
+  if (!(schema instanceof ZodObject)) {
     throw new RetikzPlotError('lowerPlots: mark registration schema must be a ZodObject with a literal type field');
   }
   const typeSchema = schema.shape.type;
-  if (!(typeSchema instanceof z.ZodLiteral) || typeof typeSchema.value !== 'string' || typeSchema.value.length === 0) {
+  if (!(typeSchema instanceof ZodLiteral) || typeof typeSchema.value !== 'string' || typeSchema.value.length === 0) {
     throw new RetikzPlotError('lowerPlots: mark registration schema must declare type as a non-empty z.literal string');
   }
   return typeSchema.value;
@@ -93,7 +94,7 @@ export const extractMarkType = (schema: z.ZodType): string => {
  */
 export type AnyMarkDefinition = {
   /** 不同 definition 的 schema 泛型不同，registry 只关心 type 提取与运行时 parse */
-  schema: z.ZodType;
+  schema: ZodType;
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark */
   collectFields?: (mark: never, fields: FieldCollector) => void;
   /** 内部宽类型占位；语义同 MarkDefinition.channelKinds，供 registry 按 type 分发后调用 */

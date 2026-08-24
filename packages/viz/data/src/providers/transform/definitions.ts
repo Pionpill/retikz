@@ -1,3 +1,5 @@
+import { createReadonlyMap } from '@retikz/foundation';
+
 import type { AnyTransformDefinition } from '../../contract';
 import type {
   IRDataAnnotateTransform,
@@ -14,7 +16,6 @@ import {
   SortTransformSchema,
   SummarizeTransformSchema,
 } from '../../schemas';
-import { createReadonlyMap } from '../../shared/collections';
 import { freezeDefinitions } from '../shared';
 import { reducerInputFields, reducerOutputFields, selectorInputFields } from '../statistics';
 import { applyAnnotate, applySelect, applySummarize } from './group';

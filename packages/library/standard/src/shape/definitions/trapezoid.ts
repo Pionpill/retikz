@@ -1,9 +1,10 @@
 import type { CoreDependencyProvider, SideValue } from '@retikz/core';
 import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 
 import { defineShape, SideValues } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { enum as zodEnum, number, strictObject } from 'zod';
 
 import { StandardShapeName } from '../constants';
 import {
@@ -14,19 +15,14 @@ import {
   polygonConnectionEnvelope,
 } from './_utils';
 
-const TrapezoidShapeParamsSchema = z.strictObject({
-  shortSide: z.enum(SideValues).optional().describe('Side shorter than its opposite side; defaults to top.'),
-  shortSideRatio: z
-    .number()
-    .positive()
-    .max(1)
-    .optional()
-    .describe('Short-side length divided by opposite-side length.'),
+const TrapezoidShapeParamsSchema = strictObject({
+  shortSide: zodEnum(SideValues).optional().describe('Side shorter than its opposite side; defaults to top.'),
+  shortSideRatio: number().positive().max(1).optional().describe('Short-side length divided by opposite-side length.'),
   cornerRadius: NonNegativeNumberSchema.optional().describe('Uniform corner radius in user units.'),
 });
 
 /** Trapezoid 形状参数 */
-export type TrapezoidShapeParams = z.infer<typeof TrapezoidShapeParamsSchema>;
+export type TrapezoidShapeParams = ZodInfer<typeof TrapezoidShapeParamsSchema>;
 
 const shortSideOf = (params: TrapezoidShapeParams): SideValue => params.shortSide ?? 'top';
 const shortSideRatioOf = (params: TrapezoidShapeParams): number => params.shortSideRatio ?? 0.72;

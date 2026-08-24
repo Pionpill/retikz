@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 import { CompositeBaseSchema, CURRENT_IR_VERSION, defineComposite, lowerIRToKernel, NodeTextColor } from '@retikz/core';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, string } from 'zod';
 
 import { convertIRToReactNode } from '../../../src/kernel/adapter';
 import { TIKZ_NODE, TIKZ_PATH, TIKZ_STEP } from '../../../src/kernel/protocol';
@@ -18,9 +18,9 @@ const emptyScene: IRScene = {
 };
 
 const PanelSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('demo'),
-  type: z.literal('panel'),
-  id: z.string(),
+  namespace: literal('demo'),
+  type: literal('panel'),
+  id: string(),
 });
 
 /** demo.panel → 同 id 的 Tier 1 node */
@@ -35,7 +35,7 @@ const panelComposite = defineComposite({
 const pathComposite = defineComposite({
   namespace: 'demo',
   type: 'path',
-  schema: CompositeBaseSchema.extend({ namespace: z.literal('demo'), type: z.literal('path') }),
+  schema: CompositeBaseSchema.extend({ namespace: literal('demo'), type: literal('path') }),
   expand: () => ({
     children: [
       {
@@ -54,7 +54,7 @@ const pathComposite = defineComposite({
 const loopComposite = defineComposite({
   namespace: 'demo',
   type: 'loop',
-  schema: CompositeBaseSchema.extend({ namespace: z.literal('demo'), type: z.literal('loop') }),
+  schema: CompositeBaseSchema.extend({ namespace: literal('demo'), type: literal('loop') }),
   expand: () => ({ children: [{ namespace: 'demo', type: 'loop' }] }),
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, strictObject } from 'zod';
 
 import type {
   IRChild,
@@ -53,8 +53,8 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'multiProposalIsolation',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('multiProposalIsolation'),
+        namespace: literal('test'),
+        type: literal('multiProposalIsolation'),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -99,8 +99,8 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'resourceProbe',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('resourceProbe'),
+        namespace: literal('test'),
+        type: literal('resourceProbe'),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -130,8 +130,8 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'warningProbe',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('warningProbe'),
+        namespace: literal('test'),
+        type: literal('warningProbe'),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -160,7 +160,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     const failure = defineComposite({
       namespace: 'test',
       type: 'lateProbeFailure',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('lateProbeFailure') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('lateProbeFailure') }),
       compile: () => {
         throw new Error('late failure');
       },
@@ -169,8 +169,8 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'failedSideEffectIsolation',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('failedSideEffectIsolation'),
+        namespace: literal('test'),
+        type: literal('failedSideEffectIsolation'),
       }),
       compile: (_, context) => {
         const probe = context.layoutChild(
@@ -213,8 +213,8 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'namedChild',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('namedChild'),
+        namespace: literal('test'),
+        type: literal('namedChild'),
       }),
       compile: (_, context) => {
         const laid = resolvedResultOf(context, {
@@ -248,8 +248,8 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'discardedNamespace',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('discardedNamespace'),
+        namespace: literal('test'),
+        type: literal('discardedNamespace'),
       }),
       compile: (_, context) => {
         context.layoutChild({ type: 'node', id: 'discarded', position: [20, 0] }, NaturalLayoutProposal);
@@ -283,8 +283,8 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'currentReferences',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('currentReferences'),
+        namespace: literal('test'),
+        type: literal('currentReferences'),
       }),
       compile: (_, context) => {
         const child = resolvedResultOf(context, {
@@ -318,10 +318,10 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'child',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('child'),
+        namespace: literal('test'),
+        type: literal('child'),
       }),
-      artifactSchema: z.strictObject({ role: z.literal('child') }),
+      artifactSchema: strictObject({ role: literal('child') }),
       compile: () => ({
         children: [{ type: 'node', position: [0, 0], text: 'child' }],
         artifact: { role: 'child' },
@@ -331,10 +331,10 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'parent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('parent'),
+        namespace: literal('test'),
+        type: literal('parent'),
       }),
-      artifactSchema: z.strictObject({ role: z.literal('parent') }),
+      artifactSchema: strictObject({ role: literal('parent') }),
       compile: (_, context) => {
         const laid = resolvedResultOf(context, { namespace: 'test', type: 'child' });
         return {
@@ -370,18 +370,18 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'layoutArtifact',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('layoutArtifact'),
+        namespace: literal('test'),
+        type: literal('layoutArtifact'),
       }),
-      artifactSchema: z.strictObject({ ok: z.literal(true) }),
+      artifactSchema: strictObject({ ok: literal(true) }),
       compile: () => ({ children: [], artifact: { ok: true } }),
     });
     const expand = defineComposite({
       namespace: 'test',
       type: 'expand',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('expand'),
+        namespace: literal('test'),
+        type: literal('expand'),
       }),
       expand: () => ({ children: [{ namespace: 'test', type: 'layoutArtifact' }] }),
     });
@@ -401,18 +401,18 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'leafArtifact',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('leafArtifact'),
+        namespace: literal('test'),
+        type: literal('leafArtifact'),
       }),
-      artifactSchema: z.strictObject({ leaf: z.literal(true) }),
+      artifactSchema: strictObject({ leaf: literal(true) }),
       compile: () => ({ children: [], artifact: { leaf: true } }),
     });
     const wrapper = defineComposite({
       namespace: 'test',
       type: 'scopeOutput',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('scopeOutput'),
+        namespace: literal('test'),
+        type: literal('scopeOutput'),
       }),
       compile: () => ({
         children: [
@@ -454,18 +454,18 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'replayedLeaf',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('replayedLeaf'),
+        namespace: literal('test'),
+        type: literal('replayedLeaf'),
       }),
-      artifactSchema: z.strictObject({ leaf: z.literal(true) }),
+      artifactSchema: strictObject({ leaf: literal(true) }),
       compile: () => ({ children: [], artifact: { leaf: true } }),
     });
     const parent = defineComposite({
       namespace: 'test',
       type: 'replayedScope',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('replayedScope'),
+        namespace: literal('test'),
+        type: literal('replayedScope'),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -503,10 +503,10 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'frozen',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('frozen'),
+        namespace: literal('test'),
+        type: literal('frozen'),
       }),
-      artifactSchema: z.strictObject({ width: z.number() }),
+      artifactSchema: strictObject({ width: number() }),
       compile: () => ({ children: [], artifact: payload }),
     });
     const ir = scene([
@@ -533,8 +533,8 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'replayedNodeLayout',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('replayedNodeLayout'),
+        namespace: literal('test'),
+        type: literal('replayedNodeLayout'),
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, { type: 'node', id: 'replayed', position: [0, 0], text: 'N' });
@@ -563,10 +563,10 @@ describe('layout-aware composite transactions and artifacts', () => {
       namespace: 'test',
       type: 'laterArtifact',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('laterArtifact'),
+        namespace: literal('test'),
+        type: literal('laterArtifact'),
       }),
-      artifactSchema: z.strictObject({ value: z.literal('later') }),
+      artifactSchema: strictObject({ value: literal('later') }),
       compile: () => ({ children: [], artifact: { value: 'later' } }),
     });
 

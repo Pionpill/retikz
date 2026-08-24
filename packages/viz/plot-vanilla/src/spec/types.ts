@@ -34,8 +34,6 @@ export type InputPlotEmbed = PlotSource &
     datasets: ExternalDatasets;
     /** Plot lowering runtime options */
     lowerOptions?: LowerPlotsOptions;
-    /** 保留已有 Plot Source IR 根身份，不再由 embed identity 添加命名空间 */
-    preserveRootIdentity?: boolean;
     /** 作用于 Plot 根节点的可选 Core Scope */
     panel?: InputPlotPanel;
   }>;

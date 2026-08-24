@@ -1,10 +1,12 @@
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
+
 import {
   NonNegativeIntegerSchema,
   NonNegativeNumberSchema,
   PositiveIntegerSchema,
   PositiveNumberSchema,
 } from '@retikz/foundation';
-import { z } from 'zod';
+import { array, boolean, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import { LAYOUT_NAMESPACE } from '../../shared';
 import {
@@ -22,46 +24,34 @@ import {
 } from '../shared';
 import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS, GridAutoFlow, GridOverlap, LayoutTrackSourceKind } from './constants';
 
-const GridFixedTrackBreadthSchema = z
-  .strictObject({
-    kind: z.literal('fixed').describe('Discriminator for a fixed grid track breadth.'),
-    value: NonNegativeNumberSchema.describe('Finite authored fixed track breadth.'),
-  })
-  .describe('Fixed GridLayout track breadth.');
+const GridFixedTrackBreadthSchema = strictObject({
+  kind: literal('fixed').describe('Discriminator for a fixed grid track breadth.'),
+  value: NonNegativeNumberSchema.describe('Finite authored fixed track breadth.'),
+}).describe('Fixed GridLayout track breadth.');
 
-const GridContentTrackBreadthSchema = z
-  .strictObject({
-    kind: z.literal('content').describe('Discriminator for an intrinsic grid track breadth.'),
-    mode: z.enum(['minimum', 'natural']).describe('Intrinsic contribution profile used by this breadth.'),
-  })
-  .describe('Intrinsic GridLayout track breadth.');
+const GridContentTrackBreadthSchema = strictObject({
+  kind: literal('content').describe('Discriminator for an intrinsic grid track breadth.'),
+  mode: zodEnum(['minimum', 'natural']).describe('Intrinsic contribution profile used by this breadth.'),
+}).describe('Intrinsic GridLayout track breadth.');
 
-const GridFractionTrackBreadthSchema = z
-  .strictObject({
-    kind: z.literal('fraction').describe('Discriminator for a fractional grid track breadth.'),
-    factor: PositiveNumberSchema.describe('Finite positive share of remaining finite axis space.'),
-  })
-  .describe('Fractional GridLayout track breadth.');
+const GridFractionTrackBreadthSchema = strictObject({
+  kind: literal('fraction').describe('Discriminator for a fractional grid track breadth.'),
+  factor: PositiveNumberSchema.describe('Finite positive share of remaining finite axis space.'),
+}).describe('Fractional GridLayout track breadth.');
 
-export const GridTrackBreadthSchema = z
-  .discriminatedUnion('kind', [
-    GridFixedTrackBreadthSchema,
-    GridContentTrackBreadthSchema,
-    GridFractionTrackBreadthSchema,
-  ])
-  .describe('Closed GridLayout track breadth union.');
-
-const GridTrackMinimumSchema = z.discriminatedUnion('kind', [
+export const GridTrackBreadthSchema = discriminatedUnion('kind', [
   GridFixedTrackBreadthSchema,
   GridContentTrackBreadthSchema,
-]);
+  GridFractionTrackBreadthSchema,
+]).describe('Closed GridLayout track breadth union.');
 
-const GridMinmaxTrackSchema = z
-  .strictObject({
-    kind: z.literal('minmax').describe('Discriminator for bounded GridLayout track sizing.'),
-    min: GridTrackMinimumSchema.describe('Non-fraction lower breadth.'),
-    max: GridTrackBreadthSchema.describe('Upper or fractional growth breadth.'),
-  })
+const GridTrackMinimumSchema = discriminatedUnion('kind', [GridFixedTrackBreadthSchema, GridContentTrackBreadthSchema]);
+
+const GridMinmaxTrackSchema = strictObject({
+  kind: literal('minmax').describe('Discriminator for bounded GridLayout track sizing.'),
+  min: GridTrackMinimumSchema.describe('Non-fraction lower breadth.'),
+  max: GridTrackBreadthSchema.describe('Upper or fractional growth breadth.'),
+})
   .superRefine((track, context) => {
     if (track.min.kind === 'fixed' && track.max.kind === 'fixed' && track.max.value < track.min.value) {
       context.addIssue({ code: 'custom', path: ['max', 'value'], message: 'Fixed max must be at least fixed min.' });
@@ -69,21 +59,19 @@ const GridMinmaxTrackSchema = z
   })
   .describe('Canonical minmax GridLayout track.');
 
-export const GridTrackSchema = z
-  .union([GridTrackBreadthSchema, GridMinmaxTrackSchema])
-  .describe('Canonical GridLayout track definition.');
+export const GridTrackSchema = union([GridTrackBreadthSchema, GridMinmaxTrackSchema]).describe(
+  'Canonical GridLayout track definition.',
+);
 
-export const GridPlacementSchema = z
-  .strictObject({
-    start: NonNegativeIntegerSchema.optional().describe('Optional zero-based explicit track start.'),
-    span: PositiveIntegerSchema.max(GRID_LAYOUT_MAX_TRACKS_PER_AXIS)
-      .default(1)
-      .describe('Positive explicit or auto track span within the track guard.'),
-  })
-  .describe('Canonical zero-based GridLayout axis placement.');
+export const GridPlacementSchema = strictObject({
+  start: NonNegativeIntegerSchema.optional().describe('Optional zero-based explicit track start.'),
+  span: PositiveIntegerSchema.max(GRID_LAYOUT_MAX_TRACKS_PER_AXIS)
+    .default(1)
+    .describe('Positive explicit or auto track span within the track guard.'),
+}).describe('Canonical zero-based GridLayout axis placement.');
 
 export const GridLayoutItemSchema = LayoutItemBaseSchema.extend({
-  kind: z.literal(LayoutItemKind.Grid).describe('Discriminator for an item owned by GridLayout.'),
+  kind: literal(LayoutItemKind.Grid).describe('Discriminator for an item owned by GridLayout.'),
   column: GridPlacementSchema.optional().describe('Optional explicit column placement.'),
   row: GridPlacementSchema.optional().describe('Optional explicit row placement.'),
   justifySelf: LayoutEdgeAlignmentSchema.optional().describe('Optional horizontal alignment within the grid area.'),
@@ -93,22 +81,20 @@ export const GridLayoutItemSchema = LayoutItemBaseSchema.extend({
 const ImplicitTrackDefault = Object.freeze({ kind: 'content' as const, mode: 'natural' as const });
 
 const GridLayoutBaseSchema = LayoutContainerBoxSchema.extend({
-  namespace: z.literal(LAYOUT_NAMESPACE).describe('Composite namespace for Layout capabilities.'),
-  type: z.literal('gridLayout').describe('Composite type for deterministic two-dimensional track layout.'),
-  columns: z
-    .array(GridTrackSchema)
+  namespace: literal(LAYOUT_NAMESPACE).describe('Composite namespace for Layout capabilities.'),
+  type: literal('gridLayout').describe('Composite type for deterministic two-dimensional track layout.'),
+  columns: array(GridTrackSchema)
     .min(1)
     .max(GRID_LAYOUT_MAX_TRACKS_PER_AXIS)
     .describe('Explicit physical column tracks.'),
-  rows: z
-    .array(GridTrackSchema)
+  rows: array(GridTrackSchema)
     .max(GRID_LAYOUT_MAX_TRACKS_PER_AXIS)
     .default([])
     .describe('Explicit physical row tracks.'),
   implicitColumn: GridTrackSchema.default(ImplicitTrackDefault).describe('Track definition for implicit columns.'),
   implicitRow: GridTrackSchema.default(ImplicitTrackDefault).describe('Track definition for implicit rows.'),
-  autoFlow: z.enum(GridAutoFlow).default(GridAutoFlow.Row).describe('Non-dense fully-auto placement flow.'),
-  overlap: z.enum(GridOverlap).default(GridOverlap.Reject).describe('Policy for fully explicit authored overlap.'),
+  autoFlow: zodEnum(GridAutoFlow).default(GridAutoFlow.Row).describe('Non-dense fully-auto placement flow.'),
+  overlap: zodEnum(GridOverlap).default(GridOverlap.Reject).describe('Policy for fully explicit authored overlap.'),
   columnGap: NonNegativeNumberSchema.default(0).describe('Physical horizontal gap between column tracks.'),
   rowGap: NonNegativeNumberSchema.default(0).describe('Physical vertical gap between row tracks.'),
   justifyItems: LayoutEdgeAlignmentSchema.default(LayoutAlignment.Stretch).describe(
@@ -121,13 +107,13 @@ const GridLayoutBaseSchema = LayoutContainerBoxSchema.extend({
   alignContent: LayoutDistributionSchema.default(LayoutDistribution.Start).describe(
     'Vertical distribution of the resolved row group.',
   ),
-  children: z.array(GridLayoutItemSchema).default([]).describe('Authored grid items in stable paint order.'),
+  children: array(GridLayoutItemSchema).default([]).describe('Authored grid items in stable paint order.'),
 });
 
-type GridLayoutRefinementInput = z.infer<typeof GridLayoutBaseSchema>;
+type GridLayoutRefinementInput = ZodInfer<typeof GridLayoutBaseSchema>;
 
 /** 校验 GridLayout 的本地 identity 与显式 placement guard */
-const refineGridLayout = (layout: GridLayoutRefinementInput, context: z.RefinementCtx): void => {
+const refineGridLayout = (layout: GridLayoutRefinementInput, context: RefinementCtx): void => {
   const seen = new Set<string>();
   layout.children.forEach((item, index) => {
     if (seen.has(item.key)) {
@@ -155,15 +141,13 @@ export const GridLayoutSchema = GridLayoutBaseSchema.superRefine(refineGridLayou
   'Canonical JSON-safe Layout GridLayout composite.',
 );
 
-export const LayoutTrackArtifactSchema = z
-  .strictObject({
-    index: NonNegativeIntegerSchema.describe('Contiguous zero-based resolved track index.'),
-    start: z.number().describe('Finite physical track start in container allocation coordinates.'),
-    size: NonNegativeNumberSchema.describe('Finite non-negative resolved track size.'),
-    sourceKind: z.enum(LayoutTrackSourceKind).describe('Authored or implicit outer sizing source for the track.'),
-    implicit: z.boolean().describe('Whether the track was materialized beyond the authored explicit track list.'),
-  })
-  .describe('Resolved GridLayout track geometry and source classification.');
+export const LayoutTrackArtifactSchema = strictObject({
+  index: NonNegativeIntegerSchema.describe('Contiguous zero-based resolved track index.'),
+  start: number().describe('Finite physical track start in container allocation coordinates.'),
+  size: NonNegativeNumberSchema.describe('Finite non-negative resolved track size.'),
+  sourceKind: zodEnum(LayoutTrackSourceKind).describe('Authored or implicit outer sizing source for the track.'),
+  implicit: boolean().describe('Whether the track was materialized beyond the authored explicit track list.'),
+}).describe('Resolved GridLayout track geometry and source classification.');
 
 const GridLayoutArtifactItemSchema = LayoutArtifactItemBaseSchema.extend({
   column: NonNegativeIntegerSchema.describe('Resolved zero-based column start.'),
@@ -172,17 +156,17 @@ const GridLayoutArtifactItemSchema = LayoutArtifactItemBaseSchema.extend({
   rowSpan: PositiveIntegerSchema.describe('Positive resolved row span.'),
 }).describe('GridLayout item placement artifact.');
 
-const GridLayoutArtifactBaseSchema = z.strictObject({
-  kind: z.literal(LayoutItemKind.Grid).describe('Discriminator for a GridLayout artifact payload.'),
+const GridLayoutArtifactBaseSchema = strictObject({
+  kind: literal(LayoutItemKind.Grid).describe('Discriminator for a GridLayout artifact payload.'),
   container: LayoutArtifactContainerSchema.describe('Resolved container geometry.'),
-  items: z.array(GridLayoutArtifactItemSchema).describe('Items in authored source order.'),
-  columns: z.array(LayoutTrackArtifactSchema).describe('Resolved columns in physical start order.'),
-  rows: z.array(LayoutTrackArtifactSchema).describe('Resolved rows in physical start order.'),
-  spacing: z.array(LayoutSpacingArtifactSchema).describe('Resolved fixed gaps and distributed free-space segments.'),
+  items: array(GridLayoutArtifactItemSchema).describe('Items in authored source order.'),
+  columns: array(LayoutTrackArtifactSchema).describe('Resolved columns in physical start order.'),
+  rows: array(LayoutTrackArtifactSchema).describe('Resolved rows in physical start order.'),
+  spacing: array(LayoutSpacingArtifactSchema).describe('Resolved fixed gaps and distributed free-space segments.'),
 });
 
 /** 校验 Grid artifact 的 authored identity、track 序列与 item spans */
-const refineGridLayoutArtifact = (artifact: z.infer<typeof GridLayoutArtifactBaseSchema>, context: z.RefinementCtx) => {
+const refineGridLayoutArtifact = (artifact: ZodInfer<typeof GridLayoutArtifactBaseSchema>, context: RefinementCtx) => {
   const keys = new Set<string>();
   artifact.items.forEach((item, index) => {
     if (item.sourceIndex !== index) {
