@@ -75,8 +75,8 @@ export type ResolvedTableLayout = Readonly<{
 
 /** canonical row 或 column 的已求解轨道几何 */
 export type TableTrackLayout = Readonly<{
-  /** semantic track id */
-  id: string;
+  /** optional semantic track id */
+  id?: string;
   /** canonical 声明顺序 */
   index: number;
   /** Table 局部轴向偏移 */
@@ -87,8 +87,8 @@ export type TableTrackLayout = Readonly<{
 
 /** 单个 Cell 的完整布局几何 */
 export type TableCellLayout = Readonly<{
-  /** semantic Cell id */
-  cellId: string;
+  /** optional semantic Cell id */
+  cellId?: string;
   /** Cell 左上角 bounds */
   box: BoundsRect;
   /** padding 收缩后的 content box */

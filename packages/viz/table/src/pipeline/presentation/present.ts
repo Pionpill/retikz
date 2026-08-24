@@ -36,7 +36,11 @@ export const presentCellValue = (
   registry: ReadonlyMap<string, AnyCellPresentationDefinition>,
 ): IRChild => {
   const name = presentation.name;
-  const prefix = `table: presentation "${name}" for cell "${input.context.cellId}"`;
+  const cellLabel =
+    input.context.cellId === undefined
+      ? `${input.context.rowIndex}:${input.context.columnIndex}`
+      : `"${input.context.cellId}"`;
+  const prefix = `table: presentation "${name}" for cell ${cellLabel}`;
   try {
     const definition = cellPresentationDefinitionOf(name, registry);
     const rawOptions = JsonObjectSchema.parse(presentation.options ?? {});

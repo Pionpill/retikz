@@ -9,7 +9,7 @@ import { OverlayLayoutInspectOptionsInputSchema, OverlayLayoutInspectOptionsSche
 /** Overlay 布局检查器的稳定注册键 */
 export const OVERLAY_LAYOUT_INSPECTOR_KEY = Object.freeze({
   namespace: LAYOUT_INSPECTOR_NAMESPACE,
-  name: 'overlay-layout',
+  type: 'overlay-layout',
 });
 
 /** 从最终 Overlay 布局产物生成辅助内容的检查器定义 */

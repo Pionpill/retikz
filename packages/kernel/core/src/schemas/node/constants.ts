@@ -1,13 +1,5 @@
 import { Anchor } from '../../shared';
 
-/** 节点形状关键字（用 const + ValueOf 派生，不用 TS enum） */
-export const BuiltinShape = {
-  Rectangle: 'rectangle',
-  Circle: 'circle',
-  Ellipse: 'ellipse',
-  Diamond: 'diamond',
-} as const;
-
 /** Node 文字颜色的宿主专用关键字 */
 export const NodeTextColor = {
   /** 根据静态不透明 fill 自动选择黑色或白色 */

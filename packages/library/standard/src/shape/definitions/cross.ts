@@ -1,5 +1,6 @@
 import type { CoreDependencyProvider, Rect, ScenePrimitive } from '@retikz/core';
 import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 
 import {
   boundaryFromContour,
@@ -15,11 +16,11 @@ import {
   verticesToSegments,
 } from '@retikz/core';
 import { PositiveNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { strictObject, union } from 'zod';
 
 import { StandardShapeName } from '../constants';
 
-const CrossDimensionSchema = z.strictObject({
+const CrossDimensionSchema = strictObject({
   default: PositiveNumberSchema.describe('Fallback dimension in user units.'),
   horizontal: PositiveNumberSchema.optional().describe('Horizontal-axis override in user units.'),
   vertical: PositiveNumberSchema.optional().describe('Vertical-axis override in user units.'),
@@ -32,19 +33,17 @@ const CrossHeightSchema = CrossDimensionSchema.extend({
   left: PositiveNumberSchema.optional().describe('Left-side override in user units.'),
 });
 
-const CrossShapeParamsSchema = z.strictObject({
-  width: z
-    .union([PositiveNumberSchema, CrossDimensionSchema])
+const CrossShapeParamsSchema = strictObject({
+  width: union([PositiveNumberSchema, CrossDimensionSchema])
     .optional()
     .describe('Arm thickness: scalar or horizontal/vertical overrides.'),
-  height: z
-    .union([PositiveNumberSchema, CrossHeightSchema])
+  height: union([PositiveNumberSchema, CrossHeightSchema])
     .optional()
     .describe('Arm extent: scalar or side overrides with horizontal/vertical fallbacks.'),
 });
 
 /** Cross 形状的参数 */
-export type CrossShapeParams = z.infer<typeof CrossShapeParamsSchema>;
+export type CrossShapeParams = ZodInfer<typeof CrossShapeParamsSchema>;
 
 type CrossDimension = NonNullable<CrossShapeParams['width']>;
 type CrossHeight = NonNullable<CrossShapeParams['height']>;

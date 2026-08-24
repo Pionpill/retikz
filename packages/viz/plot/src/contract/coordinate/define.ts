@@ -1,7 +1,7 @@
 import type { IRScope } from '@retikz/core';
 import type { ExternalRow, IRDataScalarValue } from '@retikz/data';
 import type { Position } from '@retikz/math';
-import type { z } from 'zod';
+import type { ZodType } from 'zod';
 
 import type {
   IRPlotAxisGuide,
@@ -129,7 +129,7 @@ export type CoordinateDefinitionResolveContext = {
  */
 export type CoordinateDefinition<TCoordinateOperation extends IRPlotCoordinateOperation = IRPlotCoordinateOperation> = {
   /** 完整 coordinate operation schema；必须含非空 z.literal('type') 供 registry 提取注册键 */
-  schema: z.ZodType<TCoordinateOperation>;
+  schema: ZodType<TCoordinateOperation>;
   /** 该坐标系消费的定位角色序，用于 required-channel 与 guide-dimension 校验 */
   roles: ReadonlyArray<DimensionRole>;
   /** 将 coordinate operation 解析成运行时 frame 与 guide 层 */
@@ -185,7 +185,7 @@ export const createCoordinateFrame = (
  */
 export type AnyCoordinateDefinition = Omit<CoordinateDefinition<IRPlotCoordinateOperation>, 'schema' | 'resolve'> & {
   /** 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 type 并执行 parse */
-  schema: z.ZodType;
+  schema: ZodType;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation */
   resolve: (operation: never, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution;
 };

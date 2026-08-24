@@ -15,20 +15,20 @@ Scene lets a renderer draw the table, but a host also needs structured answers s
 
 <ComponentPreview files="table-manifest-map" hideCode size="xs" />
 
-Scene and Manifest in the figure come from one layout transaction. The manifest is not a post-render calculation and does not parse SVG; it directly reuses canonical identity, solved tracks, Cell placement, and the Border Graph.
+Scene and Manifest in the figure come from one layout transaction. The manifest is not a post-render calculation and does not parse SVG; it directly reuses canonical addresses and optional identity, solved tracks, Cell placement, and the Border Graph.
 
 The artifact passes its public schema before return, is recursively frozen, and is detached from compile-internal objects. Consumers can store, compare, or use it across renderers without depending on a particular DOM structure.
 
 ## What the manifest records
 
-| Level  | Main information                                   | Question answered                              |
-| ------ | -------------------------------------------------- | ---------------------------------------------- |
-| Table  | `tableId`, overall allocation/visual bounds        | How much space is occupied or visible?         |
-| Track  | Row/column id, index, offset, size                 | Where does a track start and how large is it?  |
-| Cell   | Identity, address, span, semantics, source, bounds | Who owns this area and where did it come from? |
-| Border | Edge geometry, style, winner, contributors         | Which edge is visible and why?                 |
+| Level  | Main information                                            | Question answered                              |
+| ------ | ----------------------------------------------------------- | ---------------------------------------------- |
+| Table  | `tableId`, overall allocation/visual bounds                 | How much space is occupied or visible?         |
+| Track  | Optional row/column id, index, offset, size                 | Where does a track start and how large is it?  |
+| Cell   | Optional identity, address, span, semantics, source, bounds | Who owns this area and where did it come from? |
+| Border | Edge geometry, style, winner, contributors                  | Which edge is visible and why?                 |
 
-These arrays preserve canonical order. A Cell connects the semantic model and solved tracks through stable row/column ids and indexes. Border atoms retain candidate provenance even when several atoms merge into one visible edge.
+These arrays preserve canonical order. A Cell always connects the semantic model and solved tracks through row/column indexes, with row, column, and Cell ids retained only when authored. Border atoms retain candidate addresses and optional ids even when several atoms merge into one visible edge.
 
 ## Bounds must remain distinct
 
@@ -47,7 +47,7 @@ Root `allocationBounds` covers only tracks and gaps, while root `visualOverflowB
 
 A Cell `source` retains the smallest stable origin: explicit-grid coordinates, external dataset/row/field identity, or the Structure kind that generated it. `location` and `roles` describe semantic placement in the table; together they support inspectors, selection mapping, and domain export.
 
-The manifest provides facts rather than host interaction policy. Table does not own hover, selection, editing state, or DOM lifecycle here. A host can use the manifest as geometry and identity input for those capabilities, while persistent changes still return to the Table-owned spec or data.
+The manifest provides facts rather than host interaction policy. Table does not own hover, selection, editing state, or DOM lifecycle here. A host can use canonical addresses, geometry, and optional identity from the manifest for those capabilities, while persistent changes still return to the Table-owned spec or data.
 
 <SourceLinks
   sources={[

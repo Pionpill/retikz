@@ -1,5 +1,5 @@
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type { EntitySchema } from './schema';
 
-export type IRGraphEntity = z.infer<typeof EntitySchema>;
+export type IRGraphEntity = ZodInfer<typeof EntitySchema>;

@@ -17,6 +17,7 @@
 - React 文档与公开入口只暴露组件、`XxxProps` 和 React runtime API；`InputPlot*` 类型从 `@retikz/plot-vanilla` 使用，不由本包转发。
 - `react` / `react-dom` 保持 peerDependencies；构建 spec 不依赖浏览器全局。
 - IR-facing props 从 `@retikz/plot` 的公开 `IRPlot*` 类型派生，authoring props 从 `@retikz/plot-vanilla` 的公开 `InputPlot*` TypeScript 类型派生，不手写平行 schema。
+- `<Plot>` standalone 时只建立一个 `Layout` Scene host；放入外层 `Layout` 时只贡献 Plot Scope/composite。`className`、`style`、`renderer`、`themeStyles` 与 runtime lineage props 只属于 standalone，embedded own-property（含显式 `undefined`）必须 fail-loud；Plot 尺寸与 panel 字段仍可作为 embedded 输入。
 
 ## 验证
 

@@ -116,6 +116,15 @@ describe('Table structure schema', () => {
     ).toThrow(/duplicate/i);
   });
 
+  it('rejects whitespace-only detail column ids and field names', () => {
+    expect(TableStructureSchema.safeParse({ kind: 'detail', columns: [{ id: '   ', field: 'score' }] }).success).toBe(
+      false,
+    );
+    expect(TableStructureSchema.safeParse({ kind: 'detail', columns: [{ id: 'score', field: '   ' }] }).success).toBe(
+      false,
+    );
+  });
+
   it('accepts JSON-safe custom operations and rejects reserved kinds', () => {
     expect(TableStructureSchema.parse({ kind: 'summaryByRegion', group: 'region' })).toEqual({
       kind: 'summaryByRegion',

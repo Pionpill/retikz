@@ -1,9 +1,9 @@
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type { StrokeDashPatternSchema, StrokeStyleSchema } from './schema';
 
 /** 描边 dash / gap 长度序列 */
-export type StrokeDashPattern = z.infer<typeof StrokeDashPatternSchema>;
+export type StrokeDashPattern = ZodInfer<typeof StrokeDashPatternSchema>;
 
 /** 共享描边样式契约 */
-export type IRStrokeStyle = z.infer<typeof StrokeStyleSchema>;
+export type IRStrokeStyle = ZodInfer<typeof StrokeStyleSchema>;

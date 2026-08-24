@@ -7,6 +7,8 @@ import {
   createDefaultInspectorRegistry,
   STROKE_PATH_INSPECTOR,
   STROKE_PATH_INSPECTOR_KEY,
+  StrokePathInspectOptionsInputSchema,
+  StrokePathInspectOptionsSchema,
 } from '../../src';
 
 const hasText = (primitives: ReadonlyArray<{ type: string; children?: ReadonlyArray<{ type: string }> }>): boolean =>
@@ -30,6 +32,15 @@ const ir: IRScene = {
 };
 
 describe('stroke Path Inspector', () => {
+  it('uses the Core package namespace for its registry key', () => {
+    expect(STROKE_PATH_INSPECTOR_KEY).toEqual({ namespace: 'core', type: 'stroke-path' });
+  });
+
+  it('keeps sparse labels absent until canonical options apply the default', () => {
+    expect(StrokePathInspectOptionsInputSchema.parse({})).toEqual({});
+    expect(StrokePathInspectOptionsSchema.parse({})).toEqual({ controlPoints: true, labels: false });
+  });
+
   it('draws handles, control points, and optional labels from settled owner output', () => {
     const result = compileInspectionToScene(ir, {
       registry: createDefaultInspectorRegistry(),
@@ -39,7 +50,7 @@ describe('stroke Path Inspector', () => {
             kind: 'request',
             inspector: STROKE_PATH_INSPECTOR_KEY,
             target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].path' } },
-            value: { labels: true },
+            options: { labels: true },
           },
         ],
       },
@@ -52,7 +63,7 @@ describe('stroke Path Inspector', () => {
     const result = compileInspectionToScene(ir, {
       registry: createDefaultInspectorRegistry(),
       selection: {
-        rules: [{ kind: 'request', inspector: STROKE_PATH_INSPECTOR_KEY, target: { kind: 'scene' }, value: true }],
+        rules: [{ kind: 'request', inspector: STROKE_PATH_INSPECTOR_KEY, target: { kind: 'scene' }, options: true }],
       },
     });
     expect(result.inspection).toBeNull();
@@ -60,7 +71,7 @@ describe('stroke Path Inspector', () => {
 
   it('continues control handles from arc endpoints and closed subpath starts', () => {
     const context = {
-      inspector: STROKE_PATH_INSPECTOR_KEY,
+      inspectorKey: STROKE_PATH_INSPECTOR_KEY,
       owner: { kind: 'pathKind' as const, name: 'stroke' },
       occurrence: { sourcePath: 'children[0].path', expansionPath: [] },
       provenance: {
@@ -68,7 +79,11 @@ describe('stroke Path Inspector', () => {
         final: { sourcePath: 'children[0].path', expansionPath: [] },
       },
       options: { controlPoints: true, labels: false },
-      appearance: { colorScope: 0, scopeColor: '#2563eb', warningColor: '#dc2626' },
+      appearance: {
+        colorScope: 0,
+        scopeColor: '#2563eb',
+        semanticColors: { error: '#ef4444', success: '#16a34a', warning: '#dc2626', guide: '#6b7280' },
+      },
     };
     const output = STROKE_PATH_INSPECTOR.inspect(
       {
@@ -111,7 +126,7 @@ describe('stroke Path Inspector', () => {
         transforms: [],
       },
       {
-        inspector: STROKE_PATH_INSPECTOR_KEY,
+        inspectorKey: STROKE_PATH_INSPECTOR_KEY,
         owner: { kind: 'pathKind', name: 'stroke' },
         occurrence: { sourcePath: 'children[0].path', expansionPath: [] },
         provenance: {
@@ -119,7 +134,11 @@ describe('stroke Path Inspector', () => {
           final: { sourcePath: 'children[0].path', expansionPath: [] },
         },
         options: { controlPoints: false, labels: true },
-        appearance: { colorScope: 0, scopeColor: '#2563eb', warningColor: '#dc2626' },
+        appearance: {
+          colorScope: 0,
+          scopeColor: '#2563eb',
+          semanticColors: { error: '#ef4444', success: '#16a34a', warning: '#dc2626', guide: '#6b7280' },
+        },
       },
     );
 

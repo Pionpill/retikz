@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import type {
   IRChild,
@@ -40,8 +40,8 @@ const probeGuidesOf = (child: IRChild, measureText: TextMeasurer): ReadonlyArray
     namespace: 'test',
     type: 'baselineInspector',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('test'),
-      type: z.literal('baselineInspector'),
+      namespace: literal('test'),
+      type: literal('baselineInspector'),
     }),
     compile: (_node, context) => {
       const probe = context.layoutChild(child, NaturalLayoutProposal);
@@ -67,8 +67,8 @@ const probeEmissionOf = (child: IRChild, measureText: TextMeasurer, precision?: 
     namespace: 'test',
     type: 'baselineEmissionInspector',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('test'),
-      type: z.literal('baselineEmissionInspector'),
+      namespace: literal('test'),
+      type: literal('baselineEmissionInspector'),
     }),
     compile: (_node, context) => {
       const probe = context.layoutChild(child, NaturalLayoutProposal);

@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type { TableValueCompareOperator, TableValuePredicateKind } from './constants';
 import type { TableCellRuleSchema, TableCellSelectorSchema, TableValuePredicateSchema } from './schema';
@@ -11,10 +11,10 @@ export type TableValuePredicateKindValue = ValueOf<typeof TableValuePredicateKin
 export type TableValueCompareOperatorValue = ValueOf<typeof TableValueCompareOperator>;
 
 /** Table Cell selector IR */
-export type IRTableCellSelector = z.infer<typeof TableCellSelectorSchema>;
+export type IRTableCellSelector = ZodInfer<typeof TableCellSelectorSchema>;
 
 /** Table raw scalar predicate IR */
-export type IRTableValuePredicate = z.infer<typeof TableValuePredicateSchema>;
+export type IRTableValuePredicate = ZodInfer<typeof TableValuePredicateSchema>;
 
 /** Ordered Table Cell rule IR */
-export type IRTableCellRule = z.infer<typeof TableCellRuleSchema>;
+export type IRTableCellRule = ZodInfer<typeof TableCellRuleSchema>;

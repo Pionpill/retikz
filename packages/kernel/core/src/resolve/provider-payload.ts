@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import type { ZodType } from 'zod';
 
 import { ZodError } from 'zod';
 
@@ -15,7 +15,7 @@ export type ParseProviderPayloadInput<TOutput> = {
   /** payload 名称 */
   payloadName: string;
   /** provider 声明的 payload schema */
-  schema: z.ZodType<TOutput>;
+  schema: ZodType<TOutput>;
   /** 原始 payload 值 */
   value: unknown;
 };

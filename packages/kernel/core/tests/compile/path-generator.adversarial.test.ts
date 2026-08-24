@@ -1,5 +1,7 @@
+import type { ZodType } from 'zod';
+
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { boolean, number, object, strictObject, string, tuple } from 'zod';
 
 import type { PathCommand, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -61,7 +63,7 @@ describe('[ADV] JSON 可序列化护栏', () => {
   it('generate_returns_NaN_coord：generate 产 NaN 坐标 → 抛（不放任入 Scene）', () => {
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: () => [{ kind: 'line', to: [Number.NaN, Number.NaN] }],
     });
     const ir = wrapPath([
@@ -75,7 +77,7 @@ describe('[ADV] JSON 可序列化护栏', () => {
   it('generate_returns_Infinity_coord：generate 产 Infinity 坐标 → 抛', () => {
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: ({ from }) => [{ kind: 'line', to: [Infinity, from[1]] }],
     });
     const ir = wrapPath([
@@ -88,7 +90,7 @@ describe('[ADV] JSON 可序列化护栏', () => {
   it('infinity_param_rejected_before_generate：Infinity param 在双 parse 即被拦（不进 generate）', () => {
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({ k: z.number() }),
+      paramsSchema: object({ k: number() }),
       generate: ({ from, params }) => {
         const k = params.k as number;
         return [{ kind: 'line', to: [from[0] + k * 0, from[1] + k] }];
@@ -104,7 +106,7 @@ describe('[ADV] JSON 可序列化护栏', () => {
   it('scene_roundtrip_finite：干净 generator 产物 Scene round-trip 无损 + 全 finite', () => {
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({ n: z.number() }),
+      paramsSchema: object({ n: number() }),
       generate: ({ from, params }) => {
         const cmds: Array<PathCommand> = [];
         const n = params.n as number;
@@ -127,10 +129,10 @@ describe('[ADV] JSON 可序列化护栏', () => {
 // ───────────────────────────────────────────────────────────────────────────
 describe('[ADV] 双 parse 护栏', () => {
   const probe = (transform: (o: { a: number }) => Record<string, unknown>): Error | undefined => {
-    const sneaky = z.object({ a: z.number() }).transform(transform);
+    const sneaky = object({ a: number() }).transform(transform);
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: sneaky as unknown as z.ZodType<Record<string, never>>,
+      paramsSchema: sneaky as unknown as ZodType<Record<string, never>>,
       generate: ({ from }) => [{ kind: 'line', to: from }],
     });
     const ir = wrapPath([
@@ -156,7 +158,7 @@ describe('[ADV] 双 parse 护栏', () => {
 // ───────────────────────────────────────────────────────────────────────────
 describe('[ADV] generate 输出校验', () => {
   it('returns_empty：空数组不崩', () => {
-    const gen = definePathGenerator({ name: 'gen', paramsSchema: z.object({}), generate: () => [] });
+    const gen = definePathGenerator({ name: 'gen', paramsSchema: object({}), generate: () => [] });
     const ir = wrapPath([
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
@@ -178,7 +180,7 @@ describe('[ADV] generate 输出校验', () => {
     });
     const gen = definePathGenerator({
       name: 'dynamicCommand',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       generate: () => [command as unknown as PathCommand],
     });
     const ir = wrapPath([
@@ -207,7 +209,7 @@ describe('[ADV] generate 输出校验', () => {
       } satisfies PathCommand,
     ],
   ])('rejects invalid numeric invariant: %s', (_name, command) => {
-    const gen = definePathGenerator({ name: 'gen', paramsSchema: z.object({}), generate: () => [command] });
+    const gen = definePathGenerator({ name: 'gen', paramsSchema: object({}), generate: () => [command] });
     const ir = wrapPath([
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: {} },
@@ -218,7 +220,7 @@ describe('[ADV] generate 输出校验', () => {
   it('throws_inside：generate 内部抛错 → 包成 "path generator \'X\' threw: ..."（含名 + 原因）', () => {
     const throwingGen = definePathGenerator({
       name: 'throwingGen',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: () => {
         throw new Error('boom inside generate');
       },
@@ -236,7 +238,7 @@ describe('[ADV] generate 输出校验', () => {
     const N = 1_000_000;
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: ({ from }) => {
         const cmds: Array<PathCommand> = [];
         for (let i = 0; i < N; i++) cmds.push({ kind: 'line', to: [from[0] + i, from[1]] });
@@ -260,7 +262,7 @@ describe('[ADV] targetParams resolve 边角', () => {
     let seen: Record<string, unknown> | undefined;
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({ bend: z.object({ id: z.string() }) }),
+      paramsSchema: object({ bend: object({ id: string() }) }),
       targetParams: ['bend'],
       generate: ({ from, to, resolvedTargets }) => {
         seen = resolvedTargets;
@@ -278,7 +280,7 @@ describe('[ADV] targetParams resolve 边角', () => {
   it('listed_not_in_params：列了 key 但 params 没该 key → 跳过不崩', () => {
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({ other: z.number() }),
+      paramsSchema: object({ other: number() }),
       targetParams: ['bend'],
       generate: ({ from, to }) => [{ kind: 'line', to: to ?? from }],
     });
@@ -295,7 +297,7 @@ describe('[ADV] targetParams resolve 边角', () => {
   ] as const)('值是 %s（非 Target）→ 抛清晰错（含 key + got 类型）', (label, value) => {
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({ bend: label === 'number' ? z.number() : z.boolean() }),
+      paramsSchema: object({ bend: label === 'number' ? number() : boolean() }),
       targetParams: ['bend'],
       generate: ({ from, to }) => [{ kind: 'line', to: to ?? from }],
     });
@@ -312,7 +314,7 @@ describe('[ADV] targetParams resolve 边角', () => {
     let seen: Record<string, [number, number]> | undefined;
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({ bend: z.string() }),
+      paramsSchema: object({ bend: string() }),
       targetParams: ['bend'],
       generate: ({ from, to, resolvedTargets }) => {
         seen = resolvedTargets;
@@ -334,7 +336,7 @@ describe('[ADV] targetParams resolve 边角', () => {
     let seen: Record<string, [number, number]> | undefined;
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({ bend: z.tuple([z.number(), z.number()]) }),
+      paramsSchema: object({ bend: tuple([number(), number()]) }),
       targetParams: ['bend'],
       generate: ({ from, to, resolvedTargets }) => {
         seen = resolvedTargets;
@@ -352,7 +354,7 @@ describe('[ADV] targetParams resolve 边角', () => {
   it('duplicate_key：同 key 列两次幂等不崩', () => {
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({ bend: z.object({ id: z.string() }) }),
+      paramsSchema: object({ bend: object({ id: string() }) }),
       targetParams: ['bend', 'bend'],
       generate: ({ from, to }) => [{ kind: 'line', to: to ?? from }],
     });
@@ -397,7 +399,7 @@ describe('[ADV] 未注册 / 名称边角', () => {
   it('name_case_mismatch：大小写敏感', () => {
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: ({ from }) => [{ kind: 'line', to: from }],
     });
     const ir = wrapPath([
@@ -412,7 +414,7 @@ describe('[ADV] 未注册 / 名称边角', () => {
   it('name_proto_pollution：原型链 key 经 hasOwnProperty 守门 → throw', () => {
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: ({ from }) => [{ kind: 'line', to: from }],
     });
     for (const evil of ['__proto__', 'constructor', 'hasOwnProperty', 'toString', 'valueOf']) {
@@ -427,7 +429,7 @@ describe('[ADV] 未注册 / 名称边角', () => {
   it('available_list_sorted：错误里 available 名按字典序排序', () => {
     const g = definePathGenerator({
       name: 'g',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: ({ from }) => [{ kind: 'line', to: from }],
     });
     const ir = wrapPath([
@@ -446,7 +448,7 @@ describe('[ADV] cursor / 衔接', () => {
   it('generator_as_first_step：generator 作首 step（无前驱 move）不崩', () => {
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: ({ from }) => [{ kind: 'line', to: [from[0] + 10, from[1]] }],
     });
     const ir = wrapPath([
@@ -459,7 +461,7 @@ describe('[ADV] cursor / 衔接', () => {
   it('generator_then_generator：两个 generator 串联 cursor 衔接', () => {
     const g1 = definePathGenerator({
       name: 'g1',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: ({ from }) => [{ kind: 'line', to: [from[0] + 10, from[1]] }],
     });
     const ir = wrapPath([
@@ -473,7 +475,7 @@ describe('[ADV] cursor / 衔接', () => {
   });
 
   it('empty_generator_then_line：generator 产空后接 line 不崩', () => {
-    const empty = definePathGenerator({ name: 'empty', paramsSchema: z.object({}), generate: () => [] });
+    const empty = definePathGenerator({ name: 'empty', paramsSchema: object({}), generate: () => [] });
     const ir = wrapPath([
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'empty', to: [99, 99], params: {} },
@@ -485,7 +487,7 @@ describe('[ADV] cursor / 衔接', () => {
   it('generator_only_move_no_draw：generator 只产 move 后接 line 不崩', () => {
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: ({ from }) => [{ kind: 'move', to: [from[0] + 5, from[1] + 5] }],
     });
     const ir = wrapPath([
@@ -504,7 +506,7 @@ describe('[ADV] 与既有交叉 / round-trip', () => {
   it('generator_in_scale_scope：scope 缩放由 owner group 统一应用，generate 使用局部坐标', () => {
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: ({ from }) => [{ kind: 'line', to: [from[0] + 10, from[1]] }],
     });
     const ir = {
@@ -561,7 +563,7 @@ describe('[ADV] 与既有交叉 / round-trip', () => {
   it('generator_with_label：generator step 带 label 产 TextPrim', () => {
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: ({ from }) => [{ kind: 'line', to: [from[0] + 60, from[1]] }],
     });
     const ir = wrapPath([

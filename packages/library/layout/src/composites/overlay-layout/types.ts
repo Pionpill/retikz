@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { z } from 'zod';
+import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
 import type { LayoutSizeParticipation, OverlayPlacementKind } from './constants';
 import type {
@@ -16,22 +16,22 @@ export type OverlayPlacementKindValue = ValueOf<typeof OverlayPlacementKind>;
 export type LayoutSizeParticipationValue = ValueOf<typeof LayoutSizeParticipation>;
 
 /** Overlay placement 的 canonical JSON IR */
-export type IROverlayPlacement = z.infer<typeof OverlayPlacementSchema>;
+export type IROverlayPlacement = ZodInfer<typeof OverlayPlacementSchema>;
 
 /** Overlay placement 的作者输入 */
-export type OverlayPlacementInput = z.input<typeof OverlayPlacementSchema>;
+export type OverlayPlacementInput = ZodInput<typeof OverlayPlacementSchema>;
 
 /** OverlayLayout item 的 canonical JSON IR */
-export type IROverlayLayoutItem = z.infer<typeof OverlayLayoutItemSchema>;
+export type IROverlayLayoutItem = ZodInfer<typeof OverlayLayoutItemSchema>;
 
 /** OverlayLayout item 的作者输入 */
-export type OverlayLayoutItemInput = z.input<typeof OverlayLayoutItemSchema>;
+export type OverlayLayoutItemInput = ZodInput<typeof OverlayLayoutItemSchema>;
 
 /** OverlayLayout 的 canonical JSON IR */
-export type IROverlayLayout = z.infer<typeof OverlayLayoutSchema>;
+export type IROverlayLayout = ZodInfer<typeof OverlayLayoutSchema>;
 
 /** OverlayLayout factory 接受的作者输入 */
-export type OverlayLayoutInput = Omit<z.input<typeof OverlayLayoutSchema>, 'namespace' | 'type'>;
+export type OverlayLayoutInput = Omit<ZodInput<typeof OverlayLayoutSchema>, 'namespace' | 'type'>;
 
 /** OverlayLayout 的 JSON-safe compile artifact payload */
-export type OverlayLayoutArtifact = z.infer<typeof OverlayLayoutArtifactSchema>;
+export type OverlayLayoutArtifact = ZodInfer<typeof OverlayLayoutArtifactSchema>;

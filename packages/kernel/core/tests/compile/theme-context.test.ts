@@ -1,15 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import type { IRChild, IRScene, ResolvedTheme } from '../../src';
 
-import {
-  compileToScene,
-  CompositeBaseSchema,
-  defineComposite,
-  defineThemeStyle,
-  ThemeMode,
-} from '../../src';
+import { compileToScene, CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '../../src';
 
 const sceneOf = (children: Array<IRChild>, theme?: IRScene['theme']): IRScene => ({
   type: 'scene',
@@ -22,7 +16,7 @@ const createProbe = (observed: Array<ResolvedTheme>) =>
   defineComposite({
     namespace: 'theme-test',
     type: 'probe',
-    schema: CompositeBaseSchema.extend({ namespace: z.literal('theme-test'), type: z.literal('probe') }),
+    schema: CompositeBaseSchema.extend({ namespace: literal('theme-test'), type: literal('probe') }),
     expand: (_node, context) => {
       observed.push(context.theme);
       return { children: [{ type: 'node', position: [0, 0] }] };
@@ -32,10 +26,9 @@ const createProbe = (observed: Array<ResolvedTheme>) =>
 describe('Theme compile context', () => {
   it('从 selector 生成没有 token bag 的完整共享 Theme', () => {
     const observed: Array<ResolvedTheme> = [];
-    compileToScene(
-      sceneOf([{ namespace: 'theme-test', type: 'probe' }], { mode: ThemeMode.Light }),
-      { composites: [createProbe(observed)] },
-    );
+    compileToScene(sceneOf([{ namespace: 'theme-test', type: 'probe' }], { mode: ThemeMode.Light }), {
+      composites: [createProbe(observed)],
+    });
 
     expect(observed).toHaveLength(1);
     expect(observed[0]).toMatchObject({
@@ -71,6 +64,7 @@ describe('Theme compile context', () => {
           error: mode === ThemeMode.Dark ? '#ffaaaa' : '#aa0000',
           success: mode === ThemeMode.Dark ? '#aaffaa' : '#00aa00',
           warning: mode === ThemeMode.Dark ? '#ffffaa' : '#aaaa00',
+          guide: mode === ThemeMode.Dark ? '#cccccc' : '#666666',
         },
         categorical: mode === ThemeMode.Dark ? ['#aabbcc'] : ['#112233'],
       }),
@@ -85,7 +79,7 @@ describe('Theme compile context', () => {
     expect(observed[0]).toMatchObject({
       style: 'brand',
       mode: ThemeMode.Dark,
-      colors: { categorical: ['#aabbcc'], semantic: { error: '#ffaaaa' } },
+      colors: { categorical: ['#aabbcc'], semantic: { error: '#ffaaaa', guide: '#cccccc' } },
     });
   });
 });

@@ -164,4 +164,4 @@ export const pathTargetViewOf = (
 };
 
 /** 判断两个已解析坐标是否逐分量精确相等 */
-export const samePoint = (a: IRPosition | null, b: IRPosition | null): boolean => !!a && !!b && point.equal(a, b);
+export const samePoint = (a: IRPosition | null, b: IRPosition | null): boolean => !!a && !!b && point.isEqual(a, b);

@@ -272,7 +272,7 @@ Theme 的职责分为三层：Kernel / Core 提供主题协议与传播，上层
 - Standard 的通用 presentation，以及 Plot、Chart、Table、Graph、Geo 等视觉能力必须消费有效 Theme，并解析自己拥有的 token family；Plot 即使处于比 Chart 更底层的纵向能力层，也不能因为被 Chart 复用而跳过主题解析
 - Chart 可以编排 Chart presentation、解析 Chart-owned recipe token，并把 `plotThemeTokens` 与 Plot native `plotTheme` 交给 Plot owner；Table 可以解析 Table presentation，并把 Core shared categorical 作为继承值投影到自己的 token。任何一方都不能复制另一方的 token vocabulary、preset、resolver 或 merge 规则
 - Plot / Chart / Table / Graph 解析出的主题默认必须在 lowering 前物化为正式 Core / Standard 输入；最终 Core primitive 只接收显式 `fill`、`stroke`、`font` 等值，不再次读取 `ThemeStyle`
-- React / Vanilla adapter 只提供等价的主题 authoring、runtime definition 注入与传递；SVG / Canvas renderer 只执行统一 Scene，不解析 preset；Standard Inspector 只消费 Core `InspectionAppearance`；Data、Math 和其它没有视觉表现语义的包不提供可视化 Theme consumer
+- React / Vanilla adapter 只提供等价的主题 authoring、runtime definition 注入与传递；SVG / Canvas renderer 只执行统一 Scene，不解析 preset；Standard Inspector 只消费 Core `InspectionAppearanceContext`；Data、Math 和其它没有视觉表现语义的包不提供可视化 Theme consumer
 
 因此，在同一 `academic + light` 环境下，直接使用的 Plot、BubbleChart、DetailTable 都应分别得到自己的 academic token map；由这些能力生成的 Core 图元也会带有已经物化的样式。裸 Core `Node` 若没有显式样式则保持 Core 默认，不因所在 Scope 的 preset 自动改变。若产品要求裸 Node 也随 preset 改变，应另行定义 Theme-aware Core / Standard composite 或 Core primitive fallback 契约，不能让 renderer 私自补主题。
 

@@ -1,6 +1,6 @@
 ﻿import { describe, expect, it } from 'vitest';
 
-import { MarkOperationSchema, MarkSchema } from '../../src/schemas/mark';
+import { IntervalBoundsSchema, MarkOperationSchema, MarkSchema } from '../../src/schemas/mark';
 
 const gradientPaint = {
   kind: 'linearGradient',
@@ -129,6 +129,22 @@ describe('MarkSchema (contract)', () => {
         encoding: { x: { field: 'm' }, y: { field: 'r' } },
       }),
     ).toThrow();
+  });
+
+  it('mark_interval_bounds_whitespace_role_rejected', () => {
+    expect(() =>
+      MarkSchema.parse({
+        type: 'interval',
+        bounds: { '   ': { kind: 'full' } },
+        encoding: { color: { field: 'group' } },
+      }),
+    ).toThrow();
+  });
+
+  it('mark_interval_bounds_strip_unknown_nested_fields_after_role_key_validation', () => {
+    const parsed = IntervalBoundsSchema.parse({ custom: { kind: 'full', extra: true } });
+
+    expect(parsed).toEqual({ custom: { kind: 'full' } });
   });
 
   // contract：histogram 连续 x 区间柱（extent bound）
@@ -584,9 +600,8 @@ describe('MarkSchema (contract)', () => {
     expect(() => MarkSchema.parse({ type: 'reference', extentField: '', encoding: { x: { value: 5 } } })).toThrow();
   });
 
-  it('mark_reference_empty_string_yTo_rejected', () => {
-    // yTo string 须 min(1)：空串非法
-    expect(() => MarkSchema.parse({ type: 'reference', yTo: '', encoding: { y: { value: 70 } } })).toThrow();
+  it.each(['', '   '])('mark_reference_blank_string_yTo_%j_rejected', yTo => {
+    expect(() => MarkSchema.parse({ type: 'reference', yTo, encoding: { y: { value: 70 } } })).toThrow();
   });
 
   it('mark_reference_unknown_kind_rejected', () => {
@@ -742,6 +757,30 @@ describe('MarkSchema (contract)', () => {
       encoding: { y: { value: 80 } },
     };
     expect(MarkSchema.parse(m)).toEqual(m);
+  });
+
+  it('mark_style_colors_reject_whitespace_only_strings', () => {
+    expect(
+      MarkSchema.safeParse({
+        type: 'point',
+        color: { kind: 'constant', value: '   ' },
+        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      }).success,
+    ).toBe(false);
+    expect(
+      MarkSchema.safeParse({
+        type: 'path',
+        fill: { kind: 'constant', value: '   ' },
+        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      }).success,
+    ).toBe(false);
+    expect(
+      MarkSchema.safeParse({
+        type: 'interval',
+        label: { content: { value: 'label' }, pin: { stroke: '   ' } },
+        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+      }).success,
+    ).toBe(false);
   });
 
   it('mark_point_label_numeric_position_valid', () => {

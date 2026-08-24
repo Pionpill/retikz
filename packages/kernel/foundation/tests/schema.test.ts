@@ -1,4 +1,5 @@
 import type { AssertEqual, OpenString, ValueOf } from '@retikz/foundation';
+import type { infer as ZodInfer } from 'zod';
 
 import {
   createOpenStringSchema,
@@ -10,7 +11,7 @@ import {
   PositiveNumberSchema,
 } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { toJSONSchema } from 'zod';
 
 const TestRole = {
   Participant: 'participant',
@@ -19,7 +20,7 @@ const TestRole = {
 
 const TestRoleSchema = createOpenStringSchema(TestRole);
 const testRoleTypeIsOpenString: AssertEqual<
-  z.infer<typeof TestRoleSchema>,
+  ZodInfer<typeof TestRoleSchema>,
   OpenString<ValueOf<typeof TestRole>>
 > = true;
 
@@ -45,7 +46,7 @@ describe('createOpenStringSchema', () => {
   });
 
   it('keeps built-in enum hints and an open non-empty string branch in JSON Schema', () => {
-    expect(z.toJSONSchema(TestRoleSchema)).toMatchObject({
+    expect(toJSONSchema(TestRoleSchema)).toMatchObject({
       anyOf: [
         { type: 'string', enum: ['participant', 'activity'] },
         { type: 'string', minLength: 1 },

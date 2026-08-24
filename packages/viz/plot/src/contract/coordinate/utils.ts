@@ -1,4 +1,6 @@
-import { z } from 'zod';
+import type { ZodType } from 'zod';
+
+import { ZodLiteral, ZodObject } from 'zod';
 
 import type { CellProjectableCoordinate, CoordinateFrame } from './types';
 
@@ -19,14 +21,14 @@ export const hasProjectCell = (coordinate: CoordinateFrame): coordinate is CellP
  * @description definition schema 必须是包含 `type: z.literal('<coordinate-type>')` 的 ZodObject；
  *   该 literal 值就是 IR 中 `coordinate.type` 的真实判别串，也是 registry 的唯一键
  */
-export const extractCoordinateType = (schema: z.ZodType): string => {
-  if (!(schema instanceof z.ZodObject)) {
+export const extractCoordinateType = (schema: ZodType): string => {
+  if (!(schema instanceof ZodObject)) {
     throw new RetikzPlotError(
       'lowerPlots: coordinate registration schema must be a ZodObject with a literal type field',
     );
   }
   const typeSchema = schema.shape.type;
-  if (!(typeSchema instanceof z.ZodLiteral) || typeof typeSchema.value !== 'string' || typeSchema.value.length === 0) {
+  if (!(typeSchema instanceof ZodLiteral) || typeof typeSchema.value !== 'string' || typeSchema.value.length === 0) {
     throw new RetikzPlotError(
       'lowerPlots: coordinate registration schema must declare type as a non-empty z.literal string',
     );

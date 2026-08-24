@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import type { IRTableCellSelector, SemanticTableCell } from '../../src';
 
@@ -27,8 +27,6 @@ describe('Table Cell selector matching', () => {
     expect(
       matchesTableCellSelector(span, {
         cellIds: ['missing', 'span'],
-        rowIds: ['row.0'],
-        columnIds: ['column.0'],
         rowIndices: [0, 2],
         columnIndices: [0],
         locations: ['columnHeader'],
@@ -37,13 +35,13 @@ describe('Table Cell selector matching', () => {
         payloadKinds: ['value'],
       }),
     ).toBe(true);
-    expect(matchesTableCellSelector(span, { cellIds: ['span'], rowIds: ['row.1'] })).toBe(false);
+    expect(matchesTableCellSelector(span, { cellIds: ['span'], rowIndices: [1] })).toBe(false);
   });
 
   it('matches a spanning Cell only by its origin row and column', () => {
     const span = manualModel().cells[0];
 
-    expect(matchesTableCellSelector(span, { columnIds: ['column.0'] })).toBe(true);
+    expect(matchesTableCellSelector(span, { columnIds: ['column.0'] })).toBe(false);
     expect(matchesTableCellSelector(span, { columnIndices: [0] })).toBe(true);
     expect(matchesTableCellSelector(span, { columnIds: ['column.1'] })).toBe(false);
     expect(matchesTableCellSelector(span, { columnIndices: [1] })).toBe(false);
@@ -93,7 +91,7 @@ describe('Table Cell selector matching', () => {
 
   it('keeps selector semantics independent from the structure provider', () => {
     const custom = defineTableStructure({
-      schema: z.strictObject({ kind: z.literal('fixture-structure') }),
+      schema: strictObject({ kind: literal('fixture-structure') }),
       build: () => ({
         rows: [{ id: 'row.0', kind: 'body' }],
         columns: [{ id: 'column.0' }],
@@ -114,8 +112,6 @@ describe('Table Cell selector matching', () => {
     const generated = normalizeTableStructure({ kind: 'fixture-structure' }, { structureDefinitions: [custom] })
       .cells[0];
     const selectors: Array<IRTableCellSelector> = [
-      { cellIds: ['cell.r0.c0'] },
-      { rowIds: ['row.0'], columnIds: ['column.0'] },
       { rowIndices: [0], columnIndices: [0], locations: ['body'] },
       { roles: { all: ['data'] }, payloadKinds: ['value'] },
       { value: { kind: 'equal', value: 1 } },
@@ -124,6 +120,8 @@ describe('Table Cell selector matching', () => {
     expect(selectors.map(selector => matchesTableCellSelector(manual, selector))).toEqual(
       selectors.map(selector => matchesTableCellSelector(generated, selector)),
     );
+    expect(matchesTableCellSelector(manual, { cellIds: ['cell.r0.c0'] })).toBe(false);
+    expect(matchesTableCellSelector(generated, { cellIds: ['cell.r0.c0'] })).toBe(true);
   });
 });
 

@@ -31,8 +31,10 @@ import { resolveCellVisualScale } from '../../providers/encoding';
 import {
   TableBorderSchema,
   TableCellAppearanceSchema,
+  TableCellFormatter,
   TableCellLocation,
   TableCellPayloadKind,
+  TableCellPresentation,
   TableCellRuleSchema,
   TableCellVisualEncodingSchema,
   TableFormatterRefSchema,
@@ -48,7 +50,7 @@ const STRUCTURE_SOURCE = { kind: TableCellPlanSourceKind.Structure } as const;
 
 type MutableValuePlan = {
   kind: 'value';
-  cellId: string;
+  cellId?: string;
   formatter: IRTableFormatterRef;
   presentation: IRTablePresentationRef;
   appearance: IRTableCellAppearance;
@@ -63,7 +65,7 @@ type MutableValuePlan = {
 
 type MutableContentPlan = {
   kind: 'content';
-  cellId: string;
+  cellId?: string;
   appearance: IRTableCellAppearance;
   trace: { appearance: TableCellAppearanceTrace; matchedRuleIndices: Array<number> };
 };
@@ -177,16 +179,16 @@ const initialPlanOf = (cell: SemanticTableCell, options: ResolveTableCellPlansOp
   if (cell.payload.kind === TableCellPayloadKind.Content) {
     return {
       kind: TableCellPayloadKind.Content,
-      cellId: cell.id,
+      ...(cell.id === undefined ? {} : { cellId: cell.id }),
       appearance: structuredClone(initial.appearance),
       trace: { appearance: structuredClone(initial.trace), matchedRuleIndices: [] },
     };
   }
   return {
     kind: TableCellPayloadKind.Value,
-    cellId: cell.id,
-    formatter: TableFormatterRefSchema.parse(cell.payload.formatter ?? { name: 'identity' }),
-    presentation: TablePresentationRefSchema.parse(cell.payload.presentation ?? { name: 'text' }),
+    ...(cell.id === undefined ? {} : { cellId: cell.id }),
+    formatter: TableFormatterRefSchema.parse(cell.payload.formatter ?? { name: TableCellFormatter.Identity }),
+    presentation: TablePresentationRefSchema.parse(cell.payload.presentation ?? { name: TableCellPresentation.Text }),
     appearance: structuredClone(initial.appearance),
     trace: {
       formatter: cell.payload.formatter === undefined ? DEFAULT_SOURCE : STRUCTURE_SOURCE,
@@ -223,18 +225,18 @@ const applyEncodingColor = (plan: MutableValuePlan, encoding: IRTableCellVisualE
 };
 
 /** 把匹配 rule 依声明顺序应用到单个 plan */
-const applyRule = (plan: MutablePlan, rule: IRTableCellRule, ruleIndex: number): void => {
+const applyRule = (plan: MutablePlan, rule: IRTableCellRule, ruleIndex: number, cellLabel: string): void => {
   plan.trace.matchedRuleIndices.push(ruleIndex);
   const source = { kind: TableCellPlanSourceKind.RootRule, ruleIndex } as const;
   if (plan.kind === TableCellPayloadKind.Content) {
     if (rule.formatter !== undefined) {
       throw new RetikzTableError(
-        `table: rule ${ruleIndex} matched content Cell "${plan.cellId}" and cannot override formatter`,
+        `table: rule ${ruleIndex} matched content Cell ${cellLabel} and cannot override formatter`,
       );
     }
     if (rule.presentation !== undefined) {
       throw new RetikzTableError(
-        `table: rule ${ruleIndex} matched content Cell "${plan.cellId}" and cannot override presentation`,
+        `table: rule ${ruleIndex} matched content Cell ${cellLabel} and cannot override presentation`,
       );
     }
   } else {
@@ -280,7 +282,7 @@ export const resolveTableCellPlans = (
       context: options.scaleContext,
       registry,
     });
-    const cellIds: Array<string> = [];
+    const cellIndices: Array<number> = [];
     if (resolution !== undefined) {
       selected.forEach(candidate => {
         const color = resolution.of(candidate.value);
@@ -289,7 +291,7 @@ export const resolveTableCellPlans = (
         if (plan.kind !== TableCellPayloadKind.Value)
           throw new RetikzTableError('table: internal encoding candidate kind differs');
         applyEncodingColor(plan, encoding, color);
-        cellIds.push(candidate.cell.id);
+        cellIndices.push(candidate.index);
       });
       if (typeof encoding.legend === 'object') {
         legendDescriptors.push(
@@ -306,11 +308,14 @@ export const resolveTableCellPlans = (
         );
       }
     }
-    return { id: encoding.id, channel: encoding.channel, scaleName: encoding.scale.name, cellIds };
+    return { id: encoding.id, channel: encoding.channel, scaleName: encoding.scale.name, cellIndices };
   });
   parsedRules.forEach((rule, ruleIndex) => {
     model.cells.forEach((cell, cellIndex) => {
-      if (matchesTableCellSelector(cell, rule.selector)) applyRule(plans[cellIndex], rule, ruleIndex);
+      if (matchesTableCellSelector(cell, rule.selector)) {
+        const cellLabel = cell.id === undefined ? `${cell.rowIndex}:${cell.columnIndex}` : `"${cell.id}"`;
+        applyRule(plans[cellIndex], rule, ruleIndex, cellLabel);
+      }
     });
   });
   return deepFreeze({

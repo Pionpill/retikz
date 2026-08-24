@@ -43,7 +43,7 @@ describe('@retikz/layout-react/inspect', () => {
       </LayoutInspectLayout>,
     );
     expect(html).toContain('data-retikz-readonly-layer');
-    expect(html).toContain('#2563eb');
+    expect(html).toContain('hsl(210, 38%, 48%)');
   });
 
   it.each([

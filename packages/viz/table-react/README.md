@@ -81,8 +81,8 @@ other host capabilities from the outer `Layout` and reject standalone-only host 
 
 All three root components work standalone or as Tier 2 children of `@retikz/react` `Layout`.
 Standalone roots reuse the supported `Layout` host surface and observe `onManifest` from the same
-compile artifact. A standalone `theme` writes the root Core Scene Theme; embedded usage requires a
-stable spec id and receives the root Theme from the outer `Layout`. Embedded roots reject
+compile artifact. A standalone `theme` writes the root Core Scene Theme; embedded usage receives the
+root Theme from the outer `Layout`, and anonymous embedded Tables are valid. Embedded roots reject
 standalone host props or local `onManifest`; move them to the outer `Layout`. Datasets, custom
 definitions, and extra composites remain runtime inputs outside Table IR.
 

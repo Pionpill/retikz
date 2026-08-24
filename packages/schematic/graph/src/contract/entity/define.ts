@@ -1,5 +1,5 @@
 import type { IRJsonObject } from '@retikz/core';
-import type { z } from 'zod';
+import type { ZodType } from 'zod';
 
 import type {
   EntityKindDefinition,
@@ -15,6 +15,6 @@ export const defineEntityRole = (definition: EntityRoleDefinition): EntityRoleDe
 export const defineEntityKind = (definition: EntityKindDefinition): EntityKindDefinition => definition;
 
 /** 定义一个类型安全并可注册的 Entity predicate */
-export const defineEntityPredicate = <TSchema extends z.ZodType<IRJsonObject>>(
+export const defineEntityPredicate = <TSchema extends ZodType<IRJsonObject>>(
   definition: EntityPredicateDefinitionInput<TSchema>,
 ): EntityPredicateDefinition => definition;

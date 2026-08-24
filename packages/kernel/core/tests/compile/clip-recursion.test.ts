@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { array, literal, number, strictObject } from 'zod';
 
 import type { ClipShape, IRClip, IRScene, PathCommand } from '../../src';
 
@@ -30,7 +30,7 @@ type RecursiveClipShape = ClipShape & {
 
 const RecursiveClipDefinition = defineClip<RecursiveClip, RecursiveClipShape>({
   kind: 'recursive',
-  schema: z.strictObject({ kind: z.literal('recursive'), depth: z.number().int().nonnegative() }),
+  schema: strictObject({ kind: literal('recursive'), depth: number().int().nonnegative() }),
   resolve: (spec, context) => {
     if (spec.depth > 0) return context.resolve({ kind: 'recursive', depth: spec.depth - 1 }) as RecursiveClipShape;
     const commands: Array<PathCommand> = [
@@ -41,15 +41,15 @@ const RecursiveClipDefinition = defineClip<RecursiveClip, RecursiveClipShape>({
     ];
     return { kind: 'recursive', commands };
   },
-  shapeSchema: z.strictObject({ kind: z.literal('recursive'), commands: z.array(PathCommandSchema) }),
+  shapeSchema: strictObject({ kind: literal('recursive'), commands: array(PathCommandSchema) }),
   lower: shape => ({ commands: shape.commands, fillRule: 'nonzero' }),
 });
 
 const OperationCycleDefinition = defineClip({
   kind: 'operationCycle',
-  schema: z.strictObject({ kind: z.literal('operationCycle') }),
+  schema: strictObject({ kind: literal('operationCycle') }),
   resolve: (spec, context) => context.resolve(spec),
-  shapeSchema: z.strictObject({ kind: z.literal('operationCycle') }),
+  shapeSchema: strictObject({ kind: literal('operationCycle') }),
   lower: () => ({
     commands: [
       { kind: 'move', to: [0, 0] },
@@ -61,9 +61,9 @@ const OperationCycleDefinition = defineClip({
 
 const LowerCycleDefinition = defineClip({
   kind: 'lowerCycle',
-  schema: z.strictObject({ kind: z.literal('lowerCycle') }),
+  schema: strictObject({ kind: literal('lowerCycle') }),
   resolve: () => ({ kind: 'lowerCycle' }),
-  shapeSchema: z.strictObject({ kind: z.literal('lowerCycle') }),
+  shapeSchema: strictObject({ kind: literal('lowerCycle') }),
   lower: (shape, context) => context.lower(shape),
 });
 
@@ -89,8 +89,8 @@ describe('clip recursion guard', () => {
       namespace: 'test',
       type: 'runtimeScopeClip',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('runtimeScopeClip'),
+        namespace: literal('test'),
+        type: literal('runtimeScopeClip'),
       }),
       compile: (_, context) => ({
         children: [
@@ -156,9 +156,9 @@ describe('clip failure boundaries', () => {
   it('keeps malformed lower output as a fatal provider contract error', () => {
     const malformed = defineClip({
       kind: 'malformed',
-      schema: z.strictObject({ kind: z.literal('malformed') }),
+      schema: strictObject({ kind: literal('malformed') }),
       resolve: () => ({ kind: 'malformed' }),
-      shapeSchema: z.strictObject({ kind: z.literal('malformed') }),
+      shapeSchema: strictObject({ kind: literal('malformed') }),
       lower: () => ({ commands: [], fillRule: 'nonzero' }),
     });
 

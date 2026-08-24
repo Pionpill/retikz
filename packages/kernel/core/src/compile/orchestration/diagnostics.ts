@@ -3,8 +3,9 @@ import type { IRTransform } from '../../schemas';
 import type { DuplicateRegisterInfo } from '../namespace';
 import type { CompileWarning, CompileWarningInput } from '../warning';
 
+import { compareCompileOccurrences } from '../../contract';
 import { CompileWarningCode } from '../constants';
-import { compareCompileOccurrences, freezeOccurrence } from './artifact';
+import { freezeOccurrence } from './artifact';
 
 const compileWarningOccurrence = Symbol('compileWarningOccurrence');
 

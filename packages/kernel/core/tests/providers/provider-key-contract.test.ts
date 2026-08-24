@@ -1,6 +1,8 @@
+import type { ZodType } from 'zod';
+
 import { RetikzFoundationError, RetikzFoundationErrorCode } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, object, string, union } from 'zod';
 
 import type { IRScene } from '../../src';
 
@@ -44,7 +46,7 @@ describe('provider key contract', () => {
   it('custom_shape_uses_definition_name_not_record_key', () => {
     const ring = defineShape({
       name: 'ring',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       circumscribe: () => ({ halfWidth: 10, halfHeight: 10 }),
       boundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
       anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
@@ -62,7 +64,7 @@ describe('provider key contract', () => {
   it('custom_shape_cannot_override_a_builtin_name', () => {
     const rectangle = defineShape({
       name: 'rectangle',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       circumscribe: () => ({ halfWidth: 1, halfHeight: 1 }),
       boundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
       anchor: (rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
@@ -82,7 +84,7 @@ describe('provider key contract', () => {
   it('path_generator_definition_declares_name_and_compiles_from_array_options', () => {
     const segment = definePathGenerator({
       name: 'segment',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: ({ from }) => [{ kind: 'line', to: [from[0] + 10, from[1]] }],
     });
     const ir: IRScene = {
@@ -109,7 +111,7 @@ describe('provider key contract', () => {
         () =>
           definePathGenerator({
             name,
-            paramsSchema: z.object({}),
+            paramsSchema: object({}),
             generate: () => [],
           }),
         'definePathGenerator: name',
@@ -129,7 +131,7 @@ describe('provider key contract', () => {
       () =>
         definePathKind({
           name,
-          schema: PathSchema.extend({ kind: z.literal('custom') }),
+          schema: PathSchema.extend({ kind: literal('custom') }),
           compile: () => null,
         }),
       'definePathKind: name',
@@ -139,8 +141,8 @@ describe('provider key contract', () => {
 
   it('composite_definition_declares_namespace_and_type_as_provider_key', () => {
     const schema = CompositeBaseSchema.extend({
-      namespace: z.literal('demo'),
-      type: z.literal('badge'),
+      namespace: literal('demo'),
+      type: literal('badge'),
     });
     const badge = defineComposite({
       namespace: 'demo',
@@ -155,8 +157,8 @@ describe('provider key contract', () => {
 
   it('composite_schema_literal_must_match_declared_provider_key', () => {
     const schema = CompositeBaseSchema.extend({
-      namespace: z.literal('actual'),
-      type: z.literal('badge'),
+      namespace: literal('actual'),
+      type: literal('badge'),
     });
 
     expect(() =>
@@ -176,8 +178,8 @@ describe('provider key contract', () => {
           namespace: 'demo',
           type: 'badge',
           schema: CompositeBaseSchema.extend({
-            namespace: z.literal(namespace),
-            type: z.literal('badge'),
+            namespace: literal(namespace),
+            type: literal('badge'),
           }),
           expand: () => ({ children: [] }),
         }),
@@ -193,8 +195,8 @@ describe('provider key contract', () => {
           namespace: 'demo',
           type: 'badge',
           schema: CompositeBaseSchema.extend({
-            namespace: z.literal('demo'),
-            type: z.literal(type),
+            namespace: literal('demo'),
+            type: literal(type),
           }),
           expand: () => ({ children: [] }),
         }),
@@ -204,18 +206,18 @@ describe('provider key contract', () => {
   });
 
   it('composite_object_union_declares_one_shared_provider_key', () => {
-    const schema = z.union([
+    const schema = union([
       CompositeBaseSchema.extend({
-        namespace: z.literal('demo'),
-        type: z.literal('badge'),
-        variant: z.literal('text'),
-        text: z.string(),
+        namespace: literal('demo'),
+        type: literal('badge'),
+        variant: literal('text'),
+        text: string(),
       }),
       CompositeBaseSchema.extend({
-        namespace: z.literal('demo'),
-        type: z.literal('badge'),
-        variant: z.literal('count'),
-        count: z.number(),
+        namespace: literal('demo'),
+        type: literal('badge'),
+        variant: literal('count'),
+        count: number(),
       }),
     ]);
     const badge = defineComposite({
@@ -246,46 +248,46 @@ describe('provider key contract', () => {
 
   it('composite_object_union_rejects_unreadable_or_mixed_provider_keys', () => {
     const base = CompositeBaseSchema.extend({
-      namespace: z.literal('demo'),
-      type: z.literal('badge'),
-      variant: z.literal('base'),
+      namespace: literal('demo'),
+      type: literal('badge'),
+      variant: literal('base'),
     });
-    const definitionOf = (schema: z.ZodType) =>
+    const definitionOf = (schema: ZodType) =>
       defineComposite({ namespace: 'demo', type: 'badge', schema, expand: () => ({ children: [] }) });
 
-    expect(() => definitionOf(z.union([base, z.string()]))).toThrow(/union option 1.*ZodObject/i);
+    expect(() => definitionOf(union([base, string()]))).toThrow(/union option 1.*ZodObject/i);
     expect(() =>
       definitionOf(
-        z.union([
+        union([
           base,
           CompositeBaseSchema.extend({
-            namespace: z.string(),
-            type: z.literal('badge'),
-            variant: z.literal('dynamicNamespace'),
+            namespace: string(),
+            type: literal('badge'),
+            variant: literal('dynamicNamespace'),
           }),
         ]),
       ),
     ).toThrow(/union option 1.*namespace.*literal/i);
     expect(() =>
       definitionOf(
-        z.union([
+        union([
           base,
           CompositeBaseSchema.extend({
-            namespace: z.literal('other'),
-            type: z.literal('badge'),
-            variant: z.literal('otherNamespace'),
+            namespace: literal('other'),
+            type: literal('badge'),
+            variant: literal('otherNamespace'),
           }),
         ]),
       ),
     ).toThrow(/union option 1.*namespace.*demo.*other|union option 1.*namespace.*other.*demo/i);
     expect(() =>
       definitionOf(
-        z.union([
+        union([
           base,
           CompositeBaseSchema.extend({
-            namespace: z.literal('demo'),
-            type: z.literal('panel'),
-            variant: z.literal('otherType'),
+            namespace: literal('demo'),
+            type: literal('panel'),
+            variant: literal('otherType'),
           }),
         ]),
       ),

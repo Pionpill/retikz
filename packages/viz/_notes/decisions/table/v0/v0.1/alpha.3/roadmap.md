@@ -10,7 +10,7 @@
 ## 目标
 
 - 在现有 canonical Cell 与 value→`IRChild` 主链上增加 formatter、appearance、selector/rule 与 conditional color encoding
-- 用 Core `theme.tokens.table` 承载闭合、扁平、命名空间化的 `tableThemeTokens` vocabulary，支持 neutral、academic、vibrant、clean 四种 Table preset 及用户 overlay
+- 用 Table owner-local style definition / registry 承载相对 mode 默认 preset 的稀疏覆盖，并通过 `tableThemeTokens` 支持用户局部 overlay
 - 用 declarative mapping 同时驱动 Cell appearance 与 Legend descriptor，并保留 opaque evaluator 的仅实绘扩展路径
 - 通过 Standard Legend 与 Box Layout 完成通用 Legend 呈现和外围 composition，不在 Table 复制通用布局
 - 让 framework-neutral、React、Vanilla、SSR、manifest 与 zh/en docs 表达同一契约
@@ -60,7 +60,7 @@ ADR-04 / 05 共享 resolved palette 与 appearance pipeline，保持同一公开
 ## 已实现产品基线
 
 - formatter、presentation、selector / rule、encoding 与 style tokens 沿同一 canonical pipeline 闭环
-- neutral 为默认 preset；academic / vibrant / clean、light / dark 与 custom overlay 可用
+- light / dark 匿名默认 preset 可用；academic / vibrant / clean 由 Docs / 应用注入同名 definition，custom overlay 可用
 - visual scale resolution 与 manifest 同时保存 Cell encoding lineage 和 opt-in Legend descriptor seed
 - direct、React、Vanilla 与 SSR 共用四类 definitions、runtime contribution 与 Table manifest artifact
 - zh / en Reference、三包 README 与 changelog 明确当前 descriptor seed 边界
@@ -69,7 +69,7 @@ ADR-04 / 05 共享 resolved palette 与 appearance pipeline，保持同一公开
 
 - [ ] ADR-01～06 均保持长期形态，并通过 Architecture Gate 与人工确认
 - [x] formatter、presentation、selector / rule、encoding 与 style tokens 沿同一 canonical pipeline 闭环
-- [x] neutral / academic / vibrant / clean、light / dark 与 custom overlay 可观察且可诊断
+- [x] light / dark 匿名默认 preset、Docs 注入的 academic / vibrant / clean 与 custom overlay 可观察且可诊断
 - [x] visual scale resolution、appearance、descriptor seed 与 manifest lineage 契约一致
 - [x] direct、React、Vanilla、SSR 对当前 Table Scene 与 manifest 语义等价
 - [x] zh / en docs、README、architecture 与 changelog 对当前公开边界完成对账

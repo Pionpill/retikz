@@ -1,24 +1,25 @@
-import type { ChartThemeStyleDefinition } from '@retikz/chart';
+import type { ChartThemeDefinition } from '@retikz/chart';
 import type { FC, ReactNode } from 'react';
 
 import { useMemo } from 'react';
 
-import { ChartThemeStylesContext, useChartThemeStyles } from '../shared';
+import { ChartThemeDefinitionsContext, useChartThemeDefinitions } from '../shared';
 
-/** Chart 自有上下文主题定义的 Provider 属性 */
-export type ChartThemeProviderProps = {
-  chartThemeStyles?: ReadonlyArray<ChartThemeStyleDefinition>;
+/** Chart-owned named Theme definitions 的 Provider 属性 */
+export type ChartThemeProviderProps = Readonly<{
+  /** 注入当前具体 chartType provider 可见的 named Theme definitions */
+  themeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
   children?: ReactNode;
-};
+}>;
 
-/** 为独立 Chart 子树注入 Chart 自有主题定义 */
+/** 为独立 Chart 子树注入 named Theme definitions */
 export const ChartThemeProvider: FC<ChartThemeProviderProps> = props => {
-  const { chartThemeStyles, children } = props;
-  const parent = useChartThemeStyles();
+  const { themeDefinitions, children } = props;
+  const parent = useChartThemeDefinitions();
   const merged = useMemo(() => {
-    if (parent === undefined) return chartThemeStyles;
-    if (chartThemeStyles === undefined) return parent;
-    return [...parent, ...chartThemeStyles];
-  }, [parent, chartThemeStyles]);
-  return <ChartThemeStylesContext.Provider value={merged}>{children}</ChartThemeStylesContext.Provider>;
+    if (parent === undefined) return themeDefinitions;
+    if (themeDefinitions === undefined) return parent;
+    return [...parent, ...themeDefinitions];
+  }, [parent, themeDefinitions]);
+  return <ChartThemeDefinitionsContext.Provider value={merged}>{children}</ChartThemeDefinitionsContext.Provider>;
 };

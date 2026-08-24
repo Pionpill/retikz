@@ -1,18 +1,19 @@
 import type { PathCommand, Rect } from '@retikz/core';
 import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 
 import { worldToLocal } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { enum as zodEnum, strictObject } from 'zod';
 
 /** 轴向半椭圆端形状共享的严格参数 schema */
-export const EllipticCapShapeParamsSchema = z.strictObject({
-  axis: z.enum(['vertical', 'horizontal']).optional().describe('Main axis of the elliptic caps.'),
+export const EllipticCapShapeParamsSchema = strictObject({
+  axis: zodEnum(['vertical', 'horizontal']).optional().describe('Main axis of the elliptic caps.'),
   capDepth: NonNegativeNumberSchema.optional().describe('Depth of each elliptic cap in user units.'),
 });
 
 /** 轴向半椭圆端形状共享的参数 */
-export type EllipticCapShapeParams = z.infer<typeof EllipticCapShapeParamsSchema>;
+export type EllipticCapShapeParams = ZodInfer<typeof EllipticCapShapeParamsSchema>;
 
 const axisOf = (params: EllipticCapShapeParams): 'vertical' | 'horizontal' => params.axis ?? 'vertical';
 const capDepthOf = (params: EllipticCapShapeParams): number => params.capDepth ?? 8;

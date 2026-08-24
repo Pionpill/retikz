@@ -24,14 +24,14 @@ description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
 
 #### API 参考
 
-| API                                                                                  | 类别 | 作用                           |
-| ------------------------------------------------------------------------------------ | ---- | ------------------------------ |
-| `Position`、`Vector2`                                                                | 类型 | 二维坐标点与向量类型           |
-| `point.distance`、`point.along`、`point.against`、`point.shiftToward`、`point.equal` | 方法 | 点之间的距离、移动和相等比较   |
-| `vector2.add`、`vector2.sub`、`vector2.scale`、`vector2.dot`、`vector2.cross`        | 方法 | 向量的加减、缩放、点积和叉积   |
-| `vector2.length`、`vector2.normalize`、`vector2.normalizeOrNull`                     | 方法 | 向量长度和单位化               |
-| `vector2.fromAngleDegrees`、`vector2.normal`                                         | 方法 | 由角度构造向量和计算左手法向量 |
-| `lerp`                                                                               | 方法 | 在两个坐标点之间进行线性插值   |
+| API                                                                                    | 类别 | 作用                           |
+| -------------------------------------------------------------------------------------- | ---- | ------------------------------ |
+| `Position`、`Vector2`                                                                  | 类型 | 二维坐标点与向量类型           |
+| `point.distance`、`point.along`、`point.against`、`point.shiftToward`、`point.isEqual` | 方法 | 点之间的距离、移动和相等比较   |
+| `vector2.add`、`vector2.sub`、`vector2.scale`、`vector2.dot`、`vector2.cross`          | 方法 | 向量的加减、缩放、点积和叉积   |
+| `vector2.length`、`vector2.normalize`、`vector2.normalizeOrNull`                       | 方法 | 向量长度和单位化               |
+| `vector2.fromAngleDegrees`、`vector2.normal`                                           | 方法 | 由角度构造向量和计算左手法向量 |
+| `lerp`                                                                                 | 方法 | 在两个坐标点之间进行线性插值   |
 
 ### 边界计算
 
@@ -53,8 +53,8 @@ description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
 | `boundsOf`、`mergeBounds`                                           | 方法 | 从点集构造边界或合并两个边界 |
 | `boundsToRect`、`rectToBounds`                                      | 方法 | 在边界与矩形表示之间转换     |
 | `isFiniteBoundsRect`、`isPositiveBoundsRect`                        | 方法 | 检查矩形范围是否合法         |
-| `boundsCenter`、`boundsHalfAxes`                                    | 方法 | 取得边界中心和半轴           |
-| `expandBounds`、`boundsCorners`                                     | 方法 | 外扩边界和取得四个角点       |
+| `centerOfBounds`、`halfAxesOfBounds`                                | 方法 | 取得边界中心和半轴           |
+| `expandBounds`、`cornersOfBounds`                                   | 方法 | 外扩边界和取得四个角点       |
 
 ### 椭圆与圆弧
 
@@ -64,21 +64,21 @@ description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
 
 <ComponentPreview files="ellipse-arc-playground" size="sm" caption="调整半轴、半径和角度，观察椭圆、圆弧及其边界" />
 
-`arcEndPoint` / `ellipseArcPoint` 取曲线上一点；椭圆的 `angleDeg` 是参数角，不一定等于从中心观察到的真实极角。`arcAngleInRange` 按 `startAngleDeg → endAngleDeg` 的符号判断有向区间：正跨度在屏幕上顺时针，负跨度逆时针
+`pointAtArcAngle` / `pointAtEllipseArcAngle` 取曲线上一点；椭圆的 `angleDeg` 是参数角，不一定等于从中心观察到的真实极角。`isAngleWithinArcSweep` 按 `startAngleDeg → endAngleDeg` 的符号判断有向区间：正跨度在屏幕上顺时针，负跨度逆时针
 
-`arcBoundingPoints` / `ellipseArcBoundingPoints` 取得端点与轴向极值等边界候选点。椭圆弧方法只处理轴对齐椭圆弧；旋转椭圆应先在局部坐标计算，再用[坐标变换](/kernel/packages/base/math-transforms)映射到世界坐标。
+`collectArcBoundingCandidates` / `collectEllipseArcBoundingCandidates` 取得端点与轴向极值等边界候选点。椭圆弧方法只处理轴对齐椭圆弧；旋转椭圆应先在局部坐标计算，再用[坐标变换](/kernel/packages/base/math-transforms)映射到世界坐标。
 
 #### API 参考
 
-| API                                                                                                       | 类别 | 作用                               |
-| --------------------------------------------------------------------------------------------------------- | ---- | ---------------------------------- |
-| `Ellipse`、`CenteredBox`、`EllipseCircumscribeMode`                                                       | 类型 | 椭圆、中心盒和外接策略类型         |
-| `ellipse.center`、`ellipse.inscribedInBox`、`ellipse.circumscribedHalfAxes`                               | 方法 | 构造椭圆中心、内接椭圆和外接半轴   |
-| `ellipse.contains`、`ellipse.boundaryPoint`                                                               | 方法 | 判断包含关系和取得朝向目标的边界点 |
-| `ArcBoundingPointsInput`、`ArcAngleInRangeInput`、`EllipseArcPointInput`、`EllipseArcBoundingPointsInput` | 类型 | 圆弧与椭圆弧的输入类型             |
-| `arcEndPoint`、`ellipseArcPoint`                                                                          | 方法 | 取得圆弧或椭圆弧上的点             |
-| `arcBoundingPoints`、`ellipseArcBoundingPoints`                                                           | 方法 | 取得弧段的边界候选点               |
-| `arcAngleInRange`                                                                                         | 方法 | 判断角度是否落在有向圆弧区间内     |
+| API                                                                                                                  | 类别 | 作用                               |
+| -------------------------------------------------------------------------------------------------------------------- | ---- | ---------------------------------- |
+| `Ellipse`、`CenteredBox`、`EllipseCircumscribeMode`                                                                  | 类型 | 椭圆、中心盒和外接策略类型         |
+| `ellipse.center`、`ellipse.inscribedInBox`、`ellipse.circumscribedHalfAxes`                                          | 方法 | 构造椭圆中心、内接椭圆和外接半轴   |
+| `ellipse.contains`、`ellipse.boundaryPoint`                                                                          | 方法 | 判断包含关系和取得朝向目标的边界点 |
+| `ArcBoundingCandidatesInput`、`ArcSweepAngleInput`、`EllipseArcAnglePointInput`、`EllipseArcBoundingCandidatesInput` | 类型 | 圆弧与椭圆弧的输入类型             |
+| `pointAtArcAngle`、`pointAtEllipseArcAngle`                                                                          | 方法 | 取得圆弧或椭圆弧上的点             |
+| `collectArcBoundingCandidates`、`collectEllipseArcBoundingCandidates`                                                | 方法 | 取得弧段的边界候选点               |
+| `isAngleWithinArcSweep`                                                                                              | 方法 | 判断角度是否落在有向圆弧区间内     |
 
 ## 相关
 

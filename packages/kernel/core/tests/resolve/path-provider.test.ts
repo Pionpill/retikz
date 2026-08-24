@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, strictObject, string } from 'zod';
 
 import type { IRPathBase } from '../../src/schemas';
 
@@ -30,8 +30,8 @@ describe('resolve/path provider bindings', () => {
     const custom = definePathKind({
       name: 'highlight',
       schema: PathSchema.extend({
-        kind: z.literal('highlight'),
-        kindOptions: z.strictObject({ stroke: z.string() }),
+        kind: literal('highlight'),
+        kindOptions: strictObject({ stroke: string() }),
       }),
       compile: () => null,
     });
@@ -74,7 +74,7 @@ describe('resolve/path provider bindings', () => {
   it('reports provider payload failures with the source IR locator', () => {
     const generator = definePathGenerator({
       name: 'locator-generator',
-      paramsSchema: z.strictObject({ amount: z.number() }),
+      paramsSchema: strictObject({ amount: number() }),
       generate: ({ from }) => [{ kind: 'line', to: from }],
     });
     expect(() =>
@@ -92,7 +92,7 @@ describe('resolve/path provider bindings', () => {
   it('binds generator definitions, parsed params, and step provenance', () => {
     const generator = definePathGenerator({
       name: 'bend',
-      paramsSchema: z.strictObject({ amount: z.number() }),
+      paramsSchema: strictObject({ amount: number() }),
       generate: ({ from }) => [{ kind: 'line', to: [from[0] + 1, from[1]] }],
     });
     const resolution = resolveStrokePathWithBuiltinProviders(

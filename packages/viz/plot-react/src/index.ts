@@ -29,6 +29,7 @@ export {
   Track,
   Transform,
 } from './components';
+export * from './error';
 export type { PlotDslProps, PlotIRProps, PlotLineageProps, PlotPanelProps, PlotProps } from './Plot';
 export { Plot } from './Plot';
 export type { ResolvedPlotAuthoring, ResolvePlotAuthoringOptions } from './plot-runtime';

@@ -5,6 +5,9 @@ import { createInputScene, isEmbeddableMarked, Layout, Scope } from '@retikz/rea
 import { normalizeScene } from '@retikz/vanilla';
 import { createElement, isValidElement } from 'react';
 
+import { buildPreviewSourceIR, collectPreviewChartSources } from './build-preview-source-ir';
+import { previewEmbedPropsOf } from './preview-embed';
+
 const COMPONENT_EXPANSION_LIMIT = 16;
 
 type PreviewRootProps = {
@@ -54,7 +57,10 @@ const LAYOUT_OWN_PROPS = new Set([
 
 /** ComponentPreview 派生出的 IR 渲染信息。 */
 export type PreviewIR = {
+  /** 供 renderer 与动画检测使用的 runtime canonical IR */
   ir: IRScene;
+  /** 供 IR / Vanilla 源码展示使用的高层 Source IR */
+  sourceIr: IRScene;
   contributions: Array<CoreProviderContribution>;
   width?: number | string;
   height?: number | string;
@@ -66,7 +72,11 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
   const rootElement = resolvePreviewRootElement(Component({}));
   const props = (rootElement?.props ?? {}) as PreviewRootProps & Record<string, unknown>;
   const isEmbeddableRoot = isEmbeddableMarked(rootElement?.type);
-  let childNode = isEmbeddableRoot ? rootElement : props.children;
+  const EmbeddableRoot = rootElement?.type as FC<Record<string, unknown>> | undefined;
+  let childNode =
+    isEmbeddableRoot && EmbeddableRoot !== undefined
+      ? createElement(EmbeddableRoot, previewEmbedPropsOf(EmbeddableRoot, props))
+      : props.children;
   if (props.ir === undefined) {
     const styleProps = Object.fromEntries(
       Object.entries(props).filter(([key, value]) => !LAYOUT_OWN_PROPS.has(key) && value !== undefined),
@@ -79,24 +89,37 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
     props.ir === undefined
       ? (() => {
           const input = createInputScene(childNode);
-          return normalizeScene(input.scene, { adapters: input.adapters });
+          const runtime = normalizeScene(input.scene, { adapters: input.adapters });
+          return {
+            ...runtime,
+            sourceIr: buildPreviewSourceIR(input.scene, runtime.ir, collectPreviewChartSources(childNode)),
+          };
         })()
       : {
           ir: props.ir,
+          sourceIr: props.ir,
           contributions: [] as Array<CoreProviderContribution>,
         };
   const isLayout = rootElement?.type === Layout;
   const viewBox = isLayout ? rootElement.props.viewBox : undefined;
   const rootAnimations = isLayout ? (props.animations as IRScene['animations'] | undefined) : undefined;
   let ir = normalized.ir;
-  if (viewBox !== undefined) ir = { ...ir, viewBox };
-  if (rootAnimations !== undefined) ir = { ...ir, animations: rootAnimations };
+  let sourceIr = normalized.sourceIr;
+  if (viewBox !== undefined) {
+    ir = { ...ir, viewBox };
+    sourceIr = { ...sourceIr, viewBox };
+  }
+  if (rootAnimations !== undefined) {
+    ir = { ...ir, animations: rootAnimations };
+    sourceIr = { ...sourceIr, animations: rootAnimations };
+  }
   const ownsOutputSize = isLayout || isEmbeddableRoot;
   const width = ownsOutputSize ? (props.width as number | string | undefined) : undefined;
   const height = ownsOutputSize ? (props.height as number | string | undefined) : undefined;
   const pathKinds = isLayout ? (props.pathKinds as ReadonlyArray<AnyPathKindDefinition> | undefined) : undefined;
   return {
     ir,
+    sourceIr,
     contributions: [...normalized.contributions],
     width,
     height,

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { ZodLiteral, ZodObject } from 'zod';
 
 import type { AnyTableStructureDefinition } from '../../contract';
 
@@ -8,11 +8,11 @@ import { BUILTIN_TABLE_STRUCTURES } from './definitions';
 
 /** 从 definition schema 的 kind literal 提取唯一 registry key */
 export const extractTableStructureKind = (definition: AnyTableStructureDefinition): string => {
-  if (!(definition.schema instanceof z.ZodObject)) {
+  if (!(definition.schema instanceof ZodObject)) {
     throw new RetikzTableError('table: structure definition schema must be a ZodObject with a literal kind');
   }
   const kindSchema = definition.schema.shape.kind;
-  if (!(kindSchema instanceof z.ZodLiteral) || typeof kindSchema.value !== 'string' || kindSchema.value.length === 0) {
+  if (!(kindSchema instanceof ZodLiteral) || typeof kindSchema.value !== 'string' || kindSchema.value.length === 0) {
     throw new RetikzTableError('table: structure definition schema.kind must be a non-empty string literal');
   }
   return kindSchema.value;

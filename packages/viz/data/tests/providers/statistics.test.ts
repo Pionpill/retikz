@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject, string, unknown } from 'zod';
 
 import {
   applyReducerOperation,
@@ -59,9 +59,9 @@ describe('statistics provider schema boundaries', () => {
 
   it('rejects non-JSON custom reducer input before invoking its definition', () => {
     const definition = defineStatisticsReducer({
-      schema: z.strictObject({
-        kind: z.literal('unsafe-input'),
-        config: z.unknown(),
+      schema: strictObject({
+        kind: literal('unsafe-input'),
+        config: unknown(),
       }),
       reduce: () => ({}),
     });
@@ -76,9 +76,9 @@ describe('statistics provider schema boundaries', () => {
 
   it('rejects non-JSON output produced by a custom definition schema', () => {
     const definition = defineStatisticsReducer({
-      schema: z.strictObject({
-        kind: z.literal('unsafe-output'),
-        stamp: z.string().transform(value => new Date(value)),
+      schema: strictObject({
+        kind: literal('unsafe-output'),
+        stamp: string().transform(value => new Date(value)),
       }),
       reduce: () => ({}),
     });
@@ -93,9 +93,9 @@ describe('statistics provider schema boundaries', () => {
 
   it('rejects non-JSON output produced by a custom selector schema', () => {
     const definition = defineRowSelector({
-      schema: z.strictObject({
-        kind: z.literal('unsafe-selector-output'),
-        stamp: z.string().transform(value => new Date(value)),
+      schema: strictObject({
+        kind: literal('unsafe-selector-output'),
+        stamp: string().transform(value => new Date(value)),
       }),
       select: () => [],
     });

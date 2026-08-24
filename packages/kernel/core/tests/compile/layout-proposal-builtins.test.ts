@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import type {
   CompileOptions,
@@ -66,8 +66,8 @@ const probeChild = (
     namespace: 'test',
     type: 'builtinProbe',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('test'),
-      type: z.literal('builtinProbe'),
+      namespace: literal('test'),
+      type: literal('builtinProbe'),
       child: ChildSchema,
     }),
     compile: (node, context) => {

@@ -1,5 +1,5 @@
 import type { IRJsonObject } from '@retikz/core';
-import type { z } from 'zod';
+import type { output as ZodOutput, ZodType } from 'zod';
 
 import type {
   IRGraphRelationRoleTokenRecipe,
@@ -38,7 +38,7 @@ export type RelationKindDefinition = Readonly<{
 }>;
 
 /** Relation predicate 作者侧的类型安全定义 */
-export type RelationPredicateDefinitionInput<TSchema extends z.ZodType<IRJsonObject>> = Readonly<{
+export type RelationPredicateDefinitionInput<TSchema extends ZodType<IRJsonObject>> = Readonly<{
   /** 全局唯一的 predicate definition name */
   name: string;
   /** predicate 所属的 Relation role */
@@ -50,8 +50,8 @@ export type RelationPredicateDefinitionInput<TSchema extends z.ZodType<IRJsonObj
   /** Source params 的 JSON object schema */
   paramsSchema: TSchema;
   /** 根据已校验 Canonical params 解析稀疏结构 delta */
-  resolveStructure?: (params: z.output<TSchema>) => IRGraphRelationStructureTokenOverrides;
+  resolveStructure?: (params: ZodOutput<TSchema>) => IRGraphRelationStructureTokenOverrides;
 }>;
 
 /** Relation predicate registry 保存的参数擦除定义 */
-export type RelationPredicateDefinition = RelationPredicateDefinitionInput<z.ZodType<IRJsonObject>>;
+export type RelationPredicateDefinition = RelationPredicateDefinitionInput<ZodType<IRJsonObject>>;

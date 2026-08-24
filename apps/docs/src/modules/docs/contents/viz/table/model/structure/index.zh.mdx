@@ -27,23 +27,23 @@ description: 理解明细、显式与自定义 Structure 如何生成统一的�
 
 ## Cell 是语义单位
 
-一个 canonical Cell 不只是要显示的值。它把稳定身份、二维位置、语义、内容和布局输入组合在一起：
+一个 canonical Cell 不只是要显示的值。它把可选作者身份、二维位置、语义、内容和布局输入组合在一起：
 
-| 维度     | 主要信息                            | 下游用途                     |
-| -------- | ----------------------------------- | ---------------------------- |
-| 身份位置 | `id`、row/column id 与零基 index    | 稳定引用、轨道放置           |
-| 语义     | `location`、`roles`                 | 区分列头、正文和领域角色     |
-| 内容     | value/content `payload`             | 进入 Presentation            |
-| 布局输入 | 已补默认值的 `span` 与 Cell layout  | 轨道贡献、内容放置和边框候选 |
-| 来源     | manual、field 或 generated `source` | 调试、追溯和宿主映射         |
+| 维度     | 主要信息                              | 下游用途                     |
+| -------- | ------------------------------------- | ---------------------------- |
+| 身份位置 | 可选 `id`、row/column id 与零基 index | 显式引用、轨道放置           |
+| 语义     | `location`、`roles`                   | 区分列头、正文和领域角色     |
+| 内容     | value/content `payload`               | 进入 Presentation            |
+| 布局输入 | 已补默认值的 `span` 与 Cell layout    | 轨道贡献、内容放置和边框候选 |
+| 来源     | manual、field 或 generated `source`   | 调试、追溯和宿主映射         |
 
-行与列也有稳定 id 和 canonical index。明细列还可保留字段路径，正文行可保留外部 source index；因此消费者无需从 Cell 文本反推它属于哪条记录或字段。
+行、列与 Cell 始终有 canonical index，作者或 Structure 也可以为它们提供稳定 id。明细列还可保留字段路径，正文行可保留外部 source index；因此消费者无需从 Cell 文本反推它属于哪条记录或字段，也无需为了内部关联生成 id。
 
 ## Structure Definition 的边界
 
 自定义 Definition 可以读取只读数据上下文、字段类型和标量值，然后返回 rows、columns 与 Cells。内置和自定义 Definition 使用同一个 registry、输出 guard 和规范化步骤。
 
-Definition 必须停在语义模型边界：它可以决定 Cell 身份、角色、payload、span 和布局输入，但不能自己求解轨道、绘制边框或返回 renderer 专属对象。非法地址、重复身份、越界 span 或不一致语义会在规范化阶段 fail-loud。
+Definition 必须停在语义模型边界：它可以决定 Cell 的可选身份、角色、payload、span 和布局输入，但不能自己求解轨道、绘制边框或返回 renderer 专属对象。非法地址、重复的显式身份、越界 span 或不一致语义会在规范化阶段 fail-loud。
 
 <SourceLinks
   sources={[

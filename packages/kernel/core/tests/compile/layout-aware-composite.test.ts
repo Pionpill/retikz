@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { boolean, literal, number, strictObject } from 'zod';
 
 import type {
+  CompileWarning,
   IRChild,
   IRScene,
   LayoutChildResult,
@@ -44,14 +45,14 @@ const createLayoutDefinition = () =>
     namespace: 'test',
     type: 'layout',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('test'),
-      type: z.literal('layout'),
+      namespace: literal('test'),
+      type: literal('layout'),
       child: ChildSchema,
-      width: z.number().nonnegative(),
+      width: number().nonnegative(),
     }),
-    artifactSchema: z.strictObject({
-      naturalWidth: z.number(),
-      rangeWidth: z.number(),
+    artifactSchema: strictObject({
+      naturalWidth: number(),
+      rangeWidth: number(),
     }),
     compile: (node, context) => {
       expect(context.proposal).toEqual(NaturalLayoutProposal);
@@ -82,6 +83,80 @@ const sceneOf = (child: IRChild): IRScene => ({
 });
 
 describe('layout-aware composite', () => {
+  it('routes a composite warning through onWarn with the current Source locator', () => {
+    const definition = defineComposite({
+      namespace: 'test',
+      type: 'warning',
+      schema: CompositeBaseSchema.extend({
+        namespace: literal('test'),
+        type: literal('warning'),
+      }),
+      compile: (_node, context) => {
+        context.warn('TEST_COMPOSITE_WARNING', 'Composite warning', 'recipe.marks[0].override');
+        return { children: [] };
+      },
+    });
+    const warnings: Array<CompileWarning> = [];
+
+    compileToScene(sceneOf({ namespace: 'test', type: 'warning' }), {
+      composites: [definition],
+      onWarn: warning => warnings.push(warning),
+    });
+
+    expect(warnings).toEqual([
+      expect.objectContaining({
+        code: 'TEST_COMPOSITE_WARNING',
+        message: 'Composite warning',
+        path: 'children[0].recipe.marks[0].override',
+      }),
+    ]);
+  });
+
+  it('keeps nested composite warnings transactional until the selected probe is replayed', () => {
+    const child = defineComposite({
+      namespace: 'test',
+      type: 'warningChild',
+      schema: CompositeBaseSchema.extend({
+        namespace: literal('test'),
+        type: literal('warningChild'),
+      }),
+      compile: (_node, context) => {
+        context.warn('TEST_PROBE_WARNING', 'Probe warning');
+        return { children: [] };
+      },
+    });
+    const parent = defineComposite({
+      namespace: 'test',
+      type: 'warningParent',
+      schema: CompositeBaseSchema.extend({
+        namespace: literal('test'),
+        type: literal('warningParent'),
+        replay: boolean(),
+      }),
+      compile: (node, context) => {
+        const probe = context.layoutChild({ namespace: 'test', type: 'warningChild' }, NaturalLayoutProposal);
+        if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+        return { children: node.replay ? [context.replay(probe.result)] : [] };
+      },
+    });
+    const discardedWarnings: Array<CompileWarning> = [];
+    const replayedWarnings: Array<CompileWarning> = [];
+
+    compileToScene(sceneOf({ namespace: 'test', type: 'warningParent', replay: false }), {
+      composites: [child, parent],
+      onWarn: warning => discardedWarnings.push(warning),
+    });
+    compileToScene(sceneOf({ namespace: 'test', type: 'warningParent', replay: true }), {
+      composites: [child, parent],
+      onWarn: warning => replayedWarnings.push(warning),
+    });
+
+    expect(discardedWarnings).toEqual([]);
+    expect(replayedWarnings).toEqual([
+      expect.objectContaining({ code: 'TEST_PROBE_WARNING', message: 'Probe warning' }),
+    ]);
+  });
+
   it('measures intrinsic and constrained content, then replays the selected result without a third layout', () => {
     const measureText = vi.fn<TextMeasurer>(fixedMeasurer);
     const definition = createLayoutDefinition();
@@ -121,12 +196,12 @@ describe('layout-aware composite', () => {
       namespace: 'test',
       type: 'nestedConstraint',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('nestedConstraint'),
+        namespace: literal('test'),
+        type: literal('nestedConstraint'),
       }),
-      artifactSchema: z.strictObject({
-        xMode: z.literal('natural'),
-        yMode: z.literal('natural'),
+      artifactSchema: strictObject({
+        xMode: literal('natural'),
+        yMode: literal('natural'),
       }),
       compile: (_node, { proposal }) => {
         if (
@@ -147,8 +222,8 @@ describe('layout-aware composite', () => {
       namespace: 'test',
       type: 'scopeConstraint',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('scopeConstraint'),
+        namespace: literal('test'),
+        type: literal('scopeConstraint'),
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(
@@ -192,8 +267,8 @@ describe('layout-aware composite', () => {
       namespace: 'test',
       type: 'duplicateReplay',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('duplicateReplay'),
+        namespace: literal('test'),
+        type: literal('duplicateReplay'),
         child: ChildSchema,
       }),
       compile: (node, context) => {
@@ -222,8 +297,8 @@ describe('layout-aware composite', () => {
       namespace: 'test',
       type: 'layoutOnly',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('layoutOnly'),
+        namespace: literal('test'),
+        type: literal('layoutOnly'),
       }),
       compile,
     });

@@ -1,8 +1,9 @@
 ﻿import type { IRChild, LayoutCompositeCompileContext, ScenePrimitive } from '@retikz/core';
 
 import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import type { PresentedTableModel } from '../../src';
 import type { ResolvedTableTransaction } from '../../src/pipeline/layout';
@@ -38,8 +39,8 @@ describe('Presented Table layout transaction', () => {
       namespace: 'fixture',
       type: 'unstyled-presented-table',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('unstyled-presented-table'),
+        namespace: literal('fixture'),
+        type: literal('unstyled-presented-table'),
       }),
       compile: (_node, context) => {
         transaction = resolvePresentedTableTransaction({ presented }, context);
@@ -77,8 +78,8 @@ describe('Presented Table layout transaction', () => {
       namespace: 'fixture',
       type: 'malformed-presented-table',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('malformed-presented-table'),
+        namespace: literal('fixture'),
+        type: literal('malformed-presented-table'),
       }),
       compile: (_node, context) => {
         const transaction = resolvePresentedTableTransaction({ presented: malformed }, context);
@@ -109,8 +110,8 @@ describe('Presented Table layout transaction', () => {
       namespace: 'fixture',
       type: 'tampered-presented-table',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('tampered-presented-table'),
+        namespace: literal('fixture'),
+        type: literal('tampered-presented-table'),
       }),
       compile: (_node, context) => {
         const transaction = resolvePresentedTableTransaction({ presented: malformed }, context);
@@ -135,9 +136,9 @@ describe('Presented Table layout transaction', () => {
       namespace: 'fixture',
       type: 'styled-wrap-probe',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('styled-wrap-probe'),
-        contentId: z.string().min(1),
+        namespace: literal('fixture'),
+        type: literal('styled-wrap-probe'),
+        contentId: NonBlankStringSchema,
       }),
       compile: node => {
         return {
@@ -196,15 +197,15 @@ describe('Presented Table layout transaction', () => {
       namespace: 'fixture',
       type: 'presented-table-transaction',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('presented-table-transaction'),
+        namespace: literal('fixture'),
+        type: literal('presented-table-transaction'),
       }),
       compile: (_node, context) => {
         const tableContext: LayoutCompositeCompileContext = {
           ...context,
           layoutChild: (child, proposal) => {
             const cell = presented.cells.find(candidate => candidate.content === child);
-            if (cell !== undefined) layoutCalls.push({ cellId: cell.cellId, xKind: proposal.x.kind });
+            if (cell?.cellId !== undefined) layoutCalls.push({ cellId: cell.cellId, xKind: proposal.x.kind });
             return context.layoutChild(child, proposal);
           },
         };
@@ -377,8 +378,8 @@ describe('Presented Table layout transaction', () => {
       namespace: 'fixture',
       type: 'background-omission',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('background-omission'),
+        namespace: literal('fixture'),
+        type: literal('background-omission'),
       }),
       compile: (_node, context) => {
         transaction = resolvePresentedTableTransaction(
@@ -444,8 +445,8 @@ describe('Presented Table layout transaction', () => {
       namespace: 'fixture',
       type: 'background-intrinsic',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('background-intrinsic'),
+        namespace: literal('fixture'),
+        type: literal('background-intrinsic'),
       }),
       compile: (_node, context) => {
         transaction = resolvePresentedTableTransaction(

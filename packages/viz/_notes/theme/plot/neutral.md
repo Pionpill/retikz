@@ -5,8 +5,8 @@
 ## 实现真源
 
 - [`catalog.ts`](../../../plot/src/providers/theme/catalog.ts)：内置 Neutral Light / Dark 的完整 token preset
-- [`resolve.ts`](../../../plot/src/providers/theme/resolve.ts)：preset、shared colors 与显式覆盖的级联
-- [`mapping.ts`](../../../plot/src/providers/theme/mapping.ts)：canonical token 与原生 `plotTheme` 的双向映射
+- [`resolve.ts`](../../../plot/src/resolve/theme/resolve.ts)：preset、shared colors 与显式覆盖的级联
+- [`mapping.ts`](../../../plot/src/resolve/theme/mapping.ts)：canonical token 与原生 `plotTheme` 的双向映射
 
 本文规定视觉关系，具体数字与色值以当前 preset 和 schema 为准，避免 notes 与实现形成两份真源。
 

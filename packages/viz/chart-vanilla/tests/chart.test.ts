@@ -1,204 +1,75 @@
-import type { IRPlot } from '@retikz/plot';
-import type { InputPlot } from '@retikz/plot-vanilla';
-
-import { ChartProvider, defineChartThemeStyle } from '@retikz/chart';
-import { defineThemeStyle } from '@retikz/core';
-import { FlexLayoutProvider } from '@retikz/layout';
-import { definePlotThemeStyle, getDefaultPlotThemePreset, PlotProviderKey } from '@retikz/plot';
-import { SurfaceProvider } from '@retikz/standard';
-import { PathClipProvider } from '@retikz/standard/clip';
+import { defineChartTheme } from '@retikz/chart';
 import { describe, expect, it } from 'vitest';
 
-import { getDefaultChartThemePreset } from '../../chart/src/_chart/style';
-import { createChart, renderChart } from '../src';
-import { createBubbleChart, createConnectedScatterChart, createScatterChart } from '../src/point';
+import { renderChart } from '../src';
+import { createScatterChart } from '../src/point';
 
-const plot: IRPlot = {
-  namespace: 'plot',
-  type: 'plot',
-  data: { reference: 'countries' },
-  scales: [
-    { type: 'linear', name: 'x' },
-    { type: 'linear', name: 'y' },
-  ],
-  coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-  marks: [{ type: 'point', encoding: { x: { field: 'income' }, y: { field: 'life' } } }],
-};
+const rows = [
+  { x: 1, y: 2, size: 3, order: 1 },
+  { x: 2, y: 4, size: 5, order: 2 },
+];
 
-const plotInput = {
-  data: { reference: 'countries' },
-  scales: [
-    { type: 'linear' as const, name: 'x' },
-    { type: 'linear' as const, name: 'y' },
-  ],
-  coordinate: { type: 'cartesian2D' as const, x: 'x', y: 'y' },
-  marks: [{ type: 'point' as const, encoding: { x: { field: 'income' }, y: { field: 'life' } } }],
-} satisfies InputPlot;
+type ScenePrimitiveLike = Readonly<{
+  id?: string;
+  children?: ReadonlyArray<ScenePrimitiveLike>;
+}>;
 
-const brandCoreTheme = defineThemeStyle({
-  name: 'brand',
-  resolve: () => ({
-    semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00' },
-    categorical: ['#112233'],
-  }),
-});
-
-const brandChartTheme = defineChartThemeStyle({
-  name: 'brand',
-  resolve: theme => ({ ...getDefaultChartThemePreset(theme.mode), 'chart.canvas.fill': '#f0f9ff' }),
-});
-
-const brandPlotTheme = definePlotThemeStyle({
-  name: 'brand',
-  resolve: theme => ({
-    tokens: { ...getDefaultPlotThemePreset(theme.mode), 'plot.palette.series': ['#7c3aed'] },
-    tokenRules: [],
-  }),
-});
+const sceneIdsOf = (primitives: ReadonlyArray<ScenePrimitiveLike>): Array<string> =>
+  primitives.flatMap(primitive => [
+    ...(primitive.id === undefined ? [] : [primitive.id]),
+    ...sceneIdsOf(primitive.children ?? []),
+  ]);
 
 describe('Chart Vanilla authoring', () => {
-  it('normalizes an explicit Plot Vanilla input before creating Chart IR', () => {
-    const result = createChart({
-      plot: { input: plotInput },
-      datasets: { countries: [] },
-    });
-
-    expect(result.chart.plot).toMatchObject({
-      namespace: 'plot',
-      type: 'plot',
-      data: { reference: 'countries' },
-      marks: [{ type: 'point' }],
-    });
-    expect(result.input.bound.type).toBe('base');
+  it('does not expose a generic Chart authoring path', async () => {
+    const module = await import('../src');
+    expect(module).not.toHaveProperty('createChart');
+    expect(module).not.toHaveProperty('normalizeChart');
   });
 
-  it('passes an explicit Plot IR through the source boundary without authoring fields', () => {
-    const result = createChart({
-      plot: { spec: plot },
-      datasets: { countries: [] },
+  it('forwards named Theme definitions and Plot lowering options without putting them in Source', () => {
+    const themeDefinitions = [defineChartTheme({ name: 'scatter-theme', tokens: { chart: {} } })];
+    const lowerOptions = { fieldMaps: { rows: { x: 'x' } } } as const;
+    const result = createScatterChart({
+      data: rows,
+      encodings: { x: 'x', y: 'y' },
+      themeDefinitions,
+      lowerOptions,
     });
 
-    expect(result.input.bound.type).toBe('base');
-    expect(result.chart.plot).toMatchObject(plot);
+    expect(result.input).not.toHaveProperty('themeDefinitions');
+    expect(result.input.lowerOptions).toBe(lowerOptions);
+    expect(result.source).not.toHaveProperty('themeDefinitions');
   });
 
-  it('creates canonical ordered presentation and its complete provider graph', () => {
-    const result = createChart({
-      plot: { spec: plot },
-      datasets: { countries: [] },
-      title: 'Income and life expectancy',
-      presentation: [
-        { preset: 'subtitle', position: 'top', text: '2023 estimates' },
-        { preset: 'source', position: 'bottom', text: 'World Bank' },
-      ],
-    });
+  it('normalizes typed Point factories to family plus chartType Source IR', () => {
+    const scatter = createScatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
 
-    expect(result.chart.presentation?.children.map(item => item.key)).toEqual([
-      'chart.presentation.subtitle',
-      'chart.presentation.title',
-      'chart.plot',
-      'chart.presentation.source',
-    ]);
-    expect(result.contribution.roots).toEqual([ChartProvider.key]);
-    expect(result.contribution.providers.map(provider => provider.key)).toEqual([
-      SurfaceProvider.key,
-      PathClipProvider.key,
-      FlexLayoutProvider.key,
-      { capability: 'shape', name: 'sector' },
-      { capability: 'shape', name: 'contour' },
-      { capability: 'pathKind', name: 'ribbon' },
-      PlotProviderKey,
-      ChartProvider.key,
-    ]);
+    expect(scatter.source).toMatchObject({ type: 'point', recipe: { chartType: 'scatter' } });
+    expect(scatter.source).not.toHaveProperty('config');
   });
 
-  it('uses the stable default data reference for typed inputs and renders from one compile result', () => {
+  it('preserves Chart, derived Plot, mark, and Plot-area identity through the Core adapter', () => {
     const chart = createScatterChart({
-      data: [{ income: 1000, life: 72 }],
-      encoding: { x: { field: 'income' }, y: { field: 'life' } },
-      title: 'Income and life expectancy',
+      id: 'scatter',
+      data: rows,
+      encodings: { x: 'x', y: 'y' },
+      layout: { width: 320, height: 200 },
+      lowerOptions: { provenance: true, datumProvenance: true },
     });
-    expect(chart.input.bound.type).toBe('scatter');
     const rendered = renderChart(chart, { output: { width: 320, height: 200 } });
 
-    expect(chart.chart.plot.data.reference).toBe('chart.data');
     expect(rendered.svg).toContain('<svg');
     expect(rendered.compileResult.scene.primitives).toHaveLength(1);
+    expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toEqual(
+      expect.arrayContaining(['scatter', 'scatter/plot', 'scatter/plot.mark.0', 'scatter/plot.plotArea']),
+    );
   });
 
-  it('binds every concrete factory to its exact Chart type', () => {
-    const bubble = createBubbleChart({
-      data: [{ x: 1, y: 2, population: 3 }],
-      encoding: {
-        x: { field: 'x' },
-        y: { field: 'y' },
-        size: { field: 'population' },
-      },
-    });
-    const connected = createConnectedScatterChart({
-      data: [{ x: 1, y: 2, order: 1 }],
-      encoding: { x: { field: 'x' }, y: { field: 'y' }, order: 'order' },
-    });
+  it('does not synthesize Scene ids for an anonymous Chart without provenance', () => {
+    const chart = createScatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
+    const rendered = renderChart(chart);
 
-    expect(bubble.input.bound.type).toBe('bubble');
-    expect(bubble.chart.plot.marks[0]).toMatchObject({
-      type: 'point',
-      size: { kind: 'field', value: 'population' },
-    });
-    expect(connected.input.bound.type).toBe('connected-scatter');
-    expect(connected.chart.plot.marks.map(mark => mark.type)).toEqual(['path', 'point']);
-  });
-
-  it('carries same-named Core, Chart, and Plot Theme definitions through typed SSR', () => {
-    const chart = createScatterChart({
-      data: [{ income: 1000, life: 72 }],
-      encoding: { x: { field: 'income' }, y: { field: 'life' } },
-      theme: { style: 'brand' },
-      themeStyles: [brandCoreTheme],
-      chartThemeStyles: [brandChartTheme],
-      plotThemeStyles: [brandPlotTheme],
-    });
-
-    const rendered = renderChart(chart, { output: { width: 320, height: 200 } });
-
-    expect(rendered.svg).toContain('#f0f9ff');
-  });
-
-  it('applies Core compile options supplied to renderChart before rendering its single result', () => {
-    const chart = createChart({
-      plot: { spec: plot },
-      datasets: { countries: [] },
-      title: 'Income and life expectancy',
-      theme: { style: 'brand' },
-      chartThemeStyles: [brandChartTheme],
-      lowerOptions: { plotThemeStyles: [brandPlotTheme] },
-    });
-
-    const rendered = renderChart(chart, {
-      compile: { themeStyles: [brandCoreTheme] },
-      output: { width: 320, height: 200 },
-    });
-
-    expect(rendered.svg).toContain('<svg');
-  });
-
-  it('keeps a typed creation Theme after ChartAuthoringResult crosses a value boundary', () => {
-    const chart = createConnectedScatterChart({
-      data: [
-        { income: 1000, life: 72 },
-        { income: 2000, life: 75 },
-      ],
-      encoding: { x: { field: 'income' }, y: { field: 'life' }, order: 'income' },
-      theme: { style: 'brand' },
-      themeStyles: [brandCoreTheme],
-      chartThemeStyles: [brandChartTheme],
-      plotThemeStyles: [brandPlotTheme],
-    });
-
-    const original = renderChart(chart, { output: { width: 320, height: 200 } });
-    const copied = renderChart({ ...chart }, { output: { width: 320, height: 200 } });
-
-    expect(original.svg).toContain('#7c3aed');
-    expect(copied.svg).toBe(original.svg);
+    expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toEqual([]);
   });
 });

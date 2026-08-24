@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
 
 import type { CompileObserverDefinition } from '../../../src';
 
@@ -48,6 +47,6 @@ describe('Core observation definition contract', () => {
   });
 
   it('does not turn owner output schemas into Inspector contracts', () => {
-    expect('Inspector' in z).toBe(false);
+    expect('Inspector' in core).toBe(false);
   });
 });

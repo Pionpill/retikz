@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { array, literal, string } from 'zod';
 
 import type { IRScene, LoweredIRScene, LowerIRToKernelOptions } from '../../src';
 
 import { CompositeBaseSchema, defineComposite, lowerIRToKernel } from '../../src';
 
 const PanelSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('demo'),
-  type: z.literal('panel'),
-  id: z.string(),
+  namespace: literal('demo'),
+  type: literal('panel'),
+  id: string(),
 });
 
 /** demo.panel → 同 id 的 Tier 1 node */
@@ -24,9 +24,9 @@ const wrapperComposite = defineComposite({
   namespace: 'demo',
   type: 'wrapper',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('demo'),
-    type: z.literal('wrapper'),
-    id: z.string(),
+    namespace: literal('demo'),
+    type: literal('wrapper'),
+    id: string(),
   }),
   expand: wrapper => ({ children: [{ namespace: 'demo', type: 'panel', id: wrapper.id }] }),
 });
@@ -35,7 +35,7 @@ const wrapperComposite = defineComposite({
 const loopComposite = defineComposite({
   namespace: 'demo',
   type: 'loop',
-  schema: CompositeBaseSchema.extend({ namespace: z.literal('demo'), type: z.literal('loop') }),
+  schema: CompositeBaseSchema.extend({ namespace: literal('demo'), type: literal('loop') }),
   expand: () => ({ children: [{ namespace: 'demo', type: 'loop' }] }),
 });
 
@@ -44,9 +44,9 @@ const batchComposite = defineComposite({
   namespace: 'demo',
   type: 'batch',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('demo'),
-    type: z.literal('batch'),
-    ids: z.array(z.string()),
+    namespace: literal('demo'),
+    type: literal('batch'),
+    ids: array(string()),
   }),
   expand: batch => ({
     children: batch.ids.map(id => ({ type: 'node' as const, id, position: [0, 0] as [number, number] })),
@@ -58,8 +58,8 @@ const unicodeComposite = defineComposite({
   namespace: '示例',
   type: '面板',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('示例'),
-    type: z.literal('面板'),
+    namespace: literal('示例'),
+    type: literal('面板'),
   }),
   expand: () => ({ children: [{ type: 'node', id: 'unicode', position: [0, 0] }] }),
 });
@@ -69,7 +69,7 @@ describe('lowerIRToKernel', () => {
     const spatial = defineComposite({
       namespace: 'demo',
       type: 'spatial',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('demo'), type: z.literal('spatial') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('demo'), type: literal('spatial') }),
       expand: () => ({
         children: [],
         spatialHandles: [{ key: 'body', role: 'demo', bounds: { x: 0, y: 0, width: 10, height: 10 } }],
@@ -90,7 +90,7 @@ describe('lowerIRToKernel', () => {
     const emptySpatial = defineComposite({
       namespace: 'demo',
       type: 'emptySpatial',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('demo'), type: z.literal('emptySpatial') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('demo'), type: literal('emptySpatial') }),
       expand: () => ({ children: [], spatialHandles: [] }),
     });
     const ir: IRScene = {

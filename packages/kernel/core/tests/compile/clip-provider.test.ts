@@ -1,5 +1,7 @@
+import type { ZodType } from 'zod';
+
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { array, literal, number, strictObject, string } from 'zod';
 
 import type { ClipDefinition, ClipShape, IRClip, IRScene, PathCommand } from '../../src';
 
@@ -32,22 +34,22 @@ type RoundedRectClipShape = ClipShape & {
   fillRule: 'evenodd';
 };
 
-const RoundedRectClipShapeSchema: z.ZodType<RoundedRectClipShape> = z.strictObject({
-  kind: z.literal('roundedRect'),
-  fillRule: z.literal('evenodd'),
-  commands: z.array(PathCommandSchema),
+const RoundedRectClipShapeSchema: ZodType<RoundedRectClipShape> = strictObject({
+  kind: literal('roundedRect'),
+  fillRule: literal('evenodd'),
+  commands: array(PathCommandSchema),
 });
 
 const roundedRectClip = (): ClipDefinition =>
   defineClip<RoundedRectClip, RoundedRectClipShape>({
     kind: 'roundedRect',
-    schema: z.strictObject({
-      kind: z.literal('roundedRect'),
-      x: z.number(),
-      y: z.number(),
-      width: z.number().positive(),
-      height: z.number().positive(),
-      r: z.number().positive(),
+    schema: strictObject({
+      kind: literal('roundedRect'),
+      x: number(),
+      y: number(),
+      width: number().positive(),
+      height: number().positive(),
+      r: number().positive(),
     }),
     resolve: spec => {
       const right = spec.x + spec.width;
@@ -83,9 +85,9 @@ describe('clip providers', () => {
     expect(() =>
       defineClip({
         kind,
-        schema: z.strictObject({ kind: z.literal(kind) }),
+        schema: strictObject({ kind: literal(kind) }),
         resolve: () => ({ kind }),
-        shapeSchema: z.strictObject({ kind: z.literal(kind) }),
+        shapeSchema: strictObject({ kind: literal(kind) }),
         lower: () => ({
           commands: [
             { kind: 'move', to: [0, 0] },
@@ -121,9 +123,9 @@ describe('clip providers', () => {
   it('custom clip cannot override builtin clip kinds', () => {
     const rectOverride = defineClip({
       kind: 'rect',
-      schema: z.strictObject({ kind: z.literal('rect') }),
+      schema: strictObject({ kind: literal('rect') }),
       resolve: () => ({ kind: 'rect' }),
-      shapeSchema: z.strictObject({ kind: z.literal('rect') }),
+      shapeSchema: strictObject({ kind: literal('rect') }),
       lower: () => ({
         commands: [
           { kind: 'move', to: [0, 0] },
@@ -141,9 +143,9 @@ describe('clip providers', () => {
   it('rejects a provider key whose complete definition has another kind', () => {
     const definition = defineClip({
       kind: 'other',
-      schema: z.strictObject({ kind: z.literal('other') }),
+      schema: strictObject({ kind: literal('other') }),
       resolve: () => ({ kind: 'other' }),
-      shapeSchema: z.strictObject({ kind: z.literal('other') }),
+      shapeSchema: strictObject({ kind: literal('other') }),
       lower: () => ({
         commands: [
           { kind: 'move', to: [0, 0] },
@@ -176,11 +178,11 @@ describe('clip providers', () => {
     const resolve = vi.fn(() => ({ kind: 'schemaTransform' }));
     const definition = defineClip({
       kind: 'schemaTransform',
-      schema: z.strictObject({ kind: z.literal('schemaTransform') }).transform(() => ({
+      schema: strictObject({ kind: literal('schemaTransform') }).transform(() => ({
         kind: 'other' as const,
-      })) as unknown as z.ZodType<{ kind: 'schemaTransform' }>,
+      })) as unknown as ZodType<{ kind: 'schemaTransform' }>,
       resolve,
-      shapeSchema: z.strictObject({ kind: z.literal('schemaTransform') }),
+      shapeSchema: strictObject({ kind: literal('schemaTransform') }),
       lower: () => ({
         commands: [
           { kind: 'move', to: [0, 0] },
@@ -206,9 +208,9 @@ describe('clip providers', () => {
     }));
     const definition = defineClip({
       kind: 'resolvedMismatch',
-      schema: z.strictObject({ kind: z.literal('resolvedMismatch') }),
+      schema: strictObject({ kind: literal('resolvedMismatch') }),
       resolve: () => ({ kind: 'other' }),
-      shapeSchema: z.strictObject({ kind: z.string() }),
+      shapeSchema: strictObject({ kind: string() }),
       lower,
     });
 
@@ -228,9 +230,9 @@ describe('clip providers', () => {
     }));
     const definition = defineClip({
       kind: 'shapeTransform',
-      schema: z.strictObject({ kind: z.literal('shapeTransform') }),
+      schema: strictObject({ kind: literal('shapeTransform') }),
       resolve: () => ({ kind: 'shapeTransform' }),
-      shapeSchema: z.strictObject({ kind: z.literal('shapeTransform') }).transform(() => ({ kind: 'other' as const })),
+      shapeSchema: strictObject({ kind: literal('shapeTransform') }).transform(() => ({ kind: 'other' as const })),
       lower,
     });
 
@@ -244,11 +246,12 @@ describe('clip providers', () => {
     const resolve = vi.fn(() => ({ kind: 'nonJsonSpec' }));
     const definition = defineClip({
       kind: 'nonJsonSpec',
-      schema: z
-        .strictObject({ kind: z.literal('nonJsonSpec') })
-        .transform(spec => ({ ...spec, callback: () => undefined })),
+      schema: strictObject({ kind: literal('nonJsonSpec') }).transform(spec => ({
+        ...spec,
+        callback: () => undefined,
+      })),
       resolve,
-      shapeSchema: z.strictObject({ kind: z.literal('nonJsonSpec') }),
+      shapeSchema: strictObject({ kind: literal('nonJsonSpec') }),
       lower: () => ({
         commands: [
           { kind: 'move', to: [0, 0] },
@@ -274,9 +277,9 @@ describe('clip providers', () => {
     }));
     const definition = defineClip({
       kind: 'nonJsonShape',
-      schema: z.strictObject({ kind: z.literal('nonJsonShape') }),
+      schema: strictObject({ kind: literal('nonJsonShape') }),
       resolve: () => ({ kind: 'nonJsonShape', callback: () => undefined }) as unknown as ClipShape,
-      shapeSchema: z.strictObject({ kind: z.literal('nonJsonShape') }),
+      shapeSchema: strictObject({ kind: literal('nonJsonShape') }),
       lower,
     });
 
@@ -296,11 +299,12 @@ describe('clip providers', () => {
     }));
     const definition = defineClip({
       kind: 'nonJsonParsedShape',
-      schema: z.strictObject({ kind: z.literal('nonJsonParsedShape') }),
+      schema: strictObject({ kind: literal('nonJsonParsedShape') }),
       resolve: () => ({ kind: 'nonJsonParsedShape' }),
-      shapeSchema: z
-        .strictObject({ kind: z.literal('nonJsonParsedShape') })
-        .transform(shape => ({ ...shape, callback: () => undefined })),
+      shapeSchema: strictObject({ kind: literal('nonJsonParsedShape') }).transform(shape => ({
+        ...shape,
+        callback: () => undefined,
+      })),
       lower,
     });
 

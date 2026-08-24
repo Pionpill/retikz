@@ -2,14 +2,15 @@ import type { IRNode, IRScope } from '@retikz/core';
 
 import { defineTransform } from '@retikz/data';
 import { SOURCE_INDEX } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, object } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 
 import { createPlotLocator } from '../../../src/pipeline';
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../../src/schemas';
 
 /**
@@ -23,10 +24,10 @@ type Datasets = Record<string, Array<Record<string, unknown>>>;
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
 const doubleDefinition = defineTransform({
-  schema: z.object({
-    kind: z.literal('double'),
-    field: z.string().min(1),
-    as: z.string().min(1),
+  schema: object({
+    kind: literal('double'),
+    field: NonBlankStringSchema,
+    as: NonBlankStringSchema,
   }),
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
@@ -38,11 +39,11 @@ const doubleDefinition = defineTransform({
 });
 
 const groupSumDefinition = defineTransform({
-  schema: z.object({
-    kind: z.literal('group-sum'),
-    groupBy: z.string().min(1),
-    field: z.string().min(1),
-    as: z.string().min(1),
+  schema: object({
+    kind: literal('group-sum'),
+    groupBy: NonBlankStringSchema,
+    field: NonBlankStringSchema,
+    as: NonBlankStringSchema,
   }),
   inputFields: operation => [operation.groupBy, operation.field],
   outputFields: operation => [operation.as],
@@ -74,8 +75,7 @@ const SALES = [
 
 /** 用 lowerPlots 把 spec 展成外层 plot scope */
 const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 /** 取第一个 mark 图层 scope（无 guides 时即外层 plot scope 的第一个子 scope） */

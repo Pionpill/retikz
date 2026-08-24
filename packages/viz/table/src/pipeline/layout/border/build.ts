@@ -1,5 +1,3 @@
-import { assertNonEmptyString } from '@retikz/foundation';
-
 import type { TableBorderContribution, TableBorderSource } from '../../../contract/manifest';
 import type { TableTrackLayout } from '../types';
 import type {
@@ -117,19 +115,17 @@ const buildOccupancy = (
   const cells = [...cellsInput].sort((left, right) => {
     if (left.rowIndex !== right.rowIndex) return left.rowIndex - right.rowIndex;
     if (left.columnIndex !== right.columnIndex) return left.columnIndex - right.columnIndex;
-    return left.cellId.localeCompare(right.cellId);
+    return (left.cellId ?? '').localeCompare(right.cellId ?? '');
   });
   cells.forEach(cell => {
-    assertNonEmptyString(cell.cellId, 'table Border Graph Cell id');
+    const label = cell.cellId ?? `${cell.rowIndex}:${cell.columnIndex}`;
     if (
       !Number.isInteger(cell.rowIndex) ||
       !Number.isInteger(cell.columnIndex) ||
       cell.rowIndex < 0 ||
       cell.columnIndex < 0
     ) {
-      throw new RetikzTableError(
-        `table: Border Graph Cell "${cell.cellId}" origin must use nonnegative integer indexes`,
-      );
+      throw new RetikzTableError(`table: Border Graph Cell "${label}" origin must use nonnegative integer indexes`);
     }
     if (
       !Number.isInteger(cell.rowSpan) ||
@@ -137,17 +133,17 @@ const buildOccupancy = (
       cell.rowSpan <= 0 ||
       cell.columnSpan <= 0
     ) {
-      throw new RetikzTableError(`table: Border Graph Cell "${cell.cellId}" spans must be positive integers`);
+      throw new RetikzTableError(`table: Border Graph Cell "${label}" spans must be positive integers`);
     }
     if (cell.rowIndex + cell.rowSpan > rowCount || cell.columnIndex + cell.columnSpan > columnCount) {
-      throw new RetikzTableError(`table: Border Graph Cell "${cell.cellId}" span range exceeds canonical tracks`);
+      throw new RetikzTableError(`table: Border Graph Cell "${label}" span range exceeds canonical tracks`);
     }
     for (let row = cell.rowIndex; row < cell.rowIndex + cell.rowSpan; row += 1) {
       for (let column = cell.columnIndex; column < cell.columnIndex + cell.columnSpan; column += 1) {
         const occupied = occupancy[row][column];
         if (occupied !== undefined) {
           throw new RetikzTableError(
-            `table: Border Graph Cell "${cell.cellId}" overlaps Cell "${occupied.cellId}" at ${row}:${column}`,
+            `table: Border Graph Cell "${label}" overlaps Cell "${occupied.cellId ?? `${occupied.rowIndex}:${occupied.columnIndex}`}" at ${row}:${column}`,
           );
         }
         occupancy[row][column] = cell;
@@ -174,7 +170,7 @@ const boundaryCoordinates = (tracks: ReadonlyArray<TableTrackLayout>): ReadonlyA
 
 const cellSource = (cell: TableBorderCellInput, side: TableBorderSide): TableBorderSource => ({
   kind: 'cell',
-  cellId: cell.cellId,
+  ...(cell.cellId === undefined ? {} : { cellId: cell.cellId }),
   row: cell.rowIndex,
   column: cell.columnIndex,
   side,

@@ -1,18 +1,26 @@
 import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
-import { ChartSource, ChartTitle, ScatterChart } from '@retikz/chart-react/point';
+import { ChartSource, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart } from '@retikz/chart-react/point';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
-import { Layout, Node } from '@retikz/react';
+import { createInputScene, Layout, Node } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
 import { DetailColumn, DetailTable, ManualTable } from '@retikz/table-react';
+import { normalizeScene } from '@retikz/vanilla';
+import { createElement, isValidElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { buildPreviewSource } from '../../src/modules/docs/components/component-preview/source-panel';
-import { buildPreviewIR, formatIR, irHasAnimations } from '../../src/modules/docs/components/component-preview/utils';
+import {
+  buildPreviewIR,
+  formatIR,
+  irHasAnimations,
+  previewEmbedPropsOf,
+} from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
 import PathInspectorDemo, {
   previewSource as pathInspectorPreviewSource,
@@ -80,7 +88,8 @@ const ChartDemo: FC = () => (
       { income: 1000, life: 61 },
       { income: 4000, life: 72 },
     ]}
-    encoding={{ x: { field: 'income' }, y: { field: 'life' } }}
+    encodings={{ x: 'income', y: 'life' }}
+    layout={{ width: 320, height: 200 }}
     width={320}
     height={200}
   >
@@ -203,13 +212,49 @@ describe('buildPreviewSource', () => {
     expect(renderToStaticMarkup(result.source?.vanilla?.render?.('svg'))).toContain('<svg');
   });
 
+  it('仅由文档预览派生高层 Source IR，不扩展 Vanilla normalize 结果', () => {
+    const chart = ChartDemo({});
+    if (!isValidElement(chart) || typeof chart.type !== 'function') {
+      throw new Error('ChartDemo must return one function-component root');
+    }
+    const input = createInputScene(
+      createElement(chart.type as FC<Record<string, unknown>>, previewEmbedPropsOf(chart.type, chart.props)),
+    );
+    const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+
+    expect(normalized).not.toHaveProperty('sourceIr');
+    expect(buildPreviewIR(ChartDemo).sourceIr.children[0]).toMatchObject({ namespace: 'chart', type: 'point' });
+  });
+
   it('为 Chart composite 自动生成 canonical authoring、dataset 与真实 Vanilla SVG', () => {
     const result = buildPreviewSource(createInput({ Component: ChartDemo }));
     const vanilla = result.source?.vanilla;
+    const ir = result.source?.ir;
 
-    expect(vanilla?.files[0]?.code).toContain("import { createChart, renderChart } from '@retikz/chart-vanilla'");
-    expect(vanilla?.files[0]?.code).toContain("preset: 'title'");
-    expect(vanilla?.files[0]?.code).toContain("preset: 'source'");
+    expect(ir?.files[0]?.code).toContain('"chartType": "scatter"');
+    expect(ir?.files[0]?.code).not.toContain('"type": "base"');
+    expect(result.previewIr?.ir.children[0]).toMatchObject({ namespace: 'chart', type: 'point' });
+    expect(result.previewIr?.sourceIr.children[0]).toMatchObject({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'chart.data' },
+      layout: { width: 320, height: 200 },
+      recipe: { chartType: 'scatter', encodings: { x: 'income', y: 'life' } },
+      presentation: { title: 'Income and life expectancy', source: 'World Bank' },
+    });
+    expect(result.previewIr?.sourceIr.children[0]).not.toHaveProperty('plot');
+    expect(ir?.files[0]?.code).not.toContain('__chart.scatter.scale');
+    expect(ir?.files[0]?.code).not.toContain('__chart.scatter.guide');
+    expect(vanilla?.files[0]?.code).toContain("import { renderChart } from '@retikz/chart-vanilla'");
+    expect(vanilla?.files[0]?.code).toContain(
+      "import { createScatterChart } from '@retikz/chart-vanilla/point/scatter'",
+    );
+    expect(vanilla?.files[0]?.code).not.toContain("import { createChart, renderChart } from '@retikz/chart-vanilla'");
+    expect(vanilla?.files[0]?.code).toContain("title: 'Income and life expectancy'");
+    expect(vanilla?.files[0]?.code).toContain("source: 'World Bank'");
+    expect(vanilla?.files[0]?.code).toContain("x: 'income'");
+    expect(vanilla?.files[0]?.code).toContain("y: 'life'");
+    expect(vanilla?.files[0]?.code).not.toContain('__chart.scatter.scale');
     expect(vanilla?.files[0]?.code).toContain('income: 1000');
     expect(vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');

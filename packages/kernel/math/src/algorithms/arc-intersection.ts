@@ -1,51 +1,53 @@
-import type { ArcBoundingPointsInput, Position } from '../primitives';
+import type { ArcBoundingCandidatesInput, Position } from '../primitives';
 
 import { DEFAULT_EPSILON } from '../constants';
-import { arcAngleInRange } from '../primitives';
+import { isAngleWithinArcSweep } from '../primitives';
 
 /** 射线与圆弧求交参数 */
-export type RayArcInput = ArcBoundingPointsInput & {
+export type RayArcIntersectionInput = ArcBoundingCandidatesInput & {
   /** 射线起点 */
   origin: Position;
   /** 射线方向，不要求单位化 */
-  dir: Position;
+  direction: Position;
   /** 正向参数容差 */
   tolerance?: number;
 };
 
 /**
- * 射线（origin + s·dir）∩ 圆弧（center, radius, [startAngle, endAngle]）
+ * 射线（origin + s·direction）∩ 圆弧（center, radius, [startAngle, endAngle]）
  * @description 返回沿射线的正向参数 s，按升序排列；零方向或无有效交点时返回空数组
  */
-export const rayArc = ({
+export const intersectRayWithArc = ({
   origin,
-  dir,
+  direction,
   center,
   radius,
   startAngleDeg,
   endAngleDeg,
   tolerance = DEFAULT_EPSILON,
-}: RayArcInput): Array<number> => {
+}: RayArcIntersectionInput): Array<number> => {
   const ox = origin[0] - center[0];
   const oy = origin[1] - center[1];
-  const ux = dir[0];
-  const uy = dir[1];
-  const a = ux * ux + uy * uy;
+  const directionX = direction[0];
+  const directionY = direction[1];
+  const a = directionX * directionX + directionY * directionY;
   if (a <= tolerance * tolerance) return [];
-  const b = 2 * (ox * ux + oy * uy);
+  const b = 2 * (ox * directionX + oy * directionY);
   const c = ox * ox + oy * oy - radius * radius;
-  const disc = b * b - 4 * a * c;
-  if (disc < 0) return [];
-  const sq = Math.sqrt(disc);
-  const roots = [(-b - sq) / (2 * a), (-b + sq) / (2 * a)];
-  const hits: Array<number> = [];
-  for (const s of roots) {
-    if (s <= tolerance) continue;
-    const px = ox + s * ux;
-    const py = oy + s * uy;
-    const angle = Math.atan2(py, px) * (180 / Math.PI);
-    if (arcAngleInRange({ startAngleDeg, endAngleDeg, angleDeg: angle })) hits.push(s);
+  const discriminant = b * b - 4 * a * c;
+  if (discriminant < 0) return [];
+  const discriminantRoot = Math.sqrt(discriminant);
+  const roots = [(-b - discriminantRoot) / (2 * a), (-b + discriminantRoot) / (2 * a)];
+  const intersections: Array<number> = [];
+  for (const rayParameter of roots) {
+    if (rayParameter <= tolerance) continue;
+    const pointX = ox + rayParameter * directionX;
+    const pointY = oy + rayParameter * directionY;
+    const angle = Math.atan2(pointY, pointX) * (180 / Math.PI);
+    if (isAngleWithinArcSweep({ startAngleDeg, endAngleDeg, angleDeg: angle })) {
+      intersections.push(rayParameter);
+    }
   }
-  hits.sort((left, right) => left - right);
-  return hits;
+  intersections.sort((left, right) => left - right);
+  return intersections;
 };

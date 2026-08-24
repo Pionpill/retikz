@@ -154,10 +154,7 @@ describe('ComponentPreview global theme', () => {
     expect(() =>
       renderToStaticMarkup(
         <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Vibrant, mode: ThemeMode.Light }}>
-          <ScatterChart
-            data={[{ income: 12000, life: 74 }]}
-            encoding={{ x: { field: 'income' }, y: { field: 'life' } }}
-          />
+          <ScatterChart data={[{ income: 12000, life: 74 }]} encodings={{ x: 'income', y: 'life' }} />
         </PreviewThemeProvider>,
       ),
     ).not.toThrow();

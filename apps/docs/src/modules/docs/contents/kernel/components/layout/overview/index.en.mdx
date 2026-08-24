@@ -61,7 +61,7 @@ Published packages provide the default categorical baseline without registering 
 
 When `ir` already carries a root Theme, an explicit `theme` prop overrides it per field while preserving omitted persisted fields. Neither input object is mutated. Theme does not automatically change a plain Node or Path fill, stroke, or font.
 
-Inject a custom style through `themeStyles`: `defineThemeStyle({ name: 'brand', resolve: ({ mode }) => colors })` stays at runtime while IR contains only `{ style: 'brand' }`. If the same Layout consumes Plot or Chart, inject a same-named domain style resolver there as well; a missing registry entry reports an explicit error.
+Inject a custom style through `themeStyles`: `defineThemeStyle({ name: 'brand', resolve: ({ mode }) => ({ semantic: { guide: mode === ThemeMode.Dark ? '#94a3b8' : '#64748b' } }) })` returns only a sparse overlay relative to the current mode's default shared colors, while IR contains only `{ style: 'brand' }`. If the same Layout consumes Plot or Chart, inject a same-named domain style resolver there as well; a missing registry entry reports an explicit error.
 
 ### Reading Compile Artifacts
 
@@ -79,7 +79,7 @@ The base `<Layout>` includes no inspection logic. After installing the optional 
 import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import { LayoutInspectLayout } from '@retikz/layout-react/inspect';
 
-<LayoutInspectLayout request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: true }}>
+<LayoutInspectLayout request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, options: true }}>
   {/* FlexLayout */}
 </LayoutInspectLayout>;
 ```

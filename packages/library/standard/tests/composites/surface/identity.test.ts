@@ -2,7 +2,7 @@ import type { GroupPrim, IRChild, PathPrim, ScenePrimitive } from '@retikz/core'
 
 import { compileToScene, CompositeBaseSchema, defineComposite, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, string } from 'zod';
 
 import { createSurface, SurfaceDefinition, SurfaceProvider } from '../../../src';
 import { PathClipDefinition, PathClipProvider } from '../../../src/clip';
@@ -166,9 +166,9 @@ describe('Surface appearance, Scope, and spatial identity', () => {
       namespace: 'third',
       type: 'card',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('third'),
-        type: z.literal('card'),
-        id: z.string(),
+        namespace: literal('third'),
+        type: literal('card'),
+        id: string(),
       }),
       compile: (value, context) => ({
         allocationBounds: { x: 0, y: 0, width: 10, height: 6 },

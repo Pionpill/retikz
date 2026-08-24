@@ -9,7 +9,7 @@ import { BUILTIN_INSPECTORS, createInspectorRegistry, STROKE_PATH_INSPECTOR_KEY 
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '../../src/vanilla';
 
 const registry = createInspectorRegistry(BUILTIN_INSPECTORS);
-const request = Object.freeze({ inspector: STROKE_PATH_INSPECTOR_KEY, value: Object.freeze({ labels: true }) });
+const request = Object.freeze({ inspector: STROKE_PATH_INSPECTOR_KEY, options: Object.freeze({ labels: true }) });
 
 const content = (barrier = false) =>
   scene({
@@ -45,7 +45,7 @@ describe('@retikz/inspect/vanilla authoring and driver', () => {
     });
 
     expect(svg).toContain('data-retikz-readonly-layer');
-    expect(svg).toContain('#2563eb');
+    expect(svg).toContain('hsl(210, 38%, 48%)');
     expect(onCommit).toHaveBeenCalledTimes(1);
     expect(onCommit.mock.calls[0]?.[0].inspection?.entries.length).toBeGreaterThan(0);
   });
@@ -69,7 +69,7 @@ describe('@retikz/inspect/vanilla authoring and driver', () => {
     });
 
     expect(svg).not.toContain('data-retikz-readonly-layer');
-    expect(svg).not.toContain('#2563eb');
+    expect(svg).not.toContain('hsl(210, 38%, 48%)');
   });
 
   it('Inspect 根入口源码不静态加载 Vanilla optional peer', () => {

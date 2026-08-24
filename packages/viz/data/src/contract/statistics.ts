@@ -1,4 +1,6 @@
-import { z } from 'zod';
+import type { ZodType } from 'zod';
+
+import { ZodLiteral, ZodObject } from 'zod';
 
 import type { IRDataReducerOperation, IRDataSelectorOperation } from '../schemas';
 import type { ExternalRow } from '../shared';
@@ -12,7 +14,7 @@ import { RetikzDataError } from '../error';
  */
 export type StatisticsReducerDefinition<TReducerOperation extends IRDataReducerOperation = IRDataReducerOperation> = {
   /** 完整 reducer operation schema；必须含非空 z.literal('kind') 供注册表提取注册键 */
-  schema: z.ZodType<TReducerOperation>;
+  schema: ZodType<TReducerOperation>;
   /** 该 reducer 消费的源字段名；参与 data.model strict 校验 */
   inputFields?: (operation: TReducerOperation) => Array<string>;
   /** 该 reducer 产出的派生字段名；用于 data.model strict 源字段排除与运行时输出冲突检查，提供时必须完整声明 reduce 可能写入的字段 */
@@ -35,7 +37,7 @@ export const defineStatisticsReducer = <TReducerOperation extends IRDataReducerO
  * @description registry 需要存放不同 operation 泛型的 definition；真正调用前必须用对应 schema parse 收窄
  */
 export type AnyStatisticsReducerDefinition = {
-  schema: z.ZodType;
+  schema: ZodType;
   inputFields?: (operation: never) => Array<string>;
   outputFields?: (operation: never) => Array<string>;
   reduce: (rows: Array<ExternalRow>, operation: never, context: TransformContext) => ExternalRow;
@@ -55,7 +57,7 @@ export type RowSelection = {
  */
 export type RowSelectorDefinition<TSelectorOperation extends IRDataSelectorOperation = IRDataSelectorOperation> = {
   /** 完整 selector operation schema；必须含非空 z.literal('kind') 供注册表提取注册键 */
-  schema: z.ZodType<TSelectorOperation>;
+  schema: ZodType<TSelectorOperation>;
   /** 该 selector 消费的源字段名；参与 data.model strict 校验 */
   inputFields?: (operation: TSelectorOperation) => Array<string>;
   /** 对一组 rows 执行 selector；返回被选原始行与可选排名 */
@@ -76,7 +78,7 @@ export const defineRowSelector = <TSelectorOperation extends IRDataSelectorOpera
  * @description registry 需要存放不同 operation 泛型的 definition；真正调用前必须用对应 schema parse 收窄
  */
 export type AnyRowSelectorDefinition = {
-  schema: z.ZodType;
+  schema: ZodType;
   inputFields?: (operation: never) => Array<string>;
   select: (rows: Array<ExternalRow>, operation: never) => Array<RowSelection>;
 };
@@ -85,12 +87,12 @@ export type AnyRowSelectorDefinition = {
  * 从统计子算子定义 schema 中提取注册键。
  * @description reducer 与 row selector 都以 `kind` 作为 registry discriminator；schema 必须把它声明成非空字面量
  */
-export const extractStatisticOperation = (schema: z.ZodType): string => {
-  if (!(schema instanceof z.ZodObject)) {
+export const extractStatisticOperation = (schema: ZodType): string => {
+  if (!(schema instanceof ZodObject)) {
     throw new RetikzDataError('data: statistic registration schema must be a ZodObject with a literal kind field');
   }
   const kindSchema = schema.shape.kind;
-  if (!(kindSchema instanceof z.ZodLiteral) || typeof kindSchema.value !== 'string' || kindSchema.value.length === 0) {
+  if (!(kindSchema instanceof ZodLiteral) || typeof kindSchema.value !== 'string' || kindSchema.value.length === 0) {
     throw new RetikzDataError('data: statistic registration schema must declare kind as a non-empty z.literal string');
   }
   return kindSchema.value;

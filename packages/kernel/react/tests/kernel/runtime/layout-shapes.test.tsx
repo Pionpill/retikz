@@ -3,7 +3,7 @@ import type { BoundaryDefinition, ClipDefinition, IRScene, ScenePrimitive, Shape
 import { defineBoundary, defineClip, defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import { Layout } from '../../../src/kernel';
 import { Node } from '../../../src/kernel';
@@ -18,7 +18,7 @@ import { Step } from '../../../src/kernel';
 const radialShape = (): ShapeDefinition =>
   defineShape({
     name: 'hexagon',
-    paramsSchema: z.strictObject({}),
+    paramsSchema: strictObject({}),
     circumscribe: (hw, hh) => {
       const r = Math.hypot(hw, hh);
       return { halfWidth: r, halfHeight: r };
@@ -47,16 +47,16 @@ const radialShape = (): ShapeDefinition =>
 const fixedBoundary = (): BoundaryDefinition =>
   defineBoundary({
     name: 'pin',
-    paramsSchema: z.strictObject({}),
+    paramsSchema: strictObject({}),
     boundaryPoint: rect => [rect.x + 7, rect.y],
   });
 
 const customClip = (): ClipDefinition =>
   defineClip({
     kind: 'customClip',
-    schema: z.strictObject({ kind: z.literal('customClip') }),
+    schema: strictObject({ kind: literal('customClip') }),
     resolve: () => ({ kind: 'customClip' }),
-    shapeSchema: z.strictObject({ kind: z.literal('customClip') }),
+    shapeSchema: strictObject({ kind: literal('customClip') }),
     lower: () => ({
       commands: [
         { kind: 'move', to: [0, 0] },

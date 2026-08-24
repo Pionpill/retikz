@@ -6,11 +6,10 @@ import {
   defineComposite,
   defineThemeStyle,
   resolveCoreProviderDependencies,
-  resolveDefaultCoreThemeColors,
 } from '@retikz/core';
 import { RetikzFoundationError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import type { LowerTablesOptions, TableStructureOutput } from '../../../src';
 
@@ -21,7 +20,6 @@ import {
   defineCellVisualScale,
   defineTableStructure,
   defineTableThemeStyle,
-  getDefaultTableThemePreset,
   TABLE_NAMESPACE,
   TableComposite,
   TableRowKind,
@@ -45,39 +43,39 @@ const outputOf = (kind: string): TableStructureOutput => ({
 
 const structureOf = (kind: string) =>
   defineTableStructure({
-    schema: z.strictObject({ kind: z.literal(kind) }),
+    schema: strictObject({ kind: literal(kind) }),
     build: () => outputOf(kind),
   });
 
 const presentationOf = (name: string) =>
   defineCellPresentation({
     name,
-    optionsSchema: z.strictObject({}),
+    optionsSchema: strictObject({}),
     present: input => ({ type: 'node', position: [0, 0], text: String(input.value) }),
   });
 
 const formatterOf = (name: string) =>
   defineCellFormatter({
     name,
-    optionsSchema: z.strictObject({}),
+    optionsSchema: strictObject({}),
     format: input => input.value,
   });
 
 const visualScaleOf = (name: string) =>
   defineCellVisualScale({
     name,
-    optionsSchema: z.strictObject({}),
+    optionsSchema: strictObject({}),
     resolve: () => ({ of: () => '#2563eb', legendForm: 'swatch', domain: [1], range: ['#2563eb'] }),
   });
 
 const themeStyleOf = (name: string) =>
   defineTableThemeStyle({
     name,
-    resolve: theme => getDefaultTableThemePreset(theme.mode),
+    resolve: () => ({}),
   });
 
 const compositeOf = (namespace: string, type: string): AnyCompositeDefinition => {
-  const schema = CompositeBaseSchema.extend({ namespace: z.literal(namespace), type: z.literal(type) });
+  const schema = CompositeBaseSchema.extend({ namespace: literal(namespace), type: literal(type) });
   return defineComposite({
     namespace,
     type,
@@ -206,7 +204,7 @@ describe('Table runtime contribution', () => {
         themeStyles: [
           defineThemeStyle({
             name: 'brand',
-            resolve: ({ mode }) => resolveDefaultCoreThemeColors(mode),
+            resolve: () => ({}),
           }),
         ],
       },

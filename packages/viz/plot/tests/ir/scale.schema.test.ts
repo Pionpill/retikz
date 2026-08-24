@@ -168,6 +168,10 @@ describe('ScaleSchema ordinal', () => {
   it('ordinal_range_non_string_rejected', () => {
     expect(() => ScaleSchema.parse({ type: 'ordinal', name: 'col', range: [1, 2] })).toThrow();
   });
+
+  it('ordinal_range_whitespace_color_rejected', () => {
+    expect(() => ScaleSchema.parse({ type: 'ordinal', name: 'col', range: ['#fff', '   '] })).toThrow();
+  });
 });
 
 describe('ScaleSchema time', () => {
@@ -243,6 +247,10 @@ describe('ScaleSchema sequential 连续顺序色阶', () => {
     expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', range: ['#fff'] })).toThrow();
   });
 
+  it('range 拒绝纯空白颜色', () => {
+    expect(() => ScaleSchema.parse({ type: 'sequential', name: 'col', range: ['#fff', '   '] })).toThrow();
+  });
+
   // JSON round-trip
   it('JSON round-trip 不丢字段', () => {
     const s = {
@@ -297,6 +305,10 @@ describe('ScaleSchema diverging 连续发散色阶', () => {
 
   it('range 必须三元组', () => {
     expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', range: ['#f00', '#00f'] })).toThrow();
+  });
+
+  it('range 拒绝纯空白颜色', () => {
+    expect(() => ScaleSchema.parse({ type: 'diverging', name: 'col', range: ['#f00', '   ', '#00f'] })).toThrow();
   });
 
   it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud）', () => {
@@ -366,6 +378,10 @@ describe('ScaleSchema quantize 等宽离散化', () => {
 
   it('range 非字符串被拒', () => {
     expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', range: [0, 1] })).toThrow();
+  });
+
+  it('range 拒绝纯空白颜色', () => {
+    expect(() => ScaleSchema.parse({ type: 'quantize', name: 'col', range: ['#fff', '   '] })).toThrow();
   });
 
   it('domain 必须两元组', () => {
@@ -446,6 +462,12 @@ describe('ScaleSchema threshold 阈值离散化', () => {
     expect(() => ScaleSchema.parse({ type: 'threshold', name: 'col', breakpoints: [50], range: ['#fff'] })).toThrow();
   });
 
+  it('range 拒绝纯空白颜色', () => {
+    expect(() =>
+      ScaleSchema.parse({ type: 'threshold', name: 'col', breakpoints: [50], range: ['#fff', '   '] }),
+    ).toThrow();
+  });
+
   // 边界：断点乱序结构上合法（升序校验留 lowering）
   it('schema 接受乱序断点（升序校验留 lowering）', () => {
     const s = { type: 'threshold', name: 'col', breakpoints: [80, 60] };
@@ -504,6 +526,10 @@ describe('ScaleSchema quantile 分位离散化', () => {
 
   it('range 少于 2 元素被拒', () => {
     expect(() => ScaleSchema.parse({ type: 'quantile', name: 'col', range: ['#fff'] })).toThrow();
+  });
+
+  it('range 拒绝纯空白颜色', () => {
+    expect(() => ScaleSchema.parse({ type: 'quantile', name: 'col', range: ['#fff', '   '] })).toThrow();
   });
 
   it('自定义 scheme 名静态通过（未注册名在 lowering 期 fail-loud）', () => {

@@ -1,13 +1,14 @@
 import * as corePackage from '@retikz/core';
-import { compositeOpaqueColor, ThemeMode } from '@retikz/core';
-import { PlotThemeToken } from '@retikz/plot';
+import { compositeOpaqueColor, resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
+import { PlotThemeToken, resolvePlotTheme } from '@retikz/plot';
+import { resolveTableThemeTokens } from '@retikz/table';
 import { globSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
   isPreviewThemeStyleDocument,
-  PreviewChartThemeStyles,
+  PreviewChartThemeDefinitions,
   PreviewCoreThemeStyles,
   PreviewGraphThemeStyles,
   PreviewPlotThemeStyles,
@@ -28,7 +29,7 @@ describe('docs-owned theme presets', () => {
     for (const definitions of [
       PreviewCoreThemeStyles,
       PreviewPlotThemeStyles,
-      PreviewChartThemeStyles,
+      PreviewChartThemeDefinitions,
       PreviewTableThemeStyles,
       PreviewGraphThemeStyles,
     ]) {
@@ -45,7 +46,7 @@ describe('docs-owned theme presets', () => {
     const themeOf = (style: Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>) => {
       const core = coreByName.get(style);
       if (core === undefined) throw new Error(`missing Core definition for ${style}`);
-      return { style, mode, colors: core.resolve({ mode }) };
+      return { style, mode, colors: resolveCoreThemeStyleColors(mode, core.resolve({ mode })) };
     };
 
     const academicTheme = themeOf(PreviewThemeStyle.Academic);
@@ -100,19 +101,90 @@ describe('docs-owned theme presets', () => {
     expect(isPreviewThemeStyleDocument('kernel', 'graph')).toBe(false);
   });
 
-  it.each([ThemeMode.Light, ThemeMode.Dark])('Plot reference definitions保留完整 shape palette：%s', mode => {
+  it.each([ThemeMode.Light, ThemeMode.Dark])('Plot reference definitions 保留关键 Axis 与 shape 视觉值：%s', mode => {
     const coreByName = new Map(PreviewCoreThemeStyles.map(definition => [definition.name, definition]));
     for (const definition of PreviewPlotThemeStyles) {
       const core = coreByName.get(definition.name);
       if (core === undefined) throw new Error(`missing Core definition for ${definition.name}`);
-      const colors = core.resolve({ mode });
-      const resolved = definition.resolve({ style: definition.name, mode, colors });
+      const colors = resolveCoreThemeStyleColors(mode, core.resolve({ mode }));
+      const resolved = resolvePlotTheme({ style: definition.name, mode, colors }, {}, [definition]);
+      expect(resolved.tokens[PlotThemeToken.AxisLineEnabled]).toBe(definition.name === PreviewThemeStyle.Academic);
+      const expectedStyleRules =
+        definition.name === PreviewThemeStyle.Academic
+          ? [
+              {
+                select: { dimension: ['x', 'y'] },
+                tokens: {
+                  [PlotThemeToken.AxisGridEnabled]: false,
+                  [PlotThemeToken.AxisGridIncludeDomain]: false,
+                },
+              },
+            ]
+          : definition.name === PreviewThemeStyle.Vibrant
+            ? [
+                {
+                  select: { dimension: ['x', 'y'] },
+                  tokens: {
+                    [PlotThemeToken.AxisGridEnabled]: true,
+                    [PlotThemeToken.AxisGridIncludeDomain]: false,
+                  },
+                },
+              ]
+            : [
+                {
+                  select: { dimension: ['x', 'y'] },
+                  tokens: {
+                    [PlotThemeToken.AxisGridEnabled]: false,
+                    [PlotThemeToken.AxisGridIncludeDomain]: false,
+                  },
+                },
+                {
+                  select: { dimension: 'y' },
+                  tokens: { [PlotThemeToken.AxisGridEnabled]: true },
+                },
+              ];
+      expect(resolved.tokenRules.slice(1).map(source => source.rule)).toEqual(expectedStyleRules);
       expect(resolved.tokens[PlotThemeToken.PlotPaletteShape]).toHaveLength(8);
       expect(resolved.tokens[PlotThemeToken.PlotPaletteShape][4]).toEqual({
         type: 'polygon',
         params: { sides: 3, rotate: -90 },
       });
     }
+  });
+
+  it.each([ThemeMode.Light, ThemeMode.Dark])('Table reference definitions 保留关键视觉值：%s', mode => {
+    const coreByName = new Map(PreviewCoreThemeStyles.map(definition => [definition.name, definition]));
+    const tableByName = new Map(PreviewTableThemeStyles.map(definition => [definition.name, definition]));
+    const themeOf = (style: Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>) => {
+      const core = coreByName.get(style);
+      if (core === undefined) throw new Error(`missing Core definition for ${style}`);
+      return { style, mode, colors: resolveCoreThemeStyleColors(mode, core.resolve({ mode })) };
+    };
+
+    const academic = tableByName.get(PreviewThemeStyle.Academic);
+    const vibrant = tableByName.get(PreviewThemeStyle.Vibrant);
+    const clean = tableByName.get(PreviewThemeStyle.Clean);
+    if (academic === undefined || vibrant === undefined || clean === undefined)
+      throw new Error('missing Table definition');
+
+    const academicTokens = resolveTableThemeTokens(themeOf(PreviewThemeStyle.Academic), {}, [academic]).tokens;
+    expect(academicTokens['cell.content.font.family']).toBe('serif');
+    expect(academicTokens['table.border.top']).toEqual({
+      kind: 'line',
+      stroke: mode === ThemeMode.Light ? '#111111' : '#f5f5f5',
+      width: 1.2,
+    });
+
+    const vibrantTokens = resolveTableThemeTokens(themeOf(PreviewThemeStyle.Vibrant), {}, [vibrant]).tokens;
+    expect(vibrantTokens['cell.background.fill']).toBe(mode === ThemeMode.Light ? '#e5ecf6' : '#111827');
+    expect(vibrantTokens['table.border.horizontal']).toMatchObject({ kind: 'line', width: 1 });
+
+    const cleanTokens = resolveTableThemeTokens(themeOf(PreviewThemeStyle.Clean), {}, [clean]).tokens;
+    expect(cleanTokens['cell.background.fill']).toBeNull();
+    expect(cleanTokens['table.border.horizontal']).toBeNull();
+    expect(cleanTokens['data.sequential']).toEqual(
+      mode === ThemeMode.Light ? ['#eff6ff', '#1d4ed8'] : ['#172554', '#60a5fa'],
+    );
   });
 
   it('Layout 内嵌的 Plot 与 Table demo 统一经过 docs preview 边界', () => {

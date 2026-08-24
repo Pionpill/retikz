@@ -2,7 +2,7 @@ import type { ClipDefinition, IRScene, PathCommand } from '@retikz/core';
 
 import { compileToScene, defineClip, PathCommandSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { array, literal, number, strictObject } from 'zod';
 
 import {
   CircleClipDefinition,
@@ -17,13 +17,13 @@ import {
 const roundedRectClip = (): ClipDefinition =>
   defineClip({
     kind: 'roundedRect',
-    schema: z.strictObject({
-      kind: z.literal('roundedRect'),
-      x: z.number(),
-      y: z.number(),
-      width: z.number().positive(),
-      height: z.number().positive(),
-      radius: z.number().positive(),
+    schema: strictObject({
+      kind: literal('roundedRect'),
+      x: number(),
+      y: number(),
+      width: number().positive(),
+      height: number().positive(),
+      radius: number().positive(),
     }),
     resolve: spec => {
       const commands: Array<PathCommand> = [
@@ -34,9 +34,9 @@ const roundedRectClip = (): ClipDefinition =>
       ];
       return { kind: 'roundedRect', commands };
     },
-    shapeSchema: z.strictObject({
-      kind: z.literal('roundedRect'),
-      commands: z.array(PathCommandSchema),
+    shapeSchema: strictObject({
+      kind: literal('roundedRect'),
+      commands: array(PathCommandSchema),
     }),
     lower: shape => ({ commands: shape.commands, fillRule: 'nonzero' }),
   });

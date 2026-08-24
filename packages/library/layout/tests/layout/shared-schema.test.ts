@@ -78,6 +78,7 @@ describe('shared layout schema', () => {
     expect(parsed).toEqual(input);
     expect(ChildSchema.safeParse(input.child).success).toBe(true);
     expect(LayoutItemBaseSchema.safeParse({ ...input, key: '' }).success).toBe(false);
+    expect(LayoutItemBaseSchema.safeParse({ ...input, key: '   ' }).success).toBe(false);
     expect(LayoutItemBaseSchema.safeParse({ ...input, unknown: true }).success).toBe(false);
   });
 

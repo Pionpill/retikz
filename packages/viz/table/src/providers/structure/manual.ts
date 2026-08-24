@@ -30,8 +30,8 @@ export const MANUAL_TABLE_STRUCTURE = defineTableStructure({
   build: spec => {
     const rowKinds = spec.rowKinds ?? Array.from({ length: spec.rows.length }, () => TableRowKind.Body);
     return {
-      rows: rowKinds.map((kind, index) => ({ id: `row.${index}`, kind })),
-      columns: Array.from({ length: spec.rows[0].length }, (_, index) => ({ id: `column.${index}` })),
+      rows: rowKinds.map(kind => ({ kind })),
+      columns: Array.from({ length: spec.rows[0].length }, () => ({})),
       cells: spec.rows.flatMap((row, rowIndex) =>
         row.flatMap((cell, columnIndex) => {
           if (cell === null) return [];
@@ -40,7 +40,7 @@ export const MANUAL_TABLE_STRUCTURE = defineTableStructure({
           const fields = typeof cell === 'object' ? cell : undefined;
           return [
             {
-              id: fields?.id ?? `cell.r${rowIndex}.c${columnIndex}`,
+              ...(fields?.id === undefined ? {} : { id: fields.id }),
               row: rowIndex,
               column: columnIndex,
               payload: payloadOf(cell),

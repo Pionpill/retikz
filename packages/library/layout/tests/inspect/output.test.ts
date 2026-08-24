@@ -38,7 +38,7 @@ const contextOf = <TOptions extends IRJsonObject>(
   owner: InspectorContext<TOptions>['owner'],
 ): InspectorContext<TOptions> =>
   Object.freeze({
-    inspector: { namespace: 'layout', name: owner.kind === 'composite' ? owner.type : owner.name },
+    inspectorKey: { namespace: 'layout', type: owner.kind === 'composite' ? owner.type : owner.name },
     owner,
     occurrence: { sourcePath: 'children[0]', expansionPath: [] },
     provenance: {
@@ -46,7 +46,11 @@ const contextOf = <TOptions extends IRJsonObject>(
       final: { sourcePath: 'children[0]', expansionPath: [] },
     },
     options,
-    appearance: { colorScope: 0, scopeColor: '#2563eb', warningColor: '#dc2626' },
+    appearance: {
+      colorScope: 0,
+      scopeColor: '#2563eb',
+      semanticColors: { error: '#ef4444', success: '#16a34a', warning: '#dc2626', guide: '#6b7280' },
+    },
   });
 
 const ordinaryChildren = (value: unknown): Array<IRChild> => {

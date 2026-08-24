@@ -1,8 +1,4 @@
-export * from './definition';
-export { BaseChartRecipe } from './dispatch/base';
-export * from './dispatch/bind';
-export * from './presentation';
-export * from './provider';
-export * from './resolve';
+export * from './constants';
+export type { ChartThemeDefinition, ChartThemeResolution } from './contract/theme';
+export { defineChartTheme } from './contract/theme';
 export * from './schemas';
-export * from './style';

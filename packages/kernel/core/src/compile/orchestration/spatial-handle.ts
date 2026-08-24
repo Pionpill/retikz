@@ -12,6 +12,7 @@ import type {
 } from '../../contract';
 import type { IRPosition } from '../../schemas';
 
+import { CompileExpansionKind } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { applyTransformChain } from '../transform';
 import { canonicalizeBoundsRect } from './bounds';
@@ -56,7 +57,7 @@ export const remapSpatialOccurrenceForReplay = (
     sourcePath: parent.sourcePath,
     expansionPath: [
       ...parent.expansionPath,
-      { kind: 'replay', index: outputIndex },
+      { kind: CompileExpansionKind.Replay, index: outputIndex },
       ...candidate.expansionPath.slice(origin.expansionPath.length),
     ],
   });

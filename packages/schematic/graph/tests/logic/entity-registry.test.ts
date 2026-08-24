@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { number, strictObject } from 'zod';
 
 import * as Graph from '../../src';
 
@@ -69,7 +69,7 @@ describe('Entity definition registry', () => {
       role: 'service',
       kinds: ['service.api'],
       description: 'Deployment replica count',
-      paramsSchema: z.strictObject({ count: z.number().int().positive() }),
+      paramsSchema: strictObject({ count: number().int().positive() }),
     });
     expect(Graph.defineEntityRole(role)).toBe(role);
     expect(Graph.defineEntityKind(kind)).toBe(kind);
@@ -89,7 +89,7 @@ describe('Entity definition registry', () => {
       role: 'participant',
       kinds: ['workflow.start'],
       description: 'Invalid kind owner',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
     });
     const kind = Graph.defineEntityKind({
       kind: 'workflow.start',

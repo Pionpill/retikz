@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import { defineCellVisualScale, resolveTableThemeTokens } from '../../src';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
@@ -24,7 +24,7 @@ describe('Table visual encoding cascade', () => {
     const evaluated: Array<unknown> = [];
     const custom = defineCellVisualScale({
       name: 'inspect-scale',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       resolve: (_options, values) => {
         resolves += 1;
         expect(values).toEqual([2, 2]);
