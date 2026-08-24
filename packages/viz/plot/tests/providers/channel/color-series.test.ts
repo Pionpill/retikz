@@ -6,15 +6,14 @@ import { describe, expect, it } from 'vitest';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
 const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
-  const [def] = lowerPlots(datasets, cartOpts);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, cartOpts) as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope =>

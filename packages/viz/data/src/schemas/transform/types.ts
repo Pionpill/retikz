@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type {
   DataSortOrder,
@@ -52,40 +52,40 @@ export type TopBottomSelectorOperationKindValue = ValueOf<typeof TopBottomSelect
 export type RowSelectorTieValue = ValueOf<typeof RowSelectorTie>;
 
 /** 排序变换（稳定排序，保行数） */
-export type IRDataSortTransform = z.infer<typeof SortTransformSchema>;
+export type IRDataSortTransform = ZodInfer<typeof SortTransformSchema>;
 
 /** reducer operation（统计规约子算子） */
-export type IRDataReducerOperation = z.infer<typeof ReducerOperationSchema>;
+export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
 
 /** reducer metrics 列表 */
-export type IRDataReducerMetrics = z.infer<typeof ReducerMetricsSchema>;
+export type IRDataReducerMetrics = ZodInfer<typeof ReducerMetricsSchema>;
 
 /** quantile-band reducer operation（参数化分位区间规约） */
-export type IRDataQuantileBandReducerOperation = z.infer<typeof QuantileBandReducerOperationSchema>;
+export type IRDataQuantileBandReducerOperation = ZodInfer<typeof QuantileBandReducerOperationSchema>;
 
 /** row selector operation（代表行选择子算子） */
-export type IRDataSelectorOperation = z.infer<typeof SelectorOperationSchema>;
+export type IRDataSelectorOperation = ZodInfer<typeof SelectorOperationSchema>;
 
 /** outside-quantile-band selector operation（分位区间外原始行选择） */
-export type IRDataOutsideQuantileBandSelectorOperation = z.infer<typeof OutsideQuantileBandSelectorOperationSchema>;
+export type IRDataOutsideQuantileBandSelectorOperation = ZodInfer<typeof OutsideQuantileBandSelectorOperationSchema>;
 
 /** selector 排序规则（代表行选择前的稳定排序规则） */
-export type IRDataOrderBy = z.infer<typeof OrderBySchema>;
+export type IRDataOrderBy = ZodInfer<typeof OrderBySchema>;
 
 /** 汇总变换（分组统计，改行数） */
-export type IRDataSummarizeTransform = z.infer<typeof SummarizeTransformSchema>;
+export type IRDataSummarizeTransform = ZodInfer<typeof SummarizeTransformSchema>;
 
 /** 选择变换（选择代表原始行，可能改行数） */
-export type IRDataSelectTransform = z.infer<typeof SelectTransformSchema>;
+export type IRDataSelectTransform = ZodInfer<typeof SelectTransformSchema>;
 
 /** annotate 单行 selector 配置（至多一个代表行的回填规则） */
-export type IRDataAnnotateSelector = z.infer<typeof AnnotateSelectorSchema>;
+export type IRDataAnnotateSelector = ZodInfer<typeof AnnotateSelectorSchema>;
 
 /** 标注变换（统计回填，保行数） */
-export type IRDataAnnotateTransform = z.infer<typeof AnnotateTransformSchema>;
+export type IRDataAnnotateTransform = ZodInfer<typeof AnnotateTransformSchema>;
 
 /** 内置 transform operation（sort / summarize / select / annotate） */
-export type IRDataBuiltinTransform = z.infer<typeof BuiltinTransformSchema>;
+export type IRDataBuiltinTransform = ZodInfer<typeof BuiltinTransformSchema>;
 
 /** transform operation（内置 ∪ 外部注册 kind 开放配置） */
-export type IRDataTransform = z.infer<typeof TransformSchema>;
+export type IRDataTransform = ZodInfer<typeof TransformSchema>;

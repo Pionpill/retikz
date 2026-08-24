@@ -4,8 +4,7 @@ import type { IRPlot } from '@retikz/plot';
 import type * as RetikzVanilla from '@retikz/vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 
-import { ThemeMode } from '@retikz/core';
-import { definePlotThemeStyle, getDefaultPlotThemePreset } from '@retikz/plot';
+import { definePlotThemeStyle } from '@retikz/plot';
 import { describe, expect, it, vi } from 'vitest';
 
 const compileCalls = vi.hoisted(() => [] as Array<ReadonlyArray<unknown>>);
@@ -52,7 +51,7 @@ const contextOf = (id: string): InputEmbedContext => ({
 
 const plotThemeStyle = definePlotThemeStyle({
   name: 'brand',
-  resolve: () => ({ tokens: getDefaultPlotThemePreset(ThemeMode.Light) }),
+  resolve: () => ({}),
 });
 
 describe('Plot Vanilla runtime style options', () => {

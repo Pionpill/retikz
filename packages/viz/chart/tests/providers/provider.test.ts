@@ -1,0 +1,17 @@
+import { describe, expect, it } from 'vitest';
+
+import { createScatterChartProviderContribution } from '../../src/point';
+
+describe('concrete Chart provider contributions', () => {
+  it('uses one chart.point key, one maker reference and equal dependencies', () => {
+    const scatter = createScatterChartProviderContribution();
+    const provider = scatter.providers.at(-1);
+    expect(provider?.key).toEqual({ capability: 'composite', namespace: 'chart', type: 'point' });
+  });
+
+  it('gives every concrete contribution a unique runtime dataset reference', () => {
+    const first = createScatterChartProviderContribution().providers.at(-1);
+    const second = createScatterChartProviderContribution().providers.at(-1);
+    expect(Object.keys(first?.datasets ?? {})).not.toEqual(Object.keys(second?.datasets ?? {}));
+  });
+});

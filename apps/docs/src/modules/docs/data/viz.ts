@@ -150,30 +150,28 @@ export const vizSection: Array<Section> = [
               },
             },
           },
-          {
-            id: 'bubble',
-            label: 'viz.chartBubble',
-            difficulty: DocDifficulty.Beginner,
-            meta: {
-              pageType: 'concept',
-              audience: 'user',
-              capability: 'showcase.bubble',
-              sourceOfTruth: 'docs',
-              layout: 'showcase',
-              showcase: {
-                family: 'scatter-points',
-                role: 'primary',
-                preview: 'bubble-basic',
-                order: 20,
-              },
-            },
-          },
         ],
         meta: {
           pageType: 'group',
           audience: 'user',
           capability: 'chart.scatter-points',
           sourceOfTruth: 'architecture',
+        },
+      },
+      {
+        id: 'model',
+        label: 'viz.chartModel',
+        children: [
+          { id: 'structure', label: 'viz.chartModelStructure', difficulty: DocDifficulty.Advanced },
+          { id: 'authoring', label: 'viz.chartModelAuthoring', difficulty: DocDifficulty.Advanced },
+          { id: 'presentation', label: 'viz.chartModelPresentation', difficulty: DocDifficulty.Advanced },
+          { id: 'plot', label: 'viz.chartModelPlot', difficulty: DocDifficulty.Advanced },
+        ],
+        meta: {
+          pageType: 'concept',
+          audience: 'integrator',
+          capability: 'chart.model',
+          sourceOfTruth: 'runtime',
         },
       },
       {

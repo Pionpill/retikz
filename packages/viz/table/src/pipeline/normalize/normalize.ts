@@ -25,9 +25,9 @@ const createSemanticTableModel = (output: TableStructureOutput): SemanticTableMo
     rows: output.rows.map((row, index) => ({ ...row, index })),
     columns: output.columns.map((column, index) => ({ ...column, index })),
     cells: output.cells.map(cell => ({
-      id: cell.id,
-      rowId: output.rows[cell.row].id,
-      columnId: output.columns[cell.column].id,
+      ...(cell.id === undefined ? {} : { id: cell.id }),
+      ...(output.rows[cell.row].id === undefined ? {} : { rowId: output.rows[cell.row].id }),
+      ...(output.columns[cell.column].id === undefined ? {} : { columnId: output.columns[cell.column].id }),
       rowIndex: cell.row,
       columnIndex: cell.column,
       location: cell.location,

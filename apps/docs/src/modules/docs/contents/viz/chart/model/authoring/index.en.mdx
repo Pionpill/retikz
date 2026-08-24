@@ -1,0 +1,74 @@
+---
+title: Authoring & Resolution
+description: Understand how React, Vanilla, and JSON produce exact Chart Source that a chartType recipe resolves consistently.
+---
+
+Chart separates convenient authoring from stable execution. React and Vanilla normalize their input forms into exact Chart Source. The parser first reads the family, then selects the unique recipe from `recipe.chartType`.
+
+## One shared pipeline
+
+<ComponentPreview files="chart-authoring-pipeline" hideCode size="sm" />
+
+| Stage             | Owner                     | Result                                                        |
+| ----------------- | ------------------------- | ------------------------------------------------------------- |
+| React props / JSX | `@retikz/chart-react`     | Converts to Vanilla Input                                     |
+| Plain input       | `@retikz/chart-vanilla`   | `normalizeXxxChart` produces exact Source                     |
+| JSON              | Concrete chartType schema | Application selects a strict schema by family and `chartType` |
+| recipe            | Active Chart provider     | Produces shared parts and kind-tagged semantic mark groups    |
+| resolve           | Chart resolver            | Merges marks by kind, Plot fragments, and Theme inputs        |
+
+JSON is an alternate input, not a schema bypass. The application selects the concrete schema from `type` and `recipe.chartType`, and the active provider confirms that the recipe belongs to the root family. Unknown families, recipes, fields, and incompatible marks fail loudly. The parsed Source preserves author intent; recipe-generated coordinates, guides, and Plot marks only exist in later resolution stages.
+
+Plain authored marks append in Source order. `override: true` replaces the complete built-in semantic group with the same kind in place. If no group matches, the mark still appends and Core reports a stable warning through `onWarn`. This merge belongs only to the Chart resolver; React, Vanilla, and the visible Source IR do not perform or expose it.
+
+## Three packages, one stage each
+
+The root `@retikz/chart` entry exposes shared Chart Source schemas, constants, and the Theme contract. Each concrete chartType subpath exposes its exact schema and provider contribution. Recipe / mark Definitions and resolvers are package-internal implementation contracts, not third-party extension entry points. Plain types such as `InputScatterChart`, normalizers, and factory functions belong to `@retikz/chart-vanilla`. Typed React Charts interpret presentation markers and mark components before reusing the same normalizers, so React and Vanilla do not maintain parallel Source assembly rules. Dynamic family / chartType routing belongs to the application layer.
+
+| Entry          | Root `type` | `recipe.chartType` | Import                              |
+| -------------- | ----------- | ------------------ | ----------------------------------- |
+| `ScatterChart` | `point`     | `scatter`          | `@retikz/chart-react/point/scatter` |
+
+The Vanilla factory `createScatterChart` comes from `@retikz/chart-vanilla/point/scatter`. The concrete subpath loads only its chartType; the family root remains an explicit aggregate entry. It returns an authoring result that preserves runtime theme data while reusing the shared Chart adapter and resolution pipeline for rendering.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Scatter Chart Vanilla factory',
+      path: 'packages/viz/chart-vanilla/src/point/scatter/factory.ts',
+      startLine: 10,
+      endLine: 25,
+    },
+    {
+      label: 'Select a recipe from the active provider',
+      path: 'packages/viz/chart/src/_chart/providers/resolve.ts',
+      startLine: 7,
+      endLine: 34,
+    },
+    {
+      label: 'Resolve recipes and Chart marks',
+      path: 'packages/viz/chart/src/_chart/resolve/resolve.ts',
+      startLine: 41,
+      endLine: 70,
+    },
+    {
+      label: 'React shared Chart input wiring',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 35,
+      endLine: 78,
+    },
+  ]}
+/>
+
+## Related pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/model/structure">
+    <span className="font-semibold">Structure &amp; Types</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Review exact schemas and field ownership.</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/presentation">
+    <span className="font-semibold">Presentation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Continue with fixed presentation slots.</span>
+  </LinkedCard>
+</div>

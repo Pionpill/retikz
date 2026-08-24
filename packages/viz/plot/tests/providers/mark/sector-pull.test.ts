@@ -1,13 +1,13 @@
 import type { IRNode, IRScope } from '@retikz/core';
 
-import { arcEndPoint } from '@retikz/math';
+import { pointAtArcAngle } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 
 import { createPlotLocator } from '../../../src/pipeline';
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 400, height: 400 };
@@ -22,8 +22,7 @@ const expandOf = (
   datasets: Record<string, Array<Record<string, unknown>>>,
   options: LowerPlotsOptions = opts,
 ): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 const firstLayer = (
@@ -92,13 +91,13 @@ describe('IntervalMark.pull sector geometry', () => {
     const params = sectorParams(nodes[0]);
     expect(params.startAngle).toBeCloseTo(0, 6);
     expect(params.endAngle).toBeCloseTo(90, 6);
-    expect(nodes[0].position).toEqual(arcEndPoint([200, 200], 20, 45));
+    expect(nodes[0].position).toEqual(pointAtArcAngle([200, 200], 20, 45));
   });
 
   it('field-bound pull only moves rows with a non-zero field value', () => {
     const nodes = sectorNodes(firstLayer(pieSpec({ kind: 'field', value: 'offset' }), { share }));
     expect(nodes[0].position).toEqual([200, 200]);
-    expect(nodes[1].position).toEqual(arcEndPoint([200, 200], 18, 225));
+    expect(nodes[1].position).toEqual(pointAtArcAngle([200, 200], 18, 225));
   });
 
   it('padAngle and pull use the padded sector mid angle without rewriting radii', () => {
@@ -108,7 +107,7 @@ describe('IntervalMark.pull sector geometry', () => {
     expect(params.endAngle).toBeCloseTo(85, 6);
     expect(params.innerRadius).toBeCloseTo(100, 6);
     expect(params.outerRadius).toBeCloseTo(200, 6);
-    expect(nodes[0].position).toEqual(arcEndPoint([200, 200], 12, 45));
+    expect(nodes[0].position).toEqual(pointAtArcAngle([200, 200], 12, 45));
   });
 
   it('pull zero matches an omitted pull', () => {
@@ -125,7 +124,7 @@ describe('IntervalMark.pull sector geometry', () => {
     expect(params.outerRadius).toBeCloseTo(200, 6);
     expect(params.startAngle).toBeCloseTo(0, 6);
     expect(params.endAngle).toBeCloseTo(90, 6);
-    expect(nodes[0].position).toEqual(arcEndPoint([200, 200], 260, 45));
+    expect(nodes[0].position).toEqual(pointAtArcAngle([200, 200], 260, 45));
   });
 
   it('cartesian interval rejects pull instead of ignoring it', () => {
@@ -162,7 +161,7 @@ describe('IntervalMark.pull sector geometry', () => {
     const params = sectorParams(node);
     const midRadius = (params.innerRadius + params.outerRadius) / 2;
     const midAngle = (params.startAngle + params.endAngle) / 2;
-    expect(locator.datum(0)?.position).toEqual(arcEndPoint(vectorPosition(node), midRadius, midAngle));
+    expect(locator.datum(0)?.position).toEqual(pointAtArcAngle(vectorPosition(node), midRadius, midAngle));
   });
 
   it('locator series centroid uses pulled datum anchors', () => {

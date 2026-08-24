@@ -15,6 +15,8 @@ describe('@retikz/inspect public exports', () => {
         'RetikzInspectError',
         'RetikzInspectErrorCode',
         'STROKE_PATH_INSPECTOR',
+        'InspectionLabelsInputSchema',
+        'InspectionLabelsSchema',
       ]),
     );
     expect(api).not.toHaveProperty('RetikzInspectionCompileError');
@@ -42,6 +44,7 @@ describe('@retikz/inspect public exports', () => {
       "export * from './contract';",
       "export * from './error';",
       "export * from './providers';",
+      "export * from './schema';",
     ]);
     expect(root).not.toContain('@retikz/render');
     expect(root).not.toContain('@retikz/vanilla');

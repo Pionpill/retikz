@@ -1,7 +1,7 @@
 import type { ResolvedTheme } from '@retikz/core';
-import type { TableThemeTokenPresetMap } from '@retikz/table';
+import type { TableThemeStyleTokenOverrides } from '@retikz/table';
 
-import { defineTableThemeStyle, TableThemeTokenPresetMapSchema } from '@retikz/table';
+import { defineTableThemeStyle, TableThemeStyleTokenOverridesSchema } from '@retikz/table';
 
 import { PreviewThemeStyle } from '../constants';
 
@@ -12,67 +12,89 @@ const line = (stroke: string, width: number) => ({ kind: 'line' as const, stroke
 const styles = {
   academic: {
     light: {
-      appearance: ['#ffffff', '#111111', '#ffffff', '#111111', 'serif', 400, 600],
-      borders: [line('#111111', 1.2), null, line('#111111', 1.2), null, null, null, line('#111111', 0.8)],
-      sequential: ['#f7fbff', '#08306b'],
+      'cell.content.color': '#111111',
+      'cell.content.font.family': 'serif',
+      'columnHeader.content.color': '#111111',
+      'columnHeader.content.font.family': 'serif',
+      'columnHeader.content.font.weight': 600,
+      'table.border.top': line('#111111', 1.2),
+      'table.border.bottom': line('#111111', 1.2),
+      'table.border.horizontal': null,
+      'columnHeader.border.bottom': line('#111111', 0.8),
+      'data.sequential': ['#f7fbff', '#08306b'],
     },
     dark: {
-      appearance: ['#111111', '#f5f5f5', '#111111', '#f5f5f5', 'serif', 400, 600],
-      borders: [line('#f5f5f5', 1.2), null, line('#f5f5f5', 1.2), null, null, null, line('#a3a3a3', 0.8)],
-      sequential: ['#1e3a5f', '#90caf9'],
+      'cell.background.fill': '#111111',
+      'cell.content.color': '#f5f5f5',
+      'cell.content.font.family': 'serif',
+      'columnHeader.background.fill': '#111111',
+      'columnHeader.content.color': '#f5f5f5',
+      'columnHeader.content.font.family': 'serif',
+      'columnHeader.content.font.weight': 600,
+      'table.border.top': line('#f5f5f5', 1.2),
+      'table.border.bottom': line('#f5f5f5', 1.2),
+      'table.border.horizontal': null,
+      'columnHeader.border.bottom': line('#a3a3a3', 0.8),
+      'data.sequential': ['#1e3a5f', '#90caf9'],
     },
   },
   vibrant: {
     light: {
-      appearance: ['#e5ecf6', '#2a3f5f', '#d7e3f4', '#2a3f5f', 'sans-serif', 400, 600],
-      borders: [null, null, null, null, line('#ffffff', 1), line('#ffffff', 1), line('#ffffff', 1)],
-      sequential: ['#dbeafe', '#2563eb'],
+      'cell.background.fill': '#e5ecf6',
+      'cell.content.color': '#2a3f5f',
+      'columnHeader.background.fill': '#d7e3f4',
+      'columnHeader.content.color': '#2a3f5f',
+      'columnHeader.content.font.weight': 600,
+      'table.border.horizontal': line('#ffffff', 1),
+      'table.border.vertical': line('#ffffff', 1),
+      'columnHeader.border.bottom': line('#ffffff', 1),
+      'data.sequential': ['#dbeafe', '#2563eb'],
     },
     dark: {
-      appearance: ['#111827', '#f0f6fc', '#1f2937', '#f0f6fc', 'sans-serif', 400, 600],
-      borders: [null, null, null, null, line('#374151', 1), line('#374151', 1), line('#475569', 1)],
-      sequential: ['#172554', '#60a5fa'],
+      'cell.background.fill': '#111827',
+      'cell.content.color': '#f0f6fc',
+      'columnHeader.background.fill': '#1f2937',
+      'columnHeader.content.color': '#f0f6fc',
+      'columnHeader.content.font.weight': 600,
+      'table.border.horizontal': line('#374151', 1),
+      'table.border.vertical': line('#374151', 1),
+      'columnHeader.border.bottom': line('#475569', 1),
     },
   },
   clean: {
     light: {
-      appearance: [null, null, null, null, null, null, null],
-      borders: [null, null, null, null, null, null, null],
-      sequential: ['#eff6ff', '#1d4ed8'],
+      'cell.background.fill': null,
+      'cell.background.fillOpacity': null,
+      'cell.content.color': null,
+      'cell.content.font.family': null,
+      'cell.content.font.weight': null,
+      'columnHeader.background.fill': null,
+      'columnHeader.background.fillOpacity': null,
+      'columnHeader.content.color': null,
+      'columnHeader.content.font.family': null,
+      'columnHeader.content.font.weight': null,
+      'table.border.horizontal': null,
+      'columnHeader.border.bottom': null,
     },
     dark: {
-      appearance: [null, null, null, null, null, null, null],
-      borders: [null, null, null, null, null, null, null],
-      sequential: ['#172554', '#60a5fa'],
+      'cell.background.fill': null,
+      'cell.background.fillOpacity': null,
+      'cell.content.color': null,
+      'cell.content.font.family': null,
+      'cell.content.font.weight': null,
+      'columnHeader.background.fill': null,
+      'columnHeader.background.fillOpacity': null,
+      'columnHeader.content.color': null,
+      'columnHeader.content.font.family': null,
+      'columnHeader.content.font.weight': null,
+      'table.border.horizontal': null,
+      'columnHeader.border.bottom': null,
     },
   },
-} as const;
+} as const satisfies Record<ReferenceStyle, Record<ResolvedTheme['mode'], TableThemeStyleTokenOverrides>>;
 
-const tokensOf = (style: ReferenceStyle, theme: ResolvedTheme): TableThemeTokenPresetMap => {
-  const preset = styles[style][theme.mode];
-  const [fill, color, headerFill, headerColor, family, weight, headerWeight] = preset.appearance;
-  const [top, right, bottom, left, horizontal, vertical, headerBottom] = preset.borders;
-  return TableThemeTokenPresetMapSchema.parse({
-    'cell.background.fill': fill,
-    'cell.background.fillOpacity': fill === null ? null : 1,
-    'cell.content.color': color,
-    'cell.content.font.family': family,
-    'cell.content.font.weight': weight,
-    'columnHeader.background.fill': headerFill,
-    'columnHeader.background.fillOpacity': headerFill === null ? null : 1,
-    'columnHeader.content.color': headerColor,
-    'columnHeader.content.font.family': family,
-    'columnHeader.content.font.weight': headerWeight,
-    'table.border.top': top,
-    'table.border.right': right,
-    'table.border.bottom': bottom,
-    'table.border.left': left,
-    'table.border.horizontal': horizontal,
-    'table.border.vertical': vertical,
-    'columnHeader.border.bottom': headerBottom,
-    'data.sequential': [...preset.sequential],
-  });
-};
+const tokensOf = (style: ReferenceStyle, theme: ResolvedTheme): TableThemeStyleTokenOverrides =>
+  TableThemeStyleTokenOverridesSchema.parse(structuredClone(styles[style][theme.mode]));
 
 /** docs 维护的三个 Table reference Theme definitions */
 export const PreviewTableThemeStyles = [

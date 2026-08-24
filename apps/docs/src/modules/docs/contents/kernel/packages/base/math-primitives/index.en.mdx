@@ -24,14 +24,14 @@ Change the angle and length to see that the vector and its left-hand normal stay
 
 #### API reference
 
-| API                                                                                  | Category | Purpose                                    |
-| ------------------------------------------------------------------------------------ | -------- | ------------------------------------------ |
-| `Position`, `Vector2`                                                                | Type     | 2D coordinate-point and vector types       |
-| `point.distance`, `point.along`, `point.against`, `point.shiftToward`, `point.equal` | Method   | Point distance, movement, and equality     |
-| `vector2.add`, `vector2.sub`, `vector2.scale`, `vector2.dot`, `vector2.cross`        | Method   | Vector arithmetic and dot/cross products   |
-| `vector2.length`, `vector2.normalize`, `vector2.normalizeOrNull`                     | Method   | Vector length and normalization            |
-| `vector2.fromAngleDegrees`, `vector2.normal`                                         | Method   | Construct vectors and compute left normals |
-| `lerp`                                                                               | Method   | Linearly interpolate between two points    |
+| API                                                                                    | Category | Purpose                                    |
+| -------------------------------------------------------------------------------------- | -------- | ------------------------------------------ |
+| `Position`, `Vector2`                                                                  | Type     | 2D coordinate-point and vector types       |
+| `point.distance`, `point.along`, `point.against`, `point.shiftToward`, `point.isEqual` | Method   | Point distance, movement, and equality     |
+| `vector2.add`, `vector2.sub`, `vector2.scale`, `vector2.dot`, `vector2.cross`          | Method   | Vector arithmetic and dot/cross products   |
+| `vector2.length`, `vector2.normalize`, `vector2.normalizeOrNull`                       | Method   | Vector length and normalization            |
+| `vector2.fromAngleDegrees`, `vector2.normal`                                           | Method   | Construct vectors and compute left normals |
+| `lerp`                                                                                 | Method   | Linearly interpolate between two points    |
 
 ### Bounds calculations
 
@@ -53,8 +53,8 @@ The demo adds the arc's boundary candidates to the point set, so the dashed rect
 | `boundsOf`, `mergeBounds`                                           | Method   | Construct or merge bounds                     |
 | `boundsToRect`, `rectToBounds`                                      | Method   | Convert between bounds and rectangles         |
 | `isFiniteBoundsRect`, `isPositiveBoundsRect`                        | Method   | Validate rectangle bounds                     |
-| `boundsCenter`, `boundsHalfAxes`                                    | Method   | Derive a bounds center and half-axes          |
-| `expandBounds`, `boundsCorners`                                     | Method   | Expand bounds and derive four corners         |
+| `centerOfBounds`, `halfAxesOfBounds`                                | Method   | Derive a bounds center and half-axes          |
+| `expandBounds`, `cornersOfBounds`                                   | Method   | Expand bounds and derive four corners         |
 
 ### Ellipses and arcs
 
@@ -68,21 +68,21 @@ The demo adds the arc's boundary candidates to the point set, so the dashed rect
   caption="Adjust the radii and angles to compare the shapes and their bounds"
 />
 
-`arcEndPoint` / `ellipseArcPoint` select a curve point. An ellipse's `angleDeg` is a parameter angle and does not necessarily equal the polar angle observed from its center. `arcAngleInRange` uses the sign of `startAngleDeg → endAngleDeg`: positive spans run clockwise on screen and negative spans run counter-clockwise.
+`pointAtArcAngle` / `pointAtEllipseArcAngle` select a curve point. An ellipse's `angleDeg` is a parameter angle and does not necessarily equal the polar angle observed from its center. `isAngleWithinArcSweep` uses the sign of `startAngleDeg → endAngleDeg`: positive spans run clockwise on screen and negative spans run counter-clockwise.
 
-`arcBoundingPoints` / `ellipseArcBoundingPoints` derive endpoints and axis-extrema candidates for bounds. Elliptical-arc helpers only handle axis-aligned ellipses; compute a rotated ellipse in local space, then map it to world space with the [coordinate transforms](/kernel/packages/base/math-transforms).
+`collectArcBoundingCandidates` / `collectEllipseArcBoundingCandidates` derive endpoints and axis-extrema candidates for bounds. Elliptical-arc helpers only handle axis-aligned ellipses; compute a rotated ellipse in local space, then map it to world space with the [coordinate transforms](/kernel/packages/base/math-transforms).
 
 #### API reference
 
-| API                                                                                                       | Category | Purpose                                                                  |
-| --------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------ |
-| `Ellipse`, `CenteredBox`, `EllipseCircumscribeMode`                                                       | Type     | Ellipse, centered-box, and circumscription types                         |
-| `ellipse.center`, `ellipse.inscribedInBox`, `ellipse.circumscribedHalfAxes`                               | Method   | Derive an ellipse center, inscribed ellipse, and circumscribed half-axes |
-| `ellipse.contains`, `ellipse.boundaryPoint`                                                               | Method   | Test containment and find a boundary point                               |
-| `ArcBoundingPointsInput`, `ArcAngleInRangeInput`, `EllipseArcPointInput`, `EllipseArcBoundingPointsInput` | Type     | Circular- and elliptical-arc input types                                 |
-| `arcEndPoint`, `ellipseArcPoint`                                                                          | Method   | Select a point on a circular or elliptical arc                           |
-| `arcBoundingPoints`, `ellipseArcBoundingPoints`                                                           | Method   | Derive arc boundary candidates                                           |
-| `arcAngleInRange`                                                                                         | Method   | Test whether an angle lies in a directed interval                        |
+| API                                                                                                                  | Category | Purpose                                                                  |
+| -------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------ |
+| `Ellipse`, `CenteredBox`, `EllipseCircumscribeMode`                                                                  | Type     | Ellipse, centered-box, and circumscription types                         |
+| `ellipse.center`, `ellipse.inscribedInBox`, `ellipse.circumscribedHalfAxes`                                          | Method   | Derive an ellipse center, inscribed ellipse, and circumscribed half-axes |
+| `ellipse.contains`, `ellipse.boundaryPoint`                                                                          | Method   | Test containment and find a boundary point                               |
+| `ArcBoundingCandidatesInput`, `ArcSweepAngleInput`, `EllipseArcAnglePointInput`, `EllipseArcBoundingCandidatesInput` | Type     | Circular- and elliptical-arc input types                                 |
+| `pointAtArcAngle`, `pointAtEllipseArcAngle`                                                                          | Method   | Select a point on a circular or elliptical arc                           |
+| `collectArcBoundingCandidates`, `collectEllipseArcBoundingCandidates`                                                | Method   | Derive arc boundary candidates                                           |
+| `isAngleWithinArcSweep`                                                                                              | Method   | Test whether an angle lies in a directed interval                        |
 
 ## Related
 

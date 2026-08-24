@@ -1,14 +1,14 @@
 import type { IRJsonObject } from '@retikz/core';
 import type { InspectionSelection, InspectionSelectionTarget, InspectorKey } from '@retikz/inspect';
-import type { z } from 'zod';
+import type { input as ZodInput, output as ZodOutput } from 'zod';
 
 import type { BaseLayoutInspectOptionsInputSchema, BaseLayoutInspectOptionsSchema } from './schema';
 
 /** 通用布局检查器的输入选项 */
-export type BaseLayoutInspectOptions = z.input<typeof BaseLayoutInspectOptionsInputSchema>;
+export type BaseLayoutInspectOptions = ZodInput<typeof BaseLayoutInspectOptionsInputSchema>;
 
 /** 完整解析后的通用布局检查器选项 */
-export type ResolvedBaseLayoutInspectOptions = z.output<typeof BaseLayoutInspectOptionsSchema>;
+export type ResolvedBaseLayoutInspectOptions = ZodOutput<typeof BaseLayoutInspectOptionsSchema>;
 
 /** Layout 布局检查器选择策略的作用范围 */
 export type LayoutInspectionSelectionScope = InspectionSelectionTarget;
@@ -20,7 +20,7 @@ export type CreateLayoutInspectionSelectionInput<TOptions extends IRJsonObject =
   /** 整张图、子树或组件自身 */
   target: LayoutInspectionSelectionScope;
   /** 稀疏选项；true 使用默认值，false 关闭当前范围 */
-  value: false | true | TOptions;
+  options: false | true | TOptions;
 }>;
 
 /** 可直接交给编译驱动的 Layout 布局检查器选择结果 */

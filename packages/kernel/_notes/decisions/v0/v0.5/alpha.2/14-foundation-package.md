@@ -4,7 +4,7 @@
 - 决策日期：2026-08-08
 - 关联：[ADR-17](./17-foundation-schema-primitives.md)
 
-> **后续演进：** [ADR-17](./17-foundation-schema-primitives.md) 已 Accepted，并取代本 ADR 的零生产依赖、无 Zod schema、七个根导出三项边界；类型、断言、错误、root-only、direct dependency 与领域职责继续保持本 ADR 的 Accepted 决策。
+> **后续演进：** [ADR-17](./17-foundation-schema-primitives.md) 已 Accepted，并取代本 ADR 的零生产依赖、无 Zod schema、七个根导出三项边界；类型、断言、错误、root-only、direct dependency 与领域职责继续保持本 ADR 的 Accepted 决策。Foundation 后续增加无领域、纯编译期的 `WithRequiredProperties<T, TKey>`，用于在保留原对象其余属性的同时把指定 key 收窄为必填。
 
 ## 背景与目标
 
@@ -50,6 +50,9 @@ export type AssertEqual<TActual, TExpected> = [TActual] extends [TExpected]
 /** 保留已知字符串提示，同时接受任意字符串 */
 export type OpenString<T extends string> = T | (string & {});
 
+/** 将指定属性收窄为必填，同时保留其余属性 */
+export type WithRequiredProperties<T, TKey extends keyof T> = T & Required<Pick<T, TKey>>;
+
 /** 拒绝空串和全空白字符串 */
 export declare const assertNonEmptyString: (value: string, label: string) => void;
 
@@ -81,7 +84,7 @@ export declare const isRetikzError: (value: unknown) => value is RetikzError<str
 
 ## 行为、失败语义与兼容性
 
-- 默认行为：`ValueOf`、`AssertEqual`、`OpenString` 只提供类型语义；`assertNonEmptyString` 对已约束为 `string` 的输入拒绝空串和运行时标准空白串，对非空内容返回 `void`。它不承担 `unknown` 到 `string` 的收窄
+- 默认行为：`ValueOf`、`AssertEqual`、`OpenString`、`WithRequiredProperties` 只提供类型语义；`WithRequiredProperties` 仅把选定 key 收窄为必填，不删除或重写其余属性。`assertNonEmptyString` 对已约束为 `string` 的输入拒绝空串和运行时标准空白串，对非空内容返回 `void`。它不承担 `unknown` 到 `string` 的收窄
 - 失败与诊断：断言失败抛出 Foundation 的普通 `Error`，消息为 `${label} must be a non-empty string.`；需要 owner 错误码、前缀或诊断投影的调用方必须在自己的边界包装它。`RetikzError` 不提供 `toJSON()`、`toDiagnostic()` 或跨领域错误码映射
 - 错误分类：`isRetikzError()` 只识别正常的 Foundation class hierarchy。它不是 hostile object、跨 realm 或伪造 token 的安全边界；Core / Runtime 既有 `WeakSet` / `WeakMap` identity brand、probe 隔离和控制流判定保持不变
 - 兼容性 / breaking：`ValueOf`、`AssertEqual`、`OpenString` 的公开 owner 从 Core / Runtime 迁移到 Foundation，旧根出口移除且不保留 alias；这是 0.x 的明确 import breaking。真正消费 Foundation 的包必须改为 direct dependency，未消费的包不得为了拓扑声明依赖

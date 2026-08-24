@@ -1,11 +1,11 @@
 import { PathBaseSchema } from '@retikz/core';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import { RibbonPathOptionsSchema } from './schema';
 
 /** Standard Ribbon kind 的完整 Path options schema */
 export const RibbonPathSchema = PathBaseSchema.extend({
-  kind: z.literal('ribbon'),
+  kind: literal('ribbon'),
   kindOptions: RibbonPathOptionsSchema,
 })
   .superRefine((path, ctx) => {

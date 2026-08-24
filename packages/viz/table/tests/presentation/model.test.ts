@@ -1,5 +1,5 @@
 ﻿import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import type { CellPresentationInput } from '../../src';
 
@@ -15,12 +15,14 @@ const formattedModel = () =>
       rows: [
         [
           {
+            id: 'cell.r0.c0',
             value: 12.5,
             formatter: { name: 'number', options: { specifier: '.2f' } },
             presentation: { name: 'inspect' },
             layout: { borders: { bottom: { kind: 'line', width: 2 } } },
           },
           {
+            id: 'cell.r0.c1',
             content: { type: 'node', position: [0, 0], text: 'direct' },
             layout: { borders: { left: { kind: 'none', priority: 3 } } },
           },
@@ -34,7 +36,7 @@ describe('Presented Table model', () => {
     let observed: CellPresentationInput | undefined;
     const inspect = defineCellPresentation({
       name: 'inspect',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: input => {
         observed = input;
         return { type: 'node', position: [0, 0], text: String(input.value) };
@@ -64,8 +66,6 @@ describe('Presented Table model', () => {
       value: '12.50',
       context: {
         cellId: 'cell.r0.c0',
-        rowId: 'row.0',
-        columnId: 'column.0',
         rowIndex: 0,
         columnIndex: 0,
         location: 'body',
@@ -79,7 +79,7 @@ describe('Presented Table model', () => {
     let observed: CellPresentationInput | undefined;
     const inspect = defineCellPresentation({
       name: 'inspect',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: input => {
         observed = input;
         return { type: 'node', position: [0, 0], text: String(input.value) };
@@ -125,7 +125,7 @@ describe('Presented Table model', () => {
     ];
     const inspect = defineCellPresentation({
       name: 'inspect',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: ({ value }) => ({ type: 'node', position: [0, 0], text: String(value) }),
     });
 

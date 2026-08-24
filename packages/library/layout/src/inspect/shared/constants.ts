@@ -1,5 +1,5 @@
-/** Layout 布局检查器使用的注册命名空间，与布局产物所属者命名空间相互独立 */
-export const LAYOUT_INSPECTOR_NAMESPACE = 'retikz.layout';
+/** Layout 检查器使用的所属包注册命名空间 */
+export const LAYOUT_INSPECTOR_NAMESPACE = 'layout';
 
 /** 布局检查器的推荐共享选项 */
 export const RECOMMENDED_LAYOUT_INSPECT_OPTIONS = Object.freeze({

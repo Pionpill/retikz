@@ -1,0 +1,77 @@
+---
+title: Chart Model
+description: Learn why Chart is the approachable starting point before tracing its structure, authoring, presentation, and Plot integration.
+---
+
+Plot is the lower-level graphics grammar: it describes how data is drawn through marks, channels, scales, coordinates, and guides, but it also means authors must assemble those pieces themselves. When the goal is to express a complete graphic first, starting directly with Plot requires more low-level configuration.
+
+Chart is built on Plot and answers a different question: “I want to start with a graphic type.”
+
+- **Family → chartType routing**: the root `type` is a discoverable family, while `recipe.chartType` selects the concrete recipe. An LLM can identify the family first, then inspect that family's exact schema.
+- **Less configuration**: a recipe turns `recipe.encodings` and `recipe.properties` into a built-in semantic mark, scales, coordinates, and other default Plot semantics.
+- **Continued extension**: `recipe.marks` add marks that inherit Chart context, while `plotExtension` preserves an independent Plot fragment instead of creating a second drawing grammar.
+
+Chart therefore serves human authoring, JSON persistence, and LLM generation at the same time. When lower-level Plot capabilities are needed, use Plot directly or write a Plot-schema fragment in the Chart Source `plotExtension` field.
+
+<ComponentAlert
+  type="tip"
+  title="You can skip this at first"
+  description="Start with Scatter when you only need a Scatter chart. Return here for family routing, exact schemas, or extension boundaries."
+/>
+
+## Resolution pipeline
+
+<ComponentPreview files="chart-model-pipeline" hideCode size="xs" />
+
+Read the diagram as “Source → recipe → Plot → Surface”:
+
+1. **React / Vanilla: choose an authoring entry**
+   Typed React Charts and concrete Vanilla chartType factories enter the same Source assembly and adapter pipeline; the application selects an entry for dynamic JSON routing.
+2. **Exact Chart Source: preserve author intent**
+   Source records `namespace: 'chart'`, the family `type`, `recipe.chartType`, field-bound `encodings`, constant `properties`, optional `marks`, and `plotExtension`. It never stores the fully resolved Plot.
+3. **Schema: select the exact schema**
+   The application selects a strict schema from the family and recipe, then the active provider validates the complete Source. Unknown fields, family mismatches, and incompatible marks fail immediately.
+4. **Recipe + resolve: produce shared parts and built-in marks**
+   The recipe supplies default coordinates, guides, and semantic marks, then passes Chart marks, independent Plot content, and owner-local Theme slices to their owners.
+5. **Plot + Surface: enter compilation and drawing**
+   Plot lowers data into marks, coordinates, and guides. Chart uses a Standard Surface for chart-wide presentation, then Core and the renderer finish the graphic.
+
+## Responsibilities
+
+| Topic                  | Responsibility                                              | Read it when                                            |
+| ---------------------- | ----------------------------------------------------------- | ------------------------------------------------------- |
+| Structure & Types      | Explains families, chartTypes, exact schemas, and ownership | Reading JSON, selecting a schema, or finding boundaries |
+| Authoring & Resolution | Connects React, Vanilla, parser, recipes, and `resolve`     | Comparing entry points or tracing Source                |
+| Presentation           | Organizes title, subtitle, Plot, note, and source           | Controlling fixed slots, text style, or layout          |
+| Plot Integration       | Separates Chart marks, Plot fragments, and Theme owners     | Adding Plot marks, guides, or composition               |
+
+All four topics share one boundary: Chart decides what graphic is being authored and how it becomes a complete chart, while Plot decides how data is drawn through the graphics grammar. Type folders and `/point` entries organize source and imports; they do not add another runtime layer.
+
+## Pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/model/structure">
+    <span className="font-semibold">Structure &amp; Types</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand families, chartTypes, exact schemas, and marks.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/authoring">
+    <span className="font-semibold">Authoring &amp; Resolution</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      See how React, Vanilla, and JSON enter one pipeline.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/presentation">
+    <span className="font-semibold">Presentation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand fixed presentation slots and Surface layout.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/plot">
+    <span className="font-semibold">Plot Integration</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Separate Chart marks, Plot fragments, and Theme owners.
+    </span>
+  </LinkedCard>
+</div>

@@ -37,3 +37,8 @@ export const RibbonTaperInterpolation = {
   /** 平滑插值 */
   Smooth: 'smooth',
 } as const;
+
+/** Standard 内置 Ribbon 宽度 profile 名 */
+export const RibbonWidthProfile = {
+  Bulge: 'bulge',
+} as const;

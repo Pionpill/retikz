@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRPlot } from '../../src/schemas';
 
-import { lowerPlots } from '../../src/pipeline/expand';
+import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 
 const rows = [
@@ -64,8 +64,7 @@ const parsePlotIR = (spec: unknown): IRPlot => PlotSchema.parse(spec);
 const parsedComposition = (): IRPlot => parsePlotIR(compositionSpec);
 
 const expandOf = (spec: IRPlot): IRScope => {
-  const [definition] = lowerPlots({ sales: rows }, { width: 480, height: 300 });
-  return definition.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, { sales: rows }, { width: 480, height: 300 }) as IRScope;
 };
 
 describe('coordinate composition registry schema', () => {

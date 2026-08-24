@@ -4,7 +4,7 @@ import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
 import { RetikzRuntimeErrorCode } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import type { InputEmbedAdapter, InputScene, VanillaCompileDriver, VanillaCompileDriverSession } from '../../src';
 
@@ -21,8 +21,8 @@ describe('Vanilla processing', () => {
       namespace: 'fixture',
       type: 'box',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('box'),
+        namespace: literal('fixture'),
+        type: literal('box'),
       }),
       expand: () => ({ children: [] }),
     });
@@ -58,7 +58,7 @@ describe('Vanilla processing', () => {
     const themeStyle = defineThemeStyle({
       name: 'academic',
       resolve: () => ({
-        semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00' },
+        semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
         categorical: ['#112233'],
       }),
     });
@@ -148,8 +148,8 @@ describe('Vanilla processing', () => {
       namespace: 'fixture',
       type: 'box',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('box'),
+        namespace: literal('fixture'),
+        type: literal('box'),
       }),
       expand: () => ({ children: [] }),
     });
@@ -194,8 +194,8 @@ describe('Vanilla processing', () => {
       namespace: 'fixture',
       type: 'broken',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('broken'),
+        namespace: literal('fixture'),
+        type: literal('broken'),
       }),
       expand: () => {
         throw failure;

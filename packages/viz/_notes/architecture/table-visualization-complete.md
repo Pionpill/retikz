@@ -38,7 +38,7 @@ Data ──▶ Table ──domain resolution──▶ Standard composite / Core 
     React / Vanilla adapter
 ```
 
-Table 可以消费 Data、Standard 与 Core，但不依赖 Plot。Core 通过 `theme.tokens.table` 传递 inherited namespace、使用 `TableThemeTokenDefinition` 做 owner schema validation，并提供一套 shared colors；Table 负责自己的 vocabulary、preset、resolver、mapping 与消费。Plot 等 Tier 2 内容通过 Core 的通用 `IRChild` / composite 能力进入单元格；Table 负责 Cell box、测量请求、对齐、fit、裁剪和追溯，不解析内容内部的 mark、scale 或 guide。Table 自身的 visual encoding 当前产生 Legend descriptor seed，并在 body composition boundary 完成后解析领域无关 Legend 输入与 right / bottom placement intent；Standard 只消费 Table 已解析输入，不读取 Table token bag、field、selector、rule 或 lineage。
+Table 可以消费 Data、Standard 与 Core，但不依赖 Plot。Core 只传递 effective Theme selector 与 shared colors；Table 按同名 `TableThemeStyleDefinition` 将稀疏 style token 合并到 mode 默认 preset，再投影 shared categorical 并应用局部 `tableThemeTokens`。Table 负责自己的 vocabulary、strict schema、resolver、mapping 与消费。Plot 等 Tier 2 内容通过 Core 的通用 `IRChild` / composite 能力进入单元格；Table 负责 Cell box、测量请求、对齐、fit、裁剪和追溯，不解析内容内部的 mark、scale 或 guide。Table 自身的 visual encoding 当前产生 Legend descriptor seed，并在 body composition boundary 完成后解析领域无关 Legend 输入与 right / bottom placement intent；Standard 只消费 Table 已解析输入，不读取 Table token bag、field、selector、rule 或 lineage。
 
 ## 3. 能力边界与能力面
 

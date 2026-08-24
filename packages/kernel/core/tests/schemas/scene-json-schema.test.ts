@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { toJSONSchema } from 'zod';
 
 import { SceneSchema } from '../../src/schemas';
 
-const toSceneJsonSchema = () => z.toJSONSchema(SceneSchema, { unrepresentable: 'any' });
+const toSceneJsonSchema = () => toJSONSchema(SceneSchema, { unrepresentable: 'any' });
 
 describe('SceneSchema 可导出 JSON Schema（喂 LLM / 工具链的结构化 schema 出口）', () => {
   it('z.toJSONSchema 产出 object 型 JSON Schema 且可序列化往返', () => {

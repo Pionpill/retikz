@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRPlot } from '../../src/schemas';
 
-import { lowerPlots } from '../../src/pipeline/expand';
+import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../src/schemas';
 
 const rows = [
@@ -91,8 +91,7 @@ const sharedYOverlaySpec = {
 const parsePlotIR = (spec: unknown): IRPlot => PlotSchema.parse(spec);
 
 const expandOf = (spec: IRPlot): IRScope => {
-  const [definition] = lowerPlots({ weather: rows }, { width: 480, height: 300, provenance: true });
-  return definition.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, { weather: rows }, { width: 480, height: 300, provenance: true }) as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

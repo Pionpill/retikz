@@ -1,5 +1,5 @@
 import { NormalizedFractionSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { enum as zodEnum, strictObject } from 'zod';
 
 import type {
   IRArcStep,
@@ -179,8 +179,8 @@ type WayFoldOpInput = Record<string, unknown> & { via: unknown };
 
 const isWayFoldOpInput = (item: unknown): item is WayFoldOpInput => isPlainObject(item) && 'via' in item;
 
-const WayFoldOpSchema = z.strictObject({
-  via: z.enum([FoldStepVia.HorizontalVerticalHorizontal, FoldStepVia.VerticalHorizontalVertical]),
+const WayFoldOpSchema = strictObject({
+  via: zodEnum([FoldStepVia.HorizontalVerticalHorizontal, FoldStepVia.VerticalHorizontalVertical]),
   fraction: NormalizedFractionSchema.optional(),
 });
 

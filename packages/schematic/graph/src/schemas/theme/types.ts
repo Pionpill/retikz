@@ -1,32 +1,32 @@
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
-import type { GraphThemeToken } from './constants';
 import type {
   GraphEntityAppearanceTokenOverridesSchema,
-  GraphEntityThemeTokenRuleSchema,
-  GraphEntityThemeTokenRulesSchema,
-  GraphEntityThemeTokenSelectorSchema,
-  GraphThemeTokenOverridesSchema,
-  GraphThemeTokenResolutionSchema,
+  GraphEntityThemeRuleSchema,
+  GraphEntityThemeSelectorSchema,
+  GraphRelationThemeRuleSchema,
+  GraphRelationThemeSelectorSchema,
+  GraphThemeLayerSchema,
+  GraphThemeRuleSchema,
 } from './schema';
 
-/** Graph Theme token 的稳定 key */
-export type GraphThemeTokenValue = (typeof GraphThemeToken)[keyof typeof GraphThemeToken];
+/** Entity 非结构化 appearance 字段的非空覆盖集合 */
+export type IRGraphEntityAppearanceTokenOverrides = ZodInfer<typeof GraphEntityAppearanceTokenOverridesSchema>;
 
-/** Graph Theme token 的稀疏覆盖 IR */
-export type IRGraphThemeTokenOverrides = z.infer<typeof GraphThemeTokenOverridesSchema>;
+/** 匹配 Entity Canonical 语义的 Theme selector */
+export type IRGraphEntityThemeSelector = ZodInfer<typeof GraphEntityThemeSelectorSchema>;
 
-/** Entity variant 解析产生的稀疏外观 token 覆盖 IR */
-export type IRGraphEntityAppearanceTokenOverrides = z.infer<typeof GraphEntityAppearanceTokenOverridesSchema>;
+/** Entity appearance rule */
+export type IRGraphEntityThemeRule = ZodInfer<typeof GraphEntityThemeRuleSchema>;
 
-/** Graph Theme token 的完整解析结果 IR */
-export type IRGraphThemeTokenResolution = z.infer<typeof GraphThemeTokenResolutionSchema>;
+/** 匹配 Relation Canonical 语义与方向的 Theme selector */
+export type IRGraphRelationThemeSelector = ZodInfer<typeof GraphRelationThemeSelectorSchema>;
 
-/** 按 Entity role 和 variant 筛选主题 token 的 selector IR */
-export type IRGraphEntityThemeTokenSelector = z.infer<typeof GraphEntityThemeTokenSelectorSchema>;
+/** Relation appearance rule */
+export type IRGraphRelationThemeRule = ZodInfer<typeof GraphRelationThemeRuleSchema>;
 
-/** 一条 Entity 主题 token 规则 IR */
-export type IRGraphEntityThemeTokenRule = z.infer<typeof GraphEntityThemeTokenRuleSchema>;
+/** Graph Theme rule 判别联合 */
+export type IRGraphThemeRule = ZodInfer<typeof GraphThemeRuleSchema>;
 
-/** Entity 主题 token 规则列表 IR */
-export type IRGraphEntityThemeTokenRules = z.infer<typeof GraphEntityThemeTokenRulesSchema>;
+/** 至少包含一条 appearance rule 的 Graph-local Theme layer */
+export type IRGraphThemeLayer = ZodInfer<typeof GraphThemeLayerSchema>;

@@ -25,6 +25,7 @@ import { RetikzPlotError } from '../../../error';
 import {
   DivergingColorScaleSchema,
   OrdinalScaleSchema,
+  PlotColorScheme,
   PlotScale,
   QuantileColorScaleSchema,
   QuantizeColorScaleSchema,
@@ -34,7 +35,6 @@ import {
 import {
   builtinColorSchemeInterpolator,
   DEFAULT_PLOT_COLORS,
-  PlotColorScheme,
   safeExtent,
   sampleSchemeColors,
   toHexColor,

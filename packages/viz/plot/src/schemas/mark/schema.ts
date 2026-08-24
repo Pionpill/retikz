@@ -1,3 +1,5 @@
+import type { ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
+
 import { BendDirection, BoxSpacingSchema, FoldStepVia, JsonObjectSchema, PaintSchema } from '@retikz/core';
 import {
   AnchorRefSchema,
@@ -8,7 +10,7 @@ import {
   PositionSchema,
   StepLabelSchema,
 } from '@retikz/core';
-import { AxisScaleSchema, BoxSizeSchema } from '@retikz/core';
+import { AxisScaleSchema, BoxSizeSchema, CssColorSchema } from '@retikz/core';
 import {
   BlendMode,
   BoundarySchema,
@@ -21,13 +23,32 @@ import {
   PathScaleSchema,
   PathThickness,
   ShadowPreset,
-  ShapeRefSchema,
+  ShapeValueSchema,
 } from '@retikz/core';
-import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { RibbonPathOptionsSchema } from '@retikz/standard/ribbon';
-import { z } from 'zod';
+import {
+  array,
+  boolean,
+  discriminatedUnion,
+  enum as zodEnum,
+  literal,
+  looseObject,
+  number,
+  object,
+  record,
+  strictObject,
+  union,
+  unknown,
+} from 'zod';
 
-import { EncodingSchema, MarkGeometryLabelListSchema, MarkNodeLabelListSchema, PointEncodingSchema } from '../encoding';
+import {
+  EncodingSchema,
+  MarkChannelEncodingSchema,
+  MarkGeometryLabelListSchema,
+  MarkNodeLabelListSchema,
+  PointEncodingSchema,
+} from '../encoding';
 import { PlotLayerSchema } from '../layer';
 import { TransformSchema } from '../transform';
 import {
@@ -44,54 +65,37 @@ import {
   RelationRoutingKind,
 } from './constants';
 
-export const MarkTransformSchema = z
-  .array(TransformSchema)
-  .describe(
-    'Mark-local transform pipeline applied after the plot root transform to derive rows consumed only by this mark',
-  );
+export const MarkTransformSchema = array(TransformSchema).describe(
+  'Mark-local transform pipeline applied after the plot root transform to derive rows consumed only by this mark',
+);
 
 export const RelationTransformSchema = MarkTransformSchema;
 
 const markBase = {
-  id: z.string().min(1).optional().describe('Optional mark handle used by generated scope and anchor targets'),
+  id: NonBlankStringSchema.optional().describe('Optional mark handle used by generated scope and anchor targets'),
   layer: PlotLayerSchema.optional().describe(
     'Semantic plot layer override applied to the outer mark scope; mark datum zIndex remains a separate style channel',
   ),
-  coordinateView: z
-    .string()
-    .min(1)
-    .optional()
-    .describe('Coordinate view id this mark is projected through; omit to use the plot composition default view'),
+  coordinateView: NonBlankStringSchema.optional().describe(
+    'Coordinate view id this mark is projected through; omit to use the plot composition default view',
+  ),
   transform: MarkTransformSchema.optional().describe(
     'Optional mark-local transform pipeline applied after the plot root transform',
   ),
 };
 
-export const AnchorIdSchema = z
-  .strictObject({
-    prefix: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Optional id namespace under the current plot; defaults to the mark id, or mark.<index> when the mark has no id',
-      ),
-    field: z.string().min(1).optional().describe('Data field path whose value is slugged into the anchor id'),
-    template: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'JSON-safe id template supporting {plotId}, {markId}, {markIndex}, {index}, and {field:name} placeholders',
-      ),
-    generator: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Runtime generator key resolved from LowerPlotsOptions.anchorIdGenerators; the function itself is not stored in the IRPlot',
-      ),
-  })
+export const AnchorIdSchema = strictObject({
+  prefix: NonBlankStringSchema.optional().describe(
+    'Optional id namespace under the current plot; defaults to the mark id, or mark.<index> when the mark has no id',
+  ),
+  field: NonBlankStringSchema.optional().describe('Data field path whose value is slugged into the anchor id'),
+  template: NonBlankStringSchema.optional().describe(
+    'JSON-safe id template supporting {plotId}, {markId}, {markIndex}, {index}, and {field:name} placeholders',
+  ),
+  generator: NonBlankStringSchema.optional().describe(
+    'Runtime generator key resolved from LowerPlotsOptions.anchorIdGenerators; the function itself is not stored in the IRPlot',
+  ),
+})
   .superRefine((spec, ctx) => {
     const count = [spec.field, spec.template, spec.generator].filter(value => value !== undefined).length;
     if (count !== 1) {
@@ -106,47 +110,41 @@ export const AnchorIdSchema = z
 const anchorTargetFields = {
   anchor: AnchorRefSchema.optional().describe('Optional core anchor ref on the resolved target id'),
   offset: PositionSchema.optional().describe('Optional world-space offset applied after anchor resolution'),
-  boundary: z
-    .union([BoundarySchema, z.boolean()])
+  boundary: union([BoundarySchema, boolean()])
     .optional()
     .describe('Core target boundary override; true means shape, false omits the override'),
 };
 
-const DirectPlotTargetRefSchema = z
-  .strictObject({
-    id: z.string().min(1).describe('Existing core Node / Coordinate id'),
-    ...anchorTargetFields,
-  })
-  .describe('Direct core target reference by id');
+const DirectPlotTargetRefSchema = strictObject({
+  id: NonBlankStringSchema.describe('Existing core Node / Coordinate id'),
+  ...anchorTargetFields,
+}).describe('Direct core target reference by id');
 
-const GeneratedAnchorPlotTargetRefSchema = z
-  .strictObject({
-    anchorId: AnchorIdSchema.describe('Anchor id rule evaluated against the current relation row'),
-    ...anchorTargetFields,
-  })
-  .describe('Generated anchor target reference evaluated from the current relation row');
+const GeneratedAnchorPlotTargetRefSchema = strictObject({
+  anchorId: AnchorIdSchema.describe('Anchor id rule evaluated against the current relation row'),
+  ...anchorTargetFields,
+}).describe('Generated anchor target reference evaluated from the current relation row');
 
-const ProjectedPlotTargetRefSchema = z
-  .strictObject({
-    project: z
-      .record(z.string().min(1), z.string().min(1))
-      .describe('Coordinate-role to data-field map projected in the relation mark coordinate frame'),
-    anchorId: AnchorIdSchema.optional().describe('Optional id rule for the generated projected Coordinate'),
-    ...anchorTargetFields,
-  })
-  .describe('Projected coordinate target from the current relation row');
+const ProjectedPlotTargetRefSchema = strictObject({
+  project: record(NonBlankStringSchema, NonBlankStringSchema).describe(
+    'Coordinate-role to data-field map projected in the relation mark coordinate frame',
+  ),
+  anchorId: AnchorIdSchema.optional().describe('Optional id rule for the generated projected Coordinate'),
+  ...anchorTargetFields,
+}).describe('Projected coordinate target from the current relation row');
 
-export const PlotTargetRefSchema = z
-  .union([DirectPlotTargetRefSchema, GeneratedAnchorPlotTargetRefSchema, ProjectedPlotTargetRefSchema])
-  .describe('Relation/annotation target reference: direct core id, generated mark anchor id, or projected coordinate');
+export const PlotTargetRefSchema = union([
+  DirectPlotTargetRefSchema,
+  GeneratedAnchorPlotTargetRefSchema,
+  ProjectedPlotTargetRefSchema,
+]).describe('Relation/annotation target reference: direct core id, generated mark anchor id, or projected coordinate');
 
-const relationLabelTextSchema = z.union([
+const relationLabelTextSchema = union([
   StepLabelSchema.shape.text,
-  z.strictObject({
-    field: z
-      .string()
-      .min(1)
-      .describe('Data field path resolved from the current relation row and stringified into StepLabel.text'),
+  strictObject({
+    field: NonBlankStringSchema.describe(
+      'Data field path resolved from the current relation row and stringified into StepLabel.text',
+    ),
   }),
 ]);
 
@@ -154,57 +152,50 @@ export const RelationStepLabelSchema = StepLabelSchema.extend({
   text: relationLabelTextSchema.describe('Constant core step label text, mixed text, or a data-field binding'),
 }).describe('Relation path step label; lowered to core StepLabelSchema after field bindings are resolved');
 
-export const RelationPathSpecificOptionsSchema = z
-  .strictObject({
-    dashPattern: PathStrokeSchema.shape.dashPattern,
-    fillRule: PathFillSchema.shape.fillRule,
-    lineCap: PathStrokeSchema.shape.lineCap,
-    lineJoin: PathStrokeSchema.shape.lineJoin,
-    roundedCorners: PathGeometrySchema.shape.roundedCorners,
-    rotate: PathGeometrySchema.shape.rotate,
-    scale: PathGeometrySchema.shape.scale,
-    marks: PathDecorationSchema.shape.marks,
-  })
+export const RelationPathSpecificOptionsSchema = strictObject({
+  dashPattern: PathStrokeSchema.shape.dashPattern,
+  fillRule: PathFillSchema.shape.fillRule,
+  lineCap: PathStrokeSchema.shape.lineCap,
+  lineJoin: PathStrokeSchema.shape.lineJoin,
+  roundedCorners: PathGeometrySchema.shape.roundedCorners,
+  rotate: PathGeometrySchema.shape.rotate,
+  scale: PathGeometrySchema.shape.scale,
+  marks: PathDecorationSchema.shape.marks,
+})
   .partial()
   .describe('Core Path options used only when RelationMark kind is path');
 
-export const RelationRouteStepSchema = z
-  .strictObject({
-    kind: z.enum(RelationRouteStepKind).describe('Core path step kind for this relation route segment'),
-    to: PlotTargetRefSchema.optional().describe(
-      'Target for this step; omitted on the last drawable step defaults to RelationMark.target',
-    ),
-    via: z.enum(FoldStepVia).optional().describe('Fold direction for kind=fold'),
-    control: PositionSchema.optional().describe('Quadratic Bezier control point for kind=curve'),
-    control1: PositionSchema.optional().describe('First cubic Bezier control point for kind=cubic'),
-    control2: PositionSchema.optional().describe('Second cubic Bezier control point for kind=cubic'),
-    bendDirection: z.enum(BendDirection).optional().describe('Bend direction for kind=bend'),
-    bendAngle: z.number().gt(-180).lt(180).optional().describe('Bend angle for kind=bend'),
-    outAngle: z.number().optional().describe('Outgoing angle for kind=bend'),
-    inAngle: z.number().optional().describe('Incoming angle for kind=bend'),
-    looseness: PositiveNumberSchema.optional().describe('Curve looseness for kind=bend'),
-    label: RelationStepLabelSchema.optional().describe('Optional label attached to this drawable step'),
-  })
-  .describe('Relation route step lowered to a core path step');
+export const RelationRouteStepSchema = strictObject({
+  kind: zodEnum(RelationRouteStepKind).describe('Core path step kind for this relation route segment'),
+  to: PlotTargetRefSchema.optional().describe(
+    'Target for this step; omitted on the last drawable step defaults to RelationMark.target',
+  ),
+  via: zodEnum(FoldStepVia).optional().describe('Fold direction for kind=fold'),
+  control: PositionSchema.optional().describe('Quadratic Bezier control point for kind=curve'),
+  control1: PositionSchema.optional().describe('First cubic Bezier control point for kind=cubic'),
+  control2: PositionSchema.optional().describe('Second cubic Bezier control point for kind=cubic'),
+  bendDirection: zodEnum(BendDirection).optional().describe('Bend direction for kind=bend'),
+  bendAngle: number().gt(-180).lt(180).optional().describe('Bend angle for kind=bend'),
+  outAngle: number().optional().describe('Outgoing angle for kind=bend'),
+  inAngle: number().optional().describe('Incoming angle for kind=bend'),
+  looseness: PositiveNumberSchema.optional().describe('Curve looseness for kind=bend'),
+  label: RelationStepLabelSchema.optional().describe('Optional label attached to this drawable step'),
+}).describe('Relation route step lowered to a core path step');
 
-const RelationLineRoutingSchema = z
-  .strictObject({
-    kind: z
-      .literal(RelationRoutingKind.Line)
-      .describe('Discriminator: connect source, via points, and target with straight line steps'),
-  })
-  .describe('Line relation routing strategy');
+const RelationLineRoutingSchema = strictObject({
+  kind: literal(RelationRoutingKind.Line).describe(
+    'Discriminator: connect source, via points, and target with straight line steps',
+  ),
+}).describe('Line relation routing strategy');
 
-const RelationBendRoutingSchema = z
-  .strictObject({
-    kind: z.literal(RelationRoutingKind.Bend).describe('Discriminator: connect each segment with a core bend step'),
-    bendDirection: z.enum(BendDirection).optional().describe('Bend side relative to each relation segment'),
-    bendAngle: z.number().gt(-180).lt(180).optional().describe('Bend angle in degrees for each relation segment'),
-    outAngle: z.number().optional().describe('Outgoing angle in degrees for bend routing'),
-    inAngle: z.number().optional().describe('Incoming angle in degrees for bend routing'),
-    looseness: PositiveNumberSchema.optional().describe('Curve looseness factor for bend routing'),
-  })
-  .describe('Bend relation routing strategy');
+const RelationBendRoutingSchema = strictObject({
+  kind: literal(RelationRoutingKind.Bend).describe('Discriminator: connect each segment with a core bend step'),
+  bendDirection: zodEnum(BendDirection).optional().describe('Bend side relative to each relation segment'),
+  bendAngle: number().gt(-180).lt(180).optional().describe('Bend angle in degrees for each relation segment'),
+  outAngle: number().optional().describe('Outgoing angle in degrees for bend routing'),
+  inAngle: number().optional().describe('Incoming angle in degrees for bend routing'),
+  looseness: PositiveNumberSchema.optional().describe('Curve looseness factor for bend routing'),
+}).describe('Bend relation routing strategy');
 
 /** 关系标记算法式正交路由支持的两段折线方向 */
 const RelationOrthogonalRoutingVia = {
@@ -212,20 +203,17 @@ const RelationOrthogonalRoutingVia = {
   VerticalThenHorizontal: FoldStepVia.VerticalThenHorizontal,
 } as const;
 
-const RelationOrthogonalRoutingSchema = z
-  .strictObject({
-    kind: z
-      .literal(RelationRoutingKind.Orthogonal)
-      .describe('Discriminator: connect each segment with right-angle orthogonal line steps'),
-    via: z
-      .enum(RelationOrthogonalRoutingVia)
-      .optional()
-      .describe('Orthogonal direction: -| first horizontal then vertical; |- first vertical then horizontal'),
-    labelStep: z
-      .enum(RelationOrthogonalLabelStep)
-      .optional()
-      .describe('Which generated drawable step receives the shorthand relation label; default main'),
-  })
+const RelationOrthogonalRoutingSchema = strictObject({
+  kind: literal(RelationRoutingKind.Orthogonal).describe(
+    'Discriminator: connect each segment with right-angle orthogonal line steps',
+  ),
+  via: zodEnum(RelationOrthogonalRoutingVia)
+    .optional()
+    .describe('Orthogonal direction: -| first horizontal then vertical; |- first vertical then horizontal'),
+  labelStep: zodEnum(RelationOrthogonalLabelStep)
+    .optional()
+    .describe('Which generated drawable step receives the shorthand relation label; default main'),
+})
   .superRefine((routing, ctx) => {
     if (routing.via === undefined) {
       ctx.addIssue({
@@ -237,9 +225,11 @@ const RelationOrthogonalRoutingSchema = z
   })
   .describe('Orthogonal relation routing strategy');
 
-export const RelationRoutingSchema = z
-  .discriminatedUnion('kind', [RelationLineRoutingSchema, RelationBendRoutingSchema, RelationOrthogonalRoutingSchema])
-  .describe('Relation route strategy lowered to core Path steps after source and target refs are resolved');
+export const RelationRoutingSchema = discriminatedUnion('kind', [
+  RelationLineRoutingSchema,
+  RelationBendRoutingSchema,
+  RelationOrthogonalRoutingSchema,
+]).describe('Relation route strategy lowered to core Path steps after source and target refs are resolved');
 
 const positionalEncoding = { encoding: EncodingSchema };
 
@@ -257,43 +247,39 @@ const geometryHostLabel = {
 
 const markValueFieldVariant = (
   description: string,
-): z.ZodObject<{ kind: z.ZodLiteral<'field'>; value: z.ZodString; scale: z.ZodOptional<z.ZodString> }> =>
-  z.object({
-    kind: z.literal(MarkValueKind.Field).describe('Field binding variant'),
-    value: z.string().min(1).describe(description),
-    scale: z.string().min(1).optional().describe('Optional scale name for this field-bound style value'),
+): ZodObject<{ kind: ZodLiteral<'field'>; value: ZodString; scale: ZodOptional<ZodString> }> =>
+  object({
+    kind: literal(MarkValueKind.Field).describe('Field binding variant'),
+    value: NonBlankStringSchema.describe(description),
+    scale: NonBlankStringSchema.optional().describe('Optional scale name for this field-bound style value'),
   });
 
-const markValueSchema = <T extends z.ZodTypeAny>(
+const markValueSchema = <T extends ZodType>(
   constantValue: T,
   fieldDescription: string,
   constantDescription: string,
   schemaDescription: string,
 ) =>
-  z
-    .discriminatedUnion('kind', [
-      markValueFieldVariant(fieldDescription).describe(`Field-bound ${schemaDescription}`),
-      z
-        .object({
-          kind: z.literal(MarkValueKind.Constant).describe('Constant value variant'),
-          value: constantValue.describe(constantDescription),
-        })
-        .describe(`Constant ${schemaDescription}`),
-    ])
-    .describe(`${schemaDescription}: field-bound datum value or constant value`);
+  discriminatedUnion('kind', [
+    markValueFieldVariant(fieldDescription).describe(`Field-bound ${schemaDescription}`),
+    object({
+      kind: literal(MarkValueKind.Constant).describe('Constant value variant'),
+      value: constantValue.describe(constantDescription),
+    }).describe(`Constant ${schemaDescription}`),
+  ]).describe(`${schemaDescription}: field-bound datum value or constant value`);
 
-const StylePaintSchema = z.union([z.string(), PaintSchema]);
-const StyleNumberSchema = z.number();
+const StylePaintSchema = union([CssColorSchema, PaintSchema]);
+const StyleNumberSchema = number();
 const StyleNonnegativeNumberSchema = NonNegativeNumberSchema;
 const StylePositiveNumberSchema = PositiveNumberSchema;
-const StyleOpacitySchema = z.number().min(0).max(1);
-const StyleDashPatternSchema = z.array(StyleNonnegativeNumberSchema).min(1);
-const StyleShadowSchema = z.union([z.enum(ShadowPreset), DropShadowSchema]);
-const StyleShapeSchema = z.union([z.string().min(1), ShapeRefSchema]);
-const StyleBlendModeSchema = z.enum(BlendMode);
-const StyleBoxSpacingSchema = z.union([StyleNonnegativeNumberSchema, BoxSpacingSchema]);
-const StyleAxisScaleSchema = z.union([StylePositiveNumberSchema, AxisScaleSchema]);
-const StyleBoxSizeSchema = z.union([StyleNonnegativeNumberSchema, BoxSizeSchema]);
+const StyleOpacitySchema = number().min(0).max(1);
+const StyleDashPatternSchema = array(StyleNonnegativeNumberSchema).min(1);
+const StyleShadowSchema = union([zodEnum(ShadowPreset), DropShadowSchema]);
+const StyleShapeSchema = ShapeValueSchema;
+const StyleBlendModeSchema = zodEnum(BlendMode);
+const StyleBoxSpacingSchema = union([StyleNonnegativeNumberSchema, BoxSpacingSchema]);
+const StyleAxisScaleSchema = union([StylePositiveNumberSchema, AxisScaleSchema]);
+const StyleBoxSizeSchema = union([StyleNonnegativeNumberSchema, BoxSizeSchema]);
 
 export const PointFillStyleSchema = markValueSchema(
   StylePaintSchema,
@@ -302,7 +288,7 @@ export const PointFillStyleSchema = markValueSchema(
   'point fill style value',
 );
 export const PointColorStyleSchema = markValueSchema(
-  z.string().min(1),
+  CssColorSchema,
   'Data field path bound to point color',
   'Constant point color',
   'point color value',
@@ -344,7 +330,7 @@ export const PointOpacityStyleSchema = markValueSchema(
   'point opacity style value',
 );
 export const PointZIndexStyleSchema = markValueSchema(
-  z.number().int(),
+  number().int(),
   'Data field path bound to zIndex',
   'Constant integer zIndex value',
   'point zIndex style value',
@@ -356,13 +342,13 @@ export const NodePositiveNumberStyleSchema = markValueSchema(
   'node positive numeric style value',
 );
 export const NodeTextAlignStyleSchema = markValueSchema(
-  z.enum(NodeTextAlign),
+  zodEnum(NodeTextAlign),
   'Data field path bound to node text align',
   'Constant core Node align',
   'node text align style value',
 );
 export const NodeBooleanStyleSchema = markValueSchema(
-  z.boolean(),
+  boolean(),
   'Data field path bound to a boolean node style value',
   'Constant boolean node style value',
   'node boolean style value',
@@ -440,7 +426,7 @@ export const PathFillRuleStyleSchema = markValueSchema(
   'path fillRule style value',
 );
 export const PathThicknessStyleSchema = markValueSchema(
-  z.enum(PathThickness),
+  zodEnum(PathThickness),
   'Data field path bound to path thickness',
   'Constant core Path thickness preset',
   'path thickness style value',
@@ -452,83 +438,72 @@ export const PathScaleStyleSchema = markValueSchema(
   'path scale style value',
 );
 
-export const RelationPrimitiveStyleSchema = z
-  .strictObject({
-    color: PointColorStyleSchema.optional().describe(
-      'Shared relation master color: field-bound datum channel or constant color',
-    ),
-    fill: PointFillStyleSchema.optional().describe(
-      'Shared relation fill paint: field-bound datum channel or constant CSS color / IRPaint',
-    ),
-    fillOpacity: PointOpacityStyleSchema.optional().describe(
-      'Shared relation fill opacity: field-bound datum channel or constant opacity 0..1',
-    ),
-    stroke: PointStrokeStyleSchema.optional().describe(
-      'Shared relation stroke paint: field-bound datum channel or constant CSS color / IRPaint',
-    ),
-    strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
-      'Shared relation stroke width: field-bound datum channel or constant non-negative value',
-    ),
-    strokeOpacity: PointOpacityStyleSchema.optional().describe(
-      'Shared relation stroke opacity: field-bound datum channel or constant opacity 0..1',
-    ),
-    opacity: PointOpacityStyleSchema.optional().describe(
-      'Shared relation whole opacity: field-bound datum channel or constant opacity 0..1',
-    ),
-    shadow: ShadowStyleSchema.optional().describe(
-      'Shared relation shadow: field-bound datum channel or constant preset / object',
-    ),
-    blendMode: BlendModeStyleSchema.optional().describe(
-      'Shared relation blendMode: field-bound datum channel or constant blend mode',
-    ),
-    zIndex: PointZIndexStyleSchema.optional().describe(
-      'Shared relation zIndex: field-bound datum channel or constant integer',
-    ),
-  })
-  .describe('Style fields shared by RelationMark path kinds');
+export const RelationPrimitiveStyleSchema = strictObject({
+  color: PointColorStyleSchema.optional().describe(
+    'Shared relation master color: field-bound datum channel or constant color',
+  ),
+  fill: PointFillStyleSchema.optional().describe(
+    'Shared relation fill paint: field-bound datum channel or constant CSS color / IRPaint',
+  ),
+  fillOpacity: PointOpacityStyleSchema.optional().describe(
+    'Shared relation fill opacity: field-bound datum channel or constant opacity 0..1',
+  ),
+  stroke: PointStrokeStyleSchema.optional().describe(
+    'Shared relation stroke paint: field-bound datum channel or constant CSS color / IRPaint',
+  ),
+  strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
+    'Shared relation stroke width: field-bound datum channel or constant non-negative value',
+  ),
+  strokeOpacity: PointOpacityStyleSchema.optional().describe(
+    'Shared relation stroke opacity: field-bound datum channel or constant opacity 0..1',
+  ),
+  opacity: PointOpacityStyleSchema.optional().describe(
+    'Shared relation whole opacity: field-bound datum channel or constant opacity 0..1',
+  ),
+  shadow: ShadowStyleSchema.optional().describe(
+    'Shared relation shadow: field-bound datum channel or constant preset / object',
+  ),
+  blendMode: BlendModeStyleSchema.optional().describe(
+    'Shared relation blendMode: field-bound datum channel or constant blend mode',
+  ),
+  zIndex: PointZIndexStyleSchema.optional().describe(
+    'Shared relation zIndex: field-bound datum channel or constant integer',
+  ),
+}).describe('Style fields shared by RelationMark path kinds');
 
-const PathCycleClosureSchema = z
-  .object({
-    kind: z.literal(PathClosureKind.Cycle).describe('Cycle closure: connect the final point back to the first point'),
-  })
-  .describe('Path cycle closure: closes the path as a polygon; set fill to render an area');
+const PathCycleClosureSchema = object({
+  kind: literal(PathClosureKind.Cycle).describe('Cycle closure: connect the final point back to the first point'),
+}).describe('Path cycle closure: closes the path as a polygon; set fill to render an area');
 
-const PathBaselineClosureSchema = z
-  .object({
-    kind: z
-      .literal(PathClosureKind.Baseline)
-      .describe('Baseline closure: return from the upper outline to a baseline value'),
-    baseline: z
-      .number()
+const PathBaselineClosureSchema = object({
+  kind: literal(PathClosureKind.Baseline).describe(
+    'Baseline closure: return from the upper outline to a baseline value',
+  ),
+  baseline: number()
+    .optional()
+    .describe(
+      'Constant baseline value for the return edge; omit to use 0 when it is inside the value-axis domain, otherwise the nearest value-axis domain edge. Finite-only to keep the IR JSON round-trippable',
+    ),
+}).describe('Path baseline closure: closes the upper outline down to a baseline; set fill to render an area');
 
-      .optional()
-      .describe(
-        'Constant baseline value for the return edge; omit to use 0 when it is inside the value-axis domain, otherwise the nearest value-axis domain edge. Finite-only to keep the IR JSON round-trippable',
-      ),
-  })
-  .describe('Path baseline closure: closes the upper outline down to a baseline; set fill to render an area');
+const PathStackClosureSchema = object({
+  kind: literal(PathClosureKind.Stack).describe(
+    'Stack closure: return from the upper outline to a per-row baseline field',
+  ),
+  baselineField: NonBlankStringSchema.describe(
+    'Data field path for the lower boundary value, such as y0 from a stack transform; the upper boundary still comes from encoding.y',
+  ),
+}).describe(
+  'Path stack closure: closes the upper outline against a per-row lower-bound field; set fill to render an area',
+);
 
-const PathStackClosureSchema = z
-  .object({
-    kind: z
-      .literal(PathClosureKind.Stack)
-      .describe('Stack closure: return from the upper outline to a per-row baseline field'),
-    baselineField: z
-      .string()
-      .min(1)
-      .describe(
-        'Data field path for the lower boundary value, such as y0 from a stack transform; the upper boundary still comes from encoding.y',
-      ),
-  })
-  .describe(
-    'Path stack closure: closes the upper outline against a per-row lower-bound field; set fill to render an area',
-  );
-
-export const PathClosureSchema = z
-  .discriminatedUnion('kind', [PathCycleClosureSchema, PathBaselineClosureSchema, PathStackClosureSchema])
-  .describe(
-    'Path closure strategy: cycle, baseline, or per-row stacked baseline. Providing closure makes PathMark geometrically closed; fill still controls whether the path is painted as an area',
-  );
+export const PathClosureSchema = discriminatedUnion('kind', [
+  PathCycleClosureSchema,
+  PathBaselineClosureSchema,
+  PathStackClosureSchema,
+]).describe(
+  'Path closure strategy: cycle, baseline, or per-row stacked baseline. Providing closure makes PathMark geometrically closed; fill still controls whether the path is painted as an area',
+);
 
 const coreNodeStyle = {
   align: NodeTextAlignStyleSchema.optional().describe(
@@ -604,316 +579,260 @@ const corePathStyle = {
   ),
 };
 
-export const PointMarkSchema = z
-  .strictObject({
-    type: z.literal(PlotMark.Point).describe('Discriminator: one glyph or text label per record'),
-    color: PointColorStyleSchema.optional().describe(
-      'Glyph color: field-bound datum channel or constant color; overrides constant fill',
+export const PointMarkSchema = strictObject({
+  type: literal(PlotMark.Point).describe('Discriminator: one glyph or text label per record'),
+  color: PointColorStyleSchema.optional().describe(
+    'Glyph color: field-bound datum channel or constant color; overrides constant fill',
+  ),
+  textColor: PointColorStyleSchema.optional().describe(
+    'Text point color: field-bound datum channel or constant core Node textColor; only applied when encoding.text is set',
+  ),
+  size: PointSizeStyleSchema.optional().describe(
+    'Glyph size: field-bound datum channel via a sqrt radius scale or constant final radius',
+  ),
+  shape: PointShapeStyleSchema.optional().describe(
+    'Glyph shape: field-bound categorical channel or constant core Node shape name',
+  ),
+  fill: PointFillStyleSchema.optional().describe(
+    'Glyph fill: field-bound datum channel or constant core Node fill paint',
+  ),
+  stroke: PointStrokeStyleSchema.optional().describe(
+    'Glyph stroke paint: field-bound datum channel or constant core Node stroke paint',
+  ),
+  strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
+    'Glyph stroke width: field-bound datum channel or constant core Node stroke width',
+  ),
+  fillOpacity: PointOpacityStyleSchema.optional().describe(
+    'Glyph fill opacity: field-bound datum channel or constant opacity 0..1',
+  ),
+  strokeOpacity: PointOpacityStyleSchema.optional().describe(
+    'Glyph stroke opacity: field-bound datum channel or constant opacity 0..1',
+  ),
+  opacity: PointOpacityStyleSchema.optional().describe(
+    'Glyph whole-node opacity: field-bound datum channel or constant opacity 0..1',
+  ),
+  rotate: PointNumberStyleSchema.optional().describe(
+    'Glyph rotation in degrees: field-bound datum channel or constant angle',
+  ),
+  minimumSize: NodeBoxSizeStyleSchema.optional().describe(
+    'Minimum visual size: field-bound datum channel or constant number / {default,width,height}; overridden per datum by size',
+  ),
+  zIndex: PointZIndexStyleSchema.optional().describe(
+    'Drawing order hint: field-bound datum channel or constant zIndex',
+  ),
+  ...coreNodeStyle,
+  dx: number()
+    .optional()
+    .describe(
+      'Fine-tuning horizontal offset (user units) from the projected anchor; positive = right. Mainly for text points; prefer label position/distance. Default 0',
     ),
-    textColor: PointColorStyleSchema.optional().describe(
-      'Text point color: field-bound datum channel or constant core Node textColor; only applied when encoding.text is set',
+  dy: number()
+    .optional()
+    .describe(
+      'Fine-tuning vertical offset (user units) from the projected anchor; positive = screen-down. Mainly for text points. Default 0',
     ),
-    size: PointSizeStyleSchema.optional().describe(
-      'Glyph size: field-bound datum channel via a sqrt radius scale or constant final radius',
-    ),
-    shape: PointShapeStyleSchema.optional().describe(
-      'Glyph shape: field-bound categorical channel or constant core Node shape name',
-    ),
-    fill: PointFillStyleSchema.optional().describe(
-      'Glyph fill: field-bound datum channel or constant core Node fill paint',
-    ),
-    stroke: PointStrokeStyleSchema.optional().describe(
-      'Glyph stroke paint: field-bound datum channel or constant core Node stroke paint',
-    ),
-    strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
-      'Glyph stroke width: field-bound datum channel or constant core Node stroke width',
-    ),
-    fillOpacity: PointOpacityStyleSchema.optional().describe(
-      'Glyph fill opacity: field-bound datum channel or constant opacity 0..1',
-    ),
-    strokeOpacity: PointOpacityStyleSchema.optional().describe(
-      'Glyph stroke opacity: field-bound datum channel or constant opacity 0..1',
-    ),
-    opacity: PointOpacityStyleSchema.optional().describe(
-      'Glyph whole-node opacity: field-bound datum channel or constant opacity 0..1',
-    ),
-    rotate: PointNumberStyleSchema.optional().describe(
-      'Glyph rotation in degrees: field-bound datum channel or constant angle',
-    ),
-    minimumSize: NodeBoxSizeStyleSchema.optional().describe(
-      'Minimum visual size: field-bound datum channel or constant number / {default,width,height}; overridden per datum by size',
-    ),
-    zIndex: PointZIndexStyleSchema.optional().describe(
-      'Drawing order hint: field-bound datum channel or constant zIndex',
-    ),
-    ...coreNodeStyle,
-    dx: z
-      .number()
+  anchorId: AnchorIdSchema.optional().describe(
+    'Stable id rule written to each generated core Node; takes precedence over datumIdField for the node id',
+  ),
+  ...markBase,
+  ...nodeHostLabel,
+  encoding: PointEncodingSchema,
+}).describe(
+  'Point mark: scatter glyph or borderless text label (encoding.text set → text Node); supports optional size / opacity / shape glyph channels',
+);
 
-      .optional()
-      .describe(
-        'Fine-tuning horizontal offset (user units) from the projected anchor; positive = right. Mainly for text points; prefer label position/distance. Default 0',
-      ),
-    dy: z
-      .number()
+export const PathMarkSchema = object({
+  type: literal(PlotMark.Path).describe('Discriminator: ordered points connected into a 1D path'),
+  order: NonBlankStringSchema.optional().describe(
+    'Data field driving connection order; omit for data array order (minimal relation)',
+  ),
+  series: NonBlankStringSchema.optional().describe(
+    'Series field: split records into one path per distinct value (multi-series); each series gets its own color via the color scale',
+  ),
+  closed: boolean()
+    .optional()
+    .describe(
+      'Connect the last point back to the first, closing the path into a polygon; under polar this yields a radar outline. Default false',
+    ),
+  connectNulls: boolean()
+    .optional()
+    .describe(
+      'Whether invalid or missing projected points should be skipped and connected across; default false splits the path into separate core Path segments',
+    ),
+  closure: PathClosureSchema.optional().describe(
+    'Close the path using a cycle, a baseline, or a per-row stacked baseline. Set fill when the closed path should render as an area',
+  ),
+  curve: zodEnum(PathCurve).optional().describe('Connection curve between adjacent ordered points; default linear'),
+  strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
+    'Path stroke width: field-bound datum channel or constant core Path stroke width',
+  ),
+  opacity: PointOpacityStyleSchema.optional().describe(
+    'Path whole opacity: field-bound datum channel or constant opacity 0..1',
+  ),
+  lineCap: PathLineCapStyleSchema.optional().describe(
+    'Path stroke endpoint style: field-bound datum channel or constant core Path lineCap',
+  ),
+  lineJoin: PathLineJoinStyleSchema.optional().describe(
+    'Path stroke join style: field-bound datum channel or constant core Path lineJoin',
+  ),
+  roundedCorners: PathRoundedCornersStyleSchema.optional().describe(
+    'Path geometric corner radius: field-bound datum channel or constant core Path roundedCorners',
+  ),
+  ...corePathStyle,
+  anchorId: AnchorIdSchema.optional().describe(
+    'Stable id rule for generated per-datum core Coordinates along this path',
+  ),
+  ...markBase,
+  ...geometryHostLabel,
+  ...positionalEncoding,
+}).describe('Path mark: connects records in order into a 1D trajectory (line / radar outline)');
 
-      .optional()
-      .describe(
-        'Fine-tuning vertical offset (user units) from the projected anchor; positive = screen-down. Mainly for text points. Default 0',
-      ),
-    anchorId: AnchorIdSchema.optional().describe(
-      'Stable id rule written to each generated core Node; takes precedence over datumIdField for the node id',
-    ),
-    ...markBase,
-    ...nodeHostLabel,
-    encoding: PointEncodingSchema,
-  })
-  .describe(
-    'Point mark: scatter glyph or borderless text label (encoding.text set → text Node); supports optional size / opacity / shape glyph channels',
-  );
+const BandBoundSchema = object({
+  kind: literal(IntervalBoundKind.Band).describe(
+    'Band bound: center from the role position channel, width from the band scale bandwidth',
+  ),
+  group: NonBlankStringSchema.optional().describe(
+    'Series field that subdivides the band into equal sub-bands (grouped / dodge); omit for a full-width band',
+  ),
+}).describe(
+  'Band bound: a category band on this role (bar primary, heatmap axis, polar angle band); optional group → dodge sub-bands',
+);
 
-export const PathMarkSchema = z
-  .object({
-    type: z.literal(PlotMark.Path).describe('Discriminator: ordered points connected into a 1D path'),
-    order: z
-      .string()
-      .min(1)
-      .optional()
-      .describe('Data field driving connection order; omit for data array order (minimal relation)'),
-    series: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Series field: split records into one path per distinct value (multi-series); each series gets its own color via the color scale',
-      ),
-    closed: z
-      .boolean()
-      .optional()
-      .describe(
-        'Connect the last point back to the first, closing the path into a polygon; under polar this yields a radar outline. Default false',
-      ),
-    connectNulls: z
-      .boolean()
-      .optional()
-      .describe(
-        'Whether invalid or missing projected points should be skipped and connected across; default false splits the path into separate core Path segments',
-      ),
-    closure: PathClosureSchema.optional().describe(
-      'Close the path using a cycle, a baseline, or a per-row stacked baseline. Set fill when the closed path should render as an area',
-    ),
-    curve: z.enum(PathCurve).optional().describe('Connection curve between adjacent ordered points; default linear'),
-    strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
-      'Path stroke width: field-bound datum channel or constant core Path stroke width',
-    ),
-    opacity: PointOpacityStyleSchema.optional().describe(
-      'Path whole opacity: field-bound datum channel or constant opacity 0..1',
-    ),
-    lineCap: PathLineCapStyleSchema.optional().describe(
-      'Path stroke endpoint style: field-bound datum channel or constant core Path lineCap',
-    ),
-    lineJoin: PathLineJoinStyleSchema.optional().describe(
-      'Path stroke join style: field-bound datum channel or constant core Path lineJoin',
-    ),
-    roundedCorners: PathRoundedCornersStyleSchema.optional().describe(
-      'Path geometric corner radius: field-bound datum channel or constant core Path roundedCorners',
-    ),
-    ...corePathStyle,
-    anchorId: AnchorIdSchema.optional().describe(
-      'Stable id rule for generated per-datum core Coordinates along this path',
-    ),
-    ...markBase,
-    ...geometryHostLabel,
-    ...positionalEncoding,
-  })
-  .describe('Path mark: connects records in order into a 1D trajectory (line / radar outline)');
+const SpanBoundSchema = object({
+  kind: literal(IntervalBoundKind.Span).describe('Span bound: from a baseline to the role position channel value'),
+  baseline: number()
+    .optional()
+    .describe('Baseline the span starts from; the interval runs baseline→channel value. Default 0'),
+}).describe('Span bound: baseline→value interval (bar height, radial-bar radius)');
 
-const BandBoundSchema = z
-  .object({
-    kind: z
-      .literal(IntervalBoundKind.Band)
-      .describe('Band bound: center from the role position channel, width from the band scale bandwidth'),
-    group: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Series field that subdivides the band into equal sub-bands (grouped / dodge); omit for a full-width band',
-      ),
-  })
-  .describe(
-    'Band bound: a category band on this role (bar primary, heatmap axis, polar angle band); optional group → dodge sub-bands',
-  );
+const ExtentBoundSchema = object({
+  kind: literal(IntervalBoundKind.Extent).describe('Extent bound: an explicit interval read from two fields'),
+  from: NonBlankStringSchema.describe('Lower-bound field (e.g. stack y0 / bin start / cumulative start angle)'),
+  to: NonBlankStringSchema.describe('Upper-bound field (e.g. stack y1 / bin end / cumulative end angle)'),
+}).describe('Extent bound: explicit [from, to] field interval (histogram bin / stacked bar / cumulative pie angle)');
 
-const SpanBoundSchema = z
-  .object({
-    kind: z.literal(IntervalBoundKind.Span).describe('Span bound: from a baseline to the role position channel value'),
-    baseline: z
-      .number()
-      .optional()
-      .describe('Baseline the span starts from; the interval runs baseline→channel value. Default 0'),
-  })
-  .describe('Span bound: baseline→value interval (bar height, radial-bar radius)');
+const ProportionalBoundSchema = object({
+  kind: literal(IntervalBoundKind.Proportional).describe(
+    'Proportional bound: contiguous intervals whose widths are driven by a numeric field',
+  ),
+  field: NonBlankStringSchema.describe(
+    'Non-negative numeric field used to build contiguous proportional intervals along this role',
+  ),
+}).describe('Proportional bound: contiguous variable-width intervals along this role (variable-width bar / mosaic)');
 
-const ExtentBoundSchema = z
-  .object({
-    kind: z.literal(IntervalBoundKind.Extent).describe('Extent bound: an explicit interval read from two fields'),
-    from: z.string().min(1).describe('Lower-bound field (e.g. stack y0 / bin start / cumulative start angle)'),
-    to: z.string().min(1).describe('Upper-bound field (e.g. stack y1 / bin end / cumulative end angle)'),
-  })
-  .describe('Extent bound: explicit [from, to] field interval (histogram bin / stacked bar / cumulative pie angle)');
+const FullBoundSchema = object({
+  kind: literal(IntervalBoundKind.Full).describe('Full bound: span the whole coordinate domain of this role'),
+}).describe('Full bound: spans the role coordinate domain (pie / donut radius, inner→outer)');
 
-const ProportionalBoundSchema = z
-  .object({
-    kind: z
-      .literal(IntervalBoundKind.Proportional)
-      .describe('Proportional bound: contiguous intervals whose widths are driven by a numeric field'),
-    field: z
-      .string()
-      .min(1)
-      .describe('Non-negative numeric field used to build contiguous proportional intervals along this role'),
-  })
-  .describe('Proportional bound: contiguous variable-width intervals along this role (variable-width bar / mosaic)');
+export const IntervalBoundSchema = discriminatedUnion('kind', [
+  BandBoundSchema,
+  SpanBoundSchema,
+  ExtentBoundSchema,
+  ProportionalBoundSchema,
+  FullBoundSchema,
+]).describe('Single-role interval bound source: band / span / extent / proportional / full');
 
-const FullBoundSchema = z
-  .object({
-    kind: z.literal(IntervalBoundKind.Full).describe('Full bound: span the whole coordinate domain of this role'),
-  })
-  .describe('Full bound: spans the role coordinate domain (pie / donut radius, inner→outer)');
+const IntervalBoundsObjectSchema = object({
+  x: IntervalBoundSchema.optional().describe(
+    'Primary-role interval bound (coordinate maps x→primary: cartesian2D horizontal, polar2D angle); omit to infer from the scale (band scale → band)',
+  ),
+  y: IntervalBoundSchema.optional().describe(
+    'Secondary-role interval bound (coordinate maps y→secondary: cartesian2D vertical, polar2D radius); omit to infer (continuous scale → span from 0)',
+  ),
+}).catchall(IntervalBoundSchema);
 
-export const IntervalBoundSchema = z
-  .discriminatedUnion('kind', [
-    BandBoundSchema,
-    SpanBoundSchema,
-    ExtentBoundSchema,
-    ProportionalBoundSchema,
-    FullBoundSchema,
-  ])
-  .describe('Single-role interval bound source: band / span / extent / proportional / full');
-
-export const IntervalBoundsSchema = z
-  .object({
-    x: IntervalBoundSchema.optional().describe(
-      'Primary-role interval bound (coordinate maps x→primary: cartesian2D horizontal, polar2D angle); omit to infer from the scale (band scale → band)',
-    ),
-    y: IntervalBoundSchema.optional().describe(
-      'Secondary-role interval bound (coordinate maps y→secondary: cartesian2D vertical, polar2D radius); omit to infer (continuous scale → span from 0)',
-    ),
-  })
-  .catchall(IntervalBoundSchema)
+export const IntervalBoundsSchema = record(NonBlankStringSchema, unknown())
+  .pipe(IntervalBoundsObjectSchema)
   .describe(
     'Per-role interval bounds keyed by coordinate role; built-ins use x / y, custom coordinates may add role keys',
   );
 
-export const IntervalMarkSchema = z
-  .object({
-    type: z
-      .literal(PlotMark.Interval)
-      .describe(
-        'Discriminator: an orthogonal interval product projected to a segment / rectangle / sector / cell by the coordinate system',
-      ),
-    series: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Series field: split records into multiple interval series (color grouping; sub-band grouping when bounds.x is a band with group)',
-      ),
-    bounds: IntervalBoundsSchema.optional().describe(
-      'Per-role interval bounds keyed by coordinate role; omit to infer from the coordinate role',
-    ),
-    strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
-      'Interval cell stroke width: field-bound datum channel or constant core Node stroke width',
-    ),
-    fill: PointFillStyleSchema.optional().describe(
-      'Interval cell fill paint: field-bound datum channel or constant CSS color / IRPaint',
-    ),
-    stroke: PointStrokeStyleSchema.optional().describe(
-      'Interval cell stroke paint: field-bound datum channel or constant CSS color / IRPaint',
-    ),
-    opacity: PointOpacityStyleSchema.optional().describe(
-      'Interval cell whole opacity: field-bound datum channel or constant opacity 0..1',
-    ),
-    fillOpacity: PointOpacityStyleSchema.optional().describe(
-      'Interval cell fill opacity: field-bound datum channel or constant opacity 0..1',
-    ),
-    padAngle: NonNegativeNumberSchema.optional().describe(
-      'Angular gap in degrees applied to polar sector cells; each sector shrinks by half this angle on both sides. Cartesian cells ignore it',
-    ),
-    pull: PointNonnegativeNumberStyleSchema.optional().describe(
-      'Static radial offset in user units for polar sector cells; moves the sector center along the final mid angle. Only sector geometry supports it',
-    ),
-    anchorId: AnchorIdSchema.optional().describe(
-      'Stable id rule written to each generated core interval Node; takes precedence over datumIdField for the node id',
-    ),
-    ...coreNodeStyle,
-    ...markBase,
-    ...nodeHostLabel,
-    ...positionalEncoding,
-  })
-  .describe(
-    'Interval mark: orthogonal interval product realized per bounds × coordinate (bar / histogram / heatmap cell / radial bar / pie-donut sector)',
-  );
+export const IntervalMarkSchema = object({
+  type: literal(PlotMark.Interval).describe(
+    'Discriminator: an orthogonal interval product projected to a segment / rectangle / sector / cell by the coordinate system',
+  ),
+  series: NonBlankStringSchema.optional().describe(
+    'Series field: split records into multiple interval series (color grouping; sub-band grouping when bounds.x is a band with group)',
+  ),
+  bounds: IntervalBoundsSchema.optional().describe(
+    'Per-role interval bounds keyed by coordinate role; omit to infer from the coordinate role',
+  ),
+  strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
+    'Interval cell stroke width: field-bound datum channel or constant core Node stroke width',
+  ),
+  fill: PointFillStyleSchema.optional().describe(
+    'Interval cell fill paint: field-bound datum channel or constant CSS color / IRPaint',
+  ),
+  stroke: PointStrokeStyleSchema.optional().describe(
+    'Interval cell stroke paint: field-bound datum channel or constant CSS color / IRPaint',
+  ),
+  opacity: PointOpacityStyleSchema.optional().describe(
+    'Interval cell whole opacity: field-bound datum channel or constant opacity 0..1',
+  ),
+  fillOpacity: PointOpacityStyleSchema.optional().describe(
+    'Interval cell fill opacity: field-bound datum channel or constant opacity 0..1',
+  ),
+  padAngle: NonNegativeNumberSchema.optional().describe(
+    'Angular gap in degrees applied to polar sector cells; each sector shrinks by half this angle on both sides. Cartesian cells ignore it',
+  ),
+  pull: PointNonnegativeNumberStyleSchema.optional().describe(
+    'Static radial offset in user units for polar sector cells; moves the sector center along the final mid angle. Only sector geometry supports it',
+  ),
+  anchorId: AnchorIdSchema.optional().describe(
+    'Stable id rule written to each generated core interval Node; takes precedence over datumIdField for the node id',
+  ),
+  ...coreNodeStyle,
+  ...markBase,
+  ...nodeHostLabel,
+  ...positionalEncoding,
+}).describe(
+  'Interval mark: orthogonal interval product realized per bounds × coordinate (bar / histogram / heatmap cell / radial bar / pie-donut sector)',
+);
 
-export const ReferenceMarkSchema = z
-  .strictObject({
-    type: z
-      .literal(PlotMark.Reference)
-      .describe(
-        'Discriminator: a constant-position reference mark (line for a single value, band for a [lo,hi] interval, or region for a bounded coordinate cell)',
-      ),
-    kind: z
-      .literal(ReferenceMarkKind.Region)
-      .optional()
-      .describe(
-        'Reference form override. Set to region to require lower/upper bounds for every consumed coordinate role and fill the bounded reference cell; omit to infer line or one-axis band',
-      ),
-    yTo: z
-      .union([z.number(), z.string().min(1)])
-      .optional()
-      .describe(
-        'Upper bound along y: number → constant, string → per-datum field. With encoding.y alone it creates a horizontal band y∈[y,yTo]; with kind=region it is the region y upper bound',
-      ),
-    xTo: z
-      .union([z.number(), z.string().min(1)])
-      .optional()
-      .describe(
-        'Upper bound along x: number → constant, string → per-datum field. With encoding.x alone it creates a vertical band x∈[x,xTo]; with kind=region it is the region x upper bound',
-      ),
-    extentField: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Per-datum partial-length reference/band: field giving the span start along the opposite axis (omit → span the full opposite domain). Pairs with extentToField',
-      ),
-    extentToField: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Per-datum partial-length reference/band: field giving the span end along the opposite axis (omit → span the full opposite domain). Pairs with extentField',
-      ),
-    strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
-      'Reference line stroke width: field-bound datum channel or constant core Path stroke width',
+export const ReferenceMarkSchema = strictObject({
+  type: literal(PlotMark.Reference).describe(
+    'Discriminator: a constant-position reference mark (line for a single value, band for a [lo,hi] interval, or region for a bounded coordinate cell)',
+  ),
+  kind: literal(ReferenceMarkKind.Region)
+    .optional()
+    .describe(
+      'Reference form override. Set to region to require lower/upper bounds for every consumed coordinate role and fill the bounded reference cell; omit to infer line or one-axis band',
     ),
-    opacity: PointOpacityStyleSchema.optional().describe(
-      'Reference mark whole opacity: field-bound datum channel or constant opacity 0..1',
+  yTo: union([number(), NonBlankStringSchema])
+    .optional()
+    .describe(
+      'Upper bound along y: number → constant, string → per-datum field. With encoding.y alone it creates a horizontal band y∈[y,yTo]; with kind=region it is the region y upper bound',
     ),
-    fillOpacity: PointOpacityStyleSchema.optional().describe(
-      'Reference band fill opacity: field-bound datum channel or constant opacity 0..1',
+  xTo: union([number(), NonBlankStringSchema])
+    .optional()
+    .describe(
+      'Upper bound along x: number → constant, string → per-datum field. With encoding.x alone it creates a vertical band x∈[x,xTo]; with kind=region it is the region x upper bound',
     ),
-    label: z
-      .union([MarkNodeLabelListSchema, MarkGeometryLabelListSchema])
-      .optional()
-      .describe(
-        'Host label for the generated reference primitive: line uses geometry label, band / region use node label',
-      ),
-    ...coreNodeStyle,
-    ...corePathStyle,
-    ...markBase,
-    ...positionalEncoding,
-  })
+  extentField: NonBlankStringSchema.optional().describe(
+    'Per-datum partial-length reference/band: field giving the span start along the opposite axis (omit → span the full opposite domain). Pairs with extentToField',
+  ),
+  extentToField: NonBlankStringSchema.optional().describe(
+    'Per-datum partial-length reference/band: field giving the span end along the opposite axis (omit → span the full opposite domain). Pairs with extentField',
+  ),
+  strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
+    'Reference line stroke width: field-bound datum channel or constant core Path stroke width',
+  ),
+  opacity: PointOpacityStyleSchema.optional().describe(
+    'Reference mark whole opacity: field-bound datum channel or constant opacity 0..1',
+  ),
+  fillOpacity: PointOpacityStyleSchema.optional().describe(
+    'Reference band fill opacity: field-bound datum channel or constant opacity 0..1',
+  ),
+  label: union([MarkNodeLabelListSchema, MarkGeometryLabelListSchema])
+    .optional()
+    .describe(
+      'Host label for the generated reference primitive: line uses geometry label, band / region use node label',
+    ),
+  ...coreNodeStyle,
+  ...corePathStyle,
+  ...markBase,
+  ...positionalEncoding,
+})
   .superRefine((mark, ctx) => {
     if (mark.label === undefined) return;
     const usesNodeHost = mark.kind === ReferenceMarkKind.Region || mark.xTo !== undefined || mark.yTo !== undefined;
@@ -934,25 +853,22 @@ export const ReferenceMarkSchema = z
     'Reference mark: a constant-position reference constraint. Bind x (vertical) or y (horizontal) for a line or one-axis band; set kind=region with lower/upper bounds for the active coordinate roles. Field → per-datum, value → constant. Use extentField / extentToField for partial-length one-axis spans',
   );
 
-export const RelationPathGeometrySchema = z
-  .strictObject({
-    via: z
-      .array(PlotTargetRefSchema)
-      .optional()
-      .describe('Optional intermediate waypoints; each projected waypoint may generate a core Coordinate'),
-    route: z
-      .array(RelationRouteStepSchema)
-      .min(1)
-      .optional()
-      .describe('Explicit route steps after the initial move(source) step'),
-    routing: RelationRoutingSchema.optional().describe(
-      'Optional algorithmic route strategy; omitted means straight line routing',
-    ),
-    label: RelationStepLabelSchema.optional().describe(
-      'Convenience label attached to the default route or the final drawable explicit route step',
-    ),
-    options: RelationPathSpecificOptionsSchema.optional().describe('Core Path options used only by path relations'),
-  })
+export const RelationPathGeometrySchema = strictObject({
+  via: array(PlotTargetRefSchema)
+    .optional()
+    .describe('Optional intermediate waypoints; each projected waypoint may generate a core Coordinate'),
+  route: array(RelationRouteStepSchema)
+    .min(1)
+    .optional()
+    .describe('Explicit route steps after the initial move(source) step'),
+  routing: RelationRoutingSchema.optional().describe(
+    'Optional algorithmic route strategy; omitted means straight line routing',
+  ),
+  label: RelationStepLabelSchema.optional().describe(
+    'Convenience label attached to the default route or the final drawable explicit route step',
+  ),
+  options: RelationPathSpecificOptionsSchema.optional().describe('Core Path options used only by path relations'),
+})
   .superRefine((path, ctx) => {
     if (path.route !== undefined && path.routing !== undefined) {
       ctx.addIssue({
@@ -972,13 +888,12 @@ export const RelationPathGeometrySchema = z
   })
   .describe('Path geometry configuration for RelationMark');
 
-export const RelationRibbonSpecificOptionsSchema = z
-  .strictObject({
-    interpolation: RibbonPathOptionsSchema.shape.interpolation,
-    align: RibbonPathOptionsSchema.shape.align,
-    samples: RibbonPathOptionsSchema.shape.samples,
-    sampling: RibbonPathOptionsSchema.shape.sampling,
-  })
+export const RelationRibbonSpecificOptionsSchema = strictObject({
+  interpolation: RibbonPathOptionsSchema.shape.interpolation,
+  align: RibbonPathOptionsSchema.shape.align,
+  samples: RibbonPathOptionsSchema.shape.samples,
+  sampling: RibbonPathOptionsSchema.shape.sampling,
+})
   .superRefine((options, ctx) => {
     if (options.samples !== undefined && options.sampling !== undefined) {
       ctx.addIssue({
@@ -990,18 +905,17 @@ export const RelationRibbonSpecificOptionsSchema = z
   })
   .describe('Core Path kind=ribbon options used only by ribbon relations');
 
-export const RelationRibbonOptionsSchema = z
-  .strictObject({
-    width: PointNonnegativeNumberStyleSchema.describe(
-      'Ribbon width at the source side, or the whole width when endWidth is omitted',
-    ),
-    endWidth: PointNonnegativeNumberStyleSchema.optional().describe(
-      'Optional ribbon width at the target side; set together with width for tapered ribbons',
-    ),
-    options: RelationRibbonSpecificOptionsSchema.optional().describe(
-      'Core Path kind=ribbon options used only by ribbon relations',
-    ),
-  })
+export const RelationRibbonOptionsSchema = strictObject({
+  width: PointNonnegativeNumberStyleSchema.describe(
+    'Ribbon width at the source side, or the whole width when endWidth is omitted',
+  ),
+  endWidth: PointNonnegativeNumberStyleSchema.optional().describe(
+    'Optional ribbon width at the target side; set together with width for tapered ribbons',
+  ),
+  options: RelationRibbonSpecificOptionsSchema.optional().describe(
+    'Core Path kind=ribbon options used only by ribbon relations',
+  ),
+})
   .superRefine((ribbon, ctx) => {
     if (ribbon.options?.interpolation !== undefined && ribbon.endWidth === undefined) {
       ctx.addIssue({
@@ -1013,33 +927,31 @@ export const RelationRibbonOptionsSchema = z
   })
   .describe('Ribbon geometry configuration for RelationMark');
 
-export const RelationMarkSchema = z
-  .strictObject({
-    type: z.literal(PlotMark.Relation).describe('Discriminator: source-target relation lowered to a core Path'),
-    kind: z.enum(RelationGeometryKind).optional().describe('Relation geometry kind; omitted means path'),
-    source: PlotTargetRefSchema.describe('Relation source target'),
-    target: PlotTargetRefSchema.describe('Relation target target'),
-    style: RelationPrimitiveStyleSchema.optional().describe(
-      'Style fields shared by stroke and ribbon relation path kinds',
-    ),
-    path: RelationPathGeometrySchema.optional().describe('Path-specific relation geometry and core Path options'),
-    ribbon: RelationRibbonOptionsSchema.optional().describe(
-      'Ribbon-specific relation geometry and core Path kind=ribbon options',
-    ),
-    ...geometryHostLabel,
-    ...markBase,
-    encoding: z
-      .object({
-        color: PointEncodingSchema.shape.color
-          .optional()
-          .describe('Optional relation color channel; delivered as core Path color'),
-        channels: EncodingSchema.shape.channels
-          .optional()
-          .describe('Custom channel bindings consumed by mark / scope / path definitions'),
-      })
+export const RelationMarkSchema = strictObject({
+  type: literal(PlotMark.Relation).describe('Discriminator: source-target relation lowered to a core Path'),
+  kind: zodEnum(RelationGeometryKind).optional().describe('Relation geometry kind; omitted means path'),
+  source: PlotTargetRefSchema.describe('Relation source target'),
+  target: PlotTargetRefSchema.describe('Relation target target'),
+  style: RelationPrimitiveStyleSchema.optional().describe(
+    'Style fields shared by stroke and ribbon relation path kinds',
+  ),
+  path: RelationPathGeometrySchema.optional().describe('Path-specific relation geometry and core Path options'),
+  ribbon: RelationRibbonOptionsSchema.optional().describe(
+    'Ribbon-specific relation geometry and core Path kind=ribbon options',
+  ),
+  ...geometryHostLabel,
+  ...markBase,
+  encoding: object({
+    color: MarkChannelEncodingSchema.shape.color
       .optional()
-      .describe('Optional non-position relation channels; source/target carry relation geometry'),
+      .describe('Optional relation color channel; delivered as core Path color'),
+    channels: MarkChannelEncodingSchema.shape.channels
+      .optional()
+      .describe('Custom channel bindings consumed by mark / scope / path definitions'),
   })
+    .optional()
+    .describe('Optional non-position relation channels; source/target carry relation geometry'),
+})
   .superRefine((mark, ctx) => {
     const kind = mark.kind ?? RelationGeometryKind.Path;
     if (kind === RelationGeometryKind.Path && mark.ribbon !== undefined) {
@@ -1068,46 +980,35 @@ export const RelationMarkSchema = z
     'Relation mark: connects source and target targets through a core Path; kind selects stroke or ribbon path semantics',
   );
 
-export const MarkSchema = z
-  .discriminatedUnion('type', [
-    PointMarkSchema,
-    PathMarkSchema,
-    IntervalMarkSchema,
-    ReferenceMarkSchema,
-    RelationMarkSchema,
-  ])
-  .describe(
-    'Mark union: dimensional marks (point / path / interval), reference marks, and source-target relation marks',
-  );
+export const MarkSchema = discriminatedUnion('type', [
+  PointMarkSchema,
+  PathMarkSchema,
+  IntervalMarkSchema,
+  ReferenceMarkSchema,
+  RelationMarkSchema,
+]).describe(
+  'Mark union: dimensional marks (point / path / interval), reference marks, and source-target relation marks',
+);
 
-export const CustomMarkSchema = z
-  .looseObject({
-    type: z
-      .string()
-      .min(1)
-      .refine(type => !BUILTIN_MARK_TYPES.has(type), {
-        message: 'custom mark type must not collide with a built-in mark type',
-      })
-      .describe(
-        'Discriminator: custom mark type; must be a non-empty, non-built-in identifier registered through options.markDefinitions',
-      ),
-    transform: MarkTransformSchema.optional().describe(
-      'Optional mark-local transform pipeline applied after the plot root transform',
-    ),
-    layer: PlotLayerSchema.optional().describe(
-      'Semantic plot layer override applied to the outer custom mark output scope',
-    ),
-    coordinateView: z
-      .string()
-      .min(1)
-      .optional()
-      .describe(
-        'Coordinate view id this custom mark is projected through; omit to use the plot composition default view',
-      ),
-    encoding: EncodingSchema.optional().describe(
-      'Position / non-position channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks',
-    ),
-  })
+export const CustomMarkSchema = looseObject({
+  type: NonBlankStringSchema.refine(type => !BUILTIN_MARK_TYPES.has(type), {
+    message: 'custom mark type must not collide with a built-in mark type',
+  }).describe(
+    'Discriminator: custom mark type; must be a non-blank, non-built-in identifier registered through options.markDefinitions',
+  ),
+  transform: MarkTransformSchema.optional().describe(
+    'Optional mark-local transform pipeline applied after the plot root transform',
+  ),
+  layer: PlotLayerSchema.optional().describe(
+    'Semantic plot layer override applied to the outer custom mark output scope',
+  ),
+  coordinateView: NonBlankStringSchema.optional().describe(
+    'Coordinate view id this custom mark is projected through; omit to use the plot composition default view',
+  ),
+  encoding: EncodingSchema.optional().describe(
+    'Position / non-position channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks',
+  ),
+})
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
@@ -1122,8 +1023,6 @@ export const CustomMarkSchema = z
     'Custom mark operation: type is any non-built-in identifier; its config is validated at lowering time against the matching MarkDefinition supplied via options.markDefinitions',
   );
 
-export const MarkOperationSchema = z
-  .union([MarkSchema, CustomMarkSchema])
-  .describe(
-    'Mark operation union: built-in mark configs plus custom type open config operations validated by a runtime MarkDefinition',
-  );
+export const MarkOperationSchema = union([MarkSchema, CustomMarkSchema]).describe(
+  'Mark operation union: built-in mark configs plus custom type open config operations validated by a runtime MarkDefinition',
+);

@@ -2,8 +2,9 @@ import { compileToScene } from '@retikz/core';
 import { applyTransforms, coerceValue, defineTransform, normalizeRows, resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { readSourceIndex, tagSourceIndex } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, object } from 'zod';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
@@ -14,11 +15,7 @@ import { resolvePlotTransformRegistry } from '../../../src/providers';
 import { PlotSchema } from '../../../src/schemas';
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
-const compile = (
-  spec: IRPlot,
-  datasets: Record<string, Array<Record<string, unknown>>>,
-  options?: LowerPlotsOptions,
-) =>
+const compile = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>, options?: LowerPlotsOptions) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) }).scene;
 
 const specWithModel = (reference = 'd'): IRPlot =>
@@ -70,10 +67,10 @@ const inheritedRecord = <T>(key: string, value: T): Record<string, T> =>
   Object.create(ownRecord(key, value)) as Record<string, T>;
 
 const doubleDefinition = defineTransform({
-  schema: z.object({
-    kind: z.literal('double'),
-    field: z.string().min(1),
-    as: z.string().min(1),
+  schema: object({
+    kind: literal('double'),
+    field: NonBlankStringSchema,
+    as: NonBlankStringSchema,
   }),
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],

@@ -9,7 +9,7 @@ import {
   selectSpatialHandles,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number } from 'zod';
 
 import { toSceneResult } from '../../src';
 import { mountSvg } from '../../src/dom';
@@ -18,9 +18,9 @@ const card = defineComposite({
   namespace: 'third',
   type: 'card',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('third'),
-    type: z.literal('card'),
-    width: z.number(),
+    namespace: literal('third'),
+    type: literal('card'),
+    width: number(),
   }),
   expand: node => ({
     children: [{ type: 'node', position: [0, 0], minimumWidth: node.width, minimumHeight: 10 }],

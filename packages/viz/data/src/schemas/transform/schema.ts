@@ -1,30 +1,27 @@
 ﻿import { JsonObjectSchema } from '@retikz/core';
-import { z } from 'zod';
+import { NonBlankStringSchema } from '@retikz/foundation';
+import { array, discriminatedUnion, enum as zodEnum, literal, looseObject, strictObject, union } from 'zod';
 
 import { DataSortOrder, DataTransform, RESERVED_TRANSFORM_KINDS, RowSelectorTie } from './constants';
 import { reducerOutputFieldsOf } from './output-fields';
 import { ReducerMetricsSchema } from './reducer';
 import { BuiltinSelectorOperationSchemas, SelectorOperationSchema } from './selector';
 
-export const SortTransformSchema = z
-  .strictObject({
-    kind: z.literal(DataTransform.Sort).describe('Discriminator: sort rows'),
-    field: z.string().min(1).describe('Sort field'),
-    order: z.enum(DataSortOrder).optional().describe('Sort direction; default ascending'),
-  })
-  .describe('Sort rows by one field');
+export const SortTransformSchema = strictObject({
+  kind: literal(DataTransform.Sort).describe('Discriminator: sort rows'),
+  field: NonBlankStringSchema.describe('Sort field'),
+  order: zodEnum(DataSortOrder).optional().describe('Sort direction; default ascending'),
+}).describe('Sort rows by one field');
 
-export const GroupBySchema = z
-  .array(z.string().min(1))
+export const GroupBySchema = array(NonBlankStringSchema)
   .optional()
   .describe('Group key fields; omitted or empty means one group');
 
-export const SummarizeTransformSchema = z
-  .strictObject({
-    kind: z.literal(DataTransform.Summarize).describe('Discriminator: summarize transform'),
-    groupBy: GroupBySchema,
-    metrics: ReducerMetricsSchema.describe('Reducer metrics'),
-  })
+export const SummarizeTransformSchema = strictObject({
+  kind: literal(DataTransform.Summarize).describe('Discriminator: summarize transform'),
+  groupBy: GroupBySchema,
+  metrics: ReducerMetricsSchema.describe('Reducer metrics'),
+})
   .superRefine((operation, ctx) => {
     const groupFields = new Set(operation.groupBy ?? []);
     operation.metrics.forEach((metric, metricIndex) => {
@@ -40,52 +37,44 @@ export const SummarizeTransformSchema = z
   })
   .describe('Group rows into metric rows');
 
-export const SelectTransformSchema = z
-  .strictObject({
-    kind: z.literal(DataTransform.Select).describe('Discriminator: select transform'),
-    groupBy: GroupBySchema,
-    selector: SelectorOperationSchema.describe('Row selector'),
-    rankAs: z.string().min(1).optional().describe('One-based rank output field'),
-  })
-  .describe('Select representative rows per group');
+export const SelectTransformSchema = strictObject({
+  kind: literal(DataTransform.Select).describe('Discriminator: select transform'),
+  groupBy: GroupBySchema,
+  selector: SelectorOperationSchema.describe('Row selector'),
+  rankAs: NonBlankStringSchema.optional().describe('One-based rank output field'),
+}).describe('Select representative rows per group');
 
-const AnnotateSelectorTieSchema = z
-  .union([z.literal(RowSelectorTie.First), z.literal(RowSelectorTie.Last)])
+const AnnotateSelectorTieSchema = union([literal(RowSelectorTie.First), literal(RowSelectorTie.Last)])
   .optional()
   .describe('Single-row tie-breaking strategy; default first');
 
-const AnnotateSelectorOperationSchema = z
-  .discriminatedUnion('kind', [
-    BuiltinSelectorOperationSchemas.Min.extend({ tie: AnnotateSelectorTieSchema }),
-    BuiltinSelectorOperationSchemas.Max.extend({ tie: AnnotateSelectorTieSchema }),
-    BuiltinSelectorOperationSchemas.First,
-    BuiltinSelectorOperationSchemas.Last,
-    BuiltinSelectorOperationSchemas.Top.extend({
-      n: z.literal(1).describe('Selected row count; fixed to one for annotation'),
-      tie: AnnotateSelectorTieSchema,
-    }),
-    BuiltinSelectorOperationSchemas.Bottom.extend({
-      n: z.literal(1).describe('Selected row count; fixed to one for annotation'),
-      tie: AnnotateSelectorTieSchema,
-    }),
-    BuiltinSelectorOperationSchemas.Nth,
-  ])
-  .describe('Built-in selector operation guaranteed to select at most one row');
+const AnnotateSelectorOperationSchema = discriminatedUnion('kind', [
+  BuiltinSelectorOperationSchemas.Min.extend({ tie: AnnotateSelectorTieSchema }),
+  BuiltinSelectorOperationSchemas.Max.extend({ tie: AnnotateSelectorTieSchema }),
+  BuiltinSelectorOperationSchemas.First,
+  BuiltinSelectorOperationSchemas.Last,
+  BuiltinSelectorOperationSchemas.Top.extend({
+    n: literal(1).describe('Selected row count; fixed to one for annotation'),
+    tie: AnnotateSelectorTieSchema,
+  }),
+  BuiltinSelectorOperationSchemas.Bottom.extend({
+    n: literal(1).describe('Selected row count; fixed to one for annotation'),
+    tie: AnnotateSelectorTieSchema,
+  }),
+  BuiltinSelectorOperationSchemas.Nth,
+]).describe('Built-in selector operation guaranteed to select at most one row');
 
-export const AnnotateSelectorSchema = z
-  .strictObject({
-    selector: AnnotateSelectorOperationSchema.describe('Single-row selector'),
-    as: z.string().min(1).describe('Annotation output field'),
-  })
-  .describe('Single-row selector annotation');
+export const AnnotateSelectorSchema = strictObject({
+  selector: AnnotateSelectorOperationSchema.describe('Single-row selector'),
+  as: NonBlankStringSchema.describe('Annotation output field'),
+}).describe('Single-row selector annotation');
 
-export const AnnotateTransformSchema = z
-  .strictObject({
-    kind: z.literal(DataTransform.Annotate).describe('Discriminator: annotate transform'),
-    groupBy: GroupBySchema,
-    metrics: ReducerMetricsSchema.optional().describe('Reducer metrics'),
-    selectors: z.array(AnnotateSelectorSchema).min(1).optional().describe('Single-row selector annotations'),
-  })
+export const AnnotateTransformSchema = strictObject({
+  kind: literal(DataTransform.Annotate).describe('Discriminator: annotate transform'),
+  groupBy: GroupBySchema,
+  metrics: ReducerMetricsSchema.optional().describe('Reducer metrics'),
+  selectors: array(AnnotateSelectorSchema).min(1).optional().describe('Single-row selector annotations'),
+})
   .superRefine((operation, ctx) => {
     if (operation.metrics === undefined && operation.selectors === undefined) {
       ctx.addIssue({
@@ -109,25 +98,18 @@ export const AnnotateTransformSchema = z
   })
   .describe('Append group metrics or selector annotations');
 
-export const BuiltinTransformSchema = z
-  .discriminatedUnion('kind', [
-    SortTransformSchema,
-    SummarizeTransformSchema,
-    SelectTransformSchema,
-    AnnotateTransformSchema,
-  ])
-  .describe('Built-in data transform operation');
+export const BuiltinTransformSchema = discriminatedUnion('kind', [
+  SortTransformSchema,
+  SummarizeTransformSchema,
+  SelectTransformSchema,
+  AnnotateTransformSchema,
+]).describe('Built-in data transform operation');
 
-const ExternalTransformSchema = z
-  .looseObject({
-    kind: z
-      .string()
-      .min(1)
-      .refine(kind => !RESERVED_TRANSFORM_KINDS.has(kind), {
-        message: 'external transform kind must not collide with a built-in or removed transform kind',
-      })
-      .describe('Discriminator: custom transform kind'),
-  })
+const ExternalTransformSchema = looseObject({
+  kind: NonBlankStringSchema.refine(kind => !RESERVED_TRANSFORM_KINDS.has(kind), {
+    message: 'external transform kind must not collide with a built-in or removed transform kind',
+  }).describe('Discriminator: custom transform kind'),
+})
   .superRefine((operation, ctx) => {
     const result = JsonObjectSchema.safeParse(operation);
     if (!result.success) {
@@ -140,6 +122,6 @@ const ExternalTransformSchema = z
   })
   .describe('Custom transform operation with JSON config');
 
-export const TransformSchema = z
-  .union([BuiltinTransformSchema, ExternalTransformSchema])
-  .describe('Built-in or custom data transform operation');
+export const TransformSchema = union([BuiltinTransformSchema, ExternalTransformSchema]).describe(
+  'Built-in or custom data transform operation',
+);

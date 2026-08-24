@@ -1,6 +1,13 @@
 import type { Position } from '@retikz/math';
 
-import { arcAngleInRange, arcEndPoint, DEFAULT_EPSILON, intersect, rayArc, vector2 } from '@retikz/math';
+import {
+  DEFAULT_EPSILON,
+  intersect,
+  intersectRayWithArc,
+  isAngleWithinArcSweep,
+  pointAtArcAngle,
+  vector2,
+} from '@retikz/math';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { alignAngleSweep, DEG_TO_RAD, normalizeSignedDegrees, RAD_TO_DEG } from '../angle';
@@ -74,11 +81,11 @@ const cross = (a: Position, b: Position): number => a[0] * b[1] - a[1] * b[0];
 
 /** 段起点 */
 const segmentStart = (seg: ContourSegment): Position =>
-  seg.kind === 'line' ? seg.from : arcEndPoint(seg.center, seg.radius, seg.startAngle);
+  seg.kind === 'line' ? seg.from : pointAtArcAngle(seg.center, seg.radius, seg.startAngle);
 
 /** 段终点 */
 const segmentEnd = (seg: ContourSegment): Position =>
-  seg.kind === 'line' ? seg.to : arcEndPoint(seg.center, seg.radius, seg.endAngle);
+  seg.kind === 'line' ? seg.to : pointAtArcAngle(seg.center, seg.radius, seg.endAngle);
 
 /**
  * 段在某端的「行进切线」单位向量
@@ -226,11 +233,11 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
         if (p) candidates.push(p);
       } else if (oa.kind === 'line' && ob.kind === 'circle') {
         candidates.push(
-          ...intersect.lineCircle({ origin: oa.point, dir: oa.dir, center: ob.center, radius: ob.radius }),
+          ...intersect.lineCircle({ origin: oa.point, direction: oa.dir, center: ob.center, radius: ob.radius }),
         );
       } else if (oa.kind === 'circle' && ob.kind === 'line') {
         candidates.push(
-          ...intersect.lineCircle({ origin: ob.point, dir: ob.dir, center: oa.center, radius: oa.radius }),
+          ...intersect.lineCircle({ origin: ob.point, direction: ob.dir, center: oa.center, radius: oa.radius }),
         );
       } else if (oa.kind === 'circle' && ob.kind === 'circle') {
         candidates.push(
@@ -361,7 +368,7 @@ const tangentPointOn = (seg: ContourSegment, filletCenter: Position, radius: num
   for (const cand of candidates) {
     const angle = Math.atan2(cand[1] - seg.center[1], cand[0] - seg.center[0]) * RAD_TO_DEG;
     if (
-      !arcAngleInRange({
+      !isAngleWithinArcSweep({
         startAngleDeg: seg.startAngle,
         endAngleDeg: seg.endAngle,
         angleDeg: angle,
@@ -546,11 +553,11 @@ export const boundaryFromContour = (
 
   const considerArc = (center: Position, radius: number, startAngle: number, endAngle: number, ccw: boolean): void => {
     // 把 (start, end) 规范成与 ccw 一致的有向区间（end 落在 start 同向的 [0,360) 内），
-    //   再喂 rayArc——arcAngleInRange 据 end−start 的符号判扫描方向，必须与 ccw 自洽。
+    //   再喂 intersectRayWithArc——isAngleWithinArcSweep 据 end−start 的符号判扫描方向，必须与 ccw 自洽。
     const aligned = alignAngleSweep(startAngle, endAngle, ccw);
-    const hits = rayArc({
+    const hits = intersectRayWithArc({
       origin: rayOrigin,
-      dir,
+      direction: dir,
       center,
       radius,
       startAngleDeg: aligned.start,

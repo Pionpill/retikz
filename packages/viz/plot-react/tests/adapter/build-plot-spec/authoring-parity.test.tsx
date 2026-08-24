@@ -1,3 +1,6 @@
+import type { IRPlot } from '@retikz/plot';
+
+import { compileToScene } from '@retikz/core';
 import { lowerPlots } from '@retikz/plot';
 import { normalizePlot } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
@@ -7,6 +10,9 @@ import { Facet, Scaffold, Track } from '../../../src/components/composition';
 import { Axis } from '../../../src/components/guides';
 import { PathMark, PointMark } from '../../../src/components/marks';
 import { Scale } from '../../../src/components/scales';
+
+const compilePlot = (spec: IRPlot, datasets: Parameters<typeof lowerPlots>[0]) =>
+  compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });
 
 describe('React 与 framework-neutral authoring parity', () => {
   it('单 facet 产出完全一致的 IRPlot', () => {
@@ -108,9 +114,7 @@ describe('React 与 framework-neutral authoring parity', () => {
 
     expect(spec.scales).toEqual([]);
     expect(spec.composition?.views).toEqual([{ id: 'salesPanel', coordinate: { type: 'cartesian2D' } }]);
-    expect(() =>
-      lowerPlots({ sales: [{ region: 'north', month: 'Jan', revenue: 10 }] })[0]?.expand(spec),
-    ).not.toThrow();
+    expect(() => compilePlot(spec, { sales: [{ region: 'north', month: 'Jan', revenue: 10 }] })).not.toThrow();
   });
 
   it('facet 在 model 驱动推断时保留显式位置 scale', () => {
@@ -133,12 +137,12 @@ describe('React 与 framework-neutral authoring parity', () => {
     expect(spec.scales).toEqual([{ type: 'time', name: '__x' }]);
     expect(spec.composition?.views).toEqual([{ id: 'salesPanel', coordinate: { type: 'cartesian2D', x: '__x' } }]);
     expect(() =>
-      lowerPlots({
+      compilePlot(spec, {
         sales: [
           { region: 'north', month: '2026-01-01', revenue: 10 },
           { region: 'north', month: '2026-02-01', revenue: 12 },
         ],
-      })[0]?.expand(spec),
+      }),
     ).not.toThrow();
   });
 
@@ -161,7 +165,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       kind: 'tracks',
       coordinate: { type: 'cartesian2D' },
     });
-    expect(() => lowerPlots({ ops: [{ week: 'W1', incidents: 2, load: 0.5 }] })[0]?.expand(spec)).not.toThrow();
+    expect(() => compilePlot(spec, { ops: [{ week: 'W1', incidents: 2, load: 0.5 }] })).not.toThrow();
   });
 
   it('scaffold viewIdTemplate 在 React 与 plain authoring 中派生相同 scope', () => {

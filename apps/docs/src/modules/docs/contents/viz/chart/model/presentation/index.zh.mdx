@@ -1,0 +1,81 @@
+---
+title: 整图展示
+description: 理解标题、副标题、注记、来源与 Plot 如何按固定槽位布局在同一个 Surface 中。
+---
+
+整图展示说明“这张图在讲什么、覆盖什么范围、数据来自哪里、阅读时要注意什么”。它属于 Chart，而不是某一种图形类型，也不是 Plot 的轴、图例或标注。
+
+## 固定槽位与 canonical 顺序
+
+下面的 playground 使用真实 Point Chart，而不是用框图模拟布局。标题、副标题、Plot、注记和来源都会进入同一个 Surface；打开 Flex 辅助层后，可以看到 canonical 子项的 content、slot、allocation、padding、行区域与 gap。
+
+<ComponentPreview
+  files={['chart-presentation-layout', 'chart-presentation-preview.tsx', 'chart-presentation.data.ts']}
+  size="lg"
+  caption="辅助层只读取本次编译的内部 Flex 产物，不进入 Chart Source；关闭后可以单独查看最终内容。"
+/>
+
+`title`、`subtitle`、`note` 和 `source` 是四个固定槽位。解析时始终按 `title → subtitle → plot → note → source` 组织；缺少某个槽位时只省略该项，不改变其它项的位置。
+
+| React 标记      | Source 槽位 | 默认位置 | 典型内容                     |
+| --------------- | ----------- | -------- | ---------------------------- |
+| `ChartTitle`    | `title`     | top      | 主题或主要结论               |
+| `ChartSubtitle` | `subtitle`  | top      | 范围、年份、样本、单位或方法 |
+| `ChartNote`     | `note`      | bottom   | 读图限制、口径或补充说明     |
+| `ChartSource`   | `source`    | bottom   | 数据集与会影响理解的数据处理 |
+
+React 可以用四种标记提供对应槽位；Vanilla 和 JSON 直接写 `presentation` 对象。React 标记必须是 Chart 的直接子节点，透明 `Fragment` 可分组；同一种标记出现两次会直接报错。标记出现顺序、对象属性出现顺序和 Vanilla 构造顺序都不改变语义，当前不支持自由 presentation order。
+
+## 展示项都是可选子项
+
+`title`、`subtitle`、`note` 或 `source` 未提供时，归一过程不会创建对应子项，Plot 与其余展示内容仍按固定顺序排列。下面的四个开关可以独立比较每项存在或缺失时的 canonical 结果。
+
+<ComponentPreview
+  files={['chart-presentation-visibility', 'chart-presentation-preview.tsx', 'chart-presentation.data.ts']}
+  size="lg"
+  caption="四个开关控制对应 Chart slot 是否存在，不是通过透明度隐藏已经生成的文字。"
+/>
+
+## 编写态与 canonical 的边界
+
+编写态只提供四个槽位的内容，不需要额外的 `position` 字段。解析阶段按固定顺序插入 Plot 占位，并生成对应的 Surface / Flex 内容。
+
+展示文本可以是字符串，也可以是可 JSON 序列化的 Core `TextBlock`。React 标记额外接受字符串、透明 `Fragment` 和 Core `Text` 子节点，并把它们收敛成相同的文本契约；普通 React 元素不会进入 Source。
+
+解析阶段，Chart 使用 Standard `Surface` 作为整图容器，并通过 Flex 顺序放置展示文本和唯一的 Plot 占位。Chart 主题提供各槽位的默认文本样式，Plot 仍负责自己的轴、图例和标注。
+
+<SourceLinks
+  sources={[
+    {
+      label: '归一四个 presentation 槽位',
+      path: 'packages/viz/chart-vanilla/src/normalize/chart/presentation.ts',
+      startLine: 5,
+      endLine: 24,
+    },
+    {
+      label: 'React 展示标记收敛为槽位',
+      path: 'packages/viz/chart-react/src/shared/presentation.tsx',
+      startLine: 9,
+      endLine: 127,
+    },
+    {
+      label: '固定顺序解析为 Flex 内容',
+      path: 'packages/viz/chart/src/_chart/resolve/presentation.ts',
+      startLine: 65,
+      endLine: 130,
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/model/authoring">
+    <span className="font-semibold">编写与解析</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解展示输入所在的完整主链。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/plot">
+    <span className="font-semibold">与 Plot 协作</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">区分整图展示与 Plot 辅助元素。</span>
+  </LinkedCard>
+</div>

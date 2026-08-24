@@ -18,7 +18,7 @@ const Demo: FC = () => (
     >
       <Text font={{ size: 13, weight: 'bold' }}>Semantic model</Text>
       <Text fill="gray" font={{ size: 10 }}>
-        identity · semantics
+        address · optional id
       </Text>
     </Node>
     <Node

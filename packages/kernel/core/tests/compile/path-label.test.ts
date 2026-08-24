@@ -34,6 +34,32 @@ const linePathIR = (label: NonNullable<Parameters<typeof JSON.stringify>[0]>): I
   ],
 });
 
+const linePathHostLabelIR = (label: NonNullable<Parameters<typeof JSON.stringify>[0]>): IRScene => ({
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'path',
+      label: label as never,
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [10, 0] },
+      ],
+    },
+  ],
+});
+
+describe('path.label：stroke host label 几何', () => {
+  it('renders a host label at the whole-path position', () => {
+    const scene = compileToScene(linePathHostLabelIR({ text: 'relation', position: 'near-end' })).scene;
+    const labels = findTextPrims(scene.primitives);
+
+    expect(labels).toHaveLength(1);
+    expect(labels[0].x).toBe(7.5);
+    expect(labels[0].lines).toEqual([{ text: 'relation' }]);
+  });
+});
+
 describe('step.label：line 段的 label 几何', () => {
   it('schema rejects sloped as a side value and accepts sloped as a boolean flag', async () => {
     const { StepLabelSchema } = await import('../../src/schemas/path/step');

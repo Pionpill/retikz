@@ -1,247 +1,411 @@
-import type { InputChild, InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 
 import {
-  ContainerProvider,
   defineEntityRole,
-  EntityProvider,
-  GraphProvider,
+  defineRelationRole,
+  EntityProviderKey,
   GraphProviderKey,
-  GraphThemeToken,
-  RelationProvider,
+  RelationProviderKey,
 } from '@retikz/graph';
-import { normalizeScene } from '@retikz/vanilla';
+import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
+import type { InputGraph } from '../src';
+
 import {
-  container,
-  ContainerInputEmbedAdapter,
   createGraphVanillaAdapters,
   entity,
   EntityInputEmbedAdapter,
   graph,
   GraphInputEmbedAdapter,
+  normalizeGraph,
   relation,
   RelationInputEmbedAdapter,
-  RetikzGraphVanillaError,
-  RetikzGraphVanillaErrorCode,
 } from '../src';
 
-const normalizeChildren = (children: ReadonlyArray<InputChild>) => {
-  const normalized = normalizeScene({ children });
-  return {
-    children: normalized.ir.children,
-    providerDependencies: {
-      roots: normalized.contributions.flatMap(contribution => contribution.roots),
-      providers: normalized.contributions.flatMap(contribution => contribution.providers),
-    },
-    authoringSites: [],
-  };
-};
+const definitionOptionKeys = [
+  'entityRoles',
+  'entityKinds',
+  'entityPredicates',
+  'relationRoles',
+  'relationKinds',
+  'relationPredicates',
+  'graphThemeStyles',
+] as const;
 
 const contextOf = (id: string, kind: string): InputEmbedContext => ({
   id,
   kind,
   layerId: 'layer',
   identityPath: ['layer', id],
-  normalizeChildren,
 });
 
 const lower = <TProps>(spec: InputEmbed<TProps>, adapter: InputEmbedAdapter<TProps>) =>
   adapter.lower(spec.props, contextOf(spec.id, spec.kind));
 
 describe('@retikz/graph-vanilla package boundary', () => {
-  it('exports exactly the unified four Graph adapters', async () => {
+  it('exports one adapter and builder for each Graph semantic composite', async () => {
     const graphVanilla = await import('../src');
 
-    expect(graphVanilla.ContainerInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.EntityInputEmbedAdapter).toBeDefined();
     expect(graphVanilla.GraphInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla.graph).toBeTypeOf('function');
-    expect(graphVanilla.createGraphVanillaAdapters).toBeTypeOf('function');
+    expect(graphVanilla.EntityInputEmbedAdapter).toBeDefined();
     expect(graphVanilla.RelationInputEmbedAdapter).toBeDefined();
-    expect(graphVanilla).not.toHaveProperty('stage');
-    expect(graphVanilla).not.toHaveProperty('TerminalInputEmbedAdapter');
-    expect(graphVanilla).not.toHaveProperty('DecisionInputEmbedAdapter');
-  });
-});
-
-describe('Graph Vanilla semantic authoring', () => {
-  it('uses one package-level structured error when normalizeScene context is missing', () => {
-    expect(() =>
-      GraphInputEmbedAdapter.lower(
-        { children: [] },
-        { ...contextOf('graph', 'graph.graph'), normalizeChildren: undefined },
-      ),
-    ).toThrowError(
-      expect.objectContaining({
-        name: 'RetikzGraphVanillaError',
-        code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,
-      }),
-    );
-    expect(RetikzGraphVanillaError).toBeDefined();
-  });
-
-  it('creates four adapters and preserves Entity role and variant', () => {
-    const adapters = createGraphVanillaAdapters();
-    const nodeAdapter = adapters.find(adapter => adapter.kind === 'graph.entity');
-    expect(adapters.map(adapter => adapter.kind)).toEqual([
+    expect(graphVanilla.graph).toBeTypeOf('function');
+    expect(graphVanilla.entity).toBeTypeOf('function');
+    expect(graphVanilla.relation).toBeTypeOf('function');
+    expect(graphVanilla.normalizeGraph).toBeTypeOf('function');
+    expect(createGraphVanillaAdapters().map(adapter => adapter.kind)).toEqual([
       'graph.graph',
-      'graph.container',
       'graph.entity',
       'graph.relation',
     ]);
-    expect(nodeAdapter).toBeDefined();
-
-    const contribution = lower(
-      entity('mixed', { role: 'stage', position: [0, 0], color: '#123456', variant: 'mixed' }),
-      nodeAdapter!,
-    );
-    expect(contribution.node).toMatchObject({
-      namespace: 'graph',
-      type: 'entity',
-      role: 'stage',
-      color: '#123456',
-      variant: 'mixed',
-    });
-    expect(contribution.providerDependencies.roots[0]).toEqual(EntityProvider.key);
   });
+});
 
-  it('normalizes a multi-child Graph embed with presentation tokens and configured providers', () => {
-    const service = defineEntityRole({ role: 'service', shape: 'rectangle', padding: 6 });
-    const adapters = createGraphVanillaAdapters();
-    const result = normalizeScene(
-      {
-        children: [
-          graph('workflow', {
-            entityRoles: [service],
-            entityVariant: 'default',
-            graphThemeTokens: { [GraphThemeToken.EntityColor]: '#336699' },
-            graphThemeTokenRules: [
-              {
-                select: { role: 'service' },
-                tokens: { [GraphThemeToken.EntityStrokeWidth]: 2 },
-              },
-            ],
-            children: [
-              entity('service', { role: 'service', position: [0, 0] }),
-              entity('stage', { role: 'stage', position: [40, 0] }),
-            ],
-          }),
-        ],
-      },
-      { adapters },
-    );
-
-    expect(result.ir.children[0]).toMatchObject({
+describe('normalizeGraph', () => {
+  it('omits absent children while preserving an explicit empty array', () => {
+    expect(normalizeGraph({})).toEqual({ namespace: 'graph', type: 'graph' });
+    expect(normalizeGraph({ children: [] })).toEqual({
       namespace: 'graph',
       type: 'graph',
-      id: 'workflow',
-      entityVariant: 'default',
-      graphThemeTokens: { [GraphThemeToken.EntityColor]: '#336699' },
-      graphThemeTokenRules: [
-        {
-          select: { role: 'service' },
-          tokens: { [GraphThemeToken.EntityStrokeWidth]: 2 },
-        },
-      ],
-      children: [
-        { namespace: 'graph', type: 'entity', id: 'service', role: 'service' },
-        { namespace: 'graph', type: 'entity', id: 'stage', role: 'stage' },
-      ],
+      children: [],
     });
-    expect(result.contributions[0]?.roots[0]).toEqual(GraphProviderKey);
-    expect(result.contributions[0]?.providers).not.toContain(GraphProvider);
-    expect(result.contributions[0]?.providers).not.toContain(EntityProvider);
-    expect(result.contributions[0]?.providers).toContain(RelationProvider);
   });
 
-  it('reads custom role definitions directly from the Graph authoring input', () => {
-    const service = defineEntityRole({ role: 'service', shape: 'rectangle', padding: 6 });
-    const result = normalizeScene(
+  it('preserves the complete authored Scope surface directly on Graph', () => {
+    const input: InputGraph = {
+      id: 'architecture',
+      theme: { mode: 'dark' as const },
+      graphTheme: {
+        rules: [
+          {
+            type: 'entity' as const,
+            selector: { role: 'participant' },
+            appearance: { fill: '#eef6ff' },
+          },
+        ],
+      },
+      localNamespace: true,
+      transforms: [{ kind: 'translate' as const, x: 10, y: 20 }],
+      placement: { target: [30, 40], selfAnchor: 'center' },
+      fill: 'lightblue',
+      opacity: 0.8,
+      nodeDefault: { fill: 'white' },
+      pathDefault: { stroke: 'green' },
+      labelDefault: { font: { size: 10 } },
+      arrowDefault: { shape: 'stealth', scale: 1.5 },
+      resetStyle: ['path' as const],
+      zIndex: 2,
+      clip: { kind: 'rect' as const, x: 0, y: 0, width: 220, height: 120 },
+      boundingShape: 'circle',
+      animations: [],
+      meta: { source: 'architecture-catalog' },
+    };
+
+    expect(normalizeGraph(input)).toEqual({
+      namespace: 'graph',
+      type: 'graph',
+      ...input,
+    });
+  });
+
+  it('normalizes only Entity, Relation and Way authoring sugar', () => {
+    expect(
+      normalizeGraph({
+        children: [
+          { type: 'entity', role: 'participant', text: '', dashed: true },
+          {
+            type: 'relation',
+            source: { id: 'service' },
+            target: { id: 'database' },
+            role: 'dependency',
+            dashPattern: [6, 2],
+            labels: [{ text: 'reads', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
+            way: ['service', { id: 'database' }],
+          },
+          { type: 'node', position: [0, 120], text: 'Legend' },
+        ],
+      }),
+    ).toEqual({
+      namespace: 'graph',
+      type: 'graph',
+      children: [
+        {
+          namespace: 'graph',
+          type: 'entity',
+          role: 'participant',
+          text: '',
+          dashed: true,
+        },
+        {
+          namespace: 'graph',
+          type: 'relation',
+          source: { id: 'service' },
+          target: { id: 'database' },
+          role: 'dependency',
+          dashPattern: [6, 2],
+          labels: [{ text: 'reads', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
+          route: [
+            { type: 'step', kind: 'move', to: { id: 'service' } },
+            { type: 'step', kind: 'line', to: { id: 'database' } },
+          ],
+        },
+        { type: 'node', position: [0, 120], text: 'Legend' },
+      ],
+    });
+  });
+});
+
+describe('Graph Vanilla embed adapters', () => {
+  it('keeps embed identity separate from optional authored identity for all three composites', () => {
+    const graphContribution = lower(graph('graph-embed', {}), GraphInputEmbedAdapter);
+    const entityContribution = lower(
+      entity('entity-embed', { type: 'entity', role: 'participant', position: [0, 0] }),
+      EntityInputEmbedAdapter,
+    );
+    const relationContribution = lower(
+      relation('relation-embed', {
+        type: 'relation',
+        source: { id: 'source' },
+        target: { id: 'target' },
+        role: 'association',
+      }),
+      RelationInputEmbedAdapter,
+    );
+
+    expect(graphContribution.node).toEqual({ namespace: 'graph', type: 'graph' });
+    expect(entityContribution.node).toEqual({
+      namespace: 'graph',
+      type: 'entity',
+      role: 'participant',
+      position: [0, 0],
+    });
+    expect(relationContribution.node).toEqual({
+      namespace: 'graph',
+      type: 'relation',
+      source: { id: 'source' },
+      target: { id: 'target' },
+      role: 'association',
+    });
+    expect(graphContribution.node).not.toHaveProperty('id');
+    expect(entityContribution.node).not.toHaveProperty('id');
+    expect(relationContribution.node).not.toHaveProperty('id');
+  });
+
+  it('normalizes Relation Way while preserving complete Core NodeTargets', () => {
+    const contribution = lower(
+      relation('relation-embed', {
+        type: 'relation',
+        source: {
+          id: 'source',
+          anchor: { side: 'right', fraction: 0.5 },
+          offset: [2, -1],
+          boundary: 'shape',
+        },
+        target: { id: 'target', anchor: 'west' },
+        role: 'dependency',
+        way: ['source', { id: 'target' }],
+      }),
+      RelationInputEmbedAdapter,
+    );
+
+    expect(contribution.node).toEqual({
+      namespace: 'graph',
+      type: 'relation',
+      source: {
+        id: 'source',
+        anchor: { side: 'right', fraction: 0.5 },
+        offset: [2, -1],
+        boundary: 'shape',
+      },
+      target: { id: 'target', anchor: 'west' },
+      role: 'dependency',
+      route: [
+        { type: 'step', kind: 'move', to: { id: 'source' } },
+        { type: 'step', kind: 'line', to: { id: 'target' } },
+      ],
+    });
+  });
+
+  it('normalizes arbitrary nested embeds without adding a panel Scope', () => {
+    const normalized = normalizeScene(
       {
         children: [
-          graph('service-map', {
-            entityRoles: [service],
-            children: [entity('service', { role: 'service', position: [0, 0] })],
+          graph('outer-embed', {
+            transforms: [{ kind: 'translate', x: 12, y: 8 }],
+            children: [
+              { type: 'node', id: 'source', position: [0, 0] },
+              {
+                type: 'scope',
+                children: [
+                  entity('entity-embed', {
+                    type: 'entity',
+                    role: 'participant',
+                    position: [80, 0],
+                  }),
+                ],
+              },
+              graph('inner-embed', {
+                children: [{ type: 'node', id: 'target', position: [160, 0] }],
+              }),
+            ],
           }),
         ],
       },
       { adapters: createGraphVanillaAdapters() },
     );
 
-    expect(result.ir.children[0]).toMatchObject({
-      namespace: 'graph',
-      type: 'graph',
-      id: 'service-map',
-      children: [{ namespace: 'graph', type: 'entity', role: 'service' }],
-    });
-    expect(JSON.stringify(result.ir)).not.toContain('serviceRole');
+    expect(normalized.ir.children).toEqual([
+      {
+        namespace: 'graph',
+        type: 'graph',
+        transforms: [{ kind: 'translate', x: 12, y: 8 }],
+        children: [
+          { type: 'node', id: 'source', position: [0, 0] },
+          {
+            type: 'scope',
+            children: [
+              {
+                namespace: 'graph',
+                type: 'entity',
+                role: 'participant',
+                position: [80, 0],
+              },
+            ],
+          },
+          {
+            namespace: 'graph',
+            type: 'graph',
+            children: [{ type: 'node', id: 'target', position: [160, 0] }],
+          },
+        ],
+      },
+    ]);
   });
 
-  it('returns embeds for Container, Entity, and Relation', () => {
-    expect(container('frame', { header: { child: { type: 'node', position: [0, 0] } } })).toMatchObject({
-      type: 'embed',
-      id: 'frame',
-      kind: 'graph.container',
-    });
-    expect(entity('stage', { role: 'stage', position: [20, 0] })).toMatchObject({
-      type: 'embed',
-      id: 'stage',
-      kind: 'graph.entity',
-    });
-    expect(relation('flow', { role: 'flow', way: ['start', 'stage'] })).toMatchObject({
-      type: 'embed',
-      id: 'flow',
-      kind: 'graph.relation',
-    });
-    expect(graph('workflow', { children: [] })).toMatchObject({
-      type: 'embed',
-      id: 'workflow',
-      kind: 'graph.graph',
-    });
+  it('contributes the provider closure rooted at the matching semantic composite', () => {
+    const graphContribution = lower(graph('graph-embed', {}), GraphInputEmbedAdapter);
+    const entityContribution = lower(
+      entity('entity-embed', { type: 'entity', role: 'participant', position: [0, 0] }),
+      EntityInputEmbedAdapter,
+    );
+    const relationContribution = lower(
+      relation('relation-embed', {
+        type: 'relation',
+        source: { id: 'source' },
+        target: { id: 'target' },
+        role: 'association',
+      }),
+      RelationInputEmbedAdapter,
+    );
+
+    expect(graphContribution.providerDependencies.roots).toEqual([GraphProviderKey]);
+    expect(entityContribution.providerDependencies.roots).toEqual([EntityProviderKey]);
+    expect(relationContribution.providerDependencies.roots).toEqual([RelationProviderKey]);
+    expect(graphContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(9);
+    expect(entityContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(3);
+    expect(relationContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(5);
   });
 
-  it.each([
-    {
-      type: 'graph',
-      id: 'workflow',
-      lower: () => lower(graph('workflow', { children: [] }), GraphInputEmbedAdapter),
-    },
-    {
-      type: 'container',
-      id: 'frame',
-      lower: () =>
-        lower(
-          container('frame', { header: { child: { type: 'node', position: [0, 0] } } }),
-          ContainerInputEmbedAdapter,
-        ),
-    },
-    {
-      type: 'entity',
-      id: 'node',
-      lower: () => lower(entity('node', { role: 'decision', position: [20, 0] }), EntityInputEmbedAdapter),
-    },
-    {
-      type: 'relation',
-      id: 'connector',
-      lower: () => lower(relation('connector', { role: 'flow', way: ['node', 'target'] }), RelationInputEmbedAdapter),
-    },
-  ] as const)('lowers $type to same-id Graph IR and contributes its Definition', ({ type, id, lower: runLower }) => {
-    const contribution = runLower();
-    const provider = {
-      graph: GraphProvider,
-      container: ContainerProvider,
-      entity: EntityProvider,
-      relation: RelationProvider,
-    }[type];
-
-    expect(contribution.node).toMatchObject({
-      namespace: 'graph',
-      type,
-      id: type === 'container' ? `${id}/container` : id,
+  it('keeps all definition options out of Source IR and compiles custom definitions through every entry', () => {
+    const entityRole = defineEntityRole({
+      role: 'custom-entity',
+      description: 'Custom Entity role',
+      shape: 'rectangle',
+      padding: 4,
     });
-    expect(contribution.providerDependencies.roots).toEqual([provider.key]);
-    expect(contribution.providerDependencies.providers).toContain(provider);
-    expect(provider.makeDefinition({})).toMatchObject({ namespace: 'graph', type });
+    const relationRole = defineRelationRole({
+      role: 'custom-relation',
+      description: 'Custom Relation role',
+      defaultDirection: 'none',
+      allowedDirections: ['none'],
+      directions: { none: { sourceMarker: false, targetMarker: false, dashPattern: false } },
+    });
+    const options = {
+      entityRoles: [entityRole],
+      entityKinds: [],
+      entityPredicates: [],
+      relationRoles: [relationRole],
+      relationKinds: [],
+      relationPredicates: [],
+      graphThemeStyles: [],
+    } as const;
+    const graphContribution = lower(
+      graph('graph-embed', {
+        ...options,
+        children: [
+          { type: 'entity', id: 'graph-source', role: 'custom-entity', position: [0, 0] },
+          { type: 'entity', id: 'graph-target', role: 'custom-entity', position: [100, 0] },
+          {
+            type: 'relation',
+            source: { id: 'graph-source' },
+            target: { id: 'graph-target' },
+            role: 'custom-relation',
+          },
+        ],
+      }),
+      GraphInputEmbedAdapter,
+    );
+    const entityContribution = lower(
+      entity('entity-embed', {
+        ...options,
+        type: 'entity',
+        role: 'custom-entity',
+        position: [0, 100],
+      }),
+      EntityInputEmbedAdapter,
+    );
+    const relationContribution = lower(
+      relation('relation-embed', {
+        ...options,
+        type: 'relation',
+        source: { id: 'direct-source' },
+        target: { id: 'direct-target' },
+        role: 'custom-relation',
+      }),
+      RelationInputEmbedAdapter,
+    );
+
+    for (const contribution of [graphContribution, entityContribution, relationContribution]) {
+      for (const key of definitionOptionKeys) expect(contribution.node).not.toHaveProperty(key);
+    }
+
+    expect(() =>
+      processToStaticInputResult(
+        {
+          children: [
+            { type: 'node', id: 'direct-source', position: [0, 200] },
+            { type: 'node', id: 'direct-target', position: [100, 200] },
+            graph('compiled-graph', {
+              ...options,
+              children: [
+                { type: 'entity', id: 'compiled-source', role: 'custom-entity', position: [0, 0] },
+                { type: 'entity', id: 'compiled-target', role: 'custom-entity', position: [100, 0] },
+                {
+                  type: 'relation',
+                  source: { id: 'compiled-source' },
+                  target: { id: 'compiled-target' },
+                  role: 'custom-relation',
+                },
+              ],
+            }),
+            entity('compiled-entity', {
+              ...options,
+              type: 'entity',
+              role: 'custom-entity',
+              position: [0, 100],
+            }),
+            relation('compiled-relation', {
+              ...options,
+              type: 'relation',
+              source: { id: 'direct-source' },
+              target: { id: 'direct-target' },
+              role: 'custom-relation',
+            }),
+          ],
+        },
+        { adapters: createGraphVanillaAdapters(), compile: { padding: 0 } },
+      ),
+    ).not.toThrow();
   });
 });

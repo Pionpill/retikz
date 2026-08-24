@@ -6,7 +6,7 @@ import type {
   CompositeCompileArtifact,
   IRScene,
 } from '@retikz/core';
-import type { z } from 'zod';
+import type { output as ZodOutput } from 'zod';
 
 import type {
   AnyCellFormatterDefinition,
@@ -37,7 +37,7 @@ export type LowerTablesOptions = Readonly<{
 export type TableCompileArtifact = CompositeCompileArtifact<
   typeof TABLE_NAMESPACE,
   'table',
-  z.output<typeof TableLayoutManifestSchema>
+  ZodOutput<typeof TableLayoutManifestSchema>
 >;
 
 /** 直接编译单个 Table 的分层选项 */

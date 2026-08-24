@@ -1,9 +1,10 @@
 import type { CoreDependencyProvider } from '@retikz/core';
 import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 
 import { defineShape, DEG_TO_RAD } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { enum as zodEnum, number, strictObject } from 'zod';
 
 import { StandardShapeName } from '../constants';
 import {
@@ -14,14 +15,14 @@ import {
   polygonConnectionEnvelope,
 } from './_utils';
 
-const ParallelogramShapeParamsSchema = z.strictObject({
-  slantDirection: z.enum(['left', 'right']).optional().describe('Direction of the top-edge horizontal offset.'),
-  slantAngle: z.number().positive().max(90).optional().describe('Angle between the slanted side and horizontal edge.'),
+const ParallelogramShapeParamsSchema = strictObject({
+  slantDirection: zodEnum(['left', 'right']).optional().describe('Direction of the top-edge horizontal offset.'),
+  slantAngle: number().positive().max(90).optional().describe('Angle between the slanted side and horizontal edge.'),
   cornerRadius: NonNegativeNumberSchema.optional().describe('Uniform corner radius in user units.'),
 });
 
 /** Parallelogram 形状参数 */
-export type ParallelogramShapeParams = z.infer<typeof ParallelogramShapeParamsSchema>;
+export type ParallelogramShapeParams = ZodInfer<typeof ParallelogramShapeParamsSchema>;
 
 const directionOf = (params: ParallelogramShapeParams): 'left' | 'right' => params.slantDirection ?? 'right';
 const angleOf = (params: ParallelogramShapeParams): number => params.slantAngle ?? 70;

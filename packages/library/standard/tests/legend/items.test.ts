@@ -19,7 +19,7 @@ import {
 } from '@retikz/core';
 import { LayoutAlignment } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { boolean, literal, number, strictObject, string } from 'zod';
 
 import type { LegendCompileArtifact } from '../../src/composites/presentation/legend/definition';
 import type { LegendItemsArtifact } from '../../src/composites/presentation/legend/types';
@@ -36,18 +36,18 @@ import { createLegend } from '../../src/composites/presentation/legend/factory';
 import { fullScopeProps } from '../composites/presentation/scope-props';
 
 const LeafSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('legend-test'),
-  type: z.literal('leaf'),
-  id: z.string(),
-  width: z.number().nonnegative(),
-  height: z.number().nonnegative(),
-  minimumWidth: z.number().nonnegative().optional(),
-  minimumHeight: z.number().nonnegative().optional(),
-  originX: z.number().default(0),
-  originY: z.number().default(0),
-  exactAllocationWidth: z.number().nonnegative().optional(),
-  exactAllocationHeight: z.number().nonnegative().optional(),
-  failOnExact: z.boolean().default(false),
+  namespace: literal('legend-test'),
+  type: literal('leaf'),
+  id: string(),
+  width: number().nonnegative(),
+  height: number().nonnegative(),
+  minimumWidth: number().nonnegative().optional(),
+  minimumHeight: number().nonnegative().optional(),
+  originX: number().default(0),
+  originY: number().default(0),
+  exactAllocationWidth: number().nonnegative().optional(),
+  exactAllocationHeight: number().nonnegative().optional(),
+  failOnExact: boolean().default(false),
 });
 
 type ProbeLog = Readonly<{ id: string; proposal: LayoutProposal }>;
@@ -127,8 +127,8 @@ const compileLegend = (child: IRChild, proposal: LayoutProposal = naturalProposa
     namespace: 'legend-test',
     type: 'harness',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('legend-test'),
-      type: z.literal('harness'),
+      namespace: literal('legend-test'),
+      type: literal('harness'),
       child: ChildSchema,
     }),
     compile: (node, context) => {
@@ -708,10 +708,10 @@ describe('Legend items compile contract', () => {
       namespace: 'legend-test',
       type: 'typed-sample',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('legend-test'),
-        type: z.literal('typed-sample'),
+        namespace: literal('legend-test'),
+        type: literal('typed-sample'),
       }),
-      artifactSchema: z.strictObject({ role: z.literal('sample') }),
+      artifactSchema: strictObject({ role: literal('sample') }),
       compile: (_, context) => ({
         allocationBounds: { x: 0, y: 0, width: 16, height: 10 },
         children: [context.scope({ id: 'typed-sample' }, [])],

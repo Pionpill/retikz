@@ -25,7 +25,7 @@ import {
   NaturalLayoutProposal,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { enum as zodEnum, literal, strictObject } from 'zod';
 
 const fixedMeasurer: TextMeasurer = text => ({
   width: [...text].length * 10,
@@ -83,8 +83,8 @@ const probeChild = (
     namespace: 'layout-core-gate',
     type: 'probe',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('layout-core-gate'),
-      type: z.literal('probe'),
+      namespace: literal('layout-core-gate'),
+      type: literal('probe'),
       child: ChildSchema,
     }),
     compile: (node, context) => {
@@ -197,8 +197,8 @@ describe('Layout Core layout capability gate', () => {
       namespace: 'layout-core-gate',
       type: 'explicit-guide',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('layout-core-gate'),
-        type: z.literal('explicit-guide'),
+        namespace: literal('layout-core-gate'),
+        type: literal('explicit-guide'),
       }),
       compile: () => ({
         children: [],
@@ -221,8 +221,8 @@ describe('Layout Core layout capability gate', () => {
       namespace: 'layout-core-gate',
       type: 'implicit-guide',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('layout-core-gate'),
-        type: z.literal('implicit-guide'),
+        namespace: literal('layout-core-gate'),
+        type: literal('implicit-guide'),
       }),
       compile: () => ({
         children: [],
@@ -235,8 +235,8 @@ describe('Layout Core layout capability gate', () => {
       namespace: 'layout-core-gate',
       type: 'guide-parent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('layout-core-gate'),
-        type: z.literal('guide-parent'),
+        namespace: literal('layout-core-gate'),
+        type: literal('guide-parent'),
       }),
       compile: (_node, context) => {
         const withGuide = context.layoutChild(
@@ -269,7 +269,7 @@ describe('Layout Core layout capability gate', () => {
   it('keeps custom providers, TeX, nested Scope and selected artifacts in one probe/replay environment', () => {
     const customShape = defineShape({
       name: 'layout-core-gate-shape',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: () => ({ halfWidth: 10, halfHeight: 5 }),
       boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
       anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -321,10 +321,10 @@ describe('Layout Core layout capability gate', () => {
       namespace: 'layout-core-gate',
       type: 'nested',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('layout-core-gate'),
-        type: z.literal('nested'),
+        namespace: literal('layout-core-gate'),
+        type: literal('nested'),
       }),
-      artifactSchema: z.strictObject({ proposal: z.enum(['intrinsic', 'range', 'exact']) }),
+      artifactSchema: strictObject({ proposal: zodEnum(['intrinsic', 'range', 'exact']) }),
       compile: (_node, context) => {
         const child = context.layoutChild(
           {
@@ -357,8 +357,8 @@ describe('Layout Core layout capability gate', () => {
       namespace: 'layout-core-gate',
       type: 'nested-parent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('layout-core-gate'),
-        type: z.literal('nested-parent'),
+        namespace: literal('layout-core-gate'),
+        type: literal('nested-parent'),
       }),
       compile: (_node, context) => {
         const discarded = context.layoutChild({ namespace: 'layout-core-gate', type: 'nested' }, NaturalLayoutProposal);
@@ -426,8 +426,8 @@ describe('Layout Core layout capability gate', () => {
       namespace: 'layout-core-gate',
       type: 'failure',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('layout-core-gate'),
-        type: z.literal('failure'),
+        namespace: literal('layout-core-gate'),
+        type: literal('failure'),
       }),
       compile: (_node, context) => {
         const staged = context.layoutChild(
@@ -454,8 +454,8 @@ describe('Layout Core layout capability gate', () => {
       namespace: 'layout-core-gate',
       type: 'discard-failure',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('layout-core-gate'),
-        type: z.literal('discard-failure'),
+        namespace: literal('layout-core-gate'),
+        type: literal('discard-failure'),
       }),
       compile: (_node, context) => {
         const failed = context.layoutChild({ namespace: 'layout-core-gate', type: 'failure' }, NaturalLayoutProposal);
@@ -472,8 +472,8 @@ describe('Layout Core layout capability gate', () => {
       namespace: 'layout-core-gate',
       type: 'raise-failure',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('layout-core-gate'),
-        type: z.literal('raise-failure'),
+        namespace: literal('layout-core-gate'),
+        type: literal('raise-failure'),
       }),
       compile: (_node, context) => {
         const failed = context.layoutChild({ namespace: 'layout-core-gate', type: 'failure' }, NaturalLayoutProposal);
@@ -485,8 +485,8 @@ describe('Layout Core layout capability gate', () => {
       namespace: 'layout-core-gate',
       type: 'duplicate-replay',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('layout-core-gate'),
-        type: z.literal('duplicate-replay'),
+        namespace: literal('layout-core-gate'),
+        type: literal('duplicate-replay'),
       }),
       compile: (_node, context) => {
         const selected = context.layoutChild(
@@ -526,8 +526,8 @@ describe('Layout Core layout capability gate', () => {
       namespace: 'layout-core-gate',
       type: 'result-producer',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('layout-core-gate'),
-        type: z.literal('result-producer'),
+        namespace: literal('layout-core-gate'),
+        type: literal('result-producer'),
       }),
       compile: (_node, context) => {
         const result = context.layoutChild(
@@ -543,8 +543,8 @@ describe('Layout Core layout capability gate', () => {
       namespace: 'layout-core-gate',
       type: 'result-consumer',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('layout-core-gate'),
-        type: z.literal('result-consumer'),
+        namespace: literal('layout-core-gate'),
+        type: literal('result-consumer'),
       }),
       compile: (_node, context) => ({ children: [context.replay(retained!)] }),
     });
@@ -552,8 +552,8 @@ describe('Layout Core layout capability gate', () => {
       namespace: 'layout-core-gate',
       type: 'forged-result',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('layout-core-gate'),
-        type: z.literal('forged-result'),
+        namespace: literal('layout-core-gate'),
+        type: literal('forged-result'),
       }),
       compile: (_node, context) => ({ children: [context.replay({} as LayoutChildResult)] }),
     });
@@ -611,8 +611,8 @@ describe('Layout Core layout capability gate', () => {
         namespace: 'layout-core-gate',
         type: fixture.name,
         schema: CompositeBaseSchema.extend({
-          namespace: z.literal('layout-core-gate'),
-          type: z.literal(fixture.name),
+          namespace: literal('layout-core-gate'),
+          type: literal(fixture.name),
         }),
         compile: (_node, context) => {
           context.layoutChild({ type: 'coordinate', id: 'invalid-coordinate', position: [0, 0] }, fixture.proposal);

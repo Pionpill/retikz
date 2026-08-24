@@ -15,20 +15,20 @@ Scene 负责让 renderer 画出表格，但宿主还会需要“这个区域属�
 
 <ComponentPreview files="table-manifest-map" hideCode size="xs" />
 
-图中 Scene 与 Manifest 都来自同一个 layout transaction。Manifest 不是渲染后的补算结果，也不会解析 SVG；它直接复用 canonical identity、已解轨道、Cell 放置和 Border Graph。
+图中 Scene 与 Manifest 都来自同一个 layout transaction。Manifest 不是渲染后的补算结果，也不会解析 SVG；它直接复用 canonical 地址与可选 identity、已解轨道、Cell 放置和 Border Graph。
 
 产物在返回前会通过公开 schema 校验，并递归冻结、与编译内部对象分离。消费者可以保存、比较或跨 renderer 使用它，而不依赖某个 DOM 结构。
 
 ## Manifest 记录哪些层次
 
-| 层次   | 主要内容                                   | 能回答的问题                 |
-| ------ | ------------------------------------------ | ---------------------------- |
-| Table  | `tableId`、整体 allocation/visual bounds   | 表格占位与可见范围多大       |
-| Track  | row/column id、index、offset、size         | 某条轨道从哪里开始、尺寸多大 |
-| Cell   | 身份、地址、span、语义、来源与多组 bounds  | 这个区域属于谁、来自哪里     |
-| Border | edge geometry、style、winner、contributors | 哪条边可见、为何获胜         |
+| 层次   | 主要内容                                      | 能回答的问题                 |
+| ------ | --------------------------------------------- | ---------------------------- |
+| Table  | `tableId`、整体 allocation/visual bounds      | 表格占位与可见范围多大       |
+| Track  | 可选 row/column id、index、offset、size       | 某条轨道从哪里开始、尺寸多大 |
+| Cell   | 可选身份、地址、span、语义、来源与多组 bounds | 这个区域属于谁、来自哪里     |
+| Border | edge geometry、style、winner、contributors    | 哪条边可见、为何获胜         |
 
-这些数组保持 canonical 顺序。Cell 通过稳定 row/column id 与 index 连接语义模型和已解轨道；border atom 则保留候选来源，即使最终多个原子被合并成一条可见 edge，也不会丢失冲突过程。
+这些数组保持 canonical 顺序。Cell 始终通过 row/column index 连接语义模型和已解轨道，并在作者提供时额外保留 row/column/Cell id；border atom 则保留候选地址与可选 id，即使最终多个原子被合并成一条可见 edge，也不会丢失冲突过程。
 
 ## 不同 bounds 不应合并
 
@@ -47,7 +47,7 @@ Scene 负责让 renderer 画出表格，但宿主还会需要“这个区域属�
 
 Cell `source` 保留最小稳定来源：显式网格坐标、外部 dataset/row/field，或生成它的 Structure kind。`location` 与 `roles` 则描述它在表格中的语义位置，两者共同支持 inspector、选择映射和领域导出。
 
-Manifest 提供事实，不替宿主决定交互。Table 不在这里拥有 hover、selection、编辑状态或 DOM 生命周期；宿主可以把 manifest 用作这些能力的几何与 identity 输入，持久修改仍应回到 Table 所拥有的 spec 或数据。
+Manifest 提供事实，不替宿主决定交互。Table 不在这里拥有 hover、selection、编辑状态或 DOM 生命周期；宿主可以把 manifest 的 canonical 地址、几何与可选 identity 用作这些能力的输入，持久修改仍应回到 Table 所拥有的 spec 或数据。
 
 <SourceLinks
   sources={[

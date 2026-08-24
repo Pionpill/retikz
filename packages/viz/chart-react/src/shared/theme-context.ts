@@ -1,10 +1,10 @@
-import type { ChartThemeStyleDefinition } from '@retikz/chart';
+import type { ChartThemeDefinition } from '@retikz/chart';
 
 import { createContext, useContext } from 'react';
 
-/** Chart-owned ambient Theme definitions context */
-export const ChartThemeStylesContext = createContext<ReadonlyArray<ChartThemeStyleDefinition> | undefined>(undefined);
+/** Chart-owned ambient named Theme definitions context */
+export const ChartThemeDefinitionsContext = createContext<ReadonlyArray<ChartThemeDefinition> | undefined>(undefined);
 
-/** 读取当前 standalone Chart ambient Theme definitions */
-export const useChartThemeStyles = (): ReadonlyArray<ChartThemeStyleDefinition> | undefined =>
-  useContext(ChartThemeStylesContext);
+/** 读取当前 standalone Chart 子树的 named Theme definitions */
+export const useChartThemeDefinitions = (): ReadonlyArray<ChartThemeDefinition> | undefined =>
+  useContext(ChartThemeDefinitionsContext);

@@ -15,7 +15,7 @@ The manifest `style` region also records effective Core `style`, `themeMode`, th
 
 ## Visual encoding and Legend descriptor seeds
 
-`encodings` records the Cells actually colored by each visual encoding. `legendDescriptors` contains only explicitly opted-in Table-domain descriptors. Both come from the same visual-scale resolution and agree through `encodingId`, `channel`, and `scaleName`.
+`encodings` records the Cells actually colored by each visual encoding through canonical `cellIndices`. `legendDescriptors` contains only explicitly opted-in Table-domain descriptors. Both come from the same visual-scale resolution and agree through `encodingId`, `channel`, and `scaleName`.
 
 | Descriptor field                       | Content                                          |
 | -------------------------------------- | ------------------------------------------------ |
@@ -49,7 +49,7 @@ The border manifest preserves final visible edges together with their atomic con
 
 <ZodSchema name="TableBorderSourceSchema" />
 
-Cell sources retain `cellId + row + column + side`. Table defaults use `scope + side` or `scope + boundaryIndex`, so conflict resolution does not depend on object traversal order.
+Cell sources always retain `row + column + side` and include `cellId` only when explicitly present. Table defaults use `scope + side` or `scope + boundaryIndex`, so conflict resolution depends on neither object traversal order nor Cell ids.
 
 ### TableNoBorderContributionSchema
 

@@ -72,9 +72,9 @@ describe('Layout inspect compile integration', () => {
         registry,
         selection: {
           rules: [
-            { kind: 'request', inspector: FLEX_LAYOUT_INSPECTOR_KEY, target: { kind: 'scene' }, value: true },
-            { kind: 'request', inspector: GRID_LAYOUT_INSPECTOR_KEY, target: { kind: 'scene' }, value: true },
-            { kind: 'request', inspector: OVERLAY_LAYOUT_INSPECTOR_KEY, target: { kind: 'scene' }, value: true },
+            { kind: 'request', inspector: FLEX_LAYOUT_INSPECTOR_KEY, target: { kind: 'scene' }, options: true },
+            { kind: 'request', inspector: GRID_LAYOUT_INSPECTOR_KEY, target: { kind: 'scene' }, options: true },
+            { kind: 'request', inspector: OVERLAY_LAYOUT_INSPECTOR_KEY, target: { kind: 'scene' }, options: true },
           ],
         },
         compileOptions: {

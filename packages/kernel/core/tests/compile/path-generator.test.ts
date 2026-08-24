@@ -1,5 +1,5 @@
 ﻿import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { any, number, object, strictObject, string } from 'zod';
 
 import type { PathCommand, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -16,7 +16,7 @@ const firstDrawnPath = (prims: Array<ScenePrimitive>): Extract<ScenePrimitive, {
 /** customQuad 生成器：from→to + 一个 control，产单个 quad 命令；params.bend 为顶层 Target */
 const customQuad = definePathGenerator({
   name: 'customQuad',
-  paramsSchema: z.object({ bend: z.object({ id: z.string() }) }),
+  paramsSchema: object({ bend: object({ id: string() }) }),
   targetParams: ['bend'],
   generate: ({ from, to, resolvedTargets }) => {
     const end = to ?? from;
@@ -28,7 +28,7 @@ const customQuad = definePathGenerator({
 /** sin 生成器：采样多段，含一个 move 形成 sub-path（多段波形） */
 const sin = definePathGenerator({
   name: 'sin',
-  paramsSchema: z.object({ amplitude: z.number(), samples: z.number() }),
+  paramsSchema: object({ amplitude: number(), samples: number() }),
   generate: ({ from, to, params }) => {
     const end = to ?? [from[0] + 100, from[1]];
     const amplitude = params.amplitude as number;
@@ -47,7 +47,7 @@ const sin = definePathGenerator({
 /** 纯参数曲线（无 to）：固定一段 line */
 const fixedSegment = definePathGenerator({
   name: 'fixedSegment',
-  paramsSchema: z.object({ length: z.number() }),
+  paramsSchema: object({ length: number() }),
   generate: ({ from, params }) => [{ kind: 'line', to: [from[0] + (params.length as number), from[1]] }],
 });
 
@@ -108,7 +108,7 @@ describe('Path generator 注册面 — happy path', () => {
     let seenBend: [number, number] | undefined;
     const probe = definePathGenerator({
       name: 'probe',
-      paramsSchema: z.object({ bend: z.object({ id: z.string() }) }),
+      paramsSchema: object({ bend: object({ id: string() }) }),
       targetParams: ['bend'],
       generate: ({ from, to, resolvedTargets }) => {
         seenBend = resolvedTargets.bend;
@@ -208,7 +208,7 @@ describe('Path generator 注册面 — 边界', () => {
   it('multi_segment_subpath：generator 产含 move 的多段，commands 保留 sub-path 结构', () => {
     const multi = definePathGenerator({
       name: 'multi',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: ({ from }) => [
         { kind: 'line', to: [from[0] + 10, from[1]] },
         { kind: 'move', to: [from[0] + 20, from[1]] },
@@ -257,7 +257,7 @@ describe('Path generator 注册面 — 错误路径', () => {
     const passthrough = definePathGenerator({
       name: 'passthrough',
       // 宽松 schema 放行任意值，逼 compile 用 JsonObjectSchema 第二道护栏拦
-      paramsSchema: z.any(),
+      paramsSchema: any(),
       generate: ({ from, to }) => [{ kind: 'line', to: to ?? from }],
     });
     const ir = {
@@ -280,7 +280,7 @@ describe('Path generator 注册面 — 错误路径', () => {
   it('custom_generator_params_error_contains_provider_and_ir_path', () => {
     const strictGen = definePathGenerator({
       name: 'strictGen',
-      paramsSchema: z.strictObject({ length: z.number().positive() }),
+      paramsSchema: strictObject({ length: number().positive() }),
       generate: ({ from, params }) => [{ kind: 'line', to: [from[0] + Number(params.length), from[1]] }],
     });
     const ir: IRScene = {
@@ -308,7 +308,7 @@ describe('Path generator 注册面 — 错误路径', () => {
     // 真正护栏在 compile：paramsSchema.parse(params) 后再 JsonObjectSchema.parse(parsed)。
     const anyGen = definePathGenerator({
       name: 'anyGen',
-      paramsSchema: z.any(),
+      paramsSchema: any(),
       generate: ({ from, to }) => [{ kind: 'line', to: to ?? from }],
     });
     const ir = {
@@ -327,7 +327,7 @@ describe('Path generator 注册面 — 错误路径', () => {
     // z.any() 第一道放行 { fn }，但 compile 第二道 JsonObjectSchema.parse 必须拦下 function
     expect(() => compileToScene(ir, { pathGenerators: [anyGen] }).scene).toThrow();
     // 同时直接证明第二道护栏对 z.any() 放行后的对象有效（护栏逻辑可独立验证）
-    const passedByAny = z.any().parse({ fn: () => 2, ok: 1 });
+    const passedByAny = any().parse({ fn: () => 2, ok: 1 });
     expect(JsonObjectSchema.safeParse(passedByAny).success).toBe(false);
   });
 
@@ -335,7 +335,7 @@ describe('Path generator 注册面 — 错误路径', () => {
     let seen: Record<string, [number, number]> | undefined;
     const nestedGen = definePathGenerator({
       name: 'nestedGen',
-      paramsSchema: z.object({ control: z.object({ at: z.object({ id: z.string() }) }) }),
+      paramsSchema: object({ control: object({ at: object({ id: string() }) }) }),
       // 'control.at' 是嵌套路径：按仅顶层 key 约定不解析（resolvedTargets 不含它）
       targetParams: ['control.at'],
       generate: ({ from, to, resolvedTargets }) => {
@@ -526,12 +526,12 @@ describe('Path generator step — JSON round-trip & zod 校验', () => {
     expect(PathSchema.safeParse(bad).success).toBe(false);
   });
 
-  it('zod 错误：generator step name 为空串 → schema 拒（min(1)）', () => {
+  it.each(['', '   '])('zod 错误：generator step name=%j 为空白字符串时 schema 拒绝', name => {
     const bad = {
       type: 'path',
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
-        { type: 'step', kind: 'generator', name: '', params: {} },
+        { type: 'step', kind: 'generator', name, params: {} },
       ],
     };
     expect(PathSchema.safeParse(bad).success).toBe(false);
@@ -542,7 +542,7 @@ describe('definePathGenerator', () => {
   it('合法 def 直通返回原对象', () => {
     const def = definePathGenerator({
       name: 'def',
-      paramsSchema: z.object({ a: z.number() }),
+      paramsSchema: object({ a: number() }),
       generate: ({ from }) => [{ kind: 'line', to: from }],
     });
     expect(typeof def.generate).toBe('function');

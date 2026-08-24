@@ -20,7 +20,7 @@ export type LineCircleInput = {
   /** 直线起点 */
   origin: Position;
   /** 直线方向，不要求单位化 */
-  dir: Position;
+  direction: Position;
   /** 圆心 */
   center: Position;
   /** 圆半径 */
@@ -51,25 +51,25 @@ const lineLine = ({ a1, a2, b1, b2 }: LineLineInput): Position | null => {
   return [a1[0] + da[0] * t, a1[1] + da[1] * t];
 };
 
-/** 直线（origin + 方向 dir，dir 不必单位化）∩ 圆，返回 0/1/2 交点；切线（disc≈0）返回 2 个重合点，调用方自判 */
-const lineCircle = ({ origin, dir, center, radius }: LineCircleInput): Array<Position> => {
+/** 直线（origin + direction，direction 不必单位化）∩ 圆，返回 0/1/2 交点；切线返回 2 个重合点，调用方自判 */
+const lineCircle = ({ origin, direction, center, radius }: LineCircleInput): Array<Position> => {
   const ox = origin[0] - center[0];
   const oy = origin[1] - center[1];
-  const a = dir[0] * dir[0] + dir[1] * dir[1];
+  const a = direction[0] * direction[0] + direction[1] * direction[1];
   if (a <= DEFAULT_EPSILON * DEFAULT_EPSILON) return [];
-  const b = 2 * (ox * dir[0] + oy * dir[1]);
+  const b = 2 * (ox * direction[0] + oy * direction[1]);
   const c = ox * ox + oy * oy - radius * radius;
-  const disc = b * b - 4 * a * c;
-  if (disc < 0) return [];
-  const sq = Math.sqrt(disc);
-  const out: Array<Position> = [];
-  for (const t of [(-b - sq) / (2 * a), (-b + sq) / (2 * a)]) {
-    out.push([origin[0] + dir[0] * t, origin[1] + dir[1] * t]);
+  const discriminant = b * b - 4 * a * c;
+  if (discriminant < 0) return [];
+  const discriminantRoot = Math.sqrt(discriminant);
+  const intersections: Array<Position> = [];
+  for (const lineParameter of [(-b - discriminantRoot) / (2 * a), (-b + discriminantRoot) / (2 * a)]) {
+    intersections.push([origin[0] + direction[0] * lineParameter, origin[1] + direction[1] * lineParameter]);
   }
-  return out;
+  return intersections;
 };
 
-/** 圆 ∩ 圆，返回 0/1/2 交点（重合 / 内含 / 相离返回空）；外 / 内切（disc≈0）返回 2 个重合点，调用方自判 */
+/** 圆 ∩ 圆，返回 0/1/2 交点（重合 / 内含 / 相离返回空）；外 / 内切（discriminant≈0）返回 2 个重合点，调用方自判 */
 const circleCircle = ({ centerA, radiusA, centerB, radiusB }: CircleCircleInput): Array<Position> => {
   const dx = centerB[0] - centerA[0];
   const dy = centerB[1] - centerA[1];

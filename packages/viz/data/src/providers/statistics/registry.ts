@@ -1,4 +1,5 @@
 import { JsonObjectSchema } from '@retikz/core';
+import { createReadonlyMap } from '@retikz/foundation';
 
 import type {
   AnyRowSelectorDefinition,
@@ -12,7 +13,6 @@ import type { ExternalRow } from '../../shared';
 import { extractStatisticOperation } from '../../contract';
 import { RetikzDataError } from '../../error';
 import { ReducerOperationSchema, SelectorOperationSchema } from '../../schemas';
-import { createReadonlyMap } from '../../shared/collections';
 import { BUILTIN_STATISTICS_REDUCERS } from './reducers';
 import { BUILTIN_ROW_SELECTORS } from './selectors';
 

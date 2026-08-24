@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import type { CompiledNodeLayout, CompileOptions } from '../../src/compile';
 import type { RectPrim } from '../../src/contract';
@@ -243,7 +243,7 @@ describe('Node anchor-to-anchor position', () => {
   it('复用注册的 custom boundary anchor', () => {
     const wideBoundary = defineBoundary({
       name: 'wide',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       resolveRect: context => ({ ...context.visualRect, width: 120, height: 20 }),
       boundaryPoint: rect => [rect.x, rect.y],
       anchor: (rect, name) => (name === 'right' ? [rect.x + rect.width / 2, rect.y] : undefined),

@@ -8,7 +8,7 @@ import type { ComponentPreviewFileConfig, ComponentRenderSource, PreviewSourceCo
 import type { PreviewIR } from '../utils';
 
 import { buildPreviewIR, buildReactSourceFiles, formatIR, irHasComposite } from '../utils';
-import { buildVanillaPreview } from '../vanilla-preview';
+import { browserMeasurer, buildVanillaPreview } from '../vanilla-preview';
 import { RawSvgFrame } from './RawSvgFrame';
 
 /** 构建组件预览源码视图所需的输入。 */
@@ -46,7 +46,7 @@ export type BuildPreviewSourceInput = {
   theme?: IRScene['theme'];
 };
 
-type UnvalidatedPreviewIR = Omit<PreviewIR, 'ir'> & { ir: unknown };
+type UnvalidatedPreviewIR = Omit<PreviewIR, 'ir' | 'sourceIr'> & { ir: unknown; sourceIr: unknown };
 
 /** 组件预览源码视图及宿主可安全消费的 IR。 */
 export type BuildPreviewSourceResult = {
@@ -102,6 +102,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
       const ir: unknown = JSON.parse(irJson);
       resolvedPreviewIr = {
         ir,
+        sourceIr: ir,
         contributions: [],
         width: undefined,
         height: undefined,
@@ -112,6 +113,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
   } else if (exportedPreviewIR !== undefined) {
     resolvedPreviewIr = {
       ir: exportedPreviewIR,
+      sourceIr: exportedPreviewIR,
       contributions: [],
       width: undefined,
       height: undefined,
@@ -124,14 +126,14 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
   } else if (previewSource?.canonicalRender !== undefined) {
     try {
       resolvedPreviewIr = buildPreviewIR(previewSource.canonicalRender);
-      irJson = formatIR(resolvedPreviewIr.ir);
+      irJson = formatIR(resolvedPreviewIr.sourceIr);
     } catch (error) {
       irJson = `// Failed to compute IR: ${errorMessage(error)}`;
     }
   } else if (previewSource?.deriveIR !== false) {
     try {
       resolvedPreviewIr = buildPreviewIR(Component);
-      irJson = formatIR(resolvedPreviewIr.ir);
+      irJson = formatIR(resolvedPreviewIr.sourceIr);
     } catch (error) {
       irJson = `// Failed to compute IR: ${errorMessage(error)}`;
     }
@@ -142,12 +144,20 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
   let structureError: unknown;
   if (resolvedPreviewIr !== null) {
     const validated = SceneSchema.safeParse(resolvedPreviewIr.ir);
+    const validatedSource = SceneSchema.safeParse(resolvedPreviewIr.sourceIr);
     if (!validated.success) {
       structureError = validated.error;
+    } else if (!validatedSource.success) {
+      structureError = validatedSource.error;
     } else {
-      previewIr = { ...resolvedPreviewIr, ir: validated.data };
+      const validatedPreviewIr: PreviewIR = {
+        ...resolvedPreviewIr,
+        ir: validated.data,
+        sourceIr: validatedSource.data,
+      };
+      previewIr = validatedPreviewIr;
       try {
-        hasComposite = irHasComposite(previewIr.ir);
+        hasComposite = irHasComposite(validatedPreviewIr.ir);
       } catch (error) {
         structureError = error;
         previewIr = null;
@@ -158,6 +168,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
   const automaticVanilla =
     previewIr !== null && structureError === undefined
       ? buildVanillaPreview(previewIr, {
+          measureText: browserMeasurer,
           ...(previewSource?.datasetImports === undefined ? {} : { datasetImports: previewSource.datasetImports }),
           ...(theme === undefined ? {} : { theme }),
         })

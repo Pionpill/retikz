@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import type {
   AnyCompositeDefinition,
@@ -34,8 +34,8 @@ const explicitGuideDefinition = (guides: ReadonlyArray<LayoutAlignmentGuide>) =>
     namespace: 'test',
     type: 'explicitGuides',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('test'),
-      type: z.literal('explicitGuides'),
+      namespace: literal('test'),
+      type: literal('explicitGuides'),
     }),
     compile: () => ({ children: [], alignmentGuides: guides }),
   });
@@ -55,8 +55,8 @@ const probeGuidesOf = (
     namespace: 'test',
     type: 'guideInspector',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('test'),
-      type: z.literal('guideInspector'),
+      namespace: literal('test'),
+      type: literal('guideInspector'),
     }),
     compile: (_node, context) => {
       guides = resolvedGuides(context, child);
@@ -231,8 +231,8 @@ describe('layout alignment guide ownership', () => {
       namespace: 'test',
       type: 'explicitContainer',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('explicitContainer'),
+        namespace: literal('test'),
+        type: literal('explicitContainer'),
       }),
       compile: (_node, context) => {
         const child = resolvedGuides(context, {
@@ -258,8 +258,8 @@ describe('layout alignment guide ownership', () => {
       namespace: 'test',
       type: 'implicitContainer',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('implicitContainer'),
+        namespace: literal('test'),
+        type: literal('implicitContainer'),
       }),
       compile: (_node, context) => {
         const laid = context.layoutChild(
@@ -331,8 +331,8 @@ describe('layout alignment guide ownership', () => {
       namespace: 'test',
       type: 'doubleInspector',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('doubleInspector'),
+        namespace: literal('test'),
+        type: literal('doubleInspector'),
       }),
       compile: (_node, context) => {
         firstResult = context.layoutChild(explicitGuideChild, NaturalLayoutProposal);

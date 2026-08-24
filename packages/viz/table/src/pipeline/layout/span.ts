@@ -7,8 +7,8 @@ import { solveTableTracks } from './track';
 
 /** 单个 spanning Cell 对一个 canonical 轴的自然尺寸要求 */
 export type TableSpanConstraint = Readonly<{
-  /** semantic Cell id */
-  cellId: string;
+  /** optional semantic Cell id */
+  cellId?: string;
   /** span 起始 canonical track index */
   startIndex: number;
   /** 连续覆盖的 canonical track 数量 */
@@ -31,8 +31,8 @@ export type PropagateTableSpanContributionsInput = Readonly<{
 
 /** 单个 Cell 仍未被轨道自然尺寸覆盖的外部尺寸 */
 export type TableSpanUnmetSize = Readonly<{
-  /** semantic Cell id */
-  cellId: string;
+  /** optional semantic Cell id */
+  cellId?: string;
   /** finite nonnegative 未满足尺寸 */
   size: number;
 }>;
@@ -62,24 +62,24 @@ const assertFiniteNonnegative = (value: number, name: string): void => {
 };
 
 const validateConstraint = (constraint: TableSpanConstraint, trackCount: number): void => {
+  const label = constraint.cellId ?? `${constraint.startIndex}:${constraint.length}`;
   if (!Number.isInteger(constraint.startIndex) || constraint.startIndex < 0) {
-    throw new RetikzTableError(`table: span Cell "${constraint.cellId}" startIndex must be a nonnegative integer`);
+    throw new RetikzTableError(`table: span Cell "${label}" startIndex must be a nonnegative integer`);
   }
   if (!Number.isInteger(constraint.length) || constraint.length <= 0) {
-    throw new RetikzTableError(`table: span Cell "${constraint.cellId}" length must be a positive integer`);
+    throw new RetikzTableError(`table: span Cell "${label}" length must be a positive integer`);
   }
   if (constraint.startIndex + constraint.length > trackCount) {
-    throw new RetikzTableError(`table: span Cell "${constraint.cellId}" range exceeds ${trackCount} tracks`);
+    throw new RetikzTableError(`table: span Cell "${label}" range exceeds ${trackCount} tracks`);
   }
-  assertFiniteNonnegative(constraint.requiredOuterSize, `span Cell "${constraint.cellId}" requiredOuterSize`);
+  assertFiniteNonnegative(constraint.requiredOuterSize, `span Cell "${label}" requiredOuterSize`);
 };
 
 /** 按 span length、start index 与 Cell id 形成确定的 constraint 顺序 */
 const compareConstraint = (a: TableSpanConstraint, b: TableSpanConstraint): number => {
   if (a.length !== b.length) return a.length - b.length;
   if (a.startIndex !== b.startIndex) return a.startIndex - b.startIndex;
-  if (a.cellId === b.cellId) return 0;
-  return a.cellId < b.cellId ? -1 : 1;
+  return (a.cellId ?? '').localeCompare(b.cellId ?? '');
 };
 
 /** 把 resolved track 分类为非增长、等额增长或 flex 增长候选 */
@@ -242,7 +242,10 @@ export const propagateTableSpanContributions = (
 
     remaining = growEqualNaturalSizes(contributionSizes, naturalSizes, candidates, remaining);
     remaining = growFlexibleNaturalSizes(contributionSizes, naturalSizes, candidates, remaining);
-    unmet.push({ cellId: constraint.cellId, size: remaining });
+    unmet.push({
+      ...(constraint.cellId === undefined ? {} : { cellId: constraint.cellId }),
+      size: remaining,
+    });
   });
   return deepFreeze({
     contributions: contributionSizes.map((size, trackIndex) => ({ trackIndex, size })),

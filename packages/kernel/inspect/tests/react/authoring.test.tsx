@@ -6,7 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { null as zodNull, strictObject } from 'zod';
 
 import { BUILTIN_INSPECTORS, createInspectorRegistry, defineInspector, STROKE_PATH_INSPECTOR_KEY } from '../../src';
 import { InspectLayout, InspectPath, InspectScope } from '../../src/react';
@@ -15,7 +15,7 @@ import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from 
 const registry = createInspectorRegistry(BUILTIN_INSPECTORS);
 
 const content = (
-  <InspectPath request={{ inspector: STROKE_PATH_INSPECTOR_KEY, value: { labels: true } }}>
+  <InspectPath request={{ inspector: STROKE_PATH_INSPECTOR_KEY, options: { labels: true } }}>
     <Step kind="move" to={[0, 0]} />
     <Step kind="cubic" control1={[10, 12]} control2={[20, 12]} to={[30, 0]} />
   </InspectPath>
@@ -41,7 +41,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
       </InspectLayout>,
     );
 
-    expect(retained).toContain('#2563eb');
+    expect(retained).toContain('hsl(210, 38%, 48%)');
     expect(normalizeEmptyElements(staticHtml)).toBe(normalizeEmptyElements(retained));
   });
 
@@ -74,7 +74,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
     );
 
     expect(html).not.toContain('data-retikz-readonly-layer');
-    expect(html).not.toContain('#2563eb');
+    expect(html).not.toContain('hsl(210, 38%, 48%)');
   });
 
   it('rejects a self request whose authored site owner does not match the Inspector owner', () => {
@@ -100,7 +100,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
           sourcePath: 'children[0].path',
           owner: { kind: 'composite', namespace: 'fixture', type: 'box' },
           type: 'path',
-          authoring: createInspectionVanillaAuthoring({ inspector: STROKE_PATH_INSPECTOR_KEY, value: true }),
+          authoring: createInspectionVanillaAuthoring({ inspector: STROKE_PATH_INSPECTOR_KEY, options: true }),
         },
       ],
       coreOptions: {},
@@ -112,15 +112,15 @@ describe('@retikz/inspect/react authoring and driver', () => {
   it('counts composite owners structurally when namespace or type contains a colon', () => {
     const firstOwner = { kind: 'composite' as const, namespace: 'a:b', type: 'c' };
     const secondOwner = { kind: 'composite' as const, namespace: 'a', type: 'b:c' };
-    const firstKey = { namespace: 'fixture', name: 'first' };
-    const secondKey = { namespace: 'fixture', name: 'second' };
+    const firstKey = { namespace: 'fixture', type: 'first' };
+    const secondKey = { namespace: 'fixture', type: 'second' };
     const definitionFor = (key: typeof firstKey, owner: typeof firstOwner) =>
       defineInspector({
         ...key,
         owner,
-        subjectSchema: z.null(),
-        optionsInputSchema: z.strictObject({}),
-        optionsSchema: z.strictObject({}),
+        subjectSchema: zodNull(),
+        optionsInputSchema: strictObject({}),
+        optionsSchema: strictObject({}),
         inspect: () => [],
       });
     const colonRegistry = createInspectorRegistry([
@@ -142,20 +142,29 @@ describe('@retikz/inspect/react authoring and driver', () => {
           sourcePath: 'children[0]',
           owner: firstOwner,
           type: 'first',
-          authoring: createInspectionVanillaAuthoring({ inspector: firstKey, value: true }),
+          authoring: createInspectionVanillaAuthoring({ inspector: firstKey, options: true }),
         },
         {
           kind: 'embeddable',
           sourcePath: 'children[0]',
           owner: secondOwner,
           type: 'second',
-          authoring: createInspectionVanillaAuthoring({ inspector: secondKey, value: true }),
+          authoring: createInspectionVanillaAuthoring({ inspector: secondKey, options: true }),
         },
       ],
       coreOptions: {},
     });
     const observer = session.observers[0].createSession();
-    const context = { compileFragment: () => ({ scene: {}, artifacts: [], diagnostics: [] }) } as never;
+    const context = {
+      theme: {
+        mode: 'light',
+        colors: {
+          semantic: { error: '#error', success: '#success', warning: '#warning', guide: '#guide' },
+          categorical: ['#scope'],
+        },
+      },
+      compileFragment: () => ({ scene: {}, artifacts: [], diagnostics: [] }),
+    } as never;
     const occurrence = { sourcePath: 'children[0]', expansionPath: [] };
     observer.observe(
       {

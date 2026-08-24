@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import type { ZodType } from 'zod';
 
 import type { IRClip, IRJsonObject } from '../../schemas';
 import type { SceneClipPath } from '../scene';
@@ -48,13 +48,13 @@ export type ClipDefinitionInput<TClip extends ClipLike, TShape extends ClipShape
   /** 注册表 key，由 IR clip spec 的 `kind` 引用 */
   kind: TClip['kind'] & TShape['kind'];
   /** 该 clip spec 的 zod schema */
-  schema: z.ZodType<TClip>;
+  schema: ZodType<TClip>;
   /** 把 schema parse 后的 spec 解析为同 kind 的 ClipShape */
   resolve: {
     bivarianceHack: (spec: TClip, context: ClipResolveContext) => TShape;
   }['bivarianceHack'];
   /** 完整 ClipShape snapshot 的 Zod schema */
-  shapeSchema: z.ZodType<TShape>;
+  shapeSchema: ZodType<TShape>;
   /** 把已校验的同 kind ClipShape 降低为渲染无关路径 */
   lower: {
     bivarianceHack: (shape: TShape, context: ClipLowerContext) => SceneClipPath;
@@ -66,11 +66,11 @@ export type ClipDefinition<TClip extends ClipLike = ClipLike, TShape extends Cli
   /** 注册表 key，由 IR clip spec 的 `kind` 引用 */
   kind: TClip['kind'] & TShape['kind'];
   /** 该 clip spec 的 zod schema */
-  schema: z.ZodType<TClip>;
+  schema: ZodType<TClip>;
   /** registry 只在 spec schema parse 后调用的擦除解析入口 */
   resolve: (spec: ClipLike, context: ClipResolveContext) => ClipShape;
   /** 完整 ClipShape snapshot 的 Zod schema */
-  shapeSchema: z.ZodType<TShape>;
+  shapeSchema: ZodType<TShape>;
   /** registry 只在 shapeSchema parse 后调用的擦除 lowering 入口 */
   lower: (shape: ClipShape, context: ClipLowerContext) => SceneClipPath;
 }>;

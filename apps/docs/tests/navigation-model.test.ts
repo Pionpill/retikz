@@ -71,7 +71,7 @@ describe('layout utils', () => {
     const points = chart?.modules.find(module => module.value === 'points');
 
     expect(points?.Icon).toBeDefined();
-    expect(points?.children?.map(child => child.value)).toEqual(['scatter', 'bubble']);
+    expect(points?.children?.map(child => child.value)).toEqual(['scatter']);
   });
 
   it('Plot 末尾注册 API 参考与更新日志路由', () => {
@@ -104,13 +104,13 @@ describe('layout utils', () => {
     expect(paths.some(path => path.startsWith('/viz/releases/'))).toBe(false);
   });
 
-  it('在 Chart 下以点图家族收纳平级的 Scatter 与 Bubble Showcase', () => {
+  it('在 Chart 下并列组织点图 Showcase 与共享图形模型', () => {
     expect(vizSection.map(section => section.id).filter(Boolean)).toEqual(['data', 'chart', 'table', 'plot']);
 
     const chart = vizSection.find(section => section.id === 'chart');
     const points = chart?.pages.find(page => page.id === 'points');
     const scatter = points?.children?.find(page => page.id === 'scatter');
-    const bubble = points?.children?.find(page => page.id === 'bubble');
+    const model = chart?.pages.find(page => page.id === 'model');
     const chartPaths = flattenLeaves('viz', vizSection)
       .map(node => node.path)
       .filter(path => path.startsWith('/viz/chart/') && !path.includes('/changelog/'));
@@ -122,15 +122,15 @@ describe('layout utils', () => {
       capability: 'showcase.scatter',
       showcase: { family: 'scatter-points', role: 'primary', preview: 'scatter-basic', order: 10 },
     });
-    expect(bubble?.meta).toMatchObject({
-      pageType: 'concept',
-      audience: 'user',
-      layout: 'showcase',
-      capability: 'showcase.bubble',
-      sourceOfTruth: 'docs',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'bubble-basic', order: 20 },
-    });
-    expect(chartPaths).toEqual(['/viz/chart/points/scatter', '/viz/chart/points/bubble']);
+    expect(model?.meta).toMatchObject({ pageType: 'concept', capability: 'chart.model' });
+    expect(model?.children?.map(page => page.id)).toEqual(['structure', 'authoring', 'presentation', 'plot']);
+    expect(chartPaths).toEqual([
+      '/viz/chart/points/scatter',
+      '/viz/chart/model/structure',
+      '/viz/chart/model/authoring',
+      '/viz/chart/model/presentation',
+      '/viz/chart/model/plot',
+    ]);
     expect(chartPaths).not.toContain('/viz/chart/scatter');
   });
 

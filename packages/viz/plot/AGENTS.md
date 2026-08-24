@@ -33,8 +33,8 @@ pipeline/     创建 context、排阶段并调度 resolver，消费已确定结�
 - `composition` 的 registry、arrangement policy/layout、facet panel 与相关 context determination 属于 `resolve/composition`；pipeline 只消费其结果编排 frame / layout / lowering。
 - `lineage` 的默认与有效选项属于 `resolve/lineage`；pipeline 只执行 lineage lowering / locator。
 - `theme` 的内置 catalog、preset、token definition 与 registry merge 属于 `providers/theme`；Plot theme mapping、cascade、effective token 与 resolution 属于 `resolve/theme`。`scale`、`channel`、`mark` 遵循同一规则：definition / implementation / registry merge 在 providers，lookup、默认、校验与语义 determination 在 resolve。
-- Plot Composite 从 Core context 消费 effective Theme；IRPlot 不重复 Core style / mode。省略 `style` 时使用随 `mode` 变化的 Plot 默认 token baseline；显式 `PlotThemeStyleDefinition` 经 Plot registry 解析完整 token baseline。`plotThemeTokens`、`colors`、native `plotTheme` 与 local guide / mark / scale config 按公开 cascade 覆盖该基线。resolver 接收 Core shared colors 并负责默认 palette，不在后续阶段无条件重写 palette
-- `plotThemeStyles` 是 Plot lowering 的 runtime definition 入口。React / Vanilla adapter 必须将同一 option 传给 standalone、embedded 与 plain lowering；自定义 style 解析到 Plot 时缺少同名 definition 必须 fail-loud
+- Plot Composite 从 Core context 消费 effective Theme；IRPlot 不重复 Core style / mode。省略 `style` 时使用随 `mode` 变化的 Plot 默认 token baseline；显式 `PlotThemeStyleDefinition` 经 Plot registry 解析相对该 baseline 的稀疏覆盖。`plotThemeTokens`、`colors`、native `plotTheme` 与 local guide / mark / scale config 按公开 cascade 覆盖该结果。resolver 接收 Core shared colors 并负责默认 palette，不在后续阶段无条件重写 palette
+- `plotThemeStyles` 是 Plot lowering 的 runtime definition 入口。React / Vanilla adapter 必须将同一 option 传给 standalone、embedded 与 plain lowering；自定义 style 只返回相对默认 preset / Axis rules 的稀疏覆盖，缺少同名 definition 必须 fail-loud
 - Plot canonical palette 使用 `plot.palette.*`；`data.palette.*` 不属于 Data 或 Plot 的公开 token namespace，不保留 alias 或双读。
 - Chart 与其它上层只能传递 Plot 公开 token contract 或调用 Plot 公开纯 resolver，不得复制 Plot key、schema、preset、merge 或 resolved theme。
 - `pipeline/locator` 负责通过 lowering 流程解析 datum / series 锚点；`contract/locator` 只放公开 locator 类型。

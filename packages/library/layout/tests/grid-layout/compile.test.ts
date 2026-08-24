@@ -11,7 +11,7 @@ import {
   LayoutChildProbeKind,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { boolean, literal, number, string } from 'zod';
 
 import type { GridLayoutCompileArtifact } from '../../src';
 
@@ -25,19 +25,19 @@ import {
 } from '../../src';
 
 const LeafSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('grid-test'),
-  type: z.literal('leaf'),
-  id: z.string(),
-  width: z.number().nonnegative(),
-  height: z.number().nonnegative(),
-  originX: z.number().default(0),
-  originY: z.number().default(0),
-  firstBaseline: z.number().optional(),
-  lastBaseline: z.number().optional(),
-  responsive: z.boolean().default(false),
-  minimumWidth: z.number().nonnegative().optional(),
-  area: z.number().nonnegative().optional(),
-  failOnExact: z.boolean().default(false),
+  namespace: literal('grid-test'),
+  type: literal('leaf'),
+  id: string(),
+  width: number().nonnegative(),
+  height: number().nonnegative(),
+  originX: number().default(0),
+  originY: number().default(0),
+  firstBaseline: number().optional(),
+  lastBaseline: number().optional(),
+  responsive: boolean().default(false),
+  minimumWidth: number().nonnegative().optional(),
+  area: number().nonnegative().optional(),
+  failOnExact: boolean().default(false),
 });
 
 type ProbeLog = Readonly<{ id: string; proposal: LayoutProposal }>;
@@ -121,8 +121,8 @@ const compileGrid = (child: IRChild, proposal: LayoutProposal) => {
     namespace: 'grid-test',
     type: 'harness',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('grid-test'),
-      type: z.literal('harness'),
+      namespace: literal('grid-test'),
+      type: literal('harness'),
       child: ChildSchema,
     }),
     compile: (node, context) => {

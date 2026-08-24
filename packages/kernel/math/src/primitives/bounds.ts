@@ -100,13 +100,13 @@ export const isPositiveBoundsRect = (rect: BoundsRect): boolean =>
   isFiniteBoundsRect(rect) && rect.width > 0 && rect.height > 0;
 
 /** 轴对齐外接范围中心 */
-export const boundsCenter = ({ maxX, maxY, minX, minY }: AxisAlignedBounds): Position => [
+export const centerOfBounds = ({ maxX, maxY, minX, minY }: AxisAlignedBounds): Position => [
   (minX + maxX) / 2,
   (minY + maxY) / 2,
 ];
 
 /** 轴对齐外接范围半轴 */
-export const boundsHalfAxes = ({ maxX, maxY, minX, minY }: AxisAlignedBounds): BoundsHalfAxes => ({
+export const halfAxesOfBounds = ({ maxX, maxY, minX, minY }: AxisAlignedBounds): BoundsHalfAxes => ({
   halfWidth: (maxX - minX) / 2,
   halfHeight: (maxY - minY) / 2,
 });
@@ -123,7 +123,7 @@ export const expandBounds = (
 });
 
 /** 轴对齐外接范围的四个角点 */
-export const boundsCorners = ({ maxX, maxY, minX, minY }: AxisAlignedBounds): Array<Position> => [
+export const cornersOfBounds = ({ maxX, maxY, minX, minY }: AxisAlignedBounds): Array<Position> => [
   [minX, minY],
   [maxX, minY],
   [minX, maxY],

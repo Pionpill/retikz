@@ -109,15 +109,15 @@ export const foldSegmentSample = (
   const legIndex = scaled === 0 ? 0 : Math.min(Math.ceil(scaled) - 1, legCount - 1);
   const localT = scaled - legIndex;
   const sample = lineSegmentSample(points[legIndex], points[legIndex + 1], localT);
-  if (!pointOps.equal(points[legIndex], points[legIndex + 1])) return sample;
+  if (!pointOps.isEqual(points[legIndex], points[legIndex + 1])) return sample;
 
   for (let distance = 1; distance < legCount; distance += 1) {
     const previous = legIndex - distance;
-    if (previous >= 0 && !pointOps.equal(points[previous], points[previous + 1])) {
+    if (previous >= 0 && !pointOps.isEqual(points[previous], points[previous + 1])) {
       return { point: sample.point, tangent: lineSegmentSample(points[previous], points[previous + 1], 0).tangent };
     }
     const next = legIndex + distance;
-    if (next < legCount && !pointOps.equal(points[next], points[next + 1])) {
+    if (next < legCount && !pointOps.isEqual(points[next], points[next + 1])) {
       return { point: sample.point, tangent: lineSegmentSample(points[next], points[next + 1], 0).tangent };
     }
   }

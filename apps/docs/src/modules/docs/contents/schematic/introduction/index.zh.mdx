@@ -1,35 +1,39 @@
 ---
 title: 简介
-description: 了解 Schematic 如何把可复用图式元素与自动图示能力分层，并从 Graph 入口开始绘制。
+description: 了解 Schematic 如何让 Graph 直接复用 Core 字段，并把自动布局与 routing 留给未来 Diagram。
 ---
 
-Schematic 组承载“图中画什么、这些元素表达什么，以及关系如何自动组织”的领域能力。当前的 Graph 包族提供可独立绘制的图式元素；未来需要全局节点、边、拓扑或自动布局时，可由 Diagram 在 Graph 之上组合这些元素，而不改变它们的绘制契约。
+Schematic 组承载图式语义、关系模型与算法布局等领域能力。当前 Graph package family 提供可持久化、可独立绘制的关系记录；未来 Diagram 在它之上计算布局与 routing，而不复制 Graph schema
 
 ## 从 Graph 开始
 
-Graph 提供可选的 `Graph` presentation root，以及 `Container`、`Entity` 与 `Relation` 三类语义元素。Entity role / variant 支持 assembly-local Definition registry，内置仍包含 terminal、stage、decision、junction 与五种视觉层级；Relation role 区分 flow、branch、dependency 与 feedback。它们复用 Core 的 Scope、Node、Path、target 和 Scene，也复用 Layout 的通用布局；Graph 不复制几何、renderer 或布局算法。
+只有 `Graph` 是 Tier 2 embed root。`Entity` 与 `Relation` 是 root 内的两类 data records 和 authoring declarations；普通 Core content child 作为 Graph root decoration：
 
-| 包                      | 负责什么                                    | 什么时候使用                          |
-| ----------------------- | ------------------------------------------- | ------------------------------------- |
-| `@retikz/graph`         | Schema、factory、Definition、lowering 与 IR | 校验或持久化 JSON，直接接入 Core      |
-| `@retikz/graph-react`   | React JSX authoring                         | 在 `@retikz/react` 的 `Layout` 中使用 |
-| `@retikz/graph-vanilla` | builder、adapter、SSR 与 mount authoring    | 在无 React 的浏览器或脚本中使用       |
+- Entity 保存可选 identity、节点语义与直接的 Core Node 字段
+- Relation 保存稳定 endpoints、direction、关系语义与可选 route
+- Graph root decoration 保存不带 Graph 语义的普通 Core 内容
 
-三个包使用同一套 canonical IR。React 与 Vanilla 只负责作者入口，不复制 Schema、默认值或 lowering。
+Entity 与 Relation 分别拥有 `role → kind → predicate(params)`、Definition registry 与 Theme selector，最终下沉为普通 Core/Layout 输出。Graph 不复制 renderer、Scene、通用几何或布局算法
+
+| 包                      | 负责什么                                                     | 什么时候使用                     |
+| ----------------------- | ------------------------------------------------------------ | -------------------------------- |
+| `@retikz/graph`         | Source schema、factory、Definition、resolve 与 lowering      | 校验/持久化 JSON 或直接接入 Core |
+| `@retikz/graph-react`   | 收集 `<Graph>` JSX，并支持 standalone / embedded Layout 宿主 | React 应用与 Layout 组合         |
+| `@retikz/graph-vanilla` | `InputGraph` normalization 与 root panel adapter             | 无 React 的浏览器、SSR 或脚本    |
+
+三个包生成同一 `IRGraph`。React 与 Vanilla 只负责 authoring normalization，不拥有 schema、默认语义或 lowering
 
 ## 能力边界
 
-Graph 拥有单个图式元素的语义、外观默认值和下沉方式，但不拥有：
+Graph 拥有通用节点、关系、identity 与可复用绘制字段；它不拥有：
 
-- 全局 `GraphModel`、节点与边集合或拓扑约束
-- 自动布局、routing、避障或碰撞搜索；这些能力由上层 Diagram 负责
-- selection、viewport、history 等编辑器状态
-- UML 或状态机的执行模型
-
-因此你可以直接用 Graph 绘制局部逻辑结构，也可以在未来的 Diagram 能力中复用同一批元素。
+- 自动布局、routing、避障或 compound-edge 计算；这些由 Diagram 负责
+- selection、viewport、history、transaction 等 Editor 状态
+- UML、流程或状态机的领域执行模型
+- renderer 分支或平行 Scene / 几何系统
 
 ## 下一步
 
-- [Graph](/schematic/graph)：查看现有元素、职责与使用入口
-- [Layout 布局容器](/library/layout)：排列 Container 与基础单元
-- [Core 组件](/kernel/components)：使用底层 Node、Path、Scope 与 Layout
+- [Graph](/schematic/graph)：理解唯一 Source root 与两类语义成员
+- [Graph API 参考](/schematic/graph/api-reference)：查询最小 Source schema 与公开 authoring 入口
+- [Layout 布局能力](/library/layout)：使用通用布局能力

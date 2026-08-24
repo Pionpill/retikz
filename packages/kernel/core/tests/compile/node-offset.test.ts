@@ -70,8 +70,8 @@ describe('OffsetPosition: schema 校验', () => {
     expect(() => OffsetPositionSchema.parse({ of: { foo: 'bar' }, offset: [0, 0] })).toThrow();
   });
 
-  it('of=空字符串 → 抛错（z.string().min(1)）', () => {
-    expect(() => OffsetPositionSchema.parse({ of: '', offset: [0, 0] })).toThrow();
+  it.each(['', '   '])('of=%j 为空白字符串时抛错', of => {
+    expect(() => OffsetPositionSchema.parse({ of, offset: [0, 0] })).toThrow();
   });
 });
 

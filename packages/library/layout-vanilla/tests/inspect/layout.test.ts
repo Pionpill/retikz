@@ -21,6 +21,6 @@ describe('@retikz/layout-vanilla/inspect', () => {
       compileDriver: createLayoutInspectionVanillaDriver(),
     });
     expect(svg).toContain('data-retikz-readonly-layer');
-    expect(svg).toContain('#2563eb');
+    expect(svg).toContain('hsl(210, 38%, 48%)');
   });
 });

@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
-import { ScatterChart } from '@retikz/chart-react/point';
+import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart, ScatterMark } from '@retikz/chart-react/point/scatter';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -10,21 +11,24 @@ import { countryScatterData } from './scatter-basic.data';
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <ScatterChart
     data={countryScatterData}
-    encoding={{
-      x: { field: 'urbanPopulationShare' },
-      y: { field: 'internetUseShare' },
+    encodings={{
+      x: 'urbanPopulationShare',
+      y: 'internetUseShare',
     }}
-    mark={{
-      size: { kind: 'constant', value: values[SCATTER_BASIC_CONTROL_IDS.pointSize] },
-      opacity: { kind: 'constant', value: values[SCATTER_BASIC_CONTROL_IDS.pointOpacity] },
-    }}
-    title="城市化程度与互联网使用率"
-    subtitle="181 个经济体，2023 年；横轴和纵轴均为人口占比（%）"
-    source="世界银行：SP.URB.TOTL.IN.ZS、IT.NET.USER.ZS；仅保留两个指标均有 2023 年观测的经济体"
     width={800}
     height={400}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  />
+  >
+    <ChartTitle>城市化程度与互联网使用率</ChartTitle>
+    <ChartSubtitle>181 个经济体，2023 年；横轴和纵轴均为人口占比（%）</ChartSubtitle>
+    <ChartSource>世界银行：SP.URB.TOTL.IN.ZS、IT.NET.USER.ZS；仅保留两个指标均有 2023 年观测的经济体</ChartSource>
+    <ScatterMark
+      override
+      properties={{
+        size: values[SCATTER_BASIC_CONTROL_IDS.pointSize],
+        opacity: values[SCATTER_BASIC_CONTROL_IDS.pointOpacity],
+      }}
+    />
+  </ScatterChart>
 ));
 
 /** canonical 状态派生的稳定源码配置 */

@@ -11,6 +11,16 @@ import type {
   IRScope,
   IRStep,
 } from '@retikz/core';
+import type { IRGraph } from '@retikz/graph';
+import type { InputGraphChild } from '@retikz/graph-vanilla';
+
+import { EntitySchema, GraphSchema, RelationSchema } from '@retikz/graph';
+
+import {
+  entityPreviewAuthoringInput,
+  graphPreviewAuthoringInput,
+  relationPreviewAuthoringInput,
+} from './graph-authoring-input';
 
 const INDENT = '  ';
 const pad = (level: number): string => INDENT.repeat(level);
@@ -96,6 +106,12 @@ type Ctx = {
   graphCounts: Map<string, number>;
   generatedIds: Map<string, string>;
 };
+
+/** IR 到 docs Vanilla 源码的可选宿主上下文 */
+export type IrToVanillaCodeOptions = Readonly<{
+  /** 当前 ComponentPreview 选中的 Core Theme selector */
+  theme?: IRScene['theme'];
+}>;
 
 type WayFrag = { text: string; comment?: boolean };
 
@@ -276,10 +292,9 @@ const LAYOUT_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GridLayoutInputEmbedAdapter',
   'OverlayLayoutInputEmbedAdapter',
 ];
-const GRAPH_HELPER_ORDER: ReadonlyArray<string> = ['graph', 'container', 'entity', 'relation'];
+const GRAPH_HELPER_ORDER: ReadonlyArray<string> = ['graph', 'entity', 'relation'];
 const GRAPH_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GraphInputEmbedAdapter',
-  'ContainerInputEmbedAdapter',
   'EntityInputEmbedAdapter',
   'RelationInputEmbedAdapter',
 ];
@@ -296,11 +311,7 @@ export type StandardPreviewDefinitionName =
 export type LayoutPreviewDefinitionName = 'FlexLayoutDefinition' | 'GridLayoutDefinition' | 'OverlayLayoutDefinition';
 
 /** docs 预览能够显式注入的 Graph definition 名 */
-export type GraphPreviewDefinitionName =
-  | 'GraphDefinition'
-  | 'ContainerDefinition'
-  | 'EntityDefinition'
-  | 'RelationDefinition';
+export type GraphPreviewDefinitionName = 'GraphDefinition' | 'EntityDefinition' | 'RelationDefinition';
 
 const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefinitionName>> = {
   grid: 'GridDefinition',
@@ -318,7 +329,6 @@ const LAYOUT_DEFINITION_BY_KIND: Readonly<Record<string, LayoutPreviewDefinition
 
 const GRAPH_DEFINITION_BY_KIND: Readonly<Record<string, GraphPreviewDefinitionName>> = {
   graph: 'GraphDefinition',
-  container: 'ContainerDefinition',
   entity: 'EntityDefinition',
   relation: 'RelationDefinition',
 };
@@ -333,18 +343,10 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     const items = record.children as ReadonlyArray<{ child: IRChild }> | undefined;
     return items?.map(item => item.child) ?? [];
   }
-  if (child.namespace === 'graph' && child.type === 'container') {
-    const owned: Array<IRChild> = [];
-    const header = record.header as { child?: IRChild } | undefined;
-    if (header?.child !== undefined) owned.push(header.child);
-    const sections = record.sections as ReadonlyArray<{ child: IRChild }> | undefined;
-    sections?.forEach(section => owned.push(section.child));
-    return owned;
-  }
   if (child.namespace === 'graph' && child.type === 'graph') {
-    return [...((record.children as ReadonlyArray<IRChild> | undefined) ?? [])];
+    const children = record.children as ReadonlyArray<IRChild> | undefined;
+    return [...(children ?? [])];
   }
-  if (child.namespace === 'graph' && ['entity', 'relation'].includes(child.type)) return [];
   if (child.namespace !== 'standard' || child.type !== 'legend') return [];
   const owned: Array<IRChild> = [];
   if (record.title !== undefined) owned.push(record.title as IRChild);
@@ -387,7 +389,8 @@ export const collectPreviewDefinitions = (
   }
   const providedGraphKinds = new Set(graphAdapterKinds);
   if (graphAdapterKinds.has('graph')) {
-    GRAPH_HELPER_ORDER.forEach(kind => providedGraphKinds.add(kind));
+    providedGraphKinds.add('entity');
+    providedGraphKinds.add('relation');
   }
   const visit = (child: IRChild): void => {
     if ('namespace' in child) {
@@ -446,9 +449,6 @@ const standardCanonicalId = (kind: string, embedId: string): string => {
   return embedId;
 };
 
-const graphCanonicalId = (kind: string, embedId: string): string =>
-  kind === 'container' ? `${embedId}/${kind}` : embedId;
-
 const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => {
   const visit = (child: IRChild): void => {
     if ('namespace' in child) {
@@ -476,21 +476,6 @@ const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => 
           ctx.generatedIds.set(embedId, embedId);
         }
       }
-      if (child.namespace === 'graph' && typeof (child as { id?: unknown }).id === 'string') {
-        const kind = child.type;
-        if (GRAPH_HELPER_ORDER.includes(kind)) {
-          const authoredId = (child as unknown as { id: string }).id;
-          const count = (ctx.graphCounts.get(kind) ?? 0) + 1;
-          ctx.graphCounts.set(kind, count);
-          const embedId = `preview-${kind}-${count}`;
-          const generatedId = graphCanonicalId(kind, embedId);
-          ctx.generatedIds.set(authoredId, generatedId);
-          ctx.generatedIds.set(generatedId, generatedId);
-          if (kind === 'container') {
-            ctx.generatedIds.set(`${authoredId}/${kind}`, generatedId);
-          }
-        }
-      }
       previewOwnedChildren(child).forEach(visit);
       return;
     }
@@ -501,38 +486,6 @@ const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => 
   ctx.standardCounts.clear();
   ctx.layoutCounts.clear();
   ctx.graphCounts.clear();
-};
-
-const rewriteGraphTarget = (value: unknown, ctx: Ctx): unknown => {
-  if (typeof value !== 'object' || value === null || !('id' in value)) return value;
-  const target = value as { id: string; [key: string]: unknown };
-  const id = ctx.generatedIds.get(target.id) ?? target.id;
-  return id === target.id ? value : { ...target, id };
-};
-
-/** 只改写 Core Step 明确拥有的目标字段，不递归触碰 meta 或其它普通 JSON */
-const rewriteRelationStep = (value: unknown, ctx: Ctx): unknown => {
-  if (typeof value !== 'object' || value === null) return value;
-  const step = value as Record<string, unknown>;
-  return {
-    ...step,
-    ...('to' in step ? { to: rewriteGraphTarget(step.to, ctx) } : {}),
-    ...('from' in step ? { from: rewriteGraphTarget(step.from, ctx) } : {}),
-    ...('center' in step ? { center: rewriteGraphTarget(step.center, ctx) } : {}),
-    ...(Array.isArray(step.points) ? { points: step.points.map(point => rewriteGraphTarget(point, ctx)) } : {}),
-  };
-};
-
-const rewriteGraphInput = (kind: string, input: Record<string, unknown>, ctx: Ctx): Record<string, unknown> => {
-  if (kind === 'relation') {
-    return {
-      ...input,
-      ...(Array.isArray(input.children)
-        ? { children: input.children.map(step => rewriteRelationStep(step, ctx)) }
-        : {}),
-    };
-  }
-  return input;
 };
 
 const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
@@ -577,25 +530,62 @@ const layoutCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =
   return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
 };
 
+const graphAuthoringCode = (graph: IRGraph, indent: number, ctx: Ctx): string => {
+  const input = graphPreviewAuthoringInput(graph);
+  const replacements = new Map<string, string>();
+  let slot = 0;
+  const encodeChild = (child: IRChild): string => {
+    const placeholder = `__GRAPH_CONTENT_CHILD_${slot++}__`;
+    replacements.set(formatString(placeholder), childCode(child, indent + 2, ctx));
+    return placeholder;
+  };
+  const encodeGraphChild = (child: InputGraphChild): unknown => {
+    if (!('namespace' in child)) {
+      if (child.type !== 'entity' && child.type !== 'relation') {
+        return encodeChild(child as IRChild);
+      }
+      return child;
+    }
+    return encodeChild(child);
+  };
+  const children = input.children?.map(encodeGraphChild);
+  const encoded: Record<string, unknown> = {
+    ...input,
+    ...(children === undefined ? {} : { children }),
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
+  return code;
+};
+
 const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
-  const record = child as IRChild & { namespace: string; type: string; id?: string };
-  const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}InputEmbedAdapter`;
-  if (!GRAPH_HELPER_ORDER.includes(record.type) || !GRAPH_ADAPTER_ORDER.includes(adapterName)) {
+  const record = child as IRChild & { namespace: string; type: string };
+  const helperName = record.type;
+  const adapterName = `${helperName.charAt(0).toUpperCase()}${helperName.slice(1)}InputEmbedAdapter`;
+  if (!GRAPH_HELPER_ORDER.includes(helperName) || !GRAPH_ADAPTER_ORDER.includes(adapterName)) {
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
   }
-  const count = (ctx.graphCounts.get(record.type) ?? 0) + 1;
-  ctx.graphCounts.set(record.type, count);
-  ctx.graphHelpers.add(record.type);
+  const count = (ctx.graphCounts.get(helperName) ?? 0) + 1;
+  ctx.graphCounts.set(helperName, count);
+  ctx.graphHelpers.add(helperName);
   ctx.graphAdapters.add(adapterName);
-  const generatedId = `preview-${record.type}-${count}`;
-  if (record.type === 'graph') {
-    const graphChildren = (record as typeof record & { children: ReadonlyArray<IRChild> }).children;
-    const input = rewriteGraphInput(record.type, stripKeys(record, ['namespace', 'type', 'id', 'children']), ctx);
-    const childrenCode = childListCode(graphChildren, indent, ctx);
-    return `graph(${formatString(generatedId)}, ${formatObject({ ...input, children: '__GRAPH_CHILDREN__' }, indent).replace("'__GRAPH_CHILDREN__'", childrenCode)})`;
+  const embedId = `preview-${helperName}-${count}`;
+  if (helperName === 'graph') {
+    return `graph(${formatString(embedId)}, ${graphAuthoringCode(GraphSchema.parse(child), indent, ctx)})`;
   }
-  const input = rewriteGraphInput(record.type, stripKeys(record, ['namespace', 'type', 'id']), ctx);
-  return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
+  if (helperName === 'entity') {
+    const input = {
+      ...entityPreviewAuthoringInput(EntitySchema.parse(child)),
+      graphThemeStyles: '__GRAPH_THEME_STYLES__',
+    };
+    return `entity(${formatString(embedId)}, ${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
+  }
+  const input = {
+    ...relationPreviewAuthoringInput(RelationSchema.parse(child)),
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  return `relation(${formatString(embedId)}, ${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
 };
 
 const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
@@ -626,7 +616,7 @@ const childListCode = (children: ReadonlyArray<IRChild>, indent: number, ctx: Ct
 const HELPER_ORDER: ReadonlyArray<string> = ['scene', 'node', 'path', 'coordinate', 'scope'];
 
 /** 从纯 IR 生成不含运行时 authoring sidecar 的 Vanilla 示例代码 */
-export const irToVanillaCode = (ir: IRScene): string => {
+export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {}): string => {
   const ctx: Ctx = {
     used: new Set(['scene']),
     usesDrawWay: false,
@@ -644,6 +634,7 @@ export const irToVanillaCode = (ir: IRScene): string => {
   reservePreviewIds(ir.children, ctx);
   const childrenStr = childListCode(ir.children, 0, ctx);
   const figureConfig = {
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
     ...(ir.viewBox ? { viewBox: ir.viewBox } : {}),
     ...(ir.animations ? { animations: ir.animations } : {}),
     children: ir.children,
@@ -676,6 +667,7 @@ export const irToVanillaCode = (ir: IRScene): string => {
   }
   if (graphHelpers.length > 0) {
     imports.push(`import { ${[...graphHelpers, ...graphAdapters].join(', ')} } from '@retikz/graph-vanilla';`);
+    imports.push("import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';");
   }
   if (definitions.standard.length > 0) {
     imports.push(`import { ${definitions.standard.join(', ')} } from '@retikz/standard';`);
@@ -690,8 +682,11 @@ export const irToVanillaCode = (ir: IRScene): string => {
   const adapters = [...standardAdapters, ...layoutAdapters, ...graphAdapters];
   const adapterCode = adapters.length > 0 ? `\nconst adapters = [${adapters.join(', ')}];\n` : '';
   const definitionNames = [...definitions.standard, ...definitions.layout, ...definitions.graph];
-  const compile =
-    definitionNames.length > 0 ? `\nconst compile = { composites: [${definitionNames.join(', ')}] };\n` : '';
+  const compileEntries = [
+    ...(graphHelpers.length > 0 ? ['themeStyles: PreviewThemeDefinitionBundle.core'] : []),
+    ...(definitionNames.length > 0 ? [`composites: [${definitionNames.join(', ')}]`] : []),
+  ];
+  const compile = compileEntries.length > 0 ? `\nconst compile = { ${compileEntries.join(', ')} };\n` : '';
   return `${imports.join('\n')}\n\nconst input = scene(${figureArgs});\n${adapterCode}${compile}`;
 };
 

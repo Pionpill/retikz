@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { number, strictObject } from 'zod';
 
 import type { ScenePrimitive, ShapeDefinition } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -21,7 +21,7 @@ const findByType = <T extends ScenePrimitive['type']>(
 const radialShape = (): ShapeDefinition =>
   defineShape({
     name: 'hexagon',
-    paramsSchema: z.strictObject({}),
+    paramsSchema: strictObject({}),
     circumscribe: (hw, hh) => {
       const r = Math.hypot(hw, hh);
       return { halfWidth: r, halfHeight: r };
@@ -51,7 +51,7 @@ const radialShape = (): ShapeDefinition =>
 const chipShape = (): ShapeDefinition =>
   defineShape({
     name: 'chip',
-    paramsSchema: z.strictObject({}),
+    paramsSchema: strictObject({}),
     circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
     boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
     anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -265,7 +265,7 @@ describe('Shape registry — error path', () => {
     expect(() => compileToScene(ir).scene).toThrow(/ellipse, polygon, rectangle/);
   });
 
-  it('unknown_shape_string_in_schema_passes_validation: schema accepts any non-empty string', () => {
+  it('unknown_shape_string_in_schema_passes_validation: schema accepts any non-blank string', () => {
     expect(NodeSchema.safeParse({ type: 'node', shape: 'cloud', position: [0, 0] }).success).toBe(true);
     expect(NodeSchema.safeParse({ type: 'node', shape: '', position: [0, 0] }).success).toBe(false);
   });
@@ -273,7 +273,7 @@ describe('Shape registry — error path', () => {
   it('custom_shape_params_error_contains_provider_and_ir_path', () => {
     const strictShape = defineShape({
       name: 'scaledBox',
-      paramsSchema: z.strictObject({ scale: z.number().positive() }),
+      paramsSchema: strictObject({ scale: number().positive() }),
       circumscribe: (hw, hh, params) => ({ halfWidth: hw * params.scale, halfHeight: hh * params.scale }),
       boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
       anchor: BUILTIN_SHAPES.rectangle.anchor,

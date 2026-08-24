@@ -32,15 +32,15 @@ export const vector2 = {
   length: (a: Vector2): number => Math.hypot(a[0], a[1]),
   /** 单位化向量；零长度时返回 fallback */
   normalize: (a: Vector2, fallback: Vector2 = [1, 0], epsilon = DEFAULT_EPSILON): Vector2 => {
-    const len = Math.hypot(a[0], a[1]);
-    if (len < epsilon) return fallback;
-    return [a[0] / len, a[1] / len];
+    const length = Math.hypot(a[0], a[1]);
+    if (length < epsilon) return fallback;
+    return [a[0] / length, a[1] / length];
   },
   /** 单位化向量；零长度或非有限长度时返回 null */
   normalizeOrNull: (a: Vector2, epsilon = 0): Vector2 | null => {
-    const len = Math.hypot(a[0], a[1]);
-    if (!Number.isFinite(len) || len <= epsilon) return null;
-    return [a[0] / len, a[1] / len];
+    const length = Math.hypot(a[0], a[1]);
+    if (!Number.isFinite(length) || length <= epsilon) return null;
+    return [a[0] / length, a[1] / length];
   },
   /** 角度（度）转单位向量 */
   fromAngleDegrees: (angle: number): Vector2 => {
@@ -61,15 +61,15 @@ export const point = {
   /** 从 origin 逆 direction 后退指定长度 */
   against: (origin: Position, direction: Vector2, length: number): Position =>
     vector2.sub(origin, vector2.scale(direction, length)),
-  /** 将点 p 朝 target 移动指定距离 */
-  shiftToward: (p: Position, target: Position, dist: number): Position => {
-    if (dist === 0) return p;
-    const dir = vector2.normalize(vector2.sub(target, p), [0, 0]);
-    if (dir[0] === 0 && dir[1] === 0) return p;
-    return vector2.add(p, vector2.scale(dir, dist));
+  /** 将 sourcePoint 朝 targetPoint 移动指定距离 */
+  shiftToward: (sourcePoint: Position, targetPoint: Position, distance: number): Position => {
+    if (distance === 0) return sourcePoint;
+    const direction = vector2.normalize(vector2.sub(targetPoint, sourcePoint), [0, 0]);
+    if (direction[0] === 0 && direction[1] === 0) return sourcePoint;
+    return vector2.add(sourcePoint, vector2.scale(direction, distance));
   },
   /** 精确相等比较，不使用容差 */
-  equal: (a: Position, b: Position): boolean => a[0] === b[0] && a[1] === b[1],
+  isEqual: (a: Position, b: Position): boolean => a[0] === b[0] && a[1] === b[1],
 };
 
 /** 线性插值：a + (b - a) * t */

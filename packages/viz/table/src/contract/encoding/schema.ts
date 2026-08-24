@@ -1,28 +1,23 @@
 import { CssColorSchema } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { array, enum as zodEnum, number, strictObject, string } from 'zod';
 
 import { TableVisualChannel } from '../../schemas';
-
-const descriptorColorSchema = CssColorSchema.refine(value => NonBlankStringSchema.safeParse(value).success, {
-  message: 'Table Legend descriptor color must not be empty or whitespace.',
-});
 
 const strictlyIncreasingEdges = (edges: ReadonlyArray<number>): boolean =>
   edges.every((edge, index) => index === 0 || edge > edges[index - 1]);
 
-export const TableLegendDescriptorSchema = z
-  .strictObject({
-    encodingId: z.string().min(1).describe('Owning Table visual encoding id.'),
-    channel: z.enum(TableVisualChannel).describe('Table Cell appearance channel described by this Legend.'),
-    scaleName: z.string().min(1).describe('Resolved Table visual scale definition name.'),
-    title: z.string().optional().describe('Optional Table-owned Legend title.'),
-    form: z.enum(['ramp', 'swatch']).describe('Ramp or swatch Legend representation.'),
-    domain: z.array(ScalarValueSchema).describe('Detached resolved visual scale domain.'),
-    range: z.array(descriptorColorSchema).min(1).describe('Detached nonempty resolved color range.'),
-    edges: z.array(z.number()).optional().describe('Optional strictly increasing threshold edges.'),
-  })
+export const TableLegendDescriptorSchema = strictObject({
+  encodingId: NonBlankStringSchema.describe('Owning Table visual encoding id.'),
+  channel: zodEnum(TableVisualChannel).describe('Table Cell appearance channel described by this Legend.'),
+  scaleName: NonBlankStringSchema.describe('Resolved Table visual scale definition name.'),
+  title: string().optional().describe('Optional Table-owned Legend title.'),
+  form: zodEnum(['ramp', 'swatch']).describe('Ramp or swatch Legend representation.'),
+  domain: array(ScalarValueSchema).describe('Detached resolved visual scale domain.'),
+  range: array(CssColorSchema).min(1).describe('Detached nonempty resolved color range.'),
+  edges: array(number()).optional().describe('Optional strictly increasing threshold edges.'),
+})
   .superRefine((descriptor, context) => {
     if (descriptor.edges !== undefined && !strictlyIncreasingEdges(descriptor.edges)) {
       context.addIssue({ code: 'custom', path: ['edges'], message: 'edges must be strictly increasing' });

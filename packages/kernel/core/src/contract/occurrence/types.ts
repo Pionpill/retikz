@@ -1,7 +1,14 @@
+import type { ValueOf } from '@retikz/foundation';
+
+import type { CompileExpansionKind } from './constants';
+
+/** compile occurrence 展开路径的阶段类别取值 */
+export type CompileExpansionKindValue = ValueOf<typeof CompileExpansionKind>;
+
 /** compile dispatch、展开与输出相对原始 occurrence 的结构化路径段 */
 export type CompileExpansionSegment = Readonly<{
   /** 路径段类别 */
-  kind: 'expand' | 'output' | 'probe' | 'replay' | 'scopeChild';
+  kind: CompileExpansionKindValue;
   /** 同类输出中的稳定索引 */
   index: number;
 }>;

@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { arcEndPoint, rayArc } from '@retikz/math';
+import { intersectRayWithArc, pointAtArcAngle } from '@retikz/math';
 import { Circle, Draw, Layout, Path, Step } from '@retikz/react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
@@ -19,9 +19,9 @@ const ORIGIN: [number, number] = [-165, 0];
 const DIR: [number, number] = [1, 0];
 
 const controlledPreview = defineControlledPreview(previewControlContract, (values: RayArcValues) => {
-  const parameters = rayArc({
+  const parameters = intersectRayWithArc({
     origin: ORIGIN,
-    dir: DIR,
+    direction: DIR,
     center: CENTER,
     radius: RADIUS,
     startAngleDeg: values.startAngle,
@@ -32,7 +32,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, (value
     <Layout width={400} height={240} viewBox={{ x: -185, y: -110, width: 370, height: 220 }}>
       <Circle center={CENTER} radius={RADIUS} stroke="lightgray" dashPattern={[4, 3]} fill="none" />
       <Path stroke="darkorange" strokeWidth={2}>
-        <Step kind="move" to={arcEndPoint(CENTER, RADIUS, values.startAngle)} />
+        <Step kind="move" to={pointAtArcAngle(CENTER, RADIUS, values.startAngle)} />
         <Step kind="arc" center={CENTER} radius={RADIUS} startAngle={values.startAngle} endAngle={values.endAngle} />
       </Path>
       <Draw way={[ORIGIN, [170, 0]]} stroke="dodgerblue" strokeWidth={2} arrow="->" />

@@ -7,7 +7,7 @@ import {
   RuntimeProgramKind,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import type { IRScene } from '../../../src';
 
@@ -24,8 +24,8 @@ const themedComposite = defineComposite({
   namespace: 'theme-test',
   type: 'box',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('theme-test'),
-    type: z.literal('box'),
+    namespace: literal('theme-test'),
+    type: literal('box'),
   }),
   expand: (_node, context) => ({
     children: [

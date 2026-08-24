@@ -1,18 +1,16 @@
 # @retikz/graph
 
-`@retikz/graph` provides framework-agnostic Schematic Graph elements. Its
-JSON-serializable semantic IR retains the `graph` namespace, then lowers
-through explicit Definitions to canonical Core IR.
+`@retikz/graph` owns the framework-neutral, JSON-safe Graph Source IR, independent Definition registries, Canonical resolve, and lowering to ordinary Core Scope, Node, and Path inputs.
 
-The first release includes:
+Graph, Entity, and Relation are independent public semantic composites:
 
-- `Graph` as an optional presentation root for inherited Entity variants and Theme tokens
-- `Container` for authored headers and sections
-- `Entity` as one semantic IR entry with open role and variant keys
-- `Relation` as one semantic IR entry whose `role` distinguishes `flow`, `branch`, `dependency`, and `feedback`
-- Definition registries for custom Entity roles, variants, and Graph Theme styles
-- eight Graph-owned Entity Theme tokens with role / variant selectors
-- `GraphType` for the `graph`, `entity`, `relation`, and `container` IR discriminators
+- Graph is an optional thin shell over the complete Core Scope surface, adding local Graph Theme rules
+- Entity optionally stores identity together with Node semantics, text, and Core-compatible placement fields; without identity it lowers as drawable-only Core content
+- Relation stores Core NodeTarget endpoints, direction, relationship semantics, labels, and an optional route; without a route it lowers to a direct Core Path
+
+Entity and Relation use independent role, kind, and predicate Definitions. They can appear with or without a Graph ancestor, and Graph does not copy Core Shape, Arrow, namespace, or reference registries.
+
+Registry-backed Source fields remain open to custom non-blank keys. Their schemas also expose the built-in `EntityRole`, `RelationRole`, and `RelationKind` values as editor and JSON Schema hints; registration is still validated only during resolve.
 
 ## Install
 
@@ -24,51 +22,35 @@ This package is ESM-only and requires Node.js 24 or newer.
 本包仅发布 ES modules，要求 Node.js 24 或更高版本。
 
 ```ts
-import { DrawWay } from '@retikz/core';
-import { createEntity, createGraph, createGraphDefinitions, createRelation, defineEntityRole } from '@retikz/graph';
+import { createEntity, createGraph, createGraphDefinitions } from '@retikz/graph';
 
-const serviceRole = defineEntityRole({
-  role: 'service',
-  shape: { type: 'rectangle', params: { cornerRadius: 8 } },
-  padding: { x: 12, y: 8 },
+const graph = createGraph({
+  id: 'workflow',
+  children: [createEntity({ id: 'task', role: 'activity', text: 'Process', position: [160, 80] })],
 });
 
-const step = createEntity({
-  id: 'step',
-  role: 'stage',
-  position: [160, 0],
-  text: 'Process',
-});
-const edge = createRelation({
-  id: 'edge',
-  role: 'flow',
-  way: [[0, 0], DrawWay.Hv, 'step'],
-});
-const graph = createGraph({ id: 'workflow', entityVariant: 'mixed', children: [step, edge] });
-const composites = createGraphDefinitions({ entityRoles: [serviceRole] });
+const composites = createGraphDefinitions();
 ```
 
-Omitted node `textColor`, `stroke`, and `fill` values are resolved during
-lowering from the registered `variant`. Graph ships `default`, `fill`,
-and `mixed`; applications can add more through
-`defineEntityVariant()`. `Graph.entityVariant` and `Container.entityVariant`
-provide inherited defaults for descendants. Each Entity's `color` is its
-primary color; omitting it or setting it to `currentColor` uses black in Light
-mode or white in Dark mode.
-The fixed 15% tint is precomposed against white in Light mode or black in Dark
-mode and remains opaque. Explicit leaf paint and opacity fields
-pass through independently.
+Omit `children` when a Graph has no entries. Graph keeps arbitrary Core and Tier 2 children in author order and lowers them through one Core Scope; Entity and Relation can also compile directly outside Graph.
 
-`defineGraphThemeStyle()` pairs a Graph Theme resolver with a same-name Core
-Theme style. Its token rules select by effective role, variant, or both.
-`createGraphDefinitions(options)` and `createGraphProviders(options)` keep
-built-in and custom Definitions on the same assembly-local registry path;
-imports never mutate global state.
+Use `createGraphDefinitions(options)` or `createGraphProviders(options)` to assemble built-in and custom Definitions in one assembly-local registry. Different Definition objects competing for the same key fail loudly; imports do not mutate global state.
 
-Relation's `way` form is authoring-only and is normalized through Core
-`parseWay()` into canonical Step `children`. Persisted JSON contains only
-`children`. Imports do not mutate a global registry; pass only the Definitions
-selected for the current figure through Core compile options.
+Graph Theme style Definitions return sparse overrides relative to the mode-aware default preset. A style can change one token without repeating the complete Entity and Relation baseline:
 
-See the [Graph documentation](https://pionpill.github.io/retikz/schematic/graph)
-for components, persisted IR, and direct-definition loading examples.
+```ts
+import { createGraphDefinitions, defineGraphThemeStyle } from '@retikz/graph';
+
+const compact = defineGraphThemeStyle({
+  name: 'compact',
+  resolve: () => ({
+    entity: { tokens: { strokeWidth: 1.5 } },
+  }),
+});
+
+const composites = createGraphDefinitions({ graphThemeStyles: [compact] });
+```
+
+The resolver applies the default preset, sparse style tokens, default rules, custom style rules, Graph-local rules, and explicit Entity / Relation appearance in that order. Custom style rules append after defaults; omitting rules or returning `rules: []` does not clear the built-in rules.
+
+See the [Graph documentation](https://pionpill.github.io/retikz/schematic/graph) for components, Source schemas, and extension examples.

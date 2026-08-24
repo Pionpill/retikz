@@ -1,13 +1,12 @@
 import type { ResolvedTheme } from '@retikz/core';
-import type { IRPlotAxisThemeTokenRules, IRPlotThemeTokenResolution } from '@retikz/plot';
+import type { IRPlotAxisThemeTokenRules, IRPlotThemeTokenOverrides } from '@retikz/plot';
 
 import {
   definePlotThemeStyle,
-  LegendSymbolFit,
   PlotColorScheme,
   PlotShapePaletteSchema,
   PlotThemeToken,
-  PlotThemeTokenResolutionSchema,
+  PlotThemeTokenOverridesSchema,
 } from '@retikz/plot';
 
 import { PreviewThemeStyle } from '../constants';
@@ -89,69 +88,74 @@ const styles = {
 } as const;
 
 const tokenRulesOf = (style: ReferenceStyle): IRPlotAxisThemeTokenRules => {
-  if (style === PreviewThemeStyle.Academic) return [];
+  if (style === PreviewThemeStyle.Academic) {
+    return [
+      {
+        select: { dimension: ['x', 'y'] },
+        tokens: {
+          [PlotThemeToken.AxisGridEnabled]: false,
+          [PlotThemeToken.AxisGridIncludeDomain]: false,
+        },
+      },
+    ];
+  }
   if (style === PreviewThemeStyle.Clean) {
-    return [{ select: { dimension: 'y' }, tokens: { [PlotThemeToken.AxisGridEnabled]: true } }];
+    return [
+      {
+        select: { dimension: ['x', 'y'] },
+        tokens: {
+          [PlotThemeToken.AxisGridEnabled]: false,
+          [PlotThemeToken.AxisGridIncludeDomain]: false,
+        },
+      },
+      { select: { dimension: 'y' }, tokens: { [PlotThemeToken.AxisGridEnabled]: true } },
+    ];
   }
   return [
     {
       select: { dimension: ['x', 'y'] },
-      tokens: { [PlotThemeToken.AxisGridEnabled]: true },
+      tokens: {
+        [PlotThemeToken.AxisGridEnabled]: true,
+        [PlotThemeToken.AxisGridIncludeDomain]: false,
+      },
     },
   ];
 };
 
-const tokensOf = (style: ReferenceStyle, theme: ResolvedTheme): IRPlotThemeTokenResolution => {
+const tokensOf = (style: ReferenceStyle, theme: ResolvedTheme): IRPlotThemeTokenOverrides => {
   const preset = styles[style];
   const tickMark =
     preset.axis.tick === false
       ? false
       : { kind: 'line' as const, length: preset.axis.tick, line: { stroke: 'currentColor' } };
-  const categorical = [...theme.colors.categorical];
-  return PlotThemeTokenResolutionSchema.parse({
-    [PlotThemeToken.PlotAreaFill]: preset.area[theme.mode],
-    [PlotThemeToken.PlotTypographyForeground]: 'currentColor',
+  return PlotThemeTokenOverridesSchema.parse({
+    ...(preset.area[theme.mode] === 'none' ? {} : { [PlotThemeToken.PlotAreaFill]: preset.area[theme.mode] }),
     [PlotThemeToken.PlotTypographyFontFamily]: preset.fontFamily,
-    [PlotThemeToken.PlotTypographyFontSize]: preset.fontSize,
-    [PlotThemeToken.AxisLineEnabled]: preset.axis.line,
-    [PlotThemeToken.AxisLineStroke]: 'currentColor',
-    [PlotThemeToken.AxisLineStrokeWidth]: 1,
-    [PlotThemeToken.AxisLineDrawOpacity]: 1,
+    ...(preset.fontSize === 12 ? {} : { [PlotThemeToken.PlotTypographyFontSize]: preset.fontSize }),
+    ...(preset.axis.line ? {} : { [PlotThemeToken.AxisLineEnabled]: false }),
     [PlotThemeToken.AxisTickMark]: tickMark,
-    [PlotThemeToken.AxisTickLabelEnabled]: true,
-    [PlotThemeToken.AxisTickLabelForeground]: 'currentColor',
-    [PlotThemeToken.AxisTickLabelFontSize]: preset.axis.labelSize,
+    ...(preset.axis.labelSize === 12 ? {} : { [PlotThemeToken.AxisTickLabelFontSize]: preset.axis.labelSize }),
     [PlotThemeToken.AxisTickLabelGap]: preset.axis.labelGap,
-    [PlotThemeToken.AxisTitleEnabled]: preset.axis.title,
-    [PlotThemeToken.AxisTitleForeground]: 'currentColor',
-    [PlotThemeToken.AxisTitleFontSize]: preset.axis.titleSize,
-    [PlotThemeToken.AxisTitleFontWeight]: 600,
-    [PlotThemeToken.AxisTitlePadding]: 12,
-    [PlotThemeToken.AxisGridEnabled]: preset.axis.grid,
-    [PlotThemeToken.AxisGridStroke]:
-      style === PreviewThemeStyle.Vibrant ? (theme.mode === 'light' ? '#FFFFFF' : '#000000') : 'currentColor',
-    [PlotThemeToken.AxisGridStrokeWidth]: 1,
-    [PlotThemeToken.AxisGridDrawOpacity]: style === PreviewThemeStyle.Vibrant ? 1 : 0.15,
-    [PlotThemeToken.AxisGridIncludeDomain]: false,
-    [PlotThemeToken.LegendTitleForeground]: 'currentColor',
-    [PlotThemeToken.LegendTitleFontSize]: preset.legend.titleSize,
-    [PlotThemeToken.LegendTitleFontWeight]: preset.legend.titleWeight,
-    [PlotThemeToken.LegendLabelForeground]: 'currentColor',
-    [PlotThemeToken.LegendLabelFontSize]: preset.legend.labelSize,
-    [PlotThemeToken.LegendSwatchSize]: preset.legend.swatch,
-    [PlotThemeToken.LegendSwatchGap]: preset.legend.gap,
-    [PlotThemeToken.LegendEntryGap]: preset.legend.entry,
-    [PlotThemeToken.LegendTitleGap]: preset.legend.titleGap,
-    [PlotThemeToken.LegendRampLength]: preset.legend.ramp,
+    ...(preset.axis.title ? {} : { [PlotThemeToken.AxisTitleEnabled]: false }),
+    ...(preset.axis.titleSize === 12 ? {} : { [PlotThemeToken.AxisTitleFontSize]: preset.axis.titleSize }),
+    ...(style === PreviewThemeStyle.Vibrant
+      ? {
+          [PlotThemeToken.AxisGridStroke]: theme.mode === 'light' ? '#FFFFFF' : '#000000',
+          [PlotThemeToken.AxisGridDrawOpacity]: 1,
+        }
+      : {}),
+    ...(preset.legend.titleSize === 12 ? {} : { [PlotThemeToken.LegendTitleFontSize]: preset.legend.titleSize }),
+    ...(preset.legend.titleWeight === 600 ? {} : { [PlotThemeToken.LegendTitleFontWeight]: preset.legend.titleWeight }),
+    ...(preset.legend.labelSize === 12 ? {} : { [PlotThemeToken.LegendLabelFontSize]: preset.legend.labelSize }),
+    ...(preset.legend.swatch === 14 ? {} : { [PlotThemeToken.LegendSwatchSize]: preset.legend.swatch }),
+    ...(preset.legend.gap === 6 ? {} : { [PlotThemeToken.LegendSwatchGap]: preset.legend.gap }),
+    ...(preset.legend.entry === 6 ? {} : { [PlotThemeToken.LegendEntryGap]: preset.legend.entry }),
+    ...(preset.legend.titleGap === 6 ? {} : { [PlotThemeToken.LegendTitleGap]: preset.legend.titleGap }),
+    ...(preset.legend.ramp === 100 ? {} : { [PlotThemeToken.LegendRampLength]: preset.legend.ramp }),
     [PlotThemeToken.LegendRampThickness]: preset.legend.thickness,
-    [PlotThemeToken.LegendSymbolSize]: preset.legend.symbol,
-    [PlotThemeToken.LegendSymbolScale]: 1,
-    [PlotThemeToken.LegendSymbolFit]: LegendSymbolFit.Fit,
-    [PlotThemeToken.PlotPaletteCategorical]: categorical,
-    [PlotThemeToken.PlotPaletteSeries]: categorical,
-    [PlotThemeToken.PlotPaletteSector]: categorical,
+    ...(preset.legend.symbol === 14 ? {} : { [PlotThemeToken.LegendSymbolSize]: preset.legend.symbol }),
     [PlotThemeToken.PlotPaletteSequential]: preset.sequential,
-    [PlotThemeToken.PlotPaletteDiverging]: preset.diverging,
+    ...(preset.diverging === PlotColorScheme.RdBu ? {} : { [PlotThemeToken.PlotPaletteDiverging]: preset.diverging }),
     [PlotThemeToken.PlotPaletteShape]: structuredClone(shapePalette),
   });
 };

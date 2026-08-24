@@ -2,14 +2,14 @@ import type { IRNode, IRPath, IRScope } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, object } from 'zod';
 
 import type { AnyCoordinateDefinition, AxisFrame, CoordinateFrame, DimensionRole } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 
 import { createCoordinateFrame, defineCoordinate } from '../../../src/contract';
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../../src/schemas';
 
 /**
@@ -21,8 +21,7 @@ import { PlotSchema } from '../../../src/schemas';
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): IRScope =>
@@ -47,10 +46,10 @@ const AMPLITUDE = 50;
 const CYCLES = 1.5;
 /** 示例工厂：一维曲线坐标系——单值沿正弦曲线落点（curve = 屏幕x → 屏幕y） */
 const sineCoordinate = defineCoordinate({
-  schema: z.object({
-    type: z.literal('sine').describe('Discriminator: sine custom coordinate operation'),
-    amplitude: z.number().optional().describe('Sine amplitude in user units'),
-    cycles: z.number().optional().describe('Number of sine cycles across the canvas'),
+  schema: object({
+    type: literal('sine').describe('Discriminator: sine custom coordinate operation'),
+    amplitude: number().optional().describe('Sine amplitude in user units'),
+    cycles: number().optional().describe('Number of sine cycles across the canvas'),
   }),
   roles: ['x'],
   resolve: (operation, context) => {
@@ -75,9 +74,9 @@ const sineCoordinate = defineCoordinate({
 const ARCH_HEIGHT = 70;
 /** 示例工厂：二维桥坐标系——x 沿拱、y 竖直偏移（加性可分离）；回传解析 frameAlong 让曲线轴精确 */
 const bridgeCoordinate = defineCoordinate({
-  schema: z.object({
-    type: z.literal('bridge').describe('Discriminator: bridge custom coordinate operation'),
-    archHeight: z.number().optional().describe('Arch height in user units'),
+  schema: object({
+    type: literal('bridge').describe('Discriminator: bridge custom coordinate operation'),
+    archHeight: number().optional().describe('Arch height in user units'),
   }),
   roles: ['x', 'y'],
   resolve: (operation, context) => {
@@ -150,8 +149,8 @@ const bridgeSpec = (): IRPlot =>
   });
 
 const uvCoordinate = defineCoordinate({
-  schema: z.object({
-    type: z.literal('uv').describe('Discriminator: uv custom coordinate operation'),
+  schema: object({
+    type: literal('uv').describe('Discriminator: uv custom coordinate operation'),
   }),
   roles: ['u', 'v'],
   resolve: (_operation, context) => {
@@ -481,7 +480,7 @@ const defineSineCoordinate = (
   flat = false,
 ): AnyCoordinateDefinition =>
   defineCoordinate({
-    schema: z.object({ type: z.literal(type).describe('Discriminator: sine axis test coordinate operation') }),
+    schema: object({ type: literal(type).describe('Discriminator: sine axis test coordinate operation') }),
     roles: ['x'],
     resolve: (_operation, context) => {
       const values = context.collectRoleValues('x');

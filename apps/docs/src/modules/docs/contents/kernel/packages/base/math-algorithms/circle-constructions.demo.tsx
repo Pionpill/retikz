@@ -17,7 +17,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     values.scheme === 'circumcircle'
       ? triangle.circumCircle(...vertices)
       : values.scheme === 'incircle'
-        ? triangle.inCircle(...vertices)
+        ? triangle.incircle(...vertices)
         : undefined;
   const enclosingCircle = values.scheme === 'minimalEnclosing' ? circle.minimalEnclosing(points) : undefined;
   const isTriangleScheme = values.scheme === 'circumcircle' || values.scheme === 'incircle';

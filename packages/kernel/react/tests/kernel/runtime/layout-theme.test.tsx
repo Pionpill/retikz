@@ -4,7 +4,7 @@ import type { InputEmbedAdapter } from '@retikz/vanilla';
 import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import { Layout, Scope, ThemeProvider } from '../../../src/kernel';
 
@@ -12,7 +12,7 @@ const testThemeStyles = ['academic', 'vibrant', 'clean'].map(name =>
   defineThemeStyle({
     name,
     resolve: () => ({
-      semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00' },
+      semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
       categorical: ['#112233'],
     }),
   }),
@@ -22,8 +22,8 @@ const themedBox = defineComposite({
   namespace: 'theme-test',
   type: 'box',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('theme-test'),
-    type: z.literal('box'),
+    namespace: literal('theme-test'),
+    type: literal('box'),
   }),
   expand: (_node, context) => ({
     children: [
@@ -72,8 +72,8 @@ const themeProbe = defineComposite({
   namespace: 'theme-test',
   type: 'probe',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('theme-test'),
-    type: z.literal('probe'),
+    namespace: literal('theme-test'),
+    type: literal('probe'),
   }),
   expand: (_node, context) => {
     const styleColor =

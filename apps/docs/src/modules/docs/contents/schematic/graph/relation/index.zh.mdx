@@ -1,32 +1,26 @@
 ---
 title: Relation
-description: 用 Core Path 的作者语法表达对象之间的显式关系，并在需要时接入直接 IR 或 Vanilla。
+description: 用一个 record 保存通用 Core endpoint、关系语义、label 与可选 route。
 ---
 
-`Relation` 是 Graph 中连接 authored identity 的关系元素。它复用 Core Path 的 Step、target、label 和 mark 契约；基础用法从 React 的 `<Step>` children 开始，扩展用法再进入 Draw way、直接 IR 与 Vanilla
+Relation 负责表达“谁与谁存在什么关系”。它通过 Core NodeTarget 引用 Node、Coordinate、Scope 或上层 composite 发布的 target，保存 source/target、role、direction 与可选 kind/predicate；route 只描述怎么画，最终独立 lower 为普通 Core Path。Graph 是可选上下文，不是 Relation 的成员容器
 
 ## 职责一览
 
-| 内容     | 负责什么                                      | 适合场景                          |
-| -------- | --------------------------------------------- | --------------------------------- |
-| 基础用法 | Step、target、label 与常见路径写法            | 在 React 图中连接 Entity          |
-| 扩展用法 | Draw way、canonical IR、Definition 与 Vanilla | 接入其它作者入口或排查 lower 边界 |
+| 主题     | 职责                                          | 何时查阅            |
+| -------- | --------------------------------------------- | ------------------- |
+| 基础用法 | endpoint、direction、label 与 route authoring | 连接任意命名 target |
+| 扩展用法 | 自定义 role、kind、predicate 与 marker recipe | 建立领域关系语义    |
 
 ## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/schematic/graph/relation/basic">
     <span className="font-semibold">基础用法</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Step、target、label 与路径组合</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">稳定端点、方向和直接 route</span>
   </LinkedCard>
   <LinkedCard href="/schematic/graph/relation/extension">
     <span className="font-semibold">扩展用法</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Draw way、直接 IR 与 Vanilla</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">关系 Definition 与 registry 消费链</span>
   </LinkedCard>
 </div>
-
-## 相关
-
-- [Entity](/schematic/graph/entity)：Relation 可以 target 的图式对象
-- [Container](/schematic/graph/container)：需要连接整个区域时使用 Container 的 id
-- [Core Path](/kernel/components/draw/overview)：Relation 复用的底层路径契约
