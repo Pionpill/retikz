@@ -1,3 +1,3 @@
-import { z } from 'zod';
+import { number } from 'zod';
 
-export const AngleDegreesSchema = z.number().describe('Angle in degrees.');
+export const AngleDegreesSchema = number().describe('Angle in degrees.');

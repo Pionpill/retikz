@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, strictObject, string } from 'zod';
 
 import type { CompileObserverDefinition, IRScene } from '../../src';
 
@@ -25,10 +25,10 @@ describe('Core Path owner output', () => {
   it('requests and publishes a typed output exactly once for a non-empty Path', () => {
     let requested = false;
     let publishCount = 0;
-    const ownerOutput = { schema: z.strictObject({ label: z.string() }) };
+    const ownerOutput = { schema: strictObject({ label: string() }) };
     const kind = core.definePathKind({
       name: 'owner-output',
-      schema: core.PathSchema.extend({ kind: z.literal('owner-output') }),
+      schema: core.PathSchema.extend({ kind: literal('owner-output') }),
       ownerOutput,
       compile: context => {
         requested = context.ownerOutput.requested;
@@ -71,8 +71,8 @@ describe('Core Path owner output', () => {
     let published = 0;
     const kind = core.definePathKind({
       name: 'lazy-owner-output',
-      schema: core.PathSchema.extend({ kind: z.literal('lazy-owner-output') }),
-      ownerOutput: { schema: z.strictObject({ value: z.number() }) },
+      schema: core.PathSchema.extend({ kind: literal('lazy-owner-output') }),
+      ownerOutput: { schema: strictObject({ value: number() }) },
       compile: context => {
         requested = context.ownerOutput.requested;
         if (context.ownerOutput.requested) {
@@ -104,8 +104,8 @@ describe('Core Path owner output', () => {
   ])('fails loudly when a requested non-empty Path has %s', (_label, publishOutput) => {
     const kind = core.definePathKind({
       name: `bad-owner-output-${_label.replace(' ', '-')}`,
-      schema: core.PathSchema.extend({ kind: z.literal(`bad-owner-output-${_label.replace(' ', '-')}`) }),
-      ownerOutput: { schema: z.strictObject({ value: z.number() }) },
+      schema: core.PathSchema.extend({ kind: literal(`bad-owner-output-${_label.replace(' ', '-')}`) }),
+      ownerOutput: { schema: strictObject({ value: number() }) },
       compile: context => {
         publishOutput(context.ownerOutput.publish);
         return {
@@ -136,8 +136,8 @@ describe('Core Path owner output', () => {
   it('rejects owner output when a Path kind returns null', () => {
     const kind = core.definePathKind({
       name: 'null-owner-output',
-      schema: core.PathSchema.extend({ kind: z.literal('null-owner-output') }),
-      ownerOutput: { schema: z.strictObject({ value: z.number() }) },
+      schema: core.PathSchema.extend({ kind: literal('null-owner-output') }),
+      ownerOutput: { schema: strictObject({ value: number() }) },
       compile: context => {
         context.ownerOutput.publish({ value: 1 });
         return null;

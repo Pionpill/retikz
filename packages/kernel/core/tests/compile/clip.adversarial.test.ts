@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { array, literal, number, strictObject, tuple } from 'zod';
 
 import type { ClipResource, ClipShape, GroupPrim, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
 
@@ -12,12 +12,12 @@ type TestPolygonClipShape = ClipShape & {
 
 const polygonClip = defineClip<{ kind: 'polygon'; points: Array<[number, number]> }, TestPolygonClipShape>({
   kind: 'polygon',
-  schema: z.strictObject({
-    kind: z.literal('polygon'),
-    points: z.array(z.tuple([z.number(), z.number()])).min(3),
+  schema: strictObject({
+    kind: literal('polygon'),
+    points: array(tuple([number(), number()])).min(3),
   }),
   resolve: spec => ({ kind: 'polygon', points: spec.points }),
-  shapeSchema: z.strictObject({ kind: z.literal('polygon'), points: z.array(PositionSchema).min(3) }),
+  shapeSchema: strictObject({ kind: literal('polygon'), points: array(PositionSchema).min(3) }),
   lower: shape => ({
     commands: [
       { kind: 'move', to: shape.points[0] },

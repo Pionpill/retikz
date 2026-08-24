@@ -1,5 +1,7 @@
+import type { infer as ZodInfer } from 'zod';
+
 import { ellipse as mathEllipse } from '@retikz/math';
-import { z } from 'zod';
+import { enum as zodEnum, strictObject } from 'zod';
 
 import type { ScenePrimitive } from '../../contract';
 
@@ -8,16 +10,15 @@ import { BuiltinShape } from '../../schemas';
 import { CenterAnchor, ellipse, isDirectionalAnchor } from '../../shared';
 import { ellipsePrimitiveStyle } from './style';
 
-const ellipseParamsSchema = z.strictObject({
-  circumscribe: z
-    .enum(['proportional', 'equal'])
+const ellipseParamsSchema = strictObject({
+  circumscribe: zodEnum(['proportional', 'equal'])
     .optional()
     .describe(
       'Circumscription policy from the inner content box: "proportional" (per-axis ×√2, ellipse) or "equal" (isotropic, circle: r = diagonal half-length). Default "proportional".',
     ),
 });
 
-type EllipseParams = z.infer<typeof ellipseParamsSchema>;
+type EllipseParams = ZodInfer<typeof ellipseParamsSchema>;
 
 /**
  * ellipse 注册项

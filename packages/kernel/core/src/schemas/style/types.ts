@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type {
   CascadingGraphicStyleSchema,
@@ -9,17 +9,17 @@ import type {
   PaintValueSchema,
 } from './schema';
 
-export type IRPaintValue = z.infer<typeof PaintValueSchema>;
+export type IRPaintValue = ZodInfer<typeof PaintValueSchema>;
 
 /** 通用图形 paint 契约 */
-export type IRGraphicPaint = z.infer<typeof GraphicPaintSchema>;
+export type IRGraphicPaint = ZodInfer<typeof GraphicPaintSchema>;
 
 /** 通用图形透明度契约 */
-export type IRGraphicOpacity = z.infer<typeof GraphicOpacitySchema>;
+export type IRGraphicOpacity = ZodInfer<typeof GraphicOpacitySchema>;
 
 /** 通用图形视觉效果契约 */
-export type IRGraphicEffects = z.infer<typeof GraphicEffectsSchema>;
+export type IRGraphicEffects = ZodInfer<typeof GraphicEffectsSchema>;
 
-export type IRCascadingGraphicStyle = z.infer<typeof CascadingGraphicStyleSchema>;
+export type IRCascadingGraphicStyle = ZodInfer<typeof CascadingGraphicStyleSchema>;
 
-export type IRGraphicStyle = z.infer<typeof GraphicStyleSchema>;
+export type IRGraphicStyle = ZodInfer<typeof GraphicStyleSchema>;

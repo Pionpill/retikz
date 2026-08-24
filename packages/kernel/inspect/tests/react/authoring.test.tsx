@@ -6,7 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { null as zodNull, strictObject } from 'zod';
 
 import { BUILTIN_INSPECTORS, createInspectorRegistry, defineInspector, STROKE_PATH_INSPECTOR_KEY } from '../../src';
 import { InspectLayout, InspectPath, InspectScope } from '../../src/react';
@@ -118,9 +118,9 @@ describe('@retikz/inspect/react authoring and driver', () => {
       defineInspector({
         ...key,
         owner,
-        subjectSchema: z.null(),
-        optionsInputSchema: z.strictObject({}),
-        optionsSchema: z.strictObject({}),
+        subjectSchema: zodNull(),
+        optionsInputSchema: strictObject({}),
+        optionsSchema: strictObject({}),
         inspect: () => [],
       });
     const colonRegistry = createInspectorRegistry([

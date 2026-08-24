@@ -1,5 +1,5 @@
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { object, strictObject } from 'zod';
 
 import { JsonValueSchema } from '../json';
 
@@ -8,6 +8,6 @@ const compositeBaseShape = {
   type: NonBlankStringSchema.describe('Composite type name within the namespace.'),
 };
 
-export const CompositeBaseSchema = z.strictObject(compositeBaseShape);
+export const CompositeBaseSchema = strictObject(compositeBaseShape);
 
-export const CompositeNodeSchema = z.object(compositeBaseShape).catchall(JsonValueSchema);
+export const CompositeNodeSchema = object(compositeBaseShape).catchall(JsonValueSchema);

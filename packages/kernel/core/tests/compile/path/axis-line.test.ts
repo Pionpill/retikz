@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import type { CompileWarning, IRPosition, IRScene, IRStep, ScenePrimitive } from '../../../src';
 
@@ -222,7 +222,7 @@ describe('compile path: axis-line', () => {
   it('紧随 generator 时使用最后命令 pen override，并同步后续 relative baseline', () => {
     const generator = definePathGenerator({
       name: 'axis-probe',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       generate: ({ from }) => [{ kind: 'line', to: [from[0] + 30, from[1] + 15] }],
     });
     const ir: IRScene = {
@@ -251,7 +251,7 @@ describe('compile path: axis-line', () => {
   it('动态 pen → axis-line 后，smooth relative points 使用 projected baseline', () => {
     const generator = definePathGenerator({
       name: 'axis-smooth-probe',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       generate: ({ from }) => [{ kind: 'line', to: [from[0] + 30, from[1] + 15] }],
     });
     const ir: IRScene = {
@@ -277,7 +277,7 @@ describe('compile path: axis-line', () => {
   it('axis-line → generator absolute to 后，relative 使用 generator target baseline', () => {
     const generator = definePathGenerator({
       name: 'axis-generator-target-probe',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       generate: ({ from, to }) => [{ kind: 'line', to: to ?? from }],
     });
     const ir: IRScene = {
@@ -306,7 +306,7 @@ describe('compile path: axis-line', () => {
   it('动态 pen → axis-line → implicit arc 后，relative 使用 arc endpoint baseline', () => {
     const generator = definePathGenerator({
       name: 'axis-arc-probe',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       generate: ({ from }) => [{ kind: 'line', to: [from[0] + 30, from[1] + 15] }],
     });
     const ir: IRScene = {

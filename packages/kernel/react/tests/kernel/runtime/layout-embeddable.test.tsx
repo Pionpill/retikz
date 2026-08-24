@@ -1,11 +1,11 @@
-import type { AnyCompositeDefinition, CompositeCoreProviderKey,CoreDependencyProvider } from '@retikz/core';
+import type { AnyCompositeDefinition, CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { literal, string } from 'zod';
 
 import { Layout, Node } from '../../../src';
 
@@ -19,9 +19,9 @@ type EmbeddableFixture = FC<FixtureProps> & {
 
 const definitionOf = (key: CompositeCoreProviderKey): AnyCompositeDefinition => {
   const schema = CompositeBaseSchema.extend({
-    namespace: z.literal(key.namespace),
-    type: z.literal(key.type),
-    panelId: z.string(),
+    namespace: literal(key.namespace),
+    type: literal(key.type),
+    panelId: string(),
   });
   return defineComposite({
     namespace: key.namespace,

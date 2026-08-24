@@ -1,11 +1,11 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type { FontStyle, FontWeightKeyword, WebFontSizePreset } from './constants';
 import type { FontSchema } from './schema';
 
 /** 字体规格 IR 类型（所有字段可选，编译期解析默认值） */
-export type IRFont = z.infer<typeof FontSchema>;
+export type IRFont = ZodInfer<typeof FontSchema>;
 
 /** CSS font-weight 关键字取值 */
 export type FontWeightKeywordValue = ValueOf<typeof FontWeightKeyword>;

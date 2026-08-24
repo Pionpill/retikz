@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import type { IRChild, IRScene, ResolvedTheme } from '../../src';
 
@@ -16,7 +16,7 @@ const createProbe = (observed: Array<ResolvedTheme>) =>
   defineComposite({
     namespace: 'theme-test',
     type: 'probe',
-    schema: CompositeBaseSchema.extend({ namespace: z.literal('theme-test'), type: z.literal('probe') }),
+    schema: CompositeBaseSchema.extend({ namespace: literal('theme-test'), type: literal('probe') }),
     expand: (_node, context) => {
       observed.push(context.theme);
       return { children: [{ type: 'node', position: [0, 0] }] };

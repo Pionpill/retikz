@@ -1,6 +1,6 @@
 import { RetikzFoundationError, RetikzFoundationErrorCode } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { null as zodNull, number, strictObject, string } from 'zod';
 
 import { defineInspector } from '../../src';
 
@@ -26,11 +26,11 @@ describe('Inspector definition', () => {
       namespace: 'test',
       type: 'bounds',
       owner: { kind: 'composite', namespace: 'demo', type: 'box' },
-      subjectSchema: z.strictObject({ width: z.number() }),
-      optionsInputSchema: z.strictObject({ color: z.string().optional() }),
-      optionsSchema: z
-        .strictObject({ color: z.string().optional() })
-        .transform(value => ({ color: value.color ?? '#000000' })),
+      subjectSchema: strictObject({ width: number() }),
+      optionsInputSchema: strictObject({ color: string().optional() }),
+      optionsSchema: strictObject({ color: string().optional() }).transform(value => ({
+        color: value.color ?? '#000000',
+      })),
       inspect: () => [],
     });
 
@@ -49,9 +49,9 @@ describe('Inspector definition', () => {
           namespace: field === 'namespace' ? value : 'test',
           type: field === 'type' ? value : 'bounds',
           owner: { kind: 'pathKind', name: 'stroke' },
-          subjectSchema: z.null(),
-          optionsInputSchema: z.strictObject({}),
-          optionsSchema: z.strictObject({}),
+          subjectSchema: zodNull(),
+          optionsInputSchema: strictObject({}),
+          optionsSchema: strictObject({}),
           inspect: () => [],
         }),
       label,
@@ -70,9 +70,9 @@ describe('Inspector definition', () => {
           namespace: 'test',
           type: 'invalid-owner',
           owner,
-          subjectSchema: z.null(),
-          optionsInputSchema: z.strictObject({}),
-          optionsSchema: z.strictObject({}),
+          subjectSchema: zodNull(),
+          optionsInputSchema: strictObject({}),
+          optionsSchema: strictObject({}),
           inspect: () => [],
         }),
       label,

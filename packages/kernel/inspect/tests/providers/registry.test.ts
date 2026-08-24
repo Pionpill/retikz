@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { strictObject, string } from 'zod';
 
 import {
   createDefaultInspectorRegistry,
@@ -13,9 +13,9 @@ const definition = (namespace: string, type: string) =>
     namespace,
     type,
     owner: { kind: 'pathKind' as const, name: 'stroke' },
-    subjectSchema: z.strictObject({ value: z.string() }),
-    optionsInputSchema: z.strictObject({}),
-    optionsSchema: z.strictObject({}),
+    subjectSchema: strictObject({ value: string() }),
+    optionsInputSchema: strictObject({}),
+    optionsSchema: strictObject({}),
     inspect: () => [],
   });
 

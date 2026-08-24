@@ -1,7 +1,8 @@
 import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { number, strictObject } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
 import type { ContourSegment, Rect } from '../../shared';
@@ -21,44 +22,40 @@ import {
 
 const MAX_POLYGON_SIDES = 1024;
 
-const polygonParamsSchema = z
-  .strictObject({
-    sides: z
-      .number()
-      .int()
-      .min(3)
-      .max(MAX_POLYGON_SIDES)
-      .describe(`Number of sides of the regular polygon (3..${MAX_POLYGON_SIDES}).`),
-    rotate: z
-      .number()
-      .optional()
-      .describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
-    cornerRadius: NonNegativeNumberSchema.optional().describe(
-      'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-    ),
-    aspectRatio: PositiveNumberSchema.optional().describe(
-      'Width-to-height ratio for a four-sided diamond; omitted for regular polygon geometry.',
-    ),
-  })
-  .superRefine((params, context) => {
-    if (params.aspectRatio === undefined) return;
-    if (params.sides !== 4) {
-      context.addIssue({
-        code: 'custom',
-        path: ['aspectRatio'],
-        message: 'aspectRatio is only supported for four-sided diamonds.',
-      });
-    }
-    if (params.rotate !== undefined && params.rotate !== 0) {
-      context.addIssue({
-        code: 'custom',
-        path: ['aspectRatio'],
-        message: 'aspectRatio diamonds do not support a non-zero rotate parameter.',
-      });
-    }
-  });
+const polygonParamsSchema = strictObject({
+  sides: number()
+    .int()
+    .min(3)
+    .max(MAX_POLYGON_SIDES)
+    .describe(`Number of sides of the regular polygon (3..${MAX_POLYGON_SIDES}).`),
+  rotate: number()
+    .optional()
+    .describe('Shape self-rotation in degrees (vertex start direction); default 0. Composes with Node.rotate.'),
+  cornerRadius: NonNegativeNumberSchema.optional().describe(
+    'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+  ),
+  aspectRatio: PositiveNumberSchema.optional().describe(
+    'Width-to-height ratio for a four-sided diamond; omitted for regular polygon geometry.',
+  ),
+}).superRefine((params, context) => {
+  if (params.aspectRatio === undefined) return;
+  if (params.sides !== 4) {
+    context.addIssue({
+      code: 'custom',
+      path: ['aspectRatio'],
+      message: 'aspectRatio is only supported for four-sided diamonds.',
+    });
+  }
+  if (params.rotate !== undefined && params.rotate !== 0) {
+    context.addIssue({
+      code: 'custom',
+      path: ['aspectRatio'],
+      message: 'aspectRatio diamonds do not support a non-zero rotate parameter.',
+    });
+  }
+});
 
-type PolygonParams = z.infer<typeof polygonParamsSchema>;
+type PolygonParams = ZodInfer<typeof polygonParamsSchema>;
 
 /** 顶点角集合（度）：第 k 个顶点角 = rotate + k·(360/sides) */
 const vertexAngles = (params: PolygonParams): Array<number> => {

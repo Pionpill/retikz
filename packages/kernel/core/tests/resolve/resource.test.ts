@@ -1,6 +1,6 @@
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { array, intersection, literal, number, object, strictObject, tuple } from 'zod';
 
 import type { ClipDefinition, ClipResolveContext, MarkerPrimitive, PatternDefinition } from '../../src/contract';
 import type { IRClip, IRPaint, IRScene } from '../../src/schemas';
@@ -121,14 +121,14 @@ describe('resolve/resource clip', () => {
   }));
   const polygon: ClipDefinition = defineClip({
     kind: 'polygon',
-    schema: z.strictObject({
-      kind: z.literal('polygon'),
-      points: z.array(z.tuple([z.number(), z.number()])).min(3),
+    schema: strictObject({
+      kind: literal('polygon'),
+      points: array(tuple([number(), number()])).min(3),
     }),
     resolve: polygonResolve,
-    shapeSchema: z.strictObject({
-      kind: z.literal('polygon'),
-      points: z.array(z.tuple([z.number(), z.number()])).min(3),
+    shapeSchema: strictObject({
+      kind: literal('polygon'),
+      points: array(tuple([number(), number()])).min(3),
     }),
     lower: shape => ({
       commands: [
@@ -171,9 +171,9 @@ describe('resolve/resource clip', () => {
     }));
     const leaf = defineClip({
       kind: 'leaf',
-      schema: z.strictObject({ kind: z.literal('leaf'), radius: z.number().positive() }),
+      schema: strictObject({ kind: literal('leaf'), radius: number().positive() }),
       resolve: leafResolve,
-      shapeSchema: z.strictObject({ kind: z.literal('leaf'), radius: z.number().positive() }),
+      shapeSchema: strictObject({ kind: literal('leaf'), radius: number().positive() }),
       lower: shape => ({
         commands: [
           { kind: 'move', to: [0, 0] },
@@ -193,14 +193,14 @@ describe('resolve/resource clip', () => {
     );
     const wrapper = defineClip({
       kind: 'wrapper',
-      schema: z.strictObject({
-        kind: z.literal('wrapper'),
-        child: z.strictObject({ kind: z.literal('leaf'), radius: z.number().positive() }),
+      schema: strictObject({
+        kind: literal('wrapper'),
+        child: strictObject({ kind: literal('leaf'), radius: number().positive() }),
       }),
       resolve: wrapperResolve,
-      shapeSchema: z.strictObject({
-        kind: z.literal('wrapper'),
-        child: z.intersection(z.object({ kind: NonBlankStringSchema }), JsonObjectSchema),
+      shapeSchema: strictObject({
+        kind: literal('wrapper'),
+        child: intersection(object({ kind: NonBlankStringSchema }), JsonObjectSchema),
       }),
       lower: (shape, context) => context.lower(shape.child),
     });

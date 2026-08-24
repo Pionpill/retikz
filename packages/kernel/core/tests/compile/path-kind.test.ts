@@ -1,6 +1,6 @@
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import type { CompileWarning, IRScene, PathPrim, ScenePrimitive } from '../../src';
 
@@ -31,7 +31,7 @@ const pathPrims = (ir: IRScene, options?: Parameters<typeof compileToScene>[1]):
     (primitive): primitive is PathPrim => primitive.type === 'path',
   );
 
-const customPathSchema = <TKind extends string>(kind: TKind) => PathSchema.extend({ kind: z.literal(kind) });
+const customPathSchema = <TKind extends string>(kind: TKind) => PathSchema.extend({ kind: literal(kind) });
 
 describe('Path kind registry', () => {
   it('compiles omitted kind as the built-in stroke path kind', () => {
@@ -54,8 +54,8 @@ describe('Path kind registry', () => {
     const highlight = definePathKind({
       name: 'highlight',
       schema: PathSchema.extend({
-        kind: z.literal('highlight'),
-        kindOptions: z.strictObject({ stroke: NonBlankStringSchema }),
+        kind: literal('highlight'),
+        kindOptions: strictObject({ stroke: NonBlankStringSchema }),
       }),
       compile: context => {
         const base = context.emitStroke(context.path);
@@ -144,7 +144,7 @@ describe('Path kind registry', () => {
     let generatorCalls = 0;
     const generator = definePathGenerator({
       name: 'stroke-only-generator',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       generate: ({ from }) => {
         generatorCalls += 1;
         return [{ kind: 'line', to: [from[0] + 10, from[1]] }];
@@ -266,8 +266,8 @@ describe('Path kind registry', () => {
     const highlight = definePathKind({
       name: 'highlight',
       schema: PathSchema.extend({
-        kind: z.literal('highlight'),
-        kindOptions: z.strictObject({ stroke: NonBlankStringSchema }),
+        kind: literal('highlight'),
+        kindOptions: strictObject({ stroke: NonBlankStringSchema }),
       }),
       compile: context => context.emitStroke(context.path),
     });

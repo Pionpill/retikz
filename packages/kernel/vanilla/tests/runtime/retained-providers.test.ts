@@ -6,18 +6,19 @@ import type {
   ClipShape,
   SceneClipPath,
 } from '@retikz/core';
+import type { ZodType } from 'zod';
 
 import { defineClip, PathBaseSchema, StrokePathOwnerOutputSchema } from '@retikz/core';
 import { RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { boolean, literal, number, strictObject } from 'zod';
 
 import {
   captureCoreProviderDefinitions,
   createRetainedProviderDefinitions,
 } from '../../src/runtime/retained-providers';
 
-const pathKindSchema = PathBaseSchema.extend({ kind: z.literal('retained-fixture') });
+const pathKindSchema = PathBaseSchema.extend({ kind: literal('retained-fixture') });
 const ownerOutput = { schema: StrokePathOwnerOutputSchema };
 const initialResult = { primitives: [], boundsPoints: [] };
 const nextResult = { primitives: [], boundsPoints: [[1, 1] as [number, number]] };
@@ -32,14 +33,14 @@ type RetainedClipShape = ClipShape & {
   size: number;
 };
 
-const retainedClipSchema: z.ZodType<RetainedClip> = z.strictObject({
-  kind: z.literal('retainedClip'),
-  size: z.number().positive(),
+const retainedClipSchema: ZodType<RetainedClip> = strictObject({
+  kind: literal('retainedClip'),
+  size: number().positive(),
 });
 
-const retainedClipShapeSchema: z.ZodType<RetainedClipShape> = z.strictObject({
-  kind: z.literal('retainedClip'),
-  size: z.number().positive(),
+const retainedClipShapeSchema: ZodType<RetainedClipShape> = strictObject({
+  kind: literal('retainedClip'),
+  size: number().positive(),
 });
 
 const initialClipPath: SceneClipPath = {
@@ -64,8 +65,8 @@ type RetainedClipLower = (shape: RetainedClipShape, context: ClipLowerContext) =
 const createClipDefinition = (
   resolve: RetainedClipResolve = spec => ({ kind: 'retainedClip', size: spec.size }),
   lower: RetainedClipLower = () => initialClipPath,
-  schema: z.ZodType<RetainedClip> = retainedClipSchema,
-  shapeSchema: z.ZodType<RetainedClipShape> = retainedClipShapeSchema,
+  schema: ZodType<RetainedClip> = retainedClipSchema,
+  shapeSchema: ZodType<RetainedClipShape> = retainedClipShapeSchema,
 ): ClipDefinition =>
   defineClip<RetainedClip, RetainedClipShape>({
     kind: 'retainedClip',
@@ -160,21 +161,21 @@ describe('retained Path Kind definitions', () => {
   it('rejects retained Clip kind, schema, shape schema, and field-set changes', () => {
     const retained = createRetainedProviderDefinitions({ clips: [createClipDefinition()] });
     const invalid = expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid });
-    const changedSchema = z.strictObject({
-      kind: z.literal('retainedClip'),
-      size: z.number().positive(),
-      changed: z.boolean().optional(),
-    }) as unknown as z.ZodType<RetainedClip>;
-    const changedShapeSchema = z.strictObject({
-      kind: z.literal('retainedClip'),
-      size: z.number().positive(),
-      changed: z.boolean().optional(),
-    }) as unknown as z.ZodType<RetainedClipShape>;
+    const changedSchema = strictObject({
+      kind: literal('retainedClip'),
+      size: number().positive(),
+      changed: boolean().optional(),
+    }) as unknown as ZodType<RetainedClip>;
+    const changedShapeSchema = strictObject({
+      kind: literal('retainedClip'),
+      size: number().positive(),
+      changed: boolean().optional(),
+    }) as unknown as ZodType<RetainedClipShape>;
     const renamed = defineClip({
       kind: 'renamedClip',
-      schema: z.strictObject({ kind: z.literal('renamedClip'), size: z.number().positive() }),
+      schema: strictObject({ kind: literal('renamedClip'), size: number().positive() }),
       resolve: spec => ({ kind: 'renamedClip', size: spec.size }),
-      shapeSchema: z.strictObject({ kind: z.literal('renamedClip'), size: z.number().positive() }),
+      shapeSchema: strictObject({ kind: literal('renamedClip'), size: number().positive() }),
       lower: () => initialClipPath,
     });
     const changedFields = { ...createClipDefinition(), metadata: true } as unknown as ClipDefinition;
@@ -218,8 +219,8 @@ describe('retained Path Kind definitions', () => {
     changed.rollback();
 
     const changedSchema = PathBaseSchema.extend({
-      kind: z.literal('retained-fixture'),
-      kindOptions: z.strictObject({ changed: z.boolean() }).optional(),
+      kind: literal('retained-fixture'),
+      kindOptions: strictObject({ changed: boolean() }).optional(),
     });
     const invalid = expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid });
     expect(() => retained.prepare({ pathKinds: [createDefinition(changedSchema)] })).toThrow(invalid);

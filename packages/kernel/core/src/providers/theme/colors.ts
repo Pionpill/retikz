@@ -1,5 +1,5 @@
 import { assertPlainDataContainers } from '@retikz/foundation';
-import { z } from 'zod';
+import { array, custom, strictObject } from 'zod';
 
 import type { ThemeStyleColorOverrides } from '../../contract';
 import type {
@@ -121,25 +121,21 @@ const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
   return prototype === Object.prototype || prototype === null;
 };
 
-const ThemeStyleColorOverridesSchema = z
-  .custom<Record<string, unknown>>(isPlainRecord, {
-    error: 'Theme style color definition must return a plain object.',
-  })
-  .pipe(
-    z.strictObject({
-      semantic: z
-        .strictObject({
-          error: CssColorSchema.optional(),
-          success: CssColorSchema.optional(),
-          warning: CssColorSchema.optional(),
-          guide: CssColorSchema.optional(),
-        })
-        .optional(),
-      categorical: z.array(CssColorSchema).min(1).optional(),
-    }),
-  );
+const ThemeStyleColorOverridesSchema = custom<Record<string, unknown>>(isPlainRecord, {
+  error: 'Theme style color definition must return a plain object.',
+}).pipe(
+  strictObject({
+    semantic: strictObject({
+      error: CssColorSchema.optional(),
+      success: CssColorSchema.optional(),
+      warning: CssColorSchema.optional(),
+      guide: CssColorSchema.optional(),
+    }).optional(),
+    categorical: array(CssColorSchema).min(1).optional(),
+  }),
+);
 
-const ThemeStyleColorPlainDataSchema = z.custom<unknown>(
+const ThemeStyleColorPlainDataSchema = custom<unknown>(
   value => {
     try {
       assertPlainDataContainers(value, 'Theme style color definition output');
