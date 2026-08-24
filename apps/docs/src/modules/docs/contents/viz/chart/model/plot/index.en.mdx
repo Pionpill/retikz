@@ -1,0 +1,73 @@
+---
+title: Plot Integration
+description: Separate the Chart shell, Chart marks, and Plot drawing grammar, including owner-local Theme slices.
+---
+
+Chart reuses Plot instead of wrapping a closed drawing result. A packaged type's recipe only supplies the Plot structure required by that type. Axes, legends, scales, transforms, additional marks, and annotations remain composable through public Plot contracts. `recipe.marks` are Chart-owned semantic marks; `plotExtension.marks` are independent Plot content.
+
+## Two owners, one complete graphic
+
+<ComponentPreview files="chart-plot-ownership" hideCode size="md" />
+
+| Chart owns                                 | Plot owns                                                 |
+| ------------------------------------------ | --------------------------------------------------------- |
+| `namespace`, family, and `recipe` envelope | data, transforms, scales, and coordinates                 |
+| title, subtitle, note, and source          | marks, axes, legends, and other guides                    |
+| canvas, chart Surface, and Chart tokens    | Plot theme, grammar resolution, lowering, and diagnostics |
+
+When the Scatter recipe creates a primary Point mark from `recipe.encodings`, it is constructing Plot rather than implementing another Point system inside Chart. The recipe also emits a built-in semantic mark. `recipe.marks` add marks that inherit Chart context, while the `plotExtension` fragment remains independent; each side is consumed by its own schemas, providers, and pipeline.
+
+## Which side should an extension use?
+
+- Extend Plot when changing how data is drawn, such as adding a mark, channel, scale, coordinate, guide, or transform
+- Use a built-in Chart family / `chartType` when the reusable Plot semantics are already provided; for new or highly customized graphics, use Plot directly and keep any application-specific fields in the application model
+- Use Chart presentation for the complete graphic's subject, scope, source, or reading constraints
+- Keep coordinate explanations, legends, and data annotations in Plot guides and annotation capabilities
+
+This boundary prevents Chart types from copying the entire Plot API as the grammar grows, and prevents Plot from learning product-facing type names such as Scatter.
+
+## Runtime Theme cooperation
+
+Core, Chart, Plot, and the current recipe own separate Theme slices. A Source Theme may provide `tokens.chart`, `tokens.plot`, and `tokens.recipe`; each owner consumes only its own slice, and shared names only coordinate selection without merging ownership.
+
+In React, Source `theme` carries persisted owner slices. `ChartThemeProvider` injects the current concrete chartType provider through `themeDefinitions`, while `PlotThemeProvider` injects Plot definitions through `plotThemeStyles`. Vanilla factories preserve `themeDefinitions` and `lowerOptions.plotThemeStyles` separately and consume them in one compilation. When embedded in `<Layout>`, Core definitions come from the parent Layout while Chart and Plot definitions are still contributed by their matching providers.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Merge recipe and Plot fragments',
+      path: 'packages/viz/chart/src/_chart/resolve/plot.ts',
+      startLine: 1,
+      endLine: 90,
+    },
+    {
+      label: 'Chart provider contributes Chart definitions',
+      path: 'packages/viz/chart/src/_chart/providers/provider.ts',
+      startLine: 1,
+      endLine: 81,
+    },
+    {
+      label: 'The adapter assembles Core, Chart, and Plot providers',
+      path: 'packages/viz/chart-vanilla/src/shared/contribution.ts',
+      startLine: 12,
+      endLine: 26,
+    },
+  ]}
+/>
+
+## Related pages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/model/presentation">
+    <span className="font-semibold">Presentation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand narrative content and Surface owned by Chart.
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot">
+    <span className="font-semibold">Plot</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Continue with marks, scales, coordinates, and guides.
+    </span>
+  </LinkedCard>
+</div>

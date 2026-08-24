@@ -40,7 +40,7 @@ describe('Table Legend descriptor schema', () => {
     expect(() => TableLegendDescriptorSchema.parse({ ...threshold, edges: [20, 10] })).toThrow();
     expect(() => TableLegendDescriptorSchema.parse({ ...threshold, domain: [{ invalid: true }, 20] })).toThrow();
     expect(() => TableLegendDescriptorSchema.parse({ ...threshold, range: ['green', ' ', 'red'] })).toThrow(
-      'Table Legend descriptor color must not be empty or whitespace.',
+      'String must contain at least one non-whitespace character.',
     );
     expect(() =>
       TableLegendDescriptorSchema.parse({ ...threshold, form: 'ramp', domain: [0, 1], range: ['#fff', '#000'] }),

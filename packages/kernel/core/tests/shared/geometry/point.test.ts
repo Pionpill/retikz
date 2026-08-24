@@ -16,8 +16,8 @@ describe('point / vector2 基础运算', () => {
   });
 
   it('equal 严格相等（无容差）', () => {
-    expect(point.equal([1, 2], [1, 2])).toBe(true);
-    expect(point.equal([1, 2], [1, 2.0])).toBe(true);
-    expect(point.equal([1, 2], [1, 2.0000001])).toBe(false);
+    expect(point.isEqual([1, 2], [1, 2])).toBe(true);
+    expect(point.isEqual([1, 2], [1, 2.0])).toBe(true);
+    expect(point.isEqual([1, 2], [1, 2.0000001])).toBe(false);
   });
 });

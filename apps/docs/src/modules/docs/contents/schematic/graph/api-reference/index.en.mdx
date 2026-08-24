@@ -88,7 +88,7 @@ When `route` is omitted, lowering emits `move(source) → line(target)`. An expl
 
 Core `theme` selects or overrides the general Theme. `graphTheme` stores only Graph-local ordered appearance rules. Entity rules may select by role, kind, or predicate, while Relation rules may additionally select by direction. A role owns complete structure, and a kind or predicate may contribute an allowed structural delta
 
-The `resolve(theme)` callback passed to `defineGraphThemeStyle()` returns `GraphThemeStyleOverrides` and only declares fields that differ from the mode-aware default preset. `entity`, `relation`, and their `tokens` and `rules` are all optional. An explicit `tokens: {}` is invalid because a token override must contain at least one field
+The `resolve(theme)` callback passed to `defineGraphThemeStyle()` returns `GraphThemeStyleOverrides` and only declares fields that differ from the mode-aware default preset. `entity`, `relation`, and their `tokens` and `rules` are all optional; an explicitly `undefined` known token in the runtime callback is treated as omitted. An explicit `tokens: {}` remains invalid because a token override must contain at least one field, and the returned value may contain only plain-data containers
 
 ```ts
 const compact = defineGraphThemeStyle({

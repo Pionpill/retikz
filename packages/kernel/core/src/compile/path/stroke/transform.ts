@@ -1,4 +1,4 @@
-import { boundsCenter, boundsOf, isFinitePoint } from '@retikz/math';
+import { boundsOf, centerOfBounds, isFinitePoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
 import type { IRPathScale, IRPosition, IRTransform } from '../../../schemas';
@@ -10,7 +10,7 @@ import { applyTransformChain } from '../../transform';
 export const bboxCenter = (pts: ReadonlyArray<IRPosition>): IRPosition => {
   const bounds = boundsOf(pts);
   if (bounds === undefined) return [Number.NaN, Number.NaN];
-  return boundsCenter(bounds);
+  return centerOfBounds(bounds);
 };
 
 /** path rotate / scale transform 构造输入 */

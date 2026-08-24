@@ -1,12 +1,12 @@
-import { z } from 'zod';
+import { boolean, strictObject } from 'zod';
 
 import { BaseLayoutInspectOptionsInputSchema, resolveBaseLayoutInspectOptions } from '../shared';
 
 /** Flex 布局专属的稀疏输入字段 */
-const FlexLayoutInspectFamilyOptionsInputSchema = z.strictObject({
-  lines: z.boolean().optional().describe('Whether to draw FlexLayout line regions.'),
-  gaps: z.boolean().optional().describe('Whether to shade authored FlexLayout gaps.'),
-  distributedSpace: z.boolean().optional().describe('Whether to draw distributed free-space perimeters.'),
+const FlexLayoutInspectFamilyOptionsInputSchema = strictObject({
+  lines: boolean().optional().describe('Whether to draw FlexLayout line regions.'),
+  gaps: boolean().optional().describe('Whether to shade authored FlexLayout gaps.'),
+  distributedSpace: boolean().optional().describe('Whether to draw distributed free-space perimeters.'),
 });
 
 /** Flex 布局检查器的稀疏输入结构 */

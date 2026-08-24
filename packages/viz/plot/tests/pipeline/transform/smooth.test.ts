@@ -3,7 +3,7 @@ import type { AnyTransformDefinition, ExternalRow, TransformContext } from '@ret
 import { applyTransforms as applyDataTransforms, collectTransformFields, defineTransform } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, object } from 'zod';
 
 import type { IRPlotTransform } from '../../../src/schemas';
 
@@ -242,7 +242,7 @@ describe('smooth transform behavior (contract)', () => {
 
   it('rejects custom transform registration collisions with smooth', () => {
     const collision = defineTransform({
-      schema: z.object({ kind: z.literal('smooth') }),
+      schema: object({ kind: literal('smooth') }),
       apply: inputRows => inputRows,
     });
 

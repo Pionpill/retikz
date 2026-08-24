@@ -1,8 +1,8 @@
 import type { RuntimeRevision } from '@retikz/runtime';
 
-import { RetikzError } from '@retikz/foundation';
+import { NonBlankStringSchema, RetikzError } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { array, boolean, custom, enum as zodEnum, intersection, literal, number, object, strictObject } from 'zod';
 
 import type {
   ClipShape,
@@ -61,11 +61,11 @@ const fixedMeasurer: TextMeasurer = text => ({
   descent: 2,
 });
 
-const BoundsSchema = z.strictObject({
-  x: z.number(),
-  y: z.number(),
-  width: z.number(),
-  height: z.number(),
+const BoundsSchema = strictObject({
+  x: number(),
+  y: number(),
+  width: number(),
+  height: number(),
 });
 
 const sceneOf = (...children: Array<IRChild>): IRScene => ({
@@ -89,12 +89,12 @@ const createBoundsProbe = () =>
     namespace: 'test',
     type: 'boundsProbe',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('test'),
-      type: z.literal('boundsProbe'),
+      namespace: literal('test'),
+      type: literal('boundsProbe'),
       child: ChildSchema,
-      maxWidth: z.number().optional(),
+      maxWidth: number().optional(),
     }),
-    artifactSchema: z.strictObject({
+    artifactSchema: strictObject({
       allocation: BoundsSchema,
       visual: BoundsSchema,
     }),
@@ -253,14 +253,14 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'nestedConstraint',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('nestedConstraint'),
+        namespace: literal('test'),
+        type: literal('nestedConstraint'),
       }),
-      artifactSchema: z.strictObject({
-        xValue: z.number(),
-        yMin: z.number(),
-        yHasMax: z.boolean(),
-        frozen: z.boolean(),
+      artifactSchema: strictObject({
+        xValue: number(),
+        yMin: number(),
+        yHasMax: boolean(),
+        frozen: boolean(),
       }),
       compile: (_, { proposal }) => {
         if (proposal.x.kind !== LayoutAxisProposalKind.Exact || proposal.y.kind !== LayoutAxisProposalKind.Range) {
@@ -281,8 +281,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'constraintParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('constraintParent'),
+        namespace: literal('test'),
+        type: literal('constraintParent'),
       }),
       compile: (_, context) => {
         const child = resolvedResultOf(
@@ -378,8 +378,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'dispatchSentinel',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('dispatchSentinel'),
+        namespace: literal('test'),
+        type: literal('dispatchSentinel'),
       }),
       compile: () => {
         dispatched = true;
@@ -390,8 +390,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'invalidConstraint',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('invalidConstraint'),
+        namespace: literal('test'),
+        type: literal('invalidConstraint'),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -418,8 +418,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'invalidNestedProposal',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('invalidNestedProposal'),
+        namespace: literal('test'),
+        type: literal('invalidNestedProposal'),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -436,8 +436,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'discardInvalidNestedProposal',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('discardInvalidNestedProposal'),
+        namespace: literal('test'),
+        type: literal('discardInvalidNestedProposal'),
       }),
       compile: (_, context) => {
         context.layoutChild({ namespace: 'test', type: 'invalidNestedProposal' }, NaturalLayoutProposal);
@@ -457,8 +457,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'hostileNestedProposal',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('hostileNestedProposal'),
+        namespace: literal('test'),
+        type: literal('hostileNestedProposal'),
       }),
       compile: (_, context) => {
         const hostileProposal = new Proxy(NaturalLayoutProposal, {
@@ -474,8 +474,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'discardHostileNestedProposal',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('discardHostileNestedProposal'),
+        namespace: literal('test'),
+        type: literal('discardHostileNestedProposal'),
       }),
       compile: (_, context) => {
         context.layoutChild({ namespace: 'test', type: 'hostileNestedProposal' }, NaturalLayoutProposal);
@@ -525,8 +525,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: `singleRead${axis.kind}ProposalParent`,
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal(`singleRead${axis.kind}ProposalParent`),
+        namespace: literal('test'),
+        type: literal(`singleRead${axis.kind}ProposalParent`),
       }),
       compile: (_, context) => {
         const probe = context.layoutChild(
@@ -568,8 +568,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'unsupportedConstraintField',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('unsupportedConstraintField'),
+        namespace: literal('test'),
+        type: literal('unsupportedConstraintField'),
       }),
       compile: (_, { layoutChild }) => {
         layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, proposal as never);
@@ -587,8 +587,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'unknownConstraintKind',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('unknownConstraintKind'),
+        namespace: literal('test'),
+        type: literal('unknownConstraintKind'),
       }),
       compile: (_, { layoutChild }) => {
         layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, {
@@ -611,8 +611,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'unknownIntrinsicMode',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('unknownIntrinsicMode'),
+        namespace: literal('test'),
+        type: literal('unknownIntrinsicMode'),
       }),
       compile: (_, { layoutChild }) => {
         layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, {
@@ -636,8 +636,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'zeroChild',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('zeroChild'),
+        namespace: literal('test'),
+        type: literal('zeroChild'),
       }),
       compile: (_, context) => {
         received = context.proposal;
@@ -648,10 +648,10 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'zeroParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('zeroParent'),
+        namespace: literal('test'),
+        type: literal('zeroParent'),
       }),
-      artifactSchema: z.strictObject({ width: z.number(), height: z.number() }),
+      artifactSchema: strictObject({ width: number(), height: number() }),
       compile: (_, context) => {
         const child = resolvedResultOf(
           context,
@@ -685,8 +685,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'forwardReference',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('forwardReference'),
+        namespace: literal('test'),
+        type: literal('forwardReference'),
       }),
       compile: (_, context) => {
         const probe = context.layoutChild(
@@ -722,8 +722,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'ordinaryFailure',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('ordinaryFailure'),
+        namespace: literal('test'),
+        type: literal('ordinaryFailure'),
       }),
       compile: () => {
         throw ordinaryCause;
@@ -733,8 +733,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'nonErrorFailure',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('nonErrorFailure'),
+        namespace: literal('test'),
+        type: literal('nonErrorFailure'),
       }),
       compile: () => {
         throw thrownValue;
@@ -744,8 +744,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'discardFailures',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('discardFailures'),
+        namespace: literal('test'),
+        type: literal('discardFailures'),
       }),
       compile: (_, context) => {
         const probes = [
@@ -778,7 +778,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const leaf = defineComposite({
       namespace: 'test',
       type: 'rawCauseLeaf',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('rawCauseLeaf') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('rawCauseLeaf') }),
       compile: () => {
         invocation += 1;
         if (invocation === 1) throw null;
@@ -788,7 +788,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const parent = defineComposite({
       namespace: 'test',
       type: 'rawCauseParent',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('rawCauseParent') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('rawCauseParent') }),
       compile: (_, context) => {
         const causes: Array<unknown> = [];
         for (let index = 0; index < 2; index += 1) {
@@ -814,7 +814,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const parent = defineComposite({
       namespace: 'test',
       type: 'unregisteredProbeParent',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('unregisteredProbeParent') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('unregisteredProbeParent') }),
       compile: (_, context) => {
         const probe = context.layoutChild({ namespace: 'missing', type: 'leaf' }, NaturalLayoutProposal);
         expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
@@ -834,16 +834,16 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'deepSchemaLeaf',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('deepSchemaLeaf'),
-        required: z.number(),
+        namespace: literal('test'),
+        type: literal('deepSchemaLeaf'),
+        required: number(),
       }),
       compile: () => ({ children: [] }),
     });
     const parent = defineComposite({
       namespace: 'test',
       type: 'deepSchemaParent',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('deepSchemaParent') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('deepSchemaParent') }),
       compile: (_, context) => {
         const probe = context.layoutChild(
           {
@@ -873,8 +873,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'selectedFailureLeaf',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('selectedFailureLeaf'),
+        namespace: literal('test'),
+        type: literal('selectedFailureLeaf'),
       }),
       compile: () => {
         throw cause;
@@ -884,8 +884,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'selectedFailureParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('selectedFailureParent'),
+        namespace: literal('test'),
+        type: literal('selectedFailureParent'),
       }),
       compile: (_, context) => {
         const probe = context.layoutChild(
@@ -920,7 +920,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const leaf = defineComposite({
       namespace: 'test',
       type: 'failureOwnerLeaf',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('failureOwnerLeaf') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('failureOwnerLeaf') }),
       compile: () => {
         throw new Error('candidate failed');
       },
@@ -928,7 +928,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const producer = defineComposite({
       namespace: 'test',
       type: 'failureOwnerProducer',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('failureOwnerProducer') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('failureOwnerProducer') }),
       compile: (_, context) => {
         run += 1;
         if (run === 1) {
@@ -942,7 +942,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const copied = defineComposite({
       namespace: 'test',
       type: 'copiedFailure',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('copiedFailure') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('copiedFailure') }),
       compile: (_, context) => {
         const probe = context.layoutChild({ namespace: 'test', type: 'failureOwnerLeaf' }, NaturalLayoutProposal);
         if (probe.kind === LayoutChildProbeKind.Resolved) return { children: [] };
@@ -952,13 +952,13 @@ describe('layout-aware composite constraints and bounds', () => {
     const forged = defineComposite({
       namespace: 'test',
       type: 'forgedFailure',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('forgedFailure') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('forgedFailure') }),
       compile: (_, context) => context.raise(Object.freeze({}) as LayoutChildFailure),
     });
     const foreign = defineComposite({
       namespace: 'test',
       type: 'foreignFailure',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('foreignFailure') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('foreignFailure') }),
       compile: (_, context) => context.raise(retained!),
     });
 
@@ -992,7 +992,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const parent = defineComposite({
       namespace: 'test',
       type: 'fatalInvariantParent',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('fatalInvariantParent') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('fatalInvariantParent') }),
       compile: (_, context) => {
         context.layoutChild({ type: 'coordinate', id: 'invariant', position: [0, 0] }, NaturalLayoutProposal);
         return { children: [] };
@@ -1010,8 +1010,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'runtimeTopologyInvariantParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('runtimeTopologyInvariantParent'),
+        namespace: literal('test'),
+        type: literal('runtimeTopologyInvariantParent'),
       }),
       compile: (_, context) => {
         context.layoutChild({ type: 'scope', localNamespace: true, children: [] }, NaturalLayoutProposal);
@@ -1042,8 +1042,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'invalidLayoutChildDiscriminatorParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('invalidLayoutChildDiscriminatorParent'),
+        namespace: literal('test'),
+        type: literal('invalidLayoutChildDiscriminatorParent'),
       }),
       compile: (_, context) => {
         context.layoutChild({ type: 'invalidLayoutChild' } as IRChild, NaturalLayoutProposal);
@@ -1068,8 +1068,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'hostileLayoutChildParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('hostileLayoutChildParent'),
+        namespace: literal('test'),
+        type: literal('hostileLayoutChildParent'),
       }),
       compile: (_, context) => {
         context.layoutChild(hostileChild as IRChild, NaturalLayoutProposal);
@@ -1089,8 +1089,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'nonFiniteAutomaticAllocationParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('nonFiniteAutomaticAllocationParent'),
+        namespace: literal('test'),
+        type: literal('nonFiniteAutomaticAllocationParent'),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -1116,13 +1116,13 @@ describe('layout-aware composite constraints and bounds', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'malformedProbeChild',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('malformedProbeChild') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('malformedProbeChild') }),
       compile: () => ({ children: undefined as unknown as Array<IRChild> }),
     });
     const parent = defineComposite({
       namespace: 'test',
       type: 'malformedProbeParent',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('malformedProbeParent') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('malformedProbeParent') }),
       compile: (_, context) => {
         context.layoutChild({ namespace: 'test', type: 'malformedProbeChild' }, NaturalLayoutProposal);
         return { children: [] };
@@ -1154,8 +1154,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'dynamicCompileResult',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('dynamicCompileResult'),
+        namespace: literal('test'),
+        type: literal('dynamicCompileResult'),
       }),
       compile: () => result,
     });
@@ -1172,15 +1172,15 @@ describe('layout-aware composite constraints and bounds', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'sparseProbeChildren',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('sparseProbeChildren') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('sparseProbeChildren') }),
       compile: () => ({ children: Array<IRChild>(1) }),
     });
     const parent = defineComposite({
       namespace: 'test',
       type: 'sparseProbeChildrenParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('sparseProbeChildrenParent'),
+        namespace: literal('test'),
+        type: literal('sparseProbeChildrenParent'),
       }),
       compile: (_, context) => {
         context.layoutChild({ namespace: 'test', type: 'sparseProbeChildren' }, NaturalLayoutProposal);
@@ -1199,15 +1199,15 @@ describe('layout-aware composite constraints and bounds', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'invalidOutputChild',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('invalidOutputChild') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('invalidOutputChild') }),
       compile: () => ({ children: [{ type: 'bogus' } as IRChild] }),
     });
     const parent = defineComposite({
       namespace: 'test',
       type: 'invalidOutputChildParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('invalidOutputChildParent'),
+        namespace: literal('test'),
+        type: literal('invalidOutputChildParent'),
       }),
       compile: (_, context) => {
         context.layoutChild({ namespace: 'test', type: 'invalidOutputChild' }, NaturalLayoutProposal);
@@ -1226,7 +1226,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'hostileCallbackResult',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('hostileCallbackResult') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('hostileCallbackResult') }),
       compile: () =>
         new Proxy(
           { children: [] },
@@ -1241,8 +1241,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'hostileCallbackResultParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('hostileCallbackResultParent'),
+        namespace: literal('test'),
+        type: literal('hostileCallbackResultParent'),
       }),
       compile: (_, context) => {
         context.layoutChild({ namespace: 'test', type: 'hostileCallbackResult' }, NaturalLayoutProposal);
@@ -1261,7 +1261,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const malformed = defineComposite({
       namespace: 'test',
       type: 'hostileReplayWrapper',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('hostileReplayWrapper') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('hostileReplayWrapper') }),
       compile: (_, context) => {
         const probe = context.layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, NaturalLayoutProposal);
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
@@ -1280,8 +1280,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'hostileReplayWrapperParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('hostileReplayWrapperParent'),
+        namespace: literal('test'),
+        type: literal('hostileReplayWrapperParent'),
       }),
       compile: (_, context) => {
         context.layoutChild({ namespace: 'test', type: 'hostileReplayWrapper' }, NaturalLayoutProposal);
@@ -1310,8 +1310,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'dynamicReplayWrapperClipParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('dynamicReplayWrapperClipParent'),
+        namespace: literal('test'),
+        type: literal('dynamicReplayWrapperClipParent'),
       }),
       compile: (_, context) => {
         const probe = context.layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, NaturalLayoutProposal);
@@ -1333,8 +1333,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'sparseReplayWrapperTransforms',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('sparseReplayWrapperTransforms'),
+        namespace: literal('test'),
+        type: literal('sparseReplayWrapperTransforms'),
       }),
       compile: (_, context) => {
         const probe = context.layoutChild({ type: 'coordinate', id: 'point', position: [0, 0] }, NaturalLayoutProposal);
@@ -1346,8 +1346,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'sparseReplayWrapperTransformsParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('sparseReplayWrapperTransformsParent'),
+        namespace: literal('test'),
+        type: literal('sparseReplayWrapperTransformsParent'),
       }),
       compile: (_, context) => {
         context.layoutChild({ namespace: 'test', type: 'sparseReplayWrapperTransforms' }, NaturalLayoutProposal);
@@ -1367,8 +1367,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'hostileRuntimeScopeProps',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('hostileRuntimeScopeProps'),
+        namespace: literal('test'),
+        type: literal('hostileRuntimeScopeProps'),
       }),
       compile: (_, context) => {
         const props = new Proxy(
@@ -1386,8 +1386,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'hostileRuntimeScopePropsParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('hostileRuntimeScopePropsParent'),
+        namespace: literal('test'),
+        type: literal('hostileRuntimeScopePropsParent'),
       }),
       compile: (_, context) => {
         context.layoutChild({ namespace: 'test', type: 'hostileRuntimeScopeProps' }, NaturalLayoutProposal);
@@ -1407,8 +1407,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'sparseRuntimeScopeTransforms',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('sparseRuntimeScopeTransforms'),
+        namespace: literal('test'),
+        type: literal('sparseRuntimeScopeTransforms'),
       }),
       compile: (_, context) => ({ children: [context.scope({ transforms: Array<never>(1) }, [])] }),
     });
@@ -1416,8 +1416,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'sparseRuntimeScopeTransformsParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('sparseRuntimeScopeTransformsParent'),
+        namespace: literal('test'),
+        type: literal('sparseRuntimeScopeTransformsParent'),
       }),
       compile: (_, context) => {
         context.layoutChild({ namespace: 'test', type: 'sparseRuntimeScopeTransforms' }, NaturalLayoutProposal);
@@ -1437,8 +1437,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'sparseRuntimeScopeChildren',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('sparseRuntimeScopeChildren'),
+        namespace: literal('test'),
+        type: literal('sparseRuntimeScopeChildren'),
       }),
       compile: (_, context) => ({ children: [context.scope({}, Array<IRChild>(1))] }),
     });
@@ -1446,8 +1446,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'sparseRuntimeScopeChildrenParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('sparseRuntimeScopeChildrenParent'),
+        namespace: literal('test'),
+        type: literal('sparseRuntimeScopeChildrenParent'),
       }),
       compile: (_, context) => {
         context.layoutChild({ namespace: 'test', type: 'sparseRuntimeScopeChildren' }, NaturalLayoutProposal);
@@ -1467,8 +1467,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'singleRectangleExpand',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('singleRectangleExpand'),
+        namespace: literal('test'),
+        type: literal('singleRectangleExpand'),
       }),
       expand: () => ({
         children: [
@@ -1505,8 +1505,8 @@ describe('layout-aware composite constraints and bounds', () => {
         namespace: 'test',
         type: `malformedExpand${variant}`,
         schema: CompositeBaseSchema.extend({
-          namespace: z.literal('test'),
-          type: z.literal(`malformedExpand${variant}`),
+          namespace: literal('test'),
+          type: literal(`malformedExpand${variant}`),
         }),
         expand: () =>
           variant === 'invalidChild'
@@ -1527,8 +1527,8 @@ describe('layout-aware composite constraints and bounds', () => {
         namespace: 'test',
         type: `malformedExpand${variant}Parent`,
         schema: CompositeBaseSchema.extend({
-          namespace: z.literal('test'),
-          type: z.literal(`malformedExpand${variant}Parent`),
+          namespace: literal('test'),
+          type: literal(`malformedExpand${variant}Parent`),
         }),
         compile: (_, context) => {
           context.layoutChild({ namespace: 'test', type: `malformedExpand${variant}` }, NaturalLayoutProposal);
@@ -1547,7 +1547,7 @@ describe('layout-aware composite constraints and bounds', () => {
   it('lets malformed provider geometry and text metrics pierce the probe catch boundary', () => {
     const malformedShape = defineShape({
       name: 'malformedProbeShape',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: () => ({ halfWidth: Number.NaN, halfHeight: 1 }),
       boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
       anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -1556,7 +1556,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const shapeParent = defineComposite({
       namespace: 'test',
       type: 'malformedShapeParent',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('malformedShapeParent') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('malformedShapeParent') }),
       compile: (_, context) => {
         context.layoutChild(
           { type: 'node', position: [0, 0], shape: { type: 'malformedProbeShape', params: {} } },
@@ -1568,7 +1568,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const metricsParent = defineComposite({
       namespace: 'test',
       type: 'malformedMetricsParent',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('malformedMetricsParent') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('malformedMetricsParent') }),
       compile: (_, context) => {
         context.layoutChild({ type: 'node', position: [0, 0], text: 'bad metrics' }, NaturalLayoutProposal);
         return { children: [] };
@@ -1630,8 +1630,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: `hostileMetrics${variant}Parent`,
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal(`hostileMetrics${variant}Parent`),
+        namespace: literal('test'),
+        type: literal(`hostileMetrics${variant}Parent`),
       }),
       compile: (_, context) => {
         context.layoutChild(child, NaturalLayoutProposal);
@@ -1666,8 +1666,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: `malformedTex${variant}Parent`,
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal(`malformedTex${variant}Parent`),
+        namespace: literal('test'),
+        type: literal(`malformedTex${variant}Parent`),
       }),
       compile: (_, context) => {
         const child: IRChild =
@@ -1729,8 +1729,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: `throwing${provider}Parent`,
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal(`throwing${provider}Parent`),
+        namespace: literal('test'),
+        type: literal(`throwing${provider}Parent`),
       }),
       compile: (_, context) => {
         const probe = context.layoutChild(
@@ -1768,7 +1768,7 @@ describe('layout-aware composite constraints and bounds', () => {
   it('keeps hostile Shape circumscribe output reflection fatal inside a discarded probe', () => {
     const hostileShape = defineShape({
       name: 'hostileCircumscribeShape',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: () =>
         new Proxy(
           { halfWidth: 10, halfHeight: 10 },
@@ -1786,8 +1786,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'hostileCircumscribeParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('hostileCircumscribeParent'),
+        namespace: literal('test'),
+        type: literal('hostileCircumscribeParent'),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -1820,7 +1820,7 @@ describe('layout-aware composite constraints and bounds', () => {
       });
     const hostileShape = defineShape({
       name: 'hostilePointShape',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
       boundaryPoint: variant === 'boundaryPoint' ? hostilePoint : BUILTIN_SHAPES.rectangle.boundaryPoint,
       anchor: variant === 'shapeAnchor' ? hostilePoint : BUILTIN_SHAPES.rectangle.anchor,
@@ -1829,7 +1829,7 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const hostileBoundary = defineBoundary({
       name: 'hostilePointBoundary',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
       anchor: variant === 'boundaryAnchor' ? hostilePoint : BUILTIN_SHAPES.rectangle.anchor,
     });
@@ -1837,8 +1837,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: `hostile${variant}Parent`,
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal(`hostile${variant}Parent`),
+        namespace: literal('test'),
+        type: literal(`hostile${variant}Parent`),
       }),
       compile: (_, context) => {
         const target = {
@@ -1883,7 +1883,7 @@ describe('layout-aware composite constraints and bounds', () => {
   it('keeps hostile Shape scaleParams output reflection fatal inside a discarded probe', () => {
     const hostileShape = defineShape({
       name: 'hostileScaleParamsShape',
-      paramsSchema: z.strictObject({ radius: z.number() }),
+      paramsSchema: strictObject({ radius: number() }),
       scaleParams: () =>
         new Proxy(
           { radius: 10 },
@@ -1902,8 +1902,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'hostileScaleParamsParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('hostileScaleParamsParent'),
+        namespace: literal('test'),
+        type: literal('hostileScaleParamsParent'),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -1933,7 +1933,7 @@ describe('layout-aware composite constraints and bounds', () => {
   ])('keeps hostile $variant output reflection fatal inside a discarded probe', ({ variant, boundary }) => {
     const hostileEnvelopeShape = defineShape({
       name: 'hostileEnvelopeShape',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
       connectionEnvelope: () =>
         new Proxy(
@@ -1950,7 +1950,7 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const hostileBoundary = defineBoundary({
       name: 'hostileRectBoundary',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       resolveRect: context =>
         new Proxy(context.visualRect, {
           get: () => {
@@ -1964,8 +1964,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: `hostile${variant}Parent`,
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal(`hostile${variant}Parent`),
+        namespace: literal('test'),
+        type: literal(`hostile${variant}Parent`),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -2009,7 +2009,7 @@ describe('layout-aware composite constraints and bounds', () => {
   ])('keeps a Boundary resolveRect $label output fatal inside a discarded probe', ({ output }) => {
     const malformedBoundary = defineBoundary({
       name: 'nullishRectBoundary',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       resolveRect: () => output as never,
       boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
       anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -2018,8 +2018,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'nullishRectBoundaryParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('nullishRectBoundaryParent'),
+        namespace: literal('test'),
+        type: literal('nullishRectBoundaryParent'),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -2053,7 +2053,7 @@ describe('layout-aware composite constraints and bounds', () => {
   it('keeps hostile path-generator output iteration fatal inside a discarded probe', () => {
     const hostileGenerator = definePathGenerator({
       name: 'hostileGeneratedCommands',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       generate: () =>
         new Proxy([{ kind: 'line' as const, to: [10, 0] as [number, number] }], {
           get: (target, property, receiver) => {
@@ -2066,8 +2066,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'hostilePathGeneratorParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('hostilePathGeneratorParent'),
+        namespace: literal('test'),
+        type: literal('hostilePathGeneratorParent'),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -2095,7 +2095,7 @@ describe('layout-aware composite constraints and bounds', () => {
   it('keeps hostile PathKind compile output reflection fatal inside a discarded probe', () => {
     const hostilePathKind = definePathKind({
       name: 'hostilePathKind',
-      schema: PathSchema.extend({ kind: z.literal('hostilePathKind') }),
+      schema: PathSchema.extend({ kind: literal('hostilePathKind') }),
       compile: () =>
         new Proxy(
           { primitives: [], boundsPoints: [] },
@@ -2110,8 +2110,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'hostilePathKindParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('hostilePathKindParent'),
+        namespace: literal('test'),
+        type: literal('hostilePathKindParent'),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -2163,7 +2163,7 @@ describe('layout-aware composite constraints and bounds', () => {
     );
     const dynamicPathKind = definePathKind({
       name: 'dynamicPathKind',
-      schema: PathSchema.extend({ kind: z.literal('dynamicPathKind') }),
+      schema: PathSchema.extend({ kind: literal('dynamicPathKind') }),
       compile: () => result,
     });
 
@@ -2186,7 +2186,7 @@ describe('layout-aware composite constraints and bounds', () => {
   it('lets structurally malformed shape, arrow, pattern, clip, and path-generator outputs pierce a discarded probe', () => {
     const badShape = defineShape({
       name: 'badEmitShape',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
       boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
       anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -2205,9 +2205,9 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const badClip = defineClip({
       kind: 'badResolvedClip',
-      schema: z.strictObject({ kind: z.literal('badResolvedClip') }),
+      schema: strictObject({ kind: literal('badResolvedClip') }),
       resolve: () => ({ kind: 'badResolvedClip', width: -1 }),
-      shapeSchema: z.strictObject({ kind: z.literal('badResolvedClip'), width: z.number().positive() }),
+      shapeSchema: strictObject({ kind: literal('badResolvedClip'), width: number().positive() }),
       lower: () => ({
         commands: [
           { kind: 'move', to: [0, 0] },
@@ -2218,16 +2218,16 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const badGenerator = definePathGenerator({
       name: 'badGeneratedArc',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       generate: (() => [{ kind: 'arc', center: [0, 0], radius: -1, startAngle: 0, endAngle: 90 }]) as never,
     });
     const parent = defineComposite({
       namespace: 'test',
       type: 'malformedProviderParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('malformedProviderParent'),
-        variant: z.enum(['shape', 'arrow', 'pattern', 'clip', 'pathGenerator']),
+        namespace: literal('test'),
+        type: literal('malformedProviderParent'),
+        variant: zodEnum(['shape', 'arrow', 'pattern', 'clip', 'pathGenerator']),
       }),
       compile: (value, context) => {
         const child: IRChild =
@@ -2317,7 +2317,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const badShapes = [...shapeOutputs].map(([name, primitive]) =>
       defineShape({
         name,
-        paramsSchema: z.strictObject({}),
+        paramsSchema: strictObject({}),
         circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
         boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
         anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -2341,11 +2341,11 @@ describe('layout-aware composite constraints and bounds', () => {
     cyclicClipShape.children.push(cyclicClipShape);
     const cyclicClip = defineClip({
       kind: 'cyclicCompoundClip',
-      schema: z.strictObject({ kind: z.literal('cyclicCompoundClip') }),
+      schema: strictObject({ kind: literal('cyclicCompoundClip') }),
       resolve: () => cyclicClipShape,
-      shapeSchema: z.strictObject({
-        kind: z.literal('cyclicCompoundClip'),
-        children: z.array(z.intersection(z.object({ kind: z.string().min(1) }), JsonObjectSchema)),
+      shapeSchema: strictObject({
+        kind: literal('cyclicCompoundClip'),
+        children: array(intersection(object({ kind: NonBlankStringSchema }), JsonObjectSchema)),
       }),
       lower: () => ({
         commands: [
@@ -2372,9 +2372,9 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'malformedRecursiveProviderParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('malformedRecursiveProviderParent'),
-        variant: z.enum(variants),
+        namespace: literal('test'),
+        type: literal('malformedRecursiveProviderParent'),
+        variant: zodEnum(variants),
       }),
       compile: (value, context) => {
         const child: IRChild =
@@ -2466,7 +2466,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const badShapes = [...shapeOutputs].map(([name, primitive]) =>
       defineShape({
         name,
-        paramsSchema: z.strictObject({}),
+        paramsSchema: strictObject({}),
         circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
         boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
         anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -2496,14 +2496,14 @@ describe('layout-aware composite constraints and bounds', () => {
     symbolClipShape[Symbol('clip-hidden-function')] = () => 'hidden';
     const badClip = defineClip({
       kind: 'symbolKeyClip',
-      schema: z.strictObject({ kind: z.literal('symbolKeyClip') }),
+      schema: strictObject({ kind: literal('symbolKeyClip') }),
       resolve: () => symbolClipShape as unknown as ClipShape,
-      shapeSchema: z.strictObject({
-        kind: z.literal('symbolKeyClip'),
-        x: z.number(),
-        y: z.number(),
-        width: z.number().nonnegative(),
-        height: z.number().nonnegative(),
+      shapeSchema: strictObject({
+        kind: literal('symbolKeyClip'),
+        x: number(),
+        y: number(),
+        width: number().nonnegative(),
+        height: number().nonnegative(),
       }),
       lower: shape => ({
         commands: [
@@ -2527,9 +2527,9 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'strictProviderOutputParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('strictProviderOutputParent'),
-        variant: z.enum(variants),
+        namespace: literal('test'),
+        type: literal('strictProviderOutputParent'),
+        variant: zodEnum(variants),
       }),
       compile: (value, context) => {
         const child: IRChild =
@@ -2585,7 +2585,7 @@ describe('layout-aware composite constraints and bounds', () => {
     );
     const proxyShape = defineShape({
       name: 'proxyTrapShape',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
       boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
       anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -2615,14 +2615,14 @@ describe('layout-aware composite constraints and bounds', () => {
     );
     const proxyClip = defineClip({
       kind: 'proxyTrapClip',
-      schema: z.strictObject({ kind: z.literal('proxyTrapClip') }),
+      schema: strictObject({ kind: literal('proxyTrapClip') }),
       resolve: () => clipProxy as unknown as ClipShape,
-      shapeSchema: z.strictObject({
-        kind: z.literal('proxyTrapClip'),
-        x: z.number(),
-        y: z.number(),
-        width: z.number().nonnegative(),
-        height: z.number().nonnegative(),
+      shapeSchema: strictObject({
+        kind: literal('proxyTrapClip'),
+        x: number(),
+        y: number(),
+        width: number().nonnegative(),
+        height: number().nonnegative(),
       }),
       lower: () => ({
         commands: [
@@ -2637,9 +2637,9 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'proxyTrapParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('proxyTrapParent'),
-        variant: z.enum(variants),
+        namespace: literal('test'),
+        type: literal('proxyTrapParent'),
+        variant: zodEnum(variants),
       }),
       compile: (value, context) => {
         const child: IRChild =
@@ -2696,7 +2696,7 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const dynamicShape = defineShape({
       name: 'dynamicScenePrimitiveShape',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
       boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
       anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -2716,7 +2716,7 @@ describe('layout-aware composite constraints and bounds', () => {
   it('rejects visual bounds whose derived edges become non-finite inside a discarded probe', () => {
     const farShape = defineShape({
       name: 'nonFiniteVisualBoundsShape',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
       boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
       anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -2726,8 +2726,8 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'nonFiniteVisualBoundsParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('nonFiniteVisualBoundsParent'),
+        namespace: literal('test'),
+        type: literal('nonFiniteVisualBoundsParent'),
       }),
       compile: (_, context) => {
         context.layoutChild(
@@ -2799,14 +2799,14 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const dynamicClip = defineClip({
       kind: 'dynamicClipShape',
-      schema: z.strictObject({ kind: z.literal('dynamicClipShape') }),
+      schema: strictObject({ kind: literal('dynamicClipShape') }),
       resolve: () => dynamicShape,
-      shapeSchema: z.strictObject({
-        kind: z.literal('dynamicClipShape'),
-        x: z.number(),
-        y: z.number(),
-        width: z.number().nonnegative(),
-        height: z.number().nonnegative(),
+      shapeSchema: strictObject({
+        kind: literal('dynamicClipShape'),
+        x: number(),
+        y: number(),
+        width: number().nonnegative(),
+        height: number().nonnegative(),
       }),
       lower: shape => ({
         commands: [
@@ -2872,7 +2872,7 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const dynamicShape = defineShape({
       name: 'dynamicLayoutGeometryShape',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: () => circumscribed,
       circumscribeOffset: () => offset,
       boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
@@ -2915,7 +2915,7 @@ describe('layout-aware composite constraints and bounds', () => {
     const shapeOf = (name: string, primitive: ScenePrimitive) =>
       defineShape({
         name,
-        paramsSchema: z.strictObject({}),
+        paramsSchema: strictObject({}),
         circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
         boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
         anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -2971,7 +2971,7 @@ describe('layout-aware composite constraints and bounds', () => {
     for (const [index, children] of lossyArrays.entries()) {
       const shape = defineShape({
         name: `lossySceneArrayShape${index}`,
-        paramsSchema: z.strictObject({}),
+        paramsSchema: strictObject({}),
         circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
         boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
         anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -3009,7 +3009,7 @@ describe('layout-aware composite constraints and bounds', () => {
     hostileThrown.revoke();
     const throwingShape = defineShape({
       name: 'throwingHostileProxyShape',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
       boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
       anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -3021,9 +3021,9 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'hostileProxyFailureParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('hostileProxyFailureParent'),
-        select: z.boolean(),
+        namespace: literal('test'),
+        type: literal('hostileProxyFailureParent'),
+        select: boolean(),
       }),
       compile: (value, context) => {
         const probe = context.layoutChild(
@@ -3071,7 +3071,7 @@ describe('layout-aware composite constraints and bounds', () => {
 
     const throwingShape = defineShape({
       name: 'throwingSelfPrototypeProxyShape',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
       boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
       anchor: BUILTIN_SHAPES.rectangle.anchor,
@@ -3083,9 +3083,9 @@ describe('layout-aware composite constraints and bounds', () => {
       namespace: 'test',
       type: 'selfPrototypeProxyParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('selfPrototypeProxyParent'),
-        select: z.boolean(),
+        namespace: literal('test'),
+        type: literal('selfPrototypeProxyParent'),
+        select: boolean(),
       }),
       compile: (value, context) => {
         const probe = context.layoutChild(
@@ -3122,12 +3122,12 @@ describe('layout-aware composite constraints and bounds', () => {
     stage => {
       const throwingClip = defineClip({
         kind: 'ordinaryThrowingClip',
-        schema: z.strictObject({ kind: z.literal('ordinaryThrowingClip') }),
+        schema: strictObject({ kind: literal('ordinaryThrowingClip') }),
         resolve: () => {
           if (stage === 'resolve') throw new Error('ordinary clip resolve failure');
           return { kind: 'ordinaryThrowingClip' };
         },
-        shapeSchema: z.strictObject({ kind: z.literal('ordinaryThrowingClip') }),
+        shapeSchema: strictObject({ kind: literal('ordinaryThrowingClip') }),
         lower: () => {
           if (stage === 'lower') throw new Error('ordinary clip lower failure');
           return {
@@ -3143,8 +3143,8 @@ describe('layout-aware composite constraints and bounds', () => {
         namespace: 'test',
         type: 'discardThrowingClip',
         schema: CompositeBaseSchema.extend({
-          namespace: z.literal('test'),
-          type: z.literal('discardThrowingClip'),
+          namespace: literal('test'),
+          type: literal('discardThrowingClip'),
         }),
         compile: (_, context) => {
           const probe = context.layoutChild(
@@ -3176,8 +3176,8 @@ describe('layout-aware composite replay ownership', () => {
       namespace: 'test',
       type: 'duplicateReplayId',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('duplicateReplayId'),
+        namespace: literal('test'),
+        type: literal('duplicateReplayId'),
       }),
       compile: (_, context) => {
         const laid = resolvedResultOf(context, { type: 'coordinate', id: 'same', position: [20, 0] });
@@ -3216,8 +3216,8 @@ describe('layout-aware composite replay ownership', () => {
       namespace: 'test',
       type: 'rawBeforeReplayId',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('rawBeforeReplayId'),
+        namespace: literal('test'),
+        type: literal('rawBeforeReplayId'),
       }),
       compile: (_, context) => {
         const laid = resolvedResultOf(context, { type: 'coordinate', id: 'same', position: [20, 0] });
@@ -3257,8 +3257,8 @@ describe('layout-aware composite replay ownership', () => {
       namespace: 'test',
       type: 'mixedZIndex',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('mixedZIndex'),
+        namespace: literal('test'),
+        type: literal('mixedZIndex'),
       }),
       compile: (_, context) => {
         const laid = resolvedResultOf(context, { type: 'node', position: [0, 0], zIndex: 10 });
@@ -3290,8 +3290,8 @@ describe('layout-aware composite replay ownership', () => {
       namespace: 'test',
       type: 'transformedZIndex',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('transformedZIndex'),
+        namespace: literal('test'),
+        type: literal('transformedZIndex'),
       }),
       compile: (_, context) => {
         const laid = resolvedResultOf(context, { type: 'node', position: [0, 0], zIndex: 10 });
@@ -3323,8 +3323,8 @@ describe('layout-aware composite replay ownership', () => {
       namespace: 'test',
       type: 'multipleRoots',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('multipleRoots'),
+        namespace: literal('test'),
+        type: literal('multipleRoots'),
       }),
       expand: () => ({
         children: [
@@ -3344,8 +3344,8 @@ describe('layout-aware composite replay ownership', () => {
       namespace: 'test',
       type: 'wrappedMultipleRoots',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('wrappedMultipleRoots'),
+        namespace: literal('test'),
+        type: literal('wrappedMultipleRoots'),
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, { namespace: 'test', type: 'multipleRoots' });
@@ -3376,8 +3376,8 @@ describe('layout-aware composite replay ownership', () => {
       namespace: 'test',
       type: 'retainedReplay',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('retainedReplay'),
+        namespace: literal('test'),
+        type: literal('retainedReplay'),
       }),
       compile: (_, context) => {
         if (reuse) {
@@ -3404,8 +3404,8 @@ describe('layout-aware composite replay ownership', () => {
       namespace: 'test',
       type: 'forgedReplay',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('forgedReplay'),
+        namespace: literal('test'),
+        type: literal('forgedReplay'),
       }),
       compile: (_node, context) => ({
         children: [
@@ -3431,8 +3431,8 @@ describe('layout-aware composite replay ownership', () => {
       namespace: 'test',
       type: 'copiedLayoutResult',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('copiedLayoutResult'),
+        namespace: literal('test'),
+        type: literal('copiedLayoutResult'),
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, { type: 'node', position: [0, 0], text: 'real' });
@@ -3459,8 +3459,8 @@ describe('layout-aware composite replay ownership', () => {
       namespace: 'test',
       type: 'moved',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('moved'),
+        namespace: literal('test'),
+        type: literal('moved'),
       }),
       compile: (_, context) => {
         const child = resolvedResultOf(context, {
@@ -3480,8 +3480,8 @@ describe('layout-aware composite replay ownership', () => {
       namespace: 'test',
       type: 'outer',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('outer'),
+        namespace: literal('test'),
+        type: literal('outer'),
       }),
       artifactSchema: BoundsSchema,
       compile: (_, context) => {
@@ -3535,10 +3535,10 @@ describe('layout-aware composite artifacts and lowering errors', () => {
       namespace: 'test',
       type: 'mismatchedArtifact',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('mismatchedArtifact'),
+        namespace: literal('test'),
+        type: literal('mismatchedArtifact'),
       }),
-      artifactSchema: z.strictObject({ count: z.number() }),
+      artifactSchema: strictObject({ count: number() }),
       compile: () => ({
         children: [],
         artifact: { count: 'not-a-number' as unknown as number },
@@ -3557,8 +3557,8 @@ describe('layout-aware composite artifacts and lowering errors', () => {
       namespace: 'test',
       type: 'recursive',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('recursive'),
+        namespace: literal('test'),
+        type: literal('recursive'),
       }),
       compile: (_node, context) => {
         const child = resolvedResultOf(context, { namespace: 'test', type: 'recursive' });
@@ -3575,13 +3575,13 @@ describe('layout-aware composite artifacts and lowering errors', () => {
   });
 
   it('rejects schema-accepted values that are not JSON-safe plain data', () => {
-    const unsafeSchema = z.custom<JsonValue>(() => true);
+    const unsafeSchema = custom<JsonValue>(() => true);
     const definition = defineComposite({
       namespace: 'test',
       type: 'unsafeArtifact',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('unsafeArtifact'),
+        namespace: literal('test'),
+        type: literal('unsafeArtifact'),
       }),
       artifactSchema: unsafeSchema,
       compile: () => ({
@@ -3603,10 +3603,10 @@ describe('layout-aware composite artifacts and lowering errors', () => {
       namespace: 'test',
       type: 'specialArtifactKeys',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('specialArtifactKeys'),
+        namespace: literal('test'),
+        type: literal('specialArtifactKeys'),
       }),
-      artifactSchema: z.custom<JsonValue>(),
+      artifactSchema: custom<JsonValue>(),
       compile: () => ({ children: [], artifact: payload }),
     });
 
@@ -3625,10 +3625,10 @@ describe('layout-aware composite artifacts and lowering errors', () => {
       namespace: 'test',
       type: 'symbolArtifactKey',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('symbolArtifactKey'),
+        namespace: literal('test'),
+        type: literal('symbolArtifactKey'),
       }),
-      artifactSchema: z.custom<JsonValue>(),
+      artifactSchema: custom<JsonValue>(),
       compile: () => ({ children: [], artifact: payload }),
     });
 
@@ -3663,8 +3663,8 @@ describe('layout-aware composite artifacts and lowering errors', () => {
       namespace: 'test',
       type: 'layoutOnly',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('layoutOnly'),
+        namespace: literal('test'),
+        type: literal('layoutOnly'),
       }),
       compile: () => ({ children: [] }),
     });
@@ -3672,8 +3672,8 @@ describe('layout-aware composite artifacts and lowering errors', () => {
       namespace: 'test',
       type: 'expandToLayout',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('expandToLayout'),
+        namespace: literal('test'),
+        type: literal('expandToLayout'),
       }),
       expand: () => ({ children: [{ namespace: 'test', type: 'layoutOnly' }] }),
     });

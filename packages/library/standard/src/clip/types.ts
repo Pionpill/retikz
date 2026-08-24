@@ -1,5 +1,5 @@
 import type { ClipShape, IRClipFillRule, IRJsonObject, IRPosition, PathCommand } from '@retikz/core';
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type {
   CircleClipSchema,
@@ -9,15 +9,15 @@ import type {
   PolygonClipSchema,
 } from './schema';
 
-export type IRCircleClip = z.infer<typeof CircleClipSchema>;
+export type IRCircleClip = ZodInfer<typeof CircleClipSchema>;
 
-export type IREllipseClip = z.infer<typeof EllipseClipSchema>;
+export type IREllipseClip = ZodInfer<typeof EllipseClipSchema>;
 
-export type IRPolygonClip = z.infer<typeof PolygonClipSchema>;
+export type IRPolygonClip = ZodInfer<typeof PolygonClipSchema>;
 
-export type IRPathClip = z.infer<typeof PathClipSchema>;
+export type IRPathClip = ZodInfer<typeof PathClipSchema>;
 
-export type IRCompoundClip = z.infer<typeof CompoundClipSchema>;
+export type IRCompoundClip = ZodInfer<typeof CompoundClipSchema>;
 
 /** 用户坐标系中的圆形裁剪形状 */
 export type CircleClipShape = IRJsonObject & {

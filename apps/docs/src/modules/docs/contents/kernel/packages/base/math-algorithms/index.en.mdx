@@ -32,17 +32,17 @@ The input types are `LineLineInput` (two lines or segments defined by endpoints)
 
 ### Ray-arc intersections
 
-Ray-arc input includes a circle center, radius, start angle, and end angle. `rayArc` returns a ray parameter `s`; the actual point is `origin + s * dir`. Only intersections in the ray's forward direction are kept.
+Ray-arc input includes a circle center, radius, start angle, and end angle. `intersectRayWithArc` returns a ray parameter `s`; the actual point is `origin + s * direction`. Only intersections in the ray's forward direction are kept.
 
 <ComponentPreview files="ray-arc" size="md" caption="Purple points mark the intersections between the arc and ray" />
 
 #### Ray-arc API
 
-The `RayArcInput` type describes the ray origin, direction, and arc range. The table lists the intersection method
+The `RayArcIntersectionInput` type describes the ray origin, direction, and arc range. The table lists the intersection method
 
-| API      | Complexity            | Purpose                                                                |
-| -------- | --------------------- | ---------------------------------------------------------------------- |
-| `rayArc` | Time O(1), space O(1) | Return forward ray parameters for arc intersections in ascending order |
+| API                   | Complexity            | Purpose                                                                |
+| --------------------- | --------------------- | ---------------------------------------------------------------------- |
+| `intersectRayWithArc` | Time O(1), space O(1) | Return forward ray parameters for arc intersections in ascending order |
 
 ### Circles and triangles
 
@@ -63,7 +63,7 @@ The `Circle` type represents a circle with a center and radius. The table lists 
 | API                       | Complexity                    | Purpose                                                                                 |
 | ------------------------- | ----------------------------- | --------------------------------------------------------------------------------------- |
 | `triangle.circumCircle`   | Time O(1), space O(1)         | Construct a circumcircle; return `null` for collinear or degenerate points              |
-| `triangle.inCircle`       | Time O(1), space O(1)         | Construct an incircle; return `null` for a degenerate triangle                          |
+| `triangle.incircle`       | Time O(1), space O(1)         | Construct an incircle; return `null` for a degenerate triangle                          |
 | `circle.minimalEnclosing` | Average time O(n), space O(1) | Construct the smallest circle covering all input points; return `null` for an empty set |
 
 ### Polygons and convex hulls

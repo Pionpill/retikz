@@ -1,5 +1,5 @@
 import type { IRGraphicStyle, IRNode, IRPath } from '@retikz/core';
-import type { InspectionAppearance } from '@retikz/inspect';
+import type { InspectionAppearanceContext } from '@retikz/inspect';
 
 import type {
   LayoutArtifactContainer,
@@ -309,7 +309,7 @@ export const inspectLayoutSpacing = (
   family: 'flex' | 'grid',
   spacing: ReadonlyArray<LayoutSpacingArtifact>,
   options: Readonly<{ gaps: boolean; distributedSpace: boolean }>,
-  appearance: InspectionAppearance,
+  appearance: InspectionAppearanceContext,
 ): Array<LayoutInspectionMark> => {
   const inspected: Array<LayoutInspectionMark> = [];
   spacing
@@ -339,7 +339,7 @@ export const inspectLayoutArtifactBase = (
   container: LayoutArtifactContainer,
   items: ReadonlyArray<LayoutArtifactItemBase>,
   options: ResolvedBaseLayoutInspectOptions,
-  appearance: InspectionAppearance,
+  appearance: InspectionAppearanceContext,
   alignmentGuideDimension: 'x' | 'y' = 'y',
 ): LayoutInspectionLayers => {
   const underlay: Array<LayoutInspectionMark> = [];
@@ -373,7 +373,7 @@ export const inspectLayoutArtifactBase = (
         kind: 'area',
         role: 'layout.overflow',
         rect: item.visualBounds,
-        fill: appearance.warningColor,
+        fill: appearance.semanticColors.warning,
         opacity: LayoutInspectionWarningOpacity,
       });
     }
@@ -386,7 +386,7 @@ export const inspectLayoutArtifactBase = (
           vertical ? item.slotBounds.y : item.alignmentGuide.position,
           vertical ? item.alignmentGuide.position : item.slotBounds.x + item.slotBounds.width,
           vertical ? item.slotBounds.y + item.slotBounds.height : item.alignmentGuide.position,
-          appearance.scopeColor,
+          appearance.semanticColors.guide,
           true,
         ),
       );

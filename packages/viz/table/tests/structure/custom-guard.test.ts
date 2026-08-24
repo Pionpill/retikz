@@ -1,5 +1,7 @@
+import type { ZodType } from 'zod';
+
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
 import type { IRTableStructureOperation, TableStructureOutput } from '../../src';
 
@@ -24,7 +26,7 @@ const validOutput = (): TableStructureOutput => ({
 
 const definitionOf = (kind: string, output: TableStructureOutput) =>
   defineTableStructure({
-    schema: z.strictObject({ kind: z.literal(kind) }),
+    schema: strictObject({ kind: literal(kind) }),
     build: () =>
       kind === 'extension'
         ? output
@@ -148,10 +150,10 @@ describe('custom Table structure runtime guard', () => {
   });
 
   it('rejects a definition field transform that emits a non-JSON value', () => {
-    const schema = z.strictObject({
-      kind: z.literal('non-json-transform'),
-      option: z.string().transform(() => () => 'not-json'),
-    }) as unknown as z.ZodType<IRTableStructureOperation>;
+    const schema = strictObject({
+      kind: literal('non-json-transform'),
+      option: string().transform(() => () => 'not-json'),
+    }) as unknown as ZodType<IRTableStructureOperation>;
     const definition = defineTableStructure({
       schema,
       build: () => validOutput(),

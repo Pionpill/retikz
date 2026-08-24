@@ -1,12 +1,12 @@
 import { CssColorSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
 import { scaleThreshold as d3ScaleThreshold } from 'd3-scale';
-import { z } from 'zod';
+import { array, number, strictObject } from 'zod';
 
 import { defineCellVisualScale } from '../../contract';
 import { RetikzTableError } from '../../error';
+import { TableCellVisualScale } from '../../schemas';
 
-const thresholdsSchema = z.array(z.number()).superRefine((thresholds, context) => {
+const thresholdsSchema = array(number()).superRefine((thresholds, context) => {
   thresholds.forEach((threshold, index) => {
     if (index > 0 && threshold <= thresholds[index - 1]) {
       context.addIssue({ code: 'custom', path: [index], message: 'thresholds must be strictly increasing' });
@@ -14,15 +14,12 @@ const thresholdsSchema = z.array(z.number()).superRefine((thresholds, context) =
   });
 });
 
-const colorSchema = CssColorSchema.refine(value => NonBlankStringSchema.safeParse(value).success, {
-  message: 'color must not be blank',
-});
-const rangeSchema = z.array(colorSchema).min(1);
+const rangeSchema = array(CssColorSchema).min(1);
 
 /** 阈值分档颜色 scale */
 export const THRESHOLD_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
-  name: 'threshold-color',
-  optionsSchema: z.strictObject({
+  name: TableCellVisualScale.ThresholdColor,
+  optionsSchema: strictObject({
     thresholds: thresholdsSchema,
     range: rangeSchema.optional(),
   }),

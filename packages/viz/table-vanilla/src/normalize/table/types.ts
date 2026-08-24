@@ -47,6 +47,4 @@ export type InputTable = Readonly<{
   lowerOptions?: LowerTablesOptions;
   /** Cell 内嵌 Tier 2 内容所需的额外 composites */
   composites?: ReadonlyArray<AnyCompositeDefinition>;
-  /** 保留原始 Table 根 identity，不追加 embed 命名空间 */
-  preserveRootIdentity?: boolean;
 }>;

@@ -3,7 +3,7 @@ import type { BoundaryDefinition, ClipDefinition, IRScene } from '@retikz/core';
 import { compileToScene, defineBoundary, defineClip } from '@retikz/core';
 import { renderToSvgString as svgRenderToString } from '@retikz/render/svg';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, strictObject } from 'zod';
 
 import { renderToSvgString } from '../../src';
 
@@ -34,19 +34,19 @@ const boundaryIr: IRScene = {
 const fixedBoundary = (): BoundaryDefinition =>
   defineBoundary({
     name: 'pin',
-    paramsSchema: z.strictObject({}),
+    paramsSchema: strictObject({}),
     boundaryPoint: rect => [rect.x + 7, rect.y],
   });
 
 const circleFrameClip = (): ClipDefinition =>
   defineClip({
     kind: 'circleFrame',
-    schema: z.strictObject({
-      kind: z.literal('circleFrame'),
-      cx: z.number(),
-      cy: z.number(),
-      outer: z.number().positive(),
-      inner: z.number().positive(),
+    schema: strictObject({
+      kind: literal('circleFrame'),
+      cx: number(),
+      cy: number(),
+      outer: number().positive(),
+      inner: number().positive(),
     }),
     resolve: spec => ({
       kind: 'circleFrame',
@@ -55,12 +55,12 @@ const circleFrameClip = (): ClipDefinition =>
       outer: spec.outer,
       inner: spec.inner,
     }),
-    shapeSchema: z.strictObject({
-      kind: z.literal('circleFrame'),
-      cx: z.number(),
-      cy: z.number(),
-      outer: z.number().positive(),
-      inner: z.number().positive(),
+    shapeSchema: strictObject({
+      kind: literal('circleFrame'),
+      cx: number(),
+      cy: number(),
+      outer: number().positive(),
+      inner: number().positive(),
     }),
     lower: shape => ({
       commands: [

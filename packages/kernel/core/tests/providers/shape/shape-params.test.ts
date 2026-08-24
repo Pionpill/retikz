@@ -1,7 +1,8 @@
 import type { Position } from '@retikz/math';
+import type { ZodType } from 'zod';
 
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { number, object, strictObject } from 'zod';
 
 import type { ScenePrimitive, ShapeDefinition } from '../../../src/contract';
 import type { IRJsonObject, IRScene } from '../../../src/schemas';
@@ -22,7 +23,7 @@ const findByType = <T extends ScenePrimitive['type']>(
 const ringShape = (): ShapeDefinition =>
   defineShape({
     name: 'ring',
-    paramsSchema: z.strictObject({ r: z.number() }),
+    paramsSchema: strictObject({ r: number() }),
     circumscribe: (_hw, _hh, params) => ({ halfWidth: params.r, halfHeight: params.r }),
     boundaryPoint: (rect: Rect, _toward: Position, params): Position => [rect.x + params.r, rect.y],
     anchor: (rect: Rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
@@ -49,7 +50,7 @@ const ringShape = (): ShapeDefinition =>
 const looseShape = (): ShapeDefinition =>
   defineShape({
     name: 'loose',
-    paramsSchema: z.object({}).passthrough() as unknown as z.ZodType<IRJsonObject>,
+    paramsSchema: object({}).passthrough() as unknown as ZodType<IRJsonObject>,
     circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
     boundaryPoint: (rect: Rect): Position => [rect.x, rect.y],
     anchor: (rect: Rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),

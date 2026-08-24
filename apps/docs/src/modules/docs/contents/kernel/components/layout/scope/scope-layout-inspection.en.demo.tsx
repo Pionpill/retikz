@@ -35,7 +35,7 @@ const SceneContents: FC = () => (
 /** Compare inherited whole-figure layout inspection with a Scope barrier */
 const Demo: FC = () => (
   <LayoutInspectLayout
-    request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: true }}
+    request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, options: true }}
     width={520}
     height={190}
     viewBox={{ x: 0, y: 0, width: 520, height: 190 }}

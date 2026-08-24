@@ -21,7 +21,8 @@ import type { LowerPlotsOptions } from './expand';
 
 import { resolvePlotLineageOptions } from '../resolve/lineage';
 import { CoordinateArrangementKind } from '../schemas';
-import { lowerPlots, prepareRows } from './expand';
+import { prepareRows } from './expand';
+import { lowerPlot } from './expand/lower';
 import { createPlotLocator } from './locator';
 
 /** lowerPlotWithLineage 选项 */
@@ -270,8 +271,7 @@ export const lowerPlotWithLineage = (
   datasets: ExternalDatasets,
   options: PlotLineageLowerOptions = {},
 ): PlotLineageLowerResult => {
-  const [definition] = lowerPlots(datasets, options);
-  const children = definition.expand(spec).children;
+  const children = [lowerPlot(spec, datasets, options)];
   return { children, lineage: buildPlotLineage(spec, datasets, options) };
 };
 

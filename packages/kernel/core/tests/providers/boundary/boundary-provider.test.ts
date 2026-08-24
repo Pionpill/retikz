@@ -1,5 +1,5 @@
 ﻿import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { number, strictObject } from 'zod';
 
 import type { CompileOptions } from '../../../src/compile/compile';
 import type { BoundaryDefinition, ScenePrimitive } from '../../../src/contract';
@@ -49,7 +49,7 @@ const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, 
 const fixedBoundary = (name: string, x: number): BoundaryDefinition =>
   defineBoundary({
     name,
-    paramsSchema: z.strictObject({}),
+    paramsSchema: strictObject({}),
     boundaryPoint: rect => [rect.x + x, rect.y],
   });
 
@@ -69,7 +69,7 @@ describe('Boundary provider contract', () => {
   it('boundary_provider_custom_params：boundary params 经 paramsSchema parse 后传给 provider', () => {
     const parametric = defineBoundary({
       name: 'pin',
-      paramsSchema: z.strictObject({ offset: z.number().positive() }),
+      paramsSchema: strictObject({ offset: number().positive() }),
       boundaryPoint: (rect, _toward, params) => [rect.x + Number(params.offset), rect.y],
     });
 
@@ -83,7 +83,7 @@ describe('Boundary provider contract', () => {
   it('boundary_shape_fallback_kept：boundary registry 查不到时仍可 fallback 到 shape registry', () => {
     const shapeBoundary = defineShape({
       name: 'shape-surface',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: () => ({ halfWidth: 20, halfHeight: 20 }),
       boundaryPoint: rect => [rect.x + 13, rect.y],
       anchor: () => undefined,
@@ -96,7 +96,7 @@ describe('Boundary provider contract', () => {
   it('boundary_provider_priority_over_shape_fallback：boundary provider 与 shape 同名时 provider 优先', () => {
     const sameNameShape = defineShape({
       name: 'same',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: () => ({ halfWidth: 20, halfHeight: 20 }),
       boundaryPoint: rect => [rect.x + 17, rect.y],
       anchor: () => undefined,
@@ -114,7 +114,7 @@ describe('Boundary provider contract', () => {
   it('boundary_params_schema_rejects：provider params schema 拒绝非法参数', () => {
     const parametric = defineBoundary({
       name: 'pin',
-      paramsSchema: z.strictObject({ offset: z.number().positive() }),
+      paramsSchema: strictObject({ offset: number().positive() }),
       boundaryPoint: (rect, _toward, params) => [rect.x + Number(params.offset), rect.y],
     });
 

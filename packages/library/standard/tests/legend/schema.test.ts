@@ -237,7 +237,16 @@ describe('Legend schema and factory', () => {
   it('rejects blank and duplicate authored keys at the key that must change', () => {
     const base = createLegend({ content: { kind: LegendContentKind.Items, items: [] } });
 
-    expectIssuePath({ ...base, content: { kind: 'items', items: [{ key: '   ', sample }] } }, 'content.items.0.key');
+    const blank = LegendSchema.safeParse({
+      ...base,
+      content: { kind: 'items', items: [{ key: '   ', sample }] },
+    });
+    expect(blank.success).toBe(false);
+    if (!blank.success) {
+      expect(blank.error.issues.filter(issue => issue.path.join('.') === 'content.items.0.key')).toEqual([
+        expect.objectContaining({ message: 'String must contain at least one non-whitespace character.' }),
+      ]);
+    }
     expectIssuePath(
       {
         ...base,

@@ -1,6 +1,6 @@
 import type { LayoutCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import type { z } from 'zod';
+import type { output as ZodOutput } from 'zod';
 
 import { defineComposite } from '@retikz/core';
 
@@ -20,7 +20,7 @@ export const lowerTables = (
     IRTable,
     typeof TABLE_NAMESPACE,
     typeof TableComposite.Table,
-    z.output<typeof TableLayoutManifestSchema>
+    ZodOutput<typeof TableLayoutManifestSchema>
   >
 > => [
   defineComposite({

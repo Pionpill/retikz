@@ -2,7 +2,7 @@ import type { ExternalRow } from '@retikz/data';
 
 import { type IRChild, type IRNode, type IRNodeLabel, type IRScope } from '@retikz/core';
 import { inferCategoryDomain, resolveFieldPath } from '@retikz/data';
-import { arcEndPoint, DEFAULT_EPSILON, isFiniteNumber } from '@retikz/math';
+import { DEFAULT_EPSILON, isFiniteNumber, pointAtArcAngle } from '@retikz/math';
 
 import type {
   Cell,
@@ -448,7 +448,7 @@ export const applyIntervalCellVisualParams = (
   const pull = resolveSectorPull(mark, row);
   return {
     ...geometry,
-    center: pull > 0 ? arcEndPoint(geometry.center, pull, (nextStartAngle + nextEndAngle) / 2) : geometry.center,
+    center: pull > 0 ? pointAtArcAngle(geometry.center, pull, (nextStartAngle + nextEndAngle) / 2) : geometry.center,
     startAngle: nextStartAngle,
     endAngle: nextEndAngle,
   };

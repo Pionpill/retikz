@@ -171,5 +171,5 @@ export const previewControlContract = {
       },
     },
   ],
-  relatedApis: ['arcBoundingPoints', 'boundsOf', 'boundsToRect'],
+  relatedApis: ['collectArcBoundingCandidates', 'boundsOf', 'boundsToRect'],
 } satisfies PreviewControlContract;

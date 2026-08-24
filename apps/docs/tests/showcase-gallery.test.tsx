@@ -83,14 +83,14 @@ const examples = [
     },
   },
   {
-    id: 'bubble',
-    title: '气泡编码',
-    description: '增加数值尺寸编码。',
+    id: 'income',
+    title: '收入与寿命',
+    description: '比较收入与预期寿命。',
     preview: {
-      files: ['scatter-bubble', 'scatter-basic.data.ts'],
-      controls: { name: 'scatter-bubble' },
+      files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
+      controls: { name: 'scatter-income-life-expectancy' },
       size: 'xl',
-      caption: '气泡编码说明',
+      caption: '收入与寿命说明',
     },
   },
 ] as const satisfies readonly [GalleryExample, ...Array<GalleryExample>];
@@ -145,8 +145,8 @@ describe('<ShowcaseGallery>', () => {
     expect(cards.every(card => card.querySelector('[data-slot="component-preview-thumbnail"]'))).toBe(true);
     expect(cards[0]?.classList.contains('h-[250px]')).toBe(true);
     expect(cards[0]?.hasAttribute('aria-pressed')).toBe(false);
-    expect(cards[0]?.textContent).toContain('气泡编码');
-    expect(cards[0]?.textContent).toContain('增加数值尺寸编码。');
+    expect(cards[0]?.textContent).toContain('收入与寿命');
+    expect(cards[0]?.textContent).toContain('比较收入与预期寿命。');
     expect(cards[0]?.querySelector('[data-slot="component-preview-thumbnail"]')?.classList).toContain('bg-transparent');
     expect(cards[0]?.querySelector('[data-slot="showcase-example-copy"]')?.classList).toContain('bg-muted/40');
     expect(container.querySelector('[data-slot="showcase-featured-title"]')?.textContent).toBe('基础散点');
@@ -154,7 +154,7 @@ describe('<ShowcaseGallery>', () => {
       '比较两个连续变量。',
     );
     expect(container.textContent).toContain('基础散点说明');
-    expect(container.textContent).not.toContain('气泡编码说明');
+    expect(container.textContent).not.toContain('收入与寿命说明');
 
     act(() => cards[0]?.click());
 
@@ -162,14 +162,14 @@ describe('<ShowcaseGallery>', () => {
 
     expect(nextCards).toHaveLength(1);
     expect(nextCards[0]?.textContent).toContain('基础散点');
-    expect(nextCards[0]?.textContent).not.toContain('气泡编码');
-    expect(container.querySelector('[data-slot="showcase-featured-title"]')?.textContent).toBe('气泡编码');
+    expect(nextCards[0]?.textContent).not.toContain('收入与寿命');
+    expect(container.querySelector('[data-slot="showcase-featured-title"]')?.textContent).toBe('收入与寿命');
     expect(container.querySelector('[data-slot="showcase-featured-description"]')?.textContent).toBe(
-      '增加数值尺寸编码。',
+      '比较收入与预期寿命。',
     );
     expect(container.textContent).not.toContain('基础散点说明');
-    expect(container.textContent).toContain('气泡编码说明');
-    expect(container.querySelector('[data-location]')?.textContent).toBe('/viz/chart/points/scatter?example=bubble');
+    expect(container.textContent).toContain('收入与寿命说明');
+    expect(container.querySelector('[data-location]')?.textContent).toBe('/viz/chart/points/scatter?example=income');
 
     act(() => nextCards[0]?.click());
 
@@ -178,9 +178,9 @@ describe('<ShowcaseGallery>', () => {
   });
 
   it('从 example 参数恢复示例，非法值回退默认示例，并与 tab 参数独立组合', () => {
-    const deepLinkContainer = renderGallery(examples, '/viz/chart/points/scatter?example=bubble&tab=api');
+    const deepLinkContainer = renderGallery(examples, '/viz/chart/points/scatter?example=income&tab=api');
 
-    expect(deepLinkContainer.textContent).toContain('气泡编码说明');
+    expect(deepLinkContainer.textContent).toContain('收入与寿命说明');
     expect(deepLinkContainer.textContent).toContain('API body');
 
     act(() => roots.shift()?.unmount());
@@ -189,7 +189,7 @@ describe('<ShowcaseGallery>', () => {
     const invalidContainer = renderGallery(examples, '/viz/chart/points/scatter?example=unknown');
 
     expect(invalidContainer.textContent).toContain('基础散点说明');
-    expect(invalidContainer.textContent).not.toContain('气泡编码说明');
+    expect(invalidContainer.textContent).not.toContain('收入与寿命说明');
   });
 
   it('把普通 MDX children 作为 API 标签内容', () => {

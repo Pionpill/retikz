@@ -12,7 +12,7 @@ import { compileToScene, CompositeBaseSchema, defineComposite, resolveDefaultCor
 import { defineRetainedRenderer, RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { RetikzRuntimeErrorCode } from '@retikz/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { enum as zodEnum, literal, strictObject, string } from 'zod';
 
 import type { InputEmbedAdapter, InputScene, VanillaCompileDriver } from '../../src';
 
@@ -119,8 +119,8 @@ const createMemoryRendererFactory = (
   }) as RetainedRendererFactory;
 
 const datasetCompositeSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('fixture'),
-  type: z.literal('datasetBox'),
+  namespace: literal('fixture'),
+  type: literal('datasetBox'),
 });
 
 const makeDatasetDefinition = (datasets: Readonly<Record<string, unknown>>): AnyCompositeDefinition =>
@@ -135,7 +135,7 @@ const makeDatasetDefinition = (datasets: Readonly<Record<string, unknown>>): Any
           id: 'dataset-box',
           position: [0, 0],
           shape: 'rectangle',
-          fill: z.string().parse(datasets.color),
+          fill: string().parse(datasets.color),
         },
       ],
     }),
@@ -309,8 +309,8 @@ describe('@retikz/vanilla retained mount', () => {
 
   it('retained expand delegate透明转发 Core Theme context', () => {
     const schema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('themeDelegate'),
+      namespace: literal('fixture'),
+      type: literal('themeDelegate'),
     });
     const initialExpand = vi.fn((_node, context) => ({
       children: [
@@ -382,7 +382,7 @@ describe('@retikz/vanilla retained mount', () => {
       }),
     } as const;
     const makeDefinition = (datasets: Readonly<Record<string, unknown>>): AnyCompositeDefinition =>
-      definitions[z.enum(['#ef4444', '#22c55e']).parse(datasets.color)];
+      definitions[zodEnum(['#ef4444', '#22c55e']).parse(datasets.color)];
     const adapter: InputEmbedAdapter<{ color: string }> = {
       kind: 'fixture-cached-dataset',
       lower: props => ({
@@ -424,12 +424,12 @@ describe('@retikz/vanilla retained mount', () => {
 
   it('composite Definition 数量、顺序、key、schema 与执行分支变化时 fail-loud', () => {
     const firstSchema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('first'),
+      namespace: literal('fixture'),
+      type: literal('first'),
     });
     const secondSchema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('second'),
+      namespace: literal('fixture'),
+      type: literal('second'),
     });
     const first = defineComposite({
       namespace: 'fixture',
@@ -447,8 +447,8 @@ describe('@retikz/vanilla retained mount', () => {
       namespace: 'fixture',
       type: 'first',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('first'),
+        namespace: literal('fixture'),
+        type: literal('first'),
       }),
       expand: () => ({ children: [{ type: 'coordinate', id: 'first', position: [2, 2] }] }),
     });
@@ -469,21 +469,21 @@ describe('@retikz/vanilla retained mount', () => {
 
   it('layout-aware composite artifactSchema identity 变化时 fail-loud', () => {
     const schema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('layout'),
+      namespace: literal('fixture'),
+      type: literal('layout'),
     });
     const initial = defineComposite({
       namespace: 'fixture',
       type: 'layout',
       schema,
-      artifactSchema: z.strictObject({ value: z.literal('initial') }),
+      artifactSchema: strictObject({ value: literal('initial') }),
       compile: () => ({ children: [], artifact: { value: 'initial' } }),
     });
     const candidate = defineComposite({
       namespace: 'fixture',
       type: 'layout',
       schema,
-      artifactSchema: z.strictObject({ value: z.literal('candidate') }),
+      artifactSchema: strictObject({ value: literal('candidate') }),
       compile: () => ({ children: [], artifact: { value: 'candidate' } }),
     });
     const retained = createRetainedCompositeDefinitions([initial]);
@@ -580,8 +580,8 @@ describe('@retikz/vanilla retained mount', () => {
 
   it('mount 后修改 compile composite record 不改变 retained session compile 语义', () => {
     const schema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('fixedComposite'),
+      namespace: literal('fixture'),
+      type: literal('fixedComposite'),
     });
     const composite = defineComposite({
       namespace: 'fixture',
@@ -709,8 +709,8 @@ describe('@retikz/vanilla retained mount', () => {
       namespace: 'fixture',
       type: 'compileOnce',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('compileOnce'),
+        namespace: literal('fixture'),
+        type: literal('compileOnce'),
       }),
       expand,
     });

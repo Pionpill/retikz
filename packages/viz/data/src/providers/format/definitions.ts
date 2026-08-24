@@ -1,14 +1,13 @@
+import { createReadonlyMap } from '@retikz/foundation';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { FieldFormatDefinition } from '../../contract';
 
 import { defineFieldFormat } from '../../contract';
 import { RetikzDataError } from '../../error';
-import { DataFieldType } from '../../schemas';
-import { createReadonlyMap } from '../../shared/collections';
+import { DataFieldFormat, DataFieldType } from '../../schemas';
 import { coerceValue } from '../data';
 import { freezeDefinitions } from '../shared';
-import { DataFieldFormat } from './constants';
 
 /** 严格 YYYY/MM/DD 斜杠日期：四位年 / 两位月 / 两位日，分隔符必须是 `/` */
 const SLASH_DATE_RE = /^(\d{4})\/(\d{2})\/(\d{2})$/;

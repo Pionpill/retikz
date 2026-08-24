@@ -4,7 +4,7 @@ import type { ExternalRow } from '@retikz/data';
 import { compileToScene } from '@retikz/core';
 import { ContourShapeDefinition } from '@retikz/standard/shape';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, object } from 'zod';
 
 import type { Cell, CoordinateFrame, IntervalContext, PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
@@ -18,7 +18,7 @@ import {
   densifyCellContour,
   RETIKZ_POLAR_SEGMENT_SAMPLES,
 } from '../../../src/contract';
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { buildIntervalContext } from '../../../src/providers';
 import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
@@ -40,8 +40,7 @@ const datumAnchor = (mark: IRPlotIntervalMark, row: ExternalRow, frame: Coordina
   resolveDatumAnchor(mark, row, frame, { registry: markRegistry }, context);
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 const firstLayer = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope =>
@@ -574,8 +573,8 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       height: HEIGHT,
       coordinates: [
         defineCoordinate({
-          schema: z.object({
-            type: z.literal('noproj').describe('Discriminator: no-project-cell custom coordinate operation'),
+          schema: object({
+            type: literal('noproj').describe('Discriminator: no-project-cell custom coordinate operation'),
           }),
           roles: ['x', 'y'],
           resolve: (_operation, ctx) => {
@@ -620,8 +619,8 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       height: HEIGHT,
       coordinates: [
         defineCoordinate({
-          schema: z.object({
-            type: z.literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation'),
+          schema: object({
+            type: literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation'),
           }),
           roles: ['x', 'y'],
           resolve: (_operation, ctx) => {
@@ -688,8 +687,8 @@ describe('cell 类 mark 在无 projectCell 坐标系 fail-loud', () => {
       height: HEIGHT,
       coordinates: [
         defineCoordinate({
-          schema: z.object({
-            type: z.literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation'),
+          schema: object({
+            type: literal('curved-cell').describe('Discriminator: project-cell custom coordinate operation'),
           }),
           roles: ['x', 'y'],
           resolve: (_operation, ctx) => {

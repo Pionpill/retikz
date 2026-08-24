@@ -2,7 +2,7 @@ import type { IRChild } from '@retikz/core';
 import type { InputTable } from '@retikz/table-vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 
-import { CompositeBaseSchema, defineComposite, defineThemeStyle, resolveDefaultCoreThemeColors } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import {
   createDetailTableIR,
   createManualTableIR,
@@ -10,13 +10,12 @@ import {
   defineCellPresentation,
   defineTableStructure,
   defineTableThemeStyle,
-  getDefaultTableThemePreset,
 } from '@retikz/table';
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import type { DetailTableProps } from '../../src';
 
@@ -280,7 +279,7 @@ describe('Table React composition root integration', () => {
   it('preserves every DetailTable root prop in DetailColumn children mode', () => {
     const structureDefinitions = [
       defineTableStructure({
-        schema: z.strictObject({ kind: z.literal('root-props-structure') }),
+        schema: strictObject({ kind: literal('root-props-structure') }),
         build: () => ({
           rows: [{ id: 'row.0', kind: 'body' }],
           columns: [{ id: 'column.0' }],
@@ -291,32 +290,32 @@ describe('Table React composition root integration', () => {
     const presentationDefinitions = [
       defineCellPresentation({
         name: 'root-props-presentation',
-        optionsSchema: z.strictObject({}),
+        optionsSchema: strictObject({}),
         present: () => content,
       }),
     ];
     const formatterDefinitions = [
       defineCellFormatter({
         name: 'root-props-formatter',
-        optionsSchema: z.strictObject({}),
+        optionsSchema: strictObject({}),
         format: input => input.value,
       }),
     ];
     const themeStyles = [
       defineThemeStyle({
         name: 'root-props-theme',
-        resolve: ({ mode }) => resolveDefaultCoreThemeColors(mode),
+        resolve: () => ({}),
       }),
     ];
     const tableThemeStyles = [
       defineTableThemeStyle({
         name: 'root-props-theme',
-        resolve: theme => getDefaultTableThemePreset(theme.mode),
+        resolve: () => ({}),
       }),
     ];
     const compositeSchema = CompositeBaseSchema.extend({
-      namespace: z.literal('root-props'),
-      type: z.literal('content'),
+      namespace: literal('root-props'),
+      type: literal('content'),
     });
     const composites = [
       defineComposite({
@@ -490,13 +489,13 @@ describe('Table React composition root integration', () => {
   it('uses rule-selected custom formatter definitions in standalone rendering', () => {
     const formatter = defineCellFormatter({
       name: 'rule-prefix',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       format: input => `#${String(input.value)}`,
     });
     const output = renderToStaticMarkup(
       <ManualTable
         rows={[[7]]}
-        rules={[{ selector: { cellIds: ['cell.r0.c0'] }, formatter: { name: 'rule-prefix' } }]}
+        rules={[{ selector: { rowIndices: [0], columnIndices: [0] }, formatter: { name: 'rule-prefix' } }]}
         formatterDefinitions={[formatter]}
       />,
     );

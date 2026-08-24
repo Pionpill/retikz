@@ -21,9 +21,9 @@ const errorMessageOf = (error: unknown): string => (error instanceof Error ? err
 /** 从 canonical Cell 构造 detached、递归冻结的 formatter context */
 const formatterContextOf = (cell: SemanticTableCell): TableCellContext =>
   deepFreeze({
-    cellId: cell.id,
-    rowId: cell.rowId,
-    columnId: cell.columnId,
+    ...(cell.id === undefined ? {} : { cellId: cell.id }),
+    ...(cell.rowId === undefined ? {} : { rowId: cell.rowId }),
+    ...(cell.columnId === undefined ? {} : { columnId: cell.columnId }),
     rowIndex: cell.rowIndex,
     columnIndex: cell.columnIndex,
     location: cell.location,
@@ -41,16 +41,17 @@ const formatCell = (
   if (parsedPayload.kind === TableCellPayloadKind.Content) {
     return deepFreeze({
       kind: TableCellPayloadKind.Content,
-      cellId: cell.id,
+      ...(cell.id === undefined ? {} : { cellId: cell.id }),
       content: ChildSchema.parse(parsedPayload.content),
     });
   }
 
+  const cellLabel = cell.id === undefined ? `${cell.rowIndex}:${cell.columnIndex}` : `"${cell.id}"`;
   if (plan.kind !== TableCellPayloadKind.Value) {
-    throw new RetikzTableError(`table: formatter plan for Cell "${cell.id}" kind differs`);
+    throw new RetikzTableError(`table: formatter plan for Cell ${cellLabel} kind differs`);
   }
   const name = plan.formatter.name;
-  const prefix = `table: formatter "${name}" for cell "${cell.id}"`;
+  const prefix = `table: formatter "${name}" for cell ${cellLabel}`;
   try {
     const definition = cellFormatterDefinitionOf(name, registry);
     const rawOptions = JsonObjectSchema.parse(plan.formatter.options ?? {});
@@ -62,7 +63,7 @@ const formatCell = (
     );
     return deepFreeze({
       kind: TableCellPayloadKind.Value,
-      cellId: cell.id,
+      ...(cell.id === undefined ? {} : { cellId: cell.id }),
       rawValue: parsedPayload.value,
       value,
       formatterName: name,
@@ -72,15 +73,15 @@ const formatCell = (
   }
 };
 
-/** formatter 阶段消费的严格 identity-aligned Cell plans */
+/** formatter 阶段消费的 canonical-order-aligned Cell plans */
 export type FormatTableOptions = Readonly<{
-  /** 与 canonical Cells 等长、同序、同 identity 的 resolved plans */
+  /** 与 canonical Cells 等长同序，显式 id 也必须一致的 resolved plans */
   cells: ReadonlyArray<ResolvedTableCellPlan>;
   /** 用户自定义 Cell formatter definitions */
   formatterDefinitions?: ReadonlyArray<AnyCellFormatterDefinition>;
 }>;
 
-/** 校验 formatter plans 与 canonical Cells 同长、同序、同 identity / kind */
+/** 校验 formatter plans 与 canonical Cells 同长同序，并校验显式 identity / kind */
 const assertPlanAlignment = (model: SemanticTableModel, plans: ReadonlyArray<ResolvedTableCellPlan>): void => {
   if (model.cells.length !== plans.length)
     throw new RetikzTableError('table: formatter plan Cell count differs from semantic model');

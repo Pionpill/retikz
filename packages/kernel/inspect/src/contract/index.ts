@@ -1,1 +1,2 @@
-export * from './inspector';
+export * from './define';
+export * from './types';

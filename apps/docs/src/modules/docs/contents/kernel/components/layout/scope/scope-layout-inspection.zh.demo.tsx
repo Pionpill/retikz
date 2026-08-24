@@ -35,7 +35,7 @@ const SceneContents: FC = () => (
 /** 对比继承全图布局检查策略与 Scope 硬屏障 */
 const Demo: FC = () => (
   <LayoutInspectLayout
-    request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: true }}
+    request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, options: true }}
     width={520}
     height={190}
     viewBox={{ x: 0, y: 0, width: 520, height: 190 }}

@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type { JsonObjectSchema } from './schema';
 
@@ -6,4 +6,4 @@ import type { JsonObjectSchema } from './schema';
 export type JsonValue = string | number | boolean | null | Array<JsonValue> | { [key: string]: JsonValue };
 
 /** JSON 对象类型（path generator step 的 params 形态） */
-export type IRJsonObject = z.infer<typeof JsonObjectSchema>;
+export type IRJsonObject = ZodInfer<typeof JsonObjectSchema>;

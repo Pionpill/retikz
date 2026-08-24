@@ -21,7 +21,7 @@ Structure 已经决定 Cell 是谁、位于哪里，但原始标量还不是最�
 
 ## 两种内容路径
 
-两条路径最终都得到一个与原 Cell 同 identity、同顺序的 Core child。差别在于谁负责构造内容：
+两条路径最终都按原 Cell 的 canonical 顺序得到一个 Core child，并只保留显式 identity。差别在于谁负责构造内容：
 
 | payload   | 保存什么                                   | 如何得到 Core child                 |
 | --------- | ------------------------------------------ | ----------------------------------- |
@@ -41,24 +41,24 @@ Structure 已经决定 Cell 是谁、位于哪里，但原始标量还不是最�
 | `CellFormatterDefinition`    | `{ value, context }`，其中 value 是原始 scalar | JSON scalar         |
 | `CellPresentationDefinition` | `{ rawValue, value, context, appearance }`     | JSON-safe `IRChild` |
 
-`context` 包含稳定 Cell identity、地址、角色和来源。Presentation 的 `value` 是 formatter 输出，`rawValue` 保留规则、诊断与业务语义使用的原值；`appearance` 已经合并 preset/token、encoding 与 rules。
+`context` 始终包含 canonical 地址、角色和来源；只有作者或 Structure 显式提供时才包含 Cell、row 或 column id。Presentation 的 `value` 是 formatter 输出，`rawValue` 保留规则、诊断与业务语义使用的原值；`appearance` 已经合并 preset/token、encoding 与 rules。
 
 ## 内置与自定义走同一入口
 
 未指定 formatter 时，value Cell 使用内置 identity；未指定 presentation 时使用内置 `text`。`text` 把 scalar 转成无描边、无填充、零 padding 的 Core Node；`null` 呈现为空字符串。
 
-自定义 Formatter/Presentation Definition 都由稳定名称、精确 options schema 与单个回调组成。运行时分别把内置和自定义 Definition 合并进对应 registry。registry 构建阶段的空 key 或重复注册会 fail-loud，并指出 provider key；按 Cell dispatch 时，未注册名称、非法 options、formatter 返回非 scalar 或 Presentation 返回非 JSON-safe child 也会 fail-loud，并保留 Definition 名与 Cell id。
+自定义 Formatter/Presentation Definition 都由稳定名称、精确 options schema 与单个回调组成。运行时分别把内置和自定义 Definition 合并进对应 registry。registry 构建阶段的空 key 或重复注册会 fail-loud，并指出 provider key；按 Cell dispatch 时，未注册名称、非法 options、formatter 返回非 scalar 或 Presentation 返回非 JSON-safe child 也会 fail-loud，并保留 Definition 名与显式 Cell id 或 canonical 地址。
 
 Presentation 的输出仍需通过 Core child schema。这样内置文本与自定义图形共用后续测量、布局、replay 和 renderer，而不是为表格建立第二套渲染语义。
 
 ## Presentation 不负责什么
 
-| 相邻职责  | Presentation 会读取 | Presentation 不决定              |
-| --------- | ------------------- | -------------------------------- |
-| Structure | Cell id、payload    | 行列地址、角色、来源与 span      |
-| Style     | 最终 `appearance`   | selector、encoding 与 rule 胜者  |
-| Layout    | 产出的 styled child | 轨道尺寸、padding、fit、overflow |
-| Renderer  | 不直接接触 renderer | SVG、Canvas 或 SSR 的输出实现    |
+| 相邻职责  | Presentation 会读取   | Presentation 不决定              |
+| --------- | --------------------- | -------------------------------- |
+| Structure | 可选 Cell id、payload | 行列地址、角色、来源与 span      |
+| Style     | 最终 `appearance`     | selector、encoding 与 rule 胜者  |
+| Layout    | 产出的 styled child   | 轨道尺寸、padding、fit、overflow |
+| Renderer  | 不直接接触 renderer   | SVG、Canvas 或 SSR 的输出实现    |
 
 因此，同一个 Presentation Definition 可以被不同表型复用；同一个 Cell 的布局策略也可以独立于值的呈现方式调整。
 
@@ -71,13 +71,13 @@ Presentation 的输出仍需通过 Core child schema。这样内置文本与自�
       endLine: 48,
     },
     {
-      label: '校验 presentation carrier 与 Cell 的 identity 和顺序',
+      label: '按 canonical 顺序校验 presentation carrier 与显式 Cell identity',
       path: 'packages/viz/table/src/pipeline/presentation/table.ts',
       startLine: 67,
       endLine: 96,
     },
     {
-      label: 'value/content 分流并按原顺序保留 Cell id、值与最终外观',
+      label: 'value/content 分流并按原顺序保留可选 Cell id、值与最终外观',
       path: 'packages/viz/table/src/pipeline/presentation/table.ts',
       startLine: 99,
       endLine: 147,

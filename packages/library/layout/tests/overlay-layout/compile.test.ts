@@ -11,7 +11,7 @@ import {
   LayoutChildProbeKind,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { boolean, literal, number, string } from 'zod';
 
 import {
   createOverlayLayout,
@@ -24,18 +24,18 @@ import {
 } from '../../src';
 
 const LeafSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('overlay-test'),
-  type: z.literal('leaf'),
-  id: z.string(),
-  width: z.number().nonnegative(),
-  height: z.number().nonnegative(),
-  minimumWidth: z.number().nonnegative().optional(),
-  minimumHeight: z.number().nonnegative().optional(),
-  originX: z.number().default(0),
-  originY: z.number().default(0),
-  firstBaseline: z.number().optional(),
-  lastBaseline: z.number().optional(),
-  failOnExactPair: z.boolean().default(false),
+  namespace: literal('overlay-test'),
+  type: literal('leaf'),
+  id: string(),
+  width: number().nonnegative(),
+  height: number().nonnegative(),
+  minimumWidth: number().nonnegative().optional(),
+  minimumHeight: number().nonnegative().optional(),
+  originX: number().default(0),
+  originY: number().default(0),
+  firstBaseline: number().optional(),
+  lastBaseline: number().optional(),
+  failOnExactPair: boolean().default(false),
 });
 
 type ProbeLog = Readonly<{ id: string; proposal: LayoutProposal }>;
@@ -126,8 +126,8 @@ const compileOverlay = (child: IRChild, proposal: LayoutProposal) => {
     namespace: 'overlay-test',
     type: 'harness',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('overlay-test'),
-      type: z.literal('harness'),
+      namespace: literal('overlay-test'),
+      type: literal('harness'),
       child: ChildSchema,
     }),
     compile: (node, context) => {

@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type {
   AxisCardinalSide,
@@ -116,16 +116,16 @@ export type LegendSymbolFitValue = ValueOf<typeof LegendSymbolFit>;
 export type GuideDimensionValue = string;
 
 /** guide（axis 或 legend） */
-export type IRPlotGuide = z.infer<typeof GuideSchema>;
+export type IRPlotGuide = ZodInfer<typeof GuideSchema>;
 
 /** guide 刻度来源声明 */
-export type IRPlotGuideTickSource = z.infer<typeof GuideTickSourceSchema>;
+export type IRPlotGuideTickSource = ZodInfer<typeof GuideTickSourceSchema>;
 
 /** guide 刻度标签格式声明 */
-export type IRPlotGuideTickLabelFormat = z.infer<typeof GuideTickLabelFormatSchema>;
+export type IRPlotGuideTickLabelFormat = ZodInfer<typeof GuideTickLabelFormatSchema>;
 
 /** 坐标轴 guide（轴线 + 刻度 + 标签 + 可选网格） */
-export type IRPlotAxisGuide = z.infer<typeof AxisGuideSchema>;
+export type IRPlotAxisGuide = ZodInfer<typeof AxisGuideSchema>;
 
 /** 图例 guide（swatch / 色带 ramp / 分箱 / 梯度符号，由 color scale 或 channel definition 决定形态） */
-export type IRPlotLegendGuide = z.infer<typeof LegendGuideSchema>;
+export type IRPlotLegendGuide = ZodInfer<typeof LegendGuideSchema>;

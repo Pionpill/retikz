@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  CssColorSchema,
   FontFamilySchema,
   FontSchema,
   FontStyleSchema,
@@ -13,6 +14,13 @@ import {
 } from '../../src';
 
 describe('Core value atom schemas', () => {
+  it('preserves non-blank CSS color strings and rejects blank values', () => {
+    expect(CssColorSchema.parse(' currentColor ')).toBe(' currentColor ');
+    for (const color of ['', '   ']) {
+      expect(CssColorSchema.safeParse(color).success).toBe(false);
+    }
+  });
+
   it('parses font family, weight, and style with the existing Font contract', () => {
     for (const family of ['', 'serif', 'Inter, sans-serif']) {
       expect(FontFamilySchema.safeParse(family).success).toBe(true);

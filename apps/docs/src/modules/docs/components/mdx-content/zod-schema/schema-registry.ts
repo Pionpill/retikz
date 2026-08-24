@@ -625,6 +625,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'TableThemeTokenPresetMap',
     url: '/viz/table/reference/contract-table#tablethemetokenpresetmapschema',
   },
+  TableThemeStyleTokenOverridesSchema: {
+    schema: IRTable.TableThemeStyleTokenOverridesSchema,
+    label: 'TableThemeStyleTokenOverrides',
+    url: '/viz/table/reference/contract-table#tablethemestyletokenoverridesschema',
+  },
   TableCellSpanSchema: {
     schema: IRTable.TableCellSpanSchema,
     label: 'TableCellSpan',

@@ -1,13 +1,31 @@
 ---
 title: '@retikz/inspect'
-description: 按需观察一次编译的最终产物，用独立注册表和运行时选择生成不影响主图的路径控制点、布局边界等辅助内容。
+description: 按需观察最终编译结果，并把检查器生成的辅助内容作为不影响主图的只读图层呈现
 ---
 
-`@retikz/inspect` 是可选开发工具包。它读取 Core 发布的最终 occurrence 与所属者产物，再把 Inspector 返回的普通 Core 子元素编译成只读辅助图层；选择规则只存在于运行时，不进入 IR、Scene 或快照。
+当你需要理解“这次编译最终采用了什么结果”时，可以使用 `@retikz/inspect`。它观察 `Core` 最终采用的实例与所属者产物，再由已注册的 `Inspector` 决定如何解释这些信息、生成哪些辅助内容。
 
-```bash
-pnpm add @retikz/inspect
-```
+控制点、布局边界和对齐参考线只是常见示例。同一套能力也可以解释领域组件的计算结果、标记异常状态，或呈现第三方扩展自己的诊断信息。
+
+<ComponentAlert
+  type="tip"
+  title="Inspect 不是必需依赖"
+  description="普通绘图、编译和渲染不需要安装本包。只有特定场景需要辅助理解最终结果时，才接入 Inspect；未选择任何检查器时，不会产生辅助片段编译。"
+/>
+
+## 适用边界
+
+Inspect 适合在开发、调试、教学或扩展验证中解释已经完成的编译结果，例如查看某个领域组件最终发布了什么、某条路径采用了哪些命令，或某个布局实例得到怎样的边界。它不负责修正输入、参与布局求解或改变主图；如果只需正常绘制和渲染，无需接入本包。
+
+## 安装与接入
+
+如果项目已经使用 Retikz 的 React 或 Vanilla 宿主，只需额外安装 Inspect 包：
+
+<PackageManagerInstall packages="@retikz/inspect" />
+
+### React
+
+React 应用使用 `@retikz/inspect/react` 提供的可选包装组件。`InspectLayout` 接收注册表，`InspectPath` 在目标 `Path` 上声明仅运行时存在的检查请求：
 
 ```tsx
 import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
@@ -20,7 +38,7 @@ const registry = createDefaultInspectorRegistry();
   <InspectPath
     request={{
       inspector: STROKE_PATH_INSPECTOR_KEY,
-      value: { controlPoints: true, labels: true },
+      options: { controlPoints: true, labels: true },
     }}
   >
     <Step kind="move" to={[0, 0]} />
@@ -29,76 +47,273 @@ const registry = createDefaultInspectorRegistry();
 </InspectLayout>;
 ```
 
-## 适用边界
+`InspectLayout` 复用普通 `<Layout>` 的 `static` 或 `retained` 运行时；`InspectPath` 和 `InspectScope` 也只是在基础组件的编排位置附加选择信息，不改变原有图形契约。
 
-使用 Inspector 查看最终编译结果中的控制点、边界、间距、对齐参考线或领域诊断。它不改变布局求解、主 Scene 边界、资源、命中测试和动画，也不把开发期选择持久化。
+### Vanilla
 
-Core 只提供领域中立的所属者产物、最终 occurrence 观测和隔离片段编译。具体观察什么、如何选择以及如何绘制，都由本包或第三方 Inspector Definition 拥有。
-
-## 定义能力
-
-第三方 Inspector 使用 `defineInspector()` 声明注册键、目标 owner、subject schema、选项 schema 与输出函数。内置 stroke Path Inspector 也经过同一入口，不存在内置白名单。
+Vanilla 应用分别创建编排标记和编译驱动。标记指出检查哪一个编排位置，驱动负责把注册表、选择规则和只读图层接入普通渲染流程：
 
 ```ts
-import { defineInspector } from '@retikz/inspect';
+import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
+import { path, renderToSvgString, scene } from '@retikz/vanilla';
 
-const inspector = defineInspector({
-  namespace: 'acme',
-  name: 'bounds',
-  owner,
-  subjectSchema,
-  optionsInputSchema,
-  optionsSchema,
-  inspect: (subject, context) => buildAuxiliaryChildren(subject, context.appearance),
+const registry = createDefaultInspectorRegistry();
+const input = scene({
+  children: [
+    path('curve', {
+      authoring: createInspectionVanillaAuthoring({
+        inspector: STROKE_PATH_INSPECTOR_KEY,
+        options: { labels: true },
+      }),
+      way: [
+        [0, 0],
+        {
+          cubic: [
+            [20, -30],
+            [80, 30],
+          ],
+        },
+        [100, 0],
+      ],
+    }),
+  ],
+});
+
+const svg = renderToSvgString(input, {
+  compileDriver: createInspectionVanillaDriver({ registry }),
 });
 ```
 
-`namespace + name` 在一个注册表中必须唯一；同一 owner 可以注册多个用途不同的 Inspector。subject 与选项都必须通过 schema，输出只能是普通 `IRChild` 或其只读数组。
+### 宿主边界
 
-## 注入宿主
+根入口不会加载 React、Vanilla 或 Render。应用按实际宿主显式导入子入口：
 
-根入口不加载 React、Vanilla 或 Render。按宿主显式导入子入口：
+| 入口                      | 职责                                                 |
+| ------------------------- | ---------------------------------------------------- |
+| `@retikz/inspect`         | 定义、注册表、选择、诊断、编译驱动和内置 Path 检查器 |
+| `@retikz/inspect/react`   | `InspectLayout`、`InspectPath`、`InspectScope`       |
+| `@retikz/inspect/vanilla` | 编排标记和 Vanilla 编译驱动                          |
+| `@retikz/inspect/render`  | 把辅助平面转换为 Render 普通只读图层                 |
 
-| 入口                      | 职责                                                             |
-| ------------------------- | ---------------------------------------------------------------- |
-| `@retikz/inspect`         | Definition、注册表、选择、诊断、编译驱动与内置 Path Inspector    |
-| `@retikz/inspect/react`   | `InspectLayout`、`InspectPath`、`InspectScope` 与 React 编译驱动 |
-| `@retikz/inspect/vanilla` | authoring 标记与 Vanilla 编译驱动                                |
-| `@retikz/inspect/render`  | 把辅助平面一对一转换为普通只读图层                               |
+布局检查能力由 `@retikz/layout/inspect`、`@retikz/layout-react/inspect` 和 `@retikz/layout-vanilla/inspect` 提供。它们显式依赖本包；Layout 根入口仍可在没有 Inspect 时使用。
 
-Layout 布局使用 `@retikz/layout/inspect`、`@retikz/layout-react/inspect` 或 `@retikz/layout-vanilla/inspect`。这些入口显式依赖本包；Layout 根入口仍可在未安装 Inspector 时使用。
+## 内容
 
-## 执行机制
+### 基础用法
 
-1. 宿主收集运行时选择规则，并把 Inspector registry 交给可选编译驱动。
-2. Core 只捕获被选择 owner 的最终产物，丢弃 probe 候选、失败分支和未采用 replay。
-3. Inspect 按 occurrence 与 Inspector key 稳定排序，解析选项后调用 Definition。
-4. 普通 IR 输出在当前主题、作用域样式和 provider 环境中隔离编译，并移除公共身份、元数据与动画语义。
-5. Render 将结果作为 `pointer-events: none` 的只读图层提交；主图与辅助图层在同一 revision 成功或回滚。
+内置 `stroke` 路径检查器读取最终采用的路径命令，并用普通 `Path` 和 `Node` 画出贝塞尔控制柄、控制点与可选标签：
 
-## 错误与限制
+<ComponentPreview
+  files="inspect-basic"
+  size="sm"
+  caption="辅助图层显示最终路径命令使用的控制柄和控制点；主路径本身没有被改写。"
+/>
 
-- 重复注册键、无效 locator、越界 occurrence、owner 不匹配或 schema 失败会直接报错，不返回部分辅助结果。
-- `barrier` 只能用于整图或 authored 子树，并阻止后代重新开启任何 Inspector。
-- 贡献内部无法无歧义定位的嵌套 Scope 当前会明确拒绝；需要更精确的贡献内子树定位契约后才能支持。
-- 普通 `compileToScene()` 不创建 Inspector session，也不产生额外辅助编译成本。
+`controlPoints` 默认开启，`labels` 默认关闭。这些选项只影响辅助内容。无论是否开启检查，主图的边界、资源、命中测试、动画和公开身份都保持不变。
+
+预览的源码视图只保留普通 `Layout` 与 `Path`，因为检查选择不是可持久化图形数据，不进入 `IR`、`Scene` 或运行时快照。
+
+### 选择范围与屏障
+
+检查请求可以来自整张图、一个编排子树或当前实例。React 包装组件把常见选择映射到对应位置：
+
+| 目标     | React 入口                       | 结果                             |
+| -------- | -------------------------------- | -------------------------------- |
+| 整张图   | `<InspectLayout request={...}>`  | 选择图中所有匹配所属者的最终实例 |
+| 编排子树 | `<InspectScope request={...}>`   | 选择该 `Scope` 内匹配的最终实例  |
+| 当前路径 | `<InspectPath request={...}>`    | 只选择当前 `Path` 对应的最终实例 |
+| 硬屏障   | `<InspectScope request={false}>` | 阻止后代继承或重新开启任何检查器 |
+
+下面的试验场把两条曲线放在独立子树中，每条曲线都通过局部 `InspectPath` 请求检查。切换目标、控制点和标签，再开启右侧屏障，可以观察局部请求如何选择路径，以及硬屏障如何阻止后代重新开启检查：
+
+<ComponentPreview
+  files="inspect-selection"
+  size="md"
+  caption="A、B 是两条独立的普通路径；右侧屏障开启后，B 的局部请求也不能重新开启检查。"
+/>
+
+同一位置可以请求多个不同检查器；同一检查器在整图、子树和当前实例上的稀疏选项会按从外到内的顺序合并。普通的 `false` 只关闭当前检查器，屏障则阻止后代重新开启任何检查器。
+
+### 自定义检查器
+
+第三方检查器使用 `defineInspector()` 声明注册键、目标所属者、输入模式、选项模式和输出回调。内置检查器也经过同一入口，不存在单独的内置白名单。
+
+`InspectorKey.namespace` 使用拥有该检查器能力的包稳定短名，而不是统一的 `retikz` 前缀。Core 能力使用 `core`，Layout 能力使用 `layout`，第三方能力使用其所属包短名；`type` 在该 namespace 内唯一。检查器实现位于可选的 `@retikz/inspect` 或宿主子入口时，仍按实际能力 owner 选择 namespace。
+
+下面的示例新增一个端点检查器，并与内置控制点检查器放入同一个注册表。端点检查器读取最终 `stroke` 路径产物，再返回普通 `Node` 作为辅助标记：
+
+<ComponentPreview
+  files={['inspect-custom', 'inspect-path-endpoints.ts']}
+  size="sm"
+  caption="同一个路径组件同时请求内置控制点检查器与第三方端点检查器；两者共享注册、选择和辅助编译流程。"
+/>
+
+`InspectorDefinition` 的核心字段如下：
+
+| 字段                 | 职责                                               |
+| -------------------- | -------------------------------------------------- |
+| `namespace`、`type`  | 组成稳定复合键；`namespace` 使用能力所属包短名     |
+| `owner`              | 指定要观察的路径种类（`pathKind`）或复合组件所属者 |
+| `subjectSchema`      | 校验所属者发布的最终产物                           |
+| `optionsInputSchema` | 校验每层稀疏选择选项                               |
+| `optionsSchema`      | 把合并后的稀疏选项解析为规范选项                   |
+| `mergeOptionsInput`  | 可选的多层稀疏选项合并规则                         |
+| `inspect`            | 把最终产物和上下文转换为普通 `IRChild` 辅助内容    |
+
+检查器输出必须是普通 `IRChild` 或其只读数组。定义不能直接写入主 `Scene`，也不能绕开 `Core` 创建另一套渲染语义。
+
+## 实现原理
+
+### 定义、注册与选择
+
+每次检查都从显式注册表开始。`createDefaultInspectorRegistry()` 先加入内置检查器，再把第三方定义放入同一注册路径；`namespace + type` 重复时立即失败。
+
+宿主收集的选择规则只描述“使用哪个检查器、作用于哪里、传入什么稀疏选项”。选择解析会先校验目标和所属者，再按最终实例稳定排序、合并选项并分配辅助外观。只有真正可能命中的所属者才会请求 `Core` 发布观察结果。
+
+<SourceLinks
+  sources={[
+    {
+      label: '检查器定义与输出契约',
+      path: 'packages/kernel/inspect/src/contract/types.ts',
+    },
+    {
+      label: '内置与第三方共用的显式注册表',
+      path: 'packages/kernel/inspect/src/providers/registry.ts',
+    },
+    {
+      label: '选择校验、级联与稳定解析',
+      path: 'packages/kernel/inspect/src/compile/selection.ts',
+    },
+  ]}
+/>
+
+### 编译与只读图层
+
+下面的流程图说明一次带检查能力的编译如何同时得到主图和辅助图层。重点不是具体控制点，而是同一条通用链路：最终所属者产物进入检查器回调，普通辅助 `IR` 被隔离编译，最后与未修改的主图一起原子提交。
+
+<ComponentPreview files="inspect-compile-flow.zh" size="md" hideCode />
+
+这条链路按以下顺序执行：
+
+1. 宿主把运行时选择与注册表交给可选编译驱动。
+2. `Core` 完成普通编译，只发布被选择所属者的最终产物；探测候选、失败分支和未采用重放不会进入检查结果。
+3. Inspect 校验最终产物与选项，调用对应定义的 `inspect` 回调。
+4. 回调返回的普通 `IRChild` 在当前主题、作用域样式和提供者环境中隔离编译，并移除公开身份、元数据和动画语义。
+5. Render 把辅助平面映射为不可命中的只读图层；主图和辅助图层在同一版本中一起成功或回滚。
+
+<SourceLinks
+  sources={[
+    {
+      label: '主图与辅助内容的编译编排',
+      path: 'packages/kernel/inspect/src/compile/driver.ts',
+    },
+    {
+      label: '辅助输出规范化与隔离',
+      path: 'packages/kernel/inspect/src/compile/output.ts',
+    },
+    {
+      label: '辅助平面到只读图层的映射',
+      path: 'packages/kernel/inspect/src/render/readonly-layers.ts',
+    },
+    {
+      label: 'Vanilla 静态与保留式运行时接线',
+      path: 'packages/kernel/inspect/src/vanilla/driver.ts',
+    },
+  ]}
+/>
+
+### 隔离与成本
+
+Inspect 只观察最终结果，不参与布局求解，也不会改变主图。普通 `compileToScene()` 不创建检查会话；React 和 Vanilla 的基础入口也不会静态加载本包。
+
+检查请求存在时，额外成本来自被选择所属者的观察、检查器回调和非空辅助输出的隔离编译。没有匹配结果或回调返回空内容时，不会生成辅助平面。
 
 ## API 参考
 
-| 导出                                       | 职责                                          |
-| ------------------------------------------ | --------------------------------------------- |
-| `defineInspector()`、`InspectorDefinition` | 定义 owner、schema、选项合并和辅助输出        |
-| `createInspectorRegistry()`                | 构造显式注册表并检查重复 key                  |
-| `createDefaultInspectorRegistry()`         | 构造包含内置 stroke Path Inspector 的注册表   |
-| `compileInspectionToScene()`               | 直接执行一次主图与辅助内容的原子编译          |
-| `STROKE_PATH_INSPECTOR_KEY`                | 选择内置 stroke Path Inspector                |
-| `InspectionSelection`                      | 描述 scene、subtree 或 self 的运行时规则      |
-| `InspectionCompileResult`                  | 返回主编译结果、可选辅助平面与 Inspector 诊断 |
+### `@retikz/inspect`
+
+| API                                | 说明                                                   |
+| ---------------------------------- | ------------------------------------------------------ |
+| `defineInspector()`                | 校验并冻结一个 `InspectorDefinition`                   |
+| `createInspectorRegistry()`        | 从显式定义列表创建无全局状态的注册表；重复键直接失败   |
+| `createDefaultInspectorRegistry()` | 创建包含内置检查器的注册表，并可追加第三方定义         |
+| `resolveInspectionSelection()`     | 校验并解析运行时选择，返回按最终实例稳定排序的规范请求 |
+| `compileInspectionToScene()`       | 直接执行一次主图与辅助内容的原子编译                   |
+| `STROKE_PATH_INSPECTOR_KEY`        | 内置 `stroke` 路径检查器的复合键                       |
+| `STROKE_PATH_INSPECTOR`            | 内置 `stroke` 路径检查器定义                           |
+| `RetikzInspectError`               | Inspect 包统一的结构化错误类型                         |
+| `RetikzInspectErrorCode`           | Inspect 稳定错误码集合                                 |
+
+**稳定错误码**
+
+| 错误码                      | 类别                               |
+| --------------------------- | ---------------------------------- |
+| `INSPECTION_ERROR`          | 未被更精确类别覆盖的 Inspect 错误  |
+| `INSPECTION_COMPILE_ERROR`  | 选择、最终产物或辅助输出的编译错误 |
+| `INSPECTION_COMPILE_FAILED` | 整次检查编译失败                   |
+| `INSPECTION_CONTRACT_ERROR` | 检查器定义或其他 Inspect 契约无效  |
+| `INSPECTION_REGISTRY_ERROR` | 注册表键、定义或查找无效           |
+| `INSPECTION_VANILLA_ERROR`  | Vanilla 编排标记或宿主接线无效     |
+
+**选择结构**
+
+| 结构                                | 字段与含义                                                                |
+| ----------------------------------- | ------------------------------------------------------------------------- |
+| `InspectionSelection`               | `rules: ReadonlyArray<InspectionSelectionRule>`。一次编译的完整运行时选择 |
+| `InspectionSelectionRule` request   | `inspector`、`target`、`options`。选择检查器并传入开关或稀疏选项          |
+| `InspectionSelectionRule` barrier   | `target`。只允许整图或编排子树，并阻止后代重新开启任何检查器              |
+| `InspectionSelectionTarget` scene   | `{ kind: 'scene' }`。匹配整张图                                           |
+| `InspectionSelectionTarget` subtree | `{ kind: 'subtree', sourcePath }`。匹配一个编排子树                       |
+| `InspectionSelectionTarget` self    | `{ kind: 'self', locator }`。按编排来源或精确最终实例定位当前对象         |
+
+**编译结果**
+
+| 字段                                  | 含义                                      |
+| ------------------------------------- | ----------------------------------------- |
+| `InspectionCompileResult.primary`     | 未被辅助内容修改的普通 `Core` 编译结果    |
+| `InspectionCompileResult.inspection`  | 有序辅助平面；所有回调都无输出时为 `null` |
+| `InspectionCompileResult.diagnostics` | 隔离片段产生的结构化警告列表              |
+
+### `@retikz/inspect/react`
+
+| API             | 说明                                                       |
+| --------------- | ---------------------------------------------------------- |
+| `InspectLayout` | 绑定注册表、显式选择、提交回调，并复用基础 `Layout` 运行时 |
+| `InspectScope`  | 为编排子树添加检查请求；`request={false}` 创建硬屏障       |
+| `InspectPath`   | 为当前 `Path` 添加一个或多个检查请求                       |
+
+### `@retikz/inspect/vanilla`
+
+| API                                  | 说明                                                    |
+| ------------------------------------ | ------------------------------------------------------- |
+| `createInspectionVanillaAuthoring()` | 创建只由 Inspect 驱动识别的编排标记                     |
+| `createInspectionVanillaDriver()`    | 创建绑定注册表、选择、诊断与提交回调的 Vanilla 编译驱动 |
+
+### 错误与限制
+
+`RetikzInspectError.details.origin` 用结构化阶段标明失败位置，并提供定位该阶段所需的附加字段：
+
+| `stage`              | 含义                       | 附加字段                                          |
+| -------------------- | -------------------------- | ------------------------------------------------- |
+| `selection`          | 选择规则接纳或解析         | `ruleIndex`、`target`                             |
+| `subject`、`inspect` | 最终产物校验或检查器回调   | `inspector`、`owner`、`occurrence`                |
+| `output`、`fragment` | 输出规范化或辅助片段编译   | `inspector`、`owner`、`occurrence`、`outputIndex` |
+| `complete`           | 主结果与观察结果的最终组装 | 无                                                |
+
+| 场景                                 | 可观察结果                                                     |
+| ------------------------------------ | -------------------------------------------------------------- |
+| 重复注册键或请求未注册检查器         | 抛出 `RetikzInspectError`，不继续解析部分注册表                |
+| 无效来源路径、越界实例或所属者不匹配 | 在选择阶段失败，不调用检查器回调                               |
+| 最终产物、选项或输出未通过模式校验   | 以对应阶段的结构化来源失败，不交付部分辅助结果                 |
+| 隔离片段产生普通 `Core` 警告         | 主编译仍可成功，警告进入 `InspectionCompileResult.diagnostics` |
+| 贡献内部无法无歧义定位的嵌套 `Scope` | Vanilla 驱动明确拒绝；需要更精确的贡献内子树定位契约           |
+| 检查器输出公共身份、元数据或动画字段 | 在辅助内容封装阶段移除，不进入最终只读图层                     |
 
 ## 相关
 
-- [Path](/kernel/components/draw/path)：内置控制点 Inspector 示例
-- [Scope](/kernel/components/layout/scope)：子树选择与硬屏障
-- [Core](/kernel/packages/core/core)：领域中立编译观测能力
-- [Render](/kernel/packages/render/render)：普通只读图层如何物化
-- [Layout 布局运行时](/library/layout/reference/runtime)：Flex、Grid 与 Overlay Inspector
+- [Path](/kernel/components/draw/path)：内置 `stroke` 路径检查器的组件用法
+- [Scope](/kernel/components/layout/scope)：编排子树与屏障
+- [Core](/kernel/packages/core/core)：最终产物观察与隔离片段编译
+- [Render](/kernel/packages/render/render)：只读图层物化
+- [Layout 布局运行时](/library/layout/reference/runtime)：`Flex`、`Grid` 与 `Overlay` 的检查器

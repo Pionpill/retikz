@@ -2,7 +2,7 @@ import type { AnyCompositeDefinition, IRPath } from '@retikz/core';
 
 import { CompositeBaseSchema, DEFAULT_RESOLVED_THEME, defineComposite, ThemeMode } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { literal, string } from 'zod';
 
 import type { InputChild, InputEmbedAdapter, InputScene } from '../../src';
 
@@ -14,9 +14,9 @@ const boxComposite = defineComposite({
   namespace: 'fixture',
   type: 'box',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('fixture'),
-    type: z.literal('box'),
-    text: z.string(),
+    namespace: literal('fixture'),
+    type: literal('box'),
+    text: string(),
   }),
   expand: composite => ({
     children: [

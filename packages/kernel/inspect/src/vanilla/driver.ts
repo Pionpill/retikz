@@ -6,22 +6,17 @@ import type {
   VanillaCompileOutput,
 } from '@retikz/vanilla';
 
+import { isCompileObservationOwnerEqual } from '@retikz/core';
+
 import type { InspectionCompileResult, InspectionDiagnostic, InspectionSelection } from '../compile';
 import type { InspectorRegistry } from '../providers';
 
 import { createInspectionObserver, resolveInspectionObserverOutput } from '../compile';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 import { inspectionPlaneToReadonlyLayers } from '../render';
-import { inspectionRulesFromVanillaSite } from './authoring';
+import { inspectionSelectionRulesFromVanillaSite } from './authoring';
 
 const EMPTY_SELECTION: InspectionSelection = { rules: [] };
-
-/** 判断两个领域中立观察所属者是否相同 */
-const observationOwnerEquals = (left: CompileObservationOwner, right: CompileObservationOwner): boolean =>
-  left.kind === right.kind &&
-  (left.kind === 'pathKind'
-    ? right.kind === 'pathKind' && left.name === right.name
-    : right.kind === 'composite' && left.namespace === right.namespace && left.type === right.type);
 
 type ObservationOwnerCounts = {
   pathKinds: Map<string, number>;
@@ -29,7 +24,7 @@ type ObservationOwnerCounts = {
 };
 
 /** 按来源路径与结构化所属者取得当前实例序号并推进计数 */
-const takeObservationOwnerIndex = (
+const allocateObservationOwnerIndex = (
   countsBySourcePath: Map<string, ObservationOwnerCounts>,
   sourcePath: string,
   owner: CompileObservationOwner,
@@ -105,7 +100,7 @@ const resolveVanillaSelection = (
 ): InspectionSelection => {
   const occurrenceCounts = new Map<string, ObservationOwnerCounts>();
   const authoredRules = input.authoringSites.flatMap(site => {
-    const siteRules = inspectionRulesFromVanillaSite(site);
+    const siteRules = inspectionSelectionRulesFromVanillaSite(site);
     if (siteRules.length > 0 && isCollapsedContributionScope(site, input.authoringSites)) {
       throw new RetikzInspectError(
         RetikzInspectErrorCode.Vanilla,
@@ -114,13 +109,13 @@ const resolveVanillaSelection = (
     }
     const owner = site.owner;
     const occurrenceIndex =
-      owner === undefined ? undefined : takeObservationOwnerIndex(occurrenceCounts, site.sourcePath, owner);
+      owner === undefined ? undefined : allocateObservationOwnerIndex(occurrenceCounts, site.sourcePath, owner);
     return siteRules.map(rule => {
       if (rule.kind !== 'request' || rule.target.kind !== 'self' || rule.target.locator.kind !== 'authored') {
         return rule;
       }
       const definitionOwner = registry.require(rule.inspector).owner;
-      if (owner !== undefined && !observationOwnerEquals(owner, definitionOwner)) {
+      if (owner !== undefined && !isCompileObservationOwnerEqual(owner, definitionOwner)) {
         throw new RetikzInspectError(
           RetikzInspectErrorCode.Vanilla,
           'Inspect self request owner does not match authored site owner',

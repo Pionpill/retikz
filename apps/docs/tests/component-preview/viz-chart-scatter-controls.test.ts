@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ScatterMark } from '@retikz/chart-react/point';
 import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -10,10 +12,6 @@ import type {
 } from '../../src/modules/docs/preview';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
-import { previewControlContract as bubbleZh } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.controls';
-import { previewControlContract as bubbleEn } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.en.controls';
-import { previewSource as bubbleEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.en.demo';
-import { previewSource as bubbleZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.zh.demo';
 import { previewControlContract as basicZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.controls';
 import {
   countryScatterData,
@@ -55,7 +53,9 @@ const expectCompletePanel = (contract: PreviewControlContract): void => {
       .sort(),
   );
   expect(contract.relatedApis.length).toBeGreaterThan(0);
-  expect(contract.relatedApis.every(api => /^(Plot|PointMark|Axis|Legend)\./u.test(api))).toBe(true);
+  expect(contract.relatedApis.every(api => /^(Plot|PointMark|ScatterChart|ScatterMark|Axis|Legend)\./u.test(api))).toBe(
+    true,
+  );
 };
 
 const canonicalChartSize = (source: PreviewSourceConfig): { width?: number; height?: number } => {
@@ -76,19 +76,37 @@ const canonicalScatterProps = (source: PreviewSourceConfig): Record<string, unkn
   return chart.props;
 };
 
-const canonicalLegends = (
-  source: PreviewSourceConfig,
-): Array<{ channel?: string; title?: string; position?: string }> => {
+const canonicalScatterMarkProps = (source: PreviewSourceConfig): Record<string, unknown> => {
   const chart = source.canonicalRender?.();
   if (!isValidElement<{ children?: ReactNode }>(chart)) {
     throw new Error('Chart preview must provide a canonical element');
   }
-
-  return Children.toArray(chart.props.children).flatMap(child =>
-    isValidElement<{ channel?: string; title?: string; position?: string }>(child) && child.props.channel !== undefined
-      ? [{ channel: child.props.channel, title: child.props.title, position: child.props.position }]
-      : [],
+  const mark = Children.toArray(chart.props.children).find(
+    child => isValidElement(child) && child.type === ScatterMark,
   );
+  if (!isValidElement<Record<string, unknown>>(mark)) {
+    throw new Error('Scatter preview must provide a direct ScatterMark child');
+  }
+
+  return mark.props;
+};
+
+const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 'subtitle' | 'source', ReactNode> => {
+  const chart = source.canonicalRender?.();
+  if (!isValidElement<{ children?: ReactNode }>(chart)) {
+    throw new Error('Chart preview must provide a canonical element');
+  }
+  const children = Children.toArray(chart.props.children);
+  const textOf = (marker: typeof ChartTitle | typeof ChartSubtitle | typeof ChartSource): ReactNode => {
+    const child = children.find(candidate => isValidElement(candidate) && candidate.type === marker);
+    if (!isValidElement<{ children?: ReactNode }>(child)) throw new Error('Chart preview is missing presentation text');
+    return child.props.children;
+  };
+  return {
+    title: textOf(ChartTitle),
+    subtitle: textOf(ChartSubtitle),
+    source: textOf(ChartSource),
+  };
 };
 
 describe('Viz Chart scatter controls', () => {
@@ -112,7 +130,6 @@ describe('Viz Chart scatter controls', () => {
     for (const [zh, en] of [
       [basicZh, basicEn],
       [incomeLifeExpectancyZh, incomeLifeExpectancyEn],
-      [bubbleZh, bubbleEn],
     ] as const) {
       expect(comparable(zh)).toEqual(comparable(en));
       expectCompletePanel(zh);
@@ -149,18 +166,16 @@ describe('Viz Chart scatter controls', () => {
   it('基础 Scatter 将两个比例字段与受控 mark 常量交给 typed Chart', () => {
     for (const source of [basicZhPreviewSource, basicEnPreviewSource]) {
       expect(canonicalScatterProps(source)).toMatchObject({
-        encoding: {
-          x: { field: 'urbanPopulationShare' },
-          y: { field: 'internetUseShare' },
-        },
-        mark: {
-          size: { kind: 'constant', value: 10 },
-          opacity: { kind: 'constant', value: 0.82 },
+        encodings: {
+          x: 'urbanPopulationShare',
+          y: 'internetUseShare',
         },
       });
+      expect(canonicalScatterMarkProps(source)).toMatchObject({
+        override: true,
+        properties: { size: 10, opacity: 0.82 },
+      });
     }
-    expect(canonicalLegends(basicZhPreviewSource)).toEqual([]);
-    expect(canonicalLegends(basicEnPreviewSource)).toEqual([]);
     expect(basicZh.relatedApis).not.toContain('Legend.channel');
     expect(basicEn.relatedApis).not.toContain('Legend.channel');
   });
@@ -177,54 +192,42 @@ describe('Viz Chart scatter controls', () => {
   it('收入与寿命示例通过 typed color encoding 绑定大洲', () => {
     for (const source of [incomeLifeExpectancyZhPreviewSource, incomeLifeExpectancyEnPreviewSource]) {
       expect(canonicalScatterProps(source)).toMatchObject({
-        encoding: {
-          x: { field: 'gdpPerCapita' },
-          y: { field: 'lifeExpectancy' },
-          color: { field: 'continent' },
+        encodings: {
+          x: 'gdpPerCapita',
+          y: 'lifeExpectancy',
+          color: 'continent',
         },
-        mark: {
-          size: { kind: 'constant', value: 10 },
-          opacity: { kind: 'constant', value: 0.82 },
-        },
+      });
+      expect(canonicalScatterMarkProps(source)).toMatchObject({
+        override: true,
+        properties: { size: 10, opacity: 0.82 },
       });
     }
   });
 
-  it('收入与寿命示例使用本地化的大洲颜色图例', () => {
-    expect(canonicalLegends(incomeLifeExpectancyZhPreviewSource)).toEqual([
-      { channel: 'color', title: '大洲', position: 'right' },
-    ]);
-    expect(canonicalLegends(incomeLifeExpectancyEnPreviewSource)).toEqual([
-      { channel: 'color', title: 'Continent', position: 'right' },
-    ]);
+  it('收入与寿命示例保留 recipe 的 color encoding 语义', () => {
+    expect(incomeLifeExpectancyZh.relatedApis).not.toContain('Legend.channel');
+    expect(incomeLifeExpectancyEn.relatedApis).not.toContain('Legend.channel');
   });
 
-  it('Bubble 只在两个定量字段尺寸编码之间切换，不提供固定尺寸', () => {
-    expect(bubbleZh.canonicalValues).toEqual({ sizeEncoding: 'power', colorByGroup: true });
-    expect(JSON.stringify(bubbleZh.controls)).not.toContain('fixed');
-    expect(bubbleZh.relatedApis).toContain('PointMark.size');
-  });
-
-  it('为 Chart Showcase 使用 800 × 400 的默认图表尺寸', () => {
+  it('区分预览宿主尺寸与 Source layout', () => {
     for (const source of [
       basicZhPreviewSource,
       basicEnPreviewSource,
       incomeLifeExpectancyZhPreviewSource,
       incomeLifeExpectancyEnPreviewSource,
-      bubbleZhPreviewSource,
-      bubbleEnPreviewSource,
     ]) {
       expect(canonicalChartSize(source)).toEqual({ width: 800, height: 400 });
     }
   });
 
   it('双语 demo 在 Chart-native metadata 中说明字段单位与数据来源', () => {
-    expect(canonicalScatterProps(basicZhPreviewSource)).toMatchObject({
+    expect(canonicalPresentation(basicZhPreviewSource)).toMatchObject({
       title: '城市化程度与互联网使用率',
       subtitle: expect.stringContaining('人口占比（%）'),
       source: expect.stringContaining('世界银行'),
     });
-    expect(canonicalScatterProps(basicEnPreviewSource)).toMatchObject({
+    expect(canonicalPresentation(basicEnPreviewSource)).toMatchObject({
       title: 'Urbanization and Internet use',
       subtitle: expect.stringContaining('share of population (%)'),
       source: expect.stringContaining('World Bank'),

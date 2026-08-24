@@ -212,8 +212,8 @@ export const standardV01: Release = {
             {
               label: { zh: 'Frame 语义 header', en: 'Semantic Frame headers' },
               content: {
-                zh: '`Frame` 以 `padding` 围合 body，并用 Node-like Title / Description、横向或纵向 anchor 链、统一圆角与稳定派生 id 表达分组；不重排 body Node。',
-                en: '`Frame` encloses its body with `padding` and composes Node-like Title / Description parts through horizontal or vertical anchor chains, a uniform corner radius, and stable derived ids without rearranging body Nodes.',
+                zh: '`Frame` 以 `padding` 围合 body，并用 Node-like Title / Description、横向或纵向 anchor 链与统一圆角表达分组；只保留作者显式提供的 id，不重排 body Node。',
+                en: '`Frame` encloses its body with `padding` and composes Node-like Title / Description parts through horizontal or vertical anchor chains and a uniform corner radius. It retains only explicitly authored ids and does not rearrange body Nodes.',
               },
             },
             {
@@ -276,8 +276,8 @@ export const standardV01: Release = {
             {
               label: { zh: 'Canonical target identity', en: 'Canonical target identity' },
               content: {
-                zh: 'Vanilla adapter 将 embed id 稳定派生为 `<embed-id>/<kind>` canonical id；跨组件 target 必须显式使用该 identity，例如 `start/terminal`。',
-                en: 'Vanilla adapters derive stable `<embed-id>/<kind>` canonical IDs. Cross-component targets use that identity explicitly, for example `start/terminal`.',
+                zh: 'Vanilla adapter 的 embed id 只标识 authoring occurrence，不再派生模型 id；跨组件 target 必须引用作者显式提供的模型 identity，例如 `start/terminal`。',
+                en: 'Vanilla adapter embed ids identify authoring occurrences and no longer derive model ids. Cross-component targets must reference explicitly authored model identity, for example `start/terminal`.',
               },
             },
           ],

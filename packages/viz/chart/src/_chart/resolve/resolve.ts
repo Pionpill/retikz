@@ -1,45 +1,71 @@
-import type { IRPlot } from '@retikz/plot';
+import type { IRPlotThemeTokenOverrides } from '@retikz/plot';
 
-import { PlotSchema, resolvePlotTheme } from '@retikz/plot';
-import { z } from 'zod';
-
-import type { BoundChart } from '../../_shared';
-import type { ChartResolution, ChartResolveContext } from './types';
+import type { ChartSlotConsumption } from '../contract/recipe';
+import type { IRChartSource } from '../schemas';
+import type { ChartResolution, SelectedChartResolveContext } from './types';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
-import { invalidChartSchemaError } from '../dispatch/bind';
-import { BaseChartSchema } from '../schemas';
-import { resolveChartStyle } from '../style';
-import { chartRecipeStyleContextOf } from './style';
+import { resolveChartMarks, resolveChartSemanticMarks } from './marks';
+import { resolveChartPlot } from './plot';
+import { resolveChartPresentation } from './presentation';
+import { resolveChartTheme } from './theme';
 
-/** 将已绑定 Chart 与当前主题解析为唯一的 Base Chart */
-export const resolveChart = (chart: BoundChart, context: ChartResolveContext): ChartResolution => {
-  const style = resolveChartStyle(context.theme, chart.base, context.chartThemeStyles);
-  const plotStyle = resolvePlotTheme(
-    context.theme,
-    {
-      plotThemeTokens: chart.plot.plotThemeTokens,
-      plotThemeTokenRules: chart.plot.plotThemeTokenRules,
-      plotTheme: chart.plot.plotTheme,
-    },
-    context.plotThemeStyles,
-  );
-  const seriesColor = plotStyle.palette.series.at(0);
-  if (seriesColor === undefined) throw new RetikzChartError('Chart style must resolve a non-empty Plot series palette');
-
-  const plotCandidate = chart.createPlot(chartRecipeStyleContextOf(style, seriesColor));
-
-  let plotSpec: IRPlot;
-  try {
-    plotSpec = PlotSchema.parse(plotCandidate);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const rebased = new z.ZodError(error.issues.map(issue => ({ ...issue, path: ['plot', ...issue.path] })));
-      throw invalidChartSchemaError(RetikzChartErrorCode.InvalidResolvedPlot, rebased, error);
+const assertConsumedSlots = (
+  source: IRChartSource,
+  recipeConsumption: ChartSlotConsumption,
+  markConsumption: ChartSlotConsumption,
+): void => {
+  for (const owner of ['encodings', 'properties'] as const) {
+    const consumers = new Set([...recipeConsumption[owner], ...markConsumption[owner]]);
+    const values = owner === 'encodings' ? source.recipe.encodings : (source.recipe.properties ?? {});
+    for (const slot of Object.keys(values)) {
+      if (consumers.has(slot)) continue;
+      throw new RetikzChartError({
+        code: RetikzChartErrorCode.InvalidChartIR,
+        message: `Chart ${owner} slot "${slot}" has no active consumer`,
+        details: { path: ['recipe', owner, slot], slot, owner },
+      });
     }
-    throw error;
+  }
+};
+
+const plotThemeTokensOf = (
+  theme: ReturnType<typeof resolveChartTheme>,
+  source: IRChartSource,
+): IRPlotThemeTokenOverrides | undefined => {
+  const authored = source.plotExtension?.plotThemeTokens;
+  if (theme.plot === undefined && authored === undefined) return undefined;
+  return { ...(theme.plot ?? {}), ...(authored ?? {}) };
+};
+
+/** 将 typed Chart Source 解析为唯一完整 Plot 与固定 presentation 结果 */
+export const resolveSelectedChart = (source: IRChartSource, context: SelectedChartResolveContext): ChartResolution => {
+  const recipe = context.recipe;
+  const theme = resolveChartTheme(source, recipe, context);
+  const recipeResolution = recipe.resolve({
+    ...(source.id === undefined ? {} : { id: source.id }),
+    data: source.data,
+    encodings: source.recipe.encodings,
+    properties: source.recipe.properties ?? {},
+    recipeThemeTokens: theme.recipe,
+  });
+  if (recipeResolution.semanticMarks.length === 0) {
+    throw new RetikzChartError({
+      code: RetikzChartErrorCode.InvalidResolvedPlot,
+      message: `Chart recipe "${recipe.chartType}" must produce at least one semantic Plot mark`,
+      details: { path: ['recipe', 'chartType'] },
+    });
   }
 
-  const resolvedChart = BaseChartSchema.parse({ ...chart.base, plot: plotSpec });
-  return { chart: resolvedChart, plotSpec };
+  const markResolution = resolveChartMarks(source, recipe, theme.recipe);
+  assertConsumedSlots(source, recipe.consumes, markResolution.consumption);
+  const semanticMarkResolution = resolveChartSemanticMarks(recipeResolution, markResolution);
+  const plot = resolveChartPlot(
+    source,
+    recipeResolution,
+    semanticMarkResolution.marks,
+    plotThemeTokensOf(theme, source),
+  );
+  const presentation = resolveChartPresentation(source, plot, theme.chart);
+  return { source, theme, plot, warnings: semanticMarkResolution.warnings, presentation };
 };

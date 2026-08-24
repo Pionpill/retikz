@@ -4,14 +4,14 @@ import type { ExternalRow } from '@retikz/data';
 import { compileToScene } from '@retikz/core';
 import { SectorShapeDefinition } from '@retikz/standard/shape';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, object } from 'zod';
 
 import type { Cell, CoordinateFrame, PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot, IRPlotReferenceMark } from '../../../src/schemas';
 
 import { createCoordinateFrame, defineCoordinate, densifyCellContour } from '../../../src/contract';
-import { lowerPlots } from '../../../src/pipeline/expand';
+import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
 import { resolveMarkOperation } from '../../../src/resolve/mark';
@@ -48,8 +48,7 @@ const HEIGHT = 400;
 const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
-  const [def] = lowerPlots(datasets, options);
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, options) as IRScope;
 };
 
 /** 连续 linear PositionScale 桩（bandwidth = 0） */
@@ -659,8 +658,8 @@ describe('rule region projectCell 坐标系', () => {
       height: HEIGHT,
       coordinates: [
         defineCoordinate({
-          schema: z.object({
-            type: z.literal('curved-reference').describe('Discriminator: reference region custom coordinate operation'),
+          schema: object({
+            type: literal('curved-reference').describe('Discriminator: reference region custom coordinate operation'),
           }),
           roles: ['x', 'y'],
           resolve: (_operation, ctx) => {

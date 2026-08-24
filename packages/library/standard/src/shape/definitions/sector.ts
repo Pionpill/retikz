@@ -1,5 +1,6 @@
 import type { CoreDependencyProvider, Rect, ScenePrimitive, ShapeAnchorName } from '@retikz/core';
 import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 
 import {
   boundaryFromContour,
@@ -17,34 +18,39 @@ import {
   worldToLocal,
 } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { arcBoundingPoints, arcEndPoint, boundsCenter, boundsHalfAxes, boundsOf, DEFAULT_EPSILON } from '@retikz/math';
-import { z } from 'zod';
+import {
+  boundsOf,
+  centerOfBounds,
+  collectArcBoundingCandidates,
+  DEFAULT_EPSILON,
+  halfAxesOfBounds,
+  pointAtArcAngle,
+} from '@retikz/math';
+import { number, strictObject } from 'zod';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
 import { StandardShapeName } from '../constants';
 
-const SectorShapeParamsSchema = z
-  .strictObject({
-    innerRadius: NonNegativeNumberSchema.describe(
-      'Inner radius in user units; 0 = solid pie slice, equal to outerRadius = open arc.',
-    ),
-    outerRadius: PositiveNumberSchema.describe(
-      'Outer radius in user units; must be >= innerRadius, equality produces an open arc.',
-    ),
-    startAngle: z
-      .number()
-      .describe('Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.'),
-    endAngle: z.number().describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
-    cornerRadius: NonNegativeNumberSchema.optional().describe(
-      'Corner radius in user units for positive-thickness sectors; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
-    ),
-  })
-  .refine(params => params.outerRadius >= params.innerRadius, {
-    message: 'outerRadius must be greater than or equal to innerRadius',
-  });
+const SectorShapeParamsSchema = strictObject({
+  innerRadius: NonNegativeNumberSchema.describe(
+    'Inner radius in user units; 0 = solid pie slice, equal to outerRadius = open arc.',
+  ),
+  outerRadius: PositiveNumberSchema.describe(
+    'Outer radius in user units; must be >= innerRadius, equality produces an open arc.',
+  ),
+  startAngle: number().describe(
+    'Start angle in degrees; polar convention 0°=+x, 90°=+y (screen y-down), matching core polar.',
+  ),
+  endAngle: number().describe('End angle in degrees; swept clockwise in screen space from startAngle.'),
+  cornerRadius: NonNegativeNumberSchema.optional().describe(
+    'Corner radius in user units for positive-thickness sectors; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+  ),
+}).refine(params => params.outerRadius >= params.innerRadius, {
+  message: 'outerRadius must be greater than or equal to innerRadius',
+});
 
 /** Sector 形状的参数 */
-export type SectorShapeParams = z.infer<typeof SectorShapeParamsSchema>;
+export type SectorShapeParams = ZodInfer<typeof SectorShapeParamsSchema>;
 
 /** Sector 的派生几何 */
 type SectorGeometry = {
@@ -64,11 +70,21 @@ const computeSectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
   const apex: Position = [0, 0];
   const candidates: Array<Position> = innerRadius === 0 ? [apex] : [];
   candidates.push(
-    ...arcBoundingPoints({ center: apex, radius: outerRadius, startAngleDeg: range.start, endAngleDeg: range.end }),
+    ...collectArcBoundingCandidates({
+      center: apex,
+      radius: outerRadius,
+      startAngleDeg: range.start,
+      endAngleDeg: range.end,
+    }),
   );
   if (innerRadius > 0) {
     candidates.push(
-      ...arcBoundingPoints({ center: apex, radius: innerRadius, startAngleDeg: range.start, endAngleDeg: range.end }),
+      ...collectArcBoundingCandidates({
+        center: apex,
+        radius: innerRadius,
+        startAngleDeg: range.start,
+        endAngleDeg: range.end,
+      }),
     );
   }
   const bounds = boundsOf(candidates);
@@ -79,7 +95,7 @@ const computeSectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
       details: { candidateCount: candidates.length, shape: 'sector' },
     });
   }
-  const aabbCenter = boundsCenter(bounds);
+  const aabbCenter = centerOfBounds(bounds);
   const apexOffset: Position = [-aabbCenter[0], -aabbCenter[1]];
   const sweepRadians = (range.end - range.start) * DEG_TO_RAD;
   const midAngleRadians = range.mid * DEG_TO_RAD;
@@ -102,7 +118,7 @@ const computeSectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
   ];
   return {
     range,
-    aabbHalfAxes: boundsHalfAxes(bounds),
+    aabbHalfAxes: halfAxesOfBounds(bounds),
     apexOffset,
     centroidOffset: [centroidLocal[0] - aabbCenter[0], centroidLocal[1] - aabbCenter[1]],
     boundaryOriginOffset: [boundaryOriginLocal[0] - aabbCenter[0], boundaryOriginLocal[1] - aabbCenter[1]],
@@ -110,7 +126,8 @@ const computeSectorGeometry = (params: SectorGeometryInput): SectorGeometry => {
 };
 
 /** 根据半径和角度计算 Sector 圆心局部极坐标点 */
-const sectorPolarPoint = (radius: number, angleDegrees: number): Position => arcEndPoint([0, 0], radius, angleDegrees);
+const sectorPolarPoint = (radius: number, angleDegrees: number): Position =>
+  pointAtArcAngle([0, 0], radius, angleDegrees);
 
 /** 将 Sector 圆心局部点转换为世界坐标 */
 const toWorld = (rect: Rect, apexOffset: Position, localFromApex: Position): Position =>

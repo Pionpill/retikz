@@ -18,7 +18,7 @@ Base Table contracts define the top-level identity and Cell content shared by ev
 | `meta?`             | `IRJsonObject`                      | —              | JSON-safe metadata preserved by lowering                 |
 | `rules?`            | `Array<IRTableCellRule>`            | `[]`           | Declaration-ordered Cell overrides                       |
 | `encodings?`        | `Array<IRTableCellVisualEncoding>`  | `[]`           | Ordered raw-value mappings to color channels             |
-| `tableThemeTokens?` | `IRTableThemeTokenOverrides`        | `{}`           | Sparse Table token overlay for this IRTable            |
+| `tableThemeTokens?` | `IRTableThemeTokenOverrides`        | `{}`           | Sparse Table token overlay for this IRTable              |
 | `data?`             | `IRDataReference`                   | —              | Required by detail, forbidden by manual, optional custom |
 | `structure`         | `IRTableStructureOperation`         | —              | Detail, manual, or custom Structure                      |
 
@@ -39,6 +39,8 @@ An LLM or tool that emits one table type should retain its precise schema. Use `
 ## Cell content
 
 `IRManualTableCell` is the directly persistable non-null entry used inside manual `rows`. `string | number | boolean` are value shorthands; rich objects carry value/content, spans, layout, and semantic fields. `null` is the row-matrix empty-slot sentinel, not a Cell union member; use `{ value: null }` for a real null scalar.
+
+Rich entries may provide a stable `id`. When omitted, the Cell remains anonymous and later stages correlate it through canonical address and array order rather than materializing an address-derived id.
 
 ### ManualTableCellSchema
 
@@ -84,7 +86,7 @@ These payload schemas describe canonical Structure output. Manual authoring uses
 
 ## Table Theme tokens
 
-Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { theme })`. Table resolves an owner-local baseline through the same-named `TableThemeStyleDefinition`, projects Core shared `colors.categorical` into `data.categorical`, and finally applies the sparse local `tableThemeTokens` stored in IRTable. Table therefore keeps neither a second shared-palette input nor a complete token map in Theme IR.
+Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { theme })`. Table first builds the current mode's owner-local default preset, merges sparse style tokens from the same-named `TableThemeStyleDefinition`, projects Core shared `colors.categorical` into `data.categorical`, and finally applies the sparse local `tableThemeTokens` stored in IRTable. Tokens omitted or explicitly returned as `undefined` by a runtime definition retain their defaults, while persisted `tableThemeTokens` still reject explicit `undefined`. A Table style therefore owns neither a second shared palette nor a complete token map in Theme IR.
 
 Published packages do not pre-register named Core or Table definitions. This site's `academic`, `vibrant`, and `clean` reference styles follow the same rule as application-defined styles: inject the same name into both consuming owners. Standalone `compileTable` receives the Core definition through `compile.themeStyles` and the Table definition through `lower.tableThemeStyles`. Missing the matching Table definition fails loudly in the Table resolver.
 
@@ -100,7 +102,11 @@ Published packages do not pre-register named Core or Table definitions. This sit
 
 <ZodSchema name="TableThemeTokenPresetMapSchema" />
 
-Omitting `style` selects the default Core baseline. This site's `academic` reference follows a publication / booktabs direction, `vibrant` uses strong colors with a light surface, and `clean` removes as much nonessential decoration as possible. Every injected definition must provide a complete light/dark baseline. The Table resolver cascades the default or named style baseline → shared categorical → local `tableThemeTokens`; unknown keys, invalid values, or a missing definition identify the failing owner and fail loudly. The resolved manifest retains `style` when explicit, `themeMode`, the complete `tokens` map, and one source for each token; `themeMode` is output metadata, not a IRTable input field.
+### TableThemeStyleTokenOverridesSchema
+
+<ZodSchema name="TableThemeStyleTokenOverridesSchema" />
+
+Omitting `style` selects the Table owner-local default preset for the host mode. This site's `academic` reference follows a publication / booktabs direction, `vibrant` uses strong colors with a light surface, and `clean` removes as much nonessential decoration as possible. An injected definition returns only the tokens it changes for the current mode; the default preset fills the rest, and a style cannot provide `data.categorical`. The Table resolver cascades default preset → sparse style tokens → shared categorical → local `tableThemeTokens`; unknown keys, invalid values, or a missing definition identify the failing owner and fail loudly. The resolved manifest retains `style` when explicit, `themeMode`, the complete `tokens` map, and one source for each token. Tokens not overridden by the style keep `$default/...` sources, while explicit style tokens use `$style/...`. `themeMode` is output metadata, not an IRTable input field.
 
 ## Related
 

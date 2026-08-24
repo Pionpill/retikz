@@ -6,10 +6,12 @@ import { loadMathJaxConfigurations, resolveMathJaxExtensions } from './profiles'
 type LiteAdaptor = { outerHTML: (node: unknown) => string };
 type MathDocument = { convert: (tex: string, options: { display: boolean }) => unknown };
 type MathJaxModule = {
-  mathjax: { document: (doc: string, opts: { InputJax: unknown; OutputJax: unknown }) => MathDocument };
+  mathjax: {
+    document: (documentSource: string, options: { InputJax: unknown; OutputJax: unknown }) => MathDocument;
+  };
 };
-type TexModule = { TeX: new (opts: { packages: Array<string> }) => unknown };
-type SvgModule = { SVG: new (opts: { fontCache: string }) => unknown };
+type TexModule = { TeX: new (options: { packages: Array<string> }) => unknown };
+type SvgModule = { SVG: new (options: { fontCache: string }) => unknown };
 type AdaptorModule = { liteAdaptor: () => LiteAdaptor };
 type HandlerModule = { RegisterHTMLHandler: (adaptor: LiteAdaptor) => void };
 
@@ -29,15 +31,15 @@ const getMathJaxPackages = (extensions: Array<MathJaxExtensionValue>): Array<str
  */
 export const createMathJaxEngine = async (options?: MathJaxEngineOptions): Promise<MathJaxSvgEngine> => {
   const extensions = resolveMathJaxExtensions(options);
-  let mods: {
-    mj: MathJaxModule;
+  let modules: {
+    mathJaxModule: MathJaxModule;
     tex: TexModule;
     svg: SvgModule;
-    ad: AdaptorModule;
-    hd: HandlerModule;
+    adaptorModule: AdaptorModule;
+    handlerModule: HandlerModule;
   };
   try {
-    const [mj, tex, svg, ad, hd] = await Promise.all([
+    const [mathJaxModule, tex, svg, adaptorModule, handlerModule] = await Promise.all([
       import('mathjax-full/js/mathjax.js') as Promise<MathJaxModule>,
       import('mathjax-full/js/input/tex.js') as Promise<TexModule>,
       import('mathjax-full/js/output/svg.js') as Promise<SvgModule>,
@@ -45,7 +47,7 @@ export const createMathJaxEngine = async (options?: MathJaxEngineOptions): Promi
       import('mathjax-full/js/handlers/html.js') as unknown as Promise<HandlerModule>,
     ]);
     await loadMathJaxConfigurations(extensions);
-    mods = { mj, tex, svg, ad, hd };
+    modules = { mathJaxModule, tex, svg, adaptorModule, handlerModule };
   } catch (error) {
     throw new RetikzTexError(
       RetikzTexErrorCode.MathJax,
@@ -53,12 +55,12 @@ export const createMathJaxEngine = async (options?: MathJaxEngineOptions): Promi
       { cause: error },
     );
   }
-  const adaptor = mods.ad.liteAdaptor();
-  mods.hd.RegisterHTMLHandler(adaptor);
-  const texInput = new mods.tex.TeX({ packages: getMathJaxPackages(extensions) });
-  const svgOutput = new mods.svg.SVG({ fontCache: 'none' });
-  const doc = mods.mj.mathjax.document('', { InputJax: texInput, OutputJax: svgOutput });
+  const adaptor = modules.adaptorModule.liteAdaptor();
+  modules.handlerModule.RegisterHTMLHandler(adaptor);
+  const texInput = new modules.tex.TeX({ packages: getMathJaxPackages(extensions) });
+  const svgOutput = new modules.svg.SVG({ fontCache: 'none' });
+  const mathDocument = modules.mathJaxModule.mathjax.document('', { InputJax: texInput, OutputJax: svgOutput });
   return {
-    convert: (tex, opts) => adaptor.outerHTML(doc.convert(tex, { display: opts.display })),
+    convert: (tex, convertOptions) => adaptor.outerHTML(mathDocument.convert(tex, { display: convertOptions.display })),
   };
 };

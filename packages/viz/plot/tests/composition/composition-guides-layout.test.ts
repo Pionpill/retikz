@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { IRPlot } from '../../src/schemas';
 
-import { lowerPlots } from '../../src/pipeline/expand';
+import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { AxisGridApplyTo, PlotSchema } from '../../src/schemas';
 
 const salesRows = [
@@ -143,8 +143,7 @@ const lanesSpec = {
 };
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
-  const [definition] = lowerPlots(datasets, { width: 480, height: 300, provenance: true });
-  return definition.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, datasets, { width: 480, height: 300, provenance: true }) as IRScope;
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';

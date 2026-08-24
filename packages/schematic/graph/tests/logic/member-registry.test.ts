@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { boolean, strictObject } from 'zod';
 
 import * as Graph from '../../src';
 
@@ -70,7 +70,7 @@ describe('Relation definition registry', () => {
       name: 'confidence',
       role: 'ownership',
       description: 'Ownership confidence',
-      paramsSchema: z.strictObject({ open: z.boolean() }),
+      paramsSchema: strictObject({ open: boolean() }),
       resolveStructure: params => ({ targetMarker: { shape: params.open ? 'open' : 'normal' } }),
     });
     expect(Graph.defineRelationRole(role)).toBe(role);

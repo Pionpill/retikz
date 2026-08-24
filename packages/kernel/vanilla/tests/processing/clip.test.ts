@@ -2,7 +2,7 @@ import type { ClipDefinition } from '@retikz/core';
 
 import { compileToScene, defineClip } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import type { InputEmbedAdapter, InputScene } from '../../src';
 
@@ -16,9 +16,9 @@ import {
 const customClip = (): ClipDefinition =>
   defineClip({
     kind: 'ticketClip',
-    schema: z.strictObject({ kind: z.literal('ticketClip') }),
+    schema: strictObject({ kind: literal('ticketClip') }),
     resolve: () => ({ kind: 'ticketClip' }),
-    shapeSchema: z.strictObject({ kind: z.literal('ticketClip') }),
+    shapeSchema: strictObject({ kind: literal('ticketClip') }),
     lower: () => ({
       commands: [
         { kind: 'move', to: [0, 0] },

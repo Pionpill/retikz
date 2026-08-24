@@ -106,9 +106,9 @@ describe('Layout inspect options', () => {
     const selection = createLayoutInspectionSelection({
       inspector: GRID_LAYOUT_INSPECTOR_KEY,
       target: { kind: 'scene' },
-      value: { tracks: true, spans: false },
+      options: { tracks: true, spans: false },
     });
 
-    expect(selection.rules[0]).toMatchObject({ value: { tracks: true, spans: false } });
+    expect(selection.rules[0]).toMatchObject({ options: { tracks: true, spans: false } });
   });
 });

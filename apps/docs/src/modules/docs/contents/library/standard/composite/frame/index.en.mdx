@@ -41,7 +41,7 @@ See [Standard](/library/standard) for the package family and its three entry poi
 
 ### Basic group
 
-`id` provides stable identity, and direct `Node` children determine the body bounds; `FrameTitle` and `FrameDescription` are both optional. This minimal composition uses the default border, `padding: 8`, and `gap: 4`.
+An explicit `id` provides stable identity; when omitted, Frame and its internal layout Scope remain anonymous. Direct `Node` children determine the body bounds, and `FrameTitle` and `FrameDescription` are both optional. This minimal composition uses the default border, `padding: 8`, and `gap: 4`.
 
 <ComponentPreview files="frame-basic" size="sm" />
 
@@ -77,18 +77,18 @@ Frame JSON IR does not become a new renderer primitive. `FrameDefinition` valida
 
 Frame's responsibility ends at Core IR. A hand-authored `IRFrame` without `FrameDefinition` produces `COMPOSITE_NOT_REGISTERED` and is skipped instead of being guessed by a renderer.
 
-### Bounds, headers, and reserved ids
+### Bounds, headers, and optional ids
 
-Lowering places the body in a `${frameId}/content` Scope. Horizontal mode aligns the Title's bottom-left anchor above the body's top-left, then attaches the Description's bottom-left to the Title's bottom-right. Vertical mode lowers Description first and places Title above it, producing the visual Title, Description, body sequence. A single header part aligns directly to the body. Core resolves these anchors after Node text, shape, padding, margin, scale, and rotate layout.
+Lowering measures the body through an occurrence-local anonymous Scope probe and replays only the selected result, without generating a public body id. Horizontal mode aligns the Title's bottom-left anchor above the body's top-left, then attaches the Description's bottom-left to the Title's bottom-right. Vertical mode lowers Description first and places Title above it, producing the visual Title, Description, body sequence. A single header part aligns directly to the body. Core resolves these anchors after Node text, shape, padding, margin, scale, and rotate layout.
 
 The border is a rectangle Path inside the outer Scope and expands the final header and body bounds by `padding`. `border.style` applies only to that Path, while `border.cornerRadius` is consumed by the Core rectangle step; omitting it or setting it to `0` keeps sharp corners, while Core clamps positive values to half the shorter side. Border, body, and headers default to internal `zIndex` values of `-1`, `0`, and `1`; explicit header or `border.style.zIndex` values are preserved, while Frame's own `zIndex` applies to the complete outer Scope.
 
-Omitted header ids derive `${frameId}/title` and `${frameId}/description`. Frame rejects a body or header that explicitly occupies `frameId`, `${frameId}/content`, or either derived id; other duplicate ids continue to use Core diagnostics.
+Omitted Frame, Title, and Description ids all remain anonymous; explicit ids pass through to the matching Core Scope or Node. When Frame has an explicit root id, a direct body Node, Title, or Description cannot occupy the same id. Other duplicate explicit ids continue to use Core diagnostics.
 
 <SourceLinks
   sources={[
     {
-      label: 'Frame input and reserved-id contract',
+      label: 'Frame input and explicit-id conflict contract',
       path: 'packages/library/standard/src/composites/presentation/frame/schema.ts',
     },
     {
@@ -111,7 +111,7 @@ React, IR, and Vanilla are all validated into `IRFrame` by `FrameSchema`. React 
 
 | Prop                   | Type                        | Default                                                 | Description                                                                                     |
 | ---------------------- | --------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `id`                   | `string`                    | —                                                       | Stable identity of the outer Scope                                                              |
+| `id?`                  | `string`                    | —                                                       | Optional stable identity of the outer Scope; omission stays anonymous                           |
 | `border?`              | `FrameProps['border']`      | `{ style: { stroke: 'currentColor', strokeWidth: 1 } }` | Independent configuration for the inner border Path                                             |
 | `border.style?`        | `IRStandardPathBorderStyle` | `{ stroke: 'currentColor', strokeWidth: 1 }`            | Applies only to the border Path and accepts its public Core Path style fields                   |
 | `border.cornerRadius?` | `number`                    | —                                                       | Uniform rectangle-step corner radius; the effective maximum is clamped to half the shorter side |
@@ -125,30 +125,30 @@ Frame also accepts the remaining public Core `ScopeProps`, including cascading g
 
 ### React: `FrameTitleProps` / `FrameDescriptionProps`
 
-| Prop                | Type                           | Default                                                                 | Description                                                 |
-| ------------------- | ------------------------------ | ----------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `children` / `text` | `ReactNode` / `IRNode['text']` | —                                                                       | Uses Node text conversion and must produce valid Node text  |
-| `id?`               | `string`                       | Title: `${frameId}/title`<br />Description: `${frameId}/description`    | May override the derived id without occupying a reserved id |
-| `shape?`            | `NodeProps['shape']`           | `rectangle`                                                             | Header Node shape                                           |
-| `stroke?`           | `NodeProps['stroke']`          | `none`                                                                  | Header stroke                                               |
-| `fill?`             | `NodeProps['fill']`            | `none`                                                                  | Header fill                                                 |
-| `padding?`          | `NodeProps['padding']`         | `0`                                                                     | Header Node padding                                         |
-| `font?`             | `NodeProps['font']`            | Title: `{ size: 'sm', weight: 600 }`<br />Description: `{ size: 'xs' }` | Shallow-merges with the default font                        |
-| `opacity?`          | `number`                       | Title: —<br />Description: `0.7`                                        | Opacity of the complete header Node                         |
-| `zIndex?`           | `number`                       | `1`                                                                     | Header stacking order inside Frame                          |
+| Prop                | Type                           | Default                                                                 | Description                                                                                    |
+| ------------------- | ------------------------------ | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `children` / `text` | `ReactNode` / `IRNode['text']` | —                                                                       | Uses Node text conversion and must produce valid Node text                                     |
+| `id?`               | `string`                       | —                                                                       | Optional explicit Node id; omission stays anonymous and cannot equal an explicit Frame root id |
+| `shape?`            | `NodeProps['shape']`           | `rectangle`                                                             | Header Node shape                                                                              |
+| `stroke?`           | `NodeProps['stroke']`          | `none`                                                                  | Header stroke                                                                                  |
+| `fill?`             | `NodeProps['fill']`            | `none`                                                                  | Header fill                                                                                    |
+| `padding?`          | `NodeProps['padding']`         | `0`                                                                     | Header Node padding                                                                            |
+| `font?`             | `NodeProps['font']`            | Title: `{ size: 'sm', weight: 600 }`<br />Description: `{ size: 'xs' }` | Shallow-merges with the default font                                                           |
+| `opacity?`          | `number`                       | Title: —<br />Description: `0.7`                                        | Opacity of the complete header Node                                                            |
+| `zIndex?`           | `number`                       | `1`                                                                     | Header stacking order inside Frame                                                             |
 
 Both also accept public `NodeProps` except `position` and hydration event props, including margin, scale, rotate, label, meta, and animation. Explicit values keep Node semantics and override the defaults above. See [Node](/kernel/components/node/overview) for the complete shared contract.
 
 ### IR / persistence: `FrameInput`
 
-| Prop               | Type                        | Default                                                 | Description                                                     |
-| ------------------ | --------------------------- | ------------------------------------------------------- | --------------------------------------------------------------- |
-| `id`               | `string`                    | —                                                       | Outer Scope identity persisted in `IRFrame`                     |
-| `border?`          | `FrameInput['border']`      | `{ style: { stroke: 'currentColor', strokeWidth: 1 } }` | Independent configuration for the inner border Path             |
-| `headerDirection?` | `FrameHeaderDirectionValue` | `horizontal`                                            | Horizontal or vertical header arrangement                       |
-| `title?`           | `FrameTitleInput`           | —                                                       | JSON-safe Node-like Title without `type` or `position`          |
-| `description?`     | `FrameDescriptionInput`     | —                                                       | JSON-safe Node-like Description without `type` or `position`    |
-| `children`         | `Array<IRNode>`             | —                                                       | Non-empty direct Core Node body; other Frame fields match above |
+| Prop               | Type                        | Default                                                 | Description                                                                    |
+| ------------------ | --------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `id?`              | `string`                    | —                                                       | Optional outer Scope identity persisted in `IRFrame`; omission stays anonymous |
+| `border?`          | `FrameInput['border']`      | `{ style: { stroke: 'currentColor', strokeWidth: 1 } }` | Independent configuration for the inner border Path                            |
+| `headerDirection?` | `FrameHeaderDirectionValue` | `horizontal`                                            | Horizontal or vertical header arrangement                                      |
+| `title?`           | `FrameTitleInput`           | —                                                       | JSON-safe Node-like Title without `type` or `position`                         |
+| `description?`     | `FrameDescriptionInput`     | —                                                       | JSON-safe Node-like Description without `type` or `position`                   |
+| `children`         | `Array<IRNode>`             | —                                                       | Non-empty direct Core Node body; other Frame fields match above                |
 
 `FrameHeaderDirection` is the public closed set with `Horizontal: 'horizontal'` and `Vertical: 'vertical'`. `FrameInput` does not accept discriminators. `createFrame(input)` applies schema defaults and returns `IRFrame` with fixed `namespace: 'standard'` and `type: 'frame'`.
 
@@ -156,10 +156,10 @@ Both also accept public `NodeProps` except `position` and hydration event props,
 
 ### Vanilla: `frame()`
 
-| Prop    | Type         | Default | Description                                                                        |
-| ------- | ------------ | ------- | ---------------------------------------------------------------------------------- |
-| `id`    | `string`     | —       | Embed identity; the outer Scope id derives as `${id}/frame`                        |
-| `input` | `InputFrame` | —       | Vanilla authoring input with an optional `id`, including headers and the Node body |
+| Prop    | Type         | Default | Description                                                                             |
+| ------- | ------------ | ------- | --------------------------------------------------------------------------------------- |
+| `id`    | `string`     | —       | Embed occurrence identity used only by Vanilla traversal, not stored in Frame IR        |
+| `input` | `InputFrame` | —       | Vanilla input with an optional model `id`; only an explicit value enters the root Scope |
 
 `frameTitle(input)` and `frameDescription(input)` validate and return `IRFrameTitle` and `IRFrameDescription` for reuse in the JSON-safe input passed to `frame()`.
 

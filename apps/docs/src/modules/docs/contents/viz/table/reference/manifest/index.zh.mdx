@@ -38,7 +38,7 @@ Manifest 的 `style` 区域还保存 effective Core `style`、`themeMode`、完�
 
 ## 视觉编码与图例描述
 
-`encodings` 记录每条 visual encoding 实际着色的 Cell；`legendDescriptors` 只记录显式 opt-in 的领域 descriptor。两者来自同一次 visual scale resolution，并通过 `encodingId`、`channel` 与 `scaleName` 对账。
+`encodings` 通过 canonical `cellIndices` 记录每条 visual encoding 实际着色的 Cell；`legendDescriptors` 只记录显式 opt-in 的领域 descriptor。两者来自同一次 visual scale resolution，并通过 `encodingId`、`channel` 与 `scaleName` 对账。
 
 | Descriptor 字段                        | 内容                                    |
 | -------------------------------------- | --------------------------------------- |
@@ -56,9 +56,9 @@ descriptor 不是 Standard Legend IR，也不包含 placement、bounds 或最终
 
 <ZodSchema
   name="TableTrackManifestEntrySchema"
-  description="一条 resolved 行或列轨道的稳定身份与 Table-local 几何。"
+  description="一条 resolved 行或列轨道的可选身份与 Table-local 几何。"
   descriptions={{
-    id: '稳定语义轨道 id。',
+    id: '作者或 Structure 提供的可选语义轨道 id。',
     index: 'canonical 零基轨道索引。',
     offset: '有限 Table-local 轴向偏移。',
     size: '有限非负轨道尺寸。',
@@ -69,11 +69,11 @@ descriptor 不是 Standard Legend IR，也不包含 placement、bounds 或最终
 
 <ZodSchema
   name="TableCellManifestEntrySchema"
-  description="一个 resolved Cell 的身份、span、各坐标空间 bounds、语义与来源。"
+  description="一个 resolved Cell 的可选身份、span、各坐标空间 bounds、语义与来源。"
   descriptions={{
-    cellId: '稳定语义 Cell id。',
-    rowId: '所属起始行的稳定语义 id。',
-    columnId: '所属起始列的稳定语义 id。',
+    cellId: '作者或 Structure 提供的可选语义 Cell id。',
+    rowId: '所属起始行的可选语义 id。',
+    columnId: '所属起始列的可选语义 id。',
     rowIndex: 'Cell 起点的 canonical 零基行索引。',
     columnIndex: 'Cell 起点的 canonical 零基列索引。',
     span: 'resolved 矩形 Cell span。',
@@ -142,7 +142,7 @@ border manifest 把最终可见 edge 与原子边冲突来源一起保存。以�
   description="border 候选的 canonical 来源：Cell side、Table outer 默认边或内部 grid 默认边。"
   descriptions={{
     kind: 'Cell side 或 Table 默认边来源的判别值。',
-    cellId: '保留用于 provenance 的语义 Cell id。',
+    cellId: '保留用于 provenance 的可选语义 Cell id。',
     row: 'Cell 起点的 canonical 零基行索引。',
     column: 'Cell 起点的 canonical 零基列索引。',
     side: '提供候选的物理 Cell side 或 Table 外边。',
@@ -151,7 +151,7 @@ border manifest 把最终可见 edge 与原子边冲突来源一起保存。以�
   }}
 />
 
-Cell 来源保留 `cellId + row + column + side`；Table 默认来源使用 `scope + side` 或 `scope + boundaryIndex`，不依赖对象遍历顺序决定冲突结果。
+Cell 来源始终保留 `row + column + side`，并在显式存在时附带 `cellId`；Table 默认来源使用 `scope + side` 或 `scope + boundaryIndex`，不依赖对象遍历顺序或 Cell id 决定冲突结果。
 
 ### TableNoBorderContributionSchema
 

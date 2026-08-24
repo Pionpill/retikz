@@ -10,19 +10,18 @@ describe('docs search index frontmatter', () => {
     expect(index['/kernel/components/layout']?.en?.description.startsWith("'")).toBe(false);
   });
 
-  it('索引 Chart 页面内联展开后的共享 API 标题', async () => {
+  it('分别索引 Chart 类型页与图形模型的共享主题', async () => {
     const index = await loadSearchIndex();
 
-    expect(index['/viz/chart/points/scatter']?.zh?.headings).toEqual(
-      expect.arrayContaining(['Chart 编写', '整图展示', '运行时样式', 'Plot extensions']),
+    expect(index['/viz/chart/points/scatter']?.zh?.headings).toContain('共享 Chart 规则');
+    expect(index['/viz/chart/points/scatter']?.en?.headings).toContain('Shared Chart rules');
+    expect(index['/viz/chart/model/authoring']?.zh?.headings).toEqual(
+      expect.arrayContaining(['一条共享主链', '三套包，各自只做一段']),
     );
-    expect(index['/viz/chart/points/scatter']?.en?.headings).toEqual(
-      expect.arrayContaining([
-        'Chart authoring',
-        'Presentation',
-        'Runtime styles',
-        'Plot extensions',
-      ]),
+    expect(index['/viz/chart/model/authoring']?.en?.headings).toEqual(
+      expect.arrayContaining(['One shared pipeline', 'Three packages, one stage each']),
     );
+    expect(index['/viz/chart/model/presentation']?.zh?.headings).toContain('固定槽位与 canonical 顺序');
+    expect(index['/viz/chart/model/plot']?.zh?.headings).toContain('两个 owner，一张完整图形');
   });
 });

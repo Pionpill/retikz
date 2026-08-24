@@ -7,7 +7,7 @@ import {
   PerformanceTraceUnit,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import type { IRScene } from '../../src';
 
@@ -109,8 +109,8 @@ describe('compileToScene performance trace', () => {
       namespace: 'trace',
       type: 'replay',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('trace'),
-        type: z.literal('replay'),
+        namespace: literal('trace'),
+        type: literal('replay'),
       }),
       compile: (_node, context) => {
         const child = context.layoutChild({ type: 'node', id: 'replayed', position: [0, 0] }, NaturalLayoutProposal);

@@ -1,4 +1,5 @@
-import { z } from 'zod';
+import { NonBlankStringSchema } from '@retikz/foundation';
+import { custom, enum as zodEnum, strictObject } from 'zod';
 
 import { ThemeMode } from '../../shared';
 
@@ -60,24 +61,24 @@ const isPlainObjectContainer = (input: unknown): input is Record<string, unknown
   }
 };
 
-const ThemeObjectSchema = z.strictObject({
-  style: z.string().min(1).optional().describe('Sparse visual personality name inherited from the enclosing Theme.'),
-  mode: z.enum(ThemeMode).optional().describe('Sparse light or dark environment inherited from the enclosing Theme.'),
+const ThemeObjectSchema = strictObject({
+  style: NonBlankStringSchema.optional().describe('Sparse visual personality name inherited from the enclosing Theme.'),
+  mode: zodEnum(ThemeMode).optional().describe('Sparse light or dark environment inherited from the enclosing Theme.'),
 });
 
-const ThemeInputSchema = z
-  .custom<Record<string, unknown>>(isPlainObjectContainer, { error: 'Theme must be a plain JSON object.' })
-  .superRefine((input, context) => {
-    const failure = findJsonValidationFailure(input);
-    if (failure !== undefined) {
-      context.addIssue({ code: 'custom', path: failure.path, message: 'Theme must be a plain JSON object.' });
-      return;
-    }
-    for (const key of Reflect.ownKeys(input)) {
-      if (key === 'style' || key === 'mode') continue;
-      context.addIssue({ code: 'custom', path: [key], message: `Unrecognized Theme field: "${String(key)}".` });
-    }
-  });
+const ThemeInputSchema = custom<Record<string, unknown>>(isPlainObjectContainer, {
+  error: 'Theme must be a plain JSON object.',
+}).superRefine((input, context) => {
+  const failure = findJsonValidationFailure(input);
+  if (failure !== undefined) {
+    context.addIssue({ code: 'custom', path: failure.path, message: 'Theme must be a plain JSON object.' });
+    return;
+  }
+  for (const key of Reflect.ownKeys(input)) {
+    if (key === 'style' || key === 'mode') continue;
+    context.addIssue({ code: 'custom', path: [key], message: `Unrecognized Theme field: "${String(key)}".` });
+  }
+});
 
 export const ThemeSchema = ThemeInputSchema.pipe(ThemeObjectSchema).describe(
   'Sparse, JSON-serializable Theme override for a Scene or Scope.',

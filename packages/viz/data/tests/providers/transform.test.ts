@@ -1,5 +1,6 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, object, strictObject } from 'zod';
 
 import type { ExternalRow } from '../../src';
 
@@ -33,10 +34,10 @@ describe('data transform runtime', () => {
 
   it('executes custom transform through the same registry', () => {
     const doubleRevenue = defineTransform({
-      schema: z.object({
-        kind: z.literal('double-revenue'),
-        field: z.string().min(1),
-        as: z.string().min(1),
+      schema: object({
+        kind: literal('double-revenue'),
+        field: NonBlankStringSchema,
+        as: NonBlankStringSchema,
       }),
       inputFields: operation => [operation.field],
       outputFields: operation => [operation.as],
@@ -54,7 +55,7 @@ describe('data transform runtime', () => {
 
   it('fails loud for unknown and duplicate transform registrations', () => {
     const custom = defineTransform({
-      schema: z.object({ kind: z.literal('custom'), value: z.number() }),
+      schema: object({ kind: literal('custom'), value: number() }),
       apply: rows => rows,
     });
 
@@ -77,10 +78,10 @@ describe('data transform runtime', () => {
 
   it('uses custom statistics reducer registry from transform context', () => {
     const range = defineStatisticsReducer({
-      schema: z.object({
-        kind: z.literal('range'),
-        field: z.string().min(1),
-        as: z.string().min(1),
+      schema: object({
+        kind: literal('range'),
+        field: NonBlankStringSchema,
+        as: NonBlankStringSchema,
       }),
       inputFields: operation => [operation.field],
       outputFields: operation => [operation.as],
@@ -114,7 +115,7 @@ describe('data transform runtime', () => {
     let firstStatCalls = 0;
     let secondStatCalls = 0;
     const groupWriter = defineStatisticsReducer({
-      schema: z.strictObject({ kind: z.literal('group-writer') }),
+      schema: strictObject({ kind: literal('group-writer') }),
       outputFields: () => ['group'],
       reduce: () => {
         groupWriterCalls += 1;
@@ -122,7 +123,7 @@ describe('data transform runtime', () => {
       },
     });
     const firstStat = defineStatisticsReducer({
-      schema: z.strictObject({ kind: z.literal('first-stat') }),
+      schema: strictObject({ kind: literal('first-stat') }),
       outputFields: () => ['stat'],
       reduce: () => {
         firstStatCalls += 1;
@@ -130,7 +131,7 @@ describe('data transform runtime', () => {
       },
     });
     const secondStat = defineStatisticsReducer({
-      schema: z.strictObject({ kind: z.literal('second-stat') }),
+      schema: strictObject({ kind: literal('second-stat') }),
       outputFields: () => ['stat'],
       reduce: () => {
         secondStatCalls += 1;
@@ -169,7 +170,7 @@ describe('data transform runtime', () => {
   it('rejects custom reducer outputs that collide with annotate selector fields', () => {
     let statWriterCalls = 0;
     const statWriter = defineStatisticsReducer({
-      schema: z.strictObject({ kind: z.literal('stat-writer') }),
+      schema: strictObject({ kind: literal('stat-writer') }),
       outputFields: () => ['stat'],
       reduce: () => {
         statWriterCalls += 1;
@@ -199,7 +200,7 @@ describe('data transform runtime', () => {
 
   it('allows custom annotate reducer and selector outputs with distinct fields', () => {
     const meanWriter = defineStatisticsReducer({
-      schema: z.strictObject({ kind: z.literal('mean-writer') }),
+      schema: strictObject({ kind: literal('mean-writer') }),
       outputFields: () => ['mean'],
       reduce: rows => ({ mean: rows.reduce((sum, row) => sum + Number(row.value), 0) / rows.length }),
     });

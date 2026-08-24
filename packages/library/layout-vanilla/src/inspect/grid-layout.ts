@@ -12,4 +12,5 @@ export const inspectGridLayout = (
   id: string,
   input: InputGridLayout,
   inspect: false | true | GridLayoutInspectOptions = true,
-) => gridLayout(id, input, createInspectionVanillaAuthoring({ inspector: GRID_LAYOUT_INSPECTOR_KEY, value: inspect }));
+) =>
+  gridLayout(id, input, createInspectionVanillaAuthoring({ inspector: GRID_LAYOUT_INSPECTOR_KEY, options: inspect }));

@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import { arcEndPoint } from '@retikz/math';
+import { pointAtArcAngle } from '@retikz/math';
 
 import type { DimensionRole } from './types';
 
@@ -72,7 +72,7 @@ export const cellGeometryAnchor = (geometry: CellGeometry): Position | null => {
     const midAngle = (geometry.startAngle + geometry.endAngle) / 2;
     const midRadius =
       (Math.min(geometry.innerRadius, geometry.outerRadius) + Math.max(geometry.innerRadius, geometry.outerRadius)) / 2;
-    return arcEndPoint(geometry.center, midRadius, midAngle);
+    return pointAtArcAngle(geometry.center, midRadius, midAngle);
   }
   return contourAabbCenter(geometry.points);
 };

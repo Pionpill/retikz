@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import type { IRPlot, IRPlotAxisGuide } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline';
+import { lowerPlot } from '../../src/pipeline/expand/lower';
 import {
   resolveAxisGuideTokens,
   resolvePlotAxisGuideTheme,
@@ -22,8 +23,7 @@ const ROWS = [
 ];
 
 const expandOf = (spec: IRPlot): IRScope => {
-  const [def] = lowerPlots({ d: ROWS }, { width: 480, height: 300 });
-  return def.expand(spec).children[0] as IRScope;
+  return lowerPlot(spec, { d: ROWS }, { width: 480, height: 300 }) as IRScope;
 };
 
 const baseSpec = (override: Partial<IRPlot> = {}): IRPlot =>

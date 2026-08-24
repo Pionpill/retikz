@@ -1,78 +1,76 @@
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
+
 import { CompositeBaseSchema, PolarPositionSchema, PositionSchema, ScopePropsSchema } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveIntegerSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { getLatticeRangeError } from '../shared/lattice';
 import { StandardPathBorderStyleSchema, StandardPathStrokeStyleSchema } from '../shared/schemas';
 import { DEFAULT_GRID_LINE_SPACING, GridBorderOrder } from './constants';
 
-const GridCartesianBoundsSchema = z.strictObject({
+const GridCartesianBoundsSchema = strictObject({
   start: PositionSchema.describe('First inclusive Cartesian corner of the grid bounds.'),
   end: PositionSchema.describe('Second inclusive Cartesian corner of the grid bounds.'),
 });
 
-const GridCenteredBoundsSchema = z.strictObject({
-  position: z
-    .union([PositionSchema, PolarPositionSchema])
-    .describe('Geometric grid center; PolarPosition is resolved by Core during Scene compilation.'),
+const GridCenteredBoundsSchema = strictObject({
+  position: union([PositionSchema, PolarPositionSchema]).describe(
+    'Geometric grid center; PolarPosition is resolved by Core during Scene compilation.',
+  ),
   width: NonNegativeNumberSchema.describe('Non-negative grid width in user units.'),
   height: NonNegativeNumberSchema.describe('Non-negative grid height in user units.'),
 });
 
-const GridBoundsSchema = z
-  .union([GridCartesianBoundsSchema, GridCenteredBoundsSchema])
-  .describe('Either two unordered Cartesian corners or a center position with width and height.');
+const GridBoundsSchema = union([GridCartesianBoundsSchema, GridCenteredBoundsSchema]).describe(
+  'Either two unordered Cartesian corners or a center position with width and height.',
+);
 
-const GridLineMajorSchema = z.strictObject({
+const GridLineMajorSchema = strictObject({
   every: PositiveIntegerSchema.describe('Positive origin-relative lattice interval for major lines.'),
-  offset: z.number().int().default(0).describe('Origin-relative lattice index offset for major lines.'),
+  offset: number().int().default(0).describe('Origin-relative lattice index offset for major lines.'),
   style: StandardPathStrokeStyleSchema.optional().describe('Style fields overriding ordinary grid-line style.'),
 });
 
-export const GridLineInputSchema = z
-  .strictObject({
-    spacing: PositiveNumberSchema.default(DEFAULT_GRID_LINE_SPACING).describe(
-      'Positive distance between adjacent grid lines in this direction.',
-    ),
-    origin: z.number().optional().describe('Optional origin-relative lattice coordinate for this direction.'),
-    includeBoundary: z.boolean().default(false).describe('Whether missing bounds edges are added as grid lines.'),
-    style: StandardPathStrokeStyleSchema.optional().describe('Style for ordinary grid lines.'),
-    major: GridLineMajorSchema.optional().describe('Optional major-line interval and style override.'),
-  })
-  .describe('Configuration shared by one grid-line direction.');
+export const GridLineInputSchema = strictObject({
+  spacing: PositiveNumberSchema.default(DEFAULT_GRID_LINE_SPACING).describe(
+    'Positive distance between adjacent grid lines in this direction.',
+  ),
+  origin: number().optional().describe('Optional origin-relative lattice coordinate for this direction.'),
+  includeBoundary: boolean().default(false).describe('Whether missing bounds edges are added as grid lines.'),
+  style: StandardPathStrokeStyleSchema.optional().describe('Style for ordinary grid lines.'),
+  major: GridLineMajorSchema.optional().describe('Optional major-line interval and style override.'),
+}).describe('Configuration shared by one grid-line direction.');
 
-const GridLinePairSchema = z.strictObject({
+const GridLinePairSchema = strictObject({
   vertical: GridLineInputSchema.describe('Configuration for vertical grid lines.'),
   horizontal: GridLineInputSchema.describe('Configuration for horizontal grid lines.'),
 });
 
-export const GridLineSchema = z
-  .union([z.boolean(), GridLineInputSchema, GridLinePairSchema])
+export const GridLineSchema = union([boolean(), GridLineInputSchema, GridLinePairSchema])
   .default(true)
   .describe('Disabled, shared, or direction-specific grid-line configuration.');
 
-const GridBorderSchema = z.strictObject({
+const GridBorderSchema = strictObject({
   padding: NonNegativeNumberSchema.default(0).describe('Uniform outward border padding in user units.'),
-  order: z
-    .enum(GridBorderOrder)
+  order: zodEnum(GridBorderOrder)
     .default(GridBorderOrder.Front)
     .describe('Whether the border is emitted behind or in front of grid lines.'),
-  extendLines: z.boolean().default(false).describe('Whether grid lines extend to the padded border bounds.'),
+  extendLines: boolean().default(false).describe('Whether grid lines extend to the padded border bounds.'),
   style: StandardPathBorderStyleSchema.optional().describe('Style for the optional border path.'),
 });
 
 const GridBaseSchema = CompositeBaseSchema.extend({
-  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
-  type: z.literal('grid').describe('Composite type for a regular Cartesian grid.'),
+  namespace: literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('grid').describe('Composite type for a regular Cartesian grid.'),
   ...ScopePropsSchema.shape,
   bounds: GridBoundsSchema.describe('Unordered Cartesian corners or a center position with non-negative dimensions.'),
   line: GridLineSchema,
   border: GridBorderSchema.optional().describe('Optional padded border and its drawing order.'),
 });
 
-type GridRefinementInput = z.infer<typeof GridBaseSchema>;
-type GridLineConfig = z.infer<typeof GridLineInputSchema>;
+type GridRefinementInput = ZodInfer<typeof GridBaseSchema>;
+type GridLineConfig = ZodInfer<typeof GridLineInputSchema>;
 type GridLinePair = { vertical: GridLineConfig; horizontal: GridLineConfig };
 
 type GridNumericBounds = {
@@ -102,7 +100,7 @@ const normalizeGridBounds = (bounds: GridRefinementInput['bounds']): GridNumeric
   };
 };
 
-const refineGrid = (grid: GridRefinementInput, ctx: z.RefinementCtx): void => {
+const refineGrid = (grid: GridRefinementInput, ctx: RefinementCtx): void => {
   const line = normalizeGridLines(grid.line);
   if (line === false) return;
 

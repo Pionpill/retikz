@@ -42,6 +42,10 @@
     "./point": {
       "types": "./src/point/index.ts",
       "default": "./src/point/index.ts"
+    },
+    "./point/scatter": {
+      "types": "./src/point/scatter/index.ts",
+      "default": "./src/point/scatter/index.ts"
     }
   },
   "publishConfig": {
@@ -58,6 +62,11 @@
         "types": "./dist/types/point/index.d.ts",
         "import": "./dist/point/index.js",
         "default": "./dist/point/index.js"
+      },
+      "./point/scatter": {
+        "types": "./dist/types/point/scatter/index.d.ts",
+        "import": "./dist/point/scatter/index.js",
+        "default": "./dist/point/scatter/index.js"
       }
     }
   },
@@ -79,9 +88,8 @@
     "@retikz/chart": "workspace:*",
     "@retikz/core": "workspace:^",
     "@retikz/data": "workspace:^",
-    "@retikz/layout": "workspace:^",
+    "@retikz/foundation": "workspace:^",
     "@retikz/plot": "workspace:^",
-    "@retikz/plot-vanilla": "workspace:^",
     "@retikz/standard": "workspace:^",
     "@retikz/vanilla": "workspace:^"
   },
@@ -90,6 +98,7 @@
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "zod": "catalog:"
   }
 }

@@ -1,5 +1,7 @@
+import type { ZodType } from 'zod';
+
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { literal, number, strictObject } from 'zod';
 
 import type { ClipDefinition } from '../../contract';
 import type { RectClipShape } from '../../contract';
@@ -26,10 +28,10 @@ const keyOfBuiltinClip = (definition: ClipDefinition): BuiltinClipProviderName =
 };
 
 /** 矩形 clip provider：将 IR rect spec 直接映射为 Scene rect clip */
-const RectClipShapeSchema: z.ZodType<RectClipShape> = z.strictObject({
-  kind: z.literal('rect'),
-  x: z.number(),
-  y: z.number(),
+const RectClipShapeSchema: ZodType<RectClipShape> = strictObject({
+  kind: literal('rect'),
+  x: number(),
+  y: number(),
   width: NonNegativeNumberSchema,
   height: NonNegativeNumberSchema,
 });

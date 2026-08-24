@@ -2,7 +2,9 @@ import type { CoreProviderContribution } from '@retikz/core';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
+import { ScatterChart } from '@retikz/chart-react/point/scatter';
 import { Entity, Graph } from '@retikz/graph-react';
+import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import { useMemo } from 'react';
 import { isValidElement } from 'react';
@@ -63,6 +65,22 @@ const GraphStandalonePreviewSource = createGraphPreviewSource(() => (
   </Graph>
 ));
 
+const PlotStandaloneDemo: FC = () => (
+  <Plot data={[{ category: 'A', value: 1 }]} width={240} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
+    <PointMark x="category" y="value" />
+  </Plot>
+);
+
+const ChartStandaloneDemo: FC = () => (
+  <ScatterChart
+    data={[{ x: 1, y: 2 }]}
+    encodings={{ x: 'x', y: 'y' }}
+    width={640}
+    height={360}
+    layout={{ width: 320, height: 180 }}
+  />
+);
+
 describe('buildPreviewIR', () => {
   it('does not execute hookful embeddable root components', () => {
     const preview = buildPreviewIR(HookedEmbeddableDemo);
@@ -100,6 +118,24 @@ describe('buildPreviewIR', () => {
         viewBox: { x: 0, y: 0, width: 100, height: 50 },
         children: [{ namespace: 'graph', type: 'graph', children: [{ id: 'service' }] }],
       },
+    });
+  });
+
+  it('removes standalone Plot host props before deriving embedded preview content', () => {
+    const preview = buildPreviewIR(PlotStandaloneDemo);
+
+    expect(preview).toMatchObject({ width: 240, height: 120 });
+    expect(preview.ir.children[0]).toMatchObject({ namespace: 'plot', type: 'plot', width: 240, height: 120 });
+  });
+
+  it('separates standalone Chart host dimensions from embedded Source layout', () => {
+    const preview = buildPreviewIR(ChartStandaloneDemo);
+
+    expect(preview).toMatchObject({ width: 640, height: 360 });
+    expect(preview.sourceIr.children[0]).toMatchObject({
+      namespace: 'chart',
+      type: 'point',
+      layout: { width: 320, height: 180 },
     });
   });
 });

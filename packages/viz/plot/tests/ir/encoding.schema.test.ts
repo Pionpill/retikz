@@ -4,6 +4,7 @@ import {
   ChannelSchema,
   EncodingSchema,
   PointEncodingSchema,
+  PositionEncodingSchema,
   ShapeChannelSchema,
   SizeChannelSchema,
 } from '../../src/schemas/encoding';
@@ -95,6 +96,22 @@ describe('ChannelSchema / EncodingSchema (contract)', () => {
     const e = { u: { field: 'longitude' }, v: { field: 'latitude' } };
     expect(EncodingSchema.parse(e)).toEqual(e);
   });
+
+  it.each([PositionEncodingSchema, EncodingSchema, PointEncodingSchema])(
+    'rejects whitespace-only custom coordinate role keys',
+    schema => {
+      expect(schema.safeParse({ '   ': { field: 'longitude' } }).success).toBe(false);
+    },
+  );
+
+  it.each([PositionEncodingSchema, EncodingSchema, PointEncodingSchema])(
+    'strips unknown nested channel fields after custom role key validation',
+    schema => {
+      expect(schema.parse({ custom: { field: 'longitude', extra: true } })).toEqual({
+        custom: { field: 'longitude' },
+      });
+    },
+  );
 });
 
 describe('SizeChannelSchema / PointEncodingSchema (contract)', () => {

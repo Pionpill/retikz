@@ -1,8 +1,9 @@
 import type { IRJsonObject } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
+import type { ZodType } from 'zod';
 
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { array, strictObject, string } from 'zod';
 
 import type { AnyCellVisualScaleDefinition } from '../../src';
 
@@ -25,7 +26,7 @@ describe('Cell visual scale runtime guard', () => {
     let observed: unknown;
     const inspect = defineCellVisualScale({
       name: 'inspect-options',
-      optionsSchema: z.strictObject({ nested: z.strictObject({ colors: z.array(z.string()) }) }),
+      optionsSchema: strictObject({ nested: strictObject({ colors: array(string()) }) }),
       resolve: options => {
         observed = options;
         return { of: () => options.nested.colors[0], legendForm: 'swatch', domain: [1], range: ['red'] };
@@ -45,7 +46,7 @@ describe('Cell visual scale runtime guard', () => {
 
     const invalid = defineCellVisualScale<IRJsonObject>({
       name: 'non-json-options',
-      optionsSchema: z.strictObject({}).transform(() => ({ run: () => 'x' })) as unknown as z.ZodType<IRJsonObject>,
+      optionsSchema: strictObject({}).transform(() => ({ run: () => 'x' })) as unknown as ZodType<IRJsonObject>,
       resolve: () => undefined,
     });
     expect(() => runCustom(invalid)).toThrow(/JSON/i);
@@ -57,7 +58,7 @@ describe('Cell visual scale runtime guard', () => {
     const range = ['red', 'blue'];
     const definition = defineCellVisualScale({
       name: 'lifecycle',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       resolve: () => ({
         of: value => {
           calls += 1;
@@ -85,7 +86,7 @@ describe('Cell visual scale runtime guard', () => {
     let evaluatorReads = 0;
     const definition = defineCellVisualScale({
       name: 'captured-evaluator',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       resolve: () => ({
         get of() {
           evaluatorReads += 1;
@@ -114,7 +115,7 @@ describe('Cell visual scale runtime guard', () => {
   ] as const)('rejects malformed resolution %j', (partial, message) => {
     const invalid = defineCellVisualScale({
       name: `invalid-${String(partial.legendForm)}-${partial.range.length}-${partial.domain.length}`,
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       resolve: () => ({ of: () => 'red', ...partial }) as never,
     });
     expect(() => runCustom(invalid)).toThrow(message);
@@ -124,7 +125,7 @@ describe('Cell visual scale runtime guard', () => {
     let calls = 0;
     const definition = defineCellVisualScale({
       name: 'output-guard',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       resolve: () => ({
         of: () => (++calls === 1 ? 'not-a-color' : 'blue'),
         legendForm: 'swatch',
@@ -138,7 +139,7 @@ describe('Cell visual scale runtime guard', () => {
 
     const whitespace = defineCellVisualScale({
       name: 'whitespace-output',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       resolve: () => ({ of: () => ' ', legendForm: 'swatch', domain: [1], range: ['red'] }),
     });
     expect(() => runCustom(whitespace)?.of(1)).toThrow(/color/i);

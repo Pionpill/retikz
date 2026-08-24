@@ -217,6 +217,67 @@ describe('Graph Scope and Theme compile semantics', () => {
     }
   });
 
+  it('rejects non-plain Graph Theme style output containers', () => {
+    class EntityTokensOutput {
+      readonly color = '#2563eb';
+    }
+
+    const getterOutput = Object.defineProperty({}, 'entity', {
+      enumerable: true,
+      get: () => ({ tokens: { color: '#2563eb' } }),
+    });
+    const symbolOutput = { entity: { tokens: { color: '#2563eb' } }, [Symbol('metadata')]: true };
+    const invalidDefinitions = [
+      { name: 'class-tokens', resolve: () => ({ entity: { tokens: new EntityTokensOutput() } }) },
+      { name: 'getter-output', resolve: () => getterOutput },
+      { name: 'symbol-output', resolve: () => symbolOutput },
+    ];
+
+    for (const definition of invalidDefinitions) {
+      expect(() =>
+        Reflect.apply(Graph.resolveGraphTheme, undefined, [
+          themeWithStyle(definition.name),
+          new Map([[definition.name, definition]]),
+        ]),
+      ).toThrowError(
+        expect.objectContaining({
+          code: Graph.RetikzGraphErrorCode.DefinitionCallbackFailed,
+          details: { capability: 'graph-theme-style', key: definition.name },
+        }),
+      );
+    }
+  });
+
+  it('treats an explicitly undefined Graph style token as omitted', () => {
+    const tokens = { color: '#2563eb' };
+    Object.defineProperty(tokens, 'color', { enumerable: true, value: undefined });
+    const definition = { name: 'undefined-token', resolve: () => ({ entity: { tokens } }) };
+    const theme = themeWithStyle(definition.name);
+
+    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition)).entity.tokens.color).toBe(
+      Graph.getDefaultGraphThemePreset(theme).entity.tokens.color,
+    );
+  });
+
+  it('rejects an unknown Graph style token even when its value is undefined', () => {
+    const definition = {
+      name: 'unknown-undefined-token',
+      resolve: () => ({ entity: { tokens: { unknown: undefined } } }),
+    };
+
+    expect(() =>
+      Reflect.apply(Graph.resolveGraphTheme, undefined, [
+        themeWithStyle(definition.name),
+        new Map([[definition.name, definition]]),
+      ]),
+    ).toThrowError(
+      expect.objectContaining({
+        code: Graph.RetikzGraphErrorCode.DefinitionCallbackFailed,
+        details: { capability: 'graph-theme-style', key: definition.name },
+      }),
+    );
+  });
+
   it('keeps the unregistered Graph Theme style diagnostic unchanged', () => {
     try {
       Graph.resolveGraphTheme(themeWithStyle('missing-style'), new Map());

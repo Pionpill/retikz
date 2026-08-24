@@ -1,9 +1,9 @@
 ---
 title: '@retikz/foundation'
-description: 为所有包提供可复用的类型工具、Zod 标量 schema、非空字符串断言和结构化错误基础契约。
+description: 为所有包提供可复用的类型工具、JSON 与结构只读集合快照、Zod 标量 schema、非空字符串断言和结构化错误基础契约。
 ---
 
-`@retikz/foundation` 是为所有包提供基础能力的纯工具模块，用于统一复用类型、标量校验、空白语义和错误骨架；Zod 是它唯一的 production dependency。
+`@retikz/foundation` 是为所有包提供基础能力的纯工具模块，用于统一复用类型、JSON 与结构只读集合快照、标量校验、空白语义和错误骨架；Zod 是它唯一的 production dependency。
 
 ## 安装与使用
 
@@ -11,16 +11,26 @@ description: 为所有包提供可复用的类型工具、Zod 标量 schema、�
 
 ```ts
 import {
+  assertPlainDataContainers,
   assertNonEmptyString,
   assertPositiveNumber,
+  cloneAndFreezeJson,
   createOpenStringSchema,
+  createReadonlyMap,
   NonBlankStringSchema,
   NormalizedFractionSchema,
   PositiveNumberSchema,
   RetikzError,
   RetikzFoundationError,
 } from '@retikz/foundation';
-import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf, WithRequiredProperties } from '@retikz/foundation';
+import type {
+  AssertEqual,
+  NonEmptyReadonlyArray,
+  OpenString,
+  RetikzErrorOptions,
+  ValueOf,
+  WithRequiredProperties,
+} from '@retikz/foundation';
 ```
 
 开发者通常不需要直接使用 `@retikz/foundation`；它是一个为包之间复用基础能力而提供的纯内部工具包。
@@ -31,13 +41,13 @@ import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf, WithRequired
       label: 'Foundation 根入口',
       path: 'packages/kernel/foundation/src/index.ts',
       startLine: 1,
-      endLine: 4,
+      endLine: 6,
     },
     {
       label: '根入口与 subpath 契约测试',
       path: 'packages/kernel/foundation/tests/public-surface.test.ts',
       startLine: 1,
-      endLine: 37,
+      endLine: 44,
     },
   ]}
 />
@@ -46,7 +56,7 @@ import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf, WithRequired
 
 ### 类型工具
 
-这四个工具只在编译期工作，不产生运行时代码，也不表达任何 IR 或领域模型。
+这五个工具只在编译期工作，不产生运行时代码，也不表达任何 IR 或领域模型。
 
 | 导出                              | 语义                                             |
 | --------------------------------- | ------------------------------------------------ |
@@ -54,11 +64,42 @@ import type { AssertEqual, OpenString, RetikzErrorOptions, ValueOf, WithRequired
 | `AssertEqual<TActual, TExpected>` | 只有双向可赋值时才得到 `true`                    |
 | `OpenString<T>`                   | 保留内置字面量提示，同时接受自定义字符串         |
 | `WithRequiredProperties<T, TKey>` | 只把指定 key 收窄为必填，保留其余属性及 readonly |
+| `NonEmptyReadonlyArray<T>`        | 至少包含一个元素的只读数组                       |
 
 例如，下面的 `name` 会变为必填，而 `note` 仍保持可选：
 
 ```ts
 type Named = WithRequiredProperties<Readonly<{ name?: string; note?: string }>, 'name'>;
+```
+
+### 只读集合快照
+
+`createReadonlyMap(entries)` 将输入条目复制为独立的浅快照。结果保持原生 Map 的查询、迭代和插入顺序，但不暴露 `set`、`delete` 或 `clear`；entry value 保持原对象身份，不会被深拷贝或冻结。
+
+```ts
+const definition = { kind: 'point' };
+const source = new Map([['point', definition]]);
+const definitions = createReadonlyMap(source);
+
+source.clear();
+definitions.has('point'); // true
+```
+
+### JSON 数据快照
+
+`cloneAndFreezeJson(value, path)` 校验 JSON-safe plain data，并返回与原输入脱离的深冻结副本。循环引用、访问器、symbol key、稀疏数组、数组额外属性、非有限数和 class 实例都会抛出 `RetikzFoundationError`：
+
+```ts
+const snapshot = cloneAndFreezeJson({ filters: [{ field: 'age', value: 18 }] });
+
+Object.isFrozen(snapshot); // true
+Object.isFrozen(snapshot.filters); // true
+```
+
+`assertPlainDataContainers(value, path)` 只检查容器结构，不复制数据，也不读取访问器。它用于 owner 在 schema 之前拒绝 class 实例、Promise、异常属性描述符、symbol key、异常数组和循环引用；字符串、数字、`undefined` 等叶子值仍由 owner schema 校验：
+
+```ts
+assertPlainDataContainers({ tokens: { color: undefined } }, 'Theme provider output');
 ```
 
 ### 通用契约
@@ -150,6 +191,18 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       endLine: 15,
     },
     {
+      label: '只读 Map 浅快照实现',
+      path: 'packages/kernel/foundation/src/collections.ts',
+      startLine: 1,
+      endLine: 27,
+    },
+    {
+      label: 'plain-data 容器断言与 JSON 深冻结实现',
+      path: 'packages/kernel/foundation/src/json.ts',
+      startLine: 1,
+      endLine: 92,
+    },
+    {
       label: '标量断言实现',
       path: 'packages/kernel/foundation/src/assert.ts',
       startLine: 1,
@@ -178,6 +231,18 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       path: 'packages/kernel/foundation/tests/error.test.ts',
       startLine: 8,
       endLine: 70,
+    },
+    {
+      label: '只读 Map 浅快照测试',
+      path: 'packages/kernel/foundation/tests/collections.test.ts',
+      startLine: 1,
+      endLine: 37,
+    },
+    {
+      label: 'plain-data 容器断言与 JSON 深冻结测试',
+      path: 'packages/kernel/foundation/tests/json.test.ts',
+      startLine: 1,
+      endLine: 114,
     },
   ]}
 />

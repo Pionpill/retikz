@@ -1,21 +1,56 @@
-import type { ResolvedTheme } from '@retikz/core';
-import type { IRPlot, PlotThemeStyleDefinition } from '@retikz/plot';
+import type { IRChild, IRJsonObject, ResolvedTheme } from '@retikz/core';
+import type { IRPlot } from '@retikz/plot';
+import type { IRSurface } from '@retikz/standard';
 
-import type { IRBaseChart } from '../schemas';
-import type { ChartThemeStyleDefinition } from '../style';
+import type { ChartRecipeDefinition } from '../contract/recipe';
+import type { ChartThemeDefinition, ChartThemeResolution } from '../contract/theme';
+import type { IRChartSource } from '../schemas';
 
-/** Chart 解析器产出的唯一 Base 内部形态 */
-export type CanonicalChart = IRBaseChart;
-
-/** Chart 解析当前调用所需的窄上下文 */
-export type ChartResolveContext = Readonly<{
-  theme: ResolvedTheme;
-  chartThemeStyles?: ReadonlyArray<ChartThemeStyleDefinition>;
-  plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
+/** Chart presentation 的固定 slot 解析结果 */
+export type ChartPresentationResolution = Readonly<{
+  /** title → subtitle → plot → note → source 的最终内容 */
+  content: IRChild;
+  /** 包含 Chart shell padding 与 canvas 的 Standard Surface */
+  surface: IRSurface;
+  /** 外部 Chart border-box allocation；不写入 IRPlot */
+  layout?: IRChartSource['layout'];
+  /** 固定顺序的已消费 presentation slot 名称 */
+  slots: ReadonlyArray<'title' | 'subtitle' | 'plot' | 'note' | 'source'>;
 }>;
 
-/** Chart 解析后的 Base Chart 与完整 Plot */
+/** Chart resolve 的完整输出 */
 export type ChartResolution = Readonly<{
-  chart: CanonicalChart;
-  plotSpec: IRPlot;
+  /** 已经由 recipe 精确 schema parse 的 Source IR */
+  source: IRChartSource;
+  /** Theme owner slice cascade 的结果 */
+  theme: ChartThemeResolution;
+  /** 完整且经 PlotSchema 校验的 Plot IR */
+  plot: IRPlot;
+  /** 需要由当前 compile occurrence 提交的非致命 Chart warning */
+  warnings: ReadonlyArray<ChartResolveWarning>;
+  /** 固定顺序的 presentation 与 Surface 结果 */
+  presentation: ChartPresentationResolution;
+}>;
+
+/** Chart resolve 产生、由 Core composite context 定位并提交的 warning */
+export type ChartResolveWarning = Readonly<{
+  /** 机器可读 Chart warning code */
+  code: string;
+  /** 面向调用方的英文消息 */
+  message: string;
+  /** 相对当前 Chart Source occurrence 的 jq-like 路径 */
+  subPath?: string;
+}>;
+
+/** 已选定 recipe 与命名主题链的 Chart resolve context */
+export type SelectedChartResolveContext = Readonly<{
+  theme: ResolvedTheme;
+  recipe: ChartRecipeDefinition;
+  themeDefinitions: ReadonlyArray<ChartThemeDefinition>;
+}>;
+
+/** Mark slot 继承后的值；显式 mark payload 由 mark resolver 自己覆盖 */
+export type InheritedChartMarkSlots = Readonly<{
+  encodings: IRJsonObject;
+  properties: IRJsonObject;
 }>;

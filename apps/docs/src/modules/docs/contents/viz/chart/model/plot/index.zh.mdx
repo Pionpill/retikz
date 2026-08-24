@@ -1,0 +1,69 @@
+---
+title: 与 Plot 协作
+description: 区分 Chart 的图形外壳、Chart marks 与 Plot 的绘图语法，并理解主题如何按 owner 协作。
+---
+
+Chart 复用 Plot，而不是包住一份不可扩展的绘图结果。封装类型的 recipe 只补齐该类型默认需要的 Plot 结构；轴、图例、比例尺、变换、附加图元和标注仍沿 Plot 的公开契约继续组合。`recipe.marks` 是 Chart-owned semantic marks；`plotExtension.marks` 是独立 Plot 内容。
+
+## 两个 owner，一张完整图形
+
+<ComponentPreview files="chart-plot-ownership" hideCode size="md" />
+
+| Chart 拥有                               | Plot 拥有                                   |
+| ---------------------------------------- | ------------------------------------------- |
+| `namespace`、family 与 `recipe` envelope | data、transform、scale 与 coordinate        |
+| title、subtitle、note、source            | marks、axes、legends 与其它 guides          |
+| 画布尺寸、整图 Surface 与 Chart tokens   | Plot theme、图形语法的解析、lowering 与诊断 |
+
+当 Scatter recipe 根据 `recipe.encodings` 生成主 Point 图元时，它是在构造 Plot，不是在 Chart 中实现另一套 Point。recipe 还会生成一个内建 semantic mark；用户通过 `recipe.marks` 注入可继承 Chart context 的 mark，通过 `plotExtension` 写入完全独立的 Plot fragment。两者仍由各自的 schema、provider 与 pipeline 消费。
+
+## 扩展应该落在哪一侧
+
+- 改变“数据怎样被绘制”时扩展 Plot，例如新增 mark、channel、scale、coordinate、guide 或 transform
+- 使用内建 Chart family / `chartType` 组织已提供的可复用 Plot 语义；需要新增或高度定制的图形时直接使用 Plot，并把独有字段放入自己的应用模型
+- 说明整张图的主题、范围、来源或阅读限制时使用 Chart presentation
+- 说明坐标、图例或数据图元时继续使用 Plot 的辅助元素与标注能力
+
+这个边界避免 Chart 类型随着 Plot 能力增长而复制整套绘图 API，也避免 Plot 知道 Scatter 等产品化类型名称。
+
+## 运行时主题协作
+
+Core、Chart、Plot 与当前 recipe 分别拥有自己的 Theme token slice。主题可以是注册名称，也可以携带 `tokens.chart`、`tokens.plot` 与 `tokens.recipe`；每个 owner 只消费自己的 slice，同名只是选择协作，不合并 owner。
+
+React 中，Chart Source 的 `theme` 负责持久化的 owner slices；`ChartThemeProvider` 通过 `themeDefinitions` 注入当前具体 chartType provider，`PlotThemeProvider` 通过 `plotThemeStyles` 注入 Plot definition。Vanilla 创建函数分别保留 `themeDefinitions` 与 `lowerOptions.plotThemeStyles`，在一次编译中消费它们。嵌入 `<Layout>` 时，Core definition 来自父 Layout，Chart 与 Plot definition 仍由对应 provider 贡献。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'recipe 与 Plot fragment 合并',
+      path: 'packages/viz/chart/src/_chart/resolve/plot.ts',
+      startLine: 1,
+      endLine: 90,
+    },
+    {
+      label: 'Chart provider 贡献 Chart 定义',
+      path: 'packages/viz/chart/src/_chart/providers/provider.ts',
+      startLine: 1,
+      endLine: 81,
+    },
+    {
+      label: '适配层组装 Core、Chart 与 Plot provider',
+      path: 'packages/viz/chart-vanilla/src/shared/contribution.ts',
+      startLine: 12,
+      endLine: 26,
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/model/presentation">
+    <span className="font-semibold">整图展示</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解 Chart 自己拥有的叙事与 Surface。</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot">
+    <span className="font-semibold">Plot</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">继续查询图元、比例尺、坐标与辅助元素。</span>
+  </LinkedCard>
+</div>

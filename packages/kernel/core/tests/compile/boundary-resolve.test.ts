@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import type { BoundaryGeometryResolveContext } from '../../src/compile/node';
 import type { BoundaryDefinition, ShapeDefinition } from '../../src/contract';
@@ -204,7 +204,7 @@ describe('resolveBoundary', () => {
   it('custom resolveRect 返回非有限 rotate 时 fail-loud', () => {
     const invalidRotateBoundary = defineBoundary({
       name: 'invalid-rotate',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       resolveRect: context => ({ ...context.visualRect, rotate: Number.NaN }),
       boundaryPoint: rect => [rect.x, rect.y],
     });

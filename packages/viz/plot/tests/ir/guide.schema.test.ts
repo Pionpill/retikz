@@ -608,9 +608,8 @@ describe('LegendGuideSchema contract', () => {
     expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', orient: 'diagonal' })).toThrow();
   });
 
-  it('legend_empty_scale_rejected', () => {
-    // scale 给了但为空串 → min(1) 拒
-    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', scale: '' })).toThrow();
+  it.each(['', '   '])('legend_blank_scale_%j_rejected', scale => {
+    expect(() => LegendGuideSchema.parse({ type: 'legend', channel: 'color', scale })).toThrow();
   });
 
   it('legend_empty_title_reports_legend_message', () => {
