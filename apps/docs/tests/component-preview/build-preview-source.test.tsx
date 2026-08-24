@@ -10,11 +10,17 @@ import { createInputScene, Layout, Node } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
 import { DetailColumn, DetailTable, ManualTable } from '@retikz/table-react';
 import { normalizeScene } from '@retikz/vanilla';
+import { createElement, isValidElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { buildPreviewSource } from '../../src/modules/docs/components/component-preview/source-panel';
-import { buildPreviewIR, formatIR, irHasAnimations } from '../../src/modules/docs/components/component-preview/utils';
+import {
+  buildPreviewIR,
+  formatIR,
+  irHasAnimations,
+  previewEmbedPropsOf,
+} from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
 import PathInspectorDemo, {
   previewSource as pathInspectorPreviewSource,
@@ -207,7 +213,13 @@ describe('buildPreviewSource', () => {
   });
 
   it('仅由文档预览派生高层 Source IR，不扩展 Vanilla normalize 结果', () => {
-    const input = createInputScene(<ChartDemo />);
+    const chart = ChartDemo({});
+    if (!isValidElement(chart) || typeof chart.type !== 'function') {
+      throw new Error('ChartDemo must return one function-component root');
+    }
+    const input = createInputScene(
+      createElement(chart.type as FC<Record<string, unknown>>, previewEmbedPropsOf(chart.type, chart.props)),
+    );
     const normalized = normalizeScene(input.scene, { adapters: input.adapters });
 
     expect(normalized).not.toHaveProperty('sourceIr');

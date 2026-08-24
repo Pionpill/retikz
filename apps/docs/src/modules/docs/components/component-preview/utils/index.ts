@@ -5,6 +5,7 @@ export * from './diff';
 export * from './format-ir';
 export * from './graph-authoring-input';
 export * from './ir-to-vanilla-code';
+export * from './preview-embed';
 export * from './preview-files';
 export * from './preview-source';
 export * from './source-visibility';

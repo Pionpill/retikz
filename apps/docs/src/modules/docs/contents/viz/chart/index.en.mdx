@@ -33,6 +33,12 @@ const rows = [
 />;
 ```
 
+## React hosting and embedding
+
+Every concrete Chart component provides Layout capability by default. Rendering `<ScatterChart>` directly creates exactly one `Layout` / Scene host. Inside an existing `<Layout>`, Chart contributes only the Chart-to-Plot-to-Core Scope/composite, inherits the outer effective Theme, and does not create a second SVG.
+
+`width`, `height`, CSS, renderer/runtime, animation, and compile callbacks are all `ChartHostProps` and are valid only for standalone use. An embedded Chart fails loudly when it owns any of those fields, including an explicit `undefined`; move them to the outer `<Layout>`. Chart Source `layout` remains the separate border-box contract and is never populated or overwritten by host `width` / `height`; Chart `id` remains optional.
+
 When you already have JSON Source that matches an exact schema, the application
 should select the concrete entry from `type` and `recipe.chartType`. Chart does
 not provide a generic `<Chart source={...}>` component that dynamically loads
@@ -52,6 +58,18 @@ Source `plotExtension` fragment or use Plot directly.
       path: 'packages/viz/chart-react/src/point/shared/marks.tsx',
       startLine: 4,
       endLine: 14,
+    },
+    {
+      label: 'Standalone and embedded Chart host-field boundary',
+      path: 'packages/viz/chart-react/src/shared/host.ts',
+      startLine: 30,
+      endLine: 44,
+    },
+    {
+      label: 'Concrete Chart components share one Layout / InputEmbed entry',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 102,
+      endLine: 130,
     },
   ]}
 />

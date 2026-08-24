@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PreviewSourceConfig } from '../../src/modules/docs/preview';
 
-import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
+import { buildPreviewIR, previewEmbedPropsOf } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
 import { CHART_PRESENTATION_CONTROL_IDS } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation.constants';
 import { previewControlContract as presentationLayoutZhContract } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-layout.controls';
@@ -31,12 +31,15 @@ const canonicalScatterChartOf = (source: PreviewSourceConfig): ReactElement => {
 };
 
 const scatterContributionOf = (chart: ReactElement) =>
-  ScatterChart.inputEmbedAdapter.lower(ScatterChart.createInputEmbedProps(chart.props), {
-    id: 'chart',
-    kind: ScatterChart.inputEmbedAdapter.kind,
-    layerId: 'main',
-    identityPath: ['main', 'chart'],
-  });
+  ScatterChart.inputEmbedAdapter.lower(
+    ScatterChart.createInputEmbedProps(previewEmbedPropsOf(ScatterChart, chart.props)),
+    {
+      id: 'chart',
+      kind: ScatterChart.inputEmbedAdapter.kind,
+      layerId: 'main',
+      identityPath: ['main', 'chart'],
+    },
+  );
 
 type ControlSections = ReadonlyArray<Readonly<{ controls: ReadonlyArray<Readonly<{ id: string }>> }>>;
 
