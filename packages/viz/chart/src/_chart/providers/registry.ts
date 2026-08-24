@@ -154,6 +154,7 @@ export const resolveChartProviderRegistry = (
 
   const recipes = new Map<string, ChartRecipeDefinition>();
   const themes = new Map<string, ChartThemeDefinition>();
+  const themeDefinitions: Array<ChartThemeDefinition> = [];
   const seenContributions = new Set<ChartRecipeProviderContribution>();
   for (const [index, contribution] of contributions.entries()) {
     if (seenContributions.has(contribution)) continue;
@@ -168,17 +169,16 @@ export const resolveChartProviderRegistry = (
     }
     recipes.set(contribution.recipe.chartType, contribution.recipe);
 
-    for (const [themeIndex, theme] of contribution.themeDefinitions.entries()) {
-      if (theme.name.length === 0)
-        throw invalidRegistry('Chart theme name must be non-empty', ['themes', themeIndex, 'name']);
-      const existingTheme = themes.get(theme.name);
-      if (existingTheme !== undefined && existingTheme !== theme) throw duplicateDefinition('themes', theme.name);
-      themes.set(theme.name, theme);
-    }
+    for (const theme of contribution.themeDefinitions) themeDefinitions.push(theme);
   }
 
   const recipeMap = createReadonlyMap(recipes);
-  for (const theme of themes.values()) validateChartThemeDefinition(theme, recipeMap);
+  for (const theme of themeDefinitions) {
+    validateChartThemeDefinition(theme, recipeMap);
+    const existingTheme = themes.get(theme.name);
+    if (existingTheme !== undefined && existingTheme !== theme) throw duplicateDefinition('themes', theme.name);
+    themes.set(theme.name, theme);
+  }
   validateChartThemeBases(themes);
 
   const schemas = [...recipes.values()].map(recipe => recipe.schema);

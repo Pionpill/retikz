@@ -1,4 +1,4 @@
-import type { CssColorValue, NonEmptyReadonlyArray, ResolvedThemeColors, ThemeModeValue } from '@retikz/core';
+import type { CssColorValue, NonEmptyReadonlyArray, ThemeModeValue, ThemeStyleColorOverrides } from '@retikz/core';
 
 import { defineThemeStyle } from '@retikz/core';
 
@@ -126,19 +126,20 @@ const tonePresets: Record<ReferenceStyle, Record<ThemeModeValue, ReadonlyArray<T
   },
 };
 
-const semanticPresets: Record<ReferenceStyle, Record<ThemeModeValue, ResolvedThemeColors['semantic']>> = {
+const semanticPresets: Record<
+  ReferenceStyle,
+  Record<ThemeModeValue, NonNullable<ThemeStyleColorOverrides['semantic']>>
+> = {
   academic: {
     light: {
       error: 'hsl(0, 68%, 42%)',
       success: 'hsl(145, 50%, 32%)',
       warning: 'hsl(48, 80%, 38%)',
-      guide: 'hsl(215, 12%, 48%)',
     },
     dark: {
       error: 'hsl(0, 60%, 72%)',
       success: 'hsl(145, 50%, 68%)',
       warning: 'hsl(50, 75%, 70%)',
-      guide: 'hsl(215, 14%, 68%)',
     },
   },
   vibrant: {
@@ -146,13 +147,11 @@ const semanticPresets: Record<ReferenceStyle, Record<ThemeModeValue, ResolvedThe
       error: 'hsl(355, 80%, 57%)',
       success: 'hsl(145, 65%, 42%)',
       warning: 'hsl(50, 90%, 46%)',
-      guide: 'hsl(215, 12%, 48%)',
     },
     dark: {
       error: 'hsl(355, 78%, 72%)',
       success: 'hsl(145, 62%, 66%)',
       warning: 'hsl(50, 88%, 68%)',
-      guide: 'hsl(215, 14%, 68%)',
     },
   },
   clean: {
@@ -160,26 +159,21 @@ const semanticPresets: Record<ReferenceStyle, Record<ThemeModeValue, ResolvedThe
       error: 'hsl(0, 55%, 58%)',
       success: 'hsl(145, 38%, 47%)',
       warning: 'hsl(50, 62%, 47%)',
-      guide: 'hsl(215, 12%, 48%)',
     },
     dark: {
       error: 'hsl(0, 50%, 72%)',
       success: 'hsl(145, 38%, 68%)',
       warning: 'hsl(50, 60%, 68%)',
-      guide: 'hsl(215, 14%, 68%)',
     },
   },
 };
 
-const resolveColors = (style: ReferenceStyle, mode: ThemeModeValue): ResolvedThemeColors => {
+const resolveColors = (style: ReferenceStyle, mode: ThemeModeValue): ThemeStyleColorOverrides => {
   const categorical = hues.map((hue, index) => {
     const [saturation, lightness] = tonePresets[style][mode][index];
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   }) as unknown as NonEmptyReadonlyArray<CssColorValue>;
-  return Object.freeze({
-    semantic: Object.freeze({ ...semanticPresets[style][mode] }),
-    categorical: Object.freeze(categorical),
-  });
+  return { semantic: semanticPresets[style][mode], categorical };
 };
 
 /** docs 维护的三个 Core reference Theme definitions */

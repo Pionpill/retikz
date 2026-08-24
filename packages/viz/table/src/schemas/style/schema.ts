@@ -75,3 +75,17 @@ export const TableThemeTokenPresetMapSchema = z
   .strictObject(TableThemeTokenShape)
   .omit({ [TableThemeToken.DataCategorical]: true })
   .describe('Complete Table preset map excluding the Core shared categorical projection.');
+
+export const TableThemeStyleTokenOverridesSchema = TableThemeTokenPresetMapSchema.partial()
+  .superRefine((overrides, context) => {
+    for (const key of Object.keys(TableThemeTokenPresetMapSchema.shape)) {
+      if (Object.hasOwn(overrides, key) && overrides[key as keyof typeof overrides] === undefined) {
+        context.addIssue({
+          code: 'custom',
+          path: [key],
+          message: 'Table theme style token overrides must omit unset values instead of using undefined',
+        });
+      }
+    }
+  })
+  .describe('Sparse strict Table style token overlay excluding the Core shared categorical projection.');

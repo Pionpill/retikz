@@ -33,7 +33,7 @@ Standalone `theme` writes the root Core Scene Theme. An embedded Table does not 
   <ComponentPreview files="table-runtime-transaction" hideCode size="xxxl" previewClassName="p-3" />
 </div>
 
-1. **Canonical model**: Table schema validation runs first and a Structure definition normalizes one semantic model. Each Cell first resolves its final plan from the Core Theme `style` / `mode` preset, shared categorical colors, local `tableThemeTokens`, Cell configuration, encodings, and ordered rules. Value Cells then run the winning formatter/Presentation; content Cells bypass both and apply their resolved content style.
+1. **Canonical model**: Table schema validation runs first and a Structure definition normalizes one semantic model. Each Cell starts from the Table owner-local default preset selected by the host `theme.mode`; an explicit `theme.style` then applies the injected sparse Table definition with the same name. Shared categorical colors, local `tableThemeTokens`, Cell configuration, encodings, and ordered rules complete the final plan. Value Cells then run the winning formatter/Presentation; content Cells bypass both and apply their resolved content style.
 2. **Natural proposal probes**: every Cell calls `layoutChild` with `NaturalLayoutProposal` to obtain allocation and visual bounds. These probes measure content but do not commit output.
 3. **Columns and wrap**: natural width, spans, gaps, track configuration, and the parent x-axis `exact.value` or finite `range.max` feed the column solver. Only wrapping Cells issue another `x: range(0, contentWidth)` probe.
 4. **Rows and placement**: final probe heights feed the row solver. The transaction then computes Cell boxes, padding-reduced content boxes, fit / align / overflow placement, and the border conflict graph.
@@ -261,7 +261,7 @@ The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload
 | `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
 | Embedded Table `onManifest`        | Outer `<Layout onArtifacts>`                    |
 
-The Table preset comes from host Core `theme.style` / `theme.mode`; local `tableThemeTokens` overrides it at the IRTable level. Host CSS remains `containerStyle` and does not enter IRTable. An omitted `style` uses the default light baseline; the resolved manifest records `style` only when one was selected, together with `themeMode`, the complete token map, and token sources.
+Table always establishes its owner-local default preset from host `theme.mode`. Omitting `theme.style` uses that baseline directly. Selecting a style requires the host to inject a same-named `TableThemeStyleDefinition` through `tableThemeStyles`; an unregistered name fails loudly. The definition returns only sparse tokens, missing fields continue to inherit the default preset, and local IRTable `tableThemeTokens` override that result. Core `themeStyles` independently supplies the same-named Core definition, while host CSS remains in `containerStyle`; neither enters IRTable. The resolved manifest records `style` only when one was selected, together with `themeMode`, the complete token map, and token sources.
 
 ## Related
 

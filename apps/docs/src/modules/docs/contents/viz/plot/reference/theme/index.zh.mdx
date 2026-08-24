@@ -3,7 +3,7 @@ title: 契约 - 主题
 description: 查询 Plot canonical token、preset 级联、原生主题与 inspection 契约。
 ---
 
-Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`。未声明 `style` 时，Plot 使用自身随 `mode` 变化的默认 baseline；显式 `style` 才选择同名的完整领域 definition。发布包不内置命名 style；本站通过公开 Core / Plot definitions 注入 Academic、Vibrant、Clean 三个参考 preset。`IRPlot` 不重复声明 Core 的 `style` / `mode`；主题只控制视觉默认，不改变数据、坐标、Axis 是否存在、minor tick source 或 mark 结构。
+Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`。Plot 始终先建立随 `mode` 与 Core shared categorical 变化的默认 baseline；显式 `style` 再选择同名领域 definition，并只覆盖它明确返回的 token 与 Axis rules。发布包不内置命名 style；本站通过公开 Core / Plot definitions 注入 Academic、Vibrant、Clean 三个参考 preset。`IRPlot` 不重复声明 Core 的 `style` / `mode`；主题只控制视觉默认，不改变数据、坐标、Axis 是否存在、minor tick source 或 mark 结构。
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
@@ -13,15 +13,15 @@ Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`。未声�
 
 ## 可扩展 style
 
-用 `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })` 定义 Plot 的运行时 preset，并通过 `plotThemeStyles` 注入 `lowerPlots`、`<Plot>` 或 `renderPlot()`；React 子树也可通过 `PlotThemeProvider` ambient 注入。`tokens` 是完整基础 map，`tokenRules` 可选且只作用于 Axis；resolver 函数与解析结果不进入 `IRPlot`。在同一图中还要把同名 Core definition 传给 `themeStyles` 或 Core `ThemeProvider`，否则 Core 或 Plot 任一层都会 fail-loud。Chart typed authoring 还要通过 `<ChartThemeProvider themeDefinitions={...}>` 或 Vanilla factory 的 `themeDefinitions` 注入 Chart definitions；`lowerOptions.plotThemeStyles` 仍只负责 Plot definitions。
+用 `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })` 定义 Plot 的运行时 preset，并通过 `plotThemeStyles` 注入 `lowerPlots`、`<Plot>` 或 `renderPlot()`；React 子树也可通过 `PlotThemeProvider` ambient 注入。`tokens` 可省略，并与 `plotThemeTokens` 复用同一严格稀疏 schema；`tokenRules` 也可省略，提供时追加在默认 Axis rules 后。未返回或在 runtime definition 中显式返回 `undefined` 的 token 继续使用当前 mode 的默认值；持久化 `plotThemeTokens` / `plotThemeTokenRules` 仍拒绝显式 `undefined`。resolver 函数与解析结果不进入 `IRPlot`。在同一图中还要把同名 Core definition 传给 `themeStyles` 或 Core `ThemeProvider`，否则 Core 或 Plot 任一层都会 fail-loud。Chart typed authoring 还要通过 `<ChartThemeProvider themeDefinitions={...}>` 或 Vanilla factory 的 `themeDefinitions` 注入 Chart definitions；`lowerOptions.plotThemeStyles` 仍只负责 Plot definitions。
 
 ## 级联与原子替换
 
 ```text
 Core effective Theme
-  → Plot style 基础 tokens
-  → Plot style 中匹配 Axis dimension 的 tokenRules
-  → inherited Core categorical
+  → mode / shared categorical 建立默认 Plot tokens 与 Axis rules
+  → Plot style 稀疏 tokens
+  → 追加 Plot style 中匹配 Axis dimension 的 tokenRules
   → local IRPlot.plotThemeTokens
   → local IRPlot.plotThemeTokenRules
   → local IRPlot.plotTheme
@@ -116,23 +116,23 @@ Core effective Theme
 
 ## PlotThemeTokenResolutionSchema
 
-`PlotThemeTokenResolutionSchema` 使用完全相同的 42 个字段契约，但每个字段都必需。默认 baseline 的 Light / Dark preset 与所有注入 definition 的 `tokens` 输出都必须通过它；sparse、resolved 与 preset 因而不会维护三份同义字段清单。
+`PlotThemeTokenResolutionSchema` 使用完全相同的 42 个字段契约，但每个字段都必需。默认 Light / Dark preset 与最终级联结果通过它；注入 definition 的 `tokens` 则通过上面的 sparse overrides schema，因此自定义 style 不需要复制默认 token。
 
 ## Inspection
 
 `resolvePlotTheme(effectiveTheme, input)` 是公开纯 resolver，返回 `IRPlotThemeResolution`，其 schema 是 `PlotThemeResolutionSchema`：
 
-| 字段                | 含义                                              |
-| ------------------- | ------------------------------------------------- |
-| `style` / `mode`    | 选择 preset 的 effective Core Theme 环境          |
-| `tokens`            | 级联后的完整 token map                            |
-| `tokenSources`      | 每个 canonical token 的唯一胜出来源与稳定 path    |
-| `tokenRules`        | 按实际级联顺序保留的 style 与 IRPlot Axis rules   |
-| `authoredOverrides` | 记录原生 `plotTheme` 入口                         |
-| `plotTheme`         | 已映射并校验的完整原生 Plot theme                 |
-| `palette`           | scale、mark 与 legend 共享的最终 palette / scheme |
+| 字段                | 含义                                                     |
+| ------------------- | -------------------------------------------------------- |
+| `style` / `mode`    | 选择 preset 的 effective Core Theme 环境                 |
+| `tokens`            | 级联后的完整 token map                                   |
+| `tokenSources`      | 每个 canonical token 的唯一胜出来源与稳定 path           |
+| `tokenRules`        | 按实际级联顺序保留的 default、style 与 IRPlot Axis rules |
+| `authoredOverrides` | 记录原生 `plotTheme` 入口                                |
+| `plotTheme`         | 已映射并校验的完整原生 Plot theme                        |
+| `palette`           | scale、mark 与 legend 共享的最终 palette / scheme        |
 
-`tokenSources[].kind` 只回答 token 是从上层 effective Theme 直接投影（`inherit`），还是由 Plot style definition 或当前 Plot 输入构建（`local`），不表示级联优先级。具体胜出入口由 `path` 区分：`$style/...` 表示 Plot style baseline，`$theme/colors/categorical` 表示 Core shared categorical 投影，`$spec/plotThemeTokens/...` 与 `$spec/plotTheme/...` 表示 Plot-local 输入。`tokenRules[].path` 使用 `$style/.../tokenRules/<index>` 或 `$spec/plotThemeTokenRules/<index>`；`authoredOverrides` 中的 `plotTheme` 也记录为 `local`。
+`tokenSources[].kind` 只回答 token 是从上层 effective Theme 直接投影（`inherit`），还是由 Plot 默认值、style definition 或当前 Plot 输入构建（`local`），不表示级联优先级。具体胜出入口由 `path` 区分：未被 style 覆盖的 token 保留 `$default/...`，显式 style token 使用 `$style/...`，Plot-local 输入使用 `$spec/plotThemeTokens/...` 或 `$spec/plotTheme/...`。`tokenRules[].path` 按实际顺序使用 `$default/.../tokenRules/<index>`、`$style/.../tokenRules/<index>` 或 `$spec/plotThemeTokenRules/<index>`；`authoredOverrides` 中的 `plotTheme` 也记录为 `local`。
 
 Chart 可以调用这个 resolver 读取 recipe 需要的瞬时 series palette，但不会把完整 resolved theme 写回 `IRPlot`，也不会把 Plot token 标记为 Chart-owned。
 

@@ -10,7 +10,7 @@ const withRequiredPropertiesContract: AssertEqual<RequiredName, Readonly<{ name:
 const nonEmptyReadonlyArrayContract: AssertEqual<NonEmptyNumbers, readonly [number, ...Array<number>]> = true;
 
 describe('foundation public surface', () => {
-  it('exports only the fifteen runtime symbols from its root', () => {
+  it('exports only the sixteen runtime symbols from its root', () => {
     expect(Object.keys(foundation).sort()).toEqual(
       [
         'NonBlankStringSchema',
@@ -22,6 +22,7 @@ describe('foundation public surface', () => {
         'RetikzError',
         'RetikzFoundationError',
         'RetikzFoundationErrorCode',
+        'assertPlainDataContainers',
         'assertNonEmptyString',
         'assertPositiveNumber',
         'cloneAndFreezeJson',

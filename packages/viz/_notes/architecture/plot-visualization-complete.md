@@ -55,7 +55,7 @@ plot 可以提供依赖 mark、geometry 或 layout 语义的 plot-specific trans
 
 这些是检测维度，不要求一一对应目录；代码仍按 `schemas / contract / providers / pipeline / shared` 分层。
 
-Plot 不拥有 Core Theme 的传播协议。Core 只传递 selector 和当前生效的 shared colors；Plot 通过同名 `PlotThemeStyleDefinition` 解析自己的 vocabulary、preset、resolver、mapping 与 inspection。style resolver 必须把 shared colors 纳入完整 Plot token 基线；局部 `plotThemeTokens`、`colors` 与 native `plotTheme` 在其后覆盖。Standard 只消费 Plot 已解析的领域无关绘图输入和 Core `InspectionAppearanceContext`，不读取 Plot token bag 或重新分配 Inspector 颜色。
+Plot 不拥有 Core Theme 的传播协议。Core 只传递 selector 和当前生效的 shared colors；Plot 通过同名 `PlotThemeStyleDefinition` 解析自己的 vocabulary、preset、resolver、mapping 与 inspection。Plot 先按 mode 与 shared colors 建立完整默认 token / Axis rule 基线，再合并 style resolver 返回的稀疏覆盖；局部 `plotThemeTokens`、`colors` 与 native `plotTheme` 在其后覆盖。Standard 只消费 Plot 已解析的领域无关绘图输入和 Core `InspectionAppearanceContext`，不读取 Plot token bag 或重新分配 Inspector 颜色。
 
 ## 4. 准入原则
 

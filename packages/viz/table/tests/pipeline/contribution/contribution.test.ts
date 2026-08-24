@@ -6,7 +6,6 @@ import {
   defineComposite,
   defineThemeStyle,
   resolveCoreProviderDependencies,
-  resolveDefaultCoreThemeColors,
 } from '@retikz/core';
 import { RetikzFoundationError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
@@ -21,7 +20,6 @@ import {
   defineCellVisualScale,
   defineTableStructure,
   defineTableThemeStyle,
-  getDefaultTableThemePreset,
   TABLE_NAMESPACE,
   TableComposite,
   TableRowKind,
@@ -73,7 +71,7 @@ const visualScaleOf = (name: string) =>
 const themeStyleOf = (name: string) =>
   defineTableThemeStyle({
     name,
-    resolve: theme => getDefaultTableThemePreset(theme.mode),
+    resolve: () => ({}),
   });
 
 const compositeOf = (namespace: string, type: string): AnyCompositeDefinition => {
@@ -206,7 +204,7 @@ describe('Table runtime contribution', () => {
         themeStyles: [
           defineThemeStyle({
             name: 'brand',
-            resolve: ({ mode }) => resolveDefaultCoreThemeColors(mode),
+            resolve: () => ({}),
           }),
         ],
       },

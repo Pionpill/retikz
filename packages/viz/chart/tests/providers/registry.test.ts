@@ -2,7 +2,7 @@ import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { defineChartTheme } from '../../src';
+import { defineChartTheme, RetikzChartErrorCode } from '../../src';
 import { defineChartRecipe } from '../../src/_chart/contract';
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { createChartSourceSchema } from '../../src/_chart/schemas';
@@ -91,6 +91,118 @@ describe('active Chart provider registry', () => {
         },
       ]),
     ).toThrow();
+  });
+
+  it('rejects non-plain Chart Theme Definition containers', () => {
+    let nameGetterReadCount = 0;
+    class ThemeDefinitionOutput {
+      readonly name = 'class-theme';
+      readonly tokens = { chart: { 'chart.padding': 12 } };
+    }
+
+    const nameGetterTheme = defineChartTheme({
+      name: 'name-getter-theme',
+      tokens: { chart: { 'chart.padding': 12 } },
+    });
+    Object.defineProperty(nameGetterTheme, 'name', {
+      enumerable: true,
+      get: () => {
+        nameGetterReadCount += 1;
+        return 'name-getter-theme';
+      },
+    });
+    const getterTheme = Object.defineProperty({ name: 'getter-theme' }, 'tokens', {
+      enumerable: true,
+      get: () => ({ chart: { 'chart.padding': 12 } }),
+    });
+    const symbolTheme = {
+      name: 'symbol-theme',
+      tokens: { chart: { 'chart.padding': 12 } },
+      [Symbol('metadata')]: true,
+    };
+
+    for (const themeDefinition of [new ThemeDefinitionOutput(), nameGetterTheme, getterTheme, symbolTheme]) {
+      expect(() =>
+        resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [themeDefinition] }]),
+      ).toThrow();
+    }
+    expect(nameGetterReadCount).toBe(0);
+  });
+
+  it('rejects explicit undefined in optional named Theme Definition fields', () => {
+    const base = defineChartTheme({
+      name: 'base',
+      tokens: { chart: { 'chart.padding': 12 } },
+    });
+    const undefinedBase = defineChartTheme({
+      name: 'undefined-base',
+      tokens: { chart: { 'chart.padding': 12 } },
+    });
+    Object.defineProperty(undefinedBase, 'base', { enumerable: true, value: undefined });
+    const undefinedTokens = defineChartTheme({ name: 'undefined-tokens', base: 'base' });
+    Object.defineProperty(undefinedTokens, 'tokens', { enumerable: true, value: undefined });
+
+    for (const themeDefinition of [undefinedBase, undefinedTokens]) {
+      expect(() =>
+        resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [base, themeDefinition] }]),
+      ).toThrow();
+    }
+
+    for (const slice of ['chart', 'plot', 'recipes']) {
+      const tokens = {};
+      Object.defineProperty(tokens, slice, { enumerable: true, value: undefined });
+      const themeDefinition = defineChartTheme({ name: `undefined-${slice}`, base: 'base', tokens });
+
+      expect(() =>
+        resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [base, themeDefinition] }]),
+      ).toThrow();
+    }
+  });
+
+  it('rejects invalid named Theme Definition envelope leaf values', () => {
+    const base = defineChartTheme({
+      name: 'base',
+      tokens: { chart: { 'chart.padding': 12 } },
+    });
+    const functionTokens = defineChartTheme({ name: 'function-tokens', base: 'base' });
+    Object.defineProperty(functionTokens, 'tokens', { enumerable: true, value: () => ({}) });
+    const numericName = defineChartTheme({ name: 'numeric-name', base: 'base' });
+    Object.defineProperty(numericName, 'name', { enumerable: true, value: 42 });
+    const numericBase = defineChartTheme({
+      name: 'numeric-base',
+      tokens: { chart: { 'chart.padding': 12 } },
+    });
+    Object.defineProperty(numericBase, 'base', { enumerable: true, value: 42 });
+
+    for (const themeDefinition of [functionTokens, numericName, numericBase]) {
+      expect(() =>
+        resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [base, themeDefinition] }]),
+      ).toThrowError(expect.objectContaining({ code: RetikzChartErrorCode.InvalidRegistry }));
+    }
+  });
+
+  it('wraps a non-object named Theme Definition envelope failure', () => {
+    expect(() =>
+      Reflect.apply(resolveChartProviderRegistry, undefined, [[{ family: 'point', recipe, themeDefinitions: [null] }]]),
+    ).toThrowError(
+      expect.objectContaining({
+        code: RetikzChartErrorCode.InvalidRegistry,
+        cause: expect.any(z.ZodError),
+      }),
+    );
+  });
+
+  it('rejects explicit undefined inside an active recipe token slice', () => {
+    const recipeTokens = {};
+    Object.defineProperty(recipeTokens, 'accent', { enumerable: true, value: undefined });
+    const themeDefinition = defineChartTheme({
+      name: 'undefined-recipe-token',
+      tokens: { recipes: { fixture: recipeTokens } },
+    });
+
+    expect(() =>
+      resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [themeDefinition] }]),
+    ).toThrowError(expect.objectContaining({ code: RetikzChartErrorCode.InvalidRegistry }));
   });
 
   it('keeps the Core theme context separate from active recipe registration', () => {

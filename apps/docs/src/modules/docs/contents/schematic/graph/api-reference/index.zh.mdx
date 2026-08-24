@@ -212,7 +212,7 @@ Theme 是 Relation 的默认来源，不是可用字段白名单。Relation 显�
 
 Core `theme` 选择或覆盖通用 Theme；`graphTheme` 只保存 Graph-local ordered appearance rules。Entity rule 可按 role / kind / predicate 匹配，Relation rule 可按 role / kind / predicate / direction 匹配；role 持有完整结构，kind / predicate 只能提供允许的结构 delta
 
-`defineGraphThemeStyle()` 的 `resolve(theme)` 返回 `GraphThemeStyleOverrides`，只写相对当前明暗模式默认 preset 需要改变的字段。`entity`、`relation` 及各自的 `tokens`、`rules` 都可以省略；显式 `tokens: {}` 无效，因为 token override 必须至少包含一个字段
+`defineGraphThemeStyle()` 的 `resolve(theme)` 返回 `GraphThemeStyleOverrides`，只写相对当前明暗模式默认 preset 需要改变的字段。`entity`、`relation` 及各自的 `tokens`、`rules` 都可以省略；runtime callback 中已知 token 显式为 `undefined` 时按省略处理。显式 `tokens: {}` 仍无效，因为 token override 必须至少包含一个字段；返回值只能包含 plain-data 容器
 
 ```ts
 const compact = defineGraphThemeStyle({

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   TableSchema,
+  TableThemeStyleTokenOverridesSchema,
   TableThemeTokenBorderSchema,
   TableThemeTokenKeySchema,
   TableThemeTokenMapSchema,
@@ -54,6 +55,19 @@ describe('Table theme token schema', () => {
         'Unknown table theme token "zUnknown"',
       ]);
     }
+  });
+
+  it('keeps Table style overlays sparse, strict, and separate from Core categorical colors', () => {
+    expect(TableThemeStyleTokenOverridesSchema.parse({ 'cell.content.color': '#334155' })).toEqual({
+      'cell.content.color': '#334155',
+    });
+    expect(() => TableThemeStyleTokenOverridesSchema.parse({ unknown: true })).toThrow(/unrecognized key/i);
+    expect(() => TableThemeStyleTokenOverridesSchema.parse({ 'cell.content.color': undefined })).toThrow(
+      /omit unset values/i,
+    );
+    expect(() => TableThemeStyleTokenOverridesSchema.parse({ 'data.categorical': ['#ff0000'] })).toThrow(
+      /data\.categorical/i,
+    );
   });
 
   it('reuses authoritative value boundaries and forbids public border priority', () => {

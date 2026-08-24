@@ -1,4 +1,10 @@
-import { cloneAndFreezeJson, RetikzError, RetikzFoundationError, RetikzFoundationErrorCode } from '@retikz/foundation';
+import {
+  assertPlainDataContainers,
+  cloneAndFreezeJson,
+  RetikzError,
+  RetikzFoundationError,
+  RetikzFoundationErrorCode,
+} from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
 describe('cloneAndFreezeJson', () => {
@@ -69,5 +75,49 @@ describe('cloneAndFreezeJson', () => {
       cause: Number.POSITIVE_INFINITY,
     });
     expect((failure as RetikzFoundationError).message).toBe('payload.nested must contain only finite JSON numbers');
+  });
+});
+
+describe('assertPlainDataContainers', () => {
+  it('accepts plain containers while leaving primitive leaf validation to the caller', () => {
+    const shared = { value: undefined };
+
+    expect(() =>
+      assertPlainDataContainers({ first: shared, second: shared, callback: () => true }, 'provider output'),
+    ).not.toThrow();
+  });
+
+  it('rejects unsafe container structure without reading accessors', () => {
+    const cyclic: Record<string, unknown> = {};
+    cyclic.self = cyclic;
+    const sparse = [] as Array<unknown>;
+    sparse.length = 1;
+    const arrayWithExtra = [true];
+    Object.defineProperty(arrayWithExtra, 'extra', { enumerable: true, value: true });
+    const symbolKey = { [Symbol('key')]: true };
+    let getterReadCount = 0;
+    const accessor = Object.defineProperty({}, 'value', {
+      enumerable: true,
+      get: () => {
+        getterReadCount += 1;
+        return true;
+      },
+    });
+    const hidden = Object.defineProperty({}, 'hidden', { value: true });
+    const classInstance = new (class Demo {})();
+
+    for (const value of [cyclic, sparse, arrayWithExtra, symbolKey, accessor, hidden, classInstance, new Date(0)]) {
+      expect(() => assertPlainDataContainers(value, 'provider output')).toThrowError(RetikzFoundationError);
+    }
+    expect(getterReadCount).toBe(0);
+  });
+
+  it('rejects Array subclasses as non-plain containers', () => {
+    class ArraySubclass extends Array<string> {}
+
+    const value = new ArraySubclass('item');
+
+    expect(() => assertPlainDataContainers(value, 'provider output')).toThrowError(RetikzFoundationError);
+    expect(() => cloneAndFreezeJson(value, 'payload')).toThrowError(RetikzFoundationError);
   });
 });

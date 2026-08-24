@@ -33,7 +33,7 @@ Standalone 的 `theme` 写入根 Core Scene；embedded Table 不启动局部 com
   <ComponentPreview files="table-runtime-transaction" hideCode size="xxxl" previewClassName="p-3" />
 </div>
 
-1. **Canonical model**：先通过 Table schema，再由 Structure definition 规范化语义模型。每个 Cell 先按 Core Theme `style` / `mode` 选择的 preset、shared categorical、local `tableThemeTokens`、Cell 配置、encoding 与有序 rules 解析最终计划；value Cell 再执行胜出的 formatter/Presentation，content Cell 则绕过两者并应用解析后的 content style。
+1. **Canonical model**：先通过 Table schema，再由 Structure definition 规范化语义模型。每个 Cell 先按 host `theme.mode` 建立 Table owner-local 默认 preset；显式 `theme.style` 再应用注入的同名稀疏 Table definition，随后与 shared categorical、local `tableThemeTokens`、Cell 配置、encoding 和有序 rules 共同解析最终计划。value Cell 再执行胜出的 formatter/Presentation，content Cell 则绕过两者并应用解析后的 content style。
 2. **Natural proposal probes**：每个 Cell 先用 `NaturalLayoutProposal` 执行 `layoutChild`，得到内容的 allocation bounds 与 visual bounds；这些 probe 只用于测量。
 3. **列求解与 wrap**：natural 宽度、span、gap、track 配置，以及父级 x 轴 `exact.value` 或有限 `range.max` 一起进入列求解。只有开启 wrap 的 Cell 才按最终内容宽度再发起 `x: range(0, contentWidth)` probe。
 4. **行求解与放置**：最终 probe 的高度进入行求解，随后计算 Cell box、padding 后的 content box、fit / align / overflow placement，并建立 border conflict graph。
@@ -261,7 +261,7 @@ manifest 是 JSON-safe、detached、递归冻结的 typed artifact payload；字
 | `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
 | embedded Table 的 `onManifest`     | 外层 `<Layout onArtifacts>`                     |
 
-Table 的 Core preset 来自 host `theme.style` / `theme.mode`；local `tableThemeTokens` 在 IRTable 层级覆盖它。宿主 CSS 继续使用 `containerStyle`，不进入 IRTable。省略 `style` 时使用默认的 light 基线；resolved manifest 仅在显式选择时记录 `style`，并记录 `themeMode`、完整 token map 与来源。
+Table 始终先按 host `theme.mode` 建立 owner-local 默认 preset。省略 `theme.style` 时直接使用该基线；显式选择 style 时，宿主必须通过 `tableThemeStyles` 注入同名 `TableThemeStyleDefinition`，未注册名称会 fail-loud。definition 只需返回稀疏 token，缺失字段继续继承默认 preset，IRTable 的 local `tableThemeTokens` 再覆盖它。Core `themeStyles` 独立提供同名 Core definition，宿主 CSS 继续使用 `containerStyle`，两者都不进入 IRTable。resolved manifest 仅在显式选择时记录 `style`，并记录 `themeMode`、完整 token map 与来源。
 
 ## 相关
 

@@ -11,6 +11,7 @@ description: 为所有包提供可复用的类型工具、JSON 与结构只读�
 
 ```ts
 import {
+  assertPlainDataContainers,
   assertNonEmptyString,
   assertPositiveNumber,
   cloneAndFreezeJson,
@@ -46,7 +47,7 @@ import type {
       label: '根入口与 subpath 契约测试',
       path: 'packages/kernel/foundation/tests/public-surface.test.ts',
       startLine: 1,
-      endLine: 43,
+      endLine: 44,
     },
   ]}
 />
@@ -93,6 +94,12 @@ const snapshot = cloneAndFreezeJson({ filters: [{ field: 'age', value: 18 }] });
 
 Object.isFrozen(snapshot); // true
 Object.isFrozen(snapshot.filters); // true
+```
+
+`assertPlainDataContainers(value, path)` 只检查容器结构，不复制数据，也不读取访问器。它用于 owner 在 schema 之前拒绝 class 实例、Promise、异常属性描述符、symbol key、异常数组和循环引用；字符串、数字、`undefined` 等叶子值仍由 owner schema 校验：
+
+```ts
+assertPlainDataContainers({ tokens: { color: undefined } }, 'Theme provider output');
 ```
 
 ### 通用契约
@@ -190,10 +197,10 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       endLine: 27,
     },
     {
-      label: 'JSON 深冻结快照实现',
+      label: 'plain-data 容器断言与 JSON 深冻结实现',
       path: 'packages/kernel/foundation/src/json.ts',
       startLine: 1,
-      endLine: 74,
+      endLine: 92,
     },
     {
       label: '标量断言实现',
@@ -232,10 +239,10 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       endLine: 37,
     },
     {
-      label: 'JSON 深冻结快照测试',
+      label: 'plain-data 容器断言与 JSON 深冻结测试',
       path: 'packages/kernel/foundation/tests/json.test.ts',
       startLine: 1,
-      endLine: 73,
+      endLine: 114,
     },
   ]}
 />

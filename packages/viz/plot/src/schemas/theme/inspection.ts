@@ -85,13 +85,13 @@ export const PlotThemeResolutionSchema = z
         source.kind === ThemeTokenSource.Inherit &&
         PLOT_INHERITED_COLOR_TOKENS.has(source.token) &&
         source.path === '$theme/colors/categorical';
-      const baselinePath =
-        resolution.style === undefined
-          ? `$default/${resolution.mode}/${source.token}`
-          : `$style/${resolution.style}/${resolution.mode}/${source.token}`;
+      const baselinePaths = [
+        `$default/${resolution.mode}/${source.token}`,
+        ...(resolution.style === undefined ? [] : [`$style/${resolution.style}/${resolution.mode}/${source.token}`]),
+      ];
       const local =
         source.kind === ThemeTokenSource.Local &&
-        (source.path === baselinePath ||
+        (baselinePaths.includes(source.path) ||
           source.path === `$spec/plotThemeTokens/${source.token}` ||
           source.path.startsWith('$spec/plotTheme/'));
       if (!inherited && !local) {
@@ -102,22 +102,34 @@ export const PlotThemeResolutionSchema = z
         });
       }
     });
+    const rulePathLayers = [
+      `$default/${resolution.mode}/tokenRules/`,
+      ...(resolution.style === undefined ? [] : [`$style/${resolution.style}/${resolution.mode}/tokenRules/`]),
+      '$spec/plotThemeTokenRules/',
+    ];
+    const ruleCounts = rulePathLayers.map(() => 0);
+    let currentRuleLayer = 0;
+    if (resolution.tokenRules[0]?.path !== `${rulePathLayers[0]}0`) {
+      context.addIssue({
+        code: 'custom',
+        path: ['tokenRules'],
+        message: 'Plot token rules must start with the default rule layer',
+      });
+    }
     resolution.tokenRules.forEach((source, index) => {
-      const stylePath =
-        resolution.style === undefined
-          ? `$default/${resolution.mode}/tokenRules/`
-          : `$style/${resolution.style}/${resolution.mode}/tokenRules/`;
-      const localPath = '$spec/plotThemeTokenRules/';
-      const validPath =
-        source.path === `${stylePath}${index}` ||
-        (source.path.startsWith(localPath) && /^\$spec\/plotThemeTokenRules\/\d+$/.test(source.path));
-      if (!validPath) {
+      const ruleLayer = rulePathLayers.findIndex(
+        (prefix, layer) => layer >= currentRuleLayer && source.path === `${prefix}${ruleCounts[layer]}`,
+      );
+      if (ruleLayer === -1) {
         context.addIssue({
           code: 'custom',
           path: ['tokenRules', index, 'path'],
-          message: 'Plot token rule source path must identify a style or IRPlot rule entry',
+          message: 'Plot token rule source path must identify an ordered default, style, or IRPlot rule entry',
         });
+        return;
       }
+      currentRuleLayer = ruleLayer;
+      ruleCounts[ruleLayer] += 1;
     });
     const authoredPaths = resolution.authoredOverrides.map(source => source.path);
     if (authoredPaths.length > 1) {

@@ -2,7 +2,7 @@ import type { IRChild } from '@retikz/core';
 import type { InputTable } from '@retikz/table-vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
 
-import { CompositeBaseSchema, defineComposite, defineThemeStyle, resolveDefaultCoreThemeColors } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import {
   createDetailTableIR,
   createManualTableIR,
@@ -10,7 +10,6 @@ import {
   defineCellPresentation,
   defineTableStructure,
   defineTableThemeStyle,
-  getDefaultTableThemePreset,
 } from '@retikz/table';
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { Fragment } from 'react';
@@ -305,13 +304,13 @@ describe('Table React composition root integration', () => {
     const themeStyles = [
       defineThemeStyle({
         name: 'root-props-theme',
-        resolve: ({ mode }) => resolveDefaultCoreThemeColors(mode),
+        resolve: () => ({}),
       }),
     ];
     const tableThemeStyles = [
       defineTableThemeStyle({
         name: 'root-props-theme',
-        resolve: theme => getDefaultTableThemePreset(theme.mode),
+        resolve: () => ({}),
       }),
     ];
     const compositeSchema = CompositeBaseSchema.extend({

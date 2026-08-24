@@ -37,7 +37,7 @@ import { DetailColumn, DetailTable } from '@retikz/table-react';
 
 `columns` 与 `DetailColumn` children 只能二选一；两种写法会得到相同的明细表 spec。除 `columns` 外，`DetailTable` 的根属性在两种写法中完全一致。
 
-Table 会先解析每个 Cell 的最终计划：Core Theme 的 `style` / `mode` 选择 Table preset，shared `colors.categorical` 提供视觉编码的公共分类色，spec-local `tableThemeTokens` 覆盖 Table token。列级配置提供 formatter/presentation 与局部外观，`encodings` 映射原始数据颜色，声明顺序中的 `rules` 最后覆盖匹配 Cell，也可以改写 formatter/presentation 胜者。随后才由胜出的 formatter 把原始字段值转成显示值；只有 `tableThemeTokens` 会写入 JSON-safe IRTable，宿主 `theme` 由 Core Scene / Scope 传播。
+Table 会先解析每个 Cell 的最终计划：host `theme.mode` 建立 Table owner-local 默认 preset；显式 `theme.style` 再应用注入的同名稀疏 Table definition，随后由 shared `colors.categorical` 提供视觉编码的公共分类色，spec-local `tableThemeTokens` 覆盖 Table token。列级配置提供 formatter/presentation 与局部外观，`encodings` 映射原始数据颜色，声明顺序中的 `rules` 最后覆盖匹配 Cell，也可以改写 formatter/presentation 胜者。随后才由胜出的 formatter 把原始字段值转成显示值；只有 `tableThemeTokens` 会写入 JSON-safe IRTable，宿主 `theme` 由 Core Scene / Scope 传播。
 
 ## 例子
 
@@ -53,7 +53,7 @@ Table 会先解析每个 Cell 的最终计划：Core Theme 的 `style` / `mode` 
   type="tip"
   title="区分 Theme 与宿主 CSS"
   description={
-    'Core Theme 的 style/mode 决定 Table preset，tableThemeTokens 只覆盖当前 IRTable 的 Table token；React standalone 宿主 CSS 继续使用 containerStyle。'
+    'host theme.mode 建立 Table owner-local 默认 preset，显式 theme.style 应用注入的同名稀疏 Table definition，tableThemeTokens 最后覆盖当前 IRTable 的 Table token；React standalone 宿主 CSS 继续使用 containerStyle。'
   }
 />
 

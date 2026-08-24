@@ -37,7 +37,7 @@ For JSX-local column declarations, use `DetailColumn` children:
 
 Choose either `columns` or `DetailColumn` children. Both forms produce the same detail-table spec, and every `DetailTable` root prop other than `columns` is available in both forms.
 
-Table first resolves the final plan for each Cell. Core Theme `style` / `mode` selects the Table preset, shared `colors.categorical` supplies the common categorical palette, and spec-local `tableThemeTokens` override Table tokens. Column configuration supplies formatter/presentation references and local appearance; `encodings` map raw data to color; and declaration-ordered `rules` apply the final matching overrides, including formatter or presentation winners. Only then does the winning formatter turn a raw field value into its display value. Only `tableThemeTokens` enters the JSON-safe IRTable; the host `theme` propagates through the Core Scene / Scope.
+Table first resolves the final plan for each Cell. The host `theme.mode` establishes the Table owner-local default preset; an explicit `theme.style` then applies the injected sparse Table definition with the same name. Shared `colors.categorical` supplies the common categorical palette, and spec-local `tableThemeTokens` override Table tokens. Column configuration supplies formatter/presentation references and local appearance; `encodings` map raw data to color; and declaration-ordered `rules` apply the final matching overrides, including formatter or presentation winners. Only then does the winning formatter turn a raw field value into its display value. Only `tableThemeTokens` enters the JSON-safe IRTable; the host `theme` propagates through the Core Scene / Scope.
 
 ## Examples
 
@@ -53,7 +53,7 @@ The site's preview Provider injects same-named Core and Table Academic definitio
   type="tip"
   title="Keep Theme and host CSS separate"
   description={
-    'Core Theme style/mode selects the Table preset, tableThemeTokens provides the local Table token overlay, and React standalone host CSS continues to use containerStyle.'
+    'The host theme.mode establishes the Table owner-local default preset, an explicit theme.style applies the injected sparse Table definition with the same name, tableThemeTokens provides the final local Table token overlay, and React standalone host CSS continues to use containerStyle.'
   }
 />
 

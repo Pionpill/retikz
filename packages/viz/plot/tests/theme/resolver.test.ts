@@ -2,6 +2,7 @@ import type { ResolvedTheme, ThemeModeValue } from '@retikz/core';
 
 import { resolveDefaultCoreThemeColors, ThemeMode, ThemeTokenSource } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
+import { ZodError } from 'zod';
 
 import type { IRPlot } from '../../src';
 
@@ -56,14 +57,11 @@ describe('Plot theme resolver', () => {
         }) => unknown)
       | undefined;
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
-    const baseline = getDefaultPlotThemePreset(ThemeMode.Light);
-
     expect(define).toBeTypeOf('function');
     const definition = define?.({
       name: 'brand',
       resolve: () => ({
         tokens: {
-          ...baseline,
           [PlotThemeToken.PlotPaletteCategorical]: ['#brand-categorical'],
           [PlotThemeToken.PlotPaletteSeries]: ['#brand-series'],
           [PlotThemeToken.PlotPaletteSector]: ['#brand-sector'],
@@ -92,21 +90,35 @@ describe('Plot theme resolver', () => {
       kind: ThemeTokenSource.Local,
       path: '$style/brand/light/plot.palette.categorical',
     });
+    expect(sourceOf(result, PlotThemeToken.PlotAreaFill)).toMatchObject({
+      kind: ThemeTokenSource.Local,
+      path: '$default/light/plot.area.fill',
+    });
   });
 
-  it('拒绝缺少或重名的 Plot style definition', () => {
-    const define = (plot as Record<string, unknown>).definePlotThemeStyle as
-      | ((definition: {
-          name: string;
-          resolve: (theme: ResolvedTheme) => { tokens: Record<string, unknown> };
-        }) => unknown)
-      | undefined;
+  it('拒绝缺少或重名 definition，并把外部 style 的 undefined token 当作省略', () => {
     const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
-    const baseline = getDefaultPlotThemePreset(ThemeMode.Light);
-    const incomplete = structuredClone(baseline) as Record<string, unknown>;
-    delete incomplete[PlotThemeToken.AxisGridIncludeDomain];
-    const brand = define?.({ name: 'brand', resolve: () => ({ tokens: baseline }) });
-    const incompleteBrand = define?.({ name: 'incomplete-brand', resolve: () => ({ tokens: incomplete }) });
+    const brand = plot.definePlotThemeStyle({ name: 'brand', resolve: () => ({}) });
+    const sparseTokens = { [PlotThemeToken.AxisGridIncludeDomain]: false };
+    Object.defineProperty(sparseTokens, PlotThemeToken.AxisGridIncludeDomain, {
+      enumerable: true,
+      value: undefined,
+    });
+    const sparseRuleTokens = {
+      [PlotThemeToken.AxisGridEnabled]: false,
+      [PlotThemeToken.AxisGridIncludeDomain]: false,
+    };
+    Object.defineProperty(sparseRuleTokens, PlotThemeToken.AxisGridIncludeDomain, {
+      enumerable: true,
+      value: undefined,
+    });
+    const sparseBrand = plot.definePlotThemeStyle({
+      name: 'sparse-brand',
+      resolve: () => ({
+        tokens: sparseTokens,
+        tokenRules: [{ select: { dimension: 'x' }, tokens: sparseRuleTokens }],
+      }),
+    });
 
     expect(() =>
       resolve(
@@ -134,20 +146,187 @@ describe('Plot theme resolver', () => {
         [brand, brand],
       ),
     ).toThrow(/Plot theme style 'brand' is already registered/);
+    const sparseResult = resolve(themeOf('sparse-brand', ThemeMode.Light), {}, [sparseBrand]);
+    expect(sparseResult.tokens[PlotThemeToken.AxisGridIncludeDomain]).toBe(false);
+    expect(sourceOf(sparseResult, PlotThemeToken.AxisGridIncludeDomain)).toMatchObject({
+      path: '$default/light/axis.grid.includeDomain',
+    });
+    expect(sparseResult.tokenRules.at(-1)).toMatchObject({
+      path: '$style/sparse-brand/light/tokenRules/0',
+      rule: {
+        tokens: { [PlotThemeToken.AxisGridEnabled]: false },
+      },
+    });
+    expect(sparseResult.tokenRules.at(-1)?.rule.tokens).not.toHaveProperty(PlotThemeToken.AxisGridIncludeDomain);
+
+    const unknownTokens = { [PlotThemeToken.AxisGridEnabled]: false };
+    Object.defineProperty(unknownTokens, 'unknown.token', { enumerable: true, value: undefined });
+    const unknownRuleTokens = { [PlotThemeToken.AxisGridEnabled]: false };
+    Object.defineProperty(unknownRuleTokens, 'unknown.rule.token', { enumerable: true, value: undefined });
+    const unknownStyle = plot.definePlotThemeStyle({
+      name: 'unknown-style-token',
+      resolve: () => ({ tokens: unknownTokens }),
+    });
+    const unknownRuleStyle = plot.definePlotThemeStyle({
+      name: 'unknown-rule-token',
+      resolve: () => ({ tokenRules: [{ select: { dimension: 'x' }, tokens: unknownRuleTokens }] }),
+    });
+
+    expect(() => resolve(themeOf(unknownStyle.name, ThemeMode.Light), {}, [unknownStyle])).toThrow(/unknown/i);
+    expect(() => resolve(themeOf(unknownRuleStyle.name, ThemeMode.Light), {}, [unknownRuleStyle])).toThrow(
+      /unrecognized|unknown/i,
+    );
+  });
+
+  it('拒绝外部 style definition 的非法顶层输出，同时把已知顶层 undefined 当作省略', () => {
+    class EmptyStyleOutput {}
+    class TickMarkOutput {
+      readonly kind = 'circle';
+      readonly size = 5;
+    }
+
+    const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
+    const sparseOutput = {};
+    Object.defineProperties(sparseOutput, {
+      tokens: { enumerable: true, value: undefined },
+      tokenRules: { enumerable: true, value: undefined },
+    });
+    const sparseStyle = { name: 'sparse-output', resolve: () => sparseOutput };
+    const sparseResult = resolve(themeOf(sparseStyle.name, ThemeMode.Light), {}, [sparseStyle]);
+
+    expect(sparseResult.tokens[PlotThemeToken.PlotAreaFill]).toBe(
+      getDefaultPlotThemePreset(ThemeMode.Light)[PlotThemeToken.PlotAreaFill],
+    );
+    expect(sparseResult.tokenRules.map(source => source.path)).toEqual(['$default/light/tokenRules/0']);
+
+    const unknownOutput = {};
+    Object.defineProperty(unknownOutput, 'unknown', { enumerable: true, value: undefined });
+    const getterOutput = Object.defineProperty({}, 'tokens', {
+      enumerable: true,
+      get: () => ({ [PlotThemeToken.PlotAreaFill]: '#ffffff' }),
+    });
+    const symbolOutput = { tokens: {}, [Symbol('metadata')]: true };
+    const tokenRulesWithExtra = [{ select: { dimension: 'x' }, tokens: { [PlotThemeToken.AxisGridEnabled]: false } }];
+    Object.defineProperty(tokenRulesWithExtra, 'extra', { enumerable: true, value: true });
+    const cyclicParams: Record<string, unknown> = {};
+    cyclicParams.self = cyclicParams;
+    const invalidStyles = [
+      { name: 'null-output', resolve: () => null },
+      { name: 'undefined-output', resolve: () => undefined },
+      { name: 'primitive-output', resolve: () => 42 },
+      { name: 'unknown-output', resolve: () => unknownOutput },
+      { name: 'null-tokens', resolve: () => ({ tokens: null }) },
+      { name: 'null-token-rules', resolve: () => ({ tokenRules: null }) },
+      { name: 'date-output', resolve: () => new Date(0) },
+      { name: 'class-output', resolve: () => new EmptyStyleOutput() },
+      { name: 'promise-output', resolve: () => Promise.resolve({}) },
+      { name: 'date-tokens', resolve: () => ({ tokens: new Date(0) }) },
+      { name: 'class-tokens', resolve: () => ({ tokens: new EmptyStyleOutput() }) },
+      { name: 'promise-tokens', resolve: () => ({ tokens: Promise.resolve({}) }) },
+      {
+        name: 'class-token-value',
+        resolve: () => ({ tokens: { [PlotThemeToken.AxisTickMark]: new TickMarkOutput() } }),
+      },
+      {
+        name: 'date-rule-tokens',
+        resolve: () => ({ tokenRules: [{ select: { dimension: 'x' }, tokens: new Date(0) }] }),
+      },
+      {
+        name: 'class-rule-tokens',
+        resolve: () => ({ tokenRules: [{ select: { dimension: 'x' }, tokens: new EmptyStyleOutput() }] }),
+      },
+      {
+        name: 'promise-rule-tokens',
+        resolve: () => ({ tokenRules: [{ select: { dimension: 'x' }, tokens: Promise.resolve({}) }] }),
+      },
+      { name: 'getter-output', resolve: () => getterOutput },
+      { name: 'symbol-output', resolve: () => symbolOutput },
+      { name: 'array-extra-output', resolve: () => ({ tokenRules: tokenRulesWithExtra }) },
+      {
+        name: 'cyclic-token-value',
+        resolve: () => ({
+          tokens: { [PlotThemeToken.PlotPaletteShape]: [{ type: 'polygon', params: cyclicParams }] },
+        }),
+      },
+    ];
+
+    for (const style of invalidStyles) {
+      expect(() => resolve(themeOf(style.name, ThemeMode.Light), {}, [style]), style.name).toThrowError(
+        expect.objectContaining({
+          code: plot.RetikzPlotErrorCode.Default,
+          cause: expect.any(ZodError),
+        }),
+      );
+    }
+  });
+
+  it('保留外部 style definition callback 抛出的原始 cause', () => {
+    const cause = new Error('custom Plot style failed');
+    const style = plot.definePlotThemeStyle({
+      name: 'throwing-style',
+      resolve: () => {
+        throw cause;
+      },
+    });
+
+    expect(() => plot.resolvePlotTheme(themeOf(style.name, ThemeMode.Light), {}, [style])).toThrowError(
+      expect.objectContaining({
+        code: plot.RetikzPlotErrorCode.Default,
+        cause,
+      }),
+    );
+  });
+
+  it('在读取 Array 子类方法前拒绝外部 style token rules', () => {
+    let mapReadCount = 0;
+    class TokenRuleArray extends Array<unknown> {}
+    Object.defineProperty(TokenRuleArray.prototype, 'map', {
+      configurable: true,
+      get: () => {
+        mapReadCount += 1;
+        return Array.prototype.map;
+      },
+    });
+    const tokenRules = new TokenRuleArray({
+      select: { dimension: 'x' },
+      tokens: { [PlotThemeToken.AxisGridEnabled]: false },
+    });
+    const style = { name: 'array-subclass-rules', resolve: () => ({ tokenRules }) };
+
     expect(() =>
-      resolve(
-        {
-          style: 'incomplete-brand',
-          mode: ThemeMode.Light,
-          colors: {
-            semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706', guide: '#6b7280' },
-            categorical: ['#brand'],
+      Reflect.apply(plot.resolvePlotTheme, undefined, [themeOf(style.name, ThemeMode.Light), {}, [style]]),
+    ).toThrowError(
+      expect.objectContaining({
+        code: plot.RetikzPlotErrorCode.Default,
+        cause: expect.any(ZodError),
+      }),
+    );
+    expect(mapReadCount).toBe(0);
+  });
+
+  it('在默认 Axis rules 后追加仅含 rules 的自定义 style', () => {
+    const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
+    const definition = plot.definePlotThemeStyle({
+      name: 'brand-rules',
+      resolve: () => ({
+        tokenRules: [
+          {
+            select: { dimension: 'x' },
+            tokens: { [PlotThemeToken.AxisTitlePadding]: 20 },
           },
-        },
-        {},
-        [incompleteBrand] as never,
-      ),
-    ).toThrow(/axis\.grid\.includeDomain/);
+        ],
+      }),
+    });
+    const result = resolve(themeOf(definition.name, ThemeMode.Light), {}, [definition]);
+
+    expect(result.tokens[PlotThemeToken.AxisTitlePadding]).toBe(12);
+    expect(sourceOf(result, PlotThemeToken.AxisTitlePadding)).toMatchObject({
+      path: '$default/light/axis.title.padding',
+    });
+    expect(result.tokenRules.map(record => record.path)).toEqual([
+      '$default/light/tokenRules/0',
+      '$style/brand-rules/light/tokenRules/0',
+    ]);
   });
 
   it('为默认 baseline 的两个 mode 提供独立完整 preset', () => {
@@ -176,6 +355,20 @@ describe('Plot theme resolver', () => {
       const tokens = resolvePlotAxisThemeTokens(resolution, dimension);
       expect(tokens[PlotThemeToken.AxisGridIncludeDomain]).toBe(true);
     }
+  });
+
+  it('让 style 全局 token 覆盖默认 Axis rule', () => {
+    const resolve = plot.resolvePlotTheme as unknown as ResolvePlotTheme;
+    const definition = plot.definePlotThemeStyle({
+      name: 'brand-no-grid',
+      resolve: () => ({ tokens: { [PlotThemeToken.AxisGridEnabled]: false } }),
+    });
+    const resolution = resolve(themeOf(definition.name, ThemeMode.Light), {}, [definition]) as Parameters<
+      typeof resolvePlotAxisThemeTokens
+    >[0];
+
+    expect(resolvePlotAxisThemeTokens(resolution, 'x')[PlotThemeToken.AxisGridEnabled]).toBe(false);
+    expect(resolvePlotAxisThemeTokens(resolution, 'y')[PlotThemeToken.AxisGridEnabled]).toBe(false);
   });
 
   it('让 Axis title padding 依次接受全局 token、dimension rule 与 native theme 覆盖', () => {
@@ -341,6 +534,21 @@ describe('Plot theme resolver', () => {
       PlotThemeResolutionSchema.safeParse({
         ...result,
         authoredOverrides: [...result.authoredOverrides, ...result.authoredOverrides],
+      }).success,
+    ).toBe(false);
+
+    const withLocalRule = resolve(themeOf(undefined, ThemeMode.Light), {
+      plotThemeTokenRules: [
+        {
+          select: { dimension: 'x' },
+          tokens: { [PlotThemeToken.AxisTitlePadding]: 20 },
+        },
+      ],
+    });
+    expect(
+      PlotThemeResolutionSchema.safeParse({
+        ...withLocalRule,
+        tokenRules: withLocalRule.tokenRules.slice(1),
       }).success,
     ).toBe(false);
   });

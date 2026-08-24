@@ -247,15 +247,15 @@ const TableManifestStyleSchema = z
         });
         return;
       }
-      const baselinePath =
-        style.style === undefined
-          ? `$default/${style.themeMode}/${key}`
-          : `$style/${style.style}/${style.themeMode}/${key}`;
-      const localPaths = [baselinePath, `$spec/tableThemeTokens/${key}`];
+      const localPaths = [
+        `$default/${style.themeMode}/${key}`,
+        ...(style.style === undefined ? [] : [`$style/${style.style}/${style.themeMode}/${key}`]),
+        `$spec/tableThemeTokens/${key}`,
+      ];
       const valid =
         key === 'data.categorical'
           ? (source.source === ThemeTokenSource.Inherit && source.path === '$theme/colors/categorical') ||
-            (source.source === ThemeTokenSource.Local && source.path === localPaths[1])
+            (source.source === ThemeTokenSource.Local && source.path === `$spec/tableThemeTokens/${key}`)
           : source.source === ThemeTokenSource.Local && localPaths.includes(source.path);
       if (!valid) {
         context.addIssue({

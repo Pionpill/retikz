@@ -3,6 +3,7 @@ import type { z } from 'zod';
 
 import type { TableThemeToken } from './constants';
 import type {
+  TableThemeStyleTokenOverridesSchema,
   TableThemeTokenBorderSchema,
   TableThemeTokenKeySchema,
   TableThemeTokenMapSchema,
@@ -24,6 +25,9 @@ export type TableThemeTokenMap = z.infer<typeof TableThemeTokenMapSchema>;
 
 /** 不含 shared categorical projection 的 Table preset map */
 export type TableThemeTokenPresetMap = z.infer<typeof TableThemeTokenPresetMapSchema>;
+
+/** 自定义 Table Theme style 相对默认 preset 的稀疏 token 覆盖 */
+export type TableThemeStyleTokenOverrides = z.infer<typeof TableThemeStyleTokenOverridesSchema>;
 
 /** Table theme token 的 canonical key value */
 export type TableThemeTokenValue = ValueOf<typeof TableThemeToken>;

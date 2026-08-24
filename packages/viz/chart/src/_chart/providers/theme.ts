@@ -1,5 +1,7 @@
 import type { ResolvedTheme } from '@retikz/core';
 
+import { JsonObjectSchema } from '@retikz/core';
+import { assertPlainDataContainers, NonBlankStringSchema } from '@retikz/foundation';
 import { PlotThemeTokenOverridesSchema } from '@retikz/plot';
 import { z } from 'zod';
 
@@ -8,6 +10,24 @@ import type { IRChartSource } from '../schemas';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { ChartThemeOverridesSchema } from '../schemas';
+
+const ChartThemeDefinitionEnvelopeSchema = z
+  .strictObject({
+    name: NonBlankStringSchema.describe('Registered Chart theme name'),
+    base: NonBlankStringSchema.optional().describe('Optional registered base Chart theme name'),
+    tokens: z
+      .strictObject({
+        chart: JsonObjectSchema.optional().describe('Sparse Chart shell token slice'),
+        plot: JsonObjectSchema.optional().describe('Sparse Plot token slice'),
+        recipes: z
+          .record(NonBlankStringSchema, JsonObjectSchema)
+          .optional()
+          .describe('Sparse recipe token slices keyed by chart type'),
+      })
+      .optional()
+      .describe('Owner-separated Chart theme token slices'),
+  })
+  .describe('Registered Chart theme definition envelope');
 
 const pathOf = (prefix: ReadonlyArray<string | number>, error: z.ZodError): ReadonlyArray<string | number> => {
   const issue = error.issues.at(0);
@@ -26,26 +46,57 @@ const invalidThemeSlice = (path: ReadonlyArray<string | number>, error: z.ZodErr
     cause: error,
   });
 
+const invalidThemeDefinition = (error: z.ZodError): RetikzChartError =>
+  new RetikzChartError({
+    code: RetikzChartErrorCode.InvalidRegistry,
+    message: 'Chart theme definition has an invalid declaration envelope',
+    details: { path: pathOf(['themes'], error) },
+    cause: error,
+  });
+
+const assertOptionalPropertyIsDefined = (
+  container: object,
+  field: string,
+  path: ReadonlyArray<string | number>,
+): void => {
+  const descriptor = Object.getOwnPropertyDescriptor(container, field);
+  if (descriptor === undefined || !('value' in descriptor) || descriptor.value !== undefined) return;
+  throw new RetikzChartError({
+    code: RetikzChartErrorCode.InvalidRegistry,
+    message: 'Chart theme definition must omit unset fields instead of using undefined',
+    details: { path },
+  });
+};
+
 /** 校验当前 active recipe 可消费的命名主题 owner slices */
 export const validateChartThemeDefinition = (
   theme: ChartThemeDefinition,
   recipes: ReadonlyMap<string, ChartRecipeDefinition>,
 ): void => {
-  if (theme.name.length === 0) {
+  try {
+    assertPlainDataContainers(theme, 'Chart theme definition');
+  } catch (cause) {
     throw new RetikzChartError({
       code: RetikzChartErrorCode.InvalidRegistry,
-      message: 'Chart theme name must be non-empty',
-      details: { path: ['themes', 'name'] },
+      message: 'Chart theme definition must use plain data containers',
+      details: { path: ['themes'] },
+      cause,
     });
   }
-  if (theme.base !== undefined && theme.base.length === 0) {
-    throw new RetikzChartError({
-      code: RetikzChartErrorCode.InvalidRegistry,
-      message: `Chart theme "${theme.name}" base must be non-empty`,
-      details: { path: ['themes', theme.name, 'base'] },
-    });
+  try {
+    ChartThemeDefinitionEnvelopeSchema.parse(theme);
+  } catch (error) {
+    if (error instanceof z.ZodError) throw invalidThemeDefinition(error);
+    throw error;
   }
+  assertOptionalPropertyIsDefined(theme, 'base', ['themes', 'base']);
+  assertOptionalPropertyIsDefined(theme, 'tokens', ['themes', 'tokens']);
   const tokens = theme.tokens;
+  if (tokens !== undefined) {
+    for (const slice of ['chart', 'plot', 'recipes']) {
+      assertOptionalPropertyIsDefined(tokens, slice, ['themes', theme.name, 'tokens', slice]);
+    }
+  }
   const hasTokens =
     tokens !== undefined &&
     ((tokens.chart !== undefined && Object.keys(tokens.chart).length > 0) ||

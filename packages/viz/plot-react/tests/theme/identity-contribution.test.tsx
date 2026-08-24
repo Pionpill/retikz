@@ -2,8 +2,7 @@ import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
 import type * as RetikzReact from '@retikz/react';
 
-import { ThemeMode } from '@retikz/core';
-import { definePlotThemeStyle, getDefaultPlotThemePreset } from '@retikz/plot';
+import { definePlotThemeStyle } from '@retikz/plot';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -38,7 +37,7 @@ const data: ExternalDatasets = { sales: [{ x: 0, y: 1 }] };
 
 const plotThemeStyle = definePlotThemeStyle({
   name: 'brand',
-  resolve: () => ({ tokens: getDefaultPlotThemePreset(ThemeMode.Light) }),
+  resolve: () => ({}),
 });
 
 describe('Plot React InputEmbed routing', () => {

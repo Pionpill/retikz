@@ -6,7 +6,6 @@ import {
   defineCellPresentation,
   defineCellVisualScale,
   defineTableThemeStyle,
-  getDefaultTableThemePreset,
 } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -16,15 +15,13 @@ import { detailTable, manualTable, renderTable } from '../../src';
 const cleanCoreTheme = defineThemeStyle({
   name: 'clean',
   resolve: () => ({
-    semantic: { error: '#aa0000', success: '#00aa00', warning: '#aaaa00', guide: '#666666' },
     categorical: ['#112233'],
   }),
 });
 
 const cleanTableTheme = defineTableThemeStyle({
   name: 'clean',
-  resolve: theme => ({
-    ...getDefaultTableThemePreset(theme.mode),
+  resolve: () => ({
     'cell.background.fill': null,
     'cell.content.color': null,
     'cell.content.font.family': null,

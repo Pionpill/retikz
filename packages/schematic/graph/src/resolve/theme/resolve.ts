@@ -1,5 +1,6 @@
 import type { IRJsonObject, JsonValue, ResolvedTheme } from '@retikz/core';
 
+import { assertPlainDataContainers } from '@retikz/foundation';
 import { z } from 'zod';
 
 import type {
@@ -40,6 +41,63 @@ const GraphThemeStyleOverridesSchema = z.strictObject({
     })
     .optional(),
 });
+
+const graphThemeStyleKeys = new Set(['entity', 'relation']);
+const graphThemeStyleLayerKeys = new Set(['tokens', 'rules']);
+const graphEntityThemeTokenKeys = new Set<string>(Object.keys(GraphEntityAppearanceTokenOverridesSchema.shape));
+const graphRelationThemeTokenKeys = new Set<string>(Object.keys(GraphRelationAppearanceTokenOverridesSchema.shape));
+
+const GraphThemeStylePlainDataSchema = z.custom<unknown>(
+  value => {
+    try {
+      assertPlainDataContainers(value, 'Graph theme style definition output');
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  { error: 'Graph theme style definition must return plain data containers.' },
+);
+
+/** 判断 runtime provider 输出是否为可枚举的普通对象 */
+const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+};
+
+/** 只把 runtime style definition 中已知且显式为 undefined 的字段规范化为省略 */
+const omitKnownUndefinedProperties = (value: unknown, knownKeys: ReadonlySet<string>): unknown => {
+  if (!isPlainRecord(value)) return value;
+  return Object.fromEntries(Object.entries(value).filter(([key, item]) => item !== undefined || !knownKeys.has(key)));
+};
+
+const normalizeGraphThemeStyleLayer = (value: unknown, tokenKeys: ReadonlySet<string>): unknown => {
+  const normalized = omitKnownUndefinedProperties(value, graphThemeStyleLayerKeys);
+  if (!isPlainRecord(normalized) || !Object.hasOwn(normalized, 'tokens')) return normalized;
+  const rawTokens = normalized.tokens;
+  const tokens = omitKnownUndefinedProperties(rawTokens, tokenKeys);
+  return isPlainRecord(rawTokens) &&
+    Object.keys(rawTokens).length > 0 &&
+    isPlainRecord(tokens) &&
+    Object.keys(tokens).length === 0
+    ? Object.fromEntries(Object.entries(normalized).filter(([key]) => key !== 'tokens'))
+    : { ...normalized, tokens };
+};
+
+const normalizeGraphThemeStyleOverrides = (overrides: unknown): unknown => {
+  const normalized = omitKnownUndefinedProperties(overrides, graphThemeStyleKeys);
+  if (!isPlainRecord(normalized)) return normalized;
+  return {
+    ...normalized,
+    ...(Object.hasOwn(normalized, 'entity')
+      ? { entity: normalizeGraphThemeStyleLayer(normalized.entity, graphEntityThemeTokenKeys) }
+      : {}),
+    ...(Object.hasOwn(normalized, 'relation')
+      ? { relation: normalizeGraphThemeStyleLayer(normalized.relation, graphRelationThemeTokenKeys) }
+      : {}),
+  };
+};
 
 const mergeRules = <TRule>(
   defaults: ReadonlyArray<TRule> | undefined,
@@ -213,7 +271,10 @@ export const resolveGraphTheme = (
     });
   }
   try {
-    return mergeGraphThemeStyle(defaults, GraphThemeStyleOverridesSchema.parse(definition.resolve(theme)));
+    const rawOverrides = definition.resolve(theme);
+    GraphThemeStylePlainDataSchema.parse(rawOverrides);
+    const overrides = GraphThemeStyleOverridesSchema.parse(normalizeGraphThemeStyleOverrides(rawOverrides));
+    return mergeGraphThemeStyle(defaults, overrides);
   } catch (cause) {
     throw new RetikzGraphError({
       code: RetikzGraphErrorCode.DefinitionCallbackFailed,
