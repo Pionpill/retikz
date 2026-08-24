@@ -26,8 +26,8 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
     {
       label: 'React Plot 将 props 收集为 Plot Vanilla 嵌入输入',
       path: 'packages/viz/plot-react/src/Plot.tsx',
-      startLine: 115,
-      endLine: 133,
+      startLine: 137,
+      endLine: 153,
     },
     {
       label: 'React 子组件收集后交给 Plot Vanilla 归一化',
@@ -60,13 +60,19 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
 
 | 包                     | 拥有的职责                                                       | 典型入口                                                   |
 | ---------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------- |
-| `@retikz/plot`         | `IRPlot*` schema、Definition / registry、领域解析与 lowering     | `PlotSchema`、`lowerPlots`                             |
+| `@retikz/plot`         | `IRPlot*` schema、Definition / registry、领域解析与 lowering     | `PlotSchema`、`lowerPlots`                                 |
 | `@retikz/plot-react`   | React `XxxProps` / children 收集与 React 宿主接线                | `<Plot>`                                                   |
 | `@retikz/plot-vanilla` | `InputPlot*` 类型、normalize、InputEmbed 接线、SSR 与无 DOM 渲染 | `plot()`、`normalizePlot()`、`embedPlot()`、`renderPlot()` |
 
 三包共享 `@retikz/plot` 的 IR 与 lowering 真源。`@retikz/plot-vanilla` 是 framework-neutral 的 authoring owner：它拥有 TypeScript-only `InputPlot*`、`PlotSource` 与 `InputPlotEmbed`，把 `InputPlot` 的 `facets`、`scaffolds` 与 axis / topology binding 展开为 `IRPlot`，但不会对已类型化输入重复 schema 校验。只有 `IRPlot*` 是持久化 schema 类型；未知外部数据仍应通过 Plot schema 或 parser 进入 IR。
 
 React 只负责收集 JSX / props 并调度 Plot Vanilla；它不维护平行的 Plot IR builder、schema parse 或 lowering。已经持有完整 `IRPlot` 时，可以直接交给运行时，无需再次套 authoring helper。
+
+## React 宿主与嵌入
+
+`<Plot>` 默认就是完整的 standalone 入口：直接渲染时内部建立一个 `Layout`，因此不需要再包一层宿主。把同一个 `<Plot>` 放进已有 `<Layout>` 时，它会降级为一个 Plot Scope/composite，只共享外层 Scene、renderer 与 effective Theme，不创建嵌套 SVG。
+
+Plot 的 `width` / `height` 和 `x` / `y`、transform、clip 等 panel 字段在 embedded 模式仍属于 Plot 输入。`className`、`style`、`renderer` 与 Core `themeStyles` 只控制 standalone host，应移动到外层 `<Layout>`；`lineage`、`hostLineageMetadata` 与 `onLineage` 依赖 standalone React 生命周期，embedded 时应省略。embedded Plot 如果自带任一上述字段——即使显式写成 `undefined`——都会 fail-loud。这种区分避免宿主或 observer 配置被静默忽略，也不会为 embedded Plot 生成额外模型 id。
 
 ## Plot 负责与不负责什么
 

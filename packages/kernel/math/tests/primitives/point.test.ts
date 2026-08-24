@@ -40,8 +40,8 @@ describe('point / vector2 原语', () => {
     expect(vector2.cross([1, 0], [0, 1])).toBe(1);
   });
   it('equal 精确相等', () => {
-    expect(point.equal([1, 2], [1, 2])).toBe(true);
-    expect(point.equal([1, 2], [1, 3])).toBe(false);
+    expect(point.isEqual([1, 2], [1, 2])).toBe(true);
+    expect(point.isEqual([1, 2], [1, 3])).toBe(false);
   });
   it('shiftToward 沿方向移动 dist', () => {
     expect(point.shiftToward([0, 0], [10, 0], 3)).toEqual([3, 0]);

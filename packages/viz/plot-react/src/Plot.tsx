@@ -1,4 +1,5 @@
 import type { ExternalDatasets, ExternalRow, IRDataModel } from '@retikz/data';
+import type { AssertEqual } from '@retikz/foundation';
 import type {
   IRPlot,
   IRPlotTransform,
@@ -20,17 +21,14 @@ import { PlotInputEmbedAdapter } from '@retikz/plot-vanilla';
 import { Layout } from '@retikz/react';
 import { useEffect, useMemo, useRef } from 'react';
 
+import { RetikzPlotReactError } from './error';
 import { resolvePlotAuthoring, resolvePlotLineage } from './plot-runtime';
 import { usePlotThemeStyles } from './theme-context';
 
 /** <Plot> 作为 Layout 子面板时可直接承接的 Scope 输入 */
 export type PlotPanelProps = InputPlotPanel;
 
-/** <Plot> 两条入口共享的展示 props 与 Plot lowering 选项 */
-export type PlotCommonProps = Pick<LayoutProps, 'className' | 'style' | 'renderer' | 'themeStyles'> &
-  PlotPanelProps &
-  LowerPlotsOptions &
-  PlotLineageProps;
+type PlotLayoutHostProps = Pick<LayoutProps, 'className' | 'style' | 'renderer' | 'themeStyles'>;
 
 /** React adapter 暴露的运行时图元链路 props */
 export type PlotLineageProps = {
@@ -41,6 +39,26 @@ export type PlotLineageProps = {
   /** 渲染后接收 runtime-only 图元链路产物 */
   onLineage?: (lineage: PlotLineageRun) => void;
 };
+
+type PlotStandaloneProps = PlotLayoutHostProps & PlotLineageProps;
+
+/** Plot standalone 入口消费且 embedded 不支持的字段 */
+const PLOT_STANDALONE_PROP_KEYS = [
+  'className',
+  'style',
+  'renderer',
+  'themeStyles',
+  'lineage',
+  'hostLineageMetadata',
+  'onLineage',
+] as const satisfies ReadonlyArray<keyof PlotStandaloneProps>;
+
+type PlotStandalonePropKeysCheck = AssertEqual<(typeof PLOT_STANDALONE_PROP_KEYS)[number], keyof PlotStandaloneProps>;
+const plotStandalonePropKeysCheck: PlotStandalonePropKeysCheck = true;
+void plotStandalonePropKeysCheck;
+
+/** <Plot> 两条入口共享的展示 props 与 Plot lowering 选项 */
+export type PlotCommonProps = PlotStandaloneProps & PlotPanelProps & LowerPlotsOptions;
 
 /** Plot-owned theme 输入 */
 export type PlotThemeProps = {
@@ -118,15 +136,42 @@ const createPlotPanelInput = (props: PlotPanelProps): InputPlotPanel | undefined
 /** 将 React Plot props 收敛为由 Plot Vanilla adapter 消费的 Input */
 const createPlotInput = (props: Readonly<Record<string, unknown>>): InputPlotEmbed => {
   const plotProps = props as PlotProps;
+  const unsupportedStandaloneProps = PLOT_STANDALONE_PROP_KEYS.filter(key => Object.hasOwn(plotProps, key));
+  if (unsupportedStandaloneProps.length > 0) {
+    throw new RetikzPlotReactError(
+      `plot react: embedded Plot does not support standalone props: ${unsupportedStandaloneProps.join(', ')}; move Layout host props to the outer <Layout> and remove standalone lineage props`,
+    );
+  }
   const { spec, datasets, lowerOptions } = resolvePlotAuthoring(plotProps, { embedded: true });
   const panel = createPlotPanelInput(plotProps);
   return {
     spec,
     datasets,
     lowerOptions,
-    preserveRootIdentity: true,
     ...(panel === undefined ? {} : { panel }),
   };
+};
+
+/** 移除 standalone 已消费的宿主与 lineage 字段，避免内部 embed 重新接收 */
+const plotContentPropsOf = (props: PlotProps): PlotProps => {
+  const {
+    className: _className,
+    style: _style,
+    renderer: _renderer,
+    themeStyles: _themeStyles,
+    lineage: _lineage,
+    hostLineageMetadata: _hostLineageMetadata,
+    onLineage: _onLineage,
+    ...contentProps
+  } = props;
+  void _className;
+  void _style;
+  void _renderer;
+  void _themeStyles;
+  void _lineage;
+  void _hostLineageMetadata;
+  void _onLineage;
+  return contentProps;
 };
 
 type InputEmbeddablePlotComponent = FC<PlotProps> & {
@@ -147,6 +192,7 @@ const PlotComponent: FC<PlotProps> = props => {
   const notifiedLineageKey = useRef<string>();
   const lineage = onLineage === undefined || props.lineage === false ? undefined : resolvePlotLineage(effectiveProps);
   const lineageKey = lineage === undefined ? undefined : JSON.stringify(lineage);
+  const contentProps = plotContentPropsOf(effectiveProps);
 
   useEffect(() => {
     if (lineage === undefined || lineageKey === undefined || onLineage === undefined) return;
@@ -164,7 +210,7 @@ const PlotComponent: FC<PlotProps> = props => {
       renderer={renderer}
       themeStyles={themeStyles}
     >
-      <PlotComponent {...effectiveProps} />
+      <PlotComponent {...contentProps} />
     </Layout>
   );
 };

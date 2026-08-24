@@ -27,30 +27,30 @@ type LowerTexStateEntry = {
 const engineEntries = new Map<string, EngineEntry>();
 
 /** 根据规范化配置生成 React engine 缓存键 */
-const getEngineKey = (extensions: ReadonlyArray<MathJaxExtensionValue>): string => extensions.join(',');
+const formatEngineCacheKey = (extensions: ReadonlyArray<MathJaxExtensionValue>): string => extensions.join(',');
 
-/** 获取按有效 extension 集合分桶的共享 MathJax 引擎 */
-const getEngine = (extensions: Array<MathJaxExtensionValue>, key: string): EngineEntry => {
-  const cached = engineEntries.get(key);
-  if (cached) return cached;
-  const entry: EngineEntry = {
+/** 获取或创建按有效 extension 集合分桶的共享 MathJax 引擎条目 */
+const getOrCreateEngineEntry = (extensions: Array<MathJaxExtensionValue>, engineKey: string): EngineEntry => {
+  const cachedEntry = engineEntries.get(engineKey);
+  if (cachedEntry) return cachedEntry;
+  const engineEntry: EngineEntry = {
     promise: createMathJaxEngine({
       extensions,
     }),
     diagnosticReported: false,
   };
-  entry.promise = entry.promise.catch(error => {
-    if (engineEntries.get(key) === entry) engineEntries.delete(key);
+  engineEntry.promise = engineEntry.promise.catch(error => {
+    if (engineEntries.get(engineKey) === engineEntry) engineEntries.delete(engineKey);
     throw error;
   });
-  engineEntries.set(key, entry);
-  return entry;
+  engineEntries.set(engineKey, engineEntry);
+  return engineEntry;
 };
 
 /** 按有效配置共享 MathJax engine，并异步创建当前 hook 的 lowerer */
 export const useLowerTex = (options?: MathJaxLowerTexOptions): MathJaxLowerTexState => {
   const extensions = resolveMathJaxExtensions(options);
-  const engineKey = getEngineKey(extensions);
+  const engineKey = formatEngineCacheKey(extensions);
   const diagnosticRef = useRef(options?.onDiagnostic);
   const requestRef = useRef(0);
   const [stateEntry, setStateEntry] = useState<LowerTexStateEntry>(() => ({
@@ -60,13 +60,13 @@ export const useLowerTex = (options?: MathJaxLowerTexOptions): MathJaxLowerTexSt
   diagnosticRef.current = options?.onDiagnostic;
 
   useEffect(() => {
-    const token = ++requestRef.current;
-    let alive = true;
+    const requestToken = ++requestRef.current;
+    let isEffectActive = true;
     setStateEntry({ key: engineKey, state: { status: 'loading' } });
-    const entry = getEngine(extensions, engineKey);
-    void entry.promise
+    const engineEntry = getOrCreateEngineEntry(extensions, engineKey);
+    void engineEntry.promise
       .then(engine => {
-        if (!alive || requestRef.current !== token) return;
+        if (!isEffectActive || requestRef.current !== requestToken) return;
         const forwardDiagnostic: NonNullable<MathJaxLowerTexOptions['onDiagnostic']> = diagnostic => {
           diagnosticRef.current?.(diagnostic);
         };
@@ -76,21 +76,21 @@ export const useLowerTex = (options?: MathJaxLowerTexOptions): MathJaxLowerTexSt
         });
       })
       .catch(error => {
-        if (!alive || requestRef.current !== token) return;
+        if (!isEffectActive || requestRef.current !== requestToken) return;
         const diagnostic: TexLoweringDiagnostic = {
           kind: 'engine-error',
           source: '',
           message: error instanceof Error ? error.message : String(error),
         };
         setStateEntry({ key: engineKey, state: { status: 'error', diagnostic } });
-        if (entry.diagnosticReported) return;
+        if (engineEntry.diagnosticReported) return;
         const onDiagnostic = diagnosticRef.current;
         if (!onDiagnostic) return;
-        entry.diagnosticReported = true;
+        engineEntry.diagnosticReported = true;
         onDiagnostic(diagnostic);
       });
     return () => {
-      alive = false;
+      isEffectActive = false;
     };
   }, [engineKey]);
 

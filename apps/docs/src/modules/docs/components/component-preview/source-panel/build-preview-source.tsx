@@ -144,20 +144,23 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
   let structureError: unknown;
   if (resolvedPreviewIr !== null) {
     const validated = SceneSchema.safeParse(resolvedPreviewIr.ir);
+    const validatedSource = SceneSchema.safeParse(resolvedPreviewIr.sourceIr);
     if (!validated.success) {
       structureError = validated.error;
+    } else if (!validatedSource.success) {
+      structureError = validatedSource.error;
     } else {
-      const validatedSource = SceneSchema.safeParse(resolvedPreviewIr.sourceIr);
-      if (!validatedSource.success) {
-        structureError = validatedSource.error;
-      } else {
-        previewIr = { ...resolvedPreviewIr, ir: validated.data, sourceIr: validatedSource.data };
-        try {
-          hasComposite = irHasComposite(previewIr.ir);
-        } catch (error) {
-          structureError = error;
-          previewIr = null;
-        }
+      const validatedPreviewIr: PreviewIR = {
+        ...resolvedPreviewIr,
+        ir: validated.data,
+        sourceIr: validatedSource.data,
+      };
+      previewIr = validatedPreviewIr;
+      try {
+        hasComposite = irHasComposite(validatedPreviewIr.ir);
+      } catch (error) {
+        structureError = error;
+        previewIr = null;
       }
     }
   }

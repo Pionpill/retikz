@@ -9,27 +9,36 @@ import { vector2 } from '../primitives';
  * @remarks 复杂度：时间 O(n log n)，空间 O(n)，n 为输入点数
  */
 export const convexHull = (points: Array<Position>): Array<Position> => {
-  const pts = [...points].sort((a, b) => (a[0] === b[0] ? a[1] - b[1] : a[0] - b[0]));
-  const uniq: Array<Position> = [];
-  for (const p of pts) {
-    const last: Position | undefined = uniq.length > 0 ? uniq[uniq.length - 1] : undefined;
-    if (!last || last[0] !== p[0] || last[1] !== p[1]) uniq.push(p);
+  const sortedPoints = [...points].sort((left, right) =>
+    left[0] === right[0] ? left[1] - right[1] : left[0] - right[0],
+  );
+  const uniquePoints: Array<Position> = [];
+  for (const point of sortedPoints) {
+    const previousPoint: Position | undefined =
+      uniquePoints.length > 0 ? uniquePoints[uniquePoints.length - 1] : undefined;
+    if (!previousPoint || previousPoint[0] !== point[0] || previousPoint[1] !== point[1]) {
+      uniquePoints.push(point);
+    }
   }
-  if (uniq.length < 3) return uniq;
+  if (uniquePoints.length < 3) return uniquePoints;
 
   const cross = (o: Position, a: Position, b: Position): number =>
     vector2.cross([a[0] - o[0], a[1] - o[1]], [b[0] - o[0], b[1] - o[1]]);
 
   const lower: Array<Position> = [];
-  for (const p of uniq) {
-    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
-    lower.push(p);
+  for (const point of uniquePoints) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], point) <= 0) {
+      lower.pop();
+    }
+    lower.push(point);
   }
   const upper: Array<Position> = [];
-  for (let i = uniq.length - 1; i >= 0; i--) {
-    const p = uniq[i];
-    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
-    upper.push(p);
+  for (let index = uniquePoints.length - 1; index >= 0; index--) {
+    const point = uniquePoints[index];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], point) <= 0) {
+      upper.pop();
+    }
+    upper.push(point);
   }
   lower.pop();
   upper.pop();

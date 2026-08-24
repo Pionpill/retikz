@@ -18,7 +18,7 @@ import {
   RuntimeProgramPhase,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
 import type {
   CompileObserverDefinition,
@@ -501,11 +501,11 @@ describe('Core Runtime Program observed output', () => {
     namespace: 'test',
     type: 'program-observed',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('test'),
-      type: z.literal('program-observed'),
-      label: z.string(),
+      namespace: literal('test'),
+      type: literal('program-observed'),
+      label: string(),
     }),
-    artifactSchema: z.strictObject({ label: z.string() }),
+    artifactSchema: strictObject({ label: string() }),
     compile: node => ({
       artifact: { label: node.label },
       children: [{ type: 'node', position: [0, 0], text: node.label }],

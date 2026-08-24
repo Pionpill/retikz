@@ -25,6 +25,10 @@ describe('PlotSchema (contract)', () => {
     expect(PlotSchema.parse(spec)).toEqual(spec);
   });
 
+  it('plot_whitespace_only_id_rejected', () => {
+    expect(PlotSchema.safeParse({ ...baseLine, id: '   ' }).success).toBe(false);
+  });
+
   it('plot_root_omits_optionals_valid', () => {
     const spec = {
       namespace: 'plot',

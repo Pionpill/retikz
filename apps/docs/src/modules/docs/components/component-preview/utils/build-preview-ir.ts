@@ -6,6 +6,7 @@ import { normalizeScene } from '@retikz/vanilla';
 import { createElement, isValidElement } from 'react';
 
 import { buildPreviewSourceIR, collectPreviewChartSources } from './build-preview-source-ir';
+import { previewEmbedPropsOf } from './preview-embed';
 
 const COMPONENT_EXPANSION_LIMIT = 16;
 
@@ -71,7 +72,11 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
   const rootElement = resolvePreviewRootElement(Component({}));
   const props = (rootElement?.props ?? {}) as PreviewRootProps & Record<string, unknown>;
   const isEmbeddableRoot = isEmbeddableMarked(rootElement?.type);
-  let childNode = isEmbeddableRoot ? rootElement : props.children;
+  const EmbeddableRoot = rootElement?.type as FC<Record<string, unknown>> | undefined;
+  let childNode =
+    isEmbeddableRoot && EmbeddableRoot !== undefined
+      ? createElement(EmbeddableRoot, previewEmbedPropsOf(EmbeddableRoot, props))
+      : props.children;
   if (props.ir === undefined) {
     const styleProps = Object.fromEntries(
       Object.entries(props).filter(([key, value]) => !LAYOUT_OWN_PROPS.has(key) && value !== undefined),

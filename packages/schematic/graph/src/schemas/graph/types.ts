@@ -1,5 +1,6 @@
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type { GraphSchema } from './schema';
 
-export type IRGraph = z.infer<typeof GraphSchema>;
+/** JSON-safe Graph Source root */
+export type IRGraph = ZodInfer<typeof GraphSchema>;

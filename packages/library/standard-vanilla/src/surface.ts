@@ -9,7 +9,7 @@ import { StandardSurfaceEmbedKind } from './constants';
 /** Surface 唯一 child 的作者侧输入 */
 export type InputSurfaceChild = InputChild;
 
-/** Surface 输入可显式指定持久化 Scope id，省略时由 embed id 派生 */
+/** Surface 输入可显式指定持久化 Scope id */
 export type InputSurface = Omit<SurfaceInput, 'namespace' | 'type' | 'child' | 'id'> & {
   /** 要持久化到 Surface IR 的显式身份 */
   id?: string;
@@ -46,7 +46,7 @@ export const SurfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface> = {
         namespace: 'standard',
         type: 'surface',
         ...input,
-        id: id ?? `${context.id}/surface`,
+        ...(id === undefined ? {} : { id }),
         child: normalized.children[0],
       }),
       providerDependencies: {

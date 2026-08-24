@@ -9,8 +9,9 @@ import {
   resolveStatisticsReducerRegistry,
 } from '@retikz/data';
 import { readSourceIndex, readSourceIndices, tagSourceIndex } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, object } from 'zod';
 
 import { resolvePlotTransformRegistry } from '../../../src/providers';
 
@@ -210,11 +211,11 @@ describe('statistical transform algebra (contract)', () => {
 
   it('custom_stat_reducer_in_summarize', () => {
     const weightedMean = defineStatisticsReducer({
-      schema: z.object({
-        kind: z.literal('weighted-mean'),
-        field: z.string().min(1),
-        weight: z.string().min(1),
-        as: z.string().min(1),
+      schema: object({
+        kind: literal('weighted-mean'),
+        field: NonBlankStringSchema,
+        weight: NonBlankStringSchema,
+        as: NonBlankStringSchema,
       }),
       inputFields: operation => [operation.field, operation.weight],
       outputFields: operation => [operation.as],
@@ -249,10 +250,10 @@ describe('statistical transform algebra (contract)', () => {
 
   it('custom_row_selector_in_select', () => {
     const nearest = defineRowSelector({
-      schema: z.object({
-        kind: z.literal('nearest'),
-        field: z.string().min(1),
-        target: z.number(),
+      schema: object({
+        kind: literal('nearest'),
+        field: NonBlankStringSchema,
+        target: number(),
       }),
       inputFields: operation => [operation.field],
       select: (rows, operation) => {

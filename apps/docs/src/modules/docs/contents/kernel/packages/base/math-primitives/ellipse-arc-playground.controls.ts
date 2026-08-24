@@ -95,5 +95,5 @@ export const previewControlContract = {
       values: { ellipseRadiusX: 58, ellipseRadiusY: 24, arcRadius: 52, arcStartAngle: 20, arcEndAngle: 300 },
     },
   ],
-  relatedApis: ['ellipse.inscribedInBox', 'ellipse.center', 'arcBoundingPoints', 'boundsOf', 'boundsToRect'],
+  relatedApis: ['ellipse.inscribedInBox', 'ellipse.center', 'collectArcBoundingCandidates', 'boundsOf', 'boundsToRect'],
 } satisfies PreviewControlContract;

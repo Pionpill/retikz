@@ -1,24 +1,21 @@
 import { CssColorSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
-import { z } from 'zod';
+import { number, strictObject, tuple } from 'zod';
 
 import { defineCellVisualScale } from '../../contract';
 import { RetikzTableError } from '../../error';
+import { TableCellVisualScale } from '../../schemas';
 
-const domainSchema = z.tuple([z.number(), z.number()]).refine(([start, end]) => start <= end, {
+const domainSchema = tuple([number(), number()]).refine(([start, end]) => start <= end, {
   message: 'sequential-color domain start must be less than or equal to end',
 });
 
-const colorSchema = CssColorSchema.refine(value => NonBlankStringSchema.safeParse(value).success, {
-  message: 'color must not be blank',
-});
-const rangeSchema = z.tuple([colorSchema, colorSchema]);
+const rangeSchema = tuple([CssColorSchema, CssColorSchema]);
 
 /** 连续数值颜色 scale */
 export const SEQUENTIAL_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
-  name: 'sequential-color',
-  optionsSchema: z.strictObject({
+  name: TableCellVisualScale.SequentialColor,
+  optionsSchema: strictObject({
     domain: domainSchema.optional(),
     range: rangeSchema.optional(),
   }),

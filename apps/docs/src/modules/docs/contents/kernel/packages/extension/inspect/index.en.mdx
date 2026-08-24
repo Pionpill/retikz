@@ -1,13 +1,31 @@
 ---
 title: '@retikz/inspect'
-description: Observe final compile outputs on demand and use an explicit registry plus runtime selection to produce path controls, layout bounds, and other auxiliary content without changing the primary figure.
+description: Observe final compile results on demand and present Inspector-generated auxiliary content as readonly layers that do not change the primary figure
 ---
 
-`@retikz/inspect` is an optional development package. It reads final occurrences and owner outputs published by Core, then compiles ordinary Core children returned by an Inspector into readonly layers. Selection exists only at runtime and never enters IR, Scene, or snapshots.
+Use `@retikz/inspect` when you need to understand “what did this compile actually settle on?” It observes final occurrences and owner outputs published by Core, then lets registered Inspectors decide how to interpret that information and which auxiliary content to produce.
 
-```bash
-pnpm add @retikz/inspect
-```
+Control points, layout bounds, and alignment guides are only common examples. The same capability can explain computed results from domain components, mark exceptional states, or present diagnostics owned by third-party extensions.
+
+<ComponentAlert
+  type="tip"
+  title="Inspect is not a required dependency"
+  description="Ordinary drawing, compilation, and rendering do not require this package. Add Inspect only when a particular scene needs help understanding its final result; when no Inspector is selected, no auxiliary fragment compilation runs."
+/>
+
+## Scope
+
+Inspect is useful when development, debugging, teaching, or extension validation needs to explain a completed compile result—for example, what a domain component finally published, which commands a path adopted, or which bounds a layout occurrence received. It does not correct input, participate in layout solving, or mutate the primary figure. Ordinary drawing and rendering need no Inspect integration.
+
+## Installation and Setup
+
+If the project already uses a Retikz React or Vanilla host, install only the additional Inspect package:
+
+<PackageManagerInstall packages="@retikz/inspect" />
+
+### React
+
+React applications use the optional wrappers from `@retikz/inspect/react`. `InspectLayout` receives the registry, while `InspectPath` declares a runtime-only request at the target Path:
 
 ```tsx
 import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
@@ -20,7 +38,7 @@ const registry = createDefaultInspectorRegistry();
   <InspectPath
     request={{
       inspector: STROKE_PATH_INSPECTOR_KEY,
-      value: { controlPoints: true, labels: true },
+      options: { controlPoints: true, labels: true },
     }}
   >
     <Step kind="move" to={[0, 0]} />
@@ -29,76 +47,273 @@ const registry = createDefaultInspectorRegistry();
 </InspectLayout>;
 ```
 
-## Scope
+`InspectLayout` reuses the ordinary `<Layout>` static or retained runtime. `InspectPath` and `InspectScope` likewise add selection information only at base-component authoring sites; they do not change the underlying figure contracts.
 
-Use an Inspector for final control points, bounds, spacing, alignment guides, or domain diagnostics. It does not change layout solving, primary Scene bounds, resources, hit testing, or animation, and it does not persist development-time selection.
+### Vanilla
 
-Core owns only domain-neutral owner outputs, final-occurrence observation, and isolated fragment compilation. This package or a third-party Inspector owns what to observe, how to select it, and how to draw the result.
-
-## Define a capability
-
-Third-party Inspectors use `defineInspector()` to declare a registry key, target owner, subject schema, option schemas, and output callback. The built-in stroke Path Inspector follows the same path; there is no built-in allowlist.
+Vanilla applications create an authoring marker and a compile driver separately. The marker identifies which authoring site to inspect, and the driver connects the registry, selection rules, and readonly layers to ordinary rendering:
 
 ```ts
-import { defineInspector } from '@retikz/inspect';
+import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
+import { path, renderToSvgString, scene } from '@retikz/vanilla';
 
-const inspector = defineInspector({
-  namespace: 'acme',
-  name: 'bounds',
-  owner,
-  subjectSchema,
-  optionsInputSchema,
-  optionsSchema,
-  inspect: (subject, context) => buildAuxiliaryChildren(subject, context.appearance),
+const registry = createDefaultInspectorRegistry();
+const input = scene({
+  children: [
+    path('curve', {
+      authoring: createInspectionVanillaAuthoring({
+        inspector: STROKE_PATH_INSPECTOR_KEY,
+        options: { labels: true },
+      }),
+      way: [
+        [0, 0],
+        {
+          cubic: [
+            [20, -30],
+            [80, 30],
+          ],
+        },
+        [100, 0],
+      ],
+    }),
+  ],
+});
+
+const svg = renderToSvgString(input, {
+  compileDriver: createInspectionVanillaDriver({ registry }),
 });
 ```
 
-`namespace + name` must be unique in one registry, while one owner may have several Inspectors. Subject and options must pass their schemas, and output is an ordinary `IRChild` or readonly array of children.
+### Host Boundary
 
-## Inject the host
-
-The root entry does not load React, Vanilla, or Render. Import the host subentry explicitly:
+The root entry does not load React, Vanilla, or Render. Import the subentry for the host actually in use:
 
 | Entry                     | Responsibility                                                                             |
 | ------------------------- | ------------------------------------------------------------------------------------------ |
 | `@retikz/inspect`         | Definitions, registry, selection, diagnostics, compile driver, and built-in Path Inspector |
-| `@retikz/inspect/react`   | `InspectLayout`, `InspectPath`, `InspectScope`, and the React compile driver               |
+| `@retikz/inspect/react`   | `InspectLayout`, `InspectPath`, and `InspectScope`                                         |
 | `@retikz/inspect/vanilla` | Authoring markers and the Vanilla compile driver                                           |
-| `@retikz/inspect/render`  | One-to-one conversion from a plane to ordinary readonly layers                             |
+| `@retikz/inspect/render`  | Convert an auxiliary plane to ordinary Render readonly layers                              |
 
-Layout containers use `@retikz/layout/inspect`, `@retikz/layout-react/inspect`, or `@retikz/layout-vanilla/inspect`. These entries depend explicitly on this package; Layout root entries remain usable without it.
+Layout inspection comes from `@retikz/layout/inspect`, `@retikz/layout-react/inspect`, and `@retikz/layout-vanilla/inspect`. Those entries depend explicitly on this package; Layout root entries remain usable without Inspect.
 
-## Execution
+## Content
 
-1. The host collects runtime selection rules and gives the registry to an optional compile driver.
-2. Core captures final outputs only for selected owners and discards probe candidates, failed branches, and unused replays.
-3. Inspect sorts by occurrence and Inspector key, resolves options, and invokes the Definition.
-4. Ordinary IR output compiles in the current theme, Scope style, and provider environment, then loses public identity, metadata, and animation semantics.
-5. Render commits the result as `pointer-events: none` readonly layers; primary and auxiliary layers succeed or roll back in the same revision.
+### Basic Usage
 
-## Errors and limits
+The built-in stroke Path Inspector reads the final settled path commands and uses ordinary Path and Node children to draw Bézier handles, control points, and optional labels:
 
-- Duplicate keys, invalid locators, out-of-range occurrences, owner mismatches, and schema failures fail loudly without returning partial auxiliary output.
-- A `barrier` applies only to the whole scene or an authored subtree and prevents descendants from reopening any Inspector.
-- A nested Scope inside a contribution is rejected when it cannot be located unambiguously. Supporting it requires a more precise contribution-subtree locator contract.
-- Ordinary `compileToScene()` creates no Inspector session and performs no auxiliary compilation.
+<ComponentPreview
+  files="inspect-basic"
+  size="sm"
+  caption="The auxiliary layer shows the handles and control points used by the final path commands; the primary path itself is unchanged."
+/>
 
-## API reference
+`controlPoints` defaults to on and `labels` defaults to off. These options affect only auxiliary content. Primary bounds, resources, hit testing, animation, and public identity remain unchanged whether inspection is enabled or not.
 
-| Export                                        | Responsibility                                                      |
-| --------------------------------------------- | ------------------------------------------------------------------- |
-| `defineInspector()` and `InspectorDefinition` | Define owner, schemas, option merging, and auxiliary output         |
-| `createInspectorRegistry()`                   | Build an explicit registry and reject duplicate keys                |
-| `createDefaultInspectorRegistry()`            | Include the built-in stroke Path Inspector                          |
-| `compileInspectionToScene()`                  | Run one atomic primary and auxiliary compile                        |
-| `STROKE_PATH_INSPECTOR_KEY`                   | Select the built-in stroke Path Inspector                           |
-| `InspectionSelection`                         | Describe runtime scene, subtree, or self rules                      |
-| `InspectionCompileResult`                     | Return primary output, an optional plane, and Inspector diagnostics |
+The preview source keeps only the ordinary Layout and Path because inspection selection is not persistent figure data and never enters IR, Scene, or runtime snapshots.
+
+### Selection Scope and Barriers
+
+A request can come from the whole scene, one authored subtree, or the current occurrence. The React wrappers map the common cases to those sites:
+
+| Target           | React entry                      | Result                                                         |
+| ---------------- | -------------------------------- | -------------------------------------------------------------- |
+| Whole scene      | `<InspectLayout request={...}>`  | Select every final occurrence with a matching owner            |
+| Authored subtree | `<InspectScope request={...}>`   | Select matching occurrences below that Scope                   |
+| Current Path     | `<InspectPath request={...}>`    | Select only the final occurrence for the current Path          |
+| Hard barrier     | `<InspectScope request={false}>` | Prevent descendants from inheriting or reopening any Inspector |
+
+The playground places two curves in separate subtrees, with each curve requesting inspection locally through `InspectPath`. Change the target, control points, and labels, then enable the right-side barrier to see how local requests select paths and how the hard barrier prevents descendants from reopening inspection:
+
+<ComponentPreview
+  files="inspect-selection"
+  size="md"
+  caption="A and B are ordinary independent paths. After the right barrier is enabled, B cannot reopen inspection with its local request."
+/>
+
+One site may request several different Inspectors. Sparse options for the same Inspector merge from scene to subtree to self. An ordinary `false` disables only that Inspector at the current level, while a barrier prevents descendants from reopening any Inspector.
+
+### Custom Inspectors
+
+Third-party Inspectors use `defineInspector()` to declare a registry key, target owner, subject schema, option schemas, and output callback. Built-in Inspectors follow the same entry path; there is no separate built-in allowlist.
+
+`InspectorKey.namespace` uses the stable short name of the package that owns the Inspector capability, not a shared `retikz` prefix. Core capabilities use `core`, Layout capabilities use `layout`, and third-party capabilities use their owning package's short name; `type` is unique within that namespace. When the implementation lives in the optional `@retikz/inspect` package or a host subentry, the namespace still follows the actual capability owner.
+
+The next example defines an endpoint Inspector and registers it beside the built-in control-point Inspector. It reads the final stroke Path output and returns ordinary Nodes as auxiliary markers:
+
+<ComponentPreview
+  files={['inspect-custom', 'inspect-path-endpoints.ts']}
+  size="sm"
+  caption="The same Path requests the built-in control-point Inspector and a third-party endpoint Inspector; both share registration, selection, and auxiliary compilation."
+/>
+
+The central `InspectorDefinition` fields are:
+
+| Field                | Responsibility                                                                |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `namespace`, `type`  | Form the stable key; `namespace` uses the owning package's short name         |
+| `owner`              | Select the pathKind or composite owner to observe                             |
+| `subjectSchema`      | Validate the final value published by that owner                              |
+| `optionsInputSchema` | Validate sparse selection options at each level                               |
+| `optionsSchema`      | Resolve merged sparse input into canonical options                            |
+| `mergeOptionsInput`  | Optionally merge sparse options across selection levels                       |
+| `inspect`            | Convert the final subject and context into ordinary IRChild auxiliary content |
+
+Inspector output must be an ordinary `IRChild` or readonly array of children. A Definition cannot write into the primary Scene directly or bypass Core with parallel rendering semantics.
+
+## How It Works
+
+### Definition, Registration, and Selection
+
+Every inspection starts from an explicit registry. `createDefaultInspectorRegistry()` adds built-in Inspectors first, then sends third-party Definitions through the same registration path. A duplicate `namespace + type` fails immediately.
+
+Host-collected selection rules describe only which Inspector to use, where it applies, and which sparse options it receives. Resolution validates targets and owners, then sorts final occurrences stably, merges options, and assigns auxiliary appearance. Core is asked to publish observations only for owners that can actually match.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Inspector Definition and output contracts',
+      path: 'packages/kernel/inspect/src/contract/types.ts',
+    },
+    {
+      label: 'Explicit registry shared by built-in and third-party Inspectors',
+      path: 'packages/kernel/inspect/src/providers/registry.ts',
+    },
+    {
+      label: 'Selection admission, cascading, and stable resolution',
+      path: 'packages/kernel/inspect/src/compile/selection.ts',
+    },
+  ]}
+/>
+
+### Compilation and Readonly Layers
+
+The flow below shows how one inspection-enabled compile produces both the primary figure and auxiliary layers. The important part is not control points specifically, but the reusable chain: a final owner output enters an Inspector callback, ordinary auxiliary IR compiles in isolation, and the result commits atomically beside the unchanged primary figure.
+
+<ComponentPreview files="inspect-compile-flow.en" size="md" hideCode />
+
+Read the flow in this order:
+
+1. The host gives runtime selection and a registry to the optional compile driver.
+2. Core runs an ordinary compile and publishes final outputs only for selected owners. Probe candidates, failed branches, and unused replays do not become inspection results.
+3. Inspect validates the final subject and options, then invokes the matching Definition's `inspect` callback.
+4. Ordinary `IRChild` output compiles in isolation within the current theme, Scope style, and provider environment, then loses public identity, metadata, and animation semantics.
+5. Render maps the auxiliary plane to non-interactive readonly layers. Primary and auxiliary layers succeed or roll back together in the same revision.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Primary and auxiliary compile orchestration',
+      path: 'packages/kernel/inspect/src/compile/driver.ts',
+    },
+    {
+      label: 'Auxiliary output normalization and sealing',
+      path: 'packages/kernel/inspect/src/compile/output.ts',
+    },
+    {
+      label: 'Auxiliary plane to readonly-layer mapping',
+      path: 'packages/kernel/inspect/src/render/readonly-layers.ts',
+    },
+    {
+      label: 'Vanilla static and retained runtime wiring',
+      path: 'packages/kernel/inspect/src/vanilla/driver.ts',
+    },
+  ]}
+/>
+
+### Isolation and Cost
+
+Inspect observes final results; it does not participate in layout solving or mutate the primary figure. Ordinary `compileToScene()` creates no inspection session, and the base React and Vanilla entries do not statically load this package.
+
+When requests exist, additional work comes from observing selected owners, invoking Inspector callbacks, and compiling non-empty auxiliary output in isolation. No auxiliary plane is created when nothing matches or every callback returns no content.
+
+## API Reference
+
+### `@retikz/inspect`
+
+| API                                | Description                                                                               |
+| ---------------------------------- | ----------------------------------------------------------------------------------------- |
+| `defineInspector()`                | Validate and freeze one `InspectorDefinition`                                             |
+| `createInspectorRegistry()`        | Build a stateless registry from explicit Definitions; duplicate keys fail                 |
+| `createDefaultInspectorRegistry()` | Build a registry with built-ins and optional third-party Definitions                      |
+| `resolveInspectionSelection()`     | Validate runtime selection and return canonical requests in stable final-occurrence order |
+| `compileInspectionToScene()`       | Run one atomic primary and auxiliary compile                                              |
+| `STROKE_PATH_INSPECTOR_KEY`        | Compound key for the built-in stroke Path Inspector                                       |
+| `STROKE_PATH_INSPECTOR`            | Built-in stroke Path Inspector Definition                                                 |
+| `RetikzInspectError`               | Unified structured error type for the Inspect package                                     |
+| `RetikzInspectErrorCode`           | Stable Inspect error-code collection                                                      |
+
+**Stable error codes**
+
+| Code                        | Category                                              |
+| --------------------------- | ----------------------------------------------------- |
+| `INSPECTION_ERROR`          | Inspect error not covered by a more specific category |
+| `INSPECTION_COMPILE_ERROR`  | Selection, final-subject, or auxiliary-output error   |
+| `INSPECTION_COMPILE_FAILED` | Failure of the complete inspection compile            |
+| `INSPECTION_CONTRACT_ERROR` | Invalid Inspector Definition or Inspect contract      |
+| `INSPECTION_REGISTRY_ERROR` | Invalid registry key, Definition, or lookup           |
+| `INSPECTION_VANILLA_ERROR`  | Invalid Vanilla authoring marker or host wiring       |
+
+**Selection structures**
+
+| Structure                           | Fields and meaning                                                                                    |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `InspectionSelection`               | `rules: ReadonlyArray<InspectionSelectionRule>`. Complete runtime selection for one compile           |
+| `InspectionSelectionRule` request   | `inspector`, `target`, `options`. Select an Inspector with a switch or sparse options                 |
+| `InspectionSelectionRule` barrier   | `target`. Valid for a scene or authored subtree and prevents descendants from reopening any Inspector |
+| `InspectionSelectionTarget` scene   | `{ kind: 'scene' }`. Match the whole scene                                                            |
+| `InspectionSelectionTarget` subtree | `{ kind: 'subtree', sourcePath }`. Match one authored subtree                                         |
+| `InspectionSelectionTarget` self    | `{ kind: 'self', locator }`. Locate the current object by authored source or exact final occurrence   |
+
+**Compile result**
+
+| Field                                 | Meaning                                                         |
+| ------------------------------------- | --------------------------------------------------------------- |
+| `InspectionCompileResult.primary`     | Ordinary Core compile result, unchanged by auxiliary content    |
+| `InspectionCompileResult.inspection`  | Ordered auxiliary plane, or `null` when every callback is empty |
+| `InspectionCompileResult.diagnostics` | Structured warnings produced by isolated fragments              |
+
+### `@retikz/inspect/react`
+
+| API             | Description                                                                            |
+| --------------- | -------------------------------------------------------------------------------------- |
+| `InspectLayout` | Bind registry, explicit selection, commit callbacks, and reuse the base Layout runtime |
+| `InspectScope`  | Add requests to an authored subtree; `request={false}` creates a hard barrier          |
+| `InspectPath`   | Add one or more requests to the current Path                                           |
+
+### `@retikz/inspect/vanilla`
+
+| API                                  | Description                                                                                     |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `createInspectionVanillaAuthoring()` | Create an authoring marker interpreted only by the Inspect driver                               |
+| `createInspectionVanillaDriver()`    | Create a Vanilla compile driver bound to registry, selection, diagnostics, and commit callbacks |
+
+### Errors and Limits
+
+`RetikzInspectError.details.origin` identifies the failure stage structurally and provides the fields needed to locate that stage:
+
+| `stage`              | Meaning                                        | Additional fields                                 |
+| -------------------- | ---------------------------------------------- | ------------------------------------------------- |
+| `selection`          | Selection admission or resolution              | `ruleIndex`, `target`                             |
+| `subject`, `inspect` | Final-subject validation or Inspector callback | `inspector`, `owner`, `occurrence`                |
+| `output`, `fragment` | Output normalization or fragment compilation   | `inspector`, `owner`, `occurrence`, `outputIndex` |
+| `complete`           | Final primary/observation assembly             | None                                              |
+
+| Scenario                                                           | Observable result                                                                          |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| Duplicate registry key or unregistered request                     | Throw `RetikzInspectError` without continuing with a partial registry                      |
+| Invalid source path, out-of-range occurrence, or owner mismatch    | Fail during selection before invoking Inspector callbacks                                  |
+| Subject, options, or output fails schema validation                | Fail with a structured stage origin and return no partial auxiliary result                 |
+| An isolated fragment produces an ordinary Core warning             | Primary compile may succeed; the warning enters `InspectionCompileResult.diagnostics`      |
+| Nested Scope inside a contribution cannot be located unambiguously | The Vanilla driver rejects it pending a more precise contribution-subtree locator contract |
+| Inspector output contains public identity, metadata, or animation  | Those fields are removed while sealing auxiliary content                                   |
 
 ## Related
 
-- [Path](/kernel/components/draw/path): built-in control-point Inspector
-- [Scope](/kernel/components/layout/scope): subtree selection and hard barriers
-- [Core](/kernel/packages/core/core): domain-neutral compile observation
-- [Render](/kernel/packages/render/render): ordinary readonly layer materialization
-- [Layout runtime](/library/layout/reference/runtime): Flex, Grid, and Overlay Inspectors
+- [Path](/kernel/components/draw/path): component usage for the built-in stroke Path Inspector
+- [Scope](/kernel/components/layout/scope): authored subtrees and barriers
+- [Core](/kernel/packages/core/core): final-output observation and isolated fragment compilation
+- [Render](/kernel/packages/render/render): readonly-layer materialization
+- [Layout runtime](/library/layout/reference/runtime): Inspectors for Flex, Grid, and Overlay

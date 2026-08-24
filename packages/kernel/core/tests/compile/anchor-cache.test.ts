@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import type { NodeLayout } from '../../src/compile/node';
 import type { ShapeDefinition } from '../../src/contract';
@@ -185,7 +185,7 @@ describe('resolveEdgePoint 边上比例点', () => {
   it('不支持 edgePoint 的自定义 shape → 抛明确错', () => {
     const noEdge: ShapeDefinition = defineShape({
       name: 'noEdge',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
       boundaryPoint: r => [r.x, r.y],
       anchor: (r, name) => (name === 'center' ? [r.x, r.y] : undefined),

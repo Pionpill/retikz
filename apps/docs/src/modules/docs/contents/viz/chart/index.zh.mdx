@@ -33,6 +33,12 @@ const rows = [
 />;
 ```
 
+## React 宿主与嵌入
+
+每个具体 Chart 组件都默认提供 Layout 能力。直接渲染 `<ScatterChart>` 时只建立一个 `Layout` / Scene host；放入已有 `<Layout>` 时，Chart 只贡献 Chart → Plot → Core 的 Scope/composite，并继承外层 effective Theme，不创建第二个 SVG。
+
+`width`、`height`、CSS、renderer/runtime、动画和 compile callback 都属于 `ChartHostProps`，只在 standalone 模式合法。embedded Chart 如果自带其中任何字段——包括显式 `undefined`——会 fail-loud，应把字段移动到外层 `<Layout>`。Chart Source 的 `layout` 仍独立控制图表 border-box，不会被 host `width` / `height` 写入或覆盖；Chart `id` 也保持可选。
+
 如果已经有符合当前精确 schema 的 JSON Source，应由应用层根据 `type` 与
 `recipe.chartType` 选择对应的具体入口或 compile adapter；Chart 不提供一个
 会动态加载所有 family 的 generic `<Chart source={...}>` 组件。需要直接组合轴、图例或独立 Plot mark 时，应把内容写入 Source 的 `plotExtension` fragment，或直接使用 Plot。
@@ -50,6 +56,18 @@ const rows = [
       path: 'packages/viz/chart-react/src/point/shared/marks.tsx',
       startLine: 4,
       endLine: 14,
+    },
+    {
+      label: 'Chart standalone 与 embedded host 字段边界',
+      path: 'packages/viz/chart-react/src/shared/host.ts',
+      startLine: 30,
+      endLine: 44,
+    },
+    {
+      label: '具体 Chart 组件复用一个 Layout / InputEmbed 入口',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 102,
+      endLine: 130,
     },
   ]}
 />

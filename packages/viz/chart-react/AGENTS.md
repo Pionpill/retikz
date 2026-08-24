@@ -24,4 +24,5 @@
 - React 只把 props / markers / marks 映射为 Vanilla Input，复用逐类型 normalizer；不查找 registry、不解析 Theme、不生成 Plot IR
 - `themeDefinitions` 只作为具体 chartType provider 的运行时输入；recipe / mark Definition 不以平铺数组注入。`lowerOptions` 只转发 Plot lowering 选项；两者均不得写入 JSON Source
 - 具体 Chart 组件共用 `ChartInputEmbedAdapter` 和 Chart provider contribution，不保留 Base / typed 平行 IR、private bind 或 renderer 分支
+- 具体 Chart 组件 standalone 时只建立一个 `Layout` Scene host；放入外层 `Layout` 时只贡献 Chart-to-Plot Scope/composite 并继承外层 effective Theme。全部 `ChartHostProps` 只属于 standalone host，embedded own-property（含显式 `undefined`）必须 fail-loud；Source `layout` 继续独立表达 Chart border-box。
 - 不保留根入口 typed alias、旧 `type` prop、旧 `config`、旧 Theme token 字段或兼容 fallback

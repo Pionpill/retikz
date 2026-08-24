@@ -1,4 +1,6 @@
-import { z } from 'zod';
+import type { ZodType } from 'zod';
+
+import { ZodLiteral, ZodObject } from 'zod';
 
 import type { IRDataTransform } from '../schemas';
 import type { ExternalRow } from '../shared';
@@ -34,7 +36,7 @@ export type TransformContext = {
  */
 export type TransformDefinition<TTransform extends IRDataTransform = IRDataTransform> = {
   /** 完整 transform operation schema；必须含非空 z.literal('kind') 供 registry 提取注册键 */
-  schema: z.ZodType<TTransform>;
+  schema: ZodType<TTransform>;
   /** 该 transform 消费的源字段名；参与 data.model strict 校验 */
   inputFields?: (operation: TTransform, context: TransformContext) => Array<string>;
   /** 该 transform 产出的派生字段名；从 data.model strict 校验的源字段集中排除 */
@@ -61,7 +63,7 @@ export type AnyTransformDefinition = Omit<
   'schema' | 'inputFields' | 'outputFields' | 'apply'
 > & {
   /** 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 kind 并执行 parse */
-  schema: z.ZodType;
+  schema: ZodType;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation */
   inputFields?: (operation: never, context: TransformContext) => Array<string>;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation */
@@ -74,12 +76,12 @@ export type AnyTransformDefinition = Omit<
  * 从 transform definition schema 中提取 registry key。
  * @description definition schema 必须是包含 `kind: z.literal('<transform-kind>')` 的 ZodObject；该 literal 值就是 registry 唯一键
  */
-export const extractTransformKind = (schema: z.ZodType): string => {
-  if (!(schema instanceof z.ZodObject)) {
+export const extractTransformKind = (schema: ZodType): string => {
+  if (!(schema instanceof ZodObject)) {
     throw new RetikzDataError('data: transform registration schema must be a ZodObject with a literal kind field');
   }
   const kindSchema = schema.shape.kind;
-  if (!(kindSchema instanceof z.ZodLiteral) || typeof kindSchema.value !== 'string' || kindSchema.value.length === 0) {
+  if (!(kindSchema instanceof ZodLiteral) || typeof kindSchema.value !== 'string' || kindSchema.value.length === 0) {
     throw new RetikzDataError('data: transform registration schema must declare kind as a non-empty z.literal string');
   }
   return kindSchema.value;

@@ -16,14 +16,22 @@ export type CssColorValue = string;
 /** 只允许非空颜色数组的通用 tuple 形态 */
 export type NonEmptyReadonlyArray<T> = readonly [T, ...Array<T>];
 
+/** Core 跨领域共享的语义颜色角色集合 */
+export type CoreSemanticColors = Readonly<{
+  /** 错误状态颜色 */
+  error: CssColorValue;
+  /** 成功状态颜色 */
+  success: CssColorValue;
+  /** 警告状态颜色 */
+  warning: CssColorValue;
+  /** 低强调辅助内容颜色 */
+  guide: CssColorValue;
+}>;
+
 /** Core 为当前 Theme 派生的 shared semantic colors 与 active categorical palette */
 export type ResolvedThemeColors = Readonly<{
   /** 跨领域共享的语义颜色角色 */
-  semantic: Readonly<{
-    error: CssColorValue;
-    success: CssColorValue;
-    warning: CssColorValue;
-  }>;
+  semantic: CoreSemanticColors;
   /** 当前生效的非空 categorical palette */
   categorical: NonEmptyReadonlyArray<CssColorValue>;
 }>;

@@ -19,8 +19,8 @@ import type { TableCellSource } from '../structure';
 
 /** canonical Table row */
 export type SemanticTableRow = Readonly<{
-  /** 稳定 row id */
-  id: string;
+  /** 可选稳定 row id */
+  id?: string;
   /** canonical 声明顺序 */
   index: number;
   /** row 语义类型 */
@@ -31,8 +31,8 @@ export type SemanticTableRow = Readonly<{
 
 /** canonical Table column */
 export type SemanticTableColumn = Readonly<{
-  /** 稳定 column id */
-  id: string;
+  /** 可选稳定 column id */
+  id?: string;
   /** canonical 声明顺序 */
   index: number;
   /** detail column 对应的字段路径 */
@@ -67,12 +67,12 @@ export type ResolvedTableCellLayout = Readonly<{
 
 /** canonical Table Cell */
 export type SemanticTableCell = Readonly<{
-  /** 稳定 Cell id */
-  id: string;
-  /** 所属 row id */
-  rowId: string;
-  /** 所属 column id */
-  columnId: string;
+  /** 可选稳定 Cell id */
+  id?: string;
+  /** 可选所属 row id */
+  rowId?: string;
+  /** 可选所属 column id */
+  columnId?: string;
   /** 所属 row 的 canonical index */
   rowIndex: number;
   /** 所属 column 的 canonical index */
@@ -103,12 +103,12 @@ export type SemanticTableModel = Readonly<{
 
 /** formatter 与 presentation 共用的最小 Cell 上下文 */
 export type TableCellContext = Readonly<{
-  /** 稳定 Cell id */
-  cellId: string;
-  /** 所属 row id */
-  rowId: string;
-  /** 所属 column id */
-  columnId: string;
+  /** 可选稳定 Cell id */
+  cellId?: string;
+  /** 可选所属 row id */
+  rowId?: string;
+  /** 可选所属 column id */
+  columnId?: string;
   /** canonical row index */
   rowIndex: number;
   /** canonical column index */
@@ -126,8 +126,8 @@ export type FormattedTableCell =
   | Readonly<{
       /** value Cell 判别字段 */
       kind: 'value';
-      /** 对应 semantic Cell id */
-      cellId: string;
+      /** 对应 semantic Cell 的可选 id */
+      cellId?: string;
       /** formatter 前的 canonical scalar */
       rawValue: IRDataScalarValue;
       /** formatter 产生的展示 scalar */
@@ -138,8 +138,8 @@ export type FormattedTableCell =
   | Readonly<{
       /** direct content Cell 判别字段 */
       kind: 'content';
-      /** 对应 semantic Cell id */
-      cellId: string;
+      /** 对应 semantic Cell 的可选 id */
+      cellId?: string;
       /** detached、递归冻结的 Core child */
       content: IRChild;
     }>;
@@ -157,8 +157,8 @@ export type PresentedTableCell =
   | Readonly<{
       /** value Cell 判别字段 */
       kind: 'value';
-      /** 对应 semantic Cell 的稳定 id */
-      cellId: string;
+      /** 对应 semantic Cell 的可选 id */
+      cellId?: string;
       /** formatter 前的 canonical scalar */
       rawValue: IRDataScalarValue;
       /** formatter 产生的展示 scalar */
@@ -175,8 +175,8 @@ export type PresentedTableCell =
   | Readonly<{
       /** direct content Cell 判别字段 */
       kind: 'content';
-      /** 对应 semantic Cell 的稳定 id */
-      cellId: string;
+      /** 对应 semantic Cell 的可选 id */
+      cellId?: string;
       /** detached、递归冻结的最终视觉输入 */
       appearance: DeepReadonly<IRTableCellAppearance>;
       /** detached、递归冻结的 Core 内容 */

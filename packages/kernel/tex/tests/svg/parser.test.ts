@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { RetikzTexError } from '../../src/error';
 import { lowerMathJaxSvg } from '../../src/svg';
-import { parseTransform } from '../../src/svg/matrix';
+import { parseSvgTransform } from '../../src/svg/matrix';
 import { parsePathD } from '../../src/svg/path-d';
 
 const lowerSvgForTest = (svg: string, fontSize: number) => {
@@ -17,7 +17,7 @@ const lowerSvgForTest = (svg: string, fontSize: number) => {
 
 describe('SVG structured errors', () => {
   it('transform failures use the package RetikzTexError', () => {
-    expect(() => parseTransform('rotate(90)')).toThrow(RetikzTexError);
+    expect(() => parseSvgTransform('rotate(90)')).toThrow(RetikzTexError);
   });
 });
 

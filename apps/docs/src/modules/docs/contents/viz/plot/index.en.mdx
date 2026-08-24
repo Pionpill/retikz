@@ -26,8 +26,8 @@ Solid arrows show the main path from authoring to rendered output. External data
     {
       label: 'React Plot collects props into Plot Vanilla embed input',
       path: 'packages/viz/plot-react/src/Plot.tsx',
-      startLine: 115,
-      endLine: 133,
+      startLine: 137,
+      endLine: 153,
     },
     {
       label: 'React children are collected and delegated to Plot Vanilla normalization',
@@ -60,13 +60,19 @@ Solid arrows show the main path from authoring to rendered output. External data
 
 | Package                | Owns                                                                          | Typical entries                                            |
 | ---------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `@retikz/plot`         | `IRPlot*` schema, definitions / registries, domain resolution, lowering       | `PlotSchema`, `lowerPlots`                             |
+| `@retikz/plot`         | `IRPlot*` schema, definitions / registries, domain resolution, lowering       | `PlotSchema`, `lowerPlots`                                 |
 | `@retikz/plot-react`   | React `XxxProps` / children collection and React host wiring                  | `<Plot>`                                                   |
 | `@retikz/plot-vanilla` | `InputPlot*` types, normalization, InputEmbed wiring, SSR, DOM-free rendering | `plot()`, `normalizePlot()`, `embedPlot()`, `renderPlot()` |
 
 All three packages share the IR and lowering source of truth in `@retikz/plot`. `@retikz/plot-vanilla` is the framework-neutral authoring owner: it owns the TypeScript-only `InputPlot*`, `PlotSource`, and `InputPlotEmbed` contracts and expands `facets`, `scaffolds`, and axis / topology bindings from `InputPlot` into `IRPlot`, without schema-parsing typed input again. Only `IRPlot*` values are persisted schema types; unknown external data must still enter IR through a Plot schema or parser.
 
 React only collects JSX / props and dispatches Plot Vanilla; it owns no parallel Plot IR builder, schema parse, or lowering. If you already have a complete `IRPlot`, pass it directly to the runtime without wrapping it in another authoring helper.
+
+## React hosting and embedding
+
+`<Plot>` is already a complete standalone entry. Rendering it directly creates one internal `Layout`, so callers do not add another host. Inside an existing `<Layout>`, the same component degrades to one Plot Scope/composite: it shares the outer Scene, renderer, and effective Theme and does not create a nested SVG.
+
+Plot `width` / `height` and panel fields such as `x` / `y`, transforms, and clip remain valid embedded inputs. `className`, `style`, `renderer`, and Core `themeStyles` control only the standalone host and belong on the outer `<Layout>`; `lineage`, `hostLineageMetadata`, and `onLineage` depend on the standalone React lifecycle and must be omitted when embedded. An embedded Plot fails loudly when it owns any of those fields—even an explicit `undefined`. This keeps host or observer configuration from being ignored and does not generate an extra model id for an embedded Plot.
 
 ## What Plot owns—and what it does not
 

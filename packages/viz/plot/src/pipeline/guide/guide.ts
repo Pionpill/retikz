@@ -3,7 +3,7 @@ import type { IRShapeValue } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
 import type { Position } from '@retikz/math';
 
-import { arcEndPoint } from '@retikz/math';
+import { pointAtArcAngle } from '@retikz/math';
 
 import type {
   CoordinateFrame,
@@ -42,7 +42,7 @@ import {
 } from '../../schemas';
 import { DEFAULT_AXIS_LABEL_GAP, DEFAULT_AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
 
-/** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 arcEndPoint */
+/** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 pointAtArcAngle */
 const DEG_TO_RAD = Math.PI / 180;
 
 /** 一段直线（首尾两点） */
@@ -829,7 +829,7 @@ const cartesianYAxisTitleRotateOf = (side: CartesianAxisSide): number => (side =
  * @description guide lowering 的 IR step 需要确定 Position；若上游 scale/tick 契约被破坏，则返回 [NaN, NaN] 让问题显性暴露
  */
 const finitePolarPoint = (center: Position, angleDeg: number, radius: number): Position =>
-  Number.isFinite(angleDeg) && Number.isFinite(radius) ? arcEndPoint(center, radius, angleDeg) : [NaN, NaN];
+  Number.isFinite(angleDeg) && Number.isFinite(radius) ? pointAtArcAngle(center, radius, angleDeg) : [NaN, NaN];
 
 /**
  * 轴 / 网格 scope 的 id + meta props（provenance 开时按 guide owner 合成 plot-local id + layer 来源 meta）

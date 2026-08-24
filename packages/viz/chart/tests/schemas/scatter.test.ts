@@ -27,6 +27,12 @@ describe('Scatter Chart exact Source schema', () => {
     expect(ScatterChartPropertiesSchema.safeParse({ size: { field: 'amount' } }).success).toBe(false);
   });
 
+  it('rejects whitespace-only constant colors and paints', () => {
+    for (const property of ['color', 'textColor', 'fill', 'stroke'] as const) {
+      expect(ScatterChartPropertiesSchema.safeParse({ [property]: '   ' }).success).toBe(false);
+    }
+  });
+
   it('rejects old flattened/config shapes and unknown fields', () => {
     expect(ScatterChartSchema.safeParse({ ...scatter, type: 'scatter' }).success).toBe(false);
     expect(ScatterChartSchema.safeParse({ ...scatter, config: {} }).success).toBe(false);

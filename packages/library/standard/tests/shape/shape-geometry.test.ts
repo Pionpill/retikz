@@ -81,18 +81,33 @@ describe('Standard container shape geometry', () => {
     });
   });
 
-  it('uses a 0.2 shoulderRatio for an independently resizable elongated hexagon', () => {
+  it('uses a fixed 12-unit shoulder depth independent of the elongated hexagon width', () => {
     expect(HexagonShapeDefinition.circumscribe(20, 10, {})).toEqual({
-      halfWidth: 33.333333333333336,
+      halfWidth: 32,
       halfHeight: 10,
     });
-    expect(pathOf(HexagonShapeDefinition, { x: 0, y: 0, width: 80, height: 20 }, {}).commands).toEqual([
-      { kind: 'move', to: [-24, -10] },
-      { kind: 'line', to: [24, -10] },
-      { kind: 'line', to: [40, 0] },
-      { kind: 'line', to: [24, 10] },
-      { kind: 'line', to: [-24, 10] },
-      { kind: 'line', to: [-40, 0] },
+    expect(HexagonShapeDefinition.circumscribe(20, 10, { shoulderDepth: 8 })).toEqual({
+      halfWidth: 28,
+      halfHeight: 10,
+    });
+    expect(pathOf(HexagonShapeDefinition, { x: 0, y: 0, width: 120, height: 20 }, {}).commands).toEqual([
+      { kind: 'move', to: [-48, -10] },
+      { kind: 'line', to: [48, -10] },
+      { kind: 'line', to: [60, 0] },
+      { kind: 'line', to: [48, 10] },
+      { kind: 'line', to: [-48, 10] },
+      { kind: 'line', to: [-60, 0] },
+      { kind: 'close' },
+    ]);
+    expect(
+      pathOf(HexagonShapeDefinition, { x: 0, y: 0, width: 20, height: 20 }, { shoulderDepth: 16 }).commands,
+    ).toEqual([
+      { kind: 'move', to: [0, -10] },
+      { kind: 'line', to: [0, -10] },
+      { kind: 'line', to: [10, 0] },
+      { kind: 'line', to: [0, 10] },
+      { kind: 'line', to: [0, 10] },
+      { kind: 'line', to: [-10, 0] },
       { kind: 'close' },
     ]);
   });
@@ -222,8 +237,8 @@ describe('Standard container shape geometry', () => {
     expect(
       ParallelogramShapeDefinition.scaleParams?.({ slantDirection: 'right', slantAngle: 70, cornerRadius: 4 }, 4, 9),
     ).toEqual({ slantDirection: 'right', slantAngle: 70, cornerRadius: 24 });
-    expect(HexagonShapeDefinition.scaleParams?.({ shoulderRatio: 0.2, cornerRadius: 4 }, 4, 9)).toEqual({
-      shoulderRatio: 0.2,
+    expect(HexagonShapeDefinition.scaleParams?.({ shoulderDepth: 4, cornerRadius: 4 }, 4, 9)).toEqual({
+      shoulderDepth: 24,
       cornerRadius: 24,
     });
     expect(CylinderShapeDefinition.scaleParams?.({ axis: 'horizontal', capDepth: 4 }, 4, 9)).toEqual({
@@ -234,7 +249,8 @@ describe('Standard container shape geometry', () => {
 
   it('rejects invalid params and non-finite derived geometry', () => {
     expect(() => TrapezoidShapeDefinition.paramsSchema.parse({ shortSideRatio: 0 })).toThrow();
-    expect(() => HexagonShapeDefinition.paramsSchema.parse({ shoulderRatio: 0.5 })).toThrow();
+    expect(() => HexagonShapeDefinition.paramsSchema.parse({ shoulderDepth: -1 })).toThrow();
+    expect(() => HexagonShapeDefinition.paramsSchema.parse({ shoulderRatio: 0.2 })).toThrow();
     expect(() => ParallelogramShapeDefinition.paramsSchema.parse({ slantAngle: 0 })).toThrow();
     expect(() => CylinderShapeDefinition.paramsSchema.parse({ capDepth: -1 })).toThrow();
     expect(() => TrapezoidShapeDefinition.paramsSchema.parse({ unknown: true })).toThrow();

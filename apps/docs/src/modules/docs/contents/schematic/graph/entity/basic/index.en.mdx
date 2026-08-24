@@ -1,107 +1,158 @@
 ---
 title: Entity Basic Usage
-description: Express terminals, stages, decisions, and junctions with roles and stable authored identities.
+description: Author node semantics, text, and placement in one concise record at any Core-child position.
 ---
 
-`Entity` represents a concrete object in a flowchart, such as a start point, process step, decision, or junction. It serves as a graph node, carries the object's name or description, and participates in `Relation` connections
+`Entity` is a semantic node with an optional Core identity. Semantics, text, and Core Node-compatible placement live directly in one record, which independently lowers to one ordinary Core `Node`. Omitting `id` draws the node without registering a Core target that references can resolve
 
 ## Usage
 
 ```tsx
-import { Layout } from '@retikz/react';
 import { Entity } from '@retikz/graph-react';
+import { Layout } from '@retikz/react';
 ```
 
 ```tsx
 <Layout width={360} height={140}>
-  <Entity id="start" role="terminal" position={[24, 56]}>
-    Start
-  </Entity>
-  <Entity id="step" role="stage" variant="fill" position={[180, 56]}>
-    Process
+  <Entity id="task" role="activity" position={[180, 70]}>
+    Process order
   </Entity>
 </Layout>
 ```
 
-`Entity` wraps the Core `Node` and uses `role` to make a subject's function in a relationship graph explicit, while `variant` selects its visual treatment. It keeps Node's position, text, sizing, and visual capabilities; provide a stable `id`, a `role`, and a `position`, and string children become node text
-
-Entity's special props are:
-
-| Prop      | Meaning        | Usage                                                                                        |
-| --------- | -------------- | -------------------------------------------------------------------------------------------- |
-| `role`    | Graph function | Built-ins are `terminal`, `stage`, `decision`, and `junction`; custom keys can be registered |
-| `variant` | Visual variant | Built-ins are `default`, `fill`, and `mixed`; custom keys can be registered                  |
-
-Entity also inherits Core `Node`'s `meta` metadata field. `meta` accepts a JSON-safe object, is preserved on emitted Scene primitives, and does not affect compilation, so LLMs, inspectors, and other tools can read the domain context it carries from the IR or Scene. Other position, text, sizing, and visual props pass through to Node
+`Entity` can appear directly in Layout, Scope, Graph, or any other Core-child position. Its children accept only strings, numbers, Fragments, or Core `<Text>` and write the direct `text` field. Keep drawing content as siblings rather than Entity children
 
 ## Examples
 
-`role` is Entity's most important prop. It defines the Entity's function in the overall flowchart; choose it from the object's meaning rather than its appearance or at random. LLMs also rely on this explicit role meaning when generating or interpreting a flowchart. `variant` changes visual treatment only and must not replace `role`
+The seven built-in roles define only upper-level semantics and a base shape recipe. Graph has **no built-in Entity kinds or predicates**: a `kind` or `predicate.name` can be used only after it is registered in the current provider assembly. Every kind and params object listed below is an extension example, not a built-in value
 
-### terminal: start and end points
+Theme owns the complete Entity visual language. Each demo below can precisely control instance color and text, while the page-level Theme selector switches the overall style among Academic, Vibrant, Clean, and other choices
 
-`terminal` represents the beginning or end of a flow. Use it for entering a process, completing a task, or leaving a flow; do not use it for an ordinary processing step
+### participant: an active subject
+
+`participant` represents a subject that actively participates, owns responsibility, or provides a capability. Typical objects include people, teams, organizations, external systems, and services. Use `activity` for work being performed and `resource` for an object that is merely consumed or stored
+
+- **Built-in kinds / predicates:** none
+- **Registrable kind examples:** `participant.person`, `participant.team`, and `participant.system`; these are examples of globally unique keys only
+- **Controllable predicate params example:** an extension could declare `{ capacity: number, region: string }` through `paramsSchema`, but built-in `participant` accepts no predefined params
 
 <ComponentPreview
-  files="entity-terminal"
+  files="entity-participant"
   size="sm"
-  caption="Change the terminal color (including currentColor), variant, and inner content."
+  caption="Control the participant outline, Graph Theme primary color, and text."
 />
 
-### stage: processing step
+### activity: work and action
 
-`stage` represents a step that performs processing, an action, or a state transition. It is usually the main working node in a flow, so its inner content should describe an executable task or stage
+`activity` represents work, an action, or a transformation that happens or must be performed. Typical objects include tasks, processing steps, subprocesses, and system operations. A persistent condition is a `state`; an instantaneous occurrence is an `event`
+
+- **Built-in kinds / predicates:** none
+- **Registrable kind examples:** `activity.task`, `activity.subprocess`, and `activity.operation`
+- **Controllable predicate params example:** an extension could declare `{ retryable: boolean, slaMinutes: number }`; its `paramsSchema` owns the exact fields, defaults, and ranges
 
 <ComponentPreview
-  files="entity-stage"
+  files="entity-activity"
   size="sm"
-  caption="Change the stage color (including currentColor), variant, and inner content."
+  caption="Inspect an explicit dashed instance outline, then control the activity's precise color and text."
 />
 
-### decision: condition check
+### event: a point in time
 
-`decision` represents a point where a condition selects different next paths. Its content should describe the branching criterion, not the processing that follows a branch
+`event` represents an occurrence, boundary, or lifecycle point in time. Typical objects include start, end, timeout, message arrival, and failure events. It does not represent ongoing work or a condition that persists
+
+- **Built-in kinds / predicates:** none
+- **Registrable kind examples:** `event.start`, `event.end`, `event.timer`, and `event.message`
+- **Controllable predicate params example:** an extension could declare `{ interrupting: boolean, channel: string }`; Graph stores only JSON-safe params accepted by that schema
 
 <ComponentPreview
-  files="entity-decision"
+  files="entity-event"
   size="sm"
-  caption="Change the decision color (including currentColor), variant, and inner content."
+  caption="Control the event outline, Graph Theme primary color, and text."
 />
 
-### junction: split or merge point
+### state: a persistent condition
 
-`junction` represents several relations merging into, or splitting from, the same point. It usually carries topology only; add inner content when the connection point itself needs semantic context
+`state` represents a condition that persists for an object or system. Typical objects include pending, active, suspended, and failed states. The action that changes a state is an `activity`; the instant of transition may be modeled as an `event`
+
+- **Built-in kinds / predicates:** none
+- **Registrable kind examples:** `state.pending`, `state.active`, and `state.failed`
+- **Controllable predicate params example:** an extension could declare `{ severity: 'low' | 'high', terminal: boolean }`, with the enum and value domain validated by `paramsSchema`
 
 <ComponentPreview
-  files="entity-junction"
+  files="entity-state"
   size="sm"
-  caption="Change the junction color (including currentColor), variant, and inner content."
+  caption="Control the state outline, Graph Theme primary color, and text."
 />
 
-### Playground
+### gateway: a semantic control point
 
-The playground switches between built-in `role` and `variant` values and independently adjusts the Node primary, stroke, and text colors, showing how explicit Node props override a visual variant
+`gateway` represents a split, merge, or synchronization point with explicit control semantics. Typical objects include exclusive choices, parallel splits, parallel joins, and multi-way synchronization. Do not use it merely to obtain a diamond shape or in place of a participant or business resource
+
+- **Built-in kinds / predicates:** none
+- **Registrable kind examples:** `gateway.exclusive`, `gateway.parallel`, and `gateway.inclusive`
+- **Controllable predicate params example:** an extension could declare `{ mode: 'split' | 'merge', branches: number }` and map params to emphasis without replacing the gateway structure recipe
 
 <ComponentPreview
-  files="entity-playground"
-  size="lg"
-  caption="Switch role and variant, then adjust the primary, stroke, and text colors independently."
+  files="entity-gateway"
+  size="sm"
+  caption="Control the gateway outline, Graph Theme primary color, and text."
 />
+
+### resource: an object that is used or stored
+
+`resource` represents an object that is used, produced, transferred, or stored. Typical objects include documents, databases, queues, datasets, and artifacts. A system that actively participates and provides a capability is usually a `participant`
+
+- **Built-in kinds / predicates:** none
+- **Registrable kind examples:** `resource.document`, `resource.database`, and `resource.queue`
+- **Controllable predicate params example:** an extension could declare `{ mutable: boolean, replicas: number }` and map validated params to sparse appearance tokens in its predicate resolver
+
+<ComponentPreview
+  files="entity-resource"
+  size="sm"
+  caption="Control the resource outline, Graph Theme primary color, and text."
+/>
+
+### concept: an abstract knowledge object
+
+`concept` represents an abstract knowledge object rather than a concrete runtime instance. Typical objects include classes, claims, topics, domain concepts, and rules. Use `activity` for executable work and `participant` for an active connectable subject
+
+- **Built-in kinds / predicates:** none
+- **Registrable kind examples:** `concept.class`, `concept.claim`, and `concept.topic`
+- **Controllable predicate params example:** an extension could declare `{ confidence: number, source: string }`; those params remain the predicate's domain contract rather than fixed `concept` fields
+
+<ComponentPreview
+  files="entity-concept"
+  size="sm"
+  caption="Control the concept outline, Graph Theme primary color, and text."
+/>
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit when persisting Graph data, integrating Diagram, or diagnosing compile input."
+/>
+
+An Entity Source record stores authored fields only. `id`, `text`, and `position` may all be omitted without materializing empty wrappers, generated ids, or defaults. An Entity without `id` is still drawn from its role but registers no target in the Core namespace. At compile time, the role supplies shape, boundary, padding, corner radius, and base minimum size. Theme supplies appearance defaults, while explicit non-structural Node fields such as `color`, `fill`, `dashed`, `dashPattern`, and `textColor` take final precedence
+
+Entity performs its own registry lookup and lowers to an ordinary Core `Node`. Core, Scene, and renderers do not interpret Entity roles. Graph only adds local Theme context when present; it is not a compile prerequisite
 
 ## API Reference
 
-Entity's special props are `role` and `variant`; placement, text, and visual props follow the Core `Node` contract
-
-| Prop            | Type              | Default       | Description                                               |
-| --------------- | ----------------- | ------------- | --------------------------------------------------------- |
-| `id`            | `string`          | —             | Stable authored identity and target name                  |
-| `role`          | `string`          | —             | Selects a registered Entity role                          |
-| `variant?`      | `string`          | `default`     | Selects a registered Entity variant                       |
-| `shape?`        | `NodeShapeInput`  | from `role`   | Overrides the role-provided default shape                 |
-| Core Node props | Core `Node` props | Core defaults | Reuses Node placement, text, sizing, and visual contracts |
+| Prop         | Type                                      | Default | Description                                                     |
+| ------------ | ----------------------------------------- | ------- | --------------------------------------------------------------- |
+| `id?`        | `string`                                  | —       | Optional Core target id; omission registers no reference target |
+| `role`       | `string`                                  | —       | Registered open semantic role key                               |
+| `kind?`      | `string`                                  | —       | Registered stable subtype within the role                       |
+| `predicate?` | `{ name: string; params?: IRJsonObject }` | —       | Registered predicate and its JSON-safe parameters               |
+| `position?`  | `IRPosition`                              | —       | Directly reuses the Core Node position language                 |
+| `text?`      | `IRNode['text']`                          | —       | Node-compatible text                                            |
+| `children?`  | Node-compatible text                      | —       | React text entry; it cannot host arbitrary drawing children     |
+| `meta?`      | `IRJsonObject`                            | —       | Metadata ignored by Graph semantics                             |
 
 ## Related
 
-- [Entity Extensions](/schematic/graph/entity/extension): custom roles, variants, Graph Theme selectors, and injection
-- [Relation Basic Usage](/schematic/graph/relation/basic): connect Entity values with Steps
-- [Container Basic Usage](/schematic/graph/container/basic): organize several children
+- [Entity Extensions](/schematic/graph/entity/extension): register roles, kinds, predicates, and Theme styles
+- [Relation Basic Usage](/schematic/graph/relation/basic): connect any named targets through Core NodeTarget
+- [Graph API Reference](/schematic/graph/api-reference): inspect minimal Source records and Theme schemas

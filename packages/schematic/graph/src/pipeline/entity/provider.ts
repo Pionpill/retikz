@@ -1,5 +1,7 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
 
+import { CylinderShapeProvider, HexagonShapeProvider } from '@retikz/standard/shape';
+
 import type { GraphDefinitionOptions } from '../../contract';
 
 import { createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';
@@ -13,7 +15,7 @@ export const EntityProviderKey: CompositeCoreProviderKey = Object.freeze({
   type: GraphType.Entity,
 });
 
-/** 使用 Core 已合并的 runtime envelopes 创建唯一 Entity Definition */
+/** 使用当前 provider key 已合并的 runtime datasets 创建唯一 Entity Definition */
 const makeEntityDefinition: CoreDependencyProvider['makeDefinition'] = datasets =>
   createEntityDefinitionFromOptions(resolveGraphRuntimeOptions(datasets));
 
@@ -21,14 +23,10 @@ const makeEntityDefinition: CoreDependencyProvider['makeDefinition'] = datasets 
 export const createEntityProvider = (options: GraphDefinitionOptions = {}): CoreDependencyProvider =>
   Object.freeze({
     key: EntityProviderKey,
-    dependencies: Object.freeze([]),
+    dependencies: Object.freeze([HexagonShapeProvider.key, CylinderShapeProvider.key]),
     datasets: createGraphRuntimeDatasets(options),
     makeDefinition: makeEntityDefinition,
   });
 
-/** Entity 的 Core Composite dependency provider */
+/** 使用内置 Graph registries 的默认 Entity provider */
 export const EntityProvider = createEntityProvider();
-
-/** 创建 Entity provider 集合 */
-export const createEntityProviders = (options: GraphDefinitionOptions = {}): ReadonlyArray<CoreDependencyProvider> =>
-  Object.freeze([createEntityProvider(options)]);

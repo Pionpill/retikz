@@ -1,7 +1,8 @@
 import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import type { ScenePrimitive } from '../../contract';
 import type { ContourSegment, Rect } from '../../shared';
@@ -19,13 +20,13 @@ import {
 } from '../../shared';
 import { rectPrimitiveStyle } from './style';
 
-const rectangleParamsSchema = z.strictObject({
+const rectangleParamsSchema = strictObject({
   cornerRadius: NonNegativeNumberSchema.optional().describe(
     'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
   ),
 });
 
-type RectangleParams = z.infer<typeof rectangleParamsSchema>;
+type RectangleParams = ZodInfer<typeof rectangleParamsSchema>;
 
 /** 轴对齐 / 旋转矩形的 4 个角（CW 绕向：左上 → 右上 → 右下 → 左下），局部系经 localToWorld 投世界 */
 const rectVertices = (bounds: Rect): Array<Position> => {

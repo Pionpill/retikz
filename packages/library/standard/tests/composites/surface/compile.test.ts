@@ -9,7 +9,7 @@ import {
   LayoutChildProbeKind,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { boolean, literal, number, string } from 'zod';
 
 import type { SurfaceInput } from '../../../src';
 
@@ -18,14 +18,14 @@ import { createSurface, SurfaceDefinition } from '../../../src';
 type ProbeLog = Readonly<{ id: string; proposal: LayoutProposal }>;
 
 const LeafSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('surface-test'),
-  type: z.literal('leaf'),
-  id: z.string(),
-  width: z.number().nonnegative(),
-  height: z.number().nonnegative(),
-  originX: z.number().default(0),
-  originY: z.number().default(0),
-  reject: z.boolean().default(false),
+  namespace: literal('surface-test'),
+  type: literal('leaf'),
+  id: string(),
+  width: number().nonnegative(),
+  height: number().nonnegative(),
+  originX: number().default(0),
+  originY: number().default(0),
+  reject: boolean().default(false),
 });
 
 const createLeafDefinition = (logs: Array<ProbeLog>) =>
@@ -91,8 +91,8 @@ const compileSurface = (
     namespace: 'surface-test',
     type: 'harness',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('surface-test'),
-      type: z.literal('harness'),
+      namespace: literal('surface-test'),
+      type: literal('harness'),
       child: ChildSchema,
     }),
     compile: (node, context) => {
@@ -191,8 +191,8 @@ describe('Surface layout compile', () => {
       namespace: 'surface-test',
       type: 'failure-harness',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('surface-test'),
-        type: z.literal('failure-harness'),
+        namespace: literal('surface-test'),
+        type: literal('failure-harness'),
         child: ChildSchema,
       }),
       compile: (node, context) => {

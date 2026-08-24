@@ -12,3 +12,10 @@ Each typed component has exact props and normalizes to its matching family /
 chartType Source before the shared runtime adapter enters the Chart provider
 pipeline. There is no generic `<Chart type="..." />` API, Source-mode component,
 or Point-family input union.
+
+Every concrete Chart component is standalone by default and creates exactly one
+`Layout` / Scene renderer host. When placed inside an outer `Layout`, it contributes
+only its Chart-to-Plot Scope/composite and inherits the outer effective Theme. All
+`ChartHostProps` are standalone-only in embedded mode—including `width`, `height`,
+renderer/runtime fields, callbacks, and explicit `undefined` own props—and must move
+to the outer `Layout`. Source `layout` remains the separate Chart border-box contract.

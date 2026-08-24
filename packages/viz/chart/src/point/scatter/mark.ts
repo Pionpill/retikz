@@ -11,12 +11,7 @@ export const ScatterMarkDefinition: ChartMarkDefinition = defineChartMark({
   resolve: context => {
     const slots = markSlotsOf(context);
     return {
-      marks: [
-        resolvePointMark(slots.encodings, slots.properties, {
-          chartType: context.chartType,
-          includeId: false,
-        }),
-      ],
+      marks: [resolvePointMark(slots.encodings, slots.properties)],
     };
   },
 });

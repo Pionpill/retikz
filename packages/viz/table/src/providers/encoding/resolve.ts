@@ -2,8 +2,7 @@ import type { IRDataScalarValue } from '@retikz/data';
 
 import { CssColorSchema, JsonObjectSchema } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
-import { NonBlankStringSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { array, enum as zodEnum, number } from 'zod';
 
 import type {
   AnyCellVisualScaleDefinition,
@@ -16,17 +15,14 @@ import { RetikzTableError } from '../../error';
 import { deepFreeze } from '../../shared';
 import { cellVisualScaleDefinitionOf } from './registry';
 
-const ColorSchema = CssColorSchema.refine(value => NonBlankStringSchema.safeParse(value).success, {
-  message: 'visual scale color must not be empty or whitespace',
-});
-const EdgesSchema = z.array(z.number()).superRefine((edges, context) => {
+const EdgesSchema = array(number()).superRefine((edges, context) => {
   edges.forEach((edge, index) => {
     if (index > 0 && edge <= edges[index - 1]) {
       context.addIssue({ code: 'custom', path: [index], message: 'edges must be strictly increasing' });
     }
   });
 });
-const LegendFormSchema = z.enum(['ramp', 'swatch']);
+const LegendFormSchema = zodEnum(['ramp', 'swatch']);
 
 /** package-private visual scale 消费输入 */
 export type ResolveCellVisualScaleInput = Readonly<{
@@ -49,7 +45,7 @@ const guardResolution = (name: string, resolution: CellVisualScaleResolution): C
     return result.data;
   });
   const range = resolution.range.map((color, index) => {
-    const result = ColorSchema.safeParse(color);
+    const result = CssColorSchema.safeParse(color);
     if (!result.success)
       throw new RetikzTableError(`table: visual scale "${name}" range ${index} must be a valid color string`);
     return result.data;
@@ -85,7 +81,7 @@ const guardResolution = (name: string, resolution: CellVisualScaleResolution): C
   const observed = new Map<IRDataScalarValue, string | undefined>();
   const guardedOf = (value: IRDataScalarValue): string | undefined => {
     const output = evaluator(value);
-    const guarded = output === undefined ? undefined : ColorSchema.safeParse(output);
+    const guarded = output === undefined ? undefined : CssColorSchema.safeParse(output);
     if (guarded !== undefined && !guarded.success) {
       throw new RetikzTableError(
         `table: visual scale "${name}" evaluator output must be a valid color string or undefined`,

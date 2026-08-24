@@ -13,7 +13,7 @@ export type InspectionVanillaRequest = Readonly<{
   /** 要请求的 Inspector key */
   inspector: InspectorKey;
   /** sparse options、true 或继承关闭 false */
-  value: false | true | IRJsonObject;
+  options: false | true | IRJsonObject;
 }>;
 
 /** Vanilla site 可声明一个 request、多个 request，或 barrier */
@@ -41,7 +41,9 @@ const readInspectionVanillaAuthoring = (site: InputAuthoringSite): InspectionVan
 };
 
 /** 把一个 Vanilla authored site 的可选标记转换为通用 InspectionSelection rules */
-export const inspectionRulesFromVanillaSite = (site: InputAuthoringSite): ReadonlyArray<InspectionSelectionRule> => {
+export const inspectionSelectionRulesFromVanillaSite = (
+  site: InputAuthoringSite,
+): ReadonlyArray<InspectionSelectionRule> => {
   const authoring = readInspectionVanillaAuthoring(site);
   if (authoring === undefined) return Object.freeze([]);
   const target =
@@ -61,7 +63,7 @@ export const inspectionRulesFromVanillaSite = (site: InputAuthoringSite): Readon
   const requests = Array.isArray(authoring.input) ? authoring.input : [authoring.input];
   return Object.freeze(
     requests.map(request =>
-      Object.freeze({ kind: 'request' as const, inspector: request.inspector, target, value: request.value }),
+      Object.freeze({ kind: 'request' as const, inspector: request.inspector, target, options: request.options }),
     ),
   );
 };

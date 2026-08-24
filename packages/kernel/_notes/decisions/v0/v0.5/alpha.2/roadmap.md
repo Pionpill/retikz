@@ -73,11 +73,11 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-10 已完成 Core 原子 schema/type、Tier 2 / Tier 3 直接消费迁移、测试与双语文档，并于 2026-08-04 获人工接受。
 - ADR-11 已完成 Core 实现、Standard consumers、测试与双语文档，并获人工接受。
 - ADR-12 已完成 Core 领域中立观测底座、独立 `@retikz/inspect`、Render 普通只读图层、React / Vanilla 通用驱动和 Standard 可选子入口迁移，并于 2026-08-07 获人工接受。
-- ADR-14 已完成 Foundation 初始包、七个根契约、跨包 direct dependency 迁移、typed string 失败语义、结构化领域错误兼容、对抗复验与双语文档，并于 2026-08-09 获人工接受；其零依赖、无 schema 与七根导出边界随后由 ADR-17 演进。
+- ADR-14 已完成 Foundation 初始包、七个根契约、跨包 direct dependency 迁移、typed string 失败语义、结构化领域错误兼容、对抗复验与双语文档，并于 2026-08-09 获人工接受；其零依赖、无 schema 与七根导出边界随后由 ADR-17 演进，类型工具边界后续补充 `WithRequiredProperties<T, TKey>`。
 - ADR-13 的 namespaced Theme token bag、Definition registry 与跨 Scope token override 决策已由 ADR-15 取代；其 shared colors 与领域 owner resolver 边界由 ADR-15 继承并收窄。
 - ADR-15 已完成 Core、Plot、Chart、Table 的 selector/style resolver 实现、测试与双语契约，并获人工接受。
 - ADR-16 已完成 Math 仿射矩阵公共原子、Render / TeX 单一真源迁移、顺序敏感回归、对抗验证与双语文档，并于 2026-08-09 获人工接受。
-- ADR-17 已完成六个 Foundation 标量 schema、Core / Graph 旧 owner 移除、跨 Kernel / Standard / Viz 同义叶子迁移、对抗复验、发布产物验证与双语文档，并于 2026-08-09 获人工接受。
+- ADR-17 已完成六个 Foundation 标量 schema、受限开放字符串 schema factory、Core / Graph 旧 owner 移除、跨 Kernel / Standard / Viz 同义叶子迁移、对抗复验、发布产物验证与双语文档，并于 2026-08-09 获人工接受。
 - ADR-18 已完成 Core provider graph、React / Vanilla contribution、直接 resolver、SSR 与第三方 provider 的同构实现、测试与双语契约，并获人工接受。
 - ADR-19 已完成 Composite structured output、qualified world-space sidecar、closed selector、retained revision 原子性、Standard Surface owner 与测试文档闭环，并获人工接受。
 - ADR-20 已完成 Vanilla Input-to-IR、framework-neutral processing、React adapter parity、DOM retained transaction 与公开入口收敛，并获人工接受。
@@ -121,9 +121,9 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 7. Theme selector（style、mode）持久化在 Scene / Scope IR；Core 以 style registry 解析继承并生成 shared colors，领域 owner 以同名 style registry 物化默认 token 与局部 override，renderer 不读取 Theme 或 token。
 8. layout-aware Composite 的 authored Scope props、普通 child 与 replay child 必须沿同一 Core Scope / style / theme / identity / bounds / clip / diagnostics 主链消费；compile-local replay wrapper 不承担普通 Scope 语义。
 9. Core 只发布最终 settled owner output；`@retikz/inspect` 以显式 registry 生成辅助内容，继承 occurrence 的有效 Theme / style 并复用普通 IR / Definition / compile，但使用隔离 namespace，seal 后不保留 public id / meta / animation，且与主 Scene 的 layout、resource、identity、artifact、patch、命中和水合语义隔离。
-10. Foundation 只提供无领域原子契约；实际 consumer 直接依赖其根入口，`@retikz/math` 在没有真实消费时不声明空依赖，Core / Runtime 旧基础类型出口不形成第二真源，领域错误与私有 identity / Diagnostic 边界保持不变。
+10. Foundation 只提供无领域原子契约，包括无运行时代码的基础类型投影；实际 consumer 直接依赖其根入口，`@retikz/math` 在没有真实消费时不声明空依赖，Core / Runtime 及领域包不保留同义基础类型副本，领域错误与私有 identity / Diagnostic 边界保持不变。
 11. 通用二维仿射计算由 Math 以 plain numeric tuple 单一真源提供；Render 与 TeX 只组合该原子，不把 Scene、SVG parser、stroke 或诊断语义下沉。
-12. Foundation 只以 Zod 为生产依赖并拥有无领域、非变换的 string / number schema 原子；完整对象、IR、默认值、领域 refinement、错误包装与 Diagnostic 留在对应 owner。
+12. Foundation 只以 Zod 为生产依赖并拥有无领域、非变换的 string / number schema 原子，以及从 const object enum 组合开放非空字符串 schema 的受限 factory；完整对象、IR、registry lookup、默认值、领域 refinement、错误包装与 Diagnostic 留在对应 owner。
 13. Composite 传递依赖只通过 Core provider graph 解析；完整 key、显式 roots、dataset 同源冲突与 dependency-first 稳定拓扑在 React、Vanilla 与直接工具链中使用同一语义。
 14. 语义空间 handle 由声明 owner 保留 local key / role / payload，Core 只增加 qualified owner path 并发布同 revision world-space sidecar；Scene、renderer 与外层 Composite 不复制或重命名 descendant handles。
 15. Framework authoring Input 只经 Vanilla 归一为 Source IR；React 与未来框架包不直接重建 Core IR。
@@ -144,7 +144,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - ADR-14 在接受前必须证明 Foundation 根契约、直接依赖拓扑、Math 无真实消费时不声明依赖、typed string 失败语义和 Runtime / Render / Plot / Chart 错误兼容边界稳定，且不新增 IR、Scene、renderer 或领域 registry。
 - ADR-15 已证明 selector-only Theme、Core / Plot / Chart 同名 style registry、领域 definition 缺失时的 fail-loud 语义、React / Vanilla / plain JSON 等价性与既有 token cascade 局部 override 优先级稳定。
 - ADR-16 已证明六元组 ABI、运行时不可变单位矩阵、复合顺序与点映射稳定；Math 保持零依赖，TeX / Render 使用同一真源，同时 SVG parser、Scene hydration、可逆性、stroke 与诊断行为不变。
-- ADR-17 已证明 Foundation 的唯一 Zod 依赖、六个根 schema、空白 / 数值边界、旧 owner 单一真源迁移和 consumer 完整 schema 行为稳定，且未下沉对象、数组、IR、领域 refinement 或 Diagnostic。
+- ADR-17 已证明 Foundation 的唯一 Zod 依赖、六个根 schema、受限开放字符串 factory、空白 / 数值边界、旧 owner 单一真源迁移和 consumer 完整 schema 行为稳定，且未下沉对象、数组、IR、registry lookup、领域 refinement 或 Diagnostic。
 - ADR-18 已证明多个 roots 的传递闭包、共享 provider 单次物化、dataset `Object.is` 同源边界、缺失 / cycle / maker / definition 冲突，以及 React、Vanilla、SSR、直接 resolver 与第三方 provider 的同构行为。
 - ADR-19 已证明 expand / layout-aware Composite 统一结构化输出，Scope / placement / replay transform 后的 world-space rect、owner path、origin / final occurrence、closed selector 与 retained revision 原子性稳定，且 Scene、SVG、Canvas 不承载该 sidecar。
 - ADR-20 已证明统一 Input-to-IR、controller / static processing 边界、React / Vanilla / plain JSON 等价性、DOM retained 原子提交与公开入口依赖方向稳定。
@@ -164,7 +164,7 @@ alpha.2 交付 `sync + atomic + incremental` 的第一条完整更新链路，�
 - Plot / Table 的完整领域增量算法；alpha.2 只要求至少一个跨 Tier fixture 验证通用契约。
 - Box / Flex / Grid / Overlay solver、LayoutItem schema、Standard baseline alignment policy 与完整 CSS intrinsic sizing；Core 只提供领域中立的 alignment guide contract。
 - 为既有 `0.x` API 保留兼容桥接。
-- ADR-17 之外的 Foundation / Math 通用 helper、领域错误迁移和包拓扑重设计；Foundation schema 只按 ADR-17 冻结的六个原子收口。
+- ADR-17 之外的 Foundation / Math 通用 helper、领域错误迁移和包拓扑重设计；Foundation schema 只按 ADR-17 冻结的六个原子与 `createOpenStringSchema(values)` 收口。
 - rect 之外的 spatial band / point / path / polygon / union / intersection / polar / attachment 运算，以及事件、hit-test、selection 与 dashboard runtime。
 - provider graph 的动态 import、包发现、版本求解、全局 mutable registry、dataset 生命周期与跨 revision 缓存。
 

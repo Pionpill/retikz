@@ -1,7 +1,7 @@
 import type { IRStep, PolarPosition } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 import type { Vector2 } from '@retikz/math';
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type {
   RibbonAlignment,
@@ -24,19 +24,19 @@ import type {
 
 export type IRRibbonDirection = number | Vector2 | PolarPosition;
 
-export type IRRibbonWidthStop = z.infer<typeof RibbonWidthStopSchema>;
+export type IRRibbonWidthStop = ZodInfer<typeof RibbonWidthStopSchema>;
 
-export type IRRibbonWidth = z.infer<typeof RibbonWidthSchema>;
+export type IRRibbonWidth = ZodInfer<typeof RibbonWidthSchema>;
 
-export type IRRibbonArcCap = z.infer<typeof RibbonArcCapSchema>;
+export type IRRibbonArcCap = ZodInfer<typeof RibbonArcCapSchema>;
 
-export type IRRibbonCap = z.infer<typeof RibbonCapSchema>;
+export type IRRibbonCap = ZodInfer<typeof RibbonCapSchema>;
 
-export type IRRibbonEndpoint = z.infer<typeof RibbonEndpointSchema>;
+export type IRRibbonEndpoint = ZodInfer<typeof RibbonEndpointSchema>;
 
-export type IRRibbonSampling = z.infer<typeof RibbonSamplingSchema>;
+export type IRRibbonSampling = ZodInfer<typeof RibbonSamplingSchema>;
 
-export type IRRibbonPathOptions = z.infer<typeof RibbonPathOptionsSchema>;
+export type IRRibbonPathOptions = ZodInfer<typeof RibbonPathOptionsSchema>;
 
 export type RibbonModeValue = ValueOf<typeof RibbonMode>;
 
@@ -53,7 +53,7 @@ export type RibbonWidthInterpolationValue = ValueOf<typeof RibbonWidthInterpolat
 export type RibbonTaperInterpolationValue = ValueOf<typeof RibbonTaperInterpolation>;
 
 /** Standard Ribbon 完整 Path subject */
-export type IRRibbonPath = z.infer<typeof CompleteRibbonPathSchema>;
+export type IRRibbonPath = ZodInfer<typeof CompleteRibbonPathSchema>;
 
 /** 已补齐 Ribbon 默认值的端点属性 */
 export type CanonicalRibbonEndpoint = Omit<IRRibbonEndpoint, 'cap'> & {

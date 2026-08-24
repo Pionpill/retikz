@@ -11,7 +11,7 @@ describe('Inspection plane Render adapter', () => {
     const plane: InspectionPlane = {
       entries: [
         {
-          inspector: { namespace: 'test', name: 'points' },
+          inspector: { namespace: 'test', type: 'points' },
           owner: { kind: 'pathKind', name: 'stroke' },
           occurrence: { sourcePath: 'children[0].path', expansionPath: [] },
           colorScope: 0,

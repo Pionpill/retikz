@@ -1,6 +1,8 @@
 import type { CompileOccurrenceLocator } from '../../contract';
 import type { CompileArtifact, CompositeCompileArtifact, NodeLayoutCompileArtifact } from '../types';
 
+import { compareCompileOccurrences } from '../../contract';
+
 /** 创建递归冻结的 occurrence locator */
 export const freezeOccurrence = (occurrence: CompileOccurrenceLocator): CompileOccurrenceLocator =>
   Object.freeze({
@@ -19,27 +21,6 @@ export const freezeCompileArtifact = <T extends CompositeCompileArtifact | NodeL
     ...artifact,
     occurrence: freezeOccurrence(artifact.occurrence),
   }) as T;
-};
-
-const sourceIndexesOf = (sourcePath: string): Array<number> =>
-  Array.from(sourcePath.matchAll(/children\[(\d+)\]/g), match => Number(match[1]));
-
-const compareIndexes = (left: ReadonlyArray<number>, right: ReadonlyArray<number>): number => {
-  const sharedLength = Math.min(left.length, right.length);
-  for (let index = 0; index < sharedLength; index += 1) {
-    const difference = left[index] - right[index];
-    if (difference !== 0) return difference;
-  }
-  return left.length - right.length;
-};
-
-/** 按 canonical 逻辑树 preorder 比较两个 compile occurrence */
-export const compareCompileOccurrences = (left: CompileOccurrenceLocator, right: CompileOccurrenceLocator): number => {
-  const sourceDifference = compareIndexes(sourceIndexesOf(left.sourcePath), sourceIndexesOf(right.sourcePath));
-  if (sourceDifference !== 0) return sourceDifference;
-  const leftIndexes = left.expansionPath.map(segment => segment.index);
-  const rightIndexes = right.expansionPath.map(segment => segment.index);
-  return compareIndexes(leftIndexes, rightIndexes);
 };
 
 /** 按最终逻辑树 occurrence preorder 排列 compile artifacts */

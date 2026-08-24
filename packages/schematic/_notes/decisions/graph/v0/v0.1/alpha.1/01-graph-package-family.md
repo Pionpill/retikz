@@ -2,6 +2,8 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-15
+- 最近修订：2026-08-21
+- 历史边界：本 ADR 只继续冻结 package family 与 owner。GraphNode / GraphConnector 命名由 ADR-05 取代，Variant 与 GraphFrame 默认传播由 ADR-06 的 2026-08-23 breaking revision 删除，Graph / Entity / Relation 组合边界以 ADR-07～09 为准
 
 ## 背景
 
@@ -62,6 +64,27 @@ GraphConnector 不复制 Core Path 的 routing、appearance、target、Step 或 
 GraphNode 与 GraphConnector 使用 Core composite Definition 的普通 `expand`，直接返回单一 Core child。role、variant、Graph namespace 与 Graph discriminator 都只存在于 authored Graph IR；lower 后的 Core IR、Scene、SVG 与 Canvas 不感知这些字段。GraphFrame 继续使用 layout-aware Definition，并由宿主显式注入其 child 所需的其它 Definition
 
 直接 JSON、React 与 Vanilla 必须进入同一 Graph factory、Definition、provider 与 Core compile 主链。adapter 不复制 schema、默认值、variant recipe、路径 parser 或布局逻辑
+
+### Graph root 的 Layout composition
+
+Graph root 同时支持 standalone 与 embedded 两种宿主模式，并保持同一份 Graph Source IR、Definition、resolve 与 lowering 语义
+
+- standalone 模式下，React `Graph` 作为 Layout 宿主，接收 Layout 的尺寸、视框、renderer、className、style 与 Core Theme style definitions 等宿主输入，并只创建一个根渲染面
+- embedded 模式下，外层已有 Layout 时，Graph 不创建第二个 Layout、renderer 或 SVG / Canvas 宿主，只把自己的 Graph root 作为一个局部内容 Scope 贡献给外层场景；多个 Graph 可以在同一个 Layout 中并列存在
+- Graph panel 可以声明 `x`、`y`、`transforms`、`zIndex` 与 `clip`。`x` / `y` 先形成整体平移，再叠加显式 transforms；这些字段只作用于 Graph root Scope，不改变 Entity、Relation 或 Container 的内部坐标
+- React 与 Vanilla 对 standalone / embedded 与 panel 的表达必须等价。embedded 模式收到 standalone-only 宿主输入时必须 fail-loud，并提示将其移动到外层 Layout
+- `IRGraph` 不增加 Layout 宿主字段。Graph Source `theme` 继续表示 Graph-owned semantic Theme layer；Core Layout 的宿主 Theme 由外层 Layout 提供，不能用同名字段混用
+
+Graph root 的 panel 语义概念上等价于：
+
+```ts
+type InputGraphPanel = Pick<InputScope, 'clip' | 'transforms' | 'zIndex'> & {
+  x?: number;
+  y?: number;
+};
+```
+
+Graph 不拥有 Layout solver、measurement、spacing、自动布局或 routing。作者、Diagram 或其它消费者仍负责提供 Graph 成员的直接位置、尺寸、端口与路径；root panel 只负责把已经确定的 Graph 内容组合到当前宿主坐标空间
 
 ## 长期边界
 

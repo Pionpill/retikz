@@ -51,7 +51,7 @@ describe('core public compile exports', () => {
       style: 'clean',
       mode: 'dark',
       colors: {
-        semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+        semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706', guide: '#6b7280' },
         categorical: ['#2563eb'],
       },
     };
@@ -73,7 +73,7 @@ describe('core public compile exports', () => {
       style,
       mode,
       colors: {
-        semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706' },
+        semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706', guide: '#6b7280' },
         categorical: ['#2563eb'],
       },
     });

@@ -1,48 +1,17 @@
-import type { WayDSL } from '@retikz/core';
-import type { z } from 'zod';
+import type { input as ZodInput } from 'zod';
 
-import { parseWay } from '@retikz/core';
+import type { IRGraphRelation, RelationSchema } from '../../schemas';
 
-import type { IRRelation, RelationSchema } from '../../schemas';
-
-import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { RelationSchema as RelationIRSchema } from '../../schemas';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 
-type RelationCreateOptionsBase = Omit<z.input<typeof RelationSchema>, 'namespace' | 'type' | 'children'>;
+/** Relation 单 record 工厂的作者输入 */
+export type RelationCreateOptions = Omit<ZodInput<typeof RelationSchema>, 'namespace' | 'type'>;
 
-/** 使用规范 Core Step 编写 Relation 的作者输入 */
-export type RelationChildrenCreateOptions = RelationCreateOptionsBase & {
-  children: z.input<typeof RelationSchema>['children'];
-  way?: never;
-};
-
-/** 使用 Core Draw way 语法编写 Relation 的作者输入 */
-export type RelationWayCreateOptions = RelationCreateOptionsBase & {
-  children?: never;
-  way: WayDSL;
-};
-
-/** Relation 工厂输入，两套作者语法必须且只能选择一套 */
-export type RelationCreateOptions = RelationChildrenCreateOptions | RelationWayCreateOptions;
-
-/** 校验并创建规范 Relation IR */
-export const createRelation = (input: RelationCreateOptions): IRRelation => {
-  const { children, way, ...pathInput } = input;
-  const hasChildren = children !== undefined;
-  const hasWay = way !== undefined;
-  if (hasChildren === hasWay) {
-    throw new RetikzGraphError({
-      code: RetikzGraphErrorCode.RelationInputInvalid,
-      message: 'Relation requires exactly one of `children` or `way`.',
-      details: { capability: 'relation-authoring', reason: 'exactly-one-source-required' },
-    });
-  }
-
-  return RelationIRSchema.parse({
+/** 校验并创建 Graph root 使用的 Relation Source record */
+export const createRelation = (input: RelationCreateOptions): IRGraphRelation =>
+  RelationIRSchema.parse({
     namespace: GRAPH_NAMESPACE,
     type: GraphType.Relation,
-    ...pathInput,
-    children: way !== undefined ? parseWay(way) : children,
+    ...input,
   });
-};

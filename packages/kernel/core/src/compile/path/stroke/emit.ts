@@ -12,14 +12,14 @@ import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../s
 import { cloneAndFreezeJson } from '../../../shared/json';
 import { CompileWarningCode } from '../../constants';
 import { fallbackMeasurer } from '../../text';
-import { pointOfTarget } from '../host';
+import { emitLabelPrimitive, pointOfTarget } from '../host';
 import { createPathCommandEmitter } from './commands';
 import { createStrokeCursor, isStrokeTargetStep } from './cursor';
 import { emitInlineMarkPrimitives, emitPathEndpointDecorations, pathEndpointArrows } from './decorations';
 import { assertArrowCanInheritStroke } from './marks';
 import { emitPathBaseProps, wrapPathPrimitiveOutput } from './output';
 import { applyRoundedCorners } from './rounded-corners';
-import { createStrokeSamplingCollector } from './sampling';
+import { createStrokeSamplingCollector, sampleStrokePath } from './sampling';
 import { isStrokeSegmentStep, lowerSegmentStep } from './segments';
 import { isStrokeShapeStep, lowerShapeStep } from './shapes';
 import { applyArrowShrinks } from './shrink';
@@ -321,6 +321,29 @@ const emitCanonicalPathPrimitive = (
   });
   boundsPoints.push(...marks.boundsPoints);
 
+  const hostLabelPrims = (path.label ?? []).flatMap(label => {
+    const sample = sampleStrokePath({
+      commands,
+      segmentSamplers,
+      roundedCommands,
+      position: label.position,
+    });
+    if (sample === undefined) return [];
+    const result = emitLabelPrimitive(label, sample, {
+      measureText,
+      round,
+      rootFontSize: pathEmitOptions.rootFontSize,
+      hostOpacity: path.opacity,
+      tex: {
+        lowerTex: pathEmitOptions.lowerTex,
+        gatingOn: pathEmitOptions.lowerTex !== undefined,
+        warn: (code, message) => warn(code, message, 'label'),
+      },
+    });
+    boundsPoints.push(...result.boundsPoints);
+    return [result.primitive];
+  });
+
   // shrink 在 compile 阶段计算，与 emit 落点无关；按视觉输入把首末段端点向内缩短
   // 让 line 端点接在 hollow arrow 尾部外缘，不贯穿 back outline；shrink=0 的实心 shape 跳过
   const shrinkStart = arrows.shrinkStart + (endpointSource.firstAutoBoundary ? arrows.boundaryOuterInsetStart : 0);
@@ -349,7 +372,7 @@ const emitCanonicalPathPrimitive = (
 
   const endpointSpecs = pathEndpointArrows(arrows);
   const { primitive } = splitSubPathsForEndpointArrows(commands, baseProps, endpointSpecs);
-  const bodyPrims: Array<ScenePrimitive> = [primitive, ...labelPrims, ...marks.primitives];
+  const bodyPrims: Array<ScenePrimitive> = [primitive, ...labelPrims, ...hostLabelPrims, ...marks.primitives];
   return wrapPathPrimitiveOutput({ path, primitive, bodyPrims, boundsPoints, round });
 };
 

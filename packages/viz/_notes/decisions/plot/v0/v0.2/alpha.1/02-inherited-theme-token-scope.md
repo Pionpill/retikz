@@ -54,8 +54,8 @@ declare const definePlotThemeTokens: (
 Plot 在当前位置的 Core effective Theme 上按以下顺序解析：
 
 ```text
-Core shared categorical
-  < Plot style/mode definition
+mode + Core shared categorical 建立默认 Plot preset
+  < Plot style 稀疏覆盖
   < local plotThemeTokens
   < plotTheme
   < explicit scale / channel / guide / mark config
@@ -63,9 +63,9 @@ Core shared categorical
 
 后层只能覆盖可撤销的表现性默认，不能关闭 Plot 核心结构、改变数据角色或撤销 type recipe 不变量。Plot resolver 输出最终 domain palette、正式 guide / scale 输入与 lowering 输入；resolved Plot map 只在 Plot owner 内作为 consumer view 存在，不写回 Core Theme。
 
-未声明 Theme 时使用 Core 的 `neutral + light` effective environment，Plot 选择与当前 Plot baseline 相容的完整 preset。未声明 Plot-local token 时不产生空的伪 token map；有效 Plot resolver 仍必须产出完整、可消费的 Plot domain view。
+未声明 Theme 时使用 Core 匿名 light effective environment，Plot 选择与当前 mode / shared colors 相容的完整默认 preset。未声明 Plot-local token 时不产生空的伪 token map；有效 Plot resolver 仍必须产出完整、可消费的 Plot domain view。
 
-Core shared `palette.categorical` 是一套当前生效的非空 active CSS color array，也是内建 categorical 色值的单一真源。内建 Plot definition 接收 `ResolvedTheme.colors.categorical`，detached 投影为 `categorical`、`series`、`sector`，不在 Plot paint catalog 复制另一套默认色值。自定义 Plot style definition 可以显式提供这三类 palette，并作为完整 style baseline 高于 Core；之后仍可被 Plot-owned token、`plotTheme` 或显式 scale 覆盖。style definition 产出的 token 直接记录为 `local + $style/...`，resolver 不通过 style 名称或最终数组值反推来源。
+Core shared `palette.categorical` 是一套当前生效的非空 active CSS color array，也是默认 categorical 色值的单一真源。Plot 默认 preset 接收 `ResolvedTheme.colors.categorical`，detached 投影为 `categorical`、`series`、`sector`，不在 Plot paint catalog 复制另一套默认色值。自定义 Plot style definition 可以显式覆盖其中任意 palette；未提供的 token 继续使用默认投影，之后仍可被 Plot-owned token、`plotTheme` 或显式 scale 覆盖。style 显式产出的 token 记录为 `local + $style/...`，未覆盖 token 保留 `local + $default/...`；resolver 不通过 style 名称或最终数组值反推来源。
 
 Plot 的 sequential / diverging named scheme、interpolator、采样逻辑与 `options.colorSchemes` 继续由 Plot 拥有，不读取或改写 shared categorical array。显式 scale range、scheme、channel 或 mark config 按 Plot 的正式优先级覆盖主题 palette。
 
@@ -76,7 +76,7 @@ Plot 同时拥有独立于颜色的非空 shape palette。内建 `plot.palette.s
 - Plot token 与 native input 必须是 plain JSON-safe data
 - unknown Plot key、非法 token value、空或非法颜色数组、缺失同名 style definition、无法解析的 scheme 与无法映射的 token 都 fail-loud
 - 诊断必须指出输入层以及 token key 或 Plot native path；不得静默退回 D3 默认、renderer 默认或 Chart 私有 palette
-- Plot inspection 的 source `kind` 只使用 Core `inherit | local`。当前完整 style baseline、`plotThemeTokens` 与 `plotTheme` 为 `local`；具体入口和优先级由稳定 `path` 保留
+- Plot inspection 的 source `kind` 只使用 Core `inherit | local`。默认 preset、style 稀疏覆盖、`plotThemeTokens` 与 `plotTheme` 为 `local`；具体入口和优先级由稳定 `path` 保留
 - plain JSON、React、Vanilla、standalone Plot、embedded Plot、Chart 内部 Plot 与 direct headless compile 在相同 style definition registry 和 Core effective Theme 下产生同义 Plot resolution、Scene 输入与诊断
 - `0.x` 采用破坏性入口收敛：`styleTokens` 改为 `plotThemeTokens`，Plot native `theme` 改为 `plotTheme`，冗余 `colors` 简写删除并统一使用 `plotTheme.palette`，不保留 alias、双读或静默 bridge
 
@@ -84,9 +84,9 @@ Plot 同时拥有独立于颜色的非空 shape palette。内建 `plot.palette.s
 
 - 所属能力域与解决的问题：Visualization Complete 的 Theme / Palette 与 Plot lowering，解决 Plot token 无法沿 Core Scope 继承和 shared categorical 多重真源问题
 - `@retikz/plot` 拥有 Plot token vocabulary、内置 Neutral × 两种 mode 的 preset、开放 style definition / registry、resolver、shared color projection 与显式领域 palette 覆盖、scale / guide / channel / mark mapping、inspection 与最终 Plot consumer
-- `@retikz/core` 拥有 selector 继承、Core style registry、Core shared colors、`ThemeTokenSource` 与 `InspectionAppearance`；不解释 Plot token 语义
+- `@retikz/core` 拥有 selector 继承、Core style registry、Core shared colors、`ThemeTokenSource` 与 `InspectionAppearanceContext`；不解释 Plot token 语义
 - `@retikz/chart` 拥有 Chart token 与 recipe；只转发或贡献 Plot 输入，并在需要默认 series color 时读取 Plot resolver 的最终 palette
-- `@retikz/standard` 只消费 Plot 已解析的领域无关 presentation / layout 输入与 Core `InspectionAppearance`，不读取 Plot token
+- `@retikz/standard` 只消费 Plot 已解析的领域无关 presentation / layout 输入与 Core `InspectionAppearanceContext`，不读取 Plot token
 - plot-react、plot-vanilla、chart-react、chart-vanilla 与 plain JSON 只构造同义 JSON-safe input、注入 runtime definition 和接入生命周期，不拥有 preset 或 merge
 - Render 只执行已物化 Scene，不解析 Plot Theme、preset、palette 或 scheme
 

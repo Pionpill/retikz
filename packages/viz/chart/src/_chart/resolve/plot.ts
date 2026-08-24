@@ -1,7 +1,7 @@
 import type { IRPlot, IRPlotScaleOperation } from '@retikz/plot';
 
 import { PlotSchema } from '@retikz/plot';
-import { z } from 'zod';
+import { ZodError } from 'zod';
 
 import type { ChartRecipeResolution } from '../contract/recipe';
 import type { IRChartPlotExtension, IRChartSource } from '../schemas';
@@ -16,7 +16,7 @@ const invalidPlot = (message: string, path: ReadonlyArray<string | number>, caus
     ...(cause === undefined ? {} : { cause }),
   });
 
-const issuePathOf = (error: z.ZodError): ReadonlyArray<string | number> => {
+const issuePathOf = (error: ZodError): ReadonlyArray<string | number> => {
   const issue = error.issues.at(0);
   const unknownKey = issue?.code === 'unrecognized_keys' ? issue.keys.at(0) : undefined;
   const path = (issue?.path ?? []).map(segment => (typeof segment === 'symbol' ? String(segment) : segment));
@@ -133,8 +133,8 @@ export const resolveChartPlot = (
   try {
     return PlotSchema.parse(candidate);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      const rebased = new z.ZodError(error.issues.map(issue => ({ ...issue, path: ['plotExtension', ...issue.path] })));
+    if (error instanceof ZodError) {
+      const rebased = new ZodError(error.issues.map(issue => ({ ...issue, path: ['plotExtension', ...issue.path] })));
       throw invalidPlot('Resolved Chart Plot does not match PlotSchema', issuePathOf(rebased), rebased);
     }
     throw error;

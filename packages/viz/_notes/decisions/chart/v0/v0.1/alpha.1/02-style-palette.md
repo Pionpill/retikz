@@ -34,13 +34,13 @@ type IRChartThemeInput = Readonly<{
 - `plotTheme` 是 Plot native structured theme，仍由 Plot resolver 消费
 - 不提供 `styleTokens`、`plotStyleTokens`、`theme` 或 `themeMode` 的兼容别名
 
-Chart 公开 owner-local `ChartThemeStyleDefinition`。Chart adapter 注入 Chart 与 Plot style definitions；standalone、embedded 与 direct headless 使用同一 owner registry 和 name lookup。plain JSON 只持久化 selector 与 IRChart 本地字段，Core 不静态导入 Chart / Plot 语义，也不隐式猜测 owner。
+Chart 公开 owner-local `ChartThemeDefinition`，通过可选 `base` 与稀疏 owner slices 表达命名覆盖。Chart adapter 注入 Chart definitions 与 Plot style definitions；standalone、embedded 与 direct headless 使用同一 owner registry 和 name lookup。plain JSON 只持久化 selector 与 IRChart 本地字段，Core 不静态导入 Chart / Plot 语义，也不隐式猜测 owner。
 
 Chart token 的长期语义包括 canvas surface、presentation slot 的 foreground / font / alignment、padding、gap，以及只控制 recipe 默认生成的 `chart.axis.enabled`、`chart.axis.grid.enabled`、`chart.legend.enabled`。这些开关不能过滤显式 guides，也不能撤销 Chart type 的核心 recipe。
 
 ## 行为、默认值、失败语义与兼容性
 
-未声明 Theme 时使用 Core `neutral + light` effective environment；Chart 与 Plot 各自使用与该环境相容的 owner preset。IRChart 省略 theme fields 不产生第二套默认 environment，也不把 style / mode 写入 IRChart。
+未声明 Theme 时使用 Core 匿名 light effective environment；Chart 从 shell / recipe fallback 建立默认值，Plot 使用自己的 mode-aware 默认 preset。IRChart 省略 theme fields 不产生第二套默认 environment，也不把 style / mode 写入 IRChart。
 
 unknown Chart key、未知 presentation slot、非法 value、缺失同名 style definition、无法消费的 Chart token、Plot key / value 错误都 fail-loud，并指向可修改的输入层和 token path。Chart 不静默回退 renderer 默认、Chart palette 或旧字段。
 
@@ -52,7 +52,7 @@ React 局部 `theme` 与等价 Core Scope Theme 同义，只影响该 Chart 及�
 
 ```text
 Core effective Theme
-  -> Chart style/mode preset -> local chartThemeTokens -> explicit Chart presentation / recipe config
+  -> Chart shell / recipe fallback -> named sparse owner slices -> local chartThemeTokens -> explicit Chart presentation / recipe config
 
 Core effective Theme
   -> Plot style/mode preset -> shared categorical projection -> local plotThemeTokens

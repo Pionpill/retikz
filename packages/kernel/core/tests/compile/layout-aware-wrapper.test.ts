@@ -1,7 +1,7 @@
 import type { RuntimeRevision } from '@retikz/runtime';
 
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { boolean, literal, number, strictObject } from 'zod';
 
 import type {
   CompositeCompileChild,
@@ -87,8 +87,8 @@ describe('layout-aware composite runtime wrapper tree', () => {
       namespace: 'test',
       type: 'wrappedNode',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('wrappedNode'),
+        namespace: literal('test'),
+        type: literal('wrappedNode'),
         child: ChildSchema,
       }),
       compile: (value, context) => {
@@ -157,7 +157,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'referencedWrapper',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('referencedWrapper') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('referencedWrapper') }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, node('target', [1, 0]));
         return {
@@ -207,8 +207,8 @@ describe('layout-aware composite runtime wrapper tree', () => {
       namespace: 'test',
       type: 'emptyAndSorted',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('emptyAndSorted'),
+        namespace: literal('test'),
+        type: literal('emptyAndSorted'),
       }),
       compile: (_value, context) => ({
         children: [
@@ -233,7 +233,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'allFields',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('allFields') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('allFields') }),
       compile: (_value, context) => ({
         children: [
           context.scope(
@@ -279,7 +279,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'styledReplay',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('styledReplay') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('styledReplay') }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, node('replayed'));
         return {
@@ -322,13 +322,13 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const leaf = defineComposite({
       namespace: 'test',
       type: 'styledReplayLeaf',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('styledReplayLeaf') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('styledReplayLeaf') }),
       compile: () => ({ children: [node('nested-replayed')] }),
     });
     const owner = defineComposite({
       namespace: 'test',
       type: 'styledReplayOwner',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('styledReplayOwner') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('styledReplayOwner') }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, { namespace: 'test', type: 'styledReplayLeaf' });
         return { children: [context.scope({ fill: 'purple' }, [context.replay(laid)])] };
@@ -354,8 +354,8 @@ describe('layout-aware composite runtime wrapper tree', () => {
       namespace: 'test',
       type: 'duplicateWrappedReplay',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('duplicateWrappedReplay'),
+        namespace: literal('test'),
+        type: literal('duplicateWrappedReplay'),
       }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, node('once'));
@@ -378,7 +378,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'wholeTreePreflight',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('wholeTreePreflight') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('wholeTreePreflight') }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, {
           type: 'node',
@@ -409,21 +409,21 @@ describe('layout-aware composite runtime wrapper tree', () => {
     let retainedResult: LayoutChildResult | undefined;
     const conditionalClip = defineClip({
       kind: 'conditionalPreflightClip',
-      schema: z.strictObject({
-        kind: z.literal('conditionalPreflightClip'),
-        fail: z.boolean(),
+      schema: strictObject({
+        kind: literal('conditionalPreflightClip'),
+        fail: boolean(),
       }),
       resolve: spec => {
         clipResolveCalls += 1;
         if (spec.fail) throw new Error('runtime Scope clip failed');
         return { kind: 'conditionalPreflightClip', x: -10, y: -10, width: 20, height: 20 };
       },
-      shapeSchema: z.strictObject({
-        kind: z.literal('conditionalPreflightClip'),
-        x: z.number(),
-        y: z.number(),
-        width: z.number().nonnegative(),
-        height: z.number().nonnegative(),
+      shapeSchema: strictObject({
+        kind: literal('conditionalPreflightClip'),
+        x: number(),
+        y: number(),
+        width: number().nonnegative(),
+        height: number().nonnegative(),
       }),
       lower: shape => ({
         commands: [
@@ -440,10 +440,10 @@ describe('layout-aware composite runtime wrapper tree', () => {
       namespace: 'test',
       type: 'preflightArtifactLeaf',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('preflightArtifactLeaf'),
+        namespace: literal('test'),
+        type: literal('preflightArtifactLeaf'),
       }),
-      artifactSchema: z.strictObject({ candidate: z.literal(true) }),
+      artifactSchema: strictObject({ candidate: literal(true) }),
       compile: () => ({
         children: [
           {
@@ -472,9 +472,9 @@ describe('layout-aware composite runtime wrapper tree', () => {
       namespace: 'test',
       type: 'nestedScopeClipPreflight',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('nestedScopeClipPreflight'),
-        fail: z.boolean(),
+        namespace: literal('test'),
+        type: literal('nestedScopeClipPreflight'),
+        fail: boolean(),
       }),
       compile: (value, context) => {
         const laid = resolvedResultOf(context, { namespace: 'test', type: 'preflightArtifactLeaf' });
@@ -548,7 +548,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'repeatedScopeHandle',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('repeatedScopeHandle') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('repeatedScopeHandle') }),
       compile: (_value, context) => {
         const scope = context.scope({ id: 'only-once' }, [node('inside')]);
         return { children: [scope, scope] };
@@ -567,7 +567,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'retained',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('retained') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('retained') }),
       compile: (_value, context) => {
         run += 1;
         if (run === 1) {
@@ -593,7 +593,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const producer = defineComposite({
       namespace: 'test',
       type: 'producer',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('producer') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('producer') }),
       compile: (_value, context) => {
         foreignResult = resolvedResultOf(context, node('foreign'));
         foreignHandle = context.replay(foreignResult);
@@ -603,7 +603,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const consumer = defineComposite({
       namespace: 'test',
       type: 'consumer',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('consumer') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('consumer') }),
       compile: (_value, context) => ({
         children: [context.scope({}, [foreignHandle ?? context.replay(foreignResult!)])],
       }),
@@ -625,7 +625,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const producer = defineComposite({
       namespace: 'test',
       type: 'resultProducer',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('resultProducer') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('resultProducer') }),
       compile: (_value, context) => {
         foreignResult = resolvedResultOf(context, node('foreign-result'));
         return { children: [] };
@@ -634,7 +634,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const consumer = defineComposite({
       namespace: 'test',
       type: 'resultConsumer',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('resultConsumer') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('resultConsumer') }),
       compile: (_value, context) => ({ children: [context.replay(foreignResult!)] }),
     });
 
@@ -653,7 +653,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const forgedChild = defineComposite({
       namespace: 'test',
       type: 'forgedChild',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('forgedChild') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('forgedChild') }),
       compile: (_value, context) => ({
         children: [context.scope({}, [{} as CompositeCompileChild])],
       }),
@@ -661,7 +661,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const forgedResult = defineComposite({
       namespace: 'test',
       type: 'forgedResult',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('forgedResult') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('forgedResult') }),
       compile: (_value, context) => ({
         children: [context.replay({} as LayoutChildResult)],
       }),
@@ -686,7 +686,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'resourceWrapper',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('resourceWrapper') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('resourceWrapper') }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, {
           type: 'scope',
@@ -721,15 +721,15 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const leaf = defineComposite({
       namespace: 'test',
       type: 'artifactLeaf',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('artifactLeaf') }),
-      artifactSchema: z.strictObject({ leaf: z.literal(true) }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('artifactLeaf') }),
+      artifactSchema: strictObject({ leaf: literal(true) }),
       compile: () => ({ children: [node('artifact-node')], artifact: { leaf: true } }),
     });
     const parent = defineComposite({
       namespace: 'test',
       type: 'artifactParent',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('artifactParent') }),
-      artifactSchema: z.strictObject({ parent: z.literal(true) }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('artifactParent') }),
+      artifactSchema: strictObject({ parent: literal(true) }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, {
           type: 'scope',
@@ -774,7 +774,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'localWrapper',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('localWrapper') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('localWrapper') }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, node('secret'));
         return {
@@ -805,7 +805,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'localShadowWrapper',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('localShadowWrapper') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('localShadowWrapper') }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, node('shared', [10, 0]));
         return {
@@ -828,7 +828,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'orderedDuplicateWrapper',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('orderedDuplicateWrapper') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('orderedDuplicateWrapper') }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, {
           type: 'scope',
@@ -861,7 +861,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'detachedWrapper',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('detachedWrapper') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('detachedWrapper') }),
       compile: (_value, context) => {
         const transforms = [{ kind: 'translate' as const, x: 2, y: 3 }];
         const clip = { kind: 'rect' as const, x: 0, y: 0, width: 20, height: 10 };
@@ -912,7 +912,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'invalidProps',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('invalidProps') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('invalidProps') }),
       compile: (_value, context) => ({
         children: [context.scope(rawProps as CompositeCompileScopeProps, [])],
       }),
@@ -928,8 +928,8 @@ describe('layout-aware composite runtime wrapper tree', () => {
       namespace: 'test',
       type: 'invalidReplayTransforms',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('invalidReplayTransforms'),
+        namespace: literal('test'),
+        type: literal('invalidReplayTransforms'),
       }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, node('content'));
@@ -948,7 +948,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'atomicReplayPreflight',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('atomicReplayPreflight') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('atomicReplayPreflight') }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, node('preflight'));
         expect(() => context.replay(laid, { transforms: {} } as never)).toThrow(/invalid.*transforms/i);
@@ -964,12 +964,12 @@ describe('layout-aware composite runtime wrapper tree', () => {
   });
 
   it('applies replay placement before a parent-allocation-coordinate clip without mutating result bounds', () => {
-    const BoundsSchema = z.strictObject({ x: z.number(), y: z.number(), width: z.number(), height: z.number() });
+    const BoundsSchema = strictObject({ x: number(), y: number(), width: number(), height: number() });
     const definition = defineComposite({
       namespace: 'test',
       type: 'replayCoordinateOrder',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('replayCoordinateOrder') }),
-      artifactSchema: z.strictObject({ before: BoundsSchema, after: BoundsSchema }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('replayCoordinateOrder') }),
+      artifactSchema: strictObject({ before: BoundsSchema, after: BoundsSchema }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, node('coordinate-order'));
         const before = laid.visualBounds;
@@ -1004,7 +1004,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'discardedResultScope',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('discardedResultScope') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('discardedResultScope') }),
       compile: (_value, context) => {
         const discarded = resolvedResultOf(context, node('discarded-result'));
         return { children: [context.scope({}, [discarded as unknown as CompositeCompileChild])] };
@@ -1020,8 +1020,8 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const borderLeaf = defineComposite({
       namespace: 'test',
       type: 'borderLeaf',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('borderLeaf') }),
-      artifactSchema: z.strictObject({ role: z.literal('border') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('borderLeaf') }),
+      artifactSchema: strictObject({ role: literal('border') }),
       compile: () => ({
         children: [
           {
@@ -1039,7 +1039,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const definition = defineComposite({
       namespace: 'test',
       type: 'tableLike',
-      schema: CompositeBaseSchema.extend({ namespace: z.literal('test'), type: z.literal('tableLike') }),
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('tableLike') }),
       compile: (_value, context) => {
         const content = resolvedResultOf(context, node('content'), {
           x: { kind: LayoutAxisProposalKind.Range, min: 0, max: 40 },

@@ -8,9 +8,9 @@
 
 ADR-09 已允许单个 Axis guide 通过 `grid.includeDomain` 保留常规网格，同时保证 effective scale domain 首尾位置具有主网格线。该字段默认关闭，并被限定在 guide 局部结构语义中；Plot Theme 只能决定网格是否默认启用及其线条视觉样式。
 
-这条边界使内建风格无法完整表达自己的 Axis 参考框架。Neutral 已为 x / y Axis 默认启用低对比网格，但不能声明这些默认网格应覆盖 effective domain 两端；若在 guide lowering 中按风格名硬编码，用户又无法通过统一 Theme cascade 检查、覆盖或扩展该行为。
+这条边界使默认 preset 与宿主 style 无法完整表达自己的 Axis 参考框架。默认 x / y Axis 已启用低对比网格，但不能声明这些默认网格应覆盖 effective domain 两端；若在 guide lowering 中按风格名硬编码，用户又无法通过统一 Theme cascade 检查、覆盖或扩展该行为。
 
-本决策把“已启用的主网格是否补齐 domain 端点”提升为 Axis-scoped canonical Theme 默认。Neutral 的 x / y Axis 默认开启该策略，其余内建风格保持关闭；单个 Axis guide 的显式配置仍拥有最高优先级。
+本决策把“已启用的主网格是否补齐 domain 端点”提升为 Axis-scoped canonical Theme 默认。默认 x / y Axis rule 开启该策略；宿主 style 可以追加稀疏 rule 覆盖它，单个 Axis guide 的显式配置仍拥有最高优先级。
 
 本决策窄化取代 ADR-08 中“Axis token 只覆盖视觉默认、grid token 不改变 source 语义”的限制，以及 ADR-09 中“Theme 不得提供端点默认”的限制。ADR-08 的统一 Axis rule 机制与 ADR-09 的 guide 字段、端点解析、投影去重和非目标继续有效。
 
@@ -49,7 +49,7 @@ type IRPlotTheme = {
 };
 ```
 
-内建 style 的基础 token 值均为 `false`。Neutral 通过既有 x / y dimension rule 同时设置：
+默认 token baseline 的基础值为 `false`。默认 x / y dimension rule 同时设置：
 
 ```ts
 {
@@ -61,18 +61,18 @@ type IRPlotTheme = {
 }
 ```
 
-Academic、Vibrant 与 Clean 不新增端点 rule，继续使用基础 `false`。自定义 Plot style 通过既有 definition 返回同一 token 与 token rule，不新增 registry 或专用 preset contract。
+Academic、Vibrant 与 Clean 等宿主 style 可以追加端点 rule 覆盖默认规则。自定义 Plot style 通过既有 definition 稀疏返回同一 token 与 token rule，不新增 registry 或专用 preset contract。
 
 ## 行为、失败语义与兼容性
 
-- 默认行为：Neutral 下已有 x / y Axis 的默认 major grid 包含 effective domain 首尾位置；其他内建风格默认不包含。
+- 默认行为：默认 x / y Axis major grid 包含 effective domain 首尾位置；宿主 style 可以通过追加规则关闭端点。
 - 创建边界：`axis.grid.includeDomain: true` 不单独启用 grid。当前 dimension 的有效 `axis.grid.enabled` 为 `false` 时，该 token 保持休眠且不进入原生 Axis theme。局部 guide 随后以 `grid: true` 重新启用网格时，沿用既有 disabled-theme merge 语义，不恢复休眠的 grid 默认；需要端点时应写入 guide object，或在更高优先级 Theme 输入中同时启用 grid。
 - 合并语义：Theme 值只作为 guide 默认；局部 `grid.includeDomain` 显式 boolean 覆盖 Theme，局部 `grid: false` 关闭整个 grid。
-- 优先级：单个 Axis guide > 原生 `plotTheme.axis.grid` > Plot-local Axis token rule > `plotThemeTokens` > 内建 style rule > 内建基础 token。
+- 优先级：单个 Axis guide > 原生 `plotTheme.axis.grid` > Plot-local Axis token rule > `plotThemeTokens` > style rule > 默认 Axis rule > 默认基础 token。
 - 端点语义：启用后的 source → density → endpoints 顺序、effective domain、有限投影、`bandPosition`、循环坐标去重与 major-over-minor overlap 继续由 ADR-09 决定。
 - ThemeMode：Light / Dark 使用相同 boolean；mode 只继续调整 paint，不改变端点结构。
 - 失败与诊断：token 与原生 theme 字段只接受 boolean；未知字段、显式 `undefined` 和错误类型沿用严格 Theme schema 的现有诊断。
-- 兼容性：这是 Neutral 默认输出的有意变化，已启用的 x / y 主网格最多新增两个端点位置。显式写入 guide 或更高优先级 Theme 值可恢复关闭状态；其他 style 与未启用 grid 的 Axis 输出不变。完整 token map 增加必需字段，因此自定义 Plot style definition 必须显式返回该 token；0.x 阶段不增加缺省补全或兼容 fallback。
+- 兼容性：这是默认输出的有意变化，已启用的 x / y 主网格最多新增两个端点位置。显式写入 guide 或更高优先级 Theme 值可恢复关闭状态；未启用 grid 的 Axis 输出不变。完整 resolved token map 继续包含必需字段，自定义 Plot style definition 可以省略该 token，由默认 preset 与 Axis rule 补全；0.x 阶段不保留旧完整-map contract。
 - React / Vanilla 等价性：两套 adapter 与手写 JSON 继续传递同一 Plot theme token、原生 theme 与 Axis guide 契约，不增加 adapter 专用 prop。
 
 ## 功能与包边界
@@ -86,9 +86,9 @@ Academic、Vibrant 与 Clean 不新增端点 rule，继续使用基础 `false`�
 
 ## 最终结果与遗留边界
 
-`axis.grid.includeDomain` 已贯通完整与稀疏 token map、Axis dimension rule、原生 Plot Theme、inspection 和 guide merge。Neutral 的既有 x / y Axis 默认同时启用 major grid 与 domain 端点，其余内建风格保持关闭；端点 token 自身不创建 grid，局部 guide boolean 继续最终优先。
+`axis.grid.includeDomain` 已贯通完整与稀疏 token map、Axis dimension rule、原生 Plot Theme、inspection 和 guide merge。默认 x / y Axis rule 同时启用 major grid 与 domain 端点，宿主 style 可追加规则覆盖；端点 token 自身不创建 grid，局部 guide boolean 继续最终优先。
 
-完整 resolved token map 必须包含该 boolean，自定义 Plot style 缺失时 fail-loud；稀疏 token、Axis rule 与原生 Theme 允许省略字段，但拒绝显式 `undefined`、未知字段和错误类型。端点追加、投影去重、density 顺序与 minor overlap 继续完全由 ADR-09 的既有 lowering 决定。
+完整 resolved token map 必须包含该 boolean；自定义 Plot style 可以省略该 token，由默认 preset 与 Axis rule 补全。持久化稀疏 token、Axis rule 与原生 Theme 允许省略字段，但拒绝显式 `undefined`、未知字段和错误类型；runtime style definition 显式返回 `undefined` token 时按省略处理。端点追加、投影去重、density 顺序与 minor overlap 继续完全由 ADR-09 的既有 lowering 决定。
 
 ## 长期边界
 

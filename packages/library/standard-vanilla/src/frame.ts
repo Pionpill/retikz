@@ -26,7 +26,7 @@ export type InputFrameHeaders = Readonly<{
   description?: InputNode;
 }>;
 
-/** Vanilla Frame 输入可显式指定持久化 Scope id，省略时由 embed id 派生 */
+/** Vanilla Frame 输入可显式指定持久化 Scope id */
 export type InputFrame = Omit<FrameInput, 'id' | 'children'> & {
   /** 要持久化到 Frame IR 的显式身份 */
   id?: string;
@@ -109,7 +109,7 @@ export const FrameInputEmbedAdapter: InputEmbedAdapter<InputFrame> = {
     return {
       node: createFrame({
         ...input,
-        id: id ?? `${context.id}/frame`,
+        ...(id === undefined ? {} : { id }),
         children: frameChildren,
         ...(title === undefined ? {} : { title }),
         ...(description === undefined ? {} : { description }),

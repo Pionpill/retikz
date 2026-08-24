@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import { ManualTable, Table } from '../../src';
 
@@ -61,7 +61,7 @@ describe('Table React manifest observation', () => {
     const manifests: Array<TableLayoutManifest> = [];
     const visualScale = defineCellVisualScale({
       name: 'react-manifest-palette',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       resolve: (_options, _values, context) => ({
         of: () => context.categoricalColors[0],
         legendForm: 'swatch',
@@ -136,7 +136,7 @@ describe('Table React manifest observation', () => {
     });
     const presentation = defineCellPresentation({
       name: 'observer-stability',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present,
     });
     const presentationDefinitions = [presentation];
@@ -199,7 +199,7 @@ describe('Table React manifest observation', () => {
     const manifests: Array<TableLayoutManifest> = [];
     const inspect = defineCellPresentation({
       name: 'rule-inspect',
-      optionsSchema: z.strictObject({}),
+      optionsSchema: strictObject({}),
       present: input => {
         observed.push(input);
         return { type: 'node', position: [0, 0], text: String(input.value) };

@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import type { ZodType } from 'zod';
 
 import type { IRGeometryLabel, IRPathBase, IRPosition, IRStep, JsonValue } from '../../schemas';
 import type { CompileOwnerOutputDefinition, CompileOwnerOutputPublisher } from '../observation';
@@ -117,7 +117,7 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
   /** 非空 path kind registry key */
   name: string;
   /** 该 path kind 的完整 source subject schema */
-  schema: z.ZodType<TPath>;
+  schema: ZodType<TPath>;
   /** 把该 path kind 编译成 Scene primitive；返回 null 表示该 path 不产生输出 */
   compile: (context: PathKindCompileContext<TPath, TOwnerOutput>) => PathKindCompileResult | null;
 } & PathKindOwnerOutputBranch<TOwnerOutput>;
@@ -127,7 +127,7 @@ export type AnyPathKindDefinition = Readonly<{
   /** 非空 path kind registry key */
   name: string;
   /** 该 Path kind 的完整 source subject schema */
-  schema: z.ZodType;
+  schema: ZodType;
   /** 只在恢复当前 definition 后调用的擦除编译入口 */
   compile: (context: never) => AnyPathKindCompileResult | null;
   /** 可选最终所属者产物 schema */

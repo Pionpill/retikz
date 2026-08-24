@@ -9,6 +9,8 @@ import { CHART_NAMESPACE } from '@retikz/chart';
 import { ScatterChart } from '@retikz/chart-react/point/scatter';
 import { Fragment, isValidElement } from 'react';
 
+import { previewEmbedPropsOf } from './preview-embed';
+
 type TypedChartSource = IRScatterChart;
 
 type TypedChartComponent<TSource extends TypedChartSource> = {
@@ -34,7 +36,8 @@ const sceneChildrenOf = (scene: InputScene): ReadonlyArray<InputChild> => {
 const typedChartSourceOf = <TProps, TSource extends TypedChartSource>(
   component: TypedChartComponent<TSource>,
   props: TProps,
-): TSource => component.createInputEmbedProps(props as Readonly<Record<string, unknown>>).source;
+): TSource =>
+  component.createInputEmbedProps(previewEmbedPropsOf(component, props as Readonly<Record<string, unknown>>)).source;
 
 const sourceOf = (value: ReactNode): TypedChartSource | undefined => {
   if (!isValidElement(value)) return undefined;

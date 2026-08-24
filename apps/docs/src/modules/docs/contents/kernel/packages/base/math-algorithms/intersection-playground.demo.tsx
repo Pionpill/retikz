@@ -53,7 +53,7 @@ const sceneOf = (values: IntersectionValues): { geometry: ReactNode; hits: Array
           <Circle center={[0, 0]} radius={values.radius} stroke="dodgerblue" strokeWidth={2} fill="none" />
         </>
       ),
-      hits: intersect.lineCircle({ origin, dir: [1, 0], center: [0, 0], radius: values.radius }),
+      hits: intersect.lineCircle({ origin, direction: [1, 0], center: [0, 0], radius: values.radius }),
     };
   }
 

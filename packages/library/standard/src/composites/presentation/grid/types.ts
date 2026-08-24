@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { z } from 'zod';
+import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
 import type { GridBorderOrder } from './constants';
 import type { GridLineInputSchema, GridSchema } from './schema';
@@ -8,13 +8,13 @@ import type { GridLineInputSchema, GridSchema } from './schema';
 export type GridBorderOrderValue = ValueOf<typeof GridBorderOrder>;
 
 /** 单个 Grid 方向的线条输入配置 */
-export type GridLineInput = z.input<typeof GridLineInputSchema>;
+export type GridLineInput = ZodInput<typeof GridLineInputSchema>;
 
 /** 经 schema 默认值规范化后的单个 Grid 方向线条配置 */
-export type IRGridLine = z.infer<typeof GridLineInputSchema>;
+export type IRGridLine = ZodInfer<typeof GridLineInputSchema>;
 
 /** 持久化的 Standard Grid composite */
-export type IRGrid = z.infer<typeof GridSchema>;
+export type IRGrid = ZodInfer<typeof GridSchema>;
 
 /** 创建 Grid 时允许省略固定 discriminator 与 schema 默认字段的输入 */
-export type GridInput = Omit<z.input<typeof GridSchema>, 'namespace' | 'type'>;
+export type GridInput = Omit<ZodInput<typeof GridSchema>, 'namespace' | 'type'>;

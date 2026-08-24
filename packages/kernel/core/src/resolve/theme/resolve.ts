@@ -2,7 +2,11 @@ import type { IRTheme } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { resolveDefaultCoreThemeColors, resolveThemeStyleRegistry } from '../../providers/theme';
+import {
+  resolveCoreThemeStyleColors,
+  resolveDefaultCoreThemeColors,
+  resolveThemeStyleRegistry,
+} from '../../providers/theme';
 import { ThemeMode } from '../../shared';
 
 /** Core resolve 的 Theme 基线 */
@@ -31,5 +35,11 @@ export const resolveTheme = (
   const definition = styles.get(style);
   if (definition === undefined)
     throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Theme style '${style}' is not registered at ${path}.`);
-  return Object.freeze({ style, mode, colors: definition.resolve({ mode }) });
+  try {
+    return Object.freeze({ style, mode, colors: resolveCoreThemeStyleColors(mode, definition.resolve({ mode })) });
+  } catch (cause) {
+    throw new RetikzCoreError(RetikzCoreErrorCode.Resolve, `Theme style '${style}' resolution failed at ${path}.`, {
+      cause,
+    });
+  }
 };

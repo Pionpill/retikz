@@ -4,7 +4,7 @@ import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { createPlotProviderContribution, PointMarkSchema } from '@retikz/plot';
 import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { array, boolean, literal, strictObject, string, undefined as zodUndefined } from 'zod';
 
 import { ChartWarningCode } from '../../src';
 import { defineChartMark, defineChartRecipe } from '../../src/_chart/contract';
@@ -119,15 +119,15 @@ describe('Chart providers through Core compile', () => {
   });
 
   it('appends an unmatched override and reports one Chart warning through Core', () => {
-    const markSchema = z.strictObject({ kind: z.literal('annotation'), override: z.boolean().optional() });
+    const markSchema = strictObject({ kind: literal('annotation'), override: boolean().optional() });
     const sourceSchema = createChartSourceSchema(
       'fixture',
-      z.strictObject({
-        chartType: z.literal('warning-fixture'),
-        encodings: z.strictObject({ x: z.string(), y: z.string() }),
-        marks: z.array(markSchema).optional(),
+      strictObject({
+        chartType: literal('warning-fixture'),
+        encodings: strictObject({ x: string(), y: string() }),
+        marks: array(markSchema).optional(),
       }),
-      z.undefined().optional(),
+      zodUndefined().optional(),
     );
     const annotation = defineChartMark({
       kind: 'annotation',
@@ -146,8 +146,8 @@ describe('Chart providers through Core compile', () => {
       chartType: 'warning-fixture',
       schema: sourceSchema,
       theme: {
-        overridesSchema: z.strictObject({}),
-        resolutionSchema: z.strictObject({}),
+        overridesSchema: strictObject({}),
+        resolutionSchema: strictObject({}),
         fallback: {},
       },
       consumes: { encodings: ['x', 'y'], properties: [] },

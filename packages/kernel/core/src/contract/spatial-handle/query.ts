@@ -1,4 +1,3 @@
-import type { CompileOccurrenceLocator } from '../occurrence';
 import type {
   QualifiedSpatialHandle,
   SpatialHandleIndex,
@@ -8,20 +7,13 @@ import type {
 } from './types';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-
-const occurrenceMatches = (left: CompileOccurrenceLocator, right: CompileOccurrenceLocator): boolean =>
-  left.sourcePath === right.sourcePath &&
-  left.expansionPath.length === right.expansionPath.length &&
-  left.expansionPath.every(
-    (segment, index) =>
-      segment.kind === right.expansionPath[index]?.kind && segment.index === right.expansionPath[index]?.index,
-  );
+import { isCompileOccurrenceEqual } from '../occurrence';
 
 const ownerMatches = (owner: SpatialHandleOwner, selector: SpatialOwnerSelector): boolean =>
   owner.namespace === selector.namespace &&
   (selector.type === undefined || owner.type === selector.type) &&
   (selector.instanceId === undefined || owner.instanceId === selector.instanceId) &&
-  (selector.occurrence === undefined || occurrenceMatches(owner.occurrence, selector.occurrence));
+  (selector.occurrence === undefined || isCompileOccurrenceEqual(owner.occurrence, selector.occurrence));
 
 const withinMatches = (
   ancestors: ReadonlyArray<SpatialHandleOwner>,

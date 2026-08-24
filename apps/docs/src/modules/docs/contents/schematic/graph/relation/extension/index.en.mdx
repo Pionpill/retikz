@@ -1,89 +1,80 @@
 ---
-title: Relation Extended Usage
-description: Reuse Relation's canonical Path contract across direct IR, Draw ways, and the Vanilla entry point.
+title: Relation Extensions
+description: Extend Relation roles, kinds, and predicates through independent Definition registries while reusing Core Arrow providers.
 ---
 
-When React `<Step>` children are not the only authoring entry, Relation still stores one canonical IR. Draw ways normalize to Steps at the entry point, direct IR uses canonical `children`, and the Vanilla adapter enters the same Definition lowering path
+Relation extensions define relationship semantics, direction constraints, and marker / dash structure without creating another route or marker geometry system. Built-ins and custom entries share Graph registries, resolve, Core Path, and Arrow-provider paths
+
+<ComponentPreview
+  files="relation-definition"
+  size="md"
+  caption="Define a feedback kind and a priority predicate with type-safe parameters."
+/>
 
 ## Extension boundary
 
-Use extended Relation usage when you generate JSON-safe graph data, reuse Draw's way DSL, or assemble a figure from Vanilla. It does not provide automatic routing, obstacle avoidance, a parallel route model, or Relation-specific geometry
+Register a Definition when several Relations share stable meaning, direction constraints, or a marker / dash recipe. Write one-off routes and labels directly on the Relation record. Automatic routing and compound-edge algorithms belong to Diagram, not Relation Definitions
 
-## Draw ways
+## Define the capability
 
-`way` is author input and is not part of `RelationSchema`. The factory, React, or Vanilla entry point normalizes it through Core `parseWay()` into canonical `children`; exactly one of `children` and `way` must be supplied
+| Definition                | Responsibility                                                                               |
+| ------------------------- | -------------------------------------------------------------------------------------------- |
+| `defineRelationRole`      | Defines primary semantics, default / allowed directions, and a complete recipe per direction |
+| `defineRelationKind`      | Narrows directions within one role and contributes sparse structure deltas                   |
+| `defineRelationPredicate` | Validates JSON params and may resolve sparse structure deltas from Canonical params          |
 
-```ts
-import { DrawWay } from '@retikz/core';
-import { createRelation } from '@retikz/graph';
+A role must cover every allowed direction, while a kind may only narrow that set. A custom marker shape is a Core Arrow provider key; Graph does not own a parallel marker registry
 
-const relation = createRelation({
-  id: 'edge',
-  role: 'flow',
-  way: ['start', DrawWay.Hv, 'step'],
-});
+## Inject into a host
+
+React can pass `relationRoles`, `relationKinds`, and `relationPredicates` directly to the `<Relation>` that consumes them. Use `<Graph>` when several descendants share definitions and local `graphTheme`. Vanilla can pass the same arrays to `relation(id, input)` or `graph(id, input)`, while direct IR compilation uses `createGraphDefinitions(options)` or `createGraphProviders(options)`
+
+```tsx
+<Graph relationKinds={[feedbackKind]} relationPredicates={[priorityPredicate]}>
+  <Relation
+    id="feedback"
+    role="flow"
+    kind="workflow.feedback"
+    predicate={{ name: 'workflow.priority', params: { urgent: true } }}
+    source={{ id: 'review' }}
+    target={{ id: 'revise' }}
+    way={['review', 'revise']}
+  />
+</Graph>
 ```
 
-Supplying both or neither entry fails loudly; persisted data keeps only `children`
+## Execution model
 
-## Direct IR and Definition injection
+Relation validates the effective direction, resolves complete marker / dash structure from role, kind, and predicate, then applies Theme appearance rules. Core namespace resolves endpoint identities while compiling the Path. The authored route enters Core `Path` unchanged; marker shortening, provider lookup, and renderer output remain Core/Render responsibilities
 
-Direct JSON must use the canonical Step sequence and explicitly inject `RelationDefinition`, or use the complete Graph Definition set
-
-```ts
-import { compileToScene } from '@retikz/core';
-import { createGraphDefinitions, createRelation } from '@retikz/graph';
-
-const relation = createRelation({
-  id: 'edge',
-  role: 'flow',
-  children: [
-    { kind: 'move', to: 'start' },
-    { kind: 'line', to: 'step', label: { text: 'next' } },
-  ],
-});
-
-const scene = compileToScene(
-  { version: 1, type: 'scene', children: [relation] },
-  { composites: createGraphDefinitions() },
-);
-```
-
-`role` stays in Graph IR and is not copied implicitly into Path `meta` or a Scene primitive
-
-## Vanilla adapter
-
-Vanilla uses an embed id for authoring. `RelationInputEmbedAdapter` derives the canonical `id` internally and enters the same Relation Definition path
-
-```ts
-import { RelationInputEmbedAdapter, relation } from '@retikz/graph-vanilla';
-
-const embed = relation('edge', { role: 'flow', way: ['start', 'step'] });
-const adapters = [RelationInputEmbedAdapter];
-```
-
-## How it works
-
-<ComponentAlert
-  type="tip"
-  title="Optional for everyday use"
-  description="Revisit this section when diagnosing authoring normalization, Definitions, or Core Path boundaries."
+<SourceLinks
+  sources={[
+    { label: 'Relation Definition contracts', path: 'packages/schematic/graph/src/contract/relation/types.ts' },
+    { label: 'Built-in Relation Definitions', path: 'packages/schematic/graph/src/providers/relation/definitions.ts' },
+    { label: 'Relation resolve', path: 'packages/schematic/graph/src/resolve/relation/resolve.ts' },
+    { label: 'Relation-to-Core-Path lowering', path: 'packages/schematic/graph/src/pipeline/relation/lower.ts' },
+  ]}
 />
 
-`RelationDefinition` removes only the Graph namespace, semantic `type`, and authored-only `role`, then passes every other field to a Core stroke Path while preserving the authored `id`. Targets, labels, marks, strokes, transforms, and diagnostics therefore follow Core Path instead of a second Relation-specific semantic path
+## Errors and limits
+
+- Duplicate keys, built-in key replacement, unregistered role / kind / predicate, or role ownership mismatch fail loudly
+- Definition creation fails when a role default is outside its allowed set, a complete recipe is missing, or a kind expands the allowed set
+- A predicate resolver never runs when its params fail the predicate's Zod schema
+- Relation neither computes an authored route from endpoint coordinates nor compares route endpoints; omission emits a direct source-to-target connection
+- A missing custom Arrow provider is reported through the Core registry and never falls back to a built-in marker
 
 ## API Reference
 
-| API                         | Package                 | Purpose                                                  |
-| --------------------------- | ----------------------- | -------------------------------------------------------- |
-| `createRelation()`          | `@retikz/graph`         | Creates and normalizes Relation IR                       |
-| `createGraphDefinitions()`  | `@retikz/graph`         | Creates the Graph Definition set for direct IR           |
-| `RelationInputEmbedAdapter` | `@retikz/graph-vanilla` | Embeds Relation input into Core compilation              |
-| `relation()`                | `@retikz/graph-vanilla` | Creates a Relation embed with an authored id             |
-| `way?: WayDSL`              | Relation author input   | Draw authoring syntax mutually exclusive with `children` |
+| Public export                                                  | Purpose                                                              |
+| -------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `defineRelationRole` / `RelationRoleDefinition`                | Defines direction constraints and a complete role recipe             |
+| `defineRelationKind` / `RelationKindDefinition`                | Defines a stable subtype and narrows directions                      |
+| `defineRelationPredicate` / `RelationPredicateDefinitionInput` | Defines a predicate with type-safe JSON params                       |
+| `RelationRole` / `RelationKind` / `RelationDirection`          | Lists built-in semantics and direction vocabulary                    |
+| `GraphDefinitionOptions`                                       | Assembles Relation Definitions in the Graph-family provider assembly |
 
 ## Related
 
-- [Relation Basic Usage](/schematic/graph/relation/basic): React Steps, targets, and labels
-- [Entity Extended Usage](/schematic/graph/entity/extension): the matching direct IR and adapter entry points
-- [Core paths](/kernel/components/draw/overview): canonical Steps and renderer-agnostic output
+- [Relation Basic Usage](/schematic/graph/relation/basic): author endpoints, direction, labels, and routes
+- [Graph API Reference](/schematic/graph/api-reference): inspect Relation Source and Theme schemas

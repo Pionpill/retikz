@@ -37,3 +37,28 @@ export const PlotScale = {
 
 /** 内置 scale type 集；供 CustomScaleSchema 排除内置判别串（模块常量，非 zod） */
 export const BUILTIN_SCALE_TYPES = new Set<string>(Object.values(PlotScale));
+
+/** 内置命名配色方案名 */
+export const PlotColorScheme = {
+  Blues: 'blues',
+  Greens: 'greens',
+  Greys: 'greys',
+  Oranges: 'oranges',
+  Purples: 'purples',
+  Reds: 'reds',
+  Viridis: 'viridis',
+  Magma: 'magma',
+  Inferno: 'inferno',
+  Plasma: 'plasma',
+  Cividis: 'cividis',
+  Turbo: 'turbo',
+  BrBG: 'brbg',
+  PRGn: 'prgn',
+  PiYG: 'piyg',
+  PuOr: 'puor',
+  RdBu: 'rdbu',
+  RdGy: 'rdgy',
+  RdYlBu: 'rdylbu',
+  RdYlGn: 'rdylgn',
+  Spectral: 'spectral',
+} as const;

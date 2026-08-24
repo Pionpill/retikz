@@ -3,6 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-08-15
 - 关联：[Graph alpha.1 ADR-01](./01-graph-package-family.md) · [Graph alpha.1 ADR-02](./02-graph-node-variants.md)
+- 历史边界：本 ADR 只继续冻结 semantic IR 经 owner Definition 下沉为 Core IR 的原则。公共命名、Source surface、Variant 与独立 composite 以 ADR-05～09 的后续决策为准
 
 ## 背景
 

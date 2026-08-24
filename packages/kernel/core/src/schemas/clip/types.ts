@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type { IRJsonObject } from '../json';
 import type { ClipFillRule } from './constants';
@@ -12,7 +12,7 @@ export type ClipFillRuleValue = ValueOf<typeof ClipFillRule>;
 export type IRClipFillRule = ClipFillRuleValue;
 
 /** 矩形裁切 IR 类型 */
-export type IRRectClip = z.infer<typeof RectClipSchema>;
+export type IRRectClip = ZodInfer<typeof RectClipSchema>;
 
 /** 自定义裁切 IR 类型：`kind` 对应 compile options 中注册的 clip provider */
 export type IRCustomClip = IRJsonObject & { kind: string };

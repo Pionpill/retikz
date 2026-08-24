@@ -104,7 +104,7 @@ const svg = renderToSvgString(input, {
 
 ### 长六边形
 
-`hexagon` 是可独立调整宽高的长六边形：上下边保持水平，左右各保留一个侧向顶点。它不是 Core 正多边形 `polygon { sides: 6 }` 的别名。
+`hexagon` 是可独立调整宽高的长六边形：上下边保持水平，左右各保留一个侧向顶点。`shoulderDepth` 使用固定 user-unit 长度，因此内容变长只延长中间水平边，不会继续放大两侧尖角。它不是 Core 正多边形 `polygon { sides: 6 }` 的别名。
 
 <ComponentPreview files="hexagon-example" size="sm" />
 
@@ -112,10 +112,10 @@ const svg = renderToSvgString(input, {
 
 节点注入 `HexagonShapeDefinition`，参数类型为 `HexagonShapeParams`：
 
-| 字段             | 类型     | 说明                                                    |
-| ---------------- | -------- | ------------------------------------------------------- |
-| `shoulderRatio?` | `number` | 单侧斜肩深度与总宽度之比，范围 `(0, 0.5)`；默认为 `0.2` |
-| `cornerRadius?`  | `number` | 非负圆角半径；默认为 `0`                                |
+| 字段             | 类型     | 说明                                          |
+| ---------------- | -------- | --------------------------------------------- |
+| `shoulderDepth?` | `number` | 单侧水平肩深，使用非负 user-unit；默认为 `12` |
+| `cornerRadius?`  | `number` | 非负圆角半径；默认为 `0`                      |
 
 ### 圆柱形
 

@@ -1,5 +1,5 @@
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type { PathCommandSchema } from './schema';
 
-export type IRPathCommand = z.infer<typeof PathCommandSchema>;
+export type IRPathCommand = ZodInfer<typeof PathCommandSchema>;

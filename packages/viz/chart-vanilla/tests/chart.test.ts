@@ -62,12 +62,14 @@ describe('Chart Vanilla authoring', () => {
     expect(rendered.svg).toContain('<svg');
     expect(rendered.compileResult.scene.primitives).toHaveLength(1);
     expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toEqual(
-      expect.arrayContaining([
-        'scatter',
-        'scatter/plot',
-        'scatter/plot.__chart.scatter.mark.main',
-        'scatter/plot.plotArea',
-      ]),
+      expect.arrayContaining(['scatter', 'scatter/plot', 'scatter/plot.mark.0', 'scatter/plot.plotArea']),
     );
+  });
+
+  it('does not synthesize Scene ids for an anonymous Chart without provenance', () => {
+    const chart = createScatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
+    const rendered = renderChart(chart);
+
+    expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toEqual([]);
   });
 });

@@ -1,89 +1,80 @@
 ---
 title: Relation 扩展用法
-description: 在直接 IR、Draw way 与 Vanilla 入口中复用 Relation 的 canonical Path 契约。
+description: 用独立 Definition registry 扩展 Relation role、kind 与 predicate，并复用 Core Arrow provider。
 ---
 
-当 React `<Step>` children 不是唯一作者入口时，Relation 仍只保存一份 canonical IR。Draw way 在入口归一为 Step，直接 IR 使用 canonical `children`，Vanilla adapter 则把 embed 接入同一条 Definition lowering 路径
+Relation 扩展只定义关系语义、方向约束与 marker/dash 结构，不建立新的 route 或 marker geometry 系统。内置与自定义项共享 Graph registry、resolve、Core Path 与 Arrow provider 路径
 
-## 扩展边界
-
-Relation 扩展用法适合直接生成 JSON-safe 图式数据、复用 Draw 的 way DSL，或从 Vanilla 组装 figure。它不提供自动路由、障碍规避、独立 route model 或 Relation 专属几何
-
-## Draw way
-
-`way` 是作者输入，不属于 `RelationSchema`。factory、React 或 Vanilla 会通过 Core 的 `parseWay()` 将它归一为 canonical `children`；`children` 与 `way` 必须且只能提供一个
-
-```ts
-import { DrawWay } from '@retikz/core';
-import { createRelation } from '@retikz/graph';
-
-const relation = createRelation({
-  id: 'edge',
-  role: 'flow',
-  way: ['start', DrawWay.Hv, 'step'],
-});
-```
-
-同时提供或同时省略两个入口都会 fail-loud；归一后持久化数据只保留 `children`
-
-## 直接 IR 与 Definition 注入
-
-直接 JSON 必须写 canonical Step 序列，并显式注入 `RelationDefinition`，或使用完整的 Graph Definition 集合
-
-```ts
-import { compileToScene } from '@retikz/core';
-import { createGraphDefinitions, createRelation } from '@retikz/graph';
-
-const relation = createRelation({
-  id: 'edge',
-  role: 'flow',
-  children: [
-    { kind: 'move', to: 'start' },
-    { kind: 'line', to: 'step', label: { text: 'next' } },
-  ],
-});
-
-const scene = compileToScene(
-  { version: 1, type: 'scene', children: [relation] },
-  { composites: createGraphDefinitions() },
-);
-```
-
-`role` 只保留在 Graph IR，不会隐式写入 Path `meta` 或 Scene primitive
-
-## Vanilla adapter
-
-Vanilla 使用 embed id 编写，`RelationInputEmbedAdapter` 会在内部派生 canonical `id` 并接入同一份 Relation Definition
-
-```ts
-import { RelationInputEmbedAdapter, relation } from '@retikz/graph-vanilla';
-
-const embed = relation('edge', { role: 'flow', way: ['start', 'step'] });
-const adapters = [RelationInputEmbedAdapter];
-```
-
-## 技术原理
-
-<ComponentAlert
-  type="tip"
-  title="上手阶段可跳过本节"
-  description="需要排查作者语法归一、Definition 或 Core Path 边界时再回来阅读。"
+<ComponentPreview
+  files="relation-definition"
+  size="md"
+  caption="自定义 feedback kind 与带类型安全参数的 priority predicate。"
 />
 
-`RelationDefinition` 只移除 Graph namespace、语义 `type` 与 authored-only `role`，其它字段原样交给 Core stroke Path，并保留 authored `id`。因此 target、label、mark、stroke、变换与错误诊断都沿用 Core Path，而不会出现第二套关系语义
+## 适用边界
+
+当多个 Relation 共享稳定的关系含义、方向约束或 marker/dash recipe 时注册 Definition。一次性 route 与 labels 直接写在 Relation record；自动 routing 和 compound-edge 算法属于 Diagram，而不是 Relation Definition
+
+## 定义能力
+
+| Definition                | 职责                                                                 |
+| ------------------------- | -------------------------------------------------------------------- |
+| `defineRelationRole`      | 定义主要语义、默认/允许 direction 与每个 direction 的完整结构 recipe |
+| `defineRelationKind`      | 在 role 内收窄 direction，并提供稀疏结构 delta                       |
+| `defineRelationPredicate` | 校验 JSON params，并可从 Canonical params 解析稀疏结构 delta         |
+
+role 必须覆盖允许的 direction；kind 只能收窄不能扩大。自定义 marker shape 是 Core Arrow provider key，Graph 不拥有平行 marker registry
+
+## 注入宿主
+
+React 可以把 `relationRoles`、`relationKinds` 与 `relationPredicates` 直接传给使用它们的 `<Relation>`；多个后代共享 definitions 与局部 `graphTheme` 时，再由 `<Graph>` 统一提供。Vanilla 可把相同 arrays 传给 `relation(id, input)` 或 `graph(id, input)`；直接 IR compile 使用 `createGraphDefinitions(options)` 或 `createGraphProviders(options)`
+
+```tsx
+<Graph relationKinds={[feedbackKind]} relationPredicates={[priorityPredicate]}>
+  <Relation
+    id="feedback"
+    role="flow"
+    kind="workflow.feedback"
+    predicate={{ name: 'workflow.priority', params: { urgent: true } }}
+    source={{ id: 'review' }}
+    target={{ id: 'revise' }}
+    way={['review', 'revise']}
+  />
+</Graph>
+```
+
+## 执行机制
+
+Relation 先校验有效 direction，再按 role、kind 与 predicate 解析完整 marker/dash 结构，并按 Theme rules 解析 appearance。endpoint identity 由 Core namespace 在 Path 编译时解析；authored route 原样进入 Core `Path`，marker 缩短、provider lookup 与 renderer 输出仍由 Core/Render 拥有
+
+<SourceLinks
+  sources={[
+    { label: 'Relation Definition 契约', path: 'packages/schematic/graph/src/contract/relation/types.ts' },
+    { label: 'Relation 内置 Definition', path: 'packages/schematic/graph/src/providers/relation/definitions.ts' },
+    { label: 'Relation resolve', path: 'packages/schematic/graph/src/resolve/relation/resolve.ts' },
+    { label: 'Relation 到 Core Path 的 lowering', path: 'packages/schematic/graph/src/pipeline/relation/lower.ts' },
+  ]}
+/>
+
+## 错误与限制
+
+- 重复 key、覆盖内置 key、未注册 role/kind/predicate 或 role 归属不匹配时 fail-loud
+- role 的默认 direction 不在 allowed set、缺少对应完整 recipe，或 kind 扩大 allowed set 时 Definition 创建失败
+- predicate params 未通过自身 Zod schema 时，resolver 不会执行
+- Relation 不根据 endpoint 坐标计算 authored route，也不比较 route 首尾；省略 route 时生成 source→target 直连
+- 缺少自定义 Arrow provider 时通过 Core registry 报错，不回退到内置 marker
 
 ## API 参考
 
-| API                         | 包                      | 作用                                     |
-| --------------------------- | ----------------------- | ---------------------------------------- |
-| `createRelation()`          | `@retikz/graph`         | 创建并归一 Relation IR                   |
-| `createGraphDefinitions()`  | `@retikz/graph`         | 创建直接 IR 所需的 Graph Definition 集合 |
-| `RelationInputEmbedAdapter` | `@retikz/graph-vanilla` | 将 Relation embed 接入 Core compile      |
-| `relation()`                | `@retikz/graph-vanilla` | 创建带 authored id 的 Relation embed     |
-| `way?: WayDSL`              | Relation author input   | 与 `children` 互斥的 Draw 作者语法       |
+| 公开导出                                                       | 用途                                                        |
+| -------------------------------------------------------------- | ----------------------------------------------------------- |
+| `defineRelationRole` / `RelationRoleDefinition`                | 定义方向约束与完整 role recipe                              |
+| `defineRelationKind` / `RelationKindDefinition`                | 定义 role 内稳定子类型与方向收窄                            |
+| `defineRelationPredicate` / `RelationPredicateDefinitionInput` | 定义带类型安全 JSON params 的 predicate                     |
+| `RelationRole` / `RelationKind` / `RelationDirection`          | 查询内置语义与 direction 词汇                               |
+| `GraphDefinitionOptions`                                       | 在 Graph 包族 provider assembly 中装配 Relation definitions |
 
 ## 相关
 
-- [Relation 基础用法](/schematic/graph/relation/basic)：React Step、target 与 label
-- [Entity 扩展用法](/schematic/graph/entity/extension)：直接 IR 与 adapter 的对应入口
-- [Core Path](/kernel/components/draw/overview)：canonical Step 与 renderer-agnostic 输出
+- [Relation 基础用法](/schematic/graph/relation/basic)：编写 endpoint、direction、label 与 route
+- [Graph API 参考](/schematic/graph/api-reference)：查询 Relation Source 与 Theme schema

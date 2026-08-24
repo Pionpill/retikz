@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type { SceneSchema, ViewBoxSchema } from './schema';
 
@@ -15,7 +15,7 @@ import { type IRScope } from '../scope';
 export type IRChild = IRNode | IRPathBase | IRCoordinate | IRScope | IRComposite;
 
 /** 显式视框 IR 类型 `{ x, y, width, height }` */
-export type IRViewBox = z.infer<typeof ViewBoxSchema>;
+export type IRViewBox = ZodInfer<typeof ViewBoxSchema>;
 
 /** retikz 顶层绘制 IR，可序列化 JSON 形式的绘制描述 */
-export type IRScene = z.infer<typeof SceneSchema>;
+export type IRScene = ZodInfer<typeof SceneSchema>;

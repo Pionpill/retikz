@@ -1,5 +1,5 @@
 import type { Position } from '@retikz/math';
-import type { z } from 'zod';
+import type { ZodType } from 'zod';
 
 import type { IRJsonObject } from '../../schemas';
 import type { AnchorValue, Rect } from '../../shared';
@@ -24,7 +24,7 @@ export type BoundaryDefinitionInput<TParams extends IRJsonObject> = {
   /** 注册表 key，由 IR `boundary` 引用 */
   name: string;
   /** 运行时连接面参数的 schema */
-  paramsSchema: z.ZodType<TParams>;
+  paramsSchema: ZodType<TParams>;
   /**
    * 根据视觉 shape 和实例 params 解析本连接面使用的矩形
    * @default 直接使用视觉 rect

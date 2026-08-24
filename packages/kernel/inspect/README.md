@@ -13,7 +13,7 @@ import { InspectLayout, InspectPath } from '@retikz/inspect/react';
 const registry = createDefaultInspectorRegistry();
 
 <InspectLayout registry={registry}>
-  <InspectPath request={{ inspector: STROKE_PATH_INSPECTOR_KEY, value: true }}>{/* Path props */}</InspectPath>
+  <InspectPath request={{ inspector: STROKE_PATH_INSPECTOR_KEY, options: true }}>{/* Path props */}</InspectPath>
 </InspectLayout>;
 ```
 

@@ -12,6 +12,8 @@ export const RetikzGraphErrorCode = {
   DefinitionNotRegistered: 'GRAPH_DEFINITION_NOT_REGISTERED',
   /** Graph definition 的用户回调或回调结果无效 */
   DefinitionCallbackFailed: 'GRAPH_DEFINITION_CALLBACK_FAILED',
+  /** Graph Source data 与当前 definitions 或引用上下文不一致 */
+  ResolveInvalid: 'GRAPH_RESOLVE_INVALID',
   /** Graph 编译内部不变量被破坏 */
   CompileInvariant: 'GRAPH_COMPILE_INVARIANT',
   /** Relation authoring input 同时或都未提供来源 */

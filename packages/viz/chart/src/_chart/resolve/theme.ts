@@ -2,7 +2,7 @@ import type { ResolvedTheme, ThemeModeValue } from '@retikz/core';
 import type { IRPlotThemeTokenOverrides } from '@retikz/plot';
 
 import { ThemeMode } from '@retikz/core';
-import { z } from 'zod';
+import { ZodError } from 'zod';
 
 import type { ChartRecipeDefinition } from '../contract/recipe';
 import type { ChartThemeDefinition, ChartThemeResolution } from '../contract/theme';
@@ -145,7 +145,7 @@ export const resolveChartTheme = (
   try {
     resolvedChart = ChartThemeResolutionSchema.parse(chart);
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (error instanceof ZodError) {
       throw themeError(
         'Chart theme cascade did not produce a complete chart token map',
         ['theme', 'tokens', 'chart'],
@@ -159,7 +159,7 @@ export const resolveChartTheme = (
   try {
     resolvedRecipe = recipe.theme.resolutionSchema.parse(recipeTokens);
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (error instanceof ZodError) {
       throw themeError(
         'Chart theme cascade did not produce a complete recipe token map',
         ['theme', 'tokens', 'recipe'],

@@ -1,4 +1,4 @@
-import { arcEndPoint } from '@retikz/math';
+import { pointAtArcAngle } from '@retikz/math';
 
 import type { PathCommand } from '../../../contract';
 import type { IRPosition } from '../../../schemas';
@@ -145,7 +145,7 @@ export const createPathCommandEmitter = ({
       endAngle,
     });
     provenance.push(currentStepKind());
-    const endPoint = arcEndPoint(center, radius, endAngle);
+    const endPoint = pointAtArcAngle(center, radius, endAngle);
     boundsPoints.push(endPoint);
     lastEnd = endPoint;
   };

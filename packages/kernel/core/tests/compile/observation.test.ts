@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
-import type { CompileObservation, CompileObserverDefinition, IRScene, LayoutChildProbeKindValue } from '../../src';
+import type {
+  CompileObservation,
+  CompileObservationContext,
+  CompileObserverDefinition,
+  IRScene,
+  LayoutChildProbeKindValue,
+} from '../../src';
 
 import * as core from '../../src';
 
@@ -31,10 +37,10 @@ const observableComposite = core.defineComposite({
   namespace: 'test',
   type: 'observable',
   schema: core.CompositeBaseSchema.extend({
-    namespace: z.literal('test'),
-    type: z.literal('observable'),
+    namespace: literal('test'),
+    type: literal('observable'),
   }),
-  artifactSchema: z.strictObject({ label: z.string() }),
+  artifactSchema: strictObject({ label: string() }),
   compile: () => ({
     artifact: { label: 'settled' },
     children: [{ type: 'node', position: [0, 0], text: 'visible' }],
@@ -45,10 +51,10 @@ const probeReplayComposite = core.defineComposite({
   namespace: 'test',
   type: 'probeReplay',
   schema: core.CompositeBaseSchema.extend({
-    namespace: z.literal('test'),
-    type: z.literal('probeReplay'),
+    namespace: literal('test'),
+    type: literal('probeReplay'),
   }),
-  artifactSchema: z.strictObject({ chosen: z.string() }),
+  artifactSchema: strictObject({ chosen: string() }),
   compile: (_, context) => {
     context.layoutChild({ type: 'node', position: [0, 0], text: 'discarded' }, core.NaturalLayoutProposal);
     const selected = context.layoutChild(
@@ -176,6 +182,32 @@ describe('Core observed compile', () => {
     );
 
     expect(warnings).toHaveLength(1);
+  });
+
+  it('exposes the occurrence Theme through the observation context', () => {
+    let observedContext: CompileObservationContext | undefined;
+    const observer: CompileObserverDefinition = {
+      key: 'test/theme-context',
+      createSession: () => ({
+        select: () => true,
+        observe: (_observation, context) => {
+          observedContext = context;
+        },
+        complete: () => null,
+      }),
+    };
+
+    observedCompile(
+      { ...scene([{ namespace: 'test', type: 'observable' }]), theme: { mode: 'dark' } },
+      { composites: [observableComposite], padding: 0 },
+      [observer],
+    );
+
+    expect(observedContext?.theme).toMatchObject({
+      mode: 'dark',
+      colors: { semantic: { guide: 'hsl(215, 14%, 68%)' } },
+    });
+    expect(Object.isFrozen(observedContext?.theme)).toBe(true);
   });
 });
 

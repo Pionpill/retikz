@@ -113,6 +113,37 @@ describe('changelog data', () => {
     expect(changelogPage?.children?.some(page => page.id === changelogVersionSlug(currentRelease.minor))).toBe(true);
   });
 
+  it('Graph alpha.7 更新日志使用可组合 Graph 与三入口契约', () => {
+    const release = changelogForModule('schematic')[0];
+    const byPackage = new Map(release.packages.map(block => [block.pkg, block]));
+    const serialized = JSON.stringify(release);
+
+    for (const block of release.packages) {
+      const alpha = block.subVersions.find(version => version.version === 'alpha.7');
+      expect(alpha?.date).toBe('2026-08-23');
+      expect(alpha?.items).toHaveLength(6);
+    }
+
+    expect(JSON.stringify(byPackage.get('@retikz/graph'))).toContain('IRGraph.children');
+    expect(JSON.stringify(byPackage.get('@retikz/graph'))).toContain('IRNodeTarget');
+    expect(JSON.stringify(byPackage.get('@retikz/graph-react'))).toContain('独立 React authoring 入口');
+    expect(JSON.stringify(byPackage.get('@retikz/graph-vanilla'))).toContain('`entity()`');
+    expect(JSON.stringify(byPackage.get('@retikz/graph-vanilla'))).toContain('`relation()`');
+    expect(serialized).toContain('`graphTheme`');
+    expect(serialized).toContain('`IRGeometryLabel`');
+    expect(serialized).toContain('Theme only supplies defaults');
+    expect(serialized).toContain('JSON Schema');
+    expect(serialized).toContain('Graph `entityVariant`');
+    expect(serialized).toContain('Vibrant reference style');
+    expect(serialized).toContain('Clean');
+    expect(serialized).toContain('Core-compatible instance fields');
+    expect(serialized).toContain('`GraphThemeStyleOverrides`');
+    expect(serialized).toContain('retains default rules');
+    expect(serialized).toContain('Container contract and docs are removed');
+    expect(serialized).not.toContain('不能独立 embed');
+    expect(serialized).not.toContain('the only embed path');
+  });
+
   it.each(['data', 'chart', 'table', 'plot'] as const)('当前 Viz %s 分区注册独立更新日志详情路由', sectionId => {
     const section = vizSection.find(entry => entry.id === sectionId);
     const changelogPage = section?.pages.find(page => page.id === 'changelog');

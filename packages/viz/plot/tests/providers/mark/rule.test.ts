@@ -4,7 +4,7 @@ import type { ExternalRow } from '@retikz/data';
 import { compileToScene } from '@retikz/core';
 import { SectorShapeDefinition } from '@retikz/standard/shape';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, object } from 'zod';
 
 import type { Cell, CoordinateFrame, PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
@@ -658,8 +658,8 @@ describe('rule region projectCell 坐标系', () => {
       height: HEIGHT,
       coordinates: [
         defineCoordinate({
-          schema: z.object({
-            type: z.literal('curved-reference').describe('Discriminator: reference region custom coordinate operation'),
+          schema: object({
+            type: literal('curved-reference').describe('Discriminator: reference region custom coordinate operation'),
           }),
           roles: ['x', 'y'],
           resolve: (_operation, ctx) => {

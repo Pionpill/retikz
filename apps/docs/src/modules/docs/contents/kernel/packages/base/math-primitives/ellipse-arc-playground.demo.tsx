@@ -1,7 +1,7 @@
 import type { Ellipse, Position } from '@retikz/math';
 import type { FC } from 'react';
 
-import { arcBoundingPoints, boundsCenter, boundsOf, boundsToRect, ellipse } from '@retikz/math';
+import { boundsOf, boundsToRect, centerOfBounds, collectArcBoundingCandidates, ellipse } from '@retikz/math';
 import { Arc, Circle, Draw, Ellipse as EllipseShape, Layout, Rectangle } from '@retikz/react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -28,7 +28,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     [ellipseValue.x + ellipseValue.rx, ellipseValue.y + ellipseValue.ry],
   ]);
   const arcBounds = boundsOf(
-    arcBoundingPoints({
+    collectArcBoundingCandidates({
       center: ARC_CENTER,
       radius: values.arcRadius,
       startAngleDeg: values.arcStartAngle,
@@ -67,7 +67,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         strokeWidth={2}
       />
       <Rectangle
-        center={boundsCenter(ellipseBounds)}
+        center={centerOfBounds(ellipseBounds)}
         width={ellipseBoundsRect.width}
         height={ellipseBoundsRect.height}
         stroke="gray"
@@ -76,7 +76,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         fill="none"
       />
       <Rectangle
-        center={boundsCenter(arcBounds)}
+        center={centerOfBounds(arcBounds)}
         width={arcBoundsRect.width}
         height={arcBoundsRect.height}
         stroke="gray"

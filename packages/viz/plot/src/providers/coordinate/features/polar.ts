@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import { arcEndPoint, isFiniteNumber } from '@retikz/math';
+import { isFiniteNumber, pointAtArcAngle } from '@retikz/math';
 
 import type {
   AnyCoordinateDefinition,
@@ -42,11 +42,11 @@ const isContinuousAngleScale = (scaleType: string): boolean =>
 
 /**
  * 极坐标输出空间点 → 屏幕点。
- * @description 角度约定由 `@retikz/math` 的 arcEndPoint 统一维护；plot 侧只保留坐标帧的 nullable 契约，
+ * @description 角度约定由 `@retikz/math` 的 pointAtArcAngle 统一维护；plot 侧只保留坐标帧的 nullable 契约，
  *   让 mark lowering 可以跳过非有限输入点
  */
 const polarPoint = (center: Position, angleDeg: number, radius: number): Position | null =>
-  isFiniteNumber(angleDeg) && isFiniteNumber(radius) ? arcEndPoint(center, radius, angleDeg) : null;
+  isFiniteNumber(angleDeg) && isFiniteNumber(radius) ? pointAtArcAngle(center, radius, angleDeg) : null;
 
 /** 创建二维极坐标运行时坐标帧所需的已解析参数 */
 export type PolarCoordinateInput = {

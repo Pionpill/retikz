@@ -1,5 +1,5 @@
 ﻿import type { Position } from '@retikz/math';
-import type { z } from 'zod';
+import type { ZodType } from 'zod';
 
 import type { IRGraphicStyle, IRJsonObject, IRPathBase, ResolvedDropShadow } from '../../schemas';
 import type { AnchorValue, Rect, SideValue } from '../../shared';
@@ -100,7 +100,7 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
    * 实例参数 schema
    * @description 解析结果必须是 JSON object；无参 shape 使用 `z.strictObject({})`
    */
-  paramsSchema: z.ZodType<TParams>;
+  paramsSchema: ZodType<TParams>;
   /**
    * 根据内容半轴和 params 计算完整 shape 的外接 AABB 半轴
    */

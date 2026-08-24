@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import type { IRScene, SpatialHandleDeclaration } from '../../../src';
 
@@ -16,8 +16,8 @@ const defineCard = (spatialHandles: unknown) =>
     namespace: 'third',
     type: 'card',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('third'),
-      type: z.literal('card'),
+      namespace: literal('third'),
+      type: literal('card'),
     }),
     expand: () =>
       ({ children: [], spatialHandles }) as {
@@ -69,8 +69,8 @@ describe('spatial handle declaration contract', () => {
       namespace: 'third',
       type: 'card',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('third'),
-        type: z.literal('card'),
+        namespace: literal('third'),
+        type: literal('card'),
       }),
       expand: () => ({ children: [], spatialHandles: [], unsupported: true }) as never,
     });
@@ -86,8 +86,8 @@ describe('spatial handle declaration contract', () => {
       namespace: 'third',
       type: 'card',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('third'),
-        type: z.literal('card'),
+        namespace: literal('third'),
+        type: literal('card'),
       }),
       expand: () => result as never,
     });
