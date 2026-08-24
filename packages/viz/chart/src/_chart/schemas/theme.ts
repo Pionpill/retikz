@@ -1,4 +1,4 @@
-import type { infer as ZodInfer, ZodTypeAny } from 'zod';
+import type { infer as ZodInfer, ZodType } from 'zod';
 
 import {
   CssColorSchema,
@@ -72,7 +72,7 @@ const hasTokenSlice = (value: unknown): boolean =>
   typeof value === 'object' && value !== null && Object.keys(value).length > 0;
 
 /** 用精确 recipe schema 创建 Chart authored theme schema */
-export const createChartThemeSchema = <TRecipe extends ZodTypeAny>(recipe: TRecipe) =>
+export const createChartThemeSchema = <TRecipe extends ZodType>(recipe: TRecipe) =>
   union([
     NonBlankStringSchema.describe('Registered Chart theme name'),
     strictObject({

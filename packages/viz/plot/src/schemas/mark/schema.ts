@@ -1,4 +1,4 @@
-import type { ZodLiteral, ZodObject, ZodOptional, ZodString, ZodTypeAny } from 'zod';
+import type { ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
 
 import { BendDirection, BoxSpacingSchema, FoldStepVia, JsonObjectSchema, PaintSchema } from '@retikz/core';
 import {
@@ -254,7 +254,7 @@ const markValueFieldVariant = (
     scale: NonBlankStringSchema.optional().describe('Optional scale name for this field-bound style value'),
   });
 
-const markValueSchema = <T extends ZodTypeAny>(
+const markValueSchema = <T extends ZodType>(
   constantValue: T,
   fieldDescription: string,
   constantDescription: string,

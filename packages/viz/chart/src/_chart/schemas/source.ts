@@ -1,4 +1,4 @@
-import type { infer as ZodInfer, ZodLiteral, ZodObject, ZodOptional, ZodString, ZodTypeAny } from 'zod';
+import type { infer as ZodInfer, ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
 
 import { JsonObjectSchema, JsonValueSchema } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
@@ -40,7 +40,7 @@ const ChartSourceShellSchema = strictObject({
 }).describe('Common strict Chart Source shell before a recipe-specific schema is selected');
 
 /** 精确 recipe schema 组装所用的 root shape */
-type ChartSourceShape<TFamily extends string, TRecipe extends ZodTypeAny, TTheme extends ZodTypeAny> = {
+type ChartSourceShape<TFamily extends string, TRecipe extends ZodType, TTheme extends ZodType> = {
   namespace: ZodLiteral<typeof CHART_NAMESPACE>;
   type: ZodLiteral<TFamily>;
   id: ZodOptional<ZodString>;
@@ -53,7 +53,7 @@ type ChartSourceShape<TFamily extends string, TRecipe extends ZodTypeAny, TTheme
 };
 
 /** 按 family、recipe schema 与精确 recipe Theme schema 创建 strict Source schema */
-export const createChartSourceSchema = <TFamily extends string, TRecipe extends ZodTypeAny, TTheme extends ZodTypeAny>(
+export const createChartSourceSchema = <TFamily extends string, TRecipe extends ZodType, TTheme extends ZodType>(
   family: TFamily,
   recipe: TRecipe,
   theme: TTheme,
