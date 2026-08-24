@@ -1,6 +1,8 @@
+import type { ZodType } from 'zod';
+
 import { ClipFillRuleSchema, defineClip, JsonObjectSchema, PathCommandSchema, PositionSchema } from '@retikz/core';
 import { NonBlankStringSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { array, intersection, literal, number, object, strictObject } from 'zod';
 
 import type {
   CircleClipShape,
@@ -17,40 +19,40 @@ import type {
 
 import { CircleClipSchema, CompoundClipSchema, EllipseClipSchema, PathClipSchema, PolygonClipSchema } from './schema';
 
-const OpenClipShapeSchema = z.intersection(
-  z.object({ kind: NonBlankStringSchema.describe('Clip definition discriminator.') }),
+const OpenClipShapeSchema = intersection(
+  object({ kind: NonBlankStringSchema.describe('Clip definition discriminator.') }),
   JsonObjectSchema,
 );
 
-const CircleClipShapeSchema: z.ZodType<CircleClipShape> = z.strictObject({
-  kind: z.literal('circle'),
-  cx: z.number(),
-  cy: z.number(),
+const CircleClipShapeSchema: ZodType<CircleClipShape> = strictObject({
+  kind: literal('circle'),
+  cx: number(),
+  cy: number(),
   r: PositiveNumberSchema,
 });
 
-const EllipseClipShapeSchema: z.ZodType<EllipseClipShape> = z.strictObject({
-  kind: z.literal('ellipse'),
-  cx: z.number(),
-  cy: z.number(),
+const EllipseClipShapeSchema: ZodType<EllipseClipShape> = strictObject({
+  kind: literal('ellipse'),
+  cx: number(),
+  cy: number(),
   rx: PositiveNumberSchema,
   ry: PositiveNumberSchema,
 });
 
-const PolygonClipShapeSchema: z.ZodType<PolygonClipShape> = z.strictObject({
-  kind: z.literal('polygon'),
-  points: z.array(PositionSchema).min(3),
+const PolygonClipShapeSchema: ZodType<PolygonClipShape> = strictObject({
+  kind: literal('polygon'),
+  points: array(PositionSchema).min(3),
 });
 
-const PathClipShapeSchema: z.ZodType<PathClipShape> = z.strictObject({
-  kind: z.literal('path'),
-  commands: z.array(PathCommandSchema).min(1),
+const PathClipShapeSchema: ZodType<PathClipShape> = strictObject({
+  kind: literal('path'),
+  commands: array(PathCommandSchema).min(1),
   fillRule: ClipFillRuleSchema.optional(),
 });
 
-const CompoundClipShapeSchema: z.ZodType<CompoundClipShape> = z.strictObject({
-  kind: z.literal('compound'),
-  children: z.array(OpenClipShapeSchema).min(1),
+const CompoundClipShapeSchema: ZodType<CompoundClipShape> = strictObject({
+  kind: literal('compound'),
+  children: array(OpenClipShapeSchema).min(1),
   fillRule: ClipFillRuleSchema.optional(),
 });
 

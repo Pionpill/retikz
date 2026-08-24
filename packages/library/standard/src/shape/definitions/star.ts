@@ -1,5 +1,6 @@
 import type { CoreDependencyProvider, Rect, ScenePrimitive, ShapeAnchorName } from '@retikz/core';
 import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 
 import {
   boundaryFromContour,
@@ -13,38 +14,34 @@ import {
   verticesToSegments,
 } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { number, strictObject } from 'zod';
 
 import { StandardShapeName } from '../constants';
 
 const MaxStarPoints = 1024;
 
-const StarShapeParamsSchema = z
-  .strictObject({
-    points: z
-      .number()
-      .int()
-      .min(3)
-      .max(MaxStarPoints)
-      .describe(`Number of star points (3..${MaxStarPoints}); capped to bound vertex count (mirrors polygon sides).`),
-    innerRadius: PositiveNumberSchema.describe('Inner (notch) radius in user units.'),
-    outerRadius: PositiveNumberSchema.describe('Outer (tip) radius in user units; must be > innerRadius.'),
-    rotate: z
-      .number()
-      .optional()
-      .describe(
-        'Shape self-rotation in degrees; default 0 = first tip points up (screen -y / top); positive rotates clockwise (screen). Composes with Node.rotate.',
-      ),
-    cornerRadius: NonNegativeNumberSchema.optional().describe(
-      'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+const StarShapeParamsSchema = strictObject({
+  points: number()
+    .int()
+    .min(3)
+    .max(MaxStarPoints)
+    .describe(`Number of star points (3..${MaxStarPoints}); capped to bound vertex count (mirrors polygon sides).`),
+  innerRadius: PositiveNumberSchema.describe('Inner (notch) radius in user units.'),
+  outerRadius: PositiveNumberSchema.describe('Outer (tip) radius in user units; must be > innerRadius.'),
+  rotate: number()
+    .optional()
+    .describe(
+      'Shape self-rotation in degrees; default 0 = first tip points up (screen -y / top); positive rotates clockwise (screen). Composes with Node.rotate.',
     ),
-  })
-  .refine(params => params.outerRadius > params.innerRadius, {
-    message: 'outerRadius must be greater than innerRadius',
-  });
+  cornerRadius: NonNegativeNumberSchema.optional().describe(
+    'Corner radius in user units; 0 / omitted = sharp corners. Clamped per corner to the largest non-self-intersecting fillet.',
+  ),
+}).refine(params => params.outerRadius > params.innerRadius, {
+  message: 'outerRadius must be greater than innerRadius',
+});
 
 /** Star 形状的参数 */
-export type StarShapeParams = z.infer<typeof StarShapeParamsSchema>;
+export type StarShapeParams = ZodInfer<typeof StarShapeParamsSchema>;
 
 /** Star 的派生几何 */
 type StarGeometry = {

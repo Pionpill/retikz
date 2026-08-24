@@ -1,9 +1,10 @@
 import type { CoreDependencyProvider } from '@retikz/core';
 import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 
 import { defineShape } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import { StandardShapeName } from '../constants';
 import {
@@ -14,13 +15,13 @@ import {
   polygonConnectionEnvelope,
 } from './_utils';
 
-const HexagonShapeParamsSchema = z.strictObject({
+const HexagonShapeParamsSchema = strictObject({
   shoulderDepth: NonNegativeNumberSchema.optional().describe('Horizontal depth of each shoulder in user units.'),
   cornerRadius: NonNegativeNumberSchema.optional().describe('Uniform corner radius in user units.'),
 });
 
 /** Hexagon 形状参数 */
-export type HexagonShapeParams = z.infer<typeof HexagonShapeParamsSchema>;
+export type HexagonShapeParams = ZodInfer<typeof HexagonShapeParamsSchema>;
 
 const shoulderDepthOf = (params: HexagonShapeParams): number => params.shoulderDepth ?? 12;
 

@@ -1,3 +1,5 @@
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
+
 import { ChildSchema, CompositeBaseSchema, ScopePropsSchema } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeIntegerSchema } from '@retikz/foundation';
 import {
@@ -8,101 +10,85 @@ import {
   LayoutContainerBoxSchema,
   LayoutGapSchema,
 } from '@retikz/layout';
-import { z } from 'zod';
+import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { LegendContentKind, LegendDirection, LegendSampleAlignment, LegendWrap } from './constants';
 
-const LegendGapSchema = z
-  .union([
-    LayoutGapSchema.describe('Uniform physical gap applied to both rows and columns.'),
-    z
-      .strictObject({
-        row: LayoutGapSchema.describe('Physical vertical gap between adjacent rows.'),
-        column: LayoutGapSchema.describe('Physical horizontal gap between adjacent columns.'),
-      })
-      .describe('Independent physical row and column gaps.'),
-  ])
+const LegendGapSchema = union([
+  LayoutGapSchema.describe('Uniform physical gap applied to both rows and columns.'),
+  strictObject({
+    row: LayoutGapSchema.describe('Physical vertical gap between adjacent rows.'),
+    column: LayoutGapSchema.describe('Physical horizontal gap between adjacent columns.'),
+  }).describe('Independent physical row and column gaps.'),
+])
   .transform(gap => (typeof gap === 'number' ? { row: gap, column: gap } : gap))
   .default({ row: 8, column: 8 })
   .describe('Physical gaps between adjacent rows and columns; a number applies uniformly to both axes.');
 
-export const LegendItemSchema = z
-  .strictObject({
-    key: NonBlankStringSchema.describe('Container-local stable identity for this discrete legend item.'),
-    sample: ChildSchema.describe('JSON-safe Core child that visually demonstrates the item.'),
-    label: ChildSchema.optional().describe('Optional JSON-safe Core child explaining the sample.'),
-  })
-  .describe('Canonical discrete item in a Standard Legend.');
+export const LegendItemSchema = strictObject({
+  key: NonBlankStringSchema.describe('Container-local stable identity for this discrete legend item.'),
+  sample: ChildSchema.describe('JSON-safe Core child that visually demonstrates the item.'),
+  label: ChildSchema.optional().describe('Optional JSON-safe Core child explaining the sample.'),
+}).describe('Canonical discrete item in a Standard Legend.');
 
-export const LegendItemsContentSchema = z
-  .strictObject({
-    kind: z.literal(LegendContentKind.Items).describe('Discriminator for a list of discrete sample-label items.'),
-    direction: z
-      .enum(LegendDirection)
-      .default(LegendDirection.Vertical)
-      .describe('Physical main-axis direction used to place items in authored order.'),
-    wrap: z
-      .enum(LegendWrap)
-      .default(LegendWrap.NoWrap)
-      .describe('Whether constrained items form additional rows or columns.'),
-    gap: LegendGapSchema,
-    sampleGap: LayoutGapSchema.default(8).describe('Horizontal gap between an item sample and its label.'),
-    sampleAlign: z
-      .enum(LegendSampleAlignment)
-      .default(LegendSampleAlignment.Center)
-      .describe('Physical y-axis alignment between each item sample and label.'),
-    items: z.array(LegendItemSchema).describe('Discrete legend items in stable authored order.'),
-  })
-  .describe('Canonical discrete-items content for a Standard Legend.');
+export const LegendItemsContentSchema = strictObject({
+  kind: literal(LegendContentKind.Items).describe('Discriminator for a list of discrete sample-label items.'),
+  direction: zodEnum(LegendDirection)
+    .default(LegendDirection.Vertical)
+    .describe('Physical main-axis direction used to place items in authored order.'),
+  wrap: zodEnum(LegendWrap)
+    .default(LegendWrap.NoWrap)
+    .describe('Whether constrained items form additional rows or columns.'),
+  gap: LegendGapSchema,
+  sampleGap: LayoutGapSchema.default(8).describe('Horizontal gap between an item sample and its label.'),
+  sampleAlign: zodEnum(LegendSampleAlignment)
+    .default(LegendSampleAlignment.Center)
+    .describe('Physical y-axis alignment between each item sample and label.'),
+  items: array(LegendItemSchema).describe('Discrete legend items in stable authored order.'),
+}).describe('Canonical discrete-items content for a Standard Legend.');
 
-export const LegendTickSchema = z
-  .strictObject({
-    key: NonBlankStringSchema.describe('Container-local stable identity for this continuous legend tick.'),
-    offset: z.number().min(0).max(1).describe('Normalized authored position along the sample main axis.'),
-    label: ChildSchema.optional().describe('Optional JSON-safe Core child explaining the tick position.'),
-  })
-  .describe('Canonical normalized tick in a continuous Standard Legend.');
+export const LegendTickSchema = strictObject({
+  key: NonBlankStringSchema.describe('Container-local stable identity for this continuous legend tick.'),
+  offset: number().min(0).max(1).describe('Normalized authored position along the sample main axis.'),
+  label: ChildSchema.optional().describe('Optional JSON-safe Core child explaining the tick position.'),
+}).describe('Canonical normalized tick in a continuous Standard Legend.');
 
-export const LegendRampContentSchema = z
-  .strictObject({
-    kind: z.literal(LegendContentKind.Ramp).describe('Discriminator for one continuous sample with normalized ticks.'),
-    direction: z
-      .enum(LegendDirection)
-      .default(LegendDirection.Vertical)
-      .describe('Physical axis along which normalized tick offsets are resolved.'),
-    sample: ChildSchema.describe('JSON-safe Core child that displays the continuous visual sample.'),
-    sampleGap: LayoutGapSchema.default(8).describe('Physical gap from the sample to the optional tick-label region.'),
-    ticks: z.array(LegendTickSchema).describe('Normalized ticks in stable non-decreasing authored order.'),
-  })
-  .describe('Canonical continuous-ramp content for a Standard Legend.');
+export const LegendRampContentSchema = strictObject({
+  kind: literal(LegendContentKind.Ramp).describe('Discriminator for one continuous sample with normalized ticks.'),
+  direction: zodEnum(LegendDirection)
+    .default(LegendDirection.Vertical)
+    .describe('Physical axis along which normalized tick offsets are resolved.'),
+  sample: ChildSchema.describe('JSON-safe Core child that displays the continuous visual sample.'),
+  sampleGap: LayoutGapSchema.default(8).describe('Physical gap from the sample to the optional tick-label region.'),
+  ticks: array(LegendTickSchema).describe('Normalized ticks in stable non-decreasing authored order.'),
+}).describe('Canonical continuous-ramp content for a Standard Legend.');
 
-const LegendContentSchema = z
-  .discriminatedUnion('kind', [LegendItemsContentSchema, LegendRampContentSchema])
-  .describe('Structured discrete or continuous content of a Standard Legend.');
+const LegendContentSchema = discriminatedUnion('kind', [LegendItemsContentSchema, LegendRampContentSchema]).describe(
+  'Structured discrete or continuous content of a Standard Legend.',
+);
 
 const LegendBaseSchema = CompositeBaseSchema.extend({
-  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
-  type: z.literal('legend').describe('Composite type for an already-resolved visual legend.'),
+  namespace: literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('legend').describe('Composite type for an already-resolved visual legend.'),
   ...ScopePropsSchema.shape,
   title: ChildSchema.optional().describe('Optional JSON-safe Core child displayed above the legend body.'),
   titleGap: LayoutGapSchema.default(8).describe(
     'Vertical gap used only when both the title and a non-empty body are present.',
   ),
-  contentAlign: z
-    .enum([LayoutAlignment.Start, LayoutAlignment.Center, LayoutAlignment.End])
+  contentAlign: zodEnum([LayoutAlignment.Start, LayoutAlignment.Center, LayoutAlignment.End])
     .default(LayoutAlignment.Start)
     .describe('Physical x-axis alignment of title and body structural blocks within the Legend content box.'),
   ...LayoutContainerBoxSchema.shape,
   content: LegendContentSchema.describe('Already-resolved discrete or continuous legend presentation.'),
 });
 
-type LegendRefinementInput = z.infer<typeof LegendBaseSchema>;
+type LegendRefinementInput = ZodInfer<typeof LegendBaseSchema>;
 
 const refineLegendKeys = (
   entries: ReadonlyArray<{ key: string }>,
   pathPrefix: 'items' | 'ticks',
-  context: z.RefinementCtx,
+  context: RefinementCtx,
 ): void => {
   const seenKeys = new Set<string>();
 
@@ -118,7 +104,7 @@ const refineLegendKeys = (
   });
 };
 
-const refineLegend = (legend: LegendRefinementInput, context: z.RefinementCtx): void => {
+const refineLegend = (legend: LegendRefinementInput, context: RefinementCtx): void => {
   if (legend.content.kind === LegendContentKind.Items) {
     refineLegendKeys(legend.content.items, 'items', context);
     return;
@@ -151,7 +137,7 @@ type LegendAuthoredArtifactEntry = {
 const refineLegendAuthoredArtifactEntries = (
   entries: Array<LegendAuthoredArtifactEntry>,
   path: 'items' | 'ticks',
-  context: z.RefinementCtx,
+  context: RefinementCtx,
 ) => {
   const keys = new Set<string>();
   entries.forEach((entry, index) => {
@@ -173,15 +159,13 @@ const refineLegendAuthoredArtifactEntries = (
   });
 };
 
-export const LegendArtifactGeometrySchema = z
-  .strictObject({
-    allocationBounds: LayoutArtifactRectSchema.describe('Union of translated real child allocation bounds.'),
-    visualBounds: LayoutArtifactRectSchema.describe('Union of translated conservative child visual bounds.'),
-    visibleBounds: LayoutArtifactRectSchema.nullable().describe(
-      'Visible visual union under the Legend overflow policy, or null when no positive area remains.',
-    ),
-  })
-  .describe('Observable geometry shared by one Legend presentation region.');
+export const LegendArtifactGeometrySchema = strictObject({
+  allocationBounds: LayoutArtifactRectSchema.describe('Union of translated real child allocation bounds.'),
+  visualBounds: LayoutArtifactRectSchema.describe('Union of translated conservative child visual bounds.'),
+  visibleBounds: LayoutArtifactRectSchema.nullable().describe(
+    'Visible visual union under the Legend overflow policy, or null when no positive area remains.',
+  ),
+}).describe('Observable geometry shared by one Legend presentation region.');
 
 export const LegendPlacedChildArtifactSchema = LayoutArtifactItemBaseSchema.omit({
   key: true,
@@ -190,55 +174,48 @@ export const LegendPlacedChildArtifactSchema = LayoutArtifactItemBaseSchema.omit
   alignmentGuide: true,
 }).describe('Observable slot, placement, bounds, and overflow for one Legend child.');
 
-const LegendItemArtifactSchema = z
-  .strictObject({
-    key: NonBlankStringSchema.describe('Stable authored item identity.'),
-    sourceIndex: NonNegativeIntegerSchema.describe('Zero-based authored item order.'),
-    geometry: LegendArtifactGeometrySchema.describe('Union geometry of the sample and optional label.'),
-    sample: LegendPlacedChildArtifactSchema.describe('Resolved sample placement.'),
-    label: LegendPlacedChildArtifactSchema.nullable().describe('Resolved label placement, or null when omitted.'),
-  })
-  .describe('Resolved identity, geometry, and child placements for one discrete Legend item.');
+const LegendItemArtifactSchema = strictObject({
+  key: NonBlankStringSchema.describe('Stable authored item identity.'),
+  sourceIndex: NonNegativeIntegerSchema.describe('Zero-based authored item order.'),
+  geometry: LegendArtifactGeometrySchema.describe('Union geometry of the sample and optional label.'),
+  sample: LegendPlacedChildArtifactSchema.describe('Resolved sample placement.'),
+  label: LegendPlacedChildArtifactSchema.nullable().describe('Resolved label placement, or null when omitted.'),
+}).describe('Resolved identity, geometry, and child placements for one discrete Legend item.');
 
-export const LegendItemsArtifactSchema = z
-  .strictObject({
-    kind: z.literal(LegendContentKind.Items).describe('Discriminator for a discrete-items Legend artifact.'),
-    container: LayoutArtifactContainerSchema.describe('Resolved Legend container geometry.'),
-    title: LegendPlacedChildArtifactSchema.nullable().describe('Resolved title placement, or null when omitted.'),
-    bodyBounds: LayoutArtifactRectSchema.nullable().describe(
-      'Union of placed item allocations and structural gaps, or null when there are no items.',
-    ),
-    items: z.array(LegendItemArtifactSchema).describe('Discrete item artifacts in stable authored order.'),
-  })
+export const LegendItemsArtifactSchema = strictObject({
+  kind: literal(LegendContentKind.Items).describe('Discriminator for a discrete-items Legend artifact.'),
+  container: LayoutArtifactContainerSchema.describe('Resolved Legend container geometry.'),
+  title: LegendPlacedChildArtifactSchema.nullable().describe('Resolved title placement, or null when omitted.'),
+  bodyBounds: LayoutArtifactRectSchema.nullable().describe(
+    'Union of placed item allocations and structural gaps, or null when there are no items.',
+  ),
+  items: array(LegendItemArtifactSchema).describe('Discrete item artifacts in stable authored order.'),
+})
   .superRefine((artifact, context) => refineLegendAuthoredArtifactEntries(artifact.items, 'items', context))
   .describe('Typed artifact for a resolved discrete-items Standard Legend.');
 
-const LegendTickArtifactSchema = z
-  .strictObject({
-    key: NonBlankStringSchema.describe('Stable authored tick identity.'),
-    sourceIndex: NonNegativeIntegerSchema.describe('Zero-based authored tick order.'),
-    anchor: z
-      .strictObject({
-        x: z.number().describe('Finite horizontal anchor in Legend allocation coordinates.'),
-        y: z.number().describe('Finite vertical anchor in Legend allocation coordinates.'),
-      })
-      .describe('Sample-derived physical anchor for this normalized tick.'),
-    label: LegendPlacedChildArtifactSchema.nullable().describe('Resolved tick label placement, or null when omitted.'),
-  })
-  .describe('Resolved identity, anchor, and optional label placement for one continuous Legend tick.');
+const LegendTickArtifactSchema = strictObject({
+  key: NonBlankStringSchema.describe('Stable authored tick identity.'),
+  sourceIndex: NonNegativeIntegerSchema.describe('Zero-based authored tick order.'),
+  anchor: strictObject({
+    x: number().describe('Finite horizontal anchor in Legend allocation coordinates.'),
+    y: number().describe('Finite vertical anchor in Legend allocation coordinates.'),
+  }).describe('Sample-derived physical anchor for this normalized tick.'),
+  label: LegendPlacedChildArtifactSchema.nullable().describe('Resolved tick label placement, or null when omitted.'),
+}).describe('Resolved identity, anchor, and optional label placement for one continuous Legend tick.');
 
-export const LegendRampArtifactSchema = z
-  .strictObject({
-    kind: z.literal(LegendContentKind.Ramp).describe('Discriminator for a continuous-ramp Legend artifact.'),
-    container: LayoutArtifactContainerSchema.describe('Resolved Legend container geometry.'),
-    title: LegendPlacedChildArtifactSchema.nullable().describe('Resolved title placement, or null when omitted.'),
-    bodyBounds: LayoutArtifactRectSchema.describe('Union of the final sample and non-empty tick-label allocations.'),
-    sample: LegendPlacedChildArtifactSchema.describe('Resolved continuous sample placement.'),
-    ticks: z.array(LegendTickArtifactSchema).describe('Tick anchors and labels in stable authored order.'),
-  })
+export const LegendRampArtifactSchema = strictObject({
+  kind: literal(LegendContentKind.Ramp).describe('Discriminator for a continuous-ramp Legend artifact.'),
+  container: LayoutArtifactContainerSchema.describe('Resolved Legend container geometry.'),
+  title: LegendPlacedChildArtifactSchema.nullable().describe('Resolved title placement, or null when omitted.'),
+  bodyBounds: LayoutArtifactRectSchema.describe('Union of the final sample and non-empty tick-label allocations.'),
+  sample: LegendPlacedChildArtifactSchema.describe('Resolved continuous sample placement.'),
+  ticks: array(LegendTickArtifactSchema).describe('Tick anchors and labels in stable authored order.'),
+})
   .superRefine((artifact, context) => refineLegendAuthoredArtifactEntries(artifact.ticks, 'ticks', context))
   .describe('Typed artifact for a resolved continuous-ramp Standard Legend.');
 
-export const LegendArtifactSchema = z
-  .discriminatedUnion('kind', [LegendItemsArtifactSchema, LegendRampArtifactSchema])
-  .describe('Typed artifact for a resolved Standard Legend.');
+export const LegendArtifactSchema = discriminatedUnion('kind', [
+  LegendItemsArtifactSchema,
+  LegendRampArtifactSchema,
+]).describe('Typed artifact for a resolved Standard Legend.');

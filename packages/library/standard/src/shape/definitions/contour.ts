@@ -1,5 +1,6 @@
 import type { CoreDependencyProvider, Rect, ScenePrimitive } from '@retikz/core';
 import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 
 import {
   boundaryFromContour,
@@ -14,14 +15,13 @@ import {
 } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { boundsOf, centerOfBounds, halfAxesOfBounds } from '@retikz/math';
-import { z } from 'zod';
+import { array, number, strictObject, tuple } from 'zod';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
 import { StandardShapeName } from '../constants';
 
-const ContourShapeParamsSchema = z.strictObject({
-  points: z
-    .array(z.tuple([z.number(), z.number()]))
+const ContourShapeParamsSchema = strictObject({
+  points: array(tuple([number(), number()]))
     .min(3)
     .describe('At least three two-dimensional vertices forming a closed contour in order.'),
   cornerRadius: NonNegativeNumberSchema.optional().describe(
@@ -30,7 +30,7 @@ const ContourShapeParamsSchema = z.strictObject({
 });
 
 /** Contour 形状的参数 */
-export type ContourShapeParams = z.infer<typeof ContourShapeParamsSchema>;
+export type ContourShapeParams = ZodInfer<typeof ContourShapeParamsSchema>;
 
 /** 计算点集 AABB 中心 */
 const aabbCenterOf = (points: Array<Position>): Position => {

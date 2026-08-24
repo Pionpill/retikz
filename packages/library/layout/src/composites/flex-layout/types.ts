@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { z } from 'zod';
+import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
 import type { FlexLayoutDirection, FlexLayoutWrap } from './constants';
 import type {
@@ -16,19 +16,19 @@ export type FlexLayoutDirectionValue = ValueOf<typeof FlexLayoutDirection>;
 export type FlexLayoutWrapValue = ValueOf<typeof FlexLayoutWrap>;
 
 /** FlexLayout 主轴剩余空间分布取值 */
-export type FlexMainDistributionValue = z.infer<typeof FlexMainDistributionSchema>;
+export type FlexMainDistributionValue = ZodInfer<typeof FlexMainDistributionSchema>;
 
 /** 持久化的 FlexLayout item */
-export type IRFlexLayoutItem = z.infer<typeof FlexLayoutItemSchema>;
+export type IRFlexLayoutItem = ZodInfer<typeof FlexLayoutItemSchema>;
 
 /** 创建 FlexLayout item 时允许省略默认字段的输入 */
-export type FlexLayoutItemInput = z.input<typeof FlexLayoutItemSchema>;
+export type FlexLayoutItemInput = ZodInput<typeof FlexLayoutItemSchema>;
 
 /** 持久化的 Layout FlexLayout composite */
-export type IRFlexLayout = z.infer<typeof FlexLayoutSchema>;
+export type IRFlexLayout = ZodInfer<typeof FlexLayoutSchema>;
 
 /** 创建 FlexLayout 时允许省略固定 discriminator 与 schema 默认字段的输入 */
-export type FlexLayoutInput = Omit<z.input<typeof FlexLayoutSchema>, 'namespace' | 'type'>;
+export type FlexLayoutInput = Omit<ZodInput<typeof FlexLayoutSchema>, 'namespace' | 'type'>;
 
 /** FlexLayout 的 JSON-safe compile artifact payload */
-export type FlexLayoutArtifact = z.infer<typeof FlexLayoutArtifactSchema>;
+export type FlexLayoutArtifact = ZodInfer<typeof FlexLayoutArtifactSchema>;

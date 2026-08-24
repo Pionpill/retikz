@@ -1,6 +1,8 @@
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
+
 import { BoxSpacingSchema, CompositeBaseSchema, NodeSchema, RectangleStepSchema, ScopePropsSchema } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { array, enum as zodEnum, literal, strictObject, union } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { StandardPathBorderStyleSchema } from '../shared/schemas';
@@ -10,24 +12,24 @@ const FrameHeaderShape = {
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text rendered as Frame header content.'),
 };
 
-export const FrameTitleSchema = z
-  .strictObject(FrameHeaderShape)
-  .describe('Node-like primary title authored without an explicit position.');
+export const FrameTitleSchema = strictObject(FrameHeaderShape).describe(
+  'Node-like primary title authored without an explicit position.',
+);
 
-export const FrameDescriptionSchema = z
-  .strictObject(FrameHeaderShape)
-  .describe('Node-like supporting description authored without an explicit position.');
+export const FrameDescriptionSchema = strictObject(FrameHeaderShape).describe(
+  'Node-like supporting description authored without an explicit position.',
+);
 
-const FramePaddingSchema = z.union([NonNegativeNumberSchema, BoxSpacingSchema]);
+const FramePaddingSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]);
 
-export const FrameBorderSchema = z.strictObject({
+export const FrameBorderSchema = strictObject({
   style: StandardPathBorderStyleSchema.default({ stroke: 'currentColor', strokeWidth: 1 }),
   cornerRadius: RectangleStepSchema.shape.cornerRadius,
 });
 
 const FrameBaseSchema = CompositeBaseSchema.extend({
-  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
-  type: z.literal('frame').describe('Composite type for a bordered semantic group of Core nodes.'),
+  namespace: literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('frame').describe('Composite type for a bordered semantic group of Core nodes.'),
   ...ScopePropsSchema.shape,
   id: NonBlankStringSchema.optional().describe('Optional stable identity for the compiled outer Scope.'),
   localNamespace: ScopePropsSchema.shape.localNamespace.default(false),
@@ -41,20 +43,19 @@ const FrameBaseSchema = CompositeBaseSchema.extend({
   gap: NonNegativeNumberSchema.default(4).describe(
     'Gap between adjacent header parts and between the header and body.',
   ),
-  headerDirection: z
-    .enum(FrameHeaderDirection)
+  headerDirection: zodEnum(FrameHeaderDirection)
     .default(FrameHeaderDirection.Horizontal)
     .describe('Horizontal or vertical arrangement of the optional title and description.'),
   title: FrameTitleSchema.optional().describe('Optional Node-like primary title arranged above the Frame body.'),
   description: FrameDescriptionSchema.optional().describe(
     'Optional Node-like supporting description arranged above the Frame body.',
   ),
-  children: z.array(NodeSchema).min(1).describe('Non-empty direct Core Node body contributing to Frame bounds.'),
+  children: array(NodeSchema).min(1).describe('Non-empty direct Core Node body contributing to Frame bounds.'),
 });
 
-type FrameRefinementInput = z.infer<typeof FrameBaseSchema>;
+type FrameRefinementInput = ZodInfer<typeof FrameBaseSchema>;
 
-const refineReservedIds = (frame: FrameRefinementInput, ctx: z.RefinementCtx): void => {
+const refineReservedIds = (frame: FrameRefinementInput, ctx: RefinementCtx): void => {
   if (frame.id === undefined) return;
   const reservedIds = new Set([frame.id]);
   frame.children.forEach((child, index) => {

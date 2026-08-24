@@ -9,39 +9,35 @@ import {
 } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { LayoutOverflow, LayoutOverflowSchema } from '@retikz/layout/compose';
-import { z } from 'zod';
+import { literal, strictObject, union } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { StandardPathStrokeStyleSchema } from '../shared/schemas';
 import { SURFACE_TYPE } from './constants';
 
-export const SurfaceBackgroundSchema = z
-  .strictObject({
-    fill: PaintValueSchema.describe('Fill paint covering the complete Surface allocation box.'),
-    fillOpacity: GraphicOpacitySchema.shape.fillOpacity,
-  })
-  .describe('Optional fill appearance for the Surface allocation box.');
+export const SurfaceBackgroundSchema = strictObject({
+  fill: PaintValueSchema.describe('Fill paint covering the complete Surface allocation box.'),
+  fillOpacity: GraphicOpacitySchema.shape.fillOpacity,
+}).describe('Optional fill appearance for the Surface allocation box.');
 
 export const SurfaceBorderSchema = StandardPathStrokeStyleSchema.omit({ zIndex: true }).describe(
   'Optional stroke appearance drawn on the Surface allocation boundary.',
 );
 
-const SurfacePaddingInputSchema = z
-  .union([NonNegativeNumberSchema, BoxSpacingSchema])
-  .describe('Uniform or side-specific non-negative Surface padding.');
+const SurfacePaddingInputSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]).describe(
+  'Uniform or side-specific non-negative Surface padding.',
+);
 
-const SurfacePaddingSchema = z
-  .strictObject({
-    top: NonNegativeNumberSchema.describe('Canonical top padding in user units.'),
-    right: NonNegativeNumberSchema.describe('Canonical right padding in user units.'),
-    bottom: NonNegativeNumberSchema.describe('Canonical bottom padding in user units.'),
-    left: NonNegativeNumberSchema.describe('Canonical left padding in user units.'),
-  })
-  .describe('Canonical four-sided Surface padding.');
+const SurfacePaddingSchema = strictObject({
+  top: NonNegativeNumberSchema.describe('Canonical top padding in user units.'),
+  right: NonNegativeNumberSchema.describe('Canonical right padding in user units.'),
+  bottom: NonNegativeNumberSchema.describe('Canonical bottom padding in user units.'),
+  left: NonNegativeNumberSchema.describe('Canonical left padding in user units.'),
+}).describe('Canonical four-sided Surface padding.');
 
 export const SurfaceInputSchema = CompositeBaseSchema.extend({
-  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
-  type: z.literal(SURFACE_TYPE).describe('Composite type for a single arbitrary-child presentation surface.'),
+  namespace: literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal(SURFACE_TYPE).describe('Composite type for a single arbitrary-child presentation surface.'),
   ...ScopePropsSchema.shape,
   child: ChildSchema.describe('The one JSON-safe Core or Tier 2 child wrapped by this Surface.'),
   padding: SurfacePaddingInputSchema.optional(),
@@ -52,8 +48,8 @@ export const SurfaceInputSchema = CompositeBaseSchema.extend({
 });
 
 export const IRSurfaceSchema = CompositeBaseSchema.extend({
-  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
-  type: z.literal(SURFACE_TYPE).describe('Composite type for a single arbitrary-child presentation surface.'),
+  namespace: literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal(SURFACE_TYPE).describe('Composite type for a single arbitrary-child presentation surface.'),
   ...ScopePropsSchema.shape,
   child: ChildSchema.describe('The one JSON-safe Core or Tier 2 child wrapped by this Surface.'),
   padding: SurfacePaddingSchema,

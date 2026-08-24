@@ -2,7 +2,7 @@ import type { IRScene, PathPrim, ScenePrimitive } from '@retikz/core';
 
 import { BUILTIN_PATH_GENERATORS, compileToScene as compileCoreToScene, definePathGenerator } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { object } from 'zod';
 
 import type { RibbonWidthProfileDefinition } from '../../src/ribbon';
 
@@ -191,7 +191,7 @@ describe('builtin path generator and Standard Ribbon width profile', () => {
   it('custom_path_generator_is_not_reserved_by_an_empty_builtin_collection', () => {
     const generator = definePathGenerator({
       name: 'customLine',
-      paramsSchema: z.object({}),
+      paramsSchema: object({}),
       generate: ({ from }) => [{ kind: 'line', to: from }],
     });
     const duplicateBulge = defineRibbonWidthProfile({

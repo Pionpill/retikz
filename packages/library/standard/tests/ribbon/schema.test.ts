@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { toJSONSchema } from 'zod';
 
 import * as RibbonExports from '../../src/ribbon';
 import { RibbonPathSchema, RibbonWidthProfile, RibbonWidthProfileNameSchema } from '../../src/ribbon';
@@ -25,7 +25,7 @@ describe('Standard Ribbon schema', () => {
   });
 
   it('hints the built-in width profile while preserving custom provider names', () => {
-    expect(z.toJSONSchema(RibbonWidthProfileNameSchema)).toMatchObject({
+    expect(toJSONSchema(RibbonWidthProfileNameSchema)).toMatchObject({
       anyOf: [
         { type: 'string', enum: Object.values(RibbonWidthProfile) },
         { type: 'string', minLength: 1 },

@@ -1,3 +1,5 @@
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
+
 import {
   ArrowDetailSchema,
   CompositeBaseSchema,
@@ -7,7 +9,7 @@ import {
   TextBlockSchema,
 } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../../shared';
 import { getLatticeRangeError } from '../../shared/lattice';
@@ -15,27 +17,24 @@ import { StandardPathStrokeStyleSchema } from '../../shared/schemas';
 import { AxesArrowMode, AxesLabelEnd, AxesTickExtent, AxesTickSide, AxesTickSourceKind } from '../constants';
 import { axesTickRangeOf, enumerateAxesTickValues, normalizeAxesExtent } from './utils';
 
-const AxesDirectionalExtentSchema = z.strictObject({
+const AxesDirectionalExtentSchema = strictObject({
   negative: NonNegativeNumberSchema.describe('Drawing length in the negative axis direction.'),
   positive: NonNegativeNumberSchema.describe('Drawing length in the positive axis direction.'),
 });
 
-const AxesExtentSchema = z
-  .union([
-    PositiveNumberSchema.describe('Symmetric drawing length in both axis directions.'),
-    AxesDirectionalExtentSchema,
-  ])
-  .describe('Symmetric or direction-specific axis drawing lengths.');
+const AxesExtentSchema = union([
+  PositiveNumberSchema.describe('Symmetric drawing length in both axis directions.'),
+  AxesDirectionalExtentSchema,
+]).describe('Symmetric or direction-specific axis drawing lengths.');
 
-const AxesGridSchema = z.strictObject({
+const AxesGridSchema = strictObject({
   spacing: PositiveNumberSchema.describe('Positive grid spacing along the owning axis.'),
-  offset: z.number().default(0).describe('Axis-local mathematical offset used as the grid lattice alignment origin.'),
+  offset: number().default(0).describe('Axis-local mathematical offset used as the grid lattice alignment origin.'),
   style: StandardPathStrokeStyleSchema.optional().describe('Stroke style for grid lines projected from this axis.'),
 });
 
-const AxesLineSchema = z.strictObject({
-  arrows: z
-    .enum(AxesArrowMode)
+const AxesLineSchema = strictObject({
+  arrows: zodEnum(AxesArrowMode)
     .default(AxesArrowMode.Positive)
     .describe('Arrow placement at the negative and positive endpoints of this axis.'),
   arrowDetail: ArrowDetailSchema.optional().describe(
@@ -44,53 +43,49 @@ const AxesLineSchema = z.strictObject({
   style: StandardPathStrokeStyleSchema.optional().describe('Stroke style for this axis line.'),
 });
 
-const AxesAxisLabelObjectSchema = z.strictObject({
+const AxesAxisLabelObjectSchema = strictObject({
   text: TextBlockSchema.describe('Static axis-label text block.'),
-  end: z.enum(AxesLabelEnd).default(AxesLabelEnd.Positive).describe('Axis endpoint beyond which the label is placed.'),
+  end: zodEnum(AxesLabelEnd).default(AxesLabelEnd.Positive).describe('Axis endpoint beyond which the label is placed.'),
   offset: NonNegativeNumberSchema.default(8).describe('Label-center offset beyond the selected endpoint.'),
   style: LabelVisualStyleSchema.optional().describe('Core text style fields for this axis label.'),
 });
 
-const AxesAxisLabelSchema = z.union([z.literal(false), TextBlockSchema, AxesAxisLabelObjectSchema]);
+const AxesAxisLabelSchema = union([literal(false), TextBlockSchema, AxesAxisLabelObjectSchema]);
 
-const AxesTickSpacingSourceSchema = z.strictObject({
-  kind: z.literal(AxesTickSourceKind.Spacing).describe('Discriminator for regularly spaced ticks.'),
+const AxesTickSpacingSourceSchema = strictObject({
+  kind: literal(AxesTickSourceKind.Spacing).describe('Discriminator for regularly spaced ticks.'),
   spacing: PositiveNumberSchema.describe('Positive distance between adjacent ticks in axis-local user units.'),
-  extent: z
-    .enum(AxesTickExtent)
+  extent: zodEnum(AxesTickExtent)
     .default(AxesTickExtent.Both)
     .describe('Negative, positive, or both half-axes on which ticks are emitted.'),
 });
 
-const AxesTickValuesSourceSchema = z.strictObject({
-  kind: z.literal(AxesTickSourceKind.Values).describe('Discriminator for explicit signed tick values.'),
-  values: z
-    .array(z.number())
+const AxesTickValuesSourceSchema = strictObject({
+  kind: literal(AxesTickSourceKind.Values).describe('Discriminator for explicit signed tick values.'),
+  values: array(number())
     .min(1)
     .max(10_000)
     .describe('Strictly increasing nonzero axis-local values inside the axis extent.'),
 });
 
-const AxesTickSourceSchema = z.discriminatedUnion('kind', [AxesTickSpacingSourceSchema, AxesTickValuesSourceSchema]);
+const AxesTickSourceSchema = discriminatedUnion('kind', [AxesTickSpacingSourceSchema, AxesTickValuesSourceSchema]);
 
-const AxesTickLabelEntrySchema = z.strictObject({
-  value: z.number().describe('Existing tick value to annotate.'),
+const AxesTickLabelEntrySchema = strictObject({
+  value: number().describe('Existing tick value to annotate.'),
   text: TextBlockSchema.describe('Static text block shown for this tick.'),
 });
 
-const AxesTickLabelsSchema = z.strictObject({
-  entries: z
-    .array(AxesTickLabelEntrySchema)
+const AxesTickLabelsSchema = strictObject({
+  entries: array(AxesTickLabelEntrySchema)
     .min(1)
     .describe('Static labels attached to a subset of emitted tick values.'),
   offset: NonNegativeNumberSchema.default(4).describe('Gap from the tick endpoint to the label center.'),
   style: LabelVisualStyleSchema.optional().describe('Core text style fields shared by these tick labels.'),
 });
 
-const AxesTicksSchema = z.strictObject({
+const AxesTicksSchema = strictObject({
   source: AxesTickSourceSchema.describe('Regular or explicit tick source.'),
-  side: z
-    .enum(AxesTickSide)
+  side: zodEnum(AxesTickSide)
     .default(AxesTickSide.Both)
     .describe('Perpendicular positive, negative, or both sides of the axis on which tick segments extend.'),
   endpointGap: NonNegativeNumberSchema.default(6).describe(
@@ -98,25 +93,21 @@ const AxesTicksSchema = z.strictObject({
   ),
   length: PositiveNumberSchema.default(6).describe('Total tick-segment length distributed across the selected side.'),
   style: StandardPathStrokeStyleSchema.optional().describe('Stroke style for ticks on this axis.'),
-  labels: z
-    .union([z.literal(false), AxesTickLabelsSchema])
+  labels: union([literal(false), AxesTickLabelsSchema])
     .optional()
     .describe('Optional static labels for selected emitted ticks.'),
 });
 
 const createAxesAxisSchema = (defaultLabel: 'x' | 'y') =>
-  z.strictObject({
+  strictObject({
     extent: AxesExtentSchema.describe('Drawing lengths in the negative and positive directions of this axis.'),
-    line: z
-      .union([z.literal(false), AxesLineSchema])
+    line: union([literal(false), AxesLineSchema])
       .default({ arrows: AxesArrowMode.Positive })
       .describe('Axis baseline and endpoint arrows, or false to hide only the baseline.'),
-    ticks: z
-      .union([z.literal(false), AxesTicksSchema])
+    ticks: union([literal(false), AxesTicksSchema])
       .optional()
       .describe('Ticks and optional static tick labels for this axis.'),
-    grid: z
-      .union([z.literal(false), AxesGridSchema])
+    grid: union([literal(false), AxesGridSchema])
       .optional()
       .describe('Optional lightweight grid lines projected perpendicular to this axis.'),
     label: AxesAxisLabelSchema.default(defaultLabel).describe('Axis name, styled label, or false to hide it.'),
@@ -125,35 +116,35 @@ const createAxesAxisSchema = (defaultLabel: 'x' | 'y') =>
 const AxesXAxisSchema = createAxesAxisSchema('x');
 const AxesYAxisSchema = createAxesAxisSchema('y');
 
-const AxesOriginLabelObjectSchema = z.strictObject({
+const AxesOriginLabelObjectSchema = strictObject({
   text: TextBlockSchema.describe('Static origin-label text block.'),
   offset: NonNegativeNumberSchema.default(10).describe('Diagonal label-center offset from the origin.'),
   style: LabelVisualStyleSchema.optional().describe('Core text style fields for the origin label.'),
 });
 
-const AxesOriginLabelSchema = z.union([z.literal(false), TextBlockSchema, AxesOriginLabelObjectSchema]);
+const AxesOriginLabelSchema = union([literal(false), TextBlockSchema, AxesOriginLabelObjectSchema]);
 
-const AxesOriginSchema = z.strictObject({
+const AxesOriginSchema = strictObject({
   position: PositionSchema.default([0, 0]).describe('Screen-space origin shared by axes, grids, ticks, and labels.'),
   label: AxesOriginLabelSchema.default(false).describe('Optional single static label at the shared origin.'),
 });
 
 const AxesBaseSchema = CompositeBaseSchema.extend({
-  namespace: z.literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
-  type: z.literal('axes').describe('Composite type for static Cartesian reference axes.'),
+  namespace: literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('axes').describe('Composite type for static Cartesian reference axes.'),
   ...ScopePropsSchema.shape,
   origin: AxesOriginSchema.default({ position: [0, 0], label: false }),
   x: AxesXAxisSchema.describe('Horizontal axis configuration and its perpendicular grid projection.'),
   y: AxesYAxisSchema.describe('Vertical axis configuration and its perpendicular grid projection.'),
 });
 
-type AxesRefinementInput = z.infer<typeof AxesBaseSchema>;
+type AxesRefinementInput = ZodInfer<typeof AxesBaseSchema>;
 type AxesAxisInput = AxesRefinementInput['x'];
 
 const valuesEqual = (left: number, right: number): boolean =>
   Math.abs(left - right) <= Number.EPSILON * Math.max(1, Math.abs(left), Math.abs(right)) * 8;
 
-const refineAxisTicks = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: z.RefinementCtx): void => {
+const refineAxisTicks = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: RefinementCtx): void => {
   if (axis.ticks === undefined || axis.ticks === false) return;
 
   const extent = normalizeAxesExtent(axis.extent);
@@ -226,7 +217,7 @@ const axisHasOutput = (axis: AxesAxisInput): boolean =>
   (axis.grid !== undefined && axis.grid !== false) ||
   axis.label !== false;
 
-const refineAxis = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: z.RefinementCtx): void => {
+const refineAxis = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: RefinementCtx): void => {
   const extent = normalizeAxesExtent(axis.extent);
   if (extent.negative === 0 && extent.positive === 0) {
     ctx.addIssue({
@@ -252,7 +243,7 @@ const refineAxis = (axis: AxesAxisInput, axisKey: 'x' | 'y', ctx: z.RefinementCt
   refineAxisTicks(axis, axisKey, ctx);
 };
 
-const refineAxes = (axes: AxesRefinementInput, ctx: z.RefinementCtx): void => {
+const refineAxes = (axes: AxesRefinementInput, ctx: RefinementCtx): void => {
   if (!axisHasOutput(axes.x) && !axisHasOutput(axes.y) && axes.origin.label === false) {
     ctx.addIssue({ code: 'custom', path: ['x'], message: 'Axes requires at least one visible axis artifact.' });
   }
