@@ -1,10 +1,12 @@
+import type { core as ZodCore, ZodType } from 'zod';
+
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { toJSONSchema } from 'zod';
 
 import * as Graph from '../../src';
 
-const expectOpenStringSchema = (schema: z.ZodType, values: ReadonlyArray<string>): void => {
-  expect(z.toJSONSchema(schema)).toMatchObject({
+const expectOpenStringSchema = (schema: ZodType, values: ReadonlyArray<string>): void => {
+  expect(toJSONSchema(schema)).toMatchObject({
     anyOf: [
       { type: 'string', enum: values },
       { type: 'string', minLength: 1 },
@@ -50,8 +52,8 @@ describe('Graph registry-backed open string schemas', () => {
   });
 
   it('uses the same hinted schemas in semantic Theme selectors without visual keys', () => {
-    const graphSchema = z.toJSONSchema(Graph.GraphSchema) as {
-      properties?: Record<string, z.core.JSONSchema.BaseSchema>;
+    const graphSchema = toJSONSchema(Graph.GraphSchema) as {
+      properties?: Record<string, ZodCore.JSONSchema.BaseSchema>;
     };
     expect(graphSchema.properties).not.toHaveProperty('entityVariant');
 

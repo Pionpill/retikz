@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type { RelationDirection } from './constants';
 import type {
@@ -14,18 +14,18 @@ import type {
 
 export type RelationDirectionValue = ValueOf<typeof RelationDirection>;
 
-export type IRGraphRelation = z.infer<typeof RelationSchema>;
+export type IRGraphRelation = ZodInfer<typeof RelationSchema>;
 
-export type IRGraphRelationRouteStep = z.infer<typeof GraphRelationRouteStepSchema>;
+export type IRGraphRelationRouteStep = ZodInfer<typeof GraphRelationRouteStepSchema>;
 
-export type IRGraphRelationMarkerRecipe = z.infer<typeof GraphRelationMarkerRecipeSchema>;
+export type IRGraphRelationMarkerRecipe = ZodInfer<typeof GraphRelationMarkerRecipeSchema>;
 
-export type IRGraphRelationMarkerAppearanceTokenOverrides = z.infer<
+export type IRGraphRelationMarkerAppearanceTokenOverrides = ZodInfer<
   typeof GraphRelationMarkerAppearanceTokenOverridesSchema
 >;
 
-export type IRGraphRelationAppearanceTokenOverrides = z.infer<typeof GraphRelationAppearanceTokenOverridesSchema>;
+export type IRGraphRelationAppearanceTokenOverrides = ZodInfer<typeof GraphRelationAppearanceTokenOverridesSchema>;
 
-export type IRGraphRelationRoleTokenRecipe = z.infer<typeof GraphRelationRoleTokenRecipeSchema>;
+export type IRGraphRelationRoleTokenRecipe = ZodInfer<typeof GraphRelationRoleTokenRecipeSchema>;
 
-export type IRGraphRelationStructureTokenOverrides = z.infer<typeof GraphRelationStructureTokenOverridesSchema>;
+export type IRGraphRelationStructureTokenOverrides = ZodInfer<typeof GraphRelationStructureTokenOverridesSchema>;

@@ -1,7 +1,7 @@
 import type { IRJsonObject, JsonValue, ResolvedTheme } from '@retikz/core';
 
 import { assertPlainDataContainers } from '@retikz/foundation';
-import { z } from 'zod';
+import { array, custom, strictObject } from 'zod';
 
 import type {
   GraphRelationThemeStyleTokens,
@@ -27,19 +27,15 @@ import {
   GraphRelationThemeRuleSchema,
 } from '../../schemas';
 
-const GraphThemeStyleOverridesSchema = z.strictObject({
-  entity: z
-    .strictObject({
-      tokens: GraphEntityAppearanceTokenOverridesSchema.optional(),
-      rules: z.array(GraphEntityThemeRuleSchema).optional(),
-    })
-    .optional(),
-  relation: z
-    .strictObject({
-      tokens: GraphRelationAppearanceTokenOverridesSchema.optional(),
-      rules: z.array(GraphRelationThemeRuleSchema).optional(),
-    })
-    .optional(),
+const GraphThemeStyleOverridesSchema = strictObject({
+  entity: strictObject({
+    tokens: GraphEntityAppearanceTokenOverridesSchema.optional(),
+    rules: array(GraphEntityThemeRuleSchema).optional(),
+  }).optional(),
+  relation: strictObject({
+    tokens: GraphRelationAppearanceTokenOverridesSchema.optional(),
+    rules: array(GraphRelationThemeRuleSchema).optional(),
+  }).optional(),
 });
 
 const graphThemeStyleKeys = new Set(['entity', 'relation']);
@@ -47,7 +43,7 @@ const graphThemeStyleLayerKeys = new Set(['tokens', 'rules']);
 const graphEntityThemeTokenKeys = new Set<string>(Object.keys(GraphEntityAppearanceTokenOverridesSchema.shape));
 const graphRelationThemeTokenKeys = new Set<string>(Object.keys(GraphRelationAppearanceTokenOverridesSchema.shape));
 
-const GraphThemeStylePlainDataSchema = z.custom<unknown>(
+const GraphThemeStylePlainDataSchema = custom<unknown>(
   value => {
     try {
       assertPlainDataContainers(value, 'Graph theme style definition output');

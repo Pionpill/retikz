@@ -1,5 +1,5 @@
 import type { IRJsonObject } from '@retikz/core';
-import type { z } from 'zod';
+import type { ZodType } from 'zod';
 
 import type {
   RelationKindDefinition,
@@ -15,6 +15,6 @@ export const defineRelationRole = (definition: RelationRoleDefinition): Relation
 export const defineRelationKind = (definition: RelationKindDefinition): RelationKindDefinition => definition;
 
 /** 定义一个类型安全并可注册的 Relation predicate */
-export const defineRelationPredicate = <TSchema extends z.ZodType<IRJsonObject>>(
+export const defineRelationPredicate = <TSchema extends ZodType<IRJsonObject>>(
   definition: RelationPredicateDefinitionInput<TSchema>,
 ): RelationPredicateDefinition => definition as unknown as RelationPredicateDefinition;
