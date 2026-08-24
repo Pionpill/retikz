@@ -1,3 +1,4 @@
+import { PlotFacetConfigurationSchema } from '@retikz/plot';
 import { z } from 'zod';
 
 import { createChartSourceSchema, createChartThemeSchema } from '../../_chart/schemas';
@@ -25,6 +26,7 @@ export const ScatterChartRecipeSchema = z
     chartType: z.literal(ChartType.Scatter).describe('Globally unique Scatter recipe key'),
     encodings: ScatterChartEncodingsSchema,
     properties: ScatterChartPropertiesSchema.optional(),
+    facet: PlotFacetConfigurationSchema.optional(),
     marks: z.array(ScatterChartMarkSchema).optional(),
   })
   .describe('Scatter Chart recipe payload');

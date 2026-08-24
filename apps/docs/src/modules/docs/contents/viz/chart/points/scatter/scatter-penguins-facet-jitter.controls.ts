@@ -4,16 +4,16 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { penguinScatterData } from './scatter-penguins-facet-jitter.data';
 
-/** 抖动散点图的稳定控件 id */
+/** 分面抖动散点图的稳定控件 id */
 export const SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS = {
   jitter: 'jitter',
   pointSize: 'pointSize',
 } as const;
 
-/** 抖动散点图的中文控制面板 */
+/** 分面抖动散点图的中文控制面板 */
 export const previewControls = definePreviewControls({
   presentation: 'panel',
-  title: '企鹅抖动散点',
+  title: '企鹅分面散点',
   sections: [
     {
       label: '数据',
@@ -33,7 +33,7 @@ export const previewControls = definePreviewControls({
       ],
     },
     {
-      label: '图元',
+      label: '变换与图元',
       controls: [
         {
           kind: 'range',
@@ -58,12 +58,12 @@ export const previewControls = definePreviewControls({
   ],
 });
 
-/** 抖动散点图的稳定文档契约 */
+/** 分面抖动散点图的稳定文档契约 */
 export const previewControlContract = {
   controls: previewControls,
   canonicalValues: {
     [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.jitter]: 0.35,
     [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointSize]: 7,
   },
-  relatedApis: ['ScatterChart.encodings', 'ScatterMark.override', 'ScatterMark.properties', 'Plot.transform'],
+  relatedApis: ['ScatterChart.encodings', 'ScatterMark.override', 'ScatterMark.properties', 'PlotTransform.amount'],
 } satisfies PreviewControlContract;

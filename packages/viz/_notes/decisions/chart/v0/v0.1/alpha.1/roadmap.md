@@ -17,7 +17,7 @@ alpha.1 要证明 Point family 可以在精确 Source、recipe、Plot lowering�
 
 当前状态是进行中：Point family 的 Scatter recipe 已形成实现闭环；ADR-05 及其它未实现 chartType 仍为 deferred / gated；ADR-06、ADR-07、ADR-08 的依赖 gate 继续保留。不能因为基础设施或单个 recipe 已可消费就宣称整个 alpha.1 完成
 
-## 2. ADR-01～03 与 ADR-09 的关系
+## 2. ADR-01～03、ADR-09 与 ADR-10 的关系
 
 ADR-09 是当前 family / recipe Chart 基础设施的总决策。早期 ADR-01～03 中与 Source shell、recipe 分发、Theme owner、公开入口和 presentation 组合有关的部分，以 ADR-09 的长期契约为准；仍与当前实现一致的 Plot lower、Vanilla normalize、React 复用 Vanilla、Standard presentation 边界继续保留
 
@@ -32,6 +32,7 @@ ADR-09 是当前 family / recipe Chart 基础设施的总决策。早期 ADR-01�
 | 07  | Ranged Dot 的 row atomicity 依赖                                                                                                                      | planned / gated  |
 | 08  | Strip 的 position-offset 依赖                                                                                                                         | planned / gated  |
 | 09  | family、recipe、mark Source IR、Theme、registry 与 provider 的当前基础设施总决策                                                                      | Accepted         |
+| 10  | Chart / Plot 声明 owner 分层；Plot 非 Mark 声明使用 `PlotXxx`，`ChartFacet` 写入精确 recipe 并复用 Plot facet 主链                                    | Accepted         |
 
 ## 3. 当前 Source 与解析主链
 
@@ -44,10 +45,10 @@ namespace, type, id?, presentation?, theme?, data, layout?, recipe, plotExtensio
 其中 `type` 是 family，Point family 使用 `point`；`recipe` 固定包含：
 
 ```text
-chartType, encodings, properties?, marks?
+chartType, encodings, properties?, marks?, facet?
 ```
 
-`recipe.chartType` 是全局唯一 recipe key。`encodings` 的每个值都是字段名，`properties` 的每个值都是常量；当前 Scatter 要求 `x` / `y` 字段。`layout.width` / `layout.height` 是整张 Chart 的 border-box allocation，不复制进 Plot
+`recipe.chartType` 是全局唯一 recipe key。`encodings` 的每个值都是字段名，`properties` 的每个值都是常量；当前 Scatter 要求 `x` / `y` 字段。可选 `facet` 只保存 Plot-owned 分面原子配置，Chart resolve 使用 recipe coordinate 生成完整 Plot composition。`layout.width` / `layout.height` 是整张 Chart 的 border-box allocation，不复制进 Plot
 
 `plotExtension` 只保存用户显式声明的 Plot fragment。它不承载 recipe 展开结果，显式 Plot mark 也不继承 Chart encodings 或 properties。解析顺序固定为：
 

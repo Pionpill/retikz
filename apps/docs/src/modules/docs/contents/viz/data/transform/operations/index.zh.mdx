@@ -57,7 +57,7 @@ description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变
 | `metrics`  | `IRDataReducerMetrics` | —        | 组内统计指标，每个规约器必须写输出字段 |
 
 ```tsx
-<Transform
+<PlotTransform
   kind="summarize"
   groupBy={['region']}
   metrics={[
@@ -88,7 +88,7 @@ description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变
 | `rankAs?`  | `string`                  | —        | 把一基 rank 写入该字段 |
 
 ```tsx
-<Transform kind="select" groupBy={['region']} selector={{ kind: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
+<PlotTransform kind="select" groupBy={['region']} selector={{ kind: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
 ```
 
 ## 统计标注 annotate
@@ -113,7 +113,7 @@ description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变
 | `selectors?` | `Array<IRDataAnnotateSelector>` | —        | 广播单行代表值         |
 
 ```tsx
-<Transform
+<PlotTransform
   kind="annotate"
   groupBy={['store']}
   metrics={[{ kind: 'mean', field: 'revenue', as: 'storeMean' }]}

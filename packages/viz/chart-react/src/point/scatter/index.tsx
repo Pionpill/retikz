@@ -9,7 +9,7 @@ import { createTypedChartComponent, createTypedChartInput } from '../shared';
 
 /** ScatterChart React 属性 */
 export type ScatterChartProps = TypedChartCommonProps<IRScatterChart> &
-  Pick<CreateScatterChartInput, 'encodings' | 'properties' | 'marks'>;
+  Pick<CreateScatterChartInput, 'encodings' | 'properties' | 'facet' | 'marks'>;
 
 /** Scatter 具体类型的 Chart React 组件 */
 const ScatterChartComponent = createTypedChartComponent<ScatterChartProps, IRScatterChart>('ScatterChart', props =>
@@ -18,6 +18,7 @@ const ScatterChartComponent = createTypedChartComponent<ScatterChartProps, IRSca
     {
       encodings: props.encodings,
       ...(props.properties === undefined ? {} : { properties: props.properties }),
+      ...(props.facet === undefined ? {} : { facet: props.facet }),
       ...(props.marks === undefined ? {} : { marks: props.marks }),
     },
     input => createScatterChart(input),

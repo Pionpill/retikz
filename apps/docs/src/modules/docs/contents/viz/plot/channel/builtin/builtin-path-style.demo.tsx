@@ -1,7 +1,7 @@
-﻿import type { FC } from 'react';
+import type { FC } from 'react';
 
 import { DataFieldType } from '@retikz/data';
-import { Axis, PathMark, Plot } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -37,8 +37,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         lineJoin={values.lineJoin}
         roundedCorners={values.roundedCorners}
       />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
     </Plot>
   );
 });

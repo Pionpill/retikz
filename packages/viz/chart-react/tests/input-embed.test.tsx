@@ -2,6 +2,7 @@ import type { ChartInput } from '@retikz/chart-vanilla';
 
 import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
 import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
+import { PointMark } from '@retikz/plot-react';
 import { describe, expect, it } from 'vitest';
 
 import { ScatterChart } from '../src/point';
@@ -58,5 +59,25 @@ describe('Chart React InputEmbed routing', () => {
 
     expect(input).not.toHaveProperty('themeDefinitions');
     expect(input.source).not.toHaveProperty('themeDefinitions');
+  });
+
+  it('keeps resolveLabel in runtime options and lets explicit lowerOptions win by mark id', () => {
+    const childResolveLabel = (row: Record<string, unknown>): string => String(row.label);
+    const explicitResolveLabel = (): string => 'explicit';
+    const input = inputOf(ScatterChart, {
+      data: [{ x: 0, y: 1, label: 'A' }],
+      encodings: { x: 'x', y: 'y' },
+      lowerOptions: { resolveLabel: { labelled: explicitResolveLabel } },
+      children: (
+        <>
+          <PointMark id="labelled" x="x" y="y" resolveLabel={childResolveLabel} />
+          <PointMark id="child-only" x="x" y="y" resolveLabel={childResolveLabel} />
+        </>
+      ),
+    });
+
+    expect(input.lowerOptions?.resolveLabel?.labelled).toBe(explicitResolveLabel);
+    expect(input.lowerOptions?.resolveLabel?.['child-only']).toBe(childResolveLabel);
+    expect(JSON.stringify(input.source)).not.toContain('resolveLabel');
   });
 });

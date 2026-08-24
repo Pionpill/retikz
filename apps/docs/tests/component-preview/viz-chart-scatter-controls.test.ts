@@ -1,7 +1,10 @@
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
-import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartFacet, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { ScatterMark } from '@retikz/chart-react/point';
+import { PlotAxis, PlotTransform } from '@retikz/plot-react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -32,6 +35,8 @@ import {
 import { previewControlContract as incomeLifeExpectancyEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.en.controls';
 import { previewSource as incomeLifeExpectancyEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.en.demo';
 import { previewSource as incomeLifeExpectancyZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.zh.demo';
+import { previewSource as penguinFacetEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.en.demo';
+import { previewSource as penguinFacetZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.zh.demo';
 
 const comparable = (contract: PreviewControlContract) => ({
   controls: JSON.parse(
@@ -53,9 +58,9 @@ const expectCompletePanel = (contract: PreviewControlContract): void => {
       .sort(),
   );
   expect(contract.relatedApis.length).toBeGreaterThan(0);
-  expect(contract.relatedApis.every(api => /^(Plot|PointMark|ScatterChart|ScatterMark|Axis|Legend)\./u.test(api))).toBe(
-    true,
-  );
+  expect(
+    contract.relatedApis.every(api => /^(Plot[A-Z]\w*|Plot|PointMark|ScatterChart|ScatterMark)\./u.test(api)),
+  ).toBe(true);
 };
 
 const canonicalChartSize = (source: PreviewSourceConfig): { width?: number; height?: number } => {
@@ -89,6 +94,15 @@ const canonicalScatterMarkProps = (source: PreviewSourceConfig): Record<string, 
   }
 
   return mark.props;
+};
+
+const canonicalScatterChildren = (source: PreviewSourceConfig): Array<ReactElement<Record<string, unknown>>> => {
+  const chart = source.canonicalRender?.();
+  if (!isValidElement<{ children?: ReactNode }>(chart)) {
+    throw new Error('Chart preview must provide a canonical element');
+  }
+
+  return Children.toArray(chart.props.children).filter(isValidElement<Record<string, unknown>>);
 };
 
 const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 'subtitle' | 'source', ReactNode> => {
@@ -208,6 +222,53 @@ describe('Viz Chart scatter controls', () => {
   it('收入与寿命示例保留 recipe 的 color encoding 语义', () => {
     expect(incomeLifeExpectancyZh.relatedApis).not.toContain('Legend.channel');
     expect(incomeLifeExpectancyEn.relatedApis).not.toContain('Legend.channel');
+  });
+
+  it('企鹅示例按 owner 声明 Chart 分面、Plot 抖动与坐标轴', () => {
+    for (const source of [penguinFacetZhPreviewSource, penguinFacetEnPreviewSource]) {
+      expect(canonicalScatterMarkProps(source)).toMatchObject({ override: true });
+      expect(canonicalScatterProps(source)).not.toHaveProperty('plotExtension');
+
+      const children = canonicalScatterChildren(source);
+      const facet = children.find(child => child.type === ChartFacet);
+      const transform = children.find(child => child.type === PlotTransform);
+      const axes = children.filter(child => child.type === PlotAxis);
+
+      expect(facet?.props).toMatchObject({
+        id: 'species',
+        column: { field: 'species', order: ['Adelie', 'Chinstrap', 'Gentoo'] },
+        header: { column: true },
+        resolve: { scale: { x: 'shared', y: 'shared' } },
+        spacing: { panelGap: 20 },
+      });
+      expect(transform?.props).toMatchObject({
+        kind: 'jitter',
+        axis: 'x',
+        xField: 'billLengthMm',
+        amount: 0.35,
+        seed: 42,
+      });
+      expect(axes.map(axis => axis.props)).toMatchObject([
+        { dimension: 'x', grid: true },
+        { dimension: 'y', grid: true },
+      ]);
+    }
+  });
+
+  it('企鹅示例源码直接传数据并省略大型 Plot extension 配置', () => {
+    for (const locale of ['zh', 'en']) {
+      const source = readFileSync(
+        resolve(`src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.${locale}.demo.tsx`),
+        'utf8',
+      );
+
+      expect(source).toContain('data={penguinScatterData}');
+      expect(source).toContain('<ChartFacet');
+      expect(source).toContain('<PlotTransform');
+      expect(source.match(/<PlotAxis\b/gu)).toHaveLength(2);
+      expect(source).not.toContain('dataModel');
+      expect(source).not.toContain('plotExtension');
+    }
   });
 
   it('区分预览宿主尺寸与 Source layout', () => {

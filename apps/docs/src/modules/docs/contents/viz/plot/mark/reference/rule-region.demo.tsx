@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, Plot, PointMark, ReferenceMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PointMark, ReferenceMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -30,8 +30,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       fillOpacity={0.55}
     />
     <PointMark x="x" y="y" />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 ));
 

@@ -6,6 +6,18 @@ import type { CoordinateArrangementKind, CoordinateViewPlacementKind } from '../
 /** Plot composition schema 的消费态 */
 export type Composition = NonNullable<IRPlot['composition']>;
 
+/** 把 facet 作者配置解析为完整 Plot composition 所需的窄上下文 */
+export type PlotFacetCompositionResolveContext = {
+  /** template view 使用的主 coordinate */
+  coordinate: IRPlotCoordinateOperation;
+  /** 显式 template view id；省略时由 facet id 派生 */
+  templateViewId?: string;
+  /** Plot 低层 authoring 为生成 panel 指定的 coordinate */
+  facetCoordinate?: IRPlotCoordinateOperation;
+  /** Plot 低层 authoring 为生成 panel 指定的 view id template */
+  panelViewIdTemplate?: string;
+};
+
 /** composition arrangement 联合 */
 export type CoordinateArrangement = NonNullable<Composition['arrangements']>[number];
 

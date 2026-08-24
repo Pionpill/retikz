@@ -94,6 +94,26 @@ describe('Chart providers through Core compile', () => {
     expect(sceneIdsOf(result.scene.primitives)).toContain('scatter-json');
   });
 
+  it('keeps Plot panel identity when Scatter recipe facet compiles through the provider chain', () => {
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      id: 'scatter-facet',
+      data: { reference: 'scatter.rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+        facet: { id: 'sizeFacet', column: { field: 'size' } },
+      },
+    });
+
+    const result = compileToScene(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()]));
+    const ids = sceneIdsOf(result.scene.primitives);
+
+    expect(ids).toContain('sizeFacet.panel._.3');
+    expect(ids).toContain('sizeFacet.panel._.5');
+  });
+
   it('reports a diagnostic error when the parsed schema and installed chartType provider disagree', () => {
     const source = ScatterChartSchema.parse({
       namespace: 'chart',

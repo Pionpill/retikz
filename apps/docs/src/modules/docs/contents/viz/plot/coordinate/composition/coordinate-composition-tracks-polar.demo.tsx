@@ -1,4 +1,4 @@
-import { Axis, IntervalMark, PathMark, Plot, PointMark, Scaffold, Track } from '@retikz/plot-react';
+import { IntervalMark, PathMark, Plot, PlotAxis, PlotScaffold, PlotTrack, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -32,23 +32,23 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       width={520}
       height={330}
     >
-      <Scaffold
+      <PlotScaffold
         id="radar"
         sharedRoles={['x']}
         spacing={{ trackGap: values[COORDINATE_COMPOSITION_TRACKS_POLAR_CONTROL_IDS.trackGap] }}
       >
-        <Axis dimension="x" grid={xGridVisible} title="area" />
-        <Track id="signal" band={{ role: 'y', start: 0.1, end: 0.4 }}>
-          {localAxesVisible ? <Axis dimension="y" grid={yGridVisible} title="signal" /> : null}
+        <PlotAxis dimension="x" grid={xGridVisible} title="area" />
+        <PlotTrack id="signal" band={{ role: 'y', start: 0.1, end: 0.4 }}>
+          {localAxesVisible ? <PlotAxis dimension="y" grid={yGridVisible} title="signal" /> : null}
           <PathMark x="area" y="signal" order="order" stroke="darkorange" strokeWidth={lineWidth} />
           <PointMark x="area" y="signal" fill="moccasin" stroke="darkorange" strokeWidth={1} size={pointSize} />
-        </Track>
-        <Track id="capacity" band={{ role: 'y', start: 0.5, end: 0.76 }}>
-          {localAxesVisible ? <Axis dimension="y" grid={yGridVisible} title="capacity" /> : null}
+        </PlotTrack>
+        <PlotTrack id="capacity" band={{ role: 'y', start: 0.5, end: 0.76 }}>
+          {localAxesVisible ? <PlotAxis dimension="y" grid={yGridVisible} title="capacity" /> : null}
           <PathMark x="area" y="capacity" order="order" stroke="steelblue" strokeWidth={lineWidth} />
           <PointMark x="area" y="capacity" fill="lightblue" stroke="steelblue" strokeWidth={1} size={pointSize} />
-        </Track>
-        <Track id="sector" band={{ role: 'y', start: 0.86, end: 1 }}>
+        </PlotTrack>
+        <PlotTrack id="sector" band={{ role: 'y', start: 0.86, end: 1 }}>
           <IntervalMark
             x="area"
             y="outer"
@@ -58,8 +58,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             strokeWidth={1}
             fillOpacity={values[COORDINATE_COMPOSITION_TRACKS_POLAR_CONTROL_IDS.sectorOpacity]}
           />
-        </Track>
-      </Scaffold>
+        </PlotTrack>
+      </PlotScaffold>
     </Plot>
   );
 });

@@ -92,7 +92,7 @@ export const previewControlContract = {
     'IntervalMark.group',
     'IntervalMark.arrangement',
     'IntervalMark.stackOffset',
-    'Scale.paddingInner',
-    'Scale.paddingOuter',
+    'PlotScale.paddingInner',
+    'PlotScale.paddingOuter',
   ],
 } satisfies PreviewControlContract;

@@ -4,7 +4,7 @@ import { Layout } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { Axis, IntervalMark, PathMark, Plot, PointMark, Scale } from '../../src';
+import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale, PointMark } from '../../src';
 
 const rows = [
   { month: 0, revenue: 10 },
@@ -80,8 +80,8 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     expect(geometry(viaDsl)).toEqual(geometry(viaSpec));
   });
 
-  // 薄 Plot 默认不出轴；显式 <Axis> 才渲轴文字
-  it('dsl_no_axis_no_text：薄 <Plot> 无 <Axis> → 渲 path 但不出刻度文字', () => {
+  // 薄 Plot 默认不出轴；显式 <PlotAxis> 才渲轴文字
+  it('dsl_no_axis_no_text：薄 <Plot> 无 <PlotAxis> → 渲 path 但不出刻度文字', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
         <PathMark x="month" y="revenue" order="month" />
@@ -91,12 +91,12 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     expect(svg).not.toContain('<text');
   });
 
-  it('dsl_explicit_axis_renders_text：显式 <Axis> → 渲出刻度文字', () => {
+  it('dsl_explicit_axis_renders_text：显式 <PlotAxis> → 渲出刻度文字', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
         <PathMark x="month" y="revenue" order="month" />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
       </Plot>,
     );
     expect(svg).toContain('<path');
@@ -113,15 +113,15 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     const svg = renderToStaticMarkup(
       <Plot data={quarterly} width={480} height={300}>
         <PathMark x="quarter" y="revenue" order="quarter" />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
       </Plot>,
     );
     expect(svg).toMatch(/<path[^>]+d="M [^"]+ L [^"]+"/);
     expect(svg).toContain('Q1');
   });
 
-  // <IntervalMark> / <Scale> 渲染契约
+  // <IntervalMark> / <PlotScale> 渲染契约
   it('barmark_renders_rect：<IntervalMark> 渲出矩形', () => {
     const svg = renderToStaticMarkup(
       <Plot data={rows} width={480} height={300}>
@@ -179,8 +179,8 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     const svg = renderToStaticMarkup(
       <Plot data={trend} width={480} height={300}>
         <PathMark x="date" y="v" order="date" />
-        <Scale dimension="x" type="time" />
-        <Axis dimension="x" />
+        <PlotScale dimension="x" type="time" />
+        <PlotAxis dimension="x" />
       </Plot>,
     );
     expect(svg).toContain('<path');
@@ -232,8 +232,8 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     const svg = renderToStaticMarkup(
       <Plot data={metrics} coordinate="polar2D" width={360} height={360}>
         <PathMark x="dim" y="value" closed />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
       </Plot>,
     );
     expect(svg).toContain('<path');

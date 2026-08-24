@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, PathMark, Plot } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -29,8 +29,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         }
         closed={coordinate === 'polar2D' && values[LINE_SERIES_CONTROL_IDS.closed]}
       />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
     </Plot>
   );
 });

@@ -1,7 +1,7 @@
-﻿import type { PathCurveValue } from '@retikz/plot';
+import type { PathCurveValue } from '@retikz/plot';
 import type { FC } from 'react';
 
-import { Axis, Legend, PathMark, Scale } from '@retikz/plot-react';
+import { PathMark, PlotAxis, PlotLegend, PlotScale } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -22,8 +22,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         y={35}
         plotTheme={{ palette: { categorical: ['#2563eb', '#f97316'] } }}
       >
-        <Scale dimension="x" type="point" padding={0} />
-        <Scale dimension="y" type="linear" domainPadding={0} />
+        <PlotScale dimension="x" type="point" padding={0} />
+        <PlotScale dimension="y" type="linear" domainPadding={0} />
         <PathMark
           x="month"
           y="y1"
@@ -36,9 +36,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           stroke="none"
         />
         <PathMark x="month" y="y1" order="order" series="segment" color="segment" curve={curve} strokeWidth={2} />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
-        <Legend channel="color" />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
+        <PlotLegend channel="color" />
       </Plot>
       <Plot
         data={stackArea}
@@ -49,7 +49,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         y={10}
         plotTheme={{ palette: { categorical: ['#2563eb', '#f97316'] } }}
       >
-        <Scale dimension="y" type="linear" domainPadding={0} />
+        <PlotScale dimension="y" type="linear" domainPadding={0} />
         <PathMark
           x="month"
           y="y1"
@@ -62,8 +62,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           stroke="none"
         />
         <PathMark x="month" y="y1" order="order" series="segment" color="segment" curve={curve} strokeWidth={2} />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
       </Plot>
     </Layout>
   );

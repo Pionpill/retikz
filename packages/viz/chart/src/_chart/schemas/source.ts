@@ -1,5 +1,5 @@
 import { JsonObjectSchema, JsonValueSchema } from '@retikz/core';
-import { PlotSchema } from '@retikz/plot';
+import { PlotFacetConfigurationSchema, PlotSchema } from '@retikz/plot';
 import { z } from 'zod';
 
 import { CHART_NAMESPACE } from '../constants';
@@ -21,6 +21,7 @@ const ChartRecipeShellSchema = z
     chartType: z.string().min(1).describe('Globally unique recipe key'),
     encodings: JsonObjectSchema.describe('Recipe-owned field-bound encoding roles'),
     properties: JsonObjectSchema.optional().describe('Recipe-owned constant properties'),
+    facet: PlotFacetConfigurationSchema.optional().describe('Plot-owned facet facts supported by this Chart recipe'),
     marks: z
       .array(z.object({ kind: z.string().min(1).describe('Registered Chart mark kind') }).catchall(JsonValueSchema))
       .optional()

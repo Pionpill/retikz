@@ -12,13 +12,6 @@ import { previewControlContract } from './scatter-world-cup-shots.en.controls';
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <ScatterChart
     data={messiWorldCupShots}
-    dataModel={[
-      { name: 'x', type: 'continuous' },
-      { name: 'y', type: 'continuous' },
-      { name: 'endX', type: 'continuous' },
-      { name: 'endY', type: 'continuous' },
-      { name: 'outcome', type: 'categorical' },
-    ]}
     encodings={{ x: 'x', y: 'y', color: 'outcome' }}
     theme={{ tokens: { recipe: { axisEnabled: false, axisGridEnabled: false } } }}
     width={820}

@@ -1,7 +1,7 @@
 import type { IRDataModel } from '@retikz/data';
 
 import { defineFieldFormat } from '@retikz/data';
-import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import { wanRows } from './extension-format.data';
 
@@ -35,7 +35,7 @@ export const renderExtensionFormatPreview = () => (
   >
     <PathMark x="month" y="revenue" order="month" />
     <PointMark x="month" y="revenue" />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 );

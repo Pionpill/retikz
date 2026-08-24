@@ -1,4 +1,4 @@
-import { Axis, IntervalMark, PathMark, Plot, PointMark, Scale } from '@retikz/plot-react';
+import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
@@ -23,7 +23,7 @@ export const renderCoordinateCartesian = (values: CoordinateCartesianValues) => 
     }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <Scale dimension="y" type="linear" domainPadding={0} />
+    <PlotScale dimension="y" type="linear" domainPadding={0} />
     {values.markType === 'point' ? (
       <PointMark x="category" y="value" />
     ) : values.markType === 'line' ? (
@@ -31,8 +31,8 @@ export const renderCoordinateCartesian = (values: CoordinateCartesianValues) => 
     ) : (
       <IntervalMark x="category" y="value" />
     )}
-    <Axis dimension="x" />
-    <Axis dimension="y" grid={values.showGrid} />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid={values.showGrid} />
   </Plot>
 );
 

@@ -1,6 +1,6 @@
-import type { IRPlot, IRPlotScaleOperation } from '@retikz/plot';
+import type { IRPlot, IRPlotFacetConfiguration, IRPlotScaleOperation } from '@retikz/plot';
 
-import { PlotSchema } from '@retikz/plot';
+import { PlotSchema, resolvePlotFacetComposition } from '@retikz/plot';
 import { z } from 'zod';
 
 import type { ChartRecipeResolution } from '../contract/recipe';
@@ -66,11 +66,25 @@ export const resolveChartPlotScales = (
 export const resolveChartPlotSpatial = (
   recipe: ChartRecipeResolution,
   extension: IRChartPlotExtension | undefined,
+  facet: IRPlotFacetConfiguration | undefined,
 ): Pick<IRPlot, 'coordinate' | 'composition'> => {
   const authoredCoordinate = extension?.coordinate;
   const authoredComposition = extension?.composition;
   const authored = authoredCoordinate !== undefined || authoredComposition !== undefined;
   const spatial = recipe.scaffold.spatial;
+
+  if (facet !== undefined) {
+    if (authored) {
+      throw invalidPlot('Chart recipe facet cannot be combined with a Plot spatial extension', [
+        'plotExtension',
+        authoredCoordinate === undefined ? 'composition' : 'coordinate',
+      ]);
+    }
+    if ('composition' in spatial) {
+      throw invalidPlot('Chart recipe facet requires a single recipe coordinate scaffold', ['recipe', 'facet']);
+    }
+    return { composition: resolvePlotFacetComposition(facet, { coordinate: spatial.coordinate }) };
+  }
 
   if (authored) {
     if (!spatial.replaceable) {
@@ -108,7 +122,7 @@ export const resolveChartPlot = (
   plotThemeTokens: IRPlot['plotThemeTokens'],
 ): IRPlot => {
   const extension = source.plotExtension;
-  const spatial = resolveChartPlotSpatial(recipe, extension);
+  const spatial = resolveChartPlotSpatial(recipe, extension, source.recipe.facet);
   const guides = resolveChartPlotGuides(recipe, extension);
   const scales = resolveChartPlotScales(recipe, extension);
   const marks = [...chartMarks, ...(extension?.marks ?? [])];
@@ -134,8 +148,13 @@ export const resolveChartPlot = (
     return PlotSchema.parse(candidate);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const rebased = new z.ZodError(error.issues.map(issue => ({ ...issue, path: ['plotExtension', ...issue.path] })));
-      throw invalidPlot('Resolved Chart Plot does not match PlotSchema', issuePathOf(rebased), rebased);
+      const plotPath = issuePathOf(error);
+      const sourcePath =
+        source.recipe.facet !== undefined && plotPath[0] === 'composition'
+          ? ['recipe', 'facet', ...(plotPath[1] === 'arrangements' && plotPath[2] === 0 ? plotPath.slice(3) : [])]
+          : ['plotExtension', ...plotPath];
+      const rebased = new z.ZodError(error.issues.map(issue => ({ ...issue, path: sourcePath })));
+      throw invalidPlot('Resolved Chart Plot does not match PlotSchema', sourcePath, rebased);
     }
     throw error;
   }

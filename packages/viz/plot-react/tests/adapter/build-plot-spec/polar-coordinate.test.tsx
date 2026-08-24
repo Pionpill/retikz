@@ -5,9 +5,9 @@ import { describe, expect, it } from 'vitest';
 
 import { createPolarPieSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
 import { buildPlotIR } from '../../../src/adapter';
-import { Axis } from '../../../src/components/guides';
+import { PlotAxis } from '../../../src/components/guides';
 import { IntervalMark, PathMark } from '../../../src/components/marks';
-import { Scale } from '../../../src/components/scales';
+import { PlotScale } from '../../../src/components/scales';
 
 describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius', () => {
   it('radial_bar_equivalence：coordinate="polar2D" + <IntervalMark> → polar2D + band 角向 + interval mark', () => {
@@ -46,7 +46,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     const spec = buildPlotIR(
       <>
         <IntervalMark x="month" y="amount" />
-        <Scale dimension="x" type="band" paddingInner={0.15} paddingOuter={0} />
+        <PlotScale dimension="x" type="band" paddingInner={0.15} paddingOuter={0} />
       </>,
       '__plot',
       { coordinate: 'polar2D' },
@@ -111,8 +111,8 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     const spec = buildPlotIR(
       <>
         <PathMark x="theta" y="r" order="theta" />
-        <Scale dimension="x" type="point" />
-        <Scale dimension="y" type="log" />
+        <PlotScale dimension="x" type="point" />
+        <PlotScale dimension="y" type="log" />
       </>,
       '__plot',
       { coordinate: 'polar2D' },
@@ -171,11 +171,11 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     });
   });
 
-  it('polar_explicit_axis：写 <Axis dimension="x"/> → guides 含该轴', () => {
+  it('polar_explicit_axis：写 <PlotAxis dimension="x"/> → guides 含该轴', () => {
     const spec = buildPlotIR(
       <>
         <IntervalMark angle="value" />
-        <Axis dimension="x" />
+        <PlotAxis dimension="x" />
       </>,
       '__plot',
       { coordinate: 'polar2D' },
@@ -183,12 +183,12 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'x' }]);
   });
 
-  it('polar_radius_axis_grid：<Axis dimension="y" grid/> 落位', () => {
+  it('polar_radius_axis_grid：<PlotAxis dimension="y" grid/> 落位', () => {
     const spec = buildPlotIR(
       <>
         <PathMark x="dim" y="value" closed />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
       </>,
       '__plot',
       { coordinate: 'polar2D' },

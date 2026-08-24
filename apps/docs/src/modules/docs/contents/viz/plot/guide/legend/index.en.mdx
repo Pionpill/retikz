@@ -1,25 +1,25 @@
 ---
-title: Legend
-description: Use <Legend> to explain color, size, opacity, shape, and custom non-positional channels; a color scale or channel definition determines the form.
+title: PlotLegend
+description: Use <PlotLegend> to explain color, size, opacity, shape, and custom non-positional channels; a color scale or channel definition determines the form.
 ---
 
-`<Legend>` is the visual counterpart of a non-positional scale. `channel` selects the visual channel to explain. Built-in channels include `color`, `size`, `opacity`, and `shape`; registered custom channels use the same component.
+`<PlotLegend>` is the visual counterpart of a non-positional scale. `channel` selects the visual channel to explain. Built-in channels include `color`, `size`, `opacity`, and `shape`; registered custom channels use the same component.
 
-`<Legend>` does not select its own form. Color channels derive it from the bound scale; other built-in or custom channels use the registered definition's `legend` declaration. Categorical color produces item swatches, continuous color and opacity produce smooth ramps, binned color produces interval blocks, and size / shape produce graduated-size or shape entries.
+`<PlotLegend>` does not select its own form. Color channels derive it from the bound scale; other built-in or custom channels use the registered definition's `legend` declaration. Categorical color produces item swatches, continuous color and opacity produce smooth ramps, binned color produces interval blocks, and size / shape produce graduated-size or shape entries.
 
-A legend only explains an existing data mapping. Bind a field to a channel on the mark before declaring `<Legend>`. Also mark continuous fields as `continuous` through `model` so they are not treated as categories. Axes remain independent and still require explicit `<Axis>` declarations.
+A legend only explains an existing data mapping. Bind a field to a channel on the mark before declaring `<PlotLegend>`. Also mark continuous fields as `continuous` through `model` so they are not treated as categories. Axes remain independent and still require explicit `<PlotAxis>` declarations.
 
 ## Usage
 
 ```tsx
-import { Legend, Plot, PointMark } from '@retikz/plot-react';
+import { PlotLegend, Plot, PointMark } from '@retikz/plot-react';
 ```
 
 ```tsx
 <Plot data={cities}>
   <PointMark x="lng" y="lat" color="region" size="pop" />
-  <Legend channel="color" />
-  <Legend channel="size" position="bottom" />
+  <PlotLegend channel="color" />
+  <PlotLegend channel="size" position="bottom" />
 </Plot>
 ```
 
@@ -49,7 +49,7 @@ Binding `size` to a continuous field maps radius through a square-root scale. Th
 
 #### Shape and opacity
 
-`shape` suits categorical fields, while `opacity` suits continuous fields. Each `<Legend>` explains one channel, so a plot can contain several independent legends.
+`shape` suits categorical fields, while `opacity` suits continuous fields. Each `<PlotLegend>` explains one channel, so a plot can contain several independent legends.
 
 <ComponentPreview
   files={['legend-shape-opacity', 'legend.data.ts']}
@@ -62,25 +62,25 @@ Binding `size` to a continuous field maps radius through a square-root scale. Th
 <ComponentAlert
   type="tip"
   title="Bind a channel before generating its legend"
-  description="For everyday use, make sure the mark has a data-driven channel binding. This section explains how Legend reuses descriptors already produced by the channel and scale."
+  description="For everyday use, make sure the mark has a data-driven channel binding. This section explains how PlotLegend reuses descriptors already produced by the channel and scale."
 />
 
-Legend resolves a channel descriptor and an optional named scale from `channel` and `scale`. Color forms come from the scale; other channel forms come from `ChannelDefinition.legend` in the same registry, so custom channels do not need a separate Legend branch. `Plot.plotTheme.legend` provides visual defaults, and one legend can override them locally with `style`.
+PlotLegend resolves a channel descriptor and an optional named scale from `channel` and `scale`. Color forms come from the scale; other channel forms come from `ChannelDefinition.legend` in the same registry, so custom channels do not need a separate PlotLegend branch. `Plot.plotTheme.legend` provides visual defaults, and one legend can override them locally with `style`.
 
 <ComponentPreview files="legend-lowering-flow" size="sm" hideCode />
 
-The selected form lowers into an independent Legend scope inside the band reserved by `position`. Legends use zIndex `500` by default, above axes, facet labels, and marks; `layer={{ zIndex }}` moves the whole scope without changing entry order inside it.
+The selected form lowers into an independent PlotLegend scope inside the band reserved by `position`. Legends use zIndex `500` by default, above axes, facet labels, and marks; `layer={{ zIndex }}` moves the whole scope without changing entry order inside it.
 
 <SourceLinks
   sources={[
     {
-      label: 'Legend descriptor selection and form branching',
+      label: 'PlotLegend descriptor selection and form branching',
       path: 'packages/viz/plot/src/pipeline/expand/legend.ts',
       startLine: 325,
       endLine: 477,
     },
     {
-      label: 'Legend forms lowered into a core scope',
+      label: 'PlotLegend forms lowered into a core scope',
       path: 'packages/viz/plot/src/pipeline/guide/guide.ts',
       startLine: 1639,
       endLine: 1762,
@@ -98,19 +98,19 @@ The selected form lowers into an independent Legend scope inside the band reserv
 
 | Prop          | Type                                | Default       | Description                                                                                                                                                                   |
 | ------------- | ----------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `channel`     | `LegendProps['channel']`            | —             | Non-positional channel to explain; built-ins are color / size / opacity / shape, and registered custom channels work the same way                                             |
-| `scale?`      | `LegendProps['scale']`              | unique scale  | Named scale used to disambiguate when one channel has several scales; failure to resolve one uniquely is an error                                                             |
-| `title?`      | `LegendProps['title']`              | none          | Legend title; accepts strings, multiple lines, and structured text                                                                                                            |
+| `channel`     | `PlotLegendProps['channel']`        | —             | Non-positional channel to explain; built-ins are color / size / opacity / shape, and registered custom channels work the same way                                             |
+| `scale?`      | `PlotLegendProps['scale']`          | unique scale  | Named scale used to disambiguate when one channel has several scales; failure to resolve one uniquely is an error                                                             |
+| `title?`      | `PlotLegendProps['title']`          | none          | PlotLegend title; accepts strings, multiple lines, and structured text                                                                                                        |
 | `position?`   | <ApiValues name="LegendPosition" /> | `'right'`     | Edge that contains the legend; layout reserves a legend band on that edge                                                                                                     |
 | `orient?`     | <ApiValues name="LegendOrient" />   | by `position` | Item direction; left/right default to vertical, while top/bottom default to horizontal                                                                                        |
-| `ticks?`      | `LegendProps['ticks']`              | by form       | Ramps support the complete tick source; size currently reads `count` only; categorical swatches and shape ignore it                                                           |
-| `tickLabels?` | `LegendProps['tickLabels']`         | `true`        | Hide labels with `false`; `format` applies to ramp tick labels                                                                                                                |
-| `style?`      | `LegendProps['style']`              | theme legend  | Local visual tokens for swatch / ramp size, gaps, and text. Size symbols default to `symbolFit:'fit'` inside the `symbolSize` box; use `'preserve'` to retain rendered radius |
-| `layer?`      | `LegendProps['layer']`              | legend layer  | Override the semantic layer of the whole legend scope                                                                                                                         |
+| `ticks?`      | `PlotLegendProps['ticks']`          | by form       | Ramps support the complete tick source; size currently reads `count` only; categorical swatches and shape ignore it                                                           |
+| `tickLabels?` | `PlotLegendProps['tickLabels']`     | `true`        | Hide labels with `false`; `format` applies to ramp tick labels                                                                                                                |
+| `style?`      | `PlotLegendProps['style']`          | theme legend  | Local visual tokens for swatch / ramp size, gaps, and text. Size symbols default to `symbolFit:'fit'` inside the `symbolSize` box; use `'preserve'` to retain rendered radius |
+| `layer?`      | `PlotLegendProps['layer']`          | legend layer  | Override the semantic layer of the whole legend scope                                                                                                                         |
 
 ### Tick support matrix
 
-| Legend form                              | `ticks` support                            | `tickLabels.format` |
+| PlotLegend form                          | `ticks` support                            | `tickLabels.format` |
 | ---------------------------------------- | ------------------------------------------ | ------------------- |
 | Continuous color / opacity / custom ramp | `values > interval > count`                | supported           |
 | size                                     | `count` only; 3 representatives by default | ignored             |
@@ -137,4 +137,4 @@ The selected form lowers into an independent Legend scope inside the band reserv
 - [Axis](/viz/plot/guide/axis) — explains x / y positional channels
 - [Scale](/viz/plot/scale) — supplies the legend domain/range and determines color legend forms
 - [Channel binding](/viz/plot/channel/binding) — connects fields or constants to visual channels
-- [Custom channels](/viz/plot/channel/custom-channel) — registers project-specific channels that reuse Legend
+- [Custom channels](/viz/plot/channel/custom-channel) — registers project-specific channels that reuse PlotLegend

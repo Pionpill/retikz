@@ -1,6 +1,6 @@
 import type { IRDataModel } from '@retikz/data';
 
-import { Axis, Plot, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
@@ -39,8 +39,8 @@ export const renderFieldContractPreview = (values: FieldContractValues) => {
   return (
     <Plot data={data} model={model} width={410} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
       <PointMark x="x" y="value" size={28} />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
     </Plot>
   );
 };

@@ -12,7 +12,7 @@ import type {
   PlotComposite,
   ScaffoldFrameMode,
 } from './constants';
-import type { PlotSchema } from './schema';
+import type { PlotFacetConfigurationSchema, PlotSchema } from './schema';
 
 /** plot composite 类型 */
 export type PlotCompositeValue = ValueOf<typeof PlotComposite>;
@@ -43,3 +43,6 @@ export type ScaffoldFrameModeValue = ValueOf<typeof ScaffoldFrameMode>;
 
 /** Plot IR 根节点（plot composite 节点） */
 export type IRPlot = z.infer<typeof PlotSchema>;
+
+/** Plot 与高层图表共同复用的 JSON-safe facet 作者配置 */
+export type IRPlotFacetConfiguration = z.infer<typeof PlotFacetConfigurationSchema>;

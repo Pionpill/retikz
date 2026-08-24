@@ -14,11 +14,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   return (
     <ScatterChart
       data={fertilityWorkData}
-      dataModel={[
-        { name: 'fertilityRate', type: 'continuous' },
-        { name: 'femaleLaborParticipation', type: 'continuous' },
-        { name: 'incomeGroup', type: 'categorical' },
-      ]}
       encodings={{
         x: 'fertilityRate',
         y: 'femaleLaborParticipation',

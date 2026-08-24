@@ -41,7 +41,7 @@ export const normalizePlotRoot = (
   collected: NormalizationState,
 ): { fragment: PlotMemberFragment; runtime: PlotAuthoringRuntime } => {
   const rootContext = context as PlotRootNormalizationContext;
-  // transform 装配序：<Plot transforms> 直传 → <Transform> 收集 → mark shortcut transforms
+  // transform 装配序：<Plot transforms> 直传 → <PlotTransform> 收集 → mark shortcut transforms
   // 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 shortcut stack（那条会二次堆叠），
   // 不同签名的 shortcut stack 保留——否则该 mark 仍是 arrangement='stack' 却没有对应 y0/y1，lower 阶段读空累积界出错
   const transforms = assembledTransformsOf(collected, context);
@@ -60,7 +60,7 @@ export const normalizePlotRoot = (
   }
   const explicitScales = collectExplicitScales(collected.scales, coordKind);
 
-  // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <Scale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生
+  // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <PlotScale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生
   // 直接调用 buildPlotIR 且无 model 时，沿用 AUTO 绑定 + 默认推断（向后兼容）
   const shouldDeferPositionScales = context.model !== undefined || rootContext.deferPositionScaleInference === true;
   let coordinate: IRPlotCoordinateOperation;
@@ -91,7 +91,7 @@ export const normalizePlotRoot = (
       ...(!shouldDeferPositionScales || explicitScales.radius !== undefined ? [radiusScale] : []),
     ];
   } else if (coordKind === 'cartesian1D') {
-    // 单维直线：orientation 取对象配置；单一位置 scale 可由 <Scale dimension="x"> 覆盖（rug 默认 linear、timeline 可 time）
+    // 单维直线：orientation 取对象配置；单一位置 scale 可由 <PlotScale dimension="x"> 覆盖（rug 默认 linear、timeline 可 time）
     const orientation =
       typeof coordinateInput === 'object' && coordinateInput.type === 'cartesian1D'
         ? coordinateInput.orientation
@@ -149,7 +149,7 @@ export const normalizePlotRoot = (
   }
   if (collected.colored) scales.push(buildColorScale(collected.colorFields, context.model));
 
-  // 薄 Plot 不补默认轴：只有用户显式声明 <Axis>/<Legend> 才生成 guides
+  // 薄 Plot 不补默认轴：只有用户显式声明 <PlotAxis>/<PlotLegend> 才生成 guides
   // 需要默认轴与网格的上层组件可复用 decorateDefaultGuides
   const explicitAxes = collected.guides.filter(guide => guide.type === PlotGuide.Axis);
   const legends = collected.guides.filter(guide => guide.type === PlotGuide.Legend);
@@ -164,7 +164,7 @@ export const normalizePlotRoot = (
     scaffolds: collected.scaffolds,
   });
   // topology 规范化会为 framework-neutral plain authoring 补 cartesian 默认 scale；React defer 路径只移除本次补出的维度，
-  // 保留用户显式 <Scale> 与多轴 binding 需要的派生 scale，让 lowering 继续按实际字段类型推断
+  // 保留用户显式 <PlotScale> 与多轴 binding 需要的派生 scale，让 lowering 继续按实际字段类型推断
   const normalizedScales =
     shouldDeferPositionScales &&
     coordKind === 'cartesian2D' &&

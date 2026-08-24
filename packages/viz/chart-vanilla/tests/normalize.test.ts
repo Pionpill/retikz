@@ -49,4 +49,24 @@ describe('Chart Vanilla normalization', () => {
     expect(source).toMatchObject({ namespace: 'chart', type: 'point', recipe: { chartType: 'scatter' } });
     expect(source).not.toHaveProperty('config');
   });
+
+  it('normalizes Chart facet field shorthand into the Plot-owned compact configuration', () => {
+    const source = normalizeScatterChart({
+      data: { reference: 'rows' },
+      encodings: { x: 'amount', y: 'margin' },
+      facet: {
+        id: 'regionFacet',
+        row: 'channel',
+        column: [{ field: 'region', order: ['north', 'south'] }],
+        spacing: { panelGap: 12 },
+      },
+    });
+
+    expect(source.recipe.facet).toEqual({
+      id: 'regionFacet',
+      row: { field: 'channel' },
+      column: [{ field: 'region', order: ['north', 'south'] }],
+      spacing: { panelGap: 12 },
+    });
+  });
 });

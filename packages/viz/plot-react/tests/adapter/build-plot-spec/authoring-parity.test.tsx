@@ -1,20 +1,21 @@
+import { compileToScene } from '@retikz/core';
 import { lowerPlots } from '@retikz/plot';
 import { normalizePlot } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
-import { Facet, Scaffold, Track } from '../../../src/components/composition';
-import { Axis } from '../../../src/components/guides';
+import { PlotFacet, PlotScaffold, PlotTrack } from '../../../src/components/composition';
+import { PlotAxis } from '../../../src/components/guides';
 import { PathMark, PointMark } from '../../../src/components/marks';
-import { Scale } from '../../../src/components/scales';
+import { PlotScale } from '../../../src/components/scales';
 
 describe('React 与 framework-neutral authoring parity', () => {
   it('单 facet 产出完全一致的 IRPlot', () => {
     const react = buildPlotIR(
       <>
-        <Facet id="sales" row="channel" column="region" />
+        <PlotFacet id="sales" row="channel" column="region" />
         <PathMark facetId="sales" x="month" y="revenue" order="month" />
-        <Axis facetId="sales" dimension="y" grid />
+        <PlotAxis facetId="sales" dimension="y" grid />
       </>,
       'sales',
     );
@@ -43,13 +44,13 @@ describe('React 与 framework-neutral authoring parity', () => {
   it('单 scaffold 产出完全一致的 IRPlot', () => {
     const react = buildPlotIR(
       <>
-        <Scaffold id="ops" sharedRoles={['x']}>
-          <Track id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
-          <Track id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
-        </Scaffold>
+        <PlotScaffold id="ops" sharedRoles={['x']}>
+          <PlotTrack id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
+          <PlotTrack id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
+        </PlotScaffold>
         <PathMark trackId="incidents" x="week" y="incidents" order="week" />
         <PathMark trackId="load" x="week" y="load" order="week" />
-        <Axis scaffoldId="ops" dimension="x" grid />
+        <PlotAxis scaffoldId="ops" dimension="x" grid />
       </>,
       'ops',
     );
@@ -93,7 +94,7 @@ describe('React 与 framework-neutral authoring parity', () => {
   it('facet 在 model 驱动推断时不把分类位置字段固定为 linear scale', () => {
     const spec = buildPlotIR(
       <>
-        <Facet id="sales" column="region" />
+        <PlotFacet id="sales" column="region" />
         <PointMark facetId="sales" x="month" y="revenue" />
       </>,
       'sales',
@@ -109,15 +110,18 @@ describe('React 与 framework-neutral authoring parity', () => {
     expect(spec.scales).toEqual([]);
     expect(spec.composition?.views).toEqual([{ id: 'salesPanel', coordinate: { type: 'cartesian2D' } }]);
     expect(() =>
-      lowerPlots({ sales: [{ region: 'north', month: 'Jan', revenue: 10 }] })[0]?.expand(spec),
+      compileToScene(
+        { version: 1, type: 'scene', children: [spec] },
+        { composites: lowerPlots({ sales: [{ region: 'north', month: 'Jan', revenue: 10 }] }) },
+      ),
     ).not.toThrow();
   });
 
   it('facet 在 model 驱动推断时保留显式位置 scale', () => {
     const spec = buildPlotIR(
       <>
-        <Facet id="sales" column="region" />
-        <Scale dimension="x" type="time" />
+        <PlotFacet id="sales" column="region" />
+        <PlotScale dimension="x" type="time" />
         <PointMark facetId="sales" x="month" y="revenue" />
       </>,
       'sales',
@@ -133,22 +137,27 @@ describe('React 与 framework-neutral authoring parity', () => {
     expect(spec.scales).toEqual([{ type: 'time', name: '__x' }]);
     expect(spec.composition?.views).toEqual([{ id: 'salesPanel', coordinate: { type: 'cartesian2D', x: '__x' } }]);
     expect(() =>
-      lowerPlots({
-        sales: [
-          { region: 'north', month: '2026-01-01', revenue: 10 },
-          { region: 'north', month: '2026-02-01', revenue: 12 },
-        ],
-      })[0]?.expand(spec),
+      compileToScene(
+        { version: 1, type: 'scene', children: [spec] },
+        {
+          composites: lowerPlots({
+            sales: [
+              { region: 'north', month: '2026-01-01', revenue: 10 },
+              { region: 'north', month: '2026-02-01', revenue: 12 },
+            ],
+          }),
+        },
+      ),
     ).not.toThrow();
   });
 
   it('scaffold 在延迟推断时不把分类位置字段固定为 linear scale', () => {
     const spec = buildPlotIR(
       <>
-        <Scaffold id="ops" sharedRoles={['x']}>
-          <Track id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
-          <Track id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
-        </Scaffold>
+        <PlotScaffold id="ops" sharedRoles={['x']}>
+          <PlotTrack id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
+          <PlotTrack id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
+        </PlotScaffold>
         <PointMark trackId="incidents" x="week" y="incidents" />
         <PointMark trackId="load" x="week" y="load" />
       </>,
@@ -161,19 +170,24 @@ describe('React 与 framework-neutral authoring parity', () => {
       kind: 'tracks',
       coordinate: { type: 'cartesian2D' },
     });
-    expect(() => lowerPlots({ ops: [{ week: 'W1', incidents: 2, load: 0.5 }] })[0]?.expand(spec)).not.toThrow();
+    expect(() =>
+      compileToScene(
+        { version: 1, type: 'scene', children: [spec] },
+        { composites: lowerPlots({ ops: [{ week: 'W1', incidents: 2, load: 0.5 }] }) },
+      ),
+    ).not.toThrow();
   });
 
   it('scaffold viewIdTemplate 在 React 与 plain authoring 中派生相同 scope', () => {
     const react = buildPlotIR(
       <>
-        <Scaffold id="ops" sharedRoles={['x']} viewIdTemplate="{arrangement}.panel.{track}">
-          <Track id="load" band={{ role: 'y', start: 0, end: 0.42 }} />
-          <Track id="incidents" view="manual.incidents" band={{ role: 'y', start: 0.58, end: 1 }} />
-        </Scaffold>
+        <PlotScaffold id="ops" sharedRoles={['x']} viewIdTemplate="{arrangement}.panel.{track}">
+          <PlotTrack id="load" band={{ role: 'y', start: 0, end: 0.42 }} />
+          <PlotTrack id="incidents" view="manual.incidents" band={{ role: 'y', start: 0.58, end: 1 }} />
+        </PlotScaffold>
         <PathMark trackId="load" x="week" y="load" order="week" />
-        <Axis trackId="incidents" dimension="y" />
-        <Axis scaffoldId="ops" dimension="x" />
+        <PlotAxis trackId="incidents" dimension="y" />
+        <PlotAxis scaffoldId="ops" dimension="x" />
       </>,
       'ops',
     );
@@ -215,9 +229,9 @@ describe('React 与 framework-neutral authoring parity', () => {
   it('多轴绑定产出完全一致的 IRPlot', () => {
     const react = buildPlotIR(
       <>
-        <Axis dimension="x" />
-        <Axis id="temperature" dimension="y" />
-        <Axis id="rainfall" dimension="y" grid />
+        <PlotAxis dimension="x" />
+        <PlotAxis id="temperature" dimension="y" />
+        <PlotAxis id="rainfall" dimension="y" grid />
         <PathMark x="day" y="temperature" yAxisId="temperature" />
         <PointMark x="day" y="rainfall" yAxisId="rainfall" />
       </>,
@@ -266,8 +280,8 @@ describe('React 与 framework-neutral authoring parity', () => {
     };
     const react = buildPlotIR(
       <>
-        <Scale dimension="x" type="linear" />
-        <Scale dimension="y" type="linear" />
+        <PlotScale dimension="x" type="linear" />
+        <PlotScale dimension="y" type="linear" />
         <PointMark x="day" y="temperature" />
       </>,
       'weather',
@@ -311,8 +325,8 @@ describe('React 与 framework-neutral authoring parity', () => {
     const react = () =>
       buildPlotIR(
         <>
-          <Facet id="sales" row="region" />
-          <Axis id="right" dimension="y" />
+          <PlotFacet id="sales" row="region" />
+          <PlotAxis id="right" dimension="y" />
           <PointMark facetId="sales" yAxisId="right" x="month" y="revenue" />
         </>,
         'sales',

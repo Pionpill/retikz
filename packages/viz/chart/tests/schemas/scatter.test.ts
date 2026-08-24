@@ -27,6 +27,47 @@ describe('Scatter Chart exact Source schema', () => {
     expect(ScatterChartPropertiesSchema.safeParse({ size: { field: 'amount' } }).success).toBe(false);
   });
 
+  it('accepts the Plot-owned facet configuration and round-trips it as compact Chart Source', () => {
+    const parsed = ScatterChartSchema.parse({
+      ...scatter,
+      recipe: {
+        ...scatter.recipe,
+        facet: {
+          id: 'regionFacet',
+          row: { field: 'channel' },
+          column: { field: 'region' },
+          empty: 'show',
+          spacing: { panelGap: 12 },
+        },
+      },
+    });
+
+    expect(parsed.recipe.facet).toEqual({
+      id: 'regionFacet',
+      row: { field: 'channel' },
+      column: { field: 'region' },
+      empty: 'show',
+      spacing: { panelGap: 12 },
+    });
+    expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
+  });
+
+  it('rejects incomplete or Plot-only low-level facet controls at the Scatter recipe boundary', () => {
+    for (const facet of [
+      { id: 'missing-dimension' },
+      { id: 'view', column: { field: 'region' }, view: 'panel' },
+      { id: 'coordinate', column: { field: 'region' }, coordinate: { type: 'cartesian2D' } },
+      { id: 'template', column: { field: 'region' }, viewIdTemplate: '{panel}' },
+    ]) {
+      expect(
+        ScatterChartSchema.safeParse({
+          ...scatter,
+          recipe: { ...scatter.recipe, facet },
+        }).success,
+      ).toBe(false);
+    }
+  });
+
   it('rejects old flattened/config shapes and unknown fields', () => {
     expect(ScatterChartSchema.safeParse({ ...scatter, type: 'scatter' }).success).toBe(false);
     expect(ScatterChartSchema.safeParse({ ...scatter, config: {} }).success).toBe(false);

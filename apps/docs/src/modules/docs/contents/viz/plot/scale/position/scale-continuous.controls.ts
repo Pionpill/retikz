@@ -142,5 +142,5 @@ export const previewControlContract = {
       },
     },
   ],
-  relatedApis: ['Scale.type', 'Scale.base', 'Scale.constant', 'Scale.domainPadding'],
+  relatedApis: ['PlotScale.type', 'PlotScale.base', 'PlotScale.constant', 'PlotScale.domainPadding'],
 } satisfies PreviewControlContract;

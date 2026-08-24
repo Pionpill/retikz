@@ -211,6 +211,13 @@ export const vizV01: Release = {
             en: 'Chart recipes emit semantic groups with unique `kind` values, each able to contain multiple Plot marks. `recipe.marks[].override` atomically replaces a matching group in place; an unmatched override still appends and reports `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND` through Core `onWarn`.',
           },
         },
+        {
+          label: { zh: 'Chart-owned 分面 authoring', en: 'Chart-owned facet authoring' },
+          content: {
+            zh: '`recipe.facet` 保存紧凑的 Plot 分面作者事实，并在 Chart resolve 中复用 recipe 的坐标与尺度生成正式 Plot composition；低层模板视图与 panel id 控制仍只属于 Plot。',
+            en: '`recipe.facet` stores concise Plot facet authoring facts and reuses the recipe coordinate and scales during Chart resolution to generate the formal Plot composition; low-level template-view and panel-id controls remain Plot-only.',
+          },
+        },
       ],
       subVersions: [
         {
@@ -253,6 +260,13 @@ export const vizV01: Release = {
           content: {
             zh: '`Chart` 接收精确 Source 与 presentation marker；`ScatterChart` 把 JSX / props 转为带 `encodings`、`properties` 与 `marks` 的精确 Vanilla Input，并调用对应 normalizer 后进入同一 Chart 主链。通用 API 从根入口导入，typed API 从 `/point` 导入。',
             en: '`Chart` accepts exact Source and presentation markers. `ScatterChart` converts JSX / props with `encodings`, `properties`, and `marks` into an exact Vanilla input before entering the shared Chart path. Generic APIs come from the root and typed APIs from `/point`.',
+          },
+        },
+        {
+          label: { zh: '按 owner 组合 Chart 与 Plot 声明', en: 'Compose Chart and Plot declarations by owner' },
+          content: {
+            zh: '`ChartFacet` 写入 `recipe.facet`；`PlotTransform`、`PlotAxis` 等 `PlotXxx` children 交给 Plot React / Vanilla 主链写入 `plotExtension`。两类声明可同树组合，空间双来源会 fail-loud。',
+            en: '`ChartFacet` writes `recipe.facet`, while `PlotXxx` children such as `PlotTransform` and `PlotAxis` flow through the Plot React / Vanilla path into `plotExtension`. Both owners compose in one tree, and duplicate spatial sources fail loudly.',
           },
         },
       ],
@@ -615,6 +629,13 @@ export const vizV01: Release = {
           content: {
             zh: '`<Plot spec data>` 直喂完整 IR + 具名数据集;`<Plot data>` + `<LineMark>` / `<PointMark>` 子图层用组合 DSL 声明，`buildPlotIR` 同步装配成规范化 Plot IR。',
             en: '`<Plot spec data>` feeds a full IR + named datasets; `<Plot data>` + `<LineMark>` / `<PointMark>` children declare via the composition DSL, with `buildPlotIR` assembling a normalized Plot IR.',
+          },
+        },
+        {
+          label: { zh: 'BREAKING：声明组件使用 PlotXxx 前缀', en: 'BREAKING: PlotXxx declaration prefixes' },
+          content: {
+            zh: '`Facet`、`Scaffold`、`Track`、`Axis`、`Legend`、`Scale`、`Transform` 及对应 Props 改名为 `PlotXxx`，旧导出直接删除；根 `Plot` 与全部 Mark 组件名称保持不变。',
+            en: '`Facet`, `Scaffold`, `Track`, `Axis`, `Legend`, `Scale`, `Transform`, and their Props types are renamed to `PlotXxx`, with old exports removed. The root `Plot` and every Mark component keep their names.',
           },
         },
       ],

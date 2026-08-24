@@ -4,11 +4,12 @@ import { ScatterChartSchema } from '@retikz/chart/point/scatter';
 
 import type { InputScatterChart } from './types';
 
+import { normalizeChartFacet } from '../../normalize/chart';
 import { chartSourceOf } from '../shared';
 
 /** 将 Scatter Chart Vanilla Input 组装为精确 Source IR */
 export const normalizeScatterChart = (input: InputScatterChart): IRScatterChart => {
-  const { title, subtitle, note, source, encodings, properties, marks, ...root } = input;
+  const { title, subtitle, note, source, encodings, properties, facet, marks, ...root } = input;
   return ScatterChartSchema.parse(
     chartSourceOf({ title, subtitle, note, source }, root, {
       type: 'point',
@@ -21,6 +22,7 @@ export const normalizeScatterChart = (input: InputScatterChart): IRScatterChart 
         chartType: 'scatter',
         encodings,
         ...(properties === undefined ? {} : { properties }),
+        ...(facet === undefined ? {} : { facet: normalizeChartFacet(facet) }),
         ...(marks === undefined ? {} : { marks }),
       },
     }),

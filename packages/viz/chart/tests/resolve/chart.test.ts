@@ -1,5 +1,5 @@
 import { DEFAULT_RESOLVED_THEME, NodeTextAlign, ThemeMode } from '@retikz/core';
-import { PlotMark, PlotThemeToken, PointMarkSchema } from '@retikz/plot';
+import { PlotFacetConfigurationSchema, PlotMark, PlotThemeToken, PointMarkSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -42,6 +42,7 @@ const recipeSchema = z.strictObject({
   encodings: encodingsSchema,
   properties: propertiesSchema.optional(),
   marks: z.array(markSchema).optional(),
+  facet: PlotFacetConfigurationSchema.optional(),
 });
 const sourceSchema = createChartSourceSchema(
   'point',
@@ -304,6 +305,103 @@ describe('Chart resolution', () => {
       expect.objectContaining({
         code: RetikzChartErrorCode.InvalidResolvedPlot,
         details: expect.objectContaining({ path }),
+      }),
+    );
+  });
+
+  it('wraps the recipe coordinate in a facet composition without losing scale identity', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      recipe: {
+        ...source.recipe,
+        facet: { id: 'regionFacet', column: { field: 'region' } },
+      },
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME);
+
+    expect(result.plot).not.toHaveProperty('coordinate');
+    expect(result.plot.composition).toEqual({
+      defaultView: 'regionFacetPanel',
+      views: [
+        {
+          id: 'regionFacetPanel',
+          coordinate: { type: 'cartesian2D', x: 'x', y: 'x' },
+        },
+      ],
+      arrangements: [
+        {
+          kind: 'facet',
+          id: 'regionFacet',
+          column: { field: 'region' },
+          view: 'regionFacetPanel',
+        },
+      ],
+    });
+  });
+
+  it.each([
+    ['coordinate', { coordinate: { type: 'cartesian2D' as const } }],
+    [
+      'composition',
+      {
+        composition: {
+          defaultView: 'extension',
+          views: [{ id: 'extension', coordinate: { type: 'cartesian2D' as const } }],
+        },
+      },
+    ],
+  ])('rejects recipe facet together with Plot extension %s', (member, plotExtension) => {
+    const authored = sourceSchema.parse({
+      ...source,
+      recipe: {
+        ...source.recipe,
+        facet: { id: 'regionFacet', column: { field: 'region' } },
+      },
+      plotExtension,
+    });
+
+    expect(() => resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME)).toThrowError(
+      expect.objectContaining({
+        code: RetikzChartErrorCode.InvalidResolvedPlot,
+        details: expect.objectContaining({ path: ['plotExtension', member] }),
+      }),
+    );
+  });
+
+  it('rejects recipe facet when the recipe scaffold already owns a composition', () => {
+    const compositionRecipe = defineChartRecipe({
+      ...recipe,
+      resolve: () => ({
+        scaffold: {
+          scales: [{ value: { type: 'linear', name: 'x' }, replaceable: true }],
+          spatial: {
+            composition: {
+              defaultView: 'base',
+              views: [{ id: 'base', coordinate: { type: 'cartesian2D', x: 'x', y: 'x' } }],
+            },
+            replaceable: true,
+          },
+        },
+        semanticMarks: [{ kind: 'semantic', plotMarks: [semanticMark] }],
+      }),
+    });
+    const compositionRegistry = resolveChartProviderRegistry([
+      { family: 'point', recipe: compositionRecipe, themeDefinitions: [] },
+    ]);
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      recipe: {
+        ...source.recipe,
+        facet: { id: 'regionFacet', column: { field: 'region' } },
+      },
+    });
+
+    expect(() => resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, compositionRegistry)).toThrowError(
+      expect.objectContaining({
+        code: RetikzChartErrorCode.InvalidResolvedPlot,
+        details: expect.objectContaining({ path: ['recipe', 'facet'] }),
       }),
     );
   });

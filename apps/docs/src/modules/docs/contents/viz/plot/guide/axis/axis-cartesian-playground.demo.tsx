@@ -1,4 +1,4 @@
-import { Axis, IntervalMark, PathMark, Plot, Scale } from '@retikz/plot-react';
+import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
@@ -67,7 +67,7 @@ const renderCategoricalScene = (values: AxisCartesianPlaygroundValues) => {
   return (
     <Plot data={axisCartesianPlaygroundRows} width={380} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
       <IntervalMark x="category" y="y" fill="#2563eb" />
-      <Axis
+      <PlotAxis
         dimension="x"
         tickLabels={{
           rotate: fixedRotate,
@@ -78,7 +78,7 @@ const renderCategoricalScene = (values: AxisCartesianPlaygroundValues) => {
           },
         }}
       />
-      <Axis dimension="y" grid ticks={{ count: 5 }} title="y" />
+      <PlotAxis dimension="y" grid ticks={{ count: 5 }} title="y" />
     </Plot>
   );
 };
@@ -100,10 +100,10 @@ const renderContinuousScene = (values: AxisCartesianPlaygroundValues) => {
 
     return (
       <Plot data={axisCartesianPlaygroundRows} width={380} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-        <Scale dimension="x" type="linear" domain={[-35, 35]} />
-        <Scale dimension="y" type="linear" domain={[-5, 35]} />
+        <PlotScale dimension="x" type="linear" domain={[-35, 35]} />
+        <PlotScale dimension="y" type="linear" domain={[-5, 35]} />
         <PathMark x="x" y="y" order="x" stroke="#2563eb" />
-        <Axis
+        <PlotAxis
           dimension="x"
           placement={{ kind: 'origin', origin: 0, tickSide: 'bottom' }}
           line={{ arrow, extent: { from: -35, to: 35 } }}
@@ -112,7 +112,7 @@ const renderContinuousScene = (values: AxisCartesianPlaygroundValues) => {
           grid={grid}
           title={{ text: 'x', placement: 'at-end' }}
         />
-        <Axis
+        <PlotAxis
           dimension="y"
           placement={{ kind: 'origin', origin: 0, tickSide: 'left' }}
           line={{ arrow, extent: { from: -5, to: 35 } }}
@@ -126,11 +126,11 @@ const renderContinuousScene = (values: AxisCartesianPlaygroundValues) => {
 
   return (
     <Plot data={axisCartesianPlaygroundRows} width={380} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-      <Scale dimension="x" type="linear" domain={[-35, 35]} />
-      <Scale dimension="y" type="linear" domain={[0, 35]} />
+      <PlotScale dimension="x" type="linear" domain={[-35, 35]} />
+      <PlotScale dimension="y" type="linear" domain={[0, 35]} />
       <PathMark x="x" y="y" order="x" stroke="#2563eb" />
-      <Axis dimension="x" ticks={ticks} grid={grid} title="x" />
-      <Axis dimension="y" ticks={{ count: 5 }} title="y" />
+      <PlotAxis dimension="x" ticks={ticks} grid={grid} title="x" />
+      <PlotAxis dimension="y" ticks={{ count: 5 }} title="y" />
     </Plot>
   );
 };

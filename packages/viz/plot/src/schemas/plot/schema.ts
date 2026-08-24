@@ -146,24 +146,45 @@ const FacetHeaderSchema = z
   })
   .describe('Facet header visibility and text style');
 
+const PlotFacetConfigurationBaseSchema = z.strictObject({
+  id: z.string().min(1).describe('Stable facet id used to derive panel view ids and provenance'),
+  row: FacetDimensionsSchema.optional().describe(
+    'Facet row dimension or ordered row-dimension hierarchy; omit for a one-dimensional column facet',
+  ),
+  column: FacetDimensionsSchema.optional().describe(
+    'Facet column dimension or ordered column-dimension hierarchy; omit for a one-dimensional row facet',
+  ),
+  empty: z
+    .enum(FacetEmptyPolicy)
+    .optional()
+    .describe('Empty-panel policy; omit to drop row/column combinations that have no rows'),
+  header: FacetHeaderSchema.optional().describe('Facet row and column label visibility'),
+  resolve: CompositionResolveSchema.optional().describe('Facet-local scale, axis, and grid resolution policy'),
+  spacing: CompositionSpacingSchema.optional().describe('Facet-local spacing override'),
+});
+
+const refinePlotFacetConfiguration = (
+  facet: z.infer<typeof PlotFacetConfigurationBaseSchema>,
+  context: z.RefinementCtx,
+): void => {
+  if (facet.row === undefined && facet.column === undefined) {
+    context.addIssue({
+      code: 'custom',
+      path: ['row'],
+      message: 'facet grid requires at least one of row or column',
+    });
+  }
+};
+
+export const PlotFacetConfigurationSchema = PlotFacetConfigurationBaseSchema.superRefine(
+  refinePlotFacetConfiguration,
+).describe('JSON-safe authored facts shared by Plot and higher-level facet authoring');
+
 export const FacetArrangementSchema = z
   .strictObject({
     kind: z.literal(CoordinateArrangementKind.Facet).describe('Arrangement discriminator: data-driven facet panels'),
-    id: z.string().min(1).describe('Stable facet arrangement id used to derive panel view ids and provenance'),
+    ...PlotFacetConfigurationBaseSchema.shape,
     view: z.string().min(1).describe('Template coordinate view used by generated facet panels'),
-    row: FacetDimensionsSchema.optional().describe(
-      'Facet row dimension or ordered row-dimension hierarchy; omit for a one-dimensional column facet',
-    ),
-    column: FacetDimensionsSchema.optional().describe(
-      'Facet column dimension or ordered column-dimension hierarchy; omit for a one-dimensional row facet',
-    ),
-    empty: z
-      .enum(FacetEmptyPolicy)
-      .optional()
-      .describe('Empty-panel policy; omit to drop row/column combinations that have no rows'),
-    header: FacetHeaderSchema.optional().describe('Facet row and column label visibility'),
-    resolve: CompositionResolveSchema.optional().describe('Facet-local scale, axis, and grid resolution policy'),
-    spacing: CompositionSpacingSchema.optional().describe('Facet-local spacing override'),
     coordinate: CoordinateOperationSchema.optional().describe(
       'Coordinate operation used by every generated panel; omit to inherit the template view coordinate',
     ),
@@ -173,15 +194,7 @@ export const FacetArrangementSchema = z
       .optional()
       .describe('Panel view id template supporting {arrangement}, {row}, {column}, and {panel} placeholders'),
   })
-  .superRefine((facet, ctx) => {
-    if (facet.row === undefined && facet.column === undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['row'],
-        message: 'facet grid requires at least one of row or column',
-      });
-    }
-  })
+  .superRefine(refinePlotFacetConfiguration)
   .describe('Facet arrangement that derives panel coordinate views from data rows');
 
 const ScaffoldTrackBandSchema = z

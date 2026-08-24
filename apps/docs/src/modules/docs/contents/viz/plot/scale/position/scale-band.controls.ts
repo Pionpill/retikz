@@ -82,5 +82,5 @@ export const previewControlContract = {
     paddingOuter: 0,
     padding: 0.5,
   },
-  relatedApis: ['Scale.paddingInner', 'Scale.paddingOuter', 'Scale.padding'],
+  relatedApis: ['PlotScale.paddingInner', 'PlotScale.paddingOuter', 'PlotScale.padding'],
 } satisfies PreviewControlContract;

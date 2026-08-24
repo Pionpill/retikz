@@ -1,4 +1,4 @@
-import { Axis, PathMark, Plot, Scale, Transform } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -10,9 +10,9 @@ export const previewControls = densityControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot data={measurements} width={440} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Transform {...densityOperationOf(values)} />
-    <Scale dimension="x" type="linear" domain={[1, 10]} />
-    <Scale dimension="y" type="linear" domain={[0, 0.7]} />
+    <PlotTransform {...densityOperationOf(values)} />
+    <PlotScale dimension="x" type="linear" domain={[1, 10]} />
+    <PlotScale dimension="y" type="linear" domain={[0, 0.7]} />
     <PathMark
       x="densityX"
       y="density"
@@ -23,8 +23,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       fill="dodgerblue"
       strokeWidth={2.2}
     />
-    <Axis dimension="x" title="测量值" />
-    <Axis dimension="y" title="密度" grid />
+    <PlotAxis dimension="x" title="测量值" />
+    <PlotAxis dimension="y" title="密度" grid />
   </Plot>
 ));
 
