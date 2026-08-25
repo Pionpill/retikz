@@ -36,12 +36,12 @@ Theme owns the complete Relation visual language. The controls below expose only
 
 ### Endpoints, labels, and routes
 
-One Scope can mix omitted-route direct connections, explicit `route`, `way`, and `<Step>` authoring. Labels do not enter route steps. Relation neither computes a custom route from endpoint coordinates nor compares whether an authored route connects its endpoints
+The examples consistently use concise `way` authoring: adjacent targets draw a direct segment, while `'-|'` draws a horizontal-then-vertical fold. Relation still supports omitted-route direct connections, explicit `route`, and `<Step>` authoring. Labels do not enter route steps or determine endpoints
 
 <ComponentPreview
   files="relation-routing"
   size="lg"
-  caption="Inspect stable endpoints, two route authoring forms, and explicit label appearance and dashPattern overriding defaults."
+  caption="Inspect stable endpoints, straight and folded way authoring, and explicit label appearance and dashPattern overriding defaults."
 />
 
 ### association: general relationships
