@@ -15,7 +15,7 @@ export const BuiltinArrowShape = {
 export const DEFAULT_ARROW_SHAPE = BuiltinArrowShape.Stealth;
 
 /** 箭头默认尺寸（length / width 的 fallback） */
-export const ARROW_MARKER_DEFAULT_SIZE = 6;
+export const ARROW_MARKER_DEFAULT_SIZE = 8;
 
 /** 空心 shape 描边默认粗细（lineWidth fallback） */
 export const ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH = 1.5;

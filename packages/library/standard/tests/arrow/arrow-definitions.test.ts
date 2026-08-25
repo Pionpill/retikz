@@ -75,14 +75,24 @@ describe('Standard optional arrow definitions', () => {
       'openSquare',
     ]);
     expect(compiled.map(path => path?.commands.at(-1))).toEqual([
-      { kind: 'line', to: [94.5, 0] },
-      { kind: 'line', to: [95.25, 0] },
-      { kind: 'line', to: [100.05, 0] },
-      { kind: 'line', to: [95.25, 0] },
-      { kind: 'line', to: [94.5, 0] },
-      { kind: 'line', to: [95.25, 0] },
-      { kind: 'line', to: [94.5, 0] },
-      { kind: 'line', to: [95.25, 0] },
+      { kind: 'line', to: [89.5, 0] },
+      { kind: 'line', to: [90.88, 0] },
+      { kind: 'line', to: [99.9, 0] },
+      { kind: 'line', to: [93.5, 0] },
+      { kind: 'line', to: [89.5, 0] },
+      { kind: 'line', to: [90.88, 0] },
+      { kind: 'line', to: [92.5, 0] },
+      { kind: 'line', to: [93.5, 0] },
+    ]);
+    expect(compiled.map(path => [path?.arrowEnd?.markerWidth, path?.arrowEnd?.markerHeight])).toEqual([
+      [11, 6],
+      [11, 6],
+      [8, 8],
+      [8, 8],
+      [11, 6],
+      [11, 6],
+      [8, 8],
+      [8, 8],
     ]);
     expect(compiled[0]?.arrowEnd?.marker[0]).toMatchObject({
       type: 'path',
@@ -107,9 +117,9 @@ describe('Standard optional arrow definitions', () => {
         type: 'path',
         commands: [
           { kind: 'move', to: [0, 5] },
-          { kind: 'line', to: [5, 2.5] },
+          { kind: 'line', to: [5, 0] },
           { kind: 'line', to: [10, 5] },
-          { kind: 'line', to: [5, 7.5] },
+          { kind: 'line', to: [5, 10] },
           { kind: 'close' },
         ],
         fill: '#abcdef',
@@ -120,9 +130,9 @@ describe('Standard optional arrow definitions', () => {
         type: 'path',
         commands: [
           { kind: 'move', to: [1, 5] },
-          { kind: 'line', to: [5, 3] },
+          { kind: 'line', to: [5, 1] },
           { kind: 'line', to: [9, 5] },
-          { kind: 'line', to: [5, 7] },
+          { kind: 'line', to: [5, 9] },
           { kind: 'close' },
         ],
         stroke: '#123456',
@@ -135,9 +145,9 @@ describe('Standard optional arrow definitions', () => {
         type: 'path',
         commands: [
           { kind: 'move', to: [0, 5] },
-          { kind: 'line', to: [2.5, 2.5] },
+          { kind: 'line', to: [2.5, 0] },
           { kind: 'line', to: [10, 5] },
-          { kind: 'line', to: [2.5, 7.5] },
+          { kind: 'line', to: [2.5, 10] },
           { kind: 'close' },
         ],
         fill: '#abcdef',
@@ -148,9 +158,9 @@ describe('Standard optional arrow definitions', () => {
         type: 'path',
         commands: [
           { kind: 'move', to: [1, 5] },
-          { kind: 'line', to: [3, 3] },
+          { kind: 'line', to: [3, 1] },
           { kind: 'line', to: [9, 5] },
-          { kind: 'line', to: [3, 7] },
+          { kind: 'line', to: [3, 9] },
           { kind: 'close' },
         ],
         stroke: '#123456',
@@ -254,8 +264,8 @@ describe('Standard optional arrow definitions', () => {
     );
 
     expect(reversed?.commands).toEqual([
-      { kind: 'move', to: [94.5, 0] },
-      { kind: 'line', to: [4.75, 0] },
+      { kind: 'move', to: [89.5, 0] },
+      { kind: 'line', to: [6.5, 0] },
     ]);
     expect(reversed?.arrowStart?.shape).toBe('kite');
     expect(reversed?.arrowEnd?.shape).toBe('openSquare');
@@ -350,7 +360,7 @@ describe('Standard optional arrow definitions', () => {
         { arrows: [CrowFootArrowDefinition] },
       ).scene.primitives,
     );
-    expect(reversed?.commands.at(-1)).toEqual({ kind: 'line', to: [4.75, 0] });
+    expect(reversed?.commands.at(-1)).toEqual({ kind: 'line', to: [6.5, 0] });
 
     const doubleEnded = firstPath(
       compileToScene(
@@ -375,8 +385,8 @@ describe('Standard optional arrow definitions', () => {
       ).scene.primitives,
     );
     expect(doubleEnded?.commands).toEqual([
-      { kind: 'move', to: [-0.05, 0] },
-      { kind: 'line', to: [95.25, 0] },
+      { kind: 'move', to: [0.1, 0] },
+      { kind: 'line', to: [93.5, 0] },
     ]);
   });
 
