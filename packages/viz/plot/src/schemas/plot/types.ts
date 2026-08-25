@@ -12,7 +12,8 @@ import type {
   PlotComposite,
   ScaffoldFrameMode,
 } from './constants';
-import type { PlotFacetConfigurationSchema, PlotSchema } from './schema';
+import type { PlotPartitionDimensionSchema, PlotPartitionScalarSchema } from './partition';
+import type { PlotFacetConfigurationSchema, PlotFacetOptionsSchema, PlotSchema } from './schema';
 
 /** plot composite 类型 */
 export type PlotCompositeValue = ValueOf<typeof PlotComposite>;
@@ -46,3 +47,12 @@ export type IRPlot = ZodInfer<typeof PlotSchema>;
 
 /** Plot 与高层图表共同复用的 JSON-safe facet 作者配置 */
 export type IRPlotFacetConfiguration = ZodInfer<typeof PlotFacetConfigurationSchema>;
+
+/** facet使用的有限JSON partition scalar */
+export type PlotPartitionScalar = ZodInfer<typeof PlotPartitionScalarSchema>;
+
+/** Plot partition字段、顺序与label声明 */
+export type IRPlotPartitionDimension = ZodInfer<typeof PlotPartitionDimensionSchema>;
+
+/** 不含identity与dimension的facet选项 */
+export type IRPlotFacetOptions = ZodInfer<typeof PlotFacetOptionsSchema>;

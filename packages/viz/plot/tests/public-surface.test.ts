@@ -9,4 +9,12 @@ describe('@retikz/plot public surface', () => {
     expect(publicSurface.PlotFacetConfigurationSchema).toBeDefined();
     expect(publicSurface.resolvePlotFacetComposition).toBeTypeOf('function');
   });
+
+  it('exports Plot-owned facet partition atoms from the package root', () => {
+    const publicSurface = plot as Record<string, unknown>;
+
+    expect(publicSurface.PlotPartitionScalarSchema).toBeDefined();
+    expect(publicSurface.PlotPartitionDimensionSchema).toBeDefined();
+    expect(publicSurface.PlotFacetOptionsSchema).toBeDefined();
+  });
 });

@@ -21,6 +21,11 @@ import {
 
 import { BUILTIN_SCALE_TYPES, PlotColorScheme, PlotScale } from './constants';
 
+/** Plot scale type：保留内置提示并允许注册自定义Definition key */
+export const PlotScaleTypeSchema = createOpenStringSchema(PlotScale).describe(
+  'Built-in scale type or a custom registered scale type',
+);
+
 export const ColorSchemeNameSchema = createOpenStringSchema(PlotColorScheme).describe(
   'Color scheme name: a built-in scheme (e.g. viridis / rdbu) or a custom name registered via options.colorSchemes. Validated as a non-blank string here; an unknown name fails loud at lowering. Interpolator functions never enter the IR — only the name string',
 );
@@ -386,7 +391,7 @@ export const ScaleSchema = discriminatedUnion('type', [
 );
 
 export const CustomScaleSchema = looseObject({
-  type: NonBlankStringSchema.refine(type => !BUILTIN_SCALE_TYPES.has(type), {
+  type: PlotScaleTypeSchema.refine(type => !BUILTIN_SCALE_TYPES.has(type), {
     message: 'custom scale type must not collide with a built-in scale type',
   }).describe(
     'Discriminator: custom scale op type; any non-blank, non-built-in identifier registered through options.scaleDefinitions',

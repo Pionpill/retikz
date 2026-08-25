@@ -1,7 +1,7 @@
 import type { JsonValue } from '@retikz/core';
-import type { DataLineageRun, DataSourceIdentity, ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { DataSourceIdentity, ExternalDatasets, ExternalRow } from '@retikz/data';
 
-import { applyTransformsWithLineage, resolveFieldPath, tagSourceIndex } from '@retikz/data';
+import { resolveFieldPath } from '@retikz/data';
 
 import type {
   PlotDatumLineage,
@@ -18,12 +18,13 @@ import type {
 } from '../contract';
 import type { IRPlot, IRPlotMarkOperation, IRPlotScaleOperation, IRPlotTransform } from '../schemas';
 import type { LowerPlotsOptions } from './expand';
+import type { PlotDataArtifact } from './expand/lower';
 
+import { RetikzPlotError } from '../error';
 import { resolvePlotLineageOptions } from '../resolve/lineage';
 import { CoordinateArrangementKind } from '../schemas';
-import { prepareRows } from './expand';
-import { lowerPlot } from './expand/lower';
-import { createPlotLocator } from './locator';
+import { lowerPlotWithDataArtifact } from './expand/lower';
+import { buildPlotLocatorFromDataArtifact } from './locator';
 
 /** lowerPlotWithLineage 选项 */
 export type PlotLineageLowerOptions = LowerPlotsOptions & {
@@ -207,18 +208,15 @@ const sourceIdentityOfMeta = (meta: Record<string, unknown>): DataSourceIdentity
 /** 用 plot spec 与数据集生成 runtime-only lineage artifact */
 const buildPlotLineage = (
   spec: IRPlot,
-  datasets: ExternalDatasets,
   options: PlotLineageLowerOptions,
+  dataArtifact: PlotDataArtifact,
 ): PlotLineageLowerResult['lineage'] => {
   const lineageOptions = resolvePlotLineageOptions(options.lineage);
-  const dataset = datasets[spec.data.reference];
-  const ingested = tagSourceIndex(dataset);
-  const { normalized, transformRegistry, transformContext } = prepareRows(spec, datasets, options, ingested);
-  const root = applyTransformsWithLineage(normalized, spec.transform, {
-    registry: transformRegistry,
-    context: transformContext,
-    lineage: lineageOptions.data,
-  });
+  const rootLineage = dataArtifact.rootLineage;
+  const markLineages = dataArtifact.markLineages;
+  if (rootLineage === undefined || markLineages === undefined) {
+    throw new RetikzPlotError('plot lineage: lowering data artifact is missing lineage events');
+  }
   const rootKinds = operationKindsOf(spec.transform);
   const markData: Array<PlotMarkDataLineage> = [];
   const marks: Array<PlotMarkLineage> = [];
@@ -229,15 +227,7 @@ const buildPlotLineage = (
 
   spec.marks.forEach((mark, markIndex) => {
     const transform = (mark as { transform?: Array<IRPlotTransform> }).transform;
-    const markResult =
-      transform === undefined
-        ? { rows: root.rows, lineage: { events: [] } satisfies DataLineageRun }
-        : applyTransformsWithLineage(root.rows, transform, {
-            registry: transformRegistry,
-            context: transformContext,
-            lineage: lineageOptions.data,
-          });
-    markData.push({ markIndex, events: markResult.lineage.events });
+    markData.push({ markIndex, events: markLineages[markIndex]?.events ?? [] });
 
     const markLineage: PlotMarkLineage = {
       markIndex,
@@ -249,15 +239,17 @@ const buildPlotLineage = (
     if (lineageOptions.transformScopes) {
       markLineage.transformScope = { root: rootKinds, mark: operationKindsOf(transform) };
     }
-    if (lineageOptions.rowValues !== false)
-      markLineage.rowValues = sampleRows(markResult.rows, lineageOptions.rowValues);
+    if (lineageOptions.rowValues !== false) {
+      const markRows = dataArtifact.rootMarkDataViews[markIndex]?.dataView.rows ?? dataArtifact.rootDataView.rows;
+      markLineage.rowValues = sampleRows(markRows, lineageOptions.rowValues);
+    }
     marks.push(markLineage);
   });
 
   return {
     ...(spec.id !== undefined ? { plotId: spec.id } : {}),
     dataReference: spec.data.reference,
-    data: { root: root.lineage, marks: markData },
+    data: { root: rootLineage, marks: markData },
     marks,
     ...(lineageOptions.scaleMappings ? { scales: scaleLineageOf(spec, spec.scales) } : {}),
     ...(lineageOptions.layoutContext ? { layout: layoutLineageOf(spec) } : {}),
@@ -271,8 +263,9 @@ export const lowerPlotWithLineage = (
   datasets: ExternalDatasets,
   options: PlotLineageLowerOptions = {},
 ): PlotLineageLowerResult => {
-  const children = [lowerPlot(spec, datasets, options)];
-  return { children, lineage: buildPlotLineage(spec, datasets, options) };
+  const lineageOptions = resolvePlotLineageOptions(options.lineage);
+  const lowered = lowerPlotWithDataArtifact(spec, datasets, options, undefined, lineageOptions.data);
+  return { children: [lowered.child], lineage: buildPlotLineage(spec, options, lowered.dataArtifact) };
 };
 
 /** 创建带 lineage 的 plot locator */
@@ -281,9 +274,16 @@ export const createPlotLineageLocator = (
   datasets: ExternalDatasets,
   options: PlotLineageLowerOptions = {},
 ): PlotLineageLocator => {
-  const locator = createPlotLocator(spec, datasets, options);
-  const { lineage } = lowerPlotWithLineage(spec, datasets, options);
   const lineageOptions = resolvePlotLineageOptions(options.lineage);
+  const lowered = lowerPlotWithDataArtifact(
+    spec,
+    datasets,
+    { ...options, provenance: true, datumProvenance: true },
+    undefined,
+    lineageOptions.data,
+  );
+  const locator = buildPlotLocatorFromDataArtifact(spec, options, lowered);
+  const lineage = buildPlotLineage(spec, options, lowered.dataArtifact);
 
   const withLocatorAnchor = <T extends PlotDatumLineage | PlotSeriesLineage>(
     value: T,

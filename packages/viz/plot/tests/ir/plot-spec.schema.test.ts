@@ -10,6 +10,17 @@ type FacetConfigurationSchemaContract = {
   ) => { success: true; data: unknown } | { success: false; error: { issues: Array<{ path: Array<PropertyKey> }> } };
 };
 
+type RuntimeSchemaContract = {
+  parse: (input: unknown) => unknown;
+  safeParse: (input: unknown) => { success: boolean };
+};
+
+const runtimeSchemaOf = (name: string): RuntimeSchemaContract => {
+  const schema = (plotSchemas as Record<string, unknown>)[name];
+  expect(schema, `Plot schemas must export ${name}`).toBeDefined();
+  return schema as RuntimeSchemaContract;
+};
+
 const plotFacetConfigurationSchema = (): FacetConfigurationSchemaContract => {
   const schema = (plotSchemas as Record<string, unknown>).PlotFacetConfigurationSchema;
   expect(schema, 'Plot schemas must export PlotFacetConfigurationSchema').toBeDefined();
@@ -226,5 +237,24 @@ describe('PlotFacetConfigurationSchema', () => {
         expect.arrayContaining([expect.objectContaining({ code: 'unrecognized_keys', keys: [field], path: [] })]),
       );
     }
+  });
+});
+
+describe('Plot partition authoring schemas', () => {
+  it('exports reusable partition and facet-option schemas', () => {
+    expect(runtimeSchemaOf('PlotPartitionScalarSchema').parse(-0)).toBe(-0);
+    expect(runtimeSchemaOf('PlotPartitionDimensionSchema').parse({ field: 'metric', order: ['cpu', null] })).toEqual({
+      field: 'metric',
+      order: ['cpu', null],
+    });
+    expect(runtimeSchemaOf('PlotFacetOptionsSchema').parse({ empty: 'show', spacing: { panelGap: 12 } })).toEqual({
+      empty: 'show',
+      spacing: { panelGap: 12 },
+    });
+  });
+
+  it('rejects non-finite partition scalars', () => {
+    expect(runtimeSchemaOf('PlotPartitionScalarSchema').safeParse(Number.NaN).success).toBe(false);
+    expect(runtimeSchemaOf('PlotPartitionScalarSchema').safeParse(Number.POSITIVE_INFINITY).success).toBe(false);
   });
 });

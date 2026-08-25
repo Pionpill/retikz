@@ -1,20 +1,9 @@
-import { CompositeBaseSchema, JsonObjectSchema, TextBlockSchema } from '@retikz/core';
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
+
+import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
 import { DataReferenceSchema } from '@retikz/data';
 import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
-import type { RefinementCtx, infer as ZodInfer } from 'zod';
-import {
-  array,
-  boolean,
-  discriminatedUnion,
-  enum as zodEnum,
-  literal,
-  null as zodNull,
-  number,
-  record,
-  strictObject,
-  string,
-  union,
-} from 'zod';
+import { array, boolean, discriminatedUnion, enum as zodEnum, literal, number, record, strictObject, union } from 'zod';
 
 import { CoordinateOperationSchema } from '../coordinate';
 import { GuideSchema, GuideTextStyleSchema } from '../guide';
@@ -34,6 +23,7 @@ import {
   PlotComposite,
   ScaffoldFrameMode,
 } from './constants';
+import { PlotPartitionDimensionsSchema } from './partition';
 
 export const CompositionSpacingSchema = strictObject({
   panelGap: NonNegativeNumberSchema.optional().describe('Gap between generated facet panels in user units'),
@@ -94,29 +84,6 @@ export const CoordinateViewSchema = strictObject({
   meta: JsonObjectSchema.optional().describe('Free-form JSON-serializable metadata for this coordinate view'),
 }).describe('Coordinate view registered inside a plot composition');
 
-const FacetValueSchema = union([string(), number(), boolean(), zodNull()]).describe(
-  'JSON-safe scalar facet value used in facet ordering and panel keys',
-);
-
-const FacetLabelOverrideSchema = strictObject({
-  value: FacetValueSchema.describe('Facet value whose generated header label is overridden'),
-  label: TextBlockSchema.describe('Display text block used for this facet value in generated headers'),
-}).describe('Display label override for one facet value');
-
-const FacetDimensionSchema = strictObject({
-  field: NonBlankStringSchema.describe('Data field path used to split rows into facet panels'),
-  order: array(FacetValueSchema)
-    .optional()
-    .describe('Explicit facet value order; values not listed are appended in first-seen order'),
-  labels: array(FacetLabelOverrideSchema)
-    .optional()
-    .describe('Optional display labels for facet values; unmatched values fall back to String(value)'),
-}).describe('Facet dimension bound to a data field');
-
-const FacetDimensionsSchema = union([FacetDimensionSchema, array(FacetDimensionSchema).min(1)]).describe(
-  'One or more facet dimensions bound to data fields',
-);
-
 const FacetHeaderLabelSchema = strictObject({
   ...GuideTextStyleSchema.shape,
   rotate: number().optional().describe('Facet label rotation in degrees around the label center'),
@@ -131,20 +98,24 @@ const FacetHeaderSchema = strictObject({
   column: FacetHeaderLabelValueSchema.optional().describe('Whether generated column labels are visible or styled'),
 }).describe('Facet header visibility and text style');
 
-const PlotFacetConfigurationBaseSchema = strictObject({
-  id: NonBlankStringSchema.describe('Stable facet id used to derive panel view ids and provenance'),
-  row: FacetDimensionsSchema.optional().describe(
-    'Facet row dimension or ordered row-dimension hierarchy; omit for a one-dimensional column facet',
-  ),
-  column: FacetDimensionsSchema.optional().describe(
-    'Facet column dimension or ordered column-dimension hierarchy; omit for a one-dimensional row facet',
-  ),
+export const PlotFacetOptionsSchema = strictObject({
   empty: zodEnum(FacetEmptyPolicy)
     .optional()
     .describe('Empty-panel policy; omit to drop row/column combinations that have no rows'),
   header: FacetHeaderSchema.optional().describe('Facet row and column label visibility'),
   resolve: CompositionResolveSchema.optional().describe('Facet-local scale, axis, and grid resolution policy'),
   spacing: CompositionSpacingSchema.optional().describe('Facet-local spacing override'),
+}).describe('Facet options without arrangement identity or partition dimensions');
+
+const PlotFacetConfigurationBaseSchema = strictObject({
+  id: NonBlankStringSchema.describe('Stable facet id used to derive panel view ids and provenance'),
+  row: PlotPartitionDimensionsSchema.optional().describe(
+    'Facet row dimension or ordered row-dimension hierarchy; omit for a one-dimensional column facet',
+  ),
+  column: PlotPartitionDimensionsSchema.optional().describe(
+    'Facet column dimension or ordered column-dimension hierarchy; omit for a one-dimensional row facet',
+  ),
+  ...PlotFacetOptionsSchema.shape,
 });
 
 const refinePlotFacetConfiguration = (

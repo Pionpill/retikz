@@ -119,7 +119,7 @@ export const resolveComposition = (node: IRPlot): CompositionResolution => {
     coordinateScopes: resolveCoordinateScopeRegistry(node),
     ...(node.composition?.spacing !== undefined ? { layout: node.composition.spacing } : {}),
     ...(node.composition?.resolve !== undefined ? { resolve: node.composition.resolve } : {}),
-    arrangements: [...arrangements],
+    arrangements,
     facets,
     scaffolds,
     policyContext,

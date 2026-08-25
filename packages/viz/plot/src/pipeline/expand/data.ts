@@ -1,6 +1,7 @@
 import type {
   AnyTransformDefinition,
   DataFieldTypeMap,
+  DataView,
   ExternalDatasets,
   ExternalRow,
   TransformContext,
@@ -8,7 +9,7 @@ import type {
 
 import {
   applyFieldResolver,
-  applyTransforms,
+  applyTransformsToDataView,
   collectFormatFields,
   DEFAULT_TRANSFORM_CONTEXT,
   normalizeRows,
@@ -27,16 +28,16 @@ import { RetikzPlotError } from '../../error';
 import { resolveMarkRegistry, resolvePlotTransformRegistry, resolveScaleRegistry } from '../../providers';
 import { collectSourceFields } from '../source-fields';
 
-/** 对单个 mark 应用局部 transform，返回该 mark 实际消费的数据行 */
+/** 对单个mark应用局部transform，返回该mark实际消费的完整DataView */
 export const applyMarkTransforms = (
   mark: IRPlotMarkOperation,
-  rows: Array<ExternalRow>,
+  dataView: DataView,
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
   transformContext: TransformContext,
-): Array<ExternalRow> => {
+): DataView => {
   const transform = (mark as { transform?: Array<IRPlotTransform> }).transform;
-  if (transform === undefined) return rows;
-  return applyTransforms(rows, transform, transformRegistry, transformContext);
+  if (transform === undefined) return dataView;
+  return applyTransformsToDataView(dataView, transform, transformRegistry, transformContext);
 };
 
 /**

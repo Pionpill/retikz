@@ -1,7 +1,9 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
+import { defineTransform } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
+import { literal, object, union } from 'zod';
 
 import type { IRPlot } from '../../src';
 
@@ -259,6 +261,83 @@ describe('plot lineage runtime', () => {
     );
     expect(lineage.layout).toEqual(expect.objectContaining({ coordinateType: 'cartesian2D' }));
     expect(lineage.marks[0]?.rowValues).toEqual([{ region: 'East', revenue: 3 }]);
+  });
+
+  it('executes root and mark-local transforms once for the shared Scene and lineage artifact', () => {
+    const applyCounts = { root: 0, mark: 0 };
+    const countingTransform = defineTransform({
+      schema: object({
+        kind: literal('count-lineage-apply'),
+        scope: union([literal('root'), literal('mark')]),
+      }),
+      outputModel: () => ({ kind: 'preserve', outputs: [] }),
+      apply: (rows, operation) => {
+        applyCounts[operation.scope] += 1;
+        return rows;
+      },
+    });
+    const spec = pointSpec();
+    spec.transform = [{ kind: 'count-lineage-apply', scope: 'root' }];
+    spec.marks[0].transform = [{ kind: 'count-lineage-apply', scope: 'mark' }];
+
+    lowerPlotWithLineage(spec, datasets, {
+      lineage: {},
+      transformDefinitions: [countingTransform],
+    });
+
+    expect(applyCounts).toEqual({ root: 1, mark: 1 });
+  });
+
+  it('executes root and mark-local transforms once for a lineage locator request', () => {
+    const applyCounts = { root: 0, mark: 0 };
+    const countingTransform = defineTransform({
+      schema: object({
+        kind: literal('count-lineage-locator-apply'),
+        scope: union([literal('root'), literal('mark')]),
+      }),
+      outputModel: () => ({ kind: 'preserve', outputs: [] }),
+      apply: (rows, operation) => {
+        applyCounts[operation.scope] += 1;
+        return rows;
+      },
+    });
+    const spec = pointSpec();
+    spec.transform = [{ kind: 'count-lineage-locator-apply', scope: 'root' }];
+    spec.marks[0].transform = [{ kind: 'count-lineage-locator-apply', scope: 'mark' }];
+
+    createPlotLineageLocator(spec, datasets, {
+      lineage: {},
+      transformDefinitions: [countingTransform],
+    });
+
+    expect(applyCounts).toEqual({ root: 1, mark: 1 });
+  });
+
+  it('executes transforms independently for separate Scene and lineage lowering requests', () => {
+    const applyCounts = { root: 0, mark: 0 };
+    const countingTransform = defineTransform({
+      schema: object({
+        kind: literal('count-independent-lineage-apply'),
+        scope: union([literal('root'), literal('mark')]),
+      }),
+      outputModel: () => ({ kind: 'preserve', outputs: [] }),
+      apply: (rows, operation) => {
+        applyCounts[operation.scope] += 1;
+        return rows;
+      },
+    });
+    const spec = pointSpec();
+    spec.transform = [{ kind: 'count-independent-lineage-apply', scope: 'root' }];
+    spec.marks[0].transform = [{ kind: 'count-independent-lineage-apply', scope: 'mark' }];
+    const options = {
+      lineage: {},
+      transformDefinitions: [countingTransform],
+    };
+
+    lowerPlotWithLineage(spec, datasets, options);
+    lowerPlotWithLineage(spec, datasets, options);
+
+    expect(applyCounts).toEqual({ root: 2, mark: 2 });
   });
 
   it('omits host metadata when enabled fields are absent', () => {
