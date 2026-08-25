@@ -38,6 +38,8 @@ export const RetikzFoundationErrorCode = {
   NonEmptyStringRequired: 'FOUNDATION_NON_EMPTY_STRING_REQUIRED',
   /** 数值不是严格大于零的有限数 */
   PositiveNumberRequired: 'FOUNDATION_POSITIVE_NUMBER_REQUIRED',
+  /** JSON 数据无效 */
+  Json: 'FOUNDATION_JSON_ERROR',
 } as const;
 
 /** Foundation 包稳定错误码取值 */

@@ -173,7 +173,7 @@ Core 只提供跨 owner 成立的来源原子：`inherit` 表示 owner resolver 
 
 Scene / Scope 只持久化 `style` 与 `mode`。Plot、Chart、Table 等 Tier 2 owner 分别通过同名 runtime style definition 生成完整 baseline，并在本地分别使用 `plotThemeTokens`、`chartThemeTokens`、`tableThemeTokens` 保存 sparse override。完整 token map、definition 与 resolver 不进入 Theme IR；Core 不静态知道领域 token 类型或业务语义。
 
-Core 第一版 shared colors 只包含 `semantic.error`、`semantic.success`、`semantic.warning` 和一套非空 active `palette.categorical`。Core Inspector 为每个 occurrence 按 `colorScope % palette.categorical.length` 产生 scope color，warning 使用 warning role；Standard 只消费 `InspectionAppearance`，不读取领域 token 或重建取余。Plot 将 shared categorical 以 `inherit` 来源投影为 categorical / series / sector baseline，Table 将其投影为 `data.categorical` baseline，Chart 的默认 series color 只读取 Plot resolver 最终 palette；任何 owner 都不能复制 active categorical array。
+Core 第一版 shared colors 只包含 `semantic.error`、`semantic.success`、`semantic.warning`、`semantic.guide` 和一套非空 active `palette.categorical`。Core Inspector 为每个 occurrence 按 `colorScope % palette.categorical.length` 产生 scope color，warning 与 guide 使用对应 semantic role；Standard 只消费 `InspectionAppearanceContext`，不读取领域 token 或重建取余。Plot 将 shared categorical 以 `inherit` 来源投影为 categorical / series / sector baseline，Table 将其投影为 `data.categorical` baseline，Chart 的默认 series color 只读取 Plot resolver 最终 palette；任何 owner 都不能复制 active categorical array。
 
 ## 6. 新能力的设计流程
 

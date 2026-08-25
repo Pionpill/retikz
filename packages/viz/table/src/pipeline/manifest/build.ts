@@ -67,9 +67,9 @@ export const buildTableLayoutManifest = (
         }
         const trace = plan?.trace.appearance ?? {};
         return {
-          cellId: cell.id,
-          rowId: cell.rowId,
-          columnId: cell.columnId,
+          ...(cell.id === undefined ? {} : { cellId: cell.id }),
+          ...(cell.rowId === undefined ? {} : { rowId: cell.rowId }),
+          ...(cell.columnId === undefined ? {} : { columnId: cell.columnId }),
           rowIndex: cell.rowIndex,
           columnIndex: cell.columnIndex,
           span: { ...cell.span },

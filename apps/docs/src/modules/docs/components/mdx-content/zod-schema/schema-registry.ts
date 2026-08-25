@@ -510,20 +510,40 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/library/standard/composite/surface#surfaceschema',
   },
 
-  ContainerSchema: {
-    schema: GraphIR.ContainerSchema,
-    label: 'Container',
-    url: '/schematic/graph/container/basic',
+  GraphSchema: {
+    schema: GraphIR.GraphSchema,
+    label: 'Graph',
+    url: '/schematic/graph/api-reference',
   },
   EntitySchema: {
     schema: GraphIR.EntitySchema,
     label: 'Entity',
-    url: '/schematic/graph/entity/basic',
+    url: '/schematic/graph/api-reference',
   },
   RelationSchema: {
     schema: GraphIR.RelationSchema,
     label: 'Relation',
-    url: '/schematic/graph/relation/basic',
+    url: '/schematic/graph/api-reference',
+  },
+  GraphPredicateRefSchema: {
+    schema: GraphIR.GraphPredicateRefSchema,
+    label: 'GraphPredicateRef',
+    url: '/schematic/graph/api-reference',
+  },
+  GraphThemeLayerSchema: {
+    schema: GraphIR.GraphThemeLayerSchema,
+    label: 'GraphThemeLayer',
+    url: '/schematic/graph/api-reference',
+  },
+  GraphEntityThemeSelectorSchema: {
+    schema: GraphIR.GraphEntityThemeSelectorSchema,
+    label: 'GraphEntityThemeSelector',
+    url: '/schematic/graph/api-reference',
+  },
+  GraphRelationThemeSelectorSchema: {
+    schema: GraphIR.GraphRelationThemeSelectorSchema,
+    label: 'GraphRelationThemeSelector',
+    url: '/schematic/graph/api-reference',
   },
   TableSchema: {
     schema: IRTable.TableSchema,
@@ -604,6 +624,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IRTable.TableThemeTokenPresetMapSchema,
     label: 'TableThemeTokenPresetMap',
     url: '/viz/table/reference/contract-table#tablethemetokenpresetmapschema',
+  },
+  TableThemeStyleTokenOverridesSchema: {
+    schema: IRTable.TableThemeStyleTokenOverridesSchema,
+    label: 'TableThemeStyleTokenOverrides',
+    url: '/viz/table/reference/contract-table#tablethemestyletokenoverridesschema',
   },
   TableCellSpanSchema: {
     schema: IRTable.TableCellSpanSchema,

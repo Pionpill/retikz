@@ -1,7 +1,7 @@
 import type { AxisAlignedBounds, Position } from '@retikz/math';
 import type { FC } from 'react';
 
-import { arcBoundingPoints, boundsOf, boundsToRect } from '@retikz/math';
+import { boundsOf, boundsToRect, collectArcBoundingCandidates } from '@retikz/math';
 import { Arc, Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
 import { Fragment } from 'react';
 
@@ -34,7 +34,7 @@ const boundsLabelOf = (bounds: AxisAlignedBounds): string =>
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const points = pointsOf(values);
-  const arcBoundaryPoints = arcBoundingPoints({
+  const arcBoundaryPoints = collectArcBoundingCandidates({
     center: ARC_CENTER,
     radius: ARC_RADIUS,
     startAngleDeg: values.arcStartAngle,

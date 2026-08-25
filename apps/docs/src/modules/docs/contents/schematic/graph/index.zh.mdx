@@ -1,48 +1,60 @@
 ---
 title: Graph
-description: 用 Graph presentation root 组织 Entity、Relation 与 Container，并按基础用法或扩展用法深入学习。
+description: 用可选的 Graph Scope 提供局部语义样式与默认值，并让 Entity、Relation 和任意 Core 内容自由组合。
 ---
 
-Graph 是 Schematic 领域中可复用图式元素的统一入口。`Graph` presentation root 提供全局 Entity variant 与 Theme token 作用域；`Entity` 表达可被引用的对象，`Relation` 表达对象之间的关系，`Container` 组织带外壳的局部结构。
+Graph 是一个可选的上下文薄壳。它复用 Core `Scope` 的完整能力，并额外向可见的 Entity 与 Relation 后代提供局部 `graphTheme`；自动布局、routing 算法和 renderer 不属于 Graph。
 
-Graph 负责图中元素的语义与绘制契约，不拥有 `GraphModel`、自动布局、自动避障、命中测试或交互状态。请用 Core 坐标或 Layout 布局放置单元，再用稳定的 `id` 表达显式 target。
+Entity 与 Relation 也是独立的 Tier 2 composite，可以直接放在 Layout、Scope 或其它接受 Core child 的位置。Graph 不维护成员列表或 identity index；Relation 的引用与重复 id 诊断统一交给 Core namespace。
+
+## 两种宿主模式
+
+Graph 作为顶层 React 组件时，和 Layout、Plot、Table 一样建立一个 Scene 宿主，不需要再包一层 Layout：
+
+```tsx
+<Graph width={420} height={160}>
+  <Entity id="service" role="activity" position={[120, 80]}>
+    服务
+  </Entity>
+</Graph>
+```
+
+如果外层已经有 Layout，Graph 只下沉为影响局部内容的一个 Scope，不创建第二个 SVG 或 Canvas：
+
+```tsx
+<Layout width={800} height={220}>
+  <Graph transforms={[{ kind: 'translate', x: 80, y: 40 }]}>
+    <Entity role="activity" position={[120, 80]}>
+      局部内容
+    </Entity>
+  </Graph>
+</Layout>
+```
+
+`theme`、`nodeDefault`、`pathDefault`、`labelDefault`、`arrowDefault`、`resetStyle`、`transforms`、`placement`、`zIndex`、`clip` 等字段直接属于 `IRGraph`，并沿用 Core Scope 语义。`width`、`height`、renderer、runtime 与 DOM 属性只属于 standalone Scene 宿主；嵌入 Graph 时应把这些属性放到外层 Layout。
 
 ## 职责一览
 
-| 成员        | 拥有                                        | 不拥有                |
-| ----------- | ------------------------------------------- | --------------------- |
-| `Graph`     | presentation scope、Entity 默认值与主题规则 | GraphModel 或自动布局 |
-| `Container` | 外壳、header、有序 section 与可复用区域布局 | 图拓扑或自动放置      |
-| `Entity`    | 中性形状、content、尺寸与语义 role          | 领域状态机            |
-| `Relation`  | 一条 Core Path 路由和可选的末步 label       | 自动路由或自动避障    |
+| 成员       | 职责                                                       | 不负责                       |
+| ---------- | ---------------------------------------------------------- | ---------------------------- |
+| Graph      | Core Scope 公共面与局部 Graph Theme                        | 成员索引、排布、routing      |
+| Entity     | 节点语义，并独立下沉为普通 Core Node                       | 生成 id、承载任意绘图 child  |
+| Relation   | Core NodeTarget endpoint、关系语义，并独立下沉为 Core Path | Graph 成员校验、自动 routing |
+| Core child | 与 Entity、Relation 按作者顺序自由组合                     | 消费 Graph-local 语义规则    |
 
-所有成员都下沉为既有 Core 图元，可通过 React、直接 JSON/IR 或 Vanilla embed 编写。内置与自定义 role / variant 共用 Definition registry；Definition 按 figure 注入，不进入持久化 JSON。
-
-## 内容分组
+## 章节内容
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/schematic/graph/entity">
     <span className="font-semibold">Entity</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">图式对象、role 与组合方式</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">独立节点语义、文本、位置与扩展</span>
   </LinkedCard>
   <LinkedCard href="/schematic/graph/relation">
     <span className="font-semibold">Relation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Path step、Draw way 与 target</span>
-  </LinkedCard>
-  <LinkedCard href="/schematic/graph/container">
-    <span className="font-semibold">Container</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">外壳、header 与有序 section</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">通用引用端点、方向、route 与扩展</span>
   </LinkedCard>
   <LinkedCard href="/schematic/graph/api-reference">
     <span className="font-semibold">Graph API 参考</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Schema、factory、Definition 与 adapter identity
-    </span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Source schema、Scope 公共面与三套 adapter</span>
   </LinkedCard>
 </div>
-
-## 相关
-
-- [布局容器](/library/layout)：通用 Flex、Grid 与 Overlay 排列
-- [Schematic 简介](/schematic/introduction)：Graph 与 Diagram 能力的边界
-- [Core Path](/kernel/components/draw/overview)：Relation 使用的底层图元

@@ -3,12 +3,10 @@ import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
 import type { InputEmbedAdapter, InputScope } from '@retikz/vanilla';
 
-import { assertNonEmptyString } from '@retikz/foundation';
 import {
   createPlotProvider as createPlotDependencyProvider,
   createPlotProviderContribution,
   PLOT_NAMESPACE,
-  PlotComposite,
 } from '@retikz/plot';
 import { normalizeScopeWithChildren } from '@retikz/vanilla';
 
@@ -71,14 +69,11 @@ export const resolvePlotContribution = (request: PlotContributionRequest): Resol
 /** 将 Plot authoring input 下沉为 Core contribution 的 InputEmbed adapter */
 export const PlotInputEmbedAdapter: InputEmbedAdapter<InputPlotEmbed> = {
   kind: PLOT_NAMESPACE,
-  lower: (props, context) => {
-    assertNonEmptyString(context.id, 'plot vanilla embed id');
+  lower: props => {
     const spec = plotIROf(props);
     const providerDependencies = createPlotProviderContribution(props.datasets, props.lowerOptions);
-    const node =
-      props.preserveRootIdentity === true ? spec : { ...spec, id: `${context.id}/${spec.id ?? PlotComposite.Plot}` };
     return {
-      node: wrapPlotPanel(node, props.panel),
+      node: wrapPlotPanel(spec, props.panel),
       providerDependencies,
     };
   },

@@ -32,7 +32,7 @@ describe('Table style and encoding manifest seed', () => {
     expect(result.manifest.style.sources.map(entry => entry.key)).toEqual(TableThemeTokenKeySchema.options);
     expect(result.manifest.style.sources.find(entry => entry.key === 'cell.content.color')?.source).toBe('local');
     expect(result.manifest.encodings).toEqual([
-      { id: 'value-fill', channel: 'backgroundFill', scaleName: 'ordinal-color', cellIds: ['cell.r0.c0'] },
+      { id: 'value-fill', channel: 'backgroundFill', scaleName: 'ordinal-color', cellIndices: [0] },
     ]);
     expect(result.manifest.legendDescriptors).toEqual([
       {
@@ -224,7 +224,7 @@ describe('Table style and encoding manifest seed', () => {
     );
 
     const missingEncodingCell = structuredClone(result.manifest);
-    Object.assign(missingEncodingCell.encodings[0], { cellIds: [] });
+    Object.assign(missingEncodingCell.encodings[0], { cellIndices: [] });
     expect(() => TableLayoutManifestSchema.parse(missingEncodingCell)).toThrow(/encoding.*cell|cell.*encoding/i);
 
     const unknownCellEncoding = structuredClone(result.manifest);
@@ -248,21 +248,21 @@ describe('Table style and encoding manifest seed', () => {
     expect(() => TableLayoutManifestSchema.parse(missingCellEncoding)).toThrow(/canonical cell encoding lineage/i);
 
     const duplicateEncodingCell = structuredClone(result.manifest);
-    const firstCellId = duplicateEncodingCell.encodings[0].cellIds[0];
+    const firstCellIndex = duplicateEncodingCell.encodings[0].cellIndices[0];
     Object.assign(duplicateEncodingCell.encodings[0], {
-      cellIds: [firstCellId, firstCellId, ...duplicateEncodingCell.encodings[0].cellIds.slice(1)],
+      cellIndices: [firstCellIndex, firstCellIndex, ...duplicateEncodingCell.encodings[0].cellIndices.slice(1)],
     });
     expect(() => TableLayoutManifestSchema.parse(duplicateEncodingCell)).toThrow(/canonical cell encoding lineage/i);
 
     const unknownEncodingCell = structuredClone(result.manifest);
     Object.assign(unknownEncodingCell.encodings[0], {
-      cellIds: [...unknownEncodingCell.encodings[0].cellIds, 'forged'],
+      cellIndices: [...unknownEncodingCell.encodings[0].cellIndices, unknownEncodingCell.cells.length],
     });
     expect(() => TableLayoutManifestSchema.parse(unknownEncodingCell)).toThrow(/canonical cell encoding lineage/i);
 
     const reversedEncodingCells = structuredClone(result.manifest);
     Object.assign(reversedEncodingCells.encodings[0], {
-      cellIds: [...reversedEncodingCells.encodings[0].cellIds].reverse(),
+      cellIndices: [...reversedEncodingCells.encodings[0].cellIndices].reverse(),
     });
     expect(() => TableLayoutManifestSchema.parse(reversedEncodingCells)).toThrow(/canonical cell encoding lineage/i);
 
@@ -299,6 +299,6 @@ describe('Table style and encoding manifest seed', () => {
 
     const missingTableId = structuredClone(result.manifest);
     Reflect.deleteProperty(missingTableId, 'tableId');
-    expect(() => TableLayoutManifestSchema.parse(missingTableId)).toThrow(/tableId|table id/i);
+    expect(TableLayoutManifestSchema.parse(missingTableId)).not.toHaveProperty('tableId');
   });
 });

@@ -3,7 +3,7 @@ import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, string } from 'zod';
 
 import { Layout } from '../../../src/kernel';
 
@@ -16,9 +16,9 @@ const labeledBox = defineComposite({
   namespace: 'example',
   type: 'labeledBox',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('example'),
-    type: z.literal('labeledBox'),
-    text: z.string(),
+    namespace: literal('example'),
+    type: literal('labeledBox'),
+    text: string(),
   }),
   expand: node => ({
     children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: node.text }],

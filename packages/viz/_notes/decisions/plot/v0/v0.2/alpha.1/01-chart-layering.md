@@ -177,7 +177,7 @@ Token map 是闭合数据，不执行代码、不按名称 dispatch，因此本 
 
 ## 行为、失败语义与兼容性
 
-- Core 默认 `neutral + light` 下，直接 Plot 的既有视觉基线保持稳定；第一版 Plot preset 必须以当前 Plot resolver 默认作为兼容基线，不能机械复制 Chart 默认后改变 direct Plot
+- Core 匿名 light 默认环境下，直接 Plot 的既有视觉基线保持稳定；Plot 默认 preset 必须以当前 Plot resolver 默认作为兼容基线，不能机械复制 Chart 默认后改变 direct Plot
 - 非默认 Scene / Scope Theme 开始同时驱动直接 Plot、Chart 内部 Plot 与 Chart presentation；同一 IRPlot 在相同 effective Theme 下不因是否位于 Chart 内而获得不同 Plot preset
 - 当前 Chart catalog 中已经映射到 Plot 的 palette、axis、legend 与 Plot surface 值作为非默认 style / mode 与 Chart 迁移的设计输入；迁移后由 Plot owner 维护，不因现有代码位置继续归 Chart。精确 hex、尺寸和 scheme 是 Plot preset 数据，可在不改变四种人格和上述兼容基线的前提下审阅调优
 - 已有 `IRPlotTheme`、`colors` 与具体 guide / scale 配置继续有效，并按本 ADR 的优先级获得更高覆盖权

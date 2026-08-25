@@ -10,7 +10,7 @@ import {
 } from '@retikz/core';
 import { LayoutAlignment } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, string } from 'zod';
 
 import { LegendContentKind, LegendDirection } from '../../src/composites/presentation/legend/constants';
 import { LegendDefinition } from '../../src/composites/presentation/legend/definition';
@@ -18,13 +18,13 @@ import { createLegend } from '../../src/composites/presentation/legend/factory';
 import { fullScopeProps } from '../composites/presentation/scope-props';
 
 const LeafSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('legend-ramp-test'),
-  type: z.literal('leaf'),
-  id: z.string(),
-  width: z.number().nonnegative(),
-  height: z.number().nonnegative(),
-  exactAllocationWidth: z.number().nonnegative().optional(),
-  exactAllocationHeight: z.number().nonnegative().optional(),
+  namespace: literal('legend-ramp-test'),
+  type: literal('leaf'),
+  id: string(),
+  width: number().nonnegative(),
+  height: number().nonnegative(),
+  exactAllocationWidth: number().nonnegative().optional(),
+  exactAllocationHeight: number().nonnegative().optional(),
 });
 
 const leaf = (
@@ -60,8 +60,8 @@ const compileRamp = (child: IRChild, proposal?: LayoutProposal) => {
     namespace: 'legend-ramp-test',
     type: 'harness',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('legend-ramp-test'),
-      type: z.literal('harness'),
+      namespace: literal('legend-ramp-test'),
+      type: literal('harness'),
       child: ChildSchema,
     }),
     compile: (node, context) => {

@@ -26,8 +26,8 @@ export type ResolvedTableCellPlan =
   | Readonly<{
       /** value Cell 判别字段 */
       kind: 'value';
-      /** canonical 单元格 id */
-      cellId: string;
+      /** 可选 canonical 单元格 id */
+      cellId?: string;
       /** 最终 formatter 引用 */
       formatter: DeepReadonly<IRTableFormatterRef>;
       /** 最终 presentation 引用 */
@@ -51,8 +51,8 @@ export type ResolvedTableCellPlan =
   | Readonly<{
       /** content Cell 判别字段 */
       kind: 'content';
-      /** canonical 单元格 id */
-      cellId: string;
+      /** 可选 canonical 单元格 id */
+      cellId?: string;
       /** 进入布局的最终 appearance */
       appearance: DeepReadonly<IRTableCellAppearance>;
       /** content Cell 的规则与 appearance 胜者追溯 */
@@ -86,8 +86,8 @@ export type ResolvedTableEncoding = Readonly<{
   channel: TableVisualChannelValue;
   /** 已解析的 scale definition 名称 */
   scaleName: string;
-  /** 实际产生颜色的 canonical Cell ids */
-  cellIds: ReadonlyArray<string>;
+  /** 实际产生颜色的 canonical Cell indices */
+  cellIndices: ReadonlyArray<number>;
 }>;
 
 /** 同次 plan orchestration 的 Cell、descriptor 与 encoding bundle */

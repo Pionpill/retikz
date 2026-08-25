@@ -1,6 +1,9 @@
+import type { infer as ZodInfer, ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
+
 import { JsonObjectSchema, JsonValueSchema } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { PlotFacetConfigurationSchema, PlotSchema } from '@retikz/plot';
-import { z } from 'zod';
+import { array, literal, number, object, strictObject } from 'zod';
 
 import { CHART_NAMESPACE } from '../constants';
 import { ChartPlotExtensionSchema } from './plot-extension';
@@ -8,69 +11,58 @@ import { ChartPresentationSchema } from './presentation';
 import { createChartThemeSchema } from './theme';
 
 /** Chart 外部 layout 的正有限尺寸 */
-export const ChartLayoutSchema = z
-  .strictObject({
-    width: z.number().positive().optional().describe('External Chart border-box width'),
-    height: z.number().positive().optional().describe('External Chart border-box height'),
-  })
-  .describe('External Chart layout dimensions; never copied into Plot Source IR');
+export const ChartLayoutSchema = strictObject({
+  width: number().positive().optional().describe('External Chart border-box width'),
+  height: number().positive().optional().describe('External Chart border-box height'),
+}).describe('External Chart layout dimensions; never copied into Plot Source IR');
 
 /** 内部 erased recipe shell schema；仅用于推导通用 Source 类型 */
-const ChartRecipeShellSchema = z
-  .object({
-    chartType: z.string().min(1).describe('Globally unique recipe key'),
-    encodings: JsonObjectSchema.describe('Recipe-owned field-bound encoding roles'),
-    properties: JsonObjectSchema.optional().describe('Recipe-owned constant properties'),
-    facet: PlotFacetConfigurationSchema.optional().describe('Plot-owned facet facts supported by this Chart recipe'),
-    marks: z
-      .array(z.object({ kind: z.string().min(1).describe('Registered Chart mark kind') }).catchall(JsonValueSchema))
-      .optional()
-      .describe('Ordered Chart marks'),
-  })
-  .catchall(JsonValueSchema);
+const ChartRecipeShellSchema = object({
+  chartType: NonBlankStringSchema.describe('Globally unique recipe key'),
+  encodings: JsonObjectSchema.describe('Recipe-owned field-bound encoding roles'),
+  properties: JsonObjectSchema.optional().describe('Recipe-owned constant properties'),
+  facet: PlotFacetConfigurationSchema.optional().describe('Plot-owned facet facts supported by this Chart recipe'),
+  marks: array(object({ kind: NonBlankStringSchema.describe('Registered Chart mark kind') }).catchall(JsonValueSchema))
+    .optional()
+    .describe('Ordered Chart marks'),
+}).catchall(JsonValueSchema);
 
 /** 内部 erased Source shell schema；不参与最终 Source parse */
-const ChartSourceShellSchema = z
-  .strictObject({
-    namespace: z.literal(CHART_NAMESPACE).describe('Chart namespace discriminator'),
-    type: z.string().min(1).describe('Registered Chart family discriminator'),
-    id: z.string().min(1).optional().describe('Optional Chart identity'),
-    presentation: ChartPresentationSchema.optional(),
-    theme: createChartThemeSchema(JsonObjectSchema).optional(),
-    data: PlotSchema.shape.data.describe('Unique external dataset reference'),
-    layout: ChartLayoutSchema.optional(),
-    recipe: ChartRecipeShellSchema,
-    plotExtension: ChartPlotExtensionSchema.optional(),
-  })
-  .describe('Common strict Chart Source shell before a recipe-specific schema is selected');
+const ChartSourceShellSchema = strictObject({
+  namespace: literal(CHART_NAMESPACE).describe('Chart namespace discriminator'),
+  type: NonBlankStringSchema.describe('Registered Chart family discriminator'),
+  id: NonBlankStringSchema.optional().describe('Optional Chart identity'),
+  presentation: ChartPresentationSchema.optional(),
+  theme: createChartThemeSchema(JsonObjectSchema).optional(),
+  data: PlotSchema.shape.data.describe('Unique external dataset reference'),
+  layout: ChartLayoutSchema.optional(),
+  recipe: ChartRecipeShellSchema,
+  plotExtension: ChartPlotExtensionSchema.optional(),
+}).describe('Common strict Chart Source shell before a recipe-specific schema is selected');
 
 /** 精确 recipe schema 组装所用的 root shape */
-type ChartSourceShape<TFamily extends string, TRecipe extends z.ZodTypeAny, TTheme extends z.ZodTypeAny> = {
-  namespace: z.ZodLiteral<typeof CHART_NAMESPACE>;
-  type: z.ZodLiteral<TFamily>;
-  id: z.ZodOptional<z.ZodString>;
-  presentation: z.ZodOptional<typeof ChartPresentationSchema>;
+type ChartSourceShape<TFamily extends string, TRecipe extends ZodType, TTheme extends ZodType> = {
+  namespace: ZodLiteral<typeof CHART_NAMESPACE>;
+  type: ZodLiteral<TFamily>;
+  id: ZodOptional<ZodString>;
+  presentation: ZodOptional<typeof ChartPresentationSchema>;
   theme: TTheme;
   data: typeof PlotSchema.shape.data;
-  layout: z.ZodOptional<typeof ChartLayoutSchema>;
+  layout: ZodOptional<typeof ChartLayoutSchema>;
   recipe: TRecipe;
-  plotExtension: z.ZodOptional<typeof ChartPlotExtensionSchema>;
+  plotExtension: ZodOptional<typeof ChartPlotExtensionSchema>;
 };
 
 /** 按 family、recipe schema 与精确 recipe Theme schema 创建 strict Source schema */
-export const createChartSourceSchema = <
-  TFamily extends string,
-  TRecipe extends z.ZodTypeAny,
-  TTheme extends z.ZodTypeAny,
->(
+export const createChartSourceSchema = <TFamily extends string, TRecipe extends ZodType, TTheme extends ZodType>(
   family: TFamily,
   recipe: TRecipe,
   theme: TTheme,
-): z.ZodObject<ChartSourceShape<TFamily, TRecipe, TTheme>> =>
-  z.strictObject({
-    namespace: z.literal(CHART_NAMESPACE).describe('Chart namespace discriminator'),
-    type: z.literal(family).describe('Stable Chart family discriminator'),
-    id: z.string().min(1).optional().describe('Optional Chart identity'),
+): ZodObject<ChartSourceShape<TFamily, TRecipe, TTheme>> =>
+  strictObject({
+    namespace: literal(CHART_NAMESPACE).describe('Chart namespace discriminator'),
+    type: literal(family).describe('Stable Chart family discriminator'),
+    id: NonBlankStringSchema.optional().describe('Optional Chart identity'),
     presentation: ChartPresentationSchema.optional(),
     theme,
     data: PlotSchema.shape.data.describe('Unique external dataset reference'),
@@ -80,4 +72,4 @@ export const createChartSourceSchema = <
   });
 
 /** Chart Source 的通用 typed shell 形态 */
-export type IRChartSource = z.infer<typeof ChartSourceShellSchema>;
+export type IRChartSource = ZodInfer<typeof ChartSourceShellSchema>;

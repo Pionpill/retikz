@@ -76,22 +76,22 @@ describe('PathSchema: arrow sugar is outside core IR', () => {
 });
 
 describe('ArrowDetailSchema：错误路径', () => {
-  // shape 已开成开放字符串（z.string().min(1)）：任意非空名 schema 接受，
+  // shape 已开成开放字符串（NonBlankStringSchema）：任意非空白名 schema 接受，
   // 未注册名的拒绝移到 compile 期（见 arrows/builtin-registry.test.ts 的 compile throw 用例）
-  it('任意非空 shape 名 schema 接受（顶层）', () => {
+  it('任意非空白 shape 名 schema 接受（顶层）', () => {
     expect(ArrowDetailSchema.safeParse({ shape: 'unknown' }).success).toBe(true);
   });
 
-  it('任意非空 shape 名 schema 接受（start 子对象）', () => {
+  it('任意非空白 shape 名 schema 接受（start 子对象）', () => {
     expect(ArrowDetailSchema.safeParse({ start: { shape: 'banana' } }).success).toBe(true);
   });
 
-  it('空串 shape 拒绝（顶层，min(1)）', () => {
-    expect(ArrowDetailSchema.safeParse({ shape: '' }).success).toBe(false);
+  it.each(['', '   '])('空白 shape %j 拒绝（顶层）', shape => {
+    expect(ArrowDetailSchema.safeParse({ shape }).success).toBe(false);
   });
 
-  it('空串 shape 拒绝（start 子对象，min(1)）', () => {
-    expect(ArrowDetailSchema.safeParse({ start: { shape: '' } }).success).toBe(false);
+  it.each(['', '   '])('空白 shape %j 拒绝（start 子对象）', shape => {
+    expect(ArrowDetailSchema.safeParse({ start: { shape } }).success).toBe(false);
   });
 
   it('scale 负数拒绝', () => {

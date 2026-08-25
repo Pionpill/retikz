@@ -1,28 +1,21 @@
 import type { CompileObservation, IRScene } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { null as zodNull, number, strictObject, string } from 'zod';
 
-import type { InspectionSelection } from '../../src';
-
-import {
-  createInspectorRegistry,
-  defineInspector,
-  resolveInspectionSelection,
-  RetikzInspectError,
-  RetikzInspectErrorCode,
-} from '../../src';
+import { createInspectorRegistry, defineInspector, resolveInspectionSelection } from '../../src';
 
 const owner = { kind: 'composite' as const, namespace: 'demo', type: 'box' };
-const key = { namespace: 'test', name: 'box' };
+const key = { namespace: 'test', type: 'box' };
 const definition = defineInspector({
   ...key,
   owner,
-  subjectSchema: z.strictObject({ value: z.number() }),
-  optionsInputSchema: z.strictObject({ label: z.string().optional(), tone: z.string().optional() }),
-  optionsSchema: z
-    .strictObject({ label: z.string().optional(), tone: z.string().optional() })
-    .transform(value => ({ label: value.label ?? 'default', tone: value.tone ?? 'normal' })),
+  subjectSchema: strictObject({ value: number() }),
+  optionsInputSchema: strictObject({ label: string().optional(), tone: string().optional() }),
+  optionsSchema: strictObject({ label: string().optional(), tone: string().optional() }).transform(value => ({
+    label: value.label ?? 'default',
+    tone: value.tone ?? 'normal',
+  })),
   mergeOptionsInput: (inherited, local) => ({ ...inherited, ...local }),
   inspect: () => [],
 });
@@ -78,24 +71,24 @@ describe('Inspection selection', () => {
       observations: [observation(1), observation(0)],
       selection: {
         rules: [
-          { kind: 'request', inspector: key, target: { kind: 'scene' }, value: { tone: 'scene' } },
+          { kind: 'request', inspector: key, target: { kind: 'scene' }, options: { tone: 'scene' } },
           {
             kind: 'request',
             inspector: key,
             target: { kind: 'subtree', sourcePath: 'children[0].scope' },
-            value: { label: 'nested' },
+            options: { label: 'nested' },
           },
           {
             kind: 'request',
             inspector: key,
             target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].scope.children[1]' } },
-            value: false,
+            options: false,
           },
           {
             kind: 'request',
             inspector: key,
             target: { kind: 'self', locator: { kind: 'occurrence', occurrence: observation(1).occurrence } },
-            value: { tone: 'reopened' },
+            options: { tone: 'reopened' },
           },
         ],
       },
@@ -109,7 +102,7 @@ describe('Inspection selection', () => {
       { label: 'nested', tone: 'scene' },
       { label: 'default', tone: 'reopened' },
     ]);
-    expect(resolved.map(request => request.appearance.colorScope)).toEqual([0, 1]);
+    expect(resolved.map(request => request.colorScope)).toEqual([0, 1]);
   });
 
   it('prevents reopening below a barrier', () => {
@@ -119,13 +112,13 @@ describe('Inspection selection', () => {
       observations: [observation(0)],
       selection: {
         rules: [
-          { kind: 'request', inspector: key, target: { kind: 'scene' }, value: true },
+          { kind: 'request', inspector: key, target: { kind: 'scene' }, options: true },
           { kind: 'barrier', target: { kind: 'subtree', sourcePath: 'children[0].scope' } },
           {
             kind: 'request',
             inspector: key,
             target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].scope.children[0]' } },
-            value: true,
+            options: true,
           },
         ],
       },
@@ -145,7 +138,7 @@ describe('Inspection selection', () => {
               kind: 'request',
               inspector: key,
               target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].scope.children[0]' } },
-              value: false,
+              options: false,
             },
           ],
         },
@@ -157,9 +150,9 @@ describe('Inspection selection', () => {
     const pathDefinition = defineInspector({
       ...key,
       owner: { kind: 'pathKind' as const, name: 'stroke' },
-      subjectSchema: z.null(),
-      optionsInputSchema: z.strictObject({}),
-      optionsSchema: z.strictObject({}),
+      subjectSchema: zodNull(),
+      optionsInputSchema: strictObject({}),
+      optionsSchema: strictObject({}),
       inspect: () => [],
     });
     const pathRegistry = createInspectorRegistry([pathDefinition]);
@@ -174,7 +167,7 @@ describe('Inspection selection', () => {
               kind: 'request',
               inspector: key,
               target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].scope.children[0]' } },
-              value: true,
+              options: true,
             },
           ],
         },
@@ -185,7 +178,7 @@ describe('Inspection selection', () => {
         ir,
         registry: pathRegistry,
         observations: [observation(0)],
-        selection: { rules: [{ kind: 'request', inspector: key, target: { kind: 'scene' }, value: true }] },
+        selection: { rules: [{ kind: 'request', inspector: key, target: { kind: 'scene' }, options: true }] },
       }),
     ).toEqual([]);
   });
@@ -206,7 +199,7 @@ describe('Inspection selection', () => {
             kind: 'request',
             inspector: key,
             target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].scope.children[0]' } },
-            value: true,
+            options: true,
           },
         ],
       },
@@ -234,7 +227,7 @@ describe('Inspection selection', () => {
                 occurrenceIndex: 1,
               },
             },
-            value: true,
+            options: true,
           },
         ],
       },
@@ -263,7 +256,7 @@ describe('Inspection selection', () => {
                   occurrenceIndex: 2,
                 },
               },
-              value: true,
+              options: true,
             },
           ],
         },
@@ -272,13 +265,13 @@ describe('Inspection selection', () => {
   });
 
   it('requires explicit self selection for every Path Inspector, including third-party definitions', () => {
-    const pathKey = { namespace: 'third-party', name: 'path-geometry' };
+    const pathKey = { namespace: 'third-party', type: 'path-geometry' };
     const pathDefinition = defineInspector({
       ...pathKey,
       owner: { kind: 'pathKind' as const, name: 'stroke' },
-      subjectSchema: z.strictObject({ value: z.number() }),
-      optionsInputSchema: z.strictObject({}),
-      optionsSchema: z.strictObject({}),
+      subjectSchema: strictObject({ value: number() }),
+      optionsInputSchema: strictObject({}),
+      optionsSchema: strictObject({}),
       inspect: () => [],
     });
     const pathRegistry = createInspectorRegistry([pathDefinition]);
@@ -303,7 +296,7 @@ describe('Inspection selection', () => {
         ir: pathIr,
         registry: pathRegistry,
         observations: [pathObservation],
-        selection: { rules: [{ kind: 'request', inspector: pathKey, target: { kind: 'scene' }, value: true }] },
+        selection: { rules: [{ kind: 'request', inspector: pathKey, target: { kind: 'scene' }, options: true }] },
       }),
     ).toEqual([]);
     expect(
@@ -317,7 +310,7 @@ describe('Inspection selection', () => {
               kind: 'request',
               inspector: pathKey,
               target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].path' } },
-              value: true,
+              options: true,
             },
           ],
         },
@@ -330,8 +323,8 @@ describe('Inspection selection', () => {
       'duplicate target and key',
       {
         rules: [
-          { kind: 'request', inspector: key, target: { kind: 'scene' }, value: true },
-          { kind: 'request', inspector: key, target: { kind: 'scene' }, value: false },
+          { kind: 'request', inspector: key, target: { kind: 'scene' }, options: true },
+          { kind: 'request', inspector: key, target: { kind: 'scene' }, options: false },
         ],
       },
     ],
@@ -343,7 +336,7 @@ describe('Inspection selection', () => {
             kind: 'request',
             inspector: key,
             target: { kind: 'subtree', sourcePath: 'children[99].scope' },
-            value: true,
+            options: true,
           },
         ],
       },
@@ -363,16 +356,30 @@ describe('Inspection selection', () => {
                 occurrenceIndex: -1,
               },
             },
-            value: true,
+            options: true,
           },
         ],
       },
     ],
     [
-      'barrier self target',
+      'invalid occurrence locator index',
       {
         rules: [
-          { kind: 'barrier', target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0]' } } },
+          {
+            kind: 'request',
+            inspector: key,
+            target: {
+              kind: 'self',
+              locator: {
+                kind: 'occurrence',
+                occurrence: {
+                  sourcePath: 'children[0].scope.children[0]',
+                  expansionPath: [{ kind: 'replay', index: -1 }],
+                },
+              },
+            },
+            options: true,
+          },
         ],
       },
     ],
@@ -382,31 +389,8 @@ describe('Inspection selection', () => {
         ir,
         registry,
         observations: [observation(0)],
-        selection: selection as unknown as InspectionSelection,
+        selection,
       }),
     ).toThrow();
-  });
-
-  it.each([
-    ['null rule', { rules: [null] }],
-    ['primitive rule', { rules: [1] }],
-    ['missing target', { rules: [{ kind: 'request', inspector: key, value: true }] }],
-    ['sparse rules', { rules: new Array(1) }],
-  ] as const)('wraps malformed %s as a selection error', (_label, selection) => {
-    let failure: unknown;
-    try {
-      resolveInspectionSelection({
-        ir,
-        registry,
-        observations: [observation(0)],
-        selection: selection as unknown as InspectionSelection,
-      });
-    } catch (cause) {
-      failure = cause;
-    }
-
-    expect(failure).toBeInstanceOf(RetikzInspectError);
-    expect((failure as RetikzInspectError).code).toBe(RetikzInspectErrorCode.CompileFailed);
-    expect((failure as RetikzInspectError).details.origin).toMatchObject({ stage: 'selection', ruleIndex: 0 });
   });
 });

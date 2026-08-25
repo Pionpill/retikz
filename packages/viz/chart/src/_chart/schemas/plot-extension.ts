@@ -1,20 +1,21 @@
+import type { infer as ZodInfer } from 'zod';
+
 import { PlotSchema } from '@retikz/plot';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 /** typed Chart 可显式追加的 Plot-owned fragment */
-export const ChartPlotExtensionSchema = z
-  .strictObject({
-    transform: PlotSchema.shape.transform,
-    scales: PlotSchema.shape.scales.optional(),
-    plotThemeTokens: PlotSchema.shape.plotThemeTokens,
-    plotThemeTokenRules: PlotSchema.shape.plotThemeTokenRules,
-    plotTheme: PlotSchema.shape.plotTheme,
-    coordinate: PlotSchema.shape.coordinate,
-    composition: PlotSchema.shape.composition,
-    marks: PlotSchema.shape.marks.optional(),
-    guides: PlotSchema.shape.guides,
-    meta: PlotSchema.shape.meta,
-  })
+export const ChartPlotExtensionSchema = strictObject({
+  transform: PlotSchema.shape.transform,
+  scales: PlotSchema.shape.scales.optional(),
+  plotThemeTokens: PlotSchema.shape.plotThemeTokens,
+  plotThemeTokenRules: PlotSchema.shape.plotThemeTokenRules,
+  plotTheme: PlotSchema.shape.plotTheme,
+  coordinate: PlotSchema.shape.coordinate,
+  composition: PlotSchema.shape.composition,
+  marks: PlotSchema.shape.marks.optional(),
+  guides: PlotSchema.shape.guides,
+  meta: PlotSchema.shape.meta,
+})
   .superRefine((plot, context) => {
     if (plot.coordinate !== undefined && plot.composition !== undefined) {
       context.addIssue({
@@ -27,4 +28,4 @@ export const ChartPlotExtensionSchema = z
   .describe('Optional explicit Plot refinement; recipe-generated Plot state is never stored here');
 
 /** Chart Plot fragment 的 IR 类型 */
-export type IRChartPlotExtension = z.infer<typeof ChartPlotExtensionSchema>;
+export type IRChartPlotExtension = ZodInfer<typeof ChartPlotExtensionSchema>;

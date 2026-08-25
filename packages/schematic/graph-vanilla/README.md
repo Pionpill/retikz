@@ -1,8 +1,6 @@
 # @retikz/graph-vanilla
 
-Framework-neutral Input bindings for [`@retikz/graph`](../graph). Every
-helper returns an `InputEmbed`, and explicit InputEmbed adapters lower those
-embeds for SSR and mount workflows.
+Framework-neutral authoring bindings for [`@retikz/graph`](../graph). Graph, Entity and Relation each have an independent builder and `InputEmbed` adapter. Every adapter produces the same compact Source IR as direct JSON authoring; embed identity and runtime Definition options never enter that IR.
 
 ## Install
 
@@ -14,30 +12,44 @@ This package is ESM-only and requires Node.js 24 or newer.
 本包仅发布 ES modules，要求 Node.js 24 或更高版本。
 
 ```ts
-import { DrawWay } from '@retikz/core';
 import { createGraphVanillaAdapters, entity, graph, relation } from '@retikz/graph-vanilla';
 
 const children = [
-  graph('workflow', {
-    entityVariant: 'mixed',
+  graph('workflow-embed', {
+    transforms: [{ kind: 'translate', x: 20, y: 10 }],
     children: [
-      entity('start', { role: 'terminal', position: [0, 0], text: 'Start' }),
-      entity('step', { role: 'stage', position: [160, 0], text: 'Process' }),
-      relation('edge', { role: 'flow', way: ['start', DrawWay.Hv, 'step'] }),
+      { type: 'entity', id: 'start', role: 'event', text: 'Start', position: [80, 80] },
+      { type: 'entity', id: 'task', role: 'activity', text: 'Process', position: [320, 80] },
+      {
+        type: 'relation',
+        role: 'flow',
+        source: { id: 'start' },
+        target: { id: 'task' },
+        way: ['start', 'task'],
+      },
     ],
   }),
+  entity('legend-embed', {
+    type: 'entity',
+    role: 'concept',
+    text: 'Legend',
+    position: [80, 200],
+  }),
+  relation('legend-link-embed', {
+    type: 'relation',
+    role: 'association',
+    source: { id: 'start' },
+    target: { id: 'task' },
+  }),
 ];
+
 const adapters = createGraphVanillaAdapters();
 ```
 
-Graph, Container, Entity, and Relation helpers and adapters cover the complete
-Graph family. Graph, Entity, and Relation reuse the embed id as the canonical
-Graph IR id; Container derives stable nested ids for its outer composite.
-Relation accepts either canonical Step `children` or authoring-only `way`.
-Pass `entityRoles`, `entityVariants`, and `graphThemeStyles` directly to
-`graph()` to configure custom Definitions for that Graph subtree. The adapter
-factory only installs the four Graph embed adapters. Direct persisted IR uses
-selected Definitions from `@retikz/graph` through Core compile options.
+`graph()` accepts the complete Core Scope authoring surface directly. Use `theme` for Core Theme overrides and `graphTheme` for Graph-local Entity and Relation rules. It does not create a panel Scope or a Scene host.
 
-See the [Graph documentation](https://pionpill.github.io/retikz/schematic/graph)
-for complete examples.
+`entity()` and `relation()` can be used anywhere a Vanilla `InputChild` is accepted. Their authored `id` is optional; the first builder argument is only embed traversal identity and is never copied into Source or Core identity. Relation endpoints use Core `NodeTarget`, so `{ id, anchor, offset, boundary }` remains available without a Graph parent.
+
+Pass custom Entity, Relation and Graph Theme Definition arrays to the matching builder. The adapter contributes them through provider datasets and strips all Definition options from Source IR.
+
+See the [Graph documentation](https://pionpill.github.io/retikz/schematic/graph) for complete examples.

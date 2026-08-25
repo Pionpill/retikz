@@ -28,8 +28,8 @@ export const inspectOverlayLayoutArtifact = (
     if (context.options.anchors && item.position !== undefined) {
       const { x, y } = item.position.target;
       guides.push(
-        inspectLayoutLine('overlay.anchor', x - 5, y, x + 5, y, context.appearance.scopeColor, false),
-        inspectLayoutLine('overlay.anchor', x, y - 5, x, y + 5, context.appearance.scopeColor, false),
+        inspectLayoutLine('overlay.anchor', x - 5, y, x + 5, y, context.appearance.semanticColors.guide, false),
+        inspectLayoutLine('overlay.anchor', x, y - 5, x, y + 5, context.appearance.semanticColors.guide, false),
       );
     }
     if (context.options.stacking) {

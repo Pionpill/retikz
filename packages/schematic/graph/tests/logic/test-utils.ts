@@ -6,6 +6,7 @@ import type {
   LayoutProposal,
   ScenePrimitive,
 } from '@retikz/core';
+import type { infer as ZodInfer } from 'zod';
 
 import {
   ChildSchema,
@@ -15,31 +16,32 @@ import {
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
 } from '@retikz/core';
-import { z } from 'zod';
+import { NonBlankStringSchema } from '@retikz/foundation';
+import { boolean, custom, literal, number } from 'zod';
 
 const LogicTestNamespace = 'standard-logic-test';
 
 const ProbeLeafSchema = CompositeBaseSchema.extend({
-  namespace: z.literal(LogicTestNamespace),
-  type: z.literal('probe-leaf'),
-  id: z.string().min(1),
-  minimumWidth: z.number().nonnegative().default(8),
-  minimumHeight: z.number().nonnegative().default(6),
-  naturalWidth: z.number().nonnegative().default(24),
-  naturalHeight: z.number().nonnegative().default(14),
-  visualX: z.number().default(-4),
-  visualY: z.number().default(-3),
-  visualWidth: z.number().nonnegative().default(32),
-  visualHeight: z.number().nonnegative().default(24),
-  ignoreExact: z.boolean().default(false),
-  fail: z.boolean().default(false),
+  namespace: literal(LogicTestNamespace),
+  type: literal('probe-leaf'),
+  id: NonBlankStringSchema,
+  minimumWidth: number().nonnegative().default(8),
+  minimumHeight: number().nonnegative().default(6),
+  naturalWidth: number().nonnegative().default(24),
+  naturalHeight: number().nonnegative().default(14),
+  visualX: number().default(-4),
+  visualY: number().default(-3),
+  visualWidth: number().nonnegative().default(32),
+  visualHeight: number().nonnegative().default(24),
+  ignoreExact: boolean().default(false),
+  fail: boolean().default(false),
 });
 
 const HarnessSchema = CompositeBaseSchema.extend({
-  namespace: z.literal(LogicTestNamespace),
-  type: z.literal('harness'),
+  namespace: literal(LogicTestNamespace),
+  type: literal('harness'),
   child: ChildSchema,
-  proposal: z.custom<LayoutProposal>(),
+  proposal: custom<LayoutProposal>(),
 });
 
 export type ProbeRecord = Readonly<{
@@ -60,7 +62,7 @@ const resolvedAxis = (
   return proposal.mode === 'minimum' ? minimum : natural;
 };
 
-const pathForVisualBounds = (node: z.infer<typeof ProbeLeafSchema>): IRChild => ({
+const pathForVisualBounds = (node: ZodInfer<typeof ProbeLeafSchema>): IRChild => ({
   type: 'path',
   stroke: 'currentColor',
   strokeWidth: 1,

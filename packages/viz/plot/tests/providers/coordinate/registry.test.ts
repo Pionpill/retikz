@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, object, string } from 'zod';
 
 import type { AnyCoordinateDefinition } from '../../../src/contract';
 
@@ -9,12 +9,10 @@ import { BUILTIN_COORDINATES, resolveCoordinateRegistry } from '../../../src/pro
 import { PlotCoordinate } from '../../../src/schemas';
 
 const archDefinition = defineCoordinate({
-  schema: z
-    .object({
-      type: z.literal('arch').describe('Discriminator: custom arch coordinate operation'),
-      archHeight: z.number().positive().describe('Arch height in user units'),
-    })
-    .describe('Arch coordinate operation'),
+  schema: object({
+    type: literal('arch').describe('Discriminator: custom arch coordinate operation'),
+    archHeight: number().positive().describe('Arch height in user units'),
+  }).describe('Arch coordinate operation'),
   roles: ['x'],
   resolve: (operation, ctx) => {
     const values = ctx.collectRoleValues('x');
@@ -65,7 +63,7 @@ describe('coordinate registry（contract spec）', () => {
 
   it('duplicate_builtin_coordinate_type_throws', () => {
     const malformed: AnyCoordinateDefinition = {
-      schema: z.object({ type: z.literal(PlotCoordinate.Cartesian2D).describe('Collides with a built-in coordinate') }),
+      schema: object({ type: literal(PlotCoordinate.Cartesian2D).describe('Collides with a built-in coordinate') }),
       roles: ['x'],
       resolve: archDefinition.resolve,
     };
@@ -74,7 +72,7 @@ describe('coordinate registry（contract spec）', () => {
 
   it('malformed_coordinate_schema_non_object_throws', () => {
     const malformed: AnyCoordinateDefinition = {
-      schema: z.string(),
+      schema: string(),
       roles: ['x'],
       resolve: archDefinition.resolve,
     };
@@ -83,7 +81,7 @@ describe('coordinate registry（contract spec）', () => {
 
   it('malformed_coordinate_schema_without_literal_type_throws', () => {
     const malformed: AnyCoordinateDefinition = {
-      schema: z.object({ type: z.string().describe('Not a literal type') }).describe('Malformed coordinate operation'),
+      schema: object({ type: string().describe('Not a literal type') }).describe('Malformed coordinate operation'),
       roles: ['x'],
       resolve: archDefinition.resolve,
     };
@@ -92,7 +90,7 @@ describe('coordinate registry（contract spec）', () => {
 
   it('malformed_coordinate_schema_empty_literal_type_throws', () => {
     const malformed: AnyCoordinateDefinition = {
-      schema: z.object({ type: z.literal('').describe('Empty custom coordinate type') }),
+      schema: object({ type: literal('').describe('Empty custom coordinate type') }),
       roles: ['x'],
       resolve: archDefinition.resolve,
     };

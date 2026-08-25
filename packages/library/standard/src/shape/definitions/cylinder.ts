@@ -1,5 +1,6 @@
 import type { CoreDependencyProvider, PathCommand, Rect, ScenePrimitive } from '@retikz/core';
 import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 
 import {
   boundsConnectionEnvelope,
@@ -12,17 +13,17 @@ import {
   worldToLocal,
 } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { enum as zodEnum, strictObject } from 'zod';
 
 import { StandardShapeName } from '../constants';
 
-const CylinderShapeParamsSchema = z.strictObject({
-  axis: z.enum(['vertical', 'horizontal']).optional().describe('Cylinder main axis.'),
+const CylinderShapeParamsSchema = strictObject({
+  axis: zodEnum(['vertical', 'horizontal']).optional().describe('Cylinder main axis.'),
   capDepth: NonNegativeNumberSchema.optional().describe('Depth of each elliptical cap in user units.'),
 });
 
 /** Cylinder 形状参数 */
-export type CylinderShapeParams = z.infer<typeof CylinderShapeParamsSchema>;
+export type CylinderShapeParams = ZodInfer<typeof CylinderShapeParamsSchema>;
 
 const axisOf = (params: CylinderShapeParams): 'vertical' | 'horizontal' => params.axis ?? 'vertical';
 const capDepthOf = (params: CylinderShapeParams): number => params.capDepth ?? 8;

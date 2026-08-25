@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import { createChartSourceSchema, createChartThemeSchema, defineChartTheme } from '../../src';
 import { defineChartMark, defineChartRecipe } from '../../src/_chart/contract';
 
-const recipeThemeSchema = z.strictObject({});
+const recipeThemeSchema = strictObject({});
 const recipeSourceSchema = createChartSourceSchema(
   'fixture',
-  z.strictObject({
-    chartType: z.literal('fixture'),
-    encodings: z.strictObject({}),
+  strictObject({
+    chartType: literal('fixture'),
+    encodings: strictObject({}),
   }),
   createChartThemeSchema(recipeThemeSchema).optional(),
 );
@@ -35,7 +35,7 @@ const recipe = defineChartRecipe({
 
 const mark = defineChartMark({
   kind: 'fixture',
-  schema: z.strictObject({ kind: z.literal('fixture') }),
+  schema: strictObject({ kind: literal('fixture') }),
   resolve: () => ({ marks: [{ type: 'point', encoding: {} }] }),
 });
 

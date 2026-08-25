@@ -1,14 +1,15 @@
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { boolean, literal, strictObject } from 'zod';
 
 import * as chart from '../src';
 import * as point from '../src/point';
 import * as scatter from '../src/point/scatter';
 
-const RecipeSchema = z.strictObject({
-  chartType: z.literal('fixture'),
-  encodings: z.strictObject({ x: z.string().min(1), y: z.string().min(1) }),
-  properties: z.strictObject({ visible: z.boolean().optional() }).optional(),
+const RecipeSchema = strictObject({
+  chartType: literal('fixture'),
+  encodings: strictObject({ x: NonBlankStringSchema, y: NonBlankStringSchema }),
+  properties: strictObject({ visible: boolean().optional() }).optional(),
 });
 
 describe('@retikz/chart public surface', () => {
@@ -69,7 +70,7 @@ describe('@retikz/chart public surface', () => {
     const sourceSchema = chart.createChartSourceSchema(
       'point',
       RecipeSchema,
-      chart.createChartThemeSchema(z.strictObject({})).optional(),
+      chart.createChartThemeSchema(strictObject({})).optional(),
     );
     const source = sourceSchema.parse({
       namespace: 'chart',

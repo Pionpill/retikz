@@ -63,7 +63,7 @@ const InspectOptionsSchema = InspectInputSchema.transform(value => ({
 
 const highlightInspector = defineInspector({
   namespace: 'demo',
-  name: 'highlight-summary',
+  type: 'highlight-summary',
   owner: { kind: 'pathKind', name: 'highlight' },
   subjectSchema: StrokePathOwnerOutputSchema,
   optionsInputSchema: InspectInputSchema,
@@ -179,8 +179,8 @@ A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG
 
 | Field                | Type                             | Default | Description                                               |
 | -------------------- | -------------------------------- | ------- | --------------------------------------------------------- |
-| `namespace`          | `string`                         | —       | Forms an independent registry key with `name`             |
-| `name`               | `string`                         | —       | Forms an independent registry key with `namespace`        |
+| `namespace`          | `string`                         | —       | Forms an independent registry key with `type`             |
+| `type`               | `string`                         | —       | Forms an independent registry key with `namespace`        |
 | `owner`              | `CompileObservationOwner`        | —       | Targets the observed Path kind                            |
 | `subjectSchema`      | `ZodType<JsonValue>`             | —       | Validates the owner-output agreement                      |
 | `optionsInputSchema` | strict `ZodObject`               | —       | Validates sparse runtime input and must accept `{}`       |

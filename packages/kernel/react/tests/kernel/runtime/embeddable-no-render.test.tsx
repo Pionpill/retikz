@@ -6,7 +6,7 @@ import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { Fragment, useEffect, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, string } from 'zod';
 
 import { collectHydrationHandlers } from '../../../src';
 import { Layout } from '../../../src/kernel';
@@ -39,9 +39,9 @@ type EmbeddableFixture = FC<FixtureProps> & {
  */
 const makePanelComposite = (namespace: string): AnyCompositeDefinition => {
   const schema = CompositeBaseSchema.extend({
-    namespace: z.literal(namespace),
-    type: z.literal('panel'),
-    panelId: z.string(),
+    namespace: literal(namespace),
+    type: literal('panel'),
+    panelId: string(),
   });
   return defineComposite({
     namespace,

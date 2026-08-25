@@ -12,7 +12,7 @@ import type {
 import type { IRPointEncoding, IRPointProperties } from './schema';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
-import { pointAxisGuidesOf, pointCartesian2DOf, pointRecipeId } from './plot';
+import { pointAxisGuidesOf, pointCartesian2DOf } from './plot';
 import { PointRecipeThemeResolutionSchema } from './schema';
 
 const invalidPoint = (message: string, path: ReadonlyArray<string | number>): RetikzChartError =>
@@ -100,7 +100,7 @@ export const pointPropertySlots: ReadonlyArray<keyof IRPointProperties> = [
 export const resolvePointMark = (
   encodings: IRJsonObject,
   properties: IRJsonObject,
-  options: Readonly<{ chartType: string; id?: string; coordinateView?: string; includeId?: boolean }>,
+  options: Readonly<{ coordinateView?: string }> = {},
 ): IRPlotMarkOperation => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
@@ -108,7 +108,6 @@ export const resolvePointMark = (
     type: PlotMark.Point,
     encoding: { x: { field: x }, y: { field: y } },
   };
-  if (options.includeId !== false) mark.id = options.id ?? pointRecipeId(options.chartType, 'mark.main');
   if (options.coordinateView !== undefined) mark.coordinateView = options.coordinateView;
 
   for (const name of pointVisualSlots) {

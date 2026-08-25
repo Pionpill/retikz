@@ -2,28 +2,28 @@ import type { IRScene } from '@retikz/core';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { boolean, literal, strictObject } from 'zod';
 
 import { compileInspectionToScene, createInspectorRegistry, defineInspector } from '../../src';
 
 describe('Inspection diagnostics', () => {
   it('keeps fragment warnings in a deeply frozen stable diagnostic list', () => {
     const owner = { kind: 'composite' as const, namespace: 'demo', type: 'warning-owner' };
-    const key = { namespace: 'test', name: 'warning' };
+    const key = { namespace: 'test', type: 'warning' };
     const composite = defineComposite({
       namespace: owner.namespace,
       type: owner.type,
-      schema: CompositeBaseSchema.extend({ namespace: z.literal(owner.namespace), type: z.literal(owner.type) }),
-      artifactSchema: z.strictObject({ ok: z.boolean() }),
+      schema: CompositeBaseSchema.extend({ namespace: literal(owner.namespace), type: literal(owner.type) }),
+      artifactSchema: strictObject({ ok: boolean() }),
       compile: () => ({ artifact: { ok: true }, children: [] }),
     });
     const registry = createInspectorRegistry([
       defineInspector({
         ...key,
         owner,
-        subjectSchema: z.strictObject({ ok: z.boolean() }),
-        optionsInputSchema: z.strictObject({}),
-        optionsSchema: z.strictObject({}),
+        subjectSchema: strictObject({ ok: boolean() }),
+        optionsInputSchema: strictObject({}),
+        optionsSchema: strictObject({}),
         inspect: () => ({
           type: 'path',
           children: [
@@ -36,7 +36,7 @@ describe('Inspection diagnostics', () => {
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: owner.namespace, type: owner.type }] };
     const result = compileInspectionToScene(ir, {
       registry,
-      selection: { rules: [{ kind: 'request', inspector: key, target: { kind: 'scene' }, value: true }] },
+      selection: { rules: [{ kind: 'request', inspector: key, target: { kind: 'scene' }, options: true }] },
       compileOptions: { composites: [composite] },
     });
     expect(result.diagnostics).toHaveLength(1);

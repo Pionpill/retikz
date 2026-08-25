@@ -8,7 +8,7 @@ import {
   LayoutAlignmentGuideName,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, string } from 'zod';
 
 import type { FlexLayoutCompileArtifact, GridLayoutCompileArtifact, OverlayLayoutCompileArtifact } from '../../src';
 
@@ -30,18 +30,18 @@ import {
 import { createLayoutArtifactItem, sortLayoutSpacing } from '../../src/composites/internal';
 
 const ArtifactLeafSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('layout-artifact-test'),
-  type: z.literal('leaf'),
-  id: z.string(),
-  width: z.number().nonnegative(),
-  height: z.number().nonnegative(),
-  originX: z.number().default(0),
-  originY: z.number().default(0),
-  firstBaseline: z.number().optional(),
-  lastBaseline: z.number().optional(),
-  visualX: z.number().optional(),
-  visualY: z.number().optional(),
-  visualSize: z.number().nonnegative().optional(),
+  namespace: literal('layout-artifact-test'),
+  type: literal('leaf'),
+  id: string(),
+  width: number().nonnegative(),
+  height: number().nonnegative(),
+  originX: number().default(0),
+  originY: number().default(0),
+  firstBaseline: number().optional(),
+  lastBaseline: number().optional(),
+  visualX: number().optional(),
+  visualY: number().optional(),
+  visualSize: number().nonnegative().optional(),
 });
 
 const ArtifactLeafDefinition = defineComposite({

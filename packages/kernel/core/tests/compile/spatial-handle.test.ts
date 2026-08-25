@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, string } from 'zod';
 
 import type { IRChild, IRScene } from '../../src';
 
@@ -9,9 +9,9 @@ const card = defineComposite({
   namespace: 'third',
   type: 'card',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('third'),
-    type: z.literal('card'),
-    id: z.string().optional(),
+    namespace: literal('third'),
+    type: literal('card'),
+    id: string().optional(),
   }),
   expand: () => ({
     children: [],
@@ -31,9 +31,9 @@ const panel = defineComposite({
   namespace: 'third',
   type: 'panel',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('third'),
-    type: z.literal('panel'),
-    id: z.string().optional(),
+    namespace: literal('third'),
+    type: literal('panel'),
+    id: string().optional(),
   }),
   expand: () => ({ children: [{ namespace: 'third', type: 'card', id: 'inner-card' }] }),
 });
@@ -76,9 +76,9 @@ describe('qualified spatial handle compile', () => {
       namespace: 'third',
       type: 'orderedCard',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('third'),
-        type: z.literal('orderedCard'),
-        id: z.string().optional(),
+        namespace: literal('third'),
+        type: literal('orderedCard'),
+        id: string().optional(),
       }),
       expand: () => ({
         children: [],
@@ -158,8 +158,8 @@ describe('qualified spatial handle compile', () => {
       namespace: 'third',
       type: 'layoutCard',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('third'),
-        type: z.literal('layoutCard'),
+        namespace: literal('third'),
+        type: literal('layoutCard'),
       }),
       compile: (_node, context) => ({
         children: [
@@ -186,8 +186,8 @@ describe('qualified spatial handle compile', () => {
       namespace: 'third',
       type: 'legacyLayoutCard',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('third'),
-        type: z.literal('legacyLayoutCard'),
+        namespace: literal('third'),
+        type: literal('legacyLayoutCard'),
       }),
       compile: () =>
         ({
@@ -206,8 +206,8 @@ describe('qualified spatial handle compile', () => {
       namespace: 'third',
       type: 'scopedCard',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('third'),
-        type: z.literal('scopedCard'),
+        namespace: literal('third'),
+        type: literal('scopedCard'),
       }),
       expand: () => ({
         children: [
@@ -232,8 +232,8 @@ describe('qualified spatial handle compile', () => {
       namespace: 'third',
       type: 'reachableCard',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('third'),
-        type: z.literal('reachableCard'),
+        namespace: literal('third'),
+        type: literal('reachableCard'),
       }),
       compile: (_node, context) => {
         void context.scope({}, [], [declaration]);
@@ -254,8 +254,8 @@ describe('qualified spatial handle compile', () => {
       namespace: 'third',
       type: 'duplicateCard',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('third'),
-        type: z.literal('duplicateCard'),
+        namespace: literal('third'),
+        type: literal('duplicateCard'),
       }),
       compile: (_node, context) => ({
         children: [context.scope({}, [], [declaration]), context.scope({}, [], [declaration])],
@@ -272,8 +272,8 @@ describe('qualified spatial handle compile', () => {
       namespace: 'third',
       type: 'invalidDiscardedCard',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('third'),
-        type: z.literal('invalidDiscardedCard'),
+        namespace: literal('third'),
+        type: literal('invalidDiscardedCard'),
       }),
       compile: (_node, context) => {
         void context.scope({}, [], [{ key: '', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } }]);

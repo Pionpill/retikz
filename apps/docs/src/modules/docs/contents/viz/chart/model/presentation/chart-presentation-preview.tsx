@@ -81,7 +81,7 @@ export type ChartPresentationLayoutPreviewProps = Readonly<{
 export const ChartPresentationLayoutPreview: FC<ChartPresentationLayoutPreviewProps> = props => {
   const { copy, inspect } = props;
   return inspect ? (
-    <LayoutInspectLayout {...hostProps} request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: inspectOptions }}>
+    <LayoutInspectLayout {...hostProps} request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, options: inspectOptions }}>
       {chartOf(copy, visiblePresentation)}
     </LayoutInspectLayout>
   ) : (

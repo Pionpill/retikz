@@ -1,21 +1,16 @@
 import { CssColorSchema, FontSchema, OpacitySchema, PaintValueSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { array, record, strictObject, string, tuple, unknown } from 'zod';
 
 import { TableLineBorderSchema } from '../border';
 import { TableThemeToken } from './constants';
-
-const nonBlankColorSchema = CssColorSchema.refine(value => NonBlankStringSchema.safeParse(value).success, {
-  message: 'Table style color must not be empty or whitespace.',
-});
 
 export const TableThemeTokenBorderSchema = TableLineBorderSchema.omit({ priority: true }).describe(
   'Table theme border line without public conflict priority.',
 );
 
-const ScopeColorSchema = nonBlankColorSchema.nullable();
+const ScopeColorSchema = CssColorSchema.nullable();
 
-const categoricalColorsSchema = z.array(nonBlankColorSchema).min(1, {
+const categoricalColorsSchema = array(CssColorSchema).min(1, {
   message: 'Table categorical colors must be non-empty.',
 });
 
@@ -38,17 +33,17 @@ const TableThemeTokenShape = {
   [TableThemeToken.TableBorderVertical]: TableThemeTokenBorderSchema.nullable(),
   [TableThemeToken.ColumnHeaderBorderBottom]: TableThemeTokenBorderSchema.nullable(),
   [TableThemeToken.DataCategorical]: categoricalColorsSchema,
-  [TableThemeToken.DataSequential]: z.tuple([nonBlankColorSchema, nonBlankColorSchema]),
+  [TableThemeToken.DataSequential]: tuple([CssColorSchema, CssColorSchema]),
 } as const;
 
-const TableThemeTokenObjectSchema = z.strictObject(TableThemeTokenShape);
+const TableThemeTokenObjectSchema = strictObject(TableThemeTokenShape);
 
 export const TableThemeTokenKeySchema = TableThemeTokenObjectSchema.keyof().describe(
   'Closed Table theme token key vocabulary.',
 );
 
 const knownTokenKeys = new Set<string>(TableThemeTokenKeySchema.options);
-const themeTokenKeyPreflight = z.record(z.string(), z.unknown()).superRefine((tokens, context) => {
+const themeTokenKeyPreflight = record(string(), unknown()).superRefine((tokens, context) => {
   Object.keys(tokens)
     .filter(key => !knownTokenKeys.has(key))
     .sort()
@@ -76,7 +71,20 @@ export const TableThemeTokenOverridesSchema = themeTokenKeyPreflight
   })
   .describe('Partial strict Table theme token overlay.');
 
-export const TableThemeTokenPresetMapSchema = z
-  .strictObject(TableThemeTokenShape)
+export const TableThemeTokenPresetMapSchema = strictObject(TableThemeTokenShape)
   .omit({ [TableThemeToken.DataCategorical]: true })
   .describe('Complete Table preset map excluding the Core shared categorical projection.');
+
+export const TableThemeStyleTokenOverridesSchema = TableThemeTokenPresetMapSchema.partial()
+  .superRefine((overrides, context) => {
+    for (const key of Object.keys(TableThemeTokenPresetMapSchema.shape)) {
+      if (Object.hasOwn(overrides, key) && overrides[key as keyof typeof overrides] === undefined) {
+        context.addIssue({
+          code: 'custom',
+          path: [key],
+          message: 'Table theme style token overrides must omit unset values instead of using undefined',
+        });
+      }
+    }
+  })
+  .describe('Sparse strict Table style token overlay excluding the Core shared categorical projection.');

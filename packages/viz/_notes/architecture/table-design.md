@@ -127,9 +127,9 @@ Table 只拥有与网格拓扑有关的表头、行头、小计、总计和 Cell
 
 内置与自定义能力经过相同的注册、解析和消费链路。
 
-Style token 不属于 Table 行为 Definition，但 Table theme schema 必须通过 Core 的 `ThemeTokenDefinition<'table', ...>` registry 绑定 owner validation。Table 维护闭合、扁平、命名空间化的公开 token vocabulary；内置 preset 与用户 `tableThemeTokens` overlay 经过同一 strict schema、resolver 和消费链路。`theme.tokens.table` 由 Core Scope 继承，Table 不保存重复 `style` / `themeMode`，也不允许外部包注册未知 token 或 token consumer。
+Style token 不属于 Table 行为 Definition。Table 维护闭合、扁平、命名空间化的公开 token vocabulary，以 owner-local `TableThemeStyleDefinition` / registry 接收命名 style 的稀疏 token，并让默认 preset、style、Core shared categorical 与用户 `tableThemeTokens` 经过同一 strict schema、resolver 和消费链路。Core Scope 只继承 effective Theme selector 与 shared colors；Table 不保存重复 `style` / `themeMode`，也不允许外部包注册未知 token 或 token consumer。
 
-Core 只提供一套当前生效的非空 active `palette.categorical`。Table 将其 detached 投影为 `data.categorical` baseline；Table token、encoding range、rule 和 Cell configuration 由 Table resolver 按正式优先级覆盖。Standard 只消费 Table 已解析的 Legend / layout input 与 Core `InspectionAppearance`，不读取 Table token bag 或重建颜色分配。
+Core 只提供一套当前生效的非空 active `palette.categorical`。Table 将其 detached 投影为 `data.categorical` baseline；Table token、encoding range、rule 和 Cell configuration 由 Table resolver 按正式优先级覆盖。Standard 只消费 Table 已解析的 Legend / layout input 与 Core `InspectionAppearanceContext`，不读取 Table token bag 或重建颜色分配。
 
 地址、span 合法性、布局不变量、border conflict 和 lowering 正确性属于 Table 核心合同，不应为了扩展性暴露任意执行钩子。
 

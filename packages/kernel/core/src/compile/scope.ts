@@ -1,4 +1,4 @@
-import { boundsCenter, boundsOf } from '@retikz/math';
+import { boundsOf, centerOfBounds } from '@retikz/math';
 
 import type { Transform } from '../contract';
 import type { PositionTargetResolveContext } from '../resolve/position';
@@ -121,6 +121,6 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
 export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): Rect | null => {
   const bounds = boundsOf(collectScopeCornerPoints(layouts));
   if (bounds === undefined) return null;
-  const center = boundsCenter(bounds);
+  const center = centerOfBounds(bounds);
   return { x: center[0], y: center[1], width: bounds.maxX - bounds.minX, height: bounds.maxY - bounds.minY };
 };

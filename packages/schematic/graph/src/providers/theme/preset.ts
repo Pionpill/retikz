@@ -2,21 +2,34 @@ import type { ResolvedTheme } from '@retikz/core';
 
 import { ThemeMode } from '@retikz/core';
 
-import type { IRGraphThemeTokenResolution } from '../../schemas';
+import type { GraphThemeStyleResolution } from '../../contract';
 
-import { GraphThemeToken, GraphThemeTokenResolutionSchema } from '../../schemas';
-
-/** 从当前 Core Theme 建立默认 Graph Entity token baseline */
-export const getDefaultGraphThemePreset = (theme: ResolvedTheme): IRGraphThemeTokenResolution => {
+/** 从当前 Core Theme 建立 Graph Entity 与 Relation 的中立完整 baseline */
+export const getDefaultGraphThemePreset = (theme: ResolvedTheme): GraphThemeStyleResolution => {
   const foreground = theme.mode === ThemeMode.Light ? '#000000' : '#ffffff';
-  return GraphThemeTokenResolutionSchema.parse({
-    [GraphThemeToken.EntityColor]: foreground,
-    [GraphThemeToken.EntityTextForeground]: 'currentColor',
-    [GraphThemeToken.EntityFill]: 'none',
-    [GraphThemeToken.EntityStroke]: 'currentColor',
-    [GraphThemeToken.EntityStrokeWidth]: 1,
-    [GraphThemeToken.EntityFillOpacity]: 1,
-    [GraphThemeToken.EntityStrokeOpacity]: 1,
-    [GraphThemeToken.EntityOpacity]: 1,
-  });
+  return {
+    entity: {
+      tokens: {
+        color: foreground,
+        textColor: 'contrast',
+        fill: 'none',
+        stroke: 'currentColor',
+        strokeWidth: 1,
+        fillOpacity: 1,
+        strokeOpacity: 1,
+        opacity: 1,
+      },
+    },
+    relation: {
+      tokens: {
+        color: foreground,
+        stroke: 'currentColor',
+        strokeWidth: 1,
+        strokeOpacity: 1,
+        opacity: 1,
+        labelTextForeground: 'currentColor',
+        labelOpacity: 1,
+      },
+    },
+  };
 };

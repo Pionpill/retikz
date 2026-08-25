@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type {
   LabelTextContentSchema,
@@ -11,20 +11,20 @@ import type {
 } from './schema';
 
 /** 混排文字段 IR 类型 */
-export type IRTextRun = z.infer<typeof TextRunSchema>;
+export type IRTextRun = ZodInfer<typeof TextRunSchema>;
 
 /** 混排公式段 IR 类型 */
-export type IRMathRun = z.infer<typeof MathRunSchema>;
+export type IRMathRun = ZodInfer<typeof MathRunSchema>;
 
 /** 混排行 IR 类型 */
-export type IRMixedLine = z.infer<typeof MixedLineSchema>;
+export type IRMixedLine = ZodInfer<typeof MixedLineSchema>;
 
-export type IRLabelTextContent = z.infer<typeof LabelTextContentSchema>;
+export type IRLabelTextContent = ZodInfer<typeof LabelTextContentSchema>;
 
-export type IRLabelVisualStyle = z.infer<typeof LabelVisualStyleSchema>;
+export type IRLabelVisualStyle = ZodInfer<typeof LabelVisualStyleSchema>;
 
 /** 行规格 IR 类型 */
-export type IRLine = z.infer<typeof LineSchema>;
+export type IRLine = ZodInfer<typeof LineSchema>;
 
 /** 文本块 IR 类型（单字符串或多行 IRLine 数组） */
-export type IRTextBlock = z.infer<typeof TextBlockSchema>;
+export type IRTextBlock = ZodInfer<typeof TextBlockSchema>;

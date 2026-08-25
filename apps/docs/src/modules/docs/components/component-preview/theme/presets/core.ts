@@ -1,4 +1,4 @@
-import type { CssColorValue, NonEmptyReadonlyArray, ResolvedThemeColors, ThemeModeValue } from '@retikz/core';
+import type { CssColorValue, NonEmptyReadonlyArray, ThemeModeValue, ThemeStyleColorOverrides } from '@retikz/core';
 
 import { defineThemeStyle } from '@retikz/core';
 
@@ -126,30 +126,54 @@ const tonePresets: Record<ReferenceStyle, Record<ThemeModeValue, ReadonlyArray<T
   },
 };
 
-const semanticPresets: Record<ReferenceStyle, Record<ThemeModeValue, ResolvedThemeColors['semantic']>> = {
+const semanticPresets: Record<
+  ReferenceStyle,
+  Record<ThemeModeValue, NonNullable<ThemeStyleColorOverrides['semantic']>>
+> = {
   academic: {
-    light: { error: 'hsl(0, 68%, 42%)', success: 'hsl(145, 50%, 32%)', warning: 'hsl(48, 80%, 38%)' },
-    dark: { error: 'hsl(0, 60%, 72%)', success: 'hsl(145, 50%, 68%)', warning: 'hsl(50, 75%, 70%)' },
+    light: {
+      error: 'hsl(0, 68%, 42%)',
+      success: 'hsl(145, 50%, 32%)',
+      warning: 'hsl(48, 80%, 38%)',
+    },
+    dark: {
+      error: 'hsl(0, 60%, 72%)',
+      success: 'hsl(145, 50%, 68%)',
+      warning: 'hsl(50, 75%, 70%)',
+    },
   },
   vibrant: {
-    light: { error: 'hsl(355, 80%, 57%)', success: 'hsl(145, 65%, 42%)', warning: 'hsl(50, 90%, 46%)' },
-    dark: { error: 'hsl(355, 78%, 72%)', success: 'hsl(145, 62%, 66%)', warning: 'hsl(50, 88%, 68%)' },
+    light: {
+      error: 'hsl(355, 80%, 57%)',
+      success: 'hsl(145, 65%, 42%)',
+      warning: 'hsl(50, 90%, 46%)',
+    },
+    dark: {
+      error: 'hsl(355, 78%, 72%)',
+      success: 'hsl(145, 62%, 66%)',
+      warning: 'hsl(50, 88%, 68%)',
+    },
   },
   clean: {
-    light: { error: 'hsl(0, 55%, 58%)', success: 'hsl(145, 38%, 47%)', warning: 'hsl(50, 62%, 47%)' },
-    dark: { error: 'hsl(0, 50%, 72%)', success: 'hsl(145, 38%, 68%)', warning: 'hsl(50, 60%, 68%)' },
+    light: {
+      error: 'hsl(0, 55%, 58%)',
+      success: 'hsl(145, 38%, 47%)',
+      warning: 'hsl(50, 62%, 47%)',
+    },
+    dark: {
+      error: 'hsl(0, 50%, 72%)',
+      success: 'hsl(145, 38%, 68%)',
+      warning: 'hsl(50, 60%, 68%)',
+    },
   },
 };
 
-const resolveColors = (style: ReferenceStyle, mode: ThemeModeValue): ResolvedThemeColors => {
+const resolveColors = (style: ReferenceStyle, mode: ThemeModeValue): ThemeStyleColorOverrides => {
   const categorical = hues.map((hue, index) => {
     const [saturation, lightness] = tonePresets[style][mode][index];
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   }) as unknown as NonEmptyReadonlyArray<CssColorValue>;
-  return Object.freeze({
-    semantic: Object.freeze({ ...semanticPresets[style][mode] }),
-    categorical: Object.freeze(categorical),
-  });
+  return { semantic: semanticPresets[style][mode], categorical };
 };
 
 /** docs 维护的三个 Core reference Theme definitions */

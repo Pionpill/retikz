@@ -11,7 +11,7 @@ import {
 } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { enum as zodEnum, literal, number, strictObject } from 'zod';
 
 import type { IRTable, TableCompileArtifact } from '../../src';
 
@@ -49,8 +49,14 @@ describe('Table layout transaction', () => {
     const cause = new Error('intrinsic failed');
     const error = new RetikzTableError({
       code: RetikzTableErrorCode.TransactionStageFailed,
-      message: 'table "orders": intrinsic Cell layout: Cell "total": intrinsic failed',
-      details: { stage: 'intrinsic Cell layout', tableId: 'orders', cellId: 'total' },
+      message: 'table "orders": intrinsic Cell layout: Cell "total" at 2:3: intrinsic failed',
+      details: {
+        stage: 'intrinsic Cell layout',
+        tableId: 'orders',
+        cellId: 'total',
+        rowIndex: 2,
+        columnIndex: 3,
+      },
       cause,
     });
 
@@ -59,7 +65,13 @@ describe('Table layout transaction', () => {
       name: 'RetikzTableError',
       code: RetikzTableErrorCode.TransactionStageFailed,
       cause,
-      details: { stage: 'intrinsic Cell layout', tableId: 'orders', cellId: 'total' },
+      details: {
+        stage: 'intrinsic Cell layout',
+        tableId: 'orders',
+        cellId: 'total',
+        rowIndex: 2,
+        columnIndex: 3,
+      },
     });
   });
 
@@ -155,10 +167,10 @@ describe('Table layout transaction', () => {
   it('uses a full finite range proposal as the selected wrap replay and publishes its nested artifact once', () => {
     const calls: Array<LayoutCompositeCompileContext['proposal']> = [];
     const ProbeSchema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('probe'),
+      namespace: literal('fixture'),
+      type: literal('probe'),
     });
-    const ProbeArtifactSchema = z.strictObject({ mode: z.enum(['natural', 'range']), maxWidth: z.number() });
+    const ProbeArtifactSchema = strictObject({ mode: zodEnum(['natural', 'range']), maxWidth: number() });
     const probe = defineComposite({
       namespace: 'fixture',
       type: 'probe',
@@ -234,8 +246,8 @@ describe('Table layout transaction', () => {
     ['finite range', { kind: LayoutAxisProposalKind.Range, min: 10, max: 60 }],
   ] as const)('maps an explicit parent %s width into the column solver exactly once', (_kind, x) => {
     const OuterSchema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('outer'),
+      namespace: literal('fixture'),
+      type: literal('outer'),
       table: TableSchema,
     });
     const outer = defineComposite({
@@ -284,8 +296,8 @@ describe('Table layout transaction', () => {
     ['explicit exact zero', { kind: LayoutAxisProposalKind.Exact, value: 0 }, 0],
   ] as const)('maps parent %s without inventing or dropping a column limit', (_kind, x, expectedWidth) => {
     const OuterSchema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('limit-observer'),
+      namespace: literal('fixture'),
+      type: literal('limit-observer'),
       table: TableSchema,
     });
     const outer = defineComposite({
@@ -332,6 +344,7 @@ describe('Table layout transaction', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
+      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
       structure: {
         kind: 'manual',
         rows: [
@@ -409,14 +422,14 @@ describe('Table layout transaction', () => {
       namespace: 'fixture',
       type: 'malformed-cell-output',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('malformed-cell-output'),
+        namespace: literal('fixture'),
+        type: literal('malformed-cell-output'),
       }),
       compile: () => ({ children: [{ type: 'bogus' } as never] }),
     });
     const OuterSchema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('discard-table-probe'),
+      namespace: literal('fixture'),
+      type: literal('discard-table-probe'),
       table: TableSchema,
     });
     const outer = defineComposite({
@@ -452,8 +465,8 @@ describe('Table layout transaction', () => {
   it('associates intrinsic Cell layout failures with the Table and Cell while preserving the cause', () => {
     const rootCause = new Error('fixture intrinsic failure');
     const FailingSchema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('intrinsic-failure'),
+      namespace: literal('fixture'),
+      type: literal('intrinsic-failure'),
     });
     const failing = defineComposite({
       namespace: 'fixture',
@@ -498,14 +511,40 @@ describe('Table layout transaction', () => {
     expect(message).not.toContain("Layout child provider 'table.table'");
   });
 
+  it('locates anonymous intrinsic Cell layout failures by canonical address', () => {
+    const failing = defineComposite({
+      namespace: 'fixture',
+      type: 'anonymous-intrinsic-failure',
+      schema: CompositeBaseSchema.extend({
+        namespace: literal('fixture'),
+        type: literal('anonymous-intrinsic-failure'),
+      }),
+      compile: () => {
+        throw new Error('anonymous intrinsic failure');
+      },
+    });
+    const spec: IRTable = {
+      namespace: TABLE_NAMESPACE,
+      type: TableComposite.Table,
+      structure: {
+        kind: 'manual',
+        rows: [[null, { content: { namespace: 'fixture', type: 'anonymous-intrinsic-failure' } }]],
+      },
+    };
+
+    expect(() => compileTable(spec, {}, { theme: { mode: 'light' }, compile: { composites: [failing] } })).toThrow(
+      /intrinsic Cell layout: Cell 0:1:.*anonymous intrinsic failure/,
+    );
+  });
+
   it('keeps one leaf failure envelope when an outer solver raises a failed Table probe', () => {
     const rootCause = new Error('fixture nested Table failure');
     const failing = defineComposite({
       namespace: 'fixture',
       type: 'nested-table-failure',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('nested-table-failure'),
+        namespace: literal('fixture'),
+        type: literal('nested-table-failure'),
       }),
       compile: () => {
         throw rootCause;
@@ -525,8 +564,8 @@ describe('Table layout transaction', () => {
       namespace: 'fixture',
       type: 'nested-table-failure-outer',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('nested-table-failure-outer'),
+        namespace: literal('fixture'),
+        type: literal('nested-table-failure-outer'),
         table: TableSchema,
       }),
       compile: (node, context) => {
@@ -560,8 +599,8 @@ describe('Table layout transaction', () => {
   it('associates constrained Cell layout failures with the Table and Cell while preserving the cause', () => {
     const rootCause = new Error('fixture constrained failure');
     const FailingSchema = CompositeBaseSchema.extend({
-      namespace: z.literal('fixture'),
-      type: z.literal('constrained-failure'),
+      namespace: literal('fixture'),
+      type: literal('constrained-failure'),
     });
     const failing = defineComposite({
       namespace: 'fixture',
@@ -615,6 +654,46 @@ describe('Table layout transaction', () => {
     expect(chain.some(error => error.message.includes('children[0]'))).toBe(true);
   });
 
+  it('locates anonymous constrained Cell layout failures by canonical address', () => {
+    const failing = defineComposite({
+      namespace: 'fixture',
+      type: 'anonymous-constrained-failure',
+      schema: CompositeBaseSchema.extend({
+        namespace: literal('fixture'),
+        type: literal('anonymous-constrained-failure'),
+      }),
+      compile: (_node, context) => {
+        if (context.proposal.x.kind === LayoutAxisProposalKind.Range) {
+          throw new Error('anonymous constrained failure');
+        }
+        return {
+          children: [
+            {
+              type: 'node',
+              position: [0, 0],
+              minimumSize: { width: 80, height: 20 },
+              padding: 0,
+            },
+          ],
+        };
+      },
+    });
+    const spec: IRTable = {
+      namespace: TABLE_NAMESPACE,
+      type: TableComposite.Table,
+      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
+      structure: {
+        kind: 'manual',
+        rows: [[{ layout: { wrap: true }, content: { namespace: 'fixture', type: 'anonymous-constrained-failure' } }]],
+      },
+      layout: { columnSize: { kind: 'fixed', value: 40 } },
+    };
+
+    expect(() => compileTable(spec, {}, { theme: { mode: 'light' }, compile: { composites: [failing] } })).toThrow(
+      /constrained Cell layout: Cell 0:0:.*anonymous constrained failure/,
+    );
+  });
+
   it('associates Border Scope layout failures with the Table while preserving the cause', () => {
     const rootCause = new Error('fixture border failure');
     const spec: IRTable = {
@@ -632,8 +711,8 @@ describe('Table layout transaction', () => {
       namespace: 'fixture',
       type: 'border-failure',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('border-failure'),
+        namespace: literal('fixture'),
+        type: literal('border-failure'),
       }),
       compile: () => {
         throw rootCause;
@@ -646,8 +725,8 @@ describe('Table layout transaction', () => {
       namespace: 'fixture',
       type: 'border-harness',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('fixture'),
-        type: z.literal('border-harness'),
+        namespace: literal('fixture'),
+        type: literal('border-harness'),
       }),
       compile: (_node, context) => {
         const failedProbe = context.layoutChild(

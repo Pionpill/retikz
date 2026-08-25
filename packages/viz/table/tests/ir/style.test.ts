@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   TableSchema,
+  TableThemeStyleTokenOverridesSchema,
   TableThemeTokenBorderSchema,
   TableThemeTokenKeySchema,
   TableThemeTokenMapSchema,
@@ -56,6 +57,19 @@ describe('Table theme token schema', () => {
     }
   });
 
+  it('keeps Table style overlays sparse, strict, and separate from Core categorical colors', () => {
+    expect(TableThemeStyleTokenOverridesSchema.parse({ 'cell.content.color': '#334155' })).toEqual({
+      'cell.content.color': '#334155',
+    });
+    expect(() => TableThemeStyleTokenOverridesSchema.parse({ unknown: true })).toThrow(/unrecognized key/i);
+    expect(() => TableThemeStyleTokenOverridesSchema.parse({ 'cell.content.color': undefined })).toThrow(
+      /omit unset values/i,
+    );
+    expect(() => TableThemeStyleTokenOverridesSchema.parse({ 'data.categorical': ['#ff0000'] })).toThrow(
+      /data\.categorical/i,
+    );
+  });
+
   it('reuses authoritative value boundaries and forbids public border priority', () => {
     expect(TableThemeTokenBorderSchema.parse({ kind: 'line', stroke: 'currentColor', width: 0 })).toEqual({
       kind: 'line',
@@ -66,7 +80,7 @@ describe('Table theme token schema', () => {
     expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.background.fillOpacity': 2 })).toThrow();
     expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.content.font.weight': 'heavy' })).toThrow();
     expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.content.color': '  ' })).toThrow(
-      'Table style color must not be empty or whitespace.',
+      'String must contain at least one non-whitespace character.',
     );
     expect(TableThemeTokenOverridesSchema.parse({ 'data.categorical': ['#fff', '#fff'] })).toEqual({
       'data.categorical': ['#fff', '#fff'],

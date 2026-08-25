@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import { compileToScene, definePathKind, PathSchema, resolvePathKindRegistry, StrokePathSchema } from '../../../src';
 
@@ -121,7 +121,7 @@ describe('Path kind full-subject contract', () => {
   it('uses definition.name as the registry key independently of schema shape', () => {
     const definition = definePathKind({
       name: 'named-key',
-      schema: PathSchema.extend({ kind: z.literal('custom') }),
+      schema: PathSchema.extend({ kind: literal('custom') }),
       compile: () => null,
     });
 

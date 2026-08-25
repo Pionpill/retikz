@@ -27,15 +27,18 @@ export const triangle = {
    * @description 三点共线或退化时返回 null
    * @remarks 复杂度：时间 O(1)，空间 O(1)
    */
-  inCircle: (a: Position, b: Position, c: Position): Circle | null => {
-    const la = vector2.length([b[0] - c[0], b[1] - c[1]]);
-    const lb = vector2.length([c[0] - a[0], c[1] - a[1]]);
-    const lc = vector2.length([a[0] - b[0], a[1] - b[1]]);
-    const perim = la + lb + lc;
-    if (perim < DEFAULT_EPSILON) return null;
+  incircle: (a: Position, b: Position, c: Position): Circle | null => {
+    const sideLengthA = vector2.length([b[0] - c[0], b[1] - c[1]]);
+    const sideLengthB = vector2.length([c[0] - a[0], c[1] - a[1]]);
+    const sideLengthC = vector2.length([a[0] - b[0], a[1] - b[1]]);
+    const perimeter = sideLengthA + sideLengthB + sideLengthC;
+    if (perimeter < DEFAULT_EPSILON) return null;
     const area = Math.abs(vector2.cross([b[0] - a[0], b[1] - a[1]], [c[0] - a[0], c[1] - a[1]])) / 2;
     if (area < DEFAULT_EPSILON) return null;
-    const center: Position = [(la * a[0] + lb * b[0] + lc * c[0]) / perim, (la * a[1] + lb * b[1] + lc * c[1]) / perim];
-    return { center, radius: area / (perim / 2) };
+    const center: Position = [
+      (sideLengthA * a[0] + sideLengthB * b[0] + sideLengthC * c[0]) / perimeter,
+      (sideLengthA * a[1] + sideLengthB * b[1] + sideLengthC * c[1]) / perimeter,
+    ];
+    return { center, radius: area / (perimeter / 2) };
   },
 };

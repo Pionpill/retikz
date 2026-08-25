@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -181,14 +181,14 @@ describe('OffsetPosition: step.to compile resolve', () => {
       let parseCount = 0;
       const countedBoundary = defineBoundary({
         name: 'counted',
-        paramsSchema: z.strictObject({}).superRefine(() => {
+        paramsSchema: strictObject({}).superRefine(() => {
           parseCount += 1;
         }),
         boundaryPoint: rect => [rect.x, rect.y],
       });
       const countedStroke = definePathKind({
         name: 'counted-stroke',
-        schema: PathSchema.extend({ kind: z.literal('counted-stroke') }),
+        schema: PathSchema.extend({ kind: literal('counted-stroke') }),
         compile: context => context.emitStroke(context.path),
       });
       const target = { id: 'A', boundary: { type: 'counted', params: {} } } as const;

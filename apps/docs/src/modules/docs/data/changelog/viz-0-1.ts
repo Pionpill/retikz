@@ -1249,8 +1249,8 @@ export const vizV01: Release = {
             {
               label: { zh: '固定轨道与稳定 identity', en: 'Fixed tracks and stable identity' },
               content: {
-                zh: 'alpha.1 提供统一列宽、正文/列头行高与 gap，保留 Table/row/column/Cell identity；内容测量、span、border 与 fit/overflow 延后。',
-                en: 'alpha.1 provides uniform column width, body/header heights, and gaps while preserving Table/row/column/Cell identity; measurement, spans, borders, and fit/overflow remain deferred.',
+                zh: 'alpha.1 提供统一列宽、正文/列头行高与 gap，保留作者显式提供的 Table/row/column/Cell identity 与 canonical 顺序；内容测量、span、border 与 fit/overflow 延后。',
+                en: 'alpha.1 provides uniform column width, body/header heights, and gaps while preserving explicitly authored Table/row/column/Cell identity and canonical order; measurement, spans, borders, and fit/overflow remain deferred.',
               },
             },
           ],
@@ -1276,8 +1276,8 @@ export const vizV01: Release = {
         {
           label: { zh: 'standalone 与嵌入共用 runtime', en: 'Shared standalone and embedded runtime' },
           content: {
-            zh: '三个组件复用同一 normalization、contribution 和 lowering；standalone 可观察 manifest，嵌入父级 `Layout` 时使用稳定 Table id。',
-            en: 'All three components reuse the same normalization, contribution, and lowering; standalone rendering can observe manifests, while parent `Layout` embedding uses stable Table ids.',
+            zh: '三个组件复用同一 normalization、contribution 和 lowering；standalone 可观察 manifest，嵌入父级 `Layout` 时允许匿名 Table，并原样保留显式 id。',
+            en: 'All three components reuse the same normalization, contribution, and lowering. Standalone rendering can observe manifests, while parent `Layout` embedding permits anonymous Tables and preserves explicit ids unchanged.',
           },
         },
       ],
@@ -1375,8 +1375,8 @@ export const vizV01: Release = {
             {
               label: { zh: '确定性嵌入贡献', en: 'Deterministic embedded contributions' },
               content: {
-                zh: '嵌入态聚合 datasets、Table definitions 与 nested composites；重复稳定 id 或同 key 不同 definition 会 fail-loud。',
-                en: 'Embedded mode aggregates datasets, Table definitions, and nested composites; duplicate stable ids or conflicting definitions fail loudly.',
+                zh: '嵌入态聚合 datasets、Table definitions 与 nested composites；匿名 Table 通过 occurrence 区分，重复的显式模型 id 或同 key 不同 definition 会 fail-loud。',
+                en: 'Embedded mode aggregates datasets, Table definitions, and nested composites. Anonymous Tables are distinguished by occurrence, while duplicate explicit model ids or conflicting definitions fail loudly.',
               },
             },
           ],
@@ -1419,8 +1419,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'spec fidelity', en: 'Spec fidelity' },
               content: {
-                zh: '`detailTable()` / `manualTable()` 保留 formatter、rules/encodings 与 `tableThemeTokens`；embedded contextualization 只改根 id，不重排或重写这些字段，Core host Theme 仍由外层宿主提供。',
-                en: '`detailTable()` / `manualTable()` preserve formatter, rules/encodings, and `tableThemeTokens`; embedded contextualization changes only the root id without reordering or rewriting them, while the Core host Theme still comes from the outer host.',
+                zh: '`detailTable()` / `manualTable()` 保留 formatter、rules/encodings、`tableThemeTokens` 与可选根 id；embedded contextualization 不再生成或改写模型 id，也不重排这些字段，Core host Theme 仍由外层宿主提供。',
+                en: '`detailTable()` / `manualTable()` preserve formatter, rules/encodings, `tableThemeTokens`, and the optional root id. Embedded contextualization no longer generates or rewrites model ids or reorders these fields, while the Core host Theme still comes from the outer host.',
               },
             },
             {

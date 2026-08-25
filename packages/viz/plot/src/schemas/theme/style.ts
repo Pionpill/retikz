@@ -1,3 +1,5 @@
+import type { core as ZodCore } from 'zod';
+
 import {
   CssColorSchema,
   FontFamilySchema,
@@ -8,7 +10,7 @@ import {
   ShapeValueSchema,
   StrokeWidthSchema,
 } from '@retikz/core';
-import { z } from 'zod';
+import { array, boolean, strictObject } from 'zod';
 
 import {
   AxisTickLabelGapSchema,
@@ -26,13 +28,10 @@ import { ColorSchemeNameSchema } from '../scale';
 import { PlotThemeToken } from './constants';
 
 /** Plot 数据颜色使用的非空有序 CSS color palette */
-export const PlotColorPaletteSchema = z.array(CssColorSchema).min(1).describe('Non-empty ordered Plot color palette.');
+export const PlotColorPaletteSchema = array(CssColorSchema).min(1).describe('Non-empty ordered Plot color palette.');
 
 /** Plot shape 分类通道使用的非空有序 shape palette */
-export const PlotShapePaletteSchema = z
-  .array(ShapeValueSchema)
-  .min(1)
-  .describe('Non-empty ordered Plot shape palette.');
+export const PlotShapePaletteSchema = array(ShapeValueSchema).min(1).describe('Non-empty ordered Plot shape palette.');
 
 /** Plot 主题 token 的唯一字段契约 */
 export const PlotThemeTokenFieldShape = {
@@ -40,29 +39,29 @@ export const PlotThemeTokenFieldShape = {
   [PlotThemeToken.PlotTypographyForeground]: CssColorSchema.describe('Global Plot guide foreground color'),
   [PlotThemeToken.PlotTypographyFontFamily]: FontFamilySchema.describe('Global Plot guide font family'),
   [PlotThemeToken.PlotTypographyFontSize]: FontSizeSchema.describe('Global Plot guide font size'),
-  [PlotThemeToken.AxisLineEnabled]: z.boolean().describe('Whether existing Plot axes show baselines by default'),
+  [PlotThemeToken.AxisLineEnabled]: boolean().describe('Whether existing Plot axes show baselines by default'),
   [PlotThemeToken.AxisLineStroke]: PaintValueSchema.describe('Axis baseline stroke paint'),
   [PlotThemeToken.AxisLineStrokeWidth]: StrokeWidthSchema.describe('Axis baseline stroke width'),
   [PlotThemeToken.AxisLineDrawOpacity]: OpacitySchema.describe('Axis baseline draw opacity'),
   [PlotThemeToken.AxisTickMark]: AxisTickMarkSchema.describe('Axis tick mark glyph and style'),
-  [PlotThemeToken.AxisTickLabelEnabled]: z.boolean().describe('Whether axis tick labels are visible by default'),
+  [PlotThemeToken.AxisTickLabelEnabled]: boolean().describe('Whether axis tick labels are visible by default'),
   [PlotThemeToken.AxisTickLabelForeground]: CssColorSchema.describe('Axis tick label foreground color'),
   [PlotThemeToken.AxisTickLabelFontSize]: FontSizeSchema.describe('Axis tick label font size'),
   [PlotThemeToken.AxisTickLabelGap]: AxisTickLabelGapSchema.describe('Gap from axis ticks to labels'),
-  [PlotThemeToken.AxisTitleEnabled]: z.boolean().describe('Whether authored axis titles are visible by default'),
+  [PlotThemeToken.AxisTitleEnabled]: boolean().describe('Whether authored axis titles are visible by default'),
   [PlotThemeToken.AxisTitleForeground]: CssColorSchema.describe('Axis title foreground color'),
   [PlotThemeToken.AxisTitleFontSize]: FontSizeSchema.describe('Axis title font size'),
   [PlotThemeToken.AxisTitleFontWeight]: FontWeightSchema.describe('Axis title font weight'),
   [PlotThemeToken.AxisTitlePadding]: AxisTitlePaddingSchema.describe(
     'Padding from the axis tick label band to the title center',
   ),
-  [PlotThemeToken.AxisGridEnabled]: z.boolean().describe('Whether existing Plot axes show grid lines by default'),
+  [PlotThemeToken.AxisGridEnabled]: boolean().describe('Whether existing Plot axes show grid lines by default'),
   [PlotThemeToken.AxisGridStroke]: PaintValueSchema.describe('Axis grid stroke paint'),
   [PlotThemeToken.AxisGridStrokeWidth]: StrokeWidthSchema.describe('Axis grid stroke width'),
   [PlotThemeToken.AxisGridDrawOpacity]: OpacitySchema.describe('Axis grid draw opacity'),
-  [PlotThemeToken.AxisGridIncludeDomain]: z
-    .boolean()
-    .describe('Whether enabled major axis grids include effective domain endpoints'),
+  [PlotThemeToken.AxisGridIncludeDomain]: boolean().describe(
+    'Whether enabled major axis grids include effective domain endpoints',
+  ),
   [PlotThemeToken.LegendTitleForeground]: CssColorSchema.describe('Legend title foreground color'),
   [PlotThemeToken.LegendTitleFontSize]: FontSizeSchema.describe('Legend title font size'),
   [PlotThemeToken.LegendTitleFontWeight]: FontWeightSchema.describe('Legend title font weight'),
@@ -111,7 +110,7 @@ export const PlotAxisThemeTokenFieldShape = {
 const rejectExplicitUndefined = (
   overrides: Record<string, unknown>,
   tokens: ReadonlyArray<string>,
-  context: z.core.$RefinementCtx<Record<string, unknown>>,
+  context: ZodCore.$RefinementCtx<Record<string, unknown>>,
 ): void => {
   for (const token of tokens) {
     if (Object.hasOwn(overrides, token) && overrides[token] === undefined) {
@@ -126,15 +125,13 @@ const rejectExplicitUndefined = (
 };
 
 /** 用户可稀疏覆盖的严格 Plot token map */
-export const PlotThemeTokenOverridesSchema = z
-  .strictObject(PlotThemeTokenFieldShape)
+export const PlotThemeTokenOverridesSchema = strictObject(PlotThemeTokenFieldShape)
   .partial()
   .superRefine((overrides, context) => rejectExplicitUndefined(overrides, Object.values(PlotThemeToken), context))
   .describe('Sparse strict overrides for canonical Plot theme tokens');
 
 /** Axis scoped rule 可稀疏覆盖的严格 token map */
-export const PlotAxisThemeTokenOverridesSchema = z
-  .strictObject(PlotAxisThemeTokenFieldShape)
+export const PlotAxisThemeTokenOverridesSchema = strictObject(PlotAxisThemeTokenFieldShape)
   .partial()
   .superRefine((overrides, context) =>
     rejectExplicitUndefined(overrides, Object.keys(PlotAxisThemeTokenFieldShape), context),
@@ -142,6 +139,6 @@ export const PlotAxisThemeTokenOverridesSchema = z
   .describe('Sparse strict Axis token overrides for one scoped theme rule');
 
 /** preset 与用户覆盖解析后的完整 Plot token map */
-export const PlotThemeTokenResolutionSchema = z
-  .strictObject(PlotThemeTokenFieldShape)
-  .describe('Complete resolved map of canonical Plot theme tokens');
+export const PlotThemeTokenResolutionSchema = strictObject(PlotThemeTokenFieldShape).describe(
+  'Complete resolved map of canonical Plot theme tokens',
+);

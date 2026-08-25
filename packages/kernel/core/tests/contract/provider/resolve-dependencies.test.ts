@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { literal, number, strictObject } from 'zod';
 
 import type {
   AnyCompositeDefinition,
@@ -23,7 +23,7 @@ const compositeKey = (namespace: string, type: string): CoreProviderKey => ({
 const shapeDefinitionOf = (name: string) =>
   defineShape({
     name,
-    paramsSchema: z.strictObject({}),
+    paramsSchema: strictObject({}),
     circumscribe: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
     boundaryPoint: (_rect, toward) => toward,
     emit: () => [],
@@ -34,7 +34,7 @@ const compositeDefinitionOf = (namespace: string, type: string): AnyCompositeDef
   defineComposite({
     namespace,
     type,
-    schema: z.strictObject({ namespace: z.literal(namespace), type: z.literal(type) }),
+    schema: strictObject({ namespace: literal(namespace), type: literal(type) }),
     expand: () => ({ children: [] }),
   });
 
@@ -48,9 +48,9 @@ const arrowDefinitionOf = (name: string) =>
 const clipDefinitionOf = (name: string) =>
   defineClip({
     kind: name,
-    schema: z.strictObject({ kind: z.literal(name) }),
+    schema: strictObject({ kind: literal(name) }),
     resolve: () => ({ kind: name, size: 4 }),
-    shapeSchema: z.strictObject({ kind: z.literal(name), size: z.number().positive() }),
+    shapeSchema: strictObject({ kind: literal(name), size: number().positive() }),
     lower: shape => ({
       commands: [
         { kind: 'move', to: [0, 0] },

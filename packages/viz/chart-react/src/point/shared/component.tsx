@@ -11,7 +11,15 @@ import { createElement, useMemo } from 'react';
 import type { ChartCommonProps, InputEmbeddableChartComponent } from '../../shared';
 
 import { RetikzChartReactError } from '../../error';
-import { hasPlotChild, mergeThemeDefinitions, splitPresentationMarkers, useChartThemeDefinitions } from '../../shared';
+import {
+  assertEmbeddedChartHostProps,
+  chartContentPropsOf,
+  chartHostPropsOf,
+  hasPlotChild,
+  mergeThemeDefinitions,
+  splitPresentationMarkers,
+  useChartThemeDefinitions,
+} from '../../shared';
 import { lowerOptionsWithAmbientThemeOf, lowerOptionsWithPlotRuntimeOf } from './helpers';
 import { splitPointChartChildren } from './mark-collection';
 
@@ -165,22 +173,7 @@ export const createTypedChartComponent = <TProps extends TypedChartCommonProps<T
   createInput: (props: TProps) => ChartInput<TSource>,
 ): InputEmbeddableChartComponent<TProps, ChartInput<TSource>, typeof ChartInputEmbedAdapter> => {
   const Component: FC<TProps> = props => {
-    const {
-      width,
-      height,
-      className,
-      style,
-      renderer,
-      themeStyles,
-      runtime,
-      animate,
-      snapshotAt,
-      animationRef,
-      onArtifacts,
-      onCompileResult,
-      lowerOptions,
-      themeDefinitions,
-    } = props;
+    const { lowerOptions, themeDefinitions } = props;
     const ambientThemeDefinitions = useChartThemeDefinitions();
     const ambientPlotThemeStyles = usePlotThemeStyles();
     const effectiveProps = useMemo<TProps>(() => {
@@ -192,29 +185,17 @@ export const createTypedChartComponent = <TProps extends TypedChartCommonProps<T
         ...(effectiveLowerOptions === undefined ? {} : { lowerOptions: effectiveLowerOptions }),
       };
     }, [ambientPlotThemeStyles, ambientThemeDefinitions, themeDefinitions, lowerOptions, props]);
-    return createElement(
-      Layout,
-      {
-        width,
-        height,
-        className,
-        style,
-        renderer,
-        themeStyles,
-        runtime,
-        animate,
-        snapshotAt,
-        animationRef,
-        onArtifacts,
-        onCompileResult,
-      },
-      createElement(Component, effectiveProps),
-    );
+    const hostProps = chartHostPropsOf(props);
+    return createElement(Layout, hostProps, createElement(Component, chartContentPropsOf(effectiveProps)));
   };
   const chart = Component as InputEmbeddableChartComponent<TProps, ChartInput<TSource>, typeof ChartInputEmbedAdapter>;
   chart.displayName = displayName;
   chart.isTier2Embeddable = true;
   chart.inputEmbedAdapter = ChartInputEmbedAdapter;
-  chart.createInputEmbedProps = props => createInput(props as TProps);
+  chart.createInputEmbedProps = props => {
+    const chartProps = props as TProps;
+    assertEmbeddedChartHostProps(chartProps);
+    return createInput(chartProps);
+  };
   return chart;
 };

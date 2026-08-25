@@ -7,7 +7,7 @@ import {
   RuntimeProgramKind,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, strictObject, string } from 'zod';
 
 import type {
   CompileWarning,
@@ -74,16 +74,16 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'slotProbe',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('slotProbe'),
+        namespace: literal('test'),
+        type: literal('slotProbe'),
         child: ChildSchema,
       }),
-      artifactSchema: z.strictObject({
-        allocationWidth: z.number(),
-        allocationHeight: z.number(),
-        slotWidth: z.number(),
-        slotHeight: z.number(),
-        visualWidth: z.number(),
+      artifactSchema: strictObject({
+        allocationWidth: number(),
+        allocationHeight: number(),
+        slotWidth: number(),
+        slotHeight: number(),
+        visualWidth: number(),
       }),
       compile: (node, context) => {
         const laid = resolvedResultOf(context, node.child, {
@@ -124,14 +124,14 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'intrinsicSlot',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('intrinsicSlot'),
+        namespace: literal('test'),
+        type: literal('intrinsicSlot'),
       }),
-      artifactSchema: z.strictObject({
-        allocationWidth: z.number(),
-        allocationHeight: z.number(),
-        slotWidth: z.number(),
-        slotHeight: z.number(),
+      artifactSchema: strictObject({
+        allocationWidth: number(),
+        allocationHeight: number(),
+        slotWidth: number(),
+        slotHeight: number(),
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, boxNode());
@@ -164,13 +164,13 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'zeroProbe',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('zeroProbe'),
+        namespace: literal('test'),
+        type: literal('zeroProbe'),
       }),
-      artifactSchema: z.strictObject({
-        exactWidth: z.number(),
-        boundedHeight: z.number(),
-        indefiniteHeight: z.number(),
+      artifactSchema: strictObject({
+        exactWidth: number(),
+        boundedHeight: number(),
+        indefiniteHeight: number(),
       }),
       compile: (_node, context) => {
         const exact = resolvedResultOf(context, boxNode(), {
@@ -206,13 +206,13 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'nestedBox',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('nestedBox'),
+        namespace: literal('test'),
+        type: literal('nestedBox'),
       }),
-      artifactSchema: z.strictObject({
-        widthKind: z.string(),
-        heightKind: z.string(),
-        heightSize: z.number(),
+      artifactSchema: strictObject({
+        widthKind: string(),
+        heightKind: string(),
+        heightSize: number(),
       }),
       compile: (_node, context) => ({
         allocationBounds: { x: 5, y: 6, width: 20, height: 10 },
@@ -228,16 +228,16 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'nestedParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('nestedParent'),
+        namespace: literal('test'),
+        type: literal('nestedParent'),
       }),
-      artifactSchema: z.strictObject({
-        allocationX: z.number(),
-        allocationY: z.number(),
-        allocationWidth: z.number(),
-        allocationHeight: z.number(),
-        slotWidth: z.number(),
-        slotHeight: z.number(),
+      artifactSchema: strictObject({
+        allocationX: number(),
+        allocationY: number(),
+        allocationWidth: number(),
+        allocationHeight: number(),
+        slotWidth: number(),
+        slotHeight: number(),
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(
@@ -290,8 +290,8 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'emptyBox',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('emptyBox'),
+        namespace: literal('test'),
+        type: literal('emptyBox'),
       }),
       compile: () => ({
         allocationBounds: { x: 2, y: 3, width: 40, height: 20 },
@@ -302,14 +302,14 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'emptyBoxParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('emptyBoxParent'),
+        namespace: literal('test'),
+        type: literal('emptyBoxParent'),
       }),
-      artifactSchema: z.strictObject({
-        x: z.number(),
-        y: z.number(),
-        width: z.number(),
-        height: z.number(),
+      artifactSchema: strictObject({
+        x: number(),
+        y: number(),
+        width: number(),
+        height: number(),
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, { namespace: 'test', type: 'emptyBox' });
@@ -338,8 +338,8 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'visibleOverflowLeaf',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('visibleOverflowLeaf'),
+        namespace: literal('test'),
+        type: literal('visibleOverflowLeaf'),
       }),
       compile: () => ({
         allocationBounds: { x: 0, y: 0, width: 10, height: 10 },
@@ -350,10 +350,10 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'visibleOverflowParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('visibleOverflowParent'),
+        namespace: literal('test'),
+        type: literal('visibleOverflowParent'),
       }),
-      artifactSchema: z.strictObject({ x: z.number(), y: z.number(), width: z.number(), height: z.number() }),
+      artifactSchema: strictObject({ x: number(), y: number(), width: number(), height: number() }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, { namespace: 'test', type: 'visibleOverflowLeaf' });
         return { children: [context.replay(laid)], artifact: { ...laid.allocationBounds } };
@@ -379,13 +379,13 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'exactWidthReflow',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('exactWidthReflow'),
+        namespace: literal('test'),
+        type: literal('exactWidthReflow'),
       }),
-      artifactSchema: z.strictObject({
-        intrinsicHeight: z.number(),
-        constrainedHeight: z.number(),
-        slotWidth: z.number(),
+      artifactSchema: strictObject({
+        intrinsicHeight: number(),
+        constrainedHeight: number(),
+        slotWidth: number(),
       }),
       compile: (_node, context) => {
         const child = boxNode('aa aa');
@@ -425,8 +425,8 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'constraintMutator',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('constraintMutator'),
+        namespace: literal('test'),
+        type: literal('constraintMutator'),
       }),
       compile: (_node, context) => {
         const xProposal = context.proposal.x;
@@ -439,10 +439,10 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'constraintOwner',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('constraintOwner'),
+        namespace: literal('test'),
+        type: literal('constraintOwner'),
       }),
-      artifactSchema: z.strictObject({ slotWidth: z.number() }),
+      artifactSchema: strictObject({ slotWidth: number() }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(
           context,
@@ -471,8 +471,8 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'negativeZeroSlot',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('negativeZeroSlot'),
+        namespace: literal('test'),
+        type: literal('negativeZeroSlot'),
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, boxNode(), {
@@ -495,8 +495,8 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'clippedReplay',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('clippedReplay'),
+        namespace: literal('test'),
+        type: literal('clippedReplay'),
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, boxNode());
@@ -514,10 +514,10 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'clippedReplayParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('clippedReplayParent'),
+        namespace: literal('test'),
+        type: literal('clippedReplayParent'),
       }),
-      artifactSchema: z.strictObject({ width: z.number(), height: z.number() }),
+      artifactSchema: strictObject({ width: number(), height: number() }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, { namespace: 'test', type: 'clippedReplay' });
         return {
@@ -570,8 +570,8 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'invisibleReplayWrappers',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('invisibleReplayWrappers'),
+        namespace: literal('test'),
+        type: literal('invisibleReplayWrappers'),
       }),
       compile: (_node, context) => {
         const empty = resolvedResultOf(context, { type: 'coordinate', id: 'empty-coordinate', position: [20, 20] });
@@ -599,8 +599,8 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'detachedReplayWrapper',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('detachedReplayWrapper'),
+        namespace: literal('test'),
+        type: literal('detachedReplayWrapper'),
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, boxNode());
@@ -649,8 +649,8 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'invalidReplayWrapper',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('invalidReplayWrapper'),
+        namespace: literal('test'),
+        type: literal('invalidReplayWrapper'),
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, boxNode());
@@ -670,8 +670,8 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'replayAfterInvalidWrapper',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('replayAfterInvalidWrapper'),
+        namespace: literal('test'),
+        type: literal('replayAfterInvalidWrapper'),
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, boxNode());
@@ -698,8 +698,8 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'invalidBoxConstraint',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('invalidBoxConstraint'),
+        namespace: literal('test'),
+        type: literal('invalidBoxConstraint'),
       }),
       compile: (_node, context) => {
         context.layoutChild(boxNode(), proposal as never);
@@ -720,8 +720,8 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'invalidAllocation',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('invalidAllocation'),
+        namespace: literal('test'),
+        type: literal('invalidAllocation'),
       }),
       compile: () => ({ allocationBounds, children: [boxNode()] }),
     });
@@ -749,8 +749,8 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'dynamicAllocationChild',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('dynamicAllocationChild'),
+        namespace: literal('test'),
+        type: literal('dynamicAllocationChild'),
       }),
       compile: () => ({ allocationBounds, children: [boxNode()] }),
     });
@@ -758,10 +758,10 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'dynamicAllocationParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('dynamicAllocationParent'),
+        namespace: literal('test'),
+        type: literal('dynamicAllocationParent'),
       }),
-      artifactSchema: z.strictObject({ width: z.number() }),
+      artifactSchema: strictObject({ width: number() }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, { namespace: 'test', type: 'dynamicAllocationChild' });
         return { children: [], artifact: { width: laid.allocationBounds.width } };
@@ -781,9 +781,9 @@ describe('Box Layout Composite contract', () => {
       namespace: 'test',
       type: 'runtimeBox',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('runtimeBox'),
-        x: z.number(),
+        namespace: literal('test'),
+        type: literal('runtimeBox'),
+        x: number(),
       }),
       compile: (node, context) => {
         const laid = resolvedResultOf(

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, number, string, union } from 'zod';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../src';
 
@@ -15,9 +15,9 @@ const findByType = <T extends ScenePrimitive['type']>(
 // ---- 示例 Tier 2 fixtures（非 plot；schema extend CompositeBaseSchema，defineComposite 保强类型） ----
 
 const LabeledBoxSchema = CompositeBaseSchema.extend({
-  namespace: z.literal('example'),
-  type: z.literal('labeledBox'),
-  text: z.string().describe('Box label text'),
+  namespace: literal('example'),
+  type: literal('labeledBox'),
+  text: string().describe('Box label text'),
 });
 /** labeledBox → 一个带文字的 rectangle node */
 const labeledBox = defineComposite({
@@ -33,7 +33,7 @@ const labeledBox = defineComposite({
 const vanishing = defineComposite({
   namespace: 'example',
   type: 'vanishing',
-  schema: CompositeBaseSchema.extend({ namespace: z.literal('example'), type: z.literal('vanishing') }),
+  schema: CompositeBaseSchema.extend({ namespace: literal('example'), type: literal('vanishing') }),
   expand: () => ({ children: [] }),
 });
 
@@ -41,7 +41,7 @@ const vanishing = defineComposite({
 const panel = defineComposite({
   namespace: 'example',
   type: 'panel',
-  schema: CompositeBaseSchema.extend({ namespace: z.literal('example'), type: z.literal('panel') }),
+  schema: CompositeBaseSchema.extend({ namespace: literal('example'), type: literal('panel') }),
   expand: () => ({ children: [{ namespace: 'example', type: 'labeledBox', text: 'inner' }] }),
 });
 
@@ -49,7 +49,7 @@ const panel = defineComposite({
 const loop = defineComposite({
   namespace: 'example',
   type: 'loop',
-  schema: CompositeBaseSchema.extend({ namespace: z.literal('example'), type: z.literal('loop') }),
+  schema: CompositeBaseSchema.extend({ namespace: literal('example'), type: literal('loop') }),
   expand: () => ({ children: [{ namespace: 'example', type: 'loop' }] }),
 });
 
@@ -57,7 +57,7 @@ const loop = defineComposite({
 const zbox = defineComposite({
   namespace: 'example',
   type: 'zbox',
-  schema: CompositeBaseSchema.extend({ namespace: z.literal('example'), type: z.literal('zbox') }),
+  schema: CompositeBaseSchema.extend({ namespace: literal('example'), type: literal('zbox') }),
   expand: () => ({
     children: [{ type: 'node', id: 'z', position: [0, 0], shape: 'rectangle', text: 'z', zIndex: 10 }],
   }),
@@ -67,7 +67,7 @@ const zbox = defineComposite({
 const boxWithId = defineComposite({
   namespace: 'example',
   type: 'boxWithId',
-  schema: CompositeBaseSchema.extend({ namespace: z.literal('example'), type: z.literal('boxWithId') }),
+  schema: CompositeBaseSchema.extend({ namespace: literal('example'), type: literal('boxWithId') }),
   expand: () => ({
     children: [{ type: 'node', id: 'panel', position: [50, 50], shape: 'rectangle', text: 'P' }],
   }),
@@ -98,18 +98,18 @@ describe('lowerComposites — happy path', () => {
   });
 
   it('object-union-schema: 相同 composite key 的变体共用一次注册与展开', () => {
-    const schema = z.union([
+    const schema = union([
       CompositeBaseSchema.extend({
-        namespace: z.literal('example'),
-        type: z.literal('variantBox'),
-        variant: z.literal('text'),
-        value: z.string(),
+        namespace: literal('example'),
+        type: literal('variantBox'),
+        variant: literal('text'),
+        value: string(),
       }),
       CompositeBaseSchema.extend({
-        namespace: z.literal('example'),
-        type: z.literal('variantBox'),
-        variant: z.literal('count'),
-        value: z.number(),
+        namespace: literal('example'),
+        type: literal('variantBox'),
+        variant: literal('count'),
+        value: number(),
       }),
     ]);
     const variantBox = defineComposite({

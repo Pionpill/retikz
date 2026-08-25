@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import type { CoreDependencyProvider, CoreProviderContribution, CoreProviderKey } from '../../../src';
 
@@ -10,7 +10,7 @@ const key: CoreProviderKey = { capability: 'shape', name: 'cross' };
 const makeDefinition = () =>
   defineShape({
     name: 'cross',
-    paramsSchema: z.strictObject({}),
+    paramsSchema: strictObject({}),
     circumscribe: (halfWidth, halfHeight) => ({ halfWidth, halfHeight }),
     boundaryPoint: (_bounds, toward) => toward,
     emit: () => [],
@@ -24,7 +24,10 @@ const provider = (make: CoreDependencyProvider['makeDefinition']): CoreDependenc
   makeDefinition: make,
 });
 
-const contribution = (entry: CoreDependencyProvider): CoreProviderContribution => ({ roots: [key], providers: [entry] });
+const contribution = (entry: CoreDependencyProvider): CoreProviderContribution => ({
+  roots: [key],
+  providers: [entry],
+});
 
 describe('Core provider dataset snapshot', () => {
   it('exposes an immutable dataset record to the provider maker', () => {

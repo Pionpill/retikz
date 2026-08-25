@@ -126,5 +126,5 @@ export const previewControlContract = {
     pointD: [70, 10],
     pointE: [85, 18],
   },
-  relatedApis: ['Circle', 'triangle.circumCircle', 'triangle.inCircle', 'circle.minimalEnclosing'],
+  relatedApis: ['Circle', 'triangle.circumCircle', 'triangle.incircle', 'circle.minimalEnclosing'],
 } satisfies PreviewControlContract;

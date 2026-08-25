@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type { TableRowKind, TableStructureKind } from './constants';
 import type {
@@ -17,16 +17,16 @@ export type TableStructureKindValue = ValueOf<typeof TableStructureKind>;
 export type TableRowKindValue = ValueOf<typeof TableRowKind>;
 
 /** manual Table structure operation */
-export type IRManualTableStructure = z.infer<typeof ManualTableStructureSchema>;
+export type IRManualTableStructure = ZodInfer<typeof ManualTableStructureSchema>;
 
 /** detail Table column */
-export type IRTableDetailColumn = z.infer<typeof TableDetailColumnSchema>;
+export type IRTableDetailColumn = ZodInfer<typeof TableDetailColumnSchema>;
 
 /** detail Table structure operation */
-export type IRDetailTableStructure = z.infer<typeof DetailTableStructureSchema>;
+export type IRDetailTableStructure = ZodInfer<typeof DetailTableStructureSchema>;
 
 /** JSON-safe custom Table structure operation */
-export type IRCustomTableStructure = z.infer<typeof CustomTableStructureSchema>;
+export type IRCustomTableStructure = ZodInfer<typeof CustomTableStructureSchema>;
 
 /** Table structure operation */
-export type IRTableStructureOperation = z.infer<typeof TableStructureSchema>;
+export type IRTableStructureOperation = ZodInfer<typeof TableStructureSchema>;

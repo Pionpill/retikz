@@ -1,6 +1,6 @@
 import type { IRJsonObject } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
-import type { z, ZodType } from 'zod';
+import type { infer as ZodInfer, ZodType } from 'zod';
 
 import type { DeepReadonly } from '../../shared';
 import type { TableLegendDescriptorSchema } from './schema';
@@ -54,4 +54,4 @@ export type AnyCellVisualScaleDefinition = Omit<CellVisualScaleDefinition, 'opti
 };
 
 /** Table 向通用 Legend 层交接的领域 descriptor */
-export type TableLegendDescriptor = DeepReadonly<z.infer<typeof TableLegendDescriptorSchema>>;
+export type TableLegendDescriptor = DeepReadonly<ZodInfer<typeof TableLegendDescriptorSchema>>;

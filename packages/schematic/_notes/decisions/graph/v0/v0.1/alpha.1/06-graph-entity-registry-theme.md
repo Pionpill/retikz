@@ -1,181 +1,141 @@
-# ADR-06：建立 Graph 展示作用域与 Entity 注册主题
+# ADR-06：建立 Graph 语义注册与主题样式
 
-- 状态：Accepted
+- 状态：Accepted（2026-08-23 breaking revision）
 - 决策日期：2026-08-16
+- 修订日期：2026-08-23
+- 修订关系：ADR-07 保留本 ADR 的 Entity registry、Theme style lookup、语义 selector 与 scope 级联能力，并取代独立 Graph presentation root、按 identity 分离的实例 override、root token bag 与 Theme role recipe。ADR-09 进一步把 Graph 收敛为可选上下文，并让 Entity / Relation 成为独立 composite
 - 替代：[GraphNode variant ADR](./02-graph-node-variants.md)
 
 ## 背景与目标
 
-Entity 当前把 role 限定为四个字符串，并在单个 Definition 内用固定表维护 shape、padding 与 minimum size；variant 同样限定为三个字符串，并通过固定分支生成 paint。新增一个具有相同 Graph 语义的 role 或视觉层级时，使用者只能绕开 Entity、复制 Node 或修改包内白名单，内置与自定义无法经过同一契约和 lowering
+Entity 与 Relation 需要开放的语义词汇、可替换的结构 Definition，以及随 Core Theme 变化的领域外观默认。Graph 因此拥有 role、kind、predicate、direction 等领域语义，以及按这些 Canonical 语义匹配的 Theme rules；最终仍下沉为普通 Core Node、Path 与 Scope，Core、Scene 和 renderer 不解释 Graph 词汇
 
-Graph 同时缺少一个只负责展示作用域的持久化根。Container 可以为局部后代提供默认 variant，但不能表达整张 Graph 的 Entity 默认、领域 token 与按 role / variant 匹配的规则。Graph 因此需要在不引入全局关系数据模型、不扩张 Core Theme IR 的前提下，建立 owner-local presentation root、Definition registry 与 Theme token resolver
+早期 Graph 还提供 Entity / Relation `variant`、Graph `entityVariant`、Variant Definition 与 Theme selector 中的 `variant`。这些字段被定义为非语义视觉 key，不改变 role、kind、predicate、direction、结构、引用或几何，只是间接选择 fill、stroke、opacity 等 appearance。它们与 Graph Theme style、Graph-local rules 和元素显式 Core-compatible appearance 形成了第二套视觉参数体系，也让 LLM 和作者需要在两个等价入口之间选择
 
-本决策以开放 Entity role / variant、可选 Graph presentation scope、Graph-owned Theme token 和 direct IR / React / Vanilla 等价为目标。Graph 继续把最终结果物化为普通 Core Scope 与 Node，Core、Scene 和 renderer 不感知 Graph 领域词汇
+本修订删除整条 Variant 轴。Graph Theme 负责整体视觉语言与按语义批量设置默认值，`graphTheme` 负责局部规则，Entity / Relation 显式 appearance 字段负责单个实例的精确覆盖。Graph 不再提供任何纯视觉 selector key
 
 ## 决策
 
-### Graph 是可选 presentation root
+### Graph 语义使用 Definition / registry
 
-Graph 新增顶层 discriminator：
+Entity role、kind、predicate 与 Relation role、kind、predicate 使用开放非空 key。内置和自定义项通过同一 Definition、registry、resolver 和 provider assembly 消费；内置名称只为 author、schema 与工具提供已知词汇，不构成闭合集合
 
-```ts
-const GraphType = {
-  Graph: 'graph',
-  Container: 'container',
-  Entity: 'entity',
-  Relation: 'relation',
-} as const;
-```
+Entity role definition 拥有 shape、boundary、padding、cornerRadius 与基础 minimum size 等结构默认。Entity kind 和 predicate 只表达稳定语义分类，不保存 appearance。Relation role、kind 与 predicate 按 ADR-08 拥有 direction、marker family、marker existence 与规范 dash 等结构语义
 
-`IRGraph` 是 JSON-safe 的可选展示根，保存 children、Graph-owned Entity Theme 覆盖、selector rules 与后代 Entity 的默认 variant。它不是节点集合、关系数据库、GraphDocument 或自动布局输入；独立 Entity、Container 与 Relation 继续是合法 Graph IR
+Graph 不定义 Entity / Relation Variant Definition、registry、内置 Variant 常量或 definition options。新增可复用语义分类时进入 role、kind 或 predicate；仅改变视觉时进入 Theme 或实例 appearance，不能为视觉便利伪造语义 key
 
-Graph 在 owner-local resolve 中确定后代 Graph Entity 的 registry lookup、默认值、Theme token 与级联，再由 lowering 输出一个普通 Core Scope。Graph 只把稳定 id 与 children 映射到该 Scope，不复制 Core Scope 的 transform、clip、placement、Theme 或 inherited style surface；需要这些通用能力时，作者使用外层 Core Scope。Graph-owned 字段在此边界全部消费，不进入 Core IR、Scene 或 renderer
+### Graph Theme style 与 Core Theme style 同名协作
 
-### Entity role 与 variant 使用 Definition / registry
-
-Entity `role` 与 `variant` 改为开放非空字符串。`EntityRole` 和 `EntityVariant` 常量继续列出 Graph 包提供的内置名称，但不再代表 schema 的闭合全集
-
-Entity role definition 冻结一个 role 的 Graph 语义 key 与 Node 几何默认：
+Graph Theme style definition 以当前有效 Core Theme 解析稀疏 Entity / Relation appearance 与有序 rules。Definition 作者只声明相对 Graph 默认 preset 的变化；Graph resolver 负责补全为下游唯一完整结果：
 
 ```ts
-type EntityRoleDefinition = Readonly<{
-  role: string;
-  shape: NonNullable<IRNode['shape']>;
-  padding: NonNullable<IRNode['padding']>;
-  minimumSize?: NonNullable<IRNode['minimumSize']>;
+type GraphThemeStyleOverrides = Readonly<{
+  entity?: Readonly<{
+    tokens?: IRGraphEntityAppearanceTokenOverrides;
+    rules?: ReadonlyArray<IRGraphEntityThemeRule>;
+  }>;
+  relation?: Readonly<{
+    tokens?: IRGraphRelationAppearanceTokenOverrides;
+    rules?: ReadonlyArray<IRGraphRelationThemeRule>;
+  }>;
 }>;
 
-declare const defineEntityRole: (definition: EntityRoleDefinition) => EntityRoleDefinition;
-```
-
-Entity variant definition 冻结一个 variant key，并根据当前位置的有效 Core Theme 与最终 Entity 主色解析稀疏 appearance token。variant 不改变 role、shape 或其它几何语义：
-
-```ts
-type EntityVariantDefinition = Readonly<{
-  variant: string;
-  resolve: (context: Readonly<{ theme: ResolvedTheme; color: string }>) => IRGraphEntityAppearanceTokenOverrides;
-}>;
-
-declare const defineEntityVariant: (definition: EntityVariantDefinition) => EntityVariantDefinition;
-```
-
-内置 role 与 variant 也通过上述 Definition 注册和解析。registry 先注册内置项，再注册自定义项；自定义项不能覆盖内置 key。Entity 显式 `shape`、`padding` 与 `minimumSize` 分别优先于 role definition 的对应默认
-
-### Graph 拥有 Entity Theme token 与 selector
-
-Graph Theme token 使用 Graph owner 的稳定 key，并复用 Core paint、color、stroke width 与 opacity 值契约：
-
-```ts
-const GraphThemeToken = {
-  EntityColor: 'graph.entity.color',
-  EntityTextForeground: 'graph.entity.text.foreground',
-  EntityFill: 'graph.entity.fill',
-  EntityStroke: 'graph.entity.stroke',
-  EntityStrokeWidth: 'graph.entity.strokeWidth',
-  EntityFillOpacity: 'graph.entity.fillOpacity',
-  EntityStrokeOpacity: 'graph.entity.strokeOpacity',
-  EntityOpacity: 'graph.entity.opacity',
-} as const;
-```
-
-Graph Theme style definition 以当前有效 Core Theme 解析完整 Graph token baseline，并可附带有序、稀疏的 Entity token rules：
-
-```ts
 type GraphThemeStyleDefinition = Readonly<{
   name: string;
-  resolve: (theme: ResolvedTheme) => Readonly<{
-    tokens: IRGraphThemeTokenResolution;
-    tokenRules?: IRGraphEntityThemeTokenRules;
-  }>;
+  resolve: (theme: ResolvedTheme) => GraphThemeStyleOverrides;
 }>;
 
 declare const defineGraphThemeStyle: (definition: GraphThemeStyleDefinition) => GraphThemeStyleDefinition;
 ```
 
-Entity selector 可以按 `role`、`variant` 或两者匹配；每个字段接受一个非空 key 或非空、无重复的 key 列表。selector 至少声明一个字段，同时声明时按 AND 匹配。规则按声明顺序执行，后规则覆盖前规则
+`entity`、`relation`、`tokens` 与 `rules` 均可省略；出现的 token 对象必须至少包含一个字段。Graph 默认 preset 始终先按当前 Core Theme mode 建立，Definition tokens 再按字段覆盖。默认 rules 保留，自定义 rules 按声明顺序追加在后，因此匹配同一字段时由后规则覆盖
 
-`IRGraph.graphThemeTokens` 保存当前 Graph scope 的稀疏 token 覆盖，`IRGraph.graphThemeTokenRules` 保存当前 scope 的有序 selector rules。完整 resolution、Definition 与 resolver 都是运行时 contract，不进入 Graph IR
+省略 Core `theme.style` 时使用 Graph 自身的 Neutral 默认 baseline。显式 Core style 名称要求当前 Graph definitions 中存在同名 `GraphThemeStyleDefinition`；缺失时 fail-loud，不猜测、不回退到其它 style，也不根据 Viz 或 Docs 名称建立包内白名单
 
-### 默认 variant 与 Theme 级联
+发布包只提供 Neutral 默认 baseline，不内置命名 reference styles。Docs 通过公开 Core 与 Graph definitions 维护同名 `academic`、`vibrant` 与 `clean` 参考实现：Academic 使用出版型清晰轮廓，Vibrant 吸收旧 `fill` 的实心高对比语言，Clean 吸收旧 `mixed` 的平整弱填充与清晰边界。它们是公开 Theme 能力的消费示例，不进入 Graph Source IR 或发布包内置 registry
 
-Entity 的有效 variant 按以下顺序确定：
+### Theme rules 只匹配真实语义轴
 
-```text
-Entity 显式 variant
-> 从内到外遇到的第一个 Container.entityVariant 或 Graph.entityVariant
-> default
-```
+Entity Theme selector 可以按 `role`、`kind` 与 `predicate` 匹配；Relation Theme selector 可以按 `role`、`kind`、`predicate` 与有效 `direction` 匹配。每个 key 字段接受一个非空值或非空、无重复的值列表；同一 selector 中多个字段按 AND 匹配。rule 省略 selector 时匹配对应类型的全部元素
 
-Container 与 Graph 按真实嵌套顺序建立同一种 Entity variant scope，不因 owner 类型获得额外优先级。`undefined` 表示继续继承；显式 `default` 是合法注册值，可以重置外层值。作用域只影响当前后代，不泄漏到兄弟分支，也不影响 Relation、Container 外壳或普通 Core Node
+Theme selector 不接受 `variant`、id、颜色或其它纯视觉 key。需要按单个 identity 设置外观时，作者直接在对应 Entity / Relation record 写显式 appearance；需要按多个非语义实例批量设置时，由上层组合显式生成字段，而不是把实例集合倒灌为 Graph Theme 语义
 
-对单个 Entity，appearance token 从低到高按以下顺序级联：
+### Theme 与显式 appearance 的唯一级联
+
+对单个 Entity / Relation，appearance 从低到高按以下顺序确定：
 
 ```text
-默认或当前 Graph Theme style baseline
-> 已注册 variant definition 的稀疏 appearance token
-> 当前 Graph Theme style 中匹配的 rules
-> 从外到内各层 Graph.graphThemeTokens
-> 从外到内各层匹配的 Graph.graphThemeTokenRules
-> Entity 显式 Core Node appearance 字段
+当前 Core Theme mode 下的 Graph Neutral 默认 preset
+> 当前 Core Theme style 对应 Graph Definition 的稀疏 tokens
+> Graph 默认 rules
+> 当前 Graph Theme style Definition 中匹配的 rules
+> 从外到内各层 Graph.graphTheme 匹配 rules
+> Entity / Relation 显式 Core-compatible appearance 字段
 ```
 
-最终 Entity 主色先按同一来源确定，Entity 显式 `color` 具有最高优先级；`currentColor` 和缺省值继续按有效 Theme mode 物化为确定黑白色。variant definition 使用该最终主色计算动态 recipe，Graph 局部规则与 Entity 显式字段仍按上述优先级覆盖其结果。内置 `default`、`fill` 与 `mixed` 保持既有不透明颜色预合成和字段级显式覆盖语义
-
-Graph Theme style 由当前 Core Theme 的 `style` 名称选择；没有 style 时使用 Graph 默认 baseline。存在 style 名称但未注册对应 Graph Theme style definition 时 fail-loud，不根据名称猜测或回退到另一 style
-
-### Owner-local resolve、lowering 与组合边界
-
-Graph resolve 消费 Source IR、有效 Core Theme、role / variant registry、Graph Theme style registry 与当前 Graph scope stack，唯一负责 lookup、默认 variant、token selector、级联和显式字段优先级，并形成不持久化的确定 presentation。lowering 只消费该结果，生成等价 Core Scope / Node，不重复查 registry、补默认或解释优先级
-
-Graph presentation resolve 遍历 Graph-owned Graph / Container 结构以及 Core Scope。嵌套 Graph 继承外层 Graph token scope，再用自身默认、token 与 rules 覆盖。Graph / Container 的 `entityVariant` 是 Graph 语义默认，继续穿透普通 Core Scope 和带自身 Theme 的 Core Scope；它在遇到后代 Entity 时物化为显式有效 variant，使该 Entity 随后仍能在新的 Core Theme 中使用正确的 variant definition
-
-Graph-owned token / rule 不跨越带自身 Core Theme 的 Scope；该 Scope 内的 Entity 使用新 Theme 对应的 Graph style baseline 和已经继承的有效 variant。需要在新的 Core Theme 环境中继续使用局部 Graph token / rule 时，作者在该 Scope 内建立新的 Graph root。第三方 composite 对 variant 默认和 Graph token 都是不透明边界；Graph 不递归猜测其 child 结构，也不向 Core Composite context 添加领域 token bag
-
-独立 Entity 使用同一 role / variant resolver 与 Node lowering，但只消费当前位置 Core Theme 对应的 Graph Theme style baseline，不存在 `IRGraph` 局部 token 或默认 variant。Container 继续提供局部 `entityVariant`，其解析与 Graph root 使用同一有效 variant 规则
+Graph-local layer 不改变普通 Core、Plot、Table 或其它第三方 composite。带自身 Core `theme` 的 Scope 或 Graph 建立新的 Graph Theme style baseline，并切断外层 `graphTheme` layer；第三方 composite 内部保持不透明。元素显式 `fill`、`stroke`、`color`、`textColor`、`opacity`、marker appearance 与 label appearance 始终逐字段覆盖 Theme 默认
 
 ### Definition、provider 与 authoring 入口
 
-`createGraphDefinitions`、`createGraphProviders` 与 Graph authoring input 接受同一组可选 `entityRoles`、`entityVariants` 与 `graphThemeStyles`。React 通过 `<Graph>`、Vanilla 通过 `graph()` 传入这些 runtime-only Definition options；Graph provider dependency assembly 合并同一次装配中的 Definition 数据，并为 Graph root 与独立 Entity 创建使用同一 registry 的 canonical Definitions
-
-单个 registry 输入中的重复 key 一律拒绝；provider dependency assembly 重复收集同一个 Definition 对象时可以按 key 合并，收集到同 key 的不同对象时视为冲突并 fail-loud。该规则允许同一 adapter contribution 被正常去重，同时不允许两个实现静默争夺同一 role、variant 或 Theme style
-
-默认 `GraphDefinition`、`EntityDefinition`、`GraphProvider`、`EntityProvider` 与现有 Graph adapters 使用 Graph 内置 role、variant 和默认 Theme baseline。直接 IR 使用配置后的 Definitions，React 与 Vanilla 使用配置后的 adapters；三种入口不建立 adapter 私有 registry 或不同的默认值路径
-
-Graph 同步提供 `GraphSchema`、`createGraph`、React `Graph` 与 Vanilla `graph()`。这些入口只构造同一 `IRGraph`，Theme 解析、selector、registry lookup 与 lowering 仍由 `@retikz/graph` 负责
-
-## 基础数据结构与公开契约
-
-`IRGraph` 的最小持久化结构为：
+`GraphDefinitionOptions` 只装配 Entity / Relation role、kind、predicate 与 Graph Theme style definitions：
 
 ```ts
-type IRGraph = Readonly<{
-  namespace: 'graph';
-  type: 'graph';
-  id?: string;
-  entityVariant?: string;
-  graphThemeTokens?: IRGraphThemeTokenOverrides;
-  graphThemeTokenRules?: IRGraphEntityThemeTokenRules;
-  children: ReadonlyArray<IRChild>;
+type GraphDefinitionOptions = Readonly<{
+  entityRoles?: ReadonlyArray<EntityRoleDefinition>;
+  entityKinds?: ReadonlyArray<EntityKindDefinition>;
+  entityPredicates?: ReadonlyArray<EntityPredicateDefinition>;
+  relationRoles?: ReadonlyArray<RelationRoleDefinition>;
+  relationKinds?: ReadonlyArray<RelationKindDefinition>;
+  relationPredicates?: ReadonlyArray<RelationPredicateDefinition>;
+  graphThemeStyles?: ReadonlyArray<GraphThemeStyleDefinition>;
 }>;
 ```
 
-Graph token override 是上述 canonical token 字段的严格稀疏对象；完整 resolution 必须包含全部 token。Entity variant definition 只解析 color 之外的 appearance token，不能通过 variant 改变主色、role 或几何。Graph Theme style 与 Graph local rule 可以覆盖 `graph.entity.color`，最终仍受 Entity 显式 `color` 覆盖
+直接 IR、React 与 Vanilla 使用同一 Graph definitions 与 resolve / lowering 真源。React 提供 `GraphThemeProvider`，按祖先到局部顺序为 standalone Graph authoring 子树合并 Graph-owned Theme definitions；Graph 上显式 `graphThemeStyles` 后置。embedded Graph / Entity / Relation 由自身 authoring props 或外层宿主显式传递 `graphThemeStyles`，不能依赖 React context 穿透 Layout 的静态 InputEmbed 提取边界。Vanilla 继续使用显式 `graphThemeStyles`，不建立 ambient 或全局可变 registry
 
-Graph 内置 role 保持 `terminal`、`stage`、`decision` 与 `junction`；内置 variant 保持 `default`、`fill` 与 `mixed`。它们从闭合 schema 迁移为 builtin-first registry，并保留已有默认形状与视觉结果
+同一 registry 中重复 key、自定义覆盖内置语义 key、同名不同对象争用 Definition 均 fail-loud。相同 Definition 对象因 adapter contribution 重复出现时可以按既有 provider assembly 规则去重
+
+## 基础数据结构与公开契约
+
+Entity、Relation 与 Graph Source 中不再存在 Variant 字段：
+
+```ts
+type IRGraphEntity = Readonly<{
+  namespace: 'graph';
+  type: 'entity';
+  role: string;
+  kind?: string;
+  predicate?: IRGraphPredicateRef;
+  // Core Node-compatible non-structural fields
+}>;
+
+type IRGraphRelation = Readonly<{
+  namespace: 'graph';
+  type: 'relation';
+  role: string;
+  kind?: string;
+  predicate?: IRGraphPredicateRef;
+  direction?: RelationDirection;
+  // Core Path-compatible fields and NodeTarget endpoints
+}>;
+
+type IRGraph = IRScopeProps &
+  Readonly<{
+    namespace: 'graph';
+    type: 'graph';
+    graphTheme?: IRGraphThemeLayer;
+    children?: ReadonlyArray<IRChild>;
+  }>;
+```
+
+`IRGraphThemeLayer` 只保存有序 appearance rules；运行时 Definition、registry、完整 token resolution 与 callback 不进入 Source IR。Graph Source 只选择 Core `theme.style`，不重复保存 Graph style 名称
 
 ## 行为、失败语义与兼容性
 
-- role、variant、Theme style name 与 selector key 必须是非空字符串；selector 的列表必须非空且不能重复
-- 内置之间、自定义之间以及自定义与内置之间的重复 key 都 fail-loud；不提供覆盖内置 role / variant 的选项
-- Entity schema 只校验开放 key 的 JSON 形态；未注册 role / variant、selector 引用未注册 key、当前 Theme style 未注册 Graph definition 均在 owner resolver 中 fail-loud，并列出可用 key 或注入入口
-- 自定义 role 引用的 shape 仍由 Core shape registry 解析和诊断；Graph 不建立平行 shape registry，也不把未知 shape 改写为内置形状
-- Graph local token 不跨越带 Theme 的 Core Scope 或第三方 composite；Graph / Container 的默认 variant 可以穿透前者但不猜测后者的 child 结构
-- lower 后的 Core Scope / Node 不保留 Graph namespace、Graph discriminator、role、variant、token、selector 或 registry 数据
-- 这是对 alpha.1 GraphNode variant ADR 中“role / variant 闭合且无自定义 registry”和“不接入 Graph Theme style”决策的 breaking supersession；既有内置名称、默认几何、variant 视觉与显式字段优先级保持不变，但不保留闭合 schema、写死表、固定分支或兼容双轨
-- Relation role、Container / Relation Theme token、Graph 全局关系模型、Diagram、Editor、Core Theme / Composite context 与 renderer contract 不因本决策改变
-
-## 最终实现结果
-
-Graph presentation root、开放 Entity role / variant registry、Graph Theme token selector 与 assembly-local provider 装配已经形成 direct IR、React、Vanilla 的统一闭环。内置与自定义 Definition 共用同一注册、解析和 lowering 路径，Graph 领域数据在下沉边界全部消费
-
-默认 React JSX 宿主继续只装载内置 Graph Definitions；自定义 Definition 使用显式 configured processing adapter 或 direct IR compile，不引入全局注册
+- Source schema 使用 strict object；`variant` 与 `entityVariant` 作为未知字段直接拒绝，不静默忽略
+- Variant 常量、schema、类型、Definition、define helper、registry、options 与公开导出直接删除，不保留 alias、deprecated 或 fallback
+- Theme selector 中的 `variant` 作为未知字段拒绝；未注册 role、kind、predicate、Graph Theme style 或 selector key 继续由 owner resolver fail-loud，并列出可用 key 或注入入口
+- Graph Theme style callback 抛出异常或返回非法稀疏结构时统一报告 Definition callback 失败；显式空 token 对象无效
+- Graph Theme 只改变视觉默认，不改变 Entity / Relation 语义、结构、引用、位置、尺寸、route、marker family 或 Scene identity
+- 默认 Graph 视觉保持旧 `default` 的轮廓语言；旧 `fill` 与 `mixed` 不再是 Source 值，仅由 Docs Vibrant / Clean reference definitions 迁移其视觉意图
+- 这是 breaking Source IR、public API 与 authoring migration；`0.x` 不提供 Variant 双轨解析或自动迁移

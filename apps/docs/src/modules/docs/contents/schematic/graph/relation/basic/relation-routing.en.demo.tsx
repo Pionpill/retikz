@@ -1,48 +1,53 @@
 import type { FC } from 'react';
 
 import { FoldStepVia } from '@retikz/core';
-import { Entity, Relation } from '@retikz/graph-react';
-import { Layout, Scope, Step } from '@retikz/react';
+import { Entity, Graph, Relation } from '@retikz/graph-react';
+import { Step } from '@retikz/react';
 
-/** Demonstrates straight, orthogonal, polyline, and labelled Relation routes */
+import { createGraphPreviewSource } from '@/modules/docs/preview';
+
+/** Relation connects stable endpoints through a direct Core-compatible route */
 const Demo: FC = () => (
-  <Layout width={560} height={260}>
-    <Scope transforms={[{ kind: 'translate', x: 32, y: 52 }]}>
-      <Entity id="route-start" role="terminal" position={[0, 0]}>
-        Start
-      </Entity>
-    </Scope>
-    <Scope transforms={[{ kind: 'translate', x: 230, y: 52 }]}>
-      <Entity id="route-stage" role="stage" position={[0, 0]}>
-        Stage
-      </Entity>
-    </Scope>
-    <Scope transforms={[{ kind: 'translate', x: 430, y: 52 }]}>
-      <Entity id="route-check" role="decision" position={[0, 0]}>
-        Check
-      </Entity>
-    </Scope>
-    <Relation id="route-straight" role="flow">
-      <Step kind="move" to="route-start" />
-      <Step to="route-stage" label={{ text: 'Path steps' }} />
-    </Relation>
+  <Graph width={620} height={220}>
+    <Entity id="start" role="event" position={[80, 70]}>
+      Start
+    </Entity>
+    <Entity id="process" role="activity" position={[300, 70]}>
+      Process
+    </Entity>
+    <Entity id="store" role="resource" position={[520, 150]}>
+      Store
+    </Entity>
     <Relation
-      id="route-orthogonal"
-      role="branch"
-      way={[
-        'route-stage',
-        { label: { text: 'Draw way', position: 'near-start', side: 'top', distance: 10 } },
-        FoldStepVia.HorizontalThenVertical,
-        'route-check',
+      id="start-process"
+      role="flow"
+      source={{ id: 'start' }}
+      target={{ id: 'process' }}
+      labels={[
+        {
+          text: 'next',
+          position: 0.5,
+          textColor: '#c2410c',
+          font: { weight: 'bold' },
+          opacity: 0.8,
+        },
       ]}
+      way={['start', 'process']}
     />
-    <Relation id="route-polyline" role="flow">
-      <Step kind="move" to="route-start" />
-      <Step to={[60, 190]} />
-      <Step to={[460, 190]} />
-      <Step to="route-check" label={{ text: 'polyline' }} />
+    <Relation
+      id="process-store"
+      role="dependency"
+      source={{ id: 'process' }}
+      target={{ id: 'store' }}
+      dashPattern={[6, 4]}
+      labels={[{ text: 'write', position: 0.5 }]}
+    >
+      <Step kind="move" to="process" />
+      <Step kind="fold" via={FoldStepVia.HorizontalThenVertical} to="store" />
     </Relation>
-  </Layout>
+  </Graph>
 );
+
+export const previewSource = createGraphPreviewSource(() => Demo({}));
 
 export default Demo;

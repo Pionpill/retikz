@@ -3,7 +3,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Hexagon 示例使用的稳定字段 id */
-export const HexagonExampleControlId = { ShoulderRatio: 'shoulderRatio', CornerRadius: 'cornerRadius' } as const;
+export const HexagonExampleControlId = { ShoulderDepth: 'shoulderDepth', CornerRadius: 'cornerRadius' } as const;
 
 /** Hexagon 示例的中文属性面板 */
 export const hexagonExampleControls = definePreviewControls({
@@ -15,12 +15,12 @@ export const hexagonExampleControls = definePreviewControls({
       controls: [
         {
           kind: 'range',
-          id: HexagonExampleControlId.ShoulderRatio,
-          label: '肩部比例',
-          defaultValue: 0.2,
-          min: 0.1,
-          max: 0.4,
-          step: 0.01,
+          id: HexagonExampleControlId.ShoulderDepth,
+          label: '肩深',
+          defaultValue: 12,
+          min: 0,
+          max: 40,
+          step: 1,
         },
         {
           kind: 'range',
@@ -39,6 +39,6 @@ export const hexagonExampleControls = definePreviewControls({
 /** Hexagon 示例的稳定文档契约 */
 export const previewControlContract = {
   controls: hexagonExampleControls,
-  canonicalValues: { shoulderRatio: 0.2, cornerRadius: 4 },
+  canonicalValues: { shoulderDepth: 12, cornerRadius: 4 },
   relatedApis: ['Layout.shapes', 'Node.shape'],
 } satisfies PreviewControlContract;

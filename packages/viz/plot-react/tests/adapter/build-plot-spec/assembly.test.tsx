@@ -8,6 +8,12 @@ import { buildPlotIR } from '../../../src/adapter';
 import { PlotAxis, PlotLegend } from '../../../src/components/guides';
 import { IntervalMark, PathMark, PointMark, RelationMark } from '../../../src/components/marks';
 
+const compilePlot = (
+  spec: IRPlot,
+  datasets: Parameters<typeof lowerPlots>[0],
+  options?: Parameters<typeof lowerPlots>[1],
+) => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) });
+
 describe('buildPlotIR 装配', () => {
   it('透传 Plot plotThemeTokens 到 canonical IRPlot', () => {
     const plotThemeTokens: NonNullable<IRPlot['plotThemeTokens']> = { 'plot.palette.series': ['#2563eb'] };
@@ -435,11 +441,8 @@ describe('buildPlotIR 装配', () => {
     );
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'q' }]);
     expect(() => PlotSchema.parse(spec)).not.toThrow();
-    expect(() =>
-      compileToScene(
-        { version: 1, type: 'scene', children: [spec] },
-        { composites: lowerPlots({ __plot: [{ m: 1, r: 2 }] }, { width: 320, height: 200 }) },
-      ),
-    ).toThrow(/does not support axis dimension "q"/);
+    expect(() => compilePlot(spec, { __plot: [{ m: 1, r: 2 }] }, { width: 320, height: 200 })).toThrow(
+      /does not support axis dimension "q"/,
+    );
   });
 });

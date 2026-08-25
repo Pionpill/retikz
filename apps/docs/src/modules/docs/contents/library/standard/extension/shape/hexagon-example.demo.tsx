@@ -18,7 +18,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <Node
       position={[0, 0]}
       minimumSize={{ width: 140, height: 72 }}
-      shape={{ type: 'hexagon', params: { shoulderRatio: values.shoulderRatio, cornerRadius: values.cornerRadius } }}
+      shape={{ type: 'hexagon', params: { shoulderDepth: values.shoulderDepth, cornerRadius: values.cornerRadius } }}
       fill="#ffedd5"
       stroke="darkorange"
       strokeWidth={1.5}
@@ -26,6 +26,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   </Layout>
 ));
 export const previewSource = controlledPreview.source;
-/** 固定 Hexagon 并调整其专有几何参数 */
+/** 固定 Hexagon 并调整其固定肩深与圆角参数 */
 const Demo: FC = controlledPreview.Component;
 export default Demo;

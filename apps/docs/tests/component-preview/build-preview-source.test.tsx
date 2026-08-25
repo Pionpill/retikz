@@ -4,16 +4,23 @@ import type { FC } from 'react';
 import { ChartSource, ChartTitle } from '@retikz/chart-react';
 import { ScatterChart } from '@retikz/chart-react/point';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
+import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { createInputScene, Layout, Node } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
 import { DetailColumn, DetailTable, ManualTable } from '@retikz/table-react';
 import { normalizeScene } from '@retikz/vanilla';
+import { createElement, isValidElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { buildPreviewSource } from '../../src/modules/docs/components/component-preview/source-panel';
-import { buildPreviewIR, formatIR, irHasAnimations } from '../../src/modules/docs/components/component-preview/utils';
+import {
+  buildPreviewIR,
+  formatIR,
+  irHasAnimations,
+  previewEmbedPropsOf,
+} from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
 import PathInspectorDemo, {
   previewSource as pathInspectorPreviewSource,
@@ -33,6 +40,14 @@ const StaticDemo: FC = () => (
     <Node id="box" position={[0, 0]}>
       A
     </Node>
+  </Layout>
+);
+
+const GraphSourceDemo: FC = () => (
+  <Layout width={100} height={50} viewBox={{ x: 0, y: 0, width: 100, height: 50 }}>
+    <Graph>
+      <Entity id="service" role="participant" position={[50, 25]} />
+    </Graph>
   </Layout>
 );
 
@@ -145,6 +160,16 @@ describe('buildPreviewSource', () => {
     expect(renderToStaticMarkup(result.source?.vanilla?.render?.('svg'))).toContain('<svg');
   });
 
+  it('Graph IR 源码视图展示统一的外层 Scene', () => {
+    const result = buildPreviewSource(createInput({ Component: GraphSourceDemo }));
+    const irCode = result.source?.ir?.files[0]?.code ?? '';
+
+    expect(irCode).toContain('"type": "scene"');
+    expect(irCode).toContain('"version": 1');
+    expect(irCode).toContain('"namespace": "graph"');
+    expect(irCode).toContain('"type": "graph"');
+  });
+
   it('为 Standard composite 自动生成 helper、Adapter 与真实 Vanilla SVG', () => {
     const result = buildPreviewSource(createInput({ Component: StandardCompositeDemo }));
 
@@ -188,7 +213,13 @@ describe('buildPreviewSource', () => {
   });
 
   it('仅由文档预览派生高层 Source IR，不扩展 Vanilla normalize 结果', () => {
-    const input = createInputScene(<ChartDemo />);
+    const chart = ChartDemo({});
+    if (!isValidElement(chart) || typeof chart.type !== 'function') {
+      throw new Error('ChartDemo must return one function-component root');
+    }
+    const input = createInputScene(
+      createElement(chart.type as FC<Record<string, unknown>>, previewEmbedPropsOf(chart.type, chart.props)),
+    );
     const normalized = normalizeScene(input.scene, { adapters: input.adapters });
 
     expect(normalized).not.toHaveProperty('sourceIr');

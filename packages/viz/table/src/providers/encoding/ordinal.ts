@@ -1,17 +1,16 @@
 import { CssColorSchema } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
-import { NonBlankStringSchema } from '@retikz/foundation';
-import { z } from 'zod';
+import { array, strictObject } from 'zod';
 
 import { defineCellVisualScale } from '../../contract';
 import { RetikzTableError } from '../../error';
+import { TableCellVisualScale } from '../../schemas';
 
 const NonNullScalarSchema = ScalarValueSchema.refine(value => value !== null, {
   message: 'ordinal domain values must not be null',
 });
 
-const uniqueDomainSchema = z
-  .array(NonNullScalarSchema)
+const uniqueDomainSchema = array(NonNullScalarSchema)
   .min(1)
   .superRefine((domain, context) => {
     const seen = new Set<unknown>();
@@ -22,15 +21,12 @@ const uniqueDomainSchema = z
     });
   });
 
-const colorSchema = CssColorSchema.refine(value => NonBlankStringSchema.safeParse(value).success, {
-  message: 'color must not be blank',
-});
-const colorRangeSchema = z.array(colorSchema).min(1);
+const colorRangeSchema = array(CssColorSchema).min(1);
 
 /** 首次出现顺序的分类颜色 scale */
 export const ORDINAL_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
-  name: 'ordinal-color',
-  optionsSchema: z.strictObject({
+  name: TableCellVisualScale.OrdinalColor,
+  optionsSchema: strictObject({
     domain: uniqueDomainSchema.optional(),
     range: colorRangeSchema.optional(),
   }),

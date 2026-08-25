@@ -46,9 +46,9 @@ export const matchesTableCellSelector = (cell: SemanticTableCell, selector: IRTa
   if (selector.value !== undefined && cell.payload.kind !== TableCellPayloadKind.Value) return false;
 
   const matches =
-    (selector.cellIds === undefined || selector.cellIds.includes(cell.id)) &&
-    (selector.rowIds === undefined || selector.rowIds.includes(cell.rowId)) &&
-    (selector.columnIds === undefined || selector.columnIds.includes(cell.columnId)) &&
+    (selector.cellIds === undefined || (cell.id !== undefined && selector.cellIds.includes(cell.id))) &&
+    (selector.rowIds === undefined || (cell.rowId !== undefined && selector.rowIds.includes(cell.rowId))) &&
+    (selector.columnIds === undefined || (cell.columnId !== undefined && selector.columnIds.includes(cell.columnId))) &&
     (selector.rowIndices === undefined || selector.rowIndices.includes(cell.rowIndex)) &&
     (selector.columnIndices === undefined || selector.columnIndices.includes(cell.columnIndex)) &&
     (selector.locations === undefined || selector.locations.includes(cell.location)) &&

@@ -1,58 +1,155 @@
 ---
 title: Relation Basic Usage
-description: Connect Entity values with Core Path Step children, labels, and common route steps.
+description: Connect any Core targets and author direction, labels, and an optional route in one concise record.
 ---
 
-`Relation` expresses an explicit relationship in Graph. Basic usage uses React `<Step>` children directly, so the start, route steps, and target follow Core Path authoring syntax
+`Relation` connects any named targets through Core `NodeTarget`. Endpoints, role, direction, labels, and an optional route live directly in one Source record, which independently lowers to one ordinary Core `Path`
 
 ## Usage
 
 ```tsx
-import { Layout, Step } from '@retikz/react';
 import { Entity, Relation } from '@retikz/graph-react';
+import { Layout, Node } from '@retikz/react';
 ```
 
 ```tsx
 <Layout width={420} height={160}>
-  <Entity id="start" role="terminal" position={[24, 56]}>
-    Start
+  <Node id="source" position={[90, 80]}>
+    Input
+  </Node>
+  <Entity id="target" role="resource" position={[330, 80]}>
+    Output
   </Entity>
-  <Entity id="step" role="stage" position={[220, 56]}>
-    Step
-  </Entity>
-  <Relation id="start-to-step" role="flow">
-    <Step kind="move" to="start" />
-    <Step to="step" label={{ text: 'next' }} />
-  </Relation>
+  <Relation role="flow" source={{ id: 'source' }} target={{ id: 'target' }} />
 </Layout>
 ```
 
-Relation's `id` is its authored identity. Each path starts with a `move` step, then uses targets, coordinates, or other Core steps to describe the route
+`source` and `target` are the semantic source of truth and are never inferred from a route, marker, or visual direction. They may target a Core Node, Coordinate, resolved Scope, or an upper composite that lowers to one of those published targets. Omitting `route` directly connects source and target. `way` is Vanilla/React authoring sugar normalized to a direct `route` at the boundary
+
+Relation directly reuses most Core Path fields. A role, kind, predicate, and Theme only provide defaults. Explicit Relation Path fields such as `stroke` and `dashPattern` take final precedence, and every label may set its own `textColor`, `font`, and `opacity`
 
 ## Examples
 
-### Step routes and labels
+The five built-in roles define broad relationship semantics, the base interpretation of source / target, allowed directions, and marker families. Relation has **no built-in predicates**; a predicate name and params are valid only after their definition is registered in the current provider assembly
 
-Steps can target Entity values or coordinates, and a label belongs on the step it annotates. Fold and polyline routes continue to follow the Core Path contract
+Theme owns the complete Relation visual language. The controls below expose only the kinds, directions, and precise Relation color supported by each role, while the page-level Theme selector switches the overall style
 
-<ComponentPreview files="relation-routing" size="lg" caption="Compare straight, folded, and labelled Step routes." />
+### Endpoints, labels, and routes
 
-### Default arrow
+One Scope can mix omitted-route direct connections, explicit `route`, `way`, and `<Step>` authoring. Labels do not enter route steps. Relation neither computes a custom route from endpoint coordinates nor compares whether an authored route connects its endpoints
 
-When `marks` is omitted, Relation adds an arrow at the terminal position. An explicit `marks` array fully replaces the default, so `marks: []` disables the arrow
+<ComponentPreview
+  files="relation-routing"
+  size="lg"
+  caption="Inspect stable endpoints, two route authoring forms, and explicit label appearance and dashPattern overriding defaults."
+/>
+
+### association: general relationships
+
+`association` represents a general relationship between two objects. Source and target are only a stable record order by default, with no semantic direction. Selecting `forward`, `reverse`, or `both` places a kite marker at the corresponding endpoint
+
+- **Default / allowed directions:** `none` / `none`, `forward`, `reverse`, `both`
+- **Built-in kinds:** `uml.aggregation` and `uml.composition`; both interpret source as the whole and target as the part, and both fix direction to `none`
+- **Built-in predicates:** none; a domain extension can register a cardinality predicate whose params schema validates source and target multiplicities
+
+<ComponentPreview
+  files="relation-association"
+  size="sm"
+  caption="Switch the general association direction or either UML kind. A selected kind fixes its own direction."
+/>
+
+### dependency: dependency relationships
+
+`dependency` means source depends on target: source is the dependent and target is the dependency. It is fixed to `forward`, with a stealth marker at the target endpoint
+
+- **Default / allowed directions:** `forward` / `forward` only
+- **Built-in kind:** `provenance.derivation`, which refines source to the derived result and target to the source record and uses openStealth
+- **Built-in predicates:** none; an extension can declare params such as `{ optional: boolean, reason: string }`, with the predicate definition owning the fields and value ranges
+
+<ComponentPreview
+  files="relation-dependency"
+  size="sm"
+  caption="Compare base dependency with the built-in derivation kind and adjust the Relation color."
+/>
+
+### generalization: type generalization
+
+`generalization` means source is a more specific form of target: source is the subtype and target is the supertype. It is fixed to `forward`, with a normal marker at target
+
+- **Default / allowed directions:** `forward` / `forward` only
+- **Built-in kind:** `uml.realization`, which interprets source as the implementation and target as the specification and uses an open marker
+- **Built-in predicates:** none; a type-system extension can use params for a discriminator or constraint, but Graph does not perform type checking
+
+<ComponentPreview
+  files="relation-generalization"
+  size="sm"
+  caption="Compare base generalization with UML realization and adjust the Relation color."
+/>
+
+### flow: movement between objects
+
+`flow` represents transfer, progression, or state movement between objects, activities, or states. Source and target are stable route endpoints; the effective direction decides which endpoint receives a circle marker
+
+- **Default / allowed directions:** `forward` / `forward`, `reverse`, `both`
+- **Built-in kinds:** none; domain classifications such as `workflow.branch` and `workflow.feedback` must be registered by their owner
+- **Built-in predicates:** none; a workflow extension can declare condition params such as `{ expression: string, priority: number }`. Graph validates and stores them but does not execute the condition
+
+<ComponentPreview
+  files="relation-flow"
+  size="sm"
+  caption="Switch flow direction and observe the circle marker move between endpoints."
+/>
+
+### influence: influence relationships
+
+`influence` means one object affects another without requiring data transfer or an execution dependency. The effective direction places a square marker at source, target, or both endpoints
+
+- **Default / allowed directions:** `forward` / `forward`, `reverse`, `both`
+- **Built-in kinds:** none; the domain that owns the influence taxonomy registers its own kinds
+- **Built-in predicates:** none; an analytical model can declare params such as `{ weight: number, confidence: number }` and select appearance through Theme rules
+
+<ComponentPreview
+  files="relation-influence"
+  size="sm"
+  caption="Switch influence direction and adjust the Relation color."
+/>
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit when diagnosing endpoints or authored-route errors."
+/>
+
+Relation resolve handles only role, kind, predicate, direction, and Theme before lowering to Core Path. Core namespace owns endpoint lookup, arbitrary NodeTarget references, and unresolved / duplicate-id diagnostics. When route is omitted, lowering emits `move(source) → line(target)`; an explicit route uses the complete Core Position language and enters Core Path unchanged
+
+`RelationSchema` excludes only conflicting fields from Core `PathBaseSchema`: the Path discriminator and kind, `children` / `label`, arbitrary `marks`, and the fill family. All other identity, metadata, animation, stacking, paint, stroke, effect, dash, line cap/join, corner, and transform fields retain their Core names and semantics. `labels` directly uses Core `IRGeometryLabel`; explicit label font fields merge over the Relation default font one field at a time
 
 ## API Reference
 
-| Prop            | Type                      | Default        | Description                                                      |
-| --------------- | ------------------------- | -------------- | ---------------------------------------------------------------- |
-| `id`            | `string`                  | —              | Stable authored identity                                         |
-| `role`          | `RelationRoleValue`       | —              | Relation semantics retained only in Graph IR                     |
-| `children`      | `Array<IRStep>`           | —              | Canonical Core Path Step sequence                                |
-| `marks?`        | Core Path mark placements | terminal arrow | Explicit arrays replace the default; `[]` disables the arrow     |
-| Core Path props | Core stroke Path props    | Core defaults  | Reuses labels, stroke, fill, transforms, and related Path fields |
+| Prop                   | Type                                                                                                                               | Default              | Description                                                                                                                                                                                                 |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id?`                  | `string`                                                                                                                           | —                    | Optional stable Core Path id; omission maintains no identity for the Relation itself                                                                                                                        |
+| `source`               | `IRNodeTarget`<br />- `id: string`<br />- `anchor?: IRAnchorRef`<br />- `offset?: [number, number]`<br />- `boundary?: IRBoundary` | —                    | Core source reference<br />- Target id published by a Node, Coordinate, resolved Scope, or composite<br />- Optional anchor<br />- Optional world-space offset<br />- Optional connection-boundary override |
+| `target`               | `IRNodeTarget`<br />- `id: string`<br />- `anchor?: IRAnchorRef`<br />- `offset?: [number, number]`<br />- `boundary?: IRBoundary` | —                    | Core target reference<br />- Target id published by a Node, Coordinate, resolved Scope, or composite<br />- Optional anchor<br />- Optional world-space offset<br />- Optional connection-boundary override |
+| `role`                 | `string`                                                                                                                           | —                    | Registered open relationship-semantic key                                                                                                                                                                   |
+| `kind?`                | `string`                                                                                                                           | —                    | Registered stable subtype within the role                                                                                                                                                                   |
+| `predicate?`           | `{ name: string; params?: IRJsonObject }`                                                                                          | —                    | Registered predicate and JSON-safe params                                                                                                                                                                   |
+| `direction?`           | `'none' \| 'forward' \| 'reverse' \| 'both'`                                                                                       | from role            | Explicit semantic direction allowed by the role and kind                                                                                                                                                    |
+| `labels?`              | `Array<IRGeometryLabel>`                                                                                                           | —                    | Complete Core Geometry Labels; each label's explicit color, font, and opacity override Relation defaults                                                                                                    |
+| `route?`               | `Array<IRGraphRelationRouteStep>`                                                                                                  | source→target direct | Complete Core Path step sequence; route steps cannot carry labels                                                                                                                                           |
+| `dashPattern?`         | `Array<number>`                                                                                                                    | from role/kind       | Explicit Path dash pattern that overrides the relationship-structure default                                                                                                                                |
+| `labelTextForeground?` | `string`                                                                                                                           | from Theme           | Default text color for Relation labels                                                                                                                                                                      |
+| `labelFont?`           | `IRFont`                                                                                                                           | from Theme           | Default font for Relation labels; each label overrides individual font fields                                                                                                                               |
+| `labelOpacity?`        | `number`                                                                                                                           | from Theme           | Default opacity for Relation labels; each label's explicit value takes precedence                                                                                                                           |
+| `way?`                 | `InputPathWay`                                                                                                                     | —                    | Vanilla/React sugar normalized to `route`                                                                                                                                                                   |
+| `children?`            | Core `Step` declarations                                                                                                           | —                    | React route authoring, exclusive with `route` or `way`                                                                                                                                                      |
+| `meta?`                | `IRJsonObject`                                                                                                                     | —                    | JSON-safe metadata ignored by Graph semantics                                                                                                                                                               |
+
+All other non-conflicting Core Path fields are available directly. Use Core `Path` when you need area fill, arbitrary path marks, or another Path kind
 
 ## Related
 
-- [Relation Extended Usage](/schematic/graph/relation/extension): Draw ways, direct IR, and Vanilla
-- [Entity Basic Usage](/schematic/graph/entity/basic): create targetable subjects
-- [Core paths](/kernel/components/draw/overview): the lower-level path contract Relation uses
+- [Relation Extensions](/schematic/graph/relation/extension): register roles, kinds, predicates, and Theme styles
+- [Entity Basic Usage](/schematic/graph/entity/basic): define Entities with optional identity

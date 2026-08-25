@@ -38,18 +38,15 @@ describe('Table React InputEmbed routing', () => {
     expect(generic).not.toHaveProperty('spec');
     expect(generic).toMatchObject({
       table: { kind: 'manual', input: { id: 'generic', rows: [['Ada']] } },
-      preserveRootIdentity: true,
     });
     expect(detail).toMatchObject({
       table: {
         kind: 'detail',
         input: { id: 'detail', dataRef: 'people', columns: [{ id: 'name', field: 'name' }] },
       },
-      preserveRootIdentity: true,
     });
     expect(manual).toMatchObject({
       table: { kind: 'manual', input: { id: 'manual', rows: [[98]] } },
-      preserveRootIdentity: true,
     });
   });
 });

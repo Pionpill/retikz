@@ -11,7 +11,7 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
 
 | 字段        | 类型                                                                                                                                                   | 默认值                                     | 描述                                                                                                |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| `data`      | `IRDetailTable['data']`<br />- `reference: string`<br />- `model?: IRDataModel`                                                                    | —<br />- —<br />- —                        | 必需的外部 dataset reference<br />- 运行时 dataset 名称<br />- 可选数据模型                         |
+| `data`      | `IRDetailTable['data']`<br />- `reference: string`<br />- `model?: IRDataModel`                                                                        | —<br />- —<br />- —                        | 必需的外部 dataset reference<br />- 运行时 dataset 名称<br />- 可选数据模型                         |
 | `structure` | `IRDetailTableStructure`<br />- `kind:` <ApiValues name="TableStructureKind" /><br />- `columns: Array<IRTableDetailColumn>`<br />- `header?: boolean` | —<br />- `'detail'`<br />- —<br />- `true` | record-per-row Structure<br />- Structure 判别值<br />- 至少一列，id 必须唯一<br />- 是否生成列头行 |
 
 ### DetailTableSchema
@@ -22,7 +22,7 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
   descriptions={{
     namespace: 'Table Tier 2 composite 的固定命名空间，用于把节点路由到 Table composite definition。',
     type: '顶层 Table 规格的 composite 类型判别值。',
-    id: '可选稳定 Table id；省略时由 lowering 生成根 Scope id。',
+    id: '可选稳定 Table id；省略时 lowering 后的根 Scope 保持匿名。',
     layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
     rules: '按声明顺序应用的 Cell formatter、presentation 与外观覆盖。',
     encodings: '按声明顺序把匹配 value Cell 的原始值映射到闭合颜色通道。',

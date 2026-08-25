@@ -1,3 +1,5 @@
+import type { IRPlot } from '@retikz/plot';
+
 import { compileToScene } from '@retikz/core';
 import { lowerPlots } from '@retikz/plot';
 import { normalizePlot } from '@retikz/plot-vanilla';
@@ -8,6 +10,9 @@ import { PlotFacet, PlotScaffold, PlotTrack } from '../../../src/components/comp
 import { PlotAxis } from '../../../src/components/guides';
 import { PathMark, PointMark } from '../../../src/components/marks';
 import { PlotScale } from '../../../src/components/scales';
+
+const compilePlot = (spec: IRPlot, datasets: Parameters<typeof lowerPlots>[0]) =>
+  compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });
 
 describe('React 与 framework-neutral authoring parity', () => {
   it('单 facet 产出完全一致的 IRPlot', () => {
@@ -109,12 +114,7 @@ describe('React 与 framework-neutral authoring parity', () => {
 
     expect(spec.scales).toEqual([]);
     expect(spec.composition?.views).toEqual([{ id: 'salesPanel', coordinate: { type: 'cartesian2D' } }]);
-    expect(() =>
-      compileToScene(
-        { version: 1, type: 'scene', children: [spec] },
-        { composites: lowerPlots({ sales: [{ region: 'north', month: 'Jan', revenue: 10 }] }) },
-      ),
-    ).not.toThrow();
+    expect(() => compilePlot(spec, { sales: [{ region: 'north', month: 'Jan', revenue: 10 }] })).not.toThrow();
   });
 
   it('facet 在 model 驱动推断时保留显式位置 scale', () => {
@@ -137,17 +137,12 @@ describe('React 与 framework-neutral authoring parity', () => {
     expect(spec.scales).toEqual([{ type: 'time', name: '__x' }]);
     expect(spec.composition?.views).toEqual([{ id: 'salesPanel', coordinate: { type: 'cartesian2D', x: '__x' } }]);
     expect(() =>
-      compileToScene(
-        { version: 1, type: 'scene', children: [spec] },
-        {
-          composites: lowerPlots({
-            sales: [
-              { region: 'north', month: '2026-01-01', revenue: 10 },
-              { region: 'north', month: '2026-02-01', revenue: 12 },
-            ],
-          }),
-        },
-      ),
+      compilePlot(spec, {
+        sales: [
+          { region: 'north', month: '2026-01-01', revenue: 10 },
+          { region: 'north', month: '2026-02-01', revenue: 12 },
+        ],
+      }),
     ).not.toThrow();
   });
 
@@ -170,12 +165,7 @@ describe('React 与 framework-neutral authoring parity', () => {
       kind: 'tracks',
       coordinate: { type: 'cartesian2D' },
     });
-    expect(() =>
-      compileToScene(
-        { version: 1, type: 'scene', children: [spec] },
-        { composites: lowerPlots({ ops: [{ week: 'W1', incidents: 2, load: 0.5 }] }) },
-      ),
-    ).not.toThrow();
+    expect(() => compilePlot(spec, { ops: [{ week: 'W1', incidents: 2, load: 0.5 }] })).not.toThrow();
   });
 
   it('scaffold viewIdTemplate 在 React 与 plain authoring 中派生相同 scope', () => {

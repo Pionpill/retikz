@@ -14,7 +14,7 @@ const LABELS = {
   raw: { title: 'raw value', detail: 'canonical scalar' },
   formatter: { title: 'resolved formatter', detail: 'raw scalar → display scalar' },
   presentation: { title: 'resolved Presentation', detail: 'raw + value + appearance' },
-  styled: { title: 'styled Core child', detail: 'same Cell identity' },
+  styled: { title: 'styled Core child', detail: 'same order, optional identity' },
   content: { title: 'content payload', detail: 'renderable child' },
   contentStyle: { title: 'resolved content style', detail: 'bypass both Definitions' },
 } satisfies TablePresentationFlowLabels;

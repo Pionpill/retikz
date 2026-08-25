@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, string } from 'zod';
 
 import type { IRScene } from '../../src';
 
@@ -15,9 +15,9 @@ const child = defineComposite({
   namespace: 'third',
   type: 'child',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('third'),
-    type: z.literal('child'),
-    id: z.string().optional(),
+    namespace: literal('third'),
+    type: literal('child'),
+    id: string().optional(),
   }),
   expand: () => ({
     children: [{ type: 'node', position: [5, 5], minimumWidth: 10, minimumHeight: 10 }],
@@ -29,9 +29,9 @@ const parent = defineComposite({
   namespace: 'third',
   type: 'parent',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('third'),
-    type: z.literal('parent'),
-    id: z.string().optional(),
+    namespace: literal('third'),
+    type: literal('parent'),
+    id: string().optional(),
   }),
   compile: (_node, context) => {
     const probe = context.layoutChild(

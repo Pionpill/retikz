@@ -5,7 +5,6 @@ import type { LayoutProps } from '@retikz/react';
 import type { LowerTablesOptions, ManualTableInput, TableDetailColumnInput, TableLayoutManifest } from '@retikz/table';
 import type { InputDetailTable, InputManualTable, InputTable, InputTableVariant } from '@retikz/table-vanilla';
 
-import { assertNonEmptyString } from '@retikz/foundation';
 import { inputTableFromIR, InputTableKind } from '@retikz/table-vanilla';
 
 import type { DetailTableProps } from './DetailTable';
@@ -201,9 +200,6 @@ export const resolveReactTableRuntime = (
   }
 
   if (options.embedded) {
-    if (table.input.id === undefined)
-      throw new RetikzTableReactError(`table react: embedded ${kind} Table spec id must be non-empty`);
-    assertNonEmptyString(table.input.id, `table react embedded ${kind} Table spec id`);
     const unsupportedProps = unsupportedEmbeddedPropsOf(props);
     if (unsupportedProps.length > 0) {
       throw new RetikzTableReactError(
@@ -232,6 +228,5 @@ export const createReactTableInput = (kind: ReactTableRuntimeKindValue, props: A
     data: runtime.datasets,
     lowerOptions: runtime.lowerOptions,
     composites: runtime.composites,
-    preserveRootIdentity: true,
   };
 };

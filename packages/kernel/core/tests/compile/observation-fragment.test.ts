@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
 import type { CompileObserverDefinition, IRScene } from '../../src';
 
@@ -11,10 +11,10 @@ const observableComposite = core.defineComposite({
   namespace: 'test',
   type: 'fragment-owner',
   schema: core.CompositeBaseSchema.extend({
-    namespace: z.literal('test'),
-    type: z.literal('fragment-owner'),
+    namespace: literal('test'),
+    type: literal('fragment-owner'),
   }),
-  artifactSchema: z.strictObject({ label: z.string() }),
+  artifactSchema: strictObject({ label: string() }),
   compile: () => ({
     artifact: { label: 'fragment-owner' },
     children: [{ type: 'node', position: [0, 0], text: 'owner' }],

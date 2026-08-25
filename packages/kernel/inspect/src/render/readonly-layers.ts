@@ -8,7 +8,7 @@ export const inspectionPlaneToReadonlyLayers = (plane: InspectionPlane | null): 
   return Object.freeze(
     plane.entries.map((entry, index) =>
       Object.freeze({
-        key: `inspect:${entry.inspector.namespace}/${entry.inspector.name}:${index}`,
+        key: `inspect:${entry.inspector.namespace}/${entry.inspector.type}:${index}`,
         scene: entry.scene,
         transform: entry.transform,
       }),

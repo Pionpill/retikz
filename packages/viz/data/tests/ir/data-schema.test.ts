@@ -34,6 +34,11 @@ describe('data schema', () => {
     ]);
   });
 
+  it('rejects whitespace-only field and external reference names', () => {
+    expect(DataModelSchema.safeParse([{ name: '   ' }]).success).toBe(false);
+    expect(DataReferenceSchema.safeParse({ reference: '   ' }).success).toBe(false);
+  });
+
   it('rejects non JSON scalar values', () => {
     expect(ScalarValueSchema.parse('A')).toBe('A');
     expect(() => ScalarValueSchema.parse(() => 1)).toThrow();

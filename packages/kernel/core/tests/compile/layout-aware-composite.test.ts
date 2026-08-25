@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { boolean, literal, number, strictObject } from 'zod';
 
 import type {
   CompileWarning,
@@ -45,14 +45,14 @@ const createLayoutDefinition = () =>
     namespace: 'test',
     type: 'layout',
     schema: CompositeBaseSchema.extend({
-      namespace: z.literal('test'),
-      type: z.literal('layout'),
+      namespace: literal('test'),
+      type: literal('layout'),
       child: ChildSchema,
-      width: z.number().nonnegative(),
+      width: number().nonnegative(),
     }),
-    artifactSchema: z.strictObject({
-      naturalWidth: z.number(),
-      rangeWidth: z.number(),
+    artifactSchema: strictObject({
+      naturalWidth: number(),
+      rangeWidth: number(),
     }),
     compile: (node, context) => {
       expect(context.proposal).toEqual(NaturalLayoutProposal);
@@ -88,8 +88,8 @@ describe('layout-aware composite', () => {
       namespace: 'test',
       type: 'warning',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('warning'),
+        namespace: literal('test'),
+        type: literal('warning'),
       }),
       compile: (_node, context) => {
         context.warn('TEST_COMPOSITE_WARNING', 'Composite warning', 'recipe.marks[0].override');
@@ -117,8 +117,8 @@ describe('layout-aware composite', () => {
       namespace: 'test',
       type: 'warningChild',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('warningChild'),
+        namespace: literal('test'),
+        type: literal('warningChild'),
       }),
       compile: (_node, context) => {
         context.warn('TEST_PROBE_WARNING', 'Probe warning');
@@ -129,9 +129,9 @@ describe('layout-aware composite', () => {
       namespace: 'test',
       type: 'warningParent',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('warningParent'),
-        replay: z.boolean(),
+        namespace: literal('test'),
+        type: literal('warningParent'),
+        replay: boolean(),
       }),
       compile: (node, context) => {
         const probe = context.layoutChild({ namespace: 'test', type: 'warningChild' }, NaturalLayoutProposal);
@@ -196,12 +196,12 @@ describe('layout-aware composite', () => {
       namespace: 'test',
       type: 'nestedConstraint',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('nestedConstraint'),
+        namespace: literal('test'),
+        type: literal('nestedConstraint'),
       }),
-      artifactSchema: z.strictObject({
-        xMode: z.literal('natural'),
-        yMode: z.literal('natural'),
+      artifactSchema: strictObject({
+        xMode: literal('natural'),
+        yMode: literal('natural'),
       }),
       compile: (_node, { proposal }) => {
         if (
@@ -222,8 +222,8 @@ describe('layout-aware composite', () => {
       namespace: 'test',
       type: 'scopeConstraint',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('scopeConstraint'),
+        namespace: literal('test'),
+        type: literal('scopeConstraint'),
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(
@@ -267,8 +267,8 @@ describe('layout-aware composite', () => {
       namespace: 'test',
       type: 'duplicateReplay',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('duplicateReplay'),
+        namespace: literal('test'),
+        type: literal('duplicateReplay'),
         child: ChildSchema,
       }),
       compile: (node, context) => {
@@ -297,8 +297,8 @@ describe('layout-aware composite', () => {
       namespace: 'test',
       type: 'layoutOnly',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('layoutOnly'),
+        namespace: literal('test'),
+        type: literal('layoutOnly'),
       }),
       compile,
     });

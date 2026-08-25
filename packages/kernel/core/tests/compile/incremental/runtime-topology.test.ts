@@ -5,7 +5,7 @@ import {
   createRuntimeSession,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal } from 'zod';
 
 import type {
   CompileWarning,
@@ -86,7 +86,7 @@ describe('Core canonical Runtime topology', () => {
     };
     const repeated = definePathKind({
       name: 'repeated',
-      schema: PathSchema.extend({ kind: z.literal('repeated') }),
+      schema: PathSchema.extend({ kind: literal('repeated') }),
       compile: () => ({
         primitives: [sharedPrimitive, sharedPrimitive],
         boundsPoints: [
@@ -287,8 +287,8 @@ describe('Core canonical Runtime topology', () => {
       namespace: 'test',
       type: 'topologyReplay',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('topologyReplay'),
+        namespace: literal('test'),
+        type: literal('topologyReplay'),
       }),
       compile: (_, context) => {
         context.layoutChild({ type: 'node', position: [-100, 0] }, NaturalLayoutProposal);
@@ -325,8 +325,8 @@ describe('Core canonical Runtime topology', () => {
       namespace: 'test',
       type: 'generatedBoundary',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('generatedBoundary'),
+        namespace: literal('test'),
+        type: literal('generatedBoundary'),
       }),
       expand: () => ({
         children: [
@@ -360,8 +360,8 @@ describe('Core canonical Runtime topology', () => {
       namespace: 'test',
       type: 'generatedDuplicate',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('generatedDuplicate'),
+        namespace: literal('test'),
+        type: literal('generatedDuplicate'),
       }),
       expand: () => ({ children: [{ type: 'node', id: 'duplicate', position: [20, 0] }] }),
     });
@@ -395,8 +395,8 @@ describe('Core canonical Runtime topology', () => {
       namespace: 'test',
       type: 'replayedDuplicate',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('replayedDuplicate'),
+        namespace: literal('test'),
+        type: literal('replayedDuplicate'),
       }),
       compile: (_, context) => {
         const selected = resolvedResultOf(context, { type: 'node', id: 'duplicate', position: [20, 0] });
@@ -441,8 +441,8 @@ describe('Core canonical Runtime topology', () => {
       namespace: 'test',
       type: 'replayedPathDuplicate',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('replayedPathDuplicate'),
+        namespace: literal('test'),
+        type: literal('replayedPathDuplicate'),
       }),
       compile: (_, context) => {
         const selected = resolvedResultOf(context, path(20));
@@ -478,8 +478,8 @@ describe('Core compile warning collection', () => {
       namespace: 'test',
       type: 'outputReplayDuplicateOrder',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('outputReplayDuplicateOrder'),
+        namespace: literal('test'),
+        type: literal('outputReplayDuplicateOrder'),
       }),
       compile: (_, context) => {
         const replay = resolvedResultOf(context, { type: 'node', id: 'duplicate', position: [20, 0] });
@@ -517,8 +517,8 @@ describe('Core compile warning collection', () => {
       namespace: 'test',
       type: 'replayReplayDuplicateOrder',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('replayReplayDuplicateOrder'),
+        namespace: literal('test'),
+        type: literal('replayReplayDuplicateOrder'),
       }),
       compile: (_, context) => {
         const first = resolvedResultOf(context, { type: 'node', id: 'duplicate', position: [20, 0] });
@@ -557,8 +557,8 @@ describe('Core compile warning collection', () => {
       namespace: 'test',
       type: 'replayedScopeWarningOrder',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('replayedScopeWarningOrder'),
+        namespace: literal('test'),
+        type: literal('replayedScopeWarningOrder'),
       }),
       compile: (_, context) => {
         const replay = resolvedResultOf(context, {
@@ -598,8 +598,8 @@ describe('Core compile warning collection', () => {
       namespace: 'test',
       type: 'replayedWarningOrder',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('replayedWarningOrder'),
+        namespace: literal('test'),
+        type: literal('replayedWarningOrder'),
       }),
       compile: (_, context) => {
         const replay = resolvedResultOf(context, {
@@ -643,8 +643,8 @@ describe('Core compile warning collection', () => {
       namespace: 'test',
       type: 'warningOrder',
       schema: CompositeBaseSchema.extend({
-        namespace: z.literal('test'),
-        type: z.literal('warningOrder'),
+        namespace: literal('test'),
+        type: literal('warningOrder'),
       }),
       expand: () => ({
         children: [

@@ -1,7 +1,8 @@
 import { DEFAULT_RESOLVED_THEME, NodeTextAlign, ThemeMode } from '@retikz/core';
 import { PlotFacetConfigurationSchema, PlotMark, PlotThemeToken, PointMarkSchema } from '@retikz/plot';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { array, boolean, literal, number, preprocess, strictObject, string } from 'zod';
 
 import type { IRChartSource } from '../../src';
 import type { ChartMarkResolveContext } from '../../src/_chart/contract';
@@ -18,30 +19,30 @@ import { defineChartMark, defineChartRecipe } from '../../src/_chart/contract';
 import { chartThemeDefinitionsOf, resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveSelectedChart } from '../../src/_chart/resolve';
 
-const encodingsSchema = z.strictObject({
-  x: z.string().min(1),
-  y: z.string().min(1),
-  color: z.string().min(1).optional(),
-  ignored: z.string().min(1).optional(),
-  markOnly: z.string().min(1).optional(),
+const encodingsSchema = strictObject({
+  x: NonBlankStringSchema,
+  y: NonBlankStringSchema,
+  color: NonBlankStringSchema.optional(),
+  ignored: NonBlankStringSchema.optional(),
+  markOnly: NonBlankStringSchema.optional(),
 });
-const propertiesSchema = z.strictObject({ opacity: z.number().min(0).max(1).optional() });
-const recipeThemeOverridesSchema = z.strictObject({
-  glyph: z.string().min(1).optional(),
-  showGrid: z.boolean().optional(),
+const propertiesSchema = strictObject({ opacity: number().min(0).max(1).optional() });
+const recipeThemeOverridesSchema = strictObject({
+  glyph: NonBlankStringSchema.optional(),
+  showGrid: boolean().optional(),
 });
-const recipeThemeResolutionSchema = z.strictObject({ glyph: z.string().min(1), showGrid: z.boolean() });
-const markSchema = z.strictObject({
-  kind: z.literal('annotation'),
-  override: z.boolean().optional(),
+const recipeThemeResolutionSchema = strictObject({ glyph: NonBlankStringSchema, showGrid: boolean() });
+const markSchema = strictObject({
+  kind: literal('annotation'),
+  override: boolean().optional(),
   encodings: encodingsSchema.partial().optional(),
   properties: propertiesSchema.optional(),
 });
-const recipeSchema = z.strictObject({
-  chartType: z.literal('demo'),
+const recipeSchema = strictObject({
+  chartType: literal('demo'),
   encodings: encodingsSchema,
   properties: propertiesSchema.optional(),
-  marks: z.array(markSchema).optional(),
+  marks: array(markSchema).optional(),
   facet: PlotFacetConfigurationSchema.optional(),
 });
 const sourceSchema = createChartSourceSchema(
@@ -532,23 +533,19 @@ describe('Chart resolve parse boundary', () => {
     let markSource: Record<string, unknown> | undefined;
     let recipeThemeTokens: Record<string, unknown> | undefined;
 
-    const probeMarkSchema = z
-      .strictObject({
-        kind: z.literal('probe'),
-        value: z.preprocess(value => (value === undefined ? value : String(value)), z.string()),
-      })
-      .transform(value => {
-        markTransformCount += 1;
-        return { ...value, value: `${value.value}|mark-${markTransformCount}` };
-      });
-    const probeRecipeThemeOverridesSchema = z
-      .strictObject({
-        marker: z.preprocess(value => (value === undefined ? value : String(value)), z.string()),
-      })
-      .transform(value => {
-        recipeThemeTransformCount += 1;
-        return { ...value, marker: `${value.marker}|theme-${recipeThemeTransformCount}` };
-      });
+    const probeMarkSchema = strictObject({
+      kind: literal('probe'),
+      value: preprocess(value => (value === undefined ? value : String(value)), string()),
+    }).transform(value => {
+      markTransformCount += 1;
+      return { ...value, value: `${value.value}|mark-${markTransformCount}` };
+    });
+    const probeRecipeThemeOverridesSchema = strictObject({
+      marker: preprocess(value => (value === undefined ? value : String(value)), string()),
+    }).transform(value => {
+      recipeThemeTransformCount += 1;
+      return { ...value, marker: `${value.marker}|theme-${recipeThemeTransformCount}` };
+    });
 
     const probeMark = defineChartMark({
       kind: 'probe',
@@ -568,11 +565,11 @@ describe('Chart resolve parse boundary', () => {
     });
     const probeSourceSchema = createChartSourceSchema(
       'probe',
-      z.strictObject({
-        chartType: z.literal('probe'),
-        encodings: z.strictObject({ x: z.string(), y: z.string() }),
-        properties: z.strictObject({}).optional(),
-        marks: z.array(probeMarkSchema).optional(),
+      strictObject({
+        chartType: literal('probe'),
+        encodings: strictObject({ x: string(), y: string() }),
+        properties: strictObject({}).optional(),
+        marks: array(probeMarkSchema).optional(),
       }),
       createChartThemeSchema(probeRecipeThemeOverridesSchema).optional(),
     );
@@ -581,7 +578,7 @@ describe('Chart resolve parse boundary', () => {
       schema: probeSourceSchema,
       theme: {
         overridesSchema: probeRecipeThemeOverridesSchema,
-        resolutionSchema: z.strictObject({ marker: z.string() }),
+        resolutionSchema: strictObject({ marker: string() }),
         fallback: { marker: 'fallback' },
       },
       consumes: { encodings: ['x', 'y'], properties: [] },

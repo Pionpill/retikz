@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { literal, strictObject } from 'zod';
 
 import type { IRDataReducerOperation, IRDataSelectorOperation } from '../../src';
 
@@ -386,11 +386,11 @@ describe('statistics provider runtime', () => {
     ).toEqual(['group', 'value']);
 
     const reducer = defineStatisticsReducer({
-      schema: z.strictObject({ kind: z.literal('custom-total') }),
+      schema: strictObject({ kind: literal('custom-total') }),
       reduce: () => ({}),
     });
     const selector = defineRowSelector({
-      schema: z.strictObject({ kind: z.literal('custom-row') }),
+      schema: strictObject({ kind: literal('custom-row') }),
       select: () => [],
     });
     expect(() => resolveStatisticsReducerRegistry([reducer, reducer])).toThrow(

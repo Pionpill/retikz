@@ -6,8 +6,9 @@ import type {
   IRJsonObject,
   Scene,
 } from '@retikz/core';
+import type { AffineMatrix } from '@retikz/math';
 
-import type { InspectionAppearance, InspectorKey } from '../contract';
+import type { InspectorKey } from '../contract';
 
 /** Inspector selection 的目标 locator */
 export type InspectionSelectionTarget =
@@ -17,24 +18,37 @@ export type InspectionSelectionTarget =
       kind: 'self';
       locator:
         | Readonly<{
+            /** 按 authored source path 选择其产生的最终 occurrence */
             kind: 'authored';
+            /** authored IR 中的稳定来源路径 */
             sourcePath: string;
             /** 同一来源路径与所属者下按最终实例顺序选择的序号；省略表示全部 */
             occurrenceIndex?: number;
           }>
-        | Readonly<{ kind: 'occurrence'; occurrence: CompileOccurrenceLocator }>;
+        | Readonly<{
+            /** 精确选择一个最终编译 occurrence */
+            kind: 'occurrence';
+            /** Core 提供的最终 occurrence 定位器 */
+            occurrence: CompileOccurrenceLocator;
+          }>;
     }>;
 
-/** Inspector selection 的 request 或全 Inspector barrier */
+/** Inspector selection 的单条规则：request 控制单个 Inspector，barrier 封锁一个范围内的全部 Inspector */
 export type InspectionSelectionRule =
   | Readonly<{
+      /** 针对指定 Inspector 的启用、关闭或 options 请求 */
       kind: 'request';
+      /** 要操作的 Inspector key */
       inspector: InspectorKey;
+      /** 请求生效的 scene、subtree 或 self 范围 */
       target: InspectionSelectionTarget;
-      value: false | true | IRJsonObject;
+      /** false 关闭该 Inspector，true 使用默认 options，对象提供 sparse options */
+      options: boolean | IRJsonObject;
     }>
   | Readonly<{
+      /** 封锁目标范围内的全部 Inspector，并阻止后代规则重新开启 */
       kind: 'barrier';
+      /** 只能作用于整张 scene 或 subtree 的封锁范围 */
       target: Extract<InspectionSelectionTarget, { kind: 'scene' | 'subtree' }>;
     }>;
 
@@ -56,8 +70,8 @@ export type ResolvedInspectionRequest = Readonly<{
   provenance: Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>;
   /** canonical options */
   options: IRJsonObject;
-  /** 连续分配的 appearance */
-  appearance: InspectionAppearance;
+  /** request 级连续颜色序号 */
+  colorScope: number;
 }>;
 
 /** 一个辅助 Scene plane entry */
@@ -73,7 +87,7 @@ export type InspectionPlaneEntry = Readonly<{
   /** occurrence-local sealed Scene */
   scene: Scene;
   /** occurrence local 到 primary Scene 的矩阵 */
-  transform: readonly [number, number, number, number, number, number];
+  transform: AffineMatrix;
 }>;
 
 /** 有序、只读的 Inspector 辅助平面 */

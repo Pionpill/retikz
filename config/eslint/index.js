@@ -128,6 +128,24 @@ const eslintConfig = [
     },
   },
   {
+    name: '@retikz/packages-zod-named-imports',
+    files: ['packages/**/*.{js,jsx,ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'zod',
+              importNames: ['default', 'z'],
+              message: 'Use named Zod imports.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     name: '@retikz/react',
     files: ['**/*.{jsx,tsx}'],
     languageOptions,

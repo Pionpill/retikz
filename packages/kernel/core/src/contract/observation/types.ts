@@ -1,6 +1,8 @@
+import type { AffineMatrix } from '@retikz/math';
 import type { ZodType } from 'zod';
 
 import type { IRChild, JsonValue } from '../../schemas';
+import type { ResolvedTheme } from '../../shared';
 import type { CompileOccurrenceLocator } from '../occurrence';
 import type { Scene } from '../scene';
 
@@ -90,13 +92,15 @@ export type CompileObservation<TValue extends JsonValue = JsonValue> = Readonly<
   /** 已按所属者 schema 校验并冻结的产物 */
   value: TValue;
   /** 从所属者局部坐标到主 Scene 坐标的仿射矩阵 */
-  transform: readonly [number, number, number, number, number, number];
+  transform: AffineMatrix;
   /** probe/replay 来源追踪 */
   provenance: CompileObservationProvenance;
 }>;
 
 /** observer 在一次 observed compile 中使用的上下文 */
 export type CompileObservationContext = Readonly<{
+  /** 当前最终 occurrence 的完整、只读 Theme */
+  theme: ResolvedTheme;
   /** 在当前 occurrence 环境中编译隔离的普通 IR 片段 */
   compileFragment: (children: IRChild | ReadonlyArray<IRChild>) => CompiledSceneFragment;
 }>;

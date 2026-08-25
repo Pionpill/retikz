@@ -79,6 +79,18 @@ zod schema 仍是唯一真源；JSON-Schema 是**生成物**，随源码 `gen:sc
 - core：单文件 137KB → 13 个分片，最大 path 47KB / scope 43KB（这两个域本身复杂），其余 1–8KB。描述 414 条全保留。
 - plot：根 `PlotSchema`，9 个分片（plot / mark / scale / encoding / guide / coordinate / data / transform），2.7–25KB。描述 474 条。
 
+### 2.6 最小 Source IR 与编译时默认
+
+Schema 描述的是用户需要持久化、传递或生成的最小 Source IR，而不是把所有运行时默认值提前物化的完整快照。凡是省略后具有确定默认语义、且不会丢失独立事实的字段，都应保持可选，让用户配置保持精简
+
+- schema / parse 只校验 JSON 形态并保留省略状态，不为了方便下游消费而主动写入默认字段；不要用 `z.default(...)` 把领域默认提前固化到 Source IR
+- 默认值、空集合、继承、优先级和上下文相关的补全在编译链路中处理，具体由领域 `resolve/<domain>/` 在当前 context 下确定，pipeline / compile 只负责调度并消费确定结果
+- `CanonicalXxx` / `XxxResolution` 可以保存完整的有效结构，但该内部形态不应反向扩大公开 Source IR 的必填面
+- 显式提供的 `false`、`0`、空字符串和有独立语义的空数组必须保留；只有省略字段才使用默认逻辑，省略与显式空值等价时也要在字段描述中写明
+- schema 的 `.describe(...)` 和生成的 JSON-Schema 必须说明省略后的默认行为与处理阶段，避免 LLM 把运行时补全字段误写进用户配置
+
+因此，减少 Source IR 字段不是减少语义：独立事实继续进入 IR，推导值、缓存值、索引和仅供下游方便的空集合由编译时消费者按需生成
+
 ---
 
 ## 3. 明确反对
@@ -87,6 +99,7 @@ zod schema 仍是唯一真源；JSON-Schema 是**生成物**，随源码 `gen:sc
 - **手写第二份 JSON-Schema**：必漂移。只能从 zod 生成。
 - **`metadata: localRegistry` 旁路 globalRegistry**：丢字段级描述（见 §2.4）。
 - **per-entity 57 文件 / 单文件 / 纯自包含内联**：见 §2.2。
+- **在 schema / normalize 阶段物化领域默认**：会把可省略的配置膨胀成冗余 Source IR；默认应在编译链路的 resolve 阶段确定。
 
 ---
 

@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { z } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
 import type {
   CompositionAxisResolve,
@@ -42,7 +42,7 @@ export type CoordinateArrangementKindValue = ValueOf<typeof CoordinateArrangemen
 export type ScaffoldFrameModeValue = ValueOf<typeof ScaffoldFrameMode>;
 
 /** Plot IR 根节点（plot composite 节点） */
-export type IRPlot = z.infer<typeof PlotSchema>;
+export type IRPlot = ZodInfer<typeof PlotSchema>;
 
 /** Plot 与高层图表共同复用的 JSON-safe facet 作者配置 */
-export type IRPlotFacetConfiguration = z.infer<typeof PlotFacetConfigurationSchema>;
+export type IRPlotFacetConfiguration = ZodInfer<typeof PlotFacetConfigurationSchema>;

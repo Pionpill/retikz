@@ -18,8 +18,8 @@ type SegmentControlsInput = {
  * @remarks 复杂度：时间 O(1)，空间 O(1)；重合 knot 回退到 epsilon，避免后续切线计算除零
  */
 const centripetalSpacing = (a: Position, b: Position): number => {
-  const dist = Math.hypot(b[0] - a[0], b[1] - a[1]);
-  const spacing = Math.sqrt(dist);
+  const distance = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const spacing = Math.sqrt(distance);
   return spacing < DEFAULT_EPSILON ? DEFAULT_EPSILON : spacing;
 };
 

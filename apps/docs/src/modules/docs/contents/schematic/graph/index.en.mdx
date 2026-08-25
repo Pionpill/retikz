@@ -1,48 +1,66 @@
 ---
 title: Graph
-description: Organize Entity, Relation, and Container under a Graph presentation root, then learn basic and extended usage.
+description: Use an optional Graph Scope for local semantic styling and defaults while freely composing Entity, Relation, and any Core content.
 ---
 
-Graph is the unified entry point for reusable elements in the Schematic domain. The `Graph` presentation root provides global Entity variant and Theme-token scope; `Entity` represents targetable subjects, `Relation` represents relationships, and `Container` organizes local structure with a shell.
+Graph is an optional context shell. It reuses the complete Core `Scope` surface and adds local `graphTheme` rules for visible Entity and Relation descendants. Automatic layout, routing algorithms, and rendering remain outside Graph.
 
-Graph owns each element's diagram meaning and drawing contract. It does not own a `GraphModel`, automatic layout, obstacle avoidance, hit testing, or interaction state. Place units with Core positions or Layout containers, then use stable `id` values for explicit targets.
+Entity and Relation are independent Tier 2 composites that can appear directly in Layout, Scope, or any other Core-child position. Graph maintains neither a member collection nor an identity index; Core namespace owns references and duplicate-id diagnostics.
 
-## Responsibilities at a glance
+## Two host modes
 
-| Member      | Owns                                                          | Does not own                            |
-| ----------- | ------------------------------------------------------------- | --------------------------------------- |
-| `Graph`     | Presentation scope, Entity defaults, and Theme rules          | A GraphModel or automatic layout        |
-| `Container` | A shell, header, ordered sections, and reusable region layout | Graph topology or automatic placement   |
-| `Entity`    | Neutral shape, content, sizing, and semantic role             | Domain-specific state machines          |
-| `Relation`  | One Core Path route and an optional final-step label          | Automatic routing or obstacle avoidance |
+As a top-level React component, Graph creates one Scene host like Layout, Plot, or Table. It does not need an outer Layout:
 
-All members lower to existing Core primitives and can be authored through React, direct JSON/IR, or Vanilla embeds. Built-in and custom roles or variants share one Definition registry. Definitions are injected per figure and never enter persisted JSON.
+```tsx
+<Graph width={420} height={160}>
+  <Entity id="service" role="activity" position={[120, 80]}>
+    Service
+  </Entity>
+</Graph>
+```
 
-## Content groups
+When an outer Layout already exists, Graph lowers to one Scope that affects only local content and creates no second SVG or Canvas:
+
+```tsx
+<Layout width={800} height={220}>
+  <Graph transforms={[{ kind: 'translate', x: 80, y: 40 }]}>
+    <Entity role="activity" position={[120, 80]}>
+      Local content
+    </Entity>
+  </Graph>
+</Layout>
+```
+
+Fields such as `theme`, `nodeDefault`, `pathDefault`, `labelDefault`, `arrowDefault`, `resetStyle`, `transforms`, `placement`, `zIndex`, and `clip` belong directly to `IRGraph` and retain Core Scope semantics. `width`, `height`, renderer, runtime, and DOM props belong only to the standalone Scene host; move them to the outer Layout when Graph is embedded.
+
+## Responsibilities
+
+| Member     | Responsibility                                                        | Does not own                                 |
+| ---------- | --------------------------------------------------------------------- | -------------------------------------------- |
+| Graph      | Core Scope surface and local Graph Theme                              | Member indexes, layout, or routing           |
+| Entity     | Node semantics and independent lowering to one Core Node              | Generated ids or arbitrary drawing children  |
+| Relation   | Core NodeTarget endpoints, relation semantics, and Core Path lowering | Graph membership checks or automatic routing |
+| Core child | Free author-ordered composition with Entity and Relation              | Graph-local semantic rules                   |
+
+## Chapters
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/schematic/graph/entity">
     <span className="font-semibold">Entity</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Graph subjects, roles, and composition</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Independent node semantics, text, placement, and extensions
+    </span>
   </LinkedCard>
   <LinkedCard href="/schematic/graph/relation">
     <span className="font-semibold">Relation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Path steps, Draw ways, and targets</span>
-  </LinkedCard>
-  <LinkedCard href="/schematic/graph/container">
-    <span className="font-semibold">Container</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Shells, headers, and ordered sections</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      General references, direction, routes, and extensions
+    </span>
   </LinkedCard>
   <LinkedCard href="/schematic/graph/api-reference">
     <span className="font-semibold">Graph API Reference</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Schemas, factories, Definitions, and adapter identity
+      Source schemas, Scope surface, and three adapters
     </span>
   </LinkedCard>
 </div>
-
-## Related
-
-- [Layout containers](/library/layout): generic Flex, Grid, and Overlay arrangement
-- [Schematic introduction](/schematic/introduction): the boundary between Graph and Diagram capabilities
-- [Core paths](/kernel/components/draw/overview): the primitive output used by Relation

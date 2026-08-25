@@ -1,10 +1,11 @@
 import { normalizeScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { PlotAxis, PlotFacet, PlotTransform } from '@retikz/plot-react';
-import { Text } from '@retikz/react';
+import { Layout, Text } from '@retikz/react';
 import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { ChartFacet, ChartNote, ChartSource, ChartSubtitle, ChartTitle } from '../src';
+import { ChartFacet, ChartNote, ChartSource, ChartSubtitle, ChartTitle, RetikzChartReactErrorCode } from '../src';
 import { ScatterChart, ScatterMark } from '../src/point';
 
 type InputComponent<TInput> = {
@@ -20,7 +21,53 @@ const source = normalizeScatterChart({
   encodings: { x: 'x', y: 'y' },
 });
 
+const chartHostPropKeys = [
+  'width',
+  'height',
+  'className',
+  'style',
+  'renderer',
+  'themeStyles',
+  'runtime',
+  'animate',
+  'snapshotAt',
+  'animationRef',
+  'onArtifacts',
+  'onCompileResult',
+] as const;
+
 describe('Typed Point Chart React authoring', () => {
+  it.each(chartHostPropKeys)(
+    'rejects embedded Chart own standalone host prop %s including explicit undefined',
+    hostProp => {
+      expect(() =>
+        inputOf(ScatterChart, {
+          data: [{ x: 1, y: 2 }],
+          encodings: { x: 'x', y: 'y' },
+          [hostProp]: undefined,
+        }),
+      ).toThrowError(
+        expect.objectContaining({
+          name: 'RetikzChartReactError',
+          code: RetikzChartReactErrorCode.Default,
+          message: expect.stringMatching(/embedded Chart.*standalone.*outer.*Layout/i),
+        }),
+      );
+    },
+  );
+
+  it('renders standalone and embedded Chart through one SVG host and inherits the outer Theme mode', () => {
+    const chart = <ScatterChart data={[{ x: 1, y: 2 }]} encodings={{ x: 'x', y: 'y' }} />;
+    const standalone = renderToStaticMarkup(chart);
+    const embedded = renderToStaticMarkup(<Layout theme={{ mode: 'dark' }}>{chart}</Layout>);
+
+    expect(standalone.match(/<svg/g)).toHaveLength(1);
+    expect(embedded.match(/<svg/g)).toHaveLength(1);
+    expect(embedded).not.toContain('data-retikz-id');
+    expect(embedded).toContain('hsl(210, 50%, 60%)');
+    expect(embedded).not.toContain('hsl(210, 38%, 48%)');
+  });
+
   it('normalizes presentation markers into fixed slots independent of JSX order', () => {
     const input = inputOf(ScatterChart, {
       data: [],
@@ -261,14 +308,25 @@ describe('Typed Point Chart React authoring', () => {
     ).toThrow(/unsupported-chart-child/i);
   });
 
-  it('keeps host width and height out of Source layout', () => {
+  it('keeps standalone host dimensions separate from explicit Source layout', () => {
+    const markup = renderToStaticMarkup(
+      <ScatterChart
+        data={[{ x: 1, y: 2 }]}
+        encodings={{ x: 'x', y: 'y' }}
+        width={640}
+        height={360}
+        layout={{ width: 320, height: 180 }}
+      />,
+    );
     const input = inputOf(ScatterChart, {
       data: [{ x: 1, y: 2 }],
       encodings: { x: 'x', y: 'y' },
-      width: 640,
-      height: 360,
+      layout: { width: 320, height: 180 },
     });
-    expect(input.source).not.toHaveProperty('layout');
+
+    expect(markup).toContain('width="640"');
+    expect(markup).toContain('height="360"');
+    expect(input.source.layout).toEqual({ width: 320, height: 180 });
   });
 
   it('keeps the legacy generic source only as a fixture, not as a public component', () => {

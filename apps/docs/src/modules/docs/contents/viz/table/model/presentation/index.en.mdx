@@ -21,7 +21,7 @@ Selectors and encodings always read the canonical raw value, not formatted text.
 
 ## Two content paths
 
-Both paths produce one Core child with the same identity and order as the source Cell. They differ in who constructs the content:
+Both paths produce one Core child in source-Cell canonical order and retain only explicit identity. They differ in who constructs the content:
 
 | Payload   | Stored value                                                              | How it becomes a Core child                |
 | --------- | ------------------------------------------------------------------------- | ------------------------------------------ |
@@ -41,24 +41,24 @@ A custom formatter only performs scalar-to-scalar conversion, and its output mus
 | `CellFormatterDefinition`    | `{ value, context }`, where value is the raw scalar | JSON scalar         |
 | `CellPresentationDefinition` | `{ rawValue, value, context, appearance }`          | JSON-safe `IRChild` |
 
-`context` contains stable Cell identity, address, roles, and provenance. Presentation `value` is the formatter output, while `rawValue` preserves the original value for rules, diagnostics, and domain semantics. `appearance` already merges preset tokens, encodings, and rules.
+`context` always contains canonical address, roles, and provenance. Cell, row, and column ids appear only when an author or Structure supplied them. Presentation `value` is the formatter output, while `rawValue` preserves the original value for rules, diagnostics, and domain semantics. `appearance` already merges preset tokens, encodings, and rules.
 
 ## Built-in and custom use the same entry
 
 A value Cell uses built-in identity when no formatter is named and built-in `text` when no presentation is named. `text` converts the scalar into a zero-padding Core Node without stroke or fill; `null` becomes an empty string.
 
-Custom Formatter and Presentation Definitions each have a stable name, a precise options schema, and one callback. Runtime merges built-in and custom Definitions into their respective registries. Empty keys and duplicate registrations fail loudly while identifying the provider key during registry construction. During per-Cell dispatch, an unregistered name, invalid options, non-scalar formatter output, or non-JSON-safe Presentation output fails loudly while retaining the Definition name and Cell id.
+Custom Formatter and Presentation Definitions each have a stable name, a precise options schema, and one callback. Runtime merges built-in and custom Definitions into their respective registries. Empty keys and duplicate registrations fail loudly while identifying the provider key during registry construction. During per-Cell dispatch, an unregistered name, invalid options, non-scalar formatter output, or non-JSON-safe Presentation output fails loudly while retaining the Definition name and an explicit Cell id or canonical address.
 
 Presentation output must still pass the Core child schema. Built-in text and custom graphics therefore share measurement, layout, replay, and renderers instead of introducing a second Table-specific rendering language.
 
 ## What Presentation does not own
 
-| Neighbor  | Presentation reads        | Presentation does not decide         |
-| --------- | ------------------------- | ------------------------------------ |
-| Structure | Cell id and payload       | Address, roles, provenance, or span  |
-| Style     | Final `appearance`        | Selector, encoding, and rule winners |
-| Layout    | The produced styled child | Tracks, padding, fit, or overflow    |
-| Renderer  | No direct renderer input  | SVG, Canvas, or SSR implementation   |
+| Neighbor  | Presentation reads           | Presentation does not decide         |
+| --------- | ---------------------------- | ------------------------------------ |
+| Structure | Optional Cell id and payload | Address, roles, provenance, or span  |
+| Style     | Final `appearance`           | Selector, encoding, and rule winners |
+| Layout    | The produced styled child    | Tracks, padding, fit, or overflow    |
+| Renderer  | No direct renderer input     | SVG, Canvas, or SSR implementation   |
 
 The same Presentation Definition can therefore serve different table forms, while the same Cell can change layout policy independently of how its value is presented.
 
@@ -71,13 +71,13 @@ The same Presentation Definition can therefore serve different table forms, whil
       endLine: 48,
     },
     {
-      label: 'Presentation carriers align with Cell identity and order',
+      label: 'Presentation carriers align by canonical order and explicit Cell identity',
       path: 'packages/viz/table/src/pipeline/presentation/table.ts',
       startLine: 67,
       endLine: 96,
     },
     {
-      label: 'value/content dispatch retains source order, identity, values, and appearance',
+      label: 'value/content dispatch retains order, optional identity, values, and appearance',
       path: 'packages/viz/table/src/pipeline/presentation/table.ts',
       startLine: 99,
       endLine: 147,

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { strictObject } from 'zod';
 
 import type { CompileWarning, IRScene } from '../../src';
 
@@ -173,7 +173,7 @@ describe('CompileOptions.onWarn', () => {
   it('自定义 shape 缺少 connectionEnvelope 时 tight boundary 只发一次结构化 fallback warning', () => {
     const customShape = defineShape({
       name: 'custom-without-envelope',
-      paramsSchema: z.strictObject({}),
+      paramsSchema: strictObject({}),
       circumscribe: BUILTIN_SHAPES.rectangle.circumscribe,
       boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
       anchor: BUILTIN_SHAPES.rectangle.anchor,

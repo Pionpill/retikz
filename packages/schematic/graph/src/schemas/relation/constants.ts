@@ -1,11 +1,11 @@
-/** Relation 角色词汇 */
-export const RelationRole = {
-  /** 流程顺序关系 */
-  Flow: 'flow',
-  /** 分支关系 */
-  Branch: 'branch',
-  /** 依赖关系 */
-  Dependency: 'dependency',
-  /** 反馈关系 */
-  Feedback: 'feedback',
+/** Relation 有向性词汇 */
+export const RelationDirection = {
+  /** 无向关系 */
+  None: 'none',
+  /** 从 source 指向 target */
+  Forward: 'forward',
+  /** 从 target 指向 source */
+  Reverse: 'reverse',
+  /** 双向关系 */
+  Both: 'both',
 } as const;

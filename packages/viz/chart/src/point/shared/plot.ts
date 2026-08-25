@@ -32,12 +32,10 @@ export const pointAxisGuidesOf = (
   return [
     {
       type: PlotGuide.Axis,
-      id: pointRecipeId(chartType, 'guide.x'),
       dimension: 'x',
     },
     {
       type: PlotGuide.Axis,
-      id: pointRecipeId(chartType, 'guide.y'),
       dimension: 'y',
       ...(theme.axisGridEnabled ? { grid: true } : {}),
     },

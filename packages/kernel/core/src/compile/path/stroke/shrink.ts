@@ -1,4 +1,4 @@
-import { arcEndPoint, ellipseArcPoint, point } from '@retikz/math';
+import { point, pointAtArcAngle, pointAtEllipseArcAngle } from '@retikz/math';
 
 import type { ArrowEmitContext, MarkerFill, MarkerPrimitive, PathCommand, ResolvedArrowEnd } from '../../../contract';
 import type { ArrowMarkResolution } from '../../../resolve';
@@ -96,9 +96,9 @@ const endpointOf = (cmd: PathCommand): IRPosition | null => {
     case 'cubic':
       return [cmd.to[0], cmd.to[1]];
     case 'arc':
-      return arcEndPoint(cmd.center, cmd.radius, cmd.endAngle);
+      return pointAtArcAngle(cmd.center, cmd.radius, cmd.endAngle);
     case 'ellipseArc':
-      return ellipseArcPoint({
+      return pointAtEllipseArcAngle({
         center: cmd.center,
         radiusX: cmd.radiusX,
         radiusY: cmd.radiusY,

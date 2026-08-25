@@ -61,7 +61,7 @@ children 直接放 Kernel / Sugar 组件树即可，没有额外的固定组合�
 
 当 `ir` 已包含根 Theme 时，显式 `theme` prop 会逐字段覆盖它，未声明字段继续采用持久化值；两份输入对象都不会被修改。Theme 不会自动改变普通 Node / Path 的 fill、stroke 或 font。
 
-自定义 style 通过 `themeStyles` 注入 `<Layout>`：`defineThemeStyle({ name: 'brand', resolve: ({ mode }) => colors })` 保持在运行时，IR 只写 `{ style: 'brand' }`。若同一 Layout 还消费 Plot 或 Chart，必须同时为其注入同名的领域 style resolver；缺失的 registry 会明确报错。
+自定义 style 通过 `themeStyles` 注入 `<Layout>`：`defineThemeStyle({ name: 'brand', resolve: ({ mode }) => ({ semantic: { guide: mode === ThemeMode.Dark ? '#94a3b8' : '#64748b' } }) })` 只返回相对当前 mode 默认 shared colors 的稀疏覆盖，IR 只写 `{ style: 'brand' }`。若同一 Layout 还消费 Plot 或 Chart，必须同时为其注入同名的领域 style resolver；缺失的 registry 会明确报错。
 
 ### 读取编译产物
 
@@ -79,7 +79,7 @@ children 直接放 Kernel / Sugar 组件树即可，没有额外的固定组合�
 import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import { LayoutInspectLayout } from '@retikz/layout-react/inspect';
 
-<LayoutInspectLayout request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: true }}>
+<LayoutInspectLayout request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, options: true }}>
   {/* FlexLayout */}
 </LayoutInspectLayout>;
 ```

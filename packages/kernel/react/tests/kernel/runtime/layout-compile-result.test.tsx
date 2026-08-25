@@ -12,7 +12,7 @@ import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { literal, number } from 'zod';
 
 import { Layout } from '../../../src';
 
@@ -20,9 +20,9 @@ const card = defineComposite({
   namespace: 'third',
   type: 'card',
   schema: CompositeBaseSchema.extend({
-    namespace: z.literal('third'),
-    type: z.literal('card'),
-    width: z.number(),
+    namespace: literal('third'),
+    type: literal('card'),
+    width: number(),
   }),
   expand: node => ({
     children: [{ type: 'node', position: [0, 0], minimumWidth: node.width, minimumHeight: 10 }],

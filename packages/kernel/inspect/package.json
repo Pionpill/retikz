@@ -95,6 +95,7 @@
   "dependencies": {
     "@retikz/core": "workspace:*",
     "@retikz/foundation": "workspace:*",
+    "@retikz/math": "workspace:*",
     "zod": "catalog:"
   },
   "peerDependencies": {

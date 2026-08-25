@@ -12,4 +12,5 @@ export const inspectFlexLayout = (
   id: string,
   input: InputFlexLayout,
   inspect: false | true | FlexLayoutInspectOptions = true,
-) => flexLayout(id, input, createInspectionVanillaAuthoring({ inspector: FLEX_LAYOUT_INSPECTOR_KEY, value: inspect }));
+) =>
+  flexLayout(id, input, createInspectionVanillaAuthoring({ inspector: FLEX_LAYOUT_INSPECTOR_KEY, options: inspect }));
