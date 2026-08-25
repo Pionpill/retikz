@@ -6,11 +6,14 @@ import {
   applySelectorOperation,
   BuiltinReducerOperationSchemas,
   BuiltinSelectorOperationSchemas,
+  DataFieldType,
   DEFAULT_TRANSFORM_CONTEXT,
   defineRowSelector,
   defineStatisticsReducer,
   ReducerOperationKind,
   ReducerOperationSchema,
+  reducerOutputDescriptors,
+  reducerOutputFields,
   resolveRowSelectorRegistry,
   resolveStatisticsReducerRegistry,
   SelectorOperationKind,
@@ -55,6 +58,34 @@ describe('statistics provider schema boundaries', () => {
     expect(() => applyReducerOperation([{ value: 2 }], reducer, DEFAULT_TRANSFORM_CONTEXT)).toThrow();
     expect(SelectorOperationSchema.safeParse(selector).success).toBe(false);
     expect(() => applySelectorOperation([{ value: 2 }], selector, DEFAULT_TRANSFORM_CONTEXT)).toThrow();
+  });
+
+  it('exposes scalar reducer output descriptors without treating extent as scalar', () => {
+    expect(reducerOutputDescriptors({ kind: 'count', as: 'rows' })).toEqual([
+      { field: 'rows', type: DataFieldType.Continuous },
+    ]);
+    expect(reducerOutputDescriptors({ kind: 'mean', field: 'value', as: 'average' })).toEqual([
+      { field: 'average', type: DataFieldType.Continuous },
+    ]);
+    expect(reducerOutputDescriptors({ kind: 'quantile', field: 'value', p: 0.5, as: 'median' })).toEqual([
+      { field: 'median', type: DataFieldType.Continuous },
+    ]);
+    expect(reducerOutputDescriptors({ kind: 'extent', field: 'value', as: 'range' })).toEqual([]);
+  });
+
+  it('uses the registered reducer descriptor for custom scalar candidates', () => {
+    const definition = defineStatisticsReducer({
+      schema: strictObject({ kind: literal('custom-scalar'), as: string() }),
+      outputFields: operation => [operation.as],
+      outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
+      reduce: (_rows, operation) => ({ [operation.as]: 1 }),
+    });
+    const registry = resolveStatisticsReducerRegistry([definition]);
+
+    expect(reducerOutputDescriptors({ kind: 'custom-scalar', as: 'metric' }, registry)).toEqual([
+      { field: 'metric', type: DataFieldType.Continuous },
+    ]);
+    expect(reducerOutputFields({ kind: 'custom-scalar', as: 'metric' }, registry)).toEqual(['metric']);
   });
 
   it('rejects non-JSON custom reducer input before invoking its definition', () => {

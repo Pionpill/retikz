@@ -5,6 +5,7 @@ import { ZodLiteral, ZodObject } from 'zod';
 import type { IRDataReducerOperation, IRDataSelectorOperation } from '../schemas';
 import type { ExternalRow } from '../shared';
 import type { TransformContext } from './transform';
+import type { DataTransformOutputDescriptor } from './transform';
 
 import { RetikzDataError } from '../error';
 
@@ -19,6 +20,8 @@ export type StatisticsReducerDefinition<TReducerOperation extends IRDataReducerO
   inputFields?: (operation: TReducerOperation) => Array<string>;
   /** 该 reducer 产出的派生字段名；用于 data.model strict 源字段排除与运行时输出冲突检查，提供时必须完整声明 reduce 可能写入的字段 */
   outputFields?: (operation: TReducerOperation) => Array<string>;
+  /** 该reducer产生的已类型化scalar字段；多值或类型不可表达的输出可只声明outputFields */
+  outputs?: (operation: TReducerOperation) => Array<DataTransformOutputDescriptor>;
   /** 对一组 rows 执行 reducer；返回要写入输出行 / annotation 行的字段片段 */
   reduce: (rows: Array<ExternalRow>, operation: TReducerOperation, context: TransformContext) => ExternalRow;
 };
@@ -40,6 +43,7 @@ export type AnyStatisticsReducerDefinition = {
   schema: ZodType;
   inputFields?: (operation: never) => Array<string>;
   outputFields?: (operation: never) => Array<string>;
+  outputs?: (operation: never) => Array<DataTransformOutputDescriptor>;
   reduce: (rows: Array<ExternalRow>, operation: never, context: TransformContext) => ExternalRow;
 };
 
