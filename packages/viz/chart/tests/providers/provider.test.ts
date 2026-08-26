@@ -14,4 +14,8 @@ describe('concrete Chart provider contributions', () => {
     const second = createScatterChartProviderContribution().providers.at(-1);
     expect(Object.keys(first?.datasets ?? {})).not.toEqual(Object.keys(second?.datasets ?? {}));
   });
+
+  it('accepts Plot lowering runtime Definitions as the second factory argument', () => {
+    expect(() => createScatterChartProviderContribution([], { transformDefinitions: [] })).not.toThrow();
+  });
 });

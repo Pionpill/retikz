@@ -1,11 +1,20 @@
+import type { IRJsonObject } from '@retikz/core';
+import type { IRPlotPartitionDimension } from '@retikz/plot';
+
 import { DEFAULT_RESOLVED_THEME, NodeTextAlign, ThemeMode } from '@retikz/core';
-import { PlotFacetConfigurationSchema, PlotMark, PlotThemeToken, PointMarkSchema } from '@retikz/plot';
 import { NonBlankStringSchema } from '@retikz/foundation';
+import {
+  PlotFacetOptionsSchema,
+  PlotMark,
+  PlotPartitionDimensionsSchema,
+  PlotThemeToken,
+  PointMarkSchema,
+} from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { array, boolean, literal, number, preprocess, strictObject, string } from 'zod';
 
 import type { IRChartSource } from '../../src';
-import type { ChartMarkResolveContext } from '../../src/_chart/contract';
+import type { ChartEncodingResolution, ChartMarkResolveContext } from '../../src/_chart/contract';
 
 import {
   ChartThemeToken,
@@ -15,9 +24,39 @@ import {
   defineChartTheme,
   RetikzChartErrorCode,
 } from '../../src';
-import { defineChartMark, defineChartRecipe } from '../../src/_chart/contract';
+import { ChartEncodingSpatialKind, defineChartMark, defineChartRecipe } from '../../src/_chart/contract';
 import { chartThemeDefinitionsOf, resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveSelectedChart } from '../../src/_chart/resolve';
+
+const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }): ChartEncodingResolution => {
+  const encodings = { ...context.encodings } as IRJsonObject;
+  delete encodings.row;
+  delete encodings.column;
+  delete encodings.facet;
+  const row = context.encodings.row;
+  const column = context.encodings.column;
+  return {
+    encodings,
+    transform: [],
+    scales: [],
+    positionScales: {},
+    removedRecipeScales: new Set<string>(),
+    ...(row === undefined && column === undefined
+      ? {}
+      : {
+          spatial: {
+            kind: ChartEncodingSpatialKind.Facet,
+            id: '__chart.demo.composition.facet',
+            view: '__chart.demo.view.main',
+            ...(row === undefined ? {} : { row: row as IRPlotPartitionDimension | Array<IRPlotPartitionDimension> }),
+            ...(column === undefined
+              ? {}
+              : { column: column as IRPlotPartitionDimension | Array<IRPlotPartitionDimension> }),
+            options: context.encodings.facet ?? {},
+          },
+        }),
+  };
+};
 
 const encodingsSchema = strictObject({
   x: NonBlankStringSchema,
@@ -25,6 +64,9 @@ const encodingsSchema = strictObject({
   color: NonBlankStringSchema.optional(),
   ignored: NonBlankStringSchema.optional(),
   markOnly: NonBlankStringSchema.optional(),
+  row: PlotPartitionDimensionsSchema.optional(),
+  column: PlotPartitionDimensionsSchema.optional(),
+  facet: PlotFacetOptionsSchema.optional(),
 });
 const propertiesSchema = strictObject({ opacity: number().min(0).max(1).optional() });
 const recipeThemeOverridesSchema = strictObject({
@@ -35,7 +77,7 @@ const recipeThemeResolutionSchema = strictObject({ glyph: NonBlankStringSchema, 
 const markSchema = strictObject({
   kind: literal('annotation'),
   override: boolean().optional(),
-  encodings: encodingsSchema.partial().optional(),
+  encodings: encodingsSchema.omit({ row: true, column: true, facet: true }).partial().optional(),
   properties: propertiesSchema.optional(),
 });
 const recipeSchema = strictObject({
@@ -43,7 +85,6 @@ const recipeSchema = strictObject({
   encodings: encodingsSchema,
   properties: propertiesSchema.optional(),
   marks: array(markSchema).optional(),
-  facet: PlotFacetConfigurationSchema.optional(),
 });
 const sourceSchema = createChartSourceSchema(
   'point',
@@ -83,19 +124,21 @@ const mark = defineChartMark({
 
 const recipe = defineChartRecipe({
   chartType: 'demo',
+  encodingSlots: ['x', 'y', 'color', 'ignored', 'markOnly', 'row', 'column', 'facet'],
   schema: sourceSchema,
   theme: {
     overridesSchema: recipeThemeOverridesSchema,
     resolutionSchema: recipeThemeResolutionSchema,
     fallback: { glyph: 'circle', showGrid: true },
   },
-  consumes: { encodings: ['x', 'y', 'color'], properties: ['opacity'] },
+  consumes: { encodings: ['x', 'y', 'color', 'row', 'column', 'facet'], properties: ['opacity'] },
   marks: [
     {
       definition: mark,
       inherit: { encodings: ['x', 'y', 'markOnly'], properties: ['opacity'] },
     },
   ],
+  resolveEncodings: resolveDirectEncodings,
   resolve: () => ({
     scaffold: {
       transform: [{ kind: 'sort', field: 'x', order: 'ascending' }],
@@ -149,6 +192,7 @@ const resolveWithRegistry = <TSource extends IRChartSource>(
     theme,
     recipe: selectedRecipe,
     themeDefinitions: chartThemeDefinitionsOf(value, theme, activeRegistry.themes),
+    runtime: activeRegistry.runtime,
   });
 };
 
@@ -258,6 +302,7 @@ describe('Chart resolution', () => {
         theme,
         recipe,
         themeDefinitions: chartThemeDefinitionsOf(source, theme, registry.themes),
+        runtime: registry.runtime,
       }),
     ).toEqual(result);
   });
@@ -310,12 +355,12 @@ describe('Chart resolution', () => {
     );
   });
 
-  it('wraps the recipe coordinate in a facet composition without losing scale identity', () => {
+  it('wraps the recipe coordinate in an encoding facet composition without losing scale identity', () => {
     const authored = sourceSchema.parse({
       ...source,
       recipe: {
         ...source.recipe,
-        facet: { id: 'regionFacet', column: { field: 'region' } },
+        encodings: { ...source.recipe.encodings, column: { field: 'region' } },
       },
     });
 
@@ -323,19 +368,19 @@ describe('Chart resolution', () => {
 
     expect(result.plot).not.toHaveProperty('coordinate');
     expect(result.plot.composition).toEqual({
-      defaultView: 'regionFacetPanel',
+      defaultView: '__chart.demo.view.main',
       views: [
         {
-          id: 'regionFacetPanel',
+          id: '__chart.demo.view.main',
           coordinate: { type: 'cartesian2D', x: 'x', y: 'x' },
         },
       ],
       arrangements: [
         {
           kind: 'facet',
-          id: 'regionFacet',
+          id: '__chart.demo.composition.facet',
           column: { field: 'region' },
-          view: 'regionFacetPanel',
+          view: '__chart.demo.view.main',
         },
       ],
     });
@@ -352,12 +397,12 @@ describe('Chart resolution', () => {
         },
       },
     ],
-  ])('rejects recipe facet together with Plot extension %s', (member, plotExtension) => {
+  ])('rejects encoding facet together with Plot extension %s', (member, plotExtension) => {
     const authored = sourceSchema.parse({
       ...source,
       recipe: {
         ...source.recipe,
-        facet: { id: 'regionFacet', column: { field: 'region' } },
+        encodings: { ...source.recipe.encodings, column: { field: 'region' } },
       },
       plotExtension,
     });
@@ -370,7 +415,7 @@ describe('Chart resolution', () => {
     );
   });
 
-  it('rejects recipe facet when the recipe scaffold already owns a composition', () => {
+  it('rejects encoding facet when the recipe scaffold already owns a composition', () => {
     const compositionRecipe = defineChartRecipe({
       ...recipe,
       resolve: () => ({
@@ -395,14 +440,14 @@ describe('Chart resolution', () => {
       theme: undefined,
       recipe: {
         ...source.recipe,
-        facet: { id: 'regionFacet', column: { field: 'region' } },
+        encodings: { ...source.recipe.encodings, column: { field: 'region' } },
       },
     });
 
     expect(() => resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, compositionRegistry)).toThrowError(
       expect.objectContaining({
         code: RetikzChartErrorCode.InvalidResolvedPlot,
-        details: expect.objectContaining({ path: ['recipe', 'facet'] }),
+        details: expect.objectContaining({ path: ['recipe', 'encodings', 'facet'] }),
       }),
     );
   });
@@ -575,6 +620,7 @@ describe('Chart resolve parse boundary', () => {
     );
     const probeRecipe = defineChartRecipe({
       chartType: 'probe',
+      encodingSlots: ['x', 'y'],
       schema: probeSourceSchema,
       theme: {
         overridesSchema: probeRecipeThemeOverridesSchema,
@@ -583,6 +629,7 @@ describe('Chart resolve parse boundary', () => {
       },
       consumes: { encodings: ['x', 'y'], properties: [] },
       marks: [{ definition: probeMark, inherit: {} }],
+      resolveEncodings: resolveDirectEncodings,
       resolve: context => {
         recipeThemeTokens = context.recipeThemeTokens;
         return {
