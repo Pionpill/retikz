@@ -7,7 +7,7 @@ import * as point from '../src/point';
 
 describe('@retikz/chart-react public surface', () => {
   it('keeps only shared presentation and Theme APIs on the root entry', () => {
-    expect(chart.ChartFacet).toBeDefined();
+    expect(chart).not.toHaveProperty('ChartFacet');
     expect(chart.ChartTitle).toBeDefined();
     expect(chart.ChartSubtitle).toBeDefined();
     expect(chart.ChartNote).toBeDefined();

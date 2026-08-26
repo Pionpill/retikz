@@ -19,8 +19,11 @@ export const createScatterChart = (input: CreateScatterChartInput): ChartAuthori
     ...(input.source === undefined ? {} : { source: input.source }),
     encodings: input.encodings,
     ...(input.properties === undefined ? {} : { properties: input.properties }),
-    ...(input.facet === undefined ? {} : { facet: input.facet }),
     ...(input.marks === undefined ? {} : { marks: input.marks }),
   });
-  return createPointChart(source, parts, createScatterChartProviderContribution(parts.themeDefinitions));
+  return createPointChart(
+    source,
+    parts,
+    createScatterChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
+  );
 };

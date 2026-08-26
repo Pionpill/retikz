@@ -1,15 +1,20 @@
-import type { IRScatterChart } from '@retikz/chart/point/scatter';
+import type { IRScatterChart, IRScatterChartEncodings } from '@retikz/chart/point/scatter';
 
 import { ScatterChartSchema } from '@retikz/chart/point/scatter';
 
 import type { InputScatterChart } from './types';
 
-import { normalizeChartFacet } from '../../normalize/chart';
 import { chartSourceOf } from '../shared';
+
+const normalizeScatterEncodings = (encodings: IRScatterChartEncodings): IRScatterChartEncodings => ({
+  ...encodings,
+  ...(typeof encodings.row === 'string' ? { row: { field: encodings.row } } : {}),
+  ...(typeof encodings.column === 'string' ? { column: { field: encodings.column } } : {}),
+});
 
 /** 将 Scatter Chart Vanilla Input 组装为精确 Source IR */
 export const normalizeScatterChart = (input: InputScatterChart): IRScatterChart => {
-  const { title, subtitle, note, source, encodings, properties, facet, marks, ...root } = input;
+  const { title, subtitle, note, source, encodings, properties, marks, ...root } = input;
   return ScatterChartSchema.parse(
     chartSourceOf({ title, subtitle, note, source }, root, {
       type: 'point',
@@ -20,9 +25,8 @@ export const normalizeScatterChart = (input: InputScatterChart): IRScatterChart 
       ...(root.plotExtension === undefined ? {} : { plotExtension: root.plotExtension }),
       recipe: {
         chartType: 'scatter',
-        encodings,
+        encodings: normalizeScatterEncodings(encodings),
         ...(properties === undefined ? {} : { properties }),
-        ...(facet === undefined ? {} : { facet: normalizeChartFacet(facet) }),
         ...(marks === undefined ? {} : { marks }),
       },
     }),

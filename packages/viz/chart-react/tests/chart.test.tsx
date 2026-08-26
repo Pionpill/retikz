@@ -1,11 +1,10 @@
 import { normalizeScatterChart } from '@retikz/chart-vanilla/point/scatter';
-import { PlotAxis, PlotFacet, PlotTransform } from '@retikz/plot-react';
+import { PlotAxis, PlotTransform } from '@retikz/plot-react';
 import { Layout, Text } from '@retikz/react';
-import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { ChartFacet, ChartNote, ChartSource, ChartSubtitle, ChartTitle, RetikzChartReactErrorCode } from '../src';
+import { ChartNote, ChartSource, ChartSubtitle, ChartTitle, RetikzChartReactErrorCode } from '../src';
 import { ScatterChart, ScatterMark } from '../src/point';
 
 type InputComponent<TInput> = {
@@ -180,13 +179,17 @@ describe('Typed Point Chart React authoring', () => {
     expect(input.source).toEqual(vanilla);
   });
 
-  it('matches Vanilla for ChartFacet and delegates Plot declarations to the Plot authoring chain', () => {
+  it('matches Vanilla for encoding-driven facets and delegates Plot declarations to the Plot authoring chain', () => {
     const input = inputOf(ScatterChart, {
       data: [{ amount: 1, margin: 2, region: 'north' }],
-      encodings: { x: 'amount', y: 'margin' },
+      encodings: {
+        x: 'amount',
+        y: 'margin',
+        column: 'region',
+        facet: { spacing: { panelGap: 12 } },
+      },
       children: (
         <>
-          <ChartFacet id="regionFacet" column="region" />
           <PlotTransform kind="sort" field="amount" order="descending" />
           <PlotAxis dimension="x" grid />
         </>
@@ -194,8 +197,12 @@ describe('Typed Point Chart React authoring', () => {
     });
     const vanilla = normalizeScatterChart({
       data: { reference: 'chart.data' },
-      encodings: { x: 'amount', y: 'margin' },
-      facet: { id: 'regionFacet', column: 'region' },
+      encodings: {
+        x: 'amount',
+        y: 'margin',
+        column: 'region',
+        facet: { spacing: { panelGap: 12 } },
+      },
       plotExtension: {
         transform: [{ kind: 'sort', field: 'amount', order: 'descending' }],
         guides: [{ type: 'axis', dimension: 'x', grid: true }],
@@ -208,12 +215,11 @@ describe('Typed Point Chart React authoring', () => {
   it('preserves direct slot ownership across arrays and transparent Fragments', () => {
     const input = inputOf(ScatterChart, {
       data: [{ amount: 1, margin: 2, region: 'north' }],
-      encodings: { x: 'amount', y: 'margin' },
+      encodings: { x: 'amount', y: 'margin', column: 'region' },
       children: [
         <ChartTitle key="title">Facet example</ChartTitle>,
         <>
           <ScatterMark properties={{ opacity: 0.5 }} />
-          <ChartFacet id="regionFacet" column="region" />
           <PlotAxis dimension="y" />
         </>,
       ],
@@ -221,40 +227,8 @@ describe('Typed Point Chart React authoring', () => {
 
     expect(input.source.presentation).toEqual({ title: 'Facet example' });
     expect(input.source.recipe.marks).toEqual([{ kind: 'scatter', properties: { opacity: 0.5 } }]);
-    expect(input.source.recipe.facet).toEqual({ id: 'regionFacet', column: { field: 'region' } });
+    expect(input.source.recipe.encodings.column).toEqual({ field: 'region' });
     expect(input.source.plotExtension?.guides).toEqual([{ type: 'axis', dimension: 'y' }]);
-  });
-
-  it('rejects duplicate or nested ChartFacet declarations', () => {
-    expect(() =>
-      inputOf(ScatterChart, {
-        data: [],
-        encodings: { x: 'x', y: 'y' },
-        children: (
-          <>
-            <ChartFacet id="first" column="region" />
-            <ChartFacet id="second" row="channel" />
-          </>
-        ),
-      }),
-    ).toThrow(/ChartFacet.*at most once/i);
-
-    expect(() =>
-      inputOf(ScatterChart, {
-        data: [],
-        encodings: { x: 'x', y: 'y' },
-        facet: { id: 'propFacet', column: 'region' },
-        children: <ChartFacet id="childFacet" row="channel" />,
-      }),
-    ).toThrow(/facet.*prop.*child/i);
-
-    expect(() =>
-      inputOf(ScatterChart, {
-        data: [],
-        encodings: { x: 'x', y: 'y' },
-        children: createElement(ChartFacet, { id: 'nested', column: 'region' }, <PlotAxis dimension="x" />),
-      }),
-    ).toThrow(/ChartFacet.*children/i);
   });
 
   it('keeps Transform append order and reports Plot prop-child collection conflicts', () => {
@@ -277,21 +251,6 @@ describe('Typed Point Chart React authoring', () => {
         children: <PlotAxis dimension="y" />,
       }),
     ).toThrow(/duplicate-declaration-source/i);
-  });
-
-  it('rejects ChartFacet together with Plot-owned spatial declarations', () => {
-    expect(() =>
-      inputOf(ScatterChart, {
-        data: [{ amount: 1, margin: 2, region: 'north' }],
-        encodings: { x: 'amount', y: 'margin' },
-        children: (
-          <>
-            <ChartFacet id="regionFacet" column="region" />
-            <PlotFacet id="plotFacet" column="region" />
-          </>
-        ),
-      }),
-    ).toThrow(/ChartFacet.*Plot.*spatial/i);
   });
 
   it('does not treat nested mark components as direct Chart marks', () => {

@@ -10,7 +10,6 @@ import { createElement, useMemo } from 'react';
 
 import type { ChartCommonProps, InputEmbeddableChartComponent } from '../../shared';
 
-import { RetikzChartReactError } from '../../error';
 import {
   assertEmbeddedChartHostProps,
   chartContentPropsOf,
@@ -48,7 +47,6 @@ type PointFactoryInput = Readonly<{
   data: Array<ExternalRow>;
   encodings: unknown;
   properties?: unknown;
-  facet?: unknown;
   marks?: ReadonlyArray<unknown>;
 }>;
 
@@ -106,7 +104,7 @@ export const createTypedChartInput = <
   TInput extends PointFactoryInput,
 >(
   props: TProps,
-  payload: Pick<TInput, 'encodings' | 'properties' | 'facet' | 'marks'>,
+  payload: Pick<TInput, 'encodings' | 'properties' | 'marks'>,
   factory: (input: TInput) => ChartAuthoringResult<TSource>,
 ): ChartInput<TSource> => {
   const {
@@ -132,16 +130,6 @@ export const createTypedChartInput = <
       )
     : undefined;
   const effectivePlotExtension = plotExtensionOf(plotExtension, plotAuthoring?.fragment);
-  if (pointChildren.facet !== undefined && payload.facet !== undefined) {
-    throw new RetikzChartReactError('chart react: facet cannot be declared by both prop and child');
-  }
-  const facet = pointChildren.facet ?? payload.facet;
-  if (
-    facet !== undefined &&
-    (effectivePlotExtension?.coordinate !== undefined || effectivePlotExtension?.composition)
-  ) {
-    throw new RetikzChartReactError('chart react: ChartFacet cannot be combined with Plot-owned spatial declarations');
-  }
   const effectiveLowerOptions = lowerOptionsWithPlotRuntimeOf(lowerOptions, plotAuthoring?.runtime ?? {});
   const presentation = split.presentation;
   const input = {
@@ -161,7 +149,6 @@ export const createTypedChartInput = <
     ...(presentation.source === undefined ? {} : { source: presentation.source }),
     encodings: payload.encodings,
     ...(payload.properties === undefined ? {} : { properties: payload.properties }),
-    ...(facet === undefined ? {} : { facet }),
     ...(marks.length === 0 ? {} : { marks }),
   } as TInput;
   return factory(input).input;

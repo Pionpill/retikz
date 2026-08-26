@@ -50,23 +50,27 @@ describe('Chart Vanilla normalization', () => {
     expect(source).not.toHaveProperty('config');
   });
 
-  it('normalizes Chart facet field shorthand into the Plot-owned compact configuration', () => {
+  it('normalizes row and column string shorthand inside exact Scatter encodings', () => {
     const source = normalizeScatterChart({
       data: { reference: 'rows' },
-      encodings: { x: 'amount', y: 'margin' },
-      facet: {
-        id: 'regionFacet',
+      encodings: {
+        x: 'amount',
+        y: 'margin',
         row: 'channel',
         column: [{ field: 'region', order: ['north', 'south'] }],
-        spacing: { panelGap: 12 },
+        facet: {
+          spacing: { panelGap: 12 },
+        },
       },
     });
 
-    expect(source.recipe.facet).toEqual({
-      id: 'regionFacet',
+    expect(source.recipe.encodings).toMatchObject({
       row: { field: 'channel' },
       column: [{ field: 'region', order: ['north', 'south'] }],
-      spacing: { panelGap: 12 },
+      facet: {
+        spacing: { panelGap: 12 },
+      },
     });
+    expect(source.recipe).not.toHaveProperty('facet');
   });
 });
