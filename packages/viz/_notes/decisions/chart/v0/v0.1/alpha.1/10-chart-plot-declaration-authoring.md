@@ -4,6 +4,8 @@
 - 决策日期：2026-08-24
 - 关联：[alpha.1 roadmap](./roadmap.md) · [Chart 总设计](../../../../../architecture/chart-design.md) · [Chart 封装完备设计](../../../../../architecture/chart-encapsulation-complete.md) · [Plot 可视化完备设计](../../../../../architecture/plot-visualization-complete.md) · [ADR-09](./09-family-recipe-chart-schema.md)
 
+> **后续演进：** [`ADR-11`](./11-chart-encoding-field-mapping.md) 已在当前alpha工作实现中把 `ChartFacet`、Vanilla root `facet`与`recipe.facet`迁移为exact `encodings.row / column / facet`。ADR-11获得Acceptance前本文仍为Accepted历史决策；届时仅上述Chart-owned facet surface被替代，`PlotXxx`命名、Plot声明owner与Plot canonical facet resolver继续有效。本文后续涉及`ChartFacet`的代码与示例只用于记录原决策，不代表当前公开API。
+
 ## 背景与目标
 
 Chart 以精确 recipe 压缩常见图表的 Source IR，并用 `plotExtension` 保留完整 Plot 出口。简单 Chart 可以通过少量 props 完成 authoring；需要 transform、facet、guide 或其它 Plot 能力时，用户目前只能重新拼装较大的 `plotExtension` 对象。对象虽然保持 JSON-safe，却把多个正交能力重新集中到一个 React prop，削弱了 Chart 从常用意图渐进进入 Plot 的组合路径。

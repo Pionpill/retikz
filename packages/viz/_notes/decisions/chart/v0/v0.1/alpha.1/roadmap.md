@@ -2,14 +2,14 @@
 
 > alpha.1 以 ADR-09 规定的 family、recipe、mark、Theme、provider 与 Plot 出口作为当前基础设施总决策，先闭环 Point family 的可发布能力，再按 capability gate 处理后续 chartType。当前只确认 `scatter` 已实现；其它 Point chartType 与 `regression`、`ranged-dot`、`strip` 仍 planned / gated，milestone 尚未完成
 >
-> 关联：[`chart v0.1 roadmap`](../roadmap.md) · [`Chart 总设计`](../../../../../architecture/chart-design.md) · [`Chart 封装完备设计`](../../../../../architecture/chart-encapsulation-complete.md) · [`Plot 可视化完备设计`](../../../../../architecture/plot-visualization-complete.md)
+> 关联：[`chart v0.1 roadmap`](../roadmap.md) · [`Chart 总设计`](../../../../../architecture/chart-design.md) · [`Chart 封装完备设计`](../../../../../architecture/chart-encapsulation-complete.md) · [`Data 能力完备设计`](../../../../../architecture/data-capability-complete.md) · [`Plot 可视化完备设计`](../../../../../architecture/plot-visualization-complete.md) · [`ADR-11`](./11-chart-encoding-field-mapping.md)
 
 ## 1. Milestone 目标与当前状态
 
 alpha.1 要证明 Point family 可以在精确 Source、recipe、Plot lowering、Standard presentation、三入口 adapter 与 compile-bound provider contributions 之间形成同一条长期主链：
 
 1. root `type` 选择 `point` family，`recipe.chartType` 选择当前精确 recipe
-2. `recipe.encodings` 只保存字段名，`recipe.properties` 只保存常量，`recipe.marks` 只使用当前 recipe 允许的 `scatter` kind
+2. `recipe.encodings` 使用Scatter精确slot schema保存direct或rich字段映射；`recipe.properties`只保存常量，`recipe.marks`只使用当前recipe允许的`scatter` kind
 3. Scatter recipe 生成 Point semantic mark
 4. authored `recipe.marks` 默认按数组顺序追加，`override: true` 按 kind 原位替换内建 semantic group；`plotExtension.marks` 最后追加且不继承 Chart slots
 5. Theme 使用 Chart、Plot、recipe 三个 owner slice，并按 Core mode / style、named/base chain、inline tokens 的固定顺序级联
@@ -17,7 +17,7 @@ alpha.1 要证明 Point family 可以在精确 Source、recipe、Plot lowering�
 
 当前状态是进行中：Point family 的 Scatter recipe 已形成实现闭环；ADR-05 及其它未实现 chartType 仍为 deferred / gated；ADR-06、ADR-07、ADR-08 的依赖 gate 继续保留。不能因为基础设施或单个 recipe 已可消费就宣称整个 alpha.1 完成
 
-## 2. ADR-01～03、ADR-09 与 ADR-10 的关系
+## 2. ADR-01～03、ADR-09～11 的关系
 
 ADR-09 是当前 family / recipe Chart 基础设施的总决策。早期 ADR-01～03 中与 Source shell、recipe 分发、Theme owner、公开入口和 presentation 组合有关的部分，以 ADR-09 的长期契约为准；仍与当前实现一致的 Plot lower、Vanilla normalize、React 复用 Vanilla、Standard presentation 边界继续保留
 
@@ -32,7 +32,8 @@ ADR-09 是当前 family / recipe Chart 基础设施的总决策。早期 ADR-01�
 | 07  | Ranged Dot 的 row atomicity 依赖                                                                                                                      | planned / gated  |
 | 08  | Strip 的 position-offset 依赖                                                                                                                         | planned / gated  |
 | 09  | family、recipe、mark Source IR、Theme、registry 与 provider 的当前基础设施总决策                                                                      | Accepted         |
-| 10  | Chart / Plot 声明 owner 分层；Plot 非 Mark 声明使用 `PlotXxx`，`ChartFacet` 写入精确 recipe 并复用 Plot facet 主链                                    | Accepted         |
+| 10  | 保留Chart / Plot声明owner分层与`PlotXxx`命名；`ChartFacet` / `recipe.facet`部分待ADR-11 Accepted后由其替代                                            | Accepted         |
+| 11  | Scatter exact encodings、Data output model、rich mapping调度与旧facet surface迁移                                                                     | Proposed         |
 
 ## 3. 当前 Source 与解析主链
 
@@ -45,10 +46,10 @@ namespace, type, id?, presentation?, theme?, data, layout?, recipe, plotExtensio
 其中 `type` 是 family，Point family 使用 `point`；`recipe` 固定包含：
 
 ```text
-chartType, encodings, properties?, marks?, facet?
+chartType, encodings, properties?, marks?
 ```
 
-`recipe.chartType` 是全局唯一 recipe key。`encodings` 的每个值都是字段名，`properties` 的每个值都是常量；当前 Scatter 要求 `x` / `y` 字段。可选 `facet` 只保存 Plot-owned 分面原子配置，Chart resolve 使用 recipe coordinate 生成完整 Plot composition。`layout.width` / `layout.height` 是整张 Chart 的 border-box allocation，不复制进 Plot
+`recipe.chartType`是全局唯一recipe key。`encodings`由具体chartType的strict schema拥有：字符串保持direct field shorthand，rich mapping可组合当前slot允许的scalar aggregate、derived transform、named scale以及`row / column / facet` composition atom；当前Scatter要求`x / y`。字段类型、format与分类order继续由Data model拥有，facet canonical composition由Plot拥有。共享轴与多mark轨道不进入Chart encodings，需要时通过`plotExtension`直接使用Plot静态Tracks。`layout.width` / `layout.height`是整张Chart的border-box allocation，不复制进Plot
 
 `plotExtension` 只保存用户显式声明的 Plot fragment。它不承载 recipe 展开结果，显式 Plot mark 也不继承 Chart encodings 或 properties。解析顺序固定为：
 
@@ -56,6 +57,8 @@ chartType, encodings, properties?, marks?, facet?
 application-owned family / chartType route
   -> exact Source parse
   -> Theme cascade
+  -> authored Plot root transforms
+  -> encoding-derived operations + final field / scale / composition bindings
   -> recipe scaffold + semantic mark groups
   -> apply matching authored overrides
   -> append ordinary or unmatched Chart marks
@@ -67,9 +70,9 @@ Scatter 的包内 Definition 与 concrete provider contribution 共同描述当�
 
 ## 4. Point family 当前契约
 
-| chartType | Source 要求                                        | semantic mark | 当前状态 |
-| --------- | -------------------------------------------------- | ------------- | -------- |
-| `scatter` | `x`、`y`；可选 Point field roles 与常量 properties | 一个 Point    | 已实现   |
+| chartType | Source 要求                                                                                  | semantic mark | 当前状态 |
+| --------- | -------------------------------------------------------------------------------------------- | ------------- | -------- |
+| `scatter` | `x`、`y`；可选color / size / opacity / shape、aggregate / derived / scale与facet composition | 一个Point     | 已实现   |
 
 当前唯一已实现的 Scatter recipe 允许有序 `recipe.marks`，其中只有 `scatter` mark。普通 mark 表达额外 Point authored mark；`override: true` 在原位置整体替换内建 `scatter` semantic group。mark 省略的 slot 只从当前 binding 声明的 Chart context 继承，显式 properties 高于 inherited encoding，显式 encoding 再胜出。React `ScatterMark` 是该 Chart mark 的 marker，Vanilla 使用同形 plain input；作者需要 Path 等非 Scatter 图元时通过 `plotExtension.marks` 显式添加
 
@@ -91,7 +94,7 @@ provider graph 与 Standard Surface gate 已闭环，Scatter 的 concrete provid
 - concrete provider contribution 安装该 Definition；当前 Core compile 边界拒绝重复 chartType、family mismatch、未知 base 与依赖缺失
 - 应用层负责动态 family / chartType catalog、模块加载与 JSON 路由；Chart 不提供第三方 recipe / chartType 注册入口
 
-React 只收集 props、marker 与 children 并映射到 Vanilla Input；Vanilla 只把 typed Input normalize 为 Source；JSON、Vanilla、React 与 SSR 不各自实现 dispatch、默认或 Theme resolve，动态 JSON 路由由应用层负责
+React只收集props、marker与children并映射到Vanilla Input；Vanilla只展开`row / column`字符串shorthand并把typed Input normalize为Source；JSON、Vanilla、React与SSR不各自实现aggregate、scale、composition、dispatch、默认或Theme resolve。runtime reducer / transform / scale Definition通过provider sidecar保真传递，不进入JSON Source；动态JSON路由由应用层负责
 
 ## 7. 仍保留的 capability gates
 
@@ -111,11 +114,11 @@ Strip 需要 Plot 在分类 band 内消费独立数据驱动 offset，并在坐�
 
 alpha.1 结束前必须同时满足：
 
-1. 当前 alpha.1 的 Scatter 有稳定的 Source schema、recipe、semantic mark、mark contract、concrete provider contribution 与三入口等价性；Regression、Ranged Dot 与 Strip 在各自 capability gate 解除前不计入 active chartType
-2. 应用层 family → chartType discovery 与 JSON 路由、active provider 的精确 Source parse、Theme cascade、slot consumer、mark inheritance 与 Plot composition 形成清晰边界；Chart runtime 不维护全局 catalog
+1. 当前alpha.1的Scatter有稳定的exact encoding Source schema、ordered slot contract、recipe、semantic mark、mark contract、concrete provider contribution与三入口等价性；Regression、Ranged Dot与Strip在各自capability gate解除前不计入active chartType
+2. 应用层family → chartType discovery与JSON路由、active provider的精确Source parse、Theme cascade、encoding-derived operation、slot consumer、mark inheritance与Plot facet composition形成清晰边界；Chart runtime不维护全局catalog
 3. semantic mark → authored Chart marks → explicit Plot marks 的顺序、继承、覆盖、identity、provenance、lineage 与 locator 语义稳定
 4. Core mode / style、Chart / Plot / recipe Theme slices、固定 presentation 顺序与 Chart border-box layout 形成完整 renderer-neutral 结果
-5. React、Vanilla、JSON、SSR 与 Scatter 的 concrete provider contribution 复用同一 provider / adapter 主链；未知 family、未安装 chartType、mark、Theme、字段绑定错误与依赖缺失都在对应 owner 边界 fail-loud
+5. React、Vanilla、JSON、SSR与Scatter concrete provider contribution复用同一Source、runtime Definition sidecar与resolver主链；未知family、未安装chartType / custom operation、mark、Theme、字段绑定、output descriptor、scale family、composition冲突与依赖缺失都在对应owner边界fail-loud
 6. docs、schema discovery 与示例只展示已实现 recipe，planned / gated 类型明确标识未完成边界
 
 当前 alpha.1 仍处于进行中；Regression、Ranged Dot 或 Strip 的 gate 未解除前，不更新为完成状态
