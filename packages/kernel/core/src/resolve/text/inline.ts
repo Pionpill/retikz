@@ -1,8 +1,7 @@
-import type { IRMathRun } from '../../schemas';
-import type { CanonicalInlineRun, ParsedInlineRuns, SourceInlineRun } from './types';
+import type { CanonicalInlineRun, ParsedInlineRuns, ResolvedMathRun, SourceInlineRun } from './types';
 
 /** 判断 run 是否为公式 run */
-export const isMathRun = (run: SourceInlineRun | CanonicalInlineRun): run is IRMathRun => 'tex' in run;
+export const isMathRun = (run: SourceInlineRun | CanonicalInlineRun): run is ResolvedMathRun => 'tex' in run;
 
 /** 从指定位置查找下一个未转义公式闭合符 */
 const findClose = (raw: string, from: number, display: boolean): number => {

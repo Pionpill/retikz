@@ -9,18 +9,29 @@ import type {
   IRArrowMark,
   IRGeometryLabel,
   IRJsonObject,
+  IRPaint,
   IRPathBase,
   IRPosition,
   IRStep,
   IRTarget,
   ResolvedDropShadow,
 } from '../../schemas';
+import type { ThemeModeValue } from '../../shared';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
 import type { PaintResolutionInput } from '../resource';
 import type { StyleResolveFrame } from '../style';
+import type { ResolvedLabelTextContent } from '../text';
+
+/** 已把文字与 run 派生颜色确定为字符串的路径几何标签 */
+export type ResolvedGeometryLabel = Omit<IRGeometryLabel, 'textColor' | 'text'> & {
+  /** 已确定的标签文字主色 */
+  textColor?: string;
+  /** 已确定 run 颜色的标签正文 */
+  text: ResolvedLabelTextContent;
+};
 
 /** 展开位置、方向与距离默认值后的路径几何标签 */
-export type CanonicalGeometryLabel = Omit<IRGeometryLabel, 'position' | 'side' | 'distance'> & {
+export type CanonicalGeometryLabel = Omit<ResolvedGeometryLabel, 'position' | 'side' | 'distance'> & {
   /** 路径上的归一化位置 */
   position: number;
   /** 相对宿主线段的方向 */
@@ -29,13 +40,44 @@ export type CanonicalGeometryLabel = Omit<IRGeometryLabel, 'position' | 'side' |
   distance: number;
 };
 
+type WithResolvedStepLabel<TStep extends IRStep> = TStep extends unknown
+  ? 'label' extends keyof TStep
+    ? Omit<TStep, 'label'> & { label?: ResolvedGeometryLabel }
+    : TStep
+  : never;
+
+/** 已把 step label 派生颜色确定为字符串的步骤 */
+export type ResolvedStepSource = WithResolvedStepLabel<IRStep>;
+
+/** 已把 arrow 派生颜色确定为字符串的 mark */
+export type ResolvedArrowMark = Omit<IRArrowMark, 'color' | 'fill'> & {
+  /** 已确定的箭头主色 */
+  color?: string;
+  /** 已确定的箭头填充 */
+  fill?: string;
+};
+
+/** 已把所有上下文颜色确定为字符串的 Path Source 投影 */
+export type ResolvedPathSource = Omit<IRPathBase, 'fill' | 'stroke' | 'children' | 'label' | 'marks'> & {
+  /** 已确定的路径填充 */
+  fill?: string | IRPaint;
+  /** 已确定的路径描边 */
+  stroke?: string | IRPaint;
+  /** 已确定 step label 颜色的步骤 */
+  children?: Array<ResolvedStepSource>;
+  /** 已确定的宿主标签 */
+  label?: ResolvedGeometryLabel | Array<ResolvedGeometryLabel>;
+  /** 已确定 arrow 颜色的 marks */
+  marks?: Array<Omit<NonNullable<IRPathBase['marks']>[number], 'mark'> & { mark: ResolvedArrowMark }>;
+};
+
 type WithCanonicalStepLabel<TStep extends IRStep> = TStep extends unknown
   ? 'label' extends keyof TStep
     ? Omit<TStep, 'label'> & { label?: CanonicalGeometryLabel }
     : TStep
   : never;
 
-type CompleteCanonicalStep<TStep extends IRStep> = TStep extends {
+type CompleteCanonicalStep<TStep extends ResolvedStepSource> = TStep extends {
   kind: 'fold';
 }
   ? TStep extends { via: '-|-' | '|-|' }
@@ -53,10 +95,10 @@ type CompleteCanonicalStep<TStep extends IRStep> = TStep extends {
         : WithCanonicalStepLabel<TStep>;
 
 /** 展开折线、平滑路径与标签静态默认值后的路径步骤 */
-export type CanonicalStep = CompleteCanonicalStep<IRStep>;
+export type CanonicalStep = CompleteCanonicalStep<ResolvedStepSource>;
 
 /** 内置路径输出器消费的完整静态路径形态 */
-export type CanonicalPath = Omit<IRPathBase, 'children' | 'label' | 'shadow'> & {
+export type CanonicalPath = Omit<ResolvedPathSource, 'children' | 'label' | 'shadow'> & {
   /** 完整路径步骤 */
   children?: Array<CanonicalStep>;
   /** 统一为数组的宿主标签 */
@@ -139,6 +181,8 @@ export type PathResolveContext = Readonly<{
   scopeChain?: ReadonlyArray<Transform>;
   /** 当前样式级联栈 */
   styleStack?: ReadonlyArray<StyleResolveFrame>;
+  /** 当前 path 所在位置的 Theme 明暗模式 */
+  mode: ThemeModeValue;
   /** target/reference 解析能力 */
   targetResolver?: PathTargetResolver;
   /** path kind provider registry */

@@ -387,6 +387,7 @@ export const compileChildrenToPrimitives = (
         ? resolution
         : resolvePathValue(nextPath, {
             styleStack: pendingPath.styleStack,
+            mode: pendingPath.theme.mode,
             scopeChain,
             targetResolver,
             pathKinds: runtime.context.pathKinds,
@@ -399,6 +400,7 @@ export const compileChildrenToPrimitives = (
     const emitStroke = ((nextPath?: IRPathBase, request?: EmitStrokeOwnerOutputOptions) => {
       const source = nextPath ?? path;
       const emittedResolution = resolveStrokePathProviders(resolutionOf(source), {
+        mode: pendingPath.theme.mode,
         pathKinds: runtime.context.pathKinds,
         pathGenerators: runtime.context.pathGenerators,
         arrows: runtime.context.arrows,
@@ -443,6 +445,7 @@ export const compileChildrenToPrimitives = (
         scale: undefined,
       };
       const emittedResolution = resolveStrokePathProviders(resolutionOf(source), {
+        mode: pendingPath.theme.mode,
         pathKinds: runtime.context.pathKinds,
         pathGenerators: runtime.context.pathGenerators,
         arrows: runtime.context.arrows,
@@ -572,6 +575,7 @@ export const compileChildrenToPrimitives = (
           const targetResolver = createPathTargetResolver();
           const resolution = resolvePathValue(pendingPath.path, {
             styleStack: pendingPath.styleStack,
+            mode: pendingPath.theme.mode,
             scopeChain: pendingPath.scopeChain,
             targetResolver,
             pathKinds: runtime.context.pathKinds,
@@ -627,6 +631,7 @@ export const compileChildrenToPrimitives = (
       runtime.context.onWarn({ code, message, path: nodeIrPath });
     const resolvedNode = resolveNode(child, {
       styleFrames: styleStack,
+      mode: frame.theme.mode,
       shapes: runtime.context.shapes,
       boundaries: runtime.context.boundaries,
       patterns: runtime.context.patterns,

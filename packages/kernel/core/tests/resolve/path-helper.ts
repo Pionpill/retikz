@@ -13,6 +13,7 @@ type BuiltinProviderContext = Omit<Partial<PathResolveContext>, 'pathKinds' | 'p
   Partial<Pick<PathResolveContext, 'pathKinds' | 'pathGenerators' | 'arrows' | 'patterns' | 'round'>>;
 
 const contextWithBuiltinProviders = (context: BuiltinProviderContext): PathResolveContext => ({
+  mode: 'light',
   pathKinds: resolvePathKindRegistry(),
   pathGenerators: resolvePathGeneratorRegistry(),
   arrows: resolveArrowRegistry(),

@@ -25,6 +25,7 @@ const sceneWith = (child: IRNode): IRScene => ({
 const resolve = (source: IRNode, styleFrames: ReadonlyArray<StyleResolveFrame> = []) =>
   resolveNode(source, {
     styleFrames,
+    mode: 'light',
     shapes: resolveShapeRegistry(),
     boundaries: resolveBoundaryRegistry(),
     patterns: resolvePatternRegistry(),

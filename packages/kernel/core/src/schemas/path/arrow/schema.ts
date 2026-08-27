@@ -1,7 +1,7 @@
 import { createOpenStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { strictObject } from 'zod';
 
-import { CssColorSchema, OpacitySchema } from '../../style';
+import { ContextualColorSchema, OpacitySchema } from '../../style';
 import { BuiltinArrowShape } from './constants';
 
 /** Core 内置 arrow 与自定义注册名共享的开放名称 schema */
@@ -22,11 +22,11 @@ export const ArrowEndDetailSchema = strictObject({
   width: NonNegativeNumberSchema.optional().describe(
     'Arrow-tip width perpendicular to the path, in user units. Defaults to the shape definition fallback.',
   ),
-  color: CssColorSchema.optional().describe(
-    'Arrow color override. Hollow arrows use it as stroke; solid arrows use it as the fallback fill/stroke color. Omitted arrows inherit the path stroke.',
+  color: ContextualColorSchema.optional().describe(
+    'Arrow color override. A number derives from the effective path color; omitted arrows inherit the path stroke.',
   ),
-  fill: CssColorSchema.optional().describe(
-    'Fill override for solid arrow shapes. Hollow arrow definitions ignore fill and use `color` for their outline.',
+  fill: ContextualColorSchema.optional().describe(
+    'Fill override for solid arrow shapes. A number derives from the effective arrow color; hollow definitions ignore fill.',
   ),
   opacity: OpacitySchema.optional().describe('Arrow-only opacity. When omitted, the arrow follows the path opacity.'),
   lineWidth: NonNegativeNumberSchema.optional().describe(

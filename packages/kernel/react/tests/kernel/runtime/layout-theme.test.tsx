@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
-import { Layout, Scope, ThemeProvider } from '../../../src/kernel';
+import { Layout, Node, Scope, Text, ThemeProvider } from '../../../src/kernel';
 
 const testThemeStyles = ['academic', 'vibrant', 'clean'].map(name =>
   defineThemeStyle({
@@ -117,6 +117,56 @@ const themeProbe = defineComposite({
 });
 
 describe('<Layout theme>', () => {
+  it('children 模式允许 Node textColor 使用 contextual color 权重', () => {
+    const markup = renderToStaticMarkup(
+      <Layout theme={{ mode: ThemeMode.Dark }} width={100} height={100}>
+        <Node position={[0, 0]} color="#336699" fill={0.2} textColor={0.8}>
+          A
+        </Node>
+      </Layout>,
+    );
+
+    expect(markup).toContain('#0a141f');
+    expect(markup).toContain('#29527a');
+  });
+
+  it('children 模式允许 Text 行级 fill 使用 contextual color 权重', () => {
+    const markup = renderToStaticMarkup(
+      <Layout theme={{ mode: ThemeMode.Dark }} width={100} height={100}>
+        <Node position={[0, 0]} color="#336699">
+          <Text fill={0.4}>A</Text>
+        </Node>
+      </Layout>,
+    );
+
+    expect(markup).toContain('#14293d');
+  });
+
+  it('ir 模式把 contextual color 按 Layout 最终 Dark Theme 确定后再渲染', () => {
+    const markup = renderToStaticMarkup(
+      <Layout
+        ir={{
+          type: 'scene',
+          version: 1,
+          children: [
+            {
+              type: 'node',
+              position: [0, 0],
+              color: '#336699',
+              fill: 0.2,
+            },
+          ],
+        }}
+        theme={{ mode: ThemeMode.Dark }}
+        width={100}
+        height={100}
+      />,
+    );
+
+    expect(markup).toContain('#0a141f');
+    expect(markup).not.toContain('fill="0.2"');
+  });
+
   it('children模式把宿主Theme写入根Scene供Composite读取', () => {
     const markup = renderToStaticMarkup(
       <Layout

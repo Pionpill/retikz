@@ -69,6 +69,11 @@ describe('NodeDefaultSchema（every node 默认）', () => {
     expect(NodeDefaultSchema.safeParse({ color: 'red' }).success).toBe(true);
   });
 
+  it('接受数值派生 paint 与文字色，但拒绝数值主色', () => {
+    expect(NodeDefaultSchema.safeParse({ fill: 0.08, stroke: 1, textColor: 0.7 }).success).toBe(true);
+    expect(NodeDefaultSchema.safeParse({ color: 0.5 }).success).toBe(false);
+  });
+
   it('接受嵌套 font 字段', () => {
     expect(NodeDefaultSchema.safeParse({ font: { size: 12, family: 'serif' } }).success).toBe(true);
   });
@@ -116,6 +121,11 @@ describe('PathDefaultSchema（every path 默认）', () => {
 
   it('接受 color 主色字段', () => {
     expect(PathDefaultSchema.safeParse({ color: 'crimson' }).success).toBe(true);
+  });
+
+  it('接受数值派生 fill / stroke，但拒绝数值主色', () => {
+    expect(PathDefaultSchema.safeParse({ fill: 0.1, stroke: 0.9 }).success).toBe(true);
+    expect(PathDefaultSchema.safeParse({ color: 0.5 }).success).toBe(false);
   });
 
   it('拒被排除字段 arrow（走 arrowDefault 通道）', () => {
@@ -168,6 +178,11 @@ describe('LabelDefaultSchema（every label 默认）', () => {
     expect(LabelDefaultSchema.safeParse({}).success).toBe(true);
   });
 
+  it('接受数值派生 textColor，但拒绝数值 label master', () => {
+    expect(LabelDefaultSchema.safeParse({ textColor: 0.6 }).success).toBe(true);
+    expect(LabelDefaultSchema.safeParse({ color: 0.6 }).success).toBe(false);
+  });
+
   it('拒未知字段（strict）', () => {
     expect(LabelDefaultSchema.safeParse({ nope: 1 }).success).toBe(false);
   });
@@ -190,6 +205,10 @@ describe('ArrowDefaultSchema（every arrow 默认）', () => {
         end: { shape: 'circle' },
       }).success,
     ).toBe(true);
+  });
+
+  it('接受从 Path master 派生的数值 color 与从 arrow color 派生的数值 fill', () => {
+    expect(ArrowDefaultSchema.safeParse({ color: 0.9, fill: 0.2, end: { color: 0.8, fill: 0.1 } }).success).toBe(true);
   });
 
   it('接受任意非空白 shape 名（未注册名拒绝移到 compile 期）', () => {
@@ -222,6 +241,11 @@ describe('ScopeSchema 级联 graphic state', () => {
         children: [],
       }).success,
     ).toBe(true);
+  });
+
+  it('接受数值派生级联 paint，并保持 Scope color string-only', () => {
+    expect(ScopeSchema.safeParse({ type: 'scope', fill: 0.08, stroke: 1, children: [] }).success).toBe(true);
+    expect(ScopeSchema.safeParse({ type: 'scope', color: 0.4, children: [] }).success).toBe(false);
   });
 
   it('级联 opacity 越界拒', () => {
