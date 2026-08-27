@@ -1,5 +1,5 @@
 import * as corePackage from '@retikz/core';
-import { compositeOpaqueColor, resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
+import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
 import { PlotThemeToken, resolvePlotTheme } from '@retikz/plot';
 import { resolveTableThemeTokens } from '@retikz/table';
 import { globSync, readFileSync } from 'node:fs';
@@ -42,7 +42,6 @@ describe('docs-owned theme presets', () => {
     const coreByName = new Map(PreviewCoreThemeStyles.map(definition => [definition.name, definition]));
     const graphByName = new Map(PreviewGraphThemeStyles.map(definition => [definition.name, definition]));
     const foreground = mode === ThemeMode.Light ? '#000000' : '#ffffff';
-    const backdrop = mode === ThemeMode.Light ? '#ffffff' : '#000000';
     const themeOf = (style: Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>) => {
       const core = coreByName.get(style);
       if (core === undefined) throw new Error(`missing Core definition for ${style}`);
@@ -56,7 +55,7 @@ describe('docs-owned theme presets', () => {
         tokens: {
           color: academicColor,
           textColor: 'contrast',
-          fill: compositeOpaqueColor(academicColor, backdrop, 0.15),
+          fill: 0.15,
           stroke: 'currentColor',
           strokeWidth: 1,
         },
@@ -84,7 +83,7 @@ describe('docs-owned theme presets', () => {
         tokens: {
           color: cleanColor,
           textColor: 'contrast',
-          fill: compositeOpaqueColor(cleanColor, backdrop, 0.15),
+          fill: 0.15,
           stroke: 'none',
         },
       },
