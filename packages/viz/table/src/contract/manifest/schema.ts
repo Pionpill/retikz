@@ -1,6 +1,6 @@
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
 
-import { OpacitySchema, PaintValueSchema, ThemeMode, ThemeTokenSource } from '@retikz/core';
+import { CssColorSchema, OpacitySchema, PaintValueSchema, ThemeMode, ThemeTokenSource } from '@retikz/core';
 import {
   NonBlankStringSchema,
   NonNegativeIntegerSchema,
@@ -50,6 +50,7 @@ const TableBorderVertexSchema = strictObject({
 });
 
 export const ResolvedTableBorderLineSchema = strictObject({
+  color: CssColorSchema.describe('Master color used to resolve contextual border paint.'),
   stroke: PaintValueSchema.refine(value => value !== 'none', {
     message: 'Resolved border stroke must not be none.',
   }).describe('Resolved non-none Core paint for the border line.'),
@@ -259,7 +260,9 @@ type ManifestStyle = ZodInfer<typeof TableManifestStyleSchema>;
 const matchesStyleBorderToken = (
   line: ZodInfer<typeof ResolvedTableBorderLineSchema>,
   token: NonNullable<ManifestStyle['tokens'][ZodInfer<typeof TableBorderStyleTokenKeySchema>]>,
+  masterColor: string,
 ): boolean =>
+  line.color === masterColor &&
   JSON.stringify(line.stroke) === JSON.stringify(token.stroke ?? 'currentColor') &&
   line.width === (token.width ?? 1) &&
   line.strokeOpacity === (token.strokeOpacity ?? 1) &&
@@ -311,7 +314,21 @@ const validateBorderStyleTokenProvenance = (
     });
   }
   const styleBorder = style.tokens[token.key];
-  if (styleBorder === null || !matchesStyleBorderToken(contribution.line, styleBorder)) {
+  const contributionSource = contribution.source;
+  const sourceCell =
+    contributionSource.kind === 'cell'
+      ? cells.find(
+          candidate =>
+            candidate.rowIndex === contributionSource.row && candidate.columnIndex === contributionSource.column,
+        )
+      : undefined;
+  const masterColor =
+    sourceCell?.appearance.content?.color ??
+    (sourceCell?.location === 'columnHeader'
+      ? style.tokens['columnHeader.content.color']
+      : style.tokens['cell.content.color']) ??
+    'currentColor';
+  if (styleBorder === null || !matchesStyleBorderToken(contribution.line, styleBorder, masterColor)) {
     context.addIssue({
       code: 'custom',
       path: [...path, 'line'],

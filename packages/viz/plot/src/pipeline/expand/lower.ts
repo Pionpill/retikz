@@ -100,6 +100,7 @@ const plotBackgroundNode = (
   plotArea: Rect,
   frame: CoordinateFrame | undefined,
   fill: IRNode['fill'] | undefined,
+  masterColor: string,
 ): IRNode | null => {
   if (!supportsPlotArea(frame) || fill === undefined || fill === 'none') return null;
   const geometry =
@@ -115,10 +116,15 @@ const plotBackgroundNode = (
     ...geometry,
     padding: 0,
     strokeWidth: 0,
+    color: masterColor,
     fill,
     zIndex: PlotLayerZIndex.Background,
   };
 };
+
+/** 只把 Plot typography 主色投影到 presentation guide 图层，不污染数据 mark 图层 */
+const withGuideMasterColor = (layer: IRScope, masterColor: string): IRScope =>
+  layer.color === undefined ? { ...layer, color: masterColor } : layer;
 
 const withLayerZIndex = (child: IRChild, zIndex: number): IRChild =>
   child.type === 'coordinate' ? child : { ...child, zIndex };
@@ -399,6 +405,7 @@ export const lowerPlot = (
       const position: [number, number] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
       return {
         type: 'scope',
+        color: resolvedTheme.typography.textColor ?? 'currentColor',
         zIndex: PlotLayerZIndex.FacetLabel,
         meta: {
           source: 'plot',
@@ -606,6 +613,7 @@ export const lowerPlot = (
         frameResolution.plotArea,
         frameResolution.frame,
         resolvedTheme.plotArea?.fill,
+        resolvedTheme.typography.textColor ?? 'currentColor',
       );
       const markLayers: Array<IRChild> = node.marks
         .map((mark, markIndex) => {
@@ -641,10 +649,18 @@ export const lowerPlot = (
         children: [
           ...(backgroundNode ? [backgroundNode] : []),
           ...(gridResolution?.gridLayers ?? []).map(layer =>
-            withFacetGuideContext(layer, panelContext, node.id, panel.id),
+            withGuideMasterColor(
+              withFacetGuideContext(layer, panelContext, node.id, panel.id),
+              resolvedTheme.typography.textColor ?? 'currentColor',
+            ),
           ),
           ...markLayers,
-          ...axisResolution.axisLayers.map(layer => withFacetGuideContext(layer, panelContext, node.id, panel.id)),
+          ...axisResolution.axisLayers.map(layer =>
+            withGuideMasterColor(
+              withFacetGuideContext(layer, panelContext, node.id, panel.id),
+              resolvedTheme.typography.textColor ?? 'currentColor',
+            ),
+          ),
         ],
       };
       const translateX = rowLabelWidth + panel.columnIndex * panelStrideX;
@@ -752,13 +768,14 @@ export const lowerPlot = (
   }
   // z-order：所有网格层 → marks → 所有轴层 → legend
   const defaultFrame = frameByScope.get(coordinateScopes.defaultScope);
-  const backgroundNode = plotBackgroundNode(plotArea, defaultFrame, resolvedTheme.plotArea?.fill);
+  const guideMasterColor = resolvedTheme.typography.textColor ?? 'currentColor';
+  const backgroundNode = plotBackgroundNode(plotArea, defaultFrame, resolvedTheme.plotArea?.fill, guideMasterColor);
   const children: Array<IRChild> = [
     ...(backgroundNode ? [backgroundNode] : []),
-    ...gridLayers,
+    ...gridLayers.map(layer => withGuideMasterColor(layer, guideMasterColor)),
     ...markLayers,
-    ...axisLayers,
-    ...legendLayers,
+    ...axisLayers.map(layer => withGuideMasterColor(layer, guideMasterColor)),
+    ...legendLayers.map(layer => withGuideMasterColor(layer, guideMasterColor)),
   ];
 
   // 无 id：root = localNamespace 内容 scope（可带 provenance meta）。

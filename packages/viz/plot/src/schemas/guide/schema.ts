@@ -2,7 +2,7 @@ import type { RefinementCtx } from 'zod';
 
 import {
   ArrowEndDetailSchema,
-  CssColorSchema,
+  ContextualColorSchema,
   FontSchema,
   GeometryLabelPosition,
   LineHeightSchema,
@@ -163,7 +163,9 @@ export const AxisGridLineStyleSchema = GuideLineStyleSchema.extend({
 
 export const GuideTextStyleSchema = strictObject({
   font: FontSchema.optional().describe('Guide text font; missing fields inherit the plot text default'),
-  textColor: CssColorSchema.optional().describe('Guide text color; omit to inherit currentColor'),
+  textColor: ContextualColorSchema.optional().describe(
+    'Guide text color or weight resolved from the Plot typography foreground; omit to inherit currentColor',
+  ),
   opacity: OpacitySchema.optional().describe('Guide text opacity'),
   align: TextAlignSchema.optional().describe('Multi-line guide text alignment'),
   lineHeight: LineHeightSchema.optional().describe('Guide text line height in user units'),

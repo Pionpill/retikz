@@ -117,7 +117,7 @@ descriptor 不是 Standard Legend IR，也不包含 placement、bounds 或最终
 
 ## Border provenance
 
-border manifest 把最终可见 edge 与原子边冲突来源一起保存。以下 schema 从 resolved line 和候选 contribution 逐层组成 atom，再组成 merged edge。
+border manifest 把最终可见 edge 与原子边冲突来源一起保存。resolved line 同时保留 contextual stroke 的字符串主色，避免在 Table 层缓存预合成颜色；Core lowering 使用该主色解析数值 stroke。以下 schema 从 resolved line 和候选 contribution 逐层组成 atom，再组成 merged edge。
 
 ### ResolvedTableBorderLineSchema
 
@@ -125,6 +125,7 @@ border manifest 把最终可见 edge 与原子边冲突来源一起保存。以�
   name="ResolvedTableBorderLineSchema"
   description="完成默认值解析、可直接 lowering 为 Core Path 的 border line style。"
   descriptions={{
+    color: '用于解析 contextual border paint 的字符串主色。',
     stroke: '非 none 的 resolved Core paint。',
     width: 'resolved 非负 border 宽度。',
     strokeOpacity: '解析后的 border 线条不透明度。',
@@ -183,6 +184,7 @@ Cell 来源始终保留 `row + column + side`，并在显式存在时附带 `cel
     ownerSideRank: 'canonical 物理 owner side 排序值。',
     sourceOrderKey: '不依赖 Cell id 的 canonical 来源排序 key。',
     line: '完成默认值解析的 Core-compatible border line。',
+    'line.color': '用于解析 contextual border paint 的字符串主色。',
     'line.stroke': 'resolved border 线条使用的非 none Core paint。',
     'line.width': 'resolved border 的非负线宽。',
     'line.strokeOpacity': 'resolved border 的线条不透明度。',

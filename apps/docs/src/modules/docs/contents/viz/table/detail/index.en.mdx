@@ -49,6 +49,8 @@ Header strings become value Cells automatically. The three external records belo
 
 The site's preview Provider injects same-named Core and Table Academic definitions. The example then selects the `academic/light` environment through a standalone root `theme` or an outer `<Layout theme>` in embedded mode, while `tableThemeTokens` remains a spec-local overlay and `containerStyle` remains standalone host CSS. `legend: false` means the encoding changes Cell appearance without requesting a Legend descriptor.
 
+The example gives body and header Cells separate string content masters, then derives their backgrounds with `0.08` and `0.12`. Numeric strokes on the outer and horizontal borders follow the body Cell master. These numbers are master-color weights and do not alter the independent background or border opacity.
+
 <ComponentAlert
   type="tip"
   title="Keep Theme and host CSS separate"
