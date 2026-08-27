@@ -51,6 +51,13 @@ const graphMilestones: Array<SubVersion> = [
           en: '`GraphThemeStyleDefinition.resolve()` now returns sparse `GraphThemeStyleOverrides` relative to the default preset. Graph resolve fills omitted Entity / Relation tokens, retains default rules, and appends custom style rules after them.',
         },
       },
+      {
+        label: { zh: '上下文颜色 Theme token', en: 'Contextual color theme tokens' },
+        content: {
+          zh: 'Entity 与 Relation 的派生 fill、stroke、文字、label 和 marker token 可使用 `[0, 1]` 主色权重；Entity 跟随最终 Entity `color`，Relation 跟随最终 Relation `color`，marker fill 再跟随有效 marker color。Graph 只下沉主色链，由 Core 按 Theme mode 确定为不透明颜色。',
+          en: 'Derived Entity and Relation fill, stroke, text, label, and marker tokens may use `[0, 1]` master-color weights. Entities follow their final Entity `color`; Relations follow their final Relation `color`; marker fills then follow the effective marker color. Graph lowers this master chain and lets Core resolve opaque colors from the Theme mode.',
+        },
+      },
     ],
   },
   {

@@ -1,4 +1,4 @@
-# v0.5.0-alpha.3 Concurrent 与渐进生成
+# v0.5.0-alpha.3 Concurrent、渐进生成与上下文颜色
 
 - 状态：Proposed
 - 目标版本：`0.5.0-alpha.3`
@@ -9,6 +9,8 @@
 
 alpha.3 在 alpha.2 的同步增量 Runtime 上增加 `concurrent + atomic/progressive` 执行能力。Program 可以按 capability 阻塞执行、协作让出或 offload；Runtime 可以取消过期 prepare，并在 revision 校验后串行原子提交。表现层可以显式选择渐进物化；generation session 可以提交多批语义合法的 draft transaction。
 
+本 milestone 同时补齐 Core 上下文颜色：有明确主色来源的颜色槽位可以用归一化权重表达 Light / Dark 模式下的确定性派生色，实际 Tier 2 Theme owner 复用同一 Core 解析，不各自维护颜色算法。
+
 Concurrent、渐进物化与渐进生成是三个不同层次：调度决定工作何时执行，materialization 决定同一 Scene 如何显示，generation 决定语义 Snapshot 如何分批增长或修正。
 
 ## ADR 索引
@@ -18,6 +20,7 @@ Concurrent、渐进物化与渐进生成是三个不同层次：调度决定工�
 | [ADR-01](./01-cooperative-concurrent-runtime.md) | Proposed | Concurrent scheduler | Program capability、优先级、cooperative yield、取消、Worker 与原子 commit                 |
 | [ADR-02](./02-progressive-materialization.md)    | Proposed | 渐进物化             | atomic/progressive 策略、materialization revision、回滚、命中一致性与 capability fallback |
 | [ADR-03](./03-generation-session.md)             | Proposed | Generation session   | draft transaction、checkpoint、取消、接受后 squash 与 LLM 渐进生成边界                    |
+| [ADR-04](./04-contextual-color-resolution.md)    | Accepted | 上下文颜色           | Core 数值颜色确定化、Light / Dark 基准与 Tier 2 Theme 统一适配                            |
 
 ## 执行批次
 
@@ -26,6 +29,7 @@ Concurrent、渐进物化与渐进生成是三个不同层次：调度决定工�
 | 0    | ADR-01 | alpha.2 Runtime contract Accepted       | concurrent prepare、取消与原子 commit 可验证 |
 | 1    | ADR-02 | scheduler 与 retained renderer 可组合   | 渐进画面、geometry、hit-test 与完成状态一致  |
 | 2    | ADR-03 | transaction 与 materialization 边界稳定 | 多批 draft 可恢复、取消、接受并 squash       |
+| 3    | ADR-04 | Core Theme mode 与样式级联边界稳定      | 数值颜色只在 Core 确定化，Tier 2 无平行算法  |
 
 ## 共同不变量
 
@@ -35,6 +39,7 @@ Concurrent、渐进物化与渐进生成是三个不同层次：调度决定工�
 4. 渐进物化不产生部分 document、contribution 或 Scene commit。
 5. LLM draft transaction 与 renderer materialization batch 不是同一协议。
 6. Kernel generation session 不包含模型调用、prompt、聊天 UI 或 LLM 专属 IR。
+7. 数值颜色只从最终有效主色派生，不替代 opacity、palette 或宿主 `currentColor`。
 
 ## Milestone 验收
 
@@ -43,6 +48,7 @@ Concurrent、渐进物化与渐进生成是三个不同层次：调度决定工�
 - atomic 模式保持 alpha.2 的完整 view 原子切换；progressive 模式显式启用、可回退、可诊断。
 - 渐进期间可见内容、geometry、hit-test、事件 target 与 materialization state 一致。
 - generation session 支持多批合法 draft、checkpoint、取消、恢复和接受后 squash。
+- Core 在完整样式级联后把数值颜色确定为不透明字符串；Graph、Plot、Table Theme 复用该语义。
 - 基准记录最长主线程阻塞、取消浪费、首个可见批次、完整物化时间与 session 内存。
 
 ## 不在 alpha.3 范围
@@ -51,6 +57,7 @@ Concurrent、渐进物化与渐进生成是三个不同层次：调度决定工�
 - prompt 管理、模型 SDK、token stream、聊天界面或业务 AI workflow。
 - Workspace history、协作、CRDT 与持久 undo log。
 - Tier 2 私有交互语义或编辑器状态机。
+- 用数值替代 palette、scale range、gradient stop 或 opacity，或把颜色解析下放 renderer / 宿主 CSS。
 
 ## 授权边界
 

@@ -13,10 +13,10 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
-          label: { zh: '十八个根导出，固定五文件结构', en: 'Eighteen root exports, five fixed source files' },
+          label: { zh: '十八个 runtime 根导出', en: 'Eighteen runtime root exports' },
           content: {
-            zh: '`@retikz/foundation` 从根入口公开五个 type-only 契约与十三个 runtime symbol，包括 `WithRequiredProperties<T, TKey>`、六个非变换 Zod 标量 schema 和 `createOpenStringSchema(values)`；source 与 tests 各固定五个文件，不提供 subpath、IR、对象 schema 或 Diagnostic。',
-            en: '`@retikz/foundation` exposes five type-only contracts and thirteen runtime symbols from its root, including `WithRequiredProperties<T, TKey>`, six non-transforming Zod scalar schemas, and `createOpenStringSchema(values)`. Source and tests each stay at five fixed files, with no subpaths, IR, object schemas, or Diagnostics.',
+            zh: '`@retikz/foundation` 从根入口公开无领域的 type-only 契约与十八个 runtime symbol，包括 `WithRequiredProperties<T, TKey>`、六个非变换 Zod 标量 schema、`createOpenStringSchema(values)` 以及静态颜色原子；不提供 subpath、IR、对象 schema 或 Diagnostic。',
+            en: '`@retikz/foundation` exposes domain-free type-only contracts and eighteen runtime symbols from its root, including `WithRequiredProperties<T, TKey>`, six non-transforming Zod scalar schemas, `createOpenStringSchema(values)`, and static color atoms. It provides no subpaths, IR, object schemas, or Diagnostics.',
           },
         },
         {
@@ -66,8 +66,8 @@ export const kernelV05: Release = {
           version: 'alpha.3',
           date: '2026-08-14',
           summary: {
-            zh: '新增开放字符串 schema factory 与必填属性类型投影，统一无领域的开放词汇和结构收窄契约。',
-            en: 'Adds an open-string schema factory and a required-property type projection for shared domain-free vocabulary and structural narrowing contracts.',
+            zh: '新增开放字符串 schema factory、必填属性类型投影与静态颜色原子，统一无领域的词汇、结构收窄和颜色计算契约。',
+            en: 'Adds an open-string schema factory, a required-property type projection, and static color atoms for shared domain-free vocabulary, structural narrowing, and color computation.',
           },
           items: [
             {
@@ -75,6 +75,13 @@ export const kernelV05: Release = {
               content: {
                 zh: '`WithRequiredProperties<T, TKey>` 从 Foundation 根入口导出，只把指定 key 收窄为必填并保留其余属性；Graph Theme 直接复用该类型，不再维护私有副本。',
                 en: '`WithRequiredProperties<T, TKey>` is exported from the Foundation root, making only selected keys required while preserving all other properties. Graph Theme now consumes it directly instead of keeping a private copy.',
+              },
+            },
+            {
+              label: { zh: '静态颜色解析与不透明预合成', en: 'Static color parsing and opaque precomposition' },
+              content: {
+                zh: '`parseStaticCssColor()` 统一解析可静态确定的 CSS 颜色，`compositeOpaqueColor()` 按前景、非透明底色与 `[0, 1]` 权重输出小写 `#rrggbb`。动态宿主颜色保持不可解析；非法输入通过结构化 Foundation color error 报告。',
+                en: '`parseStaticCssColor()` parses statically determinable CSS colors, while `compositeOpaqueColor()` combines a foreground, opaque backdrop, and `[0, 1]` weight into lowercase `#rrggbb`. Dynamic host colors remain unresolved, and invalid inputs report a structured Foundation color error.',
               },
             },
           ],
@@ -258,6 +265,30 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.3',
+          date: '2026-08-26',
+          summary: {
+            zh: '新增上下文颜色权重，在完整 Theme / Scope / 图元级联后由 Core 统一确定为不透明颜色字符串。',
+            en: 'Adds contextual color weights that Core resolves into opaque color strings after the complete Theme, Scope, and primitive cascade.',
+          },
+          items: [
+            {
+              label: { zh: 'Contextual Color schema 与确定化', en: 'Contextual Color schema and resolution' },
+              content: {
+                zh: '具有唯一主色的 fill、stroke、文字、label、arrow 与 marker 派生槽接受精确 CSS 字符串或 `[0, 1]` 权重；`color` 主色、palette、scale range、gradient、pattern 与 shadow 内部颜色保持 string-only。Light / Dark 分别以白 / 黑为底色预合成，opacity 继续独立。',
+                en: 'Derived fill, stroke, text, label, arrow, and marker slots with one unambiguous master accept either exact CSS strings or `[0, 1]` weights. Master `color`, palettes, scale ranges, and colors inside gradients, patterns, and shadows remain string-only. Light and Dark precompose against white and black respectively, while opacity remains independent.',
+              },
+            },
+            {
+              label: { zh: '适配器与 Scene 边界一致', en: 'Adapter parity and a number-free Scene boundary' },
+              content: {
+                zh: '直接 JSON、React 与 Vanilla 传递同一 Source 契约；动态或缺失主色按字段路径 fail-loud。Canonical、Scene、SVG / Canvas renderer 只接收已经确定的字符串颜色。',
+                en: 'Direct JSON, React, and Vanilla share the same Source contract. Dynamic or missing masters fail loudly with the authored field path, while Canonical values, Scene output, and SVG / Canvas renderers receive resolved string colors only.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.2',
           date: '2026-08-04',

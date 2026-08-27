@@ -121,7 +121,7 @@ describe('changelog data', () => {
     for (const block of release.packages) {
       const alpha = block.subVersions.find(version => version.version === 'alpha.7');
       expect(alpha?.date).toBe('2026-08-23');
-      expect(alpha?.items).toHaveLength(6);
+      expect(alpha?.items).toHaveLength(7);
     }
 
     expect(JSON.stringify(byPackage.get('@retikz/graph'))).toContain('IRGraph.children');

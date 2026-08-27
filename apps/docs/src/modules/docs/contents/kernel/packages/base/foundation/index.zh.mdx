@@ -1,6 +1,6 @@
 ---
 title: '@retikz/foundation'
-description: 为所有包提供可复用的类型工具、JSON 与结构只读集合快照、Zod 标量 schema、非空字符串断言和结构化错误基础契约。
+description: 为所有包提供类型、JSON、标量 schema、静态颜色计算与结构化错误等无领域基础契约。
 ---
 
 `@retikz/foundation` 是为所有包提供基础能力的纯工具模块，用于统一复用类型、JSON 与结构只读集合快照、标量校验、空白语义和错误骨架；Zod 是它唯一的 production dependency。
@@ -15,10 +15,12 @@ import {
   assertNonEmptyString,
   assertPositiveNumber,
   cloneAndFreezeJson,
+  compositeOpaqueColor,
   createOpenStringSchema,
   createReadonlyMap,
   NonBlankStringSchema,
   NormalizedFractionSchema,
+  parseStaticCssColor,
   PositiveNumberSchema,
   RetikzError,
   RetikzFoundationError,
@@ -27,6 +29,7 @@ import type {
   AssertEqual,
   NonEmptyReadonlyArray,
   OpenString,
+  ParsedCssColor,
   RetikzErrorOptions,
   ValueOf,
   WithRequiredProperties,
@@ -130,6 +133,17 @@ const RoleSchema = createOpenStringSchema(Role);
 RoleSchema.parse('participant');
 RoleSchema.parse('custom.role');
 ```
+
+### 静态颜色原子
+
+`parseStaticCssColor(input)` 把可静态确定的 CSS color 解析为归一化 sRGB 通道 `{ r, g, b, a }`；动态的 `currentColor`、CSS variable 等返回 `null`。`compositeOpaqueColor(foreground, backdrop, weight)` 则按 `0..1` 权重把静态前景色预合成到不透明背景，并返回小写 `#rrggbb`：
+
+```ts
+parseStaticCssColor('darkorange');
+compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
+```
+
+Foundation 只拥有静态解析与纯计算，不知道 Theme mode 或图形字段。非法颜色、非不透明背景和越界权重会抛出 `RetikzFoundationError`，code 为 `FOUNDATION_COLOR_ERROR`；Core 根据最终样式与 Theme mode 决定何时调用这些原子。
 
 ### 断言工具
 

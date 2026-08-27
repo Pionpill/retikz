@@ -279,6 +279,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'StrokeWidth',
     url: '/kernel/reference/schema/style#strokewidth',
   },
+  ContextualColorSchema: {
+    schema: IR.ContextualColorSchema,
+    label: 'ContextualColor',
+    url: '/kernel/reference/schema/style#contextualcolorschema',
+  },
   PaintValueSchema: {
     schema: IR.PaintValueSchema,
     label: 'PaintValue',
