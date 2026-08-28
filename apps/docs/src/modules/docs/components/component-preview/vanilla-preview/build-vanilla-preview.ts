@@ -690,7 +690,6 @@ const buildChartCode = (
   datasets: ExternalDatasets,
   preview: PreviewIR,
   options: BuildVanillaPreviewOptions,
-  source?: CompositeChild,
 ): string => {
   const typedSource = typedChartSourceOf(chart);
   if (typedSource !== undefined) {
@@ -748,7 +747,7 @@ const buildChartPreview = (
     ...(Object.keys(size).length === 0 ? {} : { output: size }),
   });
   return {
-    code: buildChartCode(chart, datasets, preview, options, source),
+    code: buildChartCode(chart, datasets, preview, options),
     svg: rendered.svg,
   };
 };

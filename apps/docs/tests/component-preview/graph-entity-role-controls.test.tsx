@@ -50,6 +50,12 @@ import { previewSource as stateEnSource } from '@/modules/docs/contents/schemati
 import StateDemo, {
   previewSource as stateZhSource,
 } from '@/modules/docs/contents/schematic/graph/entity/basic/entity-state.zh.demo';
+import { previewControlContract as styleZh } from '@/modules/docs/contents/schematic/graph/entity/basic/entity-style.controls';
+import { previewControlContract as styleEn } from '@/modules/docs/contents/schematic/graph/entity/basic/entity-style.en.controls';
+import { previewSource as styleEnSource } from '@/modules/docs/contents/schematic/graph/entity/basic/entity-style.en.demo';
+import StyleDemo, {
+  previewSource as styleZhSource,
+} from '@/modules/docs/contents/schematic/graph/entity/basic/entity-style.zh.demo';
 import { previewControlContract as definitionZh } from '@/modules/docs/contents/schematic/graph/entity/extension/entity-definition.controls';
 import { previewControlContract as definitionEn } from '@/modules/docs/contents/schematic/graph/entity/extension/entity-definition.en.controls';
 import { previewSource as definitionEnSource } from '@/modules/docs/contents/schematic/graph/entity/extension/entity-definition.en.demo';
@@ -227,6 +233,100 @@ describe('Graph Entity role controls', () => {
         },
       ]);
     }
+  });
+});
+
+describe('Graph Entity style playground', () => {
+  const renderStyleWithValues = (values: Readonly<PreviewControlValues>): string =>
+    renderToStaticMarkup(
+      <PreviewControlStateContext.Provider
+        value={{
+          canonicalValues: styleZh.canonicalValues,
+          values,
+          setValue: () => undefined,
+          applyValues: () => undefined,
+          reset: () => undefined,
+        }}
+      >
+        <StyleDemo />
+      </PreviewControlStateContext.Provider>,
+    );
+
+  it('暴露全部内置 role 与统一样式控件，并保持双语契约一致', () => {
+    const fields = getPreviewControlFields(styleZh.controls);
+
+    expect(fields.map(field => ({ kind: field.kind, id: field.id, defaultValue: field.defaultValue }))).toEqual([
+      { kind: 'select', id: 'role', defaultValue: 'activity' },
+      { kind: 'text', id: 'content', defaultValue: 'Process Order' },
+      { kind: 'color', id: 'fill', defaultValue: '#e2e8f0' },
+      { kind: 'color', id: 'stroke', defaultValue: '#2563eb' },
+      { kind: 'range', id: 'strokeWidth', defaultValue: 2 },
+      { kind: 'switch', id: 'dashed', defaultValue: false },
+      { kind: 'range', id: 'opacity', defaultValue: 1 },
+      { kind: 'color', id: 'textColor', defaultValue: '#0f172a' },
+    ]);
+    expect(fields[0]?.kind === 'select' ? fields[0].options.map(option => option.value) : []).toEqual([
+      'participant',
+      'activity',
+      'event',
+      'state',
+      'gateway',
+      'resource',
+      'concept',
+    ]);
+    expect(styleZh.canonicalValues).toEqual({
+      role: 'activity',
+      content: 'Process Order',
+      fill: '#e2e8f0',
+      stroke: '#2563eb',
+      strokeWidth: 2,
+      dashed: false,
+      opacity: 1,
+      textColor: '#0f172a',
+    });
+    expect(styleEn.canonicalValues).toEqual(styleZh.canonicalValues);
+    expect(styleEn.relatedApis).toEqual(styleZh.relatedApis);
+  });
+
+  it('让 role 与每个样式控件都改变真实 SVG', () => {
+    const baseline = renderStyleWithValues(styleZh.canonicalValues);
+
+    expect(baseline).toContain('<svg');
+    for (const role of ['participant', 'event', 'state', 'gateway', 'resource', 'concept']) {
+      expect(renderStyleWithValues({ ...styleZh.canonicalValues, role }), `${role}: role`).not.toBe(baseline);
+    }
+    expect(renderStyleWithValues({ ...styleZh.canonicalValues, content: 'Changed' }), 'content').not.toBe(baseline);
+    expect(renderStyleWithValues({ ...styleZh.canonicalValues, fill: '#dbeafe' }), 'fill').not.toBe(baseline);
+    expect(renderStyleWithValues({ ...styleZh.canonicalValues, stroke: '#dc2626' }), 'stroke').not.toBe(baseline);
+    expect(renderStyleWithValues({ ...styleZh.canonicalValues, strokeWidth: 4 }), 'strokeWidth').not.toBe(baseline);
+    expect(renderStyleWithValues({ ...styleZh.canonicalValues, dashed: true }), 'dashed').not.toBe(baseline);
+    expect(renderStyleWithValues({ ...styleZh.canonicalValues, opacity: 0.5 }), 'opacity').not.toBe(baseline);
+    expect(renderStyleWithValues({ ...styleZh.canonicalValues, textColor: '#ffffff' }), 'textColor').not.toBe(baseline);
+  });
+
+  it('固定完整坐标视口，并在 Source IR 中保留 authored Entity 样式字段', () => {
+    expect(getCanonicalViewBox(styleZhSource)).toEqual({ x: 0, y: 0, width: 360, height: 180 });
+    expect(getCanonicalViewBox(styleEnSource)).toEqual({ x: 0, y: 0, width: 360, height: 180 });
+
+    const source = buildPreviewIR(() => styleZhSource.canonicalRender?.() ?? null).ir.children[0] as {
+      children?: ReadonlyArray<unknown>;
+    };
+    expect(source.children).toEqual([
+      {
+        namespace: 'graph',
+        type: 'entity',
+        id: 'entity-style',
+        role: 'activity',
+        position: [180, 90],
+        text: 'Process Order',
+        fill: '#e2e8f0',
+        stroke: '#2563eb',
+        strokeWidth: 2,
+        dashed: false,
+        opacity: 1,
+        textColor: '#0f172a',
+      },
+    ]);
   });
 });
 
