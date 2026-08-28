@@ -18,12 +18,12 @@ Schematic 领域的早期公共输入只接受 JSON-safe 结构，不支持 DOT�
 
 Graph 是 Schematic 的通用关系与呈现基础。长期拥有：
 
-- Group / Entity / Relation 的 JSON-safe 语义契约、领域 Definition、metadata 与适用的 Theme appearance rules
+- Group / Block / Entity / Relation 的 JSON-safe 语义契约、领域 Definition、metadata 与适用的 Theme appearance rules
 - 可选 Graph context：局部 `graphTheme` 与完整 Core Scope composition
 - 与 Core lower target 同名同义的位置、路径、尺寸、内容及 NodeTarget endpoint，不建立 Graph-owned geometry、presentation 或 reference 投影
-- 可独立放入任意 Core 内容树的 Group / Entity / Relation 图式呈现能力
+- 可独立放入任意 Core 内容树的 Group / Block / Entity / Relation 图式呈现能力
 
-Graph 不拥有成员数据库或全局 GraphModel root。`IRGraph`、`IRGroup`、`IREntity` 与 `IRRelation` 是四类独立 Source composite：Group 组合可见包含边界与任意 Core children，Entity / Relation 分别组合自身语义和 Core Node / Path lower-facing 字段；Graph 只组合完整 Core `IRChild` 并提供局部上下文。身份、namespace frame、重复 id 与引用解析继续由 Core 统一负责
+Graph 不拥有成员数据库或全局 GraphModel root。`IRGraph`、`IRGroup`、`IRBlock`、`IREntity` 与 `IRRelation` 是独立 Source composite：Group 组合可见包含边界与任意 Core children，Block 组合非递归 Header / Section / Row / Cell 与局部可寻址结构，Entity / Relation 分别组合自身语义和 Core Node / Path lower-facing 字段；Graph 只组合完整 Core `IRChild` 并提供局部上下文。身份、namespace frame、重复 id 与引用解析继续由 Core 统一负责
 
 当前 v0.1 已由 ADR-07～10 完成以下长期组合边界：
 
@@ -32,7 +32,9 @@ Graph 不拥有成员数据库或全局 GraphModel root。`IRGraph`、`IRGroup`�
 - `Relation`：独立的语义化 Path composite，source / target 复用 Core NodeTarget，role definition 直接持有 direction 对应的 marker / dash 结构
 - `Graph`：组合完整 Core `IRScopeProps`，额外提供可选 `graphTheme` context；children 与 Core `IRChild` 同源，不维护 membership 或引用索引
 
-Group、Entity 与 Relation 保留 `namespace: 'graph'` 的 JSON-safe semantic IR。Group 下沉为复用 Layout / Standard / Core 的可见 Scope composite，Entity 与 Relation 分别下沉为 Core Node 与 Core stroke Path；role、kind、predicate 与 Graph discriminator 在 lowering 后丢弃。Graph 下沉为普通 Core Scope，原样保留完整 Core Scope properties；不自动建立 local namespace，也不自动生成 id
+v0.1 alpha.2 正在设计 `Block`：它面向代码与工程结构说明图，使用固定 Header / Section / Row / Cell grammar 和 Layout / Surface / Node 组合形成结构化图节点。Block、Section、Row 的显式 id 继续通过 Core NodeTarget 与 anchor / boundary 连接，不增加平行 Port IR；Blender、Gaea 只作为覆盖性验证，不把执行或 Editor 语义带入 Graph
+
+Group、Block、Entity 与 Relation 保留 `namespace: 'graph'` 的 JSON-safe semantic IR。Group 下沉为复用 Layout / Standard / Core 的可见 Scope composite，Block 下沉为包含 Section / Row Core Node host 的 layout-aware Scope composite，Entity 与 Relation 分别下沉为 Core Node 与 Core stroke Path；role、kind、predicate 与 Graph discriminator 在 lowering 后丢弃。Graph 下沉为普通 Core Scope，原样保留完整 Core Scope properties；不自动建立 local namespace，也不自动生成 id
 
 Graph 不拥有 geometry 数据模型、Diagram 自动布局、自动 routing、避障、命中测试、Editor 或 renderer。作者、Diagram、Editor 或其它消费者可以计算位置与路径，并直接填写 Graph 元素复用的 Core-compatible 字段；Graph 不区分这些值的来源，也不负责调度或合并
 
@@ -40,11 +42,11 @@ Graph 不拥有 geometry 数据模型、Diagram 自动布局、自动 routing、
 
 当前 Graph 包族由三个 lockstep 包组成：
 
-| 包                      | 拥有                                                                                                                     | 不拥有                                                        |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| `@retikz/graph`         | Graph / Group / Entity / Relation IR、领域 resolve、Graph context、Definition、provider、Core-compatible 字段与 lowering | 成员数据库、geometry 模型、Diagram 自动布局、Editor、renderer |
-| `@retikz/graph-react`   | 四类 Source composite 的 JSX authoring 与宿主 adapter                                                                    | Graph schema、resolve、lowering、布局算法                     |
-| `@retikz/graph-vanilla` | 四类 Source composite 的 builder、normalize、InputEmbed 与 Vanilla adapter                                               | Graph schema、resolve、lowering、布局算法                     |
+| 包                      | 拥有                                                                                                                             | 不拥有                                                               |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `@retikz/graph`         | Graph / Group / Block / Entity / Relation IR、领域 resolve、Graph context、Definition、provider、Core-compatible 字段与 lowering | 成员数据库、Port / geometry 模型、Diagram 自动布局、Editor、renderer |
+| `@retikz/graph-react`   | 五类 Source composite 的 JSX authoring 与宿主 adapter                                                                            | Graph schema、resolve、lowering、布局算法                            |
+| `@retikz/graph-vanilla` | 五类 Source composite 的 builder、normalize、InputEmbed 与 Vanilla adapter                                                       | Graph schema、resolve、lowering、布局算法                            |
 
 未来 `@retikz/diagram` package family 单向依赖 Graph，拥有完整 Diagram 的区域装配语义、Diagram 专属 frame / appearance、布局意图、布局 Definition / provider、Diagram resolve、布局编排、routing 与计算结果；它复用 Layout 的排版和测量、Standard 的通用绘图 composite、Core 的绘图与 Theme 机制，不复制 Graph 的 Group / Entity / Relation、appearance 或 Theme 契约。Graph 当前没有端口契约；Relation 只复用 Core 已公开的 NodeTarget，后续新的局部连接点能力必须先由 Core 或适用 owner 的独立设计冻结。`@retikz/diagram` 是实际的上层能力包，不是聚合入口；package family 的具体组成与公开 API 必须由自身 roadmap / ADR 确认后建立
 
@@ -54,7 +56,7 @@ Graph 不拥有 geometry 数据模型、Diagram 自动布局、自动 routing、
 Graph React / Graph Vanilla / direct IR
           │
           ▼
- Graph / Group / Entity / Relation Source composites
+ Graph / Group / Block / Entity / Relation Source composites
           │
           ▼
   per-composite resolve / lower
@@ -63,9 +65,9 @@ Graph React / Graph Vanilla / direct IR
  Core Node / Path / Scope + namespace
 ```
 
-Graph 依赖 Core、Foundation、必要的 Math 与 Layout 公开能力，不依赖 adapter、renderer、Viz、Diagram 或 Editor。Diagram 可以依赖 Graph 及 Core、Math、Layout 的公开 measurement / geometry capability。Graph React / Vanilla 只把宿主写法归一到对应 Graph / Group / Entity / Relation Source IR；不维护私有 IR、Graph-root 成员索引、默认 id、平行 schema 或 renderer 分支
+Graph 依赖 Core、Foundation、必要的 Math、Layout 与 Standard 公开能力，不依赖 adapter、renderer、Viz、Diagram 或 Editor。Diagram 可以依赖 Graph 及 Core、Math、Layout 的公开 measurement / geometry capability。Graph React / Vanilla 只把宿主写法归一到对应 Graph / Group / Block / Entity / Relation Source IR；不维护私有 IR、Graph-root 成员索引、endpoint 所属索引、默认 id、平行 schema 或 renderer 分支
 
-Graph Theme style 与 Core、Plot、Table 使用同一个 Core `theme.style` 名称协作。Graph 发布包只维护 Neutral baseline；React 通过 `GraphThemeProvider` 为 standalone Graph 注入 Graph-owned style definitions，embedded Graph / Group / Entity / Relation 在 Layout 的静态 InputEmbed 提取边界显式传递同一 definitions，Vanilla 也通过显式 definition options 注入，不建立 ambient 全局 registry。Docs 可以像 Viz 一样通过公开 Definition 提供 Academic、Vibrant、Clean reference styles，并复用同一个 Preview Theme selector；Preview host 负责把同一 bundle 显式交给 embedded Graph authoring。这些参考值不成为 Graph Source enum 或发布包内置白名单
+Graph Theme style 与 Core、Plot、Table 使用同一个 Core `theme.style` 名称协作。Graph 发布包只维护 Neutral baseline；React 通过 `GraphThemeProvider` 为 standalone Graph 注入 Graph-owned style definitions，embedded Graph / Group / Block / Entity / Relation 在 Layout 的静态 InputEmbed 提取边界显式传递同一 definitions，Vanilla 也通过显式 definition options 注入，不建立 ambient 全局 registry。Docs 可以像 Viz 一样通过公开 Definition 提供 Academic、Vibrant、Clean reference styles，并复用同一个 Preview Theme selector；Preview host 负责把同一 bundle 显式交给 embedded Graph authoring。这些参考值不成为 Graph Source enum 或发布包内置白名单
 
 Graph context 不要求 Core 增加领域 context bag。Graph Definition 只遍历自身 schema 可见的 Source child tree，把 Graph-local appearance overrides 投影到生成态 Entity / Relation composite；投影后的节点仍由各自 Definition / provider 消费。普通 Scope 可见，第三方 composite 内部不透明；该过程不收集成员、不解析 endpoint，也不产生 authored id
 
