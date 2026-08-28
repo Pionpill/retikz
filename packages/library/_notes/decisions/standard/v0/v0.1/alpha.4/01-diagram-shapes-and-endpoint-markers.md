@@ -74,6 +74,6 @@ Graph 等 Tier 2 包可以在自身 role、kind 或 predicate recipe 中引用�
 - 新能力不改变 Core 内置 Shape / Arrow 集合，也不改变 Standard 既有 contour、cross、sector、star 与 cylinder。`ellipticCapsule` 使用独立 provider key；`diamond` 和 `openDiamond` 保留名称与装配方式，但默认几何改为 TikZ 扁菱形，属于 alpha 阶段有意的视觉 breaking change
 - Shape 与 Marker 不反推 Graph role、kind、predicate、direction、cardinality 或 Theme
 
-## 既有实现与本次修订
+## 结果
 
-Standard 的 Shape 与 Arrow 子入口已提供既有参数化 Shape 与端点 Marker，并保持直接 Definition、静态 provider 与 Core 编译主链一致。长六边形默认每侧固定肩深为 `12` user units，内容变宽不会继续放大尖角；圆柱端盖填充与端点接头覆盖符合本决策。2026-08-24 修订已增加 `ellipticCapsule` 的独立半椭圆端轮廓、Definition、静态 provider 与集合导出，并由 Graph resource 作为首个领域消费者验证；Cylinder 保留内部端盖分隔弧，resource 使用单一外轮廓与对称纵向 padding，相关几何、provider、lowering、双语文档和页面证据均已闭环
+Standard 的 Shape 与 Arrow 子入口已形成直接 Definition、静态 provider 与 Core 编译闭环。长六边形使用固定肩深；Cylinder 保留内部端盖分隔弧；`ellipticCapsule` 使用单一半椭圆端外轮廓。Graph 等领域包只引用并贡献这些通用 provider，不把领域语义下沉到 Standard

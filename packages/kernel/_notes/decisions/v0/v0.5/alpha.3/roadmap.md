@@ -9,7 +9,7 @@
 
 alpha.3 补齐 Core 上下文颜色：具有明确主色来源的颜色槽位可以使用归一化权重，Core 在完整 Theme、Scope 与图元样式级联后，按 Light / Dark 模式确定为不透明颜色字符串。Foundation 统一拥有静态 CSS 颜色解析与不透明预合成原子；Graph、Plot、Table 等 Tier 2 Theme 只声明主色链并下沉兼容槽位，不各自维护颜色算法
 
-本次发布不包含 cooperative scheduler、progressive materialization 或 generation session。对应[候选 ADR-01](../candidates/01-cooperative-concurrent-runtime.md)、[ADR-02](../candidates/02-progressive-materialization.md)与[ADR-03](../candidates/03-generation-session.md)保持未实现 Proposed，不属于 `0.5.0-alpha.3` 的公开契约；未来如重新排期，必须在新的 milestone 完成 Architecture Gate、实现、测试和文档闭环
+本次发布不包含 cooperative scheduler、progressive materialization 或 generation session。对应[候选 ADR-01](../candidates/01-cooperative-concurrent-runtime.md)、[ADR-02](../candidates/02-progressive-materialization.md)与[ADR-03](../candidates/03-generation-session.md)保持未实现 Proposed，不属于 `0.5.0-alpha.3` 的公开契约
 
 ## ADR
 
@@ -17,7 +17,7 @@ alpha.3 补齐 Core 上下文颜色：具有明确主色来源的颜色槽位可
 | --------------------------------------------- | -------- | ---------- | ------------------------------------------------------------------ |
 | [ADR-04](./04-contextual-color-resolution.md) | Accepted | 上下文颜色 | Foundation 颜色原子、Core 最终确定化与 Tier 2 Theme 主色链统一适配 |
 
-## 完成标准
+## 已交付边界
 
 - Foundation 是静态 CSS 颜色解析与不透明 source-over 预合成的唯一 owner
 - Core 数值颜色只允许位于 `[0, 1]`，并在完整级联后按最终有效主色确定化
