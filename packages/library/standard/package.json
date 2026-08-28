@@ -1,6 +1,6 @@
 {
   "name": "@retikz/standard",
-  "version": "0.1.0-alpha.4",
+  "version": "0.1.0-alpha.5",
   "retikz": {
     "domain": "library",
     "releaseGroup": "standard",
