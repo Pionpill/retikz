@@ -4,6 +4,7 @@ import type { LowerPlotsOptions } from '@retikz/plot';
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
+import { FlexLayoutArtifactSchema } from '@retikz/layout';
 import { createPlotProviderContribution, PointMarkSchema } from '@retikz/plot';
 import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
@@ -51,6 +52,33 @@ const sceneOf = (source: IRScene['children'][number]): IRScene => ({
 });
 
 describe('Chart providers through Core compile', () => {
+  it('grows the Plot item into the remaining fixed-height presentation space', () => {
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      id: 'scatter-presentation-height',
+      data: { reference: 'scatter.rows' },
+      layout: { width: 800, height: 500 },
+      presentation: { title: 'Scatter' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+      },
+    });
+
+    const result = compileToScene(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()]));
+    const artifact = result.artifacts.find(value => value.kind === 'composite' && value.type === 'flexLayout');
+    if (artifact === undefined) throw new Error('Expected Chart presentation FlexLayout compile artifact');
+    const flex = FlexLayoutArtifactSchema.parse(artifact.value);
+    const plotItem = flex.items.find(item => item.key === 'chart.plot');
+    if (plotItem === undefined) throw new Error('Expected Chart Plot presentation item');
+
+    expect(plotItem.slotBounds.height).toBeGreaterThan(300);
+    expect(plotItem.slotBounds.y + plotItem.slotBounds.height).toBeCloseTo(
+      flex.container.contentBounds.y + flex.container.contentBounds.height,
+    );
+  });
+
   it('compiles Scatter in one Scene with its provider contribution installed', () => {
     const scene: IRScene = {
       version: 1,

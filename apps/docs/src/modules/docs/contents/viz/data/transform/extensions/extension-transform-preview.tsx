@@ -1,6 +1,12 @@
 import type { IRDataModel } from '@retikz/data';
 
-import { defineTransform } from '@retikz/data';
+import {
+  DataFieldType,
+  DataTransformBindingClass,
+  DataTransformFieldEffect,
+  DataTransformPhase,
+  defineTransform,
+} from '@retikz/data';
 import { Plot, PlotAxis, PlotScale, PlotTransform, PointMark } from '@retikz/plot-react';
 import { z } from 'zod';
 
@@ -20,6 +26,15 @@ export const scaleField = defineTransform({
   }),
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
+  outputModel: operation => ({
+    kind: 'preserve',
+    outputs: [{ field: operation.as, type: DataFieldType.Continuous }],
+  }),
+  compact: {
+    phase: DataTransformPhase.FieldDerive,
+    bindingClass: DataTransformBindingClass.Field,
+    fieldEffect: DataTransformFieldEffect.Preserve,
+  },
   apply: (rows, operation) =>
     rows.map(row => ({
       ...row,

@@ -14,7 +14,8 @@ usage: distribution
       preview: {
         files: ['scatter-basic', 'scatter-basic.data.ts'],
         controls: { name: 'scatter-basic' },
-        size: 'xxl',
+        controlPanelDefaultOpen: false,
+        size: 'xxxl',
         caption: '标题说明比较对象，副标题给出年份和百分比单位，来源说明所用世界银行指标。',
       },
     },
@@ -25,7 +26,8 @@ usage: distribution
       preview: {
         files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
         controls: { name: 'scatter-fertility-work' },
-        size: 'xxl',
+        controlPanelDefaultOpen: false,
+        size: 'xxxl',
         caption: '切换收入组的颜色或形状编码，观察同一字段绑定如何改变点的视觉表达。',
       },
     },
@@ -36,18 +38,20 @@ usage: distribution
       preview: {
         files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
         controls: { name: 'scatter-income-life-expectancy' },
-        size: 'xxl',
+        controlPanelDefaultOpen: false,
+        size: 'xxxl',
         caption: '标题、副标题、注记和来源按固定 presentation slots 进入图表，颜色编码区分大洲。',
       },
     },
     {
       id: 'scatter-penguins-facet-jitter',
       title: '分面与抖动',
-      description: '用 `ChartFacet` 按物种生成三个共享尺度面板，再用 `PlotTransform` 为 `ScatterChart` 添加确定性横向抖动。',
+      description: '用 `column` 与 `facet` encoding 生成三个共享尺度面板，并在 `x` mapping 中声明确定性横向抖动。',
       preview: {
         files: ['scatter-penguins-facet-jitter', 'scatter-penguins-facet-jitter.data.ts'],
         controls: { name: 'scatter-penguins-facet-jitter' },
-        size: 'xxl',
+        controlPanelDefaultOpen: false,
+        size: 'xxxl',
         caption: '三个物种分列展示并共享横纵尺度；固定 seed 让横向抖动在交互和源码预览中保持可复现。',
       },
     },
@@ -58,23 +62,58 @@ usage: distribution
       preview: {
         files: ['scatter-world-cup-shots', 'scatter-world-cup-shots.data.ts'],
         controls: { name: 'scatter-world-cup-shots' },
-        size: 'xxl',
+        controlPanelDefaultOpen: false,
+        size: 'xxxl',
         caption: '点的位置保留射门空间含义，射门结果驱动点的颜色与可读性样式。',
       },
     },
   ]}
 >
-  Scatter 使用精确的 `ScatterChartSchema`。根 `type` 固定为 `point`，而 `recipe.chartType` 为 `scatter`；数据、尺寸、presentation 和 Theme 位于 Source 外层，字段绑定集中在 `recipe.encodings`，常量样式集中在 `recipe.properties`。
+本页 API 只列 Scatter 独有的字段映射与 mark 行为。Chart 的公共 props、字段类型、通用 transform、scale、presentation 和 Plot 扩展不在此重复，详见[图形模型](/viz/chart/model)。
 
-本页示例统一使用 `@retikz/chart-react/point/scatter` 的 `ScatterChart`。recipe 会生成内建的 `scatter` semantic mark group、二维比例尺和默认 Plot 结构；`ScatterMark` 作为直接子级写入 `recipe.marks` 并继承可消费的 encodings 与 properties。普通 `ScatterMark` 追加散点，`<ScatterMark override>` 则原位替换 recipe 隐式生成的完整 `scatter` group，适合只调整主散点样式而不重复绘制。
+## `ScatterChart.encodings`
 
-`encodings` 只接受字段名，不能把常量写进数据通道；常量写入 `properties`。recipe 根级同目标仍由 encoding 胜出；mark 的显式 property 可以覆盖 inherited encoding，mark 自己的显式 encoding 再胜出。override 未命中时 mark 仍会追加，并通过 `onWarn` 报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`。
+`ScatterChartEncodingsSchema` 是 Scatter encoding 的运行时真源，`IRScatterChartEncodings` 从 schema 派生；React 的 `ScatterChartProps.encodings`、Vanilla input 与 JSON Source 都使用这张精确表。
 
-复杂 authoring 按 owner 拆成声明组件：`ChartFacet` 写入 `recipe.facet`，复用当前 Chart recipe 的坐标与尺度；`PlotTransform`、`PlotAxis` 等 `PlotXxx` 写入 `plotExtension`，继续走 Plot 的归一化主链。需要自定义坐标视图、轨道、嵌套组合或完全独立的 Plot 图元时，直接使用 `Plot`，或显式编写 `plotExtension` fragment；独立 fragment 不继承 Chart context，也不参与 semantic group override。
+| Slot             | 支持的 Scatter mapping                                                                 | Scatter 专属约束                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `x`              | `string`、direct、aggregate、derived（`bin`、`normalize`、`jitter`、custom transform） | 必填；`jitter` 只能作用于 x 轴；`bin` 不能与 facet 组合                            |
+| `y`              | `string`、direct、aggregate、derived（`bin`、`normalize`、`jitter`、custom transform） | 必填；`jitter` 只能作用于 y 轴；`bin` 不能与 facet 组合                            |
+| `color`          | `string`、direct、aggregate                                                            | 可选；绑定 Scatter 的 color consumer，可使用兼容的分类或连续颜色 scale             |
+| `size`           | `string`、direct、aggregate、derived（`normalize`、custom transform）                  | 可选；输出必须是 continuous，命名 scale 当前只接受 `sqrt`                          |
+| `opacity`        | `string`、direct、aggregate、derived（`normalize`、custom transform）                  | 可选；输出必须是 continuous，命名 scale 当前只接受 `linear`                        |
+| `shape`          | `string`、direct                                                                       | 可选；绑定分类形状，不接受命名 scale                                               |
+| `row` / `column` | `string`、`IRPlotPartitionDimension`、`Array<IRPlotPartitionDimension>`                | 可选；声明任一维度即可生成 facet，数组表示有序的分面层级                           |
+| `facet`          | `IRPlotFacetOptions`                                                                   | 可选；配置 `empty`、`header`、`resolve`、`spacing`；必须同时存在 `row` 或 `column` |
 
-## 共享 Chart 规则
+Scatter 不接受 `series`、`detail`、`order`、`text` 或没有明确 consumer 的普通 slot 数组。字段类型与 scale compatibility 由既有 Data / Plot 契约处理，本页不展开。
 
-Scatter 与其它 Chart 类型共用相同的 family / chartType 路由、精确 schema、编写主链、固定 presentation slots 和 Theme owner slices。请在[图形模型](/viz/chart/model)中统一查阅；本页只保留 Scatter 的二维位置、分类编码和 mark 语义。
+### Facet
+
+`row` / `column` / `facet` 是 Scatter 的分面映射。`facet` 不能脱离 `row` 或 `column`；带 facet 的 x/y `bin` 也会被拒绝。
+
+```tsx
+encodings={{
+  x: 'billLengthMm',
+  y: 'flipperLengthMm',
+  column: { field: 'species', order: ['Adelie', 'Chinstrap', 'Gentoo'] },
+  facet: { header: { column: true }, spacing: { panelGap: 20 } },
+}}
+```
+
+`row` / `column` 只决定面板分区，不决定 mark 类型；Scatter 仍使用自己的点 mark。Facet 的面板排列、尺度解析和定位交给 Plot，Source 不重复保存可推导的 panel id 或坐标。
+
+## `ScatterMark`
+
+`ScatterMark` 是 Scatter 独有的直接子级 mark API。`ScatterMarkProps` 是 `@retikz/chart-react/point/scatter` 导出的 props 类型；组件身份固定为 Scatter，不需要传入 `kind`。公共 Point mark 的嵌套字段不在本页重复。
+
+| `ScatterMarkProps` 属性 | 类型                             | 默认值  | Scatter 专属行为                                                                                                                     |
+| ----------------------- | -------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `override?`             | `boolean`                        | `false` | 为 `true` 时原位替换 recipe 隐式生成的主 `scatter` mark；未命中时仍追加，并通过 `onWarn` 报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND` |
+| `encodings?`            | `ScatterMarkProps['encodings']`  | —       | 覆盖当前 Scatter recipe 继承的点字段映射；可用字段由公共 Point mark encoding 契约决定                                                |
+| `properties?`           | `ScatterMarkProps['properties']` | —       | 覆盖当前 Scatter recipe 继承的点样式；字段列表由公共 Point properties 契约决定                                                       |
+
+## 延伸阅读
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/viz/chart/model/authoring">

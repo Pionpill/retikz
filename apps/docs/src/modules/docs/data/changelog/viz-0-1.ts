@@ -29,6 +29,13 @@ export const vizV01: Release = {
             en: 'The default data builtins now keep only capabilities reusable by plot / table / geo; plot-only transforms are registered by plot itself, avoiding chart semantics in other hosts.',
           },
         },
+        {
+          label: { zh: '可追踪的 transform 输出', en: 'Traceable transform outputs' },
+          content: {
+            zh: '`TransformDefinition.outputModel`、`compact`与`StatisticsReducerDefinition.outputs`让内置和自定义operation用同一registry声明派生字段、类型证据和紧凑字段映射能力；开放`kind`只扩展vocabulary，不绕过Definition config与consumer compatibility。',
+            en: '`TransformDefinition.outputModel`, `compact`, and `StatisticsReducerDefinition.outputs` let built-in and custom operations declare derived fields, type evidence, and compact field-mapping capability through one registry. Open `kind` vocabulary does not bypass Definition config or consumer compatibility.',
+          },
+        },
       ],
       subVersions: [
         {
@@ -212,10 +219,13 @@ export const vizV01: Release = {
           },
         },
         {
-          label: { zh: 'Chart-owned 分面 authoring', en: 'Chart-owned facet authoring' },
+          label: {
+            zh: 'BREAKING：字段映射与 composition 收口',
+            en: 'BREAKING: Field mappings and composition converge',
+          },
           content: {
-            zh: '`recipe.facet` 保存紧凑的 Plot 分面作者事实，并在 Chart resolve 中复用 recipe 的坐标与尺度生成正式 Plot composition；低层模板视图与 panel id 控制仍只属于 Plot。',
-            en: '`recipe.facet` stores concise Plot facet authoring facts and reuses the recipe coordinate and scales during Chart resolution to generate the formal Plot composition; low-level template-view and panel-id controls remain Plot-only.',
+            zh: 'Scatter `encodings`支持direct、scalar aggregate、允许的derived transform、named scale以及`row / column / facet`，同时复用Data字段/transform与Plot scale/composition契约。`ChartFacet`、root `facet`与`recipe.facet`已删除；迁移到`encodings.row / column / facet`。共享轴与多mark轨道通过`plotExtension`使用Plot静态Tracks。',
+            en: 'Scatter `encodings` now support direct fields, scalar aggregates, allowed derived transforms, named scales, and `row / column / facet` while reusing Data field/transform and Plot scale/composition contracts. `ChartFacet`, root `facet`, and `recipe.facet` are removed; migrate to `encodings.row / column / facet`. Shared-axis, multi-mark tracks use Plot static Tracks through `plotExtension`.',
           },
         },
       ],
@@ -263,10 +273,10 @@ export const vizV01: Release = {
           },
         },
         {
-          label: { zh: '按 owner 组合 Chart 与 Plot 声明', en: 'Compose Chart and Plot declarations by owner' },
+          label: { zh: '同形 rich encodings 与 Plot 声明', en: 'Isomorphic rich encodings and Plot declarations' },
           content: {
-            zh: '`ChartFacet` 写入 `recipe.facet`；`PlotTransform`、`PlotAxis` 等 `PlotXxx` children 交给 Plot React / Vanilla 主链写入 `plotExtension`。两类声明可同树组合，空间双来源会 fail-loud。',
-            en: '`ChartFacet` writes `recipe.facet`, while `PlotXxx` children such as `PlotTransform` and `PlotAxis` flow through the Plot React / Vanilla path into `plotExtension`. Both owners compose in one tree, and duplicate spatial sources fail loudly.',
+            zh: '`ScatterChart`直接接收与JSON / Vanilla同形的rich `encodings`；`ChartFacet` / `ChartFacetProps`已删除。`PlotTransform`、`PlotAxis`等`PlotXxx` children仍进入`plotExtension`并服从同一Chart data flow与空间冲突诊断。',
+            en: '`ScatterChart` accepts the same rich `encodings` shape as JSON and Vanilla; `ChartFacet` and `ChartFacetProps` are removed. `PlotXxx` children such as `PlotTransform` and `PlotAxis` still enter `plotExtension` and share the Chart data flow and spatial-conflict diagnostics.',
           },
         },
       ],
@@ -296,6 +306,13 @@ export const vizV01: Release = {
           content: {
             zh: '根入口只提供 `ChartInput`、InputEmbed 与 `renderChart`；`/point` 公开精确的 `CreateXxxChartInput`、`normalizeXxxChart` 与 `createXxxChart`，具体 chartType provider 随 factory 安装；创建函数返回精简 Source、可嵌入 Input 与完整 contribution，`renderChart` 从同一次 Core compile 生成 SVG 与 compile result。',
             en: 'The root exposes only `ChartInput`, InputEmbed, and `renderChart`, while `/point` exposes exact `CreateXxxChartInput`, `normalizeXxxChart`, and `createXxxChart` APIs; each factory installs its concrete chartType provider. Factories return concise Source, embeddable Input, and a complete contribution, while `renderChart` produces its SVG and compile result from the same Core compile.',
+          },
+        },
+        {
+          label: { zh: 'BREAKING：facet input 迁入 encodings', en: 'BREAKING: Facet input moves into encodings' },
+          content: {
+            zh: '`InputChartFacet`、`normalizeChartFacet`与factory root `facet`已删除。Scatter factory只展开`row / column`字符串shorthand，rich对象原样进入与JSON / React同形的Source；runtime transform / reducer / scale Definition继续通过provider sidecar传递。',
+            en: '`InputChartFacet`, `normalizeChartFacet`, and the factory root `facet` are removed. Scatter factories only expand `row / column` string shorthands, preserving rich objects in the same Source shape as JSON and React; runtime transform, reducer, and scale Definitions continue through the provider sidecar.',
           },
         },
       ],
@@ -332,6 +349,13 @@ export const vizV01: Release = {
           content: {
             zh: 'IR 里只写 `data: { ref }`（一个名字），真实数据集渲染时单独注入、不进 IR——同一份 spec 换字段相符的数据即可复用，IR 不随数据量膨胀。',
             en: 'The IR only carries `data: { ref }` (a name); the actual dataset is injected at render time and never enters the IR — the same spec is reusable with any matching dataset, and the IR never bloats with data volume.',
+          },
+        },
+        {
+          label: { zh: '一次 lowering 的 runtime 证据', en: 'One-lowering runtime evidence' },
+          content: {
+            zh: 'Scene、lineage与locator复用同一次lowering产生的data / frame artifact；单次请求不会为查询重放custom transform，独立runtime请求仍各自执行。',
+            en: 'Scene, lineage, and locators reuse the data/frame artifact produced by one lowering. A query does not replay custom transforms within one request, while separate runtime requests still execute independently.',
           },
         },
       ],

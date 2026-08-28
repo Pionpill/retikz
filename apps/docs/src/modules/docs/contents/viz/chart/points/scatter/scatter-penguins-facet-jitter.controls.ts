@@ -65,5 +65,11 @@ export const previewControlContract = {
     [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.jitter]: 0.35,
     [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointSize]: 7,
   },
-  relatedApis: ['ScatterChart.encodings', 'ScatterMark.override', 'ScatterMark.properties', 'PlotTransform.amount'],
+  relatedApis: [
+    'ScatterChart.encodings.x.transform',
+    'ScatterChart.encodings.column',
+    'ScatterChart.encodings.facet',
+    'ScatterMark.override',
+    'ScatterMark.properties',
+  ],
 } satisfies PreviewControlContract;

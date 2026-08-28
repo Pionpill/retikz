@@ -21,8 +21,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         ...(channel === 'color' ? { color: 'incomeGroup' } : {}),
         ...(channel === 'shape' ? { shape: 'incomeGroup' } : {}),
       }}
+      layout={{ width: 800, height: 500 }}
       width={800}
-      height={400}
+      height={500}
     >
       <ChartTitle>Fertility and female labor participation</ChartTitle>
       <ChartSubtitle>

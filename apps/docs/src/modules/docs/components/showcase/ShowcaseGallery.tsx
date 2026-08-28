@@ -6,6 +6,7 @@ import { useSearchParams } from 'react-router';
 import type { ComponentPreviewProps } from '../component-preview';
 
 import { ComponentPreview, ComponentPreviewThumbnail } from '../component-preview';
+import { MarkdownInline } from '../inline-markdown';
 import { ShowcaseTabs } from './ShowcaseTabs';
 
 export type ShowcaseExample = {
@@ -13,7 +14,7 @@ export type ShowcaseExample = {
   id: string;
   /** 示例卡片标题 */
   title: string;
-  /** 示例卡片单句说明 */
+  /** 示例卡片单句说明，支持行内 Markdown */
   description: string;
   /** 选中后交给完整 ComponentPreview 的配置 */
   preview: ComponentPreviewProps;
@@ -52,7 +53,7 @@ export const ShowcaseGallery: FC<ShowcaseGalleryProps> = props => {
           {selected.title}
         </h2>
         <p data-slot="showcase-featured-description" className="mt-3 leading-relaxed">
-          {selected.description}
+          <MarkdownInline source={selected.description} />
         </p>
       </header>
 
@@ -82,9 +83,10 @@ export const ShowcaseGallery: FC<ShowcaseGalleryProps> = props => {
                   />
                   <span data-slot="showcase-example-copy" className="block min-h-0 flex-1 bg-muted/40 p-4">
                     <span className="block font-medium text-foreground">{example.title}</span>
-                    <span className="mt-1.5 block text-sm leading-relaxed text-muted-foreground">
-                      {example.description}
-                    </span>
+                    <MarkdownInline
+                      source={example.description}
+                      className="mt-1.5 block text-sm leading-relaxed text-muted-foreground"
+                    />
                   </span>
                 </button>
               ))}

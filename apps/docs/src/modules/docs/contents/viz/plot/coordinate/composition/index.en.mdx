@@ -84,6 +84,8 @@ By default, combinations without rows are hidden and the same direction shares o
 
 Shared tracks fix the scale and axis for one direction, then divide the other direction into bands. `<PlotScaffold>` owns the shared parts, while each `<PlotTrack>` contains its local axis and marks.
 
+Tracks are authored explicitly. Every `<PlotTrack>` has a stable `id`, a defined band, and local content, so different tracks can use different marks; `sharedRoles` determines which coordinate roles are reused across tracks. Repeating the same marks by field value is a facet, not a track.
+
 ### Cartesian Tracks
 
 Three metrics share the trading-day x-axis and draw in separate vertical spaces, which fits operational metrics that must stay time-aligned.
@@ -118,9 +120,16 @@ All three Props types are public exports of `@retikz/plot-react`. This table kee
 | `PlotScaffoldProps` | `id`, `coordinate`, `sharedRoles`, `frame`, `resolve`, `spacing`, `children` | Declare shared roles, coordinates, and tracks |
 | `PlotTrackProps`    | `id`, `band`, `view`, `order`, `coordinate`, `header`, `children`            | Declare one track's band and local content    |
 
+Facet partition Source atoms are exported from the `@retikz/plot` package root:
+
+| Type                       | Key fields                            | Responsibility                                          |
+| -------------------------- | ------------------------------------- | ------------------------------------------------------- |
+| `IRPlotPartitionDimension` | `field`, `order`, `labels`            | Declare a facet partition field, typed order, labels    |
+| `PlotPartitionScalar`      | `string \| number \| boolean \| null` | Preserve value types for facet order and panel identity |
+
 ## Related
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
   <LinkedCard href="/viz/plot/guide/axis">
     <span className="font-semibold">Axes</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
@@ -131,6 +140,12 @@ All three Props types are public exports of `@retikz/plot-react`. This table kee
     <span className="font-semibold">Plot Lineage</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Inspect data ownership inside facets and tracks
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/scatter">
+    <span className="font-semibold">Scatter</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      See field mappings, facets, and Plot extensions
     </span>
   </LinkedCard>
 </div>

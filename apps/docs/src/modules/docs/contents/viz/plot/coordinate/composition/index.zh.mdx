@@ -84,6 +84,8 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 
 共享轨道把同一方向的尺度和坐标轴固定下来，再把另一方向切成多条带。`<PlotScaffold>` 管理共享部分，`<PlotTrack>` 放每条轨道自己的轴和 mark。
 
+轨道由作者逐条声明。每个 `<PlotTrack>` 都有稳定 `id`、明确 band 与局部内容，因此不同轨道可以使用不同 mark；`sharedRoles` 决定哪些坐标角色在轨道间复用。按字段值重复同一组 mark 属于 facet，而不是轨道。
+
 ### 直角坐标轨道
 
 三个指标共享交易日横轴，各自在独立纵向空间中绘制，适合时间对齐的运行指标。
@@ -118,9 +120,16 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 | `PlotScaffoldProps` | `id`、`coordinate`、`sharedRoles`、`frame`、`resolve`、`spacing`、`children` | 声明共享角色、坐标与多条轨道的骨架 |
 | `PlotTrackProps`    | `id`、`band`、`view`、`order`、`coordinate`、`header`、`children`            | 声明单条轨道的占位区间与局部内容   |
 
+Facet 的 partition Source 原子从 `@retikz/plot` 包根导出：
+
+| 类型                       | 关键字段                              | 职责                                        |
+| -------------------------- | ------------------------------------- | ------------------------------------------- |
+| `IRPlotPartitionDimension` | `field`、`order`、`labels`            | 声明 facet 分区字段、typed value 顺序与标签 |
+| `PlotPartitionScalar`      | `string \| number \| boolean \| null` | 保留 facet order 与 panel identity 的值类型 |
+
 ## 相关内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
   <LinkedCard href="/viz/plot/guide/axis">
     <span className="font-semibold">坐标轴</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">查看位置、标题与网格配置</span>
@@ -128,5 +137,9 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
   <LinkedCard href="/viz/data/provenance/plot">
     <span className="font-semibold">Plot 溯源</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">查看数据在分面和轨道中的归属</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/scatter">
+    <span className="font-semibold">散点图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查看字段映射、分面与 Plot 扩展</span>
   </LinkedCard>
 </div>

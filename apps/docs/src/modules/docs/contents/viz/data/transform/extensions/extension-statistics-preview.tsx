@@ -1,6 +1,6 @@
 import type { IRDataModel } from '@retikz/data';
 
-import { defineRowSelector, defineStatisticsReducer } from '@retikz/data';
+import { DataFieldType, defineRowSelector, defineStatisticsReducer } from '@retikz/data';
 import { Plot, PlotAxis, PlotTransform, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import { z } from 'zod';
@@ -16,6 +16,7 @@ export const midpoint = defineStatisticsReducer({
   }),
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
+  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
   reduce: (rows, operation) => {
     const values = rows.map(row => Number(row[operation.field])).filter(Number.isFinite);
     if (values.length === 0) return { [operation.as]: Number.NaN };

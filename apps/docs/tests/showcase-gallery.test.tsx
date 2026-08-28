@@ -74,7 +74,7 @@ const examples = [
   {
     id: 'basic',
     title: '基础散点',
-    description: '比较两个连续变量。',
+    description: '比较两个连续变量，使用 `x` 和 `y`。',
     preview: {
       files: ['scatter-basic', 'scatter-basic.data.ts'],
       controls: { name: 'scatter-basic' },
@@ -85,7 +85,7 @@ const examples = [
   {
     id: 'income',
     title: '收入与寿命',
-    description: '比较收入与预期寿命。',
+    description: '比较收入与预期寿命，使用 `gdpPerCapita`。',
     preview: {
       files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
       controls: { name: 'scatter-income-life-expectancy' },
@@ -146,13 +146,19 @@ describe('<ShowcaseGallery>', () => {
     expect(cards[0]?.classList.contains('h-[250px]')).toBe(true);
     expect(cards[0]?.hasAttribute('aria-pressed')).toBe(false);
     expect(cards[0]?.textContent).toContain('收入与寿命');
-    expect(cards[0]?.textContent).toContain('比较收入与预期寿命。');
+    expect(cards[0]?.textContent).toContain('比较收入与预期寿命，使用 gdpPerCapita。');
+    expect(cards[0]?.querySelector('code')?.textContent).toBe('gdpPerCapita');
     expect(cards[0]?.querySelector('[data-slot="component-preview-thumbnail"]')?.classList).toContain('bg-transparent');
     expect(cards[0]?.querySelector('[data-slot="showcase-example-copy"]')?.classList).toContain('bg-muted/40');
     expect(container.querySelector('[data-slot="showcase-featured-title"]')?.textContent).toBe('基础散点');
     expect(container.querySelector('[data-slot="showcase-featured-description"]')?.textContent).toBe(
-      '比较两个连续变量。',
+      '比较两个连续变量，使用 x 和 y。',
     );
+    expect(
+      Array.from(container.querySelectorAll('[data-slot="showcase-featured-description"] code')).map(
+        code => code.textContent,
+      ),
+    ).toEqual(['x', 'y']);
     expect(container.textContent).toContain('基础散点说明');
     expect(container.textContent).not.toContain('收入与寿命说明');
 
@@ -165,7 +171,10 @@ describe('<ShowcaseGallery>', () => {
     expect(nextCards[0]?.textContent).not.toContain('收入与寿命');
     expect(container.querySelector('[data-slot="showcase-featured-title"]')?.textContent).toBe('收入与寿命');
     expect(container.querySelector('[data-slot="showcase-featured-description"]')?.textContent).toBe(
-      '比较收入与预期寿命。',
+      '比较收入与预期寿命，使用 gdpPerCapita。',
+    );
+    expect(container.querySelector('[data-slot="showcase-featured-description"] code')?.textContent).toBe(
+      'gdpPerCapita',
     );
     expect(container.textContent).not.toContain('基础散点说明');
     expect(container.textContent).toContain('收入与寿命说明');

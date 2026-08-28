@@ -20,8 +20,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         ...(channel === 'color' ? { color: 'incomeGroup' } : {}),
         ...(channel === 'shape' ? { shape: 'incomeGroup' } : {}),
       }}
+      layout={{ width: 800, height: 500 }}
       width={800}
-      height={400}
+      height={500}
     >
       <ChartTitle>生育率与女性劳动参与率</ChartTitle>
       <ChartSubtitle>186 个经济体，2022 年；横轴为每名女性生育数，纵轴为 15 岁及以上女性劳动参与率（%）</ChartSubtitle>
