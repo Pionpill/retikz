@@ -3,7 +3,7 @@ import type { IRScatterChart } from '@retikz/chart/point/scatter';
 import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import type { InputGraphChild } from '@retikz/graph-vanilla';
+import type { InputGraphChild, InputGroupChild } from '@retikz/graph-vanilla';
 import type { IRPlot } from '@retikz/plot';
 import type { IRTable } from '@retikz/table';
 import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
@@ -17,6 +17,8 @@ import {
   EntitySchema,
   GraphDefinition,
   GraphSchema,
+  GroupDefinition,
+  GroupSchema,
   RelationDefinition,
   RelationSchema,
 } from '@retikz/graph';
@@ -25,6 +27,8 @@ import {
   EntityInputEmbedAdapter,
   graph,
   GraphInputEmbedAdapter,
+  group,
+  GroupInputEmbedAdapter,
   relation,
   RelationInputEmbedAdapter,
 } from '@retikz/graph-vanilla';
@@ -169,7 +173,7 @@ type LayoutKind = 'flexLayout' | 'gridLayout' | 'overlayLayout';
 
 type LibraryKind = StandardKind | LayoutKind;
 
-type GraphKind = 'graph' | 'entity' | 'relation';
+type GraphKind = 'graph' | 'group' | 'entity' | 'relation';
 
 type LibraryConversionState = {
   counts: Record<LibraryKind, number>;
@@ -236,8 +240,10 @@ const registerPreviewIds = (children: ReadonlyArray<IRChild>, libraryState: Libr
           libraryState.adapters.delete(kind);
         }
       }
-      if (child.namespace === 'graph' && child.type === 'graph') {
-        GraphSchema.parse(child).children?.forEach(visit);
+      if (child.namespace === 'graph' && (child.type === 'graph' || child.type === 'group')) {
+        const nestedChildren =
+          child.type === 'graph' ? GraphSchema.parse(child).children : GroupSchema.parse(child).children;
+        nestedChildren?.forEach(visit);
       }
       return;
     }
@@ -387,6 +393,19 @@ const convertGraphChild = (
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
     }
+    case 'group': {
+      const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = GroupSchema.parse(child);
+      void _namespace;
+      void _type;
+      const children: ReadonlyArray<InputGroupChild> | undefined = sourceChildren?.map(nested =>
+        convertPreviewChild(nested, libraryState, state),
+      );
+      return group(nextGraphId('group', state), {
+        ...input,
+        ...(children === undefined ? {} : { children }),
+        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+      });
+    }
     case 'entity':
       return entity(nextGraphId('entity', state), {
         ...entityPreviewAuthoringInput(EntitySchema.parse(child)),
@@ -438,6 +457,7 @@ const layoutAdapters = (state: LibraryConversionState): ReadonlyArray<AnyInputEm
 
 const graphAdapters = (state: GraphConversionState): ReadonlyArray<AnyInputEmbedAdapter> => [
   ...(state.adapters.has('graph') ? [GraphInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('group') ? [GroupInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('entity') ? [EntityInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('relation') ? [RelationInputEmbedAdapter as AnyInputEmbedAdapter] : []),
 ];
@@ -458,6 +478,7 @@ const layoutDefinitionByName = {
 
 const graphDefinitionByName = {
   GraphDefinition,
+  GroupDefinition,
   EntityDefinition,
   RelationDefinition,
 } as const;
@@ -481,6 +502,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
   const graphState: GraphConversionState = {
     counts: {
       graph: 0,
+      group: 0,
       entity: 0,
       relation: 0,
     },

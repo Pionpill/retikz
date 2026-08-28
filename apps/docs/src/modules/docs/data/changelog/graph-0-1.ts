@@ -91,10 +91,18 @@ const graphMilestones: Array<SubVersion> = [
     version: 'alpha.1',
     date: '2026-08-09',
     summary: {
-      zh: '建立 Graph package family 与初始 Entity、Relation authoring foundation。',
-      en: 'Establishes the Graph package family and the initial Entity and Relation authoring foundation.',
+      zh: '建立 Graph package family，以及 Graph、Group、Entity、Relation 的初始 authoring foundation。',
+      en: 'Establishes the Graph package family and the initial Graph, Group, Entity, and Relation authoring foundation.',
     },
-    items: [],
+    items: [
+      {
+        label: { zh: 'Group 通用分组', en: 'General-purpose Group' },
+        content: {
+          zh: '新增 JSON-safe `IRGroup`、React `<Group>` 与 Vanilla `group()`。Group 接受任意 Core / Tier 2 child，复用 Standard Surface 外框、Layout caption 排列与 Core Node boundary labels；省略 label `align` 时使用 Core `start`，让默认下方左侧文字与外框左边缘对齐；不自动布局 children，也不拥有 routing 或碰撞处理。',
+          en: 'Adds JSON-safe `IRGroup`, React `<Group>`, and Vanilla `group()`. Group accepts arbitrary Core / Tier 2 child and reuses Standard Surface, Layout caption arrangement, and Core Node boundary labels. Omitted label `align` uses Core `start`, making the default lower-left text begin at the shell edge; Group does not own child layout, routing, or collision handling.',
+        },
+      },
+    ],
   },
 ];
 
@@ -107,8 +115,8 @@ export const graphV01: Release = {
       pkg: '@retikz/graph',
       version: 'v0.1',
       description: {
-        zh: 'Graph、Entity、Relation 三套独立 Source composite、Definition registry、上下文解析与 Core lowering。',
-        en: 'Three independent Graph, Entity, and Relation Source composites with Definition registries, context resolution, and Core lowering.',
+        zh: 'Graph、Group、Entity、Relation 四套独立 Source composite、Definition registry、上下文解析与 Core lowering。',
+        en: 'Four independent Graph, Group, Entity, and Relation Source composites with Definition registries, context resolution, and Core lowering.',
       },
       highlights: [
         {
@@ -125,8 +133,8 @@ export const graphV01: Release = {
       pkg: '@retikz/graph-react',
       version: 'v0.1',
       description: {
-        zh: 'Graph、Entity、Relation 三个独立 React authoring 入口，支持顶层 Scene 与任意 Core child 位置的局部组合。',
-        en: 'Three independent React authoring entries for Graph, Entity, and Relation, supporting top-level Scenes and local composition at any Core-child position.',
+        zh: 'Graph、Group、Entity、Relation 四个独立 React authoring 入口，支持顶层 Scene 与任意 Core child 位置的局部组合。',
+        en: 'Four independent React authoring entries for Graph, Group, Entity, and Relation, supporting top-level Scenes and local composition at any Core-child position.',
       },
       highlights: [
         {
@@ -143,15 +151,15 @@ export const graphV01: Release = {
       pkg: '@retikz/graph-vanilla',
       version: 'v0.1',
       description: {
-        zh: 'Graph、Entity、Relation 三个无框架 builder、InputEmbed adapter 与完整 provider closure。',
-        en: 'Three framework-free Graph, Entity, and Relation builders, InputEmbed adapters, and complete provider closures.',
+        zh: 'Graph、Group、Entity、Relation 四个无框架 builder、InputEmbed adapter 与完整 provider closure。',
+        en: 'Four framework-free Graph, Group, Entity, and Relation builders, InputEmbed adapters, and complete provider closures.',
       },
       highlights: [
         {
-          label: { zh: '三入口 adapter 接线', en: 'Three-entry adapter wiring' },
+          label: { zh: '四入口 adapter 接线', en: 'Four-entry adapter wiring' },
           content: {
-            zh: '`graph()`、`entity()`、`relation()` 分别使用对应 InputEmbed adapter；`createGraphVanillaAdapters()` 一次安装三者。adapter traversal id 只定位 authoring，不写入 Source identity。',
-            en: '`graph()`, `entity()`, and `relation()` use matching InputEmbed adapters, and `createGraphVanillaAdapters()` installs all three. Adapter traversal ids locate authoring only and never enter Source identity.',
+            zh: '`graph()`、`group()`、`entity()`、`relation()` 分别使用对应 InputEmbed adapter；`createGraphVanillaAdapters()` 一次安装四者。adapter traversal id 只定位 authoring，不写入 Source identity。',
+            en: '`graph()`, `group()`, `entity()`, and `relation()` use matching InputEmbed adapters, and `createGraphVanillaAdapters()` installs all four. Adapter traversal ids locate authoring only and never enter Source identity.',
           },
         },
       ],

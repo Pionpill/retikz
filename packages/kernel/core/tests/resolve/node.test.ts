@@ -102,6 +102,7 @@ describe('resolveNode', () => {
     expect(resolved.label).toEqual([
       {
         text: 'x',
+        align: 'middle',
         position: 'top',
         placement: 'outside',
         distance: 12,
@@ -114,7 +115,7 @@ describe('resolveNode', () => {
 
   it('fills canonical label defaults without replacing explicit zero or false values', () => {
     expect(resolve(node({ label: { text: 'default' } })).node.label).toEqual([
-      { text: 'default', position: 'top', placement: 'outside', distance: 12 },
+      { text: 'default', align: 'middle', position: 'top', placement: 'outside', distance: 12 },
     ]);
 
     expect(
@@ -133,6 +134,7 @@ describe('resolveNode', () => {
     ).toEqual([
       {
         text: 'explicit',
+        align: 'middle',
         position: { boundary: 'left', fraction: 0 },
         placement: 'inside',
         distance: 0,
@@ -142,9 +144,25 @@ describe('resolveNode', () => {
     ]);
   });
 
+  it('defaults canonical label alignment to middle and preserves explicit alignment', () => {
+    expect(resolve(node({ label: { text: 'default' } })).node.label).toEqual([
+      { text: 'default', position: 'top', placement: 'outside', distance: 12, align: 'middle' },
+    ]);
+
+    expect(resolve(node({ label: { text: 'explicit', align: 'start' } })).node.label).toEqual([
+      { text: 'explicit', position: 'top', placement: 'outside', distance: 12, align: 'start' },
+    ]);
+  });
+
   it('fills the boundary label fraction when its position omits one', () => {
     expect(resolve(node({ label: { text: 'boundary', position: { boundary: 'right' } } })).node.label).toEqual([
-      { text: 'boundary', position: { boundary: 'right', fraction: 0.5 }, placement: 'outside', distance: 12 },
+      {
+        text: 'boundary',
+        align: 'middle',
+        position: { boundary: 'right', fraction: 0.5 },
+        placement: 'outside',
+        distance: 12,
+      },
     ]);
   });
 

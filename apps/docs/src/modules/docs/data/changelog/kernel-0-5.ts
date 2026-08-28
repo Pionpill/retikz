@@ -231,8 +231,8 @@ export const kernelV05: Release = {
         {
           label: { zh: '可读文本与标签视觉盒', en: 'Readable text and visual-box labels' },
           content: {
-            zh: '`NodeTextColor.Contrast` 对静态不透明 fill 选择黑 / 白文字，无法静态求值时 warning 并回退 `currentColor`。`Node.label.distance` 表示节点边界到旋转后标签视觉盒的净距；baseline、pin、Scene bounds 与自动 viewBox 共用同一度量。',
-            en: '`NodeTextColor.Contrast` chooses black or white text for a static opaque fill and warns before falling back to `currentColor` when the fill cannot be resolved. `Node.label.distance` means the net gap to the rotated visual box, shared by baselines, pins, Scene bounds, and the automatic viewBox.',
+            zh: '`NodeTextColor.Contrast` 对静态不透明 fill 选择黑 / 白文字，无法静态求值时 warning 并回退 `currentColor`。`Node.label.distance` 表示节点边界到旋转后标签视觉盒的净距；`Node.label.align` 复用 `start` / `middle` / `end` 沿 attachment tangent 对齐视觉盒；baseline、pin、Scene bounds 与自动 viewBox 共用同一度量。',
+            en: '`NodeTextColor.Contrast` chooses black or white text for a static opaque fill and warns before falling back to `currentColor` when the fill cannot be resolved. `Node.label.distance` means the net gap to the rotated visual box, while `Node.label.align` reuses `start` / `middle` / `end` to align that box along the attachment tangent. Baselines, pins, Scene bounds, and the automatic viewBox share the same measurement.',
           },
         },
         {
@@ -337,7 +337,15 @@ export const kernelV05: Release = {
             zh: '交付 ADR-01～07 的 Node / Scope 布局、路径、文本、TeX 与 Composite 契约。',
             en: 'Delivers ADR-01 through ADR-07 across Node/Scope layout, paths, text, TeX, and composites.',
           },
-          items: [],
+          items: [
+            {
+              label: { zh: 'Node label 附着对齐', en: 'Node label attachment alignment' },
+              content: {
+                zh: '新增可选 `Node.label.align`，复用 Core `TextAlignSchema` 的 `start` / `middle` / `end`；Core 默认 `middle` 保持既有 Node 坐标，Graph Group 的外围 labels 在省略时默认 `start`，让下方左端文字左边缘贴合外框。',
+                en: 'Adds optional `Node.label.align` with Core `TextAlignSchema` values `start` / `middle` / `end`. Core defaults to `middle` to preserve existing Node coordinates, while Graph Group boundary labels default to `start` when omitted so a lower-left label starts at the shell edge.',
+              },
+            },
+          ],
         },
       ],
     },

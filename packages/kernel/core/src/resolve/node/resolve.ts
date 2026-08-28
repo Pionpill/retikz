@@ -72,6 +72,7 @@ const expandNodeLabel = (
 ): CanonicalNodeLabel => {
   const normalized: CanonicalNodeLabel = {
     ...label,
+    align: label.align ?? 'middle',
     position: expandNodeLabelPosition(label.position),
     placement: label.placement ?? 'outside',
     distance: label.distance ?? labelDistance,

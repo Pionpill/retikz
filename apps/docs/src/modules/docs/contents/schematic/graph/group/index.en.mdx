@@ -1,0 +1,120 @@
+---
+title: Group
+description: Organize arbitrary content in a nestable visible boundary with top/bottom captions and Core boundary labels.
+---
+
+`Group` states that a set of content belongs to one visible group. It accepts any Core or Tier 2 child, reuses Standard Surface for the shell, uses Layout for caption arrangement, and attaches outside text through Core Node labels. Group does not calculate child positions; authors, explicit Layout containers, or the future Diagram package still own placement in flowcharts and logic diagrams
+
+## Basic usage
+
+```tsx
+import { Entity, Graph, Group, Relation } from '@retikz/graph-react';
+```
+
+```tsx
+<Graph width={360} height={160}>
+  <Group id="runtime">
+    <Entity id="compiler" role="activity" position={[110, 100]}>
+      Compile
+    </Entity>
+    <Entity id="renderer" role="participant" position={[250, 100]}>
+      Renderer
+    </Entity>
+    <Relation role="flow" source={{ id: 'compiler' }} target={{ id: 'renderer' }} />
+  </Group>
+</Graph>
+```
+
+`Group` can appear directly in Graph, Layout, Scope, or any other Core-child position. It supplies only the visible shell and optional caption or labels; authors or higher-level layout capabilities still own child positions, arrangement, and connections
+
+## Examples
+
+### caption
+
+`caption` is the title and description region inside the shell. It can sit above or below the body and arrange its items horizontally or vertically. Use the controls below to adjust its position, direction, and spacing. The title defaults to `sm` without bold weight; the description defaults to `xs` with reduced opacity
+
+<ComponentPreview
+  files="group-basic"
+  size="sm"
+  caption="Use the controls to change caption position, direction, and spacing while observing the title, description, and arbitrary Graph children inside the shell."
+/>
+
+### label
+
+`labels` are Core Node labels attached around the Group shell. Use the controls to adjust three labels independently. They accept directional positions, boundary fractions, or an omitted position; omission places the label at the lower-left outside the shell without changing the body's layout
+
+<ComponentPreview
+  files="group-label"
+  size="sm"
+  caption="Use the controls to adjust three Group label positions and compare Core directional placement."
+/>
+
+### Style adjustments
+
+Group style adjustments focus on the shell background, border, line style, corner radius, and padding. The controls below keep the content and caption fixed while changing only the Group Surface presentation
+
+<ComponentPreview
+  files="group-style"
+  size="sm"
+  caption="Adjust the background, border color and width, border line style, opacity, corner radius, and padding independently."
+/>
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Revisit when you need to understand Group content boundaries, Theme scope, or compile diagnostics."
+/>
+
+### Arbitrary children and Graph Theme
+
+- `children` directly uses Core `IRChild`: Entity, Relation, Group, Node, Path, Scope, Layout, Plot, or any registered composite
+- `nodeDefault`, `pathDefault`, `labelDefault`, Core `theme`, transforms, placement, clipping, and namespaces retain Scope semantics
+- `graphTheme` affects only visible Entity / Relation descendants, never the shell, caption, boundary labels, or ordinary Core children
+- Group does not stack children automatically and owns no routing, obstacle avoidance, or label collision. Put FlexLayout, GridLayout, or OverlayLayout inside when ordinary arrangement is required
+- An explicit Group `id` names the shell envelope and remains targetable through Core `IRNodeTarget`
+
+### Surface, caption, and boundary-label lowering
+
+Group lowering combines the caption and authored children into the single Surface content, lowers the shell to Standard Surface, and uses a transparent Core Node to carry boundary labels. The caption participates in the shell's inner allocation; labels expand only the final visual bounds and do not change the shell boundary used when a Relation targets the Group. Neither Graph nor Group stores automatic layout results or defines a second position or boundary model for labels
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Group schema and caption / label contract',
+      path: 'packages/schematic/graph/src/schemas/group/schema.ts',
+    },
+    { label: 'Group resolve and child preservation', path: 'packages/schematic/graph/src/resolve/group/resolve.ts' },
+    {
+      label: 'Group Surface and boundary-label lowering',
+      path: 'packages/schematic/graph/src/pipeline/group/lower.ts',
+    },
+  ]}
+/>
+
+## API Reference
+
+React, IR, and Vanilla Group entry points share the same JSON-safe fields. The table lists fields added or redefined by Group; the remaining Core Scope properties retain the Core contract
+
+| Prop                 | Type                                   | Default                  | Description                                                                                                                                                                                                           |
+| -------------------- | -------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id?`                | `string`                               | —                        | Optional Scope target id                                                                                                                                                                                              |
+| `caption?`           | `IRGroupCaption`                       | —                        | Title / description region inside the shell                                                                                                                                                                           |
+| `caption.side?`      | `'top' \| 'bottom'`                    | `'top'`                  | Place the caption above or below the body                                                                                                                                                                             |
+| `caption.direction?` | `'horizontal' \| 'vertical'`           | `'horizontal'`           | Arrange title and description                                                                                                                                                                                         |
+| `caption.itemGap?`   | `number`                               | `4`                      | Gap between title and description                                                                                                                                                                                     |
+| `caption.bodyGap?`   | `number`                               | `4`                      | Gap between a non-empty body and caption                                                                                                                                                                              |
+| `labels?`            | `ReadonlyArray<IRNodeLabel>`           | —                        | Shell labels that expand visual bounds only; default to `xs` font size and gray (`gray`), omitted `align` defaults to `start`, and omitted position defaults to `{ boundary: 'bottom', fraction: 0 }` below the shell |
+| `padding?`           | `SurfaceInput['padding']`              | `10`                     | Insets around caption/body                                                                                                                                                                                            |
+| `background?`        | `SurfaceInput['background']`           | `lightgray / 0.04`       | Surface fill and opacity                                                                                                                                                                                              |
+| `border?`            | `SurfaceInput['border']`               | `lightgray / 1 + [4, 3]` | Gray dashed Surface border                                                                                                                                                                                            |
+| `cornerRadius?`      | `number`                               | `4`                      | Shell corner radius                                                                                                                                                                                                   |
+| `overflow?`          | `'visible' \| 'clip'`                  | `'visible'`              | Surface content overflow; outside labels remain unclipped                                                                                                                                                             |
+| `children?`          | `ReadonlyArray<IRChild>` / `ReactNode` | —                        | Arbitrary embeddable content                                                                                                                                                                                          |
+
+## Related
+
+- [Graph API Reference](/schematic/graph/api-reference): complete Direct IR, React, and Vanilla exports
+- [FlexLayout](/library/layout/flex-layout): explicitly arrange authored children inside Group
+- [Surface](/library/standard/composite/surface): the presentation shell reused by Group

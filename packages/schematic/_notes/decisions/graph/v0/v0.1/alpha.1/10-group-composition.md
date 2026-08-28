@@ -36,27 +36,29 @@ Group 的 padding、background、border、cornerRadius 与 overflow 直接复用
 
 Group body 是一个承载 authored children 的普通内部 Scope，并作为 Surface content 的组成部分。所有 child 按自身 Core / Tier 2 allocation 规则贡献 body bounds；Group 不按 Entity、Relation 或其它类型排除 contribution。跨 Group 的 Relation 若不应扩大某个 Group，应由作者或 Diagram 声明在适当的共同祖先，而不是由 Group 猜测拓扑并忽略其几何
 
-Group 的默认 padding 为 8，默认 border 为 `currentColor`、strokeWidth 1；省略 background 时不生成背景，cornerRadius 默认为 0，overflow 默认为 visible。`boundingShape` 缺省 rectangle，`localNamespace` 缺省 false；显式 Scope 或 Surface 字段保持各自 owner 的优先级和失败语义
+Group 的默认 padding 为 10，默认 background 为 `lightgray`、fillOpacity 0.04，默认 border 为 `lightgray`、strokeWidth 1、dashPattern `[4, 3]`，cornerRadius 默认为 4，overflow 默认为 visible。`boundingShape` 缺省 rectangle，`localNamespace` 缺省 false；显式 Scope 或 Surface 字段保持各自 owner 的优先级和失败语义
 
 ### Caption 是外框内的结构化说明区
 
 Group 使用可选 `caption` 表达框内 title / description。Caption 的 `side` 为 top 或 bottom，默认 top；`direction` 为 horizontal 或 vertical，默认 horizontal。`itemGap` 表示 title 与 description 的间距，`bodyGap` 表示 caption 与非空 body 的间距，二者默认 4，必须为非负有限数
 
-Caption 至少包含 title 或 description。两类文本直接组合 Core Node 的 text、align、lineHeight、maxTextWidth、textColor、font 与 opacity 字段 schema，不接受 id、position、shape、boundary、padding、margin、fill、stroke、label 或其它 Node identity / geometry 字段。Title 缺省使用 `sm`、weight 600；description 缺省使用 `xs`、opacity 0.7；显式字段最终覆盖对应缺省
+Caption 至少包含 title 或 description。两类文本直接组合 Core Node 的 text、align、lineHeight、maxTextWidth、textColor、font 与 opacity 字段 schema，不接受 id、position、shape、boundary、padding、margin、fill、stroke、label 或其它 Node identity / geometry 字段。Title 缺省使用 `sm` 且不指定粗细；description 缺省使用 `xs`、opacity 0.7；显式字段最终覆盖对应缺省
 
 Caption 位于 Surface padding 内并参与 Group allocation：top 顺序为 caption、bodyGap、body，bottom 顺序为 body、bodyGap、caption。没有非空 body 时不产生 bodyGap。Caption 内部排布直接复用 Layout 的公开布局与 probe / replay 语义，不复制 Flex solver 或 Standard Frame 的手工排布算法
 
 ### Labels 直接复用 Core Node label
 
-Group 使用可选 `labels: ReadonlyArray<IRNodeLabel>` 表达附着在外框内外的文字。Graph 不定义 `GroupLabelSchema`、`GroupLabelPositionSchema`、`GroupLabelBoundaryPositionSchema`、同义值类型或位置常量；每个元素直接使用 Core `NodeLabelSchema` / `IRNodeLabel`，其中 position、`{ boundary, fraction }`、placement、distance、rotate、keepUpright、pin、字体与外观的 schema、值类型、默认和 refinement 均以 Core 为唯一真源
+Group 使用可选 `labels: ReadonlyArray<IRNodeLabel>` 表达附着在外框内外的文字。Graph 不定义 `GroupLabelSchema`、`GroupLabelPositionSchema`、`GroupLabelBoundaryPositionSchema`、同义值类型或位置常量；每个元素直接使用 Core `NodeLabelSchema` / `IRNodeLabel`，其中 position、`{ boundary, fraction }`、placement、distance、rotate、keepUpright、pin、字体与外观的 schema、值类型和 refinement 均以 Core 为唯一真源
 
-Group 外框是 box-like label host。lowering 使用一个与最终 Surface allocation 完全重合、无公开 id、无可见 shape 的 Core rectangle Node 承载这些 labels，因此八方向、center、数字角度、Core boundary position、旋转后视觉盒净距、inside / outside、pin、Core label style cascade、Scene 输出与 bounds 都走 Node 的 canonical resolve / layout / emit 路径。Graph 不只复用 schema 后重写测量或边界几何
+Group 外框是 box-like label host。lowering 使用一个与最终 Surface allocation 完全重合、无公开 id、无可见 shape 的 Core rectangle Node 承载这些 labels，因此八方向、center、数字角度、Core boundary position、旋转后视觉盒净距、inside / outside、pin、Core label style cascade、Scene 输出与 bounds 都走 Node 的 canonical resolve / layout / emit 路径。Graph 不只复用 schema 后重写测量或边界几何。Group 只为边界 labels 在 host lowering 处提供 `{ boundary: 'bottom', fraction: 0 }` 的省略位置默认，使文字附着在外框下边界左端并向外侧下方偏移；显式 position 仍完全按 Core 解析
+
+Group host 为 boundary labels 注入与 description 对齐字号、并使用灰色文字：`font.size` 为 `xs`、`textColor` 为 `gray`；label 自身显式字体与颜色字段保持优先，`opacity` 仍沿用 Core 的 labelDefault 解析，不由 Group 默认改写
 
 Boundary labels 不参与 Group allocation，也不改变 Surface 尺寸或 caption / body 排布；它们按 Core Node label 规则扩展 visual bounds。多个 label 位于相同位置时保持 authored order，不自动堆叠或避让。Surface overflow 只裁剪 Surface content，不裁剪外围 labels；显式 Core Scope `clip` 仍按完整 Scope 语义作用于 Group output
 
 无可见 shape 的 label host 同时为最外层 Scope 提供与 Surface 一致的矩形 layout envelope，使 Group id、boundingShape、Scope placement 与 Relation endpoint 以外框为准，而不因长 label 改变。该内部 Node 不发布 id，不成为 Graph member、Relation endpoint、Diagram entity 或 authored provenance
 
-Group 的 Core `nodeDefault` 继续作用于 authored descendants，但不能使 caption 的测量 Node 或 label host 产生可见 shape、公开 identity 或额外 allocation。Group `labelDefault` 按 Core 优先级作用于 boundary labels；单个 label 的显式字段保持最高优先级
+Group 的 Core `nodeDefault` 继续作用于 authored descendants，但不能使 caption 的测量 Node 或 label host 产生可见 shape、公开 identity 或额外 allocation。Group host 注入的默认字号与颜色优先于 Core `labelDefault`，`labelDefault` 仍补齐其它未注入字段；单个 label 的显式字段保持最高优先级
 
 ### Direct IR、React 与 Vanilla 使用同一 Source
 
@@ -110,16 +112,16 @@ type IRGroup = IRScopeProps &
 
 - Group children 可以是任意合法 Core child；未知 composite、缺失 provider、child 自身 schema 或 compile 失败继续使用 Core / 对应 owner 的原诊断，Graph 不改写为成员错误
 - Caption 空对象、未知 side / direction、负数或非有限 gap 由 Group schema fail-loud；caption text 的 JSON、文字、字体、颜色、opacity、换行与宽度约束直接沿用 Core Node 字段诊断
-- Group labels 的 position、boundary、fraction、placement、distance、rotate、keepUpright 与 pin 完整沿用 Core `NodeLabelSchema`；Graph schema 不接受同义别名，不补 Graph 专属错误或 fallback
+- Group labels 的 `align`、position、boundary、fraction、placement、distance、rotate、keepUpright 与 pin 完整沿用 Core `NodeLabelSchema`；省略 `align` 时，Group host 注入 Core attachment-tangent `start`，显式 `align` 保持作者优先级；省略 position 时，Group host 默认使用 Core boundary position `{ boundary: 'bottom', fraction: 0 }`，并保持 Core 默认的 `placement: outside`；省略字体与颜色时，Group host 默认使用 description 的 `xs` 字号与灰色 `gray`，显式 label 字段保持优先，opacity 继续沿用 Core `labelDefault`。Graph schema 不接受同义别名，不补 Graph 专属错误或 fallback
 - Group labels、caption 与 Surface presentation 必须 JSON-safe；ReactNode、函数、DOM、renderer resource、layout solver 状态、selection、history 与 transaction 不进入 Source IR
 - Group id 的重复、local namespace、Scope target、placement、transform、clip 与 boundingShape 使用 Core 统一语义；Graph 不预检 child id，也不为 caption、Surface 或 label host 生成可见 identity
 - Core `theme` 与 Scope default channels 正常影响对应 authored descendants；`graphTheme` 只影响 Entity / Relation。Caption、Surface 与 label host 不参与 Graph Theme selector，也不改变 selector context
-- Empty Group 合法，并按默认 padding / border 形成确定的空 Surface；caption-only、labels-only 与 nested Group 保持同一最外层 Scope 和 Surface 根形状
+- Empty Group 合法，并按默认 padding / background / border / corner radius 形成确定的空 Surface；caption-only、labels-only 与 nested Group 保持同一最外层 Scope 和 Surface 根形状
 - Group 不自动排布 authored children、不排除 Relation allocation、不执行 label collision、compound layout、cross-boundary routing 或避障；这些行为只能由显式 Layout、作者或未来 Diagram 拥有
 - Standard Frame、历史 Container 名称或旧容器结构不成为 Group alias、fallback、re-export 或双轨 Source。Group 是 v0.1 alpha.1 的新增契约，没有已发布 npm 输入需要兼容
 
 ## Implementation Notes
 
-Group 已形成 Direct IR、React 与 Vanilla 的同源闭环，并通过 Graph provider assembly 组合 Group、Entity、Relation、FlexLayout、Surface 及 Surface clip 依赖。最终 lowering 保持一个 Surface allocation shell，以 FlexLayout 排列 caption 与 body，并用同尺寸透明 Core rectangle Node 承载 boundary labels；生成节点隔离 Group `nodeDefault`，boundary labels 继续消费 `labelDefault`
+Group 已形成 Direct IR、React 与 Vanilla 的同源闭环，并通过 Graph provider assembly 组合 Group、Entity、Relation、FlexLayout、Surface 及 Surface clip 依赖。最终 lowering 保持一个 Surface allocation shell，以 FlexLayout 排列 caption 与 body，并用同尺寸透明 Core rectangle Node 承载 boundary labels；生成节点隔离 Group `nodeDefault`，boundary labels 使用 description 对齐的默认字号和灰色，并继续消费 `labelDefault` 可覆盖的其它字段；同时只为省略 `align` 的 label 注入 `start`
 
 Graph / Group context 投影保持可见 Source tree 规则：嵌套 Group 从外到内叠加 `graphTheme`，显式 Core `theme` 切断外层 Graph-local layer，最终只改变 Entity / Relation。Group 的公开限制保持不变：不自动排列 authored children，不解释跨边界 Relation，不处理 routing、避障或 label collision

@@ -91,6 +91,9 @@ export const NodeLabelSchema = object({
     font: 'Label font overrides. Missing fields inherit from the parent node font.',
   }),
   text: LabelTextContentSchema,
+  align: TextAlignSchema.optional().describe(
+    'Attachment tangent alignment for the label visual box: start, middle, or end. Defaults to middle.',
+  ),
   position: union([zodEnum(NodeLabelPosition), AngleDegreesSchema, NodeLabelBoundaryPositionSchema])
     .optional()
     .describe(

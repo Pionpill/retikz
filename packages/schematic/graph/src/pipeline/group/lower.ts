@@ -1,4 +1,4 @@
-import type { IRChild, IRNode, IRScope } from '@retikz/core';
+import type { IRChild, IRNode, IRNodeLabelBoundaryPosition, IRScope } from '@retikz/core';
 import type { IRFlexLayoutItem } from '@retikz/layout';
 import type { IRSurface } from '@retikz/standard';
 
@@ -8,7 +8,13 @@ import { createSurface } from '@retikz/standard';
 import type { CanonicalGroup } from '../../resolve';
 import type { IRGroup, IRGroupCaptionText } from '../../schemas';
 
-const DEFAULT_GROUP_PADDING = 8;
+const DEFAULT_GROUP_PADDING = 10;
+const DEFAULT_GROUP_BACKGROUND = { fill: 'lightgray', fillOpacity: 0.04 };
+const DEFAULT_GROUP_BORDER = { stroke: 'lightgray', strokeWidth: 1, dashPattern: [4, 3] };
+const DEFAULT_GROUP_CORNER_RADIUS = 4;
+const DEFAULT_GROUP_LABEL_POSITION: IRNodeLabelBoundaryPosition = { boundary: 'bottom', fraction: 0 };
+const DEFAULT_GROUP_LABEL_FONT = { size: 'xs' as const };
+const DEFAULT_GROUP_LABEL_TEXT_COLOR = 'gray' as const;
 const DEFAULT_CAPTION_GAP = 4;
 
 /** 从 Group Source 提取完整 Core Scope props，移除领域与 Surface 呈现字段 */
@@ -43,7 +49,7 @@ export const groupScopeProps = (source: IRGroup): Omit<IRScope, 'type' | 'childr
 
 /** 生成不受 Group nodeDefault 影响的 caption 文本 Node */
 const captionNode = (text: IRGroupCaptionText, kind: 'title' | 'description'): IRNode => {
-  const defaultFont = kind === 'title' ? { size: 'sm' as const, weight: 600 } : { size: 'xs' as const };
+  const defaultFont = kind === 'title' ? { size: 'sm' as const } : { size: 'xs' as const };
   return {
     type: 'node',
     position: [0, 0],
@@ -117,9 +123,9 @@ export const lowerGroupSurface = (group: CanonicalGroup): IRSurface =>
     child: groupContent(group),
     padding: group.source.padding ?? DEFAULT_GROUP_PADDING,
     overflow: group.source.overflow ?? LayoutOverflow.Visible,
-    ...(group.source.background === undefined ? {} : { background: group.source.background }),
-    border: group.source.border ?? { stroke: 'currentColor', strokeWidth: 1 },
-    cornerRadius: group.source.cornerRadius ?? 0,
+    background: group.source.background ?? DEFAULT_GROUP_BACKGROUND,
+    border: group.source.border ?? DEFAULT_GROUP_BORDER,
+    cornerRadius: group.source.cornerRadius ?? DEFAULT_GROUP_CORNER_RADIUS,
   });
 
 /** 创建与最终 Surface allocation 完全重合的透明 Core Node label host */
@@ -136,5 +142,15 @@ export const lowerGroupLabelHost = (source: IRGroup, width: number, height: numb
   minimumSize: { width, height },
   scale: 1,
   rotate: 0,
-  ...(source.labels === undefined ? {} : { label: source.labels }),
+  ...(source.labels === undefined
+    ? {}
+    : {
+        label: source.labels.map(label => ({
+          ...label,
+          font: { ...label.font, size: label.font?.size ?? DEFAULT_GROUP_LABEL_FONT.size },
+          textColor: label.textColor ?? DEFAULT_GROUP_LABEL_TEXT_COLOR,
+          align: label.align ?? 'start',
+          position: label.position ?? DEFAULT_GROUP_LABEL_POSITION,
+        })),
+      }),
 });

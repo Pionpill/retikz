@@ -1,20 +1,21 @@
 ---
 title: Graph API Reference
-description: Look up the three independent Graph, Entity, and Relation Source composites, the Scope surface, and React/Vanilla adapters.
+description: Look up the four independent Graph, Group, Entity, and Relation Source composites, the Scope surface, and React/Vanilla adapters.
 ---
 
-`@retikz/graph` owns JSON-safe Source IR, Definition registries, resolve, and lowering. Graph, Entity, and Relation are independently compilable Tier 2 composites. Graph additionally reuses the complete Core Scope contract: it creates a Scene as a top-level React host and contributes only one local Scope when embedded
+`@retikz/graph` owns JSON-safe Source IR, Definition registries, resolve, and lowering. Graph, Group, Entity, and Relation are independently compilable Tier 2 composites. Graph additionally hosts a Scene at the top React level, while Group composes Scope, Surface, captions, and Core boundary labels
 
 ## Public exports
 
-| Capability        | `@retikz/graph`                                                                                    | React                           | Vanilla                                                            |
-| ----------------- | -------------------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------ |
-| Graph             | `GraphSchema`, `IRGraph`, `createGraph`, `GraphDefinition`, `GraphProviderKey`                     | `Graph`, `GraphProps`           | `graph`, `GraphInputEmbedAdapter`, `GraphInputEmbedProps`          |
-| Entity            | `EntitySchema`, `IRGraphEntity`, `createEntity`, `EntityDefinition`, `EntityProviderKey`           | `Entity`, `EntityProps`         | `entity`, `EntityInputEmbedAdapter`, `EntityInputEmbedProps`       |
-| Relation          | `RelationSchema`, `IRGraphRelation`, `createRelation`, `RelationDefinition`, `RelationProviderKey` | `Relation`, `RelationProps`     | `relation`, `RelationInputEmbedAdapter`, `RelationInputEmbedProps` |
-| Open vocabularies | `EntityRole`, `RelationRole`, `RelationKind`, and their schemas                                    | —                               | —                                                                  |
-| Theme extension   | `GraphThemeStyleDefinition`, `GraphThemeStyleOverrides`, `defineGraphThemeStyle`                   | `graphThemeStyles` on all three | `graphThemeStyles` on all three adapters                           |
-| Assembly          | `GraphDefinitionOptions`, `createGraphDefinitions`, `createGraphProviders`                         | Options on all three            | `createGraphVanillaAdapters`                                       |
+| Capability        | `@retikz/graph`                                                                                    | React                          | Vanilla                                                            |
+| ----------------- | -------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------ |
+| Graph             | `GraphSchema`, `IRGraph`, `createGraph`, `GraphDefinition`, `GraphProviderKey`                     | `Graph`, `GraphProps`          | `graph`, `GraphInputEmbedAdapter`, `GraphInputEmbedProps`          |
+| Group             | `GroupSchema`, `IRGroup`, `createGroup`, `GroupDefinition`, `GroupProviderKey`                     | `Group`, `GroupProps`          | `group`, `GroupInputEmbedAdapter`, `GroupInputEmbedProps`          |
+| Entity            | `EntitySchema`, `IRGraphEntity`, `createEntity`, `EntityDefinition`, `EntityProviderKey`           | `Entity`, `EntityProps`        | `entity`, `EntityInputEmbedAdapter`, `EntityInputEmbedProps`       |
+| Relation          | `RelationSchema`, `IRGraphRelation`, `createRelation`, `RelationDefinition`, `RelationProviderKey` | `Relation`, `RelationProps`    | `relation`, `RelationInputEmbedAdapter`, `RelationInputEmbedProps` |
+| Open vocabularies | `EntityRole`, `RelationRole`, `RelationKind`, and their schemas                                    | —                              | —                                                                  |
+| Theme extension   | `GraphThemeStyleDefinition`, `GraphThemeStyleOverrides`, `defineGraphThemeStyle`                   | `graphThemeStyles` on all four | `graphThemeStyles` on all four adapters                            |
+| Assembly          | `GraphDefinitionOptions`, `createGraphDefinitions`, `createGraphProviders`                         | Options on all four            | `createGraphVanillaAdapters`                                       |
 
 ## Graph Source composite
 
@@ -52,6 +53,14 @@ Entity role and Relation role / kind are open keys. Their schemas expose built-i
 ```
 
 See the [Scope schema](/kernel/reference/schema/scope) for nested field shapes and inheritance rules.
+
+## Group schema
+
+Group stores a nested arbitrary-`IRChild` containment relation and composes the complete Core Scope surface, Standard Surface presentation, a structured caption, and Core `IRNodeLabel` values. Caption and Surface participate in allocation, while outside labels expand visual bounds only. Group performs no authored-child layout, routing, obstacle avoidance, or collision handling
+
+<ZodSchema name="GroupSchema" />
+
+Defaults are consumed only during lowering: padding `10`, background `lightgray` / `0.04`, border `lightgray` / `1` with `dashPattern` `[4, 3]`, corner radius `4`, and overflow `visible`. Caption defaults to top and horizontal arrangement with `itemGap` / `bodyGap` of `4`; the title defaults to `sm` without a bold weight, and the description defaults to `xs` with 0.7 opacity. Group boundary labels default to the description's `xs` font size and gray (`gray`), while explicit font and color fields remain authoritative. They default to Core attachment-tangent `start` when `align` is omitted, and to `{ boundary: 'bottom', fraction: 0 }` when `position` is omitted; they attach to the left end of the bottom boundary and offset downward outside the shell, aligning the text's left edge with the shell's left edge. All other position, boundary, placement, rotation, keep-upright, and pin contracts remain direct Core `NodeLabelSchema` contracts, with `placement` still defaulting to `outside`
 
 ## Entity schema
 
@@ -128,11 +137,11 @@ Standalone and embedded Graph share the same Source contract:
 
 Standalone `width`, `height`, `viewBox`, renderer, runtime, and DOM props belong to the Layout Scene host; move them to the outer Layout when Graph is embedded. `transforms`, `placement`, `zIndex`, and `clip` belong directly to `IRGraph`; there is no extra panel envelope
 
-Vanilla `normalizeGraph()`, `normalizeEntity()`, and `normalizeRelation()` perform factory validation, child normalization, and optional `way → route` sugar only. They neither split envelopes nor materialize defaults. `createGraphVanillaAdapters()` installs all three adapters
+Vanilla `normalizeGraph()`, `normalizeGroup()`, `normalizeEntity()`, and `normalizeRelation()` perform factory validation, child normalization, and optional `way → route` sugar only. They neither split envelopes nor materialize defaults. `createGraphVanillaAdapters()` installs all four adapters
 
-The first argument of `graph(traversalId, input)`, `entity(traversalId, input)`, and `relation(traversalId, input)` is only a Vanilla authoring traversal id. It is not Source `id` and never writes or generates Graph, Entity, or Relation identity
+The first argument of `graph(traversalId, input)`, `group(traversalId, input)`, `entity(traversalId, input)`, and `relation(traversalId, input)` is only a Vanilla authoring traversal id. It is not Source `id` and never writes or generates Graph, Group, Entity, or Relation identity
 
-Definition options can be passed directly to all three React components or Vanilla adapters. Persisted IR uses the same definitions through either assembly entry:
+Definition options can be passed directly to all four React components or Vanilla adapters. Persisted IR uses the same definitions through either assembly entry:
 
 ```ts
 const scene = compileToScene(sourceIR, {

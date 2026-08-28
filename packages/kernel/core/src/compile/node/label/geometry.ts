@@ -54,7 +54,27 @@ const labelPlacementVector = (position: MeasuredNodeLabel['position']): Position
   return AnchorUnitVectorByAnchor[position];
 };
 
+/** 从 label 附着方向取得稳定的切线正向 */
+const labelTangentVector = (position: MeasuredNodeLabel['position']): Position => {
+  if (isLabelBoundaryPosition(position)) {
+    if (position.boundary === 'top' || position.boundary === 'bottom') return [1, 0];
+    return [0, 1];
+  }
+  if (position === 'top' || position === 'bottom') return [1, 0];
+  if (position === 'left' || position === 'right') return [0, 1];
+  if (position === 'center') return [1, 0];
+  const radial = labelPlacementVector(position);
+  return [-radial[1], radial[0]];
+};
+
 const labelPlacementSign = (label: MeasuredNodeLabel): number => (label.placement === 'inside' ? -1 : 1);
+
+/** 取得沿附着切线的视觉盒对齐偏移方向 */
+const labelAlignmentSign = (align: MeasuredNodeLabel['align']): number => {
+  if (align === 'start') return 1;
+  if (align === 'end') return -1;
+  return 0;
+};
 
 /** label 在 node 边界上的附着点 */
 export const labelBorderPoint = (layout: NodeLayout, label: Pick<MeasuredNodeLabel, 'position'>): Position => {
@@ -158,10 +178,16 @@ export const resolveNodeLabelGeometry = (layout: NodeLayout, label: MeasuredNode
   const vector = labelPlacementVector(label.position);
   const extent = labelProjectedHalfExtent(vector, label.measuredWidth, label.measuredHeight, rotateDeg);
   const offset = labelPlacementSign(label) * (label.distance + extent);
+  const tangent = labelTangentVector(label.position);
+  const tangentExtent = labelProjectedHalfExtent(tangent, label.measuredWidth, label.measuredHeight, rotateDeg);
+  const alignmentOffset = labelAlignmentSign(label.align) * tangentExtent;
   return {
     ...label,
     rotateDeg,
-    centerOffset: [border[0] - layout.rect.x + vector[0] * offset, border[1] - layout.rect.y + vector[1] * offset],
+    centerOffset: [
+      border[0] - layout.rect.x + vector[0] * offset + tangent[0] * alignmentOffset,
+      border[1] - layout.rect.y + vector[1] * offset + tangent[1] * alignmentOffset,
+    ],
   };
 };
 

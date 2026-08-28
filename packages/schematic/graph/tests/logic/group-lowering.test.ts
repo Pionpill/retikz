@@ -10,11 +10,11 @@ describe('Group layout-aware lowering', () => {
   it('uses the default Surface shell as the only allocation for an empty Group', () => {
     const { result } = compileInHarness(Graph.createGroup({}), naturalProposal, Graph.createGraphDefinitions());
 
-    expect(result.allocationBounds).toEqual({ x: 0, y: 0, width: 16, height: 16 });
-    expect(result.slotSize).toEqual({ width: 16, height: 16 });
+    expect(result.allocationBounds).toEqual({ x: 0, y: 0, width: 20, height: 20 });
+    expect(result.slotSize).toEqual({ width: 20, height: 20 });
   });
 
-  it('keeps boundary labels visual-only while drawing one default border', () => {
+  it('keeps boundary labels visual-only while drawing the default background and border', () => {
     const { output, result } = compileInHarness(
       Graph.createGroup({ labels: [{ text: 'external contract', position: 'top', distance: 8 }] }),
       naturalProposal,
@@ -24,10 +24,23 @@ describe('Group layout-aware lowering', () => {
       path => path.fill !== 'none' || path.stroke !== 'none',
     );
 
-    expect(result.allocationBounds).toEqual({ x: 0, y: 0, width: 16, height: 16 });
+    expect(result.allocationBounds).toEqual({ x: 0, y: 0, width: 20, height: 20 });
     expect(result.visualBounds.y).toBeLessThan(result.allocationBounds.y);
-    expect(visiblePaths).toHaveLength(1);
-    expect(visiblePaths[0]).toMatchObject({ fill: 'none', stroke: 'currentColor', strokeWidth: 1 });
+    expect(visiblePaths).toHaveLength(2);
+    expect(visiblePaths).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ fill: 'lightgray', fillOpacity: 0.04, stroke: 'none' }),
+        expect.objectContaining({
+          fill: 'none',
+          stroke: 'lightgray',
+          strokeWidth: 1,
+          dashPattern: [4, 3],
+        }),
+      ]),
+    );
+    expect(
+      visiblePaths.every(path => path.commands.some(command => command.kind === 'arc' && command.radius === 4)),
+    ).toBe(true);
   });
 
   it('arranges bottom caption after a non-empty body and includes bodyGap in allocation', () => {
@@ -72,6 +85,83 @@ describe('Group layout-aware lowering', () => {
 
     expect(paths.some(path => path.fill === '#ef4444' || path.stroke === '#2563eb')).toBe(false);
     expect(warnings).toEqual([]);
+  });
+
+  it('keeps the default title weight regular while preserving an explicit weight', () => {
+    const defaultTitle = compileInHarness(
+      Graph.createGroup({ caption: { title: { text: 'Title' } } }),
+      naturalProposal,
+      Graph.createGraphDefinitions(),
+    );
+    const explicitTitle = compileInHarness(
+      Graph.createGroup({ caption: { title: { text: 'Title', font: { weight: 700 } } } }),
+      naturalProposal,
+      Graph.createGraphDefinitions(),
+    );
+    const textPrimitives = (output: typeof defaultTitle.output) =>
+      primitivesOf(output.scene.primitives).filter(
+        (primitive): primitive is Extract<(typeof output.scene.primitives)[number], { type: 'text' }> =>
+          primitive.type === 'text',
+      );
+
+    expect(textPrimitives(defaultTitle.output)).toEqual([
+      expect.not.objectContaining({ fontWeight: expect.anything() }),
+    ]);
+    expect(textPrimitives(explicitTitle.output)).toEqual([expect.objectContaining({ fontWeight: 700 })]);
+  });
+
+  it('defaults boundary labels with only text to the lower-left point below the Group', () => {
+    const { output, result } = compileInHarness(
+      Graph.createGroup({ labels: [{ text: 'Boundary' }] }),
+      naturalProposal,
+      Graph.createGraphDefinitions(),
+    );
+    const text = primitivesOf(output.scene.primitives).filter(
+      (primitive): primitive is Extract<(typeof output.scene.primitives)[number], { type: 'text' }> =>
+        primitive.type === 'text',
+    );
+
+    expect(text).toHaveLength(1);
+    expect(text[0]?.x - (text[0]?.measuredWidth ?? 0) / 2).toBeCloseTo(result.allocationBounds.x);
+    expect(text[0]?.y).toBeGreaterThan(result.allocationBounds.y + result.allocationBounds.height);
+  });
+
+  it('defaults boundary label typography to the description scale and gray color while preserving explicit overrides', () => {
+    const defaultLabel = compileInHarness(
+      Graph.createGroup({ labels: [{ text: 'Boundary' }] }),
+      naturalProposal,
+      Graph.createGraphDefinitions(),
+    );
+    const explicitLabel = compileInHarness(
+      Graph.createGroup({
+        labels: [{ text: 'Boundary', font: { size: 20 }, textColor: '#ef4444' }],
+      }),
+      naturalProposal,
+      Graph.createGraphDefinitions(),
+    );
+    const textPrimitives = (output: typeof defaultLabel.output) =>
+      primitivesOf(output.scene.primitives).filter(
+        (primitive): primitive is Extract<(typeof output.scene.primitives)[number], { type: 'text' }> =>
+          primitive.type === 'text',
+      );
+
+    expect(textPrimitives(defaultLabel.output)).toEqual([expect.objectContaining({ fontSize: 12, fill: 'gray' })]);
+    expect(textPrimitives(explicitLabel.output)).toEqual([expect.objectContaining({ fontSize: 20, fill: '#ef4444' })]);
+  });
+
+  it('preserves an explicit boundary label alignment', () => {
+    const { output, result } = compileInHarness(
+      Graph.createGroup({ labels: [{ text: 'Boundary', align: 'middle' }] }),
+      naturalProposal,
+      Graph.createGraphDefinitions(),
+    );
+    const text = primitivesOf(output.scene.primitives).filter(
+      (primitive): primitive is Extract<(typeof output.scene.primitives)[number], { type: 'text' }> =>
+        primitive.type === 'text',
+    );
+
+    expect(text).toHaveLength(1);
+    expect(text[0]?.x).toBeCloseTo(result.allocationBounds.x);
   });
 
   it('stacks nested Group graphTheme only onto visible Entity and Relation descendants', () => {

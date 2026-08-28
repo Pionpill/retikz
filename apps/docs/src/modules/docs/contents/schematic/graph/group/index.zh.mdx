@@ -1,0 +1,114 @@
+---
+title: 分组
+description: 用可嵌套的可见边界组织任意内容，并组合上下标题说明与核心边界标签。
+---
+
+`Group` 表达“这些内容属于同一个可见分组”。它接受任意 Core 或 Tier 2 child，外框复用 Standard Surface，caption 使用 Layout 排列，外围文本直接使用 Core Node label。Group 不计算 child 位置；流程图或逻辑图中的节点仍由作者、显式 Layout 或未来 Diagram 决定位置
+
+## 基础用法
+
+```tsx
+import { Entity, Graph, Group, Relation } from '@retikz/graph-react';
+```
+
+```tsx
+<Graph width={360} height={160}>
+  <Group id="runtime">
+    <Entity id="compiler" role="activity" position={[110, 100]}>
+      编译
+    </Entity>
+    <Entity id="renderer" role="participant" position={[250, 100]}>
+      渲染器
+    </Entity>
+    <Relation role="flow" source={{ id: 'compiler' }} target={{ id: 'renderer' }} />
+  </Group>
+</Graph>
+```
+
+`Group` 可以直接放在 Graph、Layout、Scope 或其它接受 Core child 的位置。它只提供可见外框和可选的 caption、labels；child 的位置、排版与连接关系仍由作者或上层布局能力负责
+
+## 例子
+
+### 标题与说明
+
+`caption` 是外框内部的标题与说明区域，支持放在 body 上方或下方，并可按横向或纵向排列。下方控制面板可以调整位置、排列方向和间距。title 默认使用 `sm` 字号且不加粗，description 默认使用 `xs` 字号与较低透明度
+
+<ComponentPreview
+  files="group-basic"
+  size="sm"
+  caption="通过控制面板切换 caption 位置、排列方向和间距，观察 title、description 与任意 Graph children 如何共同形成外框。"
+/>
+
+### 标签
+
+`labels` 是附着在 Group 外框周围的 Core Node labels。控制面板可以分别调整三个标签的位置；也可以使用方向、边界比例或省略 position。省略时默认位于外框下方左侧，且不改变外框的内容布局
+
+<ComponentPreview
+  files="group-label"
+  size="sm"
+  caption="通过控制面板调整三个 Group label 的位置，比较 Core label 的方向定位。"
+/>
+
+### 样式调整
+
+Group 的样式调整集中在外框的背景、边框、线型、圆角和内边距。下面的 controls 固定内容与 caption，只改变 Group 自身的 Surface 呈现
+
+<ComponentPreview
+  files="group-style"
+  size="sm"
+  caption="分别调整背景、边框颜色与宽度、边框线型、透明度、圆角和内边距。"
+/>
+
+## 技术原理
+
+<ComponentAlert
+  type="tip"
+  title="上手阶段可跳过本节"
+  description="需要理解 Group 的内容边界、Theme 作用域或排查 compile 输入时再回来阅读。"
+/>
+
+### 内容与主题
+
+- `children` 直接使用 Core `IRChild`，可以放 Entity、Relation、Group、Node、Path、Scope、Layout、Plot 或其它已注册 composite
+- `nodeDefault`、`pathDefault`、`labelDefault`、Core `theme`、transform、placement、clip 与 namespace 都保持 Scope 语义
+- `graphTheme` 只影响 Group 中可见的 Entity / Relation，不影响外框、caption、boundary labels 或普通 Core children
+- Group 不自动堆栈 children，不做 routing、避障或 label collision；需要普通排版时，在 children 中显式放入 FlexLayout、GridLayout 或 OverlayLayout
+- Group 的显式 `id` 对应外框包络，可以继续通过 Core `IRNodeTarget` 被 Relation 引用
+
+### 外框与标签下沉
+
+Group lowering 会把 caption 与 authored children 组合为 Surface 的唯一内容，把外框下沉为 Standard Surface，并用透明 Core Node 承载 boundary labels。caption 参与外框内部的 allocation；labels 只扩展最终 visual bounds，不改变 Relation 连接 Group 时使用的外框边界。Graph 与 Group 都不保存自动布局结果，也不会为 labels 建立第二套位置或边界类型
+
+<SourceLinks
+  sources={[
+    { label: 'Group schema 与 caption / labels 契约', path: 'packages/schematic/graph/src/schemas/group/schema.ts' },
+    { label: 'Group resolve 与 children 保留', path: 'packages/schematic/graph/src/resolve/group/resolve.ts' },
+    { label: 'Group Surface 与 boundary labels 下沉', path: 'packages/schematic/graph/src/pipeline/group/lower.ts' },
+  ]}
+/>
+
+## API 参考
+
+`Group` 的 React、IR 与 Vanilla 入口共享同一组 JSON-safe 字段。下面只列 Group 自身新增或重定义的字段；Core Scope 的其余公开属性继续沿用 Core 契约
+
+| 属性                 | 类型                                   | 默认值                   | 描述                                                                                                                                                                               |
+| -------------------- | -------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id?`                | `string`                               | —                        | 可选 Scope target id                                                                                                                                                               |
+| `caption?`           | `IRGroupCaption`                       | —                        | 外框内的 title / description 区域                                                                                                                                                  |
+| `caption.side?`      | `'top' \| 'bottom'`                    | `'top'`                  | Caption 位于 body 上方或下方                                                                                                                                                       |
+| `caption.direction?` | `'horizontal' \| 'vertical'`           | `'horizontal'`           | Title 与 description 的排列方向                                                                                                                                                    |
+| `caption.itemGap?`   | `number`                               | `4`                      | Title 与 description 间距                                                                                                                                                          |
+| `caption.bodyGap?`   | `number`                               | `4`                      | 非空 body 与 caption 间距                                                                                                                                                          |
+| `labels?`            | `ReadonlyArray<IRNodeLabel>`           | —                        | 附着到外框且只扩展 visual bounds 的 labels；默认字号 `xs`、颜色 `gray`，省略 `align` 时默认 `start`，省略 position 时默认使用 `{ boundary: 'bottom', fraction: 0 }` 并置于外框下方 |
+| `padding?`           | `SurfaceInput['padding']`              | `10`                     | 外框到 caption/body 的内边距                                                                                                                                                       |
+| `background?`        | `SurfaceInput['background']`           | `lightgray / 0.04`       | Surface 背景填充与不透明度                                                                                                                                                         |
+| `border?`            | `SurfaceInput['border']`               | `lightgray / 1 + [4, 3]` | Surface 灰色虚线边框                                                                                                                                                               |
+| `cornerRadius?`      | `number`                               | `4`                      | 外框圆角                                                                                                                                                                           |
+| `overflow?`          | `'visible' \| 'clip'`                  | `'visible'`              | Surface content 溢出策略；外围 labels 不受此项裁剪                                                                                                                                 |
+| `children?`          | `ReadonlyArray<IRChild>` / `ReactNode` | —                        | 任意可嵌入内容                                                                                                                                                                     |
+
+## 相关
+
+- [Graph API 参考](/schematic/graph/api-reference)：Direct IR、React 与 Vanilla 的完整导出
+- [FlexLayout](/library/layout/flex-layout)：在 Group 内显式排列 authored children
+- [Surface](/library/standard/composite/surface)：Group 外框复用的呈现能力
