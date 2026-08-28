@@ -2,7 +2,7 @@
 
 - 状态：Candidate
 - 目标版本：`0.5.0-alpha.4`
-- 前置：alpha.2 的 identity / ownership / retained renderer 与 alpha.3 的 scheduler / presentation 已 Accepted
+- 前置：alpha.2 的 identity / ownership / retained renderer 已 Accepted；若交互方案依赖 scheduler / presentation，须先由独立 milestone 交付
 - 关联：[v0.5 roadmap](../roadmap.md) · [交互与增量运行时设计](../../../../../../../notes/architecture/interaction-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
 ## 根问题
@@ -21,7 +21,7 @@ alpha.4 候选目标是在不引入编辑器 UI 或业务状态机的前提下�
 
 ## 进入 Proposed 的条件
 
-1. alpha.2 / alpha.3 的 identity、transaction、retained view、materialization 与 scheduler 契约已稳定。
+1. alpha.2 的 identity、transaction 与 retained view 契约已稳定；所需 materialization / scheduler 能力已先行交付或明确不依赖
 2. 至少提供 Core 图元与一个 Tier 2 的真实交互场景，证明 ownership routing 的最小需求。
 3. 分别确认 pointer、keyboard、focus 与 viewport 事件的可观察边界，不从单一 DOM demo 反推 API。
 4. 每条 ADR 独立创建 `test-contract` 矩阵并通过 Architecture Gate。
