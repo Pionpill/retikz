@@ -120,8 +120,8 @@ type IRGroup = IRScopeProps &
 - Group 不自动排布 authored children、不排除 Relation allocation、不执行 label collision、compound layout、cross-boundary routing 或避障；这些行为只能由显式 Layout、作者或未来 Diagram 拥有
 - Standard Frame、历史 Container 名称或旧容器结构不成为 Group alias、fallback、re-export 或双轨 Source。Group 是 v0.1 alpha.1 的新增契约，没有已发布 npm 输入需要兼容
 
-## Implementation Notes
+## 结果
 
-Group 已形成 Direct IR、React 与 Vanilla 的同源闭环，并通过 Graph provider assembly 组合 Group、Entity、Relation、FlexLayout、Surface 及 Surface clip 依赖。最终 lowering 保持一个 Surface allocation shell，以 FlexLayout 排列 caption 与 body，并用同尺寸透明 Core rectangle Node 承载 boundary labels；生成节点隔离 Group `nodeDefault`，boundary labels 使用 description 对齐的默认字号和灰色，并继续消费 `labelDefault` 可覆盖的其它字段；同时只为省略 `align` 的 label 注入 `start`
+Group 已形成 Direct IR、React 与 Vanilla 的同源闭环。外框、caption、body allocation 与 boundary labels 分别复用 Standard Surface、Layout 和 Core Node label 主链；Group id 与 Relation endpoint 以 Surface 外框为准，外围 label 只扩展 visual bounds
 
-Graph / Group context 投影保持可见 Source tree 规则：嵌套 Group 从外到内叠加 `graphTheme`，显式 Core `theme` 切断外层 Graph-local layer，最终只改变 Entity / Relation。Group 的公开限制保持不变：不自动排列 authored children，不解释跨边界 Relation，不处理 routing、避障或 label collision
+嵌套 Graph / Group 从外到内叠加 `graphTheme`，显式 Core `theme` 切断外层 Graph-local layer，且最终只影响 Entity / Relation。Group 不自动排列 authored children，不解释跨边界 Relation，也不处理 routing、避障或 label collision

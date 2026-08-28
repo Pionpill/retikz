@@ -16,14 +16,6 @@ Relation 是带稳定端点和 Graph 语义、最终下沉为一个 Core Path �
 
 本决策把 identity、端点、`role → kind → predicate(params)`、语义 direction、Core-compatible route 与 labels 收敛到同一个 Relation record。Graph 不区分 authored route 与 Diagram route，也不拥有 routing 调度；Relation 继续拥有独立 Definition、registry、direction、endpoint marker 与 Theme token 契约
 
-### 成熟项目中的同类边界
-
-- Graphviz edge 直接持有 layout engine 写入的 `pos` route，说明 route 是 edge 的当前实例字段而不是第二个 edge model：https://graphviz.org/docs/attrs/pos/
-- Graphviz 将语义/绘制方向 `dir` 与 `arrowhead`、`arrowtail` 分开建模，说明 direction 不能由 marker 位置反推：https://graphviz.org/docs/attrs/dir/ · https://graphviz.org/docs/attrs/arrowhead/ · https://graphviz.org/docs/attrs/arrowtail/
-- Cytoscape edge data 直接保存稳定 `source` / `target` identity，而样式和 layout 不复制 endpoint truth：https://js.cytoscape.org/#notation/elements-json
-
-因此 Relation record 直接保存 endpoints、direction 与 route，但把 source / target、语义方向和 marker family 保持为三个独立事实；routing 消费者只更新 route，不重建 Relation identity 或语义
-
 ## 决策
 
 ### Relation 是语义化 Path record

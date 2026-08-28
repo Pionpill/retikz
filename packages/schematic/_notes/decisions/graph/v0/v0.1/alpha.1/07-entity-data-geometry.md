@@ -54,14 +54,6 @@ Entity Theme selector 可以按 role、kind、predicate.name 与 predicate.param
 
 这些路径都不要求 Graph 定义 AuthoredEntityGeometry、DiagramEntityGeometry 或优先级。Diagram 的输入输出与调度由 Diagram ADR 冻结，不反向扩大 Graph Source IR
 
-### 成熟项目中的同类边界
-
-- Graphviz 把 `pos` 定义为节点属性，布局器可以读取或输出同一属性，而不是要求图模型持有第二组 geometry records：https://graphviz.org/docs/attrs/pos/
-- Cytoscape element model 直接保存 position，layout 负责自动或手动更新这些 model fields：https://js.cytoscape.org/#notation/elements-json
-- ELK 的 `ElkShape` 直接持有 `x / y / width / height`，算法消费并更新图元素自身的 placement：https://eclipse.dev/elk/documentation/tooldevelopers/graphdatastructure.html
-
-三者都把“元素是什么”和“元素当前放在哪里”保存在同一对象边界，并把布局策略与调度交给消费者或算法层。Graph 采用相同原则，但继续让 Source placement 可选，以支持先做语义 resolve、后由 Diagram / Editor 补齐的链路
-
 ## 基础数据结构与公开契约
 
 Entity Source IR 的最小形态为：

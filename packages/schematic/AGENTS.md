@@ -23,7 +23,7 @@ Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 已按 
 - `graph` 只依赖 `@retikz/core`、必要的 `@retikz/foundation` / `@retikz/math` 与 `@retikz/layout` 公开 capability，不得依赖 adapter、renderer、Viz、Diagram 或 Editor
 - 正式、可持久化的 Graph 元素保留 semantic IR；lower target 复杂度只决定使用普通 expansion 还是 layout-aware Definition。没有独立持久化语义的便捷写法才直接输出 Core IR
 - Graph 不复制 Layout FlexLayout、artifact、spacing、axis sizing、clip 或 geometry 算法；公共面不足时先在 Layout owner 冻结并实现最小 composition contract
-- `graph-react` 只消费 `graph` 与 `@retikz/react`；`graph-vanilla` 只消费 `graph` 与 `@retikz/vanilla`
+- `graph-react` 通过 `graph-vanilla` 的 normalize / adapter 接线复用 `graph`、`@retikz/react`、`@retikz/vanilla` 与必要的 Foundation 错误契约；`graph-vanilla` 只消费 `graph` 与 `@retikz/vanilla`
 - public IR 必须 JSON-safe；ReactNode、DOM、renderer 资源和编辑器运行时状态不得进入 Graph schema
 - Group、Entity 与 Relation 是可独立放入任意 Core 内容树的 semantic composite；Graph 与 Group 均组合完整 Core Scope surface，并额外提供局部 `graphTheme`。Group 复用 Standard Surface、Layout 与 Core Node labels 表达可见边界，不自动排列 authored children
 - Graph Theme style 只按 role、kind、predicate 与 direction 等真实语义提供稀疏 appearance 默认；单例精确外观继续使用 Core-compatible 字段，Graph 发布包只维护 Neutral baseline，命名 reference styles 由消费方通过公开 Definition 注入
@@ -34,7 +34,7 @@ Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 已按 
 
 ## 当前状态
 
-Graph v0.1 alpha.1 的 ADR-01～10 均已 Accepted。当前契约是 Graph、Group、Entity 与 Relation 四个独立 Source composite：Entity / Relation 复用 Core Node / Path lower-facing surface，Graph / Group 复用完整 Core Scope surface，Group 组合 Standard Surface、Layout caption 与 Core boundary labels；children 与 Core `IRChild` 同源，`graphTheme` 只影响可见 Entity / Relation，React 与 Vanilla 只提供同一 Source IR 的 authoring sugar。
+Graph v0.1 alpha.1 的 ADR-01～10 均已形成 Accepted 或 Superseded 的最终状态。当前契约是 Graph、Group、Entity 与 Relation 四个独立 Source composite：Entity / Relation 复用 Core Node / Path lower-facing surface，Graph / Group 复用完整 Core Scope surface，Group 组合 Standard Surface、Layout caption 与 Core boundary labels；children 与 Core `IRChild` 同源，`graphTheme` 只影响可见 Entity / Relation，React 与 Vanilla 只提供同一 Source IR 的 authoring sugar。
 
 ## 验证
 

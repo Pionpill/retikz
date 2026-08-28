@@ -1,6 +1,6 @@
 # ADR-06：建立 Graph 语义注册与主题样式
 
-- 状态：Accepted（2026-08-23 breaking revision）
+- 状态：Accepted
 - 决策日期：2026-08-16
 - 修订日期：2026-08-23
 - 修订关系：ADR-07 保留本 ADR 的 Entity registry、Theme style lookup、语义 selector 与 scope 级联能力，并取代独立 Graph presentation root、按 identity 分离的实例 override、root token bag 与 Theme role recipe。ADR-09 进一步把 Graph 收敛为可选上下文，并让 Entity / Relation 成为独立 composite

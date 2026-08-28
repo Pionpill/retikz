@@ -1,6 +1,6 @@
 # Graph v0.1 alpha.1 Roadmap
 
-> 状态：进行中。ADR-01～10 均已 Accepted，Graph / Group / Entity / Relation 四类 Source composite 已按当前契约形成三入口与文档闭环。关联：[Graph v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
+> 状态：已完成。ADR-01～10 均已 Accepted 或 Superseded，Graph / Group / Entity / Relation 四类 Source composite 已按当前契约形成三入口与文档闭环。关联：[Graph v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
 ## 目标
 
@@ -8,23 +8,23 @@
 
 ## ADR
 
-| ADR                                            | 主题                                                   | 依赖                                                | 状态                                   |
-| ---------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------- | -------------------------------------- |
-| [01](./01-graph-package-family.md)             | Graph package family、owner 与公共边界                 | Diagram design；Core composite contract             | Accepted                               |
-| [02](./02-graph-node-variants.md)              | 历史 GraphNode Variant 方案                            | Core Node / color atom                              | Superseded by ADR-06 breaking revision |
-| [03](./03-semantic-ir-lightweight-lowering.md) | GraphNode / GraphConnector semantic IR 与轻量 lowering | ADR-01～ADR-02                                      | Accepted                               |
-| [04](./04-remove-callout.md)                   | 撤回 Callout 公共契约与完整闭环                        | ADR-01、ADR-03                                      | Accepted                               |
-| [05](./05-graph-element-naming.md)             | Entity / Relation 命名与 Graph 源码 owner 迁移         | ADR-01～ADR-04、Schematic Graph 完备设计            | Accepted                               |
-| [06](./06-graph-entity-registry-theme.md)      | Graph 语义 registry 与 Theme style                     | ADR-01～ADR-05、Core Composite / Theme              | Accepted breaking revision             |
-| [07](./07-entity-data-geometry.md)             | Entity 语义封装与 Core Node 复用                       | ADR-05～ADR-06、Core Node / Theme                   | Accepted                               |
-| [08](./08-relation-data-geometry.md)           | Relation 语义封装与 Core Path 复用                     | ADR-05～ADR-07、Core Arrow / Path、Standard Arrow   | Accepted                               |
-| [09](./09-composable-graph-context.md)         | Graph 可选上下文与可组合 Relation 引用                 | ADR-06～ADR-08、Core child / NodeTarget / namespace | Accepted                               |
-| [10](./10-group-composition.md)                | Group 通用包含、caption 与边界 labels                  | ADR-09、Core Scope / Node label、Layout、Surface    | Accepted                               |
+| ADR                                            | 主题                                           | 依赖                                                | 状态                                   |
+| ---------------------------------------------- | ---------------------------------------------- | --------------------------------------------------- | -------------------------------------- |
+| [01](./01-graph-package-family.md)             | Graph package family、owner 与公共边界         | Diagram design；Core composite contract             | Accepted                               |
+| [02](./02-graph-node-variants.md)              | 历史 GraphNode Variant 方案                    | Core Node / color atom                              | Superseded by ADR-06 breaking revision |
+| [03](./03-semantic-ir-lightweight-lowering.md) | Graph semantic Source IR 与 Core lowering      | ADR-01～ADR-02                                      | Accepted                               |
+| [04](./04-remove-callout.md)                   | 撤回 Callout 公共契约与完整闭环                | ADR-01、ADR-03                                      | Accepted                               |
+| [05](./05-graph-element-naming.md)             | Entity / Relation 命名与 Graph 源码 owner 迁移 | ADR-01～ADR-04、Schematic Graph 完备设计            | Accepted                               |
+| [06](./06-graph-entity-registry-theme.md)      | Graph 语义 registry 与 Theme style             | ADR-01～ADR-05、Core Composite / Theme              | Accepted breaking revision             |
+| [07](./07-entity-data-geometry.md)             | Entity 语义封装与 Core Node 复用               | ADR-05～ADR-06、Core Node / Theme                   | Accepted                               |
+| [08](./08-relation-data-geometry.md)           | Relation 语义封装与 Core Path 复用             | ADR-05～ADR-07、Core Arrow / Path、Standard Arrow   | Accepted                               |
+| [09](./09-composable-graph-context.md)         | Graph 可选上下文与可组合 Relation 引用         | ADR-06～ADR-08、Core child / NodeTarget / namespace | Accepted                               |
+| [10](./10-group-composition.md)                | Group 通用包含、caption 与边界 labels          | ADR-09、Core Scope / Node label、Layout、Surface    | Accepted                               |
 
 ## 完成标准
 
 - `@retikz/graph`、`@retikz/graph-react`、`@retikz/graph-vanilla` 形成独立 lockstep release group
-- Graph、Entity 与 Relation 是三类独立 semantic composite，不提供旧公共名称、Graph-only declaration marker、隐式 Graph wrapper 或兼容别名
+- Graph、Group、Entity 与 Relation 是四类独立 semantic composite，不提供旧公共名称、Graph-only declaration marker、隐式 Graph wrapper 或兼容别名
 - `IRGraph` 的 `children` 直接接受完整 Core `IRChild`，root 组合完整 Core `IRScopeProps` 并额外拥有 `graphTheme`；Graph 不维护 semantic member 白名单、集合、索引、membership 或 Variant 默认传播
 - Entity / Relation 可以放入任意 Core 内容树并独立 resolve / lower；没有 Graph 祖先时使用当前位置 Core Theme 与 Graph 内置默认
 - Graph、Entity、Relation 省略 id 时均不生成 Source id、Core id 或内部模型 identity；只有显式 id 才参与 Core namespace
