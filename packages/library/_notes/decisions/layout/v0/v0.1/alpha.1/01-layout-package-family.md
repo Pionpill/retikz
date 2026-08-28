@@ -6,7 +6,7 @@
 
 ## 背景与目标
 
-Standard alpha.2 已验证 FlexLayout、GridLayout、OverlayLayout、LayoutItem、共享 Box 词汇、typed artifact、Layout Inspector、直接 Definition、React 与 Vanilla authoring。后续 GraphFrame 与 Standard Legend 还需要组合 canonical solver、child probe / replay、spacing、clip 与 artifact 原子能力。
+Standard alpha.2 已验证 FlexLayout、GridLayout、OverlayLayout、LayoutItem、共享 Box 词汇、typed artifact、Layout Inspector、直接 Definition、React 与 Vanilla authoring。Graph 的可选 Scene host、Group caption 与 Standard Legend 需要组合 canonical solver、child probe / replay、spacing、clip 与 artifact 原子能力
 
 这些能力已经形成从 schema、确定性求解、layout-aware compile、placement、artifact 到 inspection 的纵向闭环，不再只是 Standard 横向增加的一组简单绘图 composite。继续由 Standard 拥有会让其同时承担官方绘图拓展与布局运行模型两种演进节奏，也迫使上层通过 Standard 获取并不属于 Standard 的布局能力。
 
