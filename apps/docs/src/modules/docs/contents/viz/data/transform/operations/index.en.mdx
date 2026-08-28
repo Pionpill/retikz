@@ -57,7 +57,7 @@ Output names must be unique within one operation: reducer outputs cannot collide
 | `metrics`  | `IRDataReducerMetrics` | —                | Group statistics; every reducer declares output fields |
 
 ```tsx
-<Transform
+<PlotTransform
   kind="summarize"
   groupBy={['region']}
   metrics={[
@@ -88,7 +88,7 @@ Output names must be unique within one operation: reducer outputs cannot collide
 | `rankAs?`  | `string`                  | —                | One-based rank field on output rows |
 
 ```tsx
-<Transform kind="select" groupBy={['region']} selector={{ kind: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
+<PlotTransform kind="select" groupBy={['region']} selector={{ kind: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
 ```
 
 ## annotate
@@ -113,7 +113,7 @@ Selector annotations accept only built-in rules that select at most one row: `mi
 | `selectors?` | `Array<IRDataAnnotateSelector>` | —                | Broadcast one representative                  |
 
 ```tsx
-<Transform
+<PlotTransform
   kind="annotate"
   groupBy={['store']}
   metrics={[{ kind: 'mean', field: 'revenue', as: 'storeMean' }]}

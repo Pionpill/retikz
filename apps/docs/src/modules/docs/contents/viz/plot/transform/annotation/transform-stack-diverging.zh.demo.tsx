@@ -1,4 +1,4 @@
-import { Axis, IntervalMark, Plot, Scale, Transform } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -14,11 +14,11 @@ export const previewControls = stackDivergingControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, () => (
   <Plot data={signedProductChange} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Transform {...stackDivergingOperation} />
-    <Scale dimension="y" type="linear" domain={[-45, 70]} />
+    <PlotTransform {...stackDivergingOperation} />
+    <PlotScale dimension="y" type="linear" domain={[-45, 70]} />
     <IntervalMark x="quarter" color="product" bounds={{ y: { kind: 'extent', from: 'y0', to: 'y1' } }} />
-    <Axis dimension="x" title="季度" />
-    <Axis dimension="y" title="变化" grid />
+    <PlotAxis dimension="x" title="季度" />
+    <PlotAxis dimension="y" title="变化" grid />
   </Plot>
 ));
 

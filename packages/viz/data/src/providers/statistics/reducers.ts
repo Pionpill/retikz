@@ -2,7 +2,7 @@ import type { AnyStatisticsReducerDefinition } from '../../contract';
 import type { ExternalRow } from '../../shared';
 
 import { defineStatisticsReducer } from '../../contract';
-import { BuiltinReducerOperationSchemas } from '../../schemas';
+import { BuiltinReducerOperationSchemas, DataFieldType } from '../../schemas';
 import { freezeDefinitions } from '../shared';
 import { finiteFieldValuesOf } from '../transform';
 import {
@@ -19,7 +19,7 @@ import {
 /** count reducer definition：统计组内行数，不读取源字段 */
 const countReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Count,
-  outputFields: operation => [operation.as],
+  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
   reduce: (rows, operation) => ({ [operation.as]: rows.length }),
 });
 
@@ -27,7 +27,7 @@ const countReducerDefinition = defineStatisticsReducer({
 const sumReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Sum,
   inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
+  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
   reduce: (rows, operation) => ({
     [operation.as]: finiteFieldValuesOf(rows, operation.field).reduce((sum, value) => sum + value, 0),
   }),
@@ -37,7 +37,7 @@ const sumReducerDefinition = defineStatisticsReducer({
 const meanReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Mean,
   inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
+  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
     return { [operation.as]: meanOf(values) };
@@ -48,7 +48,7 @@ const meanReducerDefinition = defineStatisticsReducer({
 const medianReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Median,
   inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
+  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
   reduce: (rows, operation) => ({ [operation.as]: medianOf(finiteFieldValuesOf(rows, operation.field)) }),
 });
 
@@ -56,7 +56,7 @@ const medianReducerDefinition = defineStatisticsReducer({
 const minReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Min,
   inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
+  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
     return { [operation.as]: finiteExtentOf(values).min };
@@ -67,7 +67,7 @@ const minReducerDefinition = defineStatisticsReducer({
 const maxReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Max,
   inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
+  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
     return { [operation.as]: finiteExtentOf(values).max };
@@ -90,7 +90,7 @@ const extentReducerDefinition = defineStatisticsReducer({
 const quantileReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Quantile,
   inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
+  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
   reduce: (rows, operation) => ({
     [operation.as]: quantileOf(finiteFieldValuesOf(rows, operation.field), operation.p),
   }),
@@ -100,8 +100,8 @@ const quantileReducerDefinition = defineStatisticsReducer({
 const quantileBandReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.QuantileBand,
   inputFields: operation => [operation.field],
-  outputFields: operation => {
-    const outputs: Array<string> = [
+  outputs: operation => {
+    const fields: Array<string> = [
       operation.outputs.lower,
       operation.outputs.upper,
       ...(operation.outputs.points?.map(point => point.as) ?? []),
@@ -117,9 +117,9 @@ const quantileBandReducerDefinition = defineStatisticsReducer({
       'count',
     ] as const) {
       const field = operation.outputs[key];
-      if (field !== undefined) outputs.push(field);
+      if (field !== undefined) fields.push(field);
     }
-    return outputs;
+    return fields.map(field => ({ field, type: DataFieldType.Continuous }));
   },
   reduce: (rows, operation) => {
     const stats = quantileBandStatsOf(rows, operation.field, operation.lowerP, operation.upperP);

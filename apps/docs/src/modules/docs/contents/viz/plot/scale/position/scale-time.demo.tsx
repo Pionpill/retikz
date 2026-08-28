@@ -1,4 +1,4 @@
-import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -22,8 +22,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, () => 
   >
     <PathMark x="date" y="value" order="date" />
     <PointMark x="date" y="value" />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 ));
 

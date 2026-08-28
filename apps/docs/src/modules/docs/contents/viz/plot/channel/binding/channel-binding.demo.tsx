@@ -2,7 +2,7 @@ import type { FC } from 'react';
 
 import { BuiltinShape } from '@retikz/core';
 import { DataFieldType } from '@retikz/data';
-import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotLegend, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -35,10 +35,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       label={values.showLabel ? 'abbr' : undefined}
       labelPosition="top"
     />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
-    {values.colorSource === 'field' ? <Legend channel="color" position="bottom" /> : null}
-    {values.sizeSource === 'field' ? <Legend channel="size" position="right" /> : null}
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
+    {values.colorSource === 'field' ? <PlotLegend channel="color" position="bottom" /> : null}
+    {values.sizeSource === 'field' ? <PlotLegend channel="size" position="right" /> : null}
   </Plot>
 ));
 

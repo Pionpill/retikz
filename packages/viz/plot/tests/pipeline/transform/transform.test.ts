@@ -1,6 +1,6 @@
-﻿import type { AnyTransformDefinition, ExternalRow, TransformContext } from '@retikz/data';
+import type { AnyTransformDefinition, DataView, ExternalRow, TransformContext } from '@retikz/data';
 
-import { applyTransforms as applyDataTransforms } from '@retikz/data';
+import { applyTransforms as applyDataTransforms, applyTransformsToDataView, DataFieldType } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
@@ -26,6 +26,44 @@ const SALES: Array<ExternalRow> = [
 ];
 
 describe('applyTransforms (contract)', () => {
+  it('propagates built-in plot output types through the shared DataView pipeline', () => {
+    const baseView: DataView = {
+      rows: SALES,
+      fieldTypes: new Map([
+        ['month', DataFieldType.Categorical],
+        ['product', DataFieldType.Categorical],
+        ['revenue', DataFieldType.Continuous],
+      ]),
+      fieldTypeEvidence: new Set(['month', 'product', 'revenue']),
+    };
+    const stacked = applyTransformsToDataView(
+      baseView,
+      [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
+      PLOT_TRANSFORM_REGISTRY,
+    );
+    expect(stacked.fieldTypes).toEqual(
+      new Map([
+        ['month', DataFieldType.Categorical],
+        ['product', DataFieldType.Categorical],
+        ['revenue', DataFieldType.Continuous],
+        ['y0', DataFieldType.Continuous],
+        ['y1', DataFieldType.Continuous],
+      ]),
+    );
+    expect(stacked.fieldTypeEvidence).toEqual(new Set(['month', 'product', 'revenue', 'y0', 'y1']));
+
+    const binned = applyTransformsToDataView(baseView, [{ kind: 'bin', field: 'revenue' }], PLOT_TRANSFORM_REGISTRY);
+    expect(binned.fieldTypes).toEqual(
+      new Map([
+        ['revenue', DataFieldType.Continuous],
+        ['binStart', DataFieldType.Continuous],
+        ['binEnd', DataFieldType.Continuous],
+        ['binCount', DataFieldType.Continuous],
+      ]),
+    );
+    expect(binned.fieldTypeEvidence).toEqual(new Set(['revenue', 'binStart', 'binEnd', 'binCount']));
+  });
+
   it('transform_empty_pipeline', () => {
     expect(applyTransforms(SALES)).toBe(SALES);
     expect(applyTransforms(SALES, [])).toBe(SALES);

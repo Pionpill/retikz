@@ -3,6 +3,7 @@ import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundatio
 import { array, discriminatedUnion, literal, looseObject, number, strictObject, union } from 'zod';
 
 import { ReducerOperationKind, RESERVED_REDUCER_OPERATION_KINDS } from './constants';
+import { ReducerOperationKindSchema } from './kind';
 import { reducerOutputFieldsOf } from './output-fields';
 
 /** count reducer operation schema；只输出组内行数，不读取字段 */
@@ -119,8 +120,8 @@ export const BuiltinReducerOperationSchemas = Object.freeze({
 });
 
 /** 外部统计 reducer operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供 */
-const ExternalReducerOperationSchema = looseObject({
-  kind: NonBlankStringSchema.refine(operationKind => !RESERVED_REDUCER_OPERATION_KINDS.has(operationKind), {
+export const ExternalReducerOperationSchema = looseObject({
+  kind: ReducerOperationKindSchema.refine(operationKind => !RESERVED_REDUCER_OPERATION_KINDS.has(operationKind), {
     message: 'external reducer kind must not collide with a built-in reducer kind',
   }).describe('Discriminator: custom reducer kind'),
 })
@@ -153,6 +154,18 @@ export const BuiltinReducerOperationSchema = union([
 export const ReducerOperationSchema = union([BuiltinReducerOperationSchema, ExternalReducerOperationSchema]).describe(
   'Built-in or custom reducer operation',
 );
+
+/** compact aggregate可解析的单scalar reducer候选；custom项仍需Definition capability确认 */
+export const DataScalarReducerOperationSchema = union([
+  BuiltinReducerOperationSchemas.Count,
+  BuiltinReducerOperationSchemas.Sum,
+  BuiltinReducerOperationSchemas.Mean,
+  BuiltinReducerOperationSchemas.Median,
+  BuiltinReducerOperationSchemas.Min,
+  BuiltinReducerOperationSchemas.Max,
+  BuiltinReducerOperationSchemas.Quantile,
+  ExternalReducerOperationSchema,
+]).describe('Single-scalar reducer candidate for compact field aggregation');
 
 /** reducer metrics schema；同一 metrics 数组内的输出字段名必须唯一 */
 export const ReducerMetricsSchema = array(ReducerOperationSchema)

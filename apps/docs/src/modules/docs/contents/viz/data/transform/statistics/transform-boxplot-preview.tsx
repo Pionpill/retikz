@@ -1,6 +1,6 @@
 import type { IRDataSelectTransform, IRDataSummarizeTransform } from '@retikz/data';
 
-import { Axis, IntervalMark, Plot, PointMark, ReferenceMark } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, PointMark, ReferenceMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { boxplotSamples } from './transform-boxplot.data';
@@ -59,8 +59,8 @@ export const renderTransformBoxplotPreview = (values: TransformBoxplotValues) =>
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <Plot data={boxplotSamples} width={440} height={260} x={0} y={10}>
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
         <IntervalMark
           bounds={{
             x: { kind: 'extent', from: 'boxX0', to: 'boxX1' },

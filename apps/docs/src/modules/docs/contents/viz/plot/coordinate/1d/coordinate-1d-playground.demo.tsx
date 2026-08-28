@@ -1,6 +1,6 @@
 import type { InputPlotCoordinate } from '@retikz/plot-vanilla';
 
-import { Axis, Plot, PointMark, Scale } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -38,7 +38,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       height={270}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
-      <Scale dimension="x" type="linear" domain={[0, 24]} />
+      <PlotScale dimension="x" type="linear" domain={[0, 24]} />
       <PointMark
         x="hour"
         size={values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.pointSize]}
@@ -54,7 +54,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         opacity={values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.pointOpacity]}
       />
       {values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.axisVisible] ? (
-        <Axis
+        <PlotAxis
           dimension="x"
           line={{
             stroke: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.axisStroke],

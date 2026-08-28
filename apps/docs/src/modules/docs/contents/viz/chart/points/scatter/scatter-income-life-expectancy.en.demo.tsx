@@ -17,8 +17,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       y: 'lifeExpectancy',
       color: 'continent',
     }}
+    layout={{ width: 800, height: 500 }}
     width={800}
-    height={400}
+    height={500}
   >
     <ChartTitle>Higher income generally coincides with longer life expectancy</ChartTitle>
     <ChartSubtitle>

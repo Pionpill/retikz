@@ -1,3 +1,4 @@
+import type { IRJsonObject } from '@retikz/core';
 import type { infer as ZodInfer, ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
 
 import { JsonObjectSchema, JsonValueSchema } from '@retikz/core';
@@ -70,5 +71,24 @@ export const createChartSourceSchema = <TFamily extends string, TRecipe extends 
     plotExtension: ChartPlotExtensionSchema.optional(),
   });
 
-/** Chart Source 的通用 typed shell 形态 */
-export type IRChartSource = ZodInfer<typeof ChartSourceShellSchema>;
+type IRChartSourceShell = ZodInfer<typeof ChartSourceShellSchema>;
+
+/**
+ * Chart Source 的通用typed shell形态
+ * @description exact recipe schema仍是运行时真源；erased shell只把开放owner operation保留为unknown字段，避免伪造闭合通用encoding union
+ */
+export type IRChartSource = Omit<IRChartSourceShell, 'recipe'> &
+  Readonly<{
+    recipe: Readonly<{
+      /** 当前exact recipe Definition的全局key */
+      chartType: string;
+      /** 由exact chartType schema验证的开放owner operation与字段mapping */
+      encodings: Readonly<Record<string, unknown>>;
+      /** 当前recipe的constant property slots */
+      properties?: IRJsonObject;
+      /** 当前recipe允许的有序Chart marks */
+      marks?: ReadonlyArray<IRJsonObject>;
+      /** exact recipe可拥有的其它已验证字段 */
+      [key: string]: unknown;
+    }>;
+  }>;

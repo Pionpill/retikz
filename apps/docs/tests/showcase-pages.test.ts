@@ -180,7 +180,7 @@ describe('collectShowcasePages', () => {
     expect(compiled).toContain('h2');
   });
 
-  it.each(['zh', 'en'] as const)('Scatter %s 以基础散点为主，并提供五个真实数据使用示例', lang => {
+  it.each(['zh', 'en'] as const)('Scatter %s 以基础散点为主，并提供四个真实数据使用示例', lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
 
     expect(source.match(/id: 'scatter-basic'/g)).toHaveLength(1);

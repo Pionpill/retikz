@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, Legend, Plot, ReferenceMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotLegend, ReferenceMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -31,8 +31,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <ReferenceMark y="threshold" color="tier" />
-      <Axis dimension="y" grid />
-      <Legend channel="color" />
+      <PlotAxis dimension="y" grid />
+      <PlotLegend channel="color" />
     </Plot>
   );
 });

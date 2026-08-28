@@ -8,10 +8,10 @@ import { describe, expect, it } from 'vitest';
 
 import * as plotReact from '../src';
 import {
-  Axis,
   IntervalMark,
   PathMark,
   Plot,
+  PlotAxis,
   PointMark,
   resolvePlotAuthoring,
   resolvePlotLineage,
@@ -172,7 +172,7 @@ describe('<Plot spec data> 薄包装', () => {
     expect(svg).toContain('fill="#123456"');
   });
 
-  it('spec 与 DSL 入口都透传 Axis theme token rules', () => {
+  it('spec 与 DSL 入口都透传 PlotAxis theme token rules', () => {
     const plotThemeTokenRules: NonNullable<IRPlot['plotThemeTokenRules']> = [
       {
         select: { dimension: 'x' },
@@ -195,7 +195,7 @@ describe('<Plot spec data> 薄包装', () => {
     const dslSvg = renderToStaticMarkup(
       <Plot data={revenue} plotThemeTokenRules={plotThemeTokenRules} width={480} height={300}>
         <PointMark x="quarter" y="value" />
-        <Axis dimension="x" />
+        <PlotAxis dimension="x" />
       </Plot>,
     );
 
@@ -236,13 +236,13 @@ describe('<Plot spec data> 薄包装', () => {
       <Layout width={580} height={260}>
         <Plot id="cartesianPanel" data={revenue} width={300} height={220} x={0} y={20}>
           <IntervalMark x="quarter" y="value" color="quarter" />
-          <Axis dimension="x" />
-          <Axis dimension="y" grid />
+          <PlotAxis dimension="x" />
+          <PlotAxis dimension="y" grid />
         </Plot>
         <Plot id="polarPanel" data={revenue} width={260} height={260} coordinate="polar2D" x={320} y={0}>
           <IntervalMark x="quarter" y="value" color="quarter" />
-          <Axis dimension="x" />
-          <Axis dimension="y" grid />
+          <PlotAxis dimension="x" />
+          <PlotAxis dimension="y" grid />
         </Plot>
       </Layout>,
     );
@@ -260,8 +260,8 @@ describe('<Plot spec data> 薄包装', () => {
     const svg = renderToStaticMarkup(
       <Plot data={revenue} width={300} height={220} transforms={[{ kind: 'translate', x: 10, y: 20 }]}>
         <IntervalMark x="quarter" y="value" color="quarter" />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
       </Plot>,
     );
 
@@ -333,11 +333,11 @@ describe('<Plot spec data> 薄包装', () => {
       <Layout width={580} height={260}>
         <Plot id="leftPanel" dataRef="shared" data={revenue} width={300} height={220} x={0} y={20}>
           <IntervalMark x="quarter" y="value" />
-          <Axis dimension="x" />
+          <PlotAxis dimension="x" />
         </Plot>
         <Plot id="rightPanel" dataRef="shared" data={revenue} width={260} height={220} x={320} y={20}>
           <PathMark x="quarter" y="value" order="quarter" />
-          <Axis dimension="x" />
+          <PlotAxis dimension="x" />
         </Plot>
       </Layout>,
     );

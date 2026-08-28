@@ -48,5 +48,5 @@ export const barRadialControls = definePreviewControls({
 export const previewControlContract = {
   controls: barRadialControls,
   canonicalValues: { [BAR_RADIAL_INNER_RADIUS_ID]: 0, [BAR_RADIAL_GAP_ID]: 0 },
-  relatedApis: ['IntervalMark.x', 'IntervalMark.y', 'Scale.paddingInner', 'Scale.paddingOuter'],
+  relatedApis: ['IntervalMark.x', 'IntervalMark.y', 'PlotScale.paddingInner', 'PlotScale.paddingOuter'],
 } satisfies PreviewControlContract;

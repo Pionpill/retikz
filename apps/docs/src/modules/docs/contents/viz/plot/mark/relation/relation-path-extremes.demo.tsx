@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, PathMark, Plot, PointMark, RelationMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PointMark, RelationMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -51,8 +51,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
         }}
       />
-      <Axis dimension="x" grid />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" grid />
+      <PlotAxis dimension="y" grid />
     </Plot>
   );
 });

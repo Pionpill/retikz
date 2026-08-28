@@ -71,7 +71,7 @@ const applyThemeDefinition = (
   plot: IRPlotThemeTokenOverrides,
   recipeTokens: ChartThemeResolution['recipe'],
   definition: ChartThemeDefinition,
-  recipe: ChartRecipeDefinition,
+  recipe: Pick<ChartRecipeDefinition, 'chartType'>,
 ): Readonly<{
   chart: IRChartThemeOverrides;
   plot: IRPlotThemeTokenOverrides;
@@ -117,7 +117,7 @@ const applyInlineTheme = (
 /** 解析 Chart shell、Plot 与当前 recipe 的 Theme owner slices */
 export const resolveChartTheme = (
   source: IRChartSource,
-  recipe: ChartRecipeDefinition,
+  recipe: Pick<ChartRecipeDefinition, 'chartType' | 'theme'>,
   context: Readonly<{
     theme: ResolvedTheme;
     themeDefinitions: ReadonlyArray<ChartThemeDefinition>;

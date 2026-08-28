@@ -4,12 +4,16 @@ import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { PathMarkSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
+import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveSelectedChart } from '../../src/_chart/resolve';
 import { ScatterMarkDefinition } from '../../src/point/scatter/mark';
 import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
 import { ScatterChartSchema } from '../../src/point/scatter/schema';
 
 const theme = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
+const runtime = resolveChartProviderRegistry([
+  { family: 'point', recipe: ScatterChartDefinition, themeDefinitions: [] },
+]).runtime;
 
 const resolve = (definition: typeof ScatterChartDefinition, encodings: IRJsonObject, properties: IRJsonObject = {}) =>
   definition.resolve({
@@ -59,6 +63,7 @@ describe('Point Chart recipe Definitions', () => {
       theme: DEFAULT_RESOLVED_THEME,
       recipe: ScatterChartDefinition,
       themeDefinitions: [],
+      runtime,
     });
 
     expect(result.plot.marks).toHaveLength(2);

@@ -131,10 +131,10 @@ export const previewControlContract = {
   },
   relatedApis: [
     'Plot.coordinate',
-    'Transform.bin',
+    'PlotTransform.bin',
     'IntervalMark.x0',
     'IntervalMark.x1',
     'IntervalMark.width',
-    'Scale.domainPadding',
+    'PlotScale.domainPadding',
   ],
 } satisfies PreviewControlContract;

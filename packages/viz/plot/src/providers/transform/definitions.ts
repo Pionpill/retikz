@@ -1,9 +1,14 @@
-﻿import type { AnyTransformDefinition } from '@retikz/data';
+import type { AnyTransformDefinition, DataTransformOutputDescriptor, TransformContext } from '@retikz/data';
 
 import {
+  DataFieldType,
+  DataTransformBindingClass,
+  DataTransformFieldEffect,
+  DataTransformPhase,
   defineTransform,
   extractTransformKind,
   reducerInputFields,
+  reducerOutputDescriptors,
   reducerOutputFields,
   resolveTransformRegistry,
   selectorInputFields,
@@ -55,8 +60,42 @@ const stackTransformDefinition = defineTransform<IRPlotStackTransform>({
     ...(operation.groupBy !== undefined ? [operation.groupBy] : []),
   ],
   outputFields: operation => [operation.startField ?? DEFAULT_START_FIELD, operation.endField ?? DEFAULT_END_FIELD],
+  outputModel: operation => ({
+    kind: 'preserve',
+    outputs: [
+      { field: operation.startField ?? DEFAULT_START_FIELD, type: DataFieldType.Continuous },
+      { field: operation.endField ?? DEFAULT_END_FIELD, type: DataFieldType.Continuous },
+    ],
+  }),
+  compact: {
+    phase: DataTransformPhase.CumulativeDerive,
+    bindingClass: DataTransformBindingClass.Field,
+    fieldEffect: DataTransformFieldEffect.Preserve,
+  },
   apply: (rows, operation) => applyStack(rows, operation),
 });
+
+const binOutputModel = (operation: IRPlotBinTransform, context: TransformContext) => {
+  const metrics = binMetricOperations(operation);
+  const metricFields = metrics.flatMap(metric => reducerOutputFields(metric, context.statisticsReducerRegistry));
+  const metricDescriptors = metrics.flatMap(metric =>
+    reducerOutputDescriptors(metric, context.statisticsReducerRegistry),
+  );
+  if (
+    metricFields.length !== metricDescriptors.length ||
+    metricFields.some((field, index) => metricDescriptors[index]?.field !== field)
+  ) {
+    return undefined;
+  }
+  const output = binOutputFields(operation);
+  const fields: Array<DataTransformOutputDescriptor> = [
+    { field: operation.field, type: { from: operation.field } },
+    { field: output.startField, type: DataFieldType.Continuous },
+    { field: output.endField, type: DataFieldType.Continuous },
+    ...metricDescriptors,
+  ];
+  return { kind: 'replace' as const, fields };
+};
 
 const binTransformDefinition = defineTransform<IRPlotBinTransform>({
   schema: BinTransformSchema,
@@ -74,6 +113,12 @@ const binTransformDefinition = defineTransform<IRPlotBinTransform>({
       ),
     ];
   },
+  outputModel: binOutputModel,
+  compact: {
+    phase: DataTransformPhase.RowShape,
+    bindingClass: DataTransformBindingClass.Field,
+    fieldEffect: DataTransformFieldEffect.Replace,
+  },
   apply: (rows, operation, context) => applyBin(rows, operation, context),
 });
 
@@ -81,6 +126,15 @@ const normalizeTransformDefinition = defineTransform<IRPlotNormalizeTransform>({
   schema: NormalizeTransformSchema,
   inputFields: operation => [operation.field, ...(operation.groupBy ?? [])],
   outputFields: operation => (operation.as !== undefined ? [operation.as] : []),
+  outputModel: operation => ({
+    kind: 'preserve',
+    outputs: [{ field: operation.as ?? operation.field, type: DataFieldType.Continuous }],
+  }),
+  compact: {
+    phase: DataTransformPhase.FieldDerive,
+    bindingClass: DataTransformBindingClass.Field,
+    fieldEffect: DataTransformFieldEffect.Preserve,
+  },
   apply: (rows, operation) => applyNormalize(rows, operation),
 });
 
@@ -92,6 +146,18 @@ const deriveIntervalTransformDefinition = defineTransform<IRPlotDeriveIntervalTr
     operation.startField ?? DEFAULT_DERIVE_START_FIELD,
     operation.endField ?? DEFAULT_DERIVE_END_FIELD,
   ],
+  outputModel: operation => ({
+    kind: 'preserve',
+    outputs: [
+      { field: operation.startField ?? DEFAULT_DERIVE_START_FIELD, type: DataFieldType.Continuous },
+      { field: operation.endField ?? DEFAULT_DERIVE_END_FIELD, type: DataFieldType.Continuous },
+    ],
+  }),
+  compact: {
+    phase: DataTransformPhase.CumulativeDerive,
+    bindingClass: DataTransformBindingClass.Field,
+    fieldEffect: DataTransformFieldEffect.Preserve,
+  },
   apply: (rows, operation) => applyDeriveInterval(rows, operation),
 });
 
@@ -112,6 +178,26 @@ const relateTransformDefinition = defineTransform<IRPlotRelateTransform>({
       [measure.as, measure.labelAs].filter((field): field is string => field !== undefined),
     ),
   ],
+  outputModel: operation => ({
+    kind: 'replace',
+    fields: [
+      ...(operation.groupBy ?? []).map(field => ({ field, type: { from: field } }) as const),
+      ...Object.entries(operation.source.fields).map(([field, sourceField]) => ({
+        field: relationEndpointOutputField('source', field),
+        type: { from: sourceField },
+      })),
+      ...Object.entries(operation.target.fields).map(([field, sourceField]) => ({
+        field: relationEndpointOutputField('target', field),
+        type: { from: sourceField },
+      })),
+      ...(operation.measures ?? []).flatMap(measure => [
+        { field: measure.as, type: DataFieldType.Continuous } as const,
+        ...(measure.labelAs !== undefined
+          ? [{ field: measure.labelAs, type: DataFieldType.Categorical } as const]
+          : []),
+      ]),
+    ],
+  }),
   apply: (rows, operation, context) => applyRelate(rows, operation, context),
 });
 
@@ -124,6 +210,22 @@ const jitterTransformDefinition = defineTransform<IRPlotJitterTransform>({
       axis === JitterAxis.Y || axis === JitterAxis.Both ? (operation.yField ?? DEFAULT_JITTER_Y_FIELD) : undefined,
     ].filter((field): field is string => field !== undefined);
   },
+  outputModel: operation => {
+    const axis = operation.axis ?? JitterAxis.X;
+    const fields = [
+      axis === JitterAxis.X || axis === JitterAxis.Both ? (operation.xField ?? DEFAULT_JITTER_X_FIELD) : undefined,
+      axis === JitterAxis.Y || axis === JitterAxis.Both ? (operation.yField ?? DEFAULT_JITTER_Y_FIELD) : undefined,
+    ].filter((field): field is string => field !== undefined);
+    return {
+      kind: 'preserve',
+      outputs: fields.map(field => ({ field, type: { from: field } })),
+    };
+  },
+  compact: {
+    phase: DataTransformPhase.FieldAdjust,
+    bindingClass: DataTransformBindingClass.Field,
+    fieldEffect: DataTransformFieldEffect.Preserve,
+  },
   apply: (rows, operation) => applyJitter(rows, operation),
 });
 
@@ -131,6 +233,14 @@ const densityTransformDefinition = defineTransform<IRPlotDensityTransform>({
   schema: DensityTransformSchema,
   inputFields: operation => densityInputFields(operation),
   outputFields: operation => densityOutputFields(operation),
+  outputModel: operation => ({
+    kind: 'replace',
+    fields: [
+      ...(operation.groupBy ?? []).map(field => ({ field, type: { from: field } }) as const),
+      { field: operation.xAs, type: DataFieldType.Continuous },
+      { field: operation.densityAs, type: DataFieldType.Continuous },
+    ],
+  }),
   apply: (rows, operation, context) => applyDensity(rows, operation, context),
 });
 
@@ -138,6 +248,14 @@ const smoothTransformDefinition = defineTransform<IRPlotSmoothTransform>({
   schema: SmoothTransformSchema,
   inputFields: operation => smoothInputFields(operation),
   outputFields: operation => smoothOutputFields(operation),
+  outputModel: operation => ({
+    kind: 'replace',
+    fields: [
+      ...(operation.groupBy ?? []).map(field => ({ field, type: { from: field } }) as const),
+      { field: operation.xAs, type: DataFieldType.Continuous },
+      { field: operation.yAs, type: DataFieldType.Continuous },
+    ],
+  }),
   apply: (rows, operation, context) => applySmooth(rows, operation, context),
 });
 

@@ -47,6 +47,8 @@ export type ComponentPreviewCardProps = {
   showAskAi?: boolean;
   /** 当前 demo 的声明式 controls definition */
   controlDefinition?: PreviewControlsDefinition;
+  /** 属性面板是否默认打开；缺省时跟随 docs 全局设置 */
+  controlPanelDefaultOpen?: boolean;
   /** 当前 demo 的完整 controls contract */
   controlContract?: PreviewControlContract;
   /** 是否显示预览上下文栏；缺省时随源码面板可用性决定 */
@@ -78,6 +80,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     previewClassName,
     showAskAi = true,
     controlDefinition,
+    controlPanelDefaultOpen,
     controlContract,
     showContextBar = source !== undefined,
     controlSlots,
@@ -121,7 +124,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   });
   const isCodeVisible = resolvePreviewCodeVisible(globalHideCode, localIsCodeVisible);
   const isExpanded = localIsExpanded ?? globalIsExpand;
-  const controlPanelOpen = localControlPanelOpen ?? globalControlPanelDefaultOpen;
+  const controlPanelOpen = localControlPanelOpen ?? controlPanelDefaultOpen ?? globalControlPanelDefaultOpen;
 
   const handleHideAll = useCallback(() => {
     setLocalIsCodeVisible(false);

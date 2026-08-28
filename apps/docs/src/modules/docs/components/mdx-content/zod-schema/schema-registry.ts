@@ -872,6 +872,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'CoordinateView',
     url: '/viz/plot/reference/plot#coordinateviewschema',
   },
+  PlotFacetConfigurationSchema: {
+    schema: IRPlot.PlotFacetConfigurationSchema,
+    label: 'PlotFacetConfiguration',
+    url: '/viz/plot/reference/plot#plotfacetconfigurationschema',
+  },
   FacetArrangementSchema: {
     schema: IRPlot.FacetArrangementSchema,
     label: 'FacetArrangement',

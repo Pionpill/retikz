@@ -1,7 +1,7 @@
 import type { PlotLineageRun } from '@retikz/plot';
 import type { FC } from 'react';
 
-import { Axis, IntervalMark, Plot, Scale } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
 import { useCallback, useState } from 'react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
@@ -58,9 +58,9 @@ const Demo: FC = () => {
           style={{ maxWidth: '100%', height: 'auto' }}
         >
           <IntervalMark id="revenueBars" x="region" y="revenue" color="month" transform={transforms.mark} />
-          <Scale dimension="y" type="linear" domainPadding={0} />
-          <Axis dimension="x" />
-          <Axis dimension="y" grid />
+          <PlotScale dimension="y" type="linear" domainPadding={0} />
+          <PlotAxis dimension="x" />
+          <PlotAxis dimension="y" grid />
         </Plot>
       </div>
       <pre className="m-0 h-full min-h-0 min-w-0 overflow-auto rounded-md border bg-muted/40 p-2 text-left text-[10px] leading-[1.4]">

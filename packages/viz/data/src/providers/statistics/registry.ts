@@ -4,6 +4,7 @@ import { createReadonlyMap } from '@retikz/foundation';
 import type {
   AnyRowSelectorDefinition,
   AnyStatisticsReducerDefinition,
+  DataTransformOutputDescriptor,
   RowSelection,
   TransformContext,
 } from '../../contract';
@@ -117,7 +118,18 @@ export const reducerOutputFields = (
   registry: ReadonlyMap<string, AnyStatisticsReducerDefinition> = resolveStatisticsReducerRegistry(),
 ): Array<string> => {
   const definition = reducerDefinitionOf(operation, registry);
-  return definition.outputFields?.(parseReducerOperation(definition, operation)) ?? [];
+  const parsed = parseReducerOperation(definition, operation);
+  const descriptors = definition.outputs?.(parsed);
+  return descriptors?.map(descriptor => descriptor.field) ?? definition.outputFields?.(parsed) ?? [];
+};
+
+/** 解析reducer Definition声明的已类型化scalar输出 */
+export const reducerOutputDescriptors = (
+  operation: IRDataReducerOperation,
+  registry: ReadonlyMap<string, AnyStatisticsReducerDefinition> = resolveStatisticsReducerRegistry(),
+): Array<DataTransformOutputDescriptor> => {
+  const definition = reducerDefinitionOf(operation, registry);
+  return definition.outputs?.(parseReducerOperation(definition, operation)) ?? [];
 };
 
 /** 对一组 rows 执行 reducer operation，并允许 context 注入自定义 reducer registry */
@@ -134,7 +146,7 @@ export const applyReducerOperation = (
     operation,
     rows,
     inputFields: definition.inputFields?.(parsed) ?? [],
-    outputFields: definition.outputFields?.(parsed) ?? [],
+    outputFields: reducerOutputFields(operation, registry),
   });
   return out;
 };

@@ -1,37 +1,37 @@
 ---
 title: 坐标轴
-description: 用 <Axis> 解释位置 scale：为 cartesian 或 polar 坐标系绘制轴线、刻度、标签和网格。
+description: 用 <PlotAxis> 解释位置 scale：为 cartesian 或 polar 坐标系绘制轴线、刻度、标签和网格。
 ---
 
-`<Axis>` 是位置 scale 的可视化身。`dimension` 选择要解释的坐标维度：cartesian 使用 `x` / `y`，polar 使用 `x`（角向）/ `y`（径向）。维度与坐标系不匹配时会直接报错。
+`<PlotAxis>` 是位置 scale 的可视化身。`dimension` 选择要解释的坐标维度：cartesian 使用 `x` / `y`，polar 使用 `x`（角向）/ `y`（径向）。维度与坐标系不匹配时会直接报错。
 
-`<Plot>` 不会自动补轴。需要哪条轴，就在 `<Plot>` 中显式声明对应的 `<Axis>`。轴线、刻度、刻度文字、标题和网格都是同一条 Axis guide 的配置槽位。
+`<Plot>` 不会自动补轴。需要哪条轴，就在 `<Plot>` 中显式声明对应的 `<PlotAxis>`。轴线、刻度、刻度文字、标题和网格都是同一条 PlotAxis guide 的配置槽位。
 
 ## 用法
 
 ```tsx
-import { Axis, PathMark, Plot } from '@retikz/plot-react';
+import { PlotAxis, PathMark, Plot } from '@retikz/plot-react';
 ```
 
 ```tsx
 <Plot data={rows}>
   <PathMark x="month" y="revenue" order="month" />
-  <Axis dimension="x" />
-  <Axis dimension="y" grid />
+  <PlotAxis dimension="x" />
+  <PlotAxis dimension="y" grid />
 </Plot>
 ```
 
 <ComponentAlert
   type="tip"
   title="参考线和参考带不是坐标轴"
-  description="阈值线、均值线或容差带使用 <ReferenceMark>，它们是参与 mark 叠放的数据标注；<Axis> 只解释位置 scale。"
+  description="阈值线、均值线或容差带使用 <ReferenceMark>，它们是参与 mark 叠放的数据标注；<PlotAxis> 只解释位置 scale。"
 />
 
 ## 例子
 
 ### 坐标系与轴职责
 
-先从同一份数据和同一个 `<PathMark>` 出发。切换 `cartesian2D` / `polar2D` 时，`dimension="x"` 分别解释横向 / 角向位置，`dimension="y"` 分别解释纵向 / 径向位置；`grid` 仍属于生成它的 Axis。
+先从同一份数据和同一个 `<PathMark>` 出发。切换 `cartesian2D` / `polar2D` 时，`dimension="x"` 分别解释横向 / 角向位置，`dimension="y"` 分别解释纵向 / 径向位置；`grid` 仍属于生成它的 PlotAxis。
 
 <ComponentPreview
   files={['axis-coordinate-basics', 'axis-coordinate-basics.data.ts']}
@@ -48,7 +48,7 @@ import { Axis, PathMark, Plot } from '@retikz/plot-react';
 <ComponentPreview
   files={['axis-cartesian-playground', 'axis-cartesian-playground.data.ts']}
   size="lg"
-  caption="切换连续边缘、连续原点和分类标签场景，只调整当前场景有效的 Axis 配置。"
+  caption="切换连续边缘、连续原点和分类标签场景，只调整当前场景有效的 PlotAxis 配置。"
 />
 
 ## 技术原理
@@ -61,7 +61,7 @@ import { Axis, PathMark, Plot } from '@retikz/plot-react';
 
 ### 刻度与网格来源
 
-Axis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候选 tick，再应用 `density` 得到可见 tick。网格默认复用这批结果；只有配置 `grid.ticks` 时才单独生成候选位置，因此网格密度可以独立于轴标签。`grid.includeDomain` 会在上述解析完成后追加缺失的 effective scale domain 首尾位置，并按最终投影坐标去重；它不会改变轴 tick，也不会为次网格自动追加端点。该字段的 guide 局部默认是 `false`，Theme 可以为已启用的 major grid 提供默认：未声明 style 的默认 baseline 对 x / y Axis 为 `true`，本站注入的三个参考风格为 `false`。Theme 端点 token 不会单独启用 grid，guide 显式 boolean 最终优先。次网格仍从 `grid.minor.ticks` 生成，并过滤与主网格重合的位置。
+PlotAxis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候选 tick，再应用 `density` 得到可见 tick。网格默认复用这批结果；只有配置 `grid.ticks` 时才单独生成候选位置，因此网格密度可以独立于轴标签。`grid.includeDomain` 会在上述解析完成后追加缺失的 effective scale domain 首尾位置，并按最终投影坐标去重；它不会改变轴 tick，也不会为次网格自动追加端点。该字段的 guide 局部默认是 `false`，Theme 可以为已启用的 major grid 提供默认：未声明 style 的默认 baseline 对 x / y PlotAxis 为 `true`，本站注入的三个参考风格为 `false`。Theme 端点 token 不会单独启用 grid，guide 显式 boolean 最终优先。次网格仍从 `grid.minor.ticks` 生成，并过滤与主网格重合的位置。
 
 <ComponentPreview files="axis-tick-grid-flow" size="xs" hideCode />
 
@@ -113,19 +113,19 @@ Axis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候�
 
 ## API 参考
 
-| 属性          | 类型                      | 默认值   | 描述                                                                                            |
-| ------------- | ------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
-| `dimension`   | `AxisProps['dimension']`  | —        | 要解释的维度：cartesian / polar 使用 x / y；必须匹配当前坐标系                                  |
-| `scale?`      | `AxisProps['scale']`      | 自动派生 | 位置 scale 快捷类型；等价于同维度的 `<Scale dimension="..." type="..." />`                      |
-| `placement?`  | `AxisProps['placement']`  | 自动推断 | 轴线摆放；分支 `kind` 见 <ApiValues name="AxisPlacementKind" />；`origin` 仅适用于 cartesian    |
-| `line?`       | `AxisProps['line']`       | 默认轴线 | 轴线样式与端点几何；`extent` 和 `arrow` 目前仅适用于 cartesian                                  |
-| `crossing?`   | `AxisProps['crossing']`   | 正常刻度 | 交叉值处的 tick / label 策略；`label:'corner'` 可把共享原点标签移到角落                         |
-| `ticks?`      | `AxisProps['ticks']`      | 默认刻度 | 候选 tick 来源、可见密度、端点避让和刻度标记外观                                                |
-| `tickLabels?` | `AxisProps['tickLabels']` | `true`   | 刻度文字开关、格式和样式；显式 `rotate` 优先于 `layout.rotate`，`layout:false` 关闭自适应避让   |
-| `title?`      | `AxisProps['title']`      | —        | 轴标题内容、间距、沿轴位置、方向和局部偏移                                                      |
-| `grid?`       | `AxisProps['grid']`       | `false`  | 网格开关、样式和独立 tick 来源；`minor` 生成次网格，`applyTo/select` 控制组合或分面中的投放目标 |
-| `layer?`      | `AxisProps['layer']`      | 轴层     | 覆盖轴 scope 的语义层级；不改变 grid 的背景层级                                                 |
-| `id?`         | `AxisProps['id']`         | —        | 可选 guide 句柄，用于稳定标识轴及其派生网格                                                     |
+| 属性          | 类型                          | 默认值   | 描述                                                                                            |
+| ------------- | ----------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
+| `dimension`   | `PlotAxisProps['dimension']`  | —        | 要解释的维度：cartesian / polar 使用 x / y；必须匹配当前坐标系                                  |
+| `scale?`      | `PlotAxisProps['scale']`      | 自动派生 | 位置 scale 快捷类型；等价于同维度的 `<PlotScale dimension="..." type="..." />`                  |
+| `placement?`  | `PlotAxisProps['placement']`  | 自动推断 | 轴线摆放；分支 `kind` 见 <ApiValues name="AxisPlacementKind" />；`origin` 仅适用于 cartesian    |
+| `line?`       | `PlotAxisProps['line']`       | 默认轴线 | 轴线样式与端点几何；`extent` 和 `arrow` 目前仅适用于 cartesian                                  |
+| `crossing?`   | `PlotAxisProps['crossing']`   | 正常刻度 | 交叉值处的 tick / label 策略；`label:'corner'` 可把共享原点标签移到角落                         |
+| `ticks?`      | `PlotAxisProps['ticks']`      | 默认刻度 | 候选 tick 来源、可见密度、端点避让和刻度标记外观                                                |
+| `tickLabels?` | `PlotAxisProps['tickLabels']` | `true`   | 刻度文字开关、格式和样式；显式 `rotate` 优先于 `layout.rotate`，`layout:false` 关闭自适应避让   |
+| `title?`      | `PlotAxisProps['title']`      | —        | 轴标题内容、间距、沿轴位置、方向和局部偏移                                                      |
+| `grid?`       | `PlotAxisProps['grid']`       | `false`  | 网格开关、样式和独立 tick 来源；`minor` 生成次网格，`applyTo/select` 控制组合或分面中的投放目标 |
+| `layer?`      | `PlotAxisProps['layer']`      | 轴层     | 覆盖轴 scope 的语义层级；不改变 grid 的背景层级                                                 |
+| `id?`         | `PlotAxisProps['id']`         | —        | 可选 guide 句柄，用于稳定标识轴及其派生网格                                                     |
 
 ### 关键对象字段
 
@@ -159,4 +159,4 @@ Axis 先按 `ticks.values > ticks.interval > ticks.count` 的优先级生成候�
 
 - [比例尺](/viz/plot/scale)：决定位置值如何映射和生成 tick
 - [图例](/viz/plot/guide/legend)：解释颜色、大小、透明度和形状等非位置通道
-- [坐标组合](/viz/plot/coordinate/composition)：在组合与分面中控制 Axis 的投放目标
+- [坐标组合](/viz/plot/coordinate/composition)：在组合与分面中控制 PlotAxis 的投放目标

@@ -133,5 +133,12 @@ export const previewControlContract = {
     [COORDINATE_COMPOSITION_SCOPES_CONTROL_IDS.rainfallPointsVisible]: true,
     [COORDINATE_COMPOSITION_SCOPES_CONTROL_IDS.rainfallPointSize]: 6,
   },
-  relatedApis: ['Axis.id', 'Axis.placement', 'Axis.grid', 'PathMark.yAxisId', 'PathMark.strokeWidth', 'PointMark.size'],
+  relatedApis: [
+    'PlotAxis.id',
+    'PlotAxis.placement',
+    'PlotAxis.grid',
+    'PathMark.yAxisId',
+    'PathMark.strokeWidth',
+    'PointMark.size',
+  ],
 } satisfies PreviewControlContract;

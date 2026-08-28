@@ -1,6 +1,6 @@
 import type { IRDataSortTransform } from '@retikz/data';
 
-import { Axis, IntervalMark, Plot, Scale, Transform } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
 
 import { monthlyRevenue } from './transform-sort.data';
 
@@ -19,11 +19,11 @@ export const transformSortOperationOf = (values: TransformSortValues): IRDataSor
 /** 渲染受控排序行序的单柱图 */
 export const renderTransformSortPreview = (values: TransformSortValues) => (
   <Plot data={monthlyRevenue} width={400} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Transform {...transformSortOperationOf(values)} />
+    <PlotTransform {...transformSortOperationOf(values)} />
     <IntervalMark x="month" y="revenue" />
-    <Scale dimension="x" type="band" paddingInner={0.2} paddingOuter={0.12} />
-    <Scale dimension="y" type="linear" domainPadding={0} />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotScale dimension="x" type="band" paddingInner={0.2} paddingOuter={0.12} />
+    <PlotScale dimension="y" type="linear" domainPadding={0} />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 );

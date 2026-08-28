@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, IntervalMark, Scale } from '@retikz/plot-react';
+import { IntervalMark, PlotAxis, PlotScale } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -42,10 +42,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           y: values[RECT_BOUNDS_MODE_ID] === 'band' ? { kind: 'band' } : { kind: 'full' },
         }}
       />
-      <Scale dimension="x" type="band" paddingOuter={0.15} />
-      <Scale dimension="y" type="band" paddingOuter={0} />
-      <Axis dimension="x" />
-      <Axis dimension="y" />
+      <PlotScale dimension="x" type="band" paddingOuter={0.15} />
+      <PlotScale dimension="y" type="band" paddingOuter={0} />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" />
     </Plot>
   </Layout>
 ));

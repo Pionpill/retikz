@@ -3,7 +3,7 @@ import { decorateDefaultGuides } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
-import { Axis, Legend } from '../../../src/components/guides';
+import { PlotAxis, PlotLegend } from '../../../src/components/guides';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
 
 // alpha.10：薄 Plot 退化 + 装饰函数抽出（供 v0.2 chart 复用）
@@ -25,11 +25,11 @@ describe('decorateDefaultGuides（薄 Plot 装饰函数，IRPlot 进出、框架
     ]);
   });
 
-  it('decorate_keeps_explicit_axis：已有显式 <Axis> → 原样不补', () => {
+  it('decorate_keeps_explicit_axis：已有显式 <PlotAxis> → 原样不补', () => {
     const withAxis = buildPlotIR(
       <>
         <PathMark x="m" y="r" />
-        <Axis dimension="x" />
+        <PlotAxis dimension="x" />
       </>,
       '__plot',
     );
@@ -40,7 +40,7 @@ describe('decorateDefaultGuides（薄 Plot 装饰函数，IRPlot 进出、框架
     const withLegend = buildPlotIR(
       <>
         <PointMark x="lon" y="lat" color="kind" />
-        <Legend channel="color" />
+        <PlotLegend channel="color" />
       </>,
       '__plot',
     );

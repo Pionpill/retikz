@@ -1,3 +1,4 @@
+export * from './encoding';
 export * from './marks';
 export * from './plot';
 export * from './presentation';

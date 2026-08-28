@@ -1,4 +1,4 @@
-import { Axis, IntervalMark, Plot, Scale, Transform } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -14,11 +14,11 @@ export const previewControls = deriveIntervalControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot data={tasks} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Transform {...deriveIntervalOperationOf(values)} />
-    <Scale dimension="y" type="linear" domain={[0, 12]} />
+    <PlotTransform {...deriveIntervalOperationOf(values)} />
+    <PlotScale dimension="y" type="linear" domain={[0, 12]} />
     <IntervalMark x="task" color="phase" bounds={{ y: { kind: 'extent', from: 'y0', to: 'y1' } }} />
-    <Axis dimension="x" title="任务" />
-    <Axis dimension="y" title="进度" grid />
+    <PlotAxis dimension="x" title="任务" />
+    <PlotAxis dimension="y" title="进度" grid />
   </Plot>
 ));
 

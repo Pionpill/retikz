@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { IntervalMark, Plot, Scale } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotScale } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -17,13 +17,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <IntervalMark x="month" y="value" color="month" />
-    <Scale
+    <PlotScale
       dimension="x"
       type="band"
       paddingInner={values[BAR_RADIAL_GAP_ID]}
       paddingOuter={values[BAR_RADIAL_GAP_ID] / 2}
     />
-    <Scale dimension="y" type="linear" domainPadding={0} />
+    <PlotScale dimension="y" type="linear" domainPadding={0} />
   </Plot>
 ));
 

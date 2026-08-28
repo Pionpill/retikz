@@ -30,8 +30,8 @@ Data Complete 不代表内置所有 ETL、数据库连接器或高频流式计�
 | ------------------------ | ---------------------------------------------------------------- | ----------------------------------------- |
 | Data Model               | 定义 JSON-safe row、scalar、dataset reference 与外部数据注入边界 | 业务实体模型、数据库 schema、权限模型     |
 | Field                    | 统一字段路径、字段解析、字段类型和缺失值边界                     | 视觉 channel、scale domain 选择           |
-| Transform                | 用可扩展 operation 把输入 rows 变成数据视图                      | core geometry transform、UI state update  |
-| Statistics               | 提供宿主无关的聚合和统计计算契约                                 | 只服务某个 mark 几何的布局算法            |
+| Transform                | 用可扩展 operation 把输入 rows 变成带字段类型证据的数据视图      | core geometry transform、UI state update  |
+| Statistics               | 提供宿主无关的聚合、统计计算与输出描述契约                       | 只服务某个 mark 几何的布局算法            |
 | Field Format / Parsing   | 定义字段输入格式、值解析 / coercion 与自定义 parser 接入         | axis / legend 的展示 formatter 与视觉样式 |
 | Lineage / Provenance     | 保留 source identity、transform steps 和派生关系                 | plot mark / series / scope locator        |
 | Validation / Diagnostics | 校验数据与 operation，并提供可定位错误                           | 业务质量治理平台、远程观测系统            |
@@ -47,6 +47,7 @@ Data Complete 不代表内置所有 ETL、数据库连接器或高频流式计�
 - 能被多个数据宿主复用，不依赖 plot mark、scale、coordinate 或 renderer。
 - 输入输出是 JSON-safe 数据或通过 options 注入的 runtime definition。
 - 可以通过稳定 operation / definition 表达，并由 data pipeline 消费。
+- operation discriminator复用Foundation开放字符串schema；内置key只提供常用提示，custom Definition与内置能力共用registry、config校验和pipeline。
 - 不依赖 React、DOM、Canvas、SVG 或业务数据源 SDK。
 
 依赖可视化语义的操作留在 plot；数据库连接、权限和远程缓存留在应用或数据源 adapter。
@@ -57,6 +58,7 @@ Data Complete 不代表内置所有 ETL、数据库连接器或高频流式计�
 
 - 多个宿主重复实现同一 row / field 算法或 operation schema。
 - 自定义数据能力无法通过现有 definition / registry 接入。
+- transform / reducer无法声明preserve或replace output model、scalar outputs、compact field effect与闭合phase，导致宿主只能猜测派生字段。
 - lineage 无法表达必要的 source 或 derived 关系。
 - 缺口迫使宿主复制通用数据模型或 apply pipeline。
 
@@ -67,14 +69,15 @@ schema 可表达
 contract 可扩展
 provider 可内置
 registry 可合并
-pipeline 可消费
+pipeline 可消费并逐步产出 `{ rows, fieldTypes, fieldTypeEvidence }`
+output model 与实际 rows / lineage 一致
 lineage / diagnostics 可追踪
 宿主可复用
 tests 可锁定
 docs / notes 可解释
 ```
 
-只在 plot 内写出一个 transform、只导出 schema，或只有内置 operation 而没有自定义入口，都不算 Data Complete。
+只在 plot 内写出一个 transform、只导出 schema、只返回rows却丢失派生字段证据，或只有内置operation而没有自定义入口，都不算 Data Complete。
 
 ## 5. 设计检查模板
 

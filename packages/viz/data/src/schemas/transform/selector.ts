@@ -8,6 +8,7 @@ import {
 import { array, discriminatedUnion, enum as zodEnum, literal, looseObject, number, strictObject, union } from 'zod';
 
 import { DataSortOrder, RESERVED_SELECTOR_OPERATION_KINDS, RowSelectorTie, SelectorOperationKind } from './constants';
+import { SelectorOperationKindSchema } from './kind';
 
 /** row selector 排序规则 schema；用于 first / last / nth 等代表行选择 */
 export const OrderBySchema = strictObject({
@@ -84,8 +85,8 @@ export const BuiltinSelectorOperationSchemas = Object.freeze({
 });
 
 /** 外部 row selector operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供 */
-const ExternalSelectorOperationSchema = looseObject({
-  kind: NonBlankStringSchema.refine(operationKind => !RESERVED_SELECTOR_OPERATION_KINDS.has(operationKind), {
+export const ExternalSelectorOperationSchema = looseObject({
+  kind: SelectorOperationKindSchema.refine(operationKind => !RESERVED_SELECTOR_OPERATION_KINDS.has(operationKind), {
     message: 'external selector kind must not collide with a built-in selector kind',
   }).describe('Discriminator: custom selector kind'),
 })

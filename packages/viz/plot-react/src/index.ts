@@ -1,33 +1,33 @@
 // @retikz/plot-react public API barrel.
 export { buildPlotIR, resolvePlotExtensionAuthoring } from './adapter';
 export type {
-  AxisProps,
   DatumLabelProps,
-  FacetProps,
   IntervalMarkProps,
-  LegendProps,
   PathMarkProps,
+  PlotAxisProps,
+  PlotFacetProps,
+  PlotLegendProps,
+  PlotScaffoldProps,
+  PlotScaleProps,
+  PlotTrackProps,
+  PlotTransformProps,
   PointMarkProps,
   ReferenceMarkProps,
   RelationMarkProps,
-  ScaffoldProps,
-  ScaleProps,
-  TrackProps,
-  TransformProps,
 } from './components';
 export {
-  Axis,
-  Facet,
   IntervalMark,
-  Legend,
   PathMark,
+  PlotAxis,
+  PlotFacet,
+  PlotLegend,
+  PlotScaffold,
+  PlotScale,
+  PlotTrack,
+  PlotTransform,
   PointMark,
   ReferenceMark,
   RelationMark,
-  Scaffold,
-  Scale,
-  Track,
-  Transform,
 } from './components';
 export * from './error';
 export type { PlotDslProps, PlotIRProps, PlotLineageProps, PlotPanelProps, PlotProps } from './Plot';

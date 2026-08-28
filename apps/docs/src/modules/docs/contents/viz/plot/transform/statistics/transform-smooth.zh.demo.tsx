@@ -1,4 +1,4 @@
-import { Axis, PathMark, Plot, PointMark, Scale } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -13,8 +13,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Plot data={trendSamples} width={440} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-      <Scale dimension="x" type="linear" domain={[-1, 5]} />
-      <Scale dimension="y" type="linear" domain={[0, 10]} />
+      <PlotScale dimension="x" type="linear" domain={[-1, 5]} />
+      <PlotScale dimension="y" type="linear" domain={[0, 10]} />
       <PointMark color="series" fillOpacity={0.72} x="time" y="value" />
       <PathMark
         color="series"
@@ -34,8 +34,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         x="trendX"
         y="trendY"
       />
-      <Axis dimension="x" title="时间" />
-      <Axis dimension="y" title="数值" grid />
+      <PlotAxis dimension="x" title="时间" />
+      <PlotAxis dimension="y" title="数值" grid />
     </Plot>
   );
 });
