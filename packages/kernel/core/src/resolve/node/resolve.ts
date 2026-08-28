@@ -83,7 +83,8 @@ const expandNodeLabelPosition = (position: IRNodeLabel['position']): CanonicalNo
   return position;
 };
 
-type MaterializedNodeLabel = Omit<IRNodeLabel, 'position' | 'placement' | 'distance'> & {
+type MaterializedNodeLabel = Omit<IRNodeLabel, 'align' | 'position' | 'placement' | 'distance'> & {
+  align: CanonicalNodeLabel['align'];
   position: CanonicalNodeLabel['position'];
   placement: CanonicalNodeLabel['placement'];
   distance: number;
