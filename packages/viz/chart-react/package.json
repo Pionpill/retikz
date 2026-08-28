@@ -44,8 +44,8 @@
       "default": "./src/point/index.ts"
     },
     "./point/scatter": {
-      "types": "./src/point/scatter/index.tsx",
-      "default": "./src/point/scatter/index.tsx"
+      "types": "./src/point/scatter/index.ts",
+      "default": "./src/point/scatter/index.ts"
     }
   },
   "publishConfig": {

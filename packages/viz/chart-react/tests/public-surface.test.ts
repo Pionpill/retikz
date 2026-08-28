@@ -6,8 +6,10 @@ import * as chart from '../src';
 import * as point from '../src/point';
 
 describe('@retikz/chart-react public surface', () => {
-  it('keeps only shared presentation and Theme APIs on the root entry', () => {
-    expect(chart).not.toHaveProperty('ChartFacet');
+  it('exports shared Chart declarations and presentation APIs from the root entry', () => {
+    expect(chart.ChartData).toBeDefined();
+    expect(chart.ChartLayout).toBeDefined();
+    expect(chart.ChartExtension).toBeDefined();
     expect(chart.ChartTitle).toBeDefined();
     expect(chart.ChartSubtitle).toBeDefined();
     expect(chart.ChartNote).toBeDefined();
@@ -15,24 +17,33 @@ describe('@retikz/chart-react public surface', () => {
     expect(chart.ChartThemeProvider).toBeDefined();
     expect(chart).not.toHaveProperty('Chart');
     expect(chart).not.toHaveProperty('ScatterChart');
+    expect(chart).not.toHaveProperty('ScatterEncodings');
   });
 
   it('exports only precise Point components from the Point entry', () => {
     expect(point.ScatterChart).toBeDefined();
+    expect(point.ScatterEncodings).toBeDefined();
+    expect(point.ScatterProperties).toBeDefined();
     expect(point.ScatterMark).toBeDefined();
+    expect(point).not.toHaveProperty('ChartData');
+    expect(point).not.toHaveProperty('ChartExtension');
     expect(point).not.toHaveProperty('PathMark');
     expect(point).not.toHaveProperty('Chart');
   });
 
-  it('publishes concrete chartType subpath entries', async () => {
+  it('publishes concrete chartType subpath entries without forwarding shared Chart declarations', async () => {
     const scatter = await import('../src/point/scatter');
     expect(scatter.ScatterChart).toBeDefined();
+    expect(scatter.ScatterEncodings).toBeDefined();
+    expect(scatter.ScatterProperties).toBeDefined();
     expect(scatter.ScatterMark).toBeDefined();
+    expect(scatter).not.toHaveProperty('ChartData');
+    expect(scatter).not.toHaveProperty('ChartExtension');
     expect(scatter).not.toHaveProperty('PathMark');
   });
 
   it('keeps each concrete chartType closure independent from the Point component barrel', async () => {
-    const cases = [{ chartType: 'scatter', file: 'index.tsx' }] as const;
+    const cases = [{ chartType: 'scatter', file: 'index.ts' }] as const;
 
     for (const item of cases) {
       const content = await readFile(
@@ -41,7 +52,7 @@ describe('@retikz/chart-react public surface', () => {
       );
       expect(content).not.toContain("from '../components'");
       expect(content).not.toMatch(/from ['"]@retikz\/chart-vanilla\/point['"]/);
-      expect(content).toContain(`from '@retikz/chart-vanilla/point/${item.chartType}'`);
+      expect(content).not.toContain('ChartData');
     }
   });
 });

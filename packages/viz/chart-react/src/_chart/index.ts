@@ -1,11 +1,12 @@
 export type {
-  ChartCommonProps,
-  ChartHostProps,
+  ChartDataProps,
+  ChartExtensionProps,
+  ChartLayoutProps,
   ChartPanelProps,
   ChartTextAuthoring,
   ChartThemeDefinitionsProps,
   InputEmbeddableChartComponent,
 } from '../shared';
-export { ChartNote, ChartSource, ChartSubtitle, ChartTitle } from '../shared';
+export { ChartData, ChartExtension, ChartLayout, ChartNote, ChartSource, ChartSubtitle, ChartTitle } from '../shared';
 export type { ChartThemeProviderProps } from './theme-provider';
 export { ChartThemeProvider } from './theme-provider';

@@ -1,62 +1,40 @@
+import type { ReactNode } from 'react';
+
 import { normalizeScatterChart } from '@retikz/chart-vanilla/point/scatter';
-import { PlotAxis, PlotTransform } from '@retikz/plot-react';
+import { PlotAxis, PlotFacet, PlotTransform, PointMark } from '@retikz/plot-react';
 import { Layout, Text } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { ChartNote, ChartSource, ChartSubtitle, ChartTitle, RetikzChartReactErrorCode } from '../src';
-import { ScatterChart, ScatterMark } from '../src/point';
+import {
+  ChartData,
+  ChartExtension,
+  ChartLayout,
+  ChartNote,
+  ChartSource,
+  ChartSubtitle,
+  ChartTitle,
+  RetikzChartReactErrorCode,
+} from '../src';
+import { ScatterChart, ScatterEncodings, ScatterMark, ScatterProperties } from '../src/point/scatter';
 
 type InputComponent<TInput> = {
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput;
 };
 
-const inputOf = <TInput,>(component: InputComponent<TInput>, props: Readonly<Record<string, unknown>>): TInput =>
-  component.createInputEmbedProps(props);
+const inputOf = <TInput,>(component: InputComponent<TInput>, children: ReactNode): TInput =>
+  component.createInputEmbedProps({ children });
 
-const source = normalizeScatterChart({
-  id: 'people',
-  data: { reference: 'rows' },
-  encodings: { x: 'x', y: 'y' },
-});
+const requiredDeclarations = (
+  <>
+    <ChartData data={[{ x: 1, y: 2 }]} />
+    <ScatterEncodings x="x" y="y" />
+  </>
+);
 
-const chartHostPropKeys = [
-  'width',
-  'height',
-  'className',
-  'style',
-  'renderer',
-  'themeStyles',
-  'runtime',
-  'animate',
-  'snapshotAt',
-  'animationRef',
-  'onArtifacts',
-  'onCompileResult',
-] as const;
-
-describe('Typed Point Chart React authoring', () => {
-  it.each(chartHostPropKeys)(
-    'rejects embedded Chart own standalone host prop %s including explicit undefined',
-    hostProp => {
-      expect(() =>
-        inputOf(ScatterChart, {
-          data: [{ x: 1, y: 2 }],
-          encodings: { x: 'x', y: 'y' },
-          [hostProp]: undefined,
-        }),
-      ).toThrowError(
-        expect.objectContaining({
-          name: 'RetikzChartReactError',
-          code: RetikzChartReactErrorCode.Default,
-          message: expect.stringMatching(/embedded Chart.*standalone.*outer.*Layout/i),
-        }),
-      );
-    },
-  );
-
+describe('Typed Point Chart React declarations', () => {
   it('renders standalone and embedded Chart through one SVG host and inherits the outer Theme mode', () => {
-    const chart = <ScatterChart data={[{ x: 1, y: 2 }]} encodings={{ x: 'x', y: 'y' }} />;
+    const chart = <ScatterChart>{requiredDeclarations}</ScatterChart>;
     const standalone = renderToStaticMarkup(chart);
     const embedded = renderToStaticMarkup(<Layout theme={{ mode: 'dark' }}>{chart}</Layout>);
 
@@ -67,21 +45,81 @@ describe('Typed Point Chart React authoring', () => {
     expect(embedded).not.toContain('hsl(210, 38%, 48%)');
   });
 
-  it('normalizes presentation markers into fixed slots independent of JSX order', () => {
-    const input = inputOf(ScatterChart, {
-      data: [],
-      encodings: { x: 'x', y: 'y' },
-      children: (
+  it.each([
+    { name: 'ChartData', children: <ScatterEncodings x="x" y="y" /> },
+    { name: 'ScatterEncodings', children: <ChartData data={[]} /> },
+  ])('requires exactly one $name declaration', ({ name, children }) => {
+    expect(() => inputOf(ScatterChart, children)).toThrow(new RegExp(`${name}.*exactly once`, 'i'));
+  });
+
+  it.each([
+    {
+      name: 'ChartData',
+      declarations: (
         <>
-          <ChartSource>Source</ChartSource>
-          <ChartSubtitle>Subtitle</ChartSubtitle>
-          <ChartTitle>
-            <Text font={{ weight: 'bold' }}>Title</Text>
-          </ChartTitle>
-          <ChartNote>Note</ChartNote>
+          <ChartData data={[]} />
+          <ChartData data={[]} />
+          <ScatterEncodings x="x" y="y" />
         </>
       ),
-    });
+    },
+    {
+      name: 'ChartLayout',
+      declarations: (
+        <>
+          {requiredDeclarations}
+          <ChartLayout layout={{ width: 10 }} />
+          <ChartLayout layout={{ height: 10 }} />
+        </>
+      ),
+    },
+    {
+      name: 'ChartExtension',
+      declarations: (
+        <>
+          {requiredDeclarations}
+          <ChartExtension />
+          <ChartExtension />
+        </>
+      ),
+    },
+    {
+      name: 'ScatterEncodings',
+      declarations: (
+        <>
+          <ChartData data={[]} />
+          <ScatterEncodings x="x" y="y" />
+          <ScatterEncodings x="x" y="y" />
+        </>
+      ),
+    },
+    {
+      name: 'ScatterProperties',
+      declarations: (
+        <>
+          {requiredDeclarations}
+          <ScatterProperties opacity={0.2} />
+          <ScatterProperties opacity={0.4} />
+        </>
+      ),
+    },
+  ])('rejects duplicate $name singleton declarations', ({ name, declarations }) => {
+    expect(() => inputOf(ScatterChart, declarations)).toThrow(new RegExp(`${name}.*at most once`, 'i'));
+  });
+
+  it('normalizes presentation markers into fixed slots independent of JSX order', () => {
+    const input = inputOf(
+      ScatterChart,
+      <>
+        {requiredDeclarations}
+        <ChartSource>Source</ChartSource>
+        <ChartSubtitle>Subtitle</ChartSubtitle>
+        <ChartTitle>
+          <Text font={{ weight: 'bold' }}>Title</Text>
+        </ChartTitle>
+        <ChartNote>Note</ChartNote>
+      </>,
+    );
 
     expect(input.source.presentation).toEqual({
       title: [{ text: 'Title', font: { weight: 'bold' } }],
@@ -91,50 +129,47 @@ describe('Typed Point Chart React authoring', () => {
     });
   });
 
-  it('rejects duplicate presentation slots', () => {
+  it('rejects duplicate presentation slots and non-text presentation payloads', () => {
     expect(() =>
-      inputOf(ScatterChart, {
-        data: [],
-        encodings: { x: 'x', y: 'y' },
-        children: (
-          <>
-            <ChartTitle>First</ChartTitle>
-            <ChartTitle>Second</ChartTitle>
-          </>
-        ),
-      }),
+      inputOf(
+        ScatterChart,
+        <>
+          {requiredDeclarations}
+          <ChartTitle>First</ChartTitle>
+          <ChartTitle>Second</ChartTitle>
+        </>,
+      ),
     ).toThrow(/may appear at most once/);
-  });
 
-  it('rejects non-text presentation payloads', () => {
     expect(() =>
-      inputOf(ScatterChart, {
-        data: [],
-        encodings: { x: 'x', y: 'y' },
-        children: (
+      inputOf(
+        ScatterChart,
+        <>
+          {requiredDeclarations}
           <ChartTitle>
             <div>not text</div>
           </ChartTitle>
-        ),
-      }),
+        </>,
+      ),
     ).toThrow(/accept only strings, Fragment, or Text/);
   });
 
-  it('matches the precise Vanilla Source and preserves direct mark order', () => {
-    const input = inputOf(ScatterChart, {
-      data: [
-        { x: 1, y: 2 },
-        { x: 2, y: 4 },
-      ],
-      encodings: { x: 'x', y: 'y' },
-      properties: { opacity: 0.4 },
-      children: (
-        <>
-          <ScatterMark override properties={{ opacity: 0.25 }} />
-          <ScatterMark properties={{ opacity: 0 }} />
-        </>
-      ),
-    });
+  it('maps exact Scatter declarations and preserves direct mark order', () => {
+    const input = inputOf(
+      ScatterChart,
+      <>
+        <ChartData
+          data={[
+            { x: 1, y: 2 },
+            { x: 2, y: 4 },
+          ]}
+        />
+        <ScatterEncodings x="x" y="y" />
+        <ScatterProperties opacity={0.4} />
+        <ScatterMark override properties={{ opacity: 0.25 }} />
+        <ScatterMark properties={{ opacity: 0 }} />
+      </>,
+    );
 
     expect(input.source).toMatchObject({
       type: 'point',
@@ -149,52 +184,18 @@ describe('Typed Point Chart React authoring', () => {
     });
   });
 
-  it('keeps component-level properties separate from child mark overrides', () => {
-    const input = inputOf(ScatterChart, {
-      data: [{ x: 1, y: 2 }],
-      encodings: { x: 'x', y: 'y' },
-      properties: { opacity: 0.4 },
-      marks: [{ kind: 'scatter', properties: { opacity: 0.2 } }],
-      children: <ScatterMark properties={{ opacity: 0 }} />,
-    });
-    expect(input.source.recipe.properties).toEqual({ opacity: 0.4 });
-    expect(input.source.recipe.marks).toEqual([
-      { kind: 'scatter', properties: { opacity: 0.2 } },
-      { kind: 'scatter', properties: { opacity: 0 } },
-    ]);
-  });
-
-  it('matches Vanilla when ScatterMark requests semantic group override', () => {
-    const input = inputOf(ScatterChart, {
-      data: [{ x: 1, y: 2 }],
-      encodings: { x: 'x', y: 'y' },
-      children: <ScatterMark override properties={{ opacity: 0.25 }} />,
-    });
-    const vanilla = normalizeScatterChart({
-      data: { reference: 'chart.data' },
-      encodings: { x: 'x', y: 'y' },
-      marks: [{ kind: 'scatter', override: true, properties: { opacity: 0.25 } }],
-    });
-
-    expect(input.source).toEqual(vanilla);
-  });
-
-  it('matches Vanilla for encoding-driven facets and delegates Plot declarations to the Plot authoring chain', () => {
-    const input = inputOf(ScatterChart, {
-      data: [{ amount: 1, margin: 2, region: 'north' }],
-      encodings: {
-        x: 'amount',
-        y: 'margin',
-        column: 'region',
-        facet: { spacing: { panelGap: 12 } },
-      },
-      children: (
-        <>
+  it('matches Vanilla for encoding-driven facets and delegates Plot declarations through ChartExtension', () => {
+    const input = inputOf(
+      ScatterChart,
+      <>
+        <ChartData data={[{ amount: 1, margin: 2, region: 'north' }]} />
+        <ScatterEncodings x="amount" y="margin" column="region" facet={{ spacing: { panelGap: 12 } }} />
+        <ChartExtension>
           <PlotTransform kind="sort" field="amount" order="descending" />
           <PlotAxis dimension="x" grid />
-        </>
-      ),
-    });
+        </ChartExtension>
+      </>,
+    );
     const vanilla = normalizeScatterChart({
       data: { reference: 'chart.data' },
       encodings: {
@@ -212,83 +213,211 @@ describe('Typed Point Chart React authoring', () => {
     expect(input.source).toEqual(vanilla);
   });
 
-  it('preserves direct slot ownership across arrays and transparent Fragments', () => {
-    const input = inputOf(ScatterChart, {
-      data: [{ amount: 1, margin: 2, region: 'north' }],
-      encodings: { x: 'amount', y: 'margin', column: 'region' },
-      children: [
-        <ChartTitle key="title">Facet example</ChartTitle>,
-        <>
-          <ScatterMark properties={{ opacity: 0.5 }} />
-          <PlotAxis dimension="y" />
-        </>,
-      ],
-    });
+  it('does not materialize plotExtension for an empty ChartExtension declaration', () => {
+    const input = inputOf(
+      ScatterChart,
+      <>
+        {requiredDeclarations}
+        <ChartExtension />
+      </>,
+    );
 
-    expect(input.source.presentation).toEqual({ title: 'Facet example' });
-    expect(input.source.recipe.marks).toEqual([{ kind: 'scatter', properties: { opacity: 0.5 } }]);
-    expect(input.source.recipe.encodings.column).toEqual({ field: 'region' });
-    expect(input.source.plotExtension?.guides).toEqual([{ type: 'axis', dimension: 'y' }]);
+    expect(input.source).not.toHaveProperty('plotExtension');
   });
 
   it('keeps Transform append order and reports Plot prop-child collection conflicts', () => {
-    const input = inputOf(ScatterChart, {
-      data: [{ amount: 1, margin: 2 }],
-      encodings: { x: 'amount', y: 'margin' },
-      plotExtension: { transform: [{ kind: 'sort', field: 'amount', order: 'descending' }] },
-      children: <PlotTransform kind="sort" field="margin" order="ascending" />,
-    });
+    const input = inputOf(
+      ScatterChart,
+      <>
+        <ChartData data={[{ amount: 1, margin: 2 }]} />
+        <ScatterEncodings x="amount" y="margin" />
+        <ChartExtension transform={[{ kind: 'sort', field: 'amount', order: 'descending' }]}>
+          <PlotTransform kind="sort" field="margin" order="ascending" />
+        </ChartExtension>
+      </>,
+    );
     expect(input.source.plotExtension?.transform).toEqual([
       { kind: 'sort', field: 'amount', order: 'descending' },
       { kind: 'sort', field: 'margin', order: 'ascending' },
     ]);
 
     expect(() =>
-      inputOf(ScatterChart, {
-        data: [{ amount: 1, margin: 2 }],
-        encodings: { x: 'amount', y: 'margin' },
-        plotExtension: { guides: [{ type: 'axis', dimension: 'x' }] },
-        children: <PlotAxis dimension="y" />,
-      }),
+      inputOf(
+        ScatterChart,
+        <>
+          <ChartData data={[{ amount: 1, margin: 2 }]} />
+          <ScatterEncodings x="amount" y="margin" />
+          <ChartExtension guides={[{ type: 'axis', dimension: 'x' }]}>
+            <PlotAxis dimension="y" />
+          </ChartExtension>
+        </>,
+      ),
     ).toThrow(/duplicate-declaration-source/i);
   });
 
-  it('does not treat nested mark components as direct Chart marks', () => {
+  it('rejects coordinate props combined with child composition through the Plot owner error contract', () => {
     expect(() =>
-      inputOf(ScatterChart, {
-        data: [{ x: 1, y: 2 }],
-        encodings: { x: 'x', y: 'y' },
-        children: (
-          <section>
-            <ScatterMark />
-          </section>
-        ),
+      inputOf(
+        ScatterChart,
+        <>
+          <ChartData data={[{ x: 1, y: 2, region: 'north' }]} />
+          <ScatterEncodings x="x" y="y" />
+          <ChartExtension coordinate={{ type: 'cartesian2D' }}>
+            <PlotFacet id="regions" row="region">
+              <PointMark x="x" y="y" />
+            </PlotFacet>
+          </ChartExtension>
+        </>,
+      ),
+    ).toThrow(/duplicate-declaration-source/i);
+  });
+
+  it('validates props-only ChartExtension conflicts through the Plot owner error contract', () => {
+    expect(() =>
+      inputOf(ScatterChart, [
+        <ChartData key="data" data={[{ x: 1, y: 2 }]} />,
+        <ScatterEncodings key="encodings" x="x" y="y" />,
+        <ChartExtension
+          key="extension"
+          coordinate={{ type: 'cartesian2D' }}
+          composition={{
+            defaultView: 'main',
+            views: [{ id: 'main', coordinate: { type: 'cartesian2D' } }],
+          }}
+        />,
+      ]),
+    ).toThrowError(
+      expect.objectContaining({
+        code: 'duplicate-declaration-source',
+        details: {
+          path: ['children', 2, 'props', 'composition'],
+          conflictingPath: ['children', 2, 'props', 'coordinate'],
+        },
       }),
+    );
+  });
+
+  it('renders Chart-owned marks before explicit Plot extension marks', () => {
+    const markup = renderToStaticMarkup(
+      <ScatterChart>
+        <ChartData data={[{ x: 1, y: 2 }]} />
+        <ScatterEncodings x="x" y="y" />
+        <ScatterMark properties={{ fill: '#ff0000' }} />
+        <ChartExtension>
+          <PointMark x="x" y="y" fill="#0000ff" />
+        </ChartExtension>
+      </ScatterChart>,
+    );
+
+    expect(markup.indexOf('fill="#ff0000"')).toBeGreaterThan(-1);
+    expect(markup.indexOf('fill="#0000ff"')).toBeGreaterThan(markup.indexOf('fill="#ff0000"'));
+  });
+
+  it('rejects Plot declarations outside ChartExtension and Chart declarations inside it', () => {
+    expect(() =>
+      inputOf(
+        ScatterChart,
+        <>
+          {requiredDeclarations}
+          <PlotAxis dimension="x" />
+        </>,
+      ),
+    ).toThrow(/Plot declarations.*ChartExtension/i);
+
+    expect(() =>
+      inputOf(
+        ScatterChart,
+        <>
+          {requiredDeclarations}
+          <ChartExtension>
+            <ChartData data={[]} />
+          </ChartExtension>
+        </>,
+      ),
     ).toThrow(/unsupported-chart-child/i);
   });
 
-  it('keeps standalone host dimensions separate from explicit Source layout', () => {
-    const markup = renderToStaticMarkup(
-      <ScatterChart
-        data={[{ x: 1, y: 2 }]}
-        encodings={{ x: 'x', y: 'y' }}
-        width={640}
-        height={360}
-        layout={{ width: 320, height: 180 }}
-      />,
-    );
-    const input = inputOf(ScatterChart, {
-      data: [{ x: 1, y: 2 }],
-      encodings: { x: 'x', y: 'y' },
-      layout: { width: 320, height: 180 },
-    });
+  it('rejects ordinary iterables and custom wrappers instead of widening direct-child semantics', () => {
+    const iterableChildren = new Set<ReactNode>([<PlotAxis key="axis" dimension="x" />]);
+    expect(() =>
+      inputOf(
+        ScatterChart,
+        <>
+          {requiredDeclarations}
+          <ChartExtension>{iterableChildren}</ChartExtension>
+        </>,
+      ),
+    ).toThrow(/ChartExtension.*arrays.*Fragment/i);
 
-    expect(markup).toContain('width="640"');
-    expect(markup).toContain('height="360"');
-    expect(input.source.layout).toEqual({ width: 320, height: 180 });
+    expect(() =>
+      inputOf(
+        ScatterChart,
+        <section>
+          {requiredDeclarations}
+          <ScatterMark />
+        </section>,
+      ),
+    ).toThrow(/direct Chart child/i);
   });
 
-  it('keeps the legacy generic source only as a fixture, not as a public component', () => {
-    expect(source).toMatchObject({ type: 'point', recipe: { chartType: 'scatter' } });
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'rejects non-positive or non-finite standalone ChartLayout width %s',
+    width => {
+      expect(() =>
+        renderToStaticMarkup(
+          <ScatterChart>
+            {requiredDeclarations}
+            <ChartLayout width={width} height={100} />
+          </ScatterChart>,
+        ),
+      ).toThrowError(
+        expect.objectContaining({
+          name: 'RetikzChartReactError',
+          code: RetikzChartReactErrorCode.Default,
+          message: expect.stringMatching(/ChartLayout.*width.*positive finite/i),
+        }),
+      );
+    },
+  );
+
+  it('mirrors standalone dimensions into Source layout unless an explicit layout is present', () => {
+    const mirrored = renderToStaticMarkup(
+      <ScatterChart>
+        {requiredDeclarations}
+        <ChartLayout width={640} height={360} />
+      </ScatterChart>,
+    );
+    const explicit = renderToStaticMarkup(
+      <ScatterChart>
+        {requiredDeclarations}
+        <ChartLayout width={640} height={360} layout={{ width: 320, height: 180 }} />
+      </ScatterChart>,
+    );
+
+    expect(mirrored).toMatch(/^<svg[^>]*width="640" height="360"/);
+    expect(mirrored).toContain('viewBox="-10 -10 660 380"');
+    expect(explicit).toMatch(/^<svg[^>]*width="640" height="360"/);
+    expect(explicit).toContain('viewBox="-10 -10 340 200"');
+  });
+
+  it('rejects embedded host dimensions but accepts Source-only layout', () => {
+    expect(() =>
+      inputOf(
+        ScatterChart,
+        <>
+          {requiredDeclarations}
+          <ChartLayout width={640} />
+        </>,
+      ),
+    ).toThrow(/embedded Chart.*ChartLayout.*width.*outer.*Layout/i);
+
+    const input = inputOf(
+      ScatterChart,
+      <>
+        {requiredDeclarations}
+        <ChartLayout layout={{ width: 320, height: 180 }} />
+      </>,
+    );
+    expect(input.source.layout).toEqual({ width: 320, height: 180 });
   });
 });

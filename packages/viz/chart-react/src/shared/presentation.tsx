@@ -93,7 +93,7 @@ const textBlockOf = (children: ReactNode): IRTextBlock => {
 /** React children 中提取出的固定 presentation slots 与剩余 children */
 export type ChartPresentationMarkerSplit = Readonly<{
   presentation: Partial<Record<ChartPresentationMarkerSlot, IRTextBlock>>;
-  plotChildren: ReactNode;
+  chartChildren: ReactNode;
 }>;
 
 /** 从透明 Fragment 中抽取 presentation marker
@@ -115,7 +115,7 @@ export const splitPresentationMarkers = (children: ReactNode): ChartPresentation
     presentation[slot] = textBlockOf((value.props as ChartPresentationMarkerProps).children);
     return null;
   };
-  return { presentation, plotChildren: visit(children) };
+  return { presentation, chartChildren: visit(children) };
 };
 
 /** 判断处理 presentation marker 后是否仍包含未消费的 children */

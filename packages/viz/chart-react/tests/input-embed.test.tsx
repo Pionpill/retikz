@@ -6,7 +6,8 @@ import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { PointMark } from '@retikz/plot-react';
 import { describe, expect, it } from 'vitest';
 
-import { ScatterChart } from '../src/point';
+import { ChartData, ChartExtension, ChartLayout } from '../src';
+import { ScatterChart, ScatterEncodings, ScatterProperties } from '../src/point/scatter';
 
 type InputComponent<TInput> = {
   inputEmbedAdapter?: unknown;
@@ -41,7 +42,16 @@ describe('Chart React InputEmbed routing', () => {
       },
       properties: { opacity: 0.5 },
     };
-    const reactInput = inputOf(ScatterChart, pointInput);
+    const reactInput = inputOf(ScatterChart, {
+      children: (
+        <>
+          <ChartData data={pointInput.data} reference={pointInput.dataRef} />
+          <ChartLayout layout={pointInput.layout} />
+          <ScatterEncodings {...pointInput.encodings} />
+          <ScatterProperties {...pointInput.properties} />
+        </>
+      ),
+    });
     const vanillaInput: ChartInput = createScatterChart(pointInput).input;
 
     expect(reactInput.source).toEqual(vanillaInput.source);
@@ -53,21 +63,36 @@ describe('Chart React InputEmbed routing', () => {
     expect(reactInput.chartProviderContribution.providers.map(provider => provider.key)).toEqual(
       vanillaInput.chartProviderContribution.providers.map(provider => provider.key),
     );
-    expect(reactInput.source).toMatchObject({
-      type: 'point',
-      recipe: {
-        chartType: 'scatter',
-        encodings: { ...pointInput.encodings, column: { field: 'region' } },
-      },
+  });
+
+  it('maps ChartData reference/model without serializing runtime rows', () => {
+    const input = inputOf(ScatterChart, {
+      children: (
+        <>
+          <ChartData data={[{ x: 0, y: 1 }]} reference="observations" model={[{ name: 'x', type: 'continuous' }]} />
+          <ScatterEncodings x="x" y="y" />
+        </>
+      ),
     });
+
+    expect(input.source.data).toEqual({
+      reference: 'observations',
+      model: [{ name: 'x', type: 'continuous' }],
+    });
+    expect(input.datasets.observations).toEqual([{ x: 0, y: 1 }]);
+    expect(JSON.stringify(input.source)).not.toContain('"x":0');
   });
 
   it('forwards Theme definitions without putting them in Source IR', () => {
     const themeDefinitions = [] as const;
     const input = inputOf(ScatterChart, {
-      data: [{ x: 0, y: 1 }],
-      encodings: { x: 'x', y: 'y' },
       themeDefinitions,
+      children: (
+        <>
+          <ChartData data={[{ x: 0, y: 1 }]} />
+          <ScatterEncodings x="x" y="y" />
+        </>
+      ),
     });
 
     expect(input).not.toHaveProperty('themeDefinitions');
@@ -78,13 +103,15 @@ describe('Chart React InputEmbed routing', () => {
     const childResolveLabel = (row: Record<string, unknown>): string => String(row.label);
     const explicitResolveLabel = (): string => 'explicit';
     const input = inputOf(ScatterChart, {
-      data: [{ x: 0, y: 1, label: 'A' }],
-      encodings: { x: 'x', y: 'y' },
       lowerOptions: { resolveLabel: { labelled: explicitResolveLabel } },
       children: (
         <>
-          <PointMark id="labelled" x="x" y="y" resolveLabel={childResolveLabel} />
-          <PointMark id="child-only" x="x" y="y" resolveLabel={childResolveLabel} />
+          <ChartData data={[{ x: 0, y: 1, label: 'A' }]} />
+          <ScatterEncodings x="x" y="y" />
+          <ChartExtension>
+            <PointMark id="labelled" x="x" y="y" resolveLabel={childResolveLabel} />
+            <PointMark id="child-only" x="x" y="y" resolveLabel={childResolveLabel} />
+          </ChartExtension>
         </>
       ),
     });

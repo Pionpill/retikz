@@ -94,6 +94,9 @@ export const assertChartExtensionCollection = (
   if (context.composition !== undefined && compositionDeclaration !== undefined) {
     throwDuplicateDeclarationSource(compositionDeclaration, context.composition.path);
   }
+  if (context.coordinate !== undefined && compositionDeclaration !== undefined) {
+    throwDuplicateDeclarationSource(compositionDeclaration, context.coordinate.path);
+  }
   const markDeclaration = firstDeclarationOf(
     collection,
     new Set<PlotDeclarationKind>(['path-mark', 'point-mark', 'interval-mark', 'reference-mark', 'relation-mark']),

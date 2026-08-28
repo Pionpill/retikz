@@ -237,6 +237,26 @@ describe('Plot chart-extension declaration normalization', () => {
     );
   });
 
+  it('rejects a child composition when the context already owns coordinate', () => {
+    expectDeclarationError(
+      () =>
+        normalizeExtension(
+          <PlotFacet id="regions" row="region">
+            <PointMark x="x" y="y" />
+          </PlotFacet>,
+          {
+            coordinate: {
+              value: { type: 'cartesian2D' },
+              path: ['props', 'coordinate'],
+            },
+          },
+        ),
+      'duplicate-declaration-source',
+      ['children', 0],
+      ['props', 'coordinate'],
+    );
+  });
+
   it('reports JSX guides and scales as second sources of context collections', () => {
     expectDeclarationError(
       () =>
