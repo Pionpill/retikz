@@ -1,11 +1,14 @@
 import type { AnyCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 
+import { FlexLayoutDefinition, FlexLayoutProvider } from '@retikz/layout';
+import { SurfaceDefinition, SurfaceProvider } from '@retikz/standard';
 import {
   DiamondArrowProvider,
   KiteArrowProvider,
   OpenDiamondArrowProvider,
   SquareArrowProvider,
 } from '@retikz/standard/arrow';
+import { PathClipProvider } from '@retikz/standard/clip';
 import { EllipticCapsuleShapeProvider, HexagonShapeProvider } from '@retikz/standard/shape';
 
 import type { GraphDefinitionOptions } from '../contract';
@@ -15,6 +18,8 @@ import { createEntityDefinitionFromOptions } from './entity/definition';
 import { createEntityProvider, EntityProvider } from './entity/provider';
 import { createGraphDefinitionFromOptions } from './graph/definition';
 import { createGraphProvider, GraphProvider } from './graph/provider';
+import { createGroupDefinitionFromOptions } from './group/definition';
+import { createGroupProvider, GroupProvider } from './group/provider';
 import { createRelationDefinitionFromOptions } from './relation/definition';
 import { createRelationProvider, RelationProvider } from './relation/provider';
 
@@ -23,8 +28,11 @@ export const createGraphDefinitions = (options: GraphDefinitionOptions = {}): Ar
   const resolved = resolveGraphDefinitionOptions(options);
   return [
     createGraphDefinitionFromOptions(resolved),
+    createGroupDefinitionFromOptions(resolved),
     createEntityDefinitionFromOptions(resolved),
     createRelationDefinitionFromOptions(resolved),
+    FlexLayoutDefinition,
+    SurfaceDefinition,
   ];
 };
 
@@ -32,6 +40,10 @@ const DEFAULT_GRAPH_PROVIDERS: ReadonlyArray<CoreDependencyProvider> = Object.fr
   GraphProvider,
   EntityProvider,
   RelationProvider,
+  GroupProvider,
+  FlexLayoutProvider,
+  SurfaceProvider,
+  PathClipProvider,
   HexagonShapeProvider,
   EllipticCapsuleShapeProvider,
   KiteArrowProvider,
@@ -47,6 +59,10 @@ export const createGraphProviders = (options?: GraphDefinitionOptions): Readonly
     createGraphProvider(options),
     createEntityProvider(options),
     createRelationProvider(options),
+    createGroupProvider(options),
+    FlexLayoutProvider,
+    SurfaceProvider,
+    PathClipProvider,
     HexagonShapeProvider,
     EllipticCapsuleShapeProvider,
     KiteArrowProvider,

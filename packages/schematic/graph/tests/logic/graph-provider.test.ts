@@ -4,18 +4,19 @@ import { describe, expect, it } from 'vitest';
 import * as Graph from '../../src';
 
 describe('Graph provider closure', () => {
-  it('installs Graph, Entity and Relation through semantic provider dependencies', () => {
+  it('installs the complete Graph family and Group composition dependencies', () => {
     const resolved = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });
 
     expect(resolved.composites?.map(definition => `${definition.namespace}.${definition.type}`).sort()).toEqual(
-      ['graph.entity', 'graph.graph', 'graph.relation'].sort(),
+      ['graph.entity', 'graph.graph', 'graph.group', 'graph.relation', 'layout.flexLayout', 'standard.surface'].sort(),
     );
     expect(resolved.shapes?.map(definition => definition.name).sort()).toEqual(['ellipticCapsule', 'hexagon']);
     expect(resolved.arrows?.map(definition => definition.name).sort()).toEqual(
       ['diamond', 'kite', 'openDiamond', 'square'].sort(),
     );
+    expect(resolved.clips?.map(definition => definition.kind)).toEqual(['path']);
   });
 
   it('compiles the same custom definitions through Graph, Entity and Relation roots without dataset conflict', () => {

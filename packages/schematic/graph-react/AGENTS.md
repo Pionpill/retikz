@@ -10,13 +10,13 @@ Schematic 是可复用图式语义、关系模型与算法布局的领域分组�
 
 ## 包家族
 
-| 包                      | 解决的问题                                | 拥有                                                                                                    | 不拥有                                                |
-| ----------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `@retikz/graph`         | 提供可组合关系语义与可选 Graph 局部上下文 | Graph / Entity / Relation IR、领域 resolve、Graph context、Core-compatible 字段、Definition 与 lowering | 成员数据库、geometry 模型、自动布局、Editor、renderer |
-| `@retikz/graph-react`   | 用 React 编写和运行 Graph 语义元素        | Graph / Entity / Relation JSX sugar、React runtime 接线                                                 | Graph schema、resolve、lowering、Layout、Core 语义    |
-| `@retikz/graph-vanilla` | 用无框架 API 编写和运行 Graph 语义元素    | Graph / Entity / Relation builder、normalize、SSR / mount 编排与 runtime 接线                           | Graph schema、resolve、lowering、Layout、Core 语义    |
+| 包                      | 解决的问题                                | 拥有                                                                                                            | 不拥有                                                |
+| ----------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `@retikz/graph`         | 提供可组合关系语义与可选 Graph 局部上下文 | Graph / Group / Entity / Relation IR、领域 resolve、Graph context、Core-compatible 字段、Definition 与 lowering | 成员数据库、geometry 模型、自动布局、Editor、renderer |
+| `@retikz/graph-react`   | 用 React 编写和运行 Graph 语义元素        | Graph / Group / Entity / Relation JSX sugar、React runtime 接线                                                 | Graph schema、resolve、lowering、Layout、Core 语义    |
+| `@retikz/graph-vanilla` | 用无框架 API 编写和运行 Graph 语义元素    | Graph / Group / Entity / Relation builder、normalize、SSR / mount 编排与 runtime 接线                           | Graph schema、resolve、lowering、Layout、Core 语义    |
 
-Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 已按 ADR-07～08 完成 Entity / Relation 单 record Source IR；ADR-09 正在把两者改为独立 composite，并把 Graph 收敛为可选上下文。未来 `@retikz/diagram` package family 可以按兼容版本单向依赖 `@retikz/graph`；Graph 不反向依赖 Diagram、Editor 或 renderer。
+Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 已按 ADR-07～10 建立独立 Graph / Group / Entity / Relation composite。未来 `@retikz/diagram` package family 可以按兼容版本单向依赖 `@retikz/graph`；Graph 不反向依赖 Diagram、Editor 或 renderer。
 
 ## 分层与依赖
 
@@ -25,15 +25,15 @@ Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 已按 
 - Graph 不复制 Layout FlexLayout、artifact、spacing、axis sizing、clip 或 geometry 算法；公共面不足时先在 Layout owner 冻结并实现最小 composition contract
 - `graph-react` 只消费 `graph` 与 `@retikz/react`；`graph-vanilla` 只消费 `graph` 与 `@retikz/vanilla`
 - public IR 必须 JSON-safe；ReactNode、DOM、renderer 资源和编辑器运行时状态不得进入 Graph schema
-- Entity 与 Relation 是可独立放入任意 Core 内容树的 semantic composite；Graph 组合完整 Core Scope surface，并额外提供局部 `graphTheme`，不维护成员集合、私有 identity 索引、Graph-only child grammar 或隐式 local namespace
+- Group、Entity 与 Relation 是可独立放入任意 Core 内容树的 semantic composite；Graph 与 Group 均组合完整 Core Scope surface，Group 只增加可见边界、caption 与 boundary labels，不自动排列 authored children
 - `graph-react` 的 standalone Graph 复用 React Layout 建立 Scene，embedded Graph 只贡献局部 Scope；与 Scope 同名的 props 始终进入 Graph Source，host-only props 仅在 standalone 合法
 - Relation endpoint 直接复用 Core NodeTarget 与 namespace，可以引用 Core 已公开寻址的 Node、Coordinate、resolved Scope 及下沉为这些 target 的上层 composite；Graph 不建立第二套 endpoint 或 lookup
-- Graph、Entity 与 Relation 的 id 均为显式 authoring identity；省略时不得由 resolve、lowering 或 adapter 自动生成
+- Graph、Group、Entity 与 Relation 的 id 均为显式 authoring identity；省略时不得由 resolve、lowering 或 adapter 自动生成
 - Diagram 复用 Graph 数据，拥有布局意图、约束确定化、provider 编排、自动 routing 与布局结果；不得复制 Graph schema、appearance 或 Theme 契约
 
 ## 当前状态
 
-Graph v0.1 alpha.1 已完成 ADR-01～08，ADR-09 为 Proposed。目标契约是 Graph、Entity 与 Relation 三个独立 Source composite：React JSX 分别归一到对应 Source IR，不创建 Graph-only declaration marker、隐式 Graph wrapper、默认 id、appearance 或 geometry wrapper。
+Graph v0.1 alpha.1 的 ADR-01～10 均已 Accepted。React JSX 分别归一到 Graph、Group、Entity 与 Relation Source IR；Group children 接受任意可嵌入内容，不创建成员集合、默认 id、自动布局、appearance 或 geometry wrapper。
 
 ## 验证
 
