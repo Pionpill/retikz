@@ -3,11 +3,17 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { countryScatterData, WORLD_BANK_SCATTER_YEAR } from './scatter-basic.data';
+import { createScatterPointControls } from './scatter-point-controls';
 
 /** 基础 Scatter playground 的稳定控件 id */
 export const SCATTER_BASIC_CONTROL_IDS = {
-  pointSize: 'pointSize',
-  pointOpacity: 'pointOpacity',
+  pointSize: 'scatter-basic-point-size',
+  pointFillEnabled: 'scatter-basic-point-fill-enabled',
+  pointFill: 'scatter-basic-point-fill',
+  pointStrokeEnabled: 'scatter-basic-point-stroke-enabled',
+  pointStroke: 'scatter-basic-point-stroke',
+  pointShape: 'scatter-basic-point-shape',
+  pointOpacity: 'scatter-basic-point-opacity',
 } as const;
 
 /** 基础 Scatter 的中文控制面板 */
@@ -34,26 +40,18 @@ export const scatterBasicControls = definePreviewControls({
     },
     {
       label: '散点',
-      controls: [
-        {
-          kind: 'range',
-          id: SCATTER_BASIC_CONTROL_IDS.pointSize,
-          label: '大小',
-          defaultValue: 10,
-          min: 6,
-          max: 18,
-          step: 1,
+      controls: createScatterPointControls({
+        ids: SCATTER_BASIC_CONTROL_IDS,
+        size: { label: '大小', defaultValue: 5, min: 3, max: 18, step: 1 },
+        fill: { toggleLabel: '填充', label: '填充色', defaultValue: 'currentColor' },
+        stroke: { toggleLabel: '描边', label: '描边色', defaultValue: 'currentColor' },
+        shape: {
+          label: '形状',
+          defaultValue: 'circle',
+          labels: { circle: '圆形', rectangle: '矩形', ellipse: '椭圆形', diamond: '菱形' },
         },
-        {
-          kind: 'range',
-          id: SCATTER_BASIC_CONTROL_IDS.pointOpacity,
-          label: '不透明度',
-          defaultValue: 0.82,
-          min: 0.4,
-          max: 1,
-          step: 0.02,
-        },
-      ],
+        opacity: { label: '不透明度', defaultValue: 0.82, min: 0.4, max: 1, step: 0.02 },
+      }),
     },
   ],
 });
@@ -62,13 +60,21 @@ export const scatterBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: scatterBasicControls,
   canonicalValues: {
-    [SCATTER_BASIC_CONTROL_IDS.pointSize]: 10,
+    [SCATTER_BASIC_CONTROL_IDS.pointSize]: 5,
+    [SCATTER_BASIC_CONTROL_IDS.pointFillEnabled]: false,
+    [SCATTER_BASIC_CONTROL_IDS.pointFill]: 'currentColor',
+    [SCATTER_BASIC_CONTROL_IDS.pointStrokeEnabled]: false,
+    [SCATTER_BASIC_CONTROL_IDS.pointStroke]: 'currentColor',
+    [SCATTER_BASIC_CONTROL_IDS.pointShape]: 'circle',
     [SCATTER_BASIC_CONTROL_IDS.pointOpacity]: 0.82,
   },
   relatedApis: [
-    'ScatterChart.encodings.x',
-    'ScatterChart.encodings.y',
-    'ScatterMark.override',
-    'ScatterMark.properties',
+    'ScatterEncodings.x',
+    'ScatterEncodings.y',
+    'ScatterProperties.size',
+    'ScatterProperties.fill',
+    'ScatterProperties.stroke',
+    'ScatterProperties.shape',
+    'ScatterProperties.opacity',
   ],
 } satisfies PreviewControlContract;

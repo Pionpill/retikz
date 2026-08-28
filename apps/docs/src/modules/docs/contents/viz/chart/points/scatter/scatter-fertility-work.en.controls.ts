@@ -4,6 +4,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { SCATTER_FERTILITY_WORK_CONTROL_IDS } from './scatter-fertility-work.controls';
 import { fertilityWorkData, WORLD_BANK_FERTILITY_WORK_YEAR } from './scatter-fertility-work.data';
+import { createScatterPointControls } from './scatter-point-controls';
 
 /** 分类编码 Scatter 的英文控制面板 */
 export const scatterFertilityWorkControls = definePreviewControls({
@@ -29,19 +30,13 @@ export const scatterFertilityWorkControls = definePreviewControls({
       ],
     },
     {
-      label: 'Categorical channel',
-      controls: [
-        {
-          kind: 'select',
-          id: SCATTER_FERTILITY_WORK_CONTROL_IDS.channel,
-          label: 'Map to',
-          defaultValue: 'color',
-          options: [
-            { value: 'shape', label: 'Shape' },
-            { value: 'color', label: 'Color' },
-          ],
-        },
-      ],
+      label: 'Points',
+      controls: createScatterPointControls({
+        ids: SCATTER_FERTILITY_WORK_CONTROL_IDS,
+        size: { label: 'Size', defaultValue: 5, min: 3, max: 18, step: 1 },
+        stroke: { toggleLabel: 'Stroke', label: 'Stroke color', defaultValue: 'currentColor' },
+        opacity: { label: 'Opacity', defaultValue: 0.65, min: 0.3, max: 1, step: 0.05 },
+      }),
     },
   ],
 });
@@ -50,7 +45,16 @@ export const scatterFertilityWorkControls = definePreviewControls({
 export const previewControlContract = {
   controls: scatterFertilityWorkControls,
   canonicalValues: {
-    [SCATTER_FERTILITY_WORK_CONTROL_IDS.channel]: 'color',
+    [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointSize]: 5,
+    [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointStrokeEnabled]: false,
+    [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointStroke]: 'currentColor',
+    [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointOpacity]: 0.65,
   },
-  relatedApis: ['ScatterChart.encodings', 'ScatterMark.override', 'ScatterMark.properties'],
+  relatedApis: [
+    'ScatterEncodings.color',
+    'ScatterEncodings.shape',
+    'ScatterProperties.size',
+    'ScatterProperties.stroke',
+    'ScatterProperties.opacity',
+  ],
 } satisfies PreviewControlContract;

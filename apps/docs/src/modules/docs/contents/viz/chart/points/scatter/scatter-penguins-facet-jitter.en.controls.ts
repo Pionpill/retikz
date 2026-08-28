@@ -4,6 +4,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS } from './scatter-penguins-facet-jitter.controls';
 import { penguinScatterData } from './scatter-penguins-facet-jitter.data';
+import { createScatterPointControls } from './scatter-point-controls';
 
 /** English controls for the faceted jittered scatter */
 export const previewControls = definePreviewControls({
@@ -28,27 +29,19 @@ export const previewControls = definePreviewControls({
       ],
     },
     {
-      label: 'Transform and mark',
-      controls: [
-        {
-          kind: 'range',
-          id: SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.jitter,
-          label: 'Horizontal jitter',
-          defaultValue: 0.35,
-          min: 0,
-          max: 1.2,
-          step: 0.05,
+      label: 'Mark',
+      controls: createScatterPointControls({
+        ids: SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS,
+        size: { label: 'Point size', defaultValue: 5, min: 3, max: 12, step: 1 },
+        fill: { toggleLabel: 'Fill', label: 'Fill color', defaultValue: 'currentColor' },
+        stroke: { toggleLabel: 'Stroke', label: 'Stroke color', defaultValue: 'currentColor' },
+        shape: {
+          label: 'Shape',
+          defaultValue: 'circle',
+          labels: { circle: 'Circle', rectangle: 'Rectangle', ellipse: 'Ellipse', diamond: 'Diamond' },
         },
-        {
-          kind: 'range',
-          id: SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointSize,
-          label: 'Point size',
-          defaultValue: 7,
-          min: 3,
-          max: 12,
-          step: 1,
-        },
-      ],
+        opacity: { label: 'Opacity', defaultValue: 0.72, min: 0.3, max: 1, step: 0.04 },
+      }),
     },
   ],
 });
@@ -57,14 +50,19 @@ export const previewControls = definePreviewControls({
 export const previewControlContract = {
   controls: previewControls,
   canonicalValues: {
-    [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.jitter]: 0.35,
-    [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointSize]: 7,
+    [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointSize]: 5,
+    [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointFillEnabled]: false,
+    [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointFill]: 'currentColor',
+    [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointStrokeEnabled]: false,
+    [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointStroke]: 'currentColor',
+    [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointShape]: 'circle',
+    [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointOpacity]: 0.72,
   },
   relatedApis: [
-    'ScatterChart.encodings.x.transform',
-    'ScatterChart.encodings.column',
-    'ScatterChart.encodings.facet',
-    'ScatterMark.override',
-    'ScatterMark.properties',
+    'ScatterProperties.size',
+    'ScatterProperties.fill',
+    'ScatterProperties.stroke',
+    'ScatterProperties.shape',
+    'ScatterProperties.opacity',
   ],
 } satisfies PreviewControlContract;

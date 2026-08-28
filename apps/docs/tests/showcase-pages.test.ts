@@ -180,16 +180,13 @@ describe('collectShowcasePages', () => {
     expect(compiled).toContain('h2');
   });
 
-  it.each(['zh', 'en'] as const)('Scatter %s 以基础散点为主，并提供四个真实数据使用示例', lang => {
+  it.each(['zh', 'en'] as const)('Scatter %s 以基础散点为主，并提供三个真实数据使用示例', lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
 
     expect(source.match(/id: 'scatter-basic'/g)).toHaveLength(1);
-    expect(source.match(/id: 'scatter-income-life-expectancy'/g)).toHaveLength(1);
     expect(source.match(/id: 'scatter-fertility-work'/g)).toHaveLength(1);
     expect(source.match(/id: 'scatter-penguins-facet-jitter'/g)).toHaveLength(1);
     expect(source.match(/id: 'scatter-world-cup-shots'/g)).toHaveLength(1);
-    expect(source).toContain("files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts']");
-    expect(source).toContain("controls: { name: 'scatter-income-life-expectancy' }");
   });
 
   it.each(['scatter-penguins-facet-jitter', 'scatter-world-cup-shots'])(
@@ -210,20 +207,10 @@ describe('collectShowcasePages', () => {
   it('Scatter 生育率与女性劳动参与率示例提供完整的双语 preview 文件', () => {
     for (const filename of [
       'scatter-fertility-work.data.ts',
+      'scatter-fertility-work.controls.ts',
+      'scatter-fertility-work.en.controls.ts',
       'scatter-fertility-work.zh.demo.tsx',
       'scatter-fertility-work.en.demo.tsx',
-    ]) {
-      expect(existsSync(scatterExamplePath(filename)), filename).toBe(true);
-    }
-  });
-
-  it('Scatter 收入与寿命使用示例提供完整的双语 preview 文件', () => {
-    for (const filename of [
-      'scatter-income-life-expectancy.data.ts',
-      'scatter-income-life-expectancy.controls.ts',
-      'scatter-income-life-expectancy.en.controls.ts',
-      'scatter-income-life-expectancy.zh.demo.tsx',
-      'scatter-income-life-expectancy.en.demo.tsx',
     ]) {
       expect(existsSync(scatterExamplePath(filename)), filename).toBe(true);
     }

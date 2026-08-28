@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
-import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
-import { ScatterChart, ScatterMark } from '@retikz/chart-react/point/scatter';
+import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point/scatter';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -11,43 +11,44 @@ import { previewControlContract } from './scatter-world-cup-shots.en.controls';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <ScatterChart
-    data={messiWorldCupShots}
-    encodings={{ x: 'x', y: 'y', color: 'outcome' }}
     theme={{
       tokens: {
         plot: {
           'plot.area.fill': {
             kind: 'image',
             href: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Football_pitch_metric_tr.svg',
-            fit: 'cover',
           },
         },
-        recipe: { axisEnabled: false, axisGridEnabled: false },
+        recipe: { axisEnabled: false },
       },
     }}
-    layout={{ width: 800, height: 500 }}
-    width={800}
-    height={500}
   >
+    <ChartData data={messiWorldCupShots} />
+    <ChartLayout width={800} height={500} />
+    <ScatterEncodings x="x" y="y" color="outcome" />
     <ChartTitle>Lionel Messi's 2022 World Cup shot map</ChartTitle>
     <ChartSubtitle>
       32 regulation and extra-time shots; StatsBomb 120 × 80 coordinates; lines connect starts to endpoints
     </ChartSubtitle>
     <ChartSource>StatsBomb Open Data: competition 43, season 106; excludes two period-five shootout events</ChartSource>
-    <ScatterMark
-      override
-      properties={{
-        size: values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointSize],
-        stroke: '#f8fafc',
-        strokeWidth: 1,
-        opacity: values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointOpacity],
-      }}
+    <ScatterProperties
+      size={values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointSize]}
+      {...(values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointStrokeEnabled]
+        ? { stroke: values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointStroke] }
+        : {})}
+      shape={values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointShape]}
+      opacity={values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointOpacity]}
     />
   </ScatterChart>
 ));
 
 /** Stable source configuration derived from canonical control values */
-export const previewSource = controlledPreview.source;
+export const previewSource = {
+  ...controlledPreview.source,
+  datasetImports: {
+    'chart.data': { name: 'messiWorldCupShots', from: './scatter-world-cup-shots.data' },
+  },
+};
 
 /** Explicit fallback when the controls registry is unavailable */
 export const previewControls = previewControlContract.controls;

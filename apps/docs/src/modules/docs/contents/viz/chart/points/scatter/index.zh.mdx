@@ -22,25 +22,13 @@ usage: distribution
     {
       id: 'scatter-fertility-work',
       title: '分类编码',
-      description: '用真实的世界银行国家截面比较生育率与女性劳动参与率，并切换颜色或形状编码。',
+      description: '用真实的世界银行国家截面比较生育率与女性劳动参与率，并以颜色和形状同时区分收入组。',
       preview: {
         files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
         controls: { name: 'scatter-fertility-work' },
         controlPanelDefaultOpen: false,
         size: 'xxxl',
-        caption: '切换收入组的颜色或形状编码，观察同一字段绑定如何改变点的视觉表达。',
-      },
-    },
-    {
-      id: 'scatter-income-life-expectancy',
-      title: '关联与分类颜色',
-      description: '用 Gapminder 2007 国家截面比较人均收入与预期寿命，并用大洲颜色识别重叠和差异。',
-      preview: {
-        files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
-        controls: { name: 'scatter-income-life-expectancy' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: '标题、副标题、注记和来源按固定 presentation slots 进入图表，颜色编码区分大洲。',
+        caption: '颜色与形状通道同时绑定收入组，同一类型在颜色和点形上保持一致。',
       },
     },
     {
@@ -52,7 +40,7 @@ usage: distribution
         controls: { name: 'scatter-penguins-facet-jitter' },
         controlPanelDefaultOpen: false,
         size: 'xxxl',
-        caption: '三个物种分列展示并共享横纵尺度；固定 seed 让横向抖动在交互和源码预览中保持可复现。',
+        caption: '三个物种分列展示并共享横纵尺度；x mapping 使用 jitter 打散同一位置的重叠点。',
       },
     },
     {
@@ -69,11 +57,15 @@ usage: distribution
     },
   ]}
 >
-本页 API 只列 Scatter 独有的字段映射与 mark 行为。Chart 的公共 props、字段类型、通用 transform、scale、presentation 和 Plot 扩展不在此重复，详见[图形模型](/viz/chart/model)。
+本页 API 只列 Scatter 私有的 declaration。`ChartData`、`ChartLayout`、`ChartExtension`、presentation 与公共根接线不在此重复，详见 [Chart 公共 API](/viz/chart)。
 
-## `ScatterChart.encodings`
+## `ScatterChart`
 
-`ScatterChartEncodingsSchema` 是 Scatter encoding 的运行时真源，`IRScatterChartEncodings` 从 schema 派生；React 的 `ScatterChartProps.encodings`、Vanilla input 与 JSON Source 都使用这张精确表。
+`ScatterChart` 固定 Point family 与 Scatter recipe 身份。它没有 Scatter 私有根 prop；字段映射、常量属性和 mark 分别由下面三个 declaration 表达，根只保留 Chart 公共接线与 `children`。
+
+## `ScatterEncodings`
+
+`ScatterEncodingsProps` 精确复用 schema 派生的 `IRScatterChartEncodings`。Vanilla input 与 JSON Source 继续使用相同 encoding payload，只是 React 把它写成独立 declaration。
 
 | Slot             | 支持的 Scatter mapping                                                                 | Scatter 专属约束                                                                   |
 | ---------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
@@ -93,15 +85,27 @@ Scatter 不接受 `series`、`detail`、`order`、`text` 或没有明确 consume
 `row` / `column` / `facet` 是 Scatter 的分面映射。`facet` 不能脱离 `row` 或 `column`；带 facet 的 x/y `bin` 也会被拒绝。
 
 ```tsx
-encodings={{
-  x: 'billLengthMm',
-  y: 'flipperLengthMm',
-  column: { field: 'species', order: ['Adelie', 'Chinstrap', 'Gentoo'] },
-  facet: { header: { column: true }, spacing: { panelGap: 20 } },
-}}
+<ScatterEncodings
+  x="billLengthMm"
+  y="flipperLengthMm"
+  column={{ field: 'species', order: ['Adelie', 'Chinstrap', 'Gentoo'] }}
+  facet={{ header: { column: true }, spacing: { panelGap: 20 } }}
+/>
 ```
 
 `row` / `column` 只决定面板分区，不决定 mark 类型；Scatter 仍使用自己的点 mark。Facet 的面板排列、尺度解析和定位交给 Plot，Source 不重复保存可推导的 panel id 或坐标。
+
+## `ScatterProperties`
+
+`ScatterProperties` 声明 recipe 级常量，不接受字段 mapping；字段驱动的视觉变化应写在 `ScatterEncodings`。`ScatterPropertiesProps` 的字段分组如下。
+
+| 字段                                                                                        | 值域                            |
+| ------------------------------------------------------------------------------------------- | ------------------------------- |
+| `color`、`textColor`、`fill`、`stroke`、`shape`                                             | 颜色、paint 或可扩展 shape 名称 |
+| `size`、`minimumSize`、`scale`、`rotate`、`dx`、`dy`、`padding`、`margin`、`cornerRadius`   | 有限数值或对应 JSON-safe 结构   |
+| `strokeWidth`、`fillOpacity`、`strokeOpacity`、`opacity`、`dashed`、`dotted`、`dashPattern` | 描边、透明度与虚线常量          |
+| `zIndex`、`align`、`lineHeight`、`maxTextWidth`、`font`、`label`                            | 绘制顺序、文本与标签配置        |
+| `boundary`、`shadow`、`blendMode`                                                           | 边界、阴影与混合模式            |
 
 ## `ScatterMark`
 

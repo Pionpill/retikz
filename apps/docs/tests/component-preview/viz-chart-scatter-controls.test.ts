@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 
-import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
-import { ScatterMark } from '@retikz/chart-react/point';
+import { ChartExtension, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 import { PlotAxis } from '@retikz/plot-react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -15,7 +15,6 @@ import type {
 } from '../../src/modules/docs/preview';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
-import { loadPreviewResources } from '../../src/modules/docs/components/component-preview/registry';
 import { previewControlContract as basicZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.controls';
 import {
   countryScatterData,
@@ -24,22 +23,20 @@ import {
 import { previewControlContract as basicEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.en.controls';
 import { previewSource as basicEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.en.demo';
 import { previewSource as basicZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.zh.demo';
+import { previewControlContract as fertilityWorkZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.controls';
 import {
   fertilityWorkData,
   WORLD_BANK_FERTILITY_WORK_YEAR,
 } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.data';
-import { previewControlContract as incomeLifeExpectancyZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.controls';
-import {
-  countryScatterData as incomeLifeExpectancyData,
-  GAPMINDER_SCATTER_YEAR,
-} from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.data';
-import { previewControlContract as incomeLifeExpectancyEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.en.controls';
-import { previewSource as incomeLifeExpectancyEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.en.demo';
-import { previewSource as incomeLifeExpectancyZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.zh.demo';
+import { previewControlContract as fertilityWorkEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.controls';
+import { previewSource as fertilityWorkEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
+import { previewSource as fertilityWorkZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
 import { previewControlContract as penguinFacetZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.controls';
 import { previewControlContract as penguinFacetEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.en.controls';
 import { previewSource as penguinFacetEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.en.demo';
 import { previewSource as penguinFacetZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.zh.demo';
+import { previewControlContract as worldCupZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.controls';
+import { previewControlContract as worldCupEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.en.controls';
 import { previewSource as worldCupEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.en.demo';
 import { previewSource as worldCupZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.zh.demo';
 
@@ -63,27 +60,20 @@ const expectCompletePanel = (contract: PreviewControlContract): void => {
       .sort(),
   );
   expect(contract.relatedApis.length).toBeGreaterThan(0);
-  expect(
-    contract.relatedApis.every(api => /^(Plot[A-Z]\w*|Plot|PointMark|ScatterChart|ScatterMark)\./u.test(api)),
-  ).toBe(true);
+  expect(contract.relatedApis.every(api => /^(?:Plot[A-Z]\w*|Plot|PointMark|Scatter[A-Z]\w*)(?:\.|$)/u.test(api))).toBe(
+    true,
+  );
 };
 
 const canonicalChartSize = (source: PreviewSourceConfig): { width?: number; height?: number } => {
-  const chart = source.canonicalRender?.();
-  if (!isValidElement<{ width?: number; height?: number }>(chart)) {
-    throw new Error('Chart preview must provide a canonical element');
-  }
-
-  return { width: chart.props.width, height: chart.props.height };
+  const layout = canonicalDeclarationProps(source, ChartLayout);
+  return { width: layout.width as number | undefined, height: layout.height as number | undefined };
 };
 
 const canonicalChartLayout = (source: PreviewSourceConfig): { width?: number; height?: number } => {
-  const chart = source.canonicalRender?.();
-  if (!isValidElement<{ layout?: { width?: number; height?: number } }>(chart)) {
-    throw new Error('Chart preview must provide a canonical element');
-  }
-
-  return { width: chart.props.layout?.width, height: chart.props.layout?.height };
+  const layout = canonicalDeclarationProps(source, ChartLayout);
+  const explicit = layout.layout as { width?: number; height?: number } | undefined;
+  return explicit ?? { width: layout.width as number | undefined, height: layout.height as number | undefined };
 };
 
 const canonicalScatterProps = (source: PreviewSourceConfig): Record<string, unknown> => {
@@ -95,28 +85,23 @@ const canonicalScatterProps = (source: PreviewSourceConfig): Record<string, unkn
   return chart.props;
 };
 
-const canonicalScatterMarkProps = (source: PreviewSourceConfig): Record<string, unknown> => {
-  const chart = source.canonicalRender?.();
-  if (!isValidElement<{ children?: ReactNode }>(chart)) {
-    throw new Error('Chart preview must provide a canonical element');
-  }
-  const mark = Children.toArray(chart.props.children).find(
-    child => isValidElement(child) && child.type === ScatterMark,
-  );
-  if (!isValidElement<Record<string, unknown>>(mark)) {
-    throw new Error('Scatter preview must provide a direct ScatterMark child');
-  }
-
-  return mark.props;
+const canonicalScatterPropertiesProps = (source: PreviewSourceConfig): Record<string, unknown> => {
+  return canonicalDeclarationProps(source, ScatterProperties);
 };
 
-const canonicalScatterChildren = (source: PreviewSourceConfig): Array<ReactElement<Record<string, unknown>>> => {
+const canonicalDeclarationProps = (source: PreviewSourceConfig, component: unknown): Record<string, unknown> => {
   const chart = source.canonicalRender?.();
   if (!isValidElement<{ children?: ReactNode }>(chart)) {
     throw new Error('Chart preview must provide a canonical element');
   }
+  const declaration = Children.toArray(chart.props.children).find(
+    child => isValidElement(child) && child.type === component,
+  );
+  if (!isValidElement<Record<string, unknown>>(declaration)) {
+    throw new Error('Scatter preview is missing a required declaration');
+  }
 
-  return Children.toArray(chart.props.children).filter(isValidElement<Record<string, unknown>>);
+  return declaration.props;
 };
 
 const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 'subtitle' | 'source', ReactNode> => {
@@ -135,18 +120,6 @@ const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 's
     subtitle: textOf(ChartSubtitle),
     source: textOf(ChartSource),
   };
-};
-
-const loadScatterPreviewSource = async (name: string, lang: 'zh' | 'en'): Promise<PreviewSourceConfig | undefined> => {
-  const result = await loadPreviewResources({
-    segments: ['viz', 'chart', 'points', 'scatter'],
-    name,
-    lang,
-    controlName: name,
-    controlsDisabled: false,
-    sourceFiles: [],
-  });
-  return result.status === 'ready' ? result.resources.module.previewSource : undefined;
 };
 
 describe('Viz Chart scatter controls', () => {
@@ -169,8 +142,9 @@ describe('Viz Chart scatter controls', () => {
   it('保持各组 controls 的双语结构与 canonical 状态一致', () => {
     for (const [zh, en] of [
       [basicZh, basicEn],
-      [incomeLifeExpectancyZh, incomeLifeExpectancyEn],
+      [fertilityWorkZh, fertilityWorkEn],
       [penguinFacetZh, penguinFacetEn],
+      [worldCupZh, worldCupEn],
     ] as const) {
       expect(comparable(zh)).toEqual(comparable(en));
       expectCompletePanel(zh);
@@ -178,13 +152,79 @@ describe('Viz Chart scatter controls', () => {
     }
   });
 
-  it('基础 Scatter 只暴露位置不变量与清晰可见的外观变量', () => {
+  it('四个 Scatter 示例只暴露不会与字段 encoding 冲突的公共图元控件', () => {
     expect(basicZh.canonicalValues).toEqual({
-      pointSize: 10,
-      pointOpacity: 0.82,
+      'scatter-basic-point-size': 5,
+      'scatter-basic-point-fill-enabled': false,
+      'scatter-basic-point-fill': 'currentColor',
+      'scatter-basic-point-stroke-enabled': false,
+      'scatter-basic-point-stroke': 'currentColor',
+      'scatter-basic-point-shape': 'circle',
+      'scatter-basic-point-opacity': 0.82,
     });
+    expect(fertilityWorkZh.canonicalValues).toEqual({
+      'scatter-fertility-work-point-size': 5,
+      'scatter-fertility-work-point-stroke-enabled': false,
+      'scatter-fertility-work-point-stroke': 'currentColor',
+      'scatter-fertility-work-point-opacity': 0.65,
+    });
+    expect(penguinFacetZh.canonicalValues).toEqual({
+      'scatter-penguins-facet-jitter-point-size': 5,
+      'scatter-penguins-facet-jitter-point-fill-enabled': false,
+      'scatter-penguins-facet-jitter-point-fill': 'currentColor',
+      'scatter-penguins-facet-jitter-point-stroke-enabled': false,
+      'scatter-penguins-facet-jitter-point-stroke': 'currentColor',
+      'scatter-penguins-facet-jitter-point-shape': 'circle',
+      'scatter-penguins-facet-jitter-point-opacity': 0.72,
+    });
+    expect(worldCupZh.canonicalValues).toEqual({
+      'scatter-world-cup-shots-point-size': 5,
+      'scatter-world-cup-shots-point-stroke-enabled': false,
+      'scatter-world-cup-shots-point-stroke': '#f8fafc',
+      'scatter-world-cup-shots-point-shape': 'circle',
+      'scatter-world-cup-shots-point-opacity': 0.9,
+    });
+    expect(getPreviewControlFields(basicZh.controls).map(control => control.id)).toEqual([
+      'scatter-basic-point-size',
+      'scatter-basic-point-fill-enabled',
+      'scatter-basic-point-fill',
+      'scatter-basic-point-stroke-enabled',
+      'scatter-basic-point-stroke',
+      'scatter-basic-point-shape',
+      'scatter-basic-point-opacity',
+    ]);
+    expect(getPreviewControlFields(fertilityWorkZh.controls).map(control => control.id)).toEqual([
+      'scatter-fertility-work-point-size',
+      'scatter-fertility-work-point-stroke-enabled',
+      'scatter-fertility-work-point-stroke',
+      'scatter-fertility-work-point-opacity',
+    ]);
+    expect(getPreviewControlFields(penguinFacetZh.controls).map(control => control.id)).toEqual([
+      'scatter-penguins-facet-jitter-point-size',
+      'scatter-penguins-facet-jitter-point-fill-enabled',
+      'scatter-penguins-facet-jitter-point-fill',
+      'scatter-penguins-facet-jitter-point-stroke-enabled',
+      'scatter-penguins-facet-jitter-point-stroke',
+      'scatter-penguins-facet-jitter-point-shape',
+      'scatter-penguins-facet-jitter-point-opacity',
+    ]);
+    expect(getPreviewControlFields(worldCupZh.controls).map(control => control.id)).toEqual([
+      'scatter-world-cup-shots-point-size',
+      'scatter-world-cup-shots-point-stroke-enabled',
+      'scatter-world-cup-shots-point-stroke',
+      'scatter-world-cup-shots-point-shape',
+      'scatter-world-cup-shots-point-opacity',
+    ]);
     expect(JSON.stringify(basicZh.controls)).not.toContain('gridVisible');
     expect(JSON.stringify(basicZh.controls)).not.toContain('colorByGroup');
+  });
+
+  it('各 Scatter 示例使用互不重叠的 control id，避免切换示例时串用状态', () => {
+    const ids = [basicZh, fertilityWorkZh, penguinFacetZh, worldCupZh].flatMap(contract =>
+      getPreviewControlFields(contract.controls).map(control => control.id),
+    );
+
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it('基础 Scatter 使用世界银行 2023 年的完整可连接国家截面', () => {
@@ -204,90 +244,125 @@ describe('Viz Chart scatter controls', () => {
     ).toBe(true);
   });
 
-  it('基础 Scatter 将两个比例字段与受控 mark 常量交给 typed Chart', () => {
+  it('基础 Scatter 将两个比例字段与受控常量属性交给 typed Chart', () => {
     for (const source of [basicZhPreviewSource, basicEnPreviewSource]) {
-      expect(canonicalScatterProps(source)).toMatchObject({
-        encodings: {
-          x: 'urbanPopulationShare',
-          y: 'internetUseShare',
-        },
+      expect(canonicalDeclarationProps(source, ScatterEncodings)).toMatchObject({
+        x: 'urbanPopulationShare',
+        y: 'internetUseShare',
       });
-      expect(canonicalScatterMarkProps(source)).toMatchObject({
-        override: true,
-        properties: { size: 10, opacity: 0.82 },
+      expect(canonicalScatterPropertiesProps(source)).toMatchObject({
+        size: 5,
+        shape: 'circle',
+        opacity: 0.82,
       });
+      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('fill');
+      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('stroke');
     }
-    expect(basicZh.relatedApis).toContain('ScatterChart.encodings.x');
-    expect(basicZh.relatedApis).toContain('ScatterChart.encodings.y');
-    expect(basicEn.relatedApis).toContain('ScatterChart.encodings.x');
-    expect(basicEn.relatedApis).toContain('ScatterChart.encodings.y');
-    expect(basicZh.relatedApis).not.toContain('ScatterChart.encodings');
-    expect(basicEn.relatedApis).not.toContain('ScatterChart.encodings');
+    expect(basicZh.relatedApis).toContain('ScatterEncodings.x');
+    expect(basicZh.relatedApis).toContain('ScatterEncodings.y');
+    expect(basicEn.relatedApis).toContain('ScatterEncodings.x');
+    expect(basicEn.relatedApis).toContain('ScatterEncodings.y');
+    expect(basicZh.relatedApis).not.toContain('ScatterEncodings');
+    expect(basicEn.relatedApis).not.toContain('ScatterEncodings');
     expect(basicZh.relatedApis).not.toContain('Legend.channel');
     expect(basicEn.relatedApis).not.toContain('Legend.channel');
   });
 
-  it('收入与寿命示例保留 Gapminder 2007 的完整国家截面', () => {
-    expect(GAPMINDER_SCATTER_YEAR).toBe(2007);
-    expect(incomeLifeExpectancyData).toHaveLength(142);
-    expect(new Set(incomeLifeExpectancyData.map(datum => datum.continent))).toEqual(
-      new Set(['Africa', 'Americas', 'Asia', 'Europe', 'Oceania']),
-    );
-    expect(incomeLifeExpectancyData.every(datum => datum.gdpPerCapita > 0)).toBe(true);
-  });
-
-  it('收入与寿命示例通过 typed color encoding 绑定大洲', () => {
-    for (const source of [incomeLifeExpectancyZhPreviewSource, incomeLifeExpectancyEnPreviewSource]) {
-      expect(canonicalScatterProps(source)).toMatchObject({
-        encodings: {
-          x: 'gdpPerCapita',
-          y: 'lifeExpectancy',
-          color: 'continent',
-        },
+  it('生育率与女性劳动参与率示例通过 typed color 与 shape encoding 同时区分收入组', () => {
+    for (const source of [fertilityWorkZhPreviewSource, fertilityWorkEnPreviewSource]) {
+      expect(canonicalDeclarationProps(source, ScatterEncodings)).toMatchObject({
+        x: 'fertilityRate',
+        y: 'femaleLaborParticipation',
+        color: 'incomeGroup',
+        shape: 'incomeGroup',
       });
-      expect(canonicalScatterMarkProps(source)).toMatchObject({
-        override: true,
-        properties: { size: 10, opacity: 0.82 },
+      expect(canonicalScatterPropertiesProps(source)).toMatchObject({
+        size: 5,
+        opacity: 0.65,
+      });
+      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('fill');
+      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('shape');
+      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('stroke');
+      expect(canonicalScatterProps(source)).toMatchObject({
+        theme: {
+          tokens: {
+            plot: {
+              'plot.palette.shape': [
+                'circle',
+                'rectangle',
+                'diamond',
+                { type: 'polygon', params: { sides: 3, rotate: -90 } },
+              ],
+            },
+          },
+        },
       });
     }
   });
 
-  it('收入与寿命示例保留 recipe 的 color encoding 语义', () => {
-    expect(incomeLifeExpectancyZh.relatedApis).not.toContain('Legend.channel');
-    expect(incomeLifeExpectancyEn.relatedApis).not.toContain('Legend.channel');
+  it('分类编码示例固定双通道映射，并排除会被 encoding 覆盖的 fill 与 shape controls', () => {
+    expect(getPreviewControlFields(fertilityWorkZh.controls).map(control => control.id)).not.toContain(
+      'scatter-fertility-work-point-fill',
+    );
+    expect(getPreviewControlFields(fertilityWorkZh.controls).map(control => control.id)).not.toContain(
+      'scatter-fertility-work-point-shape',
+    );
+    expect(getPreviewControlFields(fertilityWorkEn.controls).map(control => control.id)).not.toContain(
+      'scatter-fertility-work-point-fill',
+    );
+    expect(getPreviewControlFields(fertilityWorkEn.controls).map(control => control.id)).not.toContain(
+      'scatter-fertility-work-point-shape',
+    );
+    expect(fertilityWorkZh.relatedApis).toEqual([
+      'ScatterEncodings.color',
+      'ScatterEncodings.shape',
+      'ScatterProperties.size',
+      'ScatterProperties.stroke',
+      'ScatterProperties.opacity',
+    ]);
+    expect(fertilityWorkEn.relatedApis).toEqual(fertilityWorkZh.relatedApis);
+    expect(fertilityWorkZh.relatedApis).not.toContain('Legend.channel');
+    expect(fertilityWorkEn.relatedApis).not.toContain('Legend.channel');
   });
 
   it('企鹅示例通过 rich encodings 声明分面、抖动与坐标轴', () => {
     for (const source of [penguinFacetZhPreviewSource, penguinFacetEnPreviewSource]) {
-      expect(canonicalScatterMarkProps(source)).toMatchObject({ override: true });
+      expect(canonicalScatterPropertiesProps(source)).toMatchObject({
+        size: 5,
+        shape: 'circle',
+        opacity: 0.72,
+      });
+      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('fill');
+      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('stroke');
       expect(canonicalScatterProps(source)).not.toHaveProperty('plotExtension');
-      expect(canonicalScatterProps(source)).toMatchObject({
-        encodings: {
-          x: {
-            transform: {
-              kind: 'jitter',
-              axis: 'x',
-              xField: 'billLengthMm',
-              amount: 0.35,
-              seed: 42,
-            },
-            output: 'billLengthMm',
+      const encodings = canonicalDeclarationProps(source, ScatterEncodings);
+      expect(encodings).toMatchObject({
+        x: {
+          transform: {
+            kind: 'jitter',
+            xField: 'billLengthMm',
           },
-          y: 'flipperLengthMm',
-          color: 'species',
-          column: { field: 'species', order: ['Adelie', 'Chinstrap', 'Gentoo'] },
-          facet: {
-            header: { column: true },
-            resolve: { scale: { x: 'shared', y: 'shared' } },
-            spacing: { panelGap: 20, labelGap: 52 },
-          },
+          output: 'billLengthMm',
+        },
+        y: 'flipperLengthMm',
+        column: 'species',
+        facet: {
+          header: { column: true },
+          spacing: { panelGap: 20, labelGap: 52 },
         },
       });
+      expect(encodings).not.toHaveProperty('color');
+      expect(encodings).not.toHaveProperty('x.transform.amount');
+      expect(encodings).not.toHaveProperty('x.transform.seed');
+      expect(encodings).not.toHaveProperty('x.transform.axis');
+      expect(encodings).not.toHaveProperty('facet.resolve');
 
-      const children = canonicalScatterChildren(source);
-      const axes = children.filter(child => child.type === PlotAxis);
+      const extension = canonicalDeclarationProps(source, ChartExtension);
+      const axes = Children.toArray(extension.children as ReactNode).filter(
+        child => isValidElement<Record<string, unknown>>(child) && child.type === PlotAxis,
+      );
 
-      expect(axes.map(axis => axis.props)).toMatchObject([
+      expect(axes.map(axis => (axis as ReactElement<Record<string, unknown>>).props)).toMatchObject([
         { dimension: 'x', grid: true },
         { dimension: 'y', grid: true },
       ]);
@@ -303,9 +378,13 @@ describe('Viz Chart scatter controls', () => {
 
       expect(source).toContain('data={penguinScatterData}');
       expect(source).toContain("kind: 'jitter'");
-      expect(source).toContain('column: {');
-      expect(source).toContain('facet: {');
+      expect(source).toContain('column="species"');
+      expect(source).toContain('facet={{');
+      expect(source).not.toContain('color="species"');
+      expect(source).not.toContain('amount:');
+      expect(source).not.toContain('seed:');
       expect(source.match(/<PlotAxis\b/gu)).toHaveLength(2);
+      expect(source).toContain('<ChartExtension>');
       expect(source).not.toContain('<ChartFacet');
       expect(source).not.toContain('<PlotTransform');
       expect(source).not.toContain('dataModel');
@@ -322,13 +401,23 @@ describe('Viz Chart scatter controls', () => {
               'plot.area.fill': {
                 kind: 'image',
                 href: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Football_pitch_metric_tr.svg',
-                fit: 'cover',
               },
             },
+            recipe: { axisEnabled: false },
           },
         },
       });
+      expect(canonicalScatterProps(source)).not.toHaveProperty(['theme', 'tokens', 'plot', 'plot.area.fill', 'fit']);
+      expect(canonicalScatterProps(source)).not.toHaveProperty('theme.tokens.recipe.axisGridEnabled');
       expect(canonicalScatterProps(source)).not.toHaveProperty('theme.tokens.chart.chart.canvas.fill');
+      expect(canonicalScatterPropertiesProps(source)).toMatchObject({
+        size: 5,
+        shape: 'circle',
+        opacity: 0.9,
+      });
+      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('fill');
+      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('stroke');
+      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('strokeWidth');
     }
   });
 
@@ -336,8 +425,8 @@ describe('Viz Chart scatter controls', () => {
     for (const source of [
       basicZhPreviewSource,
       basicEnPreviewSource,
-      incomeLifeExpectancyZhPreviewSource,
-      incomeLifeExpectancyEnPreviewSource,
+      fertilityWorkZhPreviewSource,
+      fertilityWorkEnPreviewSource,
       penguinFacetZhPreviewSource,
       penguinFacetEnPreviewSource,
     ]) {

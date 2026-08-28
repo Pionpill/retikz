@@ -261,22 +261,22 @@ export const vizV01: Release = {
       stableDate: null,
       version: 'v0.1',
       description: {
-        zh: 'Chart 的 React authoring 与 runtime 绑定：提供 Source mode、typed Chart 与受限的 headless presentation / layer marker。',
-        en: 'React authoring and runtime bindings for Chart: Source mode, typed Charts, and constrained headless presentation / layer markers.',
+        zh: 'Chart 的 React declaration authoring 与 runtime 绑定：以具体 typed Chart 根组合公共、chartType 私有与 presentation 声明。',
+        en: 'React declaration authoring and runtime bindings for Chart: concrete typed roots compose shared, chartType-private, and presentation declarations.',
       },
       highlights: [
         {
-          label: { zh: '基础与 typed JSX authoring', en: 'Base and typed JSX authoring' },
+          label: { zh: '按 owner 拆分 declaration', en: 'Owner-scoped declarations' },
           content: {
-            zh: '`Chart` 接收精确 Source 与 presentation marker；`ScatterChart` 把 JSX / props 转为带 `encodings`、`properties` 与 `marks` 的精确 Vanilla Input，并调用对应 normalizer 后进入同一 Chart 主链。通用 API 从根入口导入，typed API 从 `/point` 导入。',
-            en: '`Chart` accepts exact Source and presentation markers. `ScatterChart` converts JSX / props with `encodings`, `properties`, and `marks` into an exact Vanilla input before entering the shared Chart path. Generic APIs come from the root and typed APIs from `/point`.',
+            zh: '根入口提供 `ChartData`、`ChartLayout`、`ChartExtension` 与 presentation；Scatter 入口提供 `ScatterEncodings`、`ScatterProperties`、`ScatterMark`。`ScatterChart` 只保留共享接线与 children，所有声明折叠为既有精确 Vanilla Input。',
+            en: 'The root entry provides `ChartData`, `ChartLayout`, `ChartExtension`, and presentation, while the Scatter entry provides `ScatterEncodings`, `ScatterProperties`, and `ScatterMark`. `ScatterChart` keeps only shared wiring and children; declarations fold into the existing exact Vanilla input.',
           },
         },
         {
-          label: { zh: '同形 rich encodings 与 Plot 声明', en: 'Isomorphic rich encodings and Plot declarations' },
+          label: { zh: '宿主与 Plot 扩展边界', en: 'Host and Plot-extension boundaries' },
           content: {
-            zh: '`ScatterChart`直接接收与JSON / Vanilla同形的rich `encodings`；`ChartFacet` / `ChartFacetProps`已删除。`PlotTransform`、`PlotAxis`等`PlotXxx` children仍进入`plotExtension`并服从同一Chart data flow与空间冲突诊断。',
-            en: '`ScatterChart` accepts the same rich `encodings` shape as JSON and Vanilla; `ChartFacet` and `ChartFacetProps` are removed. `PlotXxx` children such as `PlotTransform` and `PlotAxis` still enter `plotExtension` and share the Chart data flow and spatial-conflict diagnostics.',
+            zh: '`ChartLayout` 的 standalone 尺寸配置唯一 Layout host，并在没有显式 layout 时镜像到 Source；embedded 的高级宿主能力移到外层 `Layout`。Plot declarations 只能放入 `ChartExtension`，继续由 Plot owner 归一化和诊断冲突。',
+            en: '`ChartLayout` standalone dimensions configure the single Layout host and mirror into Source when no explicit layout exists; advanced embedded host capabilities move to the outer `Layout`. Plot declarations are legal only in `ChartExtension` and remain normalized and diagnosed by Plot.',
           },
         },
       ],
@@ -285,10 +285,28 @@ export const vizV01: Release = {
           version: 'alpha.1',
           date: '2026-08-12',
           summary: {
-            zh: 'React adapter 提供图内 presentation marker、Source mode 与首批 point-family typed Chart 入口。',
-            en: 'The React adapter adds in-chart presentation markers, Source mode, and the first point-family typed Chart entries.',
+            zh: 'React adapter 提供 owner-scoped declarations、图内 presentation marker 与首个 point-family typed Chart 入口。',
+            en: 'The React adapter provides owner-scoped declarations, in-chart presentation markers, and the first point-family typed Chart entry.',
           },
-          items: [],
+          items: [
+            {
+              label: { zh: 'BREAKING：根 props 迁为 declarations', en: 'BREAKING: Root props move to declarations' },
+              content: {
+                zh: '`ScatterChart` 删除 `data`、`dataRef`、`dataModel`、`layout`、`encodings`、`properties`、`marks` 与 `plotExtension` 根 props。React 调用方改用 `ChartData`、`ChartLayout`、`ChartExtension`、`ScatterEncodings`、`ScatterProperties` 和 `ScatterMark`；`dataRef` 迁为 `ChartData.reference`，`dataModel` 迁为 `ChartData.model`。Vanilla input 与 JSON Source 不变。',
+                en: '`ScatterChart` removes root `data`, `dataRef`, `dataModel`, `layout`, `encodings`, `properties`, `marks`, and `plotExtension` props. React callers use `ChartData`, `ChartLayout`, `ChartExtension`, `ScatterEncodings`, `ScatterProperties`, and `ScatterMark`; migrate `dataRef` to `ChartData.reference` and `dataModel` to `ChartData.model`. Vanilla input and JSON Source are unchanged.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：高级 host props 移到 Layout',
+                en: 'BREAKING: Advanced host props move to Layout',
+              },
+              content: {
+                zh: '`ScatterChart` 不再接收 CSS、renderer/runtime、动画与 compile callback 等 host props。需要这些能力时用外层 `<Layout>`；standalone 的 width/height 通过 `ChartLayout` 声明，embedded `ChartLayout` 只允许 Source `layout`。',
+                en: '`ScatterChart` no longer accepts CSS, renderer/runtime, animation, or compile-callback host props. Use an outer `<Layout>` for those capabilities; declare standalone width/height through `ChartLayout`, while embedded `ChartLayout` accepts Source `layout` only.',
+              },
+            },
+          ],
         },
       ],
     },

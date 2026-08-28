@@ -9,13 +9,13 @@ Chart 把“方便编写”与“稳定执行”分成两个阶段。React 和 V
 
 <ComponentPreview files="chart-authoring-pipeline" hideCode size="sm" />
 
-| 阶段              | owner                   | 结果                                                |
-| ----------------- | ----------------------- | --------------------------------------------------- |
-| React props / JSX | `@retikz/chart-react`   | 转换为 Vanilla Input，不直接拼 Source               |
-| Plain input       | `@retikz/chart-vanilla` | `normalizeXxxChart` 生成精确、可序列化的 Source     |
-| JSON              | 具体 chartType schema   | 应用层按 family 与 `chartType` 选择 strict schema   |
-| recipe            | 当前 Chart provider     | 生成共享部分与带 kind 的内建 semantic mark groups   |
-| resolve           | Chart resolver          | 按 kind 合并 marks、Plot fragment 与主题并交给 Plot |
+| 阶段               | owner                   | 结果                                                |
+| ------------------ | ----------------------- | --------------------------------------------------- |
+| React declarations | `@retikz/chart-react`   | 按 owner slot 折叠为 Vanilla Input，不直接拼 Source |
+| Plain input        | `@retikz/chart-vanilla` | `normalizeXxxChart` 生成精确、可序列化的 Source     |
+| JSON               | 具体 chartType schema   | 应用层按 family 与 `chartType` 选择 strict schema   |
+| recipe             | 当前 Chart provider     | 生成共享部分与带 kind 的内建 semantic mark groups   |
+| resolve            | Chart resolver          | 按 kind 合并 marks、Plot fragment 与主题并交给 Plot |
 
 JSON 是输入旁路，不跳过 schema。应用层先按 `type` 与 `recipe.chartType` 选择具体 schema，active provider 再确认 recipe 与 family 一致；未知 family、未知 recipe、未知字段和不允许的 mark 都 fail-loud。解析结果保留作者写下的 Source，recipe 产生的坐标、guide 和 Plot mark 只存在于后续解析阶段。
 
@@ -29,7 +29,7 @@ React、Vanilla 与 JSON 使用同一份具体 chartType encoding 结构。adapt
 | ------- | ----------------------------------------------------------------------------- | ---------------------------------- |
 | JSON    | 直接由具体 chartType strict schema 解析                                       | 不绕过 schema 或运行时补字段       |
 | Vanilla | 只把 `row`、`column` 字符串简写展开为 `{ field }`；其余 rich mapping 保持同形 | 不读取数据或 registry 猜测语义     |
-| React   | 把 typed props、Chart marks 与 Plot declarations 收集成同一 Vanilla Input     | 不执行 aggregate、scale 或分面算法 |
+| React   | 把 Chart 公共与 chartType 私有 declarations 收集成同一 Vanilla Input          | 不执行 aggregate、scale 或分面算法 |
 
 字段映射诱导的执行顺序也只有一条：
 
@@ -47,7 +47,7 @@ plotExtension.transform
 
 ## 三套包，各自只做一段
 
-根 `@retikz/chart` 公开 Chart Source 的共享 schema、constants 与 Theme contract；具体 chartType 子路径公开自己的精确 schema 与 provider contribution。recipe / mark Definition 和 resolver 只属于包内实现契约，不是第三方扩展入口。plain `InputScatterChart`、`normalizeXxxChart` 与创建函数属于 `@retikz/chart-vanilla`。React typed Chart 解析 presentation marker 与 Chart mark 组件后，复用相同 normalizer，因此 React 与 Vanilla 不维护平行的 Source 组装规则。动态 family / chartType 路由由应用层负责。
+根 `@retikz/chart` 公开 Chart Source 的共享 schema、constants 与 Theme contract；具体 chartType 子路径公开自己的精确 schema 与 provider contribution。recipe / mark Definition 和 resolver 只属于包内实现契约，不是第三方扩展入口。plain `InputScatterChart`、`normalizeXxxChart` 与创建函数属于 `@retikz/chart-vanilla`。React typed Chart 把 `ChartData` / `ChartLayout` / `ChartExtension`、presentation marker 和 chartType 私有 declaration 折叠到同一 Vanilla Input；Plot declarations 只能位于 `ChartExtension`，并继续复用 Plot normalizer。动态 family / chartType 路由由应用层负责。
 
 | 入口           | 根 `type` | `recipe.chartType` | 导入位置                            |
 | -------------- | --------- | ------------------ | ----------------------------------- |
@@ -64,10 +64,10 @@ Vanilla 的 `createScatterChart` 从 `@retikz/chart-vanilla/point/scatter` 导�
       endLine: 34,
     },
     {
-      label: 'React props 与 declarations 汇入同一 Vanilla Input',
+      label: 'React declarations 汇入同一 Vanilla Input',
       path: 'packages/viz/chart-react/src/point/shared/component.tsx',
-      startLine: 100,
-      endLine: 154,
+      startLine: 133,
+      endLine: 177,
     },
     {
       label: '运行时 Definition 作为 provider sidecar 传递',

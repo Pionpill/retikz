@@ -21,8 +21,12 @@ import { previewControlContract as presentationVisibilityEnContract } from '../.
 import { previewSource as presentationVisibilityZhSource } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.zh.demo';
 import { previewSource as basicEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.en.demo';
 import { previewSource as basicZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.zh.demo';
-import { previewSource as incomeLifeExpectancyEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.en.demo';
-import { previewSource as incomeLifeExpectancyZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.zh.demo';
+import { previewSource as fertilityWorkEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
+import { previewSource as fertilityWorkZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
+import { previewSource as penguinFacetEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.en.demo';
+import { previewSource as penguinFacetZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.zh.demo';
+import { previewSource as worldCupEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.en.demo';
+import { previewSource as worldCupZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.zh.demo';
 
 const canonicalScatterChartOf = (source: PreviewSourceConfig): ReactElement => {
   const chart = source.canonicalRender?.();
@@ -184,38 +188,24 @@ describe('Chart-native Scatter presentation', () => {
     }
   });
 
-  it('normalizes the Chart presentation shorthand order for the Gapminder example', () => {
-    for (const source of [incomeLifeExpectancyZhPreviewSource, incomeLifeExpectancyEnPreviewSource]) {
-      const chart = canonicalScatterChartOf(source);
-
-      expect(chart.type).toBe(ScatterChart);
-      const contribution = scatterContributionOf(chart);
-      expect(contribution.node).toMatchObject({
-        namespace: 'chart',
-        type: 'point',
-        data: { reference: 'chart.data' },
-        recipe: { chartType: 'scatter' },
-        presentation: {
-          title: expect.anything(),
-          subtitle: expect.anything(),
-          note: expect.anything(),
-          source: expect.anything(),
-        },
-      });
-    }
-  });
-
   it('generates reusable Vanilla source and SVG from the real Scatter datasets', () => {
     const cases = [
-      [basicZhPreviewSource, './scatter-basic.data'],
-      [incomeLifeExpectancyZhPreviewSource, './scatter-income-life-expectancy.data'],
+      [basicZhPreviewSource, './scatter-basic.data', 'countryScatterData'],
+      [basicEnPreviewSource, './scatter-basic.data', 'countryScatterData'],
+      [fertilityWorkZhPreviewSource, './scatter-fertility-work.data', 'fertilityWorkData'],
+      [fertilityWorkEnPreviewSource, './scatter-fertility-work.data', 'fertilityWorkData'],
+      [penguinFacetZhPreviewSource, './scatter-penguins-facet-jitter.data', 'penguinScatterData'],
+      [penguinFacetEnPreviewSource, './scatter-penguins-facet-jitter.data', 'penguinScatterData'],
+      [worldCupZhPreviewSource, './scatter-world-cup-shots.data', 'messiWorldCupShots'],
+      [worldCupEnPreviewSource, './scatter-world-cup-shots.data', 'messiWorldCupShots'],
     ] as const;
 
-    for (const [source, datasetModule] of cases) {
+    for (const [source, datasetModule, datasetExport] of cases) {
       const preview = buildPreviewIR(() => source.canonicalRender?.() ?? null);
       const vanilla = buildVanillaPreview(preview, { datasetImports: source.datasetImports });
 
-      expect(vanilla.code).toContain(`import { countryScatterData } from '${datasetModule}';`);
+      expect(vanilla.code).toContain(`import { ${datasetExport} } from '${datasetModule}';`);
+      expect(vanilla.code).not.toContain('const datasets =');
       expect(vanilla.code).toContain("import { renderChart } from '@retikz/chart-vanilla';");
       expect(vanilla.code).toContain("import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';");
       expect(vanilla.code).not.toContain('markDefinitions: [scatterMarkDefinition]');

@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
-import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
-import { ScatterChart, ScatterMark } from '@retikz/chart-react/point/scatter';
+import { ChartData, ChartExtension, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point/scatter';
 import { PlotAxis } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -11,57 +11,57 @@ import { penguinScatterData } from './scatter-penguins-facet-jitter.data';
 import { previewControlContract } from './scatter-penguins-facet-jitter.en.controls';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <ScatterChart
-    data={penguinScatterData}
-    encodings={{
-      x: {
+  <ScatterChart>
+    <ChartData data={penguinScatterData} />
+    <ChartLayout width={800} height={500} />
+    <ScatterEncodings
+      x={{
         transform: {
           kind: 'jitter',
-          axis: 'x',
           xField: 'billLengthMm',
-          amount: values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.jitter],
-          seed: 42,
         },
         output: 'billLengthMm',
-      },
-      y: 'flipperLengthMm',
-      color: 'species',
-      column: {
-        field: 'species',
-        order: ['Adelie', 'Chinstrap', 'Gentoo'],
-      },
-      facet: {
+      }}
+      y="flipperLengthMm"
+      column="species"
+      facet={{
         header: { column: true },
-        resolve: { scale: { x: 'shared', y: 'shared' } },
         spacing: { panelGap: 20, labelGap: 52 },
-      },
-    }}
-    layout={{ width: 800, height: 500 }}
-    width={800}
-    height={500}
-  >
+      }}
+    />
     <ChartTitle>Bill and flipper length across three penguin species</ChartTitle>
     <ChartSubtitle>Palmer Penguins; first 30 complete source-order records per species</ChartSubtitle>
     <ChartSource>Palmer Station Antarctica LTER; CC0; 342 of 344 rows have both measurements</ChartSource>
-    <PlotAxis dimension="x" title="Bill length (mm)" grid />
-    <PlotAxis dimension="y" title="Flipper length (mm)" grid />
-    <ScatterMark
-      override
-      properties={{
-        size: values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointSize],
-        opacity: 0.72,
-      }}
+    <ChartExtension>
+      <PlotAxis dimension="x" title="Bill length (mm)" grid />
+      <PlotAxis dimension="y" title="Flipper length (mm)" grid />
+    </ChartExtension>
+    <ScatterProperties
+      size={values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointSize]}
+      {...(values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointFillEnabled]
+        ? { fill: values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointFill] }
+        : {})}
+      {...(values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointStrokeEnabled]
+        ? { stroke: values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointStroke] }
+        : {})}
+      shape={values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointShape]}
+      opacity={values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointOpacity]}
     />
   </ScatterChart>
 ));
 
 /** Stable source configuration derived from canonical control values */
-export const previewSource = controlledPreview.source;
+export const previewSource = {
+  ...controlledPreview.source,
+  datasetImports: {
+    'chart.data': { name: 'penguinScatterData', from: './scatter-penguins-facet-jitter.data' },
+  },
+};
 
 /** Explicit fallback when the controls registry is unavailable */
 export const previewControls = previewControlContract.controls;
 
-/** Faceting and deterministic jitter through rich encodings */
+/** Faceting and jitter through rich encodings */
 const Demo: FC = controlledPreview.Component;
 
 export default Demo;

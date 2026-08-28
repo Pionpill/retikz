@@ -9,13 +9,13 @@ Chart separates convenient authoring from stable execution. React and Vanilla no
 
 <ComponentPreview files="chart-authoring-pipeline" hideCode size="sm" />
 
-| Stage             | Owner                     | Result                                                        |
-| ----------------- | ------------------------- | ------------------------------------------------------------- |
-| React props / JSX | `@retikz/chart-react`     | Converts to Vanilla Input                                     |
-| Plain input       | `@retikz/chart-vanilla`   | `normalizeXxxChart` produces exact Source                     |
-| JSON              | Concrete chartType schema | Application selects a strict schema by family and `chartType` |
-| recipe            | Active Chart provider     | Produces shared parts and kind-tagged semantic mark groups    |
-| resolve           | Chart resolver            | Merges marks by kind, Plot fragments, and Theme inputs        |
+| Stage              | Owner                     | Result                                                        |
+| ------------------ | ------------------------- | ------------------------------------------------------------- |
+| React declarations | `@retikz/chart-react`     | Folds owner slots into Vanilla Input                          |
+| Plain input        | `@retikz/chart-vanilla`   | `normalizeXxxChart` produces exact Source                     |
+| JSON               | Concrete chartType schema | Application selects a strict schema by family and `chartType` |
+| recipe             | Active Chart provider     | Produces shared parts and kind-tagged semantic mark groups    |
+| resolve            | Chart resolver            | Merges marks by kind, Plot fragments, and Theme inputs        |
 
 JSON is an alternate input, not a schema bypass. The application selects the concrete schema from `type` and `recipe.chartType`, and the active provider confirms that the recipe belongs to the root family. Unknown families, recipes, fields, and incompatible marks fail loudly. The parsed Source preserves author intent; recipe-generated coordinates, guides, and Plot marks only exist in later resolution stages.
 
@@ -29,7 +29,7 @@ React, Vanilla, and JSON use the same concrete chartType encoding structure. Ada
 | ------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
 | JSON    | Parses directly with the concrete chartType strict schema                                                          | Bypass schemas or invent fields at runtime    |
 | Vanilla | Expands only `row` and `column` string shorthand to `{ field }`; keeps every other rich mapping unchanged in shape | Inspect data or registries to infer semantics |
-| React   | Collects typed props, Chart marks, and Plot declarations into the same Vanilla Input                               | Execute aggregate, scale, or facet algorithms |
+| React   | Collects shared Chart and chartType-private declarations into the same Vanilla Input                               | Execute aggregate, scale, or facet algorithms |
 
 Field-induced execution also follows one order:
 
@@ -47,7 +47,7 @@ Custom transform, reducer, scale, and similar Definitions enter the Chart provid
 
 ## Three packages, one stage each
 
-The root `@retikz/chart` entry exposes shared Chart Source schemas, constants, and the Theme contract. Each concrete chartType subpath exposes its exact schema and provider contribution. Recipe / mark Definitions and resolvers are package-internal implementation contracts, not third-party extension entry points. Plain types such as `InputScatterChart`, normalizers, and factory functions belong to `@retikz/chart-vanilla`. Typed React Charts interpret presentation markers and mark components before reusing the same normalizers, so React and Vanilla do not maintain parallel Source assembly rules. Dynamic family / chartType routing belongs to the application layer.
+The root `@retikz/chart` entry exposes shared Chart Source schemas, constants, and the Theme contract. Each concrete chartType subpath exposes its exact schema and provider contribution. Recipe / mark Definitions and resolvers are package-internal implementation contracts, not third-party extension entry points. Plain types such as `InputScatterChart`, normalizers, and factory functions belong to `@retikz/chart-vanilla`. Typed React Charts fold `ChartData`, `ChartLayout`, `ChartExtension`, presentation markers, and chartType-private declarations into the same Vanilla Input. Plot declarations are legal only inside `ChartExtension` and continue through the Plot normalizer. Dynamic family / chartType routing belongs to the application layer.
 
 | Entry          | Root `type` | `recipe.chartType` | Import                              |
 | -------------- | ----------- | ------------------ | ----------------------------------- |
@@ -64,10 +64,10 @@ The Vanilla factory `createScatterChart` comes from `@retikz/chart-vanilla/point
       endLine: 34,
     },
     {
-      label: 'React props and declarations converge on one Vanilla Input',
+      label: 'React declarations converge on one Vanilla Input',
       path: 'packages/viz/chart-react/src/point/shared/component.tsx',
-      startLine: 100,
-      endLine: 154,
+      startLine: 133,
+      endLine: 177,
     },
     {
       label: 'Runtime Definitions travel as a provider sidecar',

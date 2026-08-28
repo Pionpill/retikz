@@ -105,16 +105,16 @@ describe('<ShowcaseTabs>', () => {
   });
 
   it('切换 Tab 时保留 example，并在回到 Examples 时删除默认 tab 参数', () => {
-    const container = renderTabs('/viz/chart/points/scatter?example=scatter-income-life-expectancy');
+    const container = renderTabs('/viz/chart/points/scatter?example=scatter-fertility-work');
 
     clickTab(container, 'API');
     expect(container.querySelector('[data-location]')?.textContent).toBe(
-      '/viz/chart/points/scatter?example=scatter-income-life-expectancy&tab=api',
+      '/viz/chart/points/scatter?example=scatter-fertility-work&tab=api',
     );
 
     clickTab(container, 'Examples');
     expect(container.querySelector('[data-location]')?.textContent).toBe(
-      '/viz/chart/points/scatter?example=scatter-income-life-expectancy',
+      '/viz/chart/points/scatter?example=scatter-fertility-work',
     );
   });
 

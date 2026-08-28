@@ -2,7 +2,8 @@ import type { CoreProviderContribution } from '@retikz/core';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
-import { ScatterChart } from '@retikz/chart-react/point/scatter';
+import { ChartData, ChartLayout } from '@retikz/chart-react';
+import { ScatterChart, ScatterEncodings } from '@retikz/chart-react/point/scatter';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
@@ -72,13 +73,11 @@ const PlotStandaloneDemo: FC = () => (
 );
 
 const ChartStandaloneDemo: FC = () => (
-  <ScatterChart
-    data={[{ x: 1, y: 2 }]}
-    encodings={{ x: 'x', y: 'y' }}
-    width={640}
-    height={360}
-    layout={{ width: 320, height: 180 }}
-  />
+  <ScatterChart>
+    <ChartData data={[{ x: 1, y: 2 }]} />
+    <ChartLayout width={640} height={360} layout={{ width: 320, height: 180 }} />
+    <ScatterEncodings x="x" y="y" />
+  </ScatterChart>
 );
 
 describe('buildPreviewIR', () => {
@@ -128,7 +127,7 @@ describe('buildPreviewIR', () => {
     expect(preview.ir.children[0]).toMatchObject({ namespace: 'plot', type: 'plot', width: 240, height: 120 });
   });
 
-  it('separates standalone Chart host dimensions from embedded Source layout', () => {
+  it('reads standalone dimensions from ChartLayout while preserving an explicit Source layout', () => {
     const preview = buildPreviewIR(ChartStandaloneDemo);
 
     expect(preview).toMatchObject({ width: 640, height: 360 });

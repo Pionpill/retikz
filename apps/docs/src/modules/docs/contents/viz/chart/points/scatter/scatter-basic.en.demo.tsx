@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
-import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
-import { ScatterChart, ScatterMark } from '@retikz/chart-react/point/scatter';
+import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point/scatter';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -10,27 +10,25 @@ import { countryScatterData } from './scatter-basic.data';
 import { previewControlContract } from './scatter-basic.en.controls';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <ScatterChart
-    data={countryScatterData}
-    encodings={{
-      x: 'urbanPopulationShare',
-      y: 'internetUseShare',
-    }}
-    layout={{ width: 800, height: 500 }}
-    width={800}
-    height={500}
-  >
+  <ScatterChart>
+    <ChartData data={countryScatterData} />
+    <ChartLayout width={800} height={500} />
+    <ScatterEncodings x="urbanPopulationShare" y="internetUseShare" />
     <ChartTitle>Urbanization and Internet use</ChartTitle>
     <ChartSubtitle>181 economies in 2023; both axes show the share of population (%)</ChartSubtitle>
     <ChartSource>
       World Bank: SP.URB.TOTL.IN.ZS and IT.NET.USER.ZS; economies with observations for both indicators in 2023
     </ChartSource>
-    <ScatterMark
-      override
-      properties={{
-        size: values[SCATTER_BASIC_CONTROL_IDS.pointSize],
-        opacity: values[SCATTER_BASIC_CONTROL_IDS.pointOpacity],
-      }}
+    <ScatterProperties
+      size={values[SCATTER_BASIC_CONTROL_IDS.pointSize]}
+      {...(values[SCATTER_BASIC_CONTROL_IDS.pointFillEnabled]
+        ? { fill: values[SCATTER_BASIC_CONTROL_IDS.pointFill] }
+        : {})}
+      {...(values[SCATTER_BASIC_CONTROL_IDS.pointStrokeEnabled]
+        ? { stroke: values[SCATTER_BASIC_CONTROL_IDS.pointStroke] }
+        : {})}
+      shape={values[SCATTER_BASIC_CONTROL_IDS.pointShape]}
+      opacity={values[SCATTER_BASIC_CONTROL_IDS.pointOpacity]}
     />
   </ScatterChart>
 ));

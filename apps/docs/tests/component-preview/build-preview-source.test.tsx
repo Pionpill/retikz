@@ -1,8 +1,8 @@
 import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
-import { ChartSource, ChartTitle } from '@retikz/chart-react';
-import { ScatterChart } from '@retikz/chart-react/point';
+import { ChartData, ChartLayout, ChartSource, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
@@ -83,16 +83,15 @@ const PlotDemo: FC = () => (
 );
 
 const ChartDemo: FC = () => (
-  <ScatterChart
-    data={[
-      { income: 1000, life: 61 },
-      { income: 4000, life: 72 },
-    ]}
-    encodings={{ x: 'income', y: 'life' }}
-    layout={{ width: 320, height: 200 }}
-    width={320}
-    height={200}
-  >
+  <ScatterChart>
+    <ChartData
+      data={[
+        { income: 1000, life: 61 },
+        { income: 4000, life: 72 },
+      ]}
+    />
+    <ChartLayout width={320} height={200} />
+    <ScatterEncodings x="income" y="life" />
     <ChartTitle>Income and life expectancy</ChartTitle>
     <ChartSource>World Bank</ChartSource>
   </ScatterChart>

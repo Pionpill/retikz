@@ -22,25 +22,13 @@ usage: distribution
     {
       id: 'scatter-fertility-work',
       title: 'Categorical encoding',
-      description: 'Compare fertility and female labor-force participation from a real World Bank country cross-section, then switch between color and shape encoding.',
+      description: 'Compare fertility and female labor-force participation from a real World Bank country cross-section, using color and shape together to distinguish income groups.',
       preview: {
         files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
         controls: { name: 'scatter-fertility-work' },
         controlPanelDefaultOpen: false,
         size: 'xxxl',
-        caption: 'Switch income-group color or shape encoding to see the same field binding change the point expression.',
-      },
-    },
-    {
-      id: 'scatter-income-life-expectancy',
-      title: 'Association and categorical color',
-      description: 'Compare GDP per capita and life expectancy in the Gapminder 2007 country cross-section, using continent color to reveal overlap and difference.',
-      preview: {
-        files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
-        controls: { name: 'scatter-income-life-expectancy' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: 'Title, subtitle, note, and source occupy fixed presentation slots; color encodes continent.',
+        caption: 'Bind income group to both color and shape, so each category keeps a distinct color-and-point-shape combination.',
       },
     },
     {
@@ -52,7 +40,7 @@ usage: distribution
         controls: { name: 'scatter-penguins-facet-jitter' },
         controlPanelDefaultOpen: false,
         size: 'xxxl',
-        caption: 'The three species use separate panels with shared x and y scales; a fixed seed keeps horizontal jitter reproducible in controls and source previews.',
+        caption: 'The three species use separate panels with shared x and y scales; the x mapping uses jitter to separate overlapping points.',
       },
     },
     {
@@ -69,11 +57,15 @@ usage: distribution
     },
   ]}
 >
-This API section lists only Scatter-specific field mappings and mark behavior. Shared Chart props, field types, transforms, scales, presentation, and Plot extensions are not repeated here; see [Chart Model](/viz/chart/model).
+This API section lists only Scatter-private declarations. `ChartData`, `ChartLayout`, `ChartExtension`, presentation, and shared root wiring are not repeated; see the [shared Chart API](/viz/chart).
 
-## `ScatterChart.encodings`
+## `ScatterChart`
 
-`ScatterChartEncodingsSchema` is the runtime source of truth for Scatter encodings, and `IRScatterChartEncodings` is derived from it. React `ScatterChartProps.encodings`, Vanilla input, and JSON Source all use this exact table.
+`ScatterChart` fixes the Point family and Scatter recipe identity. It has no Scatter-private root prop: field mappings, constant properties, and marks use the three declarations below, while the root retains only shared Chart wiring and `children`.
+
+## `ScatterEncodings`
+
+`ScatterEncodingsProps` exactly reuses schema-derived `IRScatterChartEncodings`. Vanilla input and JSON Source keep the same encoding payload; React authors it as a separate declaration.
 
 | Slot             | Supported Scatter mappings                                                            | Scatter-specific constraint                                                                       |
 | ---------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -93,15 +85,27 @@ Scatter rejects `series`, `detail`, `order`, `text`, and ordinary slot arrays wi
 `row` / `column` / `facet` are Scatter's facet mappings. `facet` cannot be used without `row` or `column`, and x/y `bin` mappings are rejected when a facet is present.
 
 ```tsx
-encodings={{
-  x: 'billLengthMm',
-  y: 'flipperLengthMm',
-  column: { field: 'species', order: ['Adelie', 'Chinstrap', 'Gentoo'] },
-  facet: { header: { column: true }, spacing: { panelGap: 20 } },
-}}
+<ScatterEncodings
+  x="billLengthMm"
+  y="flipperLengthMm"
+  column={{ field: 'species', order: ['Adelie', 'Chinstrap', 'Gentoo'] }}
+  facet={{ header: { column: true }, spacing: { panelGap: 20 } }}
+/>
 ```
 
 `row` / `column` partition panels; they do not choose a mark type. Scatter continues to use its point mark. Plot owns facet panel arrangement, scale resolution, and location, so Source does not repeat derived panel ids or coordinates.
+
+## `ScatterProperties`
+
+`ScatterProperties` declares recipe-level constants and does not accept field mappings; use `ScatterEncodings` for data-driven visual changes. `ScatterPropertiesProps` fields are grouped below.
+
+| Fields                                                                                      | Values                                                   |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `color`, `textColor`, `fill`, `stroke`, `shape`                                             | Colors, paints, or an extensible shape name              |
+| `size`, `minimumSize`, `scale`, `rotate`, `dx`, `dy`, `padding`, `margin`, `cornerRadius`   | Finite numbers or the corresponding JSON-safe structures |
+| `strokeWidth`, `fillOpacity`, `strokeOpacity`, `opacity`, `dashed`, `dotted`, `dashPattern` | Stroke, opacity, and dash constants                      |
+| `zIndex`, `align`, `lineHeight`, `maxTextWidth`, `font`, `label`                            | Drawing order, text, and label configuration             |
+| `boundary`, `shadow`, `blendMode`                                                           | Boundary, shadow, and blend mode                         |
 
 ## `ScatterMark`
 

@@ -12,10 +12,11 @@ Chart represents a complete graphic: the root `type` is a discoverable family, w
 
 ## A minimal Point Chart
 
-Concrete graphics use typed Chart entries. This `ScatterChart` produces Source with `type: 'point'` and `recipe.chartType: 'scatter'`; `encodings` bind fields and `properties` contain constants.
+Concrete graphics use a typed Chart root and fill public and private slots through owner-scoped declarations. This `ScatterChart` produces Source with `type: 'point'` and `recipe.chartType: 'scatter'`.
 
 ```tsx
-import { ScatterChart } from '@retikz/chart-react/point/scatter';
+import { ChartData, ChartLayout, ChartSource, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point/scatter';
 
 const rows = [
   { x: 1, y: 2 },
@@ -23,27 +24,38 @@ const rows = [
   { x: 3, y: 5 },
 ];
 
-<ScatterChart
-  data={rows}
-  encodings={{ x: 'x', y: 'y' }}
-  properties={{ size: 8 }}
-  title="Relationship between two variables"
-  source="Example data"
-  layout={{ width: 640, height: 360 }}
-/>;
+<ScatterChart>
+  <ChartData data={rows} />
+  <ChartLayout width={640} height={360} />
+  <ScatterEncodings x="x" y="y" />
+  <ScatterProperties size={8} />
+  <ChartTitle>Relationship between two variables</ChartTitle>
+  <ChartSource>Example data</ChartSource>
+</ScatterChart>;
 ```
+
+## Shared declaration API
+
+| Declaration                                                  | Cardinality    | Main props                        | Responsibility                                                                                                          |
+| ------------------------------------------------------------ | -------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `ChartData`                                                  | Exactly 1      | `data`, `reference?`, `model?`    | Declares runtime rows, the Source data reference, and field model; actual rows do not enter JSON Source                 |
+| `ChartLayout`                                                | At most 1      | `width?`, `height?`, `layout?`    | Declares standalone host dimensions and the Source border-box; an explicit `layout` is not field-merged with dimensions |
+| `ChartExtension`                                             | At most 1      | Plot extension props, `children?` | Isolates Plot-owned axes, legends, transforms, and independent Plot marks                                               |
+| `ChartTitle` / `ChartSubtitle` / `ChartNote` / `ChartSource` | At most 1 each | `children`                        | Writes fixed presentation slots; arrays and Fragments are transparent grouping only                                     |
+
+Plot declarations cannot be direct children of a concrete Chart. `ChartExtension` props and children enter the same Plot normalizer; prop transforms precede child transforms, while Plot reports duplicate sources for single-value slots.
+
+A concrete Chart root traverses only arrays and transparent Fragments, never DOM or custom React components; wrapped declarations fail loudly. `ChartExtension` children accept only Plot declarations, arrays, transparent Fragments, and empty slots. Ordinary iterables such as `Set` or generators are rejected, as are Chart declarations inside the extension and Plot declarations at the Chart root.
+
+The concrete Chart root keeps only wiring shared by all chart types: optional `id`, `theme`, `panel`, `themeDefinitions`, and `lowerOptions`, plus required `children`. Data, layout, recipe, and Plot extension values are no longer root props.
 
 ## React hosting and embedding
 
-Every concrete Chart component provides Layout capability by default. Rendering `<ScatterChart>` directly creates exactly one `Layout` / Scene host. Inside an existing `<Layout>`, Chart contributes only the Chart-to-Plot-to-Core Scope/composite, inherits the outer effective Theme, and does not create a second SVG.
+Rendering a concrete Chart directly creates exactly one `Layout` / Scene host. `ChartLayout.width` and `height` must be finite positive numbers and configure that host. Without an explicit `layout`, declared dimensions also mirror into Source. An explicit `layout` stays independent and is not merged with host dimensions.
 
-`width`, `height`, CSS, renderer/runtime, animation, and compile callbacks are all `ChartHostProps` and are valid only for standalone use. An embedded Chart fails loudly when it owns any of those fields, including an explicit `undefined`; move them to the outer `<Layout>`. Chart Source `layout` remains the separate border-box contract and is never populated or overwritten by host `width` / `height`; Chart `id` remains optional.
+Inside an existing `<Layout>`, Chart contributes only its Chart-to-Plot-to-Core Scope/composite, inherits the outer effective Theme, and creates no second SVG. Embedded `ChartLayout` accepts only `layout`; declaring `width` or `height`, including explicit `undefined`, fails loudly. Configure CSS, renderer/runtime, animation, and compile callbacks on the outer `<Layout>`.
 
-When you already have JSON Source that matches an exact schema, the application
-should select the concrete entry from `type` and `recipe.chartType`. Chart does
-not provide a generic `<Chart source={...}>` component that dynamically loads
-every family. To compose axes, legends, or an independent Plot mark, write a
-Source `plotExtension` fragment or use Plot directly.
+When JSON Source already matches an exact schema, the application selects the concrete entry from `type` and `recipe.chartType`; Chart does not provide a generic `<Chart source={...}>` that dynamically loads every family. Vanilla and JSON Source APIs are unchanged by the React declaration structure.
 
 <SourceLinks
   sources={[
@@ -54,22 +66,22 @@ Source `plotExtension` fragment or use Plot directly.
       endLine: 11,
     },
     {
-      label: 'Point Chart shared mark components',
-      path: 'packages/viz/chart-react/src/point/shared/marks.tsx',
-      startLine: 4,
-      endLine: 14,
+      label: 'Shared Chart declarations',
+      path: 'packages/viz/chart-react/src/shared/ChartData.tsx',
+      startLine: 5,
+      endLine: 17,
     },
     {
-      label: 'Standalone and embedded Chart host-field boundary',
-      path: 'packages/viz/chart-react/src/shared/host.ts',
-      startLine: 30,
-      endLine: 44,
+      label: 'ChartLayout dimensions and Source layout contract',
+      path: 'packages/viz/chart-react/src/shared/ChartLayout.tsx',
+      startLine: 6,
+      endLine: 18,
     },
     {
-      label: 'Concrete Chart components share one Layout / InputEmbed entry',
+      label: 'Concrete Chart Layout / InputEmbed wiring',
       path: 'packages/viz/chart-react/src/point/shared/component.tsx',
-      startLine: 102,
-      endLine: 130,
+      startLine: 179,
+      endLine: 205,
     },
   ]}
 />
