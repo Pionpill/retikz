@@ -2,7 +2,7 @@
 
 > alpha.1 以 ADR-09 规定的 family、recipe、mark、Theme、provider 与 Plot 出口作为当前基础设施总决策，先闭环 Point family 的可发布能力，再按 capability gate 处理后续 chartType。当前只确认 `scatter` 已实现；其它 Point chartType 与 `regression`、`ranged-dot`、`strip` 仍 planned / gated，milestone 尚未完成
 >
-> 关联：[`chart v0.1 roadmap`](../roadmap.md) · [`Chart 总设计`](../../../../../architecture/chart-design.md) · [`Chart 封装完备设计`](../../../../../architecture/chart-encapsulation-complete.md) · [`Data 能力完备设计`](../../../../../architecture/data-capability-complete.md) · [`Plot 可视化完备设计`](../../../../../architecture/plot-visualization-complete.md) · [`ADR-11`](./11-chart-encoding-field-mapping.md)
+> 关联：[`chart v0.1 roadmap`](../roadmap.md) · [`Chart 总设计`](../../../../../architecture/chart-design.md) · [`Chart 封装完备设计`](../../../../../architecture/chart-encapsulation-complete.md) · [`Data 能力完备设计`](../../../../../architecture/data-capability-complete.md) · [`Plot 可视化完备设计`](../../../../../architecture/plot-visualization-complete.md) · [`ADR-11`](./11-chart-encoding-field-mapping.md) · [`ADR-12`](./12-chart-react-declaration-authoring.md)
 
 ## 1. Milestone 目标与当前状态
 
@@ -14,10 +14,11 @@ alpha.1 要证明 Point family 可以在精确 Source、recipe、Plot lowering�
 4. authored `recipe.marks` 默认按数组顺序追加，`override: true` 按 kind 原位替换内建 semantic group；`plotExtension.marks` 最后追加且不继承 Chart slots
 5. Theme 使用 Chart、Plot、recipe 三个 owner slice，并按 Core mode / style、named/base chain、inline tokens 的固定顺序级联
 6. provider graph、Standard Surface 与 Plot 出口组成 renderer-neutral 的唯一结果；React、Vanilla、JSON 与 SSR 复用同一精确 Source、active provider 与 resolver 主链
+7. React 以 Chart 公共、chartType 私有、Chart mark 与 Plot extension 的 owner-scoped declarations 组装同一 Vanilla Input，不把组件树变成 Source grammar
 
 当前状态是进行中：Point family 的 Scatter recipe 已形成实现闭环；ADR-05 及其它未实现 chartType 仍为 deferred / gated；ADR-06、ADR-07、ADR-08 的依赖 gate 继续保留。不能因为基础设施或单个 recipe 已可消费就宣称整个 alpha.1 完成
 
-## 2. ADR-01～03、ADR-09～11 的关系
+## 2. ADR-01～03、ADR-09～12 的关系
 
 ADR-09 是当前 family / recipe Chart 基础设施的总决策。早期 ADR-01～03 中与 Source shell、recipe 分发、Theme owner、公开入口和 presentation 组合有关的部分，以 ADR-09 的长期契约为准；仍与当前实现一致的 Plot lower、Vanilla normalize、React 复用 Vanilla、Standard presentation 边界继续保留
 
@@ -34,6 +35,7 @@ ADR-09 是当前 family / recipe Chart 基础设施的总决策。早期 ADR-01�
 | 09  | family、recipe、mark Source IR、Theme、registry 与 provider 的当前基础设施总决策                                                                      | Accepted         |
 | 10  | 保留Chart / Plot声明owner分层与`PlotXxx`命名；`ChartFacet` / `recipe.facet`部分待ADR-11 Accepted后由其替代                                            | Accepted         |
 | 11  | Scatter exact encodings、Data output model、rich mapping调度与旧facet surface迁移                                                                     | Proposed         |
+| 12  | Chart React 公共与chartType私有声明组件、`ChartExtension`容器和具体Chart根属性收敛                                                                    | Proposed         |
 
 ## 3. 当前 Source 与解析主链
 
@@ -94,7 +96,7 @@ provider graph 与 Standard Surface gate 已闭环，Scatter 的 concrete provid
 - concrete provider contribution 安装该 Definition；当前 Core compile 边界拒绝重复 chartType、family mismatch、未知 base 与依赖缺失
 - 应用层负责动态 family / chartType catalog、模块加载与 JSON 路由；Chart 不提供第三方 recipe / chartType 注册入口
 
-React只收集props、marker与children并映射到Vanilla Input；Vanilla只展开`row / column`字符串shorthand并把typed Input normalize为Source；JSON、Vanilla、React与SSR不各自实现aggregate、scale、composition、dispatch、默认或Theme resolve。runtime reducer / transform / scale Definition通过provider sidecar保真传递，不进入JSON Source；动态JSON路由由应用层负责
+React当前收集props、marker与children并映射到Vanilla Input；ADR-12拟将其收敛为Chart公共singleton、chartType私有singleton、Chart marks与`ChartExtension`中的Plot declarations，保持独立owner。Vanilla只展开`row / column`字符串shorthand并把typed Input normalize为Source；JSON、Vanilla、React与SSR不各自实现aggregate、scale、composition、dispatch、默认或Theme resolve。runtime reducer / transform / scale Definition通过provider sidecar保真传递，不进入JSON Source；动态JSON路由由应用层负责
 
 ## 7. 仍保留的 capability gates
 
