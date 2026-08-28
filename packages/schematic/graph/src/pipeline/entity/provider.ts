@@ -1,6 +1,6 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
 
-import { CylinderShapeProvider, HexagonShapeProvider } from '@retikz/standard/shape';
+import { EllipticCapsuleShapeProvider, HexagonShapeProvider } from '@retikz/standard/shape';
 
 import type { GraphDefinitionOptions } from '../../contract';
 
@@ -23,7 +23,7 @@ const makeEntityDefinition: CoreDependencyProvider['makeDefinition'] = datasets 
 export const createEntityProvider = (options: GraphDefinitionOptions = {}): CoreDependencyProvider =>
   Object.freeze({
     key: EntityProviderKey,
-    dependencies: Object.freeze([HexagonShapeProvider.key, CylinderShapeProvider.key]),
+    dependencies: Object.freeze([HexagonShapeProvider.key, EllipticCapsuleShapeProvider.key]),
     datasets: createGraphRuntimeDatasets(options),
     makeDefinition: makeEntityDefinition,
   });

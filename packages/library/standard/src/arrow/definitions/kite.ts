@@ -9,12 +9,14 @@ import { filledPath, hollowPath } from './_utils';
 export const KiteArrowDefinition = defineArrow({
   name: StandardArrowName.Kite,
   lineContactX: 0,
+  defaultLength: 11,
+  defaultWidth: 6,
   emit: context => [
     filledPath(context, [
       [0, 5],
-      [2.5, 2.5],
+      [2.5, 0],
       [10, 5],
-      [2.5, 7.5],
+      [2.5, 10],
     ]),
   ],
 });
@@ -33,14 +35,16 @@ export const OpenKiteArrowDefinition = defineArrow({
   hollow: true,
   lineContactX: 1,
   tipX: 9,
+  defaultLength: 11,
+  defaultWidth: 6,
   emit: context => [
     hollowPath(
       context,
       [
         [1, 5],
-        [3, 3],
+        [3, 1],
         [9, 5],
-        [3, 7],
+        [3, 9],
       ],
       { strokeLinejoin: 'round' },
     ),

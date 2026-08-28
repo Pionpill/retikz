@@ -80,6 +80,13 @@ describe('Node label placement', () => {
       expect(() => NodeLabelSchema.parse({ text: 'L', position: { boundary: 'top', offset: 0.5 } })).toThrow();
     });
 
+    it('接受 Core 文本对齐值并拒绝未知值', () => {
+      expect(NodeLabelSchema.parse({ text: 'L', align: 'start' })).toMatchObject({ align: 'start' });
+      expect(NodeLabelSchema.parse({ text: 'L', align: 'middle' })).toMatchObject({ align: 'middle' });
+      expect(NodeLabelSchema.parse({ text: 'L', align: 'end' })).toMatchObject({ align: 'end' });
+      expect(() => NodeLabelSchema.parse({ text: 'L', align: 'left' })).toThrow();
+    });
+
     it('拒绝 inside placement 与 pin 同时出现', () => {
       expect(() =>
         NodeLabelSchema.parse({
@@ -192,6 +199,72 @@ describe('Node label placement', () => {
             silent,
           ).scene,
       ).toThrow(/boundary.*box-like|box-like.*boundary/i);
+    });
+
+    it('bottom boundary 的 start / end 沿切线贴合视觉盒边缘', () => {
+      const start = compileToScene(
+        sceneWithLabel({ text: 'Start', position: { boundary: 'bottom', fraction: 0 }, align: 'start', distance: 0 }),
+        silent,
+      ).scene;
+      const end = compileToScene(
+        sceneWithLabel({ text: 'End', position: { boundary: 'bottom', fraction: 0 }, align: 'end', distance: 0 }),
+        silent,
+      ).scene;
+      const startLabel = labelText(start.primitives, 'Start')!;
+      const endLabel = labelText(end.primitives, 'End')!;
+      const borderX = -50;
+
+      expect(startLabel.x - startLabel.measuredWidth / 2).toBeCloseTo(borderX);
+      expect(endLabel.x + endLabel.measuredWidth / 2).toBeCloseTo(borderX);
+      expect(startLabel.y).toBeCloseTo(endLabel.y);
+    });
+
+    it('right boundary 的切线方向从上到下', () => {
+      const start = compileToScene(
+        sceneWithLabel({ text: 'Start', position: { boundary: 'right', fraction: 0 }, align: 'start', distance: 0 }),
+        silent,
+      ).scene;
+      const end = compileToScene(
+        sceneWithLabel({ text: 'End', position: { boundary: 'right', fraction: 0 }, align: 'end', distance: 0 }),
+        silent,
+      ).scene;
+      const startLabel = labelText(start.primitives, 'Start')!;
+      const endLabel = labelText(end.primitives, 'End')!;
+      const borderY = -30;
+
+      expect(startLabel.y - startLabel.measuredHeight / 2).toBeCloseTo(borderY);
+      expect(endLabel.y + endLabel.measuredHeight / 2).toBeCloseTo(borderY);
+      expect(startLabel.x).toBeCloseTo(50 + startLabel.measuredWidth / 2);
+      expect(endLabel.x).toBeCloseTo(50 + endLabel.measuredWidth / 2);
+    });
+
+    it('center position 忽略 label align', () => {
+      const middle = compileToScene(
+        sceneWithLabel({ text: 'Middle', position: 'center', align: 'middle' }),
+        silent,
+      ).scene;
+      const start = compileToScene(sceneWithLabel({ text: 'Start', position: 'center', align: 'start' }), silent).scene;
+      const middleLabel = labelText(middle.primitives, 'Middle')!;
+      const startLabel = labelText(start.primitives, 'Start')!;
+
+      expect(startLabel.x).toBeCloseTo(middleLabel.x);
+      expect(startLabel.y).toBeCloseTo(middleLabel.y);
+    });
+
+    it('旋转 label 的 start 使用旋转后视觉盒投影', () => {
+      const scene = compileToScene(
+        sceneWithLabel({
+          text: 'Rotated',
+          position: { boundary: 'bottom', fraction: 0 },
+          align: 'start',
+          rotate: 90,
+          distance: 0,
+        }),
+        silent,
+      ).scene;
+      const label = labelText(scene.primitives, 'Rotated')!;
+
+      expect(label.x - label.measuredHeight / 2).toBeCloseTo(-50);
     });
   });
 

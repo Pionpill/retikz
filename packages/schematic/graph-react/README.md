@@ -46,6 +46,6 @@ import { Layout } from '@retikz/react';
 
 Entity and Relation can also be direct Layout or Scope children. Their `id` is optional; omitting it draws the element without registering a Core reference target. Relation endpoints use Core `NodeTarget`, including `anchor`, `offset` and `boundary`.
 
-Entity children accept Node-compatible text only. Relation children accept Core `Step` declarations and are mutually exclusive with `route` and `way`. Pass custom Graph Definition options directly to Graph, Entity or Relation; those options configure provider datasets and never enter Source IR.
+Group children accept arbitrary embeddable content, Entity children accept Node-compatible text only, and Relation children accept Core `Step` declarations mutually exclusive with `route` and `way`. Pass custom Graph Definition options directly to Graph, Group, Entity, or Relation; those options configure provider datasets and never enter Source IR.
 
 See the [Graph documentation](https://pionpill.github.io/retikz/schematic/graph) for complete examples.

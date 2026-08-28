@@ -19,6 +19,7 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 | 单轴路径连接              | 只沿垂直或水平轴连接，不强制补齐正交折线的第二段                                                 | [ADR-03 Accepted](./alpha.1/03-single-axis-path-connection.md)                 |
 | Node 文本自动对比色       | 根据实际填充明度选择黑色或白色文字，保持可读性                                                   | [ADR-04 Accepted](./alpha.1/04-node-text-auto-contrast.md)                     |
 | Node label 包围盒间距     | 长标签按自身尺寸离开节点边界，避免左右标签与节点重叠                                             | [ADR-05 Accepted](./alpha.1/05-node-label-box-spacing.md)                      |
+| Node label 附着对齐       | 让标签视觉盒沿 attachment tangent 以 start / middle / end 对齐                                   | [ADR-08 Accepted](./alpha.1/08-node-label-alignment.md)                        |
 | TeX 数学语法兼容          | 正确解析 MathJax 支持的 TeX 语法并保留跨后端视觉语义                                             | [ADR-06 Accepted](./alpha.1/06-tex-math-syntax-compatibility.md)               |
 | 布局感知 Composite        | 让 Tier 2 在同次 compile 内测量、约束、replay 并返回 artifact                                    | [ADR-07 Accepted](./alpha.1/07-layout-aware-composite.md)                      |
 | Box Layout Composite 合同 | 让任意 child 接受双轴 slot、反馈真实占用并带外层 transform / clip replay                         | [alpha.2 ADR-06 Accepted](./alpha.2/06-box-layout-composite-contract.md)       |

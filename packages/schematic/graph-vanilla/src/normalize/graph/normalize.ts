@@ -1,9 +1,9 @@
-import type { IRGraph } from '@retikz/graph';
+import type { IRGraph, IRGroup } from '@retikz/graph';
 
-import { createEntity, createGraph, createRelation } from '@retikz/graph';
+import { createEntity, createGraph, createGroup, createRelation } from '@retikz/graph';
 import { normalizePath } from '@retikz/vanilla';
 
-import type { InputEntity, InputGraph, InputGraphChild, InputRelation } from './types';
+import type { InputEntity, InputGraph, InputGraphChild, InputGroup, InputGroupChild, InputRelation } from './types';
 
 /** 将 Entity authoring 输入校验为单个 Source record */
 export const normalizeEntity = (input: InputEntity) => {
@@ -38,5 +38,17 @@ export const normalizeGraph = (input: InputGraph): IRGraph => {
   return createGraph({
     ...graph,
     ...(children === undefined ? {} : { children: children.map(normalizeGraphChild) }),
+  });
+};
+
+/** 将 Group 的混合 authoring child 归一为 Source child */
+const normalizeGroupChild = (child: InputGroupChild) => normalizeGraphChild(child);
+
+/** 将 Group authoring 输入归一化为单个 Source composite */
+export const normalizeGroup = (input: InputGroup): IRGroup => {
+  const { children, ...group } = input;
+  return createGroup({
+    ...group,
+    ...(children === undefined ? {} : { children: children.map(normalizeGroupChild) }),
   });
 };

@@ -160,6 +160,7 @@
     "label": "Schematic",
     "introduction": "Introduction",
     "graph": "Graph",
+    "group": "Group",
     "basicUsage": "Basic Usage",
     "extensionUsage": "Extended Usage",
     "entity": "Entity",

@@ -105,6 +105,7 @@ const expandNodeLabel = (
 ): MaterializedNodeLabel => {
   const normalized: MaterializedNodeLabel = {
     ...label,
+    align: label.align ?? 'middle',
     position: expandNodeLabelPosition(label.position),
     placement: label.placement ?? 'outside',
     distance: label.distance ?? labelDistance,

@@ -157,8 +157,8 @@ describe('Happy: 主色级联 / 四通道', () => {
       ],
     };
     expect(linePathOf(ir)?.arrowEnd?.shape).toBe('stealth');
-    // scale 1.5 在 compile 被消费乘进 markerWidth（默认 length 6 × 1.5 = 9）；scale 不再挂 ResolvedArrowEnd
-    expect(linePathOf(ir)?.arrowEnd?.markerWidth).toBeCloseTo(9, 5);
+    // scale 1.5 在 compile 被消费乘进 markerWidth（默认 length 8 × 1.5 = 12）；scale 不再挂 ResolvedArrowEnd
+    expect(linePathOf(ir)?.arrowEnd?.markerWidth).toBeCloseTo(12, 5);
   });
 });
 

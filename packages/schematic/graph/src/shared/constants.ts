@@ -5,6 +5,8 @@ export const GRAPH_NAMESPACE = 'graph' as const;
 export const GraphType = {
   /** 承载 Graph 展示默认与领域主题的可选根作用域 */
   Graph: 'graph',
+  /** 表示可嵌套且具有可见边界的通用内容分组 */
+  Group: 'group',
   /** 表示图中具有关系语义的实体 */
   Entity: 'entity',
   /** 表示图式元素间关系的路径 */

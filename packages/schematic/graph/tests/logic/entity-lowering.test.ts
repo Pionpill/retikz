@@ -63,6 +63,7 @@ describe('Entity lowering', () => {
 
     expect(primitives.length).toBeGreaterThan(0);
     expect(primitives.some(primitive => 'id' in primitive)).toBe(false);
+    expect(JSON.stringify(output.scene)).not.toContain('dashPattern');
   });
 
   it('fails only at lowering when position is absent without inventing an undefined identity', () => {

@@ -520,6 +520,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'Graph',
     url: '/schematic/graph/api-reference',
   },
+  GroupSchema: {
+    schema: GraphIR.GroupSchema,
+    label: 'Group',
+    url: '/schematic/graph/group',
+  },
   EntitySchema: {
     schema: GraphIR.EntitySchema,
     label: 'Entity',
