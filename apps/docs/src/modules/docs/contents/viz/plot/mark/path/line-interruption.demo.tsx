@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, Legend, PathMark, Plot, Scale } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotLegend, PlotScale } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -21,8 +21,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}
       plotTheme={{ palette: { categorical: ['#0f8f98', '#8cf27e'] } }}
     >
-      <Scale dimension="x" type="linear" domainPadding={0} />
-      <Scale dimension="y" type="linear" domainPadding={0} />
+      <PlotScale dimension="x" type="linear" domainPadding={0} />
+      <PlotScale dimension="y" type="linear" domainPadding={0} />
       {values[LINE_INTERRUPTION_CONTROL_IDS.showFill] ? (
         <PathMark
           x="year"
@@ -48,9 +48,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         connectNulls={values[LINE_INTERRUPTION_CONNECT_NULLS_ID]}
         strokeWidth={2.4}
       />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
-      <Legend channel="color" />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
+      <PlotLegend channel="color" />
     </Plot>
   );
 });

@@ -13,13 +13,14 @@ import type {
 import { IntervalBoundKind, PlotGuide, PlotMark, PlotTransform } from '@retikz/plot';
 
 import type {
-  FacetGrid,
   NormalizationState,
   PlotAuthoringDeclaration,
   PlotComposition,
   ScaffoldTrack,
   SharedScaffold,
 } from './contracts';
+import type { InputPlotFacet } from './input';
+import type { InputPlotFacetDimension } from './input-composition';
 import type { InputPlotAxis, InputPlotLegend } from './input-guides';
 import type {
   InputPlotIntervalMark,
@@ -63,8 +64,8 @@ type Collected = NormalizationState;
 type Composition = PlotComposition;
 
 const facetDimensionOf = (
-  dimension: string | NonNullable<FacetGrid['row']> | undefined,
-): NonNullable<FacetGrid['row']> | undefined => {
+  dimension: InputPlotFacetDimension | undefined,
+): Exclude<InputPlotFacetDimension, string> | undefined => {
   if (dimension === undefined) return undefined;
   return typeof dimension === 'string' ? { field: dimension } : dimension;
 };
@@ -72,7 +73,7 @@ const facetDimensionOf = (
 const scaffoldTracksOf = (scaffoldId: string, propTracks: Array<ScaffoldTrack> | undefined): Array<ScaffoldTrack> => {
   const tracks = [...(propTracks ?? [])];
   if (tracks.length === 0) {
-    throw new RetikzPlotVanillaError(`buildPlotIR: <Scaffold id="${scaffoldId}"> requires at least one track`);
+    throw new RetikzPlotVanillaError(`buildPlotIR: <PlotScaffold id="${scaffoldId}"> requires at least one track`);
   }
   return tracks;
 };
@@ -86,30 +87,11 @@ export const applyDeclaration = (
   const context = declaration.context ?? {};
   const child: { props: unknown } = { props: declaration.props };
   if (declaration.kind === 'facet') {
-    const { id, row, column, empty, coordinate, view, viewIdTemplate, header, spacing, resolve } = child.props as {
-      id: string;
-      row?: string | NonNullable<FacetGrid['row']>;
-      column?: string | NonNullable<FacetGrid['column']>;
-      empty?: FacetGrid['empty'];
-      coordinate?: FacetGrid['coordinate'];
-      view?: string;
-      viewIdTemplate?: string;
-      header?: FacetGrid['header'];
-      spacing?: Composition['spacing'];
-      resolve?: Composition['resolve'];
-    };
+    const { row, column, ...facet } = child.props as InputPlotFacet;
     into.facets.push({
-      kind: 'facet',
-      id,
-      view: view ?? `${id}Panel`,
+      ...facet,
       ...(facetDimensionOf(row) !== undefined ? { row: facetDimensionOf(row) } : {}),
       ...(facetDimensionOf(column) !== undefined ? { column: facetDimensionOf(column) } : {}),
-      ...(empty !== undefined ? { empty } : {}),
-      ...(coordinate !== undefined ? { coordinate } : {}),
-      ...(viewIdTemplate !== undefined ? { viewIdTemplate } : {}),
-      ...(header !== undefined ? { header } : {}),
-      ...(spacing !== undefined ? { spacing } : {}),
-      ...(resolve !== undefined ? { resolve } : {}),
     });
     return;
   }
@@ -138,7 +120,7 @@ export const applyDeclaration = (
     return;
   }
   if (declaration.kind === 'track') {
-    throw new RetikzPlotVanillaError('buildPlotIR: <Track> must be declared inside <Scaffold>');
+    throw new RetikzPlotVanillaError('buildPlotIR: <PlotTrack> must be declared inside <PlotScaffold>');
   }
   if (declaration.kind === 'path-mark') {
     const props = child.props as InputPlotPathMark;
@@ -631,7 +613,7 @@ export const applyDeclaration = (
     if (scale !== undefined) {
       if (dimension !== 'x' && dimension !== 'y') {
         throw new RetikzPlotVanillaError(
-          `buildPlotIR: <Axis scale> only supports built-in x / y dimensions; custom coordinate role "${dimension}" must provide its scale through CoordinateDefinition`,
+          `buildPlotIR: <PlotAxis scale> only supports built-in x / y dimensions; custom coordinate role "${dimension}" must provide its scale through CoordinateDefinition`,
         );
       }
       into.scales.push({ dimension, type: scale });
@@ -673,7 +655,7 @@ export const applyDeclaration = (
   } else if (declaration.kind === 'scale') {
     into.scales.push(child.props as InputPlotScale);
   } else if (declaration.kind === 'transform') {
-    // 通用 <Transform kind="..."> 声明：props 即 IR transform operation（按声明序进 spec.transform）
+    // 通用 <PlotTransform kind="..."> 声明：props 即 IR transform operation（按声明序进 spec.transform）
     into.transforms.push(child.props as IRPlotTransform);
   }
 };

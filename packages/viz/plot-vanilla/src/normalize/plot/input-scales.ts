@@ -12,7 +12,7 @@ export type InputPlotContinuousPositionScaleType = Exclude<InputPlotPositionScal
 /** React DSL 中暴露的 position scale domain padding 输入 */
 export type InputDomainPadding = number | { lower?: number; upper?: number };
 
-/** <Scale> 公共 props：声明某个坐标维度使用的 scale 类型 */
+/** <PlotScale> 公共 props：声明某个坐标维度使用的 scale 类型 */
 type ScaleBaseProps = {
   /** 绑定哪个定位维度；polar 下 x 为角向，y 为径向 */
   dimension: InputPlotScaleDimension;
@@ -75,7 +75,7 @@ type BandScaleProps = ScaleBaseProps & {
   align?: IRPlotBandScale['align'];
 };
 
-/** <Scale> props：声明某个坐标维度使用的 scale 类型 */
+/** <PlotScale> props：声明某个坐标维度使用的 scale 类型 */
 export type InputPlotScale = ContinuousScaleProps | BandScaleProps | PointScaleProps;
 
 /**

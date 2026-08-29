@@ -25,9 +25,16 @@ Chart Source 把“这是什么图”与“这张图如何完整呈现”分开�
   recipe: {
     chartType: 'scatter',
     encodings: {
-      x: 'weight',
-      y: 'efficiency',
+      x: {
+        field: 'weight',
+        scale: { operation: { type: 'linear', name: 'weightScale', nice: true } },
+      },
+      y: {
+        aggregate: { kind: 'mean', field: 'efficiency', as: 'meanEfficiency' },
+      },
       color: 'group',
+      column: { field: 'region', order: ['North', 'South'] },
+      facet: { header: { column: true } },
     },
     properties: { opacity: 0.82 },
     marks: [
@@ -40,7 +47,7 @@ Chart Source 把“这是什么图”与“这张图如何完整呈现”分开�
 }
 ```
 
-`encodings` 只写数据字段名，`properties` 只写常量。`recipe.marks` 是有序 Chart marks：默认追加，`override: true` 可按 kind 替换内建 semantic mark group；`plotExtension.marks` 是独立的 Plot 内容，不读取 Chart 的 encodings 或 properties。
+`encodings` 是当前 chartType 的精确字段映射计划，可以保存字段 shorthand、rich direct mapping、aggregate、受限 derived transform、命名 scale 与 composition；`properties` 只写常量。`recipe.marks` 是有序 Chart marks：默认追加，`override: true` 可按 kind 替换内建 semantic mark group。`plotExtension.marks` 不继承 Chart encodings 或 properties，但与 recipe marks 消费同一份最终 encoding data view。
 
 ## 根 shell 与嵌套 recipe envelope
 
@@ -62,9 +69,9 @@ Chart Source 把“这是什么图”与“这张图如何完整呈现”分开�
 
 family 是有限、稳定、面向发现的分类；chartType 是全局唯一 recipe key，每个 key 只属于一个 family。首批 Point family 的路由如下：
 
-| family (`type`) | chartType | 精确 schema 与核心差异                                           |
-| --------------- | --------- | ---------------------------------------------------------------- |
-| `point`         | `scatter` | `ScatterChartSchema`；x/y 必填，可选 color、size、opacity、shape |
+| family (`type`) | chartType | 精确 schema 与核心差异                                                         |
+| --------------- | --------- | ------------------------------------------------------------------------------ |
+| `point`         | `scatter` | `ScatterChartSchema`；x/y 必填；可选 visual、aggregate、scale 与 facet mapping |
 
 精确 schema 从 `@retikz/chart/point/scatter` 导入。`@retikz/chart/point` 是明确需要整个 Point family 时使用的聚合入口。
 
@@ -74,11 +81,13 @@ Chart 不提供第三方 recipe Definition 注册入口。应用层负责维护�
 
 ## encodings、properties 与 marks
 
-recipe 会把 Source 的 field-bound encodings 和 constant properties 传给自己的 semantic mark，再生成 Plot 正式 mark。两者映射到同一 slot 时，encoding 胜出；`false`、`0` 和空数组等 schema 允许的显式值不会被 truthy fallback 丢掉。
+recipe 先把 rich encodings 解析为最终字段、transform、scale 与 composition，再把 direct field projection 和 constant properties 传给自己的 semantic mark，最终生成 Plot 正式 mark。两者映射到同一 slot 时，encoding 胜出；`false`、`0` 和空数组等 schema 允许的显式值不会被 truthy fallback 丢掉。
+
+字段类型、format 与分类 order 始终属于 Data 的 `data.model`；Chart 不建立平行 `ChartFieldType`。transform / reducer kind 与 scale type 复用 owner 的开放 schema 和运行时 Definition registry，Definition 函数留在 runtime sidecar，不进入 JSON Source。
 
 recipe 会显式声明自身实际消费的 slots，而不是把 schema 中所有可写字段都视为已消费。mark 的继承声明只在 Source 里确实出现对应 mark 时生效；一个字段若没有 recipe 或当前 authored marks 消费，会在该字段路径 fail-loud，不会静默丢失。
 
-Chart mark 由 `{ kind, override?, encodings?, properties? }` 组成。mark Definition 声明它可以继承哪些字段和属性。当前 Scatter 只接受 `scatter` mark，它可以继承 Point 的 x/y/color/size/opacity/shape 部分。省略 `override` 或设为 `false` 时追加新 mark；设为 `true` 时按 kind 原位替换完整内建 group。显式 property 高于 inherited encoding，mark 自己同时声明 property 与 encoding 时仍由 encoding 胜出。
+Chart mark 由 `{ kind, override?, encodings?, properties? }` 组成。mark Definition 声明它可以继承哪些字段和属性。当前 Scatter authored mark 只接受 x/y/color/size/opacity/shape 的 direct mapping，不反向声明 aggregate、derived transform 或 composition。省略 `override` 或设为 `false` 时追加新 mark；设为 `true` 时按 kind 原位替换完整内建 group。显式 property 高于 inherited encoding，mark 自己同时声明 property 与 encoding 时仍由 encoding 胜出。
 
 ```ts
 recipe: {

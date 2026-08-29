@@ -73,7 +73,7 @@ React 的自动入口覆盖两条常用路径：
 - 分类 color 字段自动派生 `ordinal`
 - 声明为 `continuous` 或 `temporal` 的 color 字段自动派生 `sequential`
 
-`diverging`、三种离散化 scale、显式 scheme / range / domain 等高级配置写入 `IRPlot.scales`，再让 mark 的 color field binding 通过 `scale` 名称引用。`<Legend channel="color" />` 或 full spec 中的 legend guide 只负责展示已解析的映射。
+`diverging`、三种离散化 scale、显式 scheme / range / domain 等高级配置写入 `IRPlot.scales`，再让 mark 的 color field binding 通过 `scale` 名称引用。`<PlotLegend channel="color" />` 或 full spec 中的 legend guide 只负责展示已解析的映射。
 
 自动派生和显式配置只是两个入口：它们最终都由同一套 scale definition 与 resolver 解析，不会形成两套颜色语义。
 
@@ -136,8 +136,8 @@ resolver 按 scale 类型解析 domain、分档边界与 scheme / range，得到
     {
       label: '三种离散化 schema',
       path: 'packages/viz/plot/src/schemas/scale/schema.ts',
-      startLine: 340,
-      endLine: 431,
+      startLine: 299,
+      endLine: 372,
     },
   ]}
 />

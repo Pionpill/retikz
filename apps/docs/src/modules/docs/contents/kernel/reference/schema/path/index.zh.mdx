@@ -550,8 +550,8 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
     shape:
       '箭头形状名（开放字符串）：内置 6 种 Core 箭头 normal / open / stealth / openStealth / circle / openCircle，以及 2 种 Standard 箭头 diamond / openDiamond，或经 `CompileOptions.arrows` 注册的扩展名（未注册名 compile 期报错）；默认 stealth',
     scale: '等比缩放因子（默认 1），乘到 length / width 之后',
-    length: '尖长（user units，沿 path 方向），默认 6',
-    width: '尖宽（user units，垂直 path 方向），默认 6',
+    length: '尖长（user units，沿 path 方向），默认使用 Definition 的值，否则为 8',
+    width: '尖宽（user units，垂直 path 方向），默认使用 Definition 的值，否则为 8',
     color: '描边色 override；缺省走 context-stroke（继承 path stroke）',
     fill: '填充色 override（仅实心 shape 生效）；空心 shape 上 silent no-op（写了静默丢）',
     opacity: '箭头独立透明度 0..1；缺省继承 path opacity',

@@ -1,6 +1,10 @@
-import type { CoreProviderContribution, IRScene } from '@retikz/core';
+import type { CoreProviderContribution, IRJsonObject, IRScene } from '@retikz/core';
+import type { LowerPlotsOptions } from '@retikz/plot';
 
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
+import { FlexLayoutArtifactSchema } from '@retikz/layout';
 import { createPlotProviderContribution, PointMarkSchema } from '@retikz/plot';
 import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
@@ -11,6 +15,14 @@ import { defineChartMark, defineChartRecipe } from '../../src/_chart/contract';
 import { createChartProviderContribution } from '../../src/_chart/providers';
 import { createChartSourceSchema } from '../../src/_chart/schemas';
 import { createScatterChartProviderContribution, ScatterChartSchema } from '../../src/point/scatter';
+
+const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
+  encodings: context.encodings as IRJsonObject,
+  transform: [],
+  scales: [],
+  positionScales: {},
+  removedRecipeScales: new Set<string>(),
+});
 
 const rows = [
   { x: 1, y: 2, size: 3 },
@@ -23,8 +35,11 @@ const sceneIdsOf = (primitives: ReadonlyArray<{ id?: string; children?: Readonly
     ...sceneIdsOf((primitive.children ?? []) as Array<{ id?: string; children?: ReadonlyArray<unknown> }>),
   ]);
 
-const compileDefinitionsOf = (chartContributions: ReadonlyArray<CoreProviderContribution>) => {
-  const plot = createPlotProviderContribution({ 'scatter.rows': rows });
+const compileDefinitionsOf = (
+  chartContributions: ReadonlyArray<CoreProviderContribution>,
+  lowerOptions: LowerPlotsOptions = {},
+) => {
+  const plot = createPlotProviderContribution({ 'scatter.rows': rows }, lowerOptions);
   return resolveCoreProviderDependencies({
     contributions: [...chartContributions, plot, { roots: [PathClipProvider.key], providers: [PathClipProvider] }],
   });
@@ -37,6 +52,33 @@ const sceneOf = (source: IRScene['children'][number]): IRScene => ({
 });
 
 describe('Chart providers through Core compile', () => {
+  it('grows the Plot item into the remaining fixed-height presentation space', () => {
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      id: 'scatter-presentation-height',
+      data: { reference: 'scatter.rows' },
+      layout: { width: 800, height: 500 },
+      presentation: { title: 'Scatter' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+      },
+    });
+
+    const result = compileToScene(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()]));
+    const artifact = result.artifacts.find(value => value.kind === 'composite' && value.type === 'flexLayout');
+    if (artifact === undefined) throw new Error('Expected Chart presentation FlexLayout compile artifact');
+    const flex = FlexLayoutArtifactSchema.parse(artifact.value);
+    const plotItem = flex.items.find(item => item.key === 'chart.plot');
+    if (plotItem === undefined) throw new Error('Expected Chart Plot presentation item');
+
+    expect(plotItem.slotBounds.height).toBeGreaterThan(300);
+    expect(plotItem.slotBounds.y + plotItem.slotBounds.height).toBeCloseTo(
+      flex.container.contentBounds.y + flex.container.contentBounds.height,
+    );
+  });
+
   it('compiles Scatter in one Scene with its provider contribution installed', () => {
     const scene: IRScene = {
       version: 1,
@@ -94,6 +136,71 @@ describe('Chart providers through Core compile', () => {
     expect(sceneIdsOf(result.scene.primitives)).toContain('scatter-json');
   });
 
+  it('keeps Plot panel identity when Scatter encoding facet compiles through the provider chain', () => {
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      id: 'scatter-facet',
+      data: { reference: 'scatter.rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y', column: { field: 'size' } },
+      },
+    });
+
+    const result = compileToScene(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()]));
+    const ids = sceneIdsOf(result.scene.primitives);
+
+    expect(ids).toContain('__chart.scatter.composition.facet.panel._.3');
+    expect(ids).toContain('__chart.scatter.composition.facet.panel._.5');
+  });
+
+  it('shares custom runtime Definitions between Chart encoding resolution and Plot lowering', () => {
+    const copyField = defineTransform({
+      schema: strictObject({
+        kind: literal('copy-chart-field'),
+        field: NonBlankStringSchema,
+        as: NonBlankStringSchema,
+      }),
+      inputFields: operation => [operation.field],
+      outputFields: operation => [operation.as],
+      outputModel: operation => ({
+        kind: 'preserve',
+        outputs: [{ field: operation.as, type: { from: operation.field } }],
+      }),
+      compact: {
+        phase: DataTransformPhase.FieldDerive,
+        bindingClass: DataTransformBindingClass.Field,
+        fieldEffect: DataTransformFieldEffect.Preserve,
+      },
+      apply: (inputRows, operation) => inputRows.map(row => ({ ...row, [operation.as]: row[operation.field] })),
+    });
+    const lowerOptions: LowerPlotsOptions = { transformDefinitions: [copyField] };
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      id: 'scatter-custom-transform',
+      data: { reference: 'scatter.rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: {
+          x: {
+            transform: { kind: 'copy-chart-field', field: 'x', as: 'copiedX' },
+            output: 'copiedX',
+          },
+          y: 'y',
+        },
+      },
+    });
+
+    const result = compileToScene(
+      sceneOf(source),
+      compileDefinitionsOf([createScatterChartProviderContribution([], lowerOptions)], lowerOptions),
+    );
+
+    expect(sceneIdsOf(result.scene.primitives)).toContain('scatter-custom-transform');
+  });
+
   it('reports a diagnostic error when the parsed schema and installed chartType provider disagree', () => {
     const source = ScatterChartSchema.parse({
       namespace: 'chart',
@@ -144,6 +251,7 @@ describe('Chart providers through Core compile', () => {
     });
     const recipe = defineChartRecipe({
       chartType: 'warning-fixture',
+      encodingSlots: ['x', 'y'],
       schema: sourceSchema,
       theme: {
         overridesSchema: strictObject({}),
@@ -152,6 +260,7 @@ describe('Chart providers through Core compile', () => {
       },
       consumes: { encodings: ['x', 'y'], properties: [] },
       marks: [{ definition: annotation, inherit: {} }],
+      resolveEncodings: resolveDirectEncodings,
       resolve: () => ({
         scaffold: {
           scales: [],

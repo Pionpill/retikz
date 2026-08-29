@@ -180,7 +180,7 @@ describe('Graph Entity role controls', () => {
 
       expect(baseline, scenario.role).toContain('<svg');
       expect(baseline, scenario.role).toContain('fill="none"');
-      if (scenario.role === 'activity') expect(baseline).toContain('stroke-dasharray');
+      if (scenario.role === 'activity') expect(baseline).not.toContain('stroke-dasharray');
       expect(
         renderWithValues(scenario, { ...scenario.chinese.canonicalValues, color: '#2563eb' }),
         `${scenario.role}: color`,
@@ -223,7 +223,6 @@ describe('Graph Entity role controls', () => {
           type: 'entity',
           role: scenario.role,
           position: [180, 90],
-          ...(scenario.role === 'activity' ? { dashed: true } : {}),
           text: scenario.content,
         },
       ]);

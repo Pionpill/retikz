@@ -178,8 +178,8 @@ export const previewControlContract = {
   },
   relatedApis: [
     'Plot.coordinate',
-    'Scaffold.spacing',
-    'Axis.grid',
+    'PlotScaffold.spacing',
+    'PlotAxis.grid',
     'PathMark.strokeWidth',
     'PointMark.size',
     'IntervalMark.padAngle',

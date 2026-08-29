@@ -15,33 +15,33 @@ import { JsonObjectSchema } from '@retikz/core';
 import { Fragment, isValidElement } from 'react';
 
 import {
-  Axis,
-  Facet,
   IntervalMark,
-  Legend,
   PathMark,
+  PlotAxis,
+  PlotFacet,
+  PlotLegend,
+  PlotScaffold,
+  PlotScale,
+  PlotTrack,
+  PlotTransform,
   PointMark,
   ReferenceMark,
   RelationMark,
-  Scaffold,
-  Scale,
-  Track,
-  Transform as TransformComponent,
 } from '../components';
 
 const declarationKindOf = (element: ReactElement): PlotDeclarationKind | undefined => {
-  if (element.type === Facet) return 'facet';
-  if (element.type === Scaffold) return 'scaffold';
-  if (element.type === Track) return 'track';
+  if (element.type === PlotFacet) return 'facet';
+  if (element.type === PlotScaffold) return 'scaffold';
+  if (element.type === PlotTrack) return 'track';
   if (element.type === PathMark) return 'path-mark';
   if (element.type === PointMark) return 'point-mark';
   if (element.type === IntervalMark) return 'interval-mark';
   if (element.type === ReferenceMark) return 'reference-mark';
   if (element.type === RelationMark) return 'relation-mark';
-  if (element.type === Axis) return 'axis';
-  if (element.type === Legend) return 'legend';
-  if (element.type === Scale) return 'scale';
-  if (element.type === TransformComponent) return 'transform';
+  if (element.type === PlotAxis) return 'axis';
+  if (element.type === PlotLegend) return 'legend';
+  if (element.type === PlotScale) return 'scale';
+  if (element.type === PlotTransform) return 'transform';
   return undefined;
 };
 
@@ -115,7 +115,7 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
         visitContainer((slot.props as { children?: ReactNode }).children, [], {}, candidate => visitTrack(candidate));
         return;
       }
-      if (slot.type !== Track) return;
+      if (slot.type !== PlotTrack) return;
       const props = slot.props as ScaffoldTrack & { children?: ReactNode };
       tracks.push({
         id: props.id,
@@ -196,7 +196,7 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
           );
           return;
         }
-        if (child.type === Track) {
+        if (child.type === PlotTrack) {
           const trackProps = child.props as ScaffoldTrack & { children?: ReactNode };
           visitContainer(
             trackProps.children,

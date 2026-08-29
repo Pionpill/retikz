@@ -1,4 +1,4 @@
-import { Axis, IntervalMark, PathMark, Plot, PointMark, Scale } from '@retikz/plot-react';
+import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -20,13 +20,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         </>
       )}
       {values.scaleType === 'band' ? (
-        <Scale dimension="x" type="band" paddingInner={values.paddingInner} paddingOuter={values.paddingOuter} />
+        <PlotScale dimension="x" type="band" paddingInner={values.paddingInner} paddingOuter={values.paddingOuter} />
       ) : (
-        <Scale dimension="x" type="point" padding={values.padding} />
+        <PlotScale dimension="x" type="point" padding={values.padding} />
       )}
-      <Scale dimension="y" type="linear" domainPadding={0} />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
+      <PlotScale dimension="y" type="linear" domainPadding={0} />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
     </Plot>
   );
 });

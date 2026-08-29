@@ -21,6 +21,30 @@ JSON 是输入旁路，不跳过 schema。应用层先按 `type` 与 `recipe.cha
 
 普通 authored mark 按 Source 顺序追加；`override: true` 会按 kind 原位替换完整内建 semantic group。未命中时 mark 仍追加，并由 Core 的 `onWarn` 接收稳定 warning；这套合并只发生在 Chart resolver，不进入 React、Vanilla 或可见 Source IR。
 
+## 字段映射在三套入口中保持同形
+
+React、Vanilla 与 JSON 使用同一份具体 chartType encoding 结构。adapter 不会把 aggregate、scale、transform 或 composition 翻译成另一套私有配置：
+
+| 入口    | 对 `encodings` 做什么                                                         | 不做什么                           |
+| ------- | ----------------------------------------------------------------------------- | ---------------------------------- |
+| JSON    | 直接由具体 chartType strict schema 解析                                       | 不绕过 schema 或运行时补字段       |
+| Vanilla | 只把 `row`、`column` 字符串简写展开为 `{ field }`；其余 rich mapping 保持同形 | 不读取数据或 registry 猜测语义     |
+| React   | 把 typed props、Chart marks 与 Plot declarations 收集成同一 Vanilla Input     | 不执行 aggregate、scale 或分面算法 |
+
+字段映射诱导的执行顺序也只有一条：
+
+```text
+plotExtension.transform
+  → encoding-derived operations（row-shape → field-derive → row-order → cumulative-derive → field-adjust）
+  → final field / scale / facet binding
+  → semantic marks → authored Chart marks → plotExtension.marks
+  → Plot lowering
+```
+
+同一阶段内按当前 recipe 的精确 slot 顺序执行，而不是按 JSON 属性顺序。rich mapping 会先解析成最终 direct field projection，再交给 semantic mark 与 authored Chart mark；mark 不会继承 root aggregate 或 transform 配置。所有 marks 最终消费同一个 encoding data view。
+
+自定义 transform、reducer、scale 等 Definition 通过 `lowerOptions` 作为运行时 sidecar 进入 Chart provider，并与同次 Plot lowering 共享。Definition 中的 Schema 与函数不会写进 Source；可序列化 Source 仍只保存 `{ kind, ...config }` 与字段映射。
+
 ## 三套包，各自只做一段
 
 根 `@retikz/chart` 公开 Chart Source 的共享 schema、constants 与 Theme contract；具体 chartType 子路径公开自己的精确 schema 与 provider contribution。recipe / mark Definition 和 resolver 只属于包内实现契约，不是第三方扩展入口。plain `InputScatterChart`、`normalizeXxxChart` 与创建函数属于 `@retikz/chart-vanilla`。React typed Chart 解析 presentation marker 与 Chart mark 组件后，复用相同 normalizer，因此 React 与 Vanilla 不维护平行的 Source 组装规则。动态 family / chartType 路由由应用层负责。
@@ -34,28 +58,34 @@ Vanilla 的 `createScatterChart` 从 `@retikz/chart-vanilla/point/scatter` 导�
 <SourceLinks
   sources={[
     {
-      label: 'Scatter Chart Vanilla 创建入口',
-      path: 'packages/viz/chart-vanilla/src/point/scatter/factory.ts',
-      startLine: 10,
-      endLine: 25,
-    },
-    {
-      label: 'active provider 选择 recipe',
-      path: 'packages/viz/chart/src/_chart/providers/resolve.ts',
-      startLine: 7,
+      label: 'Vanilla 只展开 composition 字符串简写',
+      path: 'packages/viz/chart-vanilla/src/point/scatter/normalize.ts',
+      startLine: 9,
       endLine: 34,
     },
     {
-      label: 'recipe 与 Chart marks 进入解析主链',
-      path: 'packages/viz/chart/src/_chart/resolve/resolve.ts',
-      startLine: 41,
-      endLine: 70,
+      label: 'React props 与 declarations 汇入同一 Vanilla Input',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 100,
+      endLine: 154,
     },
     {
-      label: 'React shared Chart 输入接线',
-      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
-      startLine: 35,
-      endLine: 78,
+      label: '运行时 Definition 作为 provider sidecar 传递',
+      path: 'packages/viz/chart/src/_chart/providers/provider.ts',
+      startLine: 44,
+      endLine: 81,
+    },
+    {
+      label: 'encoding 解析先于 recipe 与 authored marks',
+      path: 'packages/viz/chart/src/_chart/resolve/resolve.ts',
+      startLine: 42,
+      endLine: 77,
+    },
+    {
+      label: '显式 transform、encoding transform 与 marks 的组装顺序',
+      path: 'packages/viz/chart/src/_chart/resolve/plot.ts',
+      startLine: 176,
+      endLine: 203,
     },
   ]}
 />

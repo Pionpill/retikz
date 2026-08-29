@@ -1,5 +1,5 @@
 import type { DimensionRole } from '../../contract';
-import type { IRPlot, IRPlotAxisGuide, IRPlotGuide } from '../../schemas';
+import type { IRPlot, IRPlotAxisGuide, IRPlotFacetConfiguration, IRPlotGuide } from '../../schemas';
 import type { Margins } from '../../shared';
 import type {
   CompositionAxisPolicyValue,
@@ -14,6 +14,7 @@ import type {
   FacetPanelValue,
   FacetScalar,
   GridTargetSelector,
+  PlotFacetCompositionResolveContext,
   ScaffoldTrack,
   SharedScaffold,
 } from './types';
@@ -23,6 +24,27 @@ import { defaultOriginAxisTickSideOf } from '../../providers';
 import { AxisGridApplyTo, CoordinateArrangementKind, CoordinateViewPlacementKind, PlotGuide } from '../../schemas';
 
 const DEFAULT_COORDINATE_SCOPE_ID = 'default';
+
+/** 把 facet 作者配置解析为完整 Plot composition */
+export const resolvePlotFacetComposition = (
+  configuration: IRPlotFacetConfiguration,
+  context: PlotFacetCompositionResolveContext,
+): NonNullable<IRPlot['composition']> => {
+  const templateViewId = context.templateViewId ?? `${configuration.id}Panel`;
+  return {
+    defaultView: templateViewId,
+    views: [{ id: templateViewId, coordinate: context.coordinate }],
+    arrangements: [
+      {
+        kind: CoordinateArrangementKind.Facet,
+        ...configuration,
+        view: templateViewId,
+        ...(context.facetCoordinate !== undefined ? { coordinate: context.facetCoordinate } : {}),
+        ...(context.panelViewIdTemplate !== undefined ? { viewIdTemplate: context.panelViewIdTemplate } : {}),
+      },
+    ],
+  };
+};
 
 /** 解析 track 对应的 coordinate view id */
 const trackViewIdOf = (arrangement: SharedScaffold, track: ScaffoldTrack): string => {
@@ -97,7 +119,7 @@ export const resolveComposition = (node: IRPlot): CompositionResolution => {
     coordinateScopes: resolveCoordinateScopeRegistry(node),
     ...(node.composition?.spacing !== undefined ? { layout: node.composition.spacing } : {}),
     ...(node.composition?.resolve !== undefined ? { resolve: node.composition.resolve } : {}),
-    arrangements: [...arrangements],
+    arrangements,
     facets,
     scaffolds,
     policyContext,

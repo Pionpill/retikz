@@ -1,13 +1,16 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
+import type { LowerPlotsOptions } from '@retikz/plot';
 
 import { FlexLayoutProvider } from '@retikz/layout';
 import { PlotProviderKey } from '@retikz/plot';
 import { SurfaceProvider } from '@retikz/standard';
 
 import type { ChartRecipeDefinition, ChartThemeDefinition } from '../contract';
+import type { IRChartSource } from '../schemas';
 import type { ChartProviderContribution, ChartRecipeProviderContribution } from './types';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
+import { eraseChartRecipeDefinition } from '../contract';
 import { chartProviderKeyOf, createChartDefinition } from './definition';
 import { resolveChartProviderRegistry } from './registry';
 
@@ -41,14 +44,16 @@ const makeChartDefinition: CoreDependencyProvider['makeDefinition'] = mergedData
 const chartProviderDependencies = Object.freeze([SurfaceProvider.key, FlexLayoutProvider.key, PlotProviderKey]);
 
 /** 为一个具体 chartType 创建只携带自身 recipe 的 provider contribution */
-export const createChartProviderContribution = (
+export const createChartProviderContribution = <TSource extends IRChartSource>(
   input: Readonly<{
     /** 当前 provider 所属的稳定 Chart family */
     family: string;
     /** 当前 provider 安装的具体 chartType Definition */
-    recipe: ChartRecipeDefinition;
+    recipe: ChartRecipeDefinition<TSource>;
     /** 当前编译边界可见的命名 Theme Definition */
     themeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
+    /** 与Plot provider共享的lowering runtime Definition */
+    lowerOptions?: LowerPlotsOptions;
   }>,
 ): ChartProviderContribution => {
   if (input.family.length === 0) {
@@ -60,8 +65,22 @@ export const createChartProviderContribution = (
   }
   const contribution: ChartRecipeProviderContribution = Object.freeze({
     family: input.family,
-    recipe: input.recipe,
+    recipe: eraseChartRecipeDefinition(input.recipe),
     themeDefinitions: Object.freeze([...(input.themeDefinitions ?? [])]),
+    runtimeDefinitions: Object.freeze({
+      ...(input.lowerOptions?.transformDefinitions === undefined
+        ? {}
+        : { transformDefinitions: input.lowerOptions.transformDefinitions }),
+      ...(input.lowerOptions?.statisticsReducerDefinitions === undefined
+        ? {}
+        : { statisticsReducerDefinitions: input.lowerOptions.statisticsReducerDefinitions }),
+      ...(input.lowerOptions?.rowSelectorDefinitions === undefined
+        ? {}
+        : { rowSelectorDefinitions: input.lowerOptions.rowSelectorDefinitions }),
+      ...(input.lowerOptions?.scaleDefinitions === undefined
+        ? {}
+        : { scaleDefinitions: input.lowerOptions.scaleDefinitions }),
+    }),
   });
   const runtimeReference = `${ChartRecipeProviderReferencePrefix}${chartRecipeProviderReferenceSeed}`;
   chartRecipeProviderReferenceSeed += 1;

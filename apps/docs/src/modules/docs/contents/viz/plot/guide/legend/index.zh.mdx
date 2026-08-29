@@ -1,25 +1,25 @@
 ---
 title: 图例
-description: 用 <Legend> 解释颜色、大小、透明度、形状和自定义非位置通道；颜色 scale 或通道定义决定图例形态。
+description: 用 <PlotLegend> 解释颜色、大小、透明度、形状和自定义非位置通道；颜色 scale 或通道定义决定图例形态。
 ---
 
-`<Legend>` 是非位置 scale 的可视化身。`channel` 选择要解释的视觉通道；内置通道包括 `color`、`size`、`opacity` 和 `shape`，注册的自定义通道也使用同一组件。
+`<PlotLegend>` 是非位置 scale 的可视化身。`channel` 选择要解释的视觉通道；内置通道包括 `color`、`size`、`opacity` 和 `shape`，注册的自定义通道也使用同一组件。
 
-图例形态不是 `<Legend>` 自己指定的：颜色通道由绑定的 scale 决定，其他内置或自定义通道由注册 definition 的 `legend` 声明决定。分类色生成逐项色块，连续色和 opacity 生成平滑色带，分箱色生成区间块，size / shape 生成渐变尺寸或形状条目。
+图例形态不是 `<PlotLegend>` 自己指定的：颜色通道由绑定的 scale 决定，其他内置或自定义通道由注册 definition 的 `legend` 声明决定。分类色生成逐项色块，连续色和 opacity 生成平滑色带，分箱色生成区间块，size / shape 生成渐变尺寸或形状条目。
 
-图例只解释已有的数据映射。先在 mark 上把字段绑定到通道，再声明 `<Legend>`；连续字段还应通过 `model` 标成 `continuous`，避免被按分类值处理。坐标轴与图例彼此独立，仍需用 `<Axis>` 显式声明位置 guide。
+图例只解释已有的数据映射。先在 mark 上把字段绑定到通道，再声明 `<PlotLegend>`；连续字段还应通过 `model` 标成 `continuous`，避免被按分类值处理。坐标轴与图例彼此独立，仍需用 `<PlotAxis>` 显式声明位置 guide。
 
 ## 用法
 
 ```tsx
-import { Legend, Plot, PointMark } from '@retikz/plot-react';
+import { PlotLegend, Plot, PointMark } from '@retikz/plot-react';
 ```
 
 ```tsx
 <Plot data={cities}>
   <PointMark x="lng" y="lat" color="region" size="pop" />
-  <Legend channel="color" />
-  <Legend channel="size" position="bottom" />
+  <PlotLegend channel="color" />
+  <PlotLegend channel="size" position="bottom" />
 </Plot>
 ```
 
@@ -49,7 +49,7 @@ import { Legend, Plot, PointMark } from '@retikz/plot-react';
 
 #### 形状与透明度
 
-`shape` 适合分类字段，`opacity` 适合连续字段。每个 `<Legend>` 只解释一个通道，因此同一张图可以同时放置多个图例。
+`shape` 适合分类字段，`opacity` 适合连续字段。每个 `<PlotLegend>` 只解释一个通道，因此同一张图可以同时放置多个图例。
 
 <ComponentPreview
   files={['legend-shape-opacity', 'legend.data.ts']}
@@ -62,14 +62,14 @@ import { Legend, Plot, PointMark } from '@retikz/plot-react';
 <ComponentAlert
   type="tip"
   title="先绑定通道，再生成图例"
-  description="日常使用只需保证 mark 上存在数据驱动的通道绑定；这一节说明 Legend 如何复用通道和 scale 已生成的描述信息。"
+  description="日常使用只需保证 mark 上存在数据驱动的通道绑定；这一节说明 PlotLegend 如何复用通道和 scale 已生成的描述信息。"
 />
 
-Legend 会按 `channel` 和可选 `scale` 找到通道描述与 scale。颜色形态来自 scale，其它通道形态来自同一 registry 中的 `ChannelDefinition.legend`，因此自定义通道不需要单独的 Legend 分支。样式由 `Plot.plotTheme.legend` 提供默认值，单个图例可以用 `style` 局部覆盖。
+PlotLegend 会按 `channel` 和可选 `scale` 找到通道描述与 scale。颜色形态来自 scale，其它通道形态来自同一 registry 中的 `ChannelDefinition.legend`，因此自定义通道不需要单独的 PlotLegend 分支。样式由 `Plot.plotTheme.legend` 提供默认值，单个图例可以用 `style` 局部覆盖。
 
 <ComponentPreview files="legend-lowering-flow" size="sm" hideCode />
 
-选择出的形态会在 `position` 对应的预留带中下沉为独立 Legend scope。图例默认使用 `500` 层级，位于坐标轴、Facet 标签和 mark 之上；`layer={{ zIndex }}` 只移动整个 scope，不改变内部条目的顺序。
+选择出的形态会在 `position` 对应的预留带中下沉为独立 PlotLegend scope。图例默认使用 `500` 层级，位于坐标轴、Facet 标签和 mark 之上；`layer={{ zIndex }}` 只移动整个 scope，不改变内部条目的顺序。
 
 <SourceLinks
   sources={[
@@ -98,15 +98,15 @@ Legend 会按 `channel` 和可选 `scale` 找到通道描述与 scale。颜色�
 
 | 属性          | 类型                                | 默认值        | 描述                                                                                                                                               |
 | ------------- | ----------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `channel`     | `LegendProps['channel']`            | —             | 要解释的非位置通道；内置为 color / size / opacity / shape，注册的自定义通道同样可用                                                                |
-| `scale?`      | `LegendProps['scale']`              | 唯一 scale    | 同一通道存在多个 scale 时用名称消歧；无法唯一确定时会报错                                                                                          |
-| `title?`      | `LegendProps['title']`              | 无            | 图例标题；支持字符串、多行文本和结构化文本                                                                                                         |
+| `channel`     | `PlotLegendProps['channel']`        | —             | 要解释的非位置通道；内置为 color / size / opacity / shape，注册的自定义通道同样可用                                                                |
+| `scale?`      | `PlotLegendProps['scale']`          | 唯一 scale    | 同一通道存在多个 scale 时用名称消歧；无法唯一确定时会报错                                                                                          |
+| `title?`      | `PlotLegendProps['title']`          | 无            | 图例标题；支持字符串、多行文本和结构化文本                                                                                                         |
 | `position?`   | <ApiValues name="LegendPosition" /> | `'right'`     | 图例所在边；布局会在对应边预留图例带                                                                                                               |
 | `orient?`     | <ApiValues name="LegendOrient" />   | 按 `position` | 条目排布方向；左右默认 vertical，上下默认 horizontal                                                                                               |
-| `ticks?`      | `LegendProps['ticks']`              | 按形态        | ramp 支持完整刻度来源；size 当前只读取 `count`；离散色块和 shape 忽略                                                                              |
-| `tickLabels?` | `LegendProps['tickLabels']`         | `true`        | 用 `false` 隐藏标签；`format` 用于 ramp 的刻度标签                                                                                                 |
-| `style?`      | `LegendProps['style']`              | theme legend  | 本地图例视觉 token；控制色块 / 色带尺寸、间距与文字样式。size 符号默认用 `symbolFit:'fit'` 收进 `symbolSize` 盒子，需保留实绘半径时用 `'preserve'` |
-| `layer?`      | `LegendProps['layer']`              | 图例层        | 覆盖整个图例 scope 的语义层级                                                                                                                      |
+| `ticks?`      | `PlotLegendProps['ticks']`          | 按形态        | ramp 支持完整刻度来源；size 当前只读取 `count`；离散色块和 shape 忽略                                                                              |
+| `tickLabels?` | `PlotLegendProps['tickLabels']`     | `true`        | 用 `false` 隐藏标签；`format` 用于 ramp 的刻度标签                                                                                                 |
+| `style?`      | `PlotLegendProps['style']`          | theme legend  | 本地图例视觉 token；控制色块 / 色带尺寸、间距与文字样式。size 符号默认用 `symbolFit:'fit'` 收进 `symbolSize` 盒子，需保留实绘半径时用 `'preserve'` |
+| `layer?`      | `PlotLegendProps['layer']`          | 图例层        | 覆盖整个图例 scope 的语义层级                                                                                                                      |
 
 ### 刻度支持矩阵
 
@@ -137,4 +137,4 @@ Legend 会按 `channel` 和可选 `scale` 找到通道描述与 scale。颜色�
 - [坐标轴](/viz/plot/guide/axis)：解释 x / y 位置通道
 - [比例尺](/viz/plot/scale)：提供图例的 domain / range，并决定颜色图例形态
 - [通道绑定](/viz/plot/channel/binding)：把字段或常量连接到视觉通道
-- [自定义通道](/viz/plot/channel/custom-channel)：注册项目特有的通道并复用 Legend
+- [自定义通道](/viz/plot/channel/custom-channel)：注册项目特有的通道并复用 PlotLegend

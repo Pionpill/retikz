@@ -5,7 +5,7 @@ import { lowerPlots, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
-import { Axis, Legend } from '../../../src/components/guides';
+import { PlotAxis, PlotLegend } from '../../../src/components/guides';
 import { IntervalMark, PathMark, PointMark, RelationMark } from '../../../src/components/marks';
 
 const compilePlot = (
@@ -101,8 +101,8 @@ describe('buildPlotIR 装配', () => {
     const spec = buildPlotIR(
       <>
         <PointMark x="x" y="y" layer={{ zIndex: 120 }} color="kind" />
-        <Axis dimension="x" layer={{ zIndex: 240 }} />
-        <Legend channel="color" layer={{ zIndex: 520 }} />
+        <PlotAxis dimension="x" layer={{ zIndex: 240 }} />
+        <PlotLegend channel="color" layer={{ zIndex: 520 }} />
       </>,
       '__plot',
       { dataFieldNames: new Set(['kind']) },
@@ -359,27 +359,27 @@ describe('buildPlotIR 装配', () => {
   });
 
   // 薄 Plot guide 装配（无默认 / 显式）
-  it('dsl_no_axis_no_guides：无 <Axis> → guides 为空（薄 Plot 不补默认轴）', () => {
+  it('dsl_no_axis_no_guides：无 <PlotAxis> → guides 为空（薄 Plot 不补默认轴）', () => {
     const spec = buildPlotIR(<PathMark x="m" y="r" />, '__plot');
     expect(spec.guides).toEqual([]);
   });
 
-  it('dsl_explicit_axis_only：写 <Axis dimension="x"/> → 仅该轴（显式所得、无默认）', () => {
+  it('dsl_explicit_axis_only：写 <PlotAxis dimension="x"/> → 仅该轴（显式所得、无默认）', () => {
     const spec = buildPlotIR(
       <>
         <PathMark x="m" y="r" />
-        <Axis dimension="x" />
+        <PlotAxis dimension="x" />
       </>,
       '__plot',
     );
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'x' }]);
   });
 
-  it('dsl_axis_fields：<Axis> 字段逐一落位（含 grid）', () => {
+  it('dsl_axis_fields：<PlotAxis> 字段逐一落位（含 grid）', () => {
     const spec = buildPlotIR(
       <>
         <PathMark x="m" y="r" />
-        <Axis
+        <PlotAxis
           dimension="y"
           ticks={{ count: 5 }}
           crossing={{ value: 0, tick: 'hide', label: 'hide' }}
@@ -403,11 +403,11 @@ describe('buildPlotIR 装配', () => {
     ]);
   });
 
-  it('dsl_axis_with_grid：<Axis dimension="y" grid/> → grid:true', () => {
+  it('dsl_axis_with_grid：<PlotAxis dimension="y" grid/> → grid:true', () => {
     const spec = buildPlotIR(
       <>
         <PathMark x="m" y="r" />
-        <Axis dimension="y" grid />
+        <PlotAxis dimension="y" grid />
       </>,
       '__plot',
     );
@@ -418,7 +418,7 @@ describe('buildPlotIR 装配', () => {
     const spec = buildPlotIR(
       <>
         <PathMark x="m" y="r" />
-        <Axis dimension="x" grid={{ includeDomain: true }} />
+        <PlotAxis dimension="x" grid={{ includeDomain: true }} />
       </>,
       '__plot',
     );
@@ -435,7 +435,7 @@ describe('buildPlotIR 装配', () => {
     const spec = buildPlotIR(
       <>
         <PathMark x="m" y="r" />
-        <Axis dimension="q" />
+        <PlotAxis dimension="q" />
       </>,
       '__plot',
     );

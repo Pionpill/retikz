@@ -1,4 +1,4 @@
-import type { EntityCreateOptions, GraphCreateOptions, RelationCreateOptions } from '@retikz/graph';
+import type { EntityCreateOptions, GraphCreateOptions, GroupCreateOptions, RelationCreateOptions } from '@retikz/graph';
 import type { InputChild, InputPath } from '@retikz/vanilla';
 
 /** Entity 的 Vanilla authoring 输入 */
@@ -23,6 +23,18 @@ export type InputRelation = Omit<RelationCreateOptions, 'route'> & (InputRelatio
 
 /** Graph children 中可直接书写的 semantic 输入 */
 export type InputGraphMember = InputEntity | InputRelation;
+
+/** Group children 中可直接书写的 semantic 输入 */
+export type InputGroupMember = InputEntity | InputRelation;
+
+/** Group children 的 Vanilla authoring union */
+export type InputGroupChild = InputGroupMember | InputChild;
+
+/** 与 Group Source 对齐、但允许 Vanilla child authoring sugar 的输入 */
+export type InputGroup = Omit<GroupCreateOptions, 'children'> &
+  Readonly<{
+    children?: ReadonlyArray<InputGroupChild>;
+  }>;
 
 /** Graph root children 的 Vanilla authoring union */
 export type InputGraphChild = InputGraphMember | InputChild;

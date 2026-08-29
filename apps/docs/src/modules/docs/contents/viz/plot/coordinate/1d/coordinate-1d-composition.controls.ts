@@ -293,6 +293,6 @@ export const previewControlContract = {
     'RelationMark.target',
     'RelationMark.path',
     'RelationMark.style',
-    'Axis.line',
+    'PlotAxis.line',
   ],
 } satisfies PreviewControlContract;

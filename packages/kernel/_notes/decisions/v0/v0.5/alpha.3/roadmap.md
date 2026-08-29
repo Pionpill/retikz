@@ -1,64 +1,35 @@
-# v0.5.0-alpha.3 Concurrent、渐进生成与上下文颜色
+# v0.5.0-alpha.3 上下文颜色
 
-- 状态：Proposed
+- 状态：已完成
 - 目标版本：`0.5.0-alpha.3`
-- 前置：alpha.2 的 Runtime、增量 compile 与 retained renderer 已 Accepted
-- 关联：[v0.5 roadmap](../roadmap.md) · [性能与增量运行时设计](../../../../../../../notes/architecture/performance-design.md) · [交互与增量运行时设计](../../../../../../../notes/architecture/interaction-design.md)
+- 前置：alpha.2 的 Foundation、Core Theme、Tier 2 lowering 与 renderer-neutral Scene 契约已 Accepted
+- 关联：[v0.5 roadmap](../roadmap.md) · [视觉 Theme 设计](../../../../../../../notes/architecture/visual-theme-design.md)
 
 ## 目标
 
-alpha.3 在 alpha.2 的同步增量 Runtime 上增加 `concurrent + atomic/progressive` 执行能力。Program 可以按 capability 阻塞执行、协作让出或 offload；Runtime 可以取消过期 prepare，并在 revision 校验后串行原子提交。表现层可以显式选择渐进物化；generation session 可以提交多批语义合法的 draft transaction。
+alpha.3 补齐 Core 上下文颜色：具有明确主色来源的颜色槽位可以使用归一化权重，Core 在完整 Theme、Scope 与图元样式级联后，按 Light / Dark 模式确定为不透明颜色字符串。Foundation 统一拥有静态 CSS 颜色解析与不透明预合成原子；Graph、Plot、Table 等 Tier 2 Theme 只声明主色链并下沉兼容槽位，不各自维护颜色算法
 
-本 milestone 同时补齐 Core 上下文颜色：有明确主色来源的颜色槽位可以用归一化权重表达 Light / Dark 模式下的确定性派生色，实际 Tier 2 Theme owner 复用同一 Core 解析，不各自维护颜色算法。
+本次发布不包含 cooperative scheduler、progressive materialization 或 generation session。对应[候选 ADR-01](../candidates/01-cooperative-concurrent-runtime.md)、[ADR-02](../candidates/02-progressive-materialization.md)与[ADR-03](../candidates/03-generation-session.md)保持未实现 Proposed，不属于 `0.5.0-alpha.3` 的公开契约
 
-Concurrent、渐进物化与渐进生成是三个不同层次：调度决定工作何时执行，materialization 决定同一 Scene 如何显示，generation 决定语义 Snapshot 如何分批增长或修正。
+## ADR
 
-## ADR 索引
+| ADR                                           | 状态     | 主题       | 交付                                                               |
+| --------------------------------------------- | -------- | ---------- | ------------------------------------------------------------------ |
+| [ADR-04](./04-contextual-color-resolution.md) | Accepted | 上下文颜色 | Foundation 颜色原子、Core 最终确定化与 Tier 2 Theme 主色链统一适配 |
 
-| ADR                                              | 状态     | 主题                 | 交付                                                                                      |
-| ------------------------------------------------ | -------- | -------------------- | ----------------------------------------------------------------------------------------- |
-| [ADR-01](./01-cooperative-concurrent-runtime.md) | Proposed | Concurrent scheduler | Program capability、优先级、cooperative yield、取消、Worker 与原子 commit                 |
-| [ADR-02](./02-progressive-materialization.md)    | Proposed | 渐进物化             | atomic/progressive 策略、materialization revision、回滚、命中一致性与 capability fallback |
-| [ADR-03](./03-generation-session.md)             | Proposed | Generation session   | draft transaction、checkpoint、取消、接受后 squash 与 LLM 渐进生成边界                    |
-| [ADR-04](./04-contextual-color-resolution.md)    | Accepted | 上下文颜色           | Core 数值颜色确定化、Light / Dark 基准与 Tier 2 Theme 统一适配                            |
+## 已交付边界
 
-## 执行批次
-
-| 批次 | ADR    | 进入条件                                | 退出条件                                     |
-| ---- | ------ | --------------------------------------- | -------------------------------------------- |
-| 0    | ADR-01 | alpha.2 Runtime contract Accepted       | concurrent prepare、取消与原子 commit 可验证 |
-| 1    | ADR-02 | scheduler 与 retained renderer 可组合   | 渐进画面、geometry、hit-test 与完成状态一致  |
-| 2    | ADR-03 | transaction 与 materialization 边界稳定 | 多批 draft 可恢复、取消、接受并 squash       |
-| 3    | ADR-04 | Core Theme mode 与样式级联边界稳定      | 数值颜色只在 Core 确定化，Tier 2 无平行算法  |
-
-## 共同不变量
-
-1. Concurrent 只并发 prepare；正式 semantic commit 串行且原子。
-2. 取消是优化，revision 校验是拒绝过期结果的正确性边界。
-3. 未声明 capability 的内置或第三方 Program 默认 blocking。
-4. 渐进物化不产生部分 document、contribution 或 Scene commit。
-5. LLM draft transaction 与 renderer materialization batch 不是同一协议。
-6. Kernel generation session 不包含模型调用、prompt、聊天 UI 或 LLM 专属 IR。
-7. 数值颜色只从最终有效主色派生，不替代 opacity、palette 或宿主 `currentColor`。
-
-## Milestone 验收
-
-- 连续高频 revision 可以取消或废弃旧 prepare，过期结果永不提交。
-- blocking / chunkable / offloadable Program 在 React 与 Vanilla 中共享语义。
-- atomic 模式保持 alpha.2 的完整 view 原子切换；progressive 模式显式启用、可回退、可诊断。
-- 渐进期间可见内容、geometry、hit-test、事件 target 与 materialization state 一致。
-- generation session 支持多批合法 draft、checkpoint、取消、恢复和接受后 squash。
-- Core 在完整样式级联后把数值颜色确定为不透明字符串；Graph、Plot、Table Theme 复用该语义。
-- 基准记录最长主线程阻塞、取消浪费、首个可见批次、完整物化时间与 session 内存。
+- Foundation 是静态 CSS 颜色解析与不透明 source-over 预合成的唯一 owner
+- Core 数值颜色只允许位于 `[0, 1]`，并在完整级联后按最终有效主色确定化
+- Light / Dark 分别使用不透明白色 / 黑色作为基准底色，结果为小写不透明十六进制颜色
+- 数值颜色不替代 opacity、palette、scale range、gradient、pattern、shadow 或宿主 `currentColor`
+- Graph、Plot、Table 只声明各自唯一主色链，Canonical、Scene 与 renderer 不保留数值颜色分支
+- 直接 JSON、React 与 Vanilla 共享同一 schema、resolve、诊断与 renderer-neutral 输出
 
 ## 不在 alpha.3 范围
 
-- Kernel 内置 pointer / keyboard / focus / selection / drag / brush / zoom behavior。
-- prompt 管理、模型 SDK、token stream、聊天界面或业务 AI workflow。
-- Workspace history、协作、CRDT 与持久 undo log。
-- Tier 2 私有交互语义或编辑器状态机。
-- 用数值替代 palette、scale range、gradient stop 或 opacity，或把颜色解析下放 renderer / 宿主 CSS。
-
-## 授权边界
-
-本 roadmap 与 Proposed ADR 只授权设计审查，不授权实现、commit、tag、publish 或 push。
+- Cooperative scheduler、Program chunk / Worker offload 与异步 prepare
+- Progressive materialization、renderer presentation batch 与独立 materialization revision
+- Generation session、draft branch、模型调用、prompt、token stream 或聊天 UI
+- 用数值替代 palette、scale range、gradient stop、pattern、shadow 或 opacity
+- 在 renderer、宿主 CSS 或 Tier 2 包中建立平行颜色解析与合成算法

@@ -1,12 +1,10 @@
 import type { FC } from 'react';
 
-import { FoldStepVia } from '@retikz/core';
 import { Entity, Graph, Relation } from '@retikz/graph-react';
-import { Step } from '@retikz/react';
 
 import { createGraphPreviewSource } from '@/modules/docs/preview';
 
-/** Relation connects stable endpoints through a direct Core-compatible route */
+/** Relation connects stable endpoints through the Core Way DSL */
 const Demo: FC = () => (
   <Graph width={620} height={220}>
     <Entity id="start" role="event" position={[80, 70]}>
@@ -41,10 +39,8 @@ const Demo: FC = () => (
       target={{ id: 'store' }}
       dashPattern={[6, 4]}
       labels={[{ text: 'write', position: 0.5 }]}
-    >
-      <Step kind="move" to="process" />
-      <Step kind="fold" via={FoldStepVia.HorizontalThenVertical} to="store" />
-    </Relation>
+      way={['process', '-|', 'store']}
+    />
   </Graph>
 );
 

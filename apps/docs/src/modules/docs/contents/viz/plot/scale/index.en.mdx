@@ -9,13 +9,13 @@ A scale maps values but does not explain the mapping to the reader. [Axes](/viz/
 
 ## Responsibilities
 
-| Family                | Mapping it owns                                               | Configuration entry                               |
-| --------------------- | ------------------------------------------------------------- | ------------------------------------------------- |
-| Positional            | numeric / temporal / categorical → coordinate, length, radius | this section's position page; `<Scale dimension>` |
-| Color                 | categorical / continuous / temporal → discrete color or band  | this section's color page; color field binding    |
-| Other visual channels | numeric / categorical → size, opacity, shape                  | [Built-in Channels](/viz/plot/channel/builtin)    |
+| Family                | Mapping it owns                                               | Configuration entry                                   |
+| --------------------- | ------------------------------------------------------------- | ----------------------------------------------------- |
+| Positional            | numeric / temporal / categorical → coordinate, length, radius | this section's position page; `<PlotScale dimension>` |
+| Color                 | categorical / continuous / temporal → discrete color or band  | this section's color page; color field binding        |
+| Other visual channels | numeric / categorical → size, opacity, shape                  | [Built-in Channels](/viz/plot/channel/builtin)        |
 
-All three entry points follow the same path: establish the field's measurement type, decide whether the default mapping is enough, then hand the scale output to coordinate projection, mark channels, and guides. React's `<Scale dimension>` configures positional dimensions only. `size` can reference `sqrt` and `opacity` can reference `linear`; mark channels can also synthesize both. `shape` currently uses only the channel-generated `ordinal` glyph mapping and does not accept an explicit scale reference.
+All three entry points follow the same path: establish the field's measurement type, decide whether the default mapping is enough, then hand the scale output to coordinate projection, mark channels, and guides. React's `<PlotScale dimension>` configures positional dimensions only. `size` can reference `sqrt` and `opacity` can reference `linear`; mark channels can also synthesize both. `shape` currently uses only the channel-generated `ordinal` glyph mapping and does not accept an explicit scale reference.
 
 Common automatic defaults are:
 
@@ -27,7 +27,7 @@ Common automatic defaults are:
 
 Automatic defaults cover the common path only. Categorical lines and scatter switch position to `point`; position data spanning magnitudes, crossing zero, or encoding area calls for `log`, `symlog`, `sqrt`, or `radial`. Color with a meaningful midpoint uses `diverging`, while business thresholds and data quantiles use explicit scales such as `threshold` and `quantile`.
 
-For other visual channels, continuous `size` defaults to the area-aware `sqrt`, continuous `opacity` uses `linear`, and categorical `shape` uses `ordinal`. These mappings belong to channel resolution; they do not make size, opacity, or shape valid targets for `<Scale dimension>`.
+For other visual channels, continuous `size` defaults to the area-aware `sqrt`, continuous `opacity` uses `linear`, and categorical `shape` uses `ordinal`. These mappings belong to channel resolution; they do not make size, opacity, or shape valid targets for `<PlotScale dimension>`.
 
 The React DSL still writes polar dimensions as `x` / `y`: `x` means angular and `y` means radial under a polar coordinate. The two pages below cover the full choice set, valid inputs, and the React / full-spec boundary. See the [Field Contract](/viz/data/model/contract) for declaring measurement types.
 

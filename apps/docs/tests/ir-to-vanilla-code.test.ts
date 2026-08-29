@@ -1,7 +1,7 @@
 import type { IRScene } from '@retikz/core';
 
 import { parseWay } from '@retikz/core';
-import { GraphSchema } from '@retikz/graph';
+import { GraphSchema, GroupSchema } from '@retikz/graph';
 import { describe, expect, it } from 'vitest';
 
 import { irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
@@ -37,6 +37,29 @@ describe('irToVanillaCode', () => {
       ]),
     );
     expect(explicitCode).toContain('children: []');
+  });
+
+  it('group-codegen：保留 caption、boundary label 与任意 child 的独立入口', () => {
+    const code = irToVanillaCode(
+      ir([
+        GroupSchema.parse({
+          namespace: 'graph',
+          type: 'group',
+          id: 'runtime',
+          caption: { title: { text: 'Runtime' } },
+          labels: [{ text: 'public', position: { boundary: 'right', fraction: 0.5 } }],
+          children: [{ namespace: 'graph', type: 'entity', role: 'activity', position: [40, 30] }],
+        }),
+      ]),
+    );
+
+    expect(code).toContain("group('preview-group-1'");
+    expect(code).toContain("caption: { title: { text: 'Runtime' } }");
+    expect(code).toContain("boundary: 'right'");
+    expect(code).toContain("entity('preview-entity-1'");
+    expect(code).toContain('GroupInputEmbedAdapter');
+    expect(code).toContain('EntityInputEmbedAdapter');
+    expect(code).not.toContain('GroupDefinition');
   });
 
   it('import-header：恒定 vanilla import + scene 装配', () => {

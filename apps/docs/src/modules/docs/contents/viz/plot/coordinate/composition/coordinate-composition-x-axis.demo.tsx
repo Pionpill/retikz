@@ -1,4 +1,4 @@
-import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -20,15 +20,15 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Plot data={releaseRows} width={520} height={250}>
-      <Axis dimension="x" grid={xGridVisible} title="T+" />
-      <Axis
+      <PlotAxis dimension="x" grid={xGridVisible} title="T+" />
+      <PlotAxis
         id="calendar"
         dimension="x"
         grid={xGridVisible}
         placement={{ kind: 'side', side: values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.secondaryAxisSide] }}
         title="D"
       />
-      <Axis dimension="y" grid={yGridVisible} title="%" />
+      <PlotAxis dimension="y" grid={yGridVisible} title="%" />
       <PathMark
         x="elapsedDay"
         y="completed"

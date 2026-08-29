@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import { DataFieldType } from '@retikz/data';
-import { Axis, Plot, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -27,8 +27,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PointMark x={values.xField} y={values.yField} size={8} fill="#2563eb" />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 ));
 

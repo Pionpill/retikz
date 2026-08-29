@@ -520,6 +520,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'Graph',
     url: '/schematic/graph/api-reference',
   },
+  GroupSchema: {
+    schema: GraphIR.GroupSchema,
+    label: 'Group',
+    url: '/schematic/graph/group',
+  },
   EntitySchema: {
     schema: GraphIR.EntitySchema,
     label: 'Entity',
@@ -866,6 +871,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IRPlot.CoordinateViewSchema,
     label: 'CoordinateView',
     url: '/viz/plot/reference/plot#coordinateviewschema',
+  },
+  PlotFacetConfigurationSchema: {
+    schema: IRPlot.PlotFacetConfigurationSchema,
+    label: 'PlotFacetConfiguration',
+    url: '/viz/plot/reference/plot#plotfacetconfigurationschema',
   },
   FacetArrangementSchema: {
     schema: IRPlot.FacetArrangementSchema,

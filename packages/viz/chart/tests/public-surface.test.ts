@@ -2,6 +2,8 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, strictObject } from 'zod';
 
+import type { ChartLocatorOptions } from '../src';
+
 import * as chart from '../src';
 import * as point from '../src/point';
 import * as scatter from '../src/point/scatter';
@@ -44,6 +46,7 @@ describe('@retikz/chart public surface', () => {
     expect(point).not.toHaveProperty('ChartMarkKind');
     expect(point).toHaveProperty('ScatterChartSchema');
     expect(point).toHaveProperty('createScatterChartProviderContribution');
+    expect(point).toHaveProperty('qualifyScatterChartLocatorOptions');
     expect(point).not.toHaveProperty('PointChartSchema');
     expect(point).not.toHaveProperty('PointChartProvider');
     expect(point).not.toHaveProperty('defineChartRecipe');
@@ -56,12 +59,23 @@ describe('@retikz/chart public surface', () => {
   it('keeps concrete chartType entries limited to schema and provider contribution', () => {
     for (const [concrete, contributionName] of [[scatter, 'createScatterChartProviderContribution']] as const) {
       expect(concrete).toHaveProperty(contributionName);
+      expect(concrete).toHaveProperty('qualifyScatterChartLocatorOptions');
       expect(concrete).not.toHaveProperty('defineChartRecipe');
       expect(concrete).not.toHaveProperty('defineChartMark');
       expect(concrete).not.toHaveProperty('ScatterChartDefinition');
       expect(concrete).not.toHaveProperty('ScatterMarkDefinition');
       expect(concrete).not.toHaveProperty('PathMarkDefinition');
     }
+  });
+
+  it('publishes Chart-facing locator options without exposing recipe identities', () => {
+    const options: ChartLocatorOptions = { facet: { row: 'north' } };
+    expect(scatter.qualifyScatterChartLocatorOptions(options)).toEqual({
+      facet: {
+        id: '__chart.scatter.composition.facet',
+        row: 'north',
+      },
+    });
   });
 
   it('keeps generated Source JSON-safe without publishing a wide Chart schema', () => {

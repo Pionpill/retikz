@@ -450,7 +450,7 @@ describe('size channel 错误输入', () => {
     expect(sizeFieldCalls).toBe(1);
   });
 
-  it('mark_local_same_name_transform_keeps_source_type_evidence', () => {
+  it('mark_local_same_name_transform_uses_output_type_evidence', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -477,9 +477,7 @@ describe('size channel 错误输入', () => {
       ],
     });
 
-    expect(() => expandOf(spec, { d: [{ x: 0, y: 0, p: 'large' }] }, cartOpts)).toThrow(
-      /size requires a continuous field/,
-    );
+    expect(() => expandOf(spec, { d: [{ x: 0, y: 0, p: 'large' }] }, cartOpts)).not.toThrow();
   });
 
   it.each([

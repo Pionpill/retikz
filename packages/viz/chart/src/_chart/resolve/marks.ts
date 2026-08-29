@@ -41,8 +41,12 @@ const pickSlots = (values: IRJsonObject, names?: ReadonlyArray<string>): IRJsonO
   return picked;
 };
 
-const inheritedSlotsOf = (source: IRChartSource, binding: ChartMarkBinding): InheritedChartMarkSlots => ({
-  encodings: pickSlots(source.recipe.encodings, binding.inherit.encodings),
+const inheritedSlotsOf = (
+  source: IRChartSource,
+  resolvedEncodings: IRJsonObject,
+  binding: ChartMarkBinding,
+): InheritedChartMarkSlots => ({
+  encodings: pickSlots(resolvedEncodings, binding.inherit.encodings),
   properties: pickSlots(source.recipe.properties ?? {}, binding.inherit.properties),
 });
 
@@ -51,12 +55,13 @@ const resolveOneMark = (
   index: number,
   mark: IRJsonObject,
   binding: ChartMarkBinding,
+  resolvedEncodings: IRJsonObject,
   recipeTokens: IRJsonObject,
 ): ReadonlyArray<IRPlotMarkOperation> => {
   const resolution = binding.definition.resolve({
     chartType: source.recipe.chartType,
     source: mark,
-    inherited: inheritedSlotsOf(source, binding),
+    inherited: inheritedSlotsOf(source, resolvedEncodings, binding),
     recipeThemeTokens: recipeTokens,
   });
   if (resolution.marks.length === 0) {
@@ -68,7 +73,8 @@ const resolveOneMark = (
 /** 通过 recipe-local binding 解析 authored Chart marks */
 export const resolveChartMarks = (
   source: IRChartSource,
-  recipe: ChartRecipeDefinition,
+  recipe: Pick<ChartRecipeDefinition, 'chartType' | 'marks'>,
+  resolvedEncodings: IRJsonObject,
   recipeTokens: IRJsonObject,
 ): ChartMarksResolution => {
   const authoredMarks = source.recipe.marks ?? [];
@@ -78,6 +84,9 @@ export const resolveChartMarks = (
   const overrideIndices = new Map<string, number>();
   for (const [index, mark] of authoredMarks.entries()) {
     const kind = mark.kind;
+    if (typeof kind !== 'string' || kind.length === 0) {
+      throw invalidMark('Chart mark kind must be a non-empty string', ['recipe', 'marks', index, 'kind']);
+    }
     const binding = recipe.marks.find(candidate => candidate.definition.kind === kind);
     if (binding === undefined) {
       throw new RetikzChartError({
@@ -101,7 +110,12 @@ export const resolveChartMarks = (
     }
     binding.inherit.encodings?.forEach(slot => encodings.add(slot));
     binding.inherit.properties?.forEach(slot => properties.add(slot));
-    marks.push({ kind, index, override, plotMarks: resolveOneMark(source, index, mark, binding, recipeTokens) });
+    marks.push({
+      kind,
+      index,
+      override,
+      plotMarks: resolveOneMark(source, index, mark, binding, resolvedEncodings, recipeTokens),
+    });
   }
   return {
     authoredMarks: marks,

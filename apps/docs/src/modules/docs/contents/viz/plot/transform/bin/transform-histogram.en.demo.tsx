@@ -1,4 +1,4 @@
-import { Axis, IntervalMark, Plot, Scale, Transform } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -12,12 +12,12 @@ export const previewControls = histogramControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Plot data={measurements} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-      <Transform {...histogramOperationOf(values)} />
-      <Scale dimension="x" type="linear" domain={[0, 20]} />
-      <Scale dimension="y" type="linear" domain={[0, 25]} />
+      <PlotTransform {...histogramOperationOf(values)} />
+      <PlotScale dimension="x" type="linear" domain={[0, 20]} />
+      <PlotScale dimension="y" type="linear" domain={[0, 25]} />
       <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
-      <Axis dimension="x" title="Measurement" />
-      <Axis dimension="y" title="Frequency" grid />
+      <PlotAxis dimension="x" title="Measurement" />
+      <PlotAxis dimension="y" title="Frequency" grid />
     </Plot>
   );
 });

@@ -15,7 +15,7 @@ Root transforms rewrite the data shared by the whole Plot. A mark-local transfor
 
 | entry point              | scope        | use it when                                        |
 | ------------------------ | ------------ | -------------------------------------------------- |
-| `<Transform ... />`      | Plot root    | Declare shared transforms in JSX order             |
+| `<PlotTransform ... />`  | Plot root    | Declare shared transforms in JSX order             |
 | `dataTransforms={[...]}` | Plot root    | Generate a shared transform array programmatically |
 | A mark's `transform`     | Current mark | Derive, aggregate, or sample one layer only        |
 
@@ -23,7 +23,7 @@ Root transforms run first, and every mark reads their result. A mark-local trans
 
 Input fields read by a transform must still satisfy `model`; derived output fields do not need to be declared in a strict model. Final mark-local data views still participate in shared scale and legend inference.
 
-See the [Data Transform Component](/viz/data/transform/overview) for the `<Transform>` API and complete root-entry assembly order. See [Plot Lineage](/viz/data/provenance/plot) to trace rows and mark outputs across transforms.
+See the [Data Transform Component](/viz/data/transform/overview) for the `<PlotTransform>` API and complete root-entry assembly order. See [Plot Lineage](/viz/data/provenance/plot) to trace rows and mark outputs across transforms.
 
 <SourceLinks
   sources={[

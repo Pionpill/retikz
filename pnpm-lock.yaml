@@ -1218,6 +1218,9 @@ importers:
       '@retikz/foundation':
         specifier: workspace:^
         version: link:../../kernel/foundation
+      '@retikz/layout':
+        specifier: workspace:^
+        version: link:../../library/layout
       '@retikz/standard':
         specifier: workspace:^
         version: link:../../library/standard

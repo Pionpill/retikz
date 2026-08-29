@@ -37,8 +37,19 @@ export const collectChannelDescriptors = (
   const register = (descriptor: ScaleDescriptor | undefined): void => {
     if (descriptor) out.push(descriptor);
   };
-  for (const view of markDataViews ?? node.marks.map(mark => ({ mark, rows: channelCtx.rows }))) {
-    const markChannels = resolveMarkChannels(view.mark, { ...channelCtx, rows: view.rows });
+  const rootDataView = {
+    rows: channelCtx.rows,
+    fieldTypes: channelCtx.fieldTypes,
+    fieldTypeEvidence: channelCtx.fieldTypeEvidence ?? new Set<string>(),
+  };
+  for (const view of markDataViews ??
+    node.marks.map((mark, markIndex) => ({ markIndex, mark, dataView: rootDataView }))) {
+    const markChannels = resolveMarkChannels(view.mark, {
+      ...channelCtx,
+      rows: view.dataView.rows,
+      fieldTypes: view.dataView.fieldTypes,
+      fieldTypeEvidence: view.dataView.fieldTypeEvidence,
+    });
     for (const descriptor of markChannels.descriptors ?? []) register(descriptor);
   }
   return out;

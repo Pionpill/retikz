@@ -1,4 +1,4 @@
-import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotLegend, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -22,12 +22,17 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PointMark x="lng" y="lat" shape="region" opacity="pop" />
-    {values.showShape ? <Legend channel="shape" position={values.shapePosition} title="区域" /> : null}
+    {values.showShape ? <PlotLegend channel="shape" position={values.shapePosition} title="区域" /> : null}
     {values.showOpacity ? (
-      <Legend channel="opacity" position={values.opacityPosition} ticks={{ count: values.tickCount }} title="人口" />
+      <PlotLegend
+        channel="opacity"
+        position={values.opacityPosition}
+        ticks={{ count: values.tickCount }}
+        title="人口"
+      />
     ) : null}
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 ));
 

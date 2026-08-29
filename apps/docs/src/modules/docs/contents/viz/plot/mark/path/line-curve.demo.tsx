@@ -1,7 +1,7 @@
-﻿import type { PathCurveValue } from '@retikz/plot';
+import type { PathCurveValue } from '@retikz/plot';
 import type { FC } from 'react';
 
-import { Axis, PathMark, PointMark } from '@retikz/plot-react';
+import { PathMark, PlotAxis, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -38,8 +38,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           lineJoin="round"
         />
         {showPoints ? <PointMark x={x} y="value" fill="#64748b" opacity={0.72} minimumSize={5} /> : null}
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
       </Plot>
     </Layout>
   );

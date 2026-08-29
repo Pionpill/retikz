@@ -17,10 +17,10 @@ export const ArrowEndDetailSchema = strictObject({
     'Uniform arrow-tip scale applied to both `length` and `width`. Defaults to 1.',
   ),
   length: NonNegativeNumberSchema.optional().describe(
-    'Arrow-tip length along the path direction, in user units. Defaults to the shape definition fallback.',
+    'Arrow-tip length along the path direction, in user units. Defaults to the shape definition value, or 8.',
   ),
   width: NonNegativeNumberSchema.optional().describe(
-    'Arrow-tip width perpendicular to the path, in user units. Defaults to the shape definition fallback.',
+    'Arrow-tip width perpendicular to the path, in user units. Defaults to the shape definition value, or 8.',
   ),
   color: ContextualColorSchema.optional().describe(
     'Arrow color override. A number derives from the effective path color; omitted arrows inherit the path stroke.',

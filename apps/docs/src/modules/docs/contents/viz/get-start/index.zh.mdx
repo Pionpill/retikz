@@ -11,7 +11,7 @@ React 项目里使用 plot 时，入口包是 `@retikz/plot-react`。它会带�
 
 ## 最终效果
 
-这张图用同一份月度营收数据叠了两层 mark：折线负责趋势，散点负责每个数据点。`<Plot>` 会自动推断 linear scale、cartesian2D 坐标系；图中的 x/y 轴和 y 方向网格由显式的 `<Axis>` 声明。
+这张图用同一份月度营收数据叠了两层 mark：折线负责趋势，散点负责每个数据点。`<Plot>` 会自动推断 linear scale、cartesian2D 坐标系；图中的 x/y 轴和 y 方向网格由显式的 `<PlotAxis>` 声明。
 
 <ComponentPreview files={['line-scatter', 'line-scatter.data.ts']} />
 
@@ -35,13 +35,13 @@ const sales = [
 
 `<Plot>` 接收数据和显示尺寸；`<PathMark>` 声明哪个字段放到 x / y 通道。`order="month"` 表示按月份连线，避免数据行顺序变化时折线乱跳。
 
-`<Plot>` 是薄容器、自己不画轴：要看到坐标轴，得显式加 `<Axis>`——`dimension` 选 x / y 维度，`grid` 让该维度带网格。下面 y 轴带网格、x 轴不带。
+`<Plot>` 是薄容器、自己不画轴：要看到坐标轴，得显式加 `<PlotAxis>`——`dimension` 选 x / y 维度，`grid` 让该维度带网格。下面 y 轴带网格、x 轴不带。
 
 ```tsx
 <Plot data={sales} width={360} height={200}>
   <PathMark x="month" y="revenue" order="month" />
-  <Axis dimension="x" />
-  <Axis dimension="y" grid />
+  <PlotAxis dimension="x" />
+  <PlotAxis dimension="y" grid />
 </Plot>
 ```
 
@@ -53,8 +53,8 @@ const sales = [
 <Plot data={sales} width={360} height={200}>
   <PathMark x="month" y="revenue" order="month" />
   <PointMark x="month" y="revenue" />
-  <Axis dimension="x" />
-  <Axis dimension="y" grid />
+  <PlotAxis dimension="x" />
+  <PlotAxis dimension="y" grid />
 </Plot>
 ```
 
@@ -62,21 +62,21 @@ const sales = [
 
 - `data` 是裸数据行数组，字段值必须能转成有限数字。
 - `<PathMark>` / `<PointMark>` 只声明字段映射，不直接写像素坐标。
-- `<Plot>` 是薄容器、自己不画轴——上面的 `<Axis dimension="x" />` 和 `<Axis dimension="y" grid />` 才显式声明了 x/y 轴和 y 网格。
+- `<Plot>` 是薄容器、自己不画轴——上面的 `<PlotAxis dimension="x" />` 和 `<PlotAxis dimension="y" grid />` 才显式声明了 x/y 轴和 y 网格。
 - 代码面板里的 IR tab 展示的是 `<Plot>` 装配出的 Plot IR；数据仍然单独传入。
 
 ## 常用开关
 
-`<Plot>` 只画你列出的 `<Axis>`；`<Axis>` 上可调刻度 / 标签 / 网格：
+`<Plot>` 只画你列出的 `<PlotAxis>`；`<PlotAxis>` 上可调刻度 / 标签 / 网格：
 
 ```tsx
 <Plot data={sales} width={360} height={200}>
   <PathMark x="month" y="revenue" order="month" />
-  <Axis dimension="y" grid ticks={{ count: 5 }} />
+  <PlotAxis dimension="y" grid ticks={{ count: 5 }} />
 </Plot>
 ```
 
-只想画数据、不画轴和网格时，不写 `<Axis>`：
+只想画数据、不画轴和网格时，不写 `<PlotAxis>`：
 
 ```tsx
 <Plot data={sales} width={360} height={200}>
@@ -94,7 +94,7 @@ const sales = [
 
 ## 时间轴
 
-x 是日期时，给这条维度加 `<Scale dimension="x" type="time" />`——刻度会落在整月 / 整年这样的时间边界上，标签也按时间格式化。日期字段可以是 ISO 字符串或毫秒时间戳。
+x 是日期时，给这条维度加 `<PlotScale dimension="x" type="time" />`——刻度会落在整月 / 整年这样的时间边界上，标签也按时间格式化。日期字段可以是 ISO 字符串或毫秒时间戳。
 
 <ComponentPreview files={['time-axis', 'time-axis.data.ts']} />
 

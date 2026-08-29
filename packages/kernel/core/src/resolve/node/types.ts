@@ -54,8 +54,10 @@ export type CanonicalNodeLabelBoundaryPosition = Omit<IRNodeLabelBoundaryPositio
 /** 展开静态位置与放置默认值后的节点标签 */
 export type CanonicalNodeLabel = Omit<
   IRNodeLabel,
-  'position' | 'placement' | 'distance' | 'textColor' | 'text' | 'pin'
+  'align' | 'position' | 'placement' | 'distance' | 'textColor' | 'text' | 'pin'
 > & {
+  /** 标签视觉盒沿附着切线的对齐方式 */
+  align: NodeTextAlignValue;
   /** 标签附着位置 */
   position: NodeLabelPositionValue | number | CanonicalNodeLabelBoundaryPosition;
   /** 标签相对附着点的放置方向 */

@@ -17,7 +17,7 @@ A positional scale answers where a field lands on the canvas, how long it is, or
 | Temporal field                                  | `time`            | Ticks land on human-readable boundaries       |
 | Categorical bars / categorical lines            | `band` / `point`  | A slot with width / a single point            |
 
-`pow` supplies a custom exponent, but the current React `<Scale>` does not expose that type; configure it through the full `IRPlot.scales` surface.
+`pow` supplies a custom exponent, but the current React `<PlotScale>` does not expose that type; configure it through the full `IRPlot.scales` surface.
 
 ## Continuous numbers
 
@@ -35,7 +35,7 @@ A positional scale answers where a field lands on the canvas, how long it is, or
 | `sqrt`<br />`pow`   | reduce large values; custom exponent       | `sqrt` uses a fixed square root; configure `pow.exponent` in the full spec                              |
 | `symlog`            | wide-range values that cross zero          | stays linear near zero; `constant` defaults to `1`, and larger values widen the linear region           |
 
-The `size` channel also uses `sqrt` so point area tracks magnitude, but that mapping belongs to [Built-in Channels](/viz/plot/channel/builtin) and is not configured by the positional `<Scale dimension>` API.
+The `size` channel also uses `sqrt` so point area tracks magnitude, but that mapping belongs to [Built-in Channels](/viz/plot/channel/builtin) and is not configured by the positional `<PlotScale dimension>` API.
 
 ### Radial
 
@@ -59,12 +59,12 @@ The `size` channel also uses `sqrt` so point area tracks magnitude, but that map
 
 ## Time
 
-A `temporal` field defaults to `time` on positional channels. It remains continuous, but ticks land on month starts, quarters, whole hours, and other readable boundaries, while labels are formatted as time. Declare the field as `temporal` in the model and no `<Scale>` is needed.
+A `temporal` field defaults to `time` on positional channels. It remains continuous, but ticks land on month starts, quarters, whole hours, and other readable boundaries, while labels are formatted as time. Declare the field as `temporal` in the model and no `<PlotScale>` is needed.
 
 <ComponentPreview
   size="lg"
   files={['scale-time', 'scale-time.data.ts']}
-  caption="The x channel does not declare Scale explicitly; the temporal model field derives a time scale and formats quarterly dates at readable time boundaries."
+  caption="The x channel does not declare PlotScale explicitly; the temporal model field derives a time scale and formats quarterly dates at readable time boundaries."
 />
 
 Dates can be ISO strings or timestamps. See [Data Intake](/viz/data/model/intake) for parsing rules. Binding a temporal field to `color` derives a continuous `sequential` band; see [Color Scales](/viz/plot/scale/color).
@@ -89,14 +89,14 @@ A categorical line can opt into point positions:
 ```tsx
 <Plot data={rows} model={[{ name: 'segment', type: 'categorical' }]}>
   <PathMark x="segment" y="revenue" order="segment" />
-  <Scale dimension="x" type="point" />
-  <Axis dimension="x" />
+  <PlotScale dimension="x" type="point" />
+  <PlotAxis dimension="x" />
 </Plot>
 ```
 
 ## How it works
 
-A positional scale gains its full context during lowering. In the figure, `derive` combines the field type, mark structure, and an explicit `<Scale>` to select a type. `validate` then checks field compatibility, valid domains, and baseline constraints. The resolver takes a domain from bound data or explicit configuration and a range from the available coordinate extent.
+A positional scale gains its full context during lowering. In the figure, `derive` combines the field type, mark structure, and an explicit `<PlotScale>` to select a type. `validate` then checks field compatibility, valid domains, and baseline constraints. The resolver takes a domain from bound data or explicit configuration and a range from the available coordinate extent.
 
 <ComponentPreview files="scale-position-flow" size="xs" hideCode />
 
@@ -127,28 +127,28 @@ The resolved scale serves both marks and guides: continuous scales output numeri
 
 ## API Reference
 
-React `<Scale>` is the declaration surface for common positional types. A `band` scale can be derived from interval structure or configured explicitly for bar gaps and outer padding. `pow` and complete IR fields belong in `IRPlot.scales`. `Axis.scale` is a shortcut for common types on the same dimension.
+React `<PlotScale>` is the declaration surface for common positional types. A `band` scale can be derived from interval structure or configured explicitly for bar gaps and outer padding. `pow` and complete IR fields belong in `IRPlot.scales`. `PlotAxis.scale` is a shortcut for common types on the same dimension.
 
-| Prop               | Type                            | Default        | Description                                                                    |
-| ------------------ | ------------------------------- | -------------- | ------------------------------------------------------------------------------ |
-| `dimension`        | `'x' \| 'y'`                    | —              | Coordinate dimension; polar uses `x` / `y` for angular / radial roles          |
-| `type`             | `ScaleProps['type']`            | —              | `linear`, `time`, `band`, `point`, `log`, `sqrt`, `symlog`, or `radial`        |
-| `domain?`          | `ScaleProps['domain']`          | inferred       | Continuous input extent, or an ordered category list for `band` / `point`      |
-| `domainPadding?`   | `ScaleProps['domainPadding']`   | `5%` inferred  | Fractional padding around continuous domains; explicit domains default to 0    |
-| `singleValueSpan?` | `ScaleProps['singleValueSpan']` | type-derived   | Minimum span used to expand a single-value domain                              |
-| `base?`            | `ScaleProps['base']`            | `10`           | `log` only; must be greater than `1`                                           |
-| `constant?`        | `ScaleProps['constant']`        | `1`            | `symlog` only; controls the width of the linear region around zero             |
-| `paddingInner?`    | `number`                        | `0.1`          | `band` only; gap between adjacent bands as a fraction of step, from `0` to `1` |
-| `paddingOuter?`    | `number`                        | `paddingInner` | `band` only; outer padding as a fraction of step, from `0` to `1`              |
-| `padding?`         | `number`                        | `0.5`          | `point` only; outer padding as a fraction of step, from `0` to `1`             |
-| `align?`           | `number`                        | `0.5`          | `band` / `point`; distributes outer padding across both ends, from `0` to `1`  |
+| Prop               | Type                                | Default        | Description                                                                    |
+| ------------------ | ----------------------------------- | -------------- | ------------------------------------------------------------------------------ |
+| `dimension`        | `'x' \| 'y'`                        | —              | Coordinate dimension; polar uses `x` / `y` for angular / radial roles          |
+| `type`             | `PlotScaleProps['type']`            | —              | `linear`, `time`, `band`, `point`, `log`, `sqrt`, `symlog`, or `radial`        |
+| `domain?`          | `PlotScaleProps['domain']`          | inferred       | Continuous input extent, or an ordered category list for `band` / `point`      |
+| `domainPadding?`   | `PlotScaleProps['domainPadding']`   | `5%` inferred  | Fractional padding around continuous domains; explicit domains default to 0    |
+| `singleValueSpan?` | `PlotScaleProps['singleValueSpan']` | type-derived   | Minimum span used to expand a single-value domain                              |
+| `base?`            | `PlotScaleProps['base']`            | `10`           | `log` only; must be greater than `1`                                           |
+| `constant?`        | `PlotScaleProps['constant']`        | `1`            | `symlog` only; controls the width of the linear region around zero             |
+| `paddingInner?`    | `number`                            | `0.1`          | `band` only; gap between adjacent bands as a fraction of step, from `0` to `1` |
+| `paddingOuter?`    | `number`                            | `paddingInner` | `band` only; outer padding as a fraction of step, from `0` to `1`              |
+| `padding?`         | `number`                            | `0.5`          | `point` only; outer padding as a fraction of step, from `0` to `1`             |
+| `align?`           | `number`                            | `0.5`          | `band` / `point`; distributes outer padding across both ends, from `0` to `1`  |
 
 The complete `IRPlotScale` surface can also name a scale, set an output `range`, and configure fields that the React DSL does not expose, including `pow.exponent`, `nice`, and `clamp`. These `IRPlot*` types and schemas come from `@retikz/plot`; every variant and custom scale operation follows this public IR contract.
 
 <SourceLinks
   sources={[
     {
-      label: 'React Scale reuses Plot Vanilla input types',
+      label: 'React PlotScale reuses Plot Vanilla input types',
       path: 'packages/viz/plot-react/src/components/scales.tsx',
       startLine: 1,
       endLine: 7,

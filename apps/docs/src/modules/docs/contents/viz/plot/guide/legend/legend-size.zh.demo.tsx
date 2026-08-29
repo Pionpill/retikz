@@ -1,4 +1,4 @@
-import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotLegend, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -21,15 +21,15 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PointMark x="lng" y="lat" size="pop" />
-    <Legend
+    <PlotLegend
       channel="size"
       position={values.position}
       orient={values.orient === 'auto' ? undefined : values.orient}
       title="人口"
       style={{ symbolSize: values.symbolSize, symbolFit: values.symbolFit }}
     />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 ));
 

@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, Legend, Plot, PointMark, ReferenceMark, Scale } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotLegend, PlotScale, PointMark, ReferenceMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -30,14 +30,14 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       coordinate={values[RULE_EXTENT_COORDINATE_ID] === 'polar2D' ? 'polar2D' : undefined}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
-      <Scale dimension="x" type="linear" domain={[0, 120]} />
-      <Scale dimension="y" type="linear" domain={[15, 95]} />
+      <PlotScale dimension="x" type="linear" domain={[0, 120]} />
+      <PlotScale dimension="y" type="linear" domain={[15, 95]} />
       <ReferenceMark y="threshold" extentField="spanStart" extentToField="spanEnd" color="tier" strokeWidth={2} />
       <PointMark x="spanStart" y="threshold" color="tier" minimumSize={6} />
       <PointMark x="spanEnd" y="threshold" color="tier" minimumSize={6} />
-      <Axis dimension="x" grid />
-      <Axis dimension="y" />
-      <Legend channel="color" />
+      <PlotAxis dimension="x" grid />
+      <PlotAxis dimension="y" />
+      <PlotLegend channel="color" />
     </Plot>
   );
 });

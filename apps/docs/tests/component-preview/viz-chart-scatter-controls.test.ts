@@ -1,7 +1,10 @@
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { ScatterMark } from '@retikz/chart-react/point';
+import { PlotAxis } from '@retikz/plot-react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -32,6 +35,12 @@ import {
 import { previewControlContract as incomeLifeExpectancyEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.en.controls';
 import { previewSource as incomeLifeExpectancyEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.en.demo';
 import { previewSource as incomeLifeExpectancyZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.zh.demo';
+import { previewControlContract as penguinFacetZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.controls';
+import { previewControlContract as penguinFacetEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.en.controls';
+import { previewSource as penguinFacetEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.en.demo';
+import { previewSource as penguinFacetZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.zh.demo';
+import { previewSource as worldCupEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.en.demo';
+import { previewSource as worldCupZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.zh.demo';
 
 const comparable = (contract: PreviewControlContract) => ({
   controls: JSON.parse(
@@ -53,9 +62,9 @@ const expectCompletePanel = (contract: PreviewControlContract): void => {
       .sort(),
   );
   expect(contract.relatedApis.length).toBeGreaterThan(0);
-  expect(contract.relatedApis.every(api => /^(Plot|PointMark|ScatterChart|ScatterMark|Axis|Legend)\./u.test(api))).toBe(
-    true,
-  );
+  expect(
+    contract.relatedApis.every(api => /^(Plot[A-Z]\w*|Plot|PointMark|ScatterChart|ScatterMark)\./u.test(api)),
+  ).toBe(true);
 };
 
 const canonicalChartSize = (source: PreviewSourceConfig): { width?: number; height?: number } => {
@@ -65,6 +74,15 @@ const canonicalChartSize = (source: PreviewSourceConfig): { width?: number; heig
   }
 
   return { width: chart.props.width, height: chart.props.height };
+};
+
+const canonicalChartLayout = (source: PreviewSourceConfig): { width?: number; height?: number } => {
+  const chart = source.canonicalRender?.();
+  if (!isValidElement<{ layout?: { width?: number; height?: number } }>(chart)) {
+    throw new Error('Chart preview must provide a canonical element');
+  }
+
+  return { width: chart.props.layout?.width, height: chart.props.layout?.height };
 };
 
 const canonicalScatterProps = (source: PreviewSourceConfig): Record<string, unknown> => {
@@ -89,6 +107,15 @@ const canonicalScatterMarkProps = (source: PreviewSourceConfig): Record<string, 
   }
 
   return mark.props;
+};
+
+const canonicalScatterChildren = (source: PreviewSourceConfig): Array<ReactElement<Record<string, unknown>>> => {
+  const chart = source.canonicalRender?.();
+  if (!isValidElement<{ children?: ReactNode }>(chart)) {
+    throw new Error('Chart preview must provide a canonical element');
+  }
+
+  return Children.toArray(chart.props.children).filter(isValidElement<Record<string, unknown>>);
 };
 
 const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 'subtitle' | 'source', ReactNode> => {
@@ -130,6 +157,7 @@ describe('Viz Chart scatter controls', () => {
     for (const [zh, en] of [
       [basicZh, basicEn],
       [incomeLifeExpectancyZh, incomeLifeExpectancyEn],
+      [penguinFacetZh, penguinFacetEn],
     ] as const) {
       expect(comparable(zh)).toEqual(comparable(en));
       expectCompletePanel(zh);
@@ -176,6 +204,12 @@ describe('Viz Chart scatter controls', () => {
         properties: { size: 10, opacity: 0.82 },
       });
     }
+    expect(basicZh.relatedApis).toContain('ScatterChart.encodings.x');
+    expect(basicZh.relatedApis).toContain('ScatterChart.encodings.y');
+    expect(basicEn.relatedApis).toContain('ScatterChart.encodings.x');
+    expect(basicEn.relatedApis).toContain('ScatterChart.encodings.y');
+    expect(basicZh.relatedApis).not.toContain('ScatterChart.encodings');
+    expect(basicEn.relatedApis).not.toContain('ScatterChart.encodings');
     expect(basicZh.relatedApis).not.toContain('Legend.channel');
     expect(basicEn.relatedApis).not.toContain('Legend.channel');
   });
@@ -210,14 +244,92 @@ describe('Viz Chart scatter controls', () => {
     expect(incomeLifeExpectancyEn.relatedApis).not.toContain('Legend.channel');
   });
 
-  it('区分预览宿主尺寸与 Source layout', () => {
+  it('企鹅示例通过 rich encodings 声明分面、抖动与坐标轴', () => {
+    for (const source of [penguinFacetZhPreviewSource, penguinFacetEnPreviewSource]) {
+      expect(canonicalScatterMarkProps(source)).toMatchObject({ override: true });
+      expect(canonicalScatterProps(source)).not.toHaveProperty('plotExtension');
+      expect(canonicalScatterProps(source)).toMatchObject({
+        encodings: {
+          x: {
+            transform: {
+              kind: 'jitter',
+              axis: 'x',
+              xField: 'billLengthMm',
+              amount: 0.35,
+              seed: 42,
+            },
+            output: 'billLengthMm',
+          },
+          y: 'flipperLengthMm',
+          color: 'species',
+          column: { field: 'species', order: ['Adelie', 'Chinstrap', 'Gentoo'] },
+          facet: {
+            header: { column: true },
+            resolve: { scale: { x: 'shared', y: 'shared' } },
+            spacing: { panelGap: 20, labelGap: 52 },
+          },
+        },
+      });
+
+      const children = canonicalScatterChildren(source);
+      const axes = children.filter(child => child.type === PlotAxis);
+
+      expect(axes.map(axis => axis.props)).toMatchObject([
+        { dimension: 'x', grid: true },
+        { dimension: 'y', grid: true },
+      ]);
+    }
+  });
+
+  it('企鹅示例源码直接传数据并省略大型 Plot extension 配置', () => {
+    for (const locale of ['zh', 'en']) {
+      const source = readFileSync(
+        resolve(`src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.${locale}.demo.tsx`),
+        'utf8',
+      );
+
+      expect(source).toContain('data={penguinScatterData}');
+      expect(source).toContain("kind: 'jitter'");
+      expect(source).toContain('column: {');
+      expect(source).toContain('facet: {');
+      expect(source.match(/<PlotAxis\b/gu)).toHaveLength(2);
+      expect(source).not.toContain('<ChartFacet');
+      expect(source).not.toContain('<PlotTransform');
+      expect(source).not.toContain('dataModel');
+      expect(source).not.toContain('plotExtension');
+    }
+  });
+
+  it('世界杯射门示例仅在 Plot area 使用外部球场背景图', () => {
+    for (const source of [worldCupZhPreviewSource, worldCupEnPreviewSource]) {
+      expect(canonicalScatterProps(source)).toMatchObject({
+        theme: {
+          tokens: {
+            plot: {
+              'plot.area.fill': {
+                kind: 'image',
+                href: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Football_pitch_metric_tr.svg',
+                fit: 'cover',
+              },
+            },
+          },
+        },
+      });
+      expect(canonicalScatterProps(source)).not.toHaveProperty('theme.tokens.chart.chart.canvas.fill');
+    }
+  });
+
+  it('为预览宿主与 Source layout 同时声明 800x500 画布', () => {
     for (const source of [
       basicZhPreviewSource,
       basicEnPreviewSource,
       incomeLifeExpectancyZhPreviewSource,
       incomeLifeExpectancyEnPreviewSource,
+      penguinFacetZhPreviewSource,
+      penguinFacetEnPreviewSource,
     ]) {
-      expect(canonicalChartSize(source)).toEqual({ width: 800, height: 400 });
+      expect(canonicalChartSize(source)).toEqual({ width: 800, height: 500 });
+      expect(canonicalChartLayout(source)).toEqual({ width: 800, height: 500 });
     }
   });
 

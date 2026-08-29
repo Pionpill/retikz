@@ -23,15 +23,15 @@ Bandwidth controls how far each observation spreads along the x-axis. A smaller 
 
 `IRPlotDensityTransform` fixes `kind` to `'density'`.
 
-| prop           | type                         | default                 | description                               |
-| -------------- | ---------------------------- | ----------------------- | ----------------------------------------- |
-| `field`        | `string`                     | —                       | One-dimensional continuous input field    |
-| `groupBy?`     | `Array<string>`              | one global group        | Estimate density independently per group  |
+| prop           | type                     | default                 | description                               |
+| -------------- | ------------------------ | ----------------------- | ----------------------------------------- |
+| `field`        | `string`                 | —                       | One-dimensional continuous input field    |
+| `groupBy?`     | `Array<string>`          | one global group        | Estimate density independently per group  |
 | `bandwidth?`   | `IRPlotDensityBandwidth` | `silverman`             | KDE bandwidth strategy                    |
-| `sampleCount?` | `number`                     | `64`                    | Sampled output rows per group; at least 2 |
-| `extent?`      | `[number, number]`           | expanded observed range | Sampling interval                         |
-| `xAs`          | `string`                     | —                       | Output field for density sample positions |
-| `densityAs`    | `string`                     | —                       | Output field for density values           |
+| `sampleCount?` | `number`                 | `64`                    | Sampled output rows per group; at least 2 |
+| `extent?`      | `[number, number]`       | expanded observed range | Sampling interval                         |
+| `xAs`          | `string`                 | —                       | Output field for density sample positions |
+| `densityAs`    | `string`                 | —                       | Output field for density values           |
 
 `bandwidth.kind` uses <ApiValues name="DensityBandwidthKind" />. The `value` branch also requires a positive `value`.
 
@@ -80,16 +80,16 @@ Adjust the number of predictions and switch between the observed range and expli
 
 `IRPlotSmoothTransform` fixes `kind` to `'smooth'`.
 
-| prop           | type                     | default                 | description                                    |
-| -------------- | ------------------------ | ----------------------- | ---------------------------------------------- |
-| `x`            | `string`                 | —                       | Independent regression field                   |
-| `y`            | `string`                 | —                       | Dependent regression field                     |
-| `groupBy?`     | `Array<string>`          | one global group        | Fit trends independently per group             |
+| prop           | type                 | default                 | description                                    |
+| -------------- | -------------------- | ----------------------- | ---------------------------------------------- |
+| `x`            | `string`             | —                       | Independent regression field                   |
+| `y`            | `string`             | —                       | Dependent regression field                     |
+| `groupBy?`     | `Array<string>`      | one global group        | Fit trends independently per group             |
 | `method?`      | `IRPlotSmoothMethod` | `linear`                | Smoothing method                               |
-| `sampleCount?` | `number`                 | `64`                    | Predicted output rows per group; at least 2    |
-| `extent?`      | `[number, number]`       | finite observed x range | Sampling interval; explicit values extrapolate |
-| `xAs`          | `string`                 | —                       | Output field for predicted positions           |
-| `yAs`          | `string`                 | —                       | Output field for predicted values              |
+| `sampleCount?` | `number`             | `64`                    | Predicted output rows per group; at least 2    |
+| `extent?`      | `[number, number]`   | finite observed x range | Sampling interval; explicit values extrapolate |
+| `xAs`          | `string`             | —                       | Output field for predicted positions           |
+| `yAs`          | `string`             | —                       | Output field for predicted values              |
 
 `method.kind` uses <ApiValues name="SmoothMethodKind" />. The only current branch is `linear`, with no extra fields.
 
@@ -114,8 +114,8 @@ Each group needs at least two finite pairs and positive x variance; a vertical l
     {
       label: 'smooth schema and field constraints',
       path: 'packages/viz/plot/src/schemas/transform/schema.ts',
-      startLine: 325,
-      endLine: 384,
+      startLine: 277,
+      endLine: 320,
     },
     {
       label: 'OLS fit, sampling extent, and predicted output',

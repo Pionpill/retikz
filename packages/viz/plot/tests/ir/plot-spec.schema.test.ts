@@ -1,6 +1,31 @@
 import { describe, expect, it } from 'vitest';
 
+import * as plotSchemas from '../../src/schemas/plot';
 import { PlotSchema } from '../../src/schemas/plot';
+
+type FacetConfigurationSchemaContract = {
+  parse: (input: unknown) => unknown;
+  safeParse: (
+    input: unknown,
+  ) => { success: true; data: unknown } | { success: false; error: { issues: Array<{ path: Array<PropertyKey> }> } };
+};
+
+type RuntimeSchemaContract = {
+  parse: (input: unknown) => unknown;
+  safeParse: (input: unknown) => { success: boolean };
+};
+
+const runtimeSchemaOf = (name: string): RuntimeSchemaContract => {
+  const schema = (plotSchemas as Record<string, unknown>)[name];
+  expect(schema, `Plot schemas must export ${name}`).toBeDefined();
+  return schema as RuntimeSchemaContract;
+};
+
+const plotFacetConfigurationSchema = (): FacetConfigurationSchemaContract => {
+  const schema = (plotSchemas as Record<string, unknown>).PlotFacetConfigurationSchema;
+  expect(schema, 'Plot schemas must export PlotFacetConfigurationSchema').toBeDefined();
+  return schema as FacetConfigurationSchemaContract;
+};
 
 const baseLine = {
   namespace: 'plot',
@@ -172,5 +197,64 @@ describe('PlotSchema (contract)', () => {
       guides: [{ type: 'axis', dimension: 'x' }],
     };
     expect(PlotSchema.parse(spec)).toEqual(spec);
+  });
+});
+
+describe('PlotFacetConfigurationSchema', () => {
+  it('round-trips the JSON-safe authored facet facts', () => {
+    const configuration = {
+      id: 'species',
+      row: [{ field: 'island' }, { field: 'sex', order: ['female', 'male', null] }],
+      column: { field: 'species' },
+      empty: 'show',
+      header: { row: true, column: { rotate: -30 } },
+      resolve: { scale: { x: 'shared', y: 'independent' }, axis: { x: 'outer' }, grid: { y: 'all' } },
+      spacing: { panelGap: 12, labelGap: 4 },
+    };
+
+    expect(plotFacetConfigurationSchema().parse(JSON.parse(JSON.stringify(configuration)))).toEqual(configuration);
+  });
+
+  it('rejects configuration without a row or column at the row path', () => {
+    const result = plotFacetConfigurationSchema().safeParse({ id: 'species' });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues).toEqual(expect.arrayContaining([expect.objectContaining({ path: ['row'] })]));
+    }
+  });
+
+  it.each(['view', 'coordinate', 'viewIdTemplate'])('rejects Plot-only %s controls', field => {
+    const result = plotFacetConfigurationSchema().safeParse({
+      id: 'species',
+      column: { field: 'species' },
+      [field]: field === 'coordinate' ? { type: 'cartesian2D' } : 'template',
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues).toEqual(
+        expect.arrayContaining([expect.objectContaining({ code: 'unrecognized_keys', keys: [field], path: [] })]),
+      );
+    }
+  });
+});
+
+describe('Plot partition authoring schemas', () => {
+  it('exports reusable partition and facet-option schemas', () => {
+    expect(runtimeSchemaOf('PlotPartitionScalarSchema').parse(-0)).toBe(-0);
+    expect(runtimeSchemaOf('PlotPartitionDimensionSchema').parse({ field: 'metric', order: ['cpu', null] })).toEqual({
+      field: 'metric',
+      order: ['cpu', null],
+    });
+    expect(runtimeSchemaOf('PlotFacetOptionsSchema').parse({ empty: 'show', spacing: { panelGap: 12 } })).toEqual({
+      empty: 'show',
+      spacing: { panelGap: 12 },
+    });
+  });
+
+  it('rejects non-finite partition scalars', () => {
+    expect(runtimeSchemaOf('PlotPartitionScalarSchema').safeParse(Number.NaN).success).toBe(false);
+    expect(runtimeSchemaOf('PlotPartitionScalarSchema').safeParse(Number.POSITIVE_INFINITY).success).toBe(false);
   });
 });

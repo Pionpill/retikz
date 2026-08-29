@@ -20,6 +20,7 @@ import type {
   NormalizeTransformSchema,
   PairMeasureOperationSchema,
   PlotBuiltinTransformSchema,
+  PlotTransformKindSchema,
   RelateTransformSchema,
   SmoothMethodSchema,
   SmoothTransformSchema,
@@ -29,6 +30,9 @@ import type {
 
 /** plot-only transform 类型 */
 export type PlotTransformValue = ValueOf<typeof PlotTransform>;
+
+/** Plot可接受的开放transform kind */
+export type PlotTransformKindValue = ZodInfer<typeof PlotTransformKindSchema>;
 
 /** stack baseline offset 策略值 */
 export type StackOffsetValue = ValueOf<typeof StackOffset>;

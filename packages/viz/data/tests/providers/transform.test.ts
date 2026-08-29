@@ -6,6 +6,9 @@ import type { ExternalRow } from '../../src';
 
 import {
   applyTransforms,
+  DataTransformBindingClass,
+  DataTransformFieldEffect,
+  DataTransformPhase,
   DEFAULT_TRANSFORM_CONTEXT,
   defineStatisticsReducer,
   defineTransform,
@@ -23,6 +26,26 @@ const SALES: Array<ExternalRow> = [
 ];
 
 describe('data transform runtime', () => {
+  it('publishes the closed compact scheduling capability through the shared registry', () => {
+    expect(resolveTransformRegistry().get('sort')?.compact).toEqual({
+      phase: DataTransformPhase.RowOrder,
+      bindingClass: DataTransformBindingClass.Order,
+      fieldEffect: DataTransformFieldEffect.Reorder,
+    });
+
+    const custom = defineTransform({
+      schema: strictObject({ kind: literal('custom-derive') }),
+      compact: {
+        phase: DataTransformPhase.FieldDerive,
+        bindingClass: DataTransformBindingClass.Field,
+        fieldEffect: DataTransformFieldEffect.Preserve,
+      },
+      apply: rows => rows,
+    });
+
+    expect(resolveTransformRegistry([custom]).get('custom-derive')?.compact).toEqual(custom.compact);
+  });
+
   it('keeps shared sort output stable and leaves host-only transforms to host registries', () => {
     const sorted = applyTransforms([{ m: 3 }, { m: 1 }, { m: 2 }], [{ kind: 'sort', field: 'm' }]);
 

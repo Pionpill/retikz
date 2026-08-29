@@ -7,7 +7,7 @@ import type {
   LayoutCompositeDefinition,
   ResolvedTheme,
 } from '@retikz/core';
-import type { ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { DataLineageOptions, DataLineageRun, DataView, ExternalDatasets } from '@retikz/data';
 
 import {
   categoricalColorAt,
@@ -17,13 +17,14 @@ import {
   resolveDefaultCoreThemeColors,
   ThemeMode,
 } from '@retikz/core';
-import { applyTransforms, tagSourceIndex } from '@retikz/data';
+import { applyTransformsToDataView, applyTransformsToDataViewWithLineage, tagSourceIndex } from '@retikz/data';
 import { assertAllValuesValid, validateBoundData } from '@retikz/data';
 
 import type { CoordinateFrame, DatumIdRegistrar, ProvenanceContext } from '../../contract';
 import type { ChannelResolveContext } from '../../resolve/channel';
 import type {
   CompositionLayout,
+  CompositionResolution,
   CompositionResolve,
   CoordinateArrangement,
   FacetGrid,
@@ -33,7 +34,7 @@ import type {
   GridTargetSelector,
 } from '../../resolve/composition';
 import type { CoordinateResolveContext } from '../../resolve/coordinate';
-import type { IRPlot, IRPlotAxisGuide, IRPlotGuide } from '../../schemas';
+import type { IRPlot, IRPlotAxisGuide, IRPlotGuide, IRPlotMarkOperation, IRPlotTransform } from '../../schemas';
 import type { Rect } from '../../shared';
 import type { LowerPlotsOptions, MarkDataView } from './types';
 
@@ -158,17 +159,44 @@ const resolvePlotAxisSize = (intrinsic: number, proposal: LayoutAxisProposal): n
   return intrinsic;
 };
 
+/** Plot 数据阶段的一次性解析产物，供场景下沉与运行时附属结果共用 */
+export type PlotDataArtifact = {
+  /** 根级变换后的数据视图 */
+  rootDataView: DataView;
+  /** 根作用域内各图元完成局部变换后的数据视图 */
+  rootMarkDataViews: Array<MarkDataView>;
+  /** 根级变换的数据追溯；仅在追溯入口生成 */
+  rootLineage?: DataLineageRun;
+  /** 与 rootMarkDataViews 同序的图元局部数据追溯；仅在追溯入口生成 */
+  markLineages?: Array<DataLineageRun>;
+  /** 基于 rootDataView 生成的规范化组合解析结果 */
+  compositionResolution: CompositionResolution;
+  /** 本次场景下沉实际消费的图元数据视图 */
+  markDataViews: Array<MarkDataView>;
+  /** 本次场景下沉实际解析的坐标框架，以坐标作用域标识索引 */
+  frameByCoordinateScopeId: ReadonlyMap<string, CoordinateFrame>;
+};
+
+/** Plot 下沉与数据产物的一次性运行结果 */
+export type PlotDataArtifactLowerResult = {
+  /** 下沉得到的Core IR */
+  child: IRChild;
+  /** 本次下沉实际消费的数据产物 */
+  dataArtifact: PlotDataArtifact;
+};
+
 /**
- * 把一个 Plot IR 根节点 + 外部数据下沉成一个 core Scope
+ * 把一个Plot IR根节点与外部数据一次性解析并下沉，同时返回runtime sidecar可复用的数据artifact
  * @description 编排：校验 ref/scale → 收集轴值 → 建归一化 scale → 建投影器（resolveFrame）→ 各 mark 下沉 → 包 localNamespace Scope。
  *   root id → Scope.id（plot-design §8.1）；provenance 开 → 外层 Scope + 各层 / datum 带来源 meta + `<plotId>.` 内部 id
  */
-export const lowerPlot = (
+export const lowerPlotWithDataArtifact = (
   node: IRPlot,
   datasets: ExternalDatasets,
   options: LowerPlotsOptions = {},
   effectiveTheme: ResolvedTheme = DEFAULT_PLOT_THEME,
-): IRChild => {
+  lineageOptions?: DataLineageOptions,
+): PlotDataArtifactLowerResult => {
   // 自描述尺寸：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
   const width = node.width ?? options.width ?? DEFAULT_PLOT_WIDTH;
   const height = node.height ?? options.height ?? DEFAULT_PLOT_HEIGHT;
@@ -223,12 +251,18 @@ export const lowerPlot = (
     assertAllValuesValid(normalized, fieldTypes);
   }
 
-  const rows = applyTransforms(normalized, node.transform, transformRegistry, transformContext);
-  const markDataViews: Array<MarkDataView> = node.marks.map(mark => ({
-    mark,
-    rows: applyMarkTransforms(mark, rows, transformRegistry, transformContext),
-  }));
-
+  const normalizedDataView: DataView = { rows: normalized, fieldTypes, fieldTypeEvidence };
+  const rootTransformResult =
+    lineageOptions === undefined
+      ? undefined
+      : applyTransformsToDataViewWithLineage(normalizedDataView, node.transform, {
+          registry: transformRegistry,
+          context: transformContext,
+          lineage: lineageOptions,
+        });
+  const rootDataView =
+    rootTransformResult?.dataView ??
+    applyTransformsToDataView(normalizedDataView, node.transform, transformRegistry, transformContext);
   const compositionResolution = resolveComposition(node);
   const {
     coordinateScopes,
@@ -238,6 +272,32 @@ export const lowerPlot = (
     scaffolds: compositionScaffolds,
     policyContext: compositionPolicyContext,
   } = compositionResolution;
+  /** 在一个明确DataView scope内执行一次mark-local transform并保留可选lineage */
+  const resolveMarkTransform = (mark: IRPlotMarkOperation, markIndex: number, inputDataView: DataView) => {
+    const transform = (mark as { transform?: Array<IRPlotTransform> }).transform;
+    if (lineageOptions === undefined || transform === undefined) {
+      return {
+        markDataView: {
+          markIndex,
+          mark,
+          dataView: applyMarkTransforms(mark, inputDataView, transformRegistry, transformContext),
+        } satisfies MarkDataView,
+        ...(lineageOptions !== undefined ? { lineage: { events: [] } satisfies DataLineageRun } : {}),
+      };
+    }
+    const result = applyTransformsToDataViewWithLineage(inputDataView, transform, {
+      registry: transformRegistry,
+      context: transformContext,
+      lineage: lineageOptions,
+    });
+    return {
+      markDataView: { markIndex, mark, dataView: result.dataView } satisfies MarkDataView,
+      lineage: result.lineage,
+    };
+  };
+  const rootMarkResults = node.marks.map((mark, markIndex) => resolveMarkTransform(mark, markIndex, rootDataView));
+  const rootMarkDataViews = rootMarkResults.map(result => result.markDataView);
+  const markDataViews: Array<MarkDataView> = rootMarkDataViews;
   const themeResolution = resolvePlotTheme(
     effectiveTheme,
     {
@@ -248,22 +308,24 @@ export const lowerPlot = (
     options.plotThemeStyles,
   );
   const resolvedTheme = resolvePlotGuideTheme(themeResolution.plotTheme, themeResolution.palette);
-  const allGuides: Array<IRPlotGuide> = (node.guides ?? []).map(guide => {
+  const themedGuides: Array<IRPlotGuide> = (node.guides ?? []).map(guide => {
     if (!isAxisGuide(guide)) return guide;
     const axisTokens = resolvePlotAxisThemeTokens(themeResolution, guide.dimension);
     return resolveAxisGuideTokens(resolvePlotAxisGuideTheme(resolvedTheme, axisTokens), guide);
   });
+  const allGuides: Array<IRPlotGuide> = themedGuides;
   const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);
   const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
   const coordinateResolveContextOf = (
     source: IRPlot,
-    frameRows: Array<ExternalRow>,
+    frameDataView: DataView,
     guides: Array<IRPlotGuide>,
     overrides: Partial<CoordinateResolveContext> = {},
   ): CoordinateResolveContext => ({
     coordinate: source.coordinate,
-    rows: frameRows,
-    fieldTypes,
+    rows: frameDataView.rows,
+    fieldTypes: frameDataView.fieldTypes,
+    fieldTypeEvidence: frameDataView.fieldTypeEvidence,
     width,
     height,
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
@@ -281,8 +343,7 @@ export const lowerPlot = (
   const { scopeById, scopeContextOf, axisPolicyFor, frameByScope, gridLayers, axisLayers, plotArea } =
     resolveScopedFrames({
       node,
-      rows,
-      fieldTypes,
+      dataView: rootDataView,
       width,
       height,
       options,
@@ -298,6 +359,17 @@ export const lowerPlot = (
       allGuides,
       allGuidesWithCompositionGap,
     });
+  const dataArtifact: PlotDataArtifact = {
+    rootDataView,
+    rootMarkDataViews,
+    ...(rootTransformResult !== undefined ? { rootLineage: rootTransformResult.lineage } : {}),
+    ...(lineageOptions !== undefined
+      ? { markLineages: rootMarkResults.map(result => result.lineage ?? { events: [] }) }
+      : {}),
+    compositionResolution,
+    markDataViews,
+    frameByCoordinateScopeId: frameByScope,
+  };
   const facets = compositionFacets;
   const arrangementLayoutOf = (arrangement: CoordinateArrangement | undefined): CompositionLayout | undefined =>
     resolveArrangementLayout(compositionLayout, arrangement);
@@ -311,9 +383,9 @@ export const lowerPlot = (
   });
   const channelCtx: ChannelResolveContext = {
     node,
-    rows,
-    fieldTypes,
-    fieldTypeEvidence,
+    rows: rootDataView.rows,
+    fieldTypes: rootDataView.fieldTypes,
+    fieldTypeEvidence: rootDataView.fieldTypeEvidence,
     channelRegistry,
     markRegistry,
     defaultColor: categoricalColorAt(resolvedTheme.palette.series, 0),
@@ -341,7 +413,7 @@ export const lowerPlot = (
     }
 
     const usedFacetScopeIds = new Set(coordinateScopes.scopes.map(scope => scope.id));
-    const panels = facets.flatMap(facet => resolveFacetPanels(facet, rows, usedFacetScopeIds));
+    const panels = facets.flatMap(facet => resolveFacetPanels(facet, rootDataView.rows, usedFacetScopeIds));
     const maxColumnIndex = panels.reduce((max, panel) => Math.max(max, panel.columnIndex), 0);
     const maxRowIndex = panels.reduce((max, panel) => Math.max(max, panel.rowIndex), 0);
     const facetLayout = arrangementLayoutOf(facets[0]);
@@ -547,9 +619,15 @@ export const lowerPlot = (
     const panelScopes: Array<IRScope> = panels.map(panel => {
       const panelAxisGuides = facetAxisGuidesForPanel(panel);
       const panelFrameGuides = facetFrameGuidesForPanel(panel);
-      const panelMarkDataViews: Array<MarkDataView> = node.marks.map(mark => ({
+      const panelDataView: DataView = {
+        rows: panel.rows,
+        fieldTypes: rootDataView.fieldTypes,
+        fieldTypeEvidence: rootDataView.fieldTypeEvidence,
+      };
+      const panelMarkDataViews: Array<MarkDataView> = node.marks.map((mark, markIndex) => ({
+        markIndex,
         mark,
-        rows: applyMarkTransforms(mark, panel.rows, transformRegistry, transformContext),
+        dataView: applyMarkTransforms(mark, panelDataView, transformRegistry, transformContext),
       }));
       const roleMarkDataViews: Record<string, Array<MarkDataView>> = {};
       for (const [role, sharing] of Object.entries(arrangementResolveOf(panel.facet)?.scale ?? {})) {
@@ -565,12 +643,12 @@ export const lowerPlot = (
       const panelLayout = arrangementLayoutOf(panel.facet);
       const frameResolution = resolveCoordinateFrame(
         panelNode,
-        coordinateResolveContextOf(panelNode, panel.rows, panelFrameGuides, {
+        coordinateResolveContextOf(panelNode, panelDataView, panelFrameGuides, {
           width: panelWidth,
           height: panelHeight,
           margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
           labelGap: panelLayout?.labelGap,
-          markDataViews,
+          markDataViews: rootMarkDataViews,
           roleMarkDataViews,
         }),
       );
@@ -579,13 +657,13 @@ export const lowerPlot = (
           ? frameResolution
           : resolveCoordinateFrame(
               { ...panelNode, guides: panelAxisGuides },
-              coordinateResolveContextOf({ ...panelNode, guides: panelAxisGuides }, panel.rows, panelAxisGuides, {
+              coordinateResolveContextOf({ ...panelNode, guides: panelAxisGuides }, panelDataView, panelAxisGuides, {
                 width: panelWidth,
                 height: panelHeight,
                 margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
                 labelGap: panelLayout?.labelGap,
                 plotAreaOverride: frameResolution.plotArea,
-                markDataViews,
+                markDataViews: rootMarkDataViews,
                 roleMarkDataViews,
               }),
             );
@@ -594,13 +672,13 @@ export const lowerPlot = (
         panelGridGuides.length > 0
           ? resolveCoordinateFrame(
               { ...panelNode, guides: panelGridGuides },
-              coordinateResolveContextOf({ ...panelNode, guides: panelGridGuides }, panel.rows, panelGridGuides, {
+              coordinateResolveContextOf({ ...panelNode, guides: panelGridGuides }, panelDataView, panelGridGuides, {
                 width: panelWidth,
                 height: panelHeight,
                 margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
                 labelGap: panelLayout?.labelGap,
                 plotAreaOverride: frameResolution.plotArea,
-                markDataViews,
+                markDataViews: rootMarkDataViews,
                 roleMarkDataViews,
               }),
             )
@@ -617,7 +695,8 @@ export const lowerPlot = (
       );
       const markLayers: Array<IRChild> = node.marks
         .map((mark, markIndex) => {
-          const markRows = panelMarkDataViews[markIndex]?.rows ?? panel.rows;
+          const markDataView = panelMarkDataViews[markIndex]?.dataView ?? panelDataView;
+          const markRows = markDataView.rows;
           const operationResolution = resolveMarkOperation(mark, { registry: markRegistry });
           const layer = lowerMark(
             operationResolution,
@@ -626,6 +705,8 @@ export const lowerPlot = (
             resolveMarkChannels(mark, {
               ...channelCtx,
               rows: markRows,
+              fieldTypes: markDataView.fieldTypes,
+              fieldTypeEvidence: markDataView.fieldTypeEvidence,
               defaultColor: categoricalColorAt(resolvedTheme.palette.series, markIndex),
             }),
             {
@@ -682,7 +763,8 @@ export const lowerPlot = (
     const children: Array<IRChild> = [...panelScopes, ...facetLabelScopes];
     if (node.id === undefined) {
       const base: IRScope = { type: 'scope', localNamespace: true, children };
-      return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
+      const child = provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
+      return { child, dataArtifact };
     }
 
     const inner: IRScope = { type: 'scope', localNamespace: true, children };
@@ -698,15 +780,16 @@ export const lowerPlot = (
       padding: 0,
       opacity: 0,
     };
-    return { type: 'scope', id: node.id, children: [innerContent, plotAreaCarrier] };
+    return { child: { type: 'scope', id: node.id, children: [innerContent, plotAreaCarrier] }, dataArtifact };
   }
 
   // 每个 mark 下沉成一个图层 Scope（样式上提到 nodeDefault/pathDefault）；空图层（无可绘制点）丢弃
   // provenance 开 → 传 markProvenance（plotId / markIndex / datum 开关 + 共享 registerDatumId），各层 / datum 绑 id + 来源 meta
   const scopeOrderById = new Map(coordinateScopes.scopes.map((scope, index) => [scope.id, index] as const));
-  const markLayerEntries = node.marks
-    .map((mark, markIndex) => {
-      const markRows = markDataViews[markIndex]?.rows ?? rows;
+  const markLayerEntries = markDataViews
+    .map(view => {
+      const { dataView, mark, markIndex } = view;
+      const markRows = dataView.rows;
       const coordinateScopeId = coordinateScopeIdOf(mark, coordinateScopes.defaultScope);
       const frame = frameByScope.get(coordinateScopeId);
       if (frame === undefined) {
@@ -720,6 +803,8 @@ export const lowerPlot = (
         resolveMarkChannels(mark, {
           ...channelCtx,
           rows: markRows,
+          fieldTypes: dataView.fieldTypes,
+          fieldTypeEvidence: dataView.fieldTypeEvidence,
           defaultColor: categoricalColorAt(resolvedTheme.palette.series, markIndex),
         }),
         {
@@ -751,7 +836,7 @@ export const lowerPlot = (
   const legendGuides = allGuides.filter(isLegendGuide);
   const legendLayers: Array<IRScope> = [];
   if (legendGuides.length > 0) {
-    const channelDescriptors = collectChannelDescriptors(node, channelCtx, markDataViews);
+    const channelDescriptors = collectChannelDescriptors(node, channelCtx, rootMarkDataViews);
     const bands = reserveLegendBands(legendGuides, width, height, plotArea);
     legendLayers.push(
       ...buildLegendLayers(
@@ -781,7 +866,8 @@ export const lowerPlot = (
   // 无 id：root = localNamespace 内容 scope（可带 provenance meta）。
   if (node.id === undefined) {
     const base: IRScope = { type: 'scope', localNamespace: true, children };
-    return provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
+    const child = provenance ? { ...base, meta: rootMeta(provenance.dataReference) } : base;
+    return { child, dataArtifact };
   }
 
   // 有 id：外层 panel scope（id、非 localNamespace → 面板 bbox 注册父帧、外部可见）
@@ -789,7 +875,9 @@ export const lowerPlot = (
   // 让面板 bbox `<plotId>` 与二维绘图区 `<plotId>.plotArea` 都落在 localNamespace 之外、外部兄弟可锚（组合连线）。
   const inner: IRScope = { type: 'scope', localNamespace: true, children };
   const innerContent: IRScope = provenance ? { ...inner, meta: rootMeta(provenance.dataReference) } : inner;
-  if (!supportsPlotArea(defaultFrame)) return { type: 'scope', id: node.id, children: [innerContent] };
+  if (!supportsPlotArea(defaultFrame)) {
+    return { child: { type: 'scope', id: node.id, children: [innerContent] }, dataArtifact };
+  }
   // plotArea 精确矩形 carrier：几何 = 扣除轴 / legend 后的绘图区；opacity 0 不可见，仅登记 bbox 锚
   const plotAreaCarrier: IRNode = {
     type: 'node',
@@ -800,8 +888,16 @@ export const lowerPlot = (
     padding: 0,
     opacity: 0,
   };
-  return { type: 'scope', id: node.id, children: [innerContent, plotAreaCarrier] };
+  return { child: { type: 'scope', id: node.id, children: [innerContent, plotAreaCarrier] }, dataArtifact };
 };
+
+/** 把一个Plot IR根节点与外部数据下沉成Core IR */
+export const lowerPlot = (
+  node: IRPlot,
+  datasets: ExternalDatasets,
+  options: LowerPlotsOptions = {},
+  effectiveTheme: ResolvedTheme = DEFAULT_PLOT_THEME,
+): IRChild => lowerPlotWithDataArtifact(node, datasets, options, effectiveTheme).child;
 
 /**
  * 构造 plot 的 Tier 2 下沉逻辑，供 core `CompileOptions.composites` 注入

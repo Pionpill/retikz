@@ -120,7 +120,7 @@ const spec: IRPlot = {
 - Position scales cannot drive color channels, and channel scales cannot drive position roles; family mismatches fail loud.
 - A definition schema should be a closed JSON object. The examples use `z.strictObject` so misspelled config is not silently stripped.
 - A position definition must implement `coordinate`, `domain`, `bandwidth`, `ticks`, `range`, and `setRange`; channel `of` currently returns only a color string or `undefined`.
-- Custom scales do not participate in React field-type auto-derivation, and declarative `<Scale>` covers built-in types only.
+- Custom scales do not participate in React field-type auto-derivation, and declarative `<PlotScale>` covers built-in types only.
 - Custom `colorSchemes` cannot override a built-in scheme with the same name; the resolver checks built-ins before host injection.
 
 This operation is rejected by the example's strict schema because the config key is unknown:

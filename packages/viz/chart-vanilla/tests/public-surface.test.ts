@@ -12,6 +12,16 @@ describe('@retikz/chart-vanilla public surface', () => {
     expect(chart).not.toHaveProperty('createChart');
     expect(chart).not.toHaveProperty('normalizeChart');
     expect(chart).not.toHaveProperty('ChartProvider');
+    expect(chart).not.toHaveProperty('InputChartFacet');
+  });
+
+  it('removes the old root facet normalizer and type source', async () => {
+    const rootSource = await readFile(fileURLToPath(new URL('../src/index.ts', import.meta.url)), 'utf8');
+    const normalizeSource = await readFile(
+      fileURLToPath(new URL('../src/normalize/chart/index.ts', import.meta.url)),
+      'utf8',
+    );
+    expect(`${rootSource}\n${normalizeSource}`).not.toMatch(/InputChartFacet|normalizeChartFacet|\.\/facet/);
   });
 
   it('exports precise Point factories and normalizers from the Point entry', () => {

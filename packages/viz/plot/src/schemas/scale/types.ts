@@ -11,6 +11,7 @@ import type {
   LinearScaleSchema,
   LogScaleSchema,
   OrdinalScaleSchema,
+  PlotScaleTypeSchema,
   PointScaleSchema,
   PowScaleSchema,
   QuantileColorScaleSchema,
@@ -27,6 +28,9 @@ import type {
 
 /** scale 类型 */
 export type PlotScaleValue = ValueOf<typeof PlotScale>;
+
+/** Plot可接受的开放scale type */
+export type PlotScaleTypeValue = ZodInfer<typeof PlotScaleTypeSchema>;
 
 /** 内置命名配色方案名 */
 export type PlotColorSchemeValue = ValueOf<typeof PlotColorScheme>;

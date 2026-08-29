@@ -3,7 +3,7 @@ import type { ExternalRow } from '@retikz/data';
 
 import { compileToScene } from '@retikz/core';
 import { applyTransforms, defineTransform, extractTransformKind } from '@retikz/data';
-import { DataTransform } from '@retikz/data';
+import { DataTransform, DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
@@ -94,6 +94,36 @@ describe('transform registry (contract)', () => {
     expect([...registry.keys()].sort()).toEqual(
       [...Object.values(DataTransform), ...Object.values(PlotTransform)].sort(),
     );
+  });
+
+  it('publishes compact scheduling capabilities for field-bindable plot transforms', () => {
+    const registry = resolvePlotTransformRegistry();
+    expect(registry.get(PlotTransform.Stack)?.compact).toEqual({
+      phase: DataTransformPhase.CumulativeDerive,
+      bindingClass: DataTransformBindingClass.Field,
+      fieldEffect: DataTransformFieldEffect.Preserve,
+    });
+    expect(registry.get(PlotTransform.Bin)?.compact).toEqual({
+      phase: DataTransformPhase.RowShape,
+      bindingClass: DataTransformBindingClass.Field,
+      fieldEffect: DataTransformFieldEffect.Replace,
+    });
+    expect(registry.get(PlotTransform.Normalize)?.compact).toEqual({
+      phase: DataTransformPhase.FieldDerive,
+      bindingClass: DataTransformBindingClass.Field,
+      fieldEffect: DataTransformFieldEffect.Preserve,
+    });
+    expect(registry.get(PlotTransform.DeriveInterval)?.compact).toEqual({
+      phase: DataTransformPhase.CumulativeDerive,
+      bindingClass: DataTransformBindingClass.Field,
+      fieldEffect: DataTransformFieldEffect.Preserve,
+    });
+    expect(registry.get(PlotTransform.Jitter)?.compact).toEqual({
+      phase: DataTransformPhase.FieldAdjust,
+      bindingClass: DataTransformBindingClass.Field,
+      fieldEffect: DataTransformFieldEffect.Preserve,
+    });
+    expect(registry.get(PlotTransform.Density)?.compact).toBeUndefined();
   });
 
   it('define_transform_preserves_schema_and_extracts_kind', () => {

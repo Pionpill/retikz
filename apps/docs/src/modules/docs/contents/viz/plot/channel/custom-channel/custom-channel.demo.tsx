@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, Legend, Plot, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotLegend, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -32,9 +32,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             : values[CUSTOM_CHANNEL_CONTROL_IDS.constantIntensity],
       }}
     />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
-    {values[CUSTOM_CHANNEL_CONTROL_IDS.bindingMode] === 'field' ? <Legend channel="intensity" /> : null}
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
+    {values[CUSTOM_CHANNEL_CONTROL_IDS.bindingMode] === 'field' ? <PlotLegend channel="intensity" /> : null}
   </Plot>
 ));
 

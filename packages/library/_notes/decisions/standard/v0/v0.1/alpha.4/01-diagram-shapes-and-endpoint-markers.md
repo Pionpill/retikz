@@ -2,6 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-19
+- 修订日期：2026-08-24
 - 关联：[alpha.4 roadmap](./roadmap.md) · [Standard v0.1 roadmap](../roadmap.md) · [Standard Drawing Library 设计](../../../../../architecture/standard-library-design.md) · [Core Drawing Complete](../../../../../../../kernel/_notes/architecture/core-drawing-complete.md) · [Graph Entity ADR](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/07-entity-data-geometry.md) · [Graph Relation ADR](../../../../../../../schematic/_notes/decisions/graph/v0/v0.1/alpha.1/08-relation-data-geometry.md)
 
 ## 背景与目标
@@ -16,18 +17,21 @@ Core 提供基础 Shape、Arrow Definition、registry、resolve、boundary、mar
 
 `@retikz/standard/shape` 增加以下 Definition、公开参数类型、名称常量成员与静态 provider：
 
-| 名称            | 参数与默认值                                                                         | 长期几何语义                                                          |
-| --------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| `trapezoid`     | `shortSide: SideValue = 'top'`、`shortSideRatio = 0.72`、`cornerRadius = 0`          | `shortSideRatio` 取 `(0, 1]`；`1` 退化为矩形                          |
-| `parallelogram` | `slantDirection: 'left' \| 'right' = 'right'`、`slantAngle = 70`、`cornerRadius = 0` | `slantAngle` 取 `(0, 90]`；`90` 退化为矩形，纵向形态使用 Node rotate  |
-| `hexagon`       | `shoulderDepth = 12`、`cornerRadius = 0`                                             | 表达可变宽高的长六边形；每侧肩部沿水平方向固定延伸非负 user-unit 长度 |
-| `cylinder`      | `axis: 'vertical' \| 'horizontal' = 'vertical'`、`capDepth = 8`                      | 每个端盖沿主轴预留非负 user-unit 深度；最终深度不超过主轴长度一半     |
+| 名称              | 参数与默认值                                                                         | 长期几何语义                                                          |
+| ----------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `trapezoid`       | `shortSide: SideValue = 'top'`、`shortSideRatio = 0.72`、`cornerRadius = 0`          | `shortSideRatio` 取 `(0, 1]`；`1` 退化为矩形                          |
+| `parallelogram`   | `slantDirection: 'left' \| 'right' = 'right'`、`slantAngle = 70`、`cornerRadius = 0` | `slantAngle` 取 `(0, 90]`；`90` 退化为矩形，纵向形态使用 Node rotate  |
+| `hexagon`         | `shoulderDepth = 12`、`cornerRadius = 0`                                             | 表达可变宽高的长六边形；每侧肩部沿水平方向固定延伸非负 user-unit 长度 |
+| `cylinder`        | `axis: 'vertical' \| 'horizontal' = 'vertical'`、`capDepth = 8`                      | 每个端盖沿主轴预留非负 user-unit 深度；最终深度不超过主轴长度一半     |
+| `ellipticCapsule` | `axis: 'vertical' \| 'horizontal' = 'vertical'`、`capDepth = 8`                      | 沿主轴两端使用半椭圆闭合外轮廓，不绘制端盖分隔弧                      |
 
-公开参数类型分别为 `TrapezoidShapeParams`、`ParallelogramShapeParams`、`HexagonShapeParams` 与 `CylinderShapeParams`；对应公开 Definition 为 `TrapezoidShapeDefinition`、`ParallelogramShapeDefinition`、`HexagonShapeDefinition` 与 `CylinderShapeDefinition`，并提供匹配的静态 provider 与 `StandardShapeName` 成员
+公开参数类型分别为 `TrapezoidShapeParams`、`ParallelogramShapeParams`、`HexagonShapeParams`、`CylinderShapeParams` 与 `EllipticCapsuleShapeParams`；对应公开 Definition 为 `TrapezoidShapeDefinition`、`ParallelogramShapeDefinition`、`HexagonShapeDefinition`、`CylinderShapeDefinition` 与 `EllipticCapsuleShapeDefinition`，并提供匹配的静态 provider 与 `StandardShapeName` 成员
 
 `SideValue` 复用 Core 的 `top | right | bottom | left` 共享词汇。参数均为 JSON-safe strict object；ratio、angle 与 direction 是无量纲语义，`shoulderDepth`、`cornerRadius` 与 `capDepth` 是随 Shape 缩放的 user-unit 长度
 
-四个 Shape 都从内容内框计算能够完整容纳内容的最终外框。梯形、平行四边形与长六边形的圆角不得裁掉内容；圆角按无自交上限裁剪。圆柱端盖分隔弧只参与描边，不形成内部连接边界或独立 identity，近端端盖与主体使用同一 fill
+五个 Shape 都从内容内框计算能够完整容纳内容的最终外框。梯形、平行四边形与长六边形的圆角不得裁掉内容；圆角按无自交上限裁剪。圆柱端盖分隔弧只参与描边，不形成内部连接边界或独立 identity，近端端盖与主体使用同一 fill
+
+`ellipticCapsule` 与 `cylinder` 共享按 `axis` 和 `capDepth` 确定的外轮廓语义，但只发出单一闭合外轮廓。纵向形态由顶部半椭圆、两侧直线与底部半椭圆组成；横向形态按同一规则旋转到左右两端。它不发出圆柱近端端盖的内部补弧，因此顶部不会形成完整椭圆；`capDepth = 0` 时退化为矩形。fill、boundary point、connection envelope 与 Scene bounds 始终以该闭合外轮廓为真源
 
 内容外接、boundary point、connection envelope、emit outer contour 与 Scene bounds 必须消费同一最终轮廓。Shape 只提供 Core 已有的 center 与方向 anchor，不增加 `short-side`、`cap-center` 等专有 anchor；padding、minimumSize、rotate、style、Theme、identity 与 Scene 行为继续由 Core 拥有
 
@@ -36,6 +40,8 @@ Core 提供基础 Shape、Arrow Definition、registry、resolve、boundary、mar
 Core `polygon { sides: 6 }` 表达顶点均布在外接圆上的正六边形。Standard `hexagon` 表达具有水平上下边和左右侧向顶点的可变宽高长六边形，每侧侧向顶点在内容内框之外固定延伸 `shoulderDepth`。内容外接后的最终宽度等于内容内框宽度加两侧肩深，不因内容继续变宽而放大尖角；直接消费更窄最终 bounds 时，有效肩深夹到最终宽度一半以保持轮廓不自交
 
 `hexagon` 是独立 Definition 与 provider key，不是 Core polygon 的别名，也不 lowering 为 polygon。作者需要正六边形时继续使用 Core polygon
+
+`ellipticCapsule` 也不是 Core rectangle 的大圆角别名。Core rounded rectangle 以统一 corner radius 生成四个圆角；`ellipticCapsule` 则让横向半径覆盖整个横截面，并允许 `capDepth` 独立控制主轴方向半径，因此两者的外轮廓、内容外接和连接边界不同
 
 ### 端点 Marker
 
@@ -65,9 +71,9 @@ Graph 等 Tier 2 包可以在自身 role、kind 或 predicate recipe 中引用�
 
 - 未知字段、非法 enum、非有限数、越界 ratio / angle、负 `shoulderDepth` / `cornerRadius` / `capDepth`、非有限派生几何以及缺失或重复 provider 必须 fail-loud，并保留 Core 的 provider name 与 IR path 诊断
 - 直接 Core IR、React、Vanilla、SSR 与 Tier 2 contribution 在相同 IR 和 provider 集合下必须得到相同 Scene、bounds 与诊断；adapter 不维护私有默认或 marker geometry
-- 新能力不改变 Core 内置 Shape / Arrow 集合，也不改变 Standard 既有 contour、cross、sector 与 star。`diamond` 和 `openDiamond` 保留名称与装配方式，但默认几何改为 TikZ 扁菱形，属于 alpha 阶段有意的视觉 breaking change
+- 新能力不改变 Core 内置 Shape / Arrow 集合，也不改变 Standard 既有 contour、cross、sector、star 与 cylinder。`ellipticCapsule` 使用独立 provider key；`diamond` 和 `openDiamond` 保留名称与装配方式，但默认几何改为 TikZ 扁菱形，属于 alpha 阶段有意的视觉 breaking change
 - Shape 与 Marker 不反推 Graph role、kind、predicate、direction、cardinality 或 Theme
 
 ## 结果
 
-Standard 的 Shape 与 Arrow 子入口已提供上述参数化 Shape 与端点 Marker，并保持直接 Definition、静态 provider 与 Core 编译主链一致。长六边形默认每侧固定肩深为 `12` user units，内容变宽不会继续放大尖角；圆柱端盖填充与端点接头覆盖符合本决策
+Standard 的 Shape 与 Arrow 子入口已形成直接 Definition、静态 provider 与 Core 编译闭环。长六边形使用固定肩深；Cylinder 保留内部端盖分隔弧；`ellipticCapsule` 使用单一半椭圆端外轮廓。Graph 等领域包只引用并贡献这些通用 provider，不把领域语义下沉到 Standard

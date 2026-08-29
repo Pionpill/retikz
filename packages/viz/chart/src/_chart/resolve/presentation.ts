@@ -110,7 +110,7 @@ const flexOf = (
   appendText('title');
   appendText('subtitle');
   slots.push(ChartPresentationSlot.Plot);
-  children.push({ kind: LayoutItemKind.Flex, key: 'chart.plot', child: plot });
+  children.push({ kind: LayoutItemKind.Flex, key: 'chart.plot', child: plot, grow: 1 });
   appendText('note');
   appendText('source');
 

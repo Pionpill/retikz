@@ -4,13 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { createHistogramSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
 import { buildPlotIR } from '../../../src/adapter';
 import { IntervalMark } from '../../../src/components/marks';
-import { Transform } from '../../../src/components/transform';
+import { PlotTransform } from '../../../src/components/transform';
 
-describe('buildPlotIR <Transform> / bin / summarize / histogram x0x1', () => {
+describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () => {
   it('transform_bin_declared_to_ir', () => {
     const spec = buildPlotIR(
       <>
-        <Transform kind="bin" field="measurement" count={20} />
+        <PlotTransform kind="bin" field="measurement" count={20} />
         <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       </>,
       '__plot',
@@ -21,7 +21,7 @@ describe('buildPlotIR <Transform> / bin / summarize / histogram x0x1', () => {
   it('bar_x0x1_histogram_continuous_x_not_band', () => {
     const spec = buildPlotIR(
       <>
-        <Transform kind="bin" field="m" step={5} />
+        <PlotTransform kind="bin" field="m" step={5} />
         <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       </>,
       '__plot',
@@ -53,7 +53,7 @@ describe('buildPlotIR <Transform> / bin / summarize / histogram x0x1', () => {
   it('transform_summarize_declared_to_ir', () => {
     const spec = buildPlotIR(
       <>
-        <Transform
+        <PlotTransform
           kind="summarize"
           groupBy={['region']}
           metrics={[{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }]}
@@ -84,10 +84,10 @@ describe('buildPlotIR <Transform> / bin / summarize / histogram x0x1', () => {
   });
 
   it('explicit_stack_suppresses_shortcut_stack_no_double', () => {
-    // 显式 <Transform kind="stack"> 存在时，<IntervalMark stack> 的 shortcut stack 不再注入（B4 去重）
+    // 显式 <PlotTransform kind="stack"> 存在时，<IntervalMark stack> 的 shortcut stack 不再注入（B4 去重）
     const spec = buildPlotIR(
       <>
-        <Transform kind="stack" x="month" y="revenue" groupBy="product" />
+        <PlotTransform kind="stack" x="month" y="revenue" groupBy="product" />
         <IntervalMark x="month" y="revenue" series="product" stack />
       </>,
       '__plot',
@@ -109,7 +109,7 @@ describe('buildPlotIR <Transform> / bin / summarize / histogram x0x1', () => {
     // summarize（显式）在前、无显式 stack → shortcut stack 补在后
     const spec = buildPlotIR(
       <>
-        <Transform
+        <PlotTransform
           kind="summarize"
           groupBy={['month', 'product']}
           metrics={[{ kind: 'sum', field: 'revenue', as: 'total' }]}
@@ -125,7 +125,7 @@ describe('buildPlotIR <Transform> / bin / summarize / histogram x0x1', () => {
   it('transform 装配产物过 PlotSchema', () => {
     const spec = buildPlotIR(
       <>
-        <Transform kind="bin" field="m" count={10} />
+        <PlotTransform kind="bin" field="m" count={10} />
         <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       </>,
       '__plot',
