@@ -68,7 +68,7 @@ description: 用 density 和 smooth 把原始样本转换成可由 PathMark 绘�
 
 ## 趋势
 
-`smooth` 当前用普通最小二乘法拟合每组 `(x, y)`，再输出一批预测采样行。原始点和趋势结果通常分成不同图元：实心点读取源数据；路径与空心点复用同一份 transform 配置，但各自执行局部变换并建立数据视图。
+`smooth` 按选定方法拟合每组 `(x, y)`，再输出一批预测采样行。内置方法包括 linear、quadratic、polynomial、logarithmic、exponential 与 power。原始点和趋势结果通常分成不同图元：实心点读取源数据；路径与空心点复用同一份 transform 配置，但各自执行局部变换并建立数据视图。
 
 ### 动态示例
 
@@ -91,11 +91,20 @@ description: 用 density 和 smooth 把原始样本转换成可由 PathMark 绘�
 | `xAs`          | `string`             | —               | 预测位置输出字段                 |
 | `yAs`          | `string`             | —               | 预测数值输出字段                 |
 
-`method.kind` 使用 <ApiValues name="SmoothMethodKind" />；当前只有无需附加字段的 `linear`。
+`method.kind` 使用 <ApiValues name="SmoothMethodKind" />。`polynomial` 额外接受 2～6 的整数 `order`，默认 3；其它方法没有附加字段。
+
+| `kind`        | 方程               | 最低样本与值域                     |
+| ------------- | ------------------ | ---------------------------------- |
+| `linear`      | `y = a + bx`       | 2 个有效 pair，至少 2 个不同 x     |
+| `quadratic`   | `y = a + bx + cx²` | 3 个有效 pair，满秩                |
+| `polynomial`  | n 阶多项式         | 至少 `order + 1` 个有效 pair，满秩 |
+| `logarithmic` | `y = a + b ln(x)`  | x 为正                             |
+| `exponential` | `y = a exp(bx)`    | y 为正                             |
+| `power`       | `y = a xᵇ`         | x 与 y 都为正                      |
 
 ### 技术原理
 
-`smooth` 先过滤出有限 `(x, y)` 对，再为每组拟合一个线性模型。`extent` 和 `sampleCount` 只控制模型拟合完成后的预测采样。
+`smooth` 先过滤出有限 `(x, y)` 对，再为每组拟合一个模型。`extent` 和 `sampleCount` 只控制模型拟合完成后的预测采样。下图专门解释默认 `linear` 分支。
 
 <ComponentPreview files="transform-smooth-logic" hideCode size="sm" />
 
@@ -107,7 +116,9 @@ description: 用 density 和 smooth 把原始样本转换成可由 PathMark 绘�
 
 未设置 `extent` 时使用有限 x 的观测最小值和最大值；显式范围可以向观测域外推。每个等距采样 x 都写出 `intercept + slope × x`，所以每组输出 `sampleCount` 行。
 
-每组至少需要两个有限点，且 x 方差必须大于 0；垂直线无法表示为 `y = a + bx`。`extent` 下界必须小于上界，输出字段不能同名，也不能覆盖 `groupBy` 字段。
+quadratic 与 polynomial 使用归一化 x basis 和带 scaled partial pivot 的方程求解；logarithmic、exponential 与 power 先按上表取对数再拟合，并把预测反变换回 y。每组都必须满足对应最低样本、不同 x、满秩和值域要求，且任何系数或预测都必须有限。
+
+`extent` 下界必须小于上界；logarithmic 与 power 的采样范围还必须保持 x 为正。输出字段不能同名，也不能覆盖 `groupBy` 字段。任一分组失败都会 fail-loud，不会跳过失败组。
 
 <SourceLinks
   sources={[

@@ -5,16 +5,17 @@ description: Show individual observations through point positions and relationsh
 
 Point charts use one or more data points as their visual subject. This group helps readers choose a chartType by visual structure and remains a source-directory and `/point` multi-entry import boundary. It does not introduce another Point resolver or runtime dispatch layer.
 
-Scatter and Bubble both belong to the `type: 'point'` family, with `recipe.chartType` selecting each exact schema and recipe. They share root `data`, `layout`, `presentation`, `theme`, and `plotExtension`, while `recipe.encodings`, `recipe.properties`, and the built-in semantic mark fix each chart's data roles and visual structure.
+Scatter, Bubble, and Regression all belong to the `type: 'point'` family, with `recipe.chartType` selecting each exact schema and recipe. They share root `data`, `layout`, `presentation`, `theme`, and `plotExtension`, while `recipe.encodings`, `recipe.properties`, and the built-in semantic mark fix each chart's data roles and visual structure.
 
 Field ownership, the authoring pipeline, chart-wide presentation, and Plot extension rules shared by every type live under [Chart Model](/viz/chart/model). This section compares only the visual semantics unique to point chart types.
 
 ## Responsibilities
 
-| Chart                                    | `chartType` | Use it when                                                 |
-| ---------------------------------------- | ----------- | ----------------------------------------------------------- |
-| [Scatter](/viz/chart/points/scatter)     | `scatter`   | Inspecting distributions, clusters, outliers, or trends     |
-| [Bubble Chart](/viz/chart/points/bubble) | `bubble`    | Comparing two positions with the magnitude of a third field |
+| Chart                                            | `chartType`  | Use it when                                                 |
+| ------------------------------------------------ | ------------ | ----------------------------------------------------------- |
+| [Scatter](/viz/chart/points/scatter)             | `scatter`    | Inspecting distributions, clusters, outliers, or trends     |
+| [Bubble Chart](/viz/chart/points/bubble)         | `bubble`     | Comparing two positions with the magnitude of a third field |
+| [Regression Chart](/viz/chart/points/regression) | `regression` | Comparing global or grouped fitted trends over observations |
 
 ## Pages
 
@@ -29,6 +30,12 @@ Field ownership, the authoring pipeline, chart-wide presentation, and Plot exten
     <span className="font-semibold">Bubble Chart</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Drive bubble area with a required third field while retaining Point position semantics
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/regression">
+    <span className="font-semibold">Regression Chart</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Overlay raw observations with one or more built-in regression trends
     </span>
   </LinkedCard>
 </div>

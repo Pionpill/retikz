@@ -1,0 +1,123 @@
+---
+title: 回归图
+description: 在原始观测点上叠加一条或多条拟合趋势，用统一的 Chart authoring 比较两个连续变量的关系。
+family: scatter-points
+usage: distribution
+---
+
+<ShowcaseGallery
+  examples={[
+    {
+      id: 'regression-basic',
+      title: '观测与分组趋势',
+      description: '用 `RegressionChart` 同时显示 Iris 观测点和趋势线，并比较全局拟合与按物种分别拟合。',
+      preview: {
+        files: ['regression-basic', 'regression-basic.data.ts'],
+        controls: { name: 'regression-basic' },
+        controlPanelDefaultOpen: false,
+        size: 'xxl',
+        caption: '切换六种内置方法、分组方式与采样密度；只有 polynomial 会显示阶数控件。',
+      },
+    },
+  ]}
+>
+Regression 适合在保留每个观测的同时，概括两个连续变量之间的整体或分组趋势。若只需要点的分布，使用 [Scatter](/viz/chart/points/scatter)；若需要完全控制数据视图、变换或趋势图元，直接使用 Plot。
+
+本页只展开 Regression 私有 API。`ChartData`、`ChartLayout`、presentation 与 `ChartExtension` 等公共声明见 [Chart 公共 API](/viz/chart)。
+
+## 如何读图
+
+每个 Regression semantic group 固定包含两层：Point 显示当前数据视图中的原始观测，Path 在同一数据视图上执行 mark-local `smooth`，再连接预测采样。趋势线不是对原始点的逐点连线，也不会替换 Point 的输入。
+
+`RegressionEncodings.series` 是 recipe-only 的可选角色。省略它会对当前数据整体拟合一条趋势；提供它会按每个字段值独立拟合，并让 Point 与 Path 共享同一分类颜色尺度、图例和 series identity。`RegressionMark` 不能改写或移除这个角色。
+
+## 六种内置方法
+
+`RegressionProperties.method` 使用 `IRPlotSmoothMethod` 的严格判别联合。省略时默认 `linear`；完整名称是公开 Source discriminator，不接受 `quad`、`poly`、`log`、`exp` 或 `pow`。
+
+| `kind`        | 拟合方程                  | 每组最低条件                                 | 额外约束                      |
+| ------------- | ------------------------- | -------------------------------------------- | ----------------------------- |
+| `linear`      | `y = a + bx`              | 2 个有效 pair，至少 2 个不同 x               | 默认方法                      |
+| `quadratic`   | `y = a + bx + cx²`        | 3 个有效 pair，并形成满秩拟合                | 固定二次                      |
+| `polynomial`  | `y = c₀ + c₁x + … + cₙxⁿ` | 至少 `order + 1` 个有效 pair，并形成满秩拟合 | `order` 为 2～6 整数，默认 3  |
+| `logarithmic` | `y = a + b ln(x)`         | 2 个有效 pair，至少 2 个不同 x               | 所有有限 x 与采样范围必须为正 |
+| `exponential` | `y = a exp(bx)`           | 2 个有效 pair，至少 2 个不同 x               | 所有有限 y 必须为正           |
+| `power`       | `y = a xᵇ`                | 2 个有效 pair，至少 2 个不同 x               | 所有有限 x、y 与采样范围为正  |
+
+`sampleCount` 控制每组趋势 Path 的等距预测点数，默认 64 且至少为 2。`extent` 只改变预测采样范围；省略时使用该组有限 x 的观测范围。拟合发生在数据空间，坐标投影只影响最终显示。
+
+## `RegressionEncodings`
+
+`RegressionEncodingsProps` 精确复用 `IRRegressionChartEncodings`。
+
+| Slot             | 类型                                                                      | 必填 | Regression 行为                                                               |
+| ---------------- | ------------------------------------------------------------------------- | ---- | ----------------------------------------------------------------------------- |
+| `x`              | Point position mapping                                                    | 是   | 回归自变量；支持 Point 位置字段、aggregate、允许的 derived transform 与 scale |
+| `y`              | Point position mapping                                                    | 是   | 回归因变量；支持与 x 相同的 Point position 能力                               |
+| `series`         | `string` 或带可选 ordinal scale 的 direct mapping                         | 否   | 只属于 recipe；控制分组、分类颜色、图例与稳定 identity                        |
+| `row` / `column` | `string`、`IRPlotPartitionDimension` 或 `Array<IRPlotPartitionDimension>` | 否   | 按当前 panel rows 独立拟合                                                    |
+| `facet`          | `IRPlotFacetOptions`                                                      | 否   | 配置分面；必须同时存在 row 或 column                                          |
+
+Facet 先建立 panel data view，再让每个 panel 内的 Smooth 独立拟合。共享或独立尺度仍由 Plot facet resolve 决定；它不会把面板外的 rows 混入模型。
+
+## `RegressionProperties`
+
+`RegressionPropertiesProps` 同时配置拟合策略与 Point / trend 的常量外观。
+
+| 属性           | 类型                          | 默认值          | 行为                                                      |
+| -------------- | ----------------------------- | --------------- | --------------------------------------------------------- |
+| `method?`      | `IRPlotSmoothMethod`          | `linear`        | 选择上表的完整方法对象                                    |
+| `sampleCount?` | `number`                      | `64`            | 每组预测采样数，必须是至少 2 的整数                       |
+| `extent?`      | `[number, number]`            | 当前组有限 x 域 | 趋势采样范围；下界必须小于上界                            |
+| `point?`       | `IRRegressionPointProperties` | Point 默认值    | 原始观测点的完整 Point 常量 properties                    |
+| `trend?`       | `IRRegressionTrendProperties` | Path 默认值     | 只允许 Path 的 stroke、线宽、透明度、端点、阴影等常量外观 |
+
+当存在 `series` 时，字段颜色优先于 `point.color`、`point.fill` 和 `trend.stroke`，其余常量外观仍有效。这样点、趋势和图例始终使用同一个分类 scale identity。
+
+## `RegressionMark`
+
+`RegressionMark` 是 RegressionChart 的直接子级 declaration。普通 mark 追加完整的“Point + Smooth Path”组；`override` 原位替换 recipe 的隐式主组。
+
+| `RegressionMarkProps` 属性 | 类型                          | 默认值  | 行为                                                               |
+| -------------------------- | ----------------------------- | ------- | ------------------------------------------------------------------ |
+| `override?`                | `boolean`                     | `false` | 替换完整 semantic group；未命中时追加并通过 `onWarn` 报告          |
+| `encodings?`               | `{ x?: string; y?: string }`  | 继承    | 只覆盖共同数据视图中已存在的 direct x / y 字段                     |
+| `properties?`              | `IRRegressionChartProperties` | 继承    | method / sampleCount / extent 按字段覆盖，point / trend 按属性合并 |
+
+无论追加还是 override，mark 都继承 recipe `series`，也不能删除 Smooth、重写趋势输出字段或只留下 Point。
+
+## 失败边界
+
+Regression 以整张 Chart fail-loud：任一分组样本不足、秩退化、方法值域不成立、显式 extent 非递增或预测出现非有限值时，不会静默跳过该组，也不会降级为 Point-only 图。错误摘要包含方法和稳定的 group 字段/值，便于定位失败分组。
+
+非有限 x / y 继续沿用 Smooth 的无效 pair 过滤策略；值域检查针对过滤后的有限 pair。`logarithmic`、`exponential` 与 `power` 的正值要求不同，切换方法前应确认数据满足上表约束。
+
+## 公开入口
+
+| 包入口                                   | 主要公开导出                                                                                                                                                                                                    | 用途                         | 边界                               |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ---------------------------------- |
+| `@retikz/chart/point/regression`         | `RegressionChartSchema`、`RegressionChartRecipeSchema`、`RegressionChartEncodingsSchema`、`RegressionChartPropertiesSchema`、`RegressionChartMarkSchema`、对应 `IRRegression*` 类型、provider 与 locator helper | JSON Source、schema 与运行时 | 不提供 React 或 plain factory      |
+| `@retikz/chart-react/point/regression`   | `RegressionChart`、`RegressionEncodings`、`RegressionProperties`、`RegressionMark` 及其 Props                                                                                                                   | React declaration authoring  | 公共 Chart 声明从包根入口导入      |
+| `@retikz/chart-vanilla/point/regression` | `InputRegressionChart`、`CreateRegressionChartInput`、`normalizeRegressionChart`、`createRegressionChart`                                                                                                       | plain authoring 与 SSR 接线  | 最终生成同一个 `IRRegressionChart` |
+| `@retikz/plot`                           | `SmoothMethodKind`、`SmoothMethodSchema`、`SmoothTransformSchema`、`IRPlotSmoothMethod`、`IRPlotSmoothTransform`                                                                                                | Plot Smooth 原子             | 内置 method 是闭合集合             |
+
+## 完全自定义拟合
+
+六个 `method.kind` 是闭合集合，Regression 不提供“注册第七种 method”的扩展点。若需要 robust regression、加权拟合、独立 series、多数据视图或完全控制输出字段，请直接组合 [`<PathMark>`](/viz/plot/mark/path) 与 mark-local transform，并按 [自定义 Plot transform](/viz/plot/transform/custom-transform) 注册完整 `TransformDefinition`；`SmoothTransformSchema` 的字段参考见 [Transform Schema](/viz/plot/reference/transform)。
+
+这种路径由 Plot 拥有数据、transform、Path、scale、lineage 与 locator；它不是 Regression recipe 的 method extension，也不会继承 Regression 的自动 Point、legend 或 semantic override。
+
+## 相关内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/points/scatter">
+    <span className="font-semibold">散点图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">只观察分布、聚类和离群点时使用</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/plot">
+    <span className="font-semibold">与 Plot 协作</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解 Chart 与 Plot 的 owner 边界</span>
+  </LinkedCard>
+</div>
+
+</ShowcaseGallery>

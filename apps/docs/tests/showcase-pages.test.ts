@@ -23,6 +23,10 @@ const bubbleContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/bubble/index.${lang}.mdx`);
 const bubbleExamplePath = (filename: string) =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/bubble/${filename}`);
+const regressionContentPath = (lang: 'zh' | 'en') =>
+  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/regression/index.${lang}.mdx`);
+const regressionExamplePath = (filename: string) =>
+  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/regression/${filename}`);
 const chartModelContentPath = (
   page: 'index' | 'structure' | 'authoring' | 'presentation' | 'plot',
   lang: 'zh' | 'en',
@@ -41,6 +45,11 @@ const compileOptions: CompileOptions = {
   development: false,
   remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter, remarkGfm],
   rehypePlugins: [rehypeSlug, [rehypeMdxCodeProps, { tagName: 'code' }]],
+};
+
+const readRequiredFile = (path: string): string => {
+  expect(existsSync(path), path).toBe(true);
+  return readFileSync(path, 'utf8');
 };
 
 const showcaseMeta = (family: string, order: number) => ({
@@ -113,6 +122,15 @@ describe('collectShowcasePages', () => {
       segments: ['viz', 'chart', 'points', 'bubble'],
       label: 'viz.chartBubble',
       metadata: { family: 'scatter-points', role: 'primary', preview: 'bubble-basic', order: 20 },
+    });
+  });
+
+  it('从实际 Viz 文档树收集 Regression 的嵌套路由', () => {
+    expect(collectShowcasePages('viz', vizSection)).toContainEqual({
+      path: '/viz/chart/points/regression',
+      segments: ['viz', 'chart', 'points', 'regression'],
+      label: 'viz.chartRegression',
+      metadata: { family: 'scatter-points', role: 'primary', preview: 'regression-basic', order: 30 },
     });
   });
 
@@ -204,6 +222,34 @@ describe('collectShowcasePages', () => {
     expect(compiled).toContain('h2');
   });
 
+  it.each(['zh', 'en'] as const)('Regression %s 覆盖精确 API、失败边界与 Plot escape hatch', async lang => {
+    const source = readRequiredFile(regressionContentPath(lang));
+
+    for (const publicName of [
+      '`@retikz/chart/point/regression`',
+      '`@retikz/chart-react/point/regression`',
+      '`@retikz/chart-vanilla/point/regression`',
+      '`RegressionChart`',
+      '`RegressionEncodings`',
+      '`RegressionProperties`',
+      '`RegressionMark`',
+      '`createRegressionChart`',
+      '`normalizeRegressionChart`',
+      '`SmoothTransformSchema`',
+    ]) {
+      expect(source, publicName).toContain(publicName);
+    }
+    for (const method of ['linear', 'quadratic', 'polynomial', 'logarithmic', 'exponential', 'power']) {
+      expect(source, method).toContain(`\`${method}\``);
+    }
+    expect(source).toContain('/viz/plot/reference/transform');
+    expect(source).toContain('/viz/plot/mark/path');
+
+    const compiled = String(await compile(source, compileOptions));
+    expect(compiled).toContain('ShowcaseGallery');
+    expect(compiled).toContain('h2');
+  });
+
   it.each(['zh', 'en'] as const)('Scatter %s 默认展示分类编码，并保留三个互补的真实数据示例', lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
 
@@ -252,6 +298,18 @@ describe('collectShowcasePages', () => {
       'bubble-basic.en.demo.tsx',
     ]) {
       expect(existsSync(bubbleExamplePath(filename)), filename).toBe(true);
+    }
+  });
+
+  it('Regression 基础示例提供数据、双语 demo 与双语 controls', () => {
+    for (const filename of [
+      'regression-basic.data.ts',
+      'regression-basic.controls.ts',
+      'regression-basic.en.controls.ts',
+      'regression-basic.zh.demo.tsx',
+      'regression-basic.en.demo.tsx',
+    ]) {
+      expect(existsSync(regressionExamplePath(filename)), filename).toBe(true);
     }
   });
 

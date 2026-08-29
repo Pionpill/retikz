@@ -235,6 +235,13 @@ export const vizV01: Release = {
             en: '`bubble` is a dedicated exact type in the Point family, fixing required `x / y / size` field roles, sqrt size scaling, a default size legend, and the `bubble` semantic mark. Constant properties and authored marks cannot replace the core size mapping.',
           },
         },
+        {
+          label: { zh: 'Regression 复合语义', en: 'Regression composite semantics' },
+          content: {
+            zh: '`regression` 以同一当前数据视图组合原始 Point 与 mark-local Smooth Path；可选 `series` 为每组独立拟合，并统一 Point、趋势、分类 scale 与 legend identity。',
+            en: '`regression` combines raw Points with a mark-local Smooth Path over the same current data view. Optional `series` fits each group independently and unifies Point, trend, categorical scale, and legend identity.',
+          },
+        },
       ],
       subVersions: [
         {
@@ -266,6 +273,13 @@ export const vizV01: Release = {
                 en: '`@retikz/chart/point/bubble` provides the strict Bubble schema, recipe, semantic mark, and provider contribution while reusing the Point mapping, facet, scaffold, lowering, and guide pipeline.',
               },
             },
+            {
+              label: { zh: 'Regression 精确 Source 与 provider', en: 'Exact Regression Source and provider' },
+              content: {
+                zh: '`@retikz/chart/point/regression` 提供严格 Regression schema、Point + Smooth Path semantic group、series scale / legend、facet panel 拟合与 locator qualification。',
+                en: '`@retikz/chart/point/regression` provides the strict Regression schema, Point + Smooth Path semantic group, series scale / legend, facet-panel fitting, and locator qualification.',
+              },
+            },
           ],
         },
       ],
@@ -291,6 +305,13 @@ export const vizV01: Release = {
           content: {
             zh: '`ChartLayout` 的 standalone 尺寸配置唯一 Layout host，并在没有显式 layout 时镜像到 Source；embedded 的高级宿主能力移到外层 `Layout`。Plot declarations 只能放入 `ChartExtension`，继续由 Plot owner 归一化和诊断冲突。',
             en: '`ChartLayout` standalone dimensions configure the single Layout host and mirror into Source when no explicit layout exists; advanced embedded host capabilities move to the outer `Layout`. Plot declarations are legal only in `ChartExtension` and remain normalized and diagnosed by Plot.',
+          },
+        },
+        {
+          label: { zh: 'Regression declaration authoring', en: 'Regression declaration authoring' },
+          content: {
+            zh: '`RegressionChart` 组合 `RegressionEncodings`、`RegressionProperties` 与 `RegressionMark`；collector 保留完整复合 mark 顺序，并把 React authoring 委托给同一 Vanilla factory。',
+            en: '`RegressionChart` composes `RegressionEncodings`, `RegressionProperties`, and `RegressionMark`. Its collector preserves complete composite-mark order and delegates React authoring to the same Vanilla factory.',
           },
         },
       ],
@@ -327,6 +348,13 @@ export const vizV01: Release = {
                 en: '`BubbleChart` composes `BubbleEncodings`, `BubbleProperties`, and `BubbleMark` into the same exact Source as Vanilla; its collector preserves authored mark order and rejects duplicate singleton declarations.',
               },
             },
+            {
+              label: { zh: 'Regression declaration authoring', en: 'Regression declaration authoring' },
+              content: {
+                zh: '`RegressionChart` 通过独立 declarations 组装数据、分组、方法、采样和 Point / trend 外观，并与 Vanilla 生成同一精确 Source。',
+                en: '`RegressionChart` assembles data, grouping, methods, sampling, and Point / trend appearance through separate declarations into the same exact Source as Vanilla.',
+              },
+            },
           ],
         },
       ],
@@ -359,6 +387,13 @@ export const vizV01: Release = {
           content: {
             zh: '`normalizeBubbleChart` 与 `createBubbleChart` 从精确 input 生成 `type: "point"`、`recipe.chartType: "bubble"` 的 Source，并安装对应 provider；`renderChart` 继续通过同一次 Core compile 输出 SVG。',
             en: '`normalizeBubbleChart` and `createBubbleChart` produce a `type: "point"`, `recipe.chartType: "bubble"` Source from exact input and install its provider; `renderChart` continues to emit SVG through the same Core compile.',
+          },
+        },
+        {
+          label: { zh: 'Regression plain factory 与 SSR', en: 'Regression plain factory and SSR' },
+          content: {
+            zh: '`normalizeRegressionChart` 与 `createRegressionChart` 保留精确 Regression encodings、properties 与 marks，安装对应 provider，并与 React / JSON Source 共用 Chart、Data 与 Plot 解析主链。',
+            en: '`normalizeRegressionChart` and `createRegressionChart` preserve exact Regression encodings, properties, and marks, install the matching provider, and share the Chart, Data, and Plot resolution path with React and JSON Source.',
           },
         },
       ],
@@ -402,6 +437,13 @@ export const vizV01: Release = {
           content: {
             zh: 'Scene、lineage与locator复用同一次lowering产生的data / frame artifact；单次请求不会为查询重放custom transform，独立runtime请求仍各自执行。',
             en: 'Scene, lineage, and locators reuse the data/frame artifact produced by one lowering. A query does not replay custom transforms within one request, while separate runtime requests still execute independently.',
+          },
+        },
+        {
+          label: { zh: '六种 Smooth 回归方法', en: 'Six Smooth regression methods' },
+          content: {
+            zh: '`SmoothMethodKind` 提供 linear、quadratic、polynomial、logarithmic、exponential 与 power；每组使用严格样本、秩、值域与有限预测检查，facet、scale、lineage 和 locator 继续消费同一次 panel-local 结果。',
+            en: '`SmoothMethodKind` provides linear, quadratic, polynomial, logarithmic, exponential, and power fits. Strict per-group sample, rank, domain, and finite-prediction checks feed facet, scale, lineage, and locator from the same panel-local result.',
           },
         },
       ],

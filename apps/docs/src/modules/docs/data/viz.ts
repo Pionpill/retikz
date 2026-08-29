@@ -168,6 +168,24 @@ export const vizSection: Array<Section> = [
               },
             },
           },
+          {
+            id: 'regression',
+            label: 'viz.chartRegression',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'concept',
+              audience: 'user',
+              capability: 'showcase.regression',
+              sourceOfTruth: 'docs',
+              layout: 'showcase',
+              showcase: {
+                family: 'scatter-points',
+                role: 'primary',
+                preview: 'regression-basic',
+                order: 30,
+              },
+            },
+          },
         ],
         meta: {
           pageType: 'group',
