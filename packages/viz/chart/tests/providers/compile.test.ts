@@ -15,6 +15,7 @@ import { defineChartMark, defineChartRecipe } from '../../src/_chart/contract';
 import { createChartProviderContribution } from '../../src/_chart/providers';
 import { createChartSourceSchema } from '../../src/_chart/schemas';
 import { BubbleChartSchema, createBubbleChartProviderContribution } from '../../src/point/bubble';
+import { createRegressionChartProviderContribution, RegressionChartSchema } from '../../src/point/regression';
 import { createScatterChartProviderContribution, ScatterChartSchema } from '../../src/point/scatter';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
@@ -72,6 +73,115 @@ const sceneOf = (source: IRScene['children'][number]): IRScene => ({
 });
 
 describe('Chart providers through Core compile', () => {
+  it('compiles grouped Regression through Point + mark-local Smooth Path with finite Scene output', () => {
+    const regressionRows = [
+      { series: 'A', x: 1, y: 2 },
+      { series: 'A', x: 2, y: 4 },
+      { series: 'A', x: 3, y: 6 },
+      { series: 'B', x: 1, y: 3 },
+      { series: 'B', x: 2, y: 5 },
+      { series: 'B', x: 3, y: 7 },
+    ];
+    const source = RegressionChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      id: 'regression',
+      data: { reference: 'regression.rows' },
+      recipe: {
+        chartType: 'regression',
+        encodings: { x: 'x', y: 'y', series: 'series' },
+        properties: { sampleCount: 3 },
+      },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createRegressionChartProviderContribution(),
+        createPlotProviderContribution({ 'regression.rows': regressionRows }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+    const result = compileToScene(sceneOf(source), definitions);
+    const serialized = JSON.stringify(result.scene.primitives);
+
+    expect(sceneIdsOf(result.scene.primitives)).toContain('regression');
+    expect(serialized).not.toContain('NaN');
+    expect(serialized).not.toContain('Infinity');
+    expect(scenePrimitivesOfType(result.scene.primitives, 'ellipse')).toHaveLength(regressionRows.length);
+  });
+
+  it('aborts the whole Regression compile when one series cannot be fitted', () => {
+    const source = RegressionChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'regression.invalid' },
+      recipe: {
+        chartType: 'regression',
+        encodings: { x: 'x', y: 'y', series: 'series' },
+      },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createRegressionChartProviderContribution(),
+        createPlotProviderContribution({
+          'regression.invalid': [
+            { series: 'A', x: 1, y: 2 },
+            { series: 'A', x: 2, y: 4 },
+            { series: 'B', x: 1, y: 3 },
+          ],
+        }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+
+    expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/smooth|regression|series.*B|pairs/i);
+  });
+
+  it('fails loud when Regression Source is compiled without its concrete provider', () => {
+    const source = RegressionChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'scatter.rows' },
+      recipe: { chartType: 'regression', encodings: { x: 'x', y: 'y' } },
+    });
+
+    expect(() =>
+      compileToScene(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()])),
+    ).toThrow(/chartType|scatter|regression/i);
+  });
+
+  it('keeps Regression facet identity distinct from Scatter and Bubble', () => {
+    const source = RegressionChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      id: 'regression-facet',
+      data: { reference: 'regression.facet' },
+      recipe: {
+        chartType: 'regression',
+        encodings: { x: 'x', y: 'y', column: 'panel' },
+        properties: { sampleCount: 2 },
+      },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createRegressionChartProviderContribution(),
+        createPlotProviderContribution({
+          'regression.facet': [
+            { panel: 'left', x: 1, y: 2 },
+            { panel: 'left', x: 2, y: 4 },
+            { panel: 'right', x: 1, y: 3 },
+            { panel: 'right', x: 2, y: 5 },
+          ],
+        }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+    const ids = sceneIdsOf(compileToScene(sceneOf(source), definitions).scene.primitives);
+
+    expect(ids.some(id => id.startsWith('__chart.regression.composition.facet.panel.'))).toBe(true);
+    expect(ids.some(id => id.startsWith('__chart.scatter.composition.facet'))).toBe(false);
+    expect(ids.some(id => id.startsWith('__chart.bubble.composition.facet'))).toBe(false);
+  });
+
   it('compiles Bubble through the shared Point provider and preserves finite scene output', () => {
     const source = BubbleChartSchema.parse({
       namespace: 'chart',

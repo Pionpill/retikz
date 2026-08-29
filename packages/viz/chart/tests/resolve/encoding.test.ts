@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
-import { resolveSelectedChart } from '../../src/_chart/resolve';
+import { resolveChartEncodingMappings, resolveSelectedChart } from '../../src/_chart/resolve';
 import { qualifyScatterChartLocatorOptions } from '../../src/point/scatter/locator';
 import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
 import { ScatterChartSchema } from '../../src/point/scatter/schema';
@@ -40,6 +40,33 @@ const resolveScatter = (
     themeDefinitions: [],
     runtime,
   });
+};
+
+const resolveOrdinalFallback = (color: unknown) => {
+  const source = ScatterChartSchema.parse({
+    namespace: 'chart',
+    type: 'point',
+    data: { reference: 'rows' },
+    recipe: {
+      chartType: 'scatter',
+      encodings: { x: 'amount', y: 'margin', color },
+    },
+  });
+
+  return resolveChartEncodingMappings(
+    { source, encodings: source.recipe.encodings, runtime: registry.runtime },
+    ['color'],
+    [
+      {
+        slot: 'color',
+        scale: {
+          family: 'channel',
+          type: 'ordinal',
+          recipeFallback: { name: '__chart.regression.scale.series', type: 'ordinal' },
+        },
+      },
+    ],
+  );
 };
 
 describe('Scatter Chart encoding resolution', () => {
@@ -252,6 +279,40 @@ describe('Scatter Chart encoding resolution', () => {
       size: { kind: 'field', value: 'weight', scale: 'weightSizeScale' },
       opacity: { kind: 'field', value: 'confidence', scale: 'confidenceOpacityScale' },
     });
+  });
+
+  it('resolves and independently replaces an ordinal recipe fallback for a channel consumer', () => {
+    const inherited = resolveOrdinalFallback({
+      field: 'group',
+      scale: { reference: '__chart.regression.scale.series' },
+    });
+    expect(inherited.encodings.color).toEqual({
+      field: 'group',
+      scale: '__chart.regression.scale.series',
+    });
+    expect(inherited.scales).toEqual([]);
+    expect([...inherited.removedRecipeScales]).toEqual([]);
+
+    const replaced = resolveOrdinalFallback({
+      field: 'group',
+      scale: { operation: { type: 'ordinal', name: 'seriesOverride' } },
+    });
+    expect(replaced.encodings.color).toEqual({ field: 'group', scale: 'seriesOverride' });
+    expect(replaced.scales).toEqual([{ type: 'ordinal', name: 'seriesOverride' }]);
+    expect([...replaced.removedRecipeScales]).toEqual(['__chart.regression.scale.series']);
+  });
+
+  it('rejects a non-ordinal scale for an ordinal channel fallback consumer', () => {
+    expect(() =>
+      resolveOrdinalFallback({
+        field: 'group',
+        scale: { operation: { type: 'sequential', name: 'seriesSequential' } },
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        details: expect.objectContaining({ path: ['recipe', 'encodings', 'color', 'scale'] }),
+      }),
+    );
   });
 
   it('rejects duplicate scale sources and missing references', () => {

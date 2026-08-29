@@ -36,7 +36,10 @@ type ChartEncodingScaleConsumer = Readonly<{
   family: 'position' | 'channel';
   type?: string;
   positionRole?: string;
-  recipeFallback?: string;
+  recipeFallback?: Readonly<{
+    name: string;
+    type: string;
+  }>;
 }>;
 
 /** exact recipe中一个普通字段slot允许的mapping能力 */
@@ -606,9 +609,14 @@ export const resolveChartEncodingMappings = <
 
   const fallbackByName = new Map<string, Readonly<{ slot: string; source: ResolvedScaleSource }>>();
   for (const consumer of consumers) {
-    const fallback = consumer.scale?.recipeFallback;
-    if (fallback !== undefined)
-      fallbackByName.set(fallback, { slot: consumer.slot, source: { family: 'position', type: 'linear' } });
+    const scale = consumer.scale;
+    if (scale?.recipeFallback !== undefined) {
+      const fallback = scale.recipeFallback;
+      fallbackByName.set(fallback.name, {
+        slot: consumer.slot,
+        source: { family: scale.family, type: fallback.type },
+      });
+    }
   }
 
   const encodingScaleByName = new Map<
@@ -680,11 +688,12 @@ export const resolveChartEncodingMappings = <
     const scaleConsumer = consumer.scale;
     if (scaleConsumer?.positionRole !== undefined) {
       positionScales[scaleConsumer.positionRole] = name;
-      if (scaleConsumer.recipeFallback !== undefined && (declaresOperation || name !== scaleConsumer.recipeFallback)) {
-        removedRecipeScales.add(scaleConsumer.recipeFallback);
-      }
     } else {
       directEncodings[consumer.slot] = { ...mapping, scale: name } satisfies ChartResolvedFieldMapping;
+    }
+    const recipeFallback = scaleConsumer?.recipeFallback;
+    if (recipeFallback !== undefined && (declaresOperation || name !== recipeFallback.name)) {
+      removedRecipeScales.add(recipeFallback.name);
     }
   }
 

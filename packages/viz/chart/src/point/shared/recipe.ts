@@ -133,6 +133,7 @@ export const pointPropertySlots: ReadonlyArray<keyof IRPointProperties> = [
 export const pointPropertySlotsWithoutSize = pointPropertySlots.filter(slot => slot !== 'size');
 
 type PointFieldEncodingSlot = 'x' | 'y' | 'color' | 'size' | 'opacity' | 'shape';
+type PointPositionFieldEncodingSlot = Extract<PointFieldEncodingSlot, 'x' | 'y'>;
 
 const pointPositionTransformCapabilities = [
   { phase: DataTransformPhase.RowShape, fieldEffect: DataTransformFieldEffect.Replace },
@@ -144,17 +145,17 @@ const pointContinuousTransformCapabilities = [
   { phase: DataTransformPhase.FieldDerive, fieldEffect: DataTransformFieldEffect.Preserve },
 ] as const;
 
-/** 创建具体 Point chartType 的字段 mapping consumers */
-export const pointFieldConsumersOf = (
+/** 创建具体 Point chartType 的位置字段 mapping consumers */
+export const pointPositionFieldConsumersOf = (
   chartType: string,
-): ReadonlyArray<ChartEncodingFieldConsumer<PointFieldEncodingSlot>> => [
+): ReadonlyArray<ChartEncodingFieldConsumer<PointPositionFieldEncodingSlot>> => [
   {
     slot: 'x',
     transforms: pointPositionTransformCapabilities,
     scale: {
       family: 'position',
       positionRole: 'x',
-      recipeFallback: pointRecipeId(chartType, 'scale.x'),
+      recipeFallback: { name: pointRecipeId(chartType, 'scale.x'), type: PlotScale.Linear },
     },
   },
   {
@@ -163,9 +164,16 @@ export const pointFieldConsumersOf = (
     scale: {
       family: 'position',
       positionRole: 'y',
-      recipeFallback: pointRecipeId(chartType, 'scale.y'),
+      recipeFallback: { name: pointRecipeId(chartType, 'scale.y'), type: PlotScale.Linear },
     },
   },
+];
+
+/** 创建具体 Point chartType 的完整字段 mapping consumers */
+export const pointFieldConsumersOf = (
+  chartType: string,
+): ReadonlyArray<ChartEncodingFieldConsumer<PointFieldEncodingSlot>> => [
+  ...pointPositionFieldConsumersOf(chartType),
   { slot: 'color', scale: { family: 'channel' } },
   {
     slot: 'size',

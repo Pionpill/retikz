@@ -47,6 +47,10 @@
       "types": "./src/point/bubble/index.ts",
       "default": "./src/point/bubble/index.ts"
     },
+    "./point/regression": {
+      "types": "./src/point/regression/index.ts",
+      "default": "./src/point/regression/index.ts"
+    },
     "./point/scatter": {
       "types": "./src/point/scatter/index.ts",
       "default": "./src/point/scatter/index.ts"
@@ -71,6 +75,11 @@
         "types": "./dist/types/point/bubble/index.d.ts",
         "import": "./dist/point/bubble/index.js",
         "default": "./dist/point/bubble/index.js"
+      },
+      "./point/regression": {
+        "types": "./dist/types/point/regression/index.d.ts",
+        "import": "./dist/point/regression/index.js",
+        "default": "./dist/point/regression/index.js"
       },
       "./point/scatter": {
         "types": "./dist/types/point/scatter/index.d.ts",

@@ -140,6 +140,7 @@ describe('published Chart release-group boundaries', () => {
       '.': { types: './src/index.ts', default: './src/index.ts' },
       './point': { types: './src/point/index.ts', default: './src/point/index.ts' },
       './point/bubble': { types: './src/point/bubble/index.ts', default: './src/point/bubble/index.ts' },
+      './point/regression': { types: './src/point/regression/index.ts', default: './src/point/regression/index.ts' },
       './point/scatter': { types: './src/point/scatter/index.ts', default: './src/point/scatter/index.ts' },
     });
     expect(manifest.publishConfig?.exports).toEqual({
@@ -157,6 +158,11 @@ describe('published Chart release-group boundaries', () => {
         types: './dist/types/point/bubble/index.d.ts',
         import: './dist/point/bubble/index.js',
         default: './dist/point/bubble/index.js',
+      },
+      './point/regression': {
+        types: './dist/types/point/regression/index.d.ts',
+        import: './dist/point/regression/index.js',
+        default: './dist/point/regression/index.js',
       },
       './point/scatter': {
         types: './dist/types/point/scatter/index.d.ts',

@@ -33,6 +33,14 @@ describe('Chart semantic source layout', () => {
     expect(paths).toContain('point/scatter/schema.ts');
     expect(paths).toContain('point/scatter/recipe.ts');
     expect(paths).toContain('point/scatter/provider.ts');
+    expect(paths).toContain('point/regression/encoding-schema.ts');
+    expect(paths).toContain('point/regression/encoding-types.ts');
+    expect(paths).toContain('point/regression/schema.ts');
+    expect(paths).toContain('point/regression/mark.ts');
+    expect(paths).toContain('point/regression/recipe.ts');
+    expect(paths).toContain('point/regression/provider.ts');
+    expect(paths).toContain('point/regression/locator.ts');
+    expect(paths).toContain('point/regression/index.ts');
     expect(paths).not.toContain('point/family.ts');
   });
 

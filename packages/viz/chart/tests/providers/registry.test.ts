@@ -10,6 +10,7 @@ import { defineChartRecipe, eraseChartRecipeDefinition } from '../../src/_chart/
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { createChartSourceSchema } from '../../src/_chart/schemas';
 import { BubbleChartDefinition } from '../../src/point/bubble/recipe';
+import { RegressionChartDefinition } from '../../src/point/regression/recipe';
 import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
@@ -47,13 +48,14 @@ const recipe = defineChartRecipe({
 });
 
 describe('active Chart provider registry', () => {
-  it('builds one exact Point schema union for active Scatter and Bubble recipes', () => {
+  it('builds one exact Point schema union for active Scatter, Bubble and Regression recipes', () => {
     const registry = resolveChartProviderRegistry([
       { family: 'point', recipe: eraseChartRecipeDefinition(ScatterChartDefinition), themeDefinitions: [] },
       { family: 'point', recipe: eraseChartRecipeDefinition(BubbleChartDefinition), themeDefinitions: [] },
+      { family: 'point', recipe: eraseChartRecipeDefinition(RegressionChartDefinition), themeDefinitions: [] },
     ]);
 
-    expect([...registry.recipes.keys()]).toEqual(['scatter', 'bubble']);
+    expect([...registry.recipes.keys()]).toEqual(['scatter', 'bubble', 'regression']);
     expect(
       registry.schema.parse({
         namespace: 'chart',
@@ -65,6 +67,14 @@ describe('active Chart provider registry', () => {
         },
       }),
     ).toMatchObject({ recipe: { chartType: 'bubble' } });
+    expect(
+      registry.schema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: { chartType: 'regression', encodings: { x: 'x', y: 'y' } },
+      }),
+    ).toMatchObject({ recipe: { chartType: 'regression' } });
   });
 
   it('deduplicates the same recipe contribution and builds a temporary schema union', () => {

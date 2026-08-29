@@ -12,9 +12,12 @@ import { resolveSelectedChart } from '../../src/_chart/resolve';
 import { BubbleMarkDefinition } from '../../src/point/bubble/mark';
 import { BubbleChartDefinition } from '../../src/point/bubble/recipe';
 import { BubbleChartSchema } from '../../src/point/bubble/schema';
+import { RegressionChartDefinition } from '../../src/point/regression/recipe';
+import { RegressionChartSchema } from '../../src/point/regression/schema';
 import { ScatterMarkDefinition } from '../../src/point/scatter/mark';
 import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
 import { ScatterChartSchema } from '../../src/point/scatter/schema';
+import { pointFieldConsumersOf, pointPositionFieldConsumersOf } from '../../src/point/shared/recipe';
 
 const theme = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
 const runtime = resolveChartProviderRegistry([
@@ -22,6 +25,9 @@ const runtime = resolveChartProviderRegistry([
 ]).runtime;
 const bubbleRuntime = resolveChartProviderRegistry([
   { family: 'point', recipe: BubbleChartDefinition, themeDefinitions: [] },
+]).runtime;
+const regressionRuntime = resolveChartProviderRegistry([
+  { family: 'point', recipe: RegressionChartDefinition, themeDefinitions: [] },
 ]).runtime;
 
 const resolve = <TSource extends IRChartSource>(
@@ -37,6 +43,185 @@ const resolve = <TSource extends IRChartSource>(
   });
 
 describe('Point Chart recipe Definitions', () => {
+  it('composes the unchanged Point consumers from the reusable x/y atom', () => {
+    const positionConsumers = pointPositionFieldConsumersOf('scatter');
+    const allConsumers = pointFieldConsumersOf('scatter');
+
+    expect(positionConsumers.map(consumer => consumer.slot)).toEqual(['x', 'y']);
+    expect(allConsumers.slice(0, 2)).toEqual(positionConsumers);
+    expect(allConsumers.map(consumer => consumer.slot)).toEqual(['x', 'y', 'color', 'size', 'opacity', 'shape']);
+    expect(positionConsumers.map(consumer => consumer.scale?.recipeFallback)).toEqual([
+      { name: '__chart.scatter.scale.x', type: 'linear' },
+      { name: '__chart.scatter.scale.y', type: 'linear' },
+    ]);
+  });
+
+  it('Regression creates one Point plus mark-local Smooth Path semantic group', () => {
+    const result = resolve(
+      RegressionChartDefinition,
+      { x: 'sepalLength', y: 'petalLength' },
+      {
+        method: { kind: 'quadratic' },
+        sampleCount: 5,
+        extent: [1, 5],
+        point: { size: 4 },
+        trend: { strokeWidth: 2 },
+      },
+    );
+
+    expect(result.semanticMarks).toEqual([
+      {
+        kind: 'regression',
+        plotMarks: [
+          expect.objectContaining({
+            type: 'point',
+            encoding: { x: { field: 'sepalLength' }, y: { field: 'petalLength' } },
+            color: { kind: 'constant', value: 'currentColor' },
+            size: { kind: 'constant', value: 4 },
+          }),
+          expect.objectContaining({
+            type: 'path',
+            order: '__chart.regression.trend.x',
+            encoding: {
+              x: { field: '__chart.regression.trend.x' },
+              y: { field: '__chart.regression.trend.y' },
+            },
+            transform: [
+              {
+                kind: 'smooth',
+                x: 'sepalLength',
+                y: 'petalLength',
+                method: { kind: 'quadratic' },
+                sampleCount: 5,
+                extent: [1, 5],
+                xAs: '__chart.regression.trend.x',
+                yAs: '__chart.regression.trend.y',
+              },
+            ],
+            stroke: { kind: 'constant', value: 'currentColor' },
+            strokeWidth: { kind: 'constant', value: 2 },
+          }),
+        ],
+      },
+    ]);
+    expect(result.scaffold.transform).toBeUndefined();
+  });
+
+  it('Regression series drives one shared ordinal identity, Smooth groupBy and default legend', () => {
+    const scale = '__chart.regression.scale.series';
+    const result = resolve(RegressionChartDefinition, {
+      x: 'sepalLength',
+      y: 'petalLength',
+      series: { field: 'species', scale },
+    });
+    const [point, path] = result.semanticMarks[0].plotMarks;
+
+    expect(result.scaffold.scales).toContainEqual({ value: { type: 'ordinal', name: scale }, replaceable: true });
+    expect(result.scaffold.guides?.value).toContainEqual({ type: 'legend', channel: 'color' });
+    expect(point).toMatchObject({ color: { kind: 'field', value: 'species', scale } });
+    expect(path).toMatchObject({
+      series: 'species',
+      stroke: { kind: 'field', value: 'species', scale },
+      transform: [expect.objectContaining({ kind: 'smooth', groupBy: ['species'] })],
+    });
+  });
+
+  it('Regression authored append and override preserve the complete group and deep-merge nested properties', () => {
+    const source = RegressionChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'regression',
+        encodings: { x: 'x', y: 'y', series: 'series' },
+        properties: {
+          method: { kind: 'polynomial', order: 2 },
+          sampleCount: 10,
+          point: { size: 3, opacity: 0.4 },
+          trend: { strokeWidth: 2, opacity: 0.6 },
+        },
+        marks: [
+          {
+            kind: 'regression',
+            override: true,
+            encodings: { x: 'x2' },
+            properties: { point: { size: 5 }, trend: { strokeWidth: 4 } },
+          },
+          { kind: 'regression', properties: { trend: { opacity: 0.8 } } },
+        ],
+      },
+    });
+    const result = resolveSelectedChart(source, {
+      theme: DEFAULT_RESOLVED_THEME,
+      recipe: RegressionChartDefinition,
+      themeDefinitions: [],
+      runtime: regressionRuntime,
+    });
+
+    expect(result.plot.marks).toHaveLength(4);
+    expect(result.plot.marks[0]).toMatchObject({
+      encoding: { x: { field: 'x2' }, y: { field: 'y' } },
+      size: { kind: 'constant', value: 5 },
+      opacity: { kind: 'constant', value: 0.4 },
+      color: { kind: 'field', value: 'series', scale: '__chart.regression.scale.series' },
+    });
+    expect(result.plot.marks[1]).toMatchObject({
+      strokeWidth: { kind: 'constant', value: 4 },
+      opacity: { kind: 'constant', value: 0.6 },
+      transform: [
+        expect.objectContaining({
+          x: 'x2',
+          y: 'y',
+          method: { kind: 'polynomial', order: 2 },
+          sampleCount: 10,
+          groupBy: ['series'],
+        }),
+      ],
+    });
+    expect(result.plot.marks[2]).toMatchObject({
+      size: { kind: 'constant', value: 3 },
+      opacity: { kind: 'constant', value: 0.4 },
+    });
+    expect(result.plot.marks[3]).toMatchObject({
+      strokeWidth: { kind: 'constant', value: 2 },
+      opacity: { kind: 'constant', value: 0.8 },
+    });
+  });
+
+  it('Regression replaces only its series fallback with an authored ordinal scale', () => {
+    const source = RegressionChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'regression',
+        encodings: {
+          x: 'x',
+          y: 'y',
+          series: { field: 'series', scale: { operation: { type: 'ordinal', name: 'authoredSeries' } } },
+        },
+      },
+    });
+    const result = resolveSelectedChart(source, {
+      theme: DEFAULT_RESOLVED_THEME,
+      recipe: RegressionChartDefinition,
+      themeDefinitions: [],
+      runtime: regressionRuntime,
+    });
+
+    expect(result.plot.scales.map(scale => scale.name)).toEqual([
+      '__chart.regression.scale.x',
+      '__chart.regression.scale.y',
+      'authoredSeries',
+    ]);
+    expect(result.plot.marks[0]).toMatchObject({
+      color: { kind: 'field', value: 'series', scale: 'authoredSeries' },
+    });
+    expect(result.plot.marks[1]).toMatchObject({
+      stroke: { kind: 'field', value: 'series', scale: 'authoredSeries' },
+    });
+  });
+
   it('Bubble creates a Point semantic mark with inherited size and a default size legend', () => {
     const result = resolve(BubbleChartDefinition, {
       x: 'income',
