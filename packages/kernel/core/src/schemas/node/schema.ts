@@ -22,7 +22,7 @@ import {
 import { AngleDegreesSchema } from '../scalar';
 import { ShapeValueSchema } from '../shape';
 import { StrokeDashOffsetSchema, StrokeDashPatternSchema } from '../stroke';
-import { CssColorSchema, GraphicStyleSchema } from '../style';
+import { ContextualColorSchema, GraphicStyleSchema } from '../style';
 import {
   createLabelVisualStyleShape,
   LabelTextContentSchema,
@@ -76,7 +76,9 @@ export const BoxSizeSchema = object({
 const BoxSizeValueSchema = union([NonNegativeNumberSchema, BoxSizeSchema]);
 
 export const NodeLabelPinSchema = object({
-  stroke: CssColorSchema.optional().describe('Leader line color; defaults to the label color / currentColor'),
+  stroke: ContextualColorSchema.optional().describe(
+    'Leader line color; an exact CSS color or a weight derived from the effective label color.',
+  ),
   strokeWidth: PositiveNumberSchema.optional().describe('Leader line width (user units); default 1'),
   dashPattern: array(number()).optional().describe('Leader dash pattern lengths in user units.'),
   dashOffset: number()
@@ -212,8 +214,8 @@ export const NodeSchema = object({
   scale: AxisScaleValueSchema.optional().describe(
     'Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.',
   ),
-  textColor: CssColorSchema.optional().describe(
-    'Node text color. The reserved `contrast` keyword selects black or white from a static opaque fill. Defaults to `currentColor`.',
+  textColor: ContextualColorSchema.optional().describe(
+    'Node text color. A number derives from the effective node color; `contrast` selects black or white from the resolved static fill. Defaults to `currentColor`.',
   ),
   padding: BoxSpacingValueSchema.optional().describe(
     'Inner spacing from content to border. Number applies to all sides; object fields resolve as side > axis > default.',

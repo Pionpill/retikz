@@ -5,15 +5,12 @@ import { array, literal, strictObject } from 'zod';
 import { createChartSourceSchema, createChartThemeSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
 import {
-  PointEncodingSchema,
   PointMarkSchema,
   PointPropertiesSchema,
   PointRecipeThemeOverridesSchema,
   PointRecipeThemeResolutionSchema,
 } from '../shared';
-
-/** Scatter recipe 的精确 field-bound encoding schema */
-export const ScatterChartEncodingsSchema = PointEncodingSchema.describe('Scatter Chart field-bound encodings');
+import { ScatterChartEncodingsSchema } from './encoding-schema';
 
 /** Scatter recipe 的精确 constant properties schema */
 export const ScatterChartPropertiesSchema = PointPropertiesSchema.describe('Scatter Chart constant properties');

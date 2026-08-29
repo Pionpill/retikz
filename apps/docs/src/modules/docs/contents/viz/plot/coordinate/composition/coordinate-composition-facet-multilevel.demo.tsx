@@ -1,4 +1,4 @@
-import { Axis, Facet, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotFacet, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -36,7 +36,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Plot data={channelRows} width={660} height={330}>
-      <Facet
+      <PlotFacet
         id="regionChannel"
         row={rowHierarchy}
         column={columnHierarchy}
@@ -47,8 +47,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         resolve={{ scale: { y: values[COORDINATE_COMPOSITION_FACET_MULTILEVEL_CONTROL_IDS.scale] } }}
         spacing={{ panelGap: values[COORDINATE_COMPOSITION_FACET_MULTILEVEL_CONTROL_IDS.panelGap] }}
       >
-        <Axis dimension="x" grid={values[COORDINATE_COMPOSITION_FACET_MULTILEVEL_CONTROL_IDS.xGridVisible]} />
-        <Axis dimension="y" grid={values[COORDINATE_COMPOSITION_FACET_MULTILEVEL_CONTROL_IDS.yGridVisible]} />
+        <PlotAxis dimension="x" grid={values[COORDINATE_COMPOSITION_FACET_MULTILEVEL_CONTROL_IDS.xGridVisible]} />
+        <PlotAxis dimension="y" grid={values[COORDINATE_COMPOSITION_FACET_MULTILEVEL_CONTROL_IDS.yGridVisible]} />
         <PathMark
           x="month"
           y="value"
@@ -64,7 +64,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           strokeWidth={1.25}
           size={values[COORDINATE_COMPOSITION_FACET_MULTILEVEL_CONTROL_IDS.pointSize]}
         />
-      </Facet>
+      </PlotFacet>
     </Plot>
   );
 });

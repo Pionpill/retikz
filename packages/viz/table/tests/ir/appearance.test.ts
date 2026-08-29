@@ -62,4 +62,17 @@ describe('Table Cell appearance schema', () => {
       resetStyle: true,
     });
   });
+
+  it('keeps content color string-only while accepting contextual background and border colors', () => {
+    expect(
+      TableCellAppearanceSchema.parse({
+        background: { fill: 0.2 },
+        borders: { bottom: { kind: 'line', stroke: 0.8 } },
+      }),
+    ).toEqual({
+      background: { fill: 0.2 },
+      borders: { bottom: { kind: 'line', stroke: 0.8 } },
+    });
+    expect(() => TableCellContentStyleSchema.parse({ color: 0.8 })).toThrow();
+  });
 });

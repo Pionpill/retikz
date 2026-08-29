@@ -78,5 +78,5 @@ export const previewControlContract = {
     showGrid: true,
     tickCount: 5,
   },
-  relatedApis: ['Plot.coordinate', 'Axis.dimension', 'Axis.grid', 'Axis.ticks'],
+  relatedApis: ['Plot.coordinate', 'PlotAxis.dimension', 'PlotAxis.grid', 'PlotAxis.ticks'],
 } satisfies PreviewControlContract;

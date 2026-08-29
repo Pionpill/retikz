@@ -123,5 +123,12 @@ export const previewControlContract = {
     [COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.forecastPointsVisible]: true,
     [COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.forecastPointSize]: 6,
   },
-  relatedApis: ['Axis.id', 'Axis.placement', 'Axis.grid', 'PathMark.xAxisId', 'PathMark.strokeWidth', 'PointMark.size'],
+  relatedApis: [
+    'PlotAxis.id',
+    'PlotAxis.placement',
+    'PlotAxis.grid',
+    'PathMark.xAxisId',
+    'PathMark.strokeWidth',
+    'PointMark.size',
+  ],
 } satisfies PreviewControlContract;

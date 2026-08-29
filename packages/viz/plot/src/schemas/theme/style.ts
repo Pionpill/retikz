@@ -1,6 +1,7 @@
 import type { core as ZodCore } from 'zod';
 
 import {
+  ContextualColorSchema,
   CssColorSchema,
   FontFamilySchema,
   FontSizeSchema,
@@ -45,11 +46,11 @@ export const PlotThemeTokenFieldShape = {
   [PlotThemeToken.AxisLineDrawOpacity]: OpacitySchema.describe('Axis baseline draw opacity'),
   [PlotThemeToken.AxisTickMark]: AxisTickMarkSchema.describe('Axis tick mark glyph and style'),
   [PlotThemeToken.AxisTickLabelEnabled]: boolean().describe('Whether axis tick labels are visible by default'),
-  [PlotThemeToken.AxisTickLabelForeground]: CssColorSchema.describe('Axis tick label foreground color'),
+  [PlotThemeToken.AxisTickLabelForeground]: ContextualColorSchema.describe('Axis tick label foreground color'),
   [PlotThemeToken.AxisTickLabelFontSize]: FontSizeSchema.describe('Axis tick label font size'),
   [PlotThemeToken.AxisTickLabelGap]: AxisTickLabelGapSchema.describe('Gap from axis ticks to labels'),
   [PlotThemeToken.AxisTitleEnabled]: boolean().describe('Whether authored axis titles are visible by default'),
-  [PlotThemeToken.AxisTitleForeground]: CssColorSchema.describe('Axis title foreground color'),
+  [PlotThemeToken.AxisTitleForeground]: ContextualColorSchema.describe('Axis title foreground color'),
   [PlotThemeToken.AxisTitleFontSize]: FontSizeSchema.describe('Axis title font size'),
   [PlotThemeToken.AxisTitleFontWeight]: FontWeightSchema.describe('Axis title font weight'),
   [PlotThemeToken.AxisTitlePadding]: AxisTitlePaddingSchema.describe(
@@ -62,10 +63,10 @@ export const PlotThemeTokenFieldShape = {
   [PlotThemeToken.AxisGridIncludeDomain]: boolean().describe(
     'Whether enabled major axis grids include effective domain endpoints',
   ),
-  [PlotThemeToken.LegendTitleForeground]: CssColorSchema.describe('Legend title foreground color'),
+  [PlotThemeToken.LegendTitleForeground]: ContextualColorSchema.describe('Legend title foreground color'),
   [PlotThemeToken.LegendTitleFontSize]: FontSizeSchema.describe('Legend title font size'),
   [PlotThemeToken.LegendTitleFontWeight]: FontWeightSchema.describe('Legend title font weight'),
-  [PlotThemeToken.LegendLabelForeground]: CssColorSchema.describe('Legend label foreground color'),
+  [PlotThemeToken.LegendLabelForeground]: ContextualColorSchema.describe('Legend label foreground color'),
   [PlotThemeToken.LegendLabelFontSize]: FontSizeSchema.describe('Legend label font size'),
   [PlotThemeToken.LegendSwatchSize]: LegendSwatchSizeSchema.describe('Legend swatch size'),
   [PlotThemeToken.LegendSwatchGap]: LegendLayoutGapSchema.describe('Legend swatch-to-label gap'),

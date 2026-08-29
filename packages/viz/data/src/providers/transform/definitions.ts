@@ -8,7 +8,13 @@ import type {
   IRDataSummarizeTransform,
 } from '../../schemas';
 
-import { defineTransform, extractTransformKind } from '../../contract';
+import {
+  DataTransformBindingClass,
+  DataTransformFieldEffect,
+  DataTransformPhase,
+  defineTransform,
+  extractTransformKind,
+} from '../../contract';
 import { RetikzDataError } from '../../error';
 import {
   AnnotateTransformSchema,
@@ -16,8 +22,9 @@ import {
   SortTransformSchema,
   SummarizeTransformSchema,
 } from '../../schemas';
+import { DataFieldType } from '../../schemas';
 import { freezeDefinitions } from '../shared';
-import { reducerInputFields, reducerOutputFields, selectorInputFields } from '../statistics';
+import { reducerInputFields, reducerOutputDescriptors, reducerOutputFields, selectorInputFields } from '../statistics';
 import { applyAnnotate, applySelect, applySummarize } from './group';
 import { applySort } from './row';
 
@@ -25,6 +32,12 @@ import { applySort } from './row';
 const sortTransformDefinition = defineTransform<IRDataSortTransform>({
   schema: SortTransformSchema,
   inputFields: operation => [operation.field],
+  outputModel: () => ({ kind: 'preserve', outputs: [] }),
+  compact: {
+    phase: DataTransformPhase.RowOrder,
+    bindingClass: DataTransformBindingClass.Order,
+    fieldEffect: DataTransformFieldEffect.Reorder,
+  },
   apply: (rows, operation) => applySort(rows, operation),
 });
 
@@ -37,6 +50,19 @@ const summarizeTransformDefinition = defineTransform<IRDataSummarizeTransform>({
   ],
   outputFields: (operation, context) =>
     operation.metrics.flatMap(metric => reducerOutputFields(metric, context.statisticsReducerRegistry)),
+  outputModel: (operation, context) => {
+    const outputs = operation.metrics.flatMap(metric =>
+      reducerOutputDescriptors(metric, context.statisticsReducerRegistry),
+    );
+    const outputFields = operation.metrics.flatMap(metric =>
+      reducerOutputFields(metric, context.statisticsReducerRegistry),
+    );
+    if (outputs.length !== outputFields.length) return undefined;
+    return {
+      kind: 'replace',
+      fields: [...(operation.groupBy ?? []).map(field => ({ field, type: { from: field } as const })), ...outputs],
+    };
+  },
   apply: (rows, operation, context) => applySummarize(rows, operation, context),
 });
 
@@ -48,6 +74,10 @@ const selectTransformDefinition = defineTransform<IRDataSelectTransform>({
     ...selectorInputFields(operation.selector, context.rowSelectorRegistry),
   ],
   outputFields: operation => (operation.rankAs !== undefined ? [operation.rankAs] : []),
+  outputModel: operation => ({
+    kind: 'preserve',
+    outputs: operation.rankAs === undefined ? [] : [{ field: operation.rankAs, type: DataFieldType.Continuous }],
+  }),
   apply: (rows, operation, context) => applySelect(rows, operation, context),
 });
 
@@ -65,6 +95,21 @@ const annotateTransformDefinition = defineTransform<IRDataAnnotateTransform>({
     ...(operation.metrics ?? []).flatMap(metric => reducerOutputFields(metric, context.statisticsReducerRegistry)),
     ...(operation.selectors ?? []).map(selector => selector.as),
   ],
+  outputModel: (operation, context) => ({
+    kind: 'preserve',
+    outputs: [
+      ...(operation.metrics ?? []).flatMap(metric =>
+        reducerOutputDescriptors(metric, context.statisticsReducerRegistry),
+      ),
+      ...(operation.selectors ?? []).map(annotation => {
+        const selector = annotation.selector;
+        return {
+          field: annotation.as,
+          type: 'by' in selector ? ({ from: selector.by } as const) : DataFieldType.Continuous,
+        };
+      }),
+    ],
+  }),
   apply: (rows, operation, context) => applyAnnotate(rows, operation, context),
 });
 

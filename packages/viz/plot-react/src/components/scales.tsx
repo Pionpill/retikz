@@ -1,7 +1,7 @@
 import type { InputPlotScale } from '@retikz/plot-vanilla';
 import type { FC } from 'react';
 
-export type ScaleProps = InputPlotScale;
+export type PlotScaleProps = InputPlotScale;
 
 /** 位置比例尺声明组件 */
-export const Scale: FC<ScaleProps> = () => null;
+export const PlotScale: FC<PlotScaleProps> = () => null;

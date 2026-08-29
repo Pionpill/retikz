@@ -5,10 +5,10 @@ import { resolveLabelOf } from '@retikz/plot-vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
-import { Axis, Legend } from '../../../src/components/guides';
+import { PlotAxis, PlotLegend } from '../../../src/components/guides';
 import { IntervalMark, PathMark, PointMark } from '../../../src/components/marks';
-import { Scale } from '../../../src/components/scales';
-import { Transform } from '../../../src/components/transform';
+import { PlotScale } from '../../../src/components/scales';
+import { PlotTransform } from '../../../src/components/transform';
 import { resolvePlotAuthoring } from '../../../src/plot-runtime';
 
 describe('Plot member extraction characterization', () => {
@@ -16,13 +16,13 @@ describe('Plot member extraction characterization', () => {
     const resolvePointLabel = (row: Record<string, unknown>): string => String(row.category);
     const spec = buildPlotIR(
       <>
-        <Transform kind="sort" field="y" order="descending" />
+        <PlotTransform kind="sort" field="y" order="descending" />
         <PointMark id="points" x="x" y="y" fill="category" resolveLabel={resolvePointLabel} />
         <PathMark id="trend" x="x" y="y" order="x" series="category" />
         <IntervalMark id="bars" x="category" y="value" />
-        <Scale dimension="y" type="log" base={2} />
-        <Axis dimension="x" grid />
-        <Legend channel="color" title="Category" />
+        <PlotScale dimension="y" type="log" base={2} />
+        <PlotAxis dimension="x" grid />
+        <PlotLegend channel="color" title="Category" />
       </>,
       'rows',
       {
@@ -89,13 +89,13 @@ describe('Plot member extraction characterization', () => {
     const nested: ReactNode = [
       <PointMark key="point" x="x" y="y" />,
       [null, false, <PathMark key="path" x="x" y="y" order="x" />],
-      new Set<ReactNode>([undefined, <Axis key="axis" dimension="y" grid />]),
+      new Set<ReactNode>([undefined, <PlotAxis key="axis" dimension="y" grid />]),
     ];
     const flat = (
       <>
         <PointMark x="x" y="y" />
         <PathMark x="x" y="y" order="x" />
-        <Axis dimension="y" grid />
+        <PlotAxis dimension="y" grid />
       </>
     );
 
@@ -125,9 +125,9 @@ describe('Plot member extraction characterization', () => {
   it('preserves explicit composition and multi-axis binding normalization', () => {
     const spec = buildPlotIR(
       <>
-        <Axis dimension="x" />
-        <Axis id="temperature" dimension="y" />
-        <Axis id="rainfall" dimension="y" grid />
+        <PlotAxis dimension="x" />
+        <PlotAxis id="temperature" dimension="y" />
+        <PlotAxis id="rainfall" dimension="y" grid />
         <PathMark x="day" y="temperature" yAxisId="temperature" />
         <PointMark x="day" y="rainfall" yAxisId="rainfall" />
       </>,

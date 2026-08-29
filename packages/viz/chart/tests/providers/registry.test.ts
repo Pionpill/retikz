@@ -1,3 +1,6 @@
+import type { IRJsonObject } from '@retikz/core';
+import type { AnyTransformDefinition } from '@retikz/data';
+
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string, undefined as zodUndefined, ZodError } from 'zod';
@@ -7,6 +10,14 @@ import { defineChartRecipe } from '../../src/_chart/contract';
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { createChartSourceSchema } from '../../src/_chart/schemas';
 
+const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
+  encodings: context.encodings as IRJsonObject,
+  transform: [],
+  scales: [],
+  positionScales: {},
+  removedRecipeScales: new Set<string>(),
+});
+
 const recipeSchema = strictObject({
   chartType: literal('fixture'),
   encodings: strictObject({ x: string(), y: string() }),
@@ -14,6 +25,7 @@ const recipeSchema = strictObject({
 const sourceSchema = createChartSourceSchema('point', recipeSchema, zodUndefined().optional());
 const recipe = defineChartRecipe({
   chartType: 'fixture',
+  encodingSlots: ['x', 'y'],
   schema: sourceSchema,
   theme: {
     overridesSchema: strictObject({ accent: string().optional() }),
@@ -22,6 +34,7 @@ const recipe = defineChartRecipe({
   },
   consumes: { encodings: ['x', 'y'], properties: [] },
   marks: [],
+  resolveEncodings: resolveDirectEncodings,
   resolve: () => ({
     scaffold: {
       scales: [],
@@ -46,6 +59,23 @@ describe('active Chart provider registry', () => {
         recipe: { chartType: 'fixture', encodings: { x: 'x', y: 'y' } },
       }),
     ).toMatchObject({ recipe: { chartType: 'fixture' } });
+  });
+
+  it('requires every merged recipe contribution to share runtime Definition array identities', () => {
+    const transformDefinitions: Array<AnyTransformDefinition> = [];
+    expect(() =>
+      resolveChartProviderRegistry([
+        { family: 'point', recipe, themeDefinitions: [], runtimeDefinitions: { transformDefinitions } },
+        { family: 'point', recipe, themeDefinitions: [], runtimeDefinitions: { transformDefinitions } },
+      ]),
+    ).not.toThrow();
+
+    expect(() =>
+      resolveChartProviderRegistry([
+        { family: 'point', recipe, themeDefinitions: [], runtimeDefinitions: { transformDefinitions: [] } },
+        { family: 'point', recipe, themeDefinitions: [], runtimeDefinitions: { transformDefinitions: [] } },
+      ]),
+    ).toThrow(/share the same transformDefinitions array/);
   });
 
   it('rejects distinct Definitions with the same active chartType', () => {

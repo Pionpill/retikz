@@ -3,6 +3,7 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { array, discriminatedUnion, enum as zodEnum, literal, looseObject, strictObject, union } from 'zod';
 
 import { DataSortOrder, DataTransform, RESERVED_TRANSFORM_KINDS, RowSelectorTie } from './constants';
+import { DataTransformKindSchema } from './kind';
 import { reducerOutputFieldsOf } from './output-fields';
 import { ReducerMetricsSchema } from './reducer';
 import { BuiltinSelectorOperationSchemas, SelectorOperationSchema } from './selector';
@@ -105,8 +106,8 @@ export const BuiltinTransformSchema = discriminatedUnion('kind', [
   AnnotateTransformSchema,
 ]).describe('Built-in data transform operation');
 
-const ExternalTransformSchema = looseObject({
-  kind: NonBlankStringSchema.refine(kind => !RESERVED_TRANSFORM_KINDS.has(kind), {
+export const ExternalTransformSchema = looseObject({
+  kind: DataTransformKindSchema.refine(kind => !RESERVED_TRANSFORM_KINDS.has(kind), {
     message: 'external transform kind must not collide with a built-in or removed transform kind',
   }).describe('Discriminator: custom transform kind'),
 })

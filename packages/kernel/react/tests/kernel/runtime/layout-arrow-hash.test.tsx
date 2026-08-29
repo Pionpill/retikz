@@ -161,7 +161,7 @@ describe('Layout arrow marker：marker 元素属性按 spec 写到 SVG', () => {
     expect(markerSection![0]).not.toContain('fill="red"');
   });
 
-  it('scale=2 → marker 元素 markerWidth=12 markerHeight=12（6×2）', () => {
+  it('scale=2 → marker 元素 markerWidth=16 markerHeight=16（8×2）', () => {
     const svg = renderToStaticMarkup(
       <Layout width={100} height={100}>
         <Path arrow="->" arrowDetail={{ shape: 'normal', scale: 2 }}>
@@ -170,7 +170,7 @@ describe('Layout arrow marker：marker 元素属性按 spec 写到 SVG', () => {
         </Path>
       </Layout>,
     );
-    expect(svg).toMatch(/<marker[^>]*markerWidth="12"/);
-    expect(svg).toMatch(/<marker[^>]*markerHeight="12"/);
+    expect(svg).toMatch(/<marker[^>]*markerWidth="16"/);
+    expect(svg).toMatch(/<marker[^>]*markerHeight="16"/);
   });
 });

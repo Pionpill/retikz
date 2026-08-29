@@ -90,6 +90,8 @@ Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { 
 
 Published packages do not pre-register named Core or Table definitions. This site's `academic`, `vibrant`, and `clean` reference styles follow the same rule as application-defined styles: inject the same name into both consuming owners. Standalone `compileTable` receives the Core definition through `compile.themeStyles` and the Table definition through `lower.tableThemeStyles`. Missing the matching Table definition fails loudly in the Table resolver.
 
+`cell.content.color` and `columnHeader.content.color` are string-or-null masters. Background fills and border-line `stroke` slots accept either an exact string or a `[0, 1]` derived weight. A body Cell background or explicit side border follows that Cell's effective content color; header backgrounds and the default header bottom border follow the header master; other Table defaults and layout borders follow the body master. A Border Graph winner retains both style and master, and adjacent edges merge only when both agree. Palettes such as `data.categorical` and `data.sequential` remain string-only.
+
 ### TableThemeTokenOverridesSchema
 
 <ZodSchema name="TableThemeTokenOverridesSchema" />

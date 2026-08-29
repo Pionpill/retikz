@@ -2,27 +2,27 @@ import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
-import { Facet, Scaffold, Track } from '../../../src/components/composition';
-import { Axis } from '../../../src/components/guides';
+import { PlotFacet, PlotScaffold, PlotTrack } from '../../../src/components/composition';
+import { PlotAxis } from '../../../src/components/guides';
 import { PathMark, PointMark } from '../../../src/components/marks';
 
 describe('buildPlotIR alpha.14 topology binding sugar', () => {
   it('track_binding_generates_shared_scaffold_composition', () => {
     const spec = buildPlotIR(
       <>
-        <Scaffold
+        <PlotScaffold
           id="ops"
           sharedRoles={['x']}
           spacing={{ trackGap: 24, axisGap: 8, labelGap: 6 }}
           resolve={{ grid: { x: 'all', y: 'all' } }}
         >
-          <Track id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
-          <Track id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
-        </Scaffold>
+          <PlotTrack id="incidents" band={{ role: 'y', start: 0, end: 0.42 }} />
+          <PlotTrack id="load" band={{ role: 'y', start: 0.58, end: 1 }} />
+        </PlotScaffold>
         <PathMark trackId="incidents" x="week" y="incidents" order="week" />
         <PathMark trackId="load" x="week" y="load" order="week" />
-        <Axis scaffoldId="ops" dimension="x" grid title="week" />
-        <Axis trackId="load" dimension="y" title="load" />
+        <PlotAxis scaffoldId="ops" dimension="x" grid title="week" />
+        <PlotAxis trackId="load" dimension="y" title="load" />
       </>,
       'ops',
     );
@@ -59,13 +59,13 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
   it('track_binding_inherits_plot_coordinate_when_scaffold_coordinate_is_omitted', () => {
     const spec = buildPlotIR(
       <>
-        <Scaffold id="radar" sharedRoles={['x']}>
-          <Track id="signal" band={{ role: 'y', start: 0.12, end: 0.48 }} />
-          <Track id="capacity" band={{ role: 'y', start: 0.58, end: 0.96 }} />
-        </Scaffold>
+        <PlotScaffold id="radar" sharedRoles={['x']}>
+          <PlotTrack id="signal" band={{ role: 'y', start: 0.12, end: 0.48 }} />
+          <PlotTrack id="capacity" band={{ role: 'y', start: 0.58, end: 0.96 }} />
+        </PlotScaffold>
         <PathMark trackId="signal" x="area" y="signal" order="order" />
         <PathMark trackId="capacity" x="area" y="capacity" order="order" />
-        <Axis scaffoldId="radar" dimension="x" grid title="area" />
+        <PlotAxis scaffoldId="radar" dimension="x" grid title="area" />
       </>,
       'radar',
       { coordinate: { type: 'polar2D' } },
@@ -84,17 +84,17 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
 
   it('scaffold_track_container_scopes_child_axes_and_marks', () => {
     const spec = buildPlotIR(
-      <Scaffold id="ops" sharedRoles={['x']}>
-        <Axis dimension="x" grid title="week" />
-        <Track id="incidents" band={{ role: 'y', start: 0, end: 0.42 }}>
-          <Axis dimension="y" title="incidents" />
+      <PlotScaffold id="ops" sharedRoles={['x']}>
+        <PlotAxis dimension="x" grid title="week" />
+        <PlotTrack id="incidents" band={{ role: 'y', start: 0, end: 0.42 }}>
+          <PlotAxis dimension="y" title="incidents" />
           <PathMark x="week" y="incidents" order="week" />
-        </Track>
-        <Track id="load" band={{ role: 'y', start: 0.58, end: 1 }}>
-          <Axis dimension="y" title="load" />
+        </PlotTrack>
+        <PlotTrack id="load" band={{ role: 'y', start: 0.58, end: 1 }}>
+          <PlotAxis dimension="y" title="load" />
           <PointMark x="week" y="load" />
-        </Track>
-      </Scaffold>,
+        </PlotTrack>
+      </PlotScaffold>,
       'ops',
     );
 
@@ -127,7 +127,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
   it('facet_binding_generates_facet_composition', () => {
     const spec = buildPlotIR(
       <>
-        <Facet
+        <PlotFacet
           id="sales"
           row={{ field: 'channel', order: ['online', 'store'] }}
           column={{ field: 'region', order: ['north', 'south', 'west'] }}
@@ -137,8 +137,8 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
         />
         <PathMark facetId="sales" x="month" y="revenue" order="month" />
         <PointMark facetId="sales" x="month" y="revenue" />
-        <Axis facetId="sales" dimension="x" title="month" />
-        <Axis facetId="sales" dimension="y" grid title="revenue" />
+        <PlotAxis facetId="sales" dimension="x" title="month" />
+        <PlotAxis facetId="sales" dimension="y" grid title="revenue" />
       </>,
       'sales',
     );
@@ -173,12 +173,12 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
 
   it('facet_container_scopes_child_axes_and_marks', () => {
     const spec = buildPlotIR(
-      <Facet id="sales" column="region">
-        <Axis dimension="x" title="month" />
-        <Axis dimension="y" grid title="revenue" />
+      <PlotFacet id="sales" column="region">
+        <PlotAxis dimension="x" title="month" />
+        <PlotAxis dimension="y" grid title="revenue" />
         <PathMark x="month" y="revenue" order="month" />
         <PointMark x="month" y="revenue" />
-      </Facet>,
+      </PlotFacet>,
       'sales',
     );
 
@@ -200,7 +200,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
 
   it('facet_container_accepts_multi_level_row_dimensions', () => {
     const spec = buildPlotIR(
-      <Facet
+      <PlotFacet
         id="sales"
         row={[
           { field: 'region', order: ['north', 'south'] },
@@ -208,10 +208,10 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
         ]}
         column="quarter"
       >
-        <Axis dimension="x" title="month" />
-        <Axis dimension="y" grid title="revenue" />
+        <PlotAxis dimension="x" title="month" />
+        <PlotAxis dimension="y" grid title="revenue" />
         <PathMark x="month" y="revenue" order="month" />
-      </Facet>,
+      </PlotFacet>,
       'sales',
     );
 
@@ -239,9 +239,9 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
     expect(() =>
       buildPlotIR(
         <>
-          <Scaffold id="ops" sharedRoles={['x']}>
-            <Track id="load" band={{ role: 'y', start: 0, end: 1 }} />
-          </Scaffold>
+          <PlotScaffold id="ops" sharedRoles={['x']}>
+            <PlotTrack id="load" band={{ role: 'y', start: 0, end: 1 }} />
+          </PlotScaffold>
           <PathMark trackId="missing" x="week" y="load" />
         </>,
         'ops',
@@ -251,7 +251,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
     expect(() =>
       buildPlotIR(
         <>
-          <Facet id="sales" column="region" />
+          <PlotFacet id="sales" column="region" />
           <PathMark facetId="missing" x="month" y="revenue" />
         </>,
         'sales',
@@ -261,7 +261,7 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
     expect(() =>
       buildPlotIR(
         <>
-          <Facet id="sales" column="region" />
+          <PlotFacet id="sales" column="region" />
           <PathMark facetId="sales" coordinateView="salesPanel" x="month" y="revenue" />
         </>,
         'sales',
@@ -271,9 +271,9 @@ describe('buildPlotIR alpha.14 topology binding sugar', () => {
     expect(() =>
       buildPlotIR(
         <>
-          <Scaffold id="ops" sharedRoles={['x']}>
-            <Track id="load" band={{ role: 'y', start: 0, end: 1 }} />
-          </Scaffold>
+          <PlotScaffold id="ops" sharedRoles={['x']}>
+            <PlotTrack id="load" band={{ role: 'y', start: 0, end: 1 }} />
+          </PlotScaffold>
           <PathMark facetId="sales" trackId="load" x="week" y="load" />
         </>,
         'ops',

@@ -59,6 +59,13 @@ export const vizV02: Release = {
               },
             },
             {
+              label: { zh: 'Guide 主色与上下文派生 token', en: 'Guide masters and contextual derived tokens' },
+              content: {
+                zh: '`plot.typography.foreground` 保持 string-only 主色；Plot area、Axis line/grid、tick/title 与 Legend 派生颜色可用 `[0, 1]` 权重，并在 lower 到 Core 后按最终主色与 Theme mode 确定化。数据 mark、palette、scheme 与 scale range 不继承 typography 主色。',
+                en: '`plot.typography.foreground` remains a string-only master. Plot-area, Axis line/grid, tick/title, and Legend derived colors may use `[0, 1]` weights resolved after lowering into Core from the final master and Theme mode. Data marks, palettes, schemes, and scale ranges do not inherit the typography master.',
+              },
+            },
+            {
               label: {
                 zh: 'BREAKING：绘图区主题收敛为 plotArea.fill',
                 en: 'BREAKING: plot-area theme moves to plotArea.fill',

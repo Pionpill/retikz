@@ -4,9 +4,9 @@ import { AxisGridApplyTo, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
-import { Axis } from '../../../src/components/guides';
+import { PlotAxis } from '../../../src/components/guides';
 import { IntervalMark, PointMark } from '../../../src/components/marks';
-import { Scale } from '../../../src/components/scales';
+import { PlotScale } from '../../../src/components/scales';
 
 describe('buildPlotIR composition adapter surface', () => {
   const composition: NonNullable<IRPlot['composition']> = {
@@ -26,7 +26,7 @@ describe('buildPlotIR composition adapter surface', () => {
       <>
         <PointMark coordinateView="temp" x="day" y="temperature" />
         <IntervalMark coordinateView="rain" x="day" y="rainfall" />
-        <Axis coordinateView="rain" dimension="y" placement={{ kind: 'side', side: 'right' }} title="Rainfall" />
+        <PlotAxis coordinateView="rain" dimension="y" placement={{ kind: 'side', side: 'right' }} title="Rainfall" />
       </>,
       'weather',
       { composition },
@@ -48,7 +48,7 @@ describe('buildPlotIR composition adapter surface', () => {
     const spec = buildPlotIR(
       <>
         <PointMark coordinateView="temp" x="day" y="temperature" />
-        <Axis
+        <PlotAxis
           coordinateView="temp"
           dimension="y"
           grid={{
@@ -75,8 +75,8 @@ describe('buildPlotIR composition adapter surface', () => {
   it('fills composition view coordinate scale bindings from declared scales', () => {
     const spec = buildPlotIR(
       <>
-        <Scale dimension="x" type="linear" />
-        <Scale dimension="y" type="linear" />
+        <PlotScale dimension="x" type="linear" />
+        <PlotScale dimension="y" type="linear" />
         <PointMark x="day" y="temperature" />
       </>,
       'weather',
@@ -105,8 +105,8 @@ describe('buildPlotIR composition adapter surface', () => {
   it('fills shared scaffold coordinate scale bindings from declared scales', () => {
     const spec = buildPlotIR(
       <>
-        <Scale dimension="x" type="linear" />
-        <Scale dimension="y" type="linear" />
+        <PlotScale dimension="x" type="linear" />
+        <PlotScale dimension="y" type="linear" />
         <PointMark coordinateView="events" x="week" y="count" />
       </>,
       'ops',

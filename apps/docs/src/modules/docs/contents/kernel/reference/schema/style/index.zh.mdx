@@ -18,8 +18,8 @@ Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直
   description="主几何共用的颜色、填充和描边 paint 字段。"
   descriptions={{
     color: '主色；stroke、fill、label 与 arrow 未单独设置时可回退到它',
-    fill: '填充 paint：CSS color 字符串或 IRPaint',
-    stroke: '描边 paint：CSS color 字符串或 IRPaint',
+    fill: '填充 paint：CSS color、基于最终 color 的 0..1 权重或 IRPaint',
+    stroke: '描边 paint：CSS color、基于最终 color 的 0..1 权重或 IRPaint',
   }}
 />
 
@@ -122,9 +122,13 @@ Core 把通用视觉外观拆成两层：`GraphicStyleSchema` 定义宿主可直
 
 ## 绘制值
 
-`fill` 与 `stroke` 接收 `PaintValueSchema`：纯色保持 CSS color 字符串；需要渐变、pattern 或图片时才使用带 `kind` 的 `IRPaint` 对象。
+`ContextualColorSchema` 接受 CSS color 字符串或 `0..1` 数值。字符串是精确颜色；数值表示最终 `color` 在当前 Theme mode 基准底色上的权重，Light 使用白色，Dark 使用黑色，并在完整样式级联后确定为不透明字符串。`color` 本身、palette、gradient stop、pattern 与 shadow color 仍只接受字符串。
 
-<ZodSchema name="PaintValueSchema" description="CSS color 字符串或结构化 IRPaint。" />
+<ZodSchema name="ContextualColorSchema" description="精确 CSS color 或基于最终主色的 0..1 权重。" />
+
+`fill` 与 `stroke` 接收 `PaintValueSchema`：纯色可写字符串或权重；需要渐变、pattern 或图片时使用带 `kind` 的 `IRPaint` 对象。数值不是 opacity，透明度继续由独立字段控制。
+
+<ZodSchema name="PaintValueSchema" description="上下文纯色或结构化 IRPaint。" />
 
 <span id="paint"></span>
 

@@ -1,6 +1,6 @@
 import type { IRPlotRelationRouting } from '@retikz/plot';
 
-import { Axis, Plot, PointMark, RelationMark, Scale } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotScale, PointMark, RelationMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -38,7 +38,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       height={250}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
-      <Scale dimension="x" type="linear" domain={[0, 12.5]} />
+      <PlotScale dimension="x" type="linear" domain={[0, 12.5]} />
       <PointMark
         x="thingX"
         anchorId={{ prefix: 'thing', field: 'thingId' }}
@@ -102,7 +102,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         path={{ routing }}
       />
       {values[COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisVisible] ? (
-        <Axis
+        <PlotAxis
           dimension="x"
           line={{
             stroke: values[COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisStroke],

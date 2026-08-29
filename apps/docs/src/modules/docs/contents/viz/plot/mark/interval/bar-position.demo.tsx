@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, IntervalMark, Scale } from '@retikz/plot-react';
+import { IntervalMark, PlotAxis, PlotScale } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -40,15 +40,15 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           labelDistance={6}
           labelFont={{ size: 10, weight: 'bold' }}
         />
-        <Scale
+        <PlotScale
           dimension={isHorizontal ? 'y' : 'x'}
           type="band"
           paddingInner={values[BAR_POSITION_CONTROL_IDS.gap]}
           paddingOuter={isHorizontal ? 0 : isPolar ? values[BAR_POSITION_CONTROL_IDS.gap] / 2 : 0.15}
         />
-        <Scale dimension={isHorizontal ? 'x' : 'y'} type="linear" domainPadding={isHorizontal ? 0.05 : 0} />
-        <Axis dimension="x" grid={isHorizontal} />
-        <Axis dimension="y" grid={!isHorizontal} />
+        <PlotScale dimension={isHorizontal ? 'x' : 'y'} type="linear" domainPadding={isHorizontal ? 0.05 : 0} />
+        <PlotAxis dimension="x" grid={isHorizontal} />
+        <PlotAxis dimension="y" grid={!isHorizontal} />
       </Plot>
     </Layout>
   );

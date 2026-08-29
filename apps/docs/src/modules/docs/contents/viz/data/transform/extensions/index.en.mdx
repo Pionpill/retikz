@@ -7,7 +7,7 @@ Data-transform extension points add row-processing operations or statistical red
 
 ## Applicability
 
-Prefer built-in operations. Register a Definition only when new row-processing semantics need a stable name, configuration validation, and reuse across hosts.
+Prefer built-in operations. Register a Definition only when new row-processing semantics need a stable name, configuration validation, and reuse across hosts. Transform, reducer, and selector `kind` values are open strings: built-in constants provide common suggestions, not a whitelist for custom keys.
 
 | Extension entry point     | Responsibility                                  | Stored configuration |
 | ------------------------- | ----------------------------------------------- | -------------------- |
@@ -19,7 +19,7 @@ Extend a reducer when `summarize` or `annotate` only lacks a statistical calcula
 
 ## Defining Data Operations
 
-`defineTransform` extracts a unique `kind` from `schema`, declares field dependencies through `inputFields` and `outputFields`, and processes rows in `apply`. `apply` must be pure and deterministic and must not mutate the input array or rows.
+`defineTransform` extracts a unique `kind` from `schema`, declares read fields through `inputFields`, lists generated field names through `outputFields`, and can describe the complete resulting field-type graph through `outputModel`. `apply` must be pure and deterministic and must not mutate the input array or rows.
 
 The `scale-field` operation below reads `x`, uses a serializable `factor` to produce `scaledX`, and uses Plot as an example host to display source and derived values:
 
@@ -32,6 +32,8 @@ The `scale-field` operation below reads `x`, uses a serializable `factor` to pro
 
 Built-in and custom transforms merge into one registry and use the same `kind` lookup, schema validation, and execution path.
 
+The example Definition also declares a preserving `outputModel` and a field-derive `compact` capability. The former gives downstream consumers typed evidence that `scaledX` is continuous; the latter lets a compatible Chart slot reuse the same Definition as a compact field mapping.
+
 ### Provenance
 
 A row-preserving transform usually retains provenance by spreading the original row. When a transform changes the row count and an output represents a group of source rows, use `TransformContext.groupProvenance` to associate those members. A newly generated row with no source counterpart may omit provenance.
@@ -42,7 +44,7 @@ A row-preserving transform usually retains provenance by spreading the original 
 | Aggregate multiple rows         | Wrap output with `groupProvenance(out, members)`          |
 | Generate source-free data       | Return a new row and allow provenance to be empty         |
 
-With provenance enabled, the same Definition may run during ordinary lowering and lineage collection. A host should freeze random or stateful inputs first, or perform nondeterministic work outside the Definition.
+Each lowering, locator, or lineage call is an independent runtime request, so Definitions must remain pure and deterministic; separate requests do not share an execution cache. Within one lineage-enabled data path, every operation executes once and its row result, field-type evidence, and lineage share that output.
 
 ## Defining Statistical Sub-operators
 
@@ -62,7 +64,7 @@ The example below registers a midpoint reducer and a selector for the row closes
   caption="The left plot generates statistical rows with a custom reducer; the right retains original representatives with a custom selector."
 />
 
-A reducer should declare read and written fields through `inputFields` and `outputFields`. A selector declares its read fields through `inputFields` and returns selected original rows. Promote the logic to a complete transform when it must change several fields or combine multiple stages.
+A reducer should declare read and written fields through `inputFields` and `outputFields`, then use `outputs` to provide field-type evidence for statically describable scalar outputs. A selector declares its read fields through `inputFields` and returns selected original rows. Promote the logic to a complete transform when it must change several fields or combine multiple stages.
 
 ## Injecting A Host
 
@@ -82,17 +84,30 @@ Other consumers can expose equivalent adapter entry points. The Definition and o
 inject Definitions → merge built-in and custom registries → look up kind → validate schema → execute
 ```
 
-Field collection and actual execution use the same registry. `inputFields` includes source fields read by an extension in strict model validation, while `outputFields` marks derived fields so they do not have to appear in the source data model.
+Field collection and actual execution use the same registry. Each step parses the operation with its Definition schema, resolves `outputModel`, executes `apply`, and advances `{ rows, fieldTypes, fieldTypeEvidence }` together. `inputFields` includes source fields read by an extension in strict model validation, while `outputFields` marks derived fields so they do not have to appear in the source data model.
+
+### Compact Field-Mapping Gate
+
+An open `kind` only means Source can store a custom operation; it does not automatically make that operation suitable for compact field mapping. A host such as Chart requires a complete capability declaration before using a Definition inside an encoding:
+
+| Definition | Required declarations                                                        | If incomplete                                                             |
+| ---------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Transform  | `compact` phase / binding class / field effect plus a complete `outputModel` | It remains a full transform, not a compact mapping                        |
+| Reducer    | `outputs()` returns exactly one typed scalar descriptor                      | It remains available to full statistics transforms, not compact aggregate |
+
+The host also checks the Definition phase, field effect, output field, and target consumer for compatibility. Custom and built-in keys share one registry, schema, and capability path; the host does not copy a built-in enum.
 
 ## Errors And Limits
 
-| Condition                                                                                               | Result                                  |
-| ------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| `kind` duplicates a built-in or custom key                                                              | Registry construction fails immediately |
-| Operation uses an unregistered `kind`                                                                   | Execution fails before applying it      |
-| Operation fails its Definition schema                                                                   | Schema validation fails                 |
-| Operation contains functions or non-JSON values                                                         | Serializability validation fails        |
-| A custom reducer's `outputFields()` declaration collides with a group key or another statistical output | Execution fails before the reducer runs |
+| Condition                                                                                   | Result                                  |
+| ------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `kind` duplicates a built-in or custom key                                                  | Registry construction fails immediately |
+| Operation uses an unregistered `kind`                                                       | Execution fails before applying it      |
+| Operation fails its Definition schema                                                       | Schema validation fails                 |
+| Operation contains functions or non-JSON values                                             | Serializability validation fails        |
+| A custom reducer output declaration collides with a group key or another statistical output | Execution fails before the reducer runs |
+| `outputModel` references a missing source field or disagrees with the actual field effect   | DataView advancement fails              |
+| A compact mapping lacks a complete capability or output descriptor                          | Host field-mapping resolution fails     |
 
 A Definition should implement only data-row and statistical semantics. Color, mark, layout, and other consumer-side semantics belong to the corresponding module extension point.
 
@@ -102,14 +117,24 @@ The following Definitions and helpers are exported from the `@retikz/data` packa
 
 ### `TransformDefinition`
 
-| Field           | Type                                                                                                 | Description                                         |
-| --------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `schema`        | `z.ZodType<TTransform>`                                                                              | Complete operation schema with a literal `kind`     |
-| `inputFields?`  | `(operation: TTransform, context: TransformContext) => Array<string>`                                | Returns source fields read by the operation         |
-| `outputFields?` | `(operation: TTransform, context: TransformContext) => Array<string>`                                | Returns derived fields produced by the operation    |
-| `apply`         | `(rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => Array<ExternalRow>` | Executes the transform purely and deterministically |
+| Field           | Type                                                                                                 | Description                                                                 |
+| --------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `schema`        | `z.ZodType<TTransform>`                                                                              | Complete operation schema with a literal `kind`                             |
+| `inputFields?`  | `(operation: TTransform, context: TransformContext) => Array<string>`                                | Returns source fields read by the operation                                 |
+| `outputFields?` | `(operation: TTransform, context: TransformContext) => Array<string>`                                | Returns generated field names for strict-model and conflict checks          |
+| `outputModel?`  | `(operation: TTransform, context: TransformContext) => DataTransformOutputModel \| undefined`        | Returns the complete field-type effect; omission discards old type evidence |
+| `compact?`      | `DataTransformCompactCapability`                                                                     | Declares phase, binding class, and field effect for field mappings          |
+| `apply`         | `(rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => Array<ExternalRow>` | Executes the transform purely and deterministically                         |
 
 Use `defineTransform(definition)` to preserve the generic relationship among these fields.
+
+### Output And Compact Contracts
+
+| Type                             | Key fields                             | Responsibility                                                         |
+| -------------------------------- | -------------------------------------- | ---------------------------------------------------------------------- |
+| `DataTransformOutputDescriptor`  | `field`, `type`                        | Assigns a fixed output type or reuses an existing type with `{ from }` |
+| `DataTransformOutputModel`       | `preserve.outputs` \| `replace.fields` | Extends the current field graph or replaces it with a complete list    |
+| `DataTransformCompactCapability` | `phase`, `bindingClass`, `fieldEffect` | Lets a host decide whether the Definition can bind to a field slot     |
 
 ### `StatisticsReducerDefinition`
 
@@ -118,6 +143,7 @@ Use `defineTransform(definition)` to preserve the generic relationship among the
 | `schema`        | `z.ZodType<TReducerOperation>`                                                                       | Schema with a non-empty literal `kind`                                                                           |
 | `inputFields?`  | `(operation: TReducerOperation) => Array<string>`                                                    | Returns source fields read by the reducer                                                                        |
 | `outputFields?` | `(operation: TReducerOperation) => Array<string>`                                                    | Returns generated fields and drives dynamic conflict checks; it must declare every field that `reduce` may write |
+| `outputs?`      | `(operation: TReducerOperation) => Array<DataTransformOutputDescriptor>`                             | Returns statically describable typed scalar outputs                                                              |
 | `reduce`        | `(rows: Array<ExternalRow>, operation: TReducerOperation, context: TransformContext) => ExternalRow` | Returns the field fragment written to output                                                                     |
 
 Use `defineStatisticsReducer(definition)` to define a reducer.
@@ -139,20 +165,20 @@ A custom selector can be used by `select` or by a host transform that explicitly
     {
       label: 'Transform Definition contract',
       path: 'packages/viz/data/src/contract/transform.ts',
-      startLine: 29,
-      endLine: 51,
+      startLine: 54,
+      endLine: 124,
     },
     {
       label: 'Statistical sub-operator contracts',
       path: 'packages/viz/data/src/contract/statistics.ts',
-      startLine: 7,
-      endLine: 70,
+      startLine: 12,
+      endLine: 68,
     },
     {
       label: 'Transform registry merge rules',
       path: 'packages/viz/data/src/providers/transform/definitions.ts',
-      startLine: 89,
-      endLine: 105,
+      startLine: 136,
+      endLine: 151,
     },
     {
       label: 'Statistical registry merge rules',
@@ -163,8 +189,8 @@ A custom selector can be used by `select` or by a host transform that explicitly
     {
       label: 'Transform lookup, validation, and execution',
       path: 'packages/viz/data/src/pipeline/transform.ts',
-      startLine: 24,
-      endLine: 75,
+      startLine: 50,
+      endLine: 140,
     },
     {
       label: 'Transform extension injection in Plot',

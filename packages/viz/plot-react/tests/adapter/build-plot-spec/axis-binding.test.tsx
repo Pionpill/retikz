@@ -2,16 +2,16 @@ import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
-import { Axis } from '../../../src/components/guides';
+import { PlotAxis } from '../../../src/components/guides';
 import { PathMark, PointMark } from '../../../src/components/marks';
 
 describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
   it('react_y_axis_binding_generates_overlay_composition', () => {
     const spec = buildPlotIR(
       <>
-        <Axis dimension="x" title="day" />
-        <Axis id="temperature" dimension="y" placement={{ kind: 'side', side: 'left' }} title="Temperature" />
-        <Axis id="rainfall" dimension="y" placement={{ kind: 'side', side: 'right' }} title="Rainfall" grid />
+        <PlotAxis dimension="x" title="day" />
+        <PlotAxis id="temperature" dimension="y" placement={{ kind: 'side', side: 'left' }} title="Temperature" />
+        <PlotAxis id="rainfall" dimension="y" placement={{ kind: 'side', side: 'right' }} title="Rainfall" grid />
         <PathMark x="day" y="temperature" yAxisId="temperature" />
         <PathMark x="day" y="rainfall" yAxisId="rainfall" />
       </>,
@@ -57,9 +57,9 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
   it('y_axis_binding_supplies_scales_when_position_inference_is_deferred', () => {
     const spec = buildPlotIR(
       <>
-        <Axis dimension="x" title="day" />
-        <Axis id="temperature" dimension="y" title="temperature" />
-        <Axis id="rainfall" dimension="y" title="rainfall" />
+        <PlotAxis dimension="x" title="day" />
+        <PlotAxis id="temperature" dimension="y" title="temperature" />
+        <PlotAxis id="rainfall" dimension="y" title="rainfall" />
         <PathMark x="day" y="temperature" yAxisId="temperature" />
         <PathMark x="day" y="rainfall" yAxisId="rainfall" />
       </>,
@@ -79,9 +79,9 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
   it('react_x_axis_binding_generates_overlay_composition', () => {
     const spec = buildPlotIR(
       <>
-        <Axis id="elapsed" dimension="x" placement={{ kind: 'side', side: 'bottom' }} title="elapsed day" />
-        <Axis id="date" dimension="x" placement={{ kind: 'side', side: 'top' }} title="date" />
-        <Axis dimension="y" title="revenue" />
+        <PlotAxis id="elapsed" dimension="x" placement={{ kind: 'side', side: 'bottom' }} title="elapsed day" />
+        <PlotAxis id="date" dimension="x" placement={{ kind: 'side', side: 'top' }} title="date" />
+        <PlotAxis dimension="y" title="revenue" />
         <PathMark x="elapsedDay" y="revenue" xAxisId="elapsed" />
         <PointMark x="dateIndex" y="revenue" xAxisId="date" />
       </>,
@@ -127,8 +127,8 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
   it('axis_binding_omitted_keeps_single_coordinate', () => {
     const spec = buildPlotIR(
       <>
-        <Axis dimension="x" />
-        <Axis id="temperature" dimension="y" />
+        <PlotAxis dimension="x" />
+        <PlotAxis id="temperature" dimension="y" />
         <PathMark x="day" y="temperature" />
       </>,
       'weather',
@@ -141,8 +141,8 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
   it('marks_without_y_axis_id_bind_to_default_axis_in_binding_mode', () => {
     const spec = buildPlotIR(
       <>
-        <Axis id="temperature" dimension="y" />
-        <Axis id="rainfall" dimension="y" />
+        <PlotAxis id="temperature" dimension="y" />
+        <PlotAxis id="rainfall" dimension="y" />
         <PathMark x="day" y="temperature" yAxisId="temperature" />
         <PointMark x="day" y="label" />
       </>,
@@ -158,7 +158,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
   it('default_y_axis_id_binds_to_dimension_default_scope', () => {
     const spec = buildPlotIR(
       <>
-        <Axis id="rainfall" dimension="y" />
+        <PlotAxis id="rainfall" dimension="y" />
         <PathMark x="day" y="temperature" yAxisId="default" />
         <PathMark x="day" y="rainfall" yAxisId="rainfall" />
       </>,
@@ -181,8 +181,8 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
   it('explicit_composition_with_same_named_scope_accepts_y_axis_id', () => {
     const spec = buildPlotIR(
       <>
-        <Axis id="temperature" dimension="y" />
-        <Axis id="rainfall" dimension="y" />
+        <PlotAxis id="temperature" dimension="y" />
+        <PlotAxis id="rainfall" dimension="y" />
         <PathMark x="day" y="temperature" yAxisId="temperature" />
         <PathMark x="day" y="rainfall" yAxisId="rainfall" />
       </>,
@@ -219,7 +219,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     expect(() =>
       buildPlotIR(
         <>
-          <Axis id="left" dimension="y" />
+          <PlotAxis id="left" dimension="y" />
           <PathMark x="day" y="temperature" yAxisId="missing" />
         </>,
         'weather',
@@ -229,7 +229,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     expect(() =>
       buildPlotIR(
         <>
-          <Axis id="left" dimension="x" />
+          <PlotAxis id="left" dimension="x" />
           <PathMark x="day" y="temperature" yAxisId="left" />
         </>,
         'weather',
@@ -239,8 +239,8 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     expect(() =>
       buildPlotIR(
         <>
-          <Axis id="left" dimension="y" />
-          <Axis id="left" dimension="y" />
+          <PlotAxis id="left" dimension="y" />
+          <PlotAxis id="left" dimension="y" />
           <PathMark x="day" y="temperature" yAxisId="left" />
         </>,
         'weather',
@@ -250,7 +250,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     expect(() =>
       buildPlotIR(
         <>
-          <Axis id="left" dimension="y" />
+          <PlotAxis id="left" dimension="y" />
           <PathMark coordinateView="left" x="day" y="temperature" yAxisId="left" />
         </>,
         'weather',
@@ -262,7 +262,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     expect(() =>
       buildPlotIR(
         <>
-          <Axis id="left" dimension="y" />
+          <PlotAxis id="left" dimension="y" />
           <PathMark x="day" y="temperature" yAxisId="left" />
         </>,
         'weather',
@@ -273,7 +273,7 @@ describe('buildPlotIR alpha.14 ADR-08 axis binding sugar', () => {
     expect(() =>
       buildPlotIR(
         <>
-          <Axis id="left" dimension="y" />
+          <PlotAxis id="left" dimension="y" />
           <PathMark x="day" y="temperature" yAxisId="left" />
         </>,
         'weather',

@@ -217,7 +217,7 @@ describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
   it('layout_invalid_nodedefault_rejected：非法 nodeDefault 不被 Layout 吞掉、走 schema 校验报错', () => {
     // fill 期望 string | IRPaint，给 number 是非法结构（模拟无类型 JS 调用方 / LLM 生成）
     const badIr = layoutIR(
-      { nodeDefault: { fill: 42 } as never },
+      { nodeDefault: { fill: 42 } },
       <Node id="A" position={[0, 0]}>
         A
       </Node>,

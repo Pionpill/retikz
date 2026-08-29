@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, PathMark } from '@retikz/plot-react';
+import { PathMark, PlotAxis } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -17,13 +17,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <Layout width={620} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
       <Plot data={channelTrend} width={300} height={220} x={0} y={30}>
         <PathMark x="month" y="score" color={color} order="month" />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
       </Plot>
       <Plot data={channelTrend} width={260} height={260} coordinate="polar2D" x={350} y={0}>
         <PathMark x="quarter" y="score" color={color} order="month" closed />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
       </Plot>
     </Layout>
   );

@@ -205,6 +205,10 @@ Theme 是 Relation 的默认来源，不是可用字段白名单。Relation 显�
 
 省略 `route` 时 lowering 生成 `move(source) → line(target)`；显式 route 使用 `Array<IRGraphRelationRouteStep>`，保持完整 Core Position language，且 route step 不承载 label
 
+## 主色与派生颜色
+
+Entity / Relation 的 `color` 是字符串主色。适用的 `fill`、`stroke`、文字前景与 marker 颜色也可写 `0..1` 数值，由 Core 在 Graph Theme、Graph-local rule 与实例字段全部级联后解析。Entity 跟随最终 Entity 主色；Relation 的 stroke、label 与 marker color 跟随 Relation 主色，marker fill 再跟随已解析 marker color。数值不是透明度，opacity 字段继续独立生效；palette、gradient stop、pattern 与 shadow color 保持字符串。
+
 ## 共享 reference 与 Graph Theme
 
 <ZodSchema

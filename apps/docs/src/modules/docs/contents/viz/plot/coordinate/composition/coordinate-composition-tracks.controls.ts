@@ -137,9 +137,9 @@ export const previewControlContract = {
     [COORDINATE_COMPOSITION_TRACKS_CONTROL_IDS.signalPointSize]: 7,
   },
   relatedApis: [
-    'Scaffold.spacing',
-    'Track.band',
-    'Axis.grid',
+    'PlotScaffold.spacing',
+    'PlotTrack.band',
+    'PlotAxis.grid',
     'PathMark.strokeWidth',
     'PathMark.closure',
     'PointMark.size',

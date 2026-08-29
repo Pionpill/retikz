@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 
-import { Axis, PathMark, Plot, PointMark, Scale } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -13,15 +13,15 @@ export const previewControls = scaleContinuousControls;
 /** 按当前 controls 状态构造合法的位置比例尺声明 */
 const renderScale = (values: typeof previewControlContract.canonicalValues): ReactElement => {
   if (values.scaleType === 'log') {
-    return <Scale dimension="y" type="log" base={values.base} domainPadding={values.domainPadding} />;
+    return <PlotScale dimension="y" type="log" base={values.base} domainPadding={values.domainPadding} />;
   }
   if (values.scaleType === 'sqrt') {
-    return <Scale dimension="y" type="sqrt" domainPadding={values.domainPadding} />;
+    return <PlotScale dimension="y" type="sqrt" domainPadding={values.domainPadding} />;
   }
   if (values.scaleType === 'symlog') {
-    return <Scale dimension="y" type="symlog" constant={values.constant} domainPadding={values.domainPadding} />;
+    return <PlotScale dimension="y" type="symlog" constant={values.constant} domainPadding={values.domainPadding} />;
   }
-  return <Scale dimension="y" type="linear" domainPadding={values.domainPadding} />;
+  return <PlotScale dimension="y" type="linear" domainPadding={values.domainPadding} />;
 };
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
@@ -35,8 +35,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <PathMark x="period" y={yField} order="period" />
       <PointMark x="period" y={yField} />
       {renderScale(values)}
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
     </Plot>
   );
 });

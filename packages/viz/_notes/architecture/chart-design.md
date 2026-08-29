@@ -85,7 +85,8 @@ type ChartSource<TEncodings, TProperties, TMark, TRecipeThemeTokens> = {
 - 不承载 Chart `data`、`layout`、`type`、`chartType`、Chart-owned encodings / properties 或 recipe 默认
 - 只保存用户明确声明的 transform、scale、coordinate / composition、guide、theme、spatial root、附加 mark 与 meta 等 Plot-owned fragment
 - 单值结构、具名集合、mark 数组与 identity 冲突分别沿 Plot 自己的 replace、merge、append 与 fail-loud 规则处理
-- `plotExtension.marks` 是完全显式、相互独立的 Plot 内容，不自动继承 Chart encodings / properties
+- `plotExtension.transform` 先于 encoding-derived operation 执行；两者与 recipe mark、Chart mark、`plotExtension.marks` 最终共享一个 resolved data view
+- `plotExtension.marks` 是完全显式的 Plot 内容，不自动继承 Chart encodings / properties，也不能自动保留 aggregate 前的 raw data view
 - normalizer 不为缺省值、data、尺寸或 recipe 生成内容创建空 `plotExtension`
 
 ## 3. Family、chartType 与精确 schema
@@ -140,7 +141,7 @@ recipe 的显式 consumer 列表贴近实际 resolver 维护，不从 schema 字
 Chart 共享稳定语义原子，不建立包含所有可选字段的宽 `SharedChartEncodingsSchema` 或 `SharedChartPropertiesSchema`：
 
 - field reference 等基础值由单一原子 schema 拥有
-- Cartesian position、颜色、大小、facet、track 等片段只有在多个 recipe 真实共享完整语义和不变量时才提取
+- Cartesian position、颜色、大小与facet等片段只有在多个 recipe 真实共享完整语义和不变量时才提取
 - 每个 `XxxChartEncodingsSchema` / `XxxChartPropertiesSchema` 最终仍是 strict 精确对象
 - 源于 Plot 且语义、值域完全一致的属性直接复用 Plot 权威原子；Chart 只拥有领域收窄、recipe 默认和 Chart-specific 组合
 - 仅服务一个 recipe 的字段留在该 recipe，不为结构整齐提前进入 Chart shared
@@ -151,7 +152,12 @@ Chart 共享稳定语义原子，不建立包含所有可选字段的宽 `Shared
 
 - position、color、size 等可以被 built-in semantic mark 或 authored Chart mark 消费
 - axis、guide 等共享 scaffold 可以读取相应数据角色
-- facet、track 由 composition owner 消费，只影响分区、轨道、共享轴与 guide 上下文，不广播给普通 mark
+- facet由encoding composition consumer消费，只影响分区与guide上下文，不广播给普通mark；轨道不进入Chart encoding，由作者通过`plotExtension`直接使用Plot静态`Tracks`
+- 字符串只表示 direct field shorthand；rich mapping 可以组合 direct field、单值 aggregate、Definition 明确允许的字段派生与 Plot named scale
+- 每个 chartType 的 strict schema 精确声明 slot、mapping union、scale family、数组语义与 composition 互斥，不提供跨 chartType 的 `ChartEncoding` / `RawEncodingValue`
+- 每个 recipe Definition 提供唯一的有序 `encodingSlots`；unused 检查、mark 继承、aggregate `groupBy` 与同阶段 operation 调度均消费这一个顺序
+- 字段类型、format 与分类order复用Data model；reducer / transform、scale与facet dimension直接组合Data / Plot owner schema，Chart不复制`ChartFieldType`或平行operation shape
+- registry-backed `kind` / `type` / `name` 复用 Foundation `OpenString` 与 owner 开放 schema；内置 const object enum 只提供常用提示，custom Definition 仍须通过 owner registry、output model与consumer compatibility
 
 每个 Definition 必须声明 slot 的 owner、consumer、目标语义与失败行为。字段同名不代表可以继承或映射。
 
@@ -171,7 +177,7 @@ Chart 共享稳定语义原子，不建立包含所有可选字段的宽 `Shared
 
 每个 chartType recipe 解析两类结果：
 
-1. 共享 scaffold：coordinate、axis、guide、facet、track 等 Chart 需要补全的 Plot 结构
+1. 共享 scaffold：coordinate、axis、guide、facet等Chart需要补全的Plot结构
 2. built-in semantic mark：当前 chartType 的核心图元计划
 
 built-in semantic mark 不等于恰好一个 Plot mark。recipe 以唯一 `kind` 输出 semantic mark group，每组包含非空、有序的 Plot marks；例如当前 Scatter 的 `scatter` group 生成一个 PointMark，未来一个组也可以原子生成多个 Plot marks。所有生成目标继续进入 Plot 正式 schema、resolve、lowering、identity、provenance、lineage、locator 与 diagnostics 主链。
@@ -299,15 +305,15 @@ Chart shell 拥有稀疏 `ChartThemeOverridesSchema` 与完整 `ChartThemeResolu
 
 ## 10. Owner 边界
 
-| Owner                   | 拥有                                                                                     | 不拥有                                                                      |
-| ----------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Chart 根                | family、identity、data 引用、外部 layout、presentation、Theme 入口                       | Plot 内部 layout、mark、scale、guide、renderer                              |
-| Chart recipe Definition | chartType、精确 schema、recipe theme、scaffold、built-in semantic mark、Chart mark 继承  | Plot mark catalog、Plot lowering、Data 算法、Core compile                   |
-| Plot                    | transform、scale、coordinate、composition、mark、guide、Plot theme 与 canonical lowering | Chart family、chartType、presentation、Chart recipe                         |
-| Data                    | 数据模型、字段、transform / statistics 与 lineage                                        | Chart encoding role、Plot channel、visual recipe                            |
-| Standard / Layout       | 通用 Surface、文本、排列和跨领域组合                                                     | Chart / Plot 领域 schema 与 recipe                                          |
-| Vanilla                 | TypeScript authoring Input 与 Input-to-Source-IR normalize                               | Chart schema、registry resolve、recipe、Plot lowering                       |
-| React                   | JSX / props / children 到 Vanilla Input 的宿主映射                                       | 平行 Source IR builder、recipe resolve、Theme resolver、Plot / Core compile |
+| Owner                   | 拥有                                                                                                                                | 不拥有                                                                      |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Chart 根                | family、identity、data 引用、外部 layout、presentation、Theme 入口                                                                  | Plot 内部 layout、mark、scale、guide、renderer                              |
+| Chart recipe Definition | chartType、精确 schema、有序 encoding slot与consumer映射、recipe theme、scaffold、semantic mark、Chart mark继承                     | Plot mark / scale / composition实现、Data算法、Core compile                 |
+| Plot                    | scale / channel、coordinate、facet / track composition、mark、guide、Plot theme、canonical lowering、provenance / lineage / locator | Chart family、chartType、presentation、Chart recipe                         |
+| Data                    | 数据模型、字段、transform / statistics、output model、data view类型证据与lineage                                                    | Chart encoding role、Plot channel、visual recipe                            |
+| Standard / Layout       | 通用 Surface、文本、排列和跨领域组合                                                                                                | Chart / Plot 领域 schema 与 recipe                                          |
+| Vanilla                 | TypeScript authoring Input 与 Input-to-Source-IR normalize                                                                          | Chart schema、registry resolve、recipe、Plot lowering                       |
+| React                   | JSX / props / children 到 Vanilla Input 的宿主映射                                                                                  | 平行 Source IR builder、recipe resolve、Theme resolver、Plot / Core compile |
 
 ## 11. 源码组织与依赖
 
@@ -331,6 +337,7 @@ src/
 - 不保留 `type: 'base'`、旧字段别名、fallback、migration 或新旧双轨
 - 不建立包含所有 family、chartType、encoding、property、mark 或 recipe theme 字段的开放宽 schema
 - 不让 `OpenString` 绕过 Definition、registry、精确 schema 与 consumer 校验
+- 不增加万能 `ChartEncoding` / `RawEncodingValue` / `ChartFieldType`，不因数组输入自动 fold / unpivot
 - 不把 `plotExtension.marks` 纳入 Chart 隐式继承
 - 不复制 Plot mark、scale、guide、composition、Theme、lowering、identity 或 diagnostics
 - 不把 resolved `IRPlot` 或 recipe 展开结果写回 Chart Source IR

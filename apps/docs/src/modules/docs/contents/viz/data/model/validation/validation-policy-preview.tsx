@@ -1,7 +1,7 @@
 import type { ExternalRow, IRDataModel } from '@retikz/data';
 import type { ReactNode } from 'react';
 
-import { Axis, IntervalMark, Plot, Scale } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
 import { Component } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
@@ -67,9 +67,9 @@ export const renderValidationPolicyPreview = (values: ValidationPolicyValues, me
         style={{ maxWidth: '100%', height: 'auto' }}
       >
         <IntervalMark x="month" y="revenue" color="month" />
-        <Scale dimension="y" type="linear" domainPadding={0} />
-        <Axis dimension="x" />
-        <Axis dimension="y" grid />
+        <PlotScale dimension="y" type="linear" domainPadding={0} />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" grid />
       </Plot>
     </ValidationErrorBoundary>
   );

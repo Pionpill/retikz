@@ -1,7 +1,18 @@
 ﻿import type { DataFieldTypeValue } from '../schemas';
+import type { ExternalRow } from '../shared';
 
 /** 逻辑字段名到字段测量类型的运行时映射；由 data.model、自动推断和 resolver 合成，不进入 IR */
 export type DataFieldTypeMap = Map<string, DataFieldTypeValue>;
+
+/** 一次数据处理阶段解析完成的行、字段类型与类型证据 */
+export type DataView = Readonly<{
+  /** 当前阶段实际输出的行 */
+  rows: Array<ExternalRow>;
+  /** 当前阶段字段名到测量类型的映射 */
+  fieldTypes: DataFieldTypeMap;
+  /** 已由model、resolver、有效观测或Definition descriptor证明类型的字段 */
+  fieldTypeEvidence: ReadonlySet<string>;
+}>;
 
 /** 运行时字段规范值；不含 boolean / null，是 `coerceValue` 与自定义 `parse` 的输出域 */
 export type ParsedFieldValue = string | number | undefined;

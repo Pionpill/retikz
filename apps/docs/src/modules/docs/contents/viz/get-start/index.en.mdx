@@ -11,7 +11,7 @@ In React projects, the plot entry package is `@retikz/plot-react`. It brings `@r
 
 ## Final Result
 
-This chart draws the same monthly revenue data with two mark layers: a line for the trend and points for each observation. `<Plot>` infers linear scales and a cartesian2D coordinate system; the x/y axes and y grid come from the explicit `<Axis>` children.
+This chart draws the same monthly revenue data with two mark layers: a line for the trend and points for each observation. `<Plot>` infers linear scales and a cartesian2D coordinate system; the x/y axes and y grid come from the explicit `<PlotAxis>` children.
 
 <ComponentPreview files={['line-scatter', 'line-scatter.data.ts']} />
 
@@ -35,13 +35,13 @@ const sales = [
 
 `<Plot>` receives the data and display size; `<PathMark>` declares which fields feed the x and y channels. `order="month"` connects points by month, so the line stays stable if row order changes.
 
-`<Plot>` is a thin container and draws no axes itself: to see axes you add `<Axis>` explicitly — `dimension` picks the x / y dimension, and `grid` adds gridlines for that dimension. Below, the y axis carries a grid and the x axis does not.
+`<Plot>` is a thin container and draws no axes itself: to see axes you add `<PlotAxis>` explicitly — `dimension` picks the x / y dimension, and `grid` adds gridlines for that dimension. Below, the y axis carries a grid and the x axis does not.
 
 ```tsx
 <Plot data={sales} width={360} height={200}>
   <PathMark x="month" y="revenue" order="month" />
-  <Axis dimension="x" />
-  <Axis dimension="y" grid />
+  <PlotAxis dimension="x" />
+  <PlotAxis dimension="y" grid />
 </Plot>
 ```
 
@@ -53,8 +53,8 @@ Marks inside the same `<Plot>` share the same coordinate system and scales. Add 
 <Plot data={sales} width={360} height={200}>
   <PathMark x="month" y="revenue" order="month" />
   <PointMark x="month" y="revenue" />
-  <Axis dimension="x" />
-  <Axis dimension="y" grid />
+  <PlotAxis dimension="x" />
+  <PlotAxis dimension="y" grid />
 </Plot>
 ```
 
@@ -62,21 +62,21 @@ Keep these 4 rules in mind:
 
 - `data` is a plain row array, and mapped field values must become finite numbers.
 - `<PathMark>` / `<PointMark>` declare field mappings, not pixel coordinates.
-- `<Plot>` is a thin container and draws no axes on its own — the `<Axis dimension="x" />` and `<Axis dimension="y" grid />` above declare the x/y axes and y grid explicitly.
+- `<Plot>` is a thin container and draws no axes on its own — the `<PlotAxis dimension="x" />` and `<PlotAxis dimension="y" grid />` above declare the x/y axes and y grid explicitly.
 - The IR tab in the code panel shows the Plot IR assembled by `<Plot>`; data is still supplied separately.
 
 ## Common Switches
 
-`<Plot>` draws only the `<Axis>` you list; each `<Axis>` can tune ticks, labels, and grid:
+`<Plot>` draws only the `<PlotAxis>` you list; each `<PlotAxis>` can tune ticks, labels, and grid:
 
 ```tsx
 <Plot data={sales} width={360} height={200}>
   <PathMark x="month" y="revenue" order="month" />
-  <Axis dimension="y" grid ticks={{ count: 5 }} />
+  <PlotAxis dimension="y" grid ticks={{ count: 5 }} />
 </Plot>
 ```
 
-Omit `<Axis>` when you only want the data marks, with no axes or grid:
+Omit `<PlotAxis>` when you only want the data marks, with no axes or grid:
 
 ```tsx
 <Plot data={sales} width={360} height={200}>
@@ -94,7 +94,7 @@ Omit `<Axis>` when you only want the data marks, with no axes or grid:
 
 ## Time Axis
 
-When x is a date, add `<Scale dimension="x" type="time" />` for that dimension — ticks land on time boundaries like whole months / years, and labels are formatted as time. The date field can be an ISO string or a millisecond timestamp.
+When x is a date, add `<PlotScale dimension="x" type="time" />` for that dimension — ticks land on time boundaries like whole months / years, and labels are formatted as time. The date field can be an ISO string or a millisecond timestamp.
 
 <ComponentPreview files={['time-axis', 'time-axis.data.ts']} />
 

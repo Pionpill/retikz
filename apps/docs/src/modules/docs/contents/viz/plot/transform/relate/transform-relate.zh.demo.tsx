@@ -1,4 +1,4 @@
-import { Axis, PathMark, Plot, PointMark, RelationMark, Scale } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotScale, PointMark, RelationMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -11,8 +11,8 @@ export const previewControls = relateControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Plot data={monthlyTrend} width={520} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
-      <Scale dimension="x" type="linear" domain={[0.5, 6.5]} />
-      <Scale dimension="y" type="linear" domain={[20, 62]} />
+      <PlotScale dimension="x" type="linear" domain={[0.5, 6.5]} />
+      <PlotScale dimension="y" type="linear" domain={[20, 62]} />
       <PathMark
         color="series"
         series="series"
@@ -52,8 +52,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }] },
         }}
       />
-      <Axis dimension="x" title="月份" grid />
-      <Axis dimension="y" title="数值" grid />
+      <PlotAxis dimension="x" title="月份" grid />
+      <PlotAxis dimension="y" title="数值" grid />
     </Plot>
   );
 });

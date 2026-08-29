@@ -217,6 +217,8 @@ Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme
 
 发布包不预注册命名的 Core 或 Table definitions。本站的 `academic`、`vibrant`、`clean` 与应用自定义 style 一样，必须在实际消费它的两个 owner 中注入同名 definition：standalone `compileTable` 通过 `compile.themeStyles` 注入 Core definition，并通过 `lower.tableThemeStyles` 注入 Table definition；缺少 Table 同名 definition 会在 Table resolver fail-loud。
 
+`cell.content.color` 与 `columnHeader.content.color` 是 string / null 主色；background fill 与 border line 的 `stroke` 是派生槽，可写精确字符串，也可写 `[0, 1]` 数值权重。普通 Cell 的背景和显式四边 border 跟随该 Cell 最终 content color，列头背景与列头默认底边跟随列头主色，其余 Table 默认或 layout border 跟随普通 Cell 主色。Border Graph 的胜出候选同时保留样式与主色，只有两者都一致的相邻边才会合并。`data.categorical`、`data.sequential` 等 palette 仍只接受字符串颜色。
+
 ### TableThemeTokenOverridesSchema
 
 <ZodSchema

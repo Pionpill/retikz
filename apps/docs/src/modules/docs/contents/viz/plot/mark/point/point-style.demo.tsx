@@ -1,7 +1,7 @@
 import type { IRPaint } from '@retikz/core';
 import type { FC } from 'react';
 
-import { Axis, Plot, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -48,8 +48,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       coordinate={values[POINT_STYLE_CONTROL_IDS.coordinate] === 'polar2D' ? 'polar2D' : undefined}
     >
       <PointMark {...pointProps} />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
     </Plot>
   );
 });

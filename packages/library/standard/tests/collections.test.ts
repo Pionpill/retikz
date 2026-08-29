@@ -41,6 +41,8 @@ import {
   CrossShapeProvider,
   CylinderShapeDefinition,
   CylinderShapeProvider,
+  EllipticCapsuleShapeDefinition,
+  EllipticCapsuleShapeProvider,
   HexagonShapeDefinition,
   HexagonShapeProvider,
   ParallelogramShapeDefinition,
@@ -66,6 +68,7 @@ describe('Standard extension collections', () => {
       ParallelogramShapeDefinition,
       HexagonShapeDefinition,
       CylinderShapeDefinition,
+      EllipticCapsuleShapeDefinition,
     ]);
     expect(StandardShapeProviders).toEqual([
       ContourShapeProvider,
@@ -76,6 +79,7 @@ describe('Standard extension collections', () => {
       ParallelogramShapeProvider,
       HexagonShapeProvider,
       CylinderShapeProvider,
+      EllipticCapsuleShapeProvider,
     ]);
   });
 

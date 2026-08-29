@@ -8,7 +8,7 @@ import type { IRPlot } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
-import { PlotSchema } from '../../src/schemas';
+import { PlotLayerZIndex, PlotSchema } from '../../src/schemas';
 
 const SALES = [
   { month: 0, revenue: 10 },
@@ -230,6 +230,72 @@ describe('lowerPlots (contract)', () => {
     expect(grids.map(scope => scope.meta?.dimension)).toEqual(['x', 'y']);
     expect(grids.every(scope => (scope.children[0] as IRPath).stroke === '#ffffff')).toBe(true);
     expect(grids.every(scope => (scope.children[0] as IRPath).strokeOpacity === 0.15)).toBe(true);
+  });
+
+  it.each([
+    [ThemeMode.Light, '#d6e0eb', '#adc2d6', '#5c85ad'],
+    [ThemeMode.Dark, '#0a141f', '#14293d', '#29527a'],
+  ] as const)('projects the Plot typography master into presentation layers in %s mode', (mode, area, grid, line) => {
+    const spec = PlotSchema.parse({
+      ...pointSpec(),
+      plotTheme: {
+        typography: { textColor: '#336699' },
+        plotArea: { fill: 0.2 },
+        axis: {
+          line: { stroke: 0.8 },
+          grid: { stroke: 0.4 },
+          tickLabels: { textColor: 0.8 },
+          title: { textColor: 0.6 },
+        },
+        legend: {
+          title: { textColor: 0.8 },
+          label: { textColor: 0.6 },
+        },
+      },
+      scales: [
+        ...pointSpec().scales,
+        { type: 'ordinal', name: 'regionColor', domain: ['north', 'south'], range: ['#f97316', '#2563eb'] },
+      ],
+      marks: [
+        {
+          type: 'point',
+          encoding: {
+            x: { field: 'month' },
+            y: { field: 'revenue' },
+            color: { field: 'region', scale: 'regionColor' },
+          },
+        },
+      ],
+      guides: [
+        { type: 'axis', dimension: 'x', title: 'Month' },
+        { type: 'legend', channel: 'color', scale: 'regionColor', title: 'Region' },
+      ],
+    });
+    const data = SALES.map(row => ({ ...row, region: row.month % 2 === 0 ? 'north' : 'south' }));
+    const lowered = expandOf(spec, { sales: data }, { ...opts, provenance: true });
+    const background = lowered.children.find(
+      child => child.type === 'node' && child.zIndex === PlotLayerZIndex.Background,
+    ) as IRNode;
+    const gridLayer = scopeByLayerMeta(lowered, 'grid');
+    const axisLayer = scopeByLayerMeta(lowered, 'axis');
+    const legendLayer = scopeByLayerMeta(lowered, 'legend');
+    const markLayer = scopeByLayerMeta(lowered, 'mark');
+
+    expect(background).toMatchObject({ color: '#336699', fill: 0.2 });
+    expect(gridLayer).toMatchObject({ color: '#336699' });
+    expect(axisLayer).toMatchObject({ color: '#336699' });
+    expect(legendLayer).toMatchObject({ color: '#336699' });
+    expect(markLayer.color).toBeUndefined();
+
+    const scene = compileToScene(
+      { version: 1, type: 'scene', theme: { mode }, children: [spec] },
+      { composites: lowerPlots({ sales: data }, opts) },
+    ).scene;
+    const serialized = JSON.stringify(scene);
+    expect(serialized).toContain(area);
+    expect(serialized).toContain(grid);
+    expect(serialized).toContain(line);
+    expect(serialized).not.toMatch(/"(?:fill|stroke)":0(?:\.\d+)?/);
   });
 
   it('layer_zindex_overrides_semantic_scope_without_reusing_mark_node_zindex', () => {

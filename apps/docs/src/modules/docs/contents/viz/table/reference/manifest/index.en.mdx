@@ -39,7 +39,7 @@ A descriptor is not Standard Legend IR and contains no placement, bounds, or fin
 
 ## Border provenance
 
-The border manifest preserves final visible edges together with their atomic conflict provenance. The following schemas build from resolved lines and candidate contributions to atoms and merged edges.
+The border manifest preserves final visible edges together with their atomic conflict provenance. A resolved line also retains the string master for a contextual stroke instead of caching a precomposited Table color; Core lowering uses that master to resolve a numeric stroke. The following schemas build from resolved lines and candidate contributions to atoms and merged edges.
 
 ### ResolvedTableBorderLineSchema
 

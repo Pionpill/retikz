@@ -49,6 +49,8 @@ Table 会先解析每个 Cell 的最终计划：host `theme.mode` 建立 Table o
 
 示例由本站预览 Provider 注入同名 Core / Table Academic definitions，再通过 standalone 根 `theme` 或 embedded 外层 `<Layout theme>` 选择 `academic/light` 环境；`tableThemeTokens` 继续只做当前 spec 的局部覆盖，`containerStyle` 只控制 standalone 宿主 CSS。`legend: false` 表示这条编码只改变 Cell 外观，不请求 Legend descriptor。
 
+示例分别为普通 Cell 和列头设置字符串内容主色，再用 `0.08` / `0.12` 派生背景；outer 与 horizontal border 的数值 stroke 跟随普通 Cell 主色。数值表示主色权重，不会改变独立的 background / border opacity。
+
 <ComponentAlert
   type="tip"
   title="区分 Theme 与宿主 CSS"

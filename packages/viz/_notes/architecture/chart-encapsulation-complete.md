@@ -1,6 +1,6 @@
 # Chart 封装完备设计
 
-> **状态：当前能力准入清单。** 本文判断一个 Chart family、内建 chartType、mark 或基础能力是否在“精确 Source schema → package-internal Definition + concrete provider contribution + compile-bound active registry → recipe resolve → Plot canonical lowering → presentation”主链上闭环。Chart 不提供第三方 recipe / chartType Definition 注册入口；应用层负责动态 catalog 与 JSON 路由，非内建复杂图形直接使用 Plot。
+> **状态：长期能力准入判据，不表示当前版本完成进度。** 下列 checkbox 用于判断一个 Chart family、内建 chartType、mark 或基础能力是否在“精确 Source schema → package-internal Definition + concrete provider contribution + compile-bound active registry → recipe resolve → Plot canonical lowering → presentation”主链上闭环，不因单个 ADR 实现完成而批量勾选。Chart 不提供第三方 recipe / chartType Definition 注册入口；应用层负责动态 catalog 与 JSON 路由，非内建复杂图形直接使用 Plot。
 
 ## 1. 完备目标
 
@@ -46,12 +46,19 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 - [ ] 不建立包含所有可选字段的宽 `SharedChartEncodingsSchema` / `SharedChartPropertiesSchema`
 - [ ] 与 Plot 语义、值域完全一致的属性直接复用 Plot 权威原子；Chart 只拥有领域收窄、默认和组合
 - [ ] 每个 encoding / property slot 都有明确 owner、consumer、目标语义和失败行为
+- [ ] 每个 recipe Definition 只有一个有序 `encodingSlots` 权威；schema消费、unused检查、mark继承、aggregate `groupBy`与同阶段operation调度不读取JSON属性顺序
+- [ ] 字符串encoding保持direct shorthand；rich mapping只组合当前slot允许的direct、scalar aggregate、derived transform、named scale与composition atom
+- [ ] Data field model是字段类型、format与分类order的唯一真源；Chart不增加`ChartFieldType`或Flint类型别名
+- [ ] reducer / transform、scale、facet dimension与options直接复用Data / Plot runtime schema，Chart不复制等价type或Zod shape
+- [ ] registry-backed operation discriminator复用Foundation `OpenString`与owner开放schema；内置enum不封闭custom Definition
+- [ ] custom reducer / transform只有在owner Definition声明完整output model、compact capability、闭合phase与consumer compatibility时进入rich mapping
 - [ ] recipe 显式 consumer 列表贴近实际 resolver，不从 schema 全字段自动推导；空名称和重复名称在 active provider registry assembly fail-loud
 - [ ] properties 与 encodings 映射到同一目标 slot 时，encoding 胜出
 - [ ] 冲突按目标 slot 解析，不使用无约束 object spread 或全局 last-wins
 - [ ] schema 接受但没有 scaffold、semantic mark 或 authored mark 消费的字段 fail-loud
 - [ ] authored mark 的继承 binding 仅在该 mark 实际出现时成为 active consumer
-- [ ] facet / track 由 composition owner 消费，不广播给普通 mark
+- [ ] facet由composition owner消费，不广播给普通mark；Chart只保存partition dimension / options，identity、canonical composition、lowering与locator仍由Plot拥有
+- [ ] Chart不提供字段驱动轨道encoding；共享轴与多mark轨道通过`plotExtension`直接使用Plot静态Tracks
 
 ## 5. Recipe 与 built-in semantic mark 完备
 
@@ -65,6 +72,7 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 - [ ] `false`、`0`、空数组和 schema 允许的空字符串不被 truthy fallback 吞掉
 - [ ] recipe 的表现默认不能撤销 chartType 的结构不变量
 - [ ] built-in mark、authored Chart marks 与 `plotExtension.marks` 的输出顺序确定
+- [ ] root transform先于encoding-derived operation；aggregate / derived后的resolved data view由semantic、authored与extension marks共享，不隐式保留raw分支
 - [ ] 空数据、非法字段、冲突 id、重复 scale、空间根冲突与 lower dependency 缺失均可诊断
 
 ## 6. Chart mark 完备
@@ -89,6 +97,7 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 - [ ] Plot 单值结构按允许替换的字段规则处理
 - [ ] Plot 具名集合按正式 identity 合并，重复且不可合并时 fail-loud
 - [ ] `plotExtension.marks` 按 Plot 顺序追加，不参与 Chart mark 继承或逐 slot 覆盖
+- [ ] `plotExtension`不能表达raw + aggregate并行data view；需要独立数据流时直接使用Plot mark-local或后续正式multi-view能力
 - [ ] coordinate 与 composition 保持唯一空间根
 - [ ] recipe 生成 id 不与 authored Chart mark 或 Plot extension 冲突
 - [ ] Chart 外层 identity 与 Plot provenance / spatial handle 连续
@@ -134,6 +143,7 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 - [ ] registry lookup、recipe resolve、Theme resolve 与 Plot lowering 只存在于领域 owner
 - [ ] inspection、文档预览与序列化展示 Chart Source IR，不以 resolved Base / Plot IR 代替
 - [ ] datasets、Theme definitions、Plot lower options 与宿主 Scope 保真传递
+- [ ] runtime reducer / transform / scale Definition通过provider sidecar保真传递，不进入JSON Source；React、Vanilla、JSON与SSR消费同一Source shape和resolver
 
 ## 11. 文档与测试证据
 
@@ -143,6 +153,7 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 - [ ] 文档说明 Chart shell、Plot、recipe Theme token owner
 - [ ] schema、registry、mismatch、recipe、mark inheritance、Theme、error、identity、adapter 与 SSR 测试齐全
 - [ ] public-surface 与 package-boundary 测试证明旧 `type: 'base'`、`config` 与旧兼容符号不存在
+- [ ] 文档与public-surface证明`ChartFacet`、root `facet`、`recipe.facet`及其normalizer已删除，迁移到exact `encodings.row / column / facet`
 
 ## 12. 反例
 
@@ -154,7 +165,9 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 - 让同一数据角色同时由多套平行 schema 拥有
 - encoding 接受常量，或 property 接受字段绑定
 - 按同名 key 向所有 mark 广播 encodings / properties
-- 让 facet / track 作为普通 mark 属性传播
+- 让facet作为普通mark属性传播，或把track伪装成字段encoding
+- 用万能 `ChartEncoding` / `RawEncodingValue`接受当前chartType没有consumer的slot，或在Chart复制字段类型与owner operation schema
+- 用内置kind白名单拒绝合法custom Definition，或把开放`kind`误当作自动compact能力
 - 把 `recipe.marks` 与 `plotExtension.marks` 混成同一继承语义
 - 只复用 Plot schema/type，却重新实现 lowering、identity、provenance 或 diagnostics
 - 使用全局优先级 object spread 覆盖无关结构

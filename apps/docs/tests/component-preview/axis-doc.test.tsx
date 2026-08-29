@@ -69,7 +69,7 @@ describe('Axis 文档 playground', () => {
     );
     expect(previewControlContract.canonicalValues.includeDomain).toBe(false);
     expect(englishPreviewControlContract.canonicalValues).toEqual(previewControlContract.canonicalValues);
-    expect(previewControlContract.relatedApis).toContain('Axis.grid.includeDomain');
+    expect(previewControlContract.relatedApis).toContain('PlotAxis.grid.includeDomain');
     expect(englishPreviewControlContract.relatedApis).toEqual(previewControlContract.relatedApis);
   });
 

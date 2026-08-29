@@ -1,62 +1,49 @@
-# ADR-03：统一 GraphNode / GraphConnector 的 semantic IR 与轻量 lowering
+# ADR-03：Graph semantic Source IR 与 Core lowering
 
 - 状态：Accepted
 - 决策日期：2026-08-15
-- 关联：[Graph alpha.1 ADR-01](./01-graph-package-family.md) · [Graph alpha.1 ADR-02](./02-graph-node-variants.md)
-- 历史边界：本 ADR 只继续冻结 semantic IR 经 owner Definition 下沉为 Core IR 的原则。公共命名、Source surface、Variant 与独立 composite 以 ADR-05～09 的后续决策为准
+- 修订日期：2026-08-28
+- 关联：[Graph package family](./01-graph-package-family.md) · [Entity 命名](./05-graph-element-naming.md) · [Entity contract](./07-entity-data-geometry.md) · [Relation contract](./08-relation-data-geometry.md) · [Graph context](./09-composable-graph-context.md) · [Group contract](./10-group-composition.md)
 
-## 背景
+## 背景与目标
 
-alpha.1 的四套节点入口重复表达同一份 Core Node authored surface，连接也容易复制 Core Path 的 routing / appearance 联合。LLM、工具和持久化数据需要的是 Graph 的 role 语义，而不是多个组件名或 lower 后的 shape。统一入口可以减少 schema、Definition、provider、adapter 和文档表面，同时保留 authored Tier 2 语义
+Graph 语义需要在持久化、LLM / 工具处理和跨 adapter 交换时保留，但 Core、Scene 与 renderer 不应解释 Graph 的 role、kind、predicate、direction 或 grouping 词汇。Graph Source 因此只保存领域事实与适用的 Core lower-facing 字段，并在 Graph owner 的 Definition / resolve / lowering 边界消费领域语义
 
 ## 决策
 
-### GraphElementType
+### Source discriminator 与持久化边界
 
-Graph 当前公开 discriminator 只有：
+Graph Source 使用 `namespace: 'graph'` 和 `GraphType` 的 `graph | group | entity | relation` 四个 discriminator。四类对象均由严格 schema 校验并保持 100% JSON-safe；函数、ReactNode、DOM、renderer resource、layout solver state 与 Editor session 不进入 Source IR
 
-```ts
-const GraphElementType = {
-  GraphFrame: 'graphFrame',
-  GraphNode: 'graphNode',
-  GraphConnector: 'graphConnector',
-} as const;
-```
+`Graph` 与 `Group` 的 children 直接复用 Core `IRChild`，不建立 Graph-only child union。Entity / Relation 可以独立出现在任意 Core 内容树，也可以作为 Graph / Group 后代
 
-### GraphNode 使用 role
+### Entity 与 Relation 的语义 lowering
 
-`GraphNode` 拥有一套 schema、IR、factory、Definition、provider 与 adapter。必填闭合 role 为：
+Entity 保存开放 `role`、可选 `kind` / `predicate` 与非结构性 Core Node instance surface。role Definition 拥有 shape、boundary、padding、cornerRadius 与基础 minimum size；Graph Theme 提供 appearance 默认；实例字段最终覆盖同名 appearance。请求 lowering 时缺少 Core Node 必需 position 必须 fail-loud
 
-```ts
-type GraphNodeRole = 'terminal' | 'stage' | 'decision' | 'junction';
-```
+Relation 保存开放 `role`、可选 `kind` / `predicate`、有效 `direction`、两个 Core NodeTarget endpoint，以及 Core Path-compatible route、labels 与未冲突的实例字段。role / kind / predicate 决定 marker / dash 结构，Graph Theme 提供 appearance 默认；省略 route 时生成 source 到 target 的直接 Core Path，显式 route 原样交给 Core compile 解析
 
-role 让 LLM 直接识别语义；它不要求从 Core shape、颜色或几何反推职责。role 提供默认 shape 与相关几何默认值，显式 `shape` 优先。GraphNode 每次只生成一个同 id Core Node，不产生 artifact、Scope、layout compiler 或 renderer 分支
+Entity 与 Relation 分别只下沉为一个普通 Core Node / Path。Graph discriminator 与领域语义不复制到 Scene primitive、renderer payload 或平行 artifact
 
-### GraphConnector 使用 role 并复用 Core Path
+### Graph 与 Group 的上下文 lowering
 
-`GraphConnector` 拥有一套 schema、IR、factory、Definition、provider 与 adapter。必填闭合 role 为：
+Graph 下沉为一个保留完整 Scope surface 的 Core Scope，并把 `graphTheme` 只投影给 Source tree 中可见的 Entity / Relation。Group 组合 Scope、Surface、Layout caption 与 Core Node labels，形成一个可引用的外框和任意 authored body；它同样只把 `graphTheme` 投影给可见的 Entity / Relation 后代
 
-```ts
-type GraphConnectorRole = 'flow' | 'branch' | 'dependency' | 'feedback';
-```
-
-canonical JSON 只接受 Core Path Step `children`。factory、React 与 Vanilla 还可接受互斥 `way: WayDSL`，入口使用 Core `parseWay()` 归一。省略 `marks` 时补一个终点箭头，显式数组完整覆盖默认值
-
-GraphConnector Definition 只移除 Graph namespace、Graph discriminator 与 role，输出一个同 id Core stroke Path。role 在 lowering 后丢弃，不复制到 Path `meta`、Scene primitive 或 artifact。Core Path 的 Step、target、label、stroke、fill、dash、line cap / join、transform 与诊断保持唯一真源
+Graph 与 Group 使用 Core layout-aware composite contract，是为了在同次 compile 中保留 Scope / Surface allocation、child replay 与 Group label host 几何；这不表示 Graph 拥有独立 Layout solver 或 Scene
 
 ### 三入口 parity
 
-直接 IR、React 与 Vanilla 必须表达相同的 GraphNode / GraphConnector canonical IR，并注入相同 Definition。adapter 只负责宿主 authoring 归一，不建立私有 schema、默认值、role registry、variant recipe 或路径 parser
+Direct IR、React 与 Vanilla 构造同一 Graph / Group / Entity / Relation Source IR，并注入同一 provider closure。adapter 可以把 JSX children、文本或 way builder 归一为 Source 字段，但不得维护私有 schema、默认 id、registry、Theme、route parser 或错误分支
 
-## 行为与兼容性
+## 行为、失败语义与兼容性
 
-- schema 只接受 `graphNode` / `graphConnector` 元素 discriminator，并严格拒绝缺失或未知 role；`terminal`、`stage`、`decision`、`junction` 仅作为 GraphNode role 值存在
-- GraphNode 与 GraphConnector 均为 JSON-safe semantic IR，可被 LLM、工具和未来 Graph presentation 直接读取
-- lower 后 Core Node / Path、Scene 与 renderer 不感知 Graph namespace、type、role、variant
-- 旧独立组件、旧 package、旧 namespace、GraphConnector 平行 route surface 与兼容入口直接删除
-- 这是 `0.x` breaking change，不提供 alias、migration、fallback 或新旧双轨
+- 四类 id 均可省略，省略时不生成 Source id、Core id 或内部 model identity
+- 未知 discriminator、未知字段和非法 JSON 在 schema 边界拒绝；未注册语义 key 与 provider 在 owner resolver / registry fail-loud
+- Relation endpoint 的重复 id、不可见 namespace、未知 target、anchor 与 boundary 继续使用 Core NodeTarget 诊断
+- Graph / Group 不收集 member，不建立 membership、Entity-only lookup 或隐式 local namespace
+- Core、Scene、SVG 与 Canvas 不新增 Graph discriminator、role、Theme token 或 renderer 分支
+- 旧 GraphFrame / GraphNode / GraphConnector、Graph-only route / label / endpoint、presentation / geometry wrapper 与 Variant 输入直接删除，不保留兼容路径
 
-## 长期边界
+## 结果
 
-GraphFrame 的布局算法、自动布局、全局 routing、GraphModel、Flow 与 Editor 状态由相应上层能力决定；Graph 不复制这些模型，也不为 role 或 lowering 增加 renderer 分支
+四类 Source composite 已通过同一 schema、Definition、resolve、lowering 与 provider 主链落到 Core。Entity / Relation 保留可独立处理的语义记录，Graph / Group 提供可选上下文和可见包含，而所有 renderer 继续只消费普通 Scene

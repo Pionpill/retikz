@@ -29,6 +29,13 @@ export const vizV01: Release = {
             en: 'The default data builtins now keep only capabilities reusable by plot / table / geo; plot-only transforms are registered by plot itself, avoiding chart semantics in other hosts.',
           },
         },
+        {
+          label: { zh: '可追踪的 transform 输出', en: 'Traceable transform outputs' },
+          content: {
+            zh: '`TransformDefinition.outputModel`、`compact`与`StatisticsReducerDefinition.outputs`让内置和自定义operation用同一registry声明派生字段、类型证据和紧凑字段映射能力；开放`kind`只扩展vocabulary，不绕过Definition config与consumer compatibility。',
+            en: '`TransformDefinition.outputModel`, `compact`, and `StatisticsReducerDefinition.outputs` let built-in and custom operations declare derived fields, type evidence, and compact field-mapping capability through one registry. Open `kind` vocabulary does not bypass Definition config or consumer compatibility.',
+          },
+        },
       ],
       subVersions: [
         {
@@ -211,6 +218,16 @@ export const vizV01: Release = {
             en: 'Chart recipes emit semantic groups with unique `kind` values, each able to contain multiple Plot marks. `recipe.marks[].override` atomically replaces a matching group in place; an unmatched override still appends and reports `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND` through Core `onWarn`.',
           },
         },
+        {
+          label: {
+            zh: 'BREAKING：字段映射与 composition 收口',
+            en: 'BREAKING: Field mappings and composition converge',
+          },
+          content: {
+            zh: 'Scatter `encodings`支持direct、scalar aggregate、允许的derived transform、named scale以及`row / column / facet`，同时复用Data字段/transform与Plot scale/composition契约。`ChartFacet`、root `facet`与`recipe.facet`已删除；迁移到`encodings.row / column / facet`。共享轴与多mark轨道通过`plotExtension`使用Plot静态Tracks。',
+            en: 'Scatter `encodings` now support direct fields, scalar aggregates, allowed derived transforms, named scales, and `row / column / facet` while reusing Data field/transform and Plot scale/composition contracts. `ChartFacet`, root `facet`, and `recipe.facet` are removed; migrate to `encodings.row / column / facet`. Shared-axis, multi-mark tracks use Plot static Tracks through `plotExtension`.',
+          },
+        },
       ],
       subVersions: [
         {
@@ -255,6 +272,13 @@ export const vizV01: Release = {
             en: '`Chart` accepts exact Source and presentation markers. `ScatterChart` converts JSX / props with `encodings`, `properties`, and `marks` into an exact Vanilla input before entering the shared Chart path. Generic APIs come from the root and typed APIs from `/point`.',
           },
         },
+        {
+          label: { zh: '同形 rich encodings 与 Plot 声明', en: 'Isomorphic rich encodings and Plot declarations' },
+          content: {
+            zh: '`ScatterChart`直接接收与JSON / Vanilla同形的rich `encodings`；`ChartFacet` / `ChartFacetProps`已删除。`PlotTransform`、`PlotAxis`等`PlotXxx` children仍进入`plotExtension`并服从同一Chart data flow与空间冲突诊断。',
+            en: '`ScatterChart` accepts the same rich `encodings` shape as JSON and Vanilla; `ChartFacet` and `ChartFacetProps` are removed. `PlotXxx` children such as `PlotTransform` and `PlotAxis` still enter `plotExtension` and share the Chart data flow and spatial-conflict diagnostics.',
+          },
+        },
       ],
       subVersions: [
         {
@@ -282,6 +306,13 @@ export const vizV01: Release = {
           content: {
             zh: '根入口只提供 `ChartInput`、InputEmbed 与 `renderChart`；`/point` 公开精确的 `CreateXxxChartInput`、`normalizeXxxChart` 与 `createXxxChart`，具体 chartType provider 随 factory 安装；创建函数返回精简 Source、可嵌入 Input 与完整 contribution，`renderChart` 从同一次 Core compile 生成 SVG 与 compile result。',
             en: 'The root exposes only `ChartInput`, InputEmbed, and `renderChart`, while `/point` exposes exact `CreateXxxChartInput`, `normalizeXxxChart`, and `createXxxChart` APIs; each factory installs its concrete chartType provider. Factories return concise Source, embeddable Input, and a complete contribution, while `renderChart` produces its SVG and compile result from the same Core compile.',
+          },
+        },
+        {
+          label: { zh: 'BREAKING：facet input 迁入 encodings', en: 'BREAKING: Facet input moves into encodings' },
+          content: {
+            zh: '`InputChartFacet`、`normalizeChartFacet`与factory root `facet`已删除。Scatter factory只展开`row / column`字符串shorthand，rich对象原样进入与JSON / React同形的Source；runtime transform / reducer / scale Definition继续通过provider sidecar传递。',
+            en: '`InputChartFacet`, `normalizeChartFacet`, and the factory root `facet` are removed. Scatter factories only expand `row / column` string shorthands, preserving rich objects in the same Source shape as JSON and React; runtime transform, reducer, and scale Definitions continue through the provider sidecar.',
           },
         },
       ],
@@ -318,6 +349,13 @@ export const vizV01: Release = {
           content: {
             zh: 'IR 里只写 `data: { ref }`（一个名字），真实数据集渲染时单独注入、不进 IR——同一份 spec 换字段相符的数据即可复用，IR 不随数据量膨胀。',
             en: 'The IR only carries `data: { ref }` (a name); the actual dataset is injected at render time and never enters the IR — the same spec is reusable with any matching dataset, and the IR never bloats with data volume.',
+          },
+        },
+        {
+          label: { zh: '一次 lowering 的 runtime 证据', en: 'One-lowering runtime evidence' },
+          content: {
+            zh: 'Scene、lineage与locator复用同一次lowering产生的data / frame artifact；单次请求不会为查询重放custom transform，独立runtime请求仍各自执行。',
+            en: 'Scene, lineage, and locators reuse the data/frame artifact produced by one lowering. A query does not replay custom transforms within one request, while separate runtime requests still execute independently.',
           },
         },
       ],
@@ -615,6 +653,13 @@ export const vizV01: Release = {
           content: {
             zh: '`<Plot spec data>` 直喂完整 IR + 具名数据集;`<Plot data>` + `<LineMark>` / `<PointMark>` 子图层用组合 DSL 声明，`buildPlotIR` 同步装配成规范化 Plot IR。',
             en: '`<Plot spec data>` feeds a full IR + named datasets; `<Plot data>` + `<LineMark>` / `<PointMark>` children declare via the composition DSL, with `buildPlotIR` assembling a normalized Plot IR.',
+          },
+        },
+        {
+          label: { zh: 'BREAKING：声明组件使用 PlotXxx 前缀', en: 'BREAKING: PlotXxx declaration prefixes' },
+          content: {
+            zh: '`Facet`、`Scaffold`、`Track`、`Axis`、`Legend`、`Scale`、`Transform` 及对应 Props 改名为 `PlotXxx`，旧导出直接删除；根 `Plot` 与全部 Mark 组件名称保持不变。',
+            en: '`Facet`, `Scaffold`, `Track`, `Axis`, `Legend`, `Scale`, `Transform`, and their Props types are renamed to `PlotXxx`, with old exports removed. The root `Plot` and every Mark component keep their names.',
           },
         },
       ],
@@ -1117,6 +1162,13 @@ export const vizV01: Release = {
               content: {
                 zh: '闭合 selector、ordinal/threshold/sequential scale 与单通道 encoding 使用 canonical raw value；Core preset < shared categorical < local `tableThemeTokens` < Cell < encodings < ordered rules，manifest 保留 winner/source trace。',
                 en: 'Closed selectors, ordinal/threshold/sequential scales, and single-channel encodings use canonical raw values. Core preset < shared categorical < local `tableThemeTokens` < Cell < encodings < ordered rules, with winner/source trace retained in manifests.',
+              },
+            },
+            {
+              label: { zh: 'Cell 主色与派生背景 / border', en: 'Cell masters with derived backgrounds and borders' },
+              content: {
+                zh: '普通 Cell 与 Column Header content color 保持 string-only 主色；background fill 与 border stroke 可使用 `[0, 1]` 权重。Cell 背景和显式边跟随该 Cell 最终主色，列头默认底边跟随 Header 主色，其余 Table 边跟随普通 Cell 主色；Border Graph winner 与 manifest 保留主色并阻止不同主色的边误合并。',
+                en: 'Body and Column Header content colors remain string-only masters, while background fills and border strokes may use `[0, 1]` weights. Cell backgrounds and explicit sides follow each Cell’s final master, the default header bottom edge follows the Header master, and other Table edges follow the body master. Border Graph winners and manifests retain that master and prevent edges with different masters from merging.',
               },
             },
             {

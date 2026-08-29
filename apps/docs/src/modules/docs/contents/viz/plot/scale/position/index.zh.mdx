@@ -17,7 +17,7 @@ description: 位置比例尺把数值、时间和分类字段映射成坐标、�
 | 时间字段                   | `time`           | 刻度落在人类可读时间边界         |
 | 分类柱状 / 分类折线        | `band` / `point` | 一格宽度 / 一个点位              |
 
-`pow` 提供自定义幂指数，但当前 React `<Scale>` 不暴露该类型，需要写入完整 `IRPlot.scales`。
+`pow` 提供自定义幂指数，但当前 React `<PlotScale>` 不暴露该类型，需要写入完整 `IRPlot.scales`。
 
 ## 连续数值
 
@@ -35,7 +35,7 @@ description: 位置比例尺把数值、时间和分类字段映射成坐标、�
 | `sqrt`<br />`pow`   | 弱化大值；自定义幂指数   | `sqrt` 使用固定开方；`pow.exponent` 通过 full spec 配置             |
 | `symlog`            | 跨零且跨度大的数值       | 零附近保持线性；`constant` 默认 `1`，调大可扩展线性区               |
 
-`size` 通道也使用 `sqrt` 让点面积更接近数值比例，但它属于[内置通道](/viz/plot/channel/builtin)的大小映射，不由位置用的 `<Scale dimension>` 配置。
+`size` 通道也使用 `sqrt` 让点面积更接近数值比例，但它属于[内置通道](/viz/plot/channel/builtin)的大小映射，不由位置用的 `<PlotScale dimension>` 配置。
 
 ### 径向
 
@@ -59,12 +59,12 @@ description: 位置比例尺把数值、时间和分类字段映射成坐标、�
 
 ## 时间
 
-`temporal` 字段的位置通道默认使用 `time`。它仍是连续映射，但刻度会落在月初、季度、整点等时间边界，标签也按时间格式化；把字段在 model 中声明为 `temporal` 后无需手写 `<Scale>`。
+`temporal` 字段的位置通道默认使用 `time`。它仍是连续映射，但刻度会落在月初、季度、整点等时间边界，标签也按时间格式化；把字段在 model 中声明为 `temporal` 后无需手写 `<PlotScale>`。
 
 <ComponentPreview
   size="lg"
   files={['scale-time', 'scale-time.data.ts']}
-  caption="横轴没有显式声明 Scale；model 中的 temporal 字段会自动派生 time scale，并把季度日期格式化到可读的时间边界。"
+  caption="横轴没有显式声明 PlotScale；model 中的 temporal 字段会自动派生 time scale，并把季度日期格式化到可读的时间边界。"
 />
 
 日期值可以是 ISO 字符串或时间戳，解析规则见[数据接入](/viz/data/model/intake)。时间字段绑定 `color` 时会自动派生连续的 `sequential` 色带，见[颜色比例尺](/viz/plot/scale/color)。
@@ -89,14 +89,14 @@ description: 位置比例尺把数值、时间和分类字段映射成坐标、�
 ```tsx
 <Plot data={rows} model={[{ name: 'segment', type: 'categorical' }]}>
   <PathMark x="segment" y="revenue" order="segment" />
-  <Scale dimension="x" type="point" />
-  <Axis dimension="x" />
+  <PlotScale dimension="x" type="point" />
+  <PlotAxis dimension="x" />
 </Plot>
 ```
 
 ## 技术原理
 
-位置 scale 在 lowering 时才拥有完整上下文。图中的 `derive` 先结合字段类型、图元结构与显式 `<Scale>` 选择类型；`validate` 检查字段兼容性、合法值域和基线约束；随后从绑定数据或显式配置解析 domain，并把坐标系提供的可用范围作为 range。
+位置 scale 在 lowering 时才拥有完整上下文。图中的 `derive` 先结合字段类型、图元结构与显式 `<PlotScale>` 选择类型；`validate` 检查字段兼容性、合法值域和基线约束；随后从绑定数据或显式配置解析 domain，并把坐标系提供的可用范围作为 range。
 
 <ComponentPreview files="scale-position-flow" size="xs" hideCode />
 
@@ -127,28 +127,28 @@ description: 位置比例尺把数值、时间和分类字段映射成坐标、�
 
 ## API 参考
 
-React `<Scale>` 是常用位置类型的声明入口；`band` 可以由 interval 结构自动派生，也可以显式配置柱间距与外侧留白。`pow` 和完整 IR 字段写入 `IRPlot.scales`。`Axis.scale` 是同维度常用类型的快捷入口。
+React `<PlotScale>` 是常用位置类型的声明入口；`band` 可以由 interval 结构自动派生，也可以显式配置柱间距与外侧留白。`pow` 和完整 IR 字段写入 `IRPlot.scales`。`PlotAxis.scale` 是同维度常用类型的快捷入口。
 
-| 属性               | 类型                            | 默认值            | 说明                                                                   |
-| ------------------ | ------------------------------- | ----------------- | ---------------------------------------------------------------------- |
-| `dimension`        | `'x' \| 'y'`                    | —                 | 坐标维度；polar 中仍用 `x` / `y` 表示角向 / 径向                       |
-| `type`             | `ScaleProps['type']`            | —                 | `linear`、`time`、`band`、`point`、`log`、`sqrt`、`symlog` 或 `radial` |
-| `domain?`          | `ScaleProps['domain']`          | 从数据推断        | 连续输入范围，或 `band` / `point` 的有序分类列表                       |
-| `domainPadding?`   | `ScaleProps['domainPadding']`   | 推断时 `5%`       | 连续 domain 两端的比例留白；显式 domain 默认不留白                     |
-| `singleValueSpan?` | `ScaleProps['singleValueSpan']` | 按类型推断        | 单值 domain 展开时使用的最小跨度                                       |
-| `base?`            | `ScaleProps['base']`            | `10`              | 仅用于 `log`，必须大于 `1`                                             |
-| `constant?`        | `ScaleProps['constant']`        | `1`               | 仅用于 `symlog`，控制零附近线性区宽度                                  |
-| `paddingInner?`    | `number`                        | `0.1`             | 仅用于 `band`；相邻 band 间距占 step 的比例，范围 `0..1`               |
-| `paddingOuter?`    | `number`                        | 同 `paddingInner` | 仅用于 `band`；首尾外侧留白占 step 的比例，范围 `0..1`                 |
-| `padding?`         | `number`                        | `0.5`             | 仅用于 `point`；首尾外侧留白占 step 的比例，范围 `0..1`                |
-| `align?`           | `number`                        | `0.5`             | 用于 `band` / `point`；控制首尾留白在范围两端的分配，范围 `0..1`       |
+| 属性               | 类型                                | 默认值            | 说明                                                                   |
+| ------------------ | ----------------------------------- | ----------------- | ---------------------------------------------------------------------- |
+| `dimension`        | `'x' \| 'y'`                        | —                 | 坐标维度；polar 中仍用 `x` / `y` 表示角向 / 径向                       |
+| `type`             | `PlotScaleProps['type']`            | —                 | `linear`、`time`、`band`、`point`、`log`、`sqrt`、`symlog` 或 `radial` |
+| `domain?`          | `PlotScaleProps['domain']`          | 从数据推断        | 连续输入范围，或 `band` / `point` 的有序分类列表                       |
+| `domainPadding?`   | `PlotScaleProps['domainPadding']`   | 推断时 `5%`       | 连续 domain 两端的比例留白；显式 domain 默认不留白                     |
+| `singleValueSpan?` | `PlotScaleProps['singleValueSpan']` | 按类型推断        | 单值 domain 展开时使用的最小跨度                                       |
+| `base?`            | `PlotScaleProps['base']`            | `10`              | 仅用于 `log`，必须大于 `1`                                             |
+| `constant?`        | `PlotScaleProps['constant']`        | `1`               | 仅用于 `symlog`，控制零附近线性区宽度                                  |
+| `paddingInner?`    | `number`                            | `0.1`             | 仅用于 `band`；相邻 band 间距占 step 的比例，范围 `0..1`               |
+| `paddingOuter?`    | `number`                            | 同 `paddingInner` | 仅用于 `band`；首尾外侧留白占 step 的比例，范围 `0..1`                 |
+| `padding?`         | `number`                            | `0.5`             | 仅用于 `point`；首尾外侧留白占 step 的比例，范围 `0..1`                |
+| `align?`           | `number`                            | `0.5`             | 用于 `band` / `point`；控制首尾留白在范围两端的分配，范围 `0..1`       |
 
 完整 `IRPlotScale` 还允许给 scale 命名、显式设置输出 `range`，并配置 React DSL 没有暴露的 `pow.exponent`、`nice` 与 `clamp`。各变体和自定义 scale operation 都遵循这一公开 IR 契约；这些 `IRPlot*` 类型与 schema 从 `@retikz/plot` 导入。
 
 <SourceLinks
   sources={[
     {
-      label: 'React Scale 复用 Plot Vanilla 的输入类型',
+      label: 'React PlotScale 复用 Plot Vanilla 的输入类型',
       path: 'packages/viz/plot-react/src/components/scales.tsx',
       startLine: 1,
       endLine: 7,

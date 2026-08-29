@@ -1,5 +1,5 @@
 import type { IRScope } from '@retikz/core';
-import type { DataFieldTypeMap, ExternalRow, IRDataScalarValue } from '@retikz/data';
+import type { DataFieldTypeMap, DataView, ExternalRow, IRDataScalarValue } from '@retikz/data';
 
 import type {
   AnyCoordinateDefinition,
@@ -17,8 +17,12 @@ import type { LegendReserve, Margins, Rect } from '../../shared';
 
 /** 单个图元及其当前可见数据行的 lowering 视图 */
 export type MarkDataView = {
+  /** Source marks数组中的稳定序号 */
+  markIndex: number;
+  /** 当前scope消费的mark operation */
   mark: IRPlotMarkOperation;
-  rows: Array<ExternalRow>;
+  /** 当前scope完整rows、fieldTypes与fieldTypeEvidence */
+  dataView: DataView;
 };
 
 /** 曲线坐标轴下沉器，由 pipeline 提供，resolve 只消费其窄 contract */
@@ -40,6 +44,8 @@ export type CoordinateResolveContext = {
   rows: Array<ExternalRow>;
   /** 字段类型表 */
   fieldTypes: DataFieldTypeMap;
+  /** 已证明字段类型的字段集合 */
+  fieldTypeEvidence?: ReadonlySet<string>;
   /** 画布宽度 */
   width: number;
   /** 画布高度 */

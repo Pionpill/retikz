@@ -27,22 +27,24 @@ For a Vanilla runtime source, `{ input }` runs `normalizePlot` exactly once. `{ 
 
 `IRPlot` stores only JSON-safe grammar and `data.reference`. Actual rows, field resolvers, label functions, and custom transform, scale, channel, coordinate, or mark Definitions are runtime inputs. They meet the IR at execution, but are never written back into it.
 
-| Input layer          | Typical entry                                                        | Enters `IRPlot`                                                                                    |
-| -------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| React DSL            | `<Plot>` plus mark, guide, and scale children                        | After shared normalization                                                                             |
-| React spec           | `<Plot spec={...} data={...}>`                                       | The `spec` does                                                                                        |
+| Input layer          | Typical entry                                                    | Enters `IRPlot`                                                                                        |
+| -------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| React DSL            | `<Plot>` plus mark, guide, and scale children                    | After shared normalization                                                                             |
+| React spec           | `<Plot spec={...} data={...}>`                                   | The `spec` does                                                                                        |
 | Vanilla              | `plot(InputPlot)`, `{ input: InputPlot }`, or `{ spec: IRPlot }` | InputPlot forms normalize once; `spec` enters directly; unknown JSON requires Plot schema/parser first |
-| Runtime dependencies | datasets, field maps, resolvers, and Definitions                     | No                                                                                                     |
+| Runtime dependencies | datasets, field maps, resolvers, and Definitions                 | No                                                                                                     |
 
 ## Lowering and Outputs
 
 <ComponentPreview files="plot-lowering-flow" size="sm" hideCode />
 
-The main lowering path resolves transform, statistics, row-selector, scale, mark, and format registries inside `prepareRows()`, then normalizes data from the data model, field maps, and resolver. It next applies transforms, resolves the frame, and builds the channel registry. Channel and mark Definitions produce primitives; guides, themes, composition, and layout add explanatory and spatial structure. The result expands into Core `Scope`, `Node`, and `Path` IR.
+The main lowering path resolves transform, statistics, row-selector, scale, mark, and format registries inside `prepareRows()`, then normalizes data from the data model, field maps, and resolver. It next applies transforms, advances DataViews with field-type evidence, resolves composition and frames, and builds the channel registry. Channel and mark Definitions produce primitives; guides, themes, and layout add explanatory and spatial structure. The result expands into Core `Scope`, `Node`, and `Path` IR.
 
 `lowerPlots()` returns the Definition consumed by Core composite compilation. It does not create DOM and does not select a renderer. `compileToScene()` consumes the lowered Core IR and produces a Scene; React `<Layout>` or a Vanilla renderer then chooses SVG, Canvas, or string output.
 
-Lineage and location are independent recomputation paths over shared inputs, not sidecars emitted directly by the main lowering path. `lowerPlotWithLineage()` returns Core IR children with a `PlotLineageRun`, while `createPlotLocator()` reuses data preparation and frame resolution to calculate datum and series anchors. Both accept the same spec, datasets, and lowering configuration without writing a complete runtime record into `IRPlot` or Scene metadata. See [Plot Lineage](/viz/data/provenance/plot) for its options and data boundary.
+One lowering produces both Core IR and the execution's data artifact: root / mark DataViews, composition resolution, and actual frames. `lowerPlotWithLineage()` builds Core IR children and `PlotLineageRun` from that same execution, so root and mark-local transforms each run once in the request; lineage no longer replays a second data pipeline.
+
+`createPlotLocator()` likewise performs one provenance-enabled lowering, then lets `datum()`, `series()`, and `resolve()` keep reading the same Scene and data artifact. A locator query does not rerun transforms. Creating another locator or independently calling another runtime entry is a new execution request and does not share a cache. Runtime records are never written back into `IRPlot`; see [Plot Lineage](/viz/data/provenance/plot) for options and data boundaries.
 
 ## Entries and Results
 
@@ -108,32 +110,32 @@ Lineage and location are independent recomputation paths over shared inputs, not
     {
       label: 'Main Plot data preparation and transform path',
       path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
-      startLine: 111,
-      endLine: 167,
+      startLine: 183,
+      endLine: 293,
     },
     {
       label: 'Frame resolution and channel registry construction',
       path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
-      startLine: 194,
-      endLine: 225,
+      startLine: 342,
+      endLine: 409,
     },
     {
       label: 'Channel, mark, and guide output as Core IR',
       path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
-      startLine: 610,
-      endLine: 699,
+      startLine: 803,
+      endLine: 878,
     },
     {
-      label: 'Independent Plot lineage lowering entry',
+      label: 'Lineage consumes the same lowering data artifact',
       path: 'packages/viz/plot/src/pipeline/lineage.ts',
-      startLine: 328,
-      endLine: 336,
+      startLine: 274,
+      endLine: 282,
     },
     {
-      label: 'Locator reuses data preparation and frame semantics',
+      label: 'Locator reuses one lowering Scene and data artifact',
       path: 'packages/viz/plot/src/pipeline/locator/locate.ts',
-      startLine: 130,
-      endLine: 186,
+      startLine: 149,
+      endLine: 184,
     },
   ]}
 />

@@ -1,6 +1,6 @@
 import type { IRDataReducerMetrics, IRDataSummarizeTransform } from '@retikz/data';
 
-import { Axis, IntervalMark, Plot, Scale, Transform } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
 
 import { orders } from './transform-summarize.data';
 
@@ -22,10 +22,10 @@ export const transformSummarizeOperationOf = (values: TransformSummarizeValues):
 /** 渲染受控统计规约后的分组柱形 */
 export const renderTransformSummarizePreview = (values: TransformSummarizeValues) => (
   <Plot data={orders} width={400} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Transform {...transformSummarizeOperationOf(values)} />
+    <PlotTransform {...transformSummarizeOperationOf(values)} />
     <IntervalMark x="region" y="metric" color="region" />
-    <Scale dimension="y" type="linear" domainPadding={0} />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotScale dimension="y" type="linear" domainPadding={0} />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 );

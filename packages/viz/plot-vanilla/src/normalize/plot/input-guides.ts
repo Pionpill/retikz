@@ -2,14 +2,14 @@ import type { IRPlotAxisGuide, IRPlotLegendGuide } from '@retikz/plot';
 
 import type { InputPlotPositionScaleType } from './input-scales';
 
-/** <Axis> props：坐标轴配置；网格走 axis-level `grid`（与 IR axis.grid 对应，非独立 <Grid> 组件） */
+/** <PlotAxis> props：坐标轴配置；网格走 axis-level `grid`（与 IR axis.grid 对应，非独立 <Grid> 组件） */
 export type InputPlotAxis = {
   /**
    * 装饰哪个定位维度：cartesian 的 x（水平）/ y（垂直）；polar 的 x（角向）/ y（径向）；
    * custom coordinate 使用 definition 声明的 role。维度须匹配坐标系合法集，否则 lowering fail-loud
    */
   dimension: string;
-  /** 位置 scale 快捷配置；对可缩放维度等价于同维度的 <Scale dimension={dimension} type={scale} /> */
+  /** 位置 scale 快捷配置；对可缩放维度等价于同维度的 <PlotScale dimension={dimension} type={scale} /> */
   scale?: InputPlotPositionScaleType;
   /** 轴线样式；false 隐藏轴线但保留 ticks / labels / grid */
   line?: IRPlotAxisGuide['line'];
@@ -38,7 +38,7 @@ export type InputPlotAxis = {
  * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 IRPlot.guides
  */
 
-/** <Legend> props：图例配置；channel 指定非位置通道，颜色形态来自 scale，其它形态来自 ChannelDefinition.legend */
+/** <PlotLegend> props：图例配置；channel 指定非位置通道，颜色形态来自 scale，其它形态来自 ChannelDefinition.legend */
 export type InputPlotLegend = {
   /** 可视化哪个非位置通道：color（颜色）/ size（尺寸）/ opacity（透明度）/ shape（形状） */
   channel: string;
@@ -63,5 +63,5 @@ export type InputPlotLegend = {
 /**
  * 图例声明组件
  * @description 配置载体：不进 React render 栈、不渲染（返回 null），由 <Plot> 同步内省其 props 装配进 IRPlot.guides；
- *   <Legend> 不抑制默认坐标轴（与 <Axis> 区分），图例与默认轴共存
+ *   <PlotLegend> 不抑制默认坐标轴（与 <PlotAxis> 区分），图例与默认轴共存
  */

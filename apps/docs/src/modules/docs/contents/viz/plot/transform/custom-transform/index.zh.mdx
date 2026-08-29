@@ -36,11 +36,11 @@ description: 用 Data 的 TransformDefinition 定义瀑布累计操作，并通�
 
 ## 注入宿主
 
-Definition 通过 `transformDefinitions` 留在运行时；`<Transform>` 只把 JSON-safe operation 装入 Plot IR：
+Definition 通过 `transformDefinitions` 留在运行时；`<PlotTransform>` 只把 JSON-safe operation 装入 Plot IR：
 
 ```tsx
 <Plot data={rows} transformDefinitions={[waterfallTransform]}>
-  <Transform kind="waterfall" field="delta" initialValue={60} />
+  <PlotTransform kind="waterfall" field="delta" initialValue={60} />
   <IntervalMark x="period" color="direction" bounds={{ y: { kind: 'extent', from: 'from', to: 'to' } }} />
 </Plot>
 ```
@@ -98,7 +98,7 @@ Definition 通过 `transformDefinitions` 留在运行时；`<Transform>` 只把 
 | 入口                                      | 用途                                       |
 | ----------------------------------------- | ------------------------------------------ |
 | `defineTransform` / `TransformDefinition` | 从 `@retikz/data` 定义运行时变换能力       |
-| `<Transform>`                             | 从 `@retikz/plot-react` 声明根级 operation |
+| `<PlotTransform>`                         | 从 `@retikz/plot-react` 声明根级 operation |
 | `PlotProps.transformDefinitions`          | React 宿主注入 Definitions                 |
 | `RenderPlotOptions.transformDefinitions`  | Vanilla 宿主从 `@retikz/plot-vanilla` 注入 |
 | `LowerPlotsOptions.transformDefinitions`  | 直接调用 Plot lowering 时注入              |

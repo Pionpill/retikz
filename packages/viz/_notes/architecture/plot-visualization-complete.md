@@ -49,8 +49,8 @@ plot 可以提供依赖 mark、geometry 或 layout 语义的 plot-specific trans
 | Mark                   | 定义数据在坐标空间中的几何显现                                                                                                                                 | plot                                                                                                            | chart preset、单 demo 拼装                                                 |
 | Guide                  | 解析 axis、grid、legend、axis / datum label 等解释语义并组织领域 provenance / locator                                                                          | plot 拥有领域解析；经跨领域验证的通用呈现由 standard 拥有                                                       | Chart title / caption / source、上层 UI 控件                               |
 | Theme / Palette        | 在 Core effective Theme 下通过同名 Plot style definition 解析 Plot surface、typography、Axis / Legend 视觉 token 与 palette，并映射到正式 Plot / Standard 输入 | Core 负责 selector 与 shared colors；plot 拥有 style definition、token、preset、resolver、mapping 与 inspection | Chart canvas / presentation / recipe token、Core Theme 语义、renderer 默认 |
-| Layer / Lowering       | 组织层、scope 与 provenance，并下沉 Core IR                                                                                                                    | plot                                                                                                            | 独立 renderer、平行 scene graph                                            |
-| Spatial Addressability | 为 view、arrangement、panel、track、plotArea 等空间保留稳定 identity 与 handle                                                                                 | plot 生成领域 handle；core 提供模型、索引与 selector 基础                                                       | Chart 外层 Surface、Layout 组合、dashboard 状态                            |
+| Layer / Lowering       | 组织层、scope、data view与provenance，并从一次lowering产物下沉Core IR                                                                                          | plot                                                                                                            | 独立 renderer、平行 scene graph                                            |
+| Spatial Addressability | 为 view、arrangement、facet panel、static track、plotArea 等空间保留稳定identity、selector与handle                                                             | plot生成领域handle；core提供模型、索引与selector基础                                                            | Chart 外层 Surface、Layout 组合、dashboard 状态                            |
 | Interaction Readiness  | 保留 datum / series / scope identity、locator、selection mapping 和诊断边界                                                                                    | plot 定义语义，core 承载 metadata，adapter 消费                                                                 | DOM 事件树、tooltip UI、高频 dashboard dataflow                            |
 
 这些是检测维度，不要求一一对应目录；代码仍按 `schemas / contract / providers / pipeline / shared` 分层。
@@ -83,6 +83,7 @@ Chart 封装也不能缩小 Visualization Complete 的空间输出或主题闭�
 - 多个 preset、adapter 或文档示例重复手写同一映射规则。
 - 自定义能力无法通过现有 definition / registry 接入。
 - 缺口会迫使上层私造 Plot IR 或无法稳定 lowering。
+- 字段驱动facet需要canonical composition、类型敏感partition identity、filtered data view、guide、provenance、lineage与locator共同闭环；静态Tracks则需要稳定identity、显式mark路由与共享坐标角色，两者都不能由Chart或adapter复制位移。
 
 ### 4.3 是否形成闭环
 
@@ -92,10 +93,11 @@ Plot schema 可表达
 contract 可扩展
 provider / feature 可实现
 pipeline / lowering 可消费
+Scene、lineage与locator复用同一次lowering / data artifact，单次请求不重放custom transform
 effective Theme + Plot token / native theme 可确定性解析
 Core style registry 与 Plot style registry 的同名解析及 shared colors 消费可追踪
 Core IR 可承载
-spatial handles / selectors 可保留 Plot 内部 identity
+spatial handles / selectors 可保留view / arrangement / facet / static或partitioned track的typed identity
 provenance / locator 可追踪
 React / Vanilla 可等价暴露
 tests 可锁定

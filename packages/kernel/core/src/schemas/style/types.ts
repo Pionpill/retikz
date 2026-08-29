@@ -2,12 +2,16 @@ import type { infer as ZodInfer } from 'zod';
 
 import type {
   CascadingGraphicStyleSchema,
+  ContextualColorSchema,
   GraphicEffectsSchema,
   GraphicOpacitySchema,
   GraphicPaintSchema,
   GraphicStyleSchema,
   PaintValueSchema,
 } from './schema';
+
+/** 精确 CSS 颜色或从有效主色派生的归一化权重 */
+export type IRContextualColor = ZodInfer<typeof ContextualColorSchema>;
 
 export type IRPaintValue = ZodInfer<typeof PaintValueSchema>;
 

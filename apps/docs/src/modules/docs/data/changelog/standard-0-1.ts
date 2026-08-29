@@ -30,7 +30,7 @@ export const standardV01: Release = {
       subVersions: [
         {
           version: 'alpha.4',
-          date: '2026-08-19',
+          date: '2026-08-28',
           summary: {
             zh: '补充五种可容纳内容的通用图式 Shape、八种 Standard 端点 marker，并修复圆柱近端端盖填充。',
             en: 'Adds five content-bearing diagram Shapes, eight Standard endpoint markers, and correct near-cap fill for cylinders.',
@@ -245,6 +245,15 @@ export const standardV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.4',
+          date: '2026-08-28',
+          summary: {
+            zh: '随 Standard release group lockstep 升级；新增 Shape 与 Marker 继续通过既有 Vanilla provider 接线按需使用。',
+            en: 'Version alignment with the Standard release group; new Shapes and Markers remain available through existing on-demand Vanilla provider wiring.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.3',
           date: '2026-08-09',
           summary: {
@@ -348,6 +357,15 @@ export const standardV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.4',
+          date: '2026-08-28',
+          summary: {
+            zh: '随 Standard release group lockstep 升级；新增 Shape 与 Marker 继续通过既有 React provider 接线按需使用。',
+            en: 'Version alignment with the Standard release group; new Shapes and Markers remain available through existing on-demand React provider wiring.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.3',
           date: '2026-08-09',

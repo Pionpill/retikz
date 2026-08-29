@@ -1,6 +1,6 @@
 # ADR-01：Cooperative Concurrent Runtime
 
-- 状态：Proposed
+- 状态：Proposed（未排期）
 - 决策日期：2026-07-26
 - 关联：[alpha.2 Transaction ADR](../alpha.2/03-program-transaction-lifecycle.md)
 
@@ -54,7 +54,7 @@ type RuntimeScheduledUpdate<TResult> = Readonly<{
 }>;
 ```
 
-alpha.3扩展原 `defineRuntimeProgram()`的 author input为 `RuntimeConcurrentProgramDefinitionInput`；`execution`封装进同一个 typed Program token/private executor，Program registry与 graph不变，不建立第二套 async registry。缺省/`blocking`直接调用 alpha.2 `run/update`。Chunkable按 candidate phase调用 `createRunWork`或 `createUpdateWork`；update work缺失时使用同步 update，Program本来无 update则同步 full run。所有 work最终必须返回同一 `RuntimeRunResult/RuntimeUpdateResult`，再走 alpha.2 artifact capture/read与 transaction。
+后续 milestone 若接受本 ADR，将扩展原 `defineRuntimeProgram()` 的 author input 为 `RuntimeConcurrentProgramDefinitionInput`；`execution` 封装进同一个 typed Program token/private executor，Program registry 与 graph 不变，不建立第二套 async registry。缺省 / `blocking` 直接调用 alpha.2 `run/update`。Chunkable 按 candidate phase 调用 `createRunWork` 或 `createUpdateWork`；update work 缺失时使用同步 update，Program 本来无 update 则同步 full run。所有 work 最终必须返回同一 `RuntimeRunResult/RuntimeUpdateResult`，再走 alpha.2 artifact capture/read 与 transaction
 
 Offload encoder只在主线程执行，并取得原 typed CandidateView/previous private read；它只能读取 Program已声明依赖，必须把所需事实投影为 structured-clone-safe `RuntimeTransferPayload`。CandidateView、Definition token、callback、owner/artifact cache本身绝不传入 Worker。Runtime按 initial/update phase选择 run/update encode/decode对；update任一函数缺失时回退同步 update/full。decode在主线程恢复标准 result，随后仍走同一 capture/fallback/commit gate。具体 Program的 encoder/decoder负责证明 blocking/chunkable/offloadable结果与同步 oracle等价。
 
@@ -89,7 +89,7 @@ Chunkable work 只能在显式 cooperative boundary 让出，并在每个 bounda
 - `@retikz/runtime` 新增 scheduler host、task handle、priority、cancellation、chunkable 与 offload executor contract。
 - `@retikz/react` 只把 Runtime task 接入 React lifecycle / commit，不把 React lane 暴露为跨包优先级。
 - `@retikz/vanilla` 注入浏览器或自定义 scheduler host；无调度宿主时仍可使用 alpha.2 同步入口。
-- alpha.3 不保证所有 Program 可中断；未声明 capability 的 blocking 是明确兼容和正确性 fallback。
+- 本提案不保证所有 Program 可中断；未声明 capability 的 blocking 是明确兼容和正确性 fallback
 
 ## 长期边界
 

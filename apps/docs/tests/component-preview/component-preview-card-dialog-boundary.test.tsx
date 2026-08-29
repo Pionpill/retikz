@@ -74,6 +74,28 @@ describe('ComponentPreviewCard dialog boundary', () => {
     act(() => root.unmount());
   });
 
+  it('单预览可覆盖全局属性面板默认打开状态', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <ComponentPreviewCard
+          name="collapsed-controls"
+          Component={Demo}
+          controlDefinition={panelDefinition}
+          controlPanelDefaultOpen={false}
+        />,
+      );
+    });
+
+    expect(container.querySelector('aside')).toBeNull();
+    expect(container.querySelector('button[aria-label="Open controls panel"]')).not.toBeNull();
+
+    act(() => root.unmount());
+  });
+
   it('带属性面板的 Card 保留显式 xs 尺寸', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

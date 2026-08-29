@@ -11,17 +11,22 @@ import { messiWorldCupShots } from './scatter-world-cup-shots.data';
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <ScatterChart
     data={messiWorldCupShots}
-    dataModel={[
-      { name: 'x', type: 'continuous' },
-      { name: 'y', type: 'continuous' },
-      { name: 'endX', type: 'continuous' },
-      { name: 'endY', type: 'continuous' },
-      { name: 'outcome', type: 'categorical' },
-    ]}
     encodings={{ x: 'x', y: 'y', color: 'outcome' }}
-    theme={{ tokens: { recipe: { axisEnabled: false, axisGridEnabled: false } } }}
-    width={820}
-    height={480}
+    theme={{
+      tokens: {
+        plot: {
+          'plot.area.fill': {
+            kind: 'image',
+            href: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Football_pitch_metric_tr.svg',
+            fit: 'cover',
+          },
+        },
+        recipe: { axisEnabled: false, axisGridEnabled: false },
+      },
+    }}
+    layout={{ width: 800, height: 500 }}
+    width={800}
+    height={500}
   >
     <ChartTitle>Lionel Messi 的 2022 世界杯射门空间分布</ChartTitle>
     <ChartSubtitle>32 次常规时间与加时赛射门；StatsBomb 120 × 80 坐标；圆点为起点，细线指向射门终点</ChartSubtitle>

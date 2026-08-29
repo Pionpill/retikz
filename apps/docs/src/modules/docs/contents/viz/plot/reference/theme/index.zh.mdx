@@ -7,7 +7,9 @@ Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`。Plot �
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
-示例通过 `PlotThemeToken` 写入绘图区背景和 categorical palette，再用 `plotThemeTokenRules` 只开启 y Axis 的 grid。结构化 theme 中对应的绘图区字段是 `plotArea.fill`；它只填充二维坐标中扣除 axis、legend 与布局预留后的 Plot area，坐标轴标签区、facet 间隙和外围 Chart canvas 保持透明。一维直线与一维圆周只有投影路径，不生成可填充的 Plot area，也不输出跨绘图区的 grid layer。React、Vanilla 和 plain JSON 都把同一 token 与 rule 原样交给 Plot resolver，adapter 不补自己的 preset；Core Theme 提供 effective `style` / `mode` 与 shared colors。
+示例把 `plot.typography.foreground` 设为字符串主色 `#2563EB`，再用 `0.08` 派生绘图区背景、用 `0.25` 派生 grid 描边；categorical palette 仍由字符串颜色组成。数值是主色权重，不是不透明度：Core 会按 Light 白底或 Dark 黑底预合成为不透明颜色，`axis.grid.drawOpacity` 等 opacity token 继续独立生效。
+
+结构化 theme 中对应的绘图区字段是 `plotArea.fill`；它只填充二维坐标中扣除 axis、legend 与布局预留后的 Plot area，坐标轴标签区、facet 间隙和外围 Chart canvas 保持透明。一维直线与一维圆周只有投影路径，不生成可填充的 Plot area，也不输出跨绘图区的 grid layer。React、Vanilla 和 plain JSON 都把同一 token 与 rule 原样交给 Plot resolver，adapter 不补自己的 preset；Core Theme 提供 effective `style` / `mode` 与 shared colors。
 
 本站参考 Vibrant preset 在 Light 下使用浅蓝灰绘图区，在 Dark 下使用深色绘图区；默认 baseline、Academic 与 Clean 保持透明。显式 `plot.area.fill` 或 `plotTheme.plotArea.fill` 仍按正常级联覆盖 preset。
 
@@ -37,6 +39,8 @@ Core effective Theme
 ## Canonical token
 
 `PlotThemeToken` 公开 42 个稳定 key。key 的 owner 是 Plot；值约束复用 Core paint / font / opacity 原子、Plot guide / scale schema 与 Standard Legend gap 原子。
+
+`plot.typography.foreground` 是所有 Plot-owned guide 的字符串主色。Plot area fill、Axis line/grid stroke、tick label、Axis title、Legend title/label 等派生颜色槽接受精确 CSS 字符串，也接受 `[0, 1]` 数值权重；数值直到 lowering 到 Core 后才按最终主色与 Theme mode 确定化。数据 mark 不继承 typography 主色，palette、scheme、scale range、gradient、pattern 与 shadow 内部颜色也保持 string-only。
 
 | 分组            | Canonical keys                                                                                                                                                                                                                                                                                                                           |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -144,6 +148,12 @@ Chart 可以调用这个 resolver 读取 recipe 需要的瞬时 series palette�
   descriptions={{
     plotArea: 'Plot area 的视觉默认值。',
     typography: 'Axis、Legend、Facet 等 Plot-owned 文本的全局默认样式。',
+    'typography.font': '所有 Plot-owned guide 共享的字体默认值。',
+    'typography.textColor': '所有 Plot-owned guide 派生颜色使用的 string-only 主色。',
+    'typography.opacity': '所有 Plot-owned guide 文本的默认不透明度。',
+    'typography.align': '所有 Plot-owned guide 多行文本的默认对齐方式。',
+    'typography.lineHeight': '所有 Plot-owned guide 文本的默认行高。',
+    'typography.maxTextWidth': '所有 Plot-owned guide 文本换行前的默认最大行宽。',
     axis: '坐标轴视觉默认值。',
     legend: '图例视觉默认值。',
     palette: 'Plot 颜色调色板默认值。',

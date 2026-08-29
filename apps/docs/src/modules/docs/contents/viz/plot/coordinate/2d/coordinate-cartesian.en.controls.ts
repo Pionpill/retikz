@@ -107,5 +107,5 @@ export const previewControlContract = {
     marginLeft: 24,
     showGrid: true,
   },
-  relatedApis: ['PointMark', 'PathMark', 'IntervalMark', 'Plot.margin', 'Axis.grid'],
+  relatedApis: ['PointMark', 'PathMark', 'IntervalMark', 'Plot.margin', 'PlotAxis.grid'],
 } satisfies PreviewControlContract;

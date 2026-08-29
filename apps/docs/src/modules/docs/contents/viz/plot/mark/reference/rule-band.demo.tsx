@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, Plot, PointMark, ReferenceMark, Scale } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotScale, PointMark, ReferenceMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -20,16 +20,16 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     coordinate={values[RULE_BAND_CONTROL_IDS.coordinate] === 'polar2D' ? 'polar2D' : undefined}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <Scale dimension="x" type="linear" domain={[0, 120]} />
-    <Scale dimension="y" type="linear" domain={[0, 100]} />
+    <PlotScale dimension="x" type="linear" domain={[0, 120]} />
+    <PlotScale dimension="y" type="linear" domain={[0, 100]} />
     {values[RULE_BAND_CONTROL_IDS.axis] === 'x' ? (
       <ReferenceMark x={values[RULE_BAND_CONTROL_IDS.start]} xTo={values[RULE_BAND_CONTROL_IDS.end]} color="#fde68a" />
     ) : (
       <ReferenceMark y={values[RULE_BAND_CONTROL_IDS.start]} yTo={values[RULE_BAND_CONTROL_IDS.end]} color="#fde68a" />
     )}
     <PointMark x="attempt" y="score" />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 ));
 
