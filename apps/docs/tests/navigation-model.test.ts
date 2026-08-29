@@ -121,7 +121,7 @@ describe('layout utils', () => {
       pageType: 'concept',
       layout: 'showcase',
       capability: 'showcase.scatter',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'scatter-basic', order: 10 },
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'scatter-fertility-work', order: 10 },
     });
     expect(bubble?.meta).toMatchObject({
       pageType: 'concept',

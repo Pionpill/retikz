@@ -26,7 +26,12 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   >
     <ChartData data={fertilityWorkData} />
     <ChartLayout width={800} height={500} />
-    <ScatterEncodings x="fertilityRate" y="femaleLaborParticipation" color="incomeGroup" shape="incomeGroup" />
+    <ScatterEncodings
+      x="fertilityRate"
+      y="femaleLaborParticipation"
+      {...(values[SCATTER_FERTILITY_WORK_CONTROL_IDS.colorByCategory] ? { color: 'incomeGroup' } : {})}
+      {...(values[SCATTER_FERTILITY_WORK_CONTROL_IDS.shapeByCategory] ? { shape: 'incomeGroup' } : {})}
+    />
     <ChartTitle>Fertility and female labor participation</ChartTitle>
     <ChartSubtitle>
       186 economies in 2022; x shows births per woman and y shows female labor-force participation among people aged 15+

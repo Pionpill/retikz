@@ -145,7 +145,7 @@ export const vizSection: Array<Section> = [
               showcase: {
                 family: 'scatter-points',
                 role: 'primary',
-                preview: 'scatter-basic',
+                preview: 'scatter-fertility-work',
                 order: 10,
               },
             },

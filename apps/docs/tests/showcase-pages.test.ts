@@ -103,7 +103,7 @@ describe('collectShowcasePages', () => {
       path: '/viz/chart/points/scatter',
       segments: ['viz', 'chart', 'points', 'scatter'],
       label: 'viz.chartScatter',
-      metadata: { family: 'scatter-points', role: 'primary', preview: 'scatter-basic', order: 10 },
+      metadata: { family: 'scatter-points', role: 'primary', preview: 'scatter-fertility-work', order: 10 },
     });
   });
 
@@ -204,10 +204,13 @@ describe('collectShowcasePages', () => {
     expect(compiled).toContain('h2');
   });
 
-  it.each(['zh', 'en'] as const)('Scatter %s 以基础散点为主，并提供三个真实数据使用示例', lang => {
+  it.each(['zh', 'en'] as const)('Scatter %s 默认展示分类编码，并保留三个互补的真实数据示例', lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
 
-    expect(source.match(/id: 'scatter-basic'/g)).toHaveLength(1);
+    expect(source).not.toContain("id: 'scatter-basic'");
+    expect(source.indexOf("id: 'scatter-fertility-work'")).toBeLessThan(
+      source.indexOf("id: 'scatter-penguins-facet-jitter'"),
+    );
     expect(source.match(/id: 'scatter-fertility-work'/g)).toHaveLength(1);
     expect(source.match(/id: 'scatter-penguins-facet-jitter'/g)).toHaveLength(1);
     expect(source.match(/id: 'scatter-world-cup-shots'/g)).toHaveLength(1);

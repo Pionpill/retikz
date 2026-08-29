@@ -1,6 +1,6 @@
 ---
 title: Scatter
-description: Compare two continuous variables directly, with Chart-native narrative metadata for scope, units, and source.
+description: Compare two continuous variables with points, and distinguish categories through color and shape encodings.
 family: scatter-points
 usage: distribution
 ---
@@ -8,27 +8,15 @@ usage: distribution
 <ShowcaseGallery
   examples={[
     {
-      id: 'scatter-basic',
-      title: 'Chart-native narrative metadata',
-      description: 'Use `ScatterChart` to compare urbanization and internet use, with title, subtitle, and source rendered inside the chart.',
-      preview: {
-        files: ['scatter-basic', 'scatter-basic.data.ts'],
-        controls: { name: 'scatter-basic' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: 'The title identifies the comparison, the subtitle supplies year and percentage units, and the source names the World Bank indicators.',
-      },
-    },
-    {
       id: 'scatter-fertility-work',
       title: 'Categorical encoding',
-      description: 'Compare fertility and female labor-force participation from a real World Bank country cross-section, using color and shape together to distinguish income groups.',
+      description: 'Compare fertility and female labor-force participation from a real World Bank country cross-section, and control whether color and shape distinguish income groups.',
       preview: {
         files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
         controls: { name: 'scatter-fertility-work' },
         controlPanelDefaultOpen: false,
         size: 'xxxl',
-        caption: 'Bind income group to both color and shape, so each category keeps a distinct color-and-point-shape combination.',
+        caption: 'Toggle color and shape encodings independently to compare one channel, both channels, or no categorical encoding.',
       },
     },
     {

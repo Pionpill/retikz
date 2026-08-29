@@ -1,7 +1,8 @@
 import type { FC } from 'react';
 
-import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData, ChartExtension, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { BubbleChart, BubbleEncodings, BubbleProperties } from '@retikz/chart-react/point/bubble';
+import { PlotAxis } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -13,13 +14,30 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartData data={gapminderBubbleData} />
     <ChartLayout width={800} height={500} />
     <BubbleEncodings
-      x={{ field: 'gdpPerCapita', scale: { operation: { type: 'log', name: 'gdpPerCapitaScale' } } }}
+      x={
+        values[BUBBLE_BASIC_CONTROL_IDS.xScale] === 'log'
+          ? { field: 'gdpPerCapita', scale: { operation: { type: 'log', name: 'gdpPerCapitaScale' } } }
+          : 'gdpPerCapita'
+      }
       y="lifeExpectancy"
       size="population"
+      {...(values[BUBBLE_BASIC_CONTROL_IDS.colorByContinent] ? { color: 'continent' } : {})}
     />
     <ChartTitle>收入、寿命与人口规模</ChartTitle>
     <ChartSubtitle>142 个国家和地区，2007 年；气泡面积由人口字段驱动</ChartSubtitle>
     <ChartSource>Gapminder 数据包 2007 年截面；人均 GDP 按购买力平价美元计</ChartSource>
+    <ChartExtension>
+      <PlotAxis
+        dimension="x"
+        ticks={{
+          count: values[BUBBLE_BASIC_CONTROL_IDS.xTickCount],
+          ...(values[BUBBLE_BASIC_CONTROL_IDS.xTickMarks] ? {} : { line: false }),
+        }}
+        tickLabels={values[BUBBLE_BASIC_CONTROL_IDS.xTickLabels] ? undefined : false}
+        grid={values[BUBBLE_BASIC_CONTROL_IDS.xGrid]}
+      />
+      <PlotAxis dimension="y" grid />
+    </ChartExtension>
     <BubbleProperties
       {...(values[BUBBLE_BASIC_CONTROL_IDS.pointFillEnabled]
         ? { fill: values[BUBBLE_BASIC_CONTROL_IDS.pointFill] }

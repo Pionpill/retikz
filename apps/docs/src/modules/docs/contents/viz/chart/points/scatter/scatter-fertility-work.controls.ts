@@ -7,6 +7,8 @@ import { createScatterPointControls } from './scatter-point-controls';
 
 /** 分类编码 Scatter 的稳定控件 id */
 export const SCATTER_FERTILITY_WORK_CONTROL_IDS = {
+  colorByCategory: 'scatter-fertility-work-color-by-category',
+  shapeByCategory: 'scatter-fertility-work-shape-by-category',
   pointSize: 'scatter-fertility-work-point-size',
   pointFillEnabled: 'scatter-fertility-work-point-fill-enabled',
   pointFill: 'scatter-fertility-work-point-fill',
@@ -40,6 +42,23 @@ export const scatterFertilityWorkControls = definePreviewControls({
       ],
     },
     {
+      label: '编码',
+      controls: [
+        {
+          kind: 'switch',
+          id: SCATTER_FERTILITY_WORK_CONTROL_IDS.colorByCategory,
+          label: '按分类区分颜色',
+          defaultValue: true,
+        },
+        {
+          kind: 'switch',
+          id: SCATTER_FERTILITY_WORK_CONTROL_IDS.shapeByCategory,
+          label: '按分类区分形状',
+          defaultValue: true,
+        },
+      ],
+    },
+    {
       label: '散点',
       controls: createScatterPointControls({
         ids: SCATTER_FERTILITY_WORK_CONTROL_IDS,
@@ -55,6 +74,8 @@ export const scatterFertilityWorkControls = definePreviewControls({
 export const previewControlContract = {
   controls: scatterFertilityWorkControls,
   canonicalValues: {
+    [SCATTER_FERTILITY_WORK_CONTROL_IDS.colorByCategory]: true,
+    [SCATTER_FERTILITY_WORK_CONTROL_IDS.shapeByCategory]: true,
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointSize]: 5,
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointStrokeEnabled]: false,
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointStroke]: 'currentColor',

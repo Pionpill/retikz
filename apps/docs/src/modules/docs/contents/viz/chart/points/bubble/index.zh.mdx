@@ -10,13 +10,13 @@ usage: distribution
     {
       id: 'bubble-basic',
       title: '人口规模气泡',
-      description: '用 `BubbleChart` 比较人均 GDP 与预期寿命，并让人口字段通过默认 sqrt 尺度驱动气泡面积。',
+      description: '用 `BubbleChart` 比较人均 GDP 与预期寿命，让人口驱动气泡面积，并按洲分类着色。',
       preview: {
         files: ['bubble-basic', 'bubble-basic.data.ts'],
         controls: { name: 'bubble-basic' },
         controlPanelDefaultOpen: false,
         size: 'xxxl',
-        caption: '横轴使用对数尺度，纵轴表示预期寿命；人口字段通过默认 sqrt 尺度决定气泡面积。',
+        caption: '横轴可切换对数或线性尺度，并控制刻度数量、刻度线、标签与网格；人口决定气泡面积，也可按洲分类着色。',
       },
     },
   ]}

@@ -25,7 +25,12 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   >
     <ChartData data={fertilityWorkData} />
     <ChartLayout width={800} height={500} />
-    <ScatterEncodings x="fertilityRate" y="femaleLaborParticipation" color="incomeGroup" shape="incomeGroup" />
+    <ScatterEncodings
+      x="fertilityRate"
+      y="femaleLaborParticipation"
+      {...(values[SCATTER_FERTILITY_WORK_CONTROL_IDS.colorByCategory] ? { color: 'incomeGroup' } : {})}
+      {...(values[SCATTER_FERTILITY_WORK_CONTROL_IDS.shapeByCategory] ? { shape: 'incomeGroup' } : {})}
+    />
     <ChartTitle>生育率与女性劳动参与率</ChartTitle>
     <ChartSubtitle>186 个经济体，2022 年；横轴为每名女性生育数，纵轴为 15 岁及以上女性劳动参与率（%）</ChartSubtitle>
     <ChartSource>

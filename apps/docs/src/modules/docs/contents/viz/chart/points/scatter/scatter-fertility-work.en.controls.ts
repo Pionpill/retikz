@@ -30,6 +30,23 @@ export const scatterFertilityWorkControls = definePreviewControls({
       ],
     },
     {
+      label: 'Encodings',
+      controls: [
+        {
+          kind: 'switch',
+          id: SCATTER_FERTILITY_WORK_CONTROL_IDS.colorByCategory,
+          label: 'Differentiate by color',
+          defaultValue: true,
+        },
+        {
+          kind: 'switch',
+          id: SCATTER_FERTILITY_WORK_CONTROL_IDS.shapeByCategory,
+          label: 'Differentiate by shape',
+          defaultValue: true,
+        },
+      ],
+    },
+    {
       label: 'Points',
       controls: createScatterPointControls({
         ids: SCATTER_FERTILITY_WORK_CONTROL_IDS,
@@ -45,6 +62,8 @@ export const scatterFertilityWorkControls = definePreviewControls({
 export const previewControlContract = {
   controls: scatterFertilityWorkControls,
   canonicalValues: {
+    [SCATTER_FERTILITY_WORK_CONTROL_IDS.colorByCategory]: true,
+    [SCATTER_FERTILITY_WORK_CONTROL_IDS.shapeByCategory]: true,
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointSize]: 5,
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointStrokeEnabled]: false,
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointStroke]: 'currentColor',

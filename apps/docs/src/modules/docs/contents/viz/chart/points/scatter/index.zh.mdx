@@ -1,6 +1,6 @@
 ---
 title: 散点图
-description: 用散点直接比较两个连续变量，并以 Chart 原生叙事信息说明数据范围、单位与来源。
+description: 用散点比较两个连续变量，并通过颜色和形状编码区分分类数据。
 family: scatter-points
 usage: distribution
 ---
@@ -8,27 +8,15 @@ usage: distribution
 <ShowcaseGallery
   examples={[
     {
-      id: 'scatter-basic',
-      title: 'Chart 原生叙事信息',
-      description: '用 `ScatterChart` 比较城市化与互联网使用率，并把标题、副标题和来源作为图表内容渲染。',
-      preview: {
-        files: ['scatter-basic', 'scatter-basic.data.ts'],
-        controls: { name: 'scatter-basic' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: '标题说明比较对象，副标题给出年份和百分比单位，来源说明所用世界银行指标。',
-      },
-    },
-    {
       id: 'scatter-fertility-work',
       title: '分类编码',
-      description: '用真实的世界银行国家截面比较生育率与女性劳动参与率，并以颜色和形状同时区分收入组。',
+      description: '用真实的世界银行国家截面比较生育率与女性劳动参与率，并控制颜色和形状是否区分收入组。',
       preview: {
         files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
         controls: { name: 'scatter-fertility-work' },
         controlPanelDefaultOpen: false,
         size: 'xxxl',
-        caption: '颜色与形状通道同时绑定收入组，同一类型在颜色和点形上保持一致。',
+        caption: '分别开关颜色和形状编码，比较单通道、双通道与不使用分类编码时的差异。',
       },
     },
     {

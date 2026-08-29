@@ -19,8 +19,6 @@ import {
 import { previewControlContract as presentationVisibilityZhContract } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.controls';
 import { previewControlContract as presentationVisibilityEnContract } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.en.controls';
 import { previewSource as presentationVisibilityZhSource } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.zh.demo';
-import { previewSource as basicEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.en.demo';
-import { previewSource as basicZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.zh.demo';
 import { previewSource as fertilityWorkEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
 import { previewSource as fertilityWorkZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
 import { previewSource as penguinFacetEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.en.demo';
@@ -169,7 +167,7 @@ describe('Chart-native Scatter presentation', () => {
   });
 
   it('uses the ScatterChart shorthand path for the World Bank example', () => {
-    for (const source of [basicZhPreviewSource, basicEnPreviewSource]) {
+    for (const source of [fertilityWorkZhPreviewSource, fertilityWorkEnPreviewSource]) {
       const chart = canonicalScatterChartOf(source);
 
       expect(chart.type).toBe(ScatterChart);
@@ -190,8 +188,6 @@ describe('Chart-native Scatter presentation', () => {
 
   it('generates reusable Vanilla source and SVG from the real Scatter datasets', () => {
     const cases = [
-      [basicZhPreviewSource, './scatter-basic.data', 'countryScatterData'],
-      [basicEnPreviewSource, './scatter-basic.data', 'countryScatterData'],
       [fertilityWorkZhPreviewSource, './scatter-fertility-work.data', 'fertilityWorkData'],
       [fertilityWorkEnPreviewSource, './scatter-fertility-work.data', 'fertilityWorkData'],
       [penguinFacetZhPreviewSource, './scatter-penguins-facet-jitter.data', 'penguinScatterData'],
@@ -214,7 +210,7 @@ describe('Chart-native Scatter presentation', () => {
   });
 
   it('passes the preview text measurer into the Vanilla Chart compile path', () => {
-    const preview = buildPreviewIR(() => basicZhPreviewSource.canonicalRender?.() ?? null);
+    const preview = buildPreviewIR(() => fertilityWorkZhPreviewSource.canonicalRender?.() ?? null);
     let measureCalls = 0;
     const vanilla = buildVanillaPreview(preview, {
       measureText: (text, font) => {
@@ -228,9 +224,9 @@ describe('Chart-native Scatter presentation', () => {
   });
 
   it('renders a selected docs Chart theme style through the Vanilla preview path', () => {
-    const preview = buildPreviewIR(() => basicZhPreviewSource.canonicalRender?.() ?? null);
+    const preview = buildPreviewIR(() => fertilityWorkZhPreviewSource.canonicalRender?.() ?? null);
     const vanilla = buildVanillaPreview(preview, {
-      datasetImports: basicZhPreviewSource.datasetImports,
+      datasetImports: fertilityWorkZhPreviewSource.datasetImports,
       theme: { mode: 'light', style: 'academic' },
     });
 

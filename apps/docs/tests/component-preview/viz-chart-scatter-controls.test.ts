@@ -15,14 +15,6 @@ import type {
 } from '../../src/modules/docs/preview';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
-import { previewControlContract as basicZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.controls';
-import {
-  countryScatterData,
-  WORLD_BANK_SCATTER_YEAR,
-} from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.data';
-import { previewControlContract as basicEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.en.controls';
-import { previewSource as basicEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.en.demo';
-import { previewSource as basicZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.zh.demo';
 import { previewControlContract as fertilityWorkZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.controls';
 import {
   fertilityWorkData,
@@ -141,7 +133,6 @@ describe('Viz Chart scatter controls', () => {
   });
   it('保持各组 controls 的双语结构与 canonical 状态一致', () => {
     for (const [zh, en] of [
-      [basicZh, basicEn],
       [fertilityWorkZh, fertilityWorkEn],
       [penguinFacetZh, penguinFacetEn],
       [worldCupZh, worldCupEn],
@@ -152,17 +143,10 @@ describe('Viz Chart scatter controls', () => {
     }
   });
 
-  it('四个 Scatter 示例只暴露不会与字段 encoding 冲突的公共图元控件', () => {
-    expect(basicZh.canonicalValues).toEqual({
-      'scatter-basic-point-size': 5,
-      'scatter-basic-point-fill-enabled': false,
-      'scatter-basic-point-fill': 'currentColor',
-      'scatter-basic-point-stroke-enabled': false,
-      'scatter-basic-point-stroke': 'currentColor',
-      'scatter-basic-point-shape': 'circle',
-      'scatter-basic-point-opacity': 0.82,
-    });
+  it('三个 Scatter 示例只暴露不会与字段 encoding 冲突的公共图元控件', () => {
     expect(fertilityWorkZh.canonicalValues).toEqual({
+      'scatter-fertility-work-color-by-category': true,
+      'scatter-fertility-work-shape-by-category': true,
       'scatter-fertility-work-point-size': 5,
       'scatter-fertility-work-point-stroke-enabled': false,
       'scatter-fertility-work-point-stroke': 'currentColor',
@@ -184,16 +168,9 @@ describe('Viz Chart scatter controls', () => {
       'scatter-world-cup-shots-point-shape': 'circle',
       'scatter-world-cup-shots-point-opacity': 0.9,
     });
-    expect(getPreviewControlFields(basicZh.controls).map(control => control.id)).toEqual([
-      'scatter-basic-point-size',
-      'scatter-basic-point-fill-enabled',
-      'scatter-basic-point-fill',
-      'scatter-basic-point-stroke-enabled',
-      'scatter-basic-point-stroke',
-      'scatter-basic-point-shape',
-      'scatter-basic-point-opacity',
-    ]);
     expect(getPreviewControlFields(fertilityWorkZh.controls).map(control => control.id)).toEqual([
+      'scatter-fertility-work-color-by-category',
+      'scatter-fertility-work-shape-by-category',
       'scatter-fertility-work-point-size',
       'scatter-fertility-work-point-stroke-enabled',
       'scatter-fertility-work-point-stroke',
@@ -215,57 +192,14 @@ describe('Viz Chart scatter controls', () => {
       'scatter-world-cup-shots-point-shape',
       'scatter-world-cup-shots-point-opacity',
     ]);
-    expect(JSON.stringify(basicZh.controls)).not.toContain('gridVisible');
-    expect(JSON.stringify(basicZh.controls)).not.toContain('colorByGroup');
   });
 
   it('各 Scatter 示例使用互不重叠的 control id，避免切换示例时串用状态', () => {
-    const ids = [basicZh, fertilityWorkZh, penguinFacetZh, worldCupZh].flatMap(contract =>
+    const ids = [fertilityWorkZh, penguinFacetZh, worldCupZh].flatMap(contract =>
       getPreviewControlFields(contract.controls).map(control => control.id),
     );
 
     expect(new Set(ids).size).toBe(ids.length);
-  });
-
-  it('基础 Scatter 使用世界银行 2023 年的完整可连接国家截面', () => {
-    expect(WORLD_BANK_SCATTER_YEAR).toBe(2023);
-    expect(countryScatterData).toHaveLength(181);
-    expect(new Set(countryScatterData.map(datum => datum.code)).size).toBe(181);
-    expect(
-      countryScatterData.every(
-        datum =>
-          datum.urbanPopulationShare >= 0 &&
-          datum.urbanPopulationShare <= 100 &&
-          datum.internetUseShare >= 0 &&
-          datum.internetUseShare <= 100 &&
-          Number(datum.urbanPopulationShare.toFixed(1)) === datum.urbanPopulationShare &&
-          Number(datum.internetUseShare.toFixed(1)) === datum.internetUseShare,
-      ),
-    ).toBe(true);
-  });
-
-  it('基础 Scatter 将两个比例字段与受控常量属性交给 typed Chart', () => {
-    for (const source of [basicZhPreviewSource, basicEnPreviewSource]) {
-      expect(canonicalDeclarationProps(source, ScatterEncodings)).toMatchObject({
-        x: 'urbanPopulationShare',
-        y: 'internetUseShare',
-      });
-      expect(canonicalScatterPropertiesProps(source)).toMatchObject({
-        size: 5,
-        shape: 'circle',
-        opacity: 0.82,
-      });
-      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('fill');
-      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('stroke');
-    }
-    expect(basicZh.relatedApis).toContain('ScatterEncodings.x');
-    expect(basicZh.relatedApis).toContain('ScatterEncodings.y');
-    expect(basicEn.relatedApis).toContain('ScatterEncodings.x');
-    expect(basicEn.relatedApis).toContain('ScatterEncodings.y');
-    expect(basicZh.relatedApis).not.toContain('ScatterEncodings');
-    expect(basicEn.relatedApis).not.toContain('ScatterEncodings');
-    expect(basicZh.relatedApis).not.toContain('Legend.channel');
-    expect(basicEn.relatedApis).not.toContain('Legend.channel');
   });
 
   it('生育率与女性劳动参与率示例通过 typed color 与 shape encoding 同时区分收入组', () => {
@@ -300,7 +234,13 @@ describe('Viz Chart scatter controls', () => {
     }
   });
 
-  it('分类编码示例固定双通道映射，并排除会被 encoding 覆盖的 fill 与 shape controls', () => {
+  it('分类编码示例用独立开关控制颜色与形状映射，并排除会被 encoding 覆盖的样式 controls', () => {
+    expect(getPreviewControlFields(fertilityWorkZh.controls).map(control => control.id)).toEqual(
+      expect.arrayContaining(['scatter-fertility-work-color-by-category', 'scatter-fertility-work-shape-by-category']),
+    );
+    expect(getPreviewControlFields(fertilityWorkEn.controls).map(control => control.id)).toEqual(
+      expect.arrayContaining(['scatter-fertility-work-color-by-category', 'scatter-fertility-work-shape-by-category']),
+    );
     expect(getPreviewControlFields(fertilityWorkZh.controls).map(control => control.id)).not.toContain(
       'scatter-fertility-work-point-fill',
     );
@@ -423,8 +363,6 @@ describe('Viz Chart scatter controls', () => {
 
   it('为预览宿主与 Source layout 同时声明 800x500 画布', () => {
     for (const source of [
-      basicZhPreviewSource,
-      basicEnPreviewSource,
       fertilityWorkZhPreviewSource,
       fertilityWorkEnPreviewSource,
       penguinFacetZhPreviewSource,
@@ -436,14 +374,14 @@ describe('Viz Chart scatter controls', () => {
   });
 
   it('双语 demo 在 Chart-native metadata 中说明字段单位与数据来源', () => {
-    expect(canonicalPresentation(basicZhPreviewSource)).toMatchObject({
-      title: '城市化程度与互联网使用率',
-      subtitle: expect.stringContaining('人口占比（%）'),
+    expect(canonicalPresentation(fertilityWorkZhPreviewSource)).toMatchObject({
+      title: '生育率与女性劳动参与率',
+      subtitle: expect.stringContaining('女性劳动参与率（%）'),
       source: expect.stringContaining('世界银行'),
     });
-    expect(canonicalPresentation(basicEnPreviewSource)).toMatchObject({
-      title: 'Urbanization and Internet use',
-      subtitle: expect.stringContaining('share of population (%)'),
+    expect(canonicalPresentation(fertilityWorkEnPreviewSource)).toMatchObject({
+      title: 'Fertility and female labor participation',
+      subtitle: expect.stringContaining('labor-force participation'),
       source: expect.stringContaining('World Bank'),
     });
   });

@@ -1,7 +1,9 @@
+import type { ChartExtensionProps } from '@retikz/chart-react';
 import type { ReactNode } from 'react';
 
-import { ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartExtension, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { BubbleEncodings, BubbleProperties } from '@retikz/chart-react/point/bubble';
+import { PlotAxis } from '@retikz/plot-react';
 import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -33,7 +35,10 @@ const comparable = (contract: PreviewControlContract) => ({
   relatedApis: contract.relatedApis,
 });
 
-const canonicalDeclarationProps = (source: PreviewSourceConfig, component: unknown): Record<string, unknown> => {
+const canonicalDeclarationProps = <TProps extends object = Record<string, unknown>>(
+  source: PreviewSourceConfig,
+  component: unknown,
+): TProps => {
   const chart = source.canonicalRender?.();
   if (!isValidElement<{ children?: ReactNode }>(chart)) {
     throw new Error('Bubble preview must provide a canonical element');
@@ -41,7 +46,7 @@ const canonicalDeclarationProps = (source: PreviewSourceConfig, component: unkno
   const declaration = Children.toArray(chart.props.children).find(
     child => isValidElement(child) && child.type === component,
   );
-  if (!isValidElement<Record<string, unknown>>(declaration)) {
+  if (!isValidElement<TProps>(declaration)) {
     throw new Error('Bubble preview is missing a required declaration');
   }
   return declaration.props;
@@ -67,6 +72,15 @@ const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 's
   };
 };
 
+const canonicalAxisProps = (source: PreviewSourceConfig): Array<Record<string, unknown>> => {
+  const extension = canonicalDeclarationProps<ChartExtensionProps>(source, ChartExtension);
+  const axes: Array<Record<string, unknown>> = [];
+  for (const child of Children.toArray(extension.children)) {
+    if (isValidElement<Record<string, unknown>>(child) && child.type === PlotAxis) axes.push(child.props);
+  }
+  return axes;
+};
+
 describe('Viz Chart Bubble controls', () => {
   it('保留可追溯的 Gapminder 2007 完整国家截面', () => {
     expect(GAPMINDER_BUBBLE_YEAR).toBe(2007);
@@ -86,6 +100,12 @@ describe('Viz Chart Bubble controls', () => {
   it('双语 controls 保持相同结构且不提供固定 size', () => {
     expect(comparable(basicZh)).toEqual(comparable(basicEn));
     expect(basicZh.canonicalValues).toEqual({
+      'bubble-basic-color-by-continent': true,
+      'bubble-basic-x-scale': 'log',
+      'bubble-basic-x-tick-count': 10,
+      'bubble-basic-x-tick-marks': true,
+      'bubble-basic-x-tick-labels': true,
+      'bubble-basic-x-grid': true,
       'bubble-basic-point-fill-enabled': false,
       'bubble-basic-point-fill': 'currentColor',
       'bubble-basic-point-stroke-enabled': false,
@@ -93,7 +113,14 @@ describe('Viz Chart Bubble controls', () => {
       'bubble-basic-point-shape': 'circle',
       'bubble-basic-point-fill-opacity': 0.7,
     });
-    expect(getPreviewControlFields(basicZh.controls).map(control => control.id)).toEqual([
+    const controlFields = getPreviewControlFields(basicZh.controls);
+    expect(controlFields.map(control => control.id)).toEqual([
+      'bubble-basic-color-by-continent',
+      'bubble-basic-x-scale',
+      'bubble-basic-x-tick-count',
+      'bubble-basic-x-tick-marks',
+      'bubble-basic-x-tick-labels',
+      'bubble-basic-x-grid',
       'bubble-basic-point-fill-enabled',
       'bubble-basic-point-fill',
       'bubble-basic-point-stroke-enabled',
@@ -101,19 +128,27 @@ describe('Viz Chart Bubble controls', () => {
       'bubble-basic-point-shape',
       'bubble-basic-point-fill-opacity',
     ]);
+    expect(controlFields.find(control => control.id === 'bubble-basic-x-tick-count')).toMatchObject({
+      kind: 'range',
+      defaultValue: 10,
+      min: 5,
+      max: 20,
+      step: 1,
+    });
     expect(Object.keys(basicZh.canonicalValues).sort()).toEqual(
       getPreviewControlFields(basicZh.controls)
         .map(control => control.id)
         .sort(),
     );
     expect(basicZh.relatedApis).toContain('BubbleEncodings.size');
+    expect(basicZh.relatedApis).toContain('BubbleEncodings.color');
     expect(basicZh.relatedApis).not.toContain('BubbleProperties.size');
     expect(basicZh.relatedApis).toContain('BubbleProperties.fill');
     expect(basicZh.relatedApis).toContain('BubbleProperties.fillOpacity');
     expect(basicZh.relatedApis).not.toContain('BubbleProperties.opacity');
   });
 
-  it('双语 demo 固定必需 size mapping 并沿用默认 sqrt 尺度', () => {
+  it('双语 demo 固定必需 size mapping，默认按洲分类着色并沿用默认 sqrt 尺度', () => {
     for (const source of [basicZhPreviewSource, basicEnPreviewSource]) {
       expect(canonicalDeclarationProps(source, BubbleEncodings)).toMatchObject({
         x: {
@@ -122,6 +157,7 @@ describe('Viz Chart Bubble controls', () => {
         },
         y: 'lifeExpectancy',
         size: 'population',
+        color: 'continent',
       });
       expect(canonicalDeclarationProps(source, BubbleEncodings)).not.toHaveProperty('size.scale');
       expect(canonicalDeclarationProps(source, BubbleProperties)).toMatchObject({ shape: 'circle' });
@@ -134,6 +170,17 @@ describe('Viz Chart Bubble controls', () => {
       expect(source.datasetImports).toEqual({
         'chart.data': { name: 'gapminderBubbleData', from: './bubble-basic.data' },
       });
+      expect(canonicalAxisProps(source)).toMatchObject([
+        {
+          dimension: 'x',
+          ticks: { count: 10 },
+          grid: true,
+        },
+        {
+          dimension: 'y',
+          grid: true,
+        },
+      ]);
     }
   });
 

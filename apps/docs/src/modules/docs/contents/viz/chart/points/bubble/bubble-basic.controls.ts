@@ -6,6 +6,12 @@ import { GAPMINDER_BUBBLE_YEAR, gapminderBubbleData } from './bubble-basic.data'
 
 /** 基础 Bubble playground 的稳定控件 id */
 export const BUBBLE_BASIC_CONTROL_IDS = {
+  colorByContinent: 'bubble-basic-color-by-continent',
+  xScale: 'bubble-basic-x-scale',
+  xTickCount: 'bubble-basic-x-tick-count',
+  xTickMarks: 'bubble-basic-x-tick-marks',
+  xTickLabels: 'bubble-basic-x-tick-labels',
+  xGrid: 'bubble-basic-x-grid',
   pointFillEnabled: 'bubble-basic-point-fill-enabled',
   pointFill: 'bubble-basic-point-fill',
   pointStrokeEnabled: 'bubble-basic-point-stroke-enabled',
@@ -35,6 +41,59 @@ export const bubbleBasicControls = definePreviewControls({
             { key: 'lifeExpectancy', label: '预期寿命' },
             { key: 'population', label: '人口' },
           ],
+        },
+      ],
+    },
+    {
+      label: '编码',
+      controls: [
+        {
+          kind: 'switch',
+          id: BUBBLE_BASIC_CONTROL_IDS.colorByContinent,
+          label: '按洲分类着色',
+          defaultValue: true,
+        },
+        {
+          kind: 'select',
+          id: BUBBLE_BASIC_CONTROL_IDS.xScale,
+          label: 'X 轴尺度',
+          defaultValue: 'log',
+          options: [
+            { value: 'log', label: '对数' },
+            { value: 'linear', label: '线性' },
+          ],
+        },
+      ],
+    },
+    {
+      label: 'X 轴',
+      controls: [
+        {
+          kind: 'range',
+          id: BUBBLE_BASIC_CONTROL_IDS.xTickCount,
+          label: '目标刻度数',
+          defaultValue: 10,
+          min: 5,
+          max: 20,
+          step: 1,
+        },
+        {
+          kind: 'switch',
+          id: BUBBLE_BASIC_CONTROL_IDS.xTickMarks,
+          label: '显示刻度线',
+          defaultValue: true,
+        },
+        {
+          kind: 'switch',
+          id: BUBBLE_BASIC_CONTROL_IDS.xTickLabels,
+          label: '显示刻度标签',
+          defaultValue: true,
+        },
+        {
+          kind: 'switch',
+          id: BUBBLE_BASIC_CONTROL_IDS.xGrid,
+          label: '显示网格线',
+          defaultValue: true,
         },
       ],
     },
@@ -97,6 +156,12 @@ export const bubbleBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: bubbleBasicControls,
   canonicalValues: {
+    [BUBBLE_BASIC_CONTROL_IDS.colorByContinent]: true,
+    [BUBBLE_BASIC_CONTROL_IDS.xScale]: 'log',
+    [BUBBLE_BASIC_CONTROL_IDS.xTickCount]: 10,
+    [BUBBLE_BASIC_CONTROL_IDS.xTickMarks]: true,
+    [BUBBLE_BASIC_CONTROL_IDS.xTickLabels]: true,
+    [BUBBLE_BASIC_CONTROL_IDS.xGrid]: true,
     [BUBBLE_BASIC_CONTROL_IDS.pointFillEnabled]: false,
     [BUBBLE_BASIC_CONTROL_IDS.pointFill]: 'currentColor',
     [BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled]: false,
@@ -108,6 +173,10 @@ export const previewControlContract = {
     'BubbleEncodings.x',
     'BubbleEncodings.y',
     'BubbleEncodings.size',
+    'BubbleEncodings.color',
+    'PlotAxis.ticks',
+    'PlotAxis.tickLabels',
+    'PlotAxis.grid',
     'BubbleProperties.fill',
     'BubbleProperties.stroke',
     'BubbleProperties.shape',
