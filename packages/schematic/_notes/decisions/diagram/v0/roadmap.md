@@ -1,6 +1,6 @@
 # Diagram v0 Roadmap
 
-> 状态：规划中；v0.1 当前只规划 alpha.1，后续 milestone 等待真实使用继续规划。关联：[Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md) · [Schematic Graph 完备设计](../../../architecture/schematic-graph-complete.md) · [Graph v0 roadmap](../../graph/v0/roadmap.md)
+> 状态：规划中；v0.1 当前规划 alpha.1 Diagram Foundation 与 alpha.2 FlowDiagram MVP，后续 milestone 等待真实使用继续规划。关联：[Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md) · [Schematic Graph 完备设计](../../../architecture/schematic-graph-complete.md) · [Graph v0 roadmap](../../graph/v0/roadmap.md)
 
 ## 目标
 
@@ -8,9 +8,9 @@ Diagram v0 在 Graph 通用关系数据与图式呈现之上建立完整自动�
 
 ## 版本方向
 
-| 版本                      | 主题             | 长期边界                                                                                                                          |
-| ------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| [v0.1](./v0.1/roadmap.md) | 完整 FlowDiagram | 建立 Diagram package family，以 presentation、frame / appearance 与 Flow drawing core 形成首个完整自动布局、routing 和 Scene 闭环 |
+| 版本                      | 主题             | 长期边界                                                                                                                                                   |
+| ------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [v0.1](./v0.1/roadmap.md) | 完整 FlowDiagram | 先建立 drawing-core-agnostic 的 Diagram Foundation，再以 presentation、frame / appearance 与 Flow drawing core 形成首个完整自动布局、routing 和 Scene 闭环 |
 
 后续 minor、布局类型与应用场景按真实用例继续规划；v0 roadmap 不预先冻结完整布局类型、约束或 provider 枚举。
 

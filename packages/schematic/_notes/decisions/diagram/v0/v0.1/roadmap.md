@@ -1,18 +1,21 @@
 # Diagram v0.1 Roadmap
 
-> 状态：规划中；当前只规划 alpha.1，后续 alpha 等待真实使用继续规划。关联：[Diagram v0 roadmap](../roadmap.md) · [Schematic 制图能力域设计](../../../../../../../notes/architecture/schematic-design.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md) · [Graph v0 roadmap](../../../graph/v0/roadmap.md)
+> 状态：规划中；当前规划 alpha.1 Diagram Foundation 与 alpha.2 FlowDiagram MVP，后续 alpha 等待真实使用继续规划。关联：[Diagram v0 roadmap](../roadmap.md) · [Schematic 制图能力域设计](../../../../../../../notes/architecture/schematic-design.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md) · [Graph v0 roadmap](../../../graph/v0/roadmap.md)
 
 ## 目标
 
-建立可使用的 Diagram package family，以 presentation、frame / appearance 与 drawing core 三层形成完整图示，以 Graph 的通用关系数据为 Flow 绘图核心的唯一语义真源。`FlowDiagram` 是首个公开图类型，为架构、数据流、控制流、依赖、传播与反馈等关系型流程图提供完整说明内容、图示装配、自动布局和 routing。v0.1 以 docs 中的真实流程图作为首个应用场景与验收语料，从简单场景开始渐进替换，并随真实需求继续规划后续 milestone。
+建立可使用的 Diagram package family，以 presentation、frame / appearance 与 drawing core 三层形成完整图示，以 Graph 的通用关系数据为 Flow 绘图核心的唯一语义真源。v0.1 先建立 drawing-core-agnostic 的 Diagram Foundation，再详细设计 `FlowDiagram` 的 Graph Body、自动 layout、routing 与结果闭环，避免外围装配与复杂图本体在同一轮设计中互相牵制
+
+`FlowDiagram` 仍是首个公开图类型，为架构、数据流、控制流、依赖、传播与反馈等关系型流程图提供完整说明内容、图示装配、自动布局和 routing。它只在 alpha.2 形成真实 Source、Direct IR / Vanilla / React 和 docs 闭环；alpha.1 不发布临时 Diagram root 或占位 drawing body
 
 ## Milestone
 
-| Milestone | 主题             | 范围                                                                                                                                                                                                         |
-| --------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| alpha.1   | 完整 FlowDiagram | 建立 Diagram 核心包、Vanilla 与 React 的可用闭环，以 presentation、frame / appearance 与 Flow drawing core 组合完整图示，并完成真实 Graph 的自动测量、layout、routing、artifact、Core Scene 与 docs 渐进迁移 |
+| Milestone | 主题               | 范围                                                                                                                                                                                                               |
+| --------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| alpha.1   | Diagram Foundation | 在 `@retikz/diagram` 包内建立 Presentation、Frame、Diagram Theme、固定区域装配、Surface / Scope 与 renderer-neutral Scene 基础闭环；drawing child 仅为不透明内部依赖，不建立 public root、adapter 或正式 docs demo |
+| alpha.2   | FlowDiagram MVP    | 冻结 Graph Body、layout / routing Definition、orchestration、result 与 artifact；一次建立 `IRFlowDiagram`、Vanilla、React、真实 Graph、完整 Scene、双语 docs 与渐进迁移                                            |
 
-alpha.1 的具体公开契约、布局类型、算法、默认值、失败语义和 docs 迁移批次在对应 ADR 设计时确认。本 roadmap 不预先规划 alpha.2 及后续 alpha 的主题。
+每个 milestone 的公开契约、默认值、失败语义和验证边界在对应 ADR 设计时确认。alpha.1 的内部 foundation 不因尚未公开而接受临时模型；alpha.2 必须直接组合 alpha.1 的长期契约，不保留占位 alias、fallback 或双轨实现
 
 ## 总体结构
 
@@ -22,51 +25,68 @@ alpha.1 的具体公开契约、布局类型、算法、默认值、失败语义
 2. `Frame / Appearance`：各 presentation region 与 drawing core 的物理排列、外框、padding、section gap 和 Diagram 专属外观
 3. `Drawing Core`：由具体图类型拥有；FlowDiagram 复用 Graph 关系数据，负责测量、layout、routing 与 renderer-neutral 布局结果
 
-Diagram 只拥有完整图示的区域装配语义和 Diagram 独有行为。通用文字、Surface、排版、测量、Theme 基础能力与绘制 primitive 继续复用 Standard、Layout 与 Core；Legend item 的长期 owner 由 ADR-01 结合真实复用证据决定；Graph 的 Group / Entity / Relation、Graph Theme 与 identity 继续由 Graph 独立拥有。
+Diagram 只拥有完整图示的区域装配语义和 Diagram 独有行为。通用文字、Surface、排版、测量、Theme 基础能力与绘制 primitive 继续复用 Standard、Layout 与 Core；Legend item 的长期 owner 由 ADR-01 结合真实复用证据决定；Graph 的 Group / Block / Entity / Relation、Graph Theme 与 identity 继续由 Graph 独立拥有
+
+Alpha.1 foundation 接收一个不透明 drawing child 以完成内部装配和 Scene 验证，但不读取其内容，也不把它保存为通用 `body` Source。内部验证载体不进入 schema、metadata、artifact 或 package exports。alpha.2 的具体 Flow root 负责把 Graph Body 结果作为 drawing child 交给同一 foundation
 
 ## 候选 ADR
 
-| ADR | 主题                                   | 负责                                                                                                                                           |
-| --- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| 01  | Diagram Assembly 与 Presentation       | 完整 Diagram 的 presentation regions 与 drawing core 关系、说明内容与 legend 的来源和归属、输出边界及 Direct IR / Vanilla / React 等价表达     |
-| 02  | Diagram Frame、Spacing 与 Appearance   | 区域排列、外框、frame padding、section gap、Diagram 专属 appearance，以及对 Layout / Standard / Core Theme 的复用边界                          |
-| 03  | FlowDiagram Graph Body                 | Flow 绘图核心对真实 Graph 的消费、managed Graph 内容、Group 层级、identity、endpoint、authored geometry 与 Block / Port 延期边界               |
-| 04  | Flow Layout Definition 与 Registry     | 可替换布局 Definition、内置与自定义 registry、公共布局意图、provider 输入输出、确定性与失败边界                                                |
-| 05  | Flow Orchestration、Result 与 Artifact | Graph Theme 下的测量、Group 递归布局、routing、provider 结果验证、render-ready Graph、renderer-neutral artifact、diagnostics 与完整 Scene 闭环 |
+### alpha.1 Diagram Foundation
 
-上述 ADR 只表示长期决策的依赖分区，不在 roadmap 冻结字段、默认值、算法库、测试 case、文件 scope 或实现步骤。
+| ADR                                                    | 主题                                 | 负责                                                                                                                                     | 状态     |
+| ------------------------------------------------------ | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| [01](./alpha.1/01-diagram-assembly-presentation.md)    | Diagram Assembly 与 Presentation     | 公共 Presentation 片段、固定区域语义、显式 Standard Legend、统一输出边界、内部 opaque drawing child 与具体 root 延期边界                 | Proposed |
+| [02](./alpha.1/02-diagram-frame-spacing-appearance.md) | Diagram Frame、Spacing 与 Appearance | 区域排列、外框、frame padding、语义区块间距、Diagram Theme、文字继承，以及对 Layout / Standard / Core Theme 的复用与 foundation 实施边界 | Proposed |
+
+### alpha.2 FlowDiagram MVP
+
+| ADR | 主题                                   | 负责                                                                                                                                           | 状态   |
+| --- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 01  | FlowDiagram Graph Body                 | 具体 Flow Source root、真实 Graph 输入、managed Graph 内容、Group 层级、identity、endpoint、authored geometry 与 Block / Port 延期边界         | 待设计 |
+| 02  | Flow Layout Definition 与 Registry     | 可替换布局 Definition、内置与自定义 registry、公共布局意图、provider 输入输出、确定性与失败边界                                                | 待设计 |
+| 03  | Flow Orchestration、Result 与 Artifact | Graph Theme 下的测量、Group 递归布局、routing、provider 结果验证、render-ready Graph、renderer-neutral artifact、diagnostics 与完整 Scene 闭环 | 待设计 |
+
+上述 ADR 只表示长期决策的依赖分区，不在 roadmap 冻结字段、默认值、算法库、测试 case、文件 scope 或实现步骤
 
 ## 依赖顺序
 
 1. Graph 先提供 Diagram 所需的通用关系模型、Graph resolve 与稳定 identity；Diagram 不把现有独立呈现元素集合伪装成全局关系模型
-2. ADR-01 建立完整 Diagram 的区域装配语义，ADR-02 再确定 frame / appearance 如何组合这些区域
-3. ADR-03 冻结 Flow drawing core 的 Graph 输入边界，ADR-04 冻结可替换 layout / routing capability
-4. ADR-05 把 frame composition 与 Flow drawing core 汇合为完整 renderer-neutral Scene 和 artifact
-5. 五个 ADR 全部完成 Architecture Gate 并由人工确认后，才细化统一的 Alpha1 implementation plan；真实 docs 使用继续暴露后续 milestone 需求
+2. alpha.1 ADR-01 建立 drawing-core-agnostic 的 Presentation 与 Assembly，ADR-02 再确定 Frame / Appearance 如何组合这些区域
+3. 两份 alpha.1 ADR 完成 Architecture Gate、人工确认和独立 implementation plan 后，先实现并验证 Diagram Foundation；内部 drawing child 只证明 foundation 可替换，不成为公开语义
+4. alpha.1 foundation 验证完成后，再逐项设计 alpha.2 的 Graph Body、layout / routing registry 与 orchestration / result，允许真实实现证据参与复杂 drawing core 推敲
+5. alpha.2 三份 ADR 全部完成 Architecture Gate 并由人工确认后，细化 FlowDiagram implementation plan，一次建立 public root、三入口、artifact、docs 与迁移闭环
 
-依赖域缺少必要的测量、几何、composition 或 Graph 关系能力时，先回到对应 owner 补齐，不在 Diagram 内复制模型、solver、artifact 或 renderer 路径。
+依赖域缺少必要的测量、几何、composition 或 Graph 关系能力时，先回到对应 owner 补齐，不在 Diagram 内复制模型、solver、artifact 或 renderer 路径
 
 ## v0.1 边界
 
 - `FlowDiagram` 是按主要关系方向自动排列的关系型流程图；关系可以表达执行、数据、控制、依赖、传播或反馈，不要求具有时间语义
-- 完整 Diagram 可以包含 title、description、legend 等 presentation 内容与 Flow drawing core；这些内容是否必填、占据哪些区域、排列方式、来源和默认值由 ADR-01～02 决定
+- 完整 Diagram 可以包含 title、description、legend 等 presentation 内容与具体 drawing core；Presentation / Frame 由 alpha.1 冻结，Flow Graph Body 由 alpha.2 冻结
 - frame padding 与 section gap 属于完整图示 composition；Flow 节点间距与层级间距属于 drawing-core layout intent，二者不合并为同一 spacing 契约
-- Diagram 三包通过对称的 `/flow` 子入口暴露 FlowDiagram；包根只提供共享基础契约，不聚合具体图类型
+- alpha.1 只在 `@retikz/diagram` 包内实现 foundation；package public exports 不暴露 foundation schema、resolver、装配入口或可实例化 composite，两个 adapter 包保持空壳
+- alpha.2 通过 Diagram 三包对称的 `/flow` 子入口暴露 FlowDiagram；包根只提供届时具有真实消费者的共享基础契约，不聚合具体图类型
 - Graph 三包继续通过公共根入口提供基础能力，不建立 FlowDiagram 专用子入口
-- docs 是首个真实消费者与验收语料；品牌配色、字体和响应式预览等站点专属选择保留为 docs recipe 或 reference appearance，不成为 Diagram Source enum 或内置白名单
-- 现有 docs 关系型流程图按已实现能力从简单场景开始逐步替换，不要求一次性迁移全部图
+- docs 是 FlowDiagram 的首个真实消费者与验收语料；alpha.1 不把内部 drawing placeholder 写成正式 demo，alpha.2 从简单关系图开始渐进替换
+- 品牌配色、字体和响应式预览等站点专属选择保留为 docs recipe 或 reference appearance，不成为 Diagram Source enum 或内置白名单
 - 不包含几何教学图、组件展示图、自由画布、交互式编辑器或完整 UML / 状态执行模型
 - 不在 v0.1 预先实现 tree、force 或其它尚无当前消费者的布局类型
-- Block / Port、跨 Group 层级 relation、完整 compound routing 与异步连续布局等待对应 Graph 能力或真实消费者后继续规划，不在 Alpha1 预留字段或兼容路径
+- Block / Port、跨 Group 层级 relation、完整 compound routing 与异步连续布局等待对应 Graph 能力或真实消费者后继续规划，不在 alpha.1 预留字段，并由 alpha.2 ADR 明确是否进入 MVP
 - 不创建 Graph 数据、Graph presentation、Graph Theme、通用 Layout / Standard composite、Editor 状态、DOM 或 renderer 的平行契约
 
-## 退出条件
+## alpha.1 退出条件
+
+- `@retikz/diagram` 包内建立 JSON-safe Presentation / Frame / Diagram Theme、Theme Definition / registry、resolve 与固定区域 assembly，且没有 package-public foundation API
+- title、description、Legend 与不透明 drawing child 可以经过 Layout / Surface / Core Scope 进入同一 renderer-neutral Scene、bounds 与 clip 边界
+- frame padding、三个 section gap、Legend 四边方位、Diagram Neutral 与同名 Core style 协作具有确定行为和失败语义
+- 内部 drawing child 可被不同尺寸和内容替换，foundation 不读取、修改或持久化其领域语义
+- `@retikz/diagram-react`、`@retikz/diagram-vanilla`、`/flow` 与正式 docs demo 保持未建立，不以占位行为冒充 FlowDiagram 闭环
+- Foundation 不复制 Graph、Layout、Standard、Core 或 renderer 已拥有的模型与机制
+
+## alpha.2 退出条件
 
 - `@retikz/diagram`、`@retikz/diagram-vanilla` 与 `@retikz/diagram-react` 形成职责明确的可用 package family，React 通过 Vanilla 共享同一 authoring 与处理链路
-- 完整 Diagram 能以 renderer-neutral 方式组合 presentation、frame / appearance 与 Flow drawing core，并把所有 presentation regions 和绘图核心纳入同一输出边界
-- frame padding、section gap 与 Flow 内部节点 / 层级间距具有独立 owner、坐标层级和消费方
+- 完整 FlowDiagram 以 renderer-neutral 方式组合 Presentation、Frame / Appearance 与 Flow drawing core，并把所有存在区域纳入同一输出边界
 - Diagram 消费 Graph 的公开 Source / resolve 契约，布局意图保持 JSON-safe，几何结果保持 renderer-neutral，并通过 Graph identity 稳定对齐
-- FlowDiagram 能完成 Graph 自动测量、布局、routing、Diagram presentation / frame composition 与 Core Scene 的最小端到端闭环，不要求作者手工计算全部节点位置和连线路径
-- direct IR、Vanilla 与 React 对 MVP 具有等价表达，不存在 adapter 或 renderer 私有能力
+- FlowDiagram 完成 Graph 自动测量、布局、routing、Diagram foundation composition 与 Core Scene 的最小端到端闭环，不要求作者手工计算全部节点位置和连线路径
+- Direct IR、Vanilla 与 React 对 MVP 具有等价表达，不存在 adapter 或 renderer 私有能力
 - 至少一批现有 docs 关系型流程图已迁移为真实消费者；未覆盖场景有明确边界，并留待后续 alpha 按需规划
-- Diagram 不复制 Graph、Layout、Standard、Core 或 renderer 已拥有的模型与机制
