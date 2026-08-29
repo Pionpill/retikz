@@ -40,6 +40,8 @@ export const RetikzFoundationErrorCode = {
   PositiveNumberRequired: 'FOUNDATION_POSITIVE_NUMBER_REQUIRED',
   /** JSON 数据无效 */
   Json: 'FOUNDATION_JSON_ERROR',
+  /** 静态颜色解析或不透明预合成输入无效 */
+  Color: 'FOUNDATION_COLOR_ERROR',
 } as const;
 
 /** Foundation 包稳定错误码取值 */

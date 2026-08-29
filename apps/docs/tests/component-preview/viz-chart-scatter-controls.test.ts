@@ -15,7 +15,6 @@ import type {
 } from '../../src/modules/docs/preview';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
-import { loadPreviewResources } from '../../src/modules/docs/components/component-preview/registry';
 import { previewControlContract as basicZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.controls';
 import {
   countryScatterData,
@@ -135,18 +134,6 @@ const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 's
     subtitle: textOf(ChartSubtitle),
     source: textOf(ChartSource),
   };
-};
-
-const loadScatterPreviewSource = async (name: string, lang: 'zh' | 'en'): Promise<PreviewSourceConfig | undefined> => {
-  const result = await loadPreviewResources({
-    segments: ['viz', 'chart', 'points', 'scatter'],
-    name,
-    lang,
-    controlName: name,
-    controlsDisabled: false,
-    sourceFiles: [],
-  });
-  return result.status === 'ready' ? result.resources.module.previewSource : undefined;
 };
 
 describe('Viz Chart scatter controls', () => {

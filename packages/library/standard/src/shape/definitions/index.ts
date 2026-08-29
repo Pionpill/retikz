@@ -1,6 +1,7 @@
 export * from './contour';
 export * from './cross';
 export * from './cylinder';
+export * from './elliptic-capsule';
 export * from './hexagon';
 export * from './parallelogram';
 export * from './sector';

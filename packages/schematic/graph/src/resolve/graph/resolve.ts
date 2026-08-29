@@ -1,6 +1,6 @@
 import type { IRChild, IRScope } from '@retikz/core';
 
-import type { IRGraph, IRGraphEntity, IRGraphRelation, IRGraphThemeLayer } from '../../schemas';
+import type { IRGraph, IRGraphEntity, IRGraphRelation, IRGraphThemeLayer, IRGroup } from '../../schemas';
 import type { GraphResolveContext } from './types';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
@@ -20,9 +20,13 @@ const isRelation = (child: IRChild): child is IRGraphRelation => isGraphComposit
 
 const isGraph = (child: IRChild): child is IRGraph => isGraphComposite(child, GraphType.Graph);
 
+const isGroup = (child: IRChild): child is IRGroup => isGraphComposite(child, GraphType.Group);
+
 const isScope = (child: IRChild): child is IRScope => !('namespace' in child) && child.type === 'scope';
 
-const graphContext = (source: IRGraph, inherited: GraphProjectionContext): GraphProjectionContext => {
+type GraphContextSource = Pick<IRGraph | IRGroup, 'theme' | 'graphTheme'>;
+
+const graphContext = (source: GraphContextSource, inherited: GraphProjectionContext): GraphProjectionContext => {
   const parentLayers = source.theme === undefined ? inherited.layers : [];
   return {
     layers: source.graphTheme === undefined ? parentLayers : [...parentLayers, source.graphTheme],
@@ -60,7 +64,7 @@ const projectChildren = (
   children.map(child => {
     if (isEntity(child)) return projectEntity(child, context, options);
     if (isRelation(child)) return projectRelation(child, context, options);
-    if (isGraph(child)) {
+    if (isGraph(child) || isGroup(child)) {
       const nestedContext = graphContext(child, context);
       return {
         ...child,
@@ -78,4 +82,8 @@ const projectChildren = (
 
 /** 把 Graph-local context 投影到 schema 可见的语义后代，并保留完整有序 Core child tree */
 export const resolveGraph = (source: IRGraph, options: GraphResolveContext): Array<IRChild> =>
+  projectChildren(source.children ?? [], graphContext(source, { layers: [] }), options);
+
+/** 把 Graph-local context 投影到一个 Group 的 schema 可见后代 */
+export const resolveGroupChildren = (source: IRGroup, options: GraphResolveContext): Array<IRChild> =>
   projectChildren(source.children ?? [], graphContext(source, { layers: [] }), options);

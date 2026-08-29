@@ -10,7 +10,13 @@ import { ArrowDetailSchema, PathFillSchema, PathGeometrySchema, PathStrokeSchema
 import { NodeTargetSchema, PositionSchema } from '../position';
 import { getRecursiveChildSchema } from '../recursive';
 import { ScopeSelfPointSchema } from '../scope-point';
-import { CascadingGraphicStyleSchema, CssColorSchema, GraphicStyleSchema, OpacitySchema } from '../style';
+import {
+  CascadingGraphicStyleSchema,
+  ContextualColorSchema,
+  CssColorSchema,
+  GraphicStyleSchema,
+  OpacitySchema,
+} from '../style';
 import { ThemeSchema } from '../theme';
 import { TransformSchema } from '../transform';
 import { ScopeBoundingShape, ScopeStyleChannel } from './constants';
@@ -40,7 +46,9 @@ export const PathDefaultSchema = strictObject({
 
 export const LabelDefaultSchema = object({
   color: CssColorSchema.optional().describe('Master color for labels in this scope; textColor falls back to it.'),
-  textColor: CssColorSchema.optional().describe('Default text color for node labels and step labels in this scope.'),
+  textColor: ContextualColorSchema.optional().describe(
+    'Default label text color: an exact CSS color or a weight derived from the effective label / host master color.',
+  ),
   opacity: OpacitySchema.optional().describe('Default label opacity.'),
   font: FontSchema.optional().describe('Default label font (family / size / weight / style); per-field fallback.'),
 })

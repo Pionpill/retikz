@@ -1,10 +1,29 @@
 import type { BoundsInsets } from '@retikz/math';
 
-import type { IRAxisScale, IRBoxSize, IRBoxSpacing, IRNode, IRNodeLabel } from '../../schemas';
-import type { CanonicalNode, CanonicalNodeLabel, NodeResolution, NodeResolveContext } from './types';
+import type {
+  IRAxisScale,
+  IRBoxSize,
+  IRBoxSpacing,
+  IRLine,
+  IRMathRun,
+  IRNode,
+  IRNodeLabel,
+  IRPaintValue,
+  IRTextRun,
+} from '../../schemas';
+import type { ResolvedInlineSourceRun, ResolvedLabelTextContent, ResolvedTextLine } from '../text';
+import type {
+  CanonicalNode,
+  CanonicalNodeLabel,
+  NodeResolution,
+  NodeResolveContext,
+  PrimaryColorResolvedNode,
+  ResolvedNodeLabelPin,
+  ResolvedNodeSource,
+} from './types';
 
 import { resolvePaint } from '../resource';
-import { resolveEffectiveLabelDefault, resolveEffectiveNodeStyle } from '../style';
+import { resolveContextualColor, resolveEffectiveLabelDefault, resolveEffectiveNodeStyle } from '../style';
 import { resolveDashPattern, resolveDropShadow } from '../style';
 import { resolveBoundaryReference } from './boundary';
 import { resolveNodeShape } from './shape';
@@ -54,7 +73,7 @@ const expandBoxSize = (value: number | IRBoxSize | undefined): CanonicalNode['mi
 };
 
 /** 展开正文单字符串为单行数组 */
-const expandNodeText = (text: IRNode['text']): CanonicalNode['text'] =>
+const expandNodeText = (text: ResolvedNodeSource['text']): CanonicalNode['text'] =>
   text === undefined ? undefined : typeof text === 'string' ? [text] : text;
 
 /** 展开标签边界位置的比例缺省值 */
@@ -64,14 +83,30 @@ const expandNodeLabelPosition = (position: IRNodeLabel['position']): CanonicalNo
   return position;
 };
 
+type MaterializedNodeLabel = Omit<IRNodeLabel, 'align' | 'position' | 'placement' | 'distance'> & {
+  align: CanonicalNodeLabel['align'];
+  position: CanonicalNodeLabel['position'];
+  placement: CanonicalNodeLabel['placement'];
+  distance: number;
+};
+
+type MaterializedNodeSource = Omit<IRNode, 'label'> & {
+  label?: Array<MaterializedNodeLabel>;
+};
+
+type PrimaryColorResolvedMaterializedNode = Omit<PrimaryColorResolvedNode, 'label'> & {
+  label?: Array<MaterializedNodeLabel>;
+};
+
 /** 按有效 labelDefault 补齐一个标签，并保留显式字段优先级 */
 const expandNodeLabel = (
   label: IRNodeLabel,
   labelDefault: ReturnType<typeof resolveEffectiveLabelDefault>,
   labelDistance: number,
-): CanonicalNodeLabel => {
-  const normalized: CanonicalNodeLabel = {
+): MaterializedNodeLabel => {
+  const normalized: MaterializedNodeLabel = {
     ...label,
+    align: label.align ?? 'middle',
     position: expandNodeLabelPosition(label.position),
     placement: label.placement ?? 'outside',
     distance: label.distance ?? labelDistance,
@@ -105,7 +140,7 @@ const expandNodeLabels = (
   label: IRNode['label'],
   labelDefault: ReturnType<typeof resolveEffectiveLabelDefault>,
   labelDistance: number,
-): CanonicalNode['label'] =>
+): Array<MaterializedNodeLabel> | undefined =>
   label === undefined
     ? undefined
     : Array.isArray(label)
@@ -113,11 +148,7 @@ const expandNodeLabels = (
       : [expandNodeLabel(label, labelDefault, labelDistance)];
 
 /** 将 Node 的持久化紧凑字段展开为布局可直接消费的完整形态 */
-const canonicalizeNode = (
-  node: IRNode,
-  labelDefault: ReturnType<typeof resolveEffectiveLabelDefault>,
-  labelDistance: number,
-): CanonicalNode => {
+const canonicalizeNode = (node: ResolvedNodeSource): CanonicalNode => {
   const { dashed, dotted, ...source } = node;
   return {
     ...source,
@@ -126,7 +157,7 @@ const canonicalizeNode = (
     minimumSize: expandBoxSize(node.minimumSize),
     scale: expandAxisScale(node.scale),
     text: expandNodeText(node.text),
-    label: expandNodeLabels(node.label, labelDefault, labelDistance),
+    label: node.label,
     align: node.align ?? 'middle',
     rotate: node.rotate ?? 0,
     dashPattern: resolveDashPattern(node.dashPattern, dashed, dotted),
@@ -134,16 +165,200 @@ const canonicalizeNode = (
   };
 };
 
+type NodeColorContext = Readonly<{
+  mode: NodeResolveContext['mode'];
+  irPath: string;
+}>;
+
+/** 将 contextual paint 的 number 分支确定为字符串，paint object 保持不变 */
+const resolveNodePaint = (
+  value: IRPaintValue | undefined,
+  masterColor: string | undefined,
+  context: NodeColorContext,
+  field: 'fill' | 'stroke',
+): Exclude<IRPaintValue, number> | undefined =>
+  typeof value === 'number'
+    ? resolveContextualColor(value, {
+        masterColor,
+        mode: context.mode,
+        fieldPath: `${context.irPath}.${field}`,
+      })
+    : value;
+
+/** 先确定 Node 自身 fill / stroke / textColor，供 auto-contrast 消费真实背景 */
+const resolveNodePrimaryColors = (
+  node: MaterializedNodeSource,
+  context: NodeColorContext,
+): PrimaryColorResolvedMaterializedNode => {
+  const { fill, stroke, textColor, ...source } = node;
+  return {
+    ...source,
+    ...(fill === undefined ? {} : { fill: resolveNodePaint(fill, node.color, context, 'fill') }),
+    ...(stroke === undefined ? {} : { stroke: resolveNodePaint(stroke, node.color, context, 'stroke') }),
+    ...(textColor === undefined
+      ? {}
+      : {
+          textColor: resolveContextualColor(textColor, {
+            masterColor: node.color,
+            mode: context.mode,
+            fieldPath: `${context.irPath}.textColor`,
+          }),
+        }),
+  };
+};
+
+/** 确定单个文字或公式 run 的派生颜色 */
+const resolveInlineRunColor = (
+  run: IRTextRun | IRMathRun,
+  masterColor: string | undefined,
+  mode: NodeResolveContext['mode'],
+  fieldPath: string,
+): ResolvedInlineSourceRun => {
+  const { fill, ...source } = run;
+  return {
+    ...source,
+    ...(fill === undefined
+      ? {}
+      : { fill: resolveContextualColor(fill, { masterColor, mode, fieldPath: `${fieldPath}.fill` }) }),
+  };
+};
+
+/** 确定正文一行的 line / run 派生颜色 */
+const resolveNodeLineColors = (
+  line: IRLine,
+  masterColor: string | undefined,
+  mode: NodeResolveContext['mode'],
+  fieldPath: string,
+): ResolvedTextLine => {
+  if (typeof line === 'string') return line;
+  if ('runs' in line) {
+    return {
+      runs: line.runs.map((run, index) => resolveInlineRunColor(run, masterColor, mode, `${fieldPath}.runs[${index}]`)),
+    };
+  }
+  const { fill, ...source } = line;
+  return {
+    ...source,
+    ...(fill === undefined
+      ? {}
+      : { fill: resolveContextualColor(fill, { masterColor, mode, fieldPath: `${fieldPath}.fill` }) }),
+  };
+};
+
+/** 确定 label 单行内容中各 run 的派生颜色 */
+const resolveLabelTextColors = (
+  text: IRNodeLabel['text'],
+  masterColor: string | undefined,
+  mode: NodeResolveContext['mode'],
+  fieldPath: string,
+): ResolvedLabelTextContent =>
+  typeof text === 'string'
+    ? text
+    : {
+        runs: text.runs.map((run, index) =>
+          resolveInlineRunColor(run, masterColor, mode, `${fieldPath}.runs[${index}]`),
+        ),
+      };
+
+/** 确定 Node label 的文字主色、run 与 pin 颜色 */
+const resolveNodeLabelColors = (
+  label: MaterializedNodeLabel,
+  labelMasterColor: string | undefined,
+  inheritedTextColor: string | undefined,
+  mode: NodeResolveContext['mode'],
+  fieldPath: string,
+): CanonicalNodeLabel => {
+  const { textColor, text, pin, ...source } = label;
+  const resolvedTextColor =
+    textColor === undefined
+      ? inheritedTextColor
+      : resolveContextualColor(textColor, {
+          masterColor: labelMasterColor,
+          mode,
+          fieldPath: `${fieldPath}.textColor`,
+        });
+  const textMaster = resolvedTextColor ?? inheritedTextColor;
+  let resolvedPin: boolean | ResolvedNodeLabelPin | undefined;
+  if (typeof pin === 'object') {
+    const { stroke, ...pinSource } = pin;
+    resolvedPin = {
+      ...pinSource,
+      ...(stroke === undefined
+        ? {}
+        : {
+            stroke: resolveContextualColor(stroke, {
+              masterColor: textMaster,
+              mode,
+              fieldPath: `${fieldPath}.pin.stroke`,
+            }),
+          }),
+    };
+  } else {
+    resolvedPin = pin;
+  }
+  return {
+    ...source,
+    ...(resolvedTextColor === undefined ? {} : { textColor: resolvedTextColor }),
+    text: resolveLabelTextColors(text, textMaster, mode, `${fieldPath}.text`),
+    ...(resolvedPin === undefined ? {} : { pin: resolvedPin }),
+  };
+};
+
+/** 在 auto-contrast 后确定正文、label run 与 pin 的派生颜色 */
+const resolveNodeDependentColors = (
+  node: PrimaryColorResolvedMaterializedNode,
+  labelDefault: ReturnType<typeof resolveEffectiveLabelDefault>,
+  context: NodeColorContext,
+  labelWasArray: boolean,
+): ResolvedNodeSource => {
+  const { text, label, ...source } = node;
+  const textMaster = node.textColor;
+  return {
+    ...source,
+    ...(text === undefined
+      ? {}
+      : {
+          text:
+            typeof text === 'string'
+              ? text
+              : text.map((line, index) =>
+                  resolveNodeLineColors(line, textMaster, context.mode, `${context.irPath}.text[${index}]`),
+                ),
+        }),
+    ...(label === undefined
+      ? {}
+      : {
+          label: (Array.isArray(label) ? label : [label]).map((item, index) =>
+            resolveNodeLabelColors(
+              item,
+              labelDefault.color ?? node.color,
+              textMaster,
+              context.mode,
+              labelWasArray ? `${context.irPath}.label[${index}]` : `${context.irPath}.label`,
+            ),
+          ),
+        }),
+  };
+};
+
 /** 解析 Node 的样式、静态默认值、provider 与布局前 canonical 形态 */
 export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeResolution => {
   const effectiveNode = resolveEffectiveNodeStyle(source, context.styleFrames);
   const effectiveLabelDefault = resolveEffectiveLabelDefault(context.styleFrames);
-  const labelsMaterialized = {
+  const labelWasArray = Array.isArray(effectiveNode.label);
+  const labelsMaterialized: MaterializedNodeSource = {
     ...effectiveNode,
     label: expandNodeLabels(effectiveNode.label, effectiveLabelDefault, context.labelDistance),
   };
-  const contrastResolved = resolveNodeTextColor(labelsMaterialized, effectiveLabelDefault, context.warn);
-  const node = canonicalizeNode(contrastResolved, effectiveLabelDefault, context.labelDistance);
+  const primaryColorsResolved = resolveNodePrimaryColors(labelsMaterialized, context);
+  const contrastResolved = resolveNodeTextColor(primaryColorsResolved, effectiveLabelDefault, context.warn);
+  const dependentColorsResolved = resolveNodeDependentColors(
+    contrastResolved,
+    effectiveLabelDefault,
+    context,
+    labelWasArray,
+  );
+  const node = canonicalizeNode(dependentColorsResolved);
   const shape = resolveNodeShape({
     node,
     shapes: context.shapes,

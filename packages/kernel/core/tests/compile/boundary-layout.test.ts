@@ -19,6 +19,7 @@ const layoutOf = (source: Parameters<typeof resolveNode>[0], shapes = resolveSha
   const boundaries = resolveBoundaryRegistry();
   const resolution = resolveNode(source, {
     styleFrames: [],
+    mode: 'light',
     shapes,
     boundaries,
     patterns: resolvePatternRegistry(),

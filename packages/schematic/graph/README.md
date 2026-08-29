@@ -2,13 +2,14 @@
 
 `@retikz/graph` owns the framework-neutral, JSON-safe Graph Source IR, independent Definition registries, Canonical resolve, and lowering to ordinary Core Scope, Node, and Path inputs.
 
-Graph, Entity, and Relation are independent public semantic composites:
+Graph, Group, Entity, and Relation are independent public semantic composites:
 
 - Graph is an optional thin shell over the complete Core Scope surface, adding local Graph Theme rules
+- Group is a nestable arbitrary-content boundary with a Standard Surface shell, structured caption, and Core Node boundary labels
 - Entity optionally stores identity together with Node semantics, text, and Core-compatible placement fields; without identity it lowers as drawable-only Core content
 - Relation stores Core NodeTarget endpoints, direction, relationship semantics, labels, and an optional route; without a route it lowers to a direct Core Path
 
-Entity and Relation use independent role, kind, and predicate Definitions. They can appear with or without a Graph ancestor, and Graph does not copy Core Shape, Arrow, namespace, or reference registries.
+Group, Entity, and Relation can appear with or without a Graph ancestor. Entity and Relation use independent role, kind, and predicate Definitions, while Group remains a closed composition surface and adds no role/kind registry.
 
 Registry-backed Source fields remain open to custom non-blank keys. Their schemas also expose the built-in `EntityRole`, `RelationRole`, and `RelationKind` values as editor and JSON Schema hints; registration is still validated only during resolve.
 
@@ -22,17 +23,22 @@ This package is ESM-only and requires Node.js 24 or newer.
 本包仅发布 ES modules，要求 Node.js 24 或更高版本。
 
 ```ts
-import { createEntity, createGraph, createGraphDefinitions } from '@retikz/graph';
+import { createEntity, createGraph, createGraphDefinitions, createGroup } from '@retikz/graph';
 
 const graph = createGraph({
   id: 'workflow',
-  children: [createEntity({ id: 'task', role: 'activity', text: 'Process', position: [160, 80] })],
+  children: [
+    createGroup({
+      caption: { title: { text: 'Runtime' } },
+      children: [createEntity({ id: 'task', role: 'activity', text: 'Process', position: [160, 80] })],
+    }),
+  ],
 });
 
 const composites = createGraphDefinitions();
 ```
 
-Omit `children` when a Graph has no entries. Graph keeps arbitrary Core and Tier 2 children in author order and lowers them through one Core Scope; Entity and Relation can also compile directly outside Graph.
+Omit `children` when a Graph or Group has no entries. Both preserve arbitrary Core and Tier 2 children in author order. Group adds a visible shell but does not position authored children; Entity and Relation can also compile directly outside Graph.
 
 Use `createGraphDefinitions(options)` or `createGraphProviders(options)` to assemble built-in and custom Definitions in one assembly-local registry. Different Definition objects competing for the same key fail loudly; imports do not mutate global state.
 

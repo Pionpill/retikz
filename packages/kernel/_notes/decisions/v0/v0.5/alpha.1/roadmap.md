@@ -23,6 +23,7 @@
 | [ADR-05](./05-node-label-box-spacing.md)           | Accepted | Node label 视觉盒间距    | `distance` 按 label 视觉盒边缘计算，统一 pin、bbox 与混排文本     |
 | [ADR-06](./06-tex-math-syntax-compatibility.md)    | Accepted | TeX 数学语法兼容         | 选择性启用 MathJax TeX 扩展并保留跨后端可表达的样式语义           |
 | [ADR-07](./07-layout-aware-composite.md)           | Accepted | 布局感知 Composite       | 人工确认后完成同次 child layout、replay 与 typed artifacts        |
+| [ADR-08](./08-node-label-alignment.md)             | Accepted | Node label 附着对齐      | 沿 attachment tangent 对齐视觉盒，并让 Group 默认使用 `start`     |
 
 Headless interaction 与 progressive compile 不再属于 alpha.1；其 ADR、实现、测试与用户文档已撤回，后续版本需重新建立 Proposed ADR。
 
@@ -34,6 +35,7 @@ Headless interaction 与 progressive compile 不再属于 alpha.1；其 ADR、�
 | 1    | ADR-02/03/05 | 几何、路径和 label 布局基础；逐条 Gate，按文件 scope 决定能否交错实施   |
 | 2    | ADR-04/06    | 文本可读性与 TeX；设计可独立，但实现仍按 core / tex 文件交叉情况串行    |
 | 3    | ADR-07       | 独立冻结 compile 结果与 composite layout 契约；Table alpha.2 以此为前置 |
+| 4    | ADR-08       | 在既有视觉盒间距上补齐 Node label tangent alignment                     |
 
 ## Milestone 边界
 
@@ -54,6 +56,7 @@ Headless interaction 与 progressive compile 不再属于 alpha.1；其 ADR、�
 - [x] ADR-07 已于 2026-07-25 获得单独实现授权；不含 commit、push 或发布。
 - [x] ADR-07 implementation / adversarial test / 双语 docs / changelog 已完成并获提交授权。
 - [x] ADR-02 至 ADR-06 完成 implementation / adversarial test / docs，并于 2026-07-26 获得统一收尾确认。
+- [x] ADR-08 完成 implementation / adversarial test / 双语 docs，并于 2026-08-28 完成 Graph Group 默认对齐同步。
 - [x] alpha.1 全部 ADR 集成后执行整体 contract / release-group 验证。
 - [x] alpha.1 全部 ADR 的 changelog / roadmap 统一收尾。
 - [x] 发版准备改动获得 commit 授权。

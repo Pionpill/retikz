@@ -1,3 +1,4 @@
+import { NormalizedFractionSchema } from '@retikz/foundation';
 import { enum as zodEnum, strictObject, union } from 'zod';
 
 import { BlendMode, DropShadowSchema, ShadowPreset } from '../effects';
@@ -5,16 +6,20 @@ import { PaintSchema } from '../paint';
 import { StrokeStyleSchema } from '../stroke';
 import { CssColorSchema, OpacitySchema } from './primitives';
 
-export const PaintValueSchema = union([CssColorSchema, PaintSchema]).describe(
-  'Paint value: a CSS color string or a IRPaint object.',
+export const ContextualColorSchema = union([CssColorSchema, NormalizedFractionSchema]).describe(
+  'Contextual color: an exact CSS color string or a normalized weight derived from the effective master color.',
+);
+
+export const PaintValueSchema = union([ContextualColorSchema, PaintSchema]).describe(
+  'Paint value: a contextual color or an IRPaint object.',
 );
 
 export const GraphicPaintSchema = strictObject({
   color: CssColorSchema.optional().describe(
     'Master color for primary geometry. Stroke, fill, labels, and arrows may inherit it unless individually overridden.',
   ),
-  fill: PaintValueSchema.optional().describe('Fill paint for primary geometry: CSS color string or IRPaint.'),
-  stroke: PaintValueSchema.optional().describe('Stroke paint for primary geometry: CSS color string or IRPaint.'),
+  fill: PaintValueSchema.optional().describe('Fill paint for primary geometry: contextual color or IRPaint.'),
+  stroke: PaintValueSchema.optional().describe('Stroke paint for primary geometry: contextual color or IRPaint.'),
 }).describe('Graphic paint fields shared by primary geometry.');
 
 export const GraphicOpacitySchema = strictObject({

@@ -13,10 +13,10 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
-          label: { zh: '十八个根导出，固定五文件结构', en: 'Eighteen root exports, five fixed source files' },
+          label: { zh: '十八个 runtime 根导出', en: 'Eighteen runtime root exports' },
           content: {
-            zh: '`@retikz/foundation` 从根入口公开五个 type-only 契约与十三个 runtime symbol，包括 `WithRequiredProperties<T, TKey>`、六个非变换 Zod 标量 schema 和 `createOpenStringSchema(values)`；source 与 tests 各固定五个文件，不提供 subpath、IR、对象 schema 或 Diagnostic。',
-            en: '`@retikz/foundation` exposes five type-only contracts and thirteen runtime symbols from its root, including `WithRequiredProperties<T, TKey>`, six non-transforming Zod scalar schemas, and `createOpenStringSchema(values)`. Source and tests each stay at five fixed files, with no subpaths, IR, object schemas, or Diagnostics.',
+            zh: '`@retikz/foundation` 从根入口公开无领域的 type-only 契约与十八个 runtime symbol，包括 `WithRequiredProperties<T, TKey>`、六个非变换 Zod 标量 schema、`createOpenStringSchema(values)` 以及静态颜色原子；不提供 subpath、IR、对象 schema 或 Diagnostic。',
+            en: '`@retikz/foundation` exposes domain-free type-only contracts and eighteen runtime symbols from its root, including `WithRequiredProperties<T, TKey>`, six non-transforming Zod scalar schemas, `createOpenStringSchema(values)`, and static color atoms. It provides no subpaths, IR, object schemas, or Diagnostics.',
           },
         },
         {
@@ -39,35 +39,11 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
-          version: 'alpha.4',
-          date: '2026-08-15',
-          summary: {
-            zh: 'BREAKING：Path Kind 收口为开放 host 与完整 subject schema，Ribbon 的 schema、profile 与几何 owner 迁入 Standard。',
-            en: 'BREAKING: Path Kind becomes an open host with complete subject schemas, while Ribbon schema, profiles, and geometry ownership move to Standard.',
-          },
-          items: [
-            {
-              label: { zh: 'BREAKING：Core 移除 Ribbon 专属公共面', en: 'BREAKING: Core Ribbon surface removed' },
-              content: {
-                zh: 'Core `PathSchema` 现只接受开放 `kind` 与 JSON-safe `kindOptions`，再由已注册 `PathKindDefinition.schema` 校验完整 Path。Core 不再导出 Ribbon schema、width profile、几何 emitter 或 `ribbonWidthProfiles`，内置 Path Kind 只保留 `stroke`。',
-                en: 'Core `PathSchema` now accepts an open `kind` plus JSON-safe `kindOptions`, then validates the complete Path through the registered `PathKindDefinition.schema`. Core no longer exports Ribbon schemas, width profiles, geometry emitters, or `ribbonWidthProfiles`; `stroke` is the only built-in Path Kind.',
-              },
-            },
-            {
-              label: { zh: '领域中立 Path Kind 服务', en: 'Domain-neutral Path Kind services' },
-              content: {
-                zh: '`PathKindDefinition` 以独立 `name` 作为 registry identity，并通过完整 subject schema 恢复 typed path。自定义 kind 可复用路径物化、Stroke 输出、host label、appearance 与 precision 服务，不依赖 Ribbon 私有状态。',
-                en: '`PathKindDefinition` uses an independent `name` as registry identity and restores a typed Path through its complete subject schema. Custom kinds can reuse path materialization, Stroke emission, host labels, appearance, and precision without depending on Ribbon-private state.',
-              },
-            },
-          ],
-        },
-        {
           version: 'alpha.3',
-          date: '2026-08-14',
+          date: '2026-08-28',
           summary: {
-            zh: '新增开放字符串 schema factory 与必填属性类型投影，统一无领域的开放词汇和结构收窄契约。',
-            en: 'Adds an open-string schema factory and a required-property type projection for shared domain-free vocabulary and structural narrowing contracts.',
+            zh: '新增开放字符串 schema factory、必填属性类型投影与静态颜色原子，统一无领域的词汇、结构收窄和颜色计算契约。',
+            en: 'Adds an open-string schema factory, a required-property type projection, and static color atoms for shared domain-free vocabulary, structural narrowing, and color computation.',
           },
           items: [
             {
@@ -75,6 +51,13 @@ export const kernelV05: Release = {
               content: {
                 zh: '`WithRequiredProperties<T, TKey>` 从 Foundation 根入口导出，只把指定 key 收窄为必填并保留其余属性；Graph Theme 直接复用该类型，不再维护私有副本。',
                 en: '`WithRequiredProperties<T, TKey>` is exported from the Foundation root, making only selected keys required while preserving all other properties. Graph Theme now consumes it directly instead of keeping a private copy.',
+              },
+            },
+            {
+              label: { zh: '静态颜色解析与不透明预合成', en: 'Static color parsing and opaque precomposition' },
+              content: {
+                zh: '`parseStaticCssColor()` 统一解析可静态确定的 CSS 颜色，`compositeOpaqueColor()` 按前景、非透明底色与 `[0, 1]` 权重输出小写 `#rrggbb`。动态宿主颜色保持不可解析；非法输入通过结构化 Foundation color error 报告。',
+                en: '`parseStaticCssColor()` parses statically determinable CSS colors, while `compositeOpaqueColor()` combines a foreground, opaque backdrop, and `[0, 1]` weight into lowercase `#rrggbb`. Dynamic host colors remain unresolved, and invalid inputs report a structured Foundation color error.',
               },
             },
           ],
@@ -122,6 +105,15 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.3',
+          date: '2026-08-28',
+          summary: {
+            zh: '随 Kernel release group lockstep 升级；不新增 Math 能力。',
+            en: 'Version-only alignment with the Kernel release group; no new Math capabilities.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.2',
           date: '2026-08-09',
@@ -196,6 +188,15 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.3',
+          date: '2026-08-28',
+          summary: {
+            zh: '随 Kernel release group lockstep 升级；cooperative scheduler、progressive materialization 与 generation session 尚未交付。',
+            en: 'Version-only alignment with the Kernel release group; cooperative scheduling, progressive materialization, and generation sessions are not included.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.2',
           date: '2026-08-04',
           summary: {
@@ -231,8 +232,8 @@ export const kernelV05: Release = {
         {
           label: { zh: '可读文本与标签视觉盒', en: 'Readable text and visual-box labels' },
           content: {
-            zh: '`NodeTextColor.Contrast` 对静态不透明 fill 选择黑 / 白文字，无法静态求值时 warning 并回退 `currentColor`。`Node.label.distance` 表示节点边界到旋转后标签视觉盒的净距；baseline、pin、Scene bounds 与自动 viewBox 共用同一度量。',
-            en: '`NodeTextColor.Contrast` chooses black or white text for a static opaque fill and warns before falling back to `currentColor` when the fill cannot be resolved. `Node.label.distance` means the net gap to the rotated visual box, shared by baselines, pins, Scene bounds, and the automatic viewBox.',
+            zh: '`NodeTextColor.Contrast` 对静态不透明 fill 选择黑 / 白文字，无法静态求值时 warning 并回退 `currentColor`。`Node.label.distance` 表示节点边界到旋转后标签视觉盒的净距；`Node.label.align` 复用 `start` / `middle` / `end` 沿 attachment tangent 对齐视觉盒；baseline、pin、Scene bounds 与自动 viewBox 共用同一度量。',
+            en: '`NodeTextColor.Contrast` chooses black or white text for a static opaque fill and warns before falling back to `currentColor` when the fill cannot be resolved. `Node.label.distance` means the net gap to the rotated visual box, while `Node.label.align` reuses `start` / `middle` / `end` to align that box along the attachment tangent. Baselines, pins, Scene bounds, and the automatic viewBox share the same measurement.',
           },
         },
         {
@@ -258,6 +259,30 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.3',
+          date: '2026-08-28',
+          summary: {
+            zh: '新增上下文颜色权重，在完整 Theme / Scope / 图元级联后由 Core 统一确定为不透明颜色字符串。',
+            en: 'Adds contextual color weights that Core resolves into opaque color strings after the complete Theme, Scope, and primitive cascade.',
+          },
+          items: [
+            {
+              label: { zh: 'Contextual Color schema 与确定化', en: 'Contextual Color schema and resolution' },
+              content: {
+                zh: '具有唯一主色的 fill、stroke、文字、label、arrow 与 marker 派生槽接受精确 CSS 字符串或 `[0, 1]` 权重；`color` 主色、palette、scale range、gradient、pattern 与 shadow 内部颜色保持 string-only。Light / Dark 分别以白 / 黑为底色预合成，opacity 继续独立。',
+                en: 'Derived fill, stroke, text, label, arrow, and marker slots with one unambiguous master accept either exact CSS strings or `[0, 1]` weights. Master `color`, palettes, scale ranges, and colors inside gradients, patterns, and shadows remain string-only. Light and Dark precompose against white and black respectively, while opacity remains independent.',
+              },
+            },
+            {
+              label: { zh: '适配器与 Scene 边界一致', en: 'Adapter parity and a number-free Scene boundary' },
+              content: {
+                zh: '直接 JSON、React 与 Vanilla 传递同一 Source 契约；动态或缺失主色按字段路径 fail-loud。Canonical、Scene、SVG / Canvas renderer 只接收已经确定的字符串颜色。',
+                en: 'Direct JSON, React, and Vanilla share the same Source contract. Dynamic or missing masters fail loudly with the authored field path, while Canonical values, Scene output, and SVG / Canvas renderers receive resolved string colors only.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.2',
           date: '2026-08-04',
@@ -337,7 +362,15 @@ export const kernelV05: Release = {
             zh: '交付 ADR-01～07 的 Node / Scope 布局、路径、文本、TeX 与 Composite 契约。',
             en: 'Delivers ADR-01 through ADR-07 across Node/Scope layout, paths, text, TeX, and composites.',
           },
-          items: [],
+          items: [
+            {
+              label: { zh: 'Node label 附着对齐', en: 'Node label attachment alignment' },
+              content: {
+                zh: '新增可选 `Node.label.align`，复用 Core `TextAlignSchema` 的 `start` / `middle` / `end`；Core 默认 `middle` 保持既有 Node 坐标，Graph Group 的外围 labels 在省略时默认 `start`，让下方左端文字左边缘贴合外框。',
+                en: 'Adds optional `Node.label.align` with Core `TextAlignSchema` values `start` / `middle` / `end`. Core defaults to `middle` to preserve existing Node coordinates, while Graph Group boundary labels default to `start` when omitted so a lower-left label starts at the shell edge.',
+              },
+            },
+          ],
         },
       ],
     },
@@ -365,6 +398,15 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.3',
+          date: '2026-08-28',
+          summary: {
+            zh: '随 Kernel release group lockstep 升级；不新增 Inspect 能力。',
+            en: 'Version-only alignment with the Kernel release group; no new Inspect capabilities.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.2',
           date: '2026-08-07',
@@ -408,6 +450,15 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.3',
+          date: '2026-08-28',
+          summary: {
+            zh: '随 Kernel release group lockstep 升级；renderer 继续只消费已确定的颜色字符串。',
+            en: 'Version-only alignment with the Kernel release group; renderers continue to consume resolved color strings only.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.2',
           date: '2026-08-04',
@@ -468,6 +519,15 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.3',
+          date: '2026-08-28',
+          summary: {
+            zh: '同步 Core 上下文颜色 authoring；最终确定化继续由 Core resolve 统一完成。',
+            en: 'Tracks Core contextual-color authoring while final resolution remains centralized in Core resolve.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.2',
           date: '2026-08-04',
           summary: {
@@ -519,6 +579,15 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.3',
+          date: '2026-08-28',
+          summary: {
+            zh: '同步 Core 上下文颜色 authoring；Vanilla normalization 不复制颜色算法。',
+            en: 'Tracks Core contextual-color authoring without duplicating color algorithms in Vanilla normalization.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.2',
           date: '2026-08-04',
@@ -578,6 +647,15 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.3',
+          date: '2026-08-28',
+          summary: {
+            zh: '随 Kernel release group lockstep 升级；不新增 TeX 能力。',
+            en: 'Version-only alignment with the Kernel release group; no new TeX capabilities.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.2',
           date: '2026-08-04',

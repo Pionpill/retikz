@@ -67,4 +67,8 @@ describe('RetikzFoundationError', () => {
     expect(error.message).toBe('Foundation failed');
     expect(error.details).toEqual({});
   });
+
+  it('exposes a stable color error code for static color atoms', () => {
+    expect(RetikzFoundationErrorCode.Color).toBe('FOUNDATION_COLOR_ERROR');
+  });
 });

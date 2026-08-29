@@ -1,4 +1,5 @@
 export * from './arrow';
+export * from './contextual-color';
 export * from './drawable';
 export * from './frame';
 export * from './label';

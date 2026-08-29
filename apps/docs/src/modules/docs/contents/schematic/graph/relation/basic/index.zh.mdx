@@ -36,12 +36,12 @@ Relation 的整体外观统一由 Theme 管理。下面的 controls 只开放当
 
 ### endpoint、label 与 route
 
-同一 Scope 可以混用省略 route 的直连、直接 `route`、`way` 与 `<Step>` authoring。labels 不进入 route steps；Relation 不根据 endpoint 坐标计算自定义 route，也不比较 authored route 是否连接 endpoint
+示例统一使用简洁的 `way`：相邻 target 表示直连，`'-|'` 表示先水平后垂直的折线。Relation 仍支持省略 route 的直连、直接 `route` 与 `<Step>` authoring；labels 不进入 route steps，也不会用于反推 endpoint
 
 <ComponentPreview
   files="relation-routing"
   size="lg"
-  caption="观察稳定 endpoint、两种 route authoring，以及显式 label 外观和 dashPattern 如何覆盖默认。"
+  caption="观察稳定 endpoint、way 的直线与折线写法，以及显式 label 外观和 dashPattern 如何覆盖默认。"
 />
 
 ### association：一般关联

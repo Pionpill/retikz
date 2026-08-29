@@ -16,6 +16,9 @@ const rootTheme = { style: 'academic', mode: 'light' } as const;
 const tableThemeTokens = {
   [TableThemeToken.CellContentFontFamily]: 'serif',
   [TableThemeToken.CellContentColor]: '#1e3a8a',
+  [TableThemeToken.CellBackgroundFill]: 0.08,
+  [TableThemeToken.ColumnHeaderContentColor]: '#7c2d12',
+  [TableThemeToken.ColumnHeaderBackgroundFill]: 0.12,
 };
 
 /** Reuses one Table definition for standalone display and embedded source derivation */
@@ -50,8 +53,8 @@ const ScoreTable: FC<ScoreTableProps> = props => {
         columnGap: 6,
         rowGap: 4,
         borders: {
-          outer: { kind: 'line', stroke: 'gray', width: 1 },
-          horizontal: { kind: 'line', stroke: 'lightgray', width: 1 },
+          outer: { kind: 'line', stroke: 0.45, width: 1 },
+          horizontal: { kind: 'line', stroke: 0.18, width: 1 },
         },
       }}
       {...(embedded

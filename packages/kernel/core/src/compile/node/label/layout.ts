@@ -70,6 +70,7 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
     return {
       text: plainText,
       laid,
+      align: lab.align,
       position: lab.position,
       placement: lab.placement,
       distance: lab.distance,

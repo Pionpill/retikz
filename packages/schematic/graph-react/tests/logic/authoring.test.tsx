@@ -17,8 +17,46 @@ import { describe, expect, it } from 'vitest';
 
 import type { GraphProps } from '../../src';
 
-import { Entity, Graph, GraphThemeProvider, Relation, RetikzGraphReactErrorCode, useGraphThemeStyles } from '../../src';
+import {
+  Entity,
+  Graph,
+  GraphThemeProvider,
+  Group,
+  Relation,
+  RetikzGraphReactErrorCode,
+  useGraphThemeStyles,
+} from '../../src';
 import { graphLayoutHostPropsOf } from '../../src/graph/authoring';
+
+describe('Group React authoring', () => {
+  it('produces the same Group Source IR while accepting arbitrary React children', () => {
+    const input = createInputScene(
+      <Group
+        id="runtime"
+        caption={{ title: { text: 'Runtime' } }}
+        labels={[{ text: 'internal', position: { boundary: 'left', fraction: 0.25 } }]}
+      >
+        <Node position={[0, 0]}>Kernel</Node>
+        <Entity role="participant" position={[80, 0]}>
+          Adapter
+        </Entity>
+      </Group>,
+    );
+    const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+
+    expect(normalized.ir.children[0]).toEqual({
+      namespace: 'graph',
+      type: 'group',
+      id: 'runtime',
+      caption: { title: { text: 'Runtime' } },
+      labels: [{ text: 'internal', position: { boundary: 'left', fraction: 0.25 } }],
+      children: [
+        { type: 'node', position: [0, 0], text: 'Kernel' },
+        { namespace: 'graph', type: 'entity', role: 'participant', position: [80, 0], text: 'Adapter' },
+      ],
+    });
+  });
+});
 
 const hostPropKeys = [
   'authoring',

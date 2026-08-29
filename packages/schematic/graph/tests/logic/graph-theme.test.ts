@@ -1,6 +1,11 @@
 import type { CompileWarning, ResolvedTheme } from '@retikz/core';
 
-import { compileToScene, DEFAULT_RESOLVED_THEME, resolveCoreProviderDependencies } from '@retikz/core';
+import {
+  compileToScene,
+  DEFAULT_RESOLVED_THEME,
+  defineThemeStyle,
+  resolveCoreProviderDependencies,
+} from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
@@ -12,6 +17,92 @@ const styleRegistry = (
 ): ReadonlyMap<string, Graph.GraphThemeStyleDefinition> => new Map([[definition.name, definition]]);
 
 describe('Graph Scope and Theme compile semantics', () => {
+  it('在最终 Entity 实例主色后解析 Graph Theme 的数值 fill', () => {
+    const definition = Graph.defineGraphThemeStyle({
+      name: 'contextual-entity',
+      resolve: () => ({ entity: { tokens: { fill: 0.2 } } }),
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        {
+          roots: [Graph.EntityProviderKey],
+          providers: Graph.createGraphProviders({ graphThemeStyles: [definition] }),
+        },
+      ],
+    });
+    const coreStyle = defineThemeStyle({ name: definition.name, resolve: () => ({}) });
+    const output = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        theme: { style: definition.name, mode: 'light' },
+        children: [
+          Graph.EntitySchema.parse({
+            namespace: 'graph',
+            type: 'entity',
+            role: 'activity',
+            position: [0, 0],
+            color: '#336699',
+          }),
+        ],
+      },
+      { ...definitions, themeStyles: [coreStyle], padding: 0 },
+    );
+
+    expect(JSON.stringify(output.scene)).toContain('#d6e0eb');
+    expect(JSON.stringify(output.scene)).not.toContain('"fill":0.2');
+  });
+
+  it('按 Relation -> label / marker 主色链解析 Graph Theme 数值 token', () => {
+    const definition = Graph.defineGraphThemeStyle({
+      name: 'contextual-relation',
+      resolve: () => ({
+        relation: {
+          tokens: {
+            color: '#336699',
+            stroke: 0.2,
+            labelTextForeground: 0.6,
+            targetMarker: { color: 0.8, fill: 0.25 },
+          },
+        },
+      }),
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        {
+          roots: [Graph.RelationProviderKey],
+          providers: Graph.createGraphProviders({ graphThemeStyles: [definition] }),
+        },
+      ],
+    });
+    const coreStyle = defineThemeStyle({ name: definition.name, resolve: () => ({}) });
+    const output = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        theme: { style: definition.name, mode: 'light' },
+        children: [
+          { type: 'node', id: 'source', position: [0, 0] },
+          { type: 'node', id: 'target', position: [80, 0] },
+          Graph.RelationSchema.parse({
+            namespace: 'graph',
+            type: 'relation',
+            source: { id: 'source' },
+            target: { id: 'target' },
+            role: 'dependency',
+            labels: [{ text: 'edge' }],
+          }),
+        ],
+      },
+      { ...definitions, themeStyles: [coreStyle], padding: 0 },
+    );
+    const scene = JSON.stringify(output.scene);
+
+    expect(scene).toContain('#d6e0eb');
+    expect(scene).toContain('#85a3c2');
+    expect(scene).toContain('#d6e1eb');
+  });
+
   it('compiles Graph Core Theme/default channels and graphTheme through the emitted Scope', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],

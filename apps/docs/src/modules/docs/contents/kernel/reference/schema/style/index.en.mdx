@@ -65,7 +65,11 @@ The four schemas below are reusable strict field fragments. Standard, Plot, and 
 
 ## Paint value
 
-`fill` and `stroke` accept `PaintValueSchema`: keep solid colors as CSS color strings, and use a `kind`-discriminated `IRPaint` object only for gradients, patterns, or images.
+`ContextualColorSchema` accepts a CSS color string or a `0..1` number. A string is an exact color. A number is the final `color` master's weight over the current Theme-mode backdrop: white in Light and black in Dark. Core materializes it to an opaque string only after the complete style cascade. The master `color`, palettes, gradient stops, patterns, and shadow colors remain string-only.
+
+<ZodSchema name="ContextualColorSchema" />
+
+`fill` and `stroke` accept `PaintValueSchema`: use a string or contextual weight for a solid color, and a `kind`-discriminated `IRPaint` object for gradients, patterns, or images. A number is not opacity; the existing opacity fields remain independent.
 
 <ZodSchema name="PaintValueSchema" />
 

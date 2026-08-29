@@ -44,6 +44,7 @@ import {
   TableBorderKind,
   TableBorderMode,
   TableCellAppearanceSchema,
+  TableCellLocation,
   TableCellPayloadKind,
   TableRowKind,
   TableSchema,
@@ -227,12 +228,16 @@ const trackLayoutsOf = (
 };
 
 /** 把 IR border 候选物化为 graph 消费态 */
-const resolveBorderCandidate = (border: DeepReadonly<IRTableBorder>): ResolvedTableBorderCandidate => {
+const resolveBorderCandidate = (
+  border: DeepReadonly<IRTableBorder>,
+  masterColor: string,
+): ResolvedTableBorderCandidate => {
   if (border.kind === TableBorderKind.None) return { kind: 'none', priority: border.priority ?? 0 };
   return {
     kind: 'line',
     priority: border.priority ?? 0,
     line: {
+      color: masterColor,
       stroke: border.stroke ?? 'currentColor',
       width: border.width ?? 1,
       strokeOpacity: border.strokeOpacity ?? 1,
@@ -257,7 +262,11 @@ const resolveStyleBorderCandidate = (
   border: DeepReadonly<IRTableThemeTokenBorder>,
   tokens: ResolvedTableThemeTokens,
 ): ResolvedTableBorderCandidate => {
-  const resolved = resolveBorderCandidate({ ...structuredClone(border), priority: -100 });
+  const masterColor =
+    (key === 'columnHeader.border.bottom'
+      ? tokens.tokens['columnHeader.content.color']
+      : tokens.tokens['cell.content.color']) ?? 'currentColor';
+  const resolved = resolveBorderCandidate({ ...structuredClone(border), priority: -100 }, masterColor);
   if (resolved.kind !== 'line') throw new RetikzTableError('table: internal style border must resolve to a line');
   return {
     ...resolved,
@@ -272,13 +281,14 @@ const resolveStyleBorderCandidate = (
 /** 把 Cell 四侧 border 按固定物理顺序物化为 Border Graph 输入 */
 const resolveCellBorders = (
   borders: DeepReadonly<IRTableCellBorders>,
+  masterColor: string,
   trace?: TableCellAppearanceTrace,
 ): Readonly<Partial<Record<TableBorderSide, ResolvedTableBorderCandidate>>> => ({
   ...Object.fromEntries(
     (['top', 'right', 'bottom', 'left'] as const).flatMap(side => {
       const border = borders[side];
       if (border === undefined) return [];
-      const resolved = resolveBorderCandidate(border);
+      const resolved = resolveBorderCandidate(border, masterColor);
       const source = trace?.[`/borders/${side}`];
       return [
         [
@@ -441,6 +451,13 @@ export const resolvePresentedTableTransaction = (
     } as const);
   const manifestStyle = 'style' in manifestTheme ? manifestTheme.style : undefined;
   const tableThemeTokens = input.tableThemeTokens ?? resolveTableThemeTokens(manifestTheme);
+  const cellContentMasterColor = (index: number): string =>
+    presented.cells[index].appearance.content?.color ??
+    (semantic.cells[index].location === TableCellLocation.ColumnHeader
+      ? tableThemeTokens.tokens['columnHeader.content.color']
+      : tableThemeTokens.tokens['cell.content.color']) ??
+    'currentColor';
+  const tableContentMasterColor = tableThemeTokens.tokens['cell.content.color'] ?? 'currentColor';
 
   const intrinsic = presented.cells.map((cell, index) => {
     const semanticCell = semantic.cells[index];
@@ -545,7 +562,11 @@ export const resolvePresentedTableTransaction = (
       fit: probe.semantic.layout.fit,
       overflow: probe.semantic.layout.overflow,
     });
-    const background = emitTableCellBackground(presented.cells[index].appearance.background, box);
+    const background = emitTableCellBackground(
+      presented.cells[index].appearance.background,
+      box,
+      cellContentMasterColor(index),
+    );
     if (background !== undefined) backgroundOutputs.push(background);
     const visualOverflowBounds =
       background === undefined
@@ -578,6 +599,7 @@ export const resolvePresentedTableTransaction = (
         : {
             borders: resolveCellBorders(
               presented.cells[index].appearance.borders,
+              cellContentMasterColor(index),
               input.plan?.cells[index].trace.appearance,
             ),
           }),
@@ -586,7 +608,7 @@ export const resolvePresentedTableTransaction = (
     defaults: {
       ...(() => {
         if (resolved.borders?.outer !== undefined) {
-          const candidate = resolveBorderCandidate(resolved.borders.outer);
+          const candidate = resolveBorderCandidate(resolved.borders.outer, tableContentMasterColor);
           return { outer: { top: candidate, right: candidate, bottom: candidate, left: candidate } };
         }
         const keys = {
@@ -613,7 +635,7 @@ export const resolvePresentedTableTransaction = (
                 tableThemeTokens,
               ),
             }
-        : { horizontal: resolveBorderCandidate(resolved.borders.horizontal) }),
+        : { horizontal: resolveBorderCandidate(resolved.borders.horizontal, tableContentMasterColor) }),
       ...(resolved.borders?.vertical === undefined
         ? tableThemeTokens.tokens['table.border.vertical'] === null
           ? {}
@@ -624,7 +646,7 @@ export const resolvePresentedTableTransaction = (
                 tableThemeTokens,
               ),
             }
-        : { vertical: resolveBorderCandidate(resolved.borders.vertical) }),
+        : { vertical: resolveBorderCandidate(resolved.borders.vertical, tableContentMasterColor) }),
     },
   });
   const borderResult =

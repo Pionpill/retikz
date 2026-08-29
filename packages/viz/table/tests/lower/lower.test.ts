@@ -118,6 +118,51 @@ describe('Table layout-aware lowering', () => {
     expect(result.scene.layout).toEqual({ x: 0, y: 0, width: 310, height: 63 });
   });
 
+  it.each([
+    ['light', '#d6e0eb', '#d6adad', '#c28585'],
+    ['dark', '#0a141f', '#3d1414', '#5c1f1f'],
+  ] as const)(
+    'resolves Cell and Header contextual colors from their own content masters in %s mode',
+    (mode, cellBackground, headerBackground, headerBorder) => {
+      const spec: IRTable = {
+        namespace: TABLE_NAMESPACE,
+        type: TableComposite.Table,
+        data: { reference: 'people' },
+        structure: { kind: 'detail', columns: [{ id: 'name', field: 'name' }] },
+        tableThemeTokens: {
+          'cell.content.color': '#336699',
+          'cell.background.fill': 0.2,
+          'columnHeader.content.color': '#993333',
+          'columnHeader.background.fill': 0.4,
+          'columnHeader.border.bottom': { kind: 'line', stroke: 0.6, width: 2 },
+        },
+      };
+      const result = compileTable(spec, { people: [{ name: 'Ada' }] }, { theme: { mode }, compile: { padding: 0 } });
+      const headerWinner = result.manifest.borders
+        .flatMap(border => border.atoms)
+        .map(atom => atom.winner)
+        .find(winner => winner.kind === 'line' && winner.source.kind === 'cell' && winner.source.side === 'bottom');
+
+      expect(result.manifest.cells[0].appearance).toMatchObject({
+        background: { fill: 0.4 },
+        content: { color: '#993333' },
+      });
+      expect(result.manifest.cells[1].appearance).toMatchObject({
+        background: { fill: 0.2 },
+        content: { color: '#336699' },
+      });
+      expect(headerWinner).toMatchObject({
+        kind: 'line',
+        line: { color: '#993333', stroke: 0.6 },
+      });
+      const serialized = JSON.stringify(result.scene);
+      expect(serialized).toContain(cellBackground);
+      expect(serialized).toContain(headerBackground);
+      expect(serialized).toContain(headerBorder);
+      expect(serialized).not.toMatch(/"(?:fill|stroke)":0(?:\.\d+)?/);
+    },
+  );
+
   it('fails loud for missing data, custom structure, and duplicate composite keys', () => {
     const detail: IRTable = {
       namespace: TABLE_NAMESPACE,

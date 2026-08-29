@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  ContextualColorSchema,
   CssColorSchema,
   FontFamilySchema,
   FontSchema,
@@ -8,6 +9,7 @@ import {
   FontWeightSchema,
   LineHeightSchema,
   NodeSchema,
+  PaintValueSchema,
   StrokeStyleSchema,
   StrokeWidthSchema,
   TextAlignSchema,
@@ -19,6 +21,29 @@ describe('Core value atom schemas', () => {
     for (const color of ['', '   ']) {
       expect(CssColorSchema.safeParse(color).success).toBe(false);
     }
+  });
+
+  it('accepts normalized numeric weights only in contextual color atoms', () => {
+    for (const color of ['currentColor', '#336699', 0, 0.4, 1]) {
+      expect(ContextualColorSchema.safeParse(color).success).toBe(true);
+    }
+    for (const color of [-0.01, 1.01, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(ContextualColorSchema.safeParse(color).success).toBe(false);
+    }
+    expect(PaintValueSchema.parse(0.4)).toBe(0.4);
+  });
+
+  it('keeps graphic masters and paint-internal colors string-only', () => {
+    expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], color: 0.4 }).success).toBe(false);
+    expect(
+      PaintValueSchema.safeParse({
+        kind: 'linearGradient',
+        stops: [
+          { offset: 0, color: 0.2 },
+          { offset: 1, color: '#ffffff' },
+        ],
+      }).success,
+    ).toBe(false);
   });
 
   it('parses font family, weight, and style with the existing Font contract', () => {

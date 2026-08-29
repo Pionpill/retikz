@@ -1,7 +1,18 @@
 import { pointAtArcAngle } from '@retikz/math';
 
 import type { Transform } from '../../contract';
-import type { IRGeometryLabel, IRPathBase, IRPosition, IRStep, IRTarget } from '../../schemas';
+import type {
+  IRArrowMark,
+  IRGeometryLabel,
+  IRMathRun,
+  IRPaintValue,
+  IRPathBase,
+  IRPosition,
+  IRStep,
+  IRTarget,
+  IRTextRun,
+} from '../../schemas';
+import type { ResolvedInlineSourceRun, ResolvedLabelTextContent } from '../text';
 import type {
   CanonicalGeometryLabel,
   CanonicalPath,
@@ -9,6 +20,10 @@ import type {
   PathResolution,
   PathResolveContext,
   PathTargetResolver,
+  ResolvedArrowMark,
+  ResolvedGeometryLabel,
+  ResolvedPathSource,
+  ResolvedStepSource,
   TargetResolution,
 } from './types';
 
@@ -23,7 +38,7 @@ import {
   isRelativeTargetLike,
 } from '../../shared';
 import { resolvePaint } from '../resource';
-import { resolveEffectivePath } from '../style';
+import { resolveContextualColor, resolveEffectiveLabelDefault, resolveEffectivePath } from '../style';
 import { resolveDropShadow } from '../style';
 import { resolvePathKind } from './provider';
 
@@ -37,7 +52,7 @@ const LABEL_POSITION: Record<string, number> = {
   'at-end': 1,
 };
 
-const canonicalizeLabel = (label: IRGeometryLabel): CanonicalGeometryLabel => ({
+const canonicalizeLabel = (label: ResolvedGeometryLabel): CanonicalGeometryLabel => ({
   ...label,
   position:
     label.position === undefined
@@ -49,7 +64,7 @@ const canonicalizeLabel = (label: IRGeometryLabel): CanonicalGeometryLabel => ({
   distance: label.distance ?? 4,
 });
 
-const canonicalizeStep = (step: IRStep): CanonicalStep => {
+const canonicalizeStep = (step: ResolvedStepSource): CanonicalStep => {
   if (step.kind === 'move' || step.kind === 'cycle' || step.kind === 'rectangle') return step;
   const label = step.label === undefined ? undefined : canonicalizeLabel(step.label);
   if (step.kind === 'fold') {
@@ -77,10 +92,10 @@ const canonicalizeStep = (step: IRStep): CanonicalStep => {
   return { ...step, label };
 };
 
-const canonicalizeSteps = (steps: ReadonlyArray<IRStep> | undefined): Array<CanonicalStep> | undefined =>
+const canonicalizeSteps = (steps: ReadonlyArray<ResolvedStepSource> | undefined): Array<CanonicalStep> | undefined =>
   steps?.map(canonicalizeStep);
 
-const canonicalizePath = (path: IRPathBase): CanonicalPath => ({
+const canonicalizePath = (path: ResolvedPathSource): CanonicalPath => ({
   ...path,
   children: canonicalizeSteps(path.children),
   label:
@@ -89,6 +104,163 @@ const canonicalizePath = (path: IRPathBase): CanonicalPath => ({
       : (Array.isArray(path.label) ? path.label : [path.label]).map(canonicalizeLabel),
   shadow: resolveDropShadow(path.shadow),
 });
+
+/** 将 contextual paint 的 number 分支确定为字符串，paint object 保持不变 */
+const resolvePathPaint = (
+  value: IRPaintValue | undefined,
+  masterColor: string | undefined,
+  context: PathResolveContext,
+  fieldPath: string,
+): Exclude<IRPaintValue, number> | undefined =>
+  typeof value === 'number' ? resolveContextualColor(value, { masterColor, mode: context.mode, fieldPath }) : value;
+
+/** 确定 geometry label 中单个文字或公式 run 的派生颜色 */
+const resolveLabelRunColor = (
+  run: IRTextRun | IRMathRun,
+  masterColor: string | undefined,
+  context: PathResolveContext,
+  fieldPath: string,
+): ResolvedInlineSourceRun => {
+  const { fill, ...source } = run;
+  return {
+    ...source,
+    ...(fill === undefined
+      ? {}
+      : {
+          fill: resolveContextualColor(fill, {
+            masterColor,
+            mode: context.mode,
+            fieldPath: `${fieldPath}.fill`,
+          }),
+        }),
+  };
+};
+
+/** 确定 geometry label 单行内容中各 run 的派生颜色 */
+const resolveGeometryLabelText = (
+  text: IRGeometryLabel['text'],
+  masterColor: string | undefined,
+  context: PathResolveContext,
+  fieldPath: string,
+): ResolvedLabelTextContent =>
+  typeof text === 'string'
+    ? text
+    : {
+        runs: text.runs.map((run, index) =>
+          resolveLabelRunColor(run, masterColor, context, `${fieldPath}.runs[${index}]`),
+        ),
+      };
+
+/** 确定一个 geometry label 的文字主色与 run 颜色 */
+const resolveGeometryLabelColors = (
+  label: IRGeometryLabel,
+  masterColor: string | undefined,
+  context: PathResolveContext,
+  fieldPath: string,
+): ResolvedGeometryLabel => {
+  const { textColor, text, ...source } = label;
+  const resolvedTextColor =
+    textColor === undefined
+      ? masterColor
+      : resolveContextualColor(textColor, {
+          masterColor,
+          mode: context.mode,
+          fieldPath: `${fieldPath}.textColor`,
+        });
+  const textMaster = resolvedTextColor ?? masterColor;
+  return {
+    ...source,
+    ...(resolvedTextColor === undefined ? {} : { textColor: resolvedTextColor }),
+    text: resolveGeometryLabelText(text, textMaster, context, `${fieldPath}.text`),
+  };
+};
+
+/** 确定一个 step 可选 label 的派生颜色 */
+const resolveStepLabelColors = (
+  step: IRStep,
+  masterColor: string | undefined,
+  context: PathResolveContext,
+  fieldPath: string,
+): ResolvedStepSource => {
+  if (!('label' in step)) return step as ResolvedStepSource;
+  const { label, ...source } = step;
+  if (label === undefined) return source;
+  return {
+    ...source,
+    label: resolveGeometryLabelColors(label, masterColor, context, `${fieldPath}.label`),
+  };
+};
+
+/** 确定 arrow color 后再以该颜色为 master 确定 fill */
+const resolveArrowColors = (
+  mark: IRArrowMark,
+  masterColor: string | undefined,
+  context: PathResolveContext,
+  fieldPath: string,
+): ResolvedArrowMark => {
+  const { color, fill, ...source } = mark;
+  const resolvedColor =
+    color === undefined
+      ? masterColor
+      : resolveContextualColor(color, {
+          masterColor,
+          mode: context.mode,
+          fieldPath: `${fieldPath}.color`,
+        });
+  return {
+    ...source,
+    ...(resolvedColor === undefined ? {} : { color: resolvedColor }),
+    ...(fill === undefined
+      ? {}
+      : {
+          fill: resolveContextualColor(fill, {
+            masterColor: resolvedColor,
+            mode: context.mode,
+            fieldPath: `${fieldPath}.fill`,
+          }),
+        }),
+  };
+};
+
+/** 在 provider 消费前确定 Path、label 与 arrow 的所有上下文颜色 */
+const resolvePathContextualColors = (
+  path: IRPathBase,
+  context: PathResolveContext,
+  irPath: string,
+  labelMasterColor: string | undefined,
+): ResolvedPathSource => {
+  const { fill, stroke, children, label, marks, ...source } = path;
+  const masterColor = path.color;
+  const resolvedHostLabel =
+    label === undefined
+      ? undefined
+      : Array.isArray(label)
+        ? label.map((item, index) =>
+            resolveGeometryLabelColors(item, labelMasterColor, context, `${irPath}.label[${index}]`),
+          )
+        : resolveGeometryLabelColors(label, labelMasterColor, context, `${irPath}.label`);
+  return {
+    ...source,
+    ...(fill === undefined ? {} : { fill: resolvePathPaint(fill, masterColor, context, `${irPath}.fill`) }),
+    ...(stroke === undefined ? {} : { stroke: resolvePathPaint(stroke, masterColor, context, `${irPath}.stroke`) }),
+    ...(children === undefined
+      ? {}
+      : {
+          children: children.map((step, index) =>
+            resolveStepLabelColors(step, labelMasterColor, context, `${irPath}.children[${index}]`),
+          ),
+        }),
+    ...(resolvedHostLabel === undefined ? {} : { label: resolvedHostLabel }),
+    ...(marks === undefined
+      ? {}
+      : {
+          marks: marks.map((item, index) => ({
+            ...item,
+            mark: resolveArrowColors(item.mark, masterColor, context, `${irPath}.marks[${index}].mark`),
+          })),
+        }),
+  };
+};
 
 const pointOfTarget = (
   target: IRTarget,
@@ -230,8 +402,12 @@ const resolveSteps = (
 export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
   const styled = context.styleStack === undefined ? path : resolveEffectivePath(path, context.styleStack);
   const irPath = context.irPath ?? 'path';
-  const kind = resolvePathKind(styled, context, irPath);
-  const canonicalPath = canonicalizePath(kind.path);
+  const labelDefault = resolveEffectiveLabelDefault(context.styleStack ?? []);
+  const labelMasterColor = labelDefault.color ?? styled.color;
+  const colorsResolved = resolvePathContextualColors(styled, context, irPath, labelMasterColor);
+  const kind = resolvePathKind(colorsResolved, context, irPath);
+  const providerColorsResolved = resolvePathContextualColors(kind.path, context, irPath, labelMasterColor);
+  const canonicalPath = canonicalizePath(providerColorsResolved);
   const targets = new Map<string, TargetResolution>();
   const scopeChain = context.scopeChain ?? [];
   const canonicalSteps =

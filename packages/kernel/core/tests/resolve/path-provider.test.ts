@@ -127,6 +127,7 @@ describe('resolve/path provider bindings', () => {
 
     expect(arrowResolution?.definition).toBe(arrow);
     expect(arrowResolution?.visual.fill).toBeUndefined();
+    expect(arrowResolution?.visual).toMatchObject({ length: 8, width: 8 });
     expect(arrowResolution?.geometry.contactX).toBe(2 - 1.5 / 2);
     expect(arrowResolution?.geometry.shrink).toBeGreaterThan(0);
   });

@@ -5,19 +5,45 @@ import type { ProviderCollection } from '../../providers/registry';
 import type {
   IRBoundary,
   IRJsonObject,
-  IRLine,
   IRNode,
   IRNodeLabel,
   IRNodeLabelBoundaryPosition,
+  IRPaint,
   NodeLabelPlacementValue,
   NodeLabelPositionValue,
   NodeTextAlignValue,
   ResolvedDropShadow,
   StrokeDashPattern,
 } from '../../schemas';
+import type { ThemeModeValue } from '../../shared';
 import type { Rect } from '../../shared/geometry';
 import type { PaintResolutionInput } from '../resource';
 import type { StyleResolveFrame } from '../style';
+import type { ResolvedLabelTextContent, ResolvedTextLine } from '../text';
+
+/** 已把派生颜色确定为字符串的 Node label pin */
+export type ResolvedNodeLabelPin = Omit<Exclude<IRNodeLabel['pin'], boolean | undefined>, 'stroke'> & {
+  /** 已确定的引线颜色 */
+  stroke?: string;
+};
+
+/** 已把 Node 自身派生颜色确定为字符串、但尚未处理正文和 label 的中间形态 */
+export type PrimaryColorResolvedNode = Omit<IRNode, 'fill' | 'stroke' | 'textColor'> & {
+  /** 已确定的节点填充 */
+  fill?: string | IRPaint;
+  /** 已确定的节点描边 */
+  stroke?: string | IRPaint;
+  /** 已确定的节点正文主色 */
+  textColor?: string;
+};
+
+/** 所有上下文颜色均已确定为字符串的 Node Source 投影 */
+export type ResolvedNodeSource = Omit<PrimaryColorResolvedNode, 'text' | 'label'> & {
+  /** 已确定行级与 run 颜色的正文 */
+  text?: string | Array<ResolvedTextLine>;
+  /** 已确定 label、run 与 pin 颜色的附属标签 */
+  label?: Array<CanonicalNodeLabel>;
+};
 
 /** 已补齐边界比例的节点标签位置 */
 export type CanonicalNodeLabelBoundaryPosition = Omit<IRNodeLabelBoundaryPosition, 'fraction'> & {
@@ -26,18 +52,29 @@ export type CanonicalNodeLabelBoundaryPosition = Omit<IRNodeLabelBoundaryPositio
 };
 
 /** 展开静态位置与放置默认值后的节点标签 */
-export type CanonicalNodeLabel = Omit<IRNodeLabel, 'position' | 'placement' | 'distance'> & {
+export type CanonicalNodeLabel = Omit<
+  IRNodeLabel,
+  'align' | 'position' | 'placement' | 'distance' | 'textColor' | 'text' | 'pin'
+> & {
+  /** 标签视觉盒沿附着切线的对齐方式 */
+  align: NodeTextAlignValue;
   /** 标签附着位置 */
   position: NodeLabelPositionValue | number | CanonicalNodeLabelBoundaryPosition;
   /** 标签相对附着点的放置方向 */
   placement: NodeLabelPlacementValue;
   /** 标签到节点边界的距离 */
   distance: number;
+  /** 已确定的标签文字主色 */
+  textColor?: string;
+  /** 已确定 run 颜色的标签正文 */
+  text: ResolvedLabelTextContent;
+  /** 已确定 stroke 颜色的标签引线 */
+  pin?: boolean | ResolvedNodeLabelPin;
 };
 
 /** 展开 Node 紧凑写法与静态默认值后的完整内部形态 */
 export type CanonicalNode = Omit<
-  IRNode,
+  ResolvedNodeSource,
   | 'padding'
   | 'margin'
   | 'minimumSize'
@@ -60,7 +97,7 @@ export type CanonicalNode = Omit<
   /** 完整轴向缩放 */
   scale: { x: number; y: number };
   /** 多行正文 */
-  text?: Array<IRLine>;
+  text?: Array<ResolvedTextLine>;
   /** 已按数组形态展开的附属标签 */
   label?: Array<CanonicalNodeLabel>;
   /** 正文对齐 */
@@ -147,6 +184,8 @@ export type NodeResolution = {
 export type NodeResolveContext = {
   /** 当前节点所在 scope 的样式 frame */
   styleFrames: ReadonlyArray<StyleResolveFrame>;
+  /** 当前节点所在位置的 Theme 明暗模式 */
+  mode: ThemeModeValue;
   /** shape provider 注册表 */
   shapes: ProviderCollection<ShapeDefinition>;
   /** boundary provider 注册表 */
