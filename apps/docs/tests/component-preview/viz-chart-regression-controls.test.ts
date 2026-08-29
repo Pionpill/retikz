@@ -34,6 +34,16 @@ type DemoModule = Readonly<{
   previewSource: PreviewSourceConfig;
 }>;
 
+type StyleModule = Readonly<{
+  regressionTrendPropertiesOf: (
+    grouped: boolean,
+    stroke: string,
+    lineStyle: 'solid' | 'dashed',
+    strokeWidth: number,
+    strokeOpacity: number,
+  ) => unknown;
+}>;
+
 const dataModules = import.meta.glob<DataModule>(
   '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.data.ts',
   { eager: true },
@@ -44,6 +54,10 @@ const controlsModules = import.meta.glob<ControlsModule>(
 );
 const demoModules = import.meta.glob<DemoModule>(
   '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.*.demo.tsx',
+  { eager: true },
+);
+const styleModules = import.meta.glob<StyleModule>(
+  '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic-style.ts',
   { eager: true },
 );
 
@@ -124,7 +138,10 @@ describe('Viz Chart Regression controls', () => {
       'regression-basic-order': 3,
       'regression-basic-sample-count': 64,
       'regression-basic-point-opacity': 0.55,
+      'regression-basic-trend-stroke-color': '#e11d48',
+      'regression-basic-trend-line-style': 'solid',
       'regression-basic-trend-stroke-width': 2,
+      'regression-basic-trend-stroke-opacity': 0.9,
     });
 
     const fields = getPreviewControlFields(zh.controls);
@@ -134,7 +151,10 @@ describe('Viz Chart Regression controls', () => {
       'regression-basic-order',
       'regression-basic-sample-count',
       'regression-basic-point-opacity',
+      'regression-basic-trend-stroke-color',
+      'regression-basic-trend-line-style',
       'regression-basic-trend-stroke-width',
+      'regression-basic-trend-stroke-opacity',
     ]);
 
     const method = fields.find(field => field.id === 'regression-basic-method');
@@ -164,14 +184,52 @@ describe('Viz Chart Regression controls', () => {
       min: 16,
       max: 128,
     });
+    expect(fields.find(field => field.id === 'regression-basic-trend-stroke-color')).toMatchObject({
+      kind: 'color',
+      defaultValue: '#e11d48',
+      visibleWhen: { controlId: 'regression-basic-group-by-species', oneOf: [false] },
+    });
+    const lineStyle = fields.find(field => field.id === 'regression-basic-trend-line-style');
+    expect(lineStyle).toMatchObject({ kind: 'select', defaultValue: 'solid' });
+    if (lineStyle?.kind === 'select') {
+      expect(lineStyle.options.map(option => option.value)).toEqual(['solid', 'dashed']);
+    }
+    expect(fields.find(field => field.id === 'regression-basic-trend-stroke-opacity')).toMatchObject({
+      kind: 'range',
+      defaultValue: 0.9,
+      min: 0.2,
+      max: 1,
+      step: 0.05,
+    });
     expect(Object.keys(zh.canonicalValues).sort()).toEqual(fields.map(field => field.id).sort());
     expect(zh.relatedApis).toEqual([
       'RegressionEncodings.series',
       'RegressionProperties.method',
       'RegressionProperties.sampleCount',
       'RegressionProperties.point.opacity',
+      'RegressionProperties.trend.stroke',
+      'RegressionProperties.trend.dashPattern',
       'RegressionProperties.trend.strokeWidth',
+      'RegressionProperties.trend.strokeOpacity',
     ]);
+  });
+
+  it('共享样式 helper 把颜色、线型与透明度映射为有效 trend properties', () => {
+    const style = requiredModule(
+      styleModules,
+      '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic-style.ts',
+    );
+
+    expect(style.regressionTrendPropertiesOf(false, '#0f766e', 'dashed', 3, 0.65)).toEqual({
+      stroke: '#0f766e',
+      dashPattern: [8, 4],
+      strokeWidth: 3,
+      strokeOpacity: 0.65,
+    });
+    expect(style.regressionTrendPropertiesOf(true, '#0f766e', 'solid', 2, 0.9)).toEqual({
+      strokeWidth: 2,
+      strokeOpacity: 0.9,
+    });
   });
 
   it('双语 demo 从 canonical controls 派生精简 Regression Source', () => {
@@ -187,7 +245,7 @@ describe('Viz Chart Regression controls', () => {
         method: { kind: 'linear' },
         sampleCount: 64,
         point: { opacity: 0.55 },
-        trend: { strokeWidth: 2 },
+        trend: { strokeWidth: 2, strokeOpacity: 0.9 },
       });
       expect(canonicalDeclarationProps(source, ChartLayout)).toMatchObject({ width: 800, height: 500 });
       expect(source.datasetImports).toEqual({

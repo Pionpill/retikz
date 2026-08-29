@@ -8,6 +8,7 @@ import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, REGRESSION_BASIC_CONTROL_IDS } from './regression-basic.controls';
 import { irisRegressionData } from './regression-basic.data';
+import { regressionTrendPropertiesOf } from './regression-basic-style';
 
 type RegressionMethodKind = IRPlotSmoothMethod['kind'];
 
@@ -38,7 +39,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       method={methodOf(values[REGRESSION_BASIC_CONTROL_IDS.method], values[REGRESSION_BASIC_CONTROL_IDS.order])}
       sampleCount={values[REGRESSION_BASIC_CONTROL_IDS.sampleCount]}
       point={{ opacity: values[REGRESSION_BASIC_CONTROL_IDS.pointOpacity] }}
-      trend={{ strokeWidth: values[REGRESSION_BASIC_CONTROL_IDS.trendStrokeWidth] }}
+      trend={regressionTrendPropertiesOf(
+        values[REGRESSION_BASIC_CONTROL_IDS.groupBySpecies],
+        values[REGRESSION_BASIC_CONTROL_IDS.trendStrokeColor],
+        values[REGRESSION_BASIC_CONTROL_IDS.trendLineStyle],
+        values[REGRESSION_BASIC_CONTROL_IDS.trendStrokeWidth],
+        values[REGRESSION_BASIC_CONTROL_IDS.trendStrokeOpacity],
+      )}
     />
     <ChartTitle>鸢尾花萼片与花瓣长度的回归趋势</ChartTitle>
     <ChartSubtitle>UCI Iris 全部 150 行观测；萼片与花瓣长度单位均为厘米，颜色表示物种</ChartSubtitle>
