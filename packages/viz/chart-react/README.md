@@ -5,7 +5,7 @@ chartType recipes.
 
 The base entry, `@retikz/chart-react`, exports `ChartData`, `ChartLayout`, and
 `ChartExtension` together with the four headless presentation markers and
-`ChartThemeProvider`. Import Scatter or Bubble declarations from
+`ChartThemeProvider`. Import Scatter, Bubble, or Regression declarations from
 `@retikz/chart-react/point`, or use the corresponding concrete component
 subpath. There is no generic `Chart` component.
 

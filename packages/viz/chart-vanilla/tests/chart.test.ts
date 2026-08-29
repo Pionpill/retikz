@@ -5,11 +5,18 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import { renderChart } from '../src';
-import { createBubbleChart, createScatterChart } from '../src/point';
+import { createBubbleChart, createRegressionChart, createScatterChart } from '../src/point';
 
 const rows = [
   { x: 1, y: 2, size: 3, order: 1 },
   { x: 2, y: 4, size: 5, order: 2 },
+];
+
+const regressionRows = [
+  { x: 1, y: 2, species: 'setosa' },
+  { x: 2, y: 4, species: 'setosa' },
+  { x: 1, y: 3, species: 'versicolor' },
+  { x: 2, y: 5, species: 'versicolor' },
 ];
 
 type ScenePrimitiveLike = Readonly<{
@@ -55,6 +62,49 @@ describe('Chart Vanilla authoring', () => {
 
     expect(rendered.svg).toContain('<svg');
     expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toContain('bubble');
+  });
+
+  it('creates Regression Source, dataset binding, and its concrete provider contribution', () => {
+    const chart = createRegressionChart({
+      data: regressionRows,
+      dataRef: 'regression.rows',
+      encodings: { x: 'x', y: 'y', series: 'species' },
+      properties: { method: { kind: 'linear' }, sampleCount: 8 },
+    });
+
+    expect(chart.source).toMatchObject({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'regression.rows' },
+      recipe: {
+        chartType: 'regression',
+        encodings: { x: 'x', y: 'y', series: 'species' },
+        properties: { method: { kind: 'linear' }, sampleCount: 8 },
+      },
+    });
+    expect(chart.input.datasets).toEqual({ 'regression.rows': regressionRows });
+    expect(chart.input.source).toBe(chart.source);
+    expect(chart.input.chartProviderContribution.providers.at(-1)?.key).toEqual({
+      capability: 'composite',
+      namespace: 'chart',
+      type: 'point',
+    });
+  });
+
+  it('renders grouped Regression through SSR without serializing runtime Definitions', () => {
+    const chart = createRegressionChart({
+      id: 'regression',
+      data: regressionRows,
+      encodings: { x: 'x', y: 'y', series: 'species' },
+      properties: { sampleCount: 8 },
+    });
+    const rendered = renderChart(chart);
+    const serializedSource = JSON.stringify(chart.source);
+
+    expect(rendered.svg).toContain('<svg');
+    expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toContain('regression');
+    expect(serializedSource).not.toMatch(/providers|definitions|schema|apply|lowerOptions/iu);
+    expect(JSON.parse(serializedSource)).toEqual(chart.source);
   });
 
   it('does not expose a generic Chart authoring path', async () => {

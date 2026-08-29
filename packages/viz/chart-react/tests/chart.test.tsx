@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { normalizeBubbleChart } from '@retikz/chart-vanilla/point/bubble';
+import { normalizeRegressionChart } from '@retikz/chart-vanilla/point/regression';
 import { normalizeScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { PlotAxis, PlotFacet, PlotTransform, PointMark } from '@retikz/plot-react';
 import { Layout, Text } from '@retikz/react';
@@ -18,6 +19,7 @@ import {
   RetikzChartReactErrorCode,
 } from '../src';
 import { BubbleChart, BubbleEncodings, BubbleMark, BubbleProperties } from '../src/point/bubble';
+import { RegressionChart, RegressionEncodings, RegressionMark, RegressionProperties } from '../src/point/regression';
 import { ScatterChart, ScatterEncodings, ScatterMark, ScatterProperties } from '../src/point/scatter';
 
 type InputComponent<TInput> = {
@@ -38,6 +40,20 @@ const requiredBubbleDeclarations = (
   <>
     <ChartData data={[{ income: 1000, lifeExpectancy: 60, population: 1_000_000 }]} />
     <BubbleEncodings x="income" y="lifeExpectancy" size="population" />
+  </>
+);
+
+const requiredRegressionDeclarations = (
+  <>
+    <ChartData
+      data={[
+        { x: 1, y: 2, species: 'setosa' },
+        { x: 2, y: 4, species: 'setosa' },
+        { x: 1, y: 3, species: 'versicolor' },
+        { x: 2, y: 5, species: 'versicolor' },
+      ]}
+    />
+    <RegressionEncodings x="x" y="y" series="species" />
   </>
 );
 
@@ -92,6 +108,92 @@ describe('Typed Point Chart React declarations', () => {
     const markup = renderToStaticMarkup(<BubbleChart>{requiredBubbleDeclarations}</BubbleChart>);
 
     expect(markup.match(/<svg/g)).toHaveLength(1);
+  });
+
+  it('maps exact Regression declarations with nested properties and preserves Fragment/array mark order', () => {
+    const marks = [
+      <RegressionMark key="override" override properties={{ point: { opacity: 0.25 }, trend: { strokeWidth: 3 } }} />,
+      <RegressionMark key="append" encodings={{ y: 'alternateY' }} properties={{ method: { kind: 'quadratic' } }} />,
+    ];
+    const input = inputOf(
+      RegressionChart,
+      <>
+        {requiredRegressionDeclarations}
+        <RegressionProperties
+          method={{ kind: 'polynomial', order: 3 }}
+          sampleCount={16}
+          point={{ size: 5, opacity: 0.6 }}
+          trend={{ strokeWidth: 2, strokeOpacity: 0.8 }}
+        />
+        <>{marks}</>
+      </>,
+    );
+
+    expect(input.source).toEqual(
+      normalizeRegressionChart({
+        data: { reference: 'chart.data' },
+        encodings: { x: 'x', y: 'y', series: 'species' },
+        properties: {
+          method: { kind: 'polynomial', order: 3 },
+          sampleCount: 16,
+          point: { size: 5, opacity: 0.6 },
+          trend: { strokeWidth: 2, strokeOpacity: 0.8 },
+        },
+        marks: [
+          {
+            kind: 'regression',
+            override: true,
+            properties: { point: { opacity: 0.25 }, trend: { strokeWidth: 3 } },
+          },
+          {
+            kind: 'regression',
+            encodings: { y: 'alternateY' },
+            properties: { method: { kind: 'quadratic' } },
+          },
+        ],
+      }),
+    );
+  });
+
+  it('enforces Regression singleton declarations and direct-child boundaries', () => {
+    expect(() =>
+      inputOf(
+        RegressionChart,
+        <>
+          <ChartData data={[]} />
+        </>,
+      ),
+    ).toThrow(/RegressionEncodings.*exactly once/i);
+
+    expect(() =>
+      inputOf(
+        RegressionChart,
+        <>
+          {requiredRegressionDeclarations}
+          <RegressionProperties sampleCount={8} />
+          <RegressionProperties sampleCount={16} />
+        </>,
+      ),
+    ).toThrow(/RegressionProperties.*at most once/i);
+
+    expect(() =>
+      inputOf(
+        RegressionChart,
+        <section>
+          {requiredRegressionDeclarations}
+          <RegressionMark />
+        </section>,
+      ),
+    ).toThrow(/direct Chart child/i);
+  });
+
+  it('renders Regression standalone and embedded through one SVG host', () => {
+    const chart = <RegressionChart>{requiredRegressionDeclarations}</RegressionChart>;
+    const standalone = renderToStaticMarkup(chart);
+    const embedded = renderToStaticMarkup(<Layout>{chart}</Layout>);
+
+    expect(standalone.match(/<svg/g)).toHaveLength(1);
+    expect(embedded.match(/<svg/g)).toHaveLength(1);
   });
 
   it('renders standalone and embedded Chart through one SVG host and inherits the outer Theme mode', () => {

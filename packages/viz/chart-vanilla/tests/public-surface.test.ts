@@ -27,6 +27,8 @@ describe('@retikz/chart-vanilla public surface', () => {
   it('exports precise Point factories and normalizers from the Point entry', () => {
     expect(point.createBubbleChart).toBeDefined();
     expect(point.normalizeBubbleChart).toBeDefined();
+    expect(point.createRegressionChart).toBeDefined();
+    expect(point.normalizeRegressionChart).toBeDefined();
     expect(point.createScatterChart).toBeDefined();
     expect(point.normalizeScatterChart).toBeDefined();
     expect(point).not.toHaveProperty('createChart');
@@ -35,14 +37,17 @@ describe('@retikz/chart-vanilla public surface', () => {
 
   it('publishes concrete chartType subpath entries', async () => {
     const bubble = await import('../src/point/bubble');
+    const regression = await import('../src/point/regression');
     const scatter = await import('../src/point/scatter');
     expect(bubble.createBubbleChart).toBeDefined();
+    expect(regression.createRegressionChart).toBeDefined();
     expect(scatter.createScatterChart).toBeDefined();
   });
 
   it('keeps each concrete chartType closure independent from the Point barrel', async () => {
     const cases = [
       { chartType: 'bubble', files: ['index.ts', 'factory.ts', 'normalize.ts', 'types.ts'] },
+      { chartType: 'regression', files: ['index.ts', 'factory.ts', 'normalize.ts', 'types.ts'] },
       { chartType: 'scatter', files: ['index.ts', 'factory.ts', 'normalize.ts', 'types.ts'] },
     ] as const;
 

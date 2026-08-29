@@ -25,6 +25,10 @@ describe('@retikz/chart-react public surface', () => {
     expect(point.BubbleEncodings).toBeDefined();
     expect(point.BubbleProperties).toBeDefined();
     expect(point.BubbleMark).toBeDefined();
+    expect(point.RegressionChart).toBeDefined();
+    expect(point.RegressionEncodings).toBeDefined();
+    expect(point.RegressionProperties).toBeDefined();
+    expect(point.RegressionMark).toBeDefined();
     expect(point.ScatterChart).toBeDefined();
     expect(point.ScatterEncodings).toBeDefined();
     expect(point.ScatterProperties).toBeDefined();
@@ -37,6 +41,7 @@ describe('@retikz/chart-react public surface', () => {
 
   it('publishes concrete chartType subpath entries without forwarding shared Chart declarations', async () => {
     const bubble = await import('../src/point/bubble');
+    const regression = await import('../src/point/regression');
     const scatter = await import('../src/point/scatter');
     expect(bubble.BubbleChart).toBeDefined();
     expect(bubble.BubbleEncodings).toBeDefined();
@@ -44,6 +49,12 @@ describe('@retikz/chart-react public surface', () => {
     expect(bubble.BubbleMark).toBeDefined();
     expect(bubble).not.toHaveProperty('ChartData');
     expect(bubble).not.toHaveProperty('ChartExtension');
+    expect(regression.RegressionChart).toBeDefined();
+    expect(regression.RegressionEncodings).toBeDefined();
+    expect(regression.RegressionProperties).toBeDefined();
+    expect(regression.RegressionMark).toBeDefined();
+    expect(regression).not.toHaveProperty('ChartData');
+    expect(regression).not.toHaveProperty('ChartExtension');
     expect(scatter.ScatterChart).toBeDefined();
     expect(scatter.ScatterEncodings).toBeDefined();
     expect(scatter.ScatterProperties).toBeDefined();
@@ -56,6 +67,7 @@ describe('@retikz/chart-react public surface', () => {
   it('keeps each concrete chartType closure independent from the Point component barrel', async () => {
     const cases = [
       { chartType: 'bubble', file: 'index.ts' },
+      { chartType: 'regression', file: 'index.ts' },
       { chartType: 'scatter', file: 'index.ts' },
     ] as const;
 

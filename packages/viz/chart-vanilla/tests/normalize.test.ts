@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeBubbleChart, normalizeScatterChart } from '../src/point';
+import { normalizeBubbleChart, normalizeRegressionChart, normalizeScatterChart } from '../src/point';
 
 describe('Chart Vanilla normalization', () => {
   it('normalizes Bubble input to its exact family and recipe Source', () => {
@@ -107,5 +107,84 @@ describe('Chart Vanilla normalization', () => {
       },
     });
     expect(source.recipe).not.toHaveProperty('facet');
+  });
+
+  it('normalizes Regression input to its exact Source and preserves direct series mapping', () => {
+    const source = normalizeRegressionChart({
+      id: 'iris-regression',
+      data: { reference: 'iris.rows' },
+      title: 'Iris regression',
+      encodings: {
+        x: 'sepalLengthCm',
+        y: 'petalLengthCm',
+        series: { field: 'species', scale: { operation: { type: 'ordinal', name: 'speciesScale' } } },
+        row: 'collection',
+        column: [{ field: 'site', order: ['north', 'south'] }],
+      },
+      properties: {
+        method: { kind: 'polynomial', order: 4 },
+        sampleCount: 32,
+        extent: [1, 8],
+        point: { opacity: 0.6, size: 5 },
+        trend: { strokeWidth: 2, dashPattern: [4, 2] },
+      },
+      marks: [
+        {
+          kind: 'regression',
+          encodings: { y: 'petalWidthCm' },
+          properties: { method: { kind: 'quadratic' }, trend: { strokeOpacity: 0.75 } },
+        },
+      ],
+    });
+
+    expect(source).toEqual({
+      namespace: 'chart',
+      type: 'point',
+      id: 'iris-regression',
+      presentation: { title: 'Iris regression' },
+      data: { reference: 'iris.rows' },
+      recipe: {
+        chartType: 'regression',
+        encodings: {
+          x: 'sepalLengthCm',
+          y: 'petalLengthCm',
+          series: { field: 'species', scale: { operation: { type: 'ordinal', name: 'speciesScale' } } },
+          row: { field: 'collection' },
+          column: [{ field: 'site', order: ['north', 'south'] }],
+        },
+        properties: {
+          method: { kind: 'polynomial', order: 4 },
+          sampleCount: 32,
+          extent: [1, 8],
+          point: { opacity: 0.6, size: 5 },
+          trend: { strokeWidth: 2, dashPattern: [4, 2] },
+        },
+        marks: [
+          {
+            kind: 'regression',
+            encodings: { y: 'petalWidthCm' },
+            properties: { method: { kind: 'quadratic' }, trend: { strokeOpacity: 0.75 } },
+          },
+        ],
+      },
+    });
+    expect(JSON.parse(JSON.stringify(source))).toEqual(source);
+  });
+
+  it.each([
+    { kind: 'linear' },
+    { kind: 'quadratic' },
+    { kind: 'polynomial', order: 6 },
+    { kind: 'logarithmic' },
+    { kind: 'exponential' },
+    { kind: 'power' },
+  ] as const)('preserves the $kind Regression method without adapter dispatch', method => {
+    const source = normalizeRegressionChart({
+      data: { reference: 'rows' },
+      encodings: { x: 'x', y: 'y' },
+      properties: { method },
+    });
+
+    expect(source.recipe.properties?.method).toEqual(method);
   });
 });

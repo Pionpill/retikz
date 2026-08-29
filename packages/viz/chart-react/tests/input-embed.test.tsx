@@ -1,15 +1,18 @@
 import type { ChartInput } from '@retikz/chart-vanilla';
 import type { CreateBubbleChartInput } from '@retikz/chart-vanilla/point/bubble';
+import type { CreateRegressionChartInput } from '@retikz/chart-vanilla/point/regression';
 import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
 
 import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
 import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble';
+import { createRegressionChart } from '@retikz/chart-vanilla/point/regression';
 import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { PointMark } from '@retikz/plot-react';
 import { describe, expect, it } from 'vitest';
 
 import { ChartData, ChartExtension, ChartLayout } from '../src';
 import { BubbleChart, BubbleEncodings, BubbleProperties } from '../src/point/bubble';
+import { RegressionChart, RegressionEncodings, RegressionMark, RegressionProperties } from '../src/point/regression';
 import { ScatterChart, ScatterEncodings, ScatterProperties } from '../src/point/scatter';
 
 type InputComponent<TInput> = {
@@ -23,7 +26,52 @@ const inputOf = <TInput,>(component: InputComponent<TInput>, props: Readonly<Rec
 describe('Chart React InputEmbed routing', () => {
   it('uses one Chart InputEmbed adapter for every typed chartType component', () => {
     expect(BubbleChart.inputEmbedAdapter).toBe(ChartInputEmbedAdapter);
+    expect(RegressionChart.inputEmbedAdapter).toBe(ChartInputEmbedAdapter);
     expect(ScatterChart.inputEmbedAdapter).toBe(ChartInputEmbedAdapter);
+  });
+
+  it('produces the same precise Regression input as its Vanilla factory', () => {
+    const regressionInput: CreateRegressionChartInput = {
+      data: [
+        { x: 1, y: 2, species: 'setosa' },
+        { x: 2, y: 4, species: 'setosa' },
+        { x: 1, y: 3, species: 'versicolor' },
+        { x: 2, y: 5, species: 'versicolor' },
+      ],
+      dataRef: 'iris.rows',
+      layout: { width: 640, height: 360 },
+      encodings: {
+        x: 'x',
+        y: 'y',
+        series: { field: 'species', scale: { operation: { type: 'ordinal', name: 'speciesScale' } } },
+      },
+      properties: {
+        method: { kind: 'power' },
+        sampleCount: 12,
+        point: { opacity: 0.5 },
+        trend: { strokeWidth: 2 },
+      },
+      marks: [{ kind: 'regression', override: true, properties: { trend: { strokeOpacity: 0.7 } } }],
+    };
+    const reactInput = inputOf(RegressionChart, {
+      children: (
+        <>
+          <ChartData data={regressionInput.data} reference={regressionInput.dataRef} />
+          <ChartLayout layout={regressionInput.layout} />
+          <RegressionEncodings {...regressionInput.encodings} />
+          <RegressionProperties {...regressionInput.properties} />
+          <RegressionMark override properties={{ trend: { strokeOpacity: 0.7 } }} />
+        </>
+      ),
+    });
+    const vanillaInput: ChartInput = createRegressionChart(regressionInput).input;
+
+    expect(reactInput.source).toEqual(vanillaInput.source);
+    expect(reactInput.datasets).toEqual(vanillaInput.datasets);
+    expect(reactInput.chartProviderContribution.providers.map(provider => provider.key)).toEqual(
+      vanillaInput.chartProviderContribution.providers.map(provider => provider.key),
+    );
+    expect(JSON.stringify(reactInput.source)).not.toMatch(/definitions|providers|apply/iu);
   });
 
   it('produces the same precise Bubble input as its Vanilla factory', () => {
