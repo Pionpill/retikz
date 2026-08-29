@@ -6,6 +6,7 @@ import type { ChartLocatorOptions } from '../src';
 
 import * as chart from '../src';
 import * as point from '../src/point';
+import * as bubble from '../src/point/bubble';
 import * as scatter from '../src/point/scatter';
 
 const RecipeSchema = strictObject({
@@ -42,10 +43,12 @@ describe('@retikz/chart public surface', () => {
 
   it('exposes concrete Point schemas and provider contributions from the Point entry', () => {
     expect(point.ChartFamily).toEqual({ Point: 'point' });
-    expect(point.ChartType).toEqual({ Scatter: 'scatter' });
+    expect(point.ChartType).toEqual({ Bubble: 'bubble', Scatter: 'scatter' });
     expect(point).not.toHaveProperty('ChartMarkKind');
     expect(point).toHaveProperty('ScatterChartSchema');
+    expect(point).toHaveProperty('BubbleChartSchema');
     expect(point).toHaveProperty('createScatterChartProviderContribution');
+    expect(point).toHaveProperty('createBubbleChartProviderContribution');
     expect(point).toHaveProperty('qualifyScatterChartLocatorOptions');
     expect(point).not.toHaveProperty('PointChartSchema');
     expect(point).not.toHaveProperty('PointChartProvider');
@@ -57,13 +60,18 @@ describe('@retikz/chart public surface', () => {
   });
 
   it('keeps concrete chartType entries limited to schema and provider contribution', () => {
-    for (const [concrete, contributionName] of [[scatter, 'createScatterChartProviderContribution']] as const) {
+    for (const [concrete, contributionName, locatorName] of [
+      [bubble, 'createBubbleChartProviderContribution', 'qualifyBubbleChartLocatorOptions'],
+      [scatter, 'createScatterChartProviderContribution', 'qualifyScatterChartLocatorOptions'],
+    ] as const) {
       expect(concrete).toHaveProperty(contributionName);
-      expect(concrete).toHaveProperty('qualifyScatterChartLocatorOptions');
+      expect(concrete).toHaveProperty(locatorName);
       expect(concrete).not.toHaveProperty('defineChartRecipe');
       expect(concrete).not.toHaveProperty('defineChartMark');
       expect(concrete).not.toHaveProperty('ScatterChartDefinition');
       expect(concrete).not.toHaveProperty('ScatterMarkDefinition');
+      expect(concrete).not.toHaveProperty('BubbleChartDefinition');
+      expect(concrete).not.toHaveProperty('BubbleMarkDefinition');
       expect(concrete).not.toHaveProperty('PathMarkDefinition');
     }
   });
@@ -73,6 +81,12 @@ describe('@retikz/chart public surface', () => {
     expect(scatter.qualifyScatterChartLocatorOptions(options)).toEqual({
       facet: {
         id: '__chart.scatter.composition.facet',
+        row: 'north',
+      },
+    });
+    expect(bubble.qualifyBubbleChartLocatorOptions(options)).toEqual({
+      facet: {
+        id: '__chart.bubble.composition.facet',
         row: 'north',
       },
     });

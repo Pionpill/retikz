@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import { renderChart } from '../src';
-import { createScatterChart } from '../src/point';
+import { createBubbleChart, createScatterChart } from '../src/point';
 
 const rows = [
   { x: 1, y: 2, size: 3, order: 1 },
@@ -24,6 +24,39 @@ const sceneIdsOf = (primitives: ReadonlyArray<ScenePrimitiveLike>): Array<string
   ]);
 
 describe('Chart Vanilla authoring', () => {
+  it('creates Bubble Source, one runtime dataset, and its concrete provider contribution', () => {
+    const chart = createBubbleChart({
+      data: rows,
+      dataRef: 'bubble.rows',
+      encodings: { x: 'x', y: 'y', size: 'size' },
+    });
+
+    expect(chart.source).toMatchObject({
+      type: 'point',
+      data: { reference: 'bubble.rows' },
+      recipe: { chartType: 'bubble', encodings: { size: 'size' } },
+    });
+    expect(chart.input.datasets).toEqual({ 'bubble.rows': rows });
+    expect(chart.input.source).toBe(chart.source);
+    expect(chart.input.chartProviderContribution.providers.at(-1)?.key).toEqual({
+      capability: 'composite',
+      namespace: 'chart',
+      type: 'point',
+    });
+  });
+
+  it('renders Bubble through the same SSR path as other Point charts', () => {
+    const chart = createBubbleChart({
+      id: 'bubble',
+      data: rows,
+      encodings: { x: 'x', y: 'y', size: 'size' },
+    });
+    const rendered = renderChart(chart);
+
+    expect(rendered.svg).toContain('<svg');
+    expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toContain('bubble');
+  });
+
   it('does not expose a generic Chart authoring path', async () => {
     const module = await import('../src');
     expect(module).not.toHaveProperty('createChart');

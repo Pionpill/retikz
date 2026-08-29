@@ -3,6 +3,7 @@ import type { FC } from 'react';
 
 import { ChartData, ChartLayout, ChartSource, ChartTitle } from '@retikz/chart-react';
 import { ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
+import { BubbleChart, BubbleEncodings } from '@retikz/chart-react/point/bubble';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
@@ -95,6 +96,20 @@ const ChartDemo: FC = () => (
     <ChartTitle>Income and life expectancy</ChartTitle>
     <ChartSource>World Bank</ChartSource>
   </ScatterChart>
+);
+
+const BubbleChartDemo: FC = () => (
+  <BubbleChart>
+    <ChartData
+      data={[
+        { income: 1000, life: 61, population: 1_000_000 },
+        { income: 4000, life: 72, population: 4_000_000 },
+      ]}
+    />
+    <ChartLayout width={320} height={200} />
+    <BubbleEncodings x="income" y="life" size="population" />
+    <ChartTitle>Income, life expectancy, and population</ChartTitle>
+  </BubbleChart>
 );
 
 const EmbeddedTableDetailDemo: FC = () => (
@@ -255,6 +270,29 @@ describe('buildPreviewSource', () => {
     expect(vanilla?.files[0]?.code).toContain("y: 'life'");
     expect(vanilla?.files[0]?.code).not.toContain('__chart.scatter.scale');
     expect(vanilla?.files[0]?.code).toContain('income: 1000');
+    expect(vanilla?.render).toBeTypeOf('function');
+    expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
+  });
+
+  it('为 Bubble composite 保留精确 Source 并生成 Bubble Vanilla factory 与真实 SVG', () => {
+    const result = buildPreviewSource(createInput({ Component: BubbleChartDemo }));
+    const vanilla = result.source?.vanilla;
+
+    expect(result.previewIr).toMatchObject({ width: 320, height: 200 });
+    expect(result.previewIr?.sourceIr.children[0]).toMatchObject({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'chart.data' },
+      layout: { width: 320, height: 200 },
+      recipe: {
+        chartType: 'bubble',
+        encodings: { x: 'income', y: 'life', size: 'population' },
+      },
+      presentation: { title: 'Income, life expectancy, and population' },
+    });
+    expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "bubble"');
+    expect(vanilla?.files[0]?.code).toContain("import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble'");
+    expect(vanilla?.files[0]?.code).toContain("size: 'population'");
     expect(vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
   });

@@ -1,5 +1,7 @@
 import type { IRChartSource } from '@retikz/chart';
+import type { IRBubbleChart } from '@retikz/chart/point/bubble';
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
+import type { CreateBubbleChartInput } from '@retikz/chart-vanilla/point/bubble';
 import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
@@ -8,8 +10,10 @@ import type { IRPlot } from '@retikz/plot';
 import type { IRTable } from '@retikz/table';
 import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 
+import { BubbleChartSchema } from '@retikz/chart/point/bubble';
 import { ScatterChartSchema } from '@retikz/chart/point/scatter';
 import { renderChart } from '@retikz/chart-vanilla';
+import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble';
 import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { fallbackMeasurer } from '@retikz/core';
 import {
@@ -651,7 +655,7 @@ const buildDatasetImportCode = (
   return { imports, expression };
 };
 
-type TypedChartSource = IRScatterChart;
+type TypedChartSource = IRScatterChart | IRBubbleChart;
 
 /** 从 Source IR 识别确定形态的 Chart */
 const typedChartSourceOf = (source: CompositeChild): TypedChartSource | undefined => {
@@ -660,6 +664,8 @@ const typedChartSourceOf = (source: CompositeChild): TypedChartSource | undefine
   switch (chartType) {
     case 'scatter':
       return ScatterChartSchema.parse(source);
+    case 'bubble':
+      return BubbleChartSchema.parse(source);
     default:
       return undefined;
   }
@@ -693,8 +699,10 @@ const buildChartCode = (
 ): string => {
   const typedSource = typedChartSourceOf(chart);
   if (typedSource !== undefined) {
-    const factory = 'createScatterChart';
-    const subpath = 'scatter';
+    const { factory, subpath } =
+      typedSource.recipe.chartType === 'bubble'
+        ? { factory: 'createBubbleChart', subpath: 'bubble' }
+        : { factory: 'createScatterChart', subpath: 'scatter' };
     const datasetImport = buildDatasetImportCode(datasets, options);
     const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
     const dataCode = datasetImport === null ? `const datasets = ${formatVanillaValue(datasets)};\n\n` : '';
@@ -741,7 +749,10 @@ const buildChartPreview = (
     themeDefinitions: PreviewThemeDefinitionBundle.chart,
     lowerOptions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot },
   };
-  const runtime = createScatterChart(input as CreateScatterChartInput);
+  const runtime =
+    chart.recipe.chartType === 'bubble'
+      ? createBubbleChart(input as CreateBubbleChartInput)
+      : createScatterChart(input as CreateScatterChartInput);
   const rendered = renderChart(runtime, {
     ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
     ...(Object.keys(size).length === 0 ? {} : { output: size }),

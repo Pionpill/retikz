@@ -1,12 +1,15 @@
 import type { ChartInput } from '@retikz/chart-vanilla';
+import type { CreateBubbleChartInput } from '@retikz/chart-vanilla/point/bubble';
 import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
 
 import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
+import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble';
 import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { PointMark } from '@retikz/plot-react';
 import { describe, expect, it } from 'vitest';
 
 import { ChartData, ChartExtension, ChartLayout } from '../src';
+import { BubbleChart, BubbleEncodings, BubbleProperties } from '../src/point/bubble';
 import { ScatterChart, ScatterEncodings, ScatterProperties } from '../src/point/scatter';
 
 type InputComponent<TInput> = {
@@ -19,7 +22,43 @@ const inputOf = <TInput,>(component: InputComponent<TInput>, props: Readonly<Rec
 
 describe('Chart React InputEmbed routing', () => {
   it('uses one Chart InputEmbed adapter for every typed chartType component', () => {
+    expect(BubbleChart.inputEmbedAdapter).toBe(ChartInputEmbedAdapter);
     expect(ScatterChart.inputEmbedAdapter).toBe(ChartInputEmbedAdapter);
+  });
+
+  it('produces the same precise Bubble input as its Vanilla factory', () => {
+    const bubbleInput: CreateBubbleChartInput = {
+      data: [
+        { income: 1000, lifeExpectancy: 60, population: 1_000_000 },
+        { income: 2000, lifeExpectancy: 70, population: 2_000_000 },
+      ],
+      dataRef: 'countries',
+      layout: { width: 800, height: 500 },
+      encodings: {
+        x: { field: 'income', scale: { operation: { type: 'log', name: 'incomeScale' } } },
+        y: 'lifeExpectancy',
+        size: 'population',
+        color: 'continent',
+      },
+      properties: { opacity: 0.75 },
+    };
+    const reactInput = inputOf(BubbleChart, {
+      children: (
+        <>
+          <ChartData data={bubbleInput.data} reference={bubbleInput.dataRef} />
+          <ChartLayout layout={bubbleInput.layout} />
+          <BubbleEncodings {...bubbleInput.encodings} />
+          <BubbleProperties {...bubbleInput.properties} />
+        </>
+      ),
+    });
+    const vanillaInput: ChartInput = createBubbleChart(bubbleInput).input;
+
+    expect(reactInput.source).toEqual(vanillaInput.source);
+    expect(reactInput.datasets).toEqual(vanillaInput.datasets);
+    expect(reactInput.chartProviderContribution.providers.map(provider => provider.key)).toEqual(
+      vanillaInput.chartProviderContribution.providers.map(provider => provider.key),
+    );
   });
 
   it('produces the same precise Point input as its Vanilla factory', () => {

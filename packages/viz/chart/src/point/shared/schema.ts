@@ -1,4 +1,5 @@
 import type { infer as ZodInfer } from 'zod';
+import type { ZodType } from 'zod';
 
 import { CssColorSchema, JsonObjectSchema } from '@retikz/core';
 import { ShapeNameSchema } from '@retikz/core';
@@ -35,6 +36,11 @@ export const PointMarkEncodingSchema = strictObject({
   opacity: NonBlankStringSchema.optional().describe('Optional opacity field override'),
   shape: NonBlankStringSchema.optional().describe('Optional shape field override'),
 }).describe('Point Chart mark field-bound encodings');
+
+/** 不允许覆盖尺寸角色的 Point mark 字段绑定 */
+export const PointMarkEncodingWithoutSizeSchema = PointMarkEncodingSchema.omit({ size: true }).describe(
+  'Point Chart mark field-bound encodings without size',
+);
 
 /** Chart-owned Point properties 的常量值
  *
@@ -73,6 +79,11 @@ export const PointPropertiesSchema = strictObject({
   label: MarkNodeLabelListSchema.optional(),
 }).describe('Point Chart constant properties');
 
+/** 不允许提供常量尺寸的 Point properties */
+export const PointPropertiesWithoutSizeSchema = PointPropertiesSchema.omit({ size: true }).describe(
+  'Point Chart constant properties without size',
+);
+
 /** Point recipe theme 的稀疏覆盖 schema */
 export const PointRecipeThemeOverridesSchema = strictObject({
   axisEnabled: boolean().optional(),
@@ -87,15 +98,23 @@ export const PointRecipeThemeResolutionSchema = strictObject({
   legendEnabled: boolean(),
 }).describe('Complete Point recipe theme tokens');
 
-/** Point mark payload 的公共 schema */
-export const PointMarkSchema = strictObject({
-  kind: literal('scatter'),
-  override: boolean().optional().describe('Whether to replace the built-in semantic mark group with this kind'),
-  encodings: PointMarkEncodingSchema.optional(),
-  properties: PointPropertiesSchema.optional(),
-}).describe('Chart-owned Point mark payload');
+/** 为具体 chartType 创建精确的 Point authored mark schema */
+export const createPointChartMarkSchema = <
+  TKind extends string,
+  TEncodingsSchema extends ZodType,
+  TPropertiesSchema extends ZodType,
+>(
+  kind: TKind,
+  encodingsSchema: TEncodingsSchema,
+  propertiesSchema: TPropertiesSchema,
+) =>
+  strictObject({
+    kind: literal(kind),
+    override: boolean().optional().describe('Whether to replace the built-in semantic mark group with this kind'),
+    encodings: encodingsSchema.optional(),
+    properties: propertiesSchema.optional(),
+  });
 
 export type IRPointEncoding = ZodInfer<typeof PointEncodingSchema>;
 export type IRPointMarkEncoding = ZodInfer<typeof PointMarkEncodingSchema>;
 export type IRPointProperties = ZodInfer<typeof PointPropertiesSchema>;
-export type IRPointMark = ZodInfer<typeof PointMarkSchema>;

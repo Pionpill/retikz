@@ -13,8 +13,8 @@
 ## Source 与 React children 边界
 
 - 根入口只提供 presentation markers、`ChartThemeProvider` 与共享类型，不提供 generic `<Chart source={...}>`
-- `/point` 入口的 `<ScatterChart>` 通过入口身份确定 family 与 chartType，并调用对应 Vanilla factory；组件不直接构造 Chart Source 外壳
-- `ChartData` 与具体 chartType 的 `XxxEncodings` 恰好各一个；`ChartLayout`、`ChartExtension` 与 `XxxProperties` 至多一个；普通 `ScatterMark` 按 authored order 追加，`override` 原样写入 Source 供 Chart resolver 匹配内建 semantic group
+- `/point` 入口的具体 `<XxxChart>` 通过入口身份确定 family 与 chartType，并调用对应 Vanilla factory；组件不直接构造 Chart Source 外壳
+- `ChartData` 与具体 chartType 的 `XxxEncodings` 恰好各一个；`ChartLayout`、`ChartExtension` 与 `XxxProperties` 至多一个；普通 `XxxMark` 按 authored order 追加，`override` 原样写入 Source 供 Chart resolver 匹配内建 semantic group
 - Plot declaration 只能放入 `ChartExtension`；Path 等独立 Plot mark 与 axis、guide、transform 继续由 Plot React / Vanilla owner 收集、诊断和归一化
 - presentation marker 按固定 slot 归一为 `title`、`subtitle`、`note`、`source`；JSX 出现顺序不改变 slot 语义，同类 marker 最多一次，Fragment 只透明分组
 - marker children 只接受字符串、透明 Fragment 和整行 Core `Text` authoring；普通 DOM、任意 ReactNode、Plot declaration 或嵌套 mark 组件 fail-loud

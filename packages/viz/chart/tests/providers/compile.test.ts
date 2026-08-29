@@ -14,6 +14,7 @@ import { ChartWarningCode } from '../../src';
 import { defineChartMark, defineChartRecipe } from '../../src/_chart/contract';
 import { createChartProviderContribution } from '../../src/_chart/providers';
 import { createChartSourceSchema } from '../../src/_chart/schemas';
+import { BubbleChartSchema, createBubbleChartProviderContribution } from '../../src/point/bubble';
 import { createScatterChartProviderContribution, ScatterChartSchema } from '../../src/point/scatter';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
@@ -35,6 +36,25 @@ const sceneIdsOf = (primitives: ReadonlyArray<{ id?: string; children?: Readonly
     ...sceneIdsOf((primitive.children ?? []) as Array<{ id?: string; children?: ReadonlyArray<unknown> }>),
   ]);
 
+/** 测试中递归检查 Scene 图元所需的最小结构 */
+type ScenePrimitiveLike = {
+  type: string;
+  children?: ReadonlyArray<ScenePrimitiveLike>;
+  fill?: unknown;
+  stroke?: unknown;
+  fillOpacity?: number;
+};
+
+/** 递归收集指定类型的 Scene 图元 */
+const scenePrimitivesOfType = (
+  primitives: ReadonlyArray<ScenePrimitiveLike>,
+  type: string,
+): Array<ScenePrimitiveLike> =>
+  primitives.flatMap(primitive => [
+    ...(primitive.type === type ? [primitive] : []),
+    ...scenePrimitivesOfType(primitive.children ?? [], type),
+  ]);
+
 const compileDefinitionsOf = (
   chartContributions: ReadonlyArray<CoreProviderContribution>,
   lowerOptions: LowerPlotsOptions = {},
@@ -52,6 +72,138 @@ const sceneOf = (source: IRScene['children'][number]): IRScene => ({
 });
 
 describe('Chart providers through Core compile', () => {
+  it('compiles Bubble through the shared Point provider and preserves finite scene output', () => {
+    const source = BubbleChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      id: 'bubble',
+      data: { reference: 'scatter.rows' },
+      recipe: {
+        chartType: 'bubble',
+        encodings: { x: 'x', y: 'y', size: 'size' },
+        properties: { color: '#d946ef' },
+      },
+    });
+
+    const result = compileToScene(
+      sceneOf(source),
+      compileDefinitionsOf([createScatterChartProviderContribution(), createBubbleChartProviderContribution()]),
+    );
+    const serializedScene = JSON.stringify(result.scene.primitives);
+
+    expect(sceneIdsOf(result.scene.primitives)).toContain('bubble');
+    expect(serializedScene).not.toContain('NaN');
+    expect(serializedScene).not.toContain('Infinity');
+    const bubblePrimitives = scenePrimitivesOfType(result.scene.primitives, 'ellipse').filter(
+      primitive => primitive.fillOpacity === 0.7,
+    );
+    expect(bubblePrimitives).toHaveLength(rows.length);
+    expect(bubblePrimitives.every(primitive => primitive.fill === '#d946ef')).toBe(true);
+    expect(bubblePrimitives.every(primitive => primitive.stroke === primitive.fill)).toBe(true);
+  });
+
+  it('keeps Bubble facet identity distinct from Scatter', () => {
+    const source = BubbleChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      id: 'bubble-facet',
+      data: { reference: 'scatter.rows' },
+      recipe: {
+        chartType: 'bubble',
+        encodings: { x: 'x', y: 'y', size: 'size', column: 'size' },
+      },
+    });
+
+    const result = compileToScene(sceneOf(source), compileDefinitionsOf([createBubbleChartProviderContribution()]));
+    const ids = sceneIdsOf(result.scene.primitives);
+
+    expect(ids).toContain('__chart.bubble.composition.facet.panel._.3');
+    expect(ids).toContain('__chart.bubble.composition.facet.panel._.5');
+    expect(ids.some(id => id.startsWith('__chart.scatter.composition.facet'))).toBe(false);
+  });
+
+  it('keeps zero and singleton Bubble size domains finite', () => {
+    for (const bubbleRows of [
+      [
+        { x: 1, y: 2, size: 0 },
+        { x: 2, y: 4, size: 0 },
+      ],
+      [{ x: 1, y: 2, size: 5 }],
+    ]) {
+      const source = BubbleChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'bubble.rows' },
+        recipe: { chartType: 'bubble', encodings: { x: 'x', y: 'y', size: 'size' } },
+      });
+      const plot = createPlotProviderContribution({ 'bubble.rows': bubbleRows });
+      const definitions = resolveCoreProviderDependencies({
+        contributions: [
+          createBubbleChartProviderContribution(),
+          plot,
+          { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        ],
+      });
+      const result = compileToScene(sceneOf(source), definitions);
+      const serializedScene = JSON.stringify(result.scene.primitives);
+
+      expect(serializedScene).not.toContain('NaN');
+      expect(serializedScene).not.toContain('Infinity');
+    }
+  });
+
+  it('rejects negative Bubble size values and named linear size scales', () => {
+    const negativeSource = BubbleChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'bubble.rows' },
+      recipe: { chartType: 'bubble', encodings: { x: 'x', y: 'y', size: 'size' } },
+    });
+    const negativeDefinitions = resolveCoreProviderDependencies({
+      contributions: [
+        createBubbleChartProviderContribution(),
+        createPlotProviderContribution({ 'bubble.rows': [{ x: 1, y: 2, size: -1 }] }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+    expect(() => compileToScene(sceneOf(negativeSource), negativeDefinitions)).toThrow(/size|sqrt|negative|domain/i);
+
+    const linearSource = BubbleChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'bubble.rows' },
+      recipe: {
+        chartType: 'bubble',
+        encodings: { x: 'x', y: 'y', size: { field: 'size', scale: { reference: 'linearSize' } } },
+      },
+      plotExtension: { scales: [{ type: 'linear', name: 'linearSize' }] },
+    });
+    const linearDefinitions = resolveCoreProviderDependencies({
+      contributions: [
+        createBubbleChartProviderContribution(),
+        createPlotProviderContribution({ 'bubble.rows': [{ x: 1, y: 2, size: 3 }] }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+    expect(() => compileToScene(sceneOf(linearSource), linearDefinitions)).toThrow(/size|sqrt|linear|scale/i);
+  });
+
+  it('fails loud when Bubble Source is compiled with only the Scatter recipe installed', () => {
+    const source = BubbleChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      id: 'bubble-missing-provider',
+      data: { reference: 'scatter.rows' },
+      recipe: {
+        chartType: 'bubble',
+        encodings: { x: 'x', y: 'y', size: 'size' },
+      },
+    });
+    expect(() =>
+      compileToScene(sceneOf(source), compileDefinitionsOf([createScatterChartProviderContribution()])),
+    ).toThrow(/chartType|scatter|bubble/i);
+  });
+
   it('grows the Plot item into the remaining fixed-height presentation space', () => {
     const source = ScatterChartSchema.parse({
       namespace: 'chart',

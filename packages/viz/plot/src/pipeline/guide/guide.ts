@@ -1761,7 +1761,7 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
           position: symbolCenter,
           shape: 'circle',
           minimumSize: entry.radius * Math.SQRT2,
-          fill: 'currentColor',
+          fill: entry.color ?? 'currentColor',
           stroke: 'none',
           strokeWidth: 0,
         });

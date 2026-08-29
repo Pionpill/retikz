@@ -6,9 +6,11 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string, undefined as zodUndefined, ZodError } from 'zod';
 
 import { defineChartTheme, RetikzChartErrorCode } from '../../src';
-import { defineChartRecipe } from '../../src/_chart/contract';
+import { defineChartRecipe, eraseChartRecipeDefinition } from '../../src/_chart/contract';
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { createChartSourceSchema } from '../../src/_chart/schemas';
+import { BubbleChartDefinition } from '../../src/point/bubble/recipe';
+import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
   encodings: context.encodings as IRJsonObject,
@@ -45,6 +47,26 @@ const recipe = defineChartRecipe({
 });
 
 describe('active Chart provider registry', () => {
+  it('builds one exact Point schema union for active Scatter and Bubble recipes', () => {
+    const registry = resolveChartProviderRegistry([
+      { family: 'point', recipe: eraseChartRecipeDefinition(ScatterChartDefinition), themeDefinitions: [] },
+      { family: 'point', recipe: eraseChartRecipeDefinition(BubbleChartDefinition), themeDefinitions: [] },
+    ]);
+
+    expect([...registry.recipes.keys()]).toEqual(['scatter', 'bubble']);
+    expect(
+      registry.schema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'bubble',
+          encodings: { x: 'income', y: 'lifeExpectancy', size: 'population' },
+        },
+      }),
+    ).toMatchObject({ recipe: { chartType: 'bubble' } });
+  });
+
   it('deduplicates the same recipe contribution and builds a temporary schema union', () => {
     const registry = resolveChartProviderRegistry([
       { family: 'point', recipe, themeDefinitions: [] },

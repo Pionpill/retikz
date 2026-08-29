@@ -21,6 +21,10 @@ describe('@retikz/chart-react public surface', () => {
   });
 
   it('exports only precise Point components from the Point entry', () => {
+    expect(point.BubbleChart).toBeDefined();
+    expect(point.BubbleEncodings).toBeDefined();
+    expect(point.BubbleProperties).toBeDefined();
+    expect(point.BubbleMark).toBeDefined();
     expect(point.ScatterChart).toBeDefined();
     expect(point.ScatterEncodings).toBeDefined();
     expect(point.ScatterProperties).toBeDefined();
@@ -32,7 +36,14 @@ describe('@retikz/chart-react public surface', () => {
   });
 
   it('publishes concrete chartType subpath entries without forwarding shared Chart declarations', async () => {
+    const bubble = await import('../src/point/bubble');
     const scatter = await import('../src/point/scatter');
+    expect(bubble.BubbleChart).toBeDefined();
+    expect(bubble.BubbleEncodings).toBeDefined();
+    expect(bubble.BubbleProperties).toBeDefined();
+    expect(bubble.BubbleMark).toBeDefined();
+    expect(bubble).not.toHaveProperty('ChartData');
+    expect(bubble).not.toHaveProperty('ChartExtension');
     expect(scatter.ScatterChart).toBeDefined();
     expect(scatter.ScatterEncodings).toBeDefined();
     expect(scatter.ScatterProperties).toBeDefined();
@@ -43,7 +54,10 @@ describe('@retikz/chart-react public surface', () => {
   });
 
   it('keeps each concrete chartType closure independent from the Point component barrel', async () => {
-    const cases = [{ chartType: 'scatter', file: 'index.ts' }] as const;
+    const cases = [
+      { chartType: 'bubble', file: 'index.ts' },
+      { chartType: 'scatter', file: 'index.ts' },
+    ] as const;
 
     for (const item of cases) {
       const content = await readFile(

@@ -10,6 +10,7 @@ export type ChartFamilyValue = ValueOf<typeof ChartFamily>;
 
 /** Point family 的全局唯一 recipe key */
 export const ChartType = {
+  Bubble: 'bubble',
   Scatter: 'scatter',
 } as const;
 

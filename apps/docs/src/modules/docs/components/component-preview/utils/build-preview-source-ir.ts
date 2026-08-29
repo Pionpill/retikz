@@ -1,17 +1,20 @@
 import type { IRChartSource } from '@retikz/chart';
+import type { IRBubbleChart } from '@retikz/chart/point/bubble';
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
+import type { BubbleChartProps } from '@retikz/chart-react/point/bubble';
 import type { ScatterChartProps } from '@retikz/chart-react/point/scatter';
 import type { IRChild, IRScene, IRScope } from '@retikz/core';
 import type { AnyInputEmbed, InputChild, InputScene } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 
 import { CHART_NAMESPACE } from '@retikz/chart';
+import { BubbleChart } from '@retikz/chart-react/point/bubble';
 import { ScatterChart } from '@retikz/chart-react/point/scatter';
 import { Fragment, isValidElement } from 'react';
 
 import { previewEmbedPropsOf } from './preview-embed';
 
-type TypedChartSource = IRScatterChart;
+type TypedChartSource = IRScatterChart | IRBubbleChart;
 
 type TypedChartComponent<TSource extends TypedChartSource> = {
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => Readonly<{ source: TSource }>;
@@ -43,6 +46,9 @@ const sourceOf = (value: ReactNode): TypedChartSource | undefined => {
   if (!isValidElement(value)) return undefined;
   if (value.type === ScatterChart) {
     return typedChartSourceOf(ScatterChart, value.props as ScatterChartProps);
+  }
+  if (value.type === BubbleChart) {
+    return typedChartSourceOf(BubbleChart, value.props as BubbleChartProps);
   }
   return undefined;
 };

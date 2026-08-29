@@ -139,6 +139,7 @@ describe('published Chart release-group boundaries', () => {
     expect(manifest.exports).toEqual({
       '.': { types: './src/index.ts', default: './src/index.ts' },
       './point': { types: './src/point/index.ts', default: './src/point/index.ts' },
+      './point/bubble': { types: './src/point/bubble/index.ts', default: './src/point/bubble/index.ts' },
       './point/scatter': { types: './src/point/scatter/index.ts', default: './src/point/scatter/index.ts' },
     });
     expect(manifest.publishConfig?.exports).toEqual({
@@ -151,6 +152,11 @@ describe('published Chart release-group boundaries', () => {
         types: './dist/types/point/index.d.ts',
         import: './dist/point/index.js',
         default: './dist/point/index.js',
+      },
+      './point/bubble': {
+        types: './dist/types/point/bubble/index.d.ts',
+        import: './dist/point/bubble/index.js',
+        default: './dist/point/bubble/index.js',
       },
       './point/scatter': {
         types: './dist/types/point/scatter/index.d.ts',
@@ -191,11 +197,11 @@ describe('published Chart release-group boundaries', () => {
   });
 
   it.each([
-    ['React', publishablePackageExpectations.react, 'tsx'],
+    ['React', publishablePackageExpectations.react, 'ts'],
     ['Vanilla', publishablePackageExpectations.vanilla, 'ts'],
   ])('publishes concrete %s chartType source entries', async (_name, expectation, extension) => {
     const manifest = await readManifest(expectation.manifest);
-    for (const chartType of ['scatter']) {
+    for (const chartType of ['bubble', 'scatter']) {
       const sourcePath = `./src/point/${chartType}/index.${extension}`;
       expect(manifest.exports?.[`./point/${chartType}`]).toEqual({ types: sourcePath, default: sourcePath });
       expect(manifest.publishConfig?.exports?.[`./point/${chartType}`]).toEqual({

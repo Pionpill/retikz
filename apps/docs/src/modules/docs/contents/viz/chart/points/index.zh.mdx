@@ -5,15 +5,16 @@ description: 用点的位置及点之间的关系展示单个观测，并按图�
 
 点图以一个或多个数据点为视觉主体。这个分组帮助读者按视觉结构选择 chartType，也保留源码目录与 `/point` 多入口导入边界；它不对应额外的 Point resolver 或运行时分发层级。
 
-Scatter 属于 `type: 'point'` family，通过 `recipe.chartType` 选择精确 schema 与 recipe。它共享根级 `data`、`layout`、`presentation`、`theme` 与 `plotExtension`，而 `recipe.encodings`、`recipe.properties` 和内建 semantic mark 体现散点图的字段角色与视觉结构。
+Scatter 与 Bubble 都属于 `type: 'point'` family，并通过 `recipe.chartType` 选择各自的精确 schema 与 recipe。它们共享根级 `data`、`layout`、`presentation`、`theme` 与 `plotExtension`，而 `recipe.encodings`、`recipe.properties` 和内建 semantic mark 固定具体图表的数据角色与视觉结构。
 
 所有类型共享的字段归属、编写主链、整图展示与 Plot 扩展规则统一放在[图形模型](/viz/chart/model)中；本分组只比较点图类型自己的视觉语义。
 
 ## 职责一览
 
-| 图表                                | `chartType` | 适合场景                         |
-| ----------------------------------- | ----------- | -------------------------------- |
-| [散点图](/viz/chart/points/scatter) | `scatter`   | 查看分布、聚类、离群点或相关趋势 |
+| 图表                                | `chartType` | 适合场景                               |
+| ----------------------------------- | ----------- | -------------------------------------- |
+| [散点图](/viz/chart/points/scatter) | `scatter`   | 查看分布、聚类、离群点或相关趋势       |
+| [气泡图](/viz/chart/points/bubble)  | `bubble`    | 同时比较二维位置与第三个连续字段的量级 |
 
 ## 章节内容
 
@@ -24,8 +25,10 @@ Scatter 属于 `type: 'point'` family，通过 `recipe.chartType` 选择精确 s
       比较两个连续变量，并用颜色或尺寸补充分类与量级
     </span>
   </LinkedCard>
-  <LinkedCard href="/viz/chart/model">
-    <span className="font-semibold">图形模型</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">查询所有 Chart 类型共享的结构与解析规则</span>
+  <LinkedCard href="/viz/chart/points/bubble">
+    <span className="font-semibold">气泡图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      用必需的第三个字段控制气泡面积，并保留 Point 的位置语义
+    </span>
   </LinkedCard>
 </div>

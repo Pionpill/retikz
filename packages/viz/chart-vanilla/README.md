@@ -4,10 +4,10 @@ Plain-data authoring and single-compile SVG rendering for family-aware Retikz
 Chart Source. The root entry, `@retikz/chart-vanilla`, exports `renderChart` and
 the shared Chart InputEmbed types. Import typed `createXxxChart` helpers from
 `@retikz/chart-vanilla/point` or a concrete subpath such as
-`@retikz/chart-vanilla/point/scatter` for a family-specific normalizer and
-provider contribution.
+`@retikz/chart-vanilla/point/scatter` or `/point/bubble` for a chartType-specific
+normalizer and provider contribution.
 
-The Scatter factory has an exact input contract and writes the stable Point
+Each Point factory has an exact input contract and writes the stable Point
 family plus its global `recipe.chartType` into Source. `encodings` contain field
 names, `properties` contain constants, and `marks` preserve authored Chart mark
 order. Vanilla only normalizes authoring input and contributes the selected

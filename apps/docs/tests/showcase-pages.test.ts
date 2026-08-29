@@ -19,6 +19,10 @@ const scatterContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/scatter/index.${lang}.mdx`);
 const scatterExamplePath = (filename: string) =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/scatter/${filename}`);
+const bubbleContentPath = (lang: 'zh' | 'en') =>
+  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/bubble/index.${lang}.mdx`);
+const bubbleExamplePath = (filename: string) =>
+  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/bubble/${filename}`);
 const chartModelContentPath = (
   page: 'index' | 'structure' | 'authoring' | 'presentation' | 'plot',
   lang: 'zh' | 'en',
@@ -103,6 +107,15 @@ describe('collectShowcasePages', () => {
     });
   });
 
+  it('从实际 Viz 文档树收集 Bubble 的嵌套路由', () => {
+    expect(collectShowcasePages('viz', vizSection)).toContainEqual({
+      path: '/viz/chart/points/bubble',
+      segments: ['viz', 'chart', 'points', 'bubble'],
+      label: 'viz.chartBubble',
+      metadata: { family: 'scatter-points', role: 'secondary', preview: 'bubble-basic', order: 20 },
+    });
+  });
+
   it('将 Scatter 页面说明为 Chart-native authoring，并保留独立的 Plot 扩展边界', () => {
     const chartSection = vizSection.find(section => section.id === 'chart');
     const pointsPage = chartSection?.pages.find(page => page.id === 'points');
@@ -180,6 +193,17 @@ describe('collectShowcasePages', () => {
     expect(compiled).toContain('h2');
   });
 
+  it.each(['zh', 'en'] as const)('Bubble %s 保留必需尺寸字段语义并保持 MDX 可编译', async lang => {
+    const source = readFileSync(bubbleContentPath(lang), 'utf8');
+    expect(source).toContain('`BubbleChart`');
+    expect(source).toContain('`BubbleEncodings.size`');
+    expect(source).toContain('/viz/chart/points/scatter');
+
+    const compiled = String(await compile(source, compileOptions));
+    expect(compiled).toContain('ShowcaseGallery');
+    expect(compiled).toContain('h2');
+  });
+
   it.each(['zh', 'en'] as const)('Scatter %s 以基础散点为主，并提供三个真实数据使用示例', lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
 
@@ -213,6 +237,18 @@ describe('collectShowcasePages', () => {
       'scatter-fertility-work.en.demo.tsx',
     ]) {
       expect(existsSync(scatterExamplePath(filename)), filename).toBe(true);
+    }
+  });
+
+  it('Bubble 基础示例提供数据、双语 demo 与双语 controls', () => {
+    for (const filename of [
+      'bubble-basic.data.ts',
+      'bubble-basic.controls.ts',
+      'bubble-basic.en.controls.ts',
+      'bubble-basic.zh.demo.tsx',
+      'bubble-basic.en.demo.tsx',
+    ]) {
+      expect(existsSync(bubbleExamplePath(filename)), filename).toBe(true);
     }
   });
 

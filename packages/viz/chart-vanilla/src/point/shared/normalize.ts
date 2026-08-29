@@ -4,6 +4,20 @@ import type { InputChartPresentation } from '../../normalize/chart';
 
 import { normalizeChartPresentation } from '../../normalize/chart';
 
+type PointPartitionEncodings = Readonly<{
+  row?: unknown;
+  column?: unknown;
+}>;
+
+/** 展开 Point chartType 共用的 row / column 字段名 shorthand */
+export const normalizePointPartitionEncodings = <TEncodings extends PointPartitionEncodings>(
+  encodings: TEncodings,
+) => ({
+  ...encodings,
+  ...(typeof encodings.row === 'string' ? { row: { field: encodings.row } } : {}),
+  ...(typeof encodings.column === 'string' ? { column: { field: encodings.column } } : {}),
+});
+
 /** 组装 concrete chartType 共用的 Chart Source 外壳 */
 export const chartSourceOf = (
   input: InputChartPresentation,

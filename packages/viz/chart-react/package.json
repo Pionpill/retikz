@@ -43,6 +43,10 @@
       "types": "./src/point/index.ts",
       "default": "./src/point/index.ts"
     },
+    "./point/bubble": {
+      "types": "./src/point/bubble/index.ts",
+      "default": "./src/point/bubble/index.ts"
+    },
     "./point/scatter": {
       "types": "./src/point/scatter/index.ts",
       "default": "./src/point/scatter/index.ts"
@@ -62,6 +66,11 @@
         "types": "./dist/types/point/index.d.ts",
         "import": "./dist/point/index.js",
         "default": "./dist/point/index.js"
+      },
+      "./point/bubble": {
+        "types": "./dist/types/point/bubble/index.d.ts",
+        "import": "./dist/point/bubble/index.js",
+        "default": "./dist/point/bubble/index.js"
       },
       "./point/scatter": {
         "types": "./dist/types/point/scatter/index.d.ts",

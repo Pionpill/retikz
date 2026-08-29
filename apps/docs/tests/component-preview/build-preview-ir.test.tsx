@@ -3,6 +3,7 @@ import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { ChartData, ChartLayout } from '@retikz/chart-react';
+import { BubbleChart, BubbleEncodings } from '@retikz/chart-react/point/bubble';
 import { ScatterChart, ScatterEncodings } from '@retikz/chart-react/point/scatter';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
@@ -11,7 +12,7 @@ import { useMemo } from 'react';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
+import { buildPreviewIR, collectPreviewChartSources } from '../../src/modules/docs/components/component-preview/utils';
 import { createGraphPreviewSource } from '../../src/modules/docs/preview';
 
 const hookedDatasets = { sample: [{ value: 1 }] };
@@ -80,6 +81,14 @@ const ChartStandaloneDemo: FC = () => (
   </ScatterChart>
 );
 
+const BubbleStandaloneDemo: FC = () => (
+  <BubbleChart>
+    <ChartData data={[{ x: 1, y: 2, population: 3 }]} />
+    <ChartLayout width={640} height={360} />
+    <BubbleEncodings x="x" y="y" size="population" />
+  </BubbleChart>
+);
+
 describe('buildPreviewIR', () => {
   it('does not execute hookful embeddable root components', () => {
     const preview = buildPreviewIR(HookedEmbeddableDemo);
@@ -136,5 +145,19 @@ describe('buildPreviewIR', () => {
       type: 'point',
       layout: { width: 320, height: 180 },
     });
+  });
+
+  it('collects the exact Bubble Source from the React authoring tree', () => {
+    expect(collectPreviewChartSources(BubbleStandaloneDemo({}))).toMatchObject([
+      {
+        namespace: 'chart',
+        type: 'point',
+        layout: { width: 640, height: 360 },
+        recipe: {
+          chartType: 'bubble',
+          encodings: { x: 'x', y: 'y', size: 'population' },
+        },
+      },
+    ]);
   });
 });

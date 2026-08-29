@@ -1,18 +1,29 @@
 import type { IRJsonObject } from '@retikz/core';
-import type { IRPlotGuide, IRPlotMarkOperation, IRPlotScaleOperation } from '@retikz/plot';
+import type {
+  IRPlotFacetOptions,
+  IRPlotGuide,
+  IRPlotMarkOperation,
+  IRPlotPartitionDimension,
+  IRPlotScaleOperation,
+} from '@retikz/plot';
 
+import { DataFieldType, DataTransformFieldEffect, DataTransformPhase } from '@retikz/data';
 import { PlotGuide, PlotMark, PointMarkSchema } from '@retikz/plot';
+import { PlotScale } from '@retikz/plot';
 
 import type { ChartMarkResolveContext } from '../../_chart/contract/mark';
 import type {
+  ChartEncodingSpatialResolution,
   ChartRecipeResolution,
   ChartRecipeResolveContext,
   ChartSemanticMarkResolution,
 } from '../../_chart/contract/recipe';
+import type { ChartEncodingFieldConsumer } from '../../_chart/resolve';
 import type { IRPointEncoding, IRPointProperties } from './schema';
 
+import { ChartEncodingSpatialKind } from '../../_chart/contract';
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
-import { pointAxisGuidesOf, pointCartesian2DOf } from './plot';
+import { pointAxisGuidesOf, pointCartesian2DOf, pointRecipeId } from './plot';
 import { PointRecipeThemeResolutionSchema } from './schema';
 
 const invalidPoint = (message: string, path: ReadonlyArray<string | number>): RetikzChartError =>
@@ -117,6 +128,91 @@ export const pointPropertySlots: ReadonlyArray<keyof IRPointProperties> = [
   ...pointVisualSlots,
   ...pointConstantPropertySlots,
 ];
+
+/** 不包含常量尺寸的 Point property slots */
+export const pointPropertySlotsWithoutSize = pointPropertySlots.filter(slot => slot !== 'size');
+
+type PointFieldEncodingSlot = 'x' | 'y' | 'color' | 'size' | 'opacity' | 'shape';
+
+const pointPositionTransformCapabilities = [
+  { phase: DataTransformPhase.RowShape, fieldEffect: DataTransformFieldEffect.Replace },
+  { phase: DataTransformPhase.FieldDerive, fieldEffect: DataTransformFieldEffect.Preserve },
+  { phase: DataTransformPhase.FieldAdjust, fieldEffect: DataTransformFieldEffect.Preserve },
+] as const;
+
+const pointContinuousTransformCapabilities = [
+  { phase: DataTransformPhase.FieldDerive, fieldEffect: DataTransformFieldEffect.Preserve },
+] as const;
+
+/** 创建具体 Point chartType 的字段 mapping consumers */
+export const pointFieldConsumersOf = (
+  chartType: string,
+): ReadonlyArray<ChartEncodingFieldConsumer<PointFieldEncodingSlot>> => [
+  {
+    slot: 'x',
+    transforms: pointPositionTransformCapabilities,
+    scale: {
+      family: 'position',
+      positionRole: 'x',
+      recipeFallback: pointRecipeId(chartType, 'scale.x'),
+    },
+  },
+  {
+    slot: 'y',
+    transforms: pointPositionTransformCapabilities,
+    scale: {
+      family: 'position',
+      positionRole: 'y',
+      recipeFallback: pointRecipeId(chartType, 'scale.y'),
+    },
+  },
+  { slot: 'color', scale: { family: 'channel' } },
+  {
+    slot: 'size',
+    transforms: pointContinuousTransformCapabilities,
+    outputType: DataFieldType.Continuous,
+    scale: { family: 'position', type: PlotScale.Sqrt },
+  },
+  {
+    slot: 'opacity',
+    transforms: pointContinuousTransformCapabilities,
+    outputType: DataFieldType.Continuous,
+    scale: { family: 'position', type: PlotScale.Linear },
+  },
+  { slot: 'shape' },
+];
+
+type PointSpatialEncodings = Readonly<{
+  row?: string | IRPlotPartitionDimension | Array<IRPlotPartitionDimension>;
+  column?: string | IRPlotPartitionDimension | Array<IRPlotPartitionDimension>;
+  facet?: IRPlotFacetOptions;
+}>;
+
+const partitionDimensionsOf = (
+  value: PointSpatialEncodings['row'],
+): IRPlotPartitionDimension | Array<IRPlotPartitionDimension> | undefined => {
+  if (value === undefined) return undefined;
+  if (typeof value === 'string') return { field: value };
+  return value;
+};
+
+/** 解析具体 Point chartType 的字段分面空间配置 */
+export const pointSpatialResolutionOf = (
+  chartType: string,
+  encodings: PointSpatialEncodings,
+): ChartEncodingSpatialResolution | undefined => {
+  const row = partitionDimensionsOf(encodings.row);
+  const column = partitionDimensionsOf(encodings.column);
+  if (row === undefined && column === undefined) return undefined;
+  return {
+    kind: ChartEncodingSpatialKind.Facet,
+    id: pointRecipeId(chartType, 'composition.facet'),
+    view: pointRecipeId(chartType, 'view.main'),
+    ...(row === undefined ? {} : { row }),
+    ...(column === undefined ? {} : { column }),
+    options: encodings.facet ?? {},
+  };
+};
 
 /** 把 Chart Point slots 解析为 Plot Point mark */
 export const resolvePointMark = (

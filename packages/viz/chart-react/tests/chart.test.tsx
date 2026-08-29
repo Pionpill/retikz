@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { normalizeBubbleChart } from '@retikz/chart-vanilla/point/bubble';
 import { normalizeScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { PlotAxis, PlotFacet, PlotTransform, PointMark } from '@retikz/plot-react';
 import { Layout, Text } from '@retikz/react';
@@ -16,6 +17,7 @@ import {
   ChartTitle,
   RetikzChartReactErrorCode,
 } from '../src';
+import { BubbleChart, BubbleEncodings, BubbleMark, BubbleProperties } from '../src/point/bubble';
 import { ScatterChart, ScatterEncodings, ScatterMark, ScatterProperties } from '../src/point/scatter';
 
 type InputComponent<TInput> = {
@@ -32,7 +34,66 @@ const requiredDeclarations = (
   </>
 );
 
+const requiredBubbleDeclarations = (
+  <>
+    <ChartData data={[{ income: 1000, lifeExpectancy: 60, population: 1_000_000 }]} />
+    <BubbleEncodings x="income" y="lifeExpectancy" size="population" />
+  </>
+);
+
 describe('Typed Point Chart React declarations', () => {
+  it('maps exact Bubble declarations and preserves authored mark order', () => {
+    const input = inputOf(
+      BubbleChart,
+      <>
+        {requiredBubbleDeclarations}
+        <BubbleProperties opacity={0.75} />
+        <BubbleMark override properties={{ strokeWidth: 1 }} />
+        <BubbleMark properties={{ opacity: 0.5 }} />
+      </>,
+    );
+
+    expect(input.source).toEqual(
+      normalizeBubbleChart({
+        data: { reference: 'chart.data' },
+        encodings: { x: 'income', y: 'lifeExpectancy', size: 'population' },
+        properties: { opacity: 0.75 },
+        marks: [
+          { kind: 'bubble', override: true, properties: { strokeWidth: 1 } },
+          { kind: 'bubble', properties: { opacity: 0.5 } },
+        ],
+      }),
+    );
+  });
+
+  it('requires one BubbleEncodings declaration and at most one BubbleProperties declaration', () => {
+    expect(() =>
+      inputOf(
+        BubbleChart,
+        <>
+          <ChartData data={[]} />
+        </>,
+      ),
+    ).toThrow(/BubbleEncodings.*exactly once/i);
+
+    expect(() =>
+      inputOf(
+        BubbleChart,
+        <>
+          {requiredBubbleDeclarations}
+          <BubbleProperties opacity={0.5} />
+          <BubbleProperties opacity={0.75} />
+        </>,
+      ),
+    ).toThrow(/BubbleProperties.*at most once/i);
+  });
+
+  it('renders Bubble standalone through one SVG host', () => {
+    const markup = renderToStaticMarkup(<BubbleChart>{requiredBubbleDeclarations}</BubbleChart>);
+
+    expect(markup.match(/<svg/g)).toHaveLength(1);
+  });
+
   it('renders standalone and embedded Chart through one SVG host and inherits the outer Theme mode', () => {
     const chart = <ScatterChart>{requiredDeclarations}</ScatterChart>;
     const standalone = renderToStaticMarkup(chart);

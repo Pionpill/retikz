@@ -181,6 +181,7 @@
     "chart": "Chart · 图形",
     "chartScatterPoints": "点图",
     "chartScatter": "散点图",
+    "chartBubble": "气泡图",
     "chartModel": "图形模型",
     "chartModelStructure": "结构与类型",
     "chartModelAuthoring": "编写与解析",

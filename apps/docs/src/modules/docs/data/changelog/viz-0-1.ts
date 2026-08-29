@@ -228,6 +228,13 @@ export const vizV01: Release = {
             en: 'Scatter `encodings` now support direct fields, scalar aggregates, allowed derived transforms, named scales, and `row / column / facet` while reusing Data field/transform and Plot scale/composition contracts. `ChartFacet`, root `facet`, and `recipe.facet` are removed; migrate to `encodings.row / column / facet`. Shared-axis, multi-mark tracks use Plot static Tracks through `plotExtension`.',
           },
         },
+        {
+          label: { zh: '独立 Bubble chartType', en: 'Dedicated Bubble chartType' },
+          content: {
+            zh: '`bubble` 作为 Point family 的独立精确类型，固定必需的 `x / y / size` 字段角色、sqrt 尺寸尺度、默认 size legend 与 `bubble` semantic mark；常量 properties 和 authored mark 都不能覆盖核心 size mapping。',
+            en: '`bubble` is a dedicated exact type in the Point family, fixing required `x / y / size` field roles, sqrt size scaling, a default size legend, and the `bubble` semantic mark. Constant properties and authored marks cannot replace the core size mapping.',
+          },
+        },
       ],
       subVersions: [
         {
@@ -252,6 +259,13 @@ export const vizV01: Release = {
                 en: '`<ScatterMark override>` and plain `{ kind: "scatter", override: true }` produce the same exact Source, styling the recipe\'s implicit primary points without drawing duplicates; a plain ScatterMark still appends extra points.',
               },
             },
+            {
+              label: { zh: 'Bubble 精确 Source 与 provider', en: 'Exact Bubble Source and provider' },
+              content: {
+                zh: '`@retikz/chart/point/bubble` 提供严格 Bubble schema、recipe、semantic mark 与 provider contribution，并复用 Point mapping、facet、scaffold、lowering 与 guide 主链。',
+                en: '`@retikz/chart/point/bubble` provides the strict Bubble schema, recipe, semantic mark, and provider contribution while reusing the Point mapping, facet, scaffold, lowering, and guide pipeline.',
+              },
+            },
           ],
         },
       ],
@@ -268,8 +282,8 @@ export const vizV01: Release = {
         {
           label: { zh: '按 owner 拆分 declaration', en: 'Owner-scoped declarations' },
           content: {
-            zh: '根入口提供 `ChartData`、`ChartLayout`、`ChartExtension` 与 presentation；Scatter 入口提供 `ScatterEncodings`、`ScatterProperties`、`ScatterMark`。`ScatterChart` 只保留共享接线与 children，所有声明折叠为既有精确 Vanilla Input。',
-            en: 'The root entry provides `ChartData`, `ChartLayout`, `ChartExtension`, and presentation, while the Scatter entry provides `ScatterEncodings`, `ScatterProperties`, and `ScatterMark`. `ScatterChart` keeps only shared wiring and children; declarations fold into the existing exact Vanilla input.',
+            zh: '根入口提供 `ChartData`、`ChartLayout`、`ChartExtension` 与 presentation；具体 chartType 入口提供 `XxxEncodings`、`XxxProperties` 与 `XxxMark`。typed Chart 根只保留共享接线和 children，所有声明折叠为对应的精确 Vanilla Input。',
+            en: 'The root entry provides `ChartData`, `ChartLayout`, `ChartExtension`, and presentation, while each chartType entry provides `XxxEncodings`, `XxxProperties`, and `XxxMark`. Typed Chart roots keep only shared wiring and children; declarations fold into the matching exact Vanilla input.',
           },
         },
         {
@@ -285,8 +299,8 @@ export const vizV01: Release = {
           version: 'alpha.1',
           date: '2026-08-12',
           summary: {
-            zh: 'React adapter 提供 owner-scoped declarations、图内 presentation marker 与首个 point-family typed Chart 入口。',
-            en: 'The React adapter provides owner-scoped declarations, in-chart presentation markers, and the first point-family typed Chart entry.',
+            zh: 'React adapter 提供 owner-scoped declarations、图内 presentation marker 与 Point family typed Chart 入口。',
+            en: 'The React adapter provides owner-scoped declarations, in-chart presentation markers, and Point-family typed Chart entries.',
           },
           items: [
             {
@@ -304,6 +318,13 @@ export const vizV01: Release = {
               content: {
                 zh: '`ScatterChart` 不再接收 CSS、renderer/runtime、动画与 compile callback 等 host props。需要这些能力时用外层 `<Layout>`；standalone 的 width/height 通过 `ChartLayout` 声明，embedded `ChartLayout` 只允许 Source `layout`。',
                 en: '`ScatterChart` no longer accepts CSS, renderer/runtime, animation, or compile-callback host props. Use an outer `<Layout>` for those capabilities; declare standalone width/height through `ChartLayout`, while embedded `ChartLayout` accepts Source `layout` only.',
+              },
+            },
+            {
+              label: { zh: 'Bubble declaration authoring', en: 'Bubble declaration authoring' },
+              content: {
+                zh: '`BubbleChart` 组合 `BubbleEncodings`、`BubbleProperties` 与 `BubbleMark`，并与 Vanilla 生成同一精确 Source；collector 保留 authored mark 顺序并拒绝重复单例 declaration。',
+                en: '`BubbleChart` composes `BubbleEncodings`, `BubbleProperties`, and `BubbleMark` into the same exact Source as Vanilla; its collector preserves authored mark order and rejects duplicate singleton declarations.',
               },
             },
           ],
@@ -329,8 +350,15 @@ export const vizV01: Release = {
         {
           label: { zh: 'BREAKING：facet input 迁入 encodings', en: 'BREAKING: Facet input moves into encodings' },
           content: {
-            zh: '`InputChartFacet`、`normalizeChartFacet`与factory root `facet`已删除。Scatter factory只展开`row / column`字符串shorthand，rich对象原样进入与JSON / React同形的Source；runtime transform / reducer / scale Definition继续通过provider sidecar传递。',
-            en: '`InputChartFacet`, `normalizeChartFacet`, and the factory root `facet` are removed. Scatter factories only expand `row / column` string shorthands, preserving rich objects in the same Source shape as JSON and React; runtime transform, reducer, and scale Definitions continue through the provider sidecar.',
+            zh: '`InputChartFacet`、`normalizeChartFacet`与factory root `facet`已删除。Point factory只展开`row / column`字符串shorthand，rich对象原样进入与JSON / React同形的Source；runtime transform / reducer / scale Definition继续通过provider sidecar传递。',
+            en: '`InputChartFacet`, `normalizeChartFacet`, and the factory root `facet` are removed. Point factories only expand `row / column` string shorthands, preserving rich objects in the same Source shape as JSON and React; runtime transform, reducer, and scale Definitions continue through the provider sidecar.',
+          },
+        },
+        {
+          label: { zh: 'Bubble plain factory 与 SSR', en: 'Bubble plain factory and SSR' },
+          content: {
+            zh: '`normalizeBubbleChart` 与 `createBubbleChart` 从精确 input 生成 `type: "point"`、`recipe.chartType: "bubble"` 的 Source，并安装对应 provider；`renderChart` 继续通过同一次 Core compile 输出 SVG。',
+            en: '`normalizeBubbleChart` and `createBubbleChart` produce a `type: "point"`, `recipe.chartType: "bubble"` Source from exact input and install its provider; `renderChart` continues to emit SVG through the same Core compile.',
           },
         },
       ],

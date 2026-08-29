@@ -1,0 +1,98 @@
+---
+title: 气泡图
+description: 用二维位置比较两个连续变量，并用必需的第三个字段表达气泡面积所代表的量级。
+family: scatter-points
+usage: distribution
+---
+
+<ShowcaseGallery
+  examples={[
+    {
+      id: 'bubble-basic',
+      title: '人口规模气泡',
+      description: '用 `BubbleChart` 比较人均 GDP 与预期寿命，并让人口字段通过默认 sqrt 尺度驱动气泡面积。',
+      preview: {
+        files: ['bubble-basic', 'bubble-basic.data.ts'],
+        controls: { name: 'bubble-basic' },
+        controlPanelDefaultOpen: false,
+        size: 'xxxl',
+        caption: '横轴使用对数尺度，纵轴表示预期寿命；人口字段通过默认 sqrt 尺度决定气泡面积。',
+      },
+    },
+  ]}
+>
+本页 API 只列 Bubble 私有的 declaration。`ChartData`、`ChartLayout`、`ChartExtension`、presentation 与公共根接线不在此重复，详见 [Chart 公共 API](/viz/chart)。
+
+## `BubbleChart`
+
+`BubbleChart` 固定 Point family 与 Bubble recipe 身份。它没有 Bubble 私有根 prop；字段映射、常量属性和 mark 分别由下面三个 declaration 表达，根只保留 Chart 公共接线与 `children`。
+
+Bubble 与 Scatter 都下沉为 Plot Point，但 Bubble 把第三个字段映射固定为不可撤销的核心角色。常量半径的点图仍应使用 Scatter，packed bubble 则不属于本 chartType。
+
+## `BubbleEncodings`
+
+`BubbleEncodingsProps` 精确复用 schema 派生的 `IRBubbleChartEncodings`。Vanilla input 与 JSON Source 使用相同 payload；React 通过独立 declaration 编写。
+
+| Slot             | 支持的 Bubble mapping                                                                  | Bubble 专属约束                                                                               |
+| ---------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `x`              | `string`、direct、aggregate、derived（`bin`、`normalize`、`jitter`、custom transform） | 必填；位置尺度沿用 Point compatibility；`jitter` 只能作用于 x；`bin` 不能与 facet 组合        |
+| `y`              | `string`、direct、aggregate、derived（`bin`、`normalize`、`jitter`、custom transform） | 必填；位置尺度沿用 Point compatibility；`jitter` 只能作用于 y；`bin` 不能与 facet 组合        |
+| `size`           | `string`、direct、aggregate、derived（`normalize`、custom transform）                  | 必填且只能是字段映射；输出必须 continuous；省略 scale 时使用 sqrt，命名 scale 也只接受 `sqrt` |
+| `color`          | `string`、direct、aggregate                                                            | 可选；接受兼容的分类或连续颜色 scale                                                          |
+| `opacity`        | `string`、direct、aggregate、derived（`normalize`、custom transform）                  | 可选；输出必须 continuous，命名 scale 当前只接受 `linear`                                     |
+| `shape`          | `string`、direct                                                                       | 可选；绑定分类形状，不接受命名 scale                                                          |
+| `row` / `column` | `string`、`IRPlotPartitionDimension`、`Array<IRPlotPartitionDimension>`                | 可选；声明任一维度即可生成 facet，数组表示有序分面层级                                        |
+| `facet`          | `IRPlotFacetOptions`                                                                   | 可选；配置 `empty`、`header`、`resolve`、`spacing`；必须同时存在 `row` 或 `column`            |
+
+默认情况下，`size` 绑定进入 Plot 的 sqrt 尺寸尺度并生成 size legend。Bubble 不接受常量 `size`，也不能通过 mark 覆盖或删除 recipe 的尺寸字段；这保证同一 Source 始终保留 Bubble 的第三数据角色。
+
+```tsx
+<BubbleEncodings
+  x={{ field: 'gdpPerCapita', scale: { operation: { type: 'log', name: 'income' } } }}
+  y="lifeExpectancy"
+  size="population"
+/>
+```
+
+`row` / `column` / `facet` 沿用 Point 分面契约。分区只改变面板组织，不改变 Bubble 的 mark 身份与必需 size mapping。
+
+## `BubbleProperties`
+
+`BubbleProperties` 声明 recipe 级常量。它复用 Point 常量属性，但明确排除固定半径 `size`；数据驱动尺寸必须来自 `BubbleEncodings.size`。
+
+Bubble 默认使用 `fillOpacity={0.7}` 和 `1px` 同色描边。`color` 同时驱动默认填充与描边；显式 `fill`、`stroke` 或透明度属性仍可分别覆盖。
+
+| 字段                                                                                        | 值域与说明                                      |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `color`、`textColor`、`fill`、`stroke`、`shape`                                             | 颜色、paint 或可扩展 shape 名称                 |
+| `minimumSize`、`scale`、`rotate`、`dx`、`dy`、`padding`、`margin`、`cornerRadius`           | 通用 Point 几何常量，不替代必需的 size 字段映射 |
+| `strokeWidth`、`fillOpacity`、`strokeOpacity`、`opacity`、`dashed`、`dotted`、`dashPattern` | 描边、透明度与虚线常量                          |
+| `zIndex`、`align`、`lineHeight`、`maxTextWidth`、`font`、`label`                            | 绘制顺序、文本与标签配置                        |
+| `boundary`、`shadow`、`blendMode`                                                           | 边界、阴影与混合模式                            |
+
+## `BubbleMark`
+
+`BubbleMark` 是 Bubble 独有的直接子级 mark API。组件身份固定为 `bubble`，调用方不传 `kind`；普通 mark 追加额外气泡，`override` mark 原位替换 recipe 的隐式主气泡。
+
+| `BubbleMarkProps` 属性 | 类型                            | 默认值  | Bubble 专属行为                                                                                                       |
+| ---------------------- | ------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
+| `override?`            | `boolean`                       | `false` | 为 `true` 时原位替换隐式主 `bubble` mark；未命中时仍追加，并通过 `onWarn` 报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND` |
+| `encodings?`           | `BubbleMarkProps['encodings']`  | —       | 可覆盖继承的 x、y、color、opacity、shape 字段，但不包含 `size`                                                        |
+| `properties?`          | `BubbleMarkProps['properties']` | —       | 可覆盖 Bubble 允许的常量样式，但不包含固定半径 `size`                                                                 |
+
+普通与 override `BubbleMark` 都从 recipe 继承同一个核心 size mapping，因此不能把 Bubble 改写成没有第三字段尺寸语义的普通 Scatter。
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/points/scatter">
+    <span className="font-semibold">散点图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">尺寸字段可选时使用 Scatter</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/authoring">
+    <span className="font-semibold">编写与解析</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查询 React、Vanilla、schema 与 recipe 主链</span>
+  </LinkedCard>
+</div>
+
+</ShowcaseGallery>

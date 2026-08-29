@@ -5,15 +5,16 @@ description: Show individual observations through point positions and relationsh
 
 Point charts use one or more data points as their visual subject. This group helps readers choose a chartType by visual structure and remains a source-directory and `/point` multi-entry import boundary. It does not introduce another Point resolver or runtime dispatch layer.
 
-Scatter belongs to the `type: 'point'` family, with its exact schema and recipe selected by `recipe.chartType`. It shares root `data`, `layout`, `presentation`, `theme`, and `plotExtension`, while `recipe.encodings`, `recipe.properties`, and its built-in semantic mark preserve the chart's field roles and visual structure.
+Scatter and Bubble both belong to the `type: 'point'` family, with `recipe.chartType` selecting each exact schema and recipe. They share root `data`, `layout`, `presentation`, `theme`, and `plotExtension`, while `recipe.encodings`, `recipe.properties`, and the built-in semantic mark fix each chart's data roles and visual structure.
 
 Field ownership, the authoring pipeline, chart-wide presentation, and Plot extension rules shared by every type live under [Chart Model](/viz/chart/model). This section compares only the visual semantics unique to point chart types.
 
 ## Responsibilities
 
-| Chart                                | `chartType` | Use it when                                             |
-| ------------------------------------ | ----------- | ------------------------------------------------------- |
-| [Scatter](/viz/chart/points/scatter) | `scatter`   | Inspecting distributions, clusters, outliers, or trends |
+| Chart                                    | `chartType` | Use it when                                                 |
+| ---------------------------------------- | ----------- | ----------------------------------------------------------- |
+| [Scatter](/viz/chart/points/scatter)     | `scatter`   | Inspecting distributions, clusters, outliers, or trends     |
+| [Bubble Chart](/viz/chart/points/bubble) | `bubble`    | Comparing two positions with the magnitude of a third field |
 
 ## Pages
 
@@ -24,10 +25,10 @@ Field ownership, the authoring pipeline, chart-wide presentation, and Plot exten
       Compare two continuous variables, then add category or magnitude with color and size
     </span>
   </LinkedCard>
-  <LinkedCard href="/viz/chart/model">
-    <span className="font-semibold">Chart Model</span>
+  <LinkedCard href="/viz/chart/points/bubble">
+    <span className="font-semibold">Bubble Chart</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Reference structure and resolution rules shared by every Chart type
+      Drive bubble area with a required third field while retaining Point position semantics
     </span>
   </LinkedCard>
 </div>

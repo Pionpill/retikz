@@ -5,7 +5,8 @@ import { array, literal, strictObject } from 'zod';
 import { createChartSourceSchema, createChartThemeSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
 import {
-  PointMarkSchema,
+  createPointChartMarkSchema,
+  PointMarkEncodingSchema,
   PointPropertiesSchema,
   PointRecipeThemeOverridesSchema,
   PointRecipeThemeResolutionSchema,
@@ -16,7 +17,11 @@ import { ScatterChartEncodingsSchema } from './encoding-schema';
 export const ScatterChartPropertiesSchema = PointPropertiesSchema.describe('Scatter Chart constant properties');
 
 /** Scatter recipe 允许的有序 Chart mark schema */
-export const ScatterChartMarkSchema = strictObject(PointMarkSchema.shape).describe('Scatter Chart mark payload');
+export const ScatterChartMarkSchema = createPointChartMarkSchema(
+  ChartType.Scatter,
+  PointMarkEncodingSchema,
+  ScatterChartPropertiesSchema,
+).describe('Scatter Chart mark payload');
 
 /** Scatter recipe 的严格 recipe envelope */
 export const ScatterChartRecipeSchema = strictObject({

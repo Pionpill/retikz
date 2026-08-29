@@ -464,6 +464,7 @@ export const buildLegendLayers = (
           : 1;
       const entries: Array<LegendEntry> = reps.map(tick => ({
         label: showLabels ? tick.label : '',
+        color: descriptor.defaultColor ?? categoricalColorAt(resolvedTheme.palette.series, 0),
         radius:
           (style.symbolFit === LegendSymbolFit.Fit
             ? Math.min(radiusScale(tick.value) * fitScale, symbolRadiusLimit)

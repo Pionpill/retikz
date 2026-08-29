@@ -4,8 +4,14 @@ import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { PathMarkSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
+import type { ChartRecipeDefinition } from '../../src/_chart/contract';
+import type { IRChartSource } from '../../src/_chart/schemas';
+
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveSelectedChart } from '../../src/_chart/resolve';
+import { BubbleMarkDefinition } from '../../src/point/bubble/mark';
+import { BubbleChartDefinition } from '../../src/point/bubble/recipe';
+import { BubbleChartSchema } from '../../src/point/bubble/schema';
 import { ScatterMarkDefinition } from '../../src/point/scatter/mark';
 import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
 import { ScatterChartSchema } from '../../src/point/scatter/schema';
@@ -14,8 +20,15 @@ const theme = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
 const runtime = resolveChartProviderRegistry([
   { family: 'point', recipe: ScatterChartDefinition, themeDefinitions: [] },
 ]).runtime;
+const bubbleRuntime = resolveChartProviderRegistry([
+  { family: 'point', recipe: BubbleChartDefinition, themeDefinitions: [] },
+]).runtime;
 
-const resolve = (definition: typeof ScatterChartDefinition, encodings: IRJsonObject, properties: IRJsonObject = {}) =>
+const resolve = <TSource extends IRChartSource>(
+  definition: ChartRecipeDefinition<TSource>,
+  encodings: IRJsonObject,
+  properties: IRJsonObject = {},
+) =>
   definition.resolve({
     data: { reference: 'rows' },
     encodings,
@@ -24,6 +37,66 @@ const resolve = (definition: typeof ScatterChartDefinition, encodings: IRJsonObj
   });
 
 describe('Point Chart recipe Definitions', () => {
+  it('Bubble creates a Point semantic mark with inherited size and a default size legend', () => {
+    const result = resolve(BubbleChartDefinition, {
+      x: 'income',
+      y: 'lifeExpectancy',
+      size: 'population',
+      color: 'continent',
+    });
+
+    expect(result.semanticMarks).toEqual([
+      expect.objectContaining({
+        kind: 'bubble',
+        plotMarks: [
+          expect.objectContaining({
+            type: 'point',
+            encoding: { x: { field: 'income' }, y: { field: 'lifeExpectancy' } },
+            size: { kind: 'field', value: 'population' },
+            fillOpacity: { kind: 'constant', value: 0.7 },
+            strokeWidth: { kind: 'constant', value: 1 },
+          }),
+        ],
+      }),
+    ]);
+    expect(result.scaffold.guides?.value).toContainEqual({ type: 'legend', channel: 'size' });
+  });
+
+  it('keeps the core size mapping on ordinary and override Bubble marks', () => {
+    const source = BubbleChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'bubble',
+        encodings: { x: 'income', y: 'lifeExpectancy', size: 'population' },
+        marks: [
+          { kind: 'bubble', override: true, properties: { opacity: 0.75 } },
+          { kind: 'bubble', properties: { strokeWidth: 1 } },
+        ],
+      },
+    });
+
+    const result = resolveSelectedChart(source, {
+      theme: DEFAULT_RESOLVED_THEME,
+      recipe: BubbleChartDefinition,
+      themeDefinitions: [],
+      runtime: bubbleRuntime,
+    });
+
+    expect(result.plot.marks).toHaveLength(2);
+    expect(result.plot.marks[0]).toMatchObject({
+      size: { kind: 'field', value: 'population' },
+      fillOpacity: { kind: 'constant', value: 0.7 },
+      strokeWidth: { kind: 'constant', value: 1 },
+    });
+    expect(result.plot.marks[1]).toMatchObject({
+      size: { kind: 'field', value: 'population' },
+      fillOpacity: { kind: 'constant', value: 0.7 },
+      strokeWidth: { kind: 'constant', value: 1 },
+    });
+  });
+
   it('Scatter creates a Point semantic mark and a Cartesian scaffold', () => {
     const result = resolve(ScatterChartDefinition, { x: 'amount', y: 'margin', size: 'weight' });
     expect(result.semanticMarks).toHaveLength(1);
@@ -72,6 +145,46 @@ describe('Point Chart recipe Definitions', () => {
 });
 
 describe('Point Chart marks', () => {
+  it('Bubble mark inherits the recipe size when another property is explicit', () => {
+    const result = BubbleMarkDefinition.resolve({
+      chartType: 'bubble',
+      source: { kind: 'bubble', properties: { opacity: 0.5 } },
+      inherited: {
+        encodings: { x: 'income', y: 'lifeExpectancy', size: 'population' },
+        properties: {},
+      },
+      recipeThemeTokens: theme,
+    });
+
+    expect(result.marks[0]).toMatchObject({
+      size: { kind: 'field', value: 'population' },
+      opacity: { kind: 'constant', value: 0.5 },
+      fillOpacity: { kind: 'constant', value: 0.7 },
+      strokeWidth: { kind: 'constant', value: 1 },
+    });
+  });
+
+  it('Bubble mark lets explicit appearance override its defaults', () => {
+    const result = BubbleMarkDefinition.resolve({
+      chartType: 'bubble',
+      source: {
+        kind: 'bubble',
+        properties: { fillOpacity: 0.9, stroke: '#0f172a', strokeWidth: 2 },
+      },
+      inherited: {
+        encodings: { x: 'income', y: 'lifeExpectancy', size: 'population' },
+        properties: {},
+      },
+      recipeThemeTokens: theme,
+    });
+
+    expect(result.marks[0]).toMatchObject({
+      fillOpacity: { kind: 'constant', value: 0.9 },
+      stroke: { kind: 'constant', value: '#0f172a' },
+      strokeWidth: { kind: 'constant', value: 2 },
+    });
+  });
+
   it('scatter mark inherits x/y and lets explicit properties override inherited values', () => {
     const result = ScatterMarkDefinition.resolve({
       chartType: 'scatter',
