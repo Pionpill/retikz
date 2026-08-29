@@ -51,7 +51,7 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 - [ ] Data field model是字段类型、format与分类order的唯一真源；Chart不增加`ChartFieldType`或Flint类型别名
 - [ ] reducer / transform、scale、facet dimension与options直接复用Data / Plot runtime schema，Chart不复制等价type或Zod shape
 - [ ] registry-backed operation discriminator复用Foundation `OpenString`与owner开放schema；内置enum不封闭custom Definition
-- [ ] custom reducer / transform只有在owner Definition声明完整output model、compact capability、闭合phase与consumer compatibility时进入rich mapping
+- [ ] custom reducer / transform只有在owner Definition声明完整output model、schedule与consumer compatibility时进入rich mapping
 - [ ] recipe 显式 consumer 列表贴近实际 resolver，不从 schema 全字段自动推导；空名称和重复名称在 active provider registry assembly fail-loud
 - [ ] properties 与 encodings 映射到同一目标 slot 时，encoding 胜出
 - [ ] 冲突按目标 slot 解析，不使用无约束 object spread 或全局 last-wins
@@ -167,7 +167,7 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 - 按同名 key 向所有 mark 广播 encodings / properties
 - 让facet作为普通mark属性传播，或把track伪装成字段encoding
 - 用万能 `ChartEncoding` / `RawEncodingValue`接受当前chartType没有consumer的slot，或在Chart复制字段类型与owner operation schema
-- 用内置kind白名单拒绝合法custom Definition，或把开放`kind`误当作自动compact能力
+- 用内置kind白名单拒绝合法custom Definition，或把开放`kind`误当作自动具备schedule
 - 把 `recipe.marks` 与 `plotExtension.marks` 混成同一继承语义
 - 只复用 Plot schema/type，却重新实现 lowering、identity、provenance 或 diagnostics
 - 使用全局优先级 object spread 覆盖无关结构

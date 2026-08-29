@@ -10,7 +10,7 @@ import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition } from '.
 
 import { RetikzDataError } from '../error';
 
-/** compact transform的闭合调度阶段 */
+/** transform的闭合调度阶段 */
 export const DataTransformPhase = {
   /** 改变行shape或粒度 */
   RowShape: 'row-shape',
@@ -24,10 +24,10 @@ export const DataTransformPhase = {
   FieldAdjust: 'field-adjust',
 } as const;
 
-/** compact transform调度阶段取值 */
+/** transform调度阶段取值 */
 export type DataTransformPhaseValue = ValueOf<typeof DataTransformPhase>;
 
-/** compact mapping允许绑定的结构类别 */
+/** transform调度允许绑定的结构类别 */
 export const DataTransformBindingClass = {
   /** 产生或覆盖一个字段binding */
   Field: 'field',
@@ -35,10 +35,10 @@ export const DataTransformBindingClass = {
   Order: 'order',
 } as const;
 
-/** compact mapping结构类别取值 */
+/** transform调度结构类别取值 */
 export type DataTransformBindingClassValue = ValueOf<typeof DataTransformBindingClass>;
 
-/** compact transform对行和字段结构的闭合影响 */
+/** transform调度对行和字段结构的闭合影响 */
 export const DataTransformFieldEffect = {
   /** 保留现有行和字段并增加或覆盖字段 */
   Preserve: 'preserve',
@@ -48,11 +48,11 @@ export const DataTransformFieldEffect = {
   Reorder: 'reorder',
 } as const;
 
-/** compact transform字段影响取值 */
+/** transform调度字段影响取值 */
 export type DataTransformFieldEffectValue = ValueOf<typeof DataTransformFieldEffect>;
 
-/** Definition声明的compact mapping调度能力 */
-export type DataTransformCompactCapability = Readonly<{
+/** Definition声明的闭合调度描述 */
+export type DataTransformSchedule = Readonly<{
   /** 固定调度阶段 */
   phase: DataTransformPhaseValue;
   /** 当前Definition允许的mapping binding类别 */
@@ -118,8 +118,8 @@ export type TransformDefinition<TTransform extends IRDataTransform = IRDataTrans
   outputFields?: (operation: TTransform, context: TransformContext) => Array<string>;
   /** 该transform对字段类型图的影响；省略时下游不得保留旧类型证据 */
   outputModel?: (operation: TTransform, context: TransformContext) => DataTransformOutputModel | undefined;
-  /** 允许上层宿主把该Definition用于字段映射的闭合调度能力 */
-  compact?: DataTransformCompactCapability;
+  /** 允许上层宿主闭合调度该Definition的固定描述 */
+  schedule?: DataTransformSchedule;
   /** 执行 transform；必须纯且确定；改行数且代表源行集合时要用 context.groupProvenance 保留 provenance */
   apply: (rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => Array<ExternalRow>;
 };

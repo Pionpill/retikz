@@ -168,7 +168,7 @@ describe('Chart providers through Core compile', () => {
         kind: 'preserve',
         outputs: [{ field: operation.as, type: { from: operation.field } }],
       }),
-      compact: {
+      schedule: {
         phase: DataTransformPhase.FieldDerive,
         bindingClass: DataTransformBindingClass.Field,
         fieldEffect: DataTransformFieldEffect.Preserve,

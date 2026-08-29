@@ -69,18 +69,18 @@ mapping可以携带一个由该mapping诱导的aggregate或derived operation，�
 Data transform Definition公开：
 
 - `outputModel`：`preserve`保留输入并增加/覆盖descriptor；`replace`列出operation后的完整字段集合
-- `compact`：声明binding class、闭合`DataTransformPhase`、field effect与可选output选择规则
+- `schedule`：声明binding class、闭合`DataTransformPhase`、field effect与可选output选择规则
 - statistics `outputs`：声明scalar或multi-output reducer结果；compact aggregate只接受恰好一个完整scalar descriptor
 
-Data pipeline逐步产出`{ rows, fieldTypes, fieldTypeEvidence }`。每一步先基于当前view解析input和output model，再执行operation并推进类型证据；Plot coordinate、scale、channel、guide、locator与lineage只读各自实际view。descriptor缺失的external operation仍可用于完整Plot transform，但不能进入type-dependent compact encoding。
+Data pipeline逐步产出`{ rows, fieldTypes, fieldTypeEvidence }`。每一步先基于当前view解析input和output model，再执行operation并推进类型证据；Plot coordinate、scale、channel、guide、locator与lineage只读各自实际view。descriptor缺失的external operation仍可用于完整Plot transform，但不能进入type-dependent encoding transform。
 
 多个aggregate mapping合并为一个summarize。每个`as`是对应consumer的字段；`groupBy`只包含summarize后仍被recipe-level direct role消费的字段，并按ordered `encodingSlots`筛选、去重。aggregate输入、临时字段、authored Chart mark与`plotExtension.marks`不能反向改变root aggregate粒度。
 
 显式`plotExtension.transform`先执行，用于准备encoding输入；随后Chart-generated operation按Definition声明的闭合阶段执行：`row-shape → field-derive → row-order → cumulative-derive → field-adjust`，同阶段按ordered slot执行。custom `kind`不能自定义phase，later-stage output不能喂earlier-stage input。
 
-内置常用能力包括scalar aggregate、position `bin`、`normalize`和单轴`jitter`；表内名称只是vocabulary，不是custom白名单。custom Definition具备同等output model、compact capability、phase、field effect与consumer type时走同一路径。`select / annotate / relate / density / smooth`等没有single-slot完整语义的operation继续属于完整Plot transform。
+内置常用能力包括scalar aggregate、position `bin`、`normalize`和单轴`jitter`；表内名称只是vocabulary，不是custom白名单。custom Definition具备同等output model、schedule与consumer type时走同一路径。`select / annotate / relate / density / smooth`等没有single-slot完整语义的operation继续属于完整Plot transform。
 
-compact jitter禁止`axis: 'both'`：x mapping只改x，y mapping只改y；双轴需要两个operation或完整`plotExtension.transform`。带composition grouping的bin在Plot提供正式grouped-bin contract前拒绝，Chart不补写owner operation没有声明的grouping或output。
+encoding jitter禁止`axis: 'both'`：x mapping只改x，y mapping只改y；双轴需要两个operation或完整`plotExtension.transform`。带composition grouping的bin在Plot提供正式grouped-bin contract前拒绝，Chart不补写owner operation没有声明的grouping或output。
 
 一个Chart只生成一个共享encoding data view。root transform、encoding-derived operation、facet partition、semantic mark、authored Chart mark与`plotExtension.marks`都消费aggregate / derived后的rows；Chart不自动保留raw分支。raw + aggregate layering、mark-local独立数据视图或不同transform分支必须直接使用Plot正式能力。
 
@@ -133,6 +133,6 @@ breaking public surface：
 
 ## 实现结果与保留边界
 
-当前实现已把Data output model与compact Definition、Chart exact mapping scheduler、React / Vanilla同形Source及旧facet surface删除接入同一端到端路径。Scene、lineage与locator在一次runtime请求内复用同一次lowering / data artifact；独立请求仍各自执行transform。
+当前实现已把Data output model与transform schedule、Chart exact mapping scheduler、React / Vanilla同形Source及旧facet surface删除接入同一端到端路径。Scene、lineage与locator在一次runtime请求内复用同一次lowering / data artifact；独立请求仍各自执行transform。
 
 本ADR仍保持Proposed。非目标继续包括：万能encoding union、Scatter `series / detail / order / text`、隐式fold、多数据视图、Chart轨道封装以及尚无consumer的预防性slot。

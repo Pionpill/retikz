@@ -134,7 +134,7 @@ describe('Scatter Chart exact Source schema', () => {
     }
   });
 
-  it('restricts compact jitter to the mapped position role', () => {
+  it('restricts encoding jitter to the mapped position role', () => {
     expect(
       ScatterChartEncodingsSchema.safeParse({
         x: { transform: { kind: 'jitter', axis: 'x', xField: 'amount' }, output: 'amount' },

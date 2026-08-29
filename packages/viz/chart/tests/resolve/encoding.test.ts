@@ -89,7 +89,7 @@ describe('Scatter Chart encoding resolution', () => {
     ]);
   });
 
-  it('schedules extension transforms first and compact mappings by phase then slot order', () => {
+  it('schedules extension transforms first and encoding transforms by phase then slot order', () => {
     const result = resolveScatter(
       {
         encodings: {
@@ -157,7 +157,7 @@ describe('Scatter Chart encoding resolution', () => {
     );
   });
 
-  it('rejects a compact operation that reads an output from a later scheduler phase', () => {
+  it('rejects an encoding transform that reads an output from a later scheduler phase', () => {
     expect(() =>
       resolveScatter({
         encodings: {
@@ -372,7 +372,7 @@ describe('Scatter Chart encoding resolution', () => {
         kind: 'preserve',
         outputs: [{ field: operation.as, type: { from: operation.field } }],
       }),
-      compact: {
+      schedule: {
         phase: DataTransformPhase.FieldDerive,
         bindingClass: DataTransformBindingClass.Field,
         fieldEffect: DataTransformFieldEffect.Preserve,

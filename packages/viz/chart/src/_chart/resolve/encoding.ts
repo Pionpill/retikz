@@ -27,7 +27,7 @@ import type { IRChartSource } from '../schemas';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 
-type ChartCompactMappingCapability = Readonly<{
+type ChartTransformCapability = Readonly<{
   phase: DataTransformPhaseValue;
   fieldEffect: DataTransformFieldEffectValue;
 }>;
@@ -42,7 +42,7 @@ type ChartEncodingScaleConsumer = Readonly<{
 /** exact recipe中一个普通字段slot允许的mapping能力 */
 export type ChartEncodingFieldConsumer<TSlot extends string = string> = Readonly<{
   slot: TSlot;
-  compact?: ReadonlyArray<ChartCompactMappingCapability>;
+  transforms?: ReadonlyArray<ChartTransformCapability>;
   outputType?: DataFieldTypeValue;
   scale?: ChartEncodingScaleConsumer;
 }>;
@@ -52,7 +52,7 @@ type ResolvedScaleSource = Readonly<{
   type: string;
 }>;
 
-type CompactOperationRecord = Readonly<{
+type TransformOperationRecord = Readonly<{
   id: string;
   slot: string;
   slotIndex: number;
@@ -197,7 +197,7 @@ const parseDerivedMapping = (
   consumer: ChartEncodingFieldConsumer,
   value: IRJsonObject,
   slotIndex: number,
-): Readonly<{ record: CompactOperationRecord; descriptor: DataTransformOutputDescriptor }> => {
+): Readonly<{ record: TransformOperationRecord; descriptor: DataTransformOutputDescriptor }> => {
   const operation = objectValueOf(value.transform) as IRPlotTransform | undefined;
   const output = value.output;
   const path = mappingPathOf(consumer.slot);
@@ -208,21 +208,21 @@ const parseDerivedMapping = (
   if (definition === undefined) {
     throw invalidEncoding(`Chart transform "${operation.kind}" is not registered`, [...path, 'transform']);
   }
-  const compact = definition.compact;
-  if (compact === undefined || compact.bindingClass !== DataTransformBindingClass.Field) {
-    throw invalidEncoding(`Chart transform "${operation.kind}" is not available for compact field mapping`, [
+  const schedule = definition.schedule;
+  if (schedule === undefined || schedule.bindingClass !== DataTransformBindingClass.Field) {
+    throw invalidEncoding(`Chart transform "${operation.kind}" is not available for encoding field mapping`, [
       ...path,
       'transform',
     ]);
   }
-  if (!transformPhaseIndex.has(compact.phase)) {
-    throw invalidEncoding(`Chart transform "${operation.kind}" declares an unknown compact phase`, [
+  if (!transformPhaseIndex.has(schedule.phase)) {
+    throw invalidEncoding(`Chart transform "${operation.kind}" declares an unknown schedule phase`, [
       ...path,
       'transform',
     ]);
   }
-  const accepted = consumer.compact?.some(
-    capability => capability.phase === compact.phase && capability.fieldEffect === compact.fieldEffect,
+  const accepted = consumer.transforms?.some(
+    capability => capability.phase === schedule.phase && capability.fieldEffect === schedule.fieldEffect,
   );
   if (accepted !== true) {
     throw invalidEncoding(`Chart transform "${operation.kind}" is incompatible with encoding "${consumer.slot}"`, [
@@ -243,9 +243,9 @@ const parseDerivedMapping = (
     }
     const expectedEffect =
       model.kind === 'preserve' ? DataTransformFieldEffect.Preserve : DataTransformFieldEffect.Replace;
-    if (compact.fieldEffect !== expectedEffect) {
+    if (schedule.fieldEffect !== expectedEffect) {
       throw invalidEncoding(
-        `Chart transform "${operation.kind}" compact field effect does not match its output model`,
+        `Chart transform "${operation.kind}" schedule field effect does not match its output model`,
         [...path, 'transform'],
       );
     }
@@ -265,13 +265,13 @@ const parseDerivedMapping = (
         id: `derived:${consumer.slot}`,
         slot: consumer.slot,
         slotIndex,
-        phase: compact.phase,
+        phase: schedule.phase,
         operation: parsed,
-        fieldEffect: compact.fieldEffect,
+        fieldEffect: schedule.fieldEffect,
         inputs: definition.inputFields?.(parsed, transformContext) ?? [],
         outputs: descriptors,
         producedFields,
-        ...(compact.fieldEffect === DataTransformFieldEffect.Replace
+        ...(schedule.fieldEffect === DataTransformFieldEffect.Replace
           ? { fieldsAfterReplace: descriptors.map(descriptor => descriptor.field) }
           : {}),
       },
@@ -295,7 +295,7 @@ const canonicalJson = (value: unknown): string => {
   return JSON.stringify(value);
 };
 
-const assertUniqueOperations = (records: ReadonlyArray<CompactOperationRecord>): void => {
+const assertUniqueOperations = (records: ReadonlyArray<TransformOperationRecord>): void => {
   const sourceByOperation = new Map<string, string>();
   for (const record of records) {
     const key = canonicalJson(record.operation);
@@ -327,7 +327,7 @@ const extensionTransformOutputs = (
 
 const assertExtensionTransformConflicts = (
   context: ChartEncodingResolveContext,
-  records: ReadonlyArray<CompactOperationRecord>,
+  records: ReadonlyArray<TransformOperationRecord>,
 ): void => {
   const extensionTransforms = context.source.plotExtension?.transform ?? [];
   if (extensionTransforms.length === 0) return;
@@ -369,7 +369,7 @@ const assertFieldDependencies = (
 };
 
 const assertRowShapeAvailability = (
-  records: ReadonlyArray<CompactOperationRecord>,
+  records: ReadonlyArray<TransformOperationRecord>,
   finalConsumers: ReadonlyArray<Readonly<{ slot: string; field: string }>>,
 ): void => {
   let availableFields: Set<string> | undefined;
@@ -456,7 +456,7 @@ export const resolveChartEncodingMappings = <
       inputs: ReadonlyArray<string>;
     }>
   > = [];
-  const compactRecords: Array<CompactOperationRecord> = [];
+  const transformRecords: Array<TransformOperationRecord> = [];
 
   for (const consumer of consumers) {
     const slot = consumer.slot;
@@ -485,7 +485,7 @@ export const resolveChartEncodingMappings = <
       continue;
     }
     const resolved = parseDerivedMapping(context, consumer, mapping, slotIndex);
-    compactRecords.push(resolved.record);
+    transformRecords.push(resolved.record);
     directEncodings[slot] = { field: resolved.descriptor.field } satisfies ChartResolvedFieldMapping;
   }
 
@@ -517,7 +517,7 @@ export const resolveChartEncodingMappings = <
   }
 
   const summarySlotIndex = Math.min(...aggregateMappings.map(mapping => mapping.slotIndex));
-  const summaryRecord: CompactOperationRecord | undefined =
+  const summaryRecord: TransformOperationRecord | undefined =
     aggregateMappings.length === 0
       ? undefined
       : {
@@ -537,8 +537,8 @@ export const resolveChartEncodingMappings = <
           fieldsAfterReplace: [...groupBy, ...aggregateMappings.map(mapping => mapping.descriptor.field)],
         };
 
-  const operationRecords = [...compactRecords, ...(summaryRecord === undefined ? [] : [summaryRecord])];
-  assertUniqueOperations(compactRecords);
+  const operationRecords = [...transformRecords, ...(summaryRecord === undefined ? [] : [summaryRecord])];
+  assertUniqueOperations(transformRecords);
   assertExtensionTransformConflicts(context, operationRecords);
 
   const producers = new Map<string, FieldProducer>();
@@ -560,7 +560,7 @@ export const resolveChartEncodingMappings = <
     }
   }
 
-  const fieldConsumers: Array<FieldConsumer> = compactRecords.map(record => ({
+  const fieldConsumers: Array<FieldConsumer> = transformRecords.map(record => ({
     id: record.id,
     slot: record.slot,
     phase: record.phase,

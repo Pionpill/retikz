@@ -33,7 +33,7 @@ const sortTransformDefinition = defineTransform<IRDataSortTransform>({
   schema: SortTransformSchema,
   inputFields: operation => [operation.field],
   outputModel: () => ({ kind: 'preserve', outputs: [] }),
-  compact: {
+  schedule: {
     phase: DataTransformPhase.RowOrder,
     bindingClass: DataTransformBindingClass.Order,
     fieldEffect: DataTransformFieldEffect.Reorder,

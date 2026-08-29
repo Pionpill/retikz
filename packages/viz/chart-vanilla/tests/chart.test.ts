@@ -58,7 +58,7 @@ describe('Chart Vanilla authoring', () => {
         kind: 'preserve',
         outputs: [{ field: operation.as, type: { from: operation.field } }],
       }),
-      compact: {
+      schedule: {
         phase: DataTransformPhase.FieldDerive,
         bindingClass: DataTransformBindingClass.Field,
         fieldEffect: DataTransformFieldEffect.Preserve,

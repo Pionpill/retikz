@@ -46,13 +46,13 @@ export const ScatterChartEncodingSlots = [
   'facet',
 ] as const;
 
-const scatterCompactPositionCapabilities = [
+const scatterPositionTransformCapabilities = [
   { phase: DataTransformPhase.RowShape, fieldEffect: DataTransformFieldEffect.Replace },
   { phase: DataTransformPhase.FieldDerive, fieldEffect: DataTransformFieldEffect.Preserve },
   { phase: DataTransformPhase.FieldAdjust, fieldEffect: DataTransformFieldEffect.Preserve },
 ] as const;
 
-const scatterCompactContinuousCapabilities = [
+const scatterContinuousTransformCapabilities = [
   { phase: DataTransformPhase.FieldDerive, fieldEffect: DataTransformFieldEffect.Preserve },
 ] as const;
 
@@ -64,7 +64,7 @@ type ScatterFieldEncodingSlot = Extract<
 const scatterFieldConsumers = [
   {
     slot: 'x',
-    compact: scatterCompactPositionCapabilities,
+    transforms: scatterPositionTransformCapabilities,
     scale: {
       family: 'position',
       positionRole: 'x',
@@ -73,7 +73,7 @@ const scatterFieldConsumers = [
   },
   {
     slot: 'y',
-    compact: scatterCompactPositionCapabilities,
+    transforms: scatterPositionTransformCapabilities,
     scale: {
       family: 'position',
       positionRole: 'y',
@@ -83,13 +83,13 @@ const scatterFieldConsumers = [
   { slot: 'color', scale: { family: 'channel' } },
   {
     slot: 'size',
-    compact: scatterCompactContinuousCapabilities,
+    transforms: scatterContinuousTransformCapabilities,
     outputType: DataFieldType.Continuous,
     scale: { family: 'position', type: PlotScale.Sqrt },
   },
   {
     slot: 'opacity',
-    compact: scatterCompactContinuousCapabilities,
+    transforms: scatterContinuousTransformCapabilities,
     outputType: DataFieldType.Continuous,
     scale: { family: 'position', type: PlotScale.Linear },
   },
