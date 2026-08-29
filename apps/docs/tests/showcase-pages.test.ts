@@ -112,7 +112,7 @@ describe('collectShowcasePages', () => {
       path: '/viz/chart/points/bubble',
       segments: ['viz', 'chart', 'points', 'bubble'],
       label: 'viz.chartBubble',
-      metadata: { family: 'scatter-points', role: 'secondary', preview: 'bubble-basic', order: 20 },
+      metadata: { family: 'scatter-points', role: 'primary', preview: 'bubble-basic', order: 20 },
     });
   });
 

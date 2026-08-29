@@ -162,7 +162,7 @@ export const vizSection: Array<Section> = [
               layout: 'showcase',
               showcase: {
                 family: 'scatter-points',
-                role: 'secondary',
+                role: 'primary',
                 preview: 'bubble-basic',
                 order: 20,
               },

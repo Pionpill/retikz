@@ -127,7 +127,7 @@ describe('layout utils', () => {
       pageType: 'concept',
       layout: 'showcase',
       capability: 'showcase.bubble',
-      showcase: { family: 'scatter-points', role: 'secondary', preview: 'bubble-basic', order: 20 },
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'bubble-basic', order: 20 },
     });
     expect(model?.meta).toMatchObject({ pageType: 'concept', capability: 'chart.model' });
     expect(model?.children?.map(page => page.id)).toEqual(['structure', 'authoring', 'presentation', 'plot']);

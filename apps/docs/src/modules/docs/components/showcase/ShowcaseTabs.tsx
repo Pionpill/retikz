@@ -7,8 +7,12 @@ import { Link, useLocation, useSearchParams } from 'react-router';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getSectionsByModule } from '@/modules/docs/data';
 
-import { ComponentPreview, DemoLocationContext } from '../component-preview';
+import type { ShowcasePageEntry } from './types';
+
+import { ComponentPreviewThumbnail, DemoLocationContext } from '../component-preview';
+import { MarkdownInline } from '../inline-markdown';
 import { collectShowcasePages } from './collect-showcase-pages';
+import { useShowcasePageDescription } from './hooks';
 
 export type ShowcaseTabsProps = {
   /** 当前 Type 人工策展的同类示例 */
@@ -20,6 +24,38 @@ export type ShowcaseTabsProps = {
 type ShowcaseTab = 'examples' | 'family' | 'api';
 
 const SHOWCASE_TABS = new Set<ShowcaseTab>(['examples', 'family', 'api']);
+
+type ShowcaseFamilyCardProps = {
+  page: ShowcasePageEntry;
+};
+
+/** 同类图表的静态缩略图卡片 */
+const ShowcaseFamilyCard: FC<ShowcaseFamilyCardProps> = props => {
+  const { page } = props;
+  const { t } = useTranslation();
+  const description = useShowcasePageDescription(page.segments);
+
+  return (
+    <Link
+      to={page.path}
+      data-slot="showcase-family-card"
+      className="flex h-[250px] flex-col overflow-hidden rounded-xl border bg-transparent text-left transition-[border-color,box-shadow] hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+    >
+      <DemoLocationContext.Provider value={page.segments}>
+        <ComponentPreviewThumbnail
+          files={page.metadata.preview}
+          className="h-[150px] shrink-0 border-b bg-transparent"
+        />
+      </DemoLocationContext.Provider>
+      <span data-slot="showcase-family-copy" className="block min-h-0 flex-1 bg-muted/40 p-4">
+        <span className="block font-medium text-foreground">{t(page.label)}</span>
+        {description && (
+          <MarkdownInline source={description} className="mt-1.5 block text-sm leading-relaxed text-muted-foreground" />
+        )}
+      </span>
+    </Link>
+  );
+};
 
 /** 把 URL 外部输入收窄为稳定的 Showcase tab */
 const normalizeShowcaseTab = (value: string | null): ShowcaseTab =>
@@ -75,22 +111,9 @@ export const ShowcaseTabs: FC<ShowcaseTabsProps> = props => {
             {t('common.showcaseFamilyEmpty')}
           </p>
         ) : (
-          <div className="flex flex-col gap-10">
+          <div data-slot="showcase-family" className="grid grid-cols-[repeat(auto-fill,minmax(230px,270px))] gap-4">
             {familyPages.map(page => (
-              <section key={page.path}>
-                <h2 className="mb-4 text-xl font-medium tracking-tight">
-                  <Link className="underline-offset-4 hover:underline" to={page.path}>
-                    {t(page.label)}
-                  </Link>
-                </h2>
-                <DemoLocationContext.Provider value={page.segments}>
-                  <ComponentPreview
-                    files={page.metadata.preview}
-                    controls={{ name: page.metadata.preview }}
-                    size="xl"
-                  />
-                </DemoLocationContext.Provider>
-              </section>
+              <ShowcaseFamilyCard key={page.path} page={page} />
             ))}
           </div>
         )}
