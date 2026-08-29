@@ -5,10 +5,10 @@ description: Import optional node shapes on demand from @retikz/standard/shape, 
 
 Shape extensions build on Core's basic shapes and add more optional content:
 
-| Package          | Provided content                                                                          |
-| ---------------- | ----------------------------------------------------------------------------------------- |
-| `core`           | `rectangle`, `ellipse`, `polygon`                                                         |
-| `standard/shape` | `cross`, `sector`, `star`, `contour`, `trapezoid`, `parallelogram`, `hexagon`, `cylinder` |
+| Package          | Provided content                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| `core`           | `rectangle`, `ellipse`, `polygon`                                                                            |
+| `standard/shape` | `cross`, `sector`, `star`, `contour`, `trapezoid`, `parallelogram`, `hexagon`, `cylinder`, `ellipticCapsule` |
 
 ## Usage
 
@@ -53,7 +53,7 @@ When an IR shape is neither a Core default nor registered in this invocation's `
 
 ## Examples
 
-The overview below places all eight extension shapes in one coordinate system before each shape exposes its own geometry controls.
+The overview below places all nine extension shapes in one coordinate system before each shape exposes its own geometry controls.
 
 <ComponentPreview files="shape-gallery" size="md" />
 
@@ -126,6 +126,21 @@ Inject `HexagonShapeDefinition`; its parameters have type `HexagonShapeParams`:
 #### API
 
 Inject `CylinderShapeDefinition`; its parameters have type `CylinderShapeParams`:
+
+| Field       | Type                         | Description                             |
+| ----------- | ---------------------------- | --------------------------------------- |
+| `axis?`     | `'vertical' \| 'horizontal'` | Main axis; defaults to `vertical`       |
+| `capDepth?` | `number`                     | Non-negative cap depth; defaults to `8` |
+
+### Elliptic Capsule
+
+`ellipticCapsule` forms one closed outer contour from a top half-ellipse, two straight sides, and a bottom half-ellipse. It shares its cap geometry with `cylinder` but omits the internal cap-divider arc, so the top does not form a complete ellipse. Unlike a capsule made from a Core rounded rectangle, `capDepth` independently controls cap depth and each half-ellipse spans the full cross-section.
+
+<ComponentPreview files="elliptic-capsule-example" size="sm" />
+
+#### API
+
+Inject `EllipticCapsuleShapeDefinition`; its parameters have type `EllipticCapsuleShapeParams`:
 
 | Field       | Type                         | Description                             |
 | ----------- | ---------------------------- | --------------------------------------- |

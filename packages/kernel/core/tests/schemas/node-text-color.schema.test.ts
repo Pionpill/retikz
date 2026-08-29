@@ -21,6 +21,29 @@ describe('Node auto-contrast textColor keyword', () => {
     expect(NodeDefaultSchema.safeParse({ textColor: CONTRAST }).success).toBe(true);
   });
 
+  it('Node、正文、run、label 与 pin 接受归一化派生颜色', () => {
+    expect(
+      NodeSchema.safeParse({
+        type: 'node',
+        position: [0, 0],
+        color: 'darkorange',
+        fill: 0.08,
+        stroke: 1,
+        textColor: 0.7,
+        text: [
+          { text: 'line', fill: 0.6 },
+          {
+            runs: [
+              { text: 'run', fill: 0.5 },
+              { tex: 'x', fill: 0.4 },
+            ],
+          },
+        ],
+        label: { text: 'label', textColor: 0.3, pin: { stroke: 0.2 } },
+      }).success,
+    ).toBe(true);
+  });
+
   it('不再接受参数化策略对象', () => {
     expect(
       NodeSchema.safeParse({

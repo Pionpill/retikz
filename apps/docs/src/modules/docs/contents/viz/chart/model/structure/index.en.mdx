@@ -25,9 +25,16 @@ This Point-family Scatter Source preserves author intent. Coordinates, scales, g
   recipe: {
     chartType: 'scatter',
     encodings: {
-      x: 'weight',
-      y: 'efficiency',
+      x: {
+        field: 'weight',
+        scale: { operation: { type: 'linear', name: 'weightScale', nice: true } },
+      },
+      y: {
+        aggregate: { kind: 'mean', field: 'efficiency', as: 'meanEfficiency' },
+      },
       color: 'group',
+      column: { field: 'region', order: ['North', 'South'] },
+      facet: { header: { column: true } },
     },
     properties: { opacity: 0.82 },
     marks: [
@@ -40,7 +47,7 @@ This Point-family Scatter Source preserves author intent. Coordinates, scales, g
 }
 ```
 
-`encodings` contain field names and `properties` contain constants. `recipe.marks` are ordered Chart marks: they append by default, while `override: true` can replace a built-in semantic mark group by kind. `plotExtension.marks` are independent Plot content and do not read Chart encodings or properties.
+`encodings` are the exact field-mapping plan for the selected chartType. They may contain field shorthands, rich direct mappings, aggregates, constrained derived transforms, named scales, and composition; `properties` contain constants. `recipe.marks` append by default, while `override: true` can replace a built-in semantic mark group by kind. `plotExtension.marks` do not inherit Chart encodings or properties, but they consume the same final encoding data view as recipe marks.
 
 ## Root shell and nested recipe envelope
 
@@ -62,9 +69,9 @@ This Point-family Scatter Source preserves author intent. Coordinates, scales, g
 
 A family is finite, stable, and intended for discovery. A chartType is a globally unique recipe key; each key belongs to exactly one family. The first Point-family routes are:
 
-| Family (`type`) | chartType | Exact schema and core difference                                                 |
-| --------------- | --------- | -------------------------------------------------------------------------------- |
-| `point`         | `scatter` | `ScatterChartSchema`; required x/y with optional color, size, opacity, and shape |
+| Family (`type`) | chartType | Exact schema and core difference                                                              |
+| --------------- | --------- | --------------------------------------------------------------------------------------------- |
+| `point`         | `scatter` | `ScatterChartSchema`; required x/y plus optional visual, aggregate, scale, and facet mappings |
 
 Import the exact schema from `@retikz/chart/point/scatter`. Use the aggregate `@retikz/chart/point` entry only when the application intentionally needs the whole Point family.
 
@@ -74,11 +81,13 @@ Chart does not provide a third-party recipe Definition registration entry. The a
 
 ## encodings, properties, and marks
 
-The recipe passes field-bound encodings and constant properties to its semantic mark, then emits official Plot marks. When both map to the same target slot, encoding wins; schema-valid explicit values such as `false`, `0`, and empty arrays are preserved rather than treated as missing.
+The recipe first resolves rich encodings into final fields, transforms, scales, and composition. It then passes direct field projections and constant properties to its semantic mark before emitting official Plot marks. When both map to the same target slot, encoding wins; schema-valid explicit values such as `false`, `0`, and empty arrays are preserved rather than treated as missing.
+
+Field type, format, and categorical order remain Data-owned facts in `data.model`; Chart does not create a parallel `ChartFieldType`. Transform and reducer kinds and scale types reuse owner-provided open schemas and runtime Definition registries. Function-bearing Definitions stay in a runtime sidecar rather than entering JSON Source.
 
 A recipe explicitly declares the slots its resolver actually consumes instead of treating every schema field as consumed. A mark inheritance declaration becomes active only when that mark is present in Source. If neither the recipe nor the current authored marks consume a field, Chart fails at that field path rather than silently dropping it.
 
-A Chart mark has `{ kind, override?, encodings?, properties? }`. Its Definition declares which fields and properties it may inherit. Scatter currently accepts only `scatter` marks, which can inherit Point x/y/color/size/opacity/shape. Omitting `override` or setting it to `false` appends a mark; `true` replaces the complete built-in group with the same kind in place. An explicit property outranks an inherited encoding, and an explicit encoding still wins when the mark declares both.
+A Chart mark has `{ kind, override?, encodings?, properties? }`. Its Definition declares which fields and properties it may inherit. A Scatter authored mark accepts direct x/y/color/size/opacity/shape mappings only; it cannot declare root aggregates, derived transforms, or composition. Omitting `override` or setting it to `false` appends a mark; `true` replaces the complete built-in group with the same kind in place. An explicit property outranks an inherited encoding, and an explicit encoding still wins when the mark declares both.
 
 ```ts
 recipe: {

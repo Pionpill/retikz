@@ -54,7 +54,7 @@
 - 同一 recipe 的 semantic group kind 必须唯一；同一 Source 对同 kind 最多一个 `override: true`
 - override 未命中时仍追加该 mark，并通过 Core composite warning 通道报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`
 - PointMark 等 Plot target 只有通过 Chart mark 入口时继承 Chart context；`plotExtension.marks` 始终保持纯 Plot 语义
-- facet / track 由 composition owner 消费，不向普通 mark 广播
+- facet 由 encoding composition consumer 消费，不向普通 mark 广播；轨道只通过 `plotExtension` 使用 Plot 静态 Tracks
 - Chart 不通过同名字段 spread 传递 encodings / properties；每个 slot 必须有明确 owner、consumer、目标和失败行为
 - recipe `consumes` 必须贴近实际 resolver 显式维护，不从 schema 全字段推导；mark binding 只在对应 authored mark 出现时成为 active consumer
 - `plotExtension` 的单值结构、具名集合、mark 数组与 identity 冲突分别沿 Plot 正式 replace、merge、append 与 fail-loud 语义处理

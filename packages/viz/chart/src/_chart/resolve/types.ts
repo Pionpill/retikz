@@ -2,7 +2,7 @@ import type { IRChild, IRJsonObject, ResolvedTheme } from '@retikz/core';
 import type { IRPlot } from '@retikz/plot';
 import type { IRSurface } from '@retikz/standard';
 
-import type { ChartRecipeDefinition } from '../contract/recipe';
+import type { ChartEncodingRuntime, ChartRecipeDefinition } from '../contract/recipe';
 import type { ChartThemeDefinition, ChartThemeResolution } from '../contract/theme';
 import type { IRChartSource } from '../schemas';
 
@@ -43,10 +43,12 @@ export type ChartResolveWarning = Readonly<{
 }>;
 
 /** 已选定 recipe 与命名主题链的 Chart resolve context */
-export type SelectedChartResolveContext = Readonly<{
+export type SelectedChartResolveContext<TSource extends IRChartSource = IRChartSource> = Readonly<{
   theme: ResolvedTheme;
-  recipe: ChartRecipeDefinition;
+  recipe: ChartRecipeDefinition<TSource>;
   themeDefinitions: ReadonlyArray<ChartThemeDefinition>;
+  /** 与当前Plot lowering共享的owner Definition注册表 */
+  runtime: ChartEncodingRuntime;
 }>;
 
 /** Mark slot 继承后的值；显式 mark payload 由 mark resolver 自己覆盖 */

@@ -10,7 +10,7 @@ import type {
   IRPlotTransform,
 } from '@retikz/plot';
 
-import type { InputPlotMark } from './input';
+import type { InputPlotFacet, InputPlotMark } from './input';
 import type { InputPlotScale } from './input-scales';
 
 /** `<Plot coordinate>` 入口形态：字符串简写、内置对象配置或自定义坐标配置 */
@@ -98,7 +98,7 @@ export type BuildPlotOptions = {
   composition?: IRPlot['composition'];
   /** 数据字段模型，声明后写入 `data.model`，并让未显式声明的位置比例尺按字段类型派生 */
   model?: IRDataModel;
-  /** 直传的根级数据变换，装配在 `<Transform>` 收集结果与自动 mark shortcut 之前 */
+  /** 直传的根级数据变换，装配在 `<PlotTransform>` 收集结果与自动 mark shortcut 之前 */
   transforms?: Array<IRPlotTransform>;
   /** 把 mark 形态转换为普通 Plot-level transforms 的作者侧简写 */
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
@@ -197,9 +197,6 @@ export type AxisBoundGuide = IRPlotGuide & {
 /** Plot composition arrangement */
 export type Arrangement = NonNullable<PlotComposition['arrangements']>[number];
 
-/** facet arrangement */
-export type FacetGrid = Extract<Arrangement, { kind: 'facet' }>;
-
 /** tracks arrangement */
 export type SharedScaffold = Extract<Arrangement, { kind: 'tracks' }>;
 
@@ -207,12 +204,7 @@ export type SharedScaffold = Extract<Arrangement, { kind: 'tracks' }>;
 export type ScaffoldTrack = SharedScaffold['tracks'][number];
 
 /** normalization 中暂存的 facet */
-export type CollectedFacet = FacetGrid & {
-  /** composition spacing */
-  spacing?: PlotComposition['spacing'];
-  /** composition resolve */
-  resolve?: PlotComposition['resolve'];
-};
+export type CollectedFacet = InputPlotFacet;
 
 /** normalization 中暂存的 scaffold */
 export type CollectedScaffold = Omit<SharedScaffold, 'coordinate'> & {
@@ -258,7 +250,7 @@ export type NormalizationState = {
   hasClosedLine: boolean;
 };
 
-/** Facet、Scaffold 与 Track 提供的声明作用域 */
+/** PlotFacet、PlotScaffold 与 PlotTrack 提供的声明作用域 */
 export type CollectionContext = {
   /** facet id */
   facetId?: string;
@@ -292,7 +284,7 @@ export type PlotAuthoringDeclaration = {
   props: IRJsonObject;
   /** 组件在原始 ReactNode tree 中的结构化路径 */
   path: PlotDeclarationPath;
-  /** Facet、Scaffold 或 Track 提供的声明上下文 */
+  /** PlotFacet、PlotScaffold 或 PlotTrack 提供的声明上下文 */
   context?: CollectionContext;
 };
 

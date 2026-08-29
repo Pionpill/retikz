@@ -1,4 +1,4 @@
-import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import { quarterlyRows } from './extension-resolver.data';
 
@@ -23,7 +23,7 @@ export const renderExtensionResolverPreview = () => (
   >
     <PathMark x="quarter" y="revenue" order="quarter" />
     <PointMark x="quarter" y="revenue" />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 );

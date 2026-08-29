@@ -159,6 +159,10 @@ describe('ArrowMarkSchema：kind:arrow + 视觉子集', () => {
     expect(ok.success).toBe(true);
   });
 
+  it('接受从 Path master 派生的数值 color 与从 marker color 派生的数值 fill', () => {
+    expect(ArrowMarkSchema.safeParse({ kind: 'arrow', color: 0.9, fill: 0.2 }).success).toBe(true);
+  });
+
   it('shape 任意非空名 schema 接受（注册名校验在编译层）', () => {
     expect(ArrowMarkSchema.safeParse({ kind: 'arrow', shape: 'myArrow' }).success).toBe(true);
   });

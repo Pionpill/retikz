@@ -120,7 +120,7 @@ const spec: IRPlot = {
 - position scale 不能驱动颜色通道，channel scale 也不能驱动位置 role；family 错配会 fail-loud。
 - definition schema 应使用闭合 JSON object。示例用 `z.strictObject`，避免拼错配置后被静默剥离。
 - position definition 必须实现 `coordinate`、`domain`、`bandwidth`、`ticks`、`range` 和 `setRange`；channel definition 的 `of` 当前只能返回颜色字符串或 `undefined`。
-- 自定义 scale 不参与 React 字段类型自动派生；声明式 `<Scale>` 也只覆盖内置 type。
+- 自定义 scale 不参与 React 字段类型自动派生；声明式 `<PlotScale>` 也只覆盖内置 type。
 - 自定义 `colorSchemes` 不能覆盖同名内置 scheme；resolver 先查内置集合，再查宿主注入。
 
 下面的 operation 会因未知键而被示例的 strict schema 拒绝：

@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { IntervalMark, RelationMark, Scale } from '@retikz/plot-react';
+import { IntervalMark, PlotScale, RelationMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -49,8 +49,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         labelTextColor="currentColor"
         labelFont={{ size: 11, weight: 'bold' }}
       />
-      <Scale dimension="x" type="linear" domain={[0, 3]} domainPadding={0} />
-      <Scale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
+      <PlotScale dimension="x" type="linear" domain={[0, 3]} domainPadding={0} />
+      <PlotScale dimension="y" type="linear" domain={[0, 100]} domainPadding={0} />
     </Plot>
   </Layout>
 ));

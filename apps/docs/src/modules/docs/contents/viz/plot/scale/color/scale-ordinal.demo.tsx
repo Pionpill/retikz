@@ -1,4 +1,4 @@
-import { Axis, Legend, PathMark, Plot } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotLegend } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -23,9 +23,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PathMark x="month" y="temp" color="city" order="month" />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
-    {values.showLegend ? <Legend channel="color" /> : null}
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
+    {values.showLegend ? <PlotLegend channel="color" /> : null}
   </Plot>
 ));
 

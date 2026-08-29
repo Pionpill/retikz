@@ -144,12 +144,12 @@ describe('compile path: arrow 箭头', () => {
   });
 
   it.each([
-    ['normal', 94.5],
-    ['open', 95.25],
-    ['stealth', 96.3],
-    ['openStealth', 96.45],
-    ['circle', 94.5],
-    ['openCircle', 94.5],
+    ['normal', 92.5],
+    ['open', 93.5],
+    ['stealth', 94.9],
+    ['openStealth', 95.1],
+    ['circle', 92.5],
+    ['openCircle', 92.5],
   ] as const)('Core 内置 shape %s 会让路径覆盖 marker 接触边半个描边宽度', (shape, expectedEndX) => {
     const ir: IRScene = {
       version: 1,
@@ -185,7 +185,7 @@ describe('compile path: arrow 箭头', () => {
       ],
     };
 
-    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([78, 0])]);
+    expect(findPathPrim(compileToScene(ir).scene.primitives).commands).toEqual([move([0, 0]), line([70, 0])]);
   });
 
   it("arrowDetail 缺省时 shape 回退 'stealth'", () => {

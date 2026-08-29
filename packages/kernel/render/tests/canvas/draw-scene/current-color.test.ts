@@ -1,11 +1,26 @@
-import type { Scene } from '@retikz/core';
+import type { IRScene, Scene } from '@retikz/core';
 
+import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { drawScene } from '../../../src/canvas';
 import { createSpyCanvasContext, stealthSpec } from './helpers';
 
 describe('drawScene currentColor 解析', () => {
+  it('contextual number 在 Core 边界已成为不透明字符串，Canvas 不新增解析分支', () => {
+    const ir: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [{ type: 'node', position: [0, 0], color: '#336699', fill: 0.2 }],
+    };
+    const scene = compileToScene(ir).scene;
+    const context = createSpyCanvasContext();
+
+    drawScene(context as unknown as CanvasRenderingContext2D, scene);
+
+    expect(context.calls.find(call => call.name === 'fill')?.fillStyle).toBe('#d6e0eb');
+  });
+
   it('stroke-currentColor：path 描边 currentColor 解析为 DrawOptions.currentColor', () => {
     const context = createSpyCanvasContext();
     const s: Scene = {

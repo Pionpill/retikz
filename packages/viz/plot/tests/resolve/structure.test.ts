@@ -3,6 +3,8 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
+import * as plot from '../../src';
+
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const source = (path: string): string => readFileSync(resolve(root, path), 'utf8');
@@ -20,7 +22,7 @@ describe('resolve source structure', () => {
     ]) {
       expect(existsSync(resolve(root, path))).toBe(true);
     }
-    expect(source('src/index.ts')).toContain("export { resolvePlotTheme } from './resolve';");
+    expect(plot.resolvePlotTheme).toBeTypeOf('function');
   });
 
   it('keeps Theme data determination out of providers', () => {

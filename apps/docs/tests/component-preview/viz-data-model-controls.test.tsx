@@ -208,8 +208,8 @@ describe('Viz Data model controls', () => {
       'utf8',
     );
 
-    expect(demoSource).toContain("import { Axis, IntervalMark, Plot, Scale } from '@retikz/plot-react';");
-    expect(demoSource).toContain('<Scale dimension="y" type="linear" domainPadding={0} />');
+    expect(demoSource).toContain("import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';");
+    expect(demoSource).toContain('<PlotScale dimension="y" type="linear" domainPadding={0} />');
 
     for (const locale of ['zh', 'en']) {
       const source = readFileSync(

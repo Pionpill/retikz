@@ -11,11 +11,11 @@ scale 只负责映射，不负责把映射解释给读者：位置刻度由[坐�
 
 | 家族         | 负责的映射                            | 配置入口                              |
 | ------------ | ------------------------------------- | ------------------------------------- |
-| 位置比例尺   | 数值 / 时间 / 分类 → 坐标、长度、半径 | 本组的位置页；`<Scale dimension>`     |
+| 位置比例尺   | 数值 / 时间 / 分类 → 坐标、长度、半径 | 本组的位置页；`<PlotScale dimension>` |
 | 颜色比例尺   | 分类 / 连续 / 时间 → 离散色或色带     | 本组的颜色页；color field binding     |
 | 其它视觉通道 | 数值 / 分类 → 大小、透明度、形状      | [内置通道](/viz/plot/channel/builtin) |
 
-三类入口共享同一条思路：先确认字段的测量类型，再决定默认映射是否足够；scale 的产物随后交给坐标投影、图元通道和 guide。React 的 `<Scale dimension>` 只配置位置维度；`size` 可引用 `sqrt`、`opacity` 可引用 `linear`，二者也可由 mark 通道自动合成。`shape` 当前只使用通道自动生成的 `ordinal` glyph 映射，不开放显式 scale 引用。
+三类入口共享同一条思路：先确认字段的测量类型，再决定默认映射是否足够；scale 的产物随后交给坐标投影、图元通道和 guide。React 的 `<PlotScale dimension>` 只配置位置维度；`size` 可引用 `sqrt`、`opacity` 可引用 `linear`，二者也可由 mark 通道自动合成。`shape` 当前只使用通道自动生成的 `ordinal` glyph 映射，不开放显式 scale 引用。
 
 常用自动默认如下：
 
@@ -27,7 +27,7 @@ scale 只负责映射，不负责把映射解释给读者：位置刻度由[坐�
 
 自动默认只覆盖最常见的路径。分类折线或散点需要把位置换成 `point`；跨数量级、跨零或面积感知的位置映射分别选择 `log`、`symlog`、`sqrt` / `radial`。带意义中点的颜色使用 `diverging`，业务断点或数据分位使用 `threshold` / `quantile` 等显式色阶。
 
-其它视觉通道中，连续 `size` 默认使用面积感知的 `sqrt`，连续 `opacity` 使用 `linear`，分类 `shape` 使用 `ordinal`。这些映射属于通道解析，不表示 `<Scale dimension>` 可以配置大小、透明度或形状。
+其它视觉通道中，连续 `size` 默认使用面积感知的 `sqrt`，连续 `opacity` 使用 `linear`，分类 `shape` 使用 `ordinal`。这些映射属于通道解析，不表示 `<PlotScale dimension>` 可以配置大小、透明度或形状。
 
 React DSL 的 polar 维度仍写 `x` / `y`：`x` 在极坐标中解释为角向，`y` 解释为径向。完整选型、合法输入和 React / full spec 的能力边界分别见下面两页；字段类型声明见[字段契约](/viz/data/model/contract)。
 

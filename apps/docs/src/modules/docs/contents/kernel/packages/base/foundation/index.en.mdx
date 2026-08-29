@@ -1,6 +1,6 @@
 ---
 title: '@retikz/foundation'
-description: Reusable type utilities, JSON and structurally readonly collection snapshots, Zod scalar schemas, non-empty string assertions, and structured error primitives for all packages.
+description: Domain-free type, JSON, scalar-schema, static-color, and structured-error contracts shared across packages.
 ---
 
 `@retikz/foundation` is a pure utility package that provides foundational capabilities for all packages, keeping shared types, JSON and structurally readonly collection snapshots, scalar validation, blank-string semantics, and error shape in one place. Zod is its only production dependency.
@@ -15,10 +15,12 @@ import {
   assertNonEmptyString,
   assertPositiveNumber,
   cloneAndFreezeJson,
+  compositeOpaqueColor,
   createOpenStringSchema,
   createReadonlyMap,
   NonBlankStringSchema,
   NormalizedFractionSchema,
+  parseStaticCssColor,
   PositiveNumberSchema,
   RetikzError,
   RetikzFoundationError,
@@ -27,6 +29,7 @@ import type {
   AssertEqual,
   NonEmptyReadonlyArray,
   OpenString,
+  ParsedCssColor,
   RetikzErrorOptions,
   ValueOf,
   WithRequiredProperties,
@@ -130,6 +133,17 @@ const RoleSchema = createOpenStringSchema(Role);
 RoleSchema.parse('participant');
 RoleSchema.parse('custom.role');
 ```
+
+### Static color atoms
+
+`parseStaticCssColor(input)` parses a statically knowable CSS color into normalized sRGB channels `{ r, g, b, a }`; dynamic values such as `currentColor` and CSS variables return `null`. `compositeOpaqueColor(foreground, backdrop, weight)` precomposes a static foreground at a `0..1` weight over an opaque backdrop and returns lowercase `#rrggbb`:
+
+```ts
+parseStaticCssColor('darkorange');
+compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
+```
+
+Foundation owns only static parsing and pure color math; it knows nothing about Theme modes or drawing fields. Invalid colors, translucent backdrops, and out-of-range weights throw `RetikzFoundationError` with code `FOUNDATION_COLOR_ERROR`. Core decides when to call these atoms from the final style and Theme mode.
 
 ### Assertion utilities
 

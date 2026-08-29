@@ -12,7 +12,12 @@ import type {
   SelectorOperationKind,
   TopBottomSelectorOperationKind,
 } from './constants';
-import type { QuantileBandReducerOperationSchema, ReducerMetricsSchema, ReducerOperationSchema } from './reducer';
+import type {
+  DataScalarReducerOperationSchema,
+  QuantileBandReducerOperationSchema,
+  ReducerMetricsSchema,
+  ReducerOperationSchema,
+} from './reducer';
 import type {
   AnnotateSelectorSchema,
   AnnotateTransformSchema,
@@ -56,6 +61,9 @@ export type IRDataSortTransform = ZodInfer<typeof SortTransformSchema>;
 
 /** reducer operation（统计规约子算子） */
 export type IRDataReducerOperation = ZodInfer<typeof ReducerOperationSchema>;
+
+/** compact aggregate Source parse态候选；运行时仍需Definition确认单scalar capability */
+export type IRDataScalarReducerOperation = ZodInfer<typeof DataScalarReducerOperationSchema>;
 
 /** reducer metrics 列表 */
 export type IRDataReducerMetrics = ZodInfer<typeof ReducerMetricsSchema>;

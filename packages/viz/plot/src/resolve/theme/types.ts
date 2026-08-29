@@ -49,7 +49,7 @@ export type EffectivePlotGuideTheme = {
   /** 绘图区视觉样式 */
   plotArea?: IRPlotTheme['plotArea'];
   /** 全局 guide 文本默认样式 */
-  typography: GuideTextStyle;
+  typography: NonNullable<IRPlotTheme['typography']>;
   /** 解析后的 palette */
   palette: EffectivePlotPalette;
   /** Axis 视觉默认值 */

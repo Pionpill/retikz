@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AnnotateSelectorSchema,
   AnnotateTransformSchema,
+  DataScalarReducerOperationSchema,
   OrderBySchema,
   OutsideQuantileBandBoundarySchema,
   OutsideQuantileBandSelectorOperationSchema,
@@ -92,6 +93,18 @@ describe('transform schema', () => {
     expect(() => TransformSchema.parse({ kind: 'sort', field: '' })).toThrow();
     expect(ReducerOperationSchema.safeParse({ kind: 'sum' }).success).toBe(false);
     expect(SelectorOperationSchema.safeParse({ kind: 'min' }).success).toBe(false);
+  });
+
+  it('accepts scalar reducer candidates while excluding multi-output built-ins', () => {
+    expect(DataScalarReducerOperationSchema.parse({ kind: 'custom.scalar', field: 'value', as: 'metric' })).toEqual({
+      kind: 'custom.scalar',
+      field: 'value',
+      as: 'metric',
+    });
+    expect(DataScalarReducerOperationSchema.safeParse({ kind: 'mean' }).success).toBe(false);
+    expect(DataScalarReducerOperationSchema.safeParse({ kind: 'extent', field: 'value', as: 'range' }).success).toBe(
+      false,
+    );
   });
 
   it('rejects transform output fields that collide within one operation', () => {

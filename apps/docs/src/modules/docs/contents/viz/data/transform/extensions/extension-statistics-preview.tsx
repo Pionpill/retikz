@@ -1,7 +1,7 @@
 import type { IRDataModel } from '@retikz/data';
 
-import { defineRowSelector, defineStatisticsReducer } from '@retikz/data';
-import { Axis, Plot, PointMark, Transform } from '@retikz/plot-react';
+import { DataFieldType, defineRowSelector, defineStatisticsReducer } from '@retikz/data';
+import { Plot, PlotAxis, PlotTransform, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import { z } from 'zod';
 
@@ -16,6 +16,7 @@ export const midpoint = defineStatisticsReducer({
   }),
   inputFields: operation => [operation.field],
   outputFields: operation => [operation.as],
+  outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
   reduce: (rows, operation) => {
     const values = rows.map(row => Number(row[operation.field])).filter(Number.isFinite);
     if (values.length === 0) return { [operation.as]: Number.NaN };
@@ -81,10 +82,10 @@ export const renderExtensionStatisticsPreview = () => (
       x={0}
       y={20}
     >
-      <Transform {...midpointSummaryOperationOf()} />
+      <PlotTransform {...midpointSummaryOperationOf()} />
       <PointMark x="group" y="midpoint" />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
     </Plot>
     <Plot
       data={scoreRows}
@@ -95,10 +96,10 @@ export const renderExtensionStatisticsPreview = () => (
       x={270}
       y={20}
     >
-      <Transform {...closestToMeanSelectOperationOf()} />
+      <PlotTransform {...closestToMeanSelectOperationOf()} />
       <PointMark x="group" y="score" />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
     </Plot>
   </Layout>
 );

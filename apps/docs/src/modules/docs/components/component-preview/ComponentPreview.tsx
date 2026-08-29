@@ -35,6 +35,8 @@ export type ComponentPreviewProps = {
   defaultSourceFile?: string;
   /** 预览控制能力与局部插槽。 */
   controls?: PreviewControlsOptions;
+  /** 属性面板是否默认打开；缺省时跟随 docs 全局设置 */
+  controlPanelDefaultOpen?: boolean;
   /** 全屏弹窗 header 动作。 */
   dialogActions?: Array<PreviewActionSlot>;
   /** 渲染区垂直对齐，默认 center */
@@ -55,6 +57,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     files,
     defaultSourceFile,
     controls,
+    controlPanelDefaultOpen,
     dialogActions,
     align = 'center',
     size = 'md',
@@ -222,6 +225,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       previewClassName={previewClassName}
       controlContract={controlContract}
       controlDefinition={controlDefinition}
+      controlPanelDefaultOpen={controlPanelDefaultOpen}
       controlSlots={resolvedControlSlots}
       dialogActions={dialogActions}
       enableThemeSwitch={enableThemeSwitch}

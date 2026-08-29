@@ -10,6 +10,7 @@ import type { NodeLayout } from './types';
 import { BUILTIN_BOUNDARIES } from '../../providers/boundary';
 import { BUILTIN_SHAPES } from '../../providers/shape';
 import { resolveNode } from '../../resolve';
+import { ThemeMode } from '../../shared';
 import { DEFAULT_LABEL_DISTANCE, DEFAULT_NODE_DISTANCE } from '../constants';
 import { fallbackMeasurer } from '../text';
 import { applyTransformChain } from '../transform';
@@ -90,6 +91,7 @@ const resolveSyntheticLayout = (
   const node = syntheticNode(input, shape, shapeParams);
   const resolution = resolveNode(node, {
     styleFrames: [],
+    mode: ThemeMode.Light,
     shapes,
     boundaries,
     patterns: new Map(),

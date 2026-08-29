@@ -2,28 +2,28 @@ import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
-import { Axis, Legend } from '../../../src/components/guides';
+import { PlotAxis, PlotLegend } from '../../../src/components/guides';
 import { PointMark } from '../../../src/components/marks';
 
-// ADR-03：Legend 装配（不吞默认 axes / 收集 / 字段落位）
+// ADR-03：PlotLegend 装配（不吞默认 axes / 收集 / 字段落位）
 describe('buildPlotIR legend 装配（ADR-03 alpha.8）', () => {
-  it('legend_only_no_default_axes：只声明 <Legend> → 仅 legend（薄 Plot 无默认轴）', () => {
+  it('legend_only_no_default_axes：只声明 <PlotLegend> → 仅 legend（薄 Plot 无默认轴）', () => {
     const spec = buildPlotIR(
       <>
         <PointMark x="lon" y="lat" color="kind" />
-        <Legend channel="color" />
+        <PlotLegend channel="color" />
       </>,
       '__plot',
     );
     expect(spec.guides).toEqual([{ type: 'legend', channel: 'color' }]);
   });
 
-  it('explicit_axis_and_legend_coexist：显式 <Axis> + <Legend> → 该轴覆盖默认、legend 保留', () => {
+  it('explicit_axis_and_legend_coexist：显式 <PlotAxis> + <PlotLegend> → 该轴覆盖默认、legend 保留', () => {
     const spec = buildPlotIR(
       <>
         <PointMark x="lon" y="lat" color="kind" />
-        <Axis dimension="x" grid />
-        <Legend channel="color" position="bottom" />
+        <PlotAxis dimension="x" grid />
+        <PlotLegend channel="color" position="bottom" />
       </>,
       '__plot',
     );
@@ -33,11 +33,11 @@ describe('buildPlotIR legend 装配（ADR-03 alpha.8）', () => {
     ]);
   });
 
-  it('legend_fields：<Legend> 字段逐一落位', () => {
+  it('legend_fields：<PlotLegend> 字段逐一落位', () => {
     const spec = buildPlotIR(
       <>
         <PointMark x="lon" y="lat" size="pop" />
-        <Legend
+        <PlotLegend
           channel="size"
           scale="__size"
           title="Population"
@@ -66,7 +66,7 @@ describe('buildPlotIR legend 装配（ADR-03 alpha.8）', () => {
     const spec = buildPlotIR(
       <>
         <PointMark x="lon" y="lat" color="kind" />
-        <Legend channel="color" />
+        <PlotLegend channel="color" />
       </>,
       '__plot',
     );

@@ -1,6 +1,6 @@
 # @retikz/graph-vanilla
 
-Framework-neutral authoring bindings for [`@retikz/graph`](../graph). Graph, Entity and Relation each have an independent builder and `InputEmbed` adapter. Every adapter produces the same compact Source IR as direct JSON authoring; embed identity and runtime Definition options never enter that IR.
+Framework-neutral authoring bindings for [`@retikz/graph`](../graph). Graph, Group, Entity, and Relation each have an independent builder and `InputEmbed` adapter. Every adapter produces the same compact Source IR as direct JSON authoring; embed identity and runtime Definition options never enter that IR.
 
 ## Install
 

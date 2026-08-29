@@ -83,7 +83,7 @@ describe('<Plot dataTransforms> 快捷数据变换直传', () => {
   });
 
   it('data_transforms_compose_with_transform_children', () => {
-    // dataTransforms（直传）拼在 <Transform> 子组件之前；与子组件混用同一管线（此处仅直传一条 summarize）
+    // dataTransforms（直传）拼在 <PlotTransform> 子组件之前；与子组件混用同一管线（此处仅直传一条 summarize）
     const svg = renderToStaticMarkup(
       <Plot
         data={orders}

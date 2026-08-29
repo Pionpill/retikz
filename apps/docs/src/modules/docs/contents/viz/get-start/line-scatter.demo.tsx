@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import { sales } from './line-scatter.data';
 
@@ -9,8 +9,8 @@ const Demo: FC = () => (
   <Plot data={sales} width={360} height={200} style={{ maxWidth: '100%', height: 'auto' }}>
     <PathMark x="month" y="revenue" order="month" />
     <PointMark x="month" y="revenue" />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 );
 

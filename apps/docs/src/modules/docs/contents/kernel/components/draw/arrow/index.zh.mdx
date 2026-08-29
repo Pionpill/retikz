@@ -26,7 +26,7 @@ import { Draw } from '@retikz/react';
 
 ### 方向、形状与外观
 
-一个面板集中控制 `arrow` 方向、六种 Core 基础箭头与两种 Standard 可选箭头、颜色、透明度和尺寸。开启“分别配置起末”后，`start` / `end` 会逐字段覆盖顶层形状与颜色；关闭时两端共用顶层配置。面板已显式注入它使用的 Standard 定义。省略 `arrowDetail` 的默认值是继承路径颜色的 `stealth`，长度和宽度都是 6。
+一个面板集中控制 `arrow` 方向、六种 Core 基础箭头与两种 Standard 可选箭头、颜色、透明度和尺寸。开启“分别配置起末”后，`start` / `end` 会逐字段覆盖顶层形状与颜色；关闭时两端共用顶层配置。面板已显式注入它使用的 Standard 定义。省略 `arrowDetail` 的默认值是继承路径颜色的 `stealth`，长度和宽度都是 8。
 
 <ComponentPreview files="arrow-appearance" size="md" />
 
@@ -157,8 +157,8 @@ Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 
 | ----------- | -------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `shape`     | <ApiValues name="BuiltinArrowShape" /> \| `string` | `'stealth'`          | Core 基础箭头为 `normal` / `open` / `stealth` / `openStealth` / `circle` / `openCircle`；Standard 可选或自定义名称经 `<Layout arrows>` / `CompileOptions.arrows` 注册 |
 | `scale`     | `number > 0`                                       | `1`                  | 等比缩放因子；乘到 `length` / `width` 之后（`length=10, scale=1.5` → 实际 15）                                                                                        |
-| `length`    | `number ≥ 0`                                       | `6`                  | 尖长（用户单位，沿路径方向）                                                                                                                                          |
-| `width`     | `number ≥ 0`                                       | `6`                  | 尖宽（用户单位，垂直路径方向）                                                                                                                                        |
+| `length`    | `number ≥ 0`                                       | Definition / `8`     | 尖长（用户单位，沿路径方向）；Definition 未提供时使用 `8`                                                                                                             |
+| `width`     | `number ≥ 0`                                       | Definition / `8`     | 尖宽（用户单位，垂直路径方向）；Definition 未提供时使用 `8`                                                                                                           |
 | `color`     | `string`                                           | —                    | 描边色覆盖；缺省继承路径描边色                                                                                                                                        |
 | `fill`      | `string`                                           | `color` 或路径描边色 | 填充色覆盖；**空心形状上静默无效**（写了被静默丢弃）                                                                                                                  |
 | `opacity`   | `number ∈ [0, 1]`                                  | —                    | 箭头独立透明度；缺省继承路径透明度                                                                                                                                    |

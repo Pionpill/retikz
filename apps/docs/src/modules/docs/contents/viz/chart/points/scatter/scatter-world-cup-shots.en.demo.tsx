@@ -12,17 +12,22 @@ import { previewControlContract } from './scatter-world-cup-shots.en.controls';
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <ScatterChart
     data={messiWorldCupShots}
-    dataModel={[
-      { name: 'x', type: 'continuous' },
-      { name: 'y', type: 'continuous' },
-      { name: 'endX', type: 'continuous' },
-      { name: 'endY', type: 'continuous' },
-      { name: 'outcome', type: 'categorical' },
-    ]}
     encodings={{ x: 'x', y: 'y', color: 'outcome' }}
-    theme={{ tokens: { recipe: { axisEnabled: false, axisGridEnabled: false } } }}
-    width={820}
-    height={480}
+    theme={{
+      tokens: {
+        plot: {
+          'plot.area.fill': {
+            kind: 'image',
+            href: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Football_pitch_metric_tr.svg',
+            fit: 'cover',
+          },
+        },
+        recipe: { axisEnabled: false, axisGridEnabled: false },
+      },
+    }}
+    layout={{ width: 800, height: 500 }}
+    width={800}
+    height={500}
   >
     <ChartTitle>Lionel Messi's 2022 World Cup shot map</ChartTitle>
     <ChartSubtitle>

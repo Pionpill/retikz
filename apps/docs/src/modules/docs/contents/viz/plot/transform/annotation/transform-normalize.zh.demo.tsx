@@ -1,4 +1,4 @@
-import { Axis, IntervalMark, Plot, Scale, Transform } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -11,12 +11,12 @@ export const previewControls = normalizeControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot data={revenue} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
     {normalizeOperationsOf(values).map((operation, index) => (
-      <Transform key={index} {...operation} />
+      <PlotTransform key={index} {...operation} />
     ))}
-    <Scale dimension="y" type="linear" domain={values.basis === 'percent' ? [0, 100] : [0, 1]} />
+    <PlotScale dimension="y" type="linear" domain={values.basis === 'percent' ? [0, 100] : [0, 1]} />
     <IntervalMark x="quarter" y="share" series="product" stack />
-    <Axis dimension="x" title="季度" />
-    <Axis dimension="y" title={values.basis === 'percent' ? '占比（%）' : '占比'} grid />
+    <PlotAxis dimension="x" title="季度" />
+    <PlotAxis dimension="y" title={values.basis === 'percent' ? '占比（%）' : '占比'} grid />
   </Plot>
 ));
 

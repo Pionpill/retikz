@@ -11,10 +11,10 @@ import type {
   IRScope,
   IRStep,
 } from '@retikz/core';
-import type { IRGraph } from '@retikz/graph';
+import type { IRGraph, IRGroup } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
 
-import { EntitySchema, GraphSchema, RelationSchema } from '@retikz/graph';
+import { EntitySchema, GraphSchema, GroupSchema, RelationSchema } from '@retikz/graph';
 
 import {
   entityPreviewAuthoringInput,
@@ -292,9 +292,10 @@ const LAYOUT_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GridLayoutInputEmbedAdapter',
   'OverlayLayoutInputEmbedAdapter',
 ];
-const GRAPH_HELPER_ORDER: ReadonlyArray<string> = ['graph', 'entity', 'relation'];
+const GRAPH_HELPER_ORDER: ReadonlyArray<string> = ['graph', 'group', 'entity', 'relation'];
 const GRAPH_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GraphInputEmbedAdapter',
+  'GroupInputEmbedAdapter',
   'EntityInputEmbedAdapter',
   'RelationInputEmbedAdapter',
 ];
@@ -311,7 +312,11 @@ export type StandardPreviewDefinitionName =
 export type LayoutPreviewDefinitionName = 'FlexLayoutDefinition' | 'GridLayoutDefinition' | 'OverlayLayoutDefinition';
 
 /** docs 预览能够显式注入的 Graph definition 名 */
-export type GraphPreviewDefinitionName = 'GraphDefinition' | 'EntityDefinition' | 'RelationDefinition';
+export type GraphPreviewDefinitionName =
+  | 'GraphDefinition'
+  | 'GroupDefinition'
+  | 'EntityDefinition'
+  | 'RelationDefinition';
 
 const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefinitionName>> = {
   grid: 'GridDefinition',
@@ -329,12 +334,16 @@ const LAYOUT_DEFINITION_BY_KIND: Readonly<Record<string, LayoutPreviewDefinition
 
 const GRAPH_DEFINITION_BY_KIND: Readonly<Record<string, GraphPreviewDefinitionName>> = {
   graph: 'GraphDefinition',
+  group: 'GroupDefinition',
   entity: 'EntityDefinition',
   relation: 'RelationDefinition',
 };
 
 const previewOwnedChildren = (child: IRChild & { namespace: string; type: string }): Array<IRChild> => {
   const record = child as unknown as Record<string, unknown>;
+  if (child.namespace === 'graph' && (child.type === 'graph' || child.type === 'group')) {
+    return (record.children as Array<IRChild> | undefined) ?? [];
+  }
   if (child.namespace === 'standard' && child.type === 'surface') return [record.child as IRChild];
   if (
     child.namespace === 'layout' &&
@@ -389,6 +398,11 @@ export const collectPreviewDefinitions = (
   }
   const providedGraphKinds = new Set(graphAdapterKinds);
   if (graphAdapterKinds.has('graph')) {
+    providedGraphKinds.add('group');
+    providedGraphKinds.add('entity');
+    providedGraphKinds.add('relation');
+  }
+  if (graphAdapterKinds.has('group')) {
     providedGraphKinds.add('entity');
     providedGraphKinds.add('relation');
   }
@@ -559,6 +573,26 @@ const graphAuthoringCode = (graph: IRGraph, indent: number, ctx: Ctx): string =>
   return code;
 };
 
+const groupAuthoringCode = (group: IRGroup, indent: number, ctx: Ctx): string => {
+  const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = group;
+  void _namespace;
+  void _type;
+  const replacements = new Map<string, string>();
+  const children = sourceChildren?.map((child, index) => {
+    const placeholder = `__GROUP_CONTENT_CHILD_${index}__`;
+    replacements.set(formatString(placeholder), childCode(child, indent + 2, ctx));
+    return placeholder;
+  });
+  const encoded: Record<string, unknown> = {
+    ...input,
+    ...(children === undefined ? {} : { children }),
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
+  return code;
+};
+
 const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string };
   const helperName = record.type;
@@ -573,6 +607,9 @@ const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =>
   const embedId = `preview-${helperName}-${count}`;
   if (helperName === 'graph') {
     return `graph(${formatString(embedId)}, ${graphAuthoringCode(GraphSchema.parse(child), indent, ctx)})`;
+  }
+  if (helperName === 'group') {
+    return `group(${formatString(embedId)}, ${groupAuthoringCode(GroupSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'entity') {
     const input = {

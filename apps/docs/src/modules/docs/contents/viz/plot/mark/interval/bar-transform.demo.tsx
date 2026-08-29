@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, IntervalMark, Plot, PointMark, Scale } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -17,10 +17,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       label="store"
       transform={[barTransformOperationOf(values)]}
     />
-    <Scale dimension="x" type="band" paddingInner={values[BAR_TRANSFORM_GAP_ID]} paddingOuter={0.15} />
-    <Scale dimension="y" type="linear" domainPadding={0} />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotScale dimension="x" type="band" paddingInner={values[BAR_TRANSFORM_GAP_ID]} paddingOuter={0.15} />
+    <PlotScale dimension="y" type="linear" domainPadding={0} />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 ));
 

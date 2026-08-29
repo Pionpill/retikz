@@ -260,6 +260,26 @@ describe('data lineage runtime', () => {
     expect(eventsOf(lineage.events, 'fieldFlow')).toHaveLength(1);
   });
 
+  it('uses the output model as lineage field-flow authority when it is available', () => {
+    const derive = defineTransform({
+      schema: object({ kind: literal('derive'), as: NonBlankStringSchema }),
+      outputFields: () => ['stale-declaration'],
+      outputModel: operation => ({
+        kind: 'preserve',
+        outputs: [{ field: operation.as, type: 'continuous' }],
+      }),
+      apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: 1 })),
+    });
+
+    const { lineage } = applyTransformsWithLineage([{ source: 1 }], [{ kind: 'derive', as: 'derived' }], {
+      registry: resolveTransformRegistry([derive]),
+      lineage: { fieldFlow: true },
+    });
+
+    expect(eventsOf(lineage.events, 'transformStep')[0]?.outputFields).toEqual(['derived']);
+    expect(eventsOf(lineage.events, 'fieldFlow')[0]?.outputFields).toEqual(['derived']);
+  });
+
   it('records full source identities only when explicitly requested', () => {
     const operations = [
       {

@@ -2,12 +2,13 @@ import type {
   IRPlot,
   IRPlotAxisGuide,
   IRPlotCoordinateOperation,
+  IRPlotFacetConfiguration,
   IRPlotGuide,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
 } from '@retikz/plot';
 
-import { PlotCoordinate, PlotGuide, PlotMark, PlotScale } from '@retikz/plot';
+import { PlotCoordinate, PlotGuide, PlotMark, PlotScale, resolvePlotFacetComposition } from '@retikz/plot';
 
 import type {
   InputPlotFacet,
@@ -25,7 +26,7 @@ type CoordinateView = NonNullable<Composition['views']>[number];
 type Arrangement = NonNullable<Composition['arrangements']>[number];
 type FacetGrid = Extract<Arrangement, { kind: 'facet' }>;
 type SharedScaffold = Extract<Arrangement, { kind: 'tracks' }>;
-type InputPlotFacetDimension = string | NonNullable<FacetGrid['row']>;
+type InputPlotFacetDimension = NonNullable<InputPlotFacet['row']>;
 
 const AUTO_X = '__x';
 const AUTO_Y = '__y';
@@ -119,7 +120,7 @@ const assertGuideBindingCompatibility = (guide: InputPlotGuide): void => {
 /** 把 facet 简写维度转为 canonical field 声明 */
 const facetDimensionOf = (
   dimension: InputPlotFacetDimension | undefined,
-): NonNullable<FacetGrid['row']> | undefined => {
+): NonNullable<IRPlotFacetConfiguration['row']> | undefined => {
   if (dimension === undefined) return undefined;
   if (typeof dimension === 'string') return { field: dimension };
   return Array.isArray(dimension) ? dimension.map(entry => ({ ...entry })) : { ...dimension };
@@ -268,17 +269,23 @@ const fillCompositionScaleBindings = (
   };
 };
 
-/** 把 facet authoring 输入转为 canonical facet arrangement */
-const normalizeFacet = (facet: InputPlotFacet): FacetGrid => {
-  const { row, column, view, spacing, resolve, ...rest } = facet;
+/** 把 facet authoring 输入转为权威 facet 配置 */
+const normalizeFacetConfiguration = (facet: InputPlotFacet): IRPlotFacetConfiguration => {
+  const {
+    row,
+    column,
+    view: _view,
+    coordinate: _coordinate,
+    viewIdTemplate: _viewIdTemplate,
+    ...configuration
+  } = facet;
+  void _view;
+  void _coordinate;
+  void _viewIdTemplate;
   return {
-    ...rest,
-    kind: 'facet',
-    view: view ?? `${facet.id}Panel`,
+    ...configuration,
     ...(facetDimensionOf(row) !== undefined ? { row: facetDimensionOf(row) } : {}),
     ...(facetDimensionOf(column) !== undefined ? { column: facetDimensionOf(column) } : {}),
-    ...(spacing !== undefined ? { spacing } : {}),
-    ...(resolve !== undefined ? { resolve } : {}),
   };
 };
 
@@ -340,12 +347,20 @@ const buildTopologyComposition = (
   }
 
   for (const facetInput of facets) {
-    const facet = normalizeFacet(facetInput);
+    const facetComposition = resolvePlotFacetComposition(normalizeFacetConfiguration(facetInput), {
+      coordinate: fillCoordinateScaleBindings(coordinate, coordinate),
+      ...(facetInput.view !== undefined ? { templateViewId: facetInput.view } : {}),
+      ...(facetInput.coordinate !== undefined
+        ? { facetCoordinate: fillCoordinateScaleBindings(facetInput.coordinate, coordinate) }
+        : {}),
+      ...(facetInput.viewIdTemplate !== undefined ? { panelViewIdTemplate: facetInput.viewIdTemplate } : {}),
+    });
+    const facet = facetComposition.arrangements?.[0] as FacetGrid;
     if (facetViewById.has(facet.id))
       throw new RetikzPlotVanillaError(`${ERROR_PREFIX} duplicate facet id "${facet.id}"`);
-    facetViewById.set(facet.id, facet.view);
+    facetViewById.set(facet.id, facetComposition.defaultView);
     facetSpecs.push(facet);
-    views.push({ id: facet.view, coordinate: fillCoordinateScaleBindings(coordinate, coordinate) });
+    views.push(...(facetComposition.views ?? []));
   }
 
   const defaultView = views.at(0)?.id ?? scaffoldSpecs[0]?.tracks[0]?.view;

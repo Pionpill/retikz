@@ -3,7 +3,7 @@ title: Entity
 description: Store an optional identity, open semantics, and Core Node instance fields in one record.
 ---
 
-Entity expresses what a node means and independently lowers to one ordinary Core Node. One Source record stores an optional `id`, `role`, optional `kind`, `predicate`, and non-structural Core Node fields such as `text`, `position`, `fill`, and `dashed`; it is not an arbitrary child host. The role selects structure, Theme supplies appearance defaults, and explicit instance fields take final precedence. Graph is only an optional local context host
+Entity expresses what a node means and independently lowers to one ordinary Core Node. One Source record stores an optional `id`, `role`, optional `kind`, `predicate`, and non-structural Core Node fields such as `text`, `position`, `fill`, and `dashed`; it is not an arbitrary child host. The role selects structure, Theme supplies appearance defaults, and explicit instance fields take final precedence. Graph is only an optional local context host. Entity `color` remains the string master; numeric `fill`, `stroke`, and text-derived colors resolve in Core only after the final instance master is known
 
 ## Responsibilities
 

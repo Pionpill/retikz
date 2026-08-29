@@ -36,11 +36,11 @@ The panel changes only the operation's `initialValue`. Switch source files to in
 
 ## Inject the Host
 
-The Definition stays at runtime through `transformDefinitions`; `<Transform>` adds only a JSON-safe operation to Plot IR:
+The Definition stays at runtime through `transformDefinitions`; `<PlotTransform>` adds only a JSON-safe operation to Plot IR:
 
 ```tsx
 <Plot data={rows} transformDefinitions={[waterfallTransform]}>
-  <Transform kind="waterfall" field="delta" initialValue={60} />
+  <PlotTransform kind="waterfall" field="delta" initialValue={60} />
   <IntervalMark x="period" color="direction" bounds={{ y: { kind: 'extent', from: 'from', to: 'to' } }} />
 </Plot>
 ```
@@ -98,7 +98,7 @@ See [Data Transform Extensions](/viz/data/transform/extensions#api-reference) fo
 | entry point                               | use                                                |
 | ----------------------------------------- | -------------------------------------------------- |
 | `defineTransform` / `TransformDefinition` | Define the runtime capability from `@retikz/data`  |
-| `<Transform>`                             | Declare a root operation from `@retikz/plot-react` |
+| `<PlotTransform>`                         | Declare a root operation from `@retikz/plot-react` |
 | `PlotProps.transformDefinitions`          | Inject Definitions into the React host             |
 | `RenderPlotOptions.transformDefinitions`  | Inject from the `@retikz/plot-vanilla` host        |
 | `LowerPlotsOptions.transformDefinitions`  | Inject when calling Plot lowering directly         |

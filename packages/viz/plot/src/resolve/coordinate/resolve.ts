@@ -230,6 +230,7 @@ export const resolveCoordinateFrame = (
   const {
     rows,
     fieldTypes,
+    fieldTypeEvidence,
     width,
     height,
     fontSize,
@@ -245,7 +246,9 @@ export const resolveCoordinateFrame = (
     lowerCustomAxis,
   } = context;
   const node = source;
-  const markDataViews = context.markDataViews ?? node.marks.map(mark => ({ mark, rows }));
+  const rootDataView = { rows, fieldTypes, fieldTypeEvidence: fieldTypeEvidence ?? new Set<string>() };
+  const markDataViews =
+    context.markDataViews ?? node.marks.map((mark, markIndex) => ({ markIndex, mark, dataView: rootDataView }));
   const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> =>
     context.roleMarkDataViews?.[role] ?? markDataViews;
   const coordinateOperation = context.coordinate ?? node.coordinate;
@@ -274,7 +277,8 @@ export const resolveCoordinateFrame = (
   ): Array<unknown> => {
     const out: Array<unknown> = [];
     const sourceViews = markDataViewsForRole(role);
-    for (const { mark, rows: markRows } of sourceViews) {
+    for (const { mark, dataView } of sourceViews) {
+      const markRows = dataView.rows;
       out.push(...relationTargetRoleValues(mark, role, markRows));
       // interval：域贡献按 bounds 来源（band/span → 位置通道值、extent → 两字段、full → 不贡献），统一替代旧 histogram / stack / sector 特判
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && axis !== undefined) {
@@ -301,7 +305,7 @@ export const resolveCoordinateFrame = (
           if (mark.closure?.kind === PathClosureKind.Baseline) {
             out.push(mark.closure.baseline ?? 0);
           } else if (mark.closure?.kind === PathClosureKind.Stack) {
-            const markRows = sourceViews.find(view => view.mark === mark)?.rows ?? rows;
+            const markRows = sourceViews.find(view => view.mark === mark)?.dataView.rows ?? rows;
             for (const row of markRows) out.push(resolveFieldPath(row, mark.closure.baselineField));
           }
         }
@@ -319,7 +323,8 @@ export const resolveCoordinateFrame = (
     if (hasRegularRoleTicks) return undefined;
     const values: TickSet['values'] = [];
     const labels: TickSet['labels'] = [];
-    for (const { mark, rows: markRows } of markDataViewsForRole(role)) {
+    for (const { mark, dataView } of markDataViewsForRole(role)) {
+      const markRows = dataView.rows;
       if (!isBuiltinMark(mark) || mark.type !== PlotMark.Interval) continue;
       const ticks = intervalProportionalAxisTicks(mark, role, markRows);
       if (ticks === undefined) continue;
@@ -335,12 +340,12 @@ export const resolveCoordinateFrame = (
     pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
   ): Array<DataFieldTypeValue> => {
     const types: Array<DataFieldTypeValue> = [];
-    for (const mark of node.marks) {
+    for (const { mark, dataView } of markDataViewsForRole(role)) {
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role))
         continue;
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
-      const type = fieldTypes.get(channel.field);
+      const type = dataView.fieldTypes.get(channel.field);
       if (type !== undefined) types.push(type);
     }
     return types;
@@ -362,14 +367,14 @@ export const resolveCoordinateFrame = (
     pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
   ): CategoryOrder | undefined => {
     const found: Array<CategoryOrder> = [];
-    for (const mark of node.marks) {
+    for (const { mark, dataView } of markDataViewsForRole(role)) {
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role))
         continue;
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
       const order = fieldOrders.get(channel.field);
       if (order === undefined || order === FieldOrderMode.Appearance) continue;
-      const type = fieldTypes.get(channel.field);
+      const type = dataView.fieldTypes.get(channel.field);
       if (type !== undefined && type !== DataFieldType.Categorical) {
         throw new RetikzPlotError(
           `lowerPlots: field "${channel.field}" has order but its type is ${type}, not categorical; order only applies to categorical fields`,

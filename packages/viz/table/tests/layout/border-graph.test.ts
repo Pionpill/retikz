@@ -18,6 +18,7 @@ import {
 import { buildTableBorderGraph, mergeTableBorderAtoms, resolveTableBorderAtoms } from '../../src/pipeline/layout';
 
 const line = (override: Partial<ResolvedTableBorderLine> = {}): ResolvedTableBorderLine => ({
+  color: '#111827',
   stroke: '#111827',
   width: 1,
   strokeOpacity: 1,
@@ -95,6 +96,10 @@ const fullGridInput = (): BuildTableBorderGraphInput => ({
 
 describe('Table Border Graph', () => {
   it('parses detached strict JSON output vocabulary for manifest and Path metadata', () => {
+    expect(ResolvedTableBorderLineSchema.parse({ ...line(), color: '#336699', stroke: 0.8 })).toMatchObject({
+      color: '#336699',
+      stroke: 0.8,
+    });
     const resolvedLine = ResolvedTableBorderLineSchema.parse(line());
     const atomKey = 'c:h:0:0';
     const winner = contribution(atomKey, { kind: 'default', scope: 'outer', side: 'top' });
@@ -416,7 +421,7 @@ describe('Table Border Graph', () => {
     expect(Object.isFrozen(edges[0].atoms[0].winner)).toBe(true);
   });
 
-  it('does not merge dashed, resource-paint, or junction-separated atoms', () => {
+  it('does not merge different masters, dashed, resource-paint, or junction-separated atoms', () => {
     const firstKey = 'c:h:0:0';
     const secondKey = 'c:h:0:1';
     const horizontalAtoms = (borderLine: ResolvedTableBorderLine): ReadonlyArray<TableBorderAtom> => [
@@ -453,6 +458,13 @@ describe('Table Border Graph', () => {
     expect(mergeTableBorderAtoms(resolveTableBorderAtoms(horizontalAtoms(gradient)), 'collapse')).toHaveLength(2);
     expect(mergeTableBorderAtoms(resolveTableBorderAtoms(horizontalAtoms(pattern)), 'collapse')).toHaveLength(2);
     expect(mergeTableBorderAtoms(resolveTableBorderAtoms(horizontalAtoms(image)), 'collapse')).toHaveLength(2);
+    const differentMasters = horizontalAtoms(line()).map((atom, index) => ({
+      ...atom,
+      contributors: atom.contributors.map(item =>
+        item.kind === 'line' ? { ...item, line: { ...item.line, color: index === 0 ? '#336699' : '#993333' } } : item,
+      ),
+    }));
+    expect(mergeTableBorderAtoms(resolveTableBorderAtoms(differentMasters), 'collapse')).toHaveLength(2);
 
     const verticalKey = 'c:v:1:0';
     const withJunction = [

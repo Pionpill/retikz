@@ -1,12 +1,14 @@
 import { JsonObjectSchema } from '@retikz/core';
 import {
   BuiltinTransformSchema as DataBuiltinTransformSchema,
+  DataTransform,
   GroupBySchema,
   ReducerMetricsSchema,
   RESERVED_TRANSFORM_KINDS,
   SelectorOperationSchema,
 } from '@retikz/data';
 import {
+  createOpenStringSchema,
   NonBlankStringSchema,
   NonNegativeNumberSchema,
   PositiveIntegerSchema,
@@ -38,6 +40,13 @@ import {
   SmoothMethodKind,
   StackOffset,
 } from './constants';
+
+const PlotAcceptedTransformKind = { ...DataTransform, ...PlotTransform } as const;
+
+/** Plot transform kind：保留Data / Plot内置提示并允许注册自定义Definition key */
+export const PlotTransformKindSchema = createOpenStringSchema(PlotAcceptedTransformKind).describe(
+  'Built-in Data or Plot transform kind, or a custom registered transform kind',
+);
 
 export const StackTransformSchema = object({
   kind: literal(PlotTransform.Stack).describe('Discriminator: cumulative stacking within each x group'),
@@ -320,8 +329,8 @@ export const PlotBuiltinTransformSchema = discriminatedUnion('kind', [
   SmoothTransformSchema,
 ]).describe('Built-in plot transform operation applied through the shared data pipeline');
 
-const ExternalTransformSchema = looseObject({
-  kind: NonBlankStringSchema.refine(
+export const ExternalPlotTransformSchema = looseObject({
+  kind: PlotTransformKindSchema.refine(
     kind => !RESERVED_TRANSFORM_KINDS.has(kind) && !BUILTIN_PLOT_TRANSFORM_KINDS.has(kind),
     {
       message: 'external transform kind must not collide with a built-in or removed transform kind',
@@ -347,7 +356,7 @@ const ExternalTransformSchema = looseObject({
 export const TransformSchema = union([
   DataBuiltinTransformSchema,
   PlotBuiltinTransformSchema,
-  ExternalTransformSchema,
+  ExternalPlotTransformSchema,
 ]).describe(
   'Plot transform operation: shared data transforms, plot-only built-ins, plus externally registered open config operations validated by a runtime TransformDefinition',
 );

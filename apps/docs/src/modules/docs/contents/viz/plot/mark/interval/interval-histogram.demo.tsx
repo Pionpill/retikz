@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, IntervalMark, Scale, Transform } from '@retikz/plot-react';
+import { IntervalMark, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -33,20 +33,20 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     >
       {values[INTERVAL_CONTINUOUS_MODE_ID] === 'histogram' ? (
         <Plot data={measurements} width={360} height={280} coordinate={coordinate}>
-          <Transform {...intervalHistogramOperationOf(values)} />
+          <PlotTransform {...intervalHistogramOperationOf(values)} />
           <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
-          <Scale dimension="x" type="linear" domainPadding={values[INTERVAL_CONTINUOUS_HORIZONTAL_PADDING_ID]} />
-          <Scale dimension="y" type="linear" domainPadding={values[INTERVAL_CONTINUOUS_VERTICAL_PADDING_ID]} />
-          <Axis dimension="x" />
-          <Axis dimension="y" grid />
+          <PlotScale dimension="x" type="linear" domainPadding={values[INTERVAL_CONTINUOUS_HORIZONTAL_PADDING_ID]} />
+          <PlotScale dimension="y" type="linear" domainPadding={values[INTERVAL_CONTINUOUS_VERTICAL_PADDING_ID]} />
+          <PlotAxis dimension="x" />
+          <PlotAxis dimension="y" grid />
         </Plot>
       ) : (
         <Plot data={laborCosts} width={360} height={280} coordinate={coordinate}>
           <IntervalMark x="country" y="cost" width="gdp" color="country" />
-          <Scale dimension="x" type="linear" domainPadding={values[INTERVAL_CONTINUOUS_HORIZONTAL_PADDING_ID]} />
-          <Scale dimension="y" type="linear" domainPadding={values[INTERVAL_CONTINUOUS_VERTICAL_PADDING_ID]} />
-          <Axis dimension="x" />
-          <Axis dimension="y" grid />
+          <PlotScale dimension="x" type="linear" domainPadding={values[INTERVAL_CONTINUOUS_HORIZONTAL_PADDING_ID]} />
+          <PlotScale dimension="y" type="linear" domainPadding={values[INTERVAL_CONTINUOUS_VERTICAL_PADDING_ID]} />
+          <PlotAxis dimension="x" />
+          <PlotAxis dimension="y" grid />
         </Plot>
       )}
     </Layout>

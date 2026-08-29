@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
 import { IntervalMark } from '../../../src/components/marks';
-import { Scale } from '../../../src/components/scales';
+import { PlotScale } from '../../../src/components/scales';
 
 describe('buildPlotIR heatmap interval mark（ADR-02 双 band，显式 bounds）', () => {
   const bandBounds = { x: { kind: 'band' }, y: { kind: 'band' } } as const;
@@ -38,7 +38,7 @@ describe('buildPlotIR heatmap interval mark（ADR-02 双 band，显式 bounds）
     const spec = buildPlotIR(
       <>
         <IntervalMark x="rowKey" y="colKey" bounds={bandBounds} />
-        <Scale dimension="y" type="band" paddingInner={0.2} paddingOuter={0} />
+        <PlotScale dimension="y" type="band" paddingInner={0.2} paddingOuter={0} />
       </>,
       '__plot',
     );
@@ -51,12 +51,12 @@ describe('buildPlotIR heatmap interval mark（ADR-02 双 band，显式 bounds）
     });
   });
 
-  it('heatmap + 显式 <Scale dimension="y"> → fail-loud（y 由 band bounds 强制 band）', () => {
+  it('heatmap + 显式 <PlotScale dimension="y"> → fail-loud（y 由 band bounds 强制 band）', () => {
     expect(() =>
       buildPlotIR(
         <>
           <IntervalMark x="rowKey" y="colKey" color="value" bounds={bandBounds} />
-          <Scale dimension="y" type="linear" />
+          <PlotScale dimension="y" type="linear" />
         </>,
         '__plot',
       ),

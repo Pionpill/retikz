@@ -1,5 +1,8 @@
 import { defineChartTheme } from '@retikz/chart';
+import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
+import { literal, strictObject } from 'zod';
 
 import { renderChart } from '../src';
 import { createScatterChart } from '../src/point';
@@ -40,6 +43,44 @@ describe('Chart Vanilla authoring', () => {
     expect(result.input).not.toHaveProperty('themeDefinitions');
     expect(result.input.lowerOptions).toBe(lowerOptions);
     expect(result.source).not.toHaveProperty('themeDefinitions');
+  });
+
+  it('shares custom transform Definitions with Chart resolution and Plot lowering without serializing runtime', () => {
+    const copyField = defineTransform({
+      schema: strictObject({
+        kind: literal('copy-chart-field'),
+        field: NonBlankStringSchema,
+        as: NonBlankStringSchema,
+      }),
+      inputFields: operation => [operation.field],
+      outputFields: operation => [operation.as],
+      outputModel: operation => ({
+        kind: 'preserve',
+        outputs: [{ field: operation.as, type: { from: operation.field } }],
+      }),
+      compact: {
+        phase: DataTransformPhase.FieldDerive,
+        bindingClass: DataTransformBindingClass.Field,
+        fieldEffect: DataTransformFieldEffect.Preserve,
+      },
+      apply: (inputRows, operation) => inputRows.map(row => ({ ...row, [operation.as]: row[operation.field] })),
+    });
+    const chart = createScatterChart({
+      id: 'custom-transform',
+      data: rows,
+      encodings: {
+        x: {
+          transform: { kind: 'copy-chart-field', field: 'x', as: 'copiedX' },
+          output: 'copiedX',
+        },
+        y: 'y',
+      },
+      lowerOptions: { transformDefinitions: [copyField] },
+    });
+
+    expect(() => renderChart(chart)).not.toThrow();
+    expect(JSON.stringify(chart.source)).toContain('copy-chart-field');
+    expect(JSON.stringify(chart.source)).not.toMatch(/outputModel|apply/);
   });
 
   it('normalizes typed Point factories to family plus chartType Source IR', () => {

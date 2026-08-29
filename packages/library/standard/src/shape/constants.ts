@@ -18,6 +18,8 @@ export const StandardShapeName = {
   Hexagon: 'hexagon',
   /** 圆柱形 */
   Cylinder: 'cylinder',
+  /** 椭圆端胶囊形 */
+  EllipticCapsule: 'ellipticCapsule',
 } as const;
 
 /** Standard 形状 provider 名称取值 */

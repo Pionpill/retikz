@@ -1,10 +1,10 @@
-import type { IRChartSource } from '@retikz/chart';
+import type { IRChartPlotExtension, IRChartSource } from '@retikz/chart';
 import type { ChartAuthoringResult, ChartInput } from '@retikz/chart-vanilla';
 import type { ExternalRow } from '@retikz/data';
 import type { FC, ReactNode } from 'react';
 
 import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
-import { usePlotThemeStyles } from '@retikz/plot-react';
+import { resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import { createElement, useMemo } from 'react';
 
@@ -14,12 +14,13 @@ import {
   assertEmbeddedChartHostProps,
   chartContentPropsOf,
   chartHostPropsOf,
+  hasPlotChild,
   mergeThemeDefinitions,
   splitPresentationMarkers,
   useChartThemeDefinitions,
 } from '../../shared';
-import { lowerOptionsWithAmbientThemeOf } from './helpers';
-import { pointMarksOf } from './mark-collection';
+import { lowerOptionsWithAmbientThemeOf, lowerOptionsWithPlotRuntimeOf } from './helpers';
+import { splitPointChartChildren } from './mark-collection';
 
 /** Point family concrete Chart 共用的 React props */
 export type TypedChartCommonProps<TSource extends IRChartSource> = ChartCommonProps &
@@ -49,6 +50,53 @@ type PointFactoryInput = Readonly<{
   marks?: ReadonlyArray<unknown>;
 }>;
 
+type PlotExtensionAuthoringContext = Parameters<typeof resolvePlotExtensionAuthoring>[1];
+
+const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> =>
+  new Set(rows.flatMap(row => Object.keys(row)));
+
+const plotExtensionContextOf = (
+  data: Array<ExternalRow>,
+  dataRef: string | undefined,
+  dataModel: IRChartSource['data']['model'],
+  extension: IRChartPlotExtension | undefined,
+): PlotExtensionAuthoringContext => ({
+  data: { reference: dataRef ?? 'chart.data', ...(dataModel === undefined ? {} : { model: dataModel }) },
+  ...(dataModel === undefined ? {} : { model: dataModel }),
+  dataFieldNames: dataFieldNamesOf(data),
+  ...(extension?.scales === undefined
+    ? {}
+    : { scales: { value: extension.scales, path: ['props', 'plotExtension', 'scales'] } }),
+  ...(extension?.coordinate === undefined
+    ? {}
+    : { coordinate: { value: extension.coordinate, path: ['props', 'plotExtension', 'coordinate'] } }),
+  ...(extension?.composition === undefined
+    ? {}
+    : { composition: { value: extension.composition, path: ['props', 'plotExtension', 'composition'] } }),
+  ...(extension?.guides === undefined
+    ? {}
+    : { guides: { value: extension.guides, path: ['props', 'plotExtension', 'guides'] } }),
+  ...(extension?.marks === undefined
+    ? {}
+    : { marks: { value: extension.marks, path: ['props', 'plotExtension', 'marks'] } }),
+  ...(extension?.transform === undefined ? {} : { dataTransforms: extension.transform }),
+});
+
+const plotExtensionOf = (
+  extension: IRChartPlotExtension | undefined,
+  fragment: ReturnType<typeof resolvePlotExtensionAuthoring>['fragment'] | undefined,
+): IRChartPlotExtension | undefined => {
+  if (fragment === undefined) return extension;
+  const passive = {
+    ...(extension?.plotThemeTokens === undefined ? {} : { plotThemeTokens: extension.plotThemeTokens }),
+    ...(extension?.plotThemeTokenRules === undefined ? {} : { plotThemeTokenRules: extension.plotThemeTokenRules }),
+    ...(extension?.plotTheme === undefined ? {} : { plotTheme: extension.plotTheme }),
+    ...(extension?.meta === undefined ? {} : { meta: extension.meta }),
+  };
+  const combined = { ...passive, ...fragment };
+  return Object.keys(combined).length === 0 ? undefined : combined;
+};
+
 /** 从 typed Point props 组装 Vanilla 精确输入，并将 marker 作为有序 marks 追加 */
 export const createTypedChartInput = <
   TProps extends TypedChartCommonProps<TSource>,
@@ -73,8 +121,16 @@ export const createTypedChartInput = <
     lowerOptions,
   } = props;
   const split = splitPresentationMarkers(children);
-  const childMarks = pointMarksOf(split.plotChildren);
-  const marks = [...(payload.marks ?? []), ...childMarks];
+  const pointChildren = splitPointChartChildren(split.plotChildren);
+  const marks = [...(payload.marks ?? []), ...pointChildren.marks];
+  const plotAuthoring = hasPlotChild(pointChildren.plotChildren)
+    ? resolvePlotExtensionAuthoring(
+        pointChildren.plotChildren,
+        plotExtensionContextOf(data, dataRef, dataModel, plotExtension),
+      )
+    : undefined;
+  const effectivePlotExtension = plotExtensionOf(plotExtension, plotAuthoring?.fragment);
+  const effectiveLowerOptions = lowerOptionsWithPlotRuntimeOf(lowerOptions, plotAuthoring?.runtime ?? {});
   const presentation = split.presentation;
   const input = {
     data,
@@ -83,10 +139,10 @@ export const createTypedChartInput = <
     ...(layout === undefined ? {} : { layout }),
     ...(id === undefined ? {} : { id }),
     ...(theme === undefined ? {} : { theme }),
-    ...(plotExtension === undefined ? {} : { plotExtension }),
+    ...(effectivePlotExtension === undefined ? {} : { plotExtension: effectivePlotExtension }),
     ...(panel === undefined ? {} : { panel }),
     ...(themeDefinitions === undefined ? {} : { themeDefinitions }),
-    ...(lowerOptions === undefined ? {} : { lowerOptions }),
+    ...(effectiveLowerOptions === undefined ? {} : { lowerOptions: effectiveLowerOptions }),
     ...(presentation.title === undefined ? {} : { title: presentation.title }),
     ...(presentation.subtitle === undefined ? {} : { subtitle: presentation.subtitle }),
     ...(presentation.note === undefined ? {} : { note: presentation.note }),

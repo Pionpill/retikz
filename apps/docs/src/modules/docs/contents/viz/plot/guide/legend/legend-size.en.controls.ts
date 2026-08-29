@@ -77,5 +77,10 @@ export const legendSizeControls = definePreviewControls({
 export const previewControlContract = {
   controls: legendSizeControls,
   canonicalValues: { position: 'bottom', orient: 'auto', symbolSize: 18, symbolFit: 'fit' },
-  relatedApis: ['Legend.position', 'Legend.orient', 'Legend.style.symbolSize', 'Legend.style.symbolFit'],
+  relatedApis: [
+    'PlotLegend.position',
+    'PlotLegend.orient',
+    'PlotLegend.style.symbolSize',
+    'PlotLegend.style.symbolFit',
+  ],
 } satisfies PreviewControlContract;

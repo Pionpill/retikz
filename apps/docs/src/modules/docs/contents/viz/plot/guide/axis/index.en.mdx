@@ -1,37 +1,37 @@
 ---
-title: Axis
-description: Use <Axis> to explain positional scales with lines, ticks, labels, and grids under Cartesian or polar coordinates.
+title: PlotAxis
+description: Use <PlotAxis> to explain positional scales with lines, ticks, labels, and grids under Cartesian or polar coordinates.
 ---
 
-`<Axis>` is the visual counterpart of a positional scale. `dimension` selects the coordinate dimension to explain: Cartesian uses `x` / `y`, while polar uses `x` (angular) / `y` (radial). A dimension that does not belong to the current coordinate system fails loudly.
+`<PlotAxis>` is the visual counterpart of a positional scale. `dimension` selects the coordinate dimension to explain: Cartesian uses `x` / `y`, while polar uses `x` (angular) / `y` (radial). A dimension that does not belong to the current coordinate system fails loudly.
 
-`<Plot>` does not add axes automatically. Declare one `<Axis>` for every axis you need. The line, ticks, tick labels, title, and grid are configuration slots on that same Axis guide.
+`<Plot>` does not add axes automatically. Declare one `<PlotAxis>` for every axis you need. The line, ticks, tick labels, title, and grid are configuration slots on that same PlotAxis guide.
 
 ## Usage
 
 ```tsx
-import { Axis, PathMark, Plot } from '@retikz/plot-react';
+import { PlotAxis, PathMark, Plot } from '@retikz/plot-react';
 ```
 
 ```tsx
 <Plot data={rows}>
   <PathMark x="month" y="revenue" order="month" />
-  <Axis dimension="x" />
-  <Axis dimension="y" grid />
+  <PlotAxis dimension="x" />
+  <PlotAxis dimension="y" grid />
 </Plot>
 ```
 
 <ComponentAlert
   type="tip"
   title="Reference lines and bands are not axes"
-  description="Use <ReferenceMark> for thresholds, means, or tolerance bands. Those are data annotations in mark draw order; <Axis> only explains a positional scale."
+  description="Use <ReferenceMark> for thresholds, means, or tolerance bands. Those are data annotations in mark draw order; <PlotAxis> only explains a positional scale."
 />
 
 ## Examples
 
 ### Coordinate system and axis roles
 
-Start with the same data and the same `<PathMark>`. When switching between `cartesian2D` and `polar2D`, `dimension="x"` explains horizontal or angular position, while `dimension="y"` explains vertical or radial position. A `grid` still belongs to the Axis that creates it.
+Start with the same data and the same `<PathMark>`. When switching between `cartesian2D` and `polar2D`, `dimension="x"` explains horizontal or angular position, while `dimension="y"` explains vertical or radial position. A `grid` still belongs to the PlotAxis that creates it.
 
 <ComponentPreview
   files={['axis-coordinate-basics', 'axis-coordinate-basics.data.ts']}
@@ -39,7 +39,7 @@ Start with the same data and the same `<PathMark>`. When switching between `cart
   caption="Switch the coordinate system, axis visibility, grid, and target tick count to compare x / y roles across both projections."
 />
 
-### Cartesian Axis playground
+### Cartesian PlotAxis playground
 
 After the basic roles are clear, tune the complete configuration in a Cartesian coordinate system. The continuous scenes cover `ticks.interval`, `ticks.density`, `ticks.mark`, and independent major / minor grid sources. The categorical scene isolates rotation, hiding, and boundary handling under `tickLabels.layout`.
 
@@ -48,7 +48,7 @@ In the origin scene, both axes use `placement.kind="origin"` to cross the other 
 <ComponentPreview
   files={['axis-cartesian-playground', 'axis-cartesian-playground.data.ts']}
   size="lg"
-  caption="Switch among continuous-edge, continuous-origin, and categorical-label scenes, then tune only the active Axis controls."
+  caption="Switch among continuous-edge, continuous-origin, and categorical-label scenes, then tune only the active PlotAxis controls."
 />
 
 ## How it works
@@ -61,14 +61,14 @@ In the origin scene, both axes use `placement.kind="origin"` to cross the other 
 
 ### Tick and grid sources
 
-Axis creates candidate ticks with the priority `ticks.values > ticks.interval > ticks.count`, then applies `density` to obtain visible ticks. The grid reuses those results unless `grid.ticks` requests a separate candidate source, so its density can remain independent from axis labels. `grid.includeDomain` appends missing effective scale-domain endpoints after that resolution and deduplicates them by final projected coordinate; it does not change axis ticks or automatically add endpoints to the minor grid. Its guide-local default is `false`, while Theme may provide a default for an enabled major grid: the unstyled default baseline uses `true` for x/y axes and the site's three injected reference styles use `false`. The Theme endpoint token does not enable a grid by itself, and an explicit guide boolean wins last. Minor-grid positions still come from `grid.minor.ticks`, then drop positions that overlap the major grid.
+PlotAxis creates candidate ticks with the priority `ticks.values > ticks.interval > ticks.count`, then applies `density` to obtain visible ticks. The grid reuses those results unless `grid.ticks` requests a separate candidate source, so its density can remain independent from axis labels. `grid.includeDomain` appends missing effective scale-domain endpoints after that resolution and deduplicates them by final projected coordinate; it does not change axis ticks or automatically add endpoints to the minor grid. Its guide-local default is `false`, while Theme may provide a default for an enabled major grid: the unstyled default baseline uses `true` for x/y axes and the site's three injected reference styles use `false`. The Theme endpoint token does not enable a grid by itself, and an explicit guide boolean wins last. Minor-grid positions still come from `grid.minor.ticks`, then drop positions that overlap the major grid.
 
 <ComponentPreview files="axis-tick-grid-flow" size="xs" hideCode />
 
 <SourceLinks
   sources={[
     {
-      label: 'Axis tick source priority and formatting',
+      label: 'PlotAxis tick source priority and formatting',
       path: 'packages/viz/plot/src/resolve/guide/ticks.ts',
       startLine: 226,
       endLine: 283,
@@ -113,19 +113,19 @@ Axes sit above marks by default, while grids stay below them. `layer={{ zIndex }
 
 ## API Reference
 
-| Prop          | Type                      | Default       | Description                                                                                                                                    |
-| ------------- | ------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dimension`   | `AxisProps['dimension']`  | —             | Dimension to explain: Cartesian / polar use x / y; it must belong to the current coordinate system                                             |
-| `scale?`      | `AxisProps['scale']`      | auto-derived  | Positional scale shortcut; equivalent to `<Scale dimension="..." type="..." />` for the same dimension                                         |
-| `placement?`  | `AxisProps['placement']`  | inferred      | Baseline placement; branch `kind` values are listed by <ApiValues name="AxisPlacementKind" />; `origin` only applies to Cartesian axes         |
-| `line?`       | `AxisProps['line']`       | default line  | Axis-line style and endpoint geometry; `extent` and `arrow` currently apply only to Cartesian axes                                             |
-| `crossing?`   | `AxisProps['crossing']`   | normal ticks  | Tick / label policy at a crossing value; `label:'corner'` can move a shared origin label to a corner                                           |
-| `ticks?`      | `AxisProps['ticks']`      | default ticks | Candidate source, visible density, endpoint avoidance, and tick-marker appearance                                                              |
-| `tickLabels?` | `AxisProps['tickLabels']` | `true`        | Tick-label visibility, format, and style; explicit `rotate` wins over `layout.rotate`, and `layout:false` disables adaptive collision handling |
-| `title?`      | `AxisProps['title']`      | —             | Axis-title content, spacing, placement along the axis, orientation, and local offset                                                           |
-| `grid?`       | `AxisProps['grid']`       | `false`       | Grid visibility, style, and independent tick source; `minor` adds minor lines, while `applyTo/select` targets composition or facet views       |
-| `layer?`      | `AxisProps['layer']`      | axis layer    | Override the semantic layer of the axis scope without changing the grid's background layer                                                     |
-| `id?`         | `AxisProps['id']`         | —             | Optional guide handle used to identify the axis and its derived grid consistently                                                              |
+| Prop          | Type                          | Default       | Description                                                                                                                                    |
+| ------------- | ----------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dimension`   | `PlotAxisProps['dimension']`  | —             | Dimension to explain: Cartesian / polar use x / y; it must belong to the current coordinate system                                             |
+| `scale?`      | `PlotAxisProps['scale']`      | auto-derived  | Positional scale shortcut; equivalent to `<PlotScale dimension="..." type="..." />` for the same dimension                                     |
+| `placement?`  | `PlotAxisProps['placement']`  | inferred      | Baseline placement; branch `kind` values are listed by <ApiValues name="AxisPlacementKind" />; `origin` only applies to Cartesian axes         |
+| `line?`       | `PlotAxisProps['line']`       | default line  | PlotAxis-line style and endpoint geometry; `extent` and `arrow` currently apply only to Cartesian axes                                         |
+| `crossing?`   | `PlotAxisProps['crossing']`   | normal ticks  | Tick / label policy at a crossing value; `label:'corner'` can move a shared origin label to a corner                                           |
+| `ticks?`      | `PlotAxisProps['ticks']`      | default ticks | Candidate source, visible density, endpoint avoidance, and tick-marker appearance                                                              |
+| `tickLabels?` | `PlotAxisProps['tickLabels']` | `true`        | Tick-label visibility, format, and style; explicit `rotate` wins over `layout.rotate`, and `layout:false` disables adaptive collision handling |
+| `title?`      | `PlotAxisProps['title']`      | —             | PlotAxis-title content, spacing, placement along the axis, orientation, and local offset                                                       |
+| `grid?`       | `PlotAxisProps['grid']`       | `false`       | Grid visibility, style, and independent tick source; `minor` adds minor lines, while `applyTo/select` targets composition or facet views       |
+| `layer?`      | `PlotAxisProps['layer']`      | axis layer    | Override the semantic layer of the axis scope without changing the grid's background layer                                                     |
+| `id?`         | `PlotAxisProps['id']`         | —             | Optional guide handle used to identify the axis and its derived grid consistently                                                              |
 
 ### Key object fields
 
@@ -159,4 +159,4 @@ Visual styling belongs to `line`, `ticks`, `tickLabels`, `title`, and `grid`. Fo
 
 - [Scale](/viz/plot/scale) — maps positional values and generates ticks
 - [Legend](/viz/plot/guide/legend) — explains non-positional channels such as color, size, opacity, and shape
-- [Coordinate composition](/viz/plot/coordinate/composition) — targets Axis output in compositions and facets
+- [Coordinate composition](/viz/plot/coordinate/composition) — targets PlotAxis output in compositions and facets

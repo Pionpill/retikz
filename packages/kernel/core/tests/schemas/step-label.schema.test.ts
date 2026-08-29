@@ -5,6 +5,7 @@ import { StepLabelSchema } from '../../src/schemas';
 describe('StepLabelSchema 新增样式字段', () => {
   it('接受 textColor', () => {
     expect(StepLabelSchema.safeParse({ text: 'x', textColor: 'red' }).success).toBe(true);
+    expect(StepLabelSchema.safeParse({ text: 'x', textColor: 0.35 }).success).toBe(true);
   });
 
   it('接受 opacity 0..1', () => {

@@ -1,4 +1,4 @@
-import { PaintValueSchema } from '@retikz/core';
+import { CssColorSchema, PaintValueSchema } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { boolean, literal, number, strictObject, union } from 'zod';
 
@@ -83,9 +83,15 @@ export const PlotAreaThemeSchema = strictObject({
   fill: PaintValueSchema.optional().describe('Plot area background fill'),
 }).describe('Plot area visual defaults');
 
+/** Plot guide typography 的字符串主色与共享文字样式 */
+export const PlotTypographyThemeSchema = strictObject({
+  ...GuideTextStyleSchema.shape,
+  textColor: CssColorSchema.optional().describe('Global guide foreground master color'),
+}).describe('Global guide typography defaults with a string-only foreground master color');
+
 export const PlotThemeSchema = strictObject({
   plotArea: PlotAreaThemeSchema.optional().describe('Plot area visual defaults'),
-  typography: GuideTextStyleSchema.optional().describe('Global guide text defaults'),
+  typography: PlotTypographyThemeSchema.optional().describe('Global guide text defaults'),
   axis: PlotAxisThemeSchema.optional().describe('Axis visual defaults'),
   legend: LegendGuideStyleSchema.optional().describe('Legend visual defaults'),
   palette: PlotPaletteThemeSchema.optional().describe('Plot color and shape palette defaults'),

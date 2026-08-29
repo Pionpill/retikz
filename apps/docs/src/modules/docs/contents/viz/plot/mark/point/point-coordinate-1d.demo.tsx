@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, PointMark } from '@retikz/plot-react';
+import { PlotAxis, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -13,11 +13,11 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   <Layout width={620} height={230} style={{ maxWidth: '100%', height: 'auto' }}>
     <Plot data={samples} width={300} height={150} coordinate="cartesian1D" x={0} y={40}>
       <PointMark x={values[POINT_COORDINATE_1D_CONTROL_IDS.xField]} color="group" />
-      <Axis dimension="x" />
+      <PlotAxis dimension="x" />
     </Plot>
     <Plot data={samples} width={230} height={230} coordinate="polar1D" x={360} y={0}>
       <PointMark x={values[POINT_COORDINATE_1D_CONTROL_IDS.xField]} color="group" />
-      <Axis dimension="x" />
+      <PlotAxis dimension="x" />
     </Plot>
   </Layout>
 ));

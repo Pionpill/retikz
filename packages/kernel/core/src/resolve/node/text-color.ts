@@ -1,9 +1,12 @@
+import type { ParsedCssColor } from '@retikz/foundation';
+
+import { parseStaticCssColor } from '@retikz/foundation';
+
 import type { IRLine, IRNode, IRNodeLabel } from '../../schemas';
-import type { ParsedCssColor } from '../../shared/color';
 import type { EffectiveLabelDefault } from '../style';
+import type { PrimaryColorResolvedNode } from './types';
 
 import { NodeTextColor } from '../../schemas';
-import { parseStaticCssColor } from '../../shared';
 
 /** 判断正文行是否仍消费 Node 文字颜色 */
 const bodyLineInheritsNodeTextColor = (line: IRLine): boolean => {
@@ -65,15 +68,15 @@ const contrastingBlackOrWhite = (color: ParsedCssColor): '#000000' | '#ffffff' =
 };
 
 /** 解析 Node auto-contrast 关键字，供 layout 消费具体 CSS color */
-export const resolveNodeTextColor = (
-  node: IRNode,
+export const resolveNodeTextColor = <TNode extends PrimaryColorResolvedNode>(
+  node: TNode,
   labelDefault: EffectiveLabelDefault,
   warn: (code: string, message: string) => void,
-): IRNode => {
+): TNode => {
   if (node.textColor !== NodeTextColor.Contrast) return node;
 
   if (!hasNodeTextColorConsumer(node, labelDefault)) {
-    const resolved: IRNode = { ...node, textColor: undefined };
+    const resolved = { ...node };
     delete resolved.textColor;
     return resolved;
   }

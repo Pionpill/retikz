@@ -1,4 +1,4 @@
-import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -20,9 +20,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Plot data={weatherRows} width={520} height={250}>
-      <Axis dimension="x" grid={xGridVisible} />
-      <Axis dimension="y" grid={yGridVisible} title="°C" />
-      <Axis
+      <PlotAxis dimension="x" grid={xGridVisible} />
+      <PlotAxis dimension="y" grid={yGridVisible} title="°C" />
+      <PlotAxis
         id="rainfall"
         dimension="y"
         placement={{ kind: 'side', side: values[COORDINATE_COMPOSITION_SCOPES_CONTROL_IDS.secondaryAxisSide] }}

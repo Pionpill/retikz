@@ -1,4 +1,5 @@
 import { normalizeScatterChart } from '@retikz/chart-vanilla/point/scatter';
+import { PlotAxis, PlotTransform } from '@retikz/plot-react';
 import { Layout, Text } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -178,6 +179,80 @@ describe('Typed Point Chart React authoring', () => {
     expect(input.source).toEqual(vanilla);
   });
 
+  it('matches Vanilla for encoding-driven facets and delegates Plot declarations to the Plot authoring chain', () => {
+    const input = inputOf(ScatterChart, {
+      data: [{ amount: 1, margin: 2, region: 'north' }],
+      encodings: {
+        x: 'amount',
+        y: 'margin',
+        column: 'region',
+        facet: { spacing: { panelGap: 12 } },
+      },
+      children: (
+        <>
+          <PlotTransform kind="sort" field="amount" order="descending" />
+          <PlotAxis dimension="x" grid />
+        </>
+      ),
+    });
+    const vanilla = normalizeScatterChart({
+      data: { reference: 'chart.data' },
+      encodings: {
+        x: 'amount',
+        y: 'margin',
+        column: 'region',
+        facet: { spacing: { panelGap: 12 } },
+      },
+      plotExtension: {
+        transform: [{ kind: 'sort', field: 'amount', order: 'descending' }],
+        guides: [{ type: 'axis', dimension: 'x', grid: true }],
+      },
+    });
+
+    expect(input.source).toEqual(vanilla);
+  });
+
+  it('preserves direct slot ownership across arrays and transparent Fragments', () => {
+    const input = inputOf(ScatterChart, {
+      data: [{ amount: 1, margin: 2, region: 'north' }],
+      encodings: { x: 'amount', y: 'margin', column: 'region' },
+      children: [
+        <ChartTitle key="title">Facet example</ChartTitle>,
+        <>
+          <ScatterMark properties={{ opacity: 0.5 }} />
+          <PlotAxis dimension="y" />
+        </>,
+      ],
+    });
+
+    expect(input.source.presentation).toEqual({ title: 'Facet example' });
+    expect(input.source.recipe.marks).toEqual([{ kind: 'scatter', properties: { opacity: 0.5 } }]);
+    expect(input.source.recipe.encodings.column).toEqual({ field: 'region' });
+    expect(input.source.plotExtension?.guides).toEqual([{ type: 'axis', dimension: 'y' }]);
+  });
+
+  it('keeps Transform append order and reports Plot prop-child collection conflicts', () => {
+    const input = inputOf(ScatterChart, {
+      data: [{ amount: 1, margin: 2 }],
+      encodings: { x: 'amount', y: 'margin' },
+      plotExtension: { transform: [{ kind: 'sort', field: 'amount', order: 'descending' }] },
+      children: <PlotTransform kind="sort" field="margin" order="ascending" />,
+    });
+    expect(input.source.plotExtension?.transform).toEqual([
+      { kind: 'sort', field: 'amount', order: 'descending' },
+      { kind: 'sort', field: 'margin', order: 'ascending' },
+    ]);
+
+    expect(() =>
+      inputOf(ScatterChart, {
+        data: [{ amount: 1, margin: 2 }],
+        encodings: { x: 'amount', y: 'margin' },
+        plotExtension: { guides: [{ type: 'axis', dimension: 'x' }] },
+        children: <PlotAxis dimension="y" />,
+      }),
+    ).toThrow(/duplicate-declaration-source/i);
+  });
+
   it('does not treat nested mark components as direct Chart marks', () => {
     expect(() =>
       inputOf(ScatterChart, {
@@ -189,7 +264,7 @@ describe('Typed Point Chart React authoring', () => {
           </section>
         ),
       }),
-    ).toThrow(/only presentation markers or ScatterMark as direct children/);
+    ).toThrow(/unsupported-chart-child/i);
   });
 
   it('keeps standalone host dimensions separate from explicit Source layout', () => {

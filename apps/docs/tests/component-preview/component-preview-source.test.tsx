@@ -256,6 +256,15 @@ describe('ComponentPreview localized controls', () => {
     expect(props).not.toHaveProperty('interactive');
   });
 
+  it('将单预览属性面板默认状态透传给卡片', async () => {
+    const props = await renderPreview(
+      ['viz', 'plot', 'mark', 'path'],
+      <ComponentPreview files="line-basic" controlPanelDefaultOpen={false} />,
+    );
+
+    expect(props.controlPanelDefaultOpen).toBe(false);
+  });
+
   it('自动合并 animation provider 与局部 slots', async () => {
     const localSlot: PreviewControlSlot = {
       id: 'local-control',

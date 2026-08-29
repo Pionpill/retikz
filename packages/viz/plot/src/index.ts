@@ -11,5 +11,6 @@ export {
   PlotProviderKey,
 } from './pipeline';
 export * from './providers';
-export { resolvePlotTheme } from './resolve';
+export type { PlotFacetCompositionResolveContext } from './resolve';
+export { resolvePlotFacetComposition, resolvePlotTheme } from './resolve';
 export * from './schemas';

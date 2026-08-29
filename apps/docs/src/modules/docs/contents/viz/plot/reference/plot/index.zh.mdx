@@ -1,6 +1,6 @@
 ---
 title: 契约 - 规格
-description: 查询 IRPlot 根、坐标视图、Facet 与 Tracks 组合的 JSON schema。
+description: 查询 IRPlot 根、坐标视图、分面配置、Facet 与 Tracks 组合的 JSON schema。
 ---
 
 `PlotSchema` 是 Plot Tier 2 composite 的根契约。它引用外部 dataset，声明变换、比例尺、坐标系、图元和辅助层；lowering 再将其展开为 Kernel IR。
@@ -72,6 +72,34 @@ Plot 只描述绘图本体及其 Axis、Legend、Facet、mark、reference 与 an
     meta: '该坐标视图的自由 JSON-safe 元数据。',
   }}
 />
+
+## PlotFacetConfigurationSchema
+
+<ZodSchema
+  name="PlotFacetConfigurationSchema"
+  description="Plot 与高层 Chart 共同复用的 JSON-safe 分面作者配置。"
+  descriptions={{
+    id: '用于派生 panel view id 和溯源的稳定分面 id。',
+    row: '行分面字段或有序的多级行分面维度。',
+    column: '列分面字段或有序的多级列分面维度。',
+    empty: '空 panel 策略；省略时丢弃无数据的行列组合。',
+    header: '分面行、列标签的可见性和文本样式。',
+    'header.row': '生成的行标签是否可见或采用指定文本样式。',
+    'header.column': '生成的列标签是否可见或采用指定文本样式。',
+    resolve: '分面内的比例尺、坐标轴与网格解析策略。',
+    'resolve.scale': '按坐标角色声明比例尺解析模式。',
+    'resolve.axis': '按坐标角色声明坐标轴渲染模式。',
+    'resolve.grid': '按坐标角色声明默认网格投影模式。',
+    spacing: '分面局部间距覆盖。',
+    'spacing.panelGap': '生成的分面 panel 之间的间距，单位为用户坐标。',
+    'spacing.trackGap': 'track 组合中各 track 之间的间距，单位为用户坐标。',
+    'spacing.axisGap': '共享同一 side 或 edge 的坐标轴之间的向外间距。',
+    'spacing.labelGap': 'panel、track 或轴标题标签与相关图区之间的距离。',
+    'spacing.padding': '参与组合 frame 计算的可选外边距。',
+  }}
+/>
+
+`row` 与 `column` 至少声明一个。该原子配置不包含模板视图、坐标或 panel id 模板；这些低层控制只属于完整 `FacetArrangementSchema`。
 
 ## FacetArrangementSchema
 

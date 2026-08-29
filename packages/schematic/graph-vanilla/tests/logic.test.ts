@@ -5,12 +5,13 @@ import {
   defineRelationRole,
   EntityProviderKey,
   GraphProviderKey,
+  GroupProviderKey,
   RelationProviderKey,
 } from '@retikz/graph';
 import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import type { InputGraph } from '../src';
+import type { InputGraph, InputGroup } from '../src';
 
 import {
   createGraphVanillaAdapters,
@@ -18,7 +19,10 @@ import {
   EntityInputEmbedAdapter,
   graph,
   GraphInputEmbedAdapter,
+  group,
+  GroupInputEmbedAdapter,
   normalizeGraph,
+  normalizeGroup,
   relation,
   RelationInputEmbedAdapter,
 } from '../src';
@@ -49,16 +53,55 @@ describe('@retikz/graph-vanilla package boundary', () => {
 
     expect(graphVanilla.GraphInputEmbedAdapter).toBeDefined();
     expect(graphVanilla.EntityInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.GroupInputEmbedAdapter).toBeDefined();
     expect(graphVanilla.RelationInputEmbedAdapter).toBeDefined();
     expect(graphVanilla.graph).toBeTypeOf('function');
     expect(graphVanilla.entity).toBeTypeOf('function');
+    expect(graphVanilla.group).toBeTypeOf('function');
     expect(graphVanilla.relation).toBeTypeOf('function');
     expect(graphVanilla.normalizeGraph).toBeTypeOf('function');
+    expect(graphVanilla.normalizeGroup).toBeTypeOf('function');
     expect(createGraphVanillaAdapters().map(adapter => adapter.kind)).toEqual([
       'graph.graph',
+      'graph.group',
       'graph.entity',
       'graph.relation',
     ]);
+  });
+});
+
+describe('normalizeGroup', () => {
+  it('preserves Group presentation and normalizes collocated Entity / Relation Source', () => {
+    const input: InputGroup = {
+      id: 'runtime',
+      caption: { title: { text: 'Runtime' } },
+      labels: [{ text: 'internal', position: { boundary: 'left', fraction: 0.25 } }],
+      children: [
+        { type: 'entity', role: 'participant', position: [0, 0] },
+        {
+          type: 'relation',
+          role: 'dependency',
+          source: { id: 'a' },
+          target: { id: 'b' },
+        },
+      ],
+    };
+
+    expect(normalizeGroup(input)).toEqual({
+      namespace: 'graph',
+      type: 'group',
+      ...input,
+      children: [
+        { namespace: 'graph', type: 'entity', role: 'participant', position: [0, 0] },
+        {
+          namespace: 'graph',
+          type: 'relation',
+          role: 'dependency',
+          source: { id: 'a' },
+          target: { id: 'b' },
+        },
+      ],
+    });
   });
 });
 
@@ -172,6 +215,7 @@ describe('Graph Vanilla embed adapters', () => {
       }),
       RelationInputEmbedAdapter,
     );
+    const groupContribution = lower(group('group-embed', {}), GroupInputEmbedAdapter);
 
     expect(graphContribution.node).toEqual({ namespace: 'graph', type: 'graph' });
     expect(entityContribution.node).toEqual({
@@ -187,9 +231,11 @@ describe('Graph Vanilla embed adapters', () => {
       target: { id: 'target' },
       role: 'association',
     });
+    expect(groupContribution.node).toEqual({ namespace: 'graph', type: 'group' });
     expect(graphContribution.node).not.toHaveProperty('id');
     expect(entityContribution.node).not.toHaveProperty('id');
     expect(relationContribution.node).not.toHaveProperty('id');
+    expect(groupContribution.node).not.toHaveProperty('id');
   });
 
   it('normalizes Relation Way while preserving complete Core NodeTargets', () => {
@@ -298,11 +344,14 @@ describe('Graph Vanilla embed adapters', () => {
       }),
       RelationInputEmbedAdapter,
     );
+    const groupContribution = lower(group('group-embed', {}), GroupInputEmbedAdapter);
 
     expect(graphContribution.providerDependencies.roots).toEqual([GraphProviderKey]);
     expect(entityContribution.providerDependencies.roots).toEqual([EntityProviderKey]);
     expect(relationContribution.providerDependencies.roots).toEqual([RelationProviderKey]);
-    expect(graphContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(9);
+    expect(groupContribution.providerDependencies.roots).toEqual([GroupProviderKey]);
+    expect(graphContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(13);
+    expect(groupContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(12);
     expect(entityContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(3);
     expect(relationContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(5);
   });

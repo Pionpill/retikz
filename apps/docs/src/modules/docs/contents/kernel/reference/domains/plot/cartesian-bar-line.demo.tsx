@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, IntervalMark, PathMark, Plot } from '@retikz/plot-react';
+import { IntervalMark, PathMark, Plot, PlotAxis } from '@retikz/plot-react';
 
 import { quarterlyPerformance } from './cartesian-bar-line.data';
 
@@ -21,8 +21,8 @@ const Demo: FC = () => (
   >
     <IntervalMark x="quarter" y="actual" fillOpacity={0.72} />
     <PathMark x="quarter" y="target" order="order" strokeWidth={3} zIndex={1} />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid ticks={{ count: 5 }} />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid ticks={{ count: 5 }} />
   </Plot>
 );
 

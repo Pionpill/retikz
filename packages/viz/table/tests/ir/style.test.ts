@@ -87,6 +87,26 @@ describe('Table theme token schema', () => {
     });
   });
 
+  it('accepts contextual weights only for derived background and border colors', () => {
+    expect(
+      TableThemeTokenOverridesSchema.parse({
+        'cell.background.fill': 0.2,
+        'columnHeader.background.fill': 0.4,
+        'table.border.horizontal': { kind: 'line', stroke: 0.6 },
+        'columnHeader.border.bottom': { kind: 'line', stroke: 0.8 },
+      }),
+    ).toEqual({
+      'cell.background.fill': 0.2,
+      'columnHeader.background.fill': 0.4,
+      'table.border.horizontal': { kind: 'line', stroke: 0.6 },
+      'columnHeader.border.bottom': { kind: 'line', stroke: 0.8 },
+    });
+    expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.content.color': 0.8 })).toThrow();
+    expect(() => TableThemeTokenOverridesSchema.parse({ 'columnHeader.content.color': 0.8 })).toThrow();
+    expect(() => TableThemeTokenOverridesSchema.parse({ 'data.categorical': [0.8] })).toThrow();
+    expect(() => TableThemeTokenOverridesSchema.parse({ 'data.sequential': [0.2, '#000000'] })).toThrow();
+  });
+
   it('adds JSON-safe root Table tokens without materializing runtime defaults', () => {
     const base = { namespace: 'table', type: 'table', structure: { kind: 'manual', rows: [[1]] } };
     expect(TableSchema.parse(base)).toEqual(base);
