@@ -8,8 +8,13 @@ import {
   ContourShapeProvider,
   CrossShapeDefinition,
   CrossShapeProvider,
+  EllipticCapsuleShapeDefinition,
+  EllipticCapsuleShapeProvider,
   SectorShapeDefinition,
   SectorShapeProvider,
+  StandardShapeDefinitions,
+  StandardShapeName,
+  StandardShapeProviders,
   StarShapeDefinition,
   StarShapeProvider,
 } from '../../src/shape';
@@ -287,5 +292,9 @@ describe('Standard optional shape definitions', () => {
     expect(SectorShapeProvider.makeDefinition({})).toBe(SectorShapeDefinition);
     expect(StarShapeProvider.makeDefinition({})).toBe(StarShapeDefinition);
     expect(ContourShapeProvider.makeDefinition({})).toBe(ContourShapeDefinition);
+    expect(EllipticCapsuleShapeProvider.makeDefinition({})).toBe(EllipticCapsuleShapeDefinition);
+    expect(EllipticCapsuleShapeDefinition.name).toBe(StandardShapeName.EllipticCapsule);
+    expect(StandardShapeDefinitions).toContain(EllipticCapsuleShapeDefinition);
+    expect(StandardShapeProviders).toContain(EllipticCapsuleShapeProvider);
   });
 });

@@ -1,20 +1,21 @@
 ---
 title: Graph API 参考
-description: 查询 Graph、Entity、Relation 三套独立 Source composite、Scope 公共面与 React/Vanilla adapter。
+description: 查询 Graph、Group、Entity、Relation 四套独立 Source composite、Scope 公共面与 React/Vanilla adapter。
 ---
 
-`@retikz/graph` 拥有 JSON-safe Source IR、Definition registry、resolve 与 lowering。Graph、Entity、Relation 都是可独立编译的 Tier 2 composite；Graph 额外复用完整 Core Scope contract，作为顶层 React 宿主时建立 Scene，嵌入时只贡献一个局部 Scope
+`@retikz/graph` 拥有 JSON-safe Source IR、Definition registry、resolve 与 lowering。Graph、Group、Entity、Relation 都是可独立编译的 Tier 2 composite；Graph 额外作为顶层 React 宿主建立 Scene，Group 则组合 Scope、Surface、caption 与 Core boundary labels
 
 ## 公开导出
 
 | 能力       | `@retikz/graph`                                                                                    | React                               | Vanilla                                                            |
 | ---------- | -------------------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------ |
 | Graph      | `GraphSchema`、`IRGraph`、`createGraph`、`GraphDefinition`、`GraphProviderKey`                     | `Graph`、`GraphProps`               | `graph`、`GraphInputEmbedAdapter`、`GraphInputEmbedProps`          |
+| Group      | `GroupSchema`、`IRGroup`、`createGroup`、`GroupDefinition`、`GroupProviderKey`                     | `Group`、`GroupProps`               | `group`、`GroupInputEmbedAdapter`、`GroupInputEmbedProps`          |
 | Entity     | `EntitySchema`、`IRGraphEntity`、`createEntity`、`EntityDefinition`、`EntityProviderKey`           | `Entity`、`EntityProps`             | `entity`、`EntityInputEmbedAdapter`、`EntityInputEmbedProps`       |
 | Relation   | `RelationSchema`、`IRGraphRelation`、`createRelation`、`RelationDefinition`、`RelationProviderKey` | `Relation`、`RelationProps`         | `relation`、`RelationInputEmbedAdapter`、`RelationInputEmbedProps` |
 | 开放词汇   | `EntityRole`、`RelationRole`、`RelationKind` 及对应 schema                                         | —                                   | —                                                                  |
-| Theme 扩展 | `GraphThemeStyleDefinition`、`GraphThemeStyleOverrides`、`defineGraphThemeStyle`                   | `graphThemeStyles` 可声明在三个组件 | `graphThemeStyles` 可传给三个 adapter                              |
-| 装配       | `GraphDefinitionOptions`、`createGraphDefinitions`、`createGraphProviders`                         | options 可声明在三个组件            | `createGraphVanillaAdapters`                                       |
+| Theme 扩展 | `GraphThemeStyleDefinition`、`GraphThemeStyleOverrides`、`defineGraphThemeStyle`                   | `graphThemeStyles` 可声明在四个组件 | `graphThemeStyles` 可传给四个 adapter                              |
+| 装配       | `GraphDefinitionOptions`、`createGraphDefinitions`、`createGraphProviders`                         | options 可声明在四个组件            | `createGraphVanillaAdapters`                                       |
 
 ## Graph Source composite
 
@@ -83,6 +84,14 @@ Entity role、Relation role / kind 都是开放 key。schema 会把内置 const 
 ```
 
 完整 Scope 字段的嵌套结构与继承规则见 [Scope schema](/kernel/reference/schema/scope)。
+
+## Group schema
+
+Group 保存任意 `IRChild` 的嵌套包含关系，并组合完整 Core Scope、Standard Surface presentation、结构化 caption 与 Core `IRNodeLabel`。caption 与 Surface 参与 allocation；外围 labels 只扩展 visual bounds。Group 不自动布局 authored children，也不拥有 routing、避障或碰撞处理
+
+<ZodSchema name="GroupSchema" />
+
+默认值只在 lowering 中消费：padding 为 `10`，background 为 `lightgray` / `0.04`，border 为 `lightgray` / `1` 且 `dashPattern` 为 `[4, 3]`，corner radius 为 `4`，overflow 为 `visible`；caption 默认位于 top，内部 horizontal 排列，`itemGap` / `bodyGap` 均为 `4`，title 默认使用 `sm` 且不加粗，description 默认使用 `xs` 与 0.7 不透明度。Group labels 默认使用与 description 对齐的 `xs` 字号和灰色 `gray`，显式字体与颜色字段优先；省略 `align` 时默认使用 Core attachment-tangent `start`，省略 position 时默认使用 `{ boundary: 'bottom', fraction: 0 }`，附着在外框下边界左端并向外侧下方偏移，使文字左边缘与外框左边缘对齐；其余 position、boundary、placement、rotate、keepUpright 与 pin 直接以 Core `NodeLabelSchema` 为真源，placement 继续默认 `outside`
 
 ## Entity schema
 
@@ -196,6 +205,10 @@ Theme 是 Relation 的默认来源，不是可用字段白名单。Relation 显�
 
 省略 `route` 时 lowering 生成 `move(source) → line(target)`；显式 route 使用 `Array<IRGraphRelationRouteStep>`，保持完整 Core Position language，且 route step 不承载 label
 
+## 主色与派生颜色
+
+Entity / Relation 的 `color` 是字符串主色。适用的 `fill`、`stroke`、文字前景与 marker 颜色也可写 `0..1` 数值，由 Core 在 Graph Theme、Graph-local rule 与实例字段全部级联后解析。Entity 跟随最终 Entity 主色；Relation 的 stroke、label 与 marker color 跟随 Relation 主色，marker fill 再跟随已解析 marker color。数值不是透明度，opacity 字段继续独立生效；palette、gradient stop、pattern 与 shadow color 保持字符串。
+
 ## 共享 reference 与 Graph Theme
 
 <ZodSchema
@@ -252,11 +265,11 @@ Graph standalone 与嵌入模式共享同一个 Source contract：
 
 standalone 的 `width`、`height`、`viewBox`、renderer、runtime 与 DOM props 属于 Layout Scene 宿主；嵌入时把它们移到外层 Layout。`transforms`、`placement`、`zIndex` 与 `clip` 等直接属于 `IRGraph`，没有额外 panel envelope
 
-Vanilla `normalizeGraph()`、`normalizeEntity()` 与 `normalizeRelation()` 只做工厂校验、child 归一化和可选 `way → route` sugar，不拆 envelope、不填默认值。`createGraphVanillaAdapters()` 一次安装三个 adapter
+Vanilla `normalizeGraph()`、`normalizeGroup()`、`normalizeEntity()` 与 `normalizeRelation()` 只做工厂校验、child 归一化和可选 `way → route` sugar，不拆 envelope、不填默认值。`createGraphVanillaAdapters()` 一次安装四个 adapter
 
-`graph(traversalId, input)`、`entity(traversalId, input)` 与 `relation(traversalId, input)` 的第一个参数只供 Vanilla authoring traversal 定位，不是 Source `id`，也不会自动写入或生成 Graph/Entity/Relation identity
+`graph(traversalId, input)`、`group(traversalId, input)`、`entity(traversalId, input)` 与 `relation(traversalId, input)` 的第一个参数只供 Vanilla authoring traversal 定位，不是 Source `id`，也不会自动写入或生成 Graph/Group/Entity/Relation identity
 
-Definition options 可以直接传给三个 React 组件或三个 Vanilla adapter。持久化 IR 通过下面任一装配入口使用相同 definitions：
+Definition options 可以直接传给四个 React 组件或四个 Vanilla adapter。持久化 IR 通过下面任一装配入口使用相同 definitions：
 
 ```ts
 const scene = compileToScene(sourceIR, {

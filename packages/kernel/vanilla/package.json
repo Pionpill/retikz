@@ -1,6 +1,6 @@
 {
   "name": "@retikz/vanilla",
-  "version": "0.5.0-alpha.3",
+  "version": "0.5.0-alpha.4",
   "retikz": {
     "domain": "kernel",
     "releaseGroup": "kernel",

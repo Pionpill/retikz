@@ -37,11 +37,11 @@ describe('Entity definition registry', () => {
     });
     expect(registry.get('gateway')).toMatchObject({
       shape: { type: 'diamond', params: { aspectRatio: 1.8 } },
-      padding: { x: 3, y: 2 },
+      padding: { x: 6, y: 4 },
     });
     expect(registry.get('resource')).toMatchObject({
-      shape: { type: 'cylinder', params: { axis: 'vertical', capDepth: 8 } },
-      padding: { x: 10, top: 14, bottom: 2 },
+      shape: { type: 'ellipticCapsule', params: { axis: 'vertical', capDepth: 8 } },
+      padding: { x: 10, y: 5 },
       minimumSize: { width: 56, height: 40 },
     });
     expect(registry.get('concept')).toMatchObject({

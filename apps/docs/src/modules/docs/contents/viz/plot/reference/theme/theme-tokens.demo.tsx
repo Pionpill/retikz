@@ -15,10 +15,11 @@ const points = [
 
 /** Plot token override 通过 IRPlot 局部 theme cascade 进入 Plot area、axis 与 palette */
 const plotThemeTokens = {
-  [PlotThemeToken.PlotAreaFill]: '#F8FAFC',
+  [PlotThemeToken.PlotTypographyForeground]: '#2563EB',
+  [PlotThemeToken.PlotAreaFill]: 0.08,
   [PlotThemeToken.PlotPaletteCategorical]: ['#2563EB', '#F97316'],
   [PlotThemeToken.AxisGridEnabled]: false,
-  [PlotThemeToken.AxisGridStroke]: '#60A5FA',
+  [PlotThemeToken.AxisGridStroke]: 0.25,
   [PlotThemeToken.AxisGridDrawOpacity]: 0.35,
 };
 

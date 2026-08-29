@@ -279,6 +279,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'StrokeWidth',
     url: '/kernel/reference/schema/style#strokewidth',
   },
+  ContextualColorSchema: {
+    schema: IR.ContextualColorSchema,
+    label: 'ContextualColor',
+    url: '/kernel/reference/schema/style#contextualcolorschema',
+  },
   PaintValueSchema: {
     schema: IR.PaintValueSchema,
     label: 'PaintValue',
@@ -514,6 +519,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: GraphIR.GraphSchema,
     label: 'Graph',
     url: '/schematic/graph/api-reference',
+  },
+  GroupSchema: {
+    schema: GraphIR.GroupSchema,
+    label: 'Group',
+    url: '/schematic/graph/group',
   },
   EntitySchema: {
     schema: GraphIR.EntitySchema,

@@ -45,13 +45,13 @@ export type ArrowDefinition = {
    */
   tipX?: number;
   /**
-   * 默认箭头长度（length fallback）；缺省 6
-   * @default 6
+   * 默认箭头长度（length fallback）；缺省 8
+   * @default 8
    */
   defaultLength?: number;
   /**
-   * 默认箭头宽度（width fallback）；缺省 6
-   * @default 6
+   * 默认箭头宽度（width fallback）；缺省 8
+   * @default 8
    */
   defaultWidth?: number;
   /** 局部坐标 marker 几何（renderer-agnostic）；adapter 把产物嵌进 `<marker>` */

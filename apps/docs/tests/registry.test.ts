@@ -1,4 +1,11 @@
-import { AxisLineStepSchema, CoordinateSchema, MoveStepSchema, RelativeTargetSchema, SceneSchema } from '@retikz/core';
+import {
+  AxisLineStepSchema,
+  ContextualColorSchema,
+  CoordinateSchema,
+  MoveStepSchema,
+  RelativeTargetSchema,
+  SceneSchema,
+} from '@retikz/core';
 import { EntitySchema, RelationSchema } from '@retikz/graph';
 import { LayoutInspectSpacingOptionsInputSchema } from '@retikz/layout/inspect';
 import {
@@ -26,6 +33,10 @@ describe('SCHEMA_REGISTRY', () => {
   it('contains the documented Kernel, Table, and Plot schema surfaces', () => {
     expect(SCHEMA_REGISTRY).toMatchObject({
       SceneSchema: { schema: SceneSchema },
+      ContextualColorSchema: {
+        schema: ContextualColorSchema,
+        url: '/kernel/reference/schema/style#contextualcolorschema',
+      },
       LayoutInspectSpacingOptionsInputSchema: { schema: LayoutInspectSpacingOptionsInputSchema },
       TableSchema: { schema: TableSchema },
       PlotSchema: { schema: PlotSchema },

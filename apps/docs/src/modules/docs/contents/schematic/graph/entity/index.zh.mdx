@@ -3,7 +3,7 @@ title: Entity
 description: 用一个 record 保存可选 identity、开放语义与 Core Node 实例字段。
 ---
 
-Entity 负责表达“是什么节点”，并独立 lower 为一个普通 Core Node。一个 Source record 同时保存可选 `id`、`role`、可选 `kind`、`predicate`，以及 `text`、`position`、`fill`、`dashed` 等非结构 Core Node 实例字段；它不承载任意 child。role 决定 shape 等结构，Theme 提供外观默认，实例显式字段最终覆盖 Theme。Graph 只是可选的局部上下文宿主
+Entity 负责表达“是什么节点”，并独立 lower 为一个普通 Core Node。一个 Source record 同时保存可选 `id`、`role`、可选 `kind`、`predicate`，以及 `text`、`position`、`fill`、`dashed` 等非结构 Core Node 实例字段；它不承载任意 child。role 决定 shape 等结构，Theme 提供外观默认，实例显式字段最终覆盖 Theme。Graph 只是可选的局部上下文宿主。Entity 的 `color` 保持字符串主色；数值 `fill`、`stroke` 或文字派生色会在最终实例主色确定后交给 Core 解析
 
 ## 职责一览
 

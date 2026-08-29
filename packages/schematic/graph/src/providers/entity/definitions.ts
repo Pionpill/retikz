@@ -40,14 +40,14 @@ export const GatewayEntityRoleDefinition = defineEntityRole({
   role: EntityRole.Gateway,
   description: '具有语义的控制分叉、汇合或同步',
   shape: { type: 'diamond', params: { aspectRatio: 1.8 } },
-  padding: { x: 3, y: 2 },
+  padding: { x: 6, y: 4 },
 });
 
 export const ResourceEntityRoleDefinition = defineEntityRole({
   role: EntityRole.Resource,
   description: '被使用、产生或存储的对象',
-  shape: { type: 'cylinder', params: { axis: 'vertical', capDepth: 8 } },
-  padding: { x: 10, top: 14, bottom: 2 },
+  shape: { type: 'ellipticCapsule', params: { axis: 'vertical', capDepth: 8 } },
+  padding: { x: 10, y: 5 },
   minimumSize: { width: 56, height: 40 },
 });
 

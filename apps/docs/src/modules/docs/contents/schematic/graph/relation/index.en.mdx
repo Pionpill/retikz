@@ -3,7 +3,7 @@ title: Relation
 description: Store general Core endpoints, relation semantics, labels, and an optional route in one record.
 ---
 
-Relation expresses who is related to whom. It uses Core NodeTarget to reference a Node, Coordinate, Scope, or target published by an upper composite, and stores source/target, role, direction, and optional kind/predicate. The route only describes how to draw the relationship and independently lowers to an ordinary Core Path. Graph is optional context rather than a member container
+Relation expresses who is related to whom. It uses Core NodeTarget to reference a Node, Coordinate, Scope, or target published by an upper composite, and stores source/target, role, direction, and optional kind/predicate. The route only describes how to draw the relationship and independently lowers to an ordinary Core Path. Graph is optional context rather than a member container. Numeric stroke, label foreground, and marker color derive from the final Relation master; marker fill then derives from the resolved marker color
 
 ## Responsibilities
 

@@ -207,6 +207,8 @@ export type MeasuredNodeLabel = {
   text: string;
   /** 含公式时的混排行布局 */
   laid?: LaidLine;
+  /** label 视觉盒沿附着切线的对齐方式 */
+  align: CanonicalNodeLabel['align'];
   /** 8 方向枚举、center、数字角度，或 box-like boundary 上的归一位置 */
   position: CanonicalNodeLabel['position'];
   /** label 相对附着点向外或向内偏移 */

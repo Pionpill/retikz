@@ -1,5 +1,28 @@
 import type { IRFont, IRLine, IRMathRun, IRTextRun } from '../../schemas';
 
+type WithResolvedFill<T> = T extends unknown ? Omit<T, 'fill'> & { fill?: string } : never;
+
+/** 已把派生颜色确定为字符串的文字 run */
+export type ResolvedTextRun = WithResolvedFill<IRTextRun>;
+
+/** 已把派生颜色确定为字符串的公式 run */
+export type ResolvedMathRun = WithResolvedFill<IRMathRun>;
+
+/** 已把派生颜色确定为字符串的行内 Source run */
+export type ResolvedInlineSourceRun = ResolvedTextRun | ResolvedMathRun;
+
+/** 已把 run 派生颜色确定为字符串的混排行 */
+export type ResolvedMixedLine = Readonly<{ runs: Array<ResolvedInlineSourceRun> }>;
+
+/** 已把派生颜色确定为字符串的单行 Source */
+export type ResolvedTextLine =
+  | string
+  | (Omit<Extract<IRLine, { text: string }>, 'fill'> & { fill?: string })
+  | ResolvedMixedLine;
+
+/** 已把派生颜色确定为字符串的 label 单行内容 */
+export type ResolvedLabelTextContent = string | ResolvedMixedLine;
+
 /** 字号解析所需的根字号与继承字号 */
 export type FontSizeResolveContext = Readonly<{
   /** preset 与 rem 的根字号 */
@@ -29,13 +52,13 @@ export type FontResolveContext = Readonly<{
 }>;
 
 /** 已解析字体的文本 run */
-export type CanonicalTextRun = Omit<IRTextRun, 'font'> & Readonly<{ font: CanonicalFont }>;
+export type CanonicalTextRun = Omit<ResolvedTextRun, 'font'> & Readonly<{ font: CanonicalFont }>;
 
 /** 已确定的行内文字或公式 run */
-export type CanonicalInlineRun = CanonicalTextRun | IRMathRun;
+export type CanonicalInlineRun = CanonicalTextRun | ResolvedMathRun;
 
 /** Source IR 行内文字或公式 run */
-export type SourceInlineRun = IRTextRun | IRMathRun;
+export type SourceInlineRun = ResolvedInlineSourceRun;
 
 /** 行内 shorthand 解析结果 */
 export type ParsedInlineRuns = Readonly<{
@@ -89,4 +112,4 @@ export type TextLineResolveContext = FontResolveContext &
   }>;
 
 /** 可由文本 resolver 消费的单行 Source IR */
-export type TextLineSource = IRLine;
+export type TextLineSource = ResolvedTextLine;

@@ -1,4 +1,10 @@
-import type { EntityInputEmbedProps, InputEntity, InputRelation, RelationInputEmbedProps } from '@retikz/graph-vanilla';
+import type {
+  EntityInputEmbedProps,
+  GroupInputEmbedProps,
+  InputEntity,
+  InputRelation,
+  RelationInputEmbedProps,
+} from '@retikz/graph-vanilla';
 import type { LayoutProps } from '@retikz/react';
 import type { AnyInputEmbedAdapter, InputChild, InputPath } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
@@ -8,6 +14,7 @@ import { normalizePath } from '@retikz/vanilla';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
 import type { EntityProps } from './Entity';
+import type { GroupProps } from './Group';
 import type { RelationProps } from './Relation';
 
 import { RetikzGraphReactError, RetikzGraphReactErrorCode } from '../errors';
@@ -285,5 +292,21 @@ export const collectGraphChildren = (children: ReactNode, embedIdPrefix: string)
   return {
     children: input.scene.children ?? [],
     adapters: input.adapters,
+  };
+};
+
+/** 将 Group React children 与 props 组装为唯一 Vanilla Input */
+export const collectGroupInput = (
+  props: GroupProps,
+  embedIdPrefix: string,
+): Readonly<{ input: GroupInputEmbedProps; adapters: ReadonlyArray<AnyInputEmbedAdapter> }> => {
+  const { children, ...input } = props;
+  const collected = collectGraphChildren(children, embedIdPrefix);
+  return {
+    input: {
+      ...input,
+      ...(collected.children.length === 0 ? {} : { children: collected.children }),
+    },
+    adapters: collected.adapters,
   };
 };

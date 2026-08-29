@@ -7,7 +7,9 @@ Plot reads `style` and `mode` from the Core effective Theme at its current Scene
 
 <ComponentPreview files="theme-tokens" size="lg" />
 
-The example writes a plot-area background and categorical palette through `PlotThemeToken`, then uses `plotThemeTokenRules` to enable grid lines for the y Axis only. React, Vanilla, and plain JSON pass the same tokens and rules to the Plot resolver without adapter-owned presets. The structured `plotArea.fill` field fills only the two-dimensional Plot area after axis, legend, and layout reserves are removed. One-dimensional lines and circles expose only a projection path, so they emit neither a fillable Plot area nor a grid layer across one.
+The example sets the string master `plot.typography.foreground` to `#2563EB`, then derives the Plot-area background with `0.08` and the grid stroke with `0.25`; the categorical palette remains a list of string colors. A number is a master-color weight, not opacity: Core precomposites it against the Light white or Dark black backdrop into an opaque color, while opacity tokens such as `axis.grid.drawOpacity` remain independent.
+
+React, Vanilla, and plain JSON pass the same tokens and rules to the Plot resolver without adapter-owned presets. The structured `plotArea.fill` field fills only the two-dimensional Plot area after axis, legend, and layout reserves are removed. One-dimensional lines and circles expose only a projection path, so they emit neither a fillable Plot area nor a grid layer across one.
 
 The site's Vibrant reference preset uses a light blue-gray Plot area in Light mode and a dark Plot area in Dark mode; the default baseline, Academic, and Clean remain transparent. Explicit `plot.area.fill` or `plotTheme.plotArea.fill` values still override the preset through the normal cascade.
 
@@ -37,6 +39,8 @@ Core effective Theme
 ## Canonical tokens
 
 `PlotThemeToken` exports 42 stable keys. Plot owns their semantics, while their value contracts reuse Core paint / font / opacity atoms, Plot guide / scale schemas, and Standard Legend gap atoms.
+
+`plot.typography.foreground` is the string-only master for Plot-owned guides. Derived slots such as Plot-area fill, Axis line/grid stroke, tick labels, Axis titles, and Legend title/labels accept either an exact CSS string or a `[0, 1]` weight. Numeric values remain authored weights until Plot lowers into Core, where the final master and Theme mode determine an opaque color. Data marks do not inherit the typography master; palette, scheme, scale range, gradient, pattern, and shadow colors remain string-only.
 
 | Group           | Canonical keys                                                                                                                                                                                                                                                                                                                           |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

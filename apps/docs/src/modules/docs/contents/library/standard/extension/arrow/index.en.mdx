@@ -64,23 +64,23 @@ The overview keeps path length and style fixed while comparing the eight Standar
 
 ### Diamond arrows
 
-`diamond` and `openDiamond` use flat 2:1 proportions and provide filled and hollow endpoints. The solid form uses arrow fill, while the open form is stroke-only.
+`diamond` and `openDiamond` default to integer dimensions of `11 × 6`, with a nominal area of 66, and provide filled and hollow endpoints. Their contours fill the base height; the solid form uses arrow fill, while the open form is stroke-only.
 
 <ComponentPreview files="diamond-arrows" size="sm" />
 
 ### Kite arrows
 
-`kite` and `openKite` place their shoulders at one quarter of the default length, producing an asymmetric contour stretched toward the tip. They share Diamond's solid/open paint rules but are not symmetric diamonds; inject `KiteArrowDefinition` or `OpenKiteArrowDefinition` on demand.
+`kite` and `openKite` also default to `11 × 6`. Their shoulders sit at one quarter of the base length, producing an asymmetric contour stretched toward the tip. They share Diamond's solid/open paint rules but are not symmetric diamonds; inject `KiteArrowDefinition` or `OpenKiteArrowDefinition` on demand.
 
 ### Square arrows
 
-`square` and `openSquare` have equal default length and width, while explicit `length` and `width` can still stretch them independently. The open form moves its contour inside the marker bounds before stroking instead of reusing the solid outer edge; their Definitions are `SquareArrowDefinition` and `OpenSquareArrowDefinition`.
+`square` and `openSquare` both default to `8 × 8`, while explicit `length` and `width` can still stretch them independently. The open form moves its contour inside the marker bounds before stroking instead of reusing the solid outer edge; their Definitions are `SquareArrowDefinition` and `OpenSquareArrowDefinition`.
 
 All three families reuse Core's marker host, start/end placement, path shrink, and `arrowDetail` visual parameters. Explicit `length` and `width` only stretch the frozen default local contours.
 
 ### Bar endpoint
 
-`bar` draws an open line perpendicular to the path tangent at the authored endpoint. It inherits the path stroke, but its name does not impose domain meanings such as “blocked” or “inhibited”; consumers assign those meanings.
+`bar` uses Core's `8 × 8` fallback by default and draws an open line perpendicular to the path tangent at the authored endpoint. It inherits the path stroke, but its name does not impose domain meanings such as “blocked” or “inhibited”; consumers assign those meanings.
 
 <ComponentPreview files="bar-arrow" size="sm" />
 
@@ -88,7 +88,7 @@ The path body overlaps the marker contact edge by half of its own stroke width, 
 
 ### Crow-foot endpoint
 
-`crowFoot` explicitly draws three open rays from the path contact point. Relationship diagrams may use it for multiplicity, but Standard defines only reusable geometry and does not bind it to cardinality.
+`crowFoot` uses Core's `8 × 8` fallback by default and draws three open rays from the path contact point. Relationship diagrams may use it for multiplicity, but Standard defines only reusable geometry and does not bind it to cardinality.
 
 <ComponentPreview files="crow-foot-arrow" size="sm" />
 

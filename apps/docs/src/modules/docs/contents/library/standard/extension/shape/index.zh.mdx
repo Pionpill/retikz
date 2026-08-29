@@ -5,10 +5,10 @@ description: 从 @retikz/standard/shape 按需引入可选节点形状，并分�
 
 形状扩展在 Core 提供的基础形状之上，补充了更多可选内容：
 
-| 包名             | 提供内容                                                                                  |
-| ---------------- | ----------------------------------------------------------------------------------------- |
-| `core`           | `rectangle` — 矩形、`ellipse` — 椭圆、`polygon` — 多边形                                  |
-| `standard/shape` | `cross`、`sector`、`star`、`contour`、`trapezoid`、`parallelogram`、`hexagon`、`cylinder` |
+| 包名             | 提供内容                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| `core`           | `rectangle` — 矩形、`ellipse` — 椭圆、`polygon` — 多边形                                                     |
+| `standard/shape` | `cross`、`sector`、`star`、`contour`、`trapezoid`、`parallelogram`、`hexagon`、`cylinder`、`ellipticCapsule` |
 
 ## 用法
 
@@ -53,7 +53,7 @@ const svg = renderToSvgString(input, {
 
 ## 例子
 
-下面先并列八个扩展形状，便于比较基本外观，再进入各自的几何参数。
+下面先并列九个扩展形状，便于比较基本外观，再进入各自的几何参数。
 
 <ComponentPreview files="shape-gallery" size="md" />
 
@@ -131,6 +131,21 @@ const svg = renderToSvgString(input, {
 | ----------- | ---------------------------- | --------------------------- |
 | `axis?`     | `'vertical' \| 'horizontal'` | 主轴方向；默认为 `vertical` |
 | `capDepth?` | `number`                     | 非负端盖深度；默认为 `8`    |
+
+### 半椭圆端胶囊形
+
+`ellipticCapsule` 由顶部半椭圆、两侧直线和底部半椭圆组成一个闭合外轮廓。它与 `cylinder` 共享端部几何，但不绘制内部端盖分隔弧，因此顶部不会形成一个完整椭圆。与 Core 圆角矩形形成的 capsule 相比，`capDepth` 可以独立控制端部深度，半椭圆始终覆盖整个横截面。
+
+<ComponentPreview files="elliptic-capsule-example" size="sm" />
+
+#### API
+
+节点注入 `EllipticCapsuleShapeDefinition`，参数类型为 `EllipticCapsuleShapeParams`：
+
+| 字段        | 类型                         | 说明                        |
+| ----------- | ---------------------------- | --------------------------- |
+| `axis?`     | `'vertical' \| 'horizontal'` | 主轴方向；默认为 `vertical` |
+| `capDepth?` | `number`                     | 非负端部深度；默认为 `8`    |
 
 ### 扇形
 

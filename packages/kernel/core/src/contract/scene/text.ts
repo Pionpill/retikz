@@ -30,7 +30,7 @@ export type TextLine = {
    * 行级文字颜色覆盖；缺省走块级 TextPrim.fill
    * @default TextPrim.fill
    */
-  fill?: IRTextRun['fill'];
+  fill?: string;
   /**
    * 行级透明度 0..1 覆盖；缺省走块级
    * @default TextPrim.opacity
@@ -84,7 +84,7 @@ export type TextPrim = {
    * 块级文字颜色
    * @default 'currentColor'
    */
-  fill?: IRTextRun['fill'];
+  fill?: string;
   /**
    * 整体透明度 0~1
    * @default 1

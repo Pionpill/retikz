@@ -23,6 +23,7 @@ const layoutSquare = (node: IRNode) => {
   const boundaries = resolveBoundaryRegistry();
   const resolution = resolveNode(node, {
     styleFrames: [],
+    mode: 'light',
     shapes: BUILTIN_SHAPES,
     boundaries,
     patterns: resolvePatternRegistry(),

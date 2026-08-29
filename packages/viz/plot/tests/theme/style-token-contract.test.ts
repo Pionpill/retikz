@@ -124,6 +124,42 @@ describe('Plot style token contract', () => {
     expect(PlotThemeSchema.safeParse({ plotArea: { background: 'none' } }).success).toBe(false);
   });
 
+  it('只让派生颜色 token 接受上下文颜色权重', () => {
+    expect(
+      PlotThemeSchema.safeParse({
+        plotArea: { fill: 0.2 },
+        axis: {
+          line: { stroke: 0.4 },
+          grid: { stroke: 0.2 },
+          tickLabels: { textColor: 0.8 },
+          title: { textColor: 0.6 },
+        },
+        legend: {
+          title: { textColor: 0.8 },
+          label: { textColor: 0.6 },
+        },
+      }).success,
+    ).toBe(true);
+    expect(
+      PlotThemeTokenOverridesSchema.safeParse({
+        [PlotThemeToken.PlotAreaFill]: 0.2,
+        [PlotThemeToken.AxisLineStroke]: 0.4,
+        [PlotThemeToken.AxisTickLabelForeground]: 0.8,
+        [PlotThemeToken.AxisTitleForeground]: 0.6,
+        [PlotThemeToken.AxisGridStroke]: 0.2,
+        [PlotThemeToken.LegendTitleForeground]: 0.8,
+        [PlotThemeToken.LegendLabelForeground]: 0.6,
+      }).success,
+    ).toBe(true);
+
+    expect(PlotThemeSchema.safeParse({ typography: { textColor: 0.8 } }).success).toBe(false);
+    expect(PlotThemeTokenOverridesSchema.safeParse({ [PlotThemeToken.PlotTypographyForeground]: 0.8 }).success).toBe(
+      false,
+    );
+    expect(PlotThemeSchema.safeParse({ palette: { series: [0.8] } }).success).toBe(false);
+    expect(PlotThemeTokenOverridesSchema.safeParse({ [PlotThemeToken.PlotPaletteSeries]: [0.8] }).success).toBe(false);
+  });
+
   it('让 axis.grid 只接受关闭或共享 line style 与 domain endpoint 默认', () => {
     for (const grid of [false, { stroke: '#ffffff', strokeWidth: 1, drawOpacity: 0.15, includeDomain: true }]) {
       expect(PlotThemeSchema.safeParse({ axis: { grid } }).success).toBe(true);

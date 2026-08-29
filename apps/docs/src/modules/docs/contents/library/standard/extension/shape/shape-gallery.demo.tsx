@@ -5,6 +5,7 @@ import {
   ContourShapeDefinition,
   CrossShapeDefinition,
   CylinderShapeDefinition,
+  EllipticCapsuleShapeDefinition,
   HexagonShapeDefinition,
   ParallelogramShapeDefinition,
   SectorShapeDefinition,
@@ -12,26 +13,27 @@ import {
   TrapezoidShapeDefinition,
 } from '@retikz/standard/shape';
 
-/** 分两行展示 Standard 的八个可选节点形状 */
+/** 分三行展示 Standard 的九个可选节点形状 */
 const Demo: FC = () => {
   const radius = 34;
   const style = { fill: '#ffedd5', stroke: 'darkorange', strokeWidth: 1.5 };
   const labels: Array<{ position: [number, number]; text: string }> = [
-    { position: [-180, -8], text: 'cross' },
-    { position: [-60, -8], text: 'sector' },
-    { position: [60, -8], text: 'star' },
-    { position: [180, -8], text: 'contour' },
-    { position: [-180, 102], text: 'trapezoid' },
-    { position: [-60, 102], text: 'parallelogram' },
-    { position: [60, 102], text: 'hexagon' },
-    { position: [180, 102], text: 'cylinder' },
+    { position: [-150, -42], text: 'cross' },
+    { position: [0, -42], text: 'sector' },
+    { position: [150, -42], text: 'star' },
+    { position: [-150, 68], text: 'contour' },
+    { position: [0, 68], text: 'trapezoid' },
+    { position: [150, 68], text: 'parallelogram' },
+    { position: [-150, 178], text: 'hexagon' },
+    { position: [0, 178], text: 'cylinder' },
+    { position: [150, 178], text: 'ellipticCapsule' },
   ];
 
   return (
     <Layout
       width={620}
-      height={300}
-      viewBox={{ x: -240, y: -105, width: 480, height: 220 }}
+      height={410}
+      viewBox={{ x: -240, y: -145, width: 480, height: 330 }}
       shapes={[
         ContourShapeDefinition,
         CrossShapeDefinition,
@@ -41,11 +43,12 @@ const Demo: FC = () => {
         ParallelogramShapeDefinition,
         HexagonShapeDefinition,
         CylinderShapeDefinition,
+        EllipticCapsuleShapeDefinition,
       ]}
     >
-      <Node position={[-180, -55]} shape="cross" minimumSize={{ width: radius, height: radius }} {...style} />
+      <Node position={[-150, -90]} shape="cross" minimumSize={{ width: radius, height: radius }} {...style} />
       <Node
-        position={[-60, -55]}
+        position={[0, -90]}
         shape={{
           type: 'sector',
           params: { innerRadius: radius * 0.42, outerRadius: radius, startAngle: 25, endAngle: 325 },
@@ -53,12 +56,12 @@ const Demo: FC = () => {
         {...style}
       />
       <Node
-        position={[60, -55]}
+        position={[150, -90]}
         shape={{ type: 'star', params: { points: 5, innerRadius: radius * 0.46, outerRadius: radius } }}
         {...style}
       />
       <Node
-        position={[180, -55]}
+        position={[-150, 20]}
         shape={{
           type: 'contour',
           params: {
@@ -73,10 +76,11 @@ const Demo: FC = () => {
         }}
         {...style}
       />
-      <Node position={[-180, 55]} shape="trapezoid" minimumSize={{ width: 70, height: 48 }} {...style} />
-      <Node position={[-60, 55]} shape="parallelogram" minimumSize={{ width: 64, height: 48 }} {...style} />
-      <Node position={[60, 55]} shape="hexagon" minimumSize={{ width: 72, height: 48 }} {...style} />
-      <Node position={[180, 55]} shape="cylinder" minimumSize={{ width: 70, height: 48 }} {...style} />
+      <Node position={[0, 20]} shape="trapezoid" minimumSize={{ width: 70, height: 48 }} {...style} />
+      <Node position={[150, 20]} shape="parallelogram" minimumSize={{ width: 64, height: 48 }} {...style} />
+      <Node position={[-150, 130]} shape="hexagon" minimumSize={{ width: 72, height: 48 }} {...style} />
+      <Node position={[0, 130]} shape="cylinder" minimumSize={{ width: 70, height: 48 }} {...style} />
+      <Node position={[150, 130]} shape="ellipticCapsule" minimumSize={{ width: 70, height: 48 }} {...style} />
       {labels.map(label => (
         <Node key={label.text} position={label.position} fill="none" stroke="none" textColor="gray" font={{ size: 12 }}>
           {label.text}

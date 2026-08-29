@@ -1183,6 +1183,13 @@ export const vizV01: Release = {
               },
             },
             {
+              label: { zh: 'Cell 主色与派生背景 / border', en: 'Cell masters with derived backgrounds and borders' },
+              content: {
+                zh: '普通 Cell 与 Column Header content color 保持 string-only 主色；background fill 与 border stroke 可使用 `[0, 1]` 权重。Cell 背景和显式边跟随该 Cell 最终主色，列头默认底边跟随 Header 主色，其余 Table 边跟随普通 Cell 主色；Border Graph winner 与 manifest 保留主色并阻止不同主色的边误合并。',
+                en: 'Body and Column Header content colors remain string-only masters, while background fills and border strokes may use `[0, 1]` weights. Cell backgrounds and explicit sides follow each Cell’s final master, the default header bottom edge follows the Header master, and other Table edges follow the body master. Border Graph winners and manifests retain that master and prevent edges with different masters from merging.',
+              },
+            },
+            {
               label: {
                 zh: 'BREAKING：Table 视觉输入迁移到 Core Theme',
                 en: 'BREAKING: Table visuals move to Core Theme',

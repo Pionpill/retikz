@@ -48,6 +48,7 @@ export const schematicSection: Array<Section> = [
           },
         ],
       },
+      { id: 'group', label: 'schematic.group', difficulty: DocDifficulty.Beginner },
       { id: 'api-reference', label: 'schematic.graphApiReference' },
     ],
   },

@@ -64,23 +64,23 @@ const svg = renderToSvgString(input, {
 
 ### 菱形箭头
 
-`diamond` 与 `openDiamond` 采用 2:1 扁菱形比例，分别提供实心与空心端点。实心版本使用 arrow fill，空心版本只使用描边。
+`diamond` 与 `openDiamond` 默认使用 `11 × 6` 的整数尺寸，名义面积为 66，分别提供实心与空心端点。轮廓会占满基准高度；实心版本使用 arrow fill，空心版本只使用描边。
 
 <ComponentPreview files="diamond-arrows" size="sm" />
 
 ### 风筝形箭头
 
-`kite` 与 `openKite` 的肩点位于默认长度的四分之一处，因此轮廓朝尖端方向明显拉长。它们与 Diamond 使用相同的 solid/open 填充规则，但不是对称菱形；按需注入 `KiteArrowDefinition` 或 `OpenKiteArrowDefinition`。
+`kite` 与 `openKite` 同样默认使用 `11 × 6`。肩点位于基准长度的四分之一处，因此轮廓朝尖端方向明显拉长。它们与 Diamond 使用相同的 solid/open 填充规则，但不是对称菱形；按需注入 `KiteArrowDefinition` 或 `OpenKiteArrowDefinition`。
 
 ### 方形箭头
 
-`square` 与 `openSquare` 的默认长度和宽度相同；显式 `length` 与 `width` 仍可独立拉伸。空心版本把轮廓收进 marker bounds 后再描边，粗线宽不会直接复用实心外边界；对应 Definition 为 `SquareArrowDefinition` 与 `OpenSquareArrowDefinition`。
+`square` 与 `openSquare` 默认都是 `8 × 8`；显式 `length` 与 `width` 仍可独立拉伸。空心版本把轮廓收进 marker bounds 后再描边，粗线宽不会直接复用实心外边界；对应 Definition 为 `SquareArrowDefinition` 与 `OpenSquareArrowDefinition`。
 
 三组几何均复用 Core 的 marker host、start/end 放置、Path shrink 和 `arrowDetail` 视觉参数。显式 `length` 与 `width` 只拉伸冻结的默认局部轮廓。
 
 ### 阻断线端点
 
-`bar` 在 authored endpoint 处绘制一条垂直于路径切线的开放线段。它继承路径描边，但名称本身不规定“禁止”“抑制”等领域含义；消费方可以按自己的语义使用。
+`bar` 默认使用 Core 的 `8 × 8` fallback，在 authored endpoint 处绘制一条垂直于路径切线的开放线段。它继承路径描边，但名称本身不规定“禁止”“抑制”等领域含义；消费方可以按自己的语义使用。
 
 <ComponentPreview files="bar-arrow" size="sm" />
 
@@ -88,7 +88,7 @@ const svg = renderToSvgString(input, {
 
 ### 三叉端点
 
-`crowFoot` 从路径接触点显式绘制三条开放射线。它可以被关系图用于多重性，也可以承载其它分叉语义；Standard 只定义通用几何，不绑定 cardinality。
+`crowFoot` 默认使用 Core 的 `8 × 8` fallback，从路径接触点显式绘制三条开放射线。它可以被关系图用于多重性，也可以承载其它分叉语义；Standard 只定义通用几何，不绑定 cardinality。
 
 <ComponentPreview files="crow-foot-arrow" size="sm" />
 

@@ -100,7 +100,7 @@ export type NodeProps = HydrationEventProps & {
   /** 横向缩放，优先于 `scale` */
   /** 纵向缩放，优先于 `scale` */
   /** 文字颜色（块级默认；行级 IRLine.fill 可覆盖）；`NodeTextColor.Contrast` 按静态不透明 fill 选黑 / 白，不填走 `currentColor` */
-  textColor?: string;
+  textColor?: IRNode['textColor'];
   /** 整节点透明度 0~1（同时作用于 shape 与 text） */
   opacity?: number;
   /** 主形状投影（仅作用于 shape 几何，不含 text / label / pin）；预设字符串（`sm`/`md`/`lg`/`xl`/`2xl`/`none`）或对象 `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`（显式字段覆盖 preset） */

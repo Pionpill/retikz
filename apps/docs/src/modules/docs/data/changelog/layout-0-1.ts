@@ -30,7 +30,7 @@ export const layoutV01: Release = {
       subVersions: [
         {
           version: 'alpha.1',
-          date: '2026-08-09',
+          date: '2026-08-28',
           summary: {
             zh: '从 Standard 迁入已验证的三类排版布局，切换为 `layout.*` identity，并建立根入口、`/compose` 与可选 `/inspect`。',
             en: 'Moves the three validated layout containers from Standard, adopts `layout.*` identities, and establishes root, `/compose`, and optional `/inspect` entries.',
@@ -65,7 +65,7 @@ export const layoutV01: Release = {
       subVersions: [
         {
           version: 'alpha.1',
-          date: '2026-08-09',
+          date: '2026-08-28',
           items: [
             {
               label: { zh: 'Vanilla 接线', en: 'Vanilla wiring' },
@@ -89,7 +89,7 @@ export const layoutV01: Release = {
       subVersions: [
         {
           version: 'alpha.1',
-          date: '2026-08-09',
+          date: '2026-08-28',
           items: [
             {
               label: { zh: 'React 接线', en: 'React wiring' },

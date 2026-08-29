@@ -160,6 +160,7 @@
     "label": "流程图",
     "introduction": "简介",
     "graph": "Graph · 图式",
+    "group": "分组",
     "basicUsage": "基础用法",
     "extensionUsage": "扩展用法",
     "entity": "实体",
