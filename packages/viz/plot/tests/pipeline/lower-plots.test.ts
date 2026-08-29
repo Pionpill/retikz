@@ -9,6 +9,7 @@ import type { IRPlot } from '../../src/schemas';
 import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 import { PlotLayerZIndex, PlotSchema } from '../../src/schemas';
+import { DEFAULT_FONT_SIZE, estimateLabelWidth } from '../../src/shared';
 
 const SALES = [
   { month: 0, revenue: 10 },
@@ -73,6 +74,22 @@ const collectScopes = (scope: IRScope): Array<IRScope> => [
   ...scope.children.filter(isScope).flatMap(child => collectScopes(child)),
 ];
 
+const collectNodes = (scope: IRScope): Array<IRNode> => [
+  ...(scope.children.filter(child => child.type === 'node') as Array<IRNode>),
+  ...scope.children.filter(isScope).flatMap(child => collectNodes(child)),
+];
+
+const textNodeVisualBottom = (node: IRNode): number => {
+  const position = node.position as [number, number];
+  const authoredFontSize = node.font?.size;
+  const fontSize = typeof authoredFontSize === 'number' ? authoredFontSize : DEFAULT_FONT_SIZE;
+  const width = estimateLabelWidth(String(node.text), fontSize);
+  const height = typeof node.lineHeight === 'number' ? node.lineHeight : fontSize;
+  const radians = (Math.abs(node.rotate ?? 0) * Math.PI) / 180;
+  const rotatedHeight = width * Math.abs(Math.sin(radians)) + height * Math.abs(Math.cos(radians));
+  return position[1] + rotatedHeight / 2;
+};
+
 const scopeByLayerMeta = (root: IRScope, layer: string): IRScope => {
   const scope = collectScopes(root).find(item => (item.meta as { layer?: unknown } | undefined)?.layer === layer);
   expect(scope).toBeDefined();
@@ -95,6 +112,47 @@ const opts: LowerPlotsOptions = { width: 480, height: 300 };
 const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
 describe('lowerPlots (contract)', () => {
+  it('auto_rotated_x_tick_labels_remain_inside_plot_allocation', () => {
+    const width = 240;
+    const height = 180;
+    const tickValues = [100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000];
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'values' },
+      scales: [
+        { type: 'linear', name: 'x', domain: [100000, 900000] },
+        { type: 'linear', name: 'y', domain: [0, 1] },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
+      guides: [
+        {
+          type: 'axis',
+          dimension: 'x',
+          ticks: { values: tickValues },
+          tickLabels: { layout: { rotate: { angles: [0, -90] }, hide: false } },
+        },
+      ],
+    });
+    const lowered = expandOf(
+      spec,
+      {
+        values: [
+          { x: 100000, y: 0 },
+          { x: 900000, y: 1 },
+        ],
+      },
+      { width, height },
+    );
+    const rotatedLabels = collectNodes(lowered).filter(
+      node => tickValues.includes(Number(node.text)) && node.rotate === -90,
+    );
+
+    expect(rotatedLabels).toHaveLength(tickValues.length);
+    expect(Math.max(...rotatedLabels.map(textNodeVisualBottom))).toBeLessThanOrEqual(height);
+  });
+
   // Happy path
   it('marks_become_layer_scopes', () => {
     const outer = expandOf(lineSpec, { sales: SALES }, opts);
