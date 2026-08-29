@@ -62,6 +62,12 @@ export const schematicSection: Array<Section> = [
     ],
   },
   {
+    id: 'diagram',
+    label: 'schematic.diagram',
+    document: true,
+    pages: [{ id: 'framework', label: 'schematic.diagramFramework' }],
+  },
+  {
     id: 'releases',
     label: 'schematic.releases',
     pages: [

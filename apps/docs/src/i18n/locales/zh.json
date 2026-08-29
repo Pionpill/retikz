@@ -160,6 +160,8 @@
     "label": "流程图",
     "introduction": "简介",
     "graph": "Graph · 图式",
+    "diagram": "Diagram · 图示",
+    "diagramFramework": "图示框架",
     "group": "分组",
     "block": "结构块",
     "basicUsage": "基础用法",

@@ -160,6 +160,8 @@
     "label": "Schematic",
     "introduction": "Introduction",
     "graph": "Graph",
+    "diagram": "Diagram",
+    "diagramFramework": "Diagram Framework",
     "group": "Group",
     "block": "Block",
     "basicUsage": "Basic Usage",

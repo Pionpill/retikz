@@ -15,7 +15,7 @@ const filterSubPage = (page: SubPage, maximum: DocDifficultyValue): SubPage | nu
   return children.length > 0 ? { ...page, children } : null;
 };
 
-/** 按最高阅读难度递归过滤文档树，并移除没有可见叶子的分组。 */
+/** 按最高阅读难度递归过滤文档树，保留有自身文档的栏目并移除没有可见叶子的普通分组 */
 export const filterSectionsByDifficulty = (sections: Array<Section>, maximum: DocDifficultyValue): Array<Section> =>
   sections.flatMap(section => {
     const pages = section.pages.flatMap(page => {
@@ -23,5 +23,5 @@ export const filterSectionsByDifficulty = (sections: Array<Section>, maximum: Do
       return filtered ? [filtered] : [];
     });
 
-    return pages.length > 0 ? [{ ...section, pages }] : [];
+    return section.document || pages.length > 0 ? [{ ...section, pages }] : [];
   });
