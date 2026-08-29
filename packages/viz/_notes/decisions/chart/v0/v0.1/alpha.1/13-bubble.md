@@ -1,6 +1,6 @@
 # ADR-13：Bubble 的必需尺寸字段语义
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-29
 - 关联：[alpha.1 roadmap](./roadmap.md) · [Chart 总设计](../../../../../architecture/chart-design.md) · [Chart 封装完备设计](../../../../../architecture/chart-encapsulation-complete.md) · [ADR-04 Scatter](./04-scatter.md) · [ADR-11 encoding 字段映射](./11-chart-encoding-field-mapping.md) · [ADR-12 React 声明组件](./12-chart-react-declaration-authoring.md)
 
