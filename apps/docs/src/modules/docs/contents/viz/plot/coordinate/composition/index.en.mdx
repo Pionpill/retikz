@@ -3,7 +3,7 @@ title: Coordinate Composition
 description: Coordinate composition organizes dual axes, data facets, and shared tracks inside one Plot while preserving clear relationships between regions.
 ---
 
-A chart sometimes needs different units in one plot area, small multiples split by category, or several metric tracks aligned to one time axis. Coordinate composition provides three direct structures: extra axes, `<Facet>`, and `<Scaffold>` with shared tracks.
+A chart sometimes needs different units in one plot area, small multiples split by category, or several metric tracks aligned to one time axis. Coordinate composition provides three direct structures: extra axes, `<PlotFacet>`, and `<PlotScaffold>` with shared tracks.
 
 ## Choose a Structure First
 
@@ -18,7 +18,7 @@ A chart sometimes needs different units in one plot area, small multiples split 
 
 Each direction has one default axis. Only an extra axis needs an `id`; a mark selects it with `xAxisId` or `yAxisId`. Layers can then share one direction while using different units in the other.
 
-This axis-id shortcut only supports `cartesian2D`. Polar angle and radius are not independent top/bottom or left/right axes; use the `<Scaffold>` / `<Track>` structure below when composing several polar regions.
+This axis-id shortcut only supports `cartesian2D`. Polar angle and radius are not independent top/bottom or left/right axes; use the `<PlotScaffold>` / `<PlotTrack>` structure below when composing several polar regions.
 
 ### Two Y-Axes
 
@@ -30,11 +30,11 @@ Temperature uses the default y-axis, while rainfall uses the right-side `rainfal
   caption="Both lines share the day x-axis; the rainfall layer selects the right y-axis with yAxisId."
 />
 
-| Goal                   | Configuration                                 | Result                         |
-| ---------------------- | --------------------------------------------- | ------------------------------ |
-| Declare another y-axis | `<Axis id="rainfall" dimension="y" ... />`    | Create a selectable y-axis     |
-| Place it on the right  | `placement={{ kind: 'side', side: 'right' }}` | Render it beside the plot area |
-| Use it for a layer     | `yAxisId="rainfall"`                          | Draw that layer in its range   |
+| Goal                   | Configuration                                  | Result                         |
+| ---------------------- | ---------------------------------------------- | ------------------------------ |
+| Declare another y-axis | `<PlotAxis id="rainfall" dimension="y" ... />` | Create a selectable y-axis     |
+| Place it on the right  | `placement={{ kind: 'side', side: 'right' }}`  | Render it beside the plot area |
+| Use it for a layer     | `yAxisId="rainfall"`                           | Draw that layer in its range   |
 
 ### Two X-Axes
 
@@ -48,7 +48,7 @@ The completion line uses elapsed days at the bottom, while the forecast line use
 
 ## Facets
 
-A facet splits data into panels by field values. Put axes and marks inside `<Facet>` to reuse them in every panel; each panel receives only its matching rows.
+A facet splits data into panels by field values. Put axes and marks inside `<PlotFacet>` to reuse them in every panel; each panel receives only its matching rows.
 
 ### Facet Playground
 
@@ -82,7 +82,9 @@ By default, combinations without rows are hidden and the same direction shares o
 
 ## Shared Tracks
 
-Shared tracks fix the scale and axis for one direction, then divide the other direction into bands. `<Scaffold>` owns the shared parts, while each `<Track>` contains its local axis and marks.
+Shared tracks fix the scale and axis for one direction, then divide the other direction into bands. `<PlotScaffold>` owns the shared parts, while each `<PlotTrack>` contains its local axis and marks.
+
+Tracks are authored explicitly. Every `<PlotTrack>` has a stable `id`, a defined band, and local content, so different tracks can use different marks; `sharedRoles` determines which coordinate roles are reused across tracks. Repeating the same marks by field value is a facet, not a track.
 
 ### Cartesian Tracks
 
@@ -94,7 +96,7 @@ Three metrics share the trading-day x-axis and draw in separate vertical spaces,
   caption="Trend, drawdown, and signal align to the same day; supporting data starts collapsed to keep the track structure prominent."
 />
 
-The key declaration is `<Scaffold sharedRoles={['x']}>`. Put the shared x-axis in `Scaffold`, each local y-axis and mark in its `<Track>`, and use the band's `start` / `end` values to assign vertical space.
+The key declaration is `<PlotScaffold sharedRoles={['x']}>`. Put the shared x-axis in `PlotScaffold`, each local y-axis and mark in its `<PlotTrack>`, and use the band's `start` / `end` values to assign vertical space.
 
 ### Polar Tracks
 
@@ -106,21 +108,28 @@ Shared tracks also work with `polar2D`. Several radial tracks then share angular
   caption="Journey areas share angular positions; signal, capacity, and outer sectors use separate radial bands."
 />
 
-The container relationship stays the same after changing coordinates: the shared axis remains in `<Scaffold>`, and local marks remain in their `<Track>`.
+The container relationship stays the same after changing coordinates: the shared axis remains in `<PlotScaffold>`, and local marks remain in their `<PlotTrack>`.
 
 ## Public Types
 
 All three Props types are public exports of `@retikz/plot-react`. This table keeps only the fields most useful when assembling coordinate structures.
 
-| Type            | Key fields                                                                   | Responsibility                                |
-| --------------- | ---------------------------------------------------------------------------- | --------------------------------------------- |
-| `FacetProps`    | `id`, `row`, `column`, `empty`, `header`, `resolve`, `spacing`, `children`   | Declare facet panels generated from data      |
-| `ScaffoldProps` | `id`, `coordinate`, `sharedRoles`, `frame`, `resolve`, `spacing`, `children` | Declare shared roles, coordinates, and tracks |
-| `TrackProps`    | `id`, `band`, `view`, `order`, `coordinate`, `header`, `children`            | Declare one track's band and local content    |
+| Type                | Key fields                                                                   | Responsibility                                |
+| ------------------- | ---------------------------------------------------------------------------- | --------------------------------------------- |
+| `PlotFacetProps`    | `id`, `row`, `column`, `empty`, `header`, `resolve`, `spacing`, `children`   | Declare facet panels generated from data      |
+| `PlotScaffoldProps` | `id`, `coordinate`, `sharedRoles`, `frame`, `resolve`, `spacing`, `children` | Declare shared roles, coordinates, and tracks |
+| `PlotTrackProps`    | `id`, `band`, `view`, `order`, `coordinate`, `header`, `children`            | Declare one track's band and local content    |
+
+Facet partition Source atoms are exported from the `@retikz/plot` package root:
+
+| Type                       | Key fields                            | Responsibility                                          |
+| -------------------------- | ------------------------------------- | ------------------------------------------------------- |
+| `IRPlotPartitionDimension` | `field`, `order`, `labels`            | Declare a facet partition field, typed order, labels    |
+| `PlotPartitionScalar`      | `string \| number \| boolean \| null` | Preserve value types for facet order and panel identity |
 
 ## Related
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
   <LinkedCard href="/viz/plot/guide/axis">
     <span className="font-semibold">Axes</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
@@ -131,6 +140,12 @@ All three Props types are public exports of `@retikz/plot-react`. This table kee
     <span className="font-semibold">Plot Lineage</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Inspect data ownership inside facets and tracks
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/scatter">
+    <span className="font-semibold">Scatter</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      See field mappings, facets, and Plot extensions
     </span>
   </LinkedCard>
 </div>

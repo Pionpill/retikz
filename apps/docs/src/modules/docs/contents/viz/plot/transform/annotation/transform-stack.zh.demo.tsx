@@ -1,4 +1,4 @@
-import { Axis, IntervalMark, Plot, Scale, Transform } from '@retikz/plot-react';
+import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -18,16 +18,16 @@ export const previewControls = stackControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot data={productRevenue} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Transform {...stackOperationOf(values)} />
-    <Scale dimension="y" type="linear" domain={yDomainByOffset[values.offset]} />
+    <PlotTransform {...stackOperationOf(values)} />
+    <PlotScale dimension="y" type="linear" domain={yDomainByOffset[values.offset]} />
     <IntervalMark
       x="quarter"
       color="product"
       bounds={{ y: { kind: 'extent', from: 'y0', to: 'y1' } }}
       opacity={values.offset === 'overlap' ? 0.6 : 1}
     />
-    <Axis dimension="x" title="季度" />
-    <Axis dimension="y" title={values.offset === 'normalize' ? '占比' : '收入'} grid />
+    <PlotAxis dimension="x" title="季度" />
+    <PlotAxis dimension="y" title={values.offset === 'normalize' ? '占比' : '收入'} grid />
   </Plot>
 ));
 

@@ -9,6 +9,7 @@ import type {
   PathKindResolution,
   PathResolution,
   PathResolveContext,
+  ResolvedArrowMark,
   StrokePathResolution,
 } from './types';
 
@@ -100,7 +101,7 @@ const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): 
 };
 
 /** 解析 arrow mark 的有效视觉属性与几何输入 */
-export const resolveArrowMark = (mark: IRArrowMark, context: PathResolveContext): ArrowMarkResolution => {
+export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveContext): ArrowMarkResolution => {
   const shape = mark.shape ?? DEFAULT_ARROW_SHAPE;
   const definition = providerDefinitionOf(context.arrows, shape, {
     capability: 'arrow shape',
@@ -156,7 +157,7 @@ export const resolveArrowMark = (mark: IRArrowMark, context: PathResolveContext)
 
 /** 为 path marks 解析全部 arrow provider */
 export const resolveArrowMarks = (
-  marks: ReadonlyArray<{ mark: IRArrowMark }> | undefined,
+  marks: ReadonlyArray<{ mark: ResolvedArrowMark }> | undefined,
   context: PathResolveContext,
 ): ReadonlyMap<IRArrowMark, ArrowMarkResolution> => {
   const resolutions = new Map<IRArrowMark, ArrowMarkResolution>();

@@ -1,6 +1,6 @@
 import type { ExternalRow, IRDataModel } from '@retikz/data';
 
-import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
@@ -30,8 +30,8 @@ export const renderValueParsingPreview = (values: ValueParsingValues) => {
     <Plot data={data} model={model} width={410} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
       <PathMark x="month" y="revenue" order="month" />
       <PointMark x="month" y="revenue" />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
     </Plot>
   );
 };

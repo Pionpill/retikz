@@ -88,5 +88,5 @@ export const previewControlContract = {
     opacityPosition: 'bottom',
     tickCount: 4,
   },
-  relatedApis: ['Legend.channel', 'Legend.position', 'Legend.ticks'],
+  relatedApis: ['PlotLegend.channel', 'PlotLegend.position', 'PlotLegend.ticks'],
 } satisfies PreviewControlContract;

@@ -72,5 +72,10 @@ export const barTransformControls = definePreviewControls({
 export const previewControlContract = {
   controls: barTransformControls,
   canonicalValues: { [BAR_TRANSFORM_BASELINE_ID]: 0, [BAR_TRANSFORM_GAP_ID]: 0 },
-  relatedApis: ['IntervalMark.transform', 'IntervalMark.arrangement', 'Scale.paddingInner', 'Scale.paddingOuter'],
+  relatedApis: [
+    'IntervalMark.transform',
+    'IntervalMark.arrangement',
+    'PlotScale.paddingInner',
+    'PlotScale.paddingOuter',
+  ],
 } satisfies PreviewControlContract;

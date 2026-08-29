@@ -1,16 +1,16 @@
 # Retikz Foundation 基础包设计
 
-> **状态：架构方向已确认。Foundation 包已按 v0.5 alpha.2 ADR-14 实现，基础 Zod schema 扩展已由 ADR-17 Accepted。** 本文定义跨包基础能力的所有权、依赖边界和最小公开契约；当前公开面以已 Accepted ADR、包文档、manifest 与测试为准。当前包拓扑以 [`包拓扑`](./package-topology.md) 和机器可读的 release-group 配置为准。
+> **状态：架构方向已确认。Foundation 包已按 v0.5 alpha.2 ADR-14 实现，基础 Zod schema 扩展已由 ADR-17 Accepted；静态颜色原子扩展由 alpha.3 ADR-04 Proposed。** 本文定义跨包基础能力的所有权、依赖边界和最小公开契约；当前公开面以已 Accepted ADR、包文档、manifest 与测试为准。当前包拓扑以 [`包拓扑`](./package-topology.md) 和机器可读的 release-group 配置为准。
 >
-> 关联设计：[`能力完备性与模块边界`](./capability-design.md) · [`原子契约与组合设计`](./atomic-contract-design.md) · [`性能与增量运行时设计`](./performance-design.md) · [`alpha.2 roadmap`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/roadmap.md) · [`Foundation ADR-14`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/14-foundation-package.md) · [`Foundation Schema ADR-17`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/17-foundation-schema-primitives.md)
+> 关联设计：[`能力完备性与模块边界`](./capability-design.md) · [`原子契约与组合设计`](./atomic-contract-design.md) · [`性能与增量运行时设计`](./performance-design.md) · [`alpha.2 roadmap`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/roadmap.md) · [`Foundation ADR-14`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/14-foundation-package.md) · [`Foundation Schema ADR-17`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/17-foundation-schema-primitives.md) · [`Contextual Color ADR-04`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.3/04-contextual-color-resolution.md)
 
 ---
 
 ## 1. 问题与目标
 
-Retikz 已经有一些跨包复用、却不属于绘图、运行时或领域可视化语义的原子能力，例如类型工具、非空字符串语义、基础 string / number 校验，以及带稳定错误码的领域错误。若把它们继续放在 `@retikz/core` 或领域包，`@retikz/math`、`@retikz/runtime` 和未来不依赖 Core 的包无法复用；若每个包保留副本，类型、数值边界、空白语义和错误识别会逐步分叉。
+Retikz 已经有一些跨包复用、却不属于绘图、运行时或领域可视化语义的原子能力，例如类型工具、非空字符串语义、基础 string / number 校验、确定性静态颜色计算，以及带稳定错误码的领域错误。若把它们继续放在 `@retikz/core` 或领域包，`@retikz/math`、`@retikz/runtime` 和未来不依赖 Core 的包无法复用；若每个包保留副本，类型、数值边界、空白语义、颜色计算和错误识别会逐步分叉。
 
-本设计建立只依赖 Zod 的 `@retikz/foundation`，作为这类能力的唯一 owner。目标是提供少量可独立理解的基础契约与非变换原子 schema，而不是建立一个可以接纳任意 helper、对象 schema 或领域 refinement 的 `utils` / `shared` 包。
+本设计建立只依赖 Zod 的 `@retikz/foundation`，作为这类能力的唯一 owner。目标是提供少量可独立理解的基础契约、非变换原子 schema 与无领域确定性值计算，而不是建立一个可以接纳任意 helper、对象 schema 或领域 refinement 的 `utils` / `shared` 包。
 
 ## 2. 包边界与依赖方向
 
@@ -90,13 +90,21 @@ class RetikzError<TCode extends string, TDetails extends Readonly<Record<string,
 
 Error 不等于 JSON IR 或 Diagnostic。Error 可以携带不可序列化的 `cause`，也用于控制流；Diagnostic 是各 owner 对正常产物、warning 或可序列化观测的独立契约。Foundation 不提供 `toJSON()`，不自动把 Error 转成 Diagnostic，也不替领域决定 details 的深拷贝或深冻结策略。
 
+### 3.5 静态颜色原子
+
+Foundation 是 Retikz 可确定化静态 CSS 颜色解析与不透明 source-over 预合成的唯一真源。该能力只接收颜色字符串、不透明底色和归一化权重，输出归一化 sRGB 通道或确定的小写十六进制颜色；不读取 Theme、IR、renderer、DOM 或宿主 CSS。
+
+静态解析只覆盖 Retikz 明确支持且无需宿主环境即可确定的 CSS 颜色子集；`currentColor`、CSS variable、系统色及其它动态宿主颜色不在 Foundation 中猜测或求值。预合成固定使用前景自身 alpha 与权重相乘后的 sRGB source-over 语义，底色必须不透明，结果不携带 alpha。颜色空间、舍入和 `FOUNDATION_COLOR_ERROR` 原子失败边界属于该原子的稳定契约，消费方不得复制同义实现。
+
+Foundation 不选择 Light / Dark 基准底色，不建立主色链，也不解释数值 Theme token。Core 或领域 owner 负责先确定自己的上下文、主色和底色，再调用颜色原子；字段路径、领域 fallback 与用户诊断继续由调用方拥有。
+
 ## 4. 明确不属于 Foundation 的内容
 
 Foundation 禁止承载：
 
-- 对象 / 数组 schema、JSON / IR 类型、parser、Definition、registry、provider、compile、lowering、Scene 或 manifest
-- coercion、transform、default、catch、参数化 range factory、颜色、几何或领域 refinement
-- 数值 / 计算几何、Runtime session / transaction / identity、renderer 或宿主状态
+- 对象 / 数组 schema、JSON / IR 类型、IR / DSL parser、Definition、registry、provider、compile、lowering、Scene 或 manifest
+- coercion、transform、default、catch、参数化 range factory、颜色 schema、几何或领域 refinement
+- 独立数学 / 计算几何能力、Runtime session / transaction / identity、renderer 或宿主状态
 - Theme token vocabulary、preset、领域 resolver、Plot / Chart / Table / Standard 语义
 - 通用 Diagnostic、日志、telemetry、错误码目录或跨领域错误映射
 - 仅有一个调用点的短 helper、消费方专属默认值、DOM / React / Node 工具
@@ -113,13 +121,13 @@ Foundation 的公开能力必须从包根直接导入。一个能力迁入 Found
 
 1. 不依赖 Retikz 领域、平台、状态或 Zod 之外的外部库
 2. 具有可独立命名的语义、不变量或失败边界
-3. 已被至少两个独立包以同义方式消费，或是 Foundation 自身最小 schema / 错误 / 类型 / 断言协议的一部分
+3. 已被至少两个独立包以同义方式消费，或是 Foundation 自身最小 schema / 错误 / 类型 / 断言 / 确定性值计算协议的一部分
 4. 不会迫使上层包经由 Foundation 获得本应由 Core、Math、Runtime 或领域 owner 承担的能力
 
 不满足这些条件的逻辑应保留在当前 owner；重复出现时先重新判断语义 owner，而不是把它们汇总到 Foundation。
 
 ## 6. 与现有架构的关系
 
-Foundation 补的是包拓扑底层的复用缺口，不改变既有能力域：Math 仍拥有纯几何，Runtime 仍拥有 identity / transaction，Core 仍拥有 Drawing Complete、完整 IR/schema 与 Theme 环境，领域包仍拥有自己的对象 schema、token、resolver、diagnostic 和 lowering。它只把这些包已经共同需要、且去除 Retikz 绘图和领域词汇后仍成立的原子能力置于正确 owner。
+Foundation 补的是包拓扑底层的复用缺口，不改变既有能力域：Math 仍拥有纯几何，Runtime 仍拥有 identity / transaction，Core 仍拥有 Drawing Complete、完整 IR/schema、Contextual Color 与 Theme 环境，领域包仍拥有自己的对象 schema、token、resolver、diagnostic 和 lowering。Foundation 只把这些包已经共同需要、且去除 Retikz 绘图和领域词汇后仍成立的原子能力置于正确 owner；静态颜色解析与预合成属于无领域值计算，Theme mode、主色链和颜色槽位解释仍属于 Core 或领域 owner。
 
 新增 Foundation 原子、移动公开 schema / 类型或改变现有错误层次均属于跨包公开架构变更。后续 Kernel ADR 必须明确 release-group、直接依赖、公开入口、已有公开面迁移、Zod / Error 兼容性和受影响领域的验证边界；不得把本设计当作直接实现授权。

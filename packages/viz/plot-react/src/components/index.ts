@@ -1,8 +1,8 @@
 // 组合 DSL：mark / guide 声明组件
-export type { FacetProps, ScaffoldProps, TrackProps } from './composition';
-export { Facet, Scaffold, Track } from './composition';
-export type { AxisProps, LegendProps } from './guides';
-export { Axis, Legend } from './guides';
+export type { PlotFacetProps, PlotScaffoldProps, PlotTrackProps } from './composition';
+export { PlotFacet, PlotScaffold, PlotTrack } from './composition';
+export type { PlotAxisProps, PlotLegendProps } from './guides';
+export { PlotAxis, PlotLegend } from './guides';
 export type {
   CoreNodeChannelProps,
   CorePathChannelProps,
@@ -14,7 +14,7 @@ export type {
   RelationMarkProps,
 } from './marks';
 export { IntervalMark, PathMark, PointMark, ReferenceMark, RelationMark } from './marks';
-export type { ScaleProps } from './scales';
-export { Scale } from './scales';
-export type { TransformProps } from './transform';
-export { Transform } from './transform';
+export type { PlotScaleProps } from './scales';
+export { PlotScale } from './scales';
+export type { PlotTransformProps } from './transform';
+export { PlotTransform } from './transform';

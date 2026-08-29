@@ -15,8 +15,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       x: 'urbanPopulationShare',
       y: 'internetUseShare',
     }}
+    layout={{ width: 800, height: 500 }}
     width={800}
-    height={400}
+    height={500}
   >
     <ChartTitle>城市化程度与互联网使用率</ChartTitle>
     <ChartSubtitle>181 个经济体，2023 年；横轴和纵轴均为人口占比（%）</ChartSubtitle>

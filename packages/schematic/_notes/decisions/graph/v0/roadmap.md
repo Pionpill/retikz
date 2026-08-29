@@ -1,6 +1,6 @@
 # Graph v0 Roadmap
 
-> 状态：进行中；v0.1 的 ADR-01～10 均已 Accepted，Graph / Group / Entity / Relation 四类 Source composite 已按当前契约形成闭环。关联：[Schematic Graph 完备设计](../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md)
+> 状态：进行中；v0.1 alpha.1 已完成，ADR-01～10 均为 Accepted 或 Superseded，Graph / Group / Entity / Relation 四类 Source composite 已形成闭环。关联：[Schematic Graph 完备设计](../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md)
 
 ## 目标
 

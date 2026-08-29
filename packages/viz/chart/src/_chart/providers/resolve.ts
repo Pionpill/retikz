@@ -30,5 +30,6 @@ export const resolveChartFromProvider = (
     theme: context.theme,
     recipe,
     themeDefinitions: chartThemeDefinitionsOf(source, context.theme, context.registry.themes),
+    runtime: context.registry.runtime,
   });
 };

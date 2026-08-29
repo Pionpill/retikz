@@ -7,7 +7,7 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 
 ## 适用边界
 
-优先使用内置操作。只有新的行处理语义需要稳定名称、配置校验和跨宿主复用时，才注册定义。
+优先使用内置操作。只有新的行处理语义需要稳定名称、配置校验和跨宿主复用时，才注册定义。transform、reducer 与 selector 的 `kind` 是开放字符串：内置常量提供常用提示，不是自定义键的白名单。
 
 | 扩展入口                  | 解决什么                         | 配置保存什么    |
 | ------------------------- | -------------------------------- | --------------- |
@@ -19,7 +19,7 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 
 ## 定义数据操作
 
-`defineTransform` 通过 `schema` 提取唯一 `kind`，用 `inputFields` 与 `outputFields` 声明字段依赖，并在 `apply` 中处理行。`apply` 必须纯且确定，不能修改输入数组或输入行。
+`defineTransform` 通过 `schema` 提取唯一 `kind`，用 `inputFields` 声明读取字段，以 `outputFields` 列出生成字段名，并可通过 `outputModel` 说明变换后的完整字段类型图。`apply` 必须纯且确定，不能修改输入数组或输入行。
 
 下面的 `scale-field` 操作读取 `x`、按可序列化 `factor` 生成 `scaledX`，再由 Plot 作为示例宿主展示原值与派生值：
 
@@ -32,6 +32,8 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 
 内置与自定义变换会合并到同一个注册表（registry），并按 `kind` 走同一套查找、Schema 校验和执行流程。
 
+示例 Definition 还声明了 preserve `outputModel` 与 field-derive `compact` capability：前者让下游知道 `scaledX` 是 continuous 字段，后者让兼容的 Chart slot 可以复用同一 Definition 做紧凑字段映射。
+
 ### 来源追溯
 
 保留行数的变换通常通过展开原行自然保留来源标记。改变行数且输出行代表一组源行时，应使用 `TransformContext.groupProvenance` 关联成员行；全新生成且没有对应源行的结果可以不附加来源。
@@ -42,7 +44,7 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 | 汇总多行生成一行 | 用 `groupProvenance(out, members)` 包装输出行 |
 | 生成无源数据     | 直接返回新行，并接受来源为空                  |
 
-启用来源追溯时，同一个定义可能在普通下沉与记录链路时分别执行。因此随机或有状态逻辑应由宿主先固化输入，或在定义外完成不确定计算。
+每个 lowering、locator 或 lineage 调用都是独立运行请求，因此 Definition 仍应保持纯且确定；不同请求不会共享执行缓存。在一次带 lineage 的数据链内，每个 operation 只执行一次，行结果、字段类型证据与 lineage 共用同一次输出。
 
 ## 定义统计子算子
 
@@ -62,7 +64,7 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
   caption="左图由自定义规约器生成统计行，右图由自定义行选择器保留原始代表行。"
 />
 
-规约器应通过 `inputFields` 与 `outputFields` 声明读写字段；行选择器通过 `inputFields` 声明读取字段，并返回选中的原始行。若逻辑需要同时改变多种字段或组合多个阶段，应升级为完整变换。
+规约器应通过 `inputFields` 与 `outputFields` 声明读写字段，并用 `outputs` 为可静态描述的 scalar 输出提供字段类型证据；行选择器通过 `inputFields` 声明读取字段，并返回选中的原始行。若逻辑需要同时改变多种字段或组合多个阶段，应升级为完整变换。
 
 ## 注入宿主
 
@@ -82,17 +84,30 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 注入定义 → 合并内置与自定义注册表 → 按 kind 查找 → Schema 校验 → 执行
 ```
 
-字段收集与实际执行使用同一注册表。`inputFields` 让严格数据模型校验扩展操作读取的源字段，`outputFields` 则标记管线生成的派生字段，避免要求它们预先出现在源数据模型中。
+字段收集与实际执行使用同一注册表。每一步先用 Definition schema 解析 operation，再读取 `outputModel`、执行 `apply`，并把 `{ rows, fieldTypes, fieldTypeEvidence }` 一起推进到下一步。`inputFields` 让严格数据模型校验扩展操作读取的源字段，`outputFields` 则标记管线生成的派生字段，避免要求它们预先出现在源数据模型中。
+
+### 字段映射能力门
+
+开放 `kind` 只表示 Source 可以保存自定义 operation，不表示它自动适合紧凑字段映射。Chart 等宿主要把 Definition 用在 encoding 内，还需要完整能力声明：
+
+| Definition | 必需声明                                                                  | 不满足时                                         |
+| ---------- | ------------------------------------------------------------------------- | ------------------------------------------------ |
+| transform  | `compact` 的 phase / binding class / field effect，以及完整 `outputModel` | 继续用于完整 transform；不能进入 compact mapping |
+| reducer    | `outputs()` 恰好返回一个已类型化 scalar descriptor                        | 可用于完整统计变换；不能作为 compact aggregate   |
+
+宿主还会检查 Definition 的阶段、字段影响、输出字段与目标 consumer 是否兼容。自定义键与内置键共用同一 registry、Schema 和能力检查，不靠宿主复制内置枚举。
 
 ## 错误与限制
 
-| 情况                                                           | 结果               |
-| -------------------------------------------------------------- | ------------------ |
-| `kind` 与内置或另一自定义键重复                                | 注册表构建立即报错 |
-| 操作使用未注册 `kind`                                          | 执行前报未注册错误 |
-| 操作不满足定义的 Schema                                        | Schema 校验失败    |
-| 操作含函数等非 JSON 值                                         | 可序列化校验失败   |
-| 自定义规约器的 `outputFields()` 声明与分组键或其它统计输出冲突 | 执行规约器前报错   |
+| 情况                                                     | 结果                   |
+| -------------------------------------------------------- | ---------------------- |
+| `kind` 与内置或另一自定义键重复                          | 注册表构建立即报错     |
+| 操作使用未注册 `kind`                                    | 执行前报未注册错误     |
+| 操作不满足定义的 Schema                                  | Schema 校验失败        |
+| 操作含函数等非 JSON 值                                   | 可序列化校验失败       |
+| 自定义规约器的输出声明与分组键或其它统计输出冲突         | 执行规约器前报错       |
+| `outputModel` 引用不存在的来源字段或与实际字段影响不一致 | 推进 DataView 前报错   |
+| compact mapping 缺少完整能力或输出描述                   | 宿主解析字段映射时报错 |
 
 定义只应实现数据行与统计语义。颜色、图元或布局等消费侧语义应放到对应模块的扩展点。
 
@@ -102,14 +117,24 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 
 ### `TransformDefinition`
 
-| 字段            | 类型                                                                                                 | 描述                                        |
-| --------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `schema`        | `z.ZodType<TTransform>`                                                                              | 含非空字面量 `kind` 的完整 operation schema |
-| `inputFields?`  | `(operation: TTransform, context: TransformContext) => Array<string>`                                | 返回 operation 读取的源字段                 |
-| `outputFields?` | `(operation: TTransform, context: TransformContext) => Array<string>`                                | 返回 operation 生成的派生字段               |
-| `apply`         | `(rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => Array<ExternalRow>` | 纯且确定地执行变换                          |
+| 字段            | 类型                                                                                                 | 描述                                                 |
+| --------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `schema`        | `z.ZodType<TTransform>`                                                                              | 含非空字面量 `kind` 的完整 operation schema          |
+| `inputFields?`  | `(operation: TTransform, context: TransformContext) => Array<string>`                                | 返回 operation 读取的源字段                          |
+| `outputFields?` | `(operation: TTransform, context: TransformContext) => Array<string>`                                | 返回生成字段名；供 strict model 与冲突检查使用       |
+| `outputModel?`  | `(operation: TTransform, context: TransformContext) => DataTransformOutputModel \| undefined`        | 返回变换后的完整字段类型影响；省略时不保留旧类型证据 |
+| `compact?`      | `DataTransformCompactCapability`                                                                     | 声明可用于字段映射的阶段、binding class 与字段影响   |
+| `apply`         | `(rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => Array<ExternalRow>` | 纯且确定地执行变换                                   |
 
-使用 `defineTransform(definition)` 保留这四个字段之间的泛型关联。
+使用 `defineTransform(definition)` 保留这些字段之间的泛型关联。
+
+### 输出与 compact 契约
+
+| 类型                             | 关键字段                               | 职责                                                        |
+| -------------------------------- | -------------------------------------- | ----------------------------------------------------------- |
+| `DataTransformOutputDescriptor`  | `field`、`type`                        | 给输出字段固定类型，或用 `{ from }` 复用现有字段类型        |
+| `DataTransformOutputModel`       | `preserve.outputs` \| `replace.fields` | 保留并增补当前字段图，或用完整字段清单替换当前字段图        |
+| `DataTransformCompactCapability` | `phase`、`bindingClass`、`fieldEffect` | 让宿主在闭合阶段顺序中判断该 Definition 能否绑定到字段 slot |
 
 ### `StatisticsReducerDefinition`
 
@@ -118,6 +143,7 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 | `schema`        | `z.ZodType<TReducerOperation>`                                                                       | 含非空字面量 `kind` 的 schema                                            |
 | `inputFields?`  | `(operation: TReducerOperation) => Array<string>`                                                    | 返回读取的源字段                                                         |
 | `outputFields?` | `(operation: TReducerOperation) => Array<string>`                                                    | 返回生成字段并作为动态冲突检查依据；必须完整声明 `reduce` 可能写入的字段 |
+| `outputs?`      | `(operation: TReducerOperation) => Array<DataTransformOutputDescriptor>`                             | 返回可静态描述的已类型化 scalar 输出                                     |
 | `reduce`        | `(rows: Array<ExternalRow>, operation: TReducerOperation, context: TransformContext) => ExternalRow` | 返回写入输出行的字段片段                                                 |
 
 使用 `defineStatisticsReducer(definition)` 定义 reducer。
@@ -139,20 +165,20 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
     {
       label: 'Transform Definition 契约',
       path: 'packages/viz/data/src/contract/transform.ts',
-      startLine: 29,
-      endLine: 51,
+      startLine: 54,
+      endLine: 124,
     },
     {
       label: '统计子算子 Definition 契约',
       path: 'packages/viz/data/src/contract/statistics.ts',
-      startLine: 7,
-      endLine: 70,
+      startLine: 12,
+      endLine: 68,
     },
     {
       label: 'Transform registry 合并规则',
       path: 'packages/viz/data/src/providers/transform/definitions.ts',
-      startLine: 89,
-      endLine: 105,
+      startLine: 136,
+      endLine: 151,
     },
     {
       label: '统计子算子 registry 合并规则',
@@ -163,8 +189,8 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
     {
       label: 'Transform 查找、校验与执行',
       path: 'packages/viz/data/src/pipeline/transform.ts',
-      startLine: 24,
-      endLine: 75,
+      startLine: 50,
+      endLine: 140,
     },
     {
       label: 'Plot 中变换扩展的注入示例',

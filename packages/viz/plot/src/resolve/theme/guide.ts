@@ -14,12 +14,13 @@ type GuidePathStyle = Partial<
 type GuideTextStyle = Partial<
   Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>
 >;
+type PlotTypographyStyle = NonNullable<IRPlotTheme['typography']>;
 type AxisTicksToken = NonNullable<IRPlotAxisGuide['ticks']>;
 type AxisTitleToken = Exclude<NonNullable<IRPlotAxisGuide['title']>, string>;
 type AxisGridToken = Exclude<NonNullable<IRPlotAxisGuide['grid']>, boolean>;
 type LegendStyle = NonNullable<IRPlotLegendGuide['style']>;
 
-const DEFAULT_TYPOGRAPHY: GuideTextStyle = { font: { size: 12 }, textColor: 'currentColor' };
+const DEFAULT_TYPOGRAPHY: PlotTypographyStyle = { font: { size: 12 }, textColor: 'currentColor' };
 
 const DEFAULT_LEGEND: EffectiveLegendGuideTokens = {
   swatchSize: 14,
@@ -47,6 +48,18 @@ const mergeTextStyle = (base: GuideTextStyle | undefined, override: GuideTextSty
   };
 };
 
+/** 合并 Plot typography 字符串主色，不把派生文字 token 的数值分支带入主色 */
+const mergeTypographyStyle = (
+  base: PlotTypographyStyle,
+  override: PlotTypographyStyle | undefined,
+): PlotTypographyStyle => ({
+  ...base,
+  ...override,
+  ...(base.font !== undefined || override?.font !== undefined
+    ? { font: { ...(base.font ?? {}), ...(override?.font ?? {}) } }
+    : {}),
+});
+
 const mergePathStyle = <T extends GuidePathStyle>(base: GuidePathStyle | undefined, override: T | undefined): T => {
   if (base === undefined) return override === undefined ? ({} as T) : { ...override };
   if (override === undefined) return { ...base } as T;
@@ -58,7 +71,7 @@ const mergePathStyle = <T extends GuidePathStyle>(base: GuidePathStyle | undefin
  * @description token cascade 已由 resolvePlotTheme 完成；此处只补齐 guide 文本继承并保留正式 Plot theme 语义
  */
 export const resolvePlotGuideTheme = (theme: IRPlotTheme, palette: EffectivePlotPalette): EffectivePlotGuideTheme => {
-  const typography = mergeTextStyle(DEFAULT_TYPOGRAPHY, theme.typography);
+  const typography = mergeTypographyStyle(DEFAULT_TYPOGRAPHY, theme.typography);
   const legend = theme.legend;
   return {
     ...(theme.plotArea !== undefined ? { plotArea: structuredClone(theme.plotArea) } : {}),

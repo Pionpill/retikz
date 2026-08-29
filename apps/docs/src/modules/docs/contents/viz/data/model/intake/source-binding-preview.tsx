@@ -1,6 +1,6 @@
 import type { ExternalRow, IRDataModel } from '@retikz/data';
 
-import { Axis, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
@@ -32,8 +32,8 @@ export const renderSourceBindingPreview = (values: SourceBindingValues) => {
     >
       <PathMark x="month" y="revenue" order="month" />
       <PointMark x="month" y="revenue" />
-      <Axis dimension="x" tickLabels={{ format: '%b', layout: { rotate: false } }} />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" tickLabels={{ format: '%b', layout: { rotate: false } }} />
+      <PlotAxis dimension="y" grid />
     </Plot>
   );
 };

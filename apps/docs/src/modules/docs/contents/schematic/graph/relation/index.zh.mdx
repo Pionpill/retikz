@@ -3,7 +3,7 @@ title: Relation
 description: 用一个 record 保存通用 Core endpoint、关系语义、label 与可选 route。
 ---
 
-Relation 负责表达“谁与谁存在什么关系”。它通过 Core NodeTarget 引用 Node、Coordinate、Scope 或上层 composite 发布的 target，保存 source/target、role、direction 与可选 kind/predicate；route 只描述怎么画，最终独立 lower 为普通 Core Path。Graph 是可选上下文，不是 Relation 的成员容器
+Relation 负责表达“谁与谁存在什么关系”。它通过 Core NodeTarget 引用 Node、Coordinate、Scope 或上层 composite 发布的 target，保存 source/target、role、direction 与可选 kind/predicate；route 只描述怎么画，最终独立 lower 为普通 Core Path。Graph 是可选上下文，不是 Relation 的成员容器。Relation 的数值 stroke、label 前景与 marker color 跟随最终 Relation 主色，marker fill 再跟随已解析的 marker color
 
 ## 职责一览
 

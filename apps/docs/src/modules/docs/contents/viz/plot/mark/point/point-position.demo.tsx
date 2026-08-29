@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, Plot, PointMark } from '@retikz/plot-react';
+import { Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -20,8 +20,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       color={values[POINT_POSITION_CONTROL_IDS.colorMode] === 'region' ? 'region' : undefined}
       size={values[POINT_POSITION_CONTROL_IDS.sizeMode] === 'population' ? 'pop' : 10}
     />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 ));
 

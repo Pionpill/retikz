@@ -4,13 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { createDensityAreaSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
 import { buildPlotIR } from '../../../src/adapter';
 import { PathMark } from '../../../src/components/marks';
-import { Transform } from '../../../src/components/transform';
+import { PlotTransform } from '../../../src/components/transform';
 
 describe('buildPlotIR density transform forwarding', () => {
   it('density_declared_to_ir', () => {
     const spec = buildPlotIR(
       <>
-        <Transform
+        <PlotTransform
           kind="density"
           field="value"
           groupBy={['species']}

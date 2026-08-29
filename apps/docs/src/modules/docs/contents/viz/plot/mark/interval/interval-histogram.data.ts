@@ -1,4 +1,4 @@
-/** Continuous values binned by <Transform kind="bin"> for the interval histogram demo. */
+/** Continuous values binned by <PlotTransform kind="bin"> for the interval histogram demo. */
 export const measurements: Array<Record<string, number>> = [
   { measurement: 2 },
   { measurement: 3 },

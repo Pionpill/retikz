@@ -1,5 +1,5 @@
 import { PlotThemeToken } from '@retikz/plot';
-import { Axis, Legend, PointMark } from '@retikz/plot-react';
+import { PlotAxis, PlotLegend, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -15,14 +15,15 @@ const points = [
 
 /** Plot token override 通过 IRPlot 局部 theme cascade 进入 Plot area、axis 与 palette */
 const plotThemeTokens = {
-  [PlotThemeToken.PlotAreaFill]: '#F8FAFC',
+  [PlotThemeToken.PlotTypographyForeground]: '#2563EB',
+  [PlotThemeToken.PlotAreaFill]: 0.08,
   [PlotThemeToken.PlotPaletteCategorical]: ['#2563EB', '#F97316'],
   [PlotThemeToken.AxisGridEnabled]: false,
-  [PlotThemeToken.AxisGridStroke]: '#60A5FA',
+  [PlotThemeToken.AxisGridStroke]: 0.25,
   [PlotThemeToken.AxisGridDrawOpacity]: 0.35,
 };
 
-/** Axis rule 只覆盖已经存在且 dimension 匹配的 Axis */
+/** PlotAxis rule 只覆盖已经存在且 dimension 匹配的 PlotAxis */
 const plotThemeTokenRules = [
   {
     select: { dimension: 'y' },
@@ -42,9 +43,9 @@ export default function ThemeTokensDemo() {
         plotThemeTokenRules={plotThemeTokenRules}
       >
         <PointMark x="x" y="y" color="series" size={8} />
-        <Axis dimension="x" />
-        <Axis dimension="y" />
-        <Legend channel="color" />
+        <PlotAxis dimension="x" />
+        <PlotAxis dimension="y" />
+        <PlotLegend channel="color" />
       </Plot>
     </Layout>
   );

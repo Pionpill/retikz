@@ -1,5 +1,5 @@
 import type { IRJsonObject, IRScope } from '@retikz/core';
-import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
+import type { DataView } from '@retikz/data';
 
 import type { AnyScaleDefinition, CoordinateFrame, DimensionRole } from '../../../contract';
 import type { ProvenanceContext } from '../../../contract';
@@ -44,8 +44,7 @@ import { legendReserveOf } from '../legend';
 /** scoped/scaffold frame 解析所需的显式上下文 */
 export type ScopedFramesResolveContext = {
   node: IRPlot;
-  rows: Array<ExternalRow>;
-  fieldTypes: DataFieldTypeMap;
+  dataView: DataView;
   width: number;
   height: number;
   options: LowerPlotsOptions;
@@ -82,8 +81,7 @@ export type ScopedFramesResolution = {
 export const resolveScopedFrames = (context: ScopedFramesResolveContext): ScopedFramesResolution => {
   const {
     node,
-    rows,
-    fieldTypes,
+    dataView,
     width,
     height,
     options,
@@ -107,8 +105,9 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     overrides: Partial<CoordinateResolveContext> = {},
   ): CoordinateResolveContext => ({
     coordinate: source.coordinate,
-    rows,
-    fieldTypes,
+    rows: dataView.rows,
+    fieldTypes: dataView.fieldTypes,
+    fieldTypeEvidence: dataView.fieldTypeEvidence,
     width,
     height,
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,

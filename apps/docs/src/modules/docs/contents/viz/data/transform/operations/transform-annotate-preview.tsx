@@ -1,6 +1,6 @@
 import type { IRDataAnnotateTransform, IRDataReducerMetrics } from '@retikz/data';
 
-import { Axis, PathMark, Plot, PointMark, Transform } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotTransform, PointMark } from '@retikz/plot-react';
 
 import { storeRevenue } from './transform-annotate.data';
 
@@ -23,10 +23,10 @@ export const transformAnnotateOperationOf = (values: TransformAnnotateValues): I
 /** 渲染保留明细点且广播受控统计量的视图 */
 export const renderTransformAnnotatePreview = (values: TransformAnnotateValues) => (
   <Plot data={storeRevenue} width={460} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Transform {...transformAnnotateOperationOf(values)} />
+    <PlotTransform {...transformAnnotateOperationOf(values)} />
     <PointMark x="quarter" y="revenue" color="store" size={5} />
     <PathMark x="quarter" y="benchmark" series="store" strokeWidth={2.2} />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 );

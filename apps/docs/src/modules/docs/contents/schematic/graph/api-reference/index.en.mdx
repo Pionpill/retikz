@@ -89,6 +89,10 @@ The complete public type of `source` and `target` is `IRNodeTarget`:
 
 When `route` is omitted, lowering emits `move(source) → line(target)`. An explicit route uses `Array<IRGraphRelationRouteStep>`, retains the complete Core Position language, and cannot carry labels on route steps
 
+## Master and derived colors
+
+Entity and Relation `color` values are string masters. Applicable `fill`, `stroke`, text foreground, and marker colors may also use a `0..1` number, which Core resolves only after Graph Theme, Graph-local rules, and instance fields have fully cascaded. Entity follows its final Entity master. Relation stroke, labels, and marker color follow the Relation master, while marker fill follows the resolved marker color. A number is not opacity, and palettes, gradient stops, patterns, and shadow colors remain string-only.
+
 ## Shared references and Graph Theme
 
 <ZodSchema name="GraphPredicateRefSchema" />

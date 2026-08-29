@@ -73,7 +73,7 @@ React auto-derivation covers two common paths:
 - a categorical color field derives `ordinal`
 - a color field declared as `continuous` or `temporal` derives `sequential`
 
-Configure `diverging`, the three discretization scales, and explicit scheme / range / domain options in `IRPlot.scales`, then reference the scale name from the mark's color field binding. `<Legend channel="color" />` or a full-spec legend guide only displays the resolved mapping.
+Configure `diverging`, the three discretization scales, and explicit scheme / range / domain options in `IRPlot.scales`, then reference the scale name from the mark's color field binding. `<PlotLegend channel="color" />` or a full-spec legend guide only displays the resolved mapping.
 
 Auto-derivation and explicit configuration are only two entry points: both are resolved by the same scale definition and resolver path, rather than creating separate color semantics.
 
@@ -136,8 +136,8 @@ An explicit `range` overrides `scheme`. When `quantize` / `quantile` provide bot
     {
       label: 'Discretization schemas',
       path: 'packages/viz/plot/src/schemas/scale/schema.ts',
-      startLine: 340,
-      endLine: 431,
+      startLine: 299,
+      endLine: 372,
     },
   ]}
 />

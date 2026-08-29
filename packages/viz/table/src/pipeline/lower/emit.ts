@@ -31,6 +31,7 @@ export const emitTableBoundsSentinel = (layout: Pick<TableLayout, 'allocationBou
 export const emitTableCellBackground = (
   background: DeepReadonly<IRTableCellBackground> | undefined,
   box: BoundsRect,
+  masterColor: string,
 ): IRPath | undefined => {
   if (
     background === undefined ||
@@ -45,6 +46,7 @@ export const emitTableCellBackground = (
   const bottom = box.y + box.height;
   return {
     type: 'path',
+    color: masterColor,
     fill: PaintValueSchema.parse(background.fill),
     fillOpacity: background.fillOpacity ?? 1,
     stroke: 'none',
@@ -64,6 +66,7 @@ export const emitTableBorderPath = (edge: TableBorderEdge, tableId?: string): IR
   type: 'path',
   ...(tableId === undefined ? {} : { id: `${tableId}/border/${edge.key}` }),
   fill: 'none',
+  color: edge.style.color,
   stroke: PaintValueSchema.parse(edge.style.stroke),
   strokeWidth: edge.style.width,
   strokeOpacity: edge.style.strokeOpacity,

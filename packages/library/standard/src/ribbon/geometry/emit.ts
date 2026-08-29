@@ -42,7 +42,9 @@ const LABEL_POSITION: Record<string, number> = {
   'at-end': 1,
 };
 
-const canonicalizeLabel = (label: IRGeometryLabel): PathKindLabel => ({
+type ResolvedRibbonLabel = Omit<IRGeometryLabel, 'textColor' | 'text'> & Pick<PathKindLabel, 'textColor' | 'text'>;
+
+const canonicalizeLabel = (label: ResolvedRibbonLabel): PathKindLabel => ({
   ...label,
   position:
     label.position === undefined
@@ -56,7 +58,8 @@ const canonicalizeLabel = (label: IRGeometryLabel): PathKindLabel => ({
 
 const labelsOf = (path: IRRibbonPath): Array<PathKindLabel> => {
   if (path.label === undefined) return [];
-  return (Array.isArray(path.label) ? path.label : [path.label]).map(canonicalizeLabel);
+  const labels = (Array.isArray(path.label) ? path.label : [path.label]) as Array<ResolvedRibbonLabel>;
+  return labels.map(canonicalizeLabel);
 };
 
 const materializedSamples = (

@@ -1,6 +1,6 @@
 import type { IRDataSelectorOperation, IRDataSelectTransform } from '@retikz/data';
 
-import { Axis, Plot, PointMark, Transform } from '@retikz/plot-react';
+import { Plot, PlotAxis, PlotTransform, PointMark } from '@retikz/plot-react';
 
 import { cityRevenue } from './transform-select.data';
 
@@ -26,9 +26,9 @@ export const transformSelectOperationOf = (values: TransformSelectValues): IRDat
 /** 渲染受控 selector 保留的原始城市行 */
 export const renderTransformSelectPreview = (values: TransformSelectValues) => (
   <Plot data={cityRevenue} width={520} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Transform {...transformSelectOperationOf(values)} />
+    <PlotTransform {...transformSelectOperationOf(values)} />
     <PointMark x="city" y="revenue" color="region" text="city" size={7} />
-    <Axis dimension="x" />
-    <Axis dimension="y" grid />
+    <PlotAxis dimension="x" />
+    <PlotAxis dimension="y" grid />
   </Plot>
 );

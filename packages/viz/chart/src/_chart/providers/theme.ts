@@ -5,7 +5,7 @@ import { assertPlainDataContainers, NonBlankStringSchema } from '@retikz/foundat
 import { PlotThemeTokenOverridesSchema } from '@retikz/plot';
 import { record, strictObject, ZodError } from 'zod';
 
-import type { ChartRecipeDefinition, ChartThemeDefinition } from '../contract';
+import type { AnyChartRecipeDefinition, ChartThemeDefinition } from '../contract';
 import type { IRChartSource } from '../schemas';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
@@ -67,7 +67,7 @@ const assertOptionalPropertyIsDefined = (
 /** 校验当前 active recipe 可消费的命名主题 owner slices */
 export const validateChartThemeDefinition = (
   theme: ChartThemeDefinition,
-  recipes: ReadonlyMap<string, ChartRecipeDefinition>,
+  recipes: ReadonlyMap<string, AnyChartRecipeDefinition>,
 ): void => {
   try {
     assertPlainDataContainers(theme, 'Chart theme definition');

@@ -21,6 +21,30 @@ JSON is an alternate input, not a schema bypass. The application selects the con
 
 Plain authored marks append in Source order. `override: true` replaces the complete built-in semantic group with the same kind in place. If no group matches, the mark still appends and Core reports a stable warning through `onWarn`. This merge belongs only to the Chart resolver; React, Vanilla, and the visible Source IR do not perform or expose it.
 
+## Field Mappings Keep One Shape
+
+React, Vanilla, and JSON use the same concrete chartType encoding structure. Adapters do not translate aggregate, scale, transform, or composition into a private configuration model:
+
+| Entry   | What it does to `encodings`                                                                                        | What it does not do                           |
+| ------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
+| JSON    | Parses directly with the concrete chartType strict schema                                                          | Bypass schemas or invent fields at runtime    |
+| Vanilla | Expands only `row` and `column` string shorthand to `{ field }`; keeps every other rich mapping unchanged in shape | Inspect data or registries to infer semantics |
+| React   | Collects typed props, Chart marks, and Plot declarations into the same Vanilla Input                               | Execute aggregate, scale, or facet algorithms |
+
+Field-induced execution also follows one order:
+
+```text
+plotExtension.transform
+  → encoding-derived operations (row-shape → field-derive → row-order → cumulative-derive → field-adjust)
+  → final field / scale / facet binding
+  → semantic marks → authored Chart marks → plotExtension.marks
+  → Plot lowering
+```
+
+Operations in the same phase follow the active recipe's exact slot order, not JSON property order. A rich mapping first resolves to its final direct field projection before semantic and authored Chart marks consume it; marks never inherit root aggregate or transform configuration. Every mark ultimately consumes the same encoding data view.
+
+Custom transform, reducer, scale, and similar Definitions enter the Chart provider through `lowerOptions` as a runtime sidecar shared with the same Plot lowering request. Their schemas and functions never enter Source; serializable Source keeps only `{ kind, ...config }` and field mappings.
+
 ## Three packages, one stage each
 
 The root `@retikz/chart` entry exposes shared Chart Source schemas, constants, and the Theme contract. Each concrete chartType subpath exposes its exact schema and provider contribution. Recipe / mark Definitions and resolvers are package-internal implementation contracts, not third-party extension entry points. Plain types such as `InputScatterChart`, normalizers, and factory functions belong to `@retikz/chart-vanilla`. Typed React Charts interpret presentation markers and mark components before reusing the same normalizers, so React and Vanilla do not maintain parallel Source assembly rules. Dynamic family / chartType routing belongs to the application layer.
@@ -34,28 +58,34 @@ The Vanilla factory `createScatterChart` comes from `@retikz/chart-vanilla/point
 <SourceLinks
   sources={[
     {
-      label: 'Scatter Chart Vanilla factory',
-      path: 'packages/viz/chart-vanilla/src/point/scatter/factory.ts',
-      startLine: 10,
-      endLine: 25,
-    },
-    {
-      label: 'Select a recipe from the active provider',
-      path: 'packages/viz/chart/src/_chart/providers/resolve.ts',
-      startLine: 7,
+      label: 'Vanilla expands only composition string shorthand',
+      path: 'packages/viz/chart-vanilla/src/point/scatter/normalize.ts',
+      startLine: 9,
       endLine: 34,
     },
     {
-      label: 'Resolve recipes and Chart marks',
-      path: 'packages/viz/chart/src/_chart/resolve/resolve.ts',
-      startLine: 41,
-      endLine: 70,
+      label: 'React props and declarations converge on one Vanilla Input',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 100,
+      endLine: 154,
     },
     {
-      label: 'React shared Chart input wiring',
-      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
-      startLine: 35,
-      endLine: 78,
+      label: 'Runtime Definitions travel as a provider sidecar',
+      path: 'packages/viz/chart/src/_chart/providers/provider.ts',
+      startLine: 44,
+      endLine: 81,
+    },
+    {
+      label: 'Encoding resolution precedes recipes and authored marks',
+      path: 'packages/viz/chart/src/_chart/resolve/resolve.ts',
+      startLine: 42,
+      endLine: 77,
+    },
+    {
+      label: 'Assembly order for explicit transforms, encoding transforms, and marks',
+      path: 'packages/viz/chart/src/_chart/resolve/plot.ts',
+      startLine: 176,
+      endLine: 203,
     },
   ]}
 />

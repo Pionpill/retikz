@@ -1,13 +1,88 @@
+import type { ValueOf } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 import { ZodLiteral, ZodObject } from 'zod';
 
-import type { IRDataTransform } from '../schemas';
+import type { DataFieldTypeValue, IRDataTransform } from '../schemas';
 import type { ExternalRow } from '../shared';
 import type { DataLineageRecorder } from './lineage';
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition } from './statistics';
 
 import { RetikzDataError } from '../error';
+
+/** compact transform的闭合调度阶段 */
+export const DataTransformPhase = {
+  /** 改变行shape或粒度 */
+  RowShape: 'row-shape',
+  /** 从现有字段派生新字段 */
+  FieldDerive: 'field-derive',
+  /** 只改变行顺序 */
+  RowOrder: 'row-order',
+  /** 依赖前序行或分组累计状态派生字段 */
+  CumulativeDerive: 'cumulative-derive',
+  /** 对已绑定位置字段做最终调整 */
+  FieldAdjust: 'field-adjust',
+} as const;
+
+/** compact transform调度阶段取值 */
+export type DataTransformPhaseValue = ValueOf<typeof DataTransformPhase>;
+
+/** compact mapping允许绑定的结构类别 */
+export const DataTransformBindingClass = {
+  /** 产生或覆盖一个字段binding */
+  Field: 'field',
+  /** 只表达有序consumer */
+  Order: 'order',
+} as const;
+
+/** compact mapping结构类别取值 */
+export type DataTransformBindingClassValue = ValueOf<typeof DataTransformBindingClass>;
+
+/** compact transform对行和字段结构的闭合影响 */
+export const DataTransformFieldEffect = {
+  /** 保留现有行和字段并增加或覆盖字段 */
+  Preserve: 'preserve',
+  /** 替换现有行shape与字段集合 */
+  Replace: 'replace',
+  /** 只重排行 */
+  Reorder: 'reorder',
+} as const;
+
+/** compact transform字段影响取值 */
+export type DataTransformFieldEffectValue = ValueOf<typeof DataTransformFieldEffect>;
+
+/** Definition声明的compact mapping调度能力 */
+export type DataTransformCompactCapability = Readonly<{
+  /** 固定调度阶段 */
+  phase: DataTransformPhaseValue;
+  /** 当前Definition允许的mapping binding类别 */
+  bindingClass: DataTransformBindingClassValue;
+  /** operation对行和字段结构的影响 */
+  fieldEffect: DataTransformFieldEffectValue;
+}>;
+
+/** transform输出字段的运行时类型描述 */
+export type DataTransformOutputDescriptor = Readonly<{
+  /** operation输出的逻辑字段名 */
+  field: string;
+  /** 固定字段类型，或复用当前DataView中另一个字段的类型 */
+  type: DataFieldTypeValue | Readonly<{ from: string }>;
+}>;
+
+/** transform对字段类型图的完整影响 */
+export type DataTransformOutputModel =
+  | Readonly<{
+      /** 保留当前字段类型图并增加或覆盖outputs */
+      kind: 'preserve';
+      /** operation产生的已类型化字段 */
+      outputs: Array<DataTransformOutputDescriptor>;
+    }>
+  | Readonly<{
+      /** 丢弃当前字段类型图并由fields完整重建 */
+      kind: 'replace';
+      /** operation之后仍存在的全部已类型化字段 */
+      fields: Array<DataTransformOutputDescriptor>;
+    }>;
 
 /**
  * transform apply 上下文。
@@ -41,6 +116,10 @@ export type TransformDefinition<TTransform extends IRDataTransform = IRDataTrans
   inputFields?: (operation: TTransform, context: TransformContext) => Array<string>;
   /** 该 transform 产出的派生字段名；从 data.model strict 校验的源字段集中排除 */
   outputFields?: (operation: TTransform, context: TransformContext) => Array<string>;
+  /** 该transform对字段类型图的影响；省略时下游不得保留旧类型证据 */
+  outputModel?: (operation: TTransform, context: TransformContext) => DataTransformOutputModel | undefined;
+  /** 允许上层宿主把该Definition用于字段映射的闭合调度能力 */
+  compact?: DataTransformCompactCapability;
   /** 执行 transform；必须纯且确定；改行数且代表源行集合时要用 context.groupProvenance 保留 provenance */
   apply: (rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => Array<ExternalRow>;
 };
@@ -60,7 +139,7 @@ export const defineTransform = <TTransform extends IRDataTransform>(
  */
 export type AnyTransformDefinition = Omit<
   TransformDefinition<IRDataTransform>,
-  'schema' | 'inputFields' | 'outputFields' | 'apply'
+  'schema' | 'inputFields' | 'outputFields' | 'outputModel' | 'apply'
 > & {
   /** 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 kind 并执行 parse */
   schema: ZodType;
@@ -68,6 +147,8 @@ export type AnyTransformDefinition = Omit<
   inputFields?: (operation: never, context: TransformContext) => Array<string>;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation */
   outputFields?: (operation: never, context: TransformContext) => Array<string>;
+  /** 内部宽类型占位；真正调用前必须用该definition.schema解析operation */
+  outputModel?: (operation: never, context: TransformContext) => DataTransformOutputModel | undefined;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation */
   apply: (rows: Array<ExternalRow>, operation: never, context: TransformContext) => Array<ExternalRow>;
 };

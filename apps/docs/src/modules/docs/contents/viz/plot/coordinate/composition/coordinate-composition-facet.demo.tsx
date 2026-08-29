@@ -1,4 +1,4 @@
-import { Axis, Facet, PathMark, Plot, PointMark } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotFacet, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -17,7 +17,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Plot data={accountRows} width={660} height={330}>
-      <Facet
+      <PlotFacet
         id="accounts"
         row={isGrid ? { field: 'tier', order: ['T1', 'T2'] } : undefined}
         column={{ field: 'product', order: ['P1', 'P2', 'P3'] }}
@@ -29,8 +29,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         resolve={{ scale: { y: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.scale] } }}
         spacing={{ panelGap: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.panelGap] }}
       >
-        <Axis dimension="x" grid={values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.xGridVisible]} />
-        <Axis dimension="y" grid={values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.yGridVisible]} />
+        <PlotAxis dimension="x" grid={values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.xGridVisible]} />
+        <PlotAxis dimension="y" grid={values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.yGridVisible]} />
         <PathMark
           x="month"
           y="accounts"
@@ -46,7 +46,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           strokeWidth={1}
           size={values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.pointSize]}
         />
-      </Facet>
+      </PlotFacet>
     </Plot>
   );
 });

@@ -113,15 +113,16 @@ describe('changelog data', () => {
     expect(changelogPage?.children?.some(page => page.id === changelogVersionSlug(currentRelease.minor))).toBe(true);
   });
 
-  it('Graph alpha.7 更新日志使用可组合 Graph 与三入口契约', () => {
+  it('Graph alpha.1 更新日志收敛首次发布的完整四入口契约', () => {
     const release = changelogForModule('schematic')[0];
     const byPackage = new Map(release.packages.map(block => [block.pkg, block]));
     const serialized = JSON.stringify(release);
 
     for (const block of release.packages) {
-      const alpha = block.subVersions.find(version => version.version === 'alpha.7');
-      expect(alpha?.date).toBe('2026-08-23');
-      expect(alpha?.items).toHaveLength(7);
+      expect(block.subVersions.map(version => version.version)).toEqual(['alpha.1']);
+      const alpha = block.subVersions[0];
+      expect(alpha.date).toBe('2026-08-28');
+      expect(alpha.items).toHaveLength(9);
     }
 
     expect(JSON.stringify(byPackage.get('@retikz/graph'))).toContain('IRGraph.children');
@@ -131,16 +132,15 @@ describe('changelog data', () => {
     expect(JSON.stringify(byPackage.get('@retikz/graph-vanilla'))).toContain('`relation()`');
     expect(serialized).toContain('`graphTheme`');
     expect(serialized).toContain('`IRGeometryLabel`');
-    expect(serialized).toContain('Theme only supplies defaults');
+    expect(serialized).toContain('Core Path-compatible route');
     expect(serialized).toContain('JSON Schema');
-    expect(serialized).toContain('Graph `entityVariant`');
+    expect(serialized).toContain('Variant visual axis');
     expect(serialized).toContain('`ellipticCapsule`');
-    expect(serialized).toContain('Vibrant reference style');
-    expect(serialized).toContain('Clean');
+    expect(serialized).toContain('Vibrant and Clean reference styles');
     expect(serialized).toContain('Core-compatible instance fields');
     expect(serialized).toContain('`GraphThemeStyleOverrides`');
-    expect(serialized).toContain('retains default rules');
-    expect(serialized).toContain('Container contract and docs are removed');
+    expect(serialized).toContain('before appending custom rules');
+    expect(serialized).toContain('Callout, Container');
     expect(serialized).not.toContain('不能独立 embed');
     expect(serialized).not.toContain('the only embed path');
   });

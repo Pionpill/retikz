@@ -27,22 +27,24 @@ React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` �
 
 `IRPlot` 只保存 JSON-safe 语法与 `data.reference`。真实数据行、字段 resolver、label 函数以及自定义 transform、scale、channel、coordinate、mark 等 Definition 属于运行时输入；它们与 IR 在执行节点汇合，但不会被写回 IR。
 
-| 输入层     | 典型入口                                                            | 进入 `IRPlot`                                                                     |
-| ---------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| React DSL  | `<Plot>`、mark / guide / scale 子组件                               | 共享规范化后进入                                                                      |
-| React spec | `<Plot spec={...} data={...}>`                                      | `spec` 进入                                                                           |
+| 输入层     | 典型入口                                                        | 进入 `IRPlot`                                                                         |
+| ---------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| React DSL  | `<Plot>`、mark / guide / scale 子组件                           | 共享规范化后进入                                                                      |
+| React spec | `<Plot spec={...} data={...}>`                                  | `spec` 进入                                                                           |
 | Vanilla    | `plot(InputPlot)`、`{ input: InputPlot }` 或 `{ spec: IRPlot }` | InputPlot 形式单次 normalize；`spec` 直接进入；unknown JSON 须先经 Plot schema/parser |
-| 运行时依赖 | datasets、field maps、resolver、各类 Definitions                    | 不进入                                                                                |
+| 运行时依赖 | datasets、field maps、resolver、各类 Definitions                | 不进入                                                                                |
 
 ## Lowering 与产物
 
 <ComponentPreview files="plot-lowering-flow" size="sm" hideCode />
 
-主 lowering 在 `prepareRows()` 内解析 transform、statistics、row selector、scale、mark 与 format registry，并按 data model、field map 和 resolver 归一化数据。随后执行 transform、解析 frame 并建立 channel registry；channel 与 mark Definition 生成图元，guide、theme、composition 与 layout 补齐辅助和空间关系，最终展开为 `Scope`、`Node`、`Path` 等 Core IR。
+主 lowering 在 `prepareRows()` 内解析 transform、statistics、row selector、scale、mark 与 format registry，并按 data model、field map 和 resolver 归一化数据。随后执行 transform、推进包含字段类型证据的 DataView、解析 composition 与 frame，并建立 channel registry；channel 与 mark Definition 生成图元，guide、theme 与 layout 补齐辅助和空间关系，最终展开为 `Scope`、`Node`、`Path` 等 Core IR。
 
 `lowerPlots()` 返回供 Core composite 编译使用的 Definition；它不直接创建 DOM，也不直接选择 renderer。`compileToScene()` 消费下沉后的 Core IR 并产生 Scene，React `<Layout>` 或 Vanilla renderer 再决定 SVG、Canvas 或字符串输出。
 
-溯源与定位是基于共享输入的独立重算路径，而不是主 lowering 直接吐出的旁路产物：`lowerPlotWithLineage()` 返回 Core IR children 与 `PlotLineageRun`，`createPlotLocator()` 复用数据准备与 frame 解析来计算 datum / series anchor。它们接收同一份 spec、datasets 与 lowering 配置，但不会把整份运行记录写进 `IRPlot` 或 Scene meta。完整开关与数据边界见[Plot 溯源](/viz/data/provenance/plot)。
+一次 lowering 会同时得到 Core IR 与本次执行的数据产物：root / mark DataView、composition resolution 和实际 frame。`lowerPlotWithLineage()` 从同一次执行生成 Core IR children 与 `PlotLineageRun`，因此 root 与 mark-local transform 在该请求各执行一次；lineage 不再重放第二条数据管线。
+
+`createPlotLocator()` 也先完成一次带 provenance 的 lowering，再让 `datum()`、`series()` 与 `resolve()` 持续读取同一份 Scene 与数据产物。一次 locator 查询不会重新执行 transform。重新创建 locator，或独立调用另一条 runtime 入口，仍是新的执行请求，不共享缓存。运行记录不会写回 `IRPlot`；完整开关与数据边界见[Plot 溯源](/viz/data/provenance/plot)。
 
 ## 入口与输出
 
@@ -108,32 +110,32 @@ React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` �
     {
       label: 'Plot 主链的数据准备与 transform',
       path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
-      startLine: 111,
-      endLine: 167,
+      startLine: 183,
+      endLine: 293,
     },
     {
       label: 'frame 解析与 channel registry 建立',
       path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
-      startLine: 194,
-      endLine: 225,
+      startLine: 342,
+      endLine: 409,
     },
     {
       label: 'channel、mark 与 guide 生成 Core IR',
       path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
-      startLine: 610,
-      endLine: 699,
+      startLine: 803,
+      endLine: 878,
     },
     {
-      label: '独立的 Plot 溯源下沉入口',
+      label: 'lineage 消费同一次 lowering 数据产物',
       path: 'packages/viz/plot/src/pipeline/lineage.ts',
-      startLine: 328,
-      endLine: 336,
+      startLine: 274,
+      endLine: 282,
     },
     {
-      label: 'Locator 复用数据准备与 frame 语义',
+      label: 'Locator 复用一次 lowering 的 Scene 与数据产物',
       path: 'packages/viz/plot/src/pipeline/locator/locate.ts',
-      startLine: 130,
-      endLine: 186,
+      startLine: 149,
+      endLine: 184,
     },
   ]}
 />

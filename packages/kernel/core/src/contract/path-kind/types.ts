@@ -1,6 +1,6 @@
 import type { ZodType } from 'zod';
 
-import type { IRGeometryLabel, IRPathBase, IRPosition, IRStep, JsonValue } from '../../schemas';
+import type { IRGeometryLabel, IRMathRun, IRPathBase, IRPosition, IRStep, IRTextRun, JsonValue } from '../../schemas';
 import type { CompileOwnerOutputDefinition, CompileOwnerOutputPublisher } from '../observation';
 import type { PathCommand, PathPrim, ScenePrimitive } from '../scene';
 import type { StrokePathOwnerOutput } from './owner-output';
@@ -68,11 +68,21 @@ export type ResolvedPathKindAppearance = Readonly<
     >
 >;
 
+type PathKindInlineRun<T> = T extends unknown ? Omit<T, 'fill'> & { fill?: string } : never;
+
+type PathKindLabelText =
+  | string
+  | {
+      runs: Array<PathKindInlineRun<IRTextRun | IRMathRun>>;
+    };
+
 /** Path kind 请求宿主标签编译时提供的已定位几何信息 */
-export type PathKindLabel = Omit<IRGeometryLabel, 'position' | 'side' | 'distance'> & {
+export type PathKindLabel = Omit<IRGeometryLabel, 'position' | 'side' | 'distance' | 'textColor' | 'text'> & {
   position: number;
   side: NonNullable<IRGeometryLabel['side']> | 'center';
   distance: number;
+  textColor?: string;
+  text: PathKindLabelText;
 };
 
 /** Path kind 请求宿主标签编译时提供的已定位几何信息 */

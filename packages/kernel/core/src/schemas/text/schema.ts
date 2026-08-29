@@ -2,7 +2,7 @@ import { PositiveNumberSchema } from '@retikz/foundation';
 import { array, boolean, enum as zodEnum, object, string, union } from 'zod';
 
 import { FontSchema } from '../font';
-import { CssColorSchema, OpacitySchema } from '../style';
+import { ContextualColorSchema, OpacitySchema } from '../style';
 import { NodeTextAlign } from './constants';
 
 export const TextAlignSchema = zodEnum(NodeTextAlign).describe('Text alignment within a multi-line text block.');
@@ -11,7 +11,9 @@ export const LineHeightSchema = PositiveNumberSchema.describe('Text line height 
 
 export const TextRunSchema = object({
   text: string().describe('Text segment content within a mixed text+math line.'),
-  fill: CssColorSchema.optional().describe('Per-run text color; overrides the line / block default.'),
+  fill: ContextualColorSchema.optional().describe(
+    'Per-run text color: an exact CSS color or a weight derived from the effective host text color.',
+  ),
   opacity: OpacitySchema.optional().describe('Per-run opacity.'),
   font: FontSchema.optional().describe('Per-run font overrides; missing fields inherit from the line / block font.'),
 })
@@ -27,8 +29,8 @@ export const MathRunSchema = object({
     .describe(
       'Display (block) vs inline TeX metrics; default inline (false). The `$$...$$` sugar sets this true, `$...$` leaves it false.',
     ),
-  fill: CssColorSchema.optional().describe(
-    'Glyph color for this formula segment; overrides the line / block text color.',
+  fill: ContextualColorSchema.optional().describe(
+    'Glyph color for this formula segment: an exact CSS color or a weight derived from the effective host text color.',
   ),
   opacity: OpacitySchema.optional().describe('Per-run opacity.'),
 })
@@ -53,7 +55,9 @@ export const LabelTextContentSchema = union([string(), MixedLineSchema]).describ
 
 export const StyledLineSchema = object({
   text: string().describe('Line content'),
-  fill: CssColorSchema.optional().describe('Per-line text color; overrides block default'),
+  fill: ContextualColorSchema.optional().describe(
+    'Per-line text color: an exact CSS color or a weight derived from the effective block text color.',
+  ),
   opacity: OpacitySchema.optional().describe('Per-line opacity.'),
   font: FontSchema.optional().describe('Per-line font overrides; missing fields inherit from block-level `font`'),
 }).describe('One styled text line with per-line visual overrides.');
@@ -61,7 +65,7 @@ export const StyledLineSchema = object({
 type LabelVisualStyleDescriptionOverrides = Partial<Record<'textColor' | 'opacity' | 'font', string>>;
 
 export const createLabelVisualStyleShape = (descriptions: LabelVisualStyleDescriptionOverrides = {}) => ({
-  textColor: CssColorSchema.optional().describe(
+  textColor: ContextualColorSchema.optional().describe(
     descriptions.textColor ?? 'Label text color override. Missing values inherit from host defaults.',
   ),
   opacity: OpacitySchema.optional().describe(

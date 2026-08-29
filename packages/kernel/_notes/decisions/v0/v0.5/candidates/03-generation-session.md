@@ -1,6 +1,6 @@
 # ADR-03：Generation Session 与 LLM 渐进生成
 
-- 状态：Proposed
+- 状态：Proposed（未排期）
 - 决策日期：2026-07-26
 - 关联：[ADR-01](./01-cooperative-concurrent-runtime.md) · [ADR-02](./02-progressive-materialization.md)
 
@@ -56,7 +56,7 @@ Session 表面：
 
 生成期间的可见预览由 adapter 显式选择 draft branch 作为 view source，并通过普通 Core Program / retained renderer 编译。每个 draft revision 可以独立选择 atomic 或 progressive materialization；renderer batch 不能反向生成 generation operation，也不能推进 draft revision。
 
-正式 current revision 在 generation 期间变化时，session 进入 `conflicted`：停止追加和接受，保留只读 draft / checkpoint 供导出或人工处理。alpha.3 不自动 rebase、merge 或覆盖 current；调用方只能取消，或基于新正式 revision 创建新 session 并显式重放经 owner 验证的 operation。
+正式 current revision 在 generation 期间变化时，session 进入 `conflicted`：停止追加和接受，保留只读 draft / checkpoint 供导出或人工处理。本提案不自动 rebase、merge 或覆盖 current；调用方只能取消，或基于新正式 revision 创建新 session 并显式重放经 owner 验证的 operation
 
 Operation 输入必须先经过 definition parser；单批任一 operation 无效、apply throw、validation 失败或 scheduled prepare 取消时，整个 draft batch 不提交。Runtime 不接收 token 片段，不猜测缺失字段，也不修复模型输出。
 

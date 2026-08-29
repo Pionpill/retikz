@@ -239,6 +239,6 @@ export const previewControlContract = {
     'PointMark.stroke',
     'PointMark.strokeWidth',
     'PointMark.opacity',
-    'Axis.line',
+    'PlotAxis.line',
   ],
 } satisfies PreviewControlContract;

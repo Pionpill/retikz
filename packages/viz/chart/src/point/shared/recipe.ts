@@ -25,8 +25,33 @@ const invalidPoint = (message: string, path: ReadonlyArray<string | number>): Re
 /** 从已 parse 的 owner slice 读取必需字段 */
 export const requiredFieldOf = (values: IRJsonObject, name: string, path: ReadonlyArray<string | number>): string => {
   const value = values[name];
-  if (typeof value !== 'string' || value.length === 0) throw invalidPoint(`Chart field "${name}" is required`, path);
-  return value;
+  if (typeof value === 'string' && value.length > 0) return value;
+  if (
+    value !== null &&
+    !Array.isArray(value) &&
+    typeof value === 'object' &&
+    typeof value.field === 'string' &&
+    value.field.length > 0
+  ) {
+    return value.field;
+  }
+  throw invalidPoint(`Chart field "${name}" is required`, path);
+};
+
+const fieldMappingOf = (
+  value: unknown,
+  path: ReadonlyArray<string | number>,
+): Readonly<{ field: string; scale?: string }> => {
+  if (typeof value === 'string' && value.length > 0) return { field: value };
+  if (value !== null && !Array.isArray(value) && typeof value === 'object') {
+    const mapping = value as Record<string, unknown>;
+    const field = mapping.field;
+    const scale = mapping.scale;
+    if (typeof field === 'string' && field.length > 0 && (scale === undefined || typeof scale === 'string')) {
+      return { field, ...(scale === undefined ? {} : { scale }) };
+    }
+  }
+  throw invalidPoint('Chart encoding must be a resolved direct field mapping', path);
 };
 
 /** 将 Chart 字段 / 常量 slot 转为 Plot mark style value */
@@ -36,11 +61,8 @@ export const markValueOf = (
   name: string,
 ): IRJsonObject | undefined => {
   if (Object.hasOwn(encodings, name)) {
-    const field = encodings[name];
-    if (typeof field !== 'string' || field.length === 0) {
-      throw invalidPoint(`Chart encoding "${name}" must be a non-empty field`, ['recipe', 'encodings', name]);
-    }
-    return { kind: 'field', value: field };
+    const mapping = fieldMappingOf(encodings[name], ['recipe', 'encodings', name]);
+    return { kind: 'field', value: mapping.field, ...(mapping.scale === undefined ? {} : { scale: mapping.scale }) };
   }
   if (Object.hasOwn(properties, name)) return { kind: 'constant', value: properties[name] };
   return undefined;
@@ -182,6 +204,7 @@ export const sizeGuideOf = (
   theme: Readonly<{ legendEnabled: boolean }>,
   encodings: IRJsonObject,
 ): IRPlotGuide | undefined => {
-  if (!theme.legendEnabled || typeof encodings.size !== 'string') return undefined;
+  if (!theme.legendEnabled || !Object.hasOwn(encodings, 'size')) return undefined;
+  fieldMappingOf(encodings.size, ['recipe', 'encodings', 'size']);
   return { type: PlotGuide.Legend, channel: 'size' };
 };

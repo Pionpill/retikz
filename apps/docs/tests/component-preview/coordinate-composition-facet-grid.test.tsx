@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from 'react';
 
-import { Axis } from '@retikz/plot-react';
+import { PlotAxis } from '@retikz/plot-react';
 import { Children, isValidElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -73,7 +73,7 @@ const defaultAxisGrids = (rendered: ReactNode): AxisGridSnapshot => {
     Children.forEach(node, child => {
       if (!isValidElement<{ children?: ReactNode; dimension?: string; grid?: boolean; id?: string }>(child)) return;
 
-      if (child.type === Axis && child.props.id === undefined && child.props.dimension !== undefined) {
+      if (child.type === PlotAxis && child.props.id === undefined && child.props.dimension !== undefined) {
         (result[child.props.dimension] ??= []).push(child.props.grid);
       }
 

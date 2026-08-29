@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, PathMark, Plot, Scale } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -25,8 +25,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Plot data={closureTrend} width={400} height={280} coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}>
-      <Scale dimension="x" type="point" padding={values[LINE_CLOSURE_HORIZONTAL_PADDING_ID]} />
-      <Scale dimension="y" type="linear" domainPadding={values[LINE_CLOSURE_VERTICAL_PADDING_ID]} />
+      <PlotScale dimension="x" type="point" padding={values[LINE_CLOSURE_HORIZONTAL_PADDING_ID]} />
+      <PlotScale dimension="y" type="linear" domainPadding={values[LINE_CLOSURE_VERTICAL_PADDING_ID]} />
       <PathMark
         x="month"
         y="value"
@@ -45,8 +45,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         strokeWidth={3}
         lineJoin="round"
       />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
     </Plot>
   );
 });

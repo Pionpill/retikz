@@ -1,6 +1,6 @@
 import type { GraphThemeStyleOverrides } from '@retikz/graph';
 
-import { compositeOpaqueColor, ThemeMode } from '@retikz/core';
+import { ThemeMode } from '@retikz/core';
 import { defineGraphThemeStyle } from '@retikz/graph';
 
 import { PreviewThemeStyle } from '../constants';
@@ -16,15 +16,13 @@ const graphThemeOverridesOf = (
 ): GraphThemeStyleOverrides => {
   const foreground = modeForeground(theme.mode);
   const color = theme.colors.categorical[0];
-  const backdrop = theme.mode === ThemeMode.Light ? '#ffffff' : '#000000';
-  const subtleFill = compositeOpaqueColor(color, backdrop, 0.15);
   if (style === PreviewThemeStyle.Academic) {
     return {
       entity: {
         tokens: {
           color,
           textColor: 'contrast',
-          fill: subtleFill,
+          fill: 0.15,
           stroke: 'currentColor',
           strokeWidth: 1,
         },
@@ -51,7 +49,7 @@ const graphThemeOverridesOf = (
       tokens: {
         color,
         textColor: 'contrast',
-        fill: subtleFill,
+        fill: 0.15,
         stroke: 'none',
       },
     },

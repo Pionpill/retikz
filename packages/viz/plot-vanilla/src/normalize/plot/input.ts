@@ -1,6 +1,7 @@
 import type {
   IRPlot,
   IRPlotCoordinateOperation,
+  IRPlotFacetConfiguration,
   IRPlotGuide,
   IRPlotIntervalMark,
   IRPlotMarkOperation,
@@ -11,7 +12,6 @@ import type {
 
 type PlotComposition = NonNullable<IRPlot['composition']>;
 type PlotArrangement = NonNullable<PlotComposition['arrangements']>[number];
-type FacetGrid = Extract<PlotArrangement, { kind: 'facet' }>;
 type SharedScaffold = Extract<PlotArrangement, { kind: 'tracks' }>;
 
 /** 支持按坐标轴分配 coordinate view 的内置 position mark */
@@ -57,17 +57,17 @@ export type InputPlotGuide = IRPlotGuide & {
 };
 
 /** facet composition 的 plain authoring 输入 */
-export type InputPlotFacet = Omit<FacetGrid, 'kind' | 'view' | 'row' | 'column'> & {
+export type InputPlotFacet = Omit<IRPlotFacetConfiguration, 'row' | 'column'> & {
   /** 行方向分面字段或完整维度配置 */
-  row?: string | NonNullable<FacetGrid['row']>;
+  row?: string | NonNullable<IRPlotFacetConfiguration['row']>;
   /** 列方向分面字段或完整维度配置 */
-  column?: string | NonNullable<FacetGrid['column']>;
+  column?: string | NonNullable<IRPlotFacetConfiguration['column']>;
   /** 分面单元对应的 coordinate view id */
   view?: string;
-  /** 当前 facet arrangement 的间距配置 */
-  spacing?: PlotComposition['spacing'];
-  /** 当前 facet arrangement 的 scale、axis 与 grid resolve 配置 */
-  resolve?: PlotComposition['resolve'];
+  /** 每个生成 panel 使用的 coordinate */
+  coordinate?: IRPlotCoordinateOperation;
+  /** 生成 panel 的 view id template */
+  viewIdTemplate?: string;
 };
 
 /** shared tracks composition 的 plain authoring 输入 */

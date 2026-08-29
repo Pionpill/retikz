@@ -1,7 +1,7 @@
 import type { IRPaint } from '@retikz/core';
 import type { FC } from 'react';
 
-import { Axis, PathMark, Plot } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -56,8 +56,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         lineCap="round"
         lineJoin="round"
       />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
     </Plot>
   );
 });

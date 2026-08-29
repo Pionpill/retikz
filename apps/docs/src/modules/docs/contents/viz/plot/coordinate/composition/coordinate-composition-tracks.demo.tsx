@@ -1,4 +1,4 @@
-import { Axis, PathMark, Plot, PointMark, Scaffold, Track } from '@retikz/plot-react';
+import { PathMark, Plot, PlotAxis, PlotScaffold, PlotTrack, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -39,14 +39,14 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Plot data={operationsRows} width={560} height={330}>
-      <Scaffold
+      <PlotScaffold
         id="ops"
         sharedRoles={['x']}
         spacing={{ trackGap: values[COORDINATE_COMPOSITION_TRACKS_CONTROL_IDS.trackGap] }}
       >
-        <Axis dimension="x" grid={xGridVisible} title="T" />
-        <Track id="trend" band={{ role: 'y', ...bands.trend }}>
-          {localAxesVisible ? <Axis dimension="y" grid={yGridVisible} title="A" /> : null}
+        <PlotAxis dimension="x" grid={xGridVisible} title="T" />
+        <PlotTrack id="trend" band={{ role: 'y', ...bands.trend }}>
+          {localAxesVisible ? <PlotAxis dimension="y" grid={yGridVisible} title="A" /> : null}
           <PathMark
             x="day"
             y="trend"
@@ -56,9 +56,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             lineCap="round"
             lineJoin="round"
           />
-        </Track>
-        <Track id="drawdown" band={{ role: 'y', ...bands.drawdown }}>
-          {localAxesVisible ? <Axis dimension="y" grid={yGridVisible} title="B" /> : null}
+        </PlotTrack>
+        <PlotTrack id="drawdown" band={{ role: 'y', ...bands.drawdown }}>
+          {localAxesVisible ? <PlotAxis dimension="y" grid={yGridVisible} title="B" /> : null}
           {values[COORDINATE_COMPOSITION_TRACKS_CONTROL_IDS.drawdownAreaVisible] ? (
             <PathMark
               x="day"
@@ -78,9 +78,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             lineCap="round"
             lineJoin="round"
           />
-        </Track>
-        <Track id="signal" band={{ role: 'y', ...bands.signal }}>
-          {localAxesVisible ? <Axis dimension="y" grid={yGridVisible} title="C" /> : null}
+        </PlotTrack>
+        <PlotTrack id="signal" band={{ role: 'y', ...bands.signal }}>
+          {localAxesVisible ? <PlotAxis dimension="y" grid={yGridVisible} title="C" /> : null}
           <PathMark
             x="day"
             y="signal"
@@ -98,8 +98,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             strokeWidth={1.5}
             size={values[COORDINATE_COMPOSITION_TRACKS_CONTROL_IDS.signalPointSize]}
           />
-        </Track>
-      </Scaffold>
+        </PlotTrack>
+      </PlotScaffold>
     </Plot>
   );
 });

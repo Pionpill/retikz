@@ -13,7 +13,7 @@ import { RetikzPlotVanillaError, RetikzPlotVanillaErrorCode } from '@retikz/plot
 import { describe, expect, it } from 'vitest';
 
 import { resolvePlotExtensionAuthoring } from '../../../src';
-import { Axis, Facet, Legend, PointMark, Scale, Transform } from '../../../src/components';
+import { PlotAxis, PlotFacet, PlotLegend, PlotScale, PlotTransform, PointMark } from '../../../src/components';
 import { Plot } from '../../../src/Plot';
 
 const extensionContext = (overrides: Partial<PlotAuthoringContext> = {}): PlotAuthoringContext => ({
@@ -84,11 +84,11 @@ describe('Plot chart-extension declaration normalization', () => {
   it('emits only explicit JSON-safe members and preserves their authored order', () => {
     const result = normalizeExtension(
       [
-        <Transform key="sort" kind="sort" field="amount" order="descending" />,
+        <PlotTransform key="sort" kind="sort" field="amount" order="descending" />,
         <PointMark key="point" id="extension.point" x="amount" y="margin" />,
-        <Scale key="scale" dimension="x" type="log" base={2} />,
-        <Axis key="axis" dimension="x" grid />,
-        <Legend key="legend" channel="color" title="Series" />,
+        <PlotScale key="scale" dimension="x" type="log" base={2} />,
+        <PlotAxis key="axis" dimension="x" grid />,
+        <PlotLegend key="legend" channel="color" title="Series" />,
       ],
       {
         coordinate: {
@@ -214,9 +214,9 @@ describe('Plot chart-extension declaration normalization', () => {
       <PointMark key="point" x="x" y="y" />,
       <>
         {null}
-        <Facet id="regions" row="region">
+        <PlotFacet id="regions" row="region">
           <PointMark x="x" y="y" />
-        </Facet>
+        </PlotFacet>
       </>,
     ];
 
@@ -240,7 +240,7 @@ describe('Plot chart-extension declaration normalization', () => {
   it('reports JSX guides and scales as second sources of context collections', () => {
     expectDeclarationError(
       () =>
-        normalizeExtension(<Axis dimension="x" />, {
+        normalizeExtension(<PlotAxis dimension="x" />, {
           guides: {
             value: [{ type: 'axis', dimension: 'y' }],
             path: ['spec', 'guides'],
@@ -253,7 +253,7 @@ describe('Plot chart-extension declaration normalization', () => {
 
     expectDeclarationError(
       () =>
-        normalizeExtension(<Scale dimension="x" type="linear" />, {
+        normalizeExtension(<PlotScale dimension="x" type="linear" />, {
           scales: {
             value: [{ type: 'linear', name: 'recipe.x' }],
             path: ['props', 'scales'],
@@ -266,7 +266,7 @@ describe('Plot chart-extension declaration normalization', () => {
 
     expectDeclarationError(
       () =>
-        normalizeExtension(<Axis dimension="x" scale="linear" />, {
+        normalizeExtension(<PlotAxis dimension="x" scale="linear" />, {
           scales: {
             value: [{ type: 'linear', name: 'recipe.x' }],
             path: ['spec', 'scales'],

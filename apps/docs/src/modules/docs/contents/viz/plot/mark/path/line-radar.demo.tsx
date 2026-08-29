@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { Axis, PathMark } from '@retikz/plot-react';
+import { PathMark, PlotAxis } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
@@ -14,13 +14,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   <Layout width={620} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
     <Plot data={team} width={280} height={280} coordinate="polar2D" x={10} y={10}>
       <PathMark x="dim" y="score" order="rank" closed />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
     </Plot>
     <Plot data={team} width={280} height={280} coordinate="polar2D" x={330} y={10}>
       <PathMark x="dim" y="score" order="rank" closed={values[LINE_RADAR_CLOSED_ID]} />
-      <Axis dimension="x" />
-      <Axis dimension="y" grid />
+      <PlotAxis dimension="x" />
+      <PlotAxis dimension="y" grid />
     </Plot>
   </Layout>
 ));

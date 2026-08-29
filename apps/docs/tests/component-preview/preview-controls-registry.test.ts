@@ -699,10 +699,10 @@ describe('preview controls registry', () => {
     expect(interruptionSource).toBeDefined();
     if (stackAreaSource === undefined || interruptionSource === undefined) return;
 
-    expect(stackAreaSource).toContain('<Scale dimension="x" type="point" padding={0} />');
-    expect(stackAreaSource.match(/<Scale dimension="y" type="linear" domainPadding=\{0\} \/>/g)).toHaveLength(2);
-    expect(interruptionSource).toContain('<Scale dimension="x" type="linear" domainPadding={0} />');
-    expect(interruptionSource).toContain('<Scale dimension="y" type="linear" domainPadding={0} />');
+    expect(stackAreaSource).toContain('<PlotScale dimension="x" type="point" padding={0} />');
+    expect(stackAreaSource.match(/<PlotScale dimension="y" type="linear" domainPadding=\{0\} \/>/g)).toHaveLength(2);
+    expect(interruptionSource).toContain('<PlotScale dimension="x" type="linear" domainPadding={0} />');
+    expect(interruptionSource).toContain('<PlotScale dimension="y" type="linear" domainPadding={0} />');
   });
 
   it('构造可填充区域默认以横向和纵向零留白作为 canonical 状态', () => {
@@ -2072,7 +2072,7 @@ describe('preview controls registry', () => {
       expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisStroke');
       expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.axisStrokeWidth');
       expect(source, language).toContain('<RelationMark');
-      expect(source, language).toContain('<Axis');
+      expect(source, language).toContain('<PlotAxis');
     }
   });
 

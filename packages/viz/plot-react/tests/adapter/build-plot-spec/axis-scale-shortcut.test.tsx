@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
-import { Axis } from '../../../src/components/guides';
+import { PlotAxis } from '../../../src/components/guides';
 import { PathMark } from '../../../src/components/marks';
 
-describe('buildPlotIR Axis scale shortcut', () => {
-  it('builds the same dimension scale as <Scale>', () => {
+describe('buildPlotIR PlotAxis scale shortcut', () => {
+  it('builds the same dimension scale as <PlotScale>', () => {
     const spec = buildPlotIR(
       <>
         <PathMark x="m" y="r" />
-        <Axis dimension="y" scale="log" />
+        <PlotAxis dimension="y" scale="log" />
       </>,
       '__plot',
     );
