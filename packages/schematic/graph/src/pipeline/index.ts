@@ -1,3 +1,4 @@
+export * from './block';
 export * from './definitions';
 export * from './entity';
 export * from './graph';

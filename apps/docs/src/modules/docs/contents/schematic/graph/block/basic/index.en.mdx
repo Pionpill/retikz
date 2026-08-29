@@ -1,0 +1,146 @@
+---
+title: Block Basic Usage
+description: Arrange arbitrary content in a vertical Graph node container and optionally compose Header, Section, Row, and Cell building blocks.
+---
+
+`Block` is an open content container that Relations can target. It arranges arbitrary Core or Tier 2 children vertically in authored order, making it useful for code structures, engineering objects, and custom graph nodes. Header, Section, Row, and Cell are optional common compositions
+
+## Usage
+
+```tsx
+import { Block, BlockCell, BlockHeader, BlockRow, BlockSection } from '@retikz/graph-react';
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Block id="user">
+  <BlockHeader title={{ text: 'User' }} description={{ text: 'Domain entity' }} />
+  <Node position={[0, 0]}>Arbitrary custom content</Node>
+  <BlockSection title={{ text: 'Fields' }}>
+    <BlockRow id="user.name">
+      <BlockCell itemKey="name" grow={1}>
+        <Node position={[0, 0]}>name</Node>
+      </BlockCell>
+    </BlockRow>
+  </BlockSection>
+</Block>
+```
+
+`Block` requires neither a Header nor a Section and never reorders content by child type. `BlockHeader`, `BlockSection`, and `BlockRow` are independent Graph composites. Only `BlockCell` is restricted to `BlockRow`, where it contains exactly one child
+
+## Examples
+
+### Open content
+
+Arbitrary ordered children enter one vertical layout. Common structure composites can be mixed with ordinary Nodes, Groups, and other Tier 2 composites
+
+<ComponentPreview
+  files="block-basic"
+  size="sm"
+  caption="Block preserves authored order; the Header, ordinary content, and Section are all regular layout children."
+/>
+
+### Independent regions and connections
+
+Section and Row support the complete Core Scope and can participate in Core addressing through explicit ids. Relation keeps using `NodeTarget + anchor / boundary`; Block does not create a second Port IR
+
+<ComponentPreview
+  files="block-connection"
+  size="sm"
+  caption="A Relation connects to the right midpoint of user.email Row."
+/>
+
+### Style adjustments
+
+The Block shell reuses Standard Surface. This playground changes shell padding, background, border, and corner radius without changing the children structure
+
+<ComponentPreview files="block-style" size="sm" caption="Adjust the Block shell; opacity can reach 1." />
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="You can skip this section at first"
+  description="Return when diagnosing layout, namespaces, or Graph Theme projection."
+/>
+
+### Layout composition
+
+Block passes authored children to a column FlexLayout, then uses Standard Surface for the shell. Header uses a row layout, Section uses a column layout, and Row maps each Cell to a row Flex item. Each is backed by its own Definition and provider, so Header, Section, and Row also compile outside Block
+
+Block, Section, and Row gap, padding, and appearance defaults apply during lowering without being written into sparse Source IR. Empty children keep the same stable Scope → Surface → Flex root shape
+
+### Identity and theme
+
+Block supports the complete Core Scope, including `localNamespace`; Section and Row reuse the same contract. Explicit ids are published in the actual Core namespace and do not automatically receive a Block prefix. Duplicate ids, invisible targets, anchors, and boundary failures continue to use Core diagnostics
+
+`graphTheme` crosses only known Graph, Group, Block, Header, Section, Row, and Core Scope content boundaries before projecting into visible Entities and Relations. It does not directly style structure shells, ordinary Core children, or unknown Tier 2 composites
+
+<SourceLinks
+  sources={[
+    { label: 'Block open-content schemas', path: 'packages/schematic/graph/src/schemas/block/schema.ts' },
+    { label: 'Block Graph context resolution', path: 'packages/schematic/graph/src/resolve/block/resolve.ts' },
+    { label: 'Block family lowering', path: 'packages/schematic/graph/src/pipeline/block/lower.ts' },
+    { label: 'Block React authoring', path: 'packages/schematic/graph-react/src/graph/Block.tsx' },
+  ]}
+/>
+
+## API Reference
+
+Direct IR, React, and Vanilla entries produce the same JSON-safe Source. Block, Section, and Row reuse the complete Core Scope and Standard Surface fields; the tables expand only fields introduced or constrained by these components
+
+### Block
+
+| Prop            | Type                         | Default         | Description                                                |
+| --------------- | ---------------------------- | --------------- | ---------------------------------------------------------- |
+| `children?`     | `ReadonlyArray<IRChild>`     | —               | Arbitrary ordered children; `ReactNode` in React authoring |
+| `graphTheme?`   | `IRGraphThemeLayer`          | —               | Local Graph Theme layer                                    |
+| `width?`        | `number`                     | —               | Fixed outer width including horizontal padding             |
+| `minWidth?`     | `number`                     | —               | Minimum outer width including horizontal padding           |
+| `gap?`          | `number`                     | `8`             | Vertical space between children                            |
+| `padding?`      | `SurfaceInput['padding']`    | `8`             | Outer shell padding                                        |
+| `background?`   | `SurfaceInput['background']` | transparent     | Outer shell background                                     |
+| `border?`       | `SurfaceInput['border']`     | lightgray / `1` | Outer shell border                                         |
+| `cornerRadius?` | `number`                     | `8`             | Outer shell corner radius                                  |
+| `overflow?`     | `'visible' \| 'clip'`        | `'visible'`     | Surface overflow semantics                                 |
+
+### BlockHeader
+
+| Prop           | Type          | Default  | Description                                          |
+| -------------- | ------------- | -------- | ---------------------------------------------------- |
+| `icon?`        | `IRChild`     | —        | At most one arbitrary child before the text column   |
+| `title`        | `IRBlockText` | required | Primary title; defaults to `sm`, normal, opacity `1` |
+| `description?` | `IRBlockText` | —        | Secondary text; defaults to `xs` and opacity `0.7`   |
+| `trailing?`    | `IRChild`     | —        | At most one arbitrary child after the text column    |
+
+### BlockSection
+
+| Prop        | Type                     | Default | Description                               |
+| ----------- | ------------------------ | ------- | ----------------------------------------- |
+| `title?`    | `IRBlockText`            | —       | Optional title placed before the children |
+| `children?` | `ReadonlyArray<IRChild>` | —       | Arbitrary ordered children                |
+| `gap?`      | `number`                 | `4`     | Vertical space between Section items      |
+
+Section defaults to `8` padding, a `lightgray / 0.04` background, a `lightgray / 1` border, and an `8` corner radius while reusing the complete Scope and Surface fields
+
+### BlockRow and BlockCell
+
+| Prop                                          | Type                         | Default     | Description                                   |
+| --------------------------------------------- | ---------------------------- | ----------- | --------------------------------------------- |
+| `row.children?`                               | `ReadonlyArray<IRBlockCell>` | —           | Ordered Row-local Flex items                  |
+| `row.gap?`                                    | `number`                     | `8`         | Horizontal space between Cells                |
+| `cell.key`                                    | `string`                     | required    | Row-local Flex item key; React uses `itemKey` |
+| `cell.child`                                  | `IRChild`                    | required    | Exactly one arbitrary child                   |
+| `cell.margin?`                                | Flex item margin             | `0`         | Reuses the FlexLayout item contract           |
+| `cell.basis?`                                 | Flex item basis              | `'content'` | Reuses the FlexLayout item contract           |
+| `cell.grow?`                                  | `number`                     | `0`         | Remaining-space growth weight                 |
+| `cell.shrink?`                                | `number`                     | `1`         | Shrink weight when space is constrained       |
+| `cell.min?` / `cell.max?` / `cell.alignSelf?` | Flex item fields             | —           | Reuses the FlexLayout item contract           |
+
+Row defaults to `8` padding and gap with a transparent background, no border, and no corner radius while reusing the complete Scope and Surface fields
+
+## Related
+
+- [Graph API Reference](/schematic/graph/api-reference): complete exports, Definitions, and providers
+- [Group](/schematic/graph/group): general visible containment that does not arrange authored children
+- [FlexLayout](/library/layout/flex-layout): the sole semantics for Cell item fields and Block-family layout

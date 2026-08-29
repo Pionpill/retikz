@@ -113,16 +113,19 @@ describe('changelog data', () => {
     expect(changelogPage?.children?.some(page => page.id === changelogVersionSlug(currentRelease.minor))).toBe(true);
   });
 
-  it('Graph alpha.1 更新日志收敛首次发布的完整四入口契约', () => {
+  it('Graph 更新日志保留 alpha.1 完整契约并登记 alpha.2 Block', () => {
     const release = changelogForModule('schematic')[0];
     const byPackage = new Map(release.packages.map(block => [block.pkg, block]));
     const serialized = JSON.stringify(release);
 
     for (const block of release.packages) {
-      expect(block.subVersions.map(version => version.version)).toEqual(['alpha.1']);
-      const alpha = block.subVersions[0];
-      expect(alpha.date).toBe('2026-08-28');
-      expect(alpha.items).toHaveLength(9);
+      expect(block.subVersions.map(version => version.version)).toEqual(expect.arrayContaining(['alpha.1', 'alpha.2']));
+      const alpha1 = block.subVersions.find(version => version.version === 'alpha.1');
+      const alpha2 = block.subVersions.find(version => version.version === 'alpha.2');
+      expect(alpha1?.date).toBe('2026-08-28');
+      expect(alpha1?.items).toHaveLength(9);
+      expect(alpha2?.date).toBe('2026-08-29');
+      expect(alpha2?.items).toHaveLength(2);
     }
 
     expect(JSON.stringify(byPackage.get('@retikz/graph'))).toContain('IRGraph.children');
@@ -137,10 +140,15 @@ describe('changelog data', () => {
     expect(serialized).toContain('Variant visual axis');
     expect(serialized).toContain('`ellipticCapsule`');
     expect(serialized).toContain('Vibrant and Clean reference styles');
+    expect(serialized).toContain('`minWidth`');
+    expect(serialized).toContain('Sections default to the shell’s `8` corner radius');
     expect(serialized).toContain('Core-compatible instance fields');
     expect(serialized).toContain('`GraphThemeStyleOverrides`');
     expect(serialized).toContain('before appending custom rules');
     expect(serialized).toContain('Callout, Container');
+    expect(serialized).toContain('`IRBlock`');
+    expect(serialized).toContain('`localNamespace`');
+    expect(serialized).toContain('automatic id prefixes');
     expect(serialized).not.toContain('不能独立 embed');
     expect(serialized).not.toContain('the only embed path');
   });

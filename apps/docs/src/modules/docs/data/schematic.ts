@@ -48,6 +48,15 @@ export const schematicSection: Array<Section> = [
           },
         ],
       },
+      {
+        id: 'block',
+        label: 'schematic.block',
+        children: [
+          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
+          { id: 'builtin', label: 'schematic.builtinImplementation', difficulty: DocDifficulty.Internals },
+          { id: 'extension', label: 'schematic.extensionUsage', difficulty: DocDifficulty.Advanced },
+        ],
+      },
       { id: 'group', label: 'schematic.group', difficulty: DocDifficulty.Beginner },
       { id: 'api-reference', label: 'schematic.graphApiReference' },
     ],

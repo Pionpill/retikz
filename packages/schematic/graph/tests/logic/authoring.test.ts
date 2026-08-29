@@ -60,4 +60,18 @@ describe('Graph Source authoring helpers', () => {
       } as never),
     ).toThrow();
   });
+
+  it('creates independent Block-family records without nesting them into Block grammar', () => {
+    const header = Graph.createBlockHeader({ title: { text: 'Service' } });
+    const section = Graph.createBlockSection({ children: [{ type: 'node', position: [0, 0], text: 'content' }] });
+    const row = Graph.createBlockRow({
+      children: [{ key: 'content', child: { type: 'node', position: [0, 0], text: 'row' } }],
+    });
+
+    expect(Graph.createBlock({ children: [header, section, row] })).toEqual({
+      namespace: 'graph',
+      type: 'block',
+      children: [header, section, row],
+    });
+  });
 });

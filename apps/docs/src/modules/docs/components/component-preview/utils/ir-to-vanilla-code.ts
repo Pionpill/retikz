@@ -11,10 +11,19 @@ import type {
   IRScope,
   IRStep,
 } from '@retikz/core';
-import type { IRGraph, IRGroup } from '@retikz/graph';
+import type { IRBlock, IRBlockHeader, IRBlockRow, IRBlockSection, IRGraph, IRGroup } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
 
-import { EntitySchema, GraphSchema, GroupSchema, RelationSchema } from '@retikz/graph';
+import {
+  BlockHeaderSchema,
+  BlockRowSchema,
+  BlockSchema,
+  BlockSectionSchema,
+  EntitySchema,
+  GraphSchema,
+  GroupSchema,
+  RelationSchema,
+} from '@retikz/graph';
 
 import {
   entityPreviewAuthoringInput,
@@ -292,10 +301,23 @@ const LAYOUT_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GridLayoutInputEmbedAdapter',
   'OverlayLayoutInputEmbedAdapter',
 ];
-const GRAPH_HELPER_ORDER: ReadonlyArray<string> = ['graph', 'group', 'entity', 'relation'];
+const GRAPH_HELPER_ORDER: ReadonlyArray<string> = [
+  'graph',
+  'group',
+  'block',
+  'blockHeader',
+  'blockSection',
+  'blockRow',
+  'entity',
+  'relation',
+];
 const GRAPH_ADAPTER_ORDER: ReadonlyArray<string> = [
   'GraphInputEmbedAdapter',
   'GroupInputEmbedAdapter',
+  'BlockInputEmbedAdapter',
+  'BlockHeaderInputEmbedAdapter',
+  'BlockSectionInputEmbedAdapter',
+  'BlockRowInputEmbedAdapter',
   'EntityInputEmbedAdapter',
   'RelationInputEmbedAdapter',
 ];
@@ -315,6 +337,10 @@ export type LayoutPreviewDefinitionName = 'FlexLayoutDefinition' | 'GridLayoutDe
 export type GraphPreviewDefinitionName =
   | 'GraphDefinition'
   | 'GroupDefinition'
+  | 'BlockDefinition'
+  | 'BlockHeaderDefinition'
+  | 'BlockSectionDefinition'
+  | 'BlockRowDefinition'
   | 'EntityDefinition'
   | 'RelationDefinition';
 
@@ -335,14 +361,31 @@ const LAYOUT_DEFINITION_BY_KIND: Readonly<Record<string, LayoutPreviewDefinition
 const GRAPH_DEFINITION_BY_KIND: Readonly<Record<string, GraphPreviewDefinitionName>> = {
   graph: 'GraphDefinition',
   group: 'GroupDefinition',
+  block: 'BlockDefinition',
+  blockHeader: 'BlockHeaderDefinition',
+  blockSection: 'BlockSectionDefinition',
+  blockRow: 'BlockRowDefinition',
   entity: 'EntityDefinition',
   relation: 'RelationDefinition',
 };
 
 const previewOwnedChildren = (child: IRChild & { namespace: string; type: string }): Array<IRChild> => {
   const record = child as unknown as Record<string, unknown>;
-  if (child.namespace === 'graph' && (child.type === 'graph' || child.type === 'group')) {
+  if (
+    child.namespace === 'graph' &&
+    (child.type === 'graph' || child.type === 'group' || child.type === 'block' || child.type === 'blockSection')
+  ) {
     return (record.children as Array<IRChild> | undefined) ?? [];
+  }
+  if (child.namespace === 'graph' && child.type === 'blockHeader') {
+    const header = BlockHeaderSchema.parse(child);
+    return [
+      ...(header.icon === undefined ? [] : [header.icon]),
+      ...(header.trailing === undefined ? [] : [header.trailing]),
+    ];
+  }
+  if (child.namespace === 'graph' && child.type === 'blockRow') {
+    return BlockRowSchema.parse(child).children?.map(cell => cell.child) ?? [];
   }
   if (child.namespace === 'standard' && child.type === 'surface') return [record.child as IRChild];
   if (
@@ -593,6 +636,87 @@ const groupAuthoringCode = (group: IRGroup, indent: number, ctx: Ctx): string =>
   return code;
 };
 
+const blockAuthoringCode = (block: IRBlock, indent: number, ctx: Ctx): string => {
+  const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = block;
+  void _namespace;
+  void _type;
+  const replacements = new Map<string, string>();
+  const children = sourceChildren?.map((child, index) => {
+    const placeholder = `__BLOCK_CONTENT_CHILD_${index}__`;
+    replacements.set(formatString(placeholder), childCode(child, indent + 2, ctx));
+    return placeholder;
+  });
+  const encoded: Record<string, unknown> = {
+    ...input,
+    ...(children === undefined ? {} : { children }),
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
+  return code;
+};
+
+const blockHeaderAuthoringCode = (header: IRBlockHeader, indent: number, ctx: Ctx): string => {
+  const { namespace: _namespace, type: _type, icon, trailing, ...input } = header;
+  void _namespace;
+  void _type;
+  const replacements = new Map<string, string>();
+  const encodeSlot = (child: IRChild, slot: string): string => {
+    const placeholder = `__BLOCK_HEADER_${slot.toUpperCase()}__`;
+    replacements.set(formatString(placeholder), childCode(child, indent + 2, ctx));
+    return placeholder;
+  };
+  const encoded = {
+    ...input,
+    ...(icon === undefined ? {} : { icon: encodeSlot(icon, 'icon') }),
+    ...(trailing === undefined ? {} : { trailing: encodeSlot(trailing, 'trailing') }),
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
+  return code;
+};
+
+const blockSectionAuthoringCode = (section: IRBlockSection, indent: number, ctx: Ctx): string => {
+  const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = section;
+  void _namespace;
+  void _type;
+  const replacements = new Map<string, string>();
+  const children = sourceChildren?.map((child, index) => {
+    const placeholder = `__BLOCK_SECTION_CHILD_${index}__`;
+    replacements.set(formatString(placeholder), childCode(child, indent + 2, ctx));
+    return placeholder;
+  });
+  const encoded = {
+    ...input,
+    ...(children === undefined ? {} : { children }),
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
+  return code;
+};
+
+const blockRowAuthoringCode = (row: IRBlockRow, indent: number, ctx: Ctx): string => {
+  const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = row;
+  void _namespace;
+  void _type;
+  const replacements = new Map<string, string>();
+  const children = sourceChildren?.map((cell, index) => {
+    const placeholder = `__BLOCK_ROW_CELL_${index}__`;
+    replacements.set(formatString(placeholder), childCode(cell.child, indent + 3, ctx));
+    return { ...cell, child: placeholder };
+  });
+  const encoded = {
+    ...input,
+    ...(children === undefined ? {} : { children }),
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
+  return code;
+};
+
 const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string };
   const helperName = record.type;
@@ -610,6 +734,18 @@ const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =>
   }
   if (helperName === 'group') {
     return `group(${formatString(embedId)}, ${groupAuthoringCode(GroupSchema.parse(child), indent, ctx)})`;
+  }
+  if (helperName === 'block') {
+    return `block(${formatString(embedId)}, ${blockAuthoringCode(BlockSchema.parse(child), indent, ctx)})`;
+  }
+  if (helperName === 'blockHeader') {
+    return `blockHeader(${formatString(embedId)}, ${blockHeaderAuthoringCode(BlockHeaderSchema.parse(child), indent, ctx)})`;
+  }
+  if (helperName === 'blockSection') {
+    return `blockSection(${formatString(embedId)}, ${blockSectionAuthoringCode(BlockSectionSchema.parse(child), indent, ctx)})`;
+  }
+  if (helperName === 'blockRow') {
+    return `blockRow(${formatString(embedId)}, ${blockRowAuthoringCode(BlockRowSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'entity') {
     const input = {

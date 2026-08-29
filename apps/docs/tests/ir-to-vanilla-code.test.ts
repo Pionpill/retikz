@@ -1,7 +1,14 @@
 import type { IRScene } from '@retikz/core';
 
 import { parseWay } from '@retikz/core';
-import { GraphSchema, GroupSchema } from '@retikz/graph';
+import {
+  BlockHeaderSchema,
+  BlockRowSchema,
+  BlockSchema,
+  BlockSectionSchema,
+  GraphSchema,
+  GroupSchema,
+} from '@retikz/graph';
 import { describe, expect, it } from 'vitest';
 
 import { irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
@@ -60,6 +67,64 @@ describe('irToVanillaCode', () => {
     expect(code).toContain('GroupInputEmbedAdapter');
     expect(code).toContain('EntityInputEmbedAdapter');
     expect(code).not.toContain('GroupDefinition');
+  });
+
+  it('block-codegen：保留开放 children 与独立 Header / Section / Row composite', () => {
+    const code = irToVanillaCode(
+      ir([
+        BlockSchema.parse({
+          namespace: 'graph',
+          type: 'block',
+          id: 'user',
+          children: [
+            BlockHeaderSchema.parse({
+              namespace: 'graph',
+              type: 'blockHeader',
+              icon: { type: 'node', position: [0, 0], text: 'U' },
+              title: { text: 'User' },
+              description: { text: 'Domain entity' },
+              trailing: { namespace: 'graph', type: 'entity', role: 'state', text: 'public' },
+            }),
+            BlockSectionSchema.parse({
+              namespace: 'graph',
+              type: 'blockSection',
+              id: 'user.fields',
+              title: { text: 'Fields' },
+              children: [
+                BlockRowSchema.parse({
+                  namespace: 'graph',
+                  type: 'blockRow',
+                  id: 'user.name',
+                  children: [
+                    {
+                      key: 'name',
+                      child: { namespace: 'graph', type: 'entity', role: 'concept', text: 'name' },
+                    },
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ]),
+    );
+
+    expect(code).toContain("block('preview-block-1'");
+    expect(code).toContain("blockHeader('preview-blockHeader-1'");
+    expect(code).toContain("blockSection('preview-blockSection-1'");
+    expect(code).toContain("blockRow('preview-blockRow-1'");
+    expect(code).toContain("title: { text: 'User' }");
+    expect(code).toContain("description: { text: 'Domain entity' }");
+    expect(code).toContain("id: 'user.fields'");
+    expect(code).toContain("id: 'user.name'");
+    expect(code).toContain("key: 'name'");
+    expect(code).toContain("entity('preview-entity-");
+    expect(code).toContain('BlockInputEmbedAdapter');
+    expect(code).toContain('BlockHeaderInputEmbedAdapter');
+    expect(code).toContain('BlockSectionInputEmbedAdapter');
+    expect(code).toContain('BlockRowInputEmbedAdapter');
+    expect(code).toContain('EntityInputEmbedAdapter');
+    expect(code).not.toContain('BlockDefinition');
   });
 
   it('import-header：恒定 vanilla import + scene 装配', () => {

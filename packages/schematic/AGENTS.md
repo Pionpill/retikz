@@ -10,13 +10,13 @@ Schematic 是可复用图式语义、关系模型与算法布局的领域分组�
 
 ## 包家族
 
-| 包                      | 解决的问题                                | 拥有                                                                                                            | 不拥有                                                |
-| ----------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `@retikz/graph`         | 提供可组合关系语义与可选 Graph 局部上下文 | Graph / Group / Entity / Relation IR、领域 resolve、Graph context、Core-compatible 字段、Definition 与 lowering | 成员数据库、geometry 模型、自动布局、Editor、renderer |
-| `@retikz/graph-react`   | 用 React 编写和运行 Graph 语义元素        | Graph / Group / Entity / Relation JSX sugar、React runtime 接线                                                 | Graph schema、resolve、lowering、Layout、Core 语义    |
-| `@retikz/graph-vanilla` | 用无框架 API 编写和运行 Graph 语义元素    | Graph / Group / Entity / Relation builder、normalize、SSR / mount 编排与 runtime 接线                           | Graph schema、resolve、lowering、Layout、Core 语义    |
+| 包                      | 解决的问题                                | 拥有                                                                                                                    | 不拥有                                                |
+| ----------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `@retikz/graph`         | 提供可组合关系语义与可选 Graph 局部上下文 | Graph / Group / Block / Entity / Relation IR、领域 resolve、Graph context、Core-compatible 字段、Definition 与 lowering | 成员数据库、geometry 模型、自动布局、Editor、renderer |
+| `@retikz/graph-react`   | 用 React 编写和运行 Graph 语义元素        | Graph / Group / Block / Entity / Relation JSX sugar、React runtime 接线                                                 | Graph schema、resolve、lowering、Layout、Core 语义    |
+| `@retikz/graph-vanilla` | 用无框架 API 编写和运行 Graph 语义元素    | Graph / Group / Block / Entity / Relation builder、normalize、SSR / mount 编排与 runtime 接线                           | Graph schema、resolve、lowering、Layout、Core 语义    |
 
-Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 已按 ADR-07～10 建立独立 Graph / Group / Entity / Relation composite：Graph 是可选上下文，Group 是任意内容的可见包含边界。未来 `@retikz/diagram` package family 可以按兼容版本单向依赖 `@retikz/graph`；Graph 不反向依赖 Diagram、Editor 或 renderer。
+Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 alpha.1 建立独立 Graph / Group / Entity / Relation composite，alpha.2 增加开放内容的 Block family：Graph 是可选上下文，Group 是任意内容的可见包含边界，Block 是具有 Graph identity 的纵向布局容器，Header / Section / Row 是可选的独立 composite。未来 `@retikz/diagram` package family 可以按兼容版本单向依赖 `@retikz/graph`；Graph 不反向依赖 Diagram、Editor 或 renderer。
 
 ## 分层与依赖
 
@@ -25,16 +25,16 @@ Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 已按 
 - Graph 不复制 Layout FlexLayout、artifact、spacing、axis sizing、clip 或 geometry 算法；公共面不足时先在 Layout owner 冻结并实现最小 composition contract
 - `graph-react` 通过 `graph-vanilla` 的 normalize / adapter 接线复用 `graph`、`@retikz/react`、`@retikz/vanilla` 与必要的 Foundation 错误契约；`graph-vanilla` 只消费 `graph` 与 `@retikz/vanilla`
 - public IR 必须 JSON-safe；ReactNode、DOM、renderer 资源和编辑器运行时状态不得进入 Graph schema
-- Group、Entity 与 Relation 是可独立放入任意 Core 内容树的 semantic composite；Graph 与 Group 均组合完整 Core Scope surface，并额外提供局部 `graphTheme`。Group 复用 Standard Surface、Layout 与 Core Node labels 表达可见边界，不自动排列 authored children
+- Group、Block、BlockHeader、BlockSection、BlockRow、Entity 与 Relation 是可独立放入任意 Core 内容树的 semantic composite；Graph、Group、Block、BlockSection 与 BlockRow 组合完整 Core Scope surface，Graph、Group 与 Block 可提供局部 `graphTheme`。Group 复用 Standard Surface、Layout 与 Core Node labels 表达可见边界且不自动排列 authored children；Block 复用 Layout 与 Surface 按作者顺序纵向排列任意 children，Header / Section / Row 只是可选组合，Cell 保持 Row-local Flex item
 - Graph Theme style 只按 role、kind、predicate 与 direction 等真实语义提供稀疏 appearance 默认；单例精确外观继续使用 Core-compatible 字段，Graph 发布包只维护 Neutral baseline，命名 reference styles 由消费方通过公开 Definition 注入
 - React Graph standalone 复用 Layout 建立 Scene，embedded Graph 只贡献局部 Scope；host-only props 不进入 `IRGraph`，Graph 不拥有 Layout solver 或 Scene 语义
 - Relation endpoint 直接复用 Core NodeTarget 与 namespace，可以引用 Core 已公开寻址的 Node、Coordinate、resolved Scope 及下沉为这些 target 的上层 composite；Graph 不建立第二套 endpoint 或 lookup
-- Graph、Group、Entity 与 Relation 的 id 均为显式 authoring identity；省略时不得由 resolve、lowering 或 adapter 自动生成
+- Graph、Group、Block、Entity 与 Relation 的 id 均为显式 authoring identity；省略时不得由 resolve、lowering 或 adapter 自动生成。Block、Section 与 Row 的显式 id 发布到当前 Core namespace，不自动添加 Block 前缀
 - Diagram 复用 Graph 数据，拥有布局意图、约束确定化、provider 编排、自动 routing 与布局结果；不得复制 Graph schema、appearance 或 Theme 契约
 
 ## 当前状态
 
-Graph v0.1 alpha.1 的 ADR-01～10 均已形成 Accepted 或 Superseded 的最终状态。当前契约是 Graph、Group、Entity 与 Relation 四个独立 Source composite：Entity / Relation 复用 Core Node / Path lower-facing surface，Graph / Group 复用完整 Core Scope surface，Group 组合 Standard Surface、Layout caption 与 Core boundary labels；children 与 Core `IRChild` 同源，`graphTheme` 只影响可见 Entity / Relation，React 与 Vanilla 只提供同一 Source IR 的 authoring sugar。
+Graph v0.1 alpha.1 的 ADR-01～10 与 alpha.2 ADR-01～03 均已形成 Accepted、Proposed 或 Superseded 的当前状态。现行契约包含独立 Graph、Group、Block family、Entity 与 Relation Source composite：Entity / Relation 复用 Core Node / Path lower-facing surface，Graph / Group / Block / Section / Row 复用完整 Core Scope surface，Block 以 Layout 与 Surface 组织任意有序 children；`graphTheme` 只影响可见 Entity / Relation，React 与 Vanilla 只提供同一 Source IR 的 authoring sugar。
 
 ## 验证
 
