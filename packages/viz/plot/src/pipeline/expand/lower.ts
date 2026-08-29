@@ -167,7 +167,7 @@ export type PlotDataArtifact = {
   rootMarkDataViews: Array<MarkDataView>;
   /** 根级变换的数据追溯；仅在追溯入口生成 */
   rootLineage?: DataLineageRun;
-  /** 与 rootMarkDataViews 同序的图元局部数据追溯；仅在追溯入口生成 */
+  /** 与实际 markDataViews 同序的图元局部数据追溯；仅在追溯入口生成 */
   markLineages?: Array<DataLineageRun>;
   /** 基于 rootDataView 生成的规范化组合解析结果 */
   compositionResolution: CompositionResolution;
@@ -414,6 +414,39 @@ export const lowerPlotWithDataArtifact = (
 
     const usedFacetScopeIds = new Set(coordinateScopes.scopes.map(scope => scope.id));
     const panels = facets.flatMap(facet => resolveFacetPanels(facet, rootDataView.rows, usedFacetScopeIds));
+    const panelMarkResults = panels.map(panel => {
+      const panelDataView: DataView = {
+        rows: panel.rows,
+        fieldTypes: rootDataView.fieldTypes,
+        fieldTypeEvidence: rootDataView.fieldTypeEvidence,
+      };
+      return {
+        panelDataView,
+        markResults: node.marks.map((mark, markIndex) => resolveMarkTransform(mark, markIndex, panelDataView)),
+      };
+    });
+    const sharedFacetMarkDataViews: Array<MarkDataView> = node.marks.map((mark, markIndex) => {
+      const scopedDataViews = panelMarkResults.map(
+        panelResult => panelResult.markResults[markIndex].markDataView.dataView,
+      );
+      const fallbackDataView = rootMarkDataViews[markIndex]?.dataView ?? rootDataView;
+      const representativeDataView = scopedDataViews[0] ?? fallbackDataView;
+      return {
+        markIndex,
+        mark,
+        dataView: {
+          rows: scopedDataViews.flatMap(dataView => dataView.rows),
+          fieldTypes: representativeDataView.fieldTypes,
+          fieldTypeEvidence: representativeDataView.fieldTypeEvidence,
+        },
+      };
+    });
+    dataArtifact.markDataViews = sharedFacetMarkDataViews;
+    if (lineageOptions !== undefined) {
+      dataArtifact.markLineages = node.marks.map((_mark, markIndex) => ({
+        events: panelMarkResults.flatMap(panelResult => panelResult.markResults[markIndex]?.lineage?.events ?? []),
+      }));
+    }
     const maxColumnIndex = panels.reduce((max, panel) => Math.max(max, panel.columnIndex), 0);
     const maxRowIndex = panels.reduce((max, panel) => Math.max(max, panel.rowIndex), 0);
     const facetLayout = arrangementLayoutOf(facets[0]);
@@ -616,19 +649,12 @@ export const lowerPlotWithDataArtifact = (
       }
     }
 
-    const panelScopes: Array<IRScope> = panels.map(panel => {
+    const panelScopes: Array<IRScope> = panels.map((panel, panelIndex) => {
       const panelAxisGuides = facetAxisGuidesForPanel(panel);
       const panelFrameGuides = facetFrameGuidesForPanel(panel);
-      const panelDataView: DataView = {
-        rows: panel.rows,
-        fieldTypes: rootDataView.fieldTypes,
-        fieldTypeEvidence: rootDataView.fieldTypeEvidence,
-      };
-      const panelMarkDataViews: Array<MarkDataView> = node.marks.map((mark, markIndex) => ({
-        markIndex,
-        mark,
-        dataView: applyMarkTransforms(mark, panelDataView, transformRegistry, transformContext),
-      }));
+      const panelResult = panelMarkResults[panelIndex];
+      const panelDataView = panelResult.panelDataView;
+      const panelMarkDataViews = panelResult.markResults.map(markResult => markResult.markDataView);
       const roleMarkDataViews: Record<string, Array<MarkDataView>> = {};
       for (const [role, sharing] of Object.entries(arrangementResolveOf(panel.facet)?.scale ?? {})) {
         if (sharing === 'independent') roleMarkDataViews[role] = panelMarkDataViews;
@@ -648,7 +674,7 @@ export const lowerPlotWithDataArtifact = (
           height: panelHeight,
           margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
           labelGap: panelLayout?.labelGap,
-          markDataViews: rootMarkDataViews,
+          markDataViews: sharedFacetMarkDataViews,
           roleMarkDataViews,
         }),
       );
@@ -663,7 +689,7 @@ export const lowerPlotWithDataArtifact = (
                 margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
                 labelGap: panelLayout?.labelGap,
                 plotAreaOverride: frameResolution.plotArea,
-                markDataViews: rootMarkDataViews,
+                markDataViews: sharedFacetMarkDataViews,
                 roleMarkDataViews,
               }),
             );
@@ -678,7 +704,7 @@ export const lowerPlotWithDataArtifact = (
                 margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
                 labelGap: panelLayout?.labelGap,
                 plotAreaOverride: frameResolution.plotArea,
-                markDataViews: rootMarkDataViews,
+                markDataViews: sharedFacetMarkDataViews,
                 roleMarkDataViews,
               }),
             )

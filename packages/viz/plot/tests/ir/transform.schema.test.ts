@@ -478,6 +478,29 @@ describe('SmoothTransformSchema', () => {
   });
 
   it.each([
+    ['linear', { kind: 'linear' }],
+    ['quadratic', { kind: 'quadratic' }],
+    ['polynomial default order', { kind: 'polynomial' }],
+    ['polynomial order 2', { kind: 'polynomial', order: 2 }],
+    ['polynomial order 3', { kind: 'polynomial', order: 3 }],
+    ['polynomial order 6', { kind: 'polynomial', order: 6 }],
+    ['logarithmic', { kind: 'logarithmic' }],
+    ['exponential', { kind: 'exponential' }],
+    ['power', { kind: 'power' }],
+  ])('smooth_accepts_complete_method_variant: %s', (_name, method) => {
+    const operation = {
+      kind: 'smooth',
+      x: 'time',
+      y: 'value',
+      method,
+      xAs: 'trendX',
+      yAs: 'trendY',
+    };
+
+    expect(TransformSchema.parse(operation)).toEqual(operation);
+  });
+
+  it.each([
     ['xAs', { kind: 'smooth', x: 'time', y: 'value', yAs: 'trendY' }],
     ['yAs', { kind: 'smooth', x: 'time', y: 'value', xAs: 'trendX' }],
   ])('smooth_requires_output_field: %s', (_field, operation) => {
@@ -516,5 +539,26 @@ describe('SmoothTransformSchema', () => {
     ],
   ])('smooth_rejects_invalid_%s', (_name, operation) => {
     expect(() => TransformSchema.parse(operation)).toThrow();
+  });
+
+  it.each([
+    ['polynomial order below minimum', { kind: 'polynomial', order: 1 }],
+    ['polynomial order above maximum', { kind: 'polynomial', order: 7 }],
+    ['polynomial non-integer order', { kind: 'polynomial', order: 2.5 }],
+    ['short logarithmic name', { kind: 'log' }],
+    ['short exponential name', { kind: 'exp' }],
+    ['unknown method field', { kind: 'quadratic', order: 2 }],
+    ['linear method options', { kind: 'linear', order: 2 }],
+  ])('smooth_rejects_invalid_method_variant: %s', (_name, method) => {
+    expect(() =>
+      TransformSchema.parse({
+        kind: 'smooth',
+        x: 'time',
+        y: 'value',
+        method,
+        xAs: 'trendX',
+        yAs: 'trendY',
+      }),
+    ).toThrow();
   });
 });

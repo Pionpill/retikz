@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 
+import { lowerPlotWithLineage } from '../../../src';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../../src/schemas';
 
@@ -98,5 +99,121 @@ describe('smooth path composition (contract)', () => {
     expect(pointLayer.children).toHaveLength(3);
     expect(pathLayer.children).toHaveLength(1);
     expect((pathLayer.children[0] as IRPath).children).toHaveLength(5);
+  });
+
+  it('fits the current rows of every facet panel and records the actual mark outputs', () => {
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'facetRows' },
+      scales: [
+        { type: 'linear', name: 'xScale' },
+        { type: 'linear', name: 'yScale' },
+      ],
+      composition: {
+        defaultView: 'root',
+        views: [{ id: 'root', coordinate: { type: 'cartesian2D', x: 'xScale', y: 'yScale' } }],
+        arrangements: [{ kind: 'facet', id: 'panel', view: 'root', column: { field: 'panel' } }],
+      },
+      marks: [
+        {
+          type: 'path',
+          order: 'trendX',
+          transform: [{ kind: 'smooth', x: 'x', y: 'y', sampleCount: 2, xAs: 'trendX', yAs: 'trendY' }],
+          encoding: { x: { field: 'trendX' }, y: { field: 'trendY' } },
+        },
+      ],
+    });
+    const result = lowerPlotWithLineage(
+      spec,
+      {
+        facetRows: [
+          { panel: 'A', x: 1, y: 2 },
+          { panel: 'A', x: 2, y: 4 },
+          { panel: 'B', x: 1, y: 10 },
+          { panel: 'B', x: 2, y: 20 },
+        ],
+      },
+      {
+        width: 480,
+        height: 300,
+        lineage: { rowValues: { maxRows: 10, fields: ['trendX', 'trendY'] } },
+      },
+    );
+
+    expect(result.lineage.marks[0]?.rowValues).toEqual([
+      { trendX: 1, trendY: 2 },
+      { trendX: 2, trendY: 4 },
+      { trendX: 1, trendY: 10 },
+      { trendX: 2, trendY: 20 },
+    ]);
+  });
+
+  it('keeps grouped regression rows in data space when coordinate projection changes', () => {
+    const specOf = (coordinate: Readonly<Record<string, unknown>>): IRPlot =>
+      PlotSchema.parse({
+        namespace: 'plot',
+        type: 'plot',
+        data: { reference: 'coordinateRows' },
+        scales: [
+          { type: 'linear', name: 'xScale' },
+          { type: 'linear', name: 'yScale' },
+          { type: 'ordinal', name: 'colorScale' },
+        ],
+        coordinate,
+        marks: [
+          {
+            type: 'path',
+            series: 'series',
+            order: 'trendX',
+            transform: [
+              {
+                kind: 'smooth',
+                x: 'x',
+                y: 'y',
+                groupBy: ['series'],
+                sampleCount: 2,
+                xAs: 'trendX',
+                yAs: 'trendY',
+              },
+            ],
+            encoding: {
+              x: { field: 'trendX' },
+              y: { field: 'trendY' },
+              color: { field: 'series', scale: 'colorScale' },
+            },
+          },
+        ],
+      });
+    const coordinateRows = [
+      { series: 'A', x: 1, y: 2 },
+      { series: 'A', x: 2, y: 4 },
+      { series: 'B', x: 1, y: 3 },
+      { series: 'B', x: 2, y: 5 },
+    ];
+    const options = {
+      width: 480,
+      height: 300,
+      lineage: { rowValues: { maxRows: 10, fields: ['series', 'trendX', 'trendY'] } },
+    };
+    const cartesian = lowerPlotWithLineage(
+      specOf({ type: 'cartesian2D', x: 'xScale', y: 'yScale' }),
+      { coordinateRows },
+      options,
+    );
+    const polar = lowerPlotWithLineage(
+      specOf({ type: 'polar2D', angle: 'xScale', radius: 'yScale' }),
+      { coordinateRows },
+      options,
+    );
+
+    expect(cartesian.lineage.marks[0]?.rowValues).toEqual([
+      { series: 'A', trendX: 1, trendY: 2 },
+      { series: 'A', trendX: 2, trendY: 4 },
+      { series: 'B', trendX: 1, trendY: 3 },
+      { series: 'B', trendX: 2, trendY: 5 },
+    ]);
+    expect(polar.lineage.marks[0]?.rowValues).toEqual(cartesian.lineage.marks[0]?.rowValues);
+    expect(polar.children).not.toEqual(cartesian.children);
   });
 });
