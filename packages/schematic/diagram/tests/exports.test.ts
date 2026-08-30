@@ -15,7 +15,7 @@ describe('@retikz/diagram package shell', () => {
     });
   });
 
-  it('keeps the public root empty before capability design', () => {
+  it('keeps package-internal Foundation contracts out of the public root', () => {
     expect(Object.keys(diagramExports)).toEqual([]);
   });
 });
