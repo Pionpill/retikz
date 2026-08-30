@@ -28,34 +28,7 @@ import {
   roleAnchor,
   roleValues,
 } from '../shared';
-
-/** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
-const POINT_SIZE = 10;
-
-/** 散点 node 样式（circle + padding0 + minimumSize；÷√2 补 circle 外接，使 POINT_SIZE 即真实直径） */
-const pointStyle = (fill: MarkPaint, mark: IRPlotPointMark): IRNodeDefault => {
-  const padding = mark.padding?.kind === 'constant' ? mark.padding.value : undefined;
-  const minimumSize = mark.minimumSize?.kind === 'constant' ? mark.minimumSize.value : undefined;
-  const stroke = mark.stroke?.kind === 'constant' ? mark.stroke.value : undefined;
-  const strokeWidth = mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : undefined;
-  const fillOpacity = mark.fillOpacity?.kind === 'constant' ? mark.fillOpacity.value : undefined;
-  const strokeOpacity = mark.strokeOpacity?.kind === 'constant' ? mark.strokeOpacity.value : undefined;
-  const opacity = mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
-  const rotate = mark.rotate?.kind === 'constant' ? mark.rotate.value : undefined;
-  return {
-    shape: 'circle',
-    padding: padding ?? 0,
-    minimumSize: minimumSize ?? POINT_SIZE / Math.SQRT2,
-    ...(typeof fill === 'string' ? { color: fill } : {}),
-    fill,
-    ...(stroke !== undefined ? { stroke } : {}),
-    ...(strokeWidth !== undefined ? { strokeWidth } : {}),
-    ...(fillOpacity !== undefined ? { fillOpacity } : {}),
-    ...(strokeOpacity !== undefined ? { strokeOpacity } : {}),
-    ...(opacity !== undefined ? { opacity } : {}),
-    ...(rotate !== undefined ? { rotate } : {}),
-  };
-};
+import { pointGlyphStyle } from './point-glyph';
 
 /** 自由文本 node 样式（无 shape 边框：padding0 + 无描边 + textColor 上提到子 Scope；色走文本而非 fill） */
 const textStyle = (textColor: string, mark: IRPlotPointMark): IRNodeDefault => {
@@ -169,10 +142,12 @@ export const lowerPoint = (
         type: 'scope',
         nodeDefault: isText
           ? textStyle(textColorConstant ?? (typeof fillConstant === 'string' ? fillConstant : defaultColor), mark)
-          : pointStyle(fillConstant ?? defaultColor, mark),
+          : pointGlyphStyle(fillConstant ?? defaultColor, mark),
         children: placed.map(p => p.node),
       }
-    : colorGroupedScope(placed, fill => (isText ? textStyle(textColorConstant ?? fill, mark) : pointStyle(fill, mark)));
+    : colorGroupedScope(placed, fill =>
+        isText ? textStyle(textColorConstant ?? fill, mark) : pointGlyphStyle(fill, mark),
+      );
   return attachMarkLayer(layer, mark, ctx);
 };
 

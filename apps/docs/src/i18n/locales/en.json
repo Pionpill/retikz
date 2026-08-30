@@ -183,6 +183,7 @@
     "chartScatter": "Scatter Chart",
     "chartBubble": "Bubble Chart",
     "chartConnectedScatter": "Connected Scatter",
+    "chartRangedDot": "Ranged Dot",
     "chartRegression": "Regression Chart",
     "chartModel": "Chart Model",
     "chartModelStructure": "Structure & Types",

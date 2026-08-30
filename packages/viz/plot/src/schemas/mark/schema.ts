@@ -641,6 +641,45 @@ export const PointMarkSchema = strictObject({
   'Point mark: scatter glyph or borderless text label (encoding.text set → text Node); supports optional size / opacity / shape glyph channels',
 );
 
+/** Relation projected target 可选端点 glyph 的封闭 Point 表现字段 */
+export const RelationEndpointGlyphSchema = strictObject({
+  ...PointMarkSchema.pick({
+    color: true,
+    size: true,
+    shape: true,
+    fill: true,
+    stroke: true,
+    strokeWidth: true,
+    fillOpacity: true,
+    strokeOpacity: true,
+    opacity: true,
+    rotate: true,
+    minimumSize: true,
+  }).shape,
+})
+  .superRefine((glyph, ctx) => {
+    for (const [name, value] of Object.entries(glyph)) {
+      if (value.kind !== MarkValueKind.Constant) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [name],
+          message: 'relation endpoint glyph styles must use constant values',
+        });
+      }
+    }
+  })
+  .describe('Constant Point glyph appearance emitted at a projected Relation endpoint');
+
+/** Relation source / target 的可选端点 glyph 配置 */
+export const RelationEndpointGlyphsSchema = strictObject({
+  source: RelationEndpointGlyphSchema.optional(),
+  target: RelationEndpointGlyphSchema.optional(),
+})
+  .refine(endpoints => endpoints.source !== undefined || endpoints.target !== undefined, {
+    message: 'relation endpoints require source or target glyph configuration',
+  })
+  .describe('Optional source and target glyphs emitted atomically with a projected Relation row');
+
 export const PathMarkSchema = object({
   type: literal(PlotMark.Path).describe('Discriminator: ordered points connected into a 1D path'),
   order: NonBlankStringSchema.optional().describe(
@@ -939,6 +978,9 @@ export const RelationMarkSchema = strictObject({
   ribbon: RelationRibbonOptionsSchema.optional().describe(
     'Ribbon-specific relation geometry and core Path kind=ribbon options',
   ),
+  endpoints: RelationEndpointGlyphsSchema.optional().describe(
+    'Optional Point glyphs emitted at plain projected source and target positions',
+  ),
   ...geometryHostLabel,
   ...markBase,
   encoding: object({
@@ -974,6 +1016,47 @@ export const RelationMarkSchema = strictObject({
         path: ['ribbon'],
         message: 'ribbon relation marks require ribbon options',
       });
+    }
+    if (mark.endpoints !== undefined) {
+      if (kind !== RelationGeometryKind.Path) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['endpoints'],
+          message: 'relation endpoint glyphs require a path relation',
+        });
+      }
+      if (!('project' in mark.source) || !('project' in mark.target)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['endpoints'],
+          message: 'relation endpoint glyphs require projected source and target refs',
+        });
+      }
+      for (const [role, ref] of [
+        ['source', mark.source],
+        ['target', mark.target],
+      ] as const) {
+        if (
+          'project' in ref &&
+          (ref.anchorId !== undefined ||
+            ref.anchor !== undefined ||
+            ref.offset !== undefined ||
+            ref.boundary !== undefined)
+        ) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [role],
+            message: 'relation endpoint glyph projected refs cannot use anchor, offset, boundary, or anchorId',
+          });
+        }
+      }
+      if (mark.path?.via !== undefined || mark.path?.route !== undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['path'],
+          message: 'relation endpoint glyphs cannot use via or route',
+        });
+      }
     }
   })
   .describe(

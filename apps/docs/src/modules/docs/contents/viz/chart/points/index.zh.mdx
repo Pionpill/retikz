@@ -5,18 +5,19 @@ description: 用点的位置及点之间的关系展示单个观测，并按图�
 
 点图以一个或多个数据点为视觉主体。这个分组帮助读者按视觉结构选择 chartType，也保留源码目录与 `/point` 多入口导入边界；它不对应额外的 Point resolver 或运行时分发层级。
 
-Scatter、Bubble、Regression 与 Connected Scatter 都属于 `type: 'point'` family，并通过 `recipe.chartType` 选择各自的精确 schema 与 recipe。它们共享根级 `data`、`layout`、`presentation`、`theme` 与 `plotExtension`，而 `recipe.encodings`、`recipe.properties` 和内建 semantic mark 固定具体图表的数据角色与视觉结构。
+Scatter、Bubble、Regression、Connected Scatter 与 Ranged Dot 都属于 `type: 'point'` family，并通过 `recipe.chartType` 选择各自的精确 schema 与 recipe。它们共享根级 `data`、`layout`、`presentation`、`theme` 与 `plotExtension`，而 `recipe.encodings`、`recipe.properties` 和内建 semantic mark 固定具体图表的数据角色与视觉结构。
 
 所有类型共享的字段归属、编写主链、整图展示与 Plot 扩展规则统一放在[图形模型](/viz/chart/model)中；本分组只比较点图类型自己的视觉语义。
 
 ## 职责一览
 
-| 图表                                   | `chartType`  | 适合场景                               |
-| -------------------------------------- | ------------ | -------------------------------------- |
-| [散点图](/viz/chart/points/scatter)    | `scatter`    | 查看分布、聚类、离群点或相关趋势       |
-| [气泡图](/viz/chart/points/bubble)     | `bubble`     | 同时比较二维位置与第三个连续字段的量级 |
-| [回归图](/viz/chart/points/regression) | `regression` | 在原始观测上比较整体或分组拟合趋势     |
-| [连接散点图](/viz/chart/points/connected-scatter) | `connected-scatter` | 按显式顺序读取观测轨迹 |
+| 图表                                              | `chartType`         | 适合场景                               |
+| ------------------------------------------------- | ------------------- | -------------------------------------- |
+| [散点图](/viz/chart/points/scatter)               | `scatter`           | 查看分布、聚类、离群点或相关趋势       |
+| [气泡图](/viz/chart/points/bubble)                | `bubble`            | 同时比较二维位置与第三个连续字段的量级 |
+| [回归图](/viz/chart/points/regression)            | `regression`        | 在原始观测上比较整体或分组拟合趋势     |
+| [连接散点图](/viz/chart/points/connected-scatter) | `connected-scatter` | 按显式顺序读取观测轨迹                 |
+| [范围点图](/viz/chart/points/ranged-dot)          | `ranged-dot`        | 比较每个类别的两个端点与变化方向       |
 
 ## 章节内容
 
@@ -40,5 +41,9 @@ Scatter、Bubble、Regression 与 Connected Scatter 都属于 `type: 'point'` fa
   <LinkedCard href="/viz/chart/points/connected-scatter">
     <span className="font-semibold">连接散点图</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">保留观测点，并按显式顺序连接一条或多条轨迹</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/ranged-dot">
+    <span className="font-semibold">范围点图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">用连接线和双端点比较每个类别的前后值</span>
   </LinkedCard>
 </div>

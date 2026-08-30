@@ -139,6 +139,16 @@ export const vizV02: Release = {
                 en: 'Chart Theme is split by owner: Source `theme.tokens.chart` is consumed by the Chart shell, `theme.tokens.plot` by Plot, and `theme.tokens.recipe` is validated and consumed by the current chartType schema. Runtime Definitions still enter the shared Core registry through their respective owners.',
               },
             },
+            {
+              label: {
+                zh: 'Relation 支持投影端点图元',
+                en: 'Relation supports projected endpoint glyphs',
+              },
+              content: {
+                zh: 'Path Relation 可在投影后的 source / target 上输出 Point 视觉端点；connector 始终先绘制，两个端点随后绘制。任一必要坐标无效时，同一 datum 的 connector 与两个端点原子跳过，同时保留原 datum provenance 且不重复注册 datum id。',
+                en: 'Path relations can emit Point-style glyphs at projected source and target coordinates, drawing the connector before both endpoints. If any required coordinate is invalid, the connector and both endpoints for that datum are skipped atomically while preserving datum provenance without duplicate datum-id registration.',
+              },
+            },
           ],
         },
       ],

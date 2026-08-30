@@ -249,6 +249,13 @@ export const vizV01: Release = {
             en: '`connected-scatter` fixes required `order` and a Path-to-Point semantic group. Optional `series` unifies trajectory grouping, color scale, and legend, while `connectNulls` controls missing-value bridging.',
           },
         },
+        {
+          label: { zh: 'Ranged Dot 原子双端点', en: 'Atomic Ranged Dot endpoints' },
+          content: {
+            zh: '`ranged-dot` 把 category / start / end 解析为一个 projected Relation；连接线与两个端点共享投影和颜色，坏行原子跳过且不留下孤立图元。',
+            en: '`ranged-dot` resolves category, start, and end into one projected Relation. Connector and endpoint glyphs share projection and color, while invalid rows skip atomically without orphan geometry.',
+          },
+        },
       ],
       subVersions: [
         {

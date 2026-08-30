@@ -69,11 +69,15 @@ This Point-family Scatter Source preserves author intent. Coordinates, scales, g
 
 A family is finite, stable, and intended for discovery. A chartType is a globally unique recipe key; each key belongs to exactly one family. The first Point-family routes are:
 
-| Family (`type`) | chartType | Exact schema and core difference                                                              |
-| --------------- | --------- | --------------------------------------------------------------------------------------------- |
-| `point`         | `scatter` | `ScatterChartSchema`; required x/y plus optional visual, aggregate, scale, and facet mappings |
+| Route                         | Exact schema and import path                                               | Core difference                               |
+| ----------------------------- | -------------------------------------------------------------------------- | --------------------------------------------- |
+| `point` → `scatter`           | `ScatterChartSchema`<br />`@retikz/chart/point/scatter`                    | Required x/y; visual, aggregate, scale, facet |
+| `point` → `bubble`            | `BubbleChartSchema`<br />`@retikz/chart/point/bubble`                      | Required x/y/size; size stays field-bound     |
+| `point` → `regression`        | `RegressionChartSchema`<br />`@retikz/chart/point/regression`              | Required x/y; series, fit, Point + trend      |
+| `point` → `connected-scatter` | `ConnectedScatterChartSchema`<br />`@retikz/chart/point/connected-scatter` | Required x/y/order; series, Path → Point      |
+| `point` → `ranged-dot`        | `RangedDotChartSchema`<br />`@retikz/chart/point/ranged-dot`               | category/start/end; connector + endpoints     |
 
-Import the exact schema from `@retikz/chart/point/scatter`. Use the aggregate `@retikz/chart/point` entry only when the application intentionally needs the whole Point family.
+Import each exact schema from the corresponding concrete chartType subpath in the table. Use the aggregate `@retikz/chart/point` entry only when the application intentionally needs the whole Point family.
 
 Every chartType owns a strict `XxxChartSchema`, `XxxChartEncodingsSchema`, `XxxChartPropertiesSchema`, and exact recipe Theme schema. Shared atoms are extracted only when the semantic invariant is genuinely shared; there is no wide union containing every family. Unknown chartTypes, family mismatches, unknown keys, and incompatible marks fail at the Source or provider boundary.
 
@@ -101,7 +105,7 @@ recipe: {
 }
 ```
 
-The first authored `scatter` mark replaces the recipe's complete built-in group, and the second mark is then appended in authored order. A semantic group may contain multiple Plot marks, and override replaces that group atomically. If `override: true` finds no group with the same kind, the mark is still appended and `onWarn` receives `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`. To connect the points, write a Plot-owned Path mark in `plotExtension.marks`; it remains independent of Chart context.
+The first authored `scatter` mark replaces the recipe's complete built-in group, and the second mark is then appended in authored order. A semantic group may contain multiple Plot marks, and override replaces that group atomically. If `override: true` finds no group with the same kind, the mark is still appended and `onWarn` receives `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`. For a custom independent connection layer beyond the built-in chartTypes, write a Plot-owned Path mark in `plotExtension.marks`; it remains independent of Chart context.
 
 ```ts
 plotExtension: {
@@ -158,7 +162,7 @@ The Chart-shell cascade is mode fallback → Core style chain → authored named
   <LinkedCard href="/viz/chart/points">
     <span className="font-semibold">Point family</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Review Scatter's exact schema and authored marks.
+      Review exact schemas and authored marks for all five active Point chartTypes.
     </span>
   </LinkedCard>
 </div>

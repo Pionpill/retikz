@@ -1,0 +1,75 @@
+---
+title: 范围点图
+description: 用同一行数据中的起点、终点和连接线比较每个类别的前后值或两个测量值。
+family: scatter-points
+usage: distribution
+---
+
+<ShowcaseGallery
+  examples={[
+    {
+      id: 'ranged-dot-basic',
+      title: '多类别前后值比较',
+      description: '比较每个类别的 start / end，并保留 authored role 所表达的变化方向。',
+      preview: {
+        files: ['ranged-dot-basic', 'ranged-dot-basic.data.ts'],
+        controls: { name: 'ranged-dot-basic' },
+        controlPanelDefaultOpen: false,
+        size: 'xxxl',
+        caption: '调整端点和连接线样式；start / end 角色不会因数值大小而交换。',
+      },
+    },
+  ]}
+>
+Ranged Dot 固定横向：`category` 映射 y，`start` 与 `end` 映射同一 x scale。若两个端点都显式声明 scale binding，名称必须一致；可以由一端声明 operation、另一端引用该名称。它适合比柱长更强调两个端点、又需要显示变化方向的比较。
+
+## 原子行语义
+
+一个 Ranged Dot semantic group 只生成一个 projected Relation operation。Plot 在同一次投影中得到两端，按“连接线、起点、终点”绘制；任一端缺失、null 或无法投影时，整行一起跳过，不留下孤立端点。
+
+`start > end` 不交换角色；`start === end` 仍保留零长度连接线和两个重合 glyph。空数据是合法空结果。
+
+## 样式优先级
+
+`point` 设置两个端点的共同常量外观，`startPoint` 与 `endPoint` 再覆盖各自端点。`range` 只影响连接线。可选 `color` 字段同时驱动三者和分类图例；member properties 不建立独立字段尺度。
+
+## API 参考
+
+### `RangedDotEncodingsProps`
+
+| 属性             | 类型                                                                      | 默认值 | 描述                         |
+| ---------------- | ------------------------------------------------------------------------- | ------ | ---------------------------- |
+| `category`       | Point position mapping                                                    | —      | 必需类别字段，固定映射 y     |
+| `start` / `end`  | Point position mapping                                                    | —      | 必需端点字段，共用 x scale   |
+| `color?`         | Point color mapping                                                       | —      | 三成员共享颜色与图例         |
+| `row` / `column` | `string`、`IRPlotPartitionDimension` 或 `Array<IRPlotPartitionDimension>` | —      | 可选分面维度                 |
+| `facet?`         | `IRPlotFacetOptions`                                                      | —      | 分面选项；需要 row 或 column |
+
+### `RangedDotPropertiesProps`
+
+| 属性          | 类型                         | 默认值 | 描述                           |
+| ------------- | ---------------------------- | ------ | ------------------------------ |
+| `point?`      | `IRRangedDotPointProperties` | Point  | 两个端点的共同常量外观         |
+| `startPoint?` | `IRRangedDotPointProperties` | 继承   | 起点覆盖                       |
+| `endPoint?`   | `IRRangedDotPointProperties` | 继承   | 终点覆盖                       |
+| `range?`      | `IRRangedDotRangeProperties` | Path   | 连接线颜色、线宽、透明度与线型 |
+
+### `RangedDotMarkProps`
+
+| 属性          | 类型                                                  | 默认值  | 描述                           |
+| ------------- | ----------------------------------------------------- | ------- | ------------------------------ |
+| `override?`   | `boolean`                                             | `false` | 替换完整 ranged-dot group      |
+| `encodings?`  | `{ category?: string; start?: string; end?: string }` | 继承    | 覆盖 direct 字段，不能改 color |
+| `properties?` | `IRRangedDotChartProperties`                          | 继承    | 按 member 合并常量外观         |
+
+## 公开入口
+
+- `@retikz/chart/point/ranged-dot`：exact schema、Source 类型、provider 与 locator
+- `@retikz/chart-react/point/ranged-dot`：Chart、Encodings、Properties 与 Mark declarations
+- `@retikz/chart-vanilla/point/ranged-dot`：normalize、factory 与 typed Input
+
+## 相关
+
+[散点图](/viz/chart/points/scatter) · [连接散点图](/viz/chart/points/connected-scatter) · [与 Plot 协作](/viz/chart/model/plot)
+
+</ShowcaseGallery>

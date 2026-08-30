@@ -55,6 +55,10 @@
       "types": "./src/point/regression/index.ts",
       "default": "./src/point/regression/index.ts"
     },
+    "./point/ranged-dot": {
+      "types": "./src/point/ranged-dot/index.ts",
+      "default": "./src/point/ranged-dot/index.ts"
+    },
     "./point/scatter": {
       "types": "./src/point/scatter/index.ts",
       "default": "./src/point/scatter/index.ts"
@@ -89,6 +93,11 @@
         "types": "./dist/types/point/regression/index.d.ts",
         "import": "./dist/point/regression/index.js",
         "default": "./dist/point/regression/index.js"
+      },
+      "./point/ranged-dot": {
+        "types": "./dist/types/point/ranged-dot/index.d.ts",
+        "import": "./dist/point/ranged-dot/index.js",
+        "default": "./dist/point/ranged-dot/index.js"
       },
       "./point/scatter": {
         "types": "./dist/types/point/scatter/index.d.ts",

@@ -13,6 +13,7 @@ export const ChartType = {
   Bubble: 'bubble',
   ConnectedScatter: 'connected-scatter',
   Regression: 'regression',
+  RangedDot: 'ranged-dot',
   Scatter: 'scatter',
 } as const;
 

@@ -19,6 +19,7 @@ import {
   ConnectedScatterChartSchema,
   createConnectedScatterChartProviderContribution,
 } from '../../src/point/connected-scatter';
+import { createRangedDotChartProviderContribution, RangedDotChartSchema } from '../../src/point/ranged-dot';
 import { createRegressionChartProviderContribution, RegressionChartSchema } from '../../src/point/regression';
 import { createScatterChartProviderContribution, ScatterChartSchema } from '../../src/point/scatter';
 
@@ -46,10 +47,11 @@ type ScenePrimitiveLike = {
   type: string;
   children?: ReadonlyArray<ScenePrimitiveLike>;
   commands?: ReadonlyArray<{ kind?: string; to?: [number, number] }>;
-  strokeWidth?: number;
   fill?: unknown;
   stroke?: unknown;
+  strokeWidth?: number;
   fillOpacity?: number;
+  rx?: number;
 };
 
 /** 递归收集指定类型的 Scene 图元 */
@@ -114,6 +116,62 @@ describe('Chart providers through Core compile', () => {
       [...positions.map(position => position[0])].sort((a, b) => a - b),
     );
     expect(scenePrimitivesOfType(result.scene.primitives, 'ellipse')).toHaveLength(3);
+    expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);
+  });
+
+  it('atomically compiles mixed Ranged Dot rows with shared field colors and preserved range direction', () => {
+    const rangedRows = [
+      { category: 'Forward', start: 1, end: 3, group: 'A' },
+      { category: 'Reverse', start: 5, end: 2, group: 'B' },
+      { category: 'Zero', start: 4, end: 4, group: 'A' },
+      { category: 'Invalid', start: null, end: 6, group: 'B' },
+    ];
+    const source = RangedDotChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'ranged.rows' },
+      recipe: {
+        chartType: 'ranged-dot',
+        encodings: { category: 'category', start: 'start', end: 'end', color: 'group' },
+        properties: {
+          point: { shape: 'circle', size: 9 },
+          range: { strokeWidth: 7 },
+        },
+      },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createRangedDotChartProviderContribution(),
+        createPlotProviderContribution({ 'ranged.rows': rangedRows }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+    const result = compileToScene(sceneOf(source), definitions);
+    const connectors = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
+      primitive => primitive.strokeWidth === 7,
+    );
+    const endpoints = scenePrimitivesOfType(result.scene.primitives, 'ellipse').filter(
+      primitive => primitive.rx === 4.5,
+    );
+    const connectorCommands = connectors.map(connector => connector.commands ?? []);
+    const connectorColors = new Set(connectors.map(connector => connector.stroke));
+    const endpointColors = new Set(endpoints.map(endpoint => endpoint.fill));
+
+    expect(connectors).toHaveLength(3);
+    expect(endpoints).toHaveLength(6);
+    expect(endpointColors).toEqual(connectorColors);
+    expect(
+      connectorCommands.some(
+        commands => commands[0]?.to?.[0] !== undefined && commands[0].to[0] > (commands[1]?.to?.[0] ?? Infinity),
+      ),
+    ).toBe(true);
+    expect(
+      connectorCommands.some(commands =>
+        commands[0]?.to?.[0] !== undefined && commands[1]?.to?.[0] !== undefined
+          ? commands[0].to[0] === commands[1].to[0]
+          : false,
+      ),
+    ).toBe(true);
     expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);
   });
 

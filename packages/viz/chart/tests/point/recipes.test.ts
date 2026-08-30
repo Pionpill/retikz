@@ -13,6 +13,8 @@ import { BubbleMarkDefinition } from '../../src/point/bubble/mark';
 import { BubbleChartDefinition } from '../../src/point/bubble/recipe';
 import { BubbleChartSchema } from '../../src/point/bubble/schema';
 import { ConnectedScatterChartDefinition } from '../../src/point/connected-scatter/recipe';
+import { RangedDotChartDefinition } from '../../src/point/ranged-dot/recipe';
+import { RangedDotChartSchema } from '../../src/point/ranged-dot/schema';
 import { RegressionChartDefinition } from '../../src/point/regression/recipe';
 import { RegressionChartSchema } from '../../src/point/regression/schema';
 import { ScatterMarkDefinition } from '../../src/point/scatter/mark';
@@ -29,6 +31,9 @@ const bubbleRuntime = resolveChartProviderRegistry([
 ]).runtime;
 const regressionRuntime = resolveChartProviderRegistry([
   { family: 'point', recipe: RegressionChartDefinition, themeDefinitions: [] },
+]).runtime;
+const rangedDotRuntime = resolveChartProviderRegistry([
+  { family: 'point', recipe: RangedDotChartDefinition, themeDefinitions: [] },
 ]).runtime;
 
 const resolve = <TSource extends IRChartSource>(
@@ -92,6 +97,123 @@ describe('Point Chart recipe Definitions', () => {
     expect(point).toMatchObject({ color: { kind: 'constant', value: '#dc2626' } });
   });
 
+  it('Ranged Dot emits one projected Relation with endpoint glyphs and shared authored roles', () => {
+    const result = resolve(
+      RangedDotChartDefinition,
+      { category: 'country', start: 'before', end: 'after' },
+      {
+        point: { size: 4, strokeWidth: 1 },
+        startPoint: { color: '#2563eb' },
+        endPoint: { color: '#dc2626', shape: 'diamond' },
+        range: { stroke: '#64748b', strokeWidth: 2, dashPattern: [4, 2] },
+      },
+    );
+
+    expect(result.semanticMarks).toEqual([
+      {
+        kind: 'ranged-dot',
+        plotMarks: [
+          expect.objectContaining({
+            type: 'relation',
+            source: { project: { x: 'before', y: 'country' } },
+            target: { project: { x: 'after', y: 'country' } },
+            style: expect.objectContaining({
+              stroke: { kind: 'constant', value: '#64748b' },
+              strokeWidth: { kind: 'constant', value: 2 },
+            }),
+            path: { options: { dashPattern: [4, 2] } },
+            endpoints: {
+              source: expect.objectContaining({
+                color: { kind: 'constant', value: '#2563eb' },
+                size: { kind: 'constant', value: 4 },
+              }),
+              target: expect.objectContaining({
+                color: { kind: 'constant', value: '#dc2626' },
+                shape: { kind: 'constant', value: 'diamond' },
+                size: { kind: 'constant', value: 4 },
+              }),
+            },
+          }),
+        ],
+      },
+    ]);
+  });
+
+  it('Ranged Dot shares one color scale across connector and endpoints', () => {
+    const result = resolve(RangedDotChartDefinition, {
+      category: 'country',
+      start: 'before',
+      end: 'after',
+      color: 'region',
+    });
+    const [relation] = result.semanticMarks[0].plotMarks;
+
+    expect(result.scaffold.scales).toContainEqual({
+      value: { type: 'ordinal', name: '__chart.ranged-dot.scale.color' },
+      replaceable: true,
+    });
+    expect(result.scaffold.guides?.value).toContainEqual({ type: 'legend', channel: 'color' });
+    expect(relation).toMatchObject({
+      encoding: { color: { field: 'region', scale: '__chart.ranged-dot.scale.color' } },
+      endpoints: { source: {}, target: {} },
+    });
+  });
+
+  it('Ranged Dot connects one authored x scale to both start and end', () => {
+    const source = RangedDotChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'ranged-dot',
+        encodings: {
+          category: 'category',
+          start: { field: 'before', scale: { operation: { type: 'log', name: 'rangeScale' } } },
+          end: { field: 'after', scale: { reference: 'rangeScale' } },
+        },
+      },
+    });
+    const result = resolveSelectedChart(source, {
+      theme: DEFAULT_RESOLVED_THEME,
+      recipe: RangedDotChartDefinition,
+      themeDefinitions: [],
+      runtime: rangedDotRuntime,
+    });
+
+    expect(result.plot.scales.map(scale => scale.name)).toEqual(['__chart.ranged-dot.scale.y', 'rangeScale']);
+    expect(result.plot.coordinate).toMatchObject({ x: 'rangeScale', y: '__chart.ranged-dot.scale.y' });
+  });
+
+  it('Ranged Dot override replaces the complete semantic group and preserves authored start/end roles', () => {
+    const source = RangedDotChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'ranged-dot',
+        encodings: { category: 'category', start: 'start', end: 'end' },
+        marks: [
+          {
+            kind: 'ranged-dot',
+            override: true,
+            encodings: { start: 'later', end: 'earlier' },
+          },
+        ],
+      },
+    });
+    const result = resolveSelectedChart(source, {
+      theme: DEFAULT_RESOLVED_THEME,
+      recipe: RangedDotChartDefinition,
+      themeDefinitions: [],
+      runtime: rangedDotRuntime,
+    });
+
+    expect(result.plot.marks).toHaveLength(1);
+    expect(result.plot.marks[0]).toMatchObject({
+      source: { project: { x: 'later', y: 'category' } },
+      target: { project: { x: 'earlier', y: 'category' } },
+    });
+  });
   it('composes the unchanged Point consumers from the reusable x/y atom', () => {
     const positionConsumers = pointPositionFieldConsumersOf('scatter');
     const allConsumers = pointFieldConsumersOf('scatter');

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   normalizeBubbleChart,
   normalizeConnectedScatterChart,
+  normalizeRangedDotChart,
   normalizeRegressionChart,
   normalizeScatterChart,
 } from '../src/point';
@@ -17,6 +18,17 @@ describe('Chart Vanilla normalization', () => {
     ).toEqual({
       chartType: 'connected-scatter',
       encodings: { x: 'x', y: 'y', order: 'year', series: 'country', row: { field: 'region' } },
+    });
+    expect(
+      normalizeRangedDotChart({
+        data: { reference: 'rows' },
+        encodings: { category: 'country', start: 'before', end: 'after' },
+        properties: { endPoint: { shape: 'diamond' } },
+      }).recipe,
+    ).toEqual({
+      chartType: 'ranged-dot',
+      encodings: { category: 'country', start: 'before', end: 'after' },
+      properties: { endPoint: { shape: 'diamond' } },
     });
   });
   it('normalizes Bubble input to its exact family and recipe Source', () => {

@@ -183,6 +183,7 @@
     "chartScatter": "散点图",
     "chartBubble": "气泡图",
     "chartConnectedScatter": "连接散点图",
+    "chartRangedDot": "范围点图",
     "chartRegression": "回归图",
     "chartModel": "图形模型",
     "chartModelStructure": "结构与类型",

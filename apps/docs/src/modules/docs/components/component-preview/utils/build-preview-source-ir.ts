@@ -1,9 +1,13 @@
 import type { IRChartSource } from '@retikz/chart';
 import type { IRBubbleChart } from '@retikz/chart/point/bubble';
 import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
+import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
+import type { IRRegressionChart } from '@retikz/chart/point/regression';
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
 import type { BubbleChartProps } from '@retikz/chart-react/point/bubble';
 import type { ConnectedScatterChartProps } from '@retikz/chart-react/point/connected-scatter';
+import type { RangedDotChartProps } from '@retikz/chart-react/point/ranged-dot';
+import type { RegressionChartProps } from '@retikz/chart-react/point/regression';
 import type { ScatterChartProps } from '@retikz/chart-react/point/scatter';
 import type { IRChild, IRScene, IRScope } from '@retikz/core';
 import type { AnyInputEmbed, InputChild, InputScene } from '@retikz/vanilla';
@@ -12,12 +16,14 @@ import type { ReactNode } from 'react';
 import { CHART_NAMESPACE } from '@retikz/chart';
 import { BubbleChart } from '@retikz/chart-react/point/bubble';
 import { ConnectedScatterChart } from '@retikz/chart-react/point/connected-scatter';
+import { RangedDotChart } from '@retikz/chart-react/point/ranged-dot';
+import { RegressionChart } from '@retikz/chart-react/point/regression';
 import { ScatterChart } from '@retikz/chart-react/point/scatter';
 import { Fragment, isValidElement } from 'react';
 
 import { previewEmbedPropsOf } from './preview-embed';
 
-type TypedChartSource = IRScatterChart | IRBubbleChart | IRConnectedScatterChart;
+type TypedChartSource = IRScatterChart | IRBubbleChart | IRConnectedScatterChart | IRRangedDotChart | IRRegressionChart;
 
 type TypedChartComponent<TSource extends TypedChartSource> = {
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => Readonly<{ source: TSource }>;
@@ -55,6 +61,12 @@ const sourceOf = (value: ReactNode): TypedChartSource | undefined => {
   }
   if (value.type === ConnectedScatterChart) {
     return typedChartSourceOf(ConnectedScatterChart, value.props as ConnectedScatterChartProps);
+  }
+  if (value.type === RangedDotChart) {
+    return typedChartSourceOf(RangedDotChart, value.props as RangedDotChartProps);
+  }
+  if (value.type === RegressionChart) {
+    return typedChartSourceOf(RegressionChart, value.props as RegressionChartProps);
   }
   return undefined;
 };

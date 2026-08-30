@@ -845,6 +845,54 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
+  it('mark_relation_accepts_projected_endpoint_glyphs', () => {
+    const mark = {
+      type: 'relation',
+      source: { project: { x: 'start', y: 'category' } },
+      target: { project: { x: 'end', y: 'category' } },
+      endpoints: {
+        source: { shape: { kind: 'constant', value: 'circle' }, size: { kind: 'constant', value: 5 } },
+        target: { shape: { kind: 'constant', value: 'diamond' }, size: { kind: 'constant', value: 6 } },
+      },
+    };
+
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+  });
+
+  it('mark_relation_rejects_endpoint_glyphs_outside_plain_projected_paths', () => {
+    const endpoints = { source: {}, target: {} };
+    expect(() => MarkSchema.parse({ type: 'relation', source: { id: 'A' }, target: { id: 'B' }, endpoints })).toThrow(
+      /projected/,
+    );
+    expect(() =>
+      MarkSchema.parse({
+        type: 'relation',
+        kind: 'ribbon',
+        source: { project: { x: 'start', y: 'category' } },
+        target: { project: { x: 'end', y: 'category' } },
+        endpoints,
+        ribbon: { width: { kind: 'constant', value: 8 } },
+      }),
+    ).toThrow(/path relation/);
+    expect(() =>
+      MarkSchema.parse({
+        type: 'relation',
+        source: { project: { x: 'start', y: 'category' } },
+        target: { project: { x: 'end', y: 'category' } },
+        endpoints,
+        path: { via: [{ project: { x: 'middle', y: 'category' } }] },
+      }),
+    ).toThrow(/via or route/);
+    expect(() =>
+      MarkSchema.parse({
+        type: 'relation',
+        source: { project: { x: 'start', y: 'category' } },
+        target: { project: { x: 'end', y: 'category' } },
+        endpoints: { source: { zIndex: { kind: 'constant', value: 2 } } },
+      }),
+    ).toThrow();
+  });
+
   it('mark_relation_explicit_route_accepts_three_leg_core_fold', () => {
     const mark = {
       type: 'relation',

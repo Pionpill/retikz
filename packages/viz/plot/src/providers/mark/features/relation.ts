@@ -1,6 +1,7 @@
 import type {
   IRChild,
   IRCoordinate,
+  IRNode,
   IRNodeLabel,
   IRNodeTarget,
   IRPath,
@@ -15,6 +16,7 @@ import { FoldStepVia } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
 
 import type {
+  IRPlotRelationEndpointGlyph,
   IRPlotRelationMark,
   IRPlotRelationPrimitiveStyle,
   IRPlotRelationRouteStep,
@@ -23,6 +25,7 @@ import type {
   IRPlotTargetRef,
   RelationOrthogonalLabelStepValue,
 } from '../../../schemas';
+import type { MarkPaint } from '../shared';
 
 import {
   type CoordinateFrame,
@@ -47,13 +50,17 @@ import {
   channelValueOf,
   collectAnchorIdFields,
   collectMarkLabelFields,
+  decorateDatum,
+  DEFAULT_FILL,
   pathChannelKinds,
   resolveGeometryMarkLabels,
 } from '../shared';
+import { pointGlyphStyle } from './point-glyph';
 
 type TargetResolution = {
   target: IRTarget;
   coordinates: Array<IRCoordinate>;
+  position?: [number, number];
 };
 
 const targetOwner = (mark: IRPlotRelationMark, ctx: MarkLoweringContext, transformedIndex: number, role: string) => ({
@@ -117,6 +124,7 @@ const resolveProjectedTarget = (
     return {
       target: { id, ...targetExtras(ref) },
       coordinates: [ctx.anchors.coordinate(id, position, owner)],
+      position,
     };
   }
   if (forceCoordinate && ctx?.anchors !== undefined) {
@@ -125,6 +133,7 @@ const resolveProjectedTarget = (
     return {
       target: { id, ...targetExtras(ref) },
       coordinates: [ctx.anchors.coordinate(id, position, owner)],
+      position,
     };
   }
   if (ref.anchor !== undefined || ref.boundary !== undefined) {
@@ -132,7 +141,8 @@ const resolveProjectedTarget = (
       `lowerPlots: relation projected ${role} target requires anchorId when anchor or boundary is set`,
     );
   }
-  return { target: shiftedPoint(position, ref.offset), coordinates: [] };
+  const shifted = shiftedPoint(position, ref.offset);
+  return { target: shifted, coordinates: [], position: shifted };
 };
 
 const resolveTarget = (
@@ -176,12 +186,42 @@ const withDefaultLabelSide = (label: IRStepLabel): IRStepLabel => {
   return { sloped: true, ...label, ...(side !== undefined ? { side } : {}) };
 };
 
-type MarkStyleValue = NonNullable<IRPlotRelationPrimitiveStyle[keyof IRPlotRelationPrimitiveStyle]>;
+type MarkStyleValue =
+  | NonNullable<IRPlotRelationPrimitiveStyle[keyof IRPlotRelationPrimitiveStyle]>
+  | NonNullable<IRPlotRelationEndpointGlyph[keyof IRPlotRelationEndpointGlyph]>;
 
 const resolveMarkValue = <T>(value: MarkStyleValue | undefined, row: ExternalRow): T | undefined => {
   if (value === undefined) return undefined;
   if (value.kind === MarkValueKind.Constant) return value.value as T;
   return resolveFieldPath(row, value.value) as T | undefined;
+};
+
+const endpointGlyphNode = (
+  glyph: IRPlotRelationEndpointGlyph,
+  position: [number, number],
+  row: ExternalRow,
+  transformedIndex: number,
+  mark: IRPlotRelationMark,
+  sharedColor: string | undefined,
+  ctx: MarkLoweringContext | undefined,
+): IRNode => {
+  const color = resolveMarkValue<string>(glyph.color, row);
+  const fill = resolveMarkValue<MarkPaint>(glyph.fill, row);
+  const node: IRNode = {
+    type: 'node',
+    position,
+    ...pointGlyphStyle(color ?? fill ?? sharedColor ?? DEFAULT_FILL, glyph),
+  };
+  const shape = resolveMarkValue<IRNode['shape']>(glyph.shape, row);
+  const size = resolveMarkValue<number>(glyph.size, row);
+  if (shape !== undefined) node.shape = shape;
+  // 与 Point size channel 一致：公开 size 是半径，Core circle 的 minimumSize 使用外接方尺寸
+  if (size !== undefined) node.minimumSize = size * Math.SQRT2;
+  const provenance =
+    ctx?.provenance === undefined
+      ? undefined
+      : { context: ctx.provenance.context, markIndex: ctx.provenance.markIndex };
+  return decorateDatum(node, row, transformedIndex, mark.type, provenance, undefined);
 };
 
 const relationStyleValue = (
@@ -483,6 +523,7 @@ export const lowerRelation = (
   const defaultColor = channelDefaultOf<string>(channels, 'color');
   const labelOf = channelValueOf<IRNodeLabel['text']>(channels, 'label');
   const children: Array<IRChild> = [];
+  const endpointChildren: Array<IRNode> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex += 1) {
     const row = rows[transformedIndex];
     if (anchorInputMissing(mark.source, row) || anchorInputMissing(mark.target, row)) continue;
@@ -574,9 +615,20 @@ export const lowerRelation = (
       channels,
     );
     children.push(...coordinates, path);
+    const sharedColor = colorOf?.(row) ?? defaultColor;
+    if (mark.endpoints?.source !== undefined && source.position !== undefined) {
+      endpointChildren.push(
+        endpointGlyphNode(mark.endpoints.source, source.position, row, transformedIndex, mark, sharedColor, ctx),
+      );
+    }
+    if (mark.endpoints?.target !== undefined && target.position !== undefined) {
+      endpointChildren.push(
+        endpointGlyphNode(mark.endpoints.target, target.position, row, transformedIndex, mark, sharedColor, ctx),
+      );
+    }
   }
   if (children.length === 0) return null;
-  return attachMarkLayer({ type: 'scope', children }, mark, ctx);
+  return attachMarkLayer({ type: 'scope', children: [...children, ...endpointChildren] }, mark, ctx);
 };
 
 const collectTargetFields = (ref: IRPlotTargetRef, fields: FieldCollector): void => {

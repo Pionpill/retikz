@@ -1,9 +1,13 @@
 import type { IRChartSource } from '@retikz/chart';
 import type { IRBubbleChart } from '@retikz/chart/point/bubble';
 import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
+import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
+import type { IRRegressionChart } from '@retikz/chart/point/regression';
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
 import type { CreateBubbleChartInput } from '@retikz/chart-vanilla/point/bubble';
 import type { CreateConnectedScatterChartInput } from '@retikz/chart-vanilla/point/connected-scatter';
+import type { CreateRangedDotChartInput } from '@retikz/chart-vanilla/point/ranged-dot';
+import type { CreateRegressionChartInput } from '@retikz/chart-vanilla/point/regression';
 import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
@@ -14,10 +18,14 @@ import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 
 import { BubbleChartSchema } from '@retikz/chart/point/bubble';
 import { ConnectedScatterChartSchema } from '@retikz/chart/point/connected-scatter';
+import { RangedDotChartSchema } from '@retikz/chart/point/ranged-dot';
+import { RegressionChartSchema } from '@retikz/chart/point/regression';
 import { ScatterChartSchema } from '@retikz/chart/point/scatter';
 import { renderChart } from '@retikz/chart-vanilla';
 import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble';
 import { createConnectedScatterChart } from '@retikz/chart-vanilla/point/connected-scatter';
+import { createRangedDotChart } from '@retikz/chart-vanilla/point/ranged-dot';
+import { createRegressionChart } from '@retikz/chart-vanilla/point/regression';
 import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { fallbackMeasurer } from '@retikz/core';
 import {
@@ -659,7 +667,7 @@ const buildDatasetImportCode = (
   return { imports, expression };
 };
 
-type TypedChartSource = IRScatterChart | IRBubbleChart | IRConnectedScatterChart;
+type TypedChartSource = IRScatterChart | IRBubbleChart | IRConnectedScatterChart | IRRangedDotChart | IRRegressionChart;
 
 /** 从 Source IR 识别确定形态的 Chart */
 const typedChartSourceOf = (source: CompositeChild): TypedChartSource | undefined => {
@@ -672,6 +680,10 @@ const typedChartSourceOf = (source: CompositeChild): TypedChartSource | undefine
       return BubbleChartSchema.parse(source);
     case 'connected-scatter':
       return ConnectedScatterChartSchema.parse(source);
+    case 'ranged-dot':
+      return RangedDotChartSchema.parse(source);
+    case 'regression':
+      return RegressionChartSchema.parse(source);
     default:
       return undefined;
   }
@@ -708,6 +720,8 @@ const buildChartCode = (
     const factoryByChartType = {
       bubble: { factory: 'createBubbleChart', subpath: 'bubble' },
       'connected-scatter': { factory: 'createConnectedScatterChart', subpath: 'connected-scatter' },
+      'ranged-dot': { factory: 'createRangedDotChart', subpath: 'ranged-dot' },
+      regression: { factory: 'createRegressionChart', subpath: 'regression' },
       scatter: { factory: 'createScatterChart', subpath: 'scatter' },
     } as const;
     const { factory, subpath } = factoryByChartType[typedSource.recipe.chartType];
@@ -763,6 +777,10 @@ const buildChartPreview = (
         return createBubbleChart(input as CreateBubbleChartInput);
       case 'connected-scatter':
         return createConnectedScatterChart(input as CreateConnectedScatterChartInput);
+      case 'ranged-dot':
+        return createRangedDotChart(input as CreateRangedDotChartInput);
+      case 'regression':
+        return createRegressionChart(input as CreateRegressionChartInput);
       case 'scatter':
         return createScatterChart(input as CreateScatterChartInput);
     }

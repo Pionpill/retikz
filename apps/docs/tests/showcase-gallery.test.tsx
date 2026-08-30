@@ -14,6 +14,7 @@ import { DemoLocationContext } from '@/modules/docs/components/component-preview
 import * as showcaseComponents from '@/modules/docs/components/showcase';
 
 vi.mock('react-i18next', () => ({
+  initReactI18next: { type: '3rdParty', init: () => undefined },
   useTranslation: () => ({
     i18n: { resolvedLanguage: 'zh' },
     t: (key: string) =>

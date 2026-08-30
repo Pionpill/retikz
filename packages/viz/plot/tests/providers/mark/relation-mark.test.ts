@@ -480,6 +480,124 @@ describe('RelationMark and anchorId lowering', () => {
     expect(path.children[1]).toMatchObject({ kind: 'line' });
   });
 
+  it('atomically lowers projected relation endpoint glyphs after connectors', () => {
+    const root = expandOf(
+      baseSpec([
+        {
+          type: 'relation',
+          source: { project: { x: 'start', y: 'category' } },
+          target: { project: { x: 'end', y: 'category' } },
+          style: { stroke: { kind: 'constant', value: '#64748b' } },
+          endpoints: {
+            source: {
+              color: { kind: 'constant', value: '#2563eb' },
+              size: { kind: 'constant', value: 5 },
+            },
+            target: {
+              color: { kind: 'constant', value: '#dc2626' },
+              shape: { kind: 'constant', value: 'diamond' },
+              size: { kind: 'constant', value: 6 },
+            },
+          },
+        },
+      ]),
+      {
+        d: [
+          { category: 0, start: 0, end: 1 },
+          { category: 0.5, start: null, end: 0.75 },
+        ],
+      },
+    );
+    const layer = markLayer(root, 0);
+    const paths = collectPaths(layer);
+    const nodes = collectNodes(layer);
+
+    expect(paths).toHaveLength(1);
+    expect(nodes).toHaveLength(2);
+    expect(layer.children.map(child => child.type)).toEqual(['path', 'node', 'node']);
+    expect(nodes.map(node => node.position)).toEqual([
+      [0, 100],
+      [200, 100],
+    ]);
+    expect(nodes[0]).toMatchObject({ fill: '#2563eb', minimumSize: 5 * Math.SQRT2 });
+    expect(nodes[1]).toMatchObject({ fill: '#dc2626', shape: 'diamond', minimumSize: 6 * Math.SQRT2 });
+  });
+
+  it('uses the same final-radius geometry for Point and Relation endpoint glyphs', () => {
+    const root = expandOf(
+      baseSpec([
+        {
+          type: 'point',
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          size: { kind: 'constant', value: 5 },
+        },
+        {
+          type: 'relation',
+          source: { project: { x: 'start', y: 'category' } },
+          target: { project: { x: 'end', y: 'category' } },
+          endpoints: {
+            source: { size: { kind: 'constant', value: 5 } },
+            target: { size: { kind: 'constant', value: 5 } },
+          },
+        },
+      ]),
+      { d: [{ x: 0.5, y: 0.5, category: 0.5, start: 0.25, end: 0.75 }] },
+    );
+    const [point] = collectNodes(markLayer(root, 0));
+    const endpoints = collectNodes(markLayer(root, 1));
+
+    expect(endpoints.map(endpoint => endpoint.minimumSize)).toEqual([point.minimumSize, point.minimumSize]);
+  });
+
+  it('keeps zero-length projected relations and overlapping endpoint glyphs', () => {
+    const root = expandOf(
+      baseSpec([
+        {
+          type: 'relation',
+          source: { project: { x: 'start', y: 'category' } },
+          target: { project: { x: 'end', y: 'category' } },
+          endpoints: { source: {}, target: {} },
+        },
+      ]),
+      { d: [{ category: 0, start: 0.5, end: 0.5 }] },
+    );
+    const layer = markLayer(root, 0);
+    const [path] = collectPaths(layer);
+    const nodes = collectNodes(layer);
+
+    expect(path.children).toEqual([
+      { type: 'step', kind: 'move', to: [100, 50] },
+      { type: 'step', kind: 'line', to: [100, 50] },
+    ]);
+    expect(nodes.map(node => node.position)).toEqual([
+      [100, 50],
+      [100, 50],
+    ]);
+  });
+
+  it('keeps endpoint datum provenance without registering duplicate datum ids', () => {
+    const root = expandOf(
+      baseSpec([
+        {
+          type: 'relation',
+          source: { project: { x: 'start', y: 'category' } },
+          target: { project: { x: 'end', y: 'category' } },
+          endpoints: { source: {}, target: {} },
+        },
+      ]),
+      { d: [{ key: 'range-a', category: 0, start: 0.25, end: 0.75 }] },
+      { ...opts, provenance: true, datumProvenance: true, datumIdField: 'key' },
+    );
+    const nodes = collectNodes(markLayer(root, 0));
+
+    expect(nodes).toHaveLength(2);
+    expect(nodes.map(node => node.id)).toEqual([undefined, undefined]);
+    expect(nodes.map(node => node.meta)).toEqual([
+      expect.objectContaining({ mark: 'relation', markIndex: 0, transformedIndex: 0, sourceIndex: 0 }),
+      expect.objectContaining({ mark: 'relation', markIndex: 0, transformedIndex: 0, sourceIndex: 0 }),
+    ]);
+  });
+
   it('lowers orthogonal routing to explicit line segments and attaches shorthand label to the main segment', () => {
     const root = expandOf(
       baseSpec([

@@ -69,11 +69,15 @@ Chart Source 把“这是什么图”与“这张图如何完整呈现”分开�
 
 family 是有限、稳定、面向发现的分类；chartType 是全局唯一 recipe key，每个 key 只属于一个 family。首批 Point family 的路由如下：
 
-| family (`type`) | chartType | 精确 schema 与核心差异                                                         |
-| --------------- | --------- | ------------------------------------------------------------------------------ |
-| `point`         | `scatter` | `ScatterChartSchema`；x/y 必填；可选 visual、aggregate、scale 与 facet mapping |
+| 路由                          | 精确 schema 与导入路径                                                     | 核心差异                                  |
+| ----------------------------- | -------------------------------------------------------------------------- | ----------------------------------------- |
+| `point` → `scatter`           | `ScatterChartSchema`<br />`@retikz/chart/point/scatter`                    | x/y 必填；visual、aggregate、scale、facet |
+| `point` → `bubble`            | `BubbleChartSchema`<br />`@retikz/chart/point/bubble`                      | x/y/size 必填；size 保持字段映射          |
+| `point` → `regression`        | `RegressionChartSchema`<br />`@retikz/chart/point/regression`              | x/y 必填；series、拟合、Point + trend     |
+| `point` → `connected-scatter` | `ConnectedScatterChartSchema`<br />`@retikz/chart/point/connected-scatter` | x/y/order 必填；series、Path → Point      |
+| `point` → `ranged-dot`        | `RangedDotChartSchema`<br />`@retikz/chart/point/ranged-dot`               | category/start/end；connector + endpoints |
 
-精确 schema 从 `@retikz/chart/point/scatter` 导入。`@retikz/chart/point` 是明确需要整个 Point family 时使用的聚合入口。
+精确 schema 从表中对应的具体 chartType subpath 导入。`@retikz/chart/point` 是明确需要整个 Point family 时使用的聚合入口。
 
 每个 chartType 都有自己的 strict `XxxChartSchema`、`XxxChartEncodingsSchema`、`XxxChartPropertiesSchema` 与 recipe Theme schema。公共原子 schema 只按真实语义复用，不把所有 family 拼成一个宽 union。未知 chartType、family mismatch、未知字段和不匹配的 mark 都在 Source / provider 边界 fail-loud。
 
@@ -101,7 +105,7 @@ recipe: {
 }
 ```
 
-上例中的第一个 `scatter` mark 替换 recipe 的完整内建 group，第二个 mark 再按 authored 顺序追加。一个 semantic group 可以包含多个 Plot marks，override 会将它们作为一个原子整体替换。若 `override: true` 没有命中同 kind group，该 mark 仍会追加，同时通过 `onWarn` 报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`。若要连线，用户应在 `plotExtension.marks` 中写入 Plot-owned Path mark；它是完全独立的 Plot 内容，不会继承 Chart context。
+上例中的第一个 `scatter` mark 替换 recipe 的完整内建 group，第二个 mark 再按 authored 顺序追加。一个 semantic group 可以包含多个 Plot marks，override 会将它们作为一个原子整体替换。若 `override: true` 没有命中同 kind group，该 mark 仍会追加，同时通过 `onWarn` 报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`。内建 chartType 之外若需要自定义独立连线层，用户应在 `plotExtension.marks` 中写入 Plot-owned Path mark；它是完全独立的 Plot 内容，不会继承 Chart context。
 
 ```ts
 plotExtension: {
@@ -152,7 +156,7 @@ Chart shell 的 cascade 是 mode fallback → Core style chain → authored name
   <LinkedCard href="/viz/chart/points">
     <span className="font-semibold">点图 family</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      查看 Scatter 的精确 schema 与 authored marks。
+      查看五个 active Point chartType 的精确 schema 与 authored marks。
     </span>
   </LinkedCard>
 </div>

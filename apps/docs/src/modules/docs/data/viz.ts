@@ -204,6 +204,24 @@ export const vizSection: Array<Section> = [
               },
             },
           },
+          {
+            id: 'ranged-dot',
+            label: 'viz.chartRangedDot',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'concept',
+              audience: 'user',
+              capability: 'showcase.ranged-dot',
+              sourceOfTruth: 'docs',
+              layout: 'showcase',
+              showcase: {
+                family: 'scatter-points',
+                role: 'primary',
+                preview: 'ranged-dot-basic',
+                order: 50,
+              },
+            },
+          },
         ],
         meta: {
           pageType: 'group',

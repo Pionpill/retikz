@@ -8,6 +8,7 @@ import * as chart from '../src';
 import * as point from '../src/point';
 import * as bubble from '../src/point/bubble';
 import * as connectedScatter from '../src/point/connected-scatter';
+import * as rangedDot from '../src/point/ranged-dot';
 import * as regression from '../src/point/regression';
 import * as scatter from '../src/point/scatter';
 
@@ -48,6 +49,7 @@ describe('@retikz/chart public surface', () => {
     expect(point.ChartType).toEqual({
       Bubble: 'bubble',
       ConnectedScatter: 'connected-scatter',
+      RangedDot: 'ranged-dot',
       Regression: 'regression',
       Scatter: 'scatter',
     });
@@ -56,10 +58,12 @@ describe('@retikz/chart public surface', () => {
     expect(point).toHaveProperty('BubbleChartSchema');
     expect(point).toHaveProperty('RegressionChartSchema');
     expect(point).toHaveProperty('ConnectedScatterChartSchema');
+    expect(point).toHaveProperty('RangedDotChartSchema');
     expect(point).toHaveProperty('createScatterChartProviderContribution');
     expect(point).toHaveProperty('createBubbleChartProviderContribution');
     expect(point).toHaveProperty('createRegressionChartProviderContribution');
     expect(point).toHaveProperty('createConnectedScatterChartProviderContribution');
+    expect(point).toHaveProperty('createRangedDotChartProviderContribution');
     expect(point).toHaveProperty('qualifyScatterChartLocatorOptions');
     expect(point).not.toHaveProperty('PointChartSchema');
     expect(point).not.toHaveProperty('PointChartProvider');
@@ -78,6 +82,7 @@ describe('@retikz/chart public surface', () => {
         'createConnectedScatterChartProviderContribution',
         'qualifyConnectedScatterChartLocatorOptions',
       ],
+      [rangedDot, 'createRangedDotChartProviderContribution', 'qualifyRangedDotChartLocatorOptions'],
       [regression, 'createRegressionChartProviderContribution', 'qualifyRegressionChartLocatorOptions'],
       [scatter, 'createScatterChartProviderContribution', 'qualifyScatterChartLocatorOptions'],
     ] as const) {
