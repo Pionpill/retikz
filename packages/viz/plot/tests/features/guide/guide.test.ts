@@ -14,12 +14,16 @@ import { lowerCustomAxis, lowerGuide } from '../../../src/pipeline/guide';
 import { PlotSchema } from '../../../src/schemas';
 
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */
-const fakeScale = (coordinate: (value: number) => number, domain: ReadonlyArray<number> = [0, 1]): PositionScale => ({
+const fakeScale = (
+  coordinate: (value: number) => number,
+  domain: ReadonlyArray<number> = [0, 1],
+  scaleRange: readonly [number, number] = [0, 0],
+): PositionScale => ({
   coordinate: value => coordinate(value as number),
   domain: () => domain,
   bandwidth: 0,
   ticks: () => ({ values: [], labels: [] }),
-  range: () => [0, 0],
+  range: () => [scaleRange[0], scaleRange[1]],
   setRange: () => {},
 });
 
@@ -33,16 +37,20 @@ const fakeTickScale = (coordinate: (value: number) => number, values: Array<numb
   setRange: () => {},
 });
 
-const fakeBandScale = (coordinates: Record<string, number>, bandwidth: number): PositionScale => ({
+const fakeBandScale = (
+  coordinates: Record<string, number>,
+  bandwidth: number,
+  scaleRange: readonly [number, number] = [
+    Math.min(...Object.values(coordinates)),
+    Math.max(...Object.values(coordinates)),
+  ],
+): PositionScale => ({
   coordinate: value => coordinates[String(value)] ?? Number.NaN,
   domain: () => Object.keys(coordinates),
   bandwidth,
   ticks: () => ({ values: Object.keys(coordinates), labels: Object.keys(coordinates) }),
   tickKind: 'category',
-  range: () => {
-    const values = Object.values(coordinates);
-    return [Math.min(...values), Math.max(...values)];
-  },
+  range: () => [scaleRange[0], scaleRange[1]],
   setRange: () => {},
 });
 
@@ -363,7 +371,7 @@ describe('lowerGuide (contract)', () => {
     expect(nodeChildren(axisLayer as IRScope).map(node => node.text)).toEqual(['0', '1', '2', '3']);
   });
 
-  it('axis_grid_domain_endpoints_are_opt_in', () => {
+  it('axis_grid_range_boundaries_are_opt_in', () => {
     const endpointCtx: GuideContext = {
       ...ctx,
       projectX: fakeScale(value => 40 + value * 40, [-1, 3]),
@@ -379,25 +387,24 @@ describe('lowerGuide (contract)', () => {
     expect(((explicitlyDisabled.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(4);
   });
 
-  it('axis_grid_appends_missing_effective_domain_endpoints_after_explicit_source', () => {
+  it('axis_grid_appends_missing_scale_range_boundaries_after_explicit_source', () => {
     const { gridLayer } = lowerGuide(
       {
         type: 'axis',
         dimension: 'x',
         grid: { ticks: { values: [0, 2] }, includeDomain: true },
       },
-      { ...ctx, projectX: fakeScale(value => 40 + value * 40, [-1, 3]) },
+      { ...ctx, projectX: fakeScale(value => 40 + value * 40, [-1, 3], [40, 440]) },
     );
     const steps = ((gridLayer as IRScope).children[0] as IRPath).children;
 
-    expect(steps).toHaveLength(8);
+    expect(steps).toHaveLength(6);
     expect(steps[0]).toEqual({ type: 'step', kind: 'move', to: [40, 10] });
     expect(steps[2]).toEqual({ type: 'step', kind: 'move', to: [120, 10] });
-    expect(steps[4]).toEqual({ type: 'step', kind: 'move', to: [0, 10] });
-    expect(steps[6]).toEqual({ type: 'step', kind: 'move', to: [160, 10] });
+    expect(steps[4]).toEqual({ type: 'step', kind: 'move', to: [440, 10] });
   });
 
-  it('axis_grid_appends_domain_endpoints_after_density_without_changing_axis_ticks', () => {
+  it('axis_grid_appends_scale_range_boundaries_after_density_without_changing_axis_ticks', () => {
     const { axisLayer, gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -406,7 +413,7 @@ describe('lowerGuide (contract)', () => {
       },
       {
         ...ctx,
-        projectX: fakeScale(value => 40 + value * 40, [0, 5]),
+        projectX: fakeScale(value => 40 + value * 40, [0, 5], [40, 440]),
         xTicks: { values: [1, 2, 3, 4], labels: ['1', '2', '3', '4'] },
       },
     );
@@ -416,12 +423,12 @@ describe('lowerGuide (contract)', () => {
     expect(nodeChildren(axisLayer as IRScope).map(node => node.text)).toEqual(['1', '2', '3', '4']);
   });
 
-  it('axis_grid_domain_endpoints_dedupe_by_finite_projected_coordinate', () => {
+  it('axis_grid_range_boundaries_dedupe_by_finite_projected_coordinate', () => {
     const existingEndpoint = lowerGuide(
       { type: 'axis', dimension: 'x', grid: { includeDomain: true } },
       {
         ...ctx,
-        projectX: fakeScale(value => 40 + value * 40, [0, 2]),
+        projectX: fakeScale(value => 40 + value * 40, [0, 2], [40, 120]),
         xTicks: { values: [0, 1, 2], labels: ['0', '1', '2'] },
       },
     );
@@ -431,7 +438,7 @@ describe('lowerGuide (contract)', () => {
         dimension: 'x',
         grid: { ticks: { values: [] }, includeDomain: true },
       },
-      { ...ctx, projectX: fakeScale(() => 40, [0, 10]) },
+      { ...ctx, projectX: fakeScale(() => 40, [0, 10], [40, 40]) },
     );
     const nonFiniteEndpoint = lowerGuide(
       {
@@ -441,16 +448,16 @@ describe('lowerGuide (contract)', () => {
       },
       {
         ...ctx,
-        projectX: fakeScale(value => (value === 0 ? Number.NaN : 40 + value * 40), [0, 10]),
+        projectX: fakeScale(value => (value === 0 ? Number.NaN : 40 + value * 40), [0, 10], [40, 440]),
       },
     );
 
     expect(((existingEndpoint.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(6);
     expect(((coincidentEndpoints.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(2);
-    expect(((nonFiniteEndpoint.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(4);
+    expect(((nonFiniteEndpoint.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(6);
   });
 
-  it('axis_grid_domain_endpoints_use_band_position_without_becoming_plot_area_borders', () => {
+  it('axis_grid_include_domain_uses_plot_range_boundaries_for_band_scale', () => {
     const { gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -459,7 +466,7 @@ describe('lowerGuide (contract)', () => {
       },
       {
         ...ctx,
-        projectX: fakeBandScale({ A: 100, B: 200 }, 20),
+        projectX: fakeBandScale({ A: 100, B: 200 }, 20, [90, 210]),
         xTicks: { values: ['A'], labels: ['A'] },
       },
     );
@@ -467,10 +474,41 @@ describe('lowerGuide (contract)', () => {
 
     expect(gridPath.children).toHaveLength(4);
     expect(gridPath.children[0]).toEqual({ type: 'step', kind: 'move', to: [90, 10] });
-    expect(gridPath.children[2]).toEqual({ type: 'step', kind: 'move', to: [190, 10] });
+    expect(gridPath.children[2]).toEqual({ type: 'step', kind: 'move', to: [210, 10] });
   });
 
-  it('axis_grid_domain_endpoints_do_not_change_minor_grid_candidates', () => {
+  it('axis_grid_include_domain_uses_plot_range_boundaries_for_point_scale', () => {
+    const { gridLayer } = lowerGuide(
+      { type: 'axis', dimension: 'x', grid: { includeDomain: true } },
+      {
+        ...ctx,
+        projectX: fakeBandScale({ A: 100, B: 200 }, 0, [90, 210]),
+        xTicks: { values: ['A'], labels: ['A'] },
+      },
+    );
+    const gridPath = (gridLayer as IRScope).children[0] as IRPath;
+
+    expect(gridPath.children).toHaveLength(6);
+    expect(gridPath.children[0]).toEqual({ type: 'step', kind: 'move', to: [100, 10] });
+    expect(gridPath.children[2]).toEqual({ type: 'step', kind: 'move', to: [90, 10] });
+    expect(gridPath.children[4]).toEqual({ type: 'step', kind: 'move', to: [210, 10] });
+  });
+
+  it('axis_grid_include_domain_draws_boundaries_without_ticks', () => {
+    const { gridLayer } = lowerGuide(
+      { type: 'axis', dimension: 'x', grid: { includeDomain: true } },
+      {
+        ...ctx,
+        projectX: fakeScale(value => 40 + value * 40, [0, 1], [40, 440]),
+        xTicks: { values: [], labels: [] },
+      },
+    );
+
+    expect(gridLayer).not.toBeNull();
+    expect(((gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(4);
+  });
+
+  it('axis_grid_range_boundaries_do_not_change_minor_grid_candidates', () => {
     const { axisLayer, gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -483,7 +521,7 @@ describe('lowerGuide (contract)', () => {
       },
       {
         ...ctx,
-        projectX: fakeScale(value => 40 + value * 40, [0, 2]),
+        projectX: fakeScale(value => 40 + value * 40, [0, 2], [40, 120]),
         xTicks: { values: [1], labels: ['1'] },
       },
     );

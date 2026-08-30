@@ -309,15 +309,15 @@ describe('lowerPlots polar guide — grid (contract)', () => {
     expect(allKinds(gridLayer)).not.toContain('arc');
   });
 
-  it('angle_grid_one_spoke_per_category', () => {
+  it('angle_grid_includes_category_spokes_and_plot_range_boundaries', () => {
     const outer = expandOf(angleGridSpec, { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
-    // 4 类别 → 4 条辐条（每条 move+line 一对）
+    // 4 类别 + 角度 scale range 两端 → 6 条辐条（每条 move+line 一对）
     const lineSegments = pathsOf(gridLayer)
       .flatMap(p => p.children)
       .filter(step => step.kind === 'line');
-    expect(lineSegments).toHaveLength(4);
+    expect(lineSegments).toHaveLength(6);
   });
 });
 
