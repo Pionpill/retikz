@@ -10,8 +10,8 @@ import type { IRRangedDotChart } from './schema';
 import { defineChartRecipe } from '../../_chart/contract';
 import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
+import { pointPositionFieldConsumersOf, pointSlotsOf, pointSpatialResolutionOf, pointThemeOf } from '../shared';
 import { pointAxisGuidesOf, pointCartesian2DOf, pointRecipeId } from '../shared/plot';
-import { pointPositionFieldConsumersOf, pointSlotsOf, pointSpatialResolutionOf, pointThemeOf } from '../shared/recipe';
 import { RangedDotMarkDefinition, resolveRangedDotMark } from './mark';
 import {
   RangedDotChartSchema,

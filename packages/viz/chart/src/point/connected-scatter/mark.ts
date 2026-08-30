@@ -7,8 +7,8 @@ import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/
 import type { IRConnectedScatterChartProperties, IRConnectedScatterMark } from './schema';
 
 import { defineChartMark } from '../../_chart/contract';
+import { requiredFieldOf, resolvePointMark } from '../shared';
 import { pointRecipeId } from '../shared/plot';
-import { requiredFieldOf, resolvePointMark } from '../shared/recipe';
 import { ConnectedScatterChartMarkSchema } from './schema';
 
 const CURRENT_COLOR = 'currentColor';
@@ -95,6 +95,7 @@ const mergedPropertiesOf = (
   };
 };
 
+/** Connected Scatter authored mark Definition */
 export const ConnectedScatterMarkDefinition: ChartMarkDefinition = defineChartMark({
   kind: 'connected-scatter',
   schema: ConnectedScatterChartMarkSchema,

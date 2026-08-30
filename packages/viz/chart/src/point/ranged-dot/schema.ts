@@ -91,10 +91,23 @@ export const RangedDotChartSchema = createChartSourceSchema(
   createChartThemeSchema(RangedDotChartThemeOverridesSchema).optional(),
 ).describe('Ranged Dot Chart Source IR');
 
+/** Ranged Dot exact Source IR */
 export type IRRangedDotChart = ZodInfer<typeof RangedDotChartSchema>;
+
+/** Ranged Dot recipe IR */
 export type IRRangedDotChartRecipe = ZodInfer<typeof RangedDotChartRecipeSchema>;
+
+/** Ranged Dot recipe 字段映射 */
 export type IRRangedDotChartEncodings = ZodInfer<typeof RangedDotChartEncodingsSchema>;
+
+/** Ranged Dot recipe 与 mark 共用的 member 属性 */
 export type IRRangedDotChartProperties = ZodInfer<typeof RangedDotChartPropertiesSchema>;
+
+/** Ranged Dot endpoint 常量属性 */
 export type IRRangedDotPointProperties = ZodInfer<typeof RangedDotPointPropertiesSchema>;
+
+/** Ranged Dot connector 常量属性 */
 export type IRRangedDotRangeProperties = ZodInfer<typeof RangedDotRangePropertiesSchema>;
+
+/** Ranged Dot authored mark IR */
 export type IRRangedDotMark = ZodInfer<typeof RangedDotChartMarkSchema>;

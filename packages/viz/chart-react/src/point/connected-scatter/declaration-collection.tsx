@@ -10,11 +10,14 @@ import { ConnectedScatterEncodings } from './ConnectedScatterEncodings';
 import { ConnectedScatterMark } from './ConnectedScatterMark';
 import { ConnectedScatterProperties } from './ConnectedScatterProperties';
 
+/** ConnectedScatterChart 直接子声明的收集结果 */
 export type CollectedConnectedScatterChartDeclarations = CollectedPointChartDeclarations<
   ConnectedScatterEncodingsProps,
   ConnectedScatterPropertiesProps,
   ConnectedScatterChartMark
 >;
+
+/** 收集 ConnectedScatterChart 的 encodings、properties 与 mark 声明 */
 export const collectConnectedScatterChartDeclarations = (
   children: ReactNode,
 ): CollectedConnectedScatterChartDeclarations =>

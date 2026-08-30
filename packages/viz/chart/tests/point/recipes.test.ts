@@ -20,7 +20,7 @@ import { RegressionChartSchema } from '../../src/point/regression/schema';
 import { ScatterMarkDefinition } from '../../src/point/scatter/mark';
 import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
 import { ScatterChartSchema } from '../../src/point/scatter/schema';
-import { pointFieldConsumersOf, pointPositionFieldConsumersOf } from '../../src/point/shared/recipe';
+import { pointFieldConsumersOf, pointPositionFieldConsumersOf } from '../../src/point/shared';
 
 const theme = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
 const runtime = resolveChartProviderRegistry([
@@ -225,6 +225,21 @@ describe('Point Chart recipe Definitions', () => {
       { name: '__chart.scatter.scale.x', type: 'linear' },
       { name: '__chart.scatter.scale.y', type: 'linear' },
     ]);
+  });
+
+  it('forwards Point offsets and labels as raw mark properties exactly once', () => {
+    const result = resolve(
+      ScatterChartDefinition,
+      { x: 'x', y: 'y' },
+      { dx: 3, dy: -2, label: { content: { value: 'A' } } },
+    );
+    const [mark] = result.semanticMarks[0].plotMarks;
+
+    expect(mark).toMatchObject({
+      dx: 3,
+      dy: -2,
+      label: { content: { value: 'A' } },
+    });
   });
 
   it('Regression creates one Point plus mark-local Smooth Path semantic group', () => {

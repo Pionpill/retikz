@@ -10,14 +10,14 @@ import type { IRConnectedScatterChart } from './schema';
 import { defineChartRecipe } from '../../_chart/contract';
 import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
-import { pointRecipeId } from '../shared/plot';
 import {
   pointPositionFieldConsumersOf,
   pointResolutionOf,
   pointSlotsOf,
   pointSpatialResolutionOf,
   pointThemeOf,
-} from '../shared/recipe';
+} from '../shared';
+import { pointRecipeId } from '../shared/plot';
 import { ConnectedScatterMarkDefinition, resolveConnectedScatterMarkGroup } from './mark';
 import {
   ConnectedScatterChartSchema,
@@ -26,6 +26,8 @@ import {
 } from './schema';
 
 const themeFallback: IRJsonObject = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
+
+/** Connected Scatter exact schema、调度与消费检查共用的 encoding 顺序 */
 export const ConnectedScatterChartEncodingSlots = ['x', 'y', 'order', 'series', 'row', 'column', 'facet'] as const;
 const propertySlots = ['point', 'path'] as const;
 const seriesScaleName = pointRecipeId(ChartType.ConnectedScatter, 'scale.series');
@@ -42,6 +44,7 @@ const consumers: ReadonlyArray<ChartEncodingFieldConsumer<(typeof ConnectedScatt
   },
 ];
 
+/** Connected Scatter Chart 的内建 semantic recipe Definition */
 export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedScatterChart> = defineChartRecipe({
   chartType: ChartType.ConnectedScatter,
   encodingSlots: ConnectedScatterChartEncodingSlots,

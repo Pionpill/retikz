@@ -5,6 +5,18 @@ import { describe, expect, it } from 'vitest';
 import * as chart from '../src';
 import * as point from '../src/point';
 
+const pointChartCases = [
+  { chartType: 'bubble', prefix: 'Bubble', load: () => import('../src/point/bubble') },
+  {
+    chartType: 'connected-scatter',
+    prefix: 'ConnectedScatter',
+    load: () => import('../src/point/connected-scatter'),
+  },
+  { chartType: 'ranged-dot', prefix: 'RangedDot', load: () => import('../src/point/ranged-dot') },
+  { chartType: 'regression', prefix: 'Regression', load: () => import('../src/point/regression') },
+  { chartType: 'scatter', prefix: 'Scatter', load: () => import('../src/point/scatter') },
+] as const;
+
 describe('@retikz/chart-react public surface', () => {
   it('exports shared Chart declarations and presentation APIs from the root entry', () => {
     expect(chart.ChartData).toBeDefined();
@@ -21,18 +33,12 @@ describe('@retikz/chart-react public surface', () => {
   });
 
   it('exports only precise Point components from the Point entry', () => {
-    expect(point.BubbleChart).toBeDefined();
-    expect(point.BubbleEncodings).toBeDefined();
-    expect(point.BubbleProperties).toBeDefined();
-    expect(point.BubbleMark).toBeDefined();
-    expect(point.RegressionChart).toBeDefined();
-    expect(point.RegressionEncodings).toBeDefined();
-    expect(point.RegressionProperties).toBeDefined();
-    expect(point.RegressionMark).toBeDefined();
-    expect(point.ScatterChart).toBeDefined();
-    expect(point.ScatterEncodings).toBeDefined();
-    expect(point.ScatterProperties).toBeDefined();
-    expect(point.ScatterMark).toBeDefined();
+    for (const { prefix } of pointChartCases) {
+      expect(point).toHaveProperty(`${prefix}Chart`);
+      expect(point).toHaveProperty(`${prefix}Encodings`);
+      expect(point).toHaveProperty(`${prefix}Properties`);
+      expect(point).toHaveProperty(`${prefix}Mark`);
+    }
     expect(point).not.toHaveProperty('ChartData');
     expect(point).not.toHaveProperty('ChartExtension');
     expect(point).not.toHaveProperty('PathMark');
@@ -40,40 +46,22 @@ describe('@retikz/chart-react public surface', () => {
   });
 
   it('publishes concrete chartType subpath entries without forwarding shared Chart declarations', async () => {
-    const bubble = await import('../src/point/bubble');
-    const regression = await import('../src/point/regression');
-    const scatter = await import('../src/point/scatter');
-    expect(bubble.BubbleChart).toBeDefined();
-    expect(bubble.BubbleEncodings).toBeDefined();
-    expect(bubble.BubbleProperties).toBeDefined();
-    expect(bubble.BubbleMark).toBeDefined();
-    expect(bubble).not.toHaveProperty('ChartData');
-    expect(bubble).not.toHaveProperty('ChartExtension');
-    expect(regression.RegressionChart).toBeDefined();
-    expect(regression.RegressionEncodings).toBeDefined();
-    expect(regression.RegressionProperties).toBeDefined();
-    expect(regression.RegressionMark).toBeDefined();
-    expect(regression).not.toHaveProperty('ChartData');
-    expect(regression).not.toHaveProperty('ChartExtension');
-    expect(scatter.ScatterChart).toBeDefined();
-    expect(scatter.ScatterEncodings).toBeDefined();
-    expect(scatter.ScatterProperties).toBeDefined();
-    expect(scatter.ScatterMark).toBeDefined();
-    expect(scatter).not.toHaveProperty('ChartData');
-    expect(scatter).not.toHaveProperty('ChartExtension');
-    expect(scatter).not.toHaveProperty('PathMark');
+    for (const { load, prefix } of pointChartCases) {
+      const module = await load();
+      expect(module).toHaveProperty(`${prefix}Chart`);
+      expect(module).toHaveProperty(`${prefix}Encodings`);
+      expect(module).toHaveProperty(`${prefix}Properties`);
+      expect(module).toHaveProperty(`${prefix}Mark`);
+      expect(module).not.toHaveProperty('ChartData');
+      expect(module).not.toHaveProperty('ChartExtension');
+      expect(module).not.toHaveProperty('PathMark');
+    }
   });
 
   it('keeps each concrete chartType closure independent from the Point component barrel', async () => {
-    const cases = [
-      { chartType: 'bubble', file: 'index.ts' },
-      { chartType: 'regression', file: 'index.ts' },
-      { chartType: 'scatter', file: 'index.ts' },
-    ] as const;
-
-    for (const item of cases) {
+    for (const { chartType } of pointChartCases) {
       const content = await readFile(
-        fileURLToPath(new URL(`../src/point/${item.chartType}/${item.file}`, import.meta.url)),
+        fileURLToPath(new URL(`../src/point/${chartType}/index.ts`, import.meta.url)),
         'utf8',
       );
       expect(content).not.toContain("from '../components'");

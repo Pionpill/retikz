@@ -9,14 +9,14 @@ import type { IRRegressionChart } from './schema';
 import { defineChartRecipe } from '../../_chart/contract';
 import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
-import { pointRecipeId } from '../shared/plot';
 import {
   pointPositionFieldConsumersOf,
   pointResolutionOf,
   pointSlotsOf,
   pointSpatialResolutionOf,
   pointThemeOf,
-} from '../shared/recipe';
+} from '../shared';
+import { pointRecipeId } from '../shared/plot';
 import { RegressionMarkDefinition, resolveRegressionMarkGroup } from './mark';
 import {
   RegressionChartSchema,

@@ -1,11 +1,19 @@
-import { defineChartTheme } from '@retikz/chart';
+import { ChartThemeToken, defineChartTheme } from '@retikz/chart';
+import { defineThemeStyle } from '@retikz/core';
 import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
+import { definePlotThemeStyle } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import { renderChart } from '../src';
-import { createBubbleChart, createRegressionChart, createScatterChart } from '../src/point';
+import {
+  createBubbleChart,
+  createConnectedScatterChart,
+  createRangedDotChart,
+  createRegressionChart,
+  createScatterChart,
+} from '../src/point';
 
 const rows = [
   { x: 1, y: 2, size: 3, order: 1 },
@@ -126,6 +134,88 @@ describe('Chart Vanilla authoring', () => {
     expect(result.input).not.toHaveProperty('themeDefinitions');
     expect(result.input.lowerOptions).toBe(lowerOptions);
     expect(result.source).not.toHaveProperty('themeDefinitions');
+  });
+
+  it('keeps the Core host Theme and Theme style definitions in the authoring result and SSR', () => {
+    const hostThemeStyle = defineThemeStyle({
+      name: 'host-style',
+      resolve: () => ({ categorical: ['#123456'] }),
+    });
+    const result = createScatterChart({
+      data: rows,
+      encodings: { x: 'x', y: 'y' },
+      theme: { style: 'host-style', mode: 'dark' },
+      themeStyles: [hostThemeStyle],
+      themeDefinitions: [
+        defineChartTheme({
+          name: 'host-style',
+          tokens: { chart: { [ChartThemeToken.CanvasFill]: '#ffffff' } },
+        }),
+      ],
+      lowerOptions: {
+        plotThemeStyles: [definePlotThemeStyle({ name: 'host-style', resolve: () => ({}) })],
+      },
+    });
+
+    expect(result.theme).toEqual({ style: 'host-style', mode: 'dark' });
+    expect(result.themeStyles).toEqual([hostThemeStyle]);
+    expect(result.input).not.toHaveProperty('theme');
+    expect(result.input).not.toHaveProperty('themeStyles');
+    expect(renderChart(result).svg).toContain('#123456');
+  });
+
+  it('keeps named and inline Chart Themes in Source instead of treating them as Core host Themes', () => {
+    const named = createScatterChart({
+      data: rows,
+      encodings: { x: 'x', y: 'y' },
+      theme: 'scatter-theme',
+      themeDefinitions: [defineChartTheme({ name: 'scatter-theme', tokens: { chart: {} } })],
+    });
+    const inlineTheme = {
+      tokens: { chart: { [ChartThemeToken.CanvasFill]: '#abcdef' } },
+    } as const;
+    const inline = createScatterChart({
+      data: rows,
+      encodings: { x: 'x', y: 'y' },
+      theme: inlineTheme,
+    });
+
+    expect(named.source.theme).toBe('scatter-theme');
+    expect(named).not.toHaveProperty('theme');
+    expect(inline.source.theme).toEqual(inlineTheme);
+    expect(inline).not.toHaveProperty('theme');
+  });
+
+  it('routes Core host Theme metadata through the shared helper for every Point factory', () => {
+    const factories = [
+      () => createScatterChart({ data: rows, encodings: { x: 'x', y: 'y' }, theme: { mode: 'dark' } }),
+      () => createBubbleChart({ data: rows, encodings: { x: 'x', y: 'y', size: 'size' }, theme: { mode: 'dark' } }),
+      () =>
+        createRegressionChart({
+          data: regressionRows,
+          encodings: { x: 'x', y: 'y' },
+          theme: { mode: 'dark' },
+        }),
+      () =>
+        createConnectedScatterChart({
+          data: rows,
+          encodings: { x: 'x', y: 'y', order: 'order' },
+          theme: { mode: 'dark' },
+        }),
+      () =>
+        createRangedDotChart({
+          data: rows,
+          encodings: { category: 'x', start: 'y', end: 'size' },
+          theme: { mode: 'dark' },
+        }),
+    ];
+
+    for (const create of factories) {
+      const result = create();
+      expect(result.theme).toEqual({ mode: 'dark' });
+      expect(result.source).not.toHaveProperty('theme');
+      expect(result.input).not.toHaveProperty('theme');
+    }
   });
 
   it('shares custom transform Definitions with Chart resolution and Plot lowering without serializing runtime', () => {

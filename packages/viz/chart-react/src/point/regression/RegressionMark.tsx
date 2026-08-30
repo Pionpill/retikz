@@ -1,9 +1,7 @@
 import type { IRRegressionChart } from '@retikz/chart/point/regression';
 import type { FC } from 'react';
 
-type ChartMarkOf<TSource extends { recipe: { marks?: ReadonlyArray<unknown> } }> = NonNullable<
-  TSource['recipe']['marks']
->[number];
+import type { ChartMarkOf } from '../shared';
 
 /** Regression Chart mark 的精确 Source payload */
 export type RegressionChartMark = Extract<ChartMarkOf<IRRegressionChart>, { kind: 'regression' }>;

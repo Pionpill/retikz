@@ -52,6 +52,7 @@ type ScenePrimitiveLike = {
   strokeWidth?: number;
   fillOpacity?: number;
   rx?: number;
+  ry?: number;
 };
 
 /** 递归收集指定类型的 Scene 图元 */
@@ -150,15 +151,14 @@ describe('Chart providers through Core compile', () => {
     const connectors = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
       primitive => primitive.strokeWidth === 7,
     );
-    const endpoints = scenePrimitivesOfType(result.scene.primitives, 'ellipse').filter(
-      primitive => primitive.rx === 4.5,
-    );
+    const endpoints = scenePrimitivesOfType(result.scene.primitives, 'ellipse');
     const connectorCommands = connectors.map(connector => connector.commands ?? []);
     const connectorColors = new Set(connectors.map(connector => connector.stroke));
     const endpointColors = new Set(endpoints.map(endpoint => endpoint.fill));
 
     expect(connectors).toHaveLength(3);
     expect(endpoints).toHaveLength(6);
+    expect(endpoints.every(endpoint => endpoint.rx === endpoint.ry)).toBe(true);
     expect(endpointColors).toEqual(connectorColors);
     expect(
       connectorCommands.some(

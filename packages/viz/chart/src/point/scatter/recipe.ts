@@ -15,7 +15,7 @@ import {
   pointThemeOf,
   resolvePointMark,
   sizeGuideOf,
-} from '../shared/recipe';
+} from '../shared';
 import { ScatterMarkDefinition } from './mark';
 import { ScatterChartSchema, ScatterChartThemeOverridesSchema, ScatterChartThemeResolutionSchema } from './schema';
 

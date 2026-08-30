@@ -14,7 +14,7 @@ import {
   pointSpatialResolutionOf,
   pointThemeOf,
   sizeGuideOf,
-} from '../shared/recipe';
+} from '../shared';
 import { BubbleMarkDefinition, resolveBubbleMark } from './mark';
 import { BubbleChartSchema, BubbleChartThemeOverridesSchema, BubbleChartThemeResolutionSchema } from './schema';
 

@@ -1,9 +1,7 @@
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
 import type { FC } from 'react';
 
-type ChartMarkOf<TSource extends { recipe: { marks?: ReadonlyArray<unknown> } }> = NonNullable<
-  TSource['recipe']['marks']
->[number];
+import type { ChartMarkOf } from '../shared';
 
 /** Scatter Chart mark 的精确 Source payload */
 export type ScatterChartMark = Extract<ChartMarkOf<IRScatterChart>, { kind: 'scatter' }>;

@@ -4,6 +4,16 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const sourceRoot = fileURLToPath(new URL('../../src/', import.meta.url));
+const pointChartTypes = ['bubble', 'connected-scatter', 'ranged-dot', 'regression', 'scatter'] as const;
+const pointChartOwnerFiles = [
+  'encoding-schema.ts',
+  'index.ts',
+  'locator.ts',
+  'mark.ts',
+  'provider.ts',
+  'recipe.ts',
+  'schema.ts',
+] as const;
 
 const sourceFilesUnder = async (directory: string): Promise<Array<string>> => {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -26,21 +36,20 @@ describe('Chart semantic source layout', () => {
     expect(paths).toContain('_chart/providers/registry.ts');
     expect(paths).toContain('_chart/providers/theme.ts');
     expect(paths).toContain('_chart/providers/definition.ts');
+    expect(paths).toContain('_chart/resolve/encoding/resolve.ts');
+    expect(paths).toContain('_chart/resolve/encoding/scale.ts');
+    expect(paths).toContain('_chart/resolve/encoding/transform.ts');
     expect(paths).toContain('_chart/resolve/resolve.ts');
     expect(paths).toContain('_chart/schemas/source.ts');
     expect(paths).toContain('point/constants.ts');
+    expect(paths).toContain('point/shared/encoding.ts');
+    expect(paths).toContain('point/shared/mark.ts');
+    expect(paths).toContain('point/shared/recipe.ts');
     expect(paths).toContain('point/shared/schema.ts');
-    expect(paths).toContain('point/scatter/schema.ts');
-    expect(paths).toContain('point/scatter/recipe.ts');
-    expect(paths).toContain('point/scatter/provider.ts');
-    expect(paths).toContain('point/regression/encoding-schema.ts');
-    expect(paths).toContain('point/regression/encoding-types.ts');
-    expect(paths).toContain('point/regression/schema.ts');
-    expect(paths).toContain('point/regression/mark.ts');
-    expect(paths).toContain('point/regression/recipe.ts');
-    expect(paths).toContain('point/regression/provider.ts');
-    expect(paths).toContain('point/regression/locator.ts');
-    expect(paths).toContain('point/regression/index.ts');
+    expect(paths).toContain('point/shared/spatial.ts');
+    for (const chartType of pointChartTypes) {
+      for (const file of pointChartOwnerFiles) expect(paths).toContain(`point/${chartType}/${file}`);
+    }
     expect(paths).not.toContain('point/family.ts');
   });
 

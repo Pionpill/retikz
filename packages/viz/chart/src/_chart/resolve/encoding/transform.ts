@@ -1,14 +1,12 @@
 import type { IRJsonObject } from '@retikz/core';
 import type {
-  DataFieldTypeValue,
-  DataTransformFieldEffectValue,
   DataTransformOutputDescriptor,
   DataTransformOutputModel,
   DataTransformPhaseValue,
   IRDataReducerOperation,
   TransformContext,
 } from '@retikz/data';
-import type { IRPlotScaleOperation, IRPlotTransform } from '@retikz/plot';
+import type { IRPlotTransform } from '@retikz/plot';
 
 import {
   DataTransform,
@@ -18,71 +16,12 @@ import {
   DEFAULT_TRANSFORM_CONTEXT,
 } from '@retikz/data';
 
-import type {
-  ChartEncodingResolution,
-  ChartEncodingResolveContext,
-  ChartResolvedFieldMapping,
-} from '../contract/recipe';
-import type { IRChartSource } from '../schemas';
+import type { ChartEncodingResolveContext, ChartResolvedFieldMapping } from '../../contract/recipe';
+import type { IRChartSource } from '../../schemas';
+import type { ChartEncodingFieldConsumer, FieldConsumer, FieldProducer, TransformOperationRecord } from './types';
 
-import { RetikzChartError, RetikzChartErrorCode } from '../../error';
-
-type ChartTransformCapability = Readonly<{
-  phase: DataTransformPhaseValue;
-  fieldEffect: DataTransformFieldEffectValue;
-}>;
-
-type ChartEncodingScaleConsumer = Readonly<{
-  family: 'position' | 'channel';
-  type?: string;
-  positionRole?: string;
-  recipeFallback?: Readonly<{
-    name: string;
-    type: string;
-  }>;
-}>;
-
-/** exact recipe中一个普通字段slot允许的mapping能力 */
-export type ChartEncodingFieldConsumer<TSlot extends string = string> = Readonly<{
-  slot: TSlot;
-  transforms?: ReadonlyArray<ChartTransformCapability>;
-  outputType?: DataFieldTypeValue;
-  scale?: ChartEncodingScaleConsumer;
-}>;
-
-type ResolvedScaleSource = Readonly<{
-  family: 'position' | 'channel';
-  type: string;
-}>;
-
-type TransformOperationRecord = Readonly<{
-  id: string;
-  slot: string;
-  slotIndex: number;
-  phase: DataTransformPhaseValue;
-  operation: IRPlotTransform;
-  fieldEffect: DataTransformFieldEffectValue;
-  inputs: ReadonlyArray<string>;
-  outputs: ReadonlyArray<DataTransformOutputDescriptor>;
-  producedFields: ReadonlyArray<string>;
-  fieldsAfterReplace?: ReadonlyArray<string>;
-}>;
-
-type FieldProducer = Readonly<{
-  id: string;
-  slot: string;
-  phase: DataTransformPhaseValue;
-  slotIndex: number;
-}>;
-
-type FieldConsumer = Readonly<{
-  id: string;
-  slot: string;
-  phase: DataTransformPhaseValue;
-  slotIndex: number;
-  fields: ReadonlyArray<string>;
-  allowsSelfOutput: boolean;
-}>;
+import { RetikzChartError } from '../../../error';
+import { directFieldsOf, invalidEncoding, mappingKindOf, mappingPathOf, objectValueOf } from './shared';
 
 const transformPhaseOrder: ReadonlyArray<DataTransformPhaseValue> = [
   DataTransformPhase.RowShape,
@@ -93,43 +32,6 @@ const transformPhaseOrder: ReadonlyArray<DataTransformPhaseValue> = [
 ];
 
 const transformPhaseIndex = new Map(transformPhaseOrder.map((phase, index) => [phase, index] as const));
-
-const invalidEncoding = (message: string, path: ReadonlyArray<string | number>, cause?: unknown): RetikzChartError =>
-  new RetikzChartError({
-    code: RetikzChartErrorCode.InvalidChartIR,
-    message,
-    details: { path },
-    ...(cause === undefined ? {} : { cause }),
-  });
-
-const mappingPathOf = (slot: string): ReadonlyArray<string | number> => ['recipe', 'encodings', slot];
-
-const objectValueOf = (value: unknown): IRJsonObject | undefined => {
-  if (value === null || Array.isArray(value) || typeof value !== 'object') return undefined;
-  return value as IRJsonObject;
-};
-
-const directFieldsOf = (value: unknown): ReadonlyArray<string> => {
-  if (typeof value === 'string') return [value];
-  if (Array.isArray(value)) return value.flatMap(item => directFieldsOf(item));
-  const object = objectValueOf(value);
-  return object !== undefined && typeof object.field === 'string' ? [object.field] : [];
-};
-
-const mappingKindOf = (value: unknown): 'direct' | 'aggregate' | 'derived' | undefined => {
-  if (typeof value === 'string') return 'direct';
-  const object = objectValueOf(value);
-  if (object === undefined) return undefined;
-  if (Object.hasOwn(object, 'aggregate')) return 'aggregate';
-  if (Object.hasOwn(object, 'transform')) return 'derived';
-  if (Object.hasOwn(object, 'field')) return 'direct';
-  return undefined;
-};
-
-const mappingScaleOf = (value: unknown): IRJsonObject | undefined => {
-  const mapping = objectValueOf(value);
-  return mapping === undefined ? undefined : objectValueOf(mapping.scale);
-};
 
 const outputDescriptorsOf = (model: DataTransformOutputModel): ReadonlyArray<DataTransformOutputDescriptor> =>
   model.kind === 'preserve' ? model.outputs : model.fields;
@@ -405,41 +307,14 @@ const assertRowShapeAvailability = (
   }
 };
 
-const resolveScaleSource = (
-  context: ChartEncodingResolveContext,
-  operation: IRPlotScaleOperation,
-  path: ReadonlyArray<string | number>,
-): ResolvedScaleSource => {
-  const definition = context.runtime.scales.get(operation.type);
-  if (definition === undefined) {
-    throw invalidEncoding(`Chart scale type "${operation.type}" is not registered`, path);
-  }
-  try {
-    definition.schema.parse(operation);
-  } catch (error) {
-    throw invalidEncoding(`Chart scale "${operation.name}" is invalid`, path, error);
-  }
-  return { family: definition.family, type: operation.type };
-};
+/** transform mapping 解析、依赖检查与 phase 调度结果 */
+export type ChartEncodingTransformResolution = Readonly<{
+  encodings: IRJsonObject;
+  records: ReadonlyArray<TransformOperationRecord>;
+}>;
 
-const assertScaleCompatible = (
-  consumer: ChartEncodingFieldConsumer,
-  source: ResolvedScaleSource,
-  path: ReadonlyArray<string | number>,
-): void => {
-  const expected = consumer.scale;
-  if (expected === undefined)
-    throw invalidEncoding(`Chart encoding "${consumer.slot}" does not support named scales`, path);
-  if (source.family !== expected.family || (expected.type !== undefined && source.type !== expected.type)) {
-    throw invalidEncoding(`Chart scale is incompatible with encoding "${consumer.slot}"`, path);
-  }
-};
-
-/**
- * 把exact recipe field mappings解析为direct bindings与有序Plot operations
- * @description schema继续由具体chartType拥有；该helper只编排owner Definition、ordered slots与consumer连接
- */
-export const resolveChartEncodingMappings = <
+/** 解析 exact field mappings 中的 direct、aggregate 与 derived transform */
+export const resolveChartEncodingTransforms = <
   TSource extends IRChartSource,
   TEncodingSlot extends Extract<keyof TSource['recipe']['encodings'], string>,
   TConsumerSlot extends TEncodingSlot,
@@ -447,7 +322,7 @@ export const resolveChartEncodingMappings = <
   context: ChartEncodingResolveContext<TSource>,
   encodingSlots: ReadonlyArray<TEncodingSlot>,
   consumers: ReadonlyArray<ChartEncodingFieldConsumer<TConsumerSlot>>,
-): ChartEncodingResolution => {
+): ChartEncodingTransformResolution => {
   const slotOrder = new Map(encodingSlots.map((slot, index) => [slot, index] as const));
   const directEncodings: IRJsonObject = {};
   const aggregateMappings: Array<
@@ -593,110 +468,6 @@ export const resolveChartEncodingMappings = <
   }
   assertFieldDependencies(producers, fieldConsumers);
 
-  const extensionScales = context.source.plotExtension?.scales ?? [];
-  const extensionScaleByName = new Map<string, IRPlotScaleOperation>();
-  for (const [index, operation] of extensionScales.entries()) {
-    if (extensionScaleByName.has(operation.name)) {
-      throw invalidEncoding(`Plot scale "${operation.name}" is declared more than once`, [
-        'plotExtension',
-        'scales',
-        index,
-        'name',
-      ]);
-    }
-    extensionScaleByName.set(operation.name, operation);
-  }
-
-  const fallbackByName = new Map<string, Readonly<{ slot: string; source: ResolvedScaleSource }>>();
-  for (const consumer of consumers) {
-    const scale = consumer.scale;
-    if (scale?.recipeFallback !== undefined) {
-      const fallback = scale.recipeFallback;
-      fallbackByName.set(fallback.name, {
-        slot: consumer.slot,
-        source: { family: scale.family, type: fallback.type },
-      });
-    }
-  }
-
-  const encodingScaleByName = new Map<
-    string,
-    Readonly<{ slot: string; operation: IRPlotScaleOperation; source: ResolvedScaleSource }>
-  >();
-  for (const consumer of consumers) {
-    const value = context.encodings[consumer.slot];
-    const scale = mappingScaleOf(value);
-    const operation = scale === undefined ? undefined : objectValueOf(scale.operation);
-    if (operation === undefined) continue;
-    const scaleOperation = operation as IRPlotScaleOperation;
-    const path = [...mappingPathOf(consumer.slot), 'scale'];
-    const existing = encodingScaleByName.get(scaleOperation.name);
-    if (existing !== undefined) {
-      throw invalidEncoding(
-        `Chart scale "${scaleOperation.name}" is already declared by encoding "${existing.slot}"`,
-        path,
-      );
-    }
-    if (extensionScaleByName.has(scaleOperation.name)) {
-      throw invalidEncoding(`Chart scale "${scaleOperation.name}" is also declared by plotExtension`, path);
-    }
-    const fallback = fallbackByName.get(scaleOperation.name);
-    if (fallback !== undefined && fallback.slot !== consumer.slot) {
-      throw invalidEncoding(`Chart scale "${scaleOperation.name}" conflicts with another recipe fallback`, path);
-    }
-    const source = resolveScaleSource(context, scaleOperation, path);
-    assertScaleCompatible(consumer, source, path);
-    encodingScaleByName.set(scaleOperation.name, { slot: consumer.slot, operation: scaleOperation, source });
-  }
-
-  const positionScales: Record<string, string> = {};
-  const removedRecipeScales = new Set<string>();
-  const encodingScales: Array<IRPlotScaleOperation> = [];
-  for (const consumer of consumers) {
-    const mapping = directEncodings[consumer.slot] as ChartResolvedFieldMapping | undefined;
-    if (mapping === undefined) continue;
-    const scale = mappingScaleOf(context.encodings[consumer.slot]);
-    if (scale === undefined) continue;
-    const path = [...mappingPathOf(consumer.slot), 'scale'];
-    let name: string;
-    const declaresOperation = Object.hasOwn(scale, 'operation');
-    if (declaresOperation) {
-      const operation = objectValueOf(scale.operation) as IRPlotScaleOperation;
-      name = operation.name;
-      encodingScales.push(operation);
-    } else {
-      const reference = scale.reference;
-      if (typeof reference !== 'string') throw invalidEncoding('Chart scale reference must be non-empty', path);
-      name = reference;
-      const encodingSource = encodingScaleByName.get(reference)?.source;
-      const extensionOperation = extensionScaleByName.get(reference);
-      const fallback = fallbackByName.get(reference);
-      if (fallback !== undefined && fallback.slot !== consumer.slot) {
-        throw invalidEncoding(
-          `Chart recipe fallback scale "${reference}" belongs to encoding "${fallback.slot}"`,
-          path,
-        );
-      }
-      const source =
-        encodingSource ??
-        (extensionOperation === undefined ? undefined : resolveScaleSource(context, extensionOperation, path)) ??
-        fallback?.source;
-      if (source === undefined) throw invalidEncoding(`Chart scale reference "${reference}" does not exist`, path);
-      assertScaleCompatible(consumer, source, path);
-    }
-
-    const scaleConsumer = consumer.scale;
-    if (scaleConsumer?.positionRole !== undefined) {
-      positionScales[scaleConsumer.positionRole] = name;
-    } else {
-      directEncodings[consumer.slot] = { ...mapping, scale: name } satisfies ChartResolvedFieldMapping;
-    }
-    const recipeFallback = scaleConsumer?.recipeFallback;
-    if (recipeFallback !== undefined && (declaresOperation || name !== recipeFallback.name)) {
-      removedRecipeScales.add(recipeFallback.name);
-    }
-  }
-
   operationRecords.sort((left, right) => {
     const phaseDifference =
       (transformPhaseIndex.get(left.phase) as number) - (transformPhaseIndex.get(right.phase) as number);
@@ -714,11 +485,5 @@ export const resolveChartEncodingMappings = <
   }
   assertRowShapeAvailability(operationRecords, finalConsumers);
 
-  return {
-    encodings: directEncodings,
-    transform: operationRecords.map(record => record.operation),
-    scales: encodingScales,
-    positionScales,
-    removedRecipeScales,
-  };
+  return { encodings: directEncodings, records: operationRecords };
 };

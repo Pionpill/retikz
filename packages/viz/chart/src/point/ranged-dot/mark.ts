@@ -12,7 +12,7 @@ import type {
 } from './schema';
 
 import { defineChartMark } from '../../_chart/contract';
-import { requiredFieldOf } from '../shared/recipe';
+import { requiredFieldOf } from '../shared';
 import { RangedDotChartMarkSchema } from './schema';
 
 const CURRENT_COLOR = 'currentColor';

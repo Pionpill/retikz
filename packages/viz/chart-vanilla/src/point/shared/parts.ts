@@ -6,7 +6,7 @@ import type { LowerPlotsOptions } from '@retikz/plot';
 import type { ChartAuthoringResult, InputChartPanel } from '../../shared';
 import type { TypedChartCommonInput } from './types';
 
-import { chartContributionOf } from '../../shared';
+import { createChartAuthoringResult } from '../../shared';
 
 /** 未显式提供 dataRef 时使用的稳定数据引用 */
 export const DEFAULT_CHART_DATA_REFERENCE = 'chart.data';
@@ -64,12 +64,16 @@ export const createPointChart = <TSource extends IRChartSource>(
   parts: TypedChartParts<TSource>,
   provider: CoreProviderContribution,
 ): ChartAuthoringResult<TSource> =>
-  chartContributionOf({
-    source,
-    datasets: parts.datasets,
-    chartProviderContribution: provider,
-    ...(parts.lowerOptions === undefined ? {} : { lowerOptions: parts.lowerOptions }),
-    ...(parts.panel === undefined ? {} : { panel: parts.panel }),
-    ...(parts.hostTheme === undefined ? {} : { theme: parts.hostTheme }),
-    ...(parts.themeStyles === undefined ? {} : { themeStyles: parts.themeStyles }),
-  });
+  createChartAuthoringResult(
+    {
+      source,
+      datasets: parts.datasets,
+      chartProviderContribution: provider,
+      ...(parts.lowerOptions === undefined ? {} : { lowerOptions: parts.lowerOptions }),
+      ...(parts.panel === undefined ? {} : { panel: parts.panel }),
+    },
+    {
+      ...(parts.hostTheme === undefined ? {} : { theme: parts.hostTheme }),
+      ...(parts.themeStyles === undefined ? {} : { themeStyles: parts.themeStyles }),
+    },
+  );

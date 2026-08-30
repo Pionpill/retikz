@@ -7,8 +7,8 @@ import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/
 import type { IRRegressionChartProperties, IRRegressionMark } from './schema';
 
 import { defineChartMark } from '../../_chart/contract';
+import { requiredFieldOf, resolvePointMark } from '../shared';
 import { pointRecipeId } from '../shared/plot';
-import { requiredFieldOf, resolvePointMark } from '../shared/recipe';
 import { RegressionChartMarkSchema } from './schema';
 
 const CURRENT_COLOR = 'currentColor';
