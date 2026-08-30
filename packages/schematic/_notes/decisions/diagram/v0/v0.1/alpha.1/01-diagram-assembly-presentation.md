@@ -1,6 +1,6 @@
 # ADR-01：Diagram Assembly 与 Presentation
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-29
 - 关联：[Diagram v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
@@ -90,3 +90,7 @@ Alpha.1 实现可以在包内建立并消费该长期契约，但在具体 Diagr
 - Legend content、key、内部布局和空 items / ticks 的合法性完整沿用 Standard Legend；Diagram 只要求 legend 字段本身是一个合法 `IRLegend`
 - 所有区域必须经过同一 renderer-neutral compile 路径进入 Scene；adapter、Docs 或 renderer 不得在 Scene 外补画 title、description 或 legend
 - Alpha.1 不导出临时 Source root、任意 drawing body、占位字段或 package-public foundation API。后续具体 Diagram root 直接采用长期契约，不保留临时 alias、fallback、migration 或双轨实现
+
+## 最终结果
+
+Alpha.1 采用该长期 Presentation 与固定区域装配契约：具体 Diagram root 延后到拥有真实 drawing core 时建立，且必须把所有存在区域送入统一 Core Scene。未决风险仅是 alpha.2 仍需为 FlowDiagram 冻结真实 body、布局、routing 与三入口公开边界，不回写或临时改造本契约

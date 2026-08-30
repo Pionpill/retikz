@@ -1,6 +1,6 @@
 # Diagram v0.1 Roadmap
 
-> 状态：规划中；当前规划 alpha.1 Diagram Foundation 与 alpha.2 FlowDiagram MVP，后续 alpha 等待真实使用继续规划。关联：[Diagram v0 roadmap](../roadmap.md) · [Schematic 制图能力域设计](../../../../../../../notes/architecture/schematic-design.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md) · [Graph v0 roadmap](../../../graph/v0/roadmap.md)
+> 状态：alpha.1 已完成，alpha.2 FlowDiagram MVP 规划中；后续 alpha 等待真实使用继续规划。关联：[Diagram v0 roadmap](../roadmap.md) · [Schematic 制图能力域设计](../../../../../../../notes/architecture/schematic-design.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md) · [Graph v0 roadmap](../../../graph/v0/roadmap.md)
 
 ## 目标
 
@@ -10,10 +10,10 @@
 
 ## Milestone
 
-| Milestone | 主题               | 范围                                                                                                                                                                                                               |
-| --------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| alpha.1   | Diagram Foundation | 在 `@retikz/diagram` 包内建立 Presentation、Frame、Diagram Theme、固定区域装配、Surface / Scope 与 renderer-neutral Scene 基础闭环；drawing child 仅为不透明内部依赖，不建立 public root、adapter 或正式 docs demo |
-| alpha.2   | FlowDiagram MVP    | 冻结 Graph Body、layout / routing Definition、orchestration、result 与 artifact；一次建立 `IRFlowDiagram`、Vanilla、React、真实 Graph、完整 Scene、双语 docs 与渐进迁移                                            |
+| Milestone | 主题               | 范围                                                                                                                                                                                                                       |
+| --------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| alpha.1   | Diagram Foundation | 在 `@retikz/diagram` 包内建立 Presentation、Frame、Diagram Theme、固定区域装配、Surface / Scope 与 renderer-neutral Scene 基础闭环；drawing child 仅为不透明内部依赖，不建立 public root、adapter 或正式 docs demo；已完成 |
+| alpha.2   | FlowDiagram MVP    | 冻结 Graph Body、layout / routing Definition、orchestration、result 与 artifact；一次建立 `IRFlowDiagram`、Vanilla、React、真实 Graph、完整 Scene、双语 docs 与渐进迁移                                                    |
 
 每个 milestone 的公开契约、默认值、失败语义和验证边界在对应 ADR 设计时确认。alpha.1 的内部 foundation 不因尚未公开而接受临时模型；alpha.2 必须直接组合 alpha.1 的长期契约，不保留占位 alias、fallback 或双轨实现
 
@@ -35,8 +35,8 @@ Alpha.1 foundation 接收一个不透明 drawing child 以完成内部装配和 
 
 | ADR                                                    | 主题                                 | 负责                                                                                                                                     | 状态     |
 | ------------------------------------------------------ | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| [01](./alpha.1/01-diagram-assembly-presentation.md)    | Diagram Assembly 与 Presentation     | 公共 Presentation 片段、固定区域语义、显式 Standard Legend、统一输出边界、内部 opaque drawing child 与具体 root 延期边界                 | Proposed |
-| [02](./alpha.1/02-diagram-frame-spacing-appearance.md) | Diagram Frame、Spacing 与 Appearance | 区域排列、外框、frame padding、语义区块间距、Diagram Theme、文字继承，以及对 Layout / Standard / Core Theme 的复用与 foundation 实施边界 | Proposed |
+| [01](./alpha.1/01-diagram-assembly-presentation.md)    | Diagram Assembly 与 Presentation     | 公共 Presentation 片段、固定区域语义、显式 Standard Legend、统一输出边界、内部 opaque drawing child 与具体 root 延期边界                 | Accepted |
+| [02](./alpha.1/02-diagram-frame-spacing-appearance.md) | Diagram Frame、Spacing 与 Appearance | 区域排列、外框、frame padding、语义区块间距、Diagram Theme、文字继承，以及对 Layout / Standard / Core Theme 的复用与 foundation 实施边界 | Accepted |
 
 ### alpha.2 FlowDiagram MVP
 

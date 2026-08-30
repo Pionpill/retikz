@@ -100,21 +100,25 @@ describe('changelog data', () => {
     );
   });
 
-  it('当前 Schematic 里程碑注册详情路由并覆盖 Graph 包族', () => {
+  it('当前 Schematic 里程碑注册详情路由并覆盖 Diagram 包族', () => {
     const releases = schematicSection.find(section => section.id === 'releases');
     const changelogPage = releases?.pages.find(page => page.id === 'changelog');
     const currentRelease = changelogForModule('schematic')[0];
     expect(currentRelease).toBeDefined();
     expect(currentRelease.packages.map(block => block.pkg)).toEqual([
-      '@retikz/graph',
-      '@retikz/graph-react',
-      '@retikz/graph-vanilla',
+      '@retikz/diagram',
+      '@retikz/diagram-react',
+      '@retikz/diagram-vanilla',
     ]);
     expect(changelogPage?.children?.some(page => page.id === changelogVersionSlug(currentRelease.minor))).toBe(true);
   });
 
   it('Graph 更新日志保留 alpha.1 完整契约并登记 alpha.2 Block', () => {
-    const release = changelogForModule('schematic')[0];
+    const release = changelogForModule('schematic').find(current =>
+      current.packages.some(block => block.pkg === '@retikz/graph'),
+    );
+    expect(release).toBeDefined();
+    if (release === undefined) throw new Error('Expected Graph release');
     const byPackage = new Map(release.packages.map(block => [block.pkg, block]));
     const serialized = JSON.stringify(release);
 

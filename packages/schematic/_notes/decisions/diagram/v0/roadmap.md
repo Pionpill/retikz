@@ -1,6 +1,6 @@
 # Diagram v0 Roadmap
 
-> 状态：规划中；v0.1 当前规划 alpha.1 Diagram Foundation 与 alpha.2 FlowDiagram MVP，后续 milestone 等待真实使用继续规划。关联：[Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md) · [Schematic Graph 完备设计](../../../architecture/schematic-graph-complete.md) · [Graph v0 roadmap](../../graph/v0/roadmap.md)
+> 状态：v0.1 alpha.1 已完成，alpha.2 FlowDiagram MVP 规划中；后续 milestone 等待真实使用继续规划。关联：[Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md) · [Schematic Graph 完备设计](../../../architecture/schematic-graph-complete.md) · [Graph v0 roadmap](../../graph/v0/roadmap.md)
 
 ## 目标
 

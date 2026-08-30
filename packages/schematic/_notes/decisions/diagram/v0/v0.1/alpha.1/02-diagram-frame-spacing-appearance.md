@@ -1,6 +1,6 @@
 # ADR-02：Diagram Frame、Spacing 与 Appearance
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-29
 - 关联：[Diagram v0.1 roadmap](../roadmap.md) · [ADR-01：Diagram Assembly 与 Presentation](./01-diagram-assembly-presentation.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
@@ -170,3 +170,7 @@ Definition options 不进入 Source。未来 React 与 Vanilla 只把同一 `Dia
 - Surface proposal、Text / TeX、Legend、Layout 与 Core Scope / namespace 错误保留 owner 路径和诊断；Diagram adapter 不吞掉、改写或降级为 warning-only
 - 未来 React 不拥有 Direct IR 无法表达的 Frame / Theme 能力，也不采用第一个生效、默认恢复或宿主 CSS 外挂。Direct IR、Vanilla 与 React normalization 后的 Source 必须逐字段等价
 - Alpha.1 不导出临时 Source root、任意 drawing body、占位字段或 package-public foundation API。后续具体 Diagram root 直接采用长期 Frame / Theme 契约，不提供 Flow 专属别名、旧名 re-export、migration、fallback 或双轨字段
+
+## 最终结果
+
+Alpha.1 固化了 Neutral、Frame、Diagram Theme 与 Core Theme 的长期优先级，并通过 Layout、Standard 与 Core 组合完整外壳。未决风险仅是 alpha.2 需要把真实 FlowDiagram 的 scope、layout 与 routing 接入该外壳，不新增第二套 spacing、Surface 或 Theme 机制
