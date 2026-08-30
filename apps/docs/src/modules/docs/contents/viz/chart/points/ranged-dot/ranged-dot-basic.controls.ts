@@ -6,6 +6,7 @@ import { rangedDotData } from './ranged-dot-basic.data';
 
 export const RANGED_DOT_CONTROL_IDS = {
   lineStyle: 'ranged-dot-line-style',
+  lineColor: 'ranged-dot-line-color',
   strokeWidth: 'ranged-dot-stroke-width',
   pointSize: 'ranged-dot-point-size',
   startColor: 'ranged-dot-start-color',
@@ -46,6 +47,7 @@ export const rangedDotBasicControls = definePreviewControls({
             { value: 'dashed', label: '虚线' },
           ],
         },
+        { kind: 'color', id: RANGED_DOT_CONTROL_IDS.lineColor, label: '连接线颜色', defaultValue: '#94a3b8' },
         {
           kind: 'range',
           id: RANGED_DOT_CONTROL_IDS.strokeWidth,
@@ -69,8 +71,8 @@ export const rangedDotBasicControls = definePreviewControls({
           max: 10,
           step: 1,
         },
-        { kind: 'color', id: RANGED_DOT_CONTROL_IDS.startColor, label: '起点颜色', defaultValue: '#64748b' },
-        { kind: 'color', id: RANGED_DOT_CONTROL_IDS.endColor, label: '终点颜色', defaultValue: '#2563eb' },
+        { kind: 'color', id: RANGED_DOT_CONTROL_IDS.startColor, label: '起点颜色', defaultValue: '#2563eb' },
+        { kind: 'color', id: RANGED_DOT_CONTROL_IDS.endColor, label: '终点颜色', defaultValue: '#f97316' },
       ],
     },
   ],
@@ -80,10 +82,11 @@ export const previewControlContract = {
   controls: rangedDotBasicControls,
   canonicalValues: {
     [RANGED_DOT_CONTROL_IDS.lineStyle]: 'solid',
+    [RANGED_DOT_CONTROL_IDS.lineColor]: '#94a3b8',
     [RANGED_DOT_CONTROL_IDS.strokeWidth]: 2,
     [RANGED_DOT_CONTROL_IDS.pointSize]: 5,
-    [RANGED_DOT_CONTROL_IDS.startColor]: '#64748b',
-    [RANGED_DOT_CONTROL_IDS.endColor]: '#2563eb',
+    [RANGED_DOT_CONTROL_IDS.startColor]: '#2563eb',
+    [RANGED_DOT_CONTROL_IDS.endColor]: '#f97316',
   },
   relatedApis: [
     'RangedDotProperties.range',

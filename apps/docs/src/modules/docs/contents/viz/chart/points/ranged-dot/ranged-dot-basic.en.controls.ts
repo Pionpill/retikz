@@ -39,6 +39,7 @@ export const rangedDotBasicControls = definePreviewControls({
             { value: 'dashed', label: 'Dashed' },
           ],
         },
+        { kind: 'color', id: RANGED_DOT_CONTROL_IDS.lineColor, label: 'Line color', defaultValue: '#94a3b8' },
         {
           kind: 'range',
           id: RANGED_DOT_CONTROL_IDS.strokeWidth,
@@ -62,8 +63,8 @@ export const rangedDotBasicControls = definePreviewControls({
           max: 10,
           step: 1,
         },
-        { kind: 'color', id: RANGED_DOT_CONTROL_IDS.startColor, label: 'Start color', defaultValue: '#64748b' },
-        { kind: 'color', id: RANGED_DOT_CONTROL_IDS.endColor, label: 'End color', defaultValue: '#2563eb' },
+        { kind: 'color', id: RANGED_DOT_CONTROL_IDS.startColor, label: 'Start color', defaultValue: '#2563eb' },
+        { kind: 'color', id: RANGED_DOT_CONTROL_IDS.endColor, label: 'End color', defaultValue: '#f97316' },
       ],
     },
   ],
@@ -73,10 +74,11 @@ export const previewControlContract = {
   controls: rangedDotBasicControls,
   canonicalValues: {
     [RANGED_DOT_CONTROL_IDS.lineStyle]: 'solid',
+    [RANGED_DOT_CONTROL_IDS.lineColor]: '#94a3b8',
     [RANGED_DOT_CONTROL_IDS.strokeWidth]: 2,
     [RANGED_DOT_CONTROL_IDS.pointSize]: 5,
-    [RANGED_DOT_CONTROL_IDS.startColor]: '#64748b',
-    [RANGED_DOT_CONTROL_IDS.endColor]: '#2563eb',
+    [RANGED_DOT_CONTROL_IDS.startColor]: '#2563eb',
+    [RANGED_DOT_CONTROL_IDS.endColor]: '#f97316',
   },
   relatedApis: [
     'RangedDotProperties.range',

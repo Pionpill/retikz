@@ -16,17 +16,18 @@ const controlled = defineControlledPreview(previewControlContract, values => (
     <RangedDotEncodings category="country" start="forestArea2000" end="forestArea2022" />
     <RangedDotProperties
       point={{ size: values[RANGED_DOT_CONTROL_IDS.pointSize] }}
-      startPoint={{ color: values[RANGED_DOT_CONTROL_IDS.startColor] }}
-      endPoint={{ color: values[RANGED_DOT_CONTROL_IDS.endColor], shape: 'diamond' }}
+      startPoint={{ color: values[RANGED_DOT_CONTROL_IDS.startColor], shape: 'circle' }}
+      endPoint={{ color: values[RANGED_DOT_CONTROL_IDS.endColor], shape: 'circle' }}
       range={{
-        stroke: '#94a3b8',
+        stroke: values[RANGED_DOT_CONTROL_IDS.lineColor],
         strokeWidth: values[RANGED_DOT_CONTROL_IDS.strokeWidth],
         ...(values[RANGED_DOT_CONTROL_IDS.lineStyle] === 'dashed' ? { dashPattern: [8, 4] } : {}),
       }}
     />
     <ChartTitle>Change in forest cover across eighteen countries</ChartTitle>
     <ChartSubtitle>
-      Forest area as a share of land; circles show 2000 and diamonds show 2022, sorted by the 2022 value
+      Forest area as a share of land; both endpoints are circles and default to the first two palette colors, sorted by
+      the 2022 value
     </ChartSubtitle>
     <ChartSource>
       World Bank WDI indicator AG.LND.FRST.ZS; static snapshot accessed 2026-08-30 and rounded to one decimal

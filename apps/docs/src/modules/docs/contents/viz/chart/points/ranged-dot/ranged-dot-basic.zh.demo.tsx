@@ -15,16 +15,18 @@ const controlled = defineControlledPreview(previewControlContract, values => (
     <RangedDotEncodings category="country" start="forestArea2000" end="forestArea2022" />
     <RangedDotProperties
       point={{ size: values[RANGED_DOT_CONTROL_IDS.pointSize] }}
-      startPoint={{ color: values[RANGED_DOT_CONTROL_IDS.startColor] }}
-      endPoint={{ color: values[RANGED_DOT_CONTROL_IDS.endColor], shape: 'diamond' }}
+      startPoint={{ color: values[RANGED_DOT_CONTROL_IDS.startColor], shape: 'circle' }}
+      endPoint={{ color: values[RANGED_DOT_CONTROL_IDS.endColor], shape: 'circle' }}
       range={{
-        stroke: '#94a3b8',
+        stroke: values[RANGED_DOT_CONTROL_IDS.lineColor],
         strokeWidth: values[RANGED_DOT_CONTROL_IDS.strokeWidth],
         ...(values[RANGED_DOT_CONTROL_IDS.lineStyle] === 'dashed' ? { dashPattern: [8, 4] } : {}),
       }}
     />
     <ChartTitle>十八个国家森林覆盖率的变化</ChartTitle>
-    <ChartSubtitle>森林面积占国土比例；圆点为 2000 年，菱形为 2022 年，按 2022 年数值升序排列</ChartSubtitle>
+    <ChartSubtitle>
+      森林面积占国土比例；两个端点均为圆形，默认使用色系中的前两个颜色，按 2022 年数值升序排列
+    </ChartSubtitle>
     <ChartSource>World Bank WDI 指标 AG.LND.FRST.ZS；2026-08-30 静态快照，数值保留一位小数</ChartSource>
   </RangedDotChart>
 ));
