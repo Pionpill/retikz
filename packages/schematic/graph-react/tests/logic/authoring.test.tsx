@@ -73,6 +73,9 @@ describe('Block React authoring', () => {
           icon: createElement(Node, { position: [0, 0], children: 'U' }),
           title: { text: 'User' },
           description: { text: 'Domain entity' },
+          direction: 'horizontal',
+          itemGap: 6,
+          justifyContent: 'space-between',
           trailing: createElement(Decoration, { id: 'visibility' }),
         }),
         createElement(Node, { position: [0, 40], children: 'Custom content' }),
@@ -100,6 +103,9 @@ describe('Block React authoring', () => {
           icon: { type: 'node', position: [0, 0], text: 'U' },
           title: { text: 'User' },
           description: { text: 'Domain entity' },
+          direction: 'horizontal',
+          itemGap: 6,
+          justifyContent: 'space-between',
           trailing: { namespace: 'fixture', type: 'decoration', id: 'visibility' },
         },
         { type: 'node', position: [0, 40], text: 'Custom content' },
@@ -116,7 +122,7 @@ describe('Block React authoring', () => {
     const WrappedCell: FC = () =>
       createElement(
         BlockCell,
-        { itemKey: 'type', grow: 1 },
+        { itemKey: 'type', basis: 'content', grow: 0, shrink: 0 },
         createElement(Entity, { role: 'concept', position: [0, 0] }),
       );
     const result = normalizeReact(
@@ -163,18 +169,13 @@ describe('Block React authoring', () => {
           {
             key: 'name',
             child: { type: 'node', position: [0, 0], text: 'name' },
-            margin: 0,
-            basis: 'content',
-            grow: 0,
-            shrink: 1,
           },
           {
             key: 'type',
             child: { namespace: 'graph', type: 'entity', role: 'concept', position: [0, 0] },
-            margin: 0,
             basis: 'content',
-            grow: 1,
-            shrink: 1,
+            grow: 0,
+            shrink: 0,
           },
         ],
       },

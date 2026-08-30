@@ -1,10 +1,8 @@
-import type { FlexLayoutItemInput } from '@retikz/layout';
-
 import { ChildSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { FlexLayoutItemSchema, LayoutItemKind } from '@retikz/layout';
+import { FlexLayoutItemSchema, FlexMainDistributionSchema, LayoutGapSchema } from '@retikz/layout';
 import { SurfaceInputSchema } from '@retikz/standard';
-import { array, literal, strictObject } from 'zod';
+import { array, enum as zodEnum, literal, strictObject } from 'zod';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { GraphThemeLayerSchema } from '../theme';
@@ -19,6 +17,11 @@ export const BlockTextSchema = strictObject({
   opacity: NodeSchema.shape.opacity,
 }).describe('Core-compatible text fields used by Block structure labels.');
 
+/** Block Header 文本区的排列方向 */
+const BlockHeaderDirectionSchema = zodEnum(['horizontal', 'vertical']).describe(
+  'Physical direction used to arrange the Header title and description.',
+);
+
 const BlockSurfaceFields = {
   padding: SurfaceInputSchema.shape.padding,
   background: SurfaceInputSchema.shape.background,
@@ -30,33 +33,56 @@ const BlockSurfaceFields = {
 export const BlockHeaderSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.BlockHeader).describe('Block Header Source composite discriminator.'),
-  icon: ChildSchema.optional().describe('Optional arbitrary child placed before the Header text column.'),
+  icon: ChildSchema.optional().describe('Optional arbitrary child placed before the Header text region.'),
   title: BlockTextSchema.describe('Required primary Header title.'),
   description: BlockTextSchema.optional().describe('Optional secondary Header description.'),
-  trailing: ChildSchema.optional().describe('Optional arbitrary child placed after the Header text column.'),
-}).describe('Independent Graph composite arranging an icon, text column and trailing child.');
+  direction: BlockHeaderDirectionSchema.optional().describe(
+    'Optional direction for the title and description text region; omitted means vertical.',
+  ),
+  itemGap: LayoutGapSchema.optional().describe(
+    'Optional minimum physical gap between the Header title and description.',
+  ),
+  justifyContent: FlexMainDistributionSchema.optional().describe(
+    'Optional main-axis distribution within the Header title and description text region.',
+  ),
+  trailing: ChildSchema.optional().describe('Optional arbitrary child placed after the Header text region.'),
+}).describe('Independent Graph composite arranging an icon, text region and trailing child.');
 
 const BlockCellInputSchema = strictObject({
   key: FlexLayoutItemSchema.shape.key,
   child: FlexLayoutItemSchema.shape.child,
-  margin: FlexLayoutItemSchema.shape.margin,
-  basis: FlexLayoutItemSchema.shape.basis,
-  grow: FlexLayoutItemSchema.shape.grow,
-  shrink: FlexLayoutItemSchema.shape.shrink,
+  margin: FlexLayoutItemSchema.shape.margin
+    .unwrap()
+    .optional()
+    .describe('Optional item margin outside the Row allocation slot.'),
+  basis: FlexLayoutItemSchema.shape.basis
+    .unwrap()
+    .optional()
+    .describe('Flex main-axis base slot; Block Cells default to zero for equal sharing.'),
+  grow: FlexLayoutItemSchema.shape.grow
+    .unwrap()
+    .optional()
+    .describe('Flex positive free-space factor; Block Cells default to one.'),
+  shrink: FlexLayoutItemSchema.shape.shrink
+    .unwrap()
+    .optional()
+    .describe('Flex shrink factor; Block Cells default to one.'),
   min: FlexLayoutItemSchema.shape.min,
   max: FlexLayoutItemSchema.shape.max,
   alignSelf: FlexLayoutItemSchema.shape.alignSelf,
+}).superRefine((cell, context) => {
+  if (cell.min !== undefined && cell.max !== undefined && cell.min > cell.max) {
+    context.addIssue({
+      code: 'custom',
+      path: ['max'],
+      message: 'max must be greater than or equal to min.',
+    });
+  }
 });
 
-export const BlockCellSchema = BlockCellInputSchema.transform(
-  (cell): FlexLayoutItemInput => ({ kind: LayoutItemKind.Flex, ...cell }),
-)
-  .pipe(FlexLayoutItemSchema)
-  .transform(({ kind: _kind, ...cell }) => {
-    void _kind;
-    return cell;
-  })
-  .describe('Row-local FlexLayout item fields excluding the fixed Flex discriminator.');
+export const BlockCellSchema = BlockCellInputSchema.describe(
+  'Row-local sparse FlexLayout item fields excluding the fixed Flex discriminator.',
+);
 
 export const BlockSectionSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),

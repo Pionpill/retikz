@@ -11,7 +11,7 @@ import type { IRBlock } from '../../schemas';
 const DEFAULT_BLOCK_GAP = 8;
 const DEFAULT_BLOCK_PADDING = 8;
 const DEFAULT_BLOCK_BACKGROUND = { fill: 'none' } as const;
-const DEFAULT_BLOCK_BORDER = { stroke: 'lightgray', strokeWidth: 1 } as const;
+const DEFAULT_BLOCK_BORDER = { stroke: 'currentColor', strokeWidth: 1, strokeOpacity: 0.2 } as const;
 const DEFAULT_BLOCK_CORNER_RADIUS = 8;
 
 /** 从 Block Source 提取完整 Core Scope props，移除 Graph、布局与 Surface 字段 */

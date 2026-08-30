@@ -16,7 +16,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const padding = typeof values.padding === 'number' ? values.padding : 8;
 
   return (
-    <Graph width={420} height={230} viewBox={{ x: padding - 155, y: padding - 68, width: 420, height: 230 }}>
+    <Graph width={420} height={230} viewBox={{ x: padding - 129, y: padding - 68, width: 420, height: 230 }}>
       <Block
         padding={padding}
         cornerRadius={cornerRadius}
@@ -27,7 +27,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         <BlockSection title={{ text: 'Methods' }}>
           <BlockRow>
             <BlockCell itemKey="method" grow={1}>
-              <Node position={[0, 0]} padding={0} margin={0} fill="none" stroke="none" textColor="currentColor">
+              <Node position={[0, 0]} padding={0} fill="none" stroke="none">
                 findById(id)
               </Node>
             </BlockCell>

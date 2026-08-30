@@ -2,17 +2,23 @@ import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import type { IRFlexLayout, IRFlexLayoutItem } from '@retikz/layout';
 import type { IRSurface } from '@retikz/standard';
 
-import { createFlexLayout, FlexLayoutDirection, LayoutAlignment, LayoutOverflow } from '@retikz/layout';
+import {
+  createFlexLayout,
+  FlexLayoutDirection,
+  LayoutAlignment,
+  LayoutDistribution,
+  LayoutOverflow,
+} from '@retikz/layout';
 import { createSurface, STANDARD_NAMESPACE, SURFACE_TYPE } from '@retikz/standard';
 
 import type { IRBlockHeader, IRBlockRow, IRBlockSection, IRBlockText } from '../../schemas';
 
 const DEFAULT_HEADER_GAP = 8;
-const DEFAULT_HEADER_TEXT_GAP = 2;
+const DEFAULT_HEADER_TEXT_GAP = 4;
 const DEFAULT_SECTION_GAP = 4;
 const DEFAULT_SECTION_PADDING = 8;
 const DEFAULT_SECTION_BACKGROUND = { fill: 'lightgray', fillOpacity: 0.04 } as const;
-const DEFAULT_SECTION_BORDER = { stroke: 'lightgray', strokeWidth: 1 } as const;
+const DEFAULT_SECTION_BORDER = { stroke: 'currentColor', strokeWidth: 1, strokeOpacity: 0.2 } as const;
 const DEFAULT_SECTION_CORNER_RADIUS = 8;
 const DEFAULT_ROW_GAP = 8;
 const DEFAULT_ROW_PADDING = 8;
@@ -32,8 +38,8 @@ const structureTextNode = (text: IRBlockText, kind: 'title' | 'description' | 's
   rotate: 0,
   ...text,
   font: {
-    size: kind === 'title' ? ('sm' as const) : ('xs' as const),
-    ...(kind === 'title' ? { weight: 'normal' as const } : {}),
+    size: kind === 'title' ? ('base' as const) : kind === 'description' ? ('xs' as const) : ('sm' as const),
+    ...(kind === 'title' ? { weight: 'bold' as const } : {}),
     ...text.font,
   },
 });
@@ -118,8 +124,9 @@ export const lowerBlockHeaderLayout = (source: IRBlockHeader): IRFlexLayout => {
     textItems.push(flexItem('description', structureText(source.description, 'description')));
   }
   const textColumn = createFlexLayout({
-    direction: FlexLayoutDirection.Column,
-    gap: DEFAULT_HEADER_TEXT_GAP,
+    direction: source.direction === 'horizontal' ? FlexLayoutDirection.Row : FlexLayoutDirection.Column,
+    gap: source.itemGap ?? DEFAULT_HEADER_TEXT_GAP,
+    justifyContent: source.justifyContent ?? LayoutDistribution.Start,
     alignItems: LayoutAlignment.Start,
     children: textItems,
   });
@@ -168,7 +175,16 @@ export const lowerBlockRowSurface = (source: IRBlockRow): IRSurface =>
       direction: FlexLayoutDirection.Row,
       gap: source.gap ?? DEFAULT_ROW_GAP,
       alignItems: LayoutAlignment.Center,
-      children: source.children?.map(cell => ({ kind: 'flex', ...cell })) ?? [],
+      children:
+        source.children?.map(cell => ({
+          kind: 'flex',
+          margin: 0,
+          basis: 0,
+          grow: 1,
+          shrink: 1,
+          min: 0,
+          ...cell,
+        })) ?? [],
     }),
     padding: source.padding ?? DEFAULT_ROW_PADDING,
     overflow: source.overflow ?? LayoutOverflow.Visible,

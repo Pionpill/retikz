@@ -18,7 +18,7 @@ import { Node } from '@retikz/react';
   <Node position={[0, 0]}>任意自定义内容</Node>
   <BlockSection title={{ text: '字段' }}>
     <BlockRow id="user.name">
-      <BlockCell itemKey="name" grow={1}>
+      <BlockCell itemKey="name">
         <Node position={[0, 0]}>name</Node>
       </BlockCell>
     </BlockRow>
@@ -26,18 +26,28 @@ import { Node } from '@retikz/react';
 </Block>
 ```
 
-`Block` 不要求 Header 或 Section，也不会按 child 类型重排内容。`BlockHeader`、`BlockSection` 与 `BlockRow` 是可独立使用的 Graph composite；只有 `BlockCell` 必须放在 `BlockRow` 内，并且恰好承载一个 child
+`Block` 提供 `BlockHeader`、`BlockSection` 等内置组件，同时也允许放置任意 retikz 组件；自定义内容建议使用 `Flex` 布局实现
 
 ## 例子
 
-### 开放内容
+### 基础用法
 
-任意有序 children 都进入同一个纵向布局。常见结构组件与普通 Node、Group 或其它 Tier 2 composite 可以混合使用
+Block family 提供五个基础元素：
+
+| 元素           | 职责                                                  |
+| -------------- | ----------------------------------------------------- |
+| `Block`        | 提供可被关系引用的外层纵向布局与可见边界              |
+| `BlockHeader`  | 组合 icon、title / description 文本区与 trailing 内容 |
+| `BlockSection` | 为一组有序内容提供可选标题与独立边界                  |
+| `BlockRow`     | 横向排列一组 Cell                                     |
+| `BlockCell`    | 把一个任意 child 映射为 Row-local Flex item           |
+
+下面的 playground 使用这些元素组合一个数据结构。可以隐藏 Header slot、切换标题排列方向与文本分布，并添加或编辑一个字段；`Block` 仍允许在其中混合普通 Node、Group 或其它 Tier 2 composite。Row 中未显式设置尺寸的 Cell 默认均分可用宽度
 
 <ComponentPreview
   files="block-basic"
   size="sm"
-  caption="Block 保留声明顺序；Header、普通内容与 Section 都只是纵向布局中的 child。"
+  caption="调整 Header 与字段内容；固定取景保持 Block 在操作 controls 时位置稳定。"
 />
 
 ### 独立区域与连接
@@ -62,7 +72,7 @@ Block 外框复用 Standard Surface。这个 playground 只改变 shell 的内�
 
 ### 布局组合
 
-Block 把 authored children 交给纵向 FlexLayout，再由 Standard Surface 提供外框。Header 使用横向布局，Section 使用纵向布局，Row 把每个 Cell 映射为横向 Flex item；它们各自拥有 Definition 和 provider，因此也能脱离 Block 独立编译
+Block 把 authored children 交给纵向 FlexLayout，再由 Standard Surface 提供外框。Header 外层始终按 icon → 文本区 → trailing 横向排列，文本区中的 title 与 description 默认纵向，也可以改为横向；Section 使用纵向布局，Row 把每个 Cell 映射为横向 Flex item。它们各自拥有 Definition 和 provider，因此也能脱离 Block 独立编译
 
 Block、Section 与 Row 的 `gap`、padding 和外观默认在 lowering 时生效，不写回稀疏 Source IR。空 children 仍保留稳定的 Scope → Surface → Flex 根形状
 
@@ -87,27 +97,30 @@ Direct IR、React 与 Vanilla 入口会产出相同的 JSON-safe Source。Block�
 
 ### Block
 
-| 属性            | 类型                         | 默认值          | 描述                                      |
-| --------------- | ---------------------------- | --------------- | ----------------------------------------- |
-| `children?`     | `ReadonlyArray<IRChild>`     | —               | 任意有序 children；React 中为 `ReactNode` |
-| `graphTheme?`   | `IRGraphThemeLayer`          | —               | Block 局部 Graph Theme                    |
-| `width?`        | `number`                     | —               | 包含水平 padding 的外层固定总宽度         |
-| `minWidth?`     | `number`                     | —               | 包含水平 padding 的外层最小总宽度         |
-| `gap?`          | `number`                     | `8`             | children 之间的纵向间距                   |
-| `padding?`      | `SurfaceInput['padding']`    | `8`             | 外层内边距                                |
-| `background?`   | `SurfaceInput['background']` | transparent     | 外层背景                                  |
-| `border?`       | `SurfaceInput['border']`     | lightgray / `1` | 外层边框                                  |
-| `cornerRadius?` | `number`                     | `8`             | 外层圆角                                  |
-| `overflow?`     | `'visible' \| 'clip'`        | `'visible'`     | Surface overflow 语义                     |
+| 属性            | 类型                         | 默认值                       | 描述                                      |
+| --------------- | ---------------------------- | ---------------------------- | ----------------------------------------- |
+| `children?`     | `ReadonlyArray<IRChild>`     | —                            | 任意有序 children；React 中为 `ReactNode` |
+| `graphTheme?`   | `IRGraphThemeLayer`          | —                            | Block 局部 Graph Theme                    |
+| `width?`        | `number`                     | —                            | 包含水平 padding 的外层固定总宽度         |
+| `minWidth?`     | `number`                     | —                            | 包含水平 padding 的外层最小总宽度         |
+| `gap?`          | `number`                     | `8`                          | children 之间的纵向间距                   |
+| `padding?`      | `SurfaceInput['padding']`    | `8`                          | 外层内边距                                |
+| `background?`   | `SurfaceInput['background']` | transparent                  | 外层背景                                  |
+| `border?`       | `SurfaceInput['border']`     | `currentColor` / `0.2` / `1` | 外层边框                                  |
+| `cornerRadius?` | `number`                     | `8`                          | 外层圆角                                  |
+| `overflow?`     | `'visible' \| 'clip'`        | `'visible'`                  | Surface overflow 语义                     |
 
 ### BlockHeader
 
-| 属性           | 类型          | 默认值 | 描述                                     |
-| -------------- | ------------- | ------ | ---------------------------------------- |
-| `icon?`        | `IRChild`     | —      | 文字列左侧至多一个任意 child             |
-| `title`        | `IRBlockText` | 必填   | 主标题；默认 `sm`、普通字重、opacity `1` |
-| `description?` | `IRBlockText` | —      | 次要说明；默认 `xs`、opacity `0.7`       |
-| `trailing?`    | `IRChild`     | —      | 文字列右侧至多一个任意 child             |
+| 属性              | 类型                         | 默认值       | 描述                                                        |
+| ----------------- | ---------------------------- | ------------ | ----------------------------------------------------------- |
+| `icon?`           | `IRChild`                    | —            | 文本区左侧至多一个任意 child                                |
+| `title`           | `IRBlockText`                | 必填         | 主标题；默认 `base`、粗体、opacity `1`                      |
+| `description?`    | `IRBlockText`                | —            | 次要说明；默认 `xs`、opacity `0.7`                          |
+| `direction?`      | `'horizontal' \| 'vertical'` | `'vertical'` | title 与 description 文本区的排列方向；不改变外层 slot 顺序 |
+| `itemGap?`        | `number`                     | `4`          | title 与 description 之间的最小物理间距                     |
+| `justifyContent?` | Flex 主轴分布                | `'start'`    | 文本区的主轴剩余空间分布；直接复用 FlexLayout 语义          |
+| `trailing?`       | `IRChild`                    | —            | 文本区右侧至多一个任意 child                                |
 
 ### BlockSection
 
@@ -117,21 +130,22 @@ Direct IR、React 与 Vanilla 入口会产出相同的 JSON-safe Source。Block�
 | `children?` | `ReadonlyArray<IRChild>` | —      | 任意有序 children        |
 | `gap?`      | `number`                 | `4`    | Section items 的纵向间距 |
 
-Section 默认使用 `8` padding、`lightgray / 0.04` 背景、`lightgray / 1` 边框与 `8` 圆角，并复用完整 Scope / Surface 字段
+Section 默认使用 `8` padding、`lightgray / 0.04` 背景、`currentColor / 0.2 / 1` 边框与 `8` 圆角，并复用完整 Scope / Surface 字段
 
 ### BlockRow 与 BlockCell
 
-| 属性                                          | 类型                         | 默认值      | 描述                                       |
-| --------------------------------------------- | ---------------------------- | ----------- | ------------------------------------------ |
-| `row.children?`                               | `ReadonlyArray<IRBlockCell>` | —           | 有序 Row-local Flex items                  |
-| `row.gap?`                                    | `number`                     | `8`         | Cell 之间的横向间距                        |
-| `cell.key`                                    | `string`                     | 必填        | Row 内 Flex item key；React 使用 `itemKey` |
-| `cell.child`                                  | `IRChild`                    | 必填        | 恰好一个任意 child                         |
-| `cell.margin?`                                | Flex item margin             | `0`         | 复用 FlexLayout item 契约                  |
-| `cell.basis?`                                 | Flex item basis              | `'content'` | 复用 FlexLayout item 契约                  |
-| `cell.grow?`                                  | `number`                     | `0`         | 剩余空间增长权重                           |
-| `cell.shrink?`                                | `number`                     | `1`         | 空间不足时收缩权重                         |
-| `cell.min?` / `cell.max?` / `cell.alignSelf?` | Flex item fields             | —           | 复用 FlexLayout item 契约                  |
+| 属性                            | 类型                         | 默认值     | 描述                                         |
+| ------------------------------- | ---------------------------- | ---------- | -------------------------------------------- |
+| `row.children?`                 | `ReadonlyArray<IRBlockCell>` | —          | 有序 Row-local Flex items                    |
+| `row.gap?`                      | `number`                     | `8`        | Cell 之间的横向间距                          |
+| `cell.key`                      | `string`                     | 必填       | Row 内 Flex item key；React 使用 `itemKey`   |
+| `cell.child`                    | `IRChild`                    | 必填       | 恰好一个任意 child                           |
+| `cell.margin?`                  | Flex item margin             | `0`        | 复用 FlexLayout item 契约                    |
+| `cell.basis?`                   | Flex item basis              | `0`        | 默认从零基准均分 Row 可用空间                |
+| `cell.grow?`                    | `number`                     | `1`        | 剩余空间增长权重                             |
+| `cell.shrink?`                  | `number`                     | `1`        | 空间不足时收缩权重                           |
+| `cell.min?`                     | `number`                     | 有效值 `0` | Row lowering 默认允许内容收缩；不写回 Source |
+| `cell.max?` / `cell.alignSelf?` | Flex item fields             | —          | 复用 FlexLayout item 契约                    |
 
 Row 默认使用 `8` padding 与 `8` gap，背景透明且不设置边框或圆角，并复用完整 Scope / Surface 字段
 

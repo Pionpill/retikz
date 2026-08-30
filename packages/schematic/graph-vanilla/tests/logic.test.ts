@@ -107,6 +107,9 @@ describe('normalizeBlock', () => {
     const header = {
       type: 'blockHeader',
       title: { text: 'User' },
+      direction: 'horizontal',
+      itemGap: 6,
+      justifyContent: 'space-between',
       icon: { type: 'entity', role: 'state', position: [0, 0] },
     } satisfies InputBlockHeader & Readonly<{ type: 'blockHeader' }>;
     const row = {
@@ -139,7 +142,21 @@ describe('normalizeBlock', () => {
       gap: 0,
       children: [normalizeBlockHeader(header), normalizeBlockSection(section)],
     });
-    expect(normalizeBlockRow(row).children?.[1]?.child).toMatchObject({ namespace: 'graph', type: 'entity' });
+    expect(normalizeBlockHeader(header)).toMatchObject({
+      direction: 'horizontal',
+      itemGap: 6,
+      justifyContent: 'space-between',
+    });
+    expect(normalizeBlockRow(row).children).toEqual([
+      {
+        key: 'name',
+        child: { type: 'node', position: [0, 0], text: 'name' },
+      },
+      {
+        key: 'type',
+        child: { namespace: 'graph', type: 'entity', role: 'concept', position: [0, 0] },
+      },
+    ]);
   });
 
   it('preserves omitted and explicit empty Block-family children', () => {

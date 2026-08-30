@@ -1,7 +1,7 @@
 # ADR-03：Block 开放内容与布局容器
 
 - 状态：Accepted
-- 决策日期：2026-08-29
+- 决策日期：2026-08-30
 - 关联：[Graph v0.1 alpha.2 roadmap](./roadmap.md) · [被替代的固定结构决策](./01-block-composition.md) · [Block 整体宽度约束](./02-block-sizing.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md) · [Group 通用包含与边界呈现](../alpha.1/10-group-composition.md)
 
 ## 背景与目标
@@ -28,19 +28,19 @@ Block 外框继续复用 Standard Surface 的 padding、background、border、co
 
 Block 的 `width` 与 `minWidth` 继续表示包含水平 padding 的外层 Surface 总宽度，并沿用独立宽度决策。省略尺寸字段时由 children 自然尺寸与父级 proposal 决定；Block 不保存布局结果或把外层尺寸复制到 child
 
-Block 的组合默认是纵向 `gap: 8`、外层 `padding: 8`、透明背景、`lightgray / 1` 边框、`cornerRadius: 8` 与 `overflow: 'visible'`。显式值优先于这些默认；默认不修改 Layout、Standard 或 Core 独立使用时的行为
+Block 的组合默认是纵向 `gap: 8`、外层 `padding: 8`、透明背景、`currentColor / 0.2 / 1` 边框、`cornerRadius: 8` 与 `overflow: 'visible'`。显式值优先于这些默认；默认不修改 Layout、Standard 或 Core 独立使用时的行为
 
 ### 常见结构是独立可选组件，不是 Block grammar
 
 Header、Section 与 Row 不再是 `IRBlock` 的必填或嵌套字段，也不形成 Block-only child union。它们分别成为独立 Graph composite，可以作为普通 `IRChild` 出现在 Block 或其它接受 `IRChild` 的内容树中；Block 不识别、重排或要求这些类型
 
-Header 组合 icon、title、description 与 trailing，并下沉为横向 Layout。Section 组合任意有序 `IRChild`，以纵向 Layout 和可选 Surface 表达常见分区。Row 组合有序 Flex items，以横向 Layout 和可选 Surface 表达常见行。三者拥有自己的 discriminator、strict schema、Definition 与 lowering，不依赖隐式 Block 父上下文；Section 与 Row 额外复用完整 Scope identity
+Header 组合 icon、title、description 与 trailing，并下沉为横向 Layout。`direction` 只控制 title 与 description 文本区使用横向或纵向 Layout，不改变 icon、文本区、trailing 的外层横向顺序。Section 组合任意有序 `IRChild`，以纵向 Layout 和可选 Surface 表达常见分区。Row 组合有序 Flex items，以横向 Layout 和可选 Surface 表达常见行。三者拥有自己的 discriminator、strict schema、Definition 与 lowering，不依赖隐式 Block 父上下文；Section 与 Row 额外复用完整 Scope identity
 
-Header 的 title 必填，icon、description 与 trailing 可选；默认使用 `8` 的横向 gap 和居中对齐，title / description 文本列使用 `2` 的纵向 gap。title 默认使用 `sm`、普通字重与完全不透明文字，description 默认使用 `xs` 与 `0.7` 不透明度；显式 Core 文字字段优先
+Header 的 title 必填，icon、description、trailing、`direction`、`itemGap` 与 `justifyContent` 可选；省略 `direction` 时 title / description 默认纵向排列，显式 `horizontal` 时改为横向排列。外层默认使用 `8` 的横向 gap 和居中对齐，title / description 文本区默认使用 `4` 的最小间距和 Layout `start` 主轴分布。`itemGap` 直接复用 Layout gap 的有限非负数值契约，`justifyContent` 直接复用 FlexLayout 主轴分布的闭合集合与算法；横向使用 `space-between` 时，固定 gap 保持为最小间距，剩余空间由 Layout 在两个文本 item 之间分配。二者只影响文本区，不改变 icon、文本区、trailing 的外层顺序或间距。title 默认使用 `base`、粗体与完全不透明文字，description 默认使用 `xs` 与 `0.7` 不透明度；显式 Core 文字字段优先
 
-Section 默认使用 `8` padding、`4` 纵向 gap、`lightgray / 0.04` 背景、`lightgray / 1` 边框与 `8` 圆角。Row 默认使用 `8` padding 和 `8` 横向 gap，背景透明且不设置边框或圆角。Section / Row 的显式 Surface 与 Layout 字段优先，这些组合默认不改变 Standard 或 Layout 独立使用时的默认
+Section 默认使用 `8` padding、`4` 纵向 gap、`lightgray / 0.04` 背景、`currentColor / 0.2 / 1` 边框与 `8` 圆角。Row 默认使用 `8` padding 和 `8` 横向 gap，背景透明且不设置边框或圆角。Section / Row 的显式 Surface 与 Layout 字段优先，这些组合默认不改变 Standard 或 Layout 独立使用时的默认
 
-Cell 保持 Row 内的 item 结构，承载单个任意 child 并直接复用 Flex item 除固定 `kind` 外的字段；它不成为独立 `IRChild` 或 composite。React / Vanilla 可以用 `BlockCell` 组装同一个 Row Source，Direct IR 直接书写对应 item
+Cell 保持 Row 内的 item 结构，承载单个任意 child 并直接复用 Flex item 除固定 `kind` 外的字段；它不成为独立 `IRChild` 或 composite。Graph 为省略尺寸分配字段的 Cell 设置 `basis: 0`、`grow: 1`、`shrink: 1`，并在 Row lowering 中把省略的 `min` 解释为 `0`，使同一 Row 中两个默认 Cell 各占一半、N 个默认 Cell 均分可用主轴空间，不受 child intrinsic minimum 偏置；Source 不因该 lowering 默认额外写入 `min`。这些只是 BlockCell 的领域默认，不改变 FlexLayout item 的全局默认。作者显式提供的 `basis`、`grow`、`shrink` 或 `min` 分别优先。React / Vanilla 可以用 `BlockCell` 组装同一个 Row Source，Direct IR 直接书写对应 item
 
 Header、Section 与 Row 不建立成员、port 或 endpoint resolver。Section 与 Row 的显式 identity、Surface、NodeTarget、anchor、boundary 与 namespace 继续由实际 Standard / Core lower target 提供；Header 不额外声明 identity。renderer 不增加专用分支
 
@@ -95,6 +95,9 @@ type IRBlockHeader = Readonly<{
   icon?: IRChild;
   title: IRBlockText;
   description?: IRBlockText;
+  direction?: 'horizontal' | 'vertical';
+  itemGap?: number;
+  justifyContent?: FlexMainDistributionValue;
   trailing?: IRChild;
 }>;
 
@@ -120,12 +123,12 @@ type IRBlockRow = IRScopeProps &
   }>;
 ```
 
-Section 与 Row 的 Scope、Surface 和 gap 分别复用与 Block 相同的 Core、Standard 与 Layout owner。Header 的文字字段继续组合 Core Node text contract；Cell 的 item 字段继续以 FlexLayout 为唯一真源
+Section 与 Row 的 Scope、Surface 和 gap 分别复用与 Block 相同的 Core、Standard 与 Layout owner。Header 的文字字段继续组合 Core Node text contract，`itemGap` 与 `justifyContent` 分别直接组合 Layout 的 `LayoutGapSchema` 与 `FlexMainDistributionSchema`；Cell 的 item 字段继续以 FlexLayout 为唯一真源，仅在 Graph BlockCell schema 上覆盖省略时的领域默认
 
 ## 行为、失败语义与兼容性
 
 - children 按声明顺序进入纵向布局；Block 不按类型重排、分组、去重或推断结构角色
-- Header 缺失 title，或 Header / Section / Row / Cell 出现未知字段、非法文本、Surface 或 Flex item 时，由各自 strict schema fail-loud。Section / Row 的 children 省略或为空都合法，并保持各自稳定的 Surface / Layout 根形状
+- Header 缺失 title、`direction` 不是 `horizontal` / `vertical`、`itemGap` 为负数或非有限数、`justifyContent` 不属于 FlexLayout 主轴分布闭合集合，或 Header / Section / Row / Cell 出现未知字段、非法文本、Surface 或 Flex item 时，由各自 strict schema fail-loud。Section / Row 的 children 省略或为空都合法，并保持各自稳定的 Surface / Layout 根形状
 - child 的未知 composite、缺失 provider、schema、layout、identity 或 compile 失败使用对应 owner 的原诊断；Graph 不改写为 Block member 错误
 - 重复 id、local namespace、未解析 target、anchor 与 boundary 继续由 Core fail-loud；Block 不增加 fallback、自动前缀或第二套 resolver
 - 非有限或负数 gap、width、minWidth，非法 Surface 字段和未知 Block 字段由对应 strict schema fail-loud；`minWidth > width` 继续是非法状态

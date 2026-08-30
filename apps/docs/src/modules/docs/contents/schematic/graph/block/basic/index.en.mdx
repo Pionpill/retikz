@@ -18,7 +18,7 @@ import { Node } from '@retikz/react';
   <Node position={[0, 0]}>Arbitrary custom content</Node>
   <BlockSection title={{ text: 'Fields' }}>
     <BlockRow id="user.name">
-      <BlockCell itemKey="name" grow={1}>
+      <BlockCell itemKey="name">
         <Node position={[0, 0]}>name</Node>
       </BlockCell>
     </BlockRow>
@@ -26,18 +26,28 @@ import { Node } from '@retikz/react';
 </Block>
 ```
 
-`Block` requires neither a Header nor a Section and never reorders content by child type. `BlockHeader`, `BlockSection`, and `BlockRow` are independent Graph composites. Only `BlockCell` is restricted to `BlockRow`, where it contains exactly one child
+`Block` provides built-in components such as `BlockHeader` and `BlockSection`, while also accepting any retikz component. Use `Flex` to lay out custom content
 
 ## Examples
 
-### Open content
+### Basic usage
 
-Arbitrary ordered children enter one vertical layout. Common structure composites can be mixed with ordinary Nodes, Groups, and other Tier 2 composites
+The Block family provides five basic elements:
+
+| Element        | Responsibility                                                       |
+| -------------- | -------------------------------------------------------------------- |
+| `Block`        | Provides the targetable outer column layout and visible boundary     |
+| `BlockHeader`  | Composes icon, title / description text region, and trailing content |
+| `BlockSection` | Gives ordered content an optional title and independent boundary     |
+| `BlockRow`     | Arranges a set of Cells horizontally                                 |
+| `BlockCell`    | Maps one arbitrary child to a Row-local Flex item                    |
+
+The playground combines these elements into a data structure. Hide Header slots, change the title layout and text distribution, and add or edit a field. A `Block` can still mix ordinary Nodes, Groups, and other Tier 2 composites. Cells without explicit sizing share the available Row width equally
 
 <ComponentPreview
   files="block-basic"
   size="sm"
-  caption="Block preserves authored order; the Header, ordinary content, and Section are all regular layout children."
+  caption="Adjust the Header and field content; the fixed camera keeps the Block stable while controls change."
 />
 
 ### Independent regions and connections
@@ -66,7 +76,7 @@ The Block shell reuses Standard Surface. This playground changes shell padding, 
 
 ### Layout composition
 
-Block passes authored children to a column FlexLayout, then uses Standard Surface for the shell. Header uses a row layout, Section uses a column layout, and Row maps each Cell to a row Flex item. Each is backed by its own Definition and provider, so Header, Section, and Row also compile outside Block
+Block passes authored children to a column FlexLayout, then uses Standard Surface for the shell. The Header shell always arranges icon → text region → trailing horizontally; title and description default to a vertical text region and can switch to horizontal. Section uses a column layout, and Row maps each Cell to a row Flex item. Each is backed by its own Definition and provider, so Header, Section, and Row also compile outside Block
 
 Block, Section, and Row gap, padding, and appearance defaults apply during lowering without being written into sparse Source IR. Empty children keep the same stable Scope → Surface → Flex root shape
 
@@ -91,27 +101,30 @@ Direct IR, React, and Vanilla entries produce the same JSON-safe Source. Block, 
 
 ### Block
 
-| Prop            | Type                         | Default         | Description                                                |
-| --------------- | ---------------------------- | --------------- | ---------------------------------------------------------- |
-| `children?`     | `ReadonlyArray<IRChild>`     | —               | Arbitrary ordered children; `ReactNode` in React authoring |
-| `graphTheme?`   | `IRGraphThemeLayer`          | —               | Local Graph Theme layer                                    |
-| `width?`        | `number`                     | —               | Fixed outer width including horizontal padding             |
-| `minWidth?`     | `number`                     | —               | Minimum outer width including horizontal padding           |
-| `gap?`          | `number`                     | `8`             | Vertical space between children                            |
-| `padding?`      | `SurfaceInput['padding']`    | `8`             | Outer shell padding                                        |
-| `background?`   | `SurfaceInput['background']` | transparent     | Outer shell background                                     |
-| `border?`       | `SurfaceInput['border']`     | lightgray / `1` | Outer shell border                                         |
-| `cornerRadius?` | `number`                     | `8`             | Outer shell corner radius                                  |
-| `overflow?`     | `'visible' \| 'clip'`        | `'visible'`     | Surface overflow semantics                                 |
+| Prop            | Type                         | Default                      | Description                                                |
+| --------------- | ---------------------------- | ---------------------------- | ---------------------------------------------------------- |
+| `children?`     | `ReadonlyArray<IRChild>`     | —                            | Arbitrary ordered children; `ReactNode` in React authoring |
+| `graphTheme?`   | `IRGraphThemeLayer`          | —                            | Local Graph Theme layer                                    |
+| `width?`        | `number`                     | —                            | Fixed outer width including horizontal padding             |
+| `minWidth?`     | `number`                     | —                            | Minimum outer width including horizontal padding           |
+| `gap?`          | `number`                     | `8`                          | Vertical space between children                            |
+| `padding?`      | `SurfaceInput['padding']`    | `8`                          | Outer shell padding                                        |
+| `background?`   | `SurfaceInput['background']` | transparent                  | Outer shell background                                     |
+| `border?`       | `SurfaceInput['border']`     | `currentColor` / `0.2` / `1` | Outer shell border                                         |
+| `cornerRadius?` | `number`                     | `8`                          | Outer shell corner radius                                  |
+| `overflow?`     | `'visible' \| 'clip'`        | `'visible'`                  | Surface overflow semantics                                 |
 
 ### BlockHeader
 
-| Prop           | Type          | Default  | Description                                          |
-| -------------- | ------------- | -------- | ---------------------------------------------------- |
-| `icon?`        | `IRChild`     | —        | At most one arbitrary child before the text column   |
-| `title`        | `IRBlockText` | required | Primary title; defaults to `sm`, normal, opacity `1` |
-| `description?` | `IRBlockText` | —        | Secondary text; defaults to `xs` and opacity `0.7`   |
-| `trailing?`    | `IRChild`     | —        | At most one arbitrary child after the text column    |
+| Prop              | Type                         | Default      | Description                                                                                     |
+| ----------------- | ---------------------------- | ------------ | ----------------------------------------------------------------------------------------------- |
+| `icon?`           | `IRChild`                    | —            | At most one arbitrary child before the text region                                              |
+| `title`           | `IRBlockText`                | required     | Primary title; defaults to `base` and bold with opacity `1`                                     |
+| `description?`    | `IRBlockText`                | —            | Secondary text; defaults to `xs` and opacity `0.7`                                              |
+| `direction?`      | `'horizontal' \| 'vertical'` | `'vertical'` | Layout direction of the title and description text region; does not change the outer slot order |
+| `itemGap?`        | `number`                     | `4`          | Minimum physical gap between title and description                                              |
+| `justifyContent?` | Flex main distribution       | `'start'`    | Main-axis free-space distribution in the text region; reuses FlexLayout semantics               |
+| `trailing?`       | `IRChild`                    | —            | At most one arbitrary child after the text region                                               |
 
 ### BlockSection
 
@@ -121,21 +134,22 @@ Direct IR, React, and Vanilla entries produce the same JSON-safe Source. Block, 
 | `children?` | `ReadonlyArray<IRChild>` | —       | Arbitrary ordered children                |
 | `gap?`      | `number`                 | `4`     | Vertical space between Section items      |
 
-Section defaults to `8` padding, a `lightgray / 0.04` background, a `lightgray / 1` border, and an `8` corner radius while reusing the complete Scope and Surface fields
+Section defaults to `8` padding, a `lightgray / 0.04` background, a `currentColor / 0.2 / 1` border, and an `8` corner radius while reusing the complete Scope and Surface fields
 
 ### BlockRow and BlockCell
 
-| Prop                                          | Type                         | Default     | Description                                   |
-| --------------------------------------------- | ---------------------------- | ----------- | --------------------------------------------- |
-| `row.children?`                               | `ReadonlyArray<IRBlockCell>` | —           | Ordered Row-local Flex items                  |
-| `row.gap?`                                    | `number`                     | `8`         | Horizontal space between Cells                |
-| `cell.key`                                    | `string`                     | required    | Row-local Flex item key; React uses `itemKey` |
-| `cell.child`                                  | `IRChild`                    | required    | Exactly one arbitrary child                   |
-| `cell.margin?`                                | Flex item margin             | `0`         | Reuses the FlexLayout item contract           |
-| `cell.basis?`                                 | Flex item basis              | `'content'` | Reuses the FlexLayout item contract           |
-| `cell.grow?`                                  | `number`                     | `0`         | Remaining-space growth weight                 |
-| `cell.shrink?`                                | `number`                     | `1`         | Shrink weight when space is constrained       |
-| `cell.min?` / `cell.max?` / `cell.alignSelf?` | Flex item fields             | —           | Reuses the FlexLayout item contract           |
+| Prop                            | Type                         | Default       | Description                                                             |
+| ------------------------------- | ---------------------------- | ------------- | ----------------------------------------------------------------------- |
+| `row.children?`                 | `ReadonlyArray<IRBlockCell>` | —             | Ordered Row-local Flex items                                            |
+| `row.gap?`                      | `number`                     | `8`           | Horizontal space between Cells                                          |
+| `cell.key`                      | `string`                     | required      | Row-local Flex item key; React uses `itemKey`                           |
+| `cell.child`                    | `IRChild`                    | required      | Exactly one arbitrary child                                             |
+| `cell.margin?`                  | Flex item margin             | `0`           | Reuses the FlexLayout item contract                                     |
+| `cell.basis?`                   | Flex item basis              | `0`           | Starts from zero so default Cells share space                           |
+| `cell.grow?`                    | `number`                     | `1`           | Remaining-space growth weight                                           |
+| `cell.shrink?`                  | `number`                     | `1`           | Shrink weight when space is constrained                                 |
+| `cell.min?`                     | `number`                     | effective `0` | Row lowering allows content to shrink by default; not written to Source |
+| `cell.max?` / `cell.alignSelf?` | Flex item fields             | —             | Reuses the FlexLayout item contract                                     |
 
 Row defaults to `8` padding and gap with a transparent background, no border, and no corner radius while reusing the complete Scope and Surface fields
 

@@ -1,4 +1,5 @@
 import type { CompileWarning, LayoutProposal } from '@retikz/core';
+import type { FlexLayoutCompileArtifact } from '@retikz/layout';
 
 import {
   compileToScene,
@@ -29,6 +30,18 @@ const textNode = (text: string) => ({
 const textValues = (primitives: ReturnType<typeof primitivesOf>): Array<string> =>
   primitives.flatMap(primitive => (primitive.type === 'text' ? primitive.lines.map(line => line.text) : []));
 
+const flexArtifactWithKeys = (
+  output: ReturnType<typeof compileToScene>,
+  keys: ReadonlyArray<string>,
+): FlexLayoutCompileArtifact => {
+  const artifact = output.artifacts
+    .filter(candidate => candidate.kind === 'composite' && candidate.type === 'flexLayout')
+    .map(candidate => candidate as FlexLayoutCompileArtifact)
+    .find(candidate => candidate.value.items.map(item => item.key).join('|') === keys.join('|'));
+  if (artifact === undefined) throw new Error(`Expected FlexLayout artifact for keys '${keys.join(', ')}'`);
+  return artifact;
+};
+
 describe('Block-family layout-aware lowering', () => {
   it('keeps arbitrary Block children in authored column order and applies shell defaults', () => {
     const { output, result } = compileInHarness(
@@ -41,7 +54,9 @@ describe('Block-family layout-aware lowering', () => {
     expect(result.allocationBounds.width).toBeGreaterThanOrEqual(16);
     expect(result.allocationBounds.height).toBeGreaterThan(16);
     expect(pathPrimitivesOf(output.scene.primitives)).toEqual(
-      expect.arrayContaining([expect.objectContaining({ fill: 'none', stroke: 'lightgray', strokeWidth: 1 })]),
+      expect.arrayContaining([
+        expect.objectContaining({ fill: 'none', stroke: 'currentColor', strokeWidth: 1, strokeOpacity: 0.2 }),
+      ]),
     );
   });
 
@@ -56,7 +71,9 @@ describe('Block-family layout-aware lowering', () => {
     expect(omitted.result.allocationBounds).toEqual(empty.result.allocationBounds);
     expect(omitted.result.slotSize).toEqual(empty.result.slotSize);
     expect(pathPrimitivesOf(omitted.output.scene.primitives)).toEqual(
-      expect.arrayContaining([expect.objectContaining({ fill: 'none', stroke: 'lightgray', strokeWidth: 1 })]),
+      expect.arrayContaining([
+        expect.objectContaining({ fill: 'none', stroke: 'currentColor', strokeWidth: 1, strokeOpacity: 0.2 }),
+      ]),
     );
   });
 
@@ -80,6 +97,22 @@ describe('Block-family layout-aware lowering', () => {
         expect.objectContaining({ lines: expect.any(Array), opacity: 0.7 }),
       ]),
     );
+    expect(texts[1]).toEqual(expect.objectContaining({ fontSize: 16, fontWeight: 'bold', opacity: 1 }));
+    expect(texts[2]).toEqual(expect.objectContaining({ fontSize: 12, opacity: 0.7 }));
+
+    const overridden = compileInHarness(
+      Graph.createBlockHeader({
+        title: { text: 'Override', font: { weight: 'normal' } },
+        description: { text: 'Override details', font: { size: 'base' } },
+      }),
+      naturalProposal,
+      Graph.createGraphDefinitions(),
+    );
+    const overriddenTexts = primitivesOf(overridden.output.scene.primitives).filter(
+      primitive => primitive.type === 'text',
+    );
+    expect(overriddenTexts[0]).toEqual(expect.objectContaining({ fontWeight: 'normal' }));
+    expect(overriddenTexts[1]).toEqual(expect.objectContaining({ fontSize: 16 }));
 
     const titleOnly = compileInHarness(
       Graph.createBlockHeader({ title: { text: 'Only' } }),
@@ -87,6 +120,77 @@ describe('Block-family layout-aware lowering', () => {
       Graph.createGraphDefinitions(),
     );
     expect(textValues(primitivesOf(titleOnly.output.scene.primitives))).toEqual(['Only']);
+  });
+
+  it('changes only the Header text layout direction', () => {
+    const source = {
+      icon: textNode('icon'),
+      title: { text: 'Service' },
+      description: { text: 'Public API' },
+      trailing: textNode('stable'),
+    } as const;
+    const implicit = compileInHarness(Graph.createBlockHeader(source), naturalProposal, Graph.createGraphDefinitions());
+    const vertical = compileInHarness(
+      Graph.createBlockHeader({ ...source, direction: 'vertical' }),
+      naturalProposal,
+      Graph.createGraphDefinitions(),
+    );
+    const horizontal = compileInHarness(
+      Graph.createBlockHeader({ ...source, direction: 'horizontal' }),
+      naturalProposal,
+      Graph.createGraphDefinitions(),
+    );
+
+    expect(implicit.result.allocationBounds).toEqual(vertical.result.allocationBounds);
+    expect(horizontal.result.allocationBounds.width).toBeGreaterThan(vertical.result.allocationBounds.width);
+    expect(horizontal.result.allocationBounds.height).toBeLessThan(vertical.result.allocationBounds.height);
+    for (const result of [implicit, vertical, horizontal]) {
+      expect(textValues(primitivesOf(result.output.scene.primitives))).toEqual([
+        'icon',
+        'Service',
+        'Public API',
+        'stable',
+      ]);
+    }
+  });
+
+  it('applies Header itemGap and main-axis distribution only inside the text region', () => {
+    const source = {
+      icon: textNode('icon'),
+      title: { text: 'A' },
+      description: { text: 'B' },
+      direction: 'horizontal' as const,
+      trailing: textNode('stable'),
+    };
+    const defaultGap = compileInHarness(
+      Graph.createBlockHeader(source),
+      naturalProposal,
+      Graph.createGraphDefinitions(),
+    );
+    const authoredGap = compileInHarness(
+      Graph.createBlockHeader({ ...source, itemGap: 20 }),
+      naturalProposal,
+      Graph.createGraphDefinitions(),
+    );
+
+    expect(authoredGap.result.allocationBounds.width - defaultGap.result.allocationBounds.width).toBeCloseTo(16);
+
+    const start = compileInHarness(
+      Graph.createBlockHeader({ ...source, itemGap: 8, justifyContent: 'start' }),
+      exactProposal(240, 40),
+      Graph.createGraphDefinitions(),
+    );
+    const distributed = compileInHarness(
+      Graph.createBlockHeader({ ...source, itemGap: 8, justifyContent: 'space-between' }),
+      exactProposal(240, 40),
+      Graph.createGraphDefinitions(),
+    );
+    const startText = flexArtifactWithKeys(start.output, ['title', 'description']);
+    const distributedText = flexArtifactWithKeys(distributed.output, ['title', 'description']);
+
+    expect(distributedText.value.items[0]?.slotBounds.x).toBe(startText.value.items[0]?.slotBounds.x);
+    expect(distributedText.value.items[1]?.slotBounds.x).toBeGreaterThan(startText.value.items[1]?.slotBounds.x ?? 0);
+    expect(textValues(primitivesOf(distributed.output.scene.primitives))).toEqual(['icon', 'A', 'B', 'stable']);
   });
 
   it('compiles independent Section and Row defaults through Surface and FlexLayout', () => {
@@ -108,10 +212,40 @@ describe('Block-family layout-aware lowering', () => {
           fillOpacity: 0.04,
           stroke: 'none',
         }),
-        expect.objectContaining({ type: 'path', fill: 'none', stroke: 'lightgray', strokeWidth: 1 }),
+        expect.objectContaining({
+          type: 'path',
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: 1,
+          strokeOpacity: 0.2,
+        }),
       ]),
     );
     expect(primitives.filter(primitive => primitive.type === 'path' && primitive.id === 'row')).toHaveLength(0);
+  });
+
+  it('shares Row space equally across two or more default Cells', () => {
+    const compileCells = (labels: ReadonlyArray<string>) => {
+      const compiled = compileInHarness(
+        Graph.createBlockRow({
+          padding: 0,
+          gap: 0,
+          children: labels.map((label, index) => ({
+            key: `cell-${index}`,
+            child: textNode(label),
+          })),
+        }),
+        exactProposal(240, 40),
+        Graph.createGraphDefinitions(),
+      );
+      return flexArtifactWithKeys(
+        compiled.output,
+        labels.map((_label, index) => `cell-${index}`),
+      ).value.items.map(item => item.slotBounds.width);
+    };
+
+    expect(compileCells(['x', 'much wider content'])).toEqual([120, 120]);
+    expect(compileCells(['x', 'medium', 'much wider content'])).toEqual([80, 80, 80]);
   });
 
   it('preserves explicit zero layout and transparent appearance values', () => {

@@ -6,7 +6,7 @@ import { Node } from '@retikz/react';
 import { createGraphPreviewSource } from '@/modules/docs/preview';
 
 const CellText: FC<{ children: string }> = ({ children }) => (
-  <Node position={[0, 0]} padding={0} margin={0} fill="none" stroke="none" textColor="currentColor">
+  <Node position={[0, 0]} padding={0} fill="none" stroke="none">
     {children}
   </Node>
 );
@@ -27,7 +27,7 @@ const Demo: FC = () => (
         </BlockRow>
       </BlockSection>
     </Block>
-    <Entity id="validator" role="activity" position={[430, 100]} textColor="currentColor">
+    <Entity id="validator" role="activity" position={[430, 100]}>
       Validator
     </Entity>
     <Relation

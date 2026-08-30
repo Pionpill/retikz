@@ -175,7 +175,7 @@ const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOption
     children: preview.ir.children.map(convertCoreChild),
   });
   return {
-    code: irToVanillaCode(preview.ir),
+    code: irToVanillaCode(preview.sourceIr),
     svg: renderToSvgString(input, {
       output: outputSize(preview),
       ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
@@ -637,7 +637,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
     measureText: options.measureText ?? browserPreviewMeasurer,
   };
   return {
-    code: irToVanillaCode(preview.ir, { theme: options.theme }),
+    code: irToVanillaCode(preview.sourceIr, { theme: options.theme }),
     svg: renderToSvgString(input, {
       adapters: [...standardAdapters(libraryState), ...layoutAdapters(libraryState), ...graphAdapters(graphState)],
       output: outputSize(preview),

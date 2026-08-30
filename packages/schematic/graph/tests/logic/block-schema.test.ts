@@ -98,22 +98,77 @@ describe('Block-family Source schemas', () => {
         {
           key: 'field',
           child: textChild('name'),
-          margin: 0,
-          basis: 'content',
           grow: 1,
-          shrink: 1,
         },
         {
           key: 'type',
           child: textChild('string'),
-          margin: 0,
-          basis: 'content',
-          grow: 0,
-          shrink: 1,
           alignSelf: 'end',
         },
       ],
     });
+  });
+
+  it('keeps Header text direction sparse while accepting both supported layouts', () => {
+    expect(Graph.createBlockHeader({ title: { text: 'Default' } })).toEqual({
+      namespace: 'graph',
+      type: 'blockHeader',
+      title: { text: 'Default' },
+    });
+    expect(Graph.createBlockHeader({ title: { text: 'Horizontal' }, direction: 'horizontal' })).toEqual({
+      namespace: 'graph',
+      type: 'blockHeader',
+      title: { text: 'Horizontal' },
+      direction: 'horizontal',
+    });
+    expect(Graph.createBlockHeader({ title: { text: 'Vertical' }, direction: 'vertical' })).toEqual({
+      namespace: 'graph',
+      type: 'blockHeader',
+      title: { text: 'Vertical' },
+      direction: 'vertical',
+    });
+    expect(
+      Graph.BlockHeaderSchema.safeParse({
+        namespace: 'graph',
+        type: 'blockHeader',
+        title: { text: 'Invalid' },
+        direction: 'diagonal',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('keeps Header text spacing sparse while reusing the closed Flex main-distribution values', () => {
+    expect(Graph.createBlockHeader({ title: { text: 'Default' } })).toEqual({
+      namespace: 'graph',
+      type: 'blockHeader',
+      title: { text: 'Default' },
+    });
+    for (const justifyContent of ['start', 'center', 'end', 'space-between', 'space-around', 'space-evenly'] as const) {
+      expect(
+        Graph.createBlockHeader({
+          title: { text: 'Title' },
+          description: { text: 'Description' },
+          itemGap: 0,
+          justifyContent,
+        }),
+      ).toMatchObject({ itemGap: 0, justifyContent });
+    }
+    expect(
+      Graph.BlockHeaderSchema.safeParse({
+        namespace: 'graph',
+        type: 'blockHeader',
+        title: { text: 'Invalid gap' },
+        itemGap: -1,
+      }).success,
+    ).toBe(false);
+    expect(
+      Graph.BlockHeaderSchema.safeParse({
+        namespace: 'graph',
+        type: 'blockHeader',
+        title: { text: 'Invalid distribution' },
+        justifyContent: 'stretch',
+      }).success,
+    ).toBe(false);
   });
 
   it('allows empty Section and Row while keeping Cell local to Row', () => {
@@ -129,10 +184,26 @@ describe('Block-family Source schemas', () => {
     expect(Graph.BlockCellSchema.parse({ key: 'cell', child: textChild('value'), basis: 24 })).toEqual({
       key: 'cell',
       child: textChild('value'),
-      margin: 0,
       basis: 24,
+    });
+    expect(Graph.BlockCellSchema.parse({ key: 'default', child: textChild('value') })).toEqual({
+      key: 'default',
+      child: textChild('value'),
+    });
+    expect(
+      Graph.BlockCellSchema.parse({
+        key: 'explicit',
+        child: textChild('value'),
+        basis: 'content',
+        grow: 0,
+        shrink: 0,
+      }),
+    ).toEqual({
+      key: 'explicit',
+      child: textChild('value'),
+      basis: 'content',
       grow: 0,
-      shrink: 1,
+      shrink: 0,
     });
     expect(Graph.GraphType).not.toHaveProperty('BlockCell');
   });
