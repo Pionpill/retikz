@@ -1,0 +1,47 @@
+---
+title: 图示框架
+description: 图示框架负责具体绘图核心之外的说明区域、外框、间距、主题和完整输出边界。
+---
+
+每一种具体 Diagram 都需要把标题、说明、图例和绘图核心装配成同一个结果。Diagram Framework 把这些与领域无关的职责集中到一套共享 Foundation，让具体类型只拥有自己的绘图语义。
+
+下图展示完整装配关系：外层边界承载 Frame / Appearance，标题、说明与图例属于 Presentation，灰色虚线区域则由具体 Diagram 类型提供。
+
+<ComponentPreview files="diagram-framework-overview" hideCode size="lg" />
+
+## 三层结构
+
+| 层次               | 当前抽象                                                                  | 所有权            |
+| ------------------ | ------------------------------------------------------------------------- | ----------------- |
+| Presentation       | 标题、说明和显式 Standard Legend，位于绘图核心之外但参与完整输出          | Diagram Framework |
+| Frame / Appearance | 内外间距、区域排列、图例方位、背景、边框、圆角、overflow 与 Diagram Theme | Diagram Framework |
+| Drawing Core       | 图中对象的测量、布局、连线和领域语义                                      | 具体 Diagram 类型 |
+
+三层保持正交：Frame 间距不会混入绘图核心的节点间距，Presentation 也不会读取绘图核心的领域数据。具体 Diagram 只需把完成后的 drawing child 交给 Framework 装配。
+
+## Presentation
+
+标题与说明沿用 Core `TextBlock`，支持多行、行级与 run 级样式，以及 text / TeX mixed runs。图例直接复用显式 Standard Legend，不建立 Diagram 私有图例模型。
+
+标题、说明和图例都是可选区域。某个区域缺失时，对应容器和间距完全折叠，不会在最终布局中保留空位。
+
+## Frame 与 Appearance
+
+Frame 分别控制标题与说明、heading 与 main、drawing 与 legend 的三类间距。Legend 可以停靠上、右、下、左四边，并沿停靠边的切线方向对齐。
+
+完整图示复用 Standard Surface 的 padding、背景、边框、圆角和 overflow。Diagram Theme 提供 Neutral 基线、与 Core Theme 同名的 style Definition，以及实例级稀疏覆盖。
+
+## 统一装配
+
+Framework 以固定的 heading / main 结构组合存在的区域，并把具体 drawing child 当作不透明输入。所有区域经 Layout Flex、Standard Surface 与 Core Scope 进入同一个 Scene、bounds、clip 和 export 结果。
+
+Framework 只保留独立事实源，不读取、修改或持久化 drawing child 的领域语义。它也不发布 Diagram 私有 identity、metadata 或 artifact；Layout 与 Legend 结果继续由原有依赖包拥有。
+
+## 当前边界
+
+- 包根不公开 `IRDiagram`、`IRFlowDiagram` 或可实例化的 Diagram root
+- React 与 Vanilla adapter 尚未接线，也没有 standalone host 或正式功能 demo
+- alpha.1 使用的 drawing child 是内部装配输入，不是公共 `body` 字段
+- Flow 的 Graph Body、自动 layout、routing、orchestration、result 与 artifact 不属于 Framework
+
+这些边界让 Framework 可以作为具体 Diagram 的长期共享底座，同时避免把内部 Foundation 或占位绘图核心提前固化成公共契约。

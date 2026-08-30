@@ -40,7 +40,7 @@ Relation 的整体外观统一由 Theme 管理。下面的 controls 只开放当
 
 <ComponentPreview
   files="relation-routing"
-  size="lg"
+  size="sm"
   caption="观察稳定 endpoint、way 的直线与折线写法，以及显式 label 外观和 dashPattern 如何覆盖默认。"
 />
 
@@ -109,6 +109,16 @@ Relation 的整体外观统一由 Theme 管理。下面的 controls 只开放当
 - **内置 predicate：** 无；分析模型可以声明 `{ weight: number, confidence: number }` 等 params，并通过 Theme selector 选择 appearance
 
 <ComponentPreview files="relation-influence" size="sm" caption="切换 influence 的语义方向，并调整 Relation 主色。" />
+
+### 样式调整
+
+下面的综合示例可以切换全部五个内置 role，并直接调整 Relation 路径与 label 的样式。role 会改变关系语义和 marker recipe；显式样式字段会覆盖对应的 Theme 默认
+
+<ComponentPreview
+  files="relation-style"
+  size="sm"
+  caption="切换 role，并分别调整描边色、描边宽度、虚线、透明度、label 文本色和文本透明度。"
+/>
 
 ## 技术原理
 

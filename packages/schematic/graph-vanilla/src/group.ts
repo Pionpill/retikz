@@ -1,14 +1,14 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
-import type { InputEmbed, InputEmbedAdapter, InputEmbedContext, NormalizedInputEmbedChildren } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { GroupProviderKey } from '@retikz/graph';
 
-import type { InputEntity, InputGroup, InputGroupChild, InputRelation } from './normalize';
+import type { InputGroup } from './normalize';
 
 import { GroupEmbedKind } from './constants';
-import { RetikzGraphVanillaError, RetikzGraphVanillaErrorCode } from './errors';
 import { normalizeGroup } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
+import { normalizeGraphAuthoringChildren } from './semantic-children';
 
 /** Group embed 同时携带 Source authoring 输入与当前 definition options */
 export type GroupInputEmbedProps = InputGroup & GraphDefinitionOptions;
@@ -34,47 +34,24 @@ const inputOf = (props: GroupInputEmbedProps): InputGroup => {
   return input;
 };
 
-const isGroupMemberInput = (child: InputGroupChild): child is InputEntity | InputRelation =>
-  !('namespace' in child) && (child.type === 'entity' || child.type === 'relation');
-
-const isGroupContentInput = (child: InputGroupChild): child is Exclude<InputGroupChild, InputEntity | InputRelation> =>
-  !isGroupMemberInput(child);
-
-const normalizeChildren = (
-  input: InputGroup,
-  context: InputEmbedContext,
-): Readonly<{ input: InputGroup; nested?: NormalizedInputEmbedChildren }> => {
-  const children = input.children ?? [];
-  const authoredChildren = children.filter(isGroupContentInput);
-  if (authoredChildren.length === 0) return { input };
-  if (context.normalizeChildren === undefined) {
-    throw new RetikzGraphVanillaError({
-      code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,
-      message: 'Group content authoring requires a normalizeScene embed context.',
-      details: { label: 'Group.children' },
-    });
-  }
-  const nested = context.normalizeChildren(authoredChildren);
-  let contentCursor = 0;
-  return {
-    input: {
-      ...input,
-      children: children.map(child => (isGroupMemberInput(child) ? child : nested.children[contentCursor++])),
-    },
-    nested,
-  };
-};
-
 /** Group Source 的 InputEmbed adapter */
 export const GroupInputEmbedAdapter: InputEmbedAdapter<GroupInputEmbedProps> = {
   kind: GroupEmbedKind,
   lower: (props, context) => {
-    const normalized = normalizeChildren(inputOf(props), context);
+    const input = inputOf(props);
+    const normalized = normalizeGraphAuthoringChildren(input.children ?? [], context, 'Group.children');
     const dependencies = createGraphProviderDependencies(GroupProviderKey, graphDefinitionOptionsOf(props));
     return {
-      node: normalizeGroup(normalized.input),
+      node: normalizeGroup({
+        ...input,
+        ...(input.children === undefined ? {} : { children: normalized.children }),
+      }),
       providerDependencies: {
-        roots: [...dependencies.roots, ...(normalized.nested?.providerDependencies.roots ?? [])],
+        roots: [
+          ...dependencies.roots,
+          ...normalized.providerRoots,
+          ...(normalized.nested?.providerDependencies.roots ?? []),
+        ],
         providers: [...dependencies.providers, ...(normalized.nested?.providerDependencies.providers ?? [])],
       },
       ...(normalized.nested === undefined ? {} : { authoringSites: normalized.nested.authoringSites }),

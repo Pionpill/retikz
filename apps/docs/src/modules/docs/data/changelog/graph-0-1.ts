@@ -2,6 +2,116 @@ import type { Release, SubVersion } from '../types';
 
 const graphMilestones: Array<SubVersion> = [
   {
+    version: 'alpha.2',
+    date: '2026-08-29',
+    summary: {
+      zh: '新增可承载任意内容的 Block 布局容器，以及可独立组合的 Header、Section 与 Row。',
+      en: 'Adds an open-content Block layout container plus independently composable Header, Section, and Row components.',
+    },
+    items: [
+      {
+        label: { zh: '开放内容与独立结构', en: 'Open content and independent structures' },
+        content: {
+          zh: '新增 JSON-safe `IRBlock`，接受任意有序 Core / Tier 2 children，并复用完整 Core Scope、Standard Surface 与纵向 FlexLayout。Header、Section 与 Row 拥有独立 schema、Definition、React 和 Vanilla 入口；Cell 保持 Row-local Flex item。显式 identity、`localNamespace`、anchor 与 boundary 继续由 Core 处理，不新增自动 id 前缀或 Port IR。',
+          en: 'Adds JSON-safe `IRBlock` with arbitrary ordered Core and Tier 2 children while reusing the complete Core Scope, Standard Surface, and a column FlexLayout. Header, Section, and Row have independent schemas, Definitions, React, and Vanilla entries, while Cell remains a Row-local Flex item. Core continues to own explicit identity, `localNamespace`, anchors, and boundaries; no automatic id prefixes or Port IR are added.',
+        },
+      },
+      {
+        label: { zh: '外层尺寸与分区内边距', en: 'Outer sizing and section padding' },
+        content: {
+          zh: 'Block 支持 `width` 与 `minWidth` 控制包含外层内边距的整体宽度；默认 Section 使用 `8` 圆角和 `8` 内边距，与 Block 外层默认值一致，Row 使用透明 `fill`，保持 `8` 内边距且不单独设置背景、边框和圆角。',
+          en: 'Block supports `width` and `minWidth` for the total outer width including shell padding. Sections default to the shell’s `8` corner radius and padding, while Rows use a transparent `fill`, remain at `8` padding, and do not set their own background, border, or corner radius.',
+        },
+      },
+    ],
+  },
+  {
+    version: 'alpha.7',
+    date: '2026-08-23',
+    summary: {
+      zh: '⚠️ 将 Graph 收敛为可选的 Core Scope 薄壳，并让 Entity、Relation 成为可独立编译和嵌入的 Source composite。',
+      en: '⚠️ Reduces Graph to an optional Core Scope shell and makes Entity and Relation independently compilable and embeddable Source composites.',
+    },
+    items: [
+      {
+        label: { zh: 'BREAKING：组合结构', en: 'BREAKING: composition structure' },
+        content: {
+          zh: '`IRGraph.children` 直接保存任意 Core / Tier 2 child，不再维护成员集合。Entity 与 Relation 可以脱离 Graph 使用；Container 契约及其文档已删除。',
+          en: '`IRGraph.children` now stores arbitrary Core and Tier 2 children directly instead of member collections. Entity and Relation can be used without Graph, and the Container contract and docs are removed.',
+        },
+      },
+      {
+        label: { zh: 'BREAKING：上下文与引用', en: 'BREAKING: context and references' },
+        content: {
+          zh: 'Graph 复用完整 Core Scope 公共面；`theme` 回归 Core Theme，Graph-local 外观规则迁移到 `graphTheme`。Relation endpoint 迁移到 `IRNodeTarget`，引用与 unresolved / duplicate-id 诊断统一交给 Core namespace。',
+          en: 'Graph reuses the complete Core Scope surface. `theme` returns to Core Theme while Graph-local appearance rules move to `graphTheme`. Relation endpoints migrate to `IRNodeTarget`, with references and unresolved / duplicate-id diagnostics delegated to Core namespace.',
+        },
+      },
+      {
+        label: { zh: 'BREAKING：authoring 入口', en: 'BREAKING: authoring entries' },
+        content: {
+          zh: 'React 的 `<Graph>` 顶层建立 Scene、嵌入时只建立局部 Scope；`<Entity>` 与 `<Relation>` 可独立嵌入。Vanilla 改用 `graph()`、`entity()`、`relation()` 三个 builder 与对应 adapters；traversal id 不再生成 authored `id`。',
+          en: 'Top-level React `<Graph>` creates a Scene and embedded Graph creates only a local Scope, while `<Entity>` and `<Relation>` can embed independently. Vanilla now exposes `graph()`, `entity()`, and `relation()` with matching adapters; traversal ids no longer generate authored `id` values.',
+        },
+      },
+      {
+        label: { zh: 'BREAKING：Relation Path 与 label 复用', en: 'BREAKING: Relation Path and label reuse' },
+        content: {
+          zh: 'Relation 直接复用除语义冲突项外的 Core Path 字段与完整 `IRGeometryLabel`。Theme 只提供默认；显式 Path 字段、dash pattern 与单个 label 外观最终优先，旧 Graph-only Relation label 类型已删除。',
+          en: 'Relation now directly reuses non-conflicting Core Path fields and complete `IRGeometryLabel` values. Theme only supplies defaults; explicit Path fields, dash patterns, and per-label appearance take final precedence, and the Graph-only Relation label type is removed.',
+        },
+      },
+      {
+        label: { zh: 'BREAKING：Variant 迁移到 Theme', en: 'BREAKING: Variant moves to Theme' },
+        content: {
+          zh: '删除 Entity / Relation `variant`、Graph `entityVariant` 及对应 Definition registry。原 `fill` 视觉意图迁到 docs Vibrant reference style，`mixed` 迁到 Clean reference style；精确单例外观继续使用 Core-compatible 实例字段。Entity role 与 Relation role / kind 仍在 TypeScript 和 JSON Schema 中提供开放词汇提示。',
+          en: 'Removes Entity / Relation `variant`, Graph `entityVariant`, and their Definition registries. The former `fill` intent moves to the docs Vibrant reference style and `mixed` moves to Clean; precise one-off appearance continues through Core-compatible instance fields. Entity role and Relation role / kind remain open vocabularies with TypeScript and JSON Schema hints.',
+        },
+      },
+      {
+        label: { zh: '稀疏 Graph Theme style', en: 'Sparse Graph Theme styles' },
+        content: {
+          zh: '`GraphThemeStyleDefinition.resolve()` 现在返回相对默认 preset 的稀疏 `GraphThemeStyleOverrides`。Graph resolver 补全未声明的 Entity / Relation tokens，保留默认 rules，并在其后追加自定义 style rules。',
+          en: '`GraphThemeStyleDefinition.resolve()` now returns sparse `GraphThemeStyleOverrides` relative to the default preset. Graph resolve fills omitted Entity / Relation tokens, retains default rules, and appends custom style rules after them.',
+        },
+      },
+      {
+        label: { zh: 'Entity role 轮廓调整', en: 'Entity role contour updates' },
+        content: {
+          zh: '`activity` 默认保持实线描边；`resource` 改用 Standard `ellipticCapsule`，由上下半椭圆端与两侧直线形成单一外轮廓，不再绘制 Cylinder 的内部端盖弧，并通过对称纵向 padding 让文本垂直居中。',
+          en: "`activity` keeps a solid outline by default. `resource` now uses Standard `ellipticCapsule`, forming one outer contour from two half-elliptic caps and straight sides without Cylinder's internal cap divider, with symmetric vertical padding keeping text vertically centered.",
+        },
+      },
+    ],
+  },
+  {
+    version: 'alpha.6',
+    date: '2026-08-21',
+    summary: {
+      zh: '⚠️ 将 Entity 与 Relation 收敛为最小单 record Graph Source IR，删除 presentation / geometry wrappers；位置、路径、尺寸与内容直接复用 Core-compatible 字段，省略项与默认值仅在 resolve / compile 中处理。',
+      en: '⚠️ Consolidates Entity and Relation into a minimal single-record Graph Source IR and removes presentation / geometry wrappers. Position, route, size, and content reuse Core-compatible fields directly, while omitted values and defaults are handled only during resolve / compile.',
+    },
+    items: [],
+  },
+  {
+    version: 'alpha.5',
+    date: '2026-08-16',
+    summary: {
+      zh: '建立 assembly-local Entity Definition registry 与 Graph Theme style，为后续三成员统一 registry/resolve 契约提供基础。',
+      en: 'Introduces assembly-local Entity Definition registries and Graph Theme styles as the foundation for the unified three-member registry and resolve contracts.',
+    },
+    items: [],
+  },
+  {
+    version: 'alpha.3',
+    date: '2026-08-10',
+    summary: {
+      zh: '⚠️ 撤回缺少真实场景验证的 Callout 公共契约，不保留兼容入口。',
+      en: '⚠️ Removes the unvalidated public Callout contract without a compatibility entry.',
+    },
+    items: [],
+  },
+  {
     version: 'alpha.1',
     date: '2026-08-28',
     summary: {
@@ -74,7 +184,7 @@ const graphMilestones: Array<SubVersion> = [
       },
     ],
   },
-];
+].sort((left, right) => right.date.localeCompare(left.date));
 
 /** Graph v0.1 里程碑 */
 export const graphV01: Release = {
@@ -85,8 +195,8 @@ export const graphV01: Release = {
       pkg: '@retikz/graph',
       version: 'v0.1',
       description: {
-        zh: 'Graph、Group、Entity、Relation 四类独立 Source composite、Definition registry、上下文解析与 Core lowering。',
-        en: 'Four independent Graph, Group, Entity, and Relation Source composites with Definition registries, context resolution, and Core lowering.',
+        zh: 'Graph family 独立 Source composite、Definition registry、上下文解析与 Core lowering。',
+        en: 'Independent Graph-family Source composites with Definition registries, context resolution, and Core lowering.',
       },
       highlights: [
         {
@@ -103,15 +213,15 @@ export const graphV01: Release = {
       pkg: '@retikz/graph-react',
       version: 'v0.1',
       description: {
-        zh: 'Graph、Group、Entity、Relation 四个独立 React authoring 入口，支持顶层 Scene 与任意 Core child 位置的局部组合。',
-        en: 'Four independent React authoring entries for Graph, Group, Entity, and Relation, supporting top-level Scenes and local composition at any Core-child position.',
+        zh: 'Graph family 的独立 React authoring 入口，支持顶层 Scene 与任意 Core child 位置的局部组合。',
+        en: 'Independent Graph-family React authoring entries for top-level Scenes and local composition at any Core-child position.',
       },
       highlights: [
         {
           label: { zh: '顶层与嵌入一致', en: 'Standalone and embedded parity' },
           content: {
-            zh: '顶层 `<Graph>` 建立一个 Scene，嵌入 Layout 时只贡献局部 Scope；`<Group>`、`<Entity>` 与 `<Relation>` 可以直接嵌入。',
-            en: 'Top-level `<Graph>` creates one Scene, while Graph inside Layout contributes only a local Scope; `<Group>`, `<Entity>`, and `<Relation>` embed directly.',
+            zh: '顶层 `<Graph>` 建立一个 Scene，嵌入 Layout 时只贡献局部 Scope；Group、Block family、Entity 与 Relation composite 都可以直接嵌入。',
+            en: 'Top-level `<Graph>` creates one Scene, while Graph inside Layout contributes only a local Scope; Group, the Block family, Entity, and Relation composites embed directly.',
           },
         },
       ],
@@ -121,15 +231,15 @@ export const graphV01: Release = {
       pkg: '@retikz/graph-vanilla',
       version: 'v0.1',
       description: {
-        zh: 'Graph、Group、Entity、Relation 四个无框架 builder、InputEmbed adapter 与完整 provider closure。',
-        en: 'Four framework-free Graph, Group, Entity, and Relation builders, InputEmbed adapters, and complete provider closures.',
+        zh: 'Graph family 的无框架 builder、InputEmbed adapter 与完整 provider closure。',
+        en: 'Framework-free Graph-family builders, InputEmbed adapters, and complete provider closures.',
       },
       highlights: [
         {
-          label: { zh: '四入口 adapter 接线', en: 'Four-entry adapter wiring' },
+          label: { zh: 'Graph family adapter 接线', en: 'Graph-family adapter wiring' },
           content: {
-            zh: '`graph()`、`group()`、`entity()`、`relation()` 分别使用对应 InputEmbed adapter；`createGraphVanillaAdapters()` 一次安装四者。adapter traversal id 只定位 authoring，不写入 Source identity。',
-            en: '`graph()`, `group()`, `entity()`, and `relation()` use matching InputEmbed adapters, and `createGraphVanillaAdapters()` installs all four. Adapter traversal ids locate authoring only and never enter Source identity.',
+            zh: '每个独立 Graph family composite 使用对应 InputEmbed adapter；`createGraphVanillaAdapters()` 一次安装完整集合。adapter traversal id 只定位 authoring，不写入 Source identity。',
+            en: 'Every independent Graph-family composite uses a matching InputEmbed adapter, and `createGraphVanillaAdapters()` installs the complete set. Adapter traversal ids locate authoring only and never enter Source identity.',
           },
         },
       ],

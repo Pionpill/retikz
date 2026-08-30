@@ -12,6 +12,8 @@ export const RetikzGraphReactErrorCode = {
   RelationInputInvalid: 'GRAPH_REACT_RELATION_INPUT_INVALID',
   /** embedded Graph 错误接收 standalone Layout 宿主属性 */
   GraphHostPropsInvalid: 'GRAPH_REACT_GRAPH_HOST_PROPS_INVALID',
+  /** Block 组合结构或单 child slot 无效 */
+  BlockStructureInvalid: 'GRAPH_REACT_BLOCK_STRUCTURE_INVALID',
 } as const;
 
 /** Graph React package 稳定错误码取值 */

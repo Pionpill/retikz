@@ -184,6 +184,9 @@ export const PACKAGE_IDS = [
   '@retikz/graph',
   '@retikz/graph-react',
   '@retikz/graph-vanilla',
+  '@retikz/diagram',
+  '@retikz/diagram-react',
+  '@retikz/diagram-vanilla',
   'docs',
 ] as const;
 export type PackageId = (typeof PACKAGE_IDS)[number];
@@ -218,6 +221,9 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   '@retikz/graph': { zh: '@retikz/graph', en: '@retikz/graph' },
   '@retikz/graph-react': { zh: '@retikz/graph-react', en: '@retikz/graph-react' },
   '@retikz/graph-vanilla': { zh: '@retikz/graph-vanilla', en: '@retikz/graph-vanilla' },
+  '@retikz/diagram': { zh: '@retikz/diagram', en: '@retikz/diagram' },
+  '@retikz/diagram-react': { zh: '@retikz/diagram-react', en: '@retikz/diagram-react' },
+  '@retikz/diagram-vanilla': { zh: '@retikz/diagram-vanilla', en: '@retikz/diagram-vanilla' },
   docs: { zh: '文档站', en: 'Docs' },
 };
 
@@ -252,7 +258,14 @@ export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
   },
   {
     id: 'schematic',
-    members: ['@retikz/graph', '@retikz/graph-react', '@retikz/graph-vanilla'],
+    members: [
+      '@retikz/graph',
+      '@retikz/graph-react',
+      '@retikz/graph-vanilla',
+      '@retikz/diagram',
+      '@retikz/diagram-react',
+      '@retikz/diagram-vanilla',
+    ],
   },
   {
     id: 'viz',

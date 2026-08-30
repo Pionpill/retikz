@@ -14,6 +14,10 @@ import { EllipticCapsuleShapeProvider, HexagonShapeProvider } from '@retikz/stan
 import type { GraphDefinitionOptions } from '../contract';
 
 import { resolveGraphDefinitionOptions } from '../providers';
+import { createBlockDefinitionFromOptions } from './block/definition';
+import { BlockProvider, createBlockProvider } from './block/provider';
+import { BlockHeaderDefinition, BlockRowDefinition, BlockSectionDefinition } from './block/structure-definition';
+import { BlockHeaderProvider, BlockRowProvider, BlockSectionProvider } from './block/structure-provider';
 import { createEntityDefinitionFromOptions } from './entity/definition';
 import { createEntityProvider, EntityProvider } from './entity/provider';
 import { createGraphDefinitionFromOptions } from './graph/definition';
@@ -29,6 +33,10 @@ export const createGraphDefinitions = (options: GraphDefinitionOptions = {}): Ar
   return [
     createGraphDefinitionFromOptions(resolved),
     createGroupDefinitionFromOptions(resolved),
+    createBlockDefinitionFromOptions(resolved),
+    BlockHeaderDefinition,
+    BlockSectionDefinition,
+    BlockRowDefinition,
     createEntityDefinitionFromOptions(resolved),
     createRelationDefinitionFromOptions(resolved),
     FlexLayoutDefinition,
@@ -41,6 +49,10 @@ const DEFAULT_GRAPH_PROVIDERS: ReadonlyArray<CoreDependencyProvider> = Object.fr
   EntityProvider,
   RelationProvider,
   GroupProvider,
+  BlockProvider,
+  BlockHeaderProvider,
+  BlockSectionProvider,
+  BlockRowProvider,
   FlexLayoutProvider,
   SurfaceProvider,
   PathClipProvider,
@@ -60,6 +72,10 @@ export const createGraphProviders = (options?: GraphDefinitionOptions): Readonly
     createEntityProvider(options),
     createRelationProvider(options),
     createGroupProvider(options),
+    createBlockProvider(options),
+    BlockHeaderProvider,
+    BlockSectionProvider,
+    BlockRowProvider,
     FlexLayoutProvider,
     SurfaceProvider,
     PathClipProvider,

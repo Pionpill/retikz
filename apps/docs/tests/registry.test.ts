@@ -6,7 +6,14 @@ import {
   RelativeTargetSchema,
   SceneSchema,
 } from '@retikz/core';
-import { EntitySchema, RelationSchema } from '@retikz/graph';
+import {
+  BlockHeaderSchema,
+  BlockRowSchema,
+  BlockSchema,
+  BlockSectionSchema,
+  EntitySchema,
+  RelationSchema,
+} from '@retikz/graph';
 import { LayoutInspectSpacingOptionsInputSchema } from '@retikz/layout/inspect';
 import {
   CoordinateSchema as PlotCoordinateSchema,
@@ -61,6 +68,10 @@ describe('SCHEMA_REGISTRY', () => {
         schema: SurfaceSchema,
         url: '/library/standard/composite/surface#surfaceschema',
       },
+      BlockSchema: { schema: BlockSchema, url: '/schematic/graph/block/basic' },
+      BlockHeaderSchema: { schema: BlockHeaderSchema, url: '/schematic/graph/block/basic' },
+      BlockSectionSchema: { schema: BlockSectionSchema, url: '/schematic/graph/block/basic' },
+      BlockRowSchema: { schema: BlockRowSchema, url: '/schematic/graph/block/basic' },
       EntitySchema: { schema: EntitySchema, url: '/schematic/graph/api-reference' },
       RelationSchema: { schema: RelationSchema, url: '/schematic/graph/api-reference' },
     });

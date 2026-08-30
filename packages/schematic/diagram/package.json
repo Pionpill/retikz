@@ -64,7 +64,12 @@
     "test:changed": "vitest run --changed --passWithNoTests"
   },
   "dependencies": {
-    "@retikz/graph": "workspace:^"
+    "@retikz/core": "workspace:^",
+    "@retikz/foundation": "workspace:^",
+    "@retikz/graph": "workspace:^",
+    "@retikz/layout": "workspace:^",
+    "@retikz/standard": "workspace:^",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
