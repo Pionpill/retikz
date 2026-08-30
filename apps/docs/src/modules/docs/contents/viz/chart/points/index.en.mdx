@@ -9,6 +9,8 @@ Scatter, Bubble, Regression, Connected Scatter, and Ranged Dot all belong to the
 
 Field ownership, the authoring pipeline, chart-wide presentation, and Plot extension rules shared by every type live under [Chart Model](/viz/chart/model). This section compares only the visual semantics unique to point chart types.
 
+Point recipes reserve edge space on continuous position scales so circles at a domain boundary are not clipped. Bubble uses `domainPadding: 0.08` for its maximum bubble radius, while the other point charts use `0.02`. A compatible continuous position scale declared by an encoding inherits that default when the field is omitted; an explicit value, including `0`, wins, while a scale fully replaced through `plotExtension` does not inherit it.
+
 ## Responsibilities
 
 | Chart                                                    | `chartType`         | Use it when                                                 |

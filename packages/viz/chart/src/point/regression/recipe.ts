@@ -15,6 +15,7 @@ import {
   pointSlotsOf,
   pointSpatialResolutionOf,
   pointThemeOf,
+  withPointPositionDomainPadding,
 } from '../shared';
 import { pointRecipeId } from '../shared/plot';
 import { RegressionMarkDefinition, resolveRegressionMarkGroup } from './mark';
@@ -79,7 +80,9 @@ export const RegressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
     },
   ],
   resolveEncodings: context => {
-    const resolution = resolveChartEncodingMappings(context, RegressionChartEncodingSlots, regressionFieldConsumers);
+    const resolution = withPointPositionDomainPadding(
+      resolveChartEncodingMappings(context, RegressionChartEncodingSlots, regressionFieldConsumers),
+    );
     const spatial = pointSpatialResolutionOf(ChartType.Regression, context.encodings);
     return {
       ...resolution,

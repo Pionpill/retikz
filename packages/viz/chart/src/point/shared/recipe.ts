@@ -24,9 +24,11 @@ export const pointResolutionOf = (
   options: Readonly<{
     scales?: ReadonlyArray<IRPlotScaleOperation>;
     guides?: ReadonlyArray<IRPlotGuide>;
+    /** Point 图连续位置比例尺的 recipe 默认 domain 留白 */
+    positionDomainPadding?: number;
   }> = {},
 ): ChartRecipeResolution => {
-  const cartesian = pointCartesian2DOf(chartType);
+  const cartesian = pointCartesian2DOf(chartType, options.positionDomainPadding);
   const scales = [...cartesian.scales, ...(options.scales ?? [])];
   const guides = [...pointAxisGuidesOf(chartType, theme), ...(options.guides ?? [])];
   return {

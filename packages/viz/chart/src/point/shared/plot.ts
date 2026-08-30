@@ -2,12 +2,16 @@ import type { IRPlot, IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
 
 import { PlotCoordinate, PlotGuide, PlotScale } from '@retikz/plot';
 
+/** 普通 Point recipe 的连续位置比例尺默认 domain 留白 */
+export const pointPositionDomainPadding = 0.02;
+
 /** 生成 Point recipe 使用的稳定 Plot member identity */
 export const pointRecipeId = (chartType: string, target: string): string => `__chart.${chartType}.${target}`;
 
 /** 为 Point recipe 建立二维笛卡尔 scaffold */
 export const pointCartesian2DOf = (
   chartType: string,
+  positionDomainPadding: number = pointPositionDomainPadding,
 ): Readonly<{
   scales: readonly [IRPlotScaleOperation, IRPlotScaleOperation];
   coordinate: NonNullable<IRPlot['coordinate']>;
@@ -16,8 +20,8 @@ export const pointCartesian2DOf = (
   const y = pointRecipeId(chartType, 'scale.y');
   return {
     scales: [
-      { type: PlotScale.Linear, name: x },
-      { type: PlotScale.Linear, name: y },
+      { type: PlotScale.Linear, name: x, domainPadding: positionDomainPadding },
+      { type: PlotScale.Linear, name: y, domainPadding: positionDomainPadding },
     ],
     coordinate: { type: PlotCoordinate.Cartesian2D, x, y },
   };

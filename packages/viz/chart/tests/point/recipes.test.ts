@@ -49,6 +49,88 @@ const resolve = <TSource extends IRChartSource>(
   });
 
 describe('Point Chart recipe Definitions', () => {
+  it('Bubble reserves the position domain for its maximum point radius', () => {
+    const result = resolve(BubbleChartDefinition, {
+      x: 'income',
+      y: 'lifeExpectancy',
+      size: 'population',
+    });
+
+    expect(result.scaffold.scales.map(scale => scale.value)).toEqual([
+      { type: 'linear', name: '__chart.bubble.scale.x', domainPadding: 0.08 },
+      { type: 'linear', name: '__chart.bubble.scale.y', domainPadding: 0.08 },
+    ]);
+  });
+
+  it('regular Point recipes reserve the position domain for their point radius', () => {
+    const scatter = resolve(ScatterChartDefinition, { x: 'x', y: 'y' });
+    const regression = resolve(RegressionChartDefinition, { x: 'x', y: 'y' });
+    const connectedScatter = resolve(ConnectedScatterChartDefinition, { x: 'x', y: 'y', order: 'order' });
+
+    expect([
+      scatter.scaffold.scales.map(scale => scale.value),
+      regression.scaffold.scales.map(scale => scale.value),
+      connectedScatter.scaffold.scales.map(scale => scale.value),
+    ]).toEqual([
+      [
+        { type: 'linear', name: '__chart.scatter.scale.x', domainPadding: 0.02 },
+        { type: 'linear', name: '__chart.scatter.scale.y', domainPadding: 0.02 },
+      ],
+      [
+        { type: 'linear', name: '__chart.regression.scale.x', domainPadding: 0.02 },
+        { type: 'linear', name: '__chart.regression.scale.y', domainPadding: 0.02 },
+      ],
+      [
+        { type: 'linear', name: '__chart.connected-scatter.scale.x', domainPadding: 0.02 },
+        { type: 'linear', name: '__chart.connected-scatter.scale.y', domainPadding: 0.02 },
+      ],
+    ]);
+  });
+
+  it('regular Point charts carry their position padding into authored continuous scales', () => {
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: {
+          x: {
+            field: 'amount',
+            scale: { operation: { type: 'log', name: 'amountScale' } },
+          },
+          y: 'margin',
+        },
+      },
+    });
+
+    const result = resolveSelectedChart(source, {
+      theme: DEFAULT_RESOLVED_THEME,
+      recipe: ScatterChartDefinition,
+      themeDefinitions: [],
+      runtime,
+    });
+
+    expect(result.plot.scales).toContainEqual({
+      type: 'log',
+      name: 'amountScale',
+      domainPadding: 0.02,
+    });
+  });
+
+  it('Ranged Dot reserves only its continuous position domain for the regular endpoint radius', () => {
+    const result = resolve(RangedDotChartDefinition, {
+      category: 'country',
+      start: 'before',
+      end: 'after',
+    });
+
+    expect(result.scaffold.scales.map(scale => scale.value)).toEqual([
+      { type: 'linear', name: '__chart.ranged-dot.scale.x', domainPadding: 0.02 },
+      { type: 'point', name: '__chart.ranged-dot.scale.y' },
+    ]);
+  });
+
   it('Connected Scatter emits an ordered open Path before Point', () => {
     const result = resolve(
       ConnectedScatterChartDefinition,
@@ -431,6 +513,46 @@ describe('Point Chart recipe Definitions', () => {
       }),
     ]);
     expect(result.scaffold.guides?.value).toContainEqual({ type: 'legend', channel: 'size' });
+  });
+
+  it('Bubble carries its position padding into authored continuous scales unless explicitly overridden', () => {
+    const source = BubbleChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'bubble',
+        encodings: {
+          x: {
+            field: 'income',
+            scale: { operation: { type: 'log', name: 'incomeScale' } },
+          },
+          y: {
+            field: 'lifeExpectancy',
+            scale: {
+              operation: {
+                type: 'linear',
+                name: 'lifeExpectancyScale',
+                domainPadding: 0,
+              },
+            },
+          },
+          size: 'population',
+        },
+      },
+    });
+
+    const result = resolveSelectedChart(source, {
+      theme: DEFAULT_RESOLVED_THEME,
+      recipe: BubbleChartDefinition,
+      themeDefinitions: [],
+      runtime: bubbleRuntime,
+    });
+
+    expect(result.plot.scales).toEqual([
+      { type: 'log', name: 'incomeScale', domainPadding: 0.08 },
+      { type: 'linear', name: 'lifeExpectancyScale', domainPadding: 0 },
+    ]);
   });
 
   it('keeps the core size mapping on ordinary and override Bubble marks', () => {

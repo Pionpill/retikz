@@ -10,7 +10,13 @@ import type { IRRangedDotChart } from './schema';
 import { defineChartRecipe } from '../../_chart/contract';
 import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
-import { pointPositionFieldConsumersOf, pointSlotsOf, pointSpatialResolutionOf, pointThemeOf } from '../shared';
+import {
+  pointPositionFieldConsumersOf,
+  pointSlotsOf,
+  pointSpatialResolutionOf,
+  pointThemeOf,
+  withPointPositionDomainPadding,
+} from '../shared';
 import { pointAxisGuidesOf, pointCartesian2DOf, pointRecipeId } from '../shared/plot';
 import { RangedDotMarkDefinition, resolveRangedDotMark } from './mark';
 import {
@@ -84,7 +90,9 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
     },
   ],
   resolveEncodings: context => {
-    const resolution = resolveChartEncodingMappings(context, RangedDotChartEncodingSlots, fieldConsumers);
+    const resolution = withPointPositionDomainPadding(
+      resolveChartEncodingMappings(context, RangedDotChartEncodingSlots, fieldConsumers),
+    );
     const encodings = withColorFallback(resolution.encodings);
     const spatial = pointSpatialResolutionOf(ChartType.RangedDot, {
       row: context.encodings.row,
@@ -100,7 +108,7 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
     const cartesian = pointCartesian2DOf(ChartType.RangedDot);
     const scales = [
       { value: cartesian.scales[0], replaceable: true },
-      { value: { ...cartesian.scales[1], type: PlotScale.Point }, replaceable: true },
+      { value: { type: PlotScale.Point, name: yScaleName }, replaceable: true },
       ...(hasColor ? [{ value: { type: PlotScale.Ordinal, name: colorScaleName }, replaceable: true }] : []),
     ];
     const guides: Array<IRPlotGuide> = [

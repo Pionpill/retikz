@@ -15,6 +15,7 @@ import {
   pointThemeOf,
   resolvePointMark,
   sizeGuideOf,
+  withPointPositionDomainPadding,
 } from '../shared';
 import { ScatterMarkDefinition } from './mark';
 import { ScatterChartSchema, ScatterChartThemeOverridesSchema, ScatterChartThemeResolutionSchema } from './schema';
@@ -62,10 +63,8 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
     },
   ],
   resolveEncodings: context => {
-    const resolution = resolveChartEncodingMappings(
-      context,
-      ScatterChartEncodingSlots,
-      pointFieldConsumersOf(ChartType.Scatter),
+    const resolution = withPointPositionDomainPadding(
+      resolveChartEncodingMappings(context, ScatterChartEncodingSlots, pointFieldConsumersOf(ChartType.Scatter)),
     );
     const spatial = pointSpatialResolutionOf(ChartType.Scatter, context.encodings);
     return spatial === undefined ? resolution : { ...resolution, spatial };

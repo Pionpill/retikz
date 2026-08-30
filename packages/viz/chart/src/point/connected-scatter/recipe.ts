@@ -16,6 +16,7 @@ import {
   pointSlotsOf,
   pointSpatialResolutionOf,
   pointThemeOf,
+  withPointPositionDomainPadding,
 } from '../shared';
 import { pointRecipeId } from '../shared/plot';
 import { ConnectedScatterMarkDefinition, resolveConnectedScatterMarkGroup } from './mark';
@@ -62,7 +63,9 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
     },
   ],
   resolveEncodings: context => {
-    const resolution = resolveChartEncodingMappings(context, ConnectedScatterChartEncodingSlots, consumers);
+    const resolution = withPointPositionDomainPadding(
+      resolveChartEncodingMappings(context, ConnectedScatterChartEncodingSlots, consumers),
+    );
     const spatial = pointSpatialResolutionOf(ChartType.ConnectedScatter, context.encodings);
     return spatial === undefined ? resolution : { ...resolution, spatial };
   },
