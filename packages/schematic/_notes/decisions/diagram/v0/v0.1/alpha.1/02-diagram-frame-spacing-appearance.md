@@ -1,6 +1,6 @@
 # ADR-02：Diagram Frame、Spacing 与 Appearance
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-29
 - 关联：[Diagram v0.1 roadmap](../roadmap.md) · [ADR-01：Diagram Assembly 与 Presentation](./01-diagram-assembly-presentation.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
@@ -10,13 +10,13 @@ ADR-01 已确定完整 Diagram 由 title、description、drawing core 与 legend
 
 如果把这些选择交给宿主，各入口仍会得到不同的完整图示；如果 Diagram 自建排版、Surface、文字或 Theme 基础机制，又会复制 Layout、Standard 与 Core。单一通用 gap 或含义不明的全局 align 也无法区分标题层级、主内容与 Legend 停靠关系。Diagram 因此需要拥有公共 Frame 与 appearance 契约，并把确定后的区域树下沉到现有 Layout、Surface 与 Core Text / Scope 能力
 
-本决策冻结所有具体 Diagram 类型可复用的 Frame、spacing、Diagram Theme、Neutral baseline、文字继承、Surface / Scope 组合、内部 foundation 边界与失败语义。Flow drawing core 的 Graph 输入、公共 Source root、adapter、自动 layout / routing、结果与 artifact 仍由 alpha.2 决策负责
+本决策冻结所有具体 Diagram 类型可复用的 Frame、spacing、Diagram Theme、Neutral baseline、文字继承、Surface / Scope 组合、内部 foundation 边界与失败语义。Flow drawing core 的 Graph 输入、公共 Source root、adapter、自动 layout / routing、结果与 artifact 仍由同一 alpha.1 的后续 ADR 负责
 
 ## 决策
 
 ### Frame 与 Theme 是长期共享 Diagram 契约
 
-Presentation、Frame 与 Diagram Theme 使用 `IRDiagramPresentation`、`IRDiagramFrame` 与 `IRDiagramTheme` 长期共享名称，供后续具体 Diagram 类型复用。该长期公开身份不改变 alpha.1 暂不导出的阶段边界。具体 Source root 仍由 drawing core 决定；Alpha.1 不建立 `IRFlowDiagram`、接受任意 drawing body 的通用 `IRDiagram` 或可实例化的临时 Diagram composite
+Presentation、Frame 与 Diagram Theme 使用 `IRDiagramPresentation`、`IRDiagramFrame` 与 `IRDiagramTheme` 长期共享名称，供后续具体 Diagram 类型复用。该长期公开身份不改变具体 Diagram root 建立前暂不导出的阶段边界。具体 Source root 仍由 drawing core 决定；本 ADR 的 Foundation 阶段不建立 `IRFlowDiagram`、接受任意 drawing body 的通用 `IRDiagram` 或可实例化的临时 Diagram composite
 
 `frame` 保存本实例的结构事实及 Surface、spacing、overflow 显式覆盖；`diagramTheme` 保存可复用的 Frame 与 presentation text 稀疏默认。Core `theme` 继续拥有 mode、style 与共享颜色环境。Frame 不使用 `frame.surface`、任意 region 数组或自由 Grid，也不把字段铺成 FlowDiagram 顶层快捷属性
 
@@ -61,7 +61,7 @@ type DiagramThemeStyleDefinition = Readonly<{
 declare const defineDiagramThemeStyle: (definition: DiagramThemeStyleDefinition) => DiagramThemeStyleDefinition;
 ```
 
-`DiagramThemeStyleOverrides` 是 `IRDiagramTheme` 的公共 TypeScript 别名，不建立第二个 schema、字段集合或更宽输出形态。Definition 是运行时扩展契约，不进入 IR；其输出仍按 `IRDiagramTheme` 的闭合、非空、JSON-safe 语义校验。内置与自定义 Definition 经过同一 `defineDiagramThemeStyle`、registry、lookup、输出校验和消费路径；重名、未注册、非法 plain-data 输出与回调失败都 fail-loud。Definition 长期通过 `DiagramDefinitionOptions.diagramThemeStyles` 注入，不建立全局 registry 或 Source enum。Alpha.1 可以在包内建立并消费同一 contract / registry，但在具体 Diagram root 形成真实公共消费者前不从 package public exports 暴露 Definition、options 或 registry
+`DiagramThemeStyleOverrides` 是 `IRDiagramTheme` 的公共 TypeScript 别名，不建立第二个 schema、字段集合或更宽输出形态。Definition 是运行时扩展契约，不进入 IR；其输出仍按 `IRDiagramTheme` 的闭合、非空、JSON-safe 语义校验。内置与自定义 Definition 经过同一 `defineDiagramThemeStyle`、registry、lookup、输出校验和消费路径；重名、未注册、非法 plain-data 输出与回调失败都 fail-loud。Definition 长期通过 `DiagramDefinitionOptions.diagramThemeStyles` 注入，不建立全局 registry 或 Source enum。本 ADR 的实现可以在包内建立并消费同一 contract / registry，但在具体 Diagram root 形成真实公共消费者前不从 package public exports 暴露 Definition、options 或 registry
 
 解析优先级固定为：
 
@@ -113,7 +113,7 @@ Diagram Theme 提供块级 textColor、opacity、font、align、lineHeight 与 m
 
 具体 Diagram Source 的完整 Core Scope properties 必须先形成有效 Diagram Scope，再在该环境中解析 Diagram Theme、测量并组装 Surface。Source 自身的 theme mode / style 因而影响本 Diagram 的 Neutral 与 registered style，而不只是传给 drawing core 后代
 
-Alpha.1 foundation 只接收调用位置已经确定的有效 Core Theme 与不透明 drawing child，不拥有临时 Source Scope 或 identity。内部验证宿主可以用普通 Core Scope 提供 Theme、transform、placement、clip 与 bounds 环境，但该宿主不进入 Diagram schema、artifact 或 package exports
+本 ADR 的 foundation 只接收调用位置已经确定的有效 Core Theme 与不透明 drawing child，不拥有临时 Source Scope 或 identity。内部验证宿主可以用普通 Core Scope 提供 Theme、transform、placement、clip 与 bounds 环境，但该宿主不进入 Diagram schema、artifact 或 package exports
 
 未来具体 Diagram root 的 id 只标识最外层完整 Scope；派生 Surface、Layout 与 presentation Node 不生成公共 identity 或额外 namespace。localNamespace、transforms、placement、clip、zIndex、meta、animations 与 boundingShape 对完整 Diagram 沿用 Core Scope 原语义。Surface overflow clip 位于该 Scope 内部，Scope clip 继续控制完整输出
 
@@ -153,7 +153,7 @@ type IRDiagramTheme = Readonly<{
 
 这些类型由 Diagram schema 派生或由 schema-derived 类型组合；代码片段只冻结字段关系。Surface、Layout 与 Core Node / Text 字段直接复用对应 owner 的公开 schema，不复制 primitive refinement 或默认值。`IRDiagramFrame` 与 `IRDiagramTheme` 是后续具体 Diagram root 组合的公共片段，不因此建立通用 root
 
-Alpha.1 在 `@retikz/diagram` 包内实现并消费 Presentation / Frame / Theme schema、resolve 与 assembly，但不从 package public exports 暴露 foundation schema、类型、resolver 或装配入口；`@retikz/diagram-vanilla` 与 `@retikz/diagram-react` 保持空壳。内部 drawing child 只作为装配依赖，不成为 Source `body` 字段、公开类型或可寻址 identity
+本 ADR 在 `@retikz/diagram` 包内实现并消费 Presentation / Frame / Theme schema、resolve 与 assembly，但在具体 Diagram root 建立前不从 package public exports 暴露 foundation schema、类型、resolver 或装配入口；`@retikz/diagram-vanilla` 与 `@retikz/diagram-react` 保持空壳。内部 drawing child 只作为装配依赖，不成为 Source `body` 字段、公开类型或可寻址 identity
 
 未来具体 Diagram root 的 Direct IR `frame` 与 `diagramTheme` 是唯一持久化真源。Vanilla 的对应 Input 保持同形并组装同一 Source；React 接收同名对象 props 并通过 Diagram Vanilla normalize 产生相同 Source。三入口不提供顶层 padding、background、legendPosition 等快捷字段，也不增加 Frame / Theme JSX marker
 
@@ -169,4 +169,10 @@ Definition options 不进入 Source。未来 React 与 Vanilla 只把同一 `Dia
 - 未注册 Diagram Theme style、Definition 重名、回调抛错或返回非法字段 / 非 plain data 由 `RetikzDiagramError` 诊断并原样保留 cause；Diagram 不回退 Neutral 或静默忽略
 - Surface proposal、Text / TeX、Legend、Layout 与 Core Scope / namespace 错误保留 owner 路径和诊断；Diagram adapter 不吞掉、改写或降级为 warning-only
 - 未来 React 不拥有 Direct IR 无法表达的 Frame / Theme 能力，也不采用第一个生效、默认恢复或宿主 CSS 外挂。Direct IR、Vanilla 与 React normalization 后的 Source 必须逐字段等价
-- Alpha.1 不导出临时 Source root、任意 drawing body、占位字段或 package-public foundation API。后续具体 Diagram root 直接采用长期 Frame / Theme 契约，不提供 Flow 专属别名、旧名 re-export、migration、fallback 或双轨字段
+- Foundation 阶段不导出临时 Source root、任意 drawing body、占位字段或 package-public foundation API。同一 alpha.1 的具体 Diagram root 直接采用长期 Frame / Theme 契约，不提供 Flow 专属别名、旧名 re-export、migration、fallback 或双轨字段
+
+## 实施结果
+
+Alpha.1 的 Foundation 阶段已在 `@retikz/diagram` 包内建立 Frame、Diagram Theme、同名 style Definition / registry、Neutral baseline、级联解析与固定 heading / main 装配。最终装配直接下沉为 Layout Flex 与唯一 Standard Surface，沿用 Core Theme、Scene bounds、Surface overflow clip 与外层 Scope clip，不建立 Diagram 私有渲染或几何路径
+
+这些能力继续保持 package-internal；drawing core、具体 root、公共 Definition options 与 adapter 接线仍由后续具体 Diagram 决策拥有
