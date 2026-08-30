@@ -28,6 +28,8 @@ import { Layout } from '@retikz/react';
 
 Entity 的整体外观统一由 Theme 管理。下面每个 demo 都允许精确调整实例颜色和文本；页面顶部的 Theme selector 统一切换 Academic、Vibrant、Clean 等整体视觉风格
 
+Neutral 默认也是 Graph Clean 完整继承的简洁样式：`stroke: 1` 使用最终静态主色绘制完整描边，`fill: 0.08` 将同一主色按 8% 权重在当前 mode backdrop 上预合成为不透明填充，`textColor: 'contrast'` 再根据最终填充解析为黑色或白色正文。这里的 `0.08` 是 contextual color 权重，不是 `fillOpacity`
+
 ### participant：参与主体
 
 `participant` 表示主动参与、负责或提供能力的主体。典型对象包括人员、团队、组织、外部系统和服务；如果对象描述的是被执行的工作，应使用 `activity`，如果只是被消费或保存的对象，应使用 `resource`
@@ -125,6 +127,8 @@ Entity 的整体外观统一由 Theme 管理。下面每个 demo 都允许精确
 />
 
 Entity Source record 只保存作者提供的字段。`id`、`text` 与 `position` 都可省略，不会产生空 wrapper、自动 id 或默认属性；省略 `id` 的 Entity 仍会按 role 绘制，但不会向 Core namespace 注册 target。role 在编译时提供 shape、boundary、padding、cornerRadius 与基础 minimum size；Theme 提供外观默认，Entity 显式 `color`、`fill`、`dashed`、`dashPattern`、`textColor` 等非结构 Node 字段最终覆盖 Theme
+
+显式静态 `color` 会同时驱动默认的数值 stroke 与 fill。`currentColor` 等非静态主色如果仍需解析任一数值颜色通道，编译会明确失败；调用方应改用静态 `color`，或同时提供字符串 stroke 与不透明静态 fill，避免猜测宿主 CSS 颜色或背景
 
 Entity 自己完成 registry lookup 并 lower 为普通 Core `Node`。Core、Scene 和 renderer 不解释 Entity role；Graph 只在存在时额外提供局部 Theme context，不是 Entity 的编译前提
 

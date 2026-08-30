@@ -14,6 +14,8 @@ const graphThemeOverridesOf = (
   style: ReferenceStyle,
   theme: Parameters<Parameters<typeof defineGraphThemeStyle>[0]['resolve']>[0],
 ): GraphThemeStyleOverrides => {
+  if (style === PreviewThemeStyle.Clean) return {};
+
   const foreground = modeForeground(theme.mode);
   const color = theme.colors.categorical[0];
   if (style === PreviewThemeStyle.Academic) {
@@ -30,30 +32,16 @@ const graphThemeOverridesOf = (
       relation: { tokens: { color: foreground, strokeWidth: 1.25 } },
     };
   }
-  if (style === PreviewThemeStyle.Vibrant) {
-    return {
-      entity: {
-        tokens: {
-          color,
-          textColor: 'contrast',
-          fill: color,
-          stroke: 'none',
-        },
-      },
-      relation: { tokens: { color: theme.colors.categorical[1], strokeWidth: 1.5 } },
-    };
-  }
-
   return {
     entity: {
       tokens: {
         color,
         textColor: 'contrast',
-        fill: 0.15,
+        fill: color,
         stroke: 'none',
       },
     },
-    relation: { tokens: { color: foreground, strokeWidth: 1, opacity: 0.72 } },
+    relation: { tokens: { color: theme.colors.categorical[1], strokeWidth: 1.5 } },
   };
 };
 

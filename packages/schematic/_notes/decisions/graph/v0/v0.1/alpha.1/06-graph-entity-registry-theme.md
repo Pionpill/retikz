@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-16
-- 修订日期：2026-08-23
+- 修订日期：2026-08-30
 - 关联：[Entity contract](./07-entity-data-geometry.md) · [Relation contract](./08-relation-data-geometry.md) · [Graph context](./09-composable-graph-context.md)
 - 替代：[GraphNode Variant ADR](./02-graph-node-variants.md)
 
@@ -44,7 +44,11 @@ type GraphThemeStyleDefinition = Readonly<{
 
 `entity`、`relation`、`tokens` 与 `rules` 均可省略；出现的 token 对象必须非空。Graph resolver 先按当前 Core Theme mode 建立 Neutral 默认 preset，再逐字段应用 Definition tokens；默认 rules 保留，自定义 rules 后置
 
-省略 Core `theme.style` 时使用 Neutral baseline。显式 style 必须存在同名 Graph Theme Definition，否则 fail-loud。发布包只内置 Neutral；其它 reference style 由调用方通过同一公开 Definition 注入
+Neutral Entity baseline 使用当前 mode 的静态前景色作为 `color` 主色，以 `stroke: 1` 绘制完整主色描边，以 `fill: 0.08` 表达同色 contextual color 权重，由 Core 在对应 mode backdrop 上物化为不透明浅色；正文使用 `textColor: 'contrast'`，在最终填充确定后解析为黑色或白色。该 baseline 形成“主色描边、同色轻填充、对比文字”的低装饰默认，Entity 显式静态 `color` 会同步驱动描边与填充，显式 appearance 仍可分别覆盖任一通道
+
+数值描边与填充必须从可静态解析的最终 Entity 主色确定。若显式 `color` 是 `currentColor` 等非静态 CSS 主色，Core 不猜测宿主颜色并 fail-loud；调用方必须改用静态 `color`，或以显式字符串描边和可静态解析的不透明填充同时覆盖两个 contextual 通道
+
+省略 Core `theme.style` 时使用 Neutral baseline。显式 style 必须存在同名 Graph Theme Definition，否则 fail-loud。发布包只内置 Neutral；其它 reference style 由调用方通过同一公开 Definition 注入。宿主 Graph style 可以返回空稀疏覆盖并完整继承 Neutral；Docs 的 Clean reference 对 Graph Entity 与 Relation 有意采用该行为，不再维护 Graph 专属 Clean 外观，但 Core、Plot、Chart 与 Table 等其它 owner 的 Clean definitions 与视觉契约不变
 
 ### Selector 与级联
 
@@ -74,6 +78,8 @@ React 可以通过 `GraphThemeProvider` 组合 definitions；跨静态 InputEmbe
 - strict Source schema 拒绝 `variant`、`entityVariant` 和 selector `variant`
 - 未注册 role、kind、predicate、Theme style 或 selector key 由 owner resolver fail-loud
 - Theme callback 抛错或返回非法稀疏结构时报告 Definition callback 失败；空 token 对象无效
+- Neutral Entity 默认填充保持不透明输出，以便 `contrast` 在未知宿主表面中仍可确定解析；它不把低透明度背景作为新的隐式 backdrop 契约
+- Neutral Entity 的数值描边或填充遇到不可静态解析的最终主色时报告 Core contextual color 错误，不回退为 `currentColor`，也不静默猜测宿主颜色
 - Theme 只改变 appearance，不改变语义、结构、identity、位置、尺寸、route 或 marker family
 - 旧 Variant schema、常量、Definition、registry、options 与导出直接删除，不保留 alias 或 fallback
 

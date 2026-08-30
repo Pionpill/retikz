@@ -12,8 +12,8 @@ export const getDefaultGraphThemePreset = (theme: ResolvedTheme): GraphThemeStyl
       tokens: {
         color: foreground,
         textColor: 'contrast',
-        fill: 'none',
-        stroke: 'currentColor',
+        fill: 0.08,
+        stroke: 1,
         strokeWidth: 1,
         fillOpacity: 1,
         strokeOpacity: 1,

@@ -23,6 +23,13 @@ const graphMilestones: Array<SubVersion> = [
           en: 'Block supports `width` and `minWidth` for the total outer width including shell padding. Sections default to the shell’s `8` corner radius and padding, while Rows use a transparent `fill`, remain at `8` padding, and do not set their own background, border, or corner radius.',
         },
       },
+      {
+        label: { zh: 'Entity 简洁默认外观', en: 'Concise Entity defaults' },
+        content: {
+          zh: 'Entity Neutral 默认改为完整主色描边、`0.08` 同色轻填充与 `contrast` 正文；数值颜色由 Core 按最终静态主色与当前 mode 物化为不透明颜色。Docs Graph Clean 不再维护 Entity / Relation 专属覆盖并完整继承 Neutral，Core、Plot、Chart 与 Table 的 Clean definitions 保持不变。',
+          en: 'Entity Neutral now uses a complete master-color outline, a light same-color `0.08` fill, and `contrast` body text; Core materializes numeric colors into opaque values from the final static master and current mode. Docs Graph Clean no longer maintains Entity/Relation-specific overrides and fully inherits Neutral, while the Core, Plot, Chart, and Table Clean definitions remain unchanged.',
+        },
+      },
     ],
   },
   {

@@ -5,6 +5,9 @@ import {
   DEFAULT_RESOLVED_THEME,
   defineThemeStyle,
   resolveCoreProviderDependencies,
+  resolveDefaultCoreThemeColors,
+  RetikzCoreErrorCode,
+  ThemeMode,
 } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -17,6 +20,98 @@ const styleRegistry = (
 ): ReadonlyMap<string, Graph.GraphThemeStyleDefinition> => new Map([[definition.name, definition]]);
 
 describe('Graph Scope and Theme compile semantics', () => {
+  it.each([
+    { mode: ThemeMode.Light, color: '#000000' },
+    { mode: ThemeMode.Dark, color: '#ffffff' },
+  ])('provides the complete mode-aware Neutral Entity baseline in $mode mode', ({ mode, color }) => {
+    const theme: ResolvedTheme = {
+      ...DEFAULT_RESOLVED_THEME,
+      mode,
+      colors: resolveDefaultCoreThemeColors(mode),
+    };
+
+    expect(Graph.getDefaultGraphThemePreset(theme).entity.tokens).toEqual({
+      color,
+      textColor: 'contrast',
+      fill: 0.08,
+      stroke: 1,
+      strokeWidth: 1,
+      fillOpacity: 1,
+      strokeOpacity: 1,
+      opacity: 1,
+    });
+  });
+
+  it('materializes a static Entity master into same-color stroke, opaque light fill, and contrast text', () => {
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [{ roots: [Graph.EntityProviderKey], providers: Graph.createGraphProviders() }],
+    });
+    const warnings: Array<CompileWarning> = [];
+    const output = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        theme: { mode: ThemeMode.Light },
+        children: [
+          Graph.EntitySchema.parse({
+            namespace: 'graph',
+            type: 'entity',
+            role: 'activity',
+            position: [0, 0],
+            text: 'Static master',
+            color: '#336699',
+          }),
+        ],
+      },
+      { ...definitions, padding: 0, onWarn: warning => warnings.push(warning) },
+    );
+    const scene = JSON.stringify(output.scene);
+
+    expect(scene).toContain('#336699');
+    expect(scene).toContain('#eff3f7');
+    expect(scene).toContain('#000000');
+    expect(warnings).toEqual([]);
+  });
+
+  it('fails loudly for a non-static Entity master until both contextual paint channels are overridden', () => {
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [{ roots: [Graph.EntityProviderKey], providers: Graph.createGraphProviders() }],
+    });
+    const source = {
+      namespace: 'graph',
+      type: 'entity',
+      role: 'activity',
+      position: [0, 0],
+      text: 'Inherited CSS color',
+      color: 'currentColor',
+    } as const;
+
+    expect(() =>
+      compileToScene(
+        { type: 'scene', version: 1, children: [Graph.EntitySchema.parse(source)] },
+        { ...definitions, padding: 0 },
+      ),
+    ).toThrowError(
+      expect.objectContaining({
+        code: RetikzCoreErrorCode.LayoutProbeRecoverable,
+        cause: expect.objectContaining({ code: RetikzCoreErrorCode.Color }),
+      }),
+    );
+
+    const warnings: Array<CompileWarning> = [];
+    const output = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [Graph.EntitySchema.parse({ ...source, fill: '#f1f5f9', stroke: 'currentColor' })],
+      },
+      { ...definitions, padding: 0, onWarn: warning => warnings.push(warning) },
+    );
+
+    expect(JSON.stringify(output.scene)).toContain('#f1f5f9');
+    expect(warnings).toEqual([]);
+  });
+
   it('在最终 Entity 实例主色后解析 Graph Theme 的数值 fill', () => {
     const definition = Graph.defineGraphThemeStyle({
       name: 'contextual-entity',
@@ -266,7 +361,7 @@ describe('Graph Scope and Theme compile semantics', () => {
 
     expect(Graph.resolveEntityAppearance(entity, { ...options, theme })).toMatchObject({
       fill: '#f97316',
-      stroke: 'currentColor',
+      stroke: 1,
     });
   });
 

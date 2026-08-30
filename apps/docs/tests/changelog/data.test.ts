@@ -113,7 +113,7 @@ describe('changelog data', () => {
     expect(changelogPage?.children?.some(page => page.id === changelogVersionSlug(currentRelease.minor))).toBe(true);
   });
 
-  it('Graph 更新日志保留 alpha.1 完整契约并登记 alpha.2 Block', () => {
+  it('Graph 更新日志保留 alpha.1 完整契约并登记 alpha.2 Block 与 Entity 默认外观', () => {
     const release = changelogForModule('schematic')[0];
     const byPackage = new Map(release.packages.map(block => [block.pkg, block]));
     const serialized = JSON.stringify(release);
@@ -125,7 +125,7 @@ describe('changelog data', () => {
       expect(alpha1?.date).toBe('2026-08-28');
       expect(alpha1?.items).toHaveLength(9);
       expect(alpha2?.date).toBe('2026-08-29');
-      expect(alpha2?.items).toHaveLength(2);
+      expect(alpha2?.items).toHaveLength(3);
     }
 
     expect(JSON.stringify(byPackage.get('@retikz/graph'))).toContain('IRGraph.children');
@@ -135,6 +135,7 @@ describe('changelog data', () => {
     expect(JSON.stringify(byPackage.get('@retikz/graph-vanilla'))).toContain('`relation()`');
     expect(serialized).toContain('`graphTheme`');
     expect(serialized).toContain('`IRGeometryLabel`');
+    expect(serialized).toContain('Entity 简洁默认外观');
     expect(serialized).toContain('Core Path-compatible route');
     expect(serialized).toContain('JSON Schema');
     expect(serialized).toContain('Variant visual axis');

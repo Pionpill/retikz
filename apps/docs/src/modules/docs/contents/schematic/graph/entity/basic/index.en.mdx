@@ -28,6 +28,8 @@ The seven built-in roles define only upper-level semantics and a base shape reci
 
 Theme owns the complete Entity visual language. Each demo below can precisely control instance color and text, while the page-level Theme selector switches the overall style among Academic, Vibrant, Clean, and other choices
 
+Neutral is also the concise baseline fully inherited by Graph Clean. `stroke: 1` draws the complete final static master color, `fill: 0.08` composites that color at 8% weight over the current mode backdrop into an opaque fill, and `textColor: 'contrast'` then resolves body text to black or white from the final fill. The `0.08` value is a contextual-color weight, not `fillOpacity`
+
 ### participant: an active subject
 
 `participant` represents a subject that actively participates, owns responsibility, or provides a capability. Typical objects include people, teams, organizations, external systems, and services. Use `activity` for work being performed and `resource` for an object that is merely consumed or stored
@@ -145,6 +147,8 @@ The combined playground switches among all seven built-in roles and directly adj
 />
 
 An Entity Source record stores authored fields only. `id`, `text`, and `position` may all be omitted without materializing empty wrappers, generated ids, or defaults. An Entity without `id` is still drawn from its role but registers no target in the Core namespace. At compile time, the role supplies shape, boundary, padding, corner radius, and base minimum size. Theme supplies appearance defaults, while explicit non-structural Node fields such as `color`, `fill`, `dashed`, `dashPattern`, and `textColor` take final precedence
+
+An explicit static `color` drives both numeric default stroke and fill channels. Compilation fails loudly when a non-static master such as `currentColor` must still resolve either numeric color channel. Use a static `color`, or provide both a string stroke and an opaque static fill, so Graph never guesses the host CSS color or backdrop
 
 Entity performs its own registry lookup and lowers to an ordinary Core `Node`. Core, Scene, and renderers do not interpret Entity roles. Graph only adds local Theme context when present; it is not a compile prerequisite
 

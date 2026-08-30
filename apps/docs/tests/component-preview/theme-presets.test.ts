@@ -77,18 +77,7 @@ describe('docs-owned theme presets', () => {
     });
 
     const cleanTheme = themeOf(PreviewThemeStyle.Clean);
-    const cleanColor = cleanTheme.colors.categorical[0];
-    expect(graphByName.get(PreviewThemeStyle.Clean)?.resolve(cleanTheme)).toEqual({
-      entity: {
-        tokens: {
-          color: cleanColor,
-          textColor: 'contrast',
-          fill: 0.15,
-          stroke: 'none',
-        },
-      },
-      relation: { tokens: { color: foreground, strokeWidth: 1, opacity: 0.72 } },
-    });
+    expect(graphByName.get(PreviewThemeStyle.Clean)?.resolve(cleanTheme)).toEqual({});
   });
 
   it('只在 Viz 与 schematic/graph 文档启用现有 Theme style selector', () => {

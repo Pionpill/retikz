@@ -109,6 +109,15 @@ const primitivesOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePri
     primitive.type === 'group' ? [primitive, ...primitivesOf(primitive.children)] : [primitive],
   );
 
+const graphAppearanceOf = (compiled: Scene): Array<ScenePrimitive> =>
+  primitivesOf(compiled.primitives).filter(
+    primitive =>
+      (primitive.type === 'group' && (primitive.id === 'start' || primitive.id === 'step')) ||
+      (primitive.type === 'path' && primitive.id === 'flow') ||
+      (primitive.type === 'text' &&
+        primitive.lines.some(line => line.text === 'Start' || line.text === 'Process' || line.text === 'next')),
+  );
+
 const recordingContext = (calls: Array<string>): CanvasRenderingContext2D =>
   new Proxy(
     {},
@@ -277,4 +286,11 @@ describe('Graph renderer integration', () => {
       expect(['#000000', '#ffffff']).toContain(entityText.fill);
     },
   );
+
+  it.each([ThemeMode.Light, ThemeMode.Dark])('让 Graph Clean 完整继承 Neutral Entity appearance：%s', mode => {
+    const neutral = sceneOf(normalizeGraph(graphInput), { mode });
+    const clean = sceneOf(normalizeGraph(graphInput), { style: PreviewThemeStyle.Clean, mode });
+
+    expect(graphAppearanceOf(clean)).toEqual(graphAppearanceOf(neutral));
+  });
 });
