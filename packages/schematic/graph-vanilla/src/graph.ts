@@ -1,14 +1,14 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
-import type { InputEmbed, InputEmbedAdapter, InputEmbedContext, NormalizedInputEmbedChildren } from '@retikz/vanilla';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { GraphProviderKey } from '@retikz/graph';
 
-import type { InputEntity, InputGraph, InputGraphChild, InputRelation } from './normalize';
+import type { InputGraph } from './normalize';
 
 import { GraphEmbedKind } from './constants';
-import { RetikzGraphVanillaError, RetikzGraphVanillaErrorCode } from './errors';
 import { normalizeGraph } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
+import { normalizeGraphAuthoringChildren } from './semantic-children';
 
 /** Graph embed 同时携带 Source authoring 输入与当前 definition options */
 export type GraphInputEmbedProps = InputGraph & GraphDefinitionOptions;
@@ -34,48 +34,24 @@ const inputOf = (props: GraphInputEmbedProps): InputGraph => {
   return input;
 };
 
-const isGraphMemberInput = (child: InputGraphChild): child is InputEntity | InputRelation =>
-  !('namespace' in child) && (child.type === 'entity' || child.type === 'relation');
-
-const isGraphContentInput = (child: InputGraphChild): child is Exclude<InputGraphChild, InputEntity | InputRelation> =>
-  !isGraphMemberInput(child);
-
-const normalizeChildren = (
-  input: InputGraph,
-  context: InputEmbedContext,
-): Readonly<{ input: InputGraph; nested?: NormalizedInputEmbedChildren }> => {
-  const children = input.children ?? [];
-  const authoredChildren = children.filter(isGraphContentInput);
-  if (authoredChildren.length === 0) return { input };
-  if (context.normalizeChildren === undefined) {
-    throw new RetikzGraphVanillaError({
-      code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,
-      message: 'Graph content authoring requires a normalizeScene embed context.',
-      details: { label: 'Graph.children' },
-    });
-  }
-
-  const nested = context.normalizeChildren(authoredChildren);
-  let contentCursor = 0;
-  return {
-    input: {
-      ...input,
-      children: children.map(child => (isGraphMemberInput(child) ? child : nested.children[contentCursor++])),
-    },
-    nested,
-  };
-};
-
 /** Graph Source root 的 InputEmbed adapter */
 export const GraphInputEmbedAdapter: InputEmbedAdapter<GraphInputEmbedProps> = {
   kind: GraphEmbedKind,
   lower: (props, context) => {
-    const normalized = normalizeChildren(inputOf(props), context);
+    const input = inputOf(props);
+    const normalized = normalizeGraphAuthoringChildren(input.children ?? [], context, 'Graph.children');
     const dependencies = createGraphProviderDependencies(GraphProviderKey, graphDefinitionOptionsOf(props));
     return {
-      node: normalizeGraph(normalized.input),
+      node: normalizeGraph({
+        ...input,
+        ...(input.children === undefined ? {} : { children: normalized.children }),
+      }),
       providerDependencies: {
-        roots: [...dependencies.roots, ...(normalized.nested?.providerDependencies.roots ?? [])],
+        roots: [
+          ...dependencies.roots,
+          ...normalized.providerRoots,
+          ...(normalized.nested?.providerDependencies.roots ?? []),
+        ],
         providers: [...dependencies.providers, ...(normalized.nested?.providerDependencies.providers ?? [])],
       },
       ...(normalized.nested === undefined ? {} : { authoringSites: normalized.nested.authoringSites }),

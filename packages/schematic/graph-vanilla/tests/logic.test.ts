@@ -1,6 +1,10 @@
 import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 
 import {
+  BlockHeaderProviderKey,
+  BlockProviderKey,
+  BlockRowProviderKey,
+  BlockSectionProviderKey,
   defineEntityRole,
   defineRelationRole,
   EntityProviderKey,
@@ -11,9 +15,17 @@ import {
 import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import type { InputGraph, InputGroup } from '../src';
+import type { InputBlock, InputBlockHeader, InputBlockRow, InputBlockSection, InputGraph, InputGroup } from '../src';
 
 import {
+  block,
+  blockHeader,
+  BlockHeaderInputEmbedAdapter,
+  BlockInputEmbedAdapter,
+  blockRow,
+  BlockRowInputEmbedAdapter,
+  blockSection,
+  BlockSectionInputEmbedAdapter,
   createGraphVanillaAdapters,
   entity,
   EntityInputEmbedAdapter,
@@ -21,6 +33,10 @@ import {
   GraphInputEmbedAdapter,
   group,
   GroupInputEmbedAdapter,
+  normalizeBlock,
+  normalizeBlockHeader,
+  normalizeBlockRow,
+  normalizeBlockSection,
   normalizeGraph,
   normalizeGroup,
   relation,
@@ -52,21 +68,85 @@ describe('@retikz/graph-vanilla package boundary', () => {
     const graphVanilla = await import('../src');
 
     expect(graphVanilla.GraphInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.BlockInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.BlockHeaderInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.BlockSectionInputEmbedAdapter).toBeDefined();
+    expect(graphVanilla.BlockRowInputEmbedAdapter).toBeDefined();
     expect(graphVanilla.EntityInputEmbedAdapter).toBeDefined();
     expect(graphVanilla.GroupInputEmbedAdapter).toBeDefined();
     expect(graphVanilla.RelationInputEmbedAdapter).toBeDefined();
     expect(graphVanilla.graph).toBeTypeOf('function');
+    expect(graphVanilla.block).toBeTypeOf('function');
+    expect(graphVanilla.blockHeader).toBeTypeOf('function');
+    expect(graphVanilla.blockSection).toBeTypeOf('function');
+    expect(graphVanilla.blockRow).toBeTypeOf('function');
     expect(graphVanilla.entity).toBeTypeOf('function');
     expect(graphVanilla.group).toBeTypeOf('function');
     expect(graphVanilla.relation).toBeTypeOf('function');
     expect(graphVanilla.normalizeGraph).toBeTypeOf('function');
+    expect(graphVanilla.normalizeBlock).toBeTypeOf('function');
+    expect(graphVanilla.normalizeBlockHeader).toBeTypeOf('function');
+    expect(graphVanilla.normalizeBlockSection).toBeTypeOf('function');
+    expect(graphVanilla.normalizeBlockRow).toBeTypeOf('function');
     expect(graphVanilla.normalizeGroup).toBeTypeOf('function');
     expect(createGraphVanillaAdapters().map(adapter => adapter.kind)).toEqual([
       'graph.graph',
       'graph.group',
+      'graph.block',
+      'graph.blockHeader',
+      'graph.blockSection',
+      'graph.blockRow',
       'graph.entity',
       'graph.relation',
     ]);
+  });
+});
+
+describe('normalizeBlock', () => {
+  it('normalizes open Block-family semantic children to the same sparse Source as Direct authoring', () => {
+    const header = {
+      type: 'blockHeader',
+      title: { text: 'User' },
+      icon: { type: 'entity', role: 'state', position: [0, 0] },
+    } satisfies InputBlockHeader & Readonly<{ type: 'blockHeader' }>;
+    const row = {
+      type: 'blockRow',
+      id: 'name',
+      children: [
+        { key: 'name', child: { type: 'node', position: [0, 0], text: 'name' } },
+        { key: 'type', child: { type: 'entity', role: 'concept', position: [0, 0] } },
+      ],
+    } satisfies InputBlockRow & Readonly<{ type: 'blockRow' }>;
+    const section = {
+      type: 'blockSection',
+      id: 'fields',
+      children: [row],
+    } satisfies InputBlockSection & Readonly<{ type: 'blockSection' }>;
+    const input: InputBlock = {
+      id: 'user',
+      width: 240,
+      minWidth: 160,
+      gap: 0,
+      children: [header, section],
+    };
+
+    expect(normalizeBlock(input)).toEqual({
+      namespace: 'graph',
+      type: 'block',
+      id: 'user',
+      width: 240,
+      minWidth: 160,
+      gap: 0,
+      children: [normalizeBlockHeader(header), normalizeBlockSection(section)],
+    });
+    expect(normalizeBlockRow(row).children?.[1]?.child).toMatchObject({ namespace: 'graph', type: 'entity' });
+  });
+
+  it('preserves omitted and explicit empty Block-family children', () => {
+    expect(normalizeBlock({})).toEqual({ namespace: 'graph', type: 'block' });
+    expect(normalizeBlock({ children: [] })).toEqual({ namespace: 'graph', type: 'block', children: [] });
+    expect(normalizeBlockSection({})).toEqual({ namespace: 'graph', type: 'blockSection' });
+    expect(normalizeBlockRow({ children: [] })).toEqual({ namespace: 'graph', type: 'blockRow', children: [] });
   });
 });
 
@@ -200,7 +280,7 @@ describe('normalizeGraph', () => {
 });
 
 describe('Graph Vanilla embed adapters', () => {
-  it('keeps embed identity separate from optional authored identity for all three composites', () => {
+  it('keeps embed identity separate from optional authored identity for every composite', () => {
     const graphContribution = lower(graph('graph-embed', {}), GraphInputEmbedAdapter);
     const entityContribution = lower(
       entity('entity-embed', { type: 'entity', role: 'participant', position: [0, 0] }),
@@ -216,6 +296,13 @@ describe('Graph Vanilla embed adapters', () => {
       RelationInputEmbedAdapter,
     );
     const groupContribution = lower(group('group-embed', {}), GroupInputEmbedAdapter);
+    const blockContribution = lower(block('block-embed', {}), BlockInputEmbedAdapter);
+    const headerContribution = lower(
+      blockHeader('header-embed', { title: { text: 'Block' } }),
+      BlockHeaderInputEmbedAdapter,
+    );
+    const sectionContribution = lower(blockSection('section-embed', {}), BlockSectionInputEmbedAdapter);
+    const rowContribution = lower(blockRow('row-embed', {}), BlockRowInputEmbedAdapter);
 
     expect(graphContribution.node).toEqual({ namespace: 'graph', type: 'graph' });
     expect(entityContribution.node).toEqual({
@@ -232,10 +319,22 @@ describe('Graph Vanilla embed adapters', () => {
       role: 'association',
     });
     expect(groupContribution.node).toEqual({ namespace: 'graph', type: 'group' });
+    expect(blockContribution.node).toEqual({ namespace: 'graph', type: 'block' });
+    expect(headerContribution.node).toEqual({
+      namespace: 'graph',
+      type: 'blockHeader',
+      title: { text: 'Block' },
+    });
+    expect(sectionContribution.node).toEqual({ namespace: 'graph', type: 'blockSection' });
+    expect(rowContribution.node).toEqual({ namespace: 'graph', type: 'blockRow' });
     expect(graphContribution.node).not.toHaveProperty('id');
     expect(entityContribution.node).not.toHaveProperty('id');
     expect(relationContribution.node).not.toHaveProperty('id');
     expect(groupContribution.node).not.toHaveProperty('id');
+    expect(blockContribution.node).not.toHaveProperty('id');
+    expect(headerContribution.node).not.toHaveProperty('id');
+    expect(sectionContribution.node).not.toHaveProperty('id');
+    expect(rowContribution.node).not.toHaveProperty('id');
   });
 
   it('normalizes Relation Way while preserving complete Core NodeTargets', () => {
@@ -329,6 +428,87 @@ describe('Graph Vanilla embed adapters', () => {
     ]);
   });
 
+  it('normalizes nested independent structure embeds while merging provider contributions', () => {
+    const normalized = normalizeScene(
+      {
+        children: [
+          block('block-embed', {
+            children: [
+              blockHeader('header-embed', {
+                icon: entity('icon-embed', { type: 'entity', role: 'state', position: [0, 0] }),
+                title: { text: 'Block' },
+              }),
+              blockSection('section-embed', {
+                children: [
+                  blockRow('row-embed', {
+                    children: [
+                      {
+                        key: 'nested',
+                        child: group('group-embed', {
+                          children: [{ type: 'node', position: [0, 0], text: 'Nested' }],
+                        }),
+                      },
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      },
+      { adapters: createGraphVanillaAdapters() },
+    );
+
+    expect(normalized.ir.children[0]).toMatchObject({
+      namespace: 'graph',
+      type: 'block',
+      children: [
+        { namespace: 'graph', type: 'blockHeader', icon: { namespace: 'graph', type: 'entity' } },
+        {
+          namespace: 'graph',
+          type: 'blockSection',
+          children: [
+            {
+              namespace: 'graph',
+              type: 'blockRow',
+              children: [{ child: { namespace: 'graph', type: 'group' } }],
+            },
+          ],
+        },
+      ],
+    });
+    expect(normalized.contributions.flatMap(contribution => contribution.roots)).toEqual(
+      expect.arrayContaining([
+        BlockProviderKey,
+        BlockHeaderProviderKey,
+        BlockSectionProviderKey,
+        BlockRowProviderKey,
+        EntityProviderKey,
+        GroupProviderKey,
+      ]),
+    );
+  });
+
+  it('compiles a collocated Block declared directly inside a standalone Group', () => {
+    expect(() =>
+      processToStaticInputResult(
+        {
+          children: [
+            group('group-embed', {
+              children: [
+                {
+                  type: 'block',
+                  children: [{ type: 'blockHeader', title: { text: 'Nested Block' } }],
+                },
+              ],
+            }),
+          ],
+        },
+        { adapters: createGraphVanillaAdapters(), compile: { padding: 0 } },
+      ),
+    ).not.toThrow();
+  });
+
   it('contributes the provider closure rooted at the matching semantic composite', () => {
     const graphContribution = lower(graph('graph-embed', {}), GraphInputEmbedAdapter);
     const entityContribution = lower(
@@ -345,13 +525,44 @@ describe('Graph Vanilla embed adapters', () => {
       RelationInputEmbedAdapter,
     );
     const groupContribution = lower(group('group-embed', {}), GroupInputEmbedAdapter);
+    const blockContribution = lower(block('block-embed', {}), BlockInputEmbedAdapter);
+    const headerContribution = lower(
+      blockHeader('header-embed', { title: { text: 'Block' } }),
+      BlockHeaderInputEmbedAdapter,
+    );
+    const sectionContribution = lower(blockSection('section-embed', {}), BlockSectionInputEmbedAdapter);
+    const rowContribution = lower(blockRow('row-embed', {}), BlockRowInputEmbedAdapter);
 
     expect(graphContribution.providerDependencies.roots).toEqual([GraphProviderKey]);
     expect(entityContribution.providerDependencies.roots).toEqual([EntityProviderKey]);
     expect(relationContribution.providerDependencies.roots).toEqual([RelationProviderKey]);
     expect(groupContribution.providerDependencies.roots).toEqual([GroupProviderKey]);
-    expect(graphContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(13);
-    expect(groupContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(12);
+    expect(blockContribution.providerDependencies.roots).toEqual([BlockProviderKey]);
+    expect(headerContribution.providerDependencies.roots).toEqual([BlockHeaderProviderKey]);
+    expect(sectionContribution.providerDependencies.roots).toEqual([BlockSectionProviderKey]);
+    expect(rowContribution.providerDependencies.roots).toEqual([BlockRowProviderKey]);
+    expect(graphContribution.providerDependencies.providers.map(provider => provider.key)).toEqual(
+      expect.arrayContaining([
+        GraphProviderKey,
+        GroupProviderKey,
+        BlockProviderKey,
+        EntityProviderKey,
+        RelationProviderKey,
+      ]),
+    );
+    expect(groupContribution.providerDependencies.providers.map(provider => provider.key)).toEqual(
+      expect.arrayContaining([GroupProviderKey, BlockProviderKey, EntityProviderKey, RelationProviderKey]),
+    );
+    expect(blockContribution.providerDependencies.providers.map(provider => provider.key)).toEqual(
+      expect.arrayContaining([
+        BlockProviderKey,
+        BlockHeaderProviderKey,
+        BlockSectionProviderKey,
+        BlockRowProviderKey,
+        EntityProviderKey,
+        RelationProviderKey,
+      ]),
+    );
     expect(entityContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(3);
     expect(relationContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(5);
   });

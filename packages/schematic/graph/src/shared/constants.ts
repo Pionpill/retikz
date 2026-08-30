@@ -7,6 +7,14 @@ export const GraphType = {
   Graph: 'graph',
   /** 表示可嵌套且具有可见边界的通用内容分组 */
   Group: 'group',
+  /** 表示具有可见边界与纵向开放内容布局的图节点容器 */
+  Block: 'block',
+  /** 表示图块中常用的图标、标题与尾随内容横向结构 */
+  BlockHeader: 'blockHeader',
+  /** 表示图块中常用的可见纵向内容分区 */
+  BlockSection: 'blockSection',
+  /** 表示图块中常用的横向 Flex item 内容行 */
+  BlockRow: 'blockRow',
   /** 表示图中具有关系语义的实体 */
   Entity: 'entity',
   /** 表示图式元素间关系的路径 */

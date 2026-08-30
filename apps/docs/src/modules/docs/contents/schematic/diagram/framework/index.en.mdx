@@ -1,0 +1,47 @@
+---
+title: Diagram Framework
+description: Diagram Framework owns supporting regions, framing, spacing, themes, and the complete output boundary outside a concrete drawing core.
+---
+
+Every concrete Diagram needs to assemble its title, description, legend, and drawing core into one result. Diagram Framework concentrates these domain-independent responsibilities in a shared Foundation so that concrete types own only their drawing semantics.
+
+The figure shows the complete assembly: the outer boundary carries Frame / Appearance, the title, description, and legend belong to Presentation, and a concrete Diagram type provides the gray dashed region.
+
+<ComponentPreview files="diagram-framework-overview" hideCode size="lg" />
+
+## Three layers
+
+| Layer              | Current abstraction                                                                                  | Owner                 |
+| ------------------ | ---------------------------------------------------------------------------------------------------- | --------------------- |
+| Presentation       | Title, description, and explicit Standard Legend outside the drawing core                            | Diagram Framework     |
+| Frame / Appearance | Spacing, region arrangement, legend docking, background, border, radius, overflow, and Diagram Theme | Diagram Framework     |
+| Drawing Core       | Measurement, layout, routing, and domain semantics for the drawn objects                             | Concrete Diagram type |
+
+The layers remain orthogonal: Frame spacing does not become node spacing inside the drawing core, and Presentation does not inspect drawing-domain data. A concrete Diagram only passes its completed drawing child into the Framework assembly.
+
+## Presentation
+
+Titles and descriptions reuse Core `TextBlock`, including multiple lines, line-level and run-level styling, and mixed text / TeX runs. Legends reuse an explicit Standard Legend instead of introducing a Diagram-specific legend model.
+
+Titles, descriptions, and legends are all optional regions. When a region is absent, its container and spacing collapse completely and leave no empty allocation in the final layout.
+
+## Frame and Appearance
+
+Frame controls separate gaps from title to description, heading to main, and drawing to legend. The Legend can dock to the top, right, bottom, or left and align along the tangent axis of its docking side.
+
+The complete figure reuses Standard Surface padding, background, border, corner radius, and overflow. Diagram Theme adds a Neutral baseline, same-name style Definitions coordinated with Core Theme, and sparse instance overrides.
+
+## Unified assembly
+
+Framework combines present regions into a fixed heading / main structure and treats the concrete drawing child as opaque input. Every region passes through Layout Flex, Standard Surface, and Core Scope into the same Scene, bounds, clipping, and export result.
+
+Framework retains only independent facts and neither reads, changes, nor persists the drawing child's domain semantics. It also publishes no Diagram-specific identity, metadata, or artifact; Layout and Legend results remain owned by their existing dependencies.
+
+## Current boundaries
+
+- The package root exposes no `IRDiagram`, `IRFlowDiagram`, or instantiable Diagram root
+- React and Vanilla adapters are not wired, and there is no standalone host or formal feature demo
+- The drawing child used by alpha.1 is an internal assembly input, not a public `body` field
+- Flow Graph Body, automatic layout, routing, orchestration, result, and artifact remain outside Framework
+
+These boundaries let Framework serve as the long-lived shared foundation for concrete Diagrams without exposing the internal Foundation or a placeholder drawing core as public contracts.

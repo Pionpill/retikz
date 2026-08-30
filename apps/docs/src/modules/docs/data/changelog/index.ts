@@ -1,6 +1,7 @@
 import type { Localized, PackageId, Release } from '../types';
 
 import { PACKAGE_GROUPS } from '../types';
+import { diagramV01 } from './diagram-0-1';
 import { graphV01 } from './graph-0-1';
 import { kernelV01 } from './kernel-0-1';
 import { kernelV02 } from './kernel-0-2';
@@ -20,6 +21,7 @@ export const changelogPageDescription: Localized = {
 
 export const changelog: Array<Release> = [
   vizV02,
+  diagramV01,
   graphV01,
   layoutV01,
   standardV01,

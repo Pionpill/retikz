@@ -1,3 +1,4 @@
+export * from './Block';
 export * from './Entity';
 export * from './Graph';
 export * from './Group';

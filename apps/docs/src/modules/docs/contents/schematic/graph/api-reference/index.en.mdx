@@ -1,21 +1,23 @@
 ---
 title: Graph API Reference
-description: Look up the four independent Graph, Group, Entity, and Relation Source composites, the Scope surface, and React/Vanilla adapters.
+description: Look up independent Graph-family Source composites, their Scope surface, and React/Vanilla adapters.
 ---
 
-`@retikz/graph` owns JSON-safe Source IR, Definition registries, resolve, and lowering. Graph, Group, Entity, and Relation are independently compilable Tier 2 composites. Graph additionally hosts a Scene at the top React level, while Group composes Scope, Surface, captions, and Core boundary labels
+`@retikz/graph` owns JSON-safe Source IR, Definition registries, resolve, and lowering. Graph, Group, Block, BlockHeader, BlockSection, BlockRow, Entity, and Relation compile independently. Graph additionally hosts a Scene at the top React level, Group composes general visible boundaries, and Block vertically arranges open content
 
 ## Public exports
 
-| Capability        | `@retikz/graph`                                                                                    | React                          | Vanilla                                                            |
-| ----------------- | -------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------ |
-| Graph             | `GraphSchema`, `IRGraph`, `createGraph`, `GraphDefinition`, `GraphProviderKey`                     | `Graph`, `GraphProps`          | `graph`, `GraphInputEmbedAdapter`, `GraphInputEmbedProps`          |
-| Group             | `GroupSchema`, `IRGroup`, `createGroup`, `GroupDefinition`, `GroupProviderKey`                     | `Group`, `GroupProps`          | `group`, `GroupInputEmbedAdapter`, `GroupInputEmbedProps`          |
-| Entity            | `EntitySchema`, `IRGraphEntity`, `createEntity`, `EntityDefinition`, `EntityProviderKey`           | `Entity`, `EntityProps`        | `entity`, `EntityInputEmbedAdapter`, `EntityInputEmbedProps`       |
-| Relation          | `RelationSchema`, `IRGraphRelation`, `createRelation`, `RelationDefinition`, `RelationProviderKey` | `Relation`, `RelationProps`    | `relation`, `RelationInputEmbedAdapter`, `RelationInputEmbedProps` |
-| Open vocabularies | `EntityRole`, `RelationRole`, `RelationKind`, and their schemas                                    | —                              | —                                                                  |
-| Theme extension   | `GraphThemeStyleDefinition`, `GraphThemeStyleOverrides`, `defineGraphThemeStyle`                   | `graphThemeStyles` on all four | `graphThemeStyles` on all four adapters                            |
-| Assembly          | `GraphDefinitionOptions`, `createGraphDefinitions`, `createGraphProviders`                         | Options on all four            | `createGraphVanillaAdapters`                                       |
+| Capability        | `@retikz/graph`                                                                                        | React                                               | Vanilla                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------- | ------------------------------------------------------------------ |
+| Graph             | `GraphSchema`, `IRGraph`, `createGraph`, `GraphDefinition`, `GraphProviderKey`                         | `Graph`, `GraphProps`                               | `graph`, `GraphInputEmbedAdapter`, `GraphInputEmbedProps`          |
+| Group             | `GroupSchema`, `IRGroup`, `createGroup`, `GroupDefinition`, `GroupProviderKey`                         | `Group`, `GroupProps`                               | `group`, `GroupInputEmbedAdapter`, `GroupInputEmbedProps`          |
+| Block             | `BlockSchema`, `IRBlock`, `createBlock`, `BlockDefinition`, `BlockProviderKey`                         | `Block`, `BlockProps`                               | `block`, `BlockInputEmbedAdapter`, `BlockInputEmbedProps`          |
+| Block structures  | Header / Section / Row schemas, types, factories, Definitions, and ProviderKeys; Row-local `BlockCell` | Three independent components and `BlockCell` marker | Three independent builders, adapters, and normalizers              |
+| Entity            | `EntitySchema`, `IRGraphEntity`, `createEntity`, `EntityDefinition`, `EntityProviderKey`               | `Entity`, `EntityProps`                             | `entity`, `EntityInputEmbedAdapter`, `EntityInputEmbedProps`       |
+| Relation          | `RelationSchema`, `IRGraphRelation`, `createRelation`, `RelationDefinition`, `RelationProviderKey`     | `Relation`, `RelationProps`                         | `relation`, `RelationInputEmbedAdapter`, `RelationInputEmbedProps` |
+| Open vocabularies | `EntityRole`, `RelationRole`, `RelationKind`, and their schemas                                        | —                                                   | —                                                                  |
+| Theme extension   | `GraphThemeStyleDefinition`, `GraphThemeStyleOverrides`, `defineGraphThemeStyle`                       | `graphThemeStyles` on Graph-family composites       | The same options on Graph-family adapters                          |
+| Assembly          | `GraphDefinitionOptions`, `createGraphDefinitions`, `createGraphProviders`                             | Options on independent composites                   | `createGraphVanillaAdapters`                                       |
 
 ## Graph Source composite
 
@@ -61,6 +63,20 @@ Group stores a nested arbitrary-`IRChild` containment relation and composes the 
 <ZodSchema name="GroupSchema" />
 
 Defaults are consumed only during lowering: padding `10`, background `lightgray` / `0.04`, border `lightgray` / `1` with `dashPattern` `[4, 3]`, corner radius `4`, and overflow `visible`. Caption defaults to top and horizontal arrangement with `itemGap` / `bodyGap` of `4`; the title defaults to `sm` without a bold weight, and the description defaults to `xs` with 0.7 opacity. Group boundary labels default to the description's `xs` font size and gray (`gray`), while explicit font and color fields remain authoritative. They default to Core attachment-tangent `start` when `align` is omitted, and to `{ boundary: 'bottom', fraction: 0 }` when `position` is omitted; they attach to the left end of the bottom boundary and offset downward outside the shell, aligning the text's left edge with the shell's left edge. All other position, boundary, placement, rotation, keep-upright, and pin contracts remain direct Core `NodeLabelSchema` contracts, with `placement` still defaulting to `outside`
+
+## Block schema
+
+Block stores arbitrary ordered `IRChild` values and combines a column FlexLayout with Standard Surface into an addressable open-content container. Block, Section, and Row reuse the complete Core Scope, including `localNamespace`. Their explicit ids are published in the actual Core namespace without an automatic Block prefix
+
+<ZodSchema name="BlockSchema" />
+
+<ZodSchema name="BlockHeaderSchema" />
+
+<ZodSchema name="BlockSectionSchema" />
+
+<ZodSchema name="BlockRowSchema" />
+
+Block lowering defaults to gap `8`, padding `8`, a transparent background, `lightgray / 1` border, corner radius `8`, and overflow `visible`. `width` and `minWidth` constrain the outer width including horizontal padding. Header, Section, and Row are independent composites; Section accepts arbitrary children, Row Cells directly reuse FlexLayout items, and Relations connect to actual lower targets through the existing `IRNodeTarget + anchor / boundary` rather than a Port IR
 
 ## Entity schema
 
@@ -127,7 +143,7 @@ Custom style rules append after the defaults. Omitting `rules` or returning `rul
 
 ## React and Vanilla authoring
 
-React `<Graph>` collects arbitrary Core and Tier 2 children in author order. Entity children write direct `text`; Relation `<Step>` children write direct `route`. `<Entity>` and `<Relation>` may also appear directly in Layout, Scope, or any other Core-child position
+React `<Graph>` and `<Block>` collect arbitrary Core and Tier 2 children in author order. `<BlockHeader>`, `<BlockSection>`, and `<BlockRow>` are independent embeds, while `<BlockCell>` only assembles Flex items inside Row. Entity children write direct `text`, and Relation `<Step>` children write direct `route`
 
 Standalone and embedded Graph share the same Source contract:
 
@@ -141,11 +157,11 @@ Standalone and embedded Graph share the same Source contract:
 
 Standalone `width`, `height`, `viewBox`, renderer, runtime, and DOM props belong to the Layout Scene host; move them to the outer Layout when Graph is embedded. `transforms`, `placement`, `zIndex`, and `clip` belong directly to `IRGraph`; there is no extra panel envelope
 
-Vanilla `normalizeGraph()`, `normalizeGroup()`, `normalizeEntity()`, and `normalizeRelation()` perform factory validation, child normalization, and optional `way → route` sugar only. They neither split envelopes nor materialize defaults. `createGraphVanillaAdapters()` installs all four adapters
+Vanilla `normalizeBlockHeader()`, `normalizeBlockSection()`, and `normalizeBlockRow()` behave like the other Graph-family normalizers and only assemble Source. `createGraphVanillaAdapters()` installs every independent adapter
 
-The first argument of `graph(traversalId, input)`, `group(traversalId, input)`, `entity(traversalId, input)`, and `relation(traversalId, input)` is only a Vanilla authoring traversal id. It is not Source `id` and never writes or generates Graph, Group, Entity, or Relation identity
+The first `traversalId` argument of every Graph-family builder only locates Vanilla authoring. It is not Source `id` and never writes or generates semantic identity
 
-Definition options can be passed directly to all four React components or Vanilla adapters. Persisted IR uses the same definitions through either assembly entry:
+Definition options can be passed directly to each React composite or Vanilla adapter. Persisted IR uses the same definitions through either assembly entry:
 
 ```ts
 const scene = compileToScene(sourceIR, {

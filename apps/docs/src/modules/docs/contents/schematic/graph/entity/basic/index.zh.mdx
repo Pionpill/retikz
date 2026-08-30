@@ -106,6 +106,16 @@ Entity 的整体外观统一由 Theme 管理。下面每个 demo 都允许精确
 
 <ComponentPreview files="entity-concept" size="sm" caption="调整 concept 的默认描边、Graph Theme 主色和文本。" />
 
+### 样式调整
+
+下面的综合示例可以切换全部七个内置 role，并直接调整 Core Node-compatible 的填充、描边、透明度与文本样式。role 只改变 Entity 的语义和基础 shape recipe；这些显式样式字段会覆盖对应的 Theme 默认
+
+<ComponentPreview
+  files="entity-style"
+  size="sm"
+  caption="切换 role，并分别调整填充色、描边色、描边宽度、虚线、透明度和文本色。"
+/>
+
 ## 技术原理
 
 <ComponentAlert

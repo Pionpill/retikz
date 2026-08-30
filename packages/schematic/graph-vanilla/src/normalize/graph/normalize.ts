@@ -1,11 +1,30 @@
-import type { IRGraph, IRGroup } from '@retikz/graph';
+import type { IRBlock, IRBlockHeader, IRBlockRow, IRBlockSection, IRGraph, IRGroup } from '@retikz/graph';
 
-import { createEntity, createGraph, createGroup, createRelation } from '@retikz/graph';
+import {
+  createBlock,
+  createBlockHeader,
+  createBlockRow,
+  createBlockSection,
+  createEntity,
+  createGraph,
+  createGroup,
+  createRelation,
+} from '@retikz/graph';
 import { normalizePath } from '@retikz/vanilla';
 
-import type { InputEntity, InputGraph, InputGraphChild, InputGroup, InputGroupChild, InputRelation } from './types';
+import type {
+  InputBlock,
+  InputBlockHeader,
+  InputBlockRow,
+  InputBlockSection,
+  InputEntity,
+  InputGraph,
+  InputGraphChild,
+  InputGroup,
+  InputRelation,
+} from './types';
 
-/** 将 Entity authoring 输入校验为单个 Source record */
+/** 将 Entity authoring 输入组装为单个 Source record */
 export const normalizeEntity = (input: InputEntity) => {
   const { type, ...entity } = input;
   void type;
@@ -23,32 +42,90 @@ export const normalizeRelation = (input: InputRelation) => {
   });
 };
 
-/** 将 Graph root 的混合 authoring child 归一为 Source child */
-const normalizeGraphChild = (child: InputGraphChild) => {
-  if (!('namespace' in child)) {
-    if (child.type === 'entity') return normalizeEntity(child);
-    if (child.type === 'relation') return normalizeRelation(child);
+/** 将 Graph-family semantic child 或普通 Vanilla child 组装为 Source child */
+export const normalizeGraphChild = (child: InputGraphChild) => {
+  if ('namespace' in child) return child;
+  switch (child.type) {
+    case 'graph':
+      return normalizeGraph(child);
+    case 'group':
+      return normalizeGroup(child);
+    case 'block':
+      return normalizeBlock(child);
+    case 'blockHeader':
+      return normalizeBlockHeader(child);
+    case 'blockSection':
+      return normalizeBlockSection(child);
+    case 'blockRow':
+      return normalizeBlockRow(child);
+    case 'entity':
+      return normalizeEntity(child);
+    case 'relation':
+      return normalizeRelation(child);
+    default:
+      return child;
   }
-  return child;
 };
 
-/** 将 collocated Graph authoring 输入归一化为最小单 record Source root */
-export const normalizeGraph = (input: InputGraph): IRGraph => {
-  const { children, ...graph } = input;
-  return createGraph({
-    ...graph,
+/** 将 Block Header authoring 输入组装为独立 Source composite */
+export const normalizeBlockHeader = (input: InputBlockHeader): IRBlockHeader => {
+  const { type: _type, icon, trailing, ...header } = input;
+  void _type;
+  return createBlockHeader({
+    ...header,
+    ...(icon === undefined ? {} : { icon: normalizeGraphChild(icon) }),
+    ...(trailing === undefined ? {} : { trailing: normalizeGraphChild(trailing) }),
+  });
+};
+
+/** 将 Block Section authoring 输入组装为独立 Source composite */
+export const normalizeBlockSection = (input: InputBlockSection): IRBlockSection => {
+  const { type: _type, children, ...section } = input;
+  void _type;
+  return createBlockSection({
+    ...section,
     ...(children === undefined ? {} : { children: children.map(normalizeGraphChild) }),
   });
 };
 
-/** 将 Group 的混合 authoring child 归一为 Source child */
-const normalizeGroupChild = (child: InputGroupChild) => normalizeGraphChild(child);
+/** 将 Block Row authoring 输入组装为独立 Source composite */
+export const normalizeBlockRow = (input: InputBlockRow): IRBlockRow => {
+  const { type: _type, children, ...row } = input;
+  void _type;
+  return createBlockRow({
+    ...row,
+    ...(children === undefined
+      ? {}
+      : { children: children.map(cell => ({ ...cell, child: normalizeGraphChild(cell.child) })) }),
+  });
+};
 
-/** 将 Group authoring 输入归一化为单个 Source composite */
+/** 将 Block 开放内容 authoring 输入组装为单个 Source composite */
+export const normalizeBlock = (input: InputBlock): IRBlock => {
+  const { type: _type, children, ...block } = input;
+  void _type;
+  return createBlock({
+    ...block,
+    ...(children === undefined ? {} : { children: children.map(normalizeGraphChild) }),
+  });
+};
+
+/** 将 Group authoring 输入组装为单个 Source composite */
 export const normalizeGroup = (input: InputGroup): IRGroup => {
-  const { children, ...group } = input;
+  const { type: _type, children, ...group } = input;
+  void _type;
   return createGroup({
     ...group,
-    ...(children === undefined ? {} : { children: children.map(normalizeGroupChild) }),
+    ...(children === undefined ? {} : { children: children.map(normalizeGraphChild) }),
+  });
+};
+
+/** 将 collocated Graph authoring 输入组装为最小单 record Source root */
+export const normalizeGraph = (input: InputGraph): IRGraph => {
+  const { type: _type, children, ...graph } = input;
+  void _type;
+  return createGraph({
+    ...graph,
+    ...(children === undefined ? {} : { children: children.map(normalizeGraphChild) }),
   });
 };
