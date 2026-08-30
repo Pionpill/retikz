@@ -58,6 +58,15 @@ describe('document difficulty visibility', () => {
 });
 
 describe('filterSectionsByDifficulty', () => {
+  it('keeps a documented section navigable when it has no child pages', () => {
+    const filtered = filterSectionsByDifficulty(
+      [{ id: 'diagram', label, document: true, pages: [] }],
+      DocDifficulty.Beginner,
+    );
+
+    expect(flattenLeaves('schematic', filtered).map(node => node.path)).toEqual(['/schematic/diagram']);
+  });
+
   it('filters leaves recursively and removes groups with no visible leaves', () => {
     const filtered = filterSectionsByDifficulty(sections, DocDifficulty.Beginner);
 
@@ -137,6 +146,6 @@ describe('current documentation difficulty assignments', () => {
     const filtered = filterSectionsByDifficulty(moduleSections, DocDifficulty.Beginner);
 
     expect(flattenLeaves(moduleId, filtered).length).toBeLessThan(flattenLeaves(moduleId, moduleSections).length);
-    expect(filtered.every(section => section.pages.length > 0)).toBe(true);
+    expect(filtered.every(section => section.document || section.pages.length > 0)).toBe(true);
   });
 });

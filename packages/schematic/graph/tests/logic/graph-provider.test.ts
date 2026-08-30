@@ -4,13 +4,24 @@ import { describe, expect, it } from 'vitest';
 import * as Graph from '../../src';
 
 describe('Graph provider closure', () => {
-  it('installs the complete Graph family and Group composition dependencies', () => {
+  it('installs the complete Graph family with Group and Block composition dependencies', () => {
     const resolved = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });
 
     expect(resolved.composites?.map(definition => `${definition.namespace}.${definition.type}`).sort()).toEqual(
-      ['graph.entity', 'graph.graph', 'graph.group', 'graph.relation', 'layout.flexLayout', 'standard.surface'].sort(),
+      [
+        'graph.block',
+        'graph.blockHeader',
+        'graph.blockRow',
+        'graph.blockSection',
+        'graph.entity',
+        'graph.graph',
+        'graph.group',
+        'graph.relation',
+        'layout.flexLayout',
+        'standard.surface',
+      ].sort(),
     );
     expect(resolved.shapes?.map(definition => definition.name).sort()).toEqual(['ellipticCapsule', 'hexagon']);
     expect(resolved.arrows?.map(definition => definition.name).sort()).toEqual(

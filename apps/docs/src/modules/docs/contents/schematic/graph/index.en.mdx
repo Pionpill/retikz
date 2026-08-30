@@ -1,11 +1,11 @@
 ---
 title: Graph
-description: Compose an optional Graph Scope, visible Groups, Entity, Relation, and arbitrary Core content.
+description: Compose an optional Graph Scope, Block, Group, Entity, Relation, and arbitrary Core content.
 ---
 
 Graph is an optional context shell. It reuses the complete Core `Scope` surface and adds local `graphTheme` rules for visible Entity and Relation descendants. Automatic layout, routing algorithms, and rendering remain outside Graph.
 
-Group, Entity, and Relation are independent Tier 2 composites that can appear directly in Layout, Scope, or any other Core-child position. Graph maintains neither a member collection nor an identity index; Core namespace owns references and duplicate-id diagnostics.
+Block, Group, Entity, and Relation are independent Tier 2 composites that can appear directly in Layout, Scope, or any other Core-child position. Block models code and engineering objects through a fixed Header, Section, Row, and Cell structure. Graph maintains neither a member collection nor an identity index; Core namespace owns references and duplicate-id diagnostics.
 
 ## Two host modes
 
@@ -38,6 +38,7 @@ Fields such as `theme`, `nodeDefault`, `pathDefault`, `labelDefault`, `arrowDefa
 | Member     | Responsibility                                                        | Does not own                                 |
 | ---------- | --------------------------------------------------------------------- | -------------------------------------------- |
 | Graph      | Core Scope surface and local Graph Theme                              | Member indexes, layout, or routing           |
+| Block      | Structured objects, local Flex layout, and addressable Section / Row  | Port models, execution, or automatic routing |
 | Group      | Visible arbitrary-content boundary, caption, and boundary labels      | Automatic layout, routing, or avoidance      |
 | Entity     | Node semantics and independent lowering to one Core Node              | Generated ids or arbitrary drawing children  |
 | Relation   | Core NodeTarget endpoints, relation semantics, and Core Path lowering | Graph membership checks or automatic routing |
@@ -46,6 +47,12 @@ Fields such as `theme`, `nodeDefault`, `pathDefault`, `labelDefault`, `arrowDefa
 ## Chapters
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/schematic/graph/block">
+    <span className="font-semibold">Block</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Structured code and engineering objects with local connection targets
+    </span>
+  </LinkedCard>
   <LinkedCard href="/schematic/graph/group">
     <span className="font-semibold">Group</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
@@ -67,7 +74,7 @@ Fields such as `theme`, `nodeDefault`, `pathDefault`, `labelDefault`, `arrowDefa
   <LinkedCard href="/schematic/graph/api-reference">
     <span className="font-semibold">Graph API Reference</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Source schemas, Scope surface, and four adapters
+      Source schemas, Scope surface, and Graph-family adapters
     </span>
   </LinkedCard>
 </div>

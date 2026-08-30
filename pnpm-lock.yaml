@@ -1119,9 +1119,24 @@ importers:
 
   packages/schematic/diagram:
     dependencies:
+      '@retikz/core':
+        specifier: workspace:^
+        version: link:../../kernel/core
+      '@retikz/foundation':
+        specifier: workspace:^
+        version: link:../../kernel/foundation
       '@retikz/graph':
         specifier: workspace:^
         version: link:../graph
+      '@retikz/layout':
+        specifier: workspace:^
+        version: link:../../library/layout
+      '@retikz/standard':
+        specifier: workspace:^
+        version: link:../../library/standard
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

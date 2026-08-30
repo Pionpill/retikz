@@ -1,0 +1,29 @@
+---
+title: Diagram
+description: 用共享的图示框架和具体绘图核心，把关系数据组织成可整体排版、渲染与导出的完整图示。
+---
+
+Diagram 面向需要作为一个整体交付的图示。它不重新定义节点、关系或基础图元，而是在具体绘图核心之外提供统一的说明区域、外框和输出边界。
+
+Graph 描述图中的对象与关系，具体 Diagram 类型决定如何测量、排布和连接这些对象；两者之间的通用装配由 Diagram Framework 负责。
+
+## 职责一览
+
+| 层次              | 负责什么                                     | 不负责什么                         |
+| ----------------- | -------------------------------------------- | ---------------------------------- |
+| Graph             | Block、Group、Entity、Relation 及关系语义    | 完整图示装配、自动布局和 routing   |
+| Diagram Framework | Presentation、Frame、Appearance 与输出边界   | 解释或改写具体绘图核心             |
+| 具体 Diagram      | 领域绘图核心、测量、布局、routing 与结果模型 | 复制 Core、Layout 或 Standard 能力 |
+
+首个具体类型将是 `FlowDiagram`。在它开放之前，Graph 继续负责可直接绘制的关系内容，Diagram Framework 只作为包内 Foundation 存在。
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/schematic/diagram/framework">
+    <span className="font-semibold">图示框架</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      alpha.1 建立的说明区域、外框、间距、主题与统一输出边界
+    </span>
+  </LinkedCard>
+</div>

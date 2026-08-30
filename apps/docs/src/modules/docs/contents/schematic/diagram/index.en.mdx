@@ -1,0 +1,29 @@
+---
+title: Diagram
+description: Combine a shared Diagram Framework with a concrete drawing core to produce complete figures that are laid out, rendered, and exported as one unit.
+---
+
+Diagram serves figures that need to be delivered as a complete unit. It does not redefine nodes, relations, or drawing primitives. Instead, it provides shared supporting regions, framing, and an output boundary outside a concrete drawing core.
+
+Graph describes the objects and relations inside a graph. A concrete Diagram type decides how to measure, arrange, and connect them, while Diagram Framework owns the shared assembly between those layers.
+
+## Responsibilities
+
+| Layer             | Owns                                                                | Does not own                                     |
+| ----------------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| Graph             | Block, Group, Entity, Relation, and relation semantics              | Complete assembly, automatic layout, or routing  |
+| Diagram Framework | Presentation, Frame, Appearance, and output boundary                | Interpretation or rewriting of a drawing core    |
+| Concrete Diagram  | Domain drawing core, measurement, layout, routing, and result model | Copies of Core, Layout, or Standard capabilities |
+
+The first concrete type will be `FlowDiagram`. Until it opens, Graph continues to own directly authored relation content, while Diagram Framework remains a package-internal Foundation.
+
+## Chapters
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/schematic/diagram/framework">
+    <span className="font-semibold">Diagram Framework</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Supporting regions, framing, spacing, themes, and the unified output boundary established in alpha.1
+    </span>
+  </LinkedCard>
+</div>
