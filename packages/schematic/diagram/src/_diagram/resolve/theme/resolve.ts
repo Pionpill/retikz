@@ -6,7 +6,7 @@ import type { DiagramThemeStyleDefinition } from '../../contract';
 import type { IRDiagramTheme } from '../../schemas';
 import type { EffectiveDiagramTextAppearance, EffectiveDiagramTheme, EffectiveDiagramThemeFrame } from './types';
 
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../errors';
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import { getDefaultDiagramTheme } from '../../providers';
 import { DiagramThemeSchema } from '../../schemas';
 

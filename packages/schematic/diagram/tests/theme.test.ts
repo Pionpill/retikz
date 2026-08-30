@@ -3,18 +3,17 @@ import type { ResolvedTheme } from '@retikz/core';
 import { DEFAULT_RESOLVED_THEME, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { DiagramThemeStyleDefinition } from '../src/contract';
-import type { IRDiagramTheme } from '../src/schemas';
+import type { DiagramThemeStyleDefinition, IRDiagramTheme } from '../src/_diagram';
 
-import { defineDiagramThemeStyle } from '../src/contract';
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../src/errors';
 import {
+  defineDiagramThemeStyle,
+  DiagramThemeSchema,
   getDefaultDiagramTheme,
   resolveDiagramDefinitionOptions,
+  resolveDiagramTheme,
   resolveDiagramThemeStyleRegistry,
-} from '../src/providers';
-import { resolveDiagramTheme } from '../src/resolve';
-import { DiagramThemeSchema } from '../src/schemas';
+} from '../src/_diagram';
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../src/errors';
 
 const themeWith = (overrides: Partial<ResolvedTheme>): ResolvedTheme => ({
   ...DEFAULT_RESOLVED_THEME,

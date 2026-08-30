@@ -6,12 +6,16 @@ import { FlexLayoutArtifactSchema, FlexLayoutDirection, FlexLayoutSchema, Layout
 import { LegendArtifactSchema, LegendSchema } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 
-import { defineDiagramThemeStyle } from '../src/contract';
+import {
+  defineDiagramThemeStyle,
+  DiagramFrameSchema,
+  DiagramPresentationSchema,
+  DiagramThemeSchema,
+  lowerDiagramFoundation,
+  resolveDiagramFoundation,
+  resolveDiagramThemeStyleRegistry,
+} from '../src/_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../src/errors';
-import { lowerDiagramFoundation } from '../src/pipeline';
-import { resolveDiagramThemeStyleRegistry } from '../src/providers';
-import { resolveDiagramFoundation } from '../src/resolve';
-import { DiagramFrameSchema, DiagramPresentationSchema, DiagramThemeSchema } from '../src/schemas';
 import { compileTestDiagramFoundation } from './test-utils';
 
 const drawing: IRChild = {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { DiagramFrameSchema, DiagramThemeSchema } from '../../src/schemas';
+import { DiagramFrameSchema, DiagramThemeSchema } from '../../src/_diagram';
 
 describe('Diagram Frame schema', () => {
   it('parses the complete fixed arrangement and preserves Surface input fields', () => {

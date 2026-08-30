@@ -3,7 +3,7 @@ import { LayoutAlignment, LayoutOverflow } from '@retikz/layout';
 
 import type { DiagramFoundationResolution, DiagramFoundationResolveContext, DiagramFoundationSource } from './types';
 
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../errors';
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import { resolveDiagramTheme } from '../theme';
 
 /** 解析 drawing-core-agnostic 的 Diagram Foundation */

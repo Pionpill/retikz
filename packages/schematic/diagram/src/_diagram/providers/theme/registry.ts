@@ -2,7 +2,7 @@ import { assertNonEmptyString } from '@retikz/foundation';
 
 import type { DiagramThemeStyleDefinition } from '../../contract';
 
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../errors';
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 
 /** 组装 Diagram Theme style registry */
 export const resolveDiagramThemeStyleRegistry = (

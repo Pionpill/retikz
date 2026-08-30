@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { DiagramPresentationSchema } from '../../src/schemas';
+import { DiagramPresentationSchema } from '../../src/_diagram';
 
 const minimalLegend = {
   namespace: 'standard',

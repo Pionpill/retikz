@@ -20,13 +20,16 @@ import { LegendProvider, SurfaceProvider } from '@retikz/standard';
 import { PathClipProvider } from '@retikz/standard/clip';
 import { literal } from 'zod';
 
-import type { DiagramDefinitionOptions } from '../src/contract';
-import type { ResolvedDiagramDefinitionOptions } from '../src/providers';
+import type { DiagramDefinitionOptions, ResolvedDiagramDefinitionOptions } from '../src/_diagram';
 
-import { lowerDiagramFoundation } from '../src/pipeline';
-import { resolveDiagramDefinitionOptions } from '../src/providers';
-import { resolveDiagramFoundation } from '../src/resolve';
-import { DiagramFrameSchema, DiagramPresentationSchema, DiagramThemeSchema } from '../src/schemas';
+import {
+  DiagramFrameSchema,
+  DiagramPresentationSchema,
+  DiagramThemeSchema,
+  lowerDiagramFoundation,
+  resolveDiagramDefinitionOptions,
+  resolveDiagramFoundation,
+} from '../src/_diagram';
 
 const TestDiagramFoundationSchema = CompositeBaseSchema.extend({
   namespace: literal('diagram-test'),
