@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { HighlightCode } from './HighlightCode';
 
 export type CodeBlockProps = {
-  /** Prism 语言名（来自围栏 `language-*`），未知值 prism 会回落为不高亮 */
+  /** Shiki 语言名（来自围栏 `language-*`），未知值回落为纯文本 */
   lang: string;
   /** 代码原文 */
   code: string;
