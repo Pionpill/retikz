@@ -651,7 +651,7 @@ test('Foundation belongs to the kernel release group with its Zod-only publish c
   const foundationRecord = packageRecords.find(({ manifest }) => manifest.name === '@retikz/foundation');
 
   assert.ok(foundationRecord, 'Foundation package manifest must be discoverable');
-  assert.equal(foundationRecord.manifest.version, '0.5.0-alpha.3');
+  assert.equal(foundationRecord.manifest.version, '0.5.0-alpha.4');
   assert.equal(foundationRecord.manifest.retikz?.releaseGroup, 'kernel');
   assert.equal(foundationRecord.manifest.sideEffects, false);
   assert.deepEqual(Object.keys(foundationRecord.manifest.exports), ['.']);

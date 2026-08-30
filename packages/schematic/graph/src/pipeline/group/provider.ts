@@ -7,6 +7,7 @@ import type { GraphDefinitionOptions } from '../../contract';
 
 import { createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
+import { BlockProviderKey } from '../block';
 import { EntityProviderKey } from '../entity';
 import { RelationProviderKey } from '../relation';
 import { createGroupDefinitionFromOptions } from './definition';
@@ -25,7 +26,13 @@ const makeGroupDefinition: CoreDependencyProvider['makeDefinition'] = datasets =
 export const createGroupProvider = (options: GraphDefinitionOptions = {}): CoreDependencyProvider =>
   Object.freeze({
     key: GroupProviderKey,
-    dependencies: Object.freeze([EntityProviderKey, RelationProviderKey, FlexLayoutProvider.key, SurfaceProvider.key]),
+    dependencies: Object.freeze([
+      BlockProviderKey,
+      EntityProviderKey,
+      RelationProviderKey,
+      FlexLayoutProvider.key,
+      SurfaceProvider.key,
+    ]),
     datasets: createGraphRuntimeDatasets(options),
     makeDefinition: makeGroupDefinition,
   });

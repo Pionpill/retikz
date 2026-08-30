@@ -15,7 +15,7 @@ describe('@retikz/graph package boundary', () => {
   it('declares the Graph release metadata and one root export', () => {
     expect(manifest).toMatchObject({
       name: '@retikz/graph',
-      version: '0.1.0-alpha.1',
+      version: '0.1.0-alpha.2',
       retikz: { domain: 'schematic', releaseGroup: 'graph' },
     });
     expect(Object.keys(manifest.exports)).toEqual(['.']);
@@ -42,20 +42,57 @@ describe('@retikz/graph package boundary', () => {
       namespace: 'graph',
       type: 'relation',
     });
+    expect(graphExports.BlockDefinition).toBeDefined();
+    expect(graphExports.BlockProviderKey).toEqual({
+      capability: 'composite',
+      namespace: 'graph',
+      type: 'block',
+    });
+    expect(graphExports.BlockHeaderDefinition).toBeDefined();
+    expect(graphExports.BlockHeaderProviderKey).toEqual({
+      capability: 'composite',
+      namespace: 'graph',
+      type: 'blockHeader',
+    });
+    expect(graphExports.BlockSectionDefinition).toBeDefined();
+    expect(graphExports.BlockSectionProviderKey).toEqual({
+      capability: 'composite',
+      namespace: 'graph',
+      type: 'blockSection',
+    });
+    expect(graphExports.BlockRowDefinition).toBeDefined();
+    expect(graphExports.BlockRowProviderKey).toEqual({
+      capability: 'composite',
+      namespace: 'graph',
+      type: 'blockRow',
+    });
     expect(graphExports.GraphSchema).toBeDefined();
     expect(graphExports.EntitySchema).toBeDefined();
     expect(graphExports.RelationSchema).toBeDefined();
+    expect(graphExports.BlockSchema).toBeDefined();
+    expect(graphExports.BlockHeaderSchema).toBeDefined();
+    expect(graphExports.BlockSectionSchema).toBeDefined();
+    expect(graphExports.BlockRowSchema).toBeDefined();
+    expect(graphExports.BlockCellSchema).toBeDefined();
     expect(graphExports).not.toHaveProperty('GraphChildSchema');
     expect(graphExports).not.toHaveProperty('GraphContentChildSchema');
     expect(graphExports).not.toHaveProperty('RelationEndpointSchema');
     expect(graphExports.createEntity).toBeTypeOf('function');
     expect(graphExports.createRelation).toBeTypeOf('function');
     expect(graphExports.createGraph).toBeTypeOf('function');
+    expect(graphExports.createBlock).toBeTypeOf('function');
+    expect(graphExports.createBlockHeader).toBeTypeOf('function');
+    expect(graphExports.createBlockSection).toBeTypeOf('function');
+    expect(graphExports.createBlockRow).toBeTypeOf('function');
     expect(graphExports.createGraphDefinitions).toBeTypeOf('function');
     expect(graphExports.createGraphProviders).toBeTypeOf('function');
   });
 
   it('does not expose split member wrappers or private continuation artifacts', () => {
+    expect(graphExports).not.toHaveProperty('BlockCellDefinition');
+    expect(graphExports).not.toHaveProperty('BlockCellProviderKey');
+    expect(graphExports).not.toHaveProperty('BlockRegionSchema');
+    expect(graphExports).not.toHaveProperty('InternalBlockRegionProvider');
     expect(graphExports).not.toHaveProperty('GraphContinuationSchema');
     expect(graphExports).not.toHaveProperty('GraphContinuationProvider');
     expect(graphExports).not.toHaveProperty('GraphPresentationSchema');

@@ -3,7 +3,7 @@ import type { IRScatterChart } from '@retikz/chart/point/scatter';
 import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import type { InputGraphChild, InputGroupChild } from '@retikz/graph-vanilla';
+import type { InputBlockChild, InputGraphChild, InputGroupChild } from '@retikz/graph-vanilla';
 import type { IRPlot } from '@retikz/plot';
 import type { IRTable } from '@retikz/table';
 import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
@@ -13,6 +13,14 @@ import { renderChart } from '@retikz/chart-vanilla';
 import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { fallbackMeasurer } from '@retikz/core';
 import {
+  BlockDefinition,
+  BlockHeaderDefinition,
+  BlockHeaderSchema,
+  BlockRowDefinition,
+  BlockRowSchema,
+  BlockSchema,
+  BlockSectionDefinition,
+  BlockSectionSchema,
   EntityDefinition,
   EntitySchema,
   GraphDefinition,
@@ -23,6 +31,14 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import {
+  block,
+  blockHeader,
+  BlockHeaderInputEmbedAdapter,
+  BlockInputEmbedAdapter,
+  blockRow,
+  BlockRowInputEmbedAdapter,
+  blockSection,
+  BlockSectionInputEmbedAdapter,
   entity,
   EntityInputEmbedAdapter,
   graph,
@@ -173,7 +189,7 @@ type LayoutKind = 'flexLayout' | 'gridLayout' | 'overlayLayout';
 
 type LibraryKind = StandardKind | LayoutKind;
 
-type GraphKind = 'graph' | 'group' | 'entity' | 'relation';
+type GraphKind = 'graph' | 'group' | 'block' | 'blockHeader' | 'blockSection' | 'blockRow' | 'entity' | 'relation';
 
 type LibraryConversionState = {
   counts: Record<LibraryKind, number>;
@@ -240,10 +256,20 @@ const registerPreviewIds = (children: ReadonlyArray<IRChild>, libraryState: Libr
           libraryState.adapters.delete(kind);
         }
       }
-      if (child.namespace === 'graph' && (child.type === 'graph' || child.type === 'group')) {
-        const nestedChildren =
-          child.type === 'graph' ? GraphSchema.parse(child).children : GroupSchema.parse(child).children;
+      if (
+        child.namespace === 'graph' &&
+        (child.type === 'graph' || child.type === 'group' || child.type === 'block' || child.type === 'blockSection')
+      ) {
+        const nestedChildren = (child as { children?: ReadonlyArray<IRChild> }).children;
         nestedChildren?.forEach(visit);
+      }
+      if (child.namespace === 'graph' && child.type === 'blockHeader') {
+        const header = BlockHeaderSchema.parse(child);
+        if (header.icon !== undefined) visit(header.icon);
+        if (header.trailing !== undefined) visit(header.trailing);
+      }
+      if (child.namespace === 'graph' && child.type === 'blockRow') {
+        BlockRowSchema.parse(child).children?.forEach(cell => visit(cell.child));
       }
       return;
     }
@@ -406,6 +432,65 @@ const convertGraphChild = (
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
     }
+    case 'block': {
+      const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = BlockSchema.parse(child);
+      void _namespace;
+      void _type;
+      const children: ReadonlyArray<InputBlockChild> | undefined = sourceChildren?.map(nested =>
+        convertPreviewChild(nested, libraryState, state),
+      );
+      return block(nextGraphId('block', state), {
+        ...input,
+        ...(children === undefined ? {} : { children }),
+        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+      });
+    }
+    case 'blockHeader': {
+      const { namespace: _namespace, type: _type, icon, trailing, ...input } = BlockHeaderSchema.parse(child);
+      void _namespace;
+      void _type;
+      return blockHeader(nextGraphId('blockHeader', state), {
+        ...input,
+        ...(icon === undefined ? {} : { icon: convertPreviewChild(icon, libraryState, state) }),
+        ...(trailing === undefined ? {} : { trailing: convertPreviewChild(trailing, libraryState, state) }),
+        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+      });
+    }
+    case 'blockSection': {
+      const {
+        namespace: _namespace,
+        type: _type,
+        children: sourceChildren,
+        ...input
+      } = BlockSectionSchema.parse(child);
+      void _namespace;
+      void _type;
+      const children: ReadonlyArray<InputGraphChild> | undefined = sourceChildren?.map(nested =>
+        convertPreviewChild(nested, libraryState, state),
+      );
+      return blockSection(nextGraphId('blockSection', state), {
+        ...input,
+        ...(children === undefined ? {} : { children }),
+        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+      });
+    }
+    case 'blockRow': {
+      const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = BlockRowSchema.parse(child);
+      void _namespace;
+      void _type;
+      return blockRow(nextGraphId('blockRow', state), {
+        ...input,
+        ...(sourceChildren === undefined
+          ? {}
+          : {
+              children: sourceChildren.map(cell => ({
+                ...cell,
+                child: convertPreviewChild(cell.child, libraryState, state),
+              })),
+            }),
+        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+      });
+    }
     case 'entity':
       return entity(nextGraphId('entity', state), {
         ...entityPreviewAuthoringInput(EntitySchema.parse(child)),
@@ -458,6 +543,10 @@ const layoutAdapters = (state: LibraryConversionState): ReadonlyArray<AnyInputEm
 const graphAdapters = (state: GraphConversionState): ReadonlyArray<AnyInputEmbedAdapter> => [
   ...(state.adapters.has('graph') ? [GraphInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('group') ? [GroupInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('block') ? [BlockInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('blockHeader') ? [BlockHeaderInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('blockSection') ? [BlockSectionInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('blockRow') ? [BlockRowInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('entity') ? [EntityInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('relation') ? [RelationInputEmbedAdapter as AnyInputEmbedAdapter] : []),
 ];
@@ -479,6 +568,10 @@ const layoutDefinitionByName = {
 const graphDefinitionByName = {
   GraphDefinition,
   GroupDefinition,
+  BlockDefinition,
+  BlockHeaderDefinition,
+  BlockSectionDefinition,
+  BlockRowDefinition,
   EntityDefinition,
   RelationDefinition,
 } as const;
@@ -503,6 +596,10 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
     counts: {
       graph: 0,
       group: 0,
+      block: 0,
+      blockHeader: 0,
+      blockSection: 0,
+      blockRow: 0,
       entity: 0,
       relation: 0,
     },

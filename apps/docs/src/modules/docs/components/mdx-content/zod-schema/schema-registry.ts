@@ -525,6 +525,26 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'Group',
     url: '/schematic/graph/group',
   },
+  BlockSchema: {
+    schema: GraphIR.BlockSchema,
+    label: 'Block',
+    url: '/schematic/graph/block/basic',
+  },
+  BlockHeaderSchema: {
+    schema: GraphIR.BlockHeaderSchema,
+    label: 'BlockHeader',
+    url: '/schematic/graph/block/basic',
+  },
+  BlockSectionSchema: {
+    schema: GraphIR.BlockSectionSchema,
+    label: 'BlockSection',
+    url: '/schematic/graph/block/basic',
+  },
+  BlockRowSchema: {
+    schema: GraphIR.BlockRowSchema,
+    label: 'BlockRow',
+    url: '/schematic/graph/block/basic',
+  },
   EntitySchema: {
     schema: GraphIR.EntitySchema,
     label: 'Entity',

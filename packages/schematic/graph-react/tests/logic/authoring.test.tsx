@@ -18,6 +18,11 @@ import { describe, expect, it } from 'vitest';
 import type { GraphProps } from '../../src';
 
 import {
+  Block,
+  BlockCell,
+  BlockHeader,
+  BlockRow,
+  BlockSection,
   Entity,
   Graph,
   GraphThemeProvider,
@@ -55,6 +60,168 @@ describe('Group React authoring', () => {
         { namespace: 'graph', type: 'entity', role: 'participant', position: [80, 0], text: 'Adapter' },
       ],
     });
+  });
+});
+
+describe('Block React authoring', () => {
+  it('normalizes arbitrary Block children in authored order through fragments and function wrappers', () => {
+    const WrappedContent: FC = () =>
+      createElement(
+        Fragment,
+        null,
+        createElement(BlockHeader, {
+          icon: createElement(Node, { position: [0, 0], children: 'U' }),
+          title: { text: 'User' },
+          description: { text: 'Domain entity' },
+          trailing: createElement(Decoration, { id: 'visibility' }),
+        }),
+        createElement(Node, { position: [0, 40], children: 'Custom content' }),
+      );
+
+    const result = normalizeReact(
+      createElement(
+        Block,
+        { id: 'user', width: 240, minWidth: 160 },
+        createElement(WrappedContent),
+        createElement(Group, null, createElement(Node, { position: [0, 80], children: 'Nested group' })),
+      ),
+    );
+
+    expect(result.ir.children[0]).toEqual({
+      namespace: 'graph',
+      type: 'block',
+      id: 'user',
+      width: 240,
+      minWidth: 160,
+      children: [
+        {
+          namespace: 'graph',
+          type: 'blockHeader',
+          icon: { type: 'node', position: [0, 0], text: 'U' },
+          title: { text: 'User' },
+          description: { text: 'Domain entity' },
+          trailing: { namespace: 'fixture', type: 'decoration', id: 'visibility' },
+        },
+        { type: 'node', position: [0, 40], text: 'Custom content' },
+        {
+          namespace: 'graph',
+          type: 'group',
+          children: [{ type: 'node', position: [0, 80], text: 'Nested group' }],
+        },
+      ],
+    });
+  });
+
+  it('exposes Header, Section and Row as independent composites with nested adapter collection', () => {
+    const WrappedCell: FC = () =>
+      createElement(
+        BlockCell,
+        { itemKey: 'type', grow: 1 },
+        createElement(Entity, { role: 'concept', position: [0, 0] }),
+      );
+    const result = normalizeReact(
+      createElement(
+        Fragment,
+        null,
+        createElement(BlockHeader, {
+          icon: createElement(Decoration, { id: 'icon' }),
+          title: { text: 'Standalone header' },
+        }),
+        createElement(
+          BlockSection,
+          { id: 'fields', title: { text: 'Fields' } },
+          createElement(Node, { position: [0, 0], children: 'Arbitrary section content' }),
+        ),
+        createElement(
+          BlockRow,
+          { id: 'name' },
+          createElement(BlockCell, { itemKey: 'name' }, createElement(Node, { position: [0, 0], children: 'name' })),
+          createElement(WrappedCell),
+        ),
+      ),
+    );
+
+    expect(result.ir.children).toEqual([
+      {
+        namespace: 'graph',
+        type: 'blockHeader',
+        icon: { namespace: 'fixture', type: 'decoration', id: 'icon' },
+        title: { text: 'Standalone header' },
+      },
+      {
+        namespace: 'graph',
+        type: 'blockSection',
+        id: 'fields',
+        title: { text: 'Fields' },
+        children: [{ type: 'node', position: [0, 0], text: 'Arbitrary section content' }],
+      },
+      {
+        namespace: 'graph',
+        type: 'blockRow',
+        id: 'name',
+        children: [
+          {
+            key: 'name',
+            child: { type: 'node', position: [0, 0], text: 'name' },
+            margin: 0,
+            basis: 'content',
+            grow: 0,
+            shrink: 1,
+          },
+          {
+            key: 'type',
+            child: { namespace: 'graph', type: 'entity', role: 'concept', position: [0, 0] },
+            margin: 0,
+            basis: 'content',
+            grow: 1,
+            shrink: 1,
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('omits optional Header slots when React children normalize to zero items', () => {
+    for (const empty of [null, false, createElement(Fragment)] as const) {
+      const result = normalizeReact(
+        createElement(BlockHeader, { title: { text: 'Empty slots' }, icon: empty, trailing: empty }),
+      );
+
+      expect(result.ir.children[0]).toEqual({
+        namespace: 'graph',
+        type: 'blockHeader',
+        title: { text: 'Empty slots' },
+      });
+    }
+  });
+
+  it('fails loudly when a Cell is outside Row or does not contain exactly one child', () => {
+    expect(() =>
+      normalizeReact(
+        createElement(Block, null, createElement(BlockCell, { itemKey: 'misplaced' }, createElement(Node))),
+      ),
+    ).toThrowError(expect.objectContaining({ code: RetikzGraphReactErrorCode.BlockStructureInvalid }));
+    expect(() =>
+      normalizeReact(createElement(BlockRow, null, createElement(BlockCell, { itemKey: 'empty' }))),
+    ).toThrowError(expect.objectContaining({ code: RetikzGraphReactErrorCode.BlockStructureInvalid }));
+    expect(() =>
+      normalizeReact(
+        createElement(
+          BlockRow,
+          null,
+          createElement(
+            BlockCell,
+            { itemKey: 'many' },
+            createElement(
+              Fragment,
+              null,
+              createElement(Node, { position: [0, 0] }),
+              createElement(Node, { position: [0, 0] }),
+            ),
+          ),
+        ),
+      ),
+    ).toThrowError(expect.objectContaining({ code: RetikzGraphReactErrorCode.BlockStructureInvalid }));
   });
 });
 
@@ -131,12 +298,17 @@ const normalizeReact = (element: ReturnType<typeof createElement>) => {
 };
 
 describe('@retikz/graph-react package boundary', () => {
-  it('exposes Graph, Entity and Relation as independent embeddable components', async () => {
+  it('exposes every Graph semantic composite independently while keeping Cell Row-local', async () => {
     const graphReact = await import('../../src');
 
     expect(Graph.inputEmbedAdapter.kind).toBe('graph.graph');
+    expect(Block.inputEmbedAdapter.kind).toBe('graph.block');
+    expect(BlockHeader.inputEmbedAdapter.kind).toBe('graph.blockHeader');
+    expect(BlockSection.inputEmbedAdapter.kind).toBe('graph.blockSection');
+    expect(BlockRow.inputEmbedAdapter.kind).toBe('graph.blockRow');
     expect(Entity.inputEmbedAdapter.kind).toBe('graph.entity');
     expect(Relation.inputEmbedAdapter.kind).toBe('graph.relation');
+    expect(BlockCell).not.toHaveProperty('inputEmbedAdapter');
     expect(graphReact).not.toHaveProperty('createGraphReactAdapters');
   });
 });

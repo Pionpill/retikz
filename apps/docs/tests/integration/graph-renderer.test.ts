@@ -207,6 +207,49 @@ describe('Graph renderer integration', () => {
     ).toContain('<svg');
   });
 
+  it('让包含 Block 的同一 Core Scene 通过 SVG 与 Canvas 渲染', () => {
+    const source = normalizeGraph({
+      children: [
+        {
+          type: 'block',
+          id: 'user',
+          children: [
+            {
+              type: 'blockHeader',
+              title: { text: 'User' },
+              description: { text: 'Domain entity' },
+            },
+            {
+              type: 'blockSection',
+              id: 'user.fields',
+              children: [
+                {
+                  type: 'blockRow',
+                  id: 'user.name',
+                  children: [
+                    {
+                      key: 'name',
+                      child: { type: 'node', position: [0, 0], text: 'name', padding: 0, margin: 0 },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const compiled = sceneOf(source);
+    const calls: Array<string> = [];
+    const svg = renderToSvgString(compiled, { idPrefix: 'graph-block' });
+
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('User');
+    expect(() => drawScene(recordingContext(calls), compiled)).not.toThrow();
+    expect(calls.length).toBeGreaterThan(0);
+    expect(JSON.stringify(compiled)).not.toContain('"type":"block"');
+  });
+
   it.each([PreviewThemeStyle.Academic, PreviewThemeStyle.Vibrant, PreviewThemeStyle.Clean])(
     '让 Graph reference style 的同一 Scene appearance 同时被 SVG 与 Canvas 消费：%s',
     style => {
