@@ -62,6 +62,12 @@ describe('OverlayLayout schema and factory', () => {
     });
   });
 
+  it('keeps an omitted item key out of Source IR', () => {
+    const parsed = createOverlayLayout({ children: [{ kind: LayoutItemKind.Overlay, child }] });
+
+    expect(parsed.children[0]).not.toHaveProperty('key');
+  });
+
   it('rejects unknown fields at layout, item, placement and nested point paths', () => {
     const base = { children: [{ kind: 'overlay', key: 'badge', child }] } satisfies OverlayLayoutInput;
     expect(() =>

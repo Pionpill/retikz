@@ -15,7 +15,7 @@ import {
   LayoutIntrinsicMode,
 } from '@retikz/core';
 
-import type { LayoutInsets, LayoutRect } from '../internal';
+import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
 import type { LayoutSpacingArtifact } from '../shared';
 import type { FlexLayoutArtifact, IRFlexLayout, IRFlexLayoutItem } from './types';
 
@@ -26,6 +26,7 @@ import {
   appendLayoutSpacingInterval,
   compensatedLayoutSum,
   contentRectOf,
+  createEffectiveLayoutItems,
   createLayoutArtifactAlignmentGuide,
   createLayoutArtifactContainer,
   createLayoutArtifactItem,
@@ -47,7 +48,7 @@ import { FlexLayoutDirection, FlexLayoutWrap } from './constants';
 type PhysicalAxis = 'x' | 'y';
 
 type MeasuredFlexItem = Readonly<{
-  authored: IRFlexLayoutItem;
+  authored: EffectiveLayoutItem<IRFlexLayoutItem>;
   sourceIndex: number;
   margin: LayoutInsets;
   flexBaseSlot: number;
@@ -298,7 +299,7 @@ export const compileFlexLayout = (
   const finiteCrossLimit = finiteCrossLimitOf(node, axes.cross, crossProposal, padding);
   const crossBasis = basisCrossProposal(finiteCrossLimit);
 
-  const measured = node.children.map((authored, sourceIndex): MeasuredFlexItem => {
+  const measured = createEffectiveLayoutItems(node.children).map((authored, sourceIndex): MeasuredFlexItem => {
     const minimumResult = requiredProbe(
       context,
       authored.child,

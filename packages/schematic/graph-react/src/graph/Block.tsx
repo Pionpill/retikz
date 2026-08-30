@@ -56,8 +56,8 @@ export type BlockRowProps = Omit<BlockRowInputEmbedProps, 'type' | 'children'> &
 /** Block Cell 的 React 编写参数 */
 export type BlockCellProps = Omit<InputBlockCell, 'key' | 'child'> &
   Readonly<{
-    /** 映射到 Source Cell.key，避免与 React key 冲突 */
-    itemKey: string;
+    /** 可选映射到 Source Cell.key，避免与 React key 冲突 */
+    itemKey?: string;
     /** Cell 中恰好一个任意 child */
     children?: ReactNode;
   }>;
@@ -231,7 +231,7 @@ const createBlockRowInput = (props: Readonly<Record<string, unknown>>, context: 
     const { children: cellChild, itemKey, ...cell } = element.props;
     const collected = collectRequiredSlot(cellChild, `${context.id}:cell:${index}`, 'BlockCell');
     adapters.push(...collected.adapters);
-    return { ...cell, key: itemKey, child: collected.child };
+    return { ...cell, ...(itemKey === undefined ? {} : { key: itemKey }), child: collected.child };
   });
   return withInputEmbedAdapters(
     {

@@ -57,7 +57,7 @@ Hosts that need one container may put only that Definition in `compile.composite
 
 The three `@retikz/layout-react` containers are embeddable Tier 2 components. Their direct children must be `LayoutItem` elements with the matching `kind`. Fragments and arrays flatten transparently, but ordinary JSX nodes cannot bypass item semantics.
 
-Every `LayoutItem` requires exactly one of `children` or `ir` and must produce exactly one `IRChild`. React `itemKey` becomes canonical JSON `key`; it never reads React's reserved `key`. Nested Layout containers may contribute the same family, while external datasets or foreign Tier 2 runtime contributions remain the outer host's responsibility.
+Every `LayoutItem` requires exactly one of `children` or `ir` and must produce exactly one `IRChild`. Optional React `itemKey` becomes canonical JSON `key`. When omitted, Source IR has no `key`, and Layout generates a container-local effective key from the source index before solving. It never reads React's reserved `key`. Nested Layout containers may contribute the same family, while external datasets or foreign Tier 2 runtime contributions remain the outer host's responsibility.
 
 React containers start no local compilation and perform no DOM measurement. They contribute IR and definitions to the outer `Layout`, which compiles and renders the complete tree. Observe artifacts through the outer host.
 

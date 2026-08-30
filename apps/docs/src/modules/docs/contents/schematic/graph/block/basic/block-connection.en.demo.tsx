@@ -15,13 +15,13 @@ const CellText: FC<{ children: string }> = ({ children }) => (
 const Demo: FC = () => (
   <Graph width={560} height={250} viewBox={{ x: -45, y: -66, width: 560, height: 250 }}>
     <Block id="user">
-      <BlockHeader title={{ text: 'User' }} description={{ text: 'Data structure' }} />
-      <BlockSection id="user.fields" title={{ text: 'Fields' }}>
+      <BlockHeader title="User" description="Data structure" />
+      <BlockSection id="user.fields" title="Fields">
         <BlockRow id="user.email">
-          <BlockCell itemKey="email" grow={1}>
+          <BlockCell grow={1}>
             <CellText>email</CellText>
           </BlockCell>
-          <BlockCell itemKey="type">
+          <BlockCell>
             <CellText>string</CellText>
           </BlockCell>
         </BlockRow>

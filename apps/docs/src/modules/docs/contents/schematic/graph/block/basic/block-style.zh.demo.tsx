@@ -23,10 +23,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         background={{ fill: '#64748b', fillOpacity: backgroundOpacity }}
         border={{ stroke: '#64748b', strokeOpacity: 0.5, strokeWidth: borderWidth }}
       >
-        <BlockHeader title={{ text: 'UserRepository' }} description={{ text: '数据访问接口' }} />
-        <BlockSection title={{ text: '方法' }}>
+        <BlockHeader title="UserRepository" description="数据访问接口" />
+        <BlockSection title="方法">
           <BlockRow>
-            <BlockCell itemKey="method" grow={1}>
+            <BlockCell grow={1}>
               <Node position={[0, 0]} padding={0} fill="none" stroke="none">
                 findById(id)
               </Node>

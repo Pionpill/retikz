@@ -103,6 +103,20 @@ describe('@retikz/graph-vanilla package boundary', () => {
 });
 
 describe('normalizeBlock', () => {
+  it('keeps string Header and Section text as sparse Source values', () => {
+    expect(normalizeBlockHeader({ title: 'User', description: 'Domain entity' })).toEqual({
+      namespace: 'graph',
+      type: 'blockHeader',
+      title: 'User',
+      description: 'Domain entity',
+    });
+    expect(normalizeBlockSection({ title: 'Fields' })).toEqual({
+      namespace: 'graph',
+      type: 'blockSection',
+      title: 'Fields',
+    });
+  });
+
   it('normalizes open Block-family semantic children to the same sparse Source as Direct authoring', () => {
     const header = {
       type: 'blockHeader',
@@ -164,6 +178,11 @@ describe('normalizeBlock', () => {
     expect(normalizeBlock({ children: [] })).toEqual({ namespace: 'graph', type: 'block', children: [] });
     expect(normalizeBlockSection({})).toEqual({ namespace: 'graph', type: 'blockSection' });
     expect(normalizeBlockRow({ children: [] })).toEqual({ namespace: 'graph', type: 'blockRow', children: [] });
+    expect(normalizeBlockRow({ children: [{ child: { type: 'node', position: [0, 0] } }] })).toEqual({
+      namespace: 'graph',
+      type: 'blockRow',
+      children: [{ child: { type: 'node', position: [0, 0] } }],
+    });
   });
 });
 

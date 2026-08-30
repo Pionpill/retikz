@@ -15,17 +15,17 @@ import { FlexLayout, LayoutItem } from '@retikz/layout-react';
 ```tsx
 <Layout width={360} height={120}>
   <FlexLayout gap={8}>
-    <LayoutItem kind="flex" itemKey="label" grow={1}>
+    <LayoutItem kind="flex" grow={1}>
       <Node position={[0, 0]} text="标签" />
     </LayoutItem>
-    <LayoutItem kind="flex" itemKey="value" shrink={0}>
+    <LayoutItem kind="flex" shrink={0}>
       <Node position={[0, 0]} text="42%" />
     </LayoutItem>
   </FlexLayout>
 </Layout>
 ```
 
-`itemKey` 是布局容器内由作者声明的标识，不读取 React 保留的 `key`。每个 `LayoutItem` 恰好接受一个可绘制子元素，或用 `ir` 显式传入一个 `IRChild`。
+`itemKey` 可以省略；Layout 会在内部生成容器局部有效 key，且不会把它写回 Source IR。只有需要跨重排保持稳定身份时才显式传入 `itemKey`；它不读取 React 保留的 `key`。每个 `LayoutItem` 恰好接受一个可绘制子元素，或用 `ir` 显式传入一个 `IRChild`。
 
 `gap` 可以写成数字，也可以写成 `{ column, row }` 对象。数字同时设置两个物理轴；对象允许分别设置列间距与行间距，且不随 `direction` 改变字段含义。
 
@@ -90,7 +90,7 @@ FlexLayout 先用 `intrinsic.minimum` 与 `intrinsic.natural` 测量子图形，
 
 `FlexLayoutInput` 是工厂函数接受的作者输入；`IRFlexLayout` 是应用默认值后可 JSON 序列化的持久化形态。
 
-React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为直属 `LayoutItem`；`FlexLayoutItemProps` 把 JSON 的 `key` 命名为 `itemKey`，并要求在 `children` 与 `ir` 中二选一。
+React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为直属 `LayoutItem`；`FlexLayoutItemProps` 把可选 JSON `key` 命名为 `itemKey`，并要求在 `children` 与 `ir` 中二选一。
 
 ### 可选 React 检查组件
 
@@ -115,14 +115,14 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
 | `justifyContent?` | `FlexMainDistributionValue`                        | `'start'`                     | 每条布局行的主轴剩余空间分布                                |
 | `alignItems?`     | <ApiValues name="LayoutAlignment" />               | `'stretch'`                   | 默认交叉轴对齐；纵向主轴不接受基线对齐                      |
 | `alignContent?`   | <ApiValues name="LayoutDistribution" />            | `'start'`                     | 多条布局行的交叉轴剩余空间分布                              |
-| `children?`       | `Array<FlexLayoutItemInput>`                       | `[]`                          | 作者声明的子项；同一容器内 `key` 必须唯一                   |
+| `children?`       | `Array<FlexLayoutItemInput>`                       | `[]`                          | 作者声明的子项；显式 `key` 在同一容器内必须唯一             |
 
 ### `FlexLayoutItemInput`
 
 | 属性         | 类型                                 | 默认值       | 描述                                                 |
 | ------------ | ------------------------------------ | ------------ | ---------------------------------------------------- |
 | `kind`       | `'flex'`                             | —            | 子项判别字段；可使用 `LayoutItemKind.Flex`           |
-| `key`        | `string`                             | —            | 当前容器内稳定且非空、由作者声明的标识               |
+| `key?`       | `string`                             | 内部生成     | 可选的容器局部稳定身份；省略时按 source index 生成   |
 | `child`      | `IRChild`                            | —            | 参与布局的任意可 JSON 序列化 Core 子图形             |
 | `margin?`    | `number` \| `IRBoxSpacing`           | `0`          | 分配区域外边距；不进入子图形的空间提案               |
 | `basis?`     | `'content'` \| `number`              | `'content'`  | 自然主轴贡献，或作者给出的有限非负基础分配尺寸       |

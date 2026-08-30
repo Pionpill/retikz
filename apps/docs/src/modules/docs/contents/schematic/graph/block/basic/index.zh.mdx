@@ -14,11 +14,11 @@ import { Node } from '@retikz/react';
 
 ```tsx
 <Block id="user">
-  <BlockHeader title={{ text: 'User' }} description={{ text: '领域实体' }} />
+  <BlockHeader title="User" description="领域实体" />
   <Node position={[0, 0]}>任意自定义内容</Node>
-  <BlockSection title={{ text: '字段' }}>
+  <BlockSection title="字段">
     <BlockRow id="user.name">
-      <BlockCell itemKey="name">
+      <BlockCell>
         <Node position={[0, 0]}>name</Node>
       </BlockCell>
     </BlockRow>
@@ -93,7 +93,7 @@ Block、Section 与 Row 支持完整的 Core Scope，包括 `localNamespace`。�
 
 ## API 参考
 
-Direct IR、React 与 Vanilla 入口会产出相同的 JSON-safe Source。Block、Section 与 Row 复用完整 Core Scope 和 Standard Surface 字段；下表只展开本页组件增加或重新约束的字段
+Direct IR、React 与 Vanilla 入口会产出相同的 JSON-safe Source。Block、Section 与 Row 复用完整 Core Scope 和 Standard Surface 字段；文本字段的 `IRBlockText` 支持直接传入字符串，也支持带样式覆盖的文本对象；下表只展开本页组件增加或重新约束的字段
 
 ### Block
 
@@ -115,8 +115,8 @@ Direct IR、React 与 Vanilla 入口会产出相同的 JSON-safe Source。Block�
 | 属性              | 类型                         | 默认值       | 描述                                                        |
 | ----------------- | ---------------------------- | ------------ | ----------------------------------------------------------- |
 | `icon?`           | `IRChild`                    | —            | 文本区左侧至多一个任意 child                                |
-| `title`           | `IRBlockText`                | 必填         | 主标题；默认 `base`、粗体、opacity `1`                      |
-| `description?`    | `IRBlockText`                | —            | 次要说明；默认 `xs`、opacity `0.7`                          |
+| `title`           | `IRBlockText`                | 必填         | 支持字符串或文本对象；主标题默认 `base`、粗体、opacity `1`  |
+| `description?`    | `IRBlockText`                | —            | 支持字符串或文本对象；次要说明默认 `xs`、opacity `0.7`      |
 | `direction?`      | `'horizontal' \| 'vertical'` | `'vertical'` | title 与 description 文本区的排列方向；不改变外层 slot 顺序 |
 | `itemGap?`        | `number`                     | `4`          | title 与 description 之间的最小物理间距                     |
 | `justifyContent?` | Flex 主轴分布                | `'start'`    | 文本区的主轴剩余空间分布；直接复用 FlexLayout 语义          |
@@ -124,11 +124,11 @@ Direct IR、React 与 Vanilla 入口会产出相同的 JSON-safe Source。Block�
 
 ### BlockSection
 
-| 属性        | 类型                     | 默认值 | 描述                     |
-| ----------- | ------------------------ | ------ | ------------------------ |
-| `title?`    | `IRBlockText`            | —      | children 之前的可选标题  |
-| `children?` | `ReadonlyArray<IRChild>` | —      | 任意有序 children        |
-| `gap?`      | `number`                 | `4`    | Section items 的纵向间距 |
+| 属性        | 类型                     | 默认值 | 描述                           |
+| ----------- | ------------------------ | ------ | ------------------------------ |
+| `title?`    | `IRBlockText`            | —      | 支持字符串或文本对象的可选标题 |
+| `children?` | `ReadonlyArray<IRChild>` | —      | 任意有序 children              |
+| `gap?`      | `number`                 | `4`    | Section items 的纵向间距       |
 
 Section 默认使用 `8` padding、`lightgray / 0.04` 背景、`currentColor / 0.2 / 1` 边框与 `8` 圆角，并复用完整 Scope / Surface 字段
 
@@ -138,7 +138,7 @@ Section 默认使用 `8` padding、`lightgray / 0.04` 背景、`currentColor / 0
 | ------------------------------- | ---------------------------- | ---------- | -------------------------------------------- |
 | `row.children?`                 | `ReadonlyArray<IRBlockCell>` | —          | 有序 Row-local Flex items                    |
 | `row.gap?`                      | `number`                     | `8`        | Cell 之间的横向间距                          |
-| `cell.key`                      | `string`                     | 必填       | Row 内 Flex item key；React 使用 `itemKey`   |
+| `cell.key?`                     | `string`                     | 内部生成   | 可选稳定身份；React 使用 `itemKey`           |
 | `cell.child`                    | `IRChild`                    | 必填       | 恰好一个任意 child                           |
 | `cell.margin?`                  | Flex item margin             | `0`        | 复用 FlexLayout item 契约                    |
 | `cell.basis?`                   | Flex item basis              | `0`        | 默认从零基准均分 Row 可用空间                |

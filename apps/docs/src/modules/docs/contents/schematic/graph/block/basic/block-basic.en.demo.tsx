@@ -67,28 +67,28 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Block id="user" width={240}>
         <BlockHeader
           icon={showIcon ? <HeaderIcon /> : undefined}
-          title={{ text: 'User' }}
-          description={{ text: 'Domain entity' }}
+          title="User"
+          description="Domain entity"
           {...(direction === 'vertical' ? {} : { direction })}
           {...(itemGap === 4 ? {} : { itemGap })}
           {...(justifyContent === 'start' ? {} : { justifyContent })}
           trailing={showTrailing ? <HeaderTrailing /> : undefined}
         />
-        <BlockSection id="user.fields" title={{ text: 'Fields' }}>
+        <BlockSection id="user.fields" title="Fields">
           <BlockRow id="user.name">
-            <BlockCell itemKey="name">
+            <BlockCell>
               <CellText>name</CellText>
             </BlockCell>
-            <BlockCell itemKey="name-type">
+            <BlockCell>
               <CellText>string</CellText>
             </BlockCell>
           </BlockRow>
           {showExtraField ? (
             <BlockRow id="user.email">
-              <BlockCell itemKey="email">
+              <BlockCell>
                 <CellText>{fieldName}</CellText>
               </BlockCell>
-              <BlockCell itemKey="email-type">
+              <BlockCell>
                 <CellText>{fieldType}</CellText>
               </BlockCell>
             </BlockRow>

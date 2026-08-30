@@ -12,17 +12,17 @@ type LayoutItemChildSource =
 
 /** FlexLayout 直属 item 的 React authoring props */
 export type FlexLayoutItemProps = Omit<FlexLayoutItemInput, 'child' | 'key'> &
-  Readonly<{ kind: 'flex'; itemKey: string }> &
+  Readonly<{ kind: 'flex'; itemKey?: string }> &
   LayoutItemChildSource;
 
 /** GridLayout 直属 item 的 React authoring props */
 export type GridLayoutItemProps = Omit<GridLayoutItemInput, 'child' | 'key'> &
-  Readonly<{ kind: 'grid'; itemKey: string }> &
+  Readonly<{ kind: 'grid'; itemKey?: string }> &
   LayoutItemChildSource;
 
 /** OverlayLayout 直属 item 的 React authoring props */
 export type OverlayLayoutItemProps = Omit<OverlayLayoutItemInput, 'child' | 'key'> &
-  Readonly<{ kind: 'overlay'; itemKey: string }> &
+  Readonly<{ kind: 'overlay'; itemKey?: string }> &
   LayoutItemChildSource;
 
 /** 三种布局容器共用的 kind 判别 React item props */

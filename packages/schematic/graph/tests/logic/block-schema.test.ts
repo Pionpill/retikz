@@ -109,6 +109,25 @@ describe('Block-family Source schemas', () => {
     });
   });
 
+  it('accepts string shorthand for Header and Section text', () => {
+    expect(
+      Graph.createBlockHeader({
+        title: 'Service',
+        description: 'Public API',
+      }),
+    ).toEqual({
+      namespace: 'graph',
+      type: 'blockHeader',
+      title: 'Service',
+      description: 'Public API',
+    });
+    expect(Graph.createBlockSection({ title: 'Fields' })).toEqual({
+      namespace: 'graph',
+      type: 'blockSection',
+      title: 'Fields',
+    });
+  });
+
   it('keeps Header text direction sparse while accepting both supported layouts', () => {
     expect(Graph.createBlockHeader({ title: { text: 'Default' } })).toEqual({
       namespace: 'graph',
@@ -188,6 +207,9 @@ describe('Block-family Source schemas', () => {
     });
     expect(Graph.BlockCellSchema.parse({ key: 'default', child: textChild('value') })).toEqual({
       key: 'default',
+      child: textChild('value'),
+    });
+    expect(Graph.BlockCellSchema.parse({ child: textChild('value') })).toEqual({
       child: textChild('value'),
     });
     expect(

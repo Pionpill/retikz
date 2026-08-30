@@ -122,6 +122,22 @@ describe('Block-family layout-aware lowering', () => {
     expect(textValues(primitivesOf(titleOnly.output.scene.primitives))).toEqual(['Only']);
   });
 
+  it('renders string Header text with the regular title and description defaults', () => {
+    const { output } = compileInHarness(
+      Graph.createBlockHeader({
+        title: 'Service',
+        description: 'Public API',
+      }),
+      naturalProposal,
+      Graph.createGraphDefinitions(),
+    );
+    const texts = primitivesOf(output.scene.primitives).filter(primitive => primitive.type === 'text');
+
+    expect(textValues(texts)).toEqual(['Service', 'Public API']);
+    expect(texts[0]).toEqual(expect.objectContaining({ fontSize: 16, fontWeight: 'bold', opacity: 1 }));
+    expect(texts[1]).toEqual(expect.objectContaining({ fontSize: 12, opacity: 0.7 }));
+  });
+
   it('changes only the Header text layout direction', () => {
     const source = {
       icon: textNode('icon'),

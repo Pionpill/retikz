@@ -80,14 +80,14 @@ type OverlayLayoutRefinementInput = ZodInfer<typeof OverlayLayoutBaseSchema>;
 const refineOverlayLayout = (layout: OverlayLayoutRefinementInput, context: RefinementCtx): void => {
   const seen = new Set<string>();
   layout.children.forEach((item, index) => {
-    if (seen.has(item.key)) {
+    if (item.key !== undefined && seen.has(item.key)) {
       context.addIssue({
         code: 'custom',
         path: ['children', index, 'key'],
         message: `Duplicate OverlayLayout item key '${item.key}'.`,
       });
     }
-    seen.add(item.key);
+    if (item.key !== undefined) seen.add(item.key);
     const alignment = item.alignSelf ?? layout.alignItems;
     const isBaseline = alignment === LayoutAlignment.FirstBaseline || alignment === LayoutAlignment.LastBaseline;
     if (item.placement.kind === OverlayPlacementKind.Positioned && isBaseline) {

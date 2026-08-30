@@ -23,10 +23,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         background={{ fill: '#64748b', fillOpacity: backgroundOpacity }}
         border={{ stroke: '#64748b', strokeOpacity: 0.5, strokeWidth: borderWidth }}
       >
-        <BlockHeader title={{ text: 'UserRepository' }} description={{ text: 'Data access interface' }} />
-        <BlockSection title={{ text: 'Methods' }}>
+        <BlockHeader title="UserRepository" description="Data access interface" />
+        <BlockSection title="Methods">
           <BlockRow>
-            <BlockCell itemKey="method" grow={1}>
+            <BlockCell grow={1}>
               <Node position={[0, 0]} padding={0} fill="none" stroke="none">
                 findById(id)
               </Node>

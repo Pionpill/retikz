@@ -14,11 +14,11 @@ import { Node } from '@retikz/react';
 
 ```tsx
 <Block id="user">
-  <BlockHeader title={{ text: 'User' }} description={{ text: 'Domain entity' }} />
+  <BlockHeader title="User" description="Domain entity" />
   <Node position={[0, 0]}>Arbitrary custom content</Node>
-  <BlockSection title={{ text: 'Fields' }}>
+  <BlockSection title="Fields">
     <BlockRow id="user.name">
-      <BlockCell itemKey="name">
+      <BlockCell>
         <Node position={[0, 0]}>name</Node>
       </BlockCell>
     </BlockRow>
@@ -97,7 +97,7 @@ Block supports the complete Core Scope, including `localNamespace`; Section and 
 
 ## API Reference
 
-Direct IR, React, and Vanilla entries produce the same JSON-safe Source. Block, Section, and Row reuse the complete Core Scope and Standard Surface fields; the tables expand only fields introduced or constrained by these components
+Direct IR, React, and Vanilla entries produce the same JSON-safe Source. Block, Section, and Row reuse the complete Core Scope and Standard Surface fields. `IRBlockText` accepts a plain string or a text object with style overrides; the tables expand only fields introduced or constrained by these components
 
 ### Block
 
@@ -119,8 +119,8 @@ Direct IR, React, and Vanilla entries produce the same JSON-safe Source. Block, 
 | Prop              | Type                         | Default      | Description                                                                                     |
 | ----------------- | ---------------------------- | ------------ | ----------------------------------------------------------------------------------------------- |
 | `icon?`           | `IRChild`                    | —            | At most one arbitrary child before the text region                                              |
-| `title`           | `IRBlockText`                | required     | Primary title; defaults to `base` and bold with opacity `1`                                     |
-| `description?`    | `IRBlockText`                | —            | Secondary text; defaults to `xs` and opacity `0.7`                                              |
+| `title`           | `IRBlockText`                | required     | String or text object; primary title defaults to `base` and bold with opacity `1`               |
+| `description?`    | `IRBlockText`                | —            | String or text object; secondary text defaults to `xs` and opacity `0.7`                        |
 | `direction?`      | `'horizontal' \| 'vertical'` | `'vertical'` | Layout direction of the title and description text region; does not change the outer slot order |
 | `itemGap?`        | `number`                     | `4`          | Minimum physical gap between title and description                                              |
 | `justifyContent?` | Flex main distribution       | `'start'`    | Main-axis free-space distribution in the text region; reuses FlexLayout semantics               |
@@ -128,11 +128,11 @@ Direct IR, React, and Vanilla entries produce the same JSON-safe Source. Block, 
 
 ### BlockSection
 
-| Prop        | Type                     | Default | Description                               |
-| ----------- | ------------------------ | ------- | ----------------------------------------- |
-| `title?`    | `IRBlockText`            | —       | Optional title placed before the children |
-| `children?` | `ReadonlyArray<IRChild>` | —       | Arbitrary ordered children                |
-| `gap?`      | `number`                 | `4`     | Vertical space between Section items      |
+| Prop        | Type                     | Default | Description                                                     |
+| ----------- | ------------------------ | ------- | --------------------------------------------------------------- |
+| `title?`    | `IRBlockText`            | —       | Optional string or text-object title placed before the children |
+| `children?` | `ReadonlyArray<IRChild>` | —       | Arbitrary ordered children                                      |
+| `gap?`      | `number`                 | `4`     | Vertical space between Section items                            |
 
 Section defaults to `8` padding, a `lightgray / 0.04` background, a `currentColor / 0.2 / 1` border, and an `8` corner radius while reusing the complete Scope and Surface fields
 
@@ -142,7 +142,7 @@ Section defaults to `8` padding, a `lightgray / 0.04` background, a `currentColo
 | ------------------------------- | ---------------------------- | ------------- | ----------------------------------------------------------------------- |
 | `row.children?`                 | `ReadonlyArray<IRBlockCell>` | —             | Ordered Row-local Flex items                                            |
 | `row.gap?`                      | `number`                     | `8`           | Horizontal space between Cells                                          |
-| `cell.key`                      | `string`                     | required      | Row-local Flex item key; React uses `itemKey`                           |
+| `cell.key?`                     | `string`                     | generated     | Optional stable identity; React uses `itemKey`                          |
 | `cell.child`                    | `IRChild`                    | required      | Exactly one arbitrary child                                             |
 | `cell.margin?`                  | Flex item margin             | `0`           | Reuses the FlexLayout item contract                                     |
 | `cell.basis?`                   | Flex item basis              | `0`           | Starts from zero so default Cells share space                           |

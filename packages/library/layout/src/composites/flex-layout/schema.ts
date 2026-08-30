@@ -103,14 +103,14 @@ const refineFlexLayout = (layout: FlexLayoutRefinementInput, context: Refinement
 
   const seenKeys = new Set<string>();
   layout.children.forEach((item, index) => {
-    if (seenKeys.has(item.key)) {
+    if (item.key !== undefined && seenKeys.has(item.key)) {
       context.addIssue({
         code: 'custom',
         path: ['children', index, 'key'],
         message: `Duplicate FlexLayout item key '${item.key}'.`,
       });
     }
-    seenKeys.add(item.key);
+    if (item.key !== undefined) seenKeys.add(item.key);
     if (isColumn && isBaseline(item.alignSelf)) {
       context.addIssue({
         code: 'custom',

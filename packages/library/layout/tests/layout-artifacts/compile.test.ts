@@ -214,6 +214,37 @@ describe('layout compile artifacts', () => {
     }
   });
 
+  it('generates deterministic effective keys without colliding with explicit keys', () => {
+    const output = compile([
+      createFlexLayout({
+        children: [
+          { kind: LayoutItemKind.Flex, child: leaf('flex-generated', 10, 10) },
+          { kind: LayoutItemKind.Flex, key: 'item:0', child: leaf('flex-explicit', 10, 10) },
+        ],
+      }),
+      createGridLayout({
+        columns: [{ kind: 'fixed', value: 10 }],
+        children: [
+          { kind: LayoutItemKind.Grid, child: leaf('grid-generated', 10, 10) },
+          { kind: LayoutItemKind.Grid, key: 'item:0', child: leaf('grid-explicit', 10, 10) },
+        ],
+      }),
+      createOverlayLayout({
+        children: [
+          { kind: LayoutItemKind.Overlay, child: leaf('overlay-generated', 10, 10) },
+          { kind: LayoutItemKind.Overlay, key: 'item:0', child: leaf('overlay-explicit', 10, 10) },
+        ],
+      }),
+    ]);
+    const artifacts = compositeArtifacts(output);
+
+    expect(artifacts.map(artifact => artifact.value.items.map(item => item.key))).toEqual([
+      ['item:0:1', 'item:0'],
+      ['item:0:1', 'item:0'],
+      ['item:0:1', 'item:0'],
+    ]);
+  });
+
   it('records Flex physical lines, authored items, translated bounds and clip overflow', () => {
     const output = compile([
       createFlexLayout({

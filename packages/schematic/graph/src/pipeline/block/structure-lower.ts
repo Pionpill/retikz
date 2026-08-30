@@ -23,26 +23,29 @@ const DEFAULT_SECTION_CORNER_RADIUS = 8;
 const DEFAULT_ROW_GAP = 8;
 const DEFAULT_ROW_PADDING = 8;
 
-const structureTextNode = (text: IRBlockText, kind: 'title' | 'description' | 'section'): IRNode => ({
-  type: 'node',
-  position: [0, 0],
-  shape: 'rectangle',
-  fill: 'none',
-  stroke: 'none',
-  textColor: 'currentColor',
-  opacity: kind === 'title' ? 1 : 0.7,
-  padding: 0,
-  margin: 0,
-  minimumSize: 0,
-  scale: 1,
-  rotate: 0,
-  ...text,
-  font: {
-    size: kind === 'title' ? ('base' as const) : kind === 'description' ? ('xs' as const) : ('sm' as const),
-    ...(kind === 'title' ? { weight: 'bold' as const } : {}),
-    ...text.font,
-  },
-});
+const structureTextNode = (text: IRBlockText, kind: 'title' | 'description' | 'section'): IRNode => {
+  const normalizedText = typeof text === 'string' ? { text } : text;
+  return {
+    type: 'node',
+    position: [0, 0],
+    shape: 'rectangle',
+    fill: 'none',
+    stroke: 'none',
+    textColor: 'currentColor',
+    opacity: kind === 'title' ? 1 : 0.7,
+    padding: 0,
+    margin: 0,
+    minimumSize: 0,
+    scale: 1,
+    rotate: 0,
+    ...normalizedText,
+    font: {
+      size: kind === 'title' ? ('base' as const) : kind === 'description' ? ('xs' as const) : ('sm' as const),
+      ...(kind === 'title' ? { weight: 'bold' as const } : {}),
+      ...normalizedText.font,
+    },
+  };
+};
 
 const structureText = (text: IRBlockText, kind: 'title' | 'description' | 'section'): IRChild => ({
   type: 'scope',

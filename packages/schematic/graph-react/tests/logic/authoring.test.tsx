@@ -64,6 +64,17 @@ describe('Group React authoring', () => {
 });
 
 describe('Block React authoring', () => {
+  it('keeps string Header text as sparse Source text', () => {
+    const result = normalizeReact(createElement(BlockHeader, { title: 'User', description: 'Domain entity' }));
+
+    expect(result.ir.children[0]).toEqual({
+      namespace: 'graph',
+      type: 'blockHeader',
+      title: 'User',
+      description: 'Domain entity',
+    });
+  });
+
   it('normalizes arbitrary Block children in authored order through fragments and function wrappers', () => {
     const WrappedContent: FC = () =>
       createElement(
@@ -180,6 +191,19 @@ describe('Block React authoring', () => {
         ],
       },
     ]);
+  });
+
+  it('keeps an omitted BlockCell itemKey out of Source IR', () => {
+    const result = normalizeReact(
+      createElement(
+        BlockRow,
+        null,
+        createElement(BlockCell, null, createElement(Node, { position: [0, 0], children: 'name' })),
+      ),
+    );
+    const row = result.ir.children[0] as { children: Array<Record<string, unknown>> };
+
+    expect(row.children[0]).not.toHaveProperty('key');
   });
 
   it('omits optional Header slots when React children normalize to zero items', () => {

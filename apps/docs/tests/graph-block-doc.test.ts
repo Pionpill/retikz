@@ -53,8 +53,9 @@ describe('Graph Block documentation', () => {
     expect(page).toContain('direction?');
     expect(page).toContain('itemGap?');
     expect(page).toContain('justifyContent?');
-    expect(page).toContain(lang === 'zh' ? '主标题；默认 `base`、粗体' : 'Primary title; defaults to `base` and bold');
-    expect(page).toContain(lang === 'zh' ? '次要说明；默认 `xs`' : 'Secondary text; defaults to `xs`');
+    expect(page).toContain(lang === 'zh' ? '支持字符串或文本对象' : 'String or text object');
+    expect(page).toContain(lang === 'zh' ? '默认 `base`、粗体' : 'defaults to `base` and bold');
+    expect(page).toContain(lang === 'zh' ? '默认 `xs`' : 'defaults to `xs`');
     expect(page).not.toContain('| `header`');
     expect(page).not.toContain('| `sections?`');
     expect(readContent(`src/modules/docs/contents/schematic/graph/block/basic/block-style.${lang}.demo.tsx`)).toContain(
@@ -80,8 +81,8 @@ describe('Graph Block documentation', () => {
       expect(vanilla.code).toContain('BlockHeaderInputEmbedAdapter');
       expect(vanilla.code).toContain("blockSection('preview-blockSection-1'");
       expect(vanilla.code).toContain("blockRow('preview-blockRow-1'");
-      expect(vanilla.code).toContain("title: { text: 'User' }");
-      expect(vanilla.code).toContain("description: { text: '领域实体' }");
+      expect(vanilla.code).toContain("title: 'User'");
+      expect(vanilla.code).toContain("description: '领域实体'");
       expect(vanilla.code).not.toContain("direction: 'vertical'");
       expect(vanilla.code).not.toContain('itemGap: 4');
       expect(vanilla.code).not.toContain("justifyContent: 'start'");
@@ -115,6 +116,7 @@ describe('Graph Block documentation', () => {
     expect(source).not.toContain('"gap":8');
     expect(source).not.toContain('"background"');
     expect(source).not.toContain('"border"');
+    expect(source).not.toContain('"key":');
     expect(source).toContain('"padding":0');
     expect(source).toContain('"fill":"none"');
     expect(source).toContain('"stroke":"none"');

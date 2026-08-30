@@ -2,12 +2,12 @@ import { ChildSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { FlexLayoutItemSchema, FlexMainDistributionSchema, LayoutGapSchema } from '@retikz/layout';
 import { SurfaceInputSchema } from '@retikz/standard';
-import { array, enum as zodEnum, literal, strictObject } from 'zod';
+import { array, enum as zodEnum, literal, strictObject, string, union } from 'zod';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { GraphThemeLayerSchema } from '../theme';
 
-export const BlockTextSchema = strictObject({
+const BlockTextObjectSchema = strictObject({
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text content for this Block text item.'),
   align: NodeSchema.shape.align,
   lineHeight: NodeSchema.shape.lineHeight,
@@ -15,7 +15,11 @@ export const BlockTextSchema = strictObject({
   textColor: NodeSchema.shape.textColor,
   font: NodeSchema.shape.font,
   opacity: NodeSchema.shape.opacity,
-}).describe('Core-compatible text fields used by Block structure labels.');
+});
+
+export const BlockTextSchema = union([string(), BlockTextObjectSchema]).describe(
+  'Block structure text as a string shorthand or Core-compatible text fields.',
+);
 
 /** Block Header 文本区的排列方向 */
 const BlockHeaderDirectionSchema = zodEnum(['horizontal', 'vertical']).describe(
@@ -105,14 +109,14 @@ export const BlockRowSchema = strictObject({
   .superRefine((row, context) => {
     const seenKeys = new Set<string>();
     row.children?.forEach((cell, index) => {
-      if (seenKeys.has(cell.key)) {
+      if (cell.key !== undefined && seenKeys.has(cell.key)) {
         context.addIssue({
           code: 'custom',
           path: ['children', index, 'key'],
           message: `Duplicate Block Row Cell key '${cell.key}'.`,
         });
       }
-      seenKeys.add(cell.key);
+      if (cell.key !== undefined) seenKeys.add(cell.key);
     });
   })
   .describe('Independent Graph composite arranging ordered Row-local Flex items horizontally.');
