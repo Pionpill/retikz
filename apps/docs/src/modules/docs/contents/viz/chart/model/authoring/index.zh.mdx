@@ -49,9 +49,9 @@ plotExtension.transform
 
 根 `@retikz/chart` 公开 Chart Source 的共享 schema、constants 与 Theme contract；具体 chartType 子路径公开自己的精确 schema 与 provider contribution。recipe / mark Definition 和 resolver 只属于包内实现契约，不是第三方扩展入口。plain `InputScatterChart`、`normalizeXxxChart` 与创建函数属于 `@retikz/chart-vanilla`。React typed Chart 把 `ChartData` / `ChartLayout` / `ChartExtension`、presentation marker 和 chartType 私有 declaration 折叠到同一 Vanilla Input；Plot declarations 只能位于 `ChartExtension`，并继续复用 Plot normalizer。动态 family / chartType 路由由应用层负责。
 
-| 入口           | 根 `type` | `recipe.chartType` | 导入位置                            |
-| -------------- | --------- | ------------------ | ----------------------------------- |
-| `ScatterChart` | `point`   | `scatter`          | `@retikz/chart-react/point/scatter` |
+| 入口           | 根 `type` | `recipe.chartType` | 导入位置                    |
+| -------------- | --------- | ------------------ | --------------------------- |
+| `ScatterChart` | `point`   | `scatter`          | `@retikz/chart-react/point` |
 
 Vanilla 的 `createScatterChart` 从 `@retikz/chart-vanilla/point/scatter` 导入。具体子路径只装载对应 chartType；family 根入口仅作为显式聚合入口。它返回保留运行时主题信息的编写结果；最终渲染仍复用共享 Chart 适配与解析主链。
 
@@ -61,7 +61,7 @@ Vanilla 的 `createScatterChart` 从 `@retikz/chart-vanilla/point/scatter` 导�
       label: 'Vanilla 只展开 composition 字符串简写',
       path: 'packages/viz/chart-vanilla/src/point/scatter/normalize.ts',
       startLine: 9,
-      endLine: 34,
+      endLine: 28,
     },
     {
       label: 'React declarations 汇入同一 Vanilla Input',

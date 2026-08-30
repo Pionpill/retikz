@@ -161,7 +161,8 @@ describe('Chart-native Scatter presentation', () => {
       const content = `${structure}\n${authoring}`;
 
       expect(content).toContain('@retikz/chart/point/scatter');
-      expect(content).toContain('@retikz/chart-react/point/scatter');
+      expect(content).toContain('@retikz/chart-react/point');
+      expect(content).not.toContain('@retikz/chart-react/point/');
       expect(content).toContain('@retikz/chart-vanilla/point/scatter');
     }
   });

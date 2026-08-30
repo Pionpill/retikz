@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
-import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point/scatter';
+import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

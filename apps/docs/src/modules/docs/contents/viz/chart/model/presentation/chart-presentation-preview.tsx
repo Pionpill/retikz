@@ -2,7 +2,7 @@ import type { FlexLayoutInspectOptions } from '@retikz/layout/inspect';
 import type { FC } from 'react';
 
 import { ChartData, ChartLayout, ChartNote, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
-import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point/scatter';
+import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import { LayoutInspectLayout } from '@retikz/layout-react/inspect';
 import { Layout } from '@retikz/react';

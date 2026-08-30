@@ -2,7 +2,7 @@ import type { IRPlotSmoothMethod } from '@retikz/plot';
 import type { FC } from 'react';
 
 import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
-import { RegressionChart, RegressionEncodings, RegressionProperties } from '@retikz/chart-react/point/regression';
+import { RegressionChart, RegressionEncodings, RegressionProperties } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

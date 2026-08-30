@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
-import { RegressionEncodings, RegressionProperties } from '@retikz/chart-react/point/regression';
+import { RegressionEncodings, RegressionProperties } from '@retikz/chart-react/point';
 import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 

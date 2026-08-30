@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
-import { RangedDotChart, RangedDotEncodings, RangedDotProperties } from '@retikz/chart-react/point/ranged-dot';
+import { RangedDotChart, RangedDotEncodings, RangedDotProperties } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

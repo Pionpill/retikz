@@ -5,7 +5,7 @@ import {
   ConnectedScatterChart,
   ConnectedScatterEncodings,
   ConnectedScatterProperties,
-} from '@retikz/chart-react/point/connected-scatter';
+} from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

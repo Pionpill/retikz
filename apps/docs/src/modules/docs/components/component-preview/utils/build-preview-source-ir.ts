@@ -4,21 +4,25 @@ import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scat
 import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
 import type { IRRegressionChart } from '@retikz/chart/point/regression';
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
-import type { BubbleChartProps } from '@retikz/chart-react/point/bubble';
-import type { ConnectedScatterChartProps } from '@retikz/chart-react/point/connected-scatter';
-import type { RangedDotChartProps } from '@retikz/chart-react/point/ranged-dot';
-import type { RegressionChartProps } from '@retikz/chart-react/point/regression';
-import type { ScatterChartProps } from '@retikz/chart-react/point/scatter';
+import type {
+  BubbleChartProps,
+  ConnectedScatterChartProps,
+  RangedDotChartProps,
+  RegressionChartProps,
+  ScatterChartProps,
+} from '@retikz/chart-react/point';
 import type { IRChild, IRScene, IRScope } from '@retikz/core';
 import type { AnyInputEmbed, InputChild, InputScene } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 
 import { CHART_NAMESPACE } from '@retikz/chart';
-import { BubbleChart } from '@retikz/chart-react/point/bubble';
-import { ConnectedScatterChart } from '@retikz/chart-react/point/connected-scatter';
-import { RangedDotChart } from '@retikz/chart-react/point/ranged-dot';
-import { RegressionChart } from '@retikz/chart-react/point/regression';
-import { ScatterChart } from '@retikz/chart-react/point/scatter';
+import {
+  BubbleChart,
+  ConnectedScatterChart,
+  RangedDotChart,
+  RegressionChart,
+  ScatterChart,
+} from '@retikz/chart-react/point';
 import { Fragment, isValidElement } from 'react';
 
 import { previewEmbedPropsOf } from './preview-embed';

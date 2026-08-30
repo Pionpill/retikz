@@ -5,7 +5,7 @@ import type { LayoutProps } from '@retikz/react';
 import type { ReactNode } from 'react';
 
 import { ChartLayout } from '@retikz/chart-react';
-import { ScatterChart } from '@retikz/chart-react/point/scatter';
+import { ScatterChart } from '@retikz/chart-react/point';
 import { Plot } from '@retikz/plot-react';
 import { resolveInputEmbedAdapter } from '@retikz/react';
 import { createElement, Fragment, isValidElement } from 'react';

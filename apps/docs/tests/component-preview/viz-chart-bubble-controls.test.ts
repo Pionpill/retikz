@@ -2,7 +2,7 @@ import type { ChartExtensionProps } from '@retikz/chart-react';
 import type { ReactNode } from 'react';
 
 import { ChartExtension, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
-import { BubbleEncodings, BubbleProperties } from '@retikz/chart-react/point/bubble';
+import { BubbleEncodings, BubbleProperties } from '@retikz/chart-react/point';
 import { PlotAxis } from '@retikz/plot-react';
 import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';

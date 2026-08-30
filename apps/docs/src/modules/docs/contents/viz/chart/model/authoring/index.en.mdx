@@ -49,9 +49,9 @@ Custom transform, reducer, scale, and similar Definitions enter the Chart provid
 
 The root `@retikz/chart` entry exposes shared Chart Source schemas, constants, and the Theme contract. Each concrete chartType subpath exposes its exact schema and provider contribution. Recipe / mark Definitions and resolvers are package-internal implementation contracts, not third-party extension entry points. Plain types such as `InputScatterChart`, normalizers, and factory functions belong to `@retikz/chart-vanilla`. Typed React Charts fold `ChartData`, `ChartLayout`, `ChartExtension`, presentation markers, and chartType-private declarations into the same Vanilla Input. Plot declarations are legal only inside `ChartExtension` and continue through the Plot normalizer. Dynamic family / chartType routing belongs to the application layer.
 
-| Entry          | Root `type` | `recipe.chartType` | Import                              |
-| -------------- | ----------- | ------------------ | ----------------------------------- |
-| `ScatterChart` | `point`     | `scatter`          | `@retikz/chart-react/point/scatter` |
+| Entry          | Root `type` | `recipe.chartType` | Import                      |
+| -------------- | ----------- | ------------------ | --------------------------- |
+| `ScatterChart` | `point`     | `scatter`          | `@retikz/chart-react/point` |
 
 The Vanilla factory `createScatterChart` comes from `@retikz/chart-vanilla/point/scatter`. The concrete subpath loads only its chartType; the family root remains an explicit aggregate entry. It returns an authoring result that preserves runtime theme data while reusing the shared Chart adapter and resolution pipeline for rendering.
 
@@ -61,7 +61,7 @@ The Vanilla factory `createScatterChart` comes from `@retikz/chart-vanilla/point
       label: 'Vanilla expands only composition string shorthand',
       path: 'packages/viz/chart-vanilla/src/point/scatter/normalize.ts',
       startLine: 9,
-      endLine: 34,
+      endLine: 28,
     },
     {
       label: 'React declarations converge on one Vanilla Input',

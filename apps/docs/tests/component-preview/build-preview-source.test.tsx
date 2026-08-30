@@ -3,7 +3,7 @@ import type { FC } from 'react';
 
 import { ChartData, ChartLayout, ChartSource, ChartTitle } from '@retikz/chart-react';
 import { ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
-import { BubbleChart, BubbleEncodings } from '@retikz/chart-react/point/bubble';
+import { BubbleChart, BubbleEncodings } from '@retikz/chart-react/point';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';

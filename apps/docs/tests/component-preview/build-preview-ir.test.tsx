@@ -3,8 +3,7 @@ import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { ChartData, ChartLayout } from '@retikz/chart-react';
-import { BubbleChart, BubbleEncodings } from '@retikz/chart-react/point/bubble';
-import { ScatterChart, ScatterEncodings } from '@retikz/chart-react/point/scatter';
+import { BubbleChart, BubbleEncodings, ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
