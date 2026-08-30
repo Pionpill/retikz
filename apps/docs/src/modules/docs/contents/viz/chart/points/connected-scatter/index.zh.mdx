@@ -1,0 +1,73 @@
+---
+title: 连接散点图
+description: 用显式顺序把观测点连接成一条或多条开放轨迹，同时保留每个观测点的可读性。
+family: scatter-points
+usage: distribution
+---
+
+<ShowcaseGallery
+  examples={[
+    {
+      id: 'connected-scatter-basic',
+      title: '有序轨迹与缺值策略',
+      description: '用必需的 `order` 连接每个 series 的观测点，并比较默认分段与跨缺值连接。',
+      preview: {
+        files: ['connected-scatter-basic', 'connected-scatter-basic.data.ts'],
+        controls: { name: 'connected-scatter-basic' },
+        controlPanelDefaultOpen: false,
+        size: 'xxxl',
+        caption: '切换“跨过缺值连接”，观察 South Africa 轨迹在 2005 年缺值处是分段还是桥接。',
+      },
+    },
+  ]}
+>
+Connected Scatter 同时表达离散观测与变化轨迹。若只需要点的分布，使用 [Scatter](/viz/chart/points/scatter)；若需要拟合趋势而不是逐观测连接，使用 [Regression](/viz/chart/points/regression)。
+
+## 数据角色
+
+`x`、`y` 与 `order` 必填。Path 按 `order` 字段排序，不能依赖输入数组的偶然顺序；可选 `series` 会拆分独立轨迹，并让 Path、Point 与图例共用一个分类颜色尺度。
+
+每个 semantic group 固定输出 `[Path, Point]`，因此线先绘制、点后绘制。`ConnectedScatterMark` 无论追加还是 `override`，都处理完整组，不能只替换其中一层。
+
+## 缺值行为
+
+Point 跳过无法投影的行。Path 默认在坏行处分段；`path.connectNulls: true` 会跳过该行并连接前后有效观测。Chart 不填补或清洗数据。
+
+## API 参考
+
+### `ConnectedScatterEncodingsProps`
+
+| 属性             | 类型                                                                      | 默认值 | 描述                             |
+| ---------------- | ------------------------------------------------------------------------- | ------ | -------------------------------- |
+| `x` / `y`        | Point position mapping                                                    | —      | 必需位置字段映射                 |
+| `order`          | direct field mapping                                                      | —      | 必需的组内连接顺序               |
+| `series?`        | direct field mapping with optional ordinal scale                          | —      | recipe-only 分组、颜色与图例角色 |
+| `row` / `column` | `string`、`IRPlotPartitionDimension` 或 `Array<IRPlotPartitionDimension>` | —      | 可选分面维度                     |
+| `facet?`         | `IRPlotFacetOptions`                                                      | —      | 分面选项；需要 row 或 column     |
+
+### `ConnectedScatterPropertiesProps`
+
+| 属性     | 类型                                | 默认值 | 描述                                            |
+| -------- | ----------------------------------- | ------ | ----------------------------------------------- |
+| `point?` | `IRConnectedScatterPointProperties` | Point  | Point 常量外观；不开放 zIndex                   |
+| `path?`  | `IRConnectedScatterPathProperties`  | Path   | 开放轨迹的线条外观与 `connectNulls`；不开放闭合 |
+
+### `ConnectedScatterMarkProps`
+
+| 属性          | 类型                                         | 默认值  | 描述                           |
+| ------------- | -------------------------------------------- | ------- | ------------------------------ |
+| `override?`   | `boolean`                                    | `false` | 原位替换完整 Path + Point 组   |
+| `encodings?`  | `{ x?: string; y?: string; order?: string }` | 继承    | 覆盖 direct 字段；不能改series |
+| `properties?` | `IRConnectedScatterChartProperties`          | 继承    | 按 member 合并常量外观         |
+
+## 公开入口
+
+- `@retikz/chart/point/connected-scatter`：exact schema、Source 类型、provider 与 locator
+- `@retikz/chart-react/point/connected-scatter`：Chart、Encodings、Properties 与 Mark declarations
+- `@retikz/chart-vanilla/point/connected-scatter`：normalize、factory 与 typed Input
+
+## 相关
+
+[散点图](/viz/chart/points/scatter) · [回归图](/viz/chart/points/regression) · [与 Plot 协作](/viz/chart/model/plot)
+
+</ShowcaseGallery>

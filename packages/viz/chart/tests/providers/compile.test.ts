@@ -15,6 +15,10 @@ import { defineChartMark, defineChartRecipe } from '../../src/_chart/contract';
 import { createChartProviderContribution } from '../../src/_chart/providers';
 import { createChartSourceSchema } from '../../src/_chart/schemas';
 import { BubbleChartSchema, createBubbleChartProviderContribution } from '../../src/point/bubble';
+import {
+  ConnectedScatterChartSchema,
+  createConnectedScatterChartProviderContribution,
+} from '../../src/point/connected-scatter';
 import { createRegressionChartProviderContribution, RegressionChartSchema } from '../../src/point/regression';
 import { createScatterChartProviderContribution, ScatterChartSchema } from '../../src/point/scatter';
 
@@ -41,6 +45,8 @@ const sceneIdsOf = (primitives: ReadonlyArray<{ id?: string; children?: Readonly
 type ScenePrimitiveLike = {
   type: string;
   children?: ReadonlyArray<ScenePrimitiveLike>;
+  commands?: ReadonlyArray<{ kind?: string; to?: [number, number] }>;
+  strokeWidth?: number;
   fill?: unknown;
   stroke?: unknown;
   fillOpacity?: number;
@@ -73,6 +79,44 @@ const sceneOf = (source: IRScene['children'][number]): IRScene => ({
 });
 
 describe('Chart providers through Core compile', () => {
+  it('compiles shuffled Connected Scatter rows by authored order and bridges invalid observations', () => {
+    const connectedRows = [
+      { series: 'A', x: 3, y: 3, order: 3 },
+      { series: 'A', x: 1, y: 1, order: 1 },
+      { series: 'A', x: 2, y: null, order: 2 },
+      { series: 'A', x: 4, y: 4, order: 4 },
+    ];
+    const source = ConnectedScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'connected.rows' },
+      recipe: {
+        chartType: 'connected-scatter',
+        encodings: { x: 'x', y: 'y', order: 'order', series: 'series' },
+        properties: { path: { connectNulls: true, stroke: '#0f766e', strokeWidth: 5 } },
+      },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createConnectedScatterChartProviderContribution(),
+        createPlotProviderContribution({ 'connected.rows': connectedRows }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+    const result = compileToScene(sceneOf(source), definitions);
+    const [trajectory] = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
+      primitive => primitive.stroke === '#0f766e' && primitive.strokeWidth === 5,
+    );
+    const positions = trajectory.commands?.flatMap(command => (Array.isArray(command.to) ? [command.to] : [])) ?? [];
+
+    expect(positions).toHaveLength(3);
+    expect(positions.map(position => position[0])).toEqual(
+      [...positions.map(position => position[0])].sort((a, b) => a - b),
+    );
+    expect(scenePrimitivesOfType(result.scene.primitives, 'ellipse')).toHaveLength(3);
+    expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);
+  });
+
   it('compiles grouped Regression through Point + mark-local Smooth Path with finite Scene output', () => {
     const regressionRows = [
       { series: 'A', x: 1, y: 2 },

@@ -242,6 +242,13 @@ export const vizV01: Release = {
             en: '`regression` combines raw Points with a mark-local Smooth Path over the same current data view. Optional `series` fits each group independently and unifies Point, trend, categorical scale, and legend identity.',
           },
         },
+        {
+          label: { zh: 'Connected Scatter 有序轨迹', en: 'Connected Scatter ordered trajectories' },
+          content: {
+            zh: '`connected-scatter` 固定必需 `order` 与 Path → Point semantic group；可选 `series` 统一轨迹分组、颜色尺度和图例，`connectNulls` 控制缺值桥接。',
+            en: '`connected-scatter` fixes required `order` and a Path-to-Point semantic group. Optional `series` unifies trajectory grouping, color scale, and legend, while `connectNulls` controls missing-value bridging.',
+          },
+        },
       ],
       subVersions: [
         {

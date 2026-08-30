@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 
 import { normalizeBubbleChart } from '@retikz/chart-vanilla/point/bubble';
+import { normalizeConnectedScatterChart } from '@retikz/chart-vanilla/point/connected-scatter';
+import { normalizeRangedDotChart } from '@retikz/chart-vanilla/point/ranged-dot';
 import { normalizeRegressionChart } from '@retikz/chart-vanilla/point/regression';
 import { normalizeScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { PlotAxis, PlotFacet, PlotTransform, PointMark } from '@retikz/plot-react';
@@ -19,6 +21,13 @@ import {
   RetikzChartReactErrorCode,
 } from '../src';
 import { BubbleChart, BubbleEncodings, BubbleMark, BubbleProperties } from '../src/point/bubble';
+import {
+  ConnectedScatterChart,
+  ConnectedScatterEncodings,
+  ConnectedScatterMark,
+  ConnectedScatterProperties,
+} from '../src/point/connected-scatter';
+import { RangedDotChart, RangedDotEncodings, RangedDotMark, RangedDotProperties } from '../src/point/ranged-dot';
 import { RegressionChart, RegressionEncodings, RegressionMark, RegressionProperties } from '../src/point/regression';
 import { ScatterChart, ScatterEncodings, ScatterMark, ScatterProperties } from '../src/point/scatter';
 
@@ -58,6 +67,91 @@ const requiredRegressionDeclarations = (
 );
 
 describe('Typed Point Chart React declarations', () => {
+  it('maps Connected Scatter and Ranged Dot declarations through typed Vanilla inputs', () => {
+    const connected = inputOf(
+      ConnectedScatterChart,
+      <>
+        <ChartData data={[{ x: 1, y: 2, year: 2020 }]} />
+        <ConnectedScatterEncodings x="x" y="y" order="year" />
+        <ConnectedScatterProperties path={{ dashPattern: [4, 2] }} />
+        <ConnectedScatterMark properties={{ point: { size: 5 } }} />
+      </>,
+    );
+    expect(connected.source).toEqual(
+      normalizeConnectedScatterChart({
+        data: { reference: 'chart.data' },
+        encodings: { x: 'x', y: 'y', order: 'year' },
+        properties: { path: { dashPattern: [4, 2] } },
+        marks: [{ kind: 'connected-scatter', properties: { point: { size: 5 } } }],
+      }),
+    );
+
+    const ranged = inputOf(
+      RangedDotChart,
+      <>
+        <ChartData data={[{ category: 'A', start: 1, end: 2 }]} />
+        <RangedDotEncodings category="category" start="start" end="end" />
+        <RangedDotProperties endPoint={{ shape: 'diamond' }} />
+        <RangedDotMark override properties={{ range: { strokeWidth: 3 } }} />
+      </>,
+    );
+    expect(ranged.source).toEqual(
+      normalizeRangedDotChart({
+        data: { reference: 'chart.data' },
+        encodings: { category: 'category', start: 'start', end: 'end' },
+        properties: { endPoint: { shape: 'diamond' } },
+        marks: [{ kind: 'ranged-dot', override: true, properties: { range: { strokeWidth: 3 } } }],
+      }),
+    );
+  });
+
+  it('enforces Connected Scatter and Ranged Dot declaration cardinality', () => {
+    expect(() => inputOf(ConnectedScatterChart, <ChartData data={[]} />)).toThrow(
+      /ConnectedScatterEncodings.*exactly once/i,
+    );
+    expect(() =>
+      inputOf(
+        ConnectedScatterChart,
+        <>
+          <ChartData data={[]} />
+          <ConnectedScatterEncodings x="x" y="y" order="order" />
+          <ConnectedScatterProperties point={{ size: 4 }} />
+          <ConnectedScatterProperties point={{ size: 5 }} />
+        </>,
+      ),
+    ).toThrow(/ConnectedScatterProperties.*at most once/i);
+
+    expect(() => inputOf(RangedDotChart, <ChartData data={[]} />)).toThrow(/RangedDotEncodings.*exactly once/i);
+    expect(() =>
+      inputOf(
+        RangedDotChart,
+        <>
+          <ChartData data={[]} />
+          <RangedDotEncodings category="category" start="start" end="end" />
+          <RangedDotProperties point={{ size: 4 }} />
+          <RangedDotProperties point={{ size: 5 }} />
+        </>,
+      ),
+    ).toThrow(/RangedDotProperties.*at most once/i);
+  });
+
+  it('renders Connected Scatter and Ranged Dot through one standalone or embedded SVG host', () => {
+    const charts = [
+      <ConnectedScatterChart key="connected">
+        <ChartData data={[{ x: 1, y: 2, order: 1 }]} />
+        <ConnectedScatterEncodings x="x" y="y" order="order" />
+      </ConnectedScatterChart>,
+      <RangedDotChart key="ranged">
+        <ChartData data={[{ category: 'A', start: 1, end: 2 }]} />
+        <RangedDotEncodings category="category" start="start" end="end" />
+      </RangedDotChart>,
+    ];
+
+    for (const chart of charts) {
+      expect(renderToStaticMarkup(chart).match(/<svg/g)).toHaveLength(1);
+      expect(renderToStaticMarkup(<Layout>{chart}</Layout>).match(/<svg/g)).toHaveLength(1);
+    }
+  });
   it('maps exact Bubble declarations and preserves authored mark order', () => {
     const input = inputOf(
       BubbleChart,

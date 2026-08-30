@@ -186,6 +186,24 @@ export const vizSection: Array<Section> = [
               },
             },
           },
+          {
+            id: 'connected-scatter',
+            label: 'viz.chartConnectedScatter',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'concept',
+              audience: 'user',
+              capability: 'showcase.connected-scatter',
+              sourceOfTruth: 'docs',
+              layout: 'showcase',
+              showcase: {
+                family: 'scatter-points',
+                role: 'primary',
+                preview: 'connected-scatter-basic',
+                order: 40,
+              },
+            },
+          },
         ],
         meta: {
           pageType: 'group',

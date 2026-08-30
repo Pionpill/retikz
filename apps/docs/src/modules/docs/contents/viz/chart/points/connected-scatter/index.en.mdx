@@ -1,0 +1,73 @@
+---
+title: Connected Scatter
+description: Connect observations into one or more explicitly ordered open trajectories while keeping every point readable.
+family: scatter-points
+usage: distribution
+---
+
+<ShowcaseGallery
+  examples={[
+    {
+      id: 'connected-scatter-basic',
+      title: 'Ordered trajectories and missing values',
+      description: 'Use required `order` to connect each series, then compare segmentation with bridging across missing values.',
+      preview: {
+        files: ['connected-scatter-basic', 'connected-scatter-basic.data.ts'],
+        controls: { name: 'connected-scatter-basic' },
+        controlPanelDefaultOpen: false,
+        size: 'xxxl',
+        caption: 'Toggle connecting across missing values and inspect whether the South Africa trajectory breaks or bridges at 2005.',
+      },
+    },
+  ]}
+>
+Connected Scatter shows discrete observations and trajectories together. Use [Scatter](/viz/chart/points/scatter) for point distributions, or [Regression](/viz/chart/points/regression) for fitted trends rather than observation-to-observation connections.
+
+## Data roles
+
+`x`, `y`, and `order` are required. Path sorts by the `order` field instead of incidental array order. Optional `series` splits independent trajectories and shares one categorical color scale across Path, Point, and legend.
+
+Each semantic group fixes `[Path, Point]`, so lines paint before points. Whether appended or used with `override`, `ConnectedScatterMark` always resolves the complete group.
+
+## Missing values
+
+Point skips rows that cannot be projected. Path segments at invalid rows by default; `path.connectNulls: true` skips that row and joins adjacent valid observations. Chart does not impute or clean data.
+
+## API Reference
+
+### `ConnectedScatterEncodingsProps`
+
+| Prop             | Type                                                                       | Default | Description                                  |
+| ---------------- | -------------------------------------------------------------------------- | ------- | -------------------------------------------- |
+| `x` / `y`        | Point position mapping                                                     | —       | Required position field mappings             |
+| `order`          | direct field mapping                                                       | —       | Required within-series connection order      |
+| `series?`        | direct field mapping with optional ordinal scale                           | —       | Recipe-only grouping, color, and legend role |
+| `row` / `column` | `string`, `IRPlotPartitionDimension`, or `Array<IRPlotPartitionDimension>` | —       | Optional facet dimensions                    |
+| `facet?`         | `IRPlotFacetOptions`                                                       | —       | Facet options; requires row or column        |
+
+### `ConnectedScatterPropertiesProps`
+
+| Prop     | Type                                | Default | Description                                           |
+| -------- | ----------------------------------- | ------- | ----------------------------------------------------- |
+| `point?` | `IRConnectedScatterPointProperties` | Point   | Constant Point appearance without zIndex              |
+| `path?`  | `IRConnectedScatterPathProperties`  | Path    | Open-path appearance and `connectNulls`; never closes |
+
+### `ConnectedScatterMarkProps`
+
+| Prop          | Type                                         | Default   | Description                              |
+| ------------- | -------------------------------------------- | --------- | ---------------------------------------- |
+| `override?`   | `boolean`                                    | `false`   | Replaces the complete Path + Point group |
+| `encodings?`  | `{ x?: string; y?: string; order?: string }` | inherited | Overrides direct fields, never series    |
+| `properties?` | `IRConnectedScatterChartProperties`          | inherited | Merges constant appearance by member     |
+
+## Public entries
+
+- `@retikz/chart/point/connected-scatter`: exact schemas, Source types, provider, and locator
+- `@retikz/chart-react/point/connected-scatter`: Chart, Encodings, Properties, and Mark declarations
+- `@retikz/chart-vanilla/point/connected-scatter`: normalizer, factory, and typed Input
+
+## Related
+
+[Scatter](/viz/chart/points/scatter) · [Regression](/viz/chart/points/regression) · [Working with Plot](/viz/chart/model/plot)
+
+</ShowcaseGallery>

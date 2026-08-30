@@ -1,7 +1,9 @@
 import type { IRChartSource } from '@retikz/chart';
 import type { IRBubbleChart } from '@retikz/chart/point/bubble';
+import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
 import type { CreateBubbleChartInput } from '@retikz/chart-vanilla/point/bubble';
+import type { CreateConnectedScatterChartInput } from '@retikz/chart-vanilla/point/connected-scatter';
 import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
@@ -11,9 +13,11 @@ import type { IRTable } from '@retikz/table';
 import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 
 import { BubbleChartSchema } from '@retikz/chart/point/bubble';
+import { ConnectedScatterChartSchema } from '@retikz/chart/point/connected-scatter';
 import { ScatterChartSchema } from '@retikz/chart/point/scatter';
 import { renderChart } from '@retikz/chart-vanilla';
 import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble';
+import { createConnectedScatterChart } from '@retikz/chart-vanilla/point/connected-scatter';
 import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { fallbackMeasurer } from '@retikz/core';
 import {
@@ -655,7 +659,7 @@ const buildDatasetImportCode = (
   return { imports, expression };
 };
 
-type TypedChartSource = IRScatterChart | IRBubbleChart;
+type TypedChartSource = IRScatterChart | IRBubbleChart | IRConnectedScatterChart;
 
 /** 从 Source IR 识别确定形态的 Chart */
 const typedChartSourceOf = (source: CompositeChild): TypedChartSource | undefined => {
@@ -666,6 +670,8 @@ const typedChartSourceOf = (source: CompositeChild): TypedChartSource | undefine
       return ScatterChartSchema.parse(source);
     case 'bubble':
       return BubbleChartSchema.parse(source);
+    case 'connected-scatter':
+      return ConnectedScatterChartSchema.parse(source);
     default:
       return undefined;
   }
@@ -699,10 +705,12 @@ const buildChartCode = (
 ): string => {
   const typedSource = typedChartSourceOf(chart);
   if (typedSource !== undefined) {
-    const { factory, subpath } =
-      typedSource.recipe.chartType === 'bubble'
-        ? { factory: 'createBubbleChart', subpath: 'bubble' }
-        : { factory: 'createScatterChart', subpath: 'scatter' };
+    const factoryByChartType = {
+      bubble: { factory: 'createBubbleChart', subpath: 'bubble' },
+      'connected-scatter': { factory: 'createConnectedScatterChart', subpath: 'connected-scatter' },
+      scatter: { factory: 'createScatterChart', subpath: 'scatter' },
+    } as const;
+    const { factory, subpath } = factoryByChartType[typedSource.recipe.chartType];
     const datasetImport = buildDatasetImportCode(datasets, options);
     const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
     const dataCode = datasetImport === null ? `const datasets = ${formatVanillaValue(datasets)};\n\n` : '';
@@ -749,10 +757,16 @@ const buildChartPreview = (
     themeDefinitions: PreviewThemeDefinitionBundle.chart,
     lowerOptions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot },
   };
-  const runtime =
-    chart.recipe.chartType === 'bubble'
-      ? createBubbleChart(input as CreateBubbleChartInput)
-      : createScatterChart(input as CreateScatterChartInput);
+  const runtime = (() => {
+    switch (chart.recipe.chartType) {
+      case 'bubble':
+        return createBubbleChart(input as CreateBubbleChartInput);
+      case 'connected-scatter':
+        return createConnectedScatterChart(input as CreateConnectedScatterChartInput);
+      case 'scatter':
+        return createScatterChart(input as CreateScatterChartInput);
+    }
+  })();
   const rendered = renderChart(runtime, {
     ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
     ...(Object.keys(size).length === 0 ? {} : { output: size }),

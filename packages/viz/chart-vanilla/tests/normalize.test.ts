@@ -1,8 +1,24 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeBubbleChart, normalizeRegressionChart, normalizeScatterChart } from '../src/point';
+import {
+  normalizeBubbleChart,
+  normalizeConnectedScatterChart,
+  normalizeRegressionChart,
+  normalizeScatterChart,
+} from '../src/point';
 
 describe('Chart Vanilla normalization', () => {
+  it('normalizes Connected Scatter and Ranged Dot to exact Sources', () => {
+    expect(
+      normalizeConnectedScatterChart({
+        data: { reference: 'rows' },
+        encodings: { x: 'x', y: 'y', order: 'year', series: 'country', row: 'region' },
+      }).recipe,
+    ).toEqual({
+      chartType: 'connected-scatter',
+      encodings: { x: 'x', y: 'y', order: 'year', series: 'country', row: { field: 'region' } },
+    });
+  });
   it('normalizes Bubble input to its exact family and recipe Source', () => {
     const source = normalizeBubbleChart({
       id: 'countries',

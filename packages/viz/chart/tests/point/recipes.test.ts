@@ -12,6 +12,7 @@ import { resolveSelectedChart } from '../../src/_chart/resolve';
 import { BubbleMarkDefinition } from '../../src/point/bubble/mark';
 import { BubbleChartDefinition } from '../../src/point/bubble/recipe';
 import { BubbleChartSchema } from '../../src/point/bubble/schema';
+import { ConnectedScatterChartDefinition } from '../../src/point/connected-scatter/recipe';
 import { RegressionChartDefinition } from '../../src/point/regression/recipe';
 import { RegressionChartSchema } from '../../src/point/regression/schema';
 import { ScatterMarkDefinition } from '../../src/point/scatter/mark';
@@ -43,6 +44,54 @@ const resolve = <TSource extends IRChartSource>(
   });
 
 describe('Point Chart recipe Definitions', () => {
+  it('Connected Scatter emits an ordered open Path before Point', () => {
+    const result = resolve(
+      ConnectedScatterChartDefinition,
+      { x: 'x', y: 'y', order: 'year' },
+      { point: { size: 4 }, path: { strokeWidth: 2, dashPattern: [4, 2], connectNulls: true } },
+    );
+    expect(result.semanticMarks).toEqual([
+      {
+        kind: 'connected-scatter',
+        plotMarks: [
+          expect.objectContaining({
+            type: 'path',
+            order: 'year',
+            closed: false,
+            connectNulls: true,
+            dashPattern: { kind: 'constant', value: [4, 2] },
+          }),
+          expect.objectContaining({ type: 'point', size: { kind: 'constant', value: 4 } }),
+        ],
+      },
+    ]);
+  });
+
+  it('Connected Scatter series groups Path and shares one color scale with Point', () => {
+    const result = resolve(ConnectedScatterChartDefinition, { x: 'x', y: 'y', order: 'year', series: 'country' });
+    const [path, point] = result.semanticMarks[0].plotMarks;
+    expect(result.scaffold.guides?.value).toContainEqual({ type: 'legend', channel: 'color' });
+    expect(path).toMatchObject({
+      series: 'country',
+      stroke: { kind: 'field', value: 'country', scale: '__chart.connected-scatter.scale.series' },
+    });
+    expect(point).toMatchObject({
+      color: { kind: 'field', value: 'country', scale: '__chart.connected-scatter.scale.series' },
+    });
+  });
+
+  it('Connected Scatter explicit Point color overrides the inherited series color', () => {
+    const result = resolve(
+      ConnectedScatterChartDefinition,
+      { x: 'x', y: 'y', order: 'year', series: 'country' },
+      { point: { color: '#dc2626' }, path: { stroke: '#16a34a' } },
+    );
+    const [path, point] = result.semanticMarks[0].plotMarks;
+
+    expect(path).toMatchObject({ stroke: { kind: 'constant', value: '#16a34a' } });
+    expect(point).toMatchObject({ color: { kind: 'constant', value: '#dc2626' } });
+  });
+
   it('composes the unchanged Point consumers from the reusable x/y atom', () => {
     const positionConsumers = pointPositionFieldConsumersOf('scatter');
     const allConsumers = pointFieldConsumersOf('scatter');
