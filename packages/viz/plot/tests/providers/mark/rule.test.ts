@@ -518,7 +518,7 @@ describe('rule polar', () => {
     expect(filledRing?.fillRule).toBe('evenodd');
   });
 
-  it('rule-polar-field-radius-rings-use-circle-path', () => {
+  it('rule-polar-field-radius-rings-use-circle-path-and-omit-zero-radius', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -545,7 +545,7 @@ describe('rule polar', () => {
       cartOpts,
     ).children[0] as IRScope;
     const paths = pathsOf(layer);
-    expect(paths).toHaveLength(3);
+    expect(paths).toHaveLength(2);
     for (const path of paths) {
       expect(path.children.map(s => s.kind)).toEqual(['move', 'circlePath']);
     }
@@ -590,7 +590,7 @@ describe('rule polar', () => {
       .flatMap(path => path.commands.filter(command => command.kind === 'ellipseArc'))
       .filter(command => Math.abs(command.endAngle - command.startAngle) >= 360);
 
-    expect(rings).toHaveLength(3);
+    expect(rings).toHaveLength(2);
     for (const ring of rings) {
       expect(scene.layout.x).toBeLessThanOrEqual(ring.center[0] - ring.radiusX);
       expect(scene.layout.y).toBeLessThanOrEqual(ring.center[1] - ring.radiusY);

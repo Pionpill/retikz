@@ -29,10 +29,22 @@ describe('resolveLinearScale (contract d3-scale)', () => {
     expect(scale(7)).toBe(100);
   });
 
-  it('scale_inferred_domain_has_default_padding', () => {
-    const scale = resolvePositionScale({ type: 'linear', name: 'x' }, [3, 7, 5], [0, 100]);
-    expect(scale.domain()).toEqual([2.8, 7.2]);
-  });
+  it.each([
+    ['linear', { type: 'linear', name: 'x' }, [3, 5, 7]],
+    ['time', { type: 'time', name: 'x' }, ['2024-01-01', '2024-12-31']],
+    ['log', { type: 'log', name: 'x' }, [1, 10, 100]],
+    ['pow', { type: 'pow', name: 'x' }, [3, 5, 7]],
+    ['sqrt', { type: 'sqrt', name: 'x' }, [3, 5, 7]],
+    ['symlog', { type: 'symlog', name: 'x' }, [-3, 5, 7]],
+    ['radial', { type: 'radial', name: 'x' }, [3, 5, 7]],
+  ] satisfies Array<[string, IRPlotScaleOperation, Array<unknown>]>)(
+    '%s_inferred_domain_defaults_to_zero_padding',
+    (_family, operation, values) => {
+      const scale = resolvePositionScale(operation, values, [0, 100]);
+      expect(scale.coordinate(values[0])).toBeCloseTo(0, 6);
+      expect(scale.coordinate(values.at(-1))).toBeCloseTo(100, 6);
+    },
+  );
 
   it('scale_domain_padding_object_targets_sides', () => {
     const scale = resolvePositionScale(

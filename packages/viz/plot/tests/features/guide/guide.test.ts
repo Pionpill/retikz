@@ -1284,6 +1284,7 @@ describe('lowerPlots guide orchestration (contract)', () => {
     const gridLayer = outer.children[0] as IRScope;
     const gridPath = gridLayer.children[0] as IRPath;
 
-    expect(gridPath.children).toHaveLength(10);
+    // 默认无 domain padding，主题端点与可见 tick 端点重合并去重：3 条 grid × move/line
+    expect(gridPath.children).toHaveLength(6);
   });
 });

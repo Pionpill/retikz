@@ -2,19 +2,20 @@
 
 - 状态：Accepted
 - 决策日期：2026-07-03
+- 修订日期：2026-08-30
 - 关联：[plot v0.1 roadmap](../roadmap.md) · [alpha.15 roadmap](./roadmap.md) · [plot-design.md §3.4 Scale](../../../../../architecture/plot-design.md#34-scale) · [plot-design.md §3.9 Guide](../../../../../architecture/plot-design.md#39-guide)
 
 ## 背景
 
-`@retikz/plot` 当前连续位置 scale 的默认 domain 来自数据 extent；`nice` 只调用 d3 scale 的 `.nice()`。当数据只有一个点，或所有点位于 cartesian2D 的左下角边界附近时，推断 domain 会让点贴在 axis / plotArea 边界上，图形可读性很差。这个问题不是 demo 层应该手写 domain 的问题，而是 scale + guide 共同承担的基础可读性契约。
+`@retikz/plot` 的连续位置 scale 默认 domain 来自数据 extent；`nice` 只调用 d3 scale 的 `.nice()`。数据 mark 是否应与 axis / plotArea 边界保持距离，取决于 chart type、position channel 与 mark geometry。Plot 无法仅根据 scale family 判断点半径、气泡尺寸、柱宽、基线或区间端点，因此不应提供统一的图形可读性留白。
 
-Plot 设计里 scale 负责 `domain / range / clamp / nice / ticks`，coordinate 只消费位置 scale，guide 从 scale tick set 派生 axis 与 grid。因此 domain 弹性必须落在 scale 解析阶段，tick 显式控制必须落在 guide 语义上。Theme 只能提供视觉默认，不能用视觉 token 掩盖 domain 语义缺失。
+Plot 设计里 scale 负责 `domain / range / clamp / nice / ticks`，coordinate 只消费位置 scale，guide 从 scale tick set 派生 axis 与 grid。Plot 继续提供显式 domain 弹性能力，但是否启用以及使用多大留白由拥有图形语义的调用方声明。Theme 只能提供视觉默认，不能用视觉 token 改写 domain 语义。
 
-同类图形语法通常会在默认值里给 inferred extent 留白，但 retikz 还要守住 JSON IR、scale family invariant 和 lowering 可预测性。尤其 `log` 只能正 domain，`sqrt` / `radial` 不能负，`pow` 在非整数指数时不能负；domain padding 不能把合法数据扩成非法 scale domain。
+显式 `domainPadding` 仍需守住 JSON IR、scale family invariant 和 lowering 可预测性。尤其 `log` 只能正 domain，`sqrt` / `radial` 不能负，`pow` 在非整数指数时不能负；domain padding 不能把合法数据扩成非法 scale domain。
 
-## 决策：把 inferred position domain 扩展为可读 domain，并开放显式 tick set
+## 决策：Plot 默认不扩展 inferred position domain，并开放显式 padding 与 tick set
 
-连续 / 时间位置 scale 新增 `domainPadding` 与 `singleValueSpan`。当 `domain` 省略时，position scale 默认启用 inferred-domain padding；当 `domain` 显式给出时，默认尊重用户，不自动 padding，只有用户同时写 `domainPadding` 才扩展显式 domain。tick 控制进入 ADR-02 的 axis 部件槽位：`ticks.count` 作为 hint，`ticks.values` 声明显式刻度，`tickLabels.format` 控制展示文本。
+连续 / 时间位置 scale 提供 `domainPadding` 与 `singleValueSpan`。无论 domain 来自数据推断还是显式声明，省略 `domainPadding` 时默认值均为 `0`；调用方只有显式声明 `domainPadding` 才扩展 domain。tick 控制进入 ADR-02 的 axis 部件槽位：`ticks.count` 作为 hint，`ticks.values` 声明显式刻度，`tickLabels.format` 控制展示文本。
 
 domain 解析顺序固定为：
 
@@ -27,7 +28,7 @@ source extent
   -> nice
 ```
 
-`source extent` 来自显式 `domain` 或 inferred extent。显式 `domain` 省略 `domainPadding` 时，`apply domainPadding` 是 no-op；inferred position domain 省略 `domainPadding` 时使用默认 `0.05`。
+`source extent` 来自显式 `domain` 或 inferred extent。省略 `domainPadding` 时，`apply domainPadding` 是 no-op。
 
 scale family 算法固定如下：
 
@@ -68,14 +69,15 @@ const plot = {
 
 理由：
 
-1. inferred domain 默认可读，解决单点和边界贴合场景，不要求用户为普通散点图手写 domain。
-2. 显式 domain 默认不改写，保留用户对数据语义边界的控制。
+1. Plot 不猜测 mark 几何和 chart 语义，推断 domain 默认保持数据 extent。
+2. Chart 等高层调用方可按 chart type、position channel 与 mark geometry 显式声明留白，同时复用 Plot 的统一算法。
 3. tick set 是 axis 语义，不是 theme 语义；`ticks.values` / `tickLabels.format` 让 guide 能表达关键刻度与展示格式。
 4. scale family invariant 在 domain padding 阶段统一处理，避免 log / sqrt / radial / pow 各自散落补丁。
 
 ## 长期边界
 
 - 分类 scale 的 `paddingInner` / `paddingOuter` / `padding` 重设计。
+- Chart 各 chart type 的默认 domain padding 策略。
 - 自动 tick label 防重叠、自动旋转、文字测量驱动抽稀。
 - Theme token、axis line / label / grid 外观样式；由 ADR-02 / ADR-03 处理。
 - Interaction 的 hover / tooltip / selection tick state。

@@ -15,8 +15,6 @@ export type ResolvePaddedDomainOptions = {
   family: PositionDomainFamily;
   /** 原始 domain，可能来自用户显式配置或数据推断 */
   domain: readonly [number, number];
-  /** domain 是否来自用户显式配置 */
-  explicitDomain: boolean;
   /** 用户声明的 domain padding；数字代表两端同值，对象可分别指定上下界 */
   domainPadding?: IRPlotDomainPadding;
   /** 单值 domain 展开跨度 */
@@ -25,8 +23,6 @@ export type ResolvePaddedDomainOptions = {
   base?: number;
   /** pow scale 的指数 */
   exponent?: number;
-  /** 推断 domain 时使用的默认 padding；显式 domain 默认不自动留白 */
-  defaultDomainPadding?: number;
 };
 
 const finiteDomain = (domain: readonly [number, number], scaleName: string): [number, number] => {
@@ -39,15 +35,8 @@ const finiteDomain = (domain: readonly [number, number], scaleName: string): [nu
   return [lo, hi];
 };
 
-const paddingSides = (
-  padding: IRPlotDomainPadding | undefined,
-  explicitDomain: boolean,
-  defaultDomainPadding: number,
-): { lower: number; upper: number } => {
-  if (padding === undefined) {
-    const value = explicitDomain ? 0 : defaultDomainPadding;
-    return { lower: value, upper: value };
-  }
+const paddingSides = (padding: IRPlotDomainPadding | undefined): { lower: number; upper: number } => {
+  if (padding === undefined) return { lower: 0, upper: 0 };
   if (typeof padding === 'number') return { lower: padding, upper: padding };
   return { lower: padding.lower ?? 0, upper: padding.upper ?? 0 };
 };
@@ -110,7 +99,7 @@ const resolveLogDomain = (options: ResolvePaddedDomainOptions): [number, number]
           return [pow(center - span / 2), pow(center + span / 2)];
         })()
       : source;
-  const padding = paddingSides(options.domainPadding, options.explicitDomain, options.defaultDomainPadding ?? 0);
+  const padding = paddingSides(options.domainPadding);
   const logLo = log(expanded[0]);
   const logHi = log(expanded[1]);
   const span = Math.abs(logHi - logLo);
@@ -123,8 +112,8 @@ const resolveLogDomain = (options: ResolvePaddedDomainOptions): [number, number]
 };
 
 /**
- * 解析连续 position scale 的最终 domain。
- * @description 对推断 domain 添加默认弹性空间；对单值 domain 先展开，再按 scale 族约束处理 log / non-negative 等边界。
+ * 解析连续 position scale 的最终 domain
+ * @description 对单值 domain 先展开，再按显式 domain padding 与 scale 族约束处理 log / non-negative 等边界
  */
 export const resolvePaddedDomain = (options: ResolvePaddedDomainOptions): [number, number] => {
   if (options.family === 'log') return resolveLogDomain(options);
@@ -140,11 +129,7 @@ export const resolvePaddedDomain = (options: ResolvePaddedDomainOptions): [numbe
 
   const expanded =
     source[0] === source[1] ? expandAdditiveSingleValue(source[0], options.singleValueSpan, clampLowerZero) : source;
-  const padded = applyAdditivePadding(
-    expanded,
-    paddingSides(options.domainPadding, options.explicitDomain, options.defaultDomainPadding ?? 0),
-    clampLowerZero,
-  );
+  const padded = applyAdditivePadding(expanded, paddingSides(options.domainPadding), clampLowerZero);
 
   if (clampLowerZero) assertNonNegative(padded, options.scaleName, options.family, 'padded');
   return padded;

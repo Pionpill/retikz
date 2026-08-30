@@ -62,10 +62,8 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'linear',
           domain: operation.domain ?? safeExtent(numericValues),
-          explicitDomain: operation.domain !== undefined,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
-          defaultDomainPadding: 0.05,
         }),
       };
     case PlotScale.Log: {
@@ -77,11 +75,9 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'log',
           domain: operation.domain ?? [lo, hi],
-          explicitDomain: operation.domain !== undefined,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
           base: operation.base,
-          defaultDomainPadding: 0.05,
         }),
       };
     }
@@ -99,11 +95,9 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'pow',
           domain: sourceDomain,
-          explicitDomain: operation.domain !== undefined,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
           exponent,
-          defaultDomainPadding: 0.05,
         }),
       };
     }
@@ -114,10 +108,8 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'sqrt',
           domain: operation.domain ?? safeExtent(numericValues.filter(value => value >= 0)),
-          explicitDomain: operation.domain !== undefined,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
-          defaultDomainPadding: 0.05,
         }),
       };
     case PlotScale.Symlog:
@@ -127,10 +119,8 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'symlog',
           domain: operation.domain ?? safeExtent(numericValues),
-          explicitDomain: operation.domain !== undefined,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
-          defaultDomainPadding: 0.05,
         }),
       };
     case PlotScale.Radial:
@@ -140,10 +130,8 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'radial',
           domain: operation.domain ?? safeExtent(numericValues.filter(value => value >= 0)),
-          explicitDomain: operation.domain !== undefined,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
-          defaultDomainPadding: 0.05,
         }),
       };
     case PlotScale.Time: {
@@ -154,10 +142,8 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'time',
           domain: operation.domain ?? safeExtent(stamps),
-          explicitDomain: operation.domain !== undefined,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
-          defaultDomainPadding: 0.05,
         }),
       };
     }

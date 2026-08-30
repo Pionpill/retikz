@@ -235,7 +235,7 @@ const referenceLineSteps = (
     return inner && outer ? pointsToSteps([inner, outer], false) : null;
   }
   const radius = frame.secondary.coordinate(constantValue);
-  if (!Number.isFinite(radius)) return null;
+  if (!Number.isFinite(radius) || radius <= 0) return null;
   const angleSpan = referenceSpanInterval(mark, row, frame.primary.coordinate, [frame.startAngle, frame.endAngle]);
   if (angleSpan === null) return null;
   const centerStep: IRStep = { type: 'step', kind: 'move', to: frame.center };

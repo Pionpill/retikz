@@ -22,7 +22,7 @@ type ScaleBaseProps = {
 type ContinuousScaleProps = ScaleBaseProps & {
   /** 显式数值 / 时间 domain；省略时从绑定数据推断 */
   domain?: [number, number];
-  /** 额外值域留白；推断 domain 默认 0.05，显式 domain 默认 0 */
+  /** 额外值域留白；推断与显式 domain 均默认 0 */
   domainPadding?: InputDomainPadding;
   /** 单值 domain 展开跨度；省略时按 scale 类型默认 */
   singleValueSpan?: number;

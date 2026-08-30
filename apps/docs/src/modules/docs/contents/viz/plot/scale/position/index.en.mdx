@@ -23,6 +23,8 @@ A positional scale answers where a field lands on the canvas, how long it is, or
 
 `linear`, `log`, `sqrt`, and `symlog` share one interactive chart. Choose a dataset in the controls, then switch the scale and tune its parameters to inspect the mapping directly.
 
+Plot uses the inferred continuous domain directly and adds no implicit boundary padding. Set `domainPadding` explicitly when a particular graphic needs room; higher-level Chart recipes can provide their own mark-aware defaults.
+
 <ComponentPreview
   size="lg"
   files={['scale-continuous', 'scale-continuous.data.ts']}
@@ -108,19 +110,19 @@ The resolved scale serves both marks and guides: continuous scales output numeri
       label: 'Default type derivation and baseline validation',
       path: 'packages/viz/plot/src/resolve/scale/resolve.ts',
       startLine: 47,
-      endLine: 167,
+      endLine: 153,
     },
     {
       label: 'Single-value expansion and padding for continuous domains',
       path: 'packages/viz/plot/src/resolve/scale/domain.ts',
-      startLine: 121,
-      endLine: 147,
+      startLine: 114,
+      endLine: 136,
     },
     {
       label: 'Resolution entry points for positional scale definitions',
       path: 'packages/viz/plot/src/resolve/scale/resolve.ts',
-      startLine: 169,
-      endLine: 187,
+      startLine: 155,
+      endLine: 173,
     },
   ]}
 />
@@ -134,7 +136,7 @@ React `<PlotScale>` is the declaration surface for common positional types. A `b
 | `dimension`        | `'x' \| 'y'`                        | —              | Coordinate dimension; polar uses `x` / `y` for angular / radial roles          |
 | `type`             | `PlotScaleProps['type']`            | —              | `linear`, `time`, `band`, `point`, `log`, `sqrt`, `symlog`, or `radial`        |
 | `domain?`          | `PlotScaleProps['domain']`          | inferred       | Continuous input extent, or an ordered category list for `band` / `point`      |
-| `domainPadding?`   | `PlotScaleProps['domainPadding']`   | `5%` inferred  | Fractional padding around continuous domains; explicit domains default to 0    |
+| `domainPadding?`   | `PlotScaleProps['domainPadding']`   | `0`            | Fractional continuous-domain padding, applied only when explicitly declared    |
 | `singleValueSpan?` | `PlotScaleProps['singleValueSpan']` | type-derived   | Minimum span used to expand a single-value domain                              |
 | `base?`            | `PlotScaleProps['base']`            | `10`           | `log` only; must be greater than `1`                                           |
 | `constant?`        | `PlotScaleProps['constant']`        | `1`            | `symlog` only; controls the width of the linear region around zero             |

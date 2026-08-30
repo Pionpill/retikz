@@ -23,6 +23,8 @@ description: 位置比例尺把数值、时间和分类字段映射成坐标、�
 
 `linear`、`log`、`sqrt` 与 `symlog` 共享同一张可交互图表。先在 controls 中选择数据，再切换 scale 并调整对应参数，可以直接观察映射变化。
 
+Plot 默认直接使用数据推断出的连续 domain，不额外增加边界留白。需要给具体图形预留空间时，显式设置 `domainPadding`；Chart 等高层封装可以再按自身图形语义提供默认策略。
+
 <ComponentPreview
   size="lg"
   files={['scale-continuous', 'scale-continuous.data.ts']}
@@ -108,19 +110,19 @@ description: 位置比例尺把数值、时间和分类字段映射成坐标、�
       label: '默认类型派生与基线校验',
       path: 'packages/viz/plot/src/resolve/scale/resolve.ts',
       startLine: 47,
-      endLine: 167,
+      endLine: 153,
     },
     {
       label: '连续 domain 的单值展开与留白',
       path: 'packages/viz/plot/src/resolve/scale/domain.ts',
-      startLine: 121,
-      endLine: 147,
+      startLine: 114,
+      endLine: 136,
     },
     {
       label: '位置 scale definition 的解析入口',
       path: 'packages/viz/plot/src/resolve/scale/resolve.ts',
-      startLine: 169,
-      endLine: 187,
+      startLine: 155,
+      endLine: 173,
     },
   ]}
 />
@@ -134,7 +136,7 @@ React `<PlotScale>` 是常用位置类型的声明入口；`band` 可以由 inte
 | `dimension`        | `'x' \| 'y'`                        | —                 | 坐标维度；polar 中仍用 `x` / `y` 表示角向 / 径向                       |
 | `type`             | `PlotScaleProps['type']`            | —                 | `linear`、`time`、`band`、`point`、`log`、`sqrt`、`symlog` 或 `radial` |
 | `domain?`          | `PlotScaleProps['domain']`          | 从数据推断        | 连续输入范围，或 `band` / `point` 的有序分类列表                       |
-| `domainPadding?`   | `PlotScaleProps['domainPadding']`   | 推断时 `5%`       | 连续 domain 两端的比例留白；显式 domain 默认不留白                     |
+| `domainPadding?`   | `PlotScaleProps['domainPadding']`   | `0`               | 连续 domain 两端的比例留白；推断与显式 domain 都只在声明后留白         |
 | `singleValueSpan?` | `PlotScaleProps['singleValueSpan']` | 按类型推断        | 单值 domain 展开时使用的最小跨度                                       |
 | `base?`            | `PlotScaleProps['base']`            | `10`              | 仅用于 `log`，必须大于 `1`                                             |
 | `constant?`        | `PlotScaleProps['constant']`        | `1`               | 仅用于 `symlog`，控制零附近线性区宽度                                  |

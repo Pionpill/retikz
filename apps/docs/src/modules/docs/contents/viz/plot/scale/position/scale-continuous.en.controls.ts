@@ -72,7 +72,7 @@ export const scaleContinuousControls = definePreviewControls({
           kind: 'range',
           id: 'domainPadding',
           label: 'Domain padding',
-          defaultValue: 0.05,
+          defaultValue: 0,
           min: 0,
           max: 0.2,
           step: 0.01,
@@ -90,7 +90,7 @@ export const previewControlContract = {
     dataVariant: 'positive',
     base: 10,
     constant: 1,
-    domainPadding: 0.05,
+    domainPadding: 0,
   },
   presets: [
     {
@@ -101,7 +101,7 @@ export const previewControlContract = {
         dataVariant: 'positive',
         base: 10,
         constant: 1,
-        domainPadding: 0.05,
+        domainPadding: 0,
       },
     },
     {
@@ -112,7 +112,7 @@ export const previewControlContract = {
         dataVariant: 'positive',
         base: 10,
         constant: 1,
-        domainPadding: 0.05,
+        domainPadding: 0,
       },
     },
     {
@@ -123,7 +123,7 @@ export const previewControlContract = {
         dataVariant: 'positive',
         base: 10,
         constant: 1,
-        domainPadding: 0.05,
+        domainPadding: 0,
       },
     },
     {
@@ -134,7 +134,7 @@ export const previewControlContract = {
         dataVariant: 'signed',
         base: 10,
         constant: 1,
-        domainPadding: 0.05,
+        domainPadding: 0,
       },
     },
   ],

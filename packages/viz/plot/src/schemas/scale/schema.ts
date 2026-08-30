@@ -52,7 +52,7 @@ export const DomainPaddingSchema = union([
 
 const ContinuousPositionDomainShape = {
   domainPadding: DomainPaddingSchema.optional().describe(
-    'Fractional padding added to the resolved domain. Inferred domains default to 0.05; explicit domains default to 0',
+    'Fractional padding added to the resolved domain. Omitted padding defaults to 0 for inferred and explicit domains',
   ),
   singleValueSpan: PositiveNumberSchema.optional().describe(
     'Fallback domain span used when the resolved domain collapses to a single value',
