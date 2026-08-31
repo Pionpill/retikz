@@ -1,3 +1,4 @@
+export * from './ChartCoordinate';
 export * from './ChartData';
 export * from './ChartExtension';
 export * from './ChartLayout';

@@ -21,11 +21,23 @@ usage: distribution
     },
   ]}
 >
-This API section lists only Bubble-private declarations. `ChartData`, `ChartLayout`, `ChartExtension`, presentation, and shared root wiring are not repeated; see the [shared Chart API](/viz/chart).
+This page expands only Bubble-private recipe slots and declarations. `ChartData`, `ChartLayout`, `ChartCoordinate`, `ChartExtension`, presentation, and shared root wiring are not repeated; see the [shared Chart API](/viz/chart).
 
 ## `BubbleChart`
 
-`BubbleChart` fixes the Point family and Bubble recipe identity. It has no Bubble-private root prop: field mappings, constant properties, and marks use the three declarations below, while the root retains only shared Chart wiring and `children`.
+`BubbleChart` fixes the Point family and Bubble recipe identity. Its root `recipe` directly uses Bubble's exact slots, while component identity supplies `chartType: 'bubble'`:
+
+```tsx
+<BubbleChart
+  rows={rows}
+  recipe={{
+    encodings: { x: 'gdpPerCapita', y: 'lifeExpectancy', size: 'population', color: 'continent' },
+    properties: { fillOpacity: 0.7 },
+  }}
+/>
+```
+
+`BubbleEncodings`, `BubbleProperties`, and `BubbleMark` are equivalent JSX sugar for those three slots. Root-only authoring can omit `children`; a root value and declaration for the same slot fail loudly instead of overriding each other.
 
 Bubble and Scatter both lower to Plot Point, but Bubble fixes a third field mapping as an irreversible core role. Use Scatter for points with a constant radius; packed bubbles are outside this chartType.
 

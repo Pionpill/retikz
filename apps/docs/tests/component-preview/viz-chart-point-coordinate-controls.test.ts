@@ -1,7 +1,6 @@
-import type { ComponentType, ReactNode } from 'react';
+import type { ComponentType } from 'react';
 
-import { ChartExtension } from '@retikz/chart-react';
-import { Children, createElement, isValidElement } from 'react';
+import { createElement, isValidElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -50,6 +49,7 @@ import { previewControlContract as worldCupZh } from '../../src/modules/docs/con
 
 type PointCoordinateScenario = Readonly<{
   coordinateId: string;
+  relatedApi: string;
   zh: PreviewControlContract;
   en: PreviewControlContract;
   demos: readonly [ComponentType, ComponentType];
@@ -60,6 +60,7 @@ type PointCoordinateScenario = Readonly<{
 const scenarios: ReadonlyArray<PointCoordinateScenario> = [
   {
     coordinateId: 'bubble-basic-coordinate-system',
+    relatedApi: 'BubbleChart.coordinate',
     zh: bubbleZh,
     en: bubbleEn,
     demos: [BubbleZhDemo, BubbleEnDemo],
@@ -67,6 +68,7 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
   },
   {
     coordinateId: 'regression-basic-coordinate-system',
+    relatedApi: 'RegressionChart.coordinate',
     zh: regressionZh,
     en: regressionEn,
     demos: [RegressionZhDemo, RegressionEnDemo],
@@ -74,6 +76,7 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
   },
   {
     coordinateId: 'connected-scatter-coordinate-system',
+    relatedApi: 'ConnectedScatterChart.coordinate',
     zh: connectedZh,
     en: connectedEn,
     demos: [ConnectedZhDemo, ConnectedEnDemo],
@@ -81,6 +84,7 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
   },
   {
     coordinateId: 'ranged-dot-coordinate-system',
+    relatedApi: 'RangedDotChart.coordinate',
     zh: rangedDotZh,
     en: rangedDotEn,
     demos: [RangedDotZhDemo, RangedDotEnDemo],
@@ -88,6 +92,7 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
   },
   {
     coordinateId: 'scatter-fertility-work-coordinate-system',
+    relatedApi: 'ScatterChart.coordinate',
     zh: fertilityZh,
     en: fertilityEn,
     demos: [FertilityZhDemo, FertilityEnDemo],
@@ -95,6 +100,7 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
   },
   {
     coordinateId: 'scatter-penguins-facet-jitter-coordinate-system',
+    relatedApi: 'ScatterChart.coordinate',
     zh: penguinZh,
     en: penguinEn,
     demos: [PenguinZhDemo, PenguinEnDemo],
@@ -139,18 +145,12 @@ const renderDemo = (
   );
 };
 
-const canonicalExtensionProps = (source: PreviewSourceConfig): Record<string, unknown> => {
+const canonicalCoordinateProps = (source: PreviewSourceConfig): Record<string, unknown> => {
   const chart = source.canonicalRender?.();
-  if (!isValidElement<{ children?: ReactNode }>(chart)) {
+  if (!isValidElement<Record<string, unknown>>(chart)) {
     throw new Error('Point Chart preview must provide a canonical element');
   }
-  const extension = Children.toArray(chart.props.children).find(
-    child => isValidElement(child) && child.type === ChartExtension,
-  );
-  if (!isValidElement<Record<string, unknown>>(extension)) {
-    throw new Error('Point Chart preview must declare ChartExtension');
-  }
-  return extension.props;
+  return chart.props;
 };
 
 describe('Viz Chart Point family coordinate controls', () => {
@@ -165,11 +165,11 @@ describe('Viz Chart Point family coordinate controls', () => {
           expect(coordinateControl.options.map(option => option.value)).toEqual(['cartesian2D', 'polar2D']);
         }
         expect(contract.canonicalValues[scenario.coordinateId]).toBe('cartesian2D');
-        expect(contract.relatedApis).toContain('ChartExtension.coordinate');
+        expect(contract.relatedApis).toContain(scenario.relatedApi);
       }
 
       for (const source of scenario.sources) {
-        expect(canonicalExtensionProps(source)).toMatchObject({ coordinate: { type: 'cartesian2D' } });
+        expect(canonicalCoordinateProps(source)).toMatchObject({ coordinate: { type: 'cartesian2D' } });
       }
     }
   });
@@ -178,7 +178,7 @@ describe('Viz Chart Point family coordinate controls', () => {
     expect(getPreviewControlFields(worldCupZh.controls).map(control => control.id)).not.toContain(
       'scatter-world-cup-shots-coordinate-system',
     );
-    expect(worldCupZh.relatedApis).not.toContain('ChartExtension.coordinate');
+    expect(worldCupZh.relatedApis).not.toContain('ScatterChart.coordinate');
   });
 
   it.each(scenarios)('$coordinateId 按坐标系与分面状态选择预览尺寸', scenario => {

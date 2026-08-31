@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { ChartData, ChartExtension, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import {
   ConnectedScatterChart,
   ConnectedScatterEncodings,
@@ -14,16 +14,15 @@ import { CONNECTED_SCATTER_CONTROL_IDS, previewControlContract } from './connect
 import { connectedScatterData } from './connected-scatter-basic.data';
 
 const controlled = defineControlledPreview(previewControlContract, values => (
-  <ConnectedScatterChart>
+  <ConnectedScatterChart
+    coordinate={
+      values[CONNECTED_SCATTER_CONTROL_IDS.coordinateSystem] === 'polar2D'
+        ? { type: 'polar2D' }
+        : { type: 'cartesian2D' }
+    }
+  >
     <ChartData data={connectedScatterData} />
     <ChartLayout {...resolvePointPreviewLayout(values[CONNECTED_SCATTER_CONTROL_IDS.coordinateSystem])} />
-    <ChartExtension
-      coordinate={
-        values[CONNECTED_SCATTER_CONTROL_IDS.coordinateSystem] === 'polar2D'
-          ? { type: 'polar2D' }
-          : { type: 'cartesian2D' }
-      }
-    />
     <ConnectedScatterEncodings x="urbanization" y="lifeExpectancy" order="year" series="country" />
     <ConnectedScatterProperties
       point={{ size: values[CONNECTED_SCATTER_CONTROL_IDS.pointSize] }}

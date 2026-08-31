@@ -23,6 +23,22 @@ usage: distribution
 >
 Connected Scatter 同时表达离散观测与变化轨迹。若只需要点的分布，使用 [Scatter](/viz/chart/points/scatter)；若需要拟合趋势而不是逐观测连接，使用 [Regression](/viz/chart/points/regression)。
 
+## `ConnectedScatterChart`
+
+根 `recipe` 使用 Connected Scatter 的 exact slots；组件身份自动补齐 Point family 与 `chartType: 'connected-scatter'`：
+
+```tsx
+<ConnectedScatterChart
+  rows={rows}
+  recipe={{
+    encodings: { x: 'year', y: 'value', order: 'year', series: 'country' },
+    properties: { path: { connectNulls: true } },
+  }}
+/>
+```
+
+`ConnectedScatterEncodings`、`ConnectedScatterProperties` 与 `ConnectedScatterMark` 是相同 recipe slots 的 headless JSX sugar。只用根配置时 `children` 可省略；不同 slots 可以混用，同一 slot 双来源会 fail-loud。
+
 ## 数据角色
 
 `x`、`y` 与 `order` 必填。Path 按 `order` 字段排序，不能依赖输入数组的偶然顺序；可选 `series` 会拆分独立轨迹，并让 Path、Point 与图例共用一个分类颜色尺度。

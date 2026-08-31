@@ -11,7 +11,11 @@ import { BUBBLE_BASIC_CONTROL_IDS, previewControlContract } from './bubble-basic
 import { gapminderBubbleData } from './bubble-basic.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <BubbleChart>
+  <BubbleChart
+    coordinate={
+      values[BUBBLE_BASIC_CONTROL_IDS.coordinateSystem] === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }
+    }
+  >
     <ChartData data={gapminderBubbleData} />
     <ChartLayout {...resolvePointPreviewLayout(values[BUBBLE_BASIC_CONTROL_IDS.coordinateSystem])} />
     <BubbleEncodings
@@ -27,11 +31,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartTitle>收入、寿命与人口规模</ChartTitle>
     <ChartSubtitle>142 个国家和地区，2007 年；气泡面积由人口字段驱动</ChartSubtitle>
     <ChartSource>Gapminder 数据包 2007 年截面；人均 GDP 按购买力平价美元计</ChartSource>
-    <ChartExtension
-      coordinate={
-        values[BUBBLE_BASIC_CONTROL_IDS.coordinateSystem] === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }
-      }
-    >
+    <ChartExtension>
       <PlotAxis
         dimension="x"
         ticks={{

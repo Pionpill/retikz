@@ -17,5 +17,6 @@ export const BubbleChart = createTypedChartComponent<BubbleChartProps, IRBubbleC
     props,
     collectBubbleChartDeclarations(props.children),
     input => createBubbleChart(input),
+    'BubbleEncodings',
   ),
 );

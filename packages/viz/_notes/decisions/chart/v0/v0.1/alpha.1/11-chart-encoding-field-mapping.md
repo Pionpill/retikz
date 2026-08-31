@@ -101,7 +101,7 @@ scale `type`与scheme复用Plot开放schema；custom scale仍由Plot Definition 
 
 `row / column`直接使用Plot partition dimension或字段名shorthand，`facet`只保存Plot facet options。只声明row或column即可生成facet；Chart用稳定recipe identity与当前有效的panel coordinate组装完整Plot facet configuration，再调用Plot canonical resolver。Source不保存可推导的arrangement id、template view或coordinate。
 
-facet encoding拥有“按字段重复panel”的composition语义，`plotExtension.coordinate`拥有panel内部的投影语义，两者可以组合。recipe spatial scaffold可替换时，显式coordinate替代recipe coordinate并成为每个facet panel共享的coordinate template；省略时继续使用recipe coordinate。`plotExtension.composition`仍与facet encoding冲突，因为两者都声明root composition。不可替换的recipe spatial scaffold继续拒绝显式coordinate。
+facet encoding拥有“按字段重复panel”的composition语义，Chart根级`coordinate`拥有panel内部的投影选择，两者可以组合。recipe spatial scaffold可替换时，显式coordinate替代recipe coordinate并成为每个facet panel共享的coordinate template；省略时继续使用recipe coordinate。`plotExtension.composition`仍与facet encoding冲突，因为两者都声明root composition；它与显式Chart coordinate同时存在时也因声明两个空间根而fail-loud。不可替换的recipe spatial scaffold继续拒绝显式coordinate。
 
 Chart的position role保持`x / y`，不因coordinate类型改变Source slot。Plot的`CoordinateDefinition`为operation提供统一的position scale binding contract：默认按role同名字段读写scale name，内置Polar把`x / y`别名映射到`angle / radius`，自定义coordinate可以为自己的operation shape提供同一hook。该hook属于Plot运行时Definition，不进入JSON IR；Chart与Plot lowering使用同一次编译边界安装的coordinate registry，不复制内置白名单。
 

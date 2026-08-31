@@ -21,6 +21,7 @@ describe('@retikz/chart-vanilla public surface', () => {
   it('keeps only shared rendering primitives on the root entry', () => {
     expect(chart).toHaveProperty('renderChart');
     expect(chart).toHaveProperty('ChartInputEmbedAdapter');
+    expect(chart).toHaveProperty('normalizeChartCoordinate');
     expect(chart).not.toHaveProperty('createChart');
     expect(chart).not.toHaveProperty('normalizeChart');
     expect(chart).not.toHaveProperty('ChartProvider');

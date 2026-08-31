@@ -203,7 +203,7 @@ const coordinateRecipe = defineChartRecipe({
 const bridgeCoordinate = defineCoordinate({
   schema: strictObject({
     type: literal('bridge'),
-    archHeight: number().optional(),
+    archHeight: number(),
     horizontalScale: string().optional(),
     verticalScale: string().optional(),
   }),
@@ -385,7 +385,6 @@ describe('Chart resolution', () => {
 
   it.each([
     ['scale', { scales: [{ type: 'log', name: 'x' }] }, ['plotExtension', 'scales', 0]],
-    ['spatial', { coordinate: { type: 'cartesian2D', x: 'x', y: 'x' } }, ['plotExtension', 'coordinate']],
     ['guides', { guides: [] }, ['plotExtension', 'guides']],
   ])('rejects an authored %s override when the recipe scaffold is not replaceable', (_, plotExtension, path) => {
     const lockedRecipe = defineChartRecipe({
@@ -408,6 +407,35 @@ describe('Chart resolution', () => {
       expect.objectContaining({
         code: RetikzChartErrorCode.InvalidResolvedPlot,
         details: expect.objectContaining({ path }),
+      }),
+    );
+  });
+
+  it('rejects a root coordinate when the recipe spatial scaffold is not replaceable', () => {
+    const lockedRecipe = defineChartRecipe({
+      ...recipe,
+      resolve: () => ({
+        scaffold: {
+          scales: [{ value: { type: 'linear', name: 'x' }, replaceable: false }],
+          spatial: { coordinate: { type: 'cartesian2D', x: 'x', y: 'x' }, replaceable: false },
+          guides: { value: [], replaceable: false },
+        },
+        semanticMarks: [{ kind: 'semantic', plotMarks: [semanticMark] }],
+      }),
+    });
+    const lockedRegistry = resolveChartProviderRegistry([
+      { family: 'point', recipe: lockedRecipe, themeDefinitions: [] },
+    ]);
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'x' },
+    });
+
+    expect(() => resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, lockedRegistry)).toThrowError(
+      expect.objectContaining({
+        code: RetikzChartErrorCode.InvalidResolvedPlot,
+        details: expect.objectContaining({ path: ['coordinate'] }),
       }),
     );
   });
@@ -447,7 +475,7 @@ describe('Chart resolution', () => {
     const authored = sourceSchema.parse({
       ...source,
       theme: undefined,
-      plotExtension: { coordinate: { type: 'polar2D' } },
+      coordinate: { type: 'polar2D' },
     });
 
     const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry);
@@ -470,8 +498,8 @@ describe('Chart resolution', () => {
     const authored = sourceSchema.parse({
       ...source,
       theme: undefined,
+      coordinate: { type: 'polar2D', angle: 'authored-angle', radius: 'authored-radius' },
       plotExtension: {
-        coordinate: { type: 'polar2D', angle: 'authored-angle', radius: 'authored-radius' },
         scales: [
           { type: 'linear', name: 'authored-angle' },
           { type: 'linear', name: 'authored-radius' },
@@ -492,7 +520,7 @@ describe('Chart resolution', () => {
     const authored = sourceSchema.parse({
       ...source,
       theme: undefined,
-      plotExtension: { coordinate: { type: 'bridge', archHeight: 24 } },
+      coordinate: { type: 'bridge', archHeight: 24 },
     });
 
     const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry);
@@ -513,7 +541,7 @@ describe('Chart resolution', () => {
         ...source.recipe,
         encodings: { ...source.recipe.encodings, column: { field: 'region' } },
       },
-      plotExtension: { coordinate: { type: 'polar2D' } },
+      coordinate: { type: 'polar2D' },
     });
 
     const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry);
@@ -530,13 +558,28 @@ describe('Chart resolution', () => {
     const authored = sourceSchema.parse({
       ...source,
       theme: undefined,
-      plotExtension: { coordinate: { type: 'uv' } },
+      coordinate: { type: 'uv' },
     });
 
     expect(() => resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry)).toThrowError(
       expect.objectContaining({
         code: RetikzChartErrorCode.InvalidResolvedPlot,
-        details: expect.objectContaining({ path: ['plotExtension', 'coordinate'] }),
+        details: expect.objectContaining({ path: ['coordinate'] }),
+      }),
+    );
+  });
+
+  it('reports missing custom coordinate configuration at the root coordinate path', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      coordinate: { type: 'bridge' },
+    });
+
+    expect(() => resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry)).toThrowError(
+      expect.objectContaining({
+        code: RetikzChartErrorCode.InvalidResolvedPlot,
+        details: expect.objectContaining({ path: ['coordinate'] }),
       }),
     );
   });

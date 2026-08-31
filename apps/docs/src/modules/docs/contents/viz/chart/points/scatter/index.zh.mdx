@@ -45,11 +45,24 @@ usage: distribution
     },
   ]}
 >
-本页 API 只列 Scatter 私有的 declaration。`ChartData`、`ChartLayout`、`ChartExtension`、presentation 与公共根接线不在此重复，详见 [Chart 公共 API](/viz/chart)。
+本页只展开 Scatter 私有的 recipe slots 与 declarations。`ChartData`、`ChartLayout`、`ChartCoordinate`、`ChartExtension`、presentation 与公共根接线不在此重复，详见 [Chart 公共 API](/viz/chart)。
 
 ## `ScatterChart`
 
-`ScatterChart` 固定 Point family 与 Scatter recipe 身份。它没有 Scatter 私有根 prop；字段映射、常量属性和 mark 分别由下面三个 declaration 表达，根只保留 Chart 公共接线与 `children`。
+`ScatterChart` 固定 Point family 与 Scatter recipe 身份。根 `recipe` 直接使用 Scatter 的 exact `encodings`、`properties` 与 `marks` 结构；组件身份会补齐 `chartType: 'scatter'`：
+
+```tsx
+<ScatterChart
+  rows={rows}
+  data={{ reference: 'chart.data' }}
+  recipe={{
+    encodings: { x: 'fertility', y: 'work', color: 'incomeGroup' },
+    properties: { size: 8 },
+  }}
+/>
+```
+
+下面三个 declarations 分别是这些 recipe slots 的等价 JSX sugar。只用根配置时可以省略 `children`；跨 slot 可以混用，根与 declaration 同时提供同一 slot 时会 fail-loud。
 
 ## `ScatterEncodings`
 

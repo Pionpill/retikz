@@ -19,5 +19,6 @@ export const RangedDotChart = createTypedChartComponent<RangedDotChartProps, IRR
       props,
       collectRangedDotChartDeclarations(props.children),
       input => createRangedDotChart(input),
+      'RangedDotEncodings',
     ),
 );

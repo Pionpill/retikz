@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { normalizeChartCoordinate } from '../src';
 import {
   normalizeBubbleChart,
   normalizeConnectedScatterChart,
@@ -9,6 +10,58 @@ import {
 } from '../src/point';
 
 describe('Chart Vanilla normalization', () => {
+  it('normalizes coordinate string shorthand while preserving object configuration', () => {
+    expect(normalizeChartCoordinate('polar2D')).toEqual({ type: 'polar2D' });
+    expect(normalizeChartCoordinate('cartesian2D')).toEqual({ type: 'cartesian2D' });
+    expect(normalizeChartCoordinate('arch')).toEqual({ type: 'arch' });
+    expect(normalizeChartCoordinate({ type: 'polar2D', innerRadius: 0 })).toEqual({
+      type: 'polar2D',
+      innerRadius: 0,
+    });
+    expect(normalizeChartCoordinate(undefined)).toBeUndefined();
+  });
+
+  it('normalizes coordinate consistently for every Point chartType', () => {
+    expect(
+      normalizeBubbleChart({
+        data: { reference: 'rows' },
+        coordinate: 'polar2D',
+        encodings: { x: 'x', y: 'y', size: 'size' },
+      }).coordinate,
+    ).toMatchObject({ type: 'polar2D' });
+    expect(
+      normalizeConnectedScatterChart({
+        data: { reference: 'rows' },
+        coordinate: 'polar2D',
+        encodings: { x: 'x', y: 'y', order: 'order' },
+      }).coordinate,
+    ).toMatchObject({ type: 'polar2D' });
+    expect(
+      normalizeRangedDotChart({
+        data: { reference: 'rows' },
+        coordinate: 'polar2D',
+        encodings: { category: 'category', start: 'start', end: 'end' },
+      }).coordinate,
+    ).toMatchObject({ type: 'polar2D' });
+    expect(
+      normalizeRegressionChart({
+        data: { reference: 'rows' },
+        coordinate: 'polar2D',
+        encodings: { x: 'x', y: 'y' },
+      }).coordinate,
+    ).toMatchObject({ type: 'polar2D' });
+    expect(
+      normalizeScatterChart({
+        data: { reference: 'rows' },
+        coordinate: 'polar2D',
+        encodings: { x: 'x', y: 'y' },
+      }).coordinate,
+    ).toMatchObject({ type: 'polar2D' });
+    expect(normalizeScatterChart({ data: { reference: 'rows' }, encodings: { x: 'x', y: 'y' } })).not.toHaveProperty(
+      'coordinate',
+    );
+  });
+
   it('normalizes Connected Scatter and Ranged Dot to exact Sources', () => {
     expect(
       normalizeConnectedScatterChart({

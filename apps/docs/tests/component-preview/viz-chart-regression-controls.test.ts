@@ -205,7 +205,7 @@ describe('Viz Chart Regression controls', () => {
     });
     expect(Object.keys(zh.canonicalValues).sort()).toEqual(fields.map(field => field.id).sort());
     expect(zh.relatedApis).toEqual([
-      'ChartExtension.coordinate',
+      'RegressionChart.coordinate',
       'RegressionEncodings.series',
       'RegressionProperties.method',
       'RegressionProperties.sampleCount',

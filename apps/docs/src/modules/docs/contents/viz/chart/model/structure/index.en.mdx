@@ -7,7 +7,7 @@ Chart Source separates “what kind of graphic is this?” from “how should th
 
 ## Start with a Chart Source
 
-This Point-family Scatter Source preserves author intent. Coordinates, scales, guides, and recipe-generated Plot marks are resolved later and never written back into Source.
+This Point-family Scatter Source preserves author intent. An explicit coordinate is stored as a root operation, while scales, guides, and recipe-generated Plot marks are resolved later and never written back into Source.
 
 ```ts
 {
@@ -22,6 +22,7 @@ This Point-family Scatter Source preserves author intent. Coordinates, scales, g
   theme: 'clean',
   data: { reference: 'rows' },
   layout: { width: 640, height: 360 },
+  coordinate: { type: 'polar2D', innerRadius: 0.2 },
   recipe: {
     chartType: 'scatter',
     encodings: {
@@ -51,19 +52,20 @@ This Point-family Scatter Source preserves author intent. Coordinates, scales, g
 
 ## Root shell and nested recipe envelope
 
-| Field           | Meaning                                                     | Owner                       |
-| --------------- | ----------------------------------------------------------- | --------------------------- |
-| `namespace`     | Fixed `chart` capability namespace                          | Chart                       |
-| `type`          | Stable family for discovery and first-stage routing         | Chart                       |
-| `id`            | Optional unique Chart identity                              | Chart / Core                |
-| `presentation`  | Four fixed slots: title, subtitle, note, source             | Chart / Standard            |
-| `theme`         | Registered name, or authored `base` plus owner token slices | Chart, Plot, current recipe |
-| `data`          | Dataset reference and optional data model                   | Plot / Data                 |
-| `layout`        | Chart Surface border-box `width` / `height`                 | Chart / Layout              |
-| `recipe`        | Exact payload for the selected chartType recipe             | Chart                       |
-| `plotExtension` | Explicit Plot-owned fragment authored by the user           | Plot                        |
+| Field           | Meaning                                                                           | Owner                        |
+| --------------- | --------------------------------------------------------------------------------- | ---------------------------- |
+| `namespace`     | Fixed `chart` capability namespace                                                | Chart                        |
+| `type`          | Stable family for discovery and first-stage routing                               | Chart                        |
+| `id`            | Optional unique Chart identity                                                    | Chart / Core                 |
+| `presentation`  | Four fixed slots: title, subtitle, note, source                                   | Chart / Standard             |
+| `theme`         | Registered name, or authored `base` plus owner token slices                       | Chart, Plot, current recipe  |
+| `data`          | Dataset reference and optional data model                                         | Plot / Data                  |
+| `layout`        | Chart Surface border-box `width` / `height`                                       | Chart / Layout               |
+| `coordinate`    | Optional Plot coordinate operation; string shorthand is not stored in JSON Source | Chart choice / Plot contract |
+| `recipe`        | Exact payload for the selected chartType recipe                                   | Chart                        |
+| `plotExtension` | Explicit Plot-owned fragment authored by the user                                 | Plot                         |
 
-`layout` allocates the outer Chart Surface. It does not describe Plot facets, tracks, coordinates, guides, or an internal plot area. When you want complete low-level drawing control, use Plot directly; the current Source contract has no `type: 'base'` special case.
+`layout` allocates the outer Chart Surface. It does not describe Plot facets, tracks, coordinates, guides, or an internal plot area. Root `coordinate` can combine with facet encodings but cannot coexist with `plotExtension.composition`. When you want complete low-level drawing control, use Plot directly; the current Source contract has no `type: 'base'` special case.
 
 ## family → chartType → exact schema
 

@@ -45,11 +45,24 @@ usage: distribution
     },
   ]}
 >
-This API section lists only Scatter-private declarations. `ChartData`, `ChartLayout`, `ChartExtension`, presentation, and shared root wiring are not repeated; see the [shared Chart API](/viz/chart).
+This page expands only Scatter-private recipe slots and declarations. `ChartData`, `ChartLayout`, `ChartCoordinate`, `ChartExtension`, presentation, and shared root wiring are not repeated; see the [shared Chart API](/viz/chart).
 
 ## `ScatterChart`
 
-`ScatterChart` fixes the Point family and Scatter recipe identity. It has no Scatter-private root prop: field mappings, constant properties, and marks use the three declarations below, while the root retains only shared Chart wiring and `children`.
+`ScatterChart` fixes the Point family and Scatter recipe identity. Its root `recipe` directly uses Scatter's exact `encodings`, `properties`, and `marks` shape; component identity supplies `chartType: 'scatter'`:
+
+```tsx
+<ScatterChart
+  rows={rows}
+  data={{ reference: 'chart.data' }}
+  recipe={{
+    encodings: { x: 'fertility', y: 'work', color: 'incomeGroup' },
+    properties: { size: 8 },
+  }}
+/>
+```
+
+The three declarations below are equivalent JSX sugar for those recipe slots. Root-only authoring can omit `children`; different slots can mix, while providing the same slot from both root and declaration fails loudly.
 
 ## `ScatterEncodings`
 

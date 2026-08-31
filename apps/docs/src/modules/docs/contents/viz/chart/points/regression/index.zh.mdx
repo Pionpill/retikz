@@ -23,7 +23,23 @@ usage: distribution
 >
 Regression 适合在保留每个观测的同时，概括两个连续变量之间的整体或分组趋势。若只需要点的分布，使用 [Scatter](/viz/chart/points/scatter)；若需要完全控制数据视图、变换或趋势图元，直接使用 Plot。
 
-本页只展开 Regression 私有 API。`ChartData`、`ChartLayout`、presentation 与 `ChartExtension` 等公共声明见 [Chart 公共 API](/viz/chart)。
+本页只展开 Regression 私有 API。`ChartData`、`ChartLayout`、`ChartCoordinate`、presentation 与 `ChartExtension` 等公共声明见 [Chart 公共 API](/viz/chart)。
+
+## `RegressionChart`
+
+根 `recipe` 直接使用 Regression 的 exact slots；组件身份会补齐 Point family 与 `chartType: 'regression'`：
+
+```tsx
+<RegressionChart
+  rows={rows}
+  recipe={{
+    encodings: { x: 'sepalLength', y: 'petalLength', series: 'species' },
+    properties: { method: { kind: 'linear' }, sampleCount: 64 },
+  }}
+/>
+```
+
+`RegressionEncodings`、`RegressionProperties` 与 `RegressionMark` 是相同 recipe slots 的等价 JSX sugar。root-only 写法可以省略 `children`；跨 slot 可以混用，同一 slot 双来源会 fail-loud。
 
 ## 如何读图
 

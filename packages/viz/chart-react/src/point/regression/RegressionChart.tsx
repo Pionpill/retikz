@@ -19,5 +19,6 @@ export const RegressionChart = createTypedChartComponent<RegressionChartProps, I
       props,
       collectRegressionChartDeclarations(props.children),
       input => createRegressionChart(input),
+      'RegressionEncodings',
     ),
 );

@@ -3,20 +3,19 @@ title: Chart
 description: Chart 在 Plot 之上组织具体图形类型，并提供标题、来源、画布和主题等整图能力。
 ---
 
-Chart 面向“完整图形”：根 `type` 是便于发现的 family，嵌套 `recipe.chartType` 选择具体 recipe。Chart 还提供标题、来源、画布与主题；Plot 持续拥有数据、图元、通道、比例尺、坐标、辅助元素与变换。Chart 不建立第二套图形语法。
+Chart 面向“完整图形”：根 `type` 是便于发现的 family，嵌套 `recipe.chartType` 选择具体 recipe。Chart 还提供标题、来源、画布、主题和高频坐标系选择；坐标 operation、Definition、registry、resolve 与 lowering 仍由 Plot 拥有。Chart 不建立第二套图形语法。
 
-| 层次  | 负责什么                                                     | 不负责什么                     |
-| ----- | ------------------------------------------------------------ | ------------------------------ |
-| Chart | family、chartType、Chart Source、整图展示、画布和 Theme      | 重新定义 Plot 的图元与编码语法 |
-| Plot  | 数据、变换、图元、通道、比例尺、坐标、轴、图例和其它辅助元素 | Scatter 等图形类型产品语义     |
+| 层次  | 负责什么                                                            | 不负责什么                     |
+| ----- | ------------------------------------------------------------------- | ------------------------------ |
+| Chart | family、chartType、Chart Source、整图展示、画布、Theme 和坐标系选择 | 重新定义 Plot 的图元与坐标语法 |
+| Plot  | 数据、变换、图元、通道、比例尺、坐标契约、轴、图例和其它辅助元素    | Scatter 等图形类型产品语义     |
 
 ## 一个最小 Point Chart
 
-具体图形使用 typed Chart 根，并通过 owner-scoped declaration 填充公共与私有 slot。下面的 `ScatterChart` 会产生 `type: 'point'`、`recipe.chartType: 'scatter'` 的 Source。
+具体图形使用 typed Chart 根。根属性沿 Source 的 `data`、`layout`、`coordinate`、`presentation`、`recipe` 与 `plotExtension` 分组；组件身份自动补齐 `type: 'point'` 与 `recipe.chartType: 'scatter'`。
 
 ```tsx
-import { ChartData, ChartLayout, ChartSource, ChartTitle } from '@retikz/chart-react';
-import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
+import { ScatterChart } from '@retikz/chart-react/point';
 
 const rows = [
   { x: 1, y: 2 },
@@ -24,36 +23,51 @@ const rows = [
   { x: 3, y: 5 },
 ];
 
-<ScatterChart>
-  <ChartData data={rows} />
-  <ChartLayout width={640} height={360} />
-  <ScatterEncodings x="x" y="y" />
-  <ScatterProperties size={8} />
-  <ChartTitle>两个变量的关系</ChartTitle>
-  <ChartSource>示例数据</ChartSource>
-</ScatterChart>;
+<ScatterChart
+  rows={rows}
+  data={{ reference: 'chart.data' }}
+  layout={{ width: 640, height: 360 }}
+  presentation={{ title: '两个变量的关系', source: '示例数据' }}
+  recipe={{ encodings: { x: 'x', y: 'y' }, properties: { size: 8 } }}
+/>;
 ```
 
-## 公共 declaration API
+## 公共根属性与 declaration API
 
-| Declaration                                                  | 基数       | 主要属性                          | 职责                                                                                   |
-| ------------------------------------------------------------ | ---------- | --------------------------------- | -------------------------------------------------------------------------------------- |
-| `ChartData`                                                  | 恰好 1     | `data`、`reference?`、`model?`    | 声明运行时数据行、Source 数据引用与字段模型；真实 rows 不进入 JSON Source              |
-| `ChartLayout`                                                | 至多 1     | `width?`、`height?`、`layout?`    | 声明 standalone host dimensions 与 Source border-box；显式 `layout` 不和尺寸字段级合并 |
-| `ChartExtension`                                             | 至多 1     | Plot extension props、`children?` | 隔离 axis、legend、transform、独立 Plot mark 等 Plot-owned 声明                        |
-| `ChartTitle` / `ChartSubtitle` / `ChartNote` / `ChartSource` | 每类至多 1 | `children`                        | 写入固定 presentation slot；数组与 Fragment 只做透明分组                               |
+| 入口                                                         | 基数       | 主要属性                                                                                 | 职责                                                                                   |
+| ------------------------------------------------------------ | ---------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 具体 `XxxChart` 根                                           | 1          | `rows?`、`data?`、`layout?`、`coordinate?`、`presentation?`、`recipe?`、`plotExtension?` | 完整 IR-like 配置入口；组件身份补齐 family 与 chartType，`rows` 仅进入运行时           |
+| `ChartData`                                                  | 至多 1     | `data`、`reference?`、`model?`                                                           | 根 data slot 的 JSX sugar；与根 `rows` / `data` 互斥                                   |
+| `ChartLayout`                                                | 至多 1     | `width?`、`height?`、`layout?`                                                           | 声明 standalone host dimensions 与 Source border-box；显式 `layout` 不和尺寸字段级合并 |
+| `ChartCoordinate`                                            | 至多 1     | `coordinate`                                                                             | 根 prop 的声明式替代入口；写入同一个 Source 根 `coordinate`                            |
+| `ChartExtension`                                             | 至多 1     | Plot extension props、`children?`                                                        | 隔离 axis、legend、transform、独立 Plot mark 等 Plot-owned 声明                        |
+| `ChartTitle` / `ChartSubtitle` / `ChartNote` / `ChartSource` | 每类至多 1 | `children`                                                                               | 写入固定 presentation slot；数组与 Fragment 只做透明分组                               |
+| `XxxEncodings` / `XxxProperties` / `XxxMark`                 | 按 slot    | 当前 chartType 的 exact props                                                            | 分别对应 `recipe.encodings`、`recipe.properties` 与有序 `recipe.marks`                 |
 
 Plot declaration 不能直接放在具体 Chart 根。`ChartExtension` 的 props 与 children 进入同一 Plot normalizer；props 中的 transform 先于 child transform，单值 slot 的双来源冲突继续由 Plot 报告。
 
+根配置与 declarations 可以跨 slot 混用，例如根 `recipe.encodings` 配合 child `XxxProperties`。同一 slot 不定义覆盖顺序：根 `layout` 与 `ChartLayout`、根 `recipe.properties` 与 `XxxProperties` 等双来源都会 fail-loud；显式 `recipe.marks: []` 也算已经提供该 slot。
+
+不需要配置时直接写坐标系名；需要配置时使用完整对象。字符串会在 Vanilla normalize 时变成 `{ type }`，JSON Source 始终只保存对象：
+
+```tsx
+<ScatterChart coordinate="polar2D">{/* declarations */}</ScatterChart>
+<BubbleChart coordinate={{ type: 'polar2D', innerRadius: 0.25, startAngle: -90 }}>
+  {/* declarations */}
+</BubbleChart>
+```
+
+也可以在 children 中使用 `<ChartCoordinate coordinate="polar2D" />` 表达同一个 slot。根 `coordinate` prop 与 `ChartCoordinate` 不能同时出现；两者均可与 recipe 的 facet encoding 组合，作为每个 panel 的坐标模板，但不能与 `ChartExtension` 的 Plot composition 同时存在，因为它们都会声明空间根。
+
 具体 Chart 根只穿透数组与透明 Fragment，不穿透 DOM 或自定义 React 组件；被 wrapper 包住的 declaration 会 fail-loud。`ChartExtension` children 只接受 Plot declarations、数组、透明 Fragment 与空 slot，`Set` / generator 等普通 iterable 会被拒绝；Chart declaration 放入 extension、Plot declaration 放在 Chart 根也都会立即报错。
 
-具体 Chart 根只保留所有类型共用的接线字段：`id?`、`theme?`、`panel?`、`themeDefinitions?`、`lowerOptions?` 与必需的 `children`。数据、layout、recipe 与 Plot extension 不再是根 props。
+Declarations 是同一 owner slot 的 headless JSX sugar，不是第二套 grammar。只使用根配置时 `children` 可以省略；无论选择 root-only、declaration-only 还是跨 slot 混合，最终都进入同一个 Vanilla Input 并生成相同 Source。
 
 ## React 宿主与嵌入
 
-直接渲染具体 Chart 时会建立唯一一个 `Layout` / Scene host。`ChartLayout.width` 与 `height` 必须是有限正数，并配置该 host；若没有显式 `layout`，已声明的尺寸还会镜像到 Source。显式 `layout` 存在时保持独立，不与 host dimensions 合并。
+直接渲染具体 Chart 时会建立唯一一个 `Layout` / Scene host。根 `layout.width` / `height` 同时配置 Source 与该隐式 host；`ChartLayout.width` / `height` 是等价 JSX sugar，并在没有显式 `layout` 时镜像到 Source。
 
-放入已有 `<Layout>` 后，Chart 只贡献 Chart → Plot → Core 的 Scope/composite 并继承外层 effective Theme，不创建第二个 SVG。embedded `ChartLayout` 只能声明 `layout`；`width` / `height`（包括显式 `undefined`）会 fail-loud。CSS、renderer/runtime、动画和 compile callback 等高级宿主能力统一配置在外层 `<Layout>`。
+放入已有 `<Layout>` 后，Chart 只贡献 Chart → Plot → Core 的 Scope/composite 并继承外层 effective Theme，不创建第二个 SVG。根 `layout` 仍只配置 Chart Source border-box；embedded `ChartLayout` 也只能声明 `layout`，其 `width` / `height`（包括显式 `undefined`）会 fail-loud。CSS、renderer/runtime、动画和 compile callback 等高级宿主能力统一配置在外层 `<Layout>`。
 
 如果已有符合精确 schema 的 JSON Source，应由应用层根据 `type` 与 `recipe.chartType` 选择具体入口或 compile adapter；Chart 不提供动态加载所有 family 的 generic `<Chart source={...}>`。Vanilla 与 JSON Source API 不受 React declaration 结构影响。
 
@@ -63,13 +77,13 @@ Plot declaration 不能直接放在具体 Chart 根。`ChartExtension` 的 props
       label: 'Chart 共享入口',
       path: 'packages/viz/chart-react/src/_chart/index.ts',
       startLine: 1,
-      endLine: 11,
+      endLine: 20,
     },
     {
-      label: 'Chart 公共 declaration',
-      path: 'packages/viz/chart-react/src/shared/ChartData.tsx',
-      startLine: 5,
-      endLine: 17,
+      label: 'ChartCoordinate 声明式替代入口',
+      path: 'packages/viz/chart-react/src/shared/ChartCoordinate.tsx',
+      startLine: 4,
+      endLine: 11,
     },
     {
       label: 'ChartLayout 尺寸与 Source layout 契约',
@@ -78,10 +92,28 @@ Plot declaration 不能直接放在具体 Chart 根。`ChartExtension` 的 props
       endLine: 18,
     },
     {
-      label: '具体 Chart 组件的 Layout / InputEmbed 接线',
+      label: '具体 Chart 根的 exact Source 分组属性',
       path: 'packages/viz/chart-react/src/point/shared/component.tsx',
-      startLine: 179,
-      endLine: 205,
+      startLine: 33,
+      endLine: 54,
+    },
+    {
+      label: '根配置与 declarations 的同 slot 冲突',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 182,
+      endLine: 225,
+    },
+    {
+      label: '根配置与 declarations 汇入同一 Vanilla Input',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 251,
+      endLine: 297,
+    },
+    {
+      label: 'standalone Layout 与 InputEmbed 接线',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 300,
+      endLine: 327,
     },
   ]}
 />

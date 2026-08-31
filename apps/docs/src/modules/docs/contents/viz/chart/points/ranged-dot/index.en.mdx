@@ -23,6 +23,22 @@ usage: distribution
 >
 Ranged Dot is fixed horizontally: `category` maps to y, while `start` and `end` share one x scale. If both endpoints declare an explicit scale binding, their names must match; one endpoint may declare the operation while the other references it. Use it when the two endpoint values and direction matter more than bar length.
 
+## `RangedDotChart`
+
+The root `recipe` uses Ranged Dot's exact slots. Component identity supplies the Point family and `chartType: 'ranged-dot'`:
+
+```tsx
+<RangedDotChart
+  rows={rows}
+  recipe={{
+    encodings: { category: 'category', start: 'before', end: 'after', color: 'group' },
+    properties: { range: { strokeWidth: 2 } },
+  }}
+/>
+```
+
+`RangedDotEncodings`, `RangedDotProperties`, and `RangedDotMark` are equivalent JSX sugar for the same recipe slots. Root-only authoring can omit `children`; different slots can mix, while two sources for one slot fail loudly.
+
 ## Atomic row semantics
 
 One Ranged Dot semantic group emits one projected Relation operation. Plot projects both endpoints together and paints connector, start glyph, then end glyph. If either endpoint is missing, null, or unprojectable, the whole row is skipped without orphan geometry.

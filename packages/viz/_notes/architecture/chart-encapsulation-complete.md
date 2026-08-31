@@ -8,7 +8,7 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 
 ## 2. Source IR 完备
 
-- [ ] Chart 根固定包含 `namespace`、`type`、可选 `id` / `presentation` / `theme`、必需 `data`、可选 `layout`、必需 `recipe` 与可选 `plotExtension`
+- [ ] Chart 根固定包含 `namespace`、`type`、可选 `id` / `presentation` / `theme`、必需 `data`、可选 `layout` / `coordinate`、必需 `recipe` 与可选 `plotExtension`
 - [ ] `namespace` 精确为 `chart`
 - [ ] `type` 是 family，不直接承担 recipe identity
 - [ ] `recipe.chartType` 是全局唯一 recipe key，并唯一映射到一个 family
@@ -136,13 +136,18 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 
 - [ ] JSON、Vanilla 与 React 生成同一精确 Chart Source IR
 - [ ] 具体组件 / factory 可以推断 family 与 chartType，但不建立平行持久化 shape 或默认逻辑
+- [ ] 每个 concrete React Chart 根组件都能通过 `rows` 与 IR-like `data` / `layout` / `coordinate` / `presentation` / `recipe` / `plotExtension` 独立完成 authoring，不要求额外 declaration child
+- [ ] React 根配置保持 Source owner 层级，不把 `width` / `height`、encodings、properties、marks 或 presentation slots 展平为平行 props
 - [ ] Vanilla normalize 只组装 typed Input，不读取 registry、Theme、data、host 或 DOM
 - [ ] React 只把 props、marker 与 children 映射为同一 Vanilla Input
+- [ ] React declaration components 只是根 owner slots 的 headless JSX sugar；root-only、declaration-only 与 hybrid authoring 对等
+- [ ] 根配置与 declaration 只允许跨 slot 混用；同 slot 双来源 fail-loud，显式 falsy 值与空数组不被当作缺省
 - [ ] React presentation marker 顺序不改变固定 presentation 语义
 - [ ] React Chart mark children 按 authored order 归一为 `recipe.marks`
 - [ ] registry lookup、recipe resolve、Theme resolve 与 Plot lowering 只存在于领域 owner
 - [ ] inspection、文档预览与序列化展示 Chart Source IR，不以 resolved Base / Plot IR 代替
 - [ ] datasets、Theme definitions、Plot lower options 与宿主 Scope 保真传递
+- [ ] 根 `layout` 与 `ChartLayout` 只拥有 Chart border-box 和 standalone numeric host 尺寸；renderer、CSS、动画与完整 host configuration 继续属于外层 Layout
 - [ ] runtime reducer / transform / scale Definition通过provider sidecar保真传递，不进入JSON Source；React、Vanilla、JSON与SSR消费同一Source shape和resolver
 
 ## 11. 文档与测试证据

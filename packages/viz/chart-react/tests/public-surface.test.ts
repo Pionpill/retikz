@@ -20,6 +20,7 @@ const pointChartCases = [
 describe('@retikz/chart-react public surface', () => {
   it('exports shared Chart declarations and presentation APIs from the root entry', () => {
     expect(chart.ChartData).toBeDefined();
+    expect(chart.ChartCoordinate).toBeDefined();
     expect(chart.ChartLayout).toBeDefined();
     expect(chart.ChartExtension).toBeDefined();
     expect(chart.ChartTitle).toBeDefined();

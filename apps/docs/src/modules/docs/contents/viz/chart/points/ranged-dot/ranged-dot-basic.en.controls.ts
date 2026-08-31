@@ -94,7 +94,7 @@ export const previewControlContract = {
     [RANGED_DOT_CONTROL_IDS.endColor]: '#f97316',
   },
   relatedApis: [
-    'ChartExtension.coordinate',
+    'RangedDotChart.coordinate',
     'RangedDotProperties.range',
     'RangedDotProperties.point',
     'RangedDotProperties.startPoint',

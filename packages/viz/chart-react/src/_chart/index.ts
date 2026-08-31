@@ -1,4 +1,5 @@
 export type {
+  ChartCoordinateProps,
   ChartDataProps,
   ChartExtensionProps,
   ChartLayoutProps,
@@ -7,6 +8,15 @@ export type {
   ChartThemeDefinitionsProps,
   InputEmbeddableChartComponent,
 } from '../shared';
-export { ChartData, ChartExtension, ChartLayout, ChartNote, ChartSource, ChartSubtitle, ChartTitle } from '../shared';
+export {
+  ChartCoordinate,
+  ChartData,
+  ChartExtension,
+  ChartLayout,
+  ChartNote,
+  ChartSource,
+  ChartSubtitle,
+  ChartTitle,
+} from '../shared';
 export type { ChartThemeProviderProps } from './theme-provider';
 export { ChartThemeProvider } from './theme-provider';

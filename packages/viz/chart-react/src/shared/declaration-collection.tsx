@@ -2,11 +2,13 @@ import type { ReactElement, ReactNode } from 'react';
 
 import { createElement, Fragment, isValidElement } from 'react';
 
+import type { ChartCoordinateProps } from './ChartCoordinate';
 import type { ChartDataProps } from './ChartData';
 import type { ChartExtensionProps } from './ChartExtension';
 import type { ChartLayoutProps } from './ChartLayout';
 
 import { RetikzChartReactError } from '../error';
+import { ChartCoordinate } from './ChartCoordinate';
 import { ChartData } from './ChartData';
 import { ChartExtension } from './ChartExtension';
 import { ChartLayout } from './ChartLayout';
@@ -22,7 +24,8 @@ export type CollectedChartDeclaration<TProps> = Readonly<{
 
 /** Chart 公共 declaration 收集结果 */
 export type CollectedChartDeclarations = Readonly<{
-  data: CollectedChartDeclaration<ChartDataProps>;
+  data?: CollectedChartDeclaration<ChartDataProps>;
+  coordinate?: CollectedChartDeclaration<ChartCoordinateProps>;
   layout?: CollectedChartDeclaration<ChartLayoutProps>;
   extension?: CollectedChartDeclaration<ChartExtensionProps>;
 }>;
@@ -39,6 +42,7 @@ export const collectChartDeclarations = (
   collectChartTypeDeclaration: CollectChartTypeDeclaration,
 ): CollectedChartDeclarations => {
   let data: CollectedChartDeclaration<ChartDataProps> | undefined;
+  let coordinate: CollectedChartDeclaration<ChartCoordinateProps> | undefined;
   let layout: CollectedChartDeclaration<ChartLayoutProps> | undefined;
   let extension: CollectedChartDeclaration<ChartExtensionProps> | undefined;
 
@@ -62,6 +66,11 @@ export const collectChartDeclarations = (
       data = { props: value.props as ChartDataProps, path };
       return;
     }
+    if (value.type === ChartCoordinate) {
+      if (coordinate !== undefined) throw duplicateDeclarationError('ChartCoordinate', path);
+      coordinate = { props: value.props as ChartCoordinateProps, path };
+      return;
+    }
     if (value.type === ChartLayout) {
       if (layout !== undefined) throw duplicateDeclarationError('ChartLayout', path);
       layout = { props: value.props as ChartLayoutProps, path };
@@ -79,8 +88,12 @@ export const collectChartDeclarations = (
   };
 
   visit(children, ['children']);
-  if (data === undefined) throw new RetikzChartReactError('chart react: ChartData must appear exactly once');
-  return { data, ...(layout === undefined ? {} : { layout }), ...(extension === undefined ? {} : { extension }) };
+  return {
+    ...(data === undefined ? {} : { data }),
+    ...(coordinate === undefined ? {} : { coordinate }),
+    ...(layout === undefined ? {} : { layout }),
+    ...(extension === undefined ? {} : { extension }),
+  };
 };
 
 const assertPositiveFiniteDimension = (name: 'width' | 'height', value: number | undefined): void => {
@@ -106,7 +119,10 @@ export type StandaloneChartDeclarations = Readonly<{
 }>;
 
 /** 为 standalone Chart 提取 host 尺寸，并把镜像后的 Source layout 留给内部 InputEmbed */
-export const prepareStandaloneChartDeclarations = (children: ReactNode): StandaloneChartDeclarations => {
+export const prepareStandaloneChartDeclarations = (
+  children: ReactNode,
+  rootLayout?: ChartLayoutProps['layout'],
+): StandaloneChartDeclarations => {
   let layoutCount = 0;
   const visit = (value: ReactNode): ReactNode => {
     if (Array.isArray(value)) return value.map(visit);
@@ -124,7 +140,7 @@ export const prepareStandaloneChartDeclarations = (children: ReactNode): Standal
   };
   const preparedChildren = visit(children);
 
-  let host: Pick<ChartLayoutProps, 'width' | 'height'> = {};
+  let childHost: Pick<ChartLayoutProps, 'width' | 'height'> = {};
   const readHost = (value: ReactNode): void => {
     if (Array.isArray(value)) {
       value.forEach(readHost);
@@ -137,12 +153,21 @@ export const prepareStandaloneChartDeclarations = (children: ReactNode): Standal
     }
     if (value.type !== ChartLayout) return;
     const props = value.props as ChartLayoutProps;
-    host = {
+    childHost = {
       ...(props.width === undefined ? {} : { width: props.width }),
       ...(props.height === undefined ? {} : { height: props.height }),
     };
   };
   readHost(children);
+  assertPositiveFiniteDimension('width', rootLayout?.width);
+  assertPositiveFiniteDimension('height', rootLayout?.height);
+  const host =
+    rootLayout === undefined
+      ? childHost
+      : {
+          ...(rootLayout.width === undefined ? {} : { width: rootLayout.width }),
+          ...(rootLayout.height === undefined ? {} : { height: rootLayout.height }),
+        };
   return { children: preparedChildren, host };
 };
 

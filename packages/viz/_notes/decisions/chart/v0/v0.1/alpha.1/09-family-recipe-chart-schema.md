@@ -7,6 +7,8 @@
 - 保留：Chart 确定性 lower 到 Plot 正式主链、Vanilla 拥有 authoring normalize、React 复用 Vanilla、presentation 复用 Standard / Layout 的既有边界
 - 重审：ADR-04～08 在接受或实现前必须改用本 ADR 的 family / chartType、精确 schema、semantic mark、Theme 与 Plot 出口契约
 
+> **后续演进：** [ADR-12](./12-chart-react-declaration-authoring.md) 将高频 coordinate 选择从 `plotExtension.coordinate` 提升为 Chart 根级 `coordinate` 与公共 `ChartCoordinate` declaration。本文关于 Plot coordinate owner、recipe spatial replaceable、角色匹配与正式 Plot resolve 的约束继续有效；`plotExtension` 字段集合和 coordinate 来源位置以 ADR-12 为准。
+
 ## 背景与目标
 
 现有 Chart Source IR 让根 `type` 同时承担用户分类、具体 recipe 身份与分发职责，并把具体图形配置放在 `config`。这会把所有 chart type 平铺到同一选择面，也无法用统一契约表达可注册 recipe、一个 recipe 生成多个 Plot mark、附加 mark 继承 Chart 数据角色，以及不同 recipe 的精确 Theme 默认。

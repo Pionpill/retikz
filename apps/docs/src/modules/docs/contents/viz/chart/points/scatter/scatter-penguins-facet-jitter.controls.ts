@@ -83,7 +83,7 @@ export const previewControlContract = {
     [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointOpacity]: 0.72,
   },
   relatedApis: [
-    'ChartExtension.coordinate',
+    'ScatterChart.coordinate',
     'ScatterProperties.size',
     'ScatterProperties.fill',
     'ScatterProperties.stroke',

@@ -1,7 +1,7 @@
 import type { IRPlotSmoothMethod } from '@retikz/plot';
 import type { FC } from 'react';
 
-import { ChartData, ChartExtension, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { RegressionChart, RegressionEncodings, RegressionProperties } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -28,16 +28,15 @@ const methodOf = (kind: RegressionMethodKind, order: number): IRPlotSmoothMethod
 };
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <RegressionChart>
+  <RegressionChart
+    coordinate={
+      values[REGRESSION_BASIC_CONTROL_IDS.coordinateSystem] === 'polar2D'
+        ? { type: 'polar2D' }
+        : { type: 'cartesian2D' }
+    }
+  >
     <ChartData data={irisRegressionData} />
     <ChartLayout {...resolvePointPreviewLayout(values[REGRESSION_BASIC_CONTROL_IDS.coordinateSystem])} />
-    <ChartExtension
-      coordinate={
-        values[REGRESSION_BASIC_CONTROL_IDS.coordinateSystem] === 'polar2D'
-          ? { type: 'polar2D' }
-          : { type: 'cartesian2D' }
-      }
-    />
     <RegressionEncodings
       x="sepalLengthCm"
       y="petalLengthCm"

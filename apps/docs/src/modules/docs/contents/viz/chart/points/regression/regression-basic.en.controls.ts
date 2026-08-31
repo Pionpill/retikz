@@ -156,7 +156,7 @@ export const previewControlContract = {
     [REGRESSION_BASIC_CONTROL_IDS.trendStrokeOpacity]: 0.9,
   },
   relatedApis: [
-    'ChartExtension.coordinate',
+    'RegressionChart.coordinate',
     'RegressionEncodings.series',
     'RegressionProperties.method',
     'RegressionProperties.sampleCount',

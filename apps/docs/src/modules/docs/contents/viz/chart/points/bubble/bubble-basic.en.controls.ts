@@ -172,7 +172,7 @@ export const previewControlContract = {
     [BUBBLE_BASIC_CONTROL_IDS.pointFillOpacity]: 0.7,
   },
   relatedApis: [
-    'ChartExtension.coordinate',
+    'BubbleChart.coordinate',
     'BubbleEncodings.x',
     'BubbleEncodings.y',
     'BubbleEncodings.size',

@@ -23,6 +23,22 @@ usage: distribution
 >
 Connected Scatter shows discrete observations and trajectories together. Use [Scatter](/viz/chart/points/scatter) for point distributions, or [Regression](/viz/chart/points/regression) for fitted trends rather than observation-to-observation connections.
 
+## `ConnectedScatterChart`
+
+The root `recipe` uses Connected Scatter's exact slots. Component identity supplies the Point family and `chartType: 'connected-scatter'`:
+
+```tsx
+<ConnectedScatterChart
+  rows={rows}
+  recipe={{
+    encodings: { x: 'year', y: 'value', order: 'year', series: 'country' },
+    properties: { path: { connectNulls: true } },
+  }}
+/>
+```
+
+`ConnectedScatterEncodings`, `ConnectedScatterProperties`, and `ConnectedScatterMark` are headless JSX sugar for the same recipe slots. Root-only authoring can omit `children`; different slots can mix, while two sources for the same slot fail loudly.
+
 ## Data roles
 
 `x`, `y`, and `order` are required. Path sorts by the `order` field instead of incidental array order. Optional `series` splits independent trajectories and shares one categorical color scale across Path, Point, and legend.

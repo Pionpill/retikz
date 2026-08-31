@@ -21,11 +21,23 @@ usage: distribution
     },
   ]}
 >
-本页 API 只列 Bubble 私有的 declaration。`ChartData`、`ChartLayout`、`ChartExtension`、presentation 与公共根接线不在此重复，详见 [Chart 公共 API](/viz/chart)。
+本页只展开 Bubble 私有的 recipe slots 与 declarations。`ChartData`、`ChartLayout`、`ChartCoordinate`、`ChartExtension`、presentation 与公共根接线不在此重复，详见 [Chart 公共 API](/viz/chart)。
 
 ## `BubbleChart`
 
-`BubbleChart` 固定 Point family 与 Bubble recipe 身份。它没有 Bubble 私有根 prop；字段映射、常量属性和 mark 分别由下面三个 declaration 表达，根只保留 Chart 公共接线与 `children`。
+`BubbleChart` 固定 Point family 与 Bubble recipe 身份。根 `recipe` 直接使用 Bubble 的 exact slots，组件身份会补齐 `chartType: 'bubble'`：
+
+```tsx
+<BubbleChart
+  rows={rows}
+  recipe={{
+    encodings: { x: 'gdpPerCapita', y: 'lifeExpectancy', size: 'population', color: 'continent' },
+    properties: { fillOpacity: 0.7 },
+  }}
+/>
+```
+
+`BubbleEncodings`、`BubbleProperties` 与 `BubbleMark` 是同三个 slots 的等价 JSX sugar。只用根配置时可以省略 `children`；同一 slot 的根配置与 declaration 不会互相覆盖，而是 fail-loud。
 
 Bubble 与 Scatter 都下沉为 Plot Point，但 Bubble 把第三个字段映射固定为不可撤销的核心角色。常量半径的点图仍应使用 Scatter，packed bubble 则不属于本 chartType。
 

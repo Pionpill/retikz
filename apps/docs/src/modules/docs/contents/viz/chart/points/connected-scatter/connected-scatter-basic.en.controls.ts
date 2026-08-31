@@ -96,7 +96,7 @@ export const previewControlContract = {
     [CONNECTED_SCATTER_CONTROL_IDS.pointSize]: 4,
   },
   relatedApis: [
-    'ChartExtension.coordinate',
+    'ConnectedScatterChart.coordinate',
     'ConnectedScatterProperties.path.connectNulls',
     'ConnectedScatterProperties.path.dashPattern',
     'ConnectedScatterProperties.path.strokeWidth',

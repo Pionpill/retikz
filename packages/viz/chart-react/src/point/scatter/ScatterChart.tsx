@@ -17,5 +17,6 @@ export const ScatterChart = createTypedChartComponent<ScatterChartProps, IRScatt
     props,
     collectScatterChartDeclarations(props.children),
     input => createScatterChart(input),
+    'ScatterEncodings',
   ),
 );

@@ -9,9 +9,9 @@ import { collectChartDeclarations, splitPresentationMarkers } from '../../shared
 /** 具体 Point chartType direct-child declarations 的共享收集结果 */
 export type CollectedPointChartDeclarations<TEncodings, TProperties, TMark> = CollectedChartDeclarations &
   Readonly<{
-    encodings: CollectedChartDeclaration<TEncodings>;
+    encodings?: CollectedChartDeclaration<TEncodings>;
     properties?: CollectedChartDeclaration<TProperties>;
-    marks: Array<TMark>;
+    marks?: Array<TMark>;
     presentation: Partial<Record<'title' | 'subtitle' | 'note' | 'source', IRTextBlock>>;
   }>;
 
@@ -53,14 +53,11 @@ export const collectPointChartDeclarations = <TEncodings, TProperties, TMarkProp
     }
     return false;
   });
-  if (encodings === undefined) {
-    throw new RetikzChartReactError(`chart react: ${options.encodingsName} must appear exactly once`);
-  }
   return {
     ...common,
-    encodings,
+    ...(encodings === undefined ? {} : { encodings }),
     ...(properties === undefined ? {} : { properties }),
-    marks,
+    ...(marks.length === 0 ? {} : { marks }),
     presentation: presentationSplit.presentation,
   };
 };

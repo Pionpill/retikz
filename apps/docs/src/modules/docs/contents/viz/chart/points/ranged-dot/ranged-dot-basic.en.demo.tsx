@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { ChartData, ChartExtension, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { RangedDotChart, RangedDotEncodings, RangedDotProperties } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -11,14 +11,13 @@ import { rangedDotData } from './ranged-dot-basic.data';
 import { previewControlContract } from './ranged-dot-basic.en.controls';
 
 const controlled = defineControlledPreview(previewControlContract, values => (
-  <RangedDotChart>
+  <RangedDotChart
+    coordinate={
+      values[RANGED_DOT_CONTROL_IDS.coordinateSystem] === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }
+    }
+  >
     <ChartData data={rangedDotData} />
     <ChartLayout {...resolvePointPreviewLayout(values[RANGED_DOT_CONTROL_IDS.coordinateSystem])} />
-    <ChartExtension
-      coordinate={
-        values[RANGED_DOT_CONTROL_IDS.coordinateSystem] === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }
-      }
-    />
     <RangedDotEncodings category="country" start="forestArea2000" end="forestArea2022" />
     <RangedDotProperties
       point={{ size: values[RANGED_DOT_CONTROL_IDS.pointSize] }}

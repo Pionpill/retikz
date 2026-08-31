@@ -11,6 +11,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import {
+  ChartCoordinate,
   ChartData,
   ChartExtension,
   ChartLayout,
@@ -37,6 +38,9 @@ type InputComponent<TInput> = {
 
 const inputOf = <TInput,>(component: InputComponent<TInput>, children: ReactNode): TInput =>
   component.createInputEmbedProps({ children });
+
+const inputFromProps = <TInput,>(component: InputComponent<TInput>, props: Readonly<Record<string, unknown>>): TInput =>
+  component.createInputEmbedProps(props);
 
 const requiredDeclarations = (
   <>
@@ -66,7 +70,406 @@ const requiredRegressionDeclarations = (
   </>
 );
 
+const coordinateRootPropCases = [
+  {
+    name: 'BubbleChart',
+    createInput: () =>
+      BubbleChart.createInputEmbedProps({ coordinate: 'polar2D', children: requiredBubbleDeclarations }),
+  },
+  {
+    name: 'ConnectedScatterChart',
+    createInput: () =>
+      ConnectedScatterChart.createInputEmbedProps({
+        coordinate: 'polar2D',
+        children: (
+          <>
+            <ChartData data={[{ x: 1, y: 2, order: 1 }]} />
+            <ConnectedScatterEncodings x="x" y="y" order="order" />
+          </>
+        ),
+      }),
+  },
+  {
+    name: 'RangedDotChart',
+    createInput: () =>
+      RangedDotChart.createInputEmbedProps({
+        coordinate: 'polar2D',
+        children: (
+          <>
+            <ChartData data={[{ category: 'A', start: 1, end: 2 }]} />
+            <RangedDotEncodings category="category" start="start" end="end" />
+          </>
+        ),
+      }),
+  },
+  {
+    name: 'RegressionChart',
+    createInput: () =>
+      RegressionChart.createInputEmbedProps({ coordinate: 'polar2D', children: requiredRegressionDeclarations }),
+  },
+  {
+    name: 'ScatterChart',
+    createInput: () => ScatterChart.createInputEmbedProps({ coordinate: 'polar2D', children: requiredDeclarations }),
+  },
+] as const;
+
 describe('Typed Point Chart React declarations', () => {
+  it.each([
+    {
+      name: 'ScatterChart',
+      chartType: 'scatter',
+      createInput: () =>
+        inputFromProps(ScatterChart, {
+          rows: [{ x: 1, y: 2 }],
+          data: { reference: 'scatter.rows' },
+          recipe: { encodings: { x: 'x', y: 'y' } },
+        }),
+    },
+    {
+      name: 'BubbleChart',
+      chartType: 'bubble',
+      createInput: () =>
+        inputFromProps(BubbleChart, {
+          rows: [{ x: 1, y: 2, size: 3 }],
+          data: { reference: 'bubble.rows' },
+          recipe: { encodings: { x: 'x', y: 'y', size: 'size' } },
+        }),
+    },
+    {
+      name: 'ConnectedScatterChart',
+      chartType: 'connected-scatter',
+      createInput: () =>
+        inputFromProps(ConnectedScatterChart, {
+          rows: [{ x: 1, y: 2, order: 3 }],
+          data: { reference: 'connected.rows' },
+          recipe: { encodings: { x: 'x', y: 'y', order: 'order' } },
+        }),
+    },
+    {
+      name: 'RegressionChart',
+      chartType: 'regression',
+      createInput: () =>
+        inputFromProps(RegressionChart, {
+          rows: [{ x: 1, y: 2 }],
+          data: { reference: 'regression.rows' },
+          recipe: { encodings: { x: 'x', y: 'y' } },
+        }),
+    },
+    {
+      name: 'RangedDotChart',
+      chartType: 'ranged-dot',
+      createInput: () =>
+        inputFromProps(RangedDotChart, {
+          rows: [{ category: 'A', start: 1, end: 2 }],
+          data: { reference: 'ranged.rows' },
+          recipe: { encodings: { category: 'category', start: 'start', end: 'end' } },
+        }),
+    },
+  ])('supports root-only IR-like authoring for $name', ({ chartType, createInput }) => {
+    const input = createInput();
+
+    expect(input.source).toMatchObject({
+      namespace: 'chart',
+      type: 'point',
+      recipe: { chartType },
+    });
+  });
+
+  it('maps every structured root slot through the existing Vanilla input', () => {
+    const rows = [{ x: 1, y: 2 }];
+    const root = inputFromProps(ScatterChart, {
+      rows,
+      data: { reference: 'root.rows', model: [{ name: 'x' }, { name: 'y' }] },
+      layout: { width: 640, height: 360 },
+      coordinate: { type: 'polar2D', innerRadius: 0 },
+      presentation: { title: 'Root title', note: 'Root note' },
+      recipe: {
+        encodings: { x: 'x', y: 'y' },
+        properties: { opacity: 0 },
+        marks: [{ kind: 'scatter', properties: { opacity: 0 } }],
+      },
+      plotExtension: { guides: [] },
+    });
+    const vanilla = normalizeScatterChart({
+      data: { reference: 'root.rows', model: [{ name: 'x' }, { name: 'y' }] },
+      layout: { width: 640, height: 360 },
+      coordinate: { type: 'polar2D', innerRadius: 0 },
+      title: 'Root title',
+      note: 'Root note',
+      encodings: { x: 'x', y: 'y' },
+      properties: { opacity: 0 },
+      marks: [{ kind: 'scatter', properties: { opacity: 0 } }],
+      plotExtension: { guides: [] },
+    });
+
+    expect(root.source).toEqual(vanilla);
+    expect(root.datasets['root.rows']).toBe(rows);
+  });
+
+  it('keeps declaration-only authoring equal to structured root authoring', () => {
+    const rows = [{ x: 1, y: 2 }];
+    const root = inputFromProps(ScatterChart, {
+      rows,
+      data: { reference: 'parity.rows' },
+      layout: { width: 320, height: 180 },
+      presentation: { title: 'Parity' },
+      recipe: { encodings: { x: 'x', y: 'y' }, properties: { opacity: 0.5 } },
+    });
+    const declarations = inputOf(
+      ScatterChart,
+      <>
+        <ChartData data={rows} reference="parity.rows" />
+        <ChartLayout layout={{ width: 320, height: 180 }} />
+        <ChartTitle>Parity</ChartTitle>
+        <ScatterEncodings x="x" y="y" />
+        <ScatterProperties opacity={0.5} />
+      </>,
+    );
+
+    expect(root.source).toEqual(declarations.source);
+    expect(root.datasets).toEqual(declarations.datasets);
+  });
+
+  it('allows root and headless declarations to mix across owner slots', () => {
+    const input = inputFromProps(ScatterChart, {
+      rows: [{ x: 1, y: 2 }],
+      data: { reference: 'hybrid.rows' },
+      presentation: { subtitle: 'Root subtitle' },
+      recipe: { encodings: { x: 'x', y: 'y' } },
+      children: (
+        <>
+          <ChartTitle>Child title</ChartTitle>
+          <ScatterProperties opacity={0.25} />
+        </>
+      ),
+    });
+
+    expect(input.source.presentation).toEqual({ title: 'Child title', subtitle: 'Root subtitle' });
+    expect(input.source.recipe).toMatchObject({
+      encodings: { x: 'x', y: 'y' },
+      properties: { opacity: 0.25 },
+    });
+  });
+
+  it.each([
+    {
+      name: 'data',
+      createInput: () =>
+        inputFromProps(ScatterChart, {
+          rows: [{ x: 1, y: 2 }],
+          data: { reference: 'root.rows' },
+          recipe: { encodings: { x: 'x', y: 'y' } },
+          children: <ChartData data={[{ x: 2, y: 3 }]} />,
+        }),
+    },
+    {
+      name: 'layout',
+      createInput: () =>
+        inputFromProps(ScatterChart, {
+          rows: [{ x: 1, y: 2 }],
+          data: { reference: 'root.rows' },
+          layout: { width: 320 },
+          recipe: { encodings: { x: 'x', y: 'y' } },
+          children: <ChartLayout layout={{ height: 180 }} />,
+        }),
+    },
+    {
+      name: 'coordinate',
+      createInput: () =>
+        inputFromProps(ScatterChart, {
+          rows: [{ x: 1, y: 2 }],
+          data: { reference: 'root.rows' },
+          coordinate: 'polar2D',
+          recipe: { encodings: { x: 'x', y: 'y' } },
+          children: <ChartCoordinate coordinate="cartesian2D" />,
+        }),
+    },
+    {
+      name: 'plotExtension',
+      createInput: () =>
+        inputFromProps(ScatterChart, {
+          rows: [{ x: 1, y: 2 }],
+          data: { reference: 'root.rows' },
+          recipe: { encodings: { x: 'x', y: 'y' } },
+          plotExtension: { guides: [] },
+          children: <ChartExtension />,
+        }),
+    },
+    {
+      name: 'recipe.encodings',
+      createInput: () =>
+        inputFromProps(ScatterChart, {
+          rows: [{ x: 1, y: 2 }],
+          data: { reference: 'root.rows' },
+          recipe: { encodings: { x: 'x', y: 'y' } },
+          children: <ScatterEncodings x="otherX" y="otherY" />,
+        }),
+    },
+    {
+      name: 'recipe.properties',
+      createInput: () =>
+        inputFromProps(ScatterChart, {
+          rows: [{ x: 1, y: 2 }],
+          data: { reference: 'root.rows' },
+          recipe: { encodings: { x: 'x', y: 'y' }, properties: { opacity: 0 } },
+          children: <ScatterProperties opacity={0.5} />,
+        }),
+    },
+    {
+      name: 'recipe.marks',
+      createInput: () =>
+        inputFromProps(ScatterChart, {
+          rows: [{ x: 1, y: 2 }],
+          data: { reference: 'root.rows' },
+          recipe: { encodings: { x: 'x', y: 'y' }, marks: [] },
+          children: <ScatterMark />,
+        }),
+    },
+    {
+      name: 'presentation.title',
+      createInput: () =>
+        inputFromProps(ScatterChart, {
+          rows: [{ x: 1, y: 2 }],
+          data: { reference: 'root.rows' },
+          presentation: { title: 'Root title' },
+          recipe: { encodings: { x: 'x', y: 'y' } },
+          children: <ChartTitle>Child title</ChartTitle>,
+        }),
+    },
+  ])('rejects root and declaration sources for the same $name slot', ({ name, createInput }) => {
+    expect(createInput).toThrow(new RegExp(`${name}.*both`, 'iu'));
+  });
+
+  it('reports missing runtime rows and recipe encodings at the React boundary', () => {
+    expect(() =>
+      inputFromProps(ScatterChart, {
+        data: { reference: 'missing.rows' },
+        recipe: { encodings: { x: 'x', y: 'y' } },
+      }),
+    ).toThrow(/runtime rows.*required/iu);
+    expect(() =>
+      inputFromProps(ScatterChart, {
+        rows: [],
+        data: { reference: 'empty.rows' },
+      }),
+    ).toThrow(/recipe.*encodings.*required/iu);
+  });
+
+  it('preserves authored zero, false, and empty arrays from structured root recipe slots', () => {
+    const connected = inputFromProps(ConnectedScatterChart, {
+      rows: [{ x: 1, y: 2, order: 1 }],
+      data: { reference: 'falsy.rows' },
+      recipe: {
+        encodings: { x: 'x', y: 'y', order: 'order' },
+        properties: { path: { connectNulls: false }, point: { opacity: 0 } },
+        marks: [],
+      },
+      plotExtension: { guides: [] },
+    });
+
+    expect(connected.source.recipe.properties).toMatchObject({
+      path: { connectNulls: false },
+      point: { opacity: 0 },
+    });
+    expect(connected.source.recipe.marks).toEqual([]);
+    expect(connected.source.plotExtension?.guides).toEqual([]);
+  });
+
+  it('uses root layout dimensions for a standalone host and keeps them Source-only when embedded', () => {
+    const rootProps = {
+      rows: [{ x: 1, y: 2 }],
+      data: { reference: 'layout.rows' },
+      layout: { width: 640, height: 360 },
+      recipe: { encodings: { x: 'x', y: 'y' } },
+      children: null,
+    };
+    const standalone = renderToStaticMarkup(<ScatterChart {...rootProps} />);
+    const embeddedInput = inputFromProps(ScatterChart, rootProps);
+
+    expect(standalone).toMatch(/^<svg[^>]*width="640" height="360"/);
+    expect(embeddedInput.source.layout).toEqual({ width: 640, height: 360 });
+  });
+
+  it.each(coordinateRootPropCases)(
+    'maps $name coordinate root props through Vanilla normalization',
+    ({ createInput }) => {
+      expect(createInput().source.coordinate).toEqual({
+        type: 'polar2D',
+        innerRadius: 0,
+        startAngle: 0,
+        endAngle: 360,
+      });
+    },
+  );
+
+  it('preserves a configured coordinate object from the concrete Chart root prop', () => {
+    const input = ScatterChart.createInputEmbedProps({
+      coordinate: { type: 'polar2D', innerRadius: 0, startAngle: -90 },
+      children: requiredDeclarations,
+    });
+
+    expect(input.source.coordinate).toEqual({
+      type: 'polar2D',
+      innerRadius: 0,
+      startAngle: -90,
+      endAngle: 360,
+    });
+  });
+
+  it('rejects simultaneous coordinate root prop and ChartCoordinate declaration', () => {
+    expect(() =>
+      ScatterChart.createInputEmbedProps({
+        coordinate: 'polar2D',
+        children: (
+          <>
+            <ChartData data={[{ x: 1, y: 2 }]} />
+            <ScatterEncodings x="x" y="y" />
+            <ChartCoordinate coordinate="cartesian2D" />
+          </>
+        ),
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        code: RetikzChartReactErrorCode.Default,
+        details: expect.objectContaining({ message: expect.stringMatching(/coordinate.*both/iu) }),
+      }),
+    );
+  });
+
+  it('maps ChartCoordinate string and object declarations through Vanilla normalization', () => {
+    const stringInput = inputOf(
+      ScatterChart,
+      <>
+        {requiredDeclarations}
+        <ChartCoordinate coordinate="polar2D" />
+      </>,
+    );
+    const objectInput = inputOf(
+      ScatterChart,
+      <>
+        {requiredDeclarations}
+        <>
+          <ChartCoordinate coordinate={{ type: 'polar2D', innerRadius: 0 }} />
+        </>
+      </>,
+    );
+
+    expect(stringInput.source).toEqual(
+      normalizeScatterChart({
+        data: { reference: 'chart.data' },
+        coordinate: 'polar2D',
+        encodings: { x: 'x', y: 'y' },
+      }),
+    );
+    expect(objectInput.source).toEqual(
+      normalizeScatterChart({
+        data: { reference: 'chart.data' },
+        coordinate: { type: 'polar2D', innerRadius: 0 },
+        encodings: { x: 'x', y: 'y' },
+      }),
+    );
+  });
+
   it('maps Connected Scatter and Ranged Dot declarations through typed Vanilla inputs', () => {
     const connected = inputOf(
       ConnectedScatterChart,
@@ -336,6 +739,16 @@ describe('Typed Point Chart React declarations', () => {
       ),
     },
     {
+      name: 'ChartCoordinate',
+      declarations: (
+        <>
+          {requiredDeclarations}
+          <ChartCoordinate coordinate="polar2D" />
+          <ChartCoordinate coordinate="cartesian2D" />
+        </>
+      ),
+    },
+    {
       name: 'ChartExtension',
       declarations: (
         <>
@@ -517,45 +930,23 @@ describe('Typed Point Chart React declarations', () => {
     ).toThrow(/duplicate-declaration-source/i);
   });
 
-  it('rejects coordinate props combined with child composition through the Plot owner error contract', () => {
+  it('rejects root ChartCoordinate combined with child composition', () => {
     expect(() =>
       inputOf(
         ScatterChart,
         <>
           <ChartData data={[{ x: 1, y: 2, region: 'north' }]} />
           <ScatterEncodings x="x" y="y" />
-          <ChartExtension coordinate={{ type: 'cartesian2D' }}>
+          <ChartCoordinate coordinate="cartesian2D" />
+          <ChartExtension>
             <PlotFacet id="regions" row="region">
               <PointMark x="x" y="y" />
             </PlotFacet>
           </ChartExtension>
         </>,
       ),
-    ).toThrow(/duplicate-declaration-source/i);
-  });
-
-  it('validates props-only ChartExtension conflicts through the Plot owner error contract', () => {
-    expect(() =>
-      inputOf(ScatterChart, [
-        <ChartData key="data" data={[{ x: 1, y: 2 }]} />,
-        <ScatterEncodings key="encodings" x="x" y="y" />,
-        <ChartExtension
-          key="extension"
-          coordinate={{ type: 'cartesian2D' }}
-          composition={{
-            defaultView: 'main',
-            views: [{ id: 'main', coordinate: { type: 'cartesian2D' } }],
-          }}
-        />,
-      ]),
     ).toThrowError(
-      expect.objectContaining({
-        code: 'duplicate-declaration-source',
-        details: {
-          path: ['children', 2, 'props', 'composition'],
-          conflictingPath: ['children', 2, 'props', 'coordinate'],
-        },
-      }),
+      expect.objectContaining({ issues: [expect.objectContaining({ path: ['plotExtension', 'composition'] })] }),
     );
   });
 

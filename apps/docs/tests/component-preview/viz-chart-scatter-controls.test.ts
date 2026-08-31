@@ -54,7 +54,7 @@ const expectCompletePanel = (contract: PreviewControlContract): void => {
   expect(contract.relatedApis.length).toBeGreaterThan(0);
   expect(
     contract.relatedApis.every(api =>
-      /^(?:ChartExtension|Plot[A-Z]\w*|Plot|PointMark|Scatter[A-Z]\w*)(?:\.|$)/u.test(api),
+      /^(?:ChartCoordinate|ChartExtension|Plot[A-Z]\w*|Plot|PointMark|Scatter[A-Z]\w*)(?:\.|$)/u.test(api),
     ),
   ).toBe(true);
 };
@@ -215,14 +215,14 @@ describe('Viz Chart scatter controls', () => {
     }
   });
 
-  it('两个通用 Scatter 示例以笛卡尔为 canonical，并通过 ChartExtension 切换 Polar', () => {
+  it('两个通用 Scatter 示例以笛卡尔为 canonical，并通过 ScatterChart 根 prop 切换 Polar', () => {
     for (const source of [
       fertilityWorkZhPreviewSource,
       fertilityWorkEnPreviewSource,
       penguinFacetZhPreviewSource,
       penguinFacetEnPreviewSource,
     ]) {
-      expect(canonicalDeclarationProps(source, ChartExtension)).toMatchObject({
+      expect(canonicalScatterProps(source)).toMatchObject({
         coordinate: { type: 'cartesian2D' },
       });
     }
@@ -234,7 +234,7 @@ describe('Viz Chart scatter controls', () => {
           'utf8',
         );
         expect(source).toContain("type: 'polar2D'");
-        expect(source).toContain('<ChartExtension');
+        expect(source).not.toContain('<ChartCoordinate');
       }
     }
   });
@@ -299,7 +299,7 @@ describe('Viz Chart scatter controls', () => {
       'scatter-fertility-work-point-shape',
     );
     expect(fertilityWorkZh.relatedApis).toEqual([
-      'ChartExtension.coordinate',
+      'ScatterChart.coordinate',
       'ScatterEncodings.color',
       'ScatterEncodings.shape',
       'ScatterProperties.size',
@@ -411,7 +411,7 @@ describe('Viz Chart scatter controls', () => {
     expect(getPreviewControlFields(worldCupZh.controls).map(control => control.id)).not.toContain(
       'scatter-world-cup-shots-coordinate-system',
     );
-    expect(worldCupZh.relatedApis).not.toContain('ChartExtension.coordinate');
+    expect(worldCupZh.relatedApis).not.toContain('ScatterChart.coordinate');
 
     for (const locale of ['zh', 'en']) {
       const source = readFileSync(

@@ -19,5 +19,6 @@ export const ConnectedScatterChart = createTypedChartComponent<ConnectedScatterC
       props,
       collectConnectedScatterChartDeclarations(props.children),
       input => createConnectedScatterChart(input),
+      'ConnectedScatterEncodings',
     ),
 );

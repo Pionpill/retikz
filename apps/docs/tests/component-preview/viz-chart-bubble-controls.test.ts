@@ -162,7 +162,7 @@ describe('Viz Chart Bubble controls', () => {
         .sort(),
     );
     expect(basicZh.relatedApis).toContain('BubbleEncodings.size');
-    expect(basicZh.relatedApis).toContain('ChartExtension.coordinate');
+    expect(basicZh.relatedApis).toContain('BubbleChart.coordinate');
     expect(basicZh.relatedApis).toContain('BubbleEncodings.color');
     expect(basicZh.relatedApis).not.toContain('BubbleProperties.size');
     expect(basicZh.relatedApis).toContain('BubbleProperties.domainPadding');

@@ -94,7 +94,7 @@ const assertCompatibleCoordinateRoles = (
   ) {
     throw invalidPlot(
       `Plot coordinate replacement roles [${authoredRoles.join(', ')}] must match recipe roles [${recipeRoles.join(', ')}]`,
-      ['plotExtension', 'coordinate'],
+      ['coordinate'],
     );
   }
 };
@@ -110,9 +110,7 @@ const resolveChartCoordinate = (
       ? undefined
       : coordinateDefinitionOf(recipeCoordinate, runtime, ['recipe', 'spatial', 'coordinate']);
   const authoredDefinition =
-    authoredCoordinate === undefined
-      ? undefined
-      : coordinateDefinitionOf(authoredCoordinate, runtime, ['plotExtension', 'coordinate']);
+    authoredCoordinate === undefined ? undefined : coordinateDefinitionOf(authoredCoordinate, runtime, ['coordinate']);
   if (recipeDefinition !== undefined && authoredDefinition !== undefined) {
     assertCompatibleCoordinateRoles(recipeDefinition, authoredDefinition);
   }
@@ -135,8 +133,7 @@ const resolveChartCoordinate = (
     return bindCoordinateScaleNames(selectedDefinition, selectedCoordinate, scaleNames);
   } catch (error) {
     if (error instanceof ZodError) {
-      const coordinatePath =
-        authoredCoordinate === undefined ? ['recipe', 'spatial', 'coordinate'] : ['plotExtension', 'coordinate'];
+      const coordinatePath = authoredCoordinate === undefined ? ['recipe', 'spatial', 'coordinate'] : ['coordinate'];
       throw invalidPlot(
         'Resolved Chart coordinate does not match its Plot CoordinateDefinition schema',
         coordinatePath,
@@ -151,10 +148,10 @@ const resolveChartCoordinate = (
 export const resolveChartPlotSpatial = (
   recipe: ChartRecipeResolution,
   encodings: ChartEncodingResolution,
+  authoredCoordinate: IRPlotCoordinateOperation | undefined,
   extension: IRChartPlotExtension | undefined,
   runtime: ChartEncodingRuntime,
 ): Pick<IRPlot, 'coordinate' | 'composition'> => {
-  const authoredCoordinate = extension?.coordinate;
   const authoredComposition = extension?.composition;
   const spatial = recipe.scaffold.spatial;
 
@@ -173,7 +170,7 @@ export const resolveChartPlotSpatial = (
       ]);
     }
     if (authoredCoordinate !== undefined && !spatial.replaceable) {
-      throw invalidPlot('Recipe spatial scaffold is not replaceable by Chart Source', ['plotExtension', 'coordinate']);
+      throw invalidPlot('Recipe spatial scaffold is not replaceable by Chart Source', ['coordinate']);
     }
     const coordinate = resolveChartCoordinate(spatial.coordinate, authoredCoordinate, encodings, runtime);
     return {
@@ -191,10 +188,10 @@ export const resolveChartPlotSpatial = (
 
   if (authoredCoordinate !== undefined || authoredComposition !== undefined) {
     if (!spatial.replaceable) {
-      throw invalidPlot('Recipe spatial scaffold is not replaceable by Chart Source', [
-        'plotExtension',
-        authoredCoordinate === undefined ? 'composition' : 'coordinate',
-      ]);
+      throw invalidPlot(
+        'Recipe spatial scaffold is not replaceable by Chart Source',
+        authoredCoordinate === undefined ? ['plotExtension', 'composition'] : ['coordinate'],
+      );
     }
     if (authoredCoordinate === undefined) {
       if (Object.keys(encodings.positionScales).length > 0) {
@@ -252,7 +249,7 @@ export const resolveChartPlot = (
   runtime: ChartEncodingRuntime,
 ): IRPlot => {
   const extension = source.plotExtension;
-  const spatial = resolveChartPlotSpatial(recipe, encodings, extension, runtime);
+  const spatial = resolveChartPlotSpatial(recipe, encodings, source.coordinate, extension, runtime);
   const guides = resolveChartPlotGuides(recipe, extension);
   const scales = resolveChartPlotScales(recipe, encodings, extension);
   const marks = [...chartMarks, ...(extension?.marks ?? [])];
@@ -287,7 +284,9 @@ export const resolveChartPlot = (
               encodings.spatial.kind,
               ...(plotPath[1] === 'arrangements' && plotPath[2] === 0 ? plotPath.slice(3) : []),
             ]
-          : ['plotExtension', ...plotPath];
+          : source.coordinate !== undefined && plotPath[0] === 'coordinate'
+            ? ['coordinate', ...plotPath.slice(1)]
+            : ['plotExtension', ...plotPath];
       const rebased = new ZodError(error.issues.map(issue => ({ ...issue, path: sourcePath })));
       throw invalidPlot('Resolved Chart Plot does not match PlotSchema', sourcePath, rebased);
     }

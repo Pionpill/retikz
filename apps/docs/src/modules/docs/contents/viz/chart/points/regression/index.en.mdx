@@ -23,7 +23,23 @@ usage: distribution
 >
 Regression is useful when you want to preserve every observation while summarizing an overall or grouped relationship between two continuous variables. Use [Scatter](/viz/chart/points/scatter) when the point distribution is enough; use Plot directly when you need full control over data views, transforms, or trend marks.
 
-This page expands only Regression-private APIs. See the [shared Chart API](/viz/chart) for `ChartData`, `ChartLayout`, presentation, `ChartExtension`, and other shared declarations.
+This page expands only Regression-private APIs. See the [shared Chart API](/viz/chart) for `ChartData`, `ChartLayout`, `ChartCoordinate`, presentation, `ChartExtension`, and other shared declarations.
+
+## `RegressionChart`
+
+The root `recipe` directly uses Regression's exact slots. Component identity supplies the Point family and `chartType: 'regression'`:
+
+```tsx
+<RegressionChart
+  rows={rows}
+  recipe={{
+    encodings: { x: 'sepalLength', y: 'petalLength', series: 'species' },
+    properties: { method: { kind: 'linear' }, sampleCount: 64 },
+  }}
+/>
+```
+
+`RegressionEncodings`, `RegressionProperties`, and `RegressionMark` are equivalent JSX sugar for the same recipe slots. Root-only authoring can omit `children`; different slots can mix, while two sources for one slot fail loudly.
 
 ## Reading the chart
 

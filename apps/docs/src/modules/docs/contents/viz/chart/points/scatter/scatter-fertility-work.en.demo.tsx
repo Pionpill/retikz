@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { ChartData, ChartExtension, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -12,6 +12,11 @@ import { previewControlContract } from './scatter-fertility-work.en.controls';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <ScatterChart
+    coordinate={
+      values[SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem] === 'polar2D'
+        ? { type: 'polar2D' }
+        : { type: 'cartesian2D' }
+    }
     theme={{
       tokens: {
         plot: {
@@ -27,13 +32,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   >
     <ChartData data={fertilityWorkData} />
     <ChartLayout {...resolvePointPreviewLayout(values[SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem])} />
-    <ChartExtension
-      coordinate={
-        values[SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem] === 'polar2D'
-          ? { type: 'polar2D' }
-          : { type: 'cartesian2D' }
-      }
-    />
     <ScatterEncodings
       x="fertilityRate"
       y="femaleLaborParticipation"

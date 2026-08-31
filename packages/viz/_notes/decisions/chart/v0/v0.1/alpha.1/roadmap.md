@@ -14,7 +14,7 @@ alpha.1 要证明 Point family 可以在精确 Source、recipe、Plot lowering�
 4. authored `recipe.marks` 默认按数组顺序追加，`override: true` 按 kind 原位替换内建 semantic group；`plotExtension.marks` 最后追加且不继承 Chart slots
 5. Theme 使用 Chart、Plot、recipe 三个 owner slice，并按 Core mode / style、named/base chain、inline tokens 的固定顺序级联
 6. provider graph、Standard Surface 与 Plot 出口组成 renderer-neutral 的唯一结果；React、Vanilla、JSON 与 SSR 复用同一精确 Source、active provider 与 resolver 主链
-7. React 以 Chart 公共、chartType 私有、Chart mark 与 Plot extension 的 owner-scoped declarations 组装同一 Vanilla Input，不把组件树变成 Source grammar
+7. React concrete Chart 根组件以 IR-like `data` / `layout` / `coordinate` / `presentation` / `recipe` / `plotExtension` 提供完整入口，runtime rows 独立传入；owner-scoped declarations 作为同一 Vanilla Input 的 headless JSX sugar
 
 当前状态是进行中：Point family 的 Scatter、Bubble、Regression、Connected Scatter 与 Ranged Dot recipe 已形成实现闭环；Bubble 的 ADR-13 与 Regression 的 ADR-06 已接受，Connected Scatter 的 ADR-05 与 Ranged Dot 的 ADR-07 保持 Proposed，等待人工验收后再接受。Strip 的目标视觉已由 Scatter + facet + jitter 组合覆盖，因此 ADR-08 不再要求独立 chartType，也不构成 alpha.1 退出 blocker。不能因为当前五个 recipe 已可消费就宣称整个 alpha.1 完成
 
@@ -35,7 +35,7 @@ ADR-09 是当前 family / recipe Chart 基础设施的总决策。早期 ADR-01�
 | 09  | family、recipe、mark Source IR、Theme、registry 与 provider 的当前基础设施总决策                                                                      | Accepted                       |
 | 10  | 保留Chart / Plot声明owner分层与`PlotXxx`命名；`ChartFacet` / `recipe.facet`部分待ADR-11 Accepted后由其替代                                            | Accepted                       |
 | 11  | Scatter exact encodings、Data output model、rich mapping调度与旧facet surface迁移                                                                     | Proposed                       |
-| 12  | Chart React 公共与chartType私有声明组件、`ChartExtension`容器和具体Chart根属性收敛                                                                    | Proposed                       |
+| 12  | concrete Chart 完整 IR-like 根配置、runtime rows、headless declarations、跨 slot hybrid 与同 slot fail-loud                                           | Accepted                       |
 | 13  | Bubble 独立 chartType、必需字段尺寸映射、不可撤销 size 继承与 Point 共享边界                                                                          | Accepted                       |
 
 ## 3. 当前 Source 与解析主链
@@ -43,7 +43,7 @@ ADR-09 是当前 family / recipe Chart 基础设施的总决策。早期 ADR-01�
 alpha.1 的 Source root 固定为：
 
 ```text
-namespace, type, id?, presentation?, theme?, data, layout?, recipe, plotExtension?
+namespace, type, id?, presentation?, theme?, data, layout?, coordinate?, recipe, plotExtension?
 ```
 
 其中 `type` 是 family，Point family 使用 `point`；`recipe` 固定包含：
@@ -111,7 +111,7 @@ provider graph 与 Standard Surface gate 已闭环，五个 active Point chartTy
 - concrete provider contribution 安装该 Definition；当前 Core compile 边界拒绝重复 chartType、family mismatch、未知 base 与依赖缺失
 - 应用层负责动态 family / chartType catalog、模块加载与 JSON 路由；Chart 不提供第三方 recipe / chartType 注册入口
 
-React 通过 Chart 公共 singleton、chartType 私有 singleton、Chart marks 与 `ChartExtension` 中的 Plot declarations 组装 Vanilla Input，并保持独立 owner。Vanilla 只展开 `row / column` 字符串 shorthand 并把 typed Input normalize 为 Source；JSON、Vanilla、React 与 SSR 不各自实现 aggregate、scale、composition、dispatch、默认或 Theme resolve。runtime reducer / transform / scale Definition 通过 provider sidecar 保真传递，不进入 JSON Source；动态 JSON 路由由应用层负责
+React concrete Chart 根通过 `rows` 与结构化 `data`、`layout`、`coordinate`、`presentation`、`recipe`、`plotExtension` 组装 Vanilla Input，组件身份推断 family 与 chartType；公共 singleton、chartType 私有 singleton、Chart marks 与 `ChartExtension` 是相同 owner slots 的 headless JSX sugar。根与 declarations 可以跨 slot 混用，同 slot 双来源 fail-loud。`ChartCoordinate` 接受名称或完整 operation；Vanilla 把名称归一为 Source 根 `{ type }`，并只展开 `row / column` 字符串 shorthand。JSON、Vanilla、React 与 SSR 不各自实现 aggregate、scale、composition、dispatch、默认或 Theme resolve。runtime reducer / transform / scale Definition 通过 provider sidecar 保真传递，不进入 JSON Source；动态 JSON 路由由应用层负责
 
 ## 7. Regression 实现边界与仍保留的 capability gates
 

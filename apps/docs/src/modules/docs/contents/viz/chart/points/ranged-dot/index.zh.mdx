@@ -23,6 +23,22 @@ usage: distribution
 >
 Ranged Dot 固定横向：`category` 映射 y，`start` 与 `end` 映射同一 x scale。若两个端点都显式声明 scale binding，名称必须一致；可以由一端声明 operation、另一端引用该名称。它适合比柱长更强调两个端点、又需要显示变化方向的比较。
 
+## `RangedDotChart`
+
+根 `recipe` 使用 Ranged Dot 的 exact slots；组件身份自动补齐 Point family 与 `chartType: 'ranged-dot'`：
+
+```tsx
+<RangedDotChart
+  rows={rows}
+  recipe={{
+    encodings: { category: 'category', start: 'before', end: 'after', color: 'group' },
+    properties: { range: { strokeWidth: 2 } },
+  }}
+/>
+```
+
+`RangedDotEncodings`、`RangedDotProperties` 与 `RangedDotMark` 是相同 recipe slots 的等价 JSX sugar。root-only 写法可以省略 `children`；不同 slot 可以混用，同一 slot 双来源会 fail-loud。
+
 ## 原子行语义
 
 一个 Ranged Dot semantic group 只生成一个 projected Relation operation。Plot 在同一次投影中得到两端，按“连接线、起点、终点”绘制；任一端缺失、null 或无法投影时，整行一起跳过，不留下孤立端点。

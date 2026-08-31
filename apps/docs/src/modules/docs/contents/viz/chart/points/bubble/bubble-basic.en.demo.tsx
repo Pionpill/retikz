@@ -12,7 +12,11 @@ import { gapminderBubbleData } from './bubble-basic.data';
 import { previewControlContract } from './bubble-basic.en.controls';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <BubbleChart>
+  <BubbleChart
+    coordinate={
+      values[BUBBLE_BASIC_CONTROL_IDS.coordinateSystem] === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }
+    }
+  >
     <ChartData data={gapminderBubbleData} />
     <ChartLayout {...resolvePointPreviewLayout(values[BUBBLE_BASIC_CONTROL_IDS.coordinateSystem])} />
     <BubbleEncodings
@@ -28,11 +32,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartTitle>Income, life expectancy, and population</ChartTitle>
     <ChartSubtitle>142 countries and territories in 2007; bubble area is driven by population</ChartSubtitle>
     <ChartSource>Gapminder data package, 2007 cross-section; GDP per capita in PPP dollars</ChartSource>
-    <ChartExtension
-      coordinate={
-        values[BUBBLE_BASIC_CONTROL_IDS.coordinateSystem] === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }
-      }
-    >
+    <ChartExtension>
       <PlotAxis
         dimension="x"
         ticks={{

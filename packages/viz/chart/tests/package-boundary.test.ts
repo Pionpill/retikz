@@ -120,6 +120,7 @@ const publishablePackageExpectations = {
       '@retikz/data': 'workspace:^',
       '@retikz/foundation': 'workspace:^',
       '@retikz/plot': 'workspace:^',
+      '@retikz/plot-vanilla': 'workspace:^',
       '@retikz/standard': 'workspace:^',
       '@retikz/vanilla': 'workspace:^',
     },

@@ -12,7 +12,13 @@ import { penguinScatterData } from './scatter-penguins-facet-jitter.data';
 import { previewControlContract } from './scatter-penguins-facet-jitter.en.controls';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <ScatterChart>
+  <ScatterChart
+    coordinate={
+      values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.coordinateSystem] === 'polar2D'
+        ? { type: 'polar2D' }
+        : { type: 'cartesian2D' }
+    }
+  >
     <ChartData data={penguinScatterData} />
     <ChartLayout
       {...resolvePointPreviewLayout(values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.coordinateSystem], {
@@ -37,13 +43,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartTitle>Bill and flipper length across three penguin species</ChartTitle>
     <ChartSubtitle>Palmer Penguins; first 30 complete source-order records per species</ChartSubtitle>
     <ChartSource>Palmer Station Antarctica LTER; CC0; 342 of 344 rows have both measurements</ChartSource>
-    <ChartExtension
-      coordinate={
-        values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.coordinateSystem] === 'polar2D'
-          ? { type: 'polar2D' }
-          : { type: 'cartesian2D' }
-      }
-    >
+    <ChartExtension>
       <PlotAxis dimension="x" title="Bill length (mm)" grid />
       <PlotAxis dimension="y" title="Flipper length (mm)" grid />
     </ChartExtension>

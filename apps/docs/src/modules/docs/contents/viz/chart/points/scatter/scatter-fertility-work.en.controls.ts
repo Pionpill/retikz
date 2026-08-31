@@ -83,7 +83,7 @@ export const previewControlContract = {
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointOpacity]: 0.65,
   },
   relatedApis: [
-    'ChartExtension.coordinate',
+    'ScatterChart.coordinate',
     'ScatterEncodings.color',
     'ScatterEncodings.shape',
     'ScatterProperties.size',

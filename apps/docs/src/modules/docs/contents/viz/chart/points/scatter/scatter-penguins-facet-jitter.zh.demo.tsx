@@ -14,7 +14,13 @@ import {
 import { penguinScatterData } from './scatter-penguins-facet-jitter.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <ScatterChart>
+  <ScatterChart
+    coordinate={
+      values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.coordinateSystem] === 'polar2D'
+        ? { type: 'polar2D' }
+        : { type: 'cartesian2D' }
+    }
+  >
     <ChartData data={penguinScatterData} />
     <ChartLayout
       {...resolvePointPreviewLayout(values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.coordinateSystem], {
@@ -39,13 +45,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartTitle>三种企鹅的喙长与鳍长</ChartTitle>
     <ChartSubtitle>Palmer Penguins；每个物种按源文件顺序取前 30 条完整记录</ChartSubtitle>
     <ChartSource>Palmer Station Antarctica LTER；CC0；原始 344 行，342 行的喙长与鳍长完整</ChartSource>
-    <ChartExtension
-      coordinate={
-        values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.coordinateSystem] === 'polar2D'
-          ? { type: 'polar2D' }
-          : { type: 'cartesian2D' }
-      }
-    >
+    <ChartExtension>
       <PlotAxis dimension="x" title="喙长（mm）" grid />
       <PlotAxis dimension="y" title="鳍长（mm）" grid />
     </ChartExtension>
