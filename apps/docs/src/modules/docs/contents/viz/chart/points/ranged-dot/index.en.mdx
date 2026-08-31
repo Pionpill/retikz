@@ -47,20 +47,21 @@ One Ranged Dot semantic group emits one projected Relation operation. Plot proje
 
 ### `RangedDotPropertiesProps`
 
-| Prop          | Type                         | Default   | Description                                   |
-| ------------- | ---------------------------- | --------- | --------------------------------------------- |
-| `point?`      | `IRRangedDotPointProperties` | Point     | Common constant appearance for both endpoints |
-| `startPoint?` | `IRRangedDotPointProperties` | inherited | Start endpoint override                       |
-| `endPoint?`   | `IRRangedDotPointProperties` | inherited | End endpoint override                         |
-| `range?`      | `IRRangedDotRangeProperties` | Path      | Connector color, width, opacity, and style    |
+| Prop             | Type                                     | Default   | Description                                                              |
+| ---------------- | ---------------------------------------- | --------- | ------------------------------------------------------------------------ |
+| `point?`         | `IRRangedDotPointProperties`             | Point     | Common constant appearance for both endpoints                            |
+| `startPoint?`    | `IRRangedDotPointProperties`             | inherited | Start endpoint override                                                  |
+| `endPoint?`      | `IRRangedDotPointProperties`             | inherited | End endpoint override                                                    |
+| `range?`         | `IRRangedDotRangeProperties`             | Path      | Connector color, width, opacity, and style                               |
+| `domainPadding?` | `number` \| `{ x?: number; y?: number }` | `0.02`    | Configures continuous x-scale domain padding; categorical y is unchanged |
 
 ### `RangedDotMarkProps`
 
-| Prop          | Type                                                  | Default   | Description                            |
-| ------------- | ----------------------------------------------------- | --------- | -------------------------------------- |
-| `override?`   | `boolean`                                             | `false`   | Replaces the complete ranged-dot group |
-| `encodings?`  | `{ category?: string; start?: string; end?: string }` | inherited | Overrides direct fields, never color   |
-| `properties?` | `IRRangedDotChartProperties`                          | inherited | Merges constant appearance by member   |
+| Prop          | Type                                                  | Default   | Description                                                      |
+| ------------- | ----------------------------------------------------- | --------- | ---------------------------------------------------------------- |
+| `override?`   | `boolean`                                             | `false`   | Replaces the complete ranged-dot group                           |
+| `encodings?`  | `{ category?: string; start?: string; end?: string }` | inherited | Overrides direct fields, never color                             |
+| `properties?` | `RangedDotMarkProps['properties']`                    | inherited | Merges member appearance and rejects recipe-only `domainPadding` |
 
 ## Public entries
 

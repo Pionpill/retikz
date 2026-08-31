@@ -6,6 +6,7 @@ import { PlotGuide, PlotScale } from '@retikz/plot';
 
 import type { ChartEncodingResolution } from '../../_chart/contract';
 import type { ChartEncodingFieldConsumer } from '../../_chart/resolve';
+import type { PointPositionDomainPaddingResolution } from './plot';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { pointPositionDomainPadding, pointRecipeId } from './plot';
@@ -76,17 +77,24 @@ const pointContinuousTransformCapabilities = [
 /** 为 encoding 声明的连续位置比例尺补齐 Point recipe 的 domain 留白 */
 export const withPointPositionDomainPadding = (
   resolution: ChartEncodingResolution,
-  domainPadding: number = pointPositionDomainPadding,
+  domainPadding: PointPositionDomainPaddingResolution = {
+    x: pointPositionDomainPadding,
+    y: pointPositionDomainPadding,
+  },
 ): ChartEncodingResolution => {
-  const positionScaleNames = new Set(Object.values(resolution.positionScales));
-  const scales = resolution.scales.map(
-    (scale): IRPlotScaleOperation =>
-      positionScaleNames.has(scale.name) &&
+  const positionRoleByScaleName = new Map(
+    Object.entries(resolution.positionScales).flatMap(([role, scaleName]) =>
+      role === 'x' || role === 'y' ? [[scaleName, role] as const] : [],
+    ),
+  );
+  const scales = resolution.scales.map((scale): IRPlotScaleOperation => {
+    const positionRole = positionRoleByScaleName.get(scale.name);
+    return positionRole !== undefined &&
       pointContinuousPositionScaleTypes.has(scale.type) &&
       !Object.hasOwn(scale, 'domainPadding')
-        ? { ...scale, domainPadding }
-        : scale,
-  );
+      ? { ...scale, domainPadding: domainPadding[positionRole] }
+      : scale;
+  });
   return { ...resolution, scales };
 };
 

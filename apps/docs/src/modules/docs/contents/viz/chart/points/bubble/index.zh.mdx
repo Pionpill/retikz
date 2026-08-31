@@ -62,13 +62,14 @@ Bubble 与 Scatter 都下沉为 Plot Point，但 Bubble 把第三个字段映射
 
 Bubble 默认使用 `fillOpacity={0.7}` 和 `1px` 同色描边。`color` 同时驱动默认填充与描边；显式 `fill`、`stroke` 或透明度属性仍可分别覆盖。
 
-| 字段                                                                                        | 值域与说明                                      |
-| ------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `color`、`textColor`、`fill`、`stroke`、`shape`                                             | 颜色、paint 或可扩展 shape 名称                 |
-| `minimumSize`、`scale`、`rotate`、`dx`、`dy`、`padding`、`margin`、`cornerRadius`           | 通用 Point 几何常量，不替代必需的 size 字段映射 |
-| `strokeWidth`、`fillOpacity`、`strokeOpacity`、`opacity`、`dashed`、`dotted`、`dashPattern` | 描边、透明度与虚线常量                          |
-| `zIndex`、`align`、`lineHeight`、`maxTextWidth`、`font`、`label`                            | 绘制顺序、文本与标签配置                        |
-| `boundary`、`shadow`、`blendMode`                                                           | 边界、阴影与混合模式                            |
+| 字段                                                                                        | 值域与说明                                                                    |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `color`、`textColor`、`fill`、`stroke`、`shape`                                             | 颜色、paint 或可扩展 shape 名称                                               |
+| `minimumSize`、`scale`、`rotate`、`dx`、`dy`、`padding`、`margin`、`cornerRadius`           | 通用 Point 几何常量，不替代必需的 size 字段映射                               |
+| `strokeWidth`、`fillOpacity`、`strokeOpacity`、`opacity`、`dashed`、`dotted`、`dashPattern` | 描边、透明度与虚线常量                                                        |
+| `zIndex`、`align`、`lineHeight`、`maxTextWidth`、`font`、`label`                            | 绘制顺序、文本与标签配置                                                      |
+| `boundary`、`shadow`、`blendMode`                                                           | 边界、阴影与混合模式                                                          |
+| `domainPadding?`                                                                            | `number` 或 `{ x?: number; y?: number }`；默认 `0.04`，可分别配置连续位置角色 |
 
 ## `BubbleMark`
 

@@ -57,8 +57,8 @@ describe('Point Chart recipe Definitions', () => {
     });
 
     expect(result.scaffold.scales.map(scale => scale.value)).toEqual([
-      { type: 'linear', name: '__chart.bubble.scale.x', domainPadding: 0.08 },
-      { type: 'linear', name: '__chart.bubble.scale.y', domainPadding: 0.08 },
+      { type: 'linear', name: '__chart.bubble.scale.x', domainPadding: 0.04 },
+      { type: 'linear', name: '__chart.bubble.scale.y', domainPadding: 0.04 },
     ]);
   });
 
@@ -116,6 +116,43 @@ describe('Point Chart recipe Definitions', () => {
       name: 'amountScale',
       domainPadding: 0.02,
     });
+  });
+
+  it('applies Point Chart properties to each continuous position role and preserves omitted role defaults', () => {
+    const scatter = resolve(ScatterChartDefinition, { x: 'x', y: 'y' }, { domainPadding: { x: 0.06 } });
+    const bubble = resolve(BubbleChartDefinition, { x: 'x', y: 'y', size: 'size' }, { domainPadding: { y: 0.09 } });
+    const regression = resolve(RegressionChartDefinition, { x: 'x', y: 'y' }, { domainPadding: 0.05 });
+    const connectedScatter = resolve(
+      ConnectedScatterChartDefinition,
+      { x: 'x', y: 'y', order: 'order' },
+      { domainPadding: { x: 0.03, y: 0.07 } },
+    );
+    const rangedDot = resolve(
+      RangedDotChartDefinition,
+      { category: 'category', start: 'start', end: 'end' },
+      { domainPadding: { x: 0.08, y: 0.1 } },
+    );
+
+    expect(scatter.scaffold.scales.map(scale => scale.value)).toEqual([
+      { type: 'linear', name: '__chart.scatter.scale.x', domainPadding: 0.06 },
+      { type: 'linear', name: '__chart.scatter.scale.y', domainPadding: 0.02 },
+    ]);
+    expect(bubble.scaffold.scales.map(scale => scale.value)).toEqual([
+      { type: 'linear', name: '__chart.bubble.scale.x', domainPadding: 0.04 },
+      { type: 'linear', name: '__chart.bubble.scale.y', domainPadding: 0.09 },
+    ]);
+    expect(regression.scaffold.scales.map(scale => scale.value)).toEqual([
+      { type: 'linear', name: '__chart.regression.scale.x', domainPadding: 0.05 },
+      { type: 'linear', name: '__chart.regression.scale.y', domainPadding: 0.05 },
+    ]);
+    expect(connectedScatter.scaffold.scales.map(scale => scale.value)).toEqual([
+      { type: 'linear', name: '__chart.connected-scatter.scale.x', domainPadding: 0.03 },
+      { type: 'linear', name: '__chart.connected-scatter.scale.y', domainPadding: 0.07 },
+    ]);
+    expect(rangedDot.scaffold.scales.map(scale => scale.value)).toEqual([
+      { type: 'linear', name: '__chart.ranged-dot.scale.x', domainPadding: 0.08 },
+      { type: 'point', name: '__chart.ranged-dot.scale.y' },
+    ]);
   });
 
   it('Ranged Dot reserves only its continuous position domain for the regular endpoint radius', () => {
@@ -522,6 +559,7 @@ describe('Point Chart recipe Definitions', () => {
       data: { reference: 'rows' },
       recipe: {
         chartType: 'bubble',
+        properties: { domainPadding: { x: 0.03, y: 0.04 } },
         encodings: {
           x: {
             field: 'income',
@@ -550,7 +588,7 @@ describe('Point Chart recipe Definitions', () => {
     });
 
     expect(result.plot.scales).toEqual([
-      { type: 'log', name: 'incomeScale', domainPadding: 0.08 },
+      { type: 'log', name: 'incomeScale', domainPadding: 0.03 },
       { type: 'linear', name: 'lifeExpectancyScale', domainPadding: 0 },
     ]);
   });

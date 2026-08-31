@@ -42,7 +42,7 @@ describe('Chart Vanilla normalization', () => {
         size: 'population',
         column: 'continent',
       },
-      properties: { opacity: 0.75 },
+      properties: { opacity: 0.75, domainPadding: { x: 0.03, y: 0.05 } },
       marks: [{ kind: 'bubble', properties: { strokeWidth: 1 } }],
     });
 
@@ -60,7 +60,7 @@ describe('Chart Vanilla normalization', () => {
           size: 'population',
           column: { field: 'continent' },
         },
-        properties: { opacity: 0.75 },
+        properties: { opacity: 0.75, domainPadding: { x: 0.03, y: 0.05 } },
         marks: [{ kind: 'bubble', properties: { strokeWidth: 1 } }],
       },
     });
@@ -74,7 +74,7 @@ describe('Chart Vanilla normalization', () => {
       title: 'Sales',
       note: 'Source note',
       encodings: { x: 'amount', y: 'margin', color: 'region' },
-      properties: { opacity: 0 },
+      properties: { opacity: 0, domainPadding: 0.04 },
       marks: [{ kind: 'scatter', properties: { size: 4 } }],
     });
 
@@ -88,7 +88,7 @@ describe('Chart Vanilla normalization', () => {
       recipe: {
         chartType: 'scatter',
         encodings: { x: 'amount', y: 'margin', color: 'region' },
-        properties: { opacity: 0 },
+        properties: { opacity: 0, domainPadding: 0.04 },
         marks: [{ kind: 'scatter', properties: { size: 4 } }],
       },
     });

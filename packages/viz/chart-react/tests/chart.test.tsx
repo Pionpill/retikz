@@ -199,7 +199,12 @@ describe('Typed Point Chart React declarations', () => {
   });
 
   it('renders Bubble standalone through one SVG host', () => {
-    const markup = renderToStaticMarkup(<BubbleChart>{requiredBubbleDeclarations}</BubbleChart>);
+    const markup = renderToStaticMarkup(
+      <BubbleChart>
+        {requiredBubbleDeclarations}
+        <BubbleProperties domainPadding={{ x: 0.04, y: 0.06 }} />
+      </BubbleChart>,
+    );
 
     expect(markup.match(/<svg/g)).toHaveLength(1);
   });

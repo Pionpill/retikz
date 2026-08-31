@@ -8,6 +8,7 @@ import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
 import {
   pointFieldConsumersOf,
+  pointPositionDomainPaddingOf,
   pointPropertySlotsWithoutSize,
   pointResolutionOf,
   pointSlotsOf,
@@ -24,7 +25,7 @@ const themeFallback: IRJsonObject = {
   axisGridEnabled: true,
   legendEnabled: true,
 };
-const bubblePositionDomainPadding = 0.08;
+const bubblePositionDomainPadding = 0.04;
 
 /** Bubble exact schema、调度与消费检查共用的 encoding 顺序 */
 export const BubbleChartEncodingSlots = [
@@ -39,6 +40,8 @@ export const BubbleChartEncodingSlots = [
   'facet',
 ] as const;
 
+const bubblePropertySlots = [...pointPropertySlotsWithoutSize, 'domainPadding'] as const;
+
 /** Bubble Chart 的内建 semantic recipe Definition */
 export const BubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defineChartRecipe({
   chartType: ChartType.Bubble,
@@ -51,7 +54,7 @@ export const BubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defin
   },
   consumes: {
     encodings: BubbleChartEncodingSlots,
-    properties: pointPropertySlotsWithoutSize,
+    properties: bubblePropertySlots,
   },
   marks: [
     {
@@ -63,9 +66,13 @@ export const BubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defin
     },
   ],
   resolveEncodings: context => {
+    const positionDomainPadding = pointPositionDomainPaddingOf(
+      context.source.recipe.properties ?? {},
+      bubblePositionDomainPadding,
+    );
     const resolution = withPointPositionDomainPadding(
       resolveChartEncodingMappings(context, BubbleChartEncodingSlots, pointFieldConsumersOf(ChartType.Bubble)),
-      bubblePositionDomainPadding,
+      positionDomainPadding,
     );
     const spatial = pointSpatialResolutionOf(ChartType.Bubble, context.encodings);
     return spatial === undefined ? resolution : { ...resolution, spatial };
@@ -75,9 +82,10 @@ export const BubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defin
     const slots = pointSlotsOf(context);
     const mark = resolveBubbleMark(slots.encodings, slots.properties);
     const sizeGuide = sizeGuideOf(theme, slots.encodings);
+    const positionDomainPadding = pointPositionDomainPaddingOf(slots.properties, bubblePositionDomainPadding);
     return pointResolutionOf(ChartType.Bubble, theme, [{ kind: ChartType.Bubble, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
-      positionDomainPadding: bubblePositionDomainPadding,
+      positionDomainPadding,
     });
   },
 });

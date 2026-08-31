@@ -9,7 +9,9 @@ Scatter、Bubble、Regression、Connected Scatter 与 Ranged Dot 都属于 `type
 
 所有类型共享的字段归属、编写主链、整图展示与 Plot 扩展规则统一放在[图形模型](/viz/chart/model)中；本分组只比较点图类型自己的视觉语义。
 
-Point recipe 会为连续位置比例尺预留边缘空间，避免落在 domain 边界上的圆点被裁切。Bubble 按最大气泡半径使用 `0.08` 的 `domainPadding`，其余点图使用 `0.02`。encoding 声明兼容的连续位置 scale 且省略该字段时会继承对应默认值；显式值（包括 `0`）优先，`plotExtension` 中完整替换的 scale 不参与继承。
+Point recipe 会为连续位置比例尺预留边缘空间，避免落在 domain 边界上的圆点被裁切。Bubble 默认使用 `0.04` 的 `domainPadding`，其余点图默认使用 `0.02`。各类型的 Properties 接受一个非负数字，统一设置横纵角色；也接受至少提供 x / y 之一的 `{ x?: number; y?: number }`，只覆盖指定角色，未写的角色保留 recipe 默认。切到 Polar 后，x / y 分别对应 angle / radius；Ranged Dot 的 y 是分类 scale，因此只应用连续的 x 留白。
+
+优先级依次为 recipe 默认、Properties、encoding scale operation。operation 显式声明的 `0` 或 `{ lower?, upper? }` 不会被 Properties 覆盖；分类 scale、命名 `scale.reference` 和 `plotExtension` scale 也不会被改写。`domainPadding` 只属于 recipe Properties，不能写进 authored mark。
 
 ## 职责一览
 

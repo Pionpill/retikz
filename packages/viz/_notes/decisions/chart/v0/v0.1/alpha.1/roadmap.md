@@ -93,6 +93,8 @@ Ranged Dot 已按 ADR-07 作为固定横向 `ranged-dot` chartType 进入 active
 
 component props 与 `recipe.properties` 都只调整内建 semantic recipe 的常量表现；React、Vanilla 与手写 JSON 最终必须得到同一 Source。Plot 的直接 `marks` 始终是最后追加的独立内容
 
+Point chartType 的 recipe properties 可以通过 `domainPadding` 调整连续位置 scale 的 domain 留白：数值简写应用于全部连续位置 role，`{ x?, y? }` 对象按 role 覆盖，未声明 role 保留 recipe 默认。普通 Point 默认 `0.02`，Bubble 默认 `0.04`；encoding scale operation 的显式值包括 `0`，始终优先。该字段不进入 authored Chart mark，也不改写 categorical、reference 或 `plotExtension` 完整提供的 scale
+
 ## 5. Theme、presentation 与空间边界
 
 Theme 接受命名主题，或 `{ base?, tokens?: { chart?, plot?, recipe? } }`。Chart shell 从 Core mode 的完整 fallback 开始，依次应用 Core style chain、authored named/base chain 与 inline slices；Chart slice 负责 canvas、padding、presentation，Plot slice 交给 Plot owner，recipe slice 由当前 recipe 的 overrides / resolution schema 负责。省略 recipe slice 时使用该 recipe 的显式 fallback

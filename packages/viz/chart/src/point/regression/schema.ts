@@ -1,4 +1,4 @@
-import type { infer as ZodInfer } from 'zod';
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
 
 import {
   BlendMode,
@@ -18,7 +18,12 @@ import { array, boolean, enum as zodEnum, literal, number, strictObject, union }
 
 import { createChartSourceSchema, createChartThemeSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
-import { PointPropertiesSchema, PointRecipeThemeOverridesSchema, PointRecipeThemeResolutionSchema } from '../shared';
+import {
+  PointPositionDomainPaddingSchema,
+  PointPropertiesSchema,
+  PointRecipeThemeOverridesSchema,
+  PointRecipeThemeResolutionSchema,
+} from '../shared';
 import { RegressionChartEncodingsSchema } from './encoding-schema';
 
 /** Regression 原始观测点的完整常量 properties */
@@ -42,23 +47,37 @@ export const RegressionTrendPropertiesSchema = strictObject({
   blendMode: zodEnum(BlendMode).optional().describe('Constant trend blend mode'),
 }).describe('Regression trend Path constant properties');
 
-/** Regression recipe 与 authored mark 共用的拟合和外观 properties */
-export const RegressionChartPropertiesSchema = strictObject({
+const RegressionPropertiesBaseSchema = strictObject({
   method: SmoothTransformSchema.shape.method,
   sampleCount: SmoothTransformSchema.shape.sampleCount,
   extent: SmoothTransformSchema.shape.extent,
   point: RegressionPointPropertiesSchema.optional(),
   trend: RegressionTrendPropertiesSchema.optional(),
+});
+
+const refineRegressionProperties = (
+  properties: ZodInfer<typeof RegressionPropertiesBaseSchema>,
+  context: RefinementCtx,
+): void => {
+  if (properties.extent !== undefined && properties.extent[0] >= properties.extent[1]) {
+    context.addIssue({
+      code: 'custom',
+      path: ['extent'],
+      message: 'regression extent lower bound must be less than upper bound',
+    });
+  }
+};
+
+/** Regression authored mark 的拟合和外观 properties */
+const RegressionMarkPropertiesSchema = RegressionPropertiesBaseSchema.superRefine(refineRegressionProperties).describe(
+  'Regression authored mark fitting and constant appearance properties',
+);
+
+/** Regression recipe 的拟合、外观与位置 domain 留白 */
+export const RegressionChartPropertiesSchema = RegressionPropertiesBaseSchema.extend({
+  domainPadding: PointPositionDomainPaddingSchema.optional(),
 })
-  .superRefine((properties, context) => {
-    if (properties.extent !== undefined && properties.extent[0] >= properties.extent[1]) {
-      context.addIssue({
-        code: 'custom',
-        path: ['extent'],
-        message: 'regression extent lower bound must be less than upper bound',
-      });
-    }
-  })
+  .superRefine(refineRegressionProperties)
   .describe('Regression Chart fitting and constant appearance properties');
 
 /** Regression authored mark 只能覆盖共同数据中的 direct x/y 字段 */
@@ -72,7 +91,7 @@ export const RegressionChartMarkSchema = strictObject({
   kind: literal(ChartType.Regression),
   override: boolean().optional().describe('Whether to replace the built-in Regression semantic group'),
   encodings: RegressionMarkEncodingsSchema.optional(),
-  properties: RegressionChartPropertiesSchema.optional(),
+  properties: RegressionMarkPropertiesSchema.optional(),
 }).describe('Regression Chart mark payload');
 
 /** Regression recipe 的严格 envelope */

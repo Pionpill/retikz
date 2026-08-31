@@ -8,6 +8,7 @@ import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
 import {
   pointFieldConsumersOf,
+  pointPositionDomainPaddingOf,
   pointPropertySlots,
   pointResolutionOf,
   pointSlotsOf,
@@ -39,6 +40,8 @@ export const ScatterChartEncodingSlots = [
   'facet',
 ] as const;
 
+const scatterPropertySlots = [...pointPropertySlots, 'domainPadding'] as const;
+
 /** Scatter Chart 的内建 semantic recipe Definition */
 export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = defineChartRecipe({
   chartType: ChartType.Scatter,
@@ -51,7 +54,7 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
   },
   consumes: {
     encodings: ScatterChartEncodingSlots,
-    properties: pointPropertySlots,
+    properties: scatterPropertySlots,
   },
   marks: [
     {
@@ -63,8 +66,10 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
     },
   ],
   resolveEncodings: context => {
+    const positionDomainPadding = pointPositionDomainPaddingOf(context.source.recipe.properties ?? {});
     const resolution = withPointPositionDomainPadding(
       resolveChartEncodingMappings(context, ScatterChartEncodingSlots, pointFieldConsumersOf(ChartType.Scatter)),
+      positionDomainPadding,
     );
     const spatial = pointSpatialResolutionOf(ChartType.Scatter, context.encodings);
     return spatial === undefined ? resolution : { ...resolution, spatial };
@@ -74,8 +79,10 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
     const slots = pointSlotsOf(context);
     const mark = resolvePointMark(slots.encodings, slots.properties);
     const sizeGuide = sizeGuideOf(theme, slots.encodings);
+    const positionDomainPadding = pointPositionDomainPaddingOf(slots.properties);
     return pointResolutionOf(ChartType.Scatter, theme, [{ kind: ChartType.Scatter, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
+      positionDomainPadding,
     });
   },
 });

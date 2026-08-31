@@ -16,7 +16,11 @@ import { array, boolean, enum as zodEnum, literal, number, strictObject, union }
 
 import { createChartSourceSchema, createChartThemeSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
-import { PointRecipeThemeOverridesSchema, PointRecipeThemeResolutionSchema } from '../shared';
+import {
+  PointPositionDomainPaddingSchema,
+  PointRecipeThemeOverridesSchema,
+  PointRecipeThemeResolutionSchema,
+} from '../shared';
 import { RangedDotChartEncodingsSchema } from './encoding-schema';
 
 /** Ranged Dot endpoint 允许的常量 Point 表现 */
@@ -47,13 +51,18 @@ export const RangedDotRangePropertiesSchema = strictObject({
   blendMode: zodEnum(BlendMode).optional(),
 }).describe('Ranged Dot connector constant Path appearance');
 
-/** Ranged Dot recipe 与 mark 共用的 member properties */
-export const RangedDotChartPropertiesSchema = strictObject({
+/** Ranged Dot authored mark member properties */
+const RangedDotMarkPropertiesSchema = strictObject({
   point: RangedDotPointPropertiesSchema.optional(),
   startPoint: RangedDotPointPropertiesSchema.optional(),
   endPoint: RangedDotPointPropertiesSchema.optional(),
   range: RangedDotRangePropertiesSchema.optional(),
 }).describe('Ranged Dot member appearance properties');
+
+/** Ranged Dot recipe properties */
+export const RangedDotChartPropertiesSchema = RangedDotMarkPropertiesSchema.extend({
+  domainPadding: PointPositionDomainPaddingSchema.optional(),
+}).describe('Ranged Dot recipe properties');
 
 /** Ranged Dot authored mark 允许覆盖的直接字段 */
 export const RangedDotMarkEncodingsSchema = strictObject({
@@ -67,7 +76,7 @@ export const RangedDotChartMarkSchema = strictObject({
   kind: literal(ChartType.RangedDot),
   override: boolean().optional(),
   encodings: RangedDotMarkEncodingsSchema.optional(),
-  properties: RangedDotChartPropertiesSchema.optional(),
+  properties: RangedDotMarkPropertiesSchema.optional(),
 }).describe('Ranged Dot Chart mark payload');
 
 /** Ranged Dot recipe envelope */

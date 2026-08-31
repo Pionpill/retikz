@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   RegressionChartEncodingsSchema,
+  RegressionChartMarkSchema,
   RegressionChartPropertiesSchema,
   RegressionChartSchema,
 } from '../../src/point/regression';
@@ -103,6 +104,15 @@ describe('Regression exact Source schema', () => {
     ['trend transform', { trend: { transform: [] } }],
   ])('rejects invalid properties: %s', (_name, properties) => {
     expect(() => RegressionChartPropertiesSchema.parse(properties)).toThrow();
+  });
+
+  it('keeps position domain padding recipe-only', () => {
+    expect(RegressionChartPropertiesSchema.parse({ domainPadding: { x: 0.03, y: 0.05 } })).toEqual({
+      domainPadding: { x: 0.03, y: 0.05 },
+    });
+    expect(
+      RegressionChartMarkSchema.safeParse({ kind: 'regression', properties: { domainPadding: 0.04 } }).success,
+    ).toBe(false);
   });
 
   it('keeps series recipe-only and rejects unknown nested fields', () => {

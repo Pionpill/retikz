@@ -64,13 +64,14 @@ Facet creates each panel data view before Smooth fits within it. Shared or indep
 
 `RegressionPropertiesProps` configures both fitting strategy and constant Point / trend appearance.
 
-| Property       | Type                          | Default                 | Behavior                                                        |
-| -------------- | ----------------------------- | ----------------------- | --------------------------------------------------------------- |
-| `method?`      | `IRPlotSmoothMethod`          | `linear`                | Selects a complete method object from the table above           |
-| `sampleCount?` | `number`                      | `64`                    | Predicted samples per group; an integer of at least 2           |
-| `extent?`      | `[number, number]`            | current finite x domain | Trend sampling interval; lower bound must be smaller than upper |
-| `point?`       | `IRRegressionPointProperties` | Point defaults          | Full Point constant properties for raw observations             |
-| `trend?`       | `IRRegressionTrendProperties` | Path defaults           | Constant Path stroke, width, opacity, caps, shadows, and peers  |
+| Property         | Type                                     | Default                 | Behavior                                                                            |
+| ---------------- | ---------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------- |
+| `method?`        | `IRPlotSmoothMethod`                     | `linear`                | Selects a complete method object from the table above                               |
+| `sampleCount?`   | `number`                                 | `64`                    | Predicted samples per group; an integer of at least 2                               |
+| `extent?`        | `[number, number]`                       | current finite x domain | Trend sampling interval; lower bound must be smaller than upper                     |
+| `domainPadding?` | `number` \| `{ x?: number; y?: number }` | `0.02`                  | Configures continuous x / y position scale domain padding together or independently |
+| `point?`         | `IRRegressionPointProperties`            | Point defaults          | Full Point constant properties for raw observations                                 |
+| `trend?`         | `IRRegressionTrendProperties`            | Path defaults           | Constant Path stroke, width, opacity, caps, shadows, and peers                      |
 
 When `series` exists, its field color takes precedence over `point.color`, `point.fill`, and `trend.stroke`; other constant appearance remains effective. Points, trends, and the legend therefore keep one categorical scale identity.
 
@@ -78,11 +79,11 @@ When `series` exists, its field color takes precedence over `point.color`, `poin
 
 `RegressionMark` is a direct child declaration of RegressionChart. A plain mark appends a complete “Point + Smooth Path” group; `override` replaces the recipe's implicit primary group in place.
 
-| `RegressionMarkProps` property | Type                          | Default   | Behavior                                                               |
-| ------------------------------ | ----------------------------- | --------- | ---------------------------------------------------------------------- |
-| `override?`                    | `boolean`                     | `false`   | Replaces the whole semantic group; a miss appends and reports `onWarn` |
-| `encodings?`                   | `{ x?: string; y?: string }`  | inherited | Overrides only existing direct x / y fields in the shared data view    |
-| `properties?`                  | `IRRegressionChartProperties` | inherited | Field-merges fit options and property-merges point / trend blocks      |
+| `RegressionMarkProps` property | Type                                | Default   | Behavior                                                                                               |
+| ------------------------------ | ----------------------------------- | --------- | ------------------------------------------------------------------------------------------------------ |
+| `override?`                    | `boolean`                           | `false`   | Replaces the whole semantic group; a miss appends and reports `onWarn`                                 |
+| `encodings?`                   | `{ x?: string; y?: string }`        | inherited | Overrides only existing direct x / y fields in the shared data view                                    |
+| `properties?`                  | `RegressionMarkProps['properties']` | inherited | Field-merges fit options and property-merges point / trend blocks; rejects recipe-only `domainPadding` |
 
 Appended and override marks both inherit recipe `series`. They cannot remove Smooth, rewrite trend output fields, or leave only Point behind.
 

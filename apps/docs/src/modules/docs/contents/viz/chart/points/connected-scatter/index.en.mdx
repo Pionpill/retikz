@@ -47,18 +47,19 @@ Point skips rows that cannot be projected. Path segments at invalid rows by defa
 
 ### `ConnectedScatterPropertiesProps`
 
-| Prop     | Type                                | Default | Description                                           |
-| -------- | ----------------------------------- | ------- | ----------------------------------------------------- |
-| `point?` | `IRConnectedScatterPointProperties` | Point   | Constant Point appearance without zIndex              |
-| `path?`  | `IRConnectedScatterPathProperties`  | Path    | Open-path appearance and `connectNulls`; never closes |
+| Prop             | Type                                     | Default | Description                                                                         |
+| ---------------- | ---------------------------------------- | ------- | ----------------------------------------------------------------------------------- |
+| `point?`         | `IRConnectedScatterPointProperties`      | Point   | Constant Point appearance without zIndex                                            |
+| `path?`          | `IRConnectedScatterPathProperties`       | Path    | Open-path appearance and `connectNulls`; never closes                               |
+| `domainPadding?` | `number` \| `{ x?: number; y?: number }` | `0.02`  | Configures continuous x / y position scale domain padding together or independently |
 
 ### `ConnectedScatterMarkProps`
 
-| Prop          | Type                                         | Default   | Description                              |
-| ------------- | -------------------------------------------- | --------- | ---------------------------------------- |
-| `override?`   | `boolean`                                    | `false`   | Replaces the complete Path + Point group |
-| `encodings?`  | `{ x?: string; y?: string; order?: string }` | inherited | Overrides direct fields, never series    |
-| `properties?` | `IRConnectedScatterChartProperties`          | inherited | Merges constant appearance by member     |
+| Prop          | Type                                         | Default   | Description                                                      |
+| ------------- | -------------------------------------------- | --------- | ---------------------------------------------------------------- |
+| `override?`   | `boolean`                                    | `false`   | Replaces the complete Path + Point group                         |
+| `encodings?`  | `{ x?: string; y?: string; order?: string }` | inherited | Overrides direct fields, never series                            |
+| `properties?` | `ConnectedScatterMarkProps['properties']`    | inherited | Merges member appearance and rejects recipe-only `domainPadding` |
 
 ## Public entries
 

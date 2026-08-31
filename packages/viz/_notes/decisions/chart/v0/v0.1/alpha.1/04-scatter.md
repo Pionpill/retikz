@@ -64,6 +64,8 @@ Scatter 当前只有一个内建 `scatter` 组。`override` 省略或为 `false`
 
 component props 与 `recipe.properties` 共同调整内建 semantic recipe 的常量表现。React `ScatterMark` 默认表达额外 authored Scatter mark，声明 `override` 时改为替换内建 `scatter` 组；它仍归一为同一个 `recipe.marks` Source payload，不写入独立配置对象。不在直接 Chart mark 位置的 marker 必须 fail-loud
 
+Point recipe properties 顶层可以用 `domainPadding: number | { x?: number; y?: number }` 调整连续位置 scale 的 domain 留白。数值简写应用于当前 recipe 的全部连续位置 role；对象按 x / y role 分别覆盖，未声明 role 保留 recipe 默认。该字段属于 recipe scaffold，不进入 Scatter 或其它 authored Chart mark 的 properties
+
 Recipe Theme 只接受当前 Point recipe 的严格 token slice，并与 Chart shell、Plot owner 的 Theme slice 按统一 Theme cascade 合并。Theme 不能改变 `point` family、`scatter` chartType、数据角色、semantic mark 数量或 mark kind
 
 ## 所有权与运行时扩展

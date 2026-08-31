@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ConnectedScatterChartEncodingsSchema,
+  ConnectedScatterChartMarkSchema,
   ConnectedScatterChartPropertiesSchema,
   ConnectedScatterChartSchema,
 } from '../../src/point/connected-scatter';
@@ -28,6 +29,16 @@ describe('Connected Scatter exact Source schema', () => {
     ).toBeDefined();
     expect(() => ConnectedScatterChartPropertiesSchema.parse({ point: { zIndex: 2 } })).toThrow();
     expect(() => ConnectedScatterChartPropertiesSchema.parse({ path: { closed: true } })).toThrow();
+  });
+
+  it('keeps position domain padding recipe-only', () => {
+    expect(ConnectedScatterChartPropertiesSchema.parse({ domainPadding: 0.04 })).toEqual({ domainPadding: 0.04 });
+    expect(
+      ConnectedScatterChartMarkSchema.safeParse({
+        kind: 'connected-scatter',
+        properties: { domainPadding: { x: 0.02 } },
+      }).success,
+    ).toBe(false);
   });
 
   it('keeps series recipe-only', () => {

@@ -64,13 +64,14 @@ Facet 先建立 panel data view，再让每个 panel 内的 Smooth 独立拟合�
 
 `RegressionPropertiesProps` 同时配置拟合策略与 Point / trend 的常量外观。
 
-| 属性           | 类型                          | 默认值          | 行为                                                      |
-| -------------- | ----------------------------- | --------------- | --------------------------------------------------------- |
-| `method?`      | `IRPlotSmoothMethod`          | `linear`        | 选择上表的完整方法对象                                    |
-| `sampleCount?` | `number`                      | `64`            | 每组预测采样数，必须是至少 2 的整数                       |
-| `extent?`      | `[number, number]`            | 当前组有限 x 域 | 趋势采样范围；下界必须小于上界                            |
-| `point?`       | `IRRegressionPointProperties` | Point 默认值    | 原始观测点的完整 Point 常量 properties                    |
-| `trend?`       | `IRRegressionTrendProperties` | Path 默认值     | 只允许 Path 的 stroke、线宽、透明度、端点、阴影等常量外观 |
+| 属性             | 类型                                     | 默认值          | 行为                                                      |
+| ---------------- | ---------------------------------------- | --------------- | --------------------------------------------------------- |
+| `method?`        | `IRPlotSmoothMethod`                     | `linear`        | 选择上表的完整方法对象                                    |
+| `sampleCount?`   | `number`                                 | `64`            | 每组预测采样数，必须是至少 2 的整数                       |
+| `extent?`        | `[number, number]`                       | 当前组有限 x 域 | 趋势采样范围；下界必须小于上界                            |
+| `domainPadding?` | `number` \| `{ x?: number; y?: number }` | `0.02`          | 统一或分别配置连续 x / y 位置 scale 的 domain 留白        |
+| `point?`         | `IRRegressionPointProperties`            | Point 默认值    | 原始观测点的完整 Point 常量 properties                    |
+| `trend?`         | `IRRegressionTrendProperties`            | Path 默认值     | 只允许 Path 的 stroke、线宽、透明度、端点、阴影等常量外观 |
 
 当存在 `series` 时，字段颜色优先于 `point.color`、`point.fill` 和 `trend.stroke`，其余常量外观仍有效。这样点、趋势和图例始终使用同一个分类 scale identity。
 
@@ -78,11 +79,11 @@ Facet 先建立 panel data view，再让每个 panel 内的 Smooth 独立拟合�
 
 `RegressionMark` 是 RegressionChart 的直接子级 declaration。普通 mark 追加完整的“Point + Smooth Path”组；`override` 原位替换 recipe 的隐式主组。
 
-| `RegressionMarkProps` 属性 | 类型                          | 默认值  | 行为                                                               |
-| -------------------------- | ----------------------------- | ------- | ------------------------------------------------------------------ |
-| `override?`                | `boolean`                     | `false` | 替换完整 semantic group；未命中时追加并通过 `onWarn` 报告          |
-| `encodings?`               | `{ x?: string; y?: string }`  | 继承    | 只覆盖共同数据视图中已存在的 direct x / y 字段                     |
-| `properties?`              | `IRRegressionChartProperties` | 继承    | method / sampleCount / extent 按字段覆盖，point / trend 按属性合并 |
+| `RegressionMarkProps` 属性 | 类型                                | 默认值  | 行为                                                                                                   |
+| -------------------------- | ----------------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
+| `override?`                | `boolean`                           | `false` | 替换完整 semantic group；未命中时追加并通过 `onWarn` 报告                                              |
+| `encodings?`               | `{ x?: string; y?: string }`        | 继承    | 只覆盖共同数据视图中已存在的 direct x / y 字段                                                         |
+| `properties?`              | `RegressionMarkProps['properties']` | 继承    | method / sampleCount / extent 按字段覆盖，point / trend 按属性合并；不接受 recipe-only `domainPadding` |
 
 无论追加还是 override，mark 都继承 recipe `series`，也不能删除 Smooth、重写趋势输出字段或只留下 Point。
 

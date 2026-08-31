@@ -11,6 +11,7 @@ import { defineChartRecipe } from '../../_chart/contract';
 import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
 import {
+  pointPositionDomainPaddingOf,
   pointPositionFieldConsumersOf,
   pointSlotsOf,
   pointSpatialResolutionOf,
@@ -30,7 +31,8 @@ const themeFallback: IRJsonObject = { axisEnabled: true, axisGridEnabled: true, 
 /** Ranged Dot exact schema、调度与消费检查共用的 encoding 顺序 */
 export const RangedDotChartEncodingSlots = ['category', 'start', 'end', 'color', 'row', 'column', 'facet'] as const;
 
-const propertySlots = ['point', 'startPoint', 'endPoint', 'range'] as const;
+const markPropertySlots = ['point', 'startPoint', 'endPoint', 'range'] as const;
+const propertySlots = [...markPropertySlots, 'domainPadding'] as const;
 const xScaleName = pointRecipeId(ChartType.RangedDot, 'scale.x');
 const yScaleName = pointRecipeId(ChartType.RangedDot, 'scale.y');
 const colorScaleName = pointRecipeId(ChartType.RangedDot, 'scale.color');
@@ -86,12 +88,14 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
   marks: [
     {
       definition: RangedDotMarkDefinition,
-      inherit: { encodings: ['category', 'start', 'end', 'color'], properties: propertySlots },
+      inherit: { encodings: ['category', 'start', 'end', 'color'], properties: markPropertySlots },
     },
   ],
   resolveEncodings: context => {
+    const positionDomainPadding = pointPositionDomainPaddingOf(context.source.recipe.properties ?? {});
     const resolution = withPointPositionDomainPadding(
       resolveChartEncodingMappings(context, RangedDotChartEncodingSlots, fieldConsumers),
+      positionDomainPadding,
     );
     const encodings = withColorFallback(resolution.encodings);
     const spatial = pointSpatialResolutionOf(ChartType.RangedDot, {
@@ -105,7 +109,8 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
     const theme = pointThemeOf(context.recipeThemeTokens);
     const slots = pointSlotsOf(context);
     const hasColor = Object.hasOwn(slots.encodings, 'color');
-    const cartesian = pointCartesian2DOf(ChartType.RangedDot);
+    const positionDomainPadding = pointPositionDomainPaddingOf(slots.properties);
+    const cartesian = pointCartesian2DOf(ChartType.RangedDot, positionDomainPadding);
     const scales = [
       { value: cartesian.scales[0], replaceable: true },
       { value: { type: PlotScale.Point, name: yScaleName }, replaceable: true },

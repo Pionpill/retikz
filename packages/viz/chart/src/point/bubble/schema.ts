@@ -7,6 +7,7 @@ import { ChartFamily, ChartType } from '../constants';
 import {
   createPointChartMarkSchema,
   PointMarkEncodingWithoutSizeSchema,
+  PointPositionDomainPaddingSchema,
   PointPropertiesWithoutSizeSchema,
   PointRecipeThemeOverridesSchema,
   PointRecipeThemeResolutionSchema,
@@ -14,15 +15,15 @@ import {
 import { BubbleChartEncodingsSchema } from './encoding-schema';
 
 /** Bubble recipe 的精确 constant properties schema */
-export const BubbleChartPropertiesSchema = PointPropertiesWithoutSizeSchema.describe(
-  'Bubble Chart constant properties without size',
-);
+export const BubbleChartPropertiesSchema = PointPropertiesWithoutSizeSchema.extend({
+  domainPadding: PointPositionDomainPaddingSchema.optional(),
+}).describe('Bubble Chart constant properties without size');
 
 /** Bubble recipe 允许的有序 Chart mark schema */
 export const BubbleChartMarkSchema = createPointChartMarkSchema(
   ChartType.Bubble,
   PointMarkEncodingWithoutSizeSchema,
-  BubbleChartPropertiesSchema,
+  PointPropertiesWithoutSizeSchema,
 ).describe('Bubble Chart mark payload');
 
 /** Bubble recipe 的严格 recipe envelope */

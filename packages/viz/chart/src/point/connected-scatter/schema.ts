@@ -14,7 +14,12 @@ import { array, boolean, enum as zodEnum, literal, number, strictObject, union }
 
 import { createChartSourceSchema, createChartThemeSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
-import { PointPropertiesSchema, PointRecipeThemeOverridesSchema, PointRecipeThemeResolutionSchema } from '../shared';
+import {
+  PointPositionDomainPaddingSchema,
+  PointPropertiesSchema,
+  PointRecipeThemeOverridesSchema,
+  PointRecipeThemeResolutionSchema,
+} from '../shared';
 import { ConnectedScatterChartEncodingsSchema } from './encoding-schema';
 
 /** Connected Scatter Point member constants without layer ownership */
@@ -36,11 +41,16 @@ export const ConnectedScatterPathPropertiesSchema = strictObject({
   connectNulls: boolean().optional(),
 }).describe('Connected Scatter open Path constant properties');
 
-/** Connected Scatter recipe properties */
-export const ConnectedScatterChartPropertiesSchema = strictObject({
+/** Connected Scatter authored mark member properties */
+const ConnectedScatterMarkPropertiesSchema = strictObject({
   point: ConnectedScatterPointPropertiesSchema.optional(),
   path: ConnectedScatterPathPropertiesSchema.optional(),
 }).describe('Connected Scatter member properties');
+
+/** Connected Scatter recipe properties */
+export const ConnectedScatterChartPropertiesSchema = ConnectedScatterMarkPropertiesSchema.extend({
+  domainPadding: PointPositionDomainPaddingSchema.optional(),
+}).describe('Connected Scatter recipe properties');
 
 /** Connected Scatter authored mark direct field overrides */
 export const ConnectedScatterMarkEncodingsSchema = strictObject({
@@ -54,7 +64,7 @@ export const ConnectedScatterChartMarkSchema = strictObject({
   kind: literal(ChartType.ConnectedScatter),
   override: boolean().optional(),
   encodings: ConnectedScatterMarkEncodingsSchema.optional(),
-  properties: ConnectedScatterChartPropertiesSchema.optional(),
+  properties: ConnectedScatterMarkPropertiesSchema.optional(),
 }).describe('Connected Scatter Chart mark payload');
 
 /** Connected Scatter recipe envelope */

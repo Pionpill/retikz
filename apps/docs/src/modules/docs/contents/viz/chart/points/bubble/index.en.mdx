@@ -62,13 +62,14 @@ By default, the `size` binding enters Plot's sqrt size scale and produces a size
 
 Bubble defaults to `fillOpacity={0.7}` with a `1px` same-color stroke. `color` drives both the default fill and stroke; explicit `fill`, `stroke`, or opacity properties can still override them independently.
 
-| Fields                                                                                      | Values and behavior                                                        |
-| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `color`, `textColor`, `fill`, `stroke`, `shape`                                             | Colors, paints, or an extensible shape name                                |
-| `minimumSize`, `scale`, `rotate`, `dx`, `dy`, `padding`, `margin`, `cornerRadius`           | Shared Point geometry constants; they do not replace the required size map |
-| `strokeWidth`, `fillOpacity`, `strokeOpacity`, `opacity`, `dashed`, `dotted`, `dashPattern` | Stroke, opacity, and dash constants                                        |
-| `zIndex`, `align`, `lineHeight`, `maxTextWidth`, `font`, `label`                            | Drawing order, text, and label configuration                               |
-| `boundary`, `shadow`, `blendMode`                                                           | Boundary, shadow, and blend mode                                           |
+| Fields                                                                                      | Values and behavior                                                                                                 |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `color`, `textColor`, `fill`, `stroke`, `shape`                                             | Colors, paints, or an extensible shape name                                                                         |
+| `minimumSize`, `scale`, `rotate`, `dx`, `dy`, `padding`, `margin`, `cornerRadius`           | Shared Point geometry constants; they do not replace the required size map                                          |
+| `strokeWidth`, `fillOpacity`, `strokeOpacity`, `opacity`, `dashed`, `dotted`, `dashPattern` | Stroke, opacity, and dash constants                                                                                 |
+| `zIndex`, `align`, `lineHeight`, `maxTextWidth`, `font`, `label`                            | Drawing order, text, and label configuration                                                                        |
+| `boundary`, `shadow`, `blendMode`                                                           | Boundary, shadow, and blend mode                                                                                    |
+| `domainPadding?`                                                                            | `number` or `{ x?: number; y?: number }`; defaults to `0.04` and configures continuous position roles independently |
 
 ## `BubbleMark`
 

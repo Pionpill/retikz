@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { ScatterChartEncodingsSchema, ScatterChartPropertiesSchema, ScatterChartSchema } from '../../src/point/scatter';
+import {
+  ScatterChartEncodingsSchema,
+  ScatterChartMarkSchema,
+  ScatterChartPropertiesSchema,
+  ScatterChartSchema,
+} from '../../src/point/scatter';
 
 const scatter = {
   namespace: 'chart',
@@ -68,6 +73,18 @@ describe('Scatter Chart exact Source schema', () => {
     expect(ScatterChartEncodingsSchema.safeParse({ x: { field: 'amount' }, y: 'margin' }).success).toBe(true);
     expect(ScatterChartPropertiesSchema.safeParse({ size: 8, opacity: 0, shape: 'circle' }).success).toBe(true);
     expect(ScatterChartPropertiesSchema.safeParse({ size: { field: 'amount' } }).success).toBe(false);
+  });
+
+  it('accepts shared or per-role position domain padding only on recipe properties', () => {
+    for (const domainPadding of [0, 0.04, { x: 0.02 }, { y: 0.08 }, { x: 0, y: 0.1 }]) {
+      expect(ScatterChartPropertiesSchema.safeParse({ domainPadding }).success).toBe(true);
+    }
+    for (const domainPadding of [-0.01, {}, { x: -0.01 }, { y: -0.01 }, { horizontal: 0.1 }]) {
+      expect(ScatterChartPropertiesSchema.safeParse({ domainPadding }).success).toBe(false);
+    }
+    expect(ScatterChartMarkSchema.safeParse({ kind: 'scatter', properties: { domainPadding: 0.1 } }).success).toBe(
+      false,
+    );
   });
 
   it('rejects unsupported and malformed Scatter encoding slots at the encodings boundary', () => {

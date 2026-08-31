@@ -7,6 +7,18 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { MarkNodeLabelListSchema } from '@retikz/plot';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
+const PointPositionDomainPaddingObjectSchema = strictObject({
+  x: number().nonnegative().optional().describe('Horizontal position domain padding'),
+  y: number().nonnegative().optional().describe('Vertical position domain padding'),
+}).refine(value => value.x !== undefined || value.y !== undefined, {
+  message: 'at least one position role domain padding is required',
+});
+
+export const PointPositionDomainPaddingSchema = union([
+  number().nonnegative(),
+  PointPositionDomainPaddingObjectSchema,
+]).describe('Shared or per-role continuous position domain padding');
+
 /** Point recipe 中可复用的字段绑定通道
  *
  * Chart Source 只保存字段名；resolver 在进入 Plot 前把字段名转换为 Plot
@@ -118,3 +130,4 @@ export const createPointChartMarkSchema = <
 export type IRPointEncoding = ZodInfer<typeof PointEncodingSchema>;
 export type IRPointMarkEncoding = ZodInfer<typeof PointMarkEncodingSchema>;
 export type IRPointProperties = ZodInfer<typeof PointPropertiesSchema>;
+export type IRPointPositionDomainPadding = ZodInfer<typeof PointPositionDomainPaddingSchema>;

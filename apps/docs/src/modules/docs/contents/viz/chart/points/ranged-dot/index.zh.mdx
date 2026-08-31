@@ -47,20 +47,21 @@ Ranged Dot 固定横向：`category` 映射 y，`start` 与 `end` 映射同一 x
 
 ### `RangedDotPropertiesProps`
 
-| 属性          | 类型                         | 默认值 | 描述                           |
-| ------------- | ---------------------------- | ------ | ------------------------------ |
-| `point?`      | `IRRangedDotPointProperties` | Point  | 两个端点的共同常量外观         |
-| `startPoint?` | `IRRangedDotPointProperties` | 继承   | 起点覆盖                       |
-| `endPoint?`   | `IRRangedDotPointProperties` | 继承   | 终点覆盖                       |
-| `range?`      | `IRRangedDotRangeProperties` | Path   | 连接线颜色、线宽、透明度与线型 |
+| 属性             | 类型                                     | 默认值 | 描述                                                   |
+| ---------------- | ---------------------------------------- | ------ | ------------------------------------------------------ |
+| `point?`         | `IRRangedDotPointProperties`             | Point  | 两个端点的共同常量外观                                 |
+| `startPoint?`    | `IRRangedDotPointProperties`             | 继承   | 起点覆盖                                               |
+| `endPoint?`      | `IRRangedDotPointProperties`             | 继承   | 终点覆盖                                               |
+| `range?`         | `IRRangedDotRangeProperties`             | Path   | 连接线颜色、线宽、透明度与线型                         |
+| `domainPadding?` | `number` \| `{ x?: number; y?: number }` | `0.02` | 配置连续 x scale 的 domain 留白；分类 y scale 不受影响 |
 
 ### `RangedDotMarkProps`
 
-| 属性          | 类型                                                  | 默认值  | 描述                           |
-| ------------- | ----------------------------------------------------- | ------- | ------------------------------ |
-| `override?`   | `boolean`                                             | `false` | 替换完整 ranged-dot group      |
-| `encodings?`  | `{ category?: string; start?: string; end?: string }` | 继承    | 覆盖 direct 字段，不能改 color |
-| `properties?` | `IRRangedDotChartProperties`                          | 继承    | 按 member 合并常量外观         |
+| 属性          | 类型                                                  | 默认值  | 描述                                                       |
+| ------------- | ----------------------------------------------------- | ------- | ---------------------------------------------------------- |
+| `override?`   | `boolean`                                             | `false` | 替换完整 ranged-dot group                                  |
+| `encodings?`  | `{ category?: string; start?: string; end?: string }` | 继承    | 覆盖 direct 字段，不能改 color                             |
+| `properties?` | `RangedDotMarkProps['properties']`                    | 继承    | 按 member 合并常量外观；不接受 recipe-only `domainPadding` |
 
 ## 公开入口
 

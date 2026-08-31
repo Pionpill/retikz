@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   RangedDotChartEncodingsSchema,
+  RangedDotChartMarkSchema,
   RangedDotChartPropertiesSchema,
   RangedDotChartSchema,
 } from '../../src/point/ranged-dot';
@@ -41,6 +42,15 @@ describe('Ranged Dot exact Source schema', () => {
     expect(() => RangedDotChartPropertiesSchema.parse({ point: { zIndex: 2 } })).toThrow();
     expect(() => RangedDotChartPropertiesSchema.parse({ startPoint: { dx: 3 } })).toThrow();
     expect(() => RangedDotChartPropertiesSchema.parse({ range: { closed: true } })).toThrow();
+  });
+
+  it('keeps position domain padding recipe-only', () => {
+    expect(RangedDotChartPropertiesSchema.parse({ domainPadding: { x: 0.06 } })).toEqual({
+      domainPadding: { x: 0.06 },
+    });
+    expect(
+      RangedDotChartMarkSchema.safeParse({ kind: 'ranged-dot', properties: { domainPadding: 0.04 } }).success,
+    ).toBe(false);
   });
 
   it('keeps color recipe-only and rejects unknown mark fields', () => {

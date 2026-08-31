@@ -88,7 +88,7 @@ describe('Chart React InputEmbed routing', () => {
         size: 'population',
         color: 'continent',
       },
-      properties: { opacity: 0.75 },
+      properties: { opacity: 0.75, domainPadding: { x: 0.03, y: 0.05 } },
     };
     const reactInput = inputOf(BubbleChart, {
       children: (
@@ -127,7 +127,7 @@ describe('Chart React InputEmbed routing', () => {
         column: 'region',
         facet: { spacing: { panelGap: 12 } },
       },
-      properties: { opacity: 0.5 },
+      properties: { opacity: 0.5, domainPadding: 0.04 },
     };
     const reactInput = inputOf(ScatterChart, {
       children: (

@@ -47,18 +47,19 @@ Point 跳过无法投影的行。Path 默认在坏行处分段；`path.connectNu
 
 ### `ConnectedScatterPropertiesProps`
 
-| 属性     | 类型                                | 默认值 | 描述                                            |
-| -------- | ----------------------------------- | ------ | ----------------------------------------------- |
-| `point?` | `IRConnectedScatterPointProperties` | Point  | Point 常量外观；不开放 zIndex                   |
-| `path?`  | `IRConnectedScatterPathProperties`  | Path   | 开放轨迹的线条外观与 `connectNulls`；不开放闭合 |
+| 属性             | 类型                                     | 默认值 | 描述                                               |
+| ---------------- | ---------------------------------------- | ------ | -------------------------------------------------- |
+| `point?`         | `IRConnectedScatterPointProperties`      | Point  | Point 常量外观；不开放 zIndex                      |
+| `path?`          | `IRConnectedScatterPathProperties`       | Path   | 开放轨迹的线条外观与 `connectNulls`；不开放闭合    |
+| `domainPadding?` | `number` \| `{ x?: number; y?: number }` | `0.02` | 统一或分别配置连续 x / y 位置 scale 的 domain 留白 |
 
 ### `ConnectedScatterMarkProps`
 
-| 属性          | 类型                                         | 默认值  | 描述                           |
-| ------------- | -------------------------------------------- | ------- | ------------------------------ |
-| `override?`   | `boolean`                                    | `false` | 原位替换完整 Path + Point 组   |
-| `encodings?`  | `{ x?: string; y?: string; order?: string }` | 继承    | 覆盖 direct 字段；不能改series |
-| `properties?` | `IRConnectedScatterChartProperties`          | 继承    | 按 member 合并常量外观         |
+| 属性          | 类型                                         | 默认值  | 描述                                                       |
+| ------------- | -------------------------------------------- | ------- | ---------------------------------------------------------- |
+| `override?`   | `boolean`                                    | `false` | 原位替换完整 Path + Point 组                               |
+| `encodings?`  | `{ x?: string; y?: string; order?: string }` | 继承    | 覆盖 direct 字段；不能改series                             |
+| `properties?` | `ConnectedScatterMarkProps['properties']`    | 继承    | 按 member 合并常量外观；不接受 recipe-only `domainPadding` |
 
 ## 公开入口
 

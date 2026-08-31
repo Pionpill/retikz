@@ -44,6 +44,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <PlotAxis dimension="y" grid />
     </ChartExtension>
     <BubbleProperties
+      domainPadding={{
+        x: values[BUBBLE_BASIC_CONTROL_IDS.xDomainPadding],
+        y: values[BUBBLE_BASIC_CONTROL_IDS.yDomainPadding],
+      }}
       {...(values[BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled]
         ? { stroke: values[BUBBLE_BASIC_CONTROL_IDS.pointStroke] }
         : {})}

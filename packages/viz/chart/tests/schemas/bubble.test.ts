@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { BubbleChartEncodingsSchema, BubbleChartPropertiesSchema, BubbleChartSchema } from '../../src/point/bubble';
+import {
+  BubbleChartEncodingsSchema,
+  BubbleChartMarkSchema,
+  BubbleChartPropertiesSchema,
+  BubbleChartSchema,
+} from '../../src/point/bubble';
 
 const bubble = {
   namespace: 'chart',
@@ -65,8 +70,14 @@ describe('Bubble Chart exact Source schema', () => {
   });
 
   it('keeps size field-bound and unavailable from Bubble properties', () => {
-    expect(BubbleChartPropertiesSchema.safeParse({ opacity: 0, shape: 'circle' }).success).toBe(true);
+    expect(
+      BubbleChartPropertiesSchema.safeParse({ opacity: 0, shape: 'circle', domainPadding: { x: 0.02, y: 0.04 } })
+        .success,
+    ).toBe(true);
     expect(BubbleChartPropertiesSchema.safeParse({ size: 8 }).success).toBe(false);
+    expect(BubbleChartMarkSchema.safeParse({ kind: 'bubble', properties: { domainPadding: 0.04 } }).success).toBe(
+      false,
+    );
   });
 
   it('rejects explicit size overrides from Bubble marks', () => {
