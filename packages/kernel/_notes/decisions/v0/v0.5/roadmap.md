@@ -29,7 +29,7 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 | Composite 依赖装配        | 以完整 key、roots 与稳定拓扑聚合跨 namespace definitions / datasets                              | [alpha.2 ADR-18 Proposed](./alpha.2/18-composite-dependency-provider-graph.md) |
 | Qualified 空间句柄        | 让嵌套 Composite 发布同 revision、renderer-neutral 的 world-space sidecar                        | [alpha.2 ADR-19 Proposed](./alpha.2/19-qualified-spatial-handles.md)           |
 | Concurrent 与渐进生成     | 可让出、取消地准备候选结果                                                                       | [未排期 Proposed](./candidates/01-cooperative-concurrent-runtime.md)           |
-| 上下文颜色                | 数值权重随最终主色确定                                                                           | [alpha.3 ADR-04 Accepted](./alpha.3/04-contextual-color-resolution.md)         |
+| 上下文颜色                | 数值权重随最终主色确定                                                                           | [alpha.3 ADR-01 Accepted](./alpha.3/01-contextual-color-resolution.md)         |
 | Headless Interaction      | 补齐 renderer-agnostic target、behavior、intent 与 ownership                                     | [alpha.4 候选](./alpha.4/roadmap.md)                                           |
 
 ## alpha.1 执行批次

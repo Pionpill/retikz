@@ -1,8 +1,8 @@
 # Retikz Foundation 基础包设计
 
-> **状态：架构方向已确认。Foundation 包已按 v0.5 alpha.2 ADR-14 实现，基础 Zod schema 扩展已由 ADR-17 Accepted；静态颜色原子扩展由 alpha.3 ADR-04 Proposed。** 本文定义跨包基础能力的所有权、依赖边界和最小公开契约；当前公开面以已 Accepted ADR、包文档、manifest 与测试为准。当前包拓扑以 [`包拓扑`](./package-topology.md) 和机器可读的 release-group 配置为准。
+> **状态：架构方向已确认。Foundation 包已按 v0.5 alpha.2 ADR-14 实现，基础 Zod schema 扩展已由 ADR-17 Accepted；静态颜色原子扩展已由 alpha.3 ADR-01 Accepted。** 本文定义跨包基础能力的所有权、依赖边界和最小公开契约；当前公开面以已 Accepted ADR、包文档、manifest 与测试为准。当前包拓扑以 [`包拓扑`](./package-topology.md) 和机器可读的 release-group 配置为准。
 >
-> 关联设计：[`能力完备性与模块边界`](./capability-design.md) · [`原子契约与组合设计`](./atomic-contract-design.md) · [`性能与增量运行时设计`](./performance-design.md) · [`alpha.2 roadmap`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/roadmap.md) · [`Foundation ADR-14`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/14-foundation-package.md) · [`Foundation Schema ADR-17`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/17-foundation-schema-primitives.md) · [`Contextual Color ADR-04`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.3/04-contextual-color-resolution.md)
+> 关联设计：[`能力完备性与模块边界`](./capability-design.md) · [`原子契约与组合设计`](./atomic-contract-design.md) · [`性能与增量运行时设计`](./performance-design.md) · [`alpha.2 roadmap`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/roadmap.md) · [`Foundation ADR-14`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/14-foundation-package.md) · [`Foundation Schema ADR-17`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/17-foundation-schema-primitives.md) · [`Contextual Color ADR-01`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.3/01-contextual-color-resolution.md)
 
 ---
 

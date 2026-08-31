@@ -1,4 +1,4 @@
-# ADR-04：Foundation 颜色原子、上下文颜色权重与 Tier 2 Theme 适配
+# ADR-01：Foundation 颜色原子、上下文颜色权重与 Tier 2 Theme 适配
 
 - 状态：Accepted
 - 决策日期：2026-08-25
