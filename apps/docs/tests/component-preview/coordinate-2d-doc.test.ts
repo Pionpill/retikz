@@ -27,6 +27,7 @@ import {
   coordinatePolarControls as englishCoordinatePolarControls,
   previewControlContract as englishPolarContract,
 } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-polar.en.controls';
+import { bridgeCoordinate } from '../../src/modules/docs/contents/viz/plot/coordinate/custom-coordinate/coordinate-custom-bridge.definition';
 
 type PreviewRender<TValues extends object> = (values: TValues) => ReactNode;
 
@@ -73,6 +74,17 @@ const horizontalAxisOf = (markup: string) =>
   ).find(points => points[0] !== points[2] && points[1] === points[3]);
 
 describe('二维坐标系文档 playground', () => {
+  it('自定义 coordinate definition 用 scaleBinding 映射非 role 同名字段', () => {
+    const operation = { type: 'bridge' as const, archHeight: 48, horizontalScale: 'horizontal' };
+    expect(bridgeCoordinate.scaleBinding?.read(operation)).toEqual({ x: 'horizontal', y: undefined });
+    expect(bridgeCoordinate.scaleBinding?.bind(operation, { x: 'x', y: 'y' })).toEqual({
+      type: 'bridge',
+      archHeight: 48,
+      horizontalScale: 'x',
+      verticalScale: 'y',
+    });
+  });
+
   it('笛卡尔 controls 提供点线面、四边留白和网格且双语同构', () => {
     const chineseFields = fieldContractOf(coordinateCartesianControls);
     const englishFields = fieldContractOf(englishCoordinateCartesianControls);

@@ -2,11 +2,13 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPointCoordinateControl } from '../point-coordinate-control';
 import { penguinScatterData } from './scatter-penguins-facet-jitter.data';
 import { createScatterPointControls } from './scatter-point-controls';
 
 /** 分面抖动散点图的稳定控件 id */
 export const SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS = {
+  coordinateSystem: 'scatter-penguins-facet-jitter-coordinate-system',
   pointSize: 'scatter-penguins-facet-jitter-point-size',
   pointFillEnabled: 'scatter-penguins-facet-jitter-point-fill-enabled',
   pointFill: 'scatter-penguins-facet-jitter-point-fill',
@@ -39,6 +41,17 @@ export const previewControls = definePreviewControls({
       ],
     },
     {
+      label: '坐标',
+      controls: [
+        createPointCoordinateControl({
+          id: SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.coordinateSystem,
+          label: '坐标系',
+          cartesianLabel: '笛卡尔',
+          polarLabel: '极坐标',
+        }),
+      ],
+    },
+    {
       label: '图元',
       controls: createScatterPointControls({
         ids: SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS,
@@ -48,7 +61,7 @@ export const previewControls = definePreviewControls({
         shape: {
           label: '形状',
           defaultValue: 'circle',
-          labels: { circle: '圆形', rectangle: '矩形', ellipse: '椭圆形', diamond: '菱形' },
+          labels: { circle: '圆形', rectangle: '矩形', diamond: '菱形' },
         },
         opacity: { label: '不透明度', defaultValue: 0.72, min: 0.3, max: 1, step: 0.04 },
       }),
@@ -60,6 +73,7 @@ export const previewControls = definePreviewControls({
 export const previewControlContract = {
   controls: previewControls,
   canonicalValues: {
+    [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointSize]: 5,
     [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointFillEnabled]: false,
     [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointFill]: 'currentColor',
@@ -69,6 +83,7 @@ export const previewControlContract = {
     [SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.pointOpacity]: 0.72,
   },
   relatedApis: [
+    'ChartExtension.coordinate',
     'ScatterProperties.size',
     'ScatterProperties.fill',
     'ScatterProperties.stroke',

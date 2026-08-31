@@ -173,8 +173,8 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
 });
 
 describe('polar1D 圆周坐标系 (contract)', () => {
-  // 布局：480×300、无角向轴 → 圆心 [240,150]、outerRadius 150
-  const CENTER: [number, number] = [240, 150];
+  // 布局：480×300、无角向轴 → 圆形区域水平起点对齐，圆心 [150,150]、outerRadius 150
+  const CENTER: [number, number] = [150, 150];
 
   const ringSpec = (extra: Record<string, unknown> = {}): IRPlot =>
     PlotSchema.parse({
@@ -189,9 +189,9 @@ describe('polar1D 圆周坐标系 (contract)', () => {
   // Happy path：角向投影落半径 R=150 圆周（angle 0 → 圆心右、angle 90 → 圆心下）
   it('polar1d_points_on_circle', () => {
     const positions = positionsOf(firstLayer(ringSpec(), { d: [{ deg: 0 }, { deg: 90 }] }, opts));
-    expect(positions[0][0]).toBeCloseTo(390, 4); // [240+150, 150]
+    expect(positions[0][0]).toBeCloseTo(300, 4); // [150+150, 150]
     expect(positions[0][1]).toBeCloseTo(150, 4);
-    expect(positions[1][0]).toBeCloseTo(240, 4); // [240, 150+150]
+    expect(positions[1][0]).toBeCloseTo(150, 4); // [150, 150+150]
     expect(positions[1][1]).toBeCloseTo(300, 4);
     for (const p of positions) expect(dist(p, CENTER)).toBeCloseTo(150, 4);
   });
@@ -200,7 +200,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
   it('polar1d_radius_fraction_halves_circle', () => {
     const [p] = positionsOf(firstLayer(ringSpec({ radius: 0.5 }), { d: [{ deg: 0 }] }, opts));
     expect(dist(p, CENTER)).toBeCloseTo(75, 4);
-    expect(p[0]).toBeCloseTo(315, 4); // 240 + 75
+    expect(p[0]).toBeCloseTo(225, 4); // 150 + 75
   });
 
   // 边界：半环 startAngle/endAngle — 角向 range 缩到 [0,180]

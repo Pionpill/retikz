@@ -155,14 +155,14 @@ export type PolarLayoutContext = {
 
 /** computePolarCoordinate 结果：圆心（屏幕坐标）+ 外半径（user units，整圆 bbox 内接） */
 export type PolarLayout = {
-  /** 圆心（plot area 中心，屏幕坐标） */
+  /** 圆心（plot area 水平起点对齐、垂直居中，屏幕坐标） */
   center: [number, number];
   /** 外半径（user units，可用外半径，已减角向标签留白） */
   outerRadius: number;
 };
 
 /**
- * 由整图尺寸估算极坐标布局：圆心 = plot area 中心、外半径 = 可用尺寸减角向标签留白
+ * 由整图尺寸估算极坐标布局：圆形区域水平起点对齐、垂直居中，外半径 = 可用尺寸减角向标签留白
  * @description 按整圆 bbox 定 center / outerRadius。
  *   有角向轴时为外圈刻度标签预留一圈留白（按最宽标签估），让标签不溢出画布；调用方只消费本 frame、不回写 layout。
  *   margin 之大 → 外半径 ≤ 0 → 抛清晰错误，不静默出退化坏图。
@@ -203,7 +203,7 @@ export const computePolarCoordinate = (
     );
   }
   return {
-    center: [margins.left + availableWidth / 2, margins.top + availableHeight / 2],
+    center: [margins.left + outerRadius, margins.top + availableHeight / 2],
     outerRadius,
   };
 };

@@ -16,13 +16,29 @@ A coordinate maps position values into screen geometry. When built-in coordinate
 
 `defineCoordinate<TCoordinateOperation>` receives this contract:
 
-| Field     | Purpose                                                                                 |
-| --------- | --------------------------------------------------------------------------------------- |
-| `schema`  | Validates the custom coordinate operation; a non-built-in literal `type` is its key     |
-| `roles`   | Declares the required position channels and their order                                 |
-| `resolve` | Builds a `CoordinateResolution` from the operation, domains, scales, canvas, and guides |
+| Field          | Purpose                                                                                 |
+| -------------- | --------------------------------------------------------------------------------------- |
+| `schema`       | Validates the custom coordinate operation; a non-built-in literal `type` is its key     |
+| `roles`        | Declares the required position channels and their order                                 |
+| `scaleBinding` | Optionally maps canonical position roles to named-scale fields owned by the operation   |
+| `resolve`      | Builds a `CoordinateResolution` from the operation, domains, scales, canvas, and guides |
 
 The returned `frame` projects points and optional Cells; `plotArea` describes the drawing region; `axisLayers` and `gridLayers` deliver guide output.
+
+Without `scaleBinding`, Plot reads and writes fields named after each role, so `roles: ['x', 'y']` uses `operation.x` and `operation.y`. A definition whose operation uses domain-specific field names can provide one bidirectional hook:
+
+```ts
+scaleBinding: {
+  read: operation => ({ x: operation.horizontalScale, y: operation.verticalScale }),
+  bind: (operation, scaleNames) => ({
+    ...operation,
+    horizontalScale: scaleNames.x,
+    verticalScale: scaleNames.y,
+  }),
+}
+```
+
+The hook exists only in the runtime Definition and never enters JSON IR. Chart also uses this contract to retain recipe position scales when a coordinate is replaced; authored coordinate bindings and encoding bindings then override in order. `bind` must preserve unrelated config such as `archHeight`, and its result is validated again by the definition schema.
 
 The bridge coordinate below arches the x-axis into a parabola while y stays vertical. Drag the arch-height control to see how an operation parameter changes projection; its definition uses a closed schema, and the source switcher exposes the data and host injection:
 
@@ -58,9 +74,10 @@ The definition with `roles: ['u', 'v']` must still be injected through `<Plot co
 
 1. The host merges built-in and custom coordinate definitions into one registry and validates role names and duplicate types.
 2. Lowering looks up `coordinate.type`; a miss fails immediately, while a hit validates the JSON operation with the definition schema.
-3. `CoordinateDefinitionResolveContext` collects each role's domain, resolves position scales, and exposes canvas and guide information.
-4. `resolve` builds a frame with `createCoordinateFrame`, then returns the `plotArea`, axis layers, and grid layers.
-5. Marks project through `frame.projectRoles` or optional `frame.projectCell` without depending on the concrete coordinate implementation.
+3. When named scales must survive a coordinate change, the host reads and writes canonical roles through `scaleBinding`, then validates the operation again.
+4. `CoordinateDefinitionResolveContext` collects each role's domain, resolves position scales, and exposes canvas and guide information.
+5. `resolve` builds a frame with `createCoordinateFrame`, then returns the `plotArea`, axis layers, and grid layers.
+6. Marks project through `frame.projectRoles` or optional `frame.projectCell` without depending on the concrete coordinate implementation.
 
 `createCoordinateFrame` can receive `roleScales`, `frameAlong`, and `projectCell`. The first supports custom axes and interval role scales; the last projects a logical Cell into rect, sector, contour, or related geometry.
 
@@ -69,8 +86,8 @@ The definition with `roles: ['u', 'v']` must still be injected through `<Plot co
     {
       label: 'CoordinateDefinition and createCoordinateFrame contracts',
       path: 'packages/viz/plot/src/contract/coordinate/define.ts',
-      startLine: 117,
-      endLine: 166,
+      startLine: 145,
+      endLine: 205,
     },
     {
       label: 'Merge built-in and custom coordinates into one registry',
@@ -87,8 +104,8 @@ The definition with `roles: ['u', 'v']` must still be injected through `<Plot co
     {
       label: 'Operation JSON and definition-schema validation',
       path: 'packages/viz/plot/src/resolve/coordinate/resolve.ts',
-      startLine: 447,
-      endLine: 450,
+      startLine: 453,
+      endLine: 455,
     },
   ]}
 />
@@ -97,6 +114,7 @@ The definition with `roles: ['u', 'v']` must still be injected through `<Plot co
 
 - A custom `type` cannot override a built-in coordinate or be registered twice. Referencing an unregistered type asks the current host options to inject its definition.
 - Missing required roles, encoding keys unsupported by the coordinate, or schema validation failures all fail immediately.
+- A `scaleBinding.bind` result that does not match the schema fails immediately; custom field mappings must preserve unrelated operation config.
 - The example uses `z.strictObject`; an unknown key such as `archHeigth` is not silently stripped or replaced by a default.
 - Point-like marks only require `projectRoles`; interval-like marks also require matching `roleScales` and `projectCell`.
 - A custom coordinate uses the `plotArea` returned by its definition and does not automatically inherit cartesian margin and legend reservation.
@@ -112,12 +130,15 @@ coordinate: { type: 'bridge', archHeigth: 60 }
 
 Public exports:
 
-| Import from `@retikz/plot`           | Use                                                        |
-| ------------------------------------ | ---------------------------------------------------------- |
-| `defineCoordinate`                   | Builds a coordinate definition from schema, roles, resolve |
-| `CoordinateDefinition`               | Full role and resolve runtime contract                     |
-| `CoordinateDefinitionResolveContext` | Domain, scale, canvas, and guide resolution entry points   |
-| `createCoordinateFrame`              | Builds point, tangent, and optional Cell projection frame  |
+| Import from `@retikz/plot`           | Use                                                          |
+| ------------------------------------ | ------------------------------------------------------------ |
+| `defineCoordinate`                   | Builds a coordinate definition from schema, roles, resolve   |
+| `CoordinateDefinition`               | Full role and resolve runtime contract                       |
+| `CoordinateScaleBinding`             | Bidirectional mapping between roles and operation fields     |
+| `CoordinateDefinitionResolveContext` | Domain, scale, canvas, and guide resolution entry points     |
+| `createCoordinateFrame`              | Builds point, tangent, and optional Cell projection frame    |
+| `readCoordinateScaleNames`           | Reads named scales by canonical role through the Definition  |
+| `bindCoordinateScaleNames`           | Writes bindings and validates the coordinate operation again |
 
 Host injection:
 

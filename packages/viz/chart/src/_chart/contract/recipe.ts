@@ -2,6 +2,7 @@ import type { IRJsonObject } from '@retikz/core';
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition, AnyTransformDefinition } from '@retikz/data';
 import type { NonEmptyReadonlyArray, ValueOf } from '@retikz/foundation';
 import type {
+  AnyCoordinateDefinition,
   AnyScaleDefinition,
   IRPlot,
   IRPlotCoordinateOperation,
@@ -27,6 +28,8 @@ export type ChartEncodingRuntime = Readonly<{
   selectors: ReadonlyMap<string, AnyRowSelectorDefinition>;
   /** Plot scale Definition注册表 */
   scales: ReadonlyMap<string, AnyScaleDefinition>;
+  /** 与Plot lowering共享的coordinate Definition注册表 */
+  coordinates: ReadonlyMap<string, AnyCoordinateDefinition>;
 }>;
 
 /** rich mapping解析后的直接字段绑定 */

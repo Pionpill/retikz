@@ -1,9 +1,14 @@
-import type { IRPlot, IRPlotCoordinateOperation, IRPlotScaleOperation } from '@retikz/plot';
+import type { AnyCoordinateDefinition, IRPlot, IRPlotCoordinateOperation, IRPlotScaleOperation } from '@retikz/plot';
 
-import { PlotSchema, resolvePlotFacetComposition } from '@retikz/plot';
+import {
+  bindCoordinateScaleNames,
+  PlotSchema,
+  readCoordinateScaleNames,
+  resolvePlotFacetComposition,
+} from '@retikz/plot';
 import { ZodError } from 'zod';
 
-import type { ChartEncodingResolution, ChartRecipeResolution } from '../contract/recipe';
+import type { ChartEncodingResolution, ChartEncodingRuntime, ChartRecipeResolution } from '../contract/recipe';
 import type { IRChartPlotExtension, IRChartSource } from '../schemas';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
@@ -65,27 +70,99 @@ export const resolveChartPlotScales = (
   return [...scales, ...encodings.scales, ...additions];
 };
 
-const withPositionScales = (
+const coordinateDefinitionOf = (
   coordinate: IRPlotCoordinateOperation,
+  runtime: ChartEncodingRuntime,
+  path: ReadonlyArray<string | number>,
+): AnyCoordinateDefinition => {
+  const definition = runtime.coordinates.get(coordinate.type);
+  if (definition === undefined) {
+    throw invalidPlot(`Plot coordinate type "${coordinate.type}" is not registered`, path);
+  }
+  return definition;
+};
+
+const assertCompatibleCoordinateRoles = (
+  recipeDefinition: AnyCoordinateDefinition,
+  authoredDefinition: AnyCoordinateDefinition,
+): void => {
+  const recipeRoles = recipeDefinition.roles;
+  const authoredRoles = authoredDefinition.roles;
+  if (
+    recipeRoles.length !== authoredRoles.length ||
+    recipeRoles.some((role, roleIndex) => role !== authoredRoles[roleIndex])
+  ) {
+    throw invalidPlot(
+      `Plot coordinate replacement roles [${authoredRoles.join(', ')}] must match recipe roles [${recipeRoles.join(', ')}]`,
+      ['plotExtension', 'coordinate'],
+    );
+  }
+};
+
+const resolveChartCoordinate = (
+  recipeCoordinate: IRPlotCoordinateOperation | undefined,
+  authoredCoordinate: IRPlotCoordinateOperation | undefined,
   encodings: ChartEncodingResolution,
-): IRPlotCoordinateOperation => ({ ...coordinate, ...encodings.positionScales });
+  runtime: ChartEncodingRuntime,
+): IRPlotCoordinateOperation => {
+  const recipeDefinition =
+    recipeCoordinate === undefined
+      ? undefined
+      : coordinateDefinitionOf(recipeCoordinate, runtime, ['recipe', 'spatial', 'coordinate']);
+  const authoredDefinition =
+    authoredCoordinate === undefined
+      ? undefined
+      : coordinateDefinitionOf(authoredCoordinate, runtime, ['plotExtension', 'coordinate']);
+  if (recipeDefinition !== undefined && authoredDefinition !== undefined) {
+    assertCompatibleCoordinateRoles(recipeDefinition, authoredDefinition);
+  }
+
+  const selectedCoordinate = authoredCoordinate ?? recipeCoordinate;
+  const selectedDefinition = authoredDefinition ?? recipeDefinition;
+  if (selectedCoordinate === undefined || selectedDefinition === undefined) {
+    throw invalidPlot('Chart coordinate scale binding requires a coordinate spatial source', ['recipe', 'spatial']);
+  }
+  try {
+    const scaleNames = {
+      ...(recipeCoordinate === undefined || recipeDefinition === undefined
+        ? {}
+        : readCoordinateScaleNames(recipeDefinition, recipeCoordinate)),
+      ...(authoredCoordinate === undefined || authoredDefinition === undefined
+        ? {}
+        : readCoordinateScaleNames(authoredDefinition, authoredCoordinate)),
+      ...encodings.positionScales,
+    };
+    return bindCoordinateScaleNames(selectedDefinition, selectedCoordinate, scaleNames);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      const coordinatePath =
+        authoredCoordinate === undefined ? ['recipe', 'spatial', 'coordinate'] : ['plotExtension', 'coordinate'];
+      throw invalidPlot(
+        'Resolved Chart coordinate does not match its Plot CoordinateDefinition schema',
+        coordinatePath,
+        error,
+      );
+    }
+    throw error;
+  }
+};
 
 /** 按 recipe 的 spatial replaceable 标记组合 coordinate / composition */
 export const resolveChartPlotSpatial = (
   recipe: ChartRecipeResolution,
   encodings: ChartEncodingResolution,
   extension: IRChartPlotExtension | undefined,
+  runtime: ChartEncodingRuntime,
 ): Pick<IRPlot, 'coordinate' | 'composition'> => {
   const authoredCoordinate = extension?.coordinate;
   const authoredComposition = extension?.composition;
-  const authored = authoredCoordinate !== undefined || authoredComposition !== undefined;
   const spatial = recipe.scaffold.spatial;
 
   if (encodings.spatial !== undefined) {
-    if (authored) {
-      throw invalidPlot('Chart composition encoding cannot be combined with a Plot spatial extension', [
+    if (authoredComposition !== undefined) {
+      throw invalidPlot('Chart composition encoding cannot be combined with a Plot composition extension', [
         'plotExtension',
-        authoredCoordinate === undefined ? 'composition' : 'coordinate',
+        'composition',
       ]);
     }
     if ('composition' in spatial) {
@@ -95,7 +172,10 @@ export const resolveChartPlotSpatial = (
         encodings.spatial.kind,
       ]);
     }
-    const coordinate = withPositionScales(spatial.coordinate, encodings);
+    if (authoredCoordinate !== undefined && !spatial.replaceable) {
+      throw invalidPlot('Recipe spatial scaffold is not replaceable by Chart Source', ['plotExtension', 'coordinate']);
+    }
+    const coordinate = resolveChartCoordinate(spatial.coordinate, authoredCoordinate, encodings, runtime);
     return {
       composition: resolvePlotFacetComposition(
         {
@@ -109,7 +189,7 @@ export const resolveChartPlotSpatial = (
     };
   }
 
-  if (authored) {
+  if (authoredCoordinate !== undefined || authoredComposition !== undefined) {
     if (!spatial.replaceable) {
       throw invalidPlot('Recipe spatial scaffold is not replaceable by Chart Source', [
         'plotExtension',
@@ -125,10 +205,19 @@ export const resolveChartPlotSpatial = (
       }
       return { composition: authoredComposition };
     }
-    return { coordinate: withPositionScales(authoredCoordinate, encodings) };
+    return {
+      coordinate: resolveChartCoordinate(
+        'coordinate' in spatial ? spatial.coordinate : undefined,
+        authoredCoordinate,
+        encodings,
+        runtime,
+      ),
+    };
   }
 
-  if ('coordinate' in spatial) return { coordinate: withPositionScales(spatial.coordinate, encodings) };
+  if ('coordinate' in spatial) {
+    return { coordinate: resolveChartCoordinate(spatial.coordinate, undefined, encodings, runtime) };
+  }
   if (Object.keys(encodings.positionScales).length > 0) {
     throw invalidPlot('Chart position scale encoding cannot target a recipe composition scaffold', [
       'recipe',
@@ -160,9 +249,10 @@ export const resolveChartPlot = (
   encodings: ChartEncodingResolution,
   chartMarks: ReadonlyArray<IRPlot['marks'][number]>,
   plotThemeTokens: IRPlot['plotThemeTokens'],
+  runtime: ChartEncodingRuntime,
 ): IRPlot => {
   const extension = source.plotExtension;
-  const spatial = resolveChartPlotSpatial(recipe, encodings, extension);
+  const spatial = resolveChartPlotSpatial(recipe, encodings, extension, runtime);
   const guides = resolveChartPlotGuides(recipe, extension);
   const scales = resolveChartPlotScales(recipe, encodings, extension);
   const marks = [...chartMarks, ...(extension?.marks ?? [])];

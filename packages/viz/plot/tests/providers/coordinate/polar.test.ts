@@ -46,6 +46,25 @@ const polarPointSpec = (encoding: Record<string, unknown>, extra: Partial<Record
   });
 
 describe('lowerPlots polar 投影几何 (contract)', () => {
+  it('polar_full_circle_left_aligns_in_a_wide_canvas', () => {
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'linear', name: 'a', domainPadding: 0, domain: [0, 360] },
+        { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
+      ],
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
+    });
+
+    const [leftmost] = positionsOf(firstLayer(spec, { d: [{ theta: 180, value: 10 }] }, opts));
+
+    expect(leftmost[0]).toBeCloseTo(0, 6);
+    expect(leftmost[1]).toBeCloseTo(150, 6);
+  });
+
   // Happy path
   it('polar_point_angle0_radiusmax_lands_right_of_center', () => {
     // 角向 domain 显式 [0,360]，行 angle=0 → θ=startAngle=0°；径向 domain [0,10]、值=10 → r=outerRadius

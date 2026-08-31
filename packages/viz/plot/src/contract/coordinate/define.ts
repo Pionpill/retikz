@@ -44,6 +44,21 @@ export type CoordinateResolution = {
   axisLayers: Array<IRScope>;
 };
 
+/** 坐标 operation 中按位置角色索引的命名 scale binding */
+export type CoordinateScaleNames = Readonly<Partial<Record<DimensionRole, string>>>;
+
+/**
+ * 坐标 Definition 的位置 scale binding 契约。
+ * @description read 把 operation 自有字段投影为统一 role；bind 将统一 role 写回 operation 自有字段。
+ *   省略该契约时，Plot 默认读取和写入与 role 同名的 operation 字段
+ */
+export type CoordinateScaleBinding<TCoordinateOperation extends IRPlotCoordinateOperation> = Readonly<{
+  /** 从坐标 operation 读取按 role 命名的 scale */
+  read: (operation: TCoordinateOperation) => CoordinateScaleNames;
+  /** 将按 role 命名的 scale 写入坐标 operation，并保留其它配置 */
+  bind: (operation: TCoordinateOperation, scaleNames: CoordinateScaleNames) => TCoordinateOperation;
+}>;
+
 /**
  * 坐标系 definition.resolve 的共享上下文。
  * @description 这里暴露的是坐标系无关的能力：画布尺寸、数据取值、scale 解析、guide 下沉与 provenance。
@@ -132,8 +147,56 @@ export type CoordinateDefinition<TCoordinateOperation extends IRPlotCoordinateOp
   schema: ZodType<TCoordinateOperation>;
   /** 该坐标系消费的定位角色序，用于 required-channel 与 guide-dimension 校验 */
   roles: ReadonlyArray<DimensionRole>;
+  /** operation 字段与统一位置 role 之间的可选 scale binding；默认使用 role 同名字段 */
+  scaleBinding?: CoordinateScaleBinding<TCoordinateOperation>;
   /** 将 coordinate operation 解析成运行时 frame 与 guide 层 */
   resolve: (operation: TCoordinateOperation, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution;
+};
+
+type CoordinateScaleBindingDefinition = Readonly<{
+  roles: ReadonlyArray<DimensionRole>;
+  schema: ZodType;
+  scaleBinding?: Readonly<{
+    read: (operation: never) => CoordinateScaleNames;
+    bind: (operation: never, scaleNames: CoordinateScaleNames) => IRPlotCoordinateOperation;
+  }>;
+}>;
+
+/** 按 Definition 契约读取 coordinate operation 的位置 scale 名称 */
+export const readCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoordinateOperation>(
+  definition: CoordinateScaleBindingDefinition,
+  operation: TCoordinateOperation,
+): CoordinateScaleNames => {
+  const parsedOperation = definition.schema.parse(operation) as TCoordinateOperation;
+  const authoredScaleNames = definition.scaleBinding?.read(parsedOperation as never);
+  const scaleNames: Partial<Record<DimensionRole, string>> = {};
+  for (const role of definition.roles) {
+    const scaleName = authoredScaleNames === undefined ? Reflect.get(parsedOperation, role) : authoredScaleNames[role];
+    if (typeof scaleName === 'string') scaleNames[role] = scaleName;
+  }
+  return scaleNames;
+};
+
+/**
+ * 按 Definition 契约把位置 scale 名称写回 coordinate operation。
+ * @description 自定义 hook 与默认同名字段路径都必须再次通过 Definition schema，避免 Chart 组装出 Plot 无法消费的 operation
+ */
+export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoordinateOperation>(
+  definition: CoordinateScaleBindingDefinition,
+  operation: TCoordinateOperation,
+  scaleNames: CoordinateScaleNames,
+): TCoordinateOperation => {
+  const parsedOperation = definition.schema.parse(operation) as TCoordinateOperation;
+  const applicableScaleNames: Partial<Record<DimensionRole, string>> = {};
+  for (const role of definition.roles) {
+    const scaleName = scaleNames[role];
+    if (scaleName !== undefined) applicableScaleNames[role] = scaleName;
+  }
+  const candidate: IRPlotCoordinateOperation =
+    definition.scaleBinding === undefined
+      ? { ...parsedOperation, ...applicableScaleNames }
+      : definition.scaleBinding.bind(parsedOperation as never, applicableScaleNames);
+  return definition.schema.parse(candidate) as TCoordinateOperation;
 };
 
 /**
@@ -183,9 +246,17 @@ export const createCoordinateFrame = (
  * registry 内部使用的宽类型。
  * @description registry 需要存放不同 operation 泛型的 definition；取出后由具体 schema parse 收窄，因此 resolve 入参在表内用 never 防止误调
  */
-export type AnyCoordinateDefinition = Omit<CoordinateDefinition<IRPlotCoordinateOperation>, 'schema' | 'resolve'> & {
+export type AnyCoordinateDefinition = Omit<
+  CoordinateDefinition<IRPlotCoordinateOperation>,
+  'scaleBinding' | 'schema' | 'resolve'
+> & {
   /** 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 type 并执行 parse */
   schema: ZodType;
+  /** 泛型擦除后的可选 scale binding；调用前必须先由 schema 收窄 operation */
+  scaleBinding?: Readonly<{
+    read: (operation: never) => CoordinateScaleNames;
+    bind: (operation: never, scaleNames: CoordinateScaleNames) => IRPlotCoordinateOperation;
+  }>;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation */
   resolve: (operation: never, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution;
 };

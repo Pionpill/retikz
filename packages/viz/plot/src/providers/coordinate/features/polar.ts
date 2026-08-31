@@ -236,6 +236,14 @@ export const densifyPolarSegments = (
 const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
   schema: Polar2DSchema,
   roles: ['x', 'y'],
+  scaleBinding: {
+    read: coordinate => ({ x: coordinate.angle, y: coordinate.radius }),
+    bind: (coordinate, scaleNames) => ({
+      ...coordinate,
+      ...(scaleNames.x === undefined ? {} : { angle: scaleNames.x }),
+      ...(scaleNames.y === undefined ? {} : { radius: scaleNames.y }),
+    }),
+  },
   resolve: (coordinate, ctx) => {
     const angleValues = ctx.collectPositionValues('x', { axis: 'primary' });
     const radiusValues = ctx.collectPositionValues('y', { axis: 'secondary', includeBaseline: true });
@@ -325,6 +333,13 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
 const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate> = {
   schema: Polar1DSchema,
   roles: ['x'],
+  scaleBinding: {
+    read: coordinate => ({ x: coordinate.angle }),
+    bind: (coordinate, scaleNames) => ({
+      ...coordinate,
+      ...(scaleNames.x === undefined ? {} : { angle: scaleNames.x }),
+    }),
+  },
   resolve: (coordinate, ctx) => {
     const radiusFraction = coordinate.radius ?? 1;
     const startAngle = coordinate.startAngle ?? 0;

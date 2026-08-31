@@ -16,13 +16,29 @@ description: 用 CoordinateDefinition 声明位置 role、比例尺和投影 fra
 
 `defineCoordinate<TCoordinateOperation>` 接收以下契约：
 
-| 字段      | 作用                                                                    |
-| --------- | ----------------------------------------------------------------------- |
-| `schema`  | 校验自定义 coordinate operation；非内置字面量 `type` 是注册键           |
-| `roles`   | 声明坐标系需要的位置通道及其顺序                                        |
-| `resolve` | 从 operation、数据域、scales、画布和 guides 构造 `CoordinateResolution` |
+| 字段           | 作用                                                                    |
+| -------------- | ----------------------------------------------------------------------- |
+| `schema`       | 校验自定义 coordinate operation；非内置字面量 `type` 是注册键           |
+| `roles`        | 声明坐标系需要的位置通道及其顺序                                        |
+| `scaleBinding` | 可选地把统一位置 role 映射到 operation 自有的命名比例尺字段             |
+| `resolve`      | 从 operation、数据域、scales、画布和 guides 构造 `CoordinateResolution` |
 
 `resolve` 返回的 `frame` 负责点与可选 Cell 投影；`plotArea` 描述绘图区；`axisLayers` 和 `gridLayers` 交付 guide 产物。
+
+省略 `scaleBinding` 时，Plot 按 role 同名字段读取和写入比例尺，例如 `roles: ['x', 'y']` 对应 `operation.x` / `operation.y`。如果 operation 使用领域字段名，definition 通过同一 hook 完成双向映射：
+
+```ts
+scaleBinding: {
+  read: operation => ({ x: operation.horizontalScale, y: operation.verticalScale }),
+  bind: (operation, scaleNames) => ({
+    ...operation,
+    horizontalScale: scaleNames.x,
+    verticalScale: scaleNames.y,
+  }),
+}
+```
+
+该 hook 只存在于运行时 Definition，不进入 JSON IR。Chart 用替换坐标系时也通过这份契约继承 recipe 的位置比例尺；显式 coordinate binding 和 encoding binding 仍按顺序覆盖。`bind` 必须保留 `archHeight` 等无关配置，返回值会再次通过 definition schema。
 
 下面的「桥」坐标系把 x 轴拱成抛物线，y 仍竖直。拖动拱高可以直接观察 operation 参数怎样改变投影；definition 使用闭合 schema，数据与宿主注入可以从源码切换器中查看：
 
@@ -58,9 +74,10 @@ const spec = {
 
 1. 宿主把内置与自定义 coordinate definitions 合并为 registry，并校验 role 名和重复 type。
 2. lowering 按 `coordinate.type` lookup；未命中时直接报错，命中后用 definition schema 校验 JSON operation。
-3. `CoordinateDefinitionResolveContext` 收集各 role 的数据域，解析 position scales，并提供画布与 guide 信息。
-4. `resolve` 用 `createCoordinateFrame` 构造 frame，再返回 `plotArea`、轴和网格层。
-5. mark 通过 `frame.projectRoles` 或可选的 `frame.projectCell` 投影，不感知具体坐标系实现。
+3. 需要跨 coordinate 保留命名比例尺时，宿主通过 `scaleBinding` 在统一 role 与 operation 字段之间读写，并再次校验 operation。
+4. `CoordinateDefinitionResolveContext` 收集各 role 的数据域，解析 position scales，并提供画布与 guide 信息。
+5. `resolve` 用 `createCoordinateFrame` 构造 frame，再返回 `plotArea`、轴和网格层。
+6. mark 通过 `frame.projectRoles` 或可选的 `frame.projectCell` 投影，不感知具体坐标系实现。
 
 `createCoordinateFrame` 可以接收 `roleScales`、`frameAlong` 和 `projectCell`。前者供自定义轴与区间图元读取各 role 的 scale；后者把逻辑 Cell 投影成 rect、sector 或 contour 等几何。
 
@@ -69,8 +86,8 @@ const spec = {
     {
       label: 'CoordinateDefinition 与 createCoordinateFrame 契约',
       path: 'packages/viz/plot/src/contract/coordinate/define.ts',
-      startLine: 117,
-      endLine: 166,
+      startLine: 145,
+      endLine: 205,
     },
     {
       label: '内置与自定义坐标系合并到统一注册表',
@@ -87,8 +104,8 @@ const spec = {
     {
       label: 'operation JSON 与 definition schema 校验',
       path: 'packages/viz/plot/src/resolve/coordinate/resolve.ts',
-      startLine: 447,
-      endLine: 450,
+      startLine: 453,
+      endLine: 455,
     },
   ]}
 />
@@ -97,6 +114,7 @@ const spec = {
 
 - 自定义 `type` 不能覆盖内置坐标系，也不能重复注册；IR 引用未注册 type 时，lowering 会要求通过本次宿主 options 注入 definition。
 - 缺少必填 role、出现坐标系不支持的 encoding key，或 schema 校验失败时都会直接报错。
+- `scaleBinding.bind` 返回不符合 schema 的 operation 时会直接失败；自定义字段映射必须保留其它 operation 配置。
 - 示例使用 `z.strictObject`；`archHeigth` 之类未知键不会被静默剥离或回退默认值。
 - 点类图元只需要 `projectRoles`；区间类图元还需要匹配的 `roleScales` 与 `projectCell`。
 - 自定义坐标系使用 definition 返回的 `plotArea`，不会自动继承 cartesian 的 margin 与 legend 预留逻辑。
@@ -116,8 +134,11 @@ coordinate: { type: 'bridge', archHeigth: 60 }
 | ------------------------------------ | ------------------------------------------------------ |
 | `defineCoordinate`                   | 从 schema、roles 与 resolve 构造 coordinate definition |
 | `CoordinateDefinition`               | 查询 role 与 resolve 的完整运行时契约                  |
+| `CoordinateScaleBinding`             | 声明 role 与 operation 比例尺字段之间的双向映射        |
 | `CoordinateDefinitionResolveContext` | 查询数据域、scale、画布和 guide 解析入口               |
 | `createCoordinateFrame`              | 构造统一的点、切向与可选 Cell 投影 frame               |
+| `readCoordinateScaleNames`           | 按 Definition 读取统一 role 的命名比例尺               |
+| `bindCoordinateScaleNames`           | 按 Definition 写回并重新校验 coordinate operation      |
 
 宿主注入：
 

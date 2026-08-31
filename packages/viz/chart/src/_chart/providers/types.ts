@@ -35,7 +35,11 @@ export type ChartRecipeProviderContributionInput<TSource extends IRChartSource> 
 export type ChartRuntimeDefinitionOptions = Readonly<
   Pick<
     LowerPlotsOptions,
-    'transformDefinitions' | 'statisticsReducerDefinitions' | 'rowSelectorDefinitions' | 'scaleDefinitions'
+    | 'coordinates'
+    | 'transformDefinitions'
+    | 'statisticsReducerDefinitions'
+    | 'rowSelectorDefinitions'
+    | 'scaleDefinitions'
   >
 >;
 

@@ -48,7 +48,7 @@ export const previewControls = definePreviewControls({
         shape: {
           label: '形状',
           defaultValue: 'circle',
-          labels: { circle: '圆形', rectangle: '矩形', ellipse: '椭圆形', diamond: '菱形' },
+          labels: { circle: '圆形', rectangle: '矩形', diamond: '菱形' },
         },
         opacity: { label: '射门点不透明度', defaultValue: 0.9, min: 0.4, max: 1, step: 0.02 },
       }),

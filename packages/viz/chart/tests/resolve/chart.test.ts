@@ -4,6 +4,7 @@ import type { IRPlotPartitionDimension } from '@retikz/plot';
 import { DEFAULT_RESOLVED_THEME, NodeTextAlign, ThemeMode } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import {
+  defineCoordinate,
   PlotFacetOptionsSchema,
   PlotMark,
   PlotPartitionDimensionsSchema,
@@ -178,6 +179,62 @@ const registry = resolveChartProviderRegistry([
         },
       }),
     ],
+  },
+]);
+
+const coordinateRecipe = defineChartRecipe({
+  ...recipe,
+  resolve: () => ({
+    scaffold: {
+      scales: [
+        { value: { type: 'linear', name: 'x' }, replaceable: true },
+        { value: { type: 'linear', name: 'y' }, replaceable: true },
+      ],
+      spatial: {
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        replaceable: true,
+      },
+      guides: { value: [], replaceable: true },
+    },
+    semanticMarks: [{ kind: 'semantic', plotMarks: [semanticMark] }],
+  }),
+});
+
+const bridgeCoordinate = defineCoordinate({
+  schema: strictObject({
+    type: literal('bridge'),
+    archHeight: number().optional(),
+    horizontalScale: string().optional(),
+    verticalScale: string().optional(),
+  }),
+  roles: ['x', 'y'],
+  scaleBinding: {
+    read: operation => ({ x: operation.horizontalScale, y: operation.verticalScale }),
+    bind: (operation, scaleNames) => ({
+      ...operation,
+      ...(scaleNames.x === undefined ? {} : { horizontalScale: scaleNames.x }),
+      ...(scaleNames.y === undefined ? {} : { verticalScale: scaleNames.y }),
+    }),
+  },
+  resolve: () => {
+    throw new Error('Chart resolve must not execute Plot coordinate geometry');
+  },
+});
+
+const uvCoordinate = defineCoordinate({
+  schema: strictObject({ type: literal('uv') }),
+  roles: ['u', 'v'],
+  resolve: () => {
+    throw new Error('Chart resolve must not execute Plot coordinate geometry');
+  },
+});
+
+const coordinateRegistry = resolveChartProviderRegistry([
+  {
+    family: 'point',
+    recipe: coordinateRecipe,
+    themeDefinitions: [],
+    runtimeDefinitions: { coordinates: [bridgeCoordinate, uvCoordinate] },
   },
 ]);
 
@@ -386,18 +443,111 @@ describe('Chart resolution', () => {
     });
   });
 
-  it.each([
-    ['coordinate', { coordinate: { type: 'cartesian2D' as const } }],
-    [
-      'composition',
-      {
-        composition: {
-          defaultView: 'extension',
-          views: [{ id: 'extension', coordinate: { type: 'cartesian2D' as const } }],
-        },
+  it('maps recipe x/y scale bindings into an authored Polar coordinate', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      plotExtension: { coordinate: { type: 'polar2D' } },
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry);
+
+    expect(result.plot.coordinate).toMatchObject({ type: 'polar2D', angle: 'x', radius: 'y' });
+  });
+
+  it('applies recipe, authored coordinate and encoding scale bindings in ascending precedence', () => {
+    const encodedRecipe = defineChartRecipe({
+      ...coordinateRecipe,
+      resolveEncodings: context => ({
+        ...resolveDirectEncodings(context),
+        scales: [{ type: 'linear', name: 'encoding-x' }],
+        positionScales: { x: 'encoding-x' },
+      }),
+    });
+    const encodedRegistry = resolveChartProviderRegistry([
+      { family: 'point', recipe: encodedRecipe, themeDefinitions: [] },
+    ]);
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      plotExtension: {
+        coordinate: { type: 'polar2D', angle: 'authored-angle', radius: 'authored-radius' },
+        scales: [
+          { type: 'linear', name: 'authored-angle' },
+          { type: 'linear', name: 'authored-radius' },
+        ],
       },
-    ],
-  ])('rejects encoding facet together with Plot extension %s', (member, plotExtension) => {
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, encodedRegistry);
+
+    expect(result.plot.coordinate).toMatchObject({
+      type: 'polar2D',
+      angle: 'encoding-x',
+      radius: 'authored-radius',
+    });
+  });
+
+  it('uses a custom coordinate scale-binding hook without changing unrelated operation fields', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      plotExtension: { coordinate: { type: 'bridge', archHeight: 24 } },
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry);
+
+    expect(result.plot.coordinate).toEqual({
+      type: 'bridge',
+      archHeight: 24,
+      horizontalScale: 'x',
+      verticalScale: 'y',
+    });
+  });
+
+  it('allows an authored Polar coordinate to become every encoding facet panel template', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      recipe: {
+        ...source.recipe,
+        encodings: { ...source.recipe.encodings, column: { field: 'region' } },
+      },
+      plotExtension: { coordinate: { type: 'polar2D' } },
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry);
+
+    expect(result.plot).not.toHaveProperty('coordinate');
+    expect(result.plot.composition?.views).toHaveLength(1);
+    expect(result.plot.composition?.views?.[0]).toMatchObject({
+      id: '__chart.demo.view.main',
+      coordinate: { type: 'polar2D', angle: 'x', radius: 'y' },
+    });
+  });
+
+  it('rejects a Scatter replacement coordinate whose roles are not exactly x/y', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      plotExtension: { coordinate: { type: 'uv' } },
+    });
+
+    expect(() => resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry)).toThrowError(
+      expect.objectContaining({
+        code: RetikzChartErrorCode.InvalidResolvedPlot,
+        details: expect.objectContaining({ path: ['plotExtension', 'coordinate'] }),
+      }),
+    );
+  });
+
+  it('rejects encoding facet together with a Plot composition extension', () => {
+    const plotExtension = {
+      composition: {
+        defaultView: 'extension',
+        views: [{ id: 'extension', coordinate: { type: 'cartesian2D' as const } }],
+      },
+    };
     const authored = sourceSchema.parse({
       ...source,
       recipe: {
@@ -410,7 +560,7 @@ describe('Chart resolution', () => {
     expect(() => resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME)).toThrowError(
       expect.objectContaining({
         code: RetikzChartErrorCode.InvalidResolvedPlot,
-        details: expect.objectContaining({ path: ['plotExtension', member] }),
+        details: expect.objectContaining({ path: ['plotExtension', 'composition'] }),
       }),
     );
   });

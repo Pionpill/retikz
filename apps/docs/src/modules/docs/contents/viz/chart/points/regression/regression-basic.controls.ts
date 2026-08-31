@@ -2,10 +2,12 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPointCoordinateControl } from '../point-coordinate-control';
 import { irisRegressionData } from './regression-basic.data';
 
 /** Regression 基础 playground 的稳定控件 id */
 export const REGRESSION_BASIC_CONTROL_IDS = {
+  coordinateSystem: 'regression-basic-coordinate-system',
   groupBySpecies: 'regression-basic-group-by-species',
   method: 'regression-basic-method',
   order: 'regression-basic-order',
@@ -37,6 +39,17 @@ export const regressionBasicControls = definePreviewControls({
             { key: 'species', label: '物种' },
           ],
         },
+      ],
+    },
+    {
+      label: '坐标',
+      controls: [
+        createPointCoordinateControl({
+          id: REGRESSION_BASIC_CONTROL_IDS.coordinateSystem,
+          label: '坐标系',
+          cartesianLabel: '笛卡尔',
+          polarLabel: '极坐标',
+        }),
       ],
     },
     {
@@ -144,6 +157,7 @@ export const regressionBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: regressionBasicControls,
   canonicalValues: {
+    [REGRESSION_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [REGRESSION_BASIC_CONTROL_IDS.groupBySpecies]: true,
     [REGRESSION_BASIC_CONTROL_IDS.method]: 'linear',
     [REGRESSION_BASIC_CONTROL_IDS.order]: 3,
@@ -155,6 +169,7 @@ export const previewControlContract = {
     [REGRESSION_BASIC_CONTROL_IDS.trendStrokeOpacity]: 0.9,
   },
   relatedApis: [
+    'ChartExtension.coordinate',
     'RegressionEncodings.series',
     'RegressionProperties.method',
     'RegressionProperties.sampleCount',

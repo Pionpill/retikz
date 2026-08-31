@@ -6,6 +6,7 @@ import { PlotAxis } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
+import { resolvePointPreviewLayout } from '../point-coordinate-control';
 import { SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS } from './scatter-penguins-facet-jitter.controls';
 import { penguinScatterData } from './scatter-penguins-facet-jitter.data';
 import { previewControlContract } from './scatter-penguins-facet-jitter.en.controls';
@@ -13,7 +14,11 @@ import { previewControlContract } from './scatter-penguins-facet-jitter.en.contr
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <ScatterChart>
     <ChartData data={penguinScatterData} />
-    <ChartLayout width={800} height={500} />
+    <ChartLayout
+      {...resolvePointPreviewLayout(values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.coordinateSystem], {
+        hasFacet: true,
+      })}
+    />
     <ScatterEncodings
       x={{
         transform: {
@@ -32,7 +37,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartTitle>Bill and flipper length across three penguin species</ChartTitle>
     <ChartSubtitle>Palmer Penguins; first 30 complete source-order records per species</ChartSubtitle>
     <ChartSource>Palmer Station Antarctica LTER; CC0; 342 of 344 rows have both measurements</ChartSource>
-    <ChartExtension>
+    <ChartExtension
+      coordinate={
+        values[SCATTER_PENGUINS_FACET_JITTER_CONTROL_IDS.coordinateSystem] === 'polar2D'
+          ? { type: 'polar2D' }
+          : { type: 'cartesian2D' }
+      }
+    >
       <PlotAxis dimension="x" title="Bill length (mm)" grid />
       <PlotAxis dimension="y" title="Flipper length (mm)" grid />
     </ChartExtension>

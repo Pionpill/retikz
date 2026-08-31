@@ -99,7 +99,29 @@ scale `type`与scheme复用Plot开放schema；custom scale仍由Plot Definition 
 
 ## 决策：row、column与facet绑定Plot composition
 
-`row / column`直接使用Plot partition dimension或字段名shorthand，`facet`只保存Plot facet options。只声明row或column即可生成facet；Chart用稳定recipe identity与当前scaffold coordinate组装完整Plot facet configuration，再调用Plot canonical resolver。Source不保存可推导的arrangement id、template view或coordinate。
+`row / column`直接使用Plot partition dimension或字段名shorthand，`facet`只保存Plot facet options。只声明row或column即可生成facet；Chart用稳定recipe identity与当前有效的panel coordinate组装完整Plot facet configuration，再调用Plot canonical resolver。Source不保存可推导的arrangement id、template view或coordinate。
+
+facet encoding拥有“按字段重复panel”的composition语义，`plotExtension.coordinate`拥有panel内部的投影语义，两者可以组合。recipe spatial scaffold可替换时，显式coordinate替代recipe coordinate并成为每个facet panel共享的coordinate template；省略时继续使用recipe coordinate。`plotExtension.composition`仍与facet encoding冲突，因为两者都声明root composition。不可替换的recipe spatial scaffold继续拒绝显式coordinate。
+
+Chart的position role保持`x / y`，不因coordinate类型改变Source slot。Plot的`CoordinateDefinition`为operation提供统一的position scale binding contract：默认按role同名字段读写scale name，内置Polar把`x / y`别名映射到`angle / radius`，自定义coordinate可以为自己的operation shape提供同一hook。该hook属于Plot运行时Definition，不进入JSON IR；Chart与Plot lowering使用同一次编译边界安装的coordinate registry，不复制内置白名单。
+
+```ts
+type CoordinateScaleBinding<TCoordinateOperation> = {
+  read: (operation: TCoordinateOperation) => Partial<Record<DimensionRole, string>>;
+  bind: (operation: TCoordinateOperation, scaleNames: Partial<Record<DimensionRole, string>>) => TCoordinateOperation;
+};
+
+type CoordinateDefinition<TCoordinateOperation> = {
+  schema: ZodType<TCoordinateOperation>;
+  roles: ReadonlyArray<DimensionRole>;
+  scaleBinding?: CoordinateScaleBinding<TCoordinateOperation>;
+  resolve: (operation: TCoordinateOperation, context: CoordinateDefinitionResolveContext) => CoordinateResolution;
+};
+```
+
+最终position scale binding按`recipe fallback < authored coordinate < encoding operation / reference`覆盖。省略显式binding时，Cartesian与Polar都继承同一组recipe scale identity、domain与padding；authored coordinate可以改绑到显式Plot scale；encoding rich mapping作为具体slot的最高优先级连接consumer。Definition hook必须保留operation其它配置，绑定后仍由自身schema与Plot resolver校验；缺失scale、重复来源或不兼容family继续由既有Plot路径fail-loud。
+
+Scatter semantic mark只声明`x / y`位置consumer，因此替换coordinate必须按顺序声明恰好`x / y`两个roles。自定义coordinate可以使用任意operation字段名，但只有通过Definition hook表达同一`x / y`roles时才能用于Scatter；`u / v`、单role或额外必需role在Chart边界fail-loud。其它chartType若需要不同roles，必须由自己的exact recipe另行冻结，不能由Scatter自动猜测。
 
 recipe-local identity统一使用`__chart.<chartType>.<target>`。Scatter facet arrangement固定为`__chart.scatter.composition.facet`并复用`__chart.scatter.view.main` template；Chart root `id`只限定最终Plot root，不改写这些recipe-local identity。
 
@@ -129,7 +151,7 @@ breaking public surface：
 
 现有字段名字符串无需迁移。`average`不新增为重复reducer；使用Data开放reducer operation。`quantitative / nominal / ordinal`不进入Chart；使用Data field model。通用`sortBy / sortOrder`与顶层scheme不进入宽mapping；使用具体chartType的order consumer与Plot scale operation。
 
-以下情况必须在所属owner fail-loud：未知或未注册Definition、malformed built-in、空字段、strict model中不存在的字段、output descriptor / phase / consumer不兼容、later-stage dependency、重复operation或output、scale多source / reference / family冲突、facet依赖错误、普通slot数组以及Chart与Plot空间双来源。Chart不维护第二套字段、scale、transform或composition诊断。
+以下情况必须在所属owner fail-loud：未知或未注册Definition、malformed built-in、空字段、strict model中不存在的字段、output descriptor / phase / consumer不兼容、later-stage dependency、重复operation或output、scale多source / reference / family冲突、facet依赖错误、普通slot数组、facet encoding与显式Plot composition并存、显式coordinate替换不可替换的recipe spatial scaffold、默认role字段不能承载scale binding且Definition未提供自定义hook、Scatter替换coordinate的roles不是恰好`x / y`，以及position scale没有合法coordinate role。Chart不维护第二套字段、scale、transform、coordinate或composition诊断。
 
 ## 实现结果与保留边界
 

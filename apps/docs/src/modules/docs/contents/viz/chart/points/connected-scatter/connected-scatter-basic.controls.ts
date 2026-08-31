@@ -2,9 +2,11 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPointCoordinateControl } from '../point-coordinate-control';
 import { connectedScatterData } from './connected-scatter-basic.data';
 
 export const CONNECTED_SCATTER_CONTROL_IDS = {
+  coordinateSystem: 'connected-scatter-coordinate-system',
   connectNulls: 'connected-scatter-connect-nulls',
   lineStyle: 'connected-scatter-line-style',
   strokeWidth: 'connected-scatter-stroke-width',
@@ -31,6 +33,17 @@ export const connectedScatterBasicControls = definePreviewControls({
             { key: 'lifeExpectancy', label: '预期寿命（岁）' },
           ],
         },
+      ],
+    },
+    {
+      label: '坐标',
+      controls: [
+        createPointCoordinateControl({
+          id: CONNECTED_SCATTER_CONTROL_IDS.coordinateSystem,
+          label: '坐标系',
+          cartesianLabel: '笛卡尔',
+          polarLabel: '极坐标',
+        }),
       ],
     },
     {
@@ -78,12 +91,14 @@ export const connectedScatterBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: connectedScatterBasicControls,
   canonicalValues: {
+    [CONNECTED_SCATTER_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [CONNECTED_SCATTER_CONTROL_IDS.connectNulls]: false,
     [CONNECTED_SCATTER_CONTROL_IDS.lineStyle]: 'solid',
     [CONNECTED_SCATTER_CONTROL_IDS.strokeWidth]: 2,
     [CONNECTED_SCATTER_CONTROL_IDS.pointSize]: 4,
   },
   relatedApis: [
+    'ChartExtension.coordinate',
     'ConnectedScatterProperties.path.connectNulls',
     'ConnectedScatterProperties.path.dashPattern',
     'ConnectedScatterProperties.path.strokeWidth',

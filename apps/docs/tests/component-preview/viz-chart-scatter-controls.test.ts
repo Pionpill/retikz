@@ -52,9 +52,11 @@ const expectCompletePanel = (contract: PreviewControlContract): void => {
       .sort(),
   );
   expect(contract.relatedApis.length).toBeGreaterThan(0);
-  expect(contract.relatedApis.every(api => /^(?:Plot[A-Z]\w*|Plot|PointMark|Scatter[A-Z]\w*)(?:\.|$)/u.test(api))).toBe(
-    true,
-  );
+  expect(
+    contract.relatedApis.every(api =>
+      /^(?:ChartExtension|Plot[A-Z]\w*|Plot|PointMark|Scatter[A-Z]\w*)(?:\.|$)/u.test(api),
+    ),
+  ).toBe(true);
 };
 
 const canonicalChartSize = (source: PreviewSourceConfig): { width?: number; height?: number } => {
@@ -145,6 +147,7 @@ describe('Viz Chart scatter controls', () => {
 
   it('三个 Scatter 示例只暴露不会与字段 encoding 冲突的公共图元控件', () => {
     expect(fertilityWorkZh.canonicalValues).toEqual({
+      'scatter-fertility-work-coordinate-system': 'cartesian2D',
       'scatter-fertility-work-color-by-category': true,
       'scatter-fertility-work-shape-by-category': true,
       'scatter-fertility-work-point-size': 5,
@@ -153,6 +156,7 @@ describe('Viz Chart scatter controls', () => {
       'scatter-fertility-work-point-opacity': 0.65,
     });
     expect(penguinFacetZh.canonicalValues).toEqual({
+      'scatter-penguins-facet-jitter-coordinate-system': 'cartesian2D',
       'scatter-penguins-facet-jitter-point-size': 5,
       'scatter-penguins-facet-jitter-point-fill-enabled': false,
       'scatter-penguins-facet-jitter-point-fill': 'currentColor',
@@ -169,6 +173,7 @@ describe('Viz Chart scatter controls', () => {
       'scatter-world-cup-shots-point-opacity': 0.9,
     });
     expect(getPreviewControlFields(fertilityWorkZh.controls).map(control => control.id)).toEqual([
+      'scatter-fertility-work-coordinate-system',
       'scatter-fertility-work-color-by-category',
       'scatter-fertility-work-shape-by-category',
       'scatter-fertility-work-point-size',
@@ -177,6 +182,7 @@ describe('Viz Chart scatter controls', () => {
       'scatter-fertility-work-point-opacity',
     ]);
     expect(getPreviewControlFields(penguinFacetZh.controls).map(control => control.id)).toEqual([
+      'scatter-penguins-facet-jitter-coordinate-system',
       'scatter-penguins-facet-jitter-point-size',
       'scatter-penguins-facet-jitter-point-fill-enabled',
       'scatter-penguins-facet-jitter-point-fill',
@@ -192,6 +198,45 @@ describe('Viz Chart scatter controls', () => {
       'scatter-world-cup-shots-point-shape',
       'scatter-world-cup-shots-point-opacity',
     ]);
+  });
+
+  it('常量形状下拉只提供视觉上可区分的点形状', () => {
+    for (const [contract, controlId] of [
+      [penguinFacetZh, 'scatter-penguins-facet-jitter-point-shape'],
+      [penguinFacetEn, 'scatter-penguins-facet-jitter-point-shape'],
+      [worldCupZh, 'scatter-world-cup-shots-point-shape'],
+      [worldCupEn, 'scatter-world-cup-shots-point-shape'],
+    ] as const) {
+      const shapeControl = getPreviewControlFields(contract.controls).find(control => control.id === controlId);
+      expect(shapeControl).toMatchObject({ kind: 'select' });
+      if (shapeControl?.kind === 'select') {
+        expect(shapeControl.options.map(option => option.value)).toEqual(['circle', 'rectangle', 'diamond']);
+      }
+    }
+  });
+
+  it('两个通用 Scatter 示例以笛卡尔为 canonical，并通过 ChartExtension 切换 Polar', () => {
+    for (const source of [
+      fertilityWorkZhPreviewSource,
+      fertilityWorkEnPreviewSource,
+      penguinFacetZhPreviewSource,
+      penguinFacetEnPreviewSource,
+    ]) {
+      expect(canonicalDeclarationProps(source, ChartExtension)).toMatchObject({
+        coordinate: { type: 'cartesian2D' },
+      });
+    }
+
+    for (const locale of ['zh', 'en']) {
+      for (const demo of ['scatter-fertility-work', 'scatter-penguins-facet-jitter']) {
+        const source = readFileSync(
+          resolve(`src/modules/docs/contents/viz/chart/points/scatter/${demo}.${locale}.demo.tsx`),
+          'utf8',
+        );
+        expect(source).toContain("type: 'polar2D'");
+        expect(source).toContain('<ChartExtension');
+      }
+    }
   });
 
   it('各 Scatter 示例使用互不重叠的 control id，避免切换示例时串用状态', () => {
@@ -254,6 +299,7 @@ describe('Viz Chart scatter controls', () => {
       'scatter-fertility-work-point-shape',
     );
     expect(fertilityWorkZh.relatedApis).toEqual([
+      'ChartExtension.coordinate',
       'ScatterEncodings.color',
       'ScatterEncodings.shape',
       'ScatterProperties.size',
@@ -324,7 +370,7 @@ describe('Viz Chart scatter controls', () => {
       expect(source).not.toContain('amount:');
       expect(source).not.toContain('seed:');
       expect(source.match(/<PlotAxis\b/gu)).toHaveLength(2);
-      expect(source).toContain('<ChartExtension>');
+      expect(source).toContain('<ChartExtension');
       expect(source).not.toContain('<ChartFacet');
       expect(source).not.toContain('<PlotTransform');
       expect(source).not.toContain('dataModel');
@@ -358,6 +404,24 @@ describe('Viz Chart scatter controls', () => {
       expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('fill');
       expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('stroke');
       expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('strokeWidth');
+    }
+  });
+
+  it('世界杯射门示例固定使用 StatsBomb 笛卡尔球场且不暴露坐标系切换', () => {
+    expect(getPreviewControlFields(worldCupZh.controls).map(control => control.id)).not.toContain(
+      'scatter-world-cup-shots-coordinate-system',
+    );
+    expect(worldCupZh.relatedApis).not.toContain('ChartExtension.coordinate');
+
+    for (const locale of ['zh', 'en']) {
+      const source = readFileSync(
+        resolve(`src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.${locale}.demo.tsx`),
+        'utf8',
+      );
+      expect(source).not.toContain('isPolar');
+      expect(source).not.toContain("type: 'polar2D'");
+      expect(source).not.toContain('<ChartExtension');
+      expect(source).toContain('Football_pitch_metric_tr.svg');
     }
   });
 

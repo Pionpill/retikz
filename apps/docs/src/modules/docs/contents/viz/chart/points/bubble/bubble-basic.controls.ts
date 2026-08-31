@@ -2,18 +2,18 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPointCoordinateControl } from '../point-coordinate-control';
 import { GAPMINDER_BUBBLE_YEAR, gapminderBubbleData } from './bubble-basic.data';
 
 /** 基础 Bubble playground 的稳定控件 id */
 export const BUBBLE_BASIC_CONTROL_IDS = {
+  coordinateSystem: 'bubble-basic-coordinate-system',
   colorByContinent: 'bubble-basic-color-by-continent',
   xScale: 'bubble-basic-x-scale',
   xTickCount: 'bubble-basic-x-tick-count',
   xTickMarks: 'bubble-basic-x-tick-marks',
   xTickLabels: 'bubble-basic-x-tick-labels',
   xGrid: 'bubble-basic-x-grid',
-  pointFillEnabled: 'bubble-basic-point-fill-enabled',
-  pointFill: 'bubble-basic-point-fill',
   pointStrokeEnabled: 'bubble-basic-point-stroke-enabled',
   pointStroke: 'bubble-basic-point-stroke',
   pointShape: 'bubble-basic-point-shape',
@@ -42,6 +42,17 @@ export const bubbleBasicControls = definePreviewControls({
             { key: 'population', label: '人口' },
           ],
         },
+      ],
+    },
+    {
+      label: '坐标',
+      controls: [
+        createPointCoordinateControl({
+          id: BUBBLE_BASIC_CONTROL_IDS.coordinateSystem,
+          label: '坐标系',
+          cartesianLabel: '笛卡尔',
+          polarLabel: '极坐标',
+        }),
       ],
     },
     {
@@ -102,19 +113,6 @@ export const bubbleBasicControls = definePreviewControls({
       controls: [
         {
           kind: 'switch',
-          id: BUBBLE_BASIC_CONTROL_IDS.pointFillEnabled,
-          label: '填充',
-          defaultValue: false,
-        },
-        {
-          kind: 'color',
-          id: BUBBLE_BASIC_CONTROL_IDS.pointFill,
-          label: '填充色',
-          defaultValue: 'currentColor',
-          visibleWhen: { controlId: BUBBLE_BASIC_CONTROL_IDS.pointFillEnabled, oneOf: [true] },
-        },
-        {
-          kind: 'switch',
           id: BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled,
           label: '描边',
           defaultValue: false,
@@ -134,7 +132,6 @@ export const bubbleBasicControls = definePreviewControls({
           options: [
             { value: 'circle', label: '圆形' },
             { value: 'rectangle', label: '矩形' },
-            { value: 'ellipse', label: '椭圆形' },
             { value: 'diamond', label: '菱形' },
           ],
         },
@@ -156,20 +153,20 @@ export const bubbleBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: bubbleBasicControls,
   canonicalValues: {
+    [BUBBLE_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [BUBBLE_BASIC_CONTROL_IDS.colorByContinent]: true,
     [BUBBLE_BASIC_CONTROL_IDS.xScale]: 'log',
     [BUBBLE_BASIC_CONTROL_IDS.xTickCount]: 10,
     [BUBBLE_BASIC_CONTROL_IDS.xTickMarks]: true,
     [BUBBLE_BASIC_CONTROL_IDS.xTickLabels]: true,
     [BUBBLE_BASIC_CONTROL_IDS.xGrid]: true,
-    [BUBBLE_BASIC_CONTROL_IDS.pointFillEnabled]: false,
-    [BUBBLE_BASIC_CONTROL_IDS.pointFill]: 'currentColor',
     [BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled]: false,
     [BUBBLE_BASIC_CONTROL_IDS.pointStroke]: 'currentColor',
     [BUBBLE_BASIC_CONTROL_IDS.pointShape]: 'circle',
     [BUBBLE_BASIC_CONTROL_IDS.pointFillOpacity]: 0.7,
   },
   relatedApis: [
+    'ChartExtension.coordinate',
     'BubbleEncodings.x',
     'BubbleEncodings.y',
     'BubbleEncodings.size',
@@ -177,7 +174,6 @@ export const previewControlContract = {
     'PlotAxis.ticks',
     'PlotAxis.tickLabels',
     'PlotAxis.grid',
-    'BubbleProperties.fill',
     'BubbleProperties.stroke',
     'BubbleProperties.shape',
     'BubbleProperties.fillOpacity',

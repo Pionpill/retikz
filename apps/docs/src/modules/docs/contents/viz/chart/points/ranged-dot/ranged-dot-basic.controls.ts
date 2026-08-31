@@ -2,9 +2,11 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPointCoordinateControl } from '../point-coordinate-control';
 import { rangedDotData } from './ranged-dot-basic.data';
 
 export const RANGED_DOT_CONTROL_IDS = {
+  coordinateSystem: 'ranged-dot-coordinate-system',
   lineStyle: 'ranged-dot-line-style',
   lineColor: 'ranged-dot-line-color',
   strokeWidth: 'ranged-dot-stroke-width',
@@ -32,6 +34,17 @@ export const rangedDotBasicControls = definePreviewControls({
             { key: 'forestArea2022', label: '2022 年（%）' },
           ],
         },
+      ],
+    },
+    {
+      label: '坐标',
+      controls: [
+        createPointCoordinateControl({
+          id: RANGED_DOT_CONTROL_IDS.coordinateSystem,
+          label: '坐标系',
+          cartesianLabel: '笛卡尔',
+          polarLabel: '极坐标',
+        }),
       ],
     },
     {
@@ -81,6 +94,7 @@ export const rangedDotBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: rangedDotBasicControls,
   canonicalValues: {
+    [RANGED_DOT_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [RANGED_DOT_CONTROL_IDS.lineStyle]: 'solid',
     [RANGED_DOT_CONTROL_IDS.lineColor]: '#94a3b8',
     [RANGED_DOT_CONTROL_IDS.strokeWidth]: 2,
@@ -89,6 +103,7 @@ export const previewControlContract = {
     [RANGED_DOT_CONTROL_IDS.endColor]: '#f97316',
   },
   relatedApis: [
+    'ChartExtension.coordinate',
     'RangedDotProperties.range',
     'RangedDotProperties.point',
     'RangedDotProperties.startPoint',

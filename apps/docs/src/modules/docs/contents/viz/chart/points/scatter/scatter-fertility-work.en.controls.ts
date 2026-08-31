@@ -2,6 +2,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPointCoordinateControl } from '../point-coordinate-control';
 import { SCATTER_FERTILITY_WORK_CONTROL_IDS } from './scatter-fertility-work.controls';
 import { fertilityWorkData, WORLD_BANK_FERTILITY_WORK_YEAR } from './scatter-fertility-work.data';
 import { createScatterPointControls } from './scatter-point-controls';
@@ -27,6 +28,17 @@ export const scatterFertilityWorkControls = definePreviewControls({
             { key: 'incomeGroup', label: 'Income group' },
           ],
         },
+      ],
+    },
+    {
+      label: 'Coordinate',
+      controls: [
+        createPointCoordinateControl({
+          id: SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem,
+          label: 'Coordinate system',
+          cartesianLabel: 'Cartesian',
+          polarLabel: 'Polar',
+        }),
       ],
     },
     {
@@ -62,6 +74,7 @@ export const scatterFertilityWorkControls = definePreviewControls({
 export const previewControlContract = {
   controls: scatterFertilityWorkControls,
   canonicalValues: {
+    [SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.colorByCategory]: true,
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.shapeByCategory]: true,
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointSize]: 5,
@@ -70,6 +83,7 @@ export const previewControlContract = {
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointOpacity]: 0.65,
   },
   relatedApis: [
+    'ChartExtension.coordinate',
     'ScatterEncodings.color',
     'ScatterEncodings.shape',
     'ScatterProperties.size',

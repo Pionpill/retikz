@@ -42,9 +42,9 @@ type ScatterShapeControlOptions = {
   /** 控件标签 */
   label: string;
   /** 初始形状 */
-  defaultValue: 'circle' | 'rectangle' | 'ellipse' | 'diamond';
+  defaultValue: 'circle' | 'rectangle' | 'diamond';
   /** 内置形状的本地化标签 */
-  labels: Readonly<Record<'circle' | 'rectangle' | 'ellipse' | 'diamond', string>>;
+  labels: Readonly<Record<'circle' | 'rectangle' | 'diamond', string>>;
 };
 
 /** Scatter 公共图元控件配置 */
@@ -204,7 +204,6 @@ const createScatterPointControlsImplementation = (
           options: [
             { value: 'circle', label: options.shape.labels.circle },
             { value: 'rectangle', label: options.shape.labels.rectangle },
-            { value: 'ellipse', label: options.shape.labels.ellipse },
             { value: 'diamond', label: options.shape.labels.diamond },
           ],
         },

@@ -6,6 +6,7 @@ import { PlotAxis } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
+import { resolvePointPreviewLayout } from '../point-coordinate-control';
 import { BUBBLE_BASIC_CONTROL_IDS } from './bubble-basic.controls';
 import { gapminderBubbleData } from './bubble-basic.data';
 import { previewControlContract } from './bubble-basic.en.controls';
@@ -13,7 +14,7 @@ import { previewControlContract } from './bubble-basic.en.controls';
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <BubbleChart>
     <ChartData data={gapminderBubbleData} />
-    <ChartLayout width={800} height={500} />
+    <ChartLayout {...resolvePointPreviewLayout(values[BUBBLE_BASIC_CONTROL_IDS.coordinateSystem])} />
     <BubbleEncodings
       x={
         values[BUBBLE_BASIC_CONTROL_IDS.xScale] === 'log'
@@ -27,7 +28,11 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartTitle>Income, life expectancy, and population</ChartTitle>
     <ChartSubtitle>142 countries and territories in 2007; bubble area is driven by population</ChartSubtitle>
     <ChartSource>Gapminder data package, 2007 cross-section; GDP per capita in PPP dollars</ChartSource>
-    <ChartExtension>
+    <ChartExtension
+      coordinate={
+        values[BUBBLE_BASIC_CONTROL_IDS.coordinateSystem] === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }
+      }
+    >
       <PlotAxis
         dimension="x"
         ticks={{
@@ -40,9 +45,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <PlotAxis dimension="y" grid />
     </ChartExtension>
     <BubbleProperties
-      {...(values[BUBBLE_BASIC_CONTROL_IDS.pointFillEnabled]
-        ? { fill: values[BUBBLE_BASIC_CONTROL_IDS.pointFill] }
-        : {})}
       {...(values[BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled]
         ? { stroke: values[BUBBLE_BASIC_CONTROL_IDS.pointStroke] }
         : {})}

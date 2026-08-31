@@ -2,6 +2,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPointCoordinateControl } from '../point-coordinate-control';
 import { REGRESSION_BASIC_CONTROL_IDS } from './regression-basic.controls';
 import { irisRegressionData } from './regression-basic.data';
 
@@ -25,6 +26,17 @@ export const regressionBasicControls = definePreviewControls({
             { key: 'species', label: 'Species' },
           ],
         },
+      ],
+    },
+    {
+      label: 'Coordinate',
+      controls: [
+        createPointCoordinateControl({
+          id: REGRESSION_BASIC_CONTROL_IDS.coordinateSystem,
+          label: 'Coordinate system',
+          cartesianLabel: 'Cartesian',
+          polarLabel: 'Polar',
+        }),
       ],
     },
     {
@@ -132,6 +144,7 @@ export const regressionBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: regressionBasicControls,
   canonicalValues: {
+    [REGRESSION_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [REGRESSION_BASIC_CONTROL_IDS.groupBySpecies]: true,
     [REGRESSION_BASIC_CONTROL_IDS.method]: 'linear',
     [REGRESSION_BASIC_CONTROL_IDS.order]: 3,
@@ -143,6 +156,7 @@ export const previewControlContract = {
     [REGRESSION_BASIC_CONTROL_IDS.trendStrokeOpacity]: 0.9,
   },
   relatedApis: [
+    'ChartExtension.coordinate',
     'RegressionEncodings.series',
     'RegressionProperties.method',
     'RegressionProperties.sampleCount',

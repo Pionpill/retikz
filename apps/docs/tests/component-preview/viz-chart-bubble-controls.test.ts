@@ -97,17 +97,16 @@ describe('Viz Chart Bubble controls', () => {
     ).toBe(true);
   });
 
-  it('双语 controls 保持相同结构且不提供固定 size', () => {
+  it('双语 controls 保持相同结构，且不提供会被分类色编码覆盖的固定填充', () => {
     expect(comparable(basicZh)).toEqual(comparable(basicEn));
     expect(basicZh.canonicalValues).toEqual({
+      'bubble-basic-coordinate-system': 'cartesian2D',
       'bubble-basic-color-by-continent': true,
       'bubble-basic-x-scale': 'log',
       'bubble-basic-x-tick-count': 10,
       'bubble-basic-x-tick-marks': true,
       'bubble-basic-x-tick-labels': true,
       'bubble-basic-x-grid': true,
-      'bubble-basic-point-fill-enabled': false,
-      'bubble-basic-point-fill': 'currentColor',
       'bubble-basic-point-stroke-enabled': false,
       'bubble-basic-point-stroke': 'currentColor',
       'bubble-basic-point-shape': 'circle',
@@ -115,14 +114,13 @@ describe('Viz Chart Bubble controls', () => {
     });
     const controlFields = getPreviewControlFields(basicZh.controls);
     expect(controlFields.map(control => control.id)).toEqual([
+      'bubble-basic-coordinate-system',
       'bubble-basic-color-by-continent',
       'bubble-basic-x-scale',
       'bubble-basic-x-tick-count',
       'bubble-basic-x-tick-marks',
       'bubble-basic-x-tick-labels',
       'bubble-basic-x-grid',
-      'bubble-basic-point-fill-enabled',
-      'bubble-basic-point-fill',
       'bubble-basic-point-stroke-enabled',
       'bubble-basic-point-stroke',
       'bubble-basic-point-shape',
@@ -135,15 +133,21 @@ describe('Viz Chart Bubble controls', () => {
       max: 20,
       step: 1,
     });
+    const shapeControl = controlFields.find(control => control.id === 'bubble-basic-point-shape');
+    expect(shapeControl).toMatchObject({ kind: 'select' });
+    if (shapeControl?.kind === 'select') {
+      expect(shapeControl.options.map(option => option.value)).toEqual(['circle', 'rectangle', 'diamond']);
+    }
     expect(Object.keys(basicZh.canonicalValues).sort()).toEqual(
       getPreviewControlFields(basicZh.controls)
         .map(control => control.id)
         .sort(),
     );
     expect(basicZh.relatedApis).toContain('BubbleEncodings.size');
+    expect(basicZh.relatedApis).toContain('ChartExtension.coordinate');
     expect(basicZh.relatedApis).toContain('BubbleEncodings.color');
     expect(basicZh.relatedApis).not.toContain('BubbleProperties.size');
-    expect(basicZh.relatedApis).toContain('BubbleProperties.fill');
+    expect(basicZh.relatedApis).not.toContain('BubbleProperties.fill');
     expect(basicZh.relatedApis).toContain('BubbleProperties.fillOpacity');
     expect(basicZh.relatedApis).not.toContain('BubbleProperties.opacity');
   });

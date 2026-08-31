@@ -38,7 +38,7 @@ export const previewControls = definePreviewControls({
         shape: {
           label: 'Shape',
           defaultValue: 'circle',
-          labels: { circle: 'Circle', rectangle: 'Rectangle', ellipse: 'Ellipse', diamond: 'Diamond' },
+          labels: { circle: 'Circle', rectangle: 'Rectangle', diamond: 'Diamond' },
         },
         opacity: { label: 'Shot point opacity', defaultValue: 0.9, min: 0.4, max: 1, step: 0.02 },
       }),
