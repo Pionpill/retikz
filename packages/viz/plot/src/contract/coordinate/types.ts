@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import type { PlotCoordinate } from '../../schemas';
+import type { PlotCoordinate, PolarInterpolationValue } from '../../schemas';
 import type { PositionScale } from '../scale';
 import type { Cell, CellGeometry } from './cell';
 
@@ -66,8 +66,10 @@ export type PolarCoordinateFrame = {
   startAngle: number;
   /** 角向终止角（度，角向 range 终点） */
   endAngle: number;
-  /** 角向 scale 是否连续；连续时 path 可做段内采样 */
-  continuousAngle: boolean;
+  /** 固定半径边界与插值敏感 mark 共用的已解析连接空间 */
+  interpolation: PolarInterpolationValue;
+  /** 固定半径 chord 边界使用的有序角向结构骨架，单位为度 */
+  angularSkeleton: ReadonlyArray<number>;
   /** angle 位置 scale（range = [startAngle, endAngle] 度） */
   primary: PositionScale;
   /** radius 位置 scale（range = [innerRadius, outerRadius]） */
@@ -80,8 +82,8 @@ export type PolarCoordinateFrame = {
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
   /** 把已映射的极坐标对（theta 度, radius user units）换算成屏幕点 */
   projectPolar: (thetaDeg: number, radius: number) => Position | null;
-  /** 正交 cell -> 环扇几何 */
-  projectCell: (cell: Cell) => CellGeometry;
+  /** 正交 cell -> 环扇或直弦 contour；options 只覆盖本次投影，不修改共享 frame */
+  projectCell: (cell: Cell, options?: { interpolation?: PolarInterpolationValue; pull?: number }) => CellGeometry;
 };
 
 /** 具备 cell 几何投影能力的运行时坐标帧 */

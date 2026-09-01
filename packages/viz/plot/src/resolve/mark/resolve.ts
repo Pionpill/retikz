@@ -7,8 +7,10 @@ import type { AnyMarkDefinition, CoordinateFrame, FieldCollector, IntervalContex
 import type { IRPlotMark, IRPlotMarkOperation } from '../../schemas';
 import type { MarkOperationResolution, MarkResolveContext } from './types';
 
+import { cellGeometryAnchor } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import { cellAnchor, roleAnchor } from '../../providers';
+import { cellAnchor, intervalCellGeometry, roleAnchor } from '../../providers';
+import { isBuiltinMark, PlotMark } from '../../schemas';
 
 /** 查找 mark definition；未注册 type 会给出上下文明确的 fail-loud 诊断 */
 export const resolveMarkDefinition = (mark: IRPlotMarkOperation, context: MarkResolveContext): AnyMarkDefinition => {
@@ -66,6 +68,10 @@ export const datumAnchor = (
   intervalContext?: IntervalContext,
 ): [number, number] | null => {
   const { definition, operation } = resolveMarkOperation(mark, context);
+  if (isBuiltinMark(operation) && operation.type === PlotMark.Interval) {
+    const geometry = intervalCellGeometry(operation, row, frame, intervalContext);
+    return geometry === null ? null : cellGeometryAnchor(geometry);
+  }
   if (definition.buildCell !== undefined) {
     return cellAnchor(definition.buildCell(operation as never, row, frame, intervalContext), frame);
   }

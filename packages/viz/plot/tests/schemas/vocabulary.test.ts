@@ -10,6 +10,8 @@ import {
   JitterAxis,
   NormalizeBasis,
   PairMeasureOperationKind,
+  PolarInterpolation,
+  PositionScaleContinuity,
   ReferenceMarkKind,
   RelationOrthogonalLabelStep,
   RelationRouteStepKind,
@@ -69,6 +71,8 @@ describe('schema vocabulary constants', () => {
     expect(Object.values(RelationRoutingKind).sort()).toEqual(['bend', 'line', 'orthogonal']);
     expect(Object.values(RelationOrthogonalLabelStep).sort()).toEqual(['last', 'main']);
     expect(Object.values(ReferenceMarkKind)).toEqual(['region']);
+    expect(Object.values(PolarInterpolation).sort()).toEqual(['chord', 'polar']);
+    expect(Object.values(PositionScaleContinuity).sort()).toEqual(['continuous', 'discrete']);
   });
 
   it('reuses core path vocabularies for relation routing and ribbon options', () => {

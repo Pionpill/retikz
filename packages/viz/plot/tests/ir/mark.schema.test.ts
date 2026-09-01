@@ -974,3 +974,53 @@ describe('MarkSchema (contract)', () => {
     expect(MarkOperationSchema.parse(m)).toEqual(m);
   });
 });
+
+describe('Polar interpolation mark contract', () => {
+  it.each(['polar', 'chord'] as const)('round-trips interpolation=%s for supported marks', interpolation => {
+    const marks = [
+      {
+        type: 'path',
+        interpolation,
+        encoding: { x: { field: 'angle' }, y: { field: 'radius' } },
+      },
+      {
+        type: 'interval',
+        interpolation,
+        encoding: { x: { field: 'angle' }, y: { field: 'radius' } },
+      },
+      {
+        type: 'reference',
+        interpolation,
+        yTo: 2,
+        encoding: { y: { value: 1 } },
+      },
+      {
+        type: 'relation',
+        source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
+        target: { project: { x: 'targetAngle', y: 'targetRadius' } },
+        path: { interpolation },
+      },
+    ];
+
+    for (const mark of marks) {
+      expect(MarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    }
+  });
+
+  it.each(['path', 'interval', 'reference'] as const)('rejects unknown %s interpolation', type => {
+    const encoding = type === 'reference' ? { y: { value: 1 } } : { x: { field: 'x' }, y: { field: 'y' } };
+
+    expect(() => MarkSchema.parse({ type, interpolation: 'spline', encoding })).toThrow();
+  });
+
+  it('rejects unknown relation path interpolation', () => {
+    expect(() =>
+      MarkSchema.parse({
+        type: 'relation',
+        source: { id: 'A' },
+        target: { id: 'B' },
+        path: { interpolation: 'spline' },
+      }),
+    ).toThrow();
+  });
+});

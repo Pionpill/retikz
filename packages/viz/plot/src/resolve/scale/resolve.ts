@@ -9,6 +9,7 @@ import type {
   ChannelScaleResolution,
   ChannelScaleResolveContext,
   PositionScale,
+  PositionScaleContinuityValue,
 } from '../../contract';
 import type { IRPlotMarkOperation, IRPlotScale, IRPlotScaleOperation } from '../../schemas';
 import type { ScaleResolveContext } from './types';
@@ -179,6 +180,23 @@ export const resolvePositionScale = (
   }
   const effectiveOperation = resolveBuiltinPositionOperation(operation, values, fallbackRange);
   return def.resolve(parseScaleOperation(def, effectiveOperation), values, fallbackRange);
+};
+
+/**
+ * 读取 position scale definition 声明的拓扑连续性
+ * @description 统一经 registry lookup 与 family 诊断，供坐标系推断空间插值默认值；不按内置 type 猜测
+ */
+export const resolvePositionScaleContinuity = (
+  operation: IRPlotScaleOperation,
+  context: ScaleResolveContext,
+): PositionScaleContinuityValue => {
+  const def = resolveScaleDefinition(operation, context);
+  if (def.family !== 'position') {
+    throw new RetikzPlotError(
+      `resolvePositionScaleContinuity: ${operation.type} scale "${operation.name}" cannot drive a positional (x/y) channel; color scales do not declare position continuity`,
+    );
+  }
+  return def.continuity;
 };
 
 /**

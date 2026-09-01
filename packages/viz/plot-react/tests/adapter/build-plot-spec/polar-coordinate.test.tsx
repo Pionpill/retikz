@@ -6,10 +6,36 @@ import { describe, expect, it } from 'vitest';
 import { createPolarPieSpec } from '../../../../plot/tests/helpers/plot-spec-fixtures';
 import { buildPlotIR } from '../../../src/adapter';
 import { PlotAxis } from '../../../src/components/guides';
-import { IntervalMark, PathMark } from '../../../src/components/marks';
+import { IntervalMark, PathMark, ReferenceMark, RelationMark } from '../../../src/components/marks';
 import { PlotScale } from '../../../src/components/scales';
 
 describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius', () => {
+  it('forwards coordinate and interpolation-sensitive mark overrides unchanged', () => {
+    const spec = buildPlotIR(
+      <>
+        <PathMark x="angle" y="radius" interpolation="polar" />
+        <IntervalMark x="angle" y="radius" interpolation="chord" />
+        <ReferenceMark y={1} yTo={2} interpolation="polar" />
+        <RelationMark
+          source={{ project: { x: 'sourceAngle', y: 'sourceRadius' } }}
+          target={{ project: { x: 'targetAngle', y: 'targetRadius' } }}
+          path={{ interpolation: 'chord' }}
+        />
+      </>,
+      '__plot',
+      { coordinate: { type: 'polar2D', interpolation: 'chord' } },
+    );
+
+    expect(spec.coordinate).toMatchObject({ interpolation: 'chord' });
+    expect(spec.marks).toMatchObject([
+      { type: 'path', interpolation: 'polar' },
+      { type: 'interval', interpolation: 'chord' },
+      { type: 'reference', interpolation: 'polar' },
+      { type: 'relation', path: { interpolation: 'chord' } },
+    ]);
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
+  });
+
   it('radial_bar_equivalence：coordinate="polar2D" + <IntervalMark> → polar2D + band 角向 + interval mark', () => {
     const spec = buildPlotIR(<IntervalMark x="month" y="amount" color="month" />, '__plot', {
       coordinate: 'polar2D',

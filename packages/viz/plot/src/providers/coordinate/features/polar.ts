@@ -1,6 +1,7 @@
+import type { IRStep } from '@retikz/core';
 import type { Position } from '@retikz/math';
 
-import { isFiniteNumber, pointAtArcAngle } from '@retikz/math';
+import { DEFAULT_EPSILON, isFiniteNumber, pointAtArcAngle } from '@retikz/math';
 
 import type {
   AnyCoordinateDefinition,
@@ -11,10 +12,10 @@ import type {
   PositionScale,
   TickSet,
 } from '../../../contract';
-import type { IRPlotCoordinate, IRPlotPolar1DCoordinate } from '../../../schemas';
+import type { IRPlotCoordinate, IRPlotPolar1DCoordinate, PolarInterpolationValue } from '../../../schemas';
 
-import { cellInterval, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
-import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema } from '../../../schemas';
+import { cellInterval, PositionScaleContinuity, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
+import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema, PolarInterpolation } from '../../../schemas';
 import { computePolarCoordinate } from '../../../shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
@@ -60,8 +61,10 @@ export type PolarCoordinateInput = {
   startAngle: number;
   /** 角向终止角（度） */
   endAngle: number;
-  /** 角向 scale 是否连续（linear / time）；决定连续 mark 是否段内采样 */
-  continuousAngle: boolean;
+  /** 固定半径边界与插值敏感 mark 共用的已解析连接空间 */
+  interpolation: PolarInterpolationValue;
+  /** 固定半径 chord 边界使用的有序角向结构骨架，单位为度 */
+  angularSkeleton: ReadonlyArray<number>;
   /** angle 位置 scale */
   primary: PositionScale;
   /** radius 位置 scale */
@@ -90,22 +93,115 @@ export const createPolarCoordinate = (input: PolarCoordinateInput): PolarCoordin
     outerRadius: input.outerRadius,
     startAngle: input.startAngle,
     endAngle: input.endAngle,
-    continuousAngle: input.continuousAngle,
+    interpolation: input.interpolation,
+    angularSkeleton: input.angularSkeleton,
     primary: input.primary,
     secondary: input.secondary,
     roleScales: { x: input.primary, y: input.secondary },
     project,
     projectRoles: values => project(values[0], values[1]),
     projectPolar,
-    projectCell: cell => ({
-      kind: 'sector',
-      center: input.center,
-      innerRadius: cellInterval(cell, 'y')[0],
-      outerRadius: cellInterval(cell, 'y')[1],
-      startAngle: cellInterval(cell, 'x')[0],
-      endAngle: cellInterval(cell, 'x')[1],
-    }),
+    projectCell: (cell, options) => {
+      const [startAngle, endAngle] = cellInterval(cell, 'x');
+      const [innerRadius, outerRadius] = cellInterval(cell, 'y');
+      const pull = options?.pull ?? 0;
+      const center = pull === 0 ? input.center : pointAtArcAngle(input.center, pull, (startAngle + endAngle) / 2);
+      const interpolation = options?.interpolation ?? input.interpolation;
+      if (interpolation === PolarInterpolation.Polar) {
+        return { kind: 'sector', center, innerRadius, outerRadius, startAngle, endAngle };
+      }
+      const fullSweep = isClosedPolarSweep(startAngle, endAngle);
+      const angles = fullSweep ? input.angularSkeleton : [startAngle, endAngle];
+      if ((fullSweep && angles.length < 3) || (!fullSweep && angles.length < 2)) {
+        return { kind: 'contour', points: [] };
+      }
+      const collapsedInnerBoundary = Math.abs(innerRadius) <= DEFAULT_EPSILON;
+      const innerPoints = collapsedInnerBoundary
+        ? fullSweep
+          ? []
+          : [center]
+        : angles.map(angle => polarPoint(center, angle, innerRadius));
+      const points = [
+        ...innerPoints,
+        ...[...angles].reverse().map(angle => polarPoint(center, angle, outerRadius)),
+      ].filter((point): point is Position => point !== null);
+      return { kind: 'contour', points };
+    },
   };
+};
+
+const samePolarDirection = (left: number, right: number): boolean => {
+  const leftRadians = (left * Math.PI) / 180;
+  const rightRadians = (right * Math.PI) / 180;
+  return (
+    Math.abs(Math.cos(leftRadians) - Math.cos(rightRadians)) <= DEFAULT_EPSILON &&
+    Math.abs(Math.sin(leftRadians) - Math.sin(rightRadians)) <= DEFAULT_EPSILON
+  );
+};
+
+/** 非零角向 sweep 的起止方向是否重合 */
+export const isClosedPolarSweep = (startAngle: number, endAngle: number): boolean =>
+  Math.abs(endAngle - startAngle) > DEFAULT_EPSILON && samePolarDirection(startAngle, endAngle);
+
+/**
+ * 固定半径 Polar 边界下沉为 Core path steps
+ * @description polar 使用精确 arc；chord 按 frame 的有序结构骨架连接，完整 sweep 在至少三个方向时闭合
+ */
+export const polarFixedRadiusSteps = (
+  frame: PolarCoordinateFrame,
+  radius: number,
+  interpolation: PolarInterpolationValue = frame.interpolation,
+  angleSpan: readonly [number, number] = [frame.startAngle, frame.endAngle],
+): Array<IRStep> | null => {
+  const [startAngle, endAngle] = angleSpan;
+  if (interpolation === PolarInterpolation.Polar) {
+    if (isClosedPolarSweep(startAngle, endAngle)) {
+      return [
+        { type: 'step', kind: 'move', to: frame.center },
+        { type: 'step', kind: 'circlePath', radius },
+      ];
+    }
+    const start = frame.projectPolar(startAngle, radius);
+    if (start === null) return null;
+    return [
+      { type: 'step', kind: 'move', to: start },
+      {
+        type: 'step',
+        kind: 'arc',
+        startAngle,
+        endAngle,
+        radius,
+        center: frame.center,
+      },
+    ];
+  }
+  const closed = isClosedPolarSweep(startAngle, endAngle);
+  const angles = frame.angularSkeleton.filter(angle =>
+    endAngle >= startAngle
+      ? angle >= startAngle - DEFAULT_EPSILON && angle <= endAngle + DEFAULT_EPSILON
+      : angle <= startAngle + DEFAULT_EPSILON && angle >= endAngle - DEFAULT_EPSILON,
+  );
+  if ((closed && angles.length < 3) || (!closed && angles.length < 2)) return null;
+  const points = angles
+    .map(angle => frame.projectPolar(angle, radius))
+    .filter((point): point is Position => point !== null);
+  if ((closed && points.length < 3) || (!closed && points.length < 2)) return null;
+  const steps: Array<IRStep> = [
+    { type: 'step', kind: 'move', to: points[0] },
+    ...points.slice(1).map((point): IRStep => ({ type: 'step', kind: 'line', to: point })),
+  ];
+  if (closed) steps.push({ type: 'step', kind: 'cycle' });
+  return steps;
+};
+
+const angularSkeleton = (scale: PositionScale, ticks: TickSet): Array<number> => {
+  const angles: Array<number> = [];
+  for (const value of ticks.values) {
+    const angle = scale.coordinate(value);
+    if (!isFiniteNumber(angle) || angles.some(existing => samePolarDirection(existing, angle))) continue;
+    angles.push(angle);
+  }
+  return angles;
 };
 
 /**
@@ -211,16 +307,31 @@ export const toPolarVertex = (
 export const densifyPolarSegments = (
   frame: PolarCoordinateFrame,
   vertices: ReadonlyArray<PolarVertex>,
+  options?: { closed?: boolean },
 ): Array<Position> => {
   if (vertices.length < 2) {
     return vertices.map(v => frame.projectPolar(v.theta, v.radius)).filter((p): p is Position => p !== null);
   }
+  const sampledVertices = [...vertices];
+  if (options?.closed) {
+    const first = vertices[0];
+    const last = vertices[vertices.length - 1];
+    let closureTheta = first.theta;
+    if (isClosedPolarSweep(frame.startAngle, frame.endAngle)) {
+      if (frame.endAngle > frame.startAngle) {
+        while (closureTheta <= last.theta + DEFAULT_EPSILON) closureTheta += 360;
+      } else {
+        while (closureTheta >= last.theta - DEFAULT_EPSILON) closureTheta -= 360;
+      }
+    }
+    sampledVertices.push({ theta: closureTheta, radius: first.radius });
+  }
   const points: Array<Position> = [];
-  const first = frame.projectPolar(vertices[0].theta, vertices[0].radius);
+  const first = frame.projectPolar(sampledVertices[0].theta, sampledVertices[0].radius);
   if (first) points.push(first);
-  for (let i = 1; i < vertices.length; i += 1) {
-    const a = vertices[i - 1];
-    const b = vertices[i];
+  for (let i = 1; i < sampledVertices.length; i += 1) {
+    const a = sampledVertices[i - 1];
+    const b = sampledVertices[i];
     // 段内中间点 + 段终点：t 从 1/(N+1) 走到 1（含终点）
     for (let step = 1; step <= RETIKZ_POLAR_SEGMENT_SAMPLES + 1; step += 1) {
       const t = step / (RETIKZ_POLAR_SEGMENT_SAMPLES + 1);
@@ -303,7 +414,12 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
       outerRadius: frameOuterRadius,
       startAngle: coordinate.startAngle,
       endAngle: coordinate.endAngle,
-      continuousAngle: isContinuousAngleScale(angleScaleDef.type),
+      interpolation:
+        coordinate.interpolation ??
+        (ctx.resolvePositionScaleContinuity(angleScaleDef) === PositionScaleContinuity.Continuous
+          ? PolarInterpolation.Polar
+          : PolarInterpolation.Chord),
+      angularSkeleton: angularSkeleton(angleScale, angularTicks ?? angleScale.ticks()),
       primary: angleScale,
       secondary: radiusScale,
     });
@@ -388,7 +504,8 @@ const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate>
       outerRadius: radius,
       startAngle,
       endAngle,
-      continuousAngle,
+      interpolation: continuousAngle ? PolarInterpolation.Polar : PolarInterpolation.Chord,
+      angularSkeleton: angularSkeleton(angleScale, angularTicks ?? angleScale.ticks()),
       primary: angleScale,
       secondary: angleScale,
     });

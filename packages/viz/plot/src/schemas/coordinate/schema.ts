@@ -2,7 +2,7 @@
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { discriminatedUnion, enum as zodEnum, literal, looseObject, number, object, union } from 'zod';
 
-import { BUILTIN_COORDINATE_TYPES, Cartesian1DOrientation, PlotCoordinate } from './constants';
+import { BUILTIN_COORDINATE_TYPES, Cartesian1DOrientation, PlotCoordinate, PolarInterpolation } from './constants';
 
 export const Cartesian2DSchema = object({
   type: literal(PlotCoordinate.Cartesian2D).describe('Discriminator: 2D cartesian space, x horizontal / y vertical'),
@@ -35,6 +35,11 @@ export const Polar2DSchema = object({
     .lt(1)
     .default(0)
     .describe('Donut hole radius as a fraction of the outer radius, 0..1 exclusive; 0 = solid disk (no hole)'),
+  interpolation: zodEnum(PolarInterpolation)
+    .optional()
+    .describe(
+      'Connection space for fixed-radius boundaries and interpolation-sensitive marks; omit to infer polar for continuous angular scales and chord for discrete angular scales',
+    ),
 }).describe(
   '2D polar coordinate system; owns the angle / radius scale bindings and the angular sweep / inner-radius geometry',
 );

@@ -135,6 +135,7 @@ export const applyDeclaration = (
       connectNulls,
       closure,
       curve,
+      interpolation,
       id,
       coordinateView,
       xAxisId,
@@ -180,6 +181,7 @@ export const applyDeclaration = (
       ...(connectNulls !== undefined ? { connectNulls } : {}),
       ...(closure !== undefined ? { closure } : {}),
       ...(curve !== undefined ? { curve } : {}),
+      ...(interpolation !== undefined ? { interpolation } : {}),
       ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),
       ...(opacityStyle !== undefined ? { opacity: opacityStyle } : {}),
       ...(lineCapStyle !== undefined ? { lineCap: lineCapStyle } : {}),
@@ -306,6 +308,7 @@ export const applyDeclaration = (
       percent,
       stack,
       bounds: explicitBounds,
+      interpolation,
       id,
       coordinateView,
       xAxisId,
@@ -349,6 +352,7 @@ export const applyDeclaration = (
     const effectiveFacetId = facetId ?? context.facetId;
     const effectiveTrackId = trackId ?? context.trackId;
     const intervalStyle = {
+      ...(interpolation !== undefined ? { interpolation } : {}),
       ...(fillStyle !== undefined ? { fill: fillStyle } : {}),
       ...(strokeStyle !== undefined ? { stroke: strokeStyle } : {}),
       ...(strokeWidthStyle !== undefined ? { strokeWidth: strokeWidthStyle } : {}),

@@ -1,12 +1,18 @@
 import type { IRNode, IRScope } from '@retikz/core';
 
+import { DataFieldType } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
+import { literal, strictObject } from 'zod';
 
+import type { CoordinateFrame } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 
+import { defineMark, defineScale } from '../../../src/contract';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
-import { PlotSchema } from '../../../src/schemas';
+import { linearPositionScale, resolveLinearScale } from '../../../src/providers';
+import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
 
 /**
  * contract polar 投影 lowering 测试。
@@ -31,6 +37,31 @@ const positionsOf = (layer: IRScope): Array<[number, number]> =>
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
+const FrameProbeSchema = strictObject({ type: literal('polar-frame-probe') });
+
+const resolvedInterpolationOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions): string | undefined => {
+  let captured: string | undefined;
+  const probe = defineMark({
+    schema: FrameProbeSchema,
+    lower: (_mark, _rows, frame: CoordinateFrame) => {
+      const value = Reflect.get(frame, 'interpolation');
+      captured = typeof value === 'string' ? value : undefined;
+      return null;
+    },
+  });
+  const withProbe = PlotSchema.parse({
+    ...spec,
+    marks: [...spec.marks, { type: 'polar-frame-probe' }],
+  });
+
+  expandOf(withProbe, datasets, {
+    ...opts,
+    ...options,
+    markDefinitions: [...(options?.markDefinitions ?? []), probe],
+  });
+  return captured;
+};
+
 /** 角向 a / 径向 r，均线性；用裸 x/y 通道（复用语义）或显式 angle/radius 通道 */
 const polarPointSpec = (encoding: Record<string, unknown>, extra: Partial<Record<string, unknown>> = {}): IRPlot =>
   PlotSchema.parse({
@@ -46,6 +77,83 @@ const polarPointSpec = (encoding: Record<string, unknown>, extra: Partial<Record
   });
 
 describe('lowerPlots polar 投影几何 (contract)', () => {
+  it('infers polar interpolation for a continuous angular scale', () => {
+    const spec = polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } });
+
+    expect(resolvedInterpolationOf(spec, { d: [{ theta: 0, value: 1 }] })).toBe(PolarInterpolation.Polar);
+  });
+
+  it.each(['band', 'point'] as const)('infers chord interpolation for a %s angular scale', type => {
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type, name: 'a' },
+        { type: 'linear', name: 'r', domain: [0, 10] },
+      ],
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      marks: [{ type: 'point', encoding: { x: { field: 'category' }, y: { field: 'value' } } }],
+    });
+
+    expect(resolvedInterpolationOf(spec, { d: [{ category: 'A', value: 1 }] })).toBe(PolarInterpolation.Chord);
+  });
+
+  it.each([
+    ['linear', PolarInterpolation.Chord],
+    ['point', PolarInterpolation.Polar],
+  ] as const)('coordinate interpolation overrides %s continuity with %s', (type, interpolation) => {
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type, name: 'a' },
+        { type: 'linear', name: 'r', domain: [0, 10] },
+      ],
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r', interpolation },
+      marks: [{ type: 'point', encoding: { x: { field: 'angle' }, y: { field: 'value' } } }],
+    });
+
+    expect(resolvedInterpolationOf(spec, { d: [{ angle: type === 'point' ? 'A' : 0, value: 1 }] })).toBe(interpolation);
+  });
+
+  it.each([
+    ['continuous', PolarInterpolation.Polar],
+    ['discrete', PolarInterpolation.Chord],
+  ] as const)('uses custom position scale continuity=%s', (continuity, expected) => {
+    const CustomAngleSchema = strictObject({ type: literal(`custom-${continuity}`), name: NonBlankStringSchema });
+    const customScale = defineScale({
+      family: 'position',
+      continuity,
+      schema: CustomAngleSchema,
+      isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
+      resolve: (_definition, values, range) =>
+        linearPositionScale(
+          resolveLinearScale(
+            { type: 'linear', name: `custom-${continuity}`, domain: [0, 1] },
+            values.filter((value): value is number => typeof value === 'number'),
+            range,
+          ),
+        ),
+    });
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: `custom-${continuity}`, name: 'a' },
+        { type: 'linear', name: 'r', domain: [0, 10] },
+      ],
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      marks: [{ type: 'point', encoding: { x: { field: 'angle' }, y: { field: 'value' } } }],
+    });
+
+    expect(resolvedInterpolationOf(spec, { d: [{ angle: 0, value: 1 }] }, { scaleDefinitions: [customScale] })).toBe(
+      expected,
+    );
+  });
+
   it('polar_full_circle_left_aligns_in_a_wide_canvas', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',

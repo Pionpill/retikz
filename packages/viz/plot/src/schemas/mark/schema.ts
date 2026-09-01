@@ -42,6 +42,7 @@ import {
   unknown,
 } from 'zod';
 
+import { PolarInterpolation } from '../coordinate';
 import {
   EncodingSchema,
   MarkChannelEncodingSchema,
@@ -705,6 +706,9 @@ export const PathMarkSchema = object({
     'Close the path using a cycle, a baseline, or a per-row stacked baseline. Set fill when the closed path should render as an area',
   ),
   curve: zodEnum(PathCurve).optional().describe('Connection curve between adjacent ordered points; default linear'),
+  interpolation: zodEnum(PolarInterpolation)
+    .optional()
+    .describe('Polar2D connection-space override; omit to inherit the resolved coordinate interpolation'),
   strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
     'Path stroke width: field-bound datum channel or constant core Path stroke width',
   ),
@@ -799,6 +803,9 @@ export const IntervalMarkSchema = object({
   bounds: IntervalBoundsSchema.optional().describe(
     'Per-role interval bounds keyed by coordinate role; omit to infer from the coordinate role',
   ),
+  interpolation: zodEnum(PolarInterpolation)
+    .optional()
+    .describe('Polar2D cell-boundary override; omit to inherit the resolved coordinate interpolation'),
   strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
     'Interval cell stroke width: field-bound datum channel or constant core Node stroke width',
   ),
@@ -815,10 +822,10 @@ export const IntervalMarkSchema = object({
     'Interval cell fill opacity: field-bound datum channel or constant opacity 0..1',
   ),
   padAngle: NonNegativeNumberSchema.optional().describe(
-    'Angular gap in degrees applied to polar sector cells; each sector shrinks by half this angle on both sides. Cartesian cells ignore it',
+    'Angular gap in degrees applied to polar cells; each cell shrinks by half this angle on both sides before sector or chord-contour projection. Cartesian cells ignore it',
   ),
   pull: PointNonnegativeNumberStyleSchema.optional().describe(
-    'Static radial offset in user units for polar sector cells; moves the sector center along the final mid angle. Only sector geometry supports it',
+    'Static radial offset in user units for polar cells; moves the local projection center along the final mid angle before sector or chord-contour projection',
   ),
   anchorId: AnchorIdSchema.optional().describe(
     'Stable id rule written to each generated core interval Node; takes precedence over datumIdField for the node id',
@@ -840,6 +847,9 @@ export const ReferenceMarkSchema = strictObject({
     .describe(
       'Reference form override. Set to region to require lower/upper bounds for every consumed coordinate role and fill the bounded reference cell; omit to infer line or one-axis band',
     ),
+  interpolation: zodEnum(PolarInterpolation)
+    .optional()
+    .describe('Polar2D band or region boundary override; fixed-angle reference lines remain straight'),
   yTo: union([number(), NonBlankStringSchema])
     .optional()
     .describe(
@@ -896,6 +906,9 @@ export const ReferenceMarkSchema = strictObject({
   );
 
 export const RelationPathGeometrySchema = strictObject({
+  interpolation: zodEnum(PolarInterpolation)
+    .optional()
+    .describe('Polar2D default projected-target path override; explicit route, routing, and ribbon do not consume it'),
   via: array(PlotTargetRefSchema)
     .optional()
     .describe('Optional intermediate waypoints; each projected waypoint may generate a core Coordinate'),
@@ -1010,7 +1023,10 @@ export const RelationMarkSchema = strictObject({
       ctx.addIssue({
         code: 'custom',
         path: ['path'],
-        message: 'ribbon relation marks cannot use path options',
+        message:
+          mark.path.interpolation === undefined
+            ? 'ribbon relation marks cannot use path options'
+            : 'relation interpolation override is not supported for ribbon geometry',
       });
     }
     if (kind === RelationGeometryKind.Ribbon && mark.ribbon === undefined) {

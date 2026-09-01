@@ -90,28 +90,55 @@ const ROWS = [
 ];
 
 describe('lowerPlots polar guide — angular axis (contract)', () => {
-  // Happy path：角向轴 = 外圆弧 + 每类别角度刻度 + 圆周外 Node 标签
-  it('angular_axis_produces_arc_axis_line', () => {
+  it('discrete_angular_axis_defaults_to_a_closed_chord_boundary', () => {
     const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x' }]), { d: ROWS }, opts);
     const { children, markIndex } = layersOf(outer);
-    // 角向轴层在 mark 层之后（压顶）
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     expect(axisLayer).toBeDefined();
-    // 轴线含 arc step（外圆弧）
-    expect(allKinds(axisLayer)).toContain('arc');
+    expect(allKinds(axisLayer)).toContain('line');
+    expect(allKinds(axisLayer)).toContain('cycle');
+    expect(allKinds(axisLayer)).not.toContain('arc');
+  });
+
+  it('partial_discrete_angular_axis_connects_each_structural_direction_without_closing', () => {
+    const outer = expandOf(
+      polarSpec([{ type: 'axis', dimension: 'x' }], { startAngle: 0, endAngle: 180 }),
+      { d: ROWS.slice(0, 3) },
+      opts,
+    );
+    const { children, markIndex } = layersOf(outer);
+    const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
+    const boundary = pathsOf(axisLayer)[0];
+
+    expect(stepKinds(boundary)).toEqual(['move', 'line', 'line']);
+  });
+
+  it('coordinate_override_keeps_a_circular_axis_line_for_a_discrete_scale', () => {
+    const outer = expandOf(
+      polarSpec([{ type: 'axis', dimension: 'x' }], { interpolation: 'polar' }),
+      { d: ROWS },
+      opts,
+    );
+    const { children, markIndex } = layersOf(outer);
+    const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
+    expect(allKinds(axisLayer)).toContain('circlePath');
   });
 
   it('angular_axis_arc_radius_near_outer_radius', () => {
-    const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x' }]), { d: ROWS }, opts);
+    const outer = expandOf(
+      polarSpec([{ type: 'axis', dimension: 'x' }], { interpolation: 'polar' }),
+      { d: ROWS },
+      opts,
+    );
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
-    const arcStep = pathsOf(axisLayer)
+    const circleStep = pathsOf(axisLayer)
       .flatMap(p => p.children)
-      .find(step => step.kind === 'arc') as { radius?: number } | undefined;
-    expect(arcStep).toBeDefined();
+      .find(step => step.kind === 'circlePath') as { radius?: number } | undefined;
+    expect(circleStep).toBeDefined();
     // 外圆弧半径 ≈ outerRadius（480×300、有角向标签留白 → outerRadius < 150）
-    expect(arcStep?.radius).toBeGreaterThan(0);
-    expect(arcStep?.radius).toBeLessThanOrEqual(150);
+    expect(circleStep?.radius).toBeGreaterThan(0);
+    expect(circleStep?.radius).toBeLessThanOrEqual(150);
   });
 
   it('angular_axis_tick_per_category', () => {
@@ -129,13 +156,17 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
   });
 
   it('angular_axis_labels_outside_arc', () => {
-    const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'x' }]), { d: ROWS }, opts);
+    const outer = expandOf(
+      polarSpec([{ type: 'axis', dimension: 'x' }], { interpolation: 'polar' }),
+      { d: ROWS },
+      opts,
+    );
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
-    const arcStep = pathsOf(axisLayer)
+    const circleStep = pathsOf(axisLayer)
       .flatMap(p => p.children)
-      .find(step => step.kind === 'arc') as { radius?: number };
-    const outerRadius = arcStep.radius as number;
+      .find(step => step.kind === 'circlePath') as { radius?: number };
+    const outerRadius = circleStep.radius as number;
     // polar center = plot 区中心。每个标签到圆心的距离 > outerRadius（圆周外侧）
     const labels = nodesOf(axisLayer);
     // 圆心估算：所有标签 position 的中位附近——用 outerRadius 反推不便，改判每个标签离任意标签集中心更远的弱断言：
@@ -154,7 +185,8 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     const { children, markIndex } = layersOf(outer);
     const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
     expect(nodesOf(axisLayer)).toHaveLength(0);
-    expect(allKinds(axisLayer)).toContain('arc');
+    expect(allKinds(axisLayer)).toContain('cycle');
+    expect(allKinds(axisLayer)).not.toContain('arc');
   });
 });
 
@@ -257,31 +289,40 @@ describe('lowerPlots polar guide — grid (contract)', () => {
     guides: [{ type: 'axis', dimension: 'y', grid: true }],
   });
 
-  // Happy path：radius axis grid:true → 每 radius tick 一个同心环（arc step）
-  it('radius_grid_produces_concentric_rings_as_arcs', () => {
+  // Happy path：radius axis grid:true → 每 radius tick 一个同心环
+  it('radius_grid_produces_concentric_circular_paths', () => {
     const outer = expandOf(radiusGridSpec, { d: [{ theta: 0, value: 5 }] }, opts);
     const { children, markIndex } = layersOf(outer);
     // grid 层在 mark 层之前（垫底）
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
     expect(gridLayer).toBeDefined();
-    // 同心环用 arc step
-    const arcs = pathsOf(gridLayer)
+    const circles = pathsOf(gridLayer)
       .flatMap(p => p.children)
-      .filter(step => step.kind === 'arc');
-    expect(arcs.length).toBeGreaterThanOrEqual(1);
+      .filter(step => step.kind === 'circlePath');
+    expect(circles.length).toBeGreaterThanOrEqual(1);
   });
 
   it('radius_grid_one_ring_per_tick', () => {
     const outer = expandOf(radiusGridSpec, { d: [{ theta: 0, value: 5 }] }, opts);
     const { children, markIndex } = layersOf(outer);
     const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
-    const arcs = pathsOf(gridLayer)
+    const circles = pathsOf(gridLayer)
       .flatMap(p => p.children)
-      .filter(step => step.kind === 'arc') as Array<{ radius?: number }>;
+      .filter(step => step.kind === 'circlePath') as Array<{ radius?: number }>;
     // 多刻度 → 多环，半径各异（同心、递增）
-    const radii = arcs.map(a => a.radius ?? 0).filter(r => r > 0);
+    const radii = circles.map(circle => circle.radius ?? 0).filter(radius => radius > 0);
     expect(radii.length).toBeGreaterThanOrEqual(1);
     expect(new Set(radii.map(r => r.toFixed(3))).size).toBe(radii.length);
+  });
+
+  it('discrete_angular_scale_uses_polygonal_radius_grid_boundaries', () => {
+    const outer = expandOf(polarSpec([{ type: 'axis', dimension: 'y', grid: true }]), { d: ROWS }, opts);
+    const { children, markIndex } = layersOf(outer);
+    const gridLayer = children.slice(0, markIndex).find(isScope) as IRScope;
+    expect(gridLayer).toBeDefined();
+    expect(allKinds(gridLayer)).toContain('line');
+    expect(allKinds(gridLayer)).toContain('cycle');
+    expect(allKinds(gridLayer)).not.toContain('arc');
   });
 
   /** 角向轴 grid（辐条）：band angle + grid:true */

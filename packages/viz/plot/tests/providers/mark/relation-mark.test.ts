@@ -1,15 +1,31 @@
-import type { IRCoordinate, IRNode, IRPath, IRScope } from '@retikz/core';
+import type { IRCoordinate, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 
+import type { PositionScale } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 
 import { definePathChannel } from '../../../src/contract';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
-import { PlotSchema } from '../../../src/schemas';
+import { createPolarCoordinate, lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
+import { resolveMarkOperation } from '../../../src/resolve/mark';
+import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 200, height: 100 };
+const markRegistry = resolveMarkRegistry();
+
+const linearScale = (domain: [number, number], range: [number, number]): PositionScale => ({
+  coordinate: value => {
+    if (typeof value !== 'number' || !Number.isFinite(value)) return Number.NaN;
+    return range[0] + ((value - domain[0]) / (domain[1] - domain[0])) * (range[1] - range[0]);
+  },
+  domain: () => domain,
+  bandwidth: 0,
+  ticks: () => ({ values: domain, labels: domain.map(String) }),
+  range: () => range,
+  setRange: () => undefined,
+});
 
 const extensionChannelsOf = (mark: {
   encoding?: { channels?: Partial<Record<string, { field?: string; value?: unknown }>> };
@@ -96,6 +112,13 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
+const targetIdOf = (step: IRStep): string | undefined => {
+  if (!('to' in step)) return undefined;
+  const target = step.to;
+  if (target === undefined || Array.isArray(target) || !('id' in target)) return undefined;
+  return target.id;
+};
+
 const baseSpec = (marks: unknown): IRPlot =>
   PlotSchema.parse({
     namespace: 'plot',
@@ -106,6 +129,19 @@ const baseSpec = (marks: unknown): IRPlot =>
       { type: 'linear', name: 'y', domainPadding: 0 },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+    marks,
+  });
+
+const polarSpec = (marks: unknown, interpolation: 'polar' | 'chord' = 'polar'): IRPlot =>
+  PlotSchema.parse({
+    namespace: 'plot',
+    type: 'plot',
+    data: { reference: 'd' },
+    scales: [
+      { type: 'linear', name: 'x', domainPadding: 0 },
+      { type: 'linear', name: 'y', domainPadding: 0 },
+    ],
+    coordinate: { type: 'polar2D', angle: 'x', radius: 'y', interpolation },
     marks,
   });
 
@@ -377,6 +413,212 @@ describe('RelationMark and anchorId lowering', () => {
     const relationLayer = markLayer(root, 1);
     expect(collectCoordinates(relationLayer).map(coordinate => coordinate.id)).toEqual(['rel.0.via.0', 'rel.1.via.0']);
     expect(collectPaths(relationLayer)[0].children[1]).toMatchObject({ kind: 'line', to: { id: 'rel.0.via.0' } });
+  });
+
+  it('inherits polar interpolation for a default all-projected relation path', () => {
+    const root = expandOf(
+      polarSpec([
+        {
+          type: 'relation',
+          source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
+          target: { project: { x: 'targetAngle', y: 'targetRadius' } },
+        },
+      ]),
+      { d: [{ sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }] },
+    );
+    const [path] = collectPaths(markLayer(root, 0));
+    expect(path.children[0]).toMatchObject({ kind: 'move' });
+    expect(path.children.filter(step => step.kind === 'line').length).toBeGreaterThan(1);
+  });
+
+  it('lets a relation polar override take precedence over a chord coordinate', () => {
+    const root = expandOf(
+      polarSpec(
+        [
+          {
+            type: 'relation',
+            source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
+            target: { project: { x: 'targetAngle', y: 'targetRadius' } },
+            path: { interpolation: 'polar' },
+          },
+        ],
+        'chord',
+      ),
+      { d: [{ sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }] },
+    );
+    const [path] = collectPaths(markLayer(root, 0));
+    expect(path.children.filter(step => step.kind === 'line').length).toBeGreaterThan(1);
+  });
+
+  it('samples projected via segments while preserving every authored target identity', () => {
+    const root = expandOf(
+      polarSpec([
+        {
+          type: 'relation',
+          source: {
+            project: { x: 'sourceAngle', y: 'sourceRadius' },
+            anchorId: { prefix: 'source', field: 'edgeId' },
+          },
+          target: {
+            project: { x: 'targetAngle', y: 'targetRadius' },
+            anchorId: { prefix: 'target', field: 'edgeId' },
+          },
+          path: {
+            interpolation: 'polar',
+            via: [
+              {
+                project: { x: 'viaAngle', y: 'viaRadius' },
+                anchorId: { prefix: 'via', field: 'edgeId' },
+              },
+            ],
+            label: { text: 'route' },
+          },
+        },
+      ]),
+      {
+        d: [
+          {
+            edgeId: 'A',
+            sourceAngle: 0,
+            sourceRadius: 4,
+            viaAngle: 5,
+            viaRadius: 8,
+            targetAngle: 10,
+            targetRadius: 6,
+          },
+        ],
+      },
+    );
+    const [path] = collectPaths(markLayer(root, 0));
+    expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'source.A' } });
+    expect(path.children.some(step => step.kind === 'line' && Array.isArray(step.to))).toBe(true);
+    expect(path.children.some(step => step.kind === 'line' && targetIdOf(step) === 'via.A')).toBe(true);
+    expect(path.children[path.children.length - 1]).toMatchObject({
+      kind: 'line',
+      to: { id: 'target.A' },
+      label: { text: 'route' },
+    });
+  });
+
+  it('keeps projected polar vertices when anchor context is absent', () => {
+    const spec = polarSpec([
+      {
+        type: 'relation',
+        source: {
+          project: { x: 'sourceAngle', y: 'sourceRadius' },
+          anchorId: { prefix: 'source', field: 'edgeId' },
+        },
+        target: {
+          project: { x: 'targetAngle', y: 'targetRadius' },
+          anchorId: { prefix: 'target', field: 'edgeId' },
+        },
+      },
+    ]);
+    const frame = createPolarCoordinate({
+      center: [0, 0],
+      innerRadius: 0,
+      outerRadius: 100,
+      startAngle: 0,
+      endAngle: 360,
+      interpolation: PolarInterpolation.Polar,
+      angularSkeleton: [0, 90, 180, 270],
+      primary: linearScale([0, 10], [0, 360]),
+      secondary: linearScale([0, 10], [0, 100]),
+    });
+    const layer = lowerMarkDefinition(
+      resolveMarkOperation(spec.marks[0], { registry: markRegistry }),
+      [{ edgeId: 'A', sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }],
+      frame,
+    ) as IRScope;
+    const [path] = collectPaths(layer);
+
+    expect(path.children.filter(step => step.kind === 'line').length).toBeGreaterThan(1);
+  });
+
+  it('rejects explicit relation interpolation on unsupported coordinate and target forms', () => {
+    const cartesian = baseSpec([
+      {
+        type: 'relation',
+        source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
+        target: { project: { x: 'targetAngle', y: 'targetRadius' } },
+        path: { interpolation: 'polar' },
+      },
+    ]);
+    expect(() =>
+      expandOf(cartesian, { d: [{ sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }] }),
+    ).toThrow(/relation.*interpolation.*polar2D/i);
+
+    const unresolvedTarget = polarSpec([
+      {
+        type: 'relation',
+        source: { id: 'A' },
+        target: { project: { x: 'targetAngle', y: 'targetRadius' } },
+        path: { interpolation: 'polar' },
+      },
+    ]);
+    expect(() => expandOf(unresolvedTarget, { d: [{ targetAngle: 10, targetRadius: 8 }] })).toThrow(
+      /relation.*interpolation.*projected/i,
+    );
+  });
+
+  it('rejects explicit relation interpolation with route, routing, or ribbon geometry', () => {
+    const row = { sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 };
+    const projectedTargets = {
+      source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
+      target: { project: { x: 'targetAngle', y: 'targetRadius' } },
+    };
+    expect(() =>
+      expandOf(
+        polarSpec([
+          {
+            type: 'relation',
+            ...projectedTargets,
+            path: { interpolation: 'polar', route: [{ kind: 'line' }] },
+          },
+        ]),
+        { d: [row] },
+      ),
+    ).toThrow(/relation.*interpolation.*route/i);
+    expect(() =>
+      expandOf(
+        polarSpec([
+          {
+            type: 'relation',
+            ...projectedTargets,
+            path: { interpolation: 'polar', routing: { kind: 'line' } },
+          },
+        ]),
+        { d: [row] },
+      ),
+    ).toThrow(/relation.*interpolation.*routing/i);
+    expect(() =>
+      polarSpec([
+        {
+          type: 'relation',
+          kind: 'ribbon',
+          ...projectedTargets,
+          path: { interpolation: 'polar' },
+          ribbon: { width: { kind: 'constant', value: 8 } },
+        },
+      ]),
+    ).toThrow(/relation.*interpolation.*ribbon/i);
+  });
+
+  it('preserves unsupported relation-owned routing when interpolation is omitted', () => {
+    const root = expandOf(
+      polarSpec([
+        {
+          type: 'relation',
+          source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
+          target: { project: { x: 'targetAngle', y: 'targetRadius' } },
+          path: { routing: { kind: 'line' } },
+        },
+      ]),
+      { d: [{ sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }] },
+    );
+    const [path] = collectPaths(markLayer(root, 0));
+    expect(path.children).toHaveLength(2);
+    expect(path.children.map(step => step.kind)).toEqual(['move', 'line']);
   });
 
   it('fails loud on duplicate anchor ids', () => {

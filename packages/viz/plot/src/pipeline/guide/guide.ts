@@ -21,7 +21,7 @@ import type { Rect } from '../../shared';
 
 import { guideLayerId, guideLayerMeta } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import { defaultOriginAxisTickSideOf } from '../../providers';
+import { defaultOriginAxisTickSideOf, polarFixedRadiusSteps } from '../../providers';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import {
   AxisCardinalSide,
@@ -1076,23 +1076,10 @@ const lowerCartesianGuide = (
   return { gridLayer, axisLayer };
 };
 
-/** 一条弧 Path（move 到弧起点 + arc step 扫 startAngle→endAngle，圆心 = frame.center、给定半径）；轴线与同心环复用 */
-const arcPath = (frame: PolarCoordinateFrame, radius: number): IRPath => {
-  const start = finitePolarPoint(frame.center, frame.startAngle, radius);
-  return {
-    type: 'path',
-    children: [
-      { type: 'step', kind: 'move', to: [start[0], start[1]] },
-      {
-        type: 'step',
-        kind: 'arc',
-        startAngle: frame.startAngle,
-        endAngle: frame.endAngle,
-        radius,
-        center: [frame.center[0], frame.center[1]],
-      },
-    ],
-  };
+/** frame 插值模式下的一条固定半径边界；退化 chord 骨架不产路径 */
+const fixedRadiusPath = (frame: PolarCoordinateFrame, radius: number): IRPath | null => {
+  const children = polarFixedRadiusSteps(frame, radius);
+  return children === null ? null : { type: 'path', children };
 };
 
 /**
@@ -1131,8 +1118,11 @@ const lowerAngularAxis = (
   const tickLineStyle = axisTickLineStyleOf(guide);
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
+  const fixedRadiusAxis = fixedRadiusPath(frame, outer);
   const axisChildren: Array<IRPath | IRNode> =
-    axisLineStyle === false ? [] : [{ ...arcPath(frame, outer), ...lineStyleProps(axisLineStyle) }];
+    axisLineStyle === false || fixedRadiusAxis === null
+      ? []
+      : [{ ...fixedRadiusAxis, ...lineStyleProps(axisLineStyle) }];
   if (tickPath) axisChildren.push(tickPath);
   axisChildren.push(...tickShapeNodes);
   const labels: Array<IRNode> = showLabels
@@ -1337,10 +1327,10 @@ const lowerRadialAxis = (
     );
     const rings: Array<IRPath> = majorCoordinates
       .filter(radius => Number.isFinite(radius) && radius > 0)
-      .map(radius => ({
-        ...arcPath(frame, radius),
-        ...lineStyleProps({ drawOpacity: 0.15, ...axisGridStyleOf(grid) }),
-      }));
+      .flatMap(radius => {
+        const path = fixedRadiusPath(frame, radius);
+        return path === null ? [] : [{ ...path, ...lineStyleProps({ drawOpacity: 0.15, ...axisGridStyleOf(grid) }) }];
+      });
     const minorGrid = axisMinorGridTokenOf(grid);
     const minorBandPosition = minorGrid?.bandPosition ?? majorBandPosition;
     const minorTicks =
@@ -1357,10 +1347,12 @@ const lowerRadialAxis = (
         ? []
         : minorTicks
             .filter(radius => Number.isFinite(radius) && radius > 0)
-            .map(radius => ({
-              ...arcPath(frame, radius),
-              ...lineStyleProps({ drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) }),
-            }));
+            .flatMap(radius => {
+              const path = fixedRadiusPath(frame, radius);
+              return path === null
+                ? []
+                : [{ ...path, ...lineStyleProps({ drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) }) }];
+            });
     const gridChildren = [...rings, ...minorRings];
     if (gridChildren.length > 0) {
       gridLayer = {

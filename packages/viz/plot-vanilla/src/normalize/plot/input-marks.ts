@@ -57,6 +57,7 @@ import type {
   IRPlotTargetRef,
   IRPlotTransform,
   PathCurveValue,
+  PolarInterpolationValue,
   RelationGeometryKindValue,
 } from '@retikz/plot';
 import type { MarkValueKind } from '@retikz/plot';
@@ -266,6 +267,8 @@ export type InputPlotPathMark = InputPlotMarkTransform &
     closure?: IRPlotPathClosure;
     /** 相邻点连接方式；缺省 linear */
     curve?: PathCurveValue;
+    /** Polar2D 连接空间局部覆盖；省略时继承坐标系 */
+    interpolation?: PolarInterpolationValue;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
     anchorId?: IRPlotAnchorId;
@@ -374,14 +377,16 @@ export type InputPlotIntervalMark = InputPlotMarkTransform &
     stack?: boolean;
     /** 显式 per-role 区间来源（高级 / heatmap 双 band）：给定则直接落 IR bounds，便捷 props 之外的逃生舱 */
     bounds?: IRPlotIntervalBounds;
+    /** Polar2D cell 边界局部覆盖；省略时继承坐标系 */
+    interpolation?: PolarInterpolationValue;
     fill?: InputPlotFieldName | IRPaint | IRPlotPointFillStyle;
     stroke?: InputPlotFieldName | IRPaint | IRPlotPointStrokeStyle;
     strokeWidth?: InputPlotMarkValueProp<number> | IRPlotPointStrokeWidthStyle;
     fillOpacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
     opacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
-    /** 极坐标扇区或环形区间之间的角度间隔 */
+    /** 极坐标 cell 之间的角度间隔，先于 sector 或 chord contour 投影应用 */
     padAngle?: number;
-    /** 极坐标扇区沿半径方向的静态视觉偏移 */
+    /** 极坐标 cell 沿中角方向的静态视觉偏移 */
     pull?: InputPlotMarkValueProp<number> | IRPlotPointNonnegativeNumberStyle;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
@@ -431,6 +436,8 @@ export type InputPlotReferenceMark = InputPlotMarkTransform &
   InputPlotCorePathChannels & {
     /** 参考形态覆写；设为 region 时 x/xTo/y/yTo 四个边界共同围出二维区域 */
     kind?: 'region';
+    /** Polar2D band / region 边界局部覆盖；line 保持直线 */
+    interpolation?: PolarInterpolationValue;
     /** 竖直参考的常量轴绑定（x=const 跨满 y 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
     x?: number | InputPlotFieldName;
     /** 水平参考的常量轴绑定（y=const 跨满 x 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */

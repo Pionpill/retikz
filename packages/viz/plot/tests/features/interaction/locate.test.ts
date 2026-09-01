@@ -756,7 +756,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
         { type: 'band', name: 'a' },
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
-      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r', interpolation: 'polar' },
       marks: [
         {
           type: 'interval',

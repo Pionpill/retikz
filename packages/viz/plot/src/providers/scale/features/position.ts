@@ -387,6 +387,7 @@ export const pointPositionScale = (scale: D3ScalePoint<string | number>): Positi
 
 const linearScaleDefinition = defineScale<IRPlotLinearScale>({
   family: 'position',
+  continuity: 'continuous',
   schema: LinearScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: true,
@@ -395,6 +396,7 @@ const linearScaleDefinition = defineScale<IRPlotLinearScale>({
 
 const logScaleDefinition = defineScale<IRPlotLogScale>({
   family: 'position',
+  continuity: 'continuous',
   schema: LogScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: false,
@@ -407,6 +409,7 @@ const logScaleDefinition = defineScale<IRPlotLogScale>({
 
 const powScaleDefinition = defineScale<IRPlotPowScale>({
   family: 'position',
+  continuity: 'continuous',
   schema: PowScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: false,
@@ -421,6 +424,7 @@ const powScaleDefinition = defineScale<IRPlotPowScale>({
 
 const sqrtScaleDefinition = defineScale<IRPlotSqrtScale>({
   family: 'position',
+  continuity: 'continuous',
   schema: SqrtScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: false,
@@ -433,6 +437,7 @@ const sqrtScaleDefinition = defineScale<IRPlotSqrtScale>({
 
 const symlogScaleDefinition = defineScale<IRPlotSymlogScale>({
   family: 'position',
+  continuity: 'continuous',
   schema: SymlogScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   // 与 log/pow/sqrt 同属非线性连续 scale → 不作 interval / area 值轴（柱 / 面积长度会失真）
@@ -444,6 +449,7 @@ const symlogScaleDefinition = defineScale<IRPlotSymlogScale>({
 
 const radialScaleDefinition = defineScale<IRPlotRadialScale>({
   family: 'position',
+  continuity: 'continuous',
   schema: RadialScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   // 面积感知半径，自 0 基线起算（南丁格尔 / 玫瑰图扇区面积编码值）→ 允许作 interval / path closure 值轴
@@ -454,6 +460,7 @@ const radialScaleDefinition = defineScale<IRPlotRadialScale>({
 
 const timeScaleDefinition = defineScale<IRPlotTimeScale>({
   family: 'position',
+  continuity: 'continuous',
   schema: TimeScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: true,
@@ -462,6 +469,7 @@ const timeScaleDefinition = defineScale<IRPlotTimeScale>({
 
 const bandScaleDefinition = defineScale<IRPlotBandScale>({
   family: 'position',
+  continuity: 'discrete',
   schema: BandScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Temporal,
   allowsBaseline: true,
@@ -470,6 +478,7 @@ const bandScaleDefinition = defineScale<IRPlotBandScale>({
 
 const pointScaleDefinition = defineScale<IRPlotPointScale>({
   family: 'position',
+  continuity: 'discrete',
   schema: PointScaleSchema,
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Temporal,
   allowsBaseline: true,

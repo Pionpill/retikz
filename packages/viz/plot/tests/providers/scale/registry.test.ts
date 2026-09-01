@@ -24,6 +24,7 @@ import { BUILTIN_SCALE_TYPES, PlotSchema } from '../../../src/schemas';
 /** 自定义 position scale：把内置 linear 包一层，仅验证 registry 分派（type 'unit'，固定 domain [0,1]） */
 const unitScale = defineScale({
   family: 'position',
+  continuity: 'continuous',
   schema: object({ type: literal('unit'), name: NonBlankStringSchema }),
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: true,
@@ -104,6 +105,31 @@ describe('scale registry（contract spec）', () => {
 
   it('builtin_scales_cover_public_builtin_types', () => {
     expect(BUILTIN_SCALES.map(def => extractScaleType(def.schema)).sort()).toEqual([...BUILTIN_SCALE_TYPES].sort());
+  });
+
+  it('position_scale_definitions_declare_closed_continuity_metadata', () => {
+    const positionDefinitions = BUILTIN_SCALES.filter(definition => definition.family === 'position');
+
+    expect(positionDefinitions.map(definition => definition.continuity).sort()).toEqual([
+      'continuous',
+      'continuous',
+      'continuous',
+      'continuous',
+      'continuous',
+      'continuous',
+      'continuous',
+      'discrete',
+      'discrete',
+    ]);
+    if (unitScale.family !== 'position') throw new TypeError('unitScale must remain a position definition');
+    expect(unitScale.continuity).toBe('continuous');
+  });
+
+  it('position_scale_definition_without_continuity_fails_loud', () => {
+    const malformed = { ...unitScale } as AnyScaleDefinition & { continuity?: unknown };
+    delete malformed.continuity;
+
+    expect(() => resolveScaleRegistry([malformed])).toThrow(/position.*continuity/i);
   });
 
   it('resolveScaleRegistry 注册内置 + 自定义', () => {

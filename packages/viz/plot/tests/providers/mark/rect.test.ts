@@ -345,7 +345,8 @@ describe('rect fail-loud', () => {
       outerRadius: 150,
       startAngle: 0,
       endAngle: 360,
-      continuousAngle: false,
+      interpolation: 'chord',
+      angularSkeleton: [0, 90, 180, 270],
       primary: bandStub(['r0', 'r1'], [0, 360]),
       secondary: bandStub(['c0', 'c1'], [0, 150]),
     });

@@ -24,6 +24,51 @@ describe('normalizePlot', () => {
     });
   });
 
+  it('透明保留 Polar coordinate 与插值敏感 mark override', () => {
+    const spec = normalizePlot({
+      data: { reference: 'polar' },
+      scales: [
+        { type: 'point', name: 'angle' },
+        { type: 'linear', name: 'radius' },
+      ],
+      coordinate: {
+        type: 'polar2D',
+        angle: 'angle',
+        radius: 'radius',
+        interpolation: 'chord',
+      },
+      marks: [],
+    });
+    const declaration = normalizePlotDeclarations(
+      {
+        declarations: [
+          { kind: 'path-mark', props: { x: 'angle', y: 'radius', interpolation: 'polar' }, path: [0] },
+          { kind: 'interval-mark', props: { x: 'angle', y: 'radius', interpolation: 'chord' }, path: [1] },
+          { kind: 'reference-mark', props: { y: 1, yTo: 2, interpolation: 'polar' }, path: [2] },
+          {
+            kind: 'relation-mark',
+            props: {
+              source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
+              target: { project: { x: 'targetAngle', y: 'targetRadius' } },
+              path: { interpolation: 'chord' },
+            },
+            path: [3],
+          },
+        ],
+        runtimeSources: [],
+      },
+      { data: { reference: 'polar' }, mode: 'plot-root' },
+    );
+
+    expect(spec.coordinate).toMatchObject({ interpolation: 'chord' });
+    expect(declaration.fragment.marks).toMatchObject([
+      { type: 'path', interpolation: 'polar' },
+      { type: 'interval', interpolation: 'chord' },
+      { type: 'reference', interpolation: 'polar' },
+      { type: 'relation', path: { interpolation: 'chord' } },
+    ]);
+  });
+
   it('从 plain authoring input 创建 schema-valid IRPlot 并保留显式 identity', () => {
     const input = {
       id: 'sales',

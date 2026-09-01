@@ -1,4 +1,5 @@
 import type { DataFieldTypeValue, IRDataScalarValue } from '@retikz/data';
+import type { ValueOf } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 import { ZodLiteral, ZodObject } from 'zod';
@@ -13,6 +14,17 @@ export type TickSet = { values: Array<IRDataScalarValue>; labels: Array<string> 
 
 /** position scale 的刻度值族，用于 guide 标签格式化 */
 export type PositionTickKind = 'number' | 'time' | 'category';
+
+/** position scale 的拓扑连续性 */
+export const PositionScaleContinuity = {
+  /** 相邻值之间存在可解释的中间位置 */
+  Continuous: 'continuous',
+  /** 只定义独立类别位置 */
+  Discrete: 'discrete',
+} as const;
+
+/** position scale 拓扑连续性值 */
+export type PositionScaleContinuityValue = ValueOf<typeof PositionScaleContinuity>;
 
 /**
  * 归一化位置 scale：连续 / band / point 对 projector & guide 暴露同一形态
@@ -82,6 +94,8 @@ export type ChannelScaleResolution = {
 export type PositionScaleDefinition<TScaleOperation extends IRPlotScaleOperation = IRPlotScaleOperation> = {
   /** 族判别：position scale 产坐标数值 */
   family: 'position';
+  /** 位置域是否在相邻值之间连续，用于 coordinate 选择空间插值默认 */
+  continuity: PositionScaleContinuityValue;
   /** 完整 scale operation schema；必须含非空 z.literal('type') 供 registry 提取注册键 */
   schema: ZodType<TScaleOperation>;
   /** 字段兼容谓词（连续 scale 仅拒 categorical、band/point 仅拒 temporal）；undefined 字段类型放行 */
@@ -129,6 +143,7 @@ export const defineScale = <TScaleOperation extends IRPlotScaleOperation>(
 export type AnyScaleDefinition =
   | {
       family: 'position';
+      continuity: PositionScaleContinuityValue;
       schema: ZodType;
       isFieldCompatible: (fieldType: DataFieldTypeValue | undefined) => boolean;
       allowsBaseline?: boolean;
