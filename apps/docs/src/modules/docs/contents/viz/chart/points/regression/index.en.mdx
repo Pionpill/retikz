@@ -92,14 +92,14 @@ Facet creates each panel data view before Smooth fits within it. Shared or indep
 
 `RegressionPropertiesProps` configures both fitting strategy and constant Point / trend appearance.
 
-| Property         | Type                                     | Default                 | Behavior                                                                            |
-| ---------------- | ---------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------- |
-| `method?`        | `IRPlotSmoothMethod`                     | `linear`                | Selects a complete method object from the table above                               |
-| `sampleCount?`   | `number`                                 | `64`                    | Predicted samples per group; an integer of at least 2                               |
-| `extent?`        | `[number, number]`                       | current finite x domain | Trend sampling interval; lower bound must be smaller than upper                     |
-| `domainPadding?` | `number` \| `{ x?: number; y?: number }` | `0.02`                  | Configures continuous x / y position scale domain padding together or independently |
-| `point?`         | `IRRegressionPointProperties`            | Point defaults          | Full Point constant properties for raw observations                                 |
-| `trend?`         | `IRRegressionTrendProperties`            | Path defaults           | Constant Path stroke, width, opacity, caps, shadows, and peers                      |
+| Property         | Type                                                                    | Default                    | Behavior                                                             |
+| ---------------- | ----------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------- |
+| `method?`        | `IRPlotSmoothMethod`                                                    | `linear`                   | Selects a complete method object from the table above                |
+| `sampleCount?`   | `number`                                                                | `64`                       | Predicted samples per group; an integer of at least 2                |
+| `extent?`        | `[number, number]`                                                      | current finite x domain    | Trend sampling interval; lower bound must be smaller than upper      |
+| `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest final Point radius | Configures continuous position-scale range or explicit ratio padding |
+| `point?`         | `IRRegressionPointProperties`                                           | Point defaults             | Full Point constant properties for raw observations                  |
+| `trend?`         | `IRRegressionTrendProperties`                                           | Path defaults              | Constant Path stroke, width, opacity, caps, shadows, and peers       |
 
 When `series` exists, its field color takes precedence over `point.color`, `point.fill`, and `trend.stroke`; other constant appearance remains effective. Points, trends, and the legend therefore keep one categorical scale identity.
 

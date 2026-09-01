@@ -6,7 +6,6 @@ import type {
   ChartRecipeResolveContext,
   ChartSemanticMarkResolution,
 } from '../../_chart/contract/recipe';
-import type { PointPositionDomainPaddingResolution } from './plot';
 
 import { pointAxisGuidesOf, pointCartesian2DOf } from './plot';
 import { PointRecipeThemeResolutionSchema } from './schema';
@@ -25,11 +24,9 @@ export const pointResolutionOf = (
   options: Readonly<{
     scales?: ReadonlyArray<IRPlotScaleOperation>;
     guides?: ReadonlyArray<IRPlotGuide>;
-    /** Point 图连续位置比例尺的 recipe 默认 domain 留白 */
-    positionDomainPadding?: PointPositionDomainPaddingResolution;
   }> = {},
 ): ChartRecipeResolution => {
-  const cartesian = pointCartesian2DOf(chartType, options.positionDomainPadding);
+  const cartesian = pointCartesian2DOf(chartType);
   const scales = [...cartesian.scales, ...(options.scales ?? [])];
   const guides = [...pointAxisGuidesOf(chartType, theme), ...(options.guides ?? [])];
   return {

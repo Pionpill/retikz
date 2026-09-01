@@ -9,9 +9,11 @@ Scatter、Bubble、Regression、Connected Scatter 与 Ranged Dot 都属于 `type
 
 所有类型共享的字段归属、编写主链、整图展示与 Plot 扩展规则统一放在[图形模型](/viz/chart/model)中；本分组只比较点图类型自己的视觉语义。
 
-Point recipe 会为连续位置比例尺预留边缘空间，避免落在 domain 边界上的圆点被裁切。Bubble 默认使用 `0.04` 的 `domainPadding`，其余点图默认使用 `0.02`。各类型的 Properties 接受一个非负数字，统一设置横纵角色；也接受至少提供 x / y 之一的 `{ x?: number; y?: number }`，只覆盖指定角色，未写的角色保留 recipe 默认。切到 Polar 后，x / y 分别对应 angle / radius；Ranged Dot 的 y 是分类 scale，因此只应用连续的 x 留白。
+Point recipe 会按最终保留的 Point 最大半径，为连续位置 scale 预留 range 空间，避免 domain 边界上的点被裁切：未配置 `size` 时半径为 `5`，字段尺寸默认最大半径为 `20`，常量尺寸或显式 sqrt scale 则取最终 range 的最大值。Regression 与 Connected Scatter 读取组内 Point，Ranged Dot 读取起止两个端点；`plotExtension.marks` 不参与计算。
 
-优先级依次为 recipe 默认、Properties、encoding scale operation。operation 显式声明的 `0` 或 `{ lower?, upper? }` 不会被 Properties 覆盖；分类 scale、命名 `scale.reference` 和 `plotExtension` scale 也不会被改写。`domainPadding` 只属于 recipe Properties，不能写进 authored mark。
+Properties 的 `domainPadding` 接受非负数字，或 `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`。省略 `kind` 时使用 range 单位；只有显式 `kind: 'ratio'` 才按 domain 跨度比例解析，且每个值必须小于 `1`。具体 side 优先于 x / y，x / y 优先于 default；range 未覆盖的 side 继承最大半径，ratio 未覆盖的 side 为 `0`。left / right / top / bottom 只适用于 Cartesian，并会按 scale range 的实际方向映射到 domain lower / upper；Polar 只能使用 default / x / y。
+
+优先级依次为自动最大半径、Properties、encoding scale operation。operation 显式声明的 `0` 或 `{ kind?, lower?, upper? }` 不会被 Properties 覆盖；分类 scale 与 `plotExtension` scale 也不会被改写。`domainPadding` 只属于 recipe Properties，不能写进 authored mark。Ranged Dot 的 y 是分类 scale，因此只应用连续的 x 留白。
 
 ## 职责一览
 

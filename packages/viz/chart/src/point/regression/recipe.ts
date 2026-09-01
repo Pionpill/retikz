@@ -10,13 +10,12 @@ import { defineChartRecipe } from '../../_chart/contract';
 import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
 import {
-  pointPositionDomainPaddingOf,
   pointPositionFieldConsumersOf,
   pointResolutionOf,
   pointSlotsOf,
   pointSpatialResolutionOf,
   pointThemeOf,
-  withPointPositionDomainPadding,
+  resolvePointScaleDefaults,
 } from '../shared';
 import { pointRecipeId } from '../shared/plot';
 import { RegressionMarkDefinition, resolveRegressionMarkGroup } from './mark';
@@ -82,11 +81,7 @@ export const RegressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
     },
   ],
   resolveEncodings: context => {
-    const positionDomainPadding = pointPositionDomainPaddingOf(context.source.recipe.properties ?? {});
-    const resolution = withPointPositionDomainPadding(
-      resolveChartEncodingMappings(context, RegressionChartEncodingSlots, regressionFieldConsumers),
-      positionDomainPadding,
-    );
+    const resolution = resolveChartEncodingMappings(context, RegressionChartEncodingSlots, regressionFieldConsumers);
     const spatial = pointSpatialResolutionOf(ChartType.Regression, context.encodings);
     return {
       ...resolution,
@@ -100,7 +95,6 @@ export const RegressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
     const hasSeries = Object.hasOwn(slots.encodings, 'series');
     const guides: Array<IRPlotGuide> =
       hasSeries && theme.legendEnabled ? [{ type: PlotGuide.Legend, channel: 'color' }] : [];
-    const positionDomainPadding = pointPositionDomainPaddingOf(slots.properties);
     return pointResolutionOf(
       ChartType.Regression,
       theme,
@@ -108,8 +102,8 @@ export const RegressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
       {
         scales: hasSeries ? [{ type: PlotScale.Ordinal, name: seriesScaleName }] : [],
         guides,
-        positionDomainPadding,
       },
     );
   },
+  resolveScaleDefaults: resolvePointScaleDefaults,
 });

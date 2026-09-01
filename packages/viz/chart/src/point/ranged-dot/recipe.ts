@@ -11,12 +11,11 @@ import { defineChartRecipe } from '../../_chart/contract';
 import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
 import {
-  pointPositionDomainPaddingOf,
   pointPositionFieldConsumersOf,
   pointSlotsOf,
   pointSpatialResolutionOf,
   pointThemeOf,
-  withPointPositionDomainPadding,
+  resolvePointScaleDefaults,
 } from '../shared';
 import { pointAxisGuidesOf, pointCartesian2DOf, pointRecipeId } from '../shared/plot';
 import { RangedDotMarkDefinition, resolveRangedDotMark } from './mark';
@@ -92,11 +91,7 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
     },
   ],
   resolveEncodings: context => {
-    const positionDomainPadding = pointPositionDomainPaddingOf(context.source.recipe.properties ?? {});
-    const resolution = withPointPositionDomainPadding(
-      resolveChartEncodingMappings(context, RangedDotChartEncodingSlots, fieldConsumers),
-      positionDomainPadding,
-    );
+    const resolution = resolveChartEncodingMappings(context, RangedDotChartEncodingSlots, fieldConsumers);
     const encodings = withColorFallback(resolution.encodings);
     const spatial = pointSpatialResolutionOf(ChartType.RangedDot, {
       row: context.encodings.row,
@@ -109,8 +104,7 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
     const theme = pointThemeOf(context.recipeThemeTokens);
     const slots = pointSlotsOf(context);
     const hasColor = Object.hasOwn(slots.encodings, 'color');
-    const positionDomainPadding = pointPositionDomainPaddingOf(slots.properties);
-    const cartesian = pointCartesian2DOf(ChartType.RangedDot, positionDomainPadding);
+    const cartesian = pointCartesian2DOf(ChartType.RangedDot);
     const scales = [
       { value: cartesian.scales[0], replaceable: true },
       { value: { type: PlotScale.Point, name: yScaleName }, replaceable: true },
@@ -131,4 +125,5 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
       ],
     };
   },
+  resolveScaleDefaults: resolvePointScaleDefaults,
 });

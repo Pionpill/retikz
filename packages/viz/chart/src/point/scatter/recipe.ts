@@ -8,15 +8,14 @@ import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
 import {
   pointFieldConsumersOf,
-  pointPositionDomainPaddingOf,
   pointPropertySlots,
   pointResolutionOf,
   pointSlotsOf,
   pointSpatialResolutionOf,
   pointThemeOf,
   resolvePointMark,
+  resolvePointScaleDefaults,
   sizeGuideOf,
-  withPointPositionDomainPadding,
 } from '../shared';
 import { ScatterMarkDefinition } from './mark';
 import { ScatterChartSchema, ScatterChartThemeOverridesSchema, ScatterChartThemeResolutionSchema } from './schema';
@@ -66,10 +65,10 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
     },
   ],
   resolveEncodings: context => {
-    const positionDomainPadding = pointPositionDomainPaddingOf(context.source.recipe.properties ?? {});
-    const resolution = withPointPositionDomainPadding(
-      resolveChartEncodingMappings(context, ScatterChartEncodingSlots, pointFieldConsumersOf(ChartType.Scatter)),
-      positionDomainPadding,
+    const resolution = resolveChartEncodingMappings(
+      context,
+      ScatterChartEncodingSlots,
+      pointFieldConsumersOf(ChartType.Scatter),
     );
     const spatial = pointSpatialResolutionOf(ChartType.Scatter, context.encodings);
     return spatial === undefined ? resolution : { ...resolution, spatial };
@@ -79,10 +78,9 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
     const slots = pointSlotsOf(context);
     const mark = resolvePointMark(slots.encodings, slots.properties);
     const sizeGuide = sizeGuideOf(theme, slots.encodings);
-    const positionDomainPadding = pointPositionDomainPaddingOf(slots.properties);
     return pointResolutionOf(ChartType.Scatter, theme, [{ kind: ChartType.Scatter, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
-      positionDomainPadding,
     });
   },
+  resolveScaleDefaults: resolvePointScaleDefaults,
 });

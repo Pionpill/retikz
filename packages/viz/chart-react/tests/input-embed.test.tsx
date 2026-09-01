@@ -88,7 +88,7 @@ describe('Chart React InputEmbed routing', () => {
         size: 'population',
         color: 'continent',
       },
-      properties: { opacity: 0.75, domainPadding: { x: 0.03, y: 0.05 } },
+      properties: { opacity: 0.75, domainPadding: { kind: 'ratio' as const, default: 0.04, left: 0.02 } },
     };
     const reactInput = inputOf(BubbleChart, {
       children: (

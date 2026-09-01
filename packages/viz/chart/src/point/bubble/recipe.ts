@@ -8,14 +8,13 @@ import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
 import {
   pointFieldConsumersOf,
-  pointPositionDomainPaddingOf,
   pointPropertySlotsWithoutSize,
   pointResolutionOf,
   pointSlotsOf,
   pointSpatialResolutionOf,
   pointThemeOf,
+  resolvePointScaleDefaults,
   sizeGuideOf,
-  withPointPositionDomainPadding,
 } from '../shared';
 import { BubbleMarkDefinition, resolveBubbleMark } from './mark';
 import { BubbleChartSchema, BubbleChartThemeOverridesSchema, BubbleChartThemeResolutionSchema } from './schema';
@@ -25,7 +24,6 @@ const themeFallback: IRJsonObject = {
   axisGridEnabled: true,
   legendEnabled: true,
 };
-const bubblePositionDomainPadding = 0.04;
 
 /** Bubble exact schema、调度与消费检查共用的 encoding 顺序 */
 export const BubbleChartEncodingSlots = [
@@ -66,13 +64,10 @@ export const BubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defin
     },
   ],
   resolveEncodings: context => {
-    const positionDomainPadding = pointPositionDomainPaddingOf(
-      context.source.recipe.properties ?? {},
-      bubblePositionDomainPadding,
-    );
-    const resolution = withPointPositionDomainPadding(
-      resolveChartEncodingMappings(context, BubbleChartEncodingSlots, pointFieldConsumersOf(ChartType.Bubble)),
-      positionDomainPadding,
+    const resolution = resolveChartEncodingMappings(
+      context,
+      BubbleChartEncodingSlots,
+      pointFieldConsumersOf(ChartType.Bubble),
     );
     const spatial = pointSpatialResolutionOf(ChartType.Bubble, context.encodings);
     return spatial === undefined ? resolution : { ...resolution, spatial };
@@ -82,10 +77,9 @@ export const BubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defin
     const slots = pointSlotsOf(context);
     const mark = resolveBubbleMark(slots.encodings, slots.properties);
     const sizeGuide = sizeGuideOf(theme, slots.encodings);
-    const positionDomainPadding = pointPositionDomainPaddingOf(slots.properties, bubblePositionDomainPadding);
     return pointResolutionOf(ChartType.Bubble, theme, [{ kind: ChartType.Bubble, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
-      positionDomainPadding,
     });
   },
+  resolveScaleDefaults: resolvePointScaleDefaults,
 });

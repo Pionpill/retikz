@@ -1,18 +1,34 @@
 import type { infer as ZodInfer } from 'zod';
 import type { ZodType } from 'zod';
 
-import { CssColorSchema, JsonObjectSchema } from '@retikz/core';
+import { BoxSpacingSchema, CssColorSchema, JsonObjectSchema } from '@retikz/core';
 import { ShapeNameSchema } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { MarkNodeLabelListSchema } from '@retikz/plot';
+import { MarkNodeLabelListSchema, PlotDomainPaddingKind } from '@retikz/plot';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
+const pointPositionDomainPaddingFields = Object.keys(BoxSpacingSchema.shape);
+
 const PointPositionDomainPaddingObjectSchema = strictObject({
-  x: number().nonnegative().optional().describe('Horizontal position domain padding'),
-  y: number().nonnegative().optional().describe('Vertical position domain padding'),
-}).refine(value => value.x !== undefined || value.y !== undefined, {
-  message: 'at least one position role domain padding is required',
-});
+  kind: zodEnum(PlotDomainPaddingKind).optional().describe('Domain padding unit; omitted means range'),
+  ...BoxSpacingSchema.shape,
+})
+  .refine(value => pointPositionDomainPaddingFields.some(field => value[field as keyof typeof value] !== undefined), {
+    message: 'at least one position domain padding value is required',
+  })
+  .superRefine((value, context) => {
+    if (value.kind !== PlotDomainPaddingKind.Ratio) return;
+    for (const field of pointPositionDomainPaddingFields) {
+      const padding = value[field as keyof typeof value];
+      if (typeof padding === 'number' && padding >= 1) {
+        context.addIssue({
+          code: 'custom',
+          path: [field],
+          message: 'ratio domain padding must be less than 1',
+        });
+      }
+    }
+  });
 
 export const PointPositionDomainPaddingSchema = union([
   number().nonnegative(),

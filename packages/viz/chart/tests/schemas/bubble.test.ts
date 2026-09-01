@@ -71,8 +71,11 @@ describe('Bubble Chart exact Source schema', () => {
 
   it('keeps size field-bound and unavailable from Bubble properties', () => {
     expect(
-      BubbleChartPropertiesSchema.safeParse({ opacity: 0, shape: 'circle', domainPadding: { x: 0.02, y: 0.04 } })
-        .success,
+      BubbleChartPropertiesSchema.safeParse({
+        opacity: 0,
+        shape: 'circle',
+        domainPadding: { kind: 'ratio', default: 0.04, left: 0.02 },
+      }).success,
     ).toBe(true);
     expect(BubbleChartPropertiesSchema.safeParse({ size: 8 }).success).toBe(false);
     expect(BubbleChartMarkSchema.safeParse({ kind: 'bubble', properties: { domainPadding: 0.04 } }).success).toBe(

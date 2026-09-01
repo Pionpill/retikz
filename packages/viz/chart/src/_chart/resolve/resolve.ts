@@ -71,6 +71,7 @@ export const resolveSelectedChart = <TSource extends IRChartSource>(
   const semanticMarkResolution = resolveChartSemanticMarks(recipeResolution, markResolution);
   const plot = resolveChartPlot(
     source,
+    recipe,
     recipeResolution,
     encodingResolution,
     semanticMarkResolution.marks,

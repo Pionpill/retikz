@@ -3,8 +3,8 @@ import type { IRNodeDefault } from '@retikz/core';
 import type { IRPlotPointMark } from '../../../schemas';
 import type { MarkPaint } from '../shared';
 
-/** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
-const POINT_SIZE = 10;
+/** Point glyph 默认最终半径（user units） */
+export const POINT_DEFAULT_RADIUS = 5;
 
 /** Point 与 Relation endpoint 共用的 glyph 样式输入 */
 export type PointGlyphStyleSource = Pick<
@@ -25,7 +25,7 @@ export const pointGlyphStyle = (fill: MarkPaint, mark: PointGlyphStyleSource): I
   return {
     shape: 'circle',
     padding: padding ?? 0,
-    minimumSize: minimumSize ?? POINT_SIZE / Math.SQRT2,
+    minimumSize: minimumSize ?? (POINT_DEFAULT_RADIUS * 2) / Math.SQRT2,
     ...(typeof fill === 'string' ? { color: fill } : {}),
     fill,
     ...(stroke !== undefined ? { stroke } : {}),

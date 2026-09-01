@@ -1,6 +1,6 @@
 # chart v0.1-alpha.1 Roadmap：Scatter & Points
 
-> alpha.1 以 ADR-09 规定的 family、recipe、mark、Theme、provider 与 Plot 出口作为当前基础设施总决策，先闭环 Point family 的可发布能力，再按 capability gate 处理后续 chartType。当前 `scatter`、`bubble`、`regression`、`connected-scatter` 与 `ranged-dot` 已形成实现、adapter、测试和文档闭环；其中 Bubble 与 Regression 的长期契约分别由 ADR-13、ADR-06 接受，Connected Scatter 与 Ranged Dot 待人工接受。`strip` 不再作为独立 chartType 或 alpha blocker，milestone 仍待整体人工验收
+> alpha.1 以 ADR-09 规定的 family、recipe、mark、Theme、provider 与 Plot 出口作为当前基础设施总决策，先闭环 Point family 的可发布能力，再按 capability gate 处理后续 chartType。当前 `scatter`、`bubble`、`regression`、`connected-scatter` 与 `ranged-dot` 已形成实现、adapter、测试和文档闭环；其中 Bubble、Regression 与 Point 最大半径 range 留白的长期契约分别由 ADR-13、ADR-06、ADR-14 接受，Connected Scatter 与 Ranged Dot 待人工接受。`strip` 不再作为独立 chartType 或 alpha blocker，milestone 仍待整体人工验收
 >
 > 关联：[`chart v0.1 roadmap`](../roadmap.md) · [`Chart 总设计`](../../../../../architecture/chart-design.md) · [`Chart 封装完备设计`](../../../../../architecture/chart-encapsulation-complete.md) · [`Data 能力完备设计`](../../../../../architecture/data-capability-complete.md) · [`Plot 可视化完备设计`](../../../../../architecture/plot-visualization-complete.md) · [`ADR-11`](./11-chart-encoding-field-mapping.md) · [`ADR-12`](./12-chart-react-declaration-authoring.md)
 
@@ -18,7 +18,7 @@ alpha.1 要证明 Point family 可以在精确 Source、recipe、Plot lowering�
 
 当前状态是进行中：Point family 的 Scatter、Bubble、Regression、Connected Scatter 与 Ranged Dot recipe 已形成实现闭环；Bubble 的 ADR-13 与 Regression 的 ADR-06 已接受，Connected Scatter 的 ADR-05 与 Ranged Dot 的 ADR-07 保持 Proposed，等待人工验收后再接受。Strip 的目标视觉已由 Scatter + facet + jitter 组合覆盖，因此 ADR-08 不再要求独立 chartType，也不构成 alpha.1 退出 blocker。不能因为当前五个 recipe 已可消费就宣称整个 alpha.1 完成
 
-## 2. ADR-01～03、ADR-09～13 的关系
+## 2. ADR-01～03、ADR-09～14 的关系
 
 ADR-09 是当前 family / recipe Chart 基础设施的总决策。早期 ADR-01～03 中与 Source shell、recipe 分发、Theme owner、公开入口和 presentation 组合有关的部分，以 ADR-09 的长期契约为准；仍与当前实现一致的 Plot lower、Vanilla normalize、React 复用 Vanilla、Standard presentation 边界继续保留
 
@@ -37,6 +37,7 @@ ADR-09 是当前 family / recipe Chart 基础设施的总决策。早期 ADR-01�
 | 11  | Scatter exact encodings、Data output model、rich mapping调度与旧facet surface迁移                                                                     | Proposed                       |
 | 12  | concrete Chart 完整 IR-like 根配置、runtime rows、headless declarations、跨 slot hybrid 与同 slot fail-loud                                           | Accepted                       |
 | 13  | Bubble 独立 chartType、必需字段尺寸映射、不可撤销 size 继承与 Point 共享边界                                                                          | Accepted                       |
+| 14  | Point family 复用 Core 四边 spacing，并按最终 Chart-owned Point 最大半径生成 range domain padding                                                     | Accepted                       |
 
 ## 3. 当前 Source 与解析主链
 
@@ -93,7 +94,7 @@ Ranged Dot 已按 ADR-07 作为固定横向 `ranged-dot` chartType 进入 active
 
 component props 与 `recipe.properties` 都只调整内建 semantic recipe 的常量表现；React、Vanilla 与手写 JSON 最终必须得到同一 Source。Plot 的直接 `marks` 始终是最后追加的独立内容
 
-Point chartType 的 recipe properties 可以通过 `domainPadding` 调整连续位置 scale 的 domain 留白：数值简写应用于全部连续位置 role，`{ x?, y? }` 对象按 role 覆盖，未声明 role 保留 recipe 默认。普通 Point 默认 `0.02`，Bubble 默认 `0.04`；encoding scale operation 的显式值包括 `0`，始终优先。该字段不进入 authored Chart mark，也不改写 categorical、reference 或 `plotExtension` 完整提供的 scale
+Point chartType 的 recipe properties 可以通过 `domainPadding` 调整连续位置 scale 的 domain 留白：数值简写与省略 `kind` 的对象使用 range 单位，显式 `kind: 'ratio'` 使用 domain 跨度比例；对象复用 Core `default / x / y / top / right / bottom / left` spacing shape。五个 Point chartType 从最终 Chart semantic groups 计算最大 Point `size` 半径作为缺省 range 留白。显式 Properties、encoding scale operation 与 Plot extension 的 owner 优先级保持不变；该字段不进入 authored Chart mark，也不改写 categorical 或 `plotExtension` 完整提供的 scale
 
 ## 5. Theme、presentation 与空间边界
 
@@ -137,5 +138,6 @@ alpha.1 结束前必须同时满足：
 4. Core mode / style、Chart / Plot / recipe Theme slices、固定 presentation 顺序与 Chart border-box layout 形成完整 renderer-neutral 结果
 5. React、Vanilla、JSON、SSR与五个active Point chartType的concrete provider contribution复用同一Source、runtime Definition sidecar与resolver主链；未知family、未安装chartType / custom operation、mark、Theme、字段绑定、output descriptor、scale family、composition冲突与依赖缺失都在对应owner边界fail-loud
 6. docs、schema discovery 与示例只展示已实现 recipe；Superseded 的 Strip 不列为可导入 chartType，其组合表达保留在 Scatter 示例与决策记录中
+7. ADR-14 已接受，Point family 的默认连续位置留白由最大 Point 半径统一驱动，四边 / Polar 失败语义与 Plot range / ratio 单位保持一致
 
 当前 alpha.1 仍处于进行中；Connected Scatter 与 Ranged Dot 的实现已完成但 ADR 保持 Proposed，需人工验收后再更新接受状态与 milestone 结论

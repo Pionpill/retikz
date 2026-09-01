@@ -92,14 +92,14 @@ Facet 先建立 panel data view，再让每个 panel 内的 Smooth 独立拟合�
 
 `RegressionPropertiesProps` 同时配置拟合策略与 Point / trend 的常量外观。
 
-| 属性             | 类型                                     | 默认值          | 行为                                                      |
-| ---------------- | ---------------------------------------- | --------------- | --------------------------------------------------------- |
-| `method?`        | `IRPlotSmoothMethod`                     | `linear`        | 选择上表的完整方法对象                                    |
-| `sampleCount?`   | `number`                                 | `64`            | 每组预测采样数，必须是至少 2 的整数                       |
-| `extent?`        | `[number, number]`                       | 当前组有限 x 域 | 趋势采样范围；下界必须小于上界                            |
-| `domainPadding?` | `number` \| `{ x?: number; y?: number }` | `0.02`          | 统一或分别配置连续 x / y 位置 scale 的 domain 留白        |
-| `point?`         | `IRRegressionPointProperties`            | Point 默认值    | 原始观测点的完整 Point 常量 properties                    |
-| `trend?`         | `IRRegressionTrendProperties`            | Path 默认值     | 只允许 Path 的 stroke、线宽、透明度、端点、阴影等常量外观 |
+| 属性             | 类型                                                                    | 默认值              | 行为                                                      |
+| ---------------- | ----------------------------------------------------------------------- | ------------------- | --------------------------------------------------------- |
+| `method?`        | `IRPlotSmoothMethod`                                                    | `linear`            | 选择上表的完整方法对象                                    |
+| `sampleCount?`   | `number`                                                                | `64`                | 每组预测采样数，必须是至少 2 的整数                       |
+| `extent?`        | `[number, number]`                                                      | 当前组有限 x 域     | 趋势采样范围；下界必须小于上界                            |
+| `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | 最终最大 Point 半径 | 配置连续位置 scale 的 range 或显式 ratio 留白             |
+| `point?`         | `IRRegressionPointProperties`                                           | Point 默认值        | 原始观测点的完整 Point 常量 properties                    |
+| `trend?`         | `IRRegressionTrendProperties`                                           | Path 默认值         | 只允许 Path 的 stroke、线宽、透明度、端点、阴影等常量外观 |
 
 当存在 `series` 时，字段颜色优先于 `point.color`、`point.fill` 和 `trend.stroke`，其余常量外观仍有效。这样点、趋势和图例始终使用同一个分类 scale identity。
 

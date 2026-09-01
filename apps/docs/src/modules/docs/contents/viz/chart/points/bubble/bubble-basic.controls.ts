@@ -8,8 +8,6 @@ import { GAPMINDER_BUBBLE_YEAR, gapminderBubbleData } from './bubble-basic.data'
 /** 基础 Bubble playground 的稳定控件 id */
 export const BUBBLE_BASIC_CONTROL_IDS = {
   coordinateSystem: 'bubble-basic-coordinate-system',
-  xDomainPadding: 'bubble-basic-x-domain-padding',
-  yDomainPadding: 'bubble-basic-y-domain-padding',
   colorByContinent: 'bubble-basic-color-by-continent',
   xScale: 'bubble-basic-x-scale',
   xTickCount: 'bubble-basic-x-tick-count',
@@ -55,24 +53,6 @@ export const bubbleBasicControls = definePreviewControls({
           cartesianLabel: '笛卡尔',
           polarLabel: '极坐标',
         }),
-        {
-          kind: 'range',
-          id: BUBBLE_BASIC_CONTROL_IDS.xDomainPadding,
-          label: 'X 位置留白',
-          defaultValue: 0.04,
-          min: 0,
-          max: 0.2,
-          step: 0.01,
-        },
-        {
-          kind: 'range',
-          id: BUBBLE_BASIC_CONTROL_IDS.yDomainPadding,
-          label: 'Y 位置留白',
-          defaultValue: 0.04,
-          min: 0,
-          max: 0.2,
-          step: 0.01,
-        },
       ],
     },
     {
@@ -174,8 +154,6 @@ export const previewControlContract = {
   controls: bubbleBasicControls,
   canonicalValues: {
     [BUBBLE_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
-    [BUBBLE_BASIC_CONTROL_IDS.xDomainPadding]: 0.04,
-    [BUBBLE_BASIC_CONTROL_IDS.yDomainPadding]: 0.04,
     [BUBBLE_BASIC_CONTROL_IDS.colorByContinent]: true,
     [BUBBLE_BASIC_CONTROL_IDS.xScale]: 'log',
     [BUBBLE_BASIC_CONTROL_IDS.xTickCount]: 10,
@@ -196,7 +174,6 @@ export const previewControlContract = {
     'PlotAxis.ticks',
     'PlotAxis.tickLabels',
     'PlotAxis.grid',
-    'BubbleProperties.domainPadding',
     'BubbleProperties.stroke',
     'BubbleProperties.shape',
     'BubbleProperties.fillOpacity',

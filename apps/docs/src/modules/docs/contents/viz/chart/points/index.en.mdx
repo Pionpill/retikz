@@ -9,9 +9,11 @@ Scatter, Bubble, Regression, Connected Scatter, and Ranged Dot all belong to the
 
 Field ownership, the authoring pipeline, chart-wide presentation, and Plot extension rules shared by every type live under [Chart Model](/viz/chart/model). This section compares only the visual semantics unique to point chart types.
 
-Point recipes reserve edge space on continuous position scales so circles at a domain boundary are not clipped. Bubble defaults to `domainPadding: 0.04`, while the other point charts default to `0.02`. Each chart's Properties accepts a nonnegative number for both position roles or `{ x?: number; y?: number }` with at least one role to override them independently; an omitted role retains its recipe default. Under Polar, x / y map to angle / radius. Ranged Dot uses a categorical y scale, so only its continuous x padding applies.
+Point recipes reserve range space on continuous position scales from the largest final Point radius, preventing boundary points from being clipped. A Point without `size` uses radius `5`; a field-sized Point defaults to maximum radius `20`; a constant size or explicit sqrt scale uses the largest final range value. Regression and Connected Scatter inspect their grouped Point, Ranged Dot inspects both endpoints, and `plotExtension.marks` never participate.
 
-Precedence is recipe default, then Properties, then an encoding scale operation. An operation's explicit `0` or `{ lower?, upper? }` is preserved. Categorical scales, named `scale.reference` bindings, and `plotExtension` scales are not rewritten. `domainPadding` belongs only to recipe Properties and is rejected on authored marks.
+Properties `domainPadding` accepts a nonnegative number or `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`. Omitting `kind` means range units. Only explicit `kind: 'ratio'` uses a source-domain-span ratio, and every ratio must be below `1`. A concrete side overrides x / y, which override default. Missing range sides inherit the maximum radius; missing ratio sides become `0`. left / right / top / bottom are Cartesian-only and map to domain lower / upper through the scale's actual range direction. Polar accepts only default / x / y.
+
+Precedence is the automatic maximum radius, then Properties, then an encoding scale operation. An operation's explicit `0` or `{ kind?, lower?, upper? }` is preserved. Categorical scales and `plotExtension` scales are not rewritten. `domainPadding` belongs only to recipe Properties and is rejected on authored marks. Ranged Dot uses a categorical y scale, so only its continuous x padding applies.
 
 ## Responsibilities
 

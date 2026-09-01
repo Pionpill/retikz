@@ -267,6 +267,16 @@ export const vizV01: Release = {
           },
           items: [
             {
+              label: {
+                zh: 'BREAKING：Point 图按最大点半径自动留白',
+                en: 'BREAKING: Point charts pad by their largest Point radius',
+              },
+              content: {
+                zh: 'Scatter、Bubble、Regression、Connected Scatter 与 Ranged Dot 不再使用固定 `0.02` / `0.04` 比例；缺少显式配置时，连续位置 scale 按最终 Chart-owned Point 的最大半径生成 range 留白。Point Properties 的 `domainPadding` 同步支持 Core `default / x / y / top / right / bottom / left` spacing 与显式 ratio；encoding scale operation 和 Plot extension 的显式所有权继续优先。React、Vanilla 与 JSON Source 使用同一 shape。',
+                en: 'Scatter, Bubble, Regression, Connected Scatter, and Ranged Dot no longer use fixed `0.02` / `0.04` ratios. Without an explicit override, continuous position scales reserve range space from the largest final Chart-owned Point radius. Point Properties `domainPadding` also supports Core `default / x / y / top / right / bottom / left` spacing and explicit ratios, while authored encoding-scale operations and Plot extensions keep priority. React, Vanilla, and JSON Source share the same shape.',
+              },
+            },
+            {
               label: { zh: '图内 title、subtitle、source、note', en: 'In-chart title, subtitle, source, and note' },
               content: {
                 zh: '四个可选 slot 支持默认属性与 JSON-safe Source；解析始终按 `title → subtitle → plot → note → source` 组织，缺少 slot 只省略对应内容。',

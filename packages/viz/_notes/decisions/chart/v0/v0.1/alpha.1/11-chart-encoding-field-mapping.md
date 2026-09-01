@@ -121,7 +121,7 @@ type CoordinateDefinition<TCoordinateOperation> = {
 
 最终position scale binding按`recipe fallback < authored coordinate < encoding operation / reference`覆盖。省略显式binding时，Cartesian与Polar都继承同一组recipe scale identity、domain与padding；authored coordinate可以改绑到显式Plot scale；encoding rich mapping作为具体slot的最高优先级连接consumer。Definition hook必须保留operation其它配置，绑定后仍由自身schema与Plot resolver校验；缺失scale、重复来源或不兼容family继续由既有Plot路径fail-loud。
 
-Point recipe properties 可以用 `domainPadding: number | { x?: number; y?: number }` 在 recipe scaffold 与 encoding position scale 之间提供逐 role 默认。优先级固定为 `recipe 默认 < properties.domainPadding < encoding scale.operation.domainPadding`；encoding 中的显式 `0` 或 Plot `{ lower?, upper? }` 对象均胜出。`scale.reference` 与 `plotExtension` 完整提供或替换的 scale 保持 Plot-owned，不由 Chart properties 隐式改写。
+Point recipe properties 可以用 [ADR-14](./14-point-radius-domain-padding.md) 的 `domainPadding` spacing contract 在自动最大半径与 encoding position scale 之间提供逐 role 默认。优先级固定为 `自动最大半径 < properties.domainPadding < encoding scale.operation.domainPadding`；encoding 中的显式 `0` 或 Plot padding 对象均胜出。`scale.reference` 与 `plotExtension` 完整提供或替换的 scale 保持 Plot-owned，不由 Chart properties 隐式改写。
 
 Scatter semantic mark只声明`x / y`位置consumer，因此替换coordinate必须按顺序声明恰好`x / y`两个roles。自定义coordinate可以使用任意operation字段名，但只有通过Definition hook表达同一`x / y`roles时才能用于Scatter；`u / v`、单role或额外必需role在Chart边界fail-loud。其它chartType若需要不同roles，必须由自己的exact recipe另行冻结，不能由Scatter自动猜测。
 

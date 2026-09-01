@@ -75,11 +75,11 @@ Point skips rows that cannot be projected. Path segments at invalid rows by defa
 
 ### `ConnectedScatterPropertiesProps`
 
-| Prop             | Type                                     | Default | Description                                                                         |
-| ---------------- | ---------------------------------------- | ------- | ----------------------------------------------------------------------------------- |
-| `point?`         | `IRConnectedScatterPointProperties`      | Point   | Constant Point appearance without zIndex                                            |
-| `path?`          | `IRConnectedScatterPathProperties`       | Path    | Open-path appearance and `connectNulls`; never closes                               |
-| `domainPadding?` | `number` \| `{ x?: number; y?: number }` | `0.02`  | Configures continuous x / y position scale domain padding together or independently |
+| Prop             | Type                                                                    | Default                    | Description                                                          |
+| ---------------- | ----------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------- |
+| `point?`         | `IRConnectedScatterPointProperties`                                     | Point                      | Constant Point appearance without zIndex                             |
+| `path?`          | `IRConnectedScatterPathProperties`                                      | Path                       | Open-path appearance and `connectNulls`; never closes                |
+| `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest final Point radius | Configures continuous position-scale range or explicit ratio padding |
 
 ### `ConnectedScatterMarkProps`
 

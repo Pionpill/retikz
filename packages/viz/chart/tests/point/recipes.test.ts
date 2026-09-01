@@ -1,10 +1,15 @@
 import type { IRJsonObject } from '@retikz/core';
+import type { IRPlotMarkOperation, IRPlotScaleOperation } from '@retikz/plot';
 
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { PathMarkSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
-import type { ChartRecipeDefinition } from '../../src/_chart/contract';
+import type {
+  ChartEncodingRuntime,
+  ChartRecipeDefinition,
+  ChartScaleDefaultsResolveContext,
+} from '../../src/_chart/contract';
 import type { IRChartSource } from '../../src/_chart/schemas';
 
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
@@ -21,7 +26,11 @@ import { RegressionChartSchema } from '../../src/point/regression/schema';
 import { ScatterMarkDefinition } from '../../src/point/scatter/mark';
 import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
 import { ScatterChartSchema } from '../../src/point/scatter/schema';
-import { pointFieldConsumersOf, pointPositionFieldConsumersOf } from '../../src/point/shared';
+import {
+  pointFieldConsumersOf,
+  pointPositionFieldConsumersOf,
+  resolvePointScaleDefaults,
+} from '../../src/point/shared';
 
 const theme = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
 const runtime = resolveChartProviderRegistry([
@@ -52,43 +61,515 @@ const resolve = <TSource extends IRChartSource>(
     recipeThemeTokens: theme,
   });
 
-describe('Point Chart recipe Definitions', () => {
-  it('Bubble reserves the position domain for its maximum point radius', () => {
-    const result = resolve(BubbleChartDefinition, {
-      x: 'income',
-      y: 'lifeExpectancy',
-      size: 'population',
-    });
+const resolveChart = <TSource extends IRChartSource>(
+  source: TSource,
+  definition: ChartRecipeDefinition<TSource>,
+  activeRuntime: ChartEncodingRuntime,
+) =>
+  resolveSelectedChart(source, {
+    theme: DEFAULT_RESOLVED_THEME,
+    recipe: definition,
+    themeDefinitions: [],
+    runtime: activeRuntime,
+  });
 
-    expect(result.scaffold.scales.map(scale => scale.value)).toEqual([
-      { type: 'linear', name: '__chart.bubble.scale.x', domainPadding: 0.04 },
-      { type: 'linear', name: '__chart.bubble.scale.y', domainPadding: 0.04 },
+const scaleDefaultsContextOf = (
+  source: IRChartSource,
+  chartMarks: ReadonlyArray<IRPlotMarkOperation>,
+  scales: ReadonlyArray<IRPlotScaleOperation>,
+): ChartScaleDefaultsResolveContext => ({
+  source,
+  encodings: {
+    encodings: {},
+    transform: [],
+    scales: [],
+    positionScales: {},
+    removedRecipeScales: new Set<string>(),
+  },
+  chartMarks,
+  scales,
+  spatial: {
+    coordinate: {
+      type: 'cartesian2D',
+      x: '__chart.scatter.scale.x',
+      y: '__chart.scatter.scale.y',
+    },
+  },
+});
+
+describe('Point Chart recipe Definitions', () => {
+  it('all Point chart types reserve continuous position ranges by their maximum final point radius', () => {
+    const scatter = resolveChart(
+      ScatterChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: { chartType: 'scatter', encodings: { x: 'x', y: 'y' } },
+      }),
+      ScatterChartDefinition,
+      runtime,
+    );
+    const bubble = resolveChart(
+      BubbleChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: { chartType: 'bubble', encodings: { x: 'x', y: 'y', size: 'size' } },
+      }),
+      BubbleChartDefinition,
+      bubbleRuntime,
+    );
+    const regression = resolveChart(
+      RegressionChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: { chartType: 'regression', encodings: { x: 'x', y: 'y' } },
+      }),
+      RegressionChartDefinition,
+      regressionRuntime,
+    );
+    const connectedScatter = resolveChart(
+      ConnectedScatterChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: { chartType: 'connected-scatter', encodings: { x: 'x', y: 'y', order: 'order' } },
+      }),
+      ConnectedScatterChartDefinition,
+      connectedScatterRuntime,
+    );
+    const rangedDot = resolveChart(
+      RangedDotChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'ranged-dot',
+          encodings: { category: 'category', start: 'start', end: 'end' },
+        },
+      }),
+      RangedDotChartDefinition,
+      rangedDotRuntime,
+    );
+
+    expect(scatter.plot.scales).toEqual([
+      {
+        type: 'linear',
+        name: '__chart.scatter.scale.x',
+        domainPadding: { kind: 'range', lower: 5, upper: 5 },
+      },
+      {
+        type: 'linear',
+        name: '__chart.scatter.scale.y',
+        domainPadding: { kind: 'range', lower: 5, upper: 5 },
+      },
+    ]);
+    expect(bubble.plot.scales).toEqual([
+      {
+        type: 'linear',
+        name: '__chart.bubble.scale.x',
+        domainPadding: { kind: 'range', lower: 20, upper: 20 },
+      },
+      {
+        type: 'linear',
+        name: '__chart.bubble.scale.y',
+        domainPadding: { kind: 'range', lower: 20, upper: 20 },
+      },
+    ]);
+    expect(regression.plot.scales.slice(0, 2)).toEqual([
+      expect.objectContaining({ domainPadding: { kind: 'range', lower: 5, upper: 5 } }),
+      expect.objectContaining({ domainPadding: { kind: 'range', lower: 5, upper: 5 } }),
+    ]);
+    expect(connectedScatter.plot.scales.slice(0, 2)).toEqual([
+      expect.objectContaining({ domainPadding: { kind: 'range', lower: 5, upper: 5 } }),
+      expect.objectContaining({ domainPadding: { kind: 'range', lower: 5, upper: 5 } }),
+    ]);
+    expect(rangedDot.plot.scales).toEqual([
+      {
+        type: 'linear',
+        name: '__chart.ranged-dot.scale.x',
+        domainPadding: { kind: 'range', lower: 5, upper: 5 },
+      },
+      { type: 'point', name: '__chart.ranged-dot.scale.y' },
     ]);
   });
 
-  it('regular Point recipes reserve the position domain for their point radius', () => {
-    const scatter = resolve(ScatterChartDefinition, { x: 'x', y: 'y' });
-    const regression = resolve(RegressionChartDefinition, { x: 'x', y: 'y' });
-    const connectedScatter = resolve(ConnectedScatterChartDefinition, { x: 'x', y: 'y', order: 'order' });
+  it.each([
+    ['constant size', { properties: { size: 9 } }, 9],
+    [
+      'explicit sqrt range',
+      {
+        encodings: {
+          size: {
+            field: 'size',
+            scale: { operation: { type: 'sqrt', name: 'sizeScale', range: [2, 13] } },
+          },
+        },
+      },
+      13,
+    ],
+    [
+      'reversed sqrt range',
+      {
+        encodings: {
+          size: {
+            field: 'size',
+            scale: { operation: { type: 'sqrt', name: 'sizeScale', range: [18, 2] } },
+          },
+        },
+      },
+      18,
+    ],
+  ])('uses the maximum final radius for %s', (_name, recipeOptions, radius) => {
+    const options = recipeOptions as {
+      properties?: IRJsonObject;
+      encodings?: IRJsonObject;
+    };
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y', ...(options.encodings ?? {}) },
+        ...(options.properties === undefined ? {} : { properties: options.properties }),
+      },
+    });
 
-    expect([
-      scatter.scaffold.scales.map(scale => scale.value),
-      regression.scaffold.scales.map(scale => scale.value),
-      connectedScatter.scaffold.scales.map(scale => scale.value),
-    ]).toEqual([
-      [
-        { type: 'linear', name: '__chart.scatter.scale.x', domainPadding: 0.02 },
-        { type: 'linear', name: '__chart.scatter.scale.y', domainPadding: 0.02 },
-      ],
-      [
-        { type: 'linear', name: '__chart.regression.scale.x', domainPadding: 0.02 },
-        { type: 'linear', name: '__chart.regression.scale.y', domainPadding: 0.02 },
-      ],
-      [
-        { type: 'linear', name: '__chart.connected-scatter.scale.x', domainPadding: 0.02 },
-        { type: 'linear', name: '__chart.connected-scatter.scale.y', domainPadding: 0.02 },
-      ],
+    const result = resolveChart(source, ScatterChartDefinition, runtime);
+
+    expect(result.plot.scales.slice(0, 2)).toEqual([
+      expect.objectContaining({ domainPadding: { kind: 'range', lower: radius, upper: radius } }),
+      expect.objectContaining({ domainPadding: { kind: 'range', lower: radius, upper: radius } }),
     ]);
+  });
+
+  it('computes the maximum after authored additions and atomic override, excluding Plot extension marks', () => {
+    const addition = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+        properties: { size: 3 },
+        marks: [{ kind: 'scatter', properties: { size: 12 } }],
+      },
+      plotExtension: {
+        marks: [
+          {
+            type: 'point',
+            encoding: { x: { field: 'x' }, y: { field: 'y' } },
+            size: { kind: 'constant', value: 99 },
+          },
+        ],
+      },
+    });
+    const override = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+        properties: { size: 30 },
+        marks: [{ kind: 'scatter', override: true, properties: { size: 4 } }],
+      },
+    });
+
+    const additionResult = resolveChart(addition, ScatterChartDefinition, runtime);
+    const overrideResult = resolveChart(override, ScatterChartDefinition, runtime);
+
+    expect(additionResult.plot.scales[0]).toMatchObject({
+      domainPadding: { kind: 'range', lower: 12, upper: 12 },
+    });
+    expect(overrideResult.plot.scales[0]).toMatchObject({
+      domainPadding: { kind: 'range', lower: 4, upper: 4 },
+    });
+  });
+
+  it('uses a referenced Plot extension sqrt scale to determine the maximum Point radius', () => {
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: {
+          x: 'x',
+          y: 'y',
+          size: { field: 'size', scale: { reference: 'sizeScale' } },
+        },
+      },
+      plotExtension: {
+        scales: [{ type: 'sqrt', name: 'sizeScale', range: [3, 17] }],
+      },
+    });
+
+    const result = resolveChart(source, ScatterChartDefinition, runtime);
+
+    expect(result.plot.scales.slice(0, 2)).toEqual([
+      expect.objectContaining({ domainPadding: { kind: 'range', lower: 17, upper: 17 } }),
+      expect.objectContaining({ domainPadding: { kind: 'range', lower: 17, upper: 17 } }),
+    ]);
+    expect(result.plot.scales).toContainEqual({ type: 'sqrt', name: 'sizeScale', range: [3, 17] });
+  });
+
+  it('fails at the Chart owner boundary when a custom Point mark exposes an invalid effective radius', () => {
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: { chartType: 'scatter', encodings: { x: 'x', y: 'y' } },
+    });
+    const positionScales = [
+      { type: 'linear', name: '__chart.scatter.scale.x' },
+      { type: 'linear', name: '__chart.scatter.scale.y' },
+    ] as const;
+
+    expect(() =>
+      resolvePointScaleDefaults(
+        scaleDefaultsContextOf(
+          source,
+          [
+            {
+              type: 'point',
+              encoding: { x: { field: 'x' }, y: { field: 'y' } },
+              size: { kind: 'constant', value: -1 },
+            },
+          ],
+          positionScales,
+        ),
+      ),
+    ).toThrowError(/finite nonnegative/);
+
+    expect(() =>
+      resolvePointScaleDefaults(
+        scaleDefaultsContextOf(
+          source,
+          [
+            {
+              type: 'point',
+              encoding: { x: { field: 'x' }, y: { field: 'y' } },
+              size: { kind: 'field', value: 'size', scale: 'sizeScale' },
+            },
+          ],
+          [...positionScales, { type: 'sqrt', name: 'sizeScale', range: [5, Number.POSITIVE_INFINITY] }],
+        ),
+      ),
+    ).toThrowError(/finite nonnegative/);
+  });
+
+  it('uses the largest Point in regression, connected-scatter, and both Ranged Dot endpoints', () => {
+    const regression = resolveChart(
+      RegressionChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'regression',
+          encodings: { x: 'x', y: 'y' },
+          properties: { point: { size: 11 } },
+        },
+      }),
+      RegressionChartDefinition,
+      regressionRuntime,
+    );
+    const connected = resolveChart(
+      ConnectedScatterChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'connected-scatter',
+          encodings: { x: 'x', y: 'y', order: 'order' },
+          properties: { point: { size: 14 } },
+        },
+      }),
+      ConnectedScatterChartDefinition,
+      connectedScatterRuntime,
+    );
+    const ranged = resolveChart(
+      RangedDotChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'ranged-dot',
+          encodings: { category: 'category', start: 'start', end: 'end' },
+          properties: { point: { size: 6 }, startPoint: { size: 8 }, endPoint: { size: 15 } },
+        },
+      }),
+      RangedDotChartDefinition,
+      rangedDotRuntime,
+    );
+
+    expect(regression.plot.scales[0]).toMatchObject({
+      domainPadding: { kind: 'range', lower: 11, upper: 11 },
+    });
+    expect(connected.plot.scales[0]).toMatchObject({
+      domainPadding: { kind: 'range', lower: 14, upper: 14 },
+    });
+    expect(ranged.plot.scales[0]).toMatchObject({
+      domainPadding: { kind: 'range', lower: 15, upper: 15 },
+    });
+  });
+
+  it('resolves Core side precedence, ratio gaps, and reversed Cartesian ranges', () => {
+    const rangeSource = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+        properties: { domainPadding: { default: 7, x: 8, left: 2, top: 3 } },
+      },
+    });
+    const ratioSource = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+        properties: { domainPadding: { kind: 'ratio', x: 0.1, left: 0.02 } },
+      },
+    });
+    const reversedSource = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: {
+          x: {
+            field: 'x',
+            scale: { operation: { type: 'linear', name: 'xScale', range: [100, 0] } },
+          },
+          y: {
+            field: 'y',
+            scale: { operation: { type: 'linear', name: 'yScale', range: [0, 100] } },
+          },
+        },
+        properties: { domainPadding: { left: 2, right: 8, top: 3, bottom: 9 } },
+      },
+    });
+
+    expect(resolveChart(rangeSource, ScatterChartDefinition, runtime).plot.scales.slice(0, 2)).toEqual([
+      expect.objectContaining({ domainPadding: { kind: 'range', lower: 2, upper: 8 } }),
+      expect.objectContaining({ domainPadding: { kind: 'range', lower: 7, upper: 3 } }),
+    ]);
+    expect(resolveChart(ratioSource, ScatterChartDefinition, runtime).plot.scales.slice(0, 2)).toEqual([
+      expect.objectContaining({ domainPadding: { kind: 'ratio', lower: 0.02, upper: 0.1 } }),
+      expect.objectContaining({ domainPadding: { kind: 'ratio', lower: 0, upper: 0 } }),
+    ]);
+    expect(resolveChart(reversedSource, ScatterChartDefinition, runtime).plot.scales).toEqual([
+      expect.objectContaining({ name: 'xScale', domainPadding: { kind: 'range', lower: 8, upper: 2 } }),
+      expect.objectContaining({ name: 'yScale', domainPadding: { kind: 'range', lower: 3, upper: 9 } }),
+    ]);
+  });
+
+  it('keeps explicit scale padding and Plot extension scale ownership ahead of Point defaults', () => {
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: {
+          x: {
+            field: 'x',
+            scale: { operation: { type: 'linear', name: 'xScale', domainPadding: 0 } },
+          },
+          y: 'y',
+        },
+      },
+      plotExtension: {
+        scales: [{ type: 'log', name: '__chart.scatter.scale.y' }],
+      },
+    });
+
+    const result = resolveChart(source, ScatterChartDefinition, runtime);
+
+    expect(result.plot.scales).toEqual([
+      { type: 'log', name: '__chart.scatter.scale.y' },
+      { type: 'linear', name: 'xScale', domainPadding: 0 },
+    ]);
+  });
+
+  it('allows axis spacing under Polar and rejects visual side spacing outside Cartesian coordinates', () => {
+    const axisPadding = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      coordinate: { type: 'polar2D' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+        properties: { domainPadding: { x: 2, y: 3 } },
+      },
+    });
+    const sidePadding = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      coordinate: { type: 'polar2D' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+        properties: { domainPadding: { left: 2 } },
+      },
+    });
+
+    const result = resolveChart(axisPadding, ScatterChartDefinition, runtime);
+    expect(result.plot.scales.slice(0, 2)).toEqual([
+      expect.objectContaining({ domainPadding: { kind: 'range', lower: 2, upper: 2 } }),
+      expect.objectContaining({ domainPadding: { kind: 'range', lower: 3, upper: 3 } }),
+    ]);
+    expect(() => resolveChart(sidePadding, ScatterChartDefinition, runtime)).toThrowError(
+      expect.objectContaining({
+        details: expect.objectContaining({ path: ['recipe', 'properties', 'domainPadding', 'left'] }),
+      }),
+    );
+  });
+
+  it('rejects visual side spacing for a custom non-Cartesian coordinate', () => {
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+        properties: { domainPadding: { right: 4 } },
+      },
+    });
+    const context = scaleDefaultsContextOf(
+      source,
+      [
+        {
+          type: 'point',
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        },
+      ],
+      [
+        { type: 'linear', name: '__chart.scatter.scale.x' },
+        { type: 'linear', name: '__chart.scatter.scale.y' },
+      ],
+    );
+
+    expect(() =>
+      resolvePointScaleDefaults({
+        ...context,
+        spatial: { coordinate: { type: 'bridge' } },
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        details: expect.objectContaining({ path: ['recipe', 'properties', 'domainPadding', 'right'] }),
+      }),
+    );
   });
 
   it('regular Point charts carry their position padding into authored continuous scales', () => {
@@ -118,58 +599,8 @@ describe('Point Chart recipe Definitions', () => {
     expect(result.plot.scales).toContainEqual({
       type: 'log',
       name: 'amountScale',
-      domainPadding: 0.02,
+      domainPadding: { kind: 'range', lower: 5, upper: 5 },
     });
-  });
-
-  it('applies Point Chart properties to each continuous position role and preserves omitted role defaults', () => {
-    const scatter = resolve(ScatterChartDefinition, { x: 'x', y: 'y' }, { domainPadding: { x: 0.06 } });
-    const bubble = resolve(BubbleChartDefinition, { x: 'x', y: 'y', size: 'size' }, { domainPadding: { y: 0.09 } });
-    const regression = resolve(RegressionChartDefinition, { x: 'x', y: 'y' }, { domainPadding: 0.05 });
-    const connectedScatter = resolve(
-      ConnectedScatterChartDefinition,
-      { x: 'x', y: 'y', order: 'order' },
-      { domainPadding: { x: 0.03, y: 0.07 } },
-    );
-    const rangedDot = resolve(
-      RangedDotChartDefinition,
-      { category: 'category', start: 'start', end: 'end' },
-      { domainPadding: { x: 0.08, y: 0.1 } },
-    );
-
-    expect(scatter.scaffold.scales.map(scale => scale.value)).toEqual([
-      { type: 'linear', name: '__chart.scatter.scale.x', domainPadding: 0.06 },
-      { type: 'linear', name: '__chart.scatter.scale.y', domainPadding: 0.02 },
-    ]);
-    expect(bubble.scaffold.scales.map(scale => scale.value)).toEqual([
-      { type: 'linear', name: '__chart.bubble.scale.x', domainPadding: 0.04 },
-      { type: 'linear', name: '__chart.bubble.scale.y', domainPadding: 0.09 },
-    ]);
-    expect(regression.scaffold.scales.map(scale => scale.value)).toEqual([
-      { type: 'linear', name: '__chart.regression.scale.x', domainPadding: 0.05 },
-      { type: 'linear', name: '__chart.regression.scale.y', domainPadding: 0.05 },
-    ]);
-    expect(connectedScatter.scaffold.scales.map(scale => scale.value)).toEqual([
-      { type: 'linear', name: '__chart.connected-scatter.scale.x', domainPadding: 0.03 },
-      { type: 'linear', name: '__chart.connected-scatter.scale.y', domainPadding: 0.07 },
-    ]);
-    expect(rangedDot.scaffold.scales.map(scale => scale.value)).toEqual([
-      { type: 'linear', name: '__chart.ranged-dot.scale.x', domainPadding: 0.08 },
-      { type: 'point', name: '__chart.ranged-dot.scale.y' },
-    ]);
-  });
-
-  it('Ranged Dot reserves only its continuous position domain for the regular endpoint radius', () => {
-    const result = resolve(RangedDotChartDefinition, {
-      category: 'country',
-      start: 'before',
-      end: 'after',
-    });
-
-    expect(result.scaffold.scales.map(scale => scale.value)).toEqual([
-      { type: 'linear', name: '__chart.ranged-dot.scale.x', domainPadding: 0.02 },
-      { type: 'point', name: '__chart.ranged-dot.scale.y' },
-    ]);
   });
 
   it('Connected Scatter emits an ordered open Path before Point', () => {
@@ -660,7 +1091,11 @@ describe('Point Chart recipe Definitions', () => {
     });
 
     expect(result.plot.scales).toEqual([
-      { type: 'log', name: 'incomeScale', domainPadding: 0.03 },
+      {
+        type: 'log',
+        name: 'incomeScale',
+        domainPadding: { kind: 'range', lower: 0.03, upper: 0.03 },
+      },
       { type: 'linear', name: 'lifeExpectancyScale', domainPadding: 0 },
     ]);
   });

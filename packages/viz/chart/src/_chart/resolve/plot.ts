@@ -8,7 +8,12 @@ import {
 } from '@retikz/plot';
 import { ZodError } from 'zod';
 
-import type { ChartEncodingResolution, ChartEncodingRuntime, ChartRecipeResolution } from '../contract/recipe';
+import type {
+  ChartEncodingResolution,
+  ChartEncodingRuntime,
+  ChartRecipeDefinition,
+  ChartRecipeResolution,
+} from '../contract/recipe';
 import type { IRChartPlotExtension, IRChartSource } from '../schemas';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
@@ -242,6 +247,7 @@ export const resolveChartPlotGuides = (
 /** 生成并再次通过 PlotSchema 校验唯一完整 Plot IR */
 export const resolveChartPlot = (
   source: IRChartSource,
+  definition: Pick<ChartRecipeDefinition, 'resolveScaleDefaults'>,
   recipe: ChartRecipeResolution,
   encodings: ChartEncodingResolution,
   chartMarks: ReadonlyArray<IRPlot['marks'][number]>,
@@ -251,7 +257,15 @@ export const resolveChartPlot = (
   const extension = source.plotExtension;
   const spatial = resolveChartPlotSpatial(recipe, encodings, source.coordinate, extension, runtime);
   const guides = resolveChartPlotGuides(recipe, extension);
-  const scales = resolveChartPlotScales(recipe, encodings, extension);
+  const mergedScales = resolveChartPlotScales(recipe, encodings, extension);
+  const scales =
+    definition.resolveScaleDefaults?.({
+      source,
+      encodings,
+      chartMarks,
+      scales: mergedScales,
+      spatial,
+    }) ?? mergedScales;
   const marks = [...chartMarks, ...(extension?.marks ?? [])];
   const transforms = [...(extension?.transform ?? []), ...encodings.transform, ...(recipe.scaffold.transform ?? [])];
 

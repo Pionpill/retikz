@@ -101,8 +101,6 @@ describe('Viz Chart Bubble controls', () => {
     expect(comparable(basicZh)).toEqual(comparable(basicEn));
     expect(basicZh.canonicalValues).toEqual({
       'bubble-basic-coordinate-system': 'cartesian2D',
-      'bubble-basic-x-domain-padding': 0.04,
-      'bubble-basic-y-domain-padding': 0.04,
       'bubble-basic-color-by-continent': true,
       'bubble-basic-x-scale': 'log',
       'bubble-basic-x-tick-count': 10,
@@ -117,8 +115,6 @@ describe('Viz Chart Bubble controls', () => {
     const controlFields = getPreviewControlFields(basicZh.controls);
     expect(controlFields.map(control => control.id)).toEqual([
       'bubble-basic-coordinate-system',
-      'bubble-basic-x-domain-padding',
-      'bubble-basic-y-domain-padding',
       'bubble-basic-color-by-continent',
       'bubble-basic-x-scale',
       'bubble-basic-x-tick-count',
@@ -130,20 +126,6 @@ describe('Viz Chart Bubble controls', () => {
       'bubble-basic-point-shape',
       'bubble-basic-point-fill-opacity',
     ]);
-    expect(controlFields.find(control => control.id === 'bubble-basic-x-domain-padding')).toMatchObject({
-      kind: 'range',
-      defaultValue: 0.04,
-      min: 0,
-      max: 0.2,
-      step: 0.01,
-    });
-    expect(controlFields.find(control => control.id === 'bubble-basic-y-domain-padding')).toMatchObject({
-      kind: 'range',
-      defaultValue: 0.04,
-      min: 0,
-      max: 0.2,
-      step: 0.01,
-    });
     expect(controlFields.find(control => control.id === 'bubble-basic-x-tick-count')).toMatchObject({
       kind: 'range',
       defaultValue: 10,
@@ -165,7 +147,7 @@ describe('Viz Chart Bubble controls', () => {
     expect(basicZh.relatedApis).toContain('BubbleChart.coordinate');
     expect(basicZh.relatedApis).toContain('BubbleEncodings.color');
     expect(basicZh.relatedApis).not.toContain('BubbleProperties.size');
-    expect(basicZh.relatedApis).toContain('BubbleProperties.domainPadding');
+    expect(basicZh.relatedApis).not.toContain('BubbleProperties.domainPadding');
     expect(basicZh.relatedApis).not.toContain('BubbleProperties.fill');
     expect(basicZh.relatedApis).toContain('BubbleProperties.fillOpacity');
     expect(basicZh.relatedApis).not.toContain('BubbleProperties.opacity');
@@ -183,10 +165,8 @@ describe('Viz Chart Bubble controls', () => {
         color: 'continent',
       });
       expect(canonicalDeclarationProps(source, BubbleEncodings)).not.toHaveProperty('size.scale');
-      expect(canonicalDeclarationProps(source, BubbleProperties)).toMatchObject({
-        domainPadding: { x: 0.04, y: 0.04 },
-        shape: 'circle',
-      });
+      expect(canonicalDeclarationProps(source, BubbleProperties)).toMatchObject({ shape: 'circle' });
+      expect(canonicalDeclarationProps(source, BubbleProperties)).not.toHaveProperty('domainPadding');
       expect(canonicalDeclarationProps(source, BubbleProperties)).not.toHaveProperty('size');
       expect(canonicalDeclarationProps(source, BubbleProperties)).not.toHaveProperty('fill');
       expect(canonicalDeclarationProps(source, BubbleProperties)).not.toHaveProperty('stroke');

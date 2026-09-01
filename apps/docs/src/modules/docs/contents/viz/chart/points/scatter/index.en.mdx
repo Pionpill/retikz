@@ -110,14 +110,14 @@ Scatter rejects `series`, `detail`, `order`, `text`, and ordinary slot arrays wi
 
 `ScatterProperties` declares recipe-level constants and does not accept field mappings; use `ScatterEncodings` for data-driven visual changes. `ScatterPropertiesProps` fields are grouped below.
 
-| Fields                                                                                      | Values                                                                                                             |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `color`, `textColor`, `fill`, `stroke`, `shape`                                             | Colors, paints, or an extensible shape name                                                                        |
-| `size`, `minimumSize`, `scale`, `rotate`, `dx`, `dy`, `padding`, `margin`, `cornerRadius`   | Finite numbers or the corresponding JSON-safe structures                                                           |
-| `strokeWidth`, `fillOpacity`, `strokeOpacity`, `opacity`, `dashed`, `dotted`, `dashPattern` | Stroke, opacity, and dash constants                                                                                |
-| `zIndex`, `align`, `lineHeight`, `maxTextWidth`, `font`, `label`                            | Drawing order, text, and label configuration                                                                       |
-| `boundary`, `shadow`, `blendMode`                                                           | Boundary, shadow, and blend mode                                                                                   |
-| `domainPadding?`                                                                            | `number` or `{ x?: number; y?: number }`; defaults to `0.02` and configures only recipe continuous position scales |
+| Fields                                                                                      | Values                                                                                                                                 |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `color`, `textColor`, `fill`, `stroke`, `shape`                                             | Colors, paints, or an extensible shape name                                                                                            |
+| `size`, `minimumSize`, `scale`, `rotate`, `dx`, `dy`, `padding`, `margin`, `cornerRadius`   | Finite numbers or the corresponding JSON-safe structures                                                                               |
+| `strokeWidth`, `fillOpacity`, `strokeOpacity`, `opacity`, `dashed`, `dotted`, `dashPattern` | Stroke, opacity, and dash constants                                                                                                    |
+| `zIndex`, `align`, `lineHeight`, `maxTextWidth`, `font`, `label`                            | Drawing order, text, and label configuration                                                                                           |
+| `boundary`, `shadow`, `blendMode`                                                           | Boundary, shadow, and blend mode                                                                                                       |
+| `domainPadding?`                                                                            | `number` or `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`; defaults to range padding from the largest final Point radius |
 
 ## `ScatterMark`
 

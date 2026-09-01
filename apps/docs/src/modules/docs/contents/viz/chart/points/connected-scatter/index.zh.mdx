@@ -75,11 +75,11 @@ Point 跳过无法投影的行。Path 默认在坏行处分段；`path.connectNu
 
 ### `ConnectedScatterPropertiesProps`
 
-| 属性             | 类型                                     | 默认值 | 描述                                               |
-| ---------------- | ---------------------------------------- | ------ | -------------------------------------------------- |
-| `point?`         | `IRConnectedScatterPointProperties`      | Point  | Point 常量外观；不开放 zIndex                      |
-| `path?`          | `IRConnectedScatterPathProperties`       | Path   | 开放轨迹的线条外观与 `connectNulls`；不开放闭合    |
-| `domainPadding?` | `number` \| `{ x?: number; y?: number }` | `0.02` | 统一或分别配置连续 x / y 位置 scale 的 domain 留白 |
+| 属性             | 类型                                                                    | 默认值              | 描述                                            |
+| ---------------- | ----------------------------------------------------------------------- | ------------------- | ----------------------------------------------- |
+| `point?`         | `IRConnectedScatterPointProperties`                                     | Point               | Point 常量外观；不开放 zIndex                   |
+| `path?`          | `IRConnectedScatterPathProperties`                                      | Path                | 开放轨迹的线条外观与 `connectNulls`；不开放闭合 |
+| `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | 最终最大 Point 半径 | 配置连续位置 scale 的 range 或显式 ratio 留白   |
 
 ### `ConnectedScatterMarkProps`
 

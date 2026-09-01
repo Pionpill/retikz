@@ -1,25 +1,13 @@
 import type { IRJsonObject } from '@retikz/core';
-import type { IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
+import type { IRPlotGuide } from '@retikz/plot';
 
 import { DataFieldType, DataTransformFieldEffect, DataTransformPhase } from '@retikz/data';
 import { PlotGuide, PlotScale } from '@retikz/plot';
 
-import type { ChartEncodingResolution } from '../../_chart/contract';
 import type { ChartEncodingFieldConsumer } from '../../_chart/resolve';
-import type { PointPositionDomainPaddingResolution } from './plot';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
-import { pointPositionDomainPadding, pointRecipeId } from './plot';
-
-const pointContinuousPositionScaleTypes = new Set<string>([
-  PlotScale.Linear,
-  PlotScale.Time,
-  PlotScale.Log,
-  PlotScale.Pow,
-  PlotScale.Sqrt,
-  PlotScale.Symlog,
-  PlotScale.Radial,
-]);
+import { pointRecipeId } from './plot';
 
 const invalidPoint = (message: string, path: ReadonlyArray<string | number>): RetikzChartError =>
   new RetikzChartError({
@@ -73,30 +61,6 @@ const pointPositionTransformCapabilities = [
 const pointContinuousTransformCapabilities = [
   { phase: DataTransformPhase.FieldDerive, fieldEffect: DataTransformFieldEffect.Preserve },
 ] as const;
-
-/** 为 encoding 声明的连续位置比例尺补齐 Point recipe 的 domain 留白 */
-export const withPointPositionDomainPadding = (
-  resolution: ChartEncodingResolution,
-  domainPadding: PointPositionDomainPaddingResolution = {
-    x: pointPositionDomainPadding,
-    y: pointPositionDomainPadding,
-  },
-): ChartEncodingResolution => {
-  const positionRoleByScaleName = new Map(
-    Object.entries(resolution.positionScales).flatMap(([role, scaleName]) =>
-      role === 'x' || role === 'y' ? [[scaleName, role] as const] : [],
-    ),
-  );
-  const scales = resolution.scales.map((scale): IRPlotScaleOperation => {
-    const positionRole = positionRoleByScaleName.get(scale.name);
-    return positionRole !== undefined &&
-      pointContinuousPositionScaleTypes.has(scale.type) &&
-      !Object.hasOwn(scale, 'domainPadding')
-      ? { ...scale, domainPadding: domainPadding[positionRole] }
-      : scale;
-  });
-  return { ...resolution, scales };
-};
 
 /** 创建具体 Point chartType 的位置字段 mapping consumers */
 export const pointPositionFieldConsumersOf = (

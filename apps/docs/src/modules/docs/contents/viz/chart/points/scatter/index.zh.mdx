@@ -110,14 +110,14 @@ Scatter 不接受 `series`、`detail`、`order`、`text` 或没有明确 consume
 
 `ScatterProperties` 声明 recipe 级常量，不接受字段 mapping；字段驱动的视觉变化应写在 `ScatterEncodings`。`ScatterPropertiesProps` 的字段分组如下。
 
-| 字段                                                                                        | 值域                                                                                |
-| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `color`、`textColor`、`fill`、`stroke`、`shape`                                             | 颜色、paint 或可扩展 shape 名称                                                     |
-| `size`、`minimumSize`、`scale`、`rotate`、`dx`、`dy`、`padding`、`margin`、`cornerRadius`   | 有限数值或对应 JSON-safe 结构                                                       |
-| `strokeWidth`、`fillOpacity`、`strokeOpacity`、`opacity`、`dashed`、`dotted`、`dashPattern` | 描边、透明度与虚线常量                                                              |
-| `zIndex`、`align`、`lineHeight`、`maxTextWidth`、`font`、`label`                            | 绘制顺序、文本与标签配置                                                            |
-| `boundary`、`shadow`、`blendMode`                                                           | 边界、阴影与混合模式                                                                |
-| `domainPadding?`                                                                            | `number` 或 `{ x?: number; y?: number }`；默认 `0.02`，只配置 recipe 连续位置 scale |
+| 字段                                                                                        | 值域                                                                                                              |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `color`、`textColor`、`fill`、`stroke`、`shape`                                             | 颜色、paint 或可扩展 shape 名称                                                                                   |
+| `size`、`minimumSize`、`scale`、`rotate`、`dx`、`dy`、`padding`、`margin`、`cornerRadius`   | 有限数值或对应 JSON-safe 结构                                                                                     |
+| `strokeWidth`、`fillOpacity`、`strokeOpacity`、`opacity`、`dashed`、`dotted`、`dashPattern` | 描边、透明度与虚线常量                                                                                            |
+| `zIndex`、`align`、`lineHeight`、`maxTextWidth`、`font`、`label`                            | 绘制顺序、文本与标签配置                                                                                          |
+| `boundary`、`shadow`、`blendMode`                                                           | 边界、阴影与混合模式                                                                                              |
+| `domainPadding?`                                                                            | `number` 或 `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`；默认按最终最大 Point 半径使用 range 留白 |
 
 ## `ScatterMark`
 

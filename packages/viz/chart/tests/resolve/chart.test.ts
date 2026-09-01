@@ -718,6 +718,31 @@ describe('Chart resolution', () => {
     });
   });
 
+  it('runs recipe scale defaults after final Chart marks and before Plot extension marks are appended', () => {
+    let observedMarkIds: Array<string | undefined> = [];
+    const scaleDefaultRecipe = defineChartRecipe({
+      ...recipe,
+      resolveScaleDefaults: context => {
+        observedMarkIds = context.chartMarks.map(operation =>
+          typeof operation.id === 'string' ? operation.id : undefined,
+        );
+        expect(context.scales).toEqual([{ type: 'log', name: 'x' }]);
+        expect(context.spatial).toEqual({ coordinate: { type: 'cartesian2D', x: 'x', y: 'x' } });
+        return context.scales.map(scale => ({ ...scale, domainPadding: 0 }));
+      },
+    });
+    const scaleDefaultRegistry = resolveChartProviderRegistry([
+      { family: 'point', recipe: scaleDefaultRecipe, themeDefinitions: [] },
+    ]);
+    const authored = sourceSchema.parse({ ...source, theme: undefined });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, scaleDefaultRegistry);
+
+    expect(observedMarkIds).toEqual(['semantic', 'mark']);
+    expect(result.plot.scales).toEqual([{ type: 'log', name: 'x', domainPadding: 0 }]);
+    expect(result.plot.marks.map(operation => operation.id)).toEqual(['semantic', 'mark', 'explicit']);
+  });
+
   it('replaces a matching semantic group atomically at its original position', () => {
     const overrideRecipe = defineChartRecipe({
       ...recipe,

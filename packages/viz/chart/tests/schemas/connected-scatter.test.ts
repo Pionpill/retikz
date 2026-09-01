@@ -32,7 +32,11 @@ describe('Connected Scatter exact Source schema', () => {
   });
 
   it('keeps position domain padding recipe-only', () => {
-    expect(ConnectedScatterChartPropertiesSchema.parse({ domainPadding: 0.04 })).toEqual({ domainPadding: 0.04 });
+    expect(
+      ConnectedScatterChartPropertiesSchema.parse({
+        domainPadding: { kind: 'range', x: 8, top: 3 },
+      }),
+    ).toEqual({ domainPadding: { kind: 'range', x: 8, top: 3 } });
     expect(
       ConnectedScatterChartMarkSchema.safeParse({
         kind: 'connected-scatter',

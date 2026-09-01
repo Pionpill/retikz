@@ -605,7 +605,7 @@ describe('Typed Point Chart React declarations', () => {
     const markup = renderToStaticMarkup(
       <BubbleChart>
         {requiredBubbleDeclarations}
-        <BubbleProperties domainPadding={{ x: 0.04, y: 0.06 }} />
+        <BubbleProperties domainPadding={{ kind: 'ratio', default: 0.04, left: 0.02 }} />
       </BubbleChart>,
     );
 

@@ -107,8 +107,12 @@ describe('Regression exact Source schema', () => {
   });
 
   it('keeps position domain padding recipe-only', () => {
-    expect(RegressionChartPropertiesSchema.parse({ domainPadding: { x: 0.03, y: 0.05 } })).toEqual({
-      domainPadding: { x: 0.03, y: 0.05 },
+    expect(
+      RegressionChartPropertiesSchema.parse({
+        domainPadding: { kind: 'ratio', default: 0.04, top: 0.02 },
+      }),
+    ).toEqual({
+      domainPadding: { kind: 'ratio', default: 0.04, top: 0.02 },
     });
     expect(
       RegressionChartMarkSchema.safeParse({ kind: 'regression', properties: { domainPadding: 0.04 } }).success,

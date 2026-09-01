@@ -45,8 +45,8 @@ describe('Ranged Dot exact Source schema', () => {
   });
 
   it('keeps position domain padding recipe-only', () => {
-    expect(RangedDotChartPropertiesSchema.parse({ domainPadding: { x: 0.06 } })).toEqual({
-      domainPadding: { x: 0.06 },
+    expect(RangedDotChartPropertiesSchema.parse({ domainPadding: { default: 5, right: 8 } })).toEqual({
+      domainPadding: { default: 5, right: 8 },
     });
     expect(
       RangedDotChartMarkSchema.safeParse({ kind: 'ranged-dot', properties: { domainPadding: 0.04 } }).success,

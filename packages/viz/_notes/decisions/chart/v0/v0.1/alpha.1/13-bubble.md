@@ -55,7 +55,7 @@ type IRBubbleMark = {
 
 这些名称表示契约角色，不新增 Plot、Data 或 Foundation 已拥有的原子类型。位置、颜色、尺寸、透明度、形状、partition、facet、aggregate、derived transform、开放 operation key 与 scale binding 直接复用 ADR-11 和当前 owner 的 schema；具体 Bubble schema仍独立闭合并由 schema 推导公开类型。
 
-`IRBubbleChartProperties` 复用 Point 常量属性，但排除 `size`，并在 recipe 顶层接受 Point 共用的 `domainPadding: number | { x?: number; y?: number }`。`IRBubbleMark` 的显式 encodings 与 properties 同时排除 `size` 与 `domainPadding`；mark 可以继承 recipe 的必需尺寸映射，却不能改写、删除或替换该角色。Bubble 的内建 semantic group 使用唯一 `kind: 'bubble'`，并确定性生成一个 Plot Point mark。
+`IRBubbleChartProperties` 复用 Point 常量属性，但排除 `size`，并在 recipe 顶层接受 [ADR-14](./14-point-radius-domain-padding.md) 统一的 Point `domainPadding` spacing contract。`IRBubbleMark` 的显式 encodings 与 properties 同时排除 `size` 与 `domainPadding`；mark 可以继承 recipe 的必需尺寸映射，却不能改写、删除或替换该角色。Bubble 的内建 semantic group 使用唯一 `kind: 'bubble'`，并确定性生成一个 Plot Point mark。
 
 具体入口为：
 
@@ -82,7 +82,7 @@ Scatter 与 Bubble 共享以下稳定 Point 能力：字段 mapping 原子、pos
 
 ## 行为、失败语义与兼容性
 
-- 默认行为：Bubble 生成一个 Point semantic mark；`size` 使用 Plot 的 sqrt 尺寸尺度语义，并默认生成 size legend。连续位置 role 的 `domainPadding` 默认是 `0.04`；legend 是可替换的表现性 guide，不属于 chartType 核心
+- 默认行为：Bubble 生成一个 Point semantic mark；`size` 使用 Plot 的 sqrt 尺寸尺度语义，并默认生成 size legend。连续位置 role 按最终字段尺寸 sqrt range 的最大半径使用 range 留白，省略显式 range 时最大半径为 `20`；legend 是可替换的表现性 guide，不属于 chartType 核心
 - 尺度约束：省略显式 scale 时沿用 Plot 的默认 sqrt size scale；内联或具名 scale 必须解析为兼容的 sqrt position scale。Chart 不实现第二套尺度或半径计算
 - mark 行为：普通 `BubbleMark` 按 authored order 追加；`override: true` 原位替换内建 `bubble` semantic group。两种情况都继承 recipe 的核心 size mapping，显式 payload 不能提供 `size`
 - facet 与 transform：row / column / facet、aggregate 与 derived mapping 沿用 Point exact encoding 和 owner operation 契约；共享轴多 mark 轨道仍只通过 `ChartExtension` / `plotExtension` 使用 Plot 能力
