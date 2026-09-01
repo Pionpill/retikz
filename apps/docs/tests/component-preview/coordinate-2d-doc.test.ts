@@ -40,6 +40,15 @@ const cartesianCanonicalValues = {
   showGrid: true,
 } as const;
 
+const polarCanonicalValues = {
+  markType: 'line',
+  markInterpolation: 'inherit',
+  coordinateInterpolation: 'auto',
+  innerRadius: 0,
+  startAngle: -90,
+  sweepAngle: 360,
+} as const;
+
 const fieldContractOf = (definition: PreviewControlsDefinition) =>
   getPreviewControlFields(definition).map(field => ({
     id: field.id,
@@ -152,7 +161,7 @@ describe('二维坐标系文档 playground', () => {
     expect(englishCartesianContract.canonicalValues).toEqual(cartesianContract.canonicalValues);
   });
 
-  it('极坐标 controls 提供点线面、内半径与角度控制且双语同构', () => {
+  it('极坐标 controls 提供点线面、插值、内半径与角度控制且双语同构', () => {
     const chineseFields = fieldContractOf(coordinatePolarControls);
     const englishFields = fieldContractOf(englishCoordinatePolarControls);
 
@@ -162,11 +171,29 @@ describe('二维坐标系文档 playground', () => {
       {
         id: 'markType',
         kind: 'select',
-        defaultValue: 'point',
+        defaultValue: 'line',
         min: undefined,
         max: undefined,
         step: undefined,
         optionValues: ['point', 'line', 'interval'],
+      },
+      {
+        id: 'markInterpolation',
+        kind: 'select',
+        defaultValue: 'inherit',
+        min: undefined,
+        max: undefined,
+        step: undefined,
+        optionValues: ['inherit', 'polar', 'chord'],
+      },
+      {
+        id: 'coordinateInterpolation',
+        kind: 'select',
+        defaultValue: 'auto',
+        min: undefined,
+        max: undefined,
+        step: undefined,
+        optionValues: ['auto', 'polar', 'chord'],
       },
       {
         id: 'innerRadius',
@@ -197,12 +224,7 @@ describe('二维坐标系文档 playground', () => {
       },
     ]);
     expect(englishFields).toEqual(chineseFields);
-    expect(polarContract.canonicalValues).toEqual({
-      markType: 'point',
-      innerRadius: 0,
-      startAngle: -90,
-      sweepAngle: 360,
-    });
+    expect(polarContract.canonicalValues).toEqual(polarCanonicalValues);
     expect(englishPolarContract.canonicalValues).toEqual(polarContract.canonicalValues);
   });
 
@@ -219,9 +241,7 @@ describe('二维坐标系文档 playground', () => {
     ['line', 'path'],
     ['interval', 'interval'],
   ] as const)('极坐标 %s control 渲染 %s mark', (markType, expectedType) => {
-    expect(
-      plotMarkOf(renderCoordinatePolar, { markType, innerRadius: 0, startAngle: -90, sweepAngle: 360 })?.type,
-    ).toBe(expectedType);
+    expect(plotMarkOf(renderCoordinatePolar, { ...polarCanonicalValues, markType })?.type).toBe(expectedType);
   });
 
   it('笛卡尔折线开放且极坐标折线闭合', () => {
@@ -230,10 +250,8 @@ describe('二维坐标系文档 playground', () => {
     );
     expect(
       plotMarkOf(renderCoordinatePolar, {
+        ...polarCanonicalValues,
         markType: 'line',
-        innerRadius: 0,
-        startAngle: -90,
-        sweepAngle: 360,
       })?.closed,
     ).toBe(true);
   });

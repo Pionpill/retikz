@@ -32,18 +32,41 @@ export const coordinatePolarControls = definePreviewControls({
           kind: 'select',
           id: 'markType',
           label: '图元类型',
-          defaultValue: 'point',
+          defaultValue: 'line',
           options: [
             { value: 'point', label: '点' },
             { value: 'line', label: '线' },
             { value: 'interval', label: '面' },
           ],
         },
+        {
+          kind: 'select',
+          id: 'markInterpolation',
+          label: '图元插值',
+          defaultValue: 'inherit',
+          options: [
+            { value: 'inherit', label: '继承坐标系' },
+            { value: 'polar', label: '极坐标曲线' },
+            { value: 'chord', label: '直线弦' },
+          ],
+          visibleWhen: { controlId: 'markType', oneOf: ['line', 'interval'] },
+        },
       ],
     },
     {
       label: '坐标投影',
       controls: [
+        {
+          kind: 'select',
+          id: 'coordinateInterpolation',
+          label: '坐标插值',
+          defaultValue: 'auto',
+          options: [
+            { value: 'auto', label: '自动推断' },
+            { value: 'polar', label: '极坐标曲线' },
+            { value: 'chord', label: '直线弦' },
+          ],
+        },
         {
           kind: 'range',
           id: 'innerRadius',
@@ -80,10 +103,12 @@ export const coordinatePolarControls = definePreviewControls({
 export const previewControlContract = {
   controls: coordinatePolarControls,
   canonicalValues: {
-    markType: 'point',
+    markType: 'line',
+    markInterpolation: 'inherit',
+    coordinateInterpolation: 'auto',
     innerRadius: 0,
     startAngle: -90,
     sweepAngle: 360,
   },
-  relatedApis: ['PointMark', 'PathMark', 'IntervalMark', 'Plot.coordinate'],
+  relatedApis: ['PointMark', 'PathMark.interpolation', 'IntervalMark.interpolation', 'Plot.coordinate.interpolation'],
 } satisfies PreviewControlContract;

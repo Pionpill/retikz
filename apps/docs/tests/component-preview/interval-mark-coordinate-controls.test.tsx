@@ -98,15 +98,20 @@ type Point = {
 const filledPathData = (markup: string): Array<string> =>
   Array.from(markup.matchAll(/<path d="([^"]+)" fill="(?!none)[^"]+"/g), match => match[1]);
 
-const pointOf = (match: RegExpMatchArray | null): Point => {
-  if (match === null) throw new Error('Expected interval sector path point');
-  return { x: Number(match[1]), y: Number(match[2]) };
+const pointOf = (point: Point | undefined): Point => {
+  if (point === undefined) throw new Error('Expected interval contour outer point');
+  return point;
 };
 
-const outerStartOf = (pathData: string): Point => pointOf(pathData.match(/ L ([\d.-]+) ([\d.-]+)/));
+const linePointsOf = (pathData: string): Array<Point> =>
+  Array.from(pathData.matchAll(/ L ([\d.-]+) ([\d.-]+)/g), match => ({
+    x: Number(match[1]),
+    y: Number(match[2]),
+  }));
 
-const outerEndOf = (pathData: string): Point =>
-  pointOf(pathData.match(/ A [\d.-]+ [\d.-]+ 0 [01] [01] ([\d.-]+) ([\d.-]+)/));
+const outerStartOf = (pathData: string): Point => pointOf(linePointsOf(pathData).at(-1));
+
+const outerEndOf = (pathData: string): Point => pointOf(linePointsOf(pathData).at(-2));
 
 const angleOf = (center: Point, point: Point): number => Math.atan2(point.y - center.y, point.x - center.x);
 
@@ -175,7 +180,7 @@ describe('IntervalMark playground 坐标系切换', () => {
     expect(polar).not.toBe(cartesian);
   });
 
-  it('基础区间的分类间距在完整圆周的首尾接缝处仍然可见', () => {
+  it('基础区间默认 chord contour 的分类间距在完整圆周首尾仍然可见', () => {
     const polar = renderScenario(scenarios[0], 'polar2D', {
       'bar-position-gap': 0.5,
       'bar-position-corner-radius': 0,

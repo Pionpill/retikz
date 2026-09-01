@@ -50,6 +50,16 @@ export const vizV02: Release = {
             },
             {
               label: {
+                zh: 'BREAKING：polar2D 插值由坐标系统一决定',
+                en: 'BREAKING: polar2D interpolation is coordinate-owned',
+              },
+              content: {
+                zh: '`polar2D.interpolation` 支持 `polar | chord`；省略时连续角向 position scale 默认 `polar`，离散 scale 默认 `chord`。Guide、Path、Interval、Reference 与满足约束的默认 Relation path 继承坐标系模式，适用 Mark 可局部覆盖且不改变 Grid。自定义 position scale Definition 现在必须声明 `continuity`。',
+                en: '`polar2D.interpolation` accepts `polar | chord`; when omitted, a continuous angular position scale defaults to `polar` and a discrete scale to `chord`. Guides, Path, Interval, Reference, and eligible default Relation paths inherit the coordinate mode, while applicable Marks may override it without changing the Grid. Custom position-scale Definitions must now declare `continuity`.',
+              },
+            },
+            {
+              label: {
                 zh: 'BREAKING：发布包主题改为 owner 默认 baseline',
                 en: 'BREAKING: published themes use owner default baselines',
               },

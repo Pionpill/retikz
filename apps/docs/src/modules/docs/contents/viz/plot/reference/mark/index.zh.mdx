@@ -75,6 +75,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     connectNulls: '是否跳过无效投影点并跨空连接。',
     closure: '循环、常量基线或每行堆叠基线的闭合策略。',
     curve: '相邻有序点的连接曲线。',
+    interpolation: 'polar2D 相邻位置的连接空间覆盖；省略时继承 coordinate。',
     strokeWidth: '路径描边宽度。',
     opacity: '路径整体不透明度。',
     lineCap: '路径端点样式。',
@@ -116,6 +117,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     type: '区间图元判别值。',
     series: '颜色分组和带内子分组的 series 字段。',
     bounds: '按坐标角色声明的区间边界；省略时从角色比例尺推断。',
+    interpolation: 'polar2D cell 边界的局部连接空间覆盖。',
     strokeWidth: '区间 cell 描边宽度。',
     fill: '区间 cell 填充 paint。',
     stroke: '区间 cell 描边 paint。',
@@ -168,6 +170,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
   descriptions={{
     type: '参考图元判别值。',
     kind: '显式 region 形态；省略时从编码推断参考线或单轴 band。',
+    interpolation: 'polar2D band / region 边界的局部连接空间覆盖；固定角度 line 保持直线。',
     yTo: 'y 方向上界；与 encoding.y 组成水平 band 或 region 边界。',
     xTo: 'x 方向上界；与 encoding.x 组成垂直 band 或 region 边界。',
     extentField: '局部长度参考的对侧起点字段。',
@@ -267,6 +270,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
   name="RelationPathGeometrySchema"
   description="RelationMark 的途经点、显式路由或算法路由配置。"
   descriptions={{
+    interpolation: '仅默认、全 projected polar2D path 使用的连接空间覆盖。',
     via: '可选中间目标，投影后可生成 Core Coordinate。',
     route: '初始 move(source) 之后的显式路由 step。',
     routing: '算法路由策略；省略时直线连接。',

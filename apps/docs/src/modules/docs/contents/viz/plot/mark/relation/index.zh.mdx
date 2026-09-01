@@ -27,6 +27,8 @@ import { Plot, PointMark, RelationMark } from '@retikz/plot-react';
 
 `RelationMark` 通常和带 `anchorId` 的位置 mark 搭配使用。位置 mark 负责把数据行投影成 core `Node` / `Coordinate` 并生成稳定 id，relation mark 只用同一套规则从自己的数据行里算出 source / target id，然后降低成 core `Path`。如果边数据还不存在，可以用 `transform` 只为当前 relation mark 动态派生关系行。
 
+在 polar2D 下，只有默认 path 且 source、target 与全部 `path.via` 都使用 `{ project }` 时，RelationMark 才继承 coordinate interpolation。`path.interpolation` 可局部覆盖该默认；ID / anchor 目标、显式 `route`、`routing` 与 ribbon 仍由 Relation 自己的路由契约决定。对这些排除形态显式配置 interpolation 会直接报错，省略时旧行为不变。
+
 ### 何时使用
 
 RelationMark 是底层关系路径 mark：它不重新发明箭头、标签或折线路由，而是把关系数据转换成 core `Path.children` 的 step 序列。表现层上看到的依赖线、流程线、引用线和带标签的连接线，都是同一类 source-target path 的不同配置。
@@ -91,12 +93,12 @@ PathMark 为每个顶点注册可引用坐标，RelationMark 的局部 `relate` 
 
 <ComponentPreview files="relation-lowering-flow" hideCode size="xs" />
 
-| 阶段       | 可观察行为                                                                                                                 |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------- |
-| 解析目标   | `{ id }` 引用已有目标，`{ anchorId }` 按当前行生成目标 id，`{ project }` 把当前行的坐标 role 投影成新坐标                  |
-| 构造路径   | 默认从 source 直连 target；`path.via` 插入中间点，`path.routing` 选择 line / bend / orthogonal，`path.route` 提供显式 step |
-| 生成几何   | 默认关系生成 core `Path`；`kind="ribbon"` 使用 `ribbon.width` / `endWidth` 生成带状 Path，不消费路径路由                   |
-| 装饰与诊断 | 顶层 `label` 挂到最终 Path，step label 挂到对应路径段；缺失目标 id 与重复生成的 anchor id 会带 mark 和数据行上下文报错     |
+| 阶段       | 可观察行为                                                                                                               |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 解析目标   | `{ id }` 引用已有目标，`{ anchorId }` 按当前行生成目标 id，`{ project }` 把当前行的坐标 role 投影成新坐标                |
+| 构造路径   | 全投影的 polar2D 默认 path 可先按 coordinate interpolation 采样；route、routing、ID / anchor target 与 ribbon 不参与继承 |
+| 生成几何   | 默认关系生成 core `Path`；`kind="ribbon"` 使用 `ribbon.width` / `endWidth` 生成带状 Path，不消费路径路由                 |
+| 装饰与诊断 | 顶层 `label` 挂到最终 Path，step label 挂到对应路径段；缺失目标 id 与重复生成的 anchor id 会带 mark 和数据行上下文报错   |
 
 `path.route` 与 `path.routing` 互斥。默认直连、line 与 bend 路由会把 `path.label` 放到最后一个可绘制 step；orthogonal 路由默认使用 `labelStep="main"`，把标签放到最长主线段，只有 `labelStep="last"` 才放到最后一段。显式 `path.route[].label` 优先级更高。
 
@@ -112,25 +114,31 @@ PathMark 为每个顶点注册可引用坐标，RelationMark 的局部 `relate` 
       label: '投影目标解析与坐标生成',
       path: 'packages/viz/plot/src/providers/mark/features/relation.ts',
       startLine: 90,
-      endLine: 134,
+      endLine: 156,
     },
     {
       label: 'id 与生成式 anchorId 目标解析',
       path: 'packages/viz/plot/src/providers/mark/features/relation.ts',
-      startLine: 136,
-      endLine: 155,
+      startLine: 158,
+      endLine: 180,
+    },
+    {
+      label: 'Polar 插值继承、排除形态与作者 target 保留',
+      path: 'packages/viz/plot/src/providers/mark/features/relation.ts',
+      startLine: 312,
+      endLine: 380,
     },
     {
       label: 'line、bend 与 orthogonal 路由分派',
       path: 'packages/viz/plot/src/providers/mark/features/relation.ts',
-      startLine: 371,
-      endLine: 382,
+      startLine: 497,
+      endLine: 509,
     },
     {
       label: 'Path 与 ribbon 关系下沉',
       path: 'packages/viz/plot/src/providers/mark/features/relation.ts',
-      startLine: 468,
-      endLine: 572,
+      startLine: 594,
+      endLine: 710,
     },
   ]}
 />
@@ -139,21 +147,22 @@ PathMark 为每个顶点注册可引用坐标，RelationMark 的局部 `relate` 
 
 下面只列 RelationMark 特有或在本页重新定义语义的属性。React 使用者可以从 `@retikz/plot-react` 导入 `RelationMarkProps`；表中的 `IRPlot*` 类型从 `@retikz/plot` 导入，Vanilla authoring 的 `InputPlotRelationPathGeometry` 从 `@retikz/plot-vanilla` 导入。局部 `transform` 及 `relate` 变换见[变换](/viz/plot/transform)，自定义字段通道见[通道绑定](/viz/plot/channel/binding)，坐标投影目标见[坐标系](/viz/plot/coordinate)。path 与 ribbon 共用的颜色、描边、透明度、阴影等样式放在 `style`；只属于普通路径的箭头、虚线和圆角放在 `path.options`。
 
-| 属性                | 类型                                                | 默认值      | 描述                                                                                  |
-| ------------------- | --------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------- |
-| `source` / `target` | `RelationMarkProps['source']`                       | 必填        | 起点与终点；可直接引用 id、按行生成 anchor id，或从当前行投影坐标                     |
-| `kind?`             | <ApiValues name="RelationGeometryKind" />           | `path`      | 每行生成普通 Path 或 ribbon Path                                                      |
-| `label?`            | `RelationMarkProps['label']`                        | —           | 整条关系的 geometry label                                                             |
-| `path.via?`         | `NonNullable<RelationMarkProps['path']>['via']`     | —           | 默认或算法路由经过的中间目标；Vanilla 输入对应 `InputPlotRelationPathGeometry['via']` |
-| `path.routing?`     | `NonNullable<RelationMarkProps['path']>['routing']` | `line`      | `line`、`bend` 或 `orthogonal` 路由；与 `path.route` 互斥                             |
-| `path.route?`       | `NonNullable<RelationMarkProps['path']>['route']`   | —           | 显式 core-like step 序列；最后一步省略 `to` 时指向 target                             |
-| `path.label?`       | `NonNullable<RelationMarkProps['path']>['label']`   | —           | 默认或算法路径的 step label 便捷写法                                                  |
-| `path.options?`     | `NonNullable<RelationMarkProps['path']>['options']` | —           | 普通路径专属的 marks、dash、roundedCorners、lineCap 与 lineJoin                       |
-| `ribbon.width`      | `IRPlotRelationRibbonOptions['width']`              | ribbon 必填 | source 侧宽度；省略 `endWidth` 时也是整条带宽                                         |
-| `ribbon.endWidth?`  | `IRPlotRelationRibbonOptions['endWidth']`           | —           | target 侧宽度                                                                         |
-| `ribbon.options?`   | `IRPlotRelationRibbonOptions['options']`            | —           | 对齐、采样与宽度插值选项                                                              |
-| `style?`            | `RelationMarkProps['style']`                        | —           | path / ribbon 共享的视觉样式                                                          |
-| `color?`            | `RelationMarkProps['color']`                        | —           | 字段驱动的关系颜色通道                                                                |
+| 属性                  | 类型                                                | 默认值          | 描述                                                                                   |
+| --------------------- | --------------------------------------------------- | --------------- | -------------------------------------------------------------------------------------- |
+| `source` / `target`   | `RelationMarkProps['source']`                       | 必填            | 起点与终点；可直接引用 id、按行生成 anchor id，或从当前行投影坐标                      |
+| `kind?`               | <ApiValues name="RelationGeometryKind" />           | `path`          | 每行生成普通 Path 或 ribbon Path                                                       |
+| `label?`              | `RelationMarkProps['label']`                        | —               | 整条关系的 geometry label                                                              |
+| `path.via?`           | `NonNullable<RelationMarkProps['path']>['via']`     | —               | 默认或算法路由经过的中间目标；Vanilla 输入对应 `InputPlotRelationPathGeometry['via']`  |
+| `path.interpolation?` | <ApiValues name="PolarInterpolation" />             | coordinate 默认 | 仅默认、全 projected polar2D path 的连接空间覆盖；不能与 route、routing 或 ribbon 组合 |
+| `path.routing?`       | `NonNullable<RelationMarkProps['path']>['routing']` | `line`          | `line`、`bend` 或 `orthogonal` 路由；与 `path.route` 互斥                              |
+| `path.route?`         | `NonNullable<RelationMarkProps['path']>['route']`   | —               | 显式 core-like step 序列；最后一步省略 `to` 时指向 target                              |
+| `path.label?`         | `NonNullable<RelationMarkProps['path']>['label']`   | —               | 默认或算法路径的 step label 便捷写法                                                   |
+| `path.options?`       | `NonNullable<RelationMarkProps['path']>['options']` | —               | 普通路径专属的 marks、dash、roundedCorners、lineCap 与 lineJoin                        |
+| `ribbon.width`        | `IRPlotRelationRibbonOptions['width']`              | ribbon 必填     | source 侧宽度；省略 `endWidth` 时也是整条带宽                                          |
+| `ribbon.endWidth?`    | `IRPlotRelationRibbonOptions['endWidth']`           | —               | target 侧宽度                                                                          |
+| `ribbon.options?`     | `IRPlotRelationRibbonOptions['options']`            | —               | 对齐、采样与宽度插值选项                                                               |
+| `style?`              | `RelationMarkProps['style']`                        | —               | path / ribbon 共享的视觉样式                                                           |
+| `color?`              | `RelationMarkProps['color']`                        | —               | 字段驱动的关系颜色通道                                                                 |
 
 ## 相关
 

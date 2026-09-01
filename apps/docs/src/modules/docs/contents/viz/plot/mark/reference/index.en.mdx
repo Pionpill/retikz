@@ -36,7 +36,7 @@ The bound axis decides orientation, and the optional upper bound decides the for
 | Vertical reference band   | `x` / `xTo`                                 | Fixed x interval, filling `x∈[x,xTo]`               |
 | Bounded 2D region         | `kind="region"` + `x` / `xTo` / `y` / `yTo` | Fixed x and y intervals, filling their intersection |
 
-Under `polar2D`, the coordinate system reinterprets the same props: `y` is a constant-radius reference ring, `y` / `yTo` is an annular band, `x` is a radial reference line, `x` / `xTo` is a sector wedge, and `kind="region"` constrains both angle and radius to form an annular sector.
+Under `polar2D`, the coordinate system reinterprets the same props: `y` is a constant-radius reference ring, `y` / `yTo` is an annular band, `x` is a radial reference line, `x` / `xTo` is a sector wedge, and `kind="region"` constrains both angle and radius. Bands and regions inherit coordinate `interpolation` or override it with curved `polar` or straight-edged `chord`; fixed-angle reference lines remain radial lines.
 
 ## Examples
 
@@ -98,7 +98,7 @@ Classification also decides iteration: all-constant bounds without an extent pro
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | Validate    | The default form binds exactly one of `x` / `y`; upper bounds pair with the same role; region supplies every bound required by the coordinate |
 | Choose rows | A fully constant reference creates one geometry; field-driven positions, upper bounds, or extents produce geometry for each valid row         |
-| Project     | Lines become core `Path` objects under cartesian2D / polar2D; bands and regions use `projectCell` to create fillable core `Node` objects      |
+| Project     | Lines stay straight; polar2D bands / regions inherit or override coordinate interpolation, then use `projectCell` for core `Node` geometry    |
 | Decorate    | Lines use Path styling and geometry labels; bands / regions use Node styling and node labels; field colors group per datum                    |
 
 A completely constant reference cannot bind color to a field because there is no datum to read. Use a constant color, or bind the reference position to a field.
@@ -112,9 +112,9 @@ A completely constant reference cannot bind color to a field because there is no
       endLine: 190,
     },
     {
-      label: 'Reference line, band, and region lowering',
+      label: 'Reference line, band, region, and Polar interpolation lowering',
       path: 'packages/viz/plot/src/providers/mark/features/reference.ts',
-      startLine: 313,
+      startLine: 225,
       endLine: 447,
     },
     {
@@ -130,14 +130,15 @@ A completely constant reference cannot bind color to a field because there is no
 
 This table keeps only ReferenceMark-specific props and props whose meaning is redefined here. See [channel bindings](/viz/plot/channel/binding) for field and constant inputs, [transforms](/viz/plot/transform) for local `transform` and layer props, and [coordinates](/viz/plot/coordinate) for coordinate-view props. Lines follow shared [Path styling](/kernel/components/draw/path#styling), while bands and regions follow shared [Node styling](/kernel/components/node/overview#visual-style-api).
 
-| Prop                              | Type                                   | Default              | Description                                                                                                                   |
-| --------------------------------- | -------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `x?` / `y?`                       | `ReferenceMarkProps['x']`              | —                    | Reference-axis value for the default form; set exactly one. Numbers are constant, fields produce one reference per row        |
-| `xTo?` / `yTo?`                   | `ReferenceMarkProps['xTo']`            | —                    | Upper bound paired with the same lower-bound role; turns a line into a band                                                   |
-| `kind?`                           | <ApiValues name="ReferenceMarkKind" /> | —                    | Set `region` to build an area from bounds on multiple roles                                                                   |
-| `extentField?` / `extentToField?` | `ReferenceMarkProps['extentField']`    | Full opposite domain | Per-row start and end that shorten a line / band along the opposite role; set them together                                   |
-| `color?`                          | `string`                               | Default layer color  | A numeric lower `x` / `y` sets color directly; a field lower bound interprets the string as a per-row color field             |
-| `label?`                          | `ReferenceMarkProps['label']`          | —                    | Lowers to a geometry label for lines and a node label for bands / regions; content lives in `content.field` / `content.value` |
+| Prop                              | Type                                    | Default              | Description                                                                                                                   |
+| --------------------------------- | --------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `x?` / `y?`                       | `ReferenceMarkProps['x']`               | —                    | Reference-axis value for the default form; set exactly one. Numbers are constant, fields produce one reference per row        |
+| `xTo?` / `yTo?`                   | `ReferenceMarkProps['xTo']`             | —                    | Upper bound paired with the same lower-bound role; turns a line into a band                                                   |
+| `kind?`                           | <ApiValues name="ReferenceMarkKind" />  | —                    | Set `region` to build an area from bounds on multiple roles                                                                   |
+| `interpolation?`                  | <ApiValues name="PolarInterpolation" /> | Coordinate default   | polar2D band / region boundary override; fixed-angle reference lines never become arcs                                        |
+| `extentField?` / `extentToField?` | `ReferenceMarkProps['extentField']`     | Full opposite domain | Per-row start and end that shorten a line / band along the opposite role; set them together                                   |
+| `color?`                          | `string`                                | Default layer color  | A numeric lower `x` / `y` sets color directly; a field lower bound interprets the string as a per-row color field             |
+| `label?`                          | `ReferenceMarkProps['label']`           | —                    | Lowers to a geometry label for lines and a node label for bands / regions; content lives in `content.field` / `content.value` |
 
 ## Related
 
