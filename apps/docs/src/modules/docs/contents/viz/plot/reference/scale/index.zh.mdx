@@ -15,7 +15,7 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
 
 ## 连续位置比例尺
 
-连续位置比例尺共用 `domainPadding` 和 `singleValueSpan`：推断 domain 时默认保留少量边界，显式 domain 则默认不扩展。
+连续位置比例尺共用 `domainPadding` 和 `singleValueSpan`。`domainPadding` 的裸数字与省略 kind 的对象使用 range 单位；`kind: 'ratio'` 才使用原始 domain 跨度比例。两种 domain 来源默认都不扩展。
 
 ### LinearScaleSchema
 
@@ -29,7 +29,7 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
     range: '图区单位中的输出范围 [start, end]；省略时从坐标 extent 派生。',
     nice: '是否把 domain 取整为易读数值。',
     clamp: '是否把 domain 外输入夹到 range 端点。',
-    domainPadding: '添加到解析 domain 的比例边界。',
+    domainPadding: '添加到解析 domain 的 range 单位留白，或显式 ratio 留白。',
     singleValueSpan: 'domain 只有单值时使用的备用跨度。',
   }}
 />
@@ -45,7 +45,7 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
     domain: 'epoch 毫秒 [start, end]；Date 实例不进入 IR。',
     nice: '是否向外对齐到易读时间边界。',
     clamp: '是否夹紧 domain 外时刻。',
-    domainPadding: '添加到解析 domain 的比例边界。',
+    domainPadding: '添加到解析 domain 的 range 单位留白，或显式 ratio 留白。',
     singleValueSpan: '时间 domain 只有单值时的备用跨度。',
   }}
 />
@@ -63,7 +63,7 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
     base: '大于 1 的对数底，默认 10。',
     nice: '是否向外对齐到底数的整次幂。',
     clamp: '是否夹紧 domain 外输入。',
-    domainPadding: '添加到 domain 的比例边界。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
     singleValueSpan: '单值 domain 的备用跨度。',
   }}
 />
@@ -81,7 +81,7 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
     exponent: '幂指数，默认 2。',
     nice: '是否取整 domain。',
     clamp: '是否夹紧 domain 外输入。',
-    domainPadding: '添加到 domain 的比例边界。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
     singleValueSpan: '单值 domain 的备用跨度。',
   }}
 />
@@ -98,7 +98,7 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
     range: '位置输出范围，或 size 通道的半径范围。',
     nice: '是否取整 domain。',
     clamp: '是否夹紧 domain 外输入。',
-    domainPadding: '添加到 domain 的比例边界。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
     singleValueSpan: '单值 domain 的备用跨度。',
   }}
 />
@@ -116,7 +116,7 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
     constant: '零附近线性区宽度，默认 1。',
     nice: '是否取整 domain。',
     clamp: '是否夹紧 domain 外输入。',
-    domainPadding: '添加到 domain 的比例边界。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
     singleValueSpan: '单值 domain 的备用跨度。',
   }}
 />
@@ -133,7 +133,7 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
     range: '图区单位中的 [innerRadius, outerRadius]。',
     nice: '是否取整 domain。',
     clamp: '是否夹紧 domain 外输入。',
-    domainPadding: '添加到 domain 的比例边界。',
+    domainPadding: '添加到 domain 的 range 单位留白，或显式 ratio 留白。',
     singleValueSpan: '单值 domain 的备用跨度。',
   }}
 />
@@ -276,7 +276,15 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
 
 ### DomainPaddingSchema
 
-<ZodSchema name="DomainPaddingSchema" description="同时作用于两端的数值边界，或分别指定 lower / upper 的对象。" />
+<ZodSchema
+  name="DomainPaddingSchema"
+  description="使用 range 输出单位或显式 domain 比例，为连续 domain 两端增加留白。"
+  descriptions={{
+    kind: '留白单位；省略时为 range，ratio 必须显式声明。',
+    lower: 'domain 下端的非负留白；ratio 时必须小于 1。',
+    upper: 'domain 上端的非负留白；ratio 时必须小于 1。',
+  }}
+/>
 
 ### CategoryValueSchema
 

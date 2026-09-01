@@ -51,6 +51,7 @@ const parseScaleOperation = (def: AnyScaleDefinition, operation: IRPlotScaleOper
 const resolveBuiltinPositionOperation = (
   operation: IRPlotScaleOperation,
   values: Array<unknown>,
+  fallbackRange: readonly [number, number],
 ): IRPlotScaleOperation => {
   if (!isBuiltinScaleOperation(operation)) return operation;
   const numericValues = values.filter(isFiniteNumber);
@@ -62,6 +63,7 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'linear',
           domain: operation.domain ?? safeExtent(numericValues),
+          range: operation.range ?? fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
         }),
@@ -75,6 +77,7 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'log',
           domain: operation.domain ?? [lo, hi],
+          range: operation.range ?? fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
           base: operation.base,
@@ -95,6 +98,7 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'pow',
           domain: sourceDomain,
+          range: operation.range ?? fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
           exponent,
@@ -108,6 +112,7 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'sqrt',
           domain: operation.domain ?? safeExtent(numericValues.filter(value => value >= 0)),
+          range: operation.range ?? fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
         }),
@@ -119,8 +124,10 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'symlog',
           domain: operation.domain ?? safeExtent(numericValues),
+          range: operation.range ?? fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
+          constant: operation.constant,
         }),
       };
     case PlotScale.Radial:
@@ -130,6 +137,7 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'radial',
           domain: operation.domain ?? safeExtent(numericValues.filter(value => value >= 0)),
+          range: operation.range ?? fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
         }),
@@ -142,6 +150,7 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'time',
           domain: operation.domain ?? safeExtent(stamps),
+          range: fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
         }),
@@ -168,7 +177,7 @@ export const resolvePositionScale = (
       `resolvePositionScale: ${operation.type} scale "${operation.name}" cannot drive a positional (x/y) channel; color scales bind the color channel only`,
     );
   }
-  const effectiveOperation = resolveBuiltinPositionOperation(operation, values);
+  const effectiveOperation = resolveBuiltinPositionOperation(operation, values, fallbackRange);
   return def.resolve(parseScaleOperation(def, effectiveOperation), values, fallbackRange);
 };
 

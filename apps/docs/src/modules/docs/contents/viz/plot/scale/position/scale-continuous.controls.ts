@@ -75,7 +75,7 @@ export const scaleContinuousControls = definePreviewControls({
         {
           kind: 'range',
           id: 'domainPadding',
-          label: '值域留白',
+          label: '值域留白比例',
           defaultValue: 0,
           min: 0,
           max: 0.2,

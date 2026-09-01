@@ -4,6 +4,26 @@ import { describe, expect, it } from 'vitest';
 import { normalizePlot, normalizePlotDeclarations } from '../../../src';
 
 describe('normalizePlot', () => {
+  it('保留显式 ratio domain padding', () => {
+    const spec = normalizePlot({
+      data: { reference: 'sales' },
+      scales: [
+        {
+          type: 'linear',
+          name: 'x',
+          domainPadding: { kind: 'ratio', lower: 0.1, upper: 0.2 },
+        },
+      ],
+      marks: [],
+    });
+
+    expect(spec.scales).toContainEqual({
+      type: 'linear',
+      name: 'x',
+      domainPadding: { kind: 'ratio', lower: 0.1, upper: 0.2 },
+    });
+  });
+
   it('从 plain authoring input 创建 schema-valid IRPlot 并保留显式 identity', () => {
     const input = {
       id: 'sales',

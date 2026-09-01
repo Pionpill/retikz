@@ -71,7 +71,7 @@ export const scaleContinuousControls = definePreviewControls({
         {
           kind: 'range',
           id: 'domainPadding',
-          label: 'Domain padding',
+          label: 'Domain padding ratio',
           defaultValue: 0,
           min: 0,
           max: 0.2,

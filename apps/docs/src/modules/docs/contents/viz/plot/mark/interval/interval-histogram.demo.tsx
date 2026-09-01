@@ -23,6 +23,16 @@ export const previewControls = intervalHistogramControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const coordinate = values[INTERVAL_CONTINUOUS_COORDINATE_ID] === 'polar2D' ? 'polar2D' : undefined;
+  const xDomainPadding = {
+    kind: 'ratio' as const,
+    lower: values[INTERVAL_CONTINUOUS_HORIZONTAL_PADDING_ID],
+    upper: values[INTERVAL_CONTINUOUS_HORIZONTAL_PADDING_ID],
+  };
+  const yDomainPadding = {
+    kind: 'ratio' as const,
+    lower: values[INTERVAL_CONTINUOUS_VERTICAL_PADDING_ID],
+    upper: values[INTERVAL_CONTINUOUS_VERTICAL_PADDING_ID],
+  };
 
   return (
     <Layout
@@ -35,16 +45,16 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         <Plot data={measurements} width={360} height={280} coordinate={coordinate}>
           <PlotTransform {...intervalHistogramOperationOf(values)} />
           <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
-          <PlotScale dimension="x" type="linear" domainPadding={values[INTERVAL_CONTINUOUS_HORIZONTAL_PADDING_ID]} />
-          <PlotScale dimension="y" type="linear" domainPadding={values[INTERVAL_CONTINUOUS_VERTICAL_PADDING_ID]} />
+          <PlotScale dimension="x" type="linear" domainPadding={xDomainPadding} />
+          <PlotScale dimension="y" type="linear" domainPadding={yDomainPadding} />
           <PlotAxis dimension="x" />
           <PlotAxis dimension="y" grid />
         </Plot>
       ) : (
         <Plot data={laborCosts} width={360} height={280} coordinate={coordinate}>
           <IntervalMark x="country" y="cost" width="gdp" color="country" />
-          <PlotScale dimension="x" type="linear" domainPadding={values[INTERVAL_CONTINUOUS_HORIZONTAL_PADDING_ID]} />
-          <PlotScale dimension="y" type="linear" domainPadding={values[INTERVAL_CONTINUOUS_VERTICAL_PADDING_ID]} />
+          <PlotScale dimension="x" type="linear" domainPadding={xDomainPadding} />
+          <PlotScale dimension="y" type="linear" domainPadding={yDomainPadding} />
           <PlotAxis dimension="x" />
           <PlotAxis dimension="y" grid />
         </Plot>

@@ -25,6 +25,8 @@ A positional scale answers where a field lands on the canvas, how long it is, or
 
 Plot uses the inferred continuous domain directly and adds no implicit boundary padding. Set `domainPadding` explicitly when a particular graphic needs room; higher-level Chart recipes can provide their own mark-aware defaults.
 
+A bare number and an object without `kind` use scale-range output units, so x and y receive the same physical gap; for example, `10` reserves 10 user units at each end. Only `{ kind: 'ratio', lower?, upper? }` explicitly uses a fraction of the source-domain span, with every ratio constrained to `0 <= value < 1`. An object may set one end only; the omitted end remains `0`.
+
 <ComponentPreview
   size="lg"
   files={['scale-continuous', 'scale-continuous.data.ts']}
@@ -109,20 +111,20 @@ The resolved scale serves both marks and guides: continuous scales output numeri
     {
       label: 'Default type derivation and baseline validation',
       path: 'packages/viz/plot/src/resolve/scale/resolve.ts',
-      startLine: 47,
-      endLine: 153,
+      startLine: 51,
+      endLine: 164,
     },
     {
       label: 'Single-value expansion and padding for continuous domains',
       path: 'packages/viz/plot/src/resolve/scale/domain.ts',
-      startLine: 114,
-      endLine: 136,
+      startLine: 56,
+      endLine: 236,
     },
     {
       label: 'Resolution entry points for positional scale definitions',
       path: 'packages/viz/plot/src/resolve/scale/resolve.ts',
-      startLine: 155,
-      endLine: 173,
+      startLine: 168,
+      endLine: 183,
     },
   ]}
 />
@@ -131,19 +133,19 @@ The resolved scale serves both marks and guides: continuous scales output numeri
 
 React `<PlotScale>` is the declaration surface for common positional types. A `band` scale can be derived from interval structure or configured explicitly for bar gaps and outer padding. `pow` and complete IR fields belong in `IRPlot.scales`. `PlotAxis.scale` is a shortcut for common types on the same dimension.
 
-| Prop               | Type                                | Default        | Description                                                                    |
-| ------------------ | ----------------------------------- | -------------- | ------------------------------------------------------------------------------ |
-| `dimension`        | `'x' \| 'y'`                        | —              | Coordinate dimension; polar uses `x` / `y` for angular / radial roles          |
-| `type`             | `PlotScaleProps['type']`            | —              | `linear`, `time`, `band`, `point`, `log`, `sqrt`, `symlog`, or `radial`        |
-| `domain?`          | `PlotScaleProps['domain']`          | inferred       | Continuous input extent, or an ordered category list for `band` / `point`      |
-| `domainPadding?`   | `PlotScaleProps['domainPadding']`   | `0`            | Fractional continuous-domain padding, applied only when explicitly declared    |
-| `singleValueSpan?` | `PlotScaleProps['singleValueSpan']` | type-derived   | Minimum span used to expand a single-value domain                              |
-| `base?`            | `PlotScaleProps['base']`            | `10`           | `log` only; must be greater than `1`                                           |
-| `constant?`        | `PlotScaleProps['constant']`        | `1`            | `symlog` only; controls the width of the linear region around zero             |
-| `paddingInner?`    | `number`                            | `0.1`          | `band` only; gap between adjacent bands as a fraction of step, from `0` to `1` |
-| `paddingOuter?`    | `number`                            | `paddingInner` | `band` only; outer padding as a fraction of step, from `0` to `1`              |
-| `padding?`         | `number`                            | `0.5`          | `point` only; outer padding as a fraction of step, from `0` to `1`             |
-| `align?`           | `number`                            | `0.5`          | `band` / `point`; distributes outer padding across both ends, from `0` to `1`  |
+| Prop               | Type                                                                        | Default        | Description                                                                                     |
+| ------------------ | --------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------- |
+| `dimension`        | `'x' \| 'y'`                                                                | —              | Coordinate dimension; polar uses `x` / `y` for angular / radial roles                           |
+| `type`             | `PlotScaleProps['type']`                                                    | —              | `linear`, `time`, `band`, `point`, `log`, `sqrt`, `symlog`, or `radial`                         |
+| `domain?`          | `PlotScaleProps['domain']`                                                  | inferred       | Continuous input extent, or an ordered category list for `band` / `point`                       |
+| `domainPadding?`   | `number` \| `{ kind?: 'range' \| 'ratio'; lower?: number; upper?: number }` | `0`            | Continuous-domain padding; bare numbers / omitted kind use range units, while ratio is explicit |
+| `singleValueSpan?` | `PlotScaleProps['singleValueSpan']`                                         | type-derived   | Minimum span used to expand a single-value domain                                               |
+| `base?`            | `PlotScaleProps['base']`                                                    | `10`           | `log` only; must be greater than `1`                                                            |
+| `constant?`        | `PlotScaleProps['constant']`                                                | `1`            | `symlog` only; controls the width of the linear region around zero                              |
+| `paddingInner?`    | `number`                                                                    | `0.1`          | `band` only; gap between adjacent bands as a fraction of step, from `0` to `1`                  |
+| `paddingOuter?`    | `number`                                                                    | `paddingInner` | `band` only; outer padding as a fraction of step, from `0` to `1`                               |
+| `padding?`         | `number`                                                                    | `0.5`          | `point` only; outer padding as a fraction of step, from `0` to `1`                              |
+| `align?`           | `number`                                                                    | `0.5`          | `band` / `point`; distributes outer padding across both ends, from `0` to `1`                   |
 
 The complete `IRPlotScale` surface can also name a scale, set an output `range`, and configure fields that the React DSL does not expose, including `pow.exponent`, `nice`, and `clamp`. These `IRPlot*` types and schemas come from `@retikz/plot`; every variant and custom scale operation follows this public IR contract.
 

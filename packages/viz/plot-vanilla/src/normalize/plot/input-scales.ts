@@ -1,4 +1,10 @@
-import type { IRPlotBandScale, IRPlotLogScale, IRPlotPointScale, IRPlotSymlogScale } from '@retikz/plot';
+import type {
+  IRPlotBandScale,
+  IRPlotDomainPadding,
+  IRPlotLogScale,
+  IRPlotPointScale,
+  IRPlotSymlogScale,
+} from '@retikz/plot';
 
 /** 位置 scale 可配置的坐标维度 */
 export type InputPlotScaleDimension = 'x' | 'y';
@@ -10,7 +16,7 @@ export type InputPlotPositionScaleType = 'linear' | 'time' | 'band' | 'point' | 
 export type InputPlotContinuousPositionScaleType = Exclude<InputPlotPositionScaleType, 'band' | 'point'>;
 
 /** React DSL 中暴露的 position scale domain padding 输入 */
-export type InputDomainPadding = number | { lower?: number; upper?: number };
+export type InputDomainPadding = IRPlotDomainPadding;
 
 /** <PlotScale> 公共 props：声明某个坐标维度使用的 scale 类型 */
 type ScaleBaseProps = {

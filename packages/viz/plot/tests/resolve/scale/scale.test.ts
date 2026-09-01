@@ -48,7 +48,7 @@ describe('resolveLinearScale (contract d3-scale)', () => {
 
   it('scale_domain_padding_object_targets_sides', () => {
     const scale = resolvePositionScale(
-      { type: 'linear', name: 'x', domainPadding: { lower: 0.25 } },
+      { type: 'linear', name: 'x', domainPadding: { kind: 'ratio', lower: 0.25 } },
       [10, 20],
       [0, 100],
     );
@@ -97,6 +97,141 @@ describe('resolveLinearScale (contract d3-scale)', () => {
     );
     expect(scale(0)).toBe(50);
     expect(scale(10)).toBe(150);
+  });
+});
+
+describe('resolvePositionScale domain padding units', () => {
+  it.each([
+    ['linear', { type: 'linear', name: 'x', domain: [10, 20] }, 10, 20, [0, 100]],
+    ['time', { type: 'time', name: 'x', domain: [10_000, 80_000] }, 10_000, 80_000, [0, 100]],
+    ['log', { type: 'log', name: 'x', domain: [10, 100] }, 10, 100, [0, 100]],
+    ['pow', { type: 'pow', name: 'x', domain: [1, 3], exponent: 2 }, 1, 3, [0, 100]],
+    ['sqrt', { type: 'sqrt', name: 'x', domain: [1, 9] }, 1, 9, [0, 100]],
+    ['symlog', { type: 'symlog', name: 'x', domain: [-10, 10], constant: 2 }, -10, 10, [0, 100]],
+    ['radial', { type: 'radial', name: 'x', domain: [10, 100], range: [2, 102] }, 10, 100, [0, 500]],
+  ] satisfies Array<[string, IRPlotScaleOperation, number, number, readonly [number, number]]>)(
+    '%s places source endpoints at exact range-unit distances',
+    (_family, operation, lowerValue, upperValue, fallbackRange) => {
+      const scale = resolvePositionScale(
+        { ...operation, domainPadding: { kind: 'range', lower: 10, upper: 20 } },
+        [],
+        fallbackRange,
+      );
+      const [rangeStart, rangeEnd] = scale.range();
+      const direction = Math.sign(rangeEnd - rangeStart);
+      expect(scale.coordinate(lowerValue)).toBeCloseTo(rangeStart + direction * 10, 6);
+      expect(scale.coordinate(upperValue)).toBeCloseTo(rangeEnd - direction * 20, 6);
+    },
+  );
+
+  it('treats a sub-unit bare number as range distance', () => {
+    const scale = resolvePositionScale(
+      { type: 'linear', name: 'x', domain: [10, 20], domainPadding: 0.25 },
+      [],
+      [0, 100],
+    );
+    expect(scale.coordinate(10)).toBeCloseTo(0.25, 6);
+    expect(scale.coordinate(20)).toBeCloseTo(99.75, 6);
+  });
+
+  it('preserves explicit source-domain-span ratios', () => {
+    const scale = resolvePositionScale(
+      { type: 'linear', name: 'x', domain: [10, 20], domainPadding: { kind: 'ratio', lower: 0.25 } },
+      [],
+      [0, 100],
+    );
+    expect(scale.domain()).toEqual([7.5, 20]);
+  });
+
+  it('keeps lower and upper attached to domain endpoints under reversed range', () => {
+    const scale = resolvePositionScale(
+      {
+        type: 'linear',
+        name: 'x',
+        domain: [10, 20],
+        domainPadding: { kind: 'range', lower: 10, upper: 20 },
+      },
+      [],
+      [100, 0],
+    );
+    expect(scale.coordinate(10)).toBeCloseTo(90, 6);
+    expect(scale.coordinate(20)).toBeCloseTo(20, 6);
+  });
+
+  it('uses an explicit scale range instead of the coordinate fallback range', () => {
+    const scale = resolvePositionScale(
+      {
+        type: 'linear',
+        name: 'x',
+        domain: [0, 10],
+        range: [50, 150],
+        domainPadding: { kind: 'range', lower: 10, upper: 20 },
+      },
+      [],
+      [0, 500],
+    );
+    expect(scale.coordinate(0)).toBeCloseTo(60, 6);
+    expect(scale.coordinate(10)).toBeCloseTo(130, 6);
+  });
+
+  it('keeps zero padding as a no-op for a collapsed range', () => {
+    const scale = resolvePositionScale({ type: 'linear', name: 'x', domain: [0, 10], domainPadding: 0 }, [], [5, 5]);
+    expect(scale.domain()).toEqual([0, 10]);
+  });
+
+  it.each([
+    ['collapsed range', [5, 5] as const, { kind: 'range', lower: 1 } as const],
+    ['padding equal to range length', [0, 100] as const, { kind: 'range', lower: 40, upper: 60 } as const],
+    ['padding above range length', [0, 100] as const, { kind: 'range', lower: 60, upper: 60 } as const],
+    ['non-finite range', [0, Number.POSITIVE_INFINITY] as const, { kind: 'range', upper: 1 } as const],
+  ])('rejects %s for positive range padding', (_name, range, domainPadding) => {
+    expect(() =>
+      resolvePositionScale({ type: 'linear', name: 'x', domain: [0, 10], domainPadding }, [], range),
+    ).toThrow(/domainPadding.*range/i);
+  });
+
+  it.each([
+    ['sqrt', { type: 'sqrt', name: 'x', domain: [0, 9], domainPadding: { kind: 'range', lower: 10 } }],
+    ['radial', { type: 'radial', name: 'x', domain: [0, 9], domainPadding: { kind: 'range', lower: 10 } }],
+    [
+      'non-integer pow',
+      { type: 'pow', name: 'x', domain: [0, 9], exponent: 0.5, domainPadding: { kind: 'range', lower: 10 } },
+    ],
+  ] satisfies Array<[string, IRPlotScaleOperation]>)(
+    '%s fails when range padding requires a negative domain',
+    (_name, operation) => {
+      expect(() => resolvePositionScale(operation, [], [0, 100])).toThrow(/non-negative/i);
+    },
+  );
+
+  it('expands a single-value domain before applying range padding', () => {
+    const scale = resolvePositionScale(
+      {
+        type: 'linear',
+        name: 'x',
+        domain: [5, 5],
+        singleValueSpan: 2,
+        domainPadding: { kind: 'range', lower: 10, upper: 10 },
+      },
+      [],
+      [0, 100],
+    );
+    expect(scale.domain()).toEqual([3.75, 6.25]);
+  });
+
+  it('applies nice after range padding', () => {
+    const scale = resolvePositionScale(
+      {
+        type: 'linear',
+        name: 'x',
+        domain: [1.1, 9.1],
+        nice: true,
+        domainPadding: { kind: 'range', lower: 10, upper: 10 },
+      },
+      [],
+      [0, 100],
+    );
+    expect(scale.domain()).toEqual([0, 11]);
   });
 });
 

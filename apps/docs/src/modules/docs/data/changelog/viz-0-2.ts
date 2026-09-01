@@ -40,6 +40,16 @@ export const vizV02: Release = {
           items: [
             {
               label: {
+                zh: 'BREAKING：domainPadding 默认改为 range 单位',
+                en: 'BREAKING: domainPadding now defaults to range units',
+              },
+              content: {
+                zh: '连续位置 scale 的 `domainPadding` 裸数字与省略 `kind` 的对象现在表示输出 range 单位；需要原 domain 跨度比例时改用 `{ kind: "ratio", lower?, upper? }`，且比例必须小于 `1`。linear、time、log、pow、sqrt、symlog 与 radial 都在各自变换空间中反算留白，并对过大的 range 请求或非法 domain fail-loud。',
+                en: 'Bare numbers and objects without `kind` now express `domainPadding` in output-range units on continuous position scales. Use `{ kind: "ratio", lower?, upper? }` for source-domain-span fractions, each below `1`. Linear, time, log, pow, sqrt, symlog, and radial scales invert range padding in their own transform space and fail loudly for oversized requests or invalid domains.',
+              },
+            },
+            {
+              label: {
                 zh: 'BREAKING：发布包主题改为 owner 默认 baseline',
                 en: 'BREAKING: published themes use owner default baselines',
               },

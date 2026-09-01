@@ -9,6 +9,7 @@ import {
   array,
   boolean,
   discriminatedUnion,
+  enum as zodEnum,
   literal,
   looseObject,
   number,
@@ -19,7 +20,7 @@ import {
   union,
 } from 'zod';
 
-import { BUILTIN_SCALE_TYPES, PlotColorScheme, PlotScale } from './constants';
+import { BUILTIN_SCALE_TYPES, PlotColorScheme, PlotDomainPaddingKind, PlotScale } from './constants';
 
 /** Plot scale type：保留内置提示并允许注册自定义Definition key */
 export const PlotScaleTypeSchema = createOpenStringSchema(PlotScale).describe(
@@ -34,25 +35,40 @@ export const CategoryValueSchema = union([string(), number()]).describe(
   'A category value: string or number (the leaf a band / point scale domain element resolves to)',
 );
 
-export const DomainPaddingSchema = union([
-  NonNegativeNumberSchema,
-  strictObject({
-    lower: NonNegativeNumberSchema.optional().describe('Padding fraction applied below the lower domain bound'),
-    upper: NonNegativeNumberSchema.optional().describe('Padding fraction applied above the upper domain bound'),
-  }).superRefine((padding, ctx) => {
-    if (padding.lower === undefined && padding.upper === undefined) {
+const DomainPaddingObjectSchema = strictObject({
+  kind: zodEnum(PlotDomainPaddingKind)
+    .optional()
+    .describe('Padding unit: range output units by default, or an explicit source-domain-span ratio'),
+  lower: NonNegativeNumberSchema.optional().describe('Padding applied beyond the lower source domain bound'),
+  upper: NonNegativeNumberSchema.optional().describe('Padding applied beyond the upper source domain bound'),
+}).superRefine((padding, ctx) => {
+  if (padding.lower === undefined && padding.upper === undefined) {
+    ctx.addIssue({
+      code: 'custom',
+      path: [],
+      message: 'domainPadding object requires lower or upper',
+    });
+  }
+  if (padding.kind !== PlotDomainPaddingKind.Ratio) return;
+  for (const side of ['lower', 'upper'] as const) {
+    const value = padding[side];
+    if (value !== undefined && value >= 1) {
       ctx.addIssue({
         code: 'custom',
-        path: [],
-        message: 'domainPadding object requires lower or upper',
+        path: [side],
+        message: `ratio domainPadding ${side} must be less than 1`,
       });
     }
-  }),
-]).describe('Position scale domain padding fraction; number applies to both sides, object can target each side');
+  }
+});
+
+export const DomainPaddingSchema = union([NonNegativeNumberSchema, DomainPaddingObjectSchema]).describe(
+  'Position scale domain padding; numbers and omitted kind use range output units, while kind ratio uses source domain span fractions',
+);
 
 const ContinuousPositionDomainShape = {
   domainPadding: DomainPaddingSchema.optional().describe(
-    'Fractional padding added to the resolved domain. Omitted padding defaults to 0 for inferred and explicit domains',
+    'Padding added to the resolved domain. Numbers use range output units; kind ratio uses source domain span fractions. Omitted padding defaults to 0',
   ),
   singleValueSpan: PositiveNumberSchema.optional().describe(
     'Fallback domain span used when the resolved domain collapses to a single value',
