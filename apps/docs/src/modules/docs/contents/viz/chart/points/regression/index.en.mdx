@@ -8,8 +8,18 @@ usage: distribution
 <ShowcaseGallery
   examples={[
     {
+      id: 'regression-minimal',
+      title: 'Basic Usage',
+      description: 'This is the minimal setup with only required options. Switch to IR to inspect the configuration; for simple charts, pass it directly to the `RegressionChart` root.',
+      preview: {
+        files: ['regression-minimal', 'regression-minimal.data.ts'],
+        size: 'xxl',
+        caption: 'A static snapshot of distance and delay for 100 flights from Vega Datasets.',
+      },
+    },
+    {
       id: 'regression-basic',
-      title: 'Observations and grouped trends',
+      title: 'Advanced playground: observations and grouped trends',
       description: 'Use `RegressionChart` to show Iris observations and trend lines together, comparing one global fit with separate fits by species.',
       preview: {
         files: ['regression-basic', 'regression-basic.data.ts', 'regression-basic-style.ts'],
@@ -46,6 +56,8 @@ The root `recipe` directly uses Regression's exact slots. Component identity sup
 Every Regression semantic group has two fixed layers. Point shows raw observations from the current data view. Path runs a mark-local `smooth` on that same view and connects the predicted samples. The trend is not a line through the source rows, and it does not replace Point's input.
 
 `RegressionEncodings.series` is an optional recipe-only role. Omit it to fit one trend across the current data view. Provide it to fit each field value independently while Point and Path share one categorical color scale, legend, and series identity. `RegressionMark` cannot rewrite or remove this role.
+
+When `series` and explicit member colors are omitted, observations and the trend share one sequential slot from Plot's `palette.series` instead of falling back to CSS `currentColor`. Explicit point color / fill and trend stroke still take precedence for their respective members.
 
 ## Six built-in methods
 

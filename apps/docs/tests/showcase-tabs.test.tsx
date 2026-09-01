@@ -141,7 +141,7 @@ describe('<ShowcaseTabs>', () => {
     expect(scatterContainer.textContent).not.toContain('No other family members yet.');
     expect(familyLink?.textContent).toBe('Bubble');
     expect(familyLink?.getAttribute('href')).toBe('/viz/chart/points/bubble');
-    expect(familyThumbnail?.getAttribute('data-files')).toBe('bubble-basic');
+    expect(familyThumbnail?.getAttribute('data-files')).toBe('bubble-minimal');
     expect(scatterContainer.querySelector('[data-slot="showcase-family-preview"]')).toBeNull();
     await vi.waitFor(() => {
       expect(scatterContainer.textContent).toContain(

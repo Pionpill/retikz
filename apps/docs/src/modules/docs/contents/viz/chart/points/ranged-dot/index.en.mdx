@@ -8,8 +8,18 @@ usage: distribution
 <ShowcaseGallery
   examples={[
     {
+      id: 'ranged-dot-minimal',
+      title: 'Basic Usage',
+      description: 'This is the minimal setup with only required options. Switch to IR to inspect the configuration; for simple charts, pass it directly to the `RangedDotChart` root.',
+      preview: {
+        files: ['ranged-dot-minimal', 'ranged-dot-minimal.data.ts'],
+        size: 'xxl',
+        caption: 'A static snapshot of daily minimum and maximum temperatures in Seattle for 20 consecutive days from Vega Datasets.',
+      },
+    },
+    {
       id: 'ranged-dot-basic',
-      title: 'Before-and-after values across categories',
+      title: 'Advanced playground: before-and-after values across categories',
       description: 'Compare start and end for every category while preserving the direction expressed by authored roles.',
       preview: {
         files: ['ranged-dot-basic', 'ranged-dot-basic.data.ts'],
@@ -48,6 +58,8 @@ One Ranged Dot semantic group emits one projected Relation operation. Plot proje
 ## Style precedence
 
 `point` sets common constant appearance, then `startPoint` and `endPoint` override their endpoint. `range` affects only the connector. Optional field-bound `color` drives all three members and one categorical legend; member properties never create separate field scales.
+
+When `color` and member color properties are omitted, the connector and both endpoints use the next default color from Plot's `palette.series` instead of falling back to CSS `currentColor`.
 
 ## API Reference
 

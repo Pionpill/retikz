@@ -8,8 +8,18 @@ usage: distribution
 <ShowcaseGallery
   examples={[
     {
+      id: 'scatter-minimal',
+      title: 'Basic Usage',
+      description: 'This is the minimal setup with only required options. Switch to IR to inspect the configuration; for simple charts, pass it directly to the `ScatterChart` root.',
+      preview: {
+        files: ['scatter-minimal', 'scatter-minimal.data.ts'],
+        size: 'xxl',
+        caption: 'A static snapshot of IMDb and Rotten Tomatoes ratings for 100 films from Vega Datasets.',
+      },
+    },
+    {
       id: 'scatter-fertility-work',
-      title: 'Categorical encoding',
+      title: 'Advanced playground: categorical encoding',
       description: 'Compare fertility and female labor-force participation from a real World Bank country cross-section, and control whether color and shape distinguish income groups.',
       preview: {
         files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],

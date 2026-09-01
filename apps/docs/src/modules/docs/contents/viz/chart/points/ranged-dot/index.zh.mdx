@@ -8,8 +8,18 @@ usage: distribution
 <ShowcaseGallery
   examples={[
     {
+      id: 'ranged-dot-minimal',
+      title: '基础用法',
+      description: '这是只传必要配置的最简用法；可切换到 IR 查看配置项，配置简单时只需在 `RangedDotChart` 根组件传递。',
+      preview: {
+        files: ['ranged-dot-minimal', 'ranged-dot-minimal.data.ts'],
+        size: 'xxl',
+        caption: 'Seattle 连续 20 天的最低与最高气温静态快照，数据来自 Vega Datasets。',
+      },
+    },
+    {
       id: 'ranged-dot-basic',
-      title: '多类别前后值比较',
+      title: '进阶调试：多类别前后值比较',
       description: '比较每个类别的 start / end，并保留 authored role 所表达的变化方向。',
       preview: {
         files: ['ranged-dot-basic', 'ranged-dot-basic.data.ts'],
@@ -48,6 +58,8 @@ Ranged Dot 固定横向：`category` 映射 y，`start` 与 `end` 映射同一 x
 ## 样式优先级
 
 `point` 设置两个端点的共同常量外观，`startPoint` 与 `endPoint` 再覆盖各自端点。`range` 只影响连接线。可选 `color` 字段同时驱动三者和分类图例；member properties 不建立独立字段尺度。
+
+省略 `color` 和成员颜色属性时，连接线与两个端点共同使用 Plot `palette.series` 的顺序默认色，不会回退为 CSS `currentColor`。
 
 ## API 参考
 

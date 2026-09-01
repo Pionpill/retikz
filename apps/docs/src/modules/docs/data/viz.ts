@@ -145,7 +145,7 @@ export const vizSection: Array<Section> = [
               showcase: {
                 family: 'scatter-points',
                 role: 'primary',
-                preview: 'scatter-fertility-work',
+                preview: 'scatter-minimal',
                 order: 10,
               },
             },
@@ -163,7 +163,7 @@ export const vizSection: Array<Section> = [
               showcase: {
                 family: 'scatter-points',
                 role: 'primary',
-                preview: 'bubble-basic',
+                preview: 'bubble-minimal',
                 order: 20,
               },
             },
@@ -181,7 +181,7 @@ export const vizSection: Array<Section> = [
               showcase: {
                 family: 'scatter-points',
                 role: 'primary',
-                preview: 'regression-basic',
+                preview: 'regression-minimal',
                 order: 30,
               },
             },
@@ -199,7 +199,7 @@ export const vizSection: Array<Section> = [
               showcase: {
                 family: 'scatter-points',
                 role: 'primary',
-                preview: 'connected-scatter-basic',
+                preview: 'connected-scatter-minimal',
                 order: 40,
               },
             },
@@ -217,7 +217,7 @@ export const vizSection: Array<Section> = [
               showcase: {
                 family: 'scatter-points',
                 role: 'primary',
-                preview: 'ranged-dot-basic',
+                preview: 'ranged-dot-minimal',
                 order: 50,
               },
             },

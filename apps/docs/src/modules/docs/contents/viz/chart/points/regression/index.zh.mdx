@@ -8,8 +8,18 @@ usage: distribution
 <ShowcaseGallery
   examples={[
     {
+      id: 'regression-minimal',
+      title: '基础用法',
+      description: '这是只传必要配置的最简用法；可切换到 IR 查看配置项，配置简单时只需在 `RegressionChart` 根组件传递。',
+      preview: {
+        files: ['regression-minimal', 'regression-minimal.data.ts'],
+        size: 'xxl',
+        caption: '100 个航班的飞行距离与延误分钟数静态快照，数据来自 Vega Datasets。',
+      },
+    },
+    {
       id: 'regression-basic',
-      title: '观测与分组趋势',
+      title: '进阶调试：观测与分组趋势',
       description: '用 `RegressionChart` 同时显示 Iris 观测点和趋势线，并比较全局拟合与按物种分别拟合。',
       preview: {
         files: ['regression-basic', 'regression-basic.data.ts', 'regression-basic-style.ts'],
@@ -46,6 +56,8 @@ Regression 适合在保留每个观测的同时，概括两个连续变量之间
 每个 Regression semantic group 固定包含两层：Point 显示当前数据视图中的原始观测，Path 在同一数据视图上执行 mark-local `smooth`，再连接预测采样。趋势线不是对原始点的逐点连线，也不会替换 Point 的输入。
 
 `RegressionEncodings.series` 是 recipe-only 的可选角色。省略它会对当前数据整体拟合一条趋势；提供它会按每个字段值独立拟合，并让 Point 与 Path 共享同一分类颜色尺度、图例和 series identity。`RegressionMark` 不能改写或移除这个角色。
+
+省略 `series` 且未显式设置成员颜色时，观测点与趋势线共享 Plot `palette.series` 的同一个顺序槽位，不会回退为 CSS `currentColor`。显式 point color / fill 与 trend stroke 仍分别优先。
 
 ## 六种内置方法
 

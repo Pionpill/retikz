@@ -8,8 +8,18 @@ usage: distribution
 <ShowcaseGallery
   examples={[
     {
+      id: 'bubble-minimal',
+      title: '基础用法',
+      description: '这是只传必要配置的最简用法；可切换到 IR 查看配置项，配置简单时只需在 `BubbleChart` 根组件传递。',
+      preview: {
+        files: ['bubble-minimal', 'bubble-minimal.data.ts'],
+        size: 'xxl',
+        caption: '100 次地震的深度、震级与显著性静态快照，数据来自 Vega Datasets。',
+      },
+    },
+    {
       id: 'bubble-basic',
-      title: '人口规模气泡',
+      title: '进阶调试：人口规模气泡',
       description: '用 `BubbleChart` 比较人均 GDP 与预期寿命，让人口驱动气泡面积，并按洲分类着色。',
       preview: {
         files: ['bubble-basic', 'bubble-basic.data.ts'],

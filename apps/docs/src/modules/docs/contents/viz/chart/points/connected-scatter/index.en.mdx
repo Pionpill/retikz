@@ -8,8 +8,18 @@ usage: distribution
 <ShowcaseGallery
   examples={[
     {
+      id: 'connected-scatter-minimal',
+      title: 'Basic Usage',
+      description: 'This is the minimal setup with only required options. Switch to IR to inspect the configuration; for simple charts, pass it directly to the `ConnectedScatterChart` root.',
+      preview: {
+        files: ['connected-scatter-minimal', 'connected-scatter-minimal.data.ts'],
+        size: 'xxl',
+        caption: 'A static snapshot of the construction unemployment rate over 100 consecutive months from Vega Datasets.',
+      },
+    },
+    {
       id: 'connected-scatter-basic',
-      title: 'Ordered trajectories and missing values',
+      title: 'Advanced playground: ordered trajectories and missing values',
       description: 'Use required `order` to connect each series, then compare segmentation with bridging across missing values.',
       preview: {
         files: ['connected-scatter-basic', 'connected-scatter-basic.data.ts'],
@@ -42,6 +52,8 @@ The root `recipe` uses Connected Scatter's exact slots. Component identity suppl
 ## Data roles
 
 `x`, `y`, and `order` are required. Path sorts by the `order` field instead of incidental array order. Optional `series` splits independent trajectories and shares one categorical color scale across Path, Point, and legend.
+
+When `series` and explicit member colors are omitted, Path and Point share one sequential slot from Plot's `palette.series` instead of falling back to CSS `currentColor`. Explicit `path.stroke` and Point color properties still take precedence for their respective members.
 
 Each semantic group fixes `[Path, Point]`, so lines paint before points. Whether appended or used with `override`, `ConnectedScatterMark` always resolves the complete group.
 

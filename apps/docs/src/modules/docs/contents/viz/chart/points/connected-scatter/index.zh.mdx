@@ -8,8 +8,18 @@ usage: distribution
 <ShowcaseGallery
   examples={[
     {
+      id: 'connected-scatter-minimal',
+      title: '基础用法',
+      description: '这是只传必要配置的最简用法；可切换到 IR 查看配置项，配置简单时只需在 `ConnectedScatterChart` 根组件传递。',
+      preview: {
+        files: ['connected-scatter-minimal', 'connected-scatter-minimal.data.ts'],
+        size: 'xxl',
+        caption: '建筑业连续 100 个月的失业率静态快照，数据来自 Vega Datasets。',
+      },
+    },
+    {
       id: 'connected-scatter-basic',
-      title: '有序轨迹与缺值策略',
+      title: '进阶调试：有序轨迹与缺值策略',
       description: '用必需的 `order` 连接每个 series 的观测点，并比较默认分段与跨缺值连接。',
       preview: {
         files: ['connected-scatter-basic', 'connected-scatter-basic.data.ts'],
@@ -42,6 +52,8 @@ Connected Scatter 同时表达离散观测与变化轨迹。若只需要点的�
 ## 数据角色
 
 `x`、`y` 与 `order` 必填。Path 按 `order` 字段排序，不能依赖输入数组的偶然顺序；可选 `series` 会拆分独立轨迹，并让 Path、Point 与图例共用一个分类颜色尺度。
+
+省略 `series` 且未显式设置成员颜色时，Path 与 Point 共享 Plot `palette.series` 的同一个顺序槽位，不会回退为 CSS `currentColor`。显式的 `path.stroke` 或 Point 颜色属性仍分别优先。
 
 每个 semantic group 固定输出 `[Path, Point]`，因此线先绘制、点后绘制。`ConnectedScatterMark` 无论追加还是 `override`，都处理完整组，不能只替换其中一层。
 

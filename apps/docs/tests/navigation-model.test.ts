@@ -130,31 +130,31 @@ describe('layout utils', () => {
       pageType: 'concept',
       layout: 'showcase',
       capability: 'showcase.scatter',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'scatter-fertility-work', order: 10 },
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'scatter-minimal', order: 10 },
     });
     expect(bubble?.meta).toMatchObject({
       pageType: 'concept',
       layout: 'showcase',
       capability: 'showcase.bubble',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'bubble-basic', order: 20 },
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'bubble-minimal', order: 20 },
     });
     expect(regression?.meta).toMatchObject({
       pageType: 'concept',
       layout: 'showcase',
       capability: 'showcase.regression',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'regression-basic', order: 30 },
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'regression-minimal', order: 30 },
     });
     expect(connectedScatter?.meta).toMatchObject({
       pageType: 'concept',
       layout: 'showcase',
       capability: 'showcase.connected-scatter',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'connected-scatter-basic', order: 40 },
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'connected-scatter-minimal', order: 40 },
     });
     expect(rangedDot?.meta).toMatchObject({
       pageType: 'concept',
       layout: 'showcase',
       capability: 'showcase.ranged-dot',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'ranged-dot-basic', order: 50 },
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'ranged-dot-minimal', order: 50 },
     });
     expect(model?.meta).toMatchObject({ pageType: 'concept', capability: 'chart.model' });
     expect(model?.children?.map(page => page.id)).toEqual(['structure', 'authoring', 'presentation', 'plot']);

@@ -8,8 +8,18 @@ usage: distribution
 <ShowcaseGallery
   examples={[
     {
+      id: 'bubble-minimal',
+      title: 'Basic Usage',
+      description: 'This is the minimal setup with only required options. Switch to IR to inspect the configuration; for simple charts, pass it directly to the `BubbleChart` root.',
+      preview: {
+        files: ['bubble-minimal', 'bubble-minimal.data.ts'],
+        size: 'xxl',
+        caption: 'A static snapshot of depth, magnitude, and significance for 100 earthquakes from Vega Datasets.',
+      },
+    },
+    {
       id: 'bubble-basic',
-      title: 'Population bubbles',
+      title: 'Advanced playground: population bubbles',
       description: 'Use `BubbleChart` to compare GDP per capita and life expectancy, with population driving bubble area and continent driving categorical color.',
       preview: {
         files: ['bubble-basic', 'bubble-basic.data.ts'],

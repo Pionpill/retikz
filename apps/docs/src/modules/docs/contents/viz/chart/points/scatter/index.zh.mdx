@@ -8,8 +8,18 @@ usage: distribution
 <ShowcaseGallery
   examples={[
     {
+      id: 'scatter-minimal',
+      title: '基础用法',
+      description: '这是只传必要配置的最简用法；可切换到 IR 查看配置项，配置简单时只需在 `ScatterChart` 根组件传递。',
+      preview: {
+        files: ['scatter-minimal', 'scatter-minimal.data.ts'],
+        size: 'xxl',
+        caption: '100 部电影的 IMDb 与 Rotten Tomatoes 评分静态快照，数据来自 Vega Datasets。',
+      },
+    },
+    {
       id: 'scatter-fertility-work',
-      title: '分类编码',
+      title: '进阶调试：分类编码',
       description: '用真实的世界银行国家截面比较生育率与女性劳动参与率，并控制颜色和形状是否区分收入组。',
       preview: {
         files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
