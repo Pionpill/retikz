@@ -11,7 +11,6 @@ import { requiredFieldOf, resolvePointMark } from '../shared';
 import { pointRecipeId } from '../shared/plot';
 import { ConnectedScatterChartMarkSchema } from './schema';
 
-const CURRENT_COLOR = 'currentColor';
 const seriesScaleName = pointRecipeId('connected-scatter', 'scale.series');
 
 const seriesOf = (encodings: IRJsonObject): Readonly<{ field: string; scale: string }> | undefined => {
@@ -61,10 +60,7 @@ export const resolveConnectedScatterMarkGroup = (
     ...pathPropertiesOf(properties),
   };
   if (series === undefined) {
-    if (!Object.hasOwn(pointProperties, 'color') && !Object.hasOwn(pointProperties, 'fill')) {
-      pointProperties.color = CURRENT_COLOR;
-    }
-    path.stroke = { kind: 'constant', value: properties.path?.stroke ?? CURRENT_COLOR };
+    if (properties.path?.stroke !== undefined) path.stroke = { kind: 'constant', value: properties.path.stroke };
   } else {
     if (!Object.hasOwn(pointProperties, 'color') && !Object.hasOwn(pointProperties, 'fill')) {
       pointEncodings.color = { field: series.field, scale: series.scale };

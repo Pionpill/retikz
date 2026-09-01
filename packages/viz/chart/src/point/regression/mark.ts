@@ -11,7 +11,6 @@ import { requiredFieldOf, resolvePointMark } from '../shared';
 import { pointRecipeId } from '../shared/plot';
 import { RegressionChartMarkSchema } from './schema';
 
-const CURRENT_COLOR = 'currentColor';
 const trendXField = pointRecipeId('regression', 'trend.x');
 const trendYField = pointRecipeId('regression', 'trend.y');
 
@@ -78,11 +77,7 @@ export const resolveRegressionMarkGroup = (
   const pointProperties: IRJsonObject = { ...(properties.point ?? {}) };
   const pointEncodings: IRJsonObject = { x, y };
 
-  if (series === undefined) {
-    if (!Object.hasOwn(pointProperties, 'color') && !Object.hasOwn(pointProperties, 'fill')) {
-      pointProperties.color = CURRENT_COLOR;
-    }
-  } else {
+  if (series !== undefined) {
     delete pointProperties.color;
     delete pointProperties.fill;
     pointEncodings.color = { field: series.field, scale: series.scale };
@@ -107,10 +102,11 @@ export const resolveRegressionMarkGroup = (
     transform: [smooth],
     encoding: { x: { field: trendXField }, y: { field: trendYField } },
     ...constantPathPropertiesOf(properties),
-    stroke:
-      series === undefined
-        ? { kind: 'constant', value: trend.stroke ?? CURRENT_COLOR }
-        : { kind: 'field', value: series.field, scale: series.scale },
+    ...(series === undefined
+      ? trend.stroke === undefined
+        ? {}
+        : { stroke: { kind: 'constant', value: trend.stroke } }
+      : { stroke: { kind: 'field', value: series.field, scale: series.scale } }),
   };
 
   return [resolvePointMark(pointEncodings, pointProperties), PathMarkSchema.parse(path)];

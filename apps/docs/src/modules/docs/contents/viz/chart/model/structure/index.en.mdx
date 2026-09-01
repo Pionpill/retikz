@@ -65,7 +65,7 @@ This Point-family Scatter Source preserves author intent. An explicit coordinate
 | `recipe`        | Exact payload for the selected chartType recipe                                   | Chart                        |
 | `plotExtension` | Explicit Plot-owned fragment authored by the user                                 | Plot                         |
 
-`layout` allocates the outer Chart Surface. It does not describe Plot facets, tracks, coordinates, guides, or an internal plot area. Root `coordinate` can combine with facet encodings but cannot coexist with `plotExtension.composition`. When you want complete low-level drawing control, use Plot directly; the current Source contract has no `type: 'base'` special case.
+`layout` allocates the outer Chart Surface. It does not describe Plot facets, tracks, coordinates, guides, or an internal plot area. When omitted, Cartesian coordinates use `800 × 500` and Polar coordinates use `400 × 500`. Authored dimensions override those defaults field by field, while an outer layout may still constrain dimensions that were not authored. Root `coordinate` can combine with facet encodings but cannot coexist with `plotExtension.composition`. When you want complete low-level drawing control, use Plot directly; the current Source contract has no `type: 'base'` special case.
 
 ## family → chartType → exact schema
 

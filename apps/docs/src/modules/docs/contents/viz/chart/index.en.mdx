@@ -65,7 +65,7 @@ Declarations are headless JSX sugar for the same owner slots, not a second gramm
 
 ## React hosting and embedding
 
-Rendering a concrete Chart directly creates exactly one `Layout` / Scene host. Root `layout.width` / `height` configure both Source and that implicit host. `ChartLayout.width` / `height` provide equivalent JSX sugar and mirror into Source when no explicit `layout` exists.
+Rendering a concrete Chart directly creates exactly one `Layout` / Scene host. Without an authored `layout`, Cartesian coordinates default to `800 × 500` and Polar coordinates default to `400 × 500`. Root `layout.width` / `height` configure both Source and that implicit host; when only one dimension is provided, the other keeps the default for the active coordinate system. `ChartLayout.width` / `height` provide equivalent JSX sugar and mirror into Source when no explicit `layout` exists.
 
 Inside an existing `<Layout>`, Chart contributes only its Chart-to-Plot-to-Core Scope/composite, inherits the outer effective Theme, and creates no second SVG. Root `layout` remains the Chart Source border-box. Embedded `ChartLayout` also accepts only `layout`; declaring `width` or `height`, including explicit `undefined`, fails loudly. Configure CSS, renderer/runtime, animation, and compile callbacks on the outer `<Layout>`.
 

@@ -65,7 +65,7 @@ Declarations 是同一 owner slot 的 headless JSX sugar，不是第二套 gramm
 
 ## React 宿主与嵌入
 
-直接渲染具体 Chart 时会建立唯一一个 `Layout` / Scene host。根 `layout.width` / `height` 同时配置 Source 与该隐式 host；`ChartLayout.width` / `height` 是等价 JSX sugar，并在没有显式 `layout` 时镜像到 Source。
+直接渲染具体 Chart 时会建立唯一一个 `Layout` / Scene host。未提供 `layout` 时，笛卡尔坐标系默认使用 `800 × 500`，极坐标系默认使用 `400 × 500`。根 `layout.width` / `height` 同时配置 Source 与该隐式 host；只提供其中一维时，另一维沿用当前坐标系的默认值。`ChartLayout.width` / `height` 是等价 JSX sugar，并在没有显式 `layout` 时镜像到 Source。
 
 放入已有 `<Layout>` 后，Chart 只贡献 Chart → Plot → Core 的 Scope/composite 并继承外层 effective Theme，不创建第二个 SVG。根 `layout` 仍只配置 Chart Source border-box；embedded `ChartLayout` 也只能声明 `layout`，其 `width` / `height`（包括显式 `undefined`）会 fail-loud。CSS、renderer/runtime、动画和 compile callback 等高级宿主能力统一配置在外层 `<Layout>`。
 

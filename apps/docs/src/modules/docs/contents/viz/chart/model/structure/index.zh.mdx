@@ -65,7 +65,7 @@ Chart Source 把“这是什么图”与“这张图如何完整呈现”分开�
 | `recipe`        | 当前 chartType 的精确 recipe payload                           | Chart                    |
 | `plotExtension` | 作者显式写入的 Plot-owned fragment                             | Plot                     |
 
-`layout` 只分配整张 Chart Surface 的外部尺寸，不表示 Plot 的 facet、track、coordinate 或内部 plot area。根 `coordinate` 可与 facet encoding 组合，但不能与 `plotExtension.composition` 同时存在。完全控制底层绘图时直接使用 Plot；当前 Source 不提供 `type: 'base'` 特例。
+`layout` 只分配整张 Chart Surface 的外部尺寸，不表示 Plot 的 facet、track、coordinate 或内部 plot area。未显式提供时，笛卡尔坐标系使用 `800 × 500`，极坐标系使用 `400 × 500`；显式宽高逐字段覆盖对应默认值，外层布局仍可约束未显式维度。根 `coordinate` 可与 facet encoding 组合，但不能与 `plotExtension.composition` 同时存在。完全控制底层绘图时直接使用 Plot；当前 Source 不提供 `type: 'base'` 特例。
 
 ## family → chartType → exact schema
 

@@ -92,8 +92,8 @@ JSON、Vanilla 与 React 最终生成同一个 `IRRegressionChart`。`Regression
 ## 行为、失败语义与兼容性
 
 - 默认行为：`method` 省略时使用普通最小二乘线性回归；`sampleCount` 必须是至少为 2 的整数，省略时每组输出 64 个按 x 等距排列的预测点；`extent` 省略时每组使用当前有效观测的 x 范围
-- 分组与颜色：省略 recipe `series` 时生成一条全局趋势，point color 与 trend stroke 各自省略时使用同一个 recipe fallback color；提供时每组独立拟合，Point 与 Path 使用同一个 categorical color scale identity，并默认生成一个 categorical legend。series 生成的 field color 高于 `point.color` / `point.fill` 与 `trend.stroke`，其它常量外观保持有效
-- mark 继承：`RegressionMark` 省略的 x / y 与 properties 继承 recipe；显式 x / y 使用 direct 字段覆盖。所有 Regression group 无条件继承 recipe series；recipe 省略 series 时所有 group 都保持未分组，并使用同一个 recipe fallback color。method / sampleCount / extent 按字段覆盖，point / trend block 按各自 property 字段合并。普通 mark 不增加自动 guide；`override: true` 也不改变 recipe scaffold，因此 recipe `series` 是共享 categorical scale 与默认 legend 的唯一来源
+- 分组与颜色：省略 recipe `series` 时生成一条全局趋势，Chart 为 Point 与趋势 Path 写入同一个 Plot `defaultColorGroup`，使省略 point color / fill 与 trend stroke 时复用 `palette.series` 的同一槽位；提供时每组独立拟合，Point 与 Path 使用同一个 categorical color scale identity，并默认生成一个 categorical legend。series 生成的 field color 高于 `point.color` / `point.fill` 与 `trend.stroke`，其它常量外观保持有效
+- mark 继承：`RegressionMark` 省略的 x / y 与 properties 继承 recipe；显式 x / y 使用 direct 字段覆盖。所有 Regression group 无条件继承 recipe series；recipe 省略 series 时所有 group 都保持未分组，并通过各自 semantic group 共享一个 Plot 默认色板槽位。method / sampleCount / extent 按字段覆盖，point / trend block 按各自 property 字段合并。普通 mark 不增加自动 guide；`override: true` 也不改变 recipe scaffold，因此 recipe `series` 是共享 categorical scale 与默认 legend 的唯一来源
 - 数据顺序：root transforms 与 encoding-derived operations 先作用于共同输入；Point 直接消费该数据，Smooth 只在趋势 Path 上运行。facet 时拟合针对每个 panel 的当前 rows 独立执行；坐标投影只改变最终展示，不改变数据空间中的拟合，趋势 Path 始终保持开放
 - 模型约束：linear、logarithmic、exponential 与 power 每组至少需要两个有效 pair 和两个不同的自变量值；quadratic 至少需要三个，polynomial 至少需要 `order + 1` 个并形成满秩拟合。秩退化、不可确定系数或非有限预测必须 fail-loud
 - 值域约束：非有限 x / y 沿用 Smooth 的无效 pair 策略；logarithmic 要求有限 x 为正，exponential 要求有限 y 为正，power 要求有限 x / y 都为正。方法值域不匹配、显式 extent 非递增、logarithmic / power extent 包含非正 x，或任一 series 有效样本不足时整张 Chart fail-loud，不降级为 Point-only 结果

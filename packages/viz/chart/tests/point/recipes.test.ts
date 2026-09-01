@@ -13,6 +13,7 @@ import { BubbleMarkDefinition } from '../../src/point/bubble/mark';
 import { BubbleChartDefinition } from '../../src/point/bubble/recipe';
 import { BubbleChartSchema } from '../../src/point/bubble/schema';
 import { ConnectedScatterChartDefinition } from '../../src/point/connected-scatter/recipe';
+import { ConnectedScatterChartSchema } from '../../src/point/connected-scatter/schema';
 import { RangedDotChartDefinition } from '../../src/point/ranged-dot/recipe';
 import { RangedDotChartSchema } from '../../src/point/ranged-dot/schema';
 import { RegressionChartDefinition } from '../../src/point/regression/recipe';
@@ -31,6 +32,9 @@ const bubbleRuntime = resolveChartProviderRegistry([
 ]).runtime;
 const regressionRuntime = resolveChartProviderRegistry([
   { family: 'point', recipe: RegressionChartDefinition, themeDefinitions: [] },
+]).runtime;
+const connectedScatterRuntime = resolveChartProviderRegistry([
+  { family: 'point', recipe: ConnectedScatterChartDefinition, themeDefinitions: [] },
 ]).runtime;
 const rangedDotRuntime = resolveChartProviderRegistry([
   { family: 'point', recipe: RangedDotChartDefinition, themeDefinitions: [] },
@@ -278,6 +282,29 @@ describe('Point Chart recipe Definitions', () => {
     });
   });
 
+  it('Ranged Dot delegates its unconfigured connector and endpoint color to the Plot palette', () => {
+    const source = RangedDotChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'ranged-dot',
+        encodings: { category: 'category', start: 'start', end: 'end' },
+      },
+    });
+    const result = resolveSelectedChart(source, {
+      theme: DEFAULT_RESOLVED_THEME,
+      recipe: RangedDotChartDefinition,
+      themeDefinitions: [],
+      runtime: rangedDotRuntime,
+    });
+
+    expect(result.plot.marks).toEqual([
+      expect.objectContaining({ type: 'relation', defaultColorGroup: '__chart.default-color.0', style: {} }),
+    ]);
+    expect(JSON.stringify(result.plot.marks)).not.toContain('currentColor');
+  });
+
   it('Ranged Dot connects one authored x scale to both start and end', () => {
     const source = RangedDotChartSchema.parse({
       namespace: 'chart',
@@ -381,7 +408,6 @@ describe('Point Chart recipe Definitions', () => {
           expect.objectContaining({
             type: 'point',
             encoding: { x: { field: 'sepalLength' }, y: { field: 'petalLength' } },
-            color: { kind: 'constant', value: 'currentColor' },
             size: { kind: 'constant', value: 4 },
           }),
           expect.objectContaining({
@@ -403,13 +429,59 @@ describe('Point Chart recipe Definitions', () => {
                 yAs: '__chart.regression.trend.y',
               },
             ],
-            stroke: { kind: 'constant', value: 'currentColor' },
             strokeWidth: { kind: 'constant', value: 2 },
           }),
         ],
       },
     ]);
     expect(result.scaffold.transform).toBeUndefined();
+  });
+
+  it('Regression assigns one default color group without constant color fallbacks', () => {
+    const source = RegressionChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: { chartType: 'regression', encodings: { x: 'x', y: 'y' } },
+    });
+    const result = resolveSelectedChart(source, {
+      theme: DEFAULT_RESOLVED_THEME,
+      recipe: RegressionChartDefinition,
+      themeDefinitions: [],
+      runtime: regressionRuntime,
+    });
+
+    expect(result.plot.marks).toHaveLength(2);
+    expect(result.plot.marks.map(mark => mark.defaultColorGroup)).toEqual([
+      '__chart.default-color.0',
+      '__chart.default-color.0',
+    ]);
+    expect(JSON.stringify(result.plot.marks)).not.toContain('currentColor');
+  });
+
+  it('Connected Scatter assigns one default color group without constant color fallbacks', () => {
+    const source = ConnectedScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'connected-scatter',
+        encodings: { x: 'x', y: 'y', order: 'order' },
+      },
+    });
+    const result = resolveSelectedChart(source, {
+      theme: DEFAULT_RESOLVED_THEME,
+      recipe: ConnectedScatterChartDefinition,
+      themeDefinitions: [],
+      runtime: connectedScatterRuntime,
+    });
+
+    expect(result.plot.marks).toHaveLength(2);
+    expect(result.plot.marks.map(mark => mark.defaultColorGroup)).toEqual([
+      '__chart.default-color.0',
+      '__chart.default-color.0',
+    ]);
+    expect(JSON.stringify(result.plot.marks)).not.toContain('currentColor');
   });
 
   it('Regression series drives one shared ordinal identity, Smooth groupBy and default legend', () => {

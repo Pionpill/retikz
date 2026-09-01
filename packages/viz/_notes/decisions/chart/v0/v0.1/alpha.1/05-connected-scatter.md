@@ -50,7 +50,7 @@ type IRConnectedScatterMark = {
 
 具体 schema 独立闭合并由 schema 推导公开类型。Point properties 复用 Point 的常量表现原子但排除 `zIndex`；Path properties 只开放常量线条表现与 `connectNulls`，排除 `zIndex`、`closed`、位置、数据、view、transform、order 与 series。authored mark 可以直接覆盖 x、y、order，却不能引入或改写 series。
 
-`series` 存在时，Path 按该字段分组，Point 与 Path 绑定同一个 ordinal color scale，并默认生成分类图例；没有 series 时两者使用同一个常量颜色。该颜色是 recipe 默认，可被合法的 member properties 显式覆盖。
+`series` 存在时，Path 按该字段分组，Point 与 Path 绑定同一个 ordinal color scale，并默认生成分类图例；没有 series 时，Chart 为两者写入同一个 Plot `defaultColorGroup`，使省略 member paint 的 Path 与 Point 复用 `palette.series` 中的同一槽位。合法的 member properties 仍可显式覆盖各自颜色。
 
 公开入口为：
 

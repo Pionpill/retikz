@@ -483,6 +483,54 @@ describe('Chart resolution', () => {
     expect(result.plot.coordinate).toMatchObject({ type: 'polar2D', angle: 'x', radius: 'y' });
   });
 
+  it('defaults the external Chart layout to 800 by 500 for Cartesian coordinates', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      layout: undefined,
+      theme: undefined,
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry);
+
+    expect(result.presentation.layout).toEqual({ width: 800, height: 500 });
+  });
+
+  it('defaults the external Chart layout to 400 by 500 for Polar coordinates', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      coordinate: { type: 'polar2D' },
+      layout: undefined,
+      theme: undefined,
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry);
+
+    expect(result.presentation.layout).toEqual({ width: 400, height: 500 });
+  });
+
+  it('preserves explicit Chart dimensions and defaults only the omitted axis', () => {
+    const cartesian = sourceSchema.parse({
+      ...source,
+      layout: { height: 360 },
+      theme: undefined,
+    });
+    const polar = sourceSchema.parse({
+      ...source,
+      coordinate: { type: 'polar2D' },
+      layout: { width: 640 },
+      theme: undefined,
+    });
+
+    expect(resolveWithRegistry(cartesian, DEFAULT_RESOLVED_THEME, coordinateRegistry).presentation.layout).toEqual({
+      width: 800,
+      height: 360,
+    });
+    expect(resolveWithRegistry(polar, DEFAULT_RESOLVED_THEME, coordinateRegistry).presentation.layout).toEqual({
+      width: 640,
+      height: 500,
+    });
+  });
+
   it('applies recipe, authored coordinate and encoding scale bindings in ascending precedence', () => {
     const encodedRecipe = defineChartRecipe({
       ...coordinateRecipe,
@@ -656,9 +704,14 @@ describe('Chart resolution', () => {
     expect(result.presentation.surface.id).toBe('demo');
     expect(result.plot.scales).toEqual([{ type: 'log', name: 'x' }]);
     expect(result.plot.marks.map(operation => operation.id)).toEqual(['semantic', 'mark', 'explicit']);
+    expect(result.plot.marks.map(operation => operation.defaultColorGroup)).toEqual([
+      '__chart.default-color.0',
+      '__chart.default-color.1',
+      undefined,
+    ]);
     expect(result.warnings).toEqual([]);
     expect(result.presentation.slots).toEqual(['title', 'plot', 'note', 'source']);
-    expect(result.presentation.layout).toEqual({ width: 640 });
+    expect(result.presentation.layout).toEqual({ width: 640, height: 500 });
     expect(inheritedContext?.inherited).toEqual({
       encodings: { x: 'amount', y: 'margin' },
       properties: { opacity: 0 },
@@ -688,6 +741,10 @@ describe('Chart resolution', () => {
     const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, overrideRegistry);
 
     expect(result.plot.marks.map(operation => operation.id)).toEqual(['mark', 'explicit']);
+    expect(result.plot.marks.map(operation => operation.defaultColorGroup)).toEqual([
+      '__chart.default-color.0',
+      undefined,
+    ]);
     expect(result.warnings).toEqual([]);
   });
 
@@ -701,6 +758,11 @@ describe('Chart resolution', () => {
     const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME);
 
     expect(result.plot.marks.map(operation => operation.id)).toEqual(['semantic', 'mark', 'explicit']);
+    expect(result.plot.marks.map(operation => operation.defaultColorGroup)).toEqual([
+      '__chart.default-color.0',
+      '__chart.default-color.1',
+      undefined,
+    ]);
     expect(result.warnings).toEqual([
       {
         code: ChartWarningCode.MarkOverrideTargetNotFound,

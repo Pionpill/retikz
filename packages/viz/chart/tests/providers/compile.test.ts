@@ -1,7 +1,13 @@
 import type { CoreProviderContribution, IRJsonObject, IRScene } from '@retikz/core';
+import type { ExternalDatasets } from '@retikz/data';
 import type { LowerPlotsOptions } from '@retikz/plot';
 
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import {
+  compileToScene,
+  resolveCoreProviderDependencies,
+  resolveDefaultCoreThemeColors,
+  ThemeMode,
+} from '@retikz/core';
 import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { FlexLayoutArtifactSchema } from '@retikz/layout';
@@ -82,6 +88,95 @@ const sceneOf = (source: IRScene['children'][number]): IRScene => ({
 });
 
 describe('Chart providers through Core compile', () => {
+  it('uses the first series palette color for every primitive in an ungrouped Point composite mark', () => {
+    const defaultColor = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical[0];
+    const fixtures: ReadonlyArray<{
+      source: IRScene['children'][number];
+      contribution: CoreProviderContribution;
+      datasets: ExternalDatasets;
+    }> = [
+      {
+        source: ConnectedScatterChartSchema.parse({
+          namespace: 'chart',
+          type: 'point',
+          data: { reference: 'connected.default-color' },
+          recipe: {
+            chartType: 'connected-scatter',
+            encodings: { x: 'x', y: 'y', order: 'order' },
+            properties: { point: { size: 4 }, path: { strokeWidth: 7 } },
+          },
+        }),
+        contribution: createConnectedScatterChartProviderContribution(),
+        datasets: {
+          'connected.default-color': [
+            { x: 1, y: 2, order: 1 },
+            { x: 2, y: 4, order: 2 },
+            { x: 3, y: 5, order: 3 },
+          ],
+        },
+      },
+      {
+        source: RegressionChartSchema.parse({
+          namespace: 'chart',
+          type: 'point',
+          data: { reference: 'regression.default-color' },
+          recipe: {
+            chartType: 'regression',
+            encodings: { x: 'x', y: 'y' },
+            properties: { sampleCount: 3, point: { size: 4 }, trend: { strokeWidth: 7 } },
+          },
+        }),
+        contribution: createRegressionChartProviderContribution(),
+        datasets: {
+          'regression.default-color': [
+            { x: 1, y: 2 },
+            { x: 2, y: 4 },
+            { x: 3, y: 5 },
+          ],
+        },
+      },
+      {
+        source: RangedDotChartSchema.parse({
+          namespace: 'chart',
+          type: 'point',
+          data: { reference: 'ranged.default-color' },
+          recipe: {
+            chartType: 'ranged-dot',
+            encodings: { category: 'category', start: 'start', end: 'end' },
+            properties: { point: { size: 4 }, range: { strokeWidth: 7 } },
+          },
+        }),
+        contribution: createRangedDotChartProviderContribution(),
+        datasets: {
+          'ranged.default-color': [
+            { category: 'A', start: 1, end: 3 },
+            { category: 'B', start: 2, end: 5 },
+          ],
+        },
+      },
+    ];
+
+    for (const fixture of fixtures) {
+      const definitions = resolveCoreProviderDependencies({
+        contributions: [
+          fixture.contribution,
+          createPlotProviderContribution(fixture.datasets),
+          { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+        ],
+      });
+      const result = compileToScene(sceneOf(fixture.source), definitions);
+      const paths = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
+        primitive => primitive.strokeWidth === 7,
+      );
+      const points = scenePrimitivesOfType(result.scene.primitives, 'ellipse');
+
+      expect(paths.length).toBeGreaterThan(0);
+      expect(points.length).toBeGreaterThan(0);
+      expect(new Set(paths.map(path => path.stroke))).toEqual(new Set([defaultColor]));
+      expect(new Set(points.map(point => point.fill))).toEqual(new Set([defaultColor]));
+    }
+  });
+
   it('compiles shuffled Connected Scatter rows by authored order and bridges invalid observations', () => {
     const connectedRows = [
       { series: 'A', x: 3, y: 3, order: 3 },

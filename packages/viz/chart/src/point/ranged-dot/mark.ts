@@ -15,8 +15,6 @@ import { defineChartMark } from '../../_chart/contract';
 import { requiredFieldOf } from '../shared';
 import { RangedDotChartMarkSchema } from './schema';
 
-const CURRENT_COLOR = 'currentColor';
-
 const endpointGlyphOf = (properties: IRRangedDotPointProperties): IRJsonObject => {
   const glyph: IRJsonObject = {};
   for (const name of [
@@ -79,7 +77,6 @@ export const resolveRangedDotMark = (
   const range = properties.range ?? {};
   const color = fieldMappingOf(encodings.color, '__chart.ranged-dot.scale.color');
   const style = rangeStyleOf(range);
-  if (color === undefined && range.stroke === undefined) style.stroke = { kind: 'constant', value: CURRENT_COLOR };
   const path = rangePathOf(range);
 
   return RelationMarkSchema.parse({
