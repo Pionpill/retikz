@@ -73,6 +73,9 @@ export const RelationTransformSchema = MarkTransformSchema;
 
 const markBase = {
   id: NonBlankStringSchema.optional().describe('Optional mark handle used by generated scope and anchor targets'),
+  defaultColorGroup: NonBlankStringSchema.optional().describe(
+    'Optional semantic group whose marks share one sequential palette.series slot when no explicit color is authored',
+  ),
   layer: PlotLayerSchema.optional().describe(
     'Semantic plot layer override applied to the outer mark scope; mark datum zIndex remains a separate style channel',
   ),
@@ -1078,6 +1081,9 @@ export const CustomMarkSchema = looseObject({
     message: 'custom mark type must not collide with a built-in mark type',
   }).describe(
     'Discriminator: custom mark type; must be a non-blank, non-built-in identifier registered through options.markDefinitions',
+  ),
+  defaultColorGroup: NonBlankStringSchema.optional().describe(
+    'Optional semantic group whose marks share one sequential palette.series slot when no explicit color is authored',
   ),
   transform: MarkTransformSchema.optional().describe(
     'Optional mark-local transform pipeline applied after the plot root transform',

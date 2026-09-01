@@ -13,6 +13,8 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
 
 <ZodSchema name="MarkOperationSchema" description="内置图元或运行时注册自定义图元的联合。" />
 
+所有图元都可用 `defaultColorGroup` 声明默认颜色共享关系。同名组只按首次出现位置消费一个 `palette.series` 槽位；未分组图元各自按声明顺序消费。显式颜色编码或常量 paint 仍然优先。
+
 ## PointMarkSchema
 
 <ZodSchema
@@ -51,6 +53,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     dy: '相对投影锚点的垂直微调，正值向屏幕下方。',
     anchorId: '写入每个生成 Node 的稳定 id 规则。',
     id: '用于生成 Scope 和锚点目标的可选图元 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
     layer: '外层图元 Scope 的语义图层覆盖。',
     coordinateView: '投影该图元的坐标视图 id；省略时使用组合默认视图。',
     transform: '仅影响该图元的局部变换链。',
@@ -91,6 +94,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     blendMode: 'Core Path 混合模式。',
     anchorId: '为路径上每数据 Coordinate 生成稳定 id 的规则。',
     id: '可选图元 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
     layer: '外层 Scope 图层覆盖。',
     coordinateView: '用于投影的坐标视图 id。',
     transform: '图元局部变换链。',
@@ -135,6 +139,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     shadow: 'Core Node 阴影。',
     blendMode: 'Core Node 混合模式。',
     id: '可选图元 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
     layer: '外层 Scope 图层覆盖。',
     coordinateView: '用于投影的坐标视图 id。',
     transform: '图元局部变换链。',
@@ -194,6 +199,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     thickness: 'Core Path 轮廓粗细预设。',
     marks: 'Core Path marks。',
     id: '可选图元 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
     layer: '外层 Scope 图层覆盖。',
     coordinateView: '用于投影的坐标视图 id。',
     transform: '图元局部变换链。',
@@ -241,6 +247,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     ribbon: 'ribbon 专用的宽度、渐变与采样选项。',
     label: '附着在关系几何上的标签。',
     id: '可选图元 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
     layer: '外层 Scope 图层覆盖。',
     coordinateView: '用于投影的坐标视图 id。',
     transform: '图元局部变换链。',
@@ -364,6 +371,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     transform: '在 Plot 根变换之后执行的图元局部变换。',
     layer: '自定义图元外层 Scope 的语义图层覆盖。',
     coordinateView: '用于投影的坐标视图 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
     encoding: '用于比例尺推断与 Definition 消费的位置、非位置通道。',
   }}
 />

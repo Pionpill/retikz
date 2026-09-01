@@ -41,6 +41,28 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(noId)).toEqual(noId);
   });
 
+  it('mark_default_color_group_is_json_safe_and_non_blank', () => {
+    const mark = {
+      type: 'point',
+      defaultColorGroup: 'observations',
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    };
+
+    expect(MarkOperationSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    expect(() =>
+      MarkOperationSchema.parse({
+        ...mark,
+        defaultColorGroup: '   ',
+      }),
+    ).toThrow();
+  });
+
+  it('custom_mark_accepts_default_color_group', () => {
+    const mark = { type: 'custom-symbol', defaultColorGroup: 'observations', value: 1 };
+
+    expect(MarkOperationSchema.parse(mark)).toEqual(mark);
+  });
+
   // 错误路径
   it('mark_accepts_layer_zindex', () => {
     const mark = {

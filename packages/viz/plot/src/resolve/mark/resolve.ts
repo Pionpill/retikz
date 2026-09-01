@@ -1,6 +1,7 @@
 import type { ExternalRow } from '@retikz/data';
 
 import { JsonObjectSchema } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 
 import type { AnyMarkDefinition, CoordinateFrame, FieldCollector, IntervalContext } from '../../contract';
 import type { IRPlotMark, IRPlotMarkOperation } from '../../schemas';
@@ -27,7 +28,12 @@ export const resolveMarkOperation = (
 ): MarkOperationResolution => {
   JsonObjectSchema.parse(mark);
   const definition = resolveMarkDefinition(mark, context);
-  const operation = definition.schema.parse(mark) as IRPlotMarkOperation;
+  const { defaultColorGroup, ...definitionOperation } = mark;
+  const resolved = definition.schema.parse(definitionOperation) as IRPlotMarkOperation;
+  const operation =
+    defaultColorGroup === undefined
+      ? resolved
+      : { ...resolved, defaultColorGroup: NonBlankStringSchema.parse(defaultColorGroup) };
   JsonObjectSchema.parse(operation);
   return { definition, operation };
 };

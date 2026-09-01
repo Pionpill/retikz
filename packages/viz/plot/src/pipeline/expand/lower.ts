@@ -96,6 +96,21 @@ import { buildLegendLayers, collectChannelDescriptors, legendReserveOf, reserveL
 const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>
   frame?.type !== PlotCoordinate.Cartesian1D && frame?.type !== PlotCoordinate.Polar1D;
 
+/** 按首次出现顺序为默认颜色组与未分组 mark 分配连续色板槽位 */
+const defaultColorPaletteIndicesOf = (marks: ReadonlyArray<IRPlotMarkOperation>): ReadonlyArray<number> => {
+  const indices = new Map<string, number>();
+  let nextIndex = 0;
+  return marks.map(mark => {
+    const group = mark.defaultColorGroup;
+    if (group === undefined) return nextIndex++;
+    const existing = indices.get(group);
+    if (existing !== undefined) return existing;
+    const index = nextIndex++;
+    indices.set(group, index);
+    return index;
+  });
+};
+
 /** 按坐标帧的实际绘图区几何生成背景节点 */
 const plotBackgroundNode = (
   plotArea: Rect,
@@ -308,6 +323,7 @@ export const lowerPlotWithDataArtifact = (
     options.plotThemeStyles,
   );
   const resolvedTheme = resolvePlotGuideTheme(themeResolution.plotTheme, themeResolution.palette);
+  const defaultColorPaletteIndices = defaultColorPaletteIndicesOf(node.marks);
   const themedGuides: Array<IRPlotGuide> = (node.guides ?? []).map(guide => {
     if (!isAxisGuide(guide)) return guide;
     const axisTokens = resolvePlotAxisThemeTokens(themeResolution, guide.dimension);
@@ -733,7 +749,10 @@ export const lowerPlotWithDataArtifact = (
               rows: markRows,
               fieldTypes: markDataView.fieldTypes,
               fieldTypeEvidence: markDataView.fieldTypeEvidence,
-              defaultColor: categoricalColorAt(resolvedTheme.palette.series, markIndex),
+              defaultColor: categoricalColorAt(
+                resolvedTheme.palette.series,
+                defaultColorPaletteIndices[markIndex] ?? markIndex,
+              ),
             }),
             {
               markIndex,
@@ -831,7 +850,10 @@ export const lowerPlotWithDataArtifact = (
           rows: markRows,
           fieldTypes: dataView.fieldTypes,
           fieldTypeEvidence: dataView.fieldTypeEvidence,
-          defaultColor: categoricalColorAt(resolvedTheme.palette.series, markIndex),
+          defaultColor: categoricalColorAt(
+            resolvedTheme.palette.series,
+            defaultColorPaletteIndices[markIndex] ?? markIndex,
+          ),
         }),
         {
           markIndex,

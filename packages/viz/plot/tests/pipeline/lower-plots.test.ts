@@ -187,6 +187,48 @@ describe('lowerPlots (contract)', () => {
     expect((layer.children[0] as IRNode).position).toEqual([0, 240]);
   });
 
+  it('shares one sequential palette slot across marks in the same default color group', () => {
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'sales' },
+      scales: [
+        { type: 'linear', name: 'xMonth', domainPadding: 0 },
+        { type: 'linear', name: 'yRevenue', domainPadding: 0 },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
+      marks: [
+        {
+          type: 'point',
+          defaultColorGroup: 'observations',
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+        {
+          type: 'point',
+          defaultColorGroup: 'observations',
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+        {
+          type: 'point',
+          defaultColorGroup: 'forecast',
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+        {
+          type: 'point',
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    });
+    const layers = expandOf(spec, { sales: SALES }, opts).children.filter(isScope);
+
+    expect(layers.map(layer => layer.nodeDefault?.fill)).toEqual([
+      sharedCategorical[0],
+      sharedCategorical[0],
+      sharedCategorical[1],
+      sharedCategorical[2],
+    ]);
+  });
+
   it('lower_point_applies_constant_node_style', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',

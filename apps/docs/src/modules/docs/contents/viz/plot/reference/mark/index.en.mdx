@@ -13,6 +13,8 @@ Marks are the geometry-output layer of the graphics grammar. Built-ins form a pr
 
 <ZodSchema name="MarkOperationSchema" />
 
+Every mark can use `defaultColorGroup` to declare a shared fallback color. A named group consumes one `palette.series` slot at its first appearance and reuses it for later members; ungrouped marks each consume the next slot in declaration order. Explicit color encodings and constant paints still take precedence.
+
 ## PointMarkSchema
 
 <ZodSchema name="PointMarkSchema" />

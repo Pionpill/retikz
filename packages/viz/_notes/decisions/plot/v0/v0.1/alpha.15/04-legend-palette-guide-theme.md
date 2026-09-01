@@ -31,6 +31,8 @@ LegendGuide 新增 `style?: LegendGuideStyle`，字段覆盖 `theme.legend`。Le
 
 Palette 必须先按同一条 fallback 链解析；color scale provider、无 color encoding 的 series 默认色、sector 默认色和 legend swatch / ramp 都消费同一份解析结果。
 
+所有 Plot mark operation 共享可选的 `defaultColorGroup`。未显式设置 color / fill / stroke 的 mark 按声明顺序消费 `palette.series`：未分组 mark 各消费一个槽位；同名 group 只在首次出现时消费一个槽位，后续成员复用该颜色。group 只控制缺省颜色，不覆盖字段颜色映射或常量 paint；内置与自定义 mark 使用同一规则。该字段记录语义共享关系而不是色板序号，IR 不持久化可由顺序推导的 `paletteIndex`。
+
 Legend ramp 的 tick 语义复用 ADR-01 / ADR-02 的 guide tick vocabulary。LegendGuide root 使用 `ticks?: GuideTickSource` 表达 ramp tick source，使用 `tickLabels?: false | GuideTickLabelFormat` 表达 ramp tick label 开关与格式；离散 legend 忽略 tick source，但仍可用 `tickLabels: false` 隐藏条目标签。`style.label` 只控制文字样式，不控制格式。
 
 ```ts
