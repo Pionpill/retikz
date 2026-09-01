@@ -17,11 +17,11 @@ const DEFAULT_HEADER_GAP = 8;
 const DEFAULT_HEADER_TEXT_GAP = 4;
 const DEFAULT_SECTION_GAP = 4;
 const DEFAULT_SECTION_PADDING = 8;
-const DEFAULT_SECTION_BACKGROUND = { fill: 'lightgray', fillOpacity: 0.04 } as const;
-const DEFAULT_SECTION_BORDER = { stroke: 'currentColor', strokeWidth: 1, strokeOpacity: 0.2 } as const;
+const DEFAULT_SECTION_BACKGROUND = { fill: 'currentColor', fillOpacity: 0.037 } as const;
+const DEFAULT_SECTION_BORDER = { stroke: 'none' } as const;
 const DEFAULT_SECTION_CORNER_RADIUS = 8;
 const DEFAULT_ROW_GAP = 8;
-const DEFAULT_ROW_PADDING = 8;
+const DEFAULT_ROW_PADDING = 0;
 
 const structureTextNode = (text: IRBlockText, kind: 'title' | 'description' | 'section'): IRNode => {
   const normalizedText = typeof text === 'string' ? { text } : text;
@@ -52,6 +52,23 @@ const structureText = (text: IRBlockText, kind: 'title' | 'description' | 'secti
   resetStyle: ['node'],
   children: [structureTextNode(text, kind)],
 });
+
+/** 把 Row content 文本下沉为无外框的普通 Core Node */
+const rowContentNode = (text: IRBlockText): IRNode => {
+  const normalizedText = typeof text === 'string' ? { text } : text;
+  return {
+    type: 'node',
+    position: [0, 0],
+    padding: 0,
+    fill: 'none',
+    stroke: 'none',
+    ...normalizedText,
+    font: {
+      size: 'sm',
+      ...normalizedText.font,
+    },
+  };
+};
 
 const flexItem = (
   key: string,
@@ -96,6 +113,30 @@ const sectionScopeProps = (source: IRBlockSection): Omit<IRScope, 'type' | 'chil
 };
 
 const rowScopeProps = (source: IRBlockRow): Omit<IRScope, 'type' | 'children'> => {
+  if ('content' in source) {
+    const {
+      namespace: _namespace,
+      type: _type,
+      content: _content,
+      gap: _gap,
+      padding: _padding,
+      background: _background,
+      border: _border,
+      cornerRadius: _cornerRadius,
+      overflow: _overflow,
+      ...scope
+    } = source;
+    void _namespace;
+    void _type;
+    void _content;
+    void _gap;
+    void _padding;
+    void _background;
+    void _border;
+    void _cornerRadius;
+    void _overflow;
+    return scope;
+  }
   const {
     namespace: _namespace,
     type: _type,
@@ -130,13 +171,13 @@ export const lowerBlockHeaderLayout = (source: IRBlockHeader): IRFlexLayout => {
     direction: source.direction === 'horizontal' ? FlexLayoutDirection.Row : FlexLayoutDirection.Column,
     gap: source.itemGap ?? DEFAULT_HEADER_TEXT_GAP,
     justifyContent: source.justifyContent ?? LayoutDistribution.Start,
-    alignItems: LayoutAlignment.Start,
+    alignItems: source.direction === 'horizontal' ? LayoutAlignment.End : LayoutAlignment.Start,
     children: textItems,
   });
   const headerItems: Array<IRFlexLayoutItem> = [];
   if (source.icon !== undefined) headerItems.push(flexItem('icon', source.icon));
   headerItems.push(flexItem('text', textColumn, { grow: 1 }));
-  if (source.trailing !== undefined) headerItems.push(flexItem('trailing', source.trailing));
+  if (source.trail !== undefined) headerItems.push(flexItem('trail', source.trail));
   return createFlexLayout({
     direction: FlexLayoutDirection.Row,
     gap: DEFAULT_HEADER_GAP,
@@ -178,16 +219,19 @@ export const lowerBlockRowSurface = (source: IRBlockRow): IRSurface =>
       direction: FlexLayoutDirection.Row,
       gap: source.gap ?? DEFAULT_ROW_GAP,
       alignItems: LayoutAlignment.Center,
-      children:
-        source.children?.map(cell => ({
-          kind: 'flex',
-          margin: 0,
-          basis: 0,
-          grow: 1,
-          shrink: 1,
-          min: 0,
-          ...cell,
-        })) ?? [],
+      children: ('content' in source
+        ? (Array.isArray(source.content) ? source.content : [source.content]).map(rowContentNode)
+        : (source.children ?? [])
+      ).map((child, itemIndex) => ({
+        kind: 'flex',
+        key: `item:${itemIndex}`,
+        child,
+        margin: 0,
+        basis: 0,
+        grow: 1,
+        shrink: 1,
+        min: 0,
+      })),
     }),
     padding: source.padding ?? DEFAULT_ROW_PADDING,
     overflow: source.overflow ?? LayoutOverflow.Visible,

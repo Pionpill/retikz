@@ -1,5 +1,6 @@
 import type { ResolvedTheme } from '@retikz/core';
 import type { WithRequiredProperties } from '@retikz/foundation';
+import type { SurfaceInput } from '@retikz/standard';
 
 import type {
   IRGraphEntityAppearanceTokenOverrides,
@@ -20,7 +21,13 @@ export type GraphRelationThemeStyleTokens = WithRequiredProperties<
   'color' | 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'opacity' | 'labelTextForeground' | 'labelOpacity'
 >;
 
-/** Graph Theme style 解析后的 Entity 与 Relation baseline 与有序规则 */
+/** Graph Theme style 的完整 Group / Block 根 Surface appearance baseline */
+export type GraphSurfaceThemeStyleTokens = WithRequiredProperties<
+  Pick<SurfaceInput, 'background' | 'border' | 'cornerRadius'>,
+  'background' | 'border' | 'cornerRadius'
+>;
+
+/** Graph Theme style 解析后的成员 appearance baseline 与有序规则 */
 export type GraphThemeStyleResolution = Readonly<{
   /** Entity-owned style baseline 与规则 */
   entity: Readonly<{
@@ -31,6 +38,14 @@ export type GraphThemeStyleResolution = Readonly<{
   relation: Readonly<{
     tokens: GraphRelationThemeStyleTokens;
     rules?: ReadonlyArray<IRGraphRelationThemeRule>;
+  }>;
+  /** Group 根 Surface 的完整 appearance baseline */
+  group: Readonly<{
+    tokens: GraphSurfaceThemeStyleTokens;
+  }>;
+  /** Block 根 Surface 的完整 appearance baseline */
+  block: Readonly<{
+    tokens: GraphSurfaceThemeStyleTokens;
   }>;
 }>;
 
@@ -49,6 +64,16 @@ export type GraphThemeStyleOverrides = Readonly<{
     tokens?: IRGraphRelationAppearanceTokenOverrides;
     /** 追加在默认 Relation rules 后的有序规则 */
     rules?: ReadonlyArray<IRGraphRelationThemeRule>;
+  }>;
+  /** 可选 Group 根 Surface appearance 覆盖 */
+  group?: Readonly<{
+    /** 相对默认 Group tokens 的非空稀疏覆盖 */
+    tokens: Readonly<Partial<GraphSurfaceThemeStyleTokens>>;
+  }>;
+  /** 可选 Block 根 Surface appearance 覆盖 */
+  block?: Readonly<{
+    /** 相对默认 Block tokens 的非空稀疏覆盖 */
+    tokens: Readonly<Partial<GraphSurfaceThemeStyleTokens>>;
   }>;
 }>;
 

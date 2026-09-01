@@ -28,7 +28,7 @@ The seven built-in roles define only upper-level semantics and a base shape reci
 
 Theme owns the complete Entity visual language. Each demo below can precisely control instance color and text, while the page-level Theme selector switches the overall style among Academic, Vibrant, Clean, and other choices
 
-Neutral is also the concise baseline fully inherited by Graph Clean. `stroke: 1` draws the complete final static master color, `fill: 0.08` composites that color at 8% weight over the current mode backdrop into an opaque fill, and `textColor: 'contrast'` then resolves body text to black or white from the final fill. The `0.08` value is a contextual-color weight, not `fillOpacity`
+Neutral uses a complete master-color outline with a light same-color `fill: 0.08`. Graph Clean explicitly removes the Entity fill while retaining that outline and uses black or white body text for the current mode; explicit instance `fill` and `textColor` values still take precedence
 
 ### participant: an active subject
 

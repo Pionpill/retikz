@@ -1,6 +1,7 @@
 import type { IRJsonObject, JsonValue, ResolvedTheme } from '@retikz/core';
 
 import { assertPlainDataContainers } from '@retikz/foundation';
+import { SurfaceInputSchema } from '@retikz/standard';
 import { array, custom, strictObject } from 'zod';
 
 import type {
@@ -36,12 +37,31 @@ const GraphThemeStyleOverridesSchema = strictObject({
     tokens: GraphRelationAppearanceTokenOverridesSchema.optional(),
     rules: array(GraphRelationThemeRuleSchema).optional(),
   }).optional(),
+  group: strictObject({
+    tokens: strictObject({
+      background: SurfaceInputSchema.shape.background,
+      border: SurfaceInputSchema.shape.border,
+      cornerRadius: SurfaceInputSchema.shape.cornerRadius,
+    }).refine(tokens => Object.keys(tokens).length > 0, {
+      message: 'Graph Group theme style tokens require at least one field.',
+    }),
+  }).optional(),
+  block: strictObject({
+    tokens: strictObject({
+      background: SurfaceInputSchema.shape.background,
+      border: SurfaceInputSchema.shape.border,
+      cornerRadius: SurfaceInputSchema.shape.cornerRadius,
+    }).refine(tokens => Object.keys(tokens).length > 0, {
+      message: 'Graph Block theme style tokens require at least one field.',
+    }),
+  }).optional(),
 });
 
-const graphThemeStyleKeys = new Set(['entity', 'relation']);
+const graphThemeStyleKeys = new Set(['entity', 'relation', 'group', 'block']);
 const graphThemeStyleLayerKeys = new Set(['tokens', 'rules']);
 const graphEntityThemeTokenKeys = new Set<string>(Object.keys(GraphEntityAppearanceTokenOverridesSchema.shape));
 const graphRelationThemeTokenKeys = new Set<string>(Object.keys(GraphRelationAppearanceTokenOverridesSchema.shape));
+const graphSurfaceThemeTokenKeys = new Set(['background', 'border', 'cornerRadius']);
 
 const GraphThemeStylePlainDataSchema = custom<unknown>(
   value => {
@@ -84,14 +104,26 @@ const normalizeGraphThemeStyleLayer = (value: unknown, tokenKeys: ReadonlySet<st
 const normalizeGraphThemeStyleOverrides = (overrides: unknown): unknown => {
   const normalized = omitKnownUndefinedProperties(overrides, graphThemeStyleKeys);
   if (!isPlainRecord(normalized)) return normalized;
+  const normalizeSurfaceLayer = (key: 'group' | 'block'): unknown => {
+    const rawLayer = normalized[key];
+    const layer = normalizeGraphThemeStyleLayer(rawLayer, graphSurfaceThemeTokenKeys);
+    if (!isPlainRecord(rawLayer) || !isPlainRecord(rawLayer.tokens)) return layer;
+    return Object.keys(rawLayer.tokens).length > 0 && isPlainRecord(layer) && Object.keys(layer).length === 0
+      ? undefined
+      : layer;
+  };
+  const group = Object.hasOwn(normalized, 'group') ? normalizeSurfaceLayer('group') : undefined;
+  const block = Object.hasOwn(normalized, 'block') ? normalizeSurfaceLayer('block') : undefined;
   return {
-    ...normalized,
+    ...Object.fromEntries(Object.entries(normalized).filter(([key]) => key !== 'group' && key !== 'block')),
     ...(Object.hasOwn(normalized, 'entity')
       ? { entity: normalizeGraphThemeStyleLayer(normalized.entity, graphEntityThemeTokenKeys) }
       : {}),
     ...(Object.hasOwn(normalized, 'relation')
       ? { relation: normalizeGraphThemeStyleLayer(normalized.relation, graphRelationThemeTokenKeys) }
       : {}),
+    ...(group === undefined ? {} : { group }),
+    ...(block === undefined ? {} : { block }),
   };
 };
 
@@ -137,6 +169,12 @@ const mergeGraphThemeStyle = (
     relation: {
       tokens: mergeRelationTokens(defaults.relation.tokens, overrides.relation?.tokens),
       ...(relationRules === undefined ? {} : { rules: relationRules }),
+    },
+    group: {
+      tokens: { ...defaults.group.tokens, ...overrides.group?.tokens },
+    },
+    block: {
+      tokens: { ...defaults.block.tokens, ...overrides.block?.tokens },
     },
   };
 };

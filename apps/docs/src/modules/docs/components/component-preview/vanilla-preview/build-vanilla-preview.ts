@@ -266,10 +266,11 @@ const registerPreviewIds = (children: ReadonlyArray<IRChild>, libraryState: Libr
       if (child.namespace === 'graph' && child.type === 'blockHeader') {
         const header = BlockHeaderSchema.parse(child);
         if (header.icon !== undefined) visit(header.icon);
-        if (header.trailing !== undefined) visit(header.trailing);
+        if (header.trail !== undefined) visit(header.trail);
       }
       if (child.namespace === 'graph' && child.type === 'blockRow') {
-        BlockRowSchema.parse(child).children?.forEach(cell => visit(cell.child));
+        const row = BlockRowSchema.parse(child);
+        if ('children' in row) row.children?.forEach(visit);
       }
       return;
     }
@@ -446,13 +447,13 @@ const convertGraphChild = (
       });
     }
     case 'blockHeader': {
-      const { namespace: _namespace, type: _type, icon, trailing, ...input } = BlockHeaderSchema.parse(child);
+      const { namespace: _namespace, type: _type, icon, trail, ...input } = BlockHeaderSchema.parse(child);
       void _namespace;
       void _type;
       return blockHeader(nextGraphId('blockHeader', state), {
         ...input,
         ...(icon === undefined ? {} : { icon: convertPreviewChild(icon, libraryState, state) }),
-        ...(trailing === undefined ? {} : { trailing: convertPreviewChild(trailing, libraryState, state) }),
+        ...(trail === undefined ? {} : { trail: convertPreviewChild(trail, libraryState, state) }),
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
     }
@@ -475,7 +476,17 @@ const convertGraphChild = (
       });
     }
     case 'blockRow': {
-      const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = BlockRowSchema.parse(child);
+      const row = BlockRowSchema.parse(child);
+      if ('content' in row) {
+        const { namespace: _namespace, type: _type, ...input } = row;
+        void _namespace;
+        void _type;
+        return blockRow(nextGraphId('blockRow', state), {
+          ...input,
+          graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+        });
+      }
+      const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = row;
       void _namespace;
       void _type;
       return blockRow(nextGraphId('blockRow', state), {
@@ -483,10 +494,7 @@ const convertGraphChild = (
         ...(sourceChildren === undefined
           ? {}
           : {
-              children: sourceChildren.map(cell => ({
-                ...cell,
-                child: convertPreviewChild(cell.child, libraryState, state),
-              })),
+              children: sourceChildren.map(item => convertPreviewChild(item, libraryState, state)),
             }),
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });

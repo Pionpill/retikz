@@ -379,13 +379,11 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
   }
   if (child.namespace === 'graph' && child.type === 'blockHeader') {
     const header = BlockHeaderSchema.parse(child);
-    return [
-      ...(header.icon === undefined ? [] : [header.icon]),
-      ...(header.trailing === undefined ? [] : [header.trailing]),
-    ];
+    return [...(header.icon === undefined ? [] : [header.icon]), ...(header.trail === undefined ? [] : [header.trail])];
   }
   if (child.namespace === 'graph' && child.type === 'blockRow') {
-    return BlockRowSchema.parse(child).children?.map(cell => cell.child) ?? [];
+    const row = BlockRowSchema.parse(child);
+    return 'children' in row ? [...(row.children ?? [])] : [];
   }
   if (child.namespace === 'standard' && child.type === 'surface') return [record.child as IRChild];
   if (
@@ -657,7 +655,7 @@ const blockAuthoringCode = (block: IRBlock, indent: number, ctx: Ctx): string =>
 };
 
 const blockHeaderAuthoringCode = (header: IRBlockHeader, indent: number, ctx: Ctx): string => {
-  const { namespace: _namespace, type: _type, icon, trailing, ...input } = header;
+  const { namespace: _namespace, type: _type, icon, trail, ...input } = header;
   void _namespace;
   void _type;
   const replacements = new Map<string, string>();
@@ -669,7 +667,7 @@ const blockHeaderAuthoringCode = (header: IRBlockHeader, indent: number, ctx: Ct
   const encoded = {
     ...input,
     ...(icon === undefined ? {} : { icon: encodeSlot(icon, 'icon') }),
-    ...(trailing === undefined ? {} : { trailing: encodeSlot(trailing, 'trailing') }),
+    ...(trail === undefined ? {} : { trail: encodeSlot(trail, 'trail') }),
     graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
   let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
@@ -698,14 +696,23 @@ const blockSectionAuthoringCode = (section: IRBlockSection, indent: number, ctx:
 };
 
 const blockRowAuthoringCode = (row: IRBlockRow, indent: number, ctx: Ctx): string => {
+  if ('content' in row) {
+    const { namespace: _namespace, type: _type, ...input } = row;
+    void _namespace;
+    void _type;
+    return formatObject({ ...input, graphThemeStyles: '__GRAPH_THEME_STYLES__' }, indent).replace(
+      "'__GRAPH_THEME_STYLES__'",
+      'PreviewThemeDefinitionBundle.graph',
+    );
+  }
   const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = row;
   void _namespace;
   void _type;
   const replacements = new Map<string, string>();
-  const children = sourceChildren?.map((cell, index) => {
-    const placeholder = `__BLOCK_ROW_CELL_${index}__`;
-    replacements.set(formatString(placeholder), childCode(cell.child, indent + 3, ctx));
-    return { ...cell, child: placeholder };
+  const children = sourceChildren?.map((child, index) => {
+    const placeholder = `__BLOCK_ROW_CHILD_${index}__`;
+    replacements.set(formatString(placeholder), childCode(child, indent + 2, ctx));
+    return placeholder;
   });
   const encoded = {
     ...input,

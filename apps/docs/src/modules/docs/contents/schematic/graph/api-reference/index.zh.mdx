@@ -7,17 +7,17 @@ description: 查询 Graph family 的独立 Source composite、Scope 公共面与
 
 ## 公开导出
 
-| 能力       | `@retikz/graph`                                                                                    | React                                              | Vanilla                                                            |
-| ---------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
-| Graph      | `GraphSchema`、`IRGraph`、`createGraph`、`GraphDefinition`、`GraphProviderKey`                     | `Graph`、`GraphProps`                              | `graph`、`GraphInputEmbedAdapter`、`GraphInputEmbedProps`          |
-| Group      | `GroupSchema`、`IRGroup`、`createGroup`、`GroupDefinition`、`GroupProviderKey`                     | `Group`、`GroupProps`                              | `group`、`GroupInputEmbedAdapter`、`GroupInputEmbedProps`          |
-| Block      | `BlockSchema`、`IRBlock`、`createBlock`、`BlockDefinition`、`BlockProviderKey`                     | `Block`、`BlockProps`                              | `block`、`BlockInputEmbedAdapter`、`BlockInputEmbedProps`          |
-| Block 结构 | Header / Section / Row 的 schema、类型、factory、Definition 与 ProviderKey；Row-local `BlockCell`  | 三个独立组件与 `BlockCell` marker                  | 三个独立 builder、adapter 与 normalize                             |
-| Entity     | `EntitySchema`、`IRGraphEntity`、`createEntity`、`EntityDefinition`、`EntityProviderKey`           | `Entity`、`EntityProps`                            | `entity`、`EntityInputEmbedAdapter`、`EntityInputEmbedProps`       |
-| Relation   | `RelationSchema`、`IRGraphRelation`、`createRelation`、`RelationDefinition`、`RelationProviderKey` | `Relation`、`RelationProps`                        | `relation`、`RelationInputEmbedAdapter`、`RelationInputEmbedProps` |
-| 开放词汇   | `EntityRole`、`RelationRole`、`RelationKind` 及对应 schema                                         | —                                                  | —                                                                  |
-| Theme 扩展 | `GraphThemeStyleDefinition`、`GraphThemeStyleOverrides`、`defineGraphThemeStyle`                   | `graphThemeStyles` 可声明在 Graph family composite | 同一 options 可传给 Graph family adapter                           |
-| 装配       | `GraphDefinitionOptions`、`createGraphDefinitions`、`createGraphProviders`                         | options 可声明在独立 composite                     | `createGraphVanillaAdapters`                                       |
+| 能力       | `@retikz/graph`                                                                                       | React                                              | Vanilla                                                            |
+| ---------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
+| Graph      | `GraphSchema`、`IRGraph`、`createGraph`、`GraphDefinition`、`GraphProviderKey`                        | `Graph`、`GraphProps`                              | `graph`、`GraphInputEmbedAdapter`、`GraphInputEmbedProps`          |
+| Group      | `GroupSchema`、`IRGroup`、`createGroup`、`GroupDefinition`、`GroupProviderKey`                        | `Group`、`GroupProps`                              | `group`、`GroupInputEmbedAdapter`、`GroupInputEmbedProps`          |
+| Block      | `BlockSchema`、`IRBlock`、`createBlock`、`BlockDefinition`、`BlockProviderKey`                        | `Block`、`BlockProps`                              | `block`、`BlockInputEmbedAdapter`、`BlockInputEmbedProps`          |
+| Block 结构 | Header / Section / Row 的 schema、类型、factory、Definition 与 ProviderKey；Row 接受任意直接 children | 三个独立组件，Row children 直接收集任意子元素      | 三个独立 builder、adapter 与 normalize                             |
+| Entity     | `EntitySchema`、`IRGraphEntity`、`createEntity`、`EntityDefinition`、`EntityProviderKey`              | `Entity`、`EntityProps`                            | `entity`、`EntityInputEmbedAdapter`、`EntityInputEmbedProps`       |
+| Relation   | `RelationSchema`、`IRGraphRelation`、`createRelation`、`RelationDefinition`、`RelationProviderKey`    | `Relation`、`RelationProps`                        | `relation`、`RelationInputEmbedAdapter`、`RelationInputEmbedProps` |
+| 开放词汇   | `EntityRole`、`RelationRole`、`RelationKind` 及对应 schema                                            | —                                                  | —                                                                  |
+| Theme 扩展 | `GraphThemeStyleDefinition`、`GraphThemeStyleOverrides`、`defineGraphThemeStyle`                      | `graphThemeStyles` 可声明在 Graph family composite | 同一 options 可传给 Graph family adapter                           |
+| 装配       | `GraphDefinitionOptions`、`createGraphDefinitions`、`createGraphProviders`                            | options 可声明在独立 composite                     | `createGraphVanillaAdapters`                                       |
 
 ## Graph Source composite
 
@@ -93,7 +93,7 @@ Group 保存任意 `IRChild` 的嵌套包含关系，并组合完整 Core Scope�
 
 <ZodSchema name="GroupSchema" />
 
-默认值只在 lowering 中消费：padding 为 `10`，background 为 `lightgray` / `0.04`，border 为 `lightgray` / `1` 且 `dashPattern` 为 `[4, 3]`，corner radius 为 `4`，overflow 为 `visible`；caption 默认位于 top，内部 horizontal 排列，`itemGap` / `bodyGap` 均为 `4`，title 默认使用 `sm` 且不加粗，description 默认使用 `xs` 与 0.7 不透明度。Group labels 默认使用与 description 对齐的 `xs` 字号和灰色 `gray`，显式字体与颜色字段优先；省略 `align` 时默认使用 Core attachment-tangent `start`，省略 position 时默认使用 `{ boundary: 'bottom', fraction: 0 }`，附着在外框下边界左端并向外侧下方偏移，使文字左边缘与外框左边缘对齐；其余 position、boundary、placement、rotate、keepUpright 与 pin 直接以 Core `NodeLabelSchema` 为真源，placement 继续默认 `outside`
+Neutral Graph Theme 为 Group 根外框提供 background `lightgray` / `0.04`、border `lightgray` / `1` 且 `dashPattern` 为 `[4, 3]`、corner radius `4` 的基线；同名 Graph Theme Definition 可以替换这三个省略字段，显式 Source 字段最终优先。其余默认值只在 lowering 中消费：padding 为 `10`、overflow 为 `visible`；caption 默认位于 top，内部 horizontal 排列，`itemGap` / `bodyGap` 均为 `4`，title 默认使用 `sm` 且不加粗，description 默认使用 `xs` 与 0.7 不透明度。Group labels 默认使用与 description 对齐的 `xs` 字号和灰色 `gray`，显式字体与颜色字段优先；省略 `align` 时默认使用 Core attachment-tangent `start`，省略 position 时默认使用 `{ boundary: 'bottom', fraction: 0 }`，附着在外框下边界左端并向外侧下方偏移，使文字左边缘与外框左边缘对齐；其余 position、boundary、placement、rotate、keepUpright 与 pin 直接以 Core `NodeLabelSchema` 为真源，placement 继续默认 `outside`
 
 ## Block schema
 
@@ -107,7 +107,7 @@ Block 保存任意有序 `IRChild`，并用纵向 FlexLayout 与 Standard Surfac
 
 <ZodSchema name="BlockRowSchema" />
 
-Block lowering 默认使用 gap `8`、padding `8`、透明 background、`lightgray / 1` border、corner radius `8` 与 overflow `visible`。`width` 与 `minWidth` 约束包含水平 padding 的外层宽度。Header、Section 与 Row 是独立 composite；Section 接受任意 children，Row 的 Cell 直接复用 FlexLayout item，Relation 通过已有 `IRNodeTarget + anchor / boundary` 连接实际 lower target，不建立 Port IR
+Neutral Graph Theme 为 Block 根外框提供透明 background、`currentColor / 0.2 / 1` border 与 corner radius `8` 的基线；同名 Graph Theme Definition 可以替换这三个省略字段，显式 Source 字段最终优先。Block lowering 的其它默认值是 gap `8`、padding `8` 与 overflow `visible`；Section 默认 padding 为 `8`、background 为 `currentColor / 0.037`、border 为 `currentColor / 0.1 / 1`，Row 默认 padding 为 `0`、横向 gap 为 `8`。`width` 与 `minWidth` 约束包含水平 padding 的外层宽度；省略尺寸时有效 `minWidth` 为 `240`，但不会写回 Source。Header、Section 与 Row 是独立 composite；Section 接受任意 children。Row 的 `content: IRBlockText | IRBlockText[]` 复用 Header / Section 文本结构，默认字号为 `sm`，显式 `font.size` 优先；单个占满、多个均分，并与 `children` 互斥。完整 Node 外壳或自定义内容直接写入 `children: IRChild[]`，并按相同的 Row 默认值均分。Relation 通过已有 `IRNodeTarget + anchor / boundary` 连接实际 lower target，不建立 Port IR
 
 ## Entity schema
 
@@ -241,20 +241,22 @@ Entity / Relation 的 `color` 是字符串主色。适用的 `fill`、`stroke`�
 
 Core `theme` 选择或覆盖通用 Theme；`graphTheme` 只保存 Graph-local ordered appearance rules。Entity rule 可按 role / kind / predicate 匹配，Relation rule 可按 role / kind / predicate / direction 匹配；role 持有完整结构，kind / predicate 只能提供允许的结构 delta
 
-`defineGraphThemeStyle()` 的 `resolve(theme)` 返回 `GraphThemeStyleOverrides`，只写相对当前明暗模式默认 preset 需要改变的字段。`entity`、`relation` 及各自的 `tokens`、`rules` 都可以省略；runtime callback 中已知 token 显式为 `undefined` 时按省略处理。显式 `tokens: {}` 仍无效，因为 token override 必须至少包含一个字段；返回值只能包含 plain-data 容器
+`defineGraphThemeStyle()` 的 `resolve(theme)` 返回 `GraphThemeStyleOverrides`，只写相对当前明暗模式默认 preset 需要改变的字段。`entity`、`relation`、`group` 与 `block` 都是可选 slice；Entity / Relation 可提供 `tokens` 与 `rules`，Group / Block 使用 `GraphSurfaceThemeStyleTokens` 的 `background`、`border` 与 `cornerRadius`。runtime callback 中已知 token 显式为 `undefined` 时按省略处理。显式 `tokens: {}` 仍无效，因为 token override 必须至少包含一个字段；返回值只能包含 plain-data 容器
 
 ```ts
 const compact = defineGraphThemeStyle({
   name: 'compact',
   resolve: () => ({
     entity: { tokens: { strokeWidth: 1.5 } },
+    group: { tokens: { cornerRadius: 2 } },
+    block: { tokens: { border: { stroke: 'currentColor', strokeWidth: 1.5 } } },
   }),
 });
 
 const composites = createGraphDefinitions({ graphThemeStyles: [compact] });
 ```
 
-Graph resolver 按以下顺序形成完整外观，后面的来源只覆盖自己声明的字段：
+Entity / Relation resolver 按以下顺序形成完整外观，后面的来源只覆盖自己声明的字段：
 
 1. 当前 Core Theme mode 对应的 Graph 默认 preset tokens
 2. 自定义 style 的稀疏 tokens
@@ -263,11 +265,13 @@ Graph resolver 按以下顺序形成完整外观，后面的来源只覆盖自�
 5. 从外到内的 Graph-local `graphTheme` rules
 6. Entity / Relation 显式 appearance 字段
 
+Group / Block 根外框只使用 Neutral baseline、同名 style 的 Group / Block tokens 与显式 Source `background` / `border` / `cornerRadius`。显式对象作为完整顶层字段替换 Theme 对象，不在对象内部深合并；`graphTheme` 仍只样式化后代 Entity / Relation，不作用于承载它的 Group / Block shell
+
 自定义 style rules 追加在默认 rules 后；省略 `rules` 或提供 `rules: []` 都不会清空内置规则。未知 Core Theme style 仍要求注册同名 Graph Theme style Definition，否则 resolve 会 fail-loud
 
 ## React 与 Vanilla authoring
 
-React `<Graph>` 与 `<Block>` 都按作者顺序收集任意 Core/Tier 2 children。`<BlockHeader>`、`<BlockSection>` 与 `<BlockRow>` 是独立 embed，`<BlockCell>` 只在 Row 内组装 Flex item。Entity children 写入直接 `text`，Relation `<Step>` children 写入直接 `route`
+React `<Graph>` 与 `<Block>` 都按作者顺序收集任意 Core/Tier 2 children。`<BlockHeader>`、`<BlockSection>` 与 `<BlockRow>` 是独立 embed；Header 的开放 slot 命名为 `icon` 与 `trail`。Row 的普通文本通过 `content` 传入，自定义内容直接使用 children。Entity children 写入直接 `text`，Relation `<Step>` children 写入直接 `route`
 
 Graph standalone 与嵌入模式共享同一个 Source contract：
 
@@ -281,7 +285,7 @@ Graph standalone 与嵌入模式共享同一个 Source contract：
 
 standalone 的 `width`、`height`、`viewBox`、renderer、runtime 与 DOM props 属于 Layout Scene 宿主；嵌入时把它们移到外层 Layout。`transforms`、`placement`、`zIndex` 与 `clip` 等直接属于 `IRGraph`，没有额外 panel envelope
 
-Vanilla 的 `normalizeBlockHeader()`、`normalizeBlockSection()` 与 `normalizeBlockRow()` 和其它 Graph family normalize 一样只组装 Source；`createGraphVanillaAdapters()` 安装全部独立 adapter
+Vanilla 的 `normalizeBlockHeader()`、`normalizeBlockSection()` 与 `normalizeBlockRow()` 和其它 Graph family normalize 一样只组装 Source；Header 右侧 child 使用 `trail`，Row `content` 原样保留，children 直接接受任意 `InputGraphChild`。`createGraphVanillaAdapters()` 安装全部独立 adapter
 
 Graph family builder 的第一个 `traversalId` 参数只供 Vanilla authoring traversal 定位，不是 Source `id`，也不会自动写入或生成 semantic identity
 

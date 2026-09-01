@@ -31,5 +31,19 @@ export const getDefaultGraphThemePreset = (theme: ResolvedTheme): GraphThemeStyl
         labelOpacity: 1,
       },
     },
+    group: {
+      tokens: {
+        background: { fill: 'lightgray', fillOpacity: 0.04 },
+        border: { stroke: 'lightgray', strokeWidth: 1, dashPattern: [4, 3] },
+        cornerRadius: 4,
+      },
+    },
+    block: {
+      tokens: {
+        background: { fill: 'none' },
+        border: { stroke: 'currentColor', strokeWidth: 1, strokeOpacity: 0.2 },
+        cornerRadius: 8,
+      },
+    },
   };
 };

@@ -1,6 +1,6 @@
 import { ChildSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { FlexLayoutItemSchema, FlexMainDistributionSchema, LayoutGapSchema } from '@retikz/layout';
+import { FlexMainDistributionSchema, LayoutGapSchema } from '@retikz/layout';
 import { SurfaceInputSchema } from '@retikz/standard';
 import { array, enum as zodEnum, literal, strictObject, string, union } from 'zod';
 
@@ -49,44 +49,8 @@ export const BlockHeaderSchema = strictObject({
   justifyContent: FlexMainDistributionSchema.optional().describe(
     'Optional main-axis distribution within the Header title and description text region.',
   ),
-  trailing: ChildSchema.optional().describe('Optional arbitrary child placed after the Header text region.'),
-}).describe('Independent Graph composite arranging an icon, text region and trailing child.');
-
-const BlockCellInputSchema = strictObject({
-  key: FlexLayoutItemSchema.shape.key,
-  child: FlexLayoutItemSchema.shape.child,
-  margin: FlexLayoutItemSchema.shape.margin
-    .unwrap()
-    .optional()
-    .describe('Optional item margin outside the Row allocation slot.'),
-  basis: FlexLayoutItemSchema.shape.basis
-    .unwrap()
-    .optional()
-    .describe('Flex main-axis base slot; Block Cells default to zero for equal sharing.'),
-  grow: FlexLayoutItemSchema.shape.grow
-    .unwrap()
-    .optional()
-    .describe('Flex positive free-space factor; Block Cells default to one.'),
-  shrink: FlexLayoutItemSchema.shape.shrink
-    .unwrap()
-    .optional()
-    .describe('Flex shrink factor; Block Cells default to one.'),
-  min: FlexLayoutItemSchema.shape.min,
-  max: FlexLayoutItemSchema.shape.max,
-  alignSelf: FlexLayoutItemSchema.shape.alignSelf,
-}).superRefine((cell, context) => {
-  if (cell.min !== undefined && cell.max !== undefined && cell.min > cell.max) {
-    context.addIssue({
-      code: 'custom',
-      path: ['max'],
-      message: 'max must be greater than or equal to min.',
-    });
-  }
-});
-
-export const BlockCellSchema = BlockCellInputSchema.describe(
-  'Row-local sparse FlexLayout item fields excluding the fixed Flex discriminator.',
-);
+  trail: ChildSchema.optional().describe('Optional arbitrary child placed after the Header text region.'),
+}).describe('Independent Graph composite arranging an icon, text region and trail child.');
 
 export const BlockSectionSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
@@ -98,28 +62,29 @@ export const BlockSectionSchema = strictObject({
   gap: NonNegativeNumberSchema.optional().describe('Optional vertical gap between Section items in user units.'),
 }).describe('Independent Graph composite presenting arbitrary children as a vertical content section.');
 
-export const BlockRowSchema = strictObject({
+const BlockRowFields = {
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.BlockRow).describe('Block Row Source composite discriminator.'),
   ...ScopePropsSchema.shape,
   ...BlockSurfaceFields,
-  children: array(BlockCellSchema).optional().describe('Optional ordered Row-local Flex items.'),
-  gap: NonNegativeNumberSchema.optional().describe('Optional horizontal gap between Row Cells in user units.'),
-})
-  .superRefine((row, context) => {
-    const seenKeys = new Set<string>();
-    row.children?.forEach((cell, index) => {
-      if (cell.key !== undefined && seenKeys.has(cell.key)) {
-        context.addIssue({
-          code: 'custom',
-          path: ['children', index, 'key'],
-          message: `Duplicate Block Row Cell key '${cell.key}'.`,
-        });
-      }
-      if (cell.key !== undefined) seenKeys.add(cell.key);
-    });
-  })
-  .describe('Independent Graph composite arranging ordered Row-local Flex items horizontally.');
+  gap: NonNegativeNumberSchema.optional().describe('Optional horizontal gap between Row children in user units.'),
+};
+
+const BlockRowContentSchema = strictObject({
+  ...BlockRowFields,
+  content: union([BlockTextSchema, array(BlockTextSchema)]).describe(
+    'Block text shorthand lowered to one full-width item or multiple equal-width Row items.',
+  ),
+});
+
+const BlockRowChildrenSchema = strictObject({
+  ...BlockRowFields,
+  children: array(ChildSchema).optional().describe('Optional ordered arbitrary Core or Tier 2 children.'),
+});
+
+export const BlockRowSchema = union([BlockRowContentSchema, BlockRowChildrenSchema]).describe(
+  'Independent Graph composite arranging Block text content or direct arbitrary children horizontally.',
+);
 
 export const BlockSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
@@ -130,7 +95,7 @@ export const BlockSchema = strictObject({
   children: array(ChildSchema).optional().describe('Optional ordered arbitrary Core or Tier 2 children.'),
   width: NonNegativeNumberSchema.optional().describe('Optional fixed outer Block width including horizontal padding.'),
   minWidth: NonNegativeNumberSchema.optional().describe(
-    'Optional minimum outer Block width including horizontal padding.',
+    'Optional minimum outer Block width including horizontal padding; omitted Source resolves to 240.',
   ),
   gap: NonNegativeNumberSchema.optional().describe('Optional vertical gap between Block children in user units.'),
 })

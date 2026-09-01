@@ -25,8 +25,8 @@ Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 已按 
 - Graph 不复制 Layout FlexLayout、artifact、spacing、axis sizing、clip 或 geometry 算法；公共面不足时先在 Layout owner 冻结并实现最小 composition contract
 - `graph-react` 只消费 `graph` 与 `@retikz/react`；`graph-vanilla` 只消费 `graph` 与 `@retikz/vanilla`
 - public IR 必须 JSON-safe；ReactNode、DOM、renderer 资源和编辑器运行时状态不得进入 Graph schema
-- Group、Block、BlockHeader、BlockSection、BlockRow、Entity 与 Relation 是可独立放入任意 Core 内容树的 semantic composite；Graph、Group、Block、BlockSection 与 BlockRow 组合完整 Core Scope surface，Graph、Group 与 Block 可提供局部 `graphTheme`。Group 复用 Standard Surface、Layout 与 Core Node labels 表达可见边界且不自动排列 authored children；Block 复用 Layout 与 Surface 按作者顺序纵向排列任意 children，Header / Section / Row 只是可选组合，Cell 保持 Row-local Flex item
-- Graph Theme style 只按 role、kind、predicate 与 direction 等真实语义提供稀疏 appearance 默认；单例精确外观继续使用 Core-compatible 字段，Graph 发布包只维护 Neutral baseline，命名 reference styles 由消费方通过公开 Definition 注入
+- Group、Block、BlockHeader、BlockSection、BlockRow、Entity 与 Relation 是可独立放入任意 Core 内容树的 semantic composite；Graph、Group、Block、BlockSection 与 BlockRow 组合完整 Core Scope surface，Graph、Group 与 Block 可提供局部 `graphTheme`。Group 复用 Standard Surface、Layout 与 Core Node labels 表达可见边界且不自动排列 authored children；Block 复用 Layout 与 Surface 按作者顺序纵向排列任意 children，Header / Section / Row 只是可选组合。Row 的 `children` 直接接受任意 child，并在 lowering 中按相同默认值均分空间
+- Graph Theme style 按 role、kind、predicate 与 direction 等真实语义为 Entity / Relation 提供稀疏 appearance 默认，并为 Group / Block 根 Surface 提供无 selector 的 `background`、`border`、`cornerRadius` baseline；单例精确外观继续使用 Core-compatible 字段，Graph 发布包只维护 Neutral baseline，命名 reference styles 由消费方通过公开 Definition 注入
 - React Graph standalone 复用 Layout 建立 Scene，embedded Graph 只贡献局部 Scope；host-only props 不进入 `IRGraph`，Graph 不拥有 Layout solver 或 Scene 语义
 - Relation endpoint 直接复用 Core NodeTarget 与 namespace，可以引用 Core 已公开寻址的 Node、Coordinate、resolved Scope 及下沉为这些 target 的上层 composite；Graph 不建立第二套 endpoint 或 lookup
 - Graph、Group、Block、Entity 与 Relation 的 id 均为显式 authoring identity；省略时不得由 resolve、lowering 或 adapter 自动生成。Block、Section 与 Row 的显式 id 发布到当前 Core namespace，不自动添加 Block 前缀
@@ -34,7 +34,7 @@ Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 已按 
 
 ## 当前状态
 
-Graph v0.1 alpha.1 ADR-01～10 与 alpha.2 ADR-03 已形成 Accepted 的现行契约，alpha.2 ADR-01 已 Superseded，ADR-02 保持 Proposed。Graph、Group、Block family、Entity 与 Relation 都是独立 Source composite：Entity / Relation 复用 Core Node / Path lower-facing surface，Graph / Group / Block / Section / Row 复用完整 Core Scope surface，Block 以 Layout 与 Surface 组织任意有序 children；`graphTheme` 只影响可见 Entity / Relation，React 与 Vanilla 只提供同一 Source IR 的 authoring sugar。
+Graph v0.1 alpha.1 ADR-01～10 与 alpha.2 ADR-03～04 已形成 Accepted 的现行契约，alpha.2 ADR-01 已 Superseded，ADR-02 保持 Proposed。Graph、Group、Block family、Entity 与 Relation 都是独立 Source composite：Entity / Relation 复用 Core Node / Path lower-facing surface，Graph / Group / Block / Section / Row 复用完整 Core Scope surface，Block 以 Layout 与 Surface 组织任意有序 children；named Graph Theme 统一提供 Entity / Relation 默认与 Group / Block 根 Surface appearance，`graphTheme` 只影响可见后代 Entity / Relation，React 与 Vanilla 只提供同一 Source IR 的 authoring sugar。
 
 ## 验证
 

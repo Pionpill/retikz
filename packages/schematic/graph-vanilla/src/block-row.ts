@@ -39,21 +39,22 @@ export const BlockRowInputEmbedAdapter: InputEmbedAdapter<BlockRowInputEmbedProp
   kind: BlockRowEmbedKind,
   lower: (props, context) => {
     const input = inputOf(props);
-    const cellChildren = input.children?.map(cell => cell.child) ?? [];
-    const normalized = normalizeGraphAuthoringChildren(cellChildren, context, 'BlockRow.children');
+    const inputChildren = 'content' in input ? undefined : input.children;
+    const normalized = normalizeGraphAuthoringChildren(inputChildren ?? [], context, 'BlockRow.children');
     const dependencies = createGraphProviderDependencies(BlockRowProviderKey, graphDefinitionOptionsOf(props));
+    let node: ReturnType<typeof normalizeBlockRow>;
+    if (input.content !== undefined || inputChildren === undefined) {
+      node = normalizeBlockRow(input);
+    } else {
+      const { content: _content, ...row } = input;
+      void _content;
+      node = normalizeBlockRow({
+        ...row,
+        children: normalized.children,
+      });
+    }
     return {
-      node: normalizeBlockRow({
-        ...input,
-        ...(input.children === undefined
-          ? {}
-          : {
-              children: input.children.map((cell, cellIndex) => ({
-                ...cell,
-                child: normalized.children[cellIndex],
-              })),
-            }),
-      }),
+      node,
       providerDependencies: {
         roots: [
           ...dependencies.roots,

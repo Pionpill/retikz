@@ -10,9 +10,6 @@ import type { IRBlock } from '../../schemas';
 
 const DEFAULT_BLOCK_GAP = 8;
 const DEFAULT_BLOCK_PADDING = 8;
-const DEFAULT_BLOCK_BACKGROUND = { fill: 'none' } as const;
-const DEFAULT_BLOCK_BORDER = { stroke: 'currentColor', strokeWidth: 1, strokeOpacity: 0.2 } as const;
-const DEFAULT_BLOCK_CORNER_RADIUS = 8;
 
 /** 从 Block Source 提取完整 Core Scope props，移除 Graph、布局与 Surface 字段 */
 export const blockScopeProps = (source: IRBlock): Omit<IRScope, 'type' | 'children'> => {
@@ -75,7 +72,7 @@ export const lowerBlockSurface = (block: CanonicalBlock): IRSurface =>
     child: lowerBlockContent(block),
     padding: block.source.padding ?? DEFAULT_BLOCK_PADDING,
     overflow: block.source.overflow ?? LayoutOverflow.Visible,
-    background: block.source.background ?? DEFAULT_BLOCK_BACKGROUND,
-    border: block.source.border ?? DEFAULT_BLOCK_BORDER,
-    cornerRadius: block.source.cornerRadius ?? DEFAULT_BLOCK_CORNER_RADIUS,
+    background: block.source.background ?? block.shellAppearance.background,
+    border: block.source.border ?? block.shellAppearance.border,
+    cornerRadius: block.source.cornerRadius ?? block.shellAppearance.cornerRadius,
   });

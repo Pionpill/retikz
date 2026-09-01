@@ -73,7 +73,7 @@ describe('@retikz/graph package boundary', () => {
     expect(graphExports.BlockHeaderSchema).toBeDefined();
     expect(graphExports.BlockSectionSchema).toBeDefined();
     expect(graphExports.BlockRowSchema).toBeDefined();
-    expect(graphExports.BlockCellSchema).toBeDefined();
+    expect(graphExports).not.toHaveProperty('BlockCellSchema');
     expect(graphExports).not.toHaveProperty('GraphChildSchema');
     expect(graphExports).not.toHaveProperty('GraphContentChildSchema');
     expect(graphExports).not.toHaveProperty('RelationEndpointSchema');

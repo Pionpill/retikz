@@ -148,15 +148,10 @@ const sourceGraphMemberOf = (
         ...(input.icon === undefined
           ? {}
           : { icon: sourceGraphChildOf(input.icon, runtimePropertyOf(runtime, 'icon'), chartSources, chartIndex) }),
-        ...(input.trailing === undefined
+        ...(input.trail === undefined
           ? {}
           : {
-              trailing: sourceGraphChildOf(
-                input.trailing,
-                runtimePropertyOf(runtime, 'trailing'),
-                chartSources,
-                chartIndex,
-              ),
+              trail: sourceGraphChildOf(input.trail, runtimePropertyOf(runtime, 'trail'), chartSources, chartIndex),
             }),
       });
     case 'blockSection': {
@@ -164,7 +159,8 @@ const sourceGraphMemberOf = (
       return normalizeBlockSection({ ...input, ...(children === undefined ? {} : { children }) });
     }
     case 'blockRow': {
-      const runtimeCells =
+      if (input.content !== undefined) return normalizeBlockRow(input);
+      const runtimeItems =
         runtime !== undefined &&
         'namespace' in runtime &&
         runtime.type === 'blockRow' &&
@@ -176,10 +172,9 @@ const sourceGraphMemberOf = (
         ...(input.children === undefined
           ? {}
           : {
-              children: input.children.map((cell, index) => ({
-                ...cell,
-                child: sourceGraphChildOf(cell.child, runtimeCells?.[index]?.child, chartSources, chartIndex),
-              })),
+              children: input.children.map((item, index) =>
+                sourceGraphChildOf(item, runtimeItems?.[index], chartSources, chartIndex),
+              ),
             }),
       });
     }

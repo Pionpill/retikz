@@ -28,7 +28,7 @@ import { Layout } from '@retikz/react';
 
 Entity 的整体外观统一由 Theme 管理。下面每个 demo 都允许精确调整实例颜色和文本；页面顶部的 Theme selector 统一切换 Academic、Vibrant、Clean 等整体视觉风格
 
-Neutral 默认也是 Graph Clean 完整继承的简洁样式：`stroke: 1` 使用最终静态主色绘制完整描边，`fill: 0.08` 将同一主色按 8% 权重在当前 mode backdrop 上预合成为不透明填充，`textColor: 'contrast'` 再根据最终填充解析为黑色或白色正文。这里的 `0.08` 是 contextual color 权重，不是 `fillOpacity`
+Neutral 默认使用完整主色描边和 `fill: 0.08` 的同色轻填充。Graph Clean 在此基础上显式移除 Entity 填充，保留主色描边，并按当前 mode 使用黑色或白色正文；实例显式提供的 `fill` 与 `textColor` 仍然优先
 
 ### participant：参与主体
 

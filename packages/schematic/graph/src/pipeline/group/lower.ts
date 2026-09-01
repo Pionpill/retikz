@@ -9,13 +9,17 @@ import type { CanonicalGroup } from '../../resolve';
 import type { IRGroup, IRGroupCaptionText } from '../../schemas';
 
 const DEFAULT_GROUP_PADDING = 10;
-const DEFAULT_GROUP_BACKGROUND = { fill: 'lightgray', fillOpacity: 0.04 };
-const DEFAULT_GROUP_BORDER = { stroke: 'lightgray', strokeWidth: 1, dashPattern: [4, 3] };
-const DEFAULT_GROUP_CORNER_RADIUS = 4;
 const DEFAULT_GROUP_LABEL_POSITION: IRNodeLabelBoundaryPosition = { boundary: 'bottom', fraction: 0 };
 const DEFAULT_GROUP_LABEL_FONT = { size: 'xs' as const };
 const DEFAULT_GROUP_LABEL_TEXT_COLOR = 'gray' as const;
 const DEFAULT_CAPTION_GAP = 4;
+
+/** Group caption 与 body 组合所需的 canonical child、方位和间距 */
+export type GroupCaptionComposition = Readonly<{
+  child: IRChild;
+  side: 'top' | 'bottom';
+  bodyGap: number;
+}>;
 
 /** 从 Group Source 提取完整 Core Scope props，移除领域与 Surface 呈现字段 */
 export const groupScopeProps = (source: IRGroup): Omit<IRScope, 'type' | 'children'> => {
@@ -96,22 +100,33 @@ const captionContent = (source: IRGroup): IRChild | undefined => {
   return { type: 'scope', resetStyle: ['node'], children: [layout] };
 };
 
+/** 把 Group caption 投影为 shell measurement 与最终 lowering 共用的组合片段 */
+export const lowerGroupCaptionComposition = (source: IRGroup): GroupCaptionComposition | undefined => {
+  const child = captionContent(source);
+  if (child === undefined) return undefined;
+  return {
+    child,
+    side: source.caption?.side === 'bottom' ? 'bottom' : 'top',
+    bodyGap: source.caption?.bodyGap ?? DEFAULT_CAPTION_GAP,
+  };
+};
+
 /** 把 caption 与任意 authored body 组合为 Surface 的唯一 child */
 const groupContent = (group: CanonicalGroup): IRChild => {
-  const caption = captionContent(group.source);
+  const caption = lowerGroupCaptionComposition(group.source);
   const body: IRChild | undefined =
     group.children.length === 0 ? undefined : { type: 'scope', children: [...group.children] };
   if (caption === undefined && body === undefined) return { type: 'scope', children: [] };
   if (caption === undefined) return body!;
-  if (body === undefined) return caption;
-  const top = group.source.caption?.side !== 'bottom';
+  if (body === undefined) return caption.child;
+  const top = caption.side === 'top';
   return createFlexLayout({
     direction: FlexLayoutDirection.Column,
-    gap: group.source.caption?.bodyGap ?? DEFAULT_CAPTION_GAP,
+    gap: caption.bodyGap,
     alignItems: LayoutAlignment.Stretch,
     children: top
-      ? [flexItem('caption', caption), flexItem('body', body)]
-      : [flexItem('body', body), flexItem('caption', caption)],
+      ? [flexItem('caption', caption.child), flexItem('body', body)]
+      : [flexItem('body', body), flexItem('caption', caption.child)],
   });
 };
 
@@ -123,9 +138,9 @@ export const lowerGroupSurface = (group: CanonicalGroup): IRSurface =>
     child: groupContent(group),
     padding: group.source.padding ?? DEFAULT_GROUP_PADDING,
     overflow: group.source.overflow ?? LayoutOverflow.Visible,
-    background: group.source.background ?? DEFAULT_GROUP_BACKGROUND,
-    border: group.source.border ?? DEFAULT_GROUP_BORDER,
-    cornerRadius: group.source.cornerRadius ?? DEFAULT_GROUP_CORNER_RADIUS,
+    background: group.source.background ?? group.shellAppearance.background,
+    border: group.source.border ?? group.shellAppearance.border,
+    cornerRadius: group.source.cornerRadius ?? group.shellAppearance.cornerRadius,
   });
 
 /** 创建与最终 Surface allocation 完全重合的透明 Core Node label host */

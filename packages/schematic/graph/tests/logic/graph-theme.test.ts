@@ -40,6 +40,16 @@ describe('Graph Scope and Theme compile semantics', () => {
       strokeOpacity: 1,
       opacity: 1,
     });
+    expect(Graph.getDefaultGraphThemePreset(theme).group.tokens).toEqual({
+      background: { fill: 'lightgray', fillOpacity: 0.04 },
+      border: { stroke: 'lightgray', strokeWidth: 1, dashPattern: [4, 3] },
+      cornerRadius: 4,
+    });
+    expect(Graph.getDefaultGraphThemePreset(theme).block.tokens).toEqual({
+      background: { fill: 'none' },
+      border: { stroke: 'currentColor', strokeWidth: 1, strokeOpacity: 0.2 },
+      cornerRadius: 8,
+    });
   });
 
   it('materializes a static Entity master into same-color stroke, opaque light fill, and contrast text', () => {
@@ -302,6 +312,8 @@ describe('Graph Scope and Theme compile semantics', () => {
         tokens: { ...defaults.entity.tokens, color: '#2563eb' },
       },
       relation: defaults.relation,
+      group: defaults.group,
+      block: defaults.block,
     });
   });
 
@@ -318,6 +330,37 @@ describe('Graph Scope and Theme compile semantics', () => {
       relation: {
         ...defaults.relation,
         tokens: { ...defaults.relation.tokens, stroke: '#16a34a' },
+      },
+      group: defaults.group,
+      block: defaults.block,
+    });
+  });
+
+  it('fills omitted Group and Block shell tokens from the Neutral preset', () => {
+    const definition = Graph.defineGraphThemeStyle({
+      name: 'container-shells',
+      resolve: () => ({
+        group: { tokens: { cornerRadius: 2 } },
+        block: { tokens: { background: { fill: '#f8fafc', fillOpacity: 0.75 } } },
+      }),
+    });
+    const theme = themeWithStyle(definition.name);
+    const defaults = Graph.getDefaultGraphThemePreset(theme);
+
+    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition))).toEqual({
+      entity: defaults.entity,
+      relation: defaults.relation,
+      group: {
+        tokens: {
+          ...defaults.group.tokens,
+          cornerRadius: 2,
+        },
+      },
+      block: {
+        tokens: {
+          ...defaults.block.tokens,
+          background: { fill: '#f8fafc', fillOpacity: 0.75 },
+        },
       },
     });
   });
@@ -380,6 +423,25 @@ describe('Graph Scope and Theme compile semantics', () => {
         details: { capability: 'graph-theme-style', key: definition.name },
       });
     }
+  });
+
+  it.each(['group', 'block'] as const)('rejects explicitly empty %s shell tokens as a callback failure', member => {
+    const definition = {
+      name: `empty-${member}-tokens`,
+      resolve: () => ({ [member]: { tokens: {} } }),
+    };
+
+    expect(() =>
+      Reflect.apply(Graph.resolveGraphTheme, undefined, [
+        themeWithStyle(definition.name),
+        new Map([[definition.name, definition]]),
+      ]),
+    ).toThrowError(
+      expect.objectContaining({
+        code: Graph.RetikzGraphErrorCode.DefinitionCallbackFailed,
+        details: { capability: 'graph-theme-style', key: definition.name },
+      }),
+    );
   });
 
   it('wraps a Graph Theme style callback exception without replacing its cause', () => {
@@ -445,10 +507,40 @@ describe('Graph Scope and Theme compile semantics', () => {
     );
   });
 
+  it('treats an explicitly undefined Group shell token as omitted', () => {
+    const tokens = { cornerRadius: 0 };
+    Object.defineProperty(tokens, 'cornerRadius', { enumerable: true, value: undefined });
+    const definition = { name: 'undefined-group-token', resolve: () => ({ group: { tokens } }) };
+    const theme = themeWithStyle(definition.name);
+
+    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition)).group.tokens.cornerRadius).toBe(
+      Graph.getDefaultGraphThemePreset(theme).group.tokens.cornerRadius,
+    );
+  });
+
   it('rejects an unknown Graph style token even when its value is undefined', () => {
     const definition = {
       name: 'unknown-undefined-token',
       resolve: () => ({ entity: { tokens: { unknown: undefined } } }),
+    };
+
+    expect(() =>
+      Reflect.apply(Graph.resolveGraphTheme, undefined, [
+        themeWithStyle(definition.name),
+        new Map([[definition.name, definition]]),
+      ]),
+    ).toThrowError(
+      expect.objectContaining({
+        code: Graph.RetikzGraphErrorCode.DefinitionCallbackFailed,
+        details: { capability: 'graph-theme-style', key: definition.name },
+      }),
+    );
+  });
+
+  it('rejects an unknown Group shell token even when its value is undefined', () => {
+    const definition = {
+      name: 'unknown-undefined-group-token',
+      resolve: () => ({ group: { tokens: { unknown: undefined } } }),
     };
 
     expect(() =>

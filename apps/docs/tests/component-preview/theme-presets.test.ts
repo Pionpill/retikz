@@ -61,6 +61,20 @@ describe('docs-owned theme presets', () => {
         },
       },
       relation: { tokens: { color: foreground, strokeWidth: 1.25 } },
+      group: {
+        tokens: {
+          background: { fill: 'none' },
+          border: { stroke: foreground, strokeWidth: 1, dashPattern: [4, 3] },
+          cornerRadius: 0,
+        },
+      },
+      block: {
+        tokens: {
+          background: { fill: 'none' },
+          border: { stroke: foreground, strokeWidth: 1 },
+          cornerRadius: 0,
+        },
+      },
     });
 
     const vibrantTheme = themeOf(PreviewThemeStyle.Vibrant);
@@ -74,10 +88,26 @@ describe('docs-owned theme presets', () => {
         },
       },
       relation: { tokens: { color: vibrantTheme.colors.categorical[1], strokeWidth: 1.5 } },
+      group: {
+        tokens: {
+          background: { fill: vibrantTheme.colors.categorical[0], fillOpacity: 0.08 },
+          border: { stroke: vibrantTheme.colors.categorical[0], strokeWidth: 1.5, strokeOpacity: 0.7 },
+          cornerRadius: 12,
+        },
+      },
+      block: {
+        tokens: {
+          background: { fill: vibrantTheme.colors.categorical[1], fillOpacity: 0.12 },
+          border: { stroke: vibrantTheme.colors.categorical[1], strokeWidth: 1.5, strokeOpacity: 0.85 },
+          cornerRadius: 12,
+        },
+      },
     });
 
     const cleanTheme = themeOf(PreviewThemeStyle.Clean);
-    expect(graphByName.get(PreviewThemeStyle.Clean)?.resolve(cleanTheme)).toEqual({});
+    expect(graphByName.get(PreviewThemeStyle.Clean)?.resolve(cleanTheme)).toEqual({
+      entity: { tokens: { textColor: foreground, fill: 'none' } },
+    });
   });
 
   it('只在 Viz 与 schematic/graph 文档启用现有 Theme style selector', () => {

@@ -69,12 +69,12 @@ export const normalizeGraphChild = (child: InputGraphChild) => {
 
 /** 将 Block Header authoring 输入组装为独立 Source composite */
 export const normalizeBlockHeader = (input: InputBlockHeader): IRBlockHeader => {
-  const { type: _type, icon, trailing, ...header } = input;
+  const { type: _type, icon, trail, ...header } = input;
   void _type;
   return createBlockHeader({
     ...header,
     ...(icon === undefined ? {} : { icon: normalizeGraphChild(icon) }),
-    ...(trailing === undefined ? {} : { trailing: normalizeGraphChild(trailing) }),
+    ...(trail === undefined ? {} : { trail: normalizeGraphChild(trail) }),
   });
 };
 
@@ -90,13 +90,22 @@ export const normalizeBlockSection = (input: InputBlockSection): IRBlockSection 
 
 /** 将 Block Row authoring 输入组装为独立 Source composite */
 export const normalizeBlockRow = (input: InputBlockRow): IRBlockRow => {
-  const { type: _type, children, ...row } = input;
+  if (input.content !== undefined) {
+    const { type: _type, content, children: _children, ...row } = input;
+    void _type;
+    void _children;
+    return createBlockRow({ ...row, content });
+  }
+  const { type: _type, content: _content, children, ...row } = input;
   void _type;
+  void _content;
   return createBlockRow({
     ...row,
     ...(children === undefined
       ? {}
-      : { children: children.map(cell => ({ ...cell, child: normalizeGraphChild(cell.child) })) }),
+      : {
+          children: children.map(normalizeGraphChild),
+        }),
   });
 };
 

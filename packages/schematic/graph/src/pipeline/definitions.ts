@@ -22,6 +22,7 @@ import { createEntityDefinitionFromOptions } from './entity/definition';
 import { createEntityProvider, EntityProvider } from './entity/provider';
 import { createGraphDefinitionFromOptions } from './graph/definition';
 import { createGraphProvider, GraphProvider } from './graph/provider';
+import { GroupBodyAllocationDefinition, GroupBodyAllocationProvider } from './group/allocation';
 import { createGroupDefinitionFromOptions } from './group/definition';
 import { createGroupProvider, GroupProvider } from './group/provider';
 import { createRelationDefinitionFromOptions } from './relation/definition';
@@ -33,6 +34,7 @@ export const createGraphDefinitions = (options: GraphDefinitionOptions = {}): Ar
   return [
     createGraphDefinitionFromOptions(resolved),
     createGroupDefinitionFromOptions(resolved),
+    GroupBodyAllocationDefinition,
     createBlockDefinitionFromOptions(resolved),
     BlockHeaderDefinition,
     BlockSectionDefinition,
@@ -49,6 +51,7 @@ const DEFAULT_GRAPH_PROVIDERS: ReadonlyArray<CoreDependencyProvider> = Object.fr
   EntityProvider,
   RelationProvider,
   GroupProvider,
+  GroupBodyAllocationProvider,
   BlockProvider,
   BlockHeaderProvider,
   BlockSectionProvider,
@@ -72,6 +75,7 @@ export const createGraphProviders = (options?: GraphDefinitionOptions): Readonly
     createEntityProvider(options),
     createRelationProvider(options),
     createGroupProvider(options),
+    GroupBodyAllocationProvider,
     createBlockProvider(options),
     BlockHeaderProvider,
     BlockSectionProvider,

@@ -18,6 +18,7 @@ describe('Graph provider closure', () => {
         'graph.entity',
         'graph.graph',
         'graph.group',
+        'graph.group-body-allocation',
         'graph.relation',
         'layout.flexLayout',
         'standard.surface',

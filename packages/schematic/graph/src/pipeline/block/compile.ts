@@ -8,6 +8,7 @@ import type {
 import { requiredLayoutProbe } from '@retikz/layout/compose';
 
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
+import type { CanonicalBlock } from '../../resolve';
 import type { IRBlock } from '../../schemas';
 
 import { resolveBlock } from '../../resolve';
@@ -34,8 +35,8 @@ const blockAxisProposal = (
   return { kind: 'range', min: minWidth };
 };
 
-const blockProposal = (source: IRBlock, proposal: LayoutProposal): LayoutProposal => ({
-  x: blockAxisProposal(proposal.x, source.width, source.minWidth),
+const blockProposal = (block: CanonicalBlock, proposal: LayoutProposal): LayoutProposal => ({
+  x: blockAxisProposal(proposal.x, block.source.width, block.minWidth),
   y: proposal.y,
 });
 
@@ -43,12 +44,18 @@ const blockProposal = (source: IRBlock, proposal: LayoutProposal): LayoutProposa
 export const createCompileBlock =
   (options: ResolvedGraphDefinitionOptions) =>
   (source: IRBlock, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
-    const block = resolveBlock(source, options);
-    const surface = requiredLayoutProbe(
-      context,
-      { child: lowerBlockSurface(block), occurrence: 0 },
-      blockProposal(source, context.proposal),
-    );
+    const block = resolveBlock(source, options, context.theme);
+    const proposal = blockProposal(block, context.proposal);
+    const measuredSurface = requiredLayoutProbe(context, { child: lowerBlockSurface(block), occurrence: 0 }, proposal);
+    // range 先保留内容自然增长，再把已选定的最终宽度作为 exact cross 传播到嵌套 stretch 布局
+    const surface =
+      proposal.x.kind === 'exact'
+        ? measuredSurface
+        : requiredLayoutProbe(
+            context,
+            { child: lowerBlockSurface(block), occurrence: 0 },
+            { ...proposal, x: { kind: 'exact', value: measuredSurface.slotSize.width } },
+          );
     return {
       allocationBounds: surface.allocationBounds,
       children: [context.replay(surface)],

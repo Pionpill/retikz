@@ -117,6 +117,28 @@ describe('normalizeBlock', () => {
     });
   });
 
+  it('keeps Row text content as the minimal Source value', () => {
+    expect(normalizeBlockRow({ content: 'name' })).toEqual({
+      namespace: 'graph',
+      type: 'blockRow',
+      content: 'name',
+    });
+    expect(normalizeBlockRow({ content: ['name', 'string'] })).toEqual({
+      namespace: 'graph',
+      type: 'blockRow',
+      content: ['name', 'string'],
+    });
+    expect(
+      normalizeBlockRow({
+        content: ['name', { text: 'string', textColor: '#64748b', font: { weight: 'bold' }, opacity: 0.6 }],
+      }),
+    ).toEqual({
+      namespace: 'graph',
+      type: 'blockRow',
+      content: ['name', { text: 'string', textColor: '#64748b', font: { weight: 'bold' }, opacity: 0.6 }],
+    });
+  });
+
   it('normalizes open Block-family semantic children to the same sparse Source as Direct authoring', () => {
     const header = {
       type: 'blockHeader',
@@ -125,13 +147,14 @@ describe('normalizeBlock', () => {
       itemGap: 6,
       justifyContent: 'space-between',
       icon: { type: 'entity', role: 'state', position: [0, 0] },
+      trail: { type: 'entity', role: 'concept', position: [20, 0] },
     } satisfies InputBlockHeader & Readonly<{ type: 'blockHeader' }>;
     const row = {
       type: 'blockRow',
       id: 'name',
       children: [
-        { key: 'name', child: { type: 'node', position: [0, 0], text: 'name' } },
-        { key: 'type', child: { type: 'entity', role: 'concept', position: [0, 0] } },
+        { type: 'node', position: [0, 0], text: 'name' },
+        { type: 'entity', role: 'concept', position: [0, 0] },
       ],
     } satisfies InputBlockRow & Readonly<{ type: 'blockRow' }>;
     const section = {
@@ -160,16 +183,12 @@ describe('normalizeBlock', () => {
       direction: 'horizontal',
       itemGap: 6,
       justifyContent: 'space-between',
+      trail: { namespace: 'graph', type: 'entity', role: 'concept', position: [20, 0] },
     });
-    expect(normalizeBlockRow(row).children).toEqual([
-      {
-        key: 'name',
-        child: { type: 'node', position: [0, 0], text: 'name' },
-      },
-      {
-        key: 'type',
-        child: { namespace: 'graph', type: 'entity', role: 'concept', position: [0, 0] },
-      },
+    const normalizedRow = normalizeBlockRow(row);
+    expect('children' in normalizedRow ? normalizedRow.children : undefined).toEqual([
+      { type: 'node', position: [0, 0], text: 'name' },
+      { namespace: 'graph', type: 'entity', role: 'concept', position: [0, 0] },
     ]);
   });
 
@@ -178,10 +197,10 @@ describe('normalizeBlock', () => {
     expect(normalizeBlock({ children: [] })).toEqual({ namespace: 'graph', type: 'block', children: [] });
     expect(normalizeBlockSection({})).toEqual({ namespace: 'graph', type: 'blockSection' });
     expect(normalizeBlockRow({ children: [] })).toEqual({ namespace: 'graph', type: 'blockRow', children: [] });
-    expect(normalizeBlockRow({ children: [{ child: { type: 'node', position: [0, 0] } }] })).toEqual({
+    expect(normalizeBlockRow({ children: [{ type: 'node', position: [0, 0] }] })).toEqual({
       namespace: 'graph',
       type: 'blockRow',
-      children: [{ child: { type: 'node', position: [0, 0] } }],
+      children: [{ type: 'node', position: [0, 0] }],
     });
   });
 });
@@ -478,12 +497,9 @@ describe('Graph Vanilla embed adapters', () => {
                 children: [
                   blockRow('row-embed', {
                     children: [
-                      {
-                        key: 'nested',
-                        child: group('group-embed', {
-                          children: [{ type: 'node', position: [0, 0], text: 'Nested' }],
-                        }),
-                      },
+                      group('group-embed', {
+                        children: [{ type: 'node', position: [0, 0], text: 'Nested' }],
+                      }),
                     ],
                   }),
                 ],
@@ -507,7 +523,7 @@ describe('Graph Vanilla embed adapters', () => {
             {
               namespace: 'graph',
               type: 'blockRow',
-              children: [{ child: { namespace: 'graph', type: 'group' } }],
+              children: [{ namespace: 'graph', type: 'group' }],
             },
           ],
         },

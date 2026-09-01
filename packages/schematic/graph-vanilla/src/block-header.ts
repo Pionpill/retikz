@@ -41,15 +41,15 @@ export const BlockHeaderInputEmbedAdapter: InputEmbedAdapter<BlockHeaderInputEmb
     const input = inputOf(props);
     const slots: Array<InputGraphChild> = [];
     if (input.icon !== undefined) slots.push(input.icon);
-    if (input.trailing !== undefined) slots.push(input.trailing);
+    if (input.trail !== undefined) slots.push(input.trail);
     const normalized = normalizeGraphAuthoringChildren(slots, context, 'BlockHeader slots');
-    const trailingIndex = input.icon === undefined ? 0 : 1;
+    const trailIndex = input.icon === undefined ? 0 : 1;
     const dependencies = createGraphProviderDependencies(BlockHeaderProviderKey, graphDefinitionOptionsOf(props));
     return {
       node: normalizeBlockHeader({
         ...input,
         ...(input.icon === undefined ? {} : { icon: normalized.children[0] }),
-        ...(input.trailing === undefined ? {} : { trailing: normalized.children[trailingIndex] }),
+        ...(input.trail === undefined ? {} : { trail: normalized.children[trailIndex] }),
       }),
       providerDependencies: {
         roots: [

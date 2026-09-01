@@ -10,7 +10,7 @@ Graph 解决的是：
 
 > 用稳定、JSON-safe、renderer-neutral 的数据表达可组合节点、关系与局部 Graph 呈现上下文，使作者、工具与 LLM 能直接理解“对象是什么、如何关联”，并通过 Core-compatible 实例字段直接进入绘图链路
 
-Graph 是 Schematic foundation，长期拥有 Group / Block family / Entity / Relation 语义、领域 resolve、可选 `graphTheme` context 与可独立绘制的 semantic composite。Graph、Group、Block、Section 与 Row Source 组合完整 Core Scope surface。位置、路径、尺寸、内容和 NodeTarget endpoint 直接复用 Core 契约；Group 表达任意内容的可见包含，Block 表达具有 Graph identity 的开放内容纵向布局容器，Header / Section / Row 是可选的独立组合，Cell 保持 Row-local Flex item。Graph 不建立独立 Port、geometry、reference、成员集合、Variant 视觉轴或按 identity 分离的 appearance 模型。`IRGraph` 不是必需模型根，只是可选上下文；Graph family composite 可以出现在任意 Core 内容树位置
+Graph 是 Schematic foundation，长期拥有 Group / Block family / Entity / Relation 语义、领域 resolve、可选 `graphTheme` context 与可独立绘制的 semantic composite。Graph、Group、Block、Section 与 Row Source 组合完整 Core Scope surface。位置、路径、尺寸、内容和 NodeTarget endpoint 直接复用 Core 契约；Group 表达任意内容的可见包含，Block 表达具有 Graph identity 的开放内容纵向布局容器，Header / Section / Row 是可选的独立组合，Row 直接接受任意 children。Graph 不建立独立 Port、geometry、reference、成员集合、Variant 视觉轴或按 identity 分离的 appearance 模型。`IRGraph` 不是必需模型根，只是可选上下文；Graph family composite 可以出现在任意 Core 内容树位置
 
 Graph 不拥有 Diagram 自动布局、自动 routing、Editor 或 renderer。Graph 支持自由布局仅表示作者可以显式提供位置与连接方式；拖拽、selection、viewport、history 和交互 session 仍归 Editor
 
@@ -37,7 +37,7 @@ React Graph standalone 时复用 Layout 建立 Scene，并把 Graph Source 作�
 
 Graph context 通过 Graph / Group / Block Definition 对自身可见 Source child tree 的编译期投影生效：生成态 Entity / Relation 仍保留原 discriminator，并由各自 provider 消费；已知的 Block family 内容边界与普通 Scope 可穿透，第三方 composite 内部不透明。该投影不进入 authored Source schema，不增加 Core 领域 context bag、成员索引或第二套 endpoint / lowering 真源
 
-Graph Theme style 与 Core、Plot、Table 使用同一个 Core `theme.style` 名称协作。Graph 发布包只维护 Neutral baseline；React 通过 `GraphThemeProvider` 为 standalone Graph 注入 Graph-owned style definitions，embedded Graph / Group / Block / Entity / Relation 在 Layout 的静态 InputEmbed 提取边界显式传递同一 definitions，Vanilla 也通过显式 definition options 注入。Docs 可复用 Viz Preview Theme selector，并通过公开 Definition 提供 Academic、Vibrant、Clean reference styles；Preview host 负责把同一 bundle 显式交给 embedded Graph authoring。这些消费方 reference styles 不进入 Graph Source enum 或发布包内置 registry
+Graph Theme style 与 Core、Plot、Table 使用同一个 Core `theme.style` 名称协作，并统一拥有 Entity / Relation 默认以及 Group / Block 根 Surface 外观。Graph 发布包只维护 Neutral baseline；React 通过 `GraphThemeProvider` 为 standalone Graph 注入 Graph-owned style definitions，embedded Graph / Group / Block / Entity / Relation 在 Layout 的静态 InputEmbed 提取边界显式传递同一 definitions，Vanilla 也通过显式 definition options 注入。Docs 可复用 Viz Preview Theme selector，并通过公开 Definition 提供 Academic、Vibrant、Clean reference styles；Preview host 负责把同一 bundle 显式交给 embedded Graph authoring。这些消费方 reference styles 不进入 Graph Source enum 或发布包内置 registry
 
 任一 Graph 能力若只能在 React、demo、某个 renderer 或未序列化 helper 中成立，都不算 Graph 闭环。Diagram 必须复用 Graph 的 Group / Block / Entity / Relation 语义与 Core identity / namespace，不得建立平行语义真源；Block 的内部 endpoint 所属关系由消费方从 Source 派生，布局计算及其调度由 Diagram 或其它消费者拥有，Graph 不为其预建 geometry result collection
 
@@ -62,13 +62,13 @@ Graph Theme style 与 Core、Plot、Table 使用同一个 Core `theme.style` 名
 
 ## 4. Data 与 Resolve
 
-Graph Data 由独立 Group / Block family / Entity / Relation record、对应 Core lower target 的实例字段与各类图自己的 JSON-safe 扩展组合而成。Relation source / target 直接使用 Core NodeTarget；领域执行状态、任意回调和运行时对象不进入 Graph IR。Entity 以排除结构字段的方式复用 Core Node：`type`、`shape`、`boundary`、`padding`、`cornerRadius` 由 Graph role / lower target 决定。Relation 以同样方式复用 Core Path，只排除与 Relation discriminator、语义 kind、route、labels、endpoint markers 和开放连线冲突的字段。Group、Graph、Block、Section 与 Row 完整复用 `IRScopeProps`。Group 额外组合 Surface 呈现、caption、Core Node labels 与任意 children；Block 组合 Surface 与纵向 FlexLayout，并按 authored order 接受任意 children；Header、Section 与 Row 是独立可选 composite，Cell 直接复用 Row-local Flex item。它们都不保存自动布局结果
+Graph Data 由独立 Group / Block family / Entity / Relation record、对应 Core lower target 的实例字段与各类图自己的 JSON-safe 扩展组合而成。Relation source / target 直接使用 Core NodeTarget；领域执行状态、任意回调和运行时对象不进入 Graph IR。Entity 以排除结构字段的方式复用 Core Node：`type`、`shape`、`boundary`、`padding`、`cornerRadius` 由 Graph role / lower target 决定。Relation 以同样方式复用 Core Path，只排除与 Relation discriminator、语义 kind、route、labels、endpoint markers 和开放连线冲突的字段。Group、Graph、Block、Section 与 Row 完整复用 `IRScopeProps`。Group 额外组合 Surface 呈现、caption、Core Node labels 与任意 children；Block 组合 Surface 与纵向 FlexLayout，并按 authored order 接受任意 children；Header、Section 与 Row 是独立可选 composite，Row children 直接保存任意 `IRChild`。它们都不保存自动布局结果
 
-Entity / Relation resolve 分别消费自身 Source IR 与窄上下文，处理领域默认、Definition lookup、Theme appearance rules、metadata 解释及补全后不变量。Graph / Group resolve 只建立局部 Graph context 并保留有序 children；Block family resolve 保留 authored order 并确定各自组合默认。它们都不收集成员、校验 membership 或建立 endpoint 索引；Group / Block family lowering 只组合既有 Surface、Layout 与 Core 能力。Theme appearance 只按 role、kind、predicate 与 direction 等真实语义为 Entity / Relation 提供默认，不使用纯视觉 Variant selector；Block family shell 不消费 Graph Theme。namespace、重复 id、NodeTarget、anchor 与 unresolved reference 由 Core 统一处理；Graph 不负责自动布局、routing、Scene 输出或 Editor 状态
+Entity / Relation resolve 分别消费自身 Source IR 与窄上下文，处理领域默认、Definition lookup、Theme appearance rules、metadata 解释及补全后不变量。Graph / Group resolve 建立局部 Graph context 并保留有序 children，Group 同时解析根 Surface appearance；Block family resolve 保留 authored order、确定组合默认，并为 Block 根 Surface 解析 appearance。它们都不收集成员、校验 membership 或建立 endpoint 索引；Group / Block family lowering 只组合既有 Surface、Layout 与 Core 能力。Theme rules 只按 role、kind、predicate 与 direction 等真实语义为 Entity / Relation 提供默认，不使用纯视觉 Variant selector；Group / Block 不增加 rule selector，只消费同名 Graph Theme 的闭合 `background`、`border` 与 `cornerRadius` baseline，显式 Source 顶层字段最终替换。namespace、重复 id、NodeTarget、anchor 与 unresolved reference 由 Core 统一处理；Graph 不负责自动布局、routing、Scene 输出或 Editor 状态
 
 Graph 不复制 Plot 的 Transform、Encoding、Scale 或 Coordinate 分层。根据任意字段声明视觉 channel 的能力只有在真实 Graph 数据可视化需求出现后才单独设计；固定 kind、predicate、metadata 与 Theme style 的确定化属于 Graph resolve
 
-Group、Block、Header、Section、Row、Entity、Relation 与 Graph 都是独立 composite，只有 Cell 保持 Row-local item。`IRGraph` / `IRGroup` 不表达成员数据库、全局关系模型或编辑文档；Group 与 Block 的嵌套内容树是唯一包含事实源，Header / Section / Row 仅在作者显式使用时存在。adapter 不得把 declaration 数组、runtime embed id、endpoint 所属索引或 normalization 结果投影成第二套集合与引用真源
+Group、Block、Header、Section、Row、Entity、Relation 与 Graph 都是独立 composite。`IRGraph` / `IRGroup` 不表达成员数据库、全局关系模型或编辑文档；Group 与 Block 的嵌套内容树是唯一包含事实源，Header / Section / Row 仅在作者显式使用时存在。adapter 不得把 declaration 数组、runtime embed id、endpoint 所属索引或 normalization 结果投影成第二套集合与引用真源
 
 ## 5. Semantic identity 与 lower target 判定
 

@@ -1,3 +1,4 @@
+import { createSurface } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
@@ -35,6 +36,8 @@ describe('Block-family Source schemas', () => {
     expect(block).not.toHaveProperty('border');
     expect(block).not.toHaveProperty('cornerRadius');
     expect(block).not.toHaveProperty('overflow');
+    expect(block).not.toHaveProperty('width');
+    expect(block).not.toHaveProperty('minWidth');
   });
 
   it('accepts arbitrary ordered children without classifying their roles', () => {
@@ -55,7 +58,7 @@ describe('Block-family Source schemas', () => {
         icon: textChild('icon'),
         title: { text: 'Service' },
         description: { text: 'Public API' },
-        trailing: textChild('stable'),
+        trail: textChild('stable'),
       }),
     ).toEqual({
       namespace: 'graph',
@@ -63,8 +66,30 @@ describe('Block-family Source schemas', () => {
       icon: textChild('icon'),
       title: { text: 'Service' },
       description: { text: 'Public API' },
-      trailing: textChild('stable'),
+      trail: textChild('stable'),
     });
+
+    expect(
+      Graph.BlockHeaderSchema.parse({
+        namespace: 'graph',
+        type: 'blockHeader',
+        title: 'Service',
+        trail: textChild('stable'),
+      }),
+    ).toEqual({
+      namespace: 'graph',
+      type: 'blockHeader',
+      title: 'Service',
+      trail: textChild('stable'),
+    });
+    expect(
+      Graph.BlockHeaderSchema.safeParse({
+        namespace: 'graph',
+        type: 'blockHeader',
+        title: 'Service',
+        trailing: textChild('legacy'),
+      }).success,
+    ).toBe(false);
 
     expect(
       Graph.createBlockSection({
@@ -86,8 +111,9 @@ describe('Block-family Source schemas', () => {
       Graph.createBlockRow({
         id: 'name',
         children: [
-          { key: 'field', child: textChild('name'), grow: 1 },
-          { key: 'type', child: textChild('string'), alignSelf: 'end' },
+          textChild('name'),
+          createSurface({ namespace: 'standard', type: 'surface', child: textChild('surface') }),
+          textChild('string'),
         ],
       }),
     ).toEqual({
@@ -95,18 +121,72 @@ describe('Block-family Source schemas', () => {
       type: 'blockRow',
       id: 'name',
       children: [
-        {
-          key: 'field',
-          child: textChild('name'),
-          grow: 1,
-        },
-        {
-          key: 'type',
-          child: textChild('string'),
-          alignSelf: 'end',
-        },
+        textChild('name'),
+        createSurface({ namespace: 'standard', type: 'surface', child: textChild('surface') }),
+        textChild('string'),
       ],
     });
+  });
+
+  it('keeps Row text content sparse and rejects a second content source', () => {
+    expect(Graph.BlockRowSchema.parse({ namespace: 'graph', type: 'blockRow', content: 'name' })).toEqual({
+      namespace: 'graph',
+      type: 'blockRow',
+      content: 'name',
+    });
+    expect(Graph.BlockRowSchema.parse({ namespace: 'graph', type: 'blockRow', content: ['name', 'string'] })).toEqual({
+      namespace: 'graph',
+      type: 'blockRow',
+      content: ['name', 'string'],
+    });
+    expect(Graph.BlockRowSchema.parse({ namespace: 'graph', type: 'blockRow', content: [] })).toEqual({
+      namespace: 'graph',
+      type: 'blockRow',
+      content: [],
+    });
+    expect(
+      Graph.BlockRowSchema.safeParse({
+        namespace: 'graph',
+        type: 'blockRow',
+        content: 'name',
+        children: [textChild('name')],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('keeps styled Row text items sparse across JSON round-trip', () => {
+    const content = [
+      'name',
+      {
+        text: 'string',
+        textColor: '#64748b',
+        font: { size: 14, weight: 'bold' as const },
+        opacity: 0.6,
+      },
+    ];
+    const row = Graph.createBlockRow({ content });
+
+    expect(row).toEqual({
+      namespace: 'graph',
+      type: 'blockRow',
+      content,
+    });
+    expect(Graph.BlockRowSchema.parse(JSON.parse(JSON.stringify(row)))).toEqual(row);
+    expect(Graph.createBlockRow({ content: { text: 'single', align: 'end' } })).toEqual({
+      namespace: 'graph',
+      type: 'blockRow',
+      content: { text: 'single', align: 'end' },
+    });
+  });
+
+  it('rejects Core Node shell fields from Row text objects', () => {
+    expect(
+      Graph.BlockRowSchema.safeParse({
+        namespace: 'graph',
+        type: 'blockRow',
+        content: { text: 'name', fill: '#ffffff' },
+      }).success,
+    ).toBe(false);
   });
 
   it('accepts string shorthand for Header and Section text', () => {
@@ -190,7 +270,7 @@ describe('Block-family Source schemas', () => {
     ).toBe(false);
   });
 
-  it('allows empty Section and Row while keeping Cell local to Row', () => {
+  it('allows empty Section and Row while keeping Row children direct', () => {
     expect(Graph.BlockSectionSchema.parse({ namespace: 'graph', type: 'blockSection' })).toEqual({
       namespace: 'graph',
       type: 'blockSection',
@@ -200,33 +280,20 @@ describe('Block-family Source schemas', () => {
       type: 'blockRow',
       children: [],
     });
-    expect(Graph.BlockCellSchema.parse({ key: 'cell', child: textChild('value'), basis: 24 })).toEqual({
-      key: 'cell',
-      child: textChild('value'),
-      basis: 24,
-    });
-    expect(Graph.BlockCellSchema.parse({ key: 'default', child: textChild('value') })).toEqual({
-      key: 'default',
-      child: textChild('value'),
-    });
-    expect(Graph.BlockCellSchema.parse({ child: textChild('value') })).toEqual({
-      child: textChild('value'),
-    });
     expect(
-      Graph.BlockCellSchema.parse({
-        key: 'explicit',
-        child: textChild('value'),
-        basis: 'content',
-        grow: 0,
-        shrink: 0,
+      Graph.BlockRowSchema.parse({
+        namespace: 'graph',
+        type: 'blockRow',
+        children: [textChild('value')],
       }),
-    ).toEqual({
-      key: 'explicit',
-      child: textChild('value'),
-      basis: 'content',
-      grow: 0,
-      shrink: 0,
-    });
+    ).toMatchObject({ children: [textChild('value')] });
+    expect(
+      Graph.BlockRowSchema.safeParse({
+        namespace: 'graph',
+        type: 'blockRow',
+        children: [{ child: textChild('value'), grow: 2 }],
+      }).success,
+    ).toBe(false);
     expect(Graph.GraphType).not.toHaveProperty('BlockCell');
   });
 
@@ -246,28 +313,6 @@ describe('Block-family Source schemas', () => {
     expect(Graph.BlockSchema.safeParse({ namespace: 'graph', type: 'block', width: 120, minWidth: 180 }).success).toBe(
       false,
     );
-  });
-
-  it('reuses Flex item validation and rejects duplicate or invalid Cell contracts', () => {
-    const invalidRange = Graph.BlockCellSchema.safeParse({
-      key: 'cell',
-      child: textChild('value'),
-      min: 20,
-      max: 10,
-    });
-    expect(invalidRange.success).toBe(false);
-    if (!invalidRange.success) expect(invalidRange.error.issues[0]?.path).toEqual(['max']);
-
-    expect(
-      Graph.BlockRowSchema.safeParse({
-        namespace: 'graph',
-        type: 'blockRow',
-        children: [
-          { key: 'duplicate', child: textChild('one') },
-          { key: 'duplicate', child: textChild('two') },
-        ],
-      }).success,
-    ).toBe(false);
   });
 
   it('rejects the superseded fixed grammar and unknown Block-family fields', () => {
@@ -301,9 +346,6 @@ describe('Block-family Source schemas', () => {
         unknown: true,
       }).success,
     ).toBe(false);
-    expect(Graph.BlockCellSchema.safeParse({ key: 'cell', child: textChild('value'), unknown: true }).success).toBe(
-      false,
-    );
   });
 
   it('round-trips only sparse JSON-safe Source facts', () => {
@@ -311,7 +353,7 @@ describe('Block-family Source schemas', () => {
       Graph.createBlock({ children: [textChild('content')] }),
       Graph.createBlockHeader({ title: { text: 'Header' } }),
       Graph.createBlockSection({ title: { text: 'Section' }, children: [] }),
-      Graph.createBlockRow({ children: [{ key: 'cell', child: textChild('value') }] }),
+      Graph.createBlockRow({ children: [textChild('value')] }),
     ];
     const schemas = [Graph.BlockSchema, Graph.BlockHeaderSchema, Graph.BlockSectionSchema, Graph.BlockRowSchema];
 
