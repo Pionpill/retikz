@@ -20,6 +20,10 @@ import {
   OpenSquareArrowProvider,
   SquareArrowDefinition,
   SquareArrowProvider,
+  StandardArrowDefinitions,
+  StandardArrowProviders,
+  StraightBarbArrowDefinition,
+  StraightBarbArrowProvider,
 } from '../../src/arrow';
 
 const arrowScene = (shape: string): IRScene => ({
@@ -55,6 +59,7 @@ describe('Standard optional arrow definitions', () => {
       OpenDiamondArrowDefinition,
       BarArrowDefinition,
       CrowFootArrowDefinition,
+      StraightBarbArrowDefinition,
       KiteArrowDefinition,
       OpenKiteArrowDefinition,
       SquareArrowDefinition,
@@ -69,6 +74,7 @@ describe('Standard optional arrow definitions', () => {
       'openDiamond',
       'bar',
       'crowFoot',
+      'straightBarb',
       'kite',
       'openKite',
       'square',
@@ -79,6 +85,7 @@ describe('Standard optional arrow definitions', () => {
       { kind: 'line', to: [90.88, 0] },
       { kind: 'line', to: [99.9, 0] },
       { kind: 'line', to: [93.5, 0] },
+      { kind: 'line', to: [99.9, 0] },
       { kind: 'line', to: [89.5, 0] },
       { kind: 'line', to: [90.88, 0] },
       { kind: 'line', to: [92.5, 0] },
@@ -87,6 +94,7 @@ describe('Standard optional arrow definitions', () => {
     expect(compiled.map(path => [path?.arrowEnd?.markerWidth, path?.arrowEnd?.markerHeight])).toEqual([
       [11, 6],
       [11, 6],
+      [8, 8],
       [8, 8],
       [8, 8],
       [11, 6],
@@ -309,6 +317,141 @@ describe('Standard optional arrow definitions', () => {
     expect(CrowFootArrowDefinition).toMatchObject({ hollow: true, lineContactX: 1, tipX: 9 });
   });
 
+  it('emits straightBarb as one continuous open stroke path', () => {
+    const definition = StandardArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
+
+    expect(definition).toBeDefined();
+    if (definition === undefined) return;
+
+    expect([
+      ...definition.emit({
+        stroke: '#123456',
+        fill: '#abcdef',
+        lineWidth: 2,
+        round: (value: number): number => value,
+      }),
+    ]).toEqual([
+      {
+        type: 'path',
+        commands: [
+          { kind: 'move', to: [1, 1] },
+          { kind: 'line', to: [9, 5] },
+          { kind: 'line', to: [1, 9] },
+        ],
+        stroke: '#123456',
+        strokeWidth: 2,
+      },
+    ]);
+    expect(definition).toMatchObject({ hollow: true, lineContactX: 9, tipX: 9 });
+  });
+
+  it('places straightBarb at forward, reverse, and double endpoints through Core marker geometry', () => {
+    const definition = StandardArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
+
+    expect(definition).toBeDefined();
+    if (definition === undefined) return;
+
+    const customized = firstPath(
+      compileToScene(
+        {
+          type: 'scene',
+          version: 1,
+          children: [
+            {
+              type: 'path',
+              marks: [
+                {
+                  pos: 1,
+                  mark: {
+                    kind: 'arrow',
+                    shape: 'straightBarb',
+                    length: 12,
+                    width: 18,
+                    lineWidth: 2,
+                    color: '#f00',
+                  },
+                },
+              ],
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [100, 0] },
+              ],
+            },
+          ],
+        },
+        { arrows: [definition] },
+      ).scene.primitives,
+    );
+    expect(customized?.commands.at(-1)).toEqual({ kind: 'line', to: [99.3, 0] });
+    expect(customized?.arrowEnd).toMatchObject({
+      shape: 'straightBarb',
+      refX: 8,
+      markerWidth: 12,
+      markerHeight: 18,
+    });
+    expect(customized?.arrowEnd?.marker[0]).toMatchObject({ stroke: '#f00', strokeWidth: 2 });
+
+    const reversed = firstPath(
+      compileToScene(
+        {
+          type: 'scene',
+          version: 1,
+          children: [
+            {
+              type: 'path',
+              marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } }],
+              children: [
+                { type: 'step', kind: 'move', to: [100, 0] },
+                { type: 'step', kind: 'line', to: [0, 0] },
+              ],
+            },
+          ],
+        },
+        { arrows: [definition] },
+      ).scene.primitives,
+    );
+    expect(reversed?.commands.at(-1)).toEqual({ kind: 'line', to: [0.1, 0] });
+
+    const doubleEnded = firstPath(
+      compileToScene(
+        {
+          type: 'scene',
+          version: 1,
+          children: [
+            {
+              type: 'path',
+              marks: [
+                { pos: 0, mark: { kind: 'arrow', shape: 'straightBarb' } },
+                { pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } },
+              ],
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [100, 0] },
+              ],
+            },
+          ],
+        },
+        { arrows: [definition] },
+      ).scene.primitives,
+    );
+    expect(doubleEnded?.commands).toEqual([
+      { kind: 'move', to: [0.1, 0] },
+      { kind: 'line', to: [99.9, 0] },
+    ]);
+  });
+
+  it('publishes straightBarb through the Standard arrow collections', () => {
+    const definition = StandardArrowDefinitions.find(candidate => candidate.name === 'straightBarb');
+    const provider = StandardArrowProviders.find(
+      candidate => candidate.key.capability === 'arrow' && candidate.key.name === 'straightBarb',
+    );
+
+    expect(definition).toBeDefined();
+    expect(provider).toBeDefined();
+    if (definition === undefined || provider === undefined) return;
+    expect(provider.makeDefinition({})).toBe(definition);
+  });
+
   it('uses Core marker placement for visual overrides, reverse routes, and double endpoints', () => {
     const customizedScene: IRScene = {
       type: 'scene',
@@ -396,6 +539,7 @@ describe('Standard optional arrow definitions', () => {
       OpenDiamondArrowDefinition,
       BarArrowDefinition,
       CrowFootArrowDefinition,
+      StraightBarbArrowDefinition,
       KiteArrowDefinition,
       OpenKiteArrowDefinition,
       SquareArrowDefinition,
@@ -407,6 +551,7 @@ describe('Standard optional arrow definitions', () => {
       'openDiamond',
       'bar',
       'crowFoot',
+      'straightBarb',
       'kite',
       'openKite',
       'square',
@@ -416,6 +561,7 @@ describe('Standard optional arrow definitions', () => {
     expect(OpenDiamondArrowProvider.makeDefinition({})).toBe(OpenDiamondArrowDefinition);
     expect(BarArrowProvider.makeDefinition({})).toBe(BarArrowDefinition);
     expect(CrowFootArrowProvider.makeDefinition({})).toBe(CrowFootArrowDefinition);
+    expect(StraightBarbArrowProvider.makeDefinition({})).toBe(StraightBarbArrowDefinition);
     expect(KiteArrowProvider.makeDefinition({})).toBe(KiteArrowDefinition);
     expect(OpenKiteArrowProvider.makeDefinition({})).toBe(OpenKiteArrowDefinition);
     expect(SquareArrowProvider.makeDefinition({})).toBe(SquareArrowDefinition);

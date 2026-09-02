@@ -1,14 +1,14 @@
 ---
 title: 箭头扩展
-description: 从 @retikz/standard/arrow 按需引入 Diamond、Kite、Square、阻断线与三叉端点，并在 React 或 Vanilla 的编译入口显式传入 Definition。
+description: 从 @retikz/standard/arrow 按需引入 Diamond、Kite、Square、Straight Barb、阻断线与三叉端点，并在 React 或 Vanilla 的编译入口显式传入 Definition。
 ---
 
 箭头扩展在 Core 提供的基础箭头之上，补充了更多可选内容：
 
-| 包名             | 提供内容                                                                                                                                     |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `core`           | `normal` — 实心三角、`open` — 空心三角、`stealth` — 实心 Stealth、`openStealth` — 空心 Stealth、`circle` — 实心圆点、`openCircle` — 空心圆点 |
-| `standard/arrow` | `diamond` / `openDiamond` — 扁菱形、`kite` / `openKite` — 风筝形、`square` / `openSquare` — 方形、`bar` — 阻断线、`crowFoot` — 三叉端点      |
+| 包名             | 提供内容                                                                                                                                                               |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core`           | `normal` — 实心三角、`open` — 空心三角、`stealth` — 实心 Stealth、`openStealth` — 空心 Stealth、`circle` — 实心圆点、`openCircle` — 空心圆点                           |
+| `standard/arrow` | `diamond` / `openDiamond` — 扁菱形、`kite` / `openKite` — 风筝形、`square` / `openSquare` — 方形、`straightBarb` — 开放直线倒钩、`bar` — 阻断线、`crowFoot` — 三叉端点 |
 
 ## 用法
 
@@ -58,7 +58,7 @@ const svg = renderToSvgString(input, {
 
 ## 例子
 
-总览保持路径长度和样式一致，分两列比较八种 Standard 端点 marker。
+总览保持路径长度和样式一致，分两列比较九种 Standard 端点 marker。
 
 <ComponentPreview files="arrow-gallery" size="sm" />
 
@@ -77,6 +77,12 @@ const svg = renderToSvgString(input, {
 `square` 与 `openSquare` 默认都是 `8 × 8`；显式 `length` 与 `width` 仍可独立拉伸。空心版本把轮廓收进 marker bounds 后再描边，粗线宽不会直接复用实心外边界；对应 Definition 为 `SquareArrowDefinition` 与 `OpenSquareArrowDefinition`。
 
 三组几何均复用 Core 的 marker host、start/end 放置、Path shrink 和 `arrowDetail` 视觉参数。显式 `length` 与 `width` 只拉伸冻结的默认局部轮廓。
+
+### 直线倒钩箭头
+
+`straightBarb` 默认使用 Core 的 `8 × 8` fallback，以一条连续的开放折线绘制 `>` 形轮廓。主路径接触箭头尖端，不闭合也不填充；描边颜色与线宽继续继承 Core marker 上下文。
+
+按 Definition 直接装配时使用 `StraightBarbArrowDefinition`；组装 provider graph 时使用 `StraightBarbArrowProvider`。Standard 只定义通用几何，不把它绑定为依赖、流程或其它领域关系。
 
 ### 阻断线端点
 
