@@ -31,11 +31,16 @@ type RelationRoleSelectCopy = Readonly<{
   options: ReadonlyArray<RelationRoleControlOption>;
 }>;
 
+type RelationRoleDirectionSelectCopy = RelationRoleSelectCopy &
+  Readonly<{
+    visibleWithKinds?: ReadonlyArray<string>;
+  }>;
+
 type RelationRoleControlCopy = Readonly<{
   title: string;
   sectionLabel: string;
   kind?: RelationRoleSelectCopy;
-  direction?: RelationRoleSelectCopy;
+  direction?: RelationRoleDirectionSelectCopy;
   colorLabel: string;
 }>;
 
@@ -61,7 +66,12 @@ export const defineRelationRoleControlContract = <const TCopy extends RelationRo
       options: copy.direction.options,
       ...(copy.kind === undefined
         ? {}
-        : { visibleWhen: { controlId: RelationRoleControlId.Kind, oneOf: [copy.kind.defaultValue] } }),
+        : {
+            visibleWhen: {
+              controlId: RelationRoleControlId.Kind,
+              oneOf: copy.direction.visibleWithKinds ?? [copy.kind.defaultValue],
+            },
+          }),
     });
   }
   roleControls.push({

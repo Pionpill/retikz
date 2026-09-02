@@ -9,7 +9,7 @@ export const previewControlContract = defineRelationRoleControlContract({
     defaultValue: '',
     options: [
       { value: '', label: 'Default' },
-      { value: 'uml.realization', label: 'UML realization' },
+      { value: 'uml.generalization', label: 'UML generalization' },
     ],
   },
   colorLabel: 'Relation color',

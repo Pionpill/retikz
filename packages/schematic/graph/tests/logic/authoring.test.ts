@@ -13,6 +13,7 @@ describe('Graph Source authoring helpers', () => {
       source: { id: 'service' },
       target: { id: 'database' },
       role: 'dependency',
+      kind: 'uml.dependency',
       route: [
         { type: 'step', kind: 'move', to: [30, 30] },
         { type: 'step', kind: 'line', to: [100, 30] },
@@ -38,6 +39,7 @@ describe('Graph Source authoring helpers', () => {
           source: { id: 'service' },
           target: { id: 'database' },
           role: 'dependency',
+          kind: 'uml.dependency',
           route: [
             { type: 'step', kind: 'move', to: [30, 30] },
             { type: 'step', kind: 'line', to: [100, 30] },

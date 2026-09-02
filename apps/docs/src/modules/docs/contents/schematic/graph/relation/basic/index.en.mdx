@@ -34,46 +34,55 @@ The five built-in roles define broad relationship semantics, the base interpreta
 
 Theme owns the complete Relation visual language. The controls below expose only the kinds, directions, and precise Relation color supported by each role, while the page-level Theme selector switches the overall style
 
+Built-in `kind` values cover common UML class- and component-diagram relationships. They determine only the path and endpoints; they do not add stereotype, multiplicity, or other text primitives
+
+| role             | Built-in kind                                           | Path and endpoints                                                                                                                                                            |
+| ---------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `association`    | `uml.association`, `uml.aggregation`, `uml.composition` | The role defaults to a filled target diamond; UML association is an unmarked solid path, aggregation has a hollow source diamond, and composition has a filled source diamond |
+| `generalization` | `uml.generalization`                                    | Solid path; the default target has a filled arrow, while the UML kind overrides it with a hollow triangle                                                                     |
+| `dependency`     | `uml.dependency`                                        | Dashed path with an open target `straightBarb` arrow                                                                                                                          |
+| `dependency`     | `uml.realization`                                       | Dashed path with a hollow target triangle                                                                                                                                     |
+
 ### association: general relationships
 
-`association` represents a general relationship between two objects. It defaults to `forward` from source to target with a filled diamond marker at target; you can also select `none`, `reverse`, or `both` explicitly
+`association` represents a general relationship between two objects. It defaults to `forward` and uses a filled target `diamond` marker. You may explicitly select `none`, `reverse`, or `both`
 
 - **Default / allowed directions:** `forward` / `none`, `forward`, `reverse`, `both`
-- **Built-in kinds:** `uml.aggregation` and `uml.composition`; both interpret source as the whole and target as the part, and both fix direction to `none`
+- **Built-in kinds:** `uml.association` uses an unmarked solid path and fixes direction to `none`. `uml.aggregation` and `uml.composition` both interpret source as the whole and target as the part, and both fix direction to `none`
 - **Built-in predicates:** none; a domain extension can register a cardinality predicate whose params schema validates source and target multiplicities
 
 <ComponentPreview
   files="relation-association"
   size="sm"
-  caption="Switch the general association direction or either UML kind. A selected kind fixes its own direction."
+  caption="The generic association defaults to a target diamond. Each UML association kind fixes direction and determines its own endpoint structure."
 />
 
 ### dependency: dependency relationships
 
-`dependency` means source depends on target: source is the dependent and target is the dependency. It is fixed to `forward`, with an open, unfilled `straightBarb` marker at the target endpoint
+`dependency` means source depends on target: source is the dependent and target is the dependency. It is fixed to `forward` and defaults to a solid path with an open, unfilled target `straightBarb` marker
 
 - **Default / allowed directions:** `forward` / `forward` only
-- **Built-in kind:** `provenance.derivation`, which refines source to the derived result and target to the source record and uses openStealth
+- **Built-in kinds:** `uml.dependency` overrides the path with a dashed open arrow. `uml.realization` uses a dashed hollow triangle. UML dependency subtypes without a visible structural difference are not built-in kinds; use a label, meta, or a custom kind when the domain semantics matter
 - **Built-in predicates:** none; an extension can declare params such as `{ optional: boolean, reason: string }`, with the predicate definition owning the fields and value ranges
 
 <ComponentPreview
   files="relation-dependency"
   size="sm"
-  caption="Compare base dependency with the built-in derivation kind and adjust the Relation color."
+  caption="Switch UML dependency kinds to compare the open-arrow and hollow-triangle endpoint structures, then adjust the Relation color."
 />
 
 ### generalization: type generalization
 
-`generalization` means source is a more specific form of target: source is the subtype and target is the supertype. It is fixed to `forward`, with a filled `normal` triangle marker at target
+`generalization` means source is a more specific form of target: source is the subtype and target is the supertype. It is fixed to `forward` and defaults to a solid path with a filled target `normal` arrow; `uml.generalization` overrides it with a hollow triangle
 
 - **Default / allowed directions:** `forward` / `forward` only
-- **Built-in kind:** `uml.realization`, which interprets source as the implementation and target as the specification and uses an open marker
+- **Built-in kind:** `uml.generalization` uses a hollow triangle. `uml.realization` is a dependency kind and uses a dashed hollow triangle
 - **Built-in predicates:** none; a type-system extension can use params for a discriminator or constraint, but Graph does not perform type checking
 
 <ComponentPreview
   files="relation-generalization"
   size="sm"
-  caption="Compare base generalization with UML realization and adjust the Relation color."
+  caption="Switch the default and UML generalization kinds to compare the filled arrow and hollow triangle, then adjust the Relation color."
 />
 
 ### flow: movement between objects
@@ -106,12 +115,12 @@ Theme owns the complete Relation visual language. The controls below expose only
 
 ### Style adjustments
 
-The combined playground switches among all five built-in roles and directly adjusts Relation path and label styles. The role changes the relationship semantics and marker recipe; explicit style fields override the corresponding Theme defaults
+The combined playground switches among all five built-in roles and directly adjusts the source, target, Relation path, and label styles. The role changes the relationship semantics and marker recipe; explicit style fields override the corresponding Theme defaults
 
 <ComponentPreview
   files="relation-style"
   size="sm"
-  caption="Switch roles, then adjust the stroke color, stroke width, dash, opacity, label text color, and text opacity independently."
+  caption="Switch roles, then independently adjust source and target colors, path stroke color and width, dash, opacity, label text color, and text opacity."
 />
 
 ## How it works

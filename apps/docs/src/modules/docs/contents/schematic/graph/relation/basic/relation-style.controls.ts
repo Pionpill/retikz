@@ -8,6 +8,8 @@ import { definePreviewControls } from '@/modules/docs/preview';
 export const RelationStyleControlId = {
   Role: 'role',
   Content: 'content',
+  SourceColor: 'sourceColor',
+  TargetColor: 'targetColor',
   Stroke: 'stroke',
   StrokeWidth: 'strokeWidth',
   Dashed: 'dashed',
@@ -49,6 +51,28 @@ export const relationStyleControls = definePreviewControls({
           defaultValue: 'Next step',
           placeholder: '输入 Relation 文本',
           multiline: true,
+        },
+      ],
+    },
+    {
+      label: '起点对象',
+      controls: [
+        {
+          kind: 'color',
+          id: RelationStyleControlId.SourceColor,
+          label: '颜色',
+          defaultValue: 'currentColor',
+        },
+      ],
+    },
+    {
+      label: '终点对象',
+      controls: [
+        {
+          kind: 'color',
+          id: RelationStyleControlId.TargetColor,
+          label: '颜色',
+          defaultValue: 'currentColor',
         },
       ],
     },
@@ -106,6 +130,8 @@ export const previewControlContract = {
   canonicalValues: {
     role: RelationRole.Flow,
     content: 'Next step',
+    sourceColor: 'currentColor',
+    targetColor: 'currentColor',
     stroke: '#2563eb',
     strokeWidth: 2,
     dashed: false,
@@ -116,6 +142,7 @@ export const previewControlContract = {
   relatedApis: [
     'Relation.role',
     'Relation.labels',
+    'Entity.color',
     'Relation.stroke',
     'Relation.strokeWidth',
     'Relation.dashPattern',

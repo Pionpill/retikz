@@ -11,6 +11,8 @@ export const previewControls = relationStyleControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const role = typeof values.role === 'string' ? values.role : 'flow';
   const content = typeof values.content === 'string' ? values.content : 'Next step';
+  const sourceColor = typeof values.sourceColor === 'string' ? values.sourceColor : 'currentColor';
+  const targetColor = typeof values.targetColor === 'string' ? values.targetColor : 'currentColor';
   const stroke = typeof values.stroke === 'string' ? values.stroke : '#2563eb';
   const strokeWidth = typeof values.strokeWidth === 'number' ? values.strokeWidth : 2;
   const opacity = typeof values.opacity === 'number' ? values.opacity : 1;
@@ -19,10 +21,20 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Graph width={460} height={220} viewBox={{ x: 0, y: 0, width: 460, height: 220 }}>
-      <Entity id="source" role="participant" position={[90, 110]}>
+      <Entity
+        id="source"
+        role="participant"
+        position={[90, 110]}
+        {...(sourceColor === 'currentColor' ? {} : { color: sourceColor })}
+      >
         Source
       </Entity>
-      <Entity id="target" role="resource" position={[370, 110]}>
+      <Entity
+        id="target"
+        role="resource"
+        position={[370, 110]}
+        {...(targetColor === 'currentColor' ? {} : { color: targetColor })}
+      >
         Target
       </Entity>
       <Relation

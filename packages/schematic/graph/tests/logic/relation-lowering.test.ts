@@ -142,6 +142,60 @@ describe('Relation lowering', () => {
     ]);
   });
 
+  it.each([
+    {
+      name: 'UML association',
+      source: { role: 'association', kind: 'uml.association' },
+      expected: {},
+    },
+    {
+      name: 'aggregation',
+      source: { role: 'association', kind: 'uml.aggregation' },
+      expected: { marks: [{ pos: 0, mark: { kind: 'arrow', shape: 'openDiamond' } }] },
+    },
+    {
+      name: 'composition',
+      source: { role: 'association', kind: 'uml.composition' },
+      expected: { marks: [{ pos: 0, mark: { kind: 'arrow', shape: 'diamond' } }] },
+    },
+    {
+      name: 'generalization',
+      source: { role: 'generalization' },
+      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'normal' } }] },
+    },
+    {
+      name: 'UML generalization',
+      source: { role: 'generalization', kind: 'uml.generalization' },
+      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'open' } }] },
+    },
+    {
+      name: 'dependency',
+      source: { role: 'dependency' },
+      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } }] },
+    },
+    {
+      name: 'UML dependency',
+      source: { role: 'dependency', kind: 'uml.dependency' },
+      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } }], dashPattern: [6, 4] },
+    },
+    {
+      name: 'realization',
+      source: { role: 'dependency', kind: 'uml.realization' },
+      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'open' } }], dashPattern: [6, 4] },
+    },
+  ])('lowers UML $name to its path and endpoint structure', ({ source, expected }) => {
+    const loweredRelation = lower(relation(source));
+
+    expect(loweredRelation).toMatchObject(expected);
+    if (source.kind === undefined && source.role === 'dependency') {
+      expect(loweredRelation).not.toHaveProperty('dashPattern');
+    }
+    if (source.kind === 'uml.association') {
+      expect(loweredRelation).not.toHaveProperty('marks');
+      expect(loweredRelation).not.toHaveProperty('dashPattern');
+    }
+  });
+
   it('compiles a direct Relation between a Core Node and Scope target', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.RelationProviderKey], providers: Graph.createGraphProviders() }],

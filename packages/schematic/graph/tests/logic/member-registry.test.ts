@@ -4,7 +4,7 @@ import { boolean, strictObject } from 'zod';
 import * as Graph from '../../src';
 
 describe('Relation definition registry', () => {
-  it('registers five solid builtin role families and four stable kind structure deltas', () => {
+  it('registers UML builtin kinds with their standard path and endpoint structures', () => {
     const roles = Graph.resolveRelationRoleRegistry();
     const kinds = Graph.resolveRelationKindRegistry(undefined, roles);
 
@@ -19,8 +19,16 @@ describe('Relation definition registry', () => {
         both: { sourceMarker: { shape: 'diamond' }, targetMarker: { shape: 'diamond' }, dashPattern: false },
       },
     });
-    expect(roles.get('dependency')?.directions.forward?.targetMarker).toEqual({ shape: 'straightBarb' });
-    expect(roles.get('generalization')?.directions.forward?.targetMarker).toEqual({ shape: 'normal' });
+    expect(roles.get('dependency')?.directions.forward).toEqual({
+      sourceMarker: false,
+      targetMarker: { shape: 'straightBarb' },
+      dashPattern: false,
+    });
+    expect(roles.get('generalization')?.directions.forward).toEqual({
+      sourceMarker: false,
+      targetMarker: { shape: 'normal' },
+      dashPattern: false,
+    });
     expect(roles.get('flow')?.directions).toMatchObject({
       forward: { sourceMarker: false, targetMarker: { shape: 'stealth' }, dashPattern: false },
       reverse: { sourceMarker: { shape: 'stealth' }, targetMarker: false, dashPattern: false },
@@ -29,11 +37,19 @@ describe('Relation definition registry', () => {
     expect(roles.get('influence')?.directions.forward?.targetMarker).toEqual({ shape: 'circle' });
 
     expect([...kinds.keys()]).toEqual([
+      'uml.association',
       'uml.aggregation',
       'uml.composition',
+      'uml.generalization',
+      'uml.dependency',
       'uml.realization',
-      'provenance.derivation',
     ]);
+    expect(kinds.get('uml.association')).toMatchObject({
+      role: 'association',
+      defaultDirection: 'none',
+      allowedDirections: ['none'],
+      directions: { none: { sourceMarker: false, targetMarker: false, dashPattern: false } },
+    });
     expect(kinds.get('uml.aggregation')).toMatchObject({
       role: 'association',
       defaultDirection: 'none',
@@ -41,8 +57,30 @@ describe('Relation definition registry', () => {
       directions: { none: { sourceMarker: { shape: 'openDiamond' }, targetMarker: false, dashPattern: false } },
     });
     expect(kinds.get('uml.composition')?.directions?.none?.sourceMarker).toEqual({ shape: 'diamond' });
-    expect(kinds.get('uml.realization')?.directions?.forward?.targetMarker).toEqual({ shape: 'open' });
-    expect(kinds.get('provenance.derivation')?.directions?.forward?.targetMarker).toEqual({ shape: 'openStealth' });
+    expect(kinds.get('uml.generalization')).toMatchObject({
+      role: 'generalization',
+      directions: { forward: { targetMarker: { shape: 'open' } } },
+    });
+    expect(kinds.get('uml.dependency')).toMatchObject({
+      role: 'dependency',
+      directions: { forward: { dashPattern: [6, 4] } },
+    });
+    expect(kinds.get('uml.realization')).toMatchObject({
+      role: 'dependency',
+      directions: { forward: { targetMarker: { shape: 'open' }, dashPattern: [6, 4] } },
+    });
+    for (const removedKind of [
+      'provenance.derivation',
+      'uml.usage',
+      'uml.abstraction',
+      'uml.binding',
+      'uml.permission',
+      'uml.manifestation',
+      'uml.deployment',
+      'uml.substitution',
+    ]) {
+      expect(kinds.has(removedKind)).toBe(false);
+    }
   });
 
   it('keeps Relation role/kind/predicate structure in semantic definitions', () => {

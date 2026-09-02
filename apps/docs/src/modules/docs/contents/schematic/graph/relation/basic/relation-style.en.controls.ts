@@ -43,6 +43,28 @@ export const relationStyleControls = definePreviewControls({
       ],
     },
     {
+      label: 'Source entity',
+      controls: [
+        {
+          kind: 'color',
+          id: RelationStyleControlId.SourceColor,
+          label: 'Color',
+          defaultValue: 'currentColor',
+        },
+      ],
+    },
+    {
+      label: 'Target entity',
+      controls: [
+        {
+          kind: 'color',
+          id: RelationStyleControlId.TargetColor,
+          label: 'Color',
+          defaultValue: 'currentColor',
+        },
+      ],
+    },
+    {
       label: 'Path style',
       controls: [
         { kind: 'color', id: RelationStyleControlId.Stroke, label: 'Stroke', defaultValue: '#2563eb' },
@@ -96,6 +118,8 @@ export const previewControlContract = {
   canonicalValues: {
     role: RelationRole.Flow,
     content: 'Next step',
+    sourceColor: 'currentColor',
+    targetColor: 'currentColor',
     stroke: '#2563eb',
     strokeWidth: 2,
     dashed: false,
@@ -106,6 +130,7 @@ export const previewControlContract = {
   relatedApis: [
     'Relation.role',
     'Relation.labels',
+    'Entity.color',
     'Relation.stroke',
     'Relation.strokeWidth',
     'Relation.dashPattern',

@@ -13,23 +13,28 @@ const relation = (input: Record<string, unknown> = {}) =>
   });
 
 describe('Relation data resolution', () => {
-  it('defaults association to forward while preserving explicit none', () => {
+  it('defaults association to forward navigation while preserving explicit directions', () => {
     const context = Graph.resolveGraphDefinitionOptions();
 
     expect(Graph.resolveRelation(relation(), context).effectiveDirection).toBe('forward');
     expect(Graph.resolveRelation(relation({ direction: 'none' }), context).effectiveDirection).toBe('none');
   });
 
-  it('resolves semantic definitions without Graph membership or endpoint projection', () => {
+  it('resolves UML realization through the dependency role without endpoint projection', () => {
     const canonical = Graph.resolveRelation(
-      relation({ id: 'realizes', role: 'generalization', kind: 'uml.realization' }),
+      relation({ id: 'realizes', role: 'dependency', kind: 'uml.realization' }),
       Graph.resolveGraphDefinitionOptions(),
     );
 
     expect(canonical).toMatchObject({
       effectiveDirection: 'forward',
-      kindDefinition: { kind: 'uml.realization', role: 'generalization' },
+      kindDefinition: { kind: 'uml.realization', role: 'dependency' },
       source: { source: { id: 'source' }, target: { id: 'target' } },
+    });
+    expect(Graph.resolveRelationStructure(canonical)).toEqual({
+      sourceMarker: false,
+      targetMarker: { shape: 'open' },
+      dashPattern: [6, 4],
     });
     expect(canonical).not.toHaveProperty('sourceEntityId');
     expect(canonical).not.toHaveProperty('targetEntityId');
@@ -51,5 +56,19 @@ describe('Relation data resolution', () => {
         Graph.resolveGraphDefinitionOptions(),
       ),
     ).toThrow(/invalid-direction.*reverse.*not allowed/i);
+  });
+
+  it('rejects removed kinds and UML kinds under another role', () => {
+    const context = Graph.resolveGraphDefinitionOptions();
+
+    expect(() =>
+      Graph.resolveRelation(relation({ id: 'provenance', role: 'dependency', kind: 'provenance.derivation' }), context),
+    ).toThrow(/provenance\.derivation.*not registered/i);
+    expect(() =>
+      Graph.resolveRelation(relation({ id: 'usage', role: 'dependency', kind: 'uml.usage' }), context),
+    ).toThrow(/uml\.usage.*not registered/i);
+    expect(() =>
+      Graph.resolveRelation(relation({ id: 'wrong-role', role: 'generalization', kind: 'uml.realization' }), context),
+    ).toThrow(/uml\.realization.*dependency.*generalization/i);
   });
 });

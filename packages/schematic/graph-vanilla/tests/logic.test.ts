@@ -297,6 +297,7 @@ describe('normalizeGraph', () => {
             source: { id: 'service' },
             target: { id: 'database' },
             role: 'dependency',
+            kind: 'uml.dependency',
             dashPattern: [6, 2],
             labels: [{ text: 'reads', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
             way: ['service', { id: 'database' }],
@@ -321,6 +322,7 @@ describe('normalizeGraph', () => {
           source: { id: 'service' },
           target: { id: 'database' },
           role: 'dependency',
+          kind: 'uml.dependency',
           dashPattern: [6, 2],
           labels: [{ text: 'reads', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
           route: [

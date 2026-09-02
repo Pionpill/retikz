@@ -9,6 +9,7 @@ export const previewControlContract = defineRelationRoleControlContract({
     defaultValue: '',
     options: [
       { value: '', label: '默认值' },
+      { value: 'uml.association', label: 'UML 一般关联' },
       { value: 'uml.aggregation', label: 'UML 聚合' },
       { value: 'uml.composition', label: 'UML 组合' },
     ],
@@ -16,6 +17,7 @@ export const previewControlContract = defineRelationRoleControlContract({
   direction: {
     label: '语义方向',
     defaultValue: 'forward',
+    visibleWithKinds: [''],
     options: [
       { value: 'none', label: '无方向' },
       { value: 'forward', label: 'source → target' },

@@ -9,6 +9,7 @@ export const previewControlContract = defineRelationRoleControlContract({
     defaultValue: '',
     options: [
       { value: '', label: 'Default' },
+      { value: 'uml.association', label: 'UML association' },
       { value: 'uml.aggregation', label: 'UML aggregation' },
       { value: 'uml.composition', label: 'UML composition' },
     ],
@@ -16,6 +17,7 @@ export const previewControlContract = defineRelationRoleControlContract({
   direction: {
     label: 'Semantic direction',
     defaultValue: 'forward',
+    visibleWithKinds: [''],
     options: [
       { value: 'none', label: 'None' },
       { value: 'forward', label: 'source → target' },

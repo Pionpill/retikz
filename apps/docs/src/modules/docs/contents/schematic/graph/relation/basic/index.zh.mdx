@@ -34,46 +34,55 @@ Relation 直接复用大部分 Core Path 字段。默认 Graph Theme 使用灰�
 
 Relation 的整体外观统一由 Theme 管理。下面的 controls 只开放当前 role 真正支持的 kind、direction 和精确 Relation 颜色；页面顶部的 Theme selector 负责切换整体视觉风格
 
+内置 `kind` 提供 UML 类图与组件图常用关系。它们只确定路径与端点；不会自动添加构造型、多重性或其它文本图元
+
+| role             | 内置 kind                                               | 路径与端点                                                                                                          |
+| ---------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `association`    | `uml.association`、`uml.aggregation`、`uml.composition` | role 默认 target 端实心菱形；UML 一般关联为两端无 marker 的实线，聚合为 source 端空心菱形，组合为 source 端实心菱形 |
+| `generalization` | `uml.generalization`                                    | 实线；默认 target 端实心箭头，UML kind 覆盖为空心三角                                                               |
+| `dependency`     | `uml.dependency`                                        | 虚线；target 端开放 `straightBarb` 箭头                                                                             |
+| `dependency`     | `uml.realization`                                       | 虚线；target 端空心三角                                                                                             |
+
 ### association：关联关系
 
-`association` 表示两个对象之间的一般关联。默认按 `forward` 从 source 指向 target，并在 target 端使用实心菱形 marker；也可显式选择 `none`、`reverse` 或 `both`
+`association` 表示两个对象之间的一般关联。默认使用 `forward`，在 target 端使用实心 `diamond`；也可以显式选择 `none`、`reverse` 或 `both`
 
 - **默认 / 允许 direction：** `forward` / `none`、`forward`、`reverse`、`both`
-- **内置 kind：** `uml.aggregation` 与 `uml.composition`，都把 source 解释为 whole、target 解释为 part，并把 direction 固定为 `none`
+- **内置 kind：** `uml.association` 使用两端无 marker 的实线，并把 direction 固定为 `none`。`uml.aggregation` 与 `uml.composition` 都把 source 解释为 whole、target 解释为 part，并把 direction 固定为 `none`
 - **内置 predicate：** 无；领域扩展可以注册 cardinality predicate，并用 params schema 校验 source / target 基数
 
 <ComponentPreview
   files="relation-association"
   size="sm"
-  caption="切换一般关联的 direction 或两个 UML kind；选择 kind 后，其 direction 由 kind 固定。"
+  caption="普通关联默认在 target 端使用菱形；切换任一 UML association kind 后，direction 固定并由 kind 决定端点结构。"
 />
 
 ### dependency：依赖关系
 
-`dependency` 表示 source 依赖 target：source 是依赖方，target 是被依赖方。它固定为 `forward`，基础 marker family 为 target 端开放、无填充的 `straightBarb`
+`dependency` 表示 source 依赖 target：source 是依赖方，target 是被依赖方。它固定为 `forward`，默认以实线路径和 target 端开放、无填充的 `straightBarb` 表达
 
 - **默认 / 允许 direction：** `forward` / 仅 `forward`
-- **内置 kind：** `provenance.derivation`，把 source 细化为派生结果、target 细化为来源记录，并使用 openStealth
+- **内置 kind：** `uml.dependency` 覆盖为虚线开放箭头；`uml.realization` 使用虚线空心三角。没有可见结构差异的 UML dependency 子类不作为内置 kind；需要保留领域语义时使用 label、meta 或自定义 kind
 - **内置 predicate：** 无；扩展可以声明 `{ optional: boolean, reason: string }` 等 params，具体字段和值域由 predicate definition 决定
 
 <ComponentPreview
   files="relation-dependency"
   size="sm"
-  caption="比较基础 dependency 与内置派生 kind，并调整 Relation 主色。"
+  caption="切换 UML dependency kind，观察开放箭头与空心三角两种端点结构，并调整 Relation 主色。"
 />
 
 ### generalization：泛化关系
 
-`generalization` 表示 source 是 target 的更具体类型：source 是 subtype，target 是 supertype。它固定为 `forward`，基础 marker family 为 target 端的 `normal` 实心三角 marker
+`generalization` 表示 source 是 target 的更具体类型：source 是 subtype，target 是 supertype。它固定为 `forward`，默认以实线路径和 target 端实心 `normal` 箭头表达；`uml.generalization` 覆盖为空心三角
 
 - **默认 / 允许 direction：** `forward` / 仅 `forward`
-- **内置 kind：** `uml.realization`，把 source 解释为 implementation、target 解释为 specification，并使用 open marker
+- **内置 kind：** `uml.generalization` 使用空心三角。`uml.realization` 是 dependency role 的 kind，以虚线空心三角表达
 - **内置 predicate：** 无；类型系统扩展可以用 params 表达 discriminator 或约束，但 Graph 不执行类型检查
 
 <ComponentPreview
   files="relation-generalization"
   size="sm"
-  caption="比较基础 generalization 与 UML realization，并调整 Relation 主色。"
+  caption="切换默认泛化与 UML 泛化，观察实心箭头和空心三角的端点差异，并调整 Relation 主色。"
 />
 
 ### flow：对象之间的流动
@@ -102,12 +111,12 @@ Relation 的整体外观统一由 Theme 管理。下面的 controls 只开放当
 
 ### 样式调整
 
-下面的综合示例可以切换全部五个内置 role，并直接调整 Relation 路径与 label 的样式。role 会改变关系语义和 marker recipe；显式样式字段会覆盖对应的 Theme 默认
+下面的综合示例可以切换全部五个内置 role，并直接调整 source、target、Relation 路径与 label 的样式。role 会改变关系语义和 marker recipe；显式样式字段会覆盖对应的 Theme 默认
 
 <ComponentPreview
   files="relation-style"
   size="sm"
-  caption="切换 role，并分别调整描边色、描边宽度、虚线、透明度、label 文本色和文本透明度。"
+  caption="切换 role，并分别调整 source 与 target 的颜色、路径描边色与宽度、虚线、透明度、label 文本色和文本透明度。"
 />
 
 ## 技术原理

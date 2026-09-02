@@ -55,12 +55,16 @@ export const RelationRole = {
 
 /** Relation 的内置稳定 kind */
 export const RelationKind = {
+  /** UML 一般关联关系 */
+  UmlAssociation: 'uml.association',
   /** UML 聚合关系 */
   UmlAggregation: 'uml.aggregation',
   /** UML 组合关系 */
   UmlComposition: 'uml.composition',
+  /** UML 泛化关系 */
+  UmlGeneralization: 'uml.generalization',
+  /** UML 依赖关系 */
+  UmlDependency: 'uml.dependency',
   /** UML 实现关系 */
   UmlRealization: 'uml.realization',
-  /** Provenance 派生关系 */
-  ProvenanceDerivation: 'provenance.derivation',
 } as const;

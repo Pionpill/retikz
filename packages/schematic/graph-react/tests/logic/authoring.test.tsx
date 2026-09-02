@@ -316,6 +316,7 @@ describe('Entity and Relation React authoring', () => {
         createElement(Entity, { role: 'participant', position: [0, 80] }, 'Preview'),
         createElement(Relation, {
           role: 'association',
+          kind: 'uml.association',
           source: { id: 'source' },
           target: { id: 'target' },
           dashPattern: [6, 2],
@@ -338,6 +339,7 @@ describe('Entity and Relation React authoring', () => {
         namespace: 'graph',
         type: 'relation',
         role: 'association',
+        kind: 'uml.association',
         source: { id: 'source' },
         target: { id: 'target' },
         dashPattern: [6, 2],
