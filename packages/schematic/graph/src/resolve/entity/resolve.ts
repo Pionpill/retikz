@@ -115,6 +115,7 @@ export const resolveEntityGraphThemeOverrides = (
   const subject = {
     role: entity.source.role,
     ...(entity.source.kind === undefined ? {} : { kind: entity.source.kind }),
+    ...(entity.source.status === undefined ? {} : { status: entity.source.status }),
     ...(entity.predicate === undefined
       ? {}
       : { predicate: { name: entity.predicate.definition.name, params: entity.predicate.params } }),
@@ -146,6 +147,7 @@ export const resolveEntityAppearance = (
   const subject = {
     role: entity.source.role,
     ...(entity.source.kind === undefined ? {} : { kind: entity.source.kind }),
+    ...(entity.source.status === undefined ? {} : { status: entity.source.status }),
     ...(entity.predicate === undefined
       ? {}
       : { predicate: { name: entity.predicate.definition.name, params: entity.predicate.params } }),

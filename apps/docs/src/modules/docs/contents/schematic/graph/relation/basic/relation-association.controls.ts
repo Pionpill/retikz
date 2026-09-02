@@ -4,6 +4,7 @@ import { defineRelationRoleControlContract } from './relation-role-controls';
 export const previewControlContract = defineRelationRoleControlContract({
   title: 'Relation：关联',
   sectionLabel: '语义与展示',
+  statusLocale: 'zh',
   kind: {
     label: '内置 kind',
     defaultValue: '',

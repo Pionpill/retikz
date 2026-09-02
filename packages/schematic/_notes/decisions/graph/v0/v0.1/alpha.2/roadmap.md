@@ -17,6 +17,7 @@ alpha.2 建立第五类 Graph Source composite `Block`，用于表达具有 Grap
 | [03](./03-block-open-content.md)          | Block 开放 children、布局与扩展边界 | Graph alpha.1、Core Scope、Layout Flex、Standard Surface | Accepted   |
 | [04](./04-container-theme-inheritance.md) | Group / Block 继承 Graph Theme 外观 | Graph Theme style、Standard Surface、Diagram Flow        | Accepted   |
 | [05](./05-uml-relation-kind-catalog.md)   | UML Relation kind 目录与结构默认    | Relation Definition、Core Path、Standard Arrow           | Proposed   |
+| [06](./06-graph-status.md)                | Entity / Relation 语义状态          | Graph Source、Graph Theme、Entity / Relation resolve     | Proposed   |
 
 ## 完成标准
 

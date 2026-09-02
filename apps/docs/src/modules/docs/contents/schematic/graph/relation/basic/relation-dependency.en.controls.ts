@@ -4,6 +4,7 @@ import { defineRelationRoleControlContract } from './relation-role-controls';
 export const previewControlContract = defineRelationRoleControlContract({
   title: 'Relation: Dependency',
   sectionLabel: 'Semantics and presentation',
+  statusLocale: 'en',
   kind: {
     label: 'Built-in kind',
     defaultValue: '',

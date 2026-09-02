@@ -4,6 +4,7 @@ import { Entity, Graph, Relation } from '@retikz/graph-react';
 
 import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/preview';
 
+import { relationStatusOf } from './relation-role-controls';
 import { previewControlContract, relationStyleControls } from './relation-style.en.controls';
 
 export const previewControls = relationStyleControls;
@@ -40,6 +41,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Relation
         id="relation-style"
         role={role}
+        status={relationStatusOf(values.status)}
         source={{ id: 'source' }}
         target={{ id: 'target' }}
         stroke={stroke}

@@ -113,6 +113,12 @@ Built-in `kind` values cover common UML class- and component-diagram relationshi
   caption="Switch influence direction and adjust the Relation color."
 />
 
+### Semantic status
+
+`status` preserves a directly readable Graph state on a Relation. `error`, `success`, `warning`, and `disabled` use the current Core Theme's `semantic.error`, `semantic.success`, `semantic.warning`, and `semantic.guide` respectively. Omitting status means no special marker and does not write `normal`. Status supplies appearance defaults only; it does not alter the role, kind, direction, route, or marker shape
+
+Every Relation role demo exposes a no-status option alongside these four values through its controls. The Relation path and every present source or target marker inherit the same status color. Explicit path, marker, or label appearance has final precedence while retaining Source status. A domain predicate's `params.status` is not mapped here automatically
+
 ### Style adjustments
 
 The combined playground switches among all five built-in roles and directly adjusts the source, target, Relation path, and label styles. The role changes the relationship semantics and marker recipe; explicit style fields override the corresponding Theme defaults
@@ -131,7 +137,7 @@ The combined playground switches among all five built-in roles and directly adju
   description="Revisit when diagnosing endpoints or authored-route errors."
 />
 
-Relation resolve handles only role, kind, predicate, direction, and Theme before lowering to Core Path. Core namespace owns endpoint lookup, arbitrary NodeTarget references, and unresolved / duplicate-id diagnostics. When route is omitted, lowering emits `move(source) → line(target)`; an explicit route uses the complete Core Position language and enters Core Path unchanged
+Relation resolve handles role, kind, predicate, status, direction, and Theme before lowering to Core Path. Core namespace owns endpoint lookup, arbitrary NodeTarget references, and unresolved / duplicate-id diagnostics. When route is omitted, lowering emits `move(source) → line(target)`; an explicit route uses the complete Core Position language and enters Core Path unchanged
 
 `RelationSchema` excludes only conflicting fields from Core `PathBaseSchema`: the Path discriminator and kind, `children` / `label`, arbitrary `marks`, and the fill family. All other identity, metadata, animation, stacking, paint, stroke, effect, dash, line cap/join, corner, and transform fields retain their Core names and semantics. `labels` directly uses Core `IRGeometryLabel`; explicit label font fields merge over the Relation default font one field at a time
 
@@ -145,6 +151,7 @@ Relation resolve handles only role, kind, predicate, direction, and Theme before
 | `role`                 | `string`                                                                                                                           | —                    | Registered open relationship-semantic key                                                                                                                                                                   |
 | `kind?`                | `string`                                                                                                                           | —                    | Registered stable subtype within the role                                                                                                                                                                   |
 | `predicate?`           | `{ name: string; params?: IRJsonObject }`                                                                                          | —                    | Registered predicate and JSON-safe params                                                                                                                                                                   |
+| `status?`              | `GraphStatusValue`                                                                                                                 | —                    | Optional closed Graph state: `error`, `success`, `warning`, or `disabled`                                                                                                                                   |
 | `direction?`           | `'none' \| 'forward' \| 'reverse' \| 'both'`                                                                                       | from role            | Explicit semantic direction allowed by the role and kind                                                                                                                                                    |
 | `labels?`              | `Array<IRGeometryLabel>`                                                                                                           | —                    | Complete Core Geometry Labels; each label's explicit color, font, and opacity override Relation defaults                                                                                                    |
 | `route?`               | `Array<IRGraphRelationRouteStep>`                                                                                                  | source→target direct | Complete Core Path step sequence; route steps cannot carry labels                                                                                                                                           |

@@ -53,7 +53,7 @@ const graphThemeOverridesOf = (
       tokens: {
         color,
         textColor: 'contrast',
-        fill: color,
+        fill: 1,
         stroke: 'none',
       },
     },

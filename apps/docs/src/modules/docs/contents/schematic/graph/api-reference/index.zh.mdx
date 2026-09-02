@@ -7,17 +7,17 @@ description: 查询 Graph family 的独立 Source composite、Scope 公共面与
 
 ## 公开导出
 
-| 能力       | `@retikz/graph`                                                                                       | React                                              | Vanilla                                                            |
-| ---------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
-| Graph      | `GraphSchema`、`IRGraph`、`createGraph`、`GraphDefinition`、`GraphProviderKey`                        | `Graph`、`GraphProps`                              | `graph`、`GraphInputEmbedAdapter`、`GraphInputEmbedProps`          |
-| Group      | `GroupSchema`、`IRGroup`、`createGroup`、`GroupDefinition`、`GroupProviderKey`                        | `Group`、`GroupProps`                              | `group`、`GroupInputEmbedAdapter`、`GroupInputEmbedProps`          |
-| Block      | `BlockSchema`、`IRBlock`、`createBlock`、`BlockDefinition`、`BlockProviderKey`                        | `Block`、`BlockProps`                              | `block`、`BlockInputEmbedAdapter`、`BlockInputEmbedProps`          |
-| Block 结构 | Header / Section / Row 的 schema、类型、factory、Definition 与 ProviderKey；Row 接受任意直接 children | 三个独立组件，Row children 直接收集任意子元素      | 三个独立 builder、adapter 与 normalize                             |
-| Entity     | `EntitySchema`、`IRGraphEntity`、`createEntity`、`EntityDefinition`、`EntityProviderKey`              | `Entity`、`EntityProps`                            | `entity`、`EntityInputEmbedAdapter`、`EntityInputEmbedProps`       |
-| Relation   | `RelationSchema`、`IRGraphRelation`、`createRelation`、`RelationDefinition`、`RelationProviderKey`    | `Relation`、`RelationProps`                        | `relation`、`RelationInputEmbedAdapter`、`RelationInputEmbedProps` |
-| 开放词汇   | `EntityRole`、`RelationRole`、`RelationKind` 及对应 schema                                            | —                                                  | —                                                                  |
-| Theme 扩展 | `GraphThemeStyleDefinition`、`GraphThemeStyleOverrides`、`defineGraphThemeStyle`                      | `graphThemeStyles` 可声明在 Graph family composite | 同一 options 可传给 Graph family adapter                           |
-| 装配       | `GraphDefinitionOptions`、`createGraphDefinitions`、`createGraphProviders`                            | options 可声明在独立 composite                     | `createGraphVanillaAdapters`                                       |
+| 能力       | `@retikz/graph`                                                                                                        | React                                              | Vanilla                                                            |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
+| Graph      | `GraphSchema`、`IRGraph`、`createGraph`、`GraphDefinition`、`GraphProviderKey`                                         | `Graph`、`GraphProps`                              | `graph`、`GraphInputEmbedAdapter`、`GraphInputEmbedProps`          |
+| Group      | `GroupSchema`、`IRGroup`、`createGroup`、`GroupDefinition`、`GroupProviderKey`                                         | `Group`、`GroupProps`                              | `group`、`GroupInputEmbedAdapter`、`GroupInputEmbedProps`          |
+| Block      | `BlockSchema`、`IRBlock`、`createBlock`、`BlockDefinition`、`BlockProviderKey`                                         | `Block`、`BlockProps`                              | `block`、`BlockInputEmbedAdapter`、`BlockInputEmbedProps`          |
+| Block 结构 | Header / Section / Row 的 schema、类型、factory、Definition 与 ProviderKey；Row 接受任意直接 children                  | 三个独立组件，Row children 直接收集任意子元素      | 三个独立 builder、adapter 与 normalize                             |
+| Entity     | `EntitySchema`、`IRGraphEntity`、`createEntity`、`EntityDefinition`、`EntityProviderKey`                               | `Entity`、`EntityProps`                            | `entity`、`EntityInputEmbedAdapter`、`EntityInputEmbedProps`       |
+| Relation   | `RelationSchema`、`IRGraphRelation`、`createRelation`、`RelationDefinition`、`RelationProviderKey`                     | `Relation`、`RelationProps`                        | `relation`、`RelationInputEmbedAdapter`、`RelationInputEmbedProps` |
+| 词汇       | `EntityRole`、`RelationRole`、`RelationKind` 及对应开放 schema；`GraphStatus`、`GraphStatusSchema`、`GraphStatusValue` | —                                                  | —                                                                  |
+| Theme 扩展 | `GraphThemeStyleDefinition`、`GraphThemeStyleOverrides`、`defineGraphThemeStyle`                                       | `graphThemeStyles` 可声明在 Graph family composite | 同一 options 可传给 Graph family adapter                           |
+| 装配       | `GraphDefinitionOptions`、`createGraphDefinitions`、`createGraphProviders`                                             | options 可声明在独立 composite                     | `createGraphVanillaAdapters`                                       |
 
 ## Graph Source composite
 
@@ -111,7 +111,7 @@ Neutral Graph Theme 为 Block 根外框提供透明 background、`currentColor /
 
 ## Entity schema
 
-Entity 把语义与 Core Node 实例字段放在同一个 Source record。除了由 role 决定的 `type`、`shape`、`boundary`、`padding`、`cornerRadius`，其余 Node 字段都可直接使用；`id`、`position` 和 `text` 可省略。当前位置的 Core Theme 与可选 Graph Theme 提供外观默认，Entity 上显式编写的 `fill`、`dashed`、`textColor` 等字段最终覆盖 Theme
+Entity 把语义与 Core Node 实例字段放在同一个 Source record。除了由 role 决定的 `type`、`shape`、`boundary`、`padding`、`cornerRadius`，其余 Node 字段都可直接使用；`id`、`position`、`text` 与闭合 `status` 都可省略。当前位置的 Core Theme 与可选 Graph Theme 提供外观默认，Entity 上显式编写的 `fill`、`dashed`、`textColor` 等字段最终覆盖 Theme
 
 <ZodSchema
   name="EntitySchema"
@@ -158,7 +158,7 @@ Entity 把语义与 Core Node 实例字段放在同一个 Source record。除了
 
 ## Relation schema
 
-Relation 同时保存 Core `IRNodeTarget` endpoint、语义、完整 Core Geometry Labels 与可选 Core route。`RelationSchema` 从 `PathBaseSchema` 只排除 discriminator / kind、`children` / `label`、任意 `marks` 与 fill family，其余 Core Path 字段直接复用。Relation resolve 不校验 Graph 成员身份；Core Path 统一解析 Node、Coordinate、resolved Scope 或上层 composite 发布的 target，并拥有 unresolved / duplicate-id 诊断
+Relation 同时保存 Core `IRNodeTarget` endpoint、语义、可选闭合 `status`、完整 Core Geometry Labels 与可选 Core route。`RelationSchema` 从 `PathBaseSchema` 只排除 discriminator / kind、`children` / `label`、任意 `marks` 与 fill family，其余 Core Path 字段直接复用。Relation resolve 不校验 Graph 成员身份；Core Path 统一解析 Node、Coordinate、resolved Scope 或上层 composite 发布的 target，并拥有 unresolved / duplicate-id 诊断
 
 <ZodSchema
   name="RelationSchema"

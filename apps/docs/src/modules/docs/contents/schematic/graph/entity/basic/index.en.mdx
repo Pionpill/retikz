@@ -128,6 +128,12 @@ Neutral uses a complete master-color outline with a light same-color `fill: 0.08
   caption="Control the concept outline, Graph Theme primary color, and text."
 />
 
+### Semantic status
+
+`status` preserves a directly readable Graph state on an Entity. `error`, `success`, `warning`, and `disabled` use the current Core Theme's `semantic.error`, `semantic.success`, `semantic.warning`, and `semantic.guide` respectively. Omitting the field means no special marker; Graph does not write a `normal` value. This is distinct from the `state` role: status describes the current diagram semantics, while that role represents a persistent condition
+
+Every Entity role demo exposes a no-status option alongside these four values through its controls. Explicit Core Node-compatible appearance such as `color`, `fill`, and `stroke` still overrides the status default without removing `status` from Source. A predicate's `params.status` remains domain data interpreted by that predicate and is never mapped to Graph status
+
 ### Style adjustments
 
 The combined playground switches among all seven built-in roles and directly adjusts Core Node-compatible fill, stroke, opacity, and text styles. The role changes Entity semantics and its base shape recipe; these explicit style fields override the corresponding Theme defaults
@@ -154,16 +160,17 @@ Entity performs its own registry lookup and lowers to an ordinary Core `Node`. C
 
 ## API Reference
 
-| Prop         | Type                                      | Default | Description                                                     |
-| ------------ | ----------------------------------------- | ------- | --------------------------------------------------------------- |
-| `id?`        | `string`                                  | —       | Optional Core target id; omission registers no reference target |
-| `role`       | `string`                                  | —       | Registered open semantic role key                               |
-| `kind?`      | `string`                                  | —       | Registered stable subtype within the role                       |
-| `predicate?` | `{ name: string; params?: IRJsonObject }` | —       | Registered predicate and its JSON-safe parameters               |
-| `position?`  | `IRPosition`                              | —       | Directly reuses the Core Node position language                 |
-| `text?`      | `IRNode['text']`                          | —       | Node-compatible text                                            |
-| `children?`  | Node-compatible text                      | —       | React text entry; it cannot host arbitrary drawing children     |
-| `meta?`      | `IRJsonObject`                            | —       | Metadata ignored by Graph semantics                             |
+| Prop         | Type                                      | Default | Description                                                               |
+| ------------ | ----------------------------------------- | ------- | ------------------------------------------------------------------------- |
+| `id?`        | `string`                                  | —       | Optional Core target id; omission registers no reference target           |
+| `role`       | `string`                                  | —       | Registered open semantic role key                                         |
+| `kind?`      | `string`                                  | —       | Registered stable subtype within the role                                 |
+| `predicate?` | `{ name: string; params?: IRJsonObject }` | —       | Registered predicate and its JSON-safe parameters                         |
+| `status?`    | `GraphStatusValue`                        | —       | Optional closed Graph state: `error`, `success`, `warning`, or `disabled` |
+| `position?`  | `IRPosition`                              | —       | Directly reuses the Core Node position language                           |
+| `text?`      | `IRNode['text']`                          | —       | Node-compatible text                                                      |
+| `children?`  | Node-compatible text                      | —       | React text entry; it cannot host arbitrary drawing children               |
+| `meta?`      | `IRJsonObject`                            | —       | Metadata ignored by Graph semantics                                       |
 
 ## Related
 

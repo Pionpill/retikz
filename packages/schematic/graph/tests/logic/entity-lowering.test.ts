@@ -66,6 +66,36 @@ describe('Entity lowering', () => {
     expect(JSON.stringify(output.scene)).not.toContain('dashPattern');
   });
 
+  it.each([
+    { status: 'error', color: theme.colors.semantic.error },
+    { status: 'success', color: theme.colors.semantic.success },
+    { status: 'warning', color: theme.colors.semantic.warning },
+    { status: 'disabled', color: theme.colors.semantic.guide },
+  ] as const)(
+    'resolves the Neutral $status status to the Core semantic Entity appearance family',
+    ({ status, color }) => {
+      const options = Graph.resolveGraphDefinitionOptions();
+      const canonical = Graph.resolveEntity(entity({ status }), options);
+
+      expect(Graph.resolveEntityAppearance(canonical, { ...options, theme })).toMatchObject({ color });
+      expect(
+        Graph.lowerEntity(canonical, Graph.resolveEntityAppearance(canonical, { ...options, theme })),
+      ).not.toHaveProperty('status');
+    },
+  );
+
+  it('lets authored Entity appearance override the status Theme while retaining the semantic status', () => {
+    const options = Graph.resolveGraphDefinitionOptions();
+    const canonical = Graph.resolveEntity(entity({ status: 'error', color: '#7c3aed' }), options);
+
+    expect(canonical.source).toMatchObject({ status: 'error' });
+    expect(Graph.lowerEntity(canonical, Graph.resolveEntityAppearance(canonical, { ...options, theme }))).toMatchObject(
+      {
+        color: '#7c3aed',
+      },
+    );
+  });
+
   it('fails only at lowering when position is absent without inventing an undefined identity', () => {
     const options = Graph.resolveGraphDefinitionOptions();
     const canonical = Graph.resolveEntity(entity({ role: 'activity', position: undefined }), options);

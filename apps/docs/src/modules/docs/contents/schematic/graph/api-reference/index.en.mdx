@@ -7,17 +7,17 @@ description: Look up independent Graph-family Source composites, their Scope sur
 
 ## Public exports
 
-| Capability        | `@retikz/graph`                                                                                                        | React                                                                  | Vanilla                                                            |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Graph             | `GraphSchema`, `IRGraph`, `createGraph`, `GraphDefinition`, `GraphProviderKey`                                         | `Graph`, `GraphProps`                                                  | `graph`, `GraphInputEmbedAdapter`, `GraphInputEmbedProps`          |
-| Group             | `GroupSchema`, `IRGroup`, `createGroup`, `GroupDefinition`, `GroupProviderKey`                                         | `Group`, `GroupProps`                                                  | `group`, `GroupInputEmbedAdapter`, `GroupInputEmbedProps`          |
-| Block             | `BlockSchema`, `IRBlock`, `createBlock`, `BlockDefinition`, `BlockProviderKey`                                         | `Block`, `BlockProps`                                                  | `block`, `BlockInputEmbedAdapter`, `BlockInputEmbedProps`          |
-| Block structures  | Header / Section / Row schemas, types, factories, Definitions, and ProviderKeys; Row accepts arbitrary direct children | Three independent components; Row collects arbitrary children directly | Three independent builders, adapters, and normalizers              |
-| Entity            | `EntitySchema`, `IRGraphEntity`, `createEntity`, `EntityDefinition`, `EntityProviderKey`                               | `Entity`, `EntityProps`                                                | `entity`, `EntityInputEmbedAdapter`, `EntityInputEmbedProps`       |
-| Relation          | `RelationSchema`, `IRGraphRelation`, `createRelation`, `RelationDefinition`, `RelationProviderKey`                     | `Relation`, `RelationProps`                                            | `relation`, `RelationInputEmbedAdapter`, `RelationInputEmbedProps` |
-| Open vocabularies | `EntityRole`, `RelationRole`, `RelationKind`, and their schemas                                                        | —                                                                      | —                                                                  |
-| Theme extension   | `GraphThemeStyleDefinition`, `GraphThemeStyleOverrides`, `defineGraphThemeStyle`                                       | `graphThemeStyles` on Graph-family composites                          | The same options on Graph-family adapters                          |
-| Assembly          | `GraphDefinitionOptions`, `createGraphDefinitions`, `createGraphProviders`                                             | Options on independent composites                                      | `createGraphVanillaAdapters`                                       |
+| Capability       | `@retikz/graph`                                                                                                                      | React                                                                  | Vanilla                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Graph            | `GraphSchema`, `IRGraph`, `createGraph`, `GraphDefinition`, `GraphProviderKey`                                                       | `Graph`, `GraphProps`                                                  | `graph`, `GraphInputEmbedAdapter`, `GraphInputEmbedProps`          |
+| Group            | `GroupSchema`, `IRGroup`, `createGroup`, `GroupDefinition`, `GroupProviderKey`                                                       | `Group`, `GroupProps`                                                  | `group`, `GroupInputEmbedAdapter`, `GroupInputEmbedProps`          |
+| Block            | `BlockSchema`, `IRBlock`, `createBlock`, `BlockDefinition`, `BlockProviderKey`                                                       | `Block`, `BlockProps`                                                  | `block`, `BlockInputEmbedAdapter`, `BlockInputEmbedProps`          |
+| Block structures | Header / Section / Row schemas, types, factories, Definitions, and ProviderKeys; Row accepts arbitrary direct children               | Three independent components; Row collects arbitrary children directly | Three independent builders, adapters, and normalizers              |
+| Entity           | `EntitySchema`, `IRGraphEntity`, `createEntity`, `EntityDefinition`, `EntityProviderKey`                                             | `Entity`, `EntityProps`                                                | `entity`, `EntityInputEmbedAdapter`, `EntityInputEmbedProps`       |
+| Relation         | `RelationSchema`, `IRGraphRelation`, `createRelation`, `RelationDefinition`, `RelationProviderKey`                                   | `Relation`, `RelationProps`                                            | `relation`, `RelationInputEmbedAdapter`, `RelationInputEmbedProps` |
+| Vocabularies     | Open `EntityRole`, `RelationRole`, and `RelationKind` with their schemas; `GraphStatus`, `GraphStatusSchema`, and `GraphStatusValue` | —                                                                      | —                                                                  |
+| Theme extension  | `GraphThemeStyleDefinition`, `GraphThemeStyleOverrides`, `defineGraphThemeStyle`                                                     | `graphThemeStyles` on Graph-family composites                          | The same options on Graph-family adapters                          |
+| Assembly         | `GraphDefinitionOptions`, `createGraphDefinitions`, `createGraphProviders`                                                           | Options on independent composites                                      | `createGraphVanillaAdapters`                                       |
 
 ## Graph Source composite
 
@@ -80,7 +80,7 @@ The Neutral Graph Theme supplies the Block root shell baseline: a transparent ba
 
 ## Entity schema
 
-Entity keeps semantics and Core Node instance fields in one Source record. Every Node field is available except role-owned `type`, `shape`, `boundary`, `padding`, and `cornerRadius`. `id`, `position`, and `text` are optional. The current Core Theme and optional Graph Theme supply appearance defaults, while explicit Entity fields such as `fill`, `dashed`, and `textColor` take final precedence
+Entity keeps semantics and Core Node instance fields in one Source record. Every Node field is available except role-owned `type`, `shape`, `boundary`, `padding`, and `cornerRadius`. `id`, `position`, `text`, and closed `status` are optional. The current Core Theme and optional Graph Theme supply appearance defaults, while explicit Entity fields such as `fill`, `dashed`, and `textColor` take final precedence
 
 <ZodSchema name="EntitySchema" />
 
@@ -88,7 +88,7 @@ Omitting `id` generates no internal id and registers no target in the Core names
 
 ## Relation schema
 
-Relation keeps Core `IRNodeTarget` endpoints, semantics, complete Core Geometry Labels, and an optional Core route together. `RelationSchema` excludes only the discriminator and kind, `children` / `label`, arbitrary `marks`, and the fill family from `PathBaseSchema`; every other Core Path field is reused directly. Relation resolve performs no Graph membership validation. Core Path resolves Nodes, Coordinates, resolved Scopes, or targets published by upper composites and owns unresolved / duplicate-id diagnostics
+Relation keeps Core `IRNodeTarget` endpoints, semantics, optional closed `status`, complete Core Geometry Labels, and an optional Core route together. `RelationSchema` excludes only the discriminator and kind, `children` / `label`, arbitrary `marks`, and the fill family from `PathBaseSchema`; every other Core Path field is reused directly. Relation resolve performs no Graph membership validation. Core Path resolves Nodes, Coordinates, resolved Scopes, or targets published by upper composites and owns unresolved / duplicate-id diagnostics
 
 <ZodSchema name="RelationSchema" />
 

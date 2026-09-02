@@ -253,6 +253,48 @@ describe('Relation lowering', () => {
     expect(label).toMatchObject({ type: 'text', fill: 'gray', fontSize: 14 });
   });
 
+  it.each([
+    { status: 'error', color: theme.colors.semantic.error },
+    { status: 'success', color: theme.colors.semantic.success },
+    { status: 'warning', color: theme.colors.semantic.warning },
+    { status: 'disabled', color: theme.colors.semantic.guide },
+  ] as const)(
+    'resolves the Neutral $status status to Core semantic colors for the Relation path and markers',
+    ({ status, color }) => {
+      const options = Graph.resolveGraphDefinitionOptions();
+      const canonical = Graph.resolveRelation(relation({ status }), options);
+
+      expect(Graph.resolveRelationAppearance(canonical, { ...options, theme })).toMatchObject({
+        color,
+        stroke: color,
+        sourceMarker: { color },
+        targetMarker: { color },
+      });
+      expect(lower(relation({ status }))).not.toHaveProperty('status');
+    },
+  );
+
+  it('lets authored Relation and endpoint appearance override the status Theme without removing status', () => {
+    const options = Graph.resolveGraphDefinitionOptions();
+    const canonical = Graph.resolveRelation(
+      relation({
+        status: 'warning',
+        color: '#7c3aed',
+        sourceMarker: { color: '#0f766e' },
+        targetMarker: { color: '#b45309' },
+      }),
+      options,
+    );
+
+    expect(canonical.source).toMatchObject({ status: 'warning' });
+    expect(Graph.resolveRelationAppearance(canonical, { ...options, theme })).toMatchObject({
+      color: '#7c3aed',
+      stroke: '#7c3aed',
+      sourceMarker: { color: '#0f766e' },
+      targetMarker: { color: '#b45309' },
+    });
+  });
+
   it('delegates an unresolved target to the Core reference diagnostic', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.RelationProviderKey], providers: Graph.createGraphProviders() }],

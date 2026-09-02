@@ -225,6 +225,7 @@ type CanonicalSelectorSubject = Readonly<{
   role: string;
   kind?: string;
   predicate?: Readonly<{ name: string; params: IRJsonObject }>;
+  status?: string;
   direction?: string;
 }>;
 
@@ -236,6 +237,7 @@ export const matchesGraphThemeSelector = (
   if (selector === undefined) return true;
   if (!selectorIncludes(selector.role, subject.role)) return false;
   if (!selectorIncludes(selector.kind, subject.kind)) return false;
+  if (!selectorIncludes(selector.status, subject.status)) return false;
   if ('direction' in selector && !selectorIncludes(selector.direction, subject.direction)) return false;
   if (selector.predicate === undefined) return true;
   if (subject.predicate === undefined || !selectorIncludes(selector.predicate.name, subject.predicate.name))

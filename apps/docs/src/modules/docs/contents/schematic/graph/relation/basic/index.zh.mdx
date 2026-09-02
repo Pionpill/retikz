@@ -109,6 +109,12 @@ Relation 的整体外观统一由 Theme 管理。下面的 controls 只开放当
 
 <ComponentPreview files="relation-influence" size="sm" caption="切换 influence 的语义方向，并调整 Relation 主色。" />
 
+### 语义状态
+
+`status` 为 Relation 保存可直接读取的图式状态：`error`、`success`、`warning` 与 `disabled` 分别使用当前 Core Theme 的 `semantic.error`、`semantic.success`、`semantic.warning` 与 `semantic.guide`。省略 status 表示没有特别标记，不写入 `normal`。状态只提供 appearance 默认，不改变 role、kind、direction、route 或 marker shape
+
+每个 Relation role demo 的 controls 都可在“无状态”和这四种状态之间切换。Relation 的 path 与实际存在的 source / target marker 会继承同一 status 颜色。显式 path、marker 或 label appearance 最终优先，但保留 Source status；领域 predicate 的 `params.status` 也不会自动映射到这里
+
 ### 样式调整
 
 下面的综合示例可以切换全部五个内置 role，并直接调整 source、target、Relation 路径与 label 的样式。role 会改变关系语义和 marker recipe；显式样式字段会覆盖对应的 Theme 默认
@@ -127,7 +133,7 @@ Relation 的整体外观统一由 Theme 管理。下面的 controls 只开放当
   description="需要排查 endpoint 或 authored route 诊断时再回来阅读。"
 />
 
-Relation resolve 只处理 role、kind、predicate、direction 与 Theme，随后 lower 为 Core Path。endpoint 的查找、任意 NodeTarget 引用和 unresolved / duplicate-id 诊断都由 Core namespace 统一负责。省略 route 时 lowering 生成 `move(source) → line(target)`；显式 route 使用完整 Core Position language，并原样交给 Core Path
+Relation resolve 只处理 role、kind、predicate、status、direction 与 Theme，随后 lower 为 Core Path。endpoint 的查找、任意 NodeTarget 引用和 unresolved / duplicate-id 诊断都由 Core namespace 统一负责。省略 route 时 lowering 生成 `move(source) → line(target)`；显式 route 使用完整 Core Position language，并原样交给 Core Path
 
 `RelationSchema` 从 Core `PathBaseSchema` 只排除冲突字段：Path discriminator / kind、`children` / `label`、任意 `marks` 与 fill family。其余 identity、metadata、animation、stacking、paint、stroke、effect、dash、line cap/join、圆角与变换字段保持 Core 名称和语义。`labels` 直接使用 Core `IRGeometryLabel`；label 的显式字体子字段与 Relation 默认字体按字段合并
 
@@ -141,6 +147,7 @@ Relation resolve 只处理 role、kind、predicate、direction 与 Theme，随�
 | `role`                 | `string`                                                                                                                           | —                  | 已注册的开放关系语义 key                                                                                                                                  |
 | `kind?`                | `string`                                                                                                                           | —                  | role 内已注册的稳定子类型                                                                                                                                 |
 | `predicate?`           | `{ name: string; params?: IRJsonObject }`                                                                                          | —                  | 已注册 predicate 与 JSON-safe 参数                                                                                                                        |
+| `status?`              | `GraphStatusValue`                                                                                                                 | —                  | 可选闭合图式状态：`error`、`success`、`warning`、`disabled`                                                                                               |
 | `direction?`           | `'none' \| 'forward' \| 'reverse' \| 'both'`                                                                                       | 由 role 决定       | 显式语义方向，必须在 role/kind 允许集合内                                                                                                                 |
 | `labels?`              | `Array<IRGeometryLabel>`                                                                                                           | —                  | 完整 Core Geometry Label；每个 label 的显式颜色、字体与透明度覆盖 Relation 默认                                                                           |
 | `route?`               | `Array<IRGraphRelationRouteStep>`                                                                                                  | source→target 直连 | 完整 Core Path step sequence；route step 不承载 label                                                                                                     |

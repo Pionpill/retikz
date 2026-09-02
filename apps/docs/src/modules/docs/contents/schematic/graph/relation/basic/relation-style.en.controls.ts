@@ -1,4 +1,4 @@
-import { RelationRole } from '@retikz/graph';
+import { GraphStatus, RelationRole } from '@retikz/graph';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
@@ -25,6 +25,19 @@ export const relationStyleControls = definePreviewControls({
             { value: RelationRole.Generalization, label: 'Generalization' },
             { value: RelationRole.Flow, label: 'Flow' },
             { value: RelationRole.Influence, label: 'Influence' },
+          ],
+        },
+        {
+          kind: 'select',
+          id: RelationStyleControlId.Status,
+          label: 'Status',
+          defaultValue: GraphStatus.Warning,
+          options: [
+            { value: '', label: 'No status' },
+            { value: GraphStatus.Error, label: 'Error' },
+            { value: GraphStatus.Success, label: 'Success' },
+            { value: GraphStatus.Warning, label: 'Warning' },
+            { value: GraphStatus.Disabled, label: 'Disabled' },
           ],
         },
       ],
@@ -117,6 +130,7 @@ export const previewControlContract = {
   controls: relationStyleControls,
   canonicalValues: {
     role: RelationRole.Flow,
+    status: GraphStatus.Warning,
     content: 'Next step',
     sourceColor: 'currentColor',
     targetColor: 'currentColor',
@@ -129,6 +143,7 @@ export const previewControlContract = {
   },
   relatedApis: [
     'Relation.role',
+    'Relation.status',
     'Relation.labels',
     'Entity.color',
     'Relation.stroke',

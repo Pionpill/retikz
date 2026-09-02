@@ -340,7 +340,7 @@ describe('Graph Vanilla embed adapters', () => {
   it('keeps embed identity separate from optional authored identity for every composite', () => {
     const graphContribution = lower(graph('graph-embed', {}), GraphInputEmbedAdapter);
     const entityContribution = lower(
-      entity('entity-embed', { type: 'entity', role: 'participant', position: [0, 0] }),
+      entity('entity-embed', { type: 'entity', role: 'participant', status: 'success', position: [0, 0] }),
       EntityInputEmbedAdapter,
     );
     const relationContribution = lower(
@@ -349,6 +349,7 @@ describe('Graph Vanilla embed adapters', () => {
         source: { id: 'source' },
         target: { id: 'target' },
         role: 'association',
+        status: 'warning',
       }),
       RelationInputEmbedAdapter,
     );
@@ -366,6 +367,7 @@ describe('Graph Vanilla embed adapters', () => {
       namespace: 'graph',
       type: 'entity',
       role: 'participant',
+      status: 'success',
       position: [0, 0],
     });
     expect(relationContribution.node).toEqual({
@@ -374,6 +376,7 @@ describe('Graph Vanilla embed adapters', () => {
       source: { id: 'source' },
       target: { id: 'target' },
       role: 'association',
+      status: 'warning',
     });
     expect(groupContribution.node).toEqual({ namespace: 'graph', type: 'group' });
     expect(blockContribution.node).toEqual({ namespace: 'graph', type: 'block' });

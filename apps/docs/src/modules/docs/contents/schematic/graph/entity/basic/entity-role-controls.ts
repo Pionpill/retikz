@@ -1,11 +1,14 @@
 import type { EntityProps } from '@retikz/graph-react';
 
+import { GraphStatus } from '@retikz/graph';
+
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Entity role demo 共用的稳定字段 id */
 export const EntityRoleControlId = {
+  Status: 'status',
   Color: 'color',
   Content: 'content',
 } as const;
@@ -17,11 +20,29 @@ export const defineEntityAppearanceProps = (color: string): Pick<EntityProps, 'c
 type EntityRoleControlCopy = Readonly<{
   title: string;
   sectionLabel: string;
+  statusLocale: 'zh' | 'en';
   colorLabel: string;
   contentLabel: string;
   contentPlaceholder: string;
   content: string;
 }>;
+
+const entityStatusOptions = {
+  zh: [
+    { value: '', label: '无状态' },
+    { value: GraphStatus.Error, label: '错误 - error' },
+    { value: GraphStatus.Success, label: '成功 - success' },
+    { value: GraphStatus.Warning, label: '警告 - warning' },
+    { value: GraphStatus.Disabled, label: '禁用 - disabled' },
+  ],
+  en: [
+    { value: '', label: 'No status' },
+    { value: GraphStatus.Error, label: 'Error' },
+    { value: GraphStatus.Success, label: 'Success' },
+    { value: GraphStatus.Warning, label: 'Warning' },
+    { value: GraphStatus.Disabled, label: 'Disabled' },
+  ],
+} as const;
 
 /** 建立一个本地化 Entity role controls 契约 */
 export const defineEntityRoleControlContract = <const TCopy extends EntityRoleControlCopy>(copy: TCopy) => {
@@ -32,6 +53,13 @@ export const defineEntityRoleControlContract = <const TCopy extends EntityRoleCo
       {
         label: copy.sectionLabel,
         controls: [
+          {
+            kind: 'select',
+            id: EntityRoleControlId.Status,
+            label: copy.statusLocale === 'zh' ? '状态' : 'Status',
+            defaultValue: GraphStatus.Warning,
+            options: entityStatusOptions[copy.statusLocale],
+          },
           {
             kind: 'color',
             id: EntityRoleControlId.Color,
@@ -53,9 +81,10 @@ export const defineEntityRoleControlContract = <const TCopy extends EntityRoleCo
   return {
     controls,
     canonicalValues: {
+      status: GraphStatus.Warning,
       color: 'currentColor',
       content: copy.content,
     },
-    relatedApis: ['Entity.color', 'Entity.children'],
+    relatedApis: ['Entity.status', 'Entity.color', 'Entity.children'],
   } satisfies PreviewControlContract;
 };

@@ -6,7 +6,7 @@ import { Entity, Graph, Relation } from '@retikz/graph-react';
 import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/preview';
 
 import { previewControlContract, relationAssociationControls } from './relation-association.controls';
-import { defineRelationSemanticProps } from './relation-role-controls';
+import { defineRelationSemanticProps, relationStatusOf } from './relation-role-controls';
 
 export const previewControls = relationAssociationControls;
 
@@ -53,6 +53,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Relation
         id="association-demo"
         role="association"
+        status={relationStatusOf(values.status)}
         {...defineRelationSemanticProps(kind, direction)}
         source={{ id: 'source' }}
         target={{ id: 'target' }}

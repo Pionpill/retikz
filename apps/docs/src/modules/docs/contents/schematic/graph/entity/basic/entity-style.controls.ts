@@ -1,4 +1,4 @@
-import { EntityRole } from '@retikz/graph';
+import { EntityRole, GraphStatus } from '@retikz/graph';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
@@ -7,6 +7,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 /** Entity 样式 playground 使用的稳定字段 id */
 export const EntityStyleControlId = {
   Role: 'role',
+  Status: 'status',
   Content: 'content',
   Fill: 'fill',
   Stroke: 'stroke',
@@ -37,6 +38,19 @@ export const entityStyleControls = definePreviewControls({
             { value: EntityRole.Gateway, label: '网关 - gateway' },
             { value: EntityRole.Resource, label: '资源 - resource' },
             { value: EntityRole.Concept, label: '概念 - concept' },
+          ],
+        },
+        {
+          kind: 'select',
+          id: EntityStyleControlId.Status,
+          label: '状态',
+          defaultValue: GraphStatus.Warning,
+          options: [
+            { value: '', label: '无状态' },
+            { value: GraphStatus.Error, label: '错误 - error' },
+            { value: GraphStatus.Success, label: '成功 - success' },
+            { value: GraphStatus.Warning, label: '警告 - warning' },
+            { value: GraphStatus.Disabled, label: '禁用 - disabled' },
           ],
         },
       ],
@@ -89,6 +103,7 @@ export const previewControlContract = {
   controls: entityStyleControls,
   canonicalValues: {
     role: EntityRole.Activity,
+    status: GraphStatus.Warning,
     content: 'Process Order',
     fill: '#e2e8f0',
     stroke: '#2563eb',
@@ -99,6 +114,7 @@ export const previewControlContract = {
   },
   relatedApis: [
     'Entity.role',
+    'Entity.status',
     'Entity.children',
     'Node.fill',
     'Node.stroke',

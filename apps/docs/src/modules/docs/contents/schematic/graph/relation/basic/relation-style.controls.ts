@@ -1,4 +1,4 @@
-import { RelationRole } from '@retikz/graph';
+import { GraphStatus, RelationRole } from '@retikz/graph';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
@@ -7,6 +7,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 /** Relation 样式 playground 使用的稳定字段 id */
 export const RelationStyleControlId = {
   Role: 'role',
+  Status: 'status',
   Content: 'content',
   SourceColor: 'sourceColor',
   TargetColor: 'targetColor',
@@ -37,6 +38,19 @@ export const relationStyleControls = definePreviewControls({
             { value: RelationRole.Generalization, label: '泛化 - generalization' },
             { value: RelationRole.Flow, label: '流动 - flow' },
             { value: RelationRole.Influence, label: '影响 - influence' },
+          ],
+        },
+        {
+          kind: 'select',
+          id: RelationStyleControlId.Status,
+          label: '状态',
+          defaultValue: GraphStatus.Warning,
+          options: [
+            { value: '', label: '无状态' },
+            { value: GraphStatus.Error, label: '错误 - error' },
+            { value: GraphStatus.Success, label: '成功 - success' },
+            { value: GraphStatus.Warning, label: '警告 - warning' },
+            { value: GraphStatus.Disabled, label: '禁用 - disabled' },
           ],
         },
       ],
@@ -129,6 +143,7 @@ export const previewControlContract = {
   controls: relationStyleControls,
   canonicalValues: {
     role: RelationRole.Flow,
+    status: GraphStatus.Warning,
     content: 'Next step',
     sourceColor: 'currentColor',
     targetColor: 'currentColor',
@@ -141,6 +156,7 @@ export const previewControlContract = {
   },
   relatedApis: [
     'Relation.role',
+    'Relation.status',
     'Relation.labels',
     'Entity.color',
     'Relation.stroke',

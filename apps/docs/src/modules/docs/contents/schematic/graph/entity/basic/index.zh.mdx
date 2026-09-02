@@ -108,6 +108,12 @@ Neutral 默认使用完整主色描边和 `fill: 0.08` 的同色轻填充。Grap
 
 <ComponentPreview files="entity-concept" size="sm" caption="调整 concept 的默认描边、Graph Theme 主色和文本。" />
 
+### 语义状态
+
+`status` 为 Entity 保存可直接读取的图式状态：`error`、`success`、`warning` 与 `disabled` 分别使用当前 Core Theme 的 `semantic.error`、`semantic.success`、`semantic.warning` 与 `semantic.guide`。省略它表示没有特别标记，不写入 `normal`。这里的状态不同于 `state` role：前者说明当前图式语义，后者说明节点所表示对象是一种持续条件
+
+每个 Entity role demo 的 controls 都可在“无状态”和这四种状态之间切换。显式 `color`、`fill`、`stroke` 等 Core Node-compatible appearance 仍会覆盖 status 的默认外观，但不会删除 Source 中的 `status`。领域 predicate 的 `params.status` 仍由 predicate 定义解释，不会自动映射为 Graph status
+
 ### 样式调整
 
 下面的综合示例可以切换全部七个内置 role，并直接调整 Core Node-compatible 的填充、描边、透明度与文本样式。role 只改变 Entity 的语义和基础 shape recipe；这些显式样式字段会覆盖对应的 Theme 默认
@@ -134,16 +140,17 @@ Entity 自己完成 registry lookup 并 lower 为普通 Core `Node`。Core、Sce
 
 ## API 参考
 
-| 属性         | 类型                                      | 默认值 | 描述                                               |
-| ------------ | ----------------------------------------- | ------ | -------------------------------------------------- |
-| `id?`        | `string`                                  | —      | 可选 Core target id；省略时不注册引用目标          |
-| `role`       | `string`                                  | —      | 已注册的开放语义角色 key                           |
-| `kind?`      | `string`                                  | —      | role 内已注册的稳定子类型                          |
-| `predicate?` | `{ name: string; params?: IRJsonObject }` | —      | 已注册 predicate 及其 JSON-safe 参数               |
-| `position?`  | `IRPosition`                              | —      | 直接复用 Core Node position language               |
-| `text?`      | `IRNode['text']`                          | —      | Node-compatible text                               |
-| `children?`  | Node-compatible text                      | —      | React authoring 的文本入口；不能承载任意绘图 child |
-| `meta?`      | `IRJsonObject`                            | —      | Graph 不解释的元信息                               |
+| 属性         | 类型                                      | 默认值 | 描述                                                        |
+| ------------ | ----------------------------------------- | ------ | ----------------------------------------------------------- |
+| `id?`        | `string`                                  | —      | 可选 Core target id；省略时不注册引用目标                   |
+| `role`       | `string`                                  | —      | 已注册的开放语义角色 key                                    |
+| `kind?`      | `string`                                  | —      | role 内已注册的稳定子类型                                   |
+| `predicate?` | `{ name: string; params?: IRJsonObject }` | —      | 已注册 predicate 及其 JSON-safe 参数                        |
+| `status?`    | `GraphStatusValue`                        | —      | 可选闭合图式状态：`error`、`success`、`warning`、`disabled` |
+| `position?`  | `IRPosition`                              | —      | 直接复用 Core Node position language                        |
+| `text?`      | `IRNode['text']`                          | —      | Node-compatible text                                        |
+| `children?`  | Node-compatible text                      | —      | React authoring 的文本入口；不能承载任意绘图 child          |
+| `meta?`      | `IRJsonObject`                            | —      | Graph 不解释的元信息                                        |
 
 ## 相关
 

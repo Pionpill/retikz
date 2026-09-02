@@ -68,3 +68,15 @@ export const RelationKind = {
   /** UML 实现关系 */
   UmlRealization: 'uml.realization',
 } as const;
+
+/** Graph Entity 与 Relation 共享的图式语义状态 */
+export const GraphStatus = {
+  /** 已失败、错误或无法继续 */
+  Error: 'error',
+  /** 已成功、已通过或健康 */
+  Success: 'success',
+  /** 需要关注、降级或存在风险 */
+  Warning: 'warning',
+  /** 被显式禁用、不可用或不参与 */
+  Disabled: 'disabled',
+} as const;
