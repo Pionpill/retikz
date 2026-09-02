@@ -32,4 +32,17 @@ describe('Shiki 代码高亮', () => {
     expect(lines[0].length).toBeGreaterThan(1);
     expect(lines[0].some(token => token.color !== undefined)).toBe(true);
   });
+
+  it.each([
+    ['dark', '#4FC1FF'],
+    ['light', '#0070C1'],
+  ] as const)('为 %s 模式应用 Plus 调色板', async (theme, pointColor) => {
+    const lines = await tokenizeHighlightCode({
+      code: 'const point: number = 1;',
+      lang: 'typescript',
+      theme,
+    });
+
+    expect(lines[0].find(token => token.content === 'point')?.color).toBe(pointColor);
+  });
 });

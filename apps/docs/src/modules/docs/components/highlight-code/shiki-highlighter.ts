@@ -29,8 +29,8 @@ const LANGUAGE_ALIASES: Readonly<Record<string, HighlightLanguage>> = {
 };
 
 const THEME_NAMES = {
-  light: 'one-light',
-  dark: 'one-dark-pro',
+  light: 'light-plus',
+  dark: 'dark-plus',
 } as const;
 
 const highlighterPromise = createHighlighter({
