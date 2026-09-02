@@ -26,10 +26,17 @@ export const GeometryLabelSchema = strictObject({
   position: union([zodEnum(GeometryLabelPosition), NormalizedFractionSchema])
     .optional()
     .describe('Position along the step: keyword or normalized number. Parameter meaning follows the step kind.'),
-  side: zodEnum(Side).optional().describe('Canonical side relative to the label anchor. Default `top`.'),
+  side: zodEnum(Side)
+    .optional()
+    .describe(
+      'Authored side relative to the label anchor. An omitted value canonicalizes to `top`, or `center` when `sloped` is true.',
+    ),
   sloped: boolean()
     .optional()
-    .describe('Rotate the label along the sampled tangent while keeping `side` responsible for label placement.'),
+    .describe('Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.'),
+  interrupt: boolean()
+    .optional()
+    .describe('Whether this label requests a gap in a compatible host stroke. Omitted values use the host policy.'),
   placement: zodEnum(GeometryLabelPlacement)
     .optional()
     .describe(

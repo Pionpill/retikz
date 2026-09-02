@@ -1,7 +1,8 @@
+import type { CurveSegmentSample } from '@retikz/math';
+
 import type { PathCommand, ResolvedArrowEnd, ScenePrimitive } from '../../../contract';
 import type { ArrowMarkResolution, CanonicalPath } from '../../../resolve';
 import type { IRPathBase, IRPosition } from '../../../schemas';
-import type { SegmentSample } from '../../../shared/geometry';
 import type { PathPrimitiveEmitResult } from '../types';
 import type { PathBasePropsWithStrokeWidth } from './output';
 
@@ -94,7 +95,7 @@ export type EmitInlineMarkPrimitivesInput = {
   /** 非端点 marks */
   inlineMarks: NonNullable<IRPathBase['marks']>;
   /** 每段几何采样器 */
-  segmentSamplers: Array<(t: number) => SegmentSample>;
+  segmentSamplers: Array<(t: number) => CurveSegmentSample>;
   /** commands 是否已经被 roundedCorners 改写 */
   roundedCommands: boolean;
   /** 已解析 arrow registry */

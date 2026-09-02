@@ -39,6 +39,26 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-09-02',
+          summary: {
+            zh: '无填充内置 Stroke Path 的居中标签默认产生真实描边断口，并用 GeometryLabel.interrupt 提供逐标签覆盖。',
+            en: 'Centered labels on unfilled built-in Stroke Paths now create real stroke gaps by default, with per-label overrides through GeometryLabel.interrupt.',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：居中标签默认断线',
+                en: 'BREAKING: automatic gaps for centered labels',
+              },
+              content: {
+                zh: '`GeometryLabel.interrupt` 让无填充内置 Stroke 的 canonical center 标签（含省略 `side` 的 `sloped: true`）切出真实 Scene 描边片段；SVG、Canvas 与 hit-test 共享同一几何。这是有意的视觉变更：需要旧的连续描边时写 `interrupt: false`。`true` 可强制非居中标签断线；有效 fill 上的 `true`，以及 Ribbon / custom / 其它非内置 Stroke host 的任意显式值都会 fail-loud。',
+                en: '`GeometryLabel.interrupt` makes canonical-center labels on unfilled built-in Stroke paths — including `sloped: true` with an omitted `side` — split into real Scene stroke fragments shared by SVG, Canvas, and hit testing. This is an intentional visual change: write `interrupt: false` to retain the old continuous stroke. `true` can force a non-centered label gap; `true` on an effectively filled Stroke and any explicit value on Ribbon, custom, or another non-built-in Stroke host fail loudly.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.3',
           date: '2026-08-28',
           summary: {
@@ -92,8 +112,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/math',
       version: 'v0.5',
       description: {
-        zh: '随 Kernel release group lockstep 进入 v0.5，并提供跨包共享的二维仿射矩阵原子。',
-        en: 'Moves to v0.5 with the Kernel release group and provides shared 2D affine-matrix primitives.',
+        zh: '随 Kernel release group lockstep 进入 v0.5，并提供跨包共享的二维仿射矩阵与无领域曲线数值原子。',
+        en: 'Moves to v0.5 with the Kernel release group and provides shared 2D affine-matrix and domain-free curve-numerics primitives.',
       },
       highlights: [
         {
@@ -105,6 +125,23 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.5',
+          date: '2026-09-02',
+          summary: {
+            zh: '新增可采样、可按距离反解并可保形切片的 plain-geometry 曲线段 API。',
+            en: 'Adds plain-geometry curve segments that can be sampled, inverted by distance, and sliced without changing kind.',
+          },
+          items: [
+            {
+              label: { zh: '曲线数值单一真源', en: 'One source of truth for curve numerics' },
+              content: {
+                zh: '`CurveSegment`、`CurveSegmentSample` 与 `curve` 从 `@retikz/math` 根入口公开，覆盖直线、二次 / 三次贝塞尔、圆弧和旋转椭圆弧的参数采样、固定预算的长度 / 距离反解及保形切片。它们只接收和返回 plain geometry；PathCommand、标签、断口、Scene、dash、箭头与命中仍由 Core 拥有。',
+                en: '`CurveSegment`, `CurveSegmentSample`, and `curve` are exported from the `@retikz/math` root. They cover parameter sampling, fixed-budget length/distance inversion, and shape-preserving slices for lines, quadratic/cubic Béziers, circular arcs, and rotated elliptical arcs. They accept and return only plain geometry; Core still owns PathCommands, labels, gaps, Scene output, dashes, arrows, and hit testing.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.3',
           date: '2026-08-28',

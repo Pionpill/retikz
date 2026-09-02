@@ -37,6 +37,7 @@ type EdgeLabelElementProps = Readonly<{
   position?: InputStepLabel['position'];
   side?: InputStepLabel['side'];
   sloped?: InputStepLabel['sloped'];
+  interrupt?: InputStepLabel['interrupt'];
   children?: unknown;
 }>;
 
@@ -218,6 +219,7 @@ const readEdgeLabel = (children: ReactNode): InputStepLabel | undefined => {
         ...(props.position === undefined ? {} : { position: props.position }),
         ...(props.side === undefined ? {} : { side: props.side }),
         ...(props.sloped === undefined ? {} : { sloped: props.sloped }),
+        ...(props.interrupt === undefined ? {} : { interrupt: props.interrupt }),
       };
     });
   };

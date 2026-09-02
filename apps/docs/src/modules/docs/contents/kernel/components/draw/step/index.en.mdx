@@ -84,6 +84,8 @@ Attach `label` to a `<Step>` to place text at any normalized position along that
 
 <ComponentPreview files="step-label" size="md" />
 
+On an unfilled built-in `stroke` Path, an edge label with canonical `side: 'center'` gaps the real stroke beneath its text by default. `sloped: true` without `side` also canonicalizes to `center`; non-centered labels stay continuous by default. Each label can use `interrupt: false` to force continuity or `interrupt: true` to force a gap; see [Path labels and stroke gaps](/kernel/components/draw/path#label-interruption) for the host boundary.
+
 The panel adjusts `position`, `side`, `sloped`, and text color together. `position` accepts seven keywords or a numeric t in `[0, 1]`; the keyword mapping and complete fields live in the [edge-label API table](#edge-labels) below instead of being repeated in the examples.
 
 ### Styling
@@ -92,14 +94,14 @@ The panel adjusts `position`, `side`, `sloped`, and text color together. `positi
 
 <Comparison target="tikz" title="Basic Step Path Syntax">
 
-| retikz                                    | TikZ mapping                         |
-| ----------------------------------------- | ------------------------------------ |
-| `kind="fold"` + `via="-\|"` / `"\|-"`     | `(A) -\| (B)` / `(A) \|- (B)`        |
+| retikz                                    | TikZ mapping                              |
+| ----------------------------------------- | ----------------------------------------- |
+| `kind="fold"` + `via="-\|"` / `"\|-"`     | `(A) -\| (B)` / `(A) \|- (B)`             |
 | `kind="fold"` + `via="-\|-"` / `"\|-\|"`  | Common three-leg flowchart graphConnector |
-| `kind="cycle"`                            | `cycle`                              |
-| `{ of, offset }` target                   | calc-library `($(of) + (dx, dy)$)`   |
-| `{ relative }` / `{ relativeAccumulate }` | `(+x, +y)` / `(++x, ++y)`            |
-| `kind="rectangle"`                        | `(a) rectangle (b)`                  |
+| `kind="cycle"`                            | `cycle`                                   |
+| `{ of, offset }` target                   | calc-library `($(of) + (dx, dy)$)`        |
+| `{ relative }` / `{ relativeAccumulate }` | `(+x, +y)` / `(++x, ++y)`                 |
+| `kind="rectangle"`                        | `(a) rectangle (b)`                       |
 
 </Comparison>
 
@@ -159,9 +161,9 @@ This ordering lets JSX, direct IR, and `<Draw>` sugar reuse the same geometry co
   sources={[
     {
       label: 'Relative-target normalization',
-      path: 'packages/kernel/core/src/compile/path/host/relative.ts',
-      startLine: 10,
-      endLine: 95,
+      path: 'packages/kernel/core/src/resolve/path/resolve.ts',
+      startLine: 342,
+      endLine: 458,
     },
     {
       label: 'Target normalization and the per-Step compile loop',
@@ -192,19 +194,19 @@ This ordering lets JSX, direct IR, and `<Draw>` sugar reuse the same geometry co
 
 ### Geometric meaning of t per step kind
 
-`label.position` first maps to a `0..1` parameter t. The compiler then asks the current kind's geometry sampler for a point and tangent: `side` offsets from that point, while `sloped` rotates by the tangent. Consequently, t means “progress through this kind's parametrization,” which is not always visual arc-length progress.
+`label.position` first maps to a `0..1` parameter t. The compiler then asks the current kind's geometry sampler for a point and tangent: `side` offsets from that point, while `sloped` rotates by the tangent. Other than generator, t retains each kind's own parametrization and is not always visual arc-length progress; an interrupted generator label samples accumulated length along its real generated commands.
 
-| Step kind                | Parametrization of t                                                           | Meaning of `t=0.5`                                                    |
-| ------------------------ | ------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| `'line'` / `'axis-line'` | Normalized arc length                                                          | Midpoint of the projected straight segment                            |
-| `'fold'`                 | `t` is split by leg count, independent of length: halves or thirds             | Breakpoints belong to the preceding leg                               |
-| `'curve'` / `'cubic'`    | Bezier parameter, **not arc length**                                           | Usually not the visual midpoint                                       |
-| `'bend'`                 | Bezier parameter after lowering to cubic                                       | Same as cubic                                                         |
-| `'smooth'`               | Generated cubic segments split t evenly;<br />each interval then uses Bezier t | Depends on segment count, not full-curve arc length                   |
-| `'generator'`            | Linear interpolation from the cursor on entry to the final pen position        | Midpoint of those endpoints; it does not follow intermediate commands |
-| `'arc'`                  | Linear interpolation across `startAngle..endAngle`                             | Mid angle                                                             |
-| `'circlePath'`           | Full-circle angle 0→360, with 0 at +x                                          | 180° (−x)                                                             |
-| `'ellipsePath'`          | Same as circlePath; parameter angle rather than uniform arc-length sampling    | 180° (−x); arbitrary `t` is not uniformly distributed by arc length   |
+| Step kind                | Parametrization of t                                                                                                                          | Meaning of `t=0.5`                                                      |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `'line'` / `'axis-line'` | Normalized arc length                                                                                                                         | Midpoint of the projected straight segment                              |
+| `'fold'`                 | `t` is split by leg count, independent of length: halves or thirds                                                                            | Breakpoints belong to the preceding leg                                 |
+| `'curve'` / `'cubic'`    | Bezier parameter, **not arc length**                                                                                                          | Usually not the visual midpoint                                         |
+| `'bend'`                 | Bezier parameter after lowering to cubic                                                                                                      | Same as cubic                                                           |
+| `'smooth'`               | Generated cubic segments split t evenly;<br />each interval then uses Bezier t                                                                | Depends on segment count, not full-curve arc length                     |
+| `'generator'`            | Interrupted labels use accumulated length of real generated commands; continuous labels retain entry-cursor-to-final-pen linear interpolation | Gap: halfway along the real command walk; continuous: endpoint midpoint |
+| `'arc'`                  | Linear interpolation across `startAngle..endAngle`                                                                                            | Mid angle                                                               |
+| `'circlePath'`           | Full-circle angle 0→360, with 0 at +x                                                                                                         | 180° (−x)                                                               |
+| `'ellipsePath'`          | Same as circlePath; parameter angle rather than uniform arc-length sampling                                                                   | 180° (−x); arbitrary `t` is not uniformly distributed by arc length     |
 
 Circle and ellipse angles increase in screen coordinates, so 90° is visually downward.
 
@@ -316,23 +318,24 @@ Only meaningful when `kind="fold"`. Let the unclipped source reference be `(px, 
 
 ### Edge labels
 
-| Prop    | Type          | Default | Description                                                                                                                                                                                                                        |
-| ------- | ------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label` | `IRStepLabel` | —       | Edge label (works on every kind except `'move'` / `'cycle'` / `'rectangle'`): `{ text, position?, side?, textColor?, opacity?, font? }`; `<EdgeLabel>` sugar covers text / position / side / sloped, and the prop wins on conflict |
+| Prop    | Type          | Default | Description                                                                                                                                                                                                                                                         |
+| ------- | ------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label` | `IRStepLabel` | —       | Edge label (works on every kind except `'move'` / `'cycle'` / `'rectangle'`): `{ text, position?, side?, sloped?, interrupt?, textColor?, opacity?, font? }`; `<EdgeLabel>` sugar covers text / position / side / sloped / interrupt, and the prop wins on conflict |
 
 ### Fields of `label`
 
 `label` is a single object, applied uniformly across all kinds that accept it:
 
-| Field       | Type                                                   | Default    | Description                                                                                                                                                                                                                                 |
-| ----------- | ------------------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `text`      | `string`                                               | —          | Required label text (single line)                                                                                                                                                                                                           |
-| `position`  | <ApiValues name="GeometryLabelPosition" /> \| `number` | `'midway'` | Normalized position t along the segment — keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1); values outside `[0, 1]` are rejected by the schema |
-| `side`      | <ApiValues name="Side" />                              | `'top'`    | Edge-label side relative to the segment. Compass aliases `north` / `south` / `east` / `west` are accepted                                                                                                                                   |
-| `sloped`    | `boolean`                                              | `false`    | Whether to rotate along the segment tangent; can still be combined with `side` for placement                                                                                                                                                |
-| `textColor` | `string`                                               | —          | Label text color; falls back to scope `labelDefault` → host path master `color` → currentColor (follows the master color, not stroke)                                                                                                       |
-| `opacity`   | `number`                                               | —          | Label-only opacity 0..1; multiplied with the owning path opacity (does not compound across scopes)                                                                                                                                          |
-| `font`      | `IRFont`                                               | —          | Label font overrides (family / size / weight / style); per-field fallback to `labelDefault` → renderer default                                                                                                                              |
+| Field       | Type                                                   | Default                                                                       | Description                                                                                                                                                                                                                                                                      |
+| ----------- | ------------------------------------------------------ | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`      | `string`                                               | —                                                                             | Required label text (single line)                                                                                                                                                                                                                                                |
+| `position`  | <ApiValues name="GeometryLabelPosition" /> \| `number` | `'midway'`                                                                    | Normalized position t along the segment — keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1); values outside `[0, 1]` are rejected by the schema                                      |
+| `side`      | <ApiValues name="Side" />                              | Without `sloped`: canonical `'top'`<br />`sloped: true`: canonical `'center'` | Authorable edge-label side relative to the segment. Compass aliases `north` / `south` / `east` / `west` are accepted; an explicit `side` always wins                                                                                                                             |
+| `sloped`    | `boolean`                                              | `false`                                                                       | Whether to rotate along the segment tangent. When `side` is omitted, true canonicalizes it to `center`; an explicit `side` still controls offset placement                                                                                                                       |
+| `interrupt` | `boolean`                                              | Host policy                                                                   | Whether to request a stroke gap. Omitted = enabled for an unfilled built-in Stroke with canonical center; `false` forces continuity and `true` forces a gap. `true` on filled Stroke, and any explicit value on Ribbon / custom / another non-built-in Stroke host, fails loudly |
+| `textColor` | `string`                                               | —                                                                             | Label text color; falls back to scope `labelDefault` → host path master `color` → currentColor (follows the master color, not stroke)                                                                                                                                            |
+| `opacity`   | `number`                                               | —                                                                             | Label-only opacity 0..1; multiplied with the owning path opacity (does not compound across scopes)                                                                                                                                                                               |
+| `font`      | `IRFont`                                               | —                                                                             | Label font overrides (family / size / weight / style); per-field fallback to `labelDefault` → renderer default                                                                                                                                                                   |
 
 The geometric meaning of t per step kind, including the `smooth` / `generator` boundaries, is in the "[Geometric meaning of t per step kind](#geometric-meaning-of-t-per-step-kind)" table above.
 

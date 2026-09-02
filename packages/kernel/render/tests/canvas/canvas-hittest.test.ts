@@ -1,5 +1,6 @@
 import type { Scene } from '@retikz/core';
 
+import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { hitTest } from '../../src/canvas';
@@ -310,5 +311,31 @@ describe('Canvas hitTest', () => {
       primitives: [{ type: 'rect', x: 0, y: 0, width: 20, height: 20, fill: '#f00' }],
     };
     expect(hitTest(scene, { x: 10, y: 10 }, { context2d: ctx() })).toBeNull();
+  });
+
+  it('centered label interruption makes the real stroke gap non-hittable while visible fragments retain their owner id', () => {
+    const scene = compileToScene(
+      {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            id: 'edge',
+            stroke: '#13579b',
+            label: { text: 'gap', sloped: true },
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [100, 0] },
+            ],
+          },
+        ],
+      },
+      { measureText: () => ({ width: 20, height: 10 }) },
+    ).scene;
+
+    expect(hitTest(scene, { x: 20, y: 0 }, { context2d: ctx() })).toBe('edge');
+    expect(hitTest(scene, { x: 50, y: 0 }, { context2d: ctx() })).toBeNull();
+    expect(hitTest(scene, { x: 80, y: 0 }, { context2d: ctx() })).toBe('edge');
   });
 });

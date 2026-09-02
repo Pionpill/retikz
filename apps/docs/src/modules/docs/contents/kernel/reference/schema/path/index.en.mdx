@@ -140,6 +140,8 @@ The strict two-leg variants `-|` / `|-` reject `fraction`. Three-leg `-|-` / `|-
 `GeometryLabelSchema` is the shared label contract for path-like hosts. `StepLabelSchema` is an alias of this schema; drawn steps and optional Standard Ribbon centerline labels reuse the same fields.
 It describes label text, normalized position along the host segment or centerline, and tangent / normal-side placement.
 
+`interrupt` declares JSON shape here, but is not drawing capability for every host. Once Core resolve knows the effective Path kind and fill, it applies the policy: an unfilled built-in `stroke` Path automatically gaps an omitted label with canonical `center` side; `sloped: true` without `side` is also canonical center. `false` keeps a continuous stroke and `true` can force a non-centered label gap. `true` on an effectively filled Stroke, and any explicit boolean on Ribbon, custom, or another non-built-in Stroke Path, fails loudly.
+
 <ZodSchema name="GeometryLabelSchema" />
 
 ## ControlPoint

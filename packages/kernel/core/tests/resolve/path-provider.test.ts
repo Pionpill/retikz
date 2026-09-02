@@ -45,6 +45,43 @@ describe('resolve/path provider bindings', () => {
     expect(resolvePathWithBuiltinProviders(path()).kind.name).toBe('stroke');
   });
 
+  it('reports unsupported explicit interruption before a custom strict path-kind schema parses the label', () => {
+    const strictRibbon = definePathKind({
+      name: 'ribbon',
+      schema: PathSchema.extend({
+        kind: literal('ribbon'),
+        label: strictObject({ text: string() }).optional(),
+      }),
+      compile: () => null,
+    });
+
+    expect(() =>
+      resolvePathWithBuiltinProviders(path({ kind: 'ribbon', label: { text: 'unsupported', interrupt: false } }), {
+        pathKinds: resolvePathKindRegistry([strictRibbon]),
+      }),
+    ).toThrow(/label\.interrupt.*built-in stroke path/i);
+  });
+
+  it('reports filled Stroke interruption requests at the host-array and step-label locators', () => {
+    expect(() =>
+      resolvePathWithBuiltinProviders(path({ fill: 'gold', label: [{ text: 'host', interrupt: true }] })),
+    ).toThrow(/label\[0\]\.interrupt.*filled stroke path/i);
+
+    expect(() =>
+      resolvePathWithBuiltinProviders(
+        path({
+          fill: 'gold',
+          children: [steps[0], { type: 'step', kind: 'line', to: [10, 0], label: { text: 'step', interrupt: true } }],
+        }),
+      ),
+    ).toThrow(/children\[1\]\.label\.interrupt.*filled stroke path/i);
+
+    expect(
+      resolvePathWithBuiltinProviders(path({ fill: 'gold', label: { text: 'continuous', interrupt: false } })).path
+        .label,
+    ).toMatchObject([{ text: 'continuous', interrupt: false }]);
+  });
+
   it('fails unknown path kinds through the resolver registry diagnostic', () => {
     expect(() =>
       resolvePathWithBuiltinProviders(path({ kind: 'missing' }), { pathKinds: resolvePathKindRegistry() }),

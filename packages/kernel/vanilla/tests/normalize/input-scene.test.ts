@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition, IRPath } from '@retikz/core';
 
-import { CompositeBaseSchema, DEFAULT_RESOLVED_THEME, defineComposite, ThemeMode } from '@retikz/core';
+import { CompositeBaseSchema, DEFAULT_RESOLVED_THEME, defineComposite, SceneSchema, ThemeMode } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
@@ -140,6 +140,29 @@ describe('@retikz/vanilla InputScene', () => {
     };
 
     expect(normalizeScene({ children: [corePath] }).ir.children[0]).toBe(corePath);
+  });
+
+  it('直接 Core Path 的 host 与 step label interrupt 经归一化后保持 JSON 合法', () => {
+    const normalized = normalizeScene({
+      children: [
+        {
+          type: 'path',
+          label: { text: 'host', interrupt: false },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0], label: { text: 'step', interrupt: true } },
+          ],
+        },
+      ],
+    });
+
+    expect(SceneSchema.parse(JSON.parse(JSON.stringify(normalized.ir))).children).toMatchObject([
+      {
+        type: 'path',
+        label: { text: 'host', interrupt: false },
+        children: [{ kind: 'move' }, { kind: 'line', label: { text: 'step', interrupt: true } }],
+      },
+    ]);
   });
 
   it('localNamespace InputScope 允许遮蔽外层 identity', () => {

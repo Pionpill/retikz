@@ -1,5 +1,5 @@
-import type { IRPosition, SegmentSample } from '@retikz/core';
-import type { Vector2 } from '@retikz/math';
+import type { IRPosition } from '@retikz/core';
+import type { CurveSegmentSample, Vector2 } from '@retikz/math';
 
 import { isFinitePoint, vector2 } from '@retikz/math';
 
@@ -12,7 +12,7 @@ import { alignTangentNormal, blendTangent } from '../centerline';
 const ENDPOINT_DIRECTION_BLEND_SPAN = 0.18;
 
 export type RibbonCrossSectionInput = {
-  sample: SegmentSample;
+  sample: CurveSegmentSample;
   offset: number;
   widthAt: (offset: number) => number;
   endpointTangents: { start: Vector2; end: Vector2 };

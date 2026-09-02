@@ -32,6 +32,17 @@ const firstPath = (primitives: Array<ScenePrimitive>, stroke: string): PathPrim 
 const firstRect = (primitives: Array<ScenePrimitive>, id: string): RectPrim | undefined =>
   flattenPrims(primitives).find((p): p is RectPrim => p.type === 'rect' && p.id === id);
 
+const strokeFragments = (primitives: Array<ScenePrimitive>, stroke: string): Array<PathPrim> =>
+  flattenPrims(primitives).filter(
+    (primitive): primitive is PathPrim => primitive.type === 'path' && primitive.stroke === stroke,
+  );
+
+const firstMoveX = (path: PathPrim): number => {
+  const command = path.commands.find(candidate => candidate.kind === 'move');
+  if (command === undefined) throw new Error('missing move command');
+  return command.to[0];
+};
+
 describe('stroke dash offset', () => {
   it('schema accepts finite positive/negative dashOffset and rejects non-finite values', () => {
     expect(PathSchema.safeParse(strokePath(-3)).success).toBe(true);
@@ -105,5 +116,33 @@ describe('stroke dash offset', () => {
     expect(firstPath(scene.primitives, '#456')?.dashOffset).toBe(7);
     expect(firstRect(scene.primitives, 'dashed')?.dashPattern).toEqual([4, 2]);
     expect(firstRect(scene.primitives, 'dashed')?.dashOffset).toBeUndefined();
+  });
+
+  it('preserves the logical dash phase when a centered label splits the stroke', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          stroke: '#123',
+          dashPattern: [11, 7],
+          dashOffset: 3,
+          label: { text: 'gap', position: 0.42, sloped: true },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    const fragments = strokeFragments(
+      compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
+      '#123',
+    ).sort((left, right) => firstMoveX(left) - firstMoveX(right));
+
+    expect(fragments).toHaveLength(2);
+    expect(fragments[0].dashOffset).toBe(3);
+    expect(fragments[1].dashOffset).not.toBe(3);
   });
 });

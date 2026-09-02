@@ -27,6 +27,8 @@ import type {
   TargetResolution,
 } from './types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import { PathKind } from '../../schemas';
 import {
   isAtPositionLike,
   isBetweenPositionLike,
@@ -52,21 +54,74 @@ const LABEL_POSITION: Record<string, number> = {
   'at-end': 1,
 };
 
-const canonicalizeLabel = (label: ResolvedGeometryLabel): CanonicalGeometryLabel => ({
-  ...label,
-  position:
-    label.position === undefined
-      ? 0.5
-      : typeof label.position === 'number'
-        ? label.position
-        : (LABEL_POSITION[label.position] ?? 0.5),
-  side: label.side ?? (label.sloped === true || label.placement === 'inside' ? 'center' : 'top'),
-  distance: label.distance ?? 4,
-});
+/** 判断 Path 是否为内置 Stroke 宿主 */
+const isBuiltinStrokePath = (path: ResolvedPathSource): boolean => (path.kind ?? PathKind.Stroke) === PathKind.Stroke;
 
-const canonicalizeStep = (step: ResolvedStepSource): CanonicalStep => {
+/** 判断 Path 是否没有有效填充 */
+const hasNoEffectivePathFill = (path: ResolvedPathSource): boolean => path.fill === undefined || path.fill === 'none';
+
+/** 验证显式 label interruption 是否可以由当前 Path 承载 */
+const assertGeometryLabelInterruption = (
+  label: ResolvedGeometryLabel,
+  path: ResolvedPathSource,
+  labelPath: string,
+): void => {
+  if (label.interrupt === undefined) return;
+  if (!isBuiltinStrokePath(path)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Resolve,
+      `Path label interruption at ${labelPath}.interrupt is only supported by an unfilled built-in Stroke path.`,
+    );
+  }
+  if (label.interrupt && !hasNoEffectivePathFill(path)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Resolve,
+      `Path label interruption at ${labelPath}.interrupt cannot be used on a filled Stroke path.`,
+    );
+  }
+};
+
+/** 在 provider 解析前验证所有显式标签断线请求 */
+const assertPathLabelInterruptionPolicy = (path: ResolvedPathSource, irPath: string): void => {
+  if (path.label !== undefined) {
+    if (Array.isArray(path.label)) {
+      for (const [index, label] of path.label.entries()) {
+        assertGeometryLabelInterruption(label, path, `${irPath}.label[${index}]`);
+      }
+    } else {
+      assertGeometryLabelInterruption(path.label, path, `${irPath}.label`);
+    }
+  }
+  for (const [index, step] of (path.children ?? []).entries()) {
+    if ('label' in step && step.label !== undefined) {
+      assertGeometryLabelInterruption(step.label, path, `${irPath}.children[${index}].label`);
+    }
+  }
+};
+
+/** 展开位置、方向、距离与 interruption 的默认值 */
+const canonicalizeLabel = (
+  label: ResolvedGeometryLabel,
+  canAutomaticallyInterrupt: boolean,
+): CanonicalGeometryLabel => {
+  const side = label.side ?? (label.sloped === true || label.placement === 'inside' ? 'center' : 'top');
+  return {
+    ...label,
+    position:
+      label.position === undefined
+        ? 0.5
+        : typeof label.position === 'number'
+          ? label.position
+          : (LABEL_POSITION[label.position] ?? 0.5),
+    side,
+    distance: label.distance ?? 4,
+    interrupt: label.interrupt ?? (canAutomaticallyInterrupt && side === 'center'),
+  };
+};
+
+const canonicalizeStep = (step: ResolvedStepSource, canAutomaticallyInterrupt: boolean): CanonicalStep => {
   if (step.kind === 'move' || step.kind === 'cycle' || step.kind === 'rectangle') return step;
-  const label = step.label === undefined ? undefined : canonicalizeLabel(step.label);
+  const label = step.label === undefined ? undefined : canonicalizeLabel(step.label, canAutomaticallyInterrupt);
   if (step.kind === 'fold') {
     switch (step.via) {
       case '-|-':
@@ -92,16 +147,20 @@ const canonicalizeStep = (step: ResolvedStepSource): CanonicalStep => {
   return { ...step, label };
 };
 
-const canonicalizeSteps = (steps: ReadonlyArray<ResolvedStepSource> | undefined): Array<CanonicalStep> | undefined =>
-  steps?.map(canonicalizeStep);
+const canonicalizeSteps = (
+  steps: ReadonlyArray<ResolvedStepSource> | undefined,
+  canAutomaticallyInterrupt: boolean,
+): Array<CanonicalStep> | undefined => steps?.map(step => canonicalizeStep(step, canAutomaticallyInterrupt));
 
-const canonicalizePath = (path: ResolvedPathSource): CanonicalPath => ({
+const canonicalizePath = (path: ResolvedPathSource, canAutomaticallyInterrupt: boolean): CanonicalPath => ({
   ...path,
-  children: canonicalizeSteps(path.children),
+  children: canonicalizeSteps(path.children, canAutomaticallyInterrupt),
   label:
     path.label === undefined
       ? undefined
-      : (Array.isArray(path.label) ? path.label : [path.label]).map(canonicalizeLabel),
+      : (Array.isArray(path.label) ? path.label : [path.label]).map(label =>
+          canonicalizeLabel(label, canAutomaticallyInterrupt),
+        ),
   shadow: resolveDropShadow(path.shadow),
 });
 
@@ -405,9 +464,11 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
   const labelDefault = resolveEffectiveLabelDefault(context.styleStack ?? []);
   const labelMasterColor = labelDefault.color ?? styled.color;
   const colorsResolved = resolvePathContextualColors(styled, context, irPath, labelMasterColor);
+  const canAutomaticallyInterrupt = isBuiltinStrokePath(colorsResolved) && hasNoEffectivePathFill(colorsResolved);
+  assertPathLabelInterruptionPolicy(colorsResolved, irPath);
   const kind = resolvePathKind(colorsResolved, context, irPath);
   const providerColorsResolved = resolvePathContextualColors(kind.path, context, irPath, labelMasterColor);
-  const canonicalPath = canonicalizePath(providerColorsResolved);
+  const canonicalPath = canonicalizePath(providerColorsResolved, canAutomaticallyInterrupt);
   const targets = new Map<string, TargetResolution>();
   const scopeChain = context.scopeChain ?? [];
   const canonicalSteps =

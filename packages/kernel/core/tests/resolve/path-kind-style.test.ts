@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { resolveEffectivePath } from '../../src/resolve/style/path';
+import { resolvePathWithBuiltinProviders } from './path-helper';
 
 describe('path kind host style', () => {
   it.each([
@@ -22,5 +23,21 @@ describe('path kind host style', () => {
 
     expect(resolved.color).toBe(color);
     expect(resolved.stroke).toBeUndefined();
+  });
+
+  it('uses cascaded fill before rejecting a requested label interruption', () => {
+    expect(() =>
+      resolvePathWithBuiltinProviders(
+        {
+          type: 'path',
+          label: { text: 'filled', interrupt: true },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [10, 0] },
+          ],
+        },
+        { styleStack: [{ cascade: {}, pathDefault: { fill: 'red' } }] },
+      ),
+    ).toThrow(/label\.interrupt.*filled stroke path/i);
   });
 });

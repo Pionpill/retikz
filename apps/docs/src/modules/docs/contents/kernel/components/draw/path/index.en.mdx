@@ -47,6 +47,32 @@ Compare a polyline, multiple subpaths, and a closed fill in one panel. Repeated 
 
 <ComponentPreview files="path-structure" size="sm" />
 
+<span id="label-interruption"></span>
+
+### Path labels and stroke gaps
+
+`<Path label>` samples on the whole Path, while `<Step label>` samples only on its owning Step. When an unfilled built-in `stroke` Path has canonical `side: 'center'`, Core removes real stroke geometry beneath the text rather than painting a backdrop. `sloped: true` with no `side` also canonicalizes to `center`.
+
+<ComponentPreview files="path-label-interruption" size="md" />
+
+With the upper-left and lower-right nodes fixed, switch the connection route, `side`, and the label position from 0 to 1 to observe sampling and gaps on the same host Path. “Automatic center” omits `side` and enables only `sloped`, so it still follows the centered-label default gap rule.
+
+<ComponentPreview
+  files={[
+    'path-label-route-playground',
+    'path-label-route-playground.tsx',
+    'path-label-route-playground.en.controls.ts',
+  ]}
+  size="md"
+  caption="Switch the route and label position: automatic center gaps the stroke; the other side values stay continuous by default."
+/>
+
+When `interrupt` is omitted, only that unfilled built-in Stroke + centered combination gets an automatic gap. `interrupt: false` forces a continuous stroke; `interrupt: true` can also gap a non-centered label.
+
+Any effective `fill` — including `fill="transparent"` or `fillOpacity={0}` — disables the automatic gap, and `interrupt: true` then fails loudly. Any explicit boolean on Ribbon, a custom Path kind, or another non-built-in Stroke host also fails loudly. The gap does not move labels, marks, dash phase, or endpoint arrows, and does not avoid label / arrow or mark collisions.
+
+Sampling a curve at a parameter, inverting distance, and taking a shape-preserving slice belong to the [`@retikz/math` curve-segment algorithms](/kernel/packages/base/math-algorithms#curve-slicing). They operate on plain geometry only; Core still decides label interruption, gap clearance, and Path output.
+
 ### Endpoints and connections
 
 #### Arrows
@@ -124,7 +150,7 @@ After installing `@retikz/inspect`, use `InspectLayout` and `InspectPath` to sel
 
 <ComponentPreview files="path-rounded-corners" size="sm" />
 
-`roundedCorners` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. The panel shows `lineJoin` above and geometric rounding below so you can drag the radius and compare them directly. (Note: per-step edge `label`s are currently positioned along the step's own segment and are not re-fitted to the shortened, rounded geometry.)
+`roundedCorners` changes the **path geometry** — it pulls the joint vertices back and inserts a tangent arc, so it affects the bounding box, arc length, path-level `marks` normalization, and connection-point resolution. This is distinct from `lineJoin`, which only styles the **stroke render** while the path centerline stays a sharp fold. The panel shows `lineJoin` above and geometric rounding below so you can drag the radius and compare them directly. (Note: continuous step `label`s retain their existing step-local sampling; interrupted labels sample final rounded geometry so the gap aligns with the visible stroke.)
 
 <Comparison target="tikz" title="Path Syntax Mapping">
 
@@ -201,7 +227,7 @@ The built-in `stroke` kind and external kinds use the same registry and collisio
 
 ### How stroke materializes geometry
 
-The default stroke path first resolves relative targets, node references, and generators into path commands (`PathCommand`: materialized move / line / arc geometry). `roundedCorners` then rewrites those commands before marks and endpoint-arrow shrinking are calculated. Finally, `rotate` / `scale` wrap the main path, labels, and marks in one group. Marks therefore follow the rounded arc length and tangent, while whole-path transforms keep decorations attached.
+The default stroke path first resolves relative targets, node references, and generators into path commands (`PathCommand`: materialized move / line / arc geometry). `roundedCorners` then rewrites those commands. Labels still sample the uncut logical path; a compatible `interrupt` projects the text visual box, removes only stroke geometry, and emits path fragments that retain command form and the original logical owner. Marks, endpoint arrows, and dash phase still follow the logical path, then `rotate` / `scale` wrap the main path, labels, and marks in one group.
 
 <SourceLinks
   sources={[
@@ -212,10 +238,10 @@ The default stroke path first resolves relative targets, node references, and ge
       endLine: 277,
     },
     {
-      label: 'Rounded geometry, marks, and arrow order',
+      label: 'Rounded geometry, label gaps, and decorations',
       path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
-      startLine: 279,
-      endLine: 320,
+      startLine: 301,
+      endLine: 425,
     },
   ]}
 />
@@ -230,7 +256,7 @@ The default stroke path first resolves relative targets, node references, and ge
 | `kind`           | <ApiValues name="PathKind" /> \| `string`           | `'stroke'`     | Open Path kind provider name. Core includes only `'stroke'`; other kinds are explicitly registered through the Path kind contract. See the optional Standard [Ribbon Path kind](/library/standard/extension/ribbon)                                                                                                                                                 |
 | `kindOptions`    | `IRPathBase['kindOptions']`                         | —              | JSON-safe options for the selected Path kind. The Core host accepts this object first; the registered definition's complete subject schema validates it during resolution                                                                                                                                                                                           |
 | `color`          | `string`                                            | —              | Master color; `stroke` / arrow / step label default to it unless individually set (follows the master color, not `stroke`)                                                                                                                                                                                                                                          |
-| `stroke`         | `string` \| `IRPaint`                           | `currentColor` | Stroke paint: CSS color or IRPaint (gradient / pattern / image); arrows that inherit stroke need an explicit solid arrow color                                                                                                                                                                                                                                  |
+| `stroke`         | `string` \| `IRPaint`                               | `currentColor` | Stroke paint: CSS color or IRPaint (gradient / pattern / image); arrows that inherit stroke need an explicit solid arrow color                                                                                                                                                                                                                                      |
 | `strokeWidth`    | `number`                                            | `1`            | Stroke width                                                                                                                                                                                                                                                                                                                                                        |
 | `dashPattern`    | `Array<number>`                                     | —              | Dash/gap lengths in user units (e.g. `[4, 2]`)                                                                                                                                                                                                                                                                                                                      |
 | `dashOffset`     | `number`                                            | —              | Dash start offset in path user units                                                                                                                                                                                                                                                                                                                                |
@@ -240,7 +266,7 @@ The default stroke path first resolves relative targets, node references, and ge
 | `thickness`      | <ApiValues name="PathThickness" />                  | —              | Component / builder sugar resolved to `strokeWidth` before IR is produced; explicit `strokeWidth` always wins                                                                                                                                                                                                                                                       |
 | `arrow`          | `'none'` \| `'->'` \| `'<-'` \| `'<->'`             | —              | Path-level arrow direction (see [Arrow](/kernel/components/draw/arrow))                                                                                                                                                                                                                                                                                             |
 | `arrowDetail`    | `IRArrowDetail`                                     | —              | Arrow visual config; fields documented on [Arrow](/kernel/components/draw/arrow)                                                                                                                                                                                                                                                                                    |
-| `fill`           | `string` \| `IRPaint`                           | `'none'`       | Fill of the closed region: any CSS color, or IRPaint (gradient / pattern / image)                                                                                                                                                                                                                                                                               |
+| `fill`           | `string` \| `IRPaint`                               | `'none'`       | Fill of the closed region: any CSS color, or IRPaint (gradient / pattern / image)                                                                                                                                                                                                                                                                                   |
 | `fillRule`       | <ApiValues name="PathFillRule" />                   | `'nonzero'`    | Fill rule; use `'evenodd'` for rings / holes                                                                                                                                                                                                                                                                                                                        |
 | `opacity`        | `number`                                            | —              | Whole-path opacity 0..1 (multiplies onto stroke and fill)                                                                                                                                                                                                                                                                                                           |
 | `fillOpacity`    | `number`                                            | —              | Fill-only opacity 0..1                                                                                                                                                                                                                                                                                                                                              |
@@ -250,6 +276,7 @@ The default stroke path first resolves relative targets, node references, and ge
 | `zIndex`         | `number` (integer)                                  | `0`            | Explicit stacking order: higher draws on top; ties keep declaration order; effective only among siblings at the same level                                                                                                                                                                                                                                          |
 | `rotate`         | `number`                                            | —              | Whole-path rotation in degrees (around the bounding-box center)                                                                                                                                                                                                                                                                                                     |
 | `scale`          | `IRPathScale`                                       | —              | Whole-path scale (number = uniform / `{ x, y }` = non-uniform, around the bounding-box center)                                                                                                                                                                                                                                                                      |
+| `label`          | `IRGeometryLabel` \| `Array<IRGeometryLabel>`       | —              | Host label: one or more labels positioned on the complete Path. A centered label on an unfilled built-in Stroke gaps by default; see [Path labels and stroke gaps](#label-interruption)                                                                                                                                                                             |
 | `marks`          | `IRPathBase['marks']`                               | —              | Marks along the path: `pos∈[0,1]`, `mark.kind:'arrow'` + a registered arrow name, oriented by the tangent at that point                                                                                                                                                                                                                                             |
 | `animations`     | `IRPathBase['animations']`                          | —              | Timeline animation tracks, passed through onto the primitives this path emits; renderers play them or fall back to static. See [Animation](/kernel/components/effects/animation)                                                                                                                                                                                    |
 | `children`       | `PathProps['children']`                             | —              | Required by the default `stroke` kind. If the first isn't `move`, the compiler coerces it to `move`; other kinds own their structural constraints in their definition schema                                                                                                                                                                                        |

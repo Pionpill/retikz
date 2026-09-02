@@ -1,7 +1,14 @@
 import type { IRClip, IRPathBase, IRScene } from '@retikz/core';
 import type { ReactElement } from 'react';
 
-import { CompositeBaseSchema, CURRENT_IR_VERSION, defineComposite, lowerIRToKernel, NodeTextColor } from '@retikz/core';
+import {
+  CompositeBaseSchema,
+  CURRENT_IR_VERSION,
+  defineComposite,
+  lowerIRToKernel,
+  NodeTextColor,
+  SceneSchema,
+} from '@retikz/core';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
@@ -545,6 +552,24 @@ describe('convertIRToReactNode', () => {
         ],
       };
       expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
+    });
+
+    it('step label interrupt 往返后仍是有效的 Core IR', () => {
+      const ir: IRScene = {
+        version: CURRENT_IR_VERSION,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [10, 0], label: { text: 'gap', interrupt: true } },
+            ],
+          },
+        ],
+      };
+
+      expect(SceneSchema.parse(normalizeReactInput(convertIRToReactNode(ir)))).toEqual(ir);
     });
 
     it('八种带 label 的 kind 全部 round-trip', () => {

@@ -395,6 +395,59 @@ describe('Path generator 注册面 — 交互', () => {
     expect(text).toBeDefined();
   });
 
+  it('generator_multi_command_label_interrupts_at_generated_walk_anchor', () => {
+    const stair = definePathGenerator({
+      name: 'label-stair',
+      paramsSchema: strictObject({}),
+      generate: ({ from, to }) => {
+        const end: [number, number] = to ?? [from[0] + 10, from[1] + 100];
+        return [
+          { kind: 'line' as const, to: [from[0] + 10, from[1]] as [number, number] },
+          { kind: 'line' as const, to: end },
+        ];
+      },
+    });
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          stroke: '#13579b',
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            {
+              type: 'step',
+              kind: 'generator',
+              name: 'label-stair',
+              to: [10, 100],
+              params: {},
+              label: { text: 'generated', position: 0.5, sloped: true },
+            },
+          ],
+        },
+      ],
+    };
+
+    const primitives = compileToScene(ir, {
+      pathGenerators: [stair],
+      measureText: () => ({ width: 20, height: 10 }),
+    }).scene.primitives;
+    const labelGroup = flattenPrims(primitives).find(
+      (primitive): primitive is Extract<ScenePrimitive, { type: 'group' }> =>
+        primitive.type === 'group' &&
+        primitive.children.some(child => child.type === 'text' && child.lines.some(line => line.text === 'generated')),
+    );
+    const rotate = labelGroup?.transforms?.find(transform => transform.kind === 'rotate');
+    const fragments = flattenPrims(primitives).filter(
+      (primitive): primitive is Extract<ScenePrimitive, { type: 'path' }> =>
+        primitive.type === 'path' && primitive.stroke === '#13579b',
+    );
+
+    expect(rotate).toMatchObject({ kind: 'rotate', cx: 10, cy: 45 });
+    expect(fragments).toHaveLength(2);
+  });
+
   it('generator_in_scope_transform：generator step 在 translate scope 内保持局部命令', () => {
     const ir: IRScene = {
       version: 1,

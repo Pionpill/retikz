@@ -113,12 +113,51 @@ describe('resolvePath', () => {
     ).toMatchObject({ label: { position: 0.5, side: 'center', distance: 4 } });
   });
 
+  it('materializes interruption defaults and explicit overrides for host and step labels', () => {
+    const canonical = resolvePathWithBuiltinProviders(
+      path({
+        label: [
+          { text: 'center', sloped: true },
+          { text: 'above', side: 'top' },
+          { text: 'force', side: 'bottom', interrupt: true },
+          { text: 'continuous', sloped: true, interrupt: false },
+        ],
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [10, 0], label: { text: 'sloped', sloped: true } },
+          { type: 'step', kind: 'line', to: [20, 0], label: { text: 'step-above', side: 'top' } },
+          {
+            type: 'step',
+            kind: 'line',
+            to: [30, 0],
+            label: { text: 'step-continuous', sloped: true, interrupt: false },
+          },
+        ],
+      }),
+    );
+
+    expect(canonical.path.label).toMatchObject([
+      { text: 'center', side: 'center', interrupt: true },
+      { text: 'above', side: 'top', interrupt: false },
+      { text: 'force', side: 'bottom', interrupt: true },
+      { text: 'continuous', side: 'center', interrupt: false },
+    ]);
+    expect(canonical.path.children).toMatchObject([
+      { kind: 'move' },
+      { kind: 'line', label: { text: 'sloped', side: 'center', interrupt: true } },
+      { kind: 'line', label: { text: 'step-above', side: 'top', interrupt: false } },
+      { kind: 'line', label: { text: 'step-continuous', side: 'center', interrupt: false } },
+    ]);
+  });
+
   it('normalizes a host label to an array while preserving explicit falsy values', () => {
     const canonical = resolvePathWithBuiltinProviders(
       path({ label: { text: 'host', position: 'at-end', side: 'bottom', distance: 0, sloped: false } }),
     );
 
-    expect(canonical.path.label).toEqual([{ text: 'host', position: 1, side: 'bottom', distance: 0, sloped: false }]);
+    expect(canonical.path.label).toEqual([
+      { text: 'host', position: 1, side: 'bottom', distance: 0, sloped: false, interrupt: false },
+    ]);
   });
 
   it('compiles compact Path forms to the same Scene as their explicit Source IR equivalents', () => {
