@@ -35,7 +35,7 @@ export const coordinate1DPlaygroundControls = definePreviewControls({
           id: 'rows',
           label: '事件时刻',
           rows: oneDimensionalEvents,
-          columns: [{ key: 'hour', label: '小时' }],
+          columns: [{ key: 'hour' }],
         },
       ],
     },

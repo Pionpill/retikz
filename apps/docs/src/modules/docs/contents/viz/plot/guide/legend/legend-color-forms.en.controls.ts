@@ -18,12 +18,7 @@ export const legendColorFormsControls = definePreviewControls({
           id: 'rows',
           label: 'City samples',
           rows: cities,
-          columns: [
-            { key: 'lng', label: 'Longitude' },
-            { key: 'lat', label: 'Latitude' },
-            { key: 'region', label: 'Region' },
-            { key: 'pop', label: 'Population' },
-          ],
+          columns: [{ key: 'lng' }, { key: 'lat' }, { key: 'region' }, { key: 'pop' }],
         },
       ],
     },

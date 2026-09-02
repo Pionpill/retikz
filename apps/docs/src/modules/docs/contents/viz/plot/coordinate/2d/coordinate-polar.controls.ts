@@ -18,10 +18,7 @@ export const coordinatePolarControls = definePreviewControls({
           id: 'rows',
           label: '分类数值',
           rows: coordinate2DRows,
-          columns: [
-            { key: 'category', label: '分类' },
-            { key: 'value', label: '数值' },
-          ],
+          columns: [{ key: 'category' }, { key: 'value' }],
         },
       ],
     },

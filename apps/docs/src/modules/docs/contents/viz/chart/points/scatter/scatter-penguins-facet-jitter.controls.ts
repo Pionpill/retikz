@@ -32,11 +32,7 @@ export const previewControls = definePreviewControls({
           id: 'rows',
           label: 'Palmer Penguins 确定性样本',
           rows: penguinScatterData,
-          columns: [
-            { key: 'species', label: '物种' },
-            { key: 'billLengthMm', label: '喙长（mm）' },
-            { key: 'flipperLengthMm', label: '鳍长（mm）' },
-          ],
+          columns: [{ key: 'species' }, { key: 'billLengthMm' }, { key: 'flipperLengthMm' }],
         },
       ],
     },

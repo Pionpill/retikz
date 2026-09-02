@@ -19,12 +19,7 @@ export const connectedScatterBasicControls = definePreviewControls({
           id: 'rows',
           label: 'World Bank country trajectories',
           rows: connectedScatterData,
-          columns: [
-            { key: 'country', label: 'Country' },
-            { key: 'year', label: 'Year' },
-            { key: 'urbanization', label: 'Urbanization (%)' },
-            { key: 'lifeExpectancy', label: 'Life expectancy (years)' },
-          ],
+          columns: [{ key: 'country' }, { key: 'year' }, { key: 'urbanization' }, { key: 'lifeExpectancy' }],
         },
       ],
     },

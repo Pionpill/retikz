@@ -18,11 +18,7 @@ export const scaleContinuousControls = definePreviewControls({
           id: 'values',
           label: '变化量',
           rows: colorValues,
-          columns: [
-            { key: 'x', label: '横坐标' },
-            { key: 'y', label: '纵坐标' },
-            { key: 'value', label: '变化值' },
-          ],
+          columns: [{ key: 'x' }, { key: 'y' }, { key: 'value' }],
         },
       ],
     },

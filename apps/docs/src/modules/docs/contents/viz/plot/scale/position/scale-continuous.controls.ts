@@ -18,11 +18,7 @@ export const scaleContinuousControls = definePreviewControls({
           id: 'values',
           label: '观测值',
           rows: continuousValues,
-          columns: [
-            { key: 'period', label: '期数' },
-            { key: 'positive', label: '正值' },
-            { key: 'signed', label: '跨零值' },
-          ],
+          columns: [{ key: 'period' }, { key: 'positive' }, { key: 'signed' }],
         },
       ],
     },

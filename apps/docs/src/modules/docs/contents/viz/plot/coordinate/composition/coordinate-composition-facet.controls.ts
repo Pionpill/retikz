@@ -31,12 +31,7 @@ export const coordinateCompositionFacetControls = definePreviewControls({
           id: 'rows',
           label: '产品账户数',
           rows: accountRows,
-          columns: [
-            { key: 'product', label: '产品' },
-            { key: 'tier', label: '套餐' },
-            { key: 'month', label: '月份' },
-            { key: 'accounts', label: '账户数' },
-          ],
+          columns: [{ key: 'product' }, { key: 'tier' }, { key: 'month' }, { key: 'accounts' }],
         },
       ],
     },

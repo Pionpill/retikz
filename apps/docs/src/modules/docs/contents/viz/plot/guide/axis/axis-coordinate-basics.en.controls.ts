@@ -18,11 +18,7 @@ export const axisCoordinateBasicsControls = definePreviewControls({
           id: 'rows',
           label: 'Dimension values',
           rows: axisCoordinateBasicsRows,
-          columns: [
-            { key: 'dimension', label: 'Dimension' },
-            { key: 'value', label: 'Value' },
-            { key: 'order', label: 'Order' },
-          ],
+          columns: [{ key: 'dimension' }, { key: 'value' }, { key: 'order' }],
         },
       ],
     },

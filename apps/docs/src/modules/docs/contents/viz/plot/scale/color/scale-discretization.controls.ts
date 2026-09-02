@@ -18,11 +18,7 @@ export const scaleDiscretizationControls = definePreviewControls({
           id: 'values',
           label: '偏斜连续值',
           rows: discretizationValues,
-          columns: [
-            { key: 'x', label: '横坐标' },
-            { key: 'y', label: '纵坐标' },
-            { key: 'value', label: '数值' },
-          ],
+          columns: [{ key: 'x' }, { key: 'y' }, { key: 'value' }],
         },
       ],
     },

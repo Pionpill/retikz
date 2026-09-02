@@ -20,10 +20,7 @@ export const jitterControls = definePreviewControls({
           id: 'rows',
           label: 'Dose and response',
           views: createPlotTransformTableViews({ source: 'Source', result: 'Jittered' }, samples, jitterOperationOf),
-          columns: [
-            { key: 'dose', label: 'Dose' },
-            { key: 'response', label: 'Response' },
-          ],
+          columns: [{ key: 'dose' }, { key: 'response' }],
         },
       ],
     },

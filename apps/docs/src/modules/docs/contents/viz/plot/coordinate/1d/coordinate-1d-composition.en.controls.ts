@@ -27,12 +27,7 @@ export const coordinate1DCompositionControls = definePreviewControls({
             coordinate1DCompositionRows,
             () => coordinate1DCompositionOperation,
           ),
-          columns: [
-            { key: 'thingLabel', label: 'Source node' },
-            { key: 'practiceLabel', label: 'Target node' },
-            { key: 'relationColor', label: 'Group color' },
-            { key: 'thingCount', label: 'Source count' },
-          ],
+          columns: [{ key: 'thingLabel' }, { key: 'practiceLabel' }, { key: 'relationColor' }, { key: 'thingCount' }],
         },
       ],
     },

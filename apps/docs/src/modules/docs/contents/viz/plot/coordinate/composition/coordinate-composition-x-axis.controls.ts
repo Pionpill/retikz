@@ -30,12 +30,7 @@ export const coordinateCompositionXAxisControls = definePreviewControls({
           id: 'rows',
           label: '发布进度',
           rows: releaseRows,
-          columns: [
-            { key: 'elapsedDay', label: '经过天数' },
-            { key: 'calendarDay', label: '日历日期' },
-            { key: 'completed', label: '完成度' },
-            { key: 'forecast', label: '预测值' },
-          ],
+          columns: [{ key: 'elapsedDay' }, { key: 'calendarDay' }, { key: 'completed' }, { key: 'forecast' }],
         },
       ],
     },

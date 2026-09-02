@@ -18,11 +18,7 @@ export const legendSizeControls = definePreviewControls({
           id: 'rows',
           label: '人口样本',
           rows: cities,
-          columns: [
-            { key: 'lng', label: '横坐标' },
-            { key: 'lat', label: '纵坐标' },
-            { key: 'pop', label: '人口' },
-          ],
+          columns: [{ key: 'lng' }, { key: 'lat' }, { key: 'pop' }],
         },
       ],
     },

@@ -24,10 +24,7 @@ export const customMarkControls = definePreviewControls({
           id: 'custom-mark-rows',
           label: '月度销售额',
           rows: glyphRows,
-          columns: [
-            { key: 'month', label: '月份' },
-            { key: 'sales', label: '销售额' },
-          ],
+          columns: [{ key: 'month' }, { key: 'sales' }],
         },
       ],
     },

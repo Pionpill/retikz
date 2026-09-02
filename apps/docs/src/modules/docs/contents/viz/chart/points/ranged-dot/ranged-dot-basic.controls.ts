@@ -28,11 +28,7 @@ export const rangedDotBasicControls = definePreviewControls({
           id: 'rows',
           label: 'World Bank 国家对比',
           rows: rangedDotData,
-          columns: [
-            { key: 'country', label: '国家' },
-            { key: 'forestArea2000', label: '2000 年（%）' },
-            { key: 'forestArea2022', label: '2022 年（%）' },
-          ],
+          columns: [{ key: 'country' }, { key: 'forestArea2000' }, { key: 'forestArea2022' }],
         },
       ],
     },

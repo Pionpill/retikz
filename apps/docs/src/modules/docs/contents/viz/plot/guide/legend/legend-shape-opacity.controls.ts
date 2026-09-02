@@ -18,12 +18,7 @@ export const legendShapeOpacityControls = definePreviewControls({
           id: 'rows',
           label: '城市样本',
           rows: cities,
-          columns: [
-            { key: 'lng', label: '横坐标' },
-            { key: 'lat', label: '纵坐标' },
-            { key: 'region', label: '区域' },
-            { key: 'pop', label: '人口' },
-          ],
+          columns: [{ key: 'lng' }, { key: 'lat' }, { key: 'region' }, { key: 'pop' }],
         },
       ],
     },

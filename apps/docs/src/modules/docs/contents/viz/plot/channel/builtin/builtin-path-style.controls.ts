@@ -21,10 +21,7 @@ export const builtinPathStyleControls = definePreviewControls({
           id: 'rows',
           label: '路径数据',
           rows: pathStyleRows,
-          columns: [
-            { key: 'step', label: '步骤' },
-            { key: 'value', label: '数值' },
-          ],
+          columns: [{ key: 'step' }, { key: 'value' }],
         },
       ],
     },

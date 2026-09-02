@@ -19,11 +19,7 @@ export const coordinateCompositionScopesControls = definePreviewControls({
           id: 'rows',
           label: 'Weather metrics',
           rows: weatherRows,
-          columns: [
-            { key: 'day', label: 'Day' },
-            { key: 'temperature', label: 'Temperature' },
-            { key: 'rainfall', label: 'Rainfall' },
-          ],
+          columns: [{ key: 'day' }, { key: 'temperature' }, { key: 'rainfall' }],
         },
       ],
     },

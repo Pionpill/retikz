@@ -17,11 +17,7 @@ export const builtinOtherControls = definePreviewControls({
           id: 'rows',
           label: '系列数据',
           rows: otherRows,
-          columns: [
-            { key: 'step', label: '步骤' },
-            { key: 'value', label: '数值' },
-            { key: 'series', label: '系列' },
-          ],
+          columns: [{ key: 'step' }, { key: 'value' }, { key: 'series' }],
         },
       ],
     },

@@ -18,10 +18,7 @@ export const coordinateCartesianControls = definePreviewControls({
           id: 'rows',
           label: 'Category values',
           rows: coordinate2DRows,
-          columns: [
-            { key: 'category', label: 'Category' },
-            { key: 'value', label: 'Value' },
-          ],
+          columns: [{ key: 'category' }, { key: 'value' }],
         },
       ],
     },

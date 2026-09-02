@@ -21,11 +21,7 @@ export const previewControls = definePreviewControls({
           id: 'rows',
           label: 'Deterministic Palmer Penguins sample',
           rows: penguinScatterData,
-          columns: [
-            { key: 'species', label: 'Species' },
-            { key: 'billLengthMm', label: 'Bill length (mm)' },
-            { key: 'flipperLengthMm', label: 'Flipper length (mm)' },
-          ],
+          columns: [{ key: 'species' }, { key: 'billLengthMm' }, { key: 'flipperLengthMm' }],
         },
       ],
     },

@@ -20,12 +20,7 @@ export const previewControls = definePreviewControls({
           id: 'rows',
           label: 'Lionel Messi: 32 non-shootout shots',
           rows: messiWorldCupShots,
-          columns: [
-            { key: 'opponent', label: 'Opponent' },
-            { key: 'minute', label: 'Minute' },
-            { key: 'outcome', label: 'Outcome' },
-            { key: 'xg', label: 'xG' },
-          ],
+          columns: [{ key: 'opponent' }, { key: 'minute' }, { key: 'outcome' }, { key: 'xg' }],
         },
       ],
     },

@@ -33,11 +33,7 @@ export const regressionBasicControls = definePreviewControls({
           id: 'rows',
           label: 'UCI Iris 全部观测',
           rows: irisRegressionData,
-          columns: [
-            { key: 'sepalLengthCm', label: '萼片长度（厘米）' },
-            { key: 'petalLengthCm', label: '花瓣长度（厘米）' },
-            { key: 'species', label: '物种' },
-          ],
+          columns: [{ key: 'sepalLengthCm' }, { key: 'petalLengthCm' }, { key: 'species' }],
         },
       ],
     },

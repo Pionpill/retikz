@@ -27,12 +27,7 @@ export const connectedScatterBasicControls = definePreviewControls({
           id: 'rows',
           label: 'World Bank 国家轨迹',
           rows: connectedScatterData,
-          columns: [
-            { key: 'country', label: '国家' },
-            { key: 'year', label: '年份' },
-            { key: 'urbanization', label: '城镇化率（%）' },
-            { key: 'lifeExpectancy', label: '预期寿命（岁）' },
-          ],
+          columns: [{ key: 'country' }, { key: 'year' }, { key: 'urbanization' }, { key: 'lifeExpectancy' }],
         },
       ],
     },

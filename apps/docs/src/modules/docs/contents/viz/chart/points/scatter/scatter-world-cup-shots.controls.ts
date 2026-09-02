@@ -30,12 +30,7 @@ export const previewControls = definePreviewControls({
           id: 'rows',
           label: 'Lionel Messi 的 32 次非点球大战射门',
           rows: messiWorldCupShots,
-          columns: [
-            { key: 'opponent', label: '对手' },
-            { key: 'minute', label: '分钟' },
-            { key: 'outcome', label: '结果' },
-            { key: 'xg', label: 'xG' },
-          ],
+          columns: [{ key: 'opponent' }, { key: 'minute' }, { key: 'outcome' }, { key: 'xg' }],
         },
       ],
     },

@@ -19,11 +19,7 @@ export const rangedDotBasicControls = definePreviewControls({
           id: 'rows',
           label: 'World Bank country comparison',
           rows: rangedDotData,
-          columns: [
-            { key: 'country', label: 'Country' },
-            { key: 'forestArea2000', label: '2000 (%)' },
-            { key: 'forestArea2022', label: '2022 (%)' },
-          ],
+          columns: [{ key: 'country' }, { key: 'forestArea2000' }, { key: 'forestArea2022' }],
         },
       ],
     },

@@ -19,12 +19,7 @@ export const coordinateCompositionTracksControls = definePreviewControls({
           id: 'rows',
           label: 'Operational metrics',
           rows: operationsRows,
-          columns: [
-            { key: 'day', label: 'Trading day' },
-            { key: 'trend', label: 'Trend' },
-            { key: 'drawdown', label: 'Drawdown' },
-            { key: 'signal', label: 'Signal' },
-          ],
+          columns: [{ key: 'day' }, { key: 'trend' }, { key: 'drawdown' }, { key: 'signal' }],
         },
       ],
     },
