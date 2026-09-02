@@ -26,7 +26,7 @@ import { Layout, Node } from '@retikz/react';
 
 `source` 与 `target` 是语义真源，不从 route、marker 或视觉方向反推。它们可以指向 Core Node、Coordinate、已解析 Scope，或 lower 后发布这些 target 的上层 composite。省略 `route` 时直接连接 source 与 target；`way` 是 Vanilla/React authoring sugar，会在入口归一为直接 `route`
 
-Relation 直接复用大部分 Core Path 字段。role、kind、predicate 与 Theme 只提供默认；Relation 显式 `stroke`、`dashPattern` 等 Path 字段最终优先，每个 label 也可以单独设置 `textColor`、`font` 与 `opacity`
+Relation 直接复用大部分 Core Path 字段。默认 Graph Theme 使用灰色、`sm` 字号的 label；role、kind、predicate 与 Theme 只提供默认，Relation 显式 `stroke`、`dashPattern` 等 Path 字段最终优先，每个 label 也可以单独设置 `textColor`、`font` 与 `opacity`
 
 ## 例子
 
@@ -34,21 +34,11 @@ Relation 直接复用大部分 Core Path 字段。role、kind、predicate 与 Th
 
 Relation 的整体外观统一由 Theme 管理。下面的 controls 只开放当前 role 真正支持的 kind、direction 和精确 Relation 颜色；页面顶部的 Theme selector 负责切换整体视觉风格
 
-### endpoint、label 与 route
+### association：关联关系
 
-示例统一使用简洁的 `way`：相邻 target 表示直连，`'-|'` 表示先水平后垂直的折线。Relation 仍支持省略 route 的直连、直接 `route` 与 `<Step>` authoring；labels 不进入 route steps，也不会用于反推 endpoint
+`association` 表示两个对象之间的一般关联。默认按 `forward` 从 source 指向 target，并在 target 端使用实心菱形 marker；也可显式选择 `none`、`reverse` 或 `both`
 
-<ComponentPreview
-  files="relation-routing"
-  size="sm"
-  caption="观察稳定 endpoint、way 的直线与折线写法，以及显式 label 外观和 dashPattern 如何覆盖默认。"
-/>
-
-### association：一般关联
-
-`association` 表示两个对象之间的一般关联。source 与 target 只是稳定记录顺序，默认没有语义方向；显式选择 `forward`、`reverse` 或 `both` 时，kite marker 出现在对应 endpoint
-
-- **默认 / 允许 direction：** `none` / `none`、`forward`、`reverse`、`both`
+- **默认 / 允许 direction：** `forward` / `none`、`forward`、`reverse`、`both`
 - **内置 kind：** `uml.aggregation` 与 `uml.composition`，都把 source 解释为 whole、target 解释为 part，并把 direction 固定为 `none`
 - **内置 predicate：** 无；领域扩展可以注册 cardinality predicate，并用 params schema 校验 source / target 基数
 
@@ -60,7 +50,7 @@ Relation 的整体外观统一由 Theme 管理。下面的 controls 只开放当
 
 ### dependency：依赖关系
 
-`dependency` 表示 source 依赖 target：source 是依赖方，target 是被依赖方。它固定为 `forward`，基础 marker family 为 target 端的 stealth
+`dependency` 表示 source 依赖 target：source 是依赖方，target 是被依赖方。它固定为 `forward`，基础 marker family 为 target 端开放、无填充的 `straightBarb`
 
 - **默认 / 允许 direction：** `forward` / 仅 `forward`
 - **内置 kind：** `provenance.derivation`，把 source 细化为派生结果、target 细化为来源记录，并使用 openStealth
@@ -74,7 +64,7 @@ Relation 的整体外观统一由 Theme 管理。下面的 controls 只开放当
 
 ### generalization：泛化关系
 
-`generalization` 表示 source 是 target 的更具体类型：source 是 subtype，target 是 supertype。它固定为 `forward`，基础 marker family 为 target 端的 normal
+`generalization` 表示 source 是 target 的更具体类型：source 是 subtype，target 是 supertype。它固定为 `forward`，基础 marker family 为 target 端的 `normal` 实心三角 marker
 
 - **默认 / 允许 direction：** `forward` / 仅 `forward`
 - **内置 kind：** `uml.realization`，把 source 解释为 implementation、target 解释为 specification，并使用 open marker
@@ -88,7 +78,7 @@ Relation 的整体外观统一由 Theme 管理。下面的 controls 只开放当
 
 ### flow：对象之间的流动
 
-`flow` 表示对象、活动或状态之间发生传递、推进或状态流转。source 与 target 是稳定 route endpoints，有效 direction 决定 circle marker 位于哪一端
+`flow` 表示对象、活动或状态之间发生传递、推进或状态流转。source 与 target 是稳定 route endpoints，有效 direction 决定 stealth marker 位于哪一端
 
 - **默认 / 允许 direction：** `forward` / `forward`、`reverse`、`both`
 - **内置 kind：** 无；`workflow.branch`、`workflow.feedback` 等领域分类需要自行注册
@@ -97,12 +87,12 @@ Relation 的整体外观统一由 Theme 管理。下面的 controls 只开放当
 <ComponentPreview
   files="relation-flow"
   size="sm"
-  caption="切换 flow 的语义方向，并观察 circle marker 的 endpoint 变化。"
+  caption="切换 flow 的语义方向，并观察 stealth marker 的 endpoint 变化。"
 />
 
 ### influence：影响关系
 
-`influence` 表示一个对象对另一个对象产生作用，不要求它们之间存在数据传递或执行依赖。有效 direction 决定 square marker 位于 source、target 或两端
+`influence` 表示一个对象对另一个对象产生作用，不要求它们之间存在数据传递或执行依赖。有效 direction 决定实心圆形 `circle` marker 位于 source、target 或两端
 
 - **默认 / 允许 direction：** `forward` / `forward`、`reverse`、`both`
 - **内置 kind：** 无；影响类型由拥有该领域的上层注册
@@ -146,8 +136,8 @@ Relation resolve 只处理 role、kind、predicate、direction 与 Theme，随�
 | `labels?`              | `Array<IRGeometryLabel>`                                                                                                           | —                  | 完整 Core Geometry Label；每个 label 的显式颜色、字体与透明度覆盖 Relation 默认                                                                           |
 | `route?`               | `Array<IRGraphRelationRouteStep>`                                                                                                  | source→target 直连 | 完整 Core Path step sequence；route step 不承载 label                                                                                                     |
 | `dashPattern?`         | `Array<number>`                                                                                                                    | 由 role/kind 决定  | 显式 Path dash pattern，最终覆盖关系结构默认                                                                                                              |
-| `labelTextForeground?` | `string`                                                                                                                           | 由 Theme 决定      | Relation labels 的默认文本颜色                                                                                                                            |
-| `labelFont?`           | `IRFont`                                                                                                                           | 由 Theme 决定      | Relation labels 的默认字体；单个 label 按子字段覆盖                                                                                                       |
+| `labelTextForeground?` | `string`                                                                                                                           | `gray`             | Relation labels 的默认文本颜色；Theme、Relation 或单个 label 可显式覆盖                                                                                   |
+| `labelFont?`           | `IRFont`                                                                                                                           | `{ size: 'sm' }`   | Relation labels 的默认字体；Theme、Relation 或单个 label 按子字段覆盖                                                                                     |
 | `labelOpacity?`        | `number`                                                                                                                           | 由 Theme 决定      | Relation labels 的默认不透明度；单个 label 显式值优先                                                                                                     |
 | `way?`                 | `InputPathWay`                                                                                                                     | —                  | Vanilla/React sugar；入口归一为 `route`                                                                                                                   |
 | `children?`            | Core `Step` declarations                                                                                                           | —                  | React route authoring；与 `route`/`way` 互斥                                                                                                              |

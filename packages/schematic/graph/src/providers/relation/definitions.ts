@@ -10,7 +10,7 @@ const solid = false as const;
 export const AssociationRelationRoleDefinition = defineRelationRole({
   role: RelationRole.Association,
   description: '两个对象之间的一般关联',
-  defaultDirection: RelationDirection.None,
+  defaultDirection: RelationDirection.Forward,
   allowedDirections: [
     RelationDirection.None,
     RelationDirection.Forward,
@@ -21,17 +21,17 @@ export const AssociationRelationRoleDefinition = defineRelationRole({
     [RelationDirection.None]: { sourceMarker: noMarker, targetMarker: noMarker, dashPattern: solid },
     [RelationDirection.Forward]: {
       sourceMarker: noMarker,
-      targetMarker: { shape: 'kite' },
+      targetMarker: { shape: 'diamond' },
       dashPattern: solid,
     },
     [RelationDirection.Reverse]: {
-      sourceMarker: { shape: 'kite' },
+      sourceMarker: { shape: 'diamond' },
       targetMarker: noMarker,
       dashPattern: solid,
     },
     [RelationDirection.Both]: {
-      sourceMarker: { shape: 'kite' },
-      targetMarker: { shape: 'kite' },
+      sourceMarker: { shape: 'diamond' },
+      targetMarker: { shape: 'diamond' },
       dashPattern: solid,
     },
   },
@@ -45,7 +45,7 @@ export const DependencyRelationRoleDefinition = defineRelationRole({
   directions: {
     [RelationDirection.Forward]: {
       sourceMarker: noMarker,
-      targetMarker: { shape: 'stealth' },
+      targetMarker: { shape: 'straightBarb' },
       dashPattern: solid,
     },
   },
@@ -73,17 +73,17 @@ export const FlowRelationRoleDefinition = defineRelationRole({
   directions: {
     [RelationDirection.Forward]: {
       sourceMarker: noMarker,
-      targetMarker: { shape: 'circle' },
+      targetMarker: { shape: 'stealth' },
       dashPattern: solid,
     },
     [RelationDirection.Reverse]: {
-      sourceMarker: { shape: 'circle' },
+      sourceMarker: { shape: 'stealth' },
       targetMarker: noMarker,
       dashPattern: solid,
     },
     [RelationDirection.Both]: {
-      sourceMarker: { shape: 'circle' },
-      targetMarker: { shape: 'circle' },
+      sourceMarker: { shape: 'stealth' },
+      targetMarker: { shape: 'stealth' },
       dashPattern: solid,
     },
   },
@@ -97,17 +97,17 @@ export const InfluenceRelationRoleDefinition = defineRelationRole({
   directions: {
     [RelationDirection.Forward]: {
       sourceMarker: noMarker,
-      targetMarker: { shape: 'square' },
+      targetMarker: { shape: 'circle' },
       dashPattern: solid,
     },
     [RelationDirection.Reverse]: {
-      sourceMarker: { shape: 'square' },
+      sourceMarker: { shape: 'circle' },
       targetMarker: noMarker,
       dashPattern: solid,
     },
     [RelationDirection.Both]: {
-      sourceMarker: { shape: 'square' },
-      targetMarker: { shape: 'square' },
+      sourceMarker: { shape: 'circle' },
+      targetMarker: { shape: 'circle' },
       dashPattern: solid,
     },
   },

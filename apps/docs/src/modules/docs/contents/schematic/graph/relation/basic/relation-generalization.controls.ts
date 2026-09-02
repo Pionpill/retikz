@@ -8,7 +8,7 @@ export const previewControlContract = defineRelationRoleControlContract({
     label: '内置 kind',
     defaultValue: '',
     options: [
-      { value: '', label: '基础 generalization' },
+      { value: '', label: '默认值' },
       { value: 'uml.realization', label: 'UML 实现' },
     ],
   },

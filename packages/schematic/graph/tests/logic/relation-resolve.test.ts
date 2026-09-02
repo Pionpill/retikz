@@ -13,6 +13,13 @@ const relation = (input: Record<string, unknown> = {}) =>
   });
 
 describe('Relation data resolution', () => {
+  it('defaults association to forward while preserving explicit none', () => {
+    const context = Graph.resolveGraphDefinitionOptions();
+
+    expect(Graph.resolveRelation(relation(), context).effectiveDirection).toBe('forward');
+    expect(Graph.resolveRelation(relation({ direction: 'none' }), context).effectiveDirection).toBe('none');
+  });
+
   it('resolves semantic definitions without Graph membership or endpoint projection', () => {
     const canonical = Graph.resolveRelation(
       relation({ id: 'realizes', role: 'generalization', kind: 'uml.realization' }),

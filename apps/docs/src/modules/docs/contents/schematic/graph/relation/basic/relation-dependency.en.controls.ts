@@ -8,7 +8,7 @@ export const previewControlContract = defineRelationRoleControlContract({
     label: 'Built-in kind',
     defaultValue: '',
     options: [
-      { value: '', label: 'Base dependency' },
+      { value: '', label: 'Default' },
       { value: 'provenance.derivation', label: 'Provenance derivation' },
     ],
   },

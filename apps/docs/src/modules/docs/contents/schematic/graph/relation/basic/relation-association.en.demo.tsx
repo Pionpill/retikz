@@ -12,7 +12,7 @@ export const previewControls = relationAssociationControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const kindValue = typeof values.kind === 'string' ? values.kind : '';
-  const directionValue = typeof values.direction === 'string' ? values.direction : 'none';
+  const directionValue = typeof values.direction === 'string' ? values.direction : 'forward';
   const color = typeof values.color === 'string' ? values.color : 'currentColor';
   const kind = kindValue.length === 0 ? undefined : kindValue;
   const direction =

@@ -8,7 +8,7 @@ export const previewControlContract = defineRelationRoleControlContract({
     label: '内置 kind',
     defaultValue: '',
     options: [
-      { value: '', label: '基础 dependency' },
+      { value: '', label: '默认值' },
       { value: 'provenance.derivation', label: 'Provenance 派生' },
     ],
   },

@@ -4,9 +4,9 @@ import { FlexLayoutDefinition, FlexLayoutProvider } from '@retikz/layout';
 import { SurfaceDefinition, SurfaceProvider } from '@retikz/standard';
 import {
   DiamondArrowProvider,
-  KiteArrowProvider,
   OpenDiamondArrowProvider,
   SquareArrowProvider,
+  StraightBarbArrowProvider,
 } from '@retikz/standard/arrow';
 import { PathClipProvider } from '@retikz/standard/clip';
 import { EllipticCapsuleShapeProvider, HexagonShapeProvider } from '@retikz/standard/shape';
@@ -61,7 +61,7 @@ const DEFAULT_GRAPH_PROVIDERS: ReadonlyArray<CoreDependencyProvider> = Object.fr
   PathClipProvider,
   HexagonShapeProvider,
   EllipticCapsuleShapeProvider,
-  KiteArrowProvider,
+  StraightBarbArrowProvider,
   SquareArrowProvider,
   DiamondArrowProvider,
   OpenDiamondArrowProvider,
@@ -85,7 +85,7 @@ export const createGraphProviders = (options?: GraphDefinitionOptions): Readonly
     PathClipProvider,
     HexagonShapeProvider,
     EllipticCapsuleShapeProvider,
-    KiteArrowProvider,
+    StraightBarbArrowProvider,
     SquareArrowProvider,
     DiamondArrowProvider,
     OpenDiamondArrowProvider,

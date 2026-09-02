@@ -52,7 +52,7 @@ const scenarios: ReadonlyArray<RoleScenario> = [
     role: 'association',
     fields: [
       { kind: 'select', id: 'kind', defaultValue: '' },
-      { kind: 'select', id: 'direction', defaultValue: 'none' },
+      { kind: 'select', id: 'direction', defaultValue: 'forward' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
     kindOptions: ['', 'uml.aggregation', 'uml.composition'],

@@ -10,19 +10,23 @@ describe('Relation definition registry', () => {
 
     expect([...roles.keys()]).toEqual(['association', 'dependency', 'generalization', 'flow', 'influence']);
     expect(roles.get('association')).toMatchObject({
-      defaultDirection: 'none',
+      defaultDirection: 'forward',
       allowedDirections: ['none', 'forward', 'reverse', 'both'],
       directions: {
         none: { sourceMarker: false, targetMarker: false, dashPattern: false },
-        forward: { sourceMarker: false, targetMarker: { shape: 'kite' }, dashPattern: false },
-        reverse: { sourceMarker: { shape: 'kite' }, targetMarker: false, dashPattern: false },
-        both: { sourceMarker: { shape: 'kite' }, targetMarker: { shape: 'kite' }, dashPattern: false },
+        forward: { sourceMarker: false, targetMarker: { shape: 'diamond' }, dashPattern: false },
+        reverse: { sourceMarker: { shape: 'diamond' }, targetMarker: false, dashPattern: false },
+        both: { sourceMarker: { shape: 'diamond' }, targetMarker: { shape: 'diamond' }, dashPattern: false },
       },
     });
-    expect(roles.get('dependency')?.directions.forward?.targetMarker).toEqual({ shape: 'stealth' });
+    expect(roles.get('dependency')?.directions.forward?.targetMarker).toEqual({ shape: 'straightBarb' });
     expect(roles.get('generalization')?.directions.forward?.targetMarker).toEqual({ shape: 'normal' });
-    expect(roles.get('flow')?.directions.forward?.targetMarker).toEqual({ shape: 'circle' });
-    expect(roles.get('influence')?.directions.forward?.targetMarker).toEqual({ shape: 'square' });
+    expect(roles.get('flow')?.directions).toMatchObject({
+      forward: { sourceMarker: false, targetMarker: { shape: 'stealth' }, dashPattern: false },
+      reverse: { sourceMarker: { shape: 'stealth' }, targetMarker: false, dashPattern: false },
+      both: { sourceMarker: { shape: 'stealth' }, targetMarker: { shape: 'stealth' }, dashPattern: false },
+    });
+    expect(roles.get('influence')?.directions.forward?.targetMarker).toEqual({ shape: 'circle' });
 
     expect([...kinds.keys()]).toEqual([
       'uml.aggregation',

@@ -8,7 +8,7 @@ export const previewControlContract = defineRelationRoleControlContract({
     label: 'Built-in kind',
     defaultValue: '',
     options: [
-      { value: '', label: 'Base generalization' },
+      { value: '', label: 'Default' },
       { value: 'uml.realization', label: 'UML realization' },
     ],
   },

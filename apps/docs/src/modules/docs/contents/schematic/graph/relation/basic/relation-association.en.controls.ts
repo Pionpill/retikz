@@ -8,14 +8,14 @@ export const previewControlContract = defineRelationRoleControlContract({
     label: 'Built-in kind',
     defaultValue: '',
     options: [
-      { value: '', label: 'Base association' },
+      { value: '', label: 'Default' },
       { value: 'uml.aggregation', label: 'UML aggregation' },
       { value: 'uml.composition', label: 'UML composition' },
     ],
   },
   direction: {
     label: 'Semantic direction',
-    defaultValue: 'none',
+    defaultValue: 'forward',
     options: [
       { value: 'none', label: 'None' },
       { value: 'forward', label: 'source → target' },

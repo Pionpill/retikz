@@ -167,12 +167,36 @@ describe('Relation lowering', () => {
       { ...definitions, padding: 0 },
     );
 
-    expect(pathPrimitivesOf(output.scene.primitives).some(path => path.id === 'edge')).toBe(true);
+    const relationPath = pathPrimitivesOf(output.scene.primitives).find(path => path.id === 'edge');
+    expect(relationPath?.arrowEnd?.shape).toBe('straightBarb');
     expect(
       primitivesOf(output.scene.primitives).some(
         primitive => primitive.type === 'text' && primitive.lines.some(line => line.text === 'depends on'),
       ),
     ).toBe(true);
+  });
+
+  it('applies the Graph preset font size and color to an unstyled Relation label', () => {
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [{ roots: [Graph.RelationProviderKey], providers: Graph.createGraphProviders() }],
+    });
+    const output = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [
+          { type: 'node', id: 'source', position: [0, 0] },
+          { type: 'node', id: 'target', position: [100, 0] },
+          relation({ role: 'association', direction: 'none', labels: [{ text: 'default label' }] }),
+        ],
+      },
+      { ...definitions, padding: 0 },
+    );
+    const label = primitivesOf(output.scene.primitives).find(
+      primitive => primitive.type === 'text' && primitive.lines.some(line => line.text === 'default label'),
+    );
+
+    expect(label).toMatchObject({ type: 'text', fill: 'gray', fontSize: 14 });
   });
 
   it('delegates an unresolved target to the Core reference diagnostic', () => {
