@@ -57,7 +57,7 @@ Regression 适合在保留每个观测的同时，概括两个连续变量之间
 
 `RegressionEncodings.series` 是 recipe-only 的可选角色。省略它会对当前数据整体拟合一条趋势；提供它会按每个字段值独立拟合，并让 Point 与 Path 共享同一分类颜色尺度、图例和 series identity。`RegressionMark` 不能改写或移除这个角色。
 
-省略 `series` 且未显式设置成员颜色时，观测点与趋势线共享 Plot `palette.series` 的同一个顺序槽位，不会回退为 CSS `currentColor`。显式 point color / fill 与 trend stroke 仍分别优先。
+省略 `series` 且未显式设置成员颜色时，观测点与趋势线会依次使用 Plot `palette.series` 的不同顺序槽位，以便区分两层，不会回退为 CSS `currentColor`。显式 point color / fill 与 trend stroke 仍分别优先。
 
 ## 六种内置方法
 

@@ -116,26 +116,6 @@ describe('Chart providers through Core compile', () => {
         },
       },
       {
-        source: RegressionChartSchema.parse({
-          namespace: 'chart',
-          type: 'point',
-          data: { reference: 'regression.default-color' },
-          recipe: {
-            chartType: 'regression',
-            encodings: { x: 'x', y: 'y' },
-            properties: { sampleCount: 3, point: { size: 4 }, trend: { strokeWidth: 7 } },
-          },
-        }),
-        contribution: createRegressionChartProviderContribution(),
-        datasets: {
-          'regression.default-color': [
-            { x: 1, y: 2 },
-            { x: 2, y: 4 },
-            { x: 3, y: 5 },
-          ],
-        },
-      },
-      {
         source: RangedDotChartSchema.parse({
           namespace: 'chart',
           type: 'point',
@@ -175,6 +155,43 @@ describe('Chart providers through Core compile', () => {
       expect(new Set(paths.map(path => path.stroke))).toEqual(new Set([defaultColor]));
       expect(new Set(points.map(point => point.fill))).toEqual(new Set([defaultColor]));
     }
+  });
+
+  it('uses consecutive series palette colors for ungrouped Regression observations and trend', () => {
+    const palette = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
+    const source = RegressionChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'regression.default-color' },
+      recipe: {
+        chartType: 'regression',
+        encodings: { x: 'x', y: 'y' },
+        properties: { sampleCount: 3, point: { size: 4 }, trend: { strokeWidth: 7 } },
+      },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createRegressionChartProviderContribution(),
+        createPlotProviderContribution({
+          'regression.default-color': [
+            { x: 1, y: 2 },
+            { x: 2, y: 4 },
+            { x: 3, y: 5 },
+          ],
+        }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+    const result = compileToScene(sceneOf(source), definitions);
+    const trendPaths = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
+      primitive => primitive.strokeWidth === 7,
+    );
+    const observationPoints = scenePrimitivesOfType(result.scene.primitives, 'ellipse');
+
+    expect(trendPaths.length).toBeGreaterThan(0);
+    expect(observationPoints.length).toBeGreaterThan(0);
+    expect(new Set(observationPoints.map(point => point.fill))).toEqual(new Set([palette[0]]));
+    expect(new Set(trendPaths.map(path => path.stroke))).toEqual(new Set([palette[1]]));
   });
 
   it('compiles shuffled Connected Scatter rows by authored order and bridges invalid observations', () => {
@@ -287,7 +304,7 @@ describe('Chart providers through Core compile', () => {
       recipe: {
         chartType: 'regression',
         encodings: { x: 'x', y: 'y', series: 'series' },
-        properties: { sampleCount: 3 },
+        properties: { sampleCount: 3, trend: { strokeWidth: 7 } },
       },
     });
     const definitions = resolveCoreProviderDependencies({
@@ -303,7 +320,14 @@ describe('Chart providers through Core compile', () => {
     expect(sceneIdsOf(result.scene.primitives)).toContain('regression');
     expect(serialized).not.toContain('NaN');
     expect(serialized).not.toContain('Infinity');
-    expect(scenePrimitivesOfType(result.scene.primitives, 'ellipse')).toHaveLength(regressionRows.length);
+    const observationPoints = scenePrimitivesOfType(result.scene.primitives, 'ellipse');
+    const trendPaths = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
+      primitive => primitive.strokeWidth === 7,
+    );
+
+    expect(observationPoints).toHaveLength(regressionRows.length);
+    expect(trendPaths).toHaveLength(2);
+    expect(new Set(observationPoints.map(point => point.fill))).toEqual(new Set(trendPaths.map(path => path.stroke)));
   });
 
   it('aborts the whole Regression compile when one series cannot be fitted', () => {

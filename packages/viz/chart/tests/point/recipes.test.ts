@@ -869,7 +869,7 @@ describe('Point Chart recipe Definitions', () => {
     expect(result.scaffold.transform).toBeUndefined();
   });
 
-  it('Regression assigns one default color group without constant color fallbacks', () => {
+  it('Regression assigns distinct default palette groups to ungrouped observations and trend', () => {
     const source = RegressionChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -885,10 +885,37 @@ describe('Point Chart recipe Definitions', () => {
 
     expect(result.plot.marks).toHaveLength(2);
     expect(result.plot.marks.map(mark => mark.defaultColorGroup)).toEqual([
+      '__chart.default-color.0.observation',
+      '__chart.default-color.0.trend',
+    ]);
+    expect(JSON.stringify(result.plot.marks)).not.toContain('currentColor');
+  });
+
+  it('Regression series preserves one shared field-color identity for observations and trend', () => {
+    const source = RegressionChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: { chartType: 'regression', encodings: { x: 'x', y: 'y', series: 'species' } },
+    });
+    const result = resolveSelectedChart(source, {
+      theme: DEFAULT_RESOLVED_THEME,
+      recipe: RegressionChartDefinition,
+      themeDefinitions: [],
+      runtime: regressionRuntime,
+    });
+    const [point, path] = result.plot.marks;
+
+    expect(result.plot.marks.map(mark => mark.defaultColorGroup)).toEqual([
       '__chart.default-color.0',
       '__chart.default-color.0',
     ]);
-    expect(JSON.stringify(result.plot.marks)).not.toContain('currentColor');
+    expect(point).toMatchObject({
+      color: { kind: 'field', value: 'species', scale: '__chart.regression.scale.series' },
+    });
+    expect(path).toMatchObject({
+      stroke: { kind: 'field', value: 'species', scale: '__chart.regression.scale.series' },
+    });
   });
 
   it('Connected Scatter assigns one default color group without constant color fallbacks', () => {

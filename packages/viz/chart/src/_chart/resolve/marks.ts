@@ -26,12 +26,19 @@ type ChartSemanticMarksResolution = Readonly<{
   warnings: ReadonlyArray<ChartResolveWarning>;
 }>;
 
-/** 为一个 Chart 语义 mark 组写入共享的 Plot 默认颜色组 */
+/** 为一个 Chart 语义 mark 组写入 Plot 默认颜色组，并隔离局部颜色组 */
 const withDefaultColorGroup = (
   marks: ReadonlyArray<IRPlotMarkOperation>,
   groupIndex: number,
 ): ReadonlyArray<IRPlotMarkOperation> =>
-  marks.map(mark => ({ ...mark, defaultColorGroup: `__chart.default-color.${groupIndex}` }));
+  marks.map(mark => {
+    const localColorGroup = mark.defaultColorGroup;
+    const defaultColorGroup =
+      localColorGroup === undefined
+        ? `__chart.default-color.${groupIndex}`
+        : `__chart.default-color.${groupIndex}.${localColorGroup}`;
+    return { ...mark, defaultColorGroup };
+  });
 
 const invalidMark = (message: string, path: ReadonlyArray<string | number>, cause?: unknown): RetikzChartError =>
   new RetikzChartError({

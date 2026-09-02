@@ -110,7 +110,13 @@ export const resolveRegressionMarkGroup = (
       : { stroke: { kind: 'field', value: series.field, scale: series.scale } }),
   };
 
-  return [resolvePointMark(pointEncodings, pointProperties), PathMarkSchema.parse(path)];
+  const point = resolvePointMark(pointEncodings, pointProperties);
+  const resolvedPath = PathMarkSchema.parse(path);
+  if (series !== undefined) return [point, resolvedPath];
+  return [
+    { ...point, defaultColorGroup: 'observation' },
+    { ...resolvedPath, defaultColorGroup: 'trend' },
+  ];
 };
 
 /** Regression authored mark Definition */
