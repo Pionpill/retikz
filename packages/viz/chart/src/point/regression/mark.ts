@@ -98,6 +98,7 @@ export const resolveRegressionMarkGroup = (
   const path: IRJsonObject = {
     type: PlotMark.Path,
     order: trendXField,
+    closed: false,
     ...(series === undefined ? {} : { series: series.field }),
     transform: [smooth],
     encoding: { x: { field: trendXField }, y: { field: trendYField } },

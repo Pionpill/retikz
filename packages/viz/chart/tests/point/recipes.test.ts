@@ -844,6 +844,7 @@ describe('Point Chart recipe Definitions', () => {
           expect.objectContaining({
             type: 'path',
             order: '__chart.regression.trend.x',
+            closed: false,
             encoding: {
               x: { field: '__chart.regression.trend.x' },
               y: { field: '__chart.regression.trend.y' },
