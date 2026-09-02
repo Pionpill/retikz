@@ -6,15 +6,15 @@ import { team } from './line-radar.data';
 
 /** 雷达路径闭合 playground 的稳定控件 id */
 export const LINE_RADAR_CLOSED_ID = 'line-radar-closed';
-/** 雷达路径的坐标插值控件 id */
-export const LINE_RADAR_COORDINATE_INTERPOLATION_ID = 'line-radar-coordinate-interpolation';
-/** 右侧雷达路径的局部插值控件 id */
-export const LINE_RADAR_MARK_INTERPOLATION_ID = 'line-radar-mark-interpolation';
+/** 左侧极坐标的插值控件 id */
+export const LINE_RADAR_LEFT_COORDINATE_INTERPOLATION_ID = 'line-radar-left-coordinate-interpolation';
+/** 右侧极坐标的插值控件 id */
+export const LINE_RADAR_RIGHT_COORDINATE_INTERPOLATION_ID = 'line-radar-right-coordinate-interpolation';
 
-/** 雷达路径闭合的中文属性面板 */
+/** 极坐标插值的中文属性面板 */
 export const lineRadarControls = definePreviewControls({
   presentation: 'panel',
-  title: '雷达闭合',
+  title: '极坐标插值',
   sections: [
     {
       label: '数据',
@@ -22,11 +22,11 @@ export const lineRadarControls = definePreviewControls({
       controls: [{ kind: 'table', id: 'team', label: '团队指标', rows: team }],
     },
     {
-      label: '坐标系',
+      label: '左侧图',
       controls: [
         {
           kind: 'select',
-          id: LINE_RADAR_COORDINATE_INTERPOLATION_ID,
+          id: LINE_RADAR_LEFT_COORDINATE_INTERPOLATION_ID,
           label: '坐标插值',
           defaultValue: 'chord',
           options: [
@@ -37,15 +37,14 @@ export const lineRadarControls = definePreviewControls({
       ],
     },
     {
-      label: '右侧路径',
+      label: '右侧图',
       controls: [
         {
           kind: 'select',
-          id: LINE_RADAR_MARK_INTERPOLATION_ID,
-          label: '局部插值',
+          id: LINE_RADAR_RIGHT_COORDINATE_INTERPOLATION_ID,
+          label: '坐标插值',
           defaultValue: 'polar',
           options: [
-            { value: 'inherit', label: '继承坐标系' },
             { value: 'polar', label: '极坐标曲线' },
             { value: 'chord', label: '直线弦' },
           ],
@@ -61,8 +60,8 @@ export const previewControlContract = {
   controls: lineRadarControls,
   canonicalValues: {
     [LINE_RADAR_CLOSED_ID]: true,
-    [LINE_RADAR_COORDINATE_INTERPOLATION_ID]: 'chord',
-    [LINE_RADAR_MARK_INTERPOLATION_ID]: 'polar',
+    [LINE_RADAR_LEFT_COORDINATE_INTERPOLATION_ID]: 'chord',
+    [LINE_RADAR_RIGHT_COORDINATE_INTERPOLATION_ID]: 'polar',
   },
-  relatedApis: ['Plot.coordinate.interpolation', 'PathMark.interpolation', 'PathMark.closed'],
+  relatedApis: ['Plot.coordinate.interpolation', 'PathMark.closed'],
 } satisfies PreviewControlContract;

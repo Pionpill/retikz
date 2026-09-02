@@ -73,12 +73,12 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 ### 极坐标插值
 
-`polar2D` 根据角向比例尺连续性推断 coordinate 默认插值：连续值使用 `polar`，离散值使用 `chord`。左图始终继承 coordinate；右图可以用 PathMark 的 `interpolation` 单独覆盖。局部覆盖只改变当前路径，不会改动两图的极坐标网格。
+`polar2D` 根据角向比例尺连续性推断 coordinate 默认插值：连续值使用 `polar`，离散值使用 `chord`。此处左右图各自继承自己的 coordinate：左图默认 `chord`，右图默认 `polar`，因此路径和网格始终使用同一连接空间。
 
 <ComponentPreview
   files={['line-radar', 'line-radar.data.ts']}
   size="lg"
-  caption="先比较同一 coordinate 下的左右路径，再把右侧改回继承；网格始终跟随 coordinate，而不是 PathMark 覆盖。"
+  caption="分别切换左右图的坐标插值，观察路径和网格如何一起在圆弧与直线弦之间切换。"
 />
 
 ### 闭合与填充

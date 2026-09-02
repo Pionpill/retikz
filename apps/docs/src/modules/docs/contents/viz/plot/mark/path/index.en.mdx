@@ -73,12 +73,12 @@ The examples cover ordering, series, connection, closure, and missing values. In
 
 ### Polar Interpolation
 
-`polar2D` infers its coordinate interpolation from angular-scale continuity: continuous values use `polar`, while discrete values use `chord`. The left plot always inherits the coordinate. The right plot can override it with PathMark `interpolation`. A local override changes only that path, not either polar grid.
+`polar2D` infers its coordinate interpolation from angular-scale continuity: continuous values use `polar`, while discrete values use `chord`. Here each plot inherits its own coordinate: the left plot defaults to `chord` and the right plot to `polar`, so each path and its grid always share one connection space.
 
 <ComponentPreview
   files={['line-radar', 'line-radar.data.ts']}
   size="lg"
-  caption="Compare both paths under one coordinate, then return the right path to inheritance. The grid follows the coordinate, not the PathMark override."
+  caption="Switch each plot's coordinate interpolation independently to see its path and grid change together between polar curves and straight chords."
 />
 
 ### Closure and Fill

@@ -8,8 +8,8 @@ import { defineControlledPreview } from '@/modules/docs/preview';
 
 import {
   LINE_RADAR_CLOSED_ID,
-  LINE_RADAR_COORDINATE_INTERPOLATION_ID,
-  LINE_RADAR_MARK_INTERPOLATION_ID,
+  LINE_RADAR_LEFT_COORDINATE_INTERPOLATION_ID,
+  LINE_RADAR_RIGHT_COORDINATE_INTERPOLATION_ID,
   previewControlContract,
 } from './line-radar.controls';
 import { team } from './line-radar.data';
@@ -21,7 +21,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       data={team}
       width={280}
       height={280}
-      coordinate={{ type: 'polar2D', interpolation: values[LINE_RADAR_COORDINATE_INTERPOLATION_ID] }}
+      coordinate={{ type: 'polar2D', interpolation: values[LINE_RADAR_LEFT_COORDINATE_INTERPOLATION_ID] }}
       x={10}
       y={10}
     >
@@ -33,19 +33,11 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       data={team}
       width={280}
       height={280}
-      coordinate={{ type: 'polar2D', interpolation: values[LINE_RADAR_COORDINATE_INTERPOLATION_ID] }}
+      coordinate={{ type: 'polar2D', interpolation: values[LINE_RADAR_RIGHT_COORDINATE_INTERPOLATION_ID] }}
       x={330}
       y={10}
     >
-      <PathMark
-        x="dim"
-        y="score"
-        order="rank"
-        closed={values[LINE_RADAR_CLOSED_ID]}
-        interpolation={
-          values[LINE_RADAR_MARK_INTERPOLATION_ID] === 'inherit' ? undefined : values[LINE_RADAR_MARK_INTERPOLATION_ID]
-        }
-      />
+      <PathMark x="dim" y="score" order="rank" closed={values[LINE_RADAR_CLOSED_ID]} />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />
     </Plot>
