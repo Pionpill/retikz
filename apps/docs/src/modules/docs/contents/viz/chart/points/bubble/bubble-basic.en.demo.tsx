@@ -1,8 +1,7 @@
 import type { FC } from 'react';
 
-import { ChartData, ChartExtension, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { BubbleChart, BubbleEncodings, BubbleProperties } from '@retikz/chart-react/point';
-import { PlotAxis } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -32,18 +31,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <ChartTitle>Income, life expectancy, and population</ChartTitle>
     <ChartSubtitle>142 countries and territories in 2007; bubble area is driven by population</ChartSubtitle>
     <ChartSource>Gapminder data package, 2007 cross-section; GDP per capita in PPP dollars</ChartSource>
-    <ChartExtension>
-      <PlotAxis
-        dimension="x"
-        ticks={{
-          count: values[BUBBLE_BASIC_CONTROL_IDS.xTickCount],
-          ...(values[BUBBLE_BASIC_CONTROL_IDS.xTickMarks] ? {} : { line: false }),
-        }}
-        tickLabels={values[BUBBLE_BASIC_CONTROL_IDS.xTickLabels] ? undefined : false}
-        grid={values[BUBBLE_BASIC_CONTROL_IDS.xGrid]}
-      />
-      <PlotAxis dimension="y" grid />
-    </ChartExtension>
     <BubbleProperties
       {...(values[BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled]
         ? { stroke: values[BUBBLE_BASIC_CONTROL_IDS.pointStroke] }

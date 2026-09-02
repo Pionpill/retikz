@@ -1,9 +1,7 @@
-import type { ChartExtensionProps } from '@retikz/chart-react';
 import type { ReactNode } from 'react';
 
 import { ChartExtension, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { BubbleEncodings, BubbleProperties } from '@retikz/chart-react/point';
-import { PlotAxis } from '@retikz/plot-react';
 import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -72,15 +70,6 @@ const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 's
   };
 };
 
-const canonicalAxisProps = (source: PreviewSourceConfig): Array<Record<string, unknown>> => {
-  const extension = canonicalDeclarationProps<ChartExtensionProps>(source, ChartExtension);
-  const axes: Array<Record<string, unknown>> = [];
-  for (const child of Children.toArray(extension.children)) {
-    if (isValidElement<Record<string, unknown>>(child) && child.type === PlotAxis) axes.push(child.props);
-  }
-  return axes;
-};
-
 describe('Viz Chart Bubble controls', () => {
   it('保留可追溯的 Gapminder 2007 完整国家截面', () => {
     expect(GAPMINDER_BUBBLE_YEAR).toBe(2007);
@@ -103,10 +92,6 @@ describe('Viz Chart Bubble controls', () => {
       'bubble-basic-coordinate-system': 'cartesian2D',
       'bubble-basic-color-by-continent': true,
       'bubble-basic-x-scale': 'log',
-      'bubble-basic-x-tick-count': 10,
-      'bubble-basic-x-tick-marks': true,
-      'bubble-basic-x-tick-labels': true,
-      'bubble-basic-x-grid': true,
       'bubble-basic-point-stroke-enabled': false,
       'bubble-basic-point-stroke': 'currentColor',
       'bubble-basic-point-shape': 'circle',
@@ -117,22 +102,11 @@ describe('Viz Chart Bubble controls', () => {
       'bubble-basic-coordinate-system',
       'bubble-basic-color-by-continent',
       'bubble-basic-x-scale',
-      'bubble-basic-x-tick-count',
-      'bubble-basic-x-tick-marks',
-      'bubble-basic-x-tick-labels',
-      'bubble-basic-x-grid',
       'bubble-basic-point-stroke-enabled',
       'bubble-basic-point-stroke',
       'bubble-basic-point-shape',
       'bubble-basic-point-fill-opacity',
     ]);
-    expect(controlFields.find(control => control.id === 'bubble-basic-x-tick-count')).toMatchObject({
-      kind: 'range',
-      defaultValue: 10,
-      min: 5,
-      max: 20,
-      step: 1,
-    });
     const shapeControl = controlFields.find(control => control.id === 'bubble-basic-point-shape');
     expect(shapeControl).toMatchObject({ kind: 'select' });
     if (shapeControl?.kind === 'select') {
@@ -146,6 +120,9 @@ describe('Viz Chart Bubble controls', () => {
     expect(basicZh.relatedApis).toContain('BubbleEncodings.size');
     expect(basicZh.relatedApis).toContain('BubbleChart.coordinate');
     expect(basicZh.relatedApis).toContain('BubbleEncodings.color');
+    expect(basicZh.relatedApis).not.toContain('PlotAxis.ticks');
+    expect(basicZh.relatedApis).not.toContain('PlotAxis.tickLabels');
+    expect(basicZh.relatedApis).not.toContain('PlotAxis.grid');
     expect(basicZh.relatedApis).not.toContain('BubbleProperties.size');
     expect(basicZh.relatedApis).not.toContain('BubbleProperties.domainPadding');
     expect(basicZh.relatedApis).not.toContain('BubbleProperties.fill');
@@ -176,17 +153,13 @@ describe('Viz Chart Bubble controls', () => {
       expect(source.datasetImports).toEqual({
         'chart.data': { name: 'gapminderBubbleData', from: './bubble-basic.data' },
       });
-      expect(canonicalAxisProps(source)).toMatchObject([
-        {
-          dimension: 'x',
-          ticks: { count: 10 },
-          grid: true,
-        },
-        {
-          dimension: 'y',
-          grid: true,
-        },
-      ]);
+      const chart = source.canonicalRender?.();
+      if (!isValidElement<{ children?: ReactNode }>(chart)) {
+        throw new Error('Bubble preview must provide a canonical element');
+      }
+      expect(
+        Children.toArray(chart.props.children).some(child => isValidElement(child) && child.type === ChartExtension),
+      ).toBe(false);
     }
   });
 

@@ -23,7 +23,12 @@ const controlled = defineControlledPreview(previewControlContract, values => (
   >
     <ChartData data={connectedScatterData} />
     <ChartLayout {...resolvePointPreviewLayout(values[CONNECTED_SCATTER_CONTROL_IDS.coordinateSystem])} />
-    <ConnectedScatterEncodings x="urbanization" y="lifeExpectancy" order="year" series="country" />
+    <ConnectedScatterEncodings
+      x="urbanization"
+      y="lifeExpectancy"
+      order="year"
+      {...(values[CONNECTED_SCATTER_CONTROL_IDS.seriesByCountry] ? { series: 'country' } : {})}
+    />
     <ConnectedScatterProperties
       point={{ size: values[CONNECTED_SCATTER_CONTROL_IDS.pointSize] }}
       path={{

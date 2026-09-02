@@ -63,38 +63,6 @@ export const bubbleBasicControls = definePreviewControls({
       ],
     },
     {
-      label: 'X axis',
-      controls: [
-        {
-          kind: 'range',
-          id: BUBBLE_BASIC_CONTROL_IDS.xTickCount,
-          label: 'Target tick count',
-          defaultValue: 10,
-          min: 5,
-          max: 20,
-          step: 1,
-        },
-        {
-          kind: 'switch',
-          id: BUBBLE_BASIC_CONTROL_IDS.xTickMarks,
-          label: 'Show tick marks',
-          defaultValue: true,
-        },
-        {
-          kind: 'switch',
-          id: BUBBLE_BASIC_CONTROL_IDS.xTickLabels,
-          label: 'Show tick labels',
-          defaultValue: true,
-        },
-        {
-          kind: 'switch',
-          id: BUBBLE_BASIC_CONTROL_IDS.xGrid,
-          label: 'Show grid lines',
-          defaultValue: true,
-        },
-      ],
-    },
-    {
       label: 'Bubble',
       controls: [
         {
@@ -142,10 +110,6 @@ export const previewControlContract = {
     [BUBBLE_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [BUBBLE_BASIC_CONTROL_IDS.colorByContinent]: true,
     [BUBBLE_BASIC_CONTROL_IDS.xScale]: 'log',
-    [BUBBLE_BASIC_CONTROL_IDS.xTickCount]: 10,
-    [BUBBLE_BASIC_CONTROL_IDS.xTickMarks]: true,
-    [BUBBLE_BASIC_CONTROL_IDS.xTickLabels]: true,
-    [BUBBLE_BASIC_CONTROL_IDS.xGrid]: true,
     [BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled]: false,
     [BUBBLE_BASIC_CONTROL_IDS.pointStroke]: 'currentColor',
     [BUBBLE_BASIC_CONTROL_IDS.pointShape]: 'circle',
@@ -157,9 +121,6 @@ export const previewControlContract = {
     'BubbleEncodings.y',
     'BubbleEncodings.size',
     'BubbleEncodings.color',
-    'PlotAxis.ticks',
-    'PlotAxis.tickLabels',
-    'PlotAxis.grid',
     'BubbleProperties.stroke',
     'BubbleProperties.shape',
     'BubbleProperties.fillOpacity',

@@ -7,6 +7,7 @@ import { connectedScatterData } from './connected-scatter-basic.data';
 
 export const CONNECTED_SCATTER_CONTROL_IDS = {
   coordinateSystem: 'connected-scatter-coordinate-system',
+  seriesByCountry: 'connected-scatter-series-by-country',
   connectNulls: 'connected-scatter-connect-nulls',
   lineStyle: 'connected-scatter-line-style',
   strokeWidth: 'connected-scatter-stroke-width',
@@ -44,6 +45,17 @@ export const connectedScatterBasicControls = definePreviewControls({
           cartesianLabel: '笛卡尔',
           polarLabel: '极坐标',
         }),
+      ],
+    },
+    {
+      label: '编码',
+      controls: [
+        {
+          kind: 'switch',
+          id: CONNECTED_SCATTER_CONTROL_IDS.seriesByCountry,
+          label: '按国家拆分轨迹',
+          defaultValue: true,
+        },
       ],
     },
     {
@@ -92,6 +104,7 @@ export const previewControlContract = {
   controls: connectedScatterBasicControls,
   canonicalValues: {
     [CONNECTED_SCATTER_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
+    [CONNECTED_SCATTER_CONTROL_IDS.seriesByCountry]: true,
     [CONNECTED_SCATTER_CONTROL_IDS.connectNulls]: false,
     [CONNECTED_SCATTER_CONTROL_IDS.lineStyle]: 'solid',
     [CONNECTED_SCATTER_CONTROL_IDS.strokeWidth]: 2,
@@ -99,6 +112,7 @@ export const previewControlContract = {
   },
   relatedApis: [
     'ConnectedScatterChart.coordinate',
+    'ConnectedScatterEncodings.series',
     'ConnectedScatterProperties.path.connectNulls',
     'ConnectedScatterProperties.path.dashPattern',
     'ConnectedScatterProperties.path.strokeWidth',

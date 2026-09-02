@@ -40,6 +40,17 @@ export const connectedScatterBasicControls = definePreviewControls({
       ],
     },
     {
+      label: 'Encodings',
+      controls: [
+        {
+          kind: 'switch',
+          id: CONNECTED_SCATTER_CONTROL_IDS.seriesByCountry,
+          label: 'Split trajectories by country',
+          defaultValue: true,
+        },
+      ],
+    },
+    {
       label: 'Trajectory',
       controls: [
         {
@@ -90,6 +101,7 @@ export const previewControlContract = {
   controls: connectedScatterBasicControls,
   canonicalValues: {
     [CONNECTED_SCATTER_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
+    [CONNECTED_SCATTER_CONTROL_IDS.seriesByCountry]: true,
     [CONNECTED_SCATTER_CONTROL_IDS.connectNulls]: false,
     [CONNECTED_SCATTER_CONTROL_IDS.lineStyle]: 'solid',
     [CONNECTED_SCATTER_CONTROL_IDS.strokeWidth]: 2,
@@ -97,6 +109,7 @@ export const previewControlContract = {
   },
   relatedApis: [
     'ConnectedScatterChart.coordinate',
+    'ConnectedScatterEncodings.series',
     'ConnectedScatterProperties.path.connectNulls',
     'ConnectedScatterProperties.path.dashPattern',
     'ConnectedScatterProperties.path.strokeWidth',
