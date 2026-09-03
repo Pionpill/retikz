@@ -21,7 +21,10 @@ const flexItem = (key: string, child: IRChild, alignSelf?: IRFlexLayoutItem['ali
 });
 
 /** 创建不带可见 Node 外壳的 presentation text */
-const presentationTextNode = (text: IRTextBlock, appearance: EffectiveDiagramTextAppearance): IRNode => ({
+export const createDiagramPresentationTextNode = (
+  text: IRTextBlock,
+  appearance: EffectiveDiagramTextAppearance,
+): IRNode => ({
   type: 'node',
   position: [0, 0],
   shape: 'rectangle',
@@ -45,12 +48,15 @@ const headingContent = (resolution: DiagramFoundationResolution): IRScope | unde
   let child: IRChild;
   if (title === undefined) {
     if (description === undefined) return undefined;
-    child = presentationTextNode(description, resolution.description);
+    child = createDiagramPresentationTextNode(description, resolution.presentationAppearance.description);
   } else if (description === undefined) {
-    child = presentationTextNode(title, resolution.title);
+    child = createDiagramPresentationTextNode(title, resolution.presentationAppearance.title);
   } else {
-    const titleNode = presentationTextNode(title, resolution.title);
-    const descriptionNode = presentationTextNode(description, resolution.description);
+    const titleNode = createDiagramPresentationTextNode(title, resolution.presentationAppearance.title);
+    const descriptionNode = createDiagramPresentationTextNode(
+      description,
+      resolution.presentationAppearance.description,
+    );
     child = createFlexLayout({
       direction: FlexLayoutDirection.Column,
       gap: resolution.frame.titleDescriptionGap,

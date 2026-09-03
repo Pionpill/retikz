@@ -13,18 +13,20 @@ export const getDefaultDiagramTheme = (theme: ResolvedTheme): EffectiveDiagramTh
     drawingLegendGap: 16,
     cornerRadius: 0,
   },
-  title: {
-    textColor: theme.mode === ThemeMode.Dark ? '#ffffff' : '#000000',
-    opacity: 1,
-    font: { size: 18, weight: 600 },
-    align: 'start',
-    lineHeight: 22,
-  },
-  description: {
-    textColor: theme.colors.semantic.guide,
-    opacity: 1,
-    font: { size: 14, weight: 400 },
-    align: 'start',
-    lineHeight: 20,
+  presentation: {
+    title: {
+      textColor: theme.mode === ThemeMode.Dark ? '#ffffff' : '#000000',
+      opacity: 1,
+      font: { size: 18, weight: 600 },
+      align: 'start',
+      lineHeight: 22,
+    },
+    description: {
+      textColor: theme.colors.semantic.guide,
+      opacity: 1,
+      font: { size: 14, weight: 400 },
+      align: 'start',
+      lineHeight: 20,
+    },
   },
 });

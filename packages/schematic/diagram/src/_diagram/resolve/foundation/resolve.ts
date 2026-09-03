@@ -53,7 +53,6 @@ export const resolveDiagramFoundation = (
   return {
     ...(source.presentation === undefined ? {} : { presentation: source.presentation }),
     frame,
-    title: theme.title,
-    description: theme.description,
+    presentationAppearance: theme.presentation,
   };
 };

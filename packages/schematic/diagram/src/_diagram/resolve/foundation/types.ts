@@ -3,7 +3,7 @@ import type { IRSurface } from '@retikz/standard';
 
 import type { DiagramThemeStyleDefinition } from '../../contract';
 import type { IRDiagramFrame, IRDiagramPresentation, IRDiagramTheme } from '../../schemas';
-import type { EffectiveDiagramTextAppearance } from '../theme';
+import type { EffectiveDiagramTheme } from '../theme';
 
 /** Diagram Foundation 解析使用的持久化片段集合 */
 export type DiagramFoundationSource = Readonly<{
@@ -36,6 +36,5 @@ export type CanonicalDiagramFrame = Readonly<{
 export type DiagramFoundationResolution = Readonly<{
   presentation?: IRDiagramPresentation;
   frame: CanonicalDiagramFrame;
-  title: EffectiveDiagramTextAppearance;
-  description: EffectiveDiagramTextAppearance;
+  presentationAppearance: EffectiveDiagramTheme['presentation'];
 }>;

@@ -25,7 +25,7 @@ const mergeFrame = (
 
 const mergeTextAppearance = (
   base: EffectiveDiagramTextAppearance,
-  overrides: IRDiagramTheme['title'],
+  overrides: NonNullable<IRDiagramTheme['presentation']>['title'],
 ): EffectiveDiagramTextAppearance => {
   if (overrides === undefined) return base;
   return {
@@ -37,8 +37,10 @@ const mergeTextAppearance = (
 
 const mergeDiagramTheme = (base: EffectiveDiagramTheme, overrides: IRDiagramTheme): EffectiveDiagramTheme => ({
   frame: mergeFrame(base.frame, overrides.frame),
-  title: mergeTextAppearance(base.title, overrides.title),
-  description: mergeTextAppearance(base.description, overrides.description),
+  presentation: {
+    title: mergeTextAppearance(base.presentation.title, overrides.presentation?.title),
+    description: mergeTextAppearance(base.presentation.description, overrides.presentation?.description),
+  },
 });
 
 /** 按当前位置 Core Theme 解析完整 Diagram Theme */

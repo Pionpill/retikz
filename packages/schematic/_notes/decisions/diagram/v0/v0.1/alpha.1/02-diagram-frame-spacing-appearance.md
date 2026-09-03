@@ -51,17 +51,15 @@ Surface allocation bounds 是完整 border box。存在区域、background、bor
 Diagram 不建立第二个命名 style 选择器。省略 Core `theme.style` 时使用 Diagram Neutral baseline；显式 Core style 时必须存在同名 `DiagramThemeStyleDefinition`，否则 fail-loud。发布包只维护 Neutral baseline，Academic、Clean、Vibrant 等 reference style 由宿主通过同一 Definition / registry 注入
 
 ```ts
-type DiagramThemeStyleOverrides = IRDiagramTheme;
-
 type DiagramThemeStyleDefinition = Readonly<{
   name: string;
-  resolve: (theme: ResolvedTheme) => DiagramThemeStyleOverrides;
+  resolve: (theme: ResolvedTheme) => IRDiagramTheme;
 }>;
 
 declare const defineDiagramThemeStyle: (definition: DiagramThemeStyleDefinition) => DiagramThemeStyleDefinition;
 ```
 
-`DiagramThemeStyleOverrides` 是 `IRDiagramTheme` 的公共 TypeScript 别名，不建立第二个 schema、字段集合或更宽输出形态。Definition 是运行时扩展契约，不进入 IR；其输出仍按 `IRDiagramTheme` 的闭合、非空、JSON-safe 语义校验。内置与自定义 Definition 经过同一 `defineDiagramThemeStyle`、registry、lookup、输出校验和消费路径；重名、未注册、非法 plain-data 输出与回调失败都 fail-loud。Definition 长期通过 `DiagramDefinitionOptions.diagramThemeStyles` 注入，不建立全局 registry 或 Source enum。本 ADR 的实现可以在包内建立并消费同一 contract / registry，但在具体 Diagram root 形成真实公共消费者前不从 package public exports 暴露 Definition、options 或 registry
+Definition 是运行时扩展契约，不进入 IR；其输出仍按 `IRDiagramTheme` 的闭合、非空、JSON-safe 语义校验。内置与自定义 Definition 经过同一 `defineDiagramThemeStyle`、registry、lookup、输出校验和消费路径；重名、未注册、非法字段输出与回调失败都 fail-loud。Definition 长期通过 `DiagramDefinitionOptions.diagramThemeStyles` 注入，不建立全局 registry 或 Source enum。本 ADR 的实现可以在包内建立并消费同一 contract / registry，但在具体 Diagram root 形成真实公共消费者前不从 package public exports 暴露 Definition、options 或 registry
 
 解析优先级固定为：
 
@@ -74,30 +72,30 @@ Core effective Theme
 → TextBlock line / run 显式样式
 ```
 
-Core Theme 拥有 mode、style、shared semantic / categorical colors；Diagram Theme 只拥有 Frame spacing、Surface appearance 及 title / description 块级默认；Standard Legend 继续拥有内部 appearance / layout；具体 drawing core 继续拥有 Graph Theme、布局或其它领域外观。Theme 不得改变 Legend 方位、对齐、overflow、区域存在性或 drawing-core 布局
+Core Theme 拥有 mode、style、shared semantic / categorical colors；Diagram Theme 只拥有 Frame spacing、Surface appearance 及 presentation title / description 块级默认；Standard Legend 继续拥有内部 appearance / layout；具体 drawing core 继续拥有 Graph Theme、布局或其它领域外观。Theme 不得改变 Legend 方位、对齐、overflow、区域存在性或 drawing-core 布局
 
-### Diagram Theme 使用 frame、title 与 description slices
+### Diagram Theme 使用 frame 与 presentation slices
 
-`IRDiagramTheme` 是非空稀疏对象，包含可选且非空的 `frame`、`title` 与 `description` slices。frame slice 只接受 `padding`、三种 gap、`background`、`border` 与 `cornerRadius`；不接受 `overflow`、`legendPosition` 或 `legendAlign`
+`IRDiagramTheme` 是非空稀疏对象，包含可选且非空的 `frame` 与 `presentation` slices。frame slice 只接受 `padding`、三种 gap、`background`、`border` 与 `cornerRadius`；不接受 `overflow`、`legendPosition` 或 `legendAlign`。presentation 只接受可选且非空的 `title` 与 `description` 块级 appearance
 
 title 与 description 使用同一个块级文本 appearance：`textColor`、`opacity`、`font`、`align`、`lineHeight` 与 `maxTextWidth`。这些字段精确复用 Core Node / Text 的同名契约
 
-Theme 级联按 slice 内的直接字段合并：省略 `frame`、`title`、`description` slice 或其中某个字段时继承较低层值，提供某个直接字段时替换该字段的较低层值，不能因高层出现一个 slice 就整体删除该 slice 的其它字段。`font` 是唯一递归合并的直接字段，按 family、size、weight、style 逐字段继承；`padding`、`background` 与 `border` 等其它对象值均作为一个直接字段整体替换，不逐子字段合并。任何层的 `undefined` 都不是删除标记，必须在输入边界 fail-loud
+Theme 级联按 slice 内的直接字段合并：省略 `frame`、`presentation.title`、`presentation.description` 或其中某个字段时继承较低层值，提供某个直接字段时替换该字段的较低层值，不能因高层出现一个 slice 就整体删除该 slice 的其它字段。`font` 是唯一递归合并的直接字段，按 family、size、weight、style 逐字段继承；`padding`、`background` 与 `border` 等其它对象值均作为一个直接字段整体替换，不逐子字段合并
 
 Neutral baseline 为：
 
-| Slice       | 字段                      | Light                             | Dark                              |
-| ----------- | ------------------------- | --------------------------------- | --------------------------------- |
-| frame       | padding                   | 16                                | 16                                |
-| frame       | titleDescriptionGap       | 6                                 | 6                                 |
-| frame       | headingMainGap            | 16                                | 16                                |
-| frame       | drawingLegendGap          | 16                                | 16                                |
-| frame       | background / border       | 省略                              | 省略                              |
-| frame       | cornerRadius              | 0                                 | 0                                 |
-| title       | textColor / opacity       | `#000000` / 1                     | `#ffffff` / 1                     |
-| title       | font / align / lineHeight | size 18、weight 600 / start / 22  | size 18、weight 600 / start / 22  |
-| description | textColor / opacity       | Core effective semantic guide / 1 | Core effective semantic guide / 1 |
-| description | font / align / lineHeight | size 14、weight 400 / start / 20  | size 14、weight 400 / start / 20  |
+| Slice                    | 字段                      | Light                             | Dark                              |
+| ------------------------ | ------------------------- | --------------------------------- | --------------------------------- |
+| frame                    | padding                   | 16                                | 16                                |
+| frame                    | titleDescriptionGap       | 6                                 | 6                                 |
+| frame                    | headingMainGap            | 16                                | 16                                |
+| frame                    | drawingLegendGap          | 16                                | 16                                |
+| frame                    | background / border       | 省略                              | 省略                              |
+| frame                    | cornerRadius              | 0                                 | 0                                 |
+| presentation.title       | textColor / opacity       | `#000000` / 1                     | `#ffffff` / 1                     |
+| presentation.title       | font / align / lineHeight | size 18、weight 600 / start / 22  | size 18、weight 600 / start / 22  |
+| presentation.description | textColor / opacity       | Core effective semantic guide / 1 | Core effective semantic guide / 1 |
+| presentation.description | font / align / lineHeight | size 14、weight 400 / start / 20  | size 14、weight 400 / start / 20  |
 
 Neutral 不设置字体 family，继续继承 Core compile 的字体环境；不设置 `maxTextWidth`，默认不主动换行；不设置 background 或 border，默认透明且无边框
 
@@ -146,8 +144,10 @@ type IRDiagramTextAppearance = Readonly<{
 
 type IRDiagramTheme = Readonly<{
   frame?: Omit<IRDiagramFrame, 'legendPosition' | 'legendAlign' | 'overflow'>;
-  title?: IRDiagramTextAppearance;
-  description?: IRDiagramTextAppearance;
+  presentation?: Readonly<{
+    title?: IRDiagramTextAppearance;
+    description?: IRDiagramTextAppearance;
+  }>;
 }>;
 ```
 
@@ -162,11 +162,10 @@ Definition options 不进入 Source。未来 React 与 Vanilla 只把同一 `Dia
 ## 行为、失败语义与兼容性
 
 - Frame 与 Theme schema 为闭合对象；未知字段、空 frame、空 diagramTheme、空 slice、负 gap / padding、非法颜色、字体、border、cornerRadius 或 overflow 均 fail-loud
-- Source 稀疏对象必须省略未设置字段；显式 `undefined` 不是 JSON-safe 删除标记，由 Source / normalize 边界拒绝
 - `frame.legendPosition`、`frame.legendAlign` 或显式 `frame.drawingLegendGap` 出现但没有 Legend 时 fail-loud；Theme 中同类默认可以在区域缺失时暂不消费，因为 Theme 是可复用层
 - `titleDescriptionGap` 或 `headingMainGap` 在相邻区域缺失时合法但不产生 gap；缺失区域不建立 Scene child、allocation、artifact 或空轨道
 - 省略 Frame 字段时使用 resolved Diagram Theme；显式 0、`visible`、透明 paint 与其它合法 falsy 值必须保留，不得改用 truthy fallback
-- 未注册 Diagram Theme style、Definition 重名、回调抛错或返回非法字段 / 非 plain data 由 `RetikzDiagramError` 诊断并原样保留 cause；Diagram 不回退 Neutral 或静默忽略
+- 未注册 Diagram Theme style、Definition 重名、回调抛错或返回非法字段由 `RetikzDiagramError` 诊断并原样保留 cause；Diagram 不回退 Neutral 或静默忽略
 - Surface proposal、Text / TeX、Legend、Layout 与 Core Scope / namespace 错误保留 owner 路径和诊断；Diagram adapter 不吞掉、改写或降级为 warning-only
 - 未来 React 不拥有 Direct IR 无法表达的 Frame / Theme 能力，也不采用第一个生效、默认恢复或宿主 CSS 外挂。Direct IR、Vanilla 与 React normalization 后的 Source 必须逐字段等价
 - Foundation 阶段不导出临时 Source root、任意 drawing body、占位字段或 package-public foundation API。同一 alpha.1 的具体 Diagram root 直接采用长期 Frame / Theme 契约，不提供 Flow 专属别名、旧名 re-export、migration、fallback 或双轨字段

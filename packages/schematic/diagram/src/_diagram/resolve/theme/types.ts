@@ -25,6 +25,8 @@ export type EffectiveDiagramTextAppearance = Readonly<{
 /** 当前 Core Theme 下解析完成的 Diagram Theme */
 export type EffectiveDiagramTheme = Readonly<{
   frame: EffectiveDiagramThemeFrame;
-  title: EffectiveDiagramTextAppearance;
-  description: EffectiveDiagramTextAppearance;
+  presentation: Readonly<{
+    title: EffectiveDiagramTextAppearance;
+    description: EffectiveDiagramTextAppearance;
+  }>;
 }>;
