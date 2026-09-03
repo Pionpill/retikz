@@ -99,6 +99,18 @@ const assertPathLabelInterruptionPolicy = (path: ResolvedPathSource, irPath: str
   }
 };
 
+/** 在 provider 消费前拒绝非内置 Stroke Path 上的端点箭头重叠声明 */
+const assertPathEndpointOverlapHost = (path: ResolvedPathSource, irPath: string): void => {
+  if (isBuiltinStrokePath(path)) return;
+  for (const [index, placement] of (path.marks ?? []).entries()) {
+    if (placement.endpointOverlap === undefined) continue;
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Resolve,
+      `Path endpoint arrow overlap at ${irPath}.marks[${index}].endpointOverlap is only supported by a built-in Stroke path.`,
+    );
+  }
+};
+
 /** 展开位置、方向、距离与 interruption 的默认值 */
 const canonicalizeLabel = (
   label: ResolvedGeometryLabel,
@@ -465,6 +477,7 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
   const labelMasterColor = labelDefault.color ?? styled.color;
   const colorsResolved = resolvePathContextualColors(styled, context, irPath, labelMasterColor);
   const canAutomaticallyInterrupt = isBuiltinStrokePath(colorsResolved) && hasNoEffectivePathFill(colorsResolved);
+  assertPathEndpointOverlapHost(colorsResolved, irPath);
   assertPathLabelInterruptionPolicy(colorsResolved, irPath);
   const kind = resolvePathKind(colorsResolved, context, irPath);
   const providerColorsResolved = resolvePathContextualColors(kind.path, context, irPath, labelMasterColor);

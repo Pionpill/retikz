@@ -168,10 +168,10 @@ describe('Standard optional arrow definitions', () => {
         strokeLinejoin: 'round',
       },
     ]);
-    expect(DiamondArrowDefinition).toMatchObject({ lineContactX: 0 });
-    expect(OpenDiamondArrowDefinition).toMatchObject({ hollow: true, lineContactX: 1, tipX: 9 });
-    expect(KiteArrowDefinition).toMatchObject({ lineContactX: 0 });
-    expect(OpenKiteArrowDefinition).toMatchObject({ hollow: true, lineContactX: 1, tipX: 9 });
+    expect(DiamondArrowDefinition).toMatchObject({ backX: 0, lineContactX: 0 });
+    expect(OpenDiamondArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
+    expect(KiteArrowDefinition).toMatchObject({ backX: 0, lineContactX: 0 });
+    expect(OpenKiteArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
   });
 
   it('emits TikZ square solid and open geometry with independent length and width scaling', () => {
@@ -235,8 +235,8 @@ describe('Standard optional arrow definitions', () => {
     );
     expect(customized?.commands.at(-1)).toEqual({ kind: 'line', to: [89.7, 0] });
     expect(customized?.arrowEnd).toMatchObject({ refX: 0, markerWidth: 12, markerHeight: 18 });
-    expect(SquareArrowDefinition).toMatchObject({ lineContactX: 0 });
-    expect(OpenSquareArrowDefinition).toMatchObject({ hollow: true, lineContactX: 1, tipX: 9 });
+    expect(SquareArrowDefinition).toMatchObject({ backX: 0, lineContactX: 0 });
+    expect(OpenSquareArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
   });
 
   it('places the new solid and open families at both ends of a reversed route', () => {
@@ -305,8 +305,8 @@ describe('Standard optional arrow definitions', () => {
         strokeWidth: 2,
       },
     ]);
-    expect(BarArrowDefinition).toMatchObject({ hollow: true, lineContactX: 9, tipX: 9 });
-    expect(CrowFootArrowDefinition).toMatchObject({ hollow: true, lineContactX: 1, tipX: 9 });
+    expect(BarArrowDefinition).toMatchObject({ backX: 9, hollow: true, lineContactX: 9, tipX: 9 });
+    expect(CrowFootArrowDefinition).toMatchObject({ backX: 1, hollow: true, lineContactX: 1, tipX: 9 });
   });
 
   it('uses Core marker placement for visual overrides, reverse routes, and double endpoints', () => {
@@ -388,6 +388,29 @@ describe('Standard optional arrow definitions', () => {
       { kind: 'move', to: [0.1, 0] },
       { kind: 'line', to: [93.5, 0] },
     ]);
+  });
+
+  it.each([
+    { definition: BarArrowDefinition, shape: 'bar' },
+    { definition: CrowFootArrowDefinition, shape: 'crowFoot' },
+  ])('uses the shared Core visual-back placement for $shape', ({ definition, shape }) => {
+    const scene: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'path',
+          marks: [{ pos: 1, endpointOverlap: 1, mark: { kind: 'arrow', shape, scale: 2 } }],
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    const primitive = firstPath(compileToScene(scene, { arrows: [definition] }).scene.primitives);
+
+    expect(primitive?.commands.at(-1)).toEqual({ kind: 'line', to: [100, 0] });
   });
 
   it('exports every optional arrow definition and static provider without implicit registration', () => {

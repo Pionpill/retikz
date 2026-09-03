@@ -48,6 +48,26 @@ describe('React JSX Input 场景', () => {
     ]);
   });
 
+  it('把 Path 的 arrowPlacement 原样交给 Vanilla 并生成端点重叠 IR', () => {
+    const props = {
+      arrow: '->' as const,
+      arrowPlacement: { end: { overlap: 0.5 } },
+    };
+    const input = createInputScene(
+      <Path {...props}>
+        <Step kind="move" to={[0, 0]} />
+        <Step kind="line" to={[20, 0]} />
+      </Path>,
+    );
+
+    expect(normalizeScene(input.scene).ir.children).toMatchObject([
+      {
+        type: 'path',
+        marks: [{ pos: 1, endpointOverlap: 0.5, mark: { kind: 'arrow' } }],
+      },
+    ]);
+  });
+
   it('保留 Path 与 Scope 的 runtime-only authoring，供 Vanilla compile driver 消费', () => {
     const scopeAuthoring = Object.freeze({ scope: true });
     const pathAuthoring = Object.freeze({ path: true });

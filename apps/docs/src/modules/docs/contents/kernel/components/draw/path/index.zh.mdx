@@ -73,7 +73,7 @@ import { Path, Step } from '@retikz/react';
 
 #### 箭头
 
-`arrow` 控制方向（`'->'` / `'<-'` / `'<->'` / `'none'`），`arrowDetail` 一个对象统管全部视觉规格（shape / scale / length / width / color / fill / opacity / lineWidth）+ 可选 `start` / `end` 起末分别配置。详细规则、8 种内置 shape、起末 merge、颜色 / 缩放 / 半透明配置以及完整 API 参考见 **[Arrow](/kernel/components/draw/arrow)** 专页。
+`arrow` 控制方向（`'->'` / `'<-'` / `'<->'` / `'none'`），`arrowDetail` 统管 shape / size / color 等视觉规格，`arrowPlacement` 则用 `[0,1]` 的归一化比例让箭头从现有默认位置推进到最终视觉后缘与逻辑端点对齐，并支持共享值与 `start` / `end` 单端覆盖。三者在 `<Path>` 与 `<Draw>` 上等价；完整规则、`0 / 0.5 / 1` 对比 demo、失败边界和 API 参考见 **[Arrow](/kernel/components/draw/arrow)** 专页。
 
 #### 端点连接面
 
@@ -262,6 +262,7 @@ import { Path, Step } from '@retikz/react';
 | `thickness`      | <ApiValues name="PathThickness" />                  | —              | 组件 / builder 语法糖：生成 IR 前解析成 `strokeWidth`；显式 `strokeWidth` 始终优先                                                                                                                                |
 | `arrow`          | `'none'` \| `'->'` \| `'<-'` \| `'<->'`             | —              | 路径级箭头方向（详见 [Arrow](/kernel/components/draw/arrow)）                                                                                                                                                     |
 | `arrowDetail`    | `IRArrowDetail`                                     | —              | 箭头视觉详细配置；字段详见 [Arrow](/kernel/components/draw/arrow)                                                                                                                                                 |
+| `arrowPlacement` | `InputPathArrowPlacement`                           | —              | 箭头端点重叠配置；比例 `1` 让最终视觉后缘对齐逻辑端点，共享与逐端覆盖详见 [Arrow](/kernel/components/draw/arrow#端点重叠)                                                                                         |
 | `fill`           | `string` \| `IRPaint`                               | `'none'`       | 闭合区域填充：任意 CSS 颜色，或 IRPaint（渐变 / 图案 / 图片）                                                                                                                                                     |
 | `fillRule`       | <ApiValues name="PathFillRule" />                   | `'nonzero'`    | 填充规则；环形 / 孔洞场景用 `'evenodd'`                                                                                                                                                                           |
 | `opacity`        | `number`                                            | —              | 整 path 透明度 0~1（同时作用于 stroke 与 fill）                                                                                                                                                                   |

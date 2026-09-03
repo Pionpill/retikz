@@ -24,12 +24,13 @@ An ArrowDefinition serves both Path endpoints and `marks[].mark.shape`. It does 
 
 ## Define the capability
 
-A minimal definition needs a stable `name`, the path-to-arrow contact point `lineContactX`, and an `emit` function that returns marker-local geometry.
+A minimal definition needs a stable `name`, a visual back at `backX`, the path contact at `lineContactX`, and an `emit` function that returns marker-local geometry.
 
 ```tsx
 const bracket = defineArrow({
   name: 'bracket',
   hollow: true,
+  backX: 2,
   lineContactX: 2,
   emit: ({ stroke, lineWidth }) => [
     {
@@ -42,7 +43,7 @@ const bracket = defineArrow({
 });
 ```
 
-`emit` uses `baseSize` local coordinates. `lineContactX` defines the marker's path-contact baseline; Core lets the path overlap that baseline by half of its own stroke width before the marker paints over the joint. `tipX` describes the visual tip. Hollow arrows also account for `lineWidth` and `outerInset` when compensating the outer outline.
+`emit` uses `baseSize` local coordinates. `backX` promises the base axial envelope back, `lineContactX` defines where the main stroke joins the marker, and `tipX` describes the visual tip; they must satisfy `backX <= lineContactX <= tipX`. Core lets the path overlap the contact baseline by half of its own stroke width before the marker paints over the joint. Endpoint overlap combines final `length × scale` with hollow `lineWidth` / `outerInset`, so ratio `1` aligns the final visual back with the logical endpoint.
 
 ## Inject into the host
 
@@ -58,7 +59,7 @@ The definition never enters IR. React, Vanilla, or persisted IR can reference th
 
 ## Execution
 
-Core basic arrows, explicitly assembled Standard arrows, and custom definitions all enter one registry. Compilation merges path defaults, `arrowDetail`, and per-end overrides before resolving the shape. It then shortens the path from the resolved size, line width, and contact point, and calls `emit` for marker geometry.
+Core basic arrows, explicitly assembled Standard arrows, and custom definitions all enter one registry. Compilation merges path defaults, `arrowDetail`, and per-end overrides before resolving the shape. It then uses resolved size and back / contact / tip geometry to place the endpoint and join the path before calling `emit` for marker geometry.
 
 The `fill` / `stroke` values passed to `emit` are `MarkerFill`. Without an explicit color they use `{ kind: 'contextStroke' }`, allowing one definition to follow each Path stroke instead of freezing a color at registration time.
 
@@ -70,7 +71,7 @@ The `fill` / `stroke` values passed to `emit` are `MarkerFill`. Without an expli
       label: 'Arrow definition and emit context',
       path: 'packages/kernel/core/src/contract/arrow/types.ts',
       startLine: 4,
-      endLine: 59,
+      endLine: 61,
     },
     {
       label: 'Unified registry for Core basic and injected arrows',
@@ -81,14 +82,14 @@ The `fill` / `stroke` values passed to `emit` are `MarkerFill`. Without an expli
     {
       label: 'Arrow lookup, visual overrides, and shrink resolution',
       path: 'packages/kernel/core/src/resolve/path/provider.ts',
-      startLine: 103,
-      endLine: 151,
+      startLine: 80,
+      endLine: 168,
     },
     {
       label: 'contextStroke, marker validation, and materialization',
       path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
       startLine: 18,
-      endLine: 82,
+      endLine: 87,
     },
     {
       label: 'Path endpoint shrink application',
@@ -101,15 +102,15 @@ The `fill` / `stroke` values passed to `emit` are `MarkerFill`. Without an expli
 
 ## Errors and limits
 
-| Case                                       | Result                                                          |
-| ------------------------------------------ | --------------------------------------------------------------- |
-| Empty name                                 | Registry rejects the non-empty key contract                     |
-| Duplicate Core, Standard, or custom name   | Registry merge reports a duplicate registration                 |
-| Unknown `arrowDetail.shape`                | Compile lists available names and `options.arrows`              |
-| Invalid `baseSize`, contact, or dimensions | Compile rejects invalid marker sizing                           |
-| Unknown primitive or non-finite geometry   | Marker validation prevents invalid Scene output                 |
-| Recursive arrows, clips, or text in marker | The narrow `MarkerPrimitive` contract rejects them              |
-| Path uses an IRPaint stroke                | Marker cannot inherit a resource paint; set a solid arrow color |
+| Case                                                    | Result                                                          |
+| ------------------------------------------------------- | --------------------------------------------------------------- |
+| Empty name                                              | Registry rejects the non-empty key contract                     |
+| Duplicate Core, Standard, or custom name                | Registry merge reports a duplicate registration                 |
+| Unknown `arrowDetail.shape`                             | Compile lists available names and `options.arrows`              |
+| Invalid `baseSize`, back / contact / tip, or dimensions | Compile rejects invalid marker geometry                         |
+| Unknown primitive or non-finite geometry                | Marker validation prevents invalid Scene output                 |
+| Recursive arrows, clips, or text in marker              | The narrow `MarkerPrimitive` contract rejects them              |
+| Path uses an IRPaint stroke                             | Marker cannot inherit a resource paint; set a solid arrow color |
 
 MarkerPrimitive allows only `path`, `ellipse`, `rect`, and groups containing the same subset. Do not return SVG `<marker>` elements, Canvas objects, text layout, or external paint resource references.
 
@@ -117,17 +118,18 @@ MarkerPrimitive allows only `path`, `ellipse`, `rect`, and groups containing the
 
 ### ArrowDefinition
 
-| Field           | Type                                 | Default                           | Description                                   |
-| --------------- | ------------------------------------ | --------------------------------- | --------------------------------------------- |
-| `name`          | `string`                             | —                                 | Registry key and shape reference              |
-| `lineContactX`  | `number`                             | —                                 | Path contact point used for body shortening   |
-| `emit`          | `(ctx) => Iterable<MarkerPrimitive>` | —                                 | Generates marker-local geometry               |
-| `baseSize`      | `number`                             | `10`                              | Marker-local reference size                   |
-| `tipX`          | `number`                             | `baseSize`                        | Visual tip x                                  |
-| `hollow`        | `boolean`                            | `false`                           | Uses stroke for a hollow outline              |
-| `defaultLength` | `number`                             | `6`                               | Fallback arrow length                         |
-| `defaultWidth`  | `number`                             | `6`                               | Fallback arrow width                          |
-| `outerInset`    | `number`                             | Hollow `lineWidth / 2`, solid `0` | Outer-outline compensation at node boundaries |
+| Field           | Type                                 | Default                           | Description                                     |
+| --------------- | ------------------------------------ | --------------------------------- | ----------------------------------------------- |
+| `name`          | `string`                             | —                                 | Registry key and shape reference                |
+| `backX`         | `number`                             | —                                 | Axial envelope back of the marker base geometry |
+| `lineContactX`  | `number`                             | —                                 | Path contact point used for body shortening     |
+| `emit`          | `(ctx) => Iterable<MarkerPrimitive>` | —                                 | Generates marker-local geometry                 |
+| `baseSize`      | `number`                             | `10`                              | Marker-local reference size                     |
+| `tipX`          | `number`                             | `baseSize`                        | Visual tip x                                    |
+| `hollow`        | `boolean`                            | `false`                           | Uses stroke for a hollow outline                |
+| `defaultLength` | `number`                             | `8`                               | Fallback arrow length                           |
+| `defaultWidth`  | `number`                             | `8`                               | Fallback arrow width                            |
+| `outerInset`    | `number`                             | Hollow `lineWidth / 2`, solid `0` | Outer-outline compensation at node boundaries   |
 
 ### Emit context
 

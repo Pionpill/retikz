@@ -67,7 +67,7 @@ Core 另外公开五个可复用的严格 fragment，按描边、填充、几何
   description="Path 宿主标签和沿路径标记字段。"
   descriptions={{
     label: '附着在 Path 或其它 path-like 宿主上的几何标签',
-    marks: '沿路径按归一化位置放置的标记；方向随路径切线',
+    marks: '沿路径按归一化位置放置的标记；方向随路径切线，端点箭头可声明归一化重叠比例',
   }}
 />
 
@@ -120,7 +120,8 @@ Core 另外公开五个可复用的严格 fragment，按描边、填充、几何
     scale: '整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）',
     roundedCorners: '线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同',
     label: '附着在 Path 或其它 path-like 宿主上的几何标签',
-    marks: "沿路径放方向标记：每项 `{ pos, mark }`，`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线",
+    marks:
+      "沿路径放方向标记：每项 `{ pos, endpointOverlap?, mark }`，`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线；endpointOverlap 只适用于内置 Stroke Path 实际选中的端点 mark",
     children: 'step 动作序列；首项通常应是 `move`',
   }}
 />
@@ -530,13 +531,14 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 ### 标记位置
 
-`PathMarkPlacementSchema` 把一个 mark 放在路径归一化位置上；方向由该位置的路径切线决定。
+`PathMarkPlacementSchema` 把一个 mark 放在路径归一化位置上；方向由该位置的路径切线决定。`endpointOverlap` 只用于内置 Stroke Path 实际选中的 `pos: 0` / `pos: 1` 端点箭头：`0` 保持现有默认放置，`0.5` 位于默认与完整进入位置的中点，`1` 让按最终尺寸和轮廓解析的视觉后缘对齐逻辑端点。中段、同侧未选中的重复端点，以及其它 Path kind 会明确失败。
 
 <ZodSchema
   name="PathMarkPlacementSchema"
   description="路径上的一个归一化标记位置及其 mark。"
   descriptions={{
     pos: '路径上的归一化位置 0..1；line-like step 按弧长，曲线 step 按参数位置',
+    endpointOverlap: '仅用于内置 Stroke Path 实际选中的端点箭头；0 保持现有默认放置，1 让最终视觉后缘对齐逻辑端点',
     mark: '放置的标记；当前为沿路径切线定向的 ArrowMark',
   }}
 />

@@ -297,6 +297,30 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-09-03',
+          summary: {
+            zh: '补齐 Stroke Path 的标签断口与端点箭头重叠几何；两者都 lower 为既有 Scene path commands，SVG、Canvas 与命中测试共享结果。',
+            en: 'Completes Stroke Path label gaps and endpoint-arrow overlap geometry. Both lower to existing Scene path commands shared by SVG, Canvas, and hit testing.',
+          },
+          items: [
+            {
+              label: { zh: '端点箭头重叠比例', en: 'Endpoint-arrow overlap ratio' },
+              content: {
+                zh: '`PathMarkPlacement.endpointOverlap` 用 `[0,1]` 比例让选中的起末箭头从现有默认位置推进到最终视觉后缘与逻辑端点对齐；中间值在两种最终位置间线性插值。计算随 `length × scale` 与空心轮廓变化；NodeTarget、逻辑 Path、标签 / 中段 mark 采样、marker seam 与 renderer contract 不变，未消费位置和非内置 Stroke host fail-loud。',
+                en: '`PathMarkPlacement.endpointOverlap` uses a `[0,1]` ratio to move the selected start or end arrow from its existing default to final-visual-back alignment at the logical endpoint, interpolating between those final placements. The calculation follows `length × scale` and hollow outlines. NodeTargets, the logical Path, label and inline-mark sampling, marker seams, and renderer contracts stay unchanged; unconsumed placements and non-built-in Stroke hosts fail loudly.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：ArrowDefinition 后缘契约', en: 'BREAKING: ArrowDefinition back contract' },
+              content: {
+                zh: '`ArrowDefinition.backX` 成为必填的 marker 基础几何后缘，并与 `lineContactX`、`tipX` 分别表达后缘、主描边接合点和尖端。三者必须有限且满足 `backX <= lineContactX <= tipX`；既有自定义 definition 需要显式补齐，不提供 fallback。',
+                en: '`ArrowDefinition.backX` is now required as the marker base-geometry back, separate from the main-stroke contact in `lineContactX` and the tip in `tipX`. All three must be finite and satisfy `backX <= lineContactX <= tipX`; existing custom definitions must add it explicitly, with no fallback.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.3',
           date: '2026-08-28',
           summary: {
@@ -556,6 +580,15 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-09-03',
+          summary: {
+            zh: '`<Path>` 与 `<Draw>` 新增 `arrowPlacement`，等价透传端点共享 overlap 与 `start` / `end` 覆盖。',
+            en: '`<Path>` and `<Draw>` add `arrowPlacement`, forwarding shared endpoint overlap and `start` / `end` overrides equivalently.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.3',
           date: '2026-08-28',
           summary: {
@@ -616,6 +649,15 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.5',
+          date: '2026-09-03',
+          summary: {
+            zh: 'plain spec 新增 `arrowPlacement`，按 nullish 规则合并共享与逐端 overlap，并对没有对应端点箭头的配置明确报错。',
+            en: 'Plain specs add `arrowPlacement`, nullishly merging shared and per-end overlap while failing explicitly when no matching endpoint arrow exists.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.3',
           date: '2026-08-28',

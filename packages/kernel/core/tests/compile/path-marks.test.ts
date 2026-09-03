@@ -53,6 +53,7 @@ describe('marks → 中段 marker primitive', () => {
     const ir = linePathIR([{ pos: 0.5, mark: { kind: 'arrow', shape: 'myTip' } }]);
     const customArrow: Record<string, TestArrowDefinition> = {
       myTip: {
+        backX: 0,
         lineContactX: 0,
         emit: () => [
           {

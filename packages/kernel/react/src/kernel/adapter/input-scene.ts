@@ -391,6 +391,7 @@ const inputPathFromProps = (props: PathProps): InputPath => {
     props.thickness === undefined &&
     props.arrow === undefined &&
     props.arrowDetail === undefined &&
+    props.arrowPlacement === undefined &&
     props.way === undefined &&
     props.children === undefined;
   return {
@@ -400,6 +401,7 @@ const inputPathFromProps = (props: PathProps): InputPath => {
     ...(props.thickness === undefined ? {} : { thickness: props.thickness }),
     ...(props.arrow === undefined ? {} : { arrow: props.arrow }),
     ...(props.arrowDetail === undefined ? {} : { arrowDetail: props.arrowDetail }),
+    ...(props.arrowPlacement === undefined ? {} : { arrowPlacement: props.arrowPlacement }),
     ...(props.way === undefined ? {} : { way: props.way }),
     ...(props.children === undefined ? {} : { children: readPathChildren(props.children) }),
   };

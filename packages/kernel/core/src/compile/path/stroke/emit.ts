@@ -349,6 +349,7 @@ const emitCanonicalPathPrimitive = (
   const { arrows, inlineMarks } = emitPathEndpointDecorations(path, {
     arrowResolutions: resolution.arrows,
     round,
+    irPath,
   });
   assertArrowCanInheritStroke(baseProps.stroke, arrows);
 

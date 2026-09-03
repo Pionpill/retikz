@@ -142,6 +142,8 @@ export type ArrowMarkVisual = Readonly<{
 export type ArrowMarkGeometry = Readonly<{
   baseSize: number;
   tipX: number;
+  /** 空心外轮廓补偿后的 marker 局部视觉后缘 */
+  visualBackX: number;
   contactX: number;
   resolvedLength: number;
   resolvedWidth: number;

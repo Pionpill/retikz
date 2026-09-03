@@ -191,7 +191,7 @@ For the endpoint rules of proportional placement, see [Placement](/kernel/refere
 
 ### PathMarkPlacement
 
-`PathMarkPlacementSchema` places one mark at a normalized path position; orientation comes from the path tangent at that position.
+`PathMarkPlacementSchema` places one mark at a normalized path position; orientation comes from the path tangent at that position. `endpointOverlap` applies only to the endpoint arrow selected at `pos: 0` or `pos: 1` by the built-in Stroke Path. `0` preserves the existing default, `0.5` is the midpoint between the default and fully entered placements, and `1` aligns the final visual back—resolved from the final size and outline—with the logical endpoint. Inline marks, duplicate unselected endpoint marks, and other Path kinds fail explicitly.
 
 <ZodSchema name="PathMarkPlacementSchema" />
 

@@ -1,6 +1,6 @@
 import type { Scene } from '@retikz/core';
 
-import { compileToScene } from '@retikz/core';
+import { compileToScene, defineArrow } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { hitTest } from '../../src/canvas';
@@ -337,5 +337,45 @@ describe('Canvas hitTest', () => {
     expect(hitTest(scene, { x: 20, y: 0 }, { context2d: ctx() })).toBe('edge');
     expect(hitTest(scene, { x: 50, y: 0 }, { context2d: ctx() })).toBeNull();
     expect(hitTest(scene, { x: 80, y: 0 }, { context2d: ctx() })).toBe('edge');
+  });
+
+  it('endpoint arrow overlap makes the extended Scene stroke hittable without renderer-specific placement', () => {
+    const arrow = defineArrow({
+      name: 'empty-overlap-probe',
+      baseSize: 10,
+      backX: 0,
+      tipX: 8,
+      lineContactX: 2,
+      emit: () => [],
+    });
+    const compile = (endpointOverlap: number): Scene =>
+      compileToScene(
+        {
+          version: 1,
+          type: 'scene',
+          children: [
+            {
+              type: 'path',
+              id: 'edge',
+              stroke: '#13579b',
+              marks: [
+                {
+                  pos: 1,
+                  endpointOverlap,
+                  mark: { kind: 'arrow', shape: 'empty-overlap-probe', length: 10, width: 10, scale: 2 },
+                },
+              ],
+              children: [
+                { type: 'step', kind: 'move', to: [0, 0] },
+                { type: 'step', kind: 'line', to: [100, 0] },
+              ],
+            },
+          ],
+        },
+        { arrows: [arrow], padding: 0 },
+      ).scene;
+
+    expect(hitTest(compile(0), { x: 102, y: 0 }, { context2d: ctx() })).toBeNull();
+    expect(hitTest(compile(1), { x: 102, y: 0 }, { context2d: ctx() })).toBe('edge');
   });
 });

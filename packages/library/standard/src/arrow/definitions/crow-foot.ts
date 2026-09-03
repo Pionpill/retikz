@@ -9,6 +9,7 @@ import { openStrokePath } from './_utils';
 export const CrowFootArrowDefinition = defineArrow({
   name: StandardArrowName.CrowFoot,
   hollow: true,
+  backX: 1,
   lineContactX: 1,
   tipX: 9,
   emit: context => [
