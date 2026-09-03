@@ -57,7 +57,7 @@ export const defineEntityRoleControlContract = <const TCopy extends EntityRoleCo
             kind: 'select',
             id: EntityRoleControlId.Status,
             label: copy.statusLocale === 'zh' ? '状态' : 'Status',
-            defaultValue: GraphStatus.Warning,
+            defaultValue: '',
             options: entityStatusOptions[copy.statusLocale],
           },
           {
@@ -81,7 +81,7 @@ export const defineEntityRoleControlContract = <const TCopy extends EntityRoleCo
   return {
     controls,
     canonicalValues: {
-      status: GraphStatus.Warning,
+      status: '',
       color: 'currentColor',
       content: copy.content,
     },

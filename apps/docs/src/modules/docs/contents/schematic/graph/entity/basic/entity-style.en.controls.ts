@@ -33,7 +33,7 @@ export const entityStyleControls = definePreviewControls({
           kind: 'select',
           id: EntityStyleControlId.Status,
           label: 'Status',
-          defaultValue: GraphStatus.Warning,
+          defaultValue: '',
           options: [
             { value: '', label: 'No status' },
             { value: GraphStatus.Error, label: 'Error' },
@@ -92,7 +92,7 @@ export const previewControlContract = {
   controls: entityStyleControls,
   canonicalValues: {
     role: EntityRole.Activity,
-    status: GraphStatus.Warning,
+    status: '',
     content: 'Process Order',
     fill: '#e2e8f0',
     stroke: '#2563eb',

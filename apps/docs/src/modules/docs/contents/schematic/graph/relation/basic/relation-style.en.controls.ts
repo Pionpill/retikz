@@ -31,7 +31,7 @@ export const relationStyleControls = definePreviewControls({
           kind: 'select',
           id: RelationStyleControlId.Status,
           label: 'Status',
-          defaultValue: GraphStatus.Warning,
+          defaultValue: '',
           options: [
             { value: '', label: 'No status' },
             { value: GraphStatus.Error, label: 'Error' },
@@ -130,7 +130,7 @@ export const previewControlContract = {
   controls: relationStyleControls,
   canonicalValues: {
     role: RelationRole.Flow,
-    status: GraphStatus.Warning,
+    status: '',
     content: 'Next step',
     sourceColor: 'currentColor',
     targetColor: 'currentColor',

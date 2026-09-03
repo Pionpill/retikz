@@ -112,7 +112,7 @@ export const defineRelationRoleControlContract = <const TCopy extends RelationRo
     kind: 'select',
     id: RelationRoleControlId.Status,
     label: copy.statusLocale === 'zh' ? '状态' : 'Status',
-    defaultValue: GraphStatus.Warning,
+    defaultValue: '',
     options: relationStatusOptions[copy.statusLocale],
   });
   roleControls.push({
@@ -133,7 +133,7 @@ export const defineRelationRoleControlContract = <const TCopy extends RelationRo
     canonicalValues: {
       ...(copy.kind === undefined ? {} : { kind: copy.kind.defaultValue }),
       ...(copy.direction === undefined ? {} : { direction: copy.direction.defaultValue }),
-      status: GraphStatus.Warning,
+      status: '',
       color: 'currentColor',
     },
     relatedApis: [

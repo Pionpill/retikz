@@ -116,9 +116,9 @@ describe('Graph semantic status controls', () => {
       const status = getPreviewControlFields(controls.previewControlContract.controls).find(
         field => field.id === 'status',
       );
-      expect(status).toMatchObject({ kind: 'select', defaultValue: 'warning' });
+      expect(status).toMatchObject({ kind: 'select', defaultValue: '' });
       expect(status?.kind === 'select' ? status.options.map(option => option.value) : []).toEqual(expectedStatusValues);
-      expect(controls.previewControlContract.canonicalValues).toMatchObject({ status: 'warning' });
+      expect(controls.previewControlContract.canonicalValues).toMatchObject({ status: '' });
       expect(englishControls.previewControlContract.canonicalValues).toEqual(
         controls.previewControlContract.canonicalValues,
       );
@@ -130,7 +130,7 @@ describe('Graph semantic status controls', () => {
     expect(relationStatusOf('')).toBeUndefined();
   });
 
-  it('writes the canonical status into every Entity and Relation role Source preview', () => {
+  it('omits the canonical status from every Entity and Relation role Source preview', () => {
     for (const path of [...entityRoleDemoPaths, ...relationRoleDemoPaths]) {
       const demo = roleDemos[path];
 
@@ -140,7 +140,9 @@ describe('Graph semantic status controls', () => {
       const graph = buildPreviewIR(() => demo.previewSource.canonicalRender?.() ?? null).ir.children[0] as {
         children?: ReadonlyArray<unknown>;
       };
-      expect(graph.children).toEqual(expect.arrayContaining([expect.objectContaining({ status: 'warning' })]));
+      expect(graph.children).not.toEqual(
+        expect.arrayContaining([expect.objectContaining({ status: expect.anything() })]),
+      );
     }
   });
 });

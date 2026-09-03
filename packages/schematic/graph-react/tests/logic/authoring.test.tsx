@@ -30,7 +30,7 @@ import {
   RetikzGraphReactErrorCode,
   useGraphThemeStyles,
 } from '../../src';
-import { graphLayoutHostPropsOf } from '../../src/graph/authoring';
+import { collectEntityInput, collectRelationInput, graphLayoutHostPropsOf } from '../../src/graph/authoring';
 
 describe('Group React authoring', () => {
   it('produces the same Group Source IR while accepting arbitrary React children', () => {
@@ -306,6 +306,26 @@ describe('@retikz/graph-react package boundary', () => {
 });
 
 describe('Entity and Relation React authoring', () => {
+  it('omits an Entity status when its React prop is undefined', () => {
+    const input = collectEntityInput({ role: 'participant', position: [0, 0], status: undefined }, 'entity-status');
+
+    expect(input).not.toHaveProperty('status');
+  });
+
+  it('omits a Relation status when its React prop is undefined', () => {
+    const input = collectRelationInput(
+      {
+        role: 'association',
+        source: { id: 'source' },
+        target: { id: 'target' },
+        status: undefined,
+      },
+      'relation-status',
+    );
+
+    expect(input).not.toHaveProperty('status');
+  });
+
   it('normalizes direct Entity and Relation children without a Graph parent or generated ids', () => {
     const result = normalizeReact(
       createElement(
