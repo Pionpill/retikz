@@ -227,6 +227,7 @@ export const applyDeclaration = (
       transform,
       layer,
       anchorId,
+      placement,
       channels,
     } = props;
     const markLabel = buildMarkLabel(props);
@@ -262,6 +263,7 @@ export const applyDeclaration = (
       ...(transform !== undefined ? { transform } : {}),
       ...(layer !== undefined ? { layer } : {}),
       ...(anchorId !== undefined ? { anchorId } : {}),
+      ...(placement !== undefined ? { placement } : {}),
       ...(colorStyle !== undefined ? { color: colorStyle } : {}),
       ...(textColorStyle !== undefined ? { textColor: textColorStyle } : {}),
       ...(sizeStyle !== undefined ? { size: sizeStyle } : {}),

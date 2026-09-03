@@ -6,6 +6,7 @@ import type {
   Cell,
   CellGeometry,
   CoordinateDefinition,
+  CoordinateFrame,
   DimensionRole,
   GuideContext,
   LoweredGuide,
@@ -171,6 +172,12 @@ export type CartesianCoordinateFrame = {
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：按 roles 序传值（[x, y]），内部委托 project；任一非有限 → null */
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
+  /** 原始 x/y 经 position scale 映射 */
+  mapRoles: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
+  /** 已映射 x/y 直接解释为屏幕位置 */
+  projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
+  /** 笛卡尔 role-space containment 边界度量 */
+  placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
   /** 正交 cell → 轴对齐矩形（闭式快路）：position = 两区间中点、width/height = 区间跨度 */
   projectCell: (cell: Cell) => CellGeometry;
 };
@@ -184,11 +191,19 @@ export const createCartesianCoordinate = (
   primary: PositionScale,
   secondary: PositionScale,
 ): CartesianCoordinateFrame => {
+  const mapRoles = (values: ReadonlyArray<unknown>): ReadonlyArray<number> | null => {
+    const x = primary.coordinate(values[0]);
+    const y = secondary.coordinate(values[1]);
+    return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
+  };
+  const projectMappedRoles = (values: ReadonlyArray<number>): Position | null => {
+    const x = values[0];
+    const y = values[1];
+    return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
+  };
   const project = (primaryValue: unknown, secondaryValue: unknown): Position | null => {
-    const x = primary.coordinate(primaryValue);
-    const y = secondary.coordinate(secondaryValue);
-    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-    return [x, y];
+    const mapped = mapRoles([primaryValue, secondaryValue]);
+    return mapped === null ? null : projectMappedRoles(mapped);
   };
   return {
     type: PlotCoordinate.Cartesian2D,
@@ -198,6 +213,14 @@ export const createCartesianCoordinate = (
     roleScales: { x: primary, y: secondary },
     project,
     projectRoles: values => project(values[0], values[1]),
+    mapRoles,
+    projectMappedRoles,
+    placementBoundary: {
+      isCyclic: () => false,
+      unitNormal: role => (role === 'x' ? [1, 0] : role === 'y' ? [0, 1] : null),
+      glyphExtentInRoleUnits: (role, _mappedRoles, screenExtent) =>
+        role === 'x' || role === 'y' ? screenExtent : null,
+    },
     projectCell: cell => {
       const [px0, px1] = cellInterval(cell, 'x');
       const [sy0, sy1] = cellInterval(cell, 'y');
@@ -233,6 +256,12 @@ export type Cartesian1DCoordinateFrame = {
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：roles 长度 1，传 [value] → horizontal [scale(v), baseline] / vertical [baseline, scale(v)]；非有限 → null */
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
+  /** 原始 x 经 position scale 映射 */
+  mapRoles: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
+  /** 已映射 x 投影到 horizontal / vertical 屏幕轴 */
+  projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
+  /** 一维笛卡尔 role-space containment 边界度量 */
+  placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
 };
 
 /**
@@ -245,11 +274,18 @@ export const createCartesian1DCoordinate = (
   orientation: Cartesian1DOrientationType,
   baseline: number,
 ): Cartesian1DCoordinateFrame => {
-  const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
+  const mapRoles = (values: ReadonlyArray<unknown>): ReadonlyArray<number> | null => {
     const position = scale.coordinate(values[0]);
+    return Number.isFinite(position) ? [position] : null;
+  };
+  const projectMappedRoles = (values: ReadonlyArray<number>): Position | null => {
+    const position = values[0];
     if (!Number.isFinite(position)) return null;
-    // horizontal：数据沿 x、塌缩 y=baseline（底边）；vertical：数据沿 y、塌缩 x=baseline（左边）
     return orientation === Cartesian1DOrientation.Horizontal ? [position, baseline] : [baseline, position];
+  };
+  const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
+    const mapped = mapRoles(values);
+    return mapped === null ? null : projectMappedRoles(mapped);
   };
   return {
     type: PlotCoordinate.Cartesian1D,
@@ -260,6 +296,13 @@ export const createCartesian1DCoordinate = (
     roleScales: { x: scale },
     project: primaryValue => projectRoles([primaryValue]),
     projectRoles,
+    mapRoles,
+    projectMappedRoles,
+    placementBoundary: {
+      isCyclic: () => false,
+      unitNormal: role => (role !== 'x' ? null : orientation === Cartesian1DOrientation.Horizontal ? [1, 0] : [0, 1]),
+      glyphExtentInRoleUnits: (role, _mappedRoles, screenExtent) => (role === 'x' ? screenExtent : null),
+    },
   };
 };
 

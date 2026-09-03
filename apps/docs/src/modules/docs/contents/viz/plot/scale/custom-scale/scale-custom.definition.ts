@@ -58,6 +58,7 @@ export const easePositionScale = defineScale({
       },
       domain: () => [domainMin, domainMax],
       bandwidth: 0,
+      step: 0,
       ticks: count => {
         if (domainMax === domainMin) return { values: [domainMin], labels: [String(domainMin)] };
         const total = Math.max(2, Math.floor(count ?? 5));

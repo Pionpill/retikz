@@ -259,6 +259,7 @@
     "grammarCoordinateCustom": "自定义坐标系",
     "grammarMark": "图元",
     "grammarMarkCustom": "自定义图元",
+    "grammarPositionAdjustment": "位置调整",
     "grammarGuide": "辅助",
     "compMark": "图元",
     "compPathMark": "路径",

@@ -28,6 +28,23 @@ export type CoordinateFrame = {
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：按 roles 序传值 → 屏幕点；非有限 → null（跳过） */
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
+  /** 原始角色值经各 role 的 position scale 映射；支持 role-space placement 时必须提供 */
+  mapRoles?: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
+  /** 已映射角色值投影到屏幕；支持 role-space placement 时必须提供 */
+  projectMappedRoles?: (values: ReadonlyArray<number>) => Position | null;
+  /** role-space containment 所需的 coordinate 边界度量；未提供时不能消费要求自动 containment 的 adjustment */
+  placementBoundary?: {
+    /** 该 role 是否循环闭合；循环 role 不制造首尾 seam */
+    isCyclic: (role: DimensionRole) => boolean;
+    /** 指定 target 上该 role 正向的屏幕单位法向 */
+    unitNormal: (role: DimensionRole, mappedRoles: ReadonlyArray<number>) => readonly [number, number] | null;
+    /** 把屏幕 glyph extent 换算为该 role 的 scale 输出单位；无法保证 containment 时返回 null */
+    glyphExtentInRoleUnits: (
+      role: DimensionRole,
+      mappedRoles: ReadonlyArray<number>,
+      screenExtent: number,
+    ) => number | null;
+  };
   /**
    * 各角色的位置 scale（可选）：供 guide 画轴用——取该角色刻度、其余角色锚在各自 domain 起点，
    * 沿 projectRoles 密采样得曲线轴线 + 刻度点。不回传 → 该坐标系不画轴
@@ -80,6 +97,12 @@ export type PolarCoordinateFrame = {
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：按 roles 顺序传值，内部委托 project */
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
+  /** 原始角色值映射为 [thetaDeg, radius] */
+  mapRoles: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
+  /** 已映射 [thetaDeg, radius] 投影为屏幕点 */
+  projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
+  /** 极坐标 role-space containment 边界度量 */
+  placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
   /** 把已映射的极坐标对（theta 度, radius user units）换算成屏幕点 */
   projectPolar: (thetaDeg: number, radius: number) => Position | null;
   /** 正交 cell -> 环扇或直弦 contour；options 只覆盖本次投影，不修改共享 frame */

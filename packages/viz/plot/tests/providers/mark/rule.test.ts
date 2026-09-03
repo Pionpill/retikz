@@ -62,6 +62,9 @@ const linearStub = (domain: [number, number], range: [number, number]): Position
     get bandwidth() {
       return 0;
     },
+    get step() {
+      return 0;
+    },
     ticks: () => ({ values: [], labels: [] }),
     range: () => [r[0], r[1]],
     setRange: next => {

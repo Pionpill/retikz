@@ -51,6 +51,7 @@ import {
   PointEncodingSchema,
 } from '../encoding';
 import { PlotLayerSchema } from '../layer';
+import { MarkPlacementSchema } from '../position-adjustment';
 import { TransformSchema } from '../transform';
 import {
   BUILTIN_MARK_TYPES,
@@ -637,6 +638,9 @@ export const PointMarkSchema = strictObject({
     ),
   anchorId: AnchorIdSchema.optional().describe(
     'Stable id rule written to each generated core Node; takes precedence over datumIdField for the node id',
+  ),
+  placement: MarkPlacementSchema.optional().describe(
+    'Position adjustments applied after position scale mapping and before mark geometry',
   ),
   ...markBase,
   ...nodeHostLabel,

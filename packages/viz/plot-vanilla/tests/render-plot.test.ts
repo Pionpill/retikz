@@ -2,9 +2,10 @@ import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
 
 import { compileToScene } from '@retikz/core';
-import { lowerPlots } from '@retikz/plot';
+import { definePositionAdjustment, lowerPlots } from '@retikz/plot';
 import { renderToSvgString } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
+import { literal, number, strictObject } from 'zod';
 
 import {
   boxplotData,
@@ -44,6 +45,18 @@ const data: ExternalDatasets = {
     { month: 2, revenue: 9 },
   ],
 };
+
+const ScreenShiftSchema = strictObject({ kind: literal('screen-shift'), dx: number() });
+type ScreenShift = { kind: 'screen-shift'; dx: number };
+const screenShift = definePositionAdjustment<ScreenShift>({
+  space: 'screen',
+  schema: ScreenShiftSchema,
+  initialize: (operation, context) =>
+    context.targets.map(target => ({
+      key: target.key,
+      position: target.position === null ? null : [target.position[0] + operation.dx, target.position[1]],
+    })),
+});
 
 const plotThemeTokens = {
   'plot.area.fill': '#123456',
@@ -98,6 +111,27 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots(data, { width: 480, height: 300 }) },
     ).scene;
+    expect(viaRenderPlot).toBe(renderToSvgString(scene, { output: { width: 480, height: 300 } }));
+  });
+
+  it('把 positionAdjustmentDefinitions 传到 lowering 并保持 SSR 与直接 Plot lowering 等价', () => {
+    const placementSpec: IRPlot = {
+      ...spec,
+      marks: [
+        {
+          type: 'point',
+          placement: { adjustments: [{ kind: 'screen-shift', dx: 9 }] },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    };
+    const options = { width: 480, height: 300, positionAdjustmentDefinitions: [screenShift] };
+    const viaRenderPlot = renderPlot(placementSpec, data, options);
+    const scene = compileToScene(
+      { version: 1, type: 'scene', children: [placementSpec] },
+      { composites: lowerPlots(data, options) },
+    ).scene;
+
     expect(viaRenderPlot).toBe(renderToSvgString(scene, { output: { width: 480, height: 300 } }));
   });
 

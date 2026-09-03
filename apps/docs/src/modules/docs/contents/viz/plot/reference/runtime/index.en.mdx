@@ -25,7 +25,7 @@ The React DSL only collects JSX / props and dispatches Plot Vanilla, while Vanil
 
 For a Vanilla runtime source, `{ input }` runs `normalizePlot` exactly once. `{ spec }` is already an `IRPlot`: the runtime preserves its object identity and bypasses normalization. Unknown JSON must be parsed with the Plot schema or another parser before it is supplied as `spec`; runtime entry points do not treat untyped JSON as IR.
 
-`IRPlot` stores only JSON-safe grammar and `data.reference`. Actual rows, field resolvers, label functions, and custom transform, scale, channel, coordinate, or mark Definitions are runtime inputs. They meet the IR at execution, but are never written back into it.
+`IRPlot` stores only JSON-safe grammar and `data.reference`. Actual rows, field resolvers, label functions, and custom transform, scale, channel, coordinate, mark, or Position Adjustment Definitions are runtime inputs. They meet the IR at execution, but are never written back into it.
 
 | Input layer          | Typical entry                                                    | Enters `IRPlot`                                                                                        |
 | -------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -33,6 +33,8 @@ For a Vanilla runtime source, `{ input }` runs `normalizePlot` exactly once. `{ 
 | React spec           | `<Plot spec={...} data={...}>`                                   | The `spec` does                                                                                        |
 | Vanilla              | `plot(InputPlot)`, `{ input: InputPlot }`, or `{ spec: IRPlot }` | InputPlot forms normalize once; `spec` enters directly; unknown JSON requires Plot schema/parser first |
 | Runtime dependencies | datasets, field maps, resolvers, and Definitions                 | No                                                                                                     |
+
+`LowerPlotsOptions.positionAdjustmentDefinitions` is the shared injection point for placement logic. React `<Plot>` and Vanilla runtimes forward the array unchanged; adapters do not compute step, randomness, coordinate projection, initializers, or glyph containment.
 
 ## Lowering and Outputs
 

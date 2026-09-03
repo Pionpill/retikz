@@ -171,6 +171,17 @@ describe('scale registry（contract spec）', () => {
     expect(scale.coordinate(0.5)).toBe(50);
   });
 
+  it('reports positive discrete step for reversed band and point ranges while continuous stays zero', () => {
+    const registry = resolveScaleRegistry();
+    const band = resolvePositionScale({ type: 'band', name: 'band' }, ['A', 'B'], [100, 0], { registry });
+    const point = resolvePositionScale({ type: 'point', name: 'point' }, ['A', 'B'], [100, 0], { registry });
+    const continuous = resolvePositionScale({ type: 'linear', name: 'linear' }, [0, 1], [100, 0], { registry });
+
+    expect(band.step).toBeGreaterThan(0);
+    expect(point.step).toBeGreaterThan(0);
+    expect(continuous.step).toBe(0);
+  });
+
   it('channel_scale_as_position_fails_loud', () => {
     const registry = resolveScaleRegistry();
     expect(() => resolvePositionScale({ type: 'ordinal', name: 'c' }, [], [0, 1], { registry })).toThrow(

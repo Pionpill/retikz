@@ -169,6 +169,8 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
   }}
 />
 
+`PositionScale` 运行时契约同时暴露 `bandwidth` 与最终 range 下的只读 `step`。`band` / `point` 的 `step` 是正离散刻度间距，连续位置 scale 固定为 `0`；Position Adjustment 的 ratio span 只消费这个实时值，不用零宽的 point `bandwidth` 代替。
+
 ### OrdinalScaleSchema
 
 <ZodSchema

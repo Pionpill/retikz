@@ -212,7 +212,7 @@ export const defineCoordinate = <TCoordinateOperation extends IRPlotCoordinateOp
   def: CoordinateDefinition<TCoordinateOperation>,
 ): CoordinateDefinition<TCoordinateOperation> => def;
 
-/** createCoordinateFrame 选项：roleScales 让 guide 画曲线轴、frameAlong 给精确切向、projectCell 支持 cell 类 mark；均可选 */
+/** createCoordinateFrame 的可选运行时能力 */
 export type CreateCoordinateFrameOptions = {
   /** 各角色位置 scale；供 guide 画轴。省略 → 该坐标系无轴 */
   roleScales?: Partial<Record<DimensionRole, PositionScale>>;
@@ -220,13 +220,20 @@ export type CreateCoordinateFrameOptions = {
   frameAlong?: (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null;
   /** 正交 cell → CellGeometry；实现了才支持 cell 类 mark（interval / sector），省略 → cell 类 mark fail-loud */
   projectCell?: (cell: Cell) => CellGeometry;
+  /** 原始角色值经 position scale 映射；支持 role-space placement 时与 projectMappedRoles 一起提供 */
+  mapRoles?: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
+  /** 已映射角色值投影到屏幕；支持 role-space placement 时与 mapRoles 一起提供 */
+  projectMappedRoles?: (values: ReadonlyArray<number>) => Position | null;
+  /** role-space placement containment 的 coordinate 边界度量 */
+  placementBoundary?: NonNullable<CoordinateFrame['placementBoundary']>;
 };
 
 /**
  * 建通用坐标帧。
  * @description 把 definition 注册 type、roles 与 projectRoles 包成 CoordinateFrame。`type` 会保留调用方注册的真实判别值，
  *   不会压成 `custom`；point/path/region 等按 `projectRoles` 投影。第三参 options 逐项声明额外能力：
- *   roleScales 允许 guide / interval 构造读取 scale，frameAlong 提供曲线轴精确切向，projectCell 开启 cell 类 mark。
+ *   roleScales 允许 guide / interval 构造读取 scale，mapRoles / projectMappedRoles 开启两段 position projection，
+ *   placementBoundary 开启 role-space containment，frameAlong 提供曲线轴精确切向，projectCell 开启 cell 类 mark。
  *   未声明的能力保持不可用并由消费方 fail-loud
  */
 export const createCoordinateFrame = (
@@ -240,6 +247,9 @@ export const createCoordinateFrame = (
   project: () => null,
   projectRoles,
   ...(options?.roleScales !== undefined ? { roleScales: options.roleScales } : {}),
+  ...(options?.mapRoles !== undefined ? { mapRoles: options.mapRoles } : {}),
+  ...(options?.projectMappedRoles !== undefined ? { projectMappedRoles: options.projectMappedRoles } : {}),
+  ...(options?.placementBoundary !== undefined ? { placementBoundary: options.placementBoundary } : {}),
   ...(options?.frameAlong !== undefined ? { frameAlong: options.frameAlong } : {}),
   ...(options?.projectCell !== undefined ? { projectCell: options.projectCell } : {}),
 });

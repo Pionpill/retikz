@@ -24,6 +24,7 @@ import type {
   IRPlotIntervalBounds,
   IRPlotLayer,
   IRPlotMarkLabelContent,
+  IRPlotMarkPlacement,
   IRPlotNodeAxisScaleStyle,
   IRPlotNodeBooleanStyle,
   IRPlotNodeBoundaryStyle,
@@ -332,6 +333,8 @@ export type InputPlotPointMark = InputPlotMarkTransform &
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
     anchorId?: IRPlotAnchorId;
+    /** position scale 后、mark geometry 前执行的有序位置调整 */
+    placement?: IRPlotMarkPlacement;
   };
 
 /**

@@ -32,3 +32,17 @@ Coordinate operations define positional roles and scale ownership. Two-dimension
 ## CoordinateOperationSchema
 
 <ZodSchema name="PlotCoordinateOperationSchema" />
+
+## CoordinateFrame Position Projection
+
+A frame that supports Position Adjustment splits placement into two capabilities from the same projection model. `mapRoles(values)` performs position-scale mapping only, and `projectMappedRoles(values)` projects that mapped role tuple to screen space. `projectRoles(values)` remains the ordinary composed entry.
+
+| Capability           | Purpose                                                        |
+| -------------------- | -------------------------------------------------------------- |
+| `roleScales`         | Read final `PositionScale`, range, bandwidth, and step by role |
+| `mapRoles`           | Raw role values → scale-output tuple                           |
+| `projectMappedRoles` | Scale-output tuple → screen position                           |
+| `projectRoles`       | One-step composed projection without adjustments               |
+| `placementBoundary`  | Cyclic roles, boundary normals, and glyph-to-role conversion   |
+
+A custom coordinate can keep only `projectRoles` when placement is unused. Point placement requires both split projection functions; automatic containment additionally requires `roleScales` and `placementBoundary`, and missing capabilities fail loudly.

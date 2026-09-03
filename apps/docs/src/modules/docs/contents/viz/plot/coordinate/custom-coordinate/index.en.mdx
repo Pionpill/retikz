@@ -77,17 +77,17 @@ The definition with `roles: ['u', 'v']` must still be injected through `<Plot co
 3. When named scales must survive a coordinate change, the host reads and writes canonical roles through `scaleBinding`, then validates the operation again.
 4. `CoordinateDefinitionResolveContext` collects each role's domain, resolves position scales, and exposes canvas and guide information.
 5. `resolve` builds a frame with `createCoordinateFrame`, then returns the `plotArea`, axis layers, and grid layers.
-6. Marks project through `frame.projectRoles` or optional `frame.projectCell` without depending on the concrete coordinate implementation.
+6. Marks project through `frame.projectRoles` or optional `frame.projectCell`; placement uses the same model split into `mapRoles` and `projectMappedRoles`.
 
-`createCoordinateFrame` can receive `roleScales`, `frameAlong`, and `projectCell`. The first supports custom axes and interval role scales; the last projects a logical Cell into rect, sector, contour, or related geometry.
+`createCoordinateFrame` can receive `roleScales`, `mapRoles`, `projectMappedRoles`, `placementBoundary`, `frameAlong`, and `projectCell`. Position Adjustment uses the split-projection capabilities, automatic containment adds boundary measurement, and `projectCell` projects a logical Cell into rect, sector, contour, or related geometry.
 
 <SourceLinks
   sources={[
     {
       label: 'CoordinateDefinition and createCoordinateFrame contracts',
       path: 'packages/viz/plot/src/contract/coordinate/define.ts',
-      startLine: 145,
-      endLine: 205,
+      startLine: 214,
+      endLine: 253,
     },
     {
       label: 'Merge built-in and custom coordinates into one registry',
@@ -116,7 +116,8 @@ The definition with `roles: ['u', 'v']` must still be injected through `<Plot co
 - Missing required roles, encoding keys unsupported by the coordinate, or schema validation failures all fail immediately.
 - A `scaleBinding.bind` result that does not match the schema fails immediately; custom field mappings must preserve unrelated operation config.
 - The example uses `z.strictObject`; an unknown key such as `archHeigth` is not silently stripped or replaced by a default.
-- Point-like marks only require `projectRoles`; interval-like marks also require matching `roleScales` and `projectCell`.
+- Ordinary point-like marks only require `projectRoles`. Point placement requires `roleScales`, `mapRoles`, and `projectMappedRoles`; containment additionally requires `placementBoundary`.
+- Interval-like marks require matching `roleScales` and `projectCell`.
 - A custom coordinate uses the `plotArea` returned by its definition and does not automatically inherit cartesian margin and legend reservation.
 - Curved axes can be generated through `lowerCustomAxis`; grids, 3D spaces, and multi-plot composition require explicit definition capabilities.
 
@@ -152,4 +153,5 @@ Host injection:
 - [Coordinates](/viz/plot/coordinate) — the shared model for built-in projections and frames
 - [Coordinate Composition](/viz/plot/coordinate/composition) — coordinate-domain boundaries across panels and tracks
 - [Custom Marks](/viz/plot/mark/custom-mark) — how marks consume a coordinate frame
+- [Position Adjustment](/viz/plot/mark/position-adjustment) — how split projection and boundary measurement support placement
 - [Runtime Extension Index](/kernel/reference/runtime/extensions) — cross-capability Definition, registry, and error boundaries

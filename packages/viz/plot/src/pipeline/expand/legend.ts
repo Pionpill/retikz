@@ -171,6 +171,7 @@ const legendRampTickScale = (
     coordinate: value => scale(Number(value)),
     domain: () => [domain[0], domain[1]],
     bandwidth: 0,
+    step: 0,
     ticks: count => scaleTicks(scale, count),
     tickKind: fieldType === DataFieldType.Temporal ? 'time' : 'number',
     range: () => [0, 1],

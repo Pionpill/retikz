@@ -69,6 +69,43 @@ describe('normalizePlot', () => {
     ]);
   });
 
+  it('保留 Point placement 并让 plain 与 declaration authoring 形成同形 IR', () => {
+    const placement = {
+      adjustments: [{ kind: 'jitter' as const, role: 'x', span: { kind: 'ratio' as const, value: 0.6 }, seed: 7 }],
+    };
+    const plain = normalizePlot({
+      data: { reference: 'points' },
+      scales: [
+        { type: 'point', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'point',
+          placement,
+          encoding: { x: { field: 'category' }, y: { field: 'value' } },
+        },
+      ],
+    });
+    const declaration = normalizePlotDeclarations(
+      {
+        declarations: [
+          {
+            kind: 'point-mark',
+            props: { x: 'category', y: 'value', placement },
+            path: [0],
+          },
+        ],
+        runtimeSources: [],
+      },
+      { data: { reference: 'points' }, mode: 'plot-root' },
+    );
+
+    expect(declaration.fragment.marks?.[0]).toEqual(plain.marks[0]);
+    expect(plain.marks[0]).toMatchObject({ placement });
+  });
+
   it('从 plain authoring input 创建 schema-valid IRPlot 并保留显式 identity', () => {
     const input = {
       id: 'sales',

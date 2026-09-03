@@ -83,11 +83,70 @@ const linearStub = (domain: [number, number], range: [number, number], bandwidth
     get bandwidth() {
       return bandwidth;
     },
+    get step() {
+      return bandwidth;
+    },
     ticks: () => ({ ticks: [], labels: [] }) as unknown as ReturnType<PositionScale['ticks']>,
     range: () => [r0, r1],
     setRange: () => undefined,
   };
 };
+
+const squarePolarFrame = (interpolation: 'polar' | 'chord', step = 90, startAngle = 0, endAngle = 360) =>
+  createPolarCoordinate({
+    center: [0, 0],
+    innerRadius: 0,
+    outerRadius: 100,
+    startAngle,
+    endAngle,
+    interpolation,
+    angularSkeleton: startAngle <= endAngle ? [45, 135, 225, 315] : [315, 225, 135, 45],
+    primary: linearStub([0, 1], [startAngle, endAngle], step),
+    secondary: linearStub([0, 1], [0, 100]),
+  });
+
+describe('Polar mapped-role projection', () => {
+  it('projects a discrete chord angle onto its adjacent polygon edge', () => {
+    const frame = squarePolarFrame(PolarInterpolation.Chord);
+    const start = frame.projectPolar(45, 100);
+    const end = frame.projectPolar(135, 100);
+
+    expect(start).not.toBeNull();
+    expect(end).not.toBeNull();
+    expect(frame.projectMappedRoles([67.5, 100])).toEqual([
+      (start?.[0] ?? 0) * 0.75 + (end?.[0] ?? 0) * 0.25,
+      (start?.[1] ?? 0) * 0.75 + (end?.[1] ?? 0) * 0.25,
+    ]);
+  });
+
+  it('keeps polar and continuous chord angles on the circular projection', () => {
+    const expected = squarePolarFrame(PolarInterpolation.Polar).projectPolar(67.5, 100);
+
+    expect(squarePolarFrame(PolarInterpolation.Polar).projectMappedRoles([67.5, 100])).toEqual(expected);
+    expect(squarePolarFrame(PolarInterpolation.Chord, 0).projectMappedRoles([67.5, 100])).toEqual(expected);
+  });
+
+  it('interpolates the cyclic seam in forward and reversed sweeps', () => {
+    const expected = [Math.SQRT1_2 * 100, -Math.SQRT1_2 * 50];
+
+    const forward = squarePolarFrame(PolarInterpolation.Chord).projectMappedRoles([337.5, 100]);
+    const reversed = squarePolarFrame(PolarInterpolation.Chord, 90, 360, 0).projectMappedRoles([337.5, 100]);
+    expect(forward?.[0]).toBeCloseTo(expected[0], 6);
+    expect(forward?.[1]).toBeCloseTo(expected[1], 6);
+    expect(reversed?.[0]).toBeCloseTo(expected[0], 6);
+    expect(reversed?.[1]).toBeCloseTo(expected[1], 6);
+  });
+
+  it('converts glyph extents with chord length and polygon edge depth', () => {
+    const frame = squarePolarFrame(PolarInterpolation.Chord);
+
+    expect(frame.placementBoundary.glyphExtentInRoleUnits('x', [67.5, 100], 10)).toBeCloseTo(
+      10 / ((Math.SQRT2 * 100) / 90),
+      6,
+    );
+    expect(frame.placementBoundary.glyphExtentInRoleUnits('y', [67.5, 100], 10)).toBeCloseTo(10 / Math.SQRT1_2, 6);
+  });
+});
 
 // ── projectCell 闭式快路：cartesian → rect、polar → sector ──────────────────────────────
 describe('projectCell 闭式快路（rect / sector）', () => {

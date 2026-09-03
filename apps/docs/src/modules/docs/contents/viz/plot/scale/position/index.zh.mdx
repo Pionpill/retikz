@@ -88,6 +88,8 @@ Plot 默认直接使用数据推断出的连续 domain，不额外增加边界�
   caption="切换比例尺：band 为 interval 提供格宽，point 只为折线和散点提供等距点位；面板只显示当前类型对应的 padding。"
 />
 
+两种离散位置 scale 都会在最终 range 下提供正 `step`。Point 的 ratio [jitter](/viz/plot/mark/point#位置散布) 使用这个刻度间距计算总散布宽度；它不使用 point 恒为 `0` 的 `bandwidth`，也不从数据值差反推间距。
+
 分类折线可显式使用点位：
 
 ```tsx

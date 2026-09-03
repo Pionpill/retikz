@@ -74,3 +74,17 @@ description: 查询 Plot 的直角、极坐标、一维与自定义坐标操作 
 ## CoordinateOperationSchema
 
 <ZodSchema name="PlotCoordinateOperationSchema" description="内置坐标配置或自定义坐标操作的联合。" />
+
+## CoordinateFrame 位置投影
+
+支持 Position Adjustment 的 frame 把位置处理拆成两个同源能力：`mapRoles(values)` 只完成 position scale 映射，`projectMappedRoles(values)` 再把已映射 role tuple 投到屏幕。`projectRoles(values)` 保留为两者组合的普通投影入口。
+
+| 能力                 | 作用                                                       |
+| -------------------- | ---------------------------------------------------------- |
+| `roleScales`         | 按 role 读取最终 `PositionScale`、range、bandwidth 与 step |
+| `mapRoles`           | 原始 role values → scale 输出 tuple                        |
+| `projectMappedRoles` | scale 输出 tuple → 屏幕位置                                |
+| `projectRoles`       | 无 adjustment 时的一步组合入口                             |
+| `placementBoundary`  | 循环 role、边界法向与 glyph extent 的 role 单位换算        |
+
+自定义 coordinate 不使用 placement 时可以只提供 `projectRoles`。Point 声明 placement 时必须同时提供两段投影；要求自动 containment 时还必须提供 `roleScales` 与 `placementBoundary`，缺失能力会 fail-loud。

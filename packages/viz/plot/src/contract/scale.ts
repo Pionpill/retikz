@@ -39,6 +39,8 @@ export type PositionScale = {
   domain: () => ReadonlyArray<IRDataScalarValue>;
   /** band 宽（连续 / point = 0；band = scale.bandwidth()）；getter 反映 setRange 后的最新值 */
   readonly bandwidth: number;
+  /** 最终 range 下的离散刻度间距（band / point 为正 step；continuous 为 0） */
+  readonly step: number;
   /** 刻度 + 标签（连续走 scaleTicks；band / point = 每类别一刻度，落 band 中心 / 点位） */
   ticks: (count?: number) => TickSet;
   /** guide 标签格式化用的刻度值族；自定义 scale 可省略并保留原 tick 标签 */

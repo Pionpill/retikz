@@ -77,17 +77,17 @@ const spec = {
 3. 需要跨 coordinate 保留命名比例尺时，宿主通过 `scaleBinding` 在统一 role 与 operation 字段之间读写，并再次校验 operation。
 4. `CoordinateDefinitionResolveContext` 收集各 role 的数据域，解析 position scales，并提供画布与 guide 信息。
 5. `resolve` 用 `createCoordinateFrame` 构造 frame，再返回 `plotArea`、轴和网格层。
-6. mark 通过 `frame.projectRoles` 或可选的 `frame.projectCell` 投影，不感知具体坐标系实现。
+6. mark 通过 `frame.projectRoles` 或可选的 `frame.projectCell` 投影；声明 placement 时则使用同源的 `mapRoles` / `projectMappedRoles` 两段能力。
 
-`createCoordinateFrame` 可以接收 `roleScales`、`frameAlong` 和 `projectCell`。前者供自定义轴与区间图元读取各 role 的 scale；后者把逻辑 Cell 投影成 rect、sector 或 contour 等几何。
+`createCoordinateFrame` 可以接收 `roleScales`、`mapRoles`、`projectMappedRoles`、`placementBoundary`、`frameAlong` 和 `projectCell`。位置调整依赖前三项拆分 scale 映射与投影，自动 containment 再使用边界度量；`projectCell` 把逻辑 Cell 投影成 rect、sector 或 contour 等几何。
 
 <SourceLinks
   sources={[
     {
       label: 'CoordinateDefinition 与 createCoordinateFrame 契约',
       path: 'packages/viz/plot/src/contract/coordinate/define.ts',
-      startLine: 145,
-      endLine: 205,
+      startLine: 214,
+      endLine: 253,
     },
     {
       label: '内置与自定义坐标系合并到统一注册表',
@@ -116,7 +116,8 @@ const spec = {
 - 缺少必填 role、出现坐标系不支持的 encoding key，或 schema 校验失败时都会直接报错。
 - `scaleBinding.bind` 返回不符合 schema 的 operation 时会直接失败；自定义字段映射必须保留其它 operation 配置。
 - 示例使用 `z.strictObject`；`archHeigth` 之类未知键不会被静默剥离或回退默认值。
-- 点类图元只需要 `projectRoles`；区间类图元还需要匹配的 `roleScales` 与 `projectCell`。
+- 普通点类图元只需要 `projectRoles`；Point placement 需要 `roleScales`、`mapRoles` 与 `projectMappedRoles`，要求 containment 时还需要 `placementBoundary`。
+- 区间类图元需要匹配的 `roleScales` 与 `projectCell`。
 - 自定义坐标系使用 definition 返回的 `plotArea`，不会自动继承 cartesian 的 margin 与 legend 预留逻辑。
 - 曲线轴可以通过 `lowerCustomAxis` 生成；网格、三维空间和多 plot 组合需要 definition 显式提供对应能力。
 
@@ -152,4 +153,5 @@ coordinate: { type: 'bridge', archHeigth: 60 }
 - [坐标系](/viz/plot/coordinate) —— 内置投影与 frame 的共同模型
 - [坐标组合](/viz/plot/coordinate/composition) —— 多 panel / track 的坐标域边界
 - [自定义图元](/viz/plot/mark/custom-mark) —— mark 如何消费 coordinate frame
+- [Position Adjustment](/viz/plot/mark/position-adjustment) —— 两段投影与边界度量怎样服务位置调整
 - [运行时扩展索引](/kernel/reference/runtime/extensions) —— 跨能力查询 Definition、registry 与错误边界

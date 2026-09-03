@@ -58,8 +58,55 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     coordinateView: '投影该图元的坐标视图 id；省略时使用组合默认视图。',
     transform: '仅影响该图元的局部变换链。',
     label: '附着在每数据 Node.label 上的标签。',
+    placement: '位置比例尺之后、Point 几何之前执行的有序位置调整。',
     encoding: '点图元的位置、文本与扩展通道。',
   }}
+/>
+
+### MarkPlacementSchema
+
+<ZodSchema
+  name="MarkPlacementSchema"
+  description="Point 图元的位置调整列表。"
+  descriptions={{
+    adjustments: '按 Source 顺序保存的 Position Adjustment operation；执行时按 Definition.space 分阶段。',
+  }}
+/>
+
+### PositionAdjustmentOperationSchema
+
+<ZodSchema
+  name="PositionAdjustmentOperationSchema"
+  description="内置 jitter 或运行时 Definition 校验的自定义位置调整联合。"
+/>
+
+### JitterPositionAdjustmentSchema
+
+<ZodSchema
+  name="JitterPositionAdjustmentSchema"
+  description="位置比例尺映射后、坐标投影前执行的确定性 role-space jitter。"
+  descriptions={{
+    kind: '内置位置调整判别值 jitter。',
+    role: '要散布的坐标 role；省略时要求当前 frame 恰有一个离散 role。',
+    span: '总散布宽度；裸数字使用 role 输出单位，ratio 使用离散 step 比例。',
+    seed: '确定性伪随机种子；省略时为 0。',
+  }}
+/>
+
+### JitterRatioSpanSchema
+
+<ZodSchema
+  name="JitterRatioSpanSchema"
+  description="以离散位置 scale 的实时 step 表示 jitter 总宽。"
+  descriptions={{ kind: '比例形式判别值 ratio。', value: '离散 step 的 0 到 1 比例。' }}
+/>
+
+### CustomPositionAdjustmentSchema
+
+<ZodSchema
+  name="CustomPositionAdjustmentSchema"
+  description="由运行时 PositionAdjustmentDefinition 校验与执行的开放 JSON operation。"
+  descriptions={{ kind: '已注册的自定义 adjustment key，不得与内置 jitter 冲突。' }}
 />
 
 ## PathMarkSchema

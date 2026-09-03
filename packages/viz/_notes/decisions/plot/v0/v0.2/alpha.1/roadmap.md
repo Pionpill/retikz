@@ -38,10 +38,11 @@ Chart 在本 milestone 中只作为消费者。若 Chart 需求暴露通用映�
 | 10  | **Axis grid 值域端点主题默认**：把端点策略纳入 Axis token cascade，并让 Neutral x / y 网格默认覆盖 effective domain 两端                                        | red   | ADR-08、ADR-09、Plot Theme resolver       | Accepted |
 | 11  | **Domain padding 单位**：把连续位置 scale 的留白明确拆分为 range 单位与 domain-span ratio，省略 `kind` 时使用 range                                             | red   | plot v0.1 ADR-01、既有 PositionScale      | Accepted |
 | 12  | **Polar2D 插值模式与继承**：连续角轴默认走极坐标曲线、离散角轴默认走弦，coordinate 为 Grid 与插值敏感 Mark 提供共享默认并允许局部覆盖                           | red   | plot v0.1 Polar coordinate / Mark / Guide | Accepted |
+| 13  | **Mark Placement 与 Position Adjustment**：在 scale 与 mark geometry 之间统一 role-space adjustment、coordinate projection 与 screen-space initializer          | red   | 既有 position scale / coordinate / mark   | Accepted |
 
 ADR-01～03 已冻结并交付 Plot 的主题所有权、inherited scope、owner contribution、shared categorical projection、跨入口等价性与 presentation 边界。Chart type / recipe / presentation 继续由 chart v0.1 路线维护。Spatial Mapping ADR-04～06 仍为待起草，不因本次边界收口而改变状态。
 
-ADR-07～12 在既有 Plot 主链上继续收敛绘图区、guide、scale 与 coordinate / mark 协作契约：Plot area background、Axis theme dimension rule、Axis grid domain endpoint、连续 position domain padding 与 Polar interpolation 都由 Plot owner 解析，不进入 Chart presentation、Core Theme 或 renderer 私有分支。ADR-10 窄化调整 ADR-08～09 的 Theme 边界，使端点策略能够复用 Axis token cascade；ADR-11 扩展 v0.1 ADR-01 的单位语义；ADR-12 则让 Polar coordinate frame 成为 Grid 与插值敏感 Mark 的共享几何事实源，同时保留 Mark 局部覆盖。
+ADR-07～13 在既有 Plot 主链上继续收敛绘图区、guide、scale 与 coordinate / mark 协作契约：Plot area background、Axis theme dimension rule、Axis grid domain endpoint、连续 position domain padding、Polar interpolation 与 Mark Placement 都由 Plot owner 解析，不进入 Chart presentation、Core Theme 或 renderer 私有分支。ADR-10 窄化调整 ADR-08～09 的 Theme 边界，使端点策略能够复用 Axis token cascade；ADR-11 扩展 v0.1 ADR-01 的单位语义；ADR-12 让 Polar coordinate frame 成为 Grid 与插值敏感 Mark 的共享几何事实源；ADR-13 再把 scale 后的位置调整、coordinate projection 与屏幕空间 initializer 收进统一管线，避免 Point 或 renderer 私有分支。
 
 ## 前置
 
@@ -65,7 +66,10 @@ ADR-07～12 在既有 Plot 主链上继续收敛绘图区、guide、scale 与 co
 任意命名内容 / 关系
   → Structured Mapping（可选）
   → 空间角色、局部布局字段与空间化关系
-  → Coordinate Mapping（可选）
+  → Position Scale（Coordinate Mapping）
+  → role-space Position Adjustment
+  → Coordinate Projection
+  → screen-space Initializer
   → Mark / Guide / Locator
   → Plot lowering
   → Core IR
@@ -87,6 +91,8 @@ ADR-07～12 在既有 Plot 主链上继续收敛绘图区、guide、scale 与 co
 - Axis 主网格可以显式包含 effective scale domain 首尾位置；Axis theme 可以为已有 grid 提供端点默认，局部 guide 仍可显式覆盖，axis ticks 与 minor grid source 保持不变。
 - 连续位置 scale 的 `domainPadding` 可以显式区分 range 与 ratio，默认单位、range 反算、scale-family invariant、失败语义与三入口迁移保持一致。
 - `polar2D` 可以根据 angular scale 连续性推断 `polar` / `chord`，也可以在 coordinate 与插值敏感 Mark 上显式覆盖；Grid、Path 与 cell 边界消费同一个 resolved frame 默认，Point 与显式 Relation routing 不承载无效配置。
+- 具备数据位置的 Mark 可以通过统一 Mark Placement 管线在 position scale 后执行 role-space adjustment、在 coordinate projection 后执行 screen-space initializer；内置与自定义 operation 共用 Position Adjustment Definition / registry，renderer、Data transform 与单个 Mark lowering 不建立私有 jitter 分支。
+- 离散 position scale 对 band 与 point 都公开最终 range 下的实时 step；ratio jitter 以 step 为唯一比例基准，自动 containment 计入 jitter envelope、glyph extent、stroke 与已有 edge clearance，Polar angle 则按 datum radius 投影且完整 sweep 不制造 seam padding。
 - 至少形成可验证的薄纵向闭环，但不以完成任何特定 Chart type 或全量结构化算法为退出条件。
 
 ## 执行模式

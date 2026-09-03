@@ -204,6 +204,9 @@ export const linearPositionScale = (scale: D3ScaleLinear<number, number>): Posit
   get bandwidth() {
     return 0;
   },
+  get step() {
+    return 0;
+  },
   ticks: count => scaleTicks(scale, count),
   tickKind: 'number',
   range: () => {
@@ -234,6 +237,9 @@ export const continuousPositionScale = (
     return [start, end];
   },
   get bandwidth() {
+    return 0;
+  },
+  get step() {
     return 0;
   },
   ticks: count => scaleTicks(scale, count),
@@ -283,6 +289,9 @@ export const timePositionScale = (scale: D3ScaleTime<number, number>): PositionS
     return [start.getTime(), end.getTime()];
   },
   get bandwidth() {
+    return 0;
+  },
+  get step() {
     return 0;
   },
   ticks: count => timeTicks(scale, count),
@@ -350,6 +359,9 @@ export const bandPositionScale = (scale: D3ScaleBand<string | number>): Position
   get bandwidth() {
     return scale.bandwidth();
   },
+  get step() {
+    return scale.step();
+  },
   ticks: () => categoryTicks(scale),
   tickKind: 'category',
   range: () => {
@@ -371,6 +383,9 @@ export const pointPositionScale = (scale: D3ScalePoint<string | number>): Positi
   domain: () => [...scale.domain()],
   get bandwidth() {
     return 0;
+  },
+  get step() {
+    return scale.step();
   },
   ticks: () => categoryTicks(scale),
   tickKind: 'category',

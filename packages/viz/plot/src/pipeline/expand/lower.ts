@@ -20,7 +20,13 @@ import {
 import { applyTransformsToDataView, applyTransformsToDataViewWithLineage, tagSourceIndex } from '@retikz/data';
 import { assertAllValuesValid, validateBoundData } from '@retikz/data';
 
-import type { CoordinateFrame, DatumIdRegistrar, ProvenanceContext } from '../../contract';
+import type {
+  AnyScaleDefinition,
+  CoordinateFrame,
+  DatumIdRegistrar,
+  DimensionRole,
+  ProvenanceContext,
+} from '../../contract';
 import type { ChannelResolveContext } from '../../resolve/channel';
 import type {
   CompositionLayout,
@@ -33,12 +39,19 @@ import type {
   FacetScalar,
   GridTargetSelector,
 } from '../../resolve/composition';
-import type { CoordinateResolveContext } from '../../resolve/coordinate';
-import type { IRPlot, IRPlotAxisGuide, IRPlotGuide, IRPlotMarkOperation, IRPlotTransform } from '../../schemas';
+import type { CoordinateFrameResolution, CoordinateResolveContext } from '../../resolve/coordinate';
+import type {
+  IRPlot,
+  IRPlotAxisGuide,
+  IRPlotCoordinateOperation,
+  IRPlotGuide,
+  IRPlotMarkOperation,
+  IRPlotTransform,
+} from '../../schemas';
 import type { Rect } from '../../shared';
 import type { LowerPlotsOptions, MarkDataView } from './types';
 
-import { rootMeta, slug } from '../../contract';
+import { PositionScaleContinuity, rootMeta, slug } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { isPolarCoordinateFrame, resolveCoordinateRegistry } from '../../providers';
 import { lowerMark, makeColorSchemeResolver, resolveChannelRegistry } from '../../providers';
@@ -67,7 +80,7 @@ import {
 import { resolveCoordinateFrame } from '../../resolve/coordinate';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import { resolveMarkOperation } from '../../resolve/mark';
-import { orderedCategoryDomain, resolveChannelScale } from '../../resolve/scale';
+import { orderedCategoryDomain, resolveChannelScale, resolvePositionScaleContinuity } from '../../resolve/scale';
 import {
   resolveAxisGuideTokens,
   resolvePlotAxisGuideTheme,
@@ -86,6 +99,7 @@ import {
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
 import { createAnchorRegistry } from '../anchors';
 import { lowerCustomAxis, lowerGuide } from '../guide';
+import { resolveMarkPlacement, resolveMarkPlacementRangeOverrides } from '../placement';
 import { createDatumIdRegistrar } from '../provenance';
 import { withEnabledAxisGrid, withoutAxisGrid, withScopeContext } from './composition';
 import { applyMarkTransforms, prepareRows } from './data';
@@ -95,6 +109,50 @@ import { buildLegendLayers, collectChannelDescriptors, legendReserveOf, reserveL
 /** 判断坐标帧是否具有可承载背景与区域锚点的二维绘图区 */
 const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>
   frame?.type !== PlotCoordinate.Cartesian1D && frame?.type !== PlotCoordinate.Polar1D;
+
+const coordinateScaleNameOf = (coordinate: IRPlotCoordinateOperation, role: DimensionRole): string | undefined => {
+  const field =
+    coordinate.type === PlotCoordinate.Polar1D || coordinate.type === PlotCoordinate.Polar2D
+      ? role === 'x'
+        ? 'angle'
+        : role === 'y'
+          ? 'radius'
+          : role
+      : role;
+  const value = (coordinate as Record<string, unknown>)[field];
+  return typeof value === 'string' ? value : undefined;
+};
+
+const rangesEqual = (left: readonly [number, number], right: readonly [number, number]): boolean =>
+  Math.abs(left[0] - right[0]) <= 1e-6 && Math.abs(left[1] - right[1]) <= 1e-6;
+
+/** 显式 continuous range 不允许被 placement containment 静默收窄 */
+const assertPlacementRangeCompatible = (
+  plot: IRPlot,
+  coordinate: IRPlotCoordinateOperation,
+  role: DimensionRole,
+  candidateRange: readonly [number, number],
+  boundaryRange: readonly [number, number] | undefined,
+  scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
+): void => {
+  if (boundaryRange === undefined || rangesEqual(candidateRange, boundaryRange)) return;
+  const scaleName = coordinateScaleNameOf(coordinate, role);
+  if (scaleName === undefined) return;
+  const scaleOperation = plot.scales.find(operation => operation.name === scaleName);
+  if (scaleOperation === undefined) return;
+  const authoredRange = (scaleOperation as Record<string, unknown>).range;
+  if (
+    !Array.isArray(authoredRange) ||
+    authoredRange.length !== 2 ||
+    !authoredRange.every(value => typeof value === 'number') ||
+    resolvePositionScaleContinuity(scaleOperation, { registry: scaleRegistry }) !== PositionScaleContinuity.Continuous
+  ) {
+    return;
+  }
+  throw new RetikzPlotError(
+    `lowerPlots: explicit range of scale "${scaleName}" for role "${role}" cannot satisfy position adjustment containment`,
+  );
+};
 
 /** 按首次出现顺序为默认颜色组与未分组 mark 分配连续色板槽位 */
 const defaultColorPaletteIndicesOf = (marks: ReadonlyArray<IRPlotMarkOperation>): ReadonlyArray<number> => {
@@ -253,6 +311,7 @@ export const lowerPlotWithDataArtifact = (
     transformContext,
     scaleRegistry,
     markRegistry,
+    positionAdjustmentRegistry,
   } = prepareRows(node, datasets, options, ingested);
   // scheme 解析器：内置 scheme + options.colorSchemes；channel scale 取色 / legend ramp 共用。
   const resolveColorScheme = makeColorSchemeResolver(options.colorSchemes);
@@ -356,41 +415,6 @@ export const lowerPlotWithDataArtifact = (
     resolveVisibleGuideTicks,
     ...overrides,
   });
-  const { scopeById, scopeContextOf, axisPolicyFor, frameByScope, gridLayers, axisLayers, plotArea } =
-    resolveScopedFrames({
-      node,
-      dataView: rootDataView,
-      width,
-      height,
-      options,
-      provenance,
-      scaleRegistry,
-      markDataViews,
-      compositionLayout,
-      compositionResolve,
-      compositionFacets,
-      compositionScaffolds,
-      compositionPolicyContext,
-      coordinateScopes,
-      allGuides,
-      allGuidesWithCompositionGap,
-    });
-  const dataArtifact: PlotDataArtifact = {
-    rootDataView,
-    rootMarkDataViews,
-    ...(rootTransformResult !== undefined ? { rootLineage: rootTransformResult.lineage } : {}),
-    ...(lineageOptions !== undefined
-      ? { markLineages: rootMarkResults.map(result => result.lineage ?? { events: [] }) }
-      : {}),
-    compositionResolution,
-    markDataViews,
-    frameByCoordinateScopeId: frameByScope,
-  };
-  const facets = compositionFacets;
-  const arrangementLayoutOf = (arrangement: CoordinateArrangement | undefined): CompositionLayout | undefined =>
-    resolveArrangementLayout(compositionLayout, arrangement);
-  const arrangementResolveOf = (arrangement: CoordinateArrangement | undefined): CompositionResolve | undefined =>
-    resolveArrangementPolicy(compositionResolve, arrangement);
 
   // 通道 registry：内置 definition 先注册，自定义 definition 再合并；mark / node / path 通道统一解析。
   const channelRegistry = resolveChannelRegistry({
@@ -411,6 +435,170 @@ export const lowerPlotWithDataArtifact = (
     resolveColorScheme,
     palette: resolvedTheme.palette,
   };
+  const scopedFramesContext = {
+    node,
+    dataView: rootDataView,
+    width,
+    height,
+    options,
+    provenance,
+    scaleRegistry,
+    markDataViews,
+    compositionLayout,
+    compositionResolve,
+    compositionFacets,
+    compositionScaffolds,
+    compositionPolicyContext,
+    coordinateScopes,
+    allGuides,
+    allGuidesWithCompositionGap,
+  };
+  type ScopedPlacementRanges = ReadonlyMap<string, Partial<Record<DimensionRole, readonly [number, number]>>>;
+  const frameRoleRangesOf = (
+    frames: ReadonlyMap<string, CoordinateFrame>,
+  ): Map<string, Partial<Record<DimensionRole, readonly [number, number]>>> =>
+    new Map(
+      [...frames].map(([scopeId, frame]) => [
+        scopeId,
+        Object.fromEntries(
+          frame.roles.flatMap(role => {
+            const range = frame.roleScales?.[role]?.range();
+            return range === undefined ? [] : [[role, range]];
+          }),
+        ),
+      ]),
+    );
+  const intersectPlacementRanges = (
+    currentRange: readonly [number, number],
+    candidateRange: readonly [number, number],
+    role: DimensionRole,
+    scopeId: string,
+  ): readonly [number, number] => {
+    const low = Math.max(Math.min(...currentRange), Math.min(...candidateRange));
+    const high = Math.min(Math.max(...currentRange), Math.max(...candidateRange));
+    if (low >= high) {
+      throw new RetikzPlotError(
+        `lowerPlots: position adjustment containment leaves no drawable range for role "${role}" in coordinate view "${scopeId}"`,
+      );
+    }
+    return currentRange[0] <= currentRange[1] ? [low, high] : [high, low];
+  };
+  const placementRangesEqual = (left: ScopedPlacementRanges, right: ScopedPlacementRanges): boolean => {
+    if (left.size !== right.size) return false;
+    for (const [scopeId, leftByRole] of left) {
+      const rightByRole = right.get(scopeId);
+      if (rightByRole === undefined) return false;
+      const roles = Object.keys(leftByRole);
+      if (roles.length !== Object.keys(rightByRole).length) return false;
+      for (const role of roles) {
+        const leftRange = leftByRole[role];
+        const rightRange = rightByRole[role];
+        if (
+          leftRange === undefined ||
+          rightRange === undefined ||
+          Math.abs(leftRange[0] - rightRange[0]) > 1e-6 ||
+          Math.abs(leftRange[1] - rightRange[1]) > 1e-6
+        ) {
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+  const resolveScopedPlacementRanges = (
+    frames: ReadonlyMap<string, CoordinateFrame>,
+    boundaryRangesByScope: ScopedPlacementRanges,
+  ): Map<string, Partial<Record<DimensionRole, readonly [number, number]>>> => {
+    const rangesByScope = new Map<string, Partial<Record<DimensionRole, readonly [number, number]>>>();
+    for (const { dataView, mark, markIndex } of markDataViews) {
+      const scopeId = coordinateScopeIdOf(mark, coordinateScopes.defaultScope);
+      const frame = frames.get(scopeId);
+      if (frame === undefined) continue;
+      const operationResolution = resolveMarkOperation(mark, { registry: markRegistry });
+      const markChannels = resolveMarkChannels(mark, {
+        ...channelCtx,
+        rows: dataView.rows,
+        fieldTypes: dataView.fieldTypes,
+        fieldTypeEvidence: dataView.fieldTypeEvidence,
+        defaultColor: categoricalColorAt(
+          resolvedTheme.palette.series,
+          defaultColorPaletteIndices[markIndex] ?? markIndex,
+        ),
+      });
+      const markRanges = resolveMarkPlacementRangeOverrides(
+        operationResolution,
+        dataView.rows,
+        frame,
+        markChannels,
+        { width, height },
+        positionAdjustmentRegistry,
+        boundaryRangesByScope.get(scopeId),
+      );
+      if (markRanges === undefined) continue;
+      const scopeRanges = rangesByScope.get(scopeId) ?? {};
+      const coordinateScope = coordinateScopes.scopes.find(scope => scope.id === scopeId);
+      for (const [role, candidateRange] of Object.entries(markRanges)) {
+        if (candidateRange === undefined) continue;
+        if (coordinateScope !== undefined) {
+          assertPlacementRangeCompatible(
+            node,
+            coordinateScope.coordinate,
+            role,
+            candidateRange,
+            boundaryRangesByScope.get(scopeId)?.[role],
+            scaleRegistry,
+          );
+        }
+        const currentRange = scopeRanges[role];
+        scopeRanges[role] =
+          currentRange === undefined
+            ? candidateRange
+            : intersectPlacementRanges(currentRange, candidateRange, role, scopeId);
+      }
+      rangesByScope.set(scopeId, scopeRanges);
+    }
+    return rangesByScope;
+  };
+
+  let scopedFramesResolution = resolveScopedFrames(scopedFramesContext);
+  if (compositionFacets.length === 0) {
+    const boundaryRangesByScope = frameRoleRangesOf(scopedFramesResolution.frameByScope);
+    let placementRangesByScope: ScopedPlacementRanges = new Map();
+    let didPlacementConverge = false;
+    for (let pass = 0; pass < 12; pass += 1) {
+      const nextRanges = resolveScopedPlacementRanges(scopedFramesResolution.frameByScope, boundaryRangesByScope);
+      if (placementRangesEqual(placementRangesByScope, nextRanges)) {
+        didPlacementConverge = true;
+        break;
+      }
+      placementRangesByScope = nextRanges;
+      scopedFramesResolution = resolveScopedFrames({
+        ...scopedFramesContext,
+        placementRoleRangeOverridesByScope: placementRangesByScope,
+      });
+    }
+    if (!didPlacementConverge) {
+      throw new RetikzPlotError('lowerPlots: position adjustment containment did not converge');
+    }
+  }
+  const { scopeById, scopeContextOf, axisPolicyFor, frameByScope, gridLayers, axisLayers, plotArea } =
+    scopedFramesResolution;
+  const dataArtifact: PlotDataArtifact = {
+    rootDataView,
+    rootMarkDataViews,
+    ...(rootTransformResult !== undefined ? { rootLineage: rootTransformResult.lineage } : {}),
+    ...(lineageOptions !== undefined
+      ? { markLineages: rootMarkResults.map(result => result.lineage ?? { events: [] }) }
+      : {}),
+    compositionResolution,
+    markDataViews,
+    frameByCoordinateScopeId: frameByScope,
+  };
+  const facets = compositionFacets;
+  const arrangementLayoutOf = (arrangement: CoordinateArrangement | undefined): CompositionLayout | undefined =>
+    resolveArrangementLayout(compositionLayout, arrangement);
+  const arrangementResolveOf = (arrangement: CoordinateArrangement | undefined): CompositionResolve | undefined =>
+    resolveArrangementPolicy(compositionResolve, arrangement);
 
   // plot 级 datum id 登记器：datumIdField + plotId 在时建一份，线穿全 mark——跨 mark 共享 seen，
   // 两 datum-bearing mark（point + bar）撞同 `<plotId>.datum.<value>` 即 fail loud（#2）。
@@ -665,6 +853,94 @@ export const lowerPlotWithDataArtifact = (
       }
     }
 
+    const resolveFacetFrameWithPlacement = (
+      panel: FacetPanel,
+      panelNode: IRPlot,
+      panelDataView: DataView,
+      panelMarkDataViews: Array<MarkDataView>,
+      panelFrameGuides: Array<IRPlotGuide>,
+      panelLayout: CompositionLayout | undefined,
+      roleMarkDataViews: Record<string, Array<MarkDataView>>,
+    ): CoordinateFrameResolution => {
+      const frameContext = (roleRangeOverrides?: Partial<Record<DimensionRole, readonly [number, number]>>) =>
+        coordinateResolveContextOf(panelNode, panelDataView, panelFrameGuides, {
+          width: panelWidth,
+          height: panelHeight,
+          margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
+          labelGap: panelLayout?.labelGap,
+          markDataViews: sharedFacetMarkDataViews,
+          roleMarkDataViews,
+          ...(roleRangeOverrides === undefined ? {} : { roleRangeOverrides }),
+        });
+      let resolution = resolveCoordinateFrame(panelNode, frameContext());
+      const boundaryRanges = Object.fromEntries(
+        resolution.frame.roles.flatMap(role => {
+          const range = resolution.frame.roleScales?.[role]?.range();
+          return range === undefined ? [] : [[role, range]];
+        }),
+      ) as Partial<Record<DimensionRole, readonly [number, number]>>;
+      let currentRanges: ScopedPlacementRanges = new Map();
+      let didConverge = false;
+      for (let pass = 0; pass < 12; pass += 1) {
+        const nextByRole: Partial<Record<DimensionRole, readonly [number, number]>> = {};
+        for (const { dataView, mark, markIndex } of panelMarkDataViews) {
+          const operationResolution = resolveMarkOperation(mark, { registry: markRegistry });
+          const markChannels = resolveMarkChannels(mark, {
+            ...channelCtx,
+            rows: dataView.rows,
+            fieldTypes: dataView.fieldTypes,
+            fieldTypeEvidence: dataView.fieldTypeEvidence,
+            defaultColor: categoricalColorAt(
+              resolvedTheme.palette.series,
+              defaultColorPaletteIndices[markIndex] ?? markIndex,
+            ),
+          });
+          const markRanges = resolveMarkPlacementRangeOverrides(
+            operationResolution,
+            dataView.rows,
+            resolution.frame,
+            markChannels,
+            { width: panelWidth, height: panelHeight },
+            positionAdjustmentRegistry,
+            boundaryRanges,
+          );
+          if (markRanges === undefined) continue;
+          for (const [role, candidateRange] of Object.entries(markRanges)) {
+            if (candidateRange === undefined) continue;
+            if (panelNode.coordinate !== undefined) {
+              assertPlacementRangeCompatible(
+                panelNode,
+                panelNode.coordinate,
+                role,
+                candidateRange,
+                boundaryRanges[role],
+                scaleRegistry,
+              );
+            }
+            const currentRange = nextByRole[role];
+            nextByRole[role] =
+              currentRange === undefined
+                ? candidateRange
+                : intersectPlacementRanges(currentRange, candidateRange, role, panel.id);
+          }
+        }
+        const nextRanges: ScopedPlacementRanges =
+          Object.keys(nextByRole).length === 0 ? new Map() : new Map([[panel.id, nextByRole]]);
+        if (placementRangesEqual(currentRanges, nextRanges)) {
+          didConverge = true;
+          break;
+        }
+        currentRanges = nextRanges;
+        resolution = resolveCoordinateFrame(panelNode, frameContext(nextByRole));
+      }
+      if (!didConverge) {
+        throw new RetikzPlotError(
+          `lowerPlots: position adjustment containment did not converge for facet panel "${panel.id}"`,
+        );
+      }
+      return resolution;
+    };
+
     const panelScopes: Array<IRScope> = panels.map((panel, panelIndex) => {
       const panelAxisGuides = facetAxisGuidesForPanel(panel);
       const panelFrameGuides = facetFrameGuidesForPanel(panel);
@@ -683,16 +959,14 @@ export const lowerPlotWithDataArtifact = (
         guides: panelFrameGuides,
       };
       const panelLayout = arrangementLayoutOf(panel.facet);
-      const frameResolution = resolveCoordinateFrame(
+      const frameResolution = resolveFacetFrameWithPlacement(
+        panel,
         panelNode,
-        coordinateResolveContextOf(panelNode, panelDataView, panelFrameGuides, {
-          width: panelWidth,
-          height: panelHeight,
-          margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
-          labelGap: panelLayout?.labelGap,
-          markDataViews: sharedFacetMarkDataViews,
-          roleMarkDataViews,
-        }),
+        panelDataView,
+        panelMarkDataViews,
+        panelFrameGuides,
+        panelLayout,
+        roleMarkDataViews,
       );
       const axisResolution =
         panelAxisGuides.length === panelFrameGuides.length
@@ -740,27 +1014,31 @@ export const lowerPlotWithDataArtifact = (
           const markDataView = panelMarkDataViews[markIndex]?.dataView ?? panelDataView;
           const markRows = markDataView.rows;
           const operationResolution = resolveMarkOperation(mark, { registry: markRegistry });
-          const layer = lowerMark(
+          const markChannels = resolveMarkChannels(mark, {
+            ...channelCtx,
+            rows: markRows,
+            fieldTypes: markDataView.fieldTypes,
+            fieldTypeEvidence: markDataView.fieldTypeEvidence,
+            defaultColor: categoricalColorAt(
+              resolvedTheme.palette.series,
+              defaultColorPaletteIndices[markIndex] ?? markIndex,
+            ),
+          });
+          const positions = resolveMarkPlacement(
             operationResolution,
             markRows,
             frameResolution.frame,
-            resolveMarkChannels(mark, {
-              ...channelCtx,
-              rows: markRows,
-              fieldTypes: markDataView.fieldTypes,
-              fieldTypeEvidence: markDataView.fieldTypeEvidence,
-              defaultColor: categoricalColorAt(
-                resolvedTheme.palette.series,
-                defaultColorPaletteIndices[markIndex] ?? markIndex,
-              ),
-            }),
-            {
-              markIndex,
-              plotId: node.id,
-              ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
-              anchors: anchorRegistry,
-            },
+            markChannels,
+            { width: panelWidth, height: panelHeight },
+            positionAdjustmentRegistry,
           );
+          const layer = lowerMark(operationResolution, markRows, frameResolution.frame, markChannels, {
+            markIndex,
+            plotId: node.id,
+            ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
+            anchors: anchorRegistry,
+            ...(positions !== undefined ? { positions } : {}),
+          });
           return layer === null ? null : withScopeContext(layer, panelContext);
         })
         .filter((layer): layer is IRChild => layer !== null);
@@ -841,27 +1119,31 @@ export const lowerPlotWithDataArtifact = (
         throw new RetikzPlotError(`lowerPlots: coordinateView "${coordinateScopeId}" is not registered`);
       }
       const operationResolution = resolveMarkOperation(mark, { registry: markRegistry });
-      const layer = lowerMark(
+      const markChannels = resolveMarkChannels(mark, {
+        ...channelCtx,
+        rows: markRows,
+        fieldTypes: dataView.fieldTypes,
+        fieldTypeEvidence: dataView.fieldTypeEvidence,
+        defaultColor: categoricalColorAt(
+          resolvedTheme.palette.series,
+          defaultColorPaletteIndices[markIndex] ?? markIndex,
+        ),
+      });
+      const positions = resolveMarkPlacement(
         operationResolution,
         markRows,
         frame,
-        resolveMarkChannels(mark, {
-          ...channelCtx,
-          rows: markRows,
-          fieldTypes: dataView.fieldTypes,
-          fieldTypeEvidence: dataView.fieldTypeEvidence,
-          defaultColor: categoricalColorAt(
-            resolvedTheme.palette.series,
-            defaultColorPaletteIndices[markIndex] ?? markIndex,
-          ),
-        }),
-        {
-          markIndex,
-          plotId: node.id,
-          ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
-          anchors: anchorRegistry,
-        },
+        markChannels,
+        { width, height },
+        positionAdjustmentRegistry,
       );
+      const layer = lowerMark(operationResolution, markRows, frame, markChannels, {
+        markIndex,
+        plotId: node.id,
+        ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
+        anchors: anchorRegistry,
+        ...(positions !== undefined ? { positions } : {}),
+      });
       if (layer === null) return null;
       const scope = scopeById.get(coordinateScopeId);
       const scopedLayer = scope === undefined ? layer : withScopeContext(layer, scopeContextOf(scope));

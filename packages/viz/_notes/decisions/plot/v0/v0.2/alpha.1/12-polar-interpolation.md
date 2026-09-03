@@ -21,7 +21,7 @@
 
 坐标系省略 `interpolation` 时，根据有效 angular position scale 的连续性推断：连续 scale 使用 `polar`，离散 scale 使用 `chord`。解析后的模式写入 Polar coordinate frame，作为 Guide 与 Mark lowering 共同消费的单一事实源；Guide 与 Mark 不再按 scale type 或 mark topology 各自推断
 
-具备坐标段或 cell 边界的内置 Mark 默认继承 frame 模式。Path、Interval 与 Reference 可以声明同名 `interpolation` 作局部覆盖；Relation 只有在默认 path 的 source、target 与 via 都是 coordinate-projected target 时继承 frame，并可以在 path 几何配置中覆盖。Point 与 Relation endpoint glyph 只有独立投影位置，不暴露无效的 interpolation 配置；anchor / node target、显式 route、routing 与 ribbon 缺少可供 Plot 连续插值的完整极坐标位置，仍由 Relation 自身契约决定，不被 coordinate interpolation 改写
+具备坐标段或 cell 边界的内置 Mark 默认继承 frame 模式。Path、Interval 与 Reference 可以声明同名 `interpolation` 作局部覆盖；Relation 只有在默认 path 的 source、target 与 via 都是 coordinate-projected target 时继承 frame，并可以在 path 几何配置中覆盖。Point 与 Relation endpoint glyph 不暴露独立的 interpolation 配置；其原始数据位置仍按极坐标点投影，但离散角轴上的 role-space adjustment 产生类别之间的合成位置时，由 frame 的已解析模式决定投影路径：`polar` 沿圆周，`chord` 沿相邻结构顶点之间的直线边。anchor / node target、显式 route、routing 与 ribbon 缺少可供 Plot 连续插值的完整极坐标位置，仍由 Relation 自身契约决定，不被 coordinate interpolation 改写
 
 有效优先级为：
 
@@ -65,6 +65,7 @@ type PositionScaleDefinition = {
 type PolarCoordinateFrame = {
   type: 'polar2D';
   interpolation: PolarInterpolationValue;
+  projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
   projectCell: (cell: Cell, options?: { interpolation?: PolarInterpolationValue }) => CellGeometry;
   // 既有已解析 scale、范围与点 / 极坐标投影能力
 };
@@ -90,7 +91,7 @@ type IRPlotRelationPathGeometry = {
 };
 ```
 
-`PositionScaleDefinition.continuity` 是 position scale 的运行时拓扑事实，不进入 JSON IR。内置与自定义 position scale 使用同一字段，使 `polar2D` 的省略值推断不依赖内置 type 白名单。Polar frame 的 `projectCell` 省略 options 时使用 frame 默认，插值敏感 Mark 以可选参数传入自己的有效覆盖；覆盖按次消费，不修改共享 frame 或 Grid。`PolarInterpolation` 只描述内置 `polar2D` 的连接空间；自定义 coordinate 继续由自己的 Source schema 与 Definition 拥有几何，不在本决策中增加通用 coordinate interpolation capability
+`PositionScaleDefinition.continuity` 是 position scale 的运行时拓扑事实，不进入 JSON IR。内置与自定义 position scale 使用同一字段，使 `polar2D` 的省略值推断不依赖内置 type 白名单。Polar frame 的 `projectCell` 省略 options 时使用 frame 默认，插值敏感 Mark 以可选参数传入自己的有效覆盖；覆盖按次消费，不修改共享 frame 或 Grid。`projectMappedRoles` 只在离散角轴的 scale 输出出现类别间合成位置时使用 resolved interpolation：`polar` 直接按角度与半径投影，`chord` 在包围该位置的相邻 angular skeleton 顶点间按角向比例线性插值；原始类别位置仍精确落在结构顶点，连续角轴仍按真实角度投影。`PolarInterpolation` 只描述内置 `polar2D` 的连接空间；自定义 coordinate 继续由自己的 Source schema 与 Definition 拥有几何，不在本决策中增加通用 coordinate interpolation capability
 
 `polar` 对每个相邻角度 / 半径输出对做连续插值。全周期闭合时，最后一段按 coordinate sweep 方向跨越角度接缝，不把接缝误解为反向绕行；`chord` 只使用有效顶点。Path 的 `curve` 随后作用于这组屏幕点，默认仍为 `linear`；显式曲线可以进一步平滑结果，但不改变 interpolation 选择的坐标空间
 
@@ -103,10 +104,10 @@ Interval、Reference band 与 region 的固定半径边界同样继承有效模�
 - 默认行为：连续 angular position scale 默认 `polar`，离散 angular position scale 默认 `chord`；显式 coordinate 值覆盖推断，具备插值语义的 Mark 再覆盖 coordinate
 - Path 拓扑：Polar Path 既有 `closed` / `closure` 规则保持不变；闭合不再禁用 `polar` 段内插值，`closed` 只决定是否连接首尾
 - Guide 行为：angular axis 的固定半径轴线与 radial grid rings 使用 coordinate interpolation；radial axis、angular ticks 与 angular grid spokes 仍是直线
-- Mark 行为：Path、Interval、Reference 与完全由 coordinate-projected target 构成的默认 Relation path 继承 frame；Point、endpoint glyph、anchor / node target、显式 Relation route / routing 和 ribbon 不消费该字段
+- Mark 行为：Path、Interval、Reference 与完全由 coordinate-projected target 构成的默认 Relation path 继承 frame；Point 与 endpoint glyph 不提供 interpolation override，但离散角轴上的 role-space adjustment 结果经 frame 的 resolved interpolation 投影；anchor / node target、显式 Relation route / routing 和 ribbon 不消费该字段
 - 失败与诊断：Polar interpolation 取值不合法由严格 schema 拒绝；Mark override 用于非 `polar2D`，Relation path override 缺少完整 projected target 或与显式 route / routing、ribbon 冲突，或 angular scale definition 无法提供连续性时 fail-loud，并定位到 coordinate / mark 与 interpolation
 - registry 边界：自定义 position scale 必须声明连续性，才能参与省略值推断；自定义 coordinate 与 custom mark 不自动获得公共 interpolation 字段，其专有行为仍由各自 Definition 解析
-- 兼容性 / breaking：离散 Polar Path 的默认弦连接保持不变，连续 Polar Path 从错误的默认弦修正为极坐标曲线；离散 angular scale 的固定半径 Guide 和 cell 边界从默认圆弧改为多边形边界。需要保留圆弧的离散 Plot 可显式设置 coordinate 或 Mark `interpolation: 'polar'`。`PositionScaleDefinition` 的自定义实现必须声明 `continuity`，不保留按 type 白名单或运行时形状猜测的 fallback
+- 兼容性 / breaking：离散 Polar Path 的默认弦连接保持不变，连续 Polar Path 从错误的默认弦修正为极坐标曲线；离散 angular scale 的固定半径 Guide 和 cell 边界从默认圆弧改为多边形边界。离散 `chord` 坐标中经 role-space adjustment 产生的类别间 Point 位置从圆周修正为多边形边，省略 placement、原始类别顶点和连续角轴保持不变。需要保留圆弧的离散 Plot 可显式设置 coordinate 或 Mark `interpolation: 'polar'`。`PositionScaleDefinition` 的自定义实现必须声明 `continuity`，不保留按 type 白名单或运行时形状猜测的 fallback
 - React / Vanilla 等价性：JSON IR、Vanilla Input 与 React props 表达同一 schema-derived contract；adapter 只传递 interpolation，不推断 scale 连续性、不合并优先级、不生成几何
 
 ## 最终结果

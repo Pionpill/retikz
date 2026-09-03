@@ -3,7 +3,7 @@ import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { PositionScale } from '../../../src/contract';
+import type { CoordinateFrame, PositionScale } from '../../../src/contract';
 import type { GuideContext } from '../../../src/contract';
 import type { IRPlot } from '../../../src/schemas';
 
@@ -22,6 +22,7 @@ const fakeScale = (
   coordinate: value => coordinate(value as number),
   domain: () => domain,
   bandwidth: 0,
+  step: 0,
   ticks: () => ({ values: [], labels: [] }),
   range: () => [scaleRange[0], scaleRange[1]],
   setRange: () => {},
@@ -32,6 +33,7 @@ const fakeTickScale = (coordinate: (value: number) => number, values: Array<numb
   coordinate: value => coordinate(value as number),
   domain: () => [values[0], values[values.length - 1]],
   bandwidth: 0,
+  step: 0,
   ticks: () => ({ values, labels: values.map(value => String(value)) }),
   range: () => [coordinate(values[0]), coordinate(values[values.length - 1])],
   setRange: () => {},
@@ -48,11 +50,18 @@ const fakeBandScale = (
   coordinate: value => coordinates[String(value)] ?? Number.NaN,
   domain: () => Object.keys(coordinates),
   bandwidth,
+  step: bandwidth,
   ticks: () => ({ values: Object.keys(coordinates), labels: Object.keys(coordinates) }),
   tickKind: 'category',
   range: () => [scaleRange[0], scaleRange[1]],
   setRange: () => {},
 });
+
+const fakePolarPlacementBoundary = {
+  isCyclic: () => false,
+  unitNormal: () => [1, 0] as const,
+  glyphExtentInRoleUnits: (_role: string, _mappedRoles: ReadonlyArray<number>, screenExtent: number) => screenExtent,
+} satisfies NonNullable<CoordinateFrame['placementBoundary']>;
 
 const ctx: GuideContext = {
   plotArea: { x: 40, y: 10, width: 400, height: 250 },
@@ -210,6 +219,9 @@ describe('lowerGuide (contract)', () => {
           roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
           project: () => null,
           projectRoles: () => null,
+          mapRoles: () => null,
+          projectMappedRoles: () => null,
+          placementBoundary: fakePolarPlacementBoundary,
           projectPolar: () => null,
           projectCell: () => ({
             kind: 'sector',
@@ -248,6 +260,9 @@ describe('lowerGuide (contract)', () => {
           roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
           project: () => null,
           projectRoles: () => null,
+          mapRoles: () => null,
+          projectMappedRoles: () => null,
+          placementBoundary: fakePolarPlacementBoundary,
           projectPolar: () => null,
           projectCell: () => ({
             kind: 'sector',
@@ -286,6 +301,9 @@ describe('lowerGuide (contract)', () => {
           roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
           project: () => null,
           projectRoles: () => null,
+          mapRoles: () => null,
+          projectMappedRoles: () => null,
+          placementBoundary: fakePolarPlacementBoundary,
           projectPolar: () => null,
           projectCell: () => ({
             kind: 'sector',
@@ -616,6 +634,9 @@ describe('lowerGuide (contract)', () => {
           roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
           project: () => null,
           projectRoles: () => null,
+          mapRoles: () => null,
+          projectMappedRoles: () => null,
+          placementBoundary: fakePolarPlacementBoundary,
           projectPolar: () => null,
           projectCell: () => ({
             kind: 'sector',
@@ -662,6 +683,9 @@ describe('lowerGuide (contract)', () => {
           roleScales: { x: angularScale, y: fakeScale(value => value) },
           project: () => null,
           projectRoles: () => null,
+          mapRoles: () => null,
+          projectMappedRoles: () => null,
+          placementBoundary: fakePolarPlacementBoundary,
           projectPolar: () => null,
           projectCell: () => ({
             kind: 'sector',
@@ -1116,6 +1140,9 @@ describe('lowerGuide (contract)', () => {
             roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
             project: () => null,
             projectRoles: () => null,
+            mapRoles: () => null,
+            projectMappedRoles: () => null,
+            placementBoundary: fakePolarPlacementBoundary,
             projectPolar: () => null,
             projectCell: () => ({
               kind: 'sector',

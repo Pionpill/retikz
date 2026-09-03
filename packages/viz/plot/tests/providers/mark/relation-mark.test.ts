@@ -22,6 +22,7 @@ const linearScale = (domain: [number, number], range: [number, number]): Positio
   },
   domain: () => domain,
   bandwidth: 0,
+  step: 0,
   ticks: () => ({ values: domain, labels: domain.map(String) }),
   range: () => range,
   setRange: () => undefined,
