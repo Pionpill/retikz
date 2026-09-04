@@ -2,8 +2,9 @@ import type { IRJsonObject } from '@retikz/core';
 import type { IRPlotMarkOperation, IRPlotScaleOperation } from '@retikz/plot';
 
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
-import { PathMarkSchema } from '@retikz/plot';
+import { defineScale, PathMarkSchema, PositionScaleContinuity } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
+import { literal, strictObject, string } from 'zod';
 
 import type {
   ChartEncodingRuntime,
@@ -31,6 +32,8 @@ import {
   pointPositionFieldConsumersOf,
   resolvePointScaleDefaults,
 } from '../../src/point/shared';
+import { StripChartDefinition } from '../../src/point/strip/recipe';
+import { StripChartSchema } from '../../src/point/strip/schema';
 
 const theme = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
 const runtime = resolveChartProviderRegistry([
@@ -47,6 +50,9 @@ const connectedScatterRuntime = resolveChartProviderRegistry([
 ]).runtime;
 const rangedDotRuntime = resolveChartProviderRegistry([
   { family: 'point', recipe: RangedDotChartDefinition, themeDefinitions: [] },
+]).runtime;
+const stripRuntime = resolveChartProviderRegistry([
+  { family: 'point', recipe: StripChartDefinition, themeDefinitions: [] },
 ]).runtime;
 
 const resolve = <TSource extends IRChartSource>(
@@ -98,6 +104,188 @@ const scaleDefaultsContextOf = (
 });
 
 describe('Point Chart recipe Definitions', () => {
+  it('lowers Strip jitter without role or duplicated Plot defaults', () => {
+    const source = StripChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'strip',
+        encodings: {
+          x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        },
+      },
+    });
+
+    const result = resolveChart(source, StripChartDefinition, stripRuntime);
+
+    expect(result.plot.marks).toEqual([
+      expect.objectContaining({
+        type: 'point',
+        placement: { adjustments: [{ kind: 'jitter' }] },
+      }),
+    ]);
+    expect(result.plot.guides).toEqual([
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y', grid: true },
+    ]);
+  });
+
+  it('moves the default Strip grid with the continuous role and preserves explicit guides', () => {
+    const horizontal = StripChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'strip',
+        encodings: {
+          x: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+          y: { field: 'category', scale: { operation: { type: 'band', name: 'category' } } },
+        },
+      },
+    });
+    const explicit = StripChartSchema.parse({
+      ...horizontal,
+      plotExtension: { guides: [{ type: 'axis', dimension: 'y', grid: true }] },
+    });
+
+    expect(resolveChart(horizontal, StripChartDefinition, stripRuntime).plot.guides).toEqual([
+      { type: 'axis', dimension: 'x', grid: true },
+      { type: 'axis', dimension: 'y' },
+    ]);
+    expect(resolveChart(explicit, StripChartDefinition, stripRuntime).plot.guides).toEqual([
+      { type: 'axis', dimension: 'y', grid: true },
+    ]);
+  });
+
+  it('requires exactly one discrete and one continuous Strip position scale', () => {
+    const sourceWith = (xType: 'band' | 'linear' | 'point', yType: 'band' | 'linear' | 'point') =>
+      StripChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'strip',
+          encodings: {
+            x: { field: 'x', scale: { operation: { type: xType, name: 'x' } } },
+            y: { field: 'y', scale: { operation: { type: yType, name: 'y' } } },
+          },
+        },
+      });
+
+    expect(() => resolveChart(sourceWith('linear', 'linear'), StripChartDefinition, stripRuntime)).toThrowError(
+      expect.objectContaining({ details: expect.objectContaining({ path: ['recipe', 'encodings'] }) }),
+    );
+    expect(() => resolveChart(sourceWith('point', 'band'), StripChartDefinition, stripRuntime)).toThrowError(
+      expect.objectContaining({ details: expect.objectContaining({ path: ['recipe', 'encodings'] }) }),
+    );
+  });
+
+  it('uses custom Scale Definition continuity instead of a built-in scale whitelist', () => {
+    const customDiscreteScale = defineScale({
+      family: 'position',
+      continuity: PositionScaleContinuity.Discrete,
+      schema: strictObject({ type: literal('custom-discrete'), name: string().min(1) }),
+      isFieldCompatible: () => true,
+      resolve: () => {
+        throw new Error('Chart resolution must not execute custom scale geometry');
+      },
+    });
+    const customRuntime = resolveChartProviderRegistry([
+      {
+        family: 'point',
+        recipe: StripChartDefinition,
+        themeDefinitions: [],
+        runtimeDefinitions: { scaleDefinitions: [customDiscreteScale] },
+      },
+    ]).runtime;
+    const source = StripChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'strip',
+        encodings: {
+          x: {
+            field: 'category',
+            scale: { operation: { type: 'custom-discrete', name: 'category' } },
+          },
+          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        },
+      },
+    });
+
+    expect(resolveChart(source, StripChartDefinition, customRuntime).plot.guides).toEqual([
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y', grid: true },
+    ]);
+  });
+
+  it('inherits Strip point and jitter slots while keeping authored marks field-only', () => {
+    const source = StripChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'strip',
+        encodings: {
+          x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        },
+        properties: { size: 7, jitter: { span: { kind: 'ratio', value: 0.5 }, seed: 3 } },
+        marks: [
+          {
+            kind: 'strip',
+            override: true,
+            encodings: { x: 'alternateCategory' },
+            properties: { jitter: { span: 0, seed: 0 } },
+          },
+          { kind: 'strip', properties: { opacity: 0.4 } },
+        ],
+      },
+    });
+
+    const result = resolveChart(source, StripChartDefinition, stripRuntime);
+
+    expect(result.plot.marks).toHaveLength(2);
+    expect(result.plot.marks[0]).toMatchObject({
+      encoding: { x: { field: 'alternateCategory' }, y: { field: 'value' } },
+      size: { kind: 'constant', value: 7 },
+      placement: { adjustments: [{ kind: 'jitter', span: 0, seed: 0 }] },
+    });
+    expect(result.plot.marks[1]).toMatchObject({
+      opacity: { kind: 'constant', value: 0.4 },
+      size: { kind: 'constant', value: 7 },
+      placement: { adjustments: [{ kind: 'jitter', span: { kind: 'ratio', value: 0.5 }, seed: 3 }] },
+    });
+  });
+
+  it('applies Point domain padding only to the continuous Strip scale', () => {
+    const source = StripChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'strip',
+        encodings: {
+          x: { field: 'category', scale: { operation: { type: 'band', name: 'category' } } },
+          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        },
+        properties: { size: 6, domainPadding: 12 },
+      },
+    });
+
+    expect(resolveChart(source, StripChartDefinition, stripRuntime).plot.scales).toEqual([
+      { type: 'band', name: 'category' },
+      {
+        type: 'linear',
+        name: 'value',
+        domainPadding: { kind: 'range', lower: 12, upper: 12 },
+      },
+    ]);
+  });
+
   it('all Point chart types reserve continuous position ranges by their maximum final point radius', () => {
     const scatter = resolveChart(
       ScatterChartSchema.parse({

@@ -21,8 +21,6 @@ import { previewControlContract as presentationVisibilityEnContract } from '../.
 import { previewSource as presentationVisibilityZhSource } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.zh.demo';
 import { previewSource as fertilityWorkEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
 import { previewSource as fertilityWorkZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
-import { previewSource as penguinFacetEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.en.demo';
-import { previewSource as penguinFacetZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.zh.demo';
 import { previewSource as worldCupEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.en.demo';
 import { previewSource as worldCupZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.zh.demo';
 
@@ -191,8 +189,6 @@ describe('Chart-native Scatter presentation', () => {
     const cases = [
       [fertilityWorkZhPreviewSource, './scatter-fertility-work.data', 'fertilityWorkData'],
       [fertilityWorkEnPreviewSource, './scatter-fertility-work.data', 'fertilityWorkData'],
-      [penguinFacetZhPreviewSource, './scatter-penguins-facet-jitter.data', 'penguinScatterData'],
-      [penguinFacetEnPreviewSource, './scatter-penguins-facet-jitter.data', 'penguinScatterData'],
       [worldCupZhPreviewSource, './scatter-world-cup-shots.data', 'messiWorldCupShots'],
       [worldCupEnPreviewSource, './scatter-world-cup-shots.data', 'messiWorldCupShots'],
     ] as const;

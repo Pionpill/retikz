@@ -1,0 +1,103 @@
+---
+title: Strip Chart
+description: Deterministically spread observations within one discrete position role while preserving values on the other continuous role.
+family: scatter-points
+usage: distribution
+---
+
+<ShowcaseGallery
+  examples={[
+    {
+      id: 'strip-minimal',
+      title: 'Basic Usage',
+      description: 'This is the minimal setup with only required options. Once one discrete and one continuous scale are explicit, `StripChart` spreads overlapping observations along the discrete role; switch to IR to inspect the exact configuration.',
+      preview: {
+        files: ['strip-minimal', 'strip-palmer-penguins.data.ts'],
+        size: 'xxxl',
+        caption: 'Every point retains its original flipper length; only its position within the species role changes.',
+      },
+    },
+    {
+      id: 'strip-basic',
+      title: 'Advanced playground: roles, coordinates, and spread',
+      description: 'Switch discrete x / y, Point / Band scales, Cartesian / Polar coordinates, then adjust spread width, random seed, and point radius.',
+      preview: {
+        files: ['strip-basic', 'strip-vega-barley.data.ts'],
+        controls: { name: 'strip-basic' },
+        controlPanelDefaultOpen: false,
+        size: 'xxxl',
+        caption: 'In Polar coordinates, discrete x spreads along angle arcs while discrete y spreads radially; the same angular offset has a different arc length at each radius.',
+      },
+    },
+  ]}
+>
+A Strip Chart organizes categories on one discrete position role and spreads individual observations around each tick. Use it for within-group distributions, overlap, and outliers. When both x and y are continuous, use [Scatter](/viz/chart/points/scatter).
+
+## `StripChart`
+
+The root `recipe` requires both x and y, with exactly one final discrete position scale and one continuous scale. Component identity supplies the Point family and `chartType: 'strip'`:
+
+```tsx
+<StripChart
+  rows={rows}
+  recipe={{
+    encodings: {
+      x: { field: 'group', scale: { operation: { type: 'point', name: 'group' } } },
+      y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+    },
+    properties: { jitter: { span: { kind: 'ratio', value: 0.3 }, seed: 0 } },
+  }}
+/>
+```
+
+`StripEncodings`, `StripProperties`, and `StripMark` are equivalent JSX sugar for the same recipe slots. Root-only authoring can omit `children`; different slots can mix, while two sources for one slot fail loudly.
+
+## Position roles and spread
+
+`x` and `y` accept direct field mappings only. A scale can be authored inline or refer to a named scale in `plotExtension.scales`. Chart reads the resolved Scale Definition `continuity`, so custom discrete scales and built-ins follow the same registry path.
+
+`jitter.span` is the **total spread width**. A number uses the current position role's output units directly. `{ kind: 'ratio', value }` uses a `0..1` fraction of the discrete tick interval. Plot defaults to `0.3` when omitted, and `seed` defaults to `0`. Identical ordered data, scale, span, and seed produce identical positions.
+
+The default grid follows only the continuous role. `domainPadding` also applies only to the continuous position scale. At a discrete boundary, Plot placement narrows the range using half the spread width plus the actual glyph extent, so points are never clamped, shrunk, or painted outside the coordinate boundary. Insufficient space fails loudly.
+
+Polar projection still happens after role-space spread: x is angle and y is radius. Discrete x therefore moves along an arc, where the same angular offset produces a different arc length at each radius. Discrete y moves radially.
+
+## API Reference
+
+### `StripEncodingsProps`
+
+| Prop       | Type                                    | Default | Description                                                       |
+| ---------- | --------------------------------------- | ------- | ----------------------------------------------------------------- |
+| `x` / `y`  | `IRStripXEncoding` / `IRStripYEncoding` | —       | Required direct mappings; exactly one discrete and one continuous |
+| `color?`   | `IRStripColorEncoding`                  | —       | Optional direct color field and scale binding                     |
+| `size?`    | `IRStripSizeEncoding`                   | —       | Optional direct radius field and sqrt scale binding               |
+| `opacity?` | `IRStripOpacityEncoding`                | —       | Optional direct opacity field and linear scale binding            |
+| `shape?`   | `IRStripShapeEncoding`                  | —       | Optional direct shape field                                       |
+
+### `StripPropertiesProps`
+
+| Prop             | Type                                                                    | Default                         | Description                                                                   |
+| ---------------- | ----------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------- |
+| `jitter?`        | `{ span?: number \| { kind: 'ratio'; value: number }; seed?: number }`  | `{ span: ratio(0.3), seed: 0 }` | Deterministic spread along the sole discrete role; no authored `role`         |
+| `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest final Point radius      | Configures only the continuous scale; Plot placement contains discrete spread |
+| Point appearance | `IRPointProperties`                                                     | Point defaults                  | Constant `size`, `shape`, paint, stroke, opacity, and related styling         |
+
+### `StripMarkProps`
+
+| Prop          | Type                         | Default   | Description                                                                |
+| ------------- | ---------------------------- | --------- | -------------------------------------------------------------------------- |
+| `override?`   | `boolean`                    | `false`   | Replaces the complete Strip Point mark                                     |
+| `encodings?`  | `IRPointMarkEncoding`        | inherited | Overrides direct fields only; no mark-local scale                          |
+| `properties?` | `IRStripChartMarkProperties` | inherited | Overrides Point appearance and jitter; rejects recipe-only `domainPadding` |
+
+## Public entries
+
+- `@retikz/chart/point/strip`: exact schemas, Source types, and provider
+- `@retikz/chart-react/point`: Chart, Encodings, Properties, and Mark declarations
+- `@retikz/chart-vanilla/point/strip`: normalizer, factory, and typed Input
+
+## Related
+
+[Scatter](/viz/chart/points/scatter) · [Point position spread](/viz/plot/mark/point#position-spread) · [Position scales](/viz/plot/scale/position) · [Working with Plot](/viz/chart/model/plot)
+
+</ShowcaseGallery>

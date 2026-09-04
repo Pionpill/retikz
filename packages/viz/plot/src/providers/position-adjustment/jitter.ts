@@ -47,7 +47,7 @@ const jitterSpanOf = (
   context: RolePositionAdjustmentContext,
   role: string,
 ): number => {
-  const span = operation.span ?? { kind: 'ratio', value: 0.8 };
+  const span = operation.span ?? { kind: 'ratio', value: 0.3 };
   if (typeof span === 'number') return span;
   const step = context.roleScales[role]?.step ?? 0;
   if (!Number.isFinite(step) || step <= 0) {

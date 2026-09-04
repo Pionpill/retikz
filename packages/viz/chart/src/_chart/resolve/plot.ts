@@ -247,7 +247,7 @@ export const resolveChartPlotGuides = (
 /** 生成并再次通过 PlotSchema 校验唯一完整 Plot IR */
 export const resolveChartPlot = (
   source: IRChartSource,
-  definition: Pick<ChartRecipeDefinition, 'resolveScaleDefaults'>,
+  definition: Pick<ChartRecipeDefinition, 'resolveGuideDefaults' | 'resolveScaleDefaults'>,
   recipe: ChartRecipeResolution,
   encodings: ChartEncodingResolution,
   chartMarks: ReadonlyArray<IRPlot['marks'][number]>,
@@ -256,7 +256,7 @@ export const resolveChartPlot = (
 ): IRPlot => {
   const extension = source.plotExtension;
   const spatial = resolveChartPlotSpatial(recipe, encodings, source.coordinate, extension, runtime);
-  const guides = resolveChartPlotGuides(recipe, extension);
+  const mergedGuides = resolveChartPlotGuides(recipe, extension);
   const mergedScales = resolveChartPlotScales(recipe, encodings, extension);
   const scales =
     definition.resolveScaleDefaults?.({
@@ -266,6 +266,16 @@ export const resolveChartPlot = (
       scales: mergedScales,
       spatial,
     }) ?? mergedScales;
+  const guides =
+    definition.resolveGuideDefaults?.({
+      source,
+      encodings,
+      chartMarks,
+      scales,
+      spatial,
+      guides: mergedGuides ?? [],
+      runtime,
+    }) ?? mergedGuides;
   const marks = [...chartMarks, ...(extension?.marks ?? [])];
   const transforms = [...(extension?.transform ?? []), ...encodings.transform, ...(recipe.scaffold.transform ?? [])];
 

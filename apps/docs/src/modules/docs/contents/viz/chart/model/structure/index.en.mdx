@@ -78,6 +78,7 @@ A family is finite, stable, and intended for discovery. A chartType is a globall
 | `point` → `regression`        | `RegressionChartSchema`<br />`@retikz/chart/point/regression`              | Required x/y; series, fit, Point + trend      |
 | `point` → `connected-scatter` | `ConnectedScatterChartSchema`<br />`@retikz/chart/point/connected-scatter` | Required x/y/order; series, Path → Point      |
 | `point` → `ranged-dot`        | `RangedDotChartSchema`<br />`@retikz/chart/point/ranged-dot`               | category/start/end; connector + endpoints     |
+| `point` → `strip`             | `StripChartSchema`<br />`@retikz/chart/point/strip`                        | Direct x/y; one discrete, one continuous      |
 
 Import each exact schema from the corresponding concrete chartType subpath in the table. Use the aggregate `@retikz/chart/point` entry only when the application intentionally needs the whole Point family.
 
@@ -164,7 +165,7 @@ The Chart-shell cascade is mode fallback → Core style chain → authored named
   <LinkedCard href="/viz/chart/points">
     <span className="font-semibold">Point family</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Review exact schemas and authored marks for all five active Point chartTypes.
+      Review exact schemas and authored marks for all six active Point chartTypes.
     </span>
   </LinkedCard>
 </div>

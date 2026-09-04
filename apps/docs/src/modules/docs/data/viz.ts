@@ -222,6 +222,24 @@ export const vizSection: Array<Section> = [
               },
             },
           },
+          {
+            id: 'strip',
+            label: 'viz.chartStrip',
+            difficulty: DocDifficulty.Beginner,
+            meta: {
+              pageType: 'concept',
+              audience: 'user',
+              capability: 'showcase.strip',
+              sourceOfTruth: 'docs',
+              layout: 'showcase',
+              showcase: {
+                family: 'scatter-points',
+                role: 'primary',
+                preview: 'strip-minimal',
+                order: 60,
+              },
+            },
+          },
         ],
         meta: {
           pageType: 'group',

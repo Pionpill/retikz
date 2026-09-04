@@ -32,7 +32,7 @@ export const pointJitterPolarControls = definePreviewControls({
           kind: 'range',
           id: POINT_JITTER_POLAR_CONTROL_IDS.ratio,
           label: 'Spread width',
-          defaultValue: 0.8,
+          defaultValue: 0.3,
           min: 0,
           max: 1,
           step: 0.05,
@@ -67,7 +67,7 @@ export const previewControlContract = {
   controls: pointJitterPolarControls,
   canonicalValues: {
     [POINT_JITTER_POLAR_CONTROL_IDS.scale]: 'discrete',
-    [POINT_JITTER_POLAR_CONTROL_IDS.ratio]: 0.8,
+    [POINT_JITTER_POLAR_CONTROL_IDS.ratio]: 0.3,
     [POINT_JITTER_POLAR_CONTROL_IDS.range]: 48,
     [POINT_JITTER_POLAR_CONTROL_IDS.seed]: 7,
   },

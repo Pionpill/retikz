@@ -15,6 +15,7 @@ const pointChartCases = [
   { chartType: 'ranged-dot', prefix: 'RangedDot', load: () => import('../src/point/ranged-dot') },
   { chartType: 'regression', prefix: 'Regression', load: () => import('../src/point/regression') },
   { chartType: 'scatter', prefix: 'Scatter', load: () => import('../src/point/scatter') },
+  { chartType: 'strip', prefix: 'Strip', load: () => import('../src/point/strip') },
 ] as const;
 
 describe('@retikz/chart-react public surface', () => {

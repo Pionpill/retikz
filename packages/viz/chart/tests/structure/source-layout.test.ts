@@ -4,11 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const sourceRoot = fileURLToPath(new URL('../../src/', import.meta.url));
-const pointChartTypes = ['bubble', 'connected-scatter', 'ranged-dot', 'regression', 'scatter'] as const;
+const pointChartTypes = ['bubble', 'connected-scatter', 'ranged-dot', 'regression', 'scatter', 'strip'] as const;
 const pointChartOwnerFiles = [
   'encoding-schema.ts',
   'index.ts',
-  'locator.ts',
   'mark.ts',
   'provider.ts',
   'recipe.ts',
@@ -49,6 +48,9 @@ describe('Chart semantic source layout', () => {
     expect(paths).toContain('point/shared/spatial.ts');
     for (const chartType of pointChartTypes) {
       for (const file of pointChartOwnerFiles) expect(paths).toContain(`point/${chartType}/${file}`);
+    }
+    for (const chartType of pointChartTypes.filter(candidate => candidate !== 'strip')) {
+      expect(paths).toContain(`point/${chartType}/locator.ts`);
     }
     expect(paths).not.toContain('point/family.ts');
   });

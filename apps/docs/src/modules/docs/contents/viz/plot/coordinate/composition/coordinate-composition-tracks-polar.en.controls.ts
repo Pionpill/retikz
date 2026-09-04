@@ -81,7 +81,7 @@ export const coordinateCompositionTracksPolarControls = definePreviewControls({
         {
           kind: 'switch',
           id: COORDINATE_COMPOSITION_TRACKS_POLAR_CONTROL_IDS.yGridVisible,
-          label: 'Circular grid (y / radius)',
+          label: 'Polygon grid (y / radius)',
           defaultValue: true,
           visibleWhen: {
             controlId: COORDINATE_COMPOSITION_TRACKS_POLAR_CONTROL_IDS.localAxes,

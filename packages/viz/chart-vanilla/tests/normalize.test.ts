@@ -7,6 +7,7 @@ import {
   normalizeRangedDotChart,
   normalizeRegressionChart,
   normalizeScatterChart,
+  normalizeStripChart,
 } from '../src/point';
 
 describe('Chart Vanilla normalization', () => {
@@ -55,6 +56,16 @@ describe('Chart Vanilla normalization', () => {
         data: { reference: 'rows' },
         coordinate: 'polar2D',
         encodings: { x: 'x', y: 'y' },
+      }).coordinate,
+    ).toMatchObject({ type: 'polar2D' });
+    expect(
+      normalizeStripChart({
+        data: { reference: 'rows' },
+        coordinate: 'polar2D',
+        encodings: {
+          x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        },
       }).coordinate,
     ).toMatchObject({ type: 'polar2D' });
     expect(normalizeScatterChart({ data: { reference: 'rows' }, encodings: { x: 'x', y: 'y' } })).not.toHaveProperty(
@@ -143,6 +154,37 @@ describe('Chart Vanilla normalization', () => {
         encodings: { x: 'amount', y: 'margin', color: 'region' },
         properties: { opacity: 0, domainPadding: 0.04 },
         marks: [{ kind: 'scatter', properties: { size: 4 } }],
+      },
+    });
+  });
+
+  it('normalizes Strip input without losing zero jitter values or empty marks', () => {
+    const source = normalizeStripChart({
+      id: 'distribution',
+      data: { reference: 'rows' },
+      coordinate: { type: 'polar2D', innerRadius: 0, startAngle: 0, endAngle: 360 },
+      encodings: {
+        x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+        y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+      },
+      properties: { size: 0, jitter: { span: 0, seed: 0 }, domainPadding: 0 },
+      marks: [],
+    });
+
+    expect(source).toEqual({
+      namespace: 'chart',
+      type: 'point',
+      id: 'distribution',
+      data: { reference: 'rows' },
+      coordinate: { type: 'polar2D', innerRadius: 0, startAngle: 0, endAngle: 360 },
+      recipe: {
+        chartType: 'strip',
+        encodings: {
+          x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        },
+        properties: { size: 0, jitter: { span: 0, seed: 0 }, domainPadding: 0 },
+        marks: [],
       },
     });
   });

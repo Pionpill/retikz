@@ -1,8 +1,7 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-import { ChartExtension, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
-import { PlotAxis } from '@retikz/plot-react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Children, isValidElement } from 'react';
@@ -23,10 +22,6 @@ import {
 import { previewControlContract as fertilityWorkEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.controls';
 import { previewSource as fertilityWorkEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
 import { previewSource as fertilityWorkZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
-import { previewControlContract as penguinFacetZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.controls';
-import { previewControlContract as penguinFacetEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.en.controls';
-import { previewSource as penguinFacetEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.en.demo';
-import { previewSource as penguinFacetZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.zh.demo';
 import { previewControlContract as worldCupZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.controls';
 import { previewControlContract as worldCupEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.en.controls';
 import { previewSource as worldCupEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.en.demo';
@@ -136,7 +131,6 @@ describe('Viz Chart scatter controls', () => {
   it('保持各组 controls 的双语结构与 canonical 状态一致', () => {
     for (const [zh, en] of [
       [fertilityWorkZh, fertilityWorkEn],
-      [penguinFacetZh, penguinFacetEn],
       [worldCupZh, worldCupEn],
     ] as const) {
       expect(comparable(zh)).toEqual(comparable(en));
@@ -145,7 +139,7 @@ describe('Viz Chart scatter controls', () => {
     }
   });
 
-  it('三个 Scatter 示例只暴露不会与字段 encoding 冲突的公共图元控件', () => {
+  it('两个 Scatter 示例只暴露不会与字段 encoding 冲突的公共图元控件', () => {
     expect(fertilityWorkZh.canonicalValues).toEqual({
       'scatter-fertility-work-coordinate-system': 'cartesian2D',
       'scatter-fertility-work-color-by-category': true,
@@ -154,16 +148,6 @@ describe('Viz Chart scatter controls', () => {
       'scatter-fertility-work-point-stroke-enabled': false,
       'scatter-fertility-work-point-stroke': 'currentColor',
       'scatter-fertility-work-point-opacity': 0.65,
-    });
-    expect(penguinFacetZh.canonicalValues).toEqual({
-      'scatter-penguins-facet-jitter-coordinate-system': 'cartesian2D',
-      'scatter-penguins-facet-jitter-point-size': 5,
-      'scatter-penguins-facet-jitter-point-fill-enabled': false,
-      'scatter-penguins-facet-jitter-point-fill': 'currentColor',
-      'scatter-penguins-facet-jitter-point-stroke-enabled': false,
-      'scatter-penguins-facet-jitter-point-stroke': 'currentColor',
-      'scatter-penguins-facet-jitter-point-shape': 'circle',
-      'scatter-penguins-facet-jitter-point-opacity': 0.72,
     });
     expect(worldCupZh.canonicalValues).toEqual({
       'scatter-world-cup-shots-point-size': 5,
@@ -181,16 +165,6 @@ describe('Viz Chart scatter controls', () => {
       'scatter-fertility-work-point-stroke',
       'scatter-fertility-work-point-opacity',
     ]);
-    expect(getPreviewControlFields(penguinFacetZh.controls).map(control => control.id)).toEqual([
-      'scatter-penguins-facet-jitter-coordinate-system',
-      'scatter-penguins-facet-jitter-point-size',
-      'scatter-penguins-facet-jitter-point-fill-enabled',
-      'scatter-penguins-facet-jitter-point-fill',
-      'scatter-penguins-facet-jitter-point-stroke-enabled',
-      'scatter-penguins-facet-jitter-point-stroke',
-      'scatter-penguins-facet-jitter-point-shape',
-      'scatter-penguins-facet-jitter-point-opacity',
-    ]);
     expect(getPreviewControlFields(worldCupZh.controls).map(control => control.id)).toEqual([
       'scatter-world-cup-shots-point-size',
       'scatter-world-cup-shots-point-stroke-enabled',
@@ -202,8 +176,6 @@ describe('Viz Chart scatter controls', () => {
 
   it('常量形状下拉只提供视觉上可区分的点形状', () => {
     for (const [contract, controlId] of [
-      [penguinFacetZh, 'scatter-penguins-facet-jitter-point-shape'],
-      [penguinFacetEn, 'scatter-penguins-facet-jitter-point-shape'],
       [worldCupZh, 'scatter-world-cup-shots-point-shape'],
       [worldCupEn, 'scatter-world-cup-shots-point-shape'],
     ] as const) {
@@ -215,20 +187,15 @@ describe('Viz Chart scatter controls', () => {
     }
   });
 
-  it('两个通用 Scatter 示例以笛卡尔为 canonical，并通过 ScatterChart 根 prop 切换 Polar', () => {
-    for (const source of [
-      fertilityWorkZhPreviewSource,
-      fertilityWorkEnPreviewSource,
-      penguinFacetZhPreviewSource,
-      penguinFacetEnPreviewSource,
-    ]) {
+  it('通用 Scatter 示例以笛卡尔为 canonical，并通过 ScatterChart 根 prop 切换 Polar', () => {
+    for (const source of [fertilityWorkZhPreviewSource, fertilityWorkEnPreviewSource]) {
       expect(canonicalScatterProps(source)).toMatchObject({
         coordinate: { type: 'cartesian2D' },
       });
     }
 
     for (const locale of ['zh', 'en']) {
-      for (const demo of ['scatter-fertility-work', 'scatter-penguins-facet-jitter']) {
+      for (const demo of ['scatter-fertility-work']) {
         const source = readFileSync(
           resolve(`src/modules/docs/contents/viz/chart/points/scatter/${demo}.${locale}.demo.tsx`),
           'utf8',
@@ -240,7 +207,7 @@ describe('Viz Chart scatter controls', () => {
   });
 
   it('各 Scatter 示例使用互不重叠的 control id，避免切换示例时串用状态', () => {
-    const ids = [fertilityWorkZh, penguinFacetZh, worldCupZh].flatMap(contract =>
+    const ids = [fertilityWorkZh, worldCupZh].flatMap(contract =>
       getPreviewControlFields(contract.controls).map(control => control.id),
     );
 
@@ -311,73 +278,6 @@ describe('Viz Chart scatter controls', () => {
     expect(fertilityWorkEn.relatedApis).not.toContain('Legend.channel');
   });
 
-  it('企鹅示例通过 rich encodings 声明分面、抖动与坐标轴', () => {
-    for (const source of [penguinFacetZhPreviewSource, penguinFacetEnPreviewSource]) {
-      expect(canonicalScatterPropertiesProps(source)).toMatchObject({
-        size: 5,
-        shape: 'circle',
-        opacity: 0.72,
-      });
-      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('fill');
-      expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('stroke');
-      expect(canonicalScatterProps(source)).not.toHaveProperty('plotExtension');
-      const encodings = canonicalDeclarationProps(source, ScatterEncodings);
-      expect(encodings).toMatchObject({
-        x: {
-          transform: {
-            kind: 'jitter',
-            xField: 'billLengthMm',
-          },
-          output: 'billLengthMm',
-        },
-        y: 'flipperLengthMm',
-        column: 'species',
-        facet: {
-          header: { column: true },
-          spacing: { panelGap: 20, labelGap: 52 },
-        },
-      });
-      expect(encodings).not.toHaveProperty('color');
-      expect(encodings).not.toHaveProperty('x.transform.amount');
-      expect(encodings).not.toHaveProperty('x.transform.seed');
-      expect(encodings).not.toHaveProperty('x.transform.axis');
-      expect(encodings).not.toHaveProperty('facet.resolve');
-
-      const extension = canonicalDeclarationProps(source, ChartExtension);
-      const axes = Children.toArray(extension.children as ReactNode).filter(
-        child => isValidElement<Record<string, unknown>>(child) && child.type === PlotAxis,
-      );
-
-      expect(axes.map(axis => (axis as ReactElement<Record<string, unknown>>).props)).toMatchObject([
-        { dimension: 'x', grid: true },
-        { dimension: 'y', grid: true },
-      ]);
-    }
-  });
-
-  it('企鹅示例源码直接传数据并省略大型 Plot extension 配置', () => {
-    for (const locale of ['zh', 'en']) {
-      const source = readFileSync(
-        resolve(`src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.${locale}.demo.tsx`),
-        'utf8',
-      );
-
-      expect(source).toContain('data={penguinScatterData}');
-      expect(source).toContain("kind: 'jitter'");
-      expect(source).toContain('column="species"');
-      expect(source).toContain('facet={{');
-      expect(source).not.toContain('color="species"');
-      expect(source).not.toContain('amount:');
-      expect(source).not.toContain('seed:');
-      expect(source.match(/<PlotAxis\b/gu)).toHaveLength(2);
-      expect(source).toContain('<ChartExtension');
-      expect(source).not.toContain('<ChartFacet');
-      expect(source).not.toContain('<PlotTransform');
-      expect(source).not.toContain('dataModel');
-      expect(source).not.toContain('plotExtension');
-    }
-  });
-
   it('世界杯射门示例仅在 Plot area 使用外部球场背景图', () => {
     for (const source of [worldCupZhPreviewSource, worldCupEnPreviewSource]) {
       expect(canonicalScatterProps(source)).toMatchObject({
@@ -426,12 +326,7 @@ describe('Viz Chart scatter controls', () => {
   });
 
   it('为预览宿主与 Source layout 同时声明 800x500 画布', () => {
-    for (const source of [
-      fertilityWorkZhPreviewSource,
-      fertilityWorkEnPreviewSource,
-      penguinFacetZhPreviewSource,
-      penguinFacetEnPreviewSource,
-    ]) {
+    for (const source of [fertilityWorkZhPreviewSource, fertilityWorkEnPreviewSource]) {
       expect(canonicalChartSize(source)).toEqual({ width: 800, height: 500 });
       expect(canonicalChartLayout(source)).toEqual({ width: 800, height: 500 });
     }

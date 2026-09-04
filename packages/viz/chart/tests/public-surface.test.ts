@@ -11,6 +11,7 @@ import * as connectedScatter from '../src/point/connected-scatter';
 import * as rangedDot from '../src/point/ranged-dot';
 import * as regression from '../src/point/regression';
 import * as scatter from '../src/point/scatter';
+import * as strip from '../src/point/strip';
 
 const RecipeSchema = strictObject({
   chartType: literal('fixture'),
@@ -52,6 +53,7 @@ describe('@retikz/chart public surface', () => {
       RangedDot: 'ranged-dot',
       Regression: 'regression',
       Scatter: 'scatter',
+      Strip: 'strip',
     });
     expect(point).not.toHaveProperty('ChartMarkKind');
     expect(point).toHaveProperty('ScatterChartSchema');
@@ -59,11 +61,13 @@ describe('@retikz/chart public surface', () => {
     expect(point).toHaveProperty('RegressionChartSchema');
     expect(point).toHaveProperty('ConnectedScatterChartSchema');
     expect(point).toHaveProperty('RangedDotChartSchema');
+    expect(point).toHaveProperty('StripChartSchema');
     expect(point).toHaveProperty('createScatterChartProviderContribution');
     expect(point).toHaveProperty('createBubbleChartProviderContribution');
     expect(point).toHaveProperty('createRegressionChartProviderContribution');
     expect(point).toHaveProperty('createConnectedScatterChartProviderContribution');
     expect(point).toHaveProperty('createRangedDotChartProviderContribution');
+    expect(point).toHaveProperty('createStripChartProviderContribution');
     expect(point).toHaveProperty('qualifyScatterChartLocatorOptions');
     expect(point).not.toHaveProperty('PointChartSchema');
     expect(point).not.toHaveProperty('PointChartProvider');
@@ -98,6 +102,11 @@ describe('@retikz/chart public surface', () => {
       expect(concrete).not.toHaveProperty('RegressionMarkDefinition');
       expect(concrete).not.toHaveProperty('PathMarkDefinition');
     }
+
+    expect(strip).toHaveProperty('StripChartSchema');
+    expect(strip).toHaveProperty('createStripChartProviderContribution');
+    expect(strip).not.toHaveProperty('StripChartDefinition');
+    expect(strip).not.toHaveProperty('StripMarkDefinition');
   });
 
   it('publishes Chart-facing locator options without exposing recipe identities', () => {

@@ -70,6 +70,17 @@ const defaultFrameOf = (spec: IRPlot, data: Array<ExternalRow> = rows) =>
   [...loweredOf(spec, {}, data).dataArtifact.frameByCoordinateScopeId.values()][0];
 
 describe('Mark Placement pipeline', () => {
+  it('uses ratio 0.3 and seed 0 when jitter defaults are omitted', () => {
+    const implicit = positionsOf(specOf([{ kind: 'jitter', role: 'x' }]));
+    const explicit = positionsOf(specOf([{ kind: 'jitter', role: 'x', span: { kind: 'ratio', value: 0.3 }, seed: 0 }]));
+    const previousDefault = positionsOf(
+      specOf([{ kind: 'jitter', role: 'x', span: { kind: 'ratio', value: 0.8 }, seed: 0 }]),
+    );
+
+    expect(implicit).toEqual(explicit);
+    expect(implicit).not.toEqual(previousDefault);
+  });
+
   it('applies deterministic ratio jitter after scale mapping', () => {
     const spec = specOf([{ kind: 'jitter', role: 'x', span: { kind: 'ratio', value: 0.8 }, seed: 3 }]);
     const first = positionsOf(spec);

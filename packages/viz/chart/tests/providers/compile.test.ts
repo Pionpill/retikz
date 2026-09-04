@@ -28,6 +28,7 @@ import {
 import { createRangedDotChartProviderContribution, RangedDotChartSchema } from '../../src/point/ranged-dot';
 import { createRegressionChartProviderContribution, RegressionChartSchema } from '../../src/point/regression';
 import { createScatterChartProviderContribution, ScatterChartSchema } from '../../src/point/scatter';
+import { createStripChartProviderContribution, StripChartSchema } from '../../src/point/strip';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
   encodings: context.encodings as IRJsonObject,
@@ -59,6 +60,11 @@ type ScenePrimitiveLike = {
   fillOpacity?: number;
   rx?: number;
   ry?: number;
+  center?: readonly [number, number];
+  cx?: number;
+  cy?: number;
+  radiusX?: number;
+  radiusY?: number;
 };
 
 /** 递归收集指定类型的 Scene 图元 */
@@ -88,6 +94,132 @@ const sceneOf = (source: IRScene['children'][number]): IRScene => ({
 });
 
 describe('Chart providers through Core compile', () => {
+  it('compiles deterministic Cartesian Strip jitter through the shared Plot placement pipeline', () => {
+    const stripRows = [
+      { category: 'A', value: 2 },
+      { category: 'A', value: 3 },
+      { category: 'A', value: 4 },
+      { category: 'B', value: 5 },
+      { category: 'B', value: 6 },
+    ];
+    const source = StripChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      id: 'strip-cartesian',
+      data: { reference: 'strip.rows' },
+      layout: { width: 480, height: 320 },
+      recipe: {
+        chartType: 'strip',
+        encodings: {
+          x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        },
+        properties: { size: 6, jitter: { span: { kind: 'ratio', value: 1 }, seed: 17 } },
+      },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createStripChartProviderContribution(),
+        createPlotProviderContribution({ 'strip.rows': stripRows }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+
+    const first = compileToScene(sceneOf(source), definitions);
+    const second = compileToScene(sceneOf(source), definitions);
+    const points = scenePrimitivesOfType(first.scene.primitives, 'ellipse');
+    const centers = points
+      .map(point => (point.cx === undefined || point.cy === undefined ? undefined : ([point.cx, point.cy] as const)))
+      .filter((center): center is readonly [number, number] => center !== undefined);
+
+    expect(points).toHaveLength(stripRows.length);
+    expect(centers).toHaveLength(stripRows.length);
+    expect(new Set(centers.slice(0, 3).map(center => center[0].toFixed(6))).size).toBeGreaterThan(1);
+    expect(centers.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y))).toBe(true);
+    expect(JSON.stringify(first.scene.primitives)).toBe(JSON.stringify(second.scene.primitives));
+  });
+
+  it.each([
+    [
+      'angle',
+      {
+        x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+        y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+      },
+    ],
+    [
+      'radius',
+      {
+        x: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        y: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+      },
+    ],
+  ] as const)('compiles Polar Strip jitter on the discrete %s role', (_role, encodings) => {
+    const stripRows = [
+      { category: 'A', value: 2 },
+      { category: 'A', value: 4 },
+      { category: 'B', value: 6 },
+    ];
+    const source = StripChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      id: `strip-polar-${_role}`,
+      data: { reference: 'strip.polar' },
+      layout: { width: 420, height: 420 },
+      coordinate: { type: 'polar2D', innerRadius: 0.25 },
+      recipe: {
+        chartType: 'strip',
+        encodings,
+        properties: { size: 4, jitter: { span: { kind: 'ratio', value: 0.5 }, seed: 9 } },
+      },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createStripChartProviderContribution(),
+        createPlotProviderContribution({ 'strip.polar': stripRows }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+
+    const result = compileToScene(sceneOf(source), definitions);
+    const points = scenePrimitivesOfType(result.scene.primitives, 'ellipse');
+
+    expect(points).toHaveLength(stripRows.length);
+    expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);
+  });
+
+  it('allows an empty Strip data view but fails loud without the Strip provider', () => {
+    const source = StripChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'strip.empty' },
+      recipe: {
+        chartType: 'strip',
+        encodings: {
+          x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        },
+      },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createStripChartProviderContribution(),
+        createPlotProviderContribution({ 'strip.empty': [] }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+
+    expect(scenePrimitivesOfType(compileToScene(sceneOf(source), definitions).scene.primitives, 'ellipse')).toEqual([]);
+    expect(() =>
+      compileToScene(
+        sceneOf(source),
+        compileDefinitionsOf([createScatterChartProviderContribution()], {
+          positionAdjustmentDefinitions: [],
+        }),
+      ),
+    ).toThrow(/strip|recipe|provider/i);
+  });
+
   it('uses the first series palette color for every primitive in an ungrouped Point composite mark', () => {
     const defaultColor = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical[0];
     const fixtures: ReadonlyArray<{

@@ -304,6 +304,13 @@ export const vizV01: Release = {
                 en: '`@retikz/chart/point/regression` provides the strict Regression schema, Point + Smooth Path semantic group, series scale / legend, facet-panel fitting, and locator qualification.',
               },
             },
+            {
+              label: { zh: 'Strip Chart 精确 Source 与离散散布', en: 'Exact Strip Chart Source and discrete spread' },
+              content: {
+                zh: '`@retikz/chart/point/strip` 新增 direct-only x/y exact schema、确定性 jitter shorthand、唯一离散角色校验与 continuous-only grid；React / Vanilla 入口生成同一 Source，并通过 Plot placement 在笛卡尔与极坐标中完成散布和 glyph containment。',
+                en: '`@retikz/chart/point/strip` adds direct-only x/y exact schemas, deterministic jitter shorthand, sole-discrete-role validation, and a continuous-only grid. React and Vanilla entries produce the same Source, while Plot placement handles spread and glyph containment in Cartesian and Polar coordinates.',
+              },
+            },
           ],
         },
       ],

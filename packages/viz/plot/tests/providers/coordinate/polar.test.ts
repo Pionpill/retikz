@@ -1,4 +1,4 @@
-import type { IRNode, IRScope } from '@retikz/core';
+import type { IRChild, IRNode, IRScope } from '@retikz/core';
 
 import { DataFieldType } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
@@ -34,6 +34,10 @@ const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOption
 /** 取一个 point 图层里所有 node 的 position（point 无 color 时为单层 nodeDefault + 裸 node） */
 const positionsOf = (layer: IRScope): Array<[number, number]> =>
   layer.children.map(child => (child as IRNode).position as [number, number]);
+
+const isNode = (child: IRChild): child is IRNode => child.type === 'node';
+
+const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
 
@@ -154,7 +158,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     );
   });
 
-  it('polar_full_circle_left_aligns_in_a_wide_canvas', () => {
+  it('polar_full_circle_centers_in_a_wide_canvas', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -169,8 +173,52 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
 
     const [leftmost] = positionsOf(firstLayer(spec, { d: [{ theta: 180, value: 10 }] }, opts));
 
-    expect(leftmost[0]).toBeCloseTo(0, 6);
+    expect(leftmost[0]).toBeCloseTo(90, 6);
     expect(leftmost[1]).toBeCloseTo(150, 6);
+  });
+
+  it('angular_label_bounds_preserve_a_centered_readable_radius', () => {
+    const categories = ['University Farm', 'Waseca', 'Morris', 'Crookston', 'Grand Rapids', 'Duluth'];
+    const rows = categories.flatMap(category => [
+      { category, value: 0 },
+      { category, value: 10 },
+    ]);
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      scales: [
+        { type: 'band', name: 'a' },
+        { type: 'linear', name: 'r', domainPadding: 0, domain: [0, 10] },
+      ],
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      marks: [{ type: 'point', encoding: { x: { field: 'category' }, y: { field: 'value' } } }],
+      guides: [{ type: 'axis', dimension: 'x' }],
+    });
+
+    const outer = expandOf(spec, { d: rows }, { width: 368, height: 362, fontSize: 11 });
+    const markLayer = outer.children
+      .filter(isScope)
+      .find(child => child.children.filter(isNode).some(node => node.text === undefined)) as IRScope;
+    const markPositions = positionsOf(markLayer);
+    const center = markPositions[0];
+    const firstOuterPoint = markPositions[1];
+    const outerRadius = Math.hypot(firstOuterPoint[0] - center[0], firstOuterPoint[1] - center[1]);
+    const axisLayer = outer.children
+      .filter(isScope)
+      .find(child => child.children.filter(isNode).some(node => node.text === 'University Farm')) as IRScope;
+
+    expect(center[0]).toBeCloseTo(184, 6);
+    expect(center[1]).toBeCloseTo(181, 6);
+    expect(outerRadius).toBeGreaterThan(80);
+    for (const label of axisLayer.children.filter(isNode)) {
+      const width = String(label.text).length * 11 * 0.6;
+      const [x, y] = label.position as [number, number];
+      expect(x - width / 2).toBeGreaterThanOrEqual(-1e-6);
+      expect(x + width / 2).toBeLessThanOrEqual(368 + 1e-6);
+      expect(y - 11 / 2).toBeGreaterThanOrEqual(-1e-6);
+      expect(y + 11 / 2).toBeLessThanOrEqual(362 + 1e-6);
+    }
   });
 
   // Happy path

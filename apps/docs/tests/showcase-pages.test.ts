@@ -18,6 +18,7 @@ import { connectedScatterMinimalData } from '@/modules/docs/contents/viz/chart/p
 import { rangedDotMinimalData } from '@/modules/docs/contents/viz/chart/points/ranged-dot/ranged-dot-minimal.data';
 import { regressionMinimalData } from '@/modules/docs/contents/viz/chart/points/regression/regression-minimal.data';
 import { scatterMinimalData } from '@/modules/docs/contents/viz/chart/points/scatter/scatter-minimal.data';
+import { stripPalmerPenguinsData } from '@/modules/docs/contents/viz/chart/points/strip/strip-palmer-penguins.data';
 import { vizSection } from '@/modules/docs/data';
 
 const scatterContentPath = (lang: 'zh' | 'en') =>
@@ -143,6 +144,15 @@ describe('collectShowcasePages', () => {
     });
   });
 
+  it('从实际 Viz 文档树收集 Strip 的嵌套路由', () => {
+    expect(collectShowcasePages('viz', vizSection)).toContainEqual({
+      path: '/viz/chart/points/strip',
+      segments: ['viz', 'chart', 'points', 'strip'],
+      label: 'viz.chartStrip',
+      metadata: { family: 'scatter-points', role: 'primary', preview: 'strip-minimal', order: 60 },
+    });
+  });
+
   it('将 Scatter 页面说明为 Chart-native authoring，并保留独立的 Plot 扩展边界', () => {
     const chartSection = vizSection.find(section => section.id === 'chart');
     const pointsPage = chartSection?.pages.find(page => page.id === 'points');
@@ -259,17 +269,17 @@ describe('collectShowcasePages', () => {
     expect(compiled).toContain('h2');
   });
 
-  it.each(['zh', 'en'] as const)('Scatter %s 默认展示基础用法，并保留三个互补的进阶示例', lang => {
+  it.each(['zh', 'en'] as const)('Scatter %s 默认展示基础用法，并保留两个互补的进阶示例', lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
 
     expect(source).not.toContain("id: 'scatter-basic'");
     expect(source.indexOf("id: 'scatter-minimal'")).toBeLessThan(source.indexOf("id: 'scatter-fertility-work'"));
     expect(source.indexOf("id: 'scatter-fertility-work'")).toBeLessThan(
-      source.indexOf("id: 'scatter-penguins-facet-jitter'"),
+      source.indexOf("id: 'scatter-world-cup-shots'"),
     );
     expect(source.match(/id: 'scatter-minimal'/g)).toHaveLength(1);
     expect(source.match(/id: 'scatter-fertility-work'/g)).toHaveLength(1);
-    expect(source.match(/id: 'scatter-penguins-facet-jitter'/g)).toHaveLength(1);
+    expect(source).not.toContain("id: 'scatter-penguins-facet-jitter'");
     expect(source.match(/id: 'scatter-world-cup-shots'/g)).toHaveLength(1);
   });
 
@@ -319,6 +329,15 @@ describe('collectShowcasePages', () => {
       rowCount: 20,
       fields: ['day', 'minimumTemperature', 'maximumTemperature'],
     },
+    {
+      chart: 'strip',
+      id: 'strip-minimal',
+      nextId: 'strip-basic',
+      root: 'StripChart',
+      data: stripPalmerPenguinsData,
+      rowCount: 90,
+      fields: ['species', 'flipperLengthMm'],
+    },
   ] as const;
 
   it.each(minimalPointExamples)(
@@ -361,20 +380,30 @@ describe('collectShowcasePages', () => {
     }
   });
 
-  it.each(['scatter-penguins-facet-jitter', 'scatter-world-cup-shots'])(
-    '%s 提供数据、双语 demo 与双语 controls',
-    id => {
-      for (const filename of [
-        `${id}.data.ts`,
-        `${id}.controls.ts`,
-        `${id}.en.controls.ts`,
-        `${id}.zh.demo.tsx`,
-        `${id}.en.demo.tsx`,
-      ]) {
-        expect(existsSync(scatterExamplePath(filename)), filename).toBe(true);
-      }
-    },
-  );
+  it('空间 Scatter 提供数据、双语 demo 与双语 controls', () => {
+    const id = 'scatter-world-cup-shots';
+    for (const filename of [
+      `${id}.data.ts`,
+      `${id}.controls.ts`,
+      `${id}.en.controls.ts`,
+      `${id}.zh.demo.tsx`,
+      `${id}.en.demo.tsx`,
+    ]) {
+      expect(existsSync(scatterExamplePath(filename)), filename).toBe(true);
+    }
+  });
+
+  it('Strip 进阶示例提供数据、双语 demo 与双语 controls', () => {
+    for (const filename of [
+      'strip-vega-barley.data.ts',
+      'strip-basic.controls.ts',
+      'strip-basic.en.controls.ts',
+      'strip-basic.zh.demo.tsx',
+      'strip-basic.en.demo.tsx',
+    ]) {
+      expect(existsSync(pointChartExamplePath('strip', filename)), filename).toBe(true);
+    }
+  });
 
   it('Scatter 生育率与女性劳动参与率示例提供完整的双语 preview 文件', () => {
     for (const filename of [

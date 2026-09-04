@@ -188,6 +188,7 @@
     "chartBubble": "Bubble Chart",
     "chartConnectedScatter": "Connected Scatter",
     "chartRangedDot": "Ranged Dot",
+    "chartStrip": "Strip Chart",
     "chartRegression": "Regression Chart",
     "chartModel": "Chart Model",
     "chartModelStructure": "Structure & Types",

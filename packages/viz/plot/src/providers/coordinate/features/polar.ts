@@ -403,6 +403,13 @@ const angularSkeleton = (scale: PositionScale, ticks: TickSet): Array<number> =>
   return angles;
 };
 
+/** 将可见角向刻度投影为极坐标布局需要的角度与文本 */
+const polarAngularLayoutLabelsOf = (
+  scale: PositionScale,
+  ticks: TickSet | undefined,
+): Array<{ angle: number; text: string }> =>
+  ticks?.values.map((value, index) => ({ angle: scale.coordinate(value), text: ticks.labels[index] ?? '' })) ?? [];
+
 /**
  * 一维极坐标运行时坐标帧。
  * @description 用单一角向 scale 把 x 角色投影到固定半径的圆周上；它不提供 cell 几何投影能力
@@ -606,8 +613,10 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
       ctx.width,
       ctx.height,
       {
-        hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false),
-        angularLabels: layoutAngularTicks?.labels ?? [],
+        angularLabels:
+          angularAxis && angularAxis.tickLabels !== false
+            ? polarAngularLayoutLabelsOf(angleScale, layoutAngularTicks)
+            : [],
       },
       { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
     );
@@ -706,8 +715,10 @@ const polar1DCoordinateDefinition: CoordinateDefinition<IRPlotPolar1DCoordinate>
       ctx.width,
       ctx.height,
       {
-        hasAngularAxis: !!(angularAxis && angularAxis.tickLabels !== false),
-        angularLabels: visibleAngularTicks?.labels ?? [],
+        angularLabels:
+          angularAxis && angularAxis.tickLabels !== false
+            ? polarAngularLayoutLabelsOf(angleScale, visibleAngularTicks)
+            : [],
       },
       { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
     );

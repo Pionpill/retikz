@@ -4,12 +4,14 @@ import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scat
 import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
 import type { IRRegressionChart } from '@retikz/chart/point/regression';
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
+import type { IRStripChart } from '@retikz/chart/point/strip';
 import type {
   BubbleChartProps,
   ConnectedScatterChartProps,
   RangedDotChartProps,
   RegressionChartProps,
   ScatterChartProps,
+  StripChartProps,
 } from '@retikz/chart-react/point';
 import type { IRChild, IRScene, IRScope } from '@retikz/core';
 import type { AnyInputEmbed, InputChild, InputScene } from '@retikz/vanilla';
@@ -22,12 +24,19 @@ import {
   RangedDotChart,
   RegressionChart,
   ScatterChart,
+  StripChart,
 } from '@retikz/chart-react/point';
 import { Fragment, isValidElement } from 'react';
 
 import { previewEmbedPropsOf } from './preview-embed';
 
-type TypedChartSource = IRScatterChart | IRBubbleChart | IRConnectedScatterChart | IRRangedDotChart | IRRegressionChart;
+type TypedChartSource =
+  | IRScatterChart
+  | IRBubbleChart
+  | IRConnectedScatterChart
+  | IRRangedDotChart
+  | IRRegressionChart
+  | IRStripChart;
 
 type TypedChartComponent<TSource extends TypedChartSource> = {
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => Readonly<{ source: TSource }>;
@@ -71,6 +80,9 @@ const sourceOf = (value: ReactNode): TypedChartSource | undefined => {
   }
   if (value.type === RegressionChart) {
     return typedChartSourceOf(RegressionChart, value.props as RegressionChartProps);
+  }
+  if (value.type === StripChart) {
+    return typedChartSourceOf(StripChart, value.props as StripChartProps);
   }
   return undefined;
 };

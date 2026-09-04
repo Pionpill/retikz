@@ -148,6 +148,7 @@ describe('published Chart release-group boundaries', () => {
       './point/ranged-dot': { types: './src/point/ranged-dot/index.ts', default: './src/point/ranged-dot/index.ts' },
       './point/regression': { types: './src/point/regression/index.ts', default: './src/point/regression/index.ts' },
       './point/scatter': { types: './src/point/scatter/index.ts', default: './src/point/scatter/index.ts' },
+      './point/strip': { types: './src/point/strip/index.ts', default: './src/point/strip/index.ts' },
     });
     expect(manifest.publishConfig?.exports).toEqual({
       '.': {
@@ -184,6 +185,11 @@ describe('published Chart release-group boundaries', () => {
         types: './dist/types/point/scatter/index.d.ts',
         import: './dist/point/scatter/index.js',
         default: './dist/point/scatter/index.js',
+      },
+      './point/strip': {
+        types: './dist/types/point/strip/index.d.ts',
+        import: './dist/point/strip/index.js',
+        default: './dist/point/strip/index.js',
       },
     });
   });

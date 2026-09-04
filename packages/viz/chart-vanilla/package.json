@@ -62,6 +62,10 @@
     "./point/scatter": {
       "types": "./src/point/scatter/index.ts",
       "default": "./src/point/scatter/index.ts"
+    },
+    "./point/strip": {
+      "types": "./src/point/strip/index.ts",
+      "default": "./src/point/strip/index.ts"
     }
   },
   "publishConfig": {
@@ -103,6 +107,11 @@
         "types": "./dist/types/point/scatter/index.d.ts",
         "import": "./dist/point/scatter/index.js",
         "default": "./dist/point/scatter/index.js"
+      },
+      "./point/strip": {
+        "types": "./dist/types/point/strip/index.d.ts",
+        "import": "./dist/point/strip/index.js",
+        "default": "./dist/point/strip/index.js"
       }
     }
   },

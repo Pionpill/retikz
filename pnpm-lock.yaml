@@ -1347,9 +1347,6 @@ importers:
       '@retikz/plot':
         specifier: workspace:^
         version: link:../plot
-      '@retikz/plot-vanilla':
-        specifier: workspace:^
-        version: link:../plot-vanilla
       '@retikz/standard':
         specifier: workspace:^
         version: link:../../library/standard
@@ -1445,6 +1442,9 @@ importers:
       '@retikz/plot':
         specifier: workspace:^
         version: link:../plot
+      '@retikz/plot-vanilla':
+        specifier: workspace:^
+        version: link:../plot-vanilla
       '@retikz/standard':
         specifier: workspace:^
         version: link:../../library/standard

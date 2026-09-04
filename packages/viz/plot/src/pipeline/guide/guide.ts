@@ -40,7 +40,12 @@ import {
   AxisTitlePlacementKeyword,
   PlotLayerZIndex,
 } from '../../schemas';
-import { DEFAULT_AXIS_LABEL_GAP, DEFAULT_AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
+import {
+  DEFAULT_AXIS_LABEL_GAP,
+  DEFAULT_AXIS_TICK_LENGTH,
+  estimateLabelWidth,
+  layoutPolarAngularLabel,
+} from '../../shared';
 
 /** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 pointAtArcAngle */
 const DEG_TO_RAD = Math.PI / 180;
@@ -1085,7 +1090,7 @@ const fixedRadiusPath = (frame: PolarCoordinateFrame, radius: number): IRPath | 
 /**
  * polar angular axis：外圆弧轴线 + 每角向刻度短径向刻度线 + 圆周外标签
  * @description 轴线 = arc step（半径 outerRadius）；刻度 = 圆周点向外 DEFAULT_AXIS_TICK_LENGTH 短线；
- *   标签 = center + (outerRadius+gap)·(cosθ,sinθ) 处 Node text。grid:true → 每刻度一条圆心→外圆辐条
+ *   标签视觉盒从 outerRadius + tickLength + gap 锚点向对应象限外展。grid:true → 每刻度一条圆心→外圆辐条
  */
 const lowerAngularAxis = (
   guide: IRPlotAxisGuide,
@@ -1130,8 +1135,21 @@ const lowerAngularAxis = (
         guide,
         ticks.values.map((value, index): IRNode => {
           const theta = scale.coordinate(value);
-          const position = finitePolarPoint(frame.center, theta, outer + tickLength + tickLabelGap + fontSize / 2);
-          return { type: 'node', position, text: ticks.labels[index], ...tickLabelStyle };
+          const text = ticks.labels[index] ?? '';
+          const labelLayout = layoutPolarAngularLabel(
+            frame.center,
+            outer,
+            { angle: theta, text },
+            fontSize,
+            tickLength + tickLabelGap,
+          );
+          return {
+            type: 'node',
+            position: labelLayout.position,
+            text,
+            ...tickLabelStyle,
+            ...(tickLabelStyle.align === undefined ? { align: labelLayout.align } : {}),
+          };
         }),
         { fontSize, mode: 'generic', axis: 'both' },
       )

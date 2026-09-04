@@ -181,7 +181,7 @@ describe('plot theme schema and lowering', () => {
     expect(background).toMatchObject({
       type: 'node',
       shape: 'circle',
-      position: [150, 150],
+      position: [240, 150],
       minimumSize: 300,
       fill: '#f8fafc',
     });

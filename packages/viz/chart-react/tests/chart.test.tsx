@@ -5,6 +5,7 @@ import { normalizeConnectedScatterChart } from '@retikz/chart-vanilla/point/conn
 import { normalizeRangedDotChart } from '@retikz/chart-vanilla/point/ranged-dot';
 import { normalizeRegressionChart } from '@retikz/chart-vanilla/point/regression';
 import { normalizeScatterChart } from '@retikz/chart-vanilla/point/scatter';
+import { normalizeStripChart } from '@retikz/chart-vanilla/point/strip';
 import { PlotAxis, PlotFacet, PlotTransform, PointMark } from '@retikz/plot-react';
 import { Layout, Text } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -31,6 +32,7 @@ import {
 import { RangedDotChart, RangedDotEncodings, RangedDotMark, RangedDotProperties } from '../src/point/ranged-dot';
 import { RegressionChart, RegressionEncodings, RegressionMark, RegressionProperties } from '../src/point/regression';
 import { ScatterChart, ScatterEncodings, ScatterMark, ScatterProperties } from '../src/point/scatter';
+import { StripChart, StripEncodings, StripMark, StripProperties } from '../src/point/strip';
 
 type InputComponent<TInput> = {
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput;
@@ -67,6 +69,22 @@ const requiredRegressionDeclarations = (
       ]}
     />
     <RegressionEncodings x="x" y="y" series="species" />
+  </>
+);
+
+const requiredStripDeclarations = (
+  <>
+    <ChartData
+      data={[
+        { category: 'A', value: 2 },
+        { category: 'A', value: 3 },
+        { category: 'B', value: 4 },
+      ]}
+    />
+    <StripEncodings
+      x={{ field: 'category', scale: { operation: { type: 'point', name: 'category' } } }}
+      y={{ field: 'value', scale: { operation: { type: 'linear', name: 'value' } } }}
+    />
   </>
 );
 
@@ -110,6 +128,10 @@ const coordinateRootPropCases = [
   {
     name: 'ScatterChart',
     createInput: () => ScatterChart.createInputEmbedProps({ coordinate: 'polar2D', children: requiredDeclarations }),
+  },
+  {
+    name: 'StripChart',
+    createInput: () => StripChart.createInputEmbedProps({ coordinate: 'polar2D', children: requiredStripDeclarations }),
   },
 ] as const;
 
@@ -163,6 +185,21 @@ describe('Typed Point Chart React declarations', () => {
           rows: [{ category: 'A', start: 1, end: 2 }],
           data: { reference: 'ranged.rows' },
           recipe: { encodings: { category: 'category', start: 'start', end: 'end' } },
+        }),
+    },
+    {
+      name: 'StripChart',
+      chartType: 'strip',
+      createInput: () =>
+        inputFromProps(StripChart, {
+          rows: [{ category: 'A', value: 2 }],
+          data: { reference: 'strip.rows' },
+          recipe: {
+            encodings: {
+              x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+              y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+            },
+          },
         }),
     },
   ])('supports root-only IR-like authoring for $name', ({ chartType, createInput }) => {
@@ -857,6 +894,81 @@ describe('Typed Point Chart React declarations', () => {
         ],
       },
     });
+  });
+
+  it('maps exact Strip declarations, preserves zero jitter values, and matches Vanilla', () => {
+    const rows = [
+      { category: 'A', value: 2 },
+      { category: 'B', value: 4 },
+    ];
+    const encodings = {
+      x: { field: 'category', scale: { operation: { type: 'point' as const, name: 'category' } } },
+      y: { field: 'value', scale: { operation: { type: 'linear' as const, name: 'value' } } },
+    };
+    const input = inputOf(
+      StripChart,
+      <>
+        <ChartData data={rows} reference="strip.rows" />
+        <StripEncodings {...encodings} />
+        <StripProperties jitter={{ span: 0, seed: 0 }} size={5} />
+        <StripMark override properties={{ jitter: { span: { kind: 'ratio', value: 0.5 }, seed: 7 } }} />
+        <StripMark encodings={{ x: 'alternateCategory' }} properties={{ opacity: 0.4 }} />
+      </>,
+    );
+    const vanilla = normalizeStripChart({
+      data: { reference: 'strip.rows' },
+      encodings,
+      properties: { jitter: { span: 0, seed: 0 }, size: 5 },
+      marks: [
+        { kind: 'strip', override: true, properties: { jitter: { span: { kind: 'ratio', value: 0.5 }, seed: 7 } } },
+        { kind: 'strip', encodings: { x: 'alternateCategory' }, properties: { opacity: 0.4 } },
+      ],
+    });
+
+    expect(input.source).toEqual(vanilla);
+    expect(input.datasets['strip.rows']).toBe(rows);
+  });
+
+  it('supports declaration-only and hybrid Strip authoring while rejecting same-slot duplicates', () => {
+    const declarationOnly = inputOf(StripChart, requiredStripDeclarations);
+    const hybrid = inputFromProps(StripChart, {
+      rows: [
+        { category: 'A', value: 2 },
+        { category: 'B', value: 4 },
+      ],
+      data: { reference: 'strip.hybrid' },
+      children: (
+        <StripEncodings
+          x={{ field: 'category', scale: { operation: { type: 'band', name: 'category' } } }}
+          y={{ field: 'value', scale: { operation: { type: 'linear', name: 'value' } } }}
+        />
+      ),
+    });
+
+    expect(declarationOnly.source.recipe.chartType).toBe('strip');
+    expect(hybrid.source.data.reference).toBe('strip.hybrid');
+    expect(() =>
+      inputFromProps(StripChart, {
+        rows: [{ category: 'A', value: 2 }],
+        recipe: { encodings: { x: 'category', y: 'value' } },
+        children: <StripEncodings x="category" y="value" />,
+      }),
+    ).toThrow(/recipe\.encodings.*both/i);
+  });
+
+  it('renders finite deterministic Strip points through the shared standalone host', () => {
+    const chart = (
+      <StripChart layout={{ width: 360, height: 240 }}>
+        {requiredStripDeclarations}
+        <StripProperties jitter={{ seed: 11 }} />
+      </StripChart>
+    );
+    const first = renderToStaticMarkup(chart);
+    const second = renderToStaticMarkup(chart);
+
+    expect(first).toBe(second);
+    expect(first).toContain('<ellipse');
+    expect(first).not.toMatch(/NaN|Infinity/);
   });
 
   it('matches Vanilla for encoding-driven facets and delegates Plot declarations through ChartExtension', () => {

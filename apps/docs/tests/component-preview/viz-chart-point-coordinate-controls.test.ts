@@ -39,13 +39,13 @@ import FertilityEnDemo from '../../src/modules/docs/contents/viz/chart/points/sc
 import { previewSource as fertilityEnSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
 import FertilityZhDemo from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
 import { previewSource as fertilityZhSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
-import { previewControlContract as penguinZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.controls';
-import { previewControlContract as penguinEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.en.controls';
-import PenguinEnDemo from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.en.demo';
-import { previewSource as penguinEnSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.en.demo';
-import PenguinZhDemo from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.zh.demo';
-import { previewSource as penguinZhSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-penguins-facet-jitter.zh.demo';
 import { previewControlContract as worldCupZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.controls';
+import { previewControlContract as stripZh } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.controls';
+import { previewControlContract as stripEn } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.en.controls';
+import StripEnDemo from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.en.demo';
+import { previewSource as stripEnSource } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.en.demo';
+import StripZhDemo from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.zh.demo';
+import { previewSource as stripZhSource } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.zh.demo';
 
 type PointCoordinateScenario = Readonly<{
   coordinateId: string;
@@ -99,13 +99,12 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
     sources: [fertilityZhSource, fertilityEnSource],
   },
   {
-    coordinateId: 'scatter-penguins-facet-jitter-coordinate-system',
-    relatedApi: 'ScatterChart.coordinate',
-    zh: penguinZh,
-    en: penguinEn,
-    demos: [PenguinZhDemo, PenguinEnDemo],
-    sources: [penguinZhSource, penguinEnSource],
-    hasFacet: true,
+    coordinateId: 'strip-basic-coordinate-system',
+    relatedApi: 'StripChart.coordinate',
+    zh: stripZh,
+    en: stripEn,
+    demos: [StripZhDemo, StripEnDemo],
+    sources: [stripZhSource, stripEnSource],
   },
 ];
 

@@ -62,7 +62,7 @@ Jitter 是 role-space adjustment：
 
 - 数值 `span` 表示 role 输出单位下的总宽，offset 位于 `[-span / 2, span / 2)`
 - ratio `span` 的范围为 `0–1`，表示离散 `step` 的比例；只能用于正 step 的离散 position scale
-- 默认 `span` 为 `{ kind: 'ratio', value: 0.8 }`，默认 `seed` 为 `0`
+- 默认 `span` 为 `{ kind: 'ratio', value: 0.3 }`，默认 `seed` 为 `0`
 - 省略 `role` 时，仅在当前 targets 恰有一个离散 role 时自动选择，否则 fail-loud
 - 相同 effective target 顺序、role、span、seed 与 step 产生相同结果；不可投影 target 仍占据稳定随机序列位置
 

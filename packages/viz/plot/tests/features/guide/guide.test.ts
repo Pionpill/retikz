@@ -72,6 +72,44 @@ const ctx: GuideContext = {
   fontSize: 11,
 };
 
+const polarAngularGuideContext = (values: Array<number>, labels: Array<string>): GuideContext => {
+  const angularScale = fakeScale(value => value, values, [0, 360]);
+  const radialScale = fakeScale(value => value);
+  return {
+    ...ctx,
+    fontSize: 10,
+    frame: {
+      type: 'polar2D',
+      roles: ['x', 'y'],
+      center: [200, 200],
+      innerRadius: 0,
+      outerRadius: 100,
+      startAngle: 0,
+      endAngle: 360,
+      interpolation: 'polar',
+      angularSkeleton: [0, 90, 180, 270],
+      primary: angularScale,
+      secondary: radialScale,
+      roleScales: { x: angularScale, y: radialScale },
+      project: () => null,
+      projectRoles: () => null,
+      mapRoles: () => null,
+      projectMappedRoles: () => null,
+      placementBoundary: fakePolarPlacementBoundary,
+      projectPolar: () => null,
+      projectCell: () => ({
+        kind: 'sector',
+        center: [200, 200],
+        innerRadius: 0,
+        outerRadius: 1,
+        startAngle: 0,
+        endAngle: 1,
+      }),
+    },
+    angularTicks: { values, labels },
+  };
+};
+
 const nodeChildren = (layer: IRScope): Array<IRNode> =>
   layer.children.filter(child => child.type === 'node') as Array<IRNode>;
 
@@ -279,6 +317,54 @@ describe('lowerGuide (contract)', () => {
     const title = nodeByText(axisLayer as IRScope, 'theta');
 
     expect(title.rotate).toBeCloseTo(-90, 6);
+  });
+
+  it('polar_angular_tick_labels_extend_outward_by_angle', () => {
+    const values = [0, 30, 90, 180, 270];
+    const labels = ['Right', 'Diagonal label', 'Bottom', 'Left', 'Top'];
+    const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'x' }, polarAngularGuideContext(values, labels));
+
+    const right = nodeByText(axisLayer as IRScope, 'Right');
+    const diagonal = nodeByText(axisLayer as IRScope, 'Diagonal label');
+    const bottom = nodeByText(axisLayer as IRScope, 'Bottom');
+    const left = nodeByText(axisLayer as IRScope, 'Left');
+    const top = nodeByText(axisLayer as IRScope, 'Top');
+
+    expect(right.align).toBe('start');
+    expect(right.position).toEqual([325, 200]);
+    expect(diagonal.align).toBe('start');
+    expect((diagonal.position as [number, number])[0]).toBeCloseTo(328.927858, 6);
+    expect((diagonal.position as [number, number])[1]).toBeCloseTo(274.436533, 6);
+    expect(bottom.align).toBe('middle');
+    expect(bottom.position).toEqual([200, 315]);
+    expect(left.align).toBe('end');
+    expect(left.position).toEqual([78, 200]);
+    expect(top.align).toBe('middle');
+    expect(top.position).toEqual([200, 85]);
+  });
+
+  it('polar_angular_tick_label_center_moves_continuously_across_a_cardinal_angle', () => {
+    const atCardinal = nodeByText(
+      lowerGuide({ type: 'axis', dimension: 'x' }, polarAngularGuideContext([90], ['Waseca'])).axisLayer as IRScope,
+      'Waseca',
+    );
+    const pastCardinal = nodeByText(
+      lowerGuide({ type: 'axis', dimension: 'x' }, polarAngularGuideContext([91.5], ['Waseca'])).axisLayer as IRScope,
+      'Waseca',
+    );
+    const [cardinalX, cardinalY] = atCardinal.position as [number, number];
+    const [pastX, pastY] = pastCardinal.position as [number, number];
+
+    expect(Math.hypot(pastX - cardinalX, pastY - cardinalY)).toBeLessThan(4);
+  });
+
+  it('polar_angular_tick_label_explicit_alignment_overrides_angle_default', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'x', tickLabels: { align: 'middle' } },
+      polarAngularGuideContext([0], ['Right']),
+    );
+
+    expect(nodeByText(axisLayer as IRScope, 'Right').align).toBe('middle');
   });
 
   it('polar_radial_axis_title_placement_samples_radius_range', () => {

@@ -21,7 +21,7 @@ export const JitterPositionAdjustmentSchema = strictObject({
   role: NonBlankStringSchema.optional().describe(
     'Coordinate role to jitter; omit only when exactly one discrete role can be selected',
   ),
-  span: JitterSpanSchema.optional().describe('Total jitter span; default is ratio 0.8'),
+  span: JitterSpanSchema.optional().describe('Total jitter span; default is ratio 0.3'),
   seed: number().optional().describe('Deterministic random seed; default 0'),
 }).describe('Role-space deterministic jitter applied after position scale mapping and before coordinate projection');
 

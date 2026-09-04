@@ -78,6 +78,7 @@ family 是有限、稳定、面向发现的分类；chartType 是全局唯一 re
 | `point` → `regression`        | `RegressionChartSchema`<br />`@retikz/chart/point/regression`              | x/y 必填；series、拟合、Point + trend     |
 | `point` → `connected-scatter` | `ConnectedScatterChartSchema`<br />`@retikz/chart/point/connected-scatter` | x/y/order 必填；series、Path → Point      |
 | `point` → `ranged-dot`        | `RangedDotChartSchema`<br />`@retikz/chart/point/ranged-dot`               | category/start/end；connector + endpoints |
+| `point` → `strip`             | `StripChartSchema`<br />`@retikz/chart/point/strip`                        | x/y direct；一离散一连续；Point + jitter  |
 
 精确 schema 从表中对应的具体 chartType subpath 导入。`@retikz/chart/point` 是明确需要整个 Point family 时使用的聚合入口。
 
@@ -158,7 +159,7 @@ Chart shell 的 cascade 是 mode fallback → Core style chain → authored name
   <LinkedCard href="/viz/chart/points">
     <span className="font-semibold">点图 family</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      查看五个 active Point chartType 的精确 schema 与 authored marks。
+      查看六个 active Point chartType 的精确 schema 与 authored marks。
     </span>
   </LinkedCard>
 </div>

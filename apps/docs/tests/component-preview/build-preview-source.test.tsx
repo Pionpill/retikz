@@ -2,8 +2,14 @@ import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
 import { ChartData, ChartLayout, ChartSource, ChartTitle } from '@retikz/chart-react';
-import { ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
-import { BubbleChart, BubbleEncodings } from '@retikz/chart-react/point';
+import {
+  BubbleChart,
+  BubbleEncodings,
+  ScatterChart,
+  ScatterEncodings,
+  StripChart,
+  StripEncodings,
+} from '@retikz/chart-react/point';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
@@ -110,6 +116,23 @@ const BubbleChartDemo: FC = () => (
     <BubbleEncodings x="income" y="life" size="population" />
     <ChartTitle>Income, life expectancy, and population</ChartTitle>
   </BubbleChart>
+);
+
+const StripChartDemo: FC = () => (
+  <StripChart>
+    <ChartData
+      data={[
+        { category: 'A', value: 2 },
+        { category: 'A', value: 3 },
+        { category: 'B', value: 4 },
+      ]}
+    />
+    <ChartLayout width={320} height={200} />
+    <StripEncodings
+      x={{ field: 'category', scale: { operation: { type: 'point', name: 'category' } } }}
+      y={{ field: 'value', scale: { operation: { type: 'linear', name: 'value' } } }}
+    />
+  </StripChart>
 );
 
 const EmbeddedTableDetailDemo: FC = () => (
@@ -293,6 +316,27 @@ describe('buildPreviewSource', () => {
     expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "bubble"');
     expect(vanilla?.files[0]?.code).toContain("import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble'");
     expect(vanilla?.files[0]?.code).toContain("size: 'population'");
+    expect(vanilla?.render).toBeTypeOf('function');
+    expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
+  });
+
+  it('为 Strip composite 保留精确 Source 并生成 Strip Vanilla factory 与真实 SVG', () => {
+    const result = buildPreviewSource(createInput({ Component: StripChartDemo }));
+    const vanilla = result.source?.vanilla;
+
+    expect(result.previewIr?.sourceIr.children[0]).toMatchObject({
+      namespace: 'chart',
+      type: 'point',
+      recipe: {
+        chartType: 'strip',
+        encodings: {
+          x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        },
+      },
+    });
+    expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "strip"');
+    expect(vanilla?.files[0]?.code).toContain("import { createStripChart } from '@retikz/chart-vanilla/point/strip'");
     expect(vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
   });

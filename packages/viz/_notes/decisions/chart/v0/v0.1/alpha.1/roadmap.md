@@ -1,6 +1,6 @@
 # chart v0.1-alpha.1 Roadmap：Scatter & Points
 
-> alpha.1 以 ADR-09 规定的 family、recipe、mark、Theme、provider 与 Plot 出口作为当前基础设施总决策，先闭环 Point family 的可发布能力，再按 capability gate 处理后续 chartType。当前 `scatter`、`bubble`、`regression`、`connected-scatter` 与 `ranged-dot` 已形成实现、adapter、测试和文档闭环；其中 Bubble、Regression 与 Point 最大半径 range 留白的长期契约分别由 ADR-13、ADR-06、ADR-14 接受，Connected Scatter 与 Ranged Dot 待人工接受。`strip` 不再作为独立 chartType 或 alpha blocker，milestone 仍待整体人工验收
+> alpha.1 以 ADR-09 规定的 family、recipe、mark、Theme、provider 与 Plot 出口作为当前基础设施总决策，先闭环 Point family 的可发布能力，再按 capability gate 处理后续 chartType。当前 `scatter`、`bubble`、`regression`、`connected-scatter`、`ranged-dot` 与 `strip` 已形成实现、adapter、测试和文档闭环；其中 Bubble、Regression、Strip 与 Point 最大半径 range 留白的长期契约分别由 ADR-13、ADR-06、ADR-08、ADR-14 接受，Connected Scatter 与 Ranged Dot 待人工接受，milestone 仍待整体验收
 >
 > 关联：[`chart v0.1 roadmap`](../roadmap.md) · [`Chart 总设计`](../../../../../architecture/chart-design.md) · [`Chart 封装完备设计`](../../../../../architecture/chart-encapsulation-complete.md) · [`Data 能力完备设计`](../../../../../architecture/data-capability-complete.md) · [`Plot 可视化完备设计`](../../../../../architecture/plot-visualization-complete.md) · [`ADR-11`](./11-chart-encoding-field-mapping.md) · [`ADR-12`](./12-chart-react-declaration-authoring.md)
 
@@ -16,7 +16,7 @@ alpha.1 要证明 Point family 可以在精确 Source、recipe、Plot lowering�
 6. provider graph、Standard Surface 与 Plot 出口组成 renderer-neutral 的唯一结果；React、Vanilla、JSON 与 SSR 复用同一精确 Source、active provider 与 resolver 主链
 7. React concrete Chart 根组件以 IR-like `data` / `layout` / `coordinate` / `presentation` / `recipe` / `plotExtension` 提供完整入口，runtime rows 独立传入；owner-scoped declarations 作为同一 Vanilla Input 的 headless JSX sugar
 
-当前状态是进行中：Point family 的 Scatter、Bubble、Regression、Connected Scatter 与 Ranged Dot recipe 已形成实现闭环；Bubble 的 ADR-13 与 Regression 的 ADR-06 已接受，Connected Scatter 的 ADR-05 与 Ranged Dot 的 ADR-07 保持 Proposed，等待人工验收后再接受。Strip 的目标视觉已由 Scatter + facet + jitter 组合覆盖，因此 ADR-08 不再要求独立 chartType，也不构成 alpha.1 退出 blocker。不能因为当前五个 recipe 已可消费就宣称整个 alpha.1 完成
+当前状态是进行中：Point family 的六个 recipe 均已形成实现闭环；Bubble、Regression 与 Strip 的 ADR 已接受，Connected Scatter 的 ADR-05 与 Ranged Dot 的 ADR-07 保持 Proposed，等待人工验收后再接受。Strip 的具体位置执行由 Plot ADR-13 统一拥有。不能因为当前六个 recipe 已可消费就宣称整个 alpha.1 完成
 
 ## 2. ADR-01～03、ADR-09～14 的关系
 
@@ -31,7 +31,7 @@ ADR-09 是当前 family / recipe Chart 基础设施的总决策。早期 ADR-01�
 | 05  | Point family 的 Connected Scatter Path → Point recipe 与 `order` 失败语义                                                                             | Proposed；实现完成，待人工接受 |
 | 06  | Regression 的分组拟合、六种 Smooth method 与 Point + trend 复合 semantic mark                                                                         | Accepted                       |
 | 07  | Ranged Dot 的 Relation projected endpoint glyph、row atomicity 与固定横向角色                                                                         | Proposed；实现完成，待人工接受 |
-| 08  | Strip 不设独立 chartType；由 Scatter + facet + jitter 组合表达                                                                                        | Superseded                     |
+| 08  | 独立 Strip recipe、x / y 角色、step-based Cartesian / Polar jitter、自动边界净空与数据不变性                                                          | Accepted                       |
 | 09  | family、recipe、mark Source IR、Theme、registry 与 provider 的当前基础设施总决策                                                                      | Accepted                       |
 | 10  | 保留Chart / Plot声明owner分层与`PlotXxx`命名；`ChartFacet` / `recipe.facet`部分待ADR-11 Accepted后由其替代                                            | Accepted                       |
 | 11  | Scatter exact encodings、Data output model、rich mapping调度与旧facet surface迁移                                                                     | Proposed                       |
@@ -70,7 +70,7 @@ application-owned family / chartType route
   -> complete Plot + fixed presentation / Surface composition
 ```
 
-五个 active Point chartType 的包内 Definition 和 concrete provider contribution 分别描述各自 recipe；provider 在当前 Core compile 边界汇合 active contribution，建立临时 recipe registry 与精确 schema union，再沿同一 parse / resolve path 消费。应用层负责动态 family / chartType catalog、模块加载与 JSON 路由；Chart 不提供全局 catalog、全局 parse/router 或第三方 recipe / chartType 注册入口
+六个 active Point chartType 的包内 Definition 和 concrete provider contribution 分别描述各自 recipe；provider 在当前 Core compile 边界汇合 active contribution，建立临时 recipe registry 与精确 schema union，再沿同一 parse / resolve path 消费。应用层负责动态 family / chartType catalog、模块加载与 JSON 路由；Chart 不提供全局 catalog、全局 parse/router 或第三方 recipe / chartType 注册入口
 
 ## 4. Point family 当前契约
 
@@ -81,6 +81,7 @@ application-owned family / chartType route
 | `regression`        | `x`、`y`；可选series、method / sampleCount / extent、point / trend properties与facet composition | Point + trend复合组            | 已实现；ADR Accepted  |
 | `connected-scatter` | `x`、`y`、`order`；可选series、connectNulls、Point / Path properties与facet composition          | Path → Point复合组             | 已实现；ADR待人工接受 |
 | `ranged-dot`        | `category`、`start`、`end`；可选color、range / endpoint properties与facet composition            | Relation connector + endpoints | 已实现；ADR待人工接受 |
+| `strip`             | `x`、`y`；恰好一个正 step 离散角色，可选视觉 encoding、jitter 与 Point properties                | 一个 Point                     | 已实现；ADR Accepted  |
 
 Scatter 与 Bubble recipe 都允许有序 `recipe.marks`，并分别只接受 `scatter` 与 `bubble` mark。普通 mark 表达额外 Point authored mark；`override: true` 在原位置整体替换同 kind 的内建 semantic group。mark 省略的 slot 只从当前 binding 声明的 Chart context 继承，显式 properties 高于 inherited encoding，显式 encoding 再胜出。Bubble 的 size 始终继承 recipe 的必需字段映射，不能由 mark 或 properties 覆盖。React `ScatterMark` / `BubbleMark` 是各自 Chart mark 的 marker，Vanilla 使用同形 plain input；作者需要 Path 等其它图元时通过 `plotExtension.marks` 显式添加
 
@@ -94,7 +95,7 @@ Ranged Dot 已按 ADR-07 作为固定横向 `ranged-dot` chartType 进入 active
 
 component props 与 `recipe.properties` 都只调整内建 semantic recipe 的常量表现；React、Vanilla 与手写 JSON 最终必须得到同一 Source。Plot 的直接 `marks` 始终是最后追加的独立内容
 
-Point chartType 的 recipe properties 可以通过 `domainPadding` 调整连续位置 scale 的 domain 留白：数值简写与省略 `kind` 的对象使用 range 单位，显式 `kind: 'ratio'` 使用 domain 跨度比例；对象复用 Core `default / x / y / top / right / bottom / left` spacing shape。五个 Point chartType 从最终 Chart semantic groups 计算最大 Point `size` 半径作为缺省 range 留白。显式 Properties、encoding scale operation 与 Plot extension 的 owner 优先级保持不变；该字段不进入 authored Chart mark，也不改写 categorical 或 `plotExtension` 完整提供的 scale
+Point chartType 的 recipe properties 可以通过 `domainPadding` 调整连续位置 scale 的 domain 留白：数值简写与省略 `kind` 的对象使用 range 单位，显式 `kind: 'ratio'` 使用 domain 跨度比例；对象复用 Core `default / x / y / top / right / bottom / left` spacing shape。各 Point chartType 从最终 Chart semantic groups 计算最大 Point `size` 半径作为缺省 range 留白。Strip 的连续 role 复用该语义；离散 role 不扩充 categorical domain，而由 Plot 按最终 step、jitter 半宽、glyph 法向 extent 与已有 edge clearance 自动解析等价的 range inset，完整 ratio 时至少容纳 `step / 2 + size + strokeWidth / 2`。显式 Properties、encoding scale operation 与 Plot extension 的 owner 优先级保持不变；该字段不进入 authored Chart mark，也不改写 categorical 或 `plotExtension` 完整提供的 scale
 
 ## 5. Theme、presentation 与空间边界
 
@@ -106,7 +107,7 @@ Chart、Plot 与 Standard 的 identity / provenance / lineage / locator 沿同�
 
 ## 6. Provider 与 adapter gates
 
-provider graph 与 Standard Surface gate 已闭环，五个 active Point chartType 的 concrete provider contribution 可以在当前 Core compile 边界声明并解析 family、recipe、mark、Theme 与 Plot / Surface 依赖。公开入口只编排这条 provider pipeline：
+provider graph 与 Standard Surface gate 已闭环，六个 active Point chartType 的 concrete provider contribution 可以在当前 Core compile 边界声明并解析 family、recipe、mark、Theme 与 Plot / Surface 依赖。公开入口只编排这条 provider pipeline：
 
 - 具体 Point chartType 的包内 Definition 声明精确 schema、recipe Theme、scaffold、semantic mark 与允许的 Chart mark binding
 - concrete provider contribution 安装该 Definition；当前 Core compile 边界拒绝重复 chartType、family mismatch、未知 base 与依赖缺失
@@ -124,20 +125,20 @@ Regression 采用 Point 与趋势 Path 组成的复合 semantic group。Point �
 
 Plot Relation 已提供 projected source / target endpoint glyph：同一 datum 的 connector、source glyph 与 target glyph 在投影成功后按固定顺序输出，任一必要坐标无效时三者原子跳过，并共享原 datum provenance。Ranged Dot 在此能力上形成一个 Relation operation；缺值跳过与 field / coordinate 诊断继续由 Plot 正式数据与坐标契约负责，Chart 不 reshape rows
 
-### 7.3 ADR-08：Strip 不再作为独立 chartType
+### 7.3 ADR-08：独立 Strip 与 coordinate-aware position jitter
 
-Strip 的目标视觉与交互能力已由现有 Scatter recipe 组合 facet 与 jitter 表达；新增独立 `strip` chartType 只会复制现有 Source 和 recipe 能力，不形成新的长期契约。因此 ADR-08 被替代，Strip 不进入 active chartType，也不再阻塞 alpha.1
+Strip 保留稳定的 `x + y` 角色，并把不含 role 的 jitter 意图交给 Plot。Plot 根据最终 PositionScale 选择唯一正 step 的 discrete role，在 position scale 与 coordinate projection 之间合成 role-space offset；band 与 point 均可消费，ratio 以 tick step 而非 bandwidth 为基准。它不依赖 facet，也不使用会改写连续字段的 Plot Data `jitter` transform。Plot 同时按 jitter envelope、实际 glyph extent 与 coordinate boundary 自动预留净空；Polar angle 在投影前合成，完整 sweep wrap，partial sweep 按每条 datum 的 radius 校验。数据、scale domain、guide、lineage 与 locator 继续沿正式主链保持一致。ADR、三种 authoring 入口、测试与双语文档均已闭环
 
 ## 8. alpha.1 退出条件
 
 alpha.1 结束前必须同时满足：
 
-1. 当前alpha.1的Scatter、Bubble、Regression、Connected Scatter与Ranged Dot有稳定的exact encoding Source schema、ordered slot contract、recipe、semantic mark、mark contract、concrete provider contribution与三入口等价性；Strip由Scatter + facet + jitter组合表达，不设独立chartType
+1. Scatter、Bubble、Regression、Connected Scatter、Ranged Dot 与 Strip 都有稳定的 exact encoding Source schema、ordered slot contract、recipe、semantic mark、mark contract、concrete provider contribution 与三入口等价性
 2. 应用层family → chartType discovery与JSON路由、active provider的精确Source parse、Theme cascade、encoding-derived operation、slot consumer、mark inheritance与Plot facet composition形成清晰边界；Chart runtime不维护全局catalog
 3. semantic mark → authored Chart marks → explicit Plot marks 的顺序、继承、覆盖、identity、provenance、lineage 与 locator 语义稳定
 4. Core mode / style、Chart / Plot / recipe Theme slices、固定 presentation 顺序与 Chart border-box layout 形成完整 renderer-neutral 结果
-5. React、Vanilla、JSON、SSR与五个active Point chartType的concrete provider contribution复用同一Source、runtime Definition sidecar与resolver主链；未知family、未安装chartType / custom operation、mark、Theme、字段绑定、output descriptor、scale family、composition冲突与依赖缺失都在对应owner边界fail-loud
-6. docs、schema discovery 与示例只展示已实现 recipe；Superseded 的 Strip 不列为可导入 chartType，其组合表达保留在 Scatter 示例与决策记录中
+5. React、Vanilla、JSON、SSR 与六个 Point chartType 的 concrete provider contribution 复用同一 Source、runtime Definition sidecar 与 resolver 主链；未知 family、未安装 chartType / custom operation、mark、Theme、字段绑定、output descriptor、scale family、composition 冲突与依赖缺失都在对应 owner 边界 fail-loud
+6. docs、schema discovery 与示例只展示已实现 recipe；Strip 在实现闭环前不得列为可导入 chartType，完成后提供仅含基础与进阶的双语页面，并移除 Scatter 中用于替代 Strip 的 facet-jitter 示例
 7. ADR-14 已接受，Point family 的默认连续位置留白由最大 Point 半径统一驱动，四边 / Polar 失败语义与 Plot range / ratio 单位保持一致
 
-当前 alpha.1 仍处于进行中；Connected Scatter 与 Ranged Dot 的实现已完成但 ADR 保持 Proposed，需人工验收后再更新接受状态与 milestone 结论
+当前 alpha.1 仍处于进行中；六个 Point recipe 已实现并完成文档闭环，但 Connected Scatter 与 Ranged Dot 的 ADR 仍保持 Proposed，需人工验收后再更新 milestone 结论

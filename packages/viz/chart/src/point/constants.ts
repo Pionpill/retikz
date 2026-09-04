@@ -15,6 +15,7 @@ export const ChartType = {
   Regression: 'regression',
   RangedDot: 'ranged-dot',
   Scatter: 'scatter',
+  Strip: 'strip',
 } as const;
 
 /** Point recipe key 取值 */
