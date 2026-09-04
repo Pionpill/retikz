@@ -3,6 +3,8 @@ import type { IRScatterChart } from '@retikz/chart/point/scatter';
 import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import type { IRFlowDiagram } from '@retikz/diagram/flow';
+import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import type { InputBlockChild, InputGraphChild, InputGroupChild } from '@retikz/graph-vanilla';
 import type { IRPlot } from '@retikz/plot';
 import type { IRTable } from '@retikz/table';
@@ -12,6 +14,8 @@ import { ScatterChartSchema } from '@retikz/chart/point/scatter';
 import { renderChart } from '@retikz/chart-vanilla';
 import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { fallbackMeasurer } from '@retikz/core';
+import { FlowDiagramSchema } from '@retikz/diagram/flow';
+import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
 import {
   BlockDefinition,
   BlockHeaderDefinition,
@@ -919,7 +923,64 @@ const buildTablePreview = (
   };
 };
 
-/** 从统一的预览 IR 上下文生成 Core、Library、Graph、Plot、Chart 或 Table 的 Vanilla 源码与真实 SVG */
+const flowAuthoringInput = (source: IRFlowDiagram): InputFlowDiagram => {
+  const { namespace: _namespace, type: _type, ...input } = source;
+  void _namespace;
+  void _type;
+  return input;
+};
+
+const buildFlowCode = (source: IRFlowDiagram, preview: PreviewIR, options: BuildVanillaPreviewOptions): string => {
+  const authoring = {
+    ...flowAuthoringInput(source),
+    diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
+    flowThemeStyles: '__FLOW_THEME_STYLES__',
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  const authoringCode = formatVanillaValue(authoring)
+    .replace("'__DIAGRAM_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.diagram')
+    .replace("'__FLOW_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.flow')
+    .replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  const figureCode = formatVanillaValue({
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    ...(preview.ir.viewBox === undefined ? {} : { viewBox: preview.ir.viewBox }),
+    children: '__FLOW_CHILDREN__',
+  }).replace("'__FLOW_CHILDREN__'", `[flowDiagram('preview-flow-1', ${authoringCode})]`);
+  return `import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [FlowDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeStyles: PreviewThemeDefinitionBundle.core },\n});\n`;
+};
+
+const buildFlowPreview = (
+  preview: PreviewIR,
+  composite: CompositeChild,
+  options: BuildVanillaPreviewOptions,
+): VanillaPreviewArtifact => {
+  const source = FlowDiagramSchema.parse(composite);
+  const input = scene({
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    ...(preview.ir.viewBox === undefined ? {} : { viewBox: preview.ir.viewBox }),
+    children: [
+      flowDiagram('preview-flow-1', {
+        ...flowAuthoringInput(source),
+        diagramThemeStyles: PreviewThemeDefinitionBundle.diagram,
+        flowThemeStyles: PreviewThemeDefinitionBundle.flow,
+        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+      }),
+    ],
+  });
+  return {
+    code: buildFlowCode(source, preview, options),
+    svg: renderToSvgString(input, {
+      adapters: [FlowDiagramInputEmbedAdapter],
+      output: outputSize(preview),
+      compile: {
+        themeStyles: PreviewThemeDefinitionBundle.core,
+        measureText: options.measureText ?? browserPreviewMeasurer,
+      },
+    }),
+  };
+};
+
+/** 从统一的预览 IR 上下文生成 Core、Library、Graph、Flow、Plot、Chart 或 Table 的 Vanilla 源码与真实 SVG */
 export const buildVanillaPreview = (
   preview: PreviewIR,
   options: BuildVanillaPreviewOptions = {},
@@ -950,6 +1011,9 @@ export const buildVanillaPreview = (
     if (effectiveComposites.length === 1 && firstComposite.namespace === 'table' && firstComposite.type === 'table') {
       return buildTablePreview(preview, firstComposite, options);
     }
+    if (effectiveComposites.length === 1 && firstComposite.namespace === 'diagram' && firstComposite.type === 'flow') {
+      return buildFlowPreview(preview, firstComposite, options);
+    }
     const unsupported = effectiveComposites.find(
       child =>
         child.namespace !== 'standard' &&
@@ -957,7 +1021,8 @@ export const buildVanillaPreview = (
         child.namespace !== 'graph' &&
         !(child.namespace === 'plot' && child.type === 'plot') &&
         !(child.namespace === 'chart' && typedChartSourceOf(child) !== undefined) &&
-        !(child.namespace === 'table' && child.type === 'table'),
+        !(child.namespace === 'table' && child.type === 'table') &&
+        !(child.namespace === 'diagram' && child.type === 'flow'),
     );
     const child = unsupported ?? firstComposite;
     return diagnostic(`Cannot generate Vanilla preview for Tier 2 composite "${child.namespace}.${child.type}".`);

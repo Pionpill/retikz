@@ -1,0 +1,26 @@
+---
+title: Flow Diagram
+description: 用扁平、可序列化的逻辑关系描述站点流程，再由可替换的布局 Definition 推导节点位置、分组边界与连线路径。
+---
+
+Flow Diagram 面向站点架构、数据流和业务流程等逻辑图。Source 把 Entity、可见 Group 与无外壳 Layout 分别放在平级 catalog 中，由根和各容器的 `children` id 列表表达包含与顺序；它只保存根级关系与稀疏配置，不保存可由布局推导的位置或路径。
+
+Graph 继续拥有 Entity、Group 与 Relation 的绘制语义；Flow 负责把它们测量后交给布局 Definition，并把结果装配成同一个 Scene、artifact 与空间索引。Graph Block 的结构与连接契约尚未稳定，因此当前不属于 Flow Source。
+
+## 职责一览
+
+| 主题              | 职责                                                  | 何时使用                 |
+| ----------------- | ----------------------------------------------------- | ------------------------ |
+| 基础用法          | JSX / 平级 JSON Source、Group、Layout、自动布局与结果 | 绘制普通站点逻辑图       |
+| Diagram Framework | 标题、说明、图例、Frame 与完整输出边界                | 需要理解 Flow 外层装配时 |
+
+## 章节内容
+
+<div className="my-6 grid grid-cols-1 gap-4">
+  <LinkedCard href="/schematic/diagram/flow/basic">
+    <span className="font-semibold">基础用法</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      从最小 Flow 到独立 Layout、可见 Group、跨作用域关系、Theme 和 artifact
+    </span>
+  </LinkedCard>
+</div>

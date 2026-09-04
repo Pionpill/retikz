@@ -81,7 +81,9 @@ describe('SCHEMA_REGISTRY', () => {
     for (const [name, entry] of Object.entries(SCHEMA_REGISTRY)) {
       expect(entry.schema, name).toBeDefined();
       expect(entry.label, name).toMatch(/^[A-Z]/);
-      expect(entry.url, name).toMatch(/^\/.+\/(?:reference|contract|composite|extension|graph)\/.+/);
+      expect(entry.url, name).toMatch(
+        /^\/.+\/(?:(?:reference|contract|composite|extension|graph)\/.+|flow\/basic(?:#.+)?)$/,
+      );
     }
   });
 

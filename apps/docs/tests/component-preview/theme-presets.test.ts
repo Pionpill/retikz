@@ -10,6 +10,8 @@ import {
   isPreviewThemeStyleDocument,
   PreviewChartThemeDefinitions,
   PreviewCoreThemeStyles,
+  PreviewDiagramThemeStyles,
+  PreviewFlowThemeStyles,
   PreviewGraphThemeStyles,
   PreviewPlotThemeStyles,
   PreviewTableThemeStyles,
@@ -24,7 +26,7 @@ describe('docs-owned theme presets', () => {
     expect(PreviewThemeStyleOptions).toEqual(['default', 'academic', 'vibrant', 'clean']);
   });
 
-  it('三个参考风格为五个 owner 提供同名 definition', () => {
+  it('三个参考风格为七个 owner 提供同名 definition', () => {
     const expected = [PreviewThemeStyle.Academic, PreviewThemeStyle.Vibrant, PreviewThemeStyle.Clean];
     for (const definitions of [
       PreviewCoreThemeStyles,
@@ -32,6 +34,8 @@ describe('docs-owned theme presets', () => {
       PreviewChartThemeDefinitions,
       PreviewTableThemeStyles,
       PreviewGraphThemeStyles,
+      PreviewDiagramThemeStyles,
+      PreviewFlowThemeStyles,
     ]) {
       expect(definitions.map(definition => definition.name)).toEqual(expected);
     }
@@ -108,14 +112,19 @@ describe('docs-owned theme presets', () => {
     expect(graphByName.get(PreviewThemeStyle.Clean)?.resolve(cleanTheme)).toEqual({
       entity: { tokens: { textColor: foreground, fill: 'none' } },
     });
+
+    const flowByName = new Map(PreviewFlowThemeStyles.map(definition => [definition.name, definition]));
+    expect(flowByName.get(PreviewThemeStyle.Academic)?.resolve(academicTheme)).toEqual({});
+    expect(flowByName.get(PreviewThemeStyle.Vibrant)?.resolve(vibrantTheme)).toEqual({});
+    expect(flowByName.get(PreviewThemeStyle.Clean)?.resolve(cleanTheme)).toEqual({});
   });
 
-  it('只在 Viz 与 schematic/graph 文档启用现有 Theme style selector', () => {
+  it('只在 Viz、schematic/graph 与 schematic/diagram 文档启用现有 Theme style selector', () => {
     expect(isPreviewThemeStyleDocument('viz', 'plot')).toBe(true);
     expect(isPreviewThemeStyleDocument('viz', undefined)).toBe(true);
     expect(isPreviewThemeStyleDocument('schematic', 'graph')).toBe(true);
     expect(isPreviewThemeStyleDocument('schematic', 'introduction')).toBe(false);
-    expect(isPreviewThemeStyleDocument('schematic', 'diagram')).toBe(false);
+    expect(isPreviewThemeStyleDocument('schematic', 'diagram')).toBe(true);
     expect(isPreviewThemeStyleDocument('kernel', 'graph')).toBe(false);
   });
 

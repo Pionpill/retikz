@@ -100,7 +100,7 @@ describe('changelog data', () => {
     );
   });
 
-  it('当前 Schematic 里程碑注册详情路由并覆盖 Graph 包族', () => {
+  it('当前 Schematic 里程碑注册详情路由并覆盖 Graph 与 Diagram 包族', () => {
     const releases = schematicSection.find(section => section.id === 'releases');
     const changelogPage = releases?.pages.find(page => page.id === 'changelog');
     const currentRelease = changelogForModule('schematic')[0];
@@ -109,23 +109,27 @@ describe('changelog data', () => {
       '@retikz/graph',
       '@retikz/graph-react',
       '@retikz/graph-vanilla',
+      '@retikz/diagram',
+      '@retikz/diagram-react',
+      '@retikz/diagram-vanilla',
     ]);
     expect(changelogPage?.children?.some(page => page.id === changelogVersionSlug(currentRelease.minor))).toBe(true);
   });
 
-  it('Graph 更新日志保留 alpha.1 完整契约并登记 alpha.2 Block 与 Entity 默认外观', () => {
+  it('Graph 更新日志保留 alpha.1 完整契约并登记 alpha.2 Block、Entity 与容器主题', () => {
     const release = changelogForModule('schematic')[0];
     const byPackage = new Map(release.packages.map(block => [block.pkg, block]));
-    const serialized = JSON.stringify(release);
+    const graphBlocks = release.packages.filter(block => block.pkg.startsWith('@retikz/graph'));
+    const serialized = JSON.stringify(graphBlocks);
 
-    for (const block of release.packages) {
+    for (const block of graphBlocks) {
       expect(block.subVersions.map(version => version.version)).toEqual(expect.arrayContaining(['alpha.1', 'alpha.2']));
       const alpha1 = block.subVersions.find(version => version.version === 'alpha.1');
       const alpha2 = block.subVersions.find(version => version.version === 'alpha.2');
       expect(alpha1?.date).toBe('2026-08-28');
       expect(alpha1?.items).toHaveLength(9);
       expect(alpha2?.date).toBe('2026-08-29');
-      expect(alpha2?.items).toHaveLength(3);
+      expect(alpha2?.items).toHaveLength(4);
     }
 
     expect(JSON.stringify(byPackage.get('@retikz/graph'))).toContain('IRGraph.children');
@@ -136,13 +140,16 @@ describe('changelog data', () => {
     expect(serialized).toContain('`graphTheme`');
     expect(serialized).toContain('`IRGeometryLabel`');
     expect(serialized).toContain('Entity 简洁默认外观');
+    expect(serialized).toContain('容器继承 Graph Theme');
     expect(serialized).toContain('Core Path-compatible route');
     expect(serialized).toContain('JSON Schema');
     expect(serialized).toContain('Variant visual axis');
     expect(serialized).toContain('`ellipticCapsule`');
     expect(serialized).toContain('Vibrant and Clean reference styles');
     expect(serialized).toContain('`minWidth`');
-    expect(serialized).toContain('Sections default to the shell’s `8` corner radius');
+    expect(serialized).toContain(
+      'Sections default to an `8` corner radius and padding with a `currentColor / 0.037` background',
+    );
     expect(serialized).toContain('Core-compatible instance fields');
     expect(serialized).toContain('`GraphThemeStyleOverrides`');
     expect(serialized).toContain('before appending custom rules');

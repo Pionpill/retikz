@@ -11,9 +11,11 @@ import type {
   IRScope,
   IRStep,
 } from '@retikz/core';
+import type { IRFlowDiagram } from '@retikz/diagram/flow';
 import type { IRBlock, IRBlockHeader, IRBlockRow, IRBlockSection, IRGraph, IRGroup } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
 
+import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import {
   BlockHeaderSchema,
   BlockRowSchema,
@@ -113,6 +115,7 @@ type Ctx = {
   graphHelpers: Set<string>;
   graphAdapters: Set<string>;
   graphCounts: Map<string, number>;
+  flowCount: number;
   generatedIds: Map<string, string>;
 };
 
@@ -473,6 +476,8 @@ export const collectPreviewDefinitions = (
           throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
         }
         if (!providedGraphKinds.has(child.type)) graph.add(definitionName);
+      } else if (child.namespace === 'diagram' && child.type === 'flow') {
+        return;
       } else {
         throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
       }
@@ -768,11 +773,30 @@ const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =>
   return `relation(${formatString(embedId)}, ${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
 };
 
+const flowCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
+  const source: IRFlowDiagram = FlowDiagramSchema.parse(child);
+  const { namespace: _namespace, type: _type, ...input } = source;
+  void _namespace;
+  void _type;
+  ctx.flowCount += 1;
+  const encoded = {
+    ...input,
+    diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
+    flowThemeStyles: '__FLOW_THEME_STYLES__',
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  return `flowDiagram(${formatString(`preview-flow-${ctx.flowCount}`)}, ${formatObject(encoded, indent)
+    .replace("'__DIAGRAM_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.diagram')
+    .replace("'__FLOW_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.flow')
+    .replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
+};
+
 const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   if ('namespace' in child) {
     if (child.namespace === 'standard') return standardCompositeCode(child, indent, ctx);
     if (child.namespace === 'layout') return layoutCompositeCode(child, indent, ctx);
     if (child.namespace === 'graph') return graphCompositeCode(child, indent, ctx);
+    if (child.namespace === 'diagram' && child.type === 'flow') return flowCompositeCode(child, indent, ctx);
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
   }
   switch (child.type) {
@@ -809,6 +833,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     graphHelpers: new Set(),
     graphAdapters: new Set(),
     graphCounts: new Map(),
+    flowCount: 0,
     generatedIds: new Map(),
   };
   reservePreviewIds(ir.children, ctx);
@@ -849,6 +874,12 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     imports.push(`import { ${[...graphHelpers, ...graphAdapters].join(', ')} } from '@retikz/graph-vanilla';`);
     imports.push("import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';");
   }
+  if (ctx.flowCount > 0) {
+    imports.push("import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';");
+    if (graphHelpers.length === 0) {
+      imports.push("import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';");
+    }
+  }
   if (definitions.standard.length > 0) {
     imports.push(`import { ${definitions.standard.join(', ')} } from '@retikz/standard';`);
   }
@@ -859,11 +890,16 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     imports.push(`import { ${definitions.graph.join(', ')} } from '@retikz/graph';`);
   }
 
-  const adapters = [...standardAdapters, ...layoutAdapters, ...graphAdapters];
+  const adapters = [
+    ...standardAdapters,
+    ...layoutAdapters,
+    ...graphAdapters,
+    ...(ctx.flowCount > 0 ? ['FlowDiagramInputEmbedAdapter'] : []),
+  ];
   const adapterCode = adapters.length > 0 ? `\nconst adapters = [${adapters.join(', ')}];\n` : '';
   const definitionNames = [...definitions.standard, ...definitions.layout, ...definitions.graph];
   const compileEntries = [
-    ...(graphHelpers.length > 0 ? ['themeStyles: PreviewThemeDefinitionBundle.core'] : []),
+    ...(graphHelpers.length > 0 || ctx.flowCount > 0 ? ['themeStyles: PreviewThemeDefinitionBundle.core'] : []),
     ...(definitionNames.length > 0 ? [`composites: [${definitionNames.join(', ')}]`] : []),
   ];
   const compile = compileEntries.length > 0 ? `\nconst compile = { ${compileEntries.join(', ')} };\n` : '';

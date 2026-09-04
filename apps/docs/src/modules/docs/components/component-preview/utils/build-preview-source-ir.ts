@@ -2,12 +2,14 @@ import type { IRChartSource } from '@retikz/chart';
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
 import type { ScatterChartProps } from '@retikz/chart-react/point/scatter';
 import type { IRChild, IRScene, IRScope } from '@retikz/core';
+import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import type { InputGraphChild, InputGraphMember } from '@retikz/graph-vanilla';
 import type { AnyInputEmbed, InputChild, InputPath, InputScene, InputScope } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 
 import { CHART_NAMESPACE } from '@retikz/chart';
 import { ScatterChart } from '@retikz/chart-react/point/scatter';
+import { FlowDiagramEmbedKind, normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import {
   BlockEmbedKind,
   BlockHeaderEmbedKind,
@@ -46,6 +48,10 @@ const sceneChildrenOf = (scene: InputScene): ReadonlyArray<InputChild> => {
 };
 
 const GRAPH_DEFINITION_OPTION_KEYS = new Set([
+  'diagramThemeStyles',
+  'flowThemeStyles',
+  'flowLayouts',
+  'defaultFlowLayout',
   'entityRoles',
   'entityKinds',
   'entityPredicates',
@@ -193,6 +199,8 @@ const sourceGraphEmbedOf = (
 ): IRChild | undefined => {
   const props = sourcePropsOf(input.props);
   switch (input.kind) {
+    case FlowDiagramEmbedKind:
+      return normalizeFlowDiagram(props as InputFlowDiagram);
     case GraphEmbedKind:
       return sourceGraphMemberOf(
         { ...props, type: 'graph', children: graphInputChildrenOf(props) },

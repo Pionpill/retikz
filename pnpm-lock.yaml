@@ -365,6 +365,15 @@ importers:
       '@retikz/data':
         specifier: workspace:*
         version: link:../../packages/viz/data
+      '@retikz/diagram':
+        specifier: workspace:*
+        version: link:../../packages/schematic/diagram
+      '@retikz/diagram-react':
+        specifier: workspace:*
+        version: link:../../packages/schematic/diagram-react
+      '@retikz/diagram-vanilla':
+        specifier: workspace:*
+        version: link:../../packages/schematic/diagram-vanilla
       '@retikz/foundation':
         specifier: workspace:*
         version: link:../../packages/kernel/foundation

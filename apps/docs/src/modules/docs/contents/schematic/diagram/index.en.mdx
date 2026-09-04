@@ -15,7 +15,7 @@ Graph describes the objects and relations inside a graph. A concrete Diagram typ
 | Diagram Framework | Presentation, Frame, Appearance, and output boundary                | Interpretation or rewriting of a drawing core    |
 | Concrete Diagram  | Domain drawing core, measurement, layout, routing, and result model | Copies of Core, Layout, or Standard capabilities |
 
-The first concrete type will be `FlowDiagram`. Until it opens, Graph continues to own directly authored relation content, while Diagram Framework remains a package-internal Foundation.
+The first concrete type is `FlowDiagram`. It closes the loop from an LLM-friendly relation Source through an automatic layout Definition and Graph materialization to a renderer-neutral artifact.
 
 ## Chapters
 
@@ -24,6 +24,12 @@ The first concrete type will be `FlowDiagram`. Until it opens, Graph continues t
     <span className="font-semibold">Diagram Framework</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Supporting regions, framing, spacing, themes, and the unified output boundary established in alpha.1
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/schematic/diagram/flow">
+    <span className="font-semibold">Flow Diagram</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Recursive Groups, automatic layout, routing, Theme, and result model for site logic diagrams
     </span>
   </LinkedCard>
 </div>
