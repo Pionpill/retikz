@@ -30,7 +30,7 @@ Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 alpha.1
 - React Graph standalone 复用 Layout 建立 Scene，embedded Graph 只贡献局部 Scope；host-only props 不进入 `IRGraph`，Graph 不拥有 Layout solver 或 Scene 语义
 - Relation endpoint 直接复用 Core NodeTarget 与 namespace，可以引用 Core 已公开寻址的 Node、Coordinate、resolved Scope 及下沉为这些 target 的上层 composite；Graph 不建立第二套 endpoint 或 lookup
 - Graph、Group、Block、Entity 与 Relation 的 id 均为显式 authoring identity；省略时不得由 resolve、lowering 或 adapter 自动生成。Block、Section 与 Row 的显式 id 发布到当前 Core namespace，不自动添加 Block 前缀
-- Diagram 用窄 Flow Source 表达递归 elements、显式 relations、布局意图、扁平 token、结构化全局配置与单项 style / layout，并确定性下沉为 Graph records；Flow style 只能投影 Graph element 已开放字段，不得复制或绕过 Graph role、Theme、identity、屏蔽字段与 canonical lowering 契约
+- Diagram 用窄 Flow Source 平级声明 Entity / Group / Layout，以根、Group 与 Layout 的 `children` 引用表达包含，并保存显式 relations、布局意图、扁平 token、结构化全局配置与单项 style / layout；resolve 重建递归 Canonical tree 后确定性下沉 Graph records。Group 始终是可见 Graph 边界，独立 Layout 只建立固定排列 scope；Flow style 只能投影 Graph element 已开放字段，不得复制或绕过 Graph role、Theme、identity、屏蔽字段与 canonical lowering 契约
 
 ## 当前状态
 
