@@ -15,12 +15,11 @@ import { LayoutItem, OverlayLayout } from '@retikz/layout-react';
 ```tsx
 <Layout width={360} height={180}>
   <OverlayLayout size={{ x: { kind: 'fixed', value: 280 }, y: { kind: 'fixed', value: 120 } }}>
-    <LayoutItem kind="overlay" itemKey="base">
+    <LayoutItem kind="overlay">
       <Node position={[0, 0]} text="Base" />
     </LayoutItem>
     <LayoutItem
       kind="overlay"
-      itemKey="badge"
       placement={{ kind: 'positioned', at: { x: 270, y: 10 }, anchor: { x: 1, y: 0 } }}
       sizeParticipation="exclude"
       zIndex={1}
@@ -115,22 +114,22 @@ JSON/IR 路径使用 `createOverlayLayout()` 与 `OverlayLayoutDefinition`；Van
 | `overflow?`     | <ApiValues name="LayoutOverflow" />         | `'visible'` | 是否在容器分配区域上裁切视觉输出    |
 | `justifyItems?` | `'start' \| 'center' \| 'end' \| 'stretch'` | `'center'`  | 默认水平对齐                        |
 | `alignItems?`   | <ApiValues name="LayoutAlignment" />        | `'center'`  | 默认垂直对齐                        |
-| `children?`     | `Array<OverlayLayoutItemInput>`             | `[]`        | 作者声明的子项；本地 `key` 必须唯一 |
+| `children?`     | `Array<OverlayLayoutItemInput>`             | `[]`        | 作者声明的子项；显式 `key` 必须唯一 |
 
 ### `OverlayLayoutItemInput`
 
-| 属性                 | 类型                                         | 默认值      | 描述                                 |
-| -------------------- | -------------------------------------------- | ----------- | ------------------------------------ |
-| `kind`               | `'overlay'`                                  | —           | 叠加布局子项判别字段                 |
-| `key`                | `string`                                     | —           | 当前容器内由作者声明的标识           |
-| `child`              | `IRChild`                                    | —           | 任意可 JSON 序列化的 Core 子图形     |
-| `placement?`         | `OverlayPlacementInput`                      | `aligned`   | 对齐或内容区域局部定位               |
-| `offset?`            | `{ x: number, y: number }`                   | `{0, 0}`    | 放置后的偏移                         |
-| `margin?`            | `number` \| `IRBoxSpacing`                   | `0`         | 对齐或定位分配区域的外边距           |
-| `justifySelf?`       | `'start' \| 'center' \| 'end' \| 'stretch'`  | 容器值      | 覆盖水平对齐                         |
-| `alignSelf?`         | <ApiValues name="LayoutAlignment" />         | 容器值      | 覆盖垂直对齐                         |
-| `sizeParticipation?` | <ApiValues name="LayoutSizeParticipation" /> | `'include'` | 是否参与固有尺寸轮廓计算             |
-| `zIndex?`            | `number`                                     | `0`         | 整数绘制层级；相同值保持作者声明顺序 |
+| 属性                 | 类型                                         | 默认值      | 描述                                     |
+| -------------------- | -------------------------------------------- | ----------- | ---------------------------------------- |
+| `kind`               | `'overlay'`                                  | —           | 叠加布局子项判别字段                     |
+| `key?`               | `string`                                     | 内部生成    | 可选稳定身份；省略时按 source index 生成 |
+| `child`              | `IRChild`                                    | —           | 任意可 JSON 序列化的 Core 子图形         |
+| `placement?`         | `OverlayPlacementInput`                      | `aligned`   | 对齐或内容区域局部定位                   |
+| `offset?`            | `{ x: number, y: number }`                   | `{0, 0}`    | 放置后的偏移                             |
+| `margin?`            | `number` \| `IRBoxSpacing`                   | `0`         | 对齐或定位分配区域的外边距               |
+| `justifySelf?`       | `'start' \| 'center' \| 'end' \| 'stretch'`  | 容器值      | 覆盖水平对齐                             |
+| `alignSelf?`         | <ApiValues name="LayoutAlignment" />         | 容器值      | 覆盖垂直对齐                             |
+| `sizeParticipation?` | <ApiValues name="LayoutSizeParticipation" /> | `'include'` | 是否参与固有尺寸轮廓计算                 |
+| `zIndex?`            | `number`                                     | `0`         | 整数绘制层级；相同值保持作者声明顺序     |
 
 ### `OverlayPlacementInput`
 
@@ -139,7 +138,7 @@ JSON/IR 路径使用 `createOverlayLayout()` 与 `OverlayLayoutDefinition`；Van
 | `aligned`    | 无                                   | 使用容器与子项对齐                   |
 | `positioned` | `at`、`anchor?`、`width?`、`height?` | 内容区域局部目标点与可选精确分配尺寸 |
 
-React 中把 `key` 写成 `itemKey`，并用一个可绘制子元素或 `ir` 提供 `child`。
+React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `ir` 提供 `child`。省略 `itemKey` 时，自动身份只在内部产物中生成，不写回 Source IR。
 
 ## 相关
 

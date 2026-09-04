@@ -26,7 +26,7 @@ description: 查询 Layout 布局容器的类型化编译产物、边界语义�
 
 | 字段               | 类型                              | 描述                                                   |
 | ------------------ | --------------------------------- | ------------------------------------------------------ |
-| `key`              | `string`                          | 对应作者声明的子项标识                                 |
+| `key`              | `string`                          | 作者声明或由 Layout 内部生成的容器局部有效身份         |
 | `sourceIndex`      | `number`                          | 连续且从零开始的声明顺序                               |
 | `marginBounds`     | `LayoutArtifactRect`              | 包含已求解外边距的完整父级分配区域                     |
 | `slotBounds`       | `LayoutArtifactRect`              | 不含外边距、由父级分配的区域                           |

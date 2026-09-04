@@ -11,7 +11,11 @@ import { useMemo } from 'react';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { buildPreviewIR, collectPreviewChartSources } from '../../src/modules/docs/components/component-preview/utils';
+import {
+  buildPreviewIR,
+  buildPreviewSourceIR,
+  collectPreviewChartSources,
+} from '../../src/modules/docs/components/component-preview/utils';
 import { createGraphPreviewSource } from '../../src/modules/docs/preview';
 
 const hookedDatasets = { sample: [{ value: 1 }] };
@@ -156,6 +160,60 @@ describe('buildPreviewIR', () => {
           chartType: 'bubble',
           encodings: { x: 'x', y: 'y', size: 'population' },
         },
+      },
+    ]);
+  });
+
+  it('rebuilds Graph Source IR from authoring input instead of runtime defaults', () => {
+    const source = buildPreviewSourceIR(
+      {
+        type: 'scene',
+        children: [
+          {
+            type: 'embed',
+            kind: 'graph.graph',
+            id: 'graph',
+            props: {
+              children: [
+                {
+                  type: 'embed',
+                  kind: 'graph.block',
+                  id: 'block',
+                  props: { id: 'block' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        type: 'scene',
+        version: 1,
+        children: [
+          {
+            namespace: 'graph',
+            type: 'graph',
+            children: [
+              {
+                namespace: 'graph',
+                type: 'block',
+                id: 'block',
+                padding: 8,
+                gap: 8,
+                children: [],
+              },
+            ],
+          },
+        ],
+      },
+      [],
+    );
+
+    expect(source.children).toEqual([
+      {
+        namespace: 'graph',
+        type: 'graph',
+        children: [{ namespace: 'graph', type: 'block', id: 'block' }],
       },
     ]);
   });

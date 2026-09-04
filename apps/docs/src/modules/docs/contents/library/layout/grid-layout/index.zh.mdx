@@ -21,10 +21,10 @@ import { GridLayout, LayoutItem } from '@retikz/layout-react';
     ]}
     columnGap={8}
   >
-    <LayoutItem kind="grid" itemKey="label">
+    <LayoutItem kind="grid">
       <Node position={[0, 0]} text="标签" />
     </LayoutItem>
-    <LayoutItem kind="grid" itemKey="value">
+    <LayoutItem kind="grid">
       <Node position={[0, 0]} text="42%" />
     </LayoutItem>
   </GridLayout>
@@ -96,24 +96,24 @@ GridLayout 使用固定的物理 x→y 求解顺序：
 
 ### `GridLayoutInput`
 
-| 属性              | 类型                                        | 默认值       | 描述                                     |
-| ----------------- | ------------------------------------------- | ------------ | ---------------------------------------- |
-| `columns`         | `Array<GridTrackInput>`                     | —            | 至少一条显式物理列轨道                   |
-| `rows?`           | `Array<GridTrackInput>`                     | `[]`         | 显式行轨道；不足部分由隐式定义补齐       |
-| `implicitColumn?` | `GridTrackInput`                            | 内容自然尺寸 | 自动放置扩展列时使用                     |
-| `implicitRow?`    | `GridTrackInput`                            | 内容自然尺寸 | 自动放置扩展行时使用                     |
-| `autoFlow?`       | <ApiValues name="GridAutoFlow" />           | `'row'`      | 非密集的确定性自动放置方向               |
-| `overlap?`        | <ApiValues name="GridOverlap" />            | `'reject'`   | 完全显式放置子项的重叠策略               |
-| `columnGap?`      | `number`                                    | `0`          | 物理列间距                               |
-| `rowGap?`         | `number`                                    | `0`          | 物理行间距                               |
-| `justifyItems?`   | `'start' \| 'center' \| 'end' \| 'stretch'` | `'stretch'`  | 默认水平子项对齐                         |
-| `alignItems?`     | <ApiValues name="LayoutAlignment" />        | `'stretch'`  | 默认垂直子项对齐                         |
-| `justifyContent?` | <ApiValues name="LayoutDistribution" />     | `'start'`    | 列组的水平剩余空间分布                   |
-| `alignContent?`   | <ApiValues name="LayoutDistribution" />     | `'start'`    | 行组的垂直剩余空间分布                   |
-| `size?`           | `LayoutSizeInput`                           | 内容 / 内容  | 容器双轴分配策略                         |
-| `padding?`        | `number` \| `IRBoxSpacing`                  | `0`          | 从分配区域到内容区域的内边距             |
-| `overflow?`       | <ApiValues name="LayoutOverflow" />         | `'visible'`  | 是否在容器分配区域上裁切视觉输出         |
-| `children?`       | `Array<GridLayoutItemInput>`                | `[]`         | 作者声明的子项；`key` 在本容器内必须唯一 |
+| 属性              | 类型                                        | 默认值       | 描述                                |
+| ----------------- | ------------------------------------------- | ------------ | ----------------------------------- |
+| `columns`         | `Array<GridTrackInput>`                     | —            | 至少一条显式物理列轨道              |
+| `rows?`           | `Array<GridTrackInput>`                     | `[]`         | 显式行轨道；不足部分由隐式定义补齐  |
+| `implicitColumn?` | `GridTrackInput`                            | 内容自然尺寸 | 自动放置扩展列时使用                |
+| `implicitRow?`    | `GridTrackInput`                            | 内容自然尺寸 | 自动放置扩展行时使用                |
+| `autoFlow?`       | <ApiValues name="GridAutoFlow" />           | `'row'`      | 非密集的确定性自动放置方向          |
+| `overlap?`        | <ApiValues name="GridOverlap" />            | `'reject'`   | 完全显式放置子项的重叠策略          |
+| `columnGap?`      | `number`                                    | `0`          | 物理列间距                          |
+| `rowGap?`         | `number`                                    | `0`          | 物理行间距                          |
+| `justifyItems?`   | `'start' \| 'center' \| 'end' \| 'stretch'` | `'stretch'`  | 默认水平子项对齐                    |
+| `alignItems?`     | <ApiValues name="LayoutAlignment" />        | `'stretch'`  | 默认垂直子项对齐                    |
+| `justifyContent?` | <ApiValues name="LayoutDistribution" />     | `'start'`    | 列组的水平剩余空间分布              |
+| `alignContent?`   | <ApiValues name="LayoutDistribution" />     | `'start'`    | 行组的垂直剩余空间分布              |
+| `size?`           | `LayoutSizeInput`                           | 内容 / 内容  | 容器双轴分配策略                    |
+| `padding?`        | `number` \| `IRBoxSpacing`                  | `0`          | 从分配区域到内容区域的内边距        |
+| `overflow?`       | <ApiValues name="LayoutOverflow" />         | `'visible'`  | 是否在容器分配区域上裁切视觉输出    |
+| `children?`       | `Array<GridLayoutItemInput>`                | `[]`         | 作者声明的子项；显式 `key` 必须唯一 |
 
 ### `GridTrackInput`
 
@@ -126,18 +126,18 @@ GridLayout 使用固定的物理 x→y 求解顺序：
 
 ### `GridLayoutItemInput`
 
-| 属性           | 类型                                        | 默认值         | 描述                             |
-| -------------- | ------------------------------------------- | -------------- | -------------------------------- |
-| `kind`         | `'grid'`                                    | —              | 网格布局子项判别字段             |
-| `key`          | `string`                                    | —              | 当前容器内由作者声明的标识       |
-| `child`        | `IRChild`                                   | —              | 任意可 JSON 序列化的 Core 子图形 |
-| `column?`      | `{ start?: number, span?: number }`         | 自动 / 跨 1 轨 | 列放置范围                       |
-| `row?`         | `{ start?: number, span?: number }`         | 自动 / 跨 1 轨 | 行放置范围                       |
-| `margin?`      | `number` \| `IRBoxSpacing`                  | `0`            | 轨道区域内缩前的子项外边距       |
-| `justifySelf?` | `'start' \| 'center' \| 'end' \| 'stretch'` | 容器值         | 覆盖水平对齐                     |
-| `alignSelf?`   | <ApiValues name="LayoutAlignment" />        | 容器值         | 覆盖垂直对齐                     |
+| 属性           | 类型                                        | 默认值         | 描述                                     |
+| -------------- | ------------------------------------------- | -------------- | ---------------------------------------- |
+| `kind`         | `'grid'`                                    | —              | 网格布局子项判别字段                     |
+| `key?`         | `string`                                    | 内部生成       | 可选稳定身份；省略时按 source index 生成 |
+| `child`        | `IRChild`                                   | —              | 任意可 JSON 序列化的 Core 子图形         |
+| `column?`      | `{ start?: number, span?: number }`         | 自动 / 跨 1 轨 | 列放置范围                               |
+| `row?`         | `{ start?: number, span?: number }`         | 自动 / 跨 1 轨 | 行放置范围                               |
+| `margin?`      | `number` \| `IRBoxSpacing`                  | `0`            | 轨道区域内缩前的子项外边距               |
+| `justifySelf?` | `'start' \| 'center' \| 'end' \| 'stretch'` | 容器值         | 覆盖水平对齐                             |
+| `alignSelf?`   | <ApiValues name="LayoutAlignment" />        | 容器值         | 覆盖垂直对齐                             |
 
-React 中把 `key` 写成 `itemKey`，并用一个可绘制子元素或 `ir` 提供 `child`。
+React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `ir` 提供 `child`。省略 `itemKey` 时，自动身份只在内部产物中生成，不写回 Source IR。
 
 ## 相关
 

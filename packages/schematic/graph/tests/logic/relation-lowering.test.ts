@@ -142,6 +142,60 @@ describe('Relation lowering', () => {
     ]);
   });
 
+  it.each([
+    {
+      name: 'UML association',
+      source: { role: 'association', kind: 'uml.association' },
+      expected: {},
+    },
+    {
+      name: 'aggregation',
+      source: { role: 'association', kind: 'uml.aggregation' },
+      expected: { marks: [{ pos: 0, mark: { kind: 'arrow', shape: 'openDiamond' } }] },
+    },
+    {
+      name: 'composition',
+      source: { role: 'association', kind: 'uml.composition' },
+      expected: { marks: [{ pos: 0, mark: { kind: 'arrow', shape: 'diamond' } }] },
+    },
+    {
+      name: 'generalization',
+      source: { role: 'generalization' },
+      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'normal' } }] },
+    },
+    {
+      name: 'UML generalization',
+      source: { role: 'generalization', kind: 'uml.generalization' },
+      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'open' } }] },
+    },
+    {
+      name: 'dependency',
+      source: { role: 'dependency' },
+      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } }] },
+    },
+    {
+      name: 'UML dependency',
+      source: { role: 'dependency', kind: 'uml.dependency' },
+      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } }], dashPattern: [6, 4] },
+    },
+    {
+      name: 'realization',
+      source: { role: 'dependency', kind: 'uml.realization' },
+      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'open' } }], dashPattern: [6, 4] },
+    },
+  ])('lowers UML $name to its path and endpoint structure', ({ source, expected }) => {
+    const loweredRelation = lower(relation(source));
+
+    expect(loweredRelation).toMatchObject(expected);
+    if (source.kind === undefined && source.role === 'dependency') {
+      expect(loweredRelation).not.toHaveProperty('dashPattern');
+    }
+    if (source.kind === 'uml.association') {
+      expect(loweredRelation).not.toHaveProperty('marks');
+      expect(loweredRelation).not.toHaveProperty('dashPattern');
+    }
+  });
+
   it('compiles a direct Relation between a Core Node and Scope target', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.RelationProviderKey], providers: Graph.createGraphProviders() }],
@@ -167,12 +221,78 @@ describe('Relation lowering', () => {
       { ...definitions, padding: 0 },
     );
 
-    expect(pathPrimitivesOf(output.scene.primitives).some(path => path.id === 'edge')).toBe(true);
+    const relationPath = pathPrimitivesOf(output.scene.primitives).find(path => path.id === 'edge');
+    expect(relationPath?.arrowEnd?.shape).toBe('straightBarb');
     expect(
       primitivesOf(output.scene.primitives).some(
         primitive => primitive.type === 'text' && primitive.lines.some(line => line.text === 'depends on'),
       ),
     ).toBe(true);
+  });
+
+  it('applies the Graph preset font size and color to an unstyled Relation label', () => {
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [{ roots: [Graph.RelationProviderKey], providers: Graph.createGraphProviders() }],
+    });
+    const output = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [
+          { type: 'node', id: 'source', position: [0, 0] },
+          { type: 'node', id: 'target', position: [100, 0] },
+          relation({ role: 'association', direction: 'none', labels: [{ text: 'default label' }] }),
+        ],
+      },
+      { ...definitions, padding: 0 },
+    );
+    const label = primitivesOf(output.scene.primitives).find(
+      primitive => primitive.type === 'text' && primitive.lines.some(line => line.text === 'default label'),
+    );
+
+    expect(label).toMatchObject({ type: 'text', fill: 'gray', fontSize: 14 });
+  });
+
+  it.each([
+    { status: 'error', color: theme.colors.semantic.error },
+    { status: 'success', color: theme.colors.semantic.success },
+    { status: 'warning', color: theme.colors.semantic.warning },
+    { status: 'disabled', color: theme.colors.semantic.guide },
+  ] as const)(
+    'resolves the Neutral $status status to Core semantic colors for the Relation path and markers',
+    ({ status, color }) => {
+      const options = Graph.resolveGraphDefinitionOptions();
+      const canonical = Graph.resolveRelation(relation({ status }), options);
+
+      expect(Graph.resolveRelationAppearance(canonical, { ...options, theme })).toMatchObject({
+        color,
+        stroke: color,
+        sourceMarker: { color },
+        targetMarker: { color },
+      });
+      expect(lower(relation({ status }))).not.toHaveProperty('status');
+    },
+  );
+
+  it('lets authored Relation and endpoint appearance override the status Theme without removing status', () => {
+    const options = Graph.resolveGraphDefinitionOptions();
+    const canonical = Graph.resolveRelation(
+      relation({
+        status: 'warning',
+        color: '#7c3aed',
+        sourceMarker: { color: '#0f766e' },
+        targetMarker: { color: '#b45309' },
+      }),
+      options,
+    );
+
+    expect(canonical.source).toMatchObject({ status: 'warning' });
+    expect(Graph.resolveRelationAppearance(canonical, { ...options, theme })).toMatchObject({
+      color: '#7c3aed',
+      stroke: '#7c3aed',
+      sourceMarker: { color: '#0f766e' },
+      targetMarker: { color: '#b45309' },
+    });
   });
 
   it('delegates an unresolved target to the Core reference diagnostic', () => {

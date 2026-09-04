@@ -91,7 +91,7 @@ const projectBlockHeader = (
   return {
     ...source,
     ...(source.icon === undefined ? {} : { icon: projectSlot(source.icon)! }),
-    ...(source.trailing === undefined ? {} : { trailing: projectSlot(source.trailing)! }),
+    ...(source.trail === undefined ? {} : { trail: projectSlot(source.trail)! }),
   };
 };
 
@@ -117,13 +117,10 @@ const projectBlockRow = (
   options: GraphResolveContext,
 ): IRBlockRow => ({
   ...source,
-  ...(source.children === undefined
+  ...(!('children' in source) || source.children === undefined
     ? {}
     : {
-        children: source.children.map(cell => ({
-          ...cell,
-          child: projectChildren([cell.child], scopeProjectionContext(source, context), options)[0],
-        })),
+        children: projectChildren(source.children, scopeProjectionContext(source, context), options),
       }),
 });
 

@@ -4,6 +4,7 @@ import { defineRelationRoleControlContract } from './relation-role-controls';
 export const previewControlContract = defineRelationRoleControlContract({
   title: 'Relation: Flow',
   sectionLabel: 'Semantics and presentation',
+  statusLocale: 'en',
   direction: {
     label: 'Semantic direction',
     defaultValue: 'forward',

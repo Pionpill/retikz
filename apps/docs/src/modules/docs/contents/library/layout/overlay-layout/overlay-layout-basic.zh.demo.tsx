@@ -12,7 +12,7 @@ const Demo: FC = () => (
       justifyItems="center"
       alignItems="center"
     >
-      <LayoutItem kind="overlay" itemKey="base" zIndex={0}>
+      <LayoutItem kind="overlay" zIndex={0}>
         <Node
           position={[0, 0]}
           text="结构层"
@@ -23,14 +23,13 @@ const Demo: FC = () => (
       </LayoutItem>
       <LayoutItem
         kind="overlay"
-        itemKey="badge"
         placement={{ kind: 'positioned', at: { x: 326, y: 18 }, anchor: { x: 1, y: 0 } }}
         sizeParticipation="exclude"
         zIndex={2}
       >
         <Node position={[0, 0]} text="置顶" shape="circle" minimumSize={42} fill="#fee2e2" stroke="#dc2626" />
       </LayoutItem>
-      <LayoutItem kind="overlay" itemKey="caption" alignSelf="end" offset={{ x: 0, y: -8 }} zIndex={1}>
+      <LayoutItem kind="overlay" alignSelf="end" offset={{ x: 0, y: -8 }} zIndex={1}>
         <Node position={[0, 0]} text="在同一分配区域内叠放" fill="#f8fafc" stroke="#64748b" />
       </LayoutItem>
     </OverlayLayout>

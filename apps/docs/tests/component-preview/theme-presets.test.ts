@@ -10,6 +10,8 @@ import {
   isPreviewThemeStyleDocument,
   PreviewChartThemeDefinitions,
   PreviewCoreThemeStyles,
+  PreviewDiagramThemeStyles,
+  PreviewFlowThemeStyles,
   PreviewGraphThemeStyles,
   PreviewPlotThemeStyles,
   PreviewTableThemeStyles,
@@ -24,7 +26,7 @@ describe('docs-owned theme presets', () => {
     expect(PreviewThemeStyleOptions).toEqual(['default', 'academic', 'vibrant', 'clean']);
   });
 
-  it('三个参考风格为五个 owner 提供同名 definition', () => {
+  it('三个参考风格为七个 owner 提供同名 definition', () => {
     const expected = [PreviewThemeStyle.Academic, PreviewThemeStyle.Vibrant, PreviewThemeStyle.Clean];
     for (const definitions of [
       PreviewCoreThemeStyles,
@@ -32,6 +34,8 @@ describe('docs-owned theme presets', () => {
       PreviewChartThemeDefinitions,
       PreviewTableThemeStyles,
       PreviewGraphThemeStyles,
+      PreviewDiagramThemeStyles,
+      PreviewFlowThemeStyles,
     ]) {
       expect(definitions.map(definition => definition.name)).toEqual(expected);
     }
@@ -61,6 +65,20 @@ describe('docs-owned theme presets', () => {
         },
       },
       relation: { tokens: { color: foreground, strokeWidth: 1.25 } },
+      group: {
+        tokens: {
+          background: { fill: 'none' },
+          border: { stroke: foreground, strokeWidth: 1, dashPattern: [4, 3] },
+          cornerRadius: 0,
+        },
+      },
+      block: {
+        tokens: {
+          background: { fill: 'none' },
+          border: { stroke: foreground, strokeWidth: 1 },
+          cornerRadius: 0,
+        },
+      },
     });
 
     const vibrantTheme = themeOf(PreviewThemeStyle.Vibrant);
@@ -69,34 +87,44 @@ describe('docs-owned theme presets', () => {
         tokens: {
           color: vibrantTheme.colors.categorical[0],
           textColor: 'contrast',
-          fill: vibrantTheme.colors.categorical[0],
+          fill: 1,
           stroke: 'none',
         },
       },
       relation: { tokens: { color: vibrantTheme.colors.categorical[1], strokeWidth: 1.5 } },
+      group: {
+        tokens: {
+          background: { fill: vibrantTheme.colors.categorical[0], fillOpacity: 0.08 },
+          border: { stroke: vibrantTheme.colors.categorical[0], strokeWidth: 1.5, strokeOpacity: 0.7 },
+          cornerRadius: 12,
+        },
+      },
+      block: {
+        tokens: {
+          background: { fill: vibrantTheme.colors.categorical[1], fillOpacity: 0.12 },
+          border: { stroke: vibrantTheme.colors.categorical[1], strokeWidth: 1.5, strokeOpacity: 0.85 },
+          cornerRadius: 12,
+        },
+      },
     });
 
     const cleanTheme = themeOf(PreviewThemeStyle.Clean);
-    const cleanColor = cleanTheme.colors.categorical[0];
     expect(graphByName.get(PreviewThemeStyle.Clean)?.resolve(cleanTheme)).toEqual({
-      entity: {
-        tokens: {
-          color: cleanColor,
-          textColor: 'contrast',
-          fill: 0.15,
-          stroke: 'none',
-        },
-      },
-      relation: { tokens: { color: foreground, strokeWidth: 1, opacity: 0.72 } },
+      entity: { tokens: { textColor: foreground, fill: 'none' } },
     });
+
+    const flowByName = new Map(PreviewFlowThemeStyles.map(definition => [definition.name, definition]));
+    expect(flowByName.get(PreviewThemeStyle.Academic)?.resolve(academicTheme)).toEqual({});
+    expect(flowByName.get(PreviewThemeStyle.Vibrant)?.resolve(vibrantTheme)).toEqual({});
+    expect(flowByName.get(PreviewThemeStyle.Clean)?.resolve(cleanTheme)).toEqual({});
   });
 
-  it('只在 Viz 与 schematic/graph 文档启用现有 Theme style selector', () => {
+  it('只在 Viz、schematic/graph 与 schematic/diagram 文档启用现有 Theme style selector', () => {
     expect(isPreviewThemeStyleDocument('viz', 'plot')).toBe(true);
     expect(isPreviewThemeStyleDocument('viz', undefined)).toBe(true);
     expect(isPreviewThemeStyleDocument('schematic', 'graph')).toBe(true);
     expect(isPreviewThemeStyleDocument('schematic', 'introduction')).toBe(false);
-    expect(isPreviewThemeStyleDocument('schematic', 'diagram')).toBe(false);
+    expect(isPreviewThemeStyleDocument('schematic', 'diagram')).toBe(true);
     expect(isPreviewThemeStyleDocument('kernel', 'graph')).toBe(false);
   });
 

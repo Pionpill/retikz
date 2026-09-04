@@ -29,7 +29,14 @@ const mergeMinimumSize = (
   };
 };
 
-const ENTITY_SEMANTIC_FIELDS = new Set<keyof IRGraphEntity>(['namespace', 'type', 'role', 'kind', 'predicate']);
+const ENTITY_SEMANTIC_FIELDS = new Set<keyof IRGraphEntity>([
+  'namespace',
+  'type',
+  'role',
+  'kind',
+  'predicate',
+  'status',
+]);
 
 const isDefinedNodeField = ([key, value]: [string, unknown]): boolean =>
   !ENTITY_SEMANTIC_FIELDS.has(key as keyof IRGraphEntity) && value !== undefined;

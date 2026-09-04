@@ -10,7 +10,7 @@ Graph 已能用 JSON-safe 的 Graph、Group、Block、Entity 与 Relation compos
 
 如果这些内容只由 Docs 或其它宿主在图外拼接，同一个 Diagram 在 Scene、renderer、Inspect 和 export 中将不再具有一致边界；如果 Diagram 自建文字、Legend、Frame、Layout 或 renderer 语义，又会复制 Core、Layout 与 Standard 已有能力。Diagram 因此需要先建立 drawing-core-agnostic 的装配 foundation，再由后续具体 Diagram root 提供真实绘图核心
 
-本决策冻结所有具体 Diagram 类型可复用的 Presentation 内容契约、固定槽位、Legend 来源和统一输出边界。区域物理位置、外框、padding、section gap 与 Diagram appearance 由 ADR-02 确定；FlowDiagram 的 Graph Body、公共 Source root、adapter、自动 layout / routing、结果与 artifact 在后续 milestone 决定
+本决策冻结所有具体 Diagram 类型可复用的 Presentation 内容契约、固定槽位、Legend 来源和统一输出边界。区域物理位置、外框、padding、section gap 与 Diagram appearance 由 ADR-02 确定；FlowDiagram 的 Graph Body、公共 Source root、adapter、自动 layout / routing、结果与 artifact 由同一 alpha.1 的后续 ADR 决定
 
 ## 决策
 
@@ -22,11 +22,11 @@ Diagram 不拥有平行的文字、Legend、Layout、Surface、Theme primitive�
 
 ### Presentation 是长期共享片段，具体 Source root 延后建立
 
-Presentation 是所有具体 Diagram 类型可以复用的长期公开 Source 片段，因此使用 `IRDiagramPresentation` 共享名称，不绑定 Flow drawing core。它只包含可选且唯一的 `title`、`description` 与 `legend`；出现时必须至少包含一个槽位，没有 Presentation 时省略整个字段。该长期公开身份不改变 alpha.1 暂不导出的阶段边界
+Presentation 是所有具体 Diagram 类型可以复用的长期公开 Source 片段，因此使用 `IRDiagramPresentation` 共享名称，不绑定 Flow drawing core。它只包含可选且唯一的 `title`、`description` 与 `legend`；出现时必须至少包含一个槽位，没有 Presentation 时省略整个字段。该长期公开身份不改变具体 Diagram root 建立前暂不导出的阶段边界
 
 完整 Diagram 的逻辑阅读和结构遍历顺序固定为 title、description、drawing core、legend。具体 Source 字段或框架 authoring 的书写顺序不得改变槽位语义；物理排列可以由 Frame 把 Legend 放在获准方位，但不能改变固定槽位、重复内容或重解释 drawing core
 
-Alpha.1 不建立 `IRFlowDiagram`、任意 body 的通用 `IRDiagram`，也不建立可实例化的临时 Diagram composite。drawing core 只作为 foundation 装配过程接收的不透明内部依赖：foundation 可以测量、排列和包装它，但不能读取或改写其内部语义。具体 Diagram root 必须在拥有真实 drawing core 契约时再把 Presentation、Frame 与 drawing core 组合成持久化 Source
+本 ADR 的 Foundation 阶段不建立 `IRFlowDiagram`、任意 body 的通用 `IRDiagram`，也不建立可实例化的临时 Diagram composite。drawing core 只作为 foundation 装配过程接收的不透明内部依赖：foundation 可以测量、排列和包装它，但不能读取或改写其内部语义。同一 alpha.1 的具体 Diagram root 必须在拥有真实 drawing core 契约时再把 Presentation、Frame 与 drawing core 组合成持久化 Source
 
 ### title 与 description 使用完整 Core TextBlock
 
@@ -60,7 +60,7 @@ Standard Frame 当前拥有 Node-only body 和自身的 header、gap、padding �
 
 ### 具体 root 建立时保持三入口等价
 
-Alpha.1 只建立 Diagram foundation，不导出可实例化 Diagram composite，也不为不存在的 concrete root 建立 Direct IR、Vanilla builder 或 React component。`@retikz/diagram-vanilla` 与 `@retikz/diagram-react` 保持空壳，不提供临时 body、占位渲染或 adapter 私有入口
+本 ADR 只建立 Diagram foundation，不导出可实例化 Diagram composite，也不为尚未设计的 concrete root 建立 Direct IR、Vanilla builder 或 React component。`@retikz/diagram-vanilla` 与 `@retikz/diagram-react` 在具体 root 建立前保持空壳，不提供临时 body、占位渲染或 adapter 私有入口
 
 未来具体 Diagram root 必须以 Direct IR 为持久化真源；Vanilla 只把 typed Input 组装为同一 Source，React 只通过 Vanilla normalize 产生相同 Source。框架 authoring 不得拥有 Direct IR 无法表达的 Presentation、Legend、布局、输出或错误恢复能力
 
@@ -80,7 +80,7 @@ type IRDiagramPresentation = Readonly<{
 
 Presentation 是闭合对象，只接受 title、description 与 legend。只有一个 Legend 槽位；需要表达多个离散项目或连续刻度时使用 Standard Legend 自身的 content 契约，不增加 Legend 数组或 Diagram 专属分组层
 
-Alpha.1 实现可以在包内建立并消费该长期契约，但在具体 Diagram root 形成真实公共消费者前不从 package public exports 暴露 foundation schema、类型、resolver 或装配入口
+本 ADR 的实现可以在包内建立并消费该长期契约，但在具体 Diagram root 形成真实公共消费者前不从 package public exports 暴露 foundation schema、类型、resolver 或装配入口
 
 ## 行为、失败语义与兼容性
 
@@ -89,8 +89,10 @@ Alpha.1 实现可以在包内建立并消费该长期契约，但在具体 Diagr
 - presentation 槽位顺序不影响结构顺序和布局输入顺序；缺失槽位完全折叠，区域间距只在相邻的实际区域之间产生
 - Legend content、key、内部布局和空 items / ticks 的合法性完整沿用 Standard Legend；Diagram 只要求 legend 字段本身是一个合法 `IRLegend`
 - 所有区域必须经过同一 renderer-neutral compile 路径进入 Scene；adapter、Docs 或 renderer 不得在 Scene 外补画 title、description 或 legend
-- Alpha.1 不导出临时 Source root、任意 drawing body、占位字段或 package-public foundation API。后续具体 Diagram root 直接采用长期契约，不保留临时 alias、fallback、migration 或双轨实现
+- Foundation 阶段不导出临时 Source root、任意 drawing body、占位字段或 package-public foundation API。同一 alpha.1 的具体 Diagram root 直接采用长期契约，不保留临时 alias、fallback、migration 或双轨实现
 
-## 最终结果
+## 实施结果
 
-Alpha.1 采用该长期 Presentation 与固定区域装配契约：具体 Diagram root 延后到拥有真实 drawing core 时建立，且必须把所有存在区域送入统一 Core Scene。未决风险仅是 alpha.2 仍需为 FlowDiagram 冻结真实 body、布局、routing 与三入口公开边界，不回写或临时改造本契约
+Alpha.1 的 Foundation 阶段已在 `@retikz/diagram` 包内建立严格、JSON-safe 的 Presentation 契约，以及 drawing-core-agnostic 的 resolve 与 assembly foundation。title、description、显式 Standard Legend 和不透明 drawing child 通过既有 Core、Layout 与 Standard 能力进入同一 Scene；缺失区域完全折叠，Presentation 派生内容不发布 Diagram identity 或 artifact
+
+该 foundation 继续保持 package-internal，包根与两个 adapter 不开放临时入口。可实例化 Source、Inspect 角色与具体 Diagram artifact 仍由拥有真实 drawing core 的后续决策建立

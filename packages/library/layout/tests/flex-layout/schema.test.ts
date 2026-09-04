@@ -64,6 +64,12 @@ describe('FlexLayout schema and factory', () => {
     expect(zero.gap).toEqual({ column: 0, row: 0 });
   });
 
+  it('keeps an omitted item key out of Source IR', () => {
+    const parsed = createFlexLayout({ children: [{ kind: LayoutItemKind.Flex, child }] });
+
+    expect(parsed.children[0]).not.toHaveProperty('key');
+  });
+
   it('keeps every nested object strict and rejects invalid numeric contracts', () => {
     const base = { children: [{ kind: 'flex', key: 'label', child }] } satisfies FlexLayoutInput;
 

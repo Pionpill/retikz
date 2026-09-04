@@ -1,4 +1,5 @@
 import type { ChartLayoutProps } from '@retikz/chart-react';
+import type { FlowDiagramLayoutHostProps } from '@retikz/diagram-react/flow';
 import type { AssertEqual } from '@retikz/foundation';
 import type { PlotLineageProps } from '@retikz/plot-react';
 import type { LayoutProps } from '@retikz/react';
@@ -6,6 +7,7 @@ import type { ReactNode } from 'react';
 
 import { ChartLayout } from '@retikz/chart-react';
 import { ScatterChart } from '@retikz/chart-react/point';
+import { FlowDiagram } from '@retikz/diagram-react/flow';
 import { Plot } from '@retikz/plot-react';
 import { resolveInputEmbedAdapter } from '@retikz/react';
 import { createElement, Fragment, isValidElement } from 'react';
@@ -29,6 +31,45 @@ void plotStandalonePropKeysCheck;
 const plotStandalonePropKeys = new Set<string>(PLOT_STANDALONE_PROP_KEYS);
 
 type PreviewHostDimensions = Pick<LayoutProps, 'width' | 'height'>;
+const FLOW_HOST_PROP_KEYS = [
+  'authoring',
+  'compileDriver',
+  'handlers',
+  'runtime',
+  'width',
+  'height',
+  'viewBox',
+  'className',
+  'style',
+  'renderer',
+  'animate',
+  'snapshotAt',
+  'animationRef',
+  'easings',
+  'animationProperties',
+  'idPrefix',
+  'nodeDistance',
+  'fontSize',
+  'shapes',
+  'boundaries',
+  'clips',
+  'arrows',
+  'patterns',
+  'pathGenerators',
+  'pathKinds',
+  'composites',
+  'themeStyles',
+  'lowerTex',
+  'artifacts',
+  'onArtifacts',
+  'onCompileResult',
+] as const satisfies ReadonlyArray<keyof FlowDiagramLayoutHostProps>;
+
+const flowHostPropKeys = new Set<string>(FLOW_HOST_PROP_KEYS);
+
+type FlowHostPropKeysCheck = AssertEqual<(typeof FLOW_HOST_PROP_KEYS)[number], keyof FlowDiagramLayoutHostProps>;
+const flowHostPropKeysCheck: FlowHostPropKeysCheck = true;
+void flowHostPropKeysCheck;
 
 /** 移除预览 standalone 根已由宿主消费、不能再次交给 InputEmbed 的字段 */
 const omitPreviewHostProps = (
@@ -73,6 +114,7 @@ export const previewEmbedPropsOf = (
   const adapter = resolveInputEmbedAdapter(component);
   if (adapter === Plot.inputEmbedAdapter) return omitPreviewHostProps(props, plotStandalonePropKeys);
   if (adapter === ScatterChart.inputEmbedAdapter) return preparePreviewChartProps(props).props;
+  if (adapter === FlowDiagram.inputEmbedAdapter) return omitPreviewHostProps(props, flowHostPropKeys);
   return props;
 };
 

@@ -38,6 +38,8 @@ describe('Standard provider subpath exports', () => {
     expect(arrow.OpenKiteArrowProvider).toBeDefined();
     expect(arrow.SquareArrowDefinition).toBeDefined();
     expect(arrow.OpenSquareArrowProvider).toBeDefined();
+    expect(arrow).toHaveProperty('StraightBarbArrowDefinition');
+    expect(arrow).toHaveProperty('StraightBarbArrowProvider');
     expect(clip.CompoundClipDefinition).toBeDefined();
     expect(ribbon.RibbonPathKindDefinition).toBeDefined();
   });

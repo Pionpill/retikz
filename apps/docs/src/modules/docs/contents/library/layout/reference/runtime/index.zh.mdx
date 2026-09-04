@@ -57,7 +57,7 @@ const artifact = FlexLayoutArtifactSchema.parse(envelope?.value);
 
 `@retikz/layout-react` 的三个容器都是可嵌入 Tier 2 组件。容器直属 children 必须是匹配 `kind` 的 `LayoutItem`；Fragment 和数组会透明展开，但普通 JSX 节点不能绕过子项语义。
 
-每个 `LayoutItem` 必须在 `children` 与 `ir` 中二选一，并最终生成恰好一个 `IRChild`。React 的 `itemKey` 会写入规范 JSON 的 `key`；它不读取 React 保留的 `key`。嵌套 Layout 布局可以继续贡献同一布局家族，外部数据集或其它 Tier 2 运行时贡献则应由外层宿主负责。
+每个 `LayoutItem` 必须在 `children` 与 `ir` 中二选一，并最终生成恰好一个 `IRChild`。可选的 React `itemKey` 会写入规范 JSON 的 `key`；省略时 Source IR 不含 `key`，Layout 在 solver 前按 source index 生成容器局部有效 key。它不读取 React 保留的 `key`。嵌套 Layout 布局可以继续贡献同一布局家族，外部数据集或其它 Tier 2 运行时贡献则应由外层宿主负责。
 
 React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 Definition 贡献给外层 `<Layout>`，由宿主统一编译和渲染；需要读取产物时使用外层的产物观察入口。
 

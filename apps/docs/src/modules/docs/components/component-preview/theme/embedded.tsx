@@ -1,13 +1,16 @@
+import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
 import type { EntityProps, GraphProps, RelationProps } from '@retikz/graph-react';
 import type { PlotProps } from '@retikz/plot-react';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import type { DetailTableProps, InputEmbeddableTableComponent, ManualTableProps } from '@retikz/table-react';
 import type { FC } from 'react';
 
+import { FlowDiagram as RuntimeFlowDiagram } from '@retikz/diagram-react/flow';
 import { Entity as RuntimeEntity, Graph as RuntimeGraph, Relation as RuntimeRelation } from '@retikz/graph-react';
 import { Plot as RuntimePlot } from '@retikz/plot-react';
 import { DetailTable as RuntimeDetailTable, ManualTable as RuntimeManualTable } from '@retikz/table-react';
 
+import { PreviewDiagramThemeStyles, PreviewFlowThemeStyles } from './presets/diagram';
 import { PreviewGraphThemeStyles } from './presets/graph';
 import { PreviewPlotThemeStyles } from './presets/plot';
 import { PreviewTableThemeStyles } from './presets/table';
@@ -75,6 +78,34 @@ export const PreviewRelation: typeof RuntimeRelation = Object.assign(
     inputEmbedAdapter: RuntimeRelation.inputEmbedAdapter,
     createInputEmbedProps: (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) =>
       RuntimeRelation.createInputEmbedProps?.(withGraphThemeStyles(props as RelationProps), context),
+  },
+);
+
+const withFlowThemeStyles = (props: FlowDiagramProps): FlowDiagramProps => ({
+  ...props,
+  diagramThemeStyles:
+    props.diagramThemeStyles === undefined
+      ? PreviewDiagramThemeStyles
+      : [...PreviewDiagramThemeStyles, ...props.diagramThemeStyles],
+  flowThemeStyles:
+    props.flowThemeStyles === undefined
+      ? PreviewFlowThemeStyles
+      : [...PreviewFlowThemeStyles, ...props.flowThemeStyles],
+  graphThemeStyles:
+    props.graphThemeStyles === undefined
+      ? PreviewGraphThemeStyles
+      : [...PreviewGraphThemeStyles, ...props.graphThemeStyles],
+});
+
+/** docs preview 的 FlowDiagram 边界，显式覆盖全部同名 Theme definitions */
+export const PreviewFlowDiagram: typeof RuntimeFlowDiagram = Object.assign(
+  ((props: FlowDiagramProps) => <RuntimeFlowDiagram {...withFlowThemeStyles(props)} />) as FC<FlowDiagramProps>,
+  {
+    displayName: 'PreviewFlowDiagram',
+    isTier2Embeddable: true as const,
+    inputEmbedAdapter: RuntimeFlowDiagram.inputEmbedAdapter,
+    createInputEmbedProps: (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) =>
+      RuntimeFlowDiagram.createInputEmbedProps(withFlowThemeStyles(props as FlowDiagramProps), context),
   },
 );
 

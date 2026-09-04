@@ -1,4 +1,4 @@
-import { RelationRole } from '@retikz/graph';
+import { GraphStatus, RelationRole } from '@retikz/graph';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
@@ -7,7 +7,10 @@ import { definePreviewControls } from '@/modules/docs/preview';
 /** Relation 样式 playground 使用的稳定字段 id */
 export const RelationStyleControlId = {
   Role: 'role',
+  Status: 'status',
   Content: 'content',
+  SourceColor: 'sourceColor',
+  TargetColor: 'targetColor',
   Stroke: 'stroke',
   StrokeWidth: 'strokeWidth',
   Dashed: 'dashed',
@@ -37,6 +40,19 @@ export const relationStyleControls = definePreviewControls({
             { value: RelationRole.Influence, label: '影响 - influence' },
           ],
         },
+        {
+          kind: 'select',
+          id: RelationStyleControlId.Status,
+          label: '状态',
+          defaultValue: '',
+          options: [
+            { value: '', label: '无状态' },
+            { value: GraphStatus.Error, label: '错误 - error' },
+            { value: GraphStatus.Success, label: '成功 - success' },
+            { value: GraphStatus.Warning, label: '警告 - warning' },
+            { value: GraphStatus.Disabled, label: '禁用 - disabled' },
+          ],
+        },
       ],
     },
     {
@@ -49,6 +65,28 @@ export const relationStyleControls = definePreviewControls({
           defaultValue: 'Next step',
           placeholder: '输入 Relation 文本',
           multiline: true,
+        },
+      ],
+    },
+    {
+      label: '起点对象',
+      controls: [
+        {
+          kind: 'color',
+          id: RelationStyleControlId.SourceColor,
+          label: '颜色',
+          defaultValue: 'currentColor',
+        },
+      ],
+    },
+    {
+      label: '终点对象',
+      controls: [
+        {
+          kind: 'color',
+          id: RelationStyleControlId.TargetColor,
+          label: '颜色',
+          defaultValue: 'currentColor',
         },
       ],
     },
@@ -105,7 +143,10 @@ export const previewControlContract = {
   controls: relationStyleControls,
   canonicalValues: {
     role: RelationRole.Flow,
+    status: '',
     content: 'Next step',
+    sourceColor: 'currentColor',
+    targetColor: 'currentColor',
     stroke: '#2563eb',
     strokeWidth: 2,
     dashed: false,
@@ -115,7 +156,9 @@ export const previewControlContract = {
   },
   relatedApis: [
     'Relation.role',
+    'Relation.status',
     'Relation.labels',
+    'Entity.color',
     'Relation.stroke',
     'Relation.strokeWidth',
     'Relation.dashPattern',

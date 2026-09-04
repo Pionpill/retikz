@@ -160,7 +160,7 @@ const renderWithValues = (scenario: RoleScenario, values: Readonly<PreviewContro
   );
 
 describe('Graph Entity role controls', () => {
-  it('为七个 role 暴露双语一致的精确颜色与文本控件', () => {
+  it('为七个 role 暴露双语一致的状态、精确颜色与文本控件', () => {
     for (const scenario of scenarios) {
       const fields = getPreviewControlFields(scenario.chinese.controls);
 
@@ -168,10 +168,12 @@ describe('Graph Entity role controls', () => {
         fields.map(field => ({ kind: field.kind, id: field.id, defaultValue: field.defaultValue })),
         scenario.role,
       ).toEqual([
+        { kind: 'select', id: 'status', defaultValue: '' },
         { kind: 'color', id: 'color', defaultValue: 'currentColor' },
         { kind: 'text', id: 'content', defaultValue: scenario.content },
       ]);
       expect(scenario.chinese.canonicalValues, scenario.role).toEqual({
+        status: '',
         color: 'currentColor',
         content: scenario.content,
       });
@@ -180,13 +182,17 @@ describe('Graph Entity role controls', () => {
     }
   });
 
-  it('让 canonical preview 使用描边无填充，并让每个控件改变真实 SVG', () => {
+  it('让 canonical preview 使用主题默认填充，并让每个控件改变真实 SVG', () => {
     for (const scenario of scenarios) {
       const baseline = renderWithValues(scenario, scenario.chinese.canonicalValues);
 
       expect(baseline, scenario.role).toContain('<svg');
-      expect(baseline, scenario.role).toContain('fill="none"');
+      expect(baseline, scenario.role).toMatch(/fill="(?!none")[^"]+"/u);
       if (scenario.role === 'activity') expect(baseline).not.toContain('stroke-dasharray');
+      expect(
+        renderWithValues(scenario, { ...scenario.chinese.canonicalValues, status: 'success' }),
+        `${scenario.role}: status`,
+      ).not.toBe(baseline);
       expect(
         renderWithValues(scenario, { ...scenario.chinese.canonicalValues, color: '#2563eb' }),
         `${scenario.role}: color`,
@@ -257,6 +263,7 @@ describe('Graph Entity style playground', () => {
 
     expect(fields.map(field => ({ kind: field.kind, id: field.id, defaultValue: field.defaultValue }))).toEqual([
       { kind: 'select', id: 'role', defaultValue: 'activity' },
+      { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'text', id: 'content', defaultValue: 'Process Order' },
       { kind: 'color', id: 'fill', defaultValue: '#e2e8f0' },
       { kind: 'color', id: 'stroke', defaultValue: '#2563eb' },
@@ -276,6 +283,7 @@ describe('Graph Entity style playground', () => {
     ]);
     expect(styleZh.canonicalValues).toEqual({
       role: 'activity',
+      status: '',
       content: 'Process Order',
       fill: '#e2e8f0',
       stroke: '#2563eb',
@@ -288,7 +296,7 @@ describe('Graph Entity style playground', () => {
     expect(styleEn.relatedApis).toEqual(styleZh.relatedApis);
   });
 
-  it('让 role 与每个样式控件都改变真实 SVG', () => {
+  it('让 role 与每个显式样式控件都改变真实 SVG', () => {
     const baseline = renderStyleWithValues(styleZh.canonicalValues);
 
     expect(baseline).toContain('<svg');
@@ -363,11 +371,11 @@ describe('Graph Entity predicate controls', () => {
     expect(definitionEn.relatedApis).toEqual(definitionZh.relatedApis);
   });
 
-  it('让 predicate params 与文本分别改变真实 SVG，canonical 保持描边无填充', () => {
+  it('让 predicate params 与文本分别改变真实 SVG，并保留主题默认填充', () => {
     const baseline = renderDefinition(definitionZh.canonicalValues);
 
     expect(baseline).toContain('<svg');
-    expect(baseline).toContain('fill="none"');
+    expect(baseline).toMatch(/fill="(?!none")[^"]+"/u);
     expect(renderDefinition({ ...definitionZh.canonicalValues, status: 'offline' })).not.toBe(baseline);
     expect(renderDefinition({ ...definitionZh.canonicalValues, critical: true })).not.toBe(baseline);
     expect(renderDefinition({ ...definitionZh.canonicalValues, content: 'Edge Gateway' })).not.toBe(baseline);

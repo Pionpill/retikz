@@ -4,12 +4,13 @@ import { defineRelationRoleControlContract } from './relation-role-controls';
 export const previewControlContract = defineRelationRoleControlContract({
   title: 'Relation：泛化',
   sectionLabel: '语义与展示',
+  statusLocale: 'zh',
   kind: {
     label: '内置 kind',
     defaultValue: '',
     options: [
-      { value: '', label: '基础 generalization' },
-      { value: 'uml.realization', label: 'UML 实现' },
+      { value: '', label: '默认值' },
+      { value: 'uml.generalization', label: 'UML 泛化' },
     ],
   },
   colorLabel: 'Relation 主色',

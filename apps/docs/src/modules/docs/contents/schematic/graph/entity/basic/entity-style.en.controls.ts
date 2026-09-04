@@ -1,4 +1,4 @@
-import { EntityRole } from '@retikz/graph';
+import { EntityRole, GraphStatus } from '@retikz/graph';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
@@ -27,6 +27,19 @@ export const entityStyleControls = definePreviewControls({
             { value: EntityRole.Gateway, label: 'Gateway' },
             { value: EntityRole.Resource, label: 'Resource' },
             { value: EntityRole.Concept, label: 'Concept' },
+          ],
+        },
+        {
+          kind: 'select',
+          id: EntityStyleControlId.Status,
+          label: 'Status',
+          defaultValue: '',
+          options: [
+            { value: '', label: 'No status' },
+            { value: GraphStatus.Error, label: 'Error' },
+            { value: GraphStatus.Success, label: 'Success' },
+            { value: GraphStatus.Warning, label: 'Warning' },
+            { value: GraphStatus.Disabled, label: 'Disabled' },
           ],
         },
       ],
@@ -79,6 +92,7 @@ export const previewControlContract = {
   controls: entityStyleControls,
   canonicalValues: {
     role: EntityRole.Activity,
+    status: '',
     content: 'Process Order',
     fill: '#e2e8f0',
     stroke: '#2563eb',
@@ -89,6 +103,7 @@ export const previewControlContract = {
   },
   relatedApis: [
     'Entity.role',
+    'Entity.status',
     'Entity.children',
     'Node.fill',
     'Node.stroke',

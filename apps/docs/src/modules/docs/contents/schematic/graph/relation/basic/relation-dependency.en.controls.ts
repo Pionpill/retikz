@@ -4,12 +4,14 @@ import { defineRelationRoleControlContract } from './relation-role-controls';
 export const previewControlContract = defineRelationRoleControlContract({
   title: 'Relation: Dependency',
   sectionLabel: 'Semantics and presentation',
+  statusLocale: 'en',
   kind: {
     label: 'Built-in kind',
     defaultValue: '',
     options: [
-      { value: '', label: 'Base dependency' },
-      { value: 'provenance.derivation', label: 'Provenance derivation' },
+      { value: '', label: 'Default' },
+      { value: 'uml.dependency', label: 'UML dependency' },
+      { value: 'uml.realization', label: 'UML realization' },
     ],
   },
   colorLabel: 'Relation color',

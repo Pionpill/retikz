@@ -4,6 +4,7 @@ import { defineEntityRoleControlContract } from './entity-role-controls';
 export const previewControlContract = defineEntityRoleControlContract({
   title: 'Entity: Concept',
   sectionLabel: 'Appearance and text',
+  statusLocale: 'en',
   colorLabel: 'Graph Theme primary color',
   contentLabel: 'Text',
   contentPlaceholder: 'Enter Entity text',

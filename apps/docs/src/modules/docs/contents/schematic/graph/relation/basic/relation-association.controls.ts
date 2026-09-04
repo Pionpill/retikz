@@ -4,18 +4,21 @@ import { defineRelationRoleControlContract } from './relation-role-controls';
 export const previewControlContract = defineRelationRoleControlContract({
   title: 'Relation：关联',
   sectionLabel: '语义与展示',
+  statusLocale: 'zh',
   kind: {
     label: '内置 kind',
     defaultValue: '',
     options: [
-      { value: '', label: '基础 association' },
+      { value: '', label: '默认值' },
+      { value: 'uml.association', label: 'UML 一般关联' },
       { value: 'uml.aggregation', label: 'UML 聚合' },
       { value: 'uml.composition', label: 'UML 组合' },
     ],
   },
   direction: {
     label: '语义方向',
-    defaultValue: 'none',
+    defaultValue: 'forward',
+    visibleWithKinds: [''],
     options: [
       { value: 'none', label: '无方向' },
       { value: 'forward', label: 'source → target' },

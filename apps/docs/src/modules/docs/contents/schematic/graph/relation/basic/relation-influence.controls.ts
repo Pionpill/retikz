@@ -4,6 +4,7 @@ import { defineRelationRoleControlContract } from './relation-role-controls';
 export const previewControlContract = defineRelationRoleControlContract({
   title: 'Relation：影响',
   sectionLabel: '语义与展示',
+  statusLocale: 'zh',
   direction: {
     label: '语义方向',
     defaultValue: 'forward',

@@ -26,7 +26,7 @@ import { Layout, Node } from '@retikz/react';
 
 `source` and `target` are the semantic source of truth and are never inferred from a route, marker, or visual direction. They may target a Core Node, Coordinate, resolved Scope, or an upper composite that lowers to one of those published targets. Omitting `route` directly connects source and target. `way` is Vanilla/React authoring sugar normalized to a direct `route` at the boundary
 
-Relation directly reuses most Core Path fields. A role, kind, predicate, and Theme only provide defaults. Explicit Relation Path fields such as `stroke` and `dashPattern` take final precedence, and every label may set its own `textColor`, `font`, and `opacity`
+Relation directly reuses most Core Path fields. The default Graph Theme renders labels in gray at the `sm` font size. A role, kind, predicate, and Theme only provide defaults; explicit Relation Path fields such as `stroke` and `dashPattern` take final precedence, and every label may set its own `textColor`, `font`, and `opacity`
 
 ## Examples
 
@@ -34,61 +34,60 @@ The five built-in roles define broad relationship semantics, the base interpreta
 
 Theme owns the complete Relation visual language. The controls below expose only the kinds, directions, and precise Relation color supported by each role, while the page-level Theme selector switches the overall style
 
-### Endpoints, labels, and routes
+Built-in `kind` values cover common UML class- and component-diagram relationships. They determine only the path and endpoints; they do not add stereotype, multiplicity, or other text primitives
 
-The examples consistently use concise `way` authoring: adjacent targets draw a direct segment, while `'-|'` draws a horizontal-then-vertical fold. Relation still supports omitted-route direct connections, explicit `route`, and `<Step>` authoring. Labels do not enter route steps or determine endpoints
-
-<ComponentPreview
-  files="relation-routing"
-  size="sm"
-  caption="Inspect stable endpoints, straight and folded way authoring, and explicit label appearance and dashPattern overriding defaults."
-/>
+| role             | Built-in kind                                           | Path and endpoints                                                                                                                                                            |
+| ---------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `association`    | `uml.association`, `uml.aggregation`, `uml.composition` | The role defaults to a filled target diamond; UML association is an unmarked solid path, aggregation has a hollow source diamond, and composition has a filled source diamond |
+| `generalization` | `uml.generalization`                                    | Solid path; the default target has a filled arrow, while the UML kind overrides it with a hollow triangle                                                                     |
+| `dependency`     | `uml.dependency`                                        | Dashed path with an open target `straightBarb` arrow                                                                                                                          |
+| `dependency`     | `uml.realization`                                       | Dashed path with a hollow target triangle                                                                                                                                     |
 
 ### association: general relationships
 
-`association` represents a general relationship between two objects. Source and target are only a stable record order by default, with no semantic direction. Selecting `forward`, `reverse`, or `both` places a kite marker at the corresponding endpoint
+`association` represents a general relationship between two objects. It defaults to `forward` and uses a filled target `diamond` marker. You may explicitly select `none`, `reverse`, or `both`
 
-- **Default / allowed directions:** `none` / `none`, `forward`, `reverse`, `both`
-- **Built-in kinds:** `uml.aggregation` and `uml.composition`; both interpret source as the whole and target as the part, and both fix direction to `none`
+- **Default / allowed directions:** `forward` / `none`, `forward`, `reverse`, `both`
+- **Built-in kinds:** `uml.association` uses an unmarked solid path and fixes direction to `none`. `uml.aggregation` and `uml.composition` both interpret source as the whole and target as the part, and both fix direction to `none`
 - **Built-in predicates:** none; a domain extension can register a cardinality predicate whose params schema validates source and target multiplicities
 
 <ComponentPreview
   files="relation-association"
   size="sm"
-  caption="Switch the general association direction or either UML kind. A selected kind fixes its own direction."
+  caption="The generic association defaults to a target diamond. Each UML association kind fixes direction and determines its own endpoint structure."
 />
 
 ### dependency: dependency relationships
 
-`dependency` means source depends on target: source is the dependent and target is the dependency. It is fixed to `forward`, with a stealth marker at the target endpoint
+`dependency` means source depends on target: source is the dependent and target is the dependency. It is fixed to `forward` and defaults to a solid path with an open, unfilled target `straightBarb` marker
 
 - **Default / allowed directions:** `forward` / `forward` only
-- **Built-in kind:** `provenance.derivation`, which refines source to the derived result and target to the source record and uses openStealth
+- **Built-in kinds:** `uml.dependency` overrides the path with a dashed open arrow. `uml.realization` uses a dashed hollow triangle. UML dependency subtypes without a visible structural difference are not built-in kinds; use a label, meta, or a custom kind when the domain semantics matter
 - **Built-in predicates:** none; an extension can declare params such as `{ optional: boolean, reason: string }`, with the predicate definition owning the fields and value ranges
 
 <ComponentPreview
   files="relation-dependency"
   size="sm"
-  caption="Compare base dependency with the built-in derivation kind and adjust the Relation color."
+  caption="Switch UML dependency kinds to compare the open-arrow and hollow-triangle endpoint structures, then adjust the Relation color."
 />
 
 ### generalization: type generalization
 
-`generalization` means source is a more specific form of target: source is the subtype and target is the supertype. It is fixed to `forward`, with a normal marker at target
+`generalization` means source is a more specific form of target: source is the subtype and target is the supertype. It is fixed to `forward` and defaults to a solid path with a filled target `normal` arrow; `uml.generalization` overrides it with a hollow triangle
 
 - **Default / allowed directions:** `forward` / `forward` only
-- **Built-in kind:** `uml.realization`, which interprets source as the implementation and target as the specification and uses an open marker
+- **Built-in kind:** `uml.generalization` uses a hollow triangle. `uml.realization` is a dependency kind and uses a dashed hollow triangle
 - **Built-in predicates:** none; a type-system extension can use params for a discriminator or constraint, but Graph does not perform type checking
 
 <ComponentPreview
   files="relation-generalization"
   size="sm"
-  caption="Compare base generalization with UML realization and adjust the Relation color."
+  caption="Switch the default and UML generalization kinds to compare the filled arrow and hollow triangle, then adjust the Relation color."
 />
 
 ### flow: movement between objects
 
-`flow` represents transfer, progression, or state movement between objects, activities, or states. Source and target are stable route endpoints; the effective direction decides which endpoint receives a circle marker
+`flow` represents transfer, progression, or state movement between objects, activities, or states. Source and target are stable route endpoints; the effective direction decides which endpoint receives a stealth marker
 
 - **Default / allowed directions:** `forward` / `forward`, `reverse`, `both`
 - **Built-in kinds:** none; domain classifications such as `workflow.branch` and `workflow.feedback` must be registered by their owner
@@ -97,12 +96,12 @@ The examples consistently use concise `way` authoring: adjacent targets draw a d
 <ComponentPreview
   files="relation-flow"
   size="sm"
-  caption="Switch flow direction and observe the circle marker move between endpoints."
+  caption="Switch flow direction and observe the stealth marker move between endpoints."
 />
 
 ### influence: influence relationships
 
-`influence` means one object affects another without requiring data transfer or an execution dependency. The effective direction places a square marker at source, target, or both endpoints
+`influence` means one object affects another without requiring data transfer or an execution dependency. The effective direction places a filled circular `circle` marker at source, target, or both endpoints
 
 - **Default / allowed directions:** `forward` / `forward`, `reverse`, `both`
 - **Built-in kinds:** none; the domain that owns the influence taxonomy registers its own kinds
@@ -114,14 +113,20 @@ The examples consistently use concise `way` authoring: adjacent targets draw a d
   caption="Switch influence direction and adjust the Relation color."
 />
 
+### Semantic status
+
+`status` preserves a directly readable Graph state on a Relation. `error`, `success`, `warning`, and `disabled` use the current Core Theme's `semantic.error`, `semantic.success`, `semantic.warning`, and `semantic.guide` respectively. Omitting status means no special marker and does not write `normal`. Status supplies appearance defaults only; it does not alter the role, kind, direction, route, or marker shape
+
+Every Relation role demo exposes a no-status option alongside these four values through its controls. The Relation path and every present source or target marker inherit the same status color. Explicit path, marker, or label appearance has final precedence while retaining Source status. A domain predicate's `params.status` is not mapped here automatically
+
 ### Style adjustments
 
-The combined playground switches among all five built-in roles and directly adjusts Relation path and label styles. The role changes the relationship semantics and marker recipe; explicit style fields override the corresponding Theme defaults
+The combined playground switches among all five built-in roles and directly adjusts the source, target, Relation path, and label styles. The role changes the relationship semantics and marker recipe; explicit style fields override the corresponding Theme defaults
 
 <ComponentPreview
   files="relation-style"
   size="sm"
-  caption="Switch roles, then adjust the stroke color, stroke width, dash, opacity, label text color, and text opacity independently."
+  caption="Switch roles, then independently adjust source and target colors, path stroke color and width, dash, opacity, label text color, and text opacity."
 />
 
 ## How it works
@@ -132,7 +137,7 @@ The combined playground switches among all five built-in roles and directly adju
   description="Revisit when diagnosing endpoints or authored-route errors."
 />
 
-Relation resolve handles only role, kind, predicate, direction, and Theme before lowering to Core Path. Core namespace owns endpoint lookup, arbitrary NodeTarget references, and unresolved / duplicate-id diagnostics. When route is omitted, lowering emits `move(source) → line(target)`; an explicit route uses the complete Core Position language and enters Core Path unchanged
+Relation resolve handles role, kind, predicate, status, direction, and Theme before lowering to Core Path. Core namespace owns endpoint lookup, arbitrary NodeTarget references, and unresolved / duplicate-id diagnostics. When route is omitted, lowering emits `move(source) → line(target)`; an explicit route uses the complete Core Position language and enters Core Path unchanged
 
 `RelationSchema` excludes only conflicting fields from Core `PathBaseSchema`: the Path discriminator and kind, `children` / `label`, arbitrary `marks`, and the fill family. All other identity, metadata, animation, stacking, paint, stroke, effect, dash, line cap/join, corner, and transform fields retain their Core names and semantics. `labels` directly uses Core `IRGeometryLabel`; explicit label font fields merge over the Relation default font one field at a time
 
@@ -146,12 +151,13 @@ Relation resolve handles only role, kind, predicate, direction, and Theme before
 | `role`                 | `string`                                                                                                                           | —                    | Registered open relationship-semantic key                                                                                                                                                                   |
 | `kind?`                | `string`                                                                                                                           | —                    | Registered stable subtype within the role                                                                                                                                                                   |
 | `predicate?`           | `{ name: string; params?: IRJsonObject }`                                                                                          | —                    | Registered predicate and JSON-safe params                                                                                                                                                                   |
+| `status?`              | `GraphStatusValue`                                                                                                                 | —                    | Optional closed Graph state: `error`, `success`, `warning`, or `disabled`                                                                                                                                   |
 | `direction?`           | `'none' \| 'forward' \| 'reverse' \| 'both'`                                                                                       | from role            | Explicit semantic direction allowed by the role and kind                                                                                                                                                    |
 | `labels?`              | `Array<IRGeometryLabel>`                                                                                                           | —                    | Complete Core Geometry Labels; each label's explicit color, font, and opacity override Relation defaults                                                                                                    |
 | `route?`               | `Array<IRGraphRelationRouteStep>`                                                                                                  | source→target direct | Complete Core Path step sequence; route steps cannot carry labels                                                                                                                                           |
 | `dashPattern?`         | `Array<number>`                                                                                                                    | from role/kind       | Explicit Path dash pattern that overrides the relationship-structure default                                                                                                                                |
-| `labelTextForeground?` | `string`                                                                                                                           | from Theme           | Default text color for Relation labels                                                                                                                                                                      |
-| `labelFont?`           | `IRFont`                                                                                                                           | from Theme           | Default font for Relation labels; each label overrides individual font fields                                                                                                                               |
+| `labelTextForeground?` | `string`                                                                                                                           | `gray`               | Default text color for Relation labels; a Theme, Relation, or individual label can override it                                                                                                              |
+| `labelFont?`           | `IRFont`                                                                                                                           | `{ size: 'sm' }`     | Default font for Relation labels; a Theme, Relation, or individual label overrides font fields                                                                                                              |
 | `labelOpacity?`        | `number`                                                                                                                           | from Theme           | Default opacity for Relation labels; each label's explicit value takes precedence                                                                                                                           |
 | `way?`                 | `InputPathWay`                                                                                                                     | —                    | Vanilla/React sugar normalized to `route`                                                                                                                                                                   |
 | `children?`            | Core `Step` declarations                                                                                                           | —                    | React route authoring, exclusive with `route` or `way`                                                                                                                                                      |

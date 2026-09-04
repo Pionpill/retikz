@@ -13,6 +13,7 @@ describe('Graph Source authoring helpers', () => {
       source: { id: 'service' },
       target: { id: 'database' },
       role: 'dependency',
+      kind: 'uml.dependency',
       route: [
         { type: 'step', kind: 'move', to: [30, 30] },
         { type: 'step', kind: 'line', to: [100, 30] },
@@ -38,6 +39,7 @@ describe('Graph Source authoring helpers', () => {
           source: { id: 'service' },
           target: { id: 'database' },
           role: 'dependency',
+          kind: 'uml.dependency',
           route: [
             { type: 'step', kind: 'move', to: [30, 30] },
             { type: 'step', kind: 'line', to: [100, 30] },
@@ -65,7 +67,7 @@ describe('Graph Source authoring helpers', () => {
     const header = Graph.createBlockHeader({ title: { text: 'Service' } });
     const section = Graph.createBlockSection({ children: [{ type: 'node', position: [0, 0], text: 'content' }] });
     const row = Graph.createBlockRow({
-      children: [{ key: 'content', child: { type: 'node', position: [0, 0], text: 'row' } }],
+      children: [{ type: 'node', position: [0, 0], text: 'row' }],
     });
 
     expect(Graph.createBlock({ children: [header, section, row] })).toEqual({

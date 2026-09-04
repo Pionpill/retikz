@@ -41,9 +41,14 @@ describe('Graph Group documentation', () => {
     expect(page).toContain('IRNodeLabel');
     expect(page).toContain('Surface');
     expect(page).toContain('FlexLayout');
+    expect(page).toContain(
+      lang === 'zh' ? '命名 Graph Theme 会为 Group 根外框提供' : 'A named Graph Theme supplies the Group root shell',
+    );
+    expect(page).toContain(lang === 'zh' ? '完整顶层字段替换' : 'complete top-level field replacement');
     expect(api).toContain('GroupSchema');
     expect(api).toContain('GroupProviderKey');
     expect(api).toContain('GroupInputEmbedAdapter');
+    expect(api).toContain('GraphSurfaceThemeStyleTokens');
   });
 
   it('keeps Group children in the executable canonical preview and Vanilla code view', () => {

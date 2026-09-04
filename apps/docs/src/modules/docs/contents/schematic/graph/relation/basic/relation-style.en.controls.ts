@@ -1,4 +1,4 @@
-import { RelationRole } from '@retikz/graph';
+import { GraphStatus, RelationRole } from '@retikz/graph';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
@@ -27,6 +27,19 @@ export const relationStyleControls = definePreviewControls({
             { value: RelationRole.Influence, label: 'Influence' },
           ],
         },
+        {
+          kind: 'select',
+          id: RelationStyleControlId.Status,
+          label: 'Status',
+          defaultValue: '',
+          options: [
+            { value: '', label: 'No status' },
+            { value: GraphStatus.Error, label: 'Error' },
+            { value: GraphStatus.Success, label: 'Success' },
+            { value: GraphStatus.Warning, label: 'Warning' },
+            { value: GraphStatus.Disabled, label: 'Disabled' },
+          ],
+        },
       ],
     },
     {
@@ -39,6 +52,28 @@ export const relationStyleControls = definePreviewControls({
           defaultValue: 'Next step',
           placeholder: 'Enter Relation text',
           multiline: true,
+        },
+      ],
+    },
+    {
+      label: 'Source entity',
+      controls: [
+        {
+          kind: 'color',
+          id: RelationStyleControlId.SourceColor,
+          label: 'Color',
+          defaultValue: 'currentColor',
+        },
+      ],
+    },
+    {
+      label: 'Target entity',
+      controls: [
+        {
+          kind: 'color',
+          id: RelationStyleControlId.TargetColor,
+          label: 'Color',
+          defaultValue: 'currentColor',
         },
       ],
     },
@@ -95,7 +130,10 @@ export const previewControlContract = {
   controls: relationStyleControls,
   canonicalValues: {
     role: RelationRole.Flow,
+    status: '',
     content: 'Next step',
+    sourceColor: 'currentColor',
+    targetColor: 'currentColor',
     stroke: '#2563eb',
     strokeWidth: 2,
     dashed: false,
@@ -105,7 +143,9 @@ export const previewControlContract = {
   },
   relatedApis: [
     'Relation.role',
+    'Relation.status',
     'Relation.labels',
+    'Entity.color',
     'Relation.stroke',
     'Relation.strokeWidth',
     'Relation.dashPattern',

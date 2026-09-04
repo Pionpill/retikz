@@ -116,14 +116,14 @@ type GridLayoutRefinementInput = ZodInfer<typeof GridLayoutBaseSchema>;
 const refineGridLayout = (layout: GridLayoutRefinementInput, context: RefinementCtx): void => {
   const seen = new Set<string>();
   layout.children.forEach((item, index) => {
-    if (seen.has(item.key)) {
+    if (item.key !== undefined && seen.has(item.key)) {
       context.addIssue({
         code: 'custom',
         path: ['children', index, 'key'],
         message: `Duplicate GridLayout item key '${item.key}'.`,
       });
     }
-    seen.add(item.key);
+    if (item.key !== undefined) seen.add(item.key);
     for (const axis of ['column', 'row'] as const) {
       const placement = item[axis];
       if (placement?.start !== undefined && placement.start > GRID_LAYOUT_MAX_TRACKS_PER_AXIS - placement.span) {
