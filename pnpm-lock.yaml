@@ -1131,6 +1131,9 @@ importers:
       '@retikz/layout':
         specifier: workspace:^
         version: link:../../library/layout
+      '@retikz/math':
+        specifier: workspace:^
+        version: link:../../kernel/math
       '@retikz/standard':
         specifier: workspace:^
         version: link:../../library/standard

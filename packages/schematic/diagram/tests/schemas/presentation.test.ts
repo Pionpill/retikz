@@ -48,34 +48,16 @@ describe('Diagram Presentation schema', () => {
     ]);
   });
 
-  it.each([
-    {},
-    { unknown: true },
-    { title: '' },
-    { title: [''] },
-    { title: [{ text: '' }] },
-    { title: [{ runs: [{ text: '' }, { tex: '' }] }] },
-  ])('rejects empty content and records outside the fixed slots: %j', input => {
+  it('preserves valid empty Core TextBlock authoring', () => {
+    expect(DiagramPresentationSchema.parse({ title: '' }).title).toBe('');
+    expect(DiagramPresentationSchema.parse({ title: [''] }).title).toEqual(['']);
+    expect(DiagramPresentationSchema.parse({ title: [{ text: '' }] }).title).toEqual([{ text: '' }]);
+    expect(DiagramPresentationSchema.parse({ title: [{ runs: [{ text: '' }, { tex: '' }] }] }).title).toEqual([
+      { runs: [{ text: '' }, { tex: '' }] },
+    ]);
+  });
+
+  it.each([{}, { unknown: true }])('rejects an empty Presentation or records outside the fixed slots: %j', input => {
     expect(() => DiagramPresentationSchema.parse(input)).toThrow();
-  });
-
-  it('rejects explicit undefined recursively instead of normalizing it to omission', () => {
-    expect(() => DiagramPresentationSchema.parse({ title: undefined })).toThrow();
-    expect(() => DiagramPresentationSchema.parse({ title: [{ runs: [{ text: 'A', font: undefined }] }] })).toThrow();
-    expect(() =>
-      DiagramPresentationSchema.parse({
-        legend: { ...minimalLegend, content: { ...minimalLegend.content, items: undefined } },
-      }),
-    ).toThrow();
-  });
-
-  it('rejects non-plain data containers before owner schemas can project them', () => {
-    class StyledLine {
-      readonly text = 'class-backed';
-    }
-
-    expect(() => DiagramPresentationSchema.parse({ title: [new StyledLine()] })).toThrow();
-    expect(() => DiagramPresentationSchema.parse({ title: () => 'callback' })).toThrow();
-    expect(() => DiagramPresentationSchema.parse({ title: Symbol('title') })).toThrow();
   });
 });

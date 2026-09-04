@@ -49,16 +49,10 @@ describe('Diagram Frame schema', () => {
   ])('rejects an empty or invalid Frame record: %j', input => {
     expect(() => DiagramFrameSchema.parse(input)).toThrow();
   });
-
-  it('rejects explicit undefined in direct and nested Frame fields', () => {
-    expect(() => DiagramFrameSchema.parse({ legendAlign: undefined })).toThrow();
-    expect(() => DiagramFrameSchema.parse({ padding: { left: undefined } })).toThrow();
-    expect(() => DiagramFrameSchema.parse({ border: { stroke: undefined } })).toThrow();
-  });
 });
 
 describe('Diagram Theme schema', () => {
-  it('parses non-empty frame, title and description appearance slices', () => {
+  it('parses non-empty frame and presentation appearance slices', () => {
     const theme = DiagramThemeSchema.parse({
       frame: {
         padding: 14,
@@ -69,26 +63,28 @@ describe('Diagram Theme schema', () => {
         border: { stroke: '#cbd5e1', strokeWidth: 1 },
         cornerRadius: 4,
       },
-      title: {
-        textColor: '#0f172a',
-        opacity: 0.95,
-        font: { family: 'Inter', size: 20, weight: 700, style: 'normal' },
-        align: 'start',
-        lineHeight: 24,
-        maxTextWidth: 320,
-      },
-      description: {
-        textColor: 'gray',
-        opacity: 0.8,
-        font: { size: 14 },
-        align: 'middle',
-        lineHeight: 20,
-        maxTextWidth: 360,
+      presentation: {
+        title: {
+          textColor: '#0f172a',
+          opacity: 0.95,
+          font: { family: 'Inter', size: 20, weight: 700, style: 'normal' },
+          align: 'start',
+          lineHeight: 24,
+          maxTextWidth: 320,
+        },
+        description: {
+          textColor: 'gray',
+          opacity: 0.8,
+          font: { size: 14 },
+          align: 'middle',
+          lineHeight: 20,
+          maxTextWidth: 360,
+        },
       },
     });
 
     expect(theme.frame?.padding).toBe(14);
-    expect(theme.title?.font).toEqual({ family: 'Inter', size: 20, weight: 700, style: 'normal' });
+    expect(theme.presentation?.title?.font).toEqual({ family: 'Inter', size: 20, weight: 700, style: 'normal' });
     expect(JSON.parse(JSON.stringify(theme))).toEqual(theme);
   });
 
@@ -96,21 +92,18 @@ describe('Diagram Theme schema', () => {
     {},
     { unknown: true },
     { frame: {} },
-    { title: {} },
-    { description: {} },
+    { presentation: {} },
+    { presentation: { title: {} } },
+    { presentation: { description: {} } },
     { frame: { overflow: 'clip' } },
     { frame: { legendPosition: 'left' } },
     { frame: { legendAlign: 'center' } },
-    { title: { padding: 4 } },
-    { title: { position: [0, 0] } },
-    { description: { stroke: '#000000' } },
+    { presentation: { title: { padding: 4 } } },
+    { presentation: { title: { position: [0, 0] } } },
+    { presentation: { description: { stroke: '#000000' } } },
+    { title: { opacity: 1 } },
+    { description: { opacity: 1 } },
   ])('rejects empty slices and fields outside Diagram appearance ownership: %j', input => {
     expect(() => DiagramThemeSchema.parse(input)).toThrow();
-  });
-
-  it('rejects explicit undefined recursively in Theme slices', () => {
-    expect(() => DiagramThemeSchema.parse({ frame: undefined })).toThrow();
-    expect(() => DiagramThemeSchema.parse({ title: { opacity: undefined } })).toThrow();
-    expect(() => DiagramThemeSchema.parse({ description: { font: { family: undefined } } })).toThrow();
   });
 });

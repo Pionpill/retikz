@@ -110,19 +110,21 @@ describe('Diagram Foundation resolve', () => {
         cornerRadius: 0,
         overflow: 'visible',
       },
-      title: {
-        textColor: '#000000',
-        opacity: 1,
-        font: { size: 18, weight: 600 },
-        align: 'start',
-        lineHeight: 22,
-      },
-      description: {
-        textColor: 'hsl(215, 12%, 48%)',
-        opacity: 1,
-        font: { size: 14, weight: 400 },
-        align: 'start',
-        lineHeight: 20,
+      presentationAppearance: {
+        title: {
+          textColor: '#000000',
+          opacity: 1,
+          font: { size: 18, weight: 600 },
+          align: 'start',
+          lineHeight: 22,
+        },
+        description: {
+          textColor: 'hsl(215, 12%, 48%)',
+          opacity: 1,
+          font: { size: 14, weight: 400 },
+          align: 'start',
+          lineHeight: 20,
+        },
       },
     });
     expect(resolution).not.toHaveProperty('drawing');
@@ -135,7 +137,7 @@ describe('Diagram Foundation resolve', () => {
       presentation: DiagramPresentationSchema.parse({ legend }),
       diagramTheme: DiagramThemeSchema.parse({
         frame: { padding: 20, cornerRadius: 8, background: { fill: '#ffffff' } },
-        title: { opacity: 0.7, font: { family: 'Inter' } },
+        presentation: { title: { opacity: 0.7, font: { family: 'Inter' } } },
       }),
       frame: DiagramFrameSchema.parse({
         legendPosition: 'left',
@@ -161,7 +163,10 @@ describe('Diagram Foundation resolve', () => {
       cornerRadius: 0,
       overflow: 'visible',
     });
-    expect(resolution.title).toMatchObject({ opacity: 0.7, font: { family: 'Inter', size: 18, weight: 600 } });
+    expect(resolution.presentationAppearance.title).toMatchObject({
+      opacity: 0.7,
+      font: { family: 'Inter', size: 18, weight: 600 },
+    });
   });
 
   it.each([{ legendPosition: 'left' as const }, { legendAlign: 'center' as const }, { drawingLegendGap: 0 }])(
@@ -264,7 +269,7 @@ describe('Diagram Foundation provider integration', () => {
       name: 'brand',
       resolve: theme => {
         observed.push(theme);
-        return { title: { textColor: '#f97316' } };
+        return { presentation: { title: { textColor: '#f97316' } } };
       },
     });
     const coreStyle = defineThemeStyle({

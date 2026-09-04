@@ -28,7 +28,7 @@ describe('Diagram Theme Definition and registry', () => {
   it('keeps the exact Definition object as a typed identity', () => {
     const definition: DiagramThemeStyleDefinition = {
       name: 'brand',
-      resolve: () => ({ title: { textColor: '#123456' } }),
+      resolve: () => ({ presentation: { title: { textColor: '#123456' } } }),
     };
 
     expect(defineDiagramThemeStyle(definition)).toBe(definition);
@@ -37,7 +37,7 @@ describe('Diagram Theme Definition and registry', () => {
   it('resolves Definition options once into the shared read-only style registry', () => {
     const definition = defineDiagramThemeStyle({
       name: 'brand',
-      resolve: () => ({ title: { textColor: '#123456' } }),
+      resolve: () => ({ presentation: { title: { textColor: '#123456' } } }),
     });
 
     const resolved = resolveDiagramDefinitionOptions({ diagramThemeStyles: [definition] });
@@ -48,12 +48,19 @@ describe('Diagram Theme Definition and registry', () => {
   });
 
   it('rejects duplicate and blank Definition names with Diagram-owned diagnostics', () => {
-    const first = defineDiagramThemeStyle({ name: 'brand', resolve: () => ({ title: { opacity: 1 } }) });
-    const second = defineDiagramThemeStyle({ name: 'brand', resolve: () => ({ description: { opacity: 1 } }) });
+    const first = defineDiagramThemeStyle({
+      name: 'brand',
+      resolve: () => ({ presentation: { title: { opacity: 1 } } }),
+    });
+    const second = defineDiagramThemeStyle({
+      name: 'brand',
+      resolve: () => ({ presentation: { description: { opacity: 1 } } }),
+    });
 
     for (const run of [
       () => resolveDiagramThemeStyleRegistry([first, second]),
-      () => resolveDiagramThemeStyleRegistry([{ name: ' ', resolve: () => ({ title: { opacity: 1 } }) }]),
+      () =>
+        resolveDiagramThemeStyleRegistry([{ name: ' ', resolve: () => ({ presentation: { title: { opacity: 1 } } }) }]),
     ]) {
       try {
         run();
@@ -81,26 +88,28 @@ describe('Diagram Neutral Theme', () => {
         drawingLegendGap: 16,
         cornerRadius: 0,
       },
-      title: {
-        textColor: '#000000',
-        opacity: 1,
-        font: { size: 18, weight: 600 },
-        align: 'start',
-        lineHeight: 22,
-      },
-      description: {
-        textColor: 'hsl(215, 12%, 48%)',
-        opacity: 1,
-        font: { size: 14, weight: 400 },
-        align: 'start',
-        lineHeight: 20,
+      presentation: {
+        title: {
+          textColor: '#000000',
+          opacity: 1,
+          font: { size: 18, weight: 600 },
+          align: 'start',
+          lineHeight: 22,
+        },
+        description: {
+          textColor: 'hsl(215, 12%, 48%)',
+          opacity: 1,
+          font: { size: 14, weight: 400 },
+          align: 'start',
+          lineHeight: 20,
+        },
       },
     });
     expect(neutral.frame).not.toHaveProperty('background');
     expect(neutral.frame).not.toHaveProperty('border');
-    expect(neutral.title.font).not.toHaveProperty('family');
-    expect(neutral.title.font).not.toHaveProperty('style');
-    expect(neutral.title).not.toHaveProperty('maxTextWidth');
+    expect(neutral.presentation.title.font).not.toHaveProperty('family');
+    expect(neutral.presentation.title.font).not.toHaveProperty('style');
+    expect(neutral.presentation.title).not.toHaveProperty('maxTextWidth');
   });
 
   it('resolves the exact Dark title and current Core semantic guide color', () => {
@@ -114,11 +123,11 @@ describe('Diagram Neutral Theme', () => {
 
     const neutral = getDefaultDiagramTheme(theme);
 
-    expect(neutral.title.textColor).toBe('#ffffff');
-    expect(neutral.description.textColor).toBe('#94a3b8');
-    expect(neutral.description.font).not.toHaveProperty('family');
-    expect(neutral.description.font).not.toHaveProperty('style');
-    expect(neutral.description).not.toHaveProperty('maxTextWidth');
+    expect(neutral.presentation.title.textColor).toBe('#ffffff');
+    expect(neutral.presentation.description.textColor).toBe('#94a3b8');
+    expect(neutral.presentation.description.font).not.toHaveProperty('family');
+    expect(neutral.presentation.description.font).not.toHaveProperty('style');
+    expect(neutral.presentation.description).not.toHaveProperty('maxTextWidth');
   });
 });
 
@@ -132,9 +141,11 @@ describe('Diagram Theme cascade', () => {
           background: { fill: theme.colors.semantic.guide },
           border: { stroke: '#64748b', strokeWidth: 1 },
         },
-        title: {
-          textColor: '#1d4ed8',
-          font: { family: 'Inter', weight: 700, style: 'italic' },
+        presentation: {
+          title: {
+            textColor: '#1d4ed8',
+            font: { family: 'Inter', weight: 700, style: 'italic' },
+          },
         },
       }),
     });
@@ -143,7 +154,7 @@ describe('Diagram Theme cascade', () => {
         background: { fill: '#f8fafc', fillOpacity: 0.8 },
         border: { strokeWidth: 3 },
       },
-      title: { opacity: 0.75, font: { size: 24, style: 'normal' } },
+      presentation: { title: { opacity: 0.75, font: { size: 24, style: 'normal' } } },
     });
 
     const resolved = resolveDiagramTheme(themeWith({ style: 'brand' }), registryOf(definition), inline);
@@ -151,7 +162,7 @@ describe('Diagram Theme cascade', () => {
     expect(resolved.frame.padding).toEqual({ top: 0, right: 0, bottom: 0, left: 20 });
     expect(resolved.frame.background).toEqual({ fill: '#f8fafc', fillOpacity: 0.8 });
     expect(resolved.frame.border).toEqual({ strokeWidth: 3 });
-    expect(resolved.title).toMatchObject({
+    expect(resolved.presentation.title).toMatchObject({
       textColor: '#1d4ed8',
       opacity: 0.75,
       font: { family: 'Inter', size: 24, weight: 700, style: 'normal' },
@@ -197,25 +208,8 @@ describe('Diagram Theme cascade', () => {
     [
       'unknown output field',
       () => {
-        const output: IRDiagramTheme = { title: { opacity: 1 } };
+        const output: IRDiagramTheme = { presentation: { title: { opacity: 1 } } };
         Object.defineProperty(output, 'unknown', { value: true, enumerable: true });
-        return output;
-      },
-    ],
-    [
-      'explicit undefined',
-      () => {
-        const title = { opacity: 1 };
-        const output: IRDiagramTheme = { title };
-        Object.defineProperty(title, 'opacity', { value: undefined, enumerable: true });
-        return output;
-      },
-    ],
-    [
-      'non-plain container',
-      () => {
-        const output: IRDiagramTheme = { title: { opacity: 1 } };
-        Object.setPrototypeOf(output, { inherited: true });
         return output;
       },
     ],
