@@ -59,6 +59,8 @@ export type ScopedFramesResolveContext = {
   coordinateScopes: CoordinateScopeRegistry;
   allGuides: Array<IRPlotGuide>;
   allGuidesWithCompositionGap: Array<IRPlotGuide>;
+  /** placement containment 对各 coordinate scope 提出的 role range 收窄 */
+  placementRoleRangeOverridesByScope?: ReadonlyMap<string, Partial<Record<DimensionRole, readonly [number, number]>>>;
 };
 
 /** scoped/scaffold frame 解析结果及后续 facet/mark lowering 需要的 scope 查询 */
@@ -96,6 +98,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     coordinateScopes,
     allGuides,
     allGuidesWithCompositionGap,
+    placementRoleRangeOverridesByScope,
   } = context;
   const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
   const scopeById = new Map(coordinateScopes.scopes.map(scope => [scope.id, scope] as const));
@@ -199,6 +202,21 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
       throw new RetikzPlotError(`lowerPlots: trackGap ${gap} leaves no range for track "${track.id}"`);
     }
     return [adjustedStart, adjustedEnd];
+  };
+  const intersectRoleRanges = (
+    currentRange: readonly [number, number],
+    placementRange: readonly [number, number],
+    role: DimensionRole,
+    scopeId: string,
+  ): readonly [number, number] => {
+    const low = Math.max(Math.min(...currentRange), Math.min(...placementRange));
+    const high = Math.min(Math.max(...currentRange), Math.max(...placementRange));
+    if (low >= high) {
+      throw new RetikzPlotError(
+        `lowerPlots: position adjustment containment leaves no drawable range for role "${role}" in coordinate view "${scopeId}"`,
+      );
+    }
+    return currentRange[0] <= currentRange[1] ? [low, high] : [high, low];
   };
   const trackScopesByScaffold = new Map<string, Array<CoordinateScopeRegistryEntry>>();
   for (const scope of coordinateScopes.scopes) {
@@ -342,6 +360,12 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
       assertTrackRole(track.band.role, scopeRoles, scope.id);
       const baseBandRange = roleRangeOf(scaffoldFrame, track.band.role, `scaffold "${scaffold.id}"`);
       roleRangeOverrides[track.band.role] = bandRangeOf(baseBandRange, track, scaffold);
+    }
+    for (const [role, placementRange] of Object.entries(placementRoleRangeOverridesByScope?.get(scope.id) ?? {})) {
+      if (placementRange === undefined) continue;
+      const currentRange = roleRangeOverrides[role];
+      roleRangeOverrides[role] =
+        currentRange === undefined ? placementRange : intersectRoleRanges(currentRange, placementRange, role, scope.id);
     }
     const scopedMarkDataViews = markDataViews.filter(
       view => coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope) === scope.id,

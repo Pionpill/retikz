@@ -1,5 +1,6 @@
 import type { IRChartPlotExtension, IRChartSource } from '@retikz/chart';
 import type { ChartAuthoringResult, ChartInput } from '@retikz/chart-vanilla';
+import type { InputChartCoordinate } from '@retikz/chart-vanilla';
 import type { ExternalRow } from '@retikz/data';
 import type { FC, ReactNode } from 'react';
 
@@ -8,43 +9,53 @@ import { resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-
 import { Layout } from '@retikz/react';
 import { createElement, useMemo } from 'react';
 
-import type { ChartCommonProps, InputEmbeddableChartComponent } from '../../shared';
+import type {
+  ChartDataProps,
+  ChartDeclarationPath,
+  ChartExtensionProps,
+  ChartLayoutProps,
+  ChartPanelProps,
+  ChartThemeDefinitionsProps,
+  CollectedChartDeclaration,
+  CollectedChartDeclarations,
+  InputEmbeddableChartComponent,
+} from '../../shared';
 
+import { RetikzChartReactError } from '../../error';
 import {
-  assertEmbeddedChartHostProps,
-  chartContentPropsOf,
-  chartHostPropsOf,
-  hasPlotChild,
+  assertChartExtensionChildren,
   mergeThemeDefinitions,
-  splitPresentationMarkers,
+  prepareStandaloneChartDeclarations,
   useChartThemeDefinitions,
 } from '../../shared';
 import { lowerOptionsWithAmbientThemeOf, lowerOptionsWithPlotRuntimeOf } from './helpers';
-import { splitPointChartChildren } from './mark-collection';
 
-/** Point family concrete Chart 共用的 React props */
-export type TypedChartCommonProps<TSource extends IRChartSource> = ChartCommonProps &
+/** Point family concrete Chart 共用的 React 根属性 */
+export type TypedChartCommonProps<TSource extends IRChartSource> = ChartPanelProps &
+  ChartThemeDefinitionsProps &
+  Pick<TSource, 'id' | 'theme'> &
   Readonly<{
-    /** Point recipe 使用的运行时数据行 */
-    data: Array<ExternalRow>;
-    /** Source.data.reference；省略时使用稳定的 chart.data */
-    dataRef?: string;
-    /** Source data model */
-    dataModel?: TSource['data']['model'];
-    /** Chart Source 的外层 border-box 尺寸 */
+    /** 运行时数据行；不写入 Chart Source */
+    rows?: Array<ExternalRow>;
+    /** Chart Source 数据配置 */
+    data?: TSource['data'];
+    /** Chart Source 外层尺寸 */
     layout?: TSource['layout'];
-    /** Chart Source 的可选身份 */
-    id?: string;
-    /** Source-owned named / inline Chart Theme */
-    theme?: TSource['theme'];
+    /** Chart 根坐标系选择；与 `ChartCoordinate` declaration 互斥 */
+    coordinate?: InputChartCoordinate;
+    /** Chart 固定 presentation slots */
+    presentation?: TSource['presentation'];
+    /** 当前 chartType 的 exact recipe slots；chartType 由具体组件身份确定 */
+    recipe?: Partial<Omit<TSource['recipe'], 'chartType'>>;
     /** 显式 Plot-owned fragment */
     plotExtension?: TSource['plotExtension'];
-    /** presentation marker 与 Chart mark 声明组件 */
+    /** 与结构化根配置等价的 headless declarations */
     children?: ReactNode;
   }>;
 
 type PointFactoryInput = Readonly<{
   data: Array<ExternalRow>;
+  coordinate?: InputChartCoordinate;
   encodings: unknown;
   properties?: unknown;
   marks?: ReadonlyArray<unknown>;
@@ -52,33 +63,45 @@ type PointFactoryInput = Readonly<{
 
 type PlotExtensionAuthoringContext = Parameters<typeof resolvePlotExtensionAuthoring>[1];
 
+type TypedPointChartDeclarations<TInput extends PointFactoryInput> = CollectedChartDeclarations &
+  Readonly<{
+    encodings?: CollectedChartDeclaration<TInput['encodings']>;
+    properties?: CollectedChartDeclaration<NonNullable<TInput['properties']>>;
+    marks?: ReadonlyArray<NonNullable<TInput['marks']>[number]>;
+    presentation: Partial<Record<'title' | 'subtitle' | 'note' | 'source', unknown>>;
+  }>;
+
+type TypedChartRootRecipe<TInput extends PointFactoryInput> = Readonly<{
+  encodings?: TInput['encodings'];
+  properties?: TInput['properties'];
+  marks?: TInput['marks'];
+}>;
+
 const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> =>
   new Set(rows.flatMap(row => Object.keys(row)));
 
+const extensionPropPath = (path: ChartDeclarationPath, prop: string): ChartDeclarationPath => [...path, 'props', prop];
+
 const plotExtensionContextOf = (
-  data: Array<ExternalRow>,
-  dataRef: string | undefined,
-  dataModel: IRChartSource['data']['model'],
+  data: ChartDataProps,
   extension: IRChartPlotExtension | undefined,
+  extensionPath: ChartDeclarationPath,
 ): PlotExtensionAuthoringContext => ({
-  data: { reference: dataRef ?? 'chart.data', ...(dataModel === undefined ? {} : { model: dataModel }) },
-  ...(dataModel === undefined ? {} : { model: dataModel }),
-  dataFieldNames: dataFieldNamesOf(data),
+  data: { reference: data.reference ?? 'chart.data', ...(data.model === undefined ? {} : { model: data.model }) },
+  ...(data.model === undefined ? {} : { model: data.model }),
+  dataFieldNames: dataFieldNamesOf(data.data),
   ...(extension?.scales === undefined
     ? {}
-    : { scales: { value: extension.scales, path: ['props', 'plotExtension', 'scales'] } }),
-  ...(extension?.coordinate === undefined
-    ? {}
-    : { coordinate: { value: extension.coordinate, path: ['props', 'plotExtension', 'coordinate'] } }),
+    : { scales: { value: extension.scales, path: extensionPropPath(extensionPath, 'scales') } }),
   ...(extension?.composition === undefined
     ? {}
-    : { composition: { value: extension.composition, path: ['props', 'plotExtension', 'composition'] } }),
+    : { composition: { value: extension.composition, path: extensionPropPath(extensionPath, 'composition') } }),
   ...(extension?.guides === undefined
     ? {}
-    : { guides: { value: extension.guides, path: ['props', 'plotExtension', 'guides'] } }),
+    : { guides: { value: extension.guides, path: extensionPropPath(extensionPath, 'guides') } }),
   ...(extension?.marks === undefined
     ? {}
-    : { marks: { value: extension.marks, path: ['props', 'plotExtension', 'marks'] } }),
+    : { marks: { value: extension.marks, path: extensionPropPath(extensionPath, 'marks') } }),
   ...(extension?.transform === undefined ? {} : { dataTransforms: extension.transform }),
 });
 
@@ -97,46 +120,166 @@ const plotExtensionOf = (
   return Object.keys(combined).length === 0 ? undefined : combined;
 };
 
-/** 从 typed Point props 组装 Vanilla 精确输入，并将 marker 作为有序 marks 追加 */
+const extensionPartsOf = (
+  declaration: CollectedChartDeclaration<ChartExtensionProps> | undefined,
+): Readonly<{
+  children?: ReactNode;
+  extension?: IRChartPlotExtension;
+  path: ChartDeclarationPath;
+}> => {
+  if (declaration === undefined) return { path: ['children'] };
+  const { children, ...extension } = declaration.props;
+  return {
+    ...(children === undefined ? {} : { children }),
+    ...(Object.keys(extension).length === 0 ? {} : { extension }),
+    path: declaration.path,
+  };
+};
+
+const assertEmbeddedChartLayout = (declaration: CollectedChartDeclaration<ChartLayoutProps> | undefined): void => {
+  if (declaration === undefined) return;
+  const unsupportedDimensions = (['width', 'height'] as const).filter(dimension =>
+    Object.hasOwn(declaration.props, dimension),
+  );
+  if (unsupportedDimensions.length === 0) return;
+  throw new RetikzChartReactError(
+    `chart react: embedded Chart does not support ChartLayout ${unsupportedDimensions.join(', ')}; move host dimensions to the outer <Layout>`,
+  );
+};
+
+const rootDeclarationConflictError = (slot: string, declaration: string): RetikzChartReactError =>
+  new RetikzChartReactError(
+    `chart react: ${slot} cannot be provided by both the concrete Chart root prop and ${declaration}`,
+  );
+
+const presentationOf = <TSource extends IRChartSource>(
+  rootPresentation: TSource['presentation'] | undefined,
+  declarationPresentation: TypedPointChartDeclarations<PointFactoryInput>['presentation'],
+): Partial<Record<'title' | 'subtitle' | 'note' | 'source', unknown>> => {
+  const presentation: Partial<Record<'title' | 'subtitle' | 'note' | 'source', unknown>> = {};
+  for (const slot of ['title', 'subtitle', 'note', 'source'] as const) {
+    const hasRootSlot = rootPresentation !== undefined && Object.hasOwn(rootPresentation, slot);
+    const hasDeclarationSlot = Object.hasOwn(declarationPresentation, slot);
+    if (hasRootSlot && hasDeclarationSlot) {
+      throw rootDeclarationConflictError(`presentation.${slot}`, `<Chart${slot[0].toUpperCase()}${slot.slice(1)}>`);
+    }
+    const value = hasRootSlot ? rootPresentation[slot] : declarationPresentation[slot];
+    if (value !== undefined) presentation[slot] = value;
+  }
+  return presentation;
+};
+
+/** 从 typed Point declarations 组装 Vanilla 精确输入 */
 export const createTypedChartInput = <
   TProps extends TypedChartCommonProps<TSource>,
   TSource extends IRChartSource,
   TInput extends PointFactoryInput,
 >(
   props: TProps,
-  payload: Pick<TInput, 'encodings' | 'properties' | 'marks'>,
+  declarations: TypedPointChartDeclarations<TInput>,
   factory: (input: TInput) => ChartAuthoringResult<TSource>,
+  encodingsDeclarationName: string,
 ): ChartInput<TSource> => {
   const {
-    children,
-    data,
-    dataRef,
-    dataModel,
-    layout,
     id,
     theme,
-    plotExtension,
+    rows: rootRows,
+    data: rootData,
+    layout: rootLayout,
+    coordinate: rootCoordinate,
+    presentation: rootPresentation,
+    recipe,
+    plotExtension: rootPlotExtension,
     panel,
     themeDefinitions,
     lowerOptions,
   } = props;
-  const split = splitPresentationMarkers(children);
-  const pointChildren = splitPointChartChildren(split.plotChildren);
-  const marks = [...(payload.marks ?? []), ...pointChildren.marks];
-  const plotAuthoring = hasPlotChild(pointChildren.plotChildren)
-    ? resolvePlotExtensionAuthoring(
-        pointChildren.plotChildren,
-        plotExtensionContextOf(data, dataRef, dataModel, plotExtension),
-      )
-    : undefined;
-  const effectivePlotExtension = plotExtensionOf(plotExtension, plotAuthoring?.fragment);
+  const rootRecipe = recipe as TypedChartRootRecipe<TInput> | undefined;
+  const hasRootData = Object.hasOwn(props, 'rows') || Object.hasOwn(props, 'data');
+  const hasRootLayout = Object.hasOwn(props, 'layout');
+  const hasRootCoordinate = Object.hasOwn(props, 'coordinate');
+  const hasRootPlotExtension = Object.hasOwn(props, 'plotExtension');
+  const hasRootEncodings = rootRecipe !== undefined && Object.hasOwn(rootRecipe, 'encodings');
+  const hasRootProperties = rootRecipe !== undefined && Object.hasOwn(rootRecipe, 'properties');
+  const hasRootMarks = rootRecipe !== undefined && Object.hasOwn(rootRecipe, 'marks');
+
+  if (hasRootData && declarations.data !== undefined) {
+    throw rootDeclarationConflictError('data', '<ChartData>');
+  }
+  if (hasRootLayout && declarations.layout !== undefined) {
+    throw rootDeclarationConflictError('layout', '<ChartLayout>');
+  }
+  if (hasRootCoordinate && declarations.coordinate !== undefined) {
+    throw rootDeclarationConflictError('coordinate', '<ChartCoordinate>');
+  }
+  if (hasRootPlotExtension && declarations.extension !== undefined) {
+    throw rootDeclarationConflictError('plotExtension', '<ChartExtension>');
+  }
+  if (hasRootEncodings && declarations.encodings !== undefined) {
+    throw rootDeclarationConflictError('recipe.encodings', 'the chartType encodings declaration');
+  }
+  if (hasRootProperties && declarations.properties !== undefined) {
+    throw rootDeclarationConflictError('recipe.properties', 'the chartType properties declaration');
+  }
+  if (hasRootMarks && declarations.marks !== undefined) {
+    throw rootDeclarationConflictError('recipe.marks', 'a chartType mark declaration');
+  }
+
+  assertEmbeddedChartLayout(declarations.layout);
+  if (!hasRootData && declarations.data === undefined) {
+    throw new RetikzChartReactError('chart react: ChartData must appear exactly once');
+  }
+  const rows = hasRootData ? rootRows : declarations.data?.props.data;
+  if (rows === undefined) {
+    throw new RetikzChartReactError(
+      'chart react: runtime rows are required from the concrete Chart root or <ChartData>',
+    );
+  }
+  const data = hasRootData
+    ? {
+        data: rows,
+        ...(rootData?.reference === undefined ? {} : { reference: rootData.reference }),
+        ...(rootData?.model === undefined ? {} : { model: rootData.model }),
+      }
+    : declarations.data?.props;
+  if (data === undefined) {
+    throw new RetikzChartReactError(
+      'chart react: runtime rows are required from the concrete Chart root or <ChartData>',
+    );
+  }
+
+  const encodings = hasRootEncodings ? rootRecipe.encodings : declarations.encodings?.props;
+  if (encodings === undefined) {
+    if (!hasRootData && recipe === undefined) {
+      throw new RetikzChartReactError(`chart react: ${encodingsDeclarationName} must appear exactly once`);
+    }
+    throw new RetikzChartReactError(
+      'chart react: recipe encodings are required from the concrete Chart root or the chartType encodings declaration',
+    );
+  }
+  const properties = hasRootProperties ? rootRecipe.properties : declarations.properties?.props;
+  const marks = hasRootMarks ? rootRecipe.marks : declarations.marks;
+  const extensionParts = extensionPartsOf(declarations.extension);
+  assertChartExtensionChildren(extensionParts.children);
+  const plotAuthoring =
+    declarations.extension !== undefined
+      ? resolvePlotExtensionAuthoring(
+          extensionParts.children,
+          plotExtensionContextOf(data, extensionParts.extension, extensionParts.path),
+        )
+      : undefined;
+  const declaredPlotExtension = plotExtensionOf(extensionParts.extension, plotAuthoring?.fragment);
+  const effectivePlotExtension = hasRootPlotExtension ? rootPlotExtension : declaredPlotExtension;
   const effectiveLowerOptions = lowerOptionsWithPlotRuntimeOf(lowerOptions, plotAuthoring?.runtime ?? {});
-  const presentation = split.presentation;
+  const presentation = presentationOf<TSource>(rootPresentation, declarations.presentation);
+  const effectiveLayout = hasRootLayout ? rootLayout : declarations.layout?.props.layout;
+  const effectiveCoordinate = hasRootCoordinate ? rootCoordinate : declarations.coordinate?.props.coordinate;
   const input = {
-    data,
-    ...(dataRef === undefined ? {} : { dataRef }),
-    ...(dataModel === undefined ? {} : { dataModel }),
-    ...(layout === undefined ? {} : { layout }),
+    data: data.data,
+    ...(data.reference === undefined ? {} : { dataRef: data.reference }),
+    ...(data.model === undefined ? {} : { dataModel: data.model }),
+    ...(effectiveLayout === undefined ? {} : { layout: effectiveLayout }),
+    ...(effectiveCoordinate === undefined ? {} : { coordinate: effectiveCoordinate }),
     ...(id === undefined ? {} : { id }),
     ...(theme === undefined ? {} : { theme }),
     ...(effectivePlotExtension === undefined ? {} : { plotExtension: effectivePlotExtension }),
@@ -147,9 +290,9 @@ export const createTypedChartInput = <
     ...(presentation.subtitle === undefined ? {} : { subtitle: presentation.subtitle }),
     ...(presentation.note === undefined ? {} : { note: presentation.note }),
     ...(presentation.source === undefined ? {} : { source: presentation.source }),
-    encodings: payload.encodings,
-    ...(payload.properties === undefined ? {} : { properties: payload.properties }),
-    ...(marks.length === 0 ? {} : { marks }),
+    encodings,
+    ...(properties === undefined ? {} : { properties }),
+    ...(marks === undefined ? {} : { marks }),
   } as TInput;
   return factory(input).input;
 };
@@ -160,7 +303,7 @@ export const createTypedChartComponent = <TProps extends TypedChartCommonProps<T
   createInput: (props: TProps) => ChartInput<TSource>,
 ): InputEmbeddableChartComponent<TProps, ChartInput<TSource>, typeof ChartInputEmbedAdapter> => {
   const Component: FC<TProps> = props => {
-    const { lowerOptions, themeDefinitions } = props;
+    const { children, layout, lowerOptions, themeDefinitions } = props;
     const ambientThemeDefinitions = useChartThemeDefinitions();
     const ambientPlotThemeStyles = usePlotThemeStyles();
     const effectiveProps = useMemo<TProps>(() => {
@@ -172,17 +315,14 @@ export const createTypedChartComponent = <TProps extends TypedChartCommonProps<T
         ...(effectiveLowerOptions === undefined ? {} : { lowerOptions: effectiveLowerOptions }),
       };
     }, [ambientPlotThemeStyles, ambientThemeDefinitions, themeDefinitions, lowerOptions, props]);
-    const hostProps = chartHostPropsOf(props);
-    return createElement(Layout, hostProps, createElement(Component, chartContentPropsOf(effectiveProps)));
+    const standalone = prepareStandaloneChartDeclarations(children, layout);
+    const embeddedProps = { ...effectiveProps, children: standalone.children };
+    return createElement(Layout, standalone.host, createElement(Component, embeddedProps));
   };
   const chart = Component as InputEmbeddableChartComponent<TProps, ChartInput<TSource>, typeof ChartInputEmbedAdapter>;
   chart.displayName = displayName;
   chart.isTier2Embeddable = true;
   chart.inputEmbedAdapter = ChartInputEmbedAdapter;
-  chart.createInputEmbedProps = props => {
-    const chartProps = props as TProps;
-    assertEmbeddedChartHostProps(chartProps);
-    return createInput(chartProps);
-  };
+  chart.createInputEmbedProps = props => createInput(props as TProps);
   return chart;
 };

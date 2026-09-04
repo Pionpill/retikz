@@ -5,9 +5,9 @@
 
 ## 定位
 
-alpha.15 不是单纯“换皮肤”。它是 plot v0.1 图形语法的最后一个 alpha，用来补齐 Guide 与 Theme 的长期契约：图应该能在不手调每个 mark 的情况下，给 axis 留出合理的值域空间，生成稳定可读的 tick / label / grid，并通过一套 JSON-safe theme 控制 axis、axis grid、legend、palette、typography 与背景。
+alpha.15 不是单纯“换皮肤”。它是 plot v0.1 图形语法的最后一个 alpha，用来补齐 Guide 与 Theme 的长期契约：Plot 提供显式、可预测的值域留白能力，生成稳定可读的 tick / label / grid，并通过一套 JSON-safe theme 控制 axis、axis grid、legend、palette、typography 与背景。
 
-当前实现里，连续位置 scale 的推断 domain 直接来自数据 extent；`nice` 只负责 d3 nice，不负责给孤立点或极值贴边场景留白。典型问题是只有一个点或一组点落在 cartesian2D 左下角时，数据点与 axis / plot 边界重合。这个问题不应靠 demo 手写 domain，也不应靠 chart preset 私自扩 range；它属于 plot guide / scale 的基础可读性。
+连续位置 scale 的推断 domain 默认直接使用数据 extent；`nice` 只负责 d3 nice。Plot 不掌握 chart type 与 mark geometry，因此不为孤立点或极值贴边场景统一猜测留白；Chart 等高层调用方按自身语义显式声明 `domainPadding`。
 
 本 milestone 同时收敛 guide 样式。现有 axis / grid / legend lowering 中有多处硬编码常量，例如 tick length、label gap、grid opacity、legend swatch / ramp 尺寸。alpha.15 要把这些变成可解释、可覆盖、可由 theme 驱动的语义，不再散落在 lowering 内部。
 
@@ -17,9 +17,9 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 
 | ADR    | 主题                                               | 目标                                                                                                                                                                                                       | 状态                 |
 | ------ | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
-| ADR-01 | **axis domain padding and tick strategy**          | 为连续 / 时间位置 scale 增加 domain 弹性、按 scale family 区分单值 domain 退化策略、tick 显式控制与 `nice` 顺序；解决点贴边和 tick 不可控问题                                                              | Accepted             |
+| ADR-01 | **axis domain padding and tick strategy**          | 为连续 / 时间位置 scale 提供显式 domain 弹性、按 scale family 区分单值 domain 退化策略、tick 显式控制与 `nice` 顺序；Plot 不猜测 chart 级留白                                                              | Accepted             |
 | ADR-02 | **axis guide structure and style tokens**          | 细化 line、ticks、tickLabels、title、grid 部件槽位的样式与几何 token；替换 guide lowering 中的硬编码常量                                                                                                   | Accepted             |
-| ADR-03 | **plot theme schema and merge priority**           | 新增 JSON-safe `IRPlot.theme`，定义 built-in theme、spec theme、guide local override 的合并顺序和默认 token 结构                                                                                         | Accepted             |
+| ADR-03 | **plot theme schema and merge priority**           | 新增 JSON-safe `IRPlot.theme`，定义 built-in theme、spec theme、guide local override 的合并顺序和默认 token 结构                                                                                           | Accepted             |
 | ADR-04 | **legend, palette, and guide family theme**        | 收敛 categorical / sequential / diverging palette、series / sector 默认配色、legend swatch / ramp / label / title 样式                                                                                     | Accepted             |
 | ADR-05 | **axis line advanced geometry**                    | 为 cartesian axis line 增加 lineCap、baseline extent、positive / negative 方向箭头与 origin placement；箭头样式复用 core ArrowEndDetail，theme 不接结构字段                                                | Accepted（已实现）   |
 | ADR-06 | **axis tick source, marker, and density strategy** | 为 axis ticks 增加 interval tick source、内置 / 自定义 mark 与 visible tick density；tick shape 复用 core Node shape，theme 不接 source / density                                                          | Accepted（已实现）   |
@@ -79,6 +79,7 @@ Theme 是横切能力，但不是交互系统。`hover`、`selected`、tooltip�
 - 对连续位置 scale 增加 `domainPadding`，支持比例与两端分别配置：
   - `domainPadding: 0.05`
   - `domainPadding: { lower: 0.05, upper: 0.05 }`
+- 推断与显式 domain 省略 `domainPadding` 时均默认不留白；Chart 等高层调用方按图形语义显式配置。
 - 本轮只做比例 padding，不做绝对值 padding；绝对 padding 若需要另开后续 ADR。
 - 单值 domain 使用 `singleValueSpan` 或内置默认策略，避免 `[v, v]` 映射退化。具体默认与 log / sqrt / radial / pow 分支以 ADR-01 的 scale-family 表为准。
 - `domainPadding` 与单值 fallback 必须按 scale family 分类：
@@ -344,7 +345,7 @@ built-in default theme
 - **theme merge**：built-in default、IRPlot.theme、Axis local override、Legend local style 的优先级稳定；语义字段不进入 token merge。
 - **legend / palette**：categorical series 默认色、sector 默认色、sequential / quantize / threshold / quantile / diverging 默认 scheme、显式 range / scheme 覆盖 theme；mark 与 legend 消费同一 `ResolvedPlotPalette`。
 - **三包等价**：React / Vanilla authoring 表面生成的 IRPlot 与手写 spec 等价。
-- **docs demo**：单点散点留白、主题切换、axis/grid 样式、legend/palette 样式各至少一组。
+- **docs demo**：显式 domain padding、主题切换、axis/grid 样式、legend/palette 样式各至少一组。
 
 ## 本轮不做
 
@@ -361,7 +362,7 @@ built-in default theme
 alpha.15 封口时应满足：
 
 - ADR-01～12 全部 Proposed -> Accepted，字段名、默认值、merge 顺序在 ADR 内固定。
-- `@retikz/plot` 的连续 / 时间位置 scale 默认能避免单点或极值贴边；显式 domain 行为可预测。
+- `@retikz/plot` 的连续 / 时间位置 scale 默认保持数据 extent，显式 `domainPadding` 行为可预测。
 - axis line、tick line、tick label、axis title、grid line 不再只能依赖 lowering 硬编码常量。
 - axis tick 能表达 line mark、常见内置 shape mark 与 custom shape mark；shape mark 复用 core Node shape，不新增 plot-only shape 系统。
 - tick 数量语义清晰：`count` 是候选数量 hint，`values` 是显式候选值，`interval` 是固定间隔候选值，`density` 控制 visible tick 抽稀，grid / mark 默认消费同一 visible tick set。
@@ -369,5 +370,5 @@ alpha.15 封口时应满足：
 - cartesian axis line 能表达 lineCap、positive / negative 方向箭头与 origin crossing，且不污染 theme 结构语义。
 - `IRPlot.theme` 能控制 axis、axis grid、legend、palette、typography、background 的默认样式。
 - React / Vanilla 能等价暴露 theme 与 guide 局部样式，不绕开 IRPlot。
-- docs 至少覆盖：单点散点留白、axis/grid 样式、theme 切换、legend/palette 样式、plot labels 与 layer zIndex。
+- docs 至少覆盖：显式 domain padding、axis/grid 样式、theme 切换、legend/palette 样式、plot labels 与 layer zIndex。
 - roadmap 明确 Interaction 进入 v0.2 能力线，不与 alpha.15 混杂。

@@ -32,7 +32,7 @@ The `scale-field` operation below reads `x`, uses a serializable `factor` to pro
 
 Built-in and custom transforms merge into one registry and use the same `kind` lookup, schema validation, and execution path.
 
-The example Definition also declares a preserving `outputModel` and a field-derive `compact` capability. The former gives downstream consumers typed evidence that `scaledX` is continuous; the latter lets a compatible Chart slot reuse the same Definition as a compact field mapping.
+The example Definition also declares a preserving `outputModel` and a field-derive `schedule`. The former gives downstream consumers typed evidence that `scaledX` is continuous; the latter lets a compatible Chart slot reuse the same Definition as a field mapping.
 
 ### Provenance
 
@@ -86,14 +86,14 @@ inject Definitions → merge built-in and custom registries → look up kind →
 
 Field collection and actual execution use the same registry. Each step parses the operation with its Definition schema, resolves `outputModel`, executes `apply`, and advances `{ rows, fieldTypes, fieldTypeEvidence }` together. `inputFields` includes source fields read by an extension in strict model validation, while `outputFields` marks derived fields so they do not have to appear in the source data model.
 
-### Compact Field-Mapping Gate
+### Encoding Field-Mapping Gate
 
-An open `kind` only means Source can store a custom operation; it does not automatically make that operation suitable for compact field mapping. A host such as Chart requires a complete capability declaration before using a Definition inside an encoding:
+An open `kind` only means Source can store a custom operation; it does not automatically make that operation suitable for field mapping. A host such as Chart requires a complete schedule before using a Definition inside an encoding:
 
-| Definition | Required declarations                                                        | If incomplete                                                             |
-| ---------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Transform  | `compact` phase / binding class / field effect plus a complete `outputModel` | It remains a full transform, not a compact mapping                        |
-| Reducer    | `outputs()` returns exactly one typed scalar descriptor                      | It remains available to full statistics transforms, not compact aggregate |
+| Definition | Required declarations                                                         | If incomplete                                                             |
+| ---------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Transform  | `schedule` phase / binding class / field effect plus a complete `outputModel` | It remains a full transform, not an encoding field mapping                |
+| Reducer    | `outputs()` returns exactly one typed scalar descriptor                       | It remains available to full statistics transforms, not compact aggregate |
 
 The host also checks the Definition phase, field effect, output field, and target consumer for compatibility. Custom and built-in keys share one registry, schema, and capability path; the host does not copy a built-in enum.
 
@@ -107,7 +107,7 @@ The host also checks the Definition phase, field effect, output field, and targe
 | Operation contains functions or non-JSON values                                             | Serializability validation fails        |
 | A custom reducer output declaration collides with a group key or another statistical output | Execution fails before the reducer runs |
 | `outputModel` references a missing source field or disagrees with the actual field effect   | DataView advancement fails              |
-| A compact mapping lacks a complete capability or output descriptor                          | Host field-mapping resolution fails     |
+| A field mapping lacks a complete schedule or output descriptor                              | Host field-mapping resolution fails     |
 
 A Definition should implement only data-row and statistical semantics. Color, mark, layout, and other consumer-side semantics belong to the corresponding module extension point.
 
@@ -123,18 +123,18 @@ The following Definitions and helpers are exported from the `@retikz/data` packa
 | `inputFields?`  | `(operation: TTransform, context: TransformContext) => Array<string>`                                | Returns source fields read by the operation                                 |
 | `outputFields?` | `(operation: TTransform, context: TransformContext) => Array<string>`                                | Returns generated field names for strict-model and conflict checks          |
 | `outputModel?`  | `(operation: TTransform, context: TransformContext) => DataTransformOutputModel \| undefined`        | Returns the complete field-type effect; omission discards old type evidence |
-| `compact?`      | `DataTransformCompactCapability`                                                                     | Declares phase, binding class, and field effect for field mappings          |
+| `schedule?`     | `DataTransformSchedule`                                                                              | Declares phase, binding class, and field effect for field mappings          |
 | `apply`         | `(rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => Array<ExternalRow>` | Executes the transform purely and deterministically                         |
 
 Use `defineTransform(definition)` to preserve the generic relationship among these fields.
 
-### Output And Compact Contracts
+### Output And Scheduling Contracts
 
-| Type                             | Key fields                             | Responsibility                                                         |
-| -------------------------------- | -------------------------------------- | ---------------------------------------------------------------------- |
-| `DataTransformOutputDescriptor`  | `field`, `type`                        | Assigns a fixed output type or reuses an existing type with `{ from }` |
-| `DataTransformOutputModel`       | `preserve.outputs` \| `replace.fields` | Extends the current field graph or replaces it with a complete list    |
-| `DataTransformCompactCapability` | `phase`, `bindingClass`, `fieldEffect` | Lets a host decide whether the Definition can bind to a field slot     |
+| Type                            | Key fields                             | Responsibility                                                         |
+| ------------------------------- | -------------------------------------- | ---------------------------------------------------------------------- |
+| `DataTransformOutputDescriptor` | `field`, `type`                        | Assigns a fixed output type or reuses an existing type with `{ from }` |
+| `DataTransformOutputModel`      | `preserve.outputs` \| `replace.fields` | Extends the current field graph or replaces it with a complete list    |
+| `DataTransformSchedule`         | `phase`, `bindingClass`, `fieldEffect` | Lets a host decide whether the Definition can bind to a field slot     |
 
 ### `StatisticsReducerDefinition`
 

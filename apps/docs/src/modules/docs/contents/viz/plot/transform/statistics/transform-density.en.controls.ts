@@ -24,12 +24,7 @@ export const densityControls = definePreviewControls({
             measurements,
             densityOperationOf,
           ),
-          columns: [
-            { key: 'group', label: 'Group' },
-            { key: 'value', label: 'Value' },
-            { key: 'densityX', label: 'Sample position' },
-            { key: 'density', label: 'Density' },
-          ],
+          columns: [{ key: 'group' }, { key: 'value' }, { key: 'densityX' }, { key: 'density' }],
         },
       ],
     },

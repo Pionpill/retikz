@@ -148,6 +148,25 @@ describe('mark registry（contract：自定义 mark）', () => {
     expect(record.rows).toBe(rows.length);
   });
 
+  it('custom_mark_definition_does_not_revalidate_pipeline_owned_default_color_group', () => {
+    const record = { calls: 0, rows: 0 };
+    const spec = dotSpec({
+      marks: [
+        {
+          type: 'dot',
+          strength: 1,
+          defaultColorGroup: 'observations',
+          encoding: { x: { field: 'cat' }, y: { field: 'val' } },
+        },
+      ],
+    });
+
+    expect(() =>
+      expandOf(spec, { d: [{ cat: 'A', val: 3 }] }, { ...opts, markDefinitions: [makeDotMark(record)] }),
+    ).not.toThrow();
+    expect(record.calls).toBe(1);
+  });
+
   it('custom_mark_schema_rejects_invalid_operation_before_behavior_callbacks', () => {
     const record = { calls: 0, rows: 0 };
     const spec = dotSpec({

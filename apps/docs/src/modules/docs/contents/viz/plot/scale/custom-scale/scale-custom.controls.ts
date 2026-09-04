@@ -23,7 +23,7 @@ export const customScaleControls = definePreviewControls({
           id: 'custom-scale-rows',
           label: '散点数据',
           rows: scaleCustomRows,
-          columns: [{ key: 'x' }, { key: 'y' }, { key: 'tier', label: '等级' }],
+          columns: [{ key: 'x' }, { key: 'y' }, { key: 'tier' }],
         },
       ],
     },

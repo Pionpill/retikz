@@ -18,11 +18,7 @@ export const axisCoordinateBasicsControls = definePreviewControls({
           id: 'rows',
           label: '维度数值',
           rows: axisCoordinateBasicsRows,
-          columns: [
-            { key: 'dimension', label: '维度' },
-            { key: 'value', label: '数值' },
-            { key: 'order', label: '顺序' },
-          ],
+          columns: [{ key: 'dimension' }, { key: 'value' }, { key: 'order' }],
         },
       ],
     },

@@ -121,7 +121,9 @@ The main path below stops at the IntervalMark boundary: convenience props or exp
 
 `series` / `group` and `arrangement` prepare the fields and bounds needed for dodge, stack, or normalized stack before this path begins. After `projectCell`, cartesian coordinates commonly produce rects, polar coordinates produce sectors, and custom frames reuse the same Cell projection contract; only then does the geometry become a core `Node` layer.
 
-`padAngle` shrinks a sector's angular bounds, while `pull` moves its center along the final bisector. Both affect projected visual geometry without rewriting source data.
+Under polar2D, cell boundaries inherit coordinate `interpolation`: `polar` produces curved sectors, while `chord` produces straight-edged contours. An explicit IntervalMark override affects only that mark, not the grid or sibling marks; setting it outside polar2D fails loudly.
+
+`padAngle` first shrinks the logical Cell's angular interval, `pull` then shifts the local projection center along the bisector, and the effective interpolation finally produces a sector or contour. Neither rewrites source data.
 
 <SourceLinks
   sources={[
@@ -164,13 +166,13 @@ The main path below stops at the IntervalMark boundary: convenience props or exp
     {
       label: 'Project Cell geometry through projectCell',
       path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 457,
-      endLine: 466,
+      startLine: 442,
+      endLine: 463,
     },
     {
       label: 'Assemble Cell geometry into a Core Node layer',
       path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 488,
+      startLine: 481,
       endLine: 537,
     },
   ]}
@@ -194,11 +196,12 @@ This table keeps only IntervalMark-specific props and props whose meaning is red
 | `stackOffset?`        | `'zero'` / `'normalize'` / `'diverging'` / `'center'` / `'overlap'` | `zero`                                                                                                                                                 | Stack baseline strategy                                                                                                                                                   |
 | `stack?` / `percent?` | `boolean`                                                           | `false`                                                                                                                                                | Convenience forms for stack and normalized stack                                                                                                                          |
 | `bounds?`             | `IntervalMarkProps['bounds']`                                       | —<br />Inferred by role<br />Required per bound<br />—<br />`0`<br />Required for `extent`<br />Required for `extent`<br />Required for `proportional` | Explicit bound source for each position role; the complete `IRPlotIntervalBounds` is an IR type from `@retikz/plot`, while React input uses `IntervalMarkProps['bounds']` |
-| `padAngle?`           | `number`                                                            | `0`                                                                                                                                                    | Angular gap between polar sectors                                                                                                                                         |
-| `pull?`               | `IntervalMarkProps['pull']`                                         | `0`                                                                                                                                                    | Non-negative sector offset along the bisector, driven by a field or constant                                                                                              |
+| `interpolation?`      | <ApiValues name="PolarInterpolation" />                             | Coordinate default                                                                                                                                     | Local polar2D cell-boundary override; `polar` produces curved edges and `chord` produces a straight contour                                                               |
+| `padAngle?`           | `number`                                                            | `0`                                                                                                                                                    | Angular gap applied before polar cell projection as a sector or chord contour                                                                                             |
+| `pull?`               | `IntervalMarkProps['pull']`                                         | `0`                                                                                                                                                    | Non-negative polar-cell offset along the bisector; supported by sectors and chord contours and driven by a field or constant                                              |
 | `label?`              | `IntervalMarkProps['label']`                                        | —                                                                                                                                                      | Attach field content to each cell through `Node.label`                                                                                                                    |
 | `resolveLabel?`       | `(row: ExternalRow) => string`                                      | —                                                                                                                                                      | Runtime label resolver; excluded from IR and requires `id`                                                                                                                |
-| `anchorId?`           | `IRPlotAnchorId`                                                | —                                                                                                                                                      | Generate a stable id for every valid cell Node                                                                                                                            |
+| `anchorId?`           | `IRPlotAnchorId`                                                    | —                                                                                                                                                      | Generate a stable id for every valid cell Node                                                                                                                            |
 
 ## Related
 

@@ -12,8 +12,9 @@
 
 ## Source 与 normalize 边界
 
-- `/point` 入口的 `createScatterChart` 从精确 typed input 推导 `type: 'point'` 与 `recipe.chartType`，并调用对应 normalizer；根入口只保留渲染与 InputEmbed 类型，不提供 generic `createChart`
-- `normalizeXxx` 只组装 JSON-safe Source：`namespace: 'chart'`、稳定 family、根 `data` / `layout` / `presentation` / `theme` / `plotExtension` 与精确 `recipe.encodings` / `properties` / `marks`
+- `/point` 入口的具体 `createXxxChart` 从精确 typed input 推导 `type: 'point'` 与 `recipe.chartType`，并调用对应 normalizer；根入口只保留渲染与 InputEmbed 类型，不提供 generic `createChart`
+- `normalizeXxx` 只组装 JSON-safe Source：`namespace: 'chart'`、稳定 family、根 `data` / `layout` / `presentation` / `theme` / `coordinate` / `plotExtension` 与精确 `recipe.encodings` / `properties` / `marks`
+- `InputChartCoordinate` 复用 Plot Vanilla 的对象 contract，并接受开放坐标系名；字符串只归一为 `{ type }`，对象配置与显式 `0` 原样进入 Source
 - Chart encodings 直接使用具体 chartType 的 exact mapping；Vanilla 只展开 row / column 字段名 shorthand，aggregate、transform、scale与composition语义由 `@retikz/chart` 的 strict schema 和 Definition 消费
 - presentation shorthand 只归一为固定 `title`、`subtitle`、`note`、`source` slots；属性构造顺序不改变语义，固定 presentation 顺序由 Chart resolver 负责
 - Source IR 不包含 datasets、函数、Definition、provider、ReactNode、DOM 或 resolved `IRPlot`

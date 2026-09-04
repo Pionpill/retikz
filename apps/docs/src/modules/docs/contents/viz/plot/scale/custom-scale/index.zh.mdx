@@ -16,10 +16,10 @@ description: 用 ScaleDefinition 扩展值到坐标或颜色的映射，并通�
 
 `defineScale` 按 `family` 区分两套输出契约：
 
-| family     | 输入与输出 | 关键契约                                                                                                                      |
-| ---------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `position` | 值 → 坐标  | `resolve` 接收 raw values 与 fallback range，返回完整 `PositionScale`；`isFieldCompatible` 与 `allowsBaseline` 声明消费限制   |
-| `channel`  | 值 → 颜色  | `resolve` 接收 raw values 与 `ChannelScaleResolveContext`，返回颜色 evaluator、`legendForm`、`domain`、`range` 与可选 `edges` |
+| family     | 输入与输出 | 关键契约                                                                                                                                  |
+| ---------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `position` | 值 → 坐标  | `resolve` 接收 raw values 与 fallback range，返回完整 `PositionScale`；`continuity`、`isFieldCompatible` 与 `allowsBaseline` 声明消费限制 |
+| `channel`  | 值 → 颜色  | `resolve` 接收 raw values 与 `ChannelScaleResolveContext`，返回颜色 evaluator、`legendForm`、`domain`、`range` 与可选 `edges`             |
 
 下面的 demo 同时注册 `ease-position` 和 `brand`：前者让 x 坐标按指数重新分布，后者把分类 `tier` 映射到品牌色板。拖动指数可以比较位置映射，颜色映射保持不变；两种 definition、数据和宿主注入都可以从源码切换器中查看：
 
@@ -79,6 +79,8 @@ const spec: IRPlot = {
 3. position definition 接收 raw values 与 fallback range，产出坐标、ticks 和 range；channel definition 接收 raw values 与颜色解析上下文，产出实绘与图例共用的结果。
 4. coordinate / axis 消费 position scale；color / paint channel 与 legend 消费 channel scale。
 
+position definition 还必须用 `continuity` 声明拓扑是 <ApiValues name="PositionScaleContinuity" />。`polar2D` 省略 `interpolation` 时依赖这项元数据选择默认连接方式：`continuous` 使用弧线，`discrete` 使用直线连接。Plot 不按自定义 `type` 名称或 runtime scale 的形状猜测连续性。
+
 <SourceLinks
   sources={[
     {
@@ -91,7 +93,7 @@ const spec: IRPlot = {
       label: 'scale registry 合并与重复校验',
       path: 'packages/viz/plot/src/providers/scale/registry.ts',
       startLine: 16,
-      endLine: 31,
+      endLine: 40,
     },
     {
       label: 'scale definition lookup 与 JSON 校验',
@@ -118,6 +120,7 @@ const spec: IRPlot = {
 
 - 自定义 `type` 不能覆盖内置 scale，也不能重复注册；未注册 type 会在 lookup 阶段直接报错。
 - position scale 不能驱动颜色通道，channel scale 也不能驱动位置 role；family 错配会 fail-loud。
+- position definition 必须声明 `continuity`；缺失或非法值会在 registry 建立时 fail-loud。
 - definition schema 应使用闭合 JSON object。示例用 `z.strictObject`，避免拼错配置后被静默剥离。
 - position definition 必须实现 `coordinate`、`domain`、`bandwidth`、`ticks`、`range` 和 `setRange`；channel definition 的 `of` 当前只能返回颜色字符串或 `undefined`。
 - 自定义 scale 不参与 React 字段类型自动派生；声明式 `<PlotScale>` 也只覆盖内置 type。
@@ -133,13 +136,14 @@ scales: [{ type: 'ease-position', name: 'x', exponnent: 1.8 }];
 
 公开导出：
 
-| 从 `@retikz/plot` 导入       | 用途                                                   |
-| ---------------------------- | ------------------------------------------------------ |
-| `defineScale`                | 从 family、schema 与 resolve 行为构造 scale definition |
-| `ScaleDefinition`            | 查询 position / channel union 的完整 Definition 契约   |
-| `PositionScale`              | position family 必须返回的坐标、ticks 与 range 接口    |
-| `ChannelScaleResolveContext` | channel family 的字段类型、强转与配色解析上下文        |
-| `ChannelScaleResolution`     | channel family 的颜色 evaluator 与图例同源结果         |
+| 从 `@retikz/plot` 导入       | 用途                                                           |
+| ---------------------------- | -------------------------------------------------------------- |
+| `defineScale`                | 从 family、schema 与 resolve 行为构造 scale definition         |
+| `ScaleDefinition`            | 查询 position / channel union 的完整 Definition 契约           |
+| `PositionScale`              | position family 必须返回的坐标、ticks 与 range 接口            |
+| `PositionScaleContinuity`    | position definition 必填的 `continuous \| discrete` 拓扑元数据 |
+| `ChannelScaleResolveContext` | channel family 的字段类型、强转与配色解析上下文                |
+| `ChannelScaleResolution`     | channel family 的颜色 evaluator 与图例同源结果                 |
 
 宿主注入：
 

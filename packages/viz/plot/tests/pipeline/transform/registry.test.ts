@@ -96,34 +96,34 @@ describe('transform registry (contract)', () => {
     );
   });
 
-  it('publishes compact scheduling capabilities for field-bindable plot transforms', () => {
+  it('publishes schedules for field-bindable plot transforms', () => {
     const registry = resolvePlotTransformRegistry();
-    expect(registry.get(PlotTransform.Stack)?.compact).toEqual({
+    expect(registry.get(PlotTransform.Stack)?.schedule).toEqual({
       phase: DataTransformPhase.CumulativeDerive,
       bindingClass: DataTransformBindingClass.Field,
       fieldEffect: DataTransformFieldEffect.Preserve,
     });
-    expect(registry.get(PlotTransform.Bin)?.compact).toEqual({
+    expect(registry.get(PlotTransform.Bin)?.schedule).toEqual({
       phase: DataTransformPhase.RowShape,
       bindingClass: DataTransformBindingClass.Field,
       fieldEffect: DataTransformFieldEffect.Replace,
     });
-    expect(registry.get(PlotTransform.Normalize)?.compact).toEqual({
+    expect(registry.get(PlotTransform.Normalize)?.schedule).toEqual({
       phase: DataTransformPhase.FieldDerive,
       bindingClass: DataTransformBindingClass.Field,
       fieldEffect: DataTransformFieldEffect.Preserve,
     });
-    expect(registry.get(PlotTransform.DeriveInterval)?.compact).toEqual({
+    expect(registry.get(PlotTransform.DeriveInterval)?.schedule).toEqual({
       phase: DataTransformPhase.CumulativeDerive,
       bindingClass: DataTransformBindingClass.Field,
       fieldEffect: DataTransformFieldEffect.Preserve,
     });
-    expect(registry.get(PlotTransform.Jitter)?.compact).toEqual({
+    expect(registry.get(PlotTransform.Jitter)?.schedule).toEqual({
       phase: DataTransformPhase.FieldAdjust,
       bindingClass: DataTransformBindingClass.Field,
       fieldEffect: DataTransformFieldEffect.Preserve,
     });
-    expect(registry.get(PlotTransform.Density)?.compact).toBeUndefined();
+    expect(registry.get(PlotTransform.Density)?.schedule).toBeUndefined();
   });
 
   it('define_transform_preserves_schema_and_extracts_kind', () => {

@@ -3,7 +3,7 @@ import type { IRNode, IRPath, IRScope } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { PositionScale } from '../../../src/contract';
+import type { CoordinateFrame, PositionScale } from '../../../src/contract';
 import type { GuideContext } from '../../../src/contract';
 import type { IRPlot } from '../../../src/schemas';
 
@@ -14,12 +14,17 @@ import { lowerCustomAxis, lowerGuide } from '../../../src/pipeline/guide';
 import { PlotSchema } from '../../../src/schemas';
 
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */
-const fakeScale = (coordinate: (value: number) => number, domain: ReadonlyArray<number> = [0, 1]): PositionScale => ({
+const fakeScale = (
+  coordinate: (value: number) => number,
+  domain: ReadonlyArray<number> = [0, 1],
+  scaleRange: readonly [number, number] = [0, 0],
+): PositionScale => ({
   coordinate: value => coordinate(value as number),
   domain: () => domain,
   bandwidth: 0,
+  step: 0,
   ticks: () => ({ values: [], labels: [] }),
-  range: () => [0, 0],
+  range: () => [scaleRange[0], scaleRange[1]],
   setRange: () => {},
 });
 
@@ -28,23 +33,35 @@ const fakeTickScale = (coordinate: (value: number) => number, values: Array<numb
   coordinate: value => coordinate(value as number),
   domain: () => [values[0], values[values.length - 1]],
   bandwidth: 0,
+  step: 0,
   ticks: () => ({ values, labels: values.map(value => String(value)) }),
   range: () => [coordinate(values[0]), coordinate(values[values.length - 1])],
   setRange: () => {},
 });
 
-const fakeBandScale = (coordinates: Record<string, number>, bandwidth: number): PositionScale => ({
+const fakeBandScale = (
+  coordinates: Record<string, number>,
+  bandwidth: number,
+  scaleRange: readonly [number, number] = [
+    Math.min(...Object.values(coordinates)),
+    Math.max(...Object.values(coordinates)),
+  ],
+): PositionScale => ({
   coordinate: value => coordinates[String(value)] ?? Number.NaN,
   domain: () => Object.keys(coordinates),
   bandwidth,
+  step: bandwidth,
   ticks: () => ({ values: Object.keys(coordinates), labels: Object.keys(coordinates) }),
   tickKind: 'category',
-  range: () => {
-    const values = Object.values(coordinates);
-    return [Math.min(...values), Math.max(...values)];
-  },
+  range: () => [scaleRange[0], scaleRange[1]],
   setRange: () => {},
 });
+
+const fakePolarPlacementBoundary = {
+  isCyclic: () => false,
+  unitNormal: () => [1, 0] as const,
+  glyphExtentInRoleUnits: (_role: string, _mappedRoles: ReadonlyArray<number>, screenExtent: number) => screenExtent,
+} satisfies NonNullable<CoordinateFrame['placementBoundary']>;
 
 const ctx: GuideContext = {
   plotArea: { x: 40, y: 10, width: 400, height: 250 },
@@ -53,6 +70,44 @@ const ctx: GuideContext = {
   xTicks: { values: [0, 1, 2], labels: ['0', '1', '2'] },
   yTicks: { values: [9, 10, 11], labels: ['9', '10', '11'] },
   fontSize: 11,
+};
+
+const polarAngularGuideContext = (values: Array<number>, labels: Array<string>): GuideContext => {
+  const angularScale = fakeScale(value => value, values, [0, 360]);
+  const radialScale = fakeScale(value => value);
+  return {
+    ...ctx,
+    fontSize: 10,
+    frame: {
+      type: 'polar2D',
+      roles: ['x', 'y'],
+      center: [200, 200],
+      innerRadius: 0,
+      outerRadius: 100,
+      startAngle: 0,
+      endAngle: 360,
+      interpolation: 'polar',
+      angularSkeleton: [0, 90, 180, 270],
+      primary: angularScale,
+      secondary: radialScale,
+      roleScales: { x: angularScale, y: radialScale },
+      project: () => null,
+      projectRoles: () => null,
+      mapRoles: () => null,
+      projectMappedRoles: () => null,
+      placementBoundary: fakePolarPlacementBoundary,
+      projectPolar: () => null,
+      projectCell: () => ({
+        kind: 'sector',
+        center: [200, 200],
+        innerRadius: 0,
+        outerRadius: 1,
+        startAngle: 0,
+        endAngle: 1,
+      }),
+    },
+    angularTicks: { values, labels },
+  };
 };
 
 const nodeChildren = (layer: IRScope): Array<IRNode> =>
@@ -195,12 +250,16 @@ describe('lowerGuide (contract)', () => {
           outerRadius: 80,
           startAngle: 0,
           endAngle: 180,
-          continuousAngle: true,
+          interpolation: 'polar',
+          angularSkeleton: [0, 90, 180, 270],
           primary: fakeScale(value => value),
           secondary: fakeScale(value => value),
           roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
           project: () => null,
           projectRoles: () => null,
+          mapRoles: () => null,
+          projectMappedRoles: () => null,
+          placementBoundary: fakePolarPlacementBoundary,
           projectPolar: () => null,
           projectCell: () => ({
             kind: 'sector',
@@ -232,12 +291,16 @@ describe('lowerGuide (contract)', () => {
           outerRadius: 80,
           startAngle: 0,
           endAngle: 180,
-          continuousAngle: true,
+          interpolation: 'polar',
+          angularSkeleton: [0, 90, 180, 270],
           primary: fakeScale(value => value),
           secondary: fakeScale(value => value),
           roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
           project: () => null,
           projectRoles: () => null,
+          mapRoles: () => null,
+          projectMappedRoles: () => null,
+          placementBoundary: fakePolarPlacementBoundary,
           projectPolar: () => null,
           projectCell: () => ({
             kind: 'sector',
@@ -256,6 +319,54 @@ describe('lowerGuide (contract)', () => {
     expect(title.rotate).toBeCloseTo(-90, 6);
   });
 
+  it('polar_angular_tick_labels_extend_outward_by_angle', () => {
+    const values = [0, 30, 90, 180, 270];
+    const labels = ['Right', 'Diagonal label', 'Bottom', 'Left', 'Top'];
+    const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'x' }, polarAngularGuideContext(values, labels));
+
+    const right = nodeByText(axisLayer as IRScope, 'Right');
+    const diagonal = nodeByText(axisLayer as IRScope, 'Diagonal label');
+    const bottom = nodeByText(axisLayer as IRScope, 'Bottom');
+    const left = nodeByText(axisLayer as IRScope, 'Left');
+    const top = nodeByText(axisLayer as IRScope, 'Top');
+
+    expect(right.align).toBe('start');
+    expect(right.position).toEqual([325, 200]);
+    expect(diagonal.align).toBe('start');
+    expect((diagonal.position as [number, number])[0]).toBeCloseTo(328.927858, 6);
+    expect((diagonal.position as [number, number])[1]).toBeCloseTo(274.436533, 6);
+    expect(bottom.align).toBe('middle');
+    expect(bottom.position).toEqual([200, 315]);
+    expect(left.align).toBe('end');
+    expect(left.position).toEqual([78, 200]);
+    expect(top.align).toBe('middle');
+    expect(top.position).toEqual([200, 85]);
+  });
+
+  it('polar_angular_tick_label_center_moves_continuously_across_a_cardinal_angle', () => {
+    const atCardinal = nodeByText(
+      lowerGuide({ type: 'axis', dimension: 'x' }, polarAngularGuideContext([90], ['Waseca'])).axisLayer as IRScope,
+      'Waseca',
+    );
+    const pastCardinal = nodeByText(
+      lowerGuide({ type: 'axis', dimension: 'x' }, polarAngularGuideContext([91.5], ['Waseca'])).axisLayer as IRScope,
+      'Waseca',
+    );
+    const [cardinalX, cardinalY] = atCardinal.position as [number, number];
+    const [pastX, pastY] = pastCardinal.position as [number, number];
+
+    expect(Math.hypot(pastX - cardinalX, pastY - cardinalY)).toBeLessThan(4);
+  });
+
+  it('polar_angular_tick_label_explicit_alignment_overrides_angle_default', () => {
+    const { axisLayer } = lowerGuide(
+      { type: 'axis', dimension: 'x', tickLabels: { align: 'middle' } },
+      polarAngularGuideContext([0], ['Right']),
+    );
+
+    expect(nodeByText(axisLayer as IRScope, 'Right').align).toBe('middle');
+  });
+
   it('polar_radial_axis_title_placement_samples_radius_range', () => {
     const { axisLayer } = lowerGuide(
       { type: 'axis', dimension: 'y', title: { text: 'radius', placement: 'at-end' } },
@@ -269,12 +380,16 @@ describe('lowerGuide (contract)', () => {
           outerRadius: 80,
           startAngle: 0,
           endAngle: 180,
-          continuousAngle: true,
+          interpolation: 'polar',
+          angularSkeleton: [0, 90, 180, 270],
           primary: fakeScale(value => value),
           secondary: fakeScale(value => value),
           roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
           project: () => null,
           projectRoles: () => null,
+          mapRoles: () => null,
+          projectMappedRoles: () => null,
+          placementBoundary: fakePolarPlacementBoundary,
           projectPolar: () => null,
           projectCell: () => ({
             kind: 'sector',
@@ -363,7 +478,7 @@ describe('lowerGuide (contract)', () => {
     expect(nodeChildren(axisLayer as IRScope).map(node => node.text)).toEqual(['0', '1', '2', '3']);
   });
 
-  it('axis_grid_domain_endpoints_are_opt_in', () => {
+  it('axis_grid_range_boundaries_are_opt_in', () => {
     const endpointCtx: GuideContext = {
       ...ctx,
       projectX: fakeScale(value => 40 + value * 40, [-1, 3]),
@@ -379,25 +494,24 @@ describe('lowerGuide (contract)', () => {
     expect(((explicitlyDisabled.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(4);
   });
 
-  it('axis_grid_appends_missing_effective_domain_endpoints_after_explicit_source', () => {
+  it('axis_grid_appends_missing_scale_range_boundaries_after_explicit_source', () => {
     const { gridLayer } = lowerGuide(
       {
         type: 'axis',
         dimension: 'x',
         grid: { ticks: { values: [0, 2] }, includeDomain: true },
       },
-      { ...ctx, projectX: fakeScale(value => 40 + value * 40, [-1, 3]) },
+      { ...ctx, projectX: fakeScale(value => 40 + value * 40, [-1, 3], [40, 440]) },
     );
     const steps = ((gridLayer as IRScope).children[0] as IRPath).children;
 
-    expect(steps).toHaveLength(8);
+    expect(steps).toHaveLength(6);
     expect(steps[0]).toEqual({ type: 'step', kind: 'move', to: [40, 10] });
     expect(steps[2]).toEqual({ type: 'step', kind: 'move', to: [120, 10] });
-    expect(steps[4]).toEqual({ type: 'step', kind: 'move', to: [0, 10] });
-    expect(steps[6]).toEqual({ type: 'step', kind: 'move', to: [160, 10] });
+    expect(steps[4]).toEqual({ type: 'step', kind: 'move', to: [440, 10] });
   });
 
-  it('axis_grid_appends_domain_endpoints_after_density_without_changing_axis_ticks', () => {
+  it('axis_grid_appends_scale_range_boundaries_after_density_without_changing_axis_ticks', () => {
     const { axisLayer, gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -406,7 +520,7 @@ describe('lowerGuide (contract)', () => {
       },
       {
         ...ctx,
-        projectX: fakeScale(value => 40 + value * 40, [0, 5]),
+        projectX: fakeScale(value => 40 + value * 40, [0, 5], [40, 440]),
         xTicks: { values: [1, 2, 3, 4], labels: ['1', '2', '3', '4'] },
       },
     );
@@ -416,12 +530,12 @@ describe('lowerGuide (contract)', () => {
     expect(nodeChildren(axisLayer as IRScope).map(node => node.text)).toEqual(['1', '2', '3', '4']);
   });
 
-  it('axis_grid_domain_endpoints_dedupe_by_finite_projected_coordinate', () => {
+  it('axis_grid_range_boundaries_dedupe_by_finite_projected_coordinate', () => {
     const existingEndpoint = lowerGuide(
       { type: 'axis', dimension: 'x', grid: { includeDomain: true } },
       {
         ...ctx,
-        projectX: fakeScale(value => 40 + value * 40, [0, 2]),
+        projectX: fakeScale(value => 40 + value * 40, [0, 2], [40, 120]),
         xTicks: { values: [0, 1, 2], labels: ['0', '1', '2'] },
       },
     );
@@ -431,7 +545,7 @@ describe('lowerGuide (contract)', () => {
         dimension: 'x',
         grid: { ticks: { values: [] }, includeDomain: true },
       },
-      { ...ctx, projectX: fakeScale(() => 40, [0, 10]) },
+      { ...ctx, projectX: fakeScale(() => 40, [0, 10], [40, 40]) },
     );
     const nonFiniteEndpoint = lowerGuide(
       {
@@ -441,16 +555,16 @@ describe('lowerGuide (contract)', () => {
       },
       {
         ...ctx,
-        projectX: fakeScale(value => (value === 0 ? Number.NaN : 40 + value * 40), [0, 10]),
+        projectX: fakeScale(value => (value === 0 ? Number.NaN : 40 + value * 40), [0, 10], [40, 440]),
       },
     );
 
     expect(((existingEndpoint.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(6);
     expect(((coincidentEndpoints.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(2);
-    expect(((nonFiniteEndpoint.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(4);
+    expect(((nonFiniteEndpoint.gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(6);
   });
 
-  it('axis_grid_domain_endpoints_use_band_position_without_becoming_plot_area_borders', () => {
+  it('axis_grid_include_domain_uses_plot_range_boundaries_for_band_scale', () => {
     const { gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -459,7 +573,7 @@ describe('lowerGuide (contract)', () => {
       },
       {
         ...ctx,
-        projectX: fakeBandScale({ A: 100, B: 200 }, 20),
+        projectX: fakeBandScale({ A: 100, B: 200 }, 20, [90, 210]),
         xTicks: { values: ['A'], labels: ['A'] },
       },
     );
@@ -467,10 +581,41 @@ describe('lowerGuide (contract)', () => {
 
     expect(gridPath.children).toHaveLength(4);
     expect(gridPath.children[0]).toEqual({ type: 'step', kind: 'move', to: [90, 10] });
-    expect(gridPath.children[2]).toEqual({ type: 'step', kind: 'move', to: [190, 10] });
+    expect(gridPath.children[2]).toEqual({ type: 'step', kind: 'move', to: [210, 10] });
   });
 
-  it('axis_grid_domain_endpoints_do_not_change_minor_grid_candidates', () => {
+  it('axis_grid_include_domain_uses_plot_range_boundaries_for_point_scale', () => {
+    const { gridLayer } = lowerGuide(
+      { type: 'axis', dimension: 'x', grid: { includeDomain: true } },
+      {
+        ...ctx,
+        projectX: fakeBandScale({ A: 100, B: 200 }, 0, [90, 210]),
+        xTicks: { values: ['A'], labels: ['A'] },
+      },
+    );
+    const gridPath = (gridLayer as IRScope).children[0] as IRPath;
+
+    expect(gridPath.children).toHaveLength(6);
+    expect(gridPath.children[0]).toEqual({ type: 'step', kind: 'move', to: [100, 10] });
+    expect(gridPath.children[2]).toEqual({ type: 'step', kind: 'move', to: [90, 10] });
+    expect(gridPath.children[4]).toEqual({ type: 'step', kind: 'move', to: [210, 10] });
+  });
+
+  it('axis_grid_include_domain_draws_boundaries_without_ticks', () => {
+    const { gridLayer } = lowerGuide(
+      { type: 'axis', dimension: 'x', grid: { includeDomain: true } },
+      {
+        ...ctx,
+        projectX: fakeScale(value => 40 + value * 40, [0, 1], [40, 440]),
+        xTicks: { values: [], labels: [] },
+      },
+    );
+
+    expect(gridLayer).not.toBeNull();
+    expect(((gridLayer as IRScope).children[0] as IRPath).children).toHaveLength(4);
+  });
+
+  it('axis_grid_range_boundaries_do_not_change_minor_grid_candidates', () => {
     const { axisLayer, gridLayer } = lowerGuide(
       {
         type: 'axis',
@@ -483,7 +628,7 @@ describe('lowerGuide (contract)', () => {
       },
       {
         ...ctx,
-        projectX: fakeScale(value => 40 + value * 40, [0, 2]),
+        projectX: fakeScale(value => 40 + value * 40, [0, 2], [40, 120]),
         xTicks: { values: [1], labels: ['1'] },
       },
     );
@@ -568,12 +713,16 @@ describe('lowerGuide (contract)', () => {
           outerRadius: 80,
           startAngle: 0,
           endAngle: 180,
-          continuousAngle: true,
+          interpolation: 'polar',
+          angularSkeleton: [0, 90, 180, 270],
           primary: fakeScale(value => value),
           secondary: fakeScale(value => value),
           roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
           project: () => null,
           projectRoles: () => null,
+          mapRoles: () => null,
+          projectMappedRoles: () => null,
+          placementBoundary: fakePolarPlacementBoundary,
           projectPolar: () => null,
           projectCell: () => ({
             kind: 'sector',
@@ -613,12 +762,16 @@ describe('lowerGuide (contract)', () => {
           outerRadius: 80,
           startAngle: 0,
           endAngle: 360,
-          continuousAngle: true,
+          interpolation: 'polar',
+          angularSkeleton: [0, 90, 180, 270],
           primary: angularScale,
           secondary: fakeScale(value => value),
           roleScales: { x: angularScale, y: fakeScale(value => value) },
           project: () => null,
           projectRoles: () => null,
+          mapRoles: () => null,
+          projectMappedRoles: () => null,
+          placementBoundary: fakePolarPlacementBoundary,
           projectPolar: () => null,
           projectCell: () => ({
             kind: 'sector',
@@ -1066,12 +1219,16 @@ describe('lowerGuide (contract)', () => {
             outerRadius: 80,
             startAngle: 0,
             endAngle: 360,
-            continuousAngle: true,
+            interpolation: 'polar',
+            angularSkeleton: [0, 90, 180, 270],
             primary: fakeScale(value => value),
             secondary: fakeScale(value => value),
             roleScales: { x: fakeScale(value => value), y: fakeScale(value => value) },
             project: () => null,
             projectRoles: () => null,
+            mapRoles: () => null,
+            projectMappedRoles: () => null,
+            placementBoundary: fakePolarPlacementBoundary,
             projectPolar: () => null,
             projectCell: () => ({
               kind: 'sector',
@@ -1246,6 +1403,7 @@ describe('lowerPlots guide orchestration (contract)', () => {
     const gridLayer = outer.children[0] as IRScope;
     const gridPath = gridLayer.children[0] as IRPath;
 
-    expect(gridPath.children).toHaveLength(10);
+    // 默认无 domain padding，主题端点与可见 tick 端点重合并去重：3 条 grid × move/line
+    expect(gridPath.children).toHaveLength(6);
   });
 });

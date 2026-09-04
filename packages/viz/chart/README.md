@@ -8,14 +8,19 @@ public runtime/authoring boundary.
 
 The root package exports family-neutral Source schemas and the public theme
 contract, including `IRChartSource`, `createChartSourceSchema`, and
-`defineChartTheme`. Scatter is the currently implemented Point chartType; it
-owns its exact schema and provider contribution under
-`@retikz/chart/point/scatter`. A Source uses
+`defineChartTheme`. Scatter, Bubble, and Regression are the currently
+implemented Point chartTypes; each owns an exact schema and provider contribution under its
+concrete `@retikz/chart/point/*` subpath. A Source uses
 `type: 'point'` for family discovery and `recipe.chartType` for exact recipe
 selection. There is no public family-wide schema, global catalog, global Chart
 parser/router, or Base Chart compatibility path. Applications that need dynamic
 family/chartType discovery own that catalog and route JSON to the concrete
 schema/provider; complex custom graphics should use `@retikz/plot` directly.
+
+Regression composes the original Point observations with an open Path whose
+mark-local `Smooth` transform fits linear, quadratic, polynomial, logarithmic,
+exponential, or power models. Its optional recipe-only `series` field drives
+grouped fitting, shared categorical color, and the default legend.
 
 Use `@retikz/chart-react` for JSX authoring or `@retikz/chart-vanilla` for
 plain-data and server-side rendering helpers.

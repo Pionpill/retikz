@@ -19,10 +19,10 @@ import {
 import { previewControlContract as presentationVisibilityZhContract } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.controls';
 import { previewControlContract as presentationVisibilityEnContract } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.en.controls';
 import { previewSource as presentationVisibilityZhSource } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.zh.demo';
-import { previewSource as basicEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.en.demo';
-import { previewSource as basicZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-basic.zh.demo';
-import { previewSource as incomeLifeExpectancyEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.en.demo';
-import { previewSource as incomeLifeExpectancyZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-income-life-expectancy.zh.demo';
+import { previewSource as fertilityWorkEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
+import { previewSource as fertilityWorkZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
+import { previewSource as worldCupEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.en.demo';
+import { previewSource as worldCupZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.zh.demo';
 
 const canonicalScatterChartOf = (source: PreviewSourceConfig): ReactElement => {
   const chart = source.canonicalRender?.();
@@ -159,13 +159,14 @@ describe('Chart-native Scatter presentation', () => {
       const content = `${structure}\n${authoring}`;
 
       expect(content).toContain('@retikz/chart/point/scatter');
-      expect(content).toContain('@retikz/chart-react/point/scatter');
+      expect(content).toContain('@retikz/chart-react/point');
+      expect(content).not.toContain('@retikz/chart-react/point/');
       expect(content).toContain('@retikz/chart-vanilla/point/scatter');
     }
   });
 
   it('uses the ScatterChart shorthand path for the World Bank example', () => {
-    for (const source of [basicZhPreviewSource, basicEnPreviewSource]) {
+    for (const source of [fertilityWorkZhPreviewSource, fertilityWorkEnPreviewSource]) {
       const chart = canonicalScatterChartOf(source);
 
       expect(chart.type).toBe(ScatterChart);
@@ -178,27 +179,6 @@ describe('Chart-native Scatter presentation', () => {
         presentation: {
           title: expect.anything(),
           subtitle: expect.anything(),
-          source: expect.anything(),
-        },
-      });
-    }
-  });
-
-  it('normalizes the Chart presentation shorthand order for the Gapminder example', () => {
-    for (const source of [incomeLifeExpectancyZhPreviewSource, incomeLifeExpectancyEnPreviewSource]) {
-      const chart = canonicalScatterChartOf(source);
-
-      expect(chart.type).toBe(ScatterChart);
-      const contribution = scatterContributionOf(chart);
-      expect(contribution.node).toMatchObject({
-        namespace: 'chart',
-        type: 'point',
-        data: { reference: 'chart.data' },
-        recipe: { chartType: 'scatter' },
-        presentation: {
-          title: expect.anything(),
-          subtitle: expect.anything(),
-          note: expect.anything(),
           source: expect.anything(),
         },
       });
@@ -207,15 +187,18 @@ describe('Chart-native Scatter presentation', () => {
 
   it('generates reusable Vanilla source and SVG from the real Scatter datasets', () => {
     const cases = [
-      [basicZhPreviewSource, './scatter-basic.data'],
-      [incomeLifeExpectancyZhPreviewSource, './scatter-income-life-expectancy.data'],
+      [fertilityWorkZhPreviewSource, './scatter-fertility-work.data', 'fertilityWorkData'],
+      [fertilityWorkEnPreviewSource, './scatter-fertility-work.data', 'fertilityWorkData'],
+      [worldCupZhPreviewSource, './scatter-world-cup-shots.data', 'messiWorldCupShots'],
+      [worldCupEnPreviewSource, './scatter-world-cup-shots.data', 'messiWorldCupShots'],
     ] as const;
 
-    for (const [source, datasetModule] of cases) {
+    for (const [source, datasetModule, datasetExport] of cases) {
       const preview = buildPreviewIR(() => source.canonicalRender?.() ?? null);
       const vanilla = buildVanillaPreview(preview, { datasetImports: source.datasetImports });
 
-      expect(vanilla.code).toContain(`import { countryScatterData } from '${datasetModule}';`);
+      expect(vanilla.code).toContain(`import { ${datasetExport} } from '${datasetModule}';`);
+      expect(vanilla.code).not.toContain('const datasets =');
       expect(vanilla.code).toContain("import { renderChart } from '@retikz/chart-vanilla';");
       expect(vanilla.code).toContain("import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';");
       expect(vanilla.code).not.toContain('markDefinitions: [scatterMarkDefinition]');
@@ -224,7 +207,7 @@ describe('Chart-native Scatter presentation', () => {
   });
 
   it('passes the preview text measurer into the Vanilla Chart compile path', () => {
-    const preview = buildPreviewIR(() => basicZhPreviewSource.canonicalRender?.() ?? null);
+    const preview = buildPreviewIR(() => fertilityWorkZhPreviewSource.canonicalRender?.() ?? null);
     let measureCalls = 0;
     const vanilla = buildVanillaPreview(preview, {
       measureText: (text, font) => {
@@ -238,9 +221,9 @@ describe('Chart-native Scatter presentation', () => {
   });
 
   it('renders a selected docs Chart theme style through the Vanilla preview path', () => {
-    const preview = buildPreviewIR(() => basicZhPreviewSource.canonicalRender?.() ?? null);
+    const preview = buildPreviewIR(() => fertilityWorkZhPreviewSource.canonicalRender?.() ?? null);
     const vanilla = buildVanillaPreview(preview, {
-      datasetImports: basicZhPreviewSource.datasetImports,
+      datasetImports: fertilityWorkZhPreviewSource.datasetImports,
       theme: { mode: 'light', style: 'academic' },
     });
 

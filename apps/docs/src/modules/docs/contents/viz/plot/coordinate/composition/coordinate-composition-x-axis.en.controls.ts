@@ -19,12 +19,7 @@ export const coordinateCompositionXAxisControls = definePreviewControls({
           id: 'rows',
           label: 'Release progress',
           rows: releaseRows,
-          columns: [
-            { key: 'elapsedDay', label: 'Elapsed day' },
-            { key: 'calendarDay', label: 'Calendar day' },
-            { key: 'completed', label: 'Completed' },
-            { key: 'forecast', label: 'Forecast' },
-          ],
+          columns: [{ key: 'elapsedDay' }, { key: 'calendarDay' }, { key: 'completed' }, { key: 'forecast' }],
         },
       ],
     },

@@ -743,7 +743,7 @@ describe('preview controls registry', () => {
     expect(positionSource).toContain(
       'paddingOuter={isHorizontal ? 0 : isPolar ? values[BAR_POSITION_CONTROL_IDS.gap] / 2 : 0.15}',
     );
-    expect(positionSource).toContain('domainPadding={isHorizontal ? 0.05 : 0}');
+    expect(positionSource).toContain("domainPadding={isHorizontal ? { kind: 'ratio', lower: 0.05, upper: 0.05 } : 0}");
 
     const seriesSource = demoSources[buildKey(segments, 'bar-series')];
     expect(seriesSource).toContain('paddingOuter={isPolar ? values[BAR_SERIES_GAP_ID] / 2 : 0.15}');

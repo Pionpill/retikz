@@ -1,4 +1,4 @@
-import type { IRChild, IRJsonObject, IRNode, IRScope } from '@retikz/core';
+import type { IRChild, IRJsonObject, IRNode, IRPath, IRScope } from '@retikz/core';
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
 
 import { readSourceIndex, readSourceIndices, resolveFieldPath } from '@retikz/data';
@@ -36,8 +36,13 @@ type RenderDatumEntry = PlotAnchorResolution & {
   markIndex: number;
 };
 
+type RenderSeriesEntry = PlotAnchorResolution & {
+  markIndex: number;
+};
+
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
 const isNode = (child: IRChild): child is IRNode => child.type === 'node';
+const isPath = (child: IRChild): child is IRPath => child.type === 'path';
 
 const mergeMeta = (parent: IRJsonObject, own: IRJsonObject | undefined): IRJsonObject => ({
   ...parent,
@@ -97,6 +102,32 @@ const collectRenderDatumEntries = (
   return child.children.flatMap(item => collectRenderDatumEntries(item, meta, nextOffset));
 };
 
+/** 从已下沉 Path endpoint 收集带 series / facet context 的结构锚点 */
+const collectRenderSeriesEntries = (
+  child: IRChild,
+  parentMeta: IRJsonObject = {},
+  offset: [number, number] = [0, 0],
+): Array<RenderSeriesEntry> => {
+  if (isPath(child)) {
+    const meta = mergeMeta(parentMeta, child.meta);
+    const markIndex = meta.markIndex;
+    const series = meta.series;
+    if (typeof markIndex !== 'number' || !Number.isInteger(markIndex)) return [];
+    if (typeof series !== 'string' && typeof series !== 'number') return [];
+    return child.children.flatMap(step => {
+      if (!('to' in step) || !Array.isArray(step.to)) return [];
+      const [x, y] = step.to;
+      if (typeof x !== 'number' || !Number.isFinite(x) || typeof y !== 'number' || !Number.isFinite(y)) return [];
+      return [{ position: [x + offset[0], y + offset[1]], meta, markIndex } satisfies RenderSeriesEntry];
+    });
+  }
+  if (!isScope(child)) return [];
+  const meta = mergeMeta(parentMeta, child.meta);
+  const [dx, dy] = translateOffsetOf(child);
+  const nextOffset: [number, number] = [offset[0] + dx, offset[1] + dy];
+  return child.children.flatMap(item => collectRenderSeriesEntries(item, meta, nextOffset));
+};
+
 const hasContextOptions = (opts: PlotLocatorOptions | undefined): boolean =>
   opts?.coordinateView !== undefined || opts?.facet !== undefined || opts?.track !== undefined;
 
@@ -137,6 +168,7 @@ export const buildPlotLocatorFromDataArtifact = (
   lowered: PlotDataArtifactLowerResult,
 ): PlotLocator => {
   const renderEntries = collectRenderDatumEntries(lowered.child);
+  const renderSeriesEntries = collectRenderSeriesEntries(lowered.child);
   const { compositionResolution, frameByCoordinateScopeId, markDataViews, rootMarkDataViews } = lowered.dataArtifact;
   const markRegistry = resolveMarkRegistry(options.markDefinitions);
 
@@ -222,7 +254,7 @@ export const buildPlotLocatorFromDataArtifact = (
   const series: PlotLocator['series'] = (value, opts) => {
     const hasContext = hasContextOptions(opts);
     const markIndex = opts?.markIndex ?? (hasContext ? undefined : defaultMarkIndex);
-    const entries = renderEntries.filter(entry => {
+    const entries = [...renderEntries, ...renderSeriesEntries].filter(entry => {
       if ((markIndex !== undefined && entry.markIndex !== markIndex) || !contextMatches(entry.meta, opts)) {
         return false;
       }

@@ -584,23 +584,37 @@ describe('离散化 / 连续色阶 · 非有限数值字段被 schema 拒（自 
 });
 
 describe('ScaleSchema position domain padding', () => {
-  it('linear_accepts_domain_padding_object', () => {
-    const s = { type: 'linear', name: 'x', domainPadding: { lower: 0.1, upper: 0.2 }, singleValueSpan: 2 };
-    expect(ScaleSchema.parse(s)).toEqual(s);
+  it.each([
+    ['range number', 0.25],
+    ['range object without kind', { lower: 12 }],
+    ['explicit range object', { kind: 'range', upper: 8 }],
+    ['explicit ratio object', { kind: 'ratio', lower: 0.1, upper: 0.2 }],
+  ])('preserves %s through parse and JSON round-trip', (_name, domainPadding) => {
+    const source = { type: 'linear', name: 'x', domainPadding, singleValueSpan: 2 };
+    expect(ScaleSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
   });
 
-  it('time_accepts_domain_padding_number', () => {
-    const s = { type: 'time', name: 'x', domainPadding: 0.05, singleValueSpan: 2 };
-    expect(ScaleSchema.parse(s)).toEqual(s);
+  it.each([
+    ['empty object', {}],
+    ['kind-only range object', { kind: 'range' }],
+    ['kind-only ratio object', { kind: 'ratio' }],
+    ['unknown kind', { kind: 'pixels', lower: 1 }],
+    ['negative number', -0.1],
+    ['negative range side', { kind: 'range', upper: -0.1 }],
+    ['non-finite range side', { kind: 'range', lower: Number.POSITIVE_INFINITY }],
+    ['ratio equal to one', { kind: 'ratio', lower: 1 }],
+    ['ratio above one', { kind: 'ratio', upper: 1.1 }],
+  ])('rejects %s', (_name, domainPadding) => {
+    expect(ScaleSchema.safeParse({ type: 'linear', name: 'x', domainPadding }).success).toBe(false);
   });
 
-  it('domain_padding_object_requires_a_side', () => {
-    expect(() => ScaleSchema.parse({ type: 'linear', name: 'x', domainPadding: {} })).toThrow();
-  });
-
-  it('domain_padding_rejects_negative_values', () => {
-    expect(() => ScaleSchema.parse({ type: 'linear', name: 'x', domainPadding: -0.1 })).toThrow();
-    expect(() => ScaleSchema.parse({ type: 'linear', name: 'x', domainPadding: { upper: -0.1 } })).toThrow();
+  it.each([
+    ['lower', { kind: 'ratio', lower: 1 }],
+    ['upper', { kind: 'ratio', upper: 1 }],
+  ])('locates an invalid ratio at the %s side', (side, domainPadding) => {
+    const result = ScaleSchema.safeParse({ type: 'linear', name: 'x', domainPadding });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues[0]?.path).toEqual(['domainPadding', side]);
   });
 
   it('single_value_span_must_be_positive', () => {

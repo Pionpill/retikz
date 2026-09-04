@@ -67,7 +67,7 @@ const stackTransformDefinition = defineTransform<IRPlotStackTransform>({
       { field: operation.endField ?? DEFAULT_END_FIELD, type: DataFieldType.Continuous },
     ],
   }),
-  compact: {
+  schedule: {
     phase: DataTransformPhase.CumulativeDerive,
     bindingClass: DataTransformBindingClass.Field,
     fieldEffect: DataTransformFieldEffect.Preserve,
@@ -114,7 +114,7 @@ const binTransformDefinition = defineTransform<IRPlotBinTransform>({
     ];
   },
   outputModel: binOutputModel,
-  compact: {
+  schedule: {
     phase: DataTransformPhase.RowShape,
     bindingClass: DataTransformBindingClass.Field,
     fieldEffect: DataTransformFieldEffect.Replace,
@@ -130,7 +130,7 @@ const normalizeTransformDefinition = defineTransform<IRPlotNormalizeTransform>({
     kind: 'preserve',
     outputs: [{ field: operation.as ?? operation.field, type: DataFieldType.Continuous }],
   }),
-  compact: {
+  schedule: {
     phase: DataTransformPhase.FieldDerive,
     bindingClass: DataTransformBindingClass.Field,
     fieldEffect: DataTransformFieldEffect.Preserve,
@@ -153,7 +153,7 @@ const deriveIntervalTransformDefinition = defineTransform<IRPlotDeriveIntervalTr
       { field: operation.endField ?? DEFAULT_DERIVE_END_FIELD, type: DataFieldType.Continuous },
     ],
   }),
-  compact: {
+  schedule: {
     phase: DataTransformPhase.CumulativeDerive,
     bindingClass: DataTransformBindingClass.Field,
     fieldEffect: DataTransformFieldEffect.Preserve,
@@ -221,7 +221,7 @@ const jitterTransformDefinition = defineTransform<IRPlotJitterTransform>({
       outputs: fields.map(field => ({ field, type: { from: field } })),
     };
   },
-  compact: {
+  schedule: {
     phase: DataTransformPhase.FieldAdjust,
     bindingClass: DataTransformBindingClass.Field,
     fieldEffect: DataTransformFieldEffect.Preserve,

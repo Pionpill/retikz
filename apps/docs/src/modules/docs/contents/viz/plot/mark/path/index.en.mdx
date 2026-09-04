@@ -36,7 +36,7 @@ The presentation form mainly changes through three groups of props: position cha
 
 ## Examples
 
-All five examples can switch between Cartesian and polar coordinates. The PathMark keeps the same responsibility: under polar2D, `x` is angular and `y` is radial. Switching to polar reveals “Close path,” so projection and the end-to-start connection can be compared independently; the default remains open.
+The examples cover ordering, series, connection, closure, and missing values. In playgrounds that switch coordinates, polar still uses `x` for angle and `y` for radius. `closed` only decides whether the last point reconnects to the first; it does not choose arcs versus straight chords between adjacent positions.
 
 ### Basic Usage
 
@@ -69,6 +69,16 @@ All five examples can switch between Cartesian and polar coordinates. The PathMa
   controls={{ name: 'line-curve' }}
   size="lg"
   caption="Keep the data fixed while combining connection and stroke changes, then compare open and closed paths under polar coordinates."
+/>
+
+### Polar Interpolation
+
+`polar2D` infers its coordinate interpolation from angular-scale continuity: continuous values use `polar`, while discrete values use `chord`. Here each plot inherits its own coordinate: the left plot defaults to `chord` and the right plot to `polar`, so each path and its grid always share one connection space.
+
+<ComponentPreview
+  files={['line-radar', 'line-radar.data.ts']}
+  size="lg"
+  caption="Switch each plot's coordinate interpolation independently to see its path and grid change together between polar curves and straight chords."
 />
 
 ### Closure and Fill
@@ -109,26 +119,34 @@ When a row cannot project into a valid point, PathMark breaks there and lowers t
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Order and group     | Rows split by `series` and then sort by `order`; without `series`, a categorical `color` field can split implicit series                               |
 | Project and segment | Each row projects to a point; invalid points break the trajectory unless `connectNulls` is enabled                                                     |
-| Connect and close   | `curve` controls adjacent segments; `closed` joins last to first, while `closure` creates cycle, baseline, or stack boundaries                         |
+| Connect and close   | polar2D `interpolation` chooses connection space first, `curve` then processes projected points, and `closed` only decides end-to-start topology       |
 | Lower               | Every continuous segment becomes a core `Path`; series form child layers, and `anchorId` additionally creates referenceable core `Coordinate` vertices |
 
 Series child layers preserve the same semantic grouping across renderers; missing values can further split each series into one or more continuous Path segments.
 
 `fill` only paints an existing closed boundary; it does not close an open path. When missing values create multiple continuous segments, each segment closes and fills independently instead of spanning the gap.
 
+`polar` samples neighboring points in angular / radial output space before projecting those samples to the screen. `chord` keeps only the projected vertices. `curve` then processes the screen points, so polar interpolation, topology closure, and the screen-space curve remain three separate choices. An explicit `interpolation` outside polar2D fails loudly.
+
 <SourceLinks
   sources={[
     {
+      label: 'polar2D Path inheritance, override, and closed-seam sampling',
+      path: 'packages/viz/plot/src/providers/mark/features/path.ts',
+      startLine: 307,
+      endLine: 337,
+    },
+    {
       label: 'Order rows, detect missing values, and split continuous segments',
       path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 382,
-      endLine: 415,
+      startLine: 380,
+      endLine: 414,
     },
     {
       label: 'Build cycle, baseline, and stack closures',
       path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 446,
-      endLine: 525,
+      startLine: 444,
+      endLine: 521,
     },
     {
       label: 'Path series, continuous segments, and core Path creation',
@@ -149,20 +167,21 @@ Series child layers preserve the same semantic grouping across renderers; missin
 
 This table keeps only PathMark-specific props and props whose meaning is redefined here. See [channel bindings](/viz/plot/channel/binding) for field and constant inputs, [transforms](/viz/plot/transform) for local `transform` and layer props, and [coordinates](/viz/plot/coordinate) for coordinate-view props. Shared stroke, fill, marks, dash, corner, and shadow props follow [Path styling](/kernel/components/draw/path#styling) and are not duplicated here.
 
-| Prop            | Type                                                                                                                                      | Default                                                                       | Description                                                                                                                                                                                  |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id?`           | `string`                                                                                                                                  | —                                                                             | Mark handle; required with `resolveLabel`                                                                                                                                                    |
-| `x` / `y`       | `PathMarkProps['x']`                                                                                                                      | Required                                                                      | Trajectory position roles; cartesian2D uses planar positions and polar2D uses angular / radial positions                                                                                     |
-| `order?`        | `PathMarkProps['order']`                                                                                                                  | Data order                                                                    | Connection order within each series                                                                                                                                                          |
-| `series?`       | `PathMarkProps['series']`                                                                                                                 | —                                                                             | Split rows into independent paths                                                                                                                                                            |
-| `color?`        | `PathMarkProps['color']`                                                                                                                  | `series`                                                                      | Path color field; a categorical color field can also split series when `series` is absent                                                                                                    |
-| `curve?`        | <ApiValues name="PathCurve" />                                                                                                            | `linear`                                                                      | Connection between adjacent points; `monotoneX` / `monotoneY` fall back to `linear` under polar2D                                                                                            |
-| `connectNulls?` | `boolean`                                                                                                                                 | `false`                                                                       | Connect across rows that cannot be projected                                                                                                                                                 |
-| `closed?`       | `boolean`                                                                                                                                 | cartesian2D: `false`<br />polar2D: `true`                                     | Join the last point back to the first                                                                                                                                                        |
-| `closure?`      | `IRPlotPathClosure`<br />- `kind: 'cycle' \| 'baseline' \| 'stack'`<br />- `baseline?: number`<br />- `baselineField: PathMarkProps['x']` | —<br />Required<br />0 or the domain edge nearest 0<br />Required for `stack` | Build a fillable boundary<br />Choose cycle, constant baseline, or per-row baseline<br />Constant lower boundary used only by `baseline`<br />Per-row lower-bound field used only by `stack` |
-| `label?`        | `PathMarkProps['label']`                                                                                                                  | —                                                                             | Path or segment labels; content and placement fields follow the TypeScript `PathMarkProps['label']` contract                                                                                 |
-| `resolveLabel?` | `(row: ExternalRow) => string`                                                                                                            | —                                                                             | Runtime label resolver; excluded from IR and requires `id`                                                                                                                                   |
-| `anchorId?`     | `IRPlotAnchorId`                                                                                                                      | —                                                                             | Generate a stable core Coordinate id for each valid path vertex                                                                                                                              |
+| Prop             | Type                                                                                                                                      | Default                                                                       | Description                                                                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id?`            | `string`                                                                                                                                  | —                                                                             | Mark handle; required with `resolveLabel`                                                                                                                                                    |
+| `x` / `y`        | `PathMarkProps['x']`                                                                                                                      | Required                                                                      | Trajectory position roles; cartesian2D uses planar positions and polar2D uses angular / radial positions                                                                                     |
+| `order?`         | `PathMarkProps['order']`                                                                                                                  | Data order                                                                    | Connection order within each series                                                                                                                                                          |
+| `series?`        | `PathMarkProps['series']`                                                                                                                 | —                                                                             | Split rows into independent paths                                                                                                                                                            |
+| `color?`         | `PathMarkProps['color']`                                                                                                                  | `series`                                                                      | Path color field; a categorical color field can also split series when `series` is absent                                                                                                    |
+| `curve?`         | <ApiValues name="PathCurve" />                                                                                                            | `linear`                                                                      | Connection between adjacent points; `monotoneX` / `monotoneY` fall back to `linear` under polar2D                                                                                            |
+| `interpolation?` | <ApiValues name="PolarInterpolation" />                                                                                                   | Coordinate default                                                            | polar2D connection space: `polar` interpolates angle / radius before projection, while `chord` connects projected vertices directly                                                          |
+| `connectNulls?`  | `boolean`                                                                                                                                 | `false`                                                                       | Connect across rows that cannot be projected                                                                                                                                                 |
+| `closed?`        | `boolean`                                                                                                                                 | cartesian2D: `false`<br />polar2D: `true`                                     | Join the last point back to the first                                                                                                                                                        |
+| `closure?`       | `IRPlotPathClosure`<br />- `kind: 'cycle' \| 'baseline' \| 'stack'`<br />- `baseline?: number`<br />- `baselineField: PathMarkProps['x']` | —<br />Required<br />0 or the domain edge nearest 0<br />Required for `stack` | Build a fillable boundary<br />Choose cycle, constant baseline, or per-row baseline<br />Constant lower boundary used only by `baseline`<br />Per-row lower-bound field used only by `stack` |
+| `label?`         | `PathMarkProps['label']`                                                                                                                  | —                                                                             | Path or segment labels; content and placement fields follow the TypeScript `PathMarkProps['label']` contract                                                                                 |
+| `resolveLabel?`  | `(row: ExternalRow) => string`                                                                                                            | —                                                                             | Runtime label resolver; excluded from IR and requires `id`                                                                                                                                   |
+| `anchorId?`      | `IRPlotAnchorId`                                                                                                                          | —                                                                             | Generate a stable core Coordinate id for each valid path vertex                                                                                                                              |
 
 ## Related
 

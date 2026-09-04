@@ -1,29 +1,22 @@
 import type { IRJsonObject } from '@retikz/core';
-import type { IRPlotPartitionDimension } from '@retikz/plot';
 
-import { DataFieldType, DataTransformFieldEffect, DataTransformPhase } from '@retikz/data';
-import { PlotScale } from '@retikz/plot';
+import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
+import type { IRScatterChart } from './schema';
 
-import type {
-  ChartEncodingSpatialResolution,
-  ChartRecipeDefinition,
-  ChartRecipeResolveContext,
-} from '../../_chart/contract';
-import type { ChartEncodingFieldConsumer } from '../../_chart/resolve';
-import type { IRScatterChart, IRScatterChartEncodings } from './schema';
-
-import { ChartEncodingSpatialKind, defineChartRecipe } from '../../_chart/contract';
+import { defineChartRecipe } from '../../_chart/contract';
 import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
-import { pointRecipeId } from '../shared/plot';
 import {
+  pointFieldConsumersOf,
   pointPropertySlots,
   pointResolutionOf,
   pointSlotsOf,
+  pointSpatialResolutionOf,
   pointThemeOf,
   resolvePointMark,
+  resolvePointScaleDefaults,
   sizeGuideOf,
-} from '../shared/recipe';
+} from '../shared';
 import { ScatterMarkDefinition } from './mark';
 import { ScatterChartSchema, ScatterChartThemeOverridesSchema, ScatterChartThemeResolutionSchema } from './schema';
 
@@ -46,79 +39,7 @@ export const ScatterChartEncodingSlots = [
   'facet',
 ] as const;
 
-const scatterCompactPositionCapabilities = [
-  { phase: DataTransformPhase.RowShape, fieldEffect: DataTransformFieldEffect.Replace },
-  { phase: DataTransformPhase.FieldDerive, fieldEffect: DataTransformFieldEffect.Preserve },
-  { phase: DataTransformPhase.FieldAdjust, fieldEffect: DataTransformFieldEffect.Preserve },
-] as const;
-
-const scatterCompactContinuousCapabilities = [
-  { phase: DataTransformPhase.FieldDerive, fieldEffect: DataTransformFieldEffect.Preserve },
-] as const;
-
-type ScatterFieldEncodingSlot = Extract<
-  keyof IRScatterChartEncodings,
-  'x' | 'y' | 'color' | 'size' | 'opacity' | 'shape'
->;
-
-const scatterFieldConsumers = [
-  {
-    slot: 'x',
-    compact: scatterCompactPositionCapabilities,
-    scale: {
-      family: 'position',
-      positionRole: 'x',
-      recipeFallback: pointRecipeId(ChartType.Scatter, 'scale.x'),
-    },
-  },
-  {
-    slot: 'y',
-    compact: scatterCompactPositionCapabilities,
-    scale: {
-      family: 'position',
-      positionRole: 'y',
-      recipeFallback: pointRecipeId(ChartType.Scatter, 'scale.y'),
-    },
-  },
-  { slot: 'color', scale: { family: 'channel' } },
-  {
-    slot: 'size',
-    compact: scatterCompactContinuousCapabilities,
-    outputType: DataFieldType.Continuous,
-    scale: { family: 'position', type: PlotScale.Sqrt },
-  },
-  {
-    slot: 'opacity',
-    compact: scatterCompactContinuousCapabilities,
-    outputType: DataFieldType.Continuous,
-    scale: { family: 'position', type: PlotScale.Linear },
-  },
-  { slot: 'shape' },
-] satisfies ReadonlyArray<ChartEncodingFieldConsumer<ScatterFieldEncodingSlot>>;
-
-const partitionDimensionsOf = (
-  value: IRScatterChartEncodings['row'],
-): IRPlotPartitionDimension | Array<IRPlotPartitionDimension> | undefined => {
-  if (value === undefined) return undefined;
-  if (typeof value === 'string') return { field: value };
-  return value;
-};
-
-const scatterSpatialResolutionOf = (encodings: IRScatterChartEncodings): ChartEncodingSpatialResolution | undefined => {
-  const row = partitionDimensionsOf(encodings.row);
-  const column = partitionDimensionsOf(encodings.column);
-  if (row !== undefined || column !== undefined) {
-    return {
-      kind: ChartEncodingSpatialKind.Facet,
-      id: pointRecipeId(ChartType.Scatter, 'composition.facet'),
-      view: pointRecipeId(ChartType.Scatter, 'view.main'),
-      ...(row === undefined ? {} : { row }),
-      ...(column === undefined ? {} : { column }),
-      options: encodings.facet ?? {},
-    };
-  }
-  return undefined;
-};
+const scatterPropertySlots = [...pointPropertySlots, 'domainPadding'] as const;
 
 /** Scatter Chart 的内建 semantic recipe Definition */
 export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = defineChartRecipe({
@@ -132,7 +53,7 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
   },
   consumes: {
     encodings: ScatterChartEncodingSlots,
-    properties: pointPropertySlots,
+    properties: scatterPropertySlots,
   },
   marks: [
     {
@@ -144,8 +65,12 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
     },
   ],
   resolveEncodings: context => {
-    const resolution = resolveChartEncodingMappings(context, ScatterChartEncodingSlots, scatterFieldConsumers);
-    const spatial = scatterSpatialResolutionOf(context.encodings);
+    const resolution = resolveChartEncodingMappings(
+      context,
+      ScatterChartEncodingSlots,
+      pointFieldConsumersOf(ChartType.Scatter),
+    );
+    const spatial = pointSpatialResolutionOf(ChartType.Scatter, context.encodings);
     return spatial === undefined ? resolution : { ...resolution, spatial };
   },
   resolve: (context: ChartRecipeResolveContext) => {
@@ -157,4 +82,5 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
       guides: sizeGuide === undefined ? [] : [sizeGuide],
     });
   },
+  resolveScaleDefaults: resolvePointScaleDefaults,
 });

@@ -1,2 +1,3 @@
 export * from './component';
-export * from './marks';
+export * from './declaration-collection';
+export type * from './types';

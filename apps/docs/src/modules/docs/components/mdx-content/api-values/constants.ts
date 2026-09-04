@@ -46,6 +46,8 @@ import {
   NormalizeBasis,
   PairMeasureOperationKind,
   PathCurve,
+  PolarInterpolation,
+  PositionScaleContinuity,
   ReferenceMarkKind,
   RelationGeometryKind,
   SmoothMethodKind,
@@ -211,6 +213,12 @@ export const API_VALUE_REGISTRY = {
   },
   PathCurve: {
     values: Object.values(PathCurve),
+  },
+  PolarInterpolation: {
+    values: Object.values(PolarInterpolation),
+  },
+  PositionScaleContinuity: {
+    values: Object.values(PositionScaleContinuity),
   },
   PathFillRule: {
     values: Object.values(PathFillRule),

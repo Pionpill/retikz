@@ -1052,6 +1052,31 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'MarkOperation',
     url: '/viz/plot/reference/mark#markoperationschema',
   },
+  MarkPlacementSchema: {
+    schema: IRPlot.MarkPlacementSchema,
+    label: 'MarkPlacement',
+    url: '/viz/plot/reference/mark#markplacementschema',
+  },
+  PositionAdjustmentOperationSchema: {
+    schema: IRPlot.PositionAdjustmentOperationSchema,
+    label: 'PositionAdjustmentOperation',
+    url: '/viz/plot/reference/mark#positionadjustmentoperationschema',
+  },
+  JitterPositionAdjustmentSchema: {
+    schema: IRPlot.JitterPositionAdjustmentSchema,
+    label: 'JitterPositionAdjustment',
+    url: '/viz/plot/reference/mark#jitterpositionadjustmentschema',
+  },
+  JitterRatioSpanSchema: {
+    schema: IRPlot.JitterRatioSpanSchema,
+    label: 'JitterRatioSpan',
+    url: '/viz/plot/reference/mark#jitterratiospanschema',
+  },
+  CustomPositionAdjustmentSchema: {
+    schema: IRPlot.CustomPositionAdjustmentSchema,
+    label: 'CustomPositionAdjustment',
+    url: '/viz/plot/reference/mark#custompositionadjustmentschema',
+  },
   MarkTransformSchema: {
     schema: IRPlot.MarkTransformSchema,
     label: 'MarkTransform',

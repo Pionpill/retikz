@@ -24,6 +24,7 @@ import { BUILTIN_SCALE_TYPES, PlotSchema } from '../../../src/schemas';
 /** 自定义 position scale：把内置 linear 包一层，仅验证 registry 分派（type 'unit'，固定 domain [0,1]） */
 const unitScale = defineScale({
   family: 'position',
+  continuity: 'continuous',
   schema: object({ type: literal('unit'), name: NonBlankStringSchema }),
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: true,
@@ -106,6 +107,31 @@ describe('scale registry（contract spec）', () => {
     expect(BUILTIN_SCALES.map(def => extractScaleType(def.schema)).sort()).toEqual([...BUILTIN_SCALE_TYPES].sort());
   });
 
+  it('position_scale_definitions_declare_closed_continuity_metadata', () => {
+    const positionDefinitions = BUILTIN_SCALES.filter(definition => definition.family === 'position');
+
+    expect(positionDefinitions.map(definition => definition.continuity).sort()).toEqual([
+      'continuous',
+      'continuous',
+      'continuous',
+      'continuous',
+      'continuous',
+      'continuous',
+      'continuous',
+      'discrete',
+      'discrete',
+    ]);
+    if (unitScale.family !== 'position') throw new TypeError('unitScale must remain a position definition');
+    expect(unitScale.continuity).toBe('continuous');
+  });
+
+  it('position_scale_definition_without_continuity_fails_loud', () => {
+    const malformed = { ...unitScale } as AnyScaleDefinition & { continuity?: unknown };
+    delete malformed.continuity;
+
+    expect(() => resolveScaleRegistry([malformed])).toThrow(/position.*continuity/i);
+  });
+
   it('resolveScaleRegistry 注册内置 + 自定义', () => {
     const registry = resolveScaleRegistry([unitScale, monoScale]);
     expect(registry.get('unit')).toBe(unitScale);
@@ -143,6 +169,17 @@ describe('scale registry（contract spec）', () => {
     expect(scale.coordinate(0)).toBe(0);
     expect(scale.coordinate(1)).toBe(100);
     expect(scale.coordinate(0.5)).toBe(50);
+  });
+
+  it('reports positive discrete step for reversed band and point ranges while continuous stays zero', () => {
+    const registry = resolveScaleRegistry();
+    const band = resolvePositionScale({ type: 'band', name: 'band' }, ['A', 'B'], [100, 0], { registry });
+    const point = resolvePositionScale({ type: 'point', name: 'point' }, ['A', 'B'], [100, 0], { registry });
+    const continuous = resolvePositionScale({ type: 'linear', name: 'linear' }, [0, 1], [100, 0], { registry });
+
+    expect(band.step).toBeGreaterThan(0);
+    expect(point.step).toBeGreaterThan(0);
+    expect(continuous.step).toBe(0);
   });
 
   it('channel_scale_as_position_fails_loud', () => {

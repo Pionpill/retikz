@@ -7,7 +7,7 @@ Chart Source separates “what kind of graphic is this?” from “how should th
 
 ## Start with a Chart Source
 
-This Point-family Scatter Source preserves author intent. Coordinates, scales, guides, and recipe-generated Plot marks are resolved later and never written back into Source.
+This Point-family Scatter Source preserves author intent. An explicit coordinate is stored as a root operation, while scales, guides, and recipe-generated Plot marks are resolved later and never written back into Source.
 
 ```ts
 {
@@ -22,6 +22,7 @@ This Point-family Scatter Source preserves author intent. Coordinates, scales, g
   theme: 'clean',
   data: { reference: 'rows' },
   layout: { width: 640, height: 360 },
+  coordinate: { type: 'polar2D', innerRadius: 0.2 },
   recipe: {
     chartType: 'scatter',
     encodings: {
@@ -51,29 +52,35 @@ This Point-family Scatter Source preserves author intent. Coordinates, scales, g
 
 ## Root shell and nested recipe envelope
 
-| Field           | Meaning                                                     | Owner                       |
-| --------------- | ----------------------------------------------------------- | --------------------------- |
-| `namespace`     | Fixed `chart` capability namespace                          | Chart                       |
-| `type`          | Stable family for discovery and first-stage routing         | Chart                       |
-| `id`            | Optional unique Chart identity                              | Chart / Core                |
-| `presentation`  | Four fixed slots: title, subtitle, note, source             | Chart / Standard            |
-| `theme`         | Registered name, or authored `base` plus owner token slices | Chart, Plot, current recipe |
-| `data`          | Dataset reference and optional data model                   | Plot / Data                 |
-| `layout`        | Chart Surface border-box `width` / `height`                 | Chart / Layout              |
-| `recipe`        | Exact payload for the selected chartType recipe             | Chart                       |
-| `plotExtension` | Explicit Plot-owned fragment authored by the user           | Plot                        |
+| Field           | Meaning                                                                           | Owner                        |
+| --------------- | --------------------------------------------------------------------------------- | ---------------------------- |
+| `namespace`     | Fixed `chart` capability namespace                                                | Chart                        |
+| `type`          | Stable family for discovery and first-stage routing                               | Chart                        |
+| `id`            | Optional unique Chart identity                                                    | Chart / Core                 |
+| `presentation`  | Four fixed slots: title, subtitle, note, source                                   | Chart / Standard             |
+| `theme`         | Registered name, or authored `base` plus owner token slices                       | Chart, Plot, current recipe  |
+| `data`          | Dataset reference and optional data model                                         | Plot / Data                  |
+| `layout`        | Chart Surface border-box `width` / `height`                                       | Chart / Layout               |
+| `coordinate`    | Optional Plot coordinate operation; string shorthand is not stored in JSON Source | Chart choice / Plot contract |
+| `recipe`        | Exact payload for the selected chartType recipe                                   | Chart                        |
+| `plotExtension` | Explicit Plot-owned fragment authored by the user                                 | Plot                         |
 
-`layout` allocates the outer Chart Surface. It does not describe Plot facets, tracks, coordinates, guides, or an internal plot area. When you want complete low-level drawing control, use Plot directly; the current Source contract has no `type: 'base'` special case.
+`layout` allocates the outer Chart Surface. It does not describe Plot facets, tracks, coordinates, guides, or an internal plot area. When omitted, Cartesian coordinates use `800 × 500` and Polar coordinates use `400 × 500`. Authored dimensions override those defaults field by field, while an outer layout may still constrain dimensions that were not authored. Root `coordinate` can combine with facet encodings but cannot coexist with `plotExtension.composition`. When you want complete low-level drawing control, use Plot directly; the current Source contract has no `type: 'base'` special case.
 
 ## family → chartType → exact schema
 
 A family is finite, stable, and intended for discovery. A chartType is a globally unique recipe key; each key belongs to exactly one family. The first Point-family routes are:
 
-| Family (`type`) | chartType | Exact schema and core difference                                                              |
-| --------------- | --------- | --------------------------------------------------------------------------------------------- |
-| `point`         | `scatter` | `ScatterChartSchema`; required x/y plus optional visual, aggregate, scale, and facet mappings |
+| Route                         | Exact schema and import path                                               | Core difference                               |
+| ----------------------------- | -------------------------------------------------------------------------- | --------------------------------------------- |
+| `point` → `scatter`           | `ScatterChartSchema`<br />`@retikz/chart/point/scatter`                    | Required x/y; visual, aggregate, scale, facet |
+| `point` → `bubble`            | `BubbleChartSchema`<br />`@retikz/chart/point/bubble`                      | Required x/y/size; size stays field-bound     |
+| `point` → `regression`        | `RegressionChartSchema`<br />`@retikz/chart/point/regression`              | Required x/y; series, fit, Point + trend      |
+| `point` → `connected-scatter` | `ConnectedScatterChartSchema`<br />`@retikz/chart/point/connected-scatter` | Required x/y/order; series, Path → Point      |
+| `point` → `ranged-dot`        | `RangedDotChartSchema`<br />`@retikz/chart/point/ranged-dot`               | category/start/end; connector + endpoints     |
+| `point` → `strip`             | `StripChartSchema`<br />`@retikz/chart/point/strip`                        | Direct x/y; one discrete, one continuous      |
 
-Import the exact schema from `@retikz/chart/point/scatter`. Use the aggregate `@retikz/chart/point` entry only when the application intentionally needs the whole Point family.
+Import each exact schema from the corresponding concrete chartType subpath in the table. Use the aggregate `@retikz/chart/point` entry only when the application intentionally needs the whole Point family.
 
 Every chartType owns a strict `XxxChartSchema`, `XxxChartEncodingsSchema`, `XxxChartPropertiesSchema`, and exact recipe Theme schema. Shared atoms are extracted only when the semantic invariant is genuinely shared; there is no wide union containing every family. Unknown chartTypes, family mismatches, unknown keys, and incompatible marks fail at the Source or provider boundary.
 
@@ -101,7 +108,7 @@ recipe: {
 }
 ```
 
-The first authored `scatter` mark replaces the recipe's complete built-in group, and the second mark is then appended in authored order. A semantic group may contain multiple Plot marks, and override replaces that group atomically. If `override: true` finds no group with the same kind, the mark is still appended and `onWarn` receives `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`. To connect the points, write a Plot-owned Path mark in `plotExtension.marks`; it remains independent of Chart context.
+The first authored `scatter` mark replaces the recipe's complete built-in group, and the second mark is then appended in authored order. A semantic group may contain multiple Plot marks, and override replaces that group atomically. If `override: true` finds no group with the same kind, the mark is still appended and `onWarn` receives `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND`. For a custom independent connection layer beyond the built-in chartTypes, write a Plot-owned Path mark in `plotExtension.marks`; it remains independent of Chart context.
 
 ```ts
 plotExtension: {
@@ -158,7 +165,7 @@ The Chart-shell cascade is mode fallback → Core style chain → authored named
   <LinkedCard href="/viz/chart/points">
     <span className="font-semibold">Point family</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Review Scatter's exact schema and authored marks.
+      Review exact schemas and authored marks for all six active Point chartTypes.
     </span>
   </LinkedCard>
 </div>

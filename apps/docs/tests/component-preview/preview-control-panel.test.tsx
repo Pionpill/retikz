@@ -625,7 +625,7 @@ describe('PreviewControlPanel', () => {
               id: 'cities',
               label: 'Cities',
               rows,
-              columns: [{ key: 'city' }, { key: 'gdp', label: 'GDP' }, { key: 'life' }, { key: 'meta' }],
+              columns: [{ key: 'city' }, { key: 'gdp' }, { key: 'life' }, { key: 'meta' }],
             },
           ],
         },
@@ -648,7 +648,7 @@ describe('PreviewControlPanel', () => {
       '102 rows · 4 columns',
     );
     expect(table?.textContent).toContain('Showing first 100 of 102 rows');
-    expect(headers).toEqual(['city', 'GDP', 'life', 'meta']);
+    expect(headers).toEqual(['city', 'gdp', 'life', 'meta']);
     expect(container.querySelectorAll('[data-slot="preview-table-row"]')).toHaveLength(100);
     expect(scrollArea?.getAttribute('data-visible-body-rows')).toBe('5');
     expect((scrollArea as HTMLElement | null)?.style.maxHeight).toBe('170px');

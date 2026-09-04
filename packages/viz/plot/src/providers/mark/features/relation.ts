@@ -1,6 +1,7 @@
 import type {
   IRChild,
   IRCoordinate,
+  IRNode,
   IRNodeLabel,
   IRNodeTarget,
   IRPath,
@@ -15,14 +16,18 @@ import { FoldStepVia } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
 
 import type {
+  IRPlotRelationEndpointGlyph,
   IRPlotRelationMark,
   IRPlotRelationPrimitiveStyle,
   IRPlotRelationRouteStep,
   IRPlotRelationRouting,
   IRPlotRelationStepLabel,
   IRPlotTargetRef,
+  PolarInterpolationValue,
   RelationOrthogonalLabelStepValue,
 } from '../../../schemas';
+import type { PolarVertex } from '../../coordinate';
+import type { MarkPaint } from '../shared';
 
 import {
   type CoordinateFrame,
@@ -30,16 +35,19 @@ import {
   type MarkChannels,
   type MarkDefinition,
   type MarkLoweringContext,
+  type PolarCoordinateFrame,
 } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import {
   MarkValueKind,
+  PolarInterpolation,
   RelationGeometryKind,
   RelationMarkSchema,
   RelationOrthogonalLabelStep,
   RelationRouteStepKind,
   RelationRoutingKind,
 } from '../../../schemas';
+import { densifyPolarSegments, isPolarCoordinateFrame, toPolarVertex } from '../../coordinate';
 import {
   applyPathChannelDeliveries,
   attachMarkLayer,
@@ -47,13 +55,18 @@ import {
   channelValueOf,
   collectAnchorIdFields,
   collectMarkLabelFields,
+  decorateDatum,
+  DEFAULT_FILL,
   pathChannelKinds,
   resolveGeometryMarkLabels,
 } from '../shared';
+import { pointGlyphStyle } from './point-glyph';
 
 type TargetResolution = {
   target: IRTarget;
   coordinates: Array<IRCoordinate>;
+  position?: [number, number];
+  polarVertex?: PolarVertex;
 };
 
 const targetOwner = (mark: IRPlotRelationMark, ctx: MarkLoweringContext, transformedIndex: number, role: string) => ({
@@ -108,15 +121,19 @@ const resolveProjectedTarget = (
   }
   const position = frame.projectRoles(values);
   if (position === null) return null;
+  const polarVertex = isPolarCoordinateFrame(frame) ? toPolarVertex(frame, values[0], values[1]) : null;
+  const polarTarget = polarVertex === null ? {} : { polarVertex };
   if (ref.anchorId !== undefined) {
     if (ctx?.anchors === undefined) {
-      return { target: shiftedPoint(position, ref.offset), coordinates: [] };
+      return { target: shiftedPoint(position, ref.offset), coordinates: [], ...polarTarget };
     }
     const owner = targetOwner(mark, ctx, transformedIndex, role);
     const id = ctx.anchors.makeId(ref.anchorId, row, owner);
     return {
       target: { id, ...targetExtras(ref) },
       coordinates: [ctx.anchors.coordinate(id, position, owner)],
+      position,
+      ...polarTarget,
     };
   }
   if (forceCoordinate && ctx?.anchors !== undefined) {
@@ -125,6 +142,8 @@ const resolveProjectedTarget = (
     return {
       target: { id, ...targetExtras(ref) },
       coordinates: [ctx.anchors.coordinate(id, position, owner)],
+      position,
+      ...polarTarget,
     };
   }
   if (ref.anchor !== undefined || ref.boundary !== undefined) {
@@ -132,7 +151,8 @@ const resolveProjectedTarget = (
       `lowerPlots: relation projected ${role} target requires anchorId when anchor or boundary is set`,
     );
   }
-  return { target: shiftedPoint(position, ref.offset), coordinates: [] };
+  const shifted = shiftedPoint(position, ref.offset);
+  return { target: shifted, coordinates: [], position: shifted, ...polarTarget };
 };
 
 const resolveTarget = (
@@ -176,12 +196,42 @@ const withDefaultLabelSide = (label: IRStepLabel): IRStepLabel => {
   return { sloped: true, ...label, ...(side !== undefined ? { side } : {}) };
 };
 
-type MarkStyleValue = NonNullable<IRPlotRelationPrimitiveStyle[keyof IRPlotRelationPrimitiveStyle]>;
+type MarkStyleValue =
+  | NonNullable<IRPlotRelationPrimitiveStyle[keyof IRPlotRelationPrimitiveStyle]>
+  | NonNullable<IRPlotRelationEndpointGlyph[keyof IRPlotRelationEndpointGlyph]>;
 
 const resolveMarkValue = <T>(value: MarkStyleValue | undefined, row: ExternalRow): T | undefined => {
   if (value === undefined) return undefined;
   if (value.kind === MarkValueKind.Constant) return value.value as T;
   return resolveFieldPath(row, value.value) as T | undefined;
+};
+
+const endpointGlyphNode = (
+  glyph: IRPlotRelationEndpointGlyph,
+  position: [number, number],
+  row: ExternalRow,
+  transformedIndex: number,
+  mark: IRPlotRelationMark,
+  sharedColor: string | undefined,
+  ctx: MarkLoweringContext | undefined,
+): IRNode => {
+  const color = resolveMarkValue<string>(glyph.color, row);
+  const fill = resolveMarkValue<MarkPaint>(glyph.fill, row);
+  const node: IRNode = {
+    type: 'node',
+    position,
+    ...pointGlyphStyle(color ?? fill ?? sharedColor ?? DEFAULT_FILL, glyph),
+  };
+  const shape = resolveMarkValue<IRNode['shape']>(glyph.shape, row);
+  const size = resolveMarkValue<number>(glyph.size, row);
+  if (shape !== undefined) node.shape = shape;
+  // 与 Point size channel 一致：公开 size 是半径，Core circle 的 minimumSize 使用外接方尺寸
+  if (size !== undefined) node.minimumSize = size * Math.SQRT2;
+  const provenance =
+    ctx?.provenance === undefined
+      ? undefined
+      : { context: ctx.provenance.context, markIndex: ctx.provenance.markIndex };
+  return decorateDatum(node, row, transformedIndex, mark.type, provenance, undefined);
 };
 
 const relationStyleValue = (
@@ -258,6 +308,76 @@ const defaultRoute = (
     ],
     label,
   );
+
+/**
+ * 计算 Relation path 在当前坐标帧下可消费的 Polar 插值
+ * @description 仅默认 path 且 source、target、全部 via 都由 coordinate projection 提供时继承；显式覆盖落到排除形态时 fail-loud
+ */
+const relationInterpolationOf = (
+  mark: IRPlotRelationMark,
+  frame: CoordinateFrame,
+): PolarInterpolationValue | undefined => {
+  const interpolation = mark.path?.interpolation;
+  const kind = mark.kind ?? RelationGeometryKind.Path;
+  if (interpolation !== undefined && !isPolarCoordinateFrame(frame)) {
+    throw new RetikzPlotError('lowerPlots: relation interpolation override is only supported under polar2D');
+  }
+  if (interpolation !== undefined && kind === RelationGeometryKind.Ribbon) {
+    throw new RetikzPlotError('lowerPlots: relation interpolation override is not supported for ribbon geometry');
+  }
+  if (interpolation !== undefined && mark.path?.route !== undefined) {
+    throw new RetikzPlotError('lowerPlots: relation interpolation override cannot be combined with an explicit route');
+  }
+  if (interpolation !== undefined && mark.path?.routing !== undefined) {
+    throw new RetikzPlotError('lowerPlots: relation interpolation override cannot be combined with routing');
+  }
+  const projectedRefs = [mark.source, ...(mark.path?.via ?? []), mark.target];
+  const hasOnlyProjectedRefs = projectedRefs.every(ref => 'project' in ref);
+  if (interpolation !== undefined && !hasOnlyProjectedRefs) {
+    throw new RetikzPlotError(
+      'lowerPlots: relation interpolation override requires projected source, target, and via refs',
+    );
+  }
+  if (
+    !isPolarCoordinateFrame(frame) ||
+    kind !== RelationGeometryKind.Path ||
+    mark.path?.route !== undefined ||
+    mark.path?.routing !== undefined ||
+    !hasOnlyProjectedRefs
+  ) {
+    return undefined;
+  }
+  return interpolation ?? frame.interpolation;
+};
+
+/**
+ * 按 Polar 输出空间采样默认 Relation path，同时保留每个作者 target 作为段终点
+ * @description 中间采样点使用屏幕坐标，source、via 与 target 的 identity、offset 和 boundary 继续由 Core target 消费
+ */
+const interpolatedPolarRoute = (
+  frame: PolarCoordinateFrame,
+  targetResolutions: Array<TargetResolution>,
+  label: IRStepLabel | undefined,
+): Array<IRStep> => {
+  const steps: Array<IRStep> = [{ type: 'step', kind: RelationRouteStepKind.Move, to: targetResolutions[0].target }];
+  for (let index = 1; index < targetResolutions.length; index += 1) {
+    const sourceResolution = targetResolutions[index - 1];
+    const targetResolution = targetResolutions[index];
+    const sourceVertex = sourceResolution.polarVertex;
+    const targetVertex = targetResolution.polarVertex;
+    if (sourceVertex === undefined || targetVertex === undefined) {
+      throw new RetikzPlotError(
+        'lowerPlots: relation interpolation requires projected source, target, and via positions',
+      );
+    }
+    const sampledPoints = densifyPolarSegments(frame, [sourceVertex, targetVertex]);
+    for (const point of sampledPoints.slice(1, -1)) {
+      steps.push({ type: 'step', kind: RelationRouteStepKind.Line, to: point });
+    }
+    steps.push({ type: 'step', kind: RelationRouteStepKind.Line, to: targetResolution.target });
+  }
+  return applyStepLabel(steps, label);
+};
 
 const routeTargets = (source: IRTarget, via: Array<IRTarget>, target: IRTarget): Array<IRTarget> => [
   source,
@@ -479,10 +599,12 @@ export const lowerRelation = (
   channels: MarkChannels,
   ctx: MarkLoweringContext | undefined,
 ): IRChild | null => {
+  const relationInterpolation = relationInterpolationOf(mark, frame);
   const colorOf = channelValueOf<string>(channels, 'color');
   const defaultColor = channelDefaultOf<string>(channels, 'color');
   const labelOf = channelValueOf<IRNodeLabel['text']>(channels, 'label');
   const children: Array<IRChild> = [];
+  const endpointChildren: Array<IRNode> = [];
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex += 1) {
     const row = rows[transformedIndex];
     if (anchorInputMissing(mark.source, row) || anchorInputMissing(mark.target, row)) continue;
@@ -532,7 +654,7 @@ export const lowerRelation = (
       coordinates.push(...routed.coordinates);
       steps = routed.steps;
     } else {
-      const viaTargets: Array<IRTarget> = [];
+      const viaResolutions: Array<TargetResolution> = [];
       for (let index = 0; index < (mark.path?.via?.length ?? 0); index += 1) {
         const via = resolveTarget(
           mark,
@@ -546,18 +668,16 @@ export const lowerRelation = (
         );
         if (via === null) continue;
         coordinates.push(...via.coordinates);
-        viaTargets.push(via.target);
+        viaResolutions.push(via);
       }
+      const viaTargets = viaResolutions.map(resolution => resolution.target);
+      const pathLabel = resolveLabel(mark.path?.label, row);
       steps =
-        mark.path?.routing === undefined
-          ? defaultRoute(source.target, viaTargets, target.target, resolveLabel(mark.path?.label, row))
-          : routedSteps(
-              mark.path.routing,
-              source.target,
-              viaTargets,
-              target.target,
-              resolveLabel(mark.path.label, row),
-            );
+        relationInterpolation === PolarInterpolation.Polar && isPolarCoordinateFrame(frame)
+          ? interpolatedPolarRoute(frame, [source, ...viaResolutions, target], pathLabel)
+          : mark.path?.routing === undefined
+            ? defaultRoute(source.target, viaTargets, target.target, pathLabel)
+            : routedSteps(mark.path.routing, source.target, viaTargets, target.target, pathLabel);
     }
     const pathOptions = (mark.path?.options ?? {}) as Partial<IRPath>;
     const label = resolveGeometryMarkLabels(mark.label, row, labelOf);
@@ -574,9 +694,20 @@ export const lowerRelation = (
       channels,
     );
     children.push(...coordinates, path);
+    const sharedColor = colorOf?.(row) ?? defaultColor;
+    if (mark.endpoints?.source !== undefined && source.position !== undefined) {
+      endpointChildren.push(
+        endpointGlyphNode(mark.endpoints.source, source.position, row, transformedIndex, mark, sharedColor, ctx),
+      );
+    }
+    if (mark.endpoints?.target !== undefined && target.position !== undefined) {
+      endpointChildren.push(
+        endpointGlyphNode(mark.endpoints.target, target.position, row, transformedIndex, mark, sharedColor, ctx),
+      );
+    }
   }
   if (children.length === 0) return null;
-  return attachMarkLayer({ type: 'scope', children }, mark, ctx);
+  return attachMarkLayer({ type: 'scope', children: [...children, ...endpointChildren] }, mark, ctx);
 };
 
 const collectTargetFields = (ref: IRPlotTargetRef, fields: FieldCollector): void => {

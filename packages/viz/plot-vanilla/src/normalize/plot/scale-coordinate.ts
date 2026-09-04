@@ -234,7 +234,12 @@ export const coordinateTypeOf = (
 };
 
 /** 归一化 polar2D coordinate 选项为配置（非 polar2D 返回 undefined），缺省字段填 schema 默认值 */
-export type PolarConfig = { innerRadius: number; startAngle: number; endAngle: number };
+export type PolarConfig = {
+  innerRadius: number;
+  startAngle: number;
+  endAngle: number;
+  interpolation?: InputPlotPolar2DCoordinate['interpolation'];
+};
 
 /** 提取并补全 polar2D 配置，其他坐标返回 `undefined` */
 export const toPolarConfig = (coordinate: InputPlotCoordinate | undefined): PolarConfig | undefined => {
@@ -251,6 +256,7 @@ export const toPolarConfig = (coordinate: InputPlotCoordinate | undefined): Pola
       innerRadius: polar.innerRadius ?? POLAR_DEFAULT_INNER_RADIUS,
       startAngle: polar.startAngle ?? POLAR_DEFAULT_START_ANGLE,
       endAngle: polar.endAngle ?? POLAR_DEFAULT_END_ANGLE,
+      ...(polar.interpolation !== undefined ? { interpolation: polar.interpolation } : {}),
     };
   }
   return undefined;

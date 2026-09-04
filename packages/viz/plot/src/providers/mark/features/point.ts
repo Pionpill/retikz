@@ -1,6 +1,14 @@
 import type { ExternalRow } from '@retikz/data';
 
-import { type IRChild, type IRNode, type IRNodeDefault, type IRNodeLabel, type IRScope } from '@retikz/core';
+import {
+  type IRAxisScale,
+  type IRBoxSize,
+  type IRChild,
+  type IRNode,
+  type IRNodeDefault,
+  type IRNodeLabel,
+  type IRScope,
+} from '@retikz/core';
 
 import type { IRPlotMark, IRPlotPointMark } from '../../../schemas';
 import type { MarkPaint } from '../shared';
@@ -28,34 +36,8 @@ import {
   roleAnchor,
   roleValues,
 } from '../shared';
-
-/** 散点 glyph 默认直径（user units，已补偿 circle 外接） */
-const POINT_SIZE = 10;
-
-/** 散点 node 样式（circle + padding0 + minimumSize；÷√2 补 circle 外接，使 POINT_SIZE 即真实直径） */
-const pointStyle = (fill: MarkPaint, mark: IRPlotPointMark): IRNodeDefault => {
-  const padding = mark.padding?.kind === 'constant' ? mark.padding.value : undefined;
-  const minimumSize = mark.minimumSize?.kind === 'constant' ? mark.minimumSize.value : undefined;
-  const stroke = mark.stroke?.kind === 'constant' ? mark.stroke.value : undefined;
-  const strokeWidth = mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : undefined;
-  const fillOpacity = mark.fillOpacity?.kind === 'constant' ? mark.fillOpacity.value : undefined;
-  const strokeOpacity = mark.strokeOpacity?.kind === 'constant' ? mark.strokeOpacity.value : undefined;
-  const opacity = mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
-  const rotate = mark.rotate?.kind === 'constant' ? mark.rotate.value : undefined;
-  return {
-    shape: 'circle',
-    padding: padding ?? 0,
-    minimumSize: minimumSize ?? POINT_SIZE / Math.SQRT2,
-    ...(typeof fill === 'string' ? { color: fill } : {}),
-    fill,
-    ...(stroke !== undefined ? { stroke } : {}),
-    ...(strokeWidth !== undefined ? { strokeWidth } : {}),
-    ...(fillOpacity !== undefined ? { fillOpacity } : {}),
-    ...(strokeOpacity !== undefined ? { strokeOpacity } : {}),
-    ...(opacity !== undefined ? { opacity } : {}),
-    ...(rotate !== undefined ? { rotate } : {}),
-  };
-};
+import { pointGlyphStyle } from './point-glyph';
+import { POINT_DEFAULT_RADIUS } from './point-glyph';
 
 /** 自由文本 node 样式（无 shape 边框：padding0 + 无描边 + textColor 上提到子 Scope；色走文本而非 fill） */
 const textStyle = (textColor: string, mark: IRPlotPointMark): IRNodeDefault => {
@@ -116,7 +98,8 @@ export const lowerPoint = (
     };
     if (isText) {
       // 文本 glyph：投影同 point（roleValues + projectRoles，坐标系无关）；内容缺失跳过；dx/dy 锚点像素微调
-      const point = frame.projectRoles(roleValues(mark, row, frame));
+      const point =
+        ctx?.positions?.positionFor(String(transformedIndex)) ?? frame.projectRoles(roleValues(mark, row, frame));
       if (!point) continue;
       const text = textOf?.(row);
       if (text === undefined) continue;
@@ -137,7 +120,7 @@ export const lowerPoint = (
       continue;
     }
     // 散点 glyph：锚点与 locator 共享同一 role 投影（point → frame.projectRoles），杜绝两套投影漂移
-    const point = roleAnchor(mark, row, frame);
+    const point = ctx?.positions?.positionFor(String(transformedIndex)) ?? roleAnchor(mark, row, frame);
     if (!point) continue;
     const deliveries = resolveChannelDeliveries();
     if (deliveries.some(({ entry, value }) => entry.channel === 'size' && value === undefined)) continue;
@@ -169,10 +152,12 @@ export const lowerPoint = (
         type: 'scope',
         nodeDefault: isText
           ? textStyle(textColorConstant ?? (typeof fillConstant === 'string' ? fillConstant : defaultColor), mark)
-          : pointStyle(fillConstant ?? defaultColor, mark),
+          : pointGlyphStyle(fillConstant ?? defaultColor, mark),
         children: placed.map(p => p.node),
       }
-    : colorGroupedScope(placed, fill => (isText ? textStyle(textColorConstant ?? fill, mark) : pointStyle(fill, mark)));
+    : colorGroupedScope(placed, fill =>
+        isText ? textStyle(textColorConstant ?? fill, mark) : pointGlyphStyle(fill, mark),
+      );
   return attachMarkLayer(layer, mark, ctx);
 };
 
@@ -184,6 +169,21 @@ const collectPointChannelFields = (mark: IRPlotPointMark, fields: FieldCollector
   fields.addChannel(mark.encoding.text);
 };
 
+/** Core minimumSize 在任意法向上的保守半径；旋转不会扩大其外接圆 */
+const minimumSizeRadiusOf = (minimumSize: number | IRBoxSize): number => {
+  if (typeof minimumSize === 'number') return minimumSize / Math.SQRT2;
+  const fallback = minimumSize.default ?? 0;
+  return Math.hypot(minimumSize.width ?? fallback, minimumSize.height ?? fallback) / 2;
+};
+
+/** Core axis scale 在任意法向上的保守放大倍数 */
+const maximumScaleOf = (scale: number | IRAxisScale | undefined): number => {
+  if (scale === undefined) return 1;
+  if (typeof scale === 'number') return Math.abs(scale);
+  const fallback = scale.default ?? 1;
+  return Math.max(Math.abs(scale.x ?? fallback), Math.abs(scale.y ?? fallback));
+};
+
 /** 内置 point mark definition */
 export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
   schema: PointMarkSchema,
@@ -192,6 +192,31 @@ export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
     collectCommonEncodingFields(mark, fields);
     collectNodeChannelFields(mark, fields);
     collectPointChannelFields(mark, fields);
+  },
+  placement: {
+    targets: (mark, rows, frame) =>
+      rows.map((row, index) => ({ key: String(index), row, roleValues: roleValues(mark, row, frame) })),
+    normalExtent: (mark, target, _unitNormal, channels) => {
+      if (mark.encoding.text !== undefined) return undefined;
+      const sizeDelivery = channels.nodeDeliveries?.find(delivery => delivery.channel === 'size');
+      const minimumSizeDelivery = channels.nodeDeliveries?.find(delivery => delivery.channel === 'minimumSize');
+      const scaleDelivery = channels.nodeDeliveries?.find(delivery => delivery.channel === 'scale');
+      const strokeDelivery = channels.nodeDeliveries?.find(delivery => delivery.channel === 'strokeWidth');
+      const size =
+        (sizeDelivery?.resolver(target.row) as number | undefined) ??
+        (mark.size?.kind === 'constant' ? mark.size.value : undefined);
+      const minimumSize =
+        (minimumSizeDelivery?.resolver(target.row) as number | IRBoxSize | undefined) ??
+        (mark.minimumSize?.kind === 'constant' ? mark.minimumSize.value : undefined);
+      const radius = size ?? (minimumSize === undefined ? POINT_DEFAULT_RADIUS : minimumSizeRadiusOf(minimumSize));
+      const scale =
+        (scaleDelivery?.resolver(target.row) as number | IRAxisScale | undefined) ??
+        (mark.scale?.kind === 'constant' ? mark.scale.value : undefined);
+      const strokeWidth =
+        (strokeDelivery?.resolver(target.row) as number | undefined) ??
+        (mark.strokeWidth?.kind === 'constant' ? mark.strokeWidth.value : 0);
+      return radius * maximumScaleOf(scale) + strokeWidth / 2;
+    },
   },
   lower: lowerPoint,
 };

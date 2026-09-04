@@ -1,10 +1,11 @@
 import type { ExternalDatasets, ExternalRow, IRDataModel } from '@retikz/data';
 import type { IRPlot, PlotLineageRun } from '@retikz/plot';
 
-import { lowerPlots } from '@retikz/plot';
+import { definePositionAdjustment, lowerPlots } from '@retikz/plot';
 import { Layout } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { literal, number, strictObject } from 'zod';
 
 import * as plotReact from '../src';
 import {
@@ -44,6 +45,18 @@ const data: ExternalDatasets = {
     { month: 2, revenue: 9 },
   ],
 };
+
+const ScreenShiftSchema = strictObject({ kind: literal('react-screen-shift'), dx: number() });
+type ScreenShift = { kind: 'react-screen-shift'; dx: number };
+const screenShift = definePositionAdjustment<ScreenShift>({
+  space: 'screen',
+  schema: ScreenShiftSchema,
+  initialize: (operation, context) =>
+    context.targets.map(target => ({
+      key: target.key,
+      position: target.position === null ? null : [target.position[0] + operation.dx, target.position[1]],
+    })),
+});
 
 const plotThemeTokens = {
   'plot.area.fill': '#123456',
@@ -228,6 +241,37 @@ describe('<Plot spec data> 薄包装', () => {
         height={300}
       />,
     );
+    expect(geometry(viaPlot)).toEqual(geometry(viaLayout));
+  });
+
+  it('把 positionAdjustmentDefinitions 传到 lowering 并保持 React SSR 与直接 Plot lowering 等价', () => {
+    const placementSpec: IRPlot = {
+      ...spec,
+      marks: [
+        {
+          type: 'point',
+          placement: { adjustments: [{ kind: 'react-screen-shift', dx: 8 }] },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+        },
+      ],
+    };
+    const lowerOptions = {
+      width: 480,
+      height: 300,
+      positionAdjustmentDefinitions: [screenShift],
+    };
+    const viaPlot = renderToStaticMarkup(
+      <Plot spec={placementSpec} data={data} width={480} height={300} positionAdjustmentDefinitions={[screenShift]} />,
+    );
+    const viaLayout = renderToStaticMarkup(
+      <Layout
+        ir={{ version: 1, type: 'scene', children: [placementSpec] }}
+        composites={lowerPlots(data, lowerOptions)}
+        width={480}
+        height={300}
+      />,
+    );
+
     expect(geometry(viaPlot)).toEqual(geometry(viaLayout));
   });
 

@@ -18,11 +18,7 @@ export const scaleOrdinalControls = definePreviewControls({
           id: 'climate',
           label: '城市气温',
           rows: climate,
-          columns: [
-            { key: 'city', label: '城市' },
-            { key: 'month', label: '月份' },
-            { key: 'temp', label: '气温' },
-          ],
+          columns: [{ key: 'city' }, { key: 'month' }, { key: 'temp' }],
         },
       ],
     },

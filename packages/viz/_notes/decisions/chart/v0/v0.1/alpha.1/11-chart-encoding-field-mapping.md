@@ -69,18 +69,18 @@ mapping可以携带一个由该mapping诱导的aggregate或derived operation，�
 Data transform Definition公开：
 
 - `outputModel`：`preserve`保留输入并增加/覆盖descriptor；`replace`列出operation后的完整字段集合
-- `compact`：声明binding class、闭合`DataTransformPhase`、field effect与可选output选择规则
+- `schedule`：声明binding class、闭合`DataTransformPhase`、field effect与可选output选择规则
 - statistics `outputs`：声明scalar或multi-output reducer结果；compact aggregate只接受恰好一个完整scalar descriptor
 
-Data pipeline逐步产出`{ rows, fieldTypes, fieldTypeEvidence }`。每一步先基于当前view解析input和output model，再执行operation并推进类型证据；Plot coordinate、scale、channel、guide、locator与lineage只读各自实际view。descriptor缺失的external operation仍可用于完整Plot transform，但不能进入type-dependent compact encoding。
+Data pipeline逐步产出`{ rows, fieldTypes, fieldTypeEvidence }`。每一步先基于当前view解析input和output model，再执行operation并推进类型证据；Plot coordinate、scale、channel、guide、locator与lineage只读各自实际view。descriptor缺失的external operation仍可用于完整Plot transform，但不能进入type-dependent encoding transform。
 
 多个aggregate mapping合并为一个summarize。每个`as`是对应consumer的字段；`groupBy`只包含summarize后仍被recipe-level direct role消费的字段，并按ordered `encodingSlots`筛选、去重。aggregate输入、临时字段、authored Chart mark与`plotExtension.marks`不能反向改变root aggregate粒度。
 
 显式`plotExtension.transform`先执行，用于准备encoding输入；随后Chart-generated operation按Definition声明的闭合阶段执行：`row-shape → field-derive → row-order → cumulative-derive → field-adjust`，同阶段按ordered slot执行。custom `kind`不能自定义phase，later-stage output不能喂earlier-stage input。
 
-内置常用能力包括scalar aggregate、position `bin`、`normalize`和单轴`jitter`；表内名称只是vocabulary，不是custom白名单。custom Definition具备同等output model、compact capability、phase、field effect与consumer type时走同一路径。`select / annotate / relate / density / smooth`等没有single-slot完整语义的operation继续属于完整Plot transform。
+内置常用能力包括scalar aggregate、position `bin`、`normalize`和单轴`jitter`；表内名称只是vocabulary，不是custom白名单。custom Definition具备同等output model、schedule与consumer type时走同一路径。`select / annotate / relate / density / smooth`等没有single-slot完整语义的operation继续属于完整Plot transform。
 
-compact jitter禁止`axis: 'both'`：x mapping只改x，y mapping只改y；双轴需要两个operation或完整`plotExtension.transform`。带composition grouping的bin在Plot提供正式grouped-bin contract前拒绝，Chart不补写owner operation没有声明的grouping或output。
+encoding jitter禁止`axis: 'both'`：x mapping只改x，y mapping只改y；双轴需要两个operation或完整`plotExtension.transform`。带composition grouping的bin在Plot提供正式grouped-bin contract前拒绝，Chart不补写owner operation没有声明的grouping或output。
 
 一个Chart只生成一个共享encoding data view。root transform、encoding-derived operation、facet partition、semantic mark、authored Chart mark与`plotExtension.marks`都消费aggregate / derived后的rows；Chart不自动保留raw分支。raw + aggregate layering、mark-local独立数据视图或不同transform分支必须直接使用Plot正式能力。
 
@@ -99,7 +99,31 @@ scale `type`与scheme复用Plot开放schema；custom scale仍由Plot Definition 
 
 ## 决策：row、column与facet绑定Plot composition
 
-`row / column`直接使用Plot partition dimension或字段名shorthand，`facet`只保存Plot facet options。只声明row或column即可生成facet；Chart用稳定recipe identity与当前scaffold coordinate组装完整Plot facet configuration，再调用Plot canonical resolver。Source不保存可推导的arrangement id、template view或coordinate。
+`row / column`直接使用Plot partition dimension或字段名shorthand，`facet`只保存Plot facet options。只声明row或column即可生成facet；Chart用稳定recipe identity与当前有效的panel coordinate组装完整Plot facet configuration，再调用Plot canonical resolver。Source不保存可推导的arrangement id、template view或coordinate。
+
+facet encoding拥有“按字段重复panel”的composition语义，Chart根级`coordinate`拥有panel内部的投影选择，两者可以组合。recipe spatial scaffold可替换时，显式coordinate替代recipe coordinate并成为每个facet panel共享的coordinate template；省略时继续使用recipe coordinate。`plotExtension.composition`仍与facet encoding冲突，因为两者都声明root composition；它与显式Chart coordinate同时存在时也因声明两个空间根而fail-loud。不可替换的recipe spatial scaffold继续拒绝显式coordinate。
+
+Chart的position role保持`x / y`，不因coordinate类型改变Source slot。Plot的`CoordinateDefinition`为operation提供统一的position scale binding contract：默认按role同名字段读写scale name，内置Polar把`x / y`别名映射到`angle / radius`，自定义coordinate可以为自己的operation shape提供同一hook。该hook属于Plot运行时Definition，不进入JSON IR；Chart与Plot lowering使用同一次编译边界安装的coordinate registry，不复制内置白名单。
+
+```ts
+type CoordinateScaleBinding<TCoordinateOperation> = {
+  read: (operation: TCoordinateOperation) => Partial<Record<DimensionRole, string>>;
+  bind: (operation: TCoordinateOperation, scaleNames: Partial<Record<DimensionRole, string>>) => TCoordinateOperation;
+};
+
+type CoordinateDefinition<TCoordinateOperation> = {
+  schema: ZodType<TCoordinateOperation>;
+  roles: ReadonlyArray<DimensionRole>;
+  scaleBinding?: CoordinateScaleBinding<TCoordinateOperation>;
+  resolve: (operation: TCoordinateOperation, context: CoordinateDefinitionResolveContext) => CoordinateResolution;
+};
+```
+
+最终position scale binding按`recipe fallback < authored coordinate < encoding operation / reference`覆盖。省略显式binding时，Cartesian与Polar都继承同一组recipe scale identity、domain与padding；authored coordinate可以改绑到显式Plot scale；encoding rich mapping作为具体slot的最高优先级连接consumer。Definition hook必须保留operation其它配置，绑定后仍由自身schema与Plot resolver校验；缺失scale、重复来源或不兼容family继续由既有Plot路径fail-loud。
+
+Point recipe properties 可以用 [ADR-14](./14-point-radius-domain-padding.md) 的 `domainPadding` spacing contract 在自动最大半径与 encoding position scale 之间提供逐 role 默认。优先级固定为 `自动最大半径 < properties.domainPadding < encoding scale.operation.domainPadding`；encoding 中的显式 `0` 或 Plot padding 对象均胜出。`scale.reference` 与 `plotExtension` 完整提供或替换的 scale 保持 Plot-owned，不由 Chart properties 隐式改写。
+
+Scatter semantic mark只声明`x / y`位置consumer，因此替换coordinate必须按顺序声明恰好`x / y`两个roles。自定义coordinate可以使用任意operation字段名，但只有通过Definition hook表达同一`x / y`roles时才能用于Scatter；`u / v`、单role或额外必需role在Chart边界fail-loud。其它chartType若需要不同roles，必须由自己的exact recipe另行冻结，不能由Scatter自动猜测。
 
 recipe-local identity统一使用`__chart.<chartType>.<target>`。Scatter facet arrangement固定为`__chart.scatter.composition.facet`并复用`__chart.scatter.view.main` template；Chart root `id`只限定最终Plot root，不改写这些recipe-local identity。
 
@@ -129,10 +153,10 @@ breaking public surface：
 
 现有字段名字符串无需迁移。`average`不新增为重复reducer；使用Data开放reducer operation。`quantitative / nominal / ordinal`不进入Chart；使用Data field model。通用`sortBy / sortOrder`与顶层scheme不进入宽mapping；使用具体chartType的order consumer与Plot scale operation。
 
-以下情况必须在所属owner fail-loud：未知或未注册Definition、malformed built-in、空字段、strict model中不存在的字段、output descriptor / phase / consumer不兼容、later-stage dependency、重复operation或output、scale多source / reference / family冲突、facet依赖错误、普通slot数组以及Chart与Plot空间双来源。Chart不维护第二套字段、scale、transform或composition诊断。
+以下情况必须在所属owner fail-loud：未知或未注册Definition、malformed built-in、空字段、strict model中不存在的字段、output descriptor / phase / consumer不兼容、later-stage dependency、重复operation或output、scale多source / reference / family冲突、facet依赖错误、普通slot数组、facet encoding与显式Plot composition并存、显式coordinate替换不可替换的recipe spatial scaffold、默认role字段不能承载scale binding且Definition未提供自定义hook、Scatter替换coordinate的roles不是恰好`x / y`，以及position scale没有合法coordinate role。Chart不维护第二套字段、scale、transform、coordinate或composition诊断。
 
 ## 实现结果与保留边界
 
-当前实现已把Data output model与compact Definition、Chart exact mapping scheduler、React / Vanilla同形Source及旧facet surface删除接入同一端到端路径。Scene、lineage与locator在一次runtime请求内复用同一次lowering / data artifact；独立请求仍各自执行transform。
+当前实现已把Data output model与transform schedule、Chart exact mapping scheduler、React / Vanilla同形Source及旧facet surface删除接入同一端到端路径。Scene、lineage与locator在一次runtime请求内复用同一次lowering / data artifact；独立请求仍各自执行transform。
 
 本ADR仍保持Proposed。非目标继续包括：万能encoding union、Scatter `series / detail / order / text`、隐式fold、多数据视图、Chart轨道封装以及尚无consumer的预防性slot。

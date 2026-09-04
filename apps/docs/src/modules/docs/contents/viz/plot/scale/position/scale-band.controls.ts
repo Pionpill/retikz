@@ -18,10 +18,7 @@ export const scaleBandControls = definePreviewControls({
           id: 'segments',
           label: '套餐营收',
           rows: segments,
-          columns: [
-            { key: 'segment', label: '套餐' },
-            { key: 'revenue', label: '营收' },
-          ],
+          columns: [{ key: 'segment' }, { key: 'revenue' }],
         },
       ],
     },

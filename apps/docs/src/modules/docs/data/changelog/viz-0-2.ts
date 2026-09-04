@@ -40,6 +40,26 @@ export const vizV02: Release = {
           items: [
             {
               label: {
+                zh: 'BREAKING：domainPadding 默认改为 range 单位',
+                en: 'BREAKING: domainPadding now defaults to range units',
+              },
+              content: {
+                zh: '连续位置 scale 的 `domainPadding` 裸数字与省略 `kind` 的对象现在表示输出 range 单位；需要原 domain 跨度比例时改用 `{ kind: "ratio", lower?, upper? }`，且比例必须小于 `1`。linear、time、log、pow、sqrt、symlog 与 radial 都在各自变换空间中反算留白，并对过大的 range 请求或非法 domain fail-loud。',
+                en: 'Bare numbers and objects without `kind` now express `domainPadding` in output-range units on continuous position scales. Use `{ kind: "ratio", lower?, upper? }` for source-domain-span fractions, each below `1`. Linear, time, log, pow, sqrt, symlog, and radial scales invert range padding in their own transform space and fail loudly for oversized requests or invalid domains.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：polar2D 插值由坐标系统一决定',
+                en: 'BREAKING: polar2D interpolation is coordinate-owned',
+              },
+              content: {
+                zh: '`polar2D.interpolation` 支持 `polar | chord`；省略时连续角向 position scale 默认 `polar`，离散 scale 默认 `chord`。Guide、Path、Interval、Reference 与满足约束的默认 Relation path 继承坐标系模式，适用 Mark 可局部覆盖且不改变 Grid。自定义 position scale Definition 现在必须声明 `continuity`。',
+                en: '`polar2D.interpolation` accepts `polar | chord`; when omitted, a continuous angular position scale defaults to `polar` and a discrete scale to `chord`. Guides, Path, Interval, Reference, and eligible default Relation paths inherit the coordinate mode, while applicable Marks may override it without changing the Grid. Custom position-scale Definitions must now declare `continuity`.',
+              },
+            },
+            {
+              label: {
                 zh: 'BREAKING：发布包主题改为 owner 默认 baseline',
                 en: 'BREAKING: published themes use owner default baselines',
               },
@@ -137,6 +157,16 @@ export const vizV02: Release = {
               content: {
                 zh: 'Chart Theme 改为按 owner 分片：Source 的 `theme.tokens.chart` 只由 Chart shell 消费，`theme.tokens.plot` 交给 Plot，`theme.tokens.recipe` 由当前 chartType schema 校验并消费；运行时 Definition 仍通过各自 owner 接入同一 Core registry。',
                 en: 'Chart Theme is split by owner: Source `theme.tokens.chart` is consumed by the Chart shell, `theme.tokens.plot` by Plot, and `theme.tokens.recipe` is validated and consumed by the current chartType schema. Runtime Definitions still enter the shared Core registry through their respective owners.',
+              },
+            },
+            {
+              label: {
+                zh: 'Relation 支持投影端点图元',
+                en: 'Relation supports projected endpoint glyphs',
+              },
+              content: {
+                zh: 'Path Relation 可在投影后的 source / target 上输出 Point 视觉端点；connector 始终先绘制，两个端点随后绘制。任一必要坐标无效时，同一 datum 的 connector 与两个端点原子跳过，同时保留原 datum provenance 且不重复注册 datum id。',
+                en: 'Path relations can emit Point-style glyphs at projected source and target coordinates, drawing the connector before both endpoints. If any required coordinate is invalid, the connector and both endpoints for that datum are skipped atomically while preserving datum provenance without duplicate datum-id registration.',
               },
             },
           ],

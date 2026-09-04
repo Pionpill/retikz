@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 
+import { RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { PlotSchema } from '../../../src/schemas';
@@ -485,13 +486,91 @@ describe('lowerPlots 极坐标折线采样', () => {
     expect(points).toHaveLength(3);
   });
 
-  it('polar_closed_line_walks_chords_no_sampling', () => {
-    // closed 雷达图恒走弦：即使使用连续角轴，闭合多边形也不做段内采样
+  it('polar_closed_line_densifies_each_segment_and_the_closing_seam', () => {
     const path = collectPaths(firstLayer(polarLineSpec({ closed: true }), { d: POLAR }, polarOpts))[0];
     expect(isClosedSteps(path.children)).toBe(true);
-    // 两个顶点直接走弦，不因连续角轴增加采样点
     const lines = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
-    expect(lines.length).toBeLessThanOrEqual(3);
+    expect(lines.length).toBeGreaterThan(2 + RETIKZ_POLAR_SEGMENT_SAMPLES);
+  });
+
+  it('polar_path_mark_chord_override_keeps_only_projected_vertices', () => {
+    const path = collectPaths(
+      firstLayer(polarLineSpec({ closed: true, interpolation: 'chord' }), { d: POLAR }, polarOpts),
+    )[0];
+    expect(isClosedSteps(path.children)).toBe(true);
+    expect(path.children.filter(step => step.kind === 'move' || step.kind === 'line')).toHaveLength(2);
+  });
+
+  it('polar_path_mark_polar_override_takes_precedence_over_a_chord_coordinate', () => {
+    const spec = PlotSchema.parse({
+      ...polarLineSpec({ closed: false, interpolation: 'polar' }),
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r', interpolation: 'chord' },
+    });
+    const path = collectPaths(firstLayer(spec, { d: POLAR }, polarOpts))[0];
+    expect(path.children.filter(step => step.kind === 'move' || step.kind === 'line').length).toBeGreaterThan(2);
+  });
+
+  it('polar_closed_path_unwraps_the_full_sweep_seam_in_coordinate_direction', () => {
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'd' },
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r', interpolation: 'polar' },
+      scales: [
+        { type: 'linear', name: 'a', domain: [0, 360], domainPadding: 0 },
+        { type: 'linear', name: 'r', domain: [0, 10], domainPadding: 0 },
+      ],
+      marks: [{ type: 'path', closed: true, encoding: { x: { field: 'a' }, y: { field: 'r' } } }],
+    });
+    const path = collectPaths(
+      firstLayer(
+        spec,
+        {
+          d: [
+            { a: 0, r: 8 },
+            { a: 90, r: 8 },
+            { a: 270, r: 8 },
+          ],
+        },
+        polarOpts,
+      ),
+    )[0];
+    const points = path.children.filter(step => step.kind === 'move' || step.kind === 'line').map(stepPoint);
+    const penultimate = points[points.length - 2];
+    expect(penultimate[0]).toBeGreaterThan(200);
+    expect(penultimate[1]).toBeLessThan(200);
+  });
+
+  it('cartesian_path_rejects_a_polar_interpolation_override', () => {
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: 'series' },
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      scales: [
+        { type: 'linear', name: 'x', domainPadding: 0 },
+        { type: 'linear', name: 'y', domainPadding: 0 },
+      ],
+      marks: [
+        {
+          type: 'path',
+          interpolation: 'polar',
+          encoding: { x: { field: 'x' }, y: { field: 'y1' } },
+        },
+      ],
+    });
+    expect(() =>
+      firstLayer(
+        spec,
+        {
+          series: [
+            { x: 0, y1: 1 },
+            { x: 1, y1: 2 },
+          ],
+        },
+        cartOpts,
+      ),
+    ).toThrow(/interpolation|polar2D/i);
   });
 });
 

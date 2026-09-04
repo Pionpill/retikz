@@ -28,10 +28,7 @@ export const jitterControls = definePreviewControls({
           id: 'rows',
           label: '剂量与响应',
           views: createPlotTransformTableViews({ source: '原始', result: '抖动后' }, samples, jitterOperationOf),
-          columns: [
-            { key: 'dose', label: '剂量' },
-            { key: 'response', label: '响应' },
-          ],
+          columns: [{ key: 'dose' }, { key: 'response' }],
         },
       ],
     },

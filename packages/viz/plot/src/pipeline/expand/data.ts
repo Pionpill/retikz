@@ -20,12 +20,17 @@ import {
   resolveStatisticsReducerRegistry,
 } from '@retikz/data';
 
-import type { AnyMarkDefinition, AnyScaleDefinition } from '../../contract';
+import type { AnyMarkDefinition, AnyPositionAdjustmentDefinition, AnyScaleDefinition } from '../../contract';
 import type { IRPlot, IRPlotMarkOperation, IRPlotTransform } from '../../schemas';
 import type { LowerPlotsOptions } from './types';
 
 import { RetikzPlotError } from '../../error';
-import { resolveMarkRegistry, resolvePlotTransformRegistry, resolveScaleRegistry } from '../../providers';
+import {
+  resolveMarkRegistry,
+  resolvePlotTransformRegistry,
+  resolvePositionAdjustmentRegistry,
+  resolveScaleRegistry,
+} from '../../providers';
 import { collectSourceFields } from '../source-fields';
 
 /** 对单个mark应用局部transform，返回该mark实际消费的完整DataView */
@@ -89,6 +94,7 @@ export const prepareRows = (
   transformContext: TransformContext;
   scaleRegistry: Map<string, AnyScaleDefinition>;
   markRegistry: Map<string, AnyMarkDefinition>;
+  positionAdjustmentRegistry: Map<string, AnyPositionAdjustmentDefinition>;
 } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
   const transformRegistry = resolvePlotTransformRegistry(options.transformDefinitions);
@@ -99,6 +105,7 @@ export const prepareRows = (
   };
   const scaleRegistry = resolveScaleRegistry(options.scaleDefinitions);
   const markRegistry = resolveMarkRegistry(options.markDefinitions);
+  const positionAdjustmentRegistry = resolvePositionAdjustmentRegistry(options.positionAdjustmentDefinitions);
   const userSourceFields = collectSourceFields(spec, transformRegistry, markRegistry, transformContext);
   const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
   const fieldMap =
@@ -151,5 +158,6 @@ export const prepareRows = (
     transformContext,
     scaleRegistry,
     markRegistry,
+    positionAdjustmentRegistry,
   };
 };

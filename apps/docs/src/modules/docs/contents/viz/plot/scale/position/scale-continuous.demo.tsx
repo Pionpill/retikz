@@ -12,16 +12,21 @@ export const previewControls = scaleContinuousControls;
 
 /** 按当前 controls 状态构造合法的位置比例尺声明 */
 const renderScale = (values: typeof previewControlContract.canonicalValues): ReactElement => {
+  const domainPadding = {
+    kind: 'ratio' as const,
+    lower: values.domainPadding,
+    upper: values.domainPadding,
+  };
   if (values.scaleType === 'log') {
-    return <PlotScale dimension="y" type="log" base={values.base} domainPadding={values.domainPadding} />;
+    return <PlotScale dimension="y" type="log" base={values.base} domainPadding={domainPadding} />;
   }
   if (values.scaleType === 'sqrt') {
-    return <PlotScale dimension="y" type="sqrt" domainPadding={values.domainPadding} />;
+    return <PlotScale dimension="y" type="sqrt" domainPadding={domainPadding} />;
   }
   if (values.scaleType === 'symlog') {
-    return <PlotScale dimension="y" type="symlog" constant={values.constant} domainPadding={values.domainPadding} />;
+    return <PlotScale dimension="y" type="symlog" constant={values.constant} domainPadding={domainPadding} />;
   }
-  return <PlotScale dimension="y" type="linear" domainPadding={values.domainPadding} />;
+  return <PlotScale dimension="y" type="linear" domainPadding={domainPadding} />;
 };
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {

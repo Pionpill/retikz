@@ -240,7 +240,9 @@ const buildPlotLineage = (
       markLineage.transformScope = { root: rootKinds, mark: operationKindsOf(transform) };
     }
     if (lineageOptions.rowValues !== false) {
-      const markRows = dataArtifact.rootMarkDataViews[markIndex]?.dataView.rows ?? dataArtifact.rootDataView.rows;
+      const markRows =
+        dataArtifact.markDataViews.find(markDataView => markDataView.markIndex === markIndex)?.dataView.rows ??
+        dataArtifact.rootDataView.rows;
       markLineage.rowValues = sampleRows(markRows, lineageOptions.rowValues);
     }
     marks.push(markLineage);

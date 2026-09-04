@@ -4,7 +4,7 @@
 >
 > 关联：[`Chart 总设计`](../../../../architecture/chart-design.md) · [`Chart 封装完备设计`](../../../../architecture/chart-encapsulation-complete.md) · [`plot v0.1 roadmap`](../../../plot/v0/v0.1/roadmap.md) · [`plot v0 roadmap`](../../../plot/v0/roadmap.md)
 >
-> **状态：草案。** alpha.1 当前只确认 Point family 的 `scatter` 已形成实现闭环；其它 Point chartType 与 `regression`、`ranged-dot`、`strip` 仍为 planned / gated。alpha.2 与 alpha.3 继续规划 Line & Area、Bar & Column，不将当前 alpha.1 宣称为已完成
+> **状态：草案。** alpha.1 当前已有 `scatter`、`bubble`、`regression`、`connected-scatter`、`ranged-dot` 与 `strip` 六个 active Point chartType；Connected Scatter 与 Ranged Dot 的 ADR 仍为 Proposed，milestone 仍待整体验收。Strip 已按 ADR-08 复用 Plot v0.2-alpha.1 ADR-13 的统一 Mark Placement 管线完成实现、adapter、测试和文档闭环。alpha.2 与 alpha.3 继续规划 Line & Area、Bar & Column
 
 ## 1. 版本目标
 
@@ -56,14 +56,16 @@ Point、Path、Interval 是 Plot 的 mark 能力。Cartesian、Polar 或其它�
 
 ### 3.1 Point family：Scatter & Points
 
-| chartType    | 核心 recipe                                       | 状态                                          |
-| ------------ | ------------------------------------------------- | --------------------------------------------- |
-| `scatter`    | 二维字段角色，生成一个 Point semantic mark        | 已实现                                        |
-| `regression` | Point + 内建 smooth / regression transform + Path | planned，等待 transform output capability     |
-| `ranged-dot` | 起止数值角色与端点 / 连接语义                     | planned，等待 row atomicity capability        |
-| `strip`      | 分类位置、数据驱动 offset 与 Point                | planned，等待 Plot position-offset capability |
+| chartType           | 核心 recipe                                       | 状态                         |
+| ------------------- | ------------------------------------------------- | ---------------------------- |
+| `scatter`           | 二维字段角色，生成一个 Point semantic mark        | 已实现                       |
+| `bubble`            | 二维字段与必需尺寸角色，生成一个 Point            | 已实现；ADR Accepted         |
+| `regression`        | Point + 内建 smooth / regression transform + Path | 已实现；ADR Accepted         |
+| `connected-scatter` | 有序 Path → Point 复合 semantic group             | 已实现；ADR Proposed，待验收 |
+| `ranged-dot`        | 起止数值角色与 Relation connector / endpoints     | 已实现；ADR Proposed，待验收 |
+| `strip`             | x / y + step-based Point jitter + boundary inset  | 已实现；ADR Accepted         |
 
-Point family 的 recipe 只把 `encodings` 用于字段绑定，把 `properties` 用于常量配置。Scatter 的 `scatter` semantic group 生成 Point；`recipe.marks` 只接受可选的 `scatter` Chart mark，默认按 authored 顺序追加，`override: true` 时原位替换该 group；Path 等其它 Plot mark 通过 `plotExtension.marks` 最后追加，且不继承 Chart slots
+Point family 的 recipe 只把 `encodings` 用于字段绑定，把 `properties` 用于常量配置。六个 active chartType 各自拥有精确 semantic group 与同 kind Chart mark；`recipe.marks` 默认按 authored 顺序追加，`override: true` 时原位替换同 kind group。Path 等显式 Plot mark 通过 `plotExtension.marks` 最后追加，且不继承 Chart slots
 
 ### 3.2 Line family：Line & Area
 
@@ -121,7 +123,7 @@ type ChartSource<TFamily extends string, TRecipe extends IRJsonObject, TRecipeTh
 
 ### 4.2 Mark、Plot 与顺序
 
-recipe 生成按唯一 kind 分组的内建 semantic marks，并声明可用的 Chart mark binding、继承 slots 与 Plot scaffold。当前 Point family 只有 `scatter` Chart mark kind；mark 只继承 binding 明确声明的 encoding / property，显式 properties 高于 inherited encoding，显式 encoding 再胜出。`override: true` 只替换同 kind group，未命中时追加并 warning。Path 等非 Scatter 图元由作者通过 `plotExtension.marks` 显式添加
+recipe 生成按唯一 kind 分组的内建 semantic marks，并声明可用的 Chart mark binding、继承 slots 与 Plot scaffold。当前 Point family 的六个 active chartType 分别拥有同名 Chart mark kind；mark 只继承 binding 明确声明的 encoding / property，显式 properties 高于 inherited encoding，显式 encoding 再胜出。`override: true` 只替换同 kind group，未命中时追加并 warning。额外 Plot 图元由作者通过 `plotExtension.marks` 显式添加
 
 解析顺序固定为：recipe semantic groups → 应用命中的 authored overrides → 按 authored 顺序追加普通或未命中的 Chart marks → `plotExtension.marks` explicit Plot marks。Chart mark 与 semantic mark 均沿 Plot 正式 mark schema、resolve、lowering、identity、provenance、lineage、locator 与 diagnostics 主链消费；显式 `plotExtension.marks` 独立于 Chart context
 
@@ -137,11 +139,11 @@ presentation 固定按 `title → subtitle → plot → note → source` 组合�
 
 ## 5. Milestones
 
-| Milestone          | 主题             | 当前目录                                                                                             | 状态   |
-| ------------------ | ---------------- | ---------------------------------------------------------------------------------------------------- | ------ |
-| chart v0.1-alpha.1 | Scatter & Points | `point`: `scatter` 已实现；其它 Point chartType、`regression`、`ranged-dot`、`strip` planned / gated | 进行中 |
-| chart v0.1-alpha.2 | Line & Area      | `line`: `line`、`area`、`range-area` 与对应 Pattern                                                  | 待起草 |
-| chart v0.1-alpha.3 | Bar & Column     | `bar`: `bar`、`waterfall`、`gantt`、`bullet` 与对应 Pattern                                          | 待起草 |
+| Milestone          | 主题             | 当前目录                                                                   | 状态   |
+| ------------------ | ---------------- | -------------------------------------------------------------------------- | ------ |
+| chart v0.1-alpha.1 | Scatter & Points | `point`: 六个 active chartType 已实现并完成文档；两篇既有 ADR 仍待人工验收 | 进行中 |
+| chart v0.1-alpha.2 | Line & Area      | `line`: `line`、`area`、`range-area` 与对应 Pattern                        | 待起草 |
+| chart v0.1-alpha.3 | Bar & Column     | `bar`: `bar`、`waterfall`、`gantt`、`bullet` 与对应 Pattern                | 待起草 |
 
 里程碑只冻结长期目标、依赖顺序与能力门槛。字段、默认值、允许覆盖范围与失败语义由对应 ADR 冻结；alpha.3 完成也不等于 v0.1 beta 或 RC
 

@@ -24,6 +24,8 @@ A custom mark lowers rows into its own Core IR assembly. Plot IR stores only the
 | `buildCell?`     | Shares a logical Cell with built-in datum-anchor paths; it is not a custom-mark render hook and does not add locator support |
 | `lower`          | Lowers prepared rows, the coordinate frame, and resolved channels into Core IR                                               |
 
+`defaultColorGroup` is operation metadata owned uniformly by the Plot pipeline, so a custom definition schema does not repeat it. Plot uses it to resolve the shared `palette.series` fallback passed through `channels`, then validates the remaining custom fields with the definition schema. Explicit color channels and constant paints still take precedence.
+
 The `diamond` mark below projects each row's `x` / `y` through `frame.projectRoles`, then uses size and fill config from the operation to emit Core diamond Nodes. Change those JSON parameters in the panel; switch source files to inspect the definition, data, and host injection:
 
 <ComponentPreview
@@ -91,14 +93,14 @@ Built-in and custom marks dispatch through the same mark registry. Coordinates i
     {
       label: 'Mark definition lookup and schema validation',
       path: 'packages/viz/plot/src/resolve/mark/resolve.ts',
-      startLine: 11,
-      endLine: 29,
+      startLine: 14,
+      endLine: 39,
     },
     {
       label: 'Field collection',
       path: 'packages/viz/plot/src/resolve/mark/resolve.ts',
-      startLine: 34,
-      endLine: 42,
+      startLine: 42,
+      endLine: 49,
     },
     {
       label: 'Channel-kind dispatch',

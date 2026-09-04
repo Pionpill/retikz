@@ -40,12 +40,7 @@ export const histogramControls = definePreviewControls({
             measurements,
             histogramOperationOf,
           ),
-          columns: [
-            { key: 'measurement', label: '测量值' },
-            { key: 'binStart', label: '分箱下界' },
-            { key: 'binEnd', label: '分箱上界' },
-            { key: 'binCount', label: '箱内数量' },
-          ],
+          columns: [{ key: 'measurement' }, { key: 'binStart' }, { key: 'binEnd' }, { key: 'binCount' }],
         },
       ],
     },

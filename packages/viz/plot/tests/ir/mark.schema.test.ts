@@ -41,6 +41,28 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(noId)).toEqual(noId);
   });
 
+  it('mark_default_color_group_is_json_safe_and_non_blank', () => {
+    const mark = {
+      type: 'point',
+      defaultColorGroup: 'observations',
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
+    };
+
+    expect(MarkOperationSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    expect(() =>
+      MarkOperationSchema.parse({
+        ...mark,
+        defaultColorGroup: '   ',
+      }),
+    ).toThrow();
+  });
+
+  it('custom_mark_accepts_default_color_group', () => {
+    const mark = { type: 'custom-symbol', defaultColorGroup: 'observations', value: 1 };
+
+    expect(MarkOperationSchema.parse(mark)).toEqual(mark);
+  });
+
   // 错误路径
   it('mark_accepts_layer_zindex', () => {
     const mark = {
@@ -845,6 +867,54 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(JSON.parse(JSON.stringify(m)))).toEqual(m);
   });
 
+  it('mark_relation_accepts_projected_endpoint_glyphs', () => {
+    const mark = {
+      type: 'relation',
+      source: { project: { x: 'start', y: 'category' } },
+      target: { project: { x: 'end', y: 'category' } },
+      endpoints: {
+        source: { shape: { kind: 'constant', value: 'circle' }, size: { kind: 'constant', value: 5 } },
+        target: { shape: { kind: 'constant', value: 'diamond' }, size: { kind: 'constant', value: 6 } },
+      },
+    };
+
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+  });
+
+  it('mark_relation_rejects_endpoint_glyphs_outside_plain_projected_paths', () => {
+    const endpoints = { source: {}, target: {} };
+    expect(() => MarkSchema.parse({ type: 'relation', source: { id: 'A' }, target: { id: 'B' }, endpoints })).toThrow(
+      /projected/,
+    );
+    expect(() =>
+      MarkSchema.parse({
+        type: 'relation',
+        kind: 'ribbon',
+        source: { project: { x: 'start', y: 'category' } },
+        target: { project: { x: 'end', y: 'category' } },
+        endpoints,
+        ribbon: { width: { kind: 'constant', value: 8 } },
+      }),
+    ).toThrow(/path relation/);
+    expect(() =>
+      MarkSchema.parse({
+        type: 'relation',
+        source: { project: { x: 'start', y: 'category' } },
+        target: { project: { x: 'end', y: 'category' } },
+        endpoints,
+        path: { via: [{ project: { x: 'middle', y: 'category' } }] },
+      }),
+    ).toThrow(/via or route/);
+    expect(() =>
+      MarkSchema.parse({
+        type: 'relation',
+        source: { project: { x: 'start', y: 'category' } },
+        target: { project: { x: 'end', y: 'category' } },
+        endpoints: { source: { zIndex: { kind: 'constant', value: 2 } } },
+      }),
+    ).toThrow();
+  });
+
   it('mark_relation_explicit_route_accepts_three_leg_core_fold', () => {
     const mark = {
       type: 'relation',
@@ -902,5 +972,55 @@ describe('MarkSchema (contract)', () => {
       encoding: { x: { field: 'x' }, y: { field: 'score' } },
     };
     expect(MarkOperationSchema.parse(m)).toEqual(m);
+  });
+});
+
+describe('Polar interpolation mark contract', () => {
+  it.each(['polar', 'chord'] as const)('round-trips interpolation=%s for supported marks', interpolation => {
+    const marks = [
+      {
+        type: 'path',
+        interpolation,
+        encoding: { x: { field: 'angle' }, y: { field: 'radius' } },
+      },
+      {
+        type: 'interval',
+        interpolation,
+        encoding: { x: { field: 'angle' }, y: { field: 'radius' } },
+      },
+      {
+        type: 'reference',
+        interpolation,
+        yTo: 2,
+        encoding: { y: { value: 1 } },
+      },
+      {
+        type: 'relation',
+        source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
+        target: { project: { x: 'targetAngle', y: 'targetRadius' } },
+        path: { interpolation },
+      },
+    ];
+
+    for (const mark of marks) {
+      expect(MarkSchema.parse(JSON.parse(JSON.stringify(mark)))).toEqual(mark);
+    }
+  });
+
+  it.each(['path', 'interval', 'reference'] as const)('rejects unknown %s interpolation', type => {
+    const encoding = type === 'reference' ? { y: { value: 1 } } : { x: { field: 'x' }, y: { field: 'y' } };
+
+    expect(() => MarkSchema.parse({ type, interpolation: 'spline', encoding })).toThrow();
+  });
+
+  it('rejects unknown relation path interpolation', () => {
+    expect(() =>
+      MarkSchema.parse({
+        type: 'relation',
+        source: { id: 'A' },
+        target: { id: 'B' },
+        path: { interpolation: 'spline' },
+      }),
+    ).toThrow();
   });
 });

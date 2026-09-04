@@ -200,8 +200,6 @@ export type PreviewPointControlField = {
 export type PreviewTableColumn = {
   /** 从每一行读取的字段名 */
   key: string;
-  /** 展示给用户的列标题，默认使用字段名 */
-  label?: string;
 };
 
 /** 只读二维表格的行集合 */
@@ -237,7 +235,7 @@ export type PreviewTableControlField = {
   kind: 'table';
   id: string;
   label: string;
-  /** 可选的显式列顺序与标题 */
+  /** 可选的显式字段筛选与列顺序 */
   columns?: ReadonlyArray<PreviewTableColumn>;
   /** 字段的可选显示条件 */
   visibleWhen?: PreviewControlCondition;

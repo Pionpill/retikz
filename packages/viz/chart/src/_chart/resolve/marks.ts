@@ -26,6 +26,20 @@ type ChartSemanticMarksResolution = Readonly<{
   warnings: ReadonlyArray<ChartResolveWarning>;
 }>;
 
+/** 为一个 Chart 语义 mark 组写入 Plot 默认颜色组，并隔离局部颜色组 */
+const withDefaultColorGroup = (
+  marks: ReadonlyArray<IRPlotMarkOperation>,
+  groupIndex: number,
+): ReadonlyArray<IRPlotMarkOperation> =>
+  marks.map(mark => {
+    const localColorGroup = mark.defaultColorGroup;
+    const defaultColorGroup =
+      localColorGroup === undefined
+        ? `__chart.default-color.${groupIndex}`
+        : `__chart.default-color.${groupIndex}.${localColorGroup}`;
+    return { ...mark, defaultColorGroup };
+  });
+
 const invalidMark = (message: string, path: ReadonlyArray<string | number>, cause?: unknown): RetikzChartError =>
   new RetikzChartError({
     code: RetikzChartErrorCode.InvalidChartIR,
@@ -150,17 +164,17 @@ export const resolveChartSemanticMarks = (
     semanticIndices.set(group.kind, index);
     return { kind: group.kind, plotMarks: [...group.plotMarks] };
   });
-  const additions: Array<IRPlotMarkOperation> = [];
+  const additions: Array<ReadonlyArray<IRPlotMarkOperation>> = [];
   const warnings: Array<ChartResolveWarning> = [];
 
   for (const mark of authored.authoredMarks) {
     if (!mark.override) {
-      additions.push(...mark.plotMarks);
+      additions.push(mark.plotMarks);
       continue;
     }
     const semanticIndex = semanticIndices.get(mark.kind);
     if (semanticIndex === undefined) {
-      additions.push(...mark.plotMarks);
+      additions.push(mark.plotMarks);
       warnings.push({
         code: ChartWarningCode.MarkOverrideTargetNotFound,
         message: `Chart mark "${mark.kind}" requested override, but the recipe produced no semantic mark group with that kind; the authored mark was appended.`,
@@ -172,7 +186,7 @@ export const resolveChartSemanticMarks = (
   }
 
   return {
-    marks: [...groups.flatMap(group => group.plotMarks), ...additions],
+    marks: [...groups.map(group => group.plotMarks), ...additions].flatMap(withDefaultColorGroup),
     warnings,
   };
 };

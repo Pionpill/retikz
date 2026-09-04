@@ -82,10 +82,10 @@ export type IRPlotDensityBandwidth = ZodInfer<typeof DensityBandwidthSchema>;
 /** density 变换（一维 KDE 采样，改行数） */
 export type IRPlotDensityTransform = ZodInfer<typeof DensityTransformSchema>;
 
-/** smooth 方法策略（首轮为线性回归） */
+/** smooth 回归方法策略 */
 export type IRPlotSmoothMethod = ZodInfer<typeof SmoothMethodSchema>;
 
-/** smooth 变换（线性趋势线采样，改行数） */
+/** smooth 变换（回归趋势线采样，改行数） */
 export type IRPlotSmoothTransform = ZodInfer<typeof SmoothTransformSchema>;
 
 /** plot-only 内置 transform operation */

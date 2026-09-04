@@ -36,6 +36,7 @@ const ChartSourceShellSchema = strictObject({
   theme: createChartThemeSchema(JsonObjectSchema).optional(),
   data: PlotSchema.shape.data.describe('Unique external dataset reference'),
   layout: ChartLayoutSchema.optional(),
+  coordinate: PlotSchema.shape.coordinate,
   recipe: ChartRecipeShellSchema,
   plotExtension: ChartPlotExtensionSchema.optional(),
 }).describe('Common strict Chart Source shell before a recipe-specific schema is selected');
@@ -49,6 +50,7 @@ type ChartSourceShape<TFamily extends string, TRecipe extends ZodType, TTheme ex
   theme: TTheme;
   data: typeof PlotSchema.shape.data;
   layout: ZodOptional<typeof ChartLayoutSchema>;
+  coordinate: typeof PlotSchema.shape.coordinate;
   recipe: TRecipe;
   plotExtension: ZodOptional<typeof ChartPlotExtensionSchema>;
 };
@@ -67,8 +69,17 @@ export const createChartSourceSchema = <TFamily extends string, TRecipe extends 
     theme,
     data: PlotSchema.shape.data.describe('Unique external dataset reference'),
     layout: ChartLayoutSchema.optional(),
+    coordinate: PlotSchema.shape.coordinate,
     recipe,
     plotExtension: ChartPlotExtensionSchema.optional(),
+  }).superRefine((source, context) => {
+    if (source.coordinate !== undefined && source.plotExtension?.composition !== undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: ['plotExtension', 'composition'],
+        message: 'Chart Source cannot contain both root coordinate and Plot composition extension',
+      });
+    }
   });
 
 type IRChartSourceShell = ZodInfer<typeof ChartSourceShellSchema>;
