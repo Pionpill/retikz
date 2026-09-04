@@ -57,6 +57,59 @@ describe('Vanilla Input normalizers', () => {
     expect(InputPathArrowDirection).toEqual({ None: 'none', Forward: '->', Backward: '<-', Both: '<->' });
   });
 
+  it('把共享箭头重叠比例与逐端覆盖映射到对应 endpoint placement', () => {
+    const input = {
+      way: [
+        [0, 0],
+        [24, 0],
+      ],
+      arrow: '<->',
+      arrowPlacement: {
+        overlap: 0.5,
+        start: { overlap: 0 },
+        end: { overlap: 1 },
+      },
+    } satisfies InputPath & { arrowPlacement: unknown };
+
+    expect(normalizePath(input)).toMatchObject({
+      marks: [
+        { pos: 0, endpointOverlap: 0, mark: { kind: 'arrow' } },
+        { pos: 1, endpointOverlap: 1, mark: { kind: 'arrow' } },
+      ],
+    });
+  });
+
+  it('只把顶层共享值写到实际创建的箭头端点', () => {
+    const input = {
+      way: [
+        [0, 0],
+        [24, 0],
+      ],
+      arrow: '->',
+      arrowPlacement: { overlap: 0.5 },
+    } satisfies InputPath & { arrowPlacement: unknown };
+
+    expect(normalizePath(input).marks).toEqual([{ pos: 1, endpointOverlap: 0.5, mark: { kind: 'arrow' } }]);
+  });
+
+  it.each([
+    { arrow: undefined, arrowPlacement: {}, expected: 'requires arrow' },
+    { arrow: 'none' as const, arrowPlacement: { overlap: 0.5 }, expected: 'requires arrow' },
+    { arrow: '->' as const, arrowPlacement: { start: { overlap: 0.5 } }, expected: 'start requires a start arrow' },
+    { arrow: '<-' as const, arrowPlacement: { end: { overlap: 0.5 } }, expected: 'end requires an end arrow' },
+  ])('拒绝没有对应箭头端点的 placement：$expected', ({ arrow, arrowPlacement, expected }) => {
+    const input = {
+      way: [
+        [0, 0],
+        [24, 0],
+      ],
+      ...(arrow === undefined ? {} : { arrow }),
+      arrowPlacement,
+    } satisfies InputPath & { arrowPlacement: unknown };
+
+    expect(() => normalizePath(input)).toThrow(expected);
+  });
+
   it('将 typed Step 的字符串 target 收敛为 Core Path step', () => {
     const input: InputPath = {
       id: 'edge',

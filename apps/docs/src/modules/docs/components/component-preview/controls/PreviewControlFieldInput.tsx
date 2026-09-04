@@ -25,6 +25,13 @@ const isPreviewColorHex = (value: string): boolean => /^#[0-9a-fA-F]{6}$/.test(v
 const PREVIEW_COLOR_CUSTOM_VALUE = 'custom';
 const PREVIEW_COLOR_CURRENT_VALUE = 'currentColor';
 const PREVIEW_COLOR_CONTRAST_VALUE = 'contrast';
+const PREVIEW_SELECT_VALUE_PREFIX = 'preview-control-value:';
+
+/** 把任意 control 字符串编码为 Radix Select 可选的非空内部值 */
+const encodePreviewSelectValue = (value: string): string => `${PREVIEW_SELECT_VALUE_PREFIX}${value}`;
+
+/** 把 Radix Select 内部值还原为 control 原始字符串 */
+const decodePreviewSelectValue = (value: string): string => value.slice(PREVIEW_SELECT_VALUE_PREFIX.length);
 
 const releaseSelectDocumentLock = (): void => {
   if (document.querySelector('[role="dialog"]')) return;
@@ -183,22 +190,23 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
         />
       );
     case 'select': {
-      const selected = field.options.find(option => option.value === value);
+      const selectedValue = typeof value === 'string' ? value : field.defaultValue;
+      const selected = field.options.find(option => option.value === selectedValue);
       return (
         <Select
-          value={typeof value === 'string' ? value : field.defaultValue}
+          value={encodePreviewSelectValue(selectedValue)}
           onOpenChange={open => {
             setSelectOpen(open);
             if (open) releaseSelectDocumentLock();
           }}
-          onValueChange={nextValue => onValueChange(nextValue)}
+          onValueChange={nextValue => onValueChange(decodePreviewSelectValue(nextValue))}
         >
           <SelectTrigger aria-label={field.label} size={compact ? 'sm' : 'default'} className={cn('w-full min-w-0')}>
-            <SelectValue>{selected?.label ?? String(value)}</SelectValue>
+            <SelectValue>{selected?.label ?? selectedValue}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {field.options.map(option => (
-              <SelectItem key={option.value} value={option.value}>
+              <SelectItem key={option.value} value={encodePreviewSelectValue(option.value)}>
                 {option.label}
               </SelectItem>
             ))}

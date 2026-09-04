@@ -1,10 +1,10 @@
 # Diagram v0 Roadmap
 
-> 状态：v0.1 alpha.1 已完成，alpha.2 FlowDiagram MVP 规划中；后续 milestone 等待真实使用继续规划。关联：[Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md) · [Schematic Graph 完备设计](../../../architecture/schematic-graph-complete.md) · [Graph v0 roadmap](../../graph/v0/roadmap.md)
+> 状态：v0.1 alpha.1 FlowDiagram MVP 已完成；后续 milestone 等待真实使用继续规划。关联：[Schematic 制图能力域设计](../../../../../../notes/architecture/schematic-design.md) · [Schematic Graph 完备设计](../../../architecture/schematic-graph-complete.md) · [Graph v0 roadmap](../../graph/v0/roadmap.md)
 
 ## 目标
 
-Diagram v0 在 Graph 通用关系数据与图式呈现之上建立完整自动图示能力：以 presentation、frame / appearance 与 drawing core 三层组织完整图示，解析 JSON-safe 的布局意图，编排可替换的布局与 routing 能力，并产出与 Graph identity 对齐的 renderer-neutral 结果。首个公开图类型是 `FlowDiagram`，以 docs 中的关系型流程图为真实应用场景，通过渐进替换现有图验证 Diagram 的公共能力，而不是建立 docs 专用模型。
+Diagram v0 在 Graph 通用关系数据与图式呈现之上建立完整自动图示能力：以 presentation、frame / appearance 与 drawing core 三层组织完整图示，解析 JSON-safe 的布局意图，编排可替换的布局与 routing 能力，并产出按 element identity 与 relation Source 顺序对齐的 renderer-neutral 结果。首个公开图类型是 `FlowDiagram`，以 docs 中的关系型流程图为真实应用场景，通过渐进替换现有图验证 Diagram 的公共能力，而不是建立 docs 专用模型。
 
 ## 版本方向
 

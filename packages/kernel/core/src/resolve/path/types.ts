@@ -31,13 +31,15 @@ export type ResolvedGeometryLabel = Omit<IRGeometryLabel, 'textColor' | 'text'> 
 };
 
 /** 展开位置、方向与距离默认值后的路径几何标签 */
-export type CanonicalGeometryLabel = Omit<ResolvedGeometryLabel, 'position' | 'side' | 'distance'> & {
+export type CanonicalGeometryLabel = Omit<ResolvedGeometryLabel, 'position' | 'side' | 'distance' | 'interrupt'> & {
   /** 路径上的归一化位置 */
   position: number;
   /** 相对宿主线段的方向 */
   side: NonNullable<IRGeometryLabel['side']> | 'center';
   /** 相对宿主线的偏移距离 */
   distance: number;
+  /** 是否在兼容的宿主描边上产生断口 */
+  interrupt: boolean;
 };
 
 type WithResolvedStepLabel<TStep extends IRStep> = TStep extends unknown
@@ -140,6 +142,8 @@ export type ArrowMarkVisual = Readonly<{
 export type ArrowMarkGeometry = Readonly<{
   baseSize: number;
   tipX: number;
+  /** 空心外轮廓补偿后的 marker 局部视觉后缘 */
+  visualBackX: number;
   contactX: number;
   resolvedLength: number;
   resolvedWidth: number;

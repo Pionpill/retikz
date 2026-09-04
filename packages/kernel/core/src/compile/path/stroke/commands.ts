@@ -31,6 +31,8 @@ export type EmitEllipseArcCommandInput = {
 export type PathCommandEmitter = {
   commands: Array<PathCommand>;
   provenance: Array<string>;
+  /** 每条 command 对应的 Source Path step 下标 */
+  stepIndexes: Array<number>;
   boundsPoints: Array<IRPosition>;
   endpointSource: {
     firstAutoBoundary: boolean;
@@ -51,15 +53,18 @@ export type PathCommandEmitter = {
 export type CreatePathCommandEmitterInput = {
   round: (n: number) => number;
   currentStepKind: () => string;
+  currentStepIndex: () => number;
 };
 
 /** 创建普通 path emit 的命令写入器 */
 export const createPathCommandEmitter = ({
   round,
   currentStepKind,
+  currentStepIndex,
 }: CreatePathCommandEmitterInput): PathCommandEmitter => {
   const commands: Array<PathCommand> = [];
   const provenance: Array<string> = [];
+  const stepIndexes: Array<number> = [];
   const boundsPoints: Array<IRPosition> = [];
   let lastEnd: IRPosition | null = null;
   let subPathStart: IRPosition | null = null;
@@ -81,6 +86,7 @@ export const createPathCommandEmitter = ({
     const rp = roundPoint(p);
     commands.push({ kind: 'move', to: [rp[0], rp[1]] });
     provenance.push(currentStepKind());
+    stepIndexes.push(currentStepIndex());
     boundsPoints.push(p);
     subPathStart = p;
     lastEnd = p;
@@ -91,6 +97,7 @@ export const createPathCommandEmitter = ({
     const rp = roundPoint(p);
     commands.push({ kind: 'line', to: [rp[0], rp[1]] });
     provenance.push(currentStepKind());
+    stepIndexes.push(currentStepIndex());
     boundsPoints.push(p);
     lastEnd = p;
   };
@@ -98,6 +105,7 @@ export const createPathCommandEmitter = ({
   const emitClose = (): void => {
     commands.push({ kind: 'close' });
     provenance.push(currentStepKind());
+    stepIndexes.push(currentStepIndex());
     lastEnd = subPathStart;
   };
 
@@ -111,6 +119,7 @@ export const createPathCommandEmitter = ({
       to: [rp[0], rp[1]],
     });
     provenance.push(currentStepKind());
+    stepIndexes.push(currentStepIndex());
     boundsPoints.push(control);
     boundsPoints.push(p);
     lastEnd = p;
@@ -128,6 +137,7 @@ export const createPathCommandEmitter = ({
       to: [rp[0], rp[1]],
     });
     provenance.push(currentStepKind());
+    stepIndexes.push(currentStepIndex());
     boundsPoints.push(control1);
     boundsPoints.push(control2);
     boundsPoints.push(to);
@@ -145,6 +155,7 @@ export const createPathCommandEmitter = ({
       endAngle,
     });
     provenance.push(currentStepKind());
+    stepIndexes.push(currentStepIndex());
     const endPoint = pointAtArcAngle(center, radius, endAngle);
     boundsPoints.push(endPoint);
     lastEnd = endPoint;
@@ -162,6 +173,7 @@ export const createPathCommandEmitter = ({
       endAngle,
     });
     provenance.push(currentStepKind());
+    stepIndexes.push(currentStepIndex());
     const endPt: IRPosition = [
       center[0] + Math.cos(endAngle * DEG_TO_RAD) * radiusX,
       center[1] + Math.sin(endAngle * DEG_TO_RAD) * radiusY,
@@ -178,6 +190,7 @@ export const createPathCommandEmitter = ({
   return {
     commands,
     provenance,
+    stepIndexes,
     boundsPoints,
     endpointSource,
     getLastEnd: () => lastEnd,

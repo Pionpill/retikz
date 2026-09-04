@@ -5,6 +5,7 @@ import type { IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { arrowMarks } from '../../helpers/arrow-marks';
+import { flattenPrims } from '../../helpers/flatten';
 import { line, move } from '../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
@@ -227,5 +228,72 @@ describe('compile path: arrow 箭头', () => {
     expect(scene.primitives.find(p => p.type === 'group')).toBeUndefined();
     const path = findPathPrim(scene.primitives);
     expect(path.arrowEnd?.shape).toBe('stealth');
+  });
+
+  it('centered label interruption keeps arrows on logical endpoints instead of gap edges', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          stroke: '#13579b',
+          marks: arrowMarks('<->'),
+          label: { text: 'gap', sloped: true },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    const fragments = flattenPrims(
+      compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
+    ).filter((primitive): primitive is PathPrim => primitive.type === 'path' && primitive.stroke === '#13579b');
+
+    expect(fragments).toHaveLength(2);
+    expect(fragments.filter(fragment => fragment.arrowStart !== undefined)).toHaveLength(1);
+    expect(fragments.filter(fragment => fragment.arrowEnd !== undefined)).toHaveLength(1);
+    const startFragment = fragments.find(fragment => fragment.arrowStart !== undefined);
+    const endFragment = fragments.find(fragment => fragment.arrowEnd !== undefined);
+    const startTerminal = [...(startFragment?.commands ?? [])].reverse().find(command => command.kind === 'line');
+    const endMove = endFragment?.commands.find(command => command.kind === 'move');
+
+    expect(startTerminal).toMatchObject({ kind: 'line', to: [39.5, 0] });
+    expect(endMove).toMatchObject({ kind: 'move', to: [60.5, 0] });
+  });
+
+  it('endpoint label interruptions retain both endpoint arrows on their original anchors', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          stroke: '#13579b',
+          marks: arrowMarks('<->'),
+          label: [
+            { text: 'start', position: 0, sloped: true },
+            { text: 'end', position: 1, sloped: true },
+          ],
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    const fragments = flattenPrims(
+      compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
+    ).filter((primitive): primitive is PathPrim => primitive.type === 'path' && primitive.stroke === '#13579b');
+    const startFragment = fragments.find(fragment => fragment.arrowStart !== undefined);
+    const endFragment = fragments.find(fragment => fragment.arrowEnd !== undefined);
+    const startMove = startFragment?.commands.find(command => command.kind === 'move');
+    const endTerminal = [...(endFragment?.commands ?? [])].reverse().find(command => command.kind === 'line');
+
+    expect(startFragment?.arrowStart?.shape).toBe('stealth');
+    expect(endFragment?.arrowEnd?.shape).toBe('stealth');
+    expect(startMove).toMatchObject({ kind: 'move', to: [5.1, 0] });
+    expect(endTerminal).toMatchObject({ kind: 'line', to: [94.9, 0] });
   });
 });

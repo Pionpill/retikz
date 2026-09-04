@@ -22,6 +22,22 @@ export const InputPathArrowDirection = {
 /** 作者侧路径箭头方向取值 */
 export type InputPathArrowDirectionValue = ValueOf<typeof InputPathArrowDirection>;
 
+/** 作者侧单个路径箭头端点的放置配置 */
+export type InputPathArrowEndpointPlacement = {
+  /** 箭头从默认位置推进到最终视觉后缘对齐逻辑端点位置的归一化比例 */
+  overlap?: number;
+};
+
+/** 作者侧路径箭头端点放置配置 */
+export type InputPathArrowPlacement = {
+  /** 实际创建端点共享的重叠比例 */
+  overlap?: number;
+  /** 起点箭头的逐字段覆盖 */
+  start?: InputPathArrowEndpointPlacement;
+  /** 终点箭头的逐字段覆盖 */
+  end?: InputPathArrowEndpointPlacement;
+};
+
 /** 作者侧路径步骤标签 */
 export type InputStepLabel = Omit<IRStepLabel, 'side'> & {
   side?: SideValue;
@@ -136,6 +152,8 @@ type InputPathBase = Omit<IRPath, 'type' | 'children'> & {
   arrow?: InputPathArrowDirectionValue;
   /** 箭头的顶层默认与端点覆盖配置 */
   arrowDetail?: IRArrowDetail;
+  /** 箭头端点的共享与逐端放置配置 */
+  arrowPlacement?: InputPathArrowPlacement;
   /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
   authoring?: unknown;
 };

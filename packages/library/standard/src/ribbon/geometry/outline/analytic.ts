@@ -1,8 +1,7 @@
-import type { IRPosition, PathCommand, SegmentSample } from '@retikz/core';
-import type { Vector2 } from '@retikz/math';
+import type { IRPosition, PathCommand } from '@retikz/core';
+import type { CurveSegmentSample, Vector2 } from '@retikz/math';
 
-import { cubicSegmentSample, lineSegmentSample, quadSegmentSample } from '@retikz/core';
-import { point } from '@retikz/math';
+import { curve, point } from '@retikz/math';
 
 import type { IRRibbonCap, RibbonAlignmentValue } from '../../types';
 import type { RibbonAnalyticSegment, RibbonCrossSection, RibbonSegment, RibbonSegmentInput } from '../types';
@@ -73,15 +72,26 @@ const segmentInputToAnalyticSegment = ({
   return null;
 };
 
-const analyticSegmentSample = (segment: RibbonAnalyticSegment, t: number): SegmentSample => {
-  if (segment.kind === 'line') return lineSegmentSample(segment.from, segment.to, t);
-  if (segment.kind === 'quad') return quadSegmentSample(segment.from, segment.control, segment.to, t);
-  return cubicSegmentSample(segment.from, segment.control1, segment.control2, segment.to, t);
+const analyticSegmentSample = (segment: RibbonAnalyticSegment, t: number): CurveSegmentSample => {
+  if (segment.kind === 'line') return curve.sampleAt({ kind: 'line', from: segment.from, to: segment.to }, t);
+  if (segment.kind === 'quad') {
+    return curve.sampleAt({ kind: 'quadraticBezier', from: segment.from, control: segment.control, to: segment.to }, t);
+  }
+  return curve.sampleAt(
+    {
+      kind: 'cubicBezier',
+      from: segment.from,
+      control1: segment.control1,
+      control2: segment.control2,
+      to: segment.to,
+    },
+    t,
+  );
 };
 
 type OffsetAnalyticPointInput = {
   point: IRPosition;
-  sample: SegmentSample;
+  sample: CurveSegmentSample;
   offset: number;
   side: 'left' | 'right';
   widthAt: (offset: number) => number;

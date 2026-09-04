@@ -13,6 +13,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <Entity
       id="entity-style"
       role={values.role}
+      status={values.status || undefined}
       position={[180, 90]}
       fill={values.fill}
       stroke={values.stroke}

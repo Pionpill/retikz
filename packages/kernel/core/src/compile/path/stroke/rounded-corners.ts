@@ -52,8 +52,36 @@ type LineRun = {
 export type ApplyRoundedCornersInput = {
   commands: Array<PathCommand>;
   provenance: Array<CommandProvenance>;
+  sourceStepIndexes: Array<number>;
   radius: number;
   round: (n: number) => number;
+};
+
+/** 圆角改写后的 command 与其 source step 映射 */
+export type RoundedCommandsResult = {
+  commands: Array<PathCommand>;
+  sourceStepIndexes: Array<number>;
+};
+
+const appendRoundedCommands = (
+  output: Array<PathCommand>,
+  outputStepIndexes: Array<number>,
+  rounded: ReadonlyArray<PathCommand>,
+  lineStepIndexes: ReadonlyArray<number>,
+  moveStepIndex?: number,
+): void => {
+  let lineIndex = 0;
+  for (const command of rounded) {
+    if (command.kind === 'move') {
+      output.push(command);
+      outputStepIndexes.push(moveStepIndex ?? lineStepIndexes[0]);
+      continue;
+    }
+    const sourceIndex = lineStepIndexes[Math.min(lineIndex, lineStepIndexes.length - 1)];
+    output.push(command);
+    outputStepIndexes.push(sourceIndex);
+    if (command.kind === 'line' && lineIndex < lineStepIndexes.length - 1) lineIndex += 1;
+  }
 };
 
 /** 把 LineRun 的折线顶点转成开放 contour 段序列 */
@@ -75,17 +103,20 @@ const runSegments = (run: LineRun): Array<ContourSegment> => {
 export const applyRoundedCorners = ({
   commands,
   provenance,
+  sourceStepIndexes,
   radius,
   round,
-}: ApplyRoundedCornersInput): Array<PathCommand> => {
+}: ApplyRoundedCornersInput): RoundedCommandsResult => {
   // 收集合格 run：连续 line-step 的 line 命令。move / 非 line step 命令打断 run。
   const out: Array<PathCommand> = [];
+  const outStepIndexes: Array<number> = [];
   let i = 0;
   while (i < commands.length) {
     const cmd = commands[i];
     const isLineStep = cmd.kind === 'line' && (provenance[i] === 'line' || provenance[i] === 'axis-line');
     if (!isLineStep) {
       out.push(cmd);
+      outStepIndexes.push(sourceStepIndexes[i] ?? -1);
       i++;
       continue;
     }
@@ -94,6 +125,7 @@ export const applyRoundedCorners = ({
     const start = endpointOf(prev);
     if (!start) {
       out.push(cmd);
+      outStepIndexes.push(sourceStepIndexes[i] ?? -1);
       i++;
       continue;
     }
@@ -133,7 +165,14 @@ export const applyRoundedCorners = ({
         const rounded = contourCommands(segs, radius, fillets, true);
         // contourCommands 闭合版自带 move + close；替换 run 的 move（out 末尾）+ line 命令 + 这条 close
         out.pop(); // 去掉原 move（contourCommands 会重发 move）
-        for (const rc of rounded) out.push(contourToPathCommand(rc, round));
+        const moveStepIndex = outStepIndexes.pop();
+        appendRoundedCommands(
+          out,
+          outStepIndexes,
+          rounded.map(command => contourToPathCommand(command, round)),
+          sourceStepIndexes.slice(cmdStart, cmdEnd),
+          moveStepIndex,
+        );
         i = closeIdx + 1; // 跳过被吸收的 close
         continue;
       }
@@ -144,23 +183,28 @@ export const applyRoundedCorners = ({
       const segs = runSegments(run);
       const fillets = filletContour(segs, radius, false);
       const rounded = contourCommands(segs, radius, fillets, false);
-      for (const rc of rounded) {
-        if (rc.kind === 'move') continue; // run 起点 move 已在 out 末尾
-        out.push(contourToPathCommand(rc, round));
-      }
+      appendRoundedCommands(
+        out,
+        outStepIndexes,
+        rounded.filter(command => command.kind !== 'move').map(command => contourToPathCommand(command, round)),
+        sourceStepIndexes.slice(cmdStart, cmdEnd),
+      );
       continue;
     }
 
     // 单段 line（无内拐角）：原样
-    for (let k = cmdStart; k < cmdEnd; k++) out.push(commands[k]);
+    for (let k = cmdStart; k < cmdEnd; k++) {
+      out.push(commands[k]);
+      outStepIndexes.push(sourceStepIndexes[k] ?? -1);
+    }
   }
-  return out;
+  return { commands: out, sourceStepIndexes: outStepIndexes };
 };
 
 /** 暴露 fillet 解（供 marks 弧长重算等沿倒角后几何采样） */
 export type { FilletSolution };
 
-/** 倒角后命令采样结果：pos∈[0,1] 处的点 + 归一化切线（与 SegmentSample 同形态） */
+/** 倒角后命令采样结果：pos∈[0,1] 处的点 + 归一化切线（与 CurveSegmentSample 同形态） */
 export type CommandSample = {
   /** 点坐标 */
   point: [number, number];

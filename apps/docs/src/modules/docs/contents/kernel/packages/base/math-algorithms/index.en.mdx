@@ -1,6 +1,6 @@
 ---
 title: Geometric algorithms
-description: Compute relationships between geometric objects and derive intersections, circles, convex hulls, and point-fitting curves from existing data with @retikz/math.
+description: Compute relationships between geometric objects and derive intersections, circles, convex hulls, point-fitting curves, and sampleable curve segments from existing data with @retikz/math.
 ---
 
 Primitives describe points, vectors, circles, and arcs. Algorithms combine those values to answer questions such as “where do they intersect?”, “which circle covers these points?”, or “how can I make a smooth curve through them?”. They handle mathematical and geometric relationships only; they do not create IR or depend on a renderer.
@@ -86,6 +86,37 @@ The result for a boundary point from `polygon.containsPoint` is undefined; add a
 | ----------------------- | --------------------------- | ------------------------------------------------------------------------ |
 | `polygon.containsPoint` | Time O(n), space O(1)       | Use the even-odd rule to test whether a point is inside a simple polygon |
 | `convexHull`            | Time O(n log n), space O(n) | Build a counter-clockwise convex hull and remove collinear middle points |
+
+### Curve slicing
+
+When a route is not straight, common jobs include placing a label, arrow, or animated object at 40%, finding where a travelled distance lands, or taking a middle section for highlighting, a gap, or a local redraw. `CurveSegment` gives lines, quadratic and cubic Béziers, circular arcs, and elliptical arcs one shared way to sample points and directions and to take shape-preserving slices.
+
+Use the panel to switch curve kinds and move the sample position and slice bounds. Light gray is the complete curve; the highlighted yellow portion comes from `curve.slice`. The blue dot and short line show the current point and direction. Every slice retains its original curve kind instead of degrading into a polyline.
+
+<ComponentPreview
+  files="curve-segments"
+  size="md"
+  caption="Switch among five curve segments and observe parameter sampling, direction, and shape-preserving slices"
+/>
+
+`sampleAt` accepts `0–1`: `0` is the start and `1` is the end. It returns both the point and direction of travel. `approximateLength` answers “how long is this route?” Lines and circular arcs are calculated directly; Béziers and elliptical arcs use a fixed number of sample points. The default `sampleCount` is 32; a higher value is more accurate but costs more work.
+
+`parameterAtDistance` answers “where do I land after travelling this far?” For Béziers and elliptical arcs, inversion uses at most 32 bisection steps by default. If a midpoint's sampled travelled distance is within the default geometric tolerance of the target distance, it returns early. A cached `totalLength` must use the same sampling budget.
+
+`slice` also clamps and orders its two parameters. Quadratic and cubic Béziers use De Casteljau subdivision; circular and elliptical arcs retain their directed sweep, center, radii, and ellipse rotation. Zero-length or zero-derivative segments still return a deterministic point and `[1, 0]` tangent, while distance inversion returns the start parameter.
+
+#### API reference
+
+| API                         | Complexity              | Purpose                                                                                                                |
+| --------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `CurveSegment`              | —                       | Closed plain-geometry union: `line`, `quadraticBezier`, `cubicBezier`, `arc`, and `ellipseArc`                         |
+| `CurveSegmentSample`        | —                       | A parameter sample with `point` and a unit forward `tangent`                                                           |
+| `curve.sampleAt`            | Time O(1), space O(1)   | Sample a point and unit tangent at a clamped `0–1` parameter                                                           |
+| `curve.approximateLength`   | Time O(n), space O(1)   | Approximate Bézier / elliptical-arc length with a fixed budget; use analytic length for lines and circular arcs        |
+| `curve.parameterAtDistance` | Time O(b·n), space O(1) | Invert distance with the same discrete model; `b` is the maximum bisection count, with early exit at default tolerance |
+| `curve.slice`               | Time O(1), space O(1)   | Take a parameter-range subcurve without changing its curve kind                                                        |
+
+Drawing semantics remain in Core: it maps final `PathCommand`s into these mathematical segments, then decides labels, gaps, dashes, arrows, and hit testing. To control automatic label gaps, use `interrupt` on [Path labels and stroke gaps](/kernel/components/draw/path#label-interruption); Math is not a drawing or label API.
 
 ### Curves through points
 

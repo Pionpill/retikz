@@ -18,4 +18,9 @@ describe('@retikz/diagram-react package shell', () => {
   it('keeps the public root empty before authoring design', () => {
     expect(Object.keys(diagramReactExports)).toEqual([]);
   });
+
+  it('publishes Flow authoring only from the explicit symmetric subpath', () => {
+    expect(manifest.exports).toHaveProperty('./flow');
+    expect(manifest.publishConfig.exports).toHaveProperty('./flow');
+  });
 });

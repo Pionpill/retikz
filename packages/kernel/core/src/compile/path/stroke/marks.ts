@@ -1,3 +1,5 @@
+import type { CurveSegmentSample } from '@retikz/math';
+
 import type {
   GroupPrim,
   MarkerFill,
@@ -7,7 +9,6 @@ import type {
   ScenePrimitive,
   Transform,
 } from '../../../contract';
-import type { SegmentSample } from '../../../shared/geometry';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { RAD_TO_DEG } from '../../../shared/geometry';
@@ -72,7 +73,7 @@ const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): SceneP
  */
 export const buildMarkMarkerGroup = (
   spec: ResolvedArrowEnd,
-  sample: SegmentSample,
+  sample: CurveSegmentSample,
   context: BuildMarkMarkerGroupContext,
 ): GroupPrim => {
   const { strokeWidth, round, contextStroke } = context;

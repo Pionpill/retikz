@@ -89,7 +89,7 @@ export const LayoutDistributionSchema = zodEnum(LayoutDistribution).describe(
 
 export const LayoutItemBaseSchema = strictObject({
   kind: zodEnum(LayoutItemKind).describe('Discriminator selecting the owning Layout container.'),
-  key: NonBlankStringSchema.describe('Container-local stable authored item identity.'),
+  key: NonBlankStringSchema.optional().describe('Optional container-local stable authored item identity.'),
   child: ChildSchema.describe('JSON-safe Core child laid out by the container.'),
   margin: LayoutSpacingSchema.default(0).describe('Item margin outside the parent allocation slot.'),
 }).describe('Shared JSON-safe child item contract for Layouts.');
@@ -153,7 +153,7 @@ export const LayoutArtifactAlignmentGuideSchema = strictObject({
 }).describe('Alignment guide actually used to place one layout item.');
 
 export const LayoutArtifactItemBaseSchema = strictObject({
-  key: NonBlankStringSchema.describe('Container-local authored item identity.'),
+  key: NonBlankStringSchema.describe('Container-local effective item identity.'),
   sourceIndex: NonNegativeIntegerSchema.describe('Zero-based authored item order.'),
   marginBounds: LayoutArtifactRectSchema.describe('Assigned slot expanded by resolved item margins.'),
   slotBounds: LayoutArtifactRectSchema.describe('Final parent-assigned child slot without margins.'),

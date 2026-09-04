@@ -14,6 +14,10 @@ const graphThemeOverridesOf = (
   style: ReferenceStyle,
   theme: Parameters<Parameters<typeof defineGraphThemeStyle>[0]['resolve']>[0],
 ): GraphThemeStyleOverrides => {
+  if (style === PreviewThemeStyle.Clean) {
+    return { entity: { tokens: { textColor: modeForeground(theme.mode), fill: 'none' } } };
+  }
+
   const foreground = modeForeground(theme.mode);
   const color = theme.colors.categorical[0];
   if (style === PreviewThemeStyle.Academic) {
@@ -28,32 +32,46 @@ const graphThemeOverridesOf = (
         },
       },
       relation: { tokens: { color: foreground, strokeWidth: 1.25 } },
-    };
-  }
-  if (style === PreviewThemeStyle.Vibrant) {
-    return {
-      entity: {
+      group: {
         tokens: {
-          color,
-          textColor: 'contrast',
-          fill: color,
-          stroke: 'none',
+          background: { fill: 'none' },
+          border: { stroke: foreground, strokeWidth: 1, dashPattern: [4, 3] },
+          cornerRadius: 0,
         },
       },
-      relation: { tokens: { color: theme.colors.categorical[1], strokeWidth: 1.5 } },
+      block: {
+        tokens: {
+          background: { fill: 'none' },
+          border: { stroke: foreground, strokeWidth: 1 },
+          cornerRadius: 0,
+        },
+      },
     };
   }
-
   return {
     entity: {
       tokens: {
         color,
         textColor: 'contrast',
-        fill: 0.15,
+        fill: 1,
         stroke: 'none',
       },
     },
-    relation: { tokens: { color: foreground, strokeWidth: 1, opacity: 0.72 } },
+    relation: { tokens: { color: theme.colors.categorical[1], strokeWidth: 1.5 } },
+    group: {
+      tokens: {
+        background: { fill: color, fillOpacity: 0.08 },
+        border: { stroke: color, strokeWidth: 1.5, strokeOpacity: 0.7 },
+        cornerRadius: 12,
+      },
+    },
+    block: {
+      tokens: {
+        background: { fill: theme.colors.categorical[1], fillOpacity: 0.12 },
+        border: { stroke: theme.colors.categorical[1], strokeWidth: 1.5, strokeOpacity: 0.85 },
+        cornerRadius: 12,
+      },
+    },
   };
 };
 

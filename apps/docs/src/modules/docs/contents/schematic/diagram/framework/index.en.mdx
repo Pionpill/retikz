@@ -37,11 +37,11 @@ Framework combines present regions into a fixed heading / main structure and tre
 
 Framework retains only independent facts and neither reads, changes, nor persists the drawing child's domain semantics. It also publishes no Diagram-specific identity, metadata, or artifact; Layout and Legend results remain owned by their existing dependencies.
 
-## Current boundaries
+## Boundary with concrete Flow
 
-- The package root exposes no `IRDiagram`, `IRFlowDiagram`, or instantiable Diagram root
-- React and Vanilla adapters are not wired, and there is no standalone host or formal feature demo
-- The drawing child used by alpha.1 is an internal assembly input, not a public `body` field
-- Flow Graph Body, automatic layout, routing, orchestration, result, and artifact remain outside Framework
+- Framework still exposes no abstract `IRDiagram` or instantiable generic Diagram root
+- `FlowDiagram` exposes Source, React, and Vanilla authoring through symmetric `./flow` package entries
+- The drawing child remains internal assembly input instead of becoming a public Flow Source `body`
+- Flow owns Graph measurement, automatic layout, routing, orchestration, and `FlowDiagramArtifact`
 
-These boundaries let Framework serve as the long-lived shared foundation for concrete Diagrams without exposing the internal Foundation or a placeholder drawing core as public contracts.
+These boundaries keep Framework as the shared foundation for concrete Diagrams, while [Flow Diagram](/schematic/diagram/flow) exposes only the domain contracts required for its complete loop.

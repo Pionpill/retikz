@@ -37,11 +37,11 @@ Framework 以固定的 heading / main 结构组合存在的区域，并把具体
 
 Framework 只保留独立事实源，不读取、修改或持久化 drawing child 的领域语义。它也不发布 Diagram 私有 identity、metadata 或 artifact；Layout 与 Legend 结果继续由原有依赖包拥有。
 
-## 当前边界
+## 与具体 Flow 的边界
 
-- 包根不公开 `IRDiagram`、`IRFlowDiagram` 或可实例化的 Diagram root
-- React 与 Vanilla adapter 尚未接线，也没有 standalone host 或正式功能 demo
-- alpha.1 使用的 drawing child 是内部装配输入，不是公共 `body` 字段
-- Flow 的 Graph Body、自动 layout、routing、orchestration、result 与 artifact 不属于 Framework
+- Framework 仍不公开抽象 `IRDiagram` 或可实例化的通用 Diagram root
+- `FlowDiagram` 通过三个包的 `./flow` 子入口公开 Source、React 与 Vanilla authoring
+- drawing child 仍是内部装配输入，不成为 Flow Source 的公共 `body` 字段
+- Flow 拥有 Graph 测量、自动 layout、routing、orchestration 与 `FlowDiagramArtifact`
 
-这些边界让 Framework 可以作为具体 Diagram 的长期共享底座，同时避免把内部 Foundation 或占位绘图核心提前固化成公共契约。
+这些边界让 Framework 继续作为具体 Diagram 的共享底座，而 [Flow Diagram](/schematic/diagram/flow) 只公开自身完整闭环所需的领域契约。

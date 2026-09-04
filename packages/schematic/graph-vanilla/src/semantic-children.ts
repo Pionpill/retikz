@@ -45,10 +45,12 @@ const visitSemanticChildren = (child: InputGraphMember, visit: (nestedChild: Inp
       return;
     case 'blockHeader':
       if (child.icon !== undefined) visit(child.icon);
-      if (child.trailing !== undefined) visit(child.trailing);
+      if (child.trail !== undefined) visit(child.trail);
       return;
     case 'blockRow':
-      child.children?.forEach(cell => visit(cell.child));
+      if ('children' in child) {
+        child.children?.forEach(visit);
+      }
       return;
     case 'entity':
     case 'relation':
@@ -73,14 +75,13 @@ const mapSemanticChildren = (
       return {
         ...child,
         ...(child.icon === undefined ? {} : { icon: map(child.icon) }),
-        ...(child.trailing === undefined ? {} : { trailing: map(child.trailing) }),
+        ...(child.trail === undefined ? {} : { trail: map(child.trail) }),
       };
     case 'blockRow':
+      if (!('children' in child) || child.children === undefined) return child;
       return {
         ...child,
-        ...(child.children === undefined
-          ? {}
-          : { children: child.children.map(cell => ({ ...cell, child: map(cell.child) })) }),
+        children: child.children.map(map),
       };
     case 'entity':
     case 'relation':

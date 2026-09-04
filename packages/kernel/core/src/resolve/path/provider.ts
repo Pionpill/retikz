@@ -78,6 +78,11 @@ export const resolvePathGenerator = (
 };
 
 const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): void => {
+  if (!Number.isFinite(definition.backX)) {
+    throw createCompositeContractError(
+      `Arrow '${shape}' has a non-finite backX (${String(definition.backX)}); it must be a finite number.`,
+    );
+  }
   if (!Number.isFinite(definition.lineContactX)) {
     throw createCompositeContractError(
       `Arrow '${shape}' has a non-finite lineContactX (${String(definition.lineContactX)}); it must be a finite number.`,
@@ -96,6 +101,12 @@ const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): 
   if (definition.outerInset !== undefined && !Number.isFinite(definition.outerInset)) {
     throw createCompositeContractError(
       `Arrow '${shape}' has a non-finite outerInset (${String(definition.outerInset)}); it must be a finite number.`,
+    );
+  }
+  const tipX = definition.tipX ?? definition.baseSize ?? ARROW_GEOMETRY_BASE_SIZE;
+  if (definition.backX > definition.lineContactX || definition.lineContactX > tipX) {
+    throw createCompositeContractError(
+      `Arrow '${shape}' geometry must satisfy backX <= lineContactX <= tipX; received ${String(definition.backX)} <= ${String(definition.lineContactX)} <= ${String(tipX)}.`,
     );
   }
 };
@@ -124,6 +135,7 @@ export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveCo
   const resolvedLength = visual.length * visual.scale;
   const resolvedWidth = visual.width * visual.scale;
   const rawOuterInset = definition.outerInset ?? (definition.hollow ? visual.lineWidth / 2 : 0);
+  const visualBackX = definition.backX - rawOuterInset;
   const boundaryOuterInset = (rawOuterInset * resolvedLength) / baseSize;
   if (!Number.isFinite(resolvedLength) || !Number.isFinite(resolvedWidth)) {
     throw new RetikzCoreError(
@@ -137,9 +149,16 @@ export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveCo
       `Arrow '${shape}' resolved outerInset is non-finite; use smaller outerInset / length / scale values.`,
     );
   }
+  if (!Number.isFinite(visualBackX)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Resolve,
+      `Arrow '${shape}' resolved visual back is non-finite; use smaller backX / outerInset values.`,
+    );
+  }
   const geometry: ArrowMarkGeometry = {
     baseSize,
     tipX,
+    visualBackX,
     contactX,
     resolvedLength,
     resolvedWidth,

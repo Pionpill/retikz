@@ -173,6 +173,7 @@ type RelationGraphThemeOverrideContext = RelationResolveContext &
 const relationSubject = (relation: CanonicalRelation) => ({
   role: relation.source.role,
   ...(relation.source.kind === undefined ? {} : { kind: relation.source.kind }),
+  ...(relation.source.status === undefined ? {} : { status: relation.source.status }),
   ...(relation.predicate === undefined
     ? {}
     : { predicate: { name: relation.predicate.definition.name, params: relation.predicate.params } }),
@@ -245,6 +246,27 @@ const sourceAppearanceOf = (relation: CanonicalRelation): IRGraphRelationAppeara
     }),
   );
 
+/**
+ * 把未由 Source 或 Theme 显式指定的 `currentColor` 路径描边绑定到 Relation 主色
+ *
+ * Graph Theme 以 `color` 作为 Relation 路径、箭头与标签共用的主色。Core Path 只有在
+ * `stroke` 缺省时才会采用该主色，因此这里在所有 Theme rule 与 Source appearance 合并后
+ * 确定实际描边，同时保留显式 `stroke` 的优先级
+ */
+const resolveRelationStroke = (
+  appearance: EffectiveRelationAppearance,
+  sourceAppearance: IRGraphRelationAppearanceTokenOverrides,
+): EffectiveRelationAppearance => {
+  if (
+    sourceAppearance.stroke !== undefined ||
+    appearance.stroke !== 'currentColor' ||
+    typeof appearance.color !== 'string'
+  ) {
+    return appearance;
+  }
+  return { ...appearance, stroke: appearance.color };
+};
+
 /** 把 Canonical Relation 与当前位置 Theme rules 确定为唯一有效外观 */
 export const resolveRelationAppearance = (
   relation: CanonicalRelation,
@@ -264,5 +286,9 @@ export const resolveRelationAppearance = (
   for (const rule of [...styleRules, ...layerRules]) validateGraphThemeSelector(rule.selector, selectorContext);
   const subject = relationSubject(relation);
   const styled = mergeMatchingRules(graphTheme.relation.tokens, styleRules, subject);
-  return mergeAppearance(mergeMatchingRules(styled, layerRules, subject), sourceAppearanceOf(relation));
+  const sourceAppearance = sourceAppearanceOf(relation);
+  return resolveRelationStroke(
+    mergeAppearance(mergeMatchingRules(styled, layerRules, subject), sourceAppearance),
+    sourceAppearance,
+  );
 };

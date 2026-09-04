@@ -71,6 +71,7 @@ Group 的样式调整集中在外框的背景、边框、线型、圆角和内�
 
 - `children` 直接使用 Core `IRChild`，可以放 Entity、Relation、Group、Node、Path、Scope、Layout、Plot 或其它已注册 composite
 - `nodeDefault`、`pathDefault`、`labelDefault`、Core `theme`、transform、placement、clip 与 namespace 都保持 Scope 语义
+- 命名 Graph Theme 会为 Group 根外框提供 `background`、`border` 与 `cornerRadius` 基线；Source 显式字段最终优先，并对对应 Theme 对象执行完整顶层字段替换，不在 `border` 或 `background` 内部深合并
 - `graphTheme` 只影响 Group 中可见的 Entity / Relation，不影响外框、caption、boundary labels 或普通 Core children
 - Group 不自动堆栈 children，不做 routing、避障或 label collision；需要普通排版时，在 children 中显式放入 FlexLayout、GridLayout 或 OverlayLayout
 - Group 的显式 `id` 对应外框包络，可以继续通过 Core `IRNodeTarget` 被 Relation 引用
@@ -90,6 +91,8 @@ Group lowering 会把 caption 与 authored children 组合为 Surface 的唯一�
 ## API 参考
 
 `Group` 的 React、IR 与 Vanilla 入口共享同一组 JSON-safe 字段。下面只列 Group 自身新增或重定义的字段；Core Scope 的其余公开属性继续沿用 Core 契约
+
+表中的外框默认值是 Neutral Graph Theme 基线。选择同名 Graph Theme Definition 后，省略的 `background`、`border` 与 `cornerRadius` 会改用该 Definition 的 Group tokens；显式 Source 值仍优先
 
 | 属性                 | 类型                                   | 默认值                   | 描述                                                                                                                                                                               |
 | -------------------- | -------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

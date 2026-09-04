@@ -12,6 +12,7 @@ import {
   RelationKindSchema,
   RelationRoleSchema,
 } from '../relation';
+import { GraphStatusSchema } from '../status';
 
 const requireAtLeastOneField =
   (label: string) =>
@@ -75,6 +76,9 @@ export const GraphEntityThemeSelectorSchema = strictObject({
     .optional()
     .describe('One or more registered Entity kind keys.'),
   predicate: GraphPredicateThemeSelectorSchema.optional().describe('Optional Entity predicate selector.'),
+  status: selectorKeySchema(GraphStatusSchema, 'Entity status')
+    .optional()
+    .describe('One or more closed Entity semantic statuses.'),
 })
   .superRefine(requireAtLeastOneField('Entity Theme selector'))
   .describe('Entity selector over complete Canonical semantics.');
@@ -87,6 +91,9 @@ export const GraphRelationThemeSelectorSchema = strictObject({
     .optional()
     .describe('One or more registered Relation kind keys.'),
   predicate: GraphPredicateThemeSelectorSchema.optional().describe('Optional Relation predicate selector.'),
+  status: selectorKeySchema(GraphStatusSchema, 'Relation status')
+    .optional()
+    .describe('One or more closed Relation semantic statuses.'),
   direction: union([RelationDirectionSchema, array(RelationDirectionSchema).min(1)])
     .optional()
     .describe('One or more effective Relation directions.'),

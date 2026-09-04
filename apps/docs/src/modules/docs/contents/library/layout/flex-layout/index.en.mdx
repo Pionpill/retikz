@@ -15,17 +15,17 @@ import { FlexLayout, LayoutItem } from '@retikz/layout-react';
 ```tsx
 <Layout width={360} height={120}>
   <FlexLayout gap={8}>
-    <LayoutItem kind="flex" itemKey="label" grow={1}>
+    <LayoutItem kind="flex" grow={1}>
       <Node position={[0, 0]} text="Label" />
     </LayoutItem>
-    <LayoutItem kind="flex" itemKey="value" shrink={0}>
+    <LayoutItem kind="flex" shrink={0}>
       <Node position={[0, 0]} text="42%" />
     </LayoutItem>
   </FlexLayout>
 </Layout>
 ```
 
-`itemKey` is the authored identity local to the layout container and never reads React's reserved `key`. Each `LayoutItem` accepts exactly one drawable child or one explicit `IRChild` through `ir`.
+`itemKey` may be omitted. Layout creates a container-local effective key internally without writing it back to Source IR. Pass `itemKey` only when identity must remain stable across reordering; it never reads React's reserved `key`. Each `LayoutItem` accepts exactly one drawable child or one explicit `IRChild` through `ir`.
 
 `gap` accepts either a number or a `{ column, row }` object. A number applies to both physical axes; the object sets column and row spacing independently, without changing field meaning when `direction` changes.
 
@@ -96,7 +96,7 @@ Each line runs bounded grow/shrink independently. An item freezes when it reache
 
 `FlexLayoutInput` is the factory authoring input. `IRFlexLayout` is the JSON-safe persisted form after defaults are applied.
 
-React `FlexLayoutProps` mirrors the container fields below but changes `children` to direct `LayoutItem` elements. `FlexLayoutItemProps` renames JSON `key` to `itemKey` and requires exactly one of `children` or `ir`.
+React `FlexLayoutProps` mirrors the container fields below but changes `children` to direct `LayoutItem` elements. `FlexLayoutItemProps` renames optional JSON `key` to `itemKey` and requires exactly one of `children` or `ir`.
 
 ### Optional React inspection component
 
@@ -121,14 +121,14 @@ Base `FlexLayout` has no `inspect` prop. After installing the optional package, 
 | `justifyContent?` | `FlexMainDistributionValue`                        | `'start'`                     | Main-axis free-space distribution within each line                                        |
 | `alignItems?`     | <ApiValues name="LayoutAlignment" />               | `'stretch'`                   | Default cross alignment; column directions reject baseline                                |
 | `alignContent?`   | <ApiValues name="LayoutDistribution" />            | `'start'`                     | Cross-axis free-space distribution between multiple lines                                 |
-| `children?`       | `Array<FlexLayoutItemInput>`                       | `[]`                          | Authored items with keys unique within this container                                     |
+| `children?`       | `Array<FlexLayoutItemInput>`                       | `[]`                          | Authored items; explicit keys must be unique within this container                        |
 
 ### `FlexLayoutItemInput`
 
 | Prop         | Type                                 | Default       | Description                                                                          |
 | ------------ | ------------------------------------ | ------------- | ------------------------------------------------------------------------------------ |
 | `kind`       | `'flex'`                             | —             | Item discriminator; use `LayoutItemKind.Flex`                                        |
-| `key`        | `string`                             | —             | Stable non-empty authored identity within this container                             |
+| `key?`       | `string`                             | generated     | Optional stable local identity; generated from source index when omitted             |
 | `child`      | `IRChild`                            | —             | Any JSON-safe Core child participating in layout                                     |
 | `margin?`    | `number` \| `IRBoxSpacing`           | `0`           | Spacing outside the slot and excluded from the child proposal                        |
 | `basis?`     | `'content'` \| `number`              | `'content'`   | Natural main contribution or finite non-negative authored base slot                  |

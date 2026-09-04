@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import type { PathPrim } from '../../../src/contract';
 import type { IRScene } from '../../../src/schemas';
 
 import { compileToScene } from '../../../src/compile/compile';
+import { arrowMarks } from '../../helpers/arrow-marks';
+import { flattenPrims } from '../../helpers/flatten';
 import { arc, close, line, move } from '../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 
@@ -136,5 +139,37 @@ describe("compile path: 'cycle' 闭合", () => {
       arc([20, 0], 10, 0, 90),
       line([0, 0]),
     ]);
+  });
+
+  it('closing edge label interruption expands close and retains endpoint arrow ownership once', () => {
+    const ir: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          stroke: '#13579b',
+          marks: arrowMarks('->'),
+          label: { text: 'close', position: 0.9, sloped: true },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+            { type: 'step', kind: 'line', to: [100, 100] },
+            { type: 'step', kind: 'cycle' },
+          ],
+        },
+      ],
+    };
+    const fragments = flattenPrims(
+      compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
+    ).filter((primitive): primitive is PathPrim => primitive.type === 'path' && primitive.stroke === '#13579b');
+
+    expect(fragments.length).toBeGreaterThanOrEqual(2);
+    expect(fragments.flatMap(fragment => fragment.commands).some(command => command.kind === 'close')).toBe(false);
+    expect(fragments.filter(fragment => fragment.arrowEnd !== undefined)).toHaveLength(1);
+    const arrowEndFragment = fragments.find(fragment => fragment.arrowEnd !== undefined);
+    const arrowEndCommand = [...(arrowEndFragment?.commands ?? [])].reverse().find(command => command.kind === 'line');
+
+    expect(arrowEndCommand).toMatchObject({ kind: 'line', to: [100, 94.9] });
   });
 });

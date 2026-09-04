@@ -5,9 +5,8 @@ import type {
   PathKindLabelInput,
   ResolvedPathKindAppearance,
   ScenePrimitive,
-  SegmentSample,
 } from '@retikz/core';
-import type { Vector2 } from '@retikz/math';
+import type { CurveSegmentSample, Vector2 } from '@retikz/math';
 
 import type { CanonicalRibbonOptions, IRRibbonPath } from '../types';
 
@@ -19,7 +18,7 @@ export const DEFAULT_RIBBON_SAMPLES = 64;
 
 /** 可按 t∈[0,1] 采样的中心线段 */
 export type RibbonSegment = {
-  sampleAt: (t: number) => SegmentSample;
+  sampleAt: (t: number) => CurveSegmentSample;
   length: number;
 };
 

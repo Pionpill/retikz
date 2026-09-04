@@ -1,7 +1,8 @@
+import type { CurveSegmentSample } from '@retikz/math';
+
 import type { PathCommand, ResolvedArrowEnd, ScenePrimitive } from '../../../contract';
 import type { ArrowMarkResolution, CanonicalPath } from '../../../resolve';
 import type { IRPathBase, IRPosition } from '../../../schemas';
-import type { SegmentSample } from '../../../shared/geometry';
 import type { PathPrimitiveEmitResult } from '../types';
 import type { PathBasePropsWithStrokeWidth } from './output';
 
@@ -31,6 +32,8 @@ export type EmitPathEndpointDecorationsContext = {
   arrowResolutions: ReadonlyMap<NonNullable<IRPathBase['marks']>[number]['mark'], ArrowMarkResolution>;
   /** 坐标取整函数 */
   round: (n: number) => number;
+  /** 当前 Path 的 IR locator */
+  irPath: string;
 };
 
 /**
@@ -41,7 +44,7 @@ export const emitPathEndpointDecorations = (
   path: Pick<CanonicalPath, 'marks'>,
   context: EmitPathEndpointDecorationsContext,
 ): PathEndpointDecorations => {
-  const { arrowResolutions, round } = context;
+  const { arrowResolutions, round, irPath } = context;
   const arrows: PathEndpointDecorations['arrows'] = {
     shrinkStart: 0,
     shrinkEnd: 0,
@@ -49,7 +52,7 @@ export const emitPathEndpointDecorations = (
     boundaryOuterInsetEnd: 0,
   };
   const inlineMarks: NonNullable<IRPathBase['marks']> = [];
-  for (const item of path.marks ?? []) {
+  for (const [index, item] of (path.marks ?? []).entries()) {
     if (item.pos === 0 && arrows.arrowStart === undefined) {
       const resolved = emitEndpointArrowMark(
         arrowResolutions.get(item.mark) ??
@@ -59,6 +62,7 @@ export const emitPathEndpointDecorations = (
               `Path arrow mark '${item.mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`,
             );
           })(),
+        item.endpointOverlap ?? 0,
         round,
       );
       arrows.arrowStart = resolved.spec;
@@ -75,12 +79,19 @@ export const emitPathEndpointDecorations = (
               `Path arrow mark '${item.mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`,
             );
           })(),
+        item.endpointOverlap ?? 0,
         round,
       );
       arrows.arrowEnd = resolved.spec;
       arrows.shrinkEnd = resolved.shrink;
       arrows.boundaryOuterInsetEnd = resolved.boundaryOuterInset;
       continue;
+    }
+    if (item.endpointOverlap !== undefined) {
+      throw new RetikzCoreError(
+        RetikzCoreErrorCode.Compile,
+        `Path endpoint arrow overlap at ${irPath}.marks[${index}].endpointOverlap requires the selected start or end arrow placement.`,
+      );
     }
     inlineMarks.push(item);
   }
@@ -94,7 +105,7 @@ export type EmitInlineMarkPrimitivesInput = {
   /** 非端点 marks */
   inlineMarks: NonNullable<IRPathBase['marks']>;
   /** 每段几何采样器 */
-  segmentSamplers: Array<(t: number) => SegmentSample>;
+  segmentSamplers: Array<(t: number) => CurveSegmentSample>;
   /** commands 是否已经被 roundedCorners 改写 */
   roundedCommands: boolean;
   /** 已解析 arrow registry */

@@ -17,6 +17,8 @@ import {
   OpenSquareArrowProvider,
   SquareArrowDefinition,
   SquareArrowProvider,
+  StraightBarbArrowDefinition,
+  StraightBarbArrowProvider,
 } from './definitions';
 
 /** Standard 提供的全部可选箭头 Definition */
@@ -25,6 +27,7 @@ export const StandardArrowDefinitions: ReadonlyArray<ArrowDefinition> = [
   OpenDiamondArrowDefinition,
   BarArrowDefinition,
   CrowFootArrowDefinition,
+  StraightBarbArrowDefinition,
   KiteArrowDefinition,
   OpenKiteArrowDefinition,
   SquareArrowDefinition,
@@ -37,6 +40,7 @@ export const StandardArrowProviders: ReadonlyArray<CoreDependencyProvider> = [
   OpenDiamondArrowProvider,
   BarArrowProvider,
   CrowFootArrowProvider,
+  StraightBarbArrowProvider,
   KiteArrowProvider,
   OpenKiteArrowProvider,
   SquareArrowProvider,

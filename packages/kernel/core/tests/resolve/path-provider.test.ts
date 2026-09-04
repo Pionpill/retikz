@@ -4,7 +4,6 @@ import { literal, number, strictObject, string } from 'zod';
 import type { IRPathBase } from '../../src/schemas';
 
 import {
-  defineArrow,
   definePathGenerator,
   definePathKind,
   PathSchema,
@@ -43,6 +42,43 @@ describe('resolve/path provider bindings', () => {
     expect(resolution.kind.definition).toBe(custom);
     expect(resolution.kind.path.kindOptions).toEqual({ stroke: 'gold' });
     expect(resolvePathWithBuiltinProviders(path()).kind.name).toBe('stroke');
+  });
+
+  it('reports unsupported explicit interruption before a custom strict path-kind schema parses the label', () => {
+    const strictRibbon = definePathKind({
+      name: 'ribbon',
+      schema: PathSchema.extend({
+        kind: literal('ribbon'),
+        label: strictObject({ text: string() }).optional(),
+      }),
+      compile: () => null,
+    });
+
+    expect(() =>
+      resolvePathWithBuiltinProviders(path({ kind: 'ribbon', label: { text: 'unsupported', interrupt: false } }), {
+        pathKinds: resolvePathKindRegistry([strictRibbon]),
+      }),
+    ).toThrow(/label\.interrupt.*built-in stroke path/i);
+  });
+
+  it('reports filled Stroke interruption requests at the host-array and step-label locators', () => {
+    expect(() =>
+      resolvePathWithBuiltinProviders(path({ fill: 'gold', label: [{ text: 'host', interrupt: true }] })),
+    ).toThrow(/label\[0\]\.interrupt.*filled stroke path/i);
+
+    expect(() =>
+      resolvePathWithBuiltinProviders(
+        path({
+          fill: 'gold',
+          children: [steps[0], { type: 'step', kind: 'line', to: [10, 0], label: { text: 'step', interrupt: true } }],
+        }),
+      ),
+    ).toThrow(/children\[1\]\.label\.interrupt.*filled stroke path/i);
+
+    expect(
+      resolvePathWithBuiltinProviders(path({ fill: 'gold', label: { text: 'continuous', interrupt: false } })).path
+        .label,
+    ).toMatchObject([{ text: 'continuous', interrupt: false }]);
   });
 
   it('fails unknown path kinds through the resolver registry diagnostic', () => {
@@ -113,13 +149,14 @@ describe('resolve/path provider bindings', () => {
   });
 
   it('binds arrow hollow visual defaults and geometry before marker emit', () => {
-    const arrow = defineArrow({
+    const arrow = {
       name: 'hollowProbe',
       hollow: true,
+      backX: 1,
       lineContactX: 2,
       emit: () => [],
-    });
-    const mark = { kind: 'arrow' as const, shape: 'hollowProbe' };
+    };
+    const mark = { kind: 'arrow' as const, shape: 'hollowProbe', length: 12, scale: 2 };
     const resolution = resolveStrokePathWithBuiltinProviders(path({ marks: [{ pos: 1, mark }] }), {
       arrows: resolveArrowRegistry([arrow]),
     });
@@ -127,8 +164,60 @@ describe('resolve/path provider bindings', () => {
 
     expect(arrowResolution?.definition).toBe(arrow);
     expect(arrowResolution?.visual.fill).toBeUndefined();
-    expect(arrowResolution?.visual).toMatchObject({ length: 8, width: 8 });
+    expect(arrowResolution?.visual).toMatchObject({ length: 12, scale: 2, width: 8 });
     expect(arrowResolution?.geometry.contactX).toBe(2 - 1.5 / 2);
+    expect(arrowResolution?.geometry).toHaveProperty('visualBackX', 1 - 1.5 / 2);
+    expect(arrowResolution?.geometry.resolvedLength).toBe(24);
     expect(arrowResolution?.geometry.shrink).toBeGreaterThan(0);
+  });
+
+  it.each([
+    {
+      name: 'non-finite back',
+      definition: { backX: Number.NaN, lineContactX: 2, tipX: 8 },
+      expected: /non-finite backX/i,
+    },
+    {
+      name: 'back after contact',
+      definition: { backX: 3, lineContactX: 2, tipX: 8 },
+      expected: /backX.*lineContactX.*tipX/i,
+    },
+    {
+      name: 'contact after tip',
+      definition: { backX: 1, lineContactX: 9, tipX: 8 },
+      expected: /backX.*lineContactX.*tipX/i,
+    },
+  ])('rejects invalid arrow geometry: $name', ({ definition, expected }) => {
+    const arrow = {
+      name: 'invalidGeometry',
+      ...definition,
+      emit: () => [],
+    };
+
+    expect(() =>
+      resolveStrokePathWithBuiltinProviders(
+        path({ marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'invalidGeometry' } }] }),
+        { arrows: resolveArrowRegistry([arrow]) },
+      ),
+    ).toThrow(expected);
+  });
+
+  it('rejects a non-finite resolved visual back before compile consumes it', () => {
+    const arrow = {
+      name: 'overflowBack',
+      backX: -Number.MAX_VALUE,
+      lineContactX: 0,
+      tipX: 1,
+      outerInset: Number.MAX_VALUE,
+      defaultLength: 0.1,
+      emit: () => [],
+    };
+
+    expect(() =>
+      resolveStrokePathWithBuiltinProviders(
+        path({ marks: [{ pos: 1, endpointOverlap: 0, mark: { kind: 'arrow', shape: arrow.name } }] }),
+        { arrows: resolveArrowRegistry([arrow]) },
+      ),
+    ).toThrow(/resolved visual back.*non-finite/i);
   });
 });

@@ -1,16 +1,17 @@
 ---
 title: Arrow
-description: 为 Draw 与 Path 选择起末箭头，并统一控制形状、尺寸、颜色、透明度与单端覆盖。
+description: 为 Draw 与 Path 选择起末箭头，并分别控制视觉样式、尺寸与端点重叠比例。
 ---
 
-箭头由两个独立的 prop 控制：
+箭头由三个独立的 prop 控制：
 
 - **`arrow`**——方向枚举：`'->'` 终点 / `'<-'` 起点 / `'<->'` 两端 / `'none'`（缺省）= 无
 - **`arrowDetail`**——视觉详细配置对象，8 个顶层字段 + 可选 `start` / `end` 子对象。**省略时使用默认的 `stealth` 倒钩形状，颜色与透明度继承路径本身**
+- **`arrowPlacement`**——端点放置对象，用归一化 `overlap` 控制箭头进入逻辑端点的比例，并支持 `start` / `end` 单端覆盖
 
-`arrow` + `arrowDetail` 同时挂在 `<Draw>` 和 `<Path>` 上，写法和效果完全一致——下文示例用 `<Draw>` 演示，`<Path>` 写法等价。
+三个 prop 同时挂在 `<Draw>` 和 `<Path>` 上，写法和效果完全一致——下文示例用 `<Draw>` 演示，`<Path>` 写法等价。
 
-箭头尖端附着在路径解析后的起点 / 终点上，也不会在中间节点重复出现。编译时会按箭头接触点缩短实际描边，避免线条穿过箭头；短线段、双向箭头或很大的 `length` / `width` 仍可能产生视觉重叠，这时优先减小箭头尺寸，或用节点 `margin` / 显式坐标给线段留出空间。
+缺省时箭头尖端附着在路径解析后的起点 / 终点，也不会在中间节点重复出现。需要让空心圆等箭头跨过 Node 边界时，用 `arrowPlacement` 调整端点放置；它不改变 NodeTarget、anchor、boundary 或路径的逻辑采样位置。
 
 ## 用法
 
@@ -47,6 +48,28 @@ Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 
 
 `scale` 乘到 `length` / `width` 之后，例如 `length=10, scale=1.5` 的实际长度是 15。
 
+### 端点重叠
+
+`arrowPlacement.overlap` 在箭头的两种最终位置间归一化：`0` 保持现有默认放置，`0.5` 位于默认位置与完整进入位置的中点，`1` 让最终视觉后缘与逻辑端点对齐。后缘、路径接合点和尖端是三个不同的几何事实，因此带倒钩的 `stealth` 在比例为 `1` 时也会完整进入。
+
+计算使用解析后的 `length × scale`，空心箭头还会计入 `lineWidth` 与外轮廓补偿。放大、缩小或覆盖长度后，`1` 仍表示整枚箭头的最终视觉后缘对齐，不是固定移动一段 user units。
+
+<ComponentPreview
+  files="arrow-endpoint-overlap"
+  size="sm"
+  caption="切换 Core 内置箭头并拖动进入比例；重点观察放大的 stealth 尾翼在比例为 1 时完整进入 Pattern 矩形边界。"
+/>
+
+顶层 `overlap` 只应用到 `arrow` 实际创建的端点；`start.overlap` / `end.overlap` 可逐端覆盖共享值，显式 `0` 会被保留。例如 `arrow="<->" arrowPlacement={{ overlap: 0.5, start: { overlap: 0 } }}` 只让末端进入一半。
+
+<ComponentAlert
+  type="warn"
+  title="重叠不会改变绘制顺序"
+  description="箭头进入节点后是否被遮挡仍由既有 zIndex 与声明顺序决定；arrowPlacement 不会自动创建裁剪、抬高箭头或改变节点填充。"
+/>
+
+`arrowPlacement` 必须对应实际端点箭头。没有箭头、配置未创建的单端、直接 IR 中的中段 mark、同侧未选中的重复端点 mark，以及非内置 Stroke Path 上的 `endpointOverlap` 都会明确报错，不会静默忽略。
+
 ## 技术原理
 
 <ComponentAlert
@@ -59,7 +82,7 @@ Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 
 
 ### 方向与端点样式如何解析
 
-`<Draw>` 先展开为等价的 `<Path>`。`arrow` 决定只创建起点、终点还是两端标记；每一端再把 `arrowDetail` 顶层字段与对应的 `start` / `end` 字段逐项合并。
+`<Draw>` 先展开为等价的 `<Path>`。`arrow` 决定只创建起点、终点还是两端标记；每一端再分别合并 `arrowDetail` 的视觉字段与 `arrowPlacement` 的放置字段。两类对象彼此独立。
 
 图中实线表示端点箭头的主解析链，虚线表示样式默认值与箭头注册表这两类辅助输入：
 
@@ -70,10 +93,10 @@ Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 
 <SourceLinks
   sources={[
     {
-      label: '方向拆分与逐端字段合并',
-      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
-      startLine: 194,
-      endLine: 218,
+      label: '方向拆分与视觉 / 放置逐端合并',
+      path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
+      startLine: 44,
+      endLine: 86,
     },
     {
       label: 'Scope 默认值与路径主色解析',
@@ -83,32 +106,38 @@ Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 
     },
     {
       label: '箭头定义查询与 marker 物化',
-      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
-      startLine: 68,
-      endLine: 127,
+      path: 'packages/kernel/core/src/resolve/path/provider.ts',
+      startLine: 115,
+      endLine: 174,
     },
   ]}
 />
 
 ### 路径本体为什么会缩短
 
-箭头尖端仍落在原始端点；compiler 根据定义里的尖端与线条接触点反向缩短路径本体，并让描边越过接触边半个自身宽度，再由 marker 覆盖接头。这样相切边界不会留下抗锯齿缝，空心箭头不会被线条贯穿，实心或半透明箭头下也不会透出多余线段。
+缺省时箭头尖端仍落在逻辑端点；compiler 根据定义里的尖端与线条接触点反向缩短路径本体，并让描边越过接触边半个自身宽度，再由 marker 覆盖接头。这样相切边界不会留下抗锯齿缝，空心箭头不会被线条贯穿，实心或半透明箭头下也不会透出多余线段。
 
-收缩距离会随 `length × scale × strokeWidth` 改变；空心形状还会把 `lineWidth` 计入接触位置。端点引用 Node 且由边界自动裁切时，compiler 还会补偿箭头外轮廓，避免空心轮廓压进节点边界。
+Core 用 definition 的 `backX`、`lineContactX` 与 `tipX` 分别解析视觉后缘、主描边接合点和尖端，再让 `overlap` 在默认 shrink 与后缘对齐所需的 shrink 之间插值。端点引用 Node 且由边界自动裁切时，箭头外轮廓保护按 `1 - overlap` 衰减；用于遮住抗锯齿接缝的半线宽覆盖仍由默认位置保留。Scene 不新增 placement 字段，SVG 与 Canvas 继续执行同一份最终 commands。
 
 <SourceLinks
   sources={[
     {
-      label: '箭头接触点与收缩量计算',
+      label: '箭头后缘、接触点与最终尺寸解析',
       path: 'packages/kernel/core/src/resolve/path/provider.ts',
-      startLine: 120,
-      endLine: 148,
+      startLine: 80,
+      endLine: 168,
+    },
+    {
+      label: '重叠比例与空心外轮廓补偿',
+      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
+      startLine: 75,
+      endLine: 106,
     },
     {
       label: '路径端点收缩编排',
       path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
-      startLine: 181,
-      endLine: 188,
+      startLine: 358,
+      endLine: 359,
     },
   ]}
 />
@@ -142,12 +171,13 @@ Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 
 
 ## API 参考
 
-### arrow
+### arrow、arrowDetail 与 arrowPlacement
 
-| 属性          | 类型                                    | 默认值 | 描述                                                                   |
-| ------------- | --------------------------------------- | ------ | ---------------------------------------------------------------------- |
-| `arrow`       | `'none'` \| `'->'` \| `'<-'` \| `'<->'` | —      | 路径级箭头方向                                                         |
-| `arrowDetail` | `IRArrowDetail`                         | —      | 箭头详细配置；顶层 8 个视觉字段均可选，并支持 `start` / `end` 单端覆盖 |
+| 属性             | 类型                                    | 默认值 | 描述                                                                       |
+| ---------------- | --------------------------------------- | ------ | -------------------------------------------------------------------------- |
+| `arrow`          | `'none'` \| `'->'` \| `'<-'` \| `'<->'` | —      | 路径级箭头方向                                                             |
+| `arrowDetail`    | `IRArrowDetail`                         | —      | 箭头详细配置；顶层 8 个视觉字段均可选，并支持 `start` / `end` 单端覆盖     |
+| `arrowPlacement` | `InputPathArrowPlacement`               | —      | 端点放置配置；共享 `overlap` 与 `start` / `end` 单端覆盖，取值均为 `[0,1]` |
 
 ### arrowDetail 字段
 
@@ -166,9 +196,17 @@ Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 
 | `start`     | `IRArrowEndDetail`（同字段集，无 `start` / `end`） | —                    | 起端覆盖配置（仅 `arrow` 含起端时生效：`'<-'` / `'<->'`）                                                                                                             |
 | `end`       | `IRArrowEndDetail`（同字段集，无 `start` / `end`） | —                    | 末端覆盖配置（仅 `arrow` 含末端时生效：`'->'` / `'<->'`）                                                                                                             |
 
+### arrowPlacement 字段
+
+| 字段      | 类型                            | 默认值 | 描述                                              |
+| --------- | ------------------------------- | ------ | ------------------------------------------------- |
+| `overlap` | `number ∈ [0, 1]`               | `0`    | 从现有默认位置到最终视觉后缘对齐位置的共享比例    |
+| `start`   | `{ overlap?: number ∈ [0, 1] }` | —      | 起端覆盖；仅 `arrow` 为 `'<-'` / `'<->'` 时可配置 |
+| `end`     | `{ overlap?: number ∈ [0, 1] }` | —      | 末端覆盖；仅 `arrow` 为 `'->'` / `'<->'` 时可配置 |
+
 ## 相关
 
 - [Draw](/kernel/components/draw/overview)：日常连线的 Sugar 写法
-- [Path](/kernel/components/draw/path)：底层路径容器，`arrow` / `arrowDetail` 行为一致
+- [Path](/kernel/components/draw/path)：底层路径容器，三个箭头 prop 的行为一致
 - [箭头扩展](/library/standard/extension/arrow)：按需装配官方可选箭头
 - [自定义箭头](/kernel/components/draw/custom-arrow)：注册项目自己的箭头 shape

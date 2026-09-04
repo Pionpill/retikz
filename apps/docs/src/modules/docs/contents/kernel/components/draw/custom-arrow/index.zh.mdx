@@ -24,12 +24,13 @@ ArrowDefinition 同时服务 Path 端点与 `marks[].mark.shape`。它不负责�
 
 ## 定义能力
 
-最小 definition 需要稳定 `name`、路径与箭头接触点 `lineContactX`，以及返回 marker 局部几何的 `emit`。
+最小 definition 需要稳定 `name`、视觉后缘 `backX`、路径接合点 `lineContactX`，以及返回 marker 局部几何的 `emit`。
 
 ```tsx
 const bracket = defineArrow({
   name: 'bracket',
   hollow: true,
+  backX: 2,
   lineContactX: 2,
   emit: ({ stroke, lineWidth }) => [
     {
@@ -42,7 +43,7 @@ const bracket = defineArrow({
 });
 ```
 
-`emit` 使用 `baseSize` 局部坐标。`lineContactX` 定义 marker 的路径接触基准；Core 会让路径越过该基准半个自身描边宽度，再由 marker 覆盖接头。`tipX` 描述视觉尖端；空心箭头还会根据 `lineWidth` 与 `outerInset` 补偿外轮廓。
+`emit` 使用 `baseSize` 局部坐标。`backX` 承诺箭头轴向包络的基础后缘，`lineContactX` 定义主描边接入 marker 的基准，`tipX` 描述视觉尖端；三者必须满足 `backX <= lineContactX <= tipX`。Core 会让路径越过接合基准半个自身描边宽度，再由 marker 覆盖接头；端点重叠则结合最终 `length × scale` 和空心 `lineWidth` / `outerInset`，让比例 `1` 的最终视觉后缘对齐逻辑端点。
 
 ## 注入宿主
 
@@ -58,7 +59,7 @@ definition 不进入 IR。相同的 shape 字符串可以由 React、Vanilla 或
 
 ## 执行机制
 
-Core 基础箭头、显式装配的 Standard 箭头与自定义 definitions 都进入同一个 registry。compile 合并路径默认值、`arrowDetail` 与单端覆盖，再按 shape 查找 definition；随后根据尺寸、线宽与接触点缩短路径，并调用 `emit` 生成 marker 几何。
+Core 基础箭头、显式装配的 Standard 箭头与自定义 definitions 都进入同一个 registry。compile 合并路径默认值、`arrowDetail` 与单端覆盖，再按 shape 查找 definition；随后根据尺寸以及 back / contact / tip 几何确定端点放置和路径接合，并调用 `emit` 生成 marker 几何。
 
 `emit` 收到的 `fill` / `stroke` 是 `MarkerFill`。未显式指定颜色时，它们使用 `{ kind: 'contextStroke' }`，让同一个 definition 跟随每条 Path 的描边色，而不是在注册时冻结颜色。
 
@@ -70,7 +71,7 @@ Core 基础箭头、显式装配的 Standard 箭头与自定义 definitions 都�
       label: 'Arrow definition 与 emit 上下文',
       path: 'packages/kernel/core/src/contract/arrow/types.ts',
       startLine: 4,
-      endLine: 59,
+      endLine: 61,
     },
     {
       label: 'Core 基础与注入箭头的统一 registry',
@@ -81,14 +82,14 @@ Core 基础箭头、显式装配的 Standard 箭头与自定义 definitions 都�
     {
       label: '箭头查找、视觉覆盖与收缩解析',
       path: 'packages/kernel/core/src/resolve/path/provider.ts',
-      startLine: 103,
-      endLine: 151,
+      startLine: 80,
+      endLine: 168,
     },
     {
       label: 'contextStroke、marker 校验与物化',
       path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
       startLine: 18,
-      endLine: 82,
+      endLine: 87,
     },
     {
       label: '路径端点收缩应用',
@@ -101,15 +102,15 @@ Core 基础箭头、显式装配的 Standard 箭头与自定义 definitions 都�
 
 ## 错误与限制
 
-| 情况                                       | 结果                                            |
-| ------------------------------------------ | ----------------------------------------------- |
-| 名称为空                                   | registry 拒绝非空 key 约束                      |
-| 与已注册的 Core、Standard 或自定义箭头重名 | registry 合并时报重复注册                       |
-| `arrowDetail.shape` 未注册                 | 编译列出可用名称与 `options.arrows` 注入提示    |
-| `baseSize`、接触点或尺寸非法               | 编译拒绝无效 marker 尺寸                        |
-| `emit` 产出未知 primitive 或无限坐标       | marker 校验拒绝，不让坏几何进入 Scene           |
-| marker 内递归箭头、clip 或文本             | `MarkerPrimitive` 窄契约拒绝                    |
-| Path 使用 IRPaint 描边                     | marker 无法继承资源 paint；需显式给纯色箭头颜色 |
+| 情况                                        | 结果                                            |
+| ------------------------------------------- | ----------------------------------------------- |
+| 名称为空                                    | registry 拒绝非空 key 约束                      |
+| 与已注册的 Core、Standard 或自定义箭头重名  | registry 合并时报重复注册                       |
+| `arrowDetail.shape` 未注册                  | 编译列出可用名称与 `options.arrows` 注入提示    |
+| `baseSize`、back / contact / tip 或尺寸非法 | 编译拒绝无效 marker 几何                        |
+| `emit` 产出未知 primitive 或无限坐标        | marker 校验拒绝，不让坏几何进入 Scene           |
+| marker 内递归箭头、clip 或文本              | `MarkerPrimitive` 窄契约拒绝                    |
+| Path 使用 IRPaint 描边                      | marker 无法继承资源 paint；需显式给纯色箭头颜色 |
 
 MarkerPrimitive 只允许 `path`、`ellipse`、`rect` 与可递归包含这些图元的 `group`。不要返回 SVG `<marker>`、Canvas 对象、文本布局或外部 paint resource 引用。
 
@@ -120,13 +121,14 @@ MarkerPrimitive 只允许 `path`、`ellipse`、`rect` 与可递归包含这些�
 | 字段            | 类型                                 | 默认值                         | 描述                           |
 | --------------- | ------------------------------------ | ------------------------------ | ------------------------------ |
 | `name`          | `string`                             | —                              | registry key 与 shape 引用名   |
+| `backX`         | `number`                             | —                              | marker 基础几何的轴向包络后缘  |
 | `lineContactX`  | `number`                             | —                              | 路径描边接触点，参与路径缩短   |
 | `emit`          | `(ctx) => Iterable<MarkerPrimitive>` | —                              | 生成 marker 局部几何           |
 | `baseSize`      | `number`                             | `10`                           | marker 局部基准边长            |
 | `tipX`          | `number`                             | `baseSize`                     | 视觉尖端 x                     |
 | `hollow`        | `boolean`                            | `false`                        | 使用描边表达空心轮廓           |
-| `defaultLength` | `number`                             | `6`                            | 缺省箭头长度                   |
-| `defaultWidth`  | `number`                             | `6`                            | 缺省箭头宽度                   |
+| `defaultLength` | `number`                             | `8`                            | 缺省箭头长度                   |
+| `defaultWidth`  | `number`                             | `8`                            | 缺省箭头宽度                   |
 | `outerInset`    | `number`                             | 空心 `lineWidth / 2`，实心 `0` | 自动连接节点边界时的外轮廓补偿 |
 
 ### emit 上下文

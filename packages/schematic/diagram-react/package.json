@@ -37,6 +37,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./flow": {
+      "types": "./src/flow/index.ts",
+      "default": "./src/flow/index.ts"
     }
   },
   "publishConfig": {
@@ -48,6 +52,11 @@
         "types": "./dist/types/index.d.ts",
         "import": "./dist/index.js",
         "default": "./dist/index.js"
+      },
+      "./flow": {
+        "types": "./dist/types/flow/index.d.ts",
+        "import": "./dist/flow.js",
+        "default": "./dist/flow.js"
       }
     }
   },
@@ -70,6 +79,7 @@
   "dependencies": {
     "@retikz/diagram": "workspace:*",
     "@retikz/diagram-vanilla": "workspace:*",
+    "@retikz/foundation": "workspace:^",
     "@retikz/react": "workspace:^",
     "@retikz/vanilla": "workspace:^"
   },

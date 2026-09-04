@@ -10,7 +10,7 @@ Graph 解决的是：
 
 > 用稳定、JSON-safe、renderer-neutral 的数据表达可组合节点、关系与局部 Graph 呈现上下文，使作者、工具与 LLM 能直接理解“对象是什么、如何关联”，并通过 Core-compatible 实例字段直接进入绘图链路
 
-Graph 是 Schematic foundation，长期拥有 Group / Block family / Entity / Relation 语义、领域 resolve、可选 `graphTheme` context 与可独立绘制的 semantic composite。Graph、Group、Block、Section 与 Row Source 组合完整 Core Scope surface。位置、路径、尺寸、内容和 NodeTarget endpoint 直接复用 Core 契约；Group 表达任意内容的可见包含，Block 表达具有 Graph identity 的开放内容纵向布局容器，Header / Section / Row 是可选的独立组合，Cell 保持 Row-local Flex item。Graph 不建立独立 Port、geometry、reference、成员集合、Variant 视觉轴或按 identity 分离的 appearance 模型。`IRGraph` 不是必需模型根，只是可选上下文；Graph family composite 可以出现在任意 Core 内容树位置
+Graph 是 Schematic foundation，长期拥有 Group / Block family / Entity / Relation 语义、领域 resolve、可选 `graphTheme` context 与可独立绘制的 semantic composite。Graph、Group、Block、Section 与 Row Source 组合完整 Core Scope surface。位置、路径、尺寸、内容和 NodeTarget endpoint 直接复用 Core 契约；Group 表达任意内容的可见包含，Block 表达具有 Graph identity 的开放内容纵向布局容器，Header / Section / Row 是可选的独立组合，Row 直接接受任意 children。Graph 不建立独立 Port、geometry、reference、成员集合、Variant 视觉轴或按 identity 分离的 appearance 模型。`IRGraph` 不是必需模型根，只是可选上下文；Graph family composite 可以出现在任意 Core 内容树位置
 
 Graph 不拥有 Diagram 自动布局、自动 routing、Editor 或 renderer。Graph 支持自由布局仅表示作者可以显式提供位置与连接方式；拖拽、selection、viewport、history 和交互 session 仍归 Editor
 
@@ -23,7 +23,7 @@ Graph 不拥有 Diagram 自动布局、自动 routing、Editor 或 renderer。Gr
 | 通用绘图拓展   | `@retikz/standard`          | Surface 等领域无关绘图 composite                                                                                                    | Graph / Diagram 数据和算法                                           |
 | 图形表达与编译 | Core / Math                 | IRChild、Node、Path、NodeTarget、namespace、shape、Scene 与几何                                                                     | Graph / Diagram 领域语义                                             |
 | authoring      | graph-react / graph-vanilla | 构造对应 Graph / Group / Block / Entity / Relation Source IR 并接入宿主                                                             | Graph schema、resolve、lowering、布局算法                            |
-| 自动图示布局   | 未来 `@retikz/diagram`      | Diagram 布局意图、约束确定化、provider、自动 layout / routing 与结果交付                                                            | Graph 基础语义、appearance、Editor、renderer                         |
+| 自动图示布局   | 未来 `@retikz/diagram`      | LLM-first Flow Source、扁平 token、全局与单项配置、布局意图、Graph 语义投影、约束确定化、provider、自动 layout / routing 与结果交付 | Graph 基础语义、屏蔽字段、Editor、renderer                           |
 
 ```text
 Graph / Group / Block / Entity / Relation direct IR / React / Vanilla
@@ -37,9 +37,9 @@ React Graph standalone 时复用 Layout 建立 Scene，并把 Graph Source 作�
 
 Graph context 通过 Graph / Group / Block Definition 对自身可见 Source child tree 的编译期投影生效：生成态 Entity / Relation 仍保留原 discriminator，并由各自 provider 消费；已知的 Block family 内容边界与普通 Scope 可穿透，第三方 composite 内部不透明。该投影不进入 authored Source schema，不增加 Core 领域 context bag、成员索引或第二套 endpoint / lowering 真源
 
-Graph Theme style 与 Core、Plot、Table 使用同一个 Core `theme.style` 名称协作。Graph 发布包只维护 Neutral baseline；React 通过 `GraphThemeProvider` 为 standalone Graph 注入 Graph-owned style definitions，embedded Graph / Group / Block / Entity / Relation 在 Layout 的静态 InputEmbed 提取边界显式传递同一 definitions，Vanilla 也通过显式 definition options 注入。Docs 可复用 Viz Preview Theme selector，并通过公开 Definition 提供 Academic、Vibrant、Clean reference styles；Preview host 负责把同一 bundle 显式交给 embedded Graph authoring。这些消费方 reference styles 不进入 Graph Source enum 或发布包内置 registry
+Graph Theme style 与 Core、Plot、Table 使用同一个 Core `theme.style` 名称协作，并统一拥有 Entity / Relation 默认以及 Group / Block 根 Surface 外观。Graph 发布包只维护 Neutral baseline；React 通过 `GraphThemeProvider` 为 standalone Graph 注入 Graph-owned style definitions，embedded Graph / Group / Block / Entity / Relation 在 Layout 的静态 InputEmbed 提取边界显式传递同一 definitions，Vanilla 也通过显式 definition options 注入。Docs 可复用 Viz Preview Theme selector，并通过公开 Definition 提供 Academic、Vibrant、Clean reference styles；Preview host 负责把同一 bundle 显式交给 embedded Graph authoring。这些消费方 reference styles 不进入 Graph Source enum 或发布包内置 registry
 
-任一 Graph 能力若只能在 React、demo、某个 renderer 或未序列化 helper 中成立，都不算 Graph 闭环。Diagram 必须复用 Graph 的 Group / Block / Entity / Relation 语义与 Core identity / namespace，不得建立平行语义真源；Block 的内部 endpoint 所属关系由消费方从 Source 派生，布局计算及其调度由 Diagram 或其它消费者拥有，Graph 不为其预建 geometry result collection
+任一 Graph 能力若只能在 React、demo、某个 renderer 或未序列化 helper 中成立，都不算 Graph 闭环。Diagram 可以拥有适合 LLM 与自动布局的窄 Flow Source，但必须把它确定性投影为 Graph 的 Group / Entity / Relation，并复用 Graph role、Theme、Core identity / namespace 与 canonical lowering，不得建立平行下层语义真源。Graph Block 在自身结构与连接契约稳定前不进入 Flow；未来消费方仍须从 Source 派生内部 endpoint 所属关系。布局计算及其调度由 Diagram 或其它消费者拥有，Graph 不为其预建 geometry result collection
 
 ## 3. 完备能力面
 
@@ -62,13 +62,13 @@ Graph Theme style 与 Core、Plot、Table 使用同一个 Core `theme.style` 名
 
 ## 4. Data 与 Resolve
 
-Graph Data 由独立 Group / Block family / Entity / Relation record、对应 Core lower target 的实例字段与各类图自己的 JSON-safe 扩展组合而成。Relation source / target 直接使用 Core NodeTarget；领域执行状态、任意回调和运行时对象不进入 Graph IR。Entity 以排除结构字段的方式复用 Core Node：`type`、`shape`、`boundary`、`padding`、`cornerRadius` 由 Graph role / lower target 决定。Relation 以同样方式复用 Core Path，只排除与 Relation discriminator、语义 kind、route、labels、endpoint markers 和开放连线冲突的字段。Group、Graph、Block、Section 与 Row 完整复用 `IRScopeProps`。Group 额外组合 Surface 呈现、caption、Core Node labels 与任意 children；Block 组合 Surface 与纵向 FlexLayout，并按 authored order 接受任意 children；Header、Section 与 Row 是独立可选 composite，Cell 直接复用 Row-local Flex item。它们都不保存自动布局结果
+Graph Data 由独立 Group / Block family / Entity / Relation record、对应 Core lower target 的实例字段与各类图自己的 JSON-safe 扩展组合而成。Relation source / target 直接使用 Core NodeTarget；领域执行状态、任意回调和运行时对象不进入 Graph IR。Entity 以排除结构字段的方式复用 Core Node：`type`、`shape`、`boundary`、`padding`、`cornerRadius` 由 Graph role / lower target 决定。Relation 以同样方式复用 Core Path，只排除与 Relation discriminator、语义 kind、route、labels、endpoint markers 和开放连线冲突的字段。Group、Graph、Block、Section 与 Row 完整复用 `IRScopeProps`。Group 额外组合 Surface 呈现、caption、Core Node labels 与任意 children；Block 组合 Surface 与纵向 FlexLayout，并按 authored order 接受任意 children；Header、Section 与 Row 是独立可选 composite，Row children 直接保存任意 `IRChild`。它们都不保存自动布局结果
 
-Entity / Relation resolve 分别消费自身 Source IR 与窄上下文，处理领域默认、Definition lookup、Theme appearance rules、metadata 解释及补全后不变量。Graph / Group resolve 只建立局部 Graph context 并保留有序 children；Block family resolve 保留 authored order 并确定各自组合默认。它们都不收集成员、校验 membership 或建立 endpoint 索引；Group / Block family lowering 只组合既有 Surface、Layout 与 Core 能力。Theme appearance 只按 role、kind、predicate 与 direction 等真实语义为 Entity / Relation 提供默认，不使用纯视觉 Variant selector；Block family shell 不消费 Graph Theme。namespace、重复 id、NodeTarget、anchor 与 unresolved reference 由 Core 统一处理；Graph 不负责自动布局、routing、Scene 输出或 Editor 状态
+Entity / Relation resolve 分别消费自身 Source IR 与窄上下文，处理领域默认、Definition lookup、Theme appearance rules、metadata 解释及补全后不变量。Graph / Group resolve 建立局部 Graph context 并保留有序 children，Group 同时解析根 Surface appearance；Block family resolve 保留 authored order、确定组合默认，并为 Block 根 Surface 解析 appearance。它们都不收集成员、校验 membership 或建立 endpoint 索引；Group / Block family lowering 只组合既有 Surface、Layout 与 Core 能力。Theme rules 只按 role、kind、predicate 与 direction 等真实语义为 Entity / Relation 提供默认，不使用纯视觉 Variant selector；Group / Block 不增加 rule selector，只消费同名 Graph Theme 的闭合 `background`、`border` 与 `cornerRadius` baseline，显式 Source 顶层字段最终替换。namespace、重复 id、NodeTarget、anchor 与 unresolved reference 由 Core 统一处理；Graph 不负责自动布局、routing、Scene 输出或 Editor 状态
 
 Graph 不复制 Plot 的 Transform、Encoding、Scale 或 Coordinate 分层。根据任意字段声明视觉 channel 的能力只有在真实 Graph 数据可视化需求出现后才单独设计；固定 kind、predicate、metadata 与 Theme style 的确定化属于 Graph resolve
 
-Group、Block、Header、Section、Row、Entity、Relation 与 Graph 都是独立 composite，只有 Cell 保持 Row-local item。`IRGraph` / `IRGroup` 不表达成员数据库、全局关系模型或编辑文档；Group 与 Block 的嵌套内容树是唯一包含事实源，Header / Section / Row 仅在作者显式使用时存在。adapter 不得把 declaration 数组、runtime embed id、endpoint 所属索引或 normalization 结果投影成第二套集合与引用真源
+Group、Block、Header、Section、Row、Entity、Relation 与 Graph 都是独立 composite。`IRGraph` / `IRGroup` 不表达成员数据库、全局关系模型或编辑文档；Group 与 Block 的嵌套内容树是唯一包含事实源，Header / Section / Row 仅在作者显式使用时存在。adapter 不得把 declaration 数组、runtime embed id、endpoint 所属索引或 normalization 结果投影成第二套集合与引用真源
 
 ## 5. Semantic identity 与 lower target 判定
 
@@ -88,9 +88,9 @@ Graph 提供“图中有什么、对象如何关联以及如何显式呈现”�
 Diagram -> Graph
 ```
 
-Diagram 在 Graph semantic records 上增加 layout kind、direction、rank、order、pin、spacing、routing 等布局意图。Block 的 Section / Row 显式 id 可以由 Diagram 派生为算法所需的局部 endpoint 投影，但该投影不写回 Graph Source。Diagram resolve 确定布局默认、约束与 provider；Diagram layout 结合 Kernel 的 measurement / geometry capability 计算节点位置、分组边界、边线路径和标签位置，并产出以显式 identity 对齐的 Diagram Layout Result
+Diagram 用自己的高层 Flow Source 平级声明 Entity / Group / Layout，以根、Group 与 Layout 的 `children` 引用组织唯一 containment，并保存显式 relations、rank、扁平 token、结构化 flowTheme、单项 style / layout、spacing 与 routing intent。resolve 校验引用与 owner 后重建递归 Canonical tree，再确定性生成 Graph semantic records。当前 Flow style 只投影 Entity / Relation / Group 已公开字段，不复制 Graph namespace、通用 NodeTarget、position、route、完整 lower-facing surface 或 Graph 特意屏蔽的 role-owned 结构。Group 始终下沉为可见 Graph Group并保留 endpoint identity；独立 Layout 复用 Layout Flex compiler 形成无外壳固定排列、artifact 与 inspection handle，不产生 Graph identity。Graph Block 及其 Section / Row endpoint 投影延期到 Block 契约稳定后的独立 Diagram 设计，当前 Flow 不预留字段或兼容入口。Entity / Group / Layout 保留 authored identity，Flow relation 由根 `relations` 集合和数组顺序确定，不重复保存 discriminator 或 id。Diagram resolve 确定 Graph 投影、token 到全局再到单项配置的级联、布局默认、约束与 provider；Diagram layout 结合 Kernel 的 measurement / geometry capability 计算节点位置、分组边界、边线路径和标签位置，并按 element id 与 relation Source 顺序产出 renderer-neutral artifact
 
-Graph 不保存 Diagram layout provider、算法内部状态、geometry result、endpoint 所属索引或来源标记。Diagram 不重新定义 Graph 的 Group、Block、Entity、Relation、Theme 或 Core identity / namespace；它如何调度计算并把最终位置、路径或尺寸交付给 Graph 或其它下游，由 Diagram ADR 明确，不得把裁决协议反向加入 Graph
+Graph 不保存 Diagram Source、layout provider、算法内部状态、geometry result、endpoint 所属索引或来源标记。Diagram 的 Flow element 是一次窄高层投影，不重新定义 Graph role、Theme、Core identity / namespace 或 canonical lowering；当前也不投影尚未稳定的 Block family。它如何调度计算并把最终位置、路径或尺寸交付给 Graph 或其它下游，由 Diagram ADR 明确，不得把裁决协议反向加入 Graph
 
 `@retikz/diagram` 是实际的自动图示能力包，不是 Schematic 聚合入口。`flow`、`tree`、`layered`、`force` 等布局可以作为 Diagram kind、provider 或 preset；Gantt 等领域可以复用 Graph / Diagram 的适用能力，但仍拥有自己的领域 Data 与 Resolve。无领域算法只有经过真实复用验证后才下沉到 Layout、Math 或其它通用 owner
 
@@ -133,8 +133,9 @@ Graph 的统一入口不是封闭的组件枚举。UML Class、State、actor、l
 ## Schematic Graph / Diagram 完备性检查
 
 - 用户问题与图式语义：
-- Graph Data / Resolve 与 Diagram Resolve / Layout 归属：
-- JSON-safe 输入、可选 id、Core NodeTarget relation endpoint、Graph context 与 Core-compatible 实例字段：
+- Flow Source / Resolve、Graph Data / lowering 与 Diagram Layout 归属：
+- LLM-first canonical JSON、definition catalog、可修复 diagnostics 与 deterministic normalization：
+- Graph 的 JSON-safe 输入、可选 id、Core NodeTarget endpoint、Graph context 与 Core-compatible 实例字段，以及 Flow element 的必需 id、无 identity relation 与简化 endpoint：
 - Semantic identity / Core Sugar / lightweight / layout-aware / docs recipe 判定：
 - 固定职责与可替换 appearance：
 - lower target surface 的 Core 真源与 Graph 仅排除 role-owned 结构字段：
@@ -154,7 +155,7 @@ Graph 的统一入口不是封闭的组件枚举。UML Class、State、actor、l
 - 只提供一个 shape helper，却宣称拥有新的语义组件
 - 为简单 Node sugar 创建独立 composite、artifact 与 layout compiler
 - 在 Graph 中保存 Diagram direction、rank、routing provider 或自动布局结果
-- 在 Diagram 中复制 Graph Group / Entity / Relation、Core identity / namespace 或 presentation schema
+- 在 Diagram 中复制 Graph role / Theme / canonical lowering、Core identity / namespace 或 presentation schema；Flow-specific 窄 authoring 投影不算复制
 - 为 Block 再建 Port id / resolver，或按 role、字段名、数组下标猜测 endpoint
 - 把 selection、viewport、history、transaction 或拖拽 session 写入 Graph / Diagram IR
 - deep import 或复制 Layout FlexLayout、artifact、spacing、measurement 与 clip 算法
@@ -165,4 +166,4 @@ Graph 的统一入口不是封闭的组件枚举。UML Class、State、actor、l
 
 ## 12. 与版本的关系
 
-本文定义长期 Graph Complete 标准；具体元素、模型字段、默认值、迁移批次和发布版本进入 milestone ADR。v0.1 alpha.1 已确认 ADR-06～10 的无 Variant Theme、Group / Entity / Relation 独立 composite、可选 Graph context、Core NodeTarget endpoint 与三入口 parity；alpha.2 已确认复用同一 endpoint 的结构化 Block。`@retikz/diagram` package family、布局 provider 与结果交付由独立 Diagram roadmap / ADR 建立
+本文定义长期 Graph Complete 标准；具体元素、模型字段、默认值、迁移批次和发布版本进入 milestone ADR。v0.1 alpha.1 已确认 ADR-06～10 的无 Variant Theme、Group / Entity / Relation 独立 composite、可选 Graph context、Core NodeTarget endpoint 与三入口 parity；alpha.2 已确认复用同一 endpoint 的结构化 Block。`@retikz/diagram` package family、LLM-first Flow Source、布局 provider 与结果交付由独立 Diagram roadmap / ADR 建立

@@ -78,7 +78,11 @@ const privateExportKeys = [
 ];
 
 /** 抹平文案后比较单个 controls 字段的运行时结构契约 */
-const controlFieldContractOf = (field: PreviewPanelControlItem) =>
+type ControlDefinitionContractOptions = Readonly<{
+  ignoreTextDefaults?: boolean;
+}>;
+
+const controlFieldContractOf = (field: PreviewPanelControlItem, options?: ControlDefinitionContractOptions) =>
   field.kind === 'table'
     ? {
         id: field.id,
@@ -90,7 +94,7 @@ const controlFieldContractOf = (field: PreviewPanelControlItem) =>
     : {
         id: field.id,
         kind: field.kind,
-        defaultValue: field.defaultValue,
+        defaultValue: options?.ignoreTextDefaults && field.kind === 'text' ? undefined : field.defaultValue,
         min: 'min' in field ? field.min : undefined,
         max: 'max' in field ? field.max : undefined,
         step: 'step' in field ? field.step : undefined,
@@ -101,7 +105,10 @@ const controlFieldContractOf = (field: PreviewPanelControlItem) =>
       };
 
 /** 抹平文案与 slot 渲染函数后比较 controls 的运行时结构契约 */
-const controlDefinitionContractOf = (definition: PreviewControlsDefinition) => {
+const controlDefinitionContractOf = (
+  definition: PreviewControlsDefinition,
+  options?: ControlDefinitionContractOptions,
+) => {
   const slots = definition.slots?.map(slot => ({
     id: slot.id,
     placement: slot.placement,
@@ -115,14 +122,14 @@ const controlDefinitionContractOf = (definition: PreviewControlsDefinition) => {
         sections: definition.sections.map(section => ({
           defaultCollapsed: section.defaultCollapsed,
           visibleWhen: section.visibleWhen,
-          fields: section.controls.map(controlFieldContractOf),
+          fields: section.controls.map(field => controlFieldContractOf(field, options)),
         })),
       }
     : {
         presentation: definition.presentation,
         slots,
         fields: definition.controls.map(field => ({
-          ...controlFieldContractOf(field),
+          ...controlFieldContractOf(field, options),
           placement: field.placement,
           visibility: field.visibility,
         })),
@@ -2369,11 +2376,19 @@ describe('preview controls registry', () => {
       ].sort();
       expect(Object.keys(contract.canonicalValues).sort(), key).toEqual(ids);
       expect(contract.relatedApis.length, key).toBeGreaterThan(0);
-      expect(controlDefinitionContractOf(englishContract.controls), englishKey).toEqual(
-        controlDefinitionContractOf(contract.controls),
+      expect(controlDefinitionContractOf(englishContract.controls, { ignoreTextDefaults: true }), englishKey).toEqual(
+        controlDefinitionContractOf(contract.controls, { ignoreTextDefaults: true }),
       );
       expect(englishContract.stateOnlyIds, englishKey).toEqual(contract.stateOnlyIds);
-      expect(englishContract.canonicalValues, englishKey).toEqual(contract.canonicalValues);
+      const textControlIds = new Set(
+        getPreviewControlFields(contract.controls)
+          .filter(field => field.kind === 'text')
+          .map(field => field.id),
+      );
+      expect(
+        Object.fromEntries(Object.entries(englishContract.canonicalValues).filter(([id]) => !textControlIds.has(id))),
+        englishKey,
+      ).toEqual(Object.fromEntries(Object.entries(contract.canonicalValues).filter(([id]) => !textControlIds.has(id))));
       expect(
         englishContract.presets?.map(preset => ({
           id: preset.id,

@@ -50,6 +50,11 @@ export type PathProps = HydrationEventProps & {
    *   （open / openStealth / openDiamond / openCircle）上 `fill` silent no-op
    */
   arrowDetail?: InputPath['arrowDetail'];
+  /**
+   * 箭头端点放置配置
+   * @description `overlap` 为实际端点共享值，`start` / `end` 可逐端覆盖；比例从默认位置插值到最终视觉后缘与逻辑端点对齐的位置
+   */
+  arrowPlacement?: InputPath['arrowPlacement'];
   /** 闭合区域填充色，CSS 颜色字符串；省略 = 不填充（仅描边）。配合 cycle step 画填充形状 */
   fill?: IRPath['fill'];
   /** 填充规则：`'nonzero'`（默认）/ `'evenodd'`（环形 / 孔洞） */

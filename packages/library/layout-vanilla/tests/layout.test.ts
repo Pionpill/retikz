@@ -72,6 +72,22 @@ describe('Layout Vanilla family', () => {
     ]);
   });
 
+  it('keeps an omitted item key out of Source IR', () => {
+    const normalized = normalizeScene(
+      scene({
+        children: [
+          flexLayout('flex', {
+            children: [{ kind: LayoutItemKind.Flex, child: { type: 'node', position: [0, 0] } }],
+          }),
+        ],
+      }),
+      { adapters: LayoutInputEmbedAdapters },
+    );
+
+    const item = (normalized.ir.children[0] as { children: Array<Record<string, unknown>> }).children[0];
+    expect(item).not.toHaveProperty('key');
+  });
+
   it('exports a shallow-frozen family adapter array in container order', () => {
     expect(LayoutInputEmbedAdapters).toEqual([
       FlexLayoutInputEmbedAdapter,

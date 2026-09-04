@@ -6,6 +6,7 @@ import type { IRPosition, IRTarget } from '../../../schemas';
 import type { PaintResolver } from '../../resource';
 import type { TextMeasurer } from '../../text';
 import type { PathEmitOptions, PathPrimitiveEmitResult } from '../types';
+import type { StrokeInterruptionProtectedRange } from './interruption';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
@@ -16,14 +17,19 @@ import { emitLabelPrimitive, pointOfTarget } from '../host';
 import { createPathCommandEmitter } from './commands';
 import { createStrokeCursor, isStrokeTargetStep } from './cursor';
 import { emitInlineMarkPrimitives, emitPathEndpointDecorations, pathEndpointArrows } from './decorations';
+import {
+  createStrokeInterruptionIntervals,
+  createStrokePathGeometry,
+  splitStrokePathAtInterruptions,
+} from './interruption';
 import { assertArrowCanInheritStroke } from './marks';
 import { emitPathBaseProps, wrapPathPrimitiveOutput } from './output';
 import { applyRoundedCorners } from './rounded-corners';
-import { createStrokeSamplingCollector, sampleStrokePath } from './sampling';
+import { createStrokeSamplingCollector } from './sampling';
 import { isStrokeSegmentStep, lowerSegmentStep } from './segments';
 import { isStrokeShapeStep, lowerShapeStep } from './shapes';
 import { applyArrowShrinks } from './shrink';
-import { splitSubPathsForEndpointArrows } from './split';
+import { emitInterruptedPathFragments, splitSubPathsForEndpointArrows } from './split';
 import { bboxCenter, buildPathOwnerOutputTransforms } from './transform';
 
 /** 普通 path emit 所需的编译上下文 */
@@ -80,8 +86,13 @@ const emitCanonicalPathPrimitive = (
 
   /** 主循环每轮置为当前 step.kind，emit* 据此标记 provenance */
   let currentStepKind = '';
-  const commandEmitter = createPathCommandEmitter({ round, currentStepKind: () => currentStepKind });
-  const { commands, provenance, boundsPoints, endpointSource } = commandEmitter;
+  let currentStepIndex = -1;
+  const commandEmitter = createPathCommandEmitter({
+    round,
+    currentStepKind: () => currentStepKind,
+    currentStepIndex: () => currentStepIndex,
+  });
+  const { commands, provenance, stepIndexes, boundsPoints, endpointSource } = commandEmitter;
   const sampling = createStrokeSamplingCollector({
     boundsPoints,
     measureText,
@@ -97,7 +108,9 @@ const emitCanonicalPathPrimitive = (
 
     let step = steps[i];
     const originalStep = canonicalSteps[i];
+    sampling.beginStep(i, step.kind);
     currentStepKind = step.kind;
+    currentStepIndex = i;
 
     if (
       cursor.relativeBaseline &&
@@ -289,11 +302,19 @@ const emitCanonicalPathPrimitive = (
   let roundedCommands = false;
   if (path.roundedCorners !== undefined && path.roundedCorners > 0) {
     const before = commands.length;
-    const next = applyRoundedCorners({ commands, provenance, radius: path.roundedCorners, round });
+    const next = applyRoundedCorners({
+      commands,
+      provenance,
+      sourceStepIndexes: stepIndexes,
+      radius: path.roundedCorners,
+      round,
+    });
     // 原地替换 commands 内容，下游 applyArrowShrinks / split 直接消费此数组
-    if (next.length !== before || next.some((c, k) => c !== commands[k])) {
+    if (next.commands.length !== before || next.commands.some((command, index) => command !== commands[index])) {
       commands.length = 0;
-      commands.push(...next);
+      commands.push(...next.commands);
+      stepIndexes.length = 0;
+      stepIndexes.push(...next.sourceStepIndexes);
       roundedCommands = true;
     }
   }
@@ -304,11 +325,71 @@ const emitCanonicalPathPrimitive = (
     style: resolution.style,
   });
   const strokeWidth = baseProps.strokeWidth;
+  const logicalGeometry = createStrokePathGeometry(commands, stepIndexes);
+  const stepLabels = sampling.materializeStepLabels(logicalGeometry);
+  const hostLabels = (path.label ?? []).flatMap(label => {
+    const labelSample = sampling.sampleHostLabel(logicalGeometry, label.position, roundedCommands);
+    if (labelSample === undefined) return [];
+    const result = emitLabelPrimitive(label, labelSample.visualSample, {
+      measureText,
+      round,
+      rootFontSize: pathEmitOptions.rootFontSize,
+      hostOpacity: path.opacity,
+      tex: {
+        lowerTex: pathEmitOptions.lowerTex,
+        gatingOn: pathEmitOptions.lowerTex !== undefined,
+        warn: (code, message) => warn(code, message, 'label'),
+      },
+    });
+    boundsPoints.push(...result.boundsPoints);
+    return [
+      { label, primitive: result.primitive, boundsPoints: result.boundsPoints, sample: labelSample.logicalSample },
+    ];
+  });
   const { arrows, inlineMarks } = emitPathEndpointDecorations(path, {
     arrowResolutions: resolution.arrows,
     round,
+    irPath,
   });
   assertArrowCanInheritStroke(baseProps.stroke, arrows);
+
+  // shrink 在 compile 阶段计算，与 emit 落点无关；按视觉输入把首末段端点向内缩短
+  // 让 line 端点接在 hollow arrow 尾部外缘，不贯穿 back outline；shrink=0 的实心 shape 跳过
+  const shrinkStart = arrows.shrinkStart + (endpointSource.firstAutoBoundary ? arrows.boundaryOuterInsetStart : 0);
+  const shrinkEnd = arrows.shrinkEnd + (endpointSource.lastAutoBoundary ? arrows.boundaryOuterInsetEnd : 0);
+  const endpointProtectionLength = strokeWidth / 2;
+  const endpointProtections: Array<StrokeInterruptionProtectedRange> = [];
+  const firstDrawableOccurrence = logicalGeometry.occurrences.find(occurrence => occurrence.command.kind !== 'close');
+  const lastDrawableOccurrence = logicalGeometry.occurrences.findLast(
+    occurrence => occurrence.command.kind !== 'close',
+  );
+  if (arrows.arrowStart !== undefined && firstDrawableOccurrence !== undefined) {
+    endpointProtections.push({
+      subPathIndex: firstDrawableOccurrence.subPathIndex,
+      start: firstDrawableOccurrence.logicalStart,
+      end: Math.min(
+        firstDrawableOccurrence.logicalEnd,
+        firstDrawableOccurrence.logicalStart + shrinkStart * strokeWidth + endpointProtectionLength,
+      ),
+    });
+  }
+  if (arrows.arrowEnd !== undefined && lastDrawableOccurrence !== undefined) {
+    endpointProtections.push({
+      subPathIndex: lastDrawableOccurrence.subPathIndex,
+      start: Math.max(
+        lastDrawableOccurrence.logicalStart,
+        lastDrawableOccurrence.logicalEnd - shrinkEnd * strokeWidth - endpointProtectionLength,
+      ),
+      end: lastDrawableOccurrence.logicalEnd,
+    });
+  }
+  const interruptionIntervals = createStrokeInterruptionIntervals(
+    [...stepLabels, ...hostLabels]
+      .filter(label => label.label.interrupt)
+      .map(label => ({ sample: label.sample, visualBoundsPoints: label.boundsPoints })),
+    strokeWidth,
+    endpointProtections,
+  );
 
   const marks = emitInlineMarkPrimitives({
     commands,
@@ -321,40 +402,37 @@ const emitCanonicalPathPrimitive = (
   });
   boundsPoints.push(...marks.boundsPoints);
 
-  const hostLabelPrims = (path.label ?? []).flatMap(label => {
-    const sample = sampleStrokePath({
-      commands,
-      segmentSamplers,
-      roundedCommands,
-      position: label.position,
-    });
-    if (sample === undefined) return [];
-    const result = emitLabelPrimitive(label, sample, {
-      measureText,
-      round,
-      rootFontSize: pathEmitOptions.rootFontSize,
-      hostOpacity: path.opacity,
-      tex: {
-        lowerTex: pathEmitOptions.lowerTex,
-        gatingOn: pathEmitOptions.lowerTex !== undefined,
-        warn: (code, message) => warn(code, message, 'label'),
-      },
-    });
-    boundsPoints.push(...result.boundsPoints);
-    return [result.primitive];
+  const endpointSpecs = pathEndpointArrows(arrows);
+  const fragments = splitStrokePathAtInterruptions(logicalGeometry, interruptionIntervals, round, {
+    separateTerminalDrawable: endpointSpecs.arrowEnd !== undefined,
   });
-
-  // shrink 在 compile 阶段计算，与 emit 落点无关；按视觉输入把首末段端点向内缩短
-  // 让 line 端点接在 hollow arrow 尾部外缘，不贯穿 back outline；shrink=0 的实心 shape 跳过
-  const shrinkStart = arrows.shrinkStart + (endpointSource.firstAutoBoundary ? arrows.boundaryOuterInsetStart : 0);
-  const shrinkEnd = arrows.shrinkEnd + (endpointSource.lastAutoBoundary ? arrows.boundaryOuterInsetEnd : 0);
-  applyArrowShrinks(commands, { shrinkStart, shrinkEnd, strokeWidth, round });
+  let primitive: ScenePrimitive;
+  if (interruptionIntervals.length === 0) {
+    applyArrowShrinks(commands, { shrinkStart, shrinkEnd, strokeWidth, round });
+    primitive = splitSubPathsForEndpointArrows(commands, baseProps, endpointSpecs).primitive;
+  } else {
+    const startFragment = fragments.find(fragment => fragment.hasPathStart);
+    const endFragment = fragments.find(fragment => fragment.hasPathEnd);
+    if (startFragment !== undefined && startFragment === endFragment) {
+      applyArrowShrinks(startFragment.commands, { shrinkStart, shrinkEnd, strokeWidth, round });
+    } else {
+      if (startFragment !== undefined) {
+        applyArrowShrinks(startFragment.commands, { shrinkStart, shrinkEnd: 0, strokeWidth, round });
+      }
+      if (endFragment !== undefined) {
+        applyArrowShrinks(endFragment.commands, { shrinkStart: 0, shrinkEnd, strokeWidth, round });
+      }
+    }
+    primitive = emitInterruptedPathFragments(fragments, baseProps, endpointSpecs);
+  }
 
   if (pathEmitOptions.captureOwnerOutput !== undefined) {
+    const ownerCommands = fragments.length === 0 ? commands : commands.map(command => ({ ...command }));
+    if (fragments.length > 0) applyArrowShrinks(ownerCommands, { shrinkStart, shrinkEnd, strokeWidth, round });
     pathEmitOptions.captureOwnerOutput(
       cloneAndFreezeJson(
         {
-          commands,
+          commands: ownerCommands,
           transforms:
             boundsPoints.length === 0
               ? []
@@ -370,9 +448,12 @@ const emitCanonicalPathPrimitive = (
     );
   }
 
-  const endpointSpecs = pathEndpointArrows(arrows);
-  const { primitive } = splitSubPathsForEndpointArrows(commands, baseProps, endpointSpecs);
-  const bodyPrims: Array<ScenePrimitive> = [primitive, ...labelPrims, ...hostLabelPrims, ...marks.primitives];
+  const bodyPrims: Array<ScenePrimitive> = [
+    primitive,
+    ...labelPrims,
+    ...hostLabels.map(label => label.primitive),
+    ...marks.primitives,
+  ];
   return wrapPathPrimitiveOutput({ path, primitive, bodyPrims, boundsPoints, round });
 };
 

@@ -21,10 +21,10 @@ import { GridLayout, LayoutItem } from '@retikz/layout-react';
     ]}
     columnGap={8}
   >
-    <LayoutItem kind="grid" itemKey="label">
+    <LayoutItem kind="grid">
       <Node position={[0, 0]} text="Label" />
     </LayoutItem>
-    <LayoutItem kind="grid" itemKey="value">
+    <LayoutItem kind="grid">
       <Node position={[0, 0]} text="42%" />
     </LayoutItem>
   </GridLayout>
@@ -99,24 +99,24 @@ Base `GridLayout` has no `inspect` prop. The optional `InspectGridLayout` object
 
 ### `GridLayoutInput`
 
-| Prop              | Type                                        | Default           | Description                                 |
-| ----------------- | ------------------------------------------- | ----------------- | ------------------------------------------- |
-| `columns`         | `Array<GridTrackInput>`                     | —                 | At least one explicit physical column track |
-| `rows?`           | `Array<GridTrackInput>`                     | `[]`              | Explicit row tracks                         |
-| `implicitColumn?` | `GridTrackInput`                            | content natural   | Track used when placement extends columns   |
-| `implicitRow?`    | `GridTrackInput`                            | content natural   | Track used when placement extends rows      |
-| `autoFlow?`       | <ApiValues name="GridAutoFlow" />           | `'row'`           | Deterministic non-dense auto-placement axis |
-| `overlap?`        | <ApiValues name="GridOverlap" />            | `'reject'`        | Policy for fully explicit item overlap      |
-| `columnGap?`      | `number`                                    | `0`               | Physical column gap                         |
-| `rowGap?`         | `number`                                    | `0`               | Physical row gap                            |
-| `justifyItems?`   | `'start' \| 'center' \| 'end' \| 'stretch'` | `'stretch'`       | Default horizontal item alignment           |
-| `alignItems?`     | <ApiValues name="LayoutAlignment" />        | `'stretch'`       | Default vertical item alignment             |
-| `justifyContent?` | <ApiValues name="LayoutDistribution" />     | `'start'`         | Horizontal distribution of the column group |
-| `alignContent?`   | <ApiValues name="LayoutDistribution" />     | `'start'`         | Vertical distribution of the row group      |
-| `size?`           | `LayoutSizeInput`                           | content / content | Per-axis container allocation policy        |
-| `padding?`        | `number` \| `IRBoxSpacing`                  | `0`               | Insets from allocation to content           |
-| `overflow?`       | <ApiValues name="LayoutOverflow" />         | `'visible'`       | Whether visual output clips to allocation   |
-| `children?`       | `Array<GridLayoutItemInput>`                | `[]`              | Authored items with container-local keys    |
+| Prop              | Type                                        | Default           | Description                                  |
+| ----------------- | ------------------------------------------- | ----------------- | -------------------------------------------- |
+| `columns`         | `Array<GridTrackInput>`                     | —                 | At least one explicit physical column track  |
+| `rows?`           | `Array<GridTrackInput>`                     | `[]`              | Explicit row tracks                          |
+| `implicitColumn?` | `GridTrackInput`                            | content natural   | Track used when placement extends columns    |
+| `implicitRow?`    | `GridTrackInput`                            | content natural   | Track used when placement extends rows       |
+| `autoFlow?`       | <ApiValues name="GridAutoFlow" />           | `'row'`           | Deterministic non-dense auto-placement axis  |
+| `overlap?`        | <ApiValues name="GridOverlap" />            | `'reject'`        | Policy for fully explicit item overlap       |
+| `columnGap?`      | `number`                                    | `0`               | Physical column gap                          |
+| `rowGap?`         | `number`                                    | `0`               | Physical row gap                             |
+| `justifyItems?`   | `'start' \| 'center' \| 'end' \| 'stretch'` | `'stretch'`       | Default horizontal item alignment            |
+| `alignItems?`     | <ApiValues name="LayoutAlignment" />        | `'stretch'`       | Default vertical item alignment              |
+| `justifyContent?` | <ApiValues name="LayoutDistribution" />     | `'start'`         | Horizontal distribution of the column group  |
+| `alignContent?`   | <ApiValues name="LayoutDistribution" />     | `'start'`         | Vertical distribution of the row group       |
+| `size?`           | `LayoutSizeInput`                           | content / content | Per-axis container allocation policy         |
+| `padding?`        | `number` \| `IRBoxSpacing`                  | `0`               | Insets from allocation to content            |
+| `overflow?`       | <ApiValues name="LayoutOverflow" />         | `'visible'`       | Whether visual output clips to allocation    |
+| `children?`       | `Array<GridLayoutItemInput>`                | `[]`              | Authored items; explicit keys must be unique |
 
 ### `GridTrackInput`
 
@@ -129,18 +129,18 @@ Base `GridLayout` has no `inspect` prop. The optional `InspectGridLayout` object
 
 ### `GridLayoutItemInput`
 
-| Prop           | Type                                        | Default       | Description                       |
-| -------------- | ------------------------------------------- | ------------- | --------------------------------- |
-| `kind`         | `'grid'`                                    | —             | GridLayout item discriminator     |
-| `key`          | `string`                                    | —             | Container-local authored identity |
-| `child`        | `IRChild`                                   | —             | Any JSON-safe Core child          |
-| `column?`      | `{ start?: number, span?: number }`         | auto / span 1 | Column placement                  |
-| `row?`         | `{ start?: number, span?: number }`         | auto / span 1 | Row placement                     |
-| `margin?`      | `number` \| `IRBoxSpacing`                  | `0`           | Item margin inside the track area |
-| `justifySelf?` | `'start' \| 'center' \| 'end' \| 'stretch'` | container     | Horizontal alignment override     |
-| `alignSelf?`   | <ApiValues name="LayoutAlignment" />        | container     | Vertical alignment override       |
+| Prop           | Type                                        | Default       | Description                                                        |
+| -------------- | ------------------------------------------- | ------------- | ------------------------------------------------------------------ |
+| `kind`         | `'grid'`                                    | —             | GridLayout item discriminator                                      |
+| `key?`         | `string`                                    | generated     | Optional stable identity; generated from source index when omitted |
+| `child`        | `IRChild`                                   | —             | Any JSON-safe Core child                                           |
+| `column?`      | `{ start?: number, span?: number }`         | auto / span 1 | Column placement                                                   |
+| `row?`         | `{ start?: number, span?: number }`         | auto / span 1 | Row placement                                                      |
+| `margin?`      | `number` \| `IRBoxSpacing`                  | `0`           | Item margin inside the track area                                  |
+| `justifySelf?` | `'start' \| 'center' \| 'end' \| 'stretch'` | container     | Horizontal alignment override                                      |
+| `alignSelf?`   | <ApiValues name="LayoutAlignment" />        | container     | Vertical alignment override                                        |
 
-In React, write `key` as `itemKey` and provide `child` through one drawable child or `ir`.
+In React, write optional `key` as `itemKey` and provide `child` through one drawable child or `ir`. When `itemKey` is omitted, the generated identity exists only in internal artifacts and is not written back to Source IR.
 
 ## Related
 

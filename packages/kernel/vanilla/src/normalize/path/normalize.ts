@@ -43,12 +43,44 @@ const arrowMarkFromDetail = (detail: InputPath['arrowDetail'], endpoint: 'start'
 /** 汇总路径箭头语法糖与显式 marks */
 const normalizePathMarks = (input: InputPath): IRPathBase['marks'] | undefined => {
   const marks: NonNullable<IRPathBase['marks']> = [];
-  if (input.arrow !== undefined && input.arrow !== 'none') {
-    if (input.arrow === '<-' || input.arrow === '<->') {
-      marks.push({ pos: 0, mark: arrowMarkFromDetail(input.arrowDetail, 'start') });
+  const hasStartArrow = input.arrow === '<-' || input.arrow === '<->';
+  const hasEndArrow = input.arrow === '->' || input.arrow === '<->';
+  if (input.arrowPlacement !== undefined) {
+    if (!hasStartArrow && !hasEndArrow) {
+      throw new RetikzVanillaError(
+        RetikzVanillaErrorCode.Normalize,
+        'normalizePath: arrowPlacement requires arrow to create at least one endpoint',
+      );
     }
-    if (input.arrow === '->' || input.arrow === '<->') {
-      marks.push({ pos: 1, mark: arrowMarkFromDetail(input.arrowDetail, 'end') });
+    if (input.arrowPlacement.start !== undefined && !hasStartArrow) {
+      throw new RetikzVanillaError(
+        RetikzVanillaErrorCode.Normalize,
+        'normalizePath: arrowPlacement.start requires a start arrow',
+      );
+    }
+    if (input.arrowPlacement.end !== undefined && !hasEndArrow) {
+      throw new RetikzVanillaError(
+        RetikzVanillaErrorCode.Normalize,
+        'normalizePath: arrowPlacement.end requires an end arrow',
+      );
+    }
+  }
+  if (input.arrow !== undefined && input.arrow !== 'none') {
+    if (hasStartArrow) {
+      const endpointOverlap = input.arrowPlacement?.start?.overlap ?? input.arrowPlacement?.overlap;
+      marks.push({
+        pos: 0,
+        ...(endpointOverlap === undefined ? {} : { endpointOverlap }),
+        mark: arrowMarkFromDetail(input.arrowDetail, 'start'),
+      });
+    }
+    if (hasEndArrow) {
+      const endpointOverlap = input.arrowPlacement?.end?.overlap ?? input.arrowPlacement?.overlap;
+      marks.push({
+        pos: 1,
+        ...(endpointOverlap === undefined ? {} : { endpointOverlap }),
+        mark: arrowMarkFromDetail(input.arrowDetail, 'end'),
+      });
     }
   }
   if (input.marks !== undefined) marks.push(...input.marks);
@@ -149,6 +181,7 @@ export const normalizePath = (input: InputPath): IRPath => {
     thickness,
     arrow: _arrow,
     arrowDetail: _arrowDetail,
+    arrowPlacement: _arrowPlacement,
     children,
     strokeWidth,
     marks: _marks,
@@ -158,6 +191,7 @@ export const normalizePath = (input: InputPath): IRPath => {
   void _authoring;
   void _arrow;
   void _arrowDetail;
+  void _arrowPlacement;
   void _marks;
   if (way !== undefined && children !== undefined) {
     throw new RetikzVanillaError(

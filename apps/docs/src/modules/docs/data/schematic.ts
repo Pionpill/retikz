@@ -65,7 +65,14 @@ export const schematicSection: Array<Section> = [
     id: 'diagram',
     label: 'schematic.diagram',
     document: true,
-    pages: [{ id: 'framework', label: 'schematic.diagramFramework' }],
+    pages: [
+      { id: 'framework', label: 'schematic.diagramFramework' },
+      {
+        id: 'flow',
+        label: 'schematic.flowDiagram',
+        children: [{ id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner }],
+      },
+    ],
   },
   {
     id: 'releases',

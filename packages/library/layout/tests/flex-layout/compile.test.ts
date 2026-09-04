@@ -607,6 +607,34 @@ describe('FlexLayout compile contract', () => {
     });
   });
 
+  it('measures a stretched responsive column child against the definite cross size', () => {
+    const result = compileFlex(
+      createFlexLayout({
+        direction: FlexLayoutDirection.Column,
+        alignItems: LayoutAlignment.Stretch,
+        children: [
+          {
+            kind: LayoutItemKind.Flex,
+            key: 'responsive',
+            child: leaf('responsive', 12, 10, { responsive: true, area: 120 }),
+          },
+        ],
+      }),
+      {
+        x: { kind: LayoutAxisProposalKind.Exact, value: 100 },
+        y: { kind: LayoutAxisProposalKind.Intrinsic, mode: 'natural' },
+      },
+    );
+
+    expect(result.observed.allocationBounds).toEqual({ x: 0, y: 0, width: 100, height: 1.2 });
+    expect(flexArtifactOf(result.output).value.items[0]?.slotBounds).toEqual({
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 1.2,
+    });
+  });
+
   it('stretches multiple wrapped line slots before issuing final exact-cross probes', () => {
     const result = compileFlex(
       createFlexLayout({

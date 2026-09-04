@@ -1,6 +1,6 @@
 # Schematic 制图能力域设计
 
-> 状态：Schematic 分组、Graph / Diagram 与 Editor 的长期边界已确认。Graph v0.1 已按当前契约形成基础闭环；Diagram 的完整图示分层已确认，具体 presentation、frame、Flow 绘图核心与 Editor 仍需分别通过 milestone ADR 落地
+> 状态：Schematic 分组、Graph / Diagram 与 Editor 的长期边界已确认。Graph v0.1 已按当前契约形成基础闭环；Diagram 的 presentation、frame foundation 与首个 Flow 绘图核心已落地，Editor 仍需通过独立 milestone ADR 落地
 
 ## 1. 目标与边界
 
@@ -10,7 +10,7 @@ Schematic 处理“如何把具有关系或结构的对象表达为可理解、�
 2. `Diagram`：组合完整图示的 presentation、frame 与绘图核心，并在 Graph 之上解析布局意图，通过可替换算法计算自动布局、连线与几何
 3. `Editor`：跨领域的交互编辑能力，负责选择、变换、事务和历史，不属于 Schematic 数据或布局 IR
 
-Graph 回答“图中有什么、对象如何关联”，Diagram 回答“完整图示如何组织，以及这些关系应按哪类布局规则自动排列”。Diagram 单向依赖 Graph；Graph 不读取 Diagram。`flow` 是 Diagram 首个关系型绘图核心，不再作为独立 package owner。Editor 可以消费 Graph 数据与 Diagram 几何，但 Graph 与 Diagram 都不保存 viewport、selection、history 或 transaction 状态
+Graph 回答“可绘制关系元素分别是什么、如何显式呈现”，Diagram 回答“完整图示如何组织，以及高层关系结构应按哪类布局规则自动排列”。FlowDiagram 拥有窄、LLM-first 的高层 Source，并确定性投影为 Graph Group / Entity / Relation；Graph 仍是这些下层语义、Theme、identity 与 lowering 的唯一 owner。Graph Block 在其自身实现与连接契约稳定前不进入 Flow Source。Diagram 单向依赖 Graph；Graph 不读取 Diagram。`flow` 是 Diagram 首个关系型绘图核心，不再作为独立 package owner。Editor 可以消费 Flow / Graph 数据与 Diagram 几何，但 Graph 与 Diagram 都不保存 viewport、selection、history 或 transaction 状态
 
 Schematic 领域的早期公共输入只接受 JSON-safe 结构，不支持 DOT、Mermaid、PlantUML 或其它文本 DSL。未来文本语法只能通过外围 parser 产生同一 Source IR，不改变 Graph 与 Diagram 的 JSON 真源
 
@@ -48,7 +48,7 @@ Graph 不拥有 geometry 数据模型、Diagram 自动布局、自动 routing、
 | `@retikz/graph-react`   | 五类 Source composite 的 JSX authoring 与宿主 adapter                                                                            | Graph schema、resolve、lowering、布局算法                            |
 | `@retikz/graph-vanilla` | 五类 Source composite 的 builder、normalize、InputEmbed 与 Vanilla adapter                                                       | Graph schema、resolve、lowering、布局算法                            |
 
-未来 `@retikz/diagram` package family 单向依赖 Graph，拥有完整 Diagram 的区域装配语义、Diagram 专属 frame / appearance、布局意图、布局 Definition / provider、Diagram resolve、布局编排、routing 与计算结果；它复用 Layout 的排版和测量、Standard 的通用绘图 composite、Core 的绘图与 Theme 机制，不复制 Graph 的 Group / Entity / Relation、appearance 或 Theme 契约。Graph 当前没有端口契约；Relation 只复用 Core 已公开的 NodeTarget，后续新的局部连接点能力必须先由 Core 或适用 owner 的独立设计冻结。`@retikz/diagram` 是实际的上层能力包，不是聚合入口；package family 的具体组成与公开 API 必须由自身 roadmap / ADR 确认后建立
+`@retikz/diagram` package family 单向依赖 Graph，拥有完整 Diagram 的区域装配语义、Diagram 专属 frame / appearance、Flow 高层 Source、扁平 Flow token、结构化全局配置、单项 style / layout、布局意图、布局 Definition / provider、Diagram resolve、布局编排、routing 与计算结果；它复用 Layout 的排版和测量、Standard 的通用绘图 composite、Core 的绘图与 Theme 机制，并把 Flow 窄投影确定性下沉为 Graph 的 Group / Entity / Relation。Flow style 只重组 Graph element 已开放的实例字段，不复制 Graph Theme、identity、lowering 或绕过 role-owned 屏蔽结构。Graph Block 必须在自身结构与连接契约稳定并出现真实 Flow 消费者后重新进入 Diagram 设计，当前 Flow 不预留 schema、token、adapter 或 artifact 字段。Graph 当前没有端口契约；Relation 只复用 Core 已公开的 NodeTarget，后续新的局部连接点能力必须先由 Core 或适用 owner 的独立设计冻结。`@retikz/diagram` 是实际的上层能力包，不是聚合入口；Flow 由 Diagram 三包对称的 `./flow` 子入口公开
 
 允许的方向为：
 
@@ -108,7 +108,7 @@ Graph 本身不拥有 children 排布算法。standalone React Graph 复用 Layo
 
 1. `Presentation` 表达 title、description、legend 等位于绘图核心之外、但仍属于完整图示的说明内容及区域语义；这些内容可以占据多个外围区域
 2. `Frame / Appearance` 组合 presentation regions 与 drawing core 的物理排列、外框、内边距、区块间距和 Diagram 专属外观；排版、测量与 Surface 继续复用 Layout / Standard
-3. `Drawing Core` 由具体图类型拥有；`FlowDiagram` 以 Graph 为唯一关系语义真源，负责自动测量、layout、routing 与 renderer-neutral 布局结果
+3. `Drawing Core` 由具体图类型拥有；`FlowDiagram` 以自己的窄 Source 作为高层 authoring 真源，以 Graph 作为下层关系语义与 lowering 真源，负责自动测量、layout、routing 与 renderer-neutral 布局结果
 
 三层不得压成一个同时拥有说明内容、视觉样式、Graph 关系数据与算法状态的平行模型。Diagram 可以拥有“某段内容在完整图示中是 presentation 或 legend”的装配语义，但通用文字、Surface、排版和 Theme 基础能力仍由既有 owner 提供；Legend item 的长期 owner 由对应 ADR 结合真实复用证据决定。移除 Diagram 领域词汇后仍成立且经多个 Tier 2 消费者验证的 composition 才下沉到 Standard 或 Layout
 
@@ -116,7 +116,7 @@ Graph 本身不拥有 children 排布算法。standalone React Graph 复用 Layo
 
 ## 6. Data、Resolve 与 Layout
 
-Graph 与 Diagram 的稳定管线只有 Data、Resolve 与 Layout 三个领域概念，不复制 Plot 的 Transform、Encoding、Scale 或 Coordinate 分层。Diagram 先分别确定 presentation、frame 与 drawing core，再通过 Layout / Standard 的公开 composition 把三者物化为一个完整图示；Graph Source record 直接承载 lower target 字段，是否以及何时调用布局器由消费者决定：
+Graph 与 Diagram 的稳定管线只有 Data、Resolve 与 Layout 三个领域概念，不复制 Plot 的 Transform、Encoding、Scale 或 Coordinate 分层。Diagram 先分别确定 presentation、frame 与 drawing core，再通过 Layout / Standard 的公开 composition 把三者物化为一个完整图示；Graph Source record 直接承载 lower target 字段，Flow Source 则只承载高层关系结构与布局意图：
 
 ```text
 Diagram presentation + frame intent + drawing core
@@ -124,8 +124,10 @@ Diagram presentation + frame intent + drawing core
         ├── presentation resolve and measurement
         └── Flow drawing core
                 │
-                ├── Graph / Group / Entity / Relation records
-                └── Diagram resolve / layout / routing
+                ├── flat Entity / Group / Layout catalogs + owner children
+                ├── recursive Canonical scopes + root relations
+                ├── rank / layout intent + token / global / local style
+                └── Flow resolve -> Graph records -> layout / routing
                             │
                             ▼
                 render-ready Graph semantic records
@@ -139,13 +141,13 @@ Core Node / Path / Scope
 
 Graph Data 由独立 Group / Entity / Relation record、对应 Core lower target 的实例字段与各类图自己的 JSON-safe 扩展组成。Group resolve 保留包含层级和可见边界，Entity / Relation resolve 负责领域 Definition、Theme、metadata 与补全后不变量；Graph Theme 只按 role、kind、predicate 与 direction 等真实语义匹配 Entity / Relation，实例 appearance 字段保持最高优先级。Relation endpoint、namespace 可见性、重复 id 与 unresolved reference 交由 Core NodeTarget / namespace 编译统一处理。Graph resolve 只确定局部 Graph context 并保留有序 children，不收集成员或建立引用索引，也不计算、合并或标记 geometry 来源
 
-Diagram 的 frame intent 与具体 drawing core intent 分开 resolve。Frame 只确定完整图示的区域排列、外框、padding、section gap 与专属 appearance；Flow drawing core 增加 direction、rank、order、pin、节点间距与 routing 等布局意图。Flow Resolve 确定布局默认、约束与 provider；Layout 结合 Kernel 提供的测量和几何能力计算节点位置、分组边界、边线路径与标签位置。计算结果如何写入 render-ready Graph Source 或直接进入其它下游，由 Diagram 自身 ADR 决定，不反向要求 Graph 建立 geometry result contract
+Diagram 的 frame intent 与具体 drawing core intent 分开 resolve。Frame 只确定完整图示的区域排列、外框、padding、section gap 与专属 appearance；Flow drawing core 用平级 Entity / Group / Layout catalog、根与各 scope 的 `children` 引用、根 relations、rank、扁平 token、结构化 flowTheme、单项 style / layout 与 routing 等窄字段表达高层 Source。catalog 已表达声明类别，不重复保存 element discriminator；relation 由根集合和数组顺序确定，不重复保存 discriminator 或 id。Flow resolve 校验唯一 owner 后按 `children` 重建递归 Canonical scope；Group 始终下沉为可见 Graph Group 并可作为 endpoint，独立 Layout 复用 Flex compiler 完成无外壳固定排列且不能作为 endpoint。Core `theme.style` 通过同名 Flow Theme Definition 解析 token；结构化全局配置高于 token，单项配置最高。Layout 与 Flow layout Definition 结合 Kernel 提供的测量和几何能力计算节点位置、分组边界、边线路径与标签位置，再由 Flow 形成 render-ready Graph records、renderer-neutral artifact 与 spatial handles，不反向要求 Graph 建立 geometry result contract
 
 Diagram 是面向 Graph 关系结构的自动图示上层能力，不是所有领域数据模型的总 owner。`flow`、`tree`、`layered`、`force` 等布局可以作为 Diagram kind、provider 或 preset；Gantt 等领域可以复用 Graph / Diagram 的适用能力，但仍拥有自己的领域数据与 resolve。只有经过真实复用验证的无领域算法或约束才下沉到 Layout、Math 或其它通用 owner
 
 ## 7. Editor 边界
 
-Editor 是跨领域交互能力。它可以通过 Graph editor adapter 编辑 Graph 数据和其中的 Core-compatible 实例字段，也可以消费 Diagram 计算结果或编辑普通 Core IR 与其它领域文档。持久化的 Graph 关系数据属于 Graph；selection、viewport、history、transaction、临时拖拽状态与交互 session 属于 Editor，不写入 Graph 或 Diagram Source IR
+Editor 是跨领域交互能力。它可以通过 Graph editor adapter 编辑 Graph 数据和其中的 Core-compatible 实例字段，也可以编辑 Flow Source、消费 Diagram 计算结果或编辑普通 Core IR 与其它领域文档。持久化的 Graph 关系数据属于 Graph，持久化的 Flow 高层结构属于 Diagram；selection、viewport、history、transaction、临时拖拽状态与交互 session 属于 Editor，不写入 Graph 或 Diagram Source IR
 
 ## 8. 迁移原则
 
@@ -156,9 +158,10 @@ Editor 是跨领域交互能力。它可以通过 Graph editor adapter 编辑 Gr
 每个 Graph / Diagram milestone ADR 至少说明：
 
 - 用户问题、图式语义与 LLM 可见字段
+- LLM-first canonical JSON、definition catalog、可修复 diagnostics 与确定性 normalization
 - presentation、frame / appearance 与 drawing core 的区域语义、owner 和组合顺序
 - frame padding、section gap 与 drawing-core spacing 的坐标层级和消费方
-- Graph Data / Resolve 与 Diagram Resolve / Layout 的 owner 和依赖方向
+- Flow Source / Resolve、Graph semantic lowering 与 Diagram Layout 的 owner 和依赖方向
 - JSON-safe IR、可选 id、Core NodeTarget relation endpoint、Graph context、Core-compatible 实例字段与失败语义
 - role、appearance、shape 与可替换呈现边界
 - lower target 字段的 Core 真源、Graph 显式收窄与缺失字段诊断
@@ -170,4 +173,4 @@ Editor 是跨领域交互能力。它可以通过 Graph editor adapter 编辑 Gr
 
 ## 10. 版本关系
 
-本文定义长期边界；具体 presentation 字段、legend 来源、frame 默认、appearance、role 词汇、关系模型、布局约束与版本迁移进入对应 milestone ADR。Graph v0.1 已确认 ADR-06～10 的无 Variant Theme、Group / Entity / Relation 独立 composite、可选 Graph context、Core NodeTarget endpoint 与三入口 parity。`@retikz/diagram` package family、完整图示装配、Flow 布局 provider 与结果交付必须由 Diagram roadmap / ADR 确认后建立，Editor 继续独立设计和审查
+本文定义长期边界；具体 presentation 字段、legend 来源、frame 默认、appearance、Flow Source、role 词汇、布局约束与版本迁移进入对应 milestone ADR。Graph v0.1 已确认 ADR-06～10 的无 Variant Theme、Group / Entity / Relation 独立 composite、可选 Graph context、Core NodeTarget endpoint 与三入口 parity。`@retikz/diagram` package family 已建立完整图示装配、Flow 平级 Source、布局 provider、Graph 物化与结果交付；Editor 继续独立设计和审查
