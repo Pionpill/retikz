@@ -27,6 +27,7 @@ import {
   coordinatePolarControls as englishCoordinatePolarControls,
   previewControlContract as englishPolarContract,
 } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-polar.en.controls';
+import { bridgeCoordinate } from '../../src/modules/docs/contents/viz/plot/coordinate/custom-coordinate/coordinate-custom-bridge.definition';
 
 type PreviewRender<TValues extends object> = (values: TValues) => ReactNode;
 
@@ -37,6 +38,15 @@ const cartesianCanonicalValues = {
   marginBottom: 24,
   marginLeft: 24,
   showGrid: true,
+} as const;
+
+const polarCanonicalValues = {
+  markType: 'line',
+  markInterpolation: 'inherit',
+  coordinateInterpolation: 'auto',
+  innerRadius: 0,
+  startAngle: -90,
+  sweepAngle: 360,
 } as const;
 
 const fieldContractOf = (definition: PreviewControlsDefinition) =>
@@ -73,6 +83,17 @@ const horizontalAxisOf = (markup: string) =>
   ).find(points => points[0] !== points[2] && points[1] === points[3]);
 
 describe('二维坐标系文档 playground', () => {
+  it('自定义 coordinate definition 用 scaleBinding 映射非 role 同名字段', () => {
+    const operation = { type: 'bridge' as const, archHeight: 48, horizontalScale: 'horizontal' };
+    expect(bridgeCoordinate.scaleBinding?.read(operation)).toEqual({ x: 'horizontal', y: undefined });
+    expect(bridgeCoordinate.scaleBinding?.bind(operation, { x: 'x', y: 'y' })).toEqual({
+      type: 'bridge',
+      archHeight: 48,
+      horizontalScale: 'x',
+      verticalScale: 'y',
+    });
+  });
+
   it('笛卡尔 controls 提供点线面、四边留白和网格且双语同构', () => {
     const chineseFields = fieldContractOf(coordinateCartesianControls);
     const englishFields = fieldContractOf(englishCoordinateCartesianControls);
@@ -140,7 +161,7 @@ describe('二维坐标系文档 playground', () => {
     expect(englishCartesianContract.canonicalValues).toEqual(cartesianContract.canonicalValues);
   });
 
-  it('极坐标 controls 提供点线面、内半径与角度控制且双语同构', () => {
+  it('极坐标 controls 提供点线面、插值、内半径与角度控制且双语同构', () => {
     const chineseFields = fieldContractOf(coordinatePolarControls);
     const englishFields = fieldContractOf(englishCoordinatePolarControls);
 
@@ -150,11 +171,29 @@ describe('二维坐标系文档 playground', () => {
       {
         id: 'markType',
         kind: 'select',
-        defaultValue: 'point',
+        defaultValue: 'line',
         min: undefined,
         max: undefined,
         step: undefined,
         optionValues: ['point', 'line', 'interval'],
+      },
+      {
+        id: 'markInterpolation',
+        kind: 'select',
+        defaultValue: 'inherit',
+        min: undefined,
+        max: undefined,
+        step: undefined,
+        optionValues: ['inherit', 'polar', 'chord'],
+      },
+      {
+        id: 'coordinateInterpolation',
+        kind: 'select',
+        defaultValue: 'auto',
+        min: undefined,
+        max: undefined,
+        step: undefined,
+        optionValues: ['auto', 'polar', 'chord'],
       },
       {
         id: 'innerRadius',
@@ -185,12 +224,7 @@ describe('二维坐标系文档 playground', () => {
       },
     ]);
     expect(englishFields).toEqual(chineseFields);
-    expect(polarContract.canonicalValues).toEqual({
-      markType: 'point',
-      innerRadius: 0,
-      startAngle: -90,
-      sweepAngle: 360,
-    });
+    expect(polarContract.canonicalValues).toEqual(polarCanonicalValues);
     expect(englishPolarContract.canonicalValues).toEqual(polarContract.canonicalValues);
   });
 
@@ -207,9 +241,7 @@ describe('二维坐标系文档 playground', () => {
     ['line', 'path'],
     ['interval', 'interval'],
   ] as const)('极坐标 %s control 渲染 %s mark', (markType, expectedType) => {
-    expect(
-      plotMarkOf(renderCoordinatePolar, { markType, innerRadius: 0, startAngle: -90, sweepAngle: 360 })?.type,
-    ).toBe(expectedType);
+    expect(plotMarkOf(renderCoordinatePolar, { ...polarCanonicalValues, markType })?.type).toBe(expectedType);
   });
 
   it('笛卡尔折线开放且极坐标折线闭合', () => {
@@ -218,10 +250,8 @@ describe('二维坐标系文档 playground', () => {
     );
     expect(
       plotMarkOf(renderCoordinatePolar, {
+        ...polarCanonicalValues,
         markType: 'line',
-        innerRadius: 0,
-        startAngle: -90,
-        sweepAngle: 360,
       })?.closed,
     ).toBe(true);
   });

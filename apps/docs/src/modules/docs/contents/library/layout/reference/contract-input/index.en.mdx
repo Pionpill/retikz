@@ -43,14 +43,14 @@ This page is the authoritative contract for persisted Layout input. React props 
 
 Every item shares these base fields. Each container page documents its additional distribution fields.
 
-| Field     | Type                            | Default | Description                                               |
-| --------- | ------------------------------- | ------- | --------------------------------------------------------- |
-| `kind`    | `'flex' \| 'grid' \| 'overlay'` | —       | Selects the layout container that owns this item          |
-| `key`     | `string`                        | —       | Non-empty authored identity unique within the container   |
-| `child`   | `IRChild`                       | —       | JSON-safe Core or registered Tier 2 child being laid out  |
-| `margin?` | `number` \| `IRBoxSpacing`      | `0`     | Spacing around the slot, excluded from the child proposal |
+| Field     | Type                            | Default   | Description                                                              |
+| --------- | ------------------------------- | --------- | ------------------------------------------------------------------------ |
+| `kind`    | `'flex' \| 'grid' \| 'overlay'` | —         | Selects the layout container that owns this item                         |
+| `key?`    | `string`                        | generated | Optional stable container-local identity; explicit values must be unique |
+| `child`   | `IRChild`                       | —         | JSON-safe Core or registered Tier 2 child being laid out                 |
+| `margin?` | `number` \| `IRBoxSpacing`      | `0`       | Spacing around the slot, excluded from the child proposal                |
 
-In React, write JSON `key` as `itemKey` and provide `child` through one drawable child or `ir`. `LayoutItem` represents only a direct container item and emits no primitive by itself.
+In React, write optional JSON `key` as `itemKey` and provide `child` through one drawable child or `ir`. When omitted, Layout creates a deterministic unique effective key from the source index. Generated keys exist only in internal artifacts and are not written back to Source IR. Inserting, deleting, or reordering items may change positional identities, so pass an explicit `key` when identity must remain stable across reordering. `LayoutItem` represents only a direct container item and emits no primitive by itself.
 
 ## Related
 

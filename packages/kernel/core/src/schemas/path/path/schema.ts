@@ -53,6 +53,9 @@ export const PathMarkPlacementSchema = object({
   pos: NormalizedFractionSchema.describe(
     'Normalized position along the path. Parameter meaning matches step labels: arc length for line-like steps and Bezier parameter for curve-like steps.',
   ),
+  endpointOverlap: NormalizedFractionSchema.optional().describe(
+    "Normalized interpolation from an endpoint arrow's default placement to final visual-back alignment with the logical endpoint. Only valid for the selected start or end arrow on a built-in Stroke path.",
+  ),
   mark: ArrowMarkSchema.describe(
     'The mark to place at this position; currently an arrow tip oriented by the path tangent.',
   ),

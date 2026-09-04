@@ -3,10 +3,11 @@ import type { CoreProviderContribution, IRScene, ThemeStyleDefinition } from '@r
 import type { ExternalRow } from '@retikz/data';
 import type { LowerPlotsOptions } from '@retikz/plot';
 
+import type { InputChartCoordinate } from '../../normalize/chart';
 import type { ChartAuthoringResult, InputChartPanel } from '../../shared';
 import type { TypedChartCommonInput } from './types';
 
-import { chartContributionOf } from '../../shared';
+import { createChartAuthoringResult } from '../../shared';
 
 /** 未显式提供 dataRef 时使用的稳定数据引用 */
 export const DEFAULT_CHART_DATA_REFERENCE = 'chart.data';
@@ -17,6 +18,7 @@ export type TypedChartParts<TSource extends IRChartSource> = Readonly<{
     id?: string;
     data: TSource['data'];
     layout?: TSource['layout'];
+    coordinate?: InputChartCoordinate;
     theme?: TSource['theme'];
     plotExtension?: TSource['plotExtension'];
   }>;
@@ -32,7 +34,19 @@ export type TypedChartParts<TSource extends IRChartSource> = Readonly<{
 export const typedChartPartsOf = <TSource extends IRChartSource>(
   input: TypedChartCommonInput<TSource>,
 ): TypedChartParts<TSource> => {
-  const { data, dataRef, dataModel, layout, id, theme, themeDefinitions, lowerOptions, panel, themeStyles } = input;
+  const {
+    data,
+    dataRef,
+    dataModel,
+    layout,
+    coordinate,
+    id,
+    theme,
+    themeDefinitions,
+    lowerOptions,
+    panel,
+    themeStyles,
+  } = input;
   const isCoreTheme = (value: TypedChartCommonInput<TSource>['theme']): value is IRScene['theme'] =>
     typeof value === 'object' && (Object.hasOwn(value, 'style') || Object.hasOwn(value, 'mode'));
   const sourceTheme = isCoreTheme(theme) ? undefined : theme;
@@ -46,6 +60,7 @@ export const typedChartPartsOf = <TSource extends IRChartSource>(
         ...(dataModel === undefined ? {} : { model: dataModel }),
       },
       ...(layout === undefined ? {} : { layout }),
+      ...(coordinate === undefined ? {} : { coordinate }),
       ...(sourceTheme === undefined ? {} : { theme: sourceTheme }),
       ...(input.plotExtension === undefined ? {} : { plotExtension: input.plotExtension }),
     },
@@ -64,12 +79,16 @@ export const createPointChart = <TSource extends IRChartSource>(
   parts: TypedChartParts<TSource>,
   provider: CoreProviderContribution,
 ): ChartAuthoringResult<TSource> =>
-  chartContributionOf({
-    source,
-    datasets: parts.datasets,
-    chartProviderContribution: provider,
-    ...(parts.lowerOptions === undefined ? {} : { lowerOptions: parts.lowerOptions }),
-    ...(parts.panel === undefined ? {} : { panel: parts.panel }),
-    ...(parts.hostTheme === undefined ? {} : { theme: parts.hostTheme }),
-    ...(parts.themeStyles === undefined ? {} : { themeStyles: parts.themeStyles }),
-  });
+  createChartAuthoringResult(
+    {
+      source,
+      datasets: parts.datasets,
+      chartProviderContribution: provider,
+      ...(parts.lowerOptions === undefined ? {} : { lowerOptions: parts.lowerOptions }),
+      ...(parts.panel === undefined ? {} : { panel: parts.panel }),
+    },
+    {
+      ...(parts.hostTheme === undefined ? {} : { theme: parts.hostTheme }),
+      ...(parts.themeStyles === undefined ? {} : { themeStyles: parts.themeStyles }),
+    },
+  );

@@ -4,7 +4,7 @@
 - 决策日期：2026-08-24
 - 关联：[alpha.1 roadmap](./roadmap.md) · [Chart 总设计](../../../../../architecture/chart-design.md) · [Chart 封装完备设计](../../../../../architecture/chart-encapsulation-complete.md) · [Plot 可视化完备设计](../../../../../architecture/plot-visualization-complete.md) · [ADR-09](./09-family-recipe-chart-schema.md)
 
-> **后续演进：** [`ADR-11`](./11-chart-encoding-field-mapping.md) 已在当前alpha工作实现中把 `ChartFacet`、Vanilla root `facet`与`recipe.facet`迁移为exact `encodings.row / column / facet`。ADR-11获得Acceptance前本文仍为Accepted历史决策；届时仅上述Chart-owned facet surface被替代，`PlotXxx`命名、Plot声明owner与Plot canonical facet resolver继续有效。本文后续涉及`ChartFacet`的代码与示例只用于记录原决策，不代表当前公开API。
+> **后续演进：** [`ADR-11`](./11-chart-encoding-field-mapping.md) 已在当前alpha工作实现中把 `ChartFacet`、Vanilla root `facet`与`recipe.facet`迁移为exact `encodings.row / column / facet`。ADR-11获得Acceptance前本文仍为Accepted历史决策；届时仅上述Chart-owned facet surface被替代，`PlotXxx`命名、Plot声明owner与Plot canonical facet resolver继续有效。本文后续涉及`ChartFacet`的代码与示例只用于记录原决策，不代表当前公开API。[`ADR-12`](./12-chart-react-declaration-authoring.md) 进一步把高频 coordinate 选择提升为 Chart 根级 Source 与公共 declaration；本文关于低层 coordinate 只能位于 `plotExtension` 的原决策由 ADR-12 替代，Plot CoordinateDefinition、registry 与 resolve owner 不变。
 
 ## 背景与目标
 

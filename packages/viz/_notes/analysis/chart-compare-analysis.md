@@ -109,11 +109,11 @@ Flint 的 Vega-Lite gallery 是这里的特例：研究对象是它整理出的 
 
 Flint 对 v0.1 最直接的启发是先选择三个传统 family，同时让它们分别覆盖 Plot 的三个坐标系无关维度 Mark：
 
-| v0.1 family      | Flint 跨库常见名称                                                             | Retikz 技术主干 | v0.1 结论                                                                                  |
-| ---------------- | ------------------------------------------------------------------------------ | --------------- | ------------------------------------------------------------------------------------------ |
-| Scatter & Points | scatter（含 bubble Pattern）、connected scatter、regression、ranged dot、strip | Point 为主      | 保留传统 family；不同 type 可隐式组合 Path、Reference 或内建 Transform                     |
-| Line & Area      | line、area、range area、sparkline、slope、streamgraph、bump                    | Path 为主       | line / area / range-area 进入 type；只改变 curve、guide、stack offset 的名称优先做 Pattern |
-| Bar & Column     | bar、stacked / grouped bar、waterfall、Gantt、bullet、pyramid、lollipop        | Interval 为主   | bar / waterfall / Gantt / bullet 进入 type；堆叠、分组、方向等做 Pattern；lollipop 暂缓    |
+| v0.1 family      | Flint 跨库常见名称                                                      | Retikz 技术主干 | v0.1 结论                                                                                  |
+| ---------------- | ----------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------ |
+| Scatter & Points | scatter、bubble、connected scatter、regression、ranged dot、strip       | Point 为主      | 保留传统 family；不同 type 可固定数据角色，或隐式组合 Path、Reference 与内建 Transform     |
+| Line & Area      | line、area、range area、sparkline、slope、streamgraph、bump             | Path 为主       | line / area / range-area 进入 type；只改变 curve、guide、stack offset 的名称优先做 Pattern |
+| Bar & Column     | bar、stacked / grouped bar、waterfall、Gantt、bullet、pyramid、lollipop | Interval 为主   | bar / waterfall / Gantt / bullet 进入 type；堆叠、分组、方向等做 Pattern；lollipop 暂缓    |
 
 三个 family 是用户目录，不是互斥的底层 primitive 白名单。Coordinate 与 family 正交：Point、Path、Interval 可以投影到 Cartesian、Polar 或其它已注册 Coordinate，不因为切换坐标系建立新的技术 family。
 
@@ -143,14 +143,14 @@ Flint 对 v0.1 最直接的启发是先选择三个传统 family，同时让它�
 | 维度              | Highcharts                                                          | ECharts                                              | Recharts                                                 | retikz Chart 目标                                                            |
 | ----------------- | ------------------------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | 第一心智模型      | 选择 series type，再填 chart options                                | 选择 series type，再组合 option components           | 选择 Chart 容器，再放 JSX children                       | 选择 Canonical Type，填写数据角色与差异配置                                  |
-| 最小配置          | 较短，默认完成度高                                                  | 基础图较短，series / axis 配置直观                   | JSX 直观，但完整图通常需要多个子组件                     | sparse IRChart；type 隐式补齐完整 Plot recipe                              |
+| 最小配置          | 较短，默认完成度高                                                  | 基础图较短，series / axis 配置直观                   | JSX 直观，但完整图通常需要多个子组件                     | sparse IRChart；type 隐式补齐完整 Plot recipe                                |
 | 完整配置表面      | style、axis、legend、tooltip、label、annotation 与 Chart shell 成熟 | option surface 极广，静态 component 与运行时能力并存 | 每个子组件 props 清晰，但 title / caption 等依赖宿主组合 | 图本体沿用 Plot 结构；单图展示使用 Chart 语义并复用 Standard，不裁剪底层能力 |
 | 默认质量          | 产品化程度高                                                        | 类型默认与主题成熟                                   | 默认较轻，常依赖应用样式                                 | type 提供结构配方与表现性默认；核心配方不可撤销，表现默认可关闭 / 替换       |
 | 类型专属配置      | series options 清晰但目录较大                                       | 各 series / component option 很丰富                  | 由组件 props 分散表达                                    | type 只暴露数据角色与允许调整范围，隐式内容不在 IR 重复声明                  |
 | 多系列 / 数据模型 | 多 series，可分别配置 data                                          | `dataset` + `series[]` 灵活但模型庞大                | 多 series children 直观                                  | 单一根 data；series / group / color 与额外 Mark 复用 Plot 语义               |
 | 混合与扩展        | custom series / module                                              | custom series / extension                            | JSX composition                                          | Chart 可包含 Plot members，并提供或消费 Plot definitions；Plot 不包含 Chart  |
-| Framework 范围    | JavaScript API 与 wrappers                                          | JavaScript API 与 wrappers                           | React-only 心智最自然                                    | JSON IRChart 是真源；React children 与 Vanilla builder 都是等价 sugar      |
-| 可序列化性        | option 大体可描述，但 callback / formatter 会越界                   | option 可包含函数与运行时状态                        | JSX / callback 非 JSON                                   | IRChart 100% JSON-safe，runtime definitions 与 datasets 通过 options 注入  |
+| Framework 范围    | JavaScript API 与 wrappers                                          | JavaScript API 与 wrappers                           | React-only 心智最自然                                    | JSON IRChart 是真源；React children 与 Vanilla builder 都是等价 sugar        |
+| 可序列化性        | option 大体可描述，但 callback / formatter 会越界                   | option 可包含函数与运行时状态                        | JSX / callback 非 JSON                                   | IRChart 100% JSON-safe，runtime definitions 与 datasets 通过 options 注入    |
 | 初次上手          | 低到中；类型和默认帮助明显                                          | 基础低、完整 option 中到高                           | React 用户低，非 React 不适用                            | 低；只学习 type、数据角色和常用样式                                          |
 | 深度学习          | 需要掌握 series / chart / module 体系                               | option 层级和 component 关系复杂                     | 需要掌握组件组合和数据处理                               | 有意转向 Plot；Chart 不复制第二套高级扩展体系                                |
 | 文档发现性        | 按 chart family 与 module 组织                                      | gallery、chart type 和 option manual 强              | 按组件 API 搜索                                          | 按分析目的导航，Canonical Type 为契约页，Chart Pattern 承担长尾名称          |
@@ -167,7 +167,7 @@ Flint 对 v0.1 最直接的启发是先选择三个传统 family，同时让它�
 | legend                           | series / point 领域内容            | 独立 legend component                                 | `<Legend>`                        | Plot 解析领域语义，Standard 呈现，不复制进 Chart presentation                  |
 | axis / datum label、annotation   | plotOptions / annotations          | axisLabel、series label、markLine / markArea          | LabelList、Reference\*            | 与数据 / coordinate 强绑定，继续属于 Plot                                      |
 | tooltip                          | hover runtime                      | tooltip component / runtime                           | `<Tooltip>`                       | Plot 拥有 locator 与领域语义，adapter 承担运行时 UI                            |
-| export / toolbox / fullscreen    | exporting module                   | toolbox features                                      | 宿主自行实现                      | adapter / host chrome，不进入静态 IRChart                                    |
+| export / toolbox / fullscreen    | exporting module                   | toolbox features                                      | 宿主自行实现                      | adapter / host chrome，不进入静态 IRChart                                      |
 | loading / no-data                | loading overlay / no-data module   | instance `showLoading` / `hideLoading`                | 宿主状态                          | loading 属 runtime；no-data presentation 需以后单独设计状态 owner              |
 | accessibility description        | accessibility options              | aria label / decal                                    | accessibility layer / host markup | Chart 可保存 semantic metadata，adapter / renderer 执行；不与可见 caption 混用 |
 
@@ -190,7 +190,7 @@ Canonical Type 是 `IRChart.type` 的稳定判别值，选择一套完整 Plot r
 
 Chart Pattern 是 Canonical Type 加 modifier、表现配置或 Plot extension 的文档配方，不进入 `type` union。
 
-Bubble 属于 Scatter Pattern：它只把 Scatter 已有的 size channel 绑定为字段，经 Plot 的 sqrt radius scale 表达面积感知语义，没有新增 Mark、Transform、Coordinate 或数据拓扑。只有 circle packing 等引入独立布局或拓扑的需求才重新判断 Canonical Type。
+Bubble 是独立 Canonical Type：虽然它与 Scatter 共用 Point mark、size channel 和 Plot 的 sqrt radius scale，且没有新增 Transform、Coordinate 或数据拓扑，但它把第三个连续字段固定为不可撤销的数据角色。独立 chartType 因而用于收紧 schema、provider identity、默认 size legend 与 mark 覆盖边界，而不是建立新的 Plot 半径算法。circle packing 等引入独立布局或拓扑的需求仍需重新判断新的 Canonical Type。
 
 ```text
 候选图表完整 Plot 配方

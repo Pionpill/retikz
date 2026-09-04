@@ -2,6 +2,7 @@ import type { IRJsonObject } from '@retikz/core';
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition, AnyTransformDefinition } from '@retikz/data';
 import type { NonEmptyReadonlyArray, ValueOf } from '@retikz/foundation';
 import type {
+  AnyCoordinateDefinition,
   AnyScaleDefinition,
   IRPlot,
   IRPlotCoordinateOperation,
@@ -27,6 +28,8 @@ export type ChartEncodingRuntime = Readonly<{
   selectors: ReadonlyMap<string, AnyRowSelectorDefinition>;
   /** Plot scale Definition注册表 */
   scales: ReadonlyMap<string, AnyScaleDefinition>;
+  /** 与Plot lowering共享的coordinate Definition注册表 */
+  coordinates: ReadonlyMap<string, AnyCoordinateDefinition>;
 }>;
 
 /** rich mapping解析后的直接字段绑定 */
@@ -78,6 +81,38 @@ export type ChartEncodingResolveContext<TSource extends IRChartSource = IRChartS
   /** 当前recipe经过exact schema校验的mapping对象 */
   encodings: TSource['recipe']['encodings'];
   /** 与Plot lowering一致的owner Definition注册表 */
+  runtime: ChartEncodingRuntime;
+}>;
+
+/** recipe 在最终 Chart semantic marks 已确定后补齐 scale 默认值的窄上下文 */
+export type ChartScaleDefaultsResolveContext = Readonly<{
+  /** 当前 exact schema 已 parse 的 Chart Source */
+  source: IRChartSource;
+  /** 当前 recipe 的 encoding 解析结果 */
+  encodings: ChartEncodingResolution;
+  /** authored override 合并后的最终 Chart semantic Plot marks */
+  chartMarks: ReadonlyArray<IRPlotMarkOperation>;
+  /** recipe、encoding 与 Plot extension 合并后的 scale operations */
+  scales: ReadonlyArray<IRPlotScaleOperation>;
+  /** 最终生效的 coordinate 或 composition */
+  spatial: Pick<IRPlot, 'coordinate' | 'composition'>;
+}>;
+
+/** Recipe 在最终 Plot scaffold 已合并后补齐 guide 默认值的窄上下文 */
+export type ChartGuideDefaultsResolveContext = Readonly<{
+  /** 当前 exact schema 已 parse 的 Chart Source */
+  source: IRChartSource;
+  /** 当前 recipe 的 encoding 解析结果 */
+  encodings: ChartEncodingResolution;
+  /** authored override 合并后的最终 Chart semantic Plot marks */
+  chartMarks: ReadonlyArray<IRPlotMarkOperation>;
+  /** scale 默认值补齐后的最终 scale operations */
+  scales: ReadonlyArray<IRPlotScaleOperation>;
+  /** 最终生效的 coordinate 或 composition */
+  spatial: Pick<IRPlot, 'coordinate' | 'composition'>;
+  /** recipe 与 Plot extension 合并后的 guides */
+  guides: ReadonlyArray<IRPlotGuide>;
+  /** 与 Plot lowering 共享的 Definition 注册表 */
   runtime: ChartEncodingRuntime;
 }>;
 
@@ -183,6 +218,10 @@ export type ChartRecipeDefinition<TSource extends IRChartSource = IRChartSource>
   resolveEncodings: (context: ChartEncodingResolveContext<TSource>) => ChartEncodingResolution;
   /** 将当前 recipe 意图解析为 Plot scaffold 与内建语义 mark */
   resolve: (context: ChartRecipeResolveContext) => ChartRecipeResolution;
+  /** 按最终 Chart semantic marks 补齐 scale 默认值；显式值必须保持不变 */
+  resolveScaleDefaults?: (context: ChartScaleDefaultsResolveContext) => ReadonlyArray<IRPlotScaleOperation>;
+  /** 按最终 scales 与 spatial 补齐 recipe guide 默认值；显式 guides 必须保持不变 */
+  resolveGuideDefaults?: (context: ChartGuideDefaultsResolveContext) => ReadonlyArray<IRPlotGuide>;
 }>;
 
 /** 异构 registry 保存的 Chart recipe Definition */

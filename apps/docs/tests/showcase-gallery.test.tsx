@@ -14,6 +14,7 @@ import { DemoLocationContext } from '@/modules/docs/components/component-preview
 import * as showcaseComponents from '@/modules/docs/components/showcase';
 
 vi.mock('react-i18next', () => ({
+  initReactI18next: { type: '3rdParty', init: () => undefined },
   useTranslation: () => ({
     i18n: { resolvedLanguage: 'zh' },
     t: (key: string) =>
@@ -83,14 +84,14 @@ const examples = [
     },
   },
   {
-    id: 'income',
-    title: '收入与寿命',
-    description: '比较收入与预期寿命，使用 `gdpPerCapita`。',
+    id: 'category',
+    title: '分类编码',
+    description: '切换 `color` 与 `shape` 编码。',
     preview: {
-      files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
-      controls: { name: 'scatter-income-life-expectancy' },
+      files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
+      controls: { name: 'scatter-fertility-work' },
       size: 'xl',
-      caption: '收入与寿命说明',
+      caption: '分类编码说明',
     },
   },
 ] as const satisfies readonly [GalleryExample, ...Array<GalleryExample>];
@@ -145,9 +146,9 @@ describe('<ShowcaseGallery>', () => {
     expect(cards.every(card => card.querySelector('[data-slot="component-preview-thumbnail"]'))).toBe(true);
     expect(cards[0]?.classList.contains('h-[250px]')).toBe(true);
     expect(cards[0]?.hasAttribute('aria-pressed')).toBe(false);
-    expect(cards[0]?.textContent).toContain('收入与寿命');
-    expect(cards[0]?.textContent).toContain('比较收入与预期寿命，使用 gdpPerCapita。');
-    expect(cards[0]?.querySelector('code')?.textContent).toBe('gdpPerCapita');
+    expect(cards[0]?.textContent).toContain('分类编码');
+    expect(cards[0]?.textContent).toContain('切换 color 与 shape 编码。');
+    expect(cards[0]?.querySelector('code')?.textContent).toBe('color');
     expect(cards[0]?.querySelector('[data-slot="component-preview-thumbnail"]')?.classList).toContain('bg-transparent');
     expect(cards[0]?.querySelector('[data-slot="showcase-example-copy"]')?.classList).toContain('bg-muted/40');
     expect(container.querySelector('[data-slot="showcase-featured-title"]')?.textContent).toBe('基础散点');
@@ -160,7 +161,7 @@ describe('<ShowcaseGallery>', () => {
       ),
     ).toEqual(['x', 'y']);
     expect(container.textContent).toContain('基础散点说明');
-    expect(container.textContent).not.toContain('收入与寿命说明');
+    expect(container.textContent).not.toContain('分类编码说明');
 
     act(() => cards[0]?.click());
 
@@ -168,17 +169,15 @@ describe('<ShowcaseGallery>', () => {
 
     expect(nextCards).toHaveLength(1);
     expect(nextCards[0]?.textContent).toContain('基础散点');
-    expect(nextCards[0]?.textContent).not.toContain('收入与寿命');
-    expect(container.querySelector('[data-slot="showcase-featured-title"]')?.textContent).toBe('收入与寿命');
+    expect(nextCards[0]?.textContent).not.toContain('分类编码');
+    expect(container.querySelector('[data-slot="showcase-featured-title"]')?.textContent).toBe('分类编码');
     expect(container.querySelector('[data-slot="showcase-featured-description"]')?.textContent).toBe(
-      '比较收入与预期寿命，使用 gdpPerCapita。',
+      '切换 color 与 shape 编码。',
     );
-    expect(container.querySelector('[data-slot="showcase-featured-description"] code')?.textContent).toBe(
-      'gdpPerCapita',
-    );
+    expect(container.querySelector('[data-slot="showcase-featured-description"] code')?.textContent).toBe('color');
     expect(container.textContent).not.toContain('基础散点说明');
-    expect(container.textContent).toContain('收入与寿命说明');
-    expect(container.querySelector('[data-location]')?.textContent).toBe('/viz/chart/points/scatter?example=income');
+    expect(container.textContent).toContain('分类编码说明');
+    expect(container.querySelector('[data-location]')?.textContent).toBe('/viz/chart/points/scatter?example=category');
 
     act(() => nextCards[0]?.click());
 
@@ -187,9 +186,9 @@ describe('<ShowcaseGallery>', () => {
   });
 
   it('从 example 参数恢复示例，非法值回退默认示例，并与 tab 参数独立组合', () => {
-    const deepLinkContainer = renderGallery(examples, '/viz/chart/points/scatter?example=income&tab=api');
+    const deepLinkContainer = renderGallery(examples, '/viz/chart/points/scatter?example=category&tab=api');
 
-    expect(deepLinkContainer.textContent).toContain('收入与寿命说明');
+    expect(deepLinkContainer.textContent).toContain('分类编码说明');
     expect(deepLinkContainer.textContent).toContain('API body');
 
     act(() => roots.shift()?.unmount());
@@ -198,7 +197,7 @@ describe('<ShowcaseGallery>', () => {
     const invalidContainer = renderGallery(examples, '/viz/chart/points/scatter?example=unknown');
 
     expect(invalidContainer.textContent).toContain('基础散点说明');
-    expect(invalidContainer.textContent).not.toContain('收入与寿命说明');
+    expect(invalidContainer.textContent).not.toContain('分类编码说明');
   });
 
   it('把普通 MDX children 作为 API 标签内容', () => {

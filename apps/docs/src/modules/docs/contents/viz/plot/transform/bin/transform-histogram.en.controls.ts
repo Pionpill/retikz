@@ -24,12 +24,7 @@ export const histogramControls = definePreviewControls({
             measurements,
             histogramOperationOf,
           ),
-          columns: [
-            { key: 'measurement', label: 'Measurement' },
-            { key: 'binStart', label: 'Bin start' },
-            { key: 'binEnd', label: 'Bin end' },
-            { key: 'binCount', label: 'Bin count' },
-          ],
+          columns: [{ key: 'measurement' }, { key: 'binStart' }, { key: 'binEnd' }, { key: 'binCount' }],
         },
       ],
     },

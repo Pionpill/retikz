@@ -68,7 +68,7 @@ A group with no finite samples throws. Silverman also requires at least two fini
 
 ## Trend
 
-`smooth` currently fits each group's `(x, y)` values with ordinary least squares and emits predicted samples. Keep source points and trend output in separate marks: solid points read source data; the path and hollow points reuse one transform configuration, but each mark runs its own local transform and builds its own data view.
+`smooth` fits each group's `(x, y)` values with the selected method and emits predicted samples. Built-ins include linear, quadratic, polynomial, logarithmic, exponential, and power regression. Keep source points and trend output in separate marks: solid points read source data; the path and hollow points reuse one transform configuration, but each mark runs its own local transform and builds its own data view.
 
 ### Dynamic Demo
 
@@ -91,11 +91,20 @@ Adjust the number of predictions and switch between the observed range and expli
 | `xAs`          | `string`             | —                       | Output field for predicted positions           |
 | `yAs`          | `string`             | —                       | Output field for predicted values              |
 
-`method.kind` uses <ApiValues name="SmoothMethodKind" />. The only current branch is `linear`, with no extra fields.
+`method.kind` uses <ApiValues name="SmoothMethodKind" />. `polynomial` additionally accepts an integer `order` from 2 through 6, defaulting to 3; the other methods have no additional fields.
+
+| `kind`        | Equation            | Minimum samples and domain                     |
+| ------------- | ------------------- | ---------------------------------------------- |
+| `linear`      | `y = a + bx`        | 2 valid pairs and at least 2 distinct x values |
+| `quadratic`   | `y = a + bx + cx²`  | 3 valid pairs and full rank                    |
+| `polynomial`  | degree-n polynomial | At least `order + 1` valid pairs and full rank |
+| `logarithmic` | `y = a + b ln(x)`   | Positive x                                     |
+| `exponential` | `y = a exp(bx)`     | Positive y                                     |
+| `power`       | `y = a xᵇ`          | Positive x and y                               |
 
 ### How It Works
 
-`smooth` first filters finite `(x, y)` pairs, then fits one linear model per group. `extent` and `sampleCount` only control prediction sampling after the model is fitted.
+`smooth` first filters finite `(x, y)` pairs, then fits one model per group. `extent` and `sampleCount` only control prediction sampling after the model is fitted. The diagram below specifically explains the default `linear` branch.
 
 <ComponentPreview files="transform-smooth-logic" hideCode size="sm" />
 
@@ -107,7 +116,9 @@ Ordinary least squares computes `meanX`, `meanY`, x variance, and xy covariance 
 
 Without `extent`, sampling uses the finite observed x minimum and maximum. An explicit range can extrapolate beyond the observations. Each evenly spaced x writes `intercept + slope × x`, so every group emits `sampleCount` rows.
 
-Each group needs at least two finite pairs and positive x variance; a vertical line cannot be represented as `y = a + bx`. The `extent` lower bound must be smaller than its upper bound, output fields must differ, and neither may overwrite a `groupBy` field.
+Quadratic and polynomial regression solve normalized x bases with scaled partial pivoting. Logarithmic, exponential, and power regression apply the transformations shown above before fitting and transform predictions back to y. Every group must satisfy its method's sample, distinct-x, rank, and domain requirements, with finite coefficients and predictions.
+
+The `extent` lower bound must be smaller than its upper bound; logarithmic and power sampling extents must also keep x positive. Output fields must differ, and neither may overwrite a `groupBy` field. Any failing group fails loudly instead of being skipped.
 
 <SourceLinks
   sources={[

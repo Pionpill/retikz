@@ -45,6 +45,8 @@ type RoleScenario = Readonly<{
   fields: ReadonlyArray<Readonly<{ kind: string; id: string; defaultValue: unknown }>>;
   kindOptions?: ReadonlyArray<string>;
   directionOptions?: ReadonlyArray<string>;
+  directionVisibleWith?: ReadonlyArray<string>;
+  visibleKind?: string;
 }>;
 
 const scenarios: ReadonlyArray<RoleScenario> = [
@@ -52,32 +54,40 @@ const scenarios: ReadonlyArray<RoleScenario> = [
     role: 'association',
     fields: [
       { kind: 'select', id: 'kind', defaultValue: '' },
-      { kind: 'select', id: 'direction', defaultValue: 'none' },
+      { kind: 'select', id: 'direction', defaultValue: 'forward' },
+      { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
-    kindOptions: ['', 'uml.aggregation', 'uml.composition'],
+    kindOptions: ['', 'uml.association', 'uml.aggregation', 'uml.composition'],
     directionOptions: ['none', 'forward', 'reverse', 'both'],
+    directionVisibleWith: [''],
+    visibleKind: 'uml.aggregation',
   },
   {
     role: 'dependency',
     fields: [
       { kind: 'select', id: 'kind', defaultValue: '' },
+      { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
-    kindOptions: ['', 'provenance.derivation'],
+    kindOptions: ['', 'uml.dependency', 'uml.realization'],
+    visibleKind: 'uml.realization',
   },
   {
     role: 'generalization',
     fields: [
       { kind: 'select', id: 'kind', defaultValue: '' },
+      { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
-    kindOptions: ['', 'uml.realization'],
+    kindOptions: ['', 'uml.generalization'],
+    visibleKind: 'uml.generalization',
   },
   {
     role: 'flow',
     fields: [
       { kind: 'select', id: 'direction', defaultValue: 'forward' },
+      { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
     directionOptions: ['forward', 'reverse', 'both'],
@@ -86,6 +96,7 @@ const scenarios: ReadonlyArray<RoleScenario> = [
     role: 'influence',
     fields: [
       { kind: 'select', id: 'direction', defaultValue: 'forward' },
+      { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
     directionOptions: ['forward', 'reverse', 'both'],
@@ -166,6 +177,13 @@ describe('Graph Relation role controls', () => {
           direction.options.map(option => option.value),
           `${scenario.role}: direction`,
         ).toEqual(scenario.directionOptions);
+        if (scenario.kindOptions !== undefined) {
+          expect(direction.visibleWhen, `${scenario.role}: direction visibility`).toEqual(
+            scenario.directionVisibleWith === undefined
+              ? { controlId: 'kind', oneOf: [''] }
+              : { controlId: 'kind', oneOf: scenario.directionVisibleWith },
+          );
+        }
       }
     }
   });
@@ -181,7 +199,7 @@ describe('Graph Relation role controls', () => {
         renderWithValues(contract, chineseDemo.default, { ...contract.canonicalValues, color: '#2563eb' }),
         `${scenario.role}: color`,
       ).not.toBe(baseline);
-      const changedKind = scenario.kindOptions?.find(value => value !== '');
+      const changedKind = scenario.visibleKind;
       if (changedKind !== undefined) {
         expect(
           renderWithValues(contract, chineseDemo.default, { ...contract.canonicalValues, kind: changedKind }),
@@ -244,7 +262,10 @@ describe('Graph Relation style playground', () => {
 
     expect(fields.map(field => ({ kind: field.kind, id: field.id, defaultValue: field.defaultValue }))).toEqual([
       { kind: 'select', id: 'role', defaultValue: 'flow' },
+      { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'text', id: 'content', defaultValue: 'Next step' },
+      { kind: 'color', id: 'sourceColor', defaultValue: 'currentColor' },
+      { kind: 'color', id: 'targetColor', defaultValue: 'currentColor' },
       { kind: 'color', id: 'stroke', defaultValue: '#2563eb' },
       { kind: 'range', id: 'strokeWidth', defaultValue: 2 },
       { kind: 'switch', id: 'dashed', defaultValue: false },
@@ -261,7 +282,10 @@ describe('Graph Relation style playground', () => {
     ]);
     expect(styleZh.canonicalValues).toEqual({
       role: 'flow',
+      status: '',
       content: 'Next step',
+      sourceColor: 'currentColor',
+      targetColor: 'currentColor',
       stroke: '#2563eb',
       strokeWidth: 2,
       dashed: false,
@@ -281,6 +305,12 @@ describe('Graph Relation style playground', () => {
       expect(renderStyleWithValues({ ...styleZh.canonicalValues, role }), `${role}: role`).not.toBe(baseline);
     }
     expect(renderStyleWithValues({ ...styleZh.canonicalValues, content: 'Changed' }), 'content').not.toBe(baseline);
+    expect(renderStyleWithValues({ ...styleZh.canonicalValues, sourceColor: '#0f766e' }), 'sourceColor').not.toBe(
+      baseline,
+    );
+    expect(renderStyleWithValues({ ...styleZh.canonicalValues, targetColor: '#7c3aed' }), 'targetColor').not.toBe(
+      baseline,
+    );
     expect(renderStyleWithValues({ ...styleZh.canonicalValues, stroke: '#dc2626' }), 'stroke').not.toBe(baseline);
     expect(renderStyleWithValues({ ...styleZh.canonicalValues, strokeWidth: 4 }), 'strokeWidth').not.toBe(baseline);
     expect(renderStyleWithValues({ ...styleZh.canonicalValues, dashed: true }), 'dashed').not.toBe(baseline);

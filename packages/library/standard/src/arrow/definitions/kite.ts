@@ -8,6 +8,7 @@ import { filledPath, hollowPath } from './_utils';
 /** 可选实心风筝形箭头 Definition */
 export const KiteArrowDefinition = defineArrow({
   name: StandardArrowName.Kite,
+  backX: 0,
   lineContactX: 0,
   defaultLength: 11,
   defaultWidth: 6,
@@ -33,6 +34,7 @@ export const KiteArrowProvider: CoreDependencyProvider = Object.freeze({
 export const OpenKiteArrowDefinition = defineArrow({
   name: StandardArrowName.OpenKite,
   hollow: true,
+  backX: 1,
   lineContactX: 1,
   tipX: 9,
   defaultLength: 11,

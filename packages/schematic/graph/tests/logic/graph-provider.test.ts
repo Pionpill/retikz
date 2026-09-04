@@ -18,6 +18,7 @@ describe('Graph provider closure', () => {
         'graph.entity',
         'graph.graph',
         'graph.group',
+        'graph.group-body-allocation',
         'graph.relation',
         'layout.flexLayout',
         'standard.surface',
@@ -25,7 +26,7 @@ describe('Graph provider closure', () => {
     );
     expect(resolved.shapes?.map(definition => definition.name).sort()).toEqual(['ellipticCapsule', 'hexagon']);
     expect(resolved.arrows?.map(definition => definition.name).sort()).toEqual(
-      ['diamond', 'kite', 'openDiamond', 'square'].sort(),
+      ['diamond', 'openDiamond', 'square', 'straightBarb'].sort(),
     );
     expect(resolved.clips?.map(definition => definition.kind)).toEqual(['path']);
   });

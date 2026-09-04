@@ -149,7 +149,7 @@ export const PreviewTableControl: FC<PreviewTableControlProps> = props => {
                         compact ? 'h-6 px-1.5' : 'h-7 px-2',
                       )}
                     >
-                      {column.label ?? column.key}
+                      {column.key}
                     </th>
                   ))}
                 </tr>

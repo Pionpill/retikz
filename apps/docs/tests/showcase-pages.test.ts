@@ -13,12 +13,30 @@ import { describe, expect, it } from 'vitest';
 import type { Section } from '@/modules/docs/data';
 
 import { collectShowcasePages } from '@/modules/docs/components/showcase';
+import { bubbleMinimalData } from '@/modules/docs/contents/viz/chart/points/bubble/bubble-minimal.data';
+import { connectedScatterMinimalData } from '@/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-minimal.data';
+import { rangedDotMinimalData } from '@/modules/docs/contents/viz/chart/points/ranged-dot/ranged-dot-minimal.data';
+import { regressionMinimalData } from '@/modules/docs/contents/viz/chart/points/regression/regression-minimal.data';
+import { scatterMinimalData } from '@/modules/docs/contents/viz/chart/points/scatter/scatter-minimal.data';
+import { stripPalmerPenguinsData } from '@/modules/docs/contents/viz/chart/points/strip/strip-palmer-penguins.data';
 import { vizSection } from '@/modules/docs/data';
 
 const scatterContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/scatter/index.${lang}.mdx`);
 const scatterExamplePath = (filename: string) =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/scatter/${filename}`);
+const bubbleContentPath = (lang: 'zh' | 'en') =>
+  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/bubble/index.${lang}.mdx`);
+const bubbleExamplePath = (filename: string) =>
+  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/bubble/${filename}`);
+const regressionContentPath = (lang: 'zh' | 'en') =>
+  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/regression/index.${lang}.mdx`);
+const regressionExamplePath = (filename: string) =>
+  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/regression/${filename}`);
+const pointChartContentPath = (chart: string, lang: 'zh' | 'en') =>
+  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/${chart}/index.${lang}.mdx`);
+const pointChartExamplePath = (chart: string, filename: string) =>
+  resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/${chart}/${filename}`);
 const chartModelContentPath = (
   page: 'index' | 'structure' | 'authoring' | 'presentation' | 'plot',
   lang: 'zh' | 'en',
@@ -37,6 +55,11 @@ const compileOptions: CompileOptions = {
   development: false,
   remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter, remarkGfm],
   rehypePlugins: [rehypeSlug, [rehypeMdxCodeProps, { tagName: 'code' }]],
+};
+
+const readRequiredFile = (path: string): string => {
+  expect(existsSync(path), path).toBe(true);
+  return readFileSync(path, 'utf8');
 };
 
 const showcaseMeta = (family: string, order: number) => ({
@@ -99,7 +122,34 @@ describe('collectShowcasePages', () => {
       path: '/viz/chart/points/scatter',
       segments: ['viz', 'chart', 'points', 'scatter'],
       label: 'viz.chartScatter',
-      metadata: { family: 'scatter-points', role: 'primary', preview: 'scatter-basic', order: 10 },
+      metadata: { family: 'scatter-points', role: 'primary', preview: 'scatter-minimal', order: 10 },
+    });
+  });
+
+  it('从实际 Viz 文档树收集 Bubble 的嵌套路由', () => {
+    expect(collectShowcasePages('viz', vizSection)).toContainEqual({
+      path: '/viz/chart/points/bubble',
+      segments: ['viz', 'chart', 'points', 'bubble'],
+      label: 'viz.chartBubble',
+      metadata: { family: 'scatter-points', role: 'primary', preview: 'bubble-minimal', order: 20 },
+    });
+  });
+
+  it('从实际 Viz 文档树收集 Regression 的嵌套路由', () => {
+    expect(collectShowcasePages('viz', vizSection)).toContainEqual({
+      path: '/viz/chart/points/regression',
+      segments: ['viz', 'chart', 'points', 'regression'],
+      label: 'viz.chartRegression',
+      metadata: { family: 'scatter-points', role: 'primary', preview: 'regression-minimal', order: 30 },
+    });
+  });
+
+  it('从实际 Viz 文档树收集 Strip 的嵌套路由', () => {
+    expect(collectShowcasePages('viz', vizSection)).toContainEqual({
+      path: '/viz/chart/points/strip',
+      segments: ['viz', 'chart', 'points', 'strip'],
+      label: 'viz.chartStrip',
+      metadata: { family: 'scatter-points', role: 'primary', preview: 'strip-minimal', order: 60 },
     });
   });
 
@@ -117,8 +167,8 @@ describe('collectShowcasePages', () => {
 
     const zh = readFileSync(scatterContentPath('zh'), 'utf8');
     const en = readFileSync(scatterContentPath('en'), 'utf8');
-    expect(zh).toContain('`@retikz/chart-react/point/scatter`');
-    expect(en).toContain('`@retikz/chart-react/point/scatter`');
+    expect(zh).toContain('`@retikz/chart-react/point`');
+    expect(en).toContain('`@retikz/chart-react/point`');
     expect(zh).toContain('`ScatterChart`');
     expect(en).toContain('`ScatterChart`');
     expect(zh).not.toContain('基于公开 Plot API 的非契约概念预览');
@@ -180,36 +230,186 @@ describe('collectShowcasePages', () => {
     expect(compiled).toContain('h2');
   });
 
-  it.each(['zh', 'en'] as const)('Scatter %s 以基础散点为主，并提供四个真实数据使用示例', lang => {
-    const source = readFileSync(scatterContentPath(lang), 'utf8');
+  it.each(['zh', 'en'] as const)('Bubble %s 保留必需尺寸字段语义并保持 MDX 可编译', async lang => {
+    const source = readFileSync(bubbleContentPath(lang), 'utf8');
+    expect(source).toContain('`BubbleChart`');
+    expect(source).toContain('`BubbleEncodings.size`');
+    expect(source).toContain('/viz/chart/points/scatter');
 
-    expect(source.match(/id: 'scatter-basic'/g)).toHaveLength(1);
-    expect(source.match(/id: 'scatter-income-life-expectancy'/g)).toHaveLength(1);
-    expect(source.match(/id: 'scatter-fertility-work'/g)).toHaveLength(1);
-    expect(source.match(/id: 'scatter-penguins-facet-jitter'/g)).toHaveLength(1);
-    expect(source.match(/id: 'scatter-world-cup-shots'/g)).toHaveLength(1);
-    expect(source).toContain("files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts']");
-    expect(source).toContain("controls: { name: 'scatter-income-life-expectancy' }");
+    const compiled = String(await compile(source, compileOptions));
+    expect(compiled).toContain('ShowcaseGallery');
+    expect(compiled).toContain('h2');
   });
 
-  it.each(['scatter-penguins-facet-jitter', 'scatter-world-cup-shots'])(
-    '%s 提供数据、双语 demo 与双语 controls',
-    id => {
-      for (const filename of [
-        `${id}.data.ts`,
-        `${id}.controls.ts`,
-        `${id}.en.controls.ts`,
-        `${id}.zh.demo.tsx`,
-        `${id}.en.demo.tsx`,
-      ]) {
-        expect(existsSync(scatterExamplePath(filename)), filename).toBe(true);
+  it.each(['zh', 'en'] as const)('Regression %s 覆盖精确 API、失败边界与 Plot escape hatch', async lang => {
+    const source = readRequiredFile(regressionContentPath(lang));
+
+    for (const publicName of [
+      '`@retikz/chart/point/regression`',
+      '`@retikz/chart-react/point`',
+      '`@retikz/chart-vanilla/point/regression`',
+      '`RegressionChart`',
+      '`RegressionEncodings`',
+      '`RegressionProperties`',
+      '`RegressionMark`',
+      '`createRegressionChart`',
+      '`normalizeRegressionChart`',
+      '`SmoothTransformSchema`',
+    ]) {
+      expect(source, publicName).toContain(publicName);
+    }
+    for (const method of ['linear', 'quadratic', 'polynomial', 'logarithmic', 'exponential', 'power']) {
+      expect(source, method).toContain(`\`${method}\``);
+    }
+    expect(source).toContain('/viz/plot/reference/transform');
+    expect(source).toContain('/viz/plot/mark/path');
+
+    const compiled = String(await compile(source, compileOptions));
+    expect(compiled).toContain('ShowcaseGallery');
+    expect(compiled).toContain('h2');
+  });
+
+  it.each(['zh', 'en'] as const)('Scatter %s 默认展示基础用法，并保留两个互补的进阶示例', lang => {
+    const source = readFileSync(scatterContentPath(lang), 'utf8');
+
+    expect(source).not.toContain("id: 'scatter-basic'");
+    expect(source.indexOf("id: 'scatter-minimal'")).toBeLessThan(source.indexOf("id: 'scatter-fertility-work'"));
+    expect(source.indexOf("id: 'scatter-fertility-work'")).toBeLessThan(
+      source.indexOf("id: 'scatter-world-cup-shots'"),
+    );
+    expect(source.match(/id: 'scatter-minimal'/g)).toHaveLength(1);
+    expect(source.match(/id: 'scatter-fertility-work'/g)).toHaveLength(1);
+    expect(source).not.toContain("id: 'scatter-penguins-facet-jitter'");
+    expect(source.match(/id: 'scatter-world-cup-shots'/g)).toHaveLength(1);
+  });
+
+  const minimalPointExamples = [
+    {
+      chart: 'scatter',
+      id: 'scatter-minimal',
+      nextId: 'scatter-fertility-work',
+      root: 'ScatterChart',
+      data: scatterMinimalData,
+      rowCount: 100,
+      fields: ['imdbRating', 'rottenTomatoesRating'],
+    },
+    {
+      chart: 'bubble',
+      id: 'bubble-minimal',
+      nextId: 'bubble-basic',
+      root: 'BubbleChart',
+      data: bubbleMinimalData,
+      rowCount: 100,
+      fields: ['depthKm', 'magnitude', 'significance'],
+    },
+    {
+      chart: 'regression',
+      id: 'regression-minimal',
+      nextId: 'regression-basic',
+      root: 'RegressionChart',
+      data: regressionMinimalData,
+      rowCount: 100,
+      fields: ['distanceMiles', 'delayMinutes'],
+    },
+    {
+      chart: 'connected-scatter',
+      id: 'connected-scatter-minimal',
+      nextId: 'connected-scatter-basic',
+      root: 'ConnectedScatterChart',
+      data: connectedScatterMinimalData,
+      rowCount: 100,
+      fields: ['month', 'unemploymentRate'],
+    },
+    {
+      chart: 'ranged-dot',
+      id: 'ranged-dot-minimal',
+      nextId: 'ranged-dot-basic',
+      root: 'RangedDotChart',
+      data: rangedDotMinimalData,
+      rowCount: 20,
+      fields: ['day', 'minimumTemperature', 'maximumTemperature'],
+    },
+    {
+      chart: 'strip',
+      id: 'strip-minimal',
+      nextId: 'strip-basic',
+      root: 'StripChart',
+      data: stripPalmerPenguinsData,
+      rowCount: 90,
+      fields: ['species', 'flipperLengthMm'],
+    },
+  ] as const;
+
+  it.each(minimalPointExamples)(
+    '$chart 基础用法保持指定数据量、root-only、双语 presentation 且无 controls',
+    example => {
+      expect(example.data).toHaveLength(example.rowCount);
+      expect(Object.keys(example.data[0] ?? {}).sort()).toEqual([...example.fields].sort());
+
+      for (const lang of ['zh', 'en'] as const) {
+        const demo = readRequiredFile(pointChartExamplePath(example.chart, `${example.id}.${lang}.demo.tsx`));
+        expect(demo).toContain(`<${example.root}`);
+        expect(demo).toContain('rows={');
+        expect(demo).toContain('presentation={{');
+        expect(demo).toContain('title:');
+        expect(demo).toContain('subtitle:');
+        expect(demo).toContain('source:');
+        expect(demo).toContain('recipe={{');
+        expect(demo).toContain('datasetImports');
+        expect(demo).not.toContain('defineControlledPreview');
+        expect(demo).not.toContain('previewControls');
+        expect(demo).not.toContain('Encodings ');
+        expect(demo).not.toContain('Properties ');
       }
     },
   );
 
+  it.each(minimalPointExamples)('$chart 双语页以无 controls 的基础用法作为首例', example => {
+    for (const lang of ['zh', 'en'] as const) {
+      const source = readFileSync(pointChartContentPath(example.chart, lang), 'utf8');
+      const minimalIndex = source.indexOf(`id: '${example.id}'`);
+      const advancedIndex = source.indexOf(`id: '${example.nextId}'`);
+      const minimalBlock = source.slice(minimalIndex, advancedIndex);
+
+      expect(minimalIndex).toBeGreaterThanOrEqual(0);
+      expect(advancedIndex).toBeGreaterThan(minimalIndex);
+      expect(minimalBlock).not.toContain('controls:');
+      expect(minimalBlock).toContain(lang === 'zh' ? '最简用法' : 'minimal setup');
+      expect(minimalBlock).toContain('IR');
+      expect(minimalBlock).toContain(example.root);
+    }
+  });
+
+  it('空间 Scatter 提供数据、双语 demo 与双语 controls', () => {
+    const id = 'scatter-world-cup-shots';
+    for (const filename of [
+      `${id}.data.ts`,
+      `${id}.controls.ts`,
+      `${id}.en.controls.ts`,
+      `${id}.zh.demo.tsx`,
+      `${id}.en.demo.tsx`,
+    ]) {
+      expect(existsSync(scatterExamplePath(filename)), filename).toBe(true);
+    }
+  });
+
+  it('Strip 进阶示例提供数据、双语 demo 与双语 controls', () => {
+    for (const filename of [
+      'strip-vega-barley.data.ts',
+      'strip-basic.controls.ts',
+      'strip-basic.en.controls.ts',
+      'strip-basic.zh.demo.tsx',
+      'strip-basic.en.demo.tsx',
+    ]) {
+      expect(existsSync(pointChartExamplePath('strip', filename)), filename).toBe(true);
+    }
+  });
+
   it('Scatter 生育率与女性劳动参与率示例提供完整的双语 preview 文件', () => {
     for (const filename of [
       'scatter-fertility-work.data.ts',
+      'scatter-fertility-work.controls.ts',
+      'scatter-fertility-work.en.controls.ts',
       'scatter-fertility-work.zh.demo.tsx',
       'scatter-fertility-work.en.demo.tsx',
     ]) {
@@ -217,15 +417,27 @@ describe('collectShowcasePages', () => {
     }
   });
 
-  it('Scatter 收入与寿命使用示例提供完整的双语 preview 文件', () => {
+  it('Bubble 进阶示例提供数据、双语 demo 与双语 controls', () => {
     for (const filename of [
-      'scatter-income-life-expectancy.data.ts',
-      'scatter-income-life-expectancy.controls.ts',
-      'scatter-income-life-expectancy.en.controls.ts',
-      'scatter-income-life-expectancy.zh.demo.tsx',
-      'scatter-income-life-expectancy.en.demo.tsx',
+      'bubble-basic.data.ts',
+      'bubble-basic.controls.ts',
+      'bubble-basic.en.controls.ts',
+      'bubble-basic.zh.demo.tsx',
+      'bubble-basic.en.demo.tsx',
     ]) {
-      expect(existsSync(scatterExamplePath(filename)), filename).toBe(true);
+      expect(existsSync(bubbleExamplePath(filename)), filename).toBe(true);
+    }
+  });
+
+  it('Regression 进阶示例提供数据、双语 demo 与双语 controls', () => {
+    for (const filename of [
+      'regression-basic.data.ts',
+      'regression-basic.controls.ts',
+      'regression-basic.en.controls.ts',
+      'regression-basic.zh.demo.tsx',
+      'regression-basic.en.demo.tsx',
+    ]) {
+      expect(existsSync(regressionExamplePath(filename)), filename).toBe(true);
     }
   });
 

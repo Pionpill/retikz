@@ -37,6 +37,7 @@ type EdgeLabelElementProps = Readonly<{
   position?: InputStepLabel['position'];
   side?: InputStepLabel['side'];
   sloped?: InputStepLabel['sloped'];
+  interrupt?: InputStepLabel['interrupt'];
   children?: unknown;
 }>;
 
@@ -218,6 +219,7 @@ const readEdgeLabel = (children: ReactNode): InputStepLabel | undefined => {
         ...(props.position === undefined ? {} : { position: props.position }),
         ...(props.side === undefined ? {} : { side: props.side }),
         ...(props.sloped === undefined ? {} : { sloped: props.sloped }),
+        ...(props.interrupt === undefined ? {} : { interrupt: props.interrupt }),
       };
     });
   };
@@ -389,6 +391,7 @@ const inputPathFromProps = (props: PathProps): InputPath => {
     props.thickness === undefined &&
     props.arrow === undefined &&
     props.arrowDetail === undefined &&
+    props.arrowPlacement === undefined &&
     props.way === undefined &&
     props.children === undefined;
   return {
@@ -398,6 +401,7 @@ const inputPathFromProps = (props: PathProps): InputPath => {
     ...(props.thickness === undefined ? {} : { thickness: props.thickness }),
     ...(props.arrow === undefined ? {} : { arrow: props.arrow }),
     ...(props.arrowDetail === undefined ? {} : { arrowDetail: props.arrowDetail }),
+    ...(props.arrowPlacement === undefined ? {} : { arrowPlacement: props.arrowPlacement }),
     ...(props.way === undefined ? {} : { way: props.way }),
     ...(props.children === undefined ? {} : { children: readPathChildren(props.children) }),
   };

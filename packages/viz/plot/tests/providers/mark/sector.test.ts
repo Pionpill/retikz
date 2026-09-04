@@ -57,7 +57,7 @@ const sectorParams = (
   };
 };
 
-// ── interval polar → sector（径向柱 / 玫瑰）─────────────────────────────
+// ── interval polar → sector（显式 polar 插值的径向柱 / 玫瑰）─────────────────────────────
 describe('lowerPlots interval→sector under polar2D (contract)', () => {
   const SALES = [
     { month: 'Jan', amount: 3 },
@@ -69,7 +69,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
-      coordinate: { type: 'polar2D', angle: 'cat', radius: 'val' },
+      coordinate: { type: 'polar2D', angle: 'cat', radius: 'val', interpolation: 'polar' },
       scales: [
         { type: 'band', name: 'cat' },
         { type: 'linear', name: 'val', domainPadding: 0 },
@@ -171,7 +171,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
-      coordinate: { type: 'polar2D', angle: 'cat', radius: 'val', innerRadius: 0.45 },
+      coordinate: { type: 'polar2D', angle: 'cat', radius: 'val', innerRadius: 0.45, interpolation: 'polar' },
       scales: [
         { type: 'band', name: 'cat' },
         { type: 'linear', name: 'val', domainPadding: 0 },
@@ -189,7 +189,7 @@ describe('lowerPlots interval→sector under polar2D (contract)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'sales' },
-      coordinate: { type: 'polar2D', angle: 'cat', radius: 'val', innerRadius: 0.45 },
+      coordinate: { type: 'polar2D', angle: 'cat', radius: 'val', innerRadius: 0.45, interpolation: 'polar' },
       scales: [
         { type: 'band', name: 'cat' },
         { type: 'linear', name: 'val', domainPadding: 0 },

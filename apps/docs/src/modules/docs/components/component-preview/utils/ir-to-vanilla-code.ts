@@ -11,9 +11,11 @@ import type {
   IRScope,
   IRStep,
 } from '@retikz/core';
+import type { IRFlowDiagram } from '@retikz/diagram/flow';
 import type { IRBlock, IRBlockHeader, IRBlockRow, IRBlockSection, IRGraph, IRGroup } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
 
+import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import {
   BlockHeaderSchema,
   BlockRowSchema,
@@ -113,6 +115,7 @@ type Ctx = {
   graphHelpers: Set<string>;
   graphAdapters: Set<string>;
   graphCounts: Map<string, number>;
+  flowCount: number;
   generatedIds: Map<string, string>;
 };
 
@@ -379,13 +382,11 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
   }
   if (child.namespace === 'graph' && child.type === 'blockHeader') {
     const header = BlockHeaderSchema.parse(child);
-    return [
-      ...(header.icon === undefined ? [] : [header.icon]),
-      ...(header.trailing === undefined ? [] : [header.trailing]),
-    ];
+    return [...(header.icon === undefined ? [] : [header.icon]), ...(header.trail === undefined ? [] : [header.trail])];
   }
   if (child.namespace === 'graph' && child.type === 'blockRow') {
-    return BlockRowSchema.parse(child).children?.map(cell => cell.child) ?? [];
+    const row = BlockRowSchema.parse(child);
+    return 'children' in row ? [...(row.children ?? [])] : [];
   }
   if (child.namespace === 'standard' && child.type === 'surface') return [record.child as IRChild];
   if (
@@ -475,6 +476,8 @@ export const collectPreviewDefinitions = (
           throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
         }
         if (!providedGraphKinds.has(child.type)) graph.add(definitionName);
+      } else if (child.namespace === 'diagram' && child.type === 'flow') {
+        return;
       } else {
         throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
       }
@@ -657,7 +660,7 @@ const blockAuthoringCode = (block: IRBlock, indent: number, ctx: Ctx): string =>
 };
 
 const blockHeaderAuthoringCode = (header: IRBlockHeader, indent: number, ctx: Ctx): string => {
-  const { namespace: _namespace, type: _type, icon, trailing, ...input } = header;
+  const { namespace: _namespace, type: _type, icon, trail, ...input } = header;
   void _namespace;
   void _type;
   const replacements = new Map<string, string>();
@@ -669,7 +672,7 @@ const blockHeaderAuthoringCode = (header: IRBlockHeader, indent: number, ctx: Ct
   const encoded = {
     ...input,
     ...(icon === undefined ? {} : { icon: encodeSlot(icon, 'icon') }),
-    ...(trailing === undefined ? {} : { trailing: encodeSlot(trailing, 'trailing') }),
+    ...(trail === undefined ? {} : { trail: encodeSlot(trail, 'trail') }),
     graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
   let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
@@ -698,14 +701,23 @@ const blockSectionAuthoringCode = (section: IRBlockSection, indent: number, ctx:
 };
 
 const blockRowAuthoringCode = (row: IRBlockRow, indent: number, ctx: Ctx): string => {
+  if ('content' in row) {
+    const { namespace: _namespace, type: _type, ...input } = row;
+    void _namespace;
+    void _type;
+    return formatObject({ ...input, graphThemeStyles: '__GRAPH_THEME_STYLES__' }, indent).replace(
+      "'__GRAPH_THEME_STYLES__'",
+      'PreviewThemeDefinitionBundle.graph',
+    );
+  }
   const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = row;
   void _namespace;
   void _type;
   const replacements = new Map<string, string>();
-  const children = sourceChildren?.map((cell, index) => {
-    const placeholder = `__BLOCK_ROW_CELL_${index}__`;
-    replacements.set(formatString(placeholder), childCode(cell.child, indent + 3, ctx));
-    return { ...cell, child: placeholder };
+  const children = sourceChildren?.map((child, index) => {
+    const placeholder = `__BLOCK_ROW_CHILD_${index}__`;
+    replacements.set(formatString(placeholder), childCode(child, indent + 2, ctx));
+    return placeholder;
   });
   const encoded = {
     ...input,
@@ -761,11 +773,30 @@ const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =>
   return `relation(${formatString(embedId)}, ${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
 };
 
+const flowCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
+  const source: IRFlowDiagram = FlowDiagramSchema.parse(child);
+  const { namespace: _namespace, type: _type, ...input } = source;
+  void _namespace;
+  void _type;
+  ctx.flowCount += 1;
+  const encoded = {
+    ...input,
+    diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
+    flowThemeStyles: '__FLOW_THEME_STYLES__',
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  return `flowDiagram(${formatString(`preview-flow-${ctx.flowCount}`)}, ${formatObject(encoded, indent)
+    .replace("'__DIAGRAM_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.diagram')
+    .replace("'__FLOW_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.flow')
+    .replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
+};
+
 const childCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   if ('namespace' in child) {
     if (child.namespace === 'standard') return standardCompositeCode(child, indent, ctx);
     if (child.namespace === 'layout') return layoutCompositeCode(child, indent, ctx);
     if (child.namespace === 'graph') return graphCompositeCode(child, indent, ctx);
+    if (child.namespace === 'diagram' && child.type === 'flow') return flowCompositeCode(child, indent, ctx);
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
   }
   switch (child.type) {
@@ -802,6 +833,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     graphHelpers: new Set(),
     graphAdapters: new Set(),
     graphCounts: new Map(),
+    flowCount: 0,
     generatedIds: new Map(),
   };
   reservePreviewIds(ir.children, ctx);
@@ -842,6 +874,12 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     imports.push(`import { ${[...graphHelpers, ...graphAdapters].join(', ')} } from '@retikz/graph-vanilla';`);
     imports.push("import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';");
   }
+  if (ctx.flowCount > 0) {
+    imports.push("import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';");
+    if (graphHelpers.length === 0) {
+      imports.push("import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';");
+    }
+  }
   if (definitions.standard.length > 0) {
     imports.push(`import { ${definitions.standard.join(', ')} } from '@retikz/standard';`);
   }
@@ -852,11 +890,16 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     imports.push(`import { ${definitions.graph.join(', ')} } from '@retikz/graph';`);
   }
 
-  const adapters = [...standardAdapters, ...layoutAdapters, ...graphAdapters];
+  const adapters = [
+    ...standardAdapters,
+    ...layoutAdapters,
+    ...graphAdapters,
+    ...(ctx.flowCount > 0 ? ['FlowDiagramInputEmbedAdapter'] : []),
+  ];
   const adapterCode = adapters.length > 0 ? `\nconst adapters = [${adapters.join(', ')}];\n` : '';
   const definitionNames = [...definitions.standard, ...definitions.layout, ...definitions.graph];
   const compileEntries = [
-    ...(graphHelpers.length > 0 ? ['themeStyles: PreviewThemeDefinitionBundle.core'] : []),
+    ...(graphHelpers.length > 0 || ctx.flowCount > 0 ? ['themeStyles: PreviewThemeDefinitionBundle.core'] : []),
     ...(definitionNames.length > 0 ? [`composites: [${definitionNames.join(', ')}]`] : []),
   ];
   const compile = compileEntries.length > 0 ? `\nconst compile = { ${compileEntries.join(', ')} };\n` : '';

@@ -39,7 +39,7 @@ export type GuideContext = {
   radialTicks?: TickSet;
 };
 
-/** lowerGuide 返回：网格层（仅 grid:true 时非空）与轴层 */
+/** lowerGuide 返回：网格层（grid:true 且有刻度或 includeDomain 边界时非空）与轴层 */
 export type LoweredGuide = {
   /** 网格层 scope（grid:true 且有刻度时）；否则 null */
   gridLayer: IRScope | null;

@@ -8,6 +8,7 @@ import { filledPath, hollowPath } from './_utils';
 /** 可选实心方形箭头 Definition */
 export const SquareArrowDefinition = defineArrow({
   name: StandardArrowName.Square,
+  backX: 0,
   lineContactX: 0,
   emit: context => [
     filledPath(context, [
@@ -31,6 +32,7 @@ export const SquareArrowProvider: CoreDependencyProvider = Object.freeze({
 export const OpenSquareArrowDefinition = defineArrow({
   name: StandardArrowName.OpenSquare,
   hollow: true,
+  backX: 1,
   lineContactX: 1,
   tipX: 9,
   emit: context => [

@@ -12,13 +12,13 @@ const Demo: FC = () => (
       gap={{ column: 8, row: 4 }}
       alignItems="center"
     >
-      <LayoutItem kind="flex" itemKey="symbol" basis={48} shrink={0}>
+      <LayoutItem kind="flex" basis={48} shrink={0}>
         <Node shape="circle" position={[0, 0]} text="A" minimumSize={36} fill="#dbeafe" stroke="#2563eb" />
       </LayoutItem>
-      <LayoutItem kind="flex" itemKey="label" grow={1} min={80}>
+      <LayoutItem kind="flex" grow={1} min={80}>
         <Node position={[0, 0]} text="Flexible label" padding={{ x: 12, y: 8 }} fill="#f8fafc" stroke="#94a3b8" />
       </LayoutItem>
-      <LayoutItem kind="flex" itemKey="value" shrink={0}>
+      <LayoutItem kind="flex" shrink={0}>
         <Node position={[0, 0]} text="42%" padding={{ x: 10, y: 8 }} fill="#dcfce7" stroke="#16a34a" />
       </LayoutItem>
     </FlexLayout>

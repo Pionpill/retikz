@@ -197,7 +197,7 @@ describe('scale family · radial', () => {
         { type: 'band', name: 'a' },
         { type: 'radial', name: 'r', domainPadding: 0 },
       ],
-      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r', interpolation: 'polar' },
       marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'val' } } }],
     });
     const data = [

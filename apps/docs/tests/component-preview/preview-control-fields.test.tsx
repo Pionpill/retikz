@@ -160,6 +160,34 @@ describe('PreviewControlFieldInput', () => {
     expect(point.container.querySelector<HTMLInputElement>('[aria-label="Control y"]')?.value).toBe('0');
   });
 
+  it('select 显示空字符串选项并保持原始值回调', async () => {
+    const field = {
+      kind: 'select',
+      id: 'kind',
+      label: '内置 kind',
+      defaultValue: '',
+      options: [
+        { value: '', label: '基础 association' },
+        { value: 'uml.aggregation', label: 'UML 聚合' },
+      ],
+    } satisfies PreviewControlField;
+    const base = await renderField(field, '');
+    const baseTrigger = base.container.querySelector<HTMLElement>('[data-slot="select-trigger"]');
+
+    expect(baseTrigger?.textContent).toBe('基础 association');
+    expect(baseTrigger?.hasAttribute('data-placeholder')).toBe(false);
+
+    const onValueChange = vi.fn();
+    const aggregation = await renderField(field, 'uml.aggregation', onValueChange);
+    const aggregationTrigger = aggregation.container.querySelector<HTMLElement>('[data-slot="select-trigger"]');
+    await act(() => aggregationTrigger?.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })));
+    const options = document.body.querySelectorAll<HTMLElement>('[data-slot="select-item"]');
+    expect(options).toHaveLength(2);
+    await act(() => options[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
+
+    expect(onValueChange).toHaveBeenLastCalledWith('');
+  });
+
   it('compact 字段使用 small 尺寸且保持可收缩宽度', async () => {
     const text = await renderField(
       { kind: 'text', id: 'text', label: 'Text', defaultValue: 'Node' },

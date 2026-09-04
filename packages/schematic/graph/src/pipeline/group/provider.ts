@@ -10,6 +10,7 @@ import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { BlockProviderKey } from '../block';
 import { EntityProviderKey } from '../entity';
 import { RelationProviderKey } from '../relation';
+import { GroupBodyAllocationProviderKey } from './allocation';
 import { createGroupDefinitionFromOptions } from './definition';
 
 /** Group Composite provider 的公开完整 key */
@@ -30,6 +31,7 @@ export const createGroupProvider = (options: GraphDefinitionOptions = {}): CoreD
       BlockProviderKey,
       EntityProviderKey,
       RelationProviderKey,
+      GroupBodyAllocationProviderKey,
       FlexLayoutProvider.key,
       SurfaceProvider.key,
     ]),

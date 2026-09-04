@@ -2,7 +2,8 @@ import type { CoreProviderContribution } from '@retikz/core';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
-import { ScatterChart } from '@retikz/chart-react/point/scatter';
+import { ChartData, ChartLayout } from '@retikz/chart-react';
+import { BubbleChart, BubbleEncodings, ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
@@ -10,7 +11,11 @@ import { useMemo } from 'react';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
+import {
+  buildPreviewIR,
+  buildPreviewSourceIR,
+  collectPreviewChartSources,
+} from '../../src/modules/docs/components/component-preview/utils';
 import { createGraphPreviewSource } from '../../src/modules/docs/preview';
 
 const hookedDatasets = { sample: [{ value: 1 }] };
@@ -72,13 +77,19 @@ const PlotStandaloneDemo: FC = () => (
 );
 
 const ChartStandaloneDemo: FC = () => (
-  <ScatterChart
-    data={[{ x: 1, y: 2 }]}
-    encodings={{ x: 'x', y: 'y' }}
-    width={640}
-    height={360}
-    layout={{ width: 320, height: 180 }}
-  />
+  <ScatterChart>
+    <ChartData data={[{ x: 1, y: 2 }]} />
+    <ChartLayout width={640} height={360} layout={{ width: 320, height: 180 }} />
+    <ScatterEncodings x="x" y="y" />
+  </ScatterChart>
+);
+
+const BubbleStandaloneDemo: FC = () => (
+  <BubbleChart>
+    <ChartData data={[{ x: 1, y: 2, population: 3 }]} />
+    <ChartLayout width={640} height={360} />
+    <BubbleEncodings x="x" y="y" size="population" />
+  </BubbleChart>
 );
 
 describe('buildPreviewIR', () => {
@@ -128,7 +139,7 @@ describe('buildPreviewIR', () => {
     expect(preview.ir.children[0]).toMatchObject({ namespace: 'plot', type: 'plot', width: 240, height: 120 });
   });
 
-  it('separates standalone Chart host dimensions from embedded Source layout', () => {
+  it('reads standalone dimensions from ChartLayout while preserving an explicit Source layout', () => {
     const preview = buildPreviewIR(ChartStandaloneDemo);
 
     expect(preview).toMatchObject({ width: 640, height: 360 });
@@ -137,5 +148,73 @@ describe('buildPreviewIR', () => {
       type: 'point',
       layout: { width: 320, height: 180 },
     });
+  });
+
+  it('collects the exact Bubble Source from the React authoring tree', () => {
+    expect(collectPreviewChartSources(BubbleStandaloneDemo({}))).toMatchObject([
+      {
+        namespace: 'chart',
+        type: 'point',
+        layout: { width: 640, height: 360 },
+        recipe: {
+          chartType: 'bubble',
+          encodings: { x: 'x', y: 'y', size: 'population' },
+        },
+      },
+    ]);
+  });
+
+  it('rebuilds Graph Source IR from authoring input instead of runtime defaults', () => {
+    const source = buildPreviewSourceIR(
+      {
+        type: 'scene',
+        children: [
+          {
+            type: 'embed',
+            kind: 'graph.graph',
+            id: 'graph',
+            props: {
+              children: [
+                {
+                  type: 'embed',
+                  kind: 'graph.block',
+                  id: 'block',
+                  props: { id: 'block' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        type: 'scene',
+        version: 1,
+        children: [
+          {
+            namespace: 'graph',
+            type: 'graph',
+            children: [
+              {
+                namespace: 'graph',
+                type: 'block',
+                id: 'block',
+                padding: 8,
+                gap: 8,
+                children: [],
+              },
+            ],
+          },
+        ],
+      },
+      [],
+    );
+
+    expect(source.children).toEqual([
+      {
+        namespace: 'graph',
+        type: 'graph',
+        children: [{ namespace: 'graph', type: 'block', id: 'block' }],
+      },
+    ]);
   });
 });

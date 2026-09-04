@@ -1,6 +1,6 @@
 ﻿import { describe, expect, it } from 'vitest';
 
-import type { PathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
+import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
@@ -316,12 +316,15 @@ describe('GroupPrim.transforms：结构化形态约束', () => {
       ],
     };
     const scene = compileToScene(ir).scene;
-    const grp = scene.primitives.find(p => p.type === 'group');
-    expect(grp).toBeDefined();
-    if (grp?.type === 'group') {
-      expect(grp.transforms).toHaveLength(1);
-      const t = grp.transforms![0];
-      expect(t.kind).toBe('rotate');
+    const labelGroup = scene.primitives.find(
+      (primitive): primitive is GroupPrim =>
+        primitive.type === 'group' && primitive.transforms?.some(transform => transform.kind === 'rotate') === true,
+    );
+    const transforms = labelGroup?.transforms;
+    expect(transforms).toBeDefined();
+    if (transforms !== undefined) {
+      expect(transforms).toHaveLength(1);
+      expect(transforms[0].kind).toBe('rotate');
     }
   });
 });

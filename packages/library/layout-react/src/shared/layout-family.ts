@@ -93,7 +93,7 @@ export const createInputLayoutItems = <TKind extends LayoutItemKindValue>(
     adapters.push(...resolved.adapters);
     return {
       ...item,
-      key: itemKey,
+      ...(itemKey === undefined ? {} : { key: itemKey }),
       child: resolved.child,
     } as LayoutItemInputByKind[TKind];
   });

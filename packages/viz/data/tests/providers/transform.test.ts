@@ -26,8 +26,8 @@ const SALES: Array<ExternalRow> = [
 ];
 
 describe('data transform runtime', () => {
-  it('publishes the closed compact scheduling capability through the shared registry', () => {
-    expect(resolveTransformRegistry().get('sort')?.compact).toEqual({
+  it('publishes the closed transform schedule through the shared registry', () => {
+    expect(resolveTransformRegistry().get('sort')?.schedule).toEqual({
       phase: DataTransformPhase.RowOrder,
       bindingClass: DataTransformBindingClass.Order,
       fieldEffect: DataTransformFieldEffect.Reorder,
@@ -35,7 +35,7 @@ describe('data transform runtime', () => {
 
     const custom = defineTransform({
       schema: strictObject({ kind: literal('custom-derive') }),
-      compact: {
+      schedule: {
         phase: DataTransformPhase.FieldDerive,
         bindingClass: DataTransformBindingClass.Field,
         fieldEffect: DataTransformFieldEffect.Preserve,
@@ -43,7 +43,7 @@ describe('data transform runtime', () => {
       apply: rows => rows,
     });
 
-    expect(resolveTransformRegistry([custom]).get('custom-derive')?.compact).toEqual(custom.compact);
+    expect(resolveTransformRegistry([custom]).get('custom-derive')?.schedule).toEqual(custom.schedule);
   });
 
   it('keeps shared sort output stable and leaves host-only transforms to host registries', () => {

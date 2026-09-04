@@ -24,6 +24,8 @@ description: 用 MarkDefinition 登记源字段、声明通道消费并把数据
 | `buildCell?`     | 给内置 datum-anchor 路径复用逻辑 Cell；当前不是自定义 mark 的渲染入口，也不会自动接入 locator |
 | `lower`          | 把准备好的 rows、coordinate frame 与通道解析结果下沉成 Core IR                                |
 
+`defaultColorGroup` 属于 Plot pipeline 统一拥有的 operation 元信息，自定义 definition schema 不需要重复声明。Plot 会先用它为 `channels` 解析共享的 `palette.series` 默认色，再把其余自定义字段交给 definition schema 校验；显式颜色通道或常量 paint 仍然优先。
+
 下面的 `diamond` 图元通过 `frame.projectRoles` 投影每行的 `x` / `y`，再按 operation 中的尺寸和填充配置生成 Core diamond Node。用面板修改这两个 JSON 参数；definition、数据和宿主注入可以从源码切换器中查看：
 
 <ComponentPreview
@@ -91,14 +93,14 @@ definition 不进入 spec，因此 spec 仍可 JSON round-trip。
     {
       label: 'mark definition lookup 与 schema 校验',
       path: 'packages/viz/plot/src/resolve/mark/resolve.ts',
-      startLine: 11,
-      endLine: 29,
+      startLine: 14,
+      endLine: 39,
     },
     {
       label: '字段收集',
       path: 'packages/viz/plot/src/resolve/mark/resolve.ts',
-      startLine: 34,
-      endLine: 42,
+      startLine: 42,
+      endLine: 49,
     },
     {
       label: 'channel kind 分派',

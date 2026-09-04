@@ -7,6 +7,7 @@ import { array, enum as zodEnum, literal, strictObject, union } from 'zod';
 
 import { GRAPH_NAMESPACE, GraphType, RelationKind, RelationRole } from '../../shared';
 import { GraphPredicateRefSchema } from '../predicate';
+import { GraphStatusSchema } from '../status';
 import { RelationDirection } from './constants';
 
 export const RelationDirectionSchema = zodEnum(RelationDirection).describe('Semantic Relation direction.');
@@ -108,6 +109,7 @@ export const RelationSchema = strictObject({
   role: RelationRoleSchema,
   kind: RelationKindSchema.optional().describe('Open stable subtype key within the selected Relation role.'),
   predicate: GraphPredicateRefSchema.optional().describe('Optional precise semantic predicate reference.'),
+  status: GraphStatusSchema.optional().describe('Optional closed Graph semantic status.'),
   direction: RelationDirectionSchema.optional().describe('Explicit semantic direction overriding role defaults.'),
   labels: array(GeometryLabelSchema)
     .optional()

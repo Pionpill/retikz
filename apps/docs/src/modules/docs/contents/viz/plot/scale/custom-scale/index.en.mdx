@@ -16,10 +16,10 @@ When built-in scales cannot express a domain mapping, special position distribut
 
 `defineScale` selects one of two output contracts through `family`:
 
-| family     | Input and output   | Key contract                                                                                                                                            |
-| ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `position` | value → coordinate | `resolve` receives raw values and a fallback range, returns a full `PositionScale`; `isFieldCompatible` and `allowsBaseline` declare consumption limits |
-| `channel`  | value → color      | `resolve` receives raw values and `ChannelScaleResolveContext`, returns a color evaluator, `legendForm`, `domain`, `range`, and optional `edges`        |
+| family     | Input and output   | Key contract                                                                                                                                                           |
+| ---------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `position` | value → coordinate | `resolve` receives raw values and a fallback range, returns a full `PositionScale`; `continuity`, `isFieldCompatible`, and `allowsBaseline` declare consumption limits |
+| `channel`  | value → color      | `resolve` receives raw values and `ChannelScaleResolveContext`, returns a color evaluator, `legendForm`, `domain`, `range`, and optional `edges`                       |
 
 The demo registers both `ease-position` and `brand`: the first redistributes x coordinates with an exponent, while the second maps categorical `tier` values to a brand palette. Drag the exponent to compare position mapping while color mapping stays fixed; switch source files to inspect both definitions, data, and host injection:
 
@@ -79,6 +79,8 @@ const spec: IRPlot = {
 3. A position definition receives raw values and a fallback range to produce coordinates, ticks, and range behavior. A channel definition receives raw values and color-resolution context to produce one rendering-and-legend result.
 4. Coordinates and axes consume position scales; color / paint channels and legends consume channel scales.
 
+A position definition must also classify its topology with `continuity`: <ApiValues name="PositionScaleContinuity" />. When `polar2D.interpolation` is omitted, Plot uses this metadata to choose the default connection: arcs for `continuous`, straight chords for `discrete`. Plot does not infer continuity from a custom `type` name or the runtime scale shape.
+
 <SourceLinks
   sources={[
     {
@@ -91,7 +93,7 @@ const spec: IRPlot = {
       label: 'Scale registry merge and duplicate validation',
       path: 'packages/viz/plot/src/providers/scale/registry.ts',
       startLine: 16,
-      endLine: 31,
+      endLine: 40,
     },
     {
       label: 'Scale definition lookup and JSON validation',
@@ -118,6 +120,7 @@ const spec: IRPlot = {
 
 - A custom `type` cannot override a built-in scale or be registered twice; an unregistered type fails during lookup.
 - Position scales cannot drive color channels, and channel scales cannot drive position roles; family mismatches fail loud.
+- A position definition must declare `continuity`; a missing or invalid value fails loudly while the registry is built.
 - A definition schema should be a closed JSON object. The examples use `z.strictObject` so misspelled config is not silently stripped.
 - A position definition must implement `coordinate`, `domain`, `bandwidth`, `ticks`, `range`, and `setRange`; channel `of` currently returns only a color string or `undefined`.
 - Custom scales do not participate in React field-type auto-derivation, and declarative `<PlotScale>` covers built-in types only.
@@ -133,13 +136,14 @@ scales: [{ type: 'ease-position', name: 'x', exponnent: 1.8 }];
 
 Public exports:
 
-| Import from `@retikz/plot`   | Use                                                         |
-| ---------------------------- | ----------------------------------------------------------- |
-| `defineScale`                | Builds a scale definition from family, schema, and resolve  |
-| `ScaleDefinition`            | Full position / channel Definition union                    |
-| `PositionScale`              | Coordinate, ticks, and range interface returned by position |
-| `ChannelScaleResolveContext` | Field type, coercion, and color-scheme resolution context   |
-| `ChannelScaleResolution`     | Color evaluator and legend source returned by channel       |
+| Import from `@retikz/plot`   | Use                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------- |
+| `defineScale`                | Builds a scale definition from family, schema, and resolve                    |
+| `ScaleDefinition`            | Full position / channel Definition union                                      |
+| `PositionScale`              | Coordinate, ticks, and range interface returned by position                   |
+| `PositionScaleContinuity`    | Required `continuous \| discrete` topology metadata for a position definition |
+| `ChannelScaleResolveContext` | Field type, coercion, and color-scheme resolution context                     |
+| `ChannelScaleResolution`     | Color evaluator and legend source returned by channel                         |
 
 Host injection:
 

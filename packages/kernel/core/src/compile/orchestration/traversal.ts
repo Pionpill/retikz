@@ -499,7 +499,7 @@ export const compileChildrenToPrimitives = (
     const emitHostLabels = (input: PathKindLabelInput): ReadonlyArray<ScenePrimitive> =>
       input.labels.flatMap((label, index) => {
         const sample = input.samples[index];
-        const emittedLabel = emitLabelPrimitive(label, sample, {
+        const emittedLabel = emitLabelPrimitive({ ...label, interrupt: false }, sample, {
           measureText: runtime.context.measureText,
           round: runtime.context.round,
           rootFontSize: runtime.context.rootFontSize,

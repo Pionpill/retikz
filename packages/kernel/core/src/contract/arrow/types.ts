@@ -32,6 +32,8 @@ export type ArrowDefinition = {
    * @default false
    */
   hollow?: boolean;
+  /** marker 基础几何沿箭头轴向承诺的包络后缘，必须不晚于线接触点 */
+  backX: number;
   /** 线接触点静态 base，决定 path shrink 与 marker refX */
   lineContactX: number;
   /**

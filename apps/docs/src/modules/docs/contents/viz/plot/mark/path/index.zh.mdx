@@ -36,7 +36,7 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 ## 例子
 
-以下五个示例都可以在“坐标系”中切换笛卡尔与极坐标。PathMark 的配置保持同一职责：在极坐标中，`x` 是角向位置，`y` 是径向位置。切换到极坐标后会出现“是否闭合”，可以独立比较投影方式与首尾连接关系；默认仍保持开放路径。
+以下示例从排序、系列、连接、闭合与缺失值分别展示 PathMark。支持坐标切换的试验场中，极坐标仍以 `x` 表示角向位置、`y` 表示径向位置；`closed` 只决定是否首尾连接，不决定相邻位置使用圆弧还是直线弦。
 
 ### 基础用法
 
@@ -69,6 +69,16 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
   controls={{ name: 'line-curve' }}
   size="lg"
   caption="保持数据不变，组合调整连接方式与描边样式，并在极坐标下比较开放与闭合路径。"
+/>
+
+### 极坐标插值
+
+`polar2D` 根据角向比例尺连续性推断 coordinate 默认插值：连续值使用 `polar`，离散值使用 `chord`。此处左右图各自继承自己的 coordinate：左图默认 `chord`，右图默认 `polar`，因此路径和网格始终使用同一连接空间。
+
+<ComponentPreview
+  files={['line-radar', 'line-radar.data.ts']}
+  size="lg"
+  caption="分别切换左右图的坐标插值，观察路径和网格如何一起在圆弧与直线弦之间切换。"
 />
 
 ### 闭合与填充
@@ -109,26 +119,34 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 | ---------- | ------------------------------------------------------------------------------------------------------------ |
 | 排序与分组 | 先按 `series` 拆路径，再按 `order` 排序；没有 `series` 时，分类 `color` 可隐式拆成多条路径                   |
 | 投影与分段 | 每行投影成一个点；无效点默认切断连续段，`connectNulls` 才会跨过缺口                                          |
-| 连接与闭合 | `curve` 决定相邻点连接方式；`closed` 回连首尾，`closure` 再构造 cycle、baseline 或 stack 的闭合区域          |
+| 连接与闭合 | polar2D 的 `interpolation` 先决定连接空间，`curve` 再作用于投影点；`closed` 只决定首尾是否相接               |
 | 下沉       | 每个连续段生成 core `Path`，系列形成独立子层；设置 `anchorId` 时，有效顶点另外生成可引用的 core `Coordinate` |
 
 系列子层在不同 renderer 中保持同一语义分组；缺失值还会把每个系列进一步拆成一个或多个连续 Path 段。
 
 `fill` 只决定已经闭合的路径是否可见填充，不会自动创建闭合边界。缺失值产生多个连续段时，每段分别闭合和填充，不会跨过空档。
 
+`polar` 会在角度 / 半径输出空间采样相邻点，再把采样结果投影到屏幕；`chord` 直接保留投影顶点。`curve` 随后处理屏幕点，因此它与极坐标插值、拓扑闭合是三个独立选择。显式 `interpolation` 只能用于 polar2D，否则会直接报错。
+
 <SourceLinks
   sources={[
     {
+      label: 'polar2D Path 继承或覆盖插值并在闭合边上采样',
+      path: 'packages/viz/plot/src/providers/mark/features/path.ts',
+      startLine: 307,
+      endLine: 337,
+    },
+    {
       label: '排序、缺失值判断与连续段拆分',
       path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 382,
-      endLine: 415,
+      startLine: 380,
+      endLine: 414,
     },
     {
       label: 'cycle、baseline 与 stack 闭合路径构造',
       path: 'packages/viz/plot/src/providers/mark/features/path.ts',
-      startLine: 446,
-      endLine: 525,
+      startLine: 444,
+      endLine: 521,
     },
     {
       label: 'PathMark 系列拆分、连续段与 core Path 生成',
@@ -149,20 +167,21 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 下面只列 PathMark 特有或在本页重新定义语义的属性。字段与常量绑定见[通道绑定](/viz/plot/channel/binding)，局部 `transform` 与图层属性见[变换](/viz/plot/transform)，坐标视图相关属性见[坐标系](/viz/plot/coordinate)。描边、填充、箭头、虚线、圆角、阴影等共享属性沿用 [Path 样式](/kernel/components/draw/path#样式)，不在这里重复。
 
-| 属性            | 类型                                                                                                                                      | 默认值                                                     | 描述                                                                                                                          |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `id?`           | `string`                                                                                                                                  | —                                                          | mark 句柄；使用 `resolveLabel` 时必填                                                                                         |
-| `x` / `y`       | `PathMarkProps['x']`                                                                                                                      | 必填                                                       | 轨迹的位置角色字段；cartesian2D 解释为平面位置，polar2D 解释为角向与径向                                                      |
-| `order?`        | `PathMarkProps['order']`                                                                                                                  | 数据顺序                                                   | 每个系列内部的连接顺序字段                                                                                                    |
-| `series?`       | `PathMarkProps['series']`                                                                                                                 | —                                                          | 把数据拆成多条独立路径                                                                                                        |
-| `color?`        | `PathMarkProps['color']`                                                                                                                  | `series`                                                   | 路径颜色字段；没有显式 `series` 时，分类颜色字段也可拆系列                                                                    |
-| `curve?`        | <ApiValues name="PathCurve" />                                                                                                            | `linear`                                                   | 相邻点的连接方式；polar2D 下 `monotoneX` / `monotoneY` 回退为 `linear`                                                        |
-| `connectNulls?` | `boolean`                                                                                                                                 | `false`                                                    | 是否跨过无法投影的行继续连接                                                                                                  |
-| `closed?`       | `boolean`                                                                                                                                 | cartesian2D: `false`<br />polar2D: `true`                  | 是否把最后一个点连回第一个点                                                                                                  |
-| `closure?`      | `IRPlotPathClosure`<br />- `kind: 'cycle' \| 'baseline' \| 'stack'`<br />- `baseline?: number`<br />- `baselineField: PathMarkProps['x']` | —<br />必填<br />0 或离 0 最近的值域边界<br />`stack` 必填 | 构造可填充边界<br />选择首尾闭合、常量基线或逐行基线<br />仅 `baseline` 使用的常量下边界<br />仅 `stack` 使用的逐行下边界字段 |
-| `label?`        | `PathMarkProps['label']`                                                                                                                  | —                                                          | 路径或路径段标签；内容与位置字段由 `PathMarkProps['label']` 的 TypeScript 输入契约定义                                        |
-| `resolveLabel?` | `(row: ExternalRow) => string`                                                                                                            | —                                                          | 运行时标签函数；不进入 IR，必须同时提供 `id`                                                                                  |
-| `anchorId?`     | `IRPlotAnchorId`                                                                                                                      | —                                                          | 为每个有效路径顶点生成稳定的 core Coordinate id                                                                               |
+| 属性             | 类型                                                                                                                                      | 默认值                                                     | 描述                                                                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `id?`            | `string`                                                                                                                                  | —                                                          | mark 句柄；使用 `resolveLabel` 时必填                                                                                         |
+| `x` / `y`        | `PathMarkProps['x']`                                                                                                                      | 必填                                                       | 轨迹的位置角色字段；cartesian2D 解释为平面位置，polar2D 解释为角向与径向                                                      |
+| `order?`         | `PathMarkProps['order']`                                                                                                                  | 数据顺序                                                   | 每个系列内部的连接顺序字段                                                                                                    |
+| `series?`        | `PathMarkProps['series']`                                                                                                                 | —                                                          | 把数据拆成多条独立路径                                                                                                        |
+| `color?`         | `PathMarkProps['color']`                                                                                                                  | `series`                                                   | 路径颜色字段；没有显式 `series` 时，分类颜色字段也可拆系列                                                                    |
+| `curve?`         | <ApiValues name="PathCurve" />                                                                                                            | `linear`                                                   | 相邻点的连接方式；polar2D 下 `monotoneX` / `monotoneY` 回退为 `linear`                                                        |
+| `interpolation?` | <ApiValues name="PolarInterpolation" />                                                                                                   | coordinate 默认                                            | polar2D 相邻位置的连接空间；`polar` 先在角度 / 半径空间插值，`chord` 直连投影顶点                                             |
+| `connectNulls?`  | `boolean`                                                                                                                                 | `false`                                                    | 是否跨过无法投影的行继续连接                                                                                                  |
+| `closed?`        | `boolean`                                                                                                                                 | cartesian2D: `false`<br />polar2D: `true`                  | 是否把最后一个点连回第一个点                                                                                                  |
+| `closure?`       | `IRPlotPathClosure`<br />- `kind: 'cycle' \| 'baseline' \| 'stack'`<br />- `baseline?: number`<br />- `baselineField: PathMarkProps['x']` | —<br />必填<br />0 或离 0 最近的值域边界<br />`stack` 必填 | 构造可填充边界<br />选择首尾闭合、常量基线或逐行基线<br />仅 `baseline` 使用的常量下边界<br />仅 `stack` 使用的逐行下边界字段 |
+| `label?`         | `PathMarkProps['label']`                                                                                                                  | —                                                          | 路径或路径段标签；内容与位置字段由 `PathMarkProps['label']` 的 TypeScript 输入契约定义                                        |
+| `resolveLabel?`  | `(row: ExternalRow) => string`                                                                                                            | —                                                          | 运行时标签函数；不进入 IR，必须同时提供 `id`                                                                                  |
+| `anchorId?`      | `IRPlotAnchorId`                                                                                                                          | —                                                          | 为每个有效路径顶点生成稳定的 core Coordinate id                                                                               |
 
 ## 相关
 

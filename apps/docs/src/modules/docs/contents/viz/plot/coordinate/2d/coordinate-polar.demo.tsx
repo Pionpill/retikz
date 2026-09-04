@@ -17,6 +17,7 @@ export const renderCoordinatePolar = (values: CoordinatePolarValues) => (
     height={300}
     coordinate={{
       type: 'polar2D',
+      interpolation: values.coordinateInterpolation === 'auto' ? undefined : values.coordinateInterpolation,
       innerRadius: values.innerRadius,
       startAngle: values.startAngle,
       endAngle: values.startAngle + values.sweepAngle,
@@ -27,9 +28,19 @@ export const renderCoordinatePolar = (values: CoordinatePolarValues) => (
     {values.markType === 'point' ? (
       <PointMark x="category" y="value" />
     ) : values.markType === 'line' ? (
-      <PathMark x="category" y="value" order="order" closed />
+      <PathMark
+        x="category"
+        y="value"
+        order="order"
+        closed
+        interpolation={values.markInterpolation === 'inherit' ? undefined : values.markInterpolation}
+      />
     ) : (
-      <IntervalMark x="category" y="value" />
+      <IntervalMark
+        x="category"
+        y="value"
+        interpolation={values.markInterpolation === 'inherit' ? undefined : values.markInterpolation}
+      />
     )}
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />

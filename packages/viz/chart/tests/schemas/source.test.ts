@@ -85,6 +85,7 @@ describe('Chart Source schema primitives', () => {
       ...minimalSource,
       id: 'fixture',
       layout: { width: 640, height: 360 },
+      coordinate: { type: 'polar2D', innerRadius: 0 },
       recipe: {
         ...minimalSource.recipe,
         properties: { size: 0, visible: false },
@@ -170,15 +171,29 @@ describe('Chart Source schema primitives', () => {
     expect(ChartPlotExtensionSchema.safeParse({ guides: [], meta: { source: 'demo' } }).success).toBe(true);
     expect(ChartPlotExtensionSchema.safeParse({ data: { reference: 'rows' } }).success).toBe(false);
     expect(ChartPlotExtensionSchema.safeParse({ namespace: 'plot', type: 'plot' }).success).toBe(false);
-    expect(
-      ChartPlotExtensionSchema.safeParse({
-        coordinate: { type: 'cartesian1D', x: 'x' },
+    expect(ChartPlotExtensionSchema.safeParse({ coordinate: { type: 'cartesian2D' } }).success).toBe(false);
+  });
+
+  it('stores coordinate as a root operation object and rejects Source string shorthand', () => {
+    const coordinate = { type: 'polar2D' as const, innerRadius: 0 };
+    expect(FixtureSourceSchema.parse({ ...minimalSource, coordinate }).coordinate).toMatchObject(coordinate);
+    expect(FixtureSourceSchema.safeParse({ ...minimalSource, coordinate: 'polar2D' }).success).toBe(false);
+  });
+
+  it('rejects a root coordinate together with a Plot composition extension', () => {
+    const result = FixtureSourceSchema.safeParse({
+      ...minimalSource,
+      coordinate: { type: 'cartesian2D' },
+      plotExtension: {
         composition: {
           defaultView: 'root',
-          views: [{ id: 'root', coordinate: { type: 'cartesian1D', x: 'x' } }],
+          views: [{ id: 'root', coordinate: { type: 'cartesian2D' } }],
         },
-      }).success,
-    ).toBe(false);
+      },
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues[0]?.path).toEqual(['plotExtension', 'composition']);
   });
 
   it('rejects the superseded chart and plot root fields', () => {

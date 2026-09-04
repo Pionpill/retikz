@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRAnimationTrack, PathCommand, ScenePrimitive, SceneResource } from '../../src';
+import type { IRAnimationTrack, IRScene, PathCommand, ScenePrimitive, SceneResource } from '../../src';
 
+import { compileToScene, defineArrow } from '../../src';
 import { visualBoundsOfPrimitives } from '../../src/compile/orchestration/visual-bounds';
 
 const boundsOf = (primitives: ReadonlyArray<ScenePrimitive>, resources: ReadonlyArray<SceneResource> = []) =>
@@ -198,6 +199,44 @@ describe('canonical visual bounds', () => {
         },
       ]),
     ).toEqual({ x: 0, y: 0, width: 0, height: 0 });
+  });
+
+  it('uses endpoint-overlap commands when calculating path visual bounds', () => {
+    const arrow = defineArrow({
+      name: 'empty-overlap-probe',
+      baseSize: 10,
+      backX: 0,
+      tipX: 8,
+      lineContactX: 2,
+      emit: () => [],
+    });
+    const maxX = (endpointOverlap: number) => {
+      const ir: IRScene = {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            marks: [
+              {
+                pos: 1,
+                endpointOverlap,
+                mark: { kind: 'arrow', shape: 'empty-overlap-probe', length: 10, width: 10 },
+              },
+            ],
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [100, 0] },
+            ],
+          },
+        ],
+      };
+      const scene = compileToScene(ir, { arrows: [arrow], padding: 0 }).scene;
+      const bounds = boundsOf(scene.primitives, scene.resources);
+      return bounds.x + bounds.width;
+    };
+
+    expect(maxX(1) - maxX(0)).toBeCloseTo(7.5, 8);
   });
 
   it('clips in group-local coordinates and then applies transforms', () => {

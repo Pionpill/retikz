@@ -14,6 +14,17 @@ export const PlotCoordinate = {
 } as const;
 
 /**
+ * Polar2D 相邻位置的连接空间
+ * @description polar 先在角度/半径输出空间插值再投影；chord 先投影顶点再以屏幕直线连接
+ */
+export const PolarInterpolation = {
+  /** 极坐标输出空间连续插值 */
+  Polar: 'polar',
+  /** 屏幕空间顶点直连 */
+  Chord: 'chord',
+} as const;
+
+/**
  * cartesian1D 轴向关键字（暴露给用户；裸字面量 `'horizontal'` 同样可用）
  * @description 决定一维直线沿哪个屏幕轴铺：horizontal 沿 x（基线在底）、vertical 沿 y（基线在左）；省略默认 horizontal（lowering 给）
  */

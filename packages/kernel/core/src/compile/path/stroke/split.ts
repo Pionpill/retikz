@@ -1,4 +1,5 @@
 import type { PathCommand, PathPrim, ResolvedArrowEnd, ScenePrimitive } from '../../../contract';
+import type { StrokeCommandFragment } from './interruption';
 
 /** baseProps：除 commands / endpoint arrows 外 PathPrim 公共属性集合（多 sub-path 复用） */
 export type PathBaseProps = Omit<PathPrim, 'type' | 'commands' | 'arrowStart' | 'arrowEnd'>;
@@ -54,4 +55,31 @@ export const splitSubPathsForEndpointArrows = (
     children: subPathPrims,
   };
   return { primitive: groupPrim, isGrouped: true };
+};
+
+/**
+ * 将 interruption fragments 输出为现有 PathPrim
+ * @description fragment 继承同一视觉 style；只把端点箭头附到含原首尾 drawable occurrence 的 fragment，并按未切断逻辑距离补偿 dash phase
+ */
+export const emitInterruptedPathFragments = (
+  fragments: ReadonlyArray<StrokeCommandFragment>,
+  baseProps: PathBaseProps,
+  endpointArrows: { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd },
+): ScenePrimitive => {
+  const pathPrimitives: Array<PathPrim> = fragments.map(fragment => {
+    const dashOffset =
+      baseProps.dashPattern === undefined ? baseProps.dashOffset : (baseProps.dashOffset ?? 0) - fragment.logicalStart;
+    return {
+      type: 'path',
+      commands: fragment.commands,
+      ...baseProps,
+      ...(baseProps.dashPattern !== undefined ? { dashOffset } : {}),
+      ...(fragment.hasPathStart && endpointArrows.arrowStart !== undefined
+        ? { arrowStart: endpointArrows.arrowStart }
+        : {}),
+      ...(fragment.hasPathEnd && endpointArrows.arrowEnd !== undefined ? { arrowEnd: endpointArrows.arrowEnd } : {}),
+    };
+  });
+  if (pathPrimitives.length === 1) return pathPrimitives[0];
+  return { type: 'group', children: pathPrimitives };
 };

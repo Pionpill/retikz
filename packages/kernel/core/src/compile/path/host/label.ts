@@ -1,7 +1,8 @@
+import type { CurveSegmentSample } from '@retikz/math';
+
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../../contract';
 import type { CanonicalFont, CanonicalGeometryLabel } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
-import type { SegmentSample } from '../../../shared/geometry';
 import type { LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
 import type { CompileWarningCodeValue } from '../../warning';
 
@@ -47,7 +48,7 @@ export type EmitLabelPrimitiveContext = {
  */
 export const emitLabelPrimitive = (
   label: CanonicalGeometryLabel,
-  sample: SegmentSample,
+  sample: CurveSegmentSample,
   context: EmitLabelPrimitiveContext,
 ): { primitive: ScenePrimitive; boundsPoints: Array<IRPosition> } => {
   const {

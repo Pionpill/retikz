@@ -1,13 +1,16 @@
 import type { ExternalRow } from '@retikz/data';
 
 import { JsonObjectSchema } from '@retikz/core';
+import { NonBlankStringSchema } from '@retikz/foundation';
 
 import type { AnyMarkDefinition, CoordinateFrame, FieldCollector, IntervalContext } from '../../contract';
 import type { IRPlotMark, IRPlotMarkOperation } from '../../schemas';
 import type { MarkOperationResolution, MarkResolveContext } from './types';
 
+import { cellGeometryAnchor } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import { cellAnchor, roleAnchor } from '../../providers';
+import { cellAnchor, intervalCellGeometry, roleAnchor } from '../../providers';
+import { isBuiltinMark, PlotMark } from '../../schemas';
 
 /** 查找 mark definition；未注册 type 会给出上下文明确的 fail-loud 诊断 */
 export const resolveMarkDefinition = (mark: IRPlotMarkOperation, context: MarkResolveContext): AnyMarkDefinition => {
@@ -27,7 +30,12 @@ export const resolveMarkOperation = (
 ): MarkOperationResolution => {
   JsonObjectSchema.parse(mark);
   const definition = resolveMarkDefinition(mark, context);
-  const operation = definition.schema.parse(mark) as IRPlotMarkOperation;
+  const { defaultColorGroup, ...definitionOperation } = mark;
+  const resolved = definition.schema.parse(definitionOperation) as IRPlotMarkOperation;
+  const operation =
+    defaultColorGroup === undefined
+      ? resolved
+      : { ...resolved, defaultColorGroup: NonBlankStringSchema.parse(defaultColorGroup) };
   JsonObjectSchema.parse(operation);
   return { definition, operation };
 };
@@ -60,6 +68,10 @@ export const datumAnchor = (
   intervalContext?: IntervalContext,
 ): [number, number] | null => {
   const { definition, operation } = resolveMarkOperation(mark, context);
+  if (isBuiltinMark(operation) && operation.type === PlotMark.Interval) {
+    const geometry = intervalCellGeometry(operation, row, frame, intervalContext);
+    return geometry === null ? null : cellGeometryAnchor(geometry);
+  }
   if (definition.buildCell !== undefined) {
     return cellAnchor(definition.buildCell(operation as never, row, frame, intervalContext), frame);
   }

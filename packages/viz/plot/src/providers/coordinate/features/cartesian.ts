@@ -1,3 +1,4 @@
+import type { IRNode, IRScope } from '@retikz/core';
 import type { Position } from '@retikz/math';
 
 import type {
@@ -5,8 +6,10 @@ import type {
   Cell,
   CellGeometry,
   CoordinateDefinition,
+  CoordinateFrame,
   DimensionRole,
   GuideContext,
+  LoweredGuide,
   PositionScale,
   TickSet,
 } from '../../../contract';
@@ -16,23 +19,127 @@ import type {
   IRPlotCoordinate,
   IRPlotScaleOperation,
 } from '../../../schemas';
-import type { Rect } from '../../../shared';
+import type { Margins, Rect } from '../../../shared';
 
 import { cellInterval } from '../../../contract';
 import {
+  AxisPlacementKind,
   Cartesian1DOrientation,
   Cartesian1DSchema,
   Cartesian2DSchema,
   PlotCoordinate,
   PlotScale,
 } from '../../../schemas';
-import { computePlotArea } from '../../../shared';
+import { computePlotArea, estimateLabelWidth } from '../../../shared';
 import { assertUniqueAxisPlacement } from '../shared';
 
 type Cartesian2DCoordinate = Extract<IRPlotCoordinate, { type: typeof PlotCoordinate.Cartesian2D }>;
 
 /** 空刻度集：某维度无 axis 时给 GuideContext 的占位 */
 const EMPTY_TICKS: TickSet = { values: [], labels: [] };
+
+/** tick label 视觉外延反馈到 plotArea 的最大收敛轮数 */
+const MAX_GUIDE_LAYOUT_PASSES = 3;
+
+/** guide 文本节点在 Plot allocation 坐标中的估算边界 */
+type TextNodeBounds = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+};
+
+/** 将 TextBlock 投影为与 guide 标签布局一致的测量字符串 */
+const textBlockMeasureText = (text: IRNode['text']): string => {
+  if (text === undefined) return '';
+  if (typeof text === 'string') return text;
+  return text
+    .map(line => {
+      if (typeof line === 'string') return line;
+      if ('text' in line) return line.text;
+      return line.runs.map(run => ('text' in run ? run.text : run.tex)).join('');
+    })
+    .join('\n');
+};
+
+/** 估算已经完成旋转与端点对齐的 guide 文本节点视觉边界 */
+const textNodeBoundsOf = (node: IRNode, fallbackFontSize: number): TextNodeBounds | undefined => {
+  if (node.text === undefined || !Array.isArray(node.position)) return undefined;
+  const [x, y] = node.position;
+  if (typeof x !== 'number' || typeof y !== 'number') return undefined;
+  const authoredFontSize = node.font?.size;
+  const fontSize = typeof authoredFontSize === 'number' ? authoredFontSize : fallbackFontSize;
+  const width = Math.min(estimateLabelWidth(textBlockMeasureText(node.text), fontSize), node.maxTextWidth ?? Infinity);
+  const height = typeof node.lineHeight === 'number' ? node.lineHeight : fontSize;
+  const localMinX = node.align === 'start' ? 0 : node.align === 'end' ? -width : -width / 2;
+  const localMaxX = node.align === 'start' ? width : node.align === 'end' ? 0 : width / 2;
+  const localMinY = -height / 2;
+  const localMaxY = height / 2;
+  const radians = ((node.rotate ?? 0) * Math.PI) / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  const corners = [
+    [localMinX, localMinY],
+    [localMinX, localMaxY],
+    [localMaxX, localMinY],
+    [localMaxX, localMaxY],
+  ].map(([localX, localY]) => [x + localX * cos - localY * sin, y + localX * sin + localY * cos]);
+  return {
+    minX: Math.min(...corners.map(([cornerX]) => cornerX)),
+    minY: Math.min(...corners.map(([, cornerY]) => cornerY)),
+    maxX: Math.max(...corners.map(([cornerX]) => cornerX)),
+    maxY: Math.max(...corners.map(([, cornerY]) => cornerY)),
+  };
+};
+
+const isNodeChild = (child: IRScope['children'][number]): child is IRNode =>
+  child.type === 'node' && 'position' in child;
+
+const isScopeChild = (child: IRScope['children'][number]): child is IRScope =>
+  child.type === 'scope' && 'children' in child;
+
+/** 收集轴层中的文本节点；mark 与 grid 不参与坐标轴外延测量 */
+const collectAxisTextNodes = (scope: IRScope): Array<IRNode> =>
+  scope.children.flatMap(child => {
+    if (isNodeChild(child)) return child.text === undefined ? [] : [child];
+    if (isScopeChild(child)) return collectAxisTextNodes(child);
+    return [];
+  });
+
+/** 计算最终可见 tick labels 相对 Plot allocation 四边的视觉溢出 */
+const guideOverflowOf = (
+  guides: ReadonlyArray<LoweredGuide>,
+  tickLabelsByGuide: ReadonlyArray<ReadonlySet<string>>,
+  width: number,
+  height: number,
+  fontSize: number,
+): Margins => {
+  const bounds = guides.flatMap((guide, guideIndex) =>
+    guide.axisLayer === null
+      ? []
+      : collectAxisTextNodes(guide.axisLayer)
+          .filter(node => tickLabelsByGuide[guideIndex]?.has(textBlockMeasureText(node.text)) === true)
+          .flatMap(node => {
+            const nodeBounds = textNodeBoundsOf(node, fontSize);
+            return nodeBounds === undefined ? [] : [nodeBounds];
+          }),
+  );
+  if (bounds.length === 0) return { top: 0, right: 0, bottom: 0, left: 0 };
+  return {
+    top: Math.max(0, -Math.min(...bounds.map(item => item.minY))),
+    right: Math.max(0, Math.max(...bounds.map(item => item.maxX)) - width),
+    bottom: Math.max(0, Math.max(...bounds.map(item => item.maxY)) - height),
+    left: Math.max(0, -Math.min(...bounds.map(item => item.minX))),
+  };
+};
+
+/** 合并 composition/decorations 与 guide 反馈的额外留白 */
+const addMarginReserve = (base: Partial<Margins> | undefined, extra: Margins): Margins => ({
+  top: (base?.top ?? 0) + extra.top,
+  right: (base?.right ?? 0) + extra.right,
+  bottom: (base?.bottom ?? 0) + extra.bottom,
+  left: (base?.left ?? 0) + extra.left,
+});
 
 /** 仅连续数值 scale 的显式 range 会阻止坐标系把 range 收敛到 plotArea（自定义 type 无内置 range 语义、按可收敛处理） */
 const hasExplicitContinuousRange = (def: IRPlotScaleOperation): boolean =>
@@ -65,6 +172,12 @@ export type CartesianCoordinateFrame = {
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：按 roles 序传值（[x, y]），内部委托 project；任一非有限 → null */
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
+  /** 原始 x/y 经 position scale 映射 */
+  mapRoles: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
+  /** 已映射 x/y 直接解释为屏幕位置 */
+  projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
+  /** 笛卡尔 role-space containment 边界度量 */
+  placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
   /** 正交 cell → 轴对齐矩形（闭式快路）：position = 两区间中点、width/height = 区间跨度 */
   projectCell: (cell: Cell) => CellGeometry;
 };
@@ -78,11 +191,19 @@ export const createCartesianCoordinate = (
   primary: PositionScale,
   secondary: PositionScale,
 ): CartesianCoordinateFrame => {
+  const mapRoles = (values: ReadonlyArray<unknown>): ReadonlyArray<number> | null => {
+    const x = primary.coordinate(values[0]);
+    const y = secondary.coordinate(values[1]);
+    return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
+  };
+  const projectMappedRoles = (values: ReadonlyArray<number>): Position | null => {
+    const x = values[0];
+    const y = values[1];
+    return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
+  };
   const project = (primaryValue: unknown, secondaryValue: unknown): Position | null => {
-    const x = primary.coordinate(primaryValue);
-    const y = secondary.coordinate(secondaryValue);
-    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-    return [x, y];
+    const mapped = mapRoles([primaryValue, secondaryValue]);
+    return mapped === null ? null : projectMappedRoles(mapped);
   };
   return {
     type: PlotCoordinate.Cartesian2D,
@@ -92,6 +213,14 @@ export const createCartesianCoordinate = (
     roleScales: { x: primary, y: secondary },
     project,
     projectRoles: values => project(values[0], values[1]),
+    mapRoles,
+    projectMappedRoles,
+    placementBoundary: {
+      isCyclic: () => false,
+      unitNormal: role => (role === 'x' ? [1, 0] : role === 'y' ? [0, 1] : null),
+      glyphExtentInRoleUnits: (role, _mappedRoles, screenExtent) =>
+        role === 'x' || role === 'y' ? screenExtent : null,
+    },
     projectCell: cell => {
       const [px0, px1] = cellInterval(cell, 'x');
       const [sy0, sy1] = cellInterval(cell, 'y');
@@ -127,6 +256,12 @@ export type Cartesian1DCoordinateFrame = {
   project: (primaryValue: unknown, secondaryValue: unknown) => Position | null;
   /** N 通道投影：roles 长度 1，传 [value] → horizontal [scale(v), baseline] / vertical [baseline, scale(v)]；非有限 → null */
   projectRoles: (values: ReadonlyArray<unknown>) => Position | null;
+  /** 原始 x 经 position scale 映射 */
+  mapRoles: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
+  /** 已映射 x 投影到 horizontal / vertical 屏幕轴 */
+  projectMappedRoles: (values: ReadonlyArray<number>) => Position | null;
+  /** 一维笛卡尔 role-space containment 边界度量 */
+  placementBoundary: NonNullable<CoordinateFrame['placementBoundary']>;
 };
 
 /**
@@ -139,11 +274,18 @@ export const createCartesian1DCoordinate = (
   orientation: Cartesian1DOrientationType,
   baseline: number,
 ): Cartesian1DCoordinateFrame => {
-  const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
+  const mapRoles = (values: ReadonlyArray<unknown>): ReadonlyArray<number> | null => {
     const position = scale.coordinate(values[0]);
+    return Number.isFinite(position) ? [position] : null;
+  };
+  const projectMappedRoles = (values: ReadonlyArray<number>): Position | null => {
+    const position = values[0];
     if (!Number.isFinite(position)) return null;
-    // horizontal：数据沿 x、塌缩 y=baseline（底边）；vertical：数据沿 y、塌缩 x=baseline（左边）
     return orientation === Cartesian1DOrientation.Horizontal ? [position, baseline] : [baseline, position];
+  };
+  const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
+    const mapped = mapRoles(values);
+    return mapped === null ? null : projectMappedRoles(mapped);
   };
   return {
     type: PlotCoordinate.Cartesian1D,
@@ -154,6 +296,13 @@ export const createCartesian1DCoordinate = (
     roleScales: { x: scale },
     project: primaryValue => projectRoles([primaryValue]),
     projectRoles,
+    mapRoles,
+    projectMappedRoles,
+    placementBoundary: {
+      isCyclic: () => false,
+      unitNormal: role => (role !== 'x' ? null : orientation === Cartesian1DOrientation.Horizontal ? [1, 0] : [0, 1]),
+      glyphExtentInRoleUnits: (role, _mappedRoles, screenExtent) => (role === 'x' ? screenExtent : null),
+    },
   };
 };
 
@@ -186,52 +335,70 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
       ? ctx.resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value))
       : undefined;
 
-    const computed = computePlotArea(
-      ctx.width,
-      ctx.height,
-      {
-        hasXAxis: !!xAxis,
-        hasYAxis: !!yAxis,
-        xLabels: layoutXTicks?.labels ?? [],
-        yLabels: layoutYTicks?.labels ?? [],
-        legendReserve: ctx.legendReserve,
-      },
-      { fontSize: ctx.fontSize, reserve: ctx.layoutReserve, margin: ctx.margin },
-    );
-    const plotArea = ctx.plotAreaOverride ?? computed.plotArea;
+    let plotArea: Rect = { x: 0, y: 0, width: ctx.width, height: ctx.height };
+    let lowered: Array<LoweredGuide> = [];
+    let guideReserve: Margins = { top: 0, right: 0, bottom: 0, left: 0 };
+    for (let pass = 0; pass < MAX_GUIDE_LAYOUT_PASSES; pass += 1) {
+      const computed = computePlotArea(
+        ctx.width,
+        ctx.height,
+        {
+          hasXAxis: !!xAxis,
+          hasYAxis: !!yAxis,
+          xLabels: layoutXTicks?.labels ?? [],
+          yLabels: layoutYTicks?.labels ?? [],
+          legendReserve: ctx.legendReserve,
+        },
+        {
+          fontSize: ctx.fontSize,
+          reserve: addMarginReserve(ctx.layoutReserve, guideReserve),
+          margin: ctx.margin,
+        },
+      );
+      plotArea = ctx.plotAreaOverride ?? computed.plotArea;
 
-    if (!hasExplicitContinuousRange(xScaleDef)) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
-    if (!hasExplicitContinuousRange(yScaleDef)) yScale.setRange([plotArea.y + plotArea.height, plotArea.y]);
-    const xRangeOverride = ctx.roleRangeOverrides?.x;
-    const yRangeOverride = ctx.roleRangeOverrides?.y;
-    if (xRangeOverride !== undefined) xScale.setRange([xRangeOverride[0], xRangeOverride[1]]);
-    if (yRangeOverride !== undefined) yScale.setRange([yRangeOverride[0], yRangeOverride[1]]);
+      if (!hasExplicitContinuousRange(xScaleDef)) xScale.setRange([plotArea.x, plotArea.x + plotArea.width]);
+      if (!hasExplicitContinuousRange(yScaleDef)) yScale.setRange([plotArea.y + plotArea.height, plotArea.y]);
+      const xRangeOverride = ctx.roleRangeOverrides?.x;
+      const yRangeOverride = ctx.roleRangeOverrides?.y;
+      if (xRangeOverride !== undefined) xScale.setRange([xRangeOverride[0], xRangeOverride[1]]);
+      if (yRangeOverride !== undefined) yScale.setRange([yRangeOverride[0], yRangeOverride[1]]);
+
+      const visibleXTicks = xAxis
+        ? ctx.resolveVisibleGuideTicks(xTicks ?? EMPTY_TICKS, xAxis.ticks, value => xScale.coordinate(value))
+        : undefined;
+      const visibleYTicks = yAxis
+        ? ctx.resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value))
+        : undefined;
+      const [xRangeStart, xRangeEnd] = xScale.range();
+      const [yRangeStart, yRangeEnd] = yScale.range();
+      const guideFrame: Rect = {
+        x: Math.min(xRangeStart, xRangeEnd),
+        y: Math.min(yRangeStart, yRangeEnd),
+        width: Math.abs(xRangeEnd - xRangeStart),
+        height: Math.abs(yRangeEnd - yRangeStart),
+      };
+      const guideContext: GuideContext = {
+        plotArea: guideFrame,
+        projectX: xScale,
+        projectY: yScale,
+        xTicks: visibleXTicks ?? EMPTY_TICKS,
+        yTicks: visibleYTicks ?? EMPTY_TICKS,
+        fontSize: ctx.fontSize,
+        labelGap: ctx.labelGap,
+      };
+      lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
+      if (ctx.plotAreaOverride !== undefined) break;
+      const tickLabelsByGuide = ctx.axisGuides.map(guide =>
+        guide.placement?.kind === AxisPlacementKind.Origin
+          ? new Set<string>()
+          : new Set(guide.dimension === 'x' ? visibleXTicks?.labels : visibleYTicks?.labels),
+      );
+      const overflow = guideOverflowOf(lowered, tickLabelsByGuide, ctx.width, ctx.height, ctx.fontSize);
+      if (Object.values(overflow).every(value => value <= 1e-6)) break;
+      guideReserve = addMarginReserve(guideReserve, overflow);
+    }
     const frame = createCartesianCoordinate(xScale, yScale);
-    const visibleXTicks = xAxis
-      ? ctx.resolveVisibleGuideTicks(xTicks ?? EMPTY_TICKS, xAxis.ticks, value => xScale.coordinate(value))
-      : undefined;
-    const visibleYTicks = yAxis
-      ? ctx.resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value))
-      : undefined;
-
-    const [xRangeStart, xRangeEnd] = xScale.range();
-    const [yRangeStart, yRangeEnd] = yScale.range();
-    const guideFrame: Rect = {
-      x: Math.min(xRangeStart, xRangeEnd),
-      y: Math.min(yRangeStart, yRangeEnd),
-      width: Math.abs(xRangeEnd - xRangeStart),
-      height: Math.abs(yRangeEnd - yRangeStart),
-    };
-    const guideContext: GuideContext = {
-      plotArea: guideFrame,
-      projectX: xScale,
-      projectY: yScale,
-      xTicks: visibleXTicks ?? EMPTY_TICKS,
-      yTicks: visibleYTicks ?? EMPTY_TICKS,
-      fontSize: ctx.fontSize,
-      labelGap: ctx.labelGap,
-    };
-    const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
     return {
       frame,
       plotArea,

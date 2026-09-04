@@ -1,17 +1,41 @@
 import type { IRChartSource } from '@retikz/chart';
+import type { IRBubbleChart } from '@retikz/chart/point/bubble';
+import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
+import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
+import type { IRRegressionChart } from '@retikz/chart/point/regression';
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
+import type { IRStripChart } from '@retikz/chart/point/strip';
+import type { CreateBubbleChartInput } from '@retikz/chart-vanilla/point/bubble';
+import type { CreateConnectedScatterChartInput } from '@retikz/chart-vanilla/point/connected-scatter';
+import type { CreateRangedDotChartInput } from '@retikz/chart-vanilla/point/ranged-dot';
+import type { CreateRegressionChartInput } from '@retikz/chart-vanilla/point/regression';
 import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
+import type { CreateStripChartInput } from '@retikz/chart-vanilla/point/strip';
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import type { IRFlowDiagram } from '@retikz/diagram/flow';
+import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import type { InputBlockChild, InputGraphChild, InputGroupChild } from '@retikz/graph-vanilla';
 import type { IRPlot } from '@retikz/plot';
 import type { IRTable } from '@retikz/table';
 import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 
+import { BubbleChartSchema } from '@retikz/chart/point/bubble';
+import { ConnectedScatterChartSchema } from '@retikz/chart/point/connected-scatter';
+import { RangedDotChartSchema } from '@retikz/chart/point/ranged-dot';
+import { RegressionChartSchema } from '@retikz/chart/point/regression';
 import { ScatterChartSchema } from '@retikz/chart/point/scatter';
+import { StripChartSchema } from '@retikz/chart/point/strip';
 import { renderChart } from '@retikz/chart-vanilla';
+import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble';
+import { createConnectedScatterChart } from '@retikz/chart-vanilla/point/connected-scatter';
+import { createRangedDotChart } from '@retikz/chart-vanilla/point/ranged-dot';
+import { createRegressionChart } from '@retikz/chart-vanilla/point/regression';
 import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
+import { createStripChart } from '@retikz/chart-vanilla/point/strip';
 import { fallbackMeasurer } from '@retikz/core';
+import { FlowDiagramSchema } from '@retikz/diagram/flow';
+import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
 import {
   BlockDefinition,
   BlockHeaderDefinition,
@@ -175,7 +199,7 @@ const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOption
     children: preview.ir.children.map(convertCoreChild),
   });
   return {
-    code: irToVanillaCode(preview.ir),
+    code: irToVanillaCode(preview.sourceIr),
     svg: renderToSvgString(input, {
       output: outputSize(preview),
       ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
@@ -266,10 +290,11 @@ const registerPreviewIds = (children: ReadonlyArray<IRChild>, libraryState: Libr
       if (child.namespace === 'graph' && child.type === 'blockHeader') {
         const header = BlockHeaderSchema.parse(child);
         if (header.icon !== undefined) visit(header.icon);
-        if (header.trailing !== undefined) visit(header.trailing);
+        if (header.trail !== undefined) visit(header.trail);
       }
       if (child.namespace === 'graph' && child.type === 'blockRow') {
-        BlockRowSchema.parse(child).children?.forEach(cell => visit(cell.child));
+        const row = BlockRowSchema.parse(child);
+        if ('children' in row) row.children?.forEach(visit);
       }
       return;
     }
@@ -446,13 +471,13 @@ const convertGraphChild = (
       });
     }
     case 'blockHeader': {
-      const { namespace: _namespace, type: _type, icon, trailing, ...input } = BlockHeaderSchema.parse(child);
+      const { namespace: _namespace, type: _type, icon, trail, ...input } = BlockHeaderSchema.parse(child);
       void _namespace;
       void _type;
       return blockHeader(nextGraphId('blockHeader', state), {
         ...input,
         ...(icon === undefined ? {} : { icon: convertPreviewChild(icon, libraryState, state) }),
-        ...(trailing === undefined ? {} : { trailing: convertPreviewChild(trailing, libraryState, state) }),
+        ...(trail === undefined ? {} : { trail: convertPreviewChild(trail, libraryState, state) }),
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
     }
@@ -475,7 +500,17 @@ const convertGraphChild = (
       });
     }
     case 'blockRow': {
-      const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = BlockRowSchema.parse(child);
+      const row = BlockRowSchema.parse(child);
+      if ('content' in row) {
+        const { namespace: _namespace, type: _type, ...input } = row;
+        void _namespace;
+        void _type;
+        return blockRow(nextGraphId('blockRow', state), {
+          ...input,
+          graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+        });
+      }
+      const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = row;
       void _namespace;
       void _type;
       return blockRow(nextGraphId('blockRow', state), {
@@ -483,10 +518,7 @@ const convertGraphChild = (
         ...(sourceChildren === undefined
           ? {}
           : {
-              children: sourceChildren.map(cell => ({
-                ...cell,
-                child: convertPreviewChild(cell.child, libraryState, state),
-              })),
+              children: sourceChildren.map(item => convertPreviewChild(item, libraryState, state)),
             }),
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
@@ -637,7 +669,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
     measureText: options.measureText ?? browserPreviewMeasurer,
   };
   return {
-    code: irToVanillaCode(preview.ir, { theme: options.theme }),
+    code: irToVanillaCode(preview.sourceIr, { theme: options.theme }),
     svg: renderToSvgString(input, {
       adapters: [...standardAdapters(libraryState), ...layoutAdapters(libraryState), ...graphAdapters(graphState)],
       output: outputSize(preview),
@@ -748,7 +780,13 @@ const buildDatasetImportCode = (
   return { imports, expression };
 };
 
-type TypedChartSource = IRScatterChart;
+type TypedChartSource =
+  | IRScatterChart
+  | IRBubbleChart
+  | IRConnectedScatterChart
+  | IRRangedDotChart
+  | IRRegressionChart
+  | IRStripChart;
 
 /** 从 Source IR 识别确定形态的 Chart */
 const typedChartSourceOf = (source: CompositeChild): TypedChartSource | undefined => {
@@ -757,6 +795,16 @@ const typedChartSourceOf = (source: CompositeChild): TypedChartSource | undefine
   switch (chartType) {
     case 'scatter':
       return ScatterChartSchema.parse(source);
+    case 'bubble':
+      return BubbleChartSchema.parse(source);
+    case 'connected-scatter':
+      return ConnectedScatterChartSchema.parse(source);
+    case 'ranged-dot':
+      return RangedDotChartSchema.parse(source);
+    case 'regression':
+      return RegressionChartSchema.parse(source);
+    case 'strip':
+      return StripChartSchema.parse(source);
     default:
       return undefined;
   }
@@ -790,8 +838,15 @@ const buildChartCode = (
 ): string => {
   const typedSource = typedChartSourceOf(chart);
   if (typedSource !== undefined) {
-    const factory = 'createScatterChart';
-    const subpath = 'scatter';
+    const factoryByChartType = {
+      bubble: { factory: 'createBubbleChart', subpath: 'bubble' },
+      'connected-scatter': { factory: 'createConnectedScatterChart', subpath: 'connected-scatter' },
+      'ranged-dot': { factory: 'createRangedDotChart', subpath: 'ranged-dot' },
+      regression: { factory: 'createRegressionChart', subpath: 'regression' },
+      scatter: { factory: 'createScatterChart', subpath: 'scatter' },
+      strip: { factory: 'createStripChart', subpath: 'strip' },
+    } as const;
+    const { factory, subpath } = factoryByChartType[typedSource.recipe.chartType];
     const datasetImport = buildDatasetImportCode(datasets, options);
     const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
     const dataCode = datasetImport === null ? `const datasets = ${formatVanillaValue(datasets)};\n\n` : '';
@@ -838,7 +893,22 @@ const buildChartPreview = (
     themeDefinitions: PreviewThemeDefinitionBundle.chart,
     lowerOptions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot },
   };
-  const runtime = createScatterChart(input as CreateScatterChartInput);
+  const runtime = (() => {
+    switch (chart.recipe.chartType) {
+      case 'bubble':
+        return createBubbleChart(input as CreateBubbleChartInput);
+      case 'connected-scatter':
+        return createConnectedScatterChart(input as CreateConnectedScatterChartInput);
+      case 'ranged-dot':
+        return createRangedDotChart(input as CreateRangedDotChartInput);
+      case 'regression':
+        return createRegressionChart(input as CreateRegressionChartInput);
+      case 'scatter':
+        return createScatterChart(input as CreateScatterChartInput);
+      case 'strip':
+        return createStripChart(input as CreateStripChartInput);
+    }
+  })();
   const rendered = renderChart(runtime, {
     ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
     ...(Object.keys(size).length === 0 ? {} : { output: size }),
@@ -911,7 +981,64 @@ const buildTablePreview = (
   };
 };
 
-/** 从统一的预览 IR 上下文生成 Core、Library、Graph、Plot、Chart 或 Table 的 Vanilla 源码与真实 SVG */
+const flowAuthoringInput = (source: IRFlowDiagram): InputFlowDiagram => {
+  const { namespace: _namespace, type: _type, ...input } = source;
+  void _namespace;
+  void _type;
+  return input;
+};
+
+const buildFlowCode = (source: IRFlowDiagram, preview: PreviewIR, options: BuildVanillaPreviewOptions): string => {
+  const authoring = {
+    ...flowAuthoringInput(source),
+    diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
+    flowThemeStyles: '__FLOW_THEME_STYLES__',
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  const authoringCode = formatVanillaValue(authoring)
+    .replace("'__DIAGRAM_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.diagram')
+    .replace("'__FLOW_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.flow')
+    .replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  const figureCode = formatVanillaValue({
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    ...(preview.ir.viewBox === undefined ? {} : { viewBox: preview.ir.viewBox }),
+    children: '__FLOW_CHILDREN__',
+  }).replace("'__FLOW_CHILDREN__'", `[flowDiagram('preview-flow-1', ${authoringCode})]`);
+  return `import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [FlowDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeStyles: PreviewThemeDefinitionBundle.core },\n});\n`;
+};
+
+const buildFlowPreview = (
+  preview: PreviewIR,
+  composite: CompositeChild,
+  options: BuildVanillaPreviewOptions,
+): VanillaPreviewArtifact => {
+  const source = FlowDiagramSchema.parse(composite);
+  const input = scene({
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    ...(preview.ir.viewBox === undefined ? {} : { viewBox: preview.ir.viewBox }),
+    children: [
+      flowDiagram('preview-flow-1', {
+        ...flowAuthoringInput(source),
+        diagramThemeStyles: PreviewThemeDefinitionBundle.diagram,
+        flowThemeStyles: PreviewThemeDefinitionBundle.flow,
+        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+      }),
+    ],
+  });
+  return {
+    code: buildFlowCode(source, preview, options),
+    svg: renderToSvgString(input, {
+      adapters: [FlowDiagramInputEmbedAdapter],
+      output: outputSize(preview),
+      compile: {
+        themeStyles: PreviewThemeDefinitionBundle.core,
+        measureText: options.measureText ?? browserPreviewMeasurer,
+      },
+    }),
+  };
+};
+
+/** 从统一的预览 IR 上下文生成 Core、Library、Graph、Flow、Plot、Chart 或 Table 的 Vanilla 源码与真实 SVG */
 export const buildVanillaPreview = (
   preview: PreviewIR,
   options: BuildVanillaPreviewOptions = {},
@@ -942,6 +1069,9 @@ export const buildVanillaPreview = (
     if (effectiveComposites.length === 1 && firstComposite.namespace === 'table' && firstComposite.type === 'table') {
       return buildTablePreview(preview, firstComposite, options);
     }
+    if (effectiveComposites.length === 1 && firstComposite.namespace === 'diagram' && firstComposite.type === 'flow') {
+      return buildFlowPreview(preview, firstComposite, options);
+    }
     const unsupported = effectiveComposites.find(
       child =>
         child.namespace !== 'standard' &&
@@ -949,7 +1079,8 @@ export const buildVanillaPreview = (
         child.namespace !== 'graph' &&
         !(child.namespace === 'plot' && child.type === 'plot') &&
         !(child.namespace === 'chart' && typedChartSourceOf(child) !== undefined) &&
-        !(child.namespace === 'table' && child.type === 'table'),
+        !(child.namespace === 'table' && child.type === 'table') &&
+        !(child.namespace === 'diagram' && child.type === 'flow'),
     );
     const child = unsupported ?? firstComposite;
     return diagnostic(`Cannot generate Vanilla preview for Tier 2 composite "${child.namespace}.${child.type}".`);

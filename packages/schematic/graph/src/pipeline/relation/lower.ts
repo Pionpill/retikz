@@ -20,6 +20,7 @@ const RELATION_ONLY_FIELDS = new Set<keyof IRGraphRelation>([
   'role',
   'kind',
   'predicate',
+  'status',
   'direction',
   'labels',
   'route',

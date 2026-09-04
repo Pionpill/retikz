@@ -1,0 +1,103 @@
+---
+title: 条带图
+description: 在一个离散位置角色内确定性散布观测点，同时保留另一个连续位置角色的原始数值。
+family: scatter-points
+usage: distribution
+---
+
+<ShowcaseGallery
+  examples={[
+    {
+      id: 'strip-minimal',
+      title: '基础用法',
+      description: '这是只传必要配置的最简用法；明确一个离散 scale 与一个连续 scale 后，`StripChart` 会自动沿离散角色散布重叠观测，可切换到 IR 查看精确配置。',
+      preview: {
+        files: ['strip-minimal', 'strip-palmer-penguins.data.ts'],
+        size: 'xxxl',
+        caption: '每个点仍保留原始鳍长；同一物种内只改变离散角色上的位置。',
+      },
+    },
+    {
+      id: 'strip-basic',
+      title: '进阶调试：角色、坐标与散布范围',
+      description: '切换离散 x / y、Point / Band scale、笛卡尔 / 极坐标，并调整散布宽度、随机种子和点半径。',
+      preview: {
+        files: ['strip-basic', 'strip-vega-barley.data.ts'],
+        controls: { name: 'strip-basic' },
+        controlPanelDefaultOpen: false,
+        size: 'xxxl',
+        caption: '极坐标下，离散 x 沿角度圆弧散布，离散 y 沿半径方向散布；不同半径上的相同角度偏移会形成不同弧长。',
+      },
+    },
+  ]}
+>
+Strip Chart 用一个离散位置角色组织类别，再在该刻度附近散布每条观测。它适合查看组内分布、重叠和离群值；如果 x、y 都是连续变量，使用 [Scatter](/viz/chart/points/scatter)。
+
+## `StripChart`
+
+根 `recipe` 必须同时声明 x 与 y，并让最终位置 scale 恰好一个是离散、一个是连续。组件身份自动补齐 Point family 与 `chartType: 'strip'`：
+
+```tsx
+<StripChart
+  rows={rows}
+  recipe={{
+    encodings: {
+      x: { field: 'group', scale: { operation: { type: 'point', name: 'group' } } },
+      y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+    },
+    properties: { jitter: { span: { kind: 'ratio', value: 0.3 }, seed: 0 } },
+  }}
+/>
+```
+
+`StripEncodings`、`StripProperties` 与 `StripMark` 是相同 recipe slots 的等价 JSX sugar。root-only 写法可以省略 `children`；不同 slot 可以混用，同一 slot 双来源会 fail-loud。
+
+## 位置角色与散布
+
+`x` 与 `y` 只接受 direct field mapping。scale 可以直接写 operation，也可以引用 `plotExtension.scales` 中的命名 scale；Chart 通过 Scale Definition 的 `continuity` 判断拓扑，因此自定义离散 scale 与内建 scale 走同一 registry 路径。
+
+`jitter.span` 是**总散布宽度**。数字直接使用当前位置角色的输出单位；`{ kind: 'ratio', value }` 使用离散刻度间距的 `0..1` 比例。省略时由 Plot 使用 `0.3`，`seed` 省略时为 `0`。相同有序数据、scale、span 与 seed 会得到相同位置。
+
+默认 grid 只跟随连续角色。`domainPadding` 也只应用于连续位置 scale；离散边界的安全距离由 Plot placement 根据半个散布宽度与实际 glyph 外扩共同收窄 range，点不会被 clamp、缩小或绘制到坐标边界外。空间不足时会明确报错。
+
+极坐标仍按角色空间散布后再投影：x 是 angle，y 是 radius。因此离散 x 沿圆弧移动，同一角度偏移在不同半径上产生不同弧长；离散 y 则沿径向移动。
+
+## API 参考
+
+### `StripEncodingsProps`
+
+| 属性       | 类型                                    | 默认值 | 描述                                                |
+| ---------- | --------------------------------------- | ------ | --------------------------------------------------- |
+| `x` / `y`  | `IRStripXEncoding` / `IRStripYEncoding` | —      | 必需 direct mapping；最终必须恰好一个离散、一个连续 |
+| `color?`   | `IRStripColorEncoding`                  | —      | 可选 direct 颜色字段与 scale binding                |
+| `size?`    | `IRStripSizeEncoding`                   | —      | 可选 direct 半径字段与 sqrt scale binding           |
+| `opacity?` | `IRStripOpacityEncoding`                | —      | 可选 direct 透明度字段与 linear scale binding       |
+| `shape?`   | `IRStripShapeEncoding`                  | —      | 可选 direct 形状字段                                |
+
+### `StripPropertiesProps`
+
+| 属性             | 类型                                                                    | 默认值                          | 描述                                                          |
+| ---------------- | ----------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------- |
+| `jitter?`        | `{ span?: number \| { kind: 'ratio'; value: number }; seed?: number }`  | `{ span: ratio(0.3), seed: 0 }` | 沿唯一离散位置角色确定性散布；Chart 不接受手写 `role`         |
+| `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | 最终最大 Point 半径             | 只配置连续位置 scale；离散 containment 由 Plot placement 负责 |
+| Point 外观       | `IRPointProperties`                                                     | Point 默认                      | `size`、`shape`、颜色、描边、透明度等常量外观                 |
+
+### `StripMarkProps`
+
+| 属性          | 类型                         | 默认值  | 描述                                                         |
+| ------------- | ---------------------------- | ------- | ------------------------------------------------------------ |
+| `override?`   | `boolean`                    | `false` | 原位替换完整 Strip Point mark                                |
+| `encodings?`  | `IRPointMarkEncoding`        | 继承    | 只覆盖 direct 字段；不能声明 mark-local scale                |
+| `properties?` | `IRStripChartMarkProperties` | 继承    | 覆盖 Point 外观与 jitter；不接受 recipe-only `domainPadding` |
+
+## 公开入口
+
+- `@retikz/chart/point/strip`：exact schemas、Source 类型与 provider
+- `@retikz/chart-react/point`：Chart、Encodings、Properties 与 Mark declarations
+- `@retikz/chart-vanilla/point/strip`：normalize、factory 与 typed Input
+
+## 相关
+
+[散点图](/viz/chart/points/scatter) · [Point 位置散布](/viz/plot/mark/point#位置散布) · [位置 Scale](/viz/plot/scale/position) · [与 Plot 协作](/viz/chart/model/plot)
+
+</ShowcaseGallery>

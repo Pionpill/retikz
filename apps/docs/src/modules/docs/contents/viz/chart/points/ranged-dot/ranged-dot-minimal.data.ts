@@ -1,0 +1,23 @@
+/** Vega Datasets seattle-weather.csv 中前 20 天最低与最高气温记录的静态快照，访问于 2026-09-01 */
+export const rangedDotMinimalData = [
+  { day: 'Day 001', minimumTemperature: 5, maximumTemperature: 12.8 },
+  { day: 'Day 002', minimumTemperature: 2.8, maximumTemperature: 10.6 },
+  { day: 'Day 003', minimumTemperature: 7.2, maximumTemperature: 11.7 },
+  { day: 'Day 004', minimumTemperature: 5.6, maximumTemperature: 12.2 },
+  { day: 'Day 005', minimumTemperature: 2.8, maximumTemperature: 8.9 },
+  { day: 'Day 006', minimumTemperature: 2.2, maximumTemperature: 4.4 },
+  { day: 'Day 007', minimumTemperature: 2.8, maximumTemperature: 7.2 },
+  { day: 'Day 008', minimumTemperature: 2.8, maximumTemperature: 10 },
+  { day: 'Day 009', minimumTemperature: 5, maximumTemperature: 9.4 },
+  { day: 'Day 010', minimumTemperature: 0.6, maximumTemperature: 6.1 },
+  { day: 'Day 011', minimumTemperature: -1.1, maximumTemperature: 6.1 },
+  { day: 'Day 012', minimumTemperature: -1.7, maximumTemperature: 6.1 },
+  { day: 'Day 013', minimumTemperature: -2.8, maximumTemperature: 5 },
+  { day: 'Day 014', minimumTemperature: 0.6, maximumTemperature: 4.4 },
+  { day: 'Day 015', minimumTemperature: -3.3, maximumTemperature: 1.1 },
+  { day: 'Day 016', minimumTemperature: -2.8, maximumTemperature: 1.7 },
+  { day: 'Day 017', minimumTemperature: 0, maximumTemperature: 3.3 },
+  { day: 'Day 018', minimumTemperature: -2.8, maximumTemperature: 0 },
+  { day: 'Day 019', minimumTemperature: -2.8, maximumTemperature: -1.1 },
+  { day: 'Day 020', minimumTemperature: -1.1, maximumTemperature: 7.2 },
+];

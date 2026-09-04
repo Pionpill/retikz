@@ -103,6 +103,23 @@ describe('buildPlotIR model → type-driven 派生（alpha.6 ADR-03，评审 P1�
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
+  it('显式 <PlotScale> 保留 ratio domain padding', () => {
+    const spec = buildPlotIR(
+      <>
+        <PathMark x="month" y="revenue" />
+        <PlotScale dimension="y" type="linear" domainPadding={{ kind: 'ratio', lower: 0.1 }} />
+      </>,
+      '__plot',
+    );
+
+    expect(spec.scales).toContainEqual({
+      type: 'linear',
+      name: '__y',
+      domainPadding: { kind: 'ratio', lower: 0.1 },
+    });
+    expect(() => PlotSchema.parse(spec)).not.toThrow();
+  });
+
   it('显式 point <PlotScale> 会把分类 domain、padding 与 align 转发到 IRPlot', () => {
     const spec = buildPlotIR(
       <>

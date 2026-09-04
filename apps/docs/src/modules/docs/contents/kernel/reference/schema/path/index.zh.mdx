@@ -67,7 +67,7 @@ Core 另外公开五个可复用的严格 fragment，按描边、填充、几何
   description="Path 宿主标签和沿路径标记字段。"
   descriptions={{
     label: '附着在 Path 或其它 path-like 宿主上的几何标签',
-    marks: '沿路径按归一化位置放置的标记；方向随路径切线',
+    marks: '沿路径按归一化位置放置的标记；方向随路径切线，端点箭头可声明归一化重叠比例',
   }}
 />
 
@@ -120,7 +120,8 @@ Core 另外公开五个可复用的严格 fragment，按描边、填充、几何
     scale: '整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）',
     roundedCorners: '线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同',
     label: '附着在 Path 或其它 path-like 宿主上的几何标签',
-    marks: "沿路径放方向标记：每项 `{ pos, mark }`，`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线",
+    marks:
+      "沿路径放方向标记：每项 `{ pos, endpointOverlap?, mark }`，`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线；endpointOverlap 只适用于内置 Stroke Path 实际选中的端点 mark",
     children: 'step 动作序列；首项通常应是 `move`',
   }}
 />
@@ -423,14 +424,18 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 `GeometryLabelSchema` 是 path-like 宿主共用的几何标签契约。`StepLabelSchema` 是这个 schema 的别名；除 move / cycle 之外的绘制 step 与可选 Standard Ribbon 的 `centerline` 标签都复用同一套字段。
 它描述标签文字、沿宿主中心线或段的归一化位置，以及相对切线 / 法线的偏移方式。
 
+`interrupt` 只在这里声明 JSON 形态，不是所有宿主都支持的绘图能力。Core resolve 在知道最终 Path kind 与有效 fill 后决定策略：无填充内置 `stroke` Path 的 canonical `center` 标签省略时自动断线，`sloped: true` 而未给 `side` 也属于该情况。`false` 保持连续，`true` 可强制非居中标签断线；有效 fill 上的 `true`，以及 Ribbon、custom 或其它非内置 Stroke Path 上的任意显式布尔值都会 fail-loud。
+
 <ZodSchema
   name="GeometryLabelSchema"
   description="几何标签：附着在 path step 或可选 Standard Ribbon centerline 上的文本与定位规格。"
   descriptions={{
     text: '标签文字内容（单行；多行需 \\n）',
     position: '沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway',
-    side: '标签相对锚点的方位：top / bottom / left / right；接受 compass 别名 north / south / east / west',
-    sloped: '是否沿采样点切线旋转标签；为 true 时仍可用 side 控制方位',
+    side: '标签相对锚点的可写方位：top / bottom / left / right；接受 compass 别名 north / south / east / west。center 只在 resolve 后产生，不能作为 IR side 写入',
+    sloped: '是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位',
+    interrupt:
+      '是否请求在兼容宿主描边中产生文字断口；省略时由宿主策略决定，无填充内置 Stroke 的 canonical center 自动启用',
     placement:
       '标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Standard Ribbon 等面状宿主在未指定 side 时放在内部',
     distance: 'side 偏移距离，默认与 Path step label 一致',
@@ -526,13 +531,14 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 ### 标记位置
 
-`PathMarkPlacementSchema` 把一个 mark 放在路径归一化位置上；方向由该位置的路径切线决定。
+`PathMarkPlacementSchema` 把一个 mark 放在路径归一化位置上；方向由该位置的路径切线决定。`endpointOverlap` 只用于内置 Stroke Path 实际选中的 `pos: 0` / `pos: 1` 端点箭头：`0` 保持现有默认放置，`0.5` 位于默认与完整进入位置的中点，`1` 让按最终尺寸和轮廓解析的视觉后缘对齐逻辑端点。中段、同侧未选中的重复端点，以及其它 Path kind 会明确失败。
 
 <ZodSchema
   name="PathMarkPlacementSchema"
   description="路径上的一个归一化标记位置及其 mark。"
   descriptions={{
     pos: '路径上的归一化位置 0..1；line-like step 按弧长，曲线 step 按参数位置',
+    endpointOverlap: '仅用于内置 Stroke Path 实际选中的端点箭头；0 保持现有默认放置，1 让最终视觉后缘对齐逻辑端点',
     mark: '放置的标记；当前为沿路径切线定向的 ArrowMark',
   }}
 />

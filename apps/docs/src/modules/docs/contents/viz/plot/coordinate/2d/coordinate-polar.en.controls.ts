@@ -18,10 +18,7 @@ export const coordinatePolarControls = definePreviewControls({
           id: 'rows',
           label: 'Category values',
           rows: coordinate2DRows,
-          columns: [
-            { key: 'category', label: 'Category' },
-            { key: 'value', label: 'Value' },
-          ],
+          columns: [{ key: 'category' }, { key: 'value' }],
         },
       ],
     },
@@ -32,18 +29,41 @@ export const coordinatePolarControls = definePreviewControls({
           kind: 'select',
           id: 'markType',
           label: 'Mark type',
-          defaultValue: 'point',
+          defaultValue: 'line',
           options: [
             { value: 'point', label: 'Point' },
             { value: 'line', label: 'Line' },
             { value: 'interval', label: 'Area' },
           ],
         },
+        {
+          kind: 'select',
+          id: 'markInterpolation',
+          label: 'Mark interpolation',
+          defaultValue: 'inherit',
+          options: [
+            { value: 'inherit', label: 'Inherit coordinate' },
+            { value: 'polar', label: 'Polar curve' },
+            { value: 'chord', label: 'Straight chord' },
+          ],
+          visibleWhen: { controlId: 'markType', oneOf: ['line', 'interval'] },
+        },
       ],
     },
     {
       label: 'Coordinate projection',
       controls: [
+        {
+          kind: 'select',
+          id: 'coordinateInterpolation',
+          label: 'Coordinate interpolation',
+          defaultValue: 'auto',
+          options: [
+            { value: 'auto', label: 'Auto inference' },
+            { value: 'polar', label: 'Polar curve' },
+            { value: 'chord', label: 'Straight chord' },
+          ],
+        },
         {
           kind: 'range',
           id: 'innerRadius',
@@ -80,10 +100,12 @@ export const coordinatePolarControls = definePreviewControls({
 export const previewControlContract = {
   controls: coordinatePolarControls,
   canonicalValues: {
-    markType: 'point',
+    markType: 'line',
+    markInterpolation: 'inherit',
+    coordinateInterpolation: 'auto',
     innerRadius: 0,
     startAngle: -90,
     sweepAngle: 360,
   },
-  relatedApis: ['PointMark', 'PathMark', 'IntervalMark', 'Plot.coordinate'],
+  relatedApis: ['PointMark', 'PathMark.interpolation', 'IntervalMark.interpolation', 'Plot.coordinate.interpolation'],
 } satisfies PreviewControlContract;

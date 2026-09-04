@@ -83,7 +83,7 @@ describe('irToVanillaCode', () => {
               icon: { type: 'node', position: [0, 0], text: 'U' },
               title: { text: 'User' },
               description: { text: 'Domain entity' },
-              trailing: { namespace: 'graph', type: 'entity', role: 'state', text: 'public' },
+              trail: { namespace: 'graph', type: 'entity', role: 'state', text: 'public' },
             }),
             BlockSectionSchema.parse({
               namespace: 'graph',
@@ -95,12 +95,7 @@ describe('irToVanillaCode', () => {
                   namespace: 'graph',
                   type: 'blockRow',
                   id: 'user.name',
-                  children: [
-                    {
-                      key: 'name',
-                      child: { namespace: 'graph', type: 'entity', role: 'concept', text: 'name' },
-                    },
-                  ],
+                  children: [{ namespace: 'graph', type: 'entity', role: 'concept', text: 'name' }],
                 }),
               ],
             }),
@@ -115,9 +110,9 @@ describe('irToVanillaCode', () => {
     expect(code).toContain("blockRow('preview-blockRow-1'");
     expect(code).toContain("title: { text: 'User' }");
     expect(code).toContain("description: { text: 'Domain entity' }");
+    expect(code).toContain('trail: entity(');
     expect(code).toContain("id: 'user.fields'");
     expect(code).toContain("id: 'user.name'");
-    expect(code).toContain("key: 'name'");
     expect(code).toContain("entity('preview-entity-");
     expect(code).toContain('BlockInputEmbedAdapter');
     expect(code).toContain('BlockHeaderInputEmbedAdapter');

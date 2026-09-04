@@ -12,7 +12,7 @@ import type {
 import type { LegendReserve, Margins } from '../../shared';
 import type { GuideContext, LoweredGuide } from '../guide';
 import type { ProvenanceContext } from '../provenance';
-import type { PositionScale, TickSet } from '../scale';
+import type { PositionScale, PositionScaleContinuityValue, TickSet } from '../scale';
 import type { Cell, CellGeometry } from './cell';
 import type { AxisFrame, CoordinateFrame, DimensionRole } from './types';
 
@@ -43,6 +43,21 @@ export type CoordinateResolution = {
   /** guide axis 下沉后的 IR scope 列表 */
   axisLayers: Array<IRScope>;
 };
+
+/** 坐标 operation 中按位置角色索引的命名 scale binding */
+export type CoordinateScaleNames = Readonly<Partial<Record<DimensionRole, string>>>;
+
+/**
+ * 坐标 Definition 的位置 scale binding 契约。
+ * @description read 把 operation 自有字段投影为统一 role；bind 将统一 role 写回 operation 自有字段。
+ *   省略该契约时，Plot 默认读取和写入与 role 同名的 operation 字段
+ */
+export type CoordinateScaleBinding<TCoordinateOperation extends IRPlotCoordinateOperation> = Readonly<{
+  /** 从坐标 operation 读取按 role 命名的 scale */
+  read: (operation: TCoordinateOperation) => CoordinateScaleNames;
+  /** 将按 role 命名的 scale 写入坐标 operation，并保留其它配置 */
+  bind: (operation: TCoordinateOperation, scaleNames: CoordinateScaleNames) => TCoordinateOperation;
+}>;
 
 /**
  * 坐标系 definition.resolve 的共享上下文。
@@ -98,6 +113,8 @@ export type CoordinateDefinitionResolveContext = {
     scaleName: string | undefined,
     values: Array<unknown>,
   ) => IRPlotScaleOperation;
+  /** 读取已注册 position scale definition 的拓扑连续性；channel scale 与未注册 type 会 fail-loud */
+  resolvePositionScaleContinuity: (operation: IRPlotScaleOperation) => PositionScaleContinuityValue;
   /** 把 scale operation 与数据域、屏幕 range 组合成可投影的位置 scale */
   buildPositionScale: (
     def: IRPlotScaleOperation,
@@ -132,8 +149,56 @@ export type CoordinateDefinition<TCoordinateOperation extends IRPlotCoordinateOp
   schema: ZodType<TCoordinateOperation>;
   /** 该坐标系消费的定位角色序，用于 required-channel 与 guide-dimension 校验 */
   roles: ReadonlyArray<DimensionRole>;
+  /** operation 字段与统一位置 role 之间的可选 scale binding；默认使用 role 同名字段 */
+  scaleBinding?: CoordinateScaleBinding<TCoordinateOperation>;
   /** 将 coordinate operation 解析成运行时 frame 与 guide 层 */
   resolve: (operation: TCoordinateOperation, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution;
+};
+
+type CoordinateScaleBindingDefinition = Readonly<{
+  roles: ReadonlyArray<DimensionRole>;
+  schema: ZodType;
+  scaleBinding?: Readonly<{
+    read: (operation: never) => CoordinateScaleNames;
+    bind: (operation: never, scaleNames: CoordinateScaleNames) => IRPlotCoordinateOperation;
+  }>;
+}>;
+
+/** 按 Definition 契约读取 coordinate operation 的位置 scale 名称 */
+export const readCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoordinateOperation>(
+  definition: CoordinateScaleBindingDefinition,
+  operation: TCoordinateOperation,
+): CoordinateScaleNames => {
+  const parsedOperation = definition.schema.parse(operation) as TCoordinateOperation;
+  const authoredScaleNames = definition.scaleBinding?.read(parsedOperation as never);
+  const scaleNames: Partial<Record<DimensionRole, string>> = {};
+  for (const role of definition.roles) {
+    const scaleName = authoredScaleNames === undefined ? Reflect.get(parsedOperation, role) : authoredScaleNames[role];
+    if (typeof scaleName === 'string') scaleNames[role] = scaleName;
+  }
+  return scaleNames;
+};
+
+/**
+ * 按 Definition 契约把位置 scale 名称写回 coordinate operation。
+ * @description 自定义 hook 与默认同名字段路径都必须再次通过 Definition schema，避免 Chart 组装出 Plot 无法消费的 operation
+ */
+export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoordinateOperation>(
+  definition: CoordinateScaleBindingDefinition,
+  operation: TCoordinateOperation,
+  scaleNames: CoordinateScaleNames,
+): TCoordinateOperation => {
+  const parsedOperation = definition.schema.parse(operation) as TCoordinateOperation;
+  const applicableScaleNames: Partial<Record<DimensionRole, string>> = {};
+  for (const role of definition.roles) {
+    const scaleName = scaleNames[role];
+    if (scaleName !== undefined) applicableScaleNames[role] = scaleName;
+  }
+  const candidate: IRPlotCoordinateOperation =
+    definition.scaleBinding === undefined
+      ? { ...parsedOperation, ...applicableScaleNames }
+      : definition.scaleBinding.bind(parsedOperation as never, applicableScaleNames);
+  return definition.schema.parse(candidate) as TCoordinateOperation;
 };
 
 /**
@@ -147,7 +212,7 @@ export const defineCoordinate = <TCoordinateOperation extends IRPlotCoordinateOp
   def: CoordinateDefinition<TCoordinateOperation>,
 ): CoordinateDefinition<TCoordinateOperation> => def;
 
-/** createCoordinateFrame 选项：roleScales 让 guide 画曲线轴、frameAlong 给精确切向、projectCell 支持 cell 类 mark；均可选 */
+/** createCoordinateFrame 的可选运行时能力 */
 export type CreateCoordinateFrameOptions = {
   /** 各角色位置 scale；供 guide 画轴。省略 → 该坐标系无轴 */
   roleScales?: Partial<Record<DimensionRole, PositionScale>>;
@@ -155,13 +220,20 @@ export type CreateCoordinateFrameOptions = {
   frameAlong?: (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null;
   /** 正交 cell → CellGeometry；实现了才支持 cell 类 mark（interval / sector），省略 → cell 类 mark fail-loud */
   projectCell?: (cell: Cell) => CellGeometry;
+  /** 原始角色值经 position scale 映射；支持 role-space placement 时与 projectMappedRoles 一起提供 */
+  mapRoles?: (values: ReadonlyArray<unknown>) => ReadonlyArray<number> | null;
+  /** 已映射角色值投影到屏幕；支持 role-space placement 时与 mapRoles 一起提供 */
+  projectMappedRoles?: (values: ReadonlyArray<number>) => Position | null;
+  /** role-space placement containment 的 coordinate 边界度量 */
+  placementBoundary?: NonNullable<CoordinateFrame['placementBoundary']>;
 };
 
 /**
  * 建通用坐标帧。
  * @description 把 definition 注册 type、roles 与 projectRoles 包成 CoordinateFrame。`type` 会保留调用方注册的真实判别值，
  *   不会压成 `custom`；point/path/region 等按 `projectRoles` 投影。第三参 options 逐项声明额外能力：
- *   roleScales 允许 guide / interval 构造读取 scale，frameAlong 提供曲线轴精确切向，projectCell 开启 cell 类 mark。
+ *   roleScales 允许 guide / interval 构造读取 scale，mapRoles / projectMappedRoles 开启两段 position projection，
+ *   placementBoundary 开启 role-space containment，frameAlong 提供曲线轴精确切向，projectCell 开启 cell 类 mark。
  *   未声明的能力保持不可用并由消费方 fail-loud
  */
 export const createCoordinateFrame = (
@@ -175,6 +247,9 @@ export const createCoordinateFrame = (
   project: () => null,
   projectRoles,
   ...(options?.roleScales !== undefined ? { roleScales: options.roleScales } : {}),
+  ...(options?.mapRoles !== undefined ? { mapRoles: options.mapRoles } : {}),
+  ...(options?.projectMappedRoles !== undefined ? { projectMappedRoles: options.projectMappedRoles } : {}),
+  ...(options?.placementBoundary !== undefined ? { placementBoundary: options.placementBoundary } : {}),
   ...(options?.frameAlong !== undefined ? { frameAlong: options.frameAlong } : {}),
   ...(options?.projectCell !== undefined ? { projectCell: options.projectCell } : {}),
 });
@@ -183,9 +258,17 @@ export const createCoordinateFrame = (
  * registry 内部使用的宽类型。
  * @description registry 需要存放不同 operation 泛型的 definition；取出后由具体 schema parse 收窄，因此 resolve 入参在表内用 never 防止误调
  */
-export type AnyCoordinateDefinition = Omit<CoordinateDefinition<IRPlotCoordinateOperation>, 'schema' | 'resolve'> & {
+export type AnyCoordinateDefinition = Omit<
+  CoordinateDefinition<IRPlotCoordinateOperation>,
+  'scaleBinding' | 'schema' | 'resolve'
+> & {
   /** 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 type 并执行 parse */
   schema: ZodType;
+  /** 泛型擦除后的可选 scale binding；调用前必须先由 schema 收窄 operation */
+  scaleBinding?: Readonly<{
+    read: (operation: never) => CoordinateScaleNames;
+    bind: (operation: never, scaleNames: CoordinateScaleNames) => IRPlotCoordinateOperation;
+  }>;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation */
   resolve: (operation: never, ctx: CoordinateDefinitionResolveContext) => CoordinateResolution;
 };

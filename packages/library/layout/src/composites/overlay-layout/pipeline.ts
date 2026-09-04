@@ -15,13 +15,14 @@ import {
   LayoutIntrinsicMode,
 } from '@retikz/core';
 
-import type { LayoutInsets, LayoutRect } from '../internal';
+import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
 import type { IROverlayLayout, IROverlayLayoutItem, OverlayLayoutArtifact } from './types';
 
 import {
   alignResolvedLayoutSlot,
   compensatedLayoutSum,
   contentRectOf,
+  createEffectiveLayoutItems,
   createLayoutArtifactAlignmentGuide,
   createLayoutArtifactContainer,
   createLayoutArtifactItem,
@@ -36,7 +37,7 @@ import { overlayStructuralGuideOffset, placeOverlayItem, resolveOverlayProfile, 
 type IntrinsicMode = 'minimum' | 'natural';
 
 type MeasuredOverlayItem = Readonly<{
-  authored: IROverlayLayoutItem;
+  authored: EffectiveLayoutItem<IROverlayLayoutItem>;
   sourceIndex: number;
   margin: LayoutInsets;
 }>;
@@ -47,7 +48,7 @@ type OverlayProfileResults = Readonly<{
 }>;
 
 type PlacedOverlayItem = Readonly<{
-  authored: IROverlayLayoutItem;
+  authored: EffectiveLayoutItem<IROverlayLayoutItem>;
   sourceIndex: number;
   margin: LayoutInsets;
   slotBounds: LayoutRect;
@@ -207,8 +208,9 @@ export const compileOverlayLayout = (
   const padding = normalizeLayoutSpacing(node.padding);
   const finiteXLimit = finiteContentLimitOf(node, 'x', context.proposal.x, padding);
   const finiteYLimit = finiteContentLimitOf(node, 'y', context.proposal.y, padding);
-  const measured: ReadonlyArray<MeasuredOverlayItem> = node.children.map((authored, sourceIndex) =>
-    Object.freeze({ authored, sourceIndex, margin: normalizeLayoutSpacing(authored.margin) }),
+  const measured: ReadonlyArray<MeasuredOverlayItem> = createEffectiveLayoutItems(node.children).map(
+    (authored, sourceIndex) =>
+      Object.freeze({ authored, sourceIndex, margin: normalizeLayoutSpacing(authored.margin) }),
   );
   const minimumResults = measured.map(item =>
     probeOverlayProfile(context, node, item, 'minimum', finiteXLimit, finiteYLimit),

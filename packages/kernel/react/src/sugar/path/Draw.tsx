@@ -33,6 +33,8 @@ export type DrawProps = Readonly<{
   arrow?: PathProps['arrow'];
   /** 箭头详细配置 */
   arrowDetail?: PathProps['arrowDetail'];
+  /** 箭头端点放置配置 */
+  arrowPlacement?: PathProps['arrowPlacement'];
   /** 闭合区域填充色 */
   fill?: IRPath['fill'];
   /** 填充规则 */

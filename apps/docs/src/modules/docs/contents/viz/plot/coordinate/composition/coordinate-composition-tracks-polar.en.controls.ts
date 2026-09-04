@@ -19,13 +19,7 @@ export const coordinateCompositionTracksPolarControls = definePreviewControls({
           id: 'rows',
           label: 'Journey metrics',
           rows: polarTrackRows,
-          columns: [
-            { key: 'area', label: 'Area' },
-            { key: 'order', label: 'Order' },
-            { key: 'signal', label: 'Signal' },
-            { key: 'capacity', label: 'Capacity' },
-            { key: 'outer', label: 'Outer ring' },
-          ],
+          columns: [{ key: 'area' }, { key: 'order' }, { key: 'signal' }, { key: 'capacity' }, { key: 'outer' }],
         },
       ],
     },
@@ -87,7 +81,7 @@ export const coordinateCompositionTracksPolarControls = definePreviewControls({
         {
           kind: 'switch',
           id: COORDINATE_COMPOSITION_TRACKS_POLAR_CONTROL_IDS.yGridVisible,
-          label: 'Circular grid (y / radius)',
+          label: 'Polygon grid (y / radius)',
           defaultValue: true,
           visibleWhen: {
             controlId: COORDINATE_COMPOSITION_TRACKS_POLAR_CONTROL_IDS.localAxes,

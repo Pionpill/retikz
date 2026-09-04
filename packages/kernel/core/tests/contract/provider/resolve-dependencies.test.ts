@@ -41,6 +41,7 @@ const compositeDefinitionOf = (namespace: string, type: string): AnyCompositeDef
 const arrowDefinitionOf = (name: string) =>
   defineArrow({
     name,
+    backX: 0,
     lineContactX: 0,
     emit: () => [],
   });

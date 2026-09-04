@@ -3,19 +3,19 @@ title: Chart
 description: Chart organizes concrete graphic types on top of Plot and adds chart-wide title, source, canvas, and theme capabilities.
 ---
 
-Chart represents a complete graphic: the root `type` is a discoverable family, while nested `recipe.chartType` selects the concrete recipe. Chart also adds title, source, canvas, and Theme behavior. Plot continues to own data, marks, channels, scales, coordinates, guides, and transforms. Chart does not introduce a second graphics grammar.
+Chart represents a complete graphic: the root `type` is a discoverable family, while nested `recipe.chartType` selects the concrete recipe. Chart also adds title, source, canvas, Theme behavior, and a high-frequency coordinate choice. Plot still owns coordinate operations, Definitions, registry lookup, resolution, and lowering. Chart does not introduce a second graphics grammar.
 
-| Layer | Owns                                                                      | Does not own                                      |
-| ----- | ------------------------------------------------------------------------- | ------------------------------------------------- |
-| Chart | family, chartType, Chart Source, presentation, canvas, and Theme          | A replacement for Plot marks and encoding grammar |
-| Plot  | data, transforms, marks, channels, scales, coordinates, axes, and legends | Product semantics such as Scatter types           |
+| Layer | Owns                                                                                | Does not own                                       |
+| ----- | ----------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Chart | family, chartType, Chart Source, presentation, canvas, Theme, and coordinate choice | A replacement for Plot marks or coordinate grammar |
+| Plot  | data, transforms, marks, channels, scales, coordinate contracts, axes, and legends  | Product semantics such as Scatter types            |
 
 ## A minimal Point Chart
 
-Concrete graphics use typed Chart entries. This `ScatterChart` produces Source with `type: 'point'` and `recipe.chartType: 'scatter'`; `encodings` bind fields and `properties` contain constants.
+Concrete graphics use a typed Chart root. Root props follow the Source `data`, `layout`, `coordinate`, `presentation`, `recipe`, and `plotExtension` groups, while component identity supplies `type: 'point'` and `recipe.chartType: 'scatter'`.
 
 ```tsx
-import { ScatterChart } from '@retikz/chart-react/point/scatter';
+import { ScatterChart } from '@retikz/chart-react/point';
 
 const rows = [
   { x: 1, y: 2 },
@@ -24,26 +24,52 @@ const rows = [
 ];
 
 <ScatterChart
-  data={rows}
-  encodings={{ x: 'x', y: 'y' }}
-  properties={{ size: 8 }}
-  title="Relationship between two variables"
-  source="Example data"
+  rows={rows}
+  data={{ reference: 'chart.data' }}
   layout={{ width: 640, height: 360 }}
+  presentation={{ title: 'Relationship between two variables', source: 'Example data' }}
+  recipe={{ encodings: { x: 'x', y: 'y' }, properties: { size: 8 } }}
 />;
 ```
 
+## Shared root prop and declaration API
+
+| Entry                                                        | Cardinality    | Main props                                                                               | Responsibility                                                                                                          |
+| ------------------------------------------------------------ | -------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Concrete `XxxChart` root                                     | 1              | `rows?`, `data?`, `layout?`, `coordinate?`, `presentation?`, `recipe?`, `plotExtension?` | Complete IR-like entry; identity supplies family and chartType, while `rows` remains runtime-only                       |
+| `ChartData`                                                  | At most 1      | `data`, `reference?`, `model?`                                                           | JSX sugar for the root data slot; mutually exclusive with root `rows` / `data`                                          |
+| `ChartLayout`                                                | At most 1      | `width?`, `height?`, `layout?`                                                           | Declares standalone host dimensions and the Source border-box; an explicit `layout` is not field-merged with dimensions |
+| `ChartCoordinate`                                            | At most 1      | `coordinate`                                                                             | Declarative alternative to the root prop; writes the same Source root `coordinate`                                      |
+| `ChartExtension`                                             | At most 1      | Plot extension props, `children?`                                                        | Isolates Plot-owned axes, legends, transforms, and independent Plot marks                                               |
+| `ChartTitle` / `ChartSubtitle` / `ChartNote` / `ChartSource` | At most 1 each | `children`                                                                               | Writes fixed presentation slots; arrays and Fragments are transparent grouping only                                     |
+| `XxxEncodings` / `XxxProperties` / `XxxMark`                 | Per slot       | Exact props for the chartType                                                            | Maps to `recipe.encodings`, `recipe.properties`, and ordered `recipe.marks`                                             |
+
+Plot declarations cannot be direct children of a concrete Chart. `ChartExtension` props and children enter the same Plot normalizer; prop transforms precede child transforms, while Plot reports duplicate sources for single-value slots.
+
+Root props and declarations can mix across owner slots, such as root `recipe.encodings` with a child `XxxProperties`. The same slot has no override order: root `layout` plus `ChartLayout`, or root `recipe.properties` plus `XxxProperties`, fails loudly. An explicit `recipe.marks: []` still counts as an authored slot.
+
+Use a coordinate name when no configuration is needed, and a full object otherwise. Vanilla normalization converts a string to `{ type }`; JSON Source always stores the object form:
+
+```tsx
+<ScatterChart coordinate="polar2D">{/* declarations */}</ScatterChart>
+<BubbleChart coordinate={{ type: 'polar2D', innerRadius: 0.25, startAngle: -90 }}>
+  {/* declarations */}
+</BubbleChart>
+```
+
+You can instead place `<ChartCoordinate coordinate="polar2D" />` among the children to express the same slot. The root `coordinate` prop and `ChartCoordinate` cannot appear together. Either form can combine with recipe facet encodings and becomes the coordinate template for each panel, but neither can coexist with a Plot composition in `ChartExtension`, because both declare the spatial root.
+
+A concrete Chart root traverses only arrays and transparent Fragments, never DOM or custom React components; wrapped declarations fail loudly. `ChartExtension` children accept only Plot declarations, arrays, transparent Fragments, and empty slots. Ordinary iterables such as `Set` or generators are rejected, as are Chart declarations inside the extension and Plot declarations at the Chart root.
+
+Declarations are headless JSX sugar for the same owner slots, not a second grammar. `children` may be omitted for root-only authoring. Root-only, declaration-only, and cross-slot hybrid authoring all converge on one Vanilla Input and the same Source.
+
 ## React hosting and embedding
 
-Every concrete Chart component provides Layout capability by default. Rendering `<ScatterChart>` directly creates exactly one `Layout` / Scene host. Inside an existing `<Layout>`, Chart contributes only the Chart-to-Plot-to-Core Scope/composite, inherits the outer effective Theme, and does not create a second SVG.
+Rendering a concrete Chart directly creates exactly one `Layout` / Scene host. Without an authored `layout`, Cartesian coordinates default to `800 × 500` and Polar coordinates default to `400 × 500`. Root `layout.width` / `height` configure both Source and that implicit host; when only one dimension is provided, the other keeps the default for the active coordinate system. `ChartLayout.width` / `height` provide equivalent JSX sugar and mirror into Source when no explicit `layout` exists.
 
-`width`, `height`, CSS, renderer/runtime, animation, and compile callbacks are all `ChartHostProps` and are valid only for standalone use. An embedded Chart fails loudly when it owns any of those fields, including an explicit `undefined`; move them to the outer `<Layout>`. Chart Source `layout` remains the separate border-box contract and is never populated or overwritten by host `width` / `height`; Chart `id` remains optional.
+Inside an existing `<Layout>`, Chart contributes only its Chart-to-Plot-to-Core Scope/composite, inherits the outer effective Theme, and creates no second SVG. Root `layout` remains the Chart Source border-box. Embedded `ChartLayout` also accepts only `layout`; declaring `width` or `height`, including explicit `undefined`, fails loudly. Configure CSS, renderer/runtime, animation, and compile callbacks on the outer `<Layout>`.
 
-When you already have JSON Source that matches an exact schema, the application
-should select the concrete entry from `type` and `recipe.chartType`. Chart does
-not provide a generic `<Chart source={...}>` component that dynamically loads
-every family. To compose axes, legends, or an independent Plot mark, write a
-Source `plotExtension` fragment or use Plot directly.
+When JSON Source already matches an exact schema, the application selects the concrete entry from `type` and `recipe.chartType`; Chart does not provide a generic `<Chart source={...}>` that dynamically loads every family. Vanilla and JSON Source APIs are unchanged by the React declaration structure.
 
 <SourceLinks
   sources={[
@@ -51,25 +77,43 @@ Source `plotExtension` fragment or use Plot directly.
       label: 'Shared Chart entry',
       path: 'packages/viz/chart-react/src/_chart/index.ts',
       startLine: 1,
+      endLine: 20,
+    },
+    {
+      label: 'Declarative ChartCoordinate alternative',
+      path: 'packages/viz/chart-react/src/shared/ChartCoordinate.tsx',
+      startLine: 4,
       endLine: 11,
     },
     {
-      label: 'Point Chart shared mark components',
-      path: 'packages/viz/chart-react/src/point/shared/marks.tsx',
-      startLine: 4,
-      endLine: 14,
+      label: 'ChartLayout dimensions and Source layout contract',
+      path: 'packages/viz/chart-react/src/shared/ChartLayout.tsx',
+      startLine: 6,
+      endLine: 18,
     },
     {
-      label: 'Standalone and embedded Chart host-field boundary',
-      path: 'packages/viz/chart-react/src/shared/host.ts',
-      startLine: 30,
-      endLine: 44,
-    },
-    {
-      label: 'Concrete Chart components share one Layout / InputEmbed entry',
+      label: 'Exact Source-group props on concrete Chart roots',
       path: 'packages/viz/chart-react/src/point/shared/component.tsx',
-      startLine: 102,
-      endLine: 130,
+      startLine: 33,
+      endLine: 54,
+    },
+    {
+      label: 'Same-slot conflicts between root props and declarations',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 182,
+      endLine: 225,
+    },
+    {
+      label: 'Root props and declarations converge on one Vanilla Input',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 251,
+      endLine: 297,
+    },
+    {
+      label: 'Standalone Layout and InputEmbed wiring',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 300,
+      endLine: 327,
     },
   ]}
 />

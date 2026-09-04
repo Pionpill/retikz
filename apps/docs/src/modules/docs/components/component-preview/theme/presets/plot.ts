@@ -17,7 +17,7 @@ const shapePalette = PlotShapePaletteSchema.parse([
   'circle',
   'rectangle',
   'diamond',
-  'cross',
+  { type: 'polygon', params: { sides: 8, rotate: 22.5 } },
   { type: 'polygon', params: { sides: 3, rotate: -90 } },
   { type: 'polygon', params: { sides: 3, rotate: 90 } },
   { type: 'polygon', params: { sides: 5, rotate: -90 } },

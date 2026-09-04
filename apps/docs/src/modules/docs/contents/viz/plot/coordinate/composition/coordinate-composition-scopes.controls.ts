@@ -30,11 +30,7 @@ export const coordinateCompositionScopesControls = definePreviewControls({
           id: 'rows',
           label: '天气指标',
           rows: weatherRows,
-          columns: [
-            { key: 'day', label: '天' },
-            { key: 'temperature', label: '温度' },
-            { key: 'rainfall', label: '降雨量' },
-          ],
+          columns: [{ key: 'day' }, { key: 'temperature' }, { key: 'rainfall' }],
         },
       ],
     },

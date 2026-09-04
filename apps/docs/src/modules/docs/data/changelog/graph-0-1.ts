@@ -12,15 +12,29 @@ const graphMilestones: Array<SubVersion> = [
       {
         label: { zh: '开放内容与独立结构', en: 'Open content and independent structures' },
         content: {
-          zh: '新增 JSON-safe `IRBlock`，接受任意有序 Core / Tier 2 children，并复用完整 Core Scope、Standard Surface 与纵向 FlexLayout。Header、Section 与 Row 拥有独立 schema、Definition、React 和 Vanilla 入口；Cell 保持 Row-local Flex item。显式 identity、`localNamespace`、anchor 与 boundary 继续由 Core 处理，不新增自动 id 前缀或 Port IR。',
-          en: 'Adds JSON-safe `IRBlock` with arbitrary ordered Core and Tier 2 children while reusing the complete Core Scope, Standard Surface, and a column FlexLayout. Header, Section, and Row have independent schemas, Definitions, React, and Vanilla entries, while Cell remains a Row-local Flex item. Core continues to own explicit identity, `localNamespace`, anchors, and boundaries; no automatic id prefixes or Port IR are added.',
+          zh: '新增 JSON-safe `IRBlock`，接受任意有序 Core / Tier 2 children，并复用完整 Core Scope、Standard Surface 与纵向 FlexLayout。Header、Section 与 Row 拥有独立 schema、Definition、React 和 Vanilla 入口；Row 直接接受任意 children。显式 identity、`localNamespace`、anchor 与 boundary 继续由 Core 处理，不新增自动 id 前缀或 Port IR。',
+          en: 'Adds JSON-safe `IRBlock` with arbitrary ordered Core and Tier 2 children while reusing the complete Core Scope, Standard Surface, and a column FlexLayout. Header, Section, and Row have independent schemas, Definitions, React, and Vanilla entries, and Row directly accepts arbitrary children. Core continues to own explicit identity, `localNamespace`, anchors, and boundaries; no automatic id prefixes or Port IR are added.',
         },
       },
       {
         label: { zh: '外层尺寸与分区内边距', en: 'Outer sizing and section padding' },
         content: {
-          zh: 'Block 支持 `width` 与 `minWidth` 控制包含外层内边距的整体宽度；默认 Section 使用 `8` 圆角和 `8` 内边距，与 Block 外层默认值一致，Row 使用透明 `fill`，保持 `8` 内边距且不单独设置背景、边框和圆角。',
-          en: 'Block supports `width` and `minWidth` for the total outer width including shell padding. Sections default to the shell’s `8` corner radius and padding, while Rows use a transparent `fill`, remain at `8` padding, and do not set their own background, border, or corner radius.',
+          zh: 'Block 支持 `width` 与 `minWidth` 控制包含外层内边距的整体宽度；默认 Section 使用 `8` 圆角、`8` 内边距和 `currentColor / 0.037` 背景，Row 不提供内边距（`0`），content 使用 `sm` 字号，并使用透明 `fill` 且不单独设置背景、边框和圆角。',
+          en: 'Block supports `width` and `minWidth` for the total outer width including shell padding. Sections default to an `8` corner radius and padding with a `currentColor / 0.037` background, while Rows use no padding (`0`), an `sm` content font size, a transparent `fill`, and no background, border, or corner radius of their own.',
+        },
+      },
+      {
+        label: { zh: 'Entity 简洁默认外观', en: 'Concise Entity defaults' },
+        content: {
+          zh: 'Entity Neutral 默认使用完整主色描边、`0.08` 同色轻填充与 `contrast` 正文；数值颜色由 Core 按最终静态主色与当前 mode 物化为不透明颜色。Docs Graph Clean 显式移除 Entity 填充并使用当前 mode 前景正文，Relation 仍继承 Neutral，实例显式外观继续优先；Core、Plot、Chart 与 Table 的 Clean definitions 保持不变。',
+          en: 'Entity Neutral uses a complete master-color outline, a light same-color `0.08` fill, and `contrast` body text; Core materializes numeric colors into opaque values from the final static master and current mode. Docs Graph Clean explicitly removes the Entity fill and uses the current-mode foreground for body text, while Relation continues to inherit Neutral and explicit instance appearance keeps priority; the Core, Plot, Chart, and Table Clean definitions remain unchanged.',
+        },
+      },
+      {
+        label: { zh: '容器继承 Graph Theme', en: 'Containers inherit Graph Theme' },
+        content: {
+          zh: 'Graph Theme style 统一拥有 Entity、Relation、Group 与 Block 外观。Group / Block 根 Surface 从同名 Definition 继承 `background`、`border` 与 `cornerRadius`，显式 Source 顶层字段最终整体替换 Theme 字段；`graphTheme` 仍只作用于后代 Entity / Relation。',
+          en: 'Graph Theme styles now own Entity, Relation, Group, and Block appearance together. Group and Block root Surfaces inherit `background`, `border`, and `cornerRadius` from the same-name Definition; explicit Source fields replace complete top-level Theme fields, while `graphTheme` remains descendant-only for Entity and Relation.',
         },
       },
     ],

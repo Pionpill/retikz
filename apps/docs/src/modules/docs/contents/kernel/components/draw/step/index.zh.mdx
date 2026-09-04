@@ -84,6 +84,8 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview files="step-label" size="md" />
 
+在无 `fill` 的内置 `stroke` Path 上，canonical `side` 为 `center` 的边标注默认会切开文字下的真实描边。`sloped: true` 且没有 `side` 时也会 canonicalize 为 `center`；非居中标签默认保持连续。每个标签可用 `interrupt: false` 强制连续，或用 `interrupt: true` 强制断线；完整宿主边界见 [Path 的标签说明](/kernel/components/draw/path#label-interruption)。
+
 面板统一调整 `position`、`side`、`sloped` 与文字颜色。`position` 接受七个关键字或 `[0, 1]` 数值 t；关键字映射与完整字段放在下方 [API 的边标注表](#边标注)，避免在示例区重复列举。
 
 ### 样式
@@ -159,9 +161,9 @@ import { Path, Step } from '@retikz/react';
   sources={[
     {
       label: '相对目标归一化',
-      path: 'packages/kernel/core/src/compile/path/host/relative.ts',
-      startLine: 10,
-      endLine: 95,
+      path: 'packages/kernel/core/src/resolve/path/resolve.ts',
+      startLine: 342,
+      endLine: 458,
     },
     {
       label: '目标归一化与逐段编译主循环',
@@ -192,19 +194,19 @@ import { Path, Step } from '@retikz/react';
 
 ### t 在每种 step kind 上的几何含义
 
-`label.position` 会先换算成 `0..1` 的参数 t。编译器再向当前 kind 的几何采样器索取该处的坐标与切线：`side` 根据坐标偏移，`sloped` 根据切线旋转。因此 t 表示的是“该 kind 的参数进度”，不一定是视觉弧长进度。
+`label.position` 会先换算成 `0..1` 的参数 t。编译器再向当前 kind 的几何采样器索取该处的坐标与切线：`side` 根据坐标偏移，`sloped` 根据切线旋转。除 generator 外，t 保持各 kind 自身的参数进度，不一定是视觉弧长进度；会断线的 generator 标签则沿其真实生成命令的累计长度取样。
 
-| Step kind                | t 的参数化方式                                             | `t=0.5` 的含义                        |
-| ------------------------ | ---------------------------------------------------------- | ------------------------------------- |
-| `'line'` / `'axis-line'` | 归一化弧长                                                 | 投影后直线段的中点                    |
-| `'fold'`                 | 按腿数均分 `t`，与各腿长度无关：两段各 `1/2`，三段各 `1/3` | 分界点归前一腿                        |
-| `'curve'` / `'cubic'`    | Bezier 参数，**不是弧长**                                  | 通常不是视觉中点                      |
-| `'bend'`                 | 降级成 cubic 后使用 Bezier 参数                            | 与 cubic 相同                         |
-| `'smooth'`               | 每个生成的 cubic 等分 t 区间<br />区间内再使用 Bezier 参数 | 取决于生成段数，不按整条曲线弧长      |
-| `'generator'`            | 当前按进入 step 时的游标到最终笔位做直线插值               | 两端点的中点，不跟随中间命令          |
-| `'arc'`                  | 在 `startAngle..endAngle` 间线性插值                       | 起末角的中间角度                      |
-| `'circlePath'`           | 整圆按角度 0→360；0 在 +x                                  | 180°（-x）                            |
-| `'ellipsePath'`          | 同 circlePath，按参数角而非等弧长采样                      | 180°（-x）；任意 `t` 不按弧长均匀分布 |
+| Step kind                | t 的参数化方式                                                                   | `t=0.5` 的含义                                   |
+| ------------------------ | -------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `'line'` / `'axis-line'` | 归一化弧长                                                                       | 投影后直线段的中点                               |
+| `'fold'`                 | 按腿数均分 `t`，与各腿长度无关：两段各 `1/2`，三段各 `1/3`                       | 分界点归前一腿                                   |
+| `'curve'` / `'cubic'`    | Bezier 参数，**不是弧长**                                                        | 通常不是视觉中点                                 |
+| `'bend'`                 | 降级成 cubic 后使用 Bezier 参数                                                  | 与 cubic 相同                                    |
+| `'smooth'`               | 每个生成的 cubic 等分 t 区间<br />区间内再使用 Bezier 参数                       | 取决于生成段数，不按整条曲线弧长                 |
+| `'generator'`            | 会断线时按真实生成命令的累计长度；连续标签保留进入 step 到最终笔位的既有直线插值 | 断线时在真实命令轨迹的半长处；连续时为两端点中点 |
+| `'arc'`                  | 在 `startAngle..endAngle` 间线性插值                                             | 起末角的中间角度                                 |
+| `'circlePath'`           | 整圆按角度 0→360；0 在 +x                                                        | 180°（-x）                                       |
+| `'ellipsePath'`          | 同 circlePath，按参数角而非等弧长采样                                            | 180°（-x）；任意 `t` 不按弧长均匀分布            |
 
 整圆和椭圆的角度递增遵循屏幕坐标，因此 90° 位于视觉下方。
 
@@ -316,23 +318,24 @@ import { Path, Step } from '@retikz/react';
 
 ### 边标注
 
-| 属性    | 类型          | 默认值 | 描述                                                                                                                                                                                                |
-| ------- | ------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label` | `IRStepLabel` | —      | 边标注（`'move'` / `'cycle'` / `'rectangle'` 外的 kind 通用）：`{ text, position?, side?, textColor?, opacity?, font? }`；`<EdgeLabel>` sugar 覆盖文字 / position / side / sloped，冲突时 prop 优先 |
+| 属性    | 类型          | 默认值 | 描述                                                                                                                                                                                                                                 |
+| ------- | ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `label` | `IRStepLabel` | —      | 边标注（`'move'` / `'cycle'` / `'rectangle'` 外的 kind 通用）：`{ text, position?, side?, sloped?, interrupt?, textColor?, opacity?, font? }`；`<EdgeLabel>` sugar 覆盖文字 / position / side / sloped / interrupt，冲突时 prop 优先 |
 
 ### label 的字段
 
 `label` 是单个对象，对所有可挂 label 的 kind 透明：
 
-| 字段        | 类型                                                   | 默认       | 描述                                                                                                                                                                                      |
-| ----------- | ------------------------------------------------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `text`      | `string`                                               | —          | 必填，标签文字（单行）                                                                                                                                                                    |
-| `position`  | <ApiValues name="GeometryLabelPosition" /> \| `number` | `'midway'` | 段上归一化位置 t——keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1）；超出 [0, 1] 由 schema 拒绝 |
-| `side`      | <ApiValues name="Side" />                              | `'top'`    | 边标注相对段方向的侧；也接受 compass 别名 `north` / `south` / `east` / `west`                                                                                                             |
-| `sloped`    | `boolean`                                              | `false`    | 是否按段切线方向旋转；为 true 时仍可配合 `side` 控制偏移侧                                                                                                                                |
-| `textColor` | `string`                                               | —          | 标签文字色；缺省回退 scope `labelDefault` → 宿主 path 主色 `color` → currentColor（跟主色不跟 stroke）                                                                                    |
-| `opacity`   | `number`                                               | —          | 标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）                                                                                                                          |
-| `font`      | `IRFont`                                               | —          | 标签字体覆盖（family / size / weight / style）；逐字段回退 `labelDefault` → 渲染端默认                                                                                                    |
+| 字段        | 类型                                                   | 默认                                                                     | 描述                                                                                                                                                                                                  |
+| ----------- | ------------------------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`      | `string`                                               | —                                                                        | 必填，标签文字（单行）                                                                                                                                                                                |
+| `position`  | <ApiValues name="GeometryLabelPosition" /> \| `number` | `'midway'`                                                               | 段上归一化位置 t——keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1）；超出 [0, 1] 由 schema 拒绝             |
+| `side`      | <ApiValues name="Side" />                              | 无 `sloped`：canonical `'top'`<br />`sloped: true`：canonical `'center'` | 可写的边标注相对段方向的侧；也接受 compass 别名 `north` / `south` / `east` / `west`。显式 `side` 始终优先                                                                                             |
+| `sloped`    | `boolean`                                              | `false`                                                                  | 是否按段切线方向旋转；省略 `side` 时为 true 会 canonicalize 为 `center`，显式 `side` 仍控制偏移侧                                                                                                     |
+| `interrupt` | `boolean`                                              | 宿主策略                                                                 | 是否请求描边断线。无填充内置 Stroke + canonical center 时省略 = 开启；`false` 强制连续，`true` 强制断线。filled Stroke 的 `true`、以及 Ribbon / custom / 其它非内置 Stroke 的任意显式值都会 fail-loud |
+| `textColor` | `string`                                               | —                                                                        | 标签文字色；缺省回退 scope `labelDefault` → 宿主 path 主色 `color` → currentColor（跟主色不跟 stroke）                                                                                                |
+| `opacity`   | `number`                                               | —                                                                        | 标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）                                                                                                                                      |
+| `font`      | `IRFont`                                               | —                                                                        | 标签字体覆盖（family / size / weight / style）；逐字段回退 `labelDefault` → 渲染端默认                                                                                                                |
 
 不同 step kind 上 t 的几何解释与 `smooth` / `generator` 边界见上方 "[t 在每种 step kind 上的几何含义](#t-在每种-step-kind-上的几何含义)" 表。
 

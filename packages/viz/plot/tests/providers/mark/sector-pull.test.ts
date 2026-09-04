@@ -169,4 +169,11 @@ describe('IntervalMark.pull sector geometry', () => {
     const locator = createPlotLocator(spec, { share }, opts);
     expect(locator.series('B')?.position).toEqual(locator.datum(1)?.position);
   });
+
+  it('chord interpolation applies padAngle and pull before contour projection', () => {
+    const spec = pieSpec({ kind: 'constant', value: 20 }, { interpolation: 'chord', padAngle: 10 });
+    const node = sectorNodes(firstLayer(spec, { share }))[0];
+    expect((node.shape as { type?: string } | undefined)?.type).toBe('contour');
+    expect(createPlotLocator(spec, { share }, opts).datum(0)?.position).toEqual(node.position);
+  });
 });

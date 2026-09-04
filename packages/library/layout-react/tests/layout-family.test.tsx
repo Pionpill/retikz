@@ -115,6 +115,22 @@ describe('Layout React layout family', () => {
     });
   });
 
+  it('keeps an omitted itemKey out of Source IR', () => {
+    const result = normalizeReactInput(
+      <FlexLayout>
+        <LayoutItem kind="flex" ir={{ type: 'node', position: [1, 2] }} />
+      </FlexLayout>,
+    );
+
+    expect(result.ir.children[0]).toMatchObject({
+      type: 'flexLayout',
+      children: [{ kind: 'flex', child: { type: 'node', position: [1, 2] } }],
+    });
+    expect((result.ir.children[0] as { children: Array<Record<string, unknown>> }).children[0]).not.toHaveProperty(
+      'key',
+    );
+  });
+
   it('roots only the authored container and reuses its stable single-key provider', () => {
     const flex = normalizeReactInput(<FlexLayout />);
     const grid = normalizeReactInput(<GridLayout columns={[{ kind: 'fixed', value: 10 }]} />);

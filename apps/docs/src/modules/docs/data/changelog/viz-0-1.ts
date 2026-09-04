@@ -228,6 +228,34 @@ export const vizV01: Release = {
             en: 'Scatter `encodings` now support direct fields, scalar aggregates, allowed derived transforms, named scales, and `row / column / facet` while reusing Data field/transform and Plot scale/composition contracts. `ChartFacet`, root `facet`, and `recipe.facet` are removed; migrate to `encodings.row / column / facet`. Shared-axis, multi-mark tracks use Plot static Tracks through `plotExtension`.',
           },
         },
+        {
+          label: { zh: '独立 Bubble chartType', en: 'Dedicated Bubble chartType' },
+          content: {
+            zh: '`bubble` 作为 Point family 的独立精确类型，固定必需的 `x / y / size` 字段角色、sqrt 尺寸尺度、默认 size legend 与 `bubble` semantic mark；常量 properties 和 authored mark 都不能覆盖核心 size mapping。',
+            en: '`bubble` is a dedicated exact type in the Point family, fixing required `x / y / size` field roles, sqrt size scaling, a default size legend, and the `bubble` semantic mark. Constant properties and authored marks cannot replace the core size mapping.',
+          },
+        },
+        {
+          label: { zh: 'Regression 复合语义', en: 'Regression composite semantics' },
+          content: {
+            zh: '`regression` 以同一当前数据视图组合原始 Point 与 mark-local Smooth Path；可选 `series` 为每组独立拟合，并统一 Point、趋势、分类 scale 与 legend identity。',
+            en: '`regression` combines raw Points with a mark-local Smooth Path over the same current data view. Optional `series` fits each group independently and unifies Point, trend, categorical scale, and legend identity.',
+          },
+        },
+        {
+          label: { zh: 'Connected Scatter 有序轨迹', en: 'Connected Scatter ordered trajectories' },
+          content: {
+            zh: '`connected-scatter` 固定必需 `order` 与 Path → Point semantic group；可选 `series` 统一轨迹分组、颜色尺度和图例，`connectNulls` 控制缺值桥接。',
+            en: '`connected-scatter` fixes required `order` and a Path-to-Point semantic group. Optional `series` unifies trajectory grouping, color scale, and legend, while `connectNulls` controls missing-value bridging.',
+          },
+        },
+        {
+          label: { zh: 'Ranged Dot 原子双端点', en: 'Atomic Ranged Dot endpoints' },
+          content: {
+            zh: '`ranged-dot` 把 category / start / end 解析为一个 projected Relation；连接线与两个端点共享投影和颜色，坏行原子跳过且不留下孤立图元。',
+            en: '`ranged-dot` resolves category, start, and end into one projected Relation. Connector and endpoint glyphs share projection and color, while invalid rows skip atomically without orphan geometry.',
+          },
+        },
       ],
       subVersions: [
         {
@@ -238,6 +266,16 @@ export const vizV01: Release = {
             en: 'First public family / chartType Chart Source and fixed presentation, wrapped as complete chart content by Standard Surface.',
           },
           items: [
+            {
+              label: {
+                zh: 'BREAKING：Point 图按最大点半径自动留白',
+                en: 'BREAKING: Point charts pad by their largest Point radius',
+              },
+              content: {
+                zh: 'Scatter、Bubble、Regression、Connected Scatter 与 Ranged Dot 不再使用固定 `0.02` / `0.04` 比例；缺少显式配置时，连续位置 scale 按最终 Chart-owned Point 的最大半径生成 range 留白。Point Properties 的 `domainPadding` 同步支持 Core `default / x / y / top / right / bottom / left` spacing 与显式 ratio；encoding scale operation 和 Plot extension 的显式所有权继续优先。React、Vanilla 与 JSON Source 使用同一 shape。',
+                en: 'Scatter, Bubble, Regression, Connected Scatter, and Ranged Dot no longer use fixed `0.02` / `0.04` ratios. Without an explicit override, continuous position scales reserve range space from the largest final Chart-owned Point radius. Point Properties `domainPadding` also supports Core `default / x / y / top / right / bottom / left` spacing and explicit ratios, while authored encoding-scale operations and Plot extensions keep priority. React, Vanilla, and JSON Source share the same shape.',
+              },
+            },
             {
               label: { zh: '图内 title、subtitle、source、note', en: 'In-chart title, subtitle, source, and note' },
               content: {
@@ -252,6 +290,27 @@ export const vizV01: Release = {
                 en: '`<ScatterMark override>` and plain `{ kind: "scatter", override: true }` produce the same exact Source, styling the recipe\'s implicit primary points without drawing duplicates; a plain ScatterMark still appends extra points.',
               },
             },
+            {
+              label: { zh: 'Bubble 精确 Source 与 provider', en: 'Exact Bubble Source and provider' },
+              content: {
+                zh: '`@retikz/chart/point/bubble` 提供严格 Bubble schema、recipe、semantic mark 与 provider contribution，并复用 Point mapping、facet、scaffold、lowering 与 guide 主链。',
+                en: '`@retikz/chart/point/bubble` provides the strict Bubble schema, recipe, semantic mark, and provider contribution while reusing the Point mapping, facet, scaffold, lowering, and guide pipeline.',
+              },
+            },
+            {
+              label: { zh: 'Regression 精确 Source 与 provider', en: 'Exact Regression Source and provider' },
+              content: {
+                zh: '`@retikz/chart/point/regression` 提供严格 Regression schema、Point + Smooth Path semantic group、series scale / legend、facet panel 拟合与 locator qualification。',
+                en: '`@retikz/chart/point/regression` provides the strict Regression schema, Point + Smooth Path semantic group, series scale / legend, facet-panel fitting, and locator qualification.',
+              },
+            },
+            {
+              label: { zh: 'Strip Chart 精确 Source 与离散散布', en: 'Exact Strip Chart Source and discrete spread' },
+              content: {
+                zh: '`@retikz/chart/point/strip` 新增 direct-only x/y exact schema、确定性 jitter shorthand、唯一离散角色校验与 continuous-only grid；React / Vanilla 入口生成同一 Source，并通过 Plot placement 在笛卡尔与极坐标中完成散布和 glyph containment。',
+                en: '`@retikz/chart/point/strip` adds direct-only x/y exact schemas, deterministic jitter shorthand, sole-discrete-role validation, and a continuous-only grid. React and Vanilla entries produce the same Source, while Plot placement handles spread and glyph containment in Cartesian and Polar coordinates.',
+              },
+            },
           ],
         },
       ],
@@ -261,22 +320,29 @@ export const vizV01: Release = {
       stableDate: null,
       version: 'v0.1',
       description: {
-        zh: 'Chart 的 React authoring 与 runtime 绑定：提供 Source mode、typed Chart 与受限的 headless presentation / layer marker。',
-        en: 'React authoring and runtime bindings for Chart: Source mode, typed Charts, and constrained headless presentation / layer markers.',
+        zh: 'Chart 的 React declaration authoring 与 runtime 绑定：以具体 typed Chart 根组合公共、chartType 私有与 presentation 声明。',
+        en: 'React declaration authoring and runtime bindings for Chart: concrete typed roots compose shared, chartType-private, and presentation declarations.',
       },
       highlights: [
         {
-          label: { zh: '基础与 typed JSX authoring', en: 'Base and typed JSX authoring' },
+          label: { zh: '按 owner 拆分 declaration', en: 'Owner-scoped declarations' },
           content: {
-            zh: '`Chart` 接收精确 Source 与 presentation marker；`ScatterChart` 把 JSX / props 转为带 `encodings`、`properties` 与 `marks` 的精确 Vanilla Input，并调用对应 normalizer 后进入同一 Chart 主链。通用 API 从根入口导入，typed API 从 `/point` 导入。',
-            en: '`Chart` accepts exact Source and presentation markers. `ScatterChart` converts JSX / props with `encodings`, `properties`, and `marks` into an exact Vanilla input before entering the shared Chart path. Generic APIs come from the root and typed APIs from `/point`.',
+            zh: '根入口提供 `ChartData`、`ChartLayout`、`ChartExtension` 与 presentation；具体 chartType 入口提供 `XxxEncodings`、`XxxProperties` 与 `XxxMark`。typed Chart 根只保留共享接线和 children，所有声明折叠为对应的精确 Vanilla Input。',
+            en: 'The root entry provides `ChartData`, `ChartLayout`, `ChartExtension`, and presentation, while each chartType entry provides `XxxEncodings`, `XxxProperties`, and `XxxMark`. Typed Chart roots keep only shared wiring and children; declarations fold into the matching exact Vanilla input.',
           },
         },
         {
-          label: { zh: '同形 rich encodings 与 Plot 声明', en: 'Isomorphic rich encodings and Plot declarations' },
+          label: { zh: '宿主与 Plot 扩展边界', en: 'Host and Plot-extension boundaries' },
           content: {
-            zh: '`ScatterChart`直接接收与JSON / Vanilla同形的rich `encodings`；`ChartFacet` / `ChartFacetProps`已删除。`PlotTransform`、`PlotAxis`等`PlotXxx` children仍进入`plotExtension`并服从同一Chart data flow与空间冲突诊断。',
-            en: '`ScatterChart` accepts the same rich `encodings` shape as JSON and Vanilla; `ChartFacet` and `ChartFacetProps` are removed. `PlotXxx` children such as `PlotTransform` and `PlotAxis` still enter `plotExtension` and share the Chart data flow and spatial-conflict diagnostics.',
+            zh: '`ChartLayout` 的 standalone 尺寸配置唯一 Layout host，并在没有显式 layout 时镜像到 Source；embedded 的高级宿主能力移到外层 `Layout`。Plot declarations 只能放入 `ChartExtension`，继续由 Plot owner 归一化和诊断冲突。',
+            en: '`ChartLayout` standalone dimensions configure the single Layout host and mirror into Source when no explicit layout exists; advanced embedded host capabilities move to the outer `Layout`. Plot declarations are legal only in `ChartExtension` and remain normalized and diagnosed by Plot.',
+          },
+        },
+        {
+          label: { zh: 'Regression declaration authoring', en: 'Regression declaration authoring' },
+          content: {
+            zh: '`RegressionChart` 组合 `RegressionEncodings`、`RegressionProperties` 与 `RegressionMark`；collector 保留完整复合 mark 顺序，并把 React authoring 委托给同一 Vanilla factory。',
+            en: '`RegressionChart` composes `RegressionEncodings`, `RegressionProperties`, and `RegressionMark`. Its collector preserves complete composite-mark order and delegates React authoring to the same Vanilla factory.',
           },
         },
       ],
@@ -285,10 +351,42 @@ export const vizV01: Release = {
           version: 'alpha.1',
           date: '2026-08-12',
           summary: {
-            zh: 'React adapter 提供图内 presentation marker、Source mode 与首批 point-family typed Chart 入口。',
-            en: 'The React adapter adds in-chart presentation markers, Source mode, and the first point-family typed Chart entries.',
+            zh: 'React adapter 提供 owner-scoped declarations、图内 presentation marker 与 Point family typed Chart 入口。',
+            en: 'The React adapter provides owner-scoped declarations, in-chart presentation markers, and Point-family typed Chart entries.',
           },
-          items: [],
+          items: [
+            {
+              label: { zh: 'BREAKING：根 props 迁为 declarations', en: 'BREAKING: Root props move to declarations' },
+              content: {
+                zh: '`ScatterChart` 删除 `data`、`dataRef`、`dataModel`、`layout`、`encodings`、`properties`、`marks` 与 `plotExtension` 根 props。React 调用方改用 `ChartData`、`ChartLayout`、`ChartExtension`、`ScatterEncodings`、`ScatterProperties` 和 `ScatterMark`；`dataRef` 迁为 `ChartData.reference`，`dataModel` 迁为 `ChartData.model`。Vanilla input 与 JSON Source 不变。',
+                en: '`ScatterChart` removes root `data`, `dataRef`, `dataModel`, `layout`, `encodings`, `properties`, `marks`, and `plotExtension` props. React callers use `ChartData`, `ChartLayout`, `ChartExtension`, `ScatterEncodings`, `ScatterProperties`, and `ScatterMark`; migrate `dataRef` to `ChartData.reference` and `dataModel` to `ChartData.model`. Vanilla input and JSON Source are unchanged.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：高级 host props 移到 Layout',
+                en: 'BREAKING: Advanced host props move to Layout',
+              },
+              content: {
+                zh: '`ScatterChart` 不再接收 CSS、renderer/runtime、动画与 compile callback 等 host props。需要这些能力时用外层 `<Layout>`；standalone 的 width/height 通过 `ChartLayout` 声明，embedded `ChartLayout` 只允许 Source `layout`。',
+                en: '`ScatterChart` no longer accepts CSS, renderer/runtime, animation, or compile-callback host props. Use an outer `<Layout>` for those capabilities; declare standalone width/height through `ChartLayout`, while embedded `ChartLayout` accepts Source `layout` only.',
+              },
+            },
+            {
+              label: { zh: 'Bubble declaration authoring', en: 'Bubble declaration authoring' },
+              content: {
+                zh: '`BubbleChart` 组合 `BubbleEncodings`、`BubbleProperties` 与 `BubbleMark`，并与 Vanilla 生成同一精确 Source；collector 保留 authored mark 顺序并拒绝重复单例 declaration。',
+                en: '`BubbleChart` composes `BubbleEncodings`, `BubbleProperties`, and `BubbleMark` into the same exact Source as Vanilla; its collector preserves authored mark order and rejects duplicate singleton declarations.',
+              },
+            },
+            {
+              label: { zh: 'Regression declaration authoring', en: 'Regression declaration authoring' },
+              content: {
+                zh: '`RegressionChart` 通过独立 declarations 组装数据、分组、方法、采样和 Point / trend 外观，并与 Vanilla 生成同一精确 Source。',
+                en: '`RegressionChart` assembles data, grouping, methods, sampling, and Point / trend appearance through separate declarations into the same exact Source as Vanilla.',
+              },
+            },
+          ],
         },
       ],
     },
@@ -311,8 +409,22 @@ export const vizV01: Release = {
         {
           label: { zh: 'BREAKING：facet input 迁入 encodings', en: 'BREAKING: Facet input moves into encodings' },
           content: {
-            zh: '`InputChartFacet`、`normalizeChartFacet`与factory root `facet`已删除。Scatter factory只展开`row / column`字符串shorthand，rich对象原样进入与JSON / React同形的Source；runtime transform / reducer / scale Definition继续通过provider sidecar传递。',
-            en: '`InputChartFacet`, `normalizeChartFacet`, and the factory root `facet` are removed. Scatter factories only expand `row / column` string shorthands, preserving rich objects in the same Source shape as JSON and React; runtime transform, reducer, and scale Definitions continue through the provider sidecar.',
+            zh: '`InputChartFacet`、`normalizeChartFacet`与factory root `facet`已删除。Point factory只展开`row / column`字符串shorthand，rich对象原样进入与JSON / React同形的Source；runtime transform / reducer / scale Definition继续通过provider sidecar传递。',
+            en: '`InputChartFacet`, `normalizeChartFacet`, and the factory root `facet` are removed. Point factories only expand `row / column` string shorthands, preserving rich objects in the same Source shape as JSON and React; runtime transform, reducer, and scale Definitions continue through the provider sidecar.',
+          },
+        },
+        {
+          label: { zh: 'Bubble plain factory 与 SSR', en: 'Bubble plain factory and SSR' },
+          content: {
+            zh: '`normalizeBubbleChart` 与 `createBubbleChart` 从精确 input 生成 `type: "point"`、`recipe.chartType: "bubble"` 的 Source，并安装对应 provider；`renderChart` 继续通过同一次 Core compile 输出 SVG。',
+            en: '`normalizeBubbleChart` and `createBubbleChart` produce a `type: "point"`, `recipe.chartType: "bubble"` Source from exact input and install its provider; `renderChart` continues to emit SVG through the same Core compile.',
+          },
+        },
+        {
+          label: { zh: 'Regression plain factory 与 SSR', en: 'Regression plain factory and SSR' },
+          content: {
+            zh: '`normalizeRegressionChart` 与 `createRegressionChart` 保留精确 Regression encodings、properties 与 marks，安装对应 provider，并与 React / JSON Source 共用 Chart、Data 与 Plot 解析主链。',
+            en: '`normalizeRegressionChart` and `createRegressionChart` preserve exact Regression encodings, properties, and marks, install the matching provider, and share the Chart, Data, and Plot resolution path with React and JSON Source.',
           },
         },
       ],
@@ -356,6 +468,13 @@ export const vizV01: Release = {
           content: {
             zh: 'Scene、lineage与locator复用同一次lowering产生的data / frame artifact；单次请求不会为查询重放custom transform，独立runtime请求仍各自执行。',
             en: 'Scene, lineage, and locators reuse the data/frame artifact produced by one lowering. A query does not replay custom transforms within one request, while separate runtime requests still execute independently.',
+          },
+        },
+        {
+          label: { zh: '六种 Smooth 回归方法', en: 'Six Smooth regression methods' },
+          content: {
+            zh: '`SmoothMethodKind` 提供 linear、quadratic、polynomial、logarithmic、exponential 与 power；每组使用严格样本、秩、值域与有限预测检查，facet、scale、lineage 和 locator 继续消费同一次 panel-local 结果。',
+            en: '`SmoothMethodKind` provides linear, quadratic, polynomial, logarithmic, exponential, and power fits. Strict per-group sample, rank, domain, and finite-prediction checks feed facet, scale, lineage, and locator from the same panel-local result.',
           },
         },
       ],

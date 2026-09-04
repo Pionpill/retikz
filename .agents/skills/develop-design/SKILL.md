@@ -28,6 +28,12 @@ description: Use when planning a retikz architecture direction, version roadmap,
 
 ## ADR 位置
 
+新建 ADR 的 milestone 以主责 package 当前 `package.json` 的 `version` 为准：
+
+- 按实际 major、minor 与 prerelease channel 定位；例如 `0.5.0-alpha.4` 只能进入 `v0/v0.5/alpha.4/`
+- 不得根据最大目录编号、旧 roadmap、其它 checkout 或计划中的下一版本猜测位置；选定 milestone 后再计算 ADR 编号
+- 跨 package ADR 先确认主责 package；主责不清、协作 package 版本不一致或 roadmap 与 package version 冲突时，停止创建并先完成对齐
+
 ```text
 packages/kernel/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.md
 packages/viz/_notes/decisions/<FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.md
@@ -117,6 +123,7 @@ Plan 写完后必须完成 Plan Gate；默认由主 agent 自审，执行计划�
 ## 完成标志
 
 - ADR 为长期形态且状态为 `Proposed`，不含施工细节或临时压缩段。
+- ADR、roadmap 与镜像 plan 的 milestone 均与主责 package 当前版本一致，且没有指向错误版本目录的残留引用。
 - 镜像简略 `PLAN.md` 已同步创建并承载完整设计检查结论。
 - 能力性迭代已完成 Architecture Gate PASS；或达到计划循环上限后已停止等待人工。
 - 人工明确确认 ADR；是否进入实现另行授权。

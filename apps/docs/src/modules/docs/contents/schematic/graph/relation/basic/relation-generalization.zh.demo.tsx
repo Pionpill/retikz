@@ -5,7 +5,7 @@ import { Entity, Graph, Relation } from '@retikz/graph-react';
 import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/preview';
 
 import { previewControlContract, relationGeneralizationControls } from './relation-generalization.controls';
-import { defineRelationSemanticProps } from './relation-role-controls';
+import { defineRelationSemanticProps, relationStatusOf } from './relation-role-controls';
 
 export const previewControls = relationGeneralizationControls;
 
@@ -40,6 +40,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Relation
         id="generalization-demo"
         role="generalization"
+        status={relationStatusOf(values.status)}
         {...defineRelationSemanticProps(kindValue.length === 0 ? undefined : kindValue, undefined)}
         source={{ id: 'source' }}
         target={{ id: 'target' }}

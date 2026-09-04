@@ -15,6 +15,8 @@ Scales are named mappings from data values to positions or visual values. Coordi
 
 ## Continuous positional scales
 
+Continuous positional scales share `domainPadding` and `singleValueSpan`. Bare numbers and objects without `kind` use range output units; `kind: 'ratio'` explicitly uses a fraction of the original domain span. Both inferred and explicit domains default to no padding.
+
 ### LinearScaleSchema
 
 <ZodSchema name="LinearScaleSchema" />
@@ -52,6 +54,8 @@ Scales are named mappings from data values to positions or visual values. Coordi
 ### PointScaleSchema
 
 <ZodSchema name="PointScaleSchema" />
+
+The runtime `PositionScale` contract exposes both `bandwidth` and a read-only `step` for the final range. `band` and `point` provide a positive discrete tick interval, while continuous position scales return `0`. Position Adjustment ratio spans consume this live value rather than treating a point scale's zero `bandwidth` as spacing.
 
 ### OrdinalScaleSchema
 

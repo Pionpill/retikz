@@ -1,6 +1,6 @@
 import type { CompileWarning } from '@retikz/core';
 
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { compileToScene, defineThemeStyle, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
@@ -41,6 +41,85 @@ describe('Group layout-aware lowering', () => {
     expect(
       visiblePaths.every(path => path.commands.some(command => command.kind === 'arc' && command.radius === 4)),
     ).toBe(true);
+  });
+
+  it('applies named Graph Theme tokens to the Group root shell', () => {
+    const styleName = 'group-shell';
+    const graphStyle = Graph.defineGraphThemeStyle({
+      name: styleName,
+      resolve: () => ({
+        group: {
+          tokens: {
+            background: { fill: '#fed7aa', fillOpacity: 0.6 },
+            border: { stroke: '#9a3412', strokeWidth: 3, dashPattern: [1, 2] },
+            cornerRadius: 7,
+          },
+        },
+      }),
+    });
+    const output = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        theme: { style: styleName },
+        children: [Graph.createGroup({})],
+      },
+      {
+        composites: Graph.createGraphDefinitions({ graphThemeStyles: [graphStyle] }),
+        themeStyles: [defineThemeStyle({ name: styleName, resolve: () => ({}) })],
+        padding: 0,
+      },
+    );
+    const visiblePaths = pathPrimitivesOf(output.scene.primitives).filter(
+      path => path.fill !== 'none' || path.stroke !== 'none',
+    );
+
+    expect(visiblePaths).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ fill: '#fed7aa', fillOpacity: 0.6, stroke: 'none' }),
+        expect.objectContaining({ stroke: '#9a3412', strokeWidth: 3, dashPattern: [1, 2] }),
+      ]),
+    );
+    expect(
+      visiblePaths.every(path => path.commands.some(command => command.kind === 'arc' && command.radius === 7)),
+    ).toBe(true);
+  });
+
+  it('replaces a themed Group border as one complete explicit Source field', () => {
+    const styleName = 'group-explicit-shell';
+    const graphStyle = Graph.defineGraphThemeStyle({
+      name: styleName,
+      resolve: () => ({
+        group: {
+          tokens: {
+            background: { fill: '#fef3c7' },
+            border: { stroke: '#92400e', strokeWidth: 4, strokeOpacity: 0.3, dashPattern: [2, 2] },
+            cornerRadius: 10,
+          },
+        },
+      }),
+    });
+    const output = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        theme: { style: styleName },
+        children: [Graph.createGroup({ border: { stroke: '#2563eb', strokeWidth: 2 } })],
+      },
+      {
+        composites: Graph.createGraphDefinitions({ graphThemeStyles: [graphStyle] }),
+        themeStyles: [defineThemeStyle({ name: styleName, resolve: () => ({}) })],
+        padding: 0,
+      },
+    );
+    const border = pathPrimitivesOf(output.scene.primitives).find(path => path.stroke === '#2563eb');
+
+    expect(border).toEqual(expect.objectContaining({ strokeWidth: 2 }));
+    expect(border?.strokeOpacity).toBeUndefined();
+    expect(border?.dashPattern).toBeUndefined();
+    expect(pathPrimitivesOf(output.scene.primitives)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ fill: '#fef3c7' })]),
+    );
   });
 
   it('arranges bottom caption after a non-empty body and includes bodyGap in allocation', () => {

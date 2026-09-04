@@ -27,12 +27,14 @@ Polar coordinates map `x` to angular positions around the center and `y` to radi
 - Lines use a closed `<PathMark>` that connects the final point back to the first.
 - Areas still use `<IntervalMark>`, producing radial intervals separated by category.
 
-The playground also controls `innerRadius`, the start angle, and the sweep angle. Sweep angle is a teaching parameter in the panel; the coordinate receives `endAngle = startAngle + sweepAngle`.
+`interpolation` chooses the connection space between neighboring polar positions. When omitted, a continuous angular scale uses `polar`, interpolating in angular / radial output space before projection; a discrete angular scale uses `chord`, connecting projected vertices directly. An explicit coordinate value affects both the grid and inheriting marks. PathMark and IntervalMark may override it locally, while PointMark exposes no such setting because points have no adjacent boundary.
+
+The playground controls coordinate and mark interpolation separately, along with `innerRadius`, the start angle, and the sweep angle. Sweep angle is a teaching parameter in the panel; the coordinate receives `endAngle = startAngle + sweepAngle`.
 
 <ComponentPreview
   files={['coordinate-polar', 'coordinate-2d.data.ts']}
   size="lg"
-  caption="After switching point, line, and area marks, adjust the inner radius and angle range to see how polar projection changes the same position bindings."
+  caption="Compare automatic inference, an explicit coordinate mode, and a local mark override. Mark interpolation hides for PointMark because a point has no adjacent boundary."
 />
 
 <Comparison target="tikz" title="TikZ Comparison">

@@ -10,13 +10,15 @@ export type EdgeLabelProps = {
   side?: InputStepLabel['side'];
   /** 是否沿采样点切线旋转标签 */
   sloped?: InputStepLabel['sloped'];
+  /** 是否请求在兼容的 Stroke 宿主上断开描边 */
+  interrupt?: InputStepLabel['interrupt'];
   /** 标签文字内容；必须是字符串 */
   children: string;
 };
 
 /**
  * Sugar 组件——挂在 <Step> 内作为子节点声明边标注
- * @description 等价于在 Step 上写 `label={{ text, position, side }}` prop；二者并存时 prop 优先。自身不渲染
+ * @description 等价于在 Step 上写 `label={{ text, position, side, interrupt }}` prop；二者并存时 prop 优先。自身不渲染
  */
 export const EdgeLabel: FC<EdgeLabelProps> = () => null;
 EdgeLabel.displayName = TIKZ_EDGE_LABEL;

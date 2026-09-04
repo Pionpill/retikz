@@ -28,6 +28,8 @@ import { Layout } from '@retikz/react';
 
 Entity 的整体外观统一由 Theme 管理。下面每个 demo 都允许精确调整实例颜色和文本；页面顶部的 Theme selector 统一切换 Academic、Vibrant、Clean 等整体视觉风格
 
+Neutral 默认使用完整主色描边和 `fill: 0.08` 的同色轻填充。Graph Clean 在此基础上显式移除 Entity 填充，保留主色描边，并按当前 mode 使用黑色或白色正文；实例显式提供的 `fill` 与 `textColor` 仍然优先
+
 ### participant：参与主体
 
 `participant` 表示主动参与、负责或提供能力的主体。典型对象包括人员、团队、组织、外部系统和服务；如果对象描述的是被执行的工作，应使用 `activity`，如果只是被消费或保存的对象，应使用 `resource`
@@ -106,6 +108,12 @@ Entity 的整体外观统一由 Theme 管理。下面每个 demo 都允许精确
 
 <ComponentPreview files="entity-concept" size="sm" caption="调整 concept 的默认描边、Graph Theme 主色和文本。" />
 
+### 语义状态
+
+`status` 为 Entity 保存可直接读取的图式状态：`error`、`success`、`warning` 与 `disabled` 分别使用当前 Core Theme 的 `semantic.error`、`semantic.success`、`semantic.warning` 与 `semantic.guide`。省略它表示没有特别标记，不写入 `normal`。这里的状态不同于 `state` role：前者说明当前图式语义，后者说明节点所表示对象是一种持续条件
+
+每个 Entity role demo 的 controls 都可在“无状态”和这四种状态之间切换。显式 `color`、`fill`、`stroke` 等 Core Node-compatible appearance 仍会覆盖 status 的默认外观，但不会删除 Source 中的 `status`。领域 predicate 的 `params.status` 仍由 predicate 定义解释，不会自动映射为 Graph status
+
 ### 样式调整
 
 下面的综合示例可以切换全部七个内置 role，并直接调整 Core Node-compatible 的填充、描边、透明度与文本样式。role 只改变 Entity 的语义和基础 shape recipe；这些显式样式字段会覆盖对应的 Theme 默认
@@ -126,20 +134,23 @@ Entity 的整体外观统一由 Theme 管理。下面每个 demo 都允许精确
 
 Entity Source record 只保存作者提供的字段。`id`、`text` 与 `position` 都可省略，不会产生空 wrapper、自动 id 或默认属性；省略 `id` 的 Entity 仍会按 role 绘制，但不会向 Core namespace 注册 target。role 在编译时提供 shape、boundary、padding、cornerRadius 与基础 minimum size；Theme 提供外观默认，Entity 显式 `color`、`fill`、`dashed`、`dashPattern`、`textColor` 等非结构 Node 字段最终覆盖 Theme
 
+显式静态 `color` 会同时驱动默认的数值 stroke 与 fill。`currentColor` 等非静态主色如果仍需解析任一数值颜色通道，编译会明确失败；调用方应改用静态 `color`，或同时提供字符串 stroke 与不透明静态 fill，避免猜测宿主 CSS 颜色或背景
+
 Entity 自己完成 registry lookup 并 lower 为普通 Core `Node`。Core、Scene 和 renderer 不解释 Entity role；Graph 只在存在时额外提供局部 Theme context，不是 Entity 的编译前提
 
 ## API 参考
 
-| 属性         | 类型                                      | 默认值 | 描述                                               |
-| ------------ | ----------------------------------------- | ------ | -------------------------------------------------- |
-| `id?`        | `string`                                  | —      | 可选 Core target id；省略时不注册引用目标          |
-| `role`       | `string`                                  | —      | 已注册的开放语义角色 key                           |
-| `kind?`      | `string`                                  | —      | role 内已注册的稳定子类型                          |
-| `predicate?` | `{ name: string; params?: IRJsonObject }` | —      | 已注册 predicate 及其 JSON-safe 参数               |
-| `position?`  | `IRPosition`                              | —      | 直接复用 Core Node position language               |
-| `text?`      | `IRNode['text']`                          | —      | Node-compatible text                               |
-| `children?`  | Node-compatible text                      | —      | React authoring 的文本入口；不能承载任意绘图 child |
-| `meta?`      | `IRJsonObject`                            | —      | Graph 不解释的元信息                               |
+| 属性         | 类型                                      | 默认值 | 描述                                                        |
+| ------------ | ----------------------------------------- | ------ | ----------------------------------------------------------- |
+| `id?`        | `string`                                  | —      | 可选 Core target id；省略时不注册引用目标                   |
+| `role`       | `string`                                  | —      | 已注册的开放语义角色 key                                    |
+| `kind?`      | `string`                                  | —      | role 内已注册的稳定子类型                                   |
+| `predicate?` | `{ name: string; params?: IRJsonObject }` | —      | 已注册 predicate 及其 JSON-safe 参数                        |
+| `status?`    | `GraphStatusValue`                        | —      | 可选闭合图式状态：`error`、`success`、`warning`、`disabled` |
+| `position?`  | `IRPosition`                              | —      | 直接复用 Core Node position language                        |
+| `text?`      | `IRNode['text']`                          | —      | Node-compatible text                                        |
+| `children?`  | Node-compatible text                      | —      | React authoring 的文本入口；不能承载任意绘图 child          |
+| `meta?`      | `IRJsonObject`                            | —      | Graph 不解释的元信息                                        |
 
 ## 相关
 

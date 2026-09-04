@@ -17,4 +17,10 @@ describe('@retikz/plot public surface', () => {
     expect(publicSurface.PlotPartitionDimensionSchema).toBeDefined();
     expect(publicSurface.PlotFacetOptionsSchema).toBeDefined();
   });
+
+  it('keeps Point glyph assembly helpers internal to mark lowering', () => {
+    const publicSurface = plot as Record<string, unknown>;
+
+    expect(publicSurface).not.toHaveProperty('pointGlyphStyle');
+  });
 });

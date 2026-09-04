@@ -10,8 +10,13 @@ import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 const findTextPrims = (prims: Array<ScenePrimitive>): Array<TextPrim> =>
   prims.filter((p): p is TextPrim => p.type === 'text');
 
-const findGroupPrim = (prims: Array<ScenePrimitive>): GroupPrim | undefined =>
-  prims.find((p): p is GroupPrim => p.type === 'group');
+const findLabelGroupPrim = (prims: Array<ScenePrimitive>): GroupPrim | undefined =>
+  prims.find(
+    (primitive): primitive is GroupPrim =>
+      primitive.type === 'group' &&
+      primitive.transforms?.some(transform => transform.kind === 'rotate') === true &&
+      primitive.children.some(child => child.type === 'text'),
+  );
 
 // core 统一 emit alphabetic 基线，故按字体度量从基线 y 还原单行文本块视觉上/中/下边，
 // 用于验证 label 实际落点（与 baseline 编码方式解耦）
@@ -121,7 +126,7 @@ describe('step.label：line 段的 label 几何', () => {
 
   it('sloped=true → 外裹 group 旋转，水平段 angle=0', () => {
     const scene = compileToScene(linePathIR({ text: 'x', sloped: true })).scene;
-    const grp = findGroupPrim(scene.primitives);
+    const grp = findLabelGroupPrim(scene.primitives);
     expect(grp).toBeDefined();
     expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 5, cy: 0 }]);
     const inner = grp!.children.find((c): c is TextPrim => c.type === 'text');
@@ -133,7 +138,7 @@ describe('step.label：line 段的 label 几何', () => {
 
   it('sloped=true → 外裹 group 旋转，同时保留 side 定位', () => {
     const scene = compileToScene(linePathIR({ text: 'x', side: 'bottom', sloped: true })).scene;
-    const grp = findGroupPrim(scene.primitives);
+    const grp = findLabelGroupPrim(scene.primitives);
     expect(grp).toBeDefined();
     expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 5, cy: 0 }]);
     const inner = grp!.children.find((c): c is TextPrim => c.type === 'text');
@@ -143,7 +148,7 @@ describe('step.label：line 段的 label 几何', () => {
 
   it('sloped=true 未显式 side 时不使用默认 top 偏移', () => {
     const scene = compileToScene(linePathIR({ text: 'x', sloped: true })).scene;
-    const grp = findGroupPrim(scene.primitives);
+    const grp = findLabelGroupPrim(scene.primitives);
     expect(grp).toBeDefined();
     expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 5, cy: 0 }]);
     const inner = grp!.children.find((c): c is TextPrim => c.type === 'text');
@@ -172,7 +177,7 @@ describe('step.label：line 段的 label 几何', () => {
       ],
     };
     const scene = compileToScene(ir).scene;
-    const grp = findGroupPrim(scene.primitives);
+    const grp = findLabelGroupPrim(scene.primitives);
     expect(grp!.transforms).toEqual([{ kind: 'rotate', degrees: 90, cx: 0, cy: 5 }]);
   });
 });
@@ -565,7 +570,7 @@ describe('label on fold (step kind="fold")：N=2 段等 t 拼接、拐角恒在 
       ],
     };
     const scene = compileToScene(ir).scene;
-    const group = findGroupPrim(scene.primitives);
+    const group = findLabelGroupPrim(scene.primitives);
     expect(group!.transforms).toEqual([{ kind: 'rotate', degrees: 0, cx: 40, cy: 0 }]);
   });
 

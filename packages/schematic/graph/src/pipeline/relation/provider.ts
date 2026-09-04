@@ -2,9 +2,9 @@ import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/c
 
 import {
   DiamondArrowProvider,
-  KiteArrowProvider,
   OpenDiamondArrowProvider,
   SquareArrowProvider,
+  StraightBarbArrowProvider,
 } from '@retikz/standard/arrow';
 
 import type { GraphDefinitionOptions } from '../../contract';
@@ -29,7 +29,7 @@ export const createRelationProvider = (options: GraphDefinitionOptions = {}): Co
   Object.freeze({
     key: RelationProviderKey,
     dependencies: Object.freeze([
-      KiteArrowProvider.key,
+      StraightBarbArrowProvider.key,
       SquareArrowProvider.key,
       DiamondArrowProvider.key,
       OpenDiamondArrowProvider.key,

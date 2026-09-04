@@ -75,6 +75,7 @@ export default controlledPreview.Component;
 ## 取景与尺寸
 
 - 会改变位置、尺寸、旋转、阴影、滤镜、描边或其它包围盒的 playground 使用固定 `viewBox`
+- 默认以自然尺寸展示：数值 `width` / `height` 分别等于 `viewBox.width` / `viewBox.height`，保持 1 user unit 对应 1 CSS px；禁止用更大的输出尺寸配更小的 viewBox 无意放大主体
 - 操作 controls 时，相机、主体中心和不变量不得漂移；变化只发生在目标属性上
 - 用最小值、最大值和组合极值验证主体与效果边界不被裁切
 - 在 800px 正文宽度的真实页面选择显式 `<ComponentPreview size>`；常规内容四边约 12px，有顶部悬浮控件时顶部约 52px

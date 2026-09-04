@@ -71,6 +71,16 @@ export const DensityBandwidthKind = {
 export const SmoothMethodKind = {
   /** 普通最小二乘线性回归 */
   Linear: 'linear',
+  /** 二次多项式回归 */
+  Quadratic: 'quadratic',
+  /** 可配置阶数的多项式回归 */
+  Polynomial: 'polynomial',
+  /** 对自变量取自然对数的线性回归 */
+  Logarithmic: 'logarithmic',
+  /** 对因变量取自然对数的指数回归 */
+  Exponential: 'exponential',
+  /** 对自变量和因变量取自然对数的幂回归 */
+  Power: 'power',
 } as const;
 
 /** plot 内置 transform kind 集：用于外部 transform 开放配置排除 plot 内置判别串 */

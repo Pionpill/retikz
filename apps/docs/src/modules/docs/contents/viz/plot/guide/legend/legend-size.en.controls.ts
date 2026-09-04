@@ -18,11 +18,7 @@ export const legendSizeControls = definePreviewControls({
           id: 'rows',
           label: 'Population samples',
           rows: cities,
-          columns: [
-            { key: 'lng', label: 'Longitude' },
-            { key: 'lat', label: 'Latitude' },
-            { key: 'pop', label: 'Population' },
-          ],
+          columns: [{ key: 'lng' }, { key: 'lat' }, { key: 'pop' }],
         },
       ],
     },
