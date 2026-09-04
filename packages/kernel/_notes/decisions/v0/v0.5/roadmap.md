@@ -1,6 +1,6 @@
 # v0.5 路线总计划
 
-> 状态：`v0.5.0-alpha.1` 与 `v0.5.0-alpha.2` 已完成；alpha.3 只交付上下文颜色，alpha.4 仅登记 Headless Interaction 候选边界，alpha.5 Proposed 补充 Stroke Path 居中标签断线，并按 Accepted ADR 修订 Path 端点箭头的视觉后缘重叠语义；Concurrent、progressive materialization 与 generation session 仍是未排期 Proposed
+> 状态：`v0.5.0-alpha.1` 与 `v0.5.0-alpha.2` 已完成；alpha.3 只交付上下文颜色；当前 alpha.4 承接 Stroke Path 居中标签断线与 Path 端点箭头视觉后缘重叠，Headless Interaction 仍只登记候选边界；Concurrent、progressive materialization 与 generation session 仍是未排期 Proposed
 >
 > 每条 Proposed ADR 必须按 `flow-alpha` 独立完成能力完备性、包边界、define-registry、测试契约与端到端闭环检查，不能因共用同一 milestone 跳过 Gate。
 
@@ -31,7 +31,7 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 | Concurrent 与渐进生成     | 可让出、取消地准备候选结果                                                                       | [未排期 Proposed](./candidates/01-cooperative-concurrent-runtime.md)           |
 | 上下文颜色                | 数值权重随最终主色确定                                                                           | [alpha.3 ADR-01 Accepted](./alpha.3/01-contextual-color-resolution.md)         |
 | Headless Interaction      | 补齐 renderer-agnostic target、behavior、intent 与 ownership                                     | [alpha.4 候选](./alpha.4/roadmap.md)                                           |
-| Path 标签与端点箭头       | 居中标签产生真实描边断口；端点箭头可从默认位置推进到视觉后缘完整进入逻辑端点                     | [alpha.5 roadmap](./alpha.5/roadmap.md)                                        |
+| Path 标签与端点箭头       | 居中标签产生真实描边断口；端点箭头可从默认位置推进到视觉后缘完整进入逻辑端点                     | [alpha.4 roadmap](./alpha.4/roadmap.md)                                        |
 
 ## alpha.1 执行批次
 
@@ -52,8 +52,7 @@ Headless interaction 与 progressive compile 的 ADR、实现、测试与文档�
 | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | alpha.2 | `sync + atomic + incremental`；补齐 Box Layout、跨 namespace Composite assembly、qualified spatial sidecar、跨包 Math affine 原子与 Vanilla 统一 authoring / framework-neutral processing | [性能设计](../../../../../../notes/architecture/performance-design.md) · [ADR-06](./alpha.2/06-box-layout-composite-contract.md) · [ADR-18](./alpha.2/18-composite-dependency-provider-graph.md) · [ADR-19](./alpha.2/19-qualified-spatial-handles.md) · [ADR-20](./alpha.2/20-vanilla-authoring-normalization.md) |
 | alpha.3 | 上下文颜色：Foundation 颜色原子、Core 最终确定化与 Tier 2 Theme 主色链统一适配                                                                                                            | [视觉 Theme 设计](../../../../../../notes/architecture/visual-theme-design.md)                                                                                                                                                                                                                                     |
-| alpha.4 | Headless Interaction：事件、ownership routing、behavior、presentation、intent                                                                                                             | [交互与增量运行时设计](../../../../../../notes/architecture/interaction-design.md)                                                                                                                                                                                                                                 |
-| alpha.5 | 无填充 Stroke Path 的居中标签自动断线；端点箭头以归一化比例从默认位置推进到按最终尺寸解析的视觉后缘完整进入；两者都保持逻辑 Path 与跨 renderer 几何一致                                   | [ADR-01](./alpha.5/01-stroke-path-label-interruption.md) · [ADR-02](./alpha.5/02-path-endpoint-arrow-overlap.md)                                                                                                                                                                                                   |
+| alpha.4 | 无填充 Stroke Path 的居中标签自动断线；端点箭头按归一化比例推进到视觉后缘完整进入；Headless Interaction 只保留候选边界                                                                    | [ADR-01](./alpha.4/01-stroke-path-label-interruption.md) · [ADR-02](./alpha.4/02-path-endpoint-arrow-overlap.md) · [交互设计](../../../../../../notes/architecture/interaction-design.md)                                                                                                                          |
 
 未来 Concurrent 与 Headless Interaction 仍须共享 identity、revision、ownership、transaction 与 retained Scene，不建立平行 Runtime。未实现能力不能由版本排期或候选 ADR 代替公开契约
 

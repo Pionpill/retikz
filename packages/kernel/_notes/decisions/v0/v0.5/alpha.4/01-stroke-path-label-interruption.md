@@ -2,7 +2,7 @@
 
 - 状态：Proposed
 - 决策日期：2026-09-02
-- 关联：[alpha.5 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Core 绘图完备设计](../../../../architecture/core-drawing-complete.md)
+- 关联：[alpha.4 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Core 绘图完备设计](../../../../architecture/core-drawing-complete.md)
 
 ## 背景与目标
 
