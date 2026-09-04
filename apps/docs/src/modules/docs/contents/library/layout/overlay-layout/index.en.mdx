@@ -15,12 +15,11 @@ import { LayoutItem, OverlayLayout } from '@retikz/layout-react';
 ```tsx
 <Layout width={360} height={180}>
   <OverlayLayout size={{ x: { kind: 'fixed', value: 280 }, y: { kind: 'fixed', value: 120 } }}>
-    <LayoutItem kind="overlay" itemKey="base">
+    <LayoutItem kind="overlay">
       <Node position={[0, 0]} text="Base" />
     </LayoutItem>
     <LayoutItem
       kind="overlay"
-      itemKey="badge"
       placement={{ kind: 'positioned', at: { x: 270, y: 10 }, anchor: { x: 1, y: 0 } }}
       sizeParticipation="exclude"
       zIndex={1}
@@ -108,29 +107,29 @@ Base `OverlayLayout` has no `inspect` prop. The optional `InspectOverlayLayout` 
 
 ### `OverlayLayoutInput`
 
-| Prop            | Type                                        | Default           | Description                           |
-| --------------- | ------------------------------------------- | ----------------- | ------------------------------------- |
-| `size?`         | `LayoutSizeInput`                           | content / content | Per-axis allocation policy            |
-| `padding?`      | `number` \| `IRBoxSpacing`                  | `0`               | Insets from allocation to content     |
-| `overflow?`     | <ApiValues name="LayoutOverflow" />         | `'visible'`       | Whether visuals clip to allocation    |
-| `justifyItems?` | `'start' \| 'center' \| 'end' \| 'stretch'` | `'center'`        | Default horizontal alignment          |
-| `alignItems?`   | <ApiValues name="LayoutAlignment" />        | `'center'`        | Default vertical alignment            |
-| `children?`     | `Array<OverlayLayoutItemInput>`             | `[]`              | Authored items with local unique keys |
+| Prop            | Type                                        | Default           | Description                                  |
+| --------------- | ------------------------------------------- | ----------------- | -------------------------------------------- |
+| `size?`         | `LayoutSizeInput`                           | content / content | Per-axis allocation policy                   |
+| `padding?`      | `number` \| `IRBoxSpacing`                  | `0`               | Insets from allocation to content            |
+| `overflow?`     | <ApiValues name="LayoutOverflow" />         | `'visible'`       | Whether visuals clip to allocation           |
+| `justifyItems?` | `'start' \| 'center' \| 'end' \| 'stretch'` | `'center'`        | Default horizontal alignment                 |
+| `alignItems?`   | <ApiValues name="LayoutAlignment" />        | `'center'`        | Default vertical alignment                   |
+| `children?`     | `Array<OverlayLayoutItemInput>`             | `[]`              | Authored items; explicit keys must be unique |
 
 ### `OverlayLayoutItemInput`
 
-| Prop                 | Type                                         | Default     | Description                                  |
-| -------------------- | -------------------------------------------- | ----------- | -------------------------------------------- |
-| `kind`               | `'overlay'`                                  | —           | OverlayLayout item discriminator             |
-| `key`                | `string`                                     | —           | Container-local authored identity            |
-| `child`              | `IRChild`                                    | —           | Any JSON-safe Core child                     |
-| `placement?`         | `OverlayPlacementInput`                      | aligned     | Alignment or content-local positioning       |
-| `offset?`            | `{ x: number, y: number }`                   | `{0, 0}`    | Translation after placement                  |
-| `margin?`            | `number` \| `IRBoxSpacing`                   | `0`         | Margin around the aligned or positioned slot |
-| `justifySelf?`       | `'start' \| 'center' \| 'end' \| 'stretch'`  | container   | Horizontal alignment override                |
-| `alignSelf?`         | <ApiValues name="LayoutAlignment" />         | container   | Vertical alignment override                  |
-| `sizeParticipation?` | <ApiValues name="LayoutSizeParticipation" /> | `'include'` | Whether the item contributes to profiles     |
-| `zIndex?`            | `number`                                     | `0`         | Integer paint layer with stable source order |
+| Prop                 | Type                                         | Default     | Description                                                        |
+| -------------------- | -------------------------------------------- | ----------- | ------------------------------------------------------------------ |
+| `kind`               | `'overlay'`                                  | —           | OverlayLayout item discriminator                                   |
+| `key?`               | `string`                                     | generated   | Optional stable identity; generated from source index when omitted |
+| `child`              | `IRChild`                                    | —           | Any JSON-safe Core child                                           |
+| `placement?`         | `OverlayPlacementInput`                      | aligned     | Alignment or content-local positioning                             |
+| `offset?`            | `{ x: number, y: number }`                   | `{0, 0}`    | Translation after placement                                        |
+| `margin?`            | `number` \| `IRBoxSpacing`                   | `0`         | Margin around the aligned or positioned slot                       |
+| `justifySelf?`       | `'start' \| 'center' \| 'end' \| 'stretch'`  | container   | Horizontal alignment override                                      |
+| `alignSelf?`         | <ApiValues name="LayoutAlignment" />         | container   | Vertical alignment override                                        |
+| `sizeParticipation?` | <ApiValues name="LayoutSizeParticipation" /> | `'include'` | Whether the item contributes to profiles                           |
+| `zIndex?`            | `number`                                     | `0`         | Integer paint layer with stable source order                       |
 
 ### `OverlayPlacementInput`
 
@@ -139,7 +138,7 @@ Base `OverlayLayout` has no `inspect` prop. The optional `InspectOverlayLayout` 
 | `aligned`    | none                                     | Uses container and item alignment            |
 | `positioned` | `at`, `anchor?`, `width?`, and `height?` | Content-local target and optional exact slot |
 
-In React, write `key` as `itemKey` and provide `child` through one drawable child or `ir`.
+In React, write optional `key` as `itemKey` and provide `child` through one drawable child or `ir`. When `itemKey` is omitted, the generated identity exists only in internal artifacts and is not written back to Source IR.
 
 ## Related
 

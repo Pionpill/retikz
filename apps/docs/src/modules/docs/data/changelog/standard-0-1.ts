@@ -32,8 +32,8 @@ export const standardV01: Release = {
           version: 'alpha.4',
           date: '2026-08-28',
           summary: {
-            zh: '补充五种可容纳内容的通用图式 Shape、八种 Standard 端点 marker，并修复圆柱近端端盖填充。',
-            en: 'Adds five content-bearing diagram Shapes, eight Standard endpoint markers, and correct near-cap fill for cylinders.',
+            zh: '补充五种可容纳内容的通用图式 Shape、九种 Standard 端点 marker，并修复圆柱近端端盖填充。',
+            en: 'Adds five content-bearing diagram Shapes, nine Standard endpoint markers, and correct near-cap fill for cylinders.',
           },
           items: [
             {
@@ -46,8 +46,8 @@ export const standardV01: Release = {
             {
               label: { zh: '开放描边端点', en: 'Open stroke endpoints' },
               content: {
-                zh: '`@retikz/standard/arrow` 新增 bar 与 crowFoot。两者都继承路径描边、支持 Core 的 length、width、lineWidth、color 与 opacity，并在 start、end、反向和双端路径上沿用统一 marker 放置与 shrink。',
-                en: '`@retikz/standard/arrow` adds bar and crowFoot. Both inherit path strokes, support Core length, width, lineWidth, color, and opacity, and share marker placement and shrink across start, end, reversed, and double-ended paths.',
+                zh: '`@retikz/standard/arrow` 新增 bar、crowFoot 与 straightBarb。三者都继承路径描边、支持 Core 的 length、width、lineWidth、color 与 opacity，并在 start、end、反向和双端路径上沿用统一 marker 放置与 shrink。',
+                en: '`@retikz/standard/arrow` adds bar, crowFoot, and straightBarb. All three inherit path strokes, support Core length, width, lineWidth, color, and opacity, and share marker placement and shrink across start, end, reversed, and double-ended paths.',
               },
             },
             {

@@ -19,7 +19,6 @@ import type { GraphProps } from '../../src';
 
 import {
   Block,
-  BlockCell,
   BlockHeader,
   BlockRow,
   BlockSection,
@@ -31,7 +30,7 @@ import {
   RetikzGraphReactErrorCode,
   useGraphThemeStyles,
 } from '../../src';
-import { graphLayoutHostPropsOf } from '../../src/graph/authoring';
+import { collectEntityInput, collectRelationInput, graphLayoutHostPropsOf } from '../../src/graph/authoring';
 
 describe('Group React authoring', () => {
   it('produces the same Group Source IR while accepting arbitrary React children', () => {
@@ -64,6 +63,30 @@ describe('Group React authoring', () => {
 });
 
 describe('Block React authoring', () => {
+  it('keeps string Header text as sparse Source text', () => {
+    const result = normalizeReact(createElement(BlockHeader, { title: 'User', description: 'Domain entity' }));
+
+    expect(result.ir.children[0]).toEqual({
+      namespace: 'graph',
+      type: 'blockHeader',
+      title: 'User',
+      description: 'Domain entity',
+    });
+  });
+
+  it('keeps BlockRow content as sparse Source text without generated children', () => {
+    const content = ['name', { text: 'string', textColor: '#64748b', font: { weight: 'bold' as const } }];
+    const result = normalizeReact(createElement(BlockRow, { id: 'name', content }));
+
+    expect(result.ir.children[0]).toEqual({
+      namespace: 'graph',
+      type: 'blockRow',
+      id: 'name',
+      content,
+    });
+    expect(result.ir.children[0]).not.toHaveProperty('children');
+  });
+
   it('normalizes arbitrary Block children in authored order through fragments and function wrappers', () => {
     const WrappedContent: FC = () =>
       createElement(
@@ -73,7 +96,10 @@ describe('Block React authoring', () => {
           icon: createElement(Node, { position: [0, 0], children: 'U' }),
           title: { text: 'User' },
           description: { text: 'Domain entity' },
-          trailing: createElement(Decoration, { id: 'visibility' }),
+          direction: 'horizontal',
+          itemGap: 6,
+          justifyContent: 'space-between',
+          trail: createElement(Decoration, { id: 'visibility' }),
         }),
         createElement(Node, { position: [0, 40], children: 'Custom content' }),
       );
@@ -100,7 +126,10 @@ describe('Block React authoring', () => {
           icon: { type: 'node', position: [0, 0], text: 'U' },
           title: { text: 'User' },
           description: { text: 'Domain entity' },
-          trailing: { namespace: 'fixture', type: 'decoration', id: 'visibility' },
+          direction: 'horizontal',
+          itemGap: 6,
+          justifyContent: 'space-between',
+          trail: { namespace: 'fixture', type: 'decoration', id: 'visibility' },
         },
         { type: 'node', position: [0, 40], text: 'Custom content' },
         {
@@ -113,12 +142,7 @@ describe('Block React authoring', () => {
   });
 
   it('exposes Header, Section and Row as independent composites with nested adapter collection', () => {
-    const WrappedCell: FC = () =>
-      createElement(
-        BlockCell,
-        { itemKey: 'type', grow: 1 },
-        createElement(Entity, { role: 'concept', position: [0, 0] }),
-      );
+    const WrappedEntity: FC = () => createElement(Entity, { role: 'concept', position: [0, 0] });
     const result = normalizeReact(
       createElement(
         Fragment,
@@ -135,8 +159,8 @@ describe('Block React authoring', () => {
         createElement(
           BlockRow,
           { id: 'name' },
-          createElement(BlockCell, { itemKey: 'name' }, createElement(Node, { position: [0, 0], children: 'name' })),
-          createElement(WrappedCell),
+          createElement(Node, { position: [0, 0], children: 'name' }),
+          createElement(WrappedEntity),
         ),
       ),
     );
@@ -160,31 +184,28 @@ describe('Block React authoring', () => {
         type: 'blockRow',
         id: 'name',
         children: [
-          {
-            key: 'name',
-            child: { type: 'node', position: [0, 0], text: 'name' },
-            margin: 0,
-            basis: 'content',
-            grow: 0,
-            shrink: 1,
-          },
-          {
-            key: 'type',
-            child: { namespace: 'graph', type: 'entity', role: 'concept', position: [0, 0] },
-            margin: 0,
-            basis: 'content',
-            grow: 1,
-            shrink: 1,
-          },
+          { type: 'node', position: [0, 0], text: 'name' },
+          { namespace: 'graph', type: 'entity', role: 'concept', position: [0, 0] },
         ],
       },
     ]);
   });
 
+  it('keeps direct Row children unwrapped in Source IR', () => {
+    const result = normalizeReact(
+      createElement(BlockRow, null, createElement(Node, { position: [0, 0], children: 'name' })),
+    );
+    const row = result.ir.children[0] as { children: Array<Record<string, unknown>> };
+
+    expect(row.children[0]).toEqual({ type: 'node', position: [0, 0], text: 'name' });
+    expect(row.children[0]).not.toHaveProperty('child');
+    expect(row.children[0]).not.toHaveProperty('key');
+  });
+
   it('omits optional Header slots when React children normalize to zero items', () => {
     for (const empty of [null, false, createElement(Fragment)] as const) {
       const result = normalizeReact(
-        createElement(BlockHeader, { title: { text: 'Empty slots' }, icon: empty, trailing: empty }),
+        createElement(BlockHeader, { title: { text: 'Empty slots' }, icon: empty, trail: empty }),
       );
 
       expect(result.ir.children[0]).toEqual({
@@ -193,35 +214,6 @@ describe('Block React authoring', () => {
         title: { text: 'Empty slots' },
       });
     }
-  });
-
-  it('fails loudly when a Cell is outside Row or does not contain exactly one child', () => {
-    expect(() =>
-      normalizeReact(
-        createElement(Block, null, createElement(BlockCell, { itemKey: 'misplaced' }, createElement(Node))),
-      ),
-    ).toThrowError(expect.objectContaining({ code: RetikzGraphReactErrorCode.BlockStructureInvalid }));
-    expect(() =>
-      normalizeReact(createElement(BlockRow, null, createElement(BlockCell, { itemKey: 'empty' }))),
-    ).toThrowError(expect.objectContaining({ code: RetikzGraphReactErrorCode.BlockStructureInvalid }));
-    expect(() =>
-      normalizeReact(
-        createElement(
-          BlockRow,
-          null,
-          createElement(
-            BlockCell,
-            { itemKey: 'many' },
-            createElement(
-              Fragment,
-              null,
-              createElement(Node, { position: [0, 0] }),
-              createElement(Node, { position: [0, 0] }),
-            ),
-          ),
-        ),
-      ),
-    ).toThrowError(expect.objectContaining({ code: RetikzGraphReactErrorCode.BlockStructureInvalid }));
   });
 });
 
@@ -298,7 +290,7 @@ const normalizeReact = (element: ReturnType<typeof createElement>) => {
 };
 
 describe('@retikz/graph-react package boundary', () => {
-  it('exposes every Graph semantic composite independently while keeping Cell Row-local', async () => {
+  it('exposes every Graph semantic composite independently', async () => {
     const graphReact = await import('../../src');
 
     expect(Graph.inputEmbedAdapter.kind).toBe('graph.graph');
@@ -308,12 +300,32 @@ describe('@retikz/graph-react package boundary', () => {
     expect(BlockRow.inputEmbedAdapter.kind).toBe('graph.blockRow');
     expect(Entity.inputEmbedAdapter.kind).toBe('graph.entity');
     expect(Relation.inputEmbedAdapter.kind).toBe('graph.relation');
-    expect(BlockCell).not.toHaveProperty('inputEmbedAdapter');
+    expect(graphReact).not.toHaveProperty('BlockCell');
     expect(graphReact).not.toHaveProperty('createGraphReactAdapters');
   });
 });
 
 describe('Entity and Relation React authoring', () => {
+  it('omits an Entity status when its React prop is undefined', () => {
+    const input = collectEntityInput({ role: 'participant', position: [0, 0], status: undefined }, 'entity-status');
+
+    expect(input).not.toHaveProperty('status');
+  });
+
+  it('omits a Relation status when its React prop is undefined', () => {
+    const input = collectRelationInput(
+      {
+        role: 'association',
+        source: { id: 'source' },
+        target: { id: 'target' },
+        status: undefined,
+      },
+      'relation-status',
+    );
+
+    expect(input).not.toHaveProperty('status');
+  });
+
   it('normalizes direct Entity and Relation children without a Graph parent or generated ids', () => {
     const result = normalizeReact(
       createElement(
@@ -321,9 +333,11 @@ describe('Entity and Relation React authoring', () => {
         null,
         createElement(Node, { id: 'source', position: [0, 0] }),
         createElement(Node, { id: 'target', position: [100, 0] }),
-        createElement(Entity, { role: 'participant', position: [0, 80] }, 'Preview'),
+        createElement(Entity, { role: 'participant', status: 'success', position: [0, 80] }, 'Preview'),
         createElement(Relation, {
           role: 'association',
+          kind: 'uml.association',
+          status: 'warning',
           source: { id: 'source' },
           target: { id: 'target' },
           dashPattern: [6, 2],
@@ -339,6 +353,7 @@ describe('Entity and Relation React authoring', () => {
         namespace: 'graph',
         type: 'entity',
         role: 'participant',
+        status: 'success',
         position: [0, 80],
         text: 'Preview',
       },
@@ -346,6 +361,8 @@ describe('Entity and Relation React authoring', () => {
         namespace: 'graph',
         type: 'relation',
         role: 'association',
+        kind: 'uml.association',
+        status: 'warning',
         source: { id: 'source' },
         target: { id: 'target' },
         dashPattern: [6, 2],

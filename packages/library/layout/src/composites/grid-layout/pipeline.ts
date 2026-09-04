@@ -15,7 +15,7 @@ import {
   LayoutIntrinsicMode,
 } from '@retikz/core';
 
-import type { LayoutInsets, LayoutRect } from '../internal';
+import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
 import type { LayoutSpacingArtifact } from '../shared';
 import type { GridTrackConstraint } from './tracks';
 import type { GridLayoutArtifact, IRGridLayout, IRGridLayoutItem, LayoutTrackSourceKindValue } from './types';
@@ -28,6 +28,7 @@ import {
   appendLayoutSpacingInterval,
   compensatedLayoutSum,
   contentRectOf,
+  createEffectiveLayoutItems,
   createLayoutArtifactAlignmentGuide,
   createLayoutArtifactContainer,
   createLayoutArtifactItem,
@@ -51,7 +52,7 @@ import {
 import { solveGridTracks } from './tracks';
 
 type MeasuredGridItem = Readonly<{
-  authored: IRGridLayoutItem;
+  authored: EffectiveLayoutItem<IRGridLayoutItem>;
   sourceIndex: number;
   margin: LayoutInsets;
   columnStart: number;
@@ -220,8 +221,9 @@ export const compileGridLayout = (
   context: LayoutCompositeCompileContext,
 ): LayoutCompositeCompileResult<GridLayoutArtifact> => {
   const padding = normalizeLayoutSpacing(node.padding);
+  const authoredItems = createEffectiveLayoutItems(node.children);
   const placements = resolveGridPlacements(
-    node.children.map((item, sourceIndex) => ({
+    authoredItems.map((item, sourceIndex) => ({
       key: item.key,
       sourceIndex,
       ...(item.column === undefined ? {} : { column: item.column }),
@@ -236,7 +238,7 @@ export const compileGridLayout = (
   );
   const columns = materializeGridTracks(node.columns, node.implicitColumn, placements.columnCount);
   const rows = materializeGridTracks(node.rows, node.implicitRow, placements.rowCount);
-  const measured: ReadonlyArray<MeasuredGridItem> = node.children.map((authored, sourceIndex) => {
+  const measured: ReadonlyArray<MeasuredGridItem> = authoredItems.map((authored, sourceIndex) => {
     const placement = placements.items[sourceIndex];
     return Object.freeze({
       authored,

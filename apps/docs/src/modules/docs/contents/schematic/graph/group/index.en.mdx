@@ -71,6 +71,7 @@ Group style adjustments focus on the shell background, border, line style, corne
 
 - `children` directly uses Core `IRChild`: Entity, Relation, Group, Node, Path, Scope, Layout, Plot, or any registered composite
 - `nodeDefault`, `pathDefault`, `labelDefault`, Core `theme`, transforms, placement, clipping, and namespaces retain Scope semantics
+- A named Graph Theme supplies the Group root shell `background`, `border`, and `cornerRadius` baseline. Explicit Source fields win and use complete top-level field replacement instead of deep-merging inside `border` or `background`
 - `graphTheme` affects only visible Entity / Relation descendants, never the shell, caption, boundary labels, or ordinary Core children
 - Group does not stack children automatically and owns no routing, obstacle avoidance, or label collision. Put FlexLayout, GridLayout, or OverlayLayout inside when ordinary arrangement is required
 - An explicit Group `id` names the shell envelope and remains targetable through Core `IRNodeTarget`
@@ -96,6 +97,8 @@ Group lowering combines the caption and authored children into the single Surfac
 ## API Reference
 
 React, IR, and Vanilla Group entry points share the same JSON-safe fields. The table lists fields added or redefined by Group; the remaining Core Scope properties retain the Core contract
+
+The shell defaults in the table are the Neutral Graph Theme baseline. After selecting a same-name Graph Theme Definition, omitted `background`, `border`, and `cornerRadius` fields use its Group tokens; explicit Source values still win
 
 | Prop                 | Type                                   | Default                  | Description                                                                                                                                                                                                           |
 | -------------------- | -------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

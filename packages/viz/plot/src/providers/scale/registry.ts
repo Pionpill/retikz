@@ -1,6 +1,6 @@
 import type { AnyScaleDefinition } from '../../contract';
 
-import { extractScaleType } from '../../contract';
+import { extractScaleType, PositionScaleContinuity } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { COLOR_SCALE_DEFINITIONS, POSITION_SCALE_DEFINITIONS } from './features';
 
@@ -23,6 +23,14 @@ export const resolveScaleRegistry = (custom?: ReadonlyArray<AnyScaleDefinition>)
     registry.set(extractScaleType(def.schema), def);
   }
   for (const def of custom ?? []) {
+    const continuity = Reflect.get(def, 'continuity');
+    if (
+      def.family === 'position' &&
+      continuity !== PositionScaleContinuity.Continuous &&
+      continuity !== PositionScaleContinuity.Discrete
+    ) {
+      throw new RetikzPlotError('lowerPlots: position scale definition continuity must be "continuous" or "discrete"');
+    }
     const type = extractScaleType(def.schema);
     if (registry.has(type)) {
       throw new RetikzPlotError(`lowerPlots: duplicate scale registration: "${type}"`);

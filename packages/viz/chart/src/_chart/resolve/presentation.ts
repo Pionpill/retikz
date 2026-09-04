@@ -11,11 +11,12 @@ import {
   LayoutDistribution,
   LayoutItemKind,
 } from '@retikz/layout';
+import { PlotCoordinate } from '@retikz/plot';
 import { createSurface } from '@retikz/standard';
 
 import type { IRChartPresentation, IRChartSource } from '../schemas';
 import type { IRChartThemeResolution } from '../schemas/theme';
-import type { ChartPresentationResolution } from './types';
+import type { ChartPresentationResolution, EffectiveChartLayout } from './types';
 
 import { ChartPresentationSlot, ChartThemeToken } from '../constants';
 
@@ -58,6 +59,26 @@ const PRESENTATION_TOKEN_KEYS: Readonly<Record<PresentationSlot, PresentationTok
     lineHeight: ChartThemeToken.SourceLineHeight,
     align: ChartThemeToken.SourceAlign,
   },
+};
+
+const DEFAULT_CARTESIAN_CHART_LAYOUT: EffectiveChartLayout = { width: 800, height: 500 };
+const DEFAULT_POLAR_CHART_LAYOUT: EffectiveChartLayout = { width: 400, height: 500 };
+
+/** 读取 Plot 默认视图实际使用的坐标系 */
+const defaultCoordinateTypeOf = (plot: IRPlot): string | undefined => {
+  if (plot.coordinate !== undefined) return plot.coordinate.type;
+  const composition = plot.composition;
+  return composition?.views?.find(view => view.id === composition.defaultView)?.coordinate.type;
+};
+
+/** 按最终坐标系补齐 Chart 外部尺寸，同时保留 authored dimension 优先级 */
+const resolveChartLayout = (source: IRChartSource, plot: IRPlot): EffectiveChartLayout => {
+  const coordinateType = defaultCoordinateTypeOf(plot);
+  const defaults =
+    coordinateType === PlotCoordinate.Polar1D || coordinateType === PlotCoordinate.Polar2D
+      ? DEFAULT_POLAR_CHART_LAYOUT
+      : DEFAULT_CARTESIAN_CHART_LAYOUT;
+  return { ...defaults, ...source.layout };
 };
 
 const textNodeOf = (
@@ -150,7 +171,7 @@ export const resolveChartPresentation = (
   return {
     content,
     surface,
-    ...(source.layout === undefined ? {} : { layout: source.layout }),
+    layout: resolveChartLayout(source, plot),
     slots: resolved.slots,
   };
 };

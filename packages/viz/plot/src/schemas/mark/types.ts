@@ -50,6 +50,8 @@ import type {
   PointStrokeStyleSchema,
   PointZIndexStyleSchema,
   ReferenceMarkSchema,
+  RelationEndpointGlyphSchema,
+  RelationEndpointGlyphsSchema,
   RelationMarkSchema,
   RelationPathGeometrySchema,
   RelationPathSpecificOptionsSchema,
@@ -213,6 +215,12 @@ export type IRPlotRelationRouting = ZodInfer<typeof RelationRoutingSchema>;
 
 /** relation primitive 的公共样式声明 */
 export type IRPlotRelationPrimitiveStyle = ZodInfer<typeof RelationPrimitiveStyleSchema>;
+
+/** Relation projected target 的端点 glyph 表现 */
+export type IRPlotRelationEndpointGlyph = ZodInfer<typeof RelationEndpointGlyphSchema>;
+
+/** Relation source / target 端点 glyph 配置 */
+export type IRPlotRelationEndpointGlyphs = ZodInfer<typeof RelationEndpointGlyphsSchema>;
 
 /** relation path 专属选项声明 */
 export type IRPlotRelationPathSpecificOptions = ZodInfer<typeof RelationPathSpecificOptionsSchema>;

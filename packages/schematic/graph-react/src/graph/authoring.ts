@@ -107,6 +107,16 @@ export const graphLayoutHostPropsOf = (props: GraphLayoutHostProps): GraphLayout
   return output;
 };
 
+/** 按 JSX props 的透传语义忽略值为 undefined 的字段 */
+const definedPropertiesOf = <TSource extends object>(source: TSource): TSource => {
+  const definedProperties = { ...source };
+  for (const key of Object.keys(source) as Array<keyof TSource>) {
+    const value = source[key];
+    if (value === undefined) Reflect.deleteProperty(definedProperties, key);
+  }
+  return definedProperties;
+};
+
 /** Graph JSX children 的通用 Kernel authoring 收集结果 */
 export type GraphChildCollection = Readonly<{
   children: ReadonlyArray<InputChild>;
@@ -212,7 +222,7 @@ export const collectEntityInput = (props: EntityProps, embedIdPrefix: string): E
   }
   return {
     type: 'entity',
-    ...input,
+    ...definedPropertiesOf(input),
     ...(authoredText === undefined ? (text === undefined ? {} : { text }) : { text: authoredText }),
   };
 };
@@ -275,7 +285,7 @@ export const collectRelationInput = (props: RelationProps, embedIdPrefix: string
   }
   return {
     type: 'relation',
-    ...input,
+    ...definedPropertiesOf(input),
     ...(authoredRoute !== undefined
       ? { route: authoredRoute }
       : route !== undefined

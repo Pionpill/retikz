@@ -58,7 +58,7 @@ Data Complete 不代表内置所有 ETL、数据库连接器或高频流式计�
 
 - 多个宿主重复实现同一 row / field 算法或 operation schema。
 - 自定义数据能力无法通过现有 definition / registry 接入。
-- transform / reducer无法声明preserve或replace output model、scalar outputs、compact field effect与闭合phase，导致宿主只能猜测派生字段。
+- transform / reducer无法声明preserve或replace output model、scalar outputs、schedule field effect与闭合phase，导致宿主只能猜测派生字段。
 - lineage 无法表达必要的 source 或 derived 关系。
 - 缺口迫使宿主复制通用数据模型或 apply pipeline。
 

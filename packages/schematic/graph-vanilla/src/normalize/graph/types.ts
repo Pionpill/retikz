@@ -30,17 +30,16 @@ export type InputRelationWay = Readonly<{
 /** Relation 的 Vanilla authoring 输入 */
 export type InputRelation = Omit<RelationCreateOptions, 'route'> & (InputRelationRoute | InputRelationWay);
 
-type BlockCellCreateOptions = NonNullable<BlockRowCreateOptions['children']>[number];
+type BlockRowContentInput = Extract<BlockRowCreateOptions, Readonly<{ content: unknown }>>['content'];
 
-/** 与 Block Cell Source 对齐、但允许 Vanilla child authoring sugar 的输入 */
-export type InputBlockCell = Omit<BlockCellCreateOptions, 'child'> & Readonly<{ child: InputGraphChild }>;
+type InputBlockRowFields = Omit<BlockRowCreateOptions, 'content' | 'children'> & Readonly<{ type?: 'blockRow' }>;
 
-/** 与 Block Row Source 对齐、但允许 Cell 使用 Vanilla child authoring sugar 的输入 */
-export type InputBlockRow = Omit<BlockRowCreateOptions, 'children'> &
-  Readonly<{
-    type?: 'blockRow';
-    children?: ReadonlyArray<InputBlockCell>;
-  }>;
+/** 与 Block Row Source 对齐、但允许 children 使用 Vanilla child authoring sugar 的输入 */
+export type InputBlockRow = InputBlockRowFields &
+  (
+    | Readonly<{ content: BlockRowContentInput; children?: never }>
+    | Readonly<{ content?: never; children?: ReadonlyArray<InputGraphChild> }>
+  );
 
 /** 与 Block Section Source 对齐、但允许任意 Vanilla child authoring sugar 的输入 */
 export type InputBlockSection = Omit<BlockSectionCreateOptions, 'children'> &
@@ -49,12 +48,12 @@ export type InputBlockSection = Omit<BlockSectionCreateOptions, 'children'> &
     children?: ReadonlyArray<InputGraphChild>;
   }>;
 
-/** 与 Block Header Source 对齐、但允许 icon / trailing 使用 Vanilla child authoring sugar 的输入 */
-export type InputBlockHeader = Omit<BlockHeaderCreateOptions, 'icon' | 'trailing'> &
+/** 与 Block Header Source 对齐、但允许 icon / trail 使用 Vanilla child authoring sugar 的输入 */
+export type InputBlockHeader = Omit<BlockHeaderCreateOptions, 'icon' | 'trail'> &
   Readonly<{
     type?: 'blockHeader';
     icon?: InputGraphChild;
-    trailing?: InputGraphChild;
+    trail?: InputGraphChild;
   }>;
 
 /** 与 Block Source 对齐、但允许开放 children 使用 Vanilla child authoring sugar 的输入 */

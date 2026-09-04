@@ -1,15 +1,13 @@
-import type { FlexLayoutItemInput } from '@retikz/layout';
-
 import { ChildSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { FlexLayoutItemSchema, LayoutItemKind } from '@retikz/layout';
+import { FlexMainDistributionSchema, LayoutGapSchema } from '@retikz/layout';
 import { SurfaceInputSchema } from '@retikz/standard';
-import { array, literal, strictObject } from 'zod';
+import { array, enum as zodEnum, literal, strictObject, string, union } from 'zod';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { GraphThemeLayerSchema } from '../theme';
 
-export const BlockTextSchema = strictObject({
+const BlockTextObjectSchema = strictObject({
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text content for this Block text item.'),
   align: NodeSchema.shape.align,
   lineHeight: NodeSchema.shape.lineHeight,
@@ -17,7 +15,16 @@ export const BlockTextSchema = strictObject({
   textColor: NodeSchema.shape.textColor,
   font: NodeSchema.shape.font,
   opacity: NodeSchema.shape.opacity,
-}).describe('Core-compatible text fields used by Block structure labels.');
+});
+
+export const BlockTextSchema = union([string(), BlockTextObjectSchema]).describe(
+  'Block structure text as a string shorthand or Core-compatible text fields.',
+);
+
+/** Block Header 文本区的排列方向 */
+const BlockHeaderDirectionSchema = zodEnum(['horizontal', 'vertical']).describe(
+  'Physical direction used to arrange the Header title and description.',
+);
 
 const BlockSurfaceFields = {
   padding: SurfaceInputSchema.shape.padding,
@@ -30,33 +37,20 @@ const BlockSurfaceFields = {
 export const BlockHeaderSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.BlockHeader).describe('Block Header Source composite discriminator.'),
-  icon: ChildSchema.optional().describe('Optional arbitrary child placed before the Header text column.'),
+  icon: ChildSchema.optional().describe('Optional arbitrary child placed before the Header text region.'),
   title: BlockTextSchema.describe('Required primary Header title.'),
   description: BlockTextSchema.optional().describe('Optional secondary Header description.'),
-  trailing: ChildSchema.optional().describe('Optional arbitrary child placed after the Header text column.'),
-}).describe('Independent Graph composite arranging an icon, text column and trailing child.');
-
-const BlockCellInputSchema = strictObject({
-  key: FlexLayoutItemSchema.shape.key,
-  child: FlexLayoutItemSchema.shape.child,
-  margin: FlexLayoutItemSchema.shape.margin,
-  basis: FlexLayoutItemSchema.shape.basis,
-  grow: FlexLayoutItemSchema.shape.grow,
-  shrink: FlexLayoutItemSchema.shape.shrink,
-  min: FlexLayoutItemSchema.shape.min,
-  max: FlexLayoutItemSchema.shape.max,
-  alignSelf: FlexLayoutItemSchema.shape.alignSelf,
-});
-
-export const BlockCellSchema = BlockCellInputSchema.transform(
-  (cell): FlexLayoutItemInput => ({ kind: LayoutItemKind.Flex, ...cell }),
-)
-  .pipe(FlexLayoutItemSchema)
-  .transform(({ kind: _kind, ...cell }) => {
-    void _kind;
-    return cell;
-  })
-  .describe('Row-local FlexLayout item fields excluding the fixed Flex discriminator.');
+  direction: BlockHeaderDirectionSchema.optional().describe(
+    'Optional direction for the title and description text region; omitted means vertical.',
+  ),
+  itemGap: LayoutGapSchema.optional().describe(
+    'Optional minimum physical gap between the Header title and description.',
+  ),
+  justifyContent: FlexMainDistributionSchema.optional().describe(
+    'Optional main-axis distribution within the Header title and description text region.',
+  ),
+  trail: ChildSchema.optional().describe('Optional arbitrary child placed after the Header text region.'),
+}).describe('Independent Graph composite arranging an icon, text region and trail child.');
 
 export const BlockSectionSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
@@ -68,28 +62,29 @@ export const BlockSectionSchema = strictObject({
   gap: NonNegativeNumberSchema.optional().describe('Optional vertical gap between Section items in user units.'),
 }).describe('Independent Graph composite presenting arbitrary children as a vertical content section.');
 
-export const BlockRowSchema = strictObject({
+const BlockRowFields = {
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.BlockRow).describe('Block Row Source composite discriminator.'),
   ...ScopePropsSchema.shape,
   ...BlockSurfaceFields,
-  children: array(BlockCellSchema).optional().describe('Optional ordered Row-local Flex items.'),
-  gap: NonNegativeNumberSchema.optional().describe('Optional horizontal gap between Row Cells in user units.'),
-})
-  .superRefine((row, context) => {
-    const seenKeys = new Set<string>();
-    row.children?.forEach((cell, index) => {
-      if (seenKeys.has(cell.key)) {
-        context.addIssue({
-          code: 'custom',
-          path: ['children', index, 'key'],
-          message: `Duplicate Block Row Cell key '${cell.key}'.`,
-        });
-      }
-      seenKeys.add(cell.key);
-    });
-  })
-  .describe('Independent Graph composite arranging ordered Row-local Flex items horizontally.');
+  gap: NonNegativeNumberSchema.optional().describe('Optional horizontal gap between Row children in user units.'),
+};
+
+const BlockRowContentSchema = strictObject({
+  ...BlockRowFields,
+  content: union([BlockTextSchema, array(BlockTextSchema)]).describe(
+    'Block text shorthand lowered to one full-width item or multiple equal-width Row items.',
+  ),
+});
+
+const BlockRowChildrenSchema = strictObject({
+  ...BlockRowFields,
+  children: array(ChildSchema).optional().describe('Optional ordered arbitrary Core or Tier 2 children.'),
+});
+
+export const BlockRowSchema = union([BlockRowContentSchema, BlockRowChildrenSchema]).describe(
+  'Independent Graph composite arranging Block text content or direct arbitrary children horizontally.',
+);
 
 export const BlockSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
@@ -100,7 +95,7 @@ export const BlockSchema = strictObject({
   children: array(ChildSchema).optional().describe('Optional ordered arbitrary Core or Tier 2 children.'),
   width: NonNegativeNumberSchema.optional().describe('Optional fixed outer Block width including horizontal padding.'),
   minWidth: NonNegativeNumberSchema.optional().describe(
-    'Optional minimum outer Block width including horizontal padding.',
+    'Optional minimum outer Block width including horizontal padding; omitted Source resolves to 240.',
   ),
   gap: NonNegativeNumberSchema.optional().describe('Optional vertical gap between Block children in user units.'),
 })

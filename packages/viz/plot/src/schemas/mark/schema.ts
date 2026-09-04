@@ -42,6 +42,7 @@ import {
   unknown,
 } from 'zod';
 
+import { PolarInterpolation } from '../coordinate';
 import {
   EncodingSchema,
   MarkChannelEncodingSchema,
@@ -50,6 +51,7 @@ import {
   PointEncodingSchema,
 } from '../encoding';
 import { PlotLayerSchema } from '../layer';
+import { MarkPlacementSchema } from '../position-adjustment';
 import { TransformSchema } from '../transform';
 import {
   BUILTIN_MARK_TYPES,
@@ -73,6 +75,9 @@ export const RelationTransformSchema = MarkTransformSchema;
 
 const markBase = {
   id: NonBlankStringSchema.optional().describe('Optional mark handle used by generated scope and anchor targets'),
+  defaultColorGroup: NonBlankStringSchema.optional().describe(
+    'Optional semantic group whose marks share one sequential palette.series slot when no explicit color is authored',
+  ),
   layer: PlotLayerSchema.optional().describe(
     'Semantic plot layer override applied to the outer mark scope; mark datum zIndex remains a separate style channel',
   ),
@@ -634,12 +639,54 @@ export const PointMarkSchema = strictObject({
   anchorId: AnchorIdSchema.optional().describe(
     'Stable id rule written to each generated core Node; takes precedence over datumIdField for the node id',
   ),
+  placement: MarkPlacementSchema.optional().describe(
+    'Position adjustments applied after position scale mapping and before mark geometry',
+  ),
   ...markBase,
   ...nodeHostLabel,
   encoding: PointEncodingSchema,
 }).describe(
   'Point mark: scatter glyph or borderless text label (encoding.text set → text Node); supports optional size / opacity / shape glyph channels',
 );
+
+/** Relation projected target 可选端点 glyph 的封闭 Point 表现字段 */
+export const RelationEndpointGlyphSchema = strictObject({
+  ...PointMarkSchema.pick({
+    color: true,
+    size: true,
+    shape: true,
+    fill: true,
+    stroke: true,
+    strokeWidth: true,
+    fillOpacity: true,
+    strokeOpacity: true,
+    opacity: true,
+    rotate: true,
+    minimumSize: true,
+  }).shape,
+})
+  .superRefine((glyph, ctx) => {
+    for (const [name, value] of Object.entries(glyph)) {
+      if (value.kind !== MarkValueKind.Constant) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [name],
+          message: 'relation endpoint glyph styles must use constant values',
+        });
+      }
+    }
+  })
+  .describe('Constant Point glyph appearance emitted at a projected Relation endpoint');
+
+/** Relation source / target 的可选端点 glyph 配置 */
+export const RelationEndpointGlyphsSchema = strictObject({
+  source: RelationEndpointGlyphSchema.optional(),
+  target: RelationEndpointGlyphSchema.optional(),
+})
+  .refine(endpoints => endpoints.source !== undefined || endpoints.target !== undefined, {
+    message: 'relation endpoints require source or target glyph configuration',
+  })
+  .describe('Optional source and target glyphs emitted atomically with a projected Relation row');
 
 export const PathMarkSchema = object({
   type: literal(PlotMark.Path).describe('Discriminator: ordered points connected into a 1D path'),
@@ -663,6 +710,9 @@ export const PathMarkSchema = object({
     'Close the path using a cycle, a baseline, or a per-row stacked baseline. Set fill when the closed path should render as an area',
   ),
   curve: zodEnum(PathCurve).optional().describe('Connection curve between adjacent ordered points; default linear'),
+  interpolation: zodEnum(PolarInterpolation)
+    .optional()
+    .describe('Polar2D connection-space override; omit to inherit the resolved coordinate interpolation'),
   strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
     'Path stroke width: field-bound datum channel or constant core Path stroke width',
   ),
@@ -757,6 +807,9 @@ export const IntervalMarkSchema = object({
   bounds: IntervalBoundsSchema.optional().describe(
     'Per-role interval bounds keyed by coordinate role; omit to infer from the coordinate role',
   ),
+  interpolation: zodEnum(PolarInterpolation)
+    .optional()
+    .describe('Polar2D cell-boundary override; omit to inherit the resolved coordinate interpolation'),
   strokeWidth: PointNonnegativeNumberStyleSchema.optional().describe(
     'Interval cell stroke width: field-bound datum channel or constant core Node stroke width',
   ),
@@ -773,10 +826,10 @@ export const IntervalMarkSchema = object({
     'Interval cell fill opacity: field-bound datum channel or constant opacity 0..1',
   ),
   padAngle: NonNegativeNumberSchema.optional().describe(
-    'Angular gap in degrees applied to polar sector cells; each sector shrinks by half this angle on both sides. Cartesian cells ignore it',
+    'Angular gap in degrees applied to polar cells; each cell shrinks by half this angle on both sides before sector or chord-contour projection. Cartesian cells ignore it',
   ),
   pull: PointNonnegativeNumberStyleSchema.optional().describe(
-    'Static radial offset in user units for polar sector cells; moves the sector center along the final mid angle. Only sector geometry supports it',
+    'Static radial offset in user units for polar cells; moves the local projection center along the final mid angle before sector or chord-contour projection',
   ),
   anchorId: AnchorIdSchema.optional().describe(
     'Stable id rule written to each generated core interval Node; takes precedence over datumIdField for the node id',
@@ -798,6 +851,9 @@ export const ReferenceMarkSchema = strictObject({
     .describe(
       'Reference form override. Set to region to require lower/upper bounds for every consumed coordinate role and fill the bounded reference cell; omit to infer line or one-axis band',
     ),
+  interpolation: zodEnum(PolarInterpolation)
+    .optional()
+    .describe('Polar2D band or region boundary override; fixed-angle reference lines remain straight'),
   yTo: union([number(), NonBlankStringSchema])
     .optional()
     .describe(
@@ -854,6 +910,9 @@ export const ReferenceMarkSchema = strictObject({
   );
 
 export const RelationPathGeometrySchema = strictObject({
+  interpolation: zodEnum(PolarInterpolation)
+    .optional()
+    .describe('Polar2D default projected-target path override; explicit route, routing, and ribbon do not consume it'),
   via: array(PlotTargetRefSchema)
     .optional()
     .describe('Optional intermediate waypoints; each projected waypoint may generate a core Coordinate'),
@@ -939,6 +998,9 @@ export const RelationMarkSchema = strictObject({
   ribbon: RelationRibbonOptionsSchema.optional().describe(
     'Ribbon-specific relation geometry and core Path kind=ribbon options',
   ),
+  endpoints: RelationEndpointGlyphsSchema.optional().describe(
+    'Optional Point glyphs emitted at plain projected source and target positions',
+  ),
   ...geometryHostLabel,
   ...markBase,
   encoding: object({
@@ -965,7 +1027,10 @@ export const RelationMarkSchema = strictObject({
       ctx.addIssue({
         code: 'custom',
         path: ['path'],
-        message: 'ribbon relation marks cannot use path options',
+        message:
+          mark.path.interpolation === undefined
+            ? 'ribbon relation marks cannot use path options'
+            : 'relation interpolation override is not supported for ribbon geometry',
       });
     }
     if (kind === RelationGeometryKind.Ribbon && mark.ribbon === undefined) {
@@ -974,6 +1039,47 @@ export const RelationMarkSchema = strictObject({
         path: ['ribbon'],
         message: 'ribbon relation marks require ribbon options',
       });
+    }
+    if (mark.endpoints !== undefined) {
+      if (kind !== RelationGeometryKind.Path) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['endpoints'],
+          message: 'relation endpoint glyphs require a path relation',
+        });
+      }
+      if (!('project' in mark.source) || !('project' in mark.target)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['endpoints'],
+          message: 'relation endpoint glyphs require projected source and target refs',
+        });
+      }
+      for (const [role, ref] of [
+        ['source', mark.source],
+        ['target', mark.target],
+      ] as const) {
+        if (
+          'project' in ref &&
+          (ref.anchorId !== undefined ||
+            ref.anchor !== undefined ||
+            ref.offset !== undefined ||
+            ref.boundary !== undefined)
+        ) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [role],
+            message: 'relation endpoint glyph projected refs cannot use anchor, offset, boundary, or anchorId',
+          });
+        }
+      }
+      if (mark.path?.via !== undefined || mark.path?.route !== undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['path'],
+          message: 'relation endpoint glyphs cannot use via or route',
+        });
+      }
     }
   })
   .describe(
@@ -995,6 +1101,9 @@ export const CustomMarkSchema = looseObject({
     message: 'custom mark type must not collide with a built-in mark type',
   }).describe(
     'Discriminator: custom mark type; must be a non-blank, non-built-in identifier registered through options.markDefinitions',
+  ),
+  defaultColorGroup: NonBlankStringSchema.optional().describe(
+    'Optional semantic group whose marks share one sequential palette.series slot when no explicit color is authored',
   ),
   transform: MarkTransformSchema.optional().describe(
     'Optional mark-local transform pipeline applied after the plot root transform',

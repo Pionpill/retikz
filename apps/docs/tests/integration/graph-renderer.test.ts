@@ -109,6 +109,16 @@ const primitivesOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePri
     primitive.type === 'group' ? [primitive, ...primitivesOf(primitive.children)] : [primitive],
   );
 
+const entityShapeFillOf = (compiled: Scene, id: string) => {
+  const entity = primitivesOf(compiled.primitives).find(primitive => primitive.type === 'group' && primitive.id === id);
+  if (entity?.type !== 'group') throw new Error(`missing Entity group '${id}'`);
+  const shape = primitivesOf(entity.children).find(
+    primitive => primitive.type === 'ellipse' || primitive.type === 'rect' || primitive.type === 'path',
+  );
+  if (shape === undefined) throw new Error(`missing Entity shape '${id}'`);
+  return shape.fill;
+};
+
 const recordingContext = (calls: Array<string>): CanvasRenderingContext2D =>
   new Proxy(
     {},
@@ -226,12 +236,7 @@ describe('Graph renderer integration', () => {
                 {
                   type: 'blockRow',
                   id: 'user.name',
-                  children: [
-                    {
-                      key: 'name',
-                      child: { type: 'node', position: [0, 0], text: 'name', padding: 0, margin: 0 },
-                    },
-                  ],
+                  children: [{ type: 'node', position: [0, 0], text: 'name', padding: 0, margin: 0 }],
                 },
               ],
             },
@@ -277,4 +282,13 @@ describe('Graph renderer integration', () => {
       expect(['#000000', '#ffffff']).toContain(entityText.fill);
     },
   );
+
+  it.each([ThemeMode.Light, ThemeMode.Dark])('让 Graph Clean Entity 无填充且不改变 Neutral 默认外观：%s', mode => {
+    const neutral = sceneOf(normalizeGraph(graphInput), { mode });
+    const clean = sceneOf(normalizeGraph(graphInput), { style: PreviewThemeStyle.Clean, mode });
+
+    expect(entityShapeFillOf(neutral, 'start')).not.toBe('none');
+    expect(entityShapeFillOf(clean, 'start')).toBe('none');
+    expect(entityShapeFillOf(clean, 'step')).toBe('none');
+  });
 });

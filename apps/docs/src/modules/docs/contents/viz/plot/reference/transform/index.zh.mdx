@@ -150,7 +150,7 @@ description: 查询 Plot 的堆叠、分箱、关联、归一化、区间派生�
     x: '自变量的连续字段。',
     y: '因变量的连续字段。',
     groupBy: '独立拟合趋势的分组键。',
-    method: '平滑方法，当前默认普通最小二乘线性回归。',
+    method: '回归方法；支持 linear、quadratic、polynomial、logarithmic、exponential 与 power，默认 linear。',
     sampleCount: '每组均匀输出的趋势样本数，默认 64。',
     extent: '可选采样范围 [min, max]；省略时使用有限 x 观测范围。',
     xAs: '趋势样本 x 位置输出字段。',
@@ -160,4 +160,4 @@ description: 查询 Plot 的堆叠、分箱、关联、归一化、区间派生�
 
 ### SmoothMethodSchema
 
-<ZodSchema name="SmoothMethodSchema" description="趋势拟合方法联合，当前为线性回归。" />
+<ZodSchema name="SmoothMethodSchema" description="六种内置回归方法的严格判别联合；polynomial 可配置 2～6 阶。" />

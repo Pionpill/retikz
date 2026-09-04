@@ -19,10 +19,16 @@ export const changelogPageDescription: Localized = {
   en: 'Release history for this documentation group by minor version, newest first; click a version for detailed per-package changes.',
 };
 
+/** Schematic v0.1 的 Graph 与 Diagram package family 共享一个详情路由 */
+const schematicV01: Release = {
+  minor: 'v0.1',
+  stableDate: null,
+  packages: [...graphV01.packages, ...diagramV01.packages],
+};
+
 export const changelog: Array<Release> = [
   vizV02,
-  diagramV01,
-  graphV01,
+  schematicV01,
   layoutV01,
   standardV01,
   kernelV05,

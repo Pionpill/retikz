@@ -152,6 +152,7 @@ export const collectReference = (
 ): void => {
   const {
     kind,
+    interpolation,
     x,
     y,
     xTo,
@@ -241,6 +242,7 @@ export const collectReference = (
   into.marks.push({
     type: PlotMark.Reference,
     ...(kind !== undefined ? { kind } : {}),
+    ...(interpolation !== undefined ? { interpolation } : {}),
     ...(id !== undefined ? { id } : {}),
     ...(coordinateView !== undefined ? { coordinateView } : {}),
     ...(transform !== undefined ? { transform } : {}),

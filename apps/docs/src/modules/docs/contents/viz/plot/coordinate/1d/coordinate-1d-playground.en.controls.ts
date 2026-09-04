@@ -19,7 +19,7 @@ export const coordinate1DPlaygroundControls = definePreviewControls({
           id: 'rows',
           label: 'Event times',
           rows: oneDimensionalEvents,
-          columns: [{ key: 'hour', label: 'Hour' }],
+          columns: [{ key: 'hour' }],
         },
       ],
     },

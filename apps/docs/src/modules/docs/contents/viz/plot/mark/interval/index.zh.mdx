@@ -121,7 +121,9 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
 
 `series` / `group` 与 `arrangement` 会在进入这条主链前准备并排、堆叠或百分比堆叠所需的字段与 bounds。进入 `projectCell` 后，cartesian 通常得到 rect，polar 通常得到 sector，自定义坐标帧也复用同一个 Cell 投影契约；最终几何才装配成 core `Node` 图层。
 
-`padAngle` 会收缩 sector 的角向边界，`pull` 沿最终扇区中线移动其中心；二者改变的是投影后的视觉几何，不会改写原始数据。
+在 polar2D 下，cell 边界默认继承 coordinate 的 `interpolation`：`polar` 生成弧形 sector，`chord` 生成直边 contour。IntervalMark 的显式覆盖只改变当前图元，不会改动网格或兄弟图元；非 polar2D 下显式配置会直接报错。
+
+`padAngle` 先收缩逻辑 Cell 的角向区间，`pull` 再沿中角平移局部投影中心，最后才按有效 interpolation 生成 sector 或 contour；二者不会改写原始数据。
 
 <SourceLinks
   sources={[
@@ -164,13 +166,13 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
     {
       label: '通过 projectCell 得到 Cell 几何',
       path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 457,
-      endLine: 466,
+      startLine: 442,
+      endLine: 463,
     },
     {
       label: '把 Cell 几何装配为 Core Node 图层',
       path: 'packages/viz/plot/src/providers/mark/features/interval.ts',
-      startLine: 488,
+      startLine: 481,
       endLine: 537,
     },
   ]}
@@ -194,11 +196,12 @@ IntervalMark 是底层 cell mark：它只负责把每行数据变成一个正交
 | `stackOffset?`        | `'zero'` / `'normalize'` / `'diverging'` / `'center'` / `'overlap'` | `zero`                                                                                                                  | 堆叠基线策略                                                                                                                             |
 | `stack?` / `percent?` | `boolean`                                                           | `false`                                                                                                                 | 堆叠和百分比堆叠便捷写法                                                                                                                 |
 | `bounds?`             | `IntervalMarkProps['bounds']`                                       | —<br />按 role 推断<br />每个 bound 必填<br />—<br />`0`<br />`extent` 必填<br />`extent` 必填<br />`proportional` 必填 | 显式声明各位置 role 的区间来源；完整的 `IRPlotIntervalBounds` 是 `@retikz/plot` 的 IR 类型，React 输入使用 `IntervalMarkProps['bounds']` |
-| `padAngle?`           | `number`                                                            | `0`                                                                                                                     | 极坐标 sector 之间的角向间隔                                                                                                             |
-| `pull?`               | `IntervalMarkProps['pull']`                                         | `0`                                                                                                                     | 极坐标 sector 沿中线方向的非负偏移；可按字段或常量驱动                                                                                   |
+| `interpolation?`      | <ApiValues name="PolarInterpolation" />                             | coordinate 默认                                                                                                         | polar2D cell 边界的局部覆盖；`polar` 生成弧边，`chord` 生成直边 contour                                                                  |
+| `padAngle?`           | `number`                                                            | `0`                                                                                                                     | 极坐标 cell 在 sector 或 chord contour 投影前应用的角向间隔                                                                              |
+| `pull?`               | `IntervalMarkProps['pull']`                                         | `0`                                                                                                                     | 极坐标 cell 沿中角方向的非负偏移；sector 与 chord contour 均支持，可按字段或常量驱动                                                     |
 | `label?`              | `IntervalMarkProps['label']`                                        | —                                                                                                                       | 把字段内容挂到每个 cell 的 `Node.label`                                                                                                  |
 | `resolveLabel?`       | `(row: ExternalRow) => string`                                      | —                                                                                                                       | 运行时标签函数；不进入 IR，必须同时提供 `id`                                                                                             |
-| `anchorId?`           | `IRPlotAnchorId`                                                | —                                                                                                                       | 为每个有效 cell Node 生成稳定 id                                                                                                         |
+| `anchorId?`           | `IRPlotAnchorId`                                                    | —                                                                                                                       | 为每个有效 cell Node 生成稳定 id                                                                                                         |
 
 ## 相关
 

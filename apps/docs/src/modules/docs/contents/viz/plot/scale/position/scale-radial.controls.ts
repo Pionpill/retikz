@@ -28,10 +28,7 @@ export const scaleRadialControls = definePreviewControls({
           id: 'squareSteps',
           label: '平方级差',
           rows: squareSteps,
-          columns: [
-            { key: 'category', label: '类别' },
-            { key: 'value', label: '数值' },
-          ],
+          columns: [{ key: 'category' }, { key: 'value' }],
           visibleWhen: { controlId: 'dataPreset', oneOf: ['square'] },
         },
         {
@@ -39,10 +36,7 @@ export const scaleRadialControls = definePreviewControls({
           id: 'evenSteps',
           label: '等差级数',
           rows: evenSteps,
-          columns: [
-            { key: 'category', label: '类别' },
-            { key: 'value', label: '数值' },
-          ],
+          columns: [{ key: 'category' }, { key: 'value' }],
           visibleWhen: { controlId: 'dataPreset', oneOf: ['even'] },
         },
         {
@@ -50,10 +44,7 @@ export const scaleRadialControls = definePreviewControls({
           id: 'rainfall',
           label: '季度降水量',
           rows: rainfall,
-          columns: [
-            { key: 'category', label: '季度' },
-            { key: 'value', label: '降水量' },
-          ],
+          columns: [{ key: 'category' }, { key: 'value' }],
           visibleWhen: { controlId: 'dataPreset', oneOf: ['rainfall'] },
         },
       ],

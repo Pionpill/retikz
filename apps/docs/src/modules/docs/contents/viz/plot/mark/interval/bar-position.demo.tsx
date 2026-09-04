@@ -46,7 +46,11 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           paddingInner={values[BAR_POSITION_CONTROL_IDS.gap]}
           paddingOuter={isHorizontal ? 0 : isPolar ? values[BAR_POSITION_CONTROL_IDS.gap] / 2 : 0.15}
         />
-        <PlotScale dimension={isHorizontal ? 'x' : 'y'} type="linear" domainPadding={isHorizontal ? 0.05 : 0} />
+        <PlotScale
+          dimension={isHorizontal ? 'x' : 'y'}
+          type="linear"
+          domainPadding={isHorizontal ? { kind: 'ratio', lower: 0.05, upper: 0.05 } : 0}
+        />
         <PlotAxis dimension="x" grid={isHorizontal} />
         <PlotAxis dimension="y" grid={!isHorizontal} />
       </Plot>

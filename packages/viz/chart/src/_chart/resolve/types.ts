@@ -6,6 +6,14 @@ import type { ChartEncodingRuntime, ChartRecipeDefinition } from '../contract/re
 import type { ChartThemeDefinition, ChartThemeResolution } from '../contract/theme';
 import type { IRChartSource } from '../schemas';
 
+/** Chart 外部 border-box 的最终有效尺寸 */
+export type EffectiveChartLayout = Readonly<{
+  /** 最终宽度 */
+  width: number;
+  /** 最终高度 */
+  height: number;
+}>;
+
 /** Chart presentation 的固定 slot 解析结果 */
 export type ChartPresentationResolution = Readonly<{
   /** title → subtitle → plot → note → source 的最终内容 */
@@ -13,7 +21,7 @@ export type ChartPresentationResolution = Readonly<{
   /** 包含 Chart shell padding 与 canvas 的 Standard Surface */
   surface: IRSurface;
   /** 外部 Chart border-box allocation；不写入 IRPlot */
-  layout?: IRChartSource['layout'];
+  layout: EffectiveChartLayout;
   /** 固定顺序的已消费 presentation slot 名称 */
   slots: ReadonlyArray<'title' | 'subtitle' | 'plot' | 'note' | 'source'>;
 }>;

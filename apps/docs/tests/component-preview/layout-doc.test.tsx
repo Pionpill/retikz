@@ -221,6 +221,19 @@ describe('Layout documentation demos', () => {
   });
 
   it.each([
+    ['flex zh', FlexZhDemo],
+    ['flex en', FlexEnDemo],
+    ['grid zh', GridZhDemo],
+    ['grid en', GridEnDemo],
+    ['overlay zh', OverlayZhDemo],
+    ['overlay en', OverlayEnDemo],
+  ] as const)('keeps %s basic Source IR free of optional item keys', (_name, Component) => {
+    const source = JSON.stringify(buildPreviewIR(Component).sourceIr);
+
+    expect(source).not.toContain('"key":');
+  });
+
+  it.each([
     ['flexLayout', FlexPlaygroundCanonical],
     ['gridLayout', GridPlaygroundCanonical],
     ['overlayLayout', OverlayPlaygroundCanonical],

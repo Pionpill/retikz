@@ -21,10 +21,7 @@ export const builtinPointStyleControls = definePreviewControls({
           id: 'rows',
           label: 'Point data',
           rows: pointStyleRows,
-          columns: [
-            { key: 'x', label: 'X value' },
-            { key: 'y', label: 'Y value' },
-          ],
+          columns: [{ key: 'x' }, { key: 'y' }],
         },
       ],
     },

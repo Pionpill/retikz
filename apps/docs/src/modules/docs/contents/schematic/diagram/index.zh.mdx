@@ -15,7 +15,7 @@ Graph 描述图中的对象与关系，具体 Diagram 类型决定如何测量�
 | Diagram Framework | Presentation、Frame、Appearance 与输出边界   | 解释或改写具体绘图核心             |
 | 具体 Diagram      | 领域绘图核心、测量、布局、routing 与结果模型 | 复制 Core、Layout 或 Standard 能力 |
 
-首个具体类型将是 `FlowDiagram`。在它开放之前，Graph 继续负责可直接绘制的关系内容，Diagram Framework 只作为包内 Foundation 存在。
+首个具体类型是 `FlowDiagram`：它把 LLM 友好的关系 Source、自动布局 Definition、Graph 物化与 renderer-neutral artifact 接成一个端到端闭环。
 
 ## 章节内容
 
@@ -24,6 +24,12 @@ Graph 描述图中的对象与关系，具体 Diagram 类型决定如何测量�
     <span className="font-semibold">图示框架</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       alpha.1 建立的说明区域、外框、间距、主题与统一输出边界
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/schematic/diagram/flow">
+    <span className="font-semibold">Flow Diagram</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      面向站点逻辑图的递归分组、自动布局、routing、Theme 与结果模型
     </span>
   </LinkedCard>
 </div>

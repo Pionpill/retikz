@@ -6,11 +6,12 @@ import { RelationKind, RelationRole } from '../../shared';
 
 const noMarker = false as const;
 const solid = false as const;
+const dashed = [6, 4];
 
 export const AssociationRelationRoleDefinition = defineRelationRole({
   role: RelationRole.Association,
   description: '两个对象之间的一般关联',
-  defaultDirection: RelationDirection.None,
+  defaultDirection: RelationDirection.Forward,
   allowedDirections: [
     RelationDirection.None,
     RelationDirection.Forward,
@@ -21,17 +22,17 @@ export const AssociationRelationRoleDefinition = defineRelationRole({
     [RelationDirection.None]: { sourceMarker: noMarker, targetMarker: noMarker, dashPattern: solid },
     [RelationDirection.Forward]: {
       sourceMarker: noMarker,
-      targetMarker: { shape: 'kite' },
+      targetMarker: { shape: 'diamond' },
       dashPattern: solid,
     },
     [RelationDirection.Reverse]: {
-      sourceMarker: { shape: 'kite' },
+      sourceMarker: { shape: 'diamond' },
       targetMarker: noMarker,
       dashPattern: solid,
     },
     [RelationDirection.Both]: {
-      sourceMarker: { shape: 'kite' },
-      targetMarker: { shape: 'kite' },
+      sourceMarker: { shape: 'diamond' },
+      targetMarker: { shape: 'diamond' },
       dashPattern: solid,
     },
   },
@@ -45,7 +46,7 @@ export const DependencyRelationRoleDefinition = defineRelationRole({
   directions: {
     [RelationDirection.Forward]: {
       sourceMarker: noMarker,
-      targetMarker: { shape: 'stealth' },
+      targetMarker: { shape: 'straightBarb' },
       dashPattern: solid,
     },
   },
@@ -73,17 +74,17 @@ export const FlowRelationRoleDefinition = defineRelationRole({
   directions: {
     [RelationDirection.Forward]: {
       sourceMarker: noMarker,
-      targetMarker: { shape: 'circle' },
+      targetMarker: { shape: 'stealth' },
       dashPattern: solid,
     },
     [RelationDirection.Reverse]: {
-      sourceMarker: { shape: 'circle' },
+      sourceMarker: { shape: 'stealth' },
       targetMarker: noMarker,
       dashPattern: solid,
     },
     [RelationDirection.Both]: {
-      sourceMarker: { shape: 'circle' },
-      targetMarker: { shape: 'circle' },
+      sourceMarker: { shape: 'stealth' },
+      targetMarker: { shape: 'stealth' },
       dashPattern: solid,
     },
   },
@@ -97,17 +98,17 @@ export const InfluenceRelationRoleDefinition = defineRelationRole({
   directions: {
     [RelationDirection.Forward]: {
       sourceMarker: noMarker,
-      targetMarker: { shape: 'square' },
+      targetMarker: { shape: 'circle' },
       dashPattern: solid,
     },
     [RelationDirection.Reverse]: {
-      sourceMarker: { shape: 'square' },
+      sourceMarker: { shape: 'circle' },
       targetMarker: noMarker,
       dashPattern: solid,
     },
     [RelationDirection.Both]: {
-      sourceMarker: { shape: 'square' },
-      targetMarker: { shape: 'square' },
+      sourceMarker: { shape: 'circle' },
+      targetMarker: { shape: 'circle' },
       dashPattern: solid,
     },
   },
@@ -122,6 +123,21 @@ export const UmlAggregationRelationKindDefinition = defineRelationKind({
   directions: {
     [RelationDirection.None]: {
       sourceMarker: { shape: 'openDiamond' },
+      targetMarker: noMarker,
+      dashPattern: solid,
+    },
+  },
+});
+
+export const UmlAssociationRelationKindDefinition = defineRelationKind({
+  kind: RelationKind.UmlAssociation,
+  role: RelationRole.Association,
+  description: '以两端无 marker 的实线表示的 UML 一般关联关系',
+  defaultDirection: RelationDirection.None,
+  allowedDirections: [RelationDirection.None],
+  directions: {
+    [RelationDirection.None]: {
+      sourceMarker: noMarker,
       targetMarker: noMarker,
       dashPattern: solid,
     },
@@ -143,21 +159,30 @@ export const UmlCompositionRelationKindDefinition = defineRelationKind({
   },
 });
 
-export const UmlRealizationRelationKindDefinition = defineRelationKind({
-  kind: RelationKind.UmlRealization,
+export const UmlGeneralizationRelationKindDefinition = defineRelationKind({
+  kind: RelationKind.UmlGeneralization,
   role: RelationRole.Generalization,
-  description: '实现端指向规范端的 UML 实现关系',
+  description: '子类型以空心三角指向父类型的 UML 泛化关系',
   directions: {
     [RelationDirection.Forward]: { targetMarker: { shape: 'open' } },
   },
 });
 
-export const ProvenanceDerivationRelationKindDefinition = defineRelationKind({
-  kind: RelationKind.ProvenanceDerivation,
+export const UmlDependencyRelationKindDefinition = defineRelationKind({
+  kind: RelationKind.UmlDependency,
   role: RelationRole.Dependency,
-  description: '派生结果指向来源记录的 Provenance 关系',
+  description: '以虚线开放箭头表示的 UML 依赖关系',
   directions: {
-    [RelationDirection.Forward]: { targetMarker: { shape: 'openStealth' } },
+    [RelationDirection.Forward]: { dashPattern: dashed },
+  },
+});
+
+export const UmlRealizationRelationKindDefinition = defineRelationKind({
+  kind: RelationKind.UmlRealization,
+  role: RelationRole.Dependency,
+  description: '实现端指向规范端的 UML 实现关系',
+  directions: {
+    [RelationDirection.Forward]: { targetMarker: { shape: 'open' }, dashPattern: dashed },
   },
 });
 
@@ -170,8 +195,10 @@ export const BUILTIN_RELATION_ROLE_DEFINITIONS: ReadonlyArray<RelationRoleDefini
 ]);
 
 export const BUILTIN_RELATION_KIND_DEFINITIONS: ReadonlyArray<RelationKindDefinition> = Object.freeze([
+  UmlAssociationRelationKindDefinition,
   UmlAggregationRelationKindDefinition,
   UmlCompositionRelationKindDefinition,
+  UmlGeneralizationRelationKindDefinition,
+  UmlDependencyRelationKindDefinition,
   UmlRealizationRelationKindDefinition,
-  ProvenanceDerivationRelationKindDefinition,
 ]);

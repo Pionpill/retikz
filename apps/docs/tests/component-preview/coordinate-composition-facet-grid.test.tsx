@@ -184,7 +184,7 @@ describe('coordinate composition grids', () => {
         coordinateCompositionTracksPolarControls,
         COORDINATE_COMPOSITION_TRACKS_POLAR_CONTROL_IDS.yGridVisible,
       ),
-    ).toBe('环形网格（y / 半径）');
+    ).toBe('多边形网格（y / 半径）');
     expect(
       controlLabel(
         englishCoordinateCompositionTracksPolarControls,
@@ -196,7 +196,7 @@ describe('coordinate composition grids', () => {
         englishCoordinateCompositionTracksPolarControls,
         COORDINATE_COMPOSITION_TRACKS_POLAR_CONTROL_IDS.yGridVisible,
       ),
-    ).toBe('Circular grid (y / radius)');
+    ).toBe('Polygon grid (y / radius)');
   });
 
   it.each([
@@ -253,7 +253,7 @@ describe('coordinate composition grids', () => {
       expect(yGridPaths.some(isHorizontalGridPath)).toBe(true);
     } else {
       expect(xGridPaths.some(path => path.includes(' L '))).toBe(true);
-      expect(yGridPaths.some(path => path.includes(' A '))).toBe(true);
+      expect(yGridPaths.some(path => path.includes(' L '))).toBe(true);
     }
   });
 });

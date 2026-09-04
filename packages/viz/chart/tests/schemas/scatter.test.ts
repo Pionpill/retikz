@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { ScatterChartEncodingsSchema, ScatterChartPropertiesSchema, ScatterChartSchema } from '../../src/point/scatter';
+import {
+  ScatterChartEncodingsSchema,
+  ScatterChartMarkSchema,
+  ScatterChartPropertiesSchema,
+  ScatterChartSchema,
+} from '../../src/point/scatter';
 
 const scatter = {
   namespace: 'chart',
@@ -70,6 +75,46 @@ describe('Scatter Chart exact Source schema', () => {
     expect(ScatterChartPropertiesSchema.safeParse({ size: { field: 'amount' } }).success).toBe(false);
   });
 
+  it('accepts shared or per-role position domain padding only on recipe properties', () => {
+    for (const domainPadding of [
+      0,
+      12,
+      { default: 5 },
+      { x: 8 },
+      { y: 9 },
+      { left: 2 },
+      { right: 3 },
+      { top: 4 },
+      { bottom: 6 },
+      { kind: 'range', x: 8 },
+      { kind: 'ratio', default: 0.04, left: 0.02 },
+    ]) {
+      expect(ScatterChartPropertiesSchema.safeParse({ domainPadding }).success).toBe(true);
+    }
+    for (const domainPadding of [
+      -0.01,
+      {},
+      { kind: 'range' },
+      { kind: 'unknown', x: 1 },
+      { x: -0.01 },
+      { y: -0.01 },
+      { kind: 'ratio', x: 1 },
+      { horizontal: 0.1 },
+    ]) {
+      expect(ScatterChartPropertiesSchema.safeParse({ domainPadding }).success).toBe(false);
+    }
+    const invalidRatio = ScatterChartPropertiesSchema.safeParse({
+      domainPadding: { kind: 'ratio', left: 1 },
+    });
+    expect(invalidRatio.success).toBe(false);
+    if (!invalidRatio.success) {
+      expect(invalidRatio.error.issues[0]?.path).toEqual(['domainPadding', 'left']);
+    }
+    expect(ScatterChartMarkSchema.safeParse({ kind: 'scatter', properties: { domainPadding: 0.1 } }).success).toBe(
+      false,
+    );
+  });
+
   it('rejects unsupported and malformed Scatter encoding slots at the encodings boundary', () => {
     for (const invalidEncodings of [
       { series: 'series' },
@@ -134,7 +179,7 @@ describe('Scatter Chart exact Source schema', () => {
     }
   });
 
-  it('restricts compact jitter to the mapped position role', () => {
+  it('restricts encoding jitter to the mapped position role', () => {
     expect(
       ScatterChartEncodingsSchema.safeParse({
         x: { transform: { kind: 'jitter', axis: 'x', xField: 'amount' }, output: 'amount' },

@@ -17,11 +17,7 @@ export const builtinOtherControls = definePreviewControls({
           id: 'rows',
           label: 'Series data',
           rows: otherRows,
-          columns: [
-            { key: 'step', label: 'Step' },
-            { key: 'value', label: 'Value' },
-            { key: 'series', label: 'Series' },
-          ],
+          columns: [{ key: 'step' }, { key: 'value' }, { key: 'series' }],
         },
       ],
     },

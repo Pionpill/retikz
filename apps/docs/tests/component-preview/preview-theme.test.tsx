@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import type { FC } from 'react';
 
-import { ScatterChart } from '@retikz/chart-react/point';
+import { ChartData } from '@retikz/chart-react';
+import { ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
 import { ThemeMode } from '@retikz/core';
+import { FlowEntity, FlowRelation } from '@retikz/diagram-react/flow';
 import { Entity, Graph, Relation } from '@retikz/graph-react';
 import { useTheme } from '@retikz/react';
 import { createRoot } from 'react-dom/client';
@@ -13,6 +15,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   PreviewDetailTable,
   PreviewEntity,
+  PreviewFlowDiagram,
   PreviewGraph,
   PreviewGraphThemeStyles,
   PreviewRelation,
@@ -154,7 +157,10 @@ describe('ComponentPreview global theme', () => {
     expect(() =>
       renderToStaticMarkup(
         <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Vibrant, mode: ThemeMode.Light }}>
-          <ScatterChart data={[{ income: 12000, life: 74 }]} encodings={{ x: 'income', y: 'life' }} />
+          <ScatterChart>
+            <ChartData data={[{ income: 12000, life: 74 }]} />
+            <ScatterEncodings x="income" y="life" />
+          </ScatterChart>
         </PreviewThemeProvider>,
       ),
     ).not.toThrow();
@@ -173,6 +179,20 @@ describe('ComponentPreview global theme', () => {
             </Entity>
             <Relation source={{ id: 'source' }} target={{ id: 'target' }} role="flow" />
           </Graph>
+        </PreviewThemeProvider>,
+      ),
+    ).not.toThrow();
+  });
+
+  it('makes the selected Flow ThemeStyle available to standalone Flow previews', () => {
+    expect(() =>
+      renderToStaticMarkup(
+        <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Clean, mode: ThemeMode.Light }}>
+          <PreviewFlowDiagram width={320} height={180}>
+            <FlowEntity id="source" text="Source" />
+            <FlowEntity id="target" text="Target" />
+            <FlowRelation source="source" target="target" />
+          </PreviewFlowDiagram>
         </PreviewThemeProvider>,
       ),
     ).not.toThrow();

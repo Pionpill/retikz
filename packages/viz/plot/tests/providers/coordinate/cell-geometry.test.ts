@@ -23,7 +23,7 @@ import { buildIntervalContext } from '../../../src/providers';
 import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
 import { datumAnchor as resolveDatumAnchor, resolveMarkOperation } from '../../../src/resolve/mark';
-import { isBuiltinMark, PlotSchema } from '../../../src/schemas';
+import { isBuiltinMark, PlotSchema, PolarInterpolation } from '../../../src/schemas';
 
 /**
  * 区间几何投影契约测试——frame.projectCell 统一 interval / sector / 曲线轴下沉。
@@ -83,11 +83,70 @@ const linearStub = (domain: [number, number], range: [number, number], bandwidth
     get bandwidth() {
       return bandwidth;
     },
+    get step() {
+      return bandwidth;
+    },
     ticks: () => ({ ticks: [], labels: [] }) as unknown as ReturnType<PositionScale['ticks']>,
     range: () => [r0, r1],
     setRange: () => undefined,
   };
 };
+
+const squarePolarFrame = (interpolation: 'polar' | 'chord', step = 90, startAngle = 0, endAngle = 360) =>
+  createPolarCoordinate({
+    center: [0, 0],
+    innerRadius: 0,
+    outerRadius: 100,
+    startAngle,
+    endAngle,
+    interpolation,
+    angularSkeleton: startAngle <= endAngle ? [45, 135, 225, 315] : [315, 225, 135, 45],
+    primary: linearStub([0, 1], [startAngle, endAngle], step),
+    secondary: linearStub([0, 1], [0, 100]),
+  });
+
+describe('Polar mapped-role projection', () => {
+  it('projects a discrete chord angle onto its adjacent polygon edge', () => {
+    const frame = squarePolarFrame(PolarInterpolation.Chord);
+    const start = frame.projectPolar(45, 100);
+    const end = frame.projectPolar(135, 100);
+
+    expect(start).not.toBeNull();
+    expect(end).not.toBeNull();
+    expect(frame.projectMappedRoles([67.5, 100])).toEqual([
+      (start?.[0] ?? 0) * 0.75 + (end?.[0] ?? 0) * 0.25,
+      (start?.[1] ?? 0) * 0.75 + (end?.[1] ?? 0) * 0.25,
+    ]);
+  });
+
+  it('keeps polar and continuous chord angles on the circular projection', () => {
+    const expected = squarePolarFrame(PolarInterpolation.Polar).projectPolar(67.5, 100);
+
+    expect(squarePolarFrame(PolarInterpolation.Polar).projectMappedRoles([67.5, 100])).toEqual(expected);
+    expect(squarePolarFrame(PolarInterpolation.Chord, 0).projectMappedRoles([67.5, 100])).toEqual(expected);
+  });
+
+  it('interpolates the cyclic seam in forward and reversed sweeps', () => {
+    const expected = [Math.SQRT1_2 * 100, -Math.SQRT1_2 * 50];
+
+    const forward = squarePolarFrame(PolarInterpolation.Chord).projectMappedRoles([337.5, 100]);
+    const reversed = squarePolarFrame(PolarInterpolation.Chord, 90, 360, 0).projectMappedRoles([337.5, 100]);
+    expect(forward?.[0]).toBeCloseTo(expected[0], 6);
+    expect(forward?.[1]).toBeCloseTo(expected[1], 6);
+    expect(reversed?.[0]).toBeCloseTo(expected[0], 6);
+    expect(reversed?.[1]).toBeCloseTo(expected[1], 6);
+  });
+
+  it('converts glyph extents with chord length and polygon edge depth', () => {
+    const frame = squarePolarFrame(PolarInterpolation.Chord);
+
+    expect(frame.placementBoundary.glyphExtentInRoleUnits('x', [67.5, 100], 10)).toBeCloseTo(
+      10 / ((Math.SQRT2 * 100) / 90),
+      6,
+    );
+    expect(frame.placementBoundary.glyphExtentInRoleUnits('y', [67.5, 100], 10)).toBeCloseTo(10 / Math.SQRT1_2, 6);
+  });
+});
 
 // ── projectCell 闭式快路：cartesian → rect、polar → sector ──────────────────────────────
 describe('projectCell 闭式快路（rect / sector）', () => {
@@ -106,7 +165,8 @@ describe('projectCell 闭式快路（rect / sector）', () => {
       outerRadius: 150,
       startAngle: 0,
       endAngle: 360,
-      continuousAngle: false,
+      interpolation: PolarInterpolation.Polar,
+      angularSkeleton: [0, 90, 180, 270],
       primary: linearStub([0, 1], [0, 360]),
       secondary: linearStub([0, 1], [0, 150]),
     });
@@ -119,6 +179,114 @@ describe('projectCell 闭式快路（rect / sector）', () => {
       outerRadius: 120,
       startAngle: 30,
       endAngle: 90,
+    });
+  });
+
+  it('polar_projectcell_chord_returns_straight_contour_for_a_partial_cell', () => {
+    const frame = createPolarCoordinate({
+      center: [0, 0],
+      innerRadius: 0,
+      outerRadius: 100,
+      startAngle: 0,
+      endAngle: 360,
+      interpolation: PolarInterpolation.Chord,
+      angularSkeleton: [0, 90, 180, 270],
+      primary: linearStub([0, 1], [0, 360]),
+      secondary: linearStub([0, 1], [0, 100]),
+    });
+
+    const geometry = frame.projectCell({ intervals: { x: [0, 90], y: [40, 100] } });
+    expect(geometry.kind).toBe('contour');
+    if (geometry.kind !== 'contour') return;
+    expect(geometry.points).toHaveLength(4);
+    const expected = [
+      [40, 0],
+      [0, 40],
+      [0, 100],
+      [100, 0],
+    ];
+    for (let index = 0; index < expected.length; index += 1) {
+      expect(geometry.points[index][0]).toBeCloseTo(expected[index][0], 9);
+      expect(geometry.points[index][1]).toBeCloseTo(expected[index][1], 9);
+    }
+  });
+
+  it('polar_projectcell_chord_with_zero_inner_radius_uses_the_center_once_for_a_partial_cell', () => {
+    const frame = createPolarCoordinate({
+      center: [0, 0],
+      innerRadius: 0,
+      outerRadius: 100,
+      startAngle: 0,
+      endAngle: 360,
+      interpolation: PolarInterpolation.Chord,
+      angularSkeleton: [0, 90, 180, 270],
+      primary: linearStub([0, 1], [0, 360]),
+      secondary: linearStub([0, 1], [0, 100]),
+    });
+    const geometry = frame.projectCell({ intervals: { x: [0, 90], y: [0, 100] } });
+
+    expect(geometry.kind).toBe('contour');
+    if (geometry.kind !== 'contour') return;
+    expect(geometry.points).toHaveLength(3);
+    expect(geometry.points.filter(point => point[0] === 0 && point[1] === 0)).toHaveLength(1);
+  });
+
+  it('polar_projectcell_chord_uses_the_structural_skeleton_for_a_full_sweep', () => {
+    const frame = createPolarCoordinate({
+      center: [0, 0],
+      innerRadius: 0,
+      outerRadius: 100,
+      startAngle: 0,
+      endAngle: 360,
+      interpolation: PolarInterpolation.Chord,
+      angularSkeleton: [0, 90, 180, 270],
+      primary: linearStub([0, 1], [0, 360]),
+      secondary: linearStub([0, 1], [0, 100]),
+    });
+    const geometry = frame.projectCell({ intervals: { x: [0, 360], y: [40, 100] } });
+
+    expect(geometry.kind).toBe('contour');
+    if (geometry.kind !== 'contour') return;
+    expect(geometry.points).toHaveLength(8);
+    expect(new Set(geometry.points.map(point => point.map(value => value.toFixed(6)).join(','))).size).toBe(8);
+  });
+
+  it('polar_projectcell_chord_with_zero_inner_radius_returns_only_the_outer_polygon', () => {
+    const frame = createPolarCoordinate({
+      center: [0, 0],
+      innerRadius: 0,
+      outerRadius: 100,
+      startAngle: 0,
+      endAngle: 360,
+      interpolation: PolarInterpolation.Chord,
+      angularSkeleton: [0, 90, 180, 270],
+      primary: linearStub([0, 1], [0, 360]),
+      secondary: linearStub([0, 1], [0, 100]),
+    });
+    const geometry = frame.projectCell({ intervals: { x: [0, 360], y: [0, 100] } });
+
+    expect(geometry.kind).toBe('contour');
+    if (geometry.kind !== 'contour') return;
+    expect(geometry.points).toHaveLength(4);
+    expect(geometry.points.every(point => Math.hypot(point[0], point[1]) === 100)).toBe(true);
+  });
+
+  it('polar_projectcell_chord_skips_a_full_sweep_with_fewer_than_three_directions', () => {
+    const frame = createPolarCoordinate({
+      center: [0, 0],
+      innerRadius: 0,
+      outerRadius: 100,
+      startAngle: 0,
+      endAngle: 360,
+      interpolation: PolarInterpolation.Chord,
+      angularSkeleton: [0, 180],
+      primary: linearStub([0, 1], [0, 360]),
+      secondary: linearStub([0, 1], [0, 100]),
+    });
+
+    expect(frame.projectCell({ intervals: { x: [0, 360], y: [40, 100] } })).toEqual({
+      kind: 'contour',
+      points: [],
     });
   });
 });
@@ -201,17 +369,23 @@ describe('cartesian interval → rect 产物（byte-equal 回归基线）', () =
   });
 });
 
-const polarBarSpec = (): IRPlot =>
+const polarBarSpec = (interpolation?: 'polar' | 'chord', markInterpolation?: 'polar' | 'chord'): IRPlot =>
   PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
-    coordinate: { type: 'polar2D', angle: 'cat', radius: 'val' },
+    coordinate: { type: 'polar2D', angle: 'cat', radius: 'val', ...(interpolation ? { interpolation } : {}) },
     scales: [
       { type: 'band', name: 'cat' },
       { type: 'linear', name: 'val' },
     ],
-    marks: [{ type: 'interval', encoding: { x: { field: 'm' }, y: { field: 'v' } } }],
+    marks: [
+      {
+        type: 'interval',
+        ...(markInterpolation ? { interpolation: markInterpolation } : {}),
+        encoding: { x: { field: 'm' }, y: { field: 'v' } },
+      },
+    ],
   });
 
 const pieSpec = (): IRPlot =>
@@ -241,13 +415,50 @@ describe('polar interval / sector → sector 产物（byte-equal 回归基线）
       { m: 'B', v: 6 },
       { m: 'C', v: 9 },
     ];
-    const nodes = nodesOf(firstLayer(polarBarSpec(), { d: rows }, cartOpts));
+    const nodes = nodesOf(firstLayer(polarBarSpec('polar'), { d: rows }, cartOpts));
     expect(nodes).toHaveLength(3);
     for (const node of nodes) {
       const shape = node.shape as { type?: string; params?: Record<string, number> } | undefined;
       expect(shape?.type).toBe('sector');
       expect(shape!.params!.outerRadius).toBeGreaterThanOrEqual(shape!.params!.innerRadius);
     }
+  });
+
+  it('polar_interval_discrete_default_uses_contour_nodes', () => {
+    const rows = [
+      { m: 'A', v: 3 },
+      { m: 'B', v: 6 },
+      { m: 'C', v: 9 },
+    ];
+    const nodes = nodesOf(firstLayer(polarBarSpec(), { d: rows }, cartOpts));
+    expect(nodes).toHaveLength(3);
+    expect(nodes.every(node => (node.shape as { type?: string } | undefined)?.type === 'contour')).toBe(true);
+  });
+
+  it('polar_interval_mark_override_takes_precedence_over_the_coordinate', () => {
+    const rows = [
+      { m: 'A', v: 3 },
+      { m: 'B', v: 6 },
+      { m: 'C', v: 9 },
+    ];
+    const polarNodes = nodesOf(firstLayer(polarBarSpec('chord', 'polar'), { d: rows }, cartOpts));
+    const chordNodes = nodesOf(firstLayer(polarBarSpec('polar', 'chord'), { d: rows }, cartOpts));
+    expect(polarNodes.every(node => (node.shape as { type?: string } | undefined)?.type === 'sector')).toBe(true);
+    expect(chordNodes.every(node => (node.shape as { type?: string } | undefined)?.type === 'contour')).toBe(true);
+  });
+
+  it('cartesian_interval_rejects_a_polar_interpolation_override', () => {
+    const spec = PlotSchema.parse({
+      ...cartesianBarSpec(),
+      marks: [
+        {
+          type: 'interval',
+          interpolation: 'chord',
+          encoding: { x: { field: 'm' }, y: { field: 'v' } },
+        },
+      ],
+    });
+    expect(() => firstLayer(spec, { d: [{ m: 'A', v: 3 }] }, cartOpts)).toThrow(/interpolation|polar2D/i);
   });
 
   it('pie_sector_mark_nodes', () => {

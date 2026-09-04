@@ -25,7 +25,7 @@ React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` �
 
 对于 Vanilla runtime source，`{ input }` 会恰好执行一次 `normalizePlot`。`{ spec }` 已经是 `IRPlot`：运行时保留它的对象 identity，并绕过 normalize。未知 JSON 必须在作为 `spec` 传入前先通过 Plot schema 或其它 parser；runtime 入口不会把未类型化 JSON 当作 IR。
 
-`IRPlot` 只保存 JSON-safe 语法与 `data.reference`。真实数据行、字段 resolver、label 函数以及自定义 transform、scale、channel、coordinate、mark 等 Definition 属于运行时输入；它们与 IR 在执行节点汇合，但不会被写回 IR。
+`IRPlot` 只保存 JSON-safe 语法与 `data.reference`。真实数据行、字段 resolver、label 函数以及自定义 transform、scale、channel、coordinate、mark、Position Adjustment 等 Definition 属于运行时输入；它们与 IR 在执行节点汇合，但不会被写回 IR。
 
 | 输入层     | 典型入口                                                        | 进入 `IRPlot`                                                                         |
 | ---------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
@@ -33,6 +33,8 @@ React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` �
 | React spec | `<Plot spec={...} data={...}>`                                  | `spec` 进入                                                                           |
 | Vanilla    | `plot(InputPlot)`、`{ input: InputPlot }` 或 `{ spec: IRPlot }` | InputPlot 形式单次 normalize；`spec` 直接进入；unknown JSON 须先经 Plot schema/parser |
 | 运行时依赖 | datasets、field maps、resolver、各类 Definitions                | 不进入                                                                                |
+
+`LowerPlotsOptions.positionAdjustmentDefinitions` 是统一的位置调整注入入口。React `<Plot>` 与 Vanilla runtime 原样转发该数组；adapter 不计算 step、随机数、coordinate projection、initializer 或 glyph containment。
 
 ## Lowering 与产物
 

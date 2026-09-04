@@ -8,6 +8,7 @@ import type {
   IRPlotMarkOperation,
   IRPlotScaleOperation,
   IRPlotTransform,
+  PolarInterpolationValue,
 } from '@retikz/plot';
 
 import type { InputPlotFacet, InputPlotMark } from './input';
@@ -33,6 +34,8 @@ export type InputPlotCoordinate =
        * @default 360
        */
       endAngle?: number;
+      /** 固定半径边界与插值敏感图元的连接空间；省略时按角向比例尺连续性推断 */
+      interpolation?: PolarInterpolationValue;
     }
   | {
       /** 1D 笛卡尔直线 */

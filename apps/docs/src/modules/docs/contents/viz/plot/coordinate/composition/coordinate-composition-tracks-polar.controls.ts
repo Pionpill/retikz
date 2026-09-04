@@ -33,13 +33,7 @@ export const coordinateCompositionTracksPolarControls = definePreviewControls({
           id: 'rows',
           label: '业务环节指标',
           rows: polarTrackRows,
-          columns: [
-            { key: 'area', label: '环节' },
-            { key: 'order', label: '顺序' },
-            { key: 'signal', label: '信号' },
-            { key: 'capacity', label: '容量' },
-            { key: 'outer', label: '外环' },
-          ],
+          columns: [{ key: 'area' }, { key: 'order' }, { key: 'signal' }, { key: 'capacity' }, { key: 'outer' }],
         },
       ],
     },
@@ -101,7 +95,7 @@ export const coordinateCompositionTracksPolarControls = definePreviewControls({
         {
           kind: 'switch',
           id: COORDINATE_COMPOSITION_TRACKS_POLAR_CONTROL_IDS.yGridVisible,
-          label: '环形网格（y / 半径）',
+          label: '多边形网格（y / 半径）',
           defaultValue: true,
           visibleWhen: {
             controlId: COORDINATE_COMPOSITION_TRACKS_POLAR_CONTROL_IDS.localAxes,

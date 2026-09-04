@@ -2,5 +2,6 @@ export * from './artifact';
 export * from './distribution';
 export * from './flex-engine';
 export * from './geometry';
+export * from './item-identity';
 export * from './layout-session';
 export * from './paired-flow';

@@ -32,7 +32,7 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 
 内置与自定义变换会合并到同一个注册表（registry），并按 `kind` 走同一套查找、Schema 校验和执行流程。
 
-示例 Definition 还声明了 preserve `outputModel` 与 field-derive `compact` capability：前者让下游知道 `scaledX` 是 continuous 字段，后者让兼容的 Chart slot 可以复用同一 Definition 做紧凑字段映射。
+示例 Definition 还声明了 preserve `outputModel` 与 field-derive `schedule`：前者让下游知道 `scaledX` 是 continuous 字段，后者让兼容的 Chart slot 可以复用同一 Definition 做字段映射。
 
 ### 来源追溯
 
@@ -88,12 +88,12 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 
 ### 字段映射能力门
 
-开放 `kind` 只表示 Source 可以保存自定义 operation，不表示它自动适合紧凑字段映射。Chart 等宿主要把 Definition 用在 encoding 内，还需要完整能力声明：
+开放 `kind` 只表示 Source 可以保存自定义 operation，不表示它自动适合 encoding 字段映射。Chart 等宿主要把 Definition 用在 encoding 内，还需要完整调度描述：
 
-| Definition | 必需声明                                                                  | 不满足时                                         |
-| ---------- | ------------------------------------------------------------------------- | ------------------------------------------------ |
-| transform  | `compact` 的 phase / binding class / field effect，以及完整 `outputModel` | 继续用于完整 transform；不能进入 compact mapping |
-| reducer    | `outputs()` 恰好返回一个已类型化 scalar descriptor                        | 可用于完整统计变换；不能作为 compact aggregate   |
+| Definition | 必需声明                                                                   | 不满足时                                       |
+| ---------- | -------------------------------------------------------------------------- | ---------------------------------------------- |
+| transform  | `schedule` 的 phase / binding class / field effect，以及完整 `outputModel` | 继续用于完整 transform；不能进入字段映射       |
+| reducer    | `outputs()` 恰好返回一个已类型化 scalar descriptor                         | 可用于完整统计变换；不能作为 compact aggregate |
 
 宿主还会检查 Definition 的阶段、字段影响、输出字段与目标 consumer 是否兼容。自定义键与内置键共用同一 registry、Schema 和能力检查，不靠宿主复制内置枚举。
 
@@ -107,7 +107,7 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 | 操作含函数等非 JSON 值                                   | 可序列化校验失败       |
 | 自定义规约器的输出声明与分组键或其它统计输出冲突         | 执行规约器前报错       |
 | `outputModel` 引用不存在的来源字段或与实际字段影响不一致 | 推进 DataView 前报错   |
-| compact mapping 缺少完整能力或输出描述                   | 宿主解析字段映射时报错 |
+| 字段映射缺少完整调度或输出描述                           | 宿主解析字段映射时报错 |
 
 定义只应实现数据行与统计语义。颜色、图元或布局等消费侧语义应放到对应模块的扩展点。
 
@@ -123,18 +123,18 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 | `inputFields?`  | `(operation: TTransform, context: TransformContext) => Array<string>`                                | 返回 operation 读取的源字段                          |
 | `outputFields?` | `(operation: TTransform, context: TransformContext) => Array<string>`                                | 返回生成字段名；供 strict model 与冲突检查使用       |
 | `outputModel?`  | `(operation: TTransform, context: TransformContext) => DataTransformOutputModel \| undefined`        | 返回变换后的完整字段类型影响；省略时不保留旧类型证据 |
-| `compact?`      | `DataTransformCompactCapability`                                                                     | 声明可用于字段映射的阶段、binding class 与字段影响   |
+| `schedule?`     | `DataTransformSchedule`                                                                              | 声明可用于字段映射的阶段、binding class 与字段影响   |
 | `apply`         | `(rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => Array<ExternalRow>` | 纯且确定地执行变换                                   |
 
 使用 `defineTransform(definition)` 保留这些字段之间的泛型关联。
 
-### 输出与 compact 契约
+### 输出与调度契约
 
-| 类型                             | 关键字段                               | 职责                                                        |
-| -------------------------------- | -------------------------------------- | ----------------------------------------------------------- |
-| `DataTransformOutputDescriptor`  | `field`、`type`                        | 给输出字段固定类型，或用 `{ from }` 复用现有字段类型        |
-| `DataTransformOutputModel`       | `preserve.outputs` \| `replace.fields` | 保留并增补当前字段图，或用完整字段清单替换当前字段图        |
-| `DataTransformCompactCapability` | `phase`、`bindingClass`、`fieldEffect` | 让宿主在闭合阶段顺序中判断该 Definition 能否绑定到字段 slot |
+| 类型                            | 关键字段                               | 职责                                                        |
+| ------------------------------- | -------------------------------------- | ----------------------------------------------------------- |
+| `DataTransformOutputDescriptor` | `field`、`type`                        | 给输出字段固定类型，或用 `{ from }` 复用现有字段类型        |
+| `DataTransformOutputModel`      | `preserve.outputs` \| `replace.fields` | 保留并增补当前字段图，或用完整字段清单替换当前字段图        |
+| `DataTransformSchedule`         | `phase`、`bindingClass`、`fieldEffect` | 让宿主在闭合阶段顺序中判断该 Definition 能否绑定到字段 slot |
 
 ### `StatisticsReducerDefinition`
 

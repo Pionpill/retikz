@@ -1,0 +1,134 @@
+---
+title: Position Adjustment
+description: 用统一 Definition 在位置比例尺之后、图元几何之前扩展 role-space 或 screen-space 位置调整，并通过 Plot runtime 注入执行。
+---
+
+Position Adjustment 适合无法在数据变换中完整决定的位置逻辑。Source 只保存 JSON-safe operation；带函数的 Definition 在运行时注入，并与内置 jitter 共用 registry、解析、执行和错误边界。
+
+<ComponentPreview
+  files={['position-adjustment', 'position-adjustment.definition.ts', 'position-adjustment.data.ts']}
+  size="lg"
+  caption="自定义 screen-nudge 在坐标投影后统一移动整组 Point；切换源码查看 Definition 与宿主注入。"
+/>
+
+## 适用边界
+
+- 依赖离散 scale 实时 `step`、角度或半径 role 的偏移，使用 role-space adjustment。
+- 依赖整组最终屏幕位置、已解析视觉通道或画布尺寸的算法，使用 screen-space initializer。
+- 会增删行、改写字段或影响 lineage 的计算仍属于 [Data transform](/viz/plot/transform)。
+- Stack 改变区间基线与上下界，不属于 additive Position Adjustment。
+
+当前内置算法只有 `jitter`，Point 是唯一内置 placement-capable Mark。Screen-space initializer 已可执行，但没有内置 collision、beeswarm 或标签避让算法；renderer 与 Core IR 只接收最终几何。
+
+## 定义能力
+
+Definition 的 `space` 决定 callback 收到的上下文和执行阶段：
+
+| `space`  | `initialize` 输入                                   | 典型用途                         |
+| -------- | --------------------------------------------------- | -------------------------------- |
+| `role`   | 已经 scale 映射、尚未 coordinate 投影的 role tuples | jitter、沿 angle / radius 的偏移 |
+| `screen` | 已投影位置、画布尺寸、已解析通道与同组 target       | 像素 nudge、集合布局算法         |
+
+示例中的 `screen-nudge` 使用闭合 schema 声明 JSON operation，再保持每个 target 的数量、顺序、key 与空位置：
+
+```ts
+const screenNudge = definePositionAdjustment<ScreenNudge>({
+  space: 'screen',
+  schema: ScreenNudgeSchema,
+  initialize: (operation, context) =>
+    context.targets.map(target => ({
+      key: target.key,
+      position:
+        target.position === null ? null : [target.position[0] + operation.dx, target.position[1] + operation.dy],
+    })),
+});
+```
+
+需要 Plot 自动预留边界净空的 role-space Definition 可以声明 `containment: { policy: 'contain', measure }`。`measure` 返回自身 role 的有限保守偏移包络；Plot 再与 coordinate 边界法向和 Mark glyph extent 合成最终 range。Screen-space containment 尚无屏幕边界 capability，本版本会明确拒绝。
+
+## 注入宿主
+
+React 通过 `<Plot positionAdjustmentDefinitions={[screenNudge]}>` 注入，Point 的 `placement.adjustments` 按 `kind` 引用：
+
+```tsx
+<Plot data={rows} positionAdjustmentDefinitions={[screenNudge]}>
+  <PointMark x="category" y="value" placement={{ adjustments: [{ kind: 'screen-nudge', dx: 12, dy: -8 }] }} />
+</Plot>
+```
+
+Vanilla 的 `renderPlot`、`embedPlot` 与直接 `lowerPlots` 都通过 `LowerPlotsOptions.positionAdjustmentDefinitions` 转发同一数组。Definition 不进入 `IRPlot`，因此 spec 仍可 JSON round-trip。
+
+## 执行机制
+
+```text
+position scale
+  -> role-space adjustment
+  -> coordinate projection
+  -> screen-space initializer
+  -> mark geometry
+  -> Core IR / renderer
+```
+
+同一阶段保持 Source 声明顺序，但所有 role-space 操作整体早于 projection，所有 screen-space 操作整体晚于 projection。最终位置只解析一次，并同时供 Point lowering、locator、SSR 与 hydration 消费；renderer 不查 registry，也不重放 initializer。
+
+内置 jitter 正因为在 role-space 执行，极坐标 angle 上的同一偏移才能随每条数据的 radius 投影成不同弧长。需要加入 placement 的自定义 coordinate 必须同源提供 `mapRoles` 与 `projectMappedRoles`；要求 containment 时还需提供 `placementBoundary`。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Position Adjustment Definition 与执行空间契约',
+      path: 'packages/viz/plot/src/contract/position-adjustment.ts',
+    },
+    {
+      label: '内置与自定义 Definition 注册表',
+      path: 'packages/viz/plot/src/providers/position-adjustment/registry.ts',
+    },
+    {
+      label: '两阶段执行与输出守门',
+      path: 'packages/viz/plot/src/pipeline/placement/resolve.ts',
+    },
+    {
+      label: '边界净空解析',
+      path: 'packages/viz/plot/src/pipeline/placement/containment.ts',
+    },
+  ]}
+/>
+
+## 错误与限制
+
+- 自定义 `kind` 不能覆盖内置 jitter，也不能重复注册；未注册 operation 会直接报错。
+- Definition schema 必须是带非空 `z.literal(kind)` 的对象；operation 在 Definition schema 前后都保持 JSON-safe。
+- Initializer 必须保留 target 数量、顺序、key、空位置和维度，并返回有限数值。
+- Ratio jitter 只适用于 `step > 0` 的离散位置 scale；数值 span 可用于任意有限输出 role。
+- 省略 jitter `role` 时，当前 frame 必须恰好只有一个离散 role，否则需显式指定。
+- 请求 containment 但 Mark 不提供 glyph extent、coordinate 不提供边界度量，或显式 range 无法再容纳净空时会 fail-loud，不会 clamp 散点。
+- 本版本不为 Path、Interval、Reference 或 Relation 自动提供 placement 语义；文本 Point 可执行不要求 containment 的 adjustment，但不能提供 glyph extent。
+
+## API 参考
+
+公开导出：
+
+| 从 `@retikz/plot` 导入               | 用途                                                   |
+| ------------------------------------ | ------------------------------------------------------ |
+| `definePositionAdjustment`           | 定义 role-space 或 screen-space runtime Definition     |
+| `PositionAdjustmentDefinition`       | 两种执行空间的公开联合                                 |
+| `RolePositionAdjustmentDefinition`   | 查询 role context、initializer 与可选 containment 契约 |
+| `ScreenPositionAdjustmentDefinition` | 查询 projected target、channels 与 dimensions 契约     |
+| `PositionAdjustmentSpace`            | `role` / `screen` 执行空间常量                         |
+| `MarkPlacementTarget`                | 稳定 target key、数据行与原始 role values              |
+| `MarkPositionResolution`             | 按 target key 读取最终屏幕位置                         |
+
+宿主注入：
+
+| 宿主                                   | 公开契约            | 注入字段                        |
+| -------------------------------------- | ------------------- | ------------------------------- |
+| `@retikz/plot-react` 的 `<Plot>`       | `PlotProps`         | `positionAdjustmentDefinitions` |
+| `@retikz/plot-vanilla` 的 `renderPlot` | `RenderPlotOptions` | `positionAdjustmentDefinitions` |
+| `@retikz/plot` 的 `lowerPlots`         | `LowerPlotsOptions` | `positionAdjustmentDefinitions` |
+
+## 相关
+
+- [PointMark](/viz/plot/mark/point) —— 内置 jitter、直角与极坐标示例
+- [位置比例尺](/viz/plot/scale/position) —— 离散 step 与 range 的来源
+- [自定义坐标系](/viz/plot/coordinate/custom-coordinate) —— 补齐两段 projection 与 containment 能力
+- [运行时总览](/viz/plot/reference/runtime) —— React、Vanilla 与 direct lowering 如何汇合

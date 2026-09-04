@@ -1,8 +1,16 @@
 import { isFiniteNumber } from '@retikz/math';
+import {
+  scaleLinear as d3ScaleLinear,
+  scaleLog as d3ScaleLog,
+  scalePow as d3ScalePow,
+  scaleRadial as d3ScaleRadial,
+  scaleSymlog as d3ScaleSymlog,
+} from 'd3-scale';
 
-import type { IRPlotDomainPadding } from '../../schemas';
+import type { IRPlotDomainPadding, PlotDomainPaddingKindValue } from '../../schemas';
 
 import { RetikzPlotError } from '../../error';
+import { PlotDomainPaddingKind } from '../../schemas';
 
 /** 可按连续值域规则扩展的 position scale 族 */
 export type PositionDomainFamily = 'linear' | 'time' | 'log' | 'pow' | 'sqrt' | 'symlog' | 'radial';
@@ -15,9 +23,9 @@ export type ResolvePaddedDomainOptions = {
   family: PositionDomainFamily;
   /** 原始 domain，可能来自用户显式配置或数据推断 */
   domain: readonly [number, number];
-  /** domain 是否来自用户显式配置 */
-  explicitDomain: boolean;
-  /** 用户声明的 domain padding；数字代表两端同值，对象可分别指定上下界 */
+  /** 当前 scale 使用的有效 range */
+  range: readonly [number, number];
+  /** 用户声明的 domain padding；数字与省略 kind 的对象使用 range 单位 */
   domainPadding?: IRPlotDomainPadding;
   /** 单值 domain 展开跨度 */
   singleValueSpan?: number;
@@ -25,31 +33,36 @@ export type ResolvePaddedDomainOptions = {
   base?: number;
   /** pow scale 的指数 */
   exponent?: number;
-  /** 推断 domain 时使用的默认 padding；显式 domain 默认不自动留白 */
-  defaultDomainPadding?: number;
+  /** symlog scale 的近零线性区常量 */
+  constant?: number;
 };
+
+type DomainPaddingResolution = Readonly<{
+  kind: PlotDomainPaddingKindValue;
+  lower: number;
+  upper: number;
+}>;
 
 const finiteDomain = (domain: readonly [number, number], scaleName: string): [number, number] => {
-  const [lo, hi] = domain;
-  if (!isFiniteNumber(lo) || !isFiniteNumber(hi)) {
+  const [lower, upper] = domain;
+  if (!isFiniteNumber(lower) || !isFiniteNumber(upper)) {
     throw new RetikzPlotError(
-      `lowerPlots: scale "${scaleName}" domain must contain finite numbers (got [${lo}, ${hi}])`,
+      `lowerPlots: scale "${scaleName}" domain must contain finite numbers (got [${lower}, ${upper}])`,
     );
   }
-  return [lo, hi];
+  return [lower, upper];
 };
 
-const paddingSides = (
-  padding: IRPlotDomainPadding | undefined,
-  explicitDomain: boolean,
-  defaultDomainPadding: number,
-): { lower: number; upper: number } => {
-  if (padding === undefined) {
-    const value = explicitDomain ? 0 : defaultDomainPadding;
-    return { lower: value, upper: value };
+const resolveDomainPadding = (padding: IRPlotDomainPadding | undefined): DomainPaddingResolution => {
+  if (padding === undefined) return { kind: PlotDomainPaddingKind.Range, lower: 0, upper: 0 };
+  if (typeof padding === 'number') {
+    return { kind: PlotDomainPaddingKind.Range, lower: padding, upper: padding };
   }
-  if (typeof padding === 'number') return { lower: padding, upper: padding };
-  return { lower: padding.lower ?? 0, upper: padding.upper ?? 0 };
+  return {
+    kind: padding.kind ?? PlotDomainPaddingKind.Range,
+    lower: padding.lower ?? 0,
+    upper: padding.upper ?? 0,
+  };
 };
 
 const defaultSingleValueSpan = (value: number): number => Math.max(Math.abs(value) * 0.2, 1);
@@ -85,9 +98,17 @@ const expandAdditiveSingleValue = (
   return [value - span / 2, value + span / 2];
 };
 
-const applyAdditivePadding = (
+const expandLogSingleValue = (value: number, singleValueSpan: number | undefined, base: number): [number, number] => {
+  const logarithm = (sourceValue: number): number => Math.log(sourceValue) / Math.log(base);
+  const power = (sourceValue: number): number => Math.pow(base, sourceValue);
+  const span = singleValueSpan ?? 1;
+  const center = logarithm(value);
+  return [power(center - span / 2), power(center + span / 2)];
+};
+
+const applyAdditiveRatioPadding = (
   domain: readonly [number, number],
-  padding: { lower: number; upper: number },
+  padding: DomainPaddingResolution,
   clampLowerZero: boolean,
 ): [number, number] => {
   const span = Math.abs(domain[1] - domain[0]);
@@ -96,56 +117,120 @@ const applyAdditivePadding = (
   return [clampLowerZero ? Math.max(0, lower) : lower, upper];
 };
 
-const resolveLogDomain = (options: ResolvePaddedDomainOptions): [number, number] => {
-  const source = finiteDomain(options.domain, options.scaleName);
-  assertStrictlyPositive(source, options.scaleName, 'source');
-  const base = options.base ?? 10;
-  const log = (value: number): number => Math.log(value) / Math.log(base);
-  const pow = (value: number): number => Math.pow(base, value);
-  const expanded =
-    source[0] === source[1]
-      ? ((): [number, number] => {
-          const span = options.singleValueSpan ?? 1;
-          const center = log(source[0]);
-          return [pow(center - span / 2), pow(center + span / 2)];
-        })()
-      : source;
-  const padding = paddingSides(options.domainPadding, options.explicitDomain, options.defaultDomainPadding ?? 0);
-  const logLo = log(expanded[0]);
-  const logHi = log(expanded[1]);
-  const span = Math.abs(logHi - logLo);
-  const padded: [number, number] =
-    logLo <= logHi
-      ? [pow(logLo - span * padding.lower), pow(logHi + span * padding.upper)]
-      : [pow(logLo + span * padding.lower), pow(logHi - span * padding.upper)];
-  assertStrictlyPositive(padded, options.scaleName, 'padded');
-  return padded;
+const applyLogRatioPadding = (
+  domain: readonly [number, number],
+  padding: DomainPaddingResolution,
+  base: number,
+): [number, number] => {
+  const logarithm = (value: number): number => Math.log(value) / Math.log(base);
+  const power = (value: number): number => Math.pow(base, value);
+  const lower = logarithm(domain[0]);
+  const upper = logarithm(domain[1]);
+  const span = Math.abs(upper - lower);
+  return lower <= upper
+    ? [power(lower - span * padding.lower), power(upper + span * padding.upper)]
+    : [power(lower + span * padding.lower), power(upper - span * padding.upper)];
+};
+
+const invertRangeEndpoints = (
+  options: ResolvePaddedDomainOptions,
+  domain: readonly [number, number],
+  range: readonly [number, number],
+): [number, number] => {
+  switch (options.family) {
+    case 'linear':
+    case 'time': {
+      const scale = d3ScaleLinear().domain([domain[0], domain[1]]).range([range[0], range[1]]);
+      return [scale.invert(options.range[0]), scale.invert(options.range[1])];
+    }
+    case 'log': {
+      const scale = d3ScaleLog()
+        .base(options.base ?? 10)
+        .domain([domain[0], domain[1]])
+        .range([range[0], range[1]]);
+      return [scale.invert(options.range[0]), scale.invert(options.range[1])];
+    }
+    case 'pow': {
+      const scale = d3ScalePow()
+        .exponent(options.exponent ?? 2)
+        .domain([domain[0], domain[1]])
+        .range([range[0], range[1]]);
+      return [scale.invert(options.range[0]), scale.invert(options.range[1])];
+    }
+    case 'sqrt': {
+      const scale = d3ScalePow().exponent(0.5).domain([domain[0], domain[1]]).range([range[0], range[1]]);
+      return [scale.invert(options.range[0]), scale.invert(options.range[1])];
+    }
+    case 'symlog': {
+      const scale = d3ScaleSymlog()
+        .constant(options.constant ?? 1)
+        .domain([domain[0], domain[1]])
+        .range([range[0], range[1]]);
+      return [scale.invert(options.range[0]), scale.invert(options.range[1])];
+    }
+    case 'radial': {
+      const scale = d3ScaleRadial().domain([domain[0], domain[1]]).range([range[0], range[1]]);
+      return [scale.invert(options.range[0]), scale.invert(options.range[1])];
+    }
+  }
+};
+
+const applyRangePadding = (
+  options: ResolvePaddedDomainOptions,
+  domain: readonly [number, number],
+  padding: DomainPaddingResolution,
+): [number, number] => {
+  if (padding.lower === 0 && padding.upper === 0) return [domain[0], domain[1]];
+
+  const [rangeStart, rangeEnd] = options.range;
+  const rangeLength = Math.abs(rangeEnd - rangeStart);
+  if (!isFiniteNumber(rangeStart) || !isFiniteNumber(rangeEnd) || rangeLength === 0) {
+    throw new RetikzPlotError(
+      `lowerPlots: scale "${options.scaleName}" domainPadding range units require a finite non-zero range`,
+    );
+  }
+  if (padding.lower + padding.upper >= rangeLength) {
+    throw new RetikzPlotError(
+      `lowerPlots: scale "${options.scaleName}" domainPadding range-unit sum must be less than range length ${rangeLength}`,
+    );
+  }
+
+  const direction = Math.sign(rangeEnd - rangeStart);
+  const innerRange: [number, number] = [rangeStart + direction * padding.lower, rangeEnd - direction * padding.upper];
+  return finiteDomain(invertRangeEndpoints(options, domain, innerRange), options.scaleName);
 };
 
 /**
- * 解析连续 position scale 的最终 domain。
- * @description 对推断 domain 添加默认弹性空间；对单值 domain 先展开，再按 scale 族约束处理 log / non-negative 等边界。
+ * 解析连续 position scale 的最终 domain
+ * @description 对单值 domain 先展开，再按显式 domain padding 单位与 scale 族约束处理 log / non-negative 等边界
  */
 export const resolvePaddedDomain = (options: ResolvePaddedDomainOptions): [number, number] => {
-  if (options.family === 'log') return resolveLogDomain(options);
-
   const source = finiteDomain(options.domain, options.scaleName);
   const exponent = options.exponent ?? 2;
+  const base = options.base ?? 10;
   const clampLowerZero =
     options.family === 'sqrt' ||
     options.family === 'radial' ||
     (options.family === 'pow' && !Number.isInteger(exponent));
 
+  if (options.family === 'log') assertStrictlyPositive(source, options.scaleName, 'source');
   if (clampLowerZero) assertNonNegative(source, options.scaleName, options.family, 'source');
 
   const expanded =
-    source[0] === source[1] ? expandAdditiveSingleValue(source[0], options.singleValueSpan, clampLowerZero) : source;
-  const padded = applyAdditivePadding(
-    expanded,
-    paddingSides(options.domainPadding, options.explicitDomain, options.defaultDomainPadding ?? 0),
-    clampLowerZero,
-  );
+    source[0] !== source[1]
+      ? source
+      : options.family === 'log'
+        ? expandLogSingleValue(source[0], options.singleValueSpan, base)
+        : expandAdditiveSingleValue(source[0], options.singleValueSpan, clampLowerZero);
+  const padding = resolveDomainPadding(options.domainPadding);
+  const padded =
+    padding.kind === PlotDomainPaddingKind.Range
+      ? applyRangePadding(options, expanded, padding)
+      : options.family === 'log'
+        ? applyLogRatioPadding(expanded, padding, base)
+        : applyAdditiveRatioPadding(expanded, padding, clampLowerZero);
 
+  if (options.family === 'log') assertStrictlyPositive(padded, options.scaleName, 'padded');
   if (clampLowerZero) assertNonNegative(padded, options.scaleName, options.family, 'padded');
   return padded;
 };

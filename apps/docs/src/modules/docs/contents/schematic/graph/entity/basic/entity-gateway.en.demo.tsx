@@ -11,7 +11,12 @@ export const previewControls = entityGatewayControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Graph width={360} height={180} viewBox={{ x: 0, y: 0, width: 360, height: 180 }}>
-    <Entity role="gateway" {...defineEntityAppearanceProps(values.color)} position={[180, 90]}>
+    <Entity
+      role="gateway"
+      status={values.status || undefined}
+      {...defineEntityAppearanceProps(values.color)}
+      position={[180, 90]}
+    >
       {values.content}
     </Entity>
   </Graph>

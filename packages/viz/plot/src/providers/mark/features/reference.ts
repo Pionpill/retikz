@@ -25,7 +25,7 @@ import { ChannelDefinitionKind } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import { PlotMark, ReferenceMarkKind, ReferenceMarkSchema } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
-import { isCartesianCoordinateFrame, isPolarCoordinateFrame } from '../../coordinate';
+import { isCartesianCoordinateFrame, isPolarCoordinateFrame, polarFixedRadiusSteps } from '../../coordinate';
 import { cellGeometryNode, cellLayer, styleForGeometry } from '../private';
 import {
   applyNodeChannelDeliveries,
@@ -102,8 +102,6 @@ const referenceConstantValue = (
   row: ExternalRow,
   orientation: ReferenceOrientation,
 ): unknown => channelValue(orientation === 'x' ? mark.encoding.x : mark.encoding.y, row);
-
-const isFullPolarSweep = (startAngle: number, endAngle: number): boolean => Math.abs(endAngle - startAngle) >= 360;
 
 /** reference band 某行的上界值（绑 x → xTo、绑 y → yTo；number 常量 / string field per-datum） */
 const referenceUpperValue = (
@@ -235,14 +233,10 @@ const referenceLineSteps = (
     return inner && outer ? pointsToSteps([inner, outer], false) : null;
   }
   const radius = frame.secondary.coordinate(constantValue);
-  if (!Number.isFinite(radius)) return null;
+  if (!Number.isFinite(radius) || radius <= 0) return null;
   const angleSpan = referenceSpanInterval(mark, row, frame.primary.coordinate, [frame.startAngle, frame.endAngle]);
   if (angleSpan === null) return null;
-  const centerStep: IRStep = { type: 'step', kind: 'move', to: frame.center };
-  const ringStep: IRStep = isFullPolarSweep(angleSpan[0], angleSpan[1])
-    ? { type: 'step', kind: 'circlePath', radius }
-    : { type: 'step', kind: 'circlePath', radius, startAngle: angleSpan[0], endAngle: angleSpan[1], closed: 'open' };
-  return [centerStep, ringStep];
+  return polarFixedRadiusSteps(frame, radius, mark.interpolation ?? frame.interpolation, angleSpan);
 };
 
 /** reference band 某行 → 正交 Cell（cartesian primary/secondary 为像素带、polar primary 为角度带 / secondary 为半径带）；退化 → null。 */
@@ -320,6 +314,9 @@ const lowerReference = (
   defaultColor: string | undefined,
   markProvenance: MarkProvenance | undefined,
 ): IRScope | null => {
+  if (mark.interpolation !== undefined && !isPolarCoordinateFrame(frame)) {
+    throw new RetikzPlotError('lowerPlots: reference interpolation override is only supported under polar2D');
+  }
   const shape = referenceShape(mark);
   if (isReferenceConstant(mark, shape, frame) && mark.encoding.color?.field !== undefined) {
     throw new RetikzPlotError(
@@ -349,7 +346,9 @@ const lowerReference = (
             ? referenceAxisBandCell(mark, row, frame, shape.orientation)
             : null;
       if (!cell) continue;
-      const geometry = frame.projectCell(cell);
+      const geometry = isPolarCoordinateFrame(frame)
+        ? frame.projectCell(cell, { interpolation: mark.interpolation ?? frame.interpolation })
+        : frame.projectCell(cell);
       if (!isRenderableCellGeometry(geometry)) continue;
       kind = geometry.kind;
       const cellNode = cellGeometryNode(geometry);

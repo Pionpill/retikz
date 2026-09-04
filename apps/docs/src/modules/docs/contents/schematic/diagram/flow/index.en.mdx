@@ -1,0 +1,26 @@
+---
+title: Flow Diagram
+description: Describe site logic as flat, serializable relations, then let a replaceable layout Definition derive positions, group bounds, and routes.
+---
+
+Flow Diagram targets site architecture, data flow, and business-process diagrams. Source declares Entities, visible Groups, and shell-free Layouts in separate flat catalogs, while root and container `children` id lists carry containment and order. It keeps root relations and sparse configuration but omits positions and routes that layout can derive.
+
+Graph still owns the drawing semantics of Entity, Group, and Relation. Flow measures them, invokes a layout Definition, then assembles one Scene, artifact, and spatial index. Graph Block structure and connection contracts are not stable yet, so Block is not currently part of Flow Source.
+
+## Responsibilities
+
+| Topic             | Responsibility                                                      | Reach for it when                    |
+| ----------------- | ------------------------------------------------------------------- | ------------------------------------ |
+| Basic usage       | JSX / flat JSON Source, Group, Layout, automatic layout, and result | Drawing ordinary site logic diagrams |
+| Diagram Framework | Title, description, Legend, Frame, and complete output              | Understanding assembly around Flow   |
+
+## Chapters
+
+<div className="my-6 grid grid-cols-1 gap-4">
+  <LinkedCard href="/schematic/diagram/flow/basic">
+    <span className="font-semibold">Basic Usage</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      From a minimal Flow to independent Layouts, visible Groups, cross-scope relations, Theme, and artifact
+    </span>
+  </LinkedCard>
+</div>

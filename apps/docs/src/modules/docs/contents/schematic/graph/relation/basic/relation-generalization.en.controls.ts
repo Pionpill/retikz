@@ -4,12 +4,13 @@ import { defineRelationRoleControlContract } from './relation-role-controls';
 export const previewControlContract = defineRelationRoleControlContract({
   title: 'Relation: Generalization',
   sectionLabel: 'Semantics and presentation',
+  statusLocale: 'en',
   kind: {
     label: 'Built-in kind',
     defaultValue: '',
     options: [
-      { value: '', label: 'Base generalization' },
-      { value: 'uml.realization', label: 'UML realization' },
+      { value: '', label: 'Default' },
+      { value: 'uml.generalization', label: 'UML generalization' },
     ],
   },
   colorLabel: 'Relation color',

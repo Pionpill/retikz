@@ -19,6 +19,8 @@ import {
   SquareArrowProvider,
   StandardArrowDefinitions,
   StandardArrowProviders,
+  StraightBarbArrowDefinition,
+  StraightBarbArrowProvider,
 } from '../src/arrow';
 import {
   CircleClipDefinition,
@@ -89,6 +91,7 @@ describe('Standard extension collections', () => {
       OpenDiamondArrowDefinition,
       BarArrowDefinition,
       CrowFootArrowDefinition,
+      StraightBarbArrowDefinition,
       KiteArrowDefinition,
       OpenKiteArrowDefinition,
       SquareArrowDefinition,
@@ -99,6 +102,7 @@ describe('Standard extension collections', () => {
       OpenDiamondArrowProvider,
       BarArrowProvider,
       CrowFootArrowProvider,
+      StraightBarbArrowProvider,
       KiteArrowProvider,
       OpenKiteArrowProvider,
       SquareArrowProvider,

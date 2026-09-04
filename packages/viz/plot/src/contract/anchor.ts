@@ -2,6 +2,7 @@ import type { IRCoordinate } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 
 import type { IRPlotAnchorId } from '../schemas';
+import type { MarkPositionResolution } from './position-adjustment';
 import type { MarkProvenance } from './provenance';
 
 /** 自定义锚点 id 生成器可读取的图元与数据行上下文 */
@@ -41,4 +42,6 @@ export type MarkLoweringContext = {
   plotId?: string;
   provenance?: MarkProvenance;
   anchors?: AnchorRegistry;
+  /** Mark Placement pipeline 已解析的最终屏幕位置 */
+  positions?: MarkPositionResolution;
 };

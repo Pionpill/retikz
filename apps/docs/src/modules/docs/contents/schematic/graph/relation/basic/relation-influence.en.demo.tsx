@@ -6,6 +6,7 @@ import { Entity, Graph, Relation } from '@retikz/graph-react';
 import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/preview';
 
 import { previewControlContract, relationInfluenceControls } from './relation-influence.en.controls';
+import { relationStatusOf } from './relation-role-controls';
 
 export const previewControls = relationInfluenceControls;
 
@@ -46,6 +47,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Relation
         id="influence-demo"
         role="influence"
+        status={relationStatusOf(values.status)}
         direction={direction}
         source={{ id: 'source' }}
         target={{ id: 'target' }}

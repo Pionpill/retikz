@@ -1,0 +1,114 @@
+---
+title: Flow Basics
+description: Describe elements, referenced containment, and relations in one flat Flow Source, then let a layout Definition generate renderable geometry and a stable artifact.
+---
+
+## Usage
+
+```tsx
+import { FlowDiagram, FlowEntities, FlowRelations } from '@retikz/diagram-react/flow';
+```
+
+```tsx
+<FlowDiagram width={640} height="auto">
+  <FlowEntities items={['Source', 'Validate']} />
+  <FlowEntities items={['Store']} />
+  <FlowRelations
+    items={[
+      ['Source', 'Validate'],
+      ['Validate', 'Store'],
+    ]}
+  />
+</FlowDiagram>
+```
+
+Each string in `FlowEntities` becomes both `id` and `text`; a `FlowRelations` tuple supplies only `source` and `target`. Use object items when ids must remain stable, copy is localized, or more fields are needed. Both batch markers are additive collectors by default: multiple instances can coexist and mix with individual `FlowEntity` or `FlowRelation` markers. Duplicate Entity ids still fail through the Flow Source diagnostic.
+
+Set `complete` when one batch marker declares the whole category for its current owner. It defaults to `false`; when `true`, no other individual or batch marker of that category may share the owner. A `FlowEntities` owner may be the Flow root, a Group, or a Layout, and different owners remain independent. `FlowRelations` is root-only.
+
+`FlowDiagram` can reuse `Layout` directly as a standalone host or embed in an outer `Layout`. Source never carries `position` or routes. With no runtime selection, Flow uses the built-in `layered` Definition and straight relation routing. Select `orthogonal` explicitly when a polyline route is needed.
+
+## Examples
+
+### Basic layout
+
+The form submission flow starts with user input, passes through a frontend form and backend service, then writes to the database. The frontend form `text` is a Core `TextBlock`: its main text accepts line breaks, while its subtitle is a separately styled text line. The panel also changes alignment, line height, and maximum width for the whole text block; these Entity-level `style` fields neither apply to individual lines nor change the Flow layout. Optional Entity and Relation `status` values project directly to Graph: Graph Theme owns their appearance, while status does not change layout or routing.
+
+<ComponentPreview
+  files="flow-basic"
+  size="md"
+  caption="Edit the main text and subtitle to observe per-line styling and block-level typography; role changes the semantic shape, while status changes the Graph Theme appearance."
+/>
+
+### Grouped layout
+
+Flow provides two forms of grouping. `FlowGroup` expresses a visible boundary with domain meaning, while `FlowLayout` only organizes several elements as one layout unit. Both establish containment through `children` and may nest each other.
+
+| Difference        | `FlowGroup`                                                               | `FlowLayout`                                               |
+| ----------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Primary role      | Express a named, styled semantic group                                    | Place direct children in a fixed arrangement               |
+| Visible result    | Materialize a Graph Group with a shell and optional title                 | Add no border, background, or title                        |
+| Internal layout   | `layout` controls automatic direction, peer gap, and rank gap             | `direction`, `gap`, and `align` directly control placement |
+| Relation endpoint | Allowed                                                                   | Not allowed; connect an Entity or Group inside it          |
+| Source catalog    | Stored in `groups`; `children` preserves direct members and sibling order | Stored in `layouts`; `children` preserves fixed order      |
+
+React nesting is only authoring convenience. The adapter normalizes Groups, Layouts, and Entities into flat catalogs, with each owner's `children` as the sole containment fact. The example places a visible Group above a shell-free Layout; the relation from the Group shell to the queue also demonstrates a Group endpoint.
+
+<ComponentPreview
+  files="flow-compound"
+  size="lg"
+  caption="Adjust the Group's automatic direction and rank spacing separately from the Layout's fixed direction, gap, and alignment. The camera stays fixed, and only the Group has a shell."
+/>
+
+### Global configuration
+
+`flowTheme` supplies one shared default style for each Flow object category at the root. `entity.style` applies to every Entity, while `relation.style` applies to every Relation; neither setting changes Source ids, containment, node layout, or routing. Local `style` can still override a global value when needed, but this example shows global configuration only.
+
+<ComponentPreview
+  files="flow-theme"
+  size="sm"
+  caption="Changing either section updates every object of that category, while the nodes, relations, and their relative positions remain unchanged."
+/>
+
+## How it works
+
+<ComponentAlert
+  type="tip"
+  title="Optional for everyday use"
+  description="Return here when consuming layout results, diagnosing Definitions, or building an LLM tool contract."
+/>
+
+| Stage       | Input                              | Observable result                                                         |
+| ----------- | ---------------------------------- | ------------------------------------------------------------------------- |
+| Measure     | Final Graph Definitions and Theme  | Fixed leaf sizes, Group shells, Layout children, and relation-label sizes |
+| Layout      | `FlowLayoutInput` + Layout context | Flex placement, automatic element bounds, routes, and label reservations  |
+| Materialize | The same validated geometry        | Graph Scene, `FlowDiagramArtifact`, and world-space handles               |
+
+The layout callback must synchronously return JSON-safe plain data and call `placeLayout` exactly once for every authored Layout. Flow uses the `@retikz/layout` Flex compiler for fixed placement, then verifies that the provider did not rewrite relative Layout bounds. It also validates ids, sizes, containment, collisions, routes, and label coverage before Graph/Core renders the result.
+
+## API Reference
+
+### React authoring
+
+| Component       | Core props                                                                                                                                          | Default                      | Description                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FlowDiagram`   | JSX children collect `entities` / `groups` / `layouts` / root `children` / `relations`; `presentation?`, `frame?`, `flowThemeTokens?`, `flowTheme?` | `layered` + straight routing | Source root, Definition injection, and standalone `Layout` host                                                                                                                                                                                                                                                                                                                                                         |
+| `FlowEntity`    | `id`, `text`, `role?`, `kind?`, `status?`, `rank?`, `style?`, `layout?`                                                                             | role=`concept`               | One Graph Entity. `text` accepts a string or TextBlock line array; each line can override `fill` and `font`, while a Flow Entity must contain at least one non-blank text or TeX run. `status` reuses Graph's `error`, `success`, `warning`, and `disabled` values; omission leaves the Entity unmarked. `style.align`, `lineHeight`, and `maxTextWidth` control whole-block alignment, line height, and wrapping width |
+| `FlowEntities`  | `items: ReadonlyArray<string \| InputFlowEntity>`<br />`complete?: boolean`                                                                         | complete=`false`             | Declares Entities at the marker position in array order. It is additive by default; `complete` makes it the owner's sole complete Entity list                                                                                                                                                                                                                                                                           |
+| `FlowGroup`     | `id`, `label?`, `rank?`, `layout?`, `style?`, `children`                                                                                            | Graph Group                  | Visible semantic boundary; `layout` automatically arranges its children. Relations cannot be Group children                                                                                                                                                                                                                                                                                                             |
+| `FlowLayout`    | `id`, `direction`, `gap?`, `align?`, `rank?`, `children`                                                                                            | align=`center`               | Shell-free fixed placement; omitted `gap` inherits effective `nodeGap`; never a Relation endpoint                                                                                                                                                                                                                                                                                                                       |
+| `FlowRelation`  | `source`, `target`, `label?`, `role?`, `kind?`, `status?`, `direction?`, `style?`, `layout?`                                                        | role=`flow`                  | Ordered root relation without an independent id. Endpoints may be Entities or Groups, never Layouts; Graph Theme supplies default appearance and explicit `style` still overrides it                                                                                                                                                                                                                                    |
+| `FlowRelations` | `items: ReadonlyArray<readonly [string, string] \| InputFlowRelation>`<br />`complete?: boolean`                                                    | complete=`false`             | Declares Relations at the Flow root in array order. It is additive by default; `complete` makes it the root's sole complete Relation list                                                                                                                                                                                                                                                                               |
+
+### Public entries
+
+| Entry                          | Main exports                                                                                                      | Use                                    |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `@retikz/diagram/flow`         | `FlowDiagramSchema`, `FlowDiagramArtifactSchema`, `createFlowDiagramProviderContribution`, `getFlowLayoutCatalog` | Direct IR, compile, and tool discovery |
+| `@retikz/diagram-react/flow`   | `FlowDiagram`, `FlowEntities`, `FlowEntity`, `FlowGroup`, `FlowLayout`, `FlowRelations`, `FlowRelation`           | JSX authoring                          |
+| `@retikz/diagram-vanilla/flow` | `flowDiagram`, `normalizeFlowDiagram`, `FlowDiagramInputEmbedAdapter`                                             | Vanilla authoring and embed            |
+
+## Related
+
+- [Diagram Framework](/schematic/diagram/framework)
+- [Graph](/schematic/graph)

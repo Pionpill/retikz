@@ -257,6 +257,74 @@ describe('datum locator — happy path', () => {
     // resolve 与结构 series() 等价
     expect(locator.series('X')).toEqual(anchor);
   });
+
+  it('resolves a mark-local transformed Path series inside each facet panel', () => {
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      id: 'regression',
+      data: { reference: 'rows' },
+      scales: [
+        { type: 'linear', name: 'xScale' },
+        { type: 'linear', name: 'yScale' },
+        { type: 'ordinal', name: 'colorScale' },
+      ],
+      composition: {
+        defaultView: 'root',
+        views: [{ id: 'root', coordinate: { type: 'cartesian2D', x: 'xScale', y: 'yScale' } }],
+        arrangements: [{ kind: 'facet', id: 'panel', view: 'root', column: { field: 'panel' } }],
+      },
+      marks: [
+        {
+          id: 'trend',
+          type: 'path',
+          series: 'series',
+          order: 'trendX',
+          transform: [
+            {
+              kind: 'smooth',
+              x: 'x',
+              y: 'y',
+              groupBy: ['series'],
+              sampleCount: 2,
+              xAs: 'trendX',
+              yAs: 'trendY',
+            },
+          ],
+          encoding: {
+            x: { field: 'trendX' },
+            y: { field: 'trendY' },
+            color: { field: 'series', scale: 'colorScale' },
+          },
+        },
+      ],
+    });
+    const locator = createPlotLocator(
+      spec,
+      {
+        rows: [
+          { panel: 'left', series: 'A', x: 1, y: 2 },
+          { panel: 'left', series: 'A', x: 2, y: 4 },
+          { panel: 'right', series: 'A', x: 1, y: 10 },
+          { panel: 'right', series: 'A', x: 2, y: 20 },
+        ],
+      },
+      opts,
+    );
+
+    const left = locator.series('A', { markIndex: 0, facet: { id: 'panel', column: 'left' } });
+    const right = locator.series('A', { markIndex: 0, facet: { id: 'panel', column: 'right' } });
+
+    expect(left).not.toBeNull();
+    expect(right).not.toBeNull();
+    expect(left?.meta).toMatchObject({ markIndex: 0, series: 'A', facet: { id: 'panel', column: 'left' } });
+    expect(right?.meta).toMatchObject({ markIndex: 0, series: 'A', facet: { id: 'panel', column: 'right' } });
+    expect(left?.position).not.toEqual(right?.position);
+    expect(left?.position[1]).toBeGreaterThanOrEqual(0);
+    expect(left?.position[1]).toBeLessThanOrEqual(opts.height ?? 300);
+    expect(right?.position[1]).toBeGreaterThanOrEqual(0);
+    expect(right?.position[1]).toBeLessThanOrEqual(opts.height ?? 300);
+  });
 });
 
 // =====================================================================
@@ -688,7 +756,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
         { type: 'band', name: 'a' },
         { type: 'linear', name: 'r', domain: [0, 10] },
       ],
-      coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
+      coordinate: { type: 'polar2D', angle: 'a', radius: 'r', interpolation: 'polar' },
       marks: [
         {
           type: 'interval',

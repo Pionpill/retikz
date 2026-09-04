@@ -1,6 +1,6 @@
 import type { PositionScale } from '@retikz/plot';
 
-import { defineScale } from '@retikz/plot';
+import { defineScale, PositionScaleContinuity } from '@retikz/plot';
 import { z } from 'zod';
 
 const BrandColorScaleSchema = z.strictObject({
@@ -37,6 +37,7 @@ const EasePositionScaleSchema = z.strictObject({
 /** 自定义位置比例尺：把归一化位置按指数重新分布，同时实现完整 PositionScale 契约 */
 export const easePositionScale = defineScale({
   family: 'position',
+  continuity: PositionScaleContinuity.Continuous,
   schema: EasePositionScaleSchema,
   isFieldCompatible: fieldType => fieldType === undefined || fieldType === 'continuous',
   allowsBaseline: true,
@@ -57,6 +58,7 @@ export const easePositionScale = defineScale({
       },
       domain: () => [domainMin, domainMax],
       bandwidth: 0,
+      step: 0,
       ticks: count => {
         if (domainMax === domainMin) return { values: [domainMin], labels: [String(domainMin)] };
         const total = Math.max(2, Math.floor(count ?? 5));

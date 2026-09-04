@@ -19,7 +19,10 @@ vi.mock('@/modules/docs/components/component-preview', async () => {
   return {
     DemoLocationContext,
     ComponentPreview: (props: ComponentPreviewProps) => (
-      <div data-slot="showcase-family-preview" data-size={props.size} />
+      <div data-slot="showcase-family-preview" data-files={props.files} data-size={props.size} />
+    ),
+    ComponentPreviewThumbnail: (props: ComponentPreviewProps) => (
+      <div data-slot="showcase-family-thumbnail" data-files={props.files} />
     ),
   };
 });
@@ -35,6 +38,7 @@ vi.mock('react-i18next', () => ({
         'common.showcaseApi': 'API',
         'common.showcaseFamilyEmpty': 'No other family members yet.',
         'viz.chartScatter': 'Scatter',
+        'viz.chartBubble': 'Bubble',
       })[key] ?? key,
   }),
 }));
@@ -105,16 +109,16 @@ describe('<ShowcaseTabs>', () => {
   });
 
   it('切换 Tab 时保留 example，并在回到 Examples 时删除默认 tab 参数', () => {
-    const container = renderTabs('/viz/chart/points/scatter?example=scatter-income-life-expectancy');
+    const container = renderTabs('/viz/chart/points/scatter?example=scatter-fertility-work');
 
     clickTab(container, 'API');
     expect(container.querySelector('[data-location]')?.textContent).toBe(
-      '/viz/chart/points/scatter?example=scatter-income-life-expectancy&tab=api',
+      '/viz/chart/points/scatter?example=scatter-fertility-work&tab=api',
     );
 
     clickTab(container, 'Examples');
     expect(container.querySelector('[data-location]')?.textContent).toBe(
-      '/viz/chart/points/scatter?example=scatter-income-life-expectancy',
+      '/viz/chart/points/scatter?example=scatter-fertility-work',
     );
   });
 
@@ -129,11 +133,20 @@ describe('<ShowcaseTabs>', () => {
     expect(invalidContainer.textContent).toContain('Examples body');
   });
 
-  it('没有其它 Point family 成员时显示空状态', () => {
+  it('Scatter 的 Family 展示同属 Point family 的 Bubble', async () => {
     const scatterContainer = renderTabs('/viz/chart/points/scatter?tab=family');
+    const familyLink = scatterContainer.querySelector('a');
+    const familyThumbnail = scatterContainer.querySelector('[data-slot="showcase-family-thumbnail"]');
 
-    expect(scatterContainer.textContent).toContain('No other family members yet.');
-    expect(scatterContainer.querySelector('a')).toBeNull();
+    expect(scatterContainer.textContent).not.toContain('No other family members yet.');
+    expect(familyLink?.textContent).toBe('Bubble');
+    expect(familyLink?.getAttribute('href')).toBe('/viz/chart/points/bubble');
+    expect(familyThumbnail?.getAttribute('data-files')).toBe('bubble-minimal');
     expect(scatterContainer.querySelector('[data-slot="showcase-family-preview"]')).toBeNull();
+    await vi.waitFor(() => {
+      expect(scatterContainer.textContent).toContain(
+        'Compare two continuous variables by position and use a required third field for the magnitude represented by bubble area.',
+      );
+    });
   });
 });

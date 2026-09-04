@@ -4,6 +4,7 @@ import { defineEntityRoleControlContract } from './entity-role-controls';
 export const previewControlContract = defineEntityRoleControlContract({
   title: 'Entity：事件',
   sectionLabel: '视觉与文本',
+  statusLocale: 'zh',
   colorLabel: 'Graph Theme 主色',
   contentLabel: '文本',
   contentPlaceholder: '输入 Entity 文本',

@@ -2,6 +2,7 @@ import type { core, z } from 'zod';
 
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
+import * as DiagramIR from '@retikz/diagram/flow';
 import * as GraphIR from '@retikz/graph';
 import * as LayoutIR from '@retikz/layout';
 import * as LayoutInspectIR from '@retikz/layout/inspect';
@@ -513,6 +514,22 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: StandardIR.SurfaceSchema,
     label: 'Surface',
     url: '/library/standard/composite/surface#surfaceschema',
+  },
+
+  FlowDiagramSchema: {
+    schema: DiagramIR.FlowDiagramSchema,
+    label: 'FlowDiagram',
+    url: '/schematic/diagram/flow/basic#flow-source',
+  },
+  FlowLayoutSchema: {
+    schema: DiagramIR.FlowLayoutSchema,
+    label: 'FlowLayout',
+    url: '/schematic/diagram/flow/basic#flow-source',
+  },
+  FlowDiagramArtifactSchema: {
+    schema: DiagramIR.FlowDiagramArtifactSchema,
+    label: 'FlowDiagramArtifact',
+    url: '/schematic/diagram/flow/basic#flowdiagramartifact',
   },
 
   GraphSchema: {
@@ -1051,6 +1068,31 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IRPlot.MarkOperationSchema,
     label: 'MarkOperation',
     url: '/viz/plot/reference/mark#markoperationschema',
+  },
+  MarkPlacementSchema: {
+    schema: IRPlot.MarkPlacementSchema,
+    label: 'MarkPlacement',
+    url: '/viz/plot/reference/mark#markplacementschema',
+  },
+  PositionAdjustmentOperationSchema: {
+    schema: IRPlot.PositionAdjustmentOperationSchema,
+    label: 'PositionAdjustmentOperation',
+    url: '/viz/plot/reference/mark#positionadjustmentoperationschema',
+  },
+  JitterPositionAdjustmentSchema: {
+    schema: IRPlot.JitterPositionAdjustmentSchema,
+    label: 'JitterPositionAdjustment',
+    url: '/viz/plot/reference/mark#jitterpositionadjustmentschema',
+  },
+  JitterRatioSpanSchema: {
+    schema: IRPlot.JitterRatioSpanSchema,
+    label: 'JitterRatioSpan',
+    url: '/viz/plot/reference/mark#jitterratiospanschema',
+  },
+  CustomPositionAdjustmentSchema: {
+    schema: IRPlot.CustomPositionAdjustmentSchema,
+    label: 'CustomPositionAdjustment',
+    url: '/viz/plot/reference/mark#custompositionadjustmentschema',
   },
   MarkTransformSchema: {
     schema: IRPlot.MarkTransformSchema,

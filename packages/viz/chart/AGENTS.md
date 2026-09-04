@@ -12,12 +12,13 @@
 
 ## Source IR
 
-- 根字段固定为必需 `namespace`、`type`、`data`、`recipe`，以及可选 `id`、`presentation`、`theme`、`layout`、`plotExtension`
+- 根字段固定为必需 `namespace`、`type`、`data`、`recipe`，以及可选 `id`、`presentation`、`theme`、`layout`、`coordinate`、`plotExtension`
 - `namespace` 精确为 `chart`；`type` 是 family，`recipe.chartType` 是全局唯一 recipe key
 - 每个 chartType 必须唯一属于一个 family；family mismatch 定位到 `type` / `recipe.chartType` 并 fail-loud
 - `layout` 只拥有 Chart 外部 `width` / `height`，不得承载 Plot facet、track、coordinate、guide 或内部尺寸
+- `coordinate` 只选择 Plot coordinate operation；Chart 不复制 coordinate Definition、registry、resolve 或 lowering。它可作为 facet panel template，但不得与 `plotExtension.composition` 同时存在
 - `recipe` 必填并包含精确 `encodings`、可选 `properties` 与有序 `marks`
-- `plotExtension` 可省略且只保存用户显式声明的 Plot-owned fragment；不得承载 data、layout、Chart encodings / properties 或 recipe 生成内容
+- `plotExtension` 可省略且只保存用户显式声明的 Plot-owned fragment；不得承载 data、layout、coordinate、Chart encodings / properties 或 recipe 生成内容
 - normalizer 不创建用户未声明的 `plotExtension`，也不得把 recipe 展开的 `IRPlot` 作为 Source IR
 - 完全底层 authoring 直接使用 Plot，不保留公开 `type: 'base'`、旧 `config`、`chartThemeTokens` 别名、fallback、migration 或新旧双轨
 - inspection、文档预览与序列化展示精简 Chart Source IR，不以内部 Base / resolved Plot IR 代替

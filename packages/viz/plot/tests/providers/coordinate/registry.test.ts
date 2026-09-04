@@ -4,7 +4,13 @@ import { literal, number, object, string } from 'zod';
 import type { AnyCoordinateDefinition } from '../../../src/contract';
 
 import * as plot from '../../../src';
-import { createCoordinateFrame, defineCoordinate, extractCoordinateType } from '../../../src/contract';
+import {
+  bindCoordinateScaleNames,
+  createCoordinateFrame,
+  defineCoordinate,
+  extractCoordinateType,
+  readCoordinateScaleNames,
+} from '../../../src/contract';
 import { BUILTIN_COORDINATES, resolveCoordinateRegistry } from '../../../src/providers';
 import { PlotCoordinate } from '../../../src/schemas';
 
@@ -42,6 +48,63 @@ describe('coordinate registry（contract spec）', () => {
     expect('createCustomCoordinate' in plot).toBe(false);
     expect(plot.extractCoordinateType).toBe(extractCoordinateType);
     expect(plot.resolveCoordinateRegistry).toBe(resolveCoordinateRegistry);
+    expect(plot.readCoordinateScaleNames).toBe(readCoordinateScaleNames);
+    expect(plot.bindCoordinateScaleNames).toBe(bindCoordinateScaleNames);
+  });
+
+  it('coordinate_scale_binding_defaults_to_role_named_operation_fields', () => {
+    const definition = resolveCoordinateRegistry().get(PlotCoordinate.Cartesian2D);
+    expect(definition).toBeDefined();
+    if (definition === undefined) return;
+    const operation = { type: PlotCoordinate.Cartesian2D, x: 'horizontal' } as const;
+
+    expect(readCoordinateScaleNames(definition, operation)).toEqual({ x: 'horizontal' });
+    expect(bindCoordinateScaleNames(definition, operation, { y: 'vertical' })).toEqual({
+      type: PlotCoordinate.Cartesian2D,
+      x: 'horizontal',
+      y: 'vertical',
+    });
+  });
+
+  it('polar_coordinate_scale_binding_aliases_x/y_roles_to_angle/radius_fields', () => {
+    const definition = resolveCoordinateRegistry().get(PlotCoordinate.Polar2D);
+    expect(definition).toBeDefined();
+    if (definition === undefined) return;
+    const operation = {
+      type: PlotCoordinate.Polar2D,
+      startAngle: 0,
+      endAngle: 360,
+      innerRadius: 0,
+    } as const;
+    const bound = bindCoordinateScaleNames(definition, operation, { x: 'angle-scale', y: 'radius-scale' });
+
+    expect(bound).toMatchObject({ angle: 'angle-scale', radius: 'radius-scale' });
+    expect(readCoordinateScaleNames(definition, bound)).toEqual({ x: 'angle-scale', y: 'radius-scale' });
+  });
+
+  it('custom_scale_binding_owns_role_mapping_and_preserves_unrelated_operation_fields', () => {
+    const definition = defineCoordinate({
+      schema: object({ type: literal('named-scale'), x: number(), horizontalScale: string().optional() }),
+      roles: ['x'],
+      scaleBinding: {
+        read: operation => ({ x: operation.horizontalScale }),
+        bind: (operation, scaleNames) => ({
+          ...operation,
+          ...(scaleNames.x === undefined ? {} : { horizontalScale: scaleNames.x }),
+        }),
+      },
+      resolve: () => {
+        throw new Error('Scale binding contract test does not resolve coordinate geometry');
+      },
+    });
+    const operation = { type: 'named-scale' as const, x: 42 };
+
+    expect(readCoordinateScaleNames(definition, operation)).toEqual({});
+    expect(bindCoordinateScaleNames(definition, operation, { x: 'horizontal' })).toEqual({
+      type: 'named-scale',
+      x: 42,
+      horizontalScale: 'horizontal',
+    });
   });
 
   it('resolveCoordinateRegistry 接受自定义 definition 数组并按 type 注册', () => {

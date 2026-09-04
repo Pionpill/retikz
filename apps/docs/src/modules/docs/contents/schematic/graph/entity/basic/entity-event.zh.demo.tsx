@@ -11,7 +11,12 @@ export const previewControls = entityEventControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Graph width={360} height={180} viewBox={{ x: 0, y: 0, width: 360, height: 180 }}>
-    <Entity role="event" {...defineEntityAppearanceProps(values.color)} position={[180, 90]}>
+    <Entity
+      role="event"
+      status={values.status || undefined}
+      {...defineEntityAppearanceProps(values.color)}
+      position={[180, 90]}
+    >
       {values.content}
     </Entity>
   </Graph>

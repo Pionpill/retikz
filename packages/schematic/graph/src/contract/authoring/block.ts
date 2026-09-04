@@ -19,6 +19,9 @@ import {
 } from '../../schemas';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 
+/** 对 union 的每个成员分别移除作者不可写字段 */
+type DistributiveOmit<T, TKeys extends PropertyKey> = T extends unknown ? Omit<T, TKeys> : never;
+
 /** Block Source record 的作者输入 */
 export type BlockCreateOptions = Omit<ZodInput<typeof BlockSchema>, 'namespace' | 'type'>;
 
@@ -29,7 +32,7 @@ export type BlockHeaderCreateOptions = Omit<ZodInput<typeof BlockHeaderSchema>, 
 export type BlockSectionCreateOptions = Omit<ZodInput<typeof BlockSectionSchema>, 'namespace' | 'type'>;
 
 /** Block Row Source record 的作者输入 */
-export type BlockRowCreateOptions = Omit<ZodInput<typeof BlockRowSchema>, 'namespace' | 'type'>;
+export type BlockRowCreateOptions = DistributiveOmit<ZodInput<typeof BlockRowSchema>, 'namespace' | 'type'>;
 
 /** 校验并创建 Block Source record */
 export const createBlock = (input: BlockCreateOptions): IRBlock =>

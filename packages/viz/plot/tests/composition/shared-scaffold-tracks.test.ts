@@ -204,7 +204,7 @@ describe('shared scaffold tracks lowering', () => {
   it('polar rings share angle scaffold and use different radius bands', () => {
     const outer = expandOf(polarScaffoldSpec, true);
     const [inner, outerRing] = markLayersOf(outer);
-    const center: [number, number] = [240, 150];
+    const center: [number, number] = [150, 150];
     expect(Math.max(...distancesFromCenter(inner, center))).toBeLessThan(
       Math.min(...distancesFromCenter(outerRing, center)),
     );

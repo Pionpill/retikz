@@ -71,6 +71,15 @@ describe('GridLayout schema and factory', () => {
     ).toEqual({ span: 2 });
   });
 
+  it('keeps an omitted item key out of Source IR', () => {
+    const parsed = createGridLayout({
+      columns: [{ kind: 'fixed', value: 20 }],
+      children: [{ kind: LayoutItemKind.Grid, child }],
+    });
+
+    expect(parsed.children[0]).not.toHaveProperty('key');
+  });
+
   it('rejects an auto span above the track guard at the authored span path', () => {
     const result = GridLayoutSchema.safeParse({
       namespace: 'layout',

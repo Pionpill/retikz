@@ -15,17 +15,28 @@ export const chartProviderKeyOf = (family: string): CompositeCoreProviderKey =>
 
 const chartProposalOf = (
   source: IRChartSource,
+  layout: Readonly<{ width: number; height: number }>,
   proposal: Readonly<{ x: LayoutAxisProposal; y: LayoutAxisProposal }>,
-): Readonly<{ x: LayoutAxisProposal; y: LayoutAxisProposal }> => ({
-  x:
-    source.layout?.width === undefined
-      ? proposal.x
-      : { kind: LayoutAxisProposalKind.Exact, value: source.layout.width },
-  y:
-    source.layout?.height === undefined
-      ? proposal.y
-      : { kind: LayoutAxisProposalKind.Exact, value: source.layout.height },
-});
+): Readonly<{ x: LayoutAxisProposal; y: LayoutAxisProposal }> => {
+  const resolveAxis = (
+    authored: number | undefined,
+    preferred: number,
+    parent: LayoutAxisProposal,
+  ): LayoutAxisProposal => {
+    if (authored !== undefined) return { kind: LayoutAxisProposalKind.Exact, value: authored };
+    if (parent.kind === LayoutAxisProposalKind.Exact) return parent;
+    if (parent.kind === LayoutAxisProposalKind.Range) {
+      const lowerBounded = Math.max(parent.min, preferred);
+      const value = parent.max === undefined ? lowerBounded : Math.min(parent.max, lowerBounded);
+      return { kind: LayoutAxisProposalKind.Exact, value };
+    }
+    return { kind: LayoutAxisProposalKind.Exact, value: preferred };
+  };
+  return {
+    x: resolveAxis(source.layout?.width, layout.width, proposal.x),
+    y: resolveAxis(source.layout?.height, layout.height, proposal.y),
+  };
+};
 
 /** 从当前 active recipe registry 创建 layout-aware Chart composite */
 export const createChartDefinition = (
@@ -62,7 +73,7 @@ export const createChartDefinition = (
       for (const warning of resolution.warnings) {
         context.warn(warning.code, warning.message, warning.subPath);
       }
-      const proposal = chartProposalOf(source, context.proposal);
+      const proposal = chartProposalOf(source, resolution.presentation.layout, context.proposal);
       const probe = context.layoutChild(resolution.presentation.surface, proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
       return {

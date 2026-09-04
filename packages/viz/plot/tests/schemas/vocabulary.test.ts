@@ -10,6 +10,8 @@ import {
   JitterAxis,
   NormalizeBasis,
   PairMeasureOperationKind,
+  PolarInterpolation,
+  PositionScaleContinuity,
   ReferenceMarkKind,
   RelationOrthogonalLabelStep,
   RelationRouteStepKind,
@@ -57,11 +59,20 @@ describe('schema vocabulary constants', () => {
     expect(Object.values(NormalizeBasis).sort()).toEqual(['fraction', 'percent']);
     expect(Object.values(JitterAxis).sort()).toEqual(['both', 'x', 'y']);
     expect(Object.values(DensityBandwidthKind).sort()).toEqual(['silverman', 'value']);
-    expect(Object.values(SmoothMethodKind)).toEqual(['linear']);
+    expect(Object.values(SmoothMethodKind)).toEqual([
+      'linear',
+      'quadratic',
+      'polynomial',
+      'logarithmic',
+      'exponential',
+      'power',
+    ]);
     expect(Object.values(RelationRouteStepKind).sort()).toEqual(['bend', 'cubic', 'curve', 'fold', 'line', 'move']);
     expect(Object.values(RelationRoutingKind).sort()).toEqual(['bend', 'line', 'orthogonal']);
     expect(Object.values(RelationOrthogonalLabelStep).sort()).toEqual(['last', 'main']);
     expect(Object.values(ReferenceMarkKind)).toEqual(['region']);
+    expect(Object.values(PolarInterpolation).sort()).toEqual(['chord', 'polar']);
+    expect(Object.values(PositionScaleContinuity).sort()).toEqual(['continuous', 'discrete']);
   });
 
   it('reuses core path vocabularies for relation routing and ribbon options', () => {

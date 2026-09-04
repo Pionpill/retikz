@@ -1,4 +1,4 @@
-export * from './encoding';
+export * from './encoding/index';
 export * from './marks';
 export * from './plot';
 export * from './presentation';

@@ -10,6 +10,8 @@ export const StandardArrowName = {
   Bar: 'bar',
   /** 三叉端点 */
   CrowFoot: 'crowFoot',
+  /** 开放直线倒钩箭头 */
+  StraightBarb: 'straightBarb',
   /** 实心风筝形箭头 */
   Kite: 'kite',
   /** 空心风筝形箭头 */

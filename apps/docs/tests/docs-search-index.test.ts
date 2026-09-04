@@ -10,11 +10,13 @@ describe('docs search index frontmatter', () => {
     expect(index['/kernel/components/layout']?.en?.description.startsWith("'")).toBe(false);
   });
 
-  it('分别索引 Chart 类型页与图形模型的共享主题', async () => {
+  it('分别索引 Scatter、Bubble 类型页与图形模型的共享主题', async () => {
     const index = await loadSearchIndex();
 
-    expect(index['/viz/chart/points/scatter']?.zh?.headings).toContain('`ScatterChart.encodings`');
-    expect(index['/viz/chart/points/scatter']?.en?.headings).toContain('`ScatterChart.encodings`');
+    expect(index['/viz/chart/points/scatter']?.zh?.headings).toContain('`ScatterEncodings`');
+    expect(index['/viz/chart/points/scatter']?.en?.headings).toContain('`ScatterEncodings`');
+    expect(index['/viz/chart/points/bubble']?.zh?.headings).toContain('`BubbleEncodings`');
+    expect(index['/viz/chart/points/bubble']?.en?.headings).toContain('`BubbleEncodings`');
     expect(index['/viz/chart/model/authoring']?.zh?.headings).toEqual(
       expect.arrayContaining(['一条共享主链', '三套包，各自只做一段']),
     );

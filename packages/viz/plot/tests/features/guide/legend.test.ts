@@ -174,7 +174,7 @@ const sequentialColorLegendSpec = (): IRPlot =>
   });
 
 /** size 散点 + size legend */
-const sizeLegendSpec = (legend: Record<string, unknown> = {}): IRPlot =>
+const sizeLegendSpec = (legend: Record<string, unknown> = {}, markProperties: Record<string, unknown> = {}): IRPlot =>
   PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -189,6 +189,7 @@ const sizeLegendSpec = (legend: Record<string, unknown> = {}): IRPlot =>
         type: 'point',
         size: { kind: 'field', value: 'population' },
         encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+        ...markProperties,
       },
     ],
     guides: [{ type: 'legend', channel: 'size', ...legend }],
@@ -426,6 +427,17 @@ describe('lowerPlots legend — happy path（contract）', () => {
     expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(14 + DEFAULT_EPSILON);
     expect(symbols.every(node => node.stroke === 'none')).toBe(true);
     expect(symbols.every(node => node.strokeWidth === 0)).toBe(true);
+  });
+
+  it('size_legend_symbols_use_the_mark_effective_color', () => {
+    const outer = expandOf(sizeLegendSpec({}, { color: { kind: 'constant', value: '#d946ef' } }), {
+      d: CONTINUOUS_ROWS,
+    });
+    const legend = findLegendLayer(outer);
+    const symbols = sizeSymbolNodesOf(legend as IRScope);
+
+    expect(symbols.length).toBeGreaterThanOrEqual(2);
+    expect(symbols.every(node => node.fill === '#d946ef')).toBe(true);
   });
 
   it('size_legend_symbol_size_style_controls_fit_box', () => {

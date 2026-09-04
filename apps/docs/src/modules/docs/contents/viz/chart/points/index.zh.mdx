@@ -5,15 +5,26 @@ description: 用点的位置及点之间的关系展示单个观测，并按图�
 
 点图以一个或多个数据点为视觉主体。这个分组帮助读者按视觉结构选择 chartType，也保留源码目录与 `/point` 多入口导入边界；它不对应额外的 Point resolver 或运行时分发层级。
 
-Scatter 属于 `type: 'point'` family，通过 `recipe.chartType` 选择精确 schema 与 recipe。它共享根级 `data`、`layout`、`presentation`、`theme` 与 `plotExtension`，而 `recipe.encodings`、`recipe.properties` 和内建 semantic mark 体现散点图的字段角色与视觉结构。
+Scatter、Bubble、Regression、Connected Scatter、Ranged Dot 与 Strip 都属于 `type: 'point'` family，并通过 `recipe.chartType` 选择各自的精确 schema 与 recipe。它们共享根级 `data`、`layout`、`presentation`、`theme` 与 `plotExtension`，而 `recipe.encodings`、`recipe.properties` 和内建 semantic mark 固定具体图表的数据角色与视觉结构。
 
 所有类型共享的字段归属、编写主链、整图展示与 Plot 扩展规则统一放在[图形模型](/viz/chart/model)中；本分组只比较点图类型自己的视觉语义。
 
+Point recipe 会按最终保留的 Point 最大半径，为连续位置 scale 预留 range 空间，避免 domain 边界上的点被裁切：未配置 `size` 时半径为 `5`，字段尺寸默认最大半径为 `20`，常量尺寸或显式 sqrt scale 则取最终 range 的最大值。Regression 与 Connected Scatter 读取组内 Point，Ranged Dot 读取起止两个端点；`plotExtension.marks` 不参与计算。
+
+Properties 的 `domainPadding` 接受非负数字，或 `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`。省略 `kind` 时使用 range 单位；只有显式 `kind: 'ratio'` 才按 domain 跨度比例解析，且每个值必须小于 `1`。具体 side 优先于 x / y，x / y 优先于 default；range 未覆盖的 side 继承最大半径，ratio 未覆盖的 side 为 `0`。left / right / top / bottom 只适用于 Cartesian，并会按 scale range 的实际方向映射到 domain lower / upper；Polar 只能使用 default / x / y。
+
+优先级依次为自动最大半径、Properties、encoding scale operation。operation 显式声明的 `0` 或 `{ kind?, lower?, upper? }` 不会被 Properties 覆盖；分类 scale 与 `plotExtension` scale 也不会被改写。`domainPadding` 只属于 recipe Properties，不能写进 authored mark。Ranged Dot 的 y 是分类 scale，因此只应用连续的 x 留白。
+
 ## 职责一览
 
-| 图表                                | `chartType` | 适合场景                         |
-| ----------------------------------- | ----------- | -------------------------------- |
-| [散点图](/viz/chart/points/scatter) | `scatter`   | 查看分布、聚类、离群点或相关趋势 |
+| 图表                                              | `chartType`         | 适合场景                               |
+| ------------------------------------------------- | ------------------- | -------------------------------------- |
+| [散点图](/viz/chart/points/scatter)               | `scatter`           | 查看分布、聚类、离群点或相关趋势       |
+| [气泡图](/viz/chart/points/bubble)                | `bubble`            | 同时比较二维位置与第三个连续字段的量级 |
+| [回归图](/viz/chart/points/regression)            | `regression`        | 在原始观测上比较整体或分组拟合趋势     |
+| [连接散点图](/viz/chart/points/connected-scatter) | `connected-scatter` | 按显式顺序读取观测轨迹                 |
+| [范围点图](/viz/chart/points/ranged-dot)          | `ranged-dot`        | 比较每个类别的两个端点与变化方向       |
+| [条带图](/viz/chart/points/strip)                 | `strip`             | 查看每个类别内的观测分布与重叠         |
 
 ## 章节内容
 
@@ -24,8 +35,28 @@ Scatter 属于 `type: 'point'` family，通过 `recipe.chartType` 选择精确 s
       比较两个连续变量，并用颜色或尺寸补充分类与量级
     </span>
   </LinkedCard>
-  <LinkedCard href="/viz/chart/model">
-    <span className="font-semibold">图形模型</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">查询所有 Chart 类型共享的结构与解析规则</span>
+  <LinkedCard href="/viz/chart/points/bubble">
+    <span className="font-semibold">气泡图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      用必需的第三个字段控制气泡面积，并保留 Point 的位置语义
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/regression">
+    <span className="font-semibold">回归图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">叠加原始观测与一条或多条内置回归趋势</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/connected-scatter">
+    <span className="font-semibold">连接散点图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">保留观测点，并按显式顺序连接一条或多条轨迹</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/ranged-dot">
+    <span className="font-semibold">范围点图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">用连接线和双端点比较每个类别的前后值</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/strip">
+    <span className="font-semibold">条带图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      在离散刻度附近确定性散布每条观测，并保留连续数值位置
+    </span>
   </LinkedCard>
 </div>

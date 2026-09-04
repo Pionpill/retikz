@@ -2,6 +2,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createScatterPointControls } from './scatter-point-controls';
 import { SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS } from './scatter-world-cup-shots.controls';
 import { messiWorldCupShots } from './scatter-world-cup-shots.data';
 
@@ -19,37 +20,23 @@ export const previewControls = definePreviewControls({
           id: 'rows',
           label: 'Lionel Messi: 32 non-shootout shots',
           rows: messiWorldCupShots,
-          columns: [
-            { key: 'opponent', label: 'Opponent' },
-            { key: 'minute', label: 'Minute' },
-            { key: 'outcome', label: 'Outcome' },
-            { key: 'xg', label: 'xG' },
-          ],
+          columns: [{ key: 'opponent' }, { key: 'minute' }, { key: 'outcome' }, { key: 'xg' }],
         },
       ],
     },
     {
       label: 'Marks',
-      controls: [
-        {
-          kind: 'range',
-          id: SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointSize,
-          label: 'Shot point size',
-          defaultValue: 8,
-          min: 4,
-          max: 14,
-          step: 1,
+      controls: createScatterPointControls({
+        ids: SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS,
+        size: { label: 'Shot point size', defaultValue: 5, min: 4, max: 14, step: 1 },
+        stroke: { toggleLabel: 'Stroke', label: 'Stroke color', defaultValue: '#f8fafc' },
+        shape: {
+          label: 'Shape',
+          defaultValue: 'circle',
+          labels: { circle: 'Circle', rectangle: 'Rectangle', diamond: 'Diamond' },
         },
-        {
-          kind: 'range',
-          id: SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointOpacity,
-          label: 'Shot point opacity',
-          defaultValue: 0.9,
-          min: 0.4,
-          max: 1,
-          step: 0.02,
-        },
-      ],
+        opacity: { label: 'Shot point opacity', defaultValue: 0.9, min: 0.4, max: 1, step: 0.02 },
+      }),
     },
   ],
 });
@@ -58,8 +45,17 @@ export const previewControls = definePreviewControls({
 export const previewControlContract = {
   controls: previewControls,
   canonicalValues: {
-    [SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointSize]: 8,
+    [SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointSize]: 5,
+    [SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointStrokeEnabled]: false,
+    [SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointStroke]: '#f8fafc',
+    [SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointShape]: 'circle',
     [SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointOpacity]: 0.9,
   },
-  relatedApis: ['ScatterChart.encodings', 'ScatterMark.override', 'ScatterMark.properties'],
+  relatedApis: [
+    'ScatterEncodings',
+    'ScatterProperties.size',
+    'ScatterProperties.stroke',
+    'ScatterProperties.shape',
+    'ScatterProperties.opacity',
+  ],
 } satisfies PreviewControlContract;

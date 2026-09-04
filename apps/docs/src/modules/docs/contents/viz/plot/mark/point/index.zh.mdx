@@ -35,7 +35,7 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
 
 ## 例子
 
-以下四个示例都可以在“坐标系”中切换笛卡尔与极坐标。PointMark 配置保持不变；在极坐标中，`x` 是角向位置，`y` 是径向位置。
+前四个通用示例可以在“坐标系”中切换笛卡尔与极坐标。PointMark 配置保持不变；在极坐标中，`x` 是角向位置，`y` 是径向位置。
 
 ### 基础用法
 
@@ -46,6 +46,32 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
   controls={{ name: 'point-position' }}
   size="lg"
   caption="切换位置、颜色与尺寸编码，对比普通散点、分类散点和气泡。"
+/>
+
+### 位置散布
+
+`placement.adjustments` 在位置比例尺之后、Point 几何之前调整位置。内置 `jitter` 的 ratio 写法使用离散比例尺的实时刻度间距；数值写法则直接使用当前 role 的输出单位。
+
+#### 直角坐标
+
+分类 x 轴上的 ratio jitter 会把同组观测散布在一个刻度间距内。切换为输出单位后，`span` 直接表示 scale 映射后的总宽；Plot 都会为两端预留 jitter 半宽与 Point 外延，避免散点越出坐标范围。
+
+<ComponentPreview
+  files={['point-jitter-cartesian', 'point-jitter.data.ts']}
+  controls={{ name: 'point-jitter-cartesian' }}
+  size="lg"
+  caption="切换宽度单位并调整 span 与 seed；每个分类中心保持不变。"
+/>
+
+#### 极坐标
+
+极坐标中的 x role 是角度。离散角度使用刻度间距比例：默认 `chord` 模式让抖动点沿相邻多边形顶点之间的直线边移动；连续角度使用数值输出单位并沿圆弧移动。两种模式都先合成角度，再按每条数据的 y 半径投影，所以外圈的屏幕位移更长，而不是统一的 `dx` / `dy`。示例通过径向 `domainPadding` 为散布空间和 Point 半径预留外侧距离。
+
+<ComponentPreview
+  files={['point-jitter-polar', 'point-jitter.data.ts']}
+  controls={{ name: 'point-jitter-polar' }}
+  size="lg"
+  caption="切换离散分类与连续数值角度，再调整散布宽度与随机种子，观察多边形和圆形网格中的角度散布。"
 />
 
 ### 样式变换
@@ -93,12 +119,14 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
 
 | 阶段 | 可观察行为                                                                               |
 | ---- | ---------------------------------------------------------------------------------------- |
-| 投影 | 每行数据按当前坐标系需要的 `x` / `y` / `z` 角色投影；无法得到有效位置的行被跳过          |
+| 定位 | 位置 scale 映射后先执行 role-space adjustment，再投影并执行 screen-space initializer     |
 | 生成 | 普通模式每行生成一个 core `Node`；设置 `text` 后改为文本 Node，并用 `dx` / `dy` 微调位置 |
 | 装饰 | `size`、`shape`、颜色与 Node 样式写入 datum Node；`label` 保留点本身并挂到 `Node.label`  |
 | 分层 | 没有颜色通道时共享 `nodeDefault`；按字段着色时按颜色组织子层，最后附加 mark 图层信息     |
 
 普通 glyph 模式下，字段尺寸为缺失值、`null`、`NaN` 或无穷值时，该行不会生成 Point glyph；尺寸字段 descriptor、scale identity 与可选 legend 是数据集级信息，仍会保留。负数尺寸会直接报错，不会被跳过或截断。设置 `text` 后使用既有文本 Node 路径，不受这条仅针对 glyph 的尺寸守门影响。
+
+同一阶段的 adjustments 保持声明顺序，但所有 role-space adjustment 都早于 coordinate projection，所有 screen-space initializer 都在投影之后。`seed`、有效行顺序、role、span 与最终离散 step 相同时，内置 jitter 会生成相同位置；无效位置仍保留随机序列槽位。需要整组屏幕位置的自定义算法见 [Position Adjustment](/viz/plot/mark/position-adjustment)。
 
 因此坐标系只决定“点在哪里”，PointMark 决定“每行生成什么 Node”，而具体形状、文字与视觉样式仍复用 [Node](/kernel/components/node/overview) 的能力。每个 mark 默认处于独立图层；调整整个 mark 与轴、图例的前后关系时使用 `layer={{ zIndex }}`，`zIndex` prop 只控制当前 mark 内 datum Node 的顺序。
 
@@ -123,6 +151,10 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
       endLine: 168,
     },
     {
+      label: '统一 placement 阶段与输出守门',
+      path: 'packages/viz/plot/src/pipeline/placement/resolve.ts',
+    },
+    {
       label: '尺寸字段校验、resolver 与 descriptor',
       path: 'packages/viz/plot/src/providers/channel/features/node.ts',
       startLine: 202,
@@ -139,6 +171,8 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------- |
 | `id?`                                | `string`                                                                                                                                                                        | —                                            | mark 句柄；使用 `resolveLabel` 时必填                                |
 | `x?` / `y?` / `z?`                   | `PointMarkProps['x']`                                                                                                                                                           | —                                            | 位置角色字段；内置坐标使用 `x` 或 `x` / `y`，`z` 留给自定义坐标 role |
+| `placement?`                         | `IRPlotMarkPlacement`                                                                                                                                                           | —                                            | 有序位置调整；Point 当前是唯一支持该契约的内置 Mark                  |
+| `placement.adjustments`              | `Array<IRPlotPositionAdjustmentOperation>`                                                                                                                                      | 必填                                         | role-space 操作整体先于 screen-space 操作，同阶段保持声明顺序        |
 | `color?`                             | `PointMarkProps['color']`                                                                                                                                                       | —                                            | 点的语义颜色；字段绑定会建立颜色通道与比例尺                         |
 | `size?`                              | `PointMarkProps['size']`                                                                                                                                                        | —                                            | 普通点的尺寸；数值字段经 sqrt scale 映射为半径，无效值跳过该 glyph   |
 | `shape?`                             | `PointMarkProps['shape']`                                                                                                                                                       | —                                            | 普通点的形状；分类字段映射到 shape 调色板                            |
@@ -160,9 +194,9 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
 | `labelFont?`                         | `PointMarkProps['labelFont']`<br />- `family?: string`<br />- `size?: number`<br />- `weight?: 'normal' \| 'bold' \| number`<br />- `style?: 'normal' \| 'italic' \| 'oblique'` | 继承<br />继承<br />继承<br />继承<br />继承 | 标签字体覆盖<br />字体族<br />字号<br />字重<br />字形               |
 | `labelRotate?` / `labelKeepUpright?` | `'none' \| 'radial' \| 'tangent' \| number` / `boolean`                                                                                                                         | `none` / `false`                             | 标签旋转模式或角度，以及是否自动保持文字正立                         |
 | `resolveLabel?`                      | `(row: ExternalRow) => string`                                                                                                                                                  | —                                            | 运行时标签函数；不进入 IR，必须同时提供 `id`                         |
-| `anchorId?`                          | `IRPlotAnchorId`                                                                                                                                                            | —                                            | 为每个有效点生成稳定的 core Node id；以下三种来源必须恰选一种        |
+| `anchorId?`                          | `IRPlotAnchorId`                                                                                                                                                                | —                                            | 为每个有效点生成稳定的 core Node id；以下三种来源必须恰选一种        |
 | `anchorId.prefix?`                   | `string`                                                                                                                                                                        | mark id 或 `mark.<index>`                    | 当前 Plot 内的 id 命名空间                                           |
-| `anchorId.field?`                    | `IRPlotAnchorId['field']`                                                                                                                                                   | —                                            | 把字段值转为 id；与 `template`、`generator` 恰选一个                 |
+| `anchorId.field?`                    | `IRPlotAnchorId['field']`                                                                                                                                                       | —                                            | 把字段值转为 id；与 `template`、`generator` 恰选一个                 |
 | `anchorId.template?`                 | `string`                                                                                                                                                                        | —                                            | JSON-safe id 模板；支持 plot、mark、index 与字段占位符               |
 | `anchorId.generator?`                | `string`                                                                                                                                                                        | —                                            | 从 `LowerPlotsOptions.anchorIdGenerators` 解析的运行时生成器 key     |
 
@@ -171,3 +205,4 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
 - [PathMark](/viz/plot/mark/path) —— 叠在散点下连成趋势线
 - [坐标系](/viz/plot/coordinate) —— 一维、二维与极坐标如何解释位置角色
 - [比例尺](/viz/plot/scale) —— size 使用的平方根 scale 与连续 scale 家族
+- [Position Adjustment](/viz/plot/mark/position-adjustment) —— 注册自定义 role / screen 位置调整

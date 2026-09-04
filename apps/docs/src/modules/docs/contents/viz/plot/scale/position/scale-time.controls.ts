@@ -17,10 +17,7 @@ export const scaleTimeControls = definePreviewControls({
           id: 'visits',
           label: '季度访问量',
           rows: visits,
-          columns: [
-            { key: 'date', label: '日期' },
-            { key: 'value', label: '访问量' },
-          ],
+          columns: [{ key: 'date' }, { key: 'value' }],
         },
       ],
     },

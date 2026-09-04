@@ -5,6 +5,7 @@ import {
   CoordinateOperationSchema,
   CoordinateSchema,
   PlotCoordinate,
+  PolarInterpolation,
 } from '../../src/schemas/coordinate';
 
 describe('CoordinateSchema (contract)', () => {
@@ -55,6 +56,34 @@ describe('CoordinateSchema polar2D (contract)', () => {
   it('polar2d_explicit_fields_valid', () => {
     const c = { type: 'polar2D', angle: 'a', radius: 'r', startAngle: -90, endAngle: 180, innerRadius: 0.3 };
     expect(CoordinateSchema.parse(c)).toEqual(c);
+  });
+
+  it.each(Object.values(PolarInterpolation))('polar2d_interpolation_%s_round_trip', interpolation => {
+    const coordinate = {
+      type: 'polar2D',
+      angle: 'a',
+      radius: 'r',
+      interpolation,
+    };
+
+    const parsed = CoordinateSchema.parse(coordinate);
+
+    expect(parsed).toEqual({
+      ...coordinate,
+      startAngle: 0,
+      endAngle: 360,
+      innerRadius: 0,
+    });
+    expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+  });
+
+  it('polar2d_unknown_interpolation_rejected', () => {
+    expect(() =>
+      CoordinateSchema.parse({
+        type: 'polar2D',
+        interpolation: 'spline',
+      }),
+    ).toThrow();
   });
 
   it('polar2d_cartesian_still_accepted_regression', () => {

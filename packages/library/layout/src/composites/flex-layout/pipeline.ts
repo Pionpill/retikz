@@ -15,7 +15,7 @@ import {
   LayoutIntrinsicMode,
 } from '@retikz/core';
 
-import type { LayoutInsets, LayoutRect } from '../internal';
+import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
 import type { LayoutSpacingArtifact } from '../shared';
 import type { FlexLayoutArtifact, IRFlexLayout, IRFlexLayoutItem } from './types';
 
@@ -26,6 +26,7 @@ import {
   appendLayoutSpacingInterval,
   compensatedLayoutSum,
   contentRectOf,
+  createEffectiveLayoutItems,
   createLayoutArtifactAlignmentGuide,
   createLayoutArtifactContainer,
   createLayoutArtifactItem,
@@ -47,7 +48,7 @@ import { FlexLayoutDirection, FlexLayoutWrap } from './constants';
 type PhysicalAxis = 'x' | 'y';
 
 type MeasuredFlexItem = Readonly<{
-  authored: IRFlexLayoutItem;
+  authored: EffectiveLayoutItem<IRFlexLayoutItem>;
   sourceIndex: number;
   margin: LayoutInsets;
   flexBaseSlot: number;
@@ -183,11 +184,32 @@ const finiteCrossLimitOf = (
   return Math.max(0, allocation - paddingSize);
 };
 
+/** 读取 cross 轴最终可确定的 content-box 尺寸 */
+const definiteCrossSizeOf = (
+  node: IRFlexLayout,
+  crossAxis: PhysicalAxis,
+  crossProposal: LayoutAxisProposal,
+  finiteCrossLimit: number | undefined,
+): number | undefined => {
+  if (finiteCrossLimit === undefined) return undefined;
+  const policy = node.size[crossAxis];
+  if (policy.kind === LayoutAxisSizeKind.Fixed || policy.kind === LayoutAxisSizeKind.Fill) return finiteCrossLimit;
+  if (crossProposal.kind === LayoutAxisProposalKind.Exact) return finiteCrossLimit;
+  return crossProposal.kind === LayoutAxisProposalKind.Range && crossProposal.max === crossProposal.min
+    ? finiteCrossLimit
+    : undefined;
+};
+
 /** 按 proposal 矩阵构造 child basis 阶段的 cross proposal */
-const basisCrossProposal = (finiteCrossLimit: number | undefined): LayoutAxisProposal =>
-  finiteCrossLimit === undefined
-    ? intrinsicProposal('natural')
-    : { kind: LayoutAxisProposalKind.Range, min: 0, max: finiteCrossLimit };
+const basisCrossProposal = (
+  finiteCrossLimit: number | undefined,
+  definiteCrossSize: number | undefined,
+): LayoutAxisProposal =>
+  definiteCrossSize !== undefined
+    ? exactProposal(definiteCrossSize)
+    : finiteCrossLimit === undefined
+      ? intrinsicProposal('natural')
+      : { kind: LayoutAxisProposalKind.Range, min: 0, max: finiteCrossLimit };
 
 /** 用 item probe 结果构造 Flex main solver 输入 */
 const mainSolverItemOf = (item: MeasuredFlexItem, direction: IRFlexLayout['direction']) => {
@@ -296,9 +318,17 @@ export const compileFlexLayout = (
   const mainProposal = proposalByAxis[axes.main];
   const crossProposal = proposalByAxis[axes.cross];
   const finiteCrossLimit = finiteCrossLimitOf(node, axes.cross, crossProposal, padding);
-  const crossBasis = basisCrossProposal(finiteCrossLimit);
+  const definiteCrossSize = definiteCrossSizeOf(node, axes.cross, crossProposal, finiteCrossLimit);
 
-  const measured = node.children.map((authored, sourceIndex): MeasuredFlexItem => {
+  const measured = createEffectiveLayoutItems(node.children).map((authored, sourceIndex): MeasuredFlexItem => {
+    const margin = normalizeLayoutSpacing(authored.margin);
+    const crossMargins = crossMarginsOf(margin, axes.cross);
+    const alignment = authored.alignSelf ?? node.alignItems;
+    const stretchedCrossSize =
+      alignment === LayoutAlignment.Stretch && definiteCrossSize !== undefined
+        ? Math.max(0, definiteCrossSize - crossMargins.start - crossMargins.end)
+        : undefined;
+    const crossBasis = basisCrossProposal(finiteCrossLimit, stretchedCrossSize);
     const minimumResult = requiredProbe(
       context,
       authored.child,
@@ -322,7 +352,7 @@ export const compileFlexLayout = (
     return Object.freeze({
       authored,
       sourceIndex,
-      margin: normalizeLayoutSpacing(authored.margin),
+      margin,
       flexBaseSlot,
       effectiveMin,
       ...(effectiveMax === undefined ? {} : { effectiveMax }),

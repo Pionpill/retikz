@@ -6,7 +6,7 @@ import { normalizeScene } from '@retikz/vanilla';
 import { createElement, isValidElement } from 'react';
 
 import { buildPreviewSourceIR, collectPreviewChartSources } from './build-preview-source-ir';
-import { previewEmbedPropsOf } from './preview-embed';
+import { previewEmbedPropsOf, previewHostDimensionsOf } from './preview-embed';
 
 const COMPONENT_EXPANSION_LIMIT = 16;
 
@@ -113,16 +113,14 @@ export const buildPreviewIR = (Component: FC): PreviewIR => {
     ir = { ...ir, animations: rootAnimations };
     sourceIr = { ...sourceIr, animations: rootAnimations };
   }
-  const ownsOutputSize = isLayout || isEmbeddableRoot;
-  const width = ownsOutputSize ? (props.width as number | string | undefined) : undefined;
-  const height = ownsOutputSize ? (props.height as number | string | undefined) : undefined;
+  const hostDimensions =
+    rootElement !== null && (isLayout || isEmbeddableRoot) ? previewHostDimensionsOf(rootElement.type, props) : {};
   const pathKinds = isLayout ? (props.pathKinds as ReadonlyArray<AnyPathKindDefinition> | undefined) : undefined;
   return {
     ir,
     sourceIr,
     contributions: [...normalized.contributions],
-    width,
-    height,
+    ...hostDimensions,
     pathKinds,
   };
 };
