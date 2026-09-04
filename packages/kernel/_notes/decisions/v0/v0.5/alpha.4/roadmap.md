@@ -1,20 +1,21 @@
-# v0.5.0-alpha.4 Path 几何与 Headless Interaction 候选
+# v0.5.0-alpha.4 Path 几何、JSON 字段与 Headless Interaction 候选
 
-- 状态：ADR-01 Proposed；ADR-02 Accepted；Headless Interaction Candidate
+- 状态：ADR-01、ADR-03 Proposed；ADR-02 Accepted；Headless Interaction Candidate
 - 目标版本：`0.5.0-alpha.4`
-- 前置：现有 Geometry Label、Stroke Path、Arrow Definition 与 alpha.2 identity / ownership / retained renderer 契约保持稳定；若交互方案依赖 scheduler / presentation，须先由独立 milestone 交付
+- 前置：现有 Geometry Label、Stroke Path、Arrow Definition、Foundation JSON 与 alpha.2 identity / ownership / retained renderer 契约保持稳定；若交互方案依赖 scheduler / presentation，须先由独立 milestone 交付
 - 关联：[v0.5 roadmap](../roadmap.md) · [交互与增量运行时设计](../../../../../../../notes/architecture/interaction-design.md) · [Drawing Complete](../../../../architecture/core-drawing-complete.md)
 
 ## 目标与 ADR
 
-alpha.4 收敛两项已确认的 Kernel Path 契约：无填充 Stroke Path 的居中标签产生真实描边断口；端点箭头可以按最终视觉后缘跨过逻辑端点。两项能力都保持 Scene 与 renderer 边界稳定，并由 Core 继续拥有最终行为与诊断。
+alpha.4 收敛三项已确认的 Kernel 契约：无填充 Stroke Path 的居中标签产生真实描边断口；端点箭头可以按最终视觉后缘跨过逻辑端点；Foundation 以一次严格 JSON 快照统一 Source IR 的 `undefined` 与 JSON-safe 边界，并为 runtime sparse patch 提供独立的 known-key 省略原子。三项能力都保持 Scene 与 renderer 边界稳定，并由 Core 或领域 owner 继续拥有最终行为与诊断。
 
 Headless Interaction 仍只保留候选边界，尚未形成 Proposed ADR，不因与上述 ADR 同属 alpha.4 而获得实现授权。
 
-| ADR                                              | 状态     | 主题                  | 交付                                                                |
-| ------------------------------------------------ | -------- | --------------------- | ------------------------------------------------------------------- |
-| [ADR-01](./01-stroke-path-label-interruption.md) | Proposed | Stroke Path 标签断线  | 条件默认、真实几何断口、装饰连续性与不支持组合的失败语义            |
-| [ADR-02](./02-path-endpoint-arrow-overlap.md)    | Accepted | Path 端点箭头重叠比例 | 视觉后缘完整进入、实例级归一化重叠、Core 统一几何与 definition 语义 |
+| ADR                                              | 状态     | 主题                     | 交付                                                                             |
+| ------------------------------------------------ | -------- | ------------------------ | -------------------------------------------------------------------------------- |
+| [ADR-01](./01-stroke-path-label-interruption.md) | Proposed | Stroke Path 标签断线     | 条件默认、真实几何断口、装饰连续性与不支持组合的失败语义                         |
+| [ADR-02](./02-path-endpoint-arrow-overlap.md)    | Accepted | Path 端点箭头重叠比例    | 视觉后缘完整进入、实例级归一化重叠、Core 统一几何与 definition 语义              |
+| [ADR-03](./03-json-undefined-field-contracts.md) | Proposed | Source JSON 快照与省略值 | 一次 JSON 全树预处理、Source fail-loud 与独立的 runtime known-key undefined 省略 |
 
 ## Headless Interaction 候选
 
@@ -40,5 +41,6 @@ Headless Interaction 的候选目标是在不引入编辑器 UI 或业务状态�
 ## 共同边界
 
 - Path 标签断口与端点箭头重叠不新增 Scene primitive、renderer mask、DOM 测量或 adapter-local 几何，也不改变逻辑 Path、NodeTarget 或命中身份
+- JSON 字段统一不让 Foundation 接管领域对象 schema、错误文案、默认值、Definition 嵌套结构或 adapter-local 清理
 - Headless Interaction 候选不冻结具体 TypeScript API、事件列表、behavior 状态机和默认手势，也不纳入编辑器 UI、selection store、tooltip、form、workspace history 或领域交互实现
 - 本 roadmap 与 Proposed ADR 不授权实现、commit、push、tag 或 publish
