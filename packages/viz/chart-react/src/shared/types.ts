@@ -1,29 +1,7 @@
 import type { ChartThemeDefinition } from '@retikz/chart';
 import type { InputChartPanel } from '@retikz/chart-vanilla';
 import type { LowerPlotsOptions } from '@retikz/plot';
-import type { LayoutProps } from '@retikz/react';
 import type { FC } from 'react';
-
-/** Chart standalone 复用的 Layout 宿主字段
- *
- * Source 的 `layout` 属于 Chart border-box 分配；这里的 `width` / `height`
- * 只控制 React renderer host，不能写回 Source
- */
-export type ChartHostProps = Pick<
-  LayoutProps,
-  | 'width'
-  | 'height'
-  | 'className'
-  | 'style'
-  | 'renderer'
-  | 'themeStyles'
-  | 'runtime'
-  | 'animate'
-  | 'snapshotAt'
-  | 'animationRef'
-  | 'onArtifacts'
-  | 'onCompileResult'
->;
 
 /** Chart React 的宿主 Scope 输入
  *
@@ -41,9 +19,6 @@ export type ChartThemeDefinitionsProps = Readonly<{
   /** Plot lowering runtime options；不写入 Chart Source */
   lowerOptions?: LowerPlotsOptions;
 }>;
-
-/** Chart React 组件共享的 host / panel / runtime 字段 */
-export type ChartCommonProps = ChartHostProps & ChartPanelProps & ChartThemeDefinitionsProps;
 
 /** 可嵌入 Chart React component 的静态 Vanilla Input 契约 */
 export type InputEmbeddableChartComponent<TProps, TInput, TAdapter> = FC<TProps> & {

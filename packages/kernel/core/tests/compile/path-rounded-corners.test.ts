@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrim, IRScene, ScenePrimitive } from '../../src';
+import type { GroupPrim, IRScene, ScenePrimitive, TextPrim } from '../../src';
 import type { PathPrim } from '../../src/contract';
 import type { IRPath } from '../../src/schemas/path/path';
 
 import { compileToScene } from '../../src/compile/compile';
 import { PathSchema } from '../../src/schemas/path/path';
+import { flattenPrims } from '../helpers/flatten';
 import { close } from '../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };
@@ -26,6 +27,22 @@ const pathWith = (config: Record<string, unknown>, ...steps: Array<unknown>): IR
 /** 取编译后首个 PathPrim 的 commands 的 kind 序列（结构化断言用） */
 const kinds = (ir: IRScene): Array<string> =>
   findPathPrim(compileToScene(ir, silent).scene.primitives).commands.map(c => c.kind);
+
+/** 取 sloped label 的旋转锚点，作为文字沿最终路径定位的可观察结果 */
+const labelRotationCenter = (primitives: ReadonlyArray<ScenePrimitive>, text: string): [number, number] => {
+  const labelGroup = flattenPrims(primitives).find(
+    (primitive): primitive is GroupPrim =>
+      primitive.type === 'group' &&
+      primitive.children.some(
+        (child): child is TextPrim => child.type === 'text' && child.lines.some(line => line.text === text),
+      ),
+  );
+  const rotation = labelGroup?.transforms?.find(transform => transform.kind === 'rotate');
+  if (rotation === undefined || rotation.cx === undefined || rotation.cy === undefined) {
+    throw new Error(`missing rotation group for '${text}'`);
+  }
+  return [rotation.cx, rotation.cy];
+};
 
 // ───────────────────────── Happy path ─────────────────────────
 
@@ -264,6 +281,79 @@ describe('roundedCorners 交互', () => {
     expect(gRounded).toBeDefined();
     // 倒角后 mark 定位发生变化（弧长重算），两组 transforms 不应逐字相等
     expect(gRounded?.transforms).not.toEqual(gSharp?.transforms);
+  });
+
+  it('roundedCorners + centered label keeps its rounded arc while emitting split stroke fragments', () => {
+    const ir = pathWith(
+      { roundedCorners: 12, stroke: '#13579b' },
+      { type: 'step', kind: 'move', to: [0, 0] },
+      { type: 'step', kind: 'line', to: [100, 0], label: { text: 'turn', position: 0.9, sloped: true } },
+      { type: 'step', kind: 'line', to: [100, 100] },
+    );
+    const fragments = flattenPrims(
+      compileToScene(ir, { measureText: () => ({ width: 20, height: 10 }) }).scene.primitives,
+    ).filter((primitive): primitive is PathPrim => primitive.type === 'path' && primitive.stroke === '#13579b');
+
+    expect(fragments).toHaveLength(2);
+    expect(fragments.some(fragment => fragment.commands.some(command => command.kind === 'arc'))).toBe(true);
+  });
+
+  it.each([
+    {
+      name: '居中默认断口',
+      label: { text: 'automatic', position: 0.5, sloped: true },
+      shouldInterrupt: true,
+    },
+    {
+      name: '非居中显式断口',
+      label: { text: 'forced', position: 0.5, side: 'top', sloped: true, interrupt: true },
+      shouldInterrupt: true,
+    },
+    {
+      name: '显式连续描边',
+      label: { text: 'continuous', position: 0.5, sloped: true, interrupt: false },
+      shouldInterrupt: false,
+    },
+  ])('roundedCorners + Path.label $name 从同一最终圆角几何定位文字和断口', ({ label, shouldInterrupt }) => {
+    // path 的中点位于倒角圆弧 45°：圆心 [70, 30]、半径 30，故锚点为 [91.213..., 8.786...]
+    const roundedAnchor: [number, number] = [91.2132034, 8.7867966];
+    const roundedMidpointAngle = -45;
+    const compiledScene = compileToScene(
+      pathWith(
+        { roundedCorners: 30, stroke: '#13579b', label },
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [100, 0] },
+        { type: 'step', kind: 'line', to: [100, 100] },
+      ),
+      { measureText: () => ({ width: 20, height: 10 }) },
+    ).scene;
+    const fragments = flattenPrims(compiledScene.primitives).filter(
+      (primitive): primitive is PathPrim => primitive.type === 'path' && primitive.stroke === '#13579b',
+    );
+    const arcs = fragments
+      .flatMap(fragment => fragment.commands)
+      .filter((command): command is Extract<PathPrim['commands'][number], { kind: 'arc' }> => command.kind === 'arc');
+    const rotationCenter = labelRotationCenter(compiledScene.primitives, label.text);
+
+    expect(rotationCenter[0]).toBeCloseTo(roundedAnchor[0], 2);
+    expect(rotationCenter[1]).toBeCloseTo(roundedAnchor[1], 2);
+
+    if (shouldInterrupt) {
+      expect(fragments).toHaveLength(2);
+      expect(arcs.length).toBeGreaterThan(0);
+      expect(
+        arcs.some(
+          arc =>
+            Math.min(arc.startAngle, arc.endAngle) < roundedMidpointAngle &&
+            roundedMidpointAngle < Math.max(arc.startAngle, arc.endAngle),
+        ),
+      ).toBe(false);
+    } else {
+      expect(fragments).toHaveLength(1);
+      expect(arcs).toHaveLength(1);
+      expect(Math.min(arcs[0].startAngle, arcs[0].endAngle)).toBeLessThan(roundedMidpointAngle);
+      expect(Math.max(arcs[0].startAngle, arcs[0].endAngle)).toBeGreaterThan(roundedMidpointAngle);
+    }
   });
 
   it('roundedCorners + path rotate → 先算几何圆角再施加 path 变换（内层 commands = 旋转前的倒角几何）', () => {

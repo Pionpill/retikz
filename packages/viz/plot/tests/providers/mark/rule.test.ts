@@ -15,7 +15,7 @@ import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
 import { resolveMarkOperation } from '../../../src/resolve/mark';
-import { PlotSchema } from '../../../src/schemas';
+import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
 
 /** core Path 的最小形态（鸭子类型断言端点；避免引入 core 内部 IRPath 类型耦合） */
 type RulePath = {
@@ -60,6 +60,9 @@ const linearStub = (domain: [number, number], range: [number, number]): Position
       typeof value === 'number' && Number.isFinite(value) ? r[0] + ((value - d0) / (d1 - d0)) * (r[1] - r[0]) : NaN,
     domain: () => [d0, d1],
     get bandwidth() {
+      return 0;
+    },
+    get step() {
       return 0;
     },
     ticks: () => ({ values: [], labels: [] }),
@@ -423,14 +426,15 @@ describe('rule fail-loud', () => {
 
 // ── 交互：polar line / band + z-order ────────────────────────────────────────────────────
 describe('rule polar', () => {
-  const polarFrame = (continuousAngle = true) =>
+  const polarFrame = (interpolation: 'polar' | 'chord' = PolarInterpolation.Polar) =>
     createPolarCoordinate({
       center: [200, 200],
       innerRadius: 0,
       outerRadius: 150,
       startAngle: 0,
       endAngle: 360,
-      continuousAngle,
+      interpolation,
+      angularSkeleton: [0, 90, 180, 270],
       primary: linearStub([0, 360], [0, 360]),
       secondary: linearStub([0, 100], [0, 150]),
     });
@@ -447,7 +451,7 @@ describe('rule polar', () => {
   it('rule-polar-constant-radius-ring', () => {
     // 水平 rule y=50（常量半径）→ 常半径环，用 core circlePath 表达，避免采样成多边形
     const mark: IRPlotReferenceMark = { type: 'reference', encoding: { y: { value: 50 } } };
-    const layer = lowerMark(mark, [{}], polarFrame(true)) as IRScope;
+    const layer = lowerMark(mark, [{}], polarFrame()) as IRScope;
     const steps = pathsOf(layer)[0].children;
     expect(steps.map(s => s.kind)).toEqual(['move', 'circlePath']);
     expect(steps[1].radius).toBeCloseTo(75, 6);
@@ -465,6 +469,41 @@ describe('rule polar', () => {
     expect(shape.params.outerRadius).toBeCloseTo(90, 6);
   });
 
+  it('rule-polar-constant-radius-ring_inherits_chord_interpolation', () => {
+    const mark: IRPlotReferenceMark = { type: 'reference', encoding: { y: { value: 50 } } };
+    const layer = lowerMark(mark, [{}], polarFrame(PolarInterpolation.Chord)) as IRScope;
+    expect(pathsOf(layer)[0].children.map(step => step.kind)).toEqual(['move', 'line', 'line', 'line', 'cycle']);
+  });
+
+  it('rule-band-polar-mark_override_takes_precedence_over_the_frame', () => {
+    const polarMark: IRPlotReferenceMark = {
+      type: 'reference',
+      interpolation: 'polar',
+      encoding: { y: { value: 40 } },
+      yTo: 60,
+    };
+    const chordMark: IRPlotReferenceMark = {
+      type: 'reference',
+      interpolation: 'chord',
+      encoding: { y: { value: 40 } },
+      yTo: 60,
+    };
+    const polarNode = nodesOf(lowerMark(polarMark, [{}], polarFrame(PolarInterpolation.Chord)) as IRScope)[0];
+    const chordNode = nodesOf(lowerMark(chordMark, [{}], polarFrame()) as IRScope)[0];
+    expect((polarNode.shape as { type?: string } | undefined)?.type).toBe('sector');
+    expect((chordNode.shape as { type?: string } | undefined)?.type).toBe('contour');
+  });
+
+  it('rule-cartesian-rejects-a-polar-interpolation-override', () => {
+    const mark: IRPlotReferenceMark = {
+      type: 'reference',
+      interpolation: 'chord',
+      encoding: { y: { value: 40 } },
+      yTo: 60,
+    };
+    expect(() => lowerMark(mark, [{}], cartFrame())).toThrow(/interpolation|polar2D/i);
+  });
+
   it('rule-band-polar-demo-categorical-angle-keeps-inner-radius', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
@@ -476,7 +515,7 @@ describe('rule polar', () => {
           { name: 'score', type: 'continuous' },
         ],
       },
-      coordinate: { type: 'polar2D' },
+      coordinate: { type: 'polar2D', interpolation: 'polar' },
       scales: [],
       marks: [
         { type: 'reference', encoding: { y: { value: 60 }, color: { value: '#fde68a' } }, yTo: 80 },
@@ -518,7 +557,7 @@ describe('rule polar', () => {
     expect(filledRing?.fillRule).toBe('evenodd');
   });
 
-  it('rule-polar-field-radius-rings-use-circle-path', () => {
+  it('rule-polar-field-radius-rings-use-circle-path-and-omit-zero-radius', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -545,7 +584,7 @@ describe('rule polar', () => {
       cartOpts,
     ).children[0] as IRScope;
     const paths = pathsOf(layer);
-    expect(paths).toHaveLength(3);
+    expect(paths).toHaveLength(2);
     for (const path of paths) {
       expect(path.children.map(s => s.kind)).toEqual(['move', 'circlePath']);
     }
@@ -590,7 +629,7 @@ describe('rule polar', () => {
       .flatMap(path => path.commands.filter(command => command.kind === 'ellipseArc'))
       .filter(command => Math.abs(command.endAngle - command.startAngle) >= 360);
 
-    expect(rings).toHaveLength(3);
+    expect(rings).toHaveLength(2);
     for (const ring of rings) {
       expect(scene.layout.x).toBeLessThanOrEqual(ring.center[0] - ring.radiusX);
       expect(scene.layout.y).toBeLessThanOrEqual(ring.center[1] - ring.radiusY);

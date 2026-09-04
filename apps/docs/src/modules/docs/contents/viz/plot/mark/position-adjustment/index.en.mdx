@@ -1,0 +1,134 @@
+---
+title: Position Adjustment
+description: Extend role- or screen-space placement after position scales and before mark geometry through one runtime-injected Definition contract.
+---
+
+Position Adjustment covers placement logic that cannot be fully decided by a data transform. Source stores only a JSON-safe operation; the function-bearing Definition is injected at runtime and shares registry, resolution, execution, and errors with built-in jitter.
+
+<ComponentPreview
+  files={['position-adjustment', 'position-adjustment.definition.ts', 'position-adjustment.data.ts']}
+  size="lg"
+  caption="The custom screen-nudge moves the projected Point group; switch source files to inspect its Definition and host injection."
+/>
+
+## Applicability
+
+- Use a role-space adjustment for offsets that depend on a discrete scale's live `step`, angle, or radius role.
+- Use a screen-space initializer for algorithms that need the whole projected group, resolved visual channels, or plot dimensions.
+- Computation that adds or removes rows, rewrites fields, or changes lineage remains a [Data transform](/viz/plot/transform).
+- Stack changes interval baselines and bounds, so it is not an additive Position Adjustment.
+
+The only built-in algorithm is currently `jitter`, and Point is the only built-in placement-capable Mark. Screen-space initializers are executable infrastructure, but no built-in collision, beeswarm, or label-avoidance algorithm exists yet. Renderers and Core IR receive only final geometry.
+
+## Define the Capability
+
+A Definition's `space` selects both callback context and execution stage:
+
+| `space`  | `initialize` input                                     | Typical use                      |
+| -------- | ------------------------------------------------------ | -------------------------------- |
+| `role`   | Scale-mapped role tuples before coordinate projection  | Jitter or angle / radius offsets |
+| `screen` | Projected positions, dimensions, channels, and targets | Pixel nudges or group layout     |
+
+The example's `screen-nudge` uses a closed schema for its JSON operation and preserves every target's count, order, key, and null position:
+
+```ts
+const screenNudge = definePositionAdjustment<ScreenNudge>({
+  space: 'screen',
+  schema: ScreenNudgeSchema,
+  initialize: (operation, context) =>
+    context.targets.map(target => ({
+      key: target.key,
+      position:
+        target.position === null ? null : [target.position[0] + operation.dx, target.position[1] + operation.dy],
+    })),
+});
+```
+
+A role-space Definition that requires Plot to reserve boundary clearance can declare `containment: { policy: 'contain', measure }`. `measure` returns a finite conservative envelope in its own roles; Plot combines it with coordinate boundary normals and Mark glyph extent to resolve the final range. Screen-space containment has no screen-boundary capability yet and is rejected explicitly in this version.
+
+## Inject into a Host
+
+React injects the Definition with `<Plot positionAdjustmentDefinitions={[screenNudge]}>`, while Point references its `kind` from `placement.adjustments`:
+
+```tsx
+<Plot data={rows} positionAdjustmentDefinitions={[screenNudge]}>
+  <PointMark x="category" y="value" placement={{ adjustments: [{ kind: 'screen-nudge', dx: 12, dy: -8 }] }} />
+</Plot>
+```
+
+Vanilla `renderPlot`, `embedPlot`, and direct `lowerPlots` forward the same array through `LowerPlotsOptions.positionAdjustmentDefinitions`. Definitions do not enter `IRPlot`, so the spec remains JSON-round-trippable.
+
+## Execution
+
+```text
+position scale
+  -> role-space adjustment
+  -> coordinate projection
+  -> screen-space initializer
+  -> mark geometry
+  -> Core IR / renderer
+```
+
+Source order is stable within each stage, but all role-space operations run before projection and all screen-space operations run afterward. The final positions are resolved once and shared by Point lowering, locators, SSR, and hydration; renderers neither query the registry nor replay an initializer.
+
+Built-in jitter runs in role space so the same polar angle offset projects to a different arc length at each row's radius. A custom coordinate that joins placement must expose `mapRoles` and `projectMappedRoles` from one projection model; containment additionally requires `placementBoundary`.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Position Adjustment Definition and execution-space contract',
+      path: 'packages/viz/plot/src/contract/position-adjustment.ts',
+    },
+    {
+      label: 'Built-in and custom Definition registry',
+      path: 'packages/viz/plot/src/providers/position-adjustment/registry.ts',
+    },
+    {
+      label: 'Two-stage execution and output guards',
+      path: 'packages/viz/plot/src/pipeline/placement/resolve.ts',
+    },
+    {
+      label: 'Boundary-clearance resolution',
+      path: 'packages/viz/plot/src/pipeline/placement/containment.ts',
+    },
+  ]}
+/>
+
+## Errors and Limits
+
+- A custom `kind` cannot override built-in jitter or be registered twice; an unregistered operation fails immediately.
+- A Definition schema must be an object with a non-empty `z.literal(kind)`; operations remain JSON-safe before and after Definition parsing.
+- Initializers must preserve target count, order, keys, null positions, and dimensions and must return finite numbers.
+- Ratio jitter requires a discrete position scale with `step > 0`; numeric spans work with any finite output role.
+- Omitting jitter `role` requires exactly one discrete role in the current frame; otherwise specify it explicitly.
+- If containment lacks Mark glyph extent or coordinate boundary measurement, or an explicit range cannot fit the clearance, Plot fails instead of clamping points.
+- This version does not assign placement semantics automatically to Path, Interval, Reference, or Relation. Text Points can run adjustments without containment but cannot provide glyph extent.
+
+## API Reference
+
+Public exports:
+
+| Import from `@retikz/plot`           | Purpose                                                     |
+| ------------------------------------ | ----------------------------------------------------------- |
+| `definePositionAdjustment`           | Define a role- or screen-space runtime Definition           |
+| `PositionAdjustmentDefinition`       | Public union of both execution spaces                       |
+| `RolePositionAdjustmentDefinition`   | Inspect role context, initializer, and optional containment |
+| `ScreenPositionAdjustmentDefinition` | Inspect projected targets, channels, and dimensions         |
+| `PositionAdjustmentSpace`            | `role` / `screen` execution-space constants                 |
+| `MarkPlacementTarget`                | Stable target key, data row, and original role values       |
+| `MarkPositionResolution`             | Read the final screen position by target key                |
+
+Host injection:
+
+| Host                                | Public contract     | Injection field                 |
+| ----------------------------------- | ------------------- | ------------------------------- |
+| `@retikz/plot-react` `<Plot>`       | `PlotProps`         | `positionAdjustmentDefinitions` |
+| `@retikz/plot-vanilla` `renderPlot` | `RenderPlotOptions` | `positionAdjustmentDefinitions` |
+| `@retikz/plot` `lowerPlots`         | `LowerPlotsOptions` | `positionAdjustmentDefinitions` |
+
+## Related
+
+- [PointMark](/viz/plot/mark/point) — built-in jitter with Cartesian and polar examples
+- [Position scales](/viz/plot/scale/position) — where discrete step and range come from
+- [Custom coordinates](/viz/plot/coordinate/custom-coordinate) — provide split projection and containment capabilities
+- [Runtime overview](/viz/plot/reference/runtime) — how React, Vanilla, and direct lowering converge

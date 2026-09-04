@@ -1,0 +1,104 @@
+---
+title: Ranged Dot
+description: Compare a start and end value from each row with two endpoints and one connector for every category.
+family: scatter-points
+usage: distribution
+---
+
+<ShowcaseGallery
+  examples={[
+    {
+      id: 'ranged-dot-minimal',
+      title: 'Basic Usage',
+      description: 'This is the minimal setup with only required options. Switch to IR to inspect the configuration; for simple charts, pass it directly to the `RangedDotChart` root.',
+      preview: {
+        files: ['ranged-dot-minimal', 'ranged-dot-minimal.data.ts'],
+        size: 'xxxl',
+        caption: 'A static snapshot of daily minimum and maximum temperatures in Seattle for 20 consecutive days from Vega Datasets.',
+      },
+    },
+    {
+      id: 'ranged-dot-basic',
+      title: 'Advanced playground: before-and-after values across categories',
+      description: 'Compare start and end for every category while preserving the direction expressed by authored roles.',
+      preview: {
+        files: ['ranged-dot-basic', 'ranged-dot-basic.data.ts'],
+        controls: { name: 'ranged-dot-basic' },
+        controlPanelDefaultOpen: false,
+        size: 'xxxl',
+        caption: 'Adjust endpoint and connector appearance; start and end roles never swap based on numeric order.',
+      },
+    },
+  ]}
+>
+Ranged Dot is fixed horizontally: `category` maps to y, while `start` and `end` share one x scale. If both endpoints declare an explicit scale binding, their names must match; one endpoint may declare the operation while the other references it. Use it when the two endpoint values and direction matter more than bar length.
+
+## `RangedDotChart`
+
+The root `recipe` uses Ranged Dot's exact slots. Component identity supplies the Point family and `chartType: 'ranged-dot'`:
+
+```tsx
+<RangedDotChart
+  rows={rows}
+  recipe={{
+    encodings: { category: 'category', start: 'before', end: 'after', color: 'group' },
+    properties: { range: { strokeWidth: 2 } },
+  }}
+/>
+```
+
+`RangedDotEncodings`, `RangedDotProperties`, and `RangedDotMark` are equivalent JSX sugar for the same recipe slots. Root-only authoring can omit `children`; different slots can mix, while two sources for one slot fail loudly.
+
+## Atomic row semantics
+
+One Ranged Dot semantic group emits one projected Relation operation. Plot projects both endpoints together and paints connector, start glyph, then end glyph. If either endpoint is missing, null, or unprojectable, the whole row is skipped without orphan geometry.
+
+`start > end` never swaps roles. `start === end` retains a zero-length connector and two overlapping glyphs. Empty data is a valid empty result.
+
+## Style precedence
+
+`point` sets common constant appearance, then `startPoint` and `endPoint` override their endpoint. `range` affects only the connector. Optional field-bound `color` drives all three members and one categorical legend; member properties never create separate field scales.
+
+When `color` and member color properties are omitted, the connector and both endpoints use the next default color from Plot's `palette.series` instead of falling back to CSS `currentColor`.
+
+## API Reference
+
+### `RangedDotEncodingsProps`
+
+| Prop             | Type                                                                       | Default | Description                                  |
+| ---------------- | -------------------------------------------------------------------------- | ------- | -------------------------------------------- |
+| `category`       | Point position mapping                                                     | —       | Required category field fixed to y           |
+| `start` / `end`  | Point position mapping                                                     | —       | Required endpoint fields sharing one x scale |
+| `color?`         | Point color mapping                                                        | —       | Shared color and legend for all members      |
+| `row` / `column` | `string`, `IRPlotPartitionDimension`, or `Array<IRPlotPartitionDimension>` | —       | Optional facet dimensions                    |
+| `facet?`         | `IRPlotFacetOptions`                                                       | —       | Facet options; requires row or column        |
+
+### `RangedDotPropertiesProps`
+
+| Prop             | Type                                                                    | Default                       | Description                                                                               |
+| ---------------- | ----------------------------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------- |
+| `point?`         | `IRRangedDotPointProperties`                                            | Point                         | Common constant appearance for both endpoints                                             |
+| `startPoint?`    | `IRRangedDotPointProperties`                                            | inherited                     | Start endpoint override                                                                   |
+| `endPoint?`      | `IRRangedDotPointProperties`                                            | inherited                     | End endpoint override                                                                     |
+| `range?`         | `IRRangedDotRangeProperties`                                            | Path                          | Connector color, width, opacity, and style                                                |
+| `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest endpoint Point radius | Configures continuous x-scale range or explicit ratio padding; categorical y is unchanged |
+
+### `RangedDotMarkProps`
+
+| Prop          | Type                                                  | Default   | Description                                                      |
+| ------------- | ----------------------------------------------------- | --------- | ---------------------------------------------------------------- |
+| `override?`   | `boolean`                                             | `false`   | Replaces the complete ranged-dot group                           |
+| `encodings?`  | `{ category?: string; start?: string; end?: string }` | inherited | Overrides direct fields, never color                             |
+| `properties?` | `RangedDotMarkProps['properties']`                    | inherited | Merges member appearance and rejects recipe-only `domainPadding` |
+
+## Public entries
+
+- `@retikz/chart/point/ranged-dot`: exact schemas, Source types, provider, and locator
+- `@retikz/chart-react/point`: Chart, Encodings, Properties, and Mark declarations
+- `@retikz/chart-vanilla/point/ranged-dot`: normalizer, factory, and typed Input
+
+## Related
+
+[Scatter](/viz/chart/points/scatter) · [Connected Scatter](/viz/chart/points/connected-scatter) · [Working with Plot](/viz/chart/model/plot)
+
+</ShowcaseGallery>

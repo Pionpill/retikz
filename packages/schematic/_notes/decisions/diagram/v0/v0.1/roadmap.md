@@ -1,6 +1,6 @@
 # Diagram v0.1 Roadmap
 
-> 状态：alpha.1 进行中；Diagram Foundation 与 FlowDiagram MVP 已形成三入口、真实 Graph 物化、artifact 和双语 Docs 闭环。本 milestone 已按 ADR-07 将 Flow Source 调整为平级 catalog 与引用式 containment，并拆分可见 Group 与无外壳 Layout；Entity 对 Core 富文本的投影仍由 ADR-06 独立校准。关联：[Diagram v0 roadmap](../roadmap.md) · [Schematic 制图能力域设计](../../../../../../../notes/architecture/schematic-design.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md) · [Graph v0 roadmap](../../../graph/v0/roadmap.md)
+> 状态：alpha.1 FlowDiagram MVP 已形成三入口、真实 Graph 物化、artifact 和双语 Docs 闭环。本 milestone 已按 ADR-07 将 Flow Source 调整为平级 catalog 与引用式 containment，并拆分可见 Group 与无外壳 Layout；Entity 对 Core 富文本的投影仍由 ADR-06 独立校准。关联：[Diagram v0 roadmap](../roadmap.md) · [Schematic 制图能力域设计](../../../../../../../notes/architecture/schematic-design.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md) · [Graph v0 roadmap](../../../graph/v0/roadmap.md)
 
 ## 目标
 

@@ -39,6 +39,26 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-09-02',
+          summary: {
+            zh: '无填充内置 Stroke Path 的居中标签默认产生真实描边断口，并用 GeometryLabel.interrupt 提供逐标签覆盖。',
+            en: 'Centered labels on unfilled built-in Stroke Paths now create real stroke gaps by default, with per-label overrides through GeometryLabel.interrupt.',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：居中标签默认断线',
+                en: 'BREAKING: automatic gaps for centered labels',
+              },
+              content: {
+                zh: '`GeometryLabel.interrupt` 让无填充内置 Stroke 的 canonical center 标签（含省略 `side` 的 `sloped: true`）切出真实 Scene 描边片段；SVG、Canvas 与 hit-test 共享同一几何。这是有意的视觉变更：需要旧的连续描边时写 `interrupt: false`。`true` 可强制非居中标签断线；有效 fill 上的 `true`，以及 Ribbon / custom / 其它非内置 Stroke host 的任意显式值都会 fail-loud。',
+                en: '`GeometryLabel.interrupt` makes canonical-center labels on unfilled built-in Stroke paths — including `sloped: true` with an omitted `side` — split into real Scene stroke fragments shared by SVG, Canvas, and hit testing. This is an intentional visual change: write `interrupt: false` to retain the old continuous stroke. `true` can force a non-centered label gap; `true` on an effectively filled Stroke and any explicit value on Ribbon, custom, or another non-built-in Stroke host fail loudly.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.3',
           date: '2026-08-28',
           summary: {
@@ -92,8 +112,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/math',
       version: 'v0.5',
       description: {
-        zh: '随 Kernel release group lockstep 进入 v0.5，并提供跨包共享的二维仿射矩阵原子。',
-        en: 'Moves to v0.5 with the Kernel release group and provides shared 2D affine-matrix primitives.',
+        zh: '随 Kernel release group lockstep 进入 v0.5，并提供跨包共享的二维仿射矩阵与无领域曲线数值原子。',
+        en: 'Moves to v0.5 with the Kernel release group and provides shared 2D affine-matrix and domain-free curve-numerics primitives.',
       },
       highlights: [
         {
@@ -105,6 +125,23 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.5',
+          date: '2026-09-02',
+          summary: {
+            zh: '新增可采样、可按距离反解并可保形切片的 plain-geometry 曲线段 API。',
+            en: 'Adds plain-geometry curve segments that can be sampled, inverted by distance, and sliced without changing kind.',
+          },
+          items: [
+            {
+              label: { zh: '曲线数值单一真源', en: 'One source of truth for curve numerics' },
+              content: {
+                zh: '`CurveSegment`、`CurveSegmentSample` 与 `curve` 从 `@retikz/math` 根入口公开，覆盖直线、二次 / 三次贝塞尔、圆弧和旋转椭圆弧的参数采样、固定预算的长度 / 距离反解及保形切片。它们只接收和返回 plain geometry；PathCommand、标签、断口、Scene、dash、箭头与命中仍由 Core 拥有。',
+                en: '`CurveSegment`, `CurveSegmentSample`, and `curve` are exported from the `@retikz/math` root. They cover parameter sampling, fixed-budget length/distance inversion, and shape-preserving slices for lines, quadratic/cubic Béziers, circular arcs, and rotated elliptical arcs. They accept and return only plain geometry; Core still owns PathCommands, labels, gaps, Scene output, dashes, arrows, and hit testing.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.3',
           date: '2026-08-28',
@@ -259,6 +296,30 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.5',
+          date: '2026-09-03',
+          summary: {
+            zh: '补齐 Stroke Path 的标签断口与端点箭头重叠几何；两者都 lower 为既有 Scene path commands，SVG、Canvas 与命中测试共享结果。',
+            en: 'Completes Stroke Path label gaps and endpoint-arrow overlap geometry. Both lower to existing Scene path commands shared by SVG, Canvas, and hit testing.',
+          },
+          items: [
+            {
+              label: { zh: '端点箭头重叠比例', en: 'Endpoint-arrow overlap ratio' },
+              content: {
+                zh: '`PathMarkPlacement.endpointOverlap` 用 `[0,1]` 比例让选中的起末箭头从现有默认位置推进到最终视觉后缘与逻辑端点对齐；中间值在两种最终位置间线性插值。计算随 `length × scale` 与空心轮廓变化；NodeTarget、逻辑 Path、标签 / 中段 mark 采样、marker seam 与 renderer contract 不变，未消费位置和非内置 Stroke host fail-loud。',
+                en: '`PathMarkPlacement.endpointOverlap` uses a `[0,1]` ratio to move the selected start or end arrow from its existing default to final-visual-back alignment at the logical endpoint, interpolating between those final placements. The calculation follows `length × scale` and hollow outlines. NodeTargets, the logical Path, label and inline-mark sampling, marker seams, and renderer contracts stay unchanged; unconsumed placements and non-built-in Stroke hosts fail loudly.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：ArrowDefinition 后缘契约', en: 'BREAKING: ArrowDefinition back contract' },
+              content: {
+                zh: '`ArrowDefinition.backX` 成为必填的 marker 基础几何后缘，并与 `lineContactX`、`tipX` 分别表达后缘、主描边接合点和尖端。三者必须有限且满足 `backX <= lineContactX <= tipX`；既有自定义 definition 需要显式补齐，不提供 fallback。',
+                en: '`ArrowDefinition.backX` is now required as the marker base-geometry back, separate from the main-stroke contact in `lineContactX` and the tip in `tipX`. All three must be finite and satisfy `backX <= lineContactX <= tipX`; existing custom definitions must add it explicitly, with no fallback.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.3',
           date: '2026-08-28',
@@ -519,6 +580,15 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-09-03',
+          summary: {
+            zh: '`<Path>` 与 `<Draw>` 新增 `arrowPlacement`，等价透传端点共享 overlap 与 `start` / `end` 覆盖。',
+            en: '`<Path>` and `<Draw>` add `arrowPlacement`, forwarding shared endpoint overlap and `start` / `end` overrides equivalently.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.3',
           date: '2026-08-28',
           summary: {
@@ -579,6 +649,15 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.5',
+          date: '2026-09-03',
+          summary: {
+            zh: 'plain spec 新增 `arrowPlacement`，按 nullish 规则合并共享与逐端 overlap，并对没有对应端点箭头的配置明确报错。',
+            en: 'Plain specs add `arrowPlacement`, nullishly merging shared and per-end overlap while failing explicitly when no matching endpoint arrow exists.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.3',
           date: '2026-08-28',

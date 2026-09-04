@@ -2194,6 +2194,7 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const badArrow = defineArrow({
       name: 'badEmitArrow',
+      backX: 0,
       lineContactX: 0,
       emit: (() => [{ type: 'rect', x: 0, y: 0, width: -1, height: 2 }]) as unknown as () => Iterable<MarkerPrimitive>,
     });
@@ -2331,6 +2332,7 @@ describe('layout-aware composite constraints and bounds', () => {
     cyclicMarkerGroup.children.push(cyclicMarkerGroup);
     const cyclicArrow = defineArrow({
       name: 'cyclicMarkerArrow',
+      backX: 0,
       lineContactX: 0,
       emit: () => [cyclicMarkerGroup],
     });
@@ -2483,6 +2485,7 @@ describe('layout-aware composite constraints and bounds', () => {
     symbolMarker[Symbol('marker-hidden-function')] = () => 'hidden';
     const badArrow = defineArrow({
       name: 'symbolKeyMarkerArrow',
+      backX: 0,
       lineContactX: 0,
       emit: () => [symbolMarker as unknown as MarkerPrimitive],
     });
@@ -2601,6 +2604,7 @@ describe('layout-aware composite constraints and bounds', () => {
     };
     const proxyArrow = defineArrow({
       name: 'proxyTrapArrow',
+      backX: 0,
       lineContactX: 0,
       emit: () => markerIterable,
     });
@@ -2764,6 +2768,7 @@ describe('layout-aware composite constraints and bounds', () => {
     });
     const dynamicArrow = defineArrow({
       name: 'dynamicMarkerPrimitiveArrow',
+      backX: 0,
       lineContactX: 0,
       emit: () => [dynamicRect],
     });
@@ -2979,6 +2984,7 @@ describe('layout-aware composite constraints and bounds', () => {
       });
       const arrow = defineArrow({
         name: `lossyMarkerArrayArrow${index}`,
+        backX: 0,
         lineContactX: 0,
         emit: () => [{ type: 'group', children } as unknown as MarkerPrimitive],
       });

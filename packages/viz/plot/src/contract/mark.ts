@@ -8,6 +8,7 @@ import type { IRPlotMark, IRPlotMarkOperation } from '../schemas';
 import type { MarkLoweringContext } from './anchor';
 import type { ChannelDefinitionKindValue, FieldCollector, MarkChannels } from './channel';
 import type { Cell, CoordinateFrame } from './coordinate';
+import type { MarkPlacementTarget } from './position-adjustment';
 
 import { RetikzPlotError } from '../error';
 
@@ -55,6 +56,18 @@ export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
   channelKinds?: (mark: T) => ReadonlySet<ChannelDefinitionKindValue>;
   /** 区间类 mark：某行 → 正交 Cell（interval 用；非区间类省略） */
   buildCell?: (mark: T, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
+  /** 可选 Mark Placement 能力；只有显式声明的 Mark 才能消费 `placement` */
+  placement?: {
+    /** 按稳定顺序枚举可调整的位置目标 */
+    targets: (mark: T, rows: Array<ExternalRow>, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
+    /** 目标沿指定屏幕单位法向的 glyph extent；无法证明时返回 undefined */
+    normalExtent?: (
+      mark: T,
+      target: MarkPlacementTarget,
+      unitNormal: readonly [number, number],
+      channels: MarkChannels,
+    ) => number | undefined;
+  };
   /** 下沉到 core IR 图层（无可绘制图元返回 null；不支持的 mark × coordinate 由实现 fail-loud） */
   lower: (
     mark: T,
@@ -101,6 +114,16 @@ export type AnyMarkDefinition = {
   channelKinds?: (mark: never) => ReadonlySet<ChannelDefinitionKindValue>;
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark */
   buildCell?: (mark: never, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
+  /** 内部宽类型占位；语义同 MarkDefinition.placement */
+  placement?: {
+    targets: (mark: never, rows: Array<ExternalRow>, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
+    normalExtent?: (
+      mark: never,
+      target: MarkPlacementTarget,
+      unitNormal: readonly [number, number],
+      channels: MarkChannels,
+    ) => number | undefined;
+  };
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark */
   lower: (
     mark: never,

@@ -15,6 +15,30 @@ const compilePlot = (spec: IRPlot, datasets: Parameters<typeof lowerPlots>[0]) =
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) });
 
 describe('React 与 framework-neutral authoring parity', () => {
+  it('Point placement 产出完全一致的 IRPlot', () => {
+    const placement = {
+      adjustments: [{ kind: 'jitter' as const, role: 'x', span: { kind: 'ratio' as const, value: 0.6 }, seed: 7 }],
+    };
+    const react = buildPlotIR(<PointMark x="category" y="value" placement={placement} />, 'points');
+    const plain = normalizePlot({
+      data: { reference: 'points' },
+      scales: [
+        { type: 'linear', name: '__x' },
+        { type: 'linear', name: '__y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
+      marks: [
+        {
+          type: 'point',
+          placement,
+          encoding: { x: { field: 'category' }, y: { field: 'value' } },
+        },
+      ],
+    });
+
+    expect(react).toEqual(plain);
+  });
+
   it('单 facet 产出完全一致的 IRPlot', () => {
     const react = buildPlotIR(
       <>

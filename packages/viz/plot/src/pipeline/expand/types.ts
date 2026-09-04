@@ -11,6 +11,7 @@ import type {
   AnyChannelDefinition,
   AnyCoordinateDefinition,
   AnyMarkDefinition,
+  AnyPositionAdjustmentDefinition,
   AnyScaleDefinition,
   PlotThemeStyleDefinition,
   ResolveLabel,
@@ -76,6 +77,8 @@ export type LowerPlotsOptions = {
   colorSchemes?: Record<string, (t: number) => string>;
   /** 自定义 mark definitions；未注册或冲突的 type 会 fail-loud */
   markDefinitions?: Array<AnyMarkDefinition>;
+  /** 自定义 Position Adjustment definitions；内置与自定义按 kind 共用 registry */
+  positionAdjustmentDefinitions?: ReadonlyArray<AnyPositionAdjustmentDefinition>;
   /** 自定义字段格式 definitions；definition 提供蕴含类型与 canonical parser */
   formatDefinitions?: Array<FieldFormatDefinition>;
 };

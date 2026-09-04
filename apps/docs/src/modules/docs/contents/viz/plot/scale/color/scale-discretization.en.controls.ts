@@ -18,11 +18,7 @@ export const scaleDiscretizationControls = definePreviewControls({
           id: 'values',
           label: 'Skewed continuous values',
           rows: discretizationValues,
-          columns: [
-            { key: 'x', label: 'X' },
-            { key: 'y', label: 'Y' },
-            { key: 'value', label: 'Value' },
-          ],
+          columns: [{ key: 'x' }, { key: 'y' }, { key: 'value' }],
         },
       ],
     },

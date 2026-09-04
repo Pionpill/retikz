@@ -3,6 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { StepLabelSchema } from '../../src/schemas';
 
 describe('StepLabelSchema 新增样式字段', () => {
+  it('接受 interrupt 布尔开关', () => {
+    expect(StepLabelSchema.safeParse({ text: 'x', interrupt: true }).success).toBe(true);
+    expect(StepLabelSchema.safeParse({ text: 'x', interrupt: false }).success).toBe(true);
+  });
+
   it('接受 textColor', () => {
     expect(StepLabelSchema.safeParse({ text: 'x', textColor: 'red' }).success).toBe(true);
     expect(StepLabelSchema.safeParse({ text: 'x', textColor: 0.35 }).success).toBe(true);
@@ -38,6 +43,15 @@ describe('StepLabelSchema 新增样式字段', () => {
 });
 
 describe('StepLabelSchema 错误路径', () => {
+  it('interrupt 非布尔值拒绝', () => {
+    expect(StepLabelSchema.safeParse({ text: 'x', interrupt: 'always' }).success).toBe(false);
+    expect(StepLabelSchema.safeParse({ text: 'x', interrupt: 1 }).success).toBe(false);
+  });
+
+  it('保持严格对象，拒绝未知字段', () => {
+    expect(StepLabelSchema.safeParse({ text: 'x', interrupt: true, unexpected: true }).success).toBe(false);
+  });
+
   it('opacity 越界拒（>1）', () => {
     expect(StepLabelSchema.safeParse({ text: 'x', opacity: 1.5 }).success).toBe(false);
   });
@@ -66,6 +80,12 @@ describe('StepLabelSchema 零破坏（旧形态仍合法）', () => {
 });
 
 describe('StepLabel JSON round-trip', () => {
+  it('interrupt 序列化往返保持布尔值', () => {
+    const label = { text: 'gap', interrupt: false };
+
+    expect(StepLabelSchema.parse(JSON.parse(JSON.stringify(label)))).toEqual(label);
+  });
+
   it('含三新字段的 label 序列化往返语义等价', () => {
     const label = {
       text: 'sin',

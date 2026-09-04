@@ -8,6 +8,7 @@ import { filledPath, hollowPath } from './_utils';
 /** 可选实心菱形箭头 Definition */
 export const DiamondArrowDefinition = defineArrow({
   name: StandardArrowName.Diamond,
+  backX: 0,
   lineContactX: 0,
   defaultLength: 11,
   defaultWidth: 6,
@@ -33,6 +34,7 @@ export const DiamondArrowProvider: CoreDependencyProvider = Object.freeze({
 export const OpenDiamondArrowDefinition = defineArrow({
   name: StandardArrowName.OpenDiamond,
   hollow: true,
+  backX: 1,
   lineContactX: 1,
   tipX: 9,
   defaultLength: 11,

@@ -1,26 +1,30 @@
 import type { IRChartSource } from '@retikz/chart';
-import type { IRScene, ThemeStyleDefinition } from '@retikz/core';
+import type { CoreProviderContribution } from '@retikz/core';
 
 import { createPlotProviderContribution } from '@retikz/plot';
 import { PathClipProvider } from '@retikz/standard/clip';
 
-import type { ChartAuthoringResult, ChartInput } from './types';
+import type { ChartAuthoringResult, ChartHostThemeInput, ChartInput } from './types';
 
 /** 以 Chart / Plot runtime input 组装唯一依赖根 */
-export const chartContributionOf = <TSource extends IRChartSource>(
+export const buildChartProviderContribution = <TSource extends IRChartSource>(
   input: ChartInput<TSource>,
-  theme: IRScene['theme'] | undefined = undefined,
-  themeStyles: ReadonlyArray<ThemeStyleDefinition> | undefined = undefined,
-): ChartAuthoringResult<TSource> => {
+): CoreProviderContribution => {
   const plot = createPlotProviderContribution(input.datasets, input.lowerOptions);
   return {
-    source: input.source,
-    input,
-    contribution: {
-      roots: [...input.chartProviderContribution.roots],
-      providers: [PathClipProvider, ...plot.providers, ...input.chartProviderContribution.providers],
-    },
-    ...(theme === undefined ? {} : { theme }),
-    ...(themeStyles === undefined ? {} : { themeStyles }),
+    roots: [...input.chartProviderContribution.roots],
+    providers: [PathClipProvider, ...plot.providers, ...input.chartProviderContribution.providers],
   };
 };
+
+/** 组装可供 adapter 与 standalone SSR 共用的 Chart authoring result */
+export const createChartAuthoringResult = <TSource extends IRChartSource>(
+  input: ChartInput<TSource>,
+  host: ChartHostThemeInput = {},
+): ChartAuthoringResult<TSource> => ({
+  source: input.source,
+  input,
+  contribution: buildChartProviderContribution(input),
+  ...(host.theme === undefined ? {} : { theme: host.theme }),
+  ...(host.themeStyles === undefined ? {} : { themeStyles: host.themeStyles }),
+});

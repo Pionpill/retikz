@@ -47,11 +47,33 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview files="path-structure" size="sm" />
 
+<span id="label-interruption"></span>
+
+### 路径标签与描边断口
+
+`<Path label>` 在整条 Path 上采样，`<Step label>` 只在所属 Step 上采样。无 `fill` 的内置 `stroke` Path 出现 canonical `side: 'center'` 时，Core 会从文字下移除真实描边，而不是绘制一层背景。`sloped: true` 且没有 `side` 时也会 canonicalize 为 `center`。
+
+<ComponentPreview files="path-label-interruption" size="md" />
+
+固定左上、右下两个节点后，切换连接路线、`side` 与 0–1 的标签位置，观察同一条宿主 Path 上的采样与断口。选择“自动居中”时不传 `side`、只启用 `sloped`，因此仍走居中标签的默认断线规则。
+
+<ComponentPreview
+  files={['path-label-route-playground', 'path-label-route-playground.tsx', 'path-label-route-playground.controls.ts']}
+  size="md"
+  caption="切换路线与标签位置；自动居中会断线，其它 side 默认保持连续。"
+/>
+
+省略 `interrupt` 时，只有这个无填充内置 Stroke + 居中的组合自动断线。`interrupt: false` 强制保留连续描边；`interrupt: true` 则可让非居中标签也断线。
+
+任意有效 `fill`（包括 `fill="transparent"` 或 `fillOpacity={0}`）都会关闭自动断线，且 `interrupt: true` 会 fail-loud。Ribbon、custom Path kind 与其它非内置 Stroke Path 上的任意显式布尔值同样 fail-loud。断口不移动标签、marks、dash 或端点箭头，也不处理标签与箭头 / mark 的碰撞。
+
+曲线在参数处取点、按距离反解参数和保形裁切是 [`@retikz/math` 的曲线段算法](/kernel/packages/base/math-algorithms#曲线切片)。它只处理 plain geometry；标签是否断线、断口间距和 Path 输出仍由 Core 决定。
+
 ### 端点与连接
 
 #### 箭头
 
-`arrow` 控制方向（`'->'` / `'<-'` / `'<->'` / `'none'`），`arrowDetail` 一个对象统管全部视觉规格（shape / scale / length / width / color / fill / opacity / lineWidth）+ 可选 `start` / `end` 起末分别配置。详细规则、8 种内置 shape、起末 merge、颜色 / 缩放 / 半透明配置以及完整 API 参考见 **[Arrow](/kernel/components/draw/arrow)** 专页。
+`arrow` 控制方向（`'->'` / `'<-'` / `'<->'` / `'none'`），`arrowDetail` 统管 shape / size / color 等视觉规格，`arrowPlacement` 则用 `[0,1]` 的归一化比例让箭头从现有默认位置推进到最终视觉后缘与逻辑端点对齐，并支持共享值与 `start` / `end` 单端覆盖。三者在 `<Path>` 与 `<Draw>` 上等价；完整规则、`0 / 0.5 / 1` 对比 demo、失败边界和 API 参考见 **[Arrow](/kernel/components/draw/arrow)** 专页。
 
 #### 端点连接面
 
@@ -124,7 +146,7 @@ import { Path, Step } from '@retikz/react';
 
 <ComponentPreview files="path-rounded-corners" size="sm" />
 
-`roundedCorners` 改的是**路径几何**——它把拐角顶点回退并插入一段相切圆弧，因此影响包围盒、弧长、路径级 `marks` 的归一化定位和连接点解析。这和 `lineJoin` 是两码事：`lineJoin` 只改**描边视觉**，路径中心线仍是尖折。面板上方展示 `lineJoin`，下方展示几何圆角，可直接拖动半径比较。（注：step 边标注 `label` 当前仍定位在该 step 自身线段上，不随接缝倒角缩短重算。）
+`roundedCorners` 改的是**路径几何**——它把拐角顶点回退并插入一段相切圆弧，因此影响包围盒、弧长、路径级 `marks` 的归一化定位和连接点解析。这和 `lineJoin` 是两码事：`lineJoin` 只改**描边视觉**，路径中心线仍是尖折。面板上方展示 `lineJoin`，下方展示几何圆角，可直接拖动半径比较。（注：连续描边的 step `label` 保留既有 step-local 采样；会断线的标签按倒角后的实际几何取样，使 gap 对齐可见描边。）
 
 <Comparison target="tikz" title="Path 写法映射">
 
@@ -201,7 +223,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 描边如何物化几何
 
-默认描边会先把 relative、节点引用和 generator 解析成路径命令（`PathCommand`，即物化后的 move / line / arc 等几何）。`roundedCorners` 随后改写命令，再计算路径标记与端点箭头收缩；`rotate` / `scale` 最后把主路径、标签和标记包装成同一个 group。于是标记会跟随倒圆后的弧长与切线，整体变换也不会让装饰脱离路径。
+默认描边会先把 relative、节点引用和 generator 解析成路径命令（`PathCommand`，即物化后的 move / line / arc 等几何）。`roundedCorners` 随后改写命令。标签仍从未切断的逻辑路径取样；兼容的 `interrupt` 会按文字视觉盒只移除描边几何，并输出保留命令形态与原逻辑 owner 的路径片段。marks、端点箭头和 dash 仍按逻辑路径处理，`rotate` / `scale` 最后把主路径、标签和标记包装成同一个 group。
 
 <SourceLinks
   sources={[
@@ -212,10 +234,10 @@ import { Path, Step } from '@retikz/react';
       endLine: 277,
     },
     {
-      label: '圆角、标记与箭头处理顺序',
+      label: '圆角、标签断口与装饰输出',
       path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
-      startLine: 279,
-      endLine: 320,
+      startLine: 301,
+      endLine: 425,
     },
   ]}
 />
@@ -230,7 +252,7 @@ import { Path, Step } from '@retikz/react';
 | `kind`           | <ApiValues name="PathKind" /> \| `string`           | `'stroke'`     | 开放的 Path kind provider 名称；Core 内置 `'stroke'`，其它 kind 通过 Path kind contract 显式注册；可选 Standard Ribbon 见 [Ribbon Path kind](/library/standard/extension/ribbon)                                  |
 | `kindOptions`    | `IRPathBase['kindOptions']`                         | —              | 选定 Path kind 的 JSON-safe 参数；Core host 先接受该对象，注册 definition 的完整 subject schema 在后续解析阶段校验                                                                                                |
 | `color`          | `string`                                            | —              | 主色；`stroke` / 箭头 / step label 未单设则随它（跟主色不跟 `stroke`）                                                                                                                                            |
-| `stroke`         | `string` \| `IRPaint`                           | `currentColor` | 描边 paint：CSS 颜色或 IRPaint（渐变 / pattern / image）；箭头继承时需给箭头显式纯色                                                                                                                          |
+| `stroke`         | `string` \| `IRPaint`                               | `currentColor` | 描边 paint：CSS 颜色或 IRPaint（渐变 / pattern / image）；箭头继承时需给箭头显式纯色                                                                                                                              |
 | `strokeWidth`    | `number`                                            | `1`            | 描边宽度                                                                                                                                                                                                          |
 | `dashPattern`    | `Array<number>`                                     | —              | dash/gap 长度序列（如 `[4, 2]`）                                                                                                                                                                                  |
 | `dashOffset`     | `number`                                            | —              | 虚线起点偏移，单位同路径 user units                                                                                                                                                                               |
@@ -240,7 +262,8 @@ import { Path, Step } from '@retikz/react';
 | `thickness`      | <ApiValues name="PathThickness" />                  | —              | 组件 / builder 语法糖：生成 IR 前解析成 `strokeWidth`；显式 `strokeWidth` 始终优先                                                                                                                                |
 | `arrow`          | `'none'` \| `'->'` \| `'<-'` \| `'<->'`             | —              | 路径级箭头方向（详见 [Arrow](/kernel/components/draw/arrow)）                                                                                                                                                     |
 | `arrowDetail`    | `IRArrowDetail`                                     | —              | 箭头视觉详细配置；字段详见 [Arrow](/kernel/components/draw/arrow)                                                                                                                                                 |
-| `fill`           | `string` \| `IRPaint`                           | `'none'`       | 闭合区域填充：任意 CSS 颜色，或 IRPaint（渐变 / 图案 / 图片）                                                                                                                                                 |
+| `arrowPlacement` | `InputPathArrowPlacement`                           | —              | 箭头端点重叠配置；比例 `1` 让最终视觉后缘对齐逻辑端点，共享与逐端覆盖详见 [Arrow](/kernel/components/draw/arrow#端点重叠)                                                                                         |
+| `fill`           | `string` \| `IRPaint`                               | `'none'`       | 闭合区域填充：任意 CSS 颜色，或 IRPaint（渐变 / 图案 / 图片）                                                                                                                                                     |
 | `fillRule`       | <ApiValues name="PathFillRule" />                   | `'nonzero'`    | 填充规则；环形 / 孔洞场景用 `'evenodd'`                                                                                                                                                                           |
 | `opacity`        | `number`                                            | —              | 整 path 透明度 0~1（同时作用于 stroke 与 fill）                                                                                                                                                                   |
 | `fillOpacity`    | `number`                                            | —              | 仅 fill 透明度 0~1                                                                                                                                                                                                |
@@ -250,6 +273,7 @@ import { Path, Step } from '@retikz/react';
 | `zIndex`         | `number`（整数）                                    | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效                                                                                                                                                        |
 | `rotate`         | `number`                                            | —              | 整条 path 旋转角（度，绕包围盒中心）                                                                                                                                                                              |
 | `scale`          | `IRPathScale`                                       | —              | 整条 path 缩放（数字等比 / `{ x, y }` 非等比，绕包围盒中心）                                                                                                                                                      |
+| `label`          | `IRGeometryLabel` \| `Array<IRGeometryLabel>`       | —              | 宿主标签：单个或多个标签按整条 Path 定位；无填充内置 Stroke 的居中标签默认断线，详见[路径标签与描边断口](#label-interruption)                                                                                     |
 | `marks`          | `IRPathBase['marks']`                               | —              | 沿路径标记：`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线                                                                                                                                       |
 | `animations`     | `IRPathBase['animations']`                          | —              | 时间轴动画 tracks，透传进本 path emit 的图元，renderer 播放或降级静态；见 [动画](/kernel/components/effects/animation)                                                                                            |
 | `children`       | `PathProps['children']`                             | —              | 默认 `stroke` kind 必填；首个非 `move` 时编译器会强制改成 `move`。其它 kind 的结构约束由各自 definition schema 负责                                                                                               |

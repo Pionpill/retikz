@@ -17,10 +17,7 @@ export const scaleTimeControls = definePreviewControls({
           id: 'visits',
           label: 'Quarterly visits',
           rows: visits,
-          columns: [
-            { key: 'date', label: 'Date' },
-            { key: 'value', label: 'Visits' },
-          ],
+          columns: [{ key: 'date' }, { key: 'value' }],
         },
       ],
     },

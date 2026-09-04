@@ -51,12 +51,7 @@ export const coordinate1DCompositionControls = definePreviewControls({
             coordinate1DCompositionRows,
             () => coordinate1DCompositionOperation,
           ),
-          columns: [
-            { key: 'thingLabel', label: '来源节点' },
-            { key: 'practiceLabel', label: '汇聚目标' },
-            { key: 'relationColor', label: '分组色' },
-            { key: 'thingCount', label: '来源数量' },
-          ],
+          columns: [{ key: 'thingLabel' }, { key: 'practiceLabel' }, { key: 'relationColor' }, { key: 'thingCount' }],
         },
       ],
     },

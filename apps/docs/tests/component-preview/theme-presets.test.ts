@@ -87,7 +87,7 @@ describe('docs-owned theme presets', () => {
         tokens: {
           color: vibrantTheme.colors.categorical[0],
           textColor: 'contrast',
-          fill: vibrantTheme.colors.categorical[0],
+          fill: 1,
           stroke: 'none',
         },
       },

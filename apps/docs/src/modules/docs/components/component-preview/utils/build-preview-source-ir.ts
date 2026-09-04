@@ -1,6 +1,18 @@
 import type { IRChartSource } from '@retikz/chart';
+import type { IRBubbleChart } from '@retikz/chart/point/bubble';
+import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
+import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
+import type { IRRegressionChart } from '@retikz/chart/point/regression';
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
-import type { ScatterChartProps } from '@retikz/chart-react/point/scatter';
+import type { IRStripChart } from '@retikz/chart/point/strip';
+import type {
+  BubbleChartProps,
+  ConnectedScatterChartProps,
+  RangedDotChartProps,
+  RegressionChartProps,
+  ScatterChartProps,
+  StripChartProps,
+} from '@retikz/chart-react/point';
 import type { IRChild, IRScene, IRScope } from '@retikz/core';
 import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import type { InputGraphChild, InputGraphMember } from '@retikz/graph-vanilla';
@@ -8,7 +20,14 @@ import type { AnyInputEmbed, InputChild, InputPath, InputScene, InputScope } fro
 import type { ReactNode } from 'react';
 
 import { CHART_NAMESPACE } from '@retikz/chart';
-import { ScatterChart } from '@retikz/chart-react/point/scatter';
+import {
+  BubbleChart,
+  ConnectedScatterChart,
+  RangedDotChart,
+  RegressionChart,
+  ScatterChart,
+  StripChart,
+} from '@retikz/chart-react/point';
 import { FlowDiagramEmbedKind, normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import {
   BlockEmbedKind,
@@ -33,7 +52,13 @@ import { Fragment, isValidElement } from 'react';
 
 import { previewEmbedPropsOf } from './preview-embed';
 
-type TypedChartSource = IRScatterChart;
+type TypedChartSource =
+  | IRScatterChart
+  | IRBubbleChart
+  | IRConnectedScatterChart
+  | IRRangedDotChart
+  | IRRegressionChart
+  | IRStripChart;
 
 type TypedChartComponent<TSource extends TypedChartSource> = {
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => Readonly<{ source: TSource }>;
@@ -100,8 +125,7 @@ const sourceCoreChildOf = (
   if (input.type === 'node' || 'position' in input) {
     return normalizeNode(input);
   }
-  if (input.type === 'path' || input.type === undefined) return normalizePath(input as InputPath);
-  if (input.type === 'scope') {
+  if (input.type === 'scope' || runtime?.type === 'scope') {
     const { type: _type, children, ...scopeWithAuthoring } = input as InputScope;
     void _type;
     const { authoring: _authoring, ...scope } = scopeWithAuthoring;
@@ -115,6 +139,7 @@ const sourceCoreChildOf = (
       ),
     } as IRScope;
   }
+  if (input.type === 'path' || input.type === undefined) return normalizePath(input as InputPath);
   return runtime ?? (input as IRChild);
 };
 
@@ -295,6 +320,21 @@ const sourceOf = (value: ReactNode): TypedChartSource | undefined => {
   if (!isValidElement(value)) return undefined;
   if (value.type === ScatterChart) {
     return typedChartSourceOf(ScatterChart, value.props as ScatterChartProps);
+  }
+  if (value.type === BubbleChart) {
+    return typedChartSourceOf(BubbleChart, value.props as BubbleChartProps);
+  }
+  if (value.type === ConnectedScatterChart) {
+    return typedChartSourceOf(ConnectedScatterChart, value.props as ConnectedScatterChartProps);
+  }
+  if (value.type === RangedDotChart) {
+    return typedChartSourceOf(RangedDotChart, value.props as RangedDotChartProps);
+  }
+  if (value.type === RegressionChart) {
+    return typedChartSourceOf(RegressionChart, value.props as RegressionChartProps);
+  }
+  if (value.type === StripChart) {
+    return typedChartSourceOf(StripChart, value.props as StripChartProps);
   }
   return undefined;
 };

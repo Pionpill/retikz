@@ -9,6 +9,7 @@ import { openStrokePath } from './_utils';
 export const BarArrowDefinition = defineArrow({
   name: StandardArrowName.Bar,
   hollow: true,
+  backX: 9,
   lineContactX: 9,
   tipX: 9,
   emit: context => [

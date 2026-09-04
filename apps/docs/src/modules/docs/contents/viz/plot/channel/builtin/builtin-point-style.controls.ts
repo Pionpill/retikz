@@ -21,10 +21,7 @@ export const builtinPointStyleControls = definePreviewControls({
           id: 'rows',
           label: '点数据',
           rows: pointStyleRows,
-          columns: [
-            { key: 'x', label: '横轴值' },
-            { key: 'y', label: '纵轴值' },
-          ],
+          columns: [{ key: 'x' }, { key: 'y' }],
         },
       ],
     },

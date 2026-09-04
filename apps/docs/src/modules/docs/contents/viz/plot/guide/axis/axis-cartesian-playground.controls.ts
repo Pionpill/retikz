@@ -18,11 +18,7 @@ export const axisCartesianPlaygroundControls = definePreviewControls({
           id: 'rows',
           label: '共享样本',
           rows: axisCartesianPlaygroundRows,
-          columns: [
-            { key: 'category', label: '分类' },
-            { key: 'x', label: 'x' },
-            { key: 'y', label: 'y' },
-          ],
+          columns: [{ key: 'category' }, { key: 'x' }, { key: 'y' }],
         },
       ],
     },

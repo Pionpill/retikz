@@ -1,0 +1,123 @@
+---
+title: Bubble Chart
+description: Compare two continuous variables by position and use a required third field for the magnitude represented by bubble area.
+family: scatter-points
+usage: distribution
+---
+
+<ShowcaseGallery
+  examples={[
+    {
+      id: 'bubble-minimal',
+      title: 'Basic Usage',
+      description: 'This is the minimal setup with only required options. Switch to IR to inspect the configuration; for simple charts, pass it directly to the `BubbleChart` root.',
+      preview: {
+        files: ['bubble-minimal', 'bubble-minimal.data.ts'],
+        size: 'xxxl',
+        caption: 'A static snapshot of depth, magnitude, and significance for 100 earthquakes from Vega Datasets.',
+      },
+    },
+    {
+      id: 'bubble-basic',
+      title: 'Advanced playground: population bubbles',
+      description: 'Use `BubbleChart` to compare GDP per capita and life expectancy, with population driving bubble area and continent driving categorical color.',
+      preview: {
+        files: ['bubble-basic', 'bubble-basic.data.ts'],
+        controls: { name: 'bubble-basic' },
+        controlPanelDefaultOpen: false,
+        size: 'xxxl',
+        caption: 'Switch the x-axis between log and linear scales; population drives area, with optional color by continent.',
+      },
+    },
+  ]}
+>
+This page expands only Bubble-private recipe slots and declarations. `ChartData`, `ChartLayout`, `ChartCoordinate`, `ChartExtension`, presentation, and shared root wiring are not repeated; see the [shared Chart API](/viz/chart).
+
+## `BubbleChart`
+
+`BubbleChart` fixes the Point family and Bubble recipe identity. Its root `recipe` directly uses Bubble's exact slots, while component identity supplies `chartType: 'bubble'`:
+
+```tsx
+<BubbleChart
+  rows={rows}
+  recipe={{
+    encodings: { x: 'gdpPerCapita', y: 'lifeExpectancy', size: 'population', color: 'continent' },
+    properties: { fillOpacity: 0.7 },
+  }}
+/>
+```
+
+`BubbleEncodings`, `BubbleProperties`, and `BubbleMark` are equivalent JSX sugar for those three slots. Root-only authoring can omit `children`; a root value and declaration for the same slot fail loudly instead of overriding each other.
+
+Bubble and Scatter both lower to Plot Point, but Bubble fixes a third field mapping as an irreversible core role. Use Scatter for points with a constant radius; packed bubbles are outside this chartType.
+
+## `BubbleEncodings`
+
+`BubbleEncodingsProps` exactly reuses schema-derived `IRBubbleChartEncodings`. Vanilla input and JSON Source use the same payload; React authors it as a separate declaration.
+
+| Slot             | Supported Bubble mappings                                                             | Bubble-specific constraint                                                                                         |
+| ---------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `x`              | `string`, direct, aggregate, derived (`bin`, `normalize`, `jitter`, custom transform) | Required; position scales follow Point compatibility; `jitter` targets only x; `bin` cannot be combined with facet |
+| `y`              | `string`, direct, aggregate, derived (`bin`, `normalize`, `jitter`, custom transform) | Required; position scales follow Point compatibility; `jitter` targets only y; `bin` cannot be combined with facet |
+| `size`           | `string`, direct, aggregate, derived (`normalize`, custom transform)                  | Required and field-bound; output must be continuous; omission uses sqrt, and named scales accept only `sqrt`       |
+| `color`          | `string`, direct, aggregate                                                           | Optional; accepts a compatible categorical or continuous color scale                                               |
+| `opacity`        | `string`, direct, aggregate, derived (`normalize`, custom transform)                  | Optional; output must be continuous, and named scales currently accept only `linear`                               |
+| `shape`          | `string`, direct                                                                      | Optional; binds categorical shape and does not accept a named scale                                                |
+| `row` / `column` | `string`, `IRPlotPartitionDimension`, `Array<IRPlotPartitionDimension>`               | Optional; either dimension creates a facet, and arrays express ordered facet hierarchy                             |
+| `facet`          | `IRPlotFacetOptions`                                                                  | Optional; configures `empty`, `header`, `resolve`, and `spacing`; requires `row` or `column`                       |
+
+By default, the `size` binding enters Plot's sqrt size scale and produces a size legend. Bubble rejects constant `size`, and marks cannot replace or remove the recipe's size field, so every Source retains Bubble's third data role.
+
+```tsx
+<BubbleEncodings
+  x={{ field: 'gdpPerCapita', scale: { operation: { type: 'log', name: 'income' } } }}
+  y="lifeExpectancy"
+  size="population"
+/>
+```
+
+`row` / `column` / `facet` follow the Point facet contract. Partitioning changes panel organization without changing Bubble's mark identity or required size mapping.
+
+## `BubbleProperties`
+
+`BubbleProperties` declares recipe-level constants. It reuses Point constant properties but explicitly excludes fixed-radius `size`; data-driven size must come from `BubbleEncodings.size`.
+
+Bubble defaults to `fillOpacity={0.7}` with a `1px` same-color stroke. `color` drives both the default fill and stroke; explicit `fill`, `stroke`, or opacity properties can still override them independently.
+
+| Fields                                                                                      | Values and behavior                                                                                                                                                 |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `color`, `textColor`, `fill`, `stroke`, `shape`                                             | Colors, paints, or an extensible shape name                                                                                                                         |
+| `minimumSize`, `scale`, `rotate`, `dx`, `dy`, `padding`, `margin`, `cornerRadius`           | Shared Point geometry constants; they do not replace the required size map                                                                                          |
+| `strokeWidth`, `fillOpacity`, `strokeOpacity`, `opacity`, `dashed`, `dotted`, `dashPattern` | Stroke, opacity, and dash constants                                                                                                                                 |
+| `zIndex`, `align`, `lineHeight`, `maxTextWidth`, `font`, `label`                            | Drawing order, text, and label configuration                                                                                                                        |
+| `boundary`, `shadow`, `blendMode`                                                           | Boundary, shadow, and blend mode                                                                                                                                    |
+| `domainPadding?`                                                                            | `number` or `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`; defaults to the maximum radius of the field-size sqrt range, or `20` when range is omitted |
+
+## `BubbleMark`
+
+`BubbleMark` is Bubble's direct-child mark API. Its identity is fixed to `bubble`, so callers do not provide `kind`; a plain mark appends bubbles, while an `override` mark replaces the recipe's implicit primary bubbles in place.
+
+| `BubbleMarkProps` property | Type                            | Default | Bubble-specific behavior                                                                                                                    |
+| -------------------------- | ------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `override?`                | `boolean`                       | `false` | When `true`, replaces the implicit primary `bubble` mark; a missing target still appends and reports `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND` |
+| `encodings?`               | `BubbleMarkProps['encodings']`  | —       | May override inherited x, y, color, opacity, and shape fields, but does not contain `size`                                                  |
+| `properties?`              | `BubbleMarkProps['properties']` | —       | May override Bubble-compatible constant styling, but does not contain fixed-radius `size`                                                   |
+
+Both plain and override `BubbleMark` inherit the same core size mapping from the recipe, so they cannot rewrite Bubble into a Scatter without a third-field size role.
+
+## Related reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/viz/chart/points/scatter">
+    <span className="font-semibold">Scatter Chart</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Use Scatter when the size field is optional</span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/model/authoring">
+    <span className="font-semibold">Authoring &amp; Resolution</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Reference the React, Vanilla, schema, and recipe pipeline
+    </span>
+  </LinkedCard>
+</div>
+
+</ShowcaseGallery>

@@ -272,6 +272,30 @@ export const SmoothMethodSchema = discriminatedUnion('kind', [
       'Smooth method discriminator: ordinary least-squares linear regression',
     ),
   }).describe('Linear regression smooth method'),
+  strictObject({
+    kind: literal(SmoothMethodKind.Quadratic).describe(
+      'Smooth method discriminator: second-degree polynomial regression',
+    ),
+  }).describe('Quadratic regression smooth method'),
+  strictObject({
+    kind: literal(SmoothMethodKind.Polynomial).describe(
+      'Smooth method discriminator: configurable-degree polynomial regression',
+    ),
+    order: number().int().min(2).max(6).optional().describe('Polynomial degree from 2 through 6; default 3'),
+  }).describe('Polynomial regression smooth method'),
+  strictObject({
+    kind: literal(SmoothMethodKind.Logarithmic).describe(
+      'Smooth method discriminator: logarithmic regression y = a + b ln(x)',
+    ),
+  }).describe('Logarithmic regression smooth method'),
+  strictObject({
+    kind: literal(SmoothMethodKind.Exponential).describe(
+      'Smooth method discriminator: exponential regression y = a exp(bx)',
+    ),
+  }).describe('Exponential regression smooth method'),
+  strictObject({
+    kind: literal(SmoothMethodKind.Power).describe('Smooth method discriminator: power regression y = a x^b'),
+  }).describe('Power regression smooth method'),
 ]).describe('Smooth transform method strategy');
 
 export const SmoothTransformSchema = strictObject({
@@ -316,7 +340,7 @@ export const SmoothTransformSchema = strictObject({
       }
     }
   })
-  .describe('Smooth transform: sample linear regression trend rows consumable by PathMark');
+  .describe('Smooth transform: sample regression trend rows consumable by PathMark');
 
 export const PlotBuiltinTransformSchema = discriminatedUnion('kind', [
   StackTransformSchema,

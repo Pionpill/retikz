@@ -9,6 +9,7 @@ import { Step } from '../../../src/kernel';
 const TestOpenArrowDefinition = defineArrow({
   name: 'testOpen',
   hollow: true,
+  backX: 1,
   lineContactX: 1,
   tipX: 9,
   emit: context => [

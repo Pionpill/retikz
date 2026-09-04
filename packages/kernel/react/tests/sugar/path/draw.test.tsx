@@ -38,6 +38,23 @@ describe('Draw: 基础展开', () => {
     expect(sugarIR.children).toEqual(kernelIR.children);
   });
 
+  it('把 arrowPlacement 透传到与手写 endpoint mark 等价的 Path IR', () => {
+    const props = {
+      way: ['a', 'b'],
+      arrow: '->' as const,
+      arrowPlacement: { end: { overlap: 0.5 } },
+    };
+    const sugarIR = ir(<Draw {...props} />);
+    const kernelIR = ir(
+      <Path marks={[{ pos: 1, endpointOverlap: 0.5, mark: { kind: 'arrow' } }]}>
+        <Step kind="move" to="a" />
+        <Step kind="line" to="b" />
+      </Path>,
+    );
+
+    expect(sugarIR.children).toEqual(kernelIR.children);
+  });
+
   it('样式 / 箭头 / 填充 props 透传到 Path 节点', () => {
     const out = ir(
       <Draw

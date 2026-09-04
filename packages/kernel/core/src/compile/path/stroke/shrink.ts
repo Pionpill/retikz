@@ -4,6 +4,7 @@ import type { ArrowEmitContext, MarkerFill, MarkerPrimitive, PathCommand, Resolv
 import type { ArrowMarkResolution } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
@@ -73,12 +74,35 @@ export type EndpointArrowMarkEmission = {
 
 export const emitEndpointArrowMark = (
   resolution: ArrowMarkResolution,
+  endpointOverlap: number,
   round: (n: number) => number,
 ): EndpointArrowMarkEmission => {
+  const { geometry } = resolution;
+  if (endpointOverlap === 0) {
+    return {
+      spec: emitArrowEnd(resolution, round),
+      shrink: geometry.shrink,
+      boundaryOuterInset: geometry.boundaryOuterInset,
+    };
+  }
+  const fullEntryShrink = ((geometry.visualBackX - geometry.contactX) * geometry.resolvedLength) / geometry.baseSize;
+  if (!Number.isFinite(fullEntryShrink)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `Arrow '${resolution.visual.shape}' full-entry shrink is non-finite; use smaller back/contact/length/scale values.`,
+    );
+  }
+  const endpointShrink = geometry.shrink + (fullEntryShrink - geometry.shrink) * endpointOverlap;
+  if (!Number.isFinite(endpointShrink)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `Arrow '${resolution.visual.shape}' endpoint-overlap shrink is non-finite; use smaller geometry values.`,
+    );
+  }
   return {
     spec: emitArrowEnd(resolution, round),
-    shrink: resolution.geometry.shrink,
-    boundaryOuterInset: resolution.geometry.boundaryOuterInset,
+    shrink: endpointShrink,
+    boundaryOuterInset: geometry.boundaryOuterInset * (1 - endpointOverlap),
   };
 };
 

@@ -194,7 +194,7 @@ describe('Graph Scope and Theme compile semantics', () => {
             type: 'relation',
             source: { id: 'source' },
             target: { id: 'target' },
-            role: 'dependency',
+            role: 'generalization',
             labels: [{ text: 'edge' }],
           }),
         ],

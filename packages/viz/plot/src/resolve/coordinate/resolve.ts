@@ -32,6 +32,7 @@ import {
   derivePositionScale,
   orderedCategoryDomain,
   resolvePositionScale,
+  resolvePositionScaleContinuity,
 } from '../scale';
 
 /** 查找当前 coordinate operation 对应的 definition，并集中报告未注册坐标系 */
@@ -472,6 +473,7 @@ export const resolveCoordinateFrame = (
     resolveGuideTicks: context.resolveGuideTicks,
     resolveVisibleGuideTicks: context.resolveVisibleGuideTicks,
     resolveScaleForRole: resolveScaleForDefinitionRole,
+    resolvePositionScaleContinuity: operation => resolvePositionScaleContinuity(operation, { registry: scaleRegistry }),
     buildPositionScale: (def, values, range) =>
       resolvePositionScale(def, values, [range[0], range[1]], { registry: scaleRegistry }),
     assertBaselineScaleCompatible: (scaleType, marks) =>

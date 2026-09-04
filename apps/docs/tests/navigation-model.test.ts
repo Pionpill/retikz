@@ -71,7 +71,14 @@ describe('layout utils', () => {
     const points = chart?.modules.find(module => module.value === 'points');
 
     expect(points?.Icon).toBeDefined();
-    expect(points?.children?.map(child => child.value)).toEqual(['scatter']);
+    expect(points?.children?.map(child => child.value)).toEqual([
+      'scatter',
+      'bubble',
+      'regression',
+      'connected-scatter',
+      'ranged-dot',
+      'strip',
+    ]);
   });
 
   it('Plot 末尾注册 API 参考与更新日志路由', () => {
@@ -110,22 +117,62 @@ describe('layout utils', () => {
     const chart = vizSection.find(section => section.id === 'chart');
     const points = chart?.pages.find(page => page.id === 'points');
     const scatter = points?.children?.find(page => page.id === 'scatter');
+    const bubble = points?.children?.find(page => page.id === 'bubble');
+    const regression = points?.children?.find(page => page.id === 'regression');
+    const connectedScatter = points?.children?.find(page => page.id === 'connected-scatter');
+    const rangedDot = points?.children?.find(page => page.id === 'ranged-dot');
+    const strip = points?.children?.find(page => page.id === 'strip');
     const model = chart?.pages.find(page => page.id === 'model');
     const chartPaths = flattenLeaves('viz', vizSection)
       .map(node => node.path)
       .filter(path => path.startsWith('/viz/chart/') && !path.includes('/changelog/'));
 
-    expect(points?.meta).toMatchObject({ pageType: 'group', capability: 'chart.scatter-points' });
+    expect(points?.meta).toMatchObject({ pageType: 'group', capability: 'chart.points' });
     expect(scatter?.meta).toMatchObject({
       pageType: 'concept',
       layout: 'showcase',
       capability: 'showcase.scatter',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'scatter-basic', order: 10 },
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'scatter-minimal', order: 10 },
+    });
+    expect(bubble?.meta).toMatchObject({
+      pageType: 'concept',
+      layout: 'showcase',
+      capability: 'showcase.bubble',
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'bubble-minimal', order: 20 },
+    });
+    expect(regression?.meta).toMatchObject({
+      pageType: 'concept',
+      layout: 'showcase',
+      capability: 'showcase.regression',
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'regression-minimal', order: 30 },
+    });
+    expect(connectedScatter?.meta).toMatchObject({
+      pageType: 'concept',
+      layout: 'showcase',
+      capability: 'showcase.connected-scatter',
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'connected-scatter-minimal', order: 40 },
+    });
+    expect(rangedDot?.meta).toMatchObject({
+      pageType: 'concept',
+      layout: 'showcase',
+      capability: 'showcase.ranged-dot',
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'ranged-dot-minimal', order: 50 },
+    });
+    expect(strip?.meta).toMatchObject({
+      pageType: 'concept',
+      layout: 'showcase',
+      capability: 'showcase.strip',
+      showcase: { family: 'scatter-points', role: 'primary', preview: 'strip-minimal', order: 60 },
     });
     expect(model?.meta).toMatchObject({ pageType: 'concept', capability: 'chart.model' });
     expect(model?.children?.map(page => page.id)).toEqual(['structure', 'authoring', 'presentation', 'plot']);
     expect(chartPaths).toEqual([
       '/viz/chart/points/scatter',
+      '/viz/chart/points/bubble',
+      '/viz/chart/points/regression',
+      '/viz/chart/points/connected-scatter',
+      '/viz/chart/points/ranged-dot',
+      '/viz/chart/points/strip',
       '/viz/chart/model/structure',
       '/viz/chart/model/authoring',
       '/viz/chart/model/presentation',

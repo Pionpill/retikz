@@ -1,0 +1,138 @@
+import type { PreviewControlContract } from '@/modules/docs/preview';
+
+import { definePreviewControls } from '@/modules/docs/preview';
+
+import { createPointCoordinateControl } from '../point-coordinate-control';
+import { GAPMINDER_BUBBLE_YEAR, gapminderBubbleData } from './bubble-basic.data';
+
+/** 基础 Bubble playground 的稳定控件 id */
+export const BUBBLE_BASIC_CONTROL_IDS = {
+  coordinateSystem: 'bubble-basic-coordinate-system',
+  colorByContinent: 'bubble-basic-color-by-continent',
+  xScale: 'bubble-basic-x-scale',
+  pointStrokeEnabled: 'bubble-basic-point-stroke-enabled',
+  pointStroke: 'bubble-basic-point-stroke',
+  pointShape: 'bubble-basic-point-shape',
+  pointFillOpacity: 'bubble-basic-point-fill-opacity',
+} as const;
+
+/** 基础 Bubble 的中文控制面板 */
+export const bubbleBasicControls = definePreviewControls({
+  presentation: 'panel',
+  title: '基础气泡图',
+  sections: [
+    {
+      label: '数据',
+      defaultCollapsed: true,
+      controls: [
+        {
+          kind: 'table',
+          id: 'rows',
+          label: `${GAPMINDER_BUBBLE_YEAR} 年国家截面`,
+          rows: gapminderBubbleData,
+          columns: [
+            { key: 'country' },
+            { key: 'continent' },
+            { key: 'gdpPerCapita' },
+            { key: 'lifeExpectancy' },
+            { key: 'population' },
+          ],
+        },
+      ],
+    },
+    {
+      label: '坐标',
+      controls: [
+        createPointCoordinateControl({
+          id: BUBBLE_BASIC_CONTROL_IDS.coordinateSystem,
+          label: '坐标系',
+          cartesianLabel: '笛卡尔',
+          polarLabel: '极坐标',
+        }),
+      ],
+    },
+    {
+      label: '编码',
+      controls: [
+        {
+          kind: 'switch',
+          id: BUBBLE_BASIC_CONTROL_IDS.colorByContinent,
+          label: '按洲分类着色',
+          defaultValue: true,
+        },
+        {
+          kind: 'select',
+          id: BUBBLE_BASIC_CONTROL_IDS.xScale,
+          label: 'X 轴尺度',
+          defaultValue: 'log',
+          options: [
+            { value: 'log', label: '对数' },
+            { value: 'linear', label: '线性' },
+          ],
+        },
+      ],
+    },
+    {
+      label: '气泡',
+      controls: [
+        {
+          kind: 'switch',
+          id: BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled,
+          label: '描边',
+          defaultValue: false,
+        },
+        {
+          kind: 'color',
+          id: BUBBLE_BASIC_CONTROL_IDS.pointStroke,
+          label: '描边色',
+          defaultValue: 'currentColor',
+          visibleWhen: { controlId: BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled, oneOf: [true] },
+        },
+        {
+          kind: 'select',
+          id: BUBBLE_BASIC_CONTROL_IDS.pointShape,
+          label: '形状',
+          defaultValue: 'circle',
+          options: [
+            { value: 'circle', label: '圆形' },
+            { value: 'rectangle', label: '矩形' },
+            { value: 'diamond', label: '菱形' },
+          ],
+        },
+        {
+          kind: 'range',
+          id: BUBBLE_BASIC_CONTROL_IDS.pointFillOpacity,
+          label: '填充不透明度',
+          defaultValue: 0.7,
+          min: 0.3,
+          max: 1,
+          step: 0.05,
+        },
+      ],
+    },
+  ],
+});
+
+/** 基础 Bubble 的稳定文档契约 */
+export const previewControlContract = {
+  controls: bubbleBasicControls,
+  canonicalValues: {
+    [BUBBLE_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
+    [BUBBLE_BASIC_CONTROL_IDS.colorByContinent]: true,
+    [BUBBLE_BASIC_CONTROL_IDS.xScale]: 'log',
+    [BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled]: false,
+    [BUBBLE_BASIC_CONTROL_IDS.pointStroke]: 'currentColor',
+    [BUBBLE_BASIC_CONTROL_IDS.pointShape]: 'circle',
+    [BUBBLE_BASIC_CONTROL_IDS.pointFillOpacity]: 0.7,
+  },
+  relatedApis: [
+    'BubbleChart.coordinate',
+    'BubbleEncodings.x',
+    'BubbleEncodings.y',
+    'BubbleEncodings.size',
+    'BubbleEncodings.color',
+    'BubbleProperties.stroke',
+    'BubbleProperties.shape',
+    'BubbleProperties.fillOpacity',
+  ],
+} satisfies PreviewControlContract;

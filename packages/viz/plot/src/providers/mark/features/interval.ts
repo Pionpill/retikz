@@ -2,7 +2,7 @@ import type { ExternalRow } from '@retikz/data';
 
 import { type IRChild, type IRNode, type IRNodeLabel, type IRScope } from '@retikz/core';
 import { inferCategoryDomain, resolveFieldPath } from '@retikz/data';
-import { DEFAULT_EPSILON, isFiniteNumber, pointAtArcAngle } from '@retikz/math';
+import { DEFAULT_EPSILON, isFiniteNumber } from '@retikz/math';
 
 import type {
   Cell,
@@ -406,51 +406,35 @@ export const markCell = (
 const cellSeriesValue = (mark: IRPlotMark, row: ExternalRow): unknown =>
   mark.type === PlotMark.Interval && mark.series !== undefined ? resolveFieldPath(row, mark.series) : undefined;
 
-const resolveSectorPull = (mark: IRPlotIntervalMark, row: ExternalRow): number => {
+const resolvePolarCellPull = (mark: IRPlotIntervalMark, row: ExternalRow): number => {
   const pull = mark.pull;
   if (pull === undefined) return 0;
   const value = pull.kind === 'field' ? resolveFieldPath(row, pull.value) : pull.value;
   if (!isFiniteNumber(value) || value < 0) {
     throw new RetikzPlotError(
-      'lowerPlots: interval pull requires a finite non-negative numeric value for polar sector geometry',
+      'lowerPlots: interval pull requires a finite non-negative numeric value for polar cell geometry',
     );
   }
   return value;
 };
 
-/** 把 interval 的视觉参数应用到已投影 cell 图元。 */
-export const applyIntervalCellVisualParams = (
-  geometry: CellGeometry,
-  mark: IRPlotIntervalMark,
-  row: ExternalRow,
-): CellGeometry => {
-  if (geometry.kind !== 'sector') {
-    if (mark.pull !== undefined) {
-      throw new RetikzPlotError('lowerPlots: interval pull is only supported for polar sector geometry');
-    }
-    return geometry;
-  }
-  const startAngle = geometry.startAngle;
-  const endAngle = geometry.endAngle;
+/** 把 padAngle 应用到 cell 的角向输出区间，不修改原 cell */
+const paddedPolarCell = (cell: Cell, mark: IRPlotIntervalMark): Cell => {
+  const interval = cell.intervals.x;
+  if (interval === undefined) return cell;
+  const [startAngle, endAngle] = interval;
   const padAngle = mark.padAngle;
-  let nextStartAngle = startAngle;
-  let nextEndAngle = endAngle;
-  if (padAngle !== undefined) {
-    const sweep = endAngle - startAngle;
-    const maxInset = Math.max(0, Math.abs(sweep) - 1e-6);
-    const inset = Math.min(padAngle, maxInset);
-    if (inset > 0) {
-      const direction = sweep >= 0 ? 1 : -1;
-      nextStartAngle = startAngle + (direction * inset) / 2;
-      nextEndAngle = endAngle - (direction * inset) / 2;
-    }
-  }
-  const pull = resolveSectorPull(mark, row);
+  if (padAngle === undefined) return cell;
+  const sweep = endAngle - startAngle;
+  const maxInset = Math.max(0, Math.abs(sweep) - 1e-6);
+  const inset = Math.min(padAngle, maxInset);
+  if (inset <= 0) return cell;
+  const direction = sweep >= 0 ? 1 : -1;
   return {
-    ...geometry,
-    center: pull > 0 ? pointAtArcAngle(geometry.center, pull, (nextStartAngle + nextEndAngle) / 2) : geometry.center,
-    startAngle: nextStartAngle,
-    endAngle: nextEndAngle,
+    intervals: {
+      ...cell.intervals,
+      x: [startAngle + (direction * inset) / 2, endAngle - (direction * inset) / 2],
+    },
   };
 };
 
@@ -464,7 +448,19 @@ export const intervalCellGeometry = (
   if (!hasProjectCell(frame)) return null;
   const cell = markCell(mark, row, frame, ctx);
   if (!cell) return null;
-  return applyIntervalCellVisualParams(frame.projectCell(cell), mark, row);
+  if (isPolarCoordinateFrame(frame)) {
+    return frame.projectCell(paddedPolarCell(cell, mark), {
+      interpolation: mark.interpolation ?? frame.interpolation,
+      pull: resolvePolarCellPull(mark, row),
+    });
+  }
+  if (mark.interpolation !== undefined) {
+    throw new RetikzPlotError('lowerPlots: interval interpolation override is only supported under polar2D');
+  }
+  if (mark.pull !== undefined) {
+    throw new RetikzPlotError('lowerPlots: interval pull is only supported for polar2D cell geometry');
+  }
+  return frame.projectCell(cell);
 };
 
 const moveSectorCornerRadiusToShapeParams = (node: IRNode): void => {

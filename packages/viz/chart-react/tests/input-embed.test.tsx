@@ -1,12 +1,19 @@
 import type { ChartInput } from '@retikz/chart-vanilla';
+import type { CreateBubbleChartInput } from '@retikz/chart-vanilla/point/bubble';
+import type { CreateRegressionChartInput } from '@retikz/chart-vanilla/point/regression';
 import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
 
 import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
+import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble';
+import { createRegressionChart } from '@retikz/chart-vanilla/point/regression';
 import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { PointMark } from '@retikz/plot-react';
 import { describe, expect, it } from 'vitest';
 
-import { ScatterChart } from '../src/point';
+import { ChartData, ChartExtension, ChartLayout } from '../src';
+import { BubbleChart, BubbleEncodings, BubbleProperties } from '../src/point/bubble';
+import { RegressionChart, RegressionEncodings, RegressionMark, RegressionProperties } from '../src/point/regression';
+import { ScatterChart, ScatterEncodings, ScatterProperties } from '../src/point/scatter';
 
 type InputComponent<TInput> = {
   inputEmbedAdapter?: unknown;
@@ -18,7 +25,88 @@ const inputOf = <TInput,>(component: InputComponent<TInput>, props: Readonly<Rec
 
 describe('Chart React InputEmbed routing', () => {
   it('uses one Chart InputEmbed adapter for every typed chartType component', () => {
+    expect(BubbleChart.inputEmbedAdapter).toBe(ChartInputEmbedAdapter);
+    expect(RegressionChart.inputEmbedAdapter).toBe(ChartInputEmbedAdapter);
     expect(ScatterChart.inputEmbedAdapter).toBe(ChartInputEmbedAdapter);
+  });
+
+  it('produces the same precise Regression input as its Vanilla factory', () => {
+    const regressionInput: CreateRegressionChartInput = {
+      data: [
+        { x: 1, y: 2, species: 'setosa' },
+        { x: 2, y: 4, species: 'setosa' },
+        { x: 1, y: 3, species: 'versicolor' },
+        { x: 2, y: 5, species: 'versicolor' },
+      ],
+      dataRef: 'iris.rows',
+      layout: { width: 640, height: 360 },
+      encodings: {
+        x: 'x',
+        y: 'y',
+        series: { field: 'species', scale: { operation: { type: 'ordinal', name: 'speciesScale' } } },
+      },
+      properties: {
+        method: { kind: 'power' },
+        sampleCount: 12,
+        point: { opacity: 0.5 },
+        trend: { strokeWidth: 2 },
+      },
+      marks: [{ kind: 'regression', override: true, properties: { trend: { strokeOpacity: 0.7 } } }],
+    };
+    const reactInput = inputOf(RegressionChart, {
+      children: (
+        <>
+          <ChartData data={regressionInput.data} reference={regressionInput.dataRef} />
+          <ChartLayout layout={regressionInput.layout} />
+          <RegressionEncodings {...regressionInput.encodings} />
+          <RegressionProperties {...regressionInput.properties} />
+          <RegressionMark override properties={{ trend: { strokeOpacity: 0.7 } }} />
+        </>
+      ),
+    });
+    const vanillaInput: ChartInput = createRegressionChart(regressionInput).input;
+
+    expect(reactInput.source).toEqual(vanillaInput.source);
+    expect(reactInput.datasets).toEqual(vanillaInput.datasets);
+    expect(reactInput.chartProviderContribution.providers.map(provider => provider.key)).toEqual(
+      vanillaInput.chartProviderContribution.providers.map(provider => provider.key),
+    );
+    expect(JSON.stringify(reactInput.source)).not.toMatch(/definitions|providers|apply/iu);
+  });
+
+  it('produces the same precise Bubble input as its Vanilla factory', () => {
+    const bubbleInput: CreateBubbleChartInput = {
+      data: [
+        { income: 1000, lifeExpectancy: 60, population: 1_000_000 },
+        { income: 2000, lifeExpectancy: 70, population: 2_000_000 },
+      ],
+      dataRef: 'countries',
+      layout: { width: 800, height: 500 },
+      encodings: {
+        x: { field: 'income', scale: { operation: { type: 'log', name: 'incomeScale' } } },
+        y: 'lifeExpectancy',
+        size: 'population',
+        color: 'continent',
+      },
+      properties: { opacity: 0.75, domainPadding: { kind: 'ratio' as const, default: 0.04, left: 0.02 } },
+    };
+    const reactInput = inputOf(BubbleChart, {
+      children: (
+        <>
+          <ChartData data={bubbleInput.data} reference={bubbleInput.dataRef} />
+          <ChartLayout layout={bubbleInput.layout} />
+          <BubbleEncodings {...bubbleInput.encodings} />
+          <BubbleProperties {...bubbleInput.properties} />
+        </>
+      ),
+    });
+    const vanillaInput: ChartInput = createBubbleChart(bubbleInput).input;
+
+    expect(reactInput.source).toEqual(vanillaInput.source);
+    expect(reactInput.datasets).toEqual(vanillaInput.datasets);
+    expect(reactInput.chartProviderContribution.providers.map(provider => provider.key)).toEqual(
+      vanillaInput.chartProviderContribution.providers.map(provider => provider.key),
+    );
   });
 
   it('produces the same precise Point input as its Vanilla factory', () => {
@@ -39,9 +127,18 @@ describe('Chart React InputEmbed routing', () => {
         column: 'region',
         facet: { spacing: { panelGap: 12 } },
       },
-      properties: { opacity: 0.5 },
+      properties: { opacity: 0.5, domainPadding: 0.04 },
     };
-    const reactInput = inputOf(ScatterChart, pointInput);
+    const reactInput = inputOf(ScatterChart, {
+      children: (
+        <>
+          <ChartData data={pointInput.data} reference={pointInput.dataRef} />
+          <ChartLayout layout={pointInput.layout} />
+          <ScatterEncodings {...pointInput.encodings} />
+          <ScatterProperties {...pointInput.properties} />
+        </>
+      ),
+    });
     const vanillaInput: ChartInput = createScatterChart(pointInput).input;
 
     expect(reactInput.source).toEqual(vanillaInput.source);
@@ -53,21 +150,36 @@ describe('Chart React InputEmbed routing', () => {
     expect(reactInput.chartProviderContribution.providers.map(provider => provider.key)).toEqual(
       vanillaInput.chartProviderContribution.providers.map(provider => provider.key),
     );
-    expect(reactInput.source).toMatchObject({
-      type: 'point',
-      recipe: {
-        chartType: 'scatter',
-        encodings: { ...pointInput.encodings, column: { field: 'region' } },
-      },
+  });
+
+  it('maps ChartData reference/model without serializing runtime rows', () => {
+    const input = inputOf(ScatterChart, {
+      children: (
+        <>
+          <ChartData data={[{ x: 0, y: 1 }]} reference="observations" model={[{ name: 'x', type: 'continuous' }]} />
+          <ScatterEncodings x="x" y="y" />
+        </>
+      ),
     });
+
+    expect(input.source.data).toEqual({
+      reference: 'observations',
+      model: [{ name: 'x', type: 'continuous' }],
+    });
+    expect(input.datasets.observations).toEqual([{ x: 0, y: 1 }]);
+    expect(JSON.stringify(input.source)).not.toContain('"x":0');
   });
 
   it('forwards Theme definitions without putting them in Source IR', () => {
     const themeDefinitions = [] as const;
     const input = inputOf(ScatterChart, {
-      data: [{ x: 0, y: 1 }],
-      encodings: { x: 'x', y: 'y' },
       themeDefinitions,
+      children: (
+        <>
+          <ChartData data={[{ x: 0, y: 1 }]} />
+          <ScatterEncodings x="x" y="y" />
+        </>
+      ),
     });
 
     expect(input).not.toHaveProperty('themeDefinitions');
@@ -78,13 +190,15 @@ describe('Chart React InputEmbed routing', () => {
     const childResolveLabel = (row: Record<string, unknown>): string => String(row.label);
     const explicitResolveLabel = (): string => 'explicit';
     const input = inputOf(ScatterChart, {
-      data: [{ x: 0, y: 1, label: 'A' }],
-      encodings: { x: 'x', y: 'y' },
       lowerOptions: { resolveLabel: { labelled: explicitResolveLabel } },
       children: (
         <>
-          <PointMark id="labelled" x="x" y="y" resolveLabel={childResolveLabel} />
-          <PointMark id="child-only" x="x" y="y" resolveLabel={childResolveLabel} />
+          <ChartData data={[{ x: 0, y: 1, label: 'A' }]} />
+          <ScatterEncodings x="x" y="y" />
+          <ChartExtension>
+            <PointMark id="labelled" x="x" y="y" resolveLabel={childResolveLabel} />
+            <PointMark id="child-only" x="x" y="y" resolveLabel={childResolveLabel} />
+          </ChartExtension>
         </>
       ),
     });

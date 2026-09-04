@@ -1,10 +1,10 @@
+import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { IRPath, IRScene, ScenePrimitive } from '../../src';
 import type { ArrowDefinition } from '../../src/contract';
 
 import { compileToScene } from '../../src/compile/compile';
-import { arcSegmentSample, cubicSegmentSample, lineSegmentSample } from '../../src/shared/geometry/path';
 import { flattenPrims } from '../helpers/flatten';
 
 type TestArrowDefinition = Omit<ArrowDefinition, 'name'> & { name?: string };
@@ -53,6 +53,7 @@ describe('marks → 中段 marker primitive', () => {
     const ir = linePathIR([{ pos: 0.5, mark: { kind: 'arrow', shape: 'myTip' } }]);
     const customArrow: Record<string, TestArrowDefinition> = {
       myTip: {
+        backX: 0,
         lineContactX: 0,
         emit: () => [
           {
@@ -74,6 +75,49 @@ describe('marks → 中段 marker primitive', () => {
         .scene.primitives,
     );
     expect(withMark).toBeGreaterThan(without);
+  });
+
+  it('centered label interruption leaves a middle mark sampled on the logical path', () => {
+    const base: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          stroke: '#13579b',
+          label: { text: 'gap', sloped: true },
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    const withMark: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'path',
+          stroke: '#13579b',
+          label: { text: 'gap', sloped: true },
+          marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }],
+          children: [
+            { type: 'step', kind: 'move', to: [0, 0] },
+            { type: 'step', kind: 'line', to: [100, 0] },
+          ],
+        },
+      ],
+    };
+    const options = { measureText: () => ({ width: 20, height: 10 }) };
+    const basePrimitives = compileToScene(base, options).scene.primitives;
+    const markedPrimitives = compileToScene(withMark, options).scene.primitives;
+    const fragments = flattenPrims(markedPrimitives).filter(
+      primitive => primitive.type === 'path' && primitive.stroke === '#13579b',
+    );
+
+    expect(fragments).toHaveLength(2);
+    expect(leafCount(markedPrimitives)).toBeGreaterThan(leafCount(basePrimitives));
   });
 });
 
@@ -131,7 +175,7 @@ describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致
 
 describe('段几何采样契约（marks 定向依赖的机器）', () => {
   it('直线段中点 tangent 沿线方向', () => {
-    const s = lineSegmentSample([0, 0], [10, 0], 0.5);
+    const s = curve.sampleAt({ kind: 'line', from: [0, 0], to: [10, 0] }, 0.5);
     expect(s.point[0]).toBeCloseTo(5, 6);
     expect(s.point[1]).toBeCloseTo(0, 6);
     expect(s.tangent[0]).toBeCloseTo(1, 6);
@@ -140,14 +184,17 @@ describe('段几何采样契约（marks 定向依赖的机器）', () => {
 
   it('cubic 段中点 tangent 与解析导数一致（曲线 mark 定向）', () => {
     // 对称上拱 cubic：from(0,0) c1(0,-10) c2(10,-10) to(10,0)，中点切线水平向 +x
-    const s = cubicSegmentSample([0, 0], [0, -10], [10, -10], [10, 0], 0.5);
+    const s = curve.sampleAt(
+      { kind: 'cubicBezier', from: [0, 0], control1: [0, -10], control2: [10, -10], to: [10, 0] },
+      0.5,
+    );
     expect(s.tangent[0]).toBeCloseTo(1, 6);
     expect(s.tangent[1]).toBeCloseTo(0, 6);
   });
 
   it('arc 段 tangent 垂直于半径（圆弧 mark 定向）', () => {
     // 圆心(0,0) r=10，t=0 在 startAngle=0 (+x 轴)，CCW 扫向 90°，起点切线沿 +y
-    const s = arcSegmentSample([0, 0], 10, 0, 90, 0);
+    const s = curve.sampleAt({ kind: 'arc', center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: 90 }, 0);
     expect(s.point[0]).toBeCloseTo(10, 6);
     expect(s.point[1]).toBeCloseTo(0, 6);
     expect(s.tangent[0]).toBeCloseTo(0, 6);
@@ -155,7 +202,7 @@ describe('段几何采样契约（marks 定向依赖的机器）', () => {
   });
 
   it('arc 段中点 tangent 方向正确（45° 处切线垂直半径）', () => {
-    const s = arcSegmentSample([0, 0], 10, 0, 90, 0.5);
+    const s = curve.sampleAt({ kind: 'arc', center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: 90 }, 0.5);
     // 45° 点切线 = (-sin45, cos45)
     expect(s.tangent[0]).toBeCloseTo(-Math.SQRT1_2, 6);
     expect(s.tangent[1]).toBeCloseTo(Math.SQRT1_2, 6);

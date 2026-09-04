@@ -30,7 +30,7 @@ export const scaleField = defineTransform({
     kind: 'preserve',
     outputs: [{ field: operation.as, type: DataFieldType.Continuous }],
   }),
-  compact: {
+  schedule: {
     phase: DataTransformPhase.FieldDerive,
     bindingClass: DataTransformBindingClass.Field,
     fieldEffect: DataTransformFieldEffect.Preserve,

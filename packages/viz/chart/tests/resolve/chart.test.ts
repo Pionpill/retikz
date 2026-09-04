@@ -4,6 +4,7 @@ import type { IRPlotPartitionDimension } from '@retikz/plot';
 import { DEFAULT_RESOLVED_THEME, NodeTextAlign, ThemeMode } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import {
+  defineCoordinate,
   PlotFacetOptionsSchema,
   PlotMark,
   PlotPartitionDimensionsSchema,
@@ -181,6 +182,62 @@ const registry = resolveChartProviderRegistry([
   },
 ]);
 
+const coordinateRecipe = defineChartRecipe({
+  ...recipe,
+  resolve: () => ({
+    scaffold: {
+      scales: [
+        { value: { type: 'linear', name: 'x' }, replaceable: true },
+        { value: { type: 'linear', name: 'y' }, replaceable: true },
+      ],
+      spatial: {
+        coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+        replaceable: true,
+      },
+      guides: { value: [], replaceable: true },
+    },
+    semanticMarks: [{ kind: 'semantic', plotMarks: [semanticMark] }],
+  }),
+});
+
+const bridgeCoordinate = defineCoordinate({
+  schema: strictObject({
+    type: literal('bridge'),
+    archHeight: number(),
+    horizontalScale: string().optional(),
+    verticalScale: string().optional(),
+  }),
+  roles: ['x', 'y'],
+  scaleBinding: {
+    read: operation => ({ x: operation.horizontalScale, y: operation.verticalScale }),
+    bind: (operation, scaleNames) => ({
+      ...operation,
+      ...(scaleNames.x === undefined ? {} : { horizontalScale: scaleNames.x }),
+      ...(scaleNames.y === undefined ? {} : { verticalScale: scaleNames.y }),
+    }),
+  },
+  resolve: () => {
+    throw new Error('Chart resolve must not execute Plot coordinate geometry');
+  },
+});
+
+const uvCoordinate = defineCoordinate({
+  schema: strictObject({ type: literal('uv') }),
+  roles: ['u', 'v'],
+  resolve: () => {
+    throw new Error('Chart resolve must not execute Plot coordinate geometry');
+  },
+});
+
+const coordinateRegistry = resolveChartProviderRegistry([
+  {
+    family: 'point',
+    recipe: coordinateRecipe,
+    themeDefinitions: [],
+    runtimeDefinitions: { coordinates: [bridgeCoordinate, uvCoordinate] },
+  },
+]);
+
 const resolveWithRegistry = <TSource extends IRChartSource>(
   value: TSource,
   theme: typeof DEFAULT_RESOLVED_THEME,
@@ -328,7 +385,6 @@ describe('Chart resolution', () => {
 
   it.each([
     ['scale', { scales: [{ type: 'log', name: 'x' }] }, ['plotExtension', 'scales', 0]],
-    ['spatial', { coordinate: { type: 'cartesian2D', x: 'x', y: 'x' } }, ['plotExtension', 'coordinate']],
     ['guides', { guides: [] }, ['plotExtension', 'guides']],
   ])('rejects an authored %s override when the recipe scaffold is not replaceable', (_, plotExtension, path) => {
     const lockedRecipe = defineChartRecipe({
@@ -351,6 +407,35 @@ describe('Chart resolution', () => {
       expect.objectContaining({
         code: RetikzChartErrorCode.InvalidResolvedPlot,
         details: expect.objectContaining({ path }),
+      }),
+    );
+  });
+
+  it('rejects a root coordinate when the recipe spatial scaffold is not replaceable', () => {
+    const lockedRecipe = defineChartRecipe({
+      ...recipe,
+      resolve: () => ({
+        scaffold: {
+          scales: [{ value: { type: 'linear', name: 'x' }, replaceable: false }],
+          spatial: { coordinate: { type: 'cartesian2D', x: 'x', y: 'x' }, replaceable: false },
+          guides: { value: [], replaceable: false },
+        },
+        semanticMarks: [{ kind: 'semantic', plotMarks: [semanticMark] }],
+      }),
+    });
+    const lockedRegistry = resolveChartProviderRegistry([
+      { family: 'point', recipe: lockedRecipe, themeDefinitions: [] },
+    ]);
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'x' },
+    });
+
+    expect(() => resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, lockedRegistry)).toThrowError(
+      expect.objectContaining({
+        code: RetikzChartErrorCode.InvalidResolvedPlot,
+        details: expect.objectContaining({ path: ['coordinate'] }),
       }),
     );
   });
@@ -386,18 +471,174 @@ describe('Chart resolution', () => {
     });
   });
 
-  it.each([
-    ['coordinate', { coordinate: { type: 'cartesian2D' as const } }],
-    [
-      'composition',
-      {
-        composition: {
-          defaultView: 'extension',
-          views: [{ id: 'extension', coordinate: { type: 'cartesian2D' as const } }],
-        },
+  it('maps recipe x/y scale bindings into an authored Polar coordinate', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      coordinate: { type: 'polar2D' },
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry);
+
+    expect(result.plot.coordinate).toMatchObject({ type: 'polar2D', angle: 'x', radius: 'y' });
+  });
+
+  it('defaults the external Chart layout to 800 by 500 for Cartesian coordinates', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      layout: undefined,
+      theme: undefined,
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry);
+
+    expect(result.presentation.layout).toEqual({ width: 800, height: 500 });
+  });
+
+  it('defaults the external Chart layout to 400 by 500 for Polar coordinates', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      coordinate: { type: 'polar2D' },
+      layout: undefined,
+      theme: undefined,
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry);
+
+    expect(result.presentation.layout).toEqual({ width: 400, height: 500 });
+  });
+
+  it('preserves explicit Chart dimensions and defaults only the omitted axis', () => {
+    const cartesian = sourceSchema.parse({
+      ...source,
+      layout: { height: 360 },
+      theme: undefined,
+    });
+    const polar = sourceSchema.parse({
+      ...source,
+      coordinate: { type: 'polar2D' },
+      layout: { width: 640 },
+      theme: undefined,
+    });
+
+    expect(resolveWithRegistry(cartesian, DEFAULT_RESOLVED_THEME, coordinateRegistry).presentation.layout).toEqual({
+      width: 800,
+      height: 360,
+    });
+    expect(resolveWithRegistry(polar, DEFAULT_RESOLVED_THEME, coordinateRegistry).presentation.layout).toEqual({
+      width: 640,
+      height: 500,
+    });
+  });
+
+  it('applies recipe, authored coordinate and encoding scale bindings in ascending precedence', () => {
+    const encodedRecipe = defineChartRecipe({
+      ...coordinateRecipe,
+      resolveEncodings: context => ({
+        ...resolveDirectEncodings(context),
+        scales: [{ type: 'linear', name: 'encoding-x' }],
+        positionScales: { x: 'encoding-x' },
+      }),
+    });
+    const encodedRegistry = resolveChartProviderRegistry([
+      { family: 'point', recipe: encodedRecipe, themeDefinitions: [] },
+    ]);
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      coordinate: { type: 'polar2D', angle: 'authored-angle', radius: 'authored-radius' },
+      plotExtension: {
+        scales: [
+          { type: 'linear', name: 'authored-angle' },
+          { type: 'linear', name: 'authored-radius' },
+        ],
       },
-    ],
-  ])('rejects encoding facet together with Plot extension %s', (member, plotExtension) => {
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, encodedRegistry);
+
+    expect(result.plot.coordinate).toMatchObject({
+      type: 'polar2D',
+      angle: 'encoding-x',
+      radius: 'authored-radius',
+    });
+  });
+
+  it('uses a custom coordinate scale-binding hook without changing unrelated operation fields', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      coordinate: { type: 'bridge', archHeight: 24 },
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry);
+
+    expect(result.plot.coordinate).toEqual({
+      type: 'bridge',
+      archHeight: 24,
+      horizontalScale: 'x',
+      verticalScale: 'y',
+    });
+  });
+
+  it('allows an authored Polar coordinate to become every encoding facet panel template', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      recipe: {
+        ...source.recipe,
+        encodings: { ...source.recipe.encodings, column: { field: 'region' } },
+      },
+      coordinate: { type: 'polar2D' },
+    });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry);
+
+    expect(result.plot).not.toHaveProperty('coordinate');
+    expect(result.plot.composition?.views).toHaveLength(1);
+    expect(result.plot.composition?.views?.[0]).toMatchObject({
+      id: '__chart.demo.view.main',
+      coordinate: { type: 'polar2D', angle: 'x', radius: 'y' },
+    });
+  });
+
+  it('rejects a Scatter replacement coordinate whose roles are not exactly x/y', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      coordinate: { type: 'uv' },
+    });
+
+    expect(() => resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry)).toThrowError(
+      expect.objectContaining({
+        code: RetikzChartErrorCode.InvalidResolvedPlot,
+        details: expect.objectContaining({ path: ['coordinate'] }),
+      }),
+    );
+  });
+
+  it('reports missing custom coordinate configuration at the root coordinate path', () => {
+    const authored = sourceSchema.parse({
+      ...source,
+      theme: undefined,
+      coordinate: { type: 'bridge' },
+    });
+
+    expect(() => resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, coordinateRegistry)).toThrowError(
+      expect.objectContaining({
+        code: RetikzChartErrorCode.InvalidResolvedPlot,
+        details: expect.objectContaining({ path: ['coordinate'] }),
+      }),
+    );
+  });
+
+  it('rejects encoding facet together with a Plot composition extension', () => {
+    const plotExtension = {
+      composition: {
+        defaultView: 'extension',
+        views: [{ id: 'extension', coordinate: { type: 'cartesian2D' as const } }],
+      },
+    };
     const authored = sourceSchema.parse({
       ...source,
       recipe: {
@@ -410,7 +651,7 @@ describe('Chart resolution', () => {
     expect(() => resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME)).toThrowError(
       expect.objectContaining({
         code: RetikzChartErrorCode.InvalidResolvedPlot,
-        details: expect.objectContaining({ path: ['plotExtension', member] }),
+        details: expect.objectContaining({ path: ['plotExtension', 'composition'] }),
       }),
     );
   });
@@ -463,13 +704,43 @@ describe('Chart resolution', () => {
     expect(result.presentation.surface.id).toBe('demo');
     expect(result.plot.scales).toEqual([{ type: 'log', name: 'x' }]);
     expect(result.plot.marks.map(operation => operation.id)).toEqual(['semantic', 'mark', 'explicit']);
+    expect(result.plot.marks.map(operation => operation.defaultColorGroup)).toEqual([
+      '__chart.default-color.0',
+      '__chart.default-color.1',
+      undefined,
+    ]);
     expect(result.warnings).toEqual([]);
     expect(result.presentation.slots).toEqual(['title', 'plot', 'note', 'source']);
-    expect(result.presentation.layout).toEqual({ width: 640 });
+    expect(result.presentation.layout).toEqual({ width: 640, height: 500 });
     expect(inheritedContext?.inherited).toEqual({
       encodings: { x: 'amount', y: 'margin' },
       properties: { opacity: 0 },
     });
+  });
+
+  it('runs recipe scale defaults after final Chart marks and before Plot extension marks are appended', () => {
+    let observedMarkIds: Array<string | undefined> = [];
+    const scaleDefaultRecipe = defineChartRecipe({
+      ...recipe,
+      resolveScaleDefaults: context => {
+        observedMarkIds = context.chartMarks.map(operation =>
+          typeof operation.id === 'string' ? operation.id : undefined,
+        );
+        expect(context.scales).toEqual([{ type: 'log', name: 'x' }]);
+        expect(context.spatial).toEqual({ coordinate: { type: 'cartesian2D', x: 'x', y: 'x' } });
+        return context.scales.map(scale => ({ ...scale, domainPadding: 0 }));
+      },
+    });
+    const scaleDefaultRegistry = resolveChartProviderRegistry([
+      { family: 'point', recipe: scaleDefaultRecipe, themeDefinitions: [] },
+    ]);
+    const authored = sourceSchema.parse({ ...source, theme: undefined });
+
+    const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, scaleDefaultRegistry);
+
+    expect(observedMarkIds).toEqual(['semantic', 'mark']);
+    expect(result.plot.scales).toEqual([{ type: 'log', name: 'x', domainPadding: 0 }]);
+    expect(result.plot.marks.map(operation => operation.id)).toEqual(['semantic', 'mark', 'explicit']);
   });
 
   it('replaces a matching semantic group atomically at its original position', () => {
@@ -495,6 +766,10 @@ describe('Chart resolution', () => {
     const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME, overrideRegistry);
 
     expect(result.plot.marks.map(operation => operation.id)).toEqual(['mark', 'explicit']);
+    expect(result.plot.marks.map(operation => operation.defaultColorGroup)).toEqual([
+      '__chart.default-color.0',
+      undefined,
+    ]);
     expect(result.warnings).toEqual([]);
   });
 
@@ -508,6 +783,11 @@ describe('Chart resolution', () => {
     const result = resolveWithRegistry(authored, DEFAULT_RESOLVED_THEME);
 
     expect(result.plot.marks.map(operation => operation.id)).toEqual(['semantic', 'mark', 'explicit']);
+    expect(result.plot.marks.map(operation => operation.defaultColorGroup)).toEqual([
+      '__chart.default-color.0',
+      '__chart.default-color.1',
+      undefined,
+    ]);
     expect(result.warnings).toEqual([
       {
         code: ChartWarningCode.MarkOverrideTargetNotFound,

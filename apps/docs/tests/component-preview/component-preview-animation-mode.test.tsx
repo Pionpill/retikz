@@ -44,6 +44,8 @@ const ExplicitlyDisabledDemo: FC = () => (
   </Layout>
 );
 
+const ViewBoxOnlySvgDemo: FC = () => <svg viewBox="0 0 100 100" />;
+
 const PreviewHarness: FC<{ Component: FC }> = props => {
   const state = usePreviewPanelState({
     controlState,
@@ -84,5 +86,12 @@ describe('ComponentPreview 全局动画模式', () => {
   it('共享 PreviewPanel 的 enabled 覆盖 demo 显式关闭', async () => {
     useComponentPreviewStore.getState().setAnimationMode('enabled');
     expect((await renderPreview(ExplicitlyDisabledDemo)).querySelector('style')).not.toBeNull();
+  });
+
+  it('PreviewPanel 为只有 viewBox 的 SVG 提供完整可用尺寸', async () => {
+    const svg = (await renderPreview(ViewBoxOnlySvgDemo)).querySelector('svg');
+
+    expect(svg?.parentElement?.classList.contains('h-full')).toBe(true);
+    expect(svg?.parentElement?.classList.contains('w-full')).toBe(true);
   });
 });

@@ -67,6 +67,7 @@ const lowerPlotOptionsOf = (
     channelDefinitions,
     colorSchemes,
     markDefinitions,
+    positionAdjustmentDefinitions,
     formatDefinitions,
     plotThemeStyles,
   } = props;
@@ -96,6 +97,7 @@ const lowerPlotOptionsOf = (
     channelDefinitions,
     colorSchemes,
     markDefinitions,
+    positionAdjustmentDefinitions,
     formatDefinitions,
     plotThemeStyles,
   };

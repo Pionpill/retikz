@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import type { FC } from 'react';
 
-import { ScatterChart } from '@retikz/chart-react/point';
+import { ChartData } from '@retikz/chart-react';
+import { ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
 import { ThemeMode } from '@retikz/core';
 import { FlowEntity, FlowRelation } from '@retikz/diagram-react/flow';
 import { Entity, Graph, Relation } from '@retikz/graph-react';
@@ -156,7 +157,10 @@ describe('ComponentPreview global theme', () => {
     expect(() =>
       renderToStaticMarkup(
         <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Vibrant, mode: ThemeMode.Light }}>
-          <ScatterChart data={[{ income: 12000, life: 74 }]} encodings={{ x: 'income', y: 'life' }} />
+          <ScatterChart>
+            <ChartData data={[{ income: 12000, life: 74 }]} />
+            <ScatterEncodings x="income" y="life" />
+          </ScatterChart>
         </PreviewThemeProvider>,
       ),
     ).not.toThrow();

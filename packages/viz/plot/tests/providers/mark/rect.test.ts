@@ -81,6 +81,9 @@ const bandStub = (categories: Array<string>, range: [number, number]): PositionS
     get bandwidth() {
       return Math.abs(step);
     },
+    get step() {
+      return Math.abs(step);
+    },
     ticks: () => ({ ticks: [], labels: [] }) as unknown as ReturnType<PositionScale['ticks']>,
     range: () => [r0, r1],
     setRange: () => undefined,
@@ -96,6 +99,9 @@ const linearStub = (domain: [number, number], range: [number, number]): Position
       typeof value === 'number' && Number.isFinite(value) ? r0 + ((value - d0) / (d1 - d0)) * (r1 - r0) : NaN,
     domain: () => [d0, d1],
     get bandwidth() {
+      return 0;
+    },
+    get step() {
       return 0;
     },
     ticks: () => ({ ticks: [], labels: [] }) as unknown as ReturnType<PositionScale['ticks']>,
@@ -345,7 +351,8 @@ describe('rect fail-loud', () => {
       outerRadius: 150,
       startAngle: 0,
       endAngle: 360,
-      continuousAngle: false,
+      interpolation: 'chord',
+      angularSkeleton: [0, 90, 180, 270],
       primary: bandStub(['r0', 'r1'], [0, 360]),
       secondary: bandStub(['c0', 'c1'], [0, 150]),
     });

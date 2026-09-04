@@ -9,15 +9,35 @@ Chart 把“方便编写”与“稳定执行”分成两个阶段。React 和 V
 
 <ComponentPreview files="chart-authoring-pipeline" hideCode size="sm" />
 
-| 阶段              | owner                   | 结果                                                |
-| ----------------- | ----------------------- | --------------------------------------------------- |
-| React props / JSX | `@retikz/chart-react`   | 转换为 Vanilla Input，不直接拼 Source               |
-| Plain input       | `@retikz/chart-vanilla` | `normalizeXxxChart` 生成精确、可序列化的 Source     |
-| JSON              | 具体 chartType schema   | 应用层按 family 与 `chartType` 选择 strict schema   |
-| recipe            | 当前 Chart provider     | 生成共享部分与带 kind 的内建 semantic mark groups   |
-| resolve           | Chart resolver          | 按 kind 合并 marks、Plot fragment 与主题并交给 Plot |
+| 阶段                       | owner                   | 结果                                                |
+| -------------------------- | ----------------------- | --------------------------------------------------- |
+| React roots / declarations | `@retikz/chart-react`   | 按 owner slot 折叠为 Vanilla Input，不直接拼 Source |
+| Plain input                | `@retikz/chart-vanilla` | `normalizeXxxChart` 生成精确、可序列化的 Source     |
+| JSON                       | 具体 chartType schema   | 应用层按 family 与 `chartType` 选择 strict schema   |
+| recipe                     | 当前 Chart provider     | 生成共享部分与带 kind 的内建 semantic mark groups   |
+| resolve                    | Chart resolver          | 按 kind 合并 marks、Plot fragment 与主题并交给 Plot |
+
+具体 React Chart 根可以直接沿 Source 分组提供 `data`、`layout`、`coordinate`、`presentation`、`recipe` 与 `plotExtension`；`rows` 单独承载运行时数据，不进入 JSON Source。组件身份会补齐 namespace、family 与 `recipe.chartType`，因此 root-only 写法不需要 `children`：
+
+```tsx
+<ScatterChart
+  rows={rows}
+  data={{ reference: 'chart.data' }}
+  layout={{ width: 640, height: 360 }}
+  presentation={{ title: '两个变量的关系' }}
+  recipe={{
+    encodings: { x: 'x', y: 'y' },
+    properties: { size: 8 },
+    marks: [],
+  }}
+/>
+```
+
+`ChartData`、`ChartLayout`、presentation markers 与各 chartType 的 Encodings / Properties / Mark declarations 都是同一 owner slot 的 headless JSX sugar。不同 slot 可以混用；同一 slot 同时从根与 declaration 提供时会 fail-loud，不做覆盖或逐字段合并。显式 `recipe.marks: []` 也算已经提供 marks slot。
 
 JSON 是输入旁路，不跳过 schema。应用层先按 `type` 与 `recipe.chartType` 选择具体 schema，active provider 再确认 recipe 与 family 一致；未知 family、未知 recipe、未知字段和不允许的 mark 都 fail-loud。解析结果保留作者写下的 Source，recipe 产生的坐标、guide 和 Plot mark 只存在于后续解析阶段。
+
+坐标系是 Chart 根的一等 authoring slot。Vanilla 与 React concrete Chart 根 prop 可用 `'polar2D'` 等字符串或完整 operation 对象；React 也保留 `ChartCoordinate` 作为声明式替代入口，但两种 React 写法不能同时出现。字符串只归一为 `{ type: 'polar2D' }`，JSON Source 仅接受根 `coordinate` 对象。未声明时不物化默认值，继续使用 recipe spatial scaffold。
 
 普通 authored mark 按 Source 顺序追加；`override: true` 会按 kind 原位替换完整内建 semantic group。未命中时 mark 仍追加，并由 Core 的 `onWarn` 接收稳定 warning；这套合并只发生在 Chart resolver，不进入 React、Vanilla 或可见 Source IR。
 
@@ -29,7 +49,7 @@ React、Vanilla 与 JSON 使用同一份具体 chartType encoding 结构。adapt
 | ------- | ----------------------------------------------------------------------------- | ---------------------------------- |
 | JSON    | 直接由具体 chartType strict schema 解析                                       | 不绕过 schema 或运行时补字段       |
 | Vanilla | 只把 `row`、`column` 字符串简写展开为 `{ field }`；其余 rich mapping 保持同形 | 不读取数据或 registry 猜测语义     |
-| React   | 把 typed props、Chart marks 与 Plot declarations 收集成同一 Vanilla Input     | 不执行 aggregate、scale 或分面算法 |
+| React   | 把 Chart 公共与 chartType 私有 declarations 收集成同一 Vanilla Input          | 不执行 aggregate、scale 或分面算法 |
 
 字段映射诱导的执行顺序也只有一条：
 
@@ -47,27 +67,39 @@ plotExtension.transform
 
 ## 三套包，各自只做一段
 
-根 `@retikz/chart` 公开 Chart Source 的共享 schema、constants 与 Theme contract；具体 chartType 子路径公开自己的精确 schema 与 provider contribution。recipe / mark Definition 和 resolver 只属于包内实现契约，不是第三方扩展入口。plain `InputScatterChart`、`normalizeXxxChart` 与创建函数属于 `@retikz/chart-vanilla`。React typed Chart 解析 presentation marker 与 Chart mark 组件后，复用相同 normalizer，因此 React 与 Vanilla 不维护平行的 Source 组装规则。动态 family / chartType 路由由应用层负责。
+根 `@retikz/chart` 公开 Chart Source 的共享 schema、constants 与 Theme contract；具体 chartType 子路径公开自己的精确 schema 与 provider contribution。recipe / mark Definition 和 resolver 只属于包内实现契约，不是第三方扩展入口。plain `InputScatterChart`、`InputChartCoordinate`、`normalizeXxxChart` 与创建函数属于 `@retikz/chart-vanilla`。React typed Chart 把根 `coordinate` prop、`ChartData` / `ChartLayout` / `ChartCoordinate` / `ChartExtension`、presentation marker 和 chartType 私有 declaration 折叠到同一 Vanilla Input；Plot declarations 只能位于 `ChartExtension`，并继续复用 Plot normalizer。动态 family / chartType 路由由应用层负责。
 
-| 入口           | 根 `type` | `recipe.chartType` | 导入位置                            |
-| -------------- | --------- | ------------------ | ----------------------------------- |
-| `ScatterChart` | `point`   | `scatter`          | `@retikz/chart-react/point/scatter` |
+| 入口           | 根 `type` | `recipe.chartType` | 导入位置                    |
+| -------------- | --------- | ------------------ | --------------------------- |
+| `ScatterChart` | `point`   | `scatter`          | `@retikz/chart-react/point` |
 
 Vanilla 的 `createScatterChart` 从 `@retikz/chart-vanilla/point/scatter` 导入。具体子路径只装载对应 chartType；family 根入口仅作为显式聚合入口。它返回保留运行时主题信息的编写结果；最终渲染仍复用共享 Chart 适配与解析主链。
 
 <SourceLinks
   sources={[
     {
-      label: 'Vanilla 只展开 composition 字符串简写',
-      path: 'packages/viz/chart-vanilla/src/point/scatter/normalize.ts',
-      startLine: 9,
-      endLine: 34,
+      label: 'Vanilla 展开 coordinate 字符串简写',
+      path: 'packages/viz/chart-vanilla/src/normalize/chart/coordinate.ts',
+      startLine: 5,
+      endLine: 8,
     },
     {
-      label: 'React props 与 declarations 汇入同一 Vanilla Input',
+      label: 'React 根属性沿 exact Source 分组',
       path: 'packages/viz/chart-react/src/point/shared/component.tsx',
-      startLine: 100,
-      endLine: 154,
+      startLine: 33,
+      endLine: 54,
+    },
+    {
+      label: '根配置与 declarations 的同 slot 冲突',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 182,
+      endLine: 225,
+    },
+    {
+      label: '根配置与 declarations 汇入同一 Vanilla Input',
+      path: 'packages/viz/chart-react/src/point/shared/component.tsx',
+      startLine: 251,
+      endLine: 297,
     },
     {
       label: '运行时 Definition 作为 provider sidecar 传递',

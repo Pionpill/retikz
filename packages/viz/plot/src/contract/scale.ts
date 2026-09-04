@@ -1,4 +1,5 @@
 import type { DataFieldTypeValue, IRDataScalarValue } from '@retikz/data';
+import type { ValueOf } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 import { ZodLiteral, ZodObject } from 'zod';
@@ -14,6 +15,17 @@ export type TickSet = { values: Array<IRDataScalarValue>; labels: Array<string> 
 /** position scale 的刻度值族，用于 guide 标签格式化 */
 export type PositionTickKind = 'number' | 'time' | 'category';
 
+/** position scale 的拓扑连续性 */
+export const PositionScaleContinuity = {
+  /** 相邻值之间存在可解释的中间位置 */
+  Continuous: 'continuous',
+  /** 只定义独立类别位置 */
+  Discrete: 'discrete',
+} as const;
+
+/** position scale 拓扑连续性值 */
+export type PositionScaleContinuityValue = ValueOf<typeof PositionScaleContinuity>;
+
 /**
  * 归一化位置 scale：连续 / band / point 对 projector & guide 暴露同一形态
  * @description 把「band 起点 vs 中心」「bandwidth 是否为 0」「类别 vs 数值刻度」收进一层；
@@ -27,6 +39,8 @@ export type PositionScale = {
   domain: () => ReadonlyArray<IRDataScalarValue>;
   /** band 宽（连续 / point = 0；band = scale.bandwidth()）；getter 反映 setRange 后的最新值 */
   readonly bandwidth: number;
+  /** 最终 range 下的离散刻度间距（band / point 为正 step；continuous 为 0） */
+  readonly step: number;
   /** 刻度 + 标签（连续走 scaleTicks；band / point = 每类别一刻度，落 band 中心 / 点位） */
   ticks: (count?: number) => TickSet;
   /** guide 标签格式化用的刻度值族；自定义 scale 可省略并保留原 tick 标签 */
@@ -82,6 +96,8 @@ export type ChannelScaleResolution = {
 export type PositionScaleDefinition<TScaleOperation extends IRPlotScaleOperation = IRPlotScaleOperation> = {
   /** 族判别：position scale 产坐标数值 */
   family: 'position';
+  /** 位置域是否在相邻值之间连续，用于 coordinate 选择空间插值默认 */
+  continuity: PositionScaleContinuityValue;
   /** 完整 scale operation schema；必须含非空 z.literal('type') 供 registry 提取注册键 */
   schema: ZodType<TScaleOperation>;
   /** 字段兼容谓词（连续 scale 仅拒 categorical、band/point 仅拒 temporal）；undefined 字段类型放行 */
@@ -129,6 +145,7 @@ export const defineScale = <TScaleOperation extends IRPlotScaleOperation>(
 export type AnyScaleDefinition =
   | {
       family: 'position';
+      continuity: PositionScaleContinuityValue;
       schema: ZodType;
       isFieldCompatible: (fieldType: DataFieldTypeValue | undefined) => boolean;
       allowsBaseline?: boolean;

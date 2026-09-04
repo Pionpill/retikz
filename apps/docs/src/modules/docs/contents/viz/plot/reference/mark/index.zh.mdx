@@ -13,6 +13,8 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
 
 <ZodSchema name="MarkOperationSchema" description="内置图元或运行时注册自定义图元的联合。" />
 
+所有图元都可用 `defaultColorGroup` 声明默认颜色共享关系。同名组只按首次出现位置消费一个 `palette.series` 槽位；未分组图元各自按声明顺序消费。显式颜色编码或常量 paint 仍然优先。
+
 ## PointMarkSchema
 
 <ZodSchema
@@ -51,12 +53,60 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     dy: '相对投影锚点的垂直微调，正值向屏幕下方。',
     anchorId: '写入每个生成 Node 的稳定 id 规则。',
     id: '用于生成 Scope 和锚点目标的可选图元 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
     layer: '外层图元 Scope 的语义图层覆盖。',
     coordinateView: '投影该图元的坐标视图 id；省略时使用组合默认视图。',
     transform: '仅影响该图元的局部变换链。',
     label: '附着在每数据 Node.label 上的标签。',
+    placement: '位置比例尺之后、Point 几何之前执行的有序位置调整。',
     encoding: '点图元的位置、文本与扩展通道。',
   }}
+/>
+
+### MarkPlacementSchema
+
+<ZodSchema
+  name="MarkPlacementSchema"
+  description="Point 图元的位置调整列表。"
+  descriptions={{
+    adjustments: '按 Source 顺序保存的 Position Adjustment operation；执行时按 Definition.space 分阶段。',
+  }}
+/>
+
+### PositionAdjustmentOperationSchema
+
+<ZodSchema
+  name="PositionAdjustmentOperationSchema"
+  description="内置 jitter 或运行时 Definition 校验的自定义位置调整联合。"
+/>
+
+### JitterPositionAdjustmentSchema
+
+<ZodSchema
+  name="JitterPositionAdjustmentSchema"
+  description="位置比例尺映射后、坐标投影前执行的确定性 role-space jitter。"
+  descriptions={{
+    kind: '内置位置调整判别值 jitter。',
+    role: '要散布的坐标 role；省略时要求当前 frame 恰有一个离散 role。',
+    span: '总散布宽度；裸数字使用 role 输出单位，ratio 使用离散 step 比例。',
+    seed: '确定性伪随机种子；省略时为 0。',
+  }}
+/>
+
+### JitterRatioSpanSchema
+
+<ZodSchema
+  name="JitterRatioSpanSchema"
+  description="以离散位置 scale 的实时 step 表示 jitter 总宽。"
+  descriptions={{ kind: '比例形式判别值 ratio。', value: '离散 step 的 0 到 1 比例。' }}
+/>
+
+### CustomPositionAdjustmentSchema
+
+<ZodSchema
+  name="CustomPositionAdjustmentSchema"
+  description="由运行时 PositionAdjustmentDefinition 校验与执行的开放 JSON operation。"
+  descriptions={{ kind: '已注册的自定义 adjustment key，不得与内置 jitter 冲突。' }}
 />
 
 ## PathMarkSchema
@@ -72,6 +122,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     connectNulls: '是否跳过无效投影点并跨空连接。',
     closure: '循环、常量基线或每行堆叠基线的闭合策略。',
     curve: '相邻有序点的连接曲线。',
+    interpolation: 'polar2D 相邻位置的连接空间覆盖；省略时继承 coordinate。',
     strokeWidth: '路径描边宽度。',
     opacity: '路径整体不透明度。',
     lineCap: '路径端点样式。',
@@ -91,6 +142,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     blendMode: 'Core Path 混合模式。',
     anchorId: '为路径上每数据 Coordinate 生成稳定 id 的规则。',
     id: '可选图元 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
     layer: '外层 Scope 图层覆盖。',
     coordinateView: '用于投影的坐标视图 id。',
     transform: '图元局部变换链。',
@@ -112,6 +164,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     type: '区间图元判别值。',
     series: '颜色分组和带内子分组的 series 字段。',
     bounds: '按坐标角色声明的区间边界；省略时从角色比例尺推断。',
+    interpolation: 'polar2D cell 边界的局部连接空间覆盖。',
     strokeWidth: '区间 cell 描边宽度。',
     fill: '区间 cell 填充 paint。',
     stroke: '区间 cell 描边 paint。',
@@ -135,6 +188,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     shadow: 'Core Node 阴影。',
     blendMode: 'Core Node 混合模式。',
     id: '可选图元 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
     layer: '外层 Scope 图层覆盖。',
     coordinateView: '用于投影的坐标视图 id。',
     transform: '图元局部变换链。',
@@ -163,6 +217,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
   descriptions={{
     type: '参考图元判别值。',
     kind: '显式 region 形态；省略时从编码推断参考线或单轴 band。',
+    interpolation: 'polar2D band / region 边界的局部连接空间覆盖；固定角度 line 保持直线。',
     yTo: 'y 方向上界；与 encoding.y 组成水平 band 或 region 边界。',
     xTo: 'x 方向上界；与 encoding.x 组成垂直 band 或 region 边界。',
     extentField: '局部长度参考的对侧起点字段。',
@@ -194,6 +249,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     thickness: 'Core Path 轮廓粗细预设。',
     marks: 'Core Path marks。',
     id: '可选图元 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
     layer: '外层 Scope 图层覆盖。',
     coordinateView: '用于投影的坐标视图 id。',
     transform: '图元局部变换链。',
@@ -211,11 +267,37 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     kind: '关系几何类型，省略时为 path。',
     source: '关系源目标。',
     target: '关系目标目标。',
+    endpoints: '可选投影端点 glyph；仅适用于普通 path Relation。',
+    'endpoints.source': '绘制在 source 投影位置的常量 Point glyph。',
+    'endpoints.source.color': 'source glyph 的常量主颜色。',
+    'endpoints.source.size': 'source glyph 的常量半径。',
+    'endpoints.source.shape': 'source glyph 的常量形状。',
+    'endpoints.source.fill': 'source glyph 的常量填充 paint。',
+    'endpoints.source.stroke': 'source glyph 的常量描边 paint。',
+    'endpoints.source.strokeWidth': 'source glyph 的常量描边宽度。',
+    'endpoints.source.fillOpacity': 'source glyph 的常量填充不透明度。',
+    'endpoints.source.strokeOpacity': 'source glyph 的常量描边不透明度。',
+    'endpoints.source.opacity': 'source glyph 的常量整体不透明度。',
+    'endpoints.source.rotate': 'source glyph 的常量旋转角度。',
+    'endpoints.source.minimumSize': 'source glyph 的常量最小视觉尺寸。',
+    'endpoints.target': '绘制在 target 投影位置的常量 Point glyph。',
+    'endpoints.target.color': 'target glyph 的常量主颜色。',
+    'endpoints.target.size': 'target glyph 的常量半径。',
+    'endpoints.target.shape': 'target glyph 的常量形状。',
+    'endpoints.target.fill': 'target glyph 的常量填充 paint。',
+    'endpoints.target.stroke': 'target glyph 的常量描边 paint。',
+    'endpoints.target.strokeWidth': 'target glyph 的常量描边宽度。',
+    'endpoints.target.fillOpacity': 'target glyph 的常量填充不透明度。',
+    'endpoints.target.strokeOpacity': 'target glyph 的常量描边不透明度。',
+    'endpoints.target.opacity': 'target glyph 的常量整体不透明度。',
+    'endpoints.target.rotate': 'target glyph 的常量旋转角度。',
+    'endpoints.target.minimumSize': 'target glyph 的常量最小视觉尺寸。',
     style: 'path 与 ribbon 共享的视觉字段。',
     path: '描边路径专用的路由、途经点和 Core Path 选项。',
     ribbon: 'ribbon 专用的宽度、渐变与采样选项。',
     label: '附着在关系几何上的标签。',
     id: '可选图元 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
     layer: '外层 Scope 图层覆盖。',
     coordinateView: '用于投影的坐标视图 id。',
     transform: '图元局部变换链。',
@@ -235,6 +317,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
   name="RelationPathGeometrySchema"
   description="RelationMark 的途经点、显式路由或算法路由配置。"
   descriptions={{
+    interpolation: '仅默认、全 projected polar2D path 使用的连接空间覆盖。',
     via: '可选中间目标，投影后可生成 Core Coordinate。',
     route: '初始 move(source) 之后的显式路由 step。',
     routing: '算法路由策略；省略时直线连接。',
@@ -246,6 +329,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     'label.position': '标签沿 step 的关键词或归一化位置；参数含义由 step 类型决定。',
     'label.side': '相对标签锚点的标准侧，默认 top。',
     'label.sloped': '是否沿采样切线旋转，并由 side 决定标签方位。',
+    'label.interrupt': '是否请求在兼容宿主的描边中形成断口；省略时由宿主策略决定。',
     'label.placement': '标签放置方式：outside 按 side 外偏，inside 由区域 host 放在内部。',
     'label.distance': '标签相对锚点的侧向偏移距离，单位为用户坐标。',
     options: '仅 path 关系使用的 Core Path 选项。',
@@ -324,6 +408,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     'label.position': '标签沿 step 的关键词或归一化位置；参数含义由 step 类型决定。',
     'label.side': '相对标签锚点的标准侧，默认 top。',
     'label.sloped': '是否沿采样切线旋转，并由 side 决定标签方位。',
+    'label.interrupt': '是否请求在兼容宿主的描边中形成断口；省略时由宿主策略决定。',
     'label.placement': '标签放置方式：outside 按 side 外偏，inside 由区域 host 放在内部。',
     'label.distance': '标签相对锚点的侧向偏移距离，单位为用户坐标。',
   }}
@@ -339,6 +424,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     transform: '在 Plot 根变换之后执行的图元局部变换。',
     layer: '自定义图元外层 Scope 的语义图层覆盖。',
     coordinateView: '用于投影的坐标视图 id。',
+    defaultColorGroup: '省略显式颜色时共享同一个顺序色板槽位的语义组。',
     encoding: '用于比例尺推断与 Definition 消费的位置、非位置通道。',
   }}
 />

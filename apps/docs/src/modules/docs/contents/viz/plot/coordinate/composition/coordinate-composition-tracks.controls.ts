@@ -30,12 +30,7 @@ export const coordinateCompositionTracksControls = definePreviewControls({
           id: 'rows',
           label: '运行指标',
           rows: operationsRows,
-          columns: [
-            { key: 'day', label: '交易日' },
-            { key: 'trend', label: '趋势' },
-            { key: 'drawdown', label: '回撤' },
-            { key: 'signal', label: '信号' },
-          ],
+          columns: [{ key: 'day' }, { key: 'trend' }, { key: 'drawdown' }, { key: 'signal' }],
         },
       ],
     },

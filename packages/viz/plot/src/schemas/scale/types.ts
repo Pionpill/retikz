@@ -1,7 +1,7 @@
 import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type { PlotColorScheme, PlotScale } from './constants';
+import type { PlotColorScheme, PlotDomainPaddingKind, PlotScale } from './constants';
 import type {
   BandScaleSchema,
   CategoryValueSchema,
@@ -40,6 +40,9 @@ export type IRPlotCategoryValue = ZodInfer<typeof CategoryValueSchema>;
 
 /** position scale 的 domain padding */
 export type IRPlotDomainPadding = ZodInfer<typeof DomainPaddingSchema>;
+
+/** position scale 的 domain padding 单位 */
+export type PlotDomainPaddingKindValue = ValueOf<typeof PlotDomainPaddingKind>;
 
 /** 线性 scale */
 export type IRPlotLinearScale = ZodInfer<typeof LinearScaleSchema>;

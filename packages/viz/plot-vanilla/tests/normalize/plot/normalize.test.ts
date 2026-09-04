@@ -4,6 +4,108 @@ import { describe, expect, it } from 'vitest';
 import { normalizePlot, normalizePlotDeclarations } from '../../../src';
 
 describe('normalizePlot', () => {
+  it('保留显式 ratio domain padding', () => {
+    const spec = normalizePlot({
+      data: { reference: 'sales' },
+      scales: [
+        {
+          type: 'linear',
+          name: 'x',
+          domainPadding: { kind: 'ratio', lower: 0.1, upper: 0.2 },
+        },
+      ],
+      marks: [],
+    });
+
+    expect(spec.scales).toContainEqual({
+      type: 'linear',
+      name: 'x',
+      domainPadding: { kind: 'ratio', lower: 0.1, upper: 0.2 },
+    });
+  });
+
+  it('透明保留 Polar coordinate 与插值敏感 mark override', () => {
+    const spec = normalizePlot({
+      data: { reference: 'polar' },
+      scales: [
+        { type: 'point', name: 'angle' },
+        { type: 'linear', name: 'radius' },
+      ],
+      coordinate: {
+        type: 'polar2D',
+        angle: 'angle',
+        radius: 'radius',
+        interpolation: 'chord',
+      },
+      marks: [],
+    });
+    const declaration = normalizePlotDeclarations(
+      {
+        declarations: [
+          { kind: 'path-mark', props: { x: 'angle', y: 'radius', interpolation: 'polar' }, path: [0] },
+          { kind: 'interval-mark', props: { x: 'angle', y: 'radius', interpolation: 'chord' }, path: [1] },
+          { kind: 'reference-mark', props: { y: 1, yTo: 2, interpolation: 'polar' }, path: [2] },
+          {
+            kind: 'relation-mark',
+            props: {
+              source: { project: { x: 'sourceAngle', y: 'sourceRadius' } },
+              target: { project: { x: 'targetAngle', y: 'targetRadius' } },
+              path: { interpolation: 'chord' },
+            },
+            path: [3],
+          },
+        ],
+        runtimeSources: [],
+      },
+      { data: { reference: 'polar' }, mode: 'plot-root' },
+    );
+
+    expect(spec.coordinate).toMatchObject({ interpolation: 'chord' });
+    expect(declaration.fragment.marks).toMatchObject([
+      { type: 'path', interpolation: 'polar' },
+      { type: 'interval', interpolation: 'chord' },
+      { type: 'reference', interpolation: 'polar' },
+      { type: 'relation', path: { interpolation: 'chord' } },
+    ]);
+  });
+
+  it('保留 Point placement 并让 plain 与 declaration authoring 形成同形 IR', () => {
+    const placement = {
+      adjustments: [{ kind: 'jitter' as const, role: 'x', span: { kind: 'ratio' as const, value: 0.6 }, seed: 7 }],
+    };
+    const plain = normalizePlot({
+      data: { reference: 'points' },
+      scales: [
+        { type: 'point', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'point',
+          placement,
+          encoding: { x: { field: 'category' }, y: { field: 'value' } },
+        },
+      ],
+    });
+    const declaration = normalizePlotDeclarations(
+      {
+        declarations: [
+          {
+            kind: 'point-mark',
+            props: { x: 'category', y: 'value', placement },
+            path: [0],
+          },
+        ],
+        runtimeSources: [],
+      },
+      { data: { reference: 'points' }, mode: 'plot-root' },
+    );
+
+    expect(declaration.fragment.marks?.[0]).toEqual(plain.marks[0]);
+    expect(plain.marks[0]).toMatchObject({ placement });
+  });
+
   it('从 plain authoring input 创建 schema-valid IRPlot 并保留显式 identity', () => {
     const input = {
       id: 'sales',

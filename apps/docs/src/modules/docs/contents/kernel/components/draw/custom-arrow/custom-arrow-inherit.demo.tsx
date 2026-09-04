@@ -11,6 +11,7 @@ import { Draw, Layout } from '@retikz/react';
 const bracket = defineArrow({
   name: 'bracket',
   hollow: true,
+  backX: 2,
   lineContactX: 2,
   tipX: 8,
   defaultLength: 9,

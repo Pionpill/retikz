@@ -55,6 +55,7 @@ const scenarios: ReadonlyArray<RoleScenario> = [
     fields: [
       { kind: 'select', id: 'kind', defaultValue: '' },
       { kind: 'select', id: 'direction', defaultValue: 'forward' },
+      { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
     kindOptions: ['', 'uml.association', 'uml.aggregation', 'uml.composition'],
@@ -66,6 +67,7 @@ const scenarios: ReadonlyArray<RoleScenario> = [
     role: 'dependency',
     fields: [
       { kind: 'select', id: 'kind', defaultValue: '' },
+      { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
     kindOptions: ['', 'uml.dependency', 'uml.realization'],
@@ -75,6 +77,7 @@ const scenarios: ReadonlyArray<RoleScenario> = [
     role: 'generalization',
     fields: [
       { kind: 'select', id: 'kind', defaultValue: '' },
+      { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
     kindOptions: ['', 'uml.generalization'],
@@ -84,6 +87,7 @@ const scenarios: ReadonlyArray<RoleScenario> = [
     role: 'flow',
     fields: [
       { kind: 'select', id: 'direction', defaultValue: 'forward' },
+      { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
     directionOptions: ['forward', 'reverse', 'both'],
@@ -92,6 +96,7 @@ const scenarios: ReadonlyArray<RoleScenario> = [
     role: 'influence',
     fields: [
       { kind: 'select', id: 'direction', defaultValue: 'forward' },
+      { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
     directionOptions: ['forward', 'reverse', 'both'],
@@ -257,6 +262,7 @@ describe('Graph Relation style playground', () => {
 
     expect(fields.map(field => ({ kind: field.kind, id: field.id, defaultValue: field.defaultValue }))).toEqual([
       { kind: 'select', id: 'role', defaultValue: 'flow' },
+      { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'text', id: 'content', defaultValue: 'Next step' },
       { kind: 'color', id: 'sourceColor', defaultValue: 'currentColor' },
       { kind: 'color', id: 'targetColor', defaultValue: 'currentColor' },
@@ -276,6 +282,7 @@ describe('Graph Relation style playground', () => {
     ]);
     expect(styleZh.canonicalValues).toEqual({
       role: 'flow',
+      status: '',
       content: 'Next step',
       sourceColor: 'currentColor',
       targetColor: 'currentColor',

@@ -18,6 +18,7 @@ const filledPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, nu
 /** 实心三角箭头：基础线接触点在 marker 左边界 */
 const normalArrow = defineArrow({
   name: BuiltinArrowShape.Normal,
+  backX: 0,
   lineContactX: 0,
   emit: context => [
     filledPath(context, [
@@ -32,6 +33,7 @@ const normalArrow = defineArrow({
 const openArrow = defineArrow({
   name: BuiltinArrowShape.Open,
   hollow: true,
+  backX: 1,
   lineContactX: 1,
   tipX: 9,
   emit: context => [
@@ -46,6 +48,7 @@ const openArrow = defineArrow({
 /** 实心 stealth 箭头：倒钩点用于让路径 shrink 到视觉内凹处 */
 const stealthArrow = defineArrow({
   name: BuiltinArrowShape.Stealth,
+  backX: 0,
   lineContactX: 3,
   emit: context => [
     filledPath(context, [
@@ -74,6 +77,7 @@ const hollowPath = (context: ArrowEmitContext, points: ReadonlyArray<[number, nu
 const openStealthArrow = defineArrow({
   name: BuiltinArrowShape.OpenStealth,
   hollow: true,
+  backX: 1,
   lineContactX: 3,
   tipX: 9,
   emit: context => [
@@ -89,6 +93,7 @@ const openStealthArrow = defineArrow({
 /** Core 内置实心圆点箭头 */
 const circleArrow = defineArrow({
   name: BuiltinArrowShape.Circle,
+  backX: 0,
   lineContactX: 0,
   emit: context => [
     {
@@ -106,6 +111,7 @@ const circleArrow = defineArrow({
 const openCircleArrow = defineArrow({
   name: BuiltinArrowShape.OpenCircle,
   hollow: true,
+  backX: 0.75,
   lineContactX: 0.75,
   emit: context => [
     {

@@ -1,6 +1,6 @@
 ---
 title: Scatter
-description: Compare two continuous variables directly, with Chart-native narrative metadata for scope, units, and source.
+description: Compare two continuous variables with points, and distinguish categories through color and shape encodings.
 family: scatter-points
 usage: distribution
 ---
@@ -8,51 +8,25 @@ usage: distribution
 <ShowcaseGallery
   examples={[
     {
-      id: 'scatter-basic',
-      title: 'Chart-native narrative metadata',
-      description: 'Use `ScatterChart` to compare urbanization and internet use, with title, subtitle, and source rendered inside the chart.',
+      id: 'scatter-minimal',
+      title: 'Basic Usage',
+      description: 'This is the minimal setup with only required options. Switch to IR to inspect the configuration; for simple charts, pass it directly to the `ScatterChart` root.',
       preview: {
-        files: ['scatter-basic', 'scatter-basic.data.ts'],
-        controls: { name: 'scatter-basic' },
-        controlPanelDefaultOpen: false,
+        files: ['scatter-minimal', 'scatter-minimal.data.ts'],
         size: 'xxxl',
-        caption: 'The title identifies the comparison, the subtitle supplies year and percentage units, and the source names the World Bank indicators.',
+        caption: 'A static snapshot of IMDb and Rotten Tomatoes ratings for 100 films from Vega Datasets.',
       },
     },
     {
       id: 'scatter-fertility-work',
-      title: 'Categorical encoding',
-      description: 'Compare fertility and female labor-force participation from a real World Bank country cross-section, then switch between color and shape encoding.',
+      title: 'Advanced playground: categorical encoding',
+      description: 'Compare fertility and female labor-force participation from a real World Bank country cross-section, and control whether color and shape distinguish income groups.',
       preview: {
         files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
         controls: { name: 'scatter-fertility-work' },
         controlPanelDefaultOpen: false,
         size: 'xxxl',
-        caption: 'Switch income-group color or shape encoding to see the same field binding change the point expression.',
-      },
-    },
-    {
-      id: 'scatter-income-life-expectancy',
-      title: 'Association and categorical color',
-      description: 'Compare GDP per capita and life expectancy in the Gapminder 2007 country cross-section, using continent color to reveal overlap and difference.',
-      preview: {
-        files: ['scatter-income-life-expectancy', 'scatter-income-life-expectancy.data.ts'],
-        controls: { name: 'scatter-income-life-expectancy' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: 'Title, subtitle, note, and source occupy fixed presentation slots; color encodes continent.',
-      },
-    },
-    {
-      id: 'scatter-penguins-facet-jitter',
-      title: 'Faceting and jitter',
-      description: 'Use `column` and `facet` encodings for three shared-scale panels, with deterministic horizontal jitter declared in the rich `x` mapping.',
-      preview: {
-        files: ['scatter-penguins-facet-jitter', 'scatter-penguins-facet-jitter.data.ts'],
-        controls: { name: 'scatter-penguins-facet-jitter' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: 'The three species use separate panels with shared x and y scales; a fixed seed keeps horizontal jitter reproducible in controls and source previews.',
+        caption: 'Toggle color and shape encodings independently to compare one channel, both channels, or no categorical encoding.',
       },
     },
     {
@@ -69,11 +43,28 @@ usage: distribution
     },
   ]}
 >
-This API section lists only Scatter-specific field mappings and mark behavior. Shared Chart props, field types, transforms, scales, presentation, and Plot extensions are not repeated here; see [Chart Model](/viz/chart/model).
+This page expands only Scatter-private recipe slots and declarations. `ChartData`, `ChartLayout`, `ChartCoordinate`, `ChartExtension`, presentation, and shared root wiring are not repeated; see the [shared Chart API](/viz/chart).
 
-## `ScatterChart.encodings`
+## `ScatterChart`
 
-`ScatterChartEncodingsSchema` is the runtime source of truth for Scatter encodings, and `IRScatterChartEncodings` is derived from it. React `ScatterChartProps.encodings`, Vanilla input, and JSON Source all use this exact table.
+`ScatterChart` fixes the Point family and Scatter recipe identity. Its root `recipe` directly uses Scatter's exact `encodings`, `properties`, and `marks` shape; component identity supplies `chartType: 'scatter'`:
+
+```tsx
+<ScatterChart
+  rows={rows}
+  data={{ reference: 'chart.data' }}
+  recipe={{
+    encodings: { x: 'fertility', y: 'work', color: 'incomeGroup' },
+    properties: { size: 8 },
+  }}
+/>
+```
+
+The three declarations below are equivalent JSX sugar for those recipe slots. Root-only authoring can omit `children`; different slots can mix, while providing the same slot from both root and declaration fails loudly.
+
+## `ScatterEncodings`
+
+`ScatterEncodingsProps` exactly reuses schema-derived `IRScatterChartEncodings`. Vanilla input and JSON Source keep the same encoding payload; React authors it as a separate declaration.
 
 | Slot             | Supported Scatter mappings                                                            | Scatter-specific constraint                                                                       |
 | ---------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -93,19 +84,32 @@ Scatter rejects `series`, `detail`, `order`, `text`, and ordinary slot arrays wi
 `row` / `column` / `facet` are Scatter's facet mappings. `facet` cannot be used without `row` or `column`, and x/y `bin` mappings are rejected when a facet is present.
 
 ```tsx
-encodings={{
-  x: 'billLengthMm',
-  y: 'flipperLengthMm',
-  column: { field: 'species', order: ['Adelie', 'Chinstrap', 'Gentoo'] },
-  facet: { header: { column: true }, spacing: { panelGap: 20 } },
-}}
+<ScatterEncodings
+  x="billLengthMm"
+  y="flipperLengthMm"
+  column={{ field: 'species', order: ['Adelie', 'Chinstrap', 'Gentoo'] }}
+  facet={{ header: { column: true }, spacing: { panelGap: 20 } }}
+/>
 ```
 
 `row` / `column` partition panels; they do not choose a mark type. Scatter continues to use its point mark. Plot owns facet panel arrangement, scale resolution, and location, so Source does not repeat derived panel ids or coordinates.
 
+## `ScatterProperties`
+
+`ScatterProperties` declares recipe-level constants and does not accept field mappings; use `ScatterEncodings` for data-driven visual changes. `ScatterPropertiesProps` fields are grouped below.
+
+| Fields                                                                                      | Values                                                                                                                                 |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `color`, `textColor`, `fill`, `stroke`, `shape`                                             | Colors, paints, or an extensible shape name                                                                                            |
+| `size`, `minimumSize`, `scale`, `rotate`, `dx`, `dy`, `padding`, `margin`, `cornerRadius`   | Finite numbers or the corresponding JSON-safe structures                                                                               |
+| `strokeWidth`, `fillOpacity`, `strokeOpacity`, `opacity`, `dashed`, `dotted`, `dashPattern` | Stroke, opacity, and dash constants                                                                                                    |
+| `zIndex`, `align`, `lineHeight`, `maxTextWidth`, `font`, `label`                            | Drawing order, text, and label configuration                                                                                           |
+| `boundary`, `shadow`, `blendMode`                                                           | Boundary, shadow, and blend mode                                                                                                       |
+| `domainPadding?`                                                                            | `number` or `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`; defaults to range padding from the largest final Point radius |
+
 ## `ScatterMark`
 
-`ScatterMark` is Scatter's direct-child mark API. `ScatterMarkProps` is the props type exported by `@retikz/chart-react/point/scatter`; the component identity is fixed to Scatter, so callers do not provide `kind`. Shared Point mark nested fields are not repeated here.
+`ScatterMark` is Scatter's direct-child mark API. `ScatterMarkProps` is the props type exported by `@retikz/chart-react/point`; the component identity is fixed to Scatter, so callers do not provide `kind`. Shared Point mark nested fields are not repeated here.
 
 | `ScatterMarkProps` property | Type                             | Default | Scatter-specific behavior                                                                                                                                               |
 | --------------------------- | -------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

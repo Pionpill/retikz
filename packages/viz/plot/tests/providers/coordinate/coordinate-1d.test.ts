@@ -173,7 +173,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
 });
 
 describe('polar1D 圆周坐标系 (contract)', () => {
-  // 布局：480×300、无角向轴 → 圆心 [240,150]、outerRadius 150
+  // 布局：480×300、无角向轴 → 圆形区域在可用区域居中，圆心 [240,150]、outerRadius 150
   const CENTER: [number, number] = [240, 150];
 
   const ringSpec = (extra: Record<string, unknown> = {}): IRPlot =>

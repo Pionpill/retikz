@@ -36,7 +36,7 @@ ReferenceMark 是底层参考 mark：它负责把一个固定轴值解释成 lin
 | 竖直参考带   | `x` / `xTo`                                 | 固定 x 区间，填充 `x∈[x,xTo]`      |
 | 二维参考区域 | `kind="region"` + `x` / `xTo` / `y` / `yTo` | 同时固定 x 与 y 区间，填充二者交集 |
 
-在 `polar2D` 下，同一组属性会被坐标系重解释：`y` 是常半径参考环，`y` / `yTo` 是环带；`x` 是径向参考线，`x` / `xTo` 是扇形楔；`kind="region"` 同时限制角度和半径，得到一个环扇区。
+在 `polar2D` 下，同一组属性会被坐标系重解释：`y` 是常半径参考环，`y` / `yTo` 是环带；`x` 是径向参考线，`x` / `xTo` 是扇形楔；`kind="region"` 同时限制角度和半径。band / region 默认继承 coordinate 的 `interpolation`，也可局部覆盖为弧边 `polar` 或直边 `chord`；固定角度参考线始终是径向直线。
 
 ## 例子
 
@@ -94,12 +94,12 @@ extent 只改变参考在对侧轴上的覆盖范围，不改变 `x` / `y` 绑�
 
 形态分类同时决定迭代方式：边界全为常量且没有 extent 时只生成一份；任一位置、上界或 extent 来自字段时按数据行处理。两条路径最终都停在 core primitive，不重复展开全局 Scene 编译流程。
 
-| 阶段     | 可观察行为                                                                                                        |
-| -------- | ----------------------------------------------------------------------------------------------------------------- |
-| 校验     | 默认形态必须只绑定 `x` 或 `y`；上界必须与同一 role 配对；region 必须给齐当前坐标系所需边界                        |
-| 决定行数 | 全常量参考只生成一份几何；轴值、上界或 extent 来自字段时按有效数据行生成                                          |
-| 投影     | line 在 cartesian2D / polar2D 下生成 core `Path`；band / region 通过坐标帧 `projectCell` 生成可填充的 core `Node` |
-| 装饰     | line 使用 Path 样式与 geometry label；band / region 使用 Node 样式与 node label；颜色字段按 datum 分组            |
+| 阶段     | 可观察行为                                                                                                      |
+| -------- | --------------------------------------------------------------------------------------------------------------- |
+| 校验     | 默认形态必须只绑定 `x` 或 `y`；上界必须与同一 role 配对；region 必须给齐当前坐标系所需边界                      |
+| 决定行数 | 全常量参考只生成一份几何；轴值、上界或 extent 来自字段时按有效数据行生成                                        |
+| 投影     | line 保持直线；polar2D band / region 继承或覆盖 coordinate interpolation，再通过 `projectCell` 生成 core `Node` |
+| 装饰     | line 使用 Path 样式与 geometry label；band / region 使用 Node 样式与 node label；颜色字段按 datum 分组          |
 
 字段颜色不能绑定到一个完全常量的 reference，因为没有数据行可供逐行取值；此时应使用常量颜色，或把参考位置绑定到字段。
 
@@ -112,9 +112,9 @@ extent 只改变参考在对侧轴上的覆盖范围，不改变 `x` / `y` 绑�
       endLine: 190,
     },
     {
-      label: 'ReferenceMark line、band 与 region 下沉',
+      label: 'ReferenceMark line、band、region 与 Polar 插值下沉',
       path: 'packages/viz/plot/src/providers/mark/features/reference.ts',
-      startLine: 313,
+      startLine: 225,
       endLine: 447,
     },
     {
@@ -130,14 +130,15 @@ extent 只改变参考在对侧轴上的覆盖范围，不改变 `x` / `y` 绑�
 
 下面只列 ReferenceMark 特有或在本页重新定义语义的属性。字段与常量绑定见[通道绑定](/viz/plot/channel/binding)，局部 `transform` 与图层属性见[变换](/viz/plot/transform)，坐标视图相关属性见[坐标系](/viz/plot/coordinate)。line 的共享视觉属性沿用 [Path 样式](/kernel/components/draw/path#样式)，band / region 的共享视觉属性沿用 [Node 样式](/kernel/components/node/overview#视觉样式-api)。
 
-| 属性                              | 类型                                   | 默认值     | 描述                                                                                                    |
-| --------------------------------- | -------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------- |
-| `x?` / `y?`                       | `ReferenceMarkProps['x']`              | —          | 默认形态的参考轴值，必须二选一；数字生成常量参考，字段按行生成                                          |
-| `xTo?` / `yTo?`                   | `ReferenceMarkProps['xTo']`            | —          | 与同 role 下界配对的上界；给出后 line 变为 band                                                         |
-| `kind?`                           | <ApiValues name="ReferenceMarkKind" /> | —          | 设为 `region` 时，使用多个 role 的上下界构造区域                                                        |
-| `extentField?` / `extentToField?` | `ReferenceMarkProps['extentField']`    | 对侧轴满域 | 把 line / band 限制在对侧 role 的逐行起止范围内，必须成对                                               |
-| `color?`                          | `string`                               | 默认图层色 | 下界 `x` / `y` 为数字时直接设色；下界为字段时解释为逐行颜色字段                                         |
-| `label?`                          | `ReferenceMarkProps['label']`          | —          | line 下沉为 geometry label，band / region 下沉为 node label；内容写在 `content.field` / `content.value` |
+| 属性                              | 类型                                    | 默认值          | 描述                                                                                                    |
+| --------------------------------- | --------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------- |
+| `x?` / `y?`                       | `ReferenceMarkProps['x']`               | —               | 默认形态的参考轴值，必须二选一；数字生成常量参考，字段按行生成                                          |
+| `xTo?` / `yTo?`                   | `ReferenceMarkProps['xTo']`             | —               | 与同 role 下界配对的上界；给出后 line 变为 band                                                         |
+| `kind?`                           | <ApiValues name="ReferenceMarkKind" />  | —               | 设为 `region` 时，使用多个 role 的上下界构造区域                                                        |
+| `interpolation?`                  | <ApiValues name="PolarInterpolation" /> | coordinate 默认 | polar2D band / region 的边界覆盖；固定角度 reference line 不弧化                                        |
+| `extentField?` / `extentToField?` | `ReferenceMarkProps['extentField']`     | 对侧轴满域      | 把 line / band 限制在对侧 role 的逐行起止范围内，必须成对                                               |
+| `color?`                          | `string`                                | 默认图层色      | 下界 `x` / `y` 为数字时直接设色；下界为字段时解释为逐行颜色字段                                         |
+| `label?`                          | `ReferenceMarkProps['label']`           | —               | line 下沉为 geometry label，band / region 下沉为 node label；内容写在 `content.field` / `content.value` |
 
 ## 相关
 

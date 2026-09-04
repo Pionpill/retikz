@@ -9,6 +9,7 @@ import type {
   ChannelScaleResolution,
   ChannelScaleResolveContext,
   PositionScale,
+  PositionScaleContinuityValue,
 } from '../../contract';
 import type { IRPlotMarkOperation, IRPlotScale, IRPlotScaleOperation } from '../../schemas';
 import type { ScaleResolveContext } from './types';
@@ -51,6 +52,7 @@ const parseScaleOperation = (def: AnyScaleDefinition, operation: IRPlotScaleOper
 const resolveBuiltinPositionOperation = (
   operation: IRPlotScaleOperation,
   values: Array<unknown>,
+  fallbackRange: readonly [number, number],
 ): IRPlotScaleOperation => {
   if (!isBuiltinScaleOperation(operation)) return operation;
   const numericValues = values.filter(isFiniteNumber);
@@ -62,10 +64,9 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'linear',
           domain: operation.domain ?? safeExtent(numericValues),
-          explicitDomain: operation.domain !== undefined,
+          range: operation.range ?? fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
-          defaultDomainPadding: 0.05,
         }),
       };
     case PlotScale.Log: {
@@ -77,11 +78,10 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'log',
           domain: operation.domain ?? [lo, hi],
-          explicitDomain: operation.domain !== undefined,
+          range: operation.range ?? fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
           base: operation.base,
-          defaultDomainPadding: 0.05,
         }),
       };
     }
@@ -99,11 +99,10 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'pow',
           domain: sourceDomain,
-          explicitDomain: operation.domain !== undefined,
+          range: operation.range ?? fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
           exponent,
-          defaultDomainPadding: 0.05,
         }),
       };
     }
@@ -114,10 +113,9 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'sqrt',
           domain: operation.domain ?? safeExtent(numericValues.filter(value => value >= 0)),
-          explicitDomain: operation.domain !== undefined,
+          range: operation.range ?? fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
-          defaultDomainPadding: 0.05,
         }),
       };
     case PlotScale.Symlog:
@@ -127,10 +125,10 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'symlog',
           domain: operation.domain ?? safeExtent(numericValues),
-          explicitDomain: operation.domain !== undefined,
+          range: operation.range ?? fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
-          defaultDomainPadding: 0.05,
+          constant: operation.constant,
         }),
       };
     case PlotScale.Radial:
@@ -140,10 +138,9 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'radial',
           domain: operation.domain ?? safeExtent(numericValues.filter(value => value >= 0)),
-          explicitDomain: operation.domain !== undefined,
+          range: operation.range ?? fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
-          defaultDomainPadding: 0.05,
         }),
       };
     case PlotScale.Time: {
@@ -154,10 +151,9 @@ const resolveBuiltinPositionOperation = (
           scaleName: operation.name,
           family: 'time',
           domain: operation.domain ?? safeExtent(stamps),
-          explicitDomain: operation.domain !== undefined,
+          range: fallbackRange,
           domainPadding: operation.domainPadding,
           singleValueSpan: operation.singleValueSpan,
-          defaultDomainPadding: 0.05,
         }),
       };
     }
@@ -182,8 +178,25 @@ export const resolvePositionScale = (
       `resolvePositionScale: ${operation.type} scale "${operation.name}" cannot drive a positional (x/y) channel; color scales bind the color channel only`,
     );
   }
-  const effectiveOperation = resolveBuiltinPositionOperation(operation, values);
+  const effectiveOperation = resolveBuiltinPositionOperation(operation, values, fallbackRange);
   return def.resolve(parseScaleOperation(def, effectiveOperation), values, fallbackRange);
+};
+
+/**
+ * 读取 position scale definition 声明的拓扑连续性
+ * @description 统一经 registry lookup 与 family 诊断，供坐标系推断空间插值默认值；不按内置 type 猜测
+ */
+export const resolvePositionScaleContinuity = (
+  operation: IRPlotScaleOperation,
+  context: ScaleResolveContext,
+): PositionScaleContinuityValue => {
+  const def = resolveScaleDefinition(operation, context);
+  if (def.family !== 'position') {
+    throw new RetikzPlotError(
+      `resolvePositionScaleContinuity: ${operation.type} scale "${operation.name}" cannot drive a positional (x/y) channel; color scales do not declare position continuity`,
+    );
+  }
+  return def.continuity;
 };
 
 /**

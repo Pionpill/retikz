@@ -38,6 +38,14 @@ export const PlotScale = {
 /** 内置 scale type 集；供 CustomScaleSchema 排除内置判别串（模块常量，非 zod） */
 export const BUILTIN_SCALE_TYPES = new Set<string>(Object.values(PlotScale));
 
+/** 连续位置 scale 的 domain padding 单位 */
+export const PlotDomainPaddingKind = {
+  /** scale range 输出单位 */
+  Range: 'range',
+  /** source domain span 比例 */
+  Ratio: 'ratio',
+} as const;
+
 /** 内置命名配色方案名 */
 export const PlotColorScheme = {
   Blues: 'blues',

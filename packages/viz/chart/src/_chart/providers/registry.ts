@@ -2,7 +2,7 @@ import type { ZodType } from 'zod';
 
 import { resolveRowSelectorRegistry, resolveStatisticsReducerRegistry } from '@retikz/data';
 import { createReadonlyMap } from '@retikz/foundation';
-import { resolvePlotTransformRegistry, resolveScaleRegistry } from '@retikz/plot';
+import { resolveCoordinateRegistry, resolvePlotTransformRegistry, resolveScaleRegistry } from '@retikz/plot';
 import { union, ZodError, ZodLiteral, ZodObject } from 'zod';
 
 import type { AnyChartRecipeDefinition, ChartEncodingRuntime, ChartThemeDefinition } from '../contract';
@@ -184,6 +184,7 @@ const validateRecipe = (recipe: AnyChartRecipeDefinition, family: string, index:
 };
 
 const runtimeDefinitionKeys = [
+  'coordinates',
   'transformDefinitions',
   'statisticsReducerDefinitions',
   'rowSelectorDefinitions',
@@ -217,6 +218,7 @@ const resolveEncodingRuntime = (definitions: ChartRuntimeDefinitionOptions): Cha
       reducers: createReadonlyMap(resolveStatisticsReducerRegistry(definitions.statisticsReducerDefinitions)),
       selectors: createReadonlyMap(resolveRowSelectorRegistry(definitions.rowSelectorDefinitions)),
       scales: createReadonlyMap(resolveScaleRegistry(definitions.scaleDefinitions)),
+      coordinates: createReadonlyMap(resolveCoordinateRegistry(definitions.coordinates)),
     });
   } catch (error) {
     throw invalidRegistry('Chart provider contains invalid runtime Definitions', ['runtimeDefinitions'], error);

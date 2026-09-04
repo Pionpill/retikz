@@ -12,6 +12,7 @@ const scaleOf = (
   coordinate: value => (typeof value === 'number' ? value : domain.indexOf(value as string) * 10),
   domain: () => domain,
   bandwidth: 0,
+  step: 0,
   ticks: count => {
     const values = count === undefined ? ticks : ticks.slice(0, count);
     return { values, labels: values.map(String) };

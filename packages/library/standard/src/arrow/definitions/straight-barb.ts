@@ -8,6 +8,7 @@ import { StandardArrowName } from '../constants';
 export const StraightBarbArrowDefinition = defineArrow({
   name: StandardArrowName.StraightBarb,
   hollow: true,
+  backX: 1,
   lineContactX: 9,
   tipX: 9,
   emit: context => [

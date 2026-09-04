@@ -9,6 +9,8 @@ import type { ChartAuthoringResult } from '../shared/types';
 import { RetikzChartVanillaError } from '../error';
 import { ChartInputEmbedAdapter } from './adapter';
 
+export type { InputChartCoordinate } from '../normalize/chart';
+export { normalizeChartCoordinate } from '../normalize/chart';
 export type { ChartAuthoringResult, ChartHostThemeInput, ChartInput, InputChartPanel } from '../shared';
 export { ChartInputEmbedAdapter } from './adapter';
 

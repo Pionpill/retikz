@@ -5,12 +5,13 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /**
  * 自定义箭头：TikZ Bracket 样式（空心方括号 [）——一条 stroke 路径勾出"┌…└"括号，与内置三角形箭头明显不同。
- * 几何在局部 baseSize=10 坐标系（viewBox 0 0 10 10）；hollow:true → 框架丢 fill、用描边、lineContactX 自动减 lineWidth/2。
+ * 几何在局部 baseSize=10 坐标系（viewBox 0 0 10 10）；backX 描述后缘，hollow:true 时框架用描边并补偿外轮廓
  * stroke 取 ctx.stroke（无 color override 时为 contextStroke，跟随 path 描边色）。
  */
 const bracket = defineArrow({
   name: 'bracket',
   hollow: true,
+  backX: 2,
   lineContactX: 2,
   tipX: 8,
   defaultLength: 9,

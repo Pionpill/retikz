@@ -27,12 +27,14 @@ description: 二维坐标系把 x 与 y 位置通道投影到笛卡尔或极坐�
 - 线使用闭合的 `<PathMark>`，把最后一点连回第一点。
 - 面仍由 `<IntervalMark>` 实现，形成按分类分隔的径向区间。
 
-试验场还可以控制 `innerRadius`、起始角度和扫过角度。扫过角度是面板中的教学参数，实际传给 coordinate 的 `endAngle` 等于 `startAngle + sweepAngle`。
+`interpolation` 决定相邻极坐标位置之间的连接空间。省略时，连续角向比例尺使用 `polar`，在角度 / 半径输出空间插值后再投影；离散角向比例尺使用 `chord`，直接连接投影顶点。coordinate 的显式值会同时作用于网格与可继承图元；PathMark 和 IntervalMark 可以再局部覆盖，PointMark 没有连接边界，因此不提供该配置。
+
+试验场可以分别控制 coordinate 与当前图元的插值模式，也可以调整 `innerRadius`、起始角度和扫过角度。扫过角度是面板中的教学参数，实际传给 coordinate 的 `endAngle` 等于 `startAngle + sweepAngle`。
 
 <ComponentPreview
   files={['coordinate-polar', 'coordinate-2d.data.ts']}
   size="lg"
-  caption="切换点、线、面后，再调整内半径和角度范围，观察极坐标投影如何改变同一组位置绑定。"
+  caption="比较自动推断、coordinate 显式模式与单个图元覆盖；PointMark 下图元插值会隐藏，因为点没有相邻边界。"
 />
 
 <Comparison target="tikz" title="TikZ 对照">

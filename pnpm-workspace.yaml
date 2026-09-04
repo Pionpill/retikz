@@ -22,7 +22,6 @@ catalog:
   '@types/node': ^25.6.0
   '@types/react': ~18.2
   '@types/react-dom': ~18.2
-  '@types/react-syntax-highlighter': ^15.5.13
   '@vitest/coverage-v8': ^4.1.10
   '@vitejs/plugin-react': ^6.0.3
   ai: ^6.0.204
@@ -54,12 +53,12 @@ catalog:
   react-i18next: ^17
   react-resizable-panels: ^3.0.6
   react-router: ^7.14.2
-  react-syntax-highlighter: ^16.1.1
   rehype-mdx-code-props: ^3.0.1
   rehype-slug: ^6.0.0
   remark-frontmatter: ^5.0.0
   remark-gfm: ^4.0.1
   remark-mdx-frontmatter: ^5.0.0
+  shiki: ^4.4.3
   sonner: ^2.0.7
   tailwind-merge: ^3.5.0
   tailwindcss: ^4.2.4

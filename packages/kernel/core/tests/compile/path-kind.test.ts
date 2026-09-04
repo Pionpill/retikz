@@ -140,6 +140,26 @@ describe('Path kind registry', () => {
     ).not.toThrow();
   });
 
+  it('rejects endpoint arrow overlap before a custom path kind provider can consume it', () => {
+    const custom = definePathKind({
+      name: 'custom-overlap',
+      schema: customPathSchema('custom-overlap'),
+      compile: () => ({ primitives: [], boundsPoints: [] }),
+    });
+    const input = scene([
+      {
+        type: 'path',
+        kind: 'custom-overlap',
+        marks: [{ pos: 1, endpointOverlap: 0.5, mark: { kind: 'arrow' } }],
+        children: steps,
+      },
+    ]);
+
+    expect(() => compileToScene(input, { pathKinds: [custom] })).toThrow(
+      /children\[0\]\.path\.marks\[0\]\.endpointOverlap.*built-in Stroke path/,
+    );
+  });
+
   it('resolves only stroke providers when a custom kind emits stroke', () => {
     let generatorCalls = 0;
     const generator = definePathGenerator({

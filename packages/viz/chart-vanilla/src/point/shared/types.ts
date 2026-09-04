@@ -3,7 +3,7 @@ import type { IRScene, ThemeStyleDefinition } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import type { LowerPlotsOptions } from '@retikz/plot';
 
-import type { InputChartPresentation } from '../../normalize/chart';
+import type { InputChartCoordinate, InputChartPresentation } from '../../normalize/chart';
 import type { InputChartPanel } from '../../shared';
 
 /** Point family 各 concrete chartType 共用的 Vanilla 输入字段 */
@@ -17,6 +17,8 @@ export type TypedChartCommonInput<TSource extends IRChartSource> = InputChartPre
     dataModel?: TSource['data']['model'];
     /** Chart 外层尺寸 */
     layout?: TSource['layout'];
+    /** Chart 根坐标系选择 */
+    coordinate?: InputChartCoordinate;
     /** Chart Source 身份 */
     id?: string;
     /** Source-owned named / inline Chart Theme；Core host Theme 仍可使用同名字段的 Core 形态 */
@@ -35,5 +37,6 @@ export type TypedChartCommonInput<TSource extends IRChartSource> = InputChartPre
 
 /** 从精确 Chart Source 推导对应的 plain normalizer 输入 */
 export type InputTypedChart<TSource extends { data: object; recipe: object }> = InputChartPresentation &
-  Omit<TSource, 'namespace' | 'type' | 'presentation' | 'recipe'> &
+  Omit<TSource, 'namespace' | 'type' | 'presentation' | 'recipe' | 'coordinate'> &
+  Readonly<{ coordinate?: InputChartCoordinate }> &
   Omit<TSource['recipe'], 'chartType'>;

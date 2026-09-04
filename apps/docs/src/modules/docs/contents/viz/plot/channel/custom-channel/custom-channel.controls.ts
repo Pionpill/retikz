@@ -24,11 +24,7 @@ export const customChannelControls = definePreviewControls({
           id: 'custom-channel-points',
           label: '散点数据',
           rows: customChannelPoints,
-          columns: [
-            { key: 'x', label: 'x' },
-            { key: 'y', label: 'y' },
-            { key: 'score', label: '强度分数' },
-          ],
+          columns: [{ key: 'x' }, { key: 'y' }, { key: 'score' }],
         },
       ],
     },

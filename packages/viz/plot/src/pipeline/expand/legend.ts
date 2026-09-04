@@ -171,6 +171,7 @@ const legendRampTickScale = (
     coordinate: value => scale(Number(value)),
     domain: () => [domain[0], domain[1]],
     bandwidth: 0,
+    step: 0,
     ticks: count => scaleTicks(scale, count),
     tickKind: fieldType === DataFieldType.Temporal ? 'time' : 'number',
     range: () => [0, 1],
@@ -464,6 +465,7 @@ export const buildLegendLayers = (
           : 1;
       const entries: Array<LegendEntry> = reps.map(tick => ({
         label: showLabels ? tick.label : '',
+        color: descriptor.defaultColor ?? categoricalColorAt(resolvedTheme.palette.series, 0),
         radius:
           (style.symbolFit === LegendSymbolFit.Fit
             ? Math.min(radiusScale(tick.value) * fitScale, symbolRadiusLimit)

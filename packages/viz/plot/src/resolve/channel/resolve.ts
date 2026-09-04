@@ -74,7 +74,7 @@ export const resolveMarkChannels = (mark: IRPlotMarkOperation, context: ChannelR
   const registerDescriptor = (descriptor: ScaleDescriptor | undefined): void => {
     if (descriptor === undefined) return;
     descriptors.push(
-      descriptor.channel === 'shape'
+      descriptor.channel === 'shape' || descriptor.channel === 'size'
         ? {
             ...descriptor,
             ...(typeof defaults.fill === 'string'

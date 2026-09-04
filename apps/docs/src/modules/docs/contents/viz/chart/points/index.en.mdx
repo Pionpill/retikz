@@ -5,15 +5,26 @@ description: Show individual observations through point positions and relationsh
 
 Point charts use one or more data points as their visual subject. This group helps readers choose a chartType by visual structure and remains a source-directory and `/point` multi-entry import boundary. It does not introduce another Point resolver or runtime dispatch layer.
 
-Scatter belongs to the `type: 'point'` family, with its exact schema and recipe selected by `recipe.chartType`. It shares root `data`, `layout`, `presentation`, `theme`, and `plotExtension`, while `recipe.encodings`, `recipe.properties`, and its built-in semantic mark preserve the chart's field roles and visual structure.
+Scatter, Bubble, Regression, Connected Scatter, Ranged Dot, and Strip all belong to the `type: 'point'` family, with `recipe.chartType` selecting each exact schema and recipe. They share root `data`, `layout`, `presentation`, `theme`, and `plotExtension`, while `recipe.encodings`, `recipe.properties`, and the built-in semantic mark fix each chart's data roles and visual structure.
 
 Field ownership, the authoring pipeline, chart-wide presentation, and Plot extension rules shared by every type live under [Chart Model](/viz/chart/model). This section compares only the visual semantics unique to point chart types.
 
+Point recipes reserve range space on continuous position scales from the largest final Point radius, preventing boundary points from being clipped. A Point without `size` uses radius `5`; a field-sized Point defaults to maximum radius `20`; a constant size or explicit sqrt scale uses the largest final range value. Regression and Connected Scatter inspect their grouped Point, Ranged Dot inspects both endpoints, and `plotExtension.marks` never participate.
+
+Properties `domainPadding` accepts a nonnegative number or `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`. Omitting `kind` means range units. Only explicit `kind: 'ratio'` uses a source-domain-span ratio, and every ratio must be below `1`. A concrete side overrides x / y, which override default. Missing range sides inherit the maximum radius; missing ratio sides become `0`. left / right / top / bottom are Cartesian-only and map to domain lower / upper through the scale's actual range direction. Polar accepts only default / x / y.
+
+Precedence is the automatic maximum radius, then Properties, then an encoding scale operation. An operation's explicit `0` or `{ kind?, lower?, upper? }` is preserved. Categorical scales and `plotExtension` scales are not rewritten. `domainPadding` belongs only to recipe Properties and is rejected on authored marks. Ranged Dot uses a categorical y scale, so only its continuous x padding applies.
+
 ## Responsibilities
 
-| Chart                                | `chartType` | Use it when                                             |
-| ------------------------------------ | ----------- | ------------------------------------------------------- |
-| [Scatter](/viz/chart/points/scatter) | `scatter`   | Inspecting distributions, clusters, outliers, or trends |
+| Chart                                                    | `chartType`         | Use it when                                                 |
+| -------------------------------------------------------- | ------------------- | ----------------------------------------------------------- |
+| [Scatter](/viz/chart/points/scatter)                     | `scatter`           | Inspecting distributions, clusters, outliers, or trends     |
+| [Bubble Chart](/viz/chart/points/bubble)                 | `bubble`            | Comparing two positions with the magnitude of a third field |
+| [Regression Chart](/viz/chart/points/regression)         | `regression`        | Comparing global or grouped fitted trends over observations |
+| [Connected Scatter](/viz/chart/points/connected-scatter) | `connected-scatter` | Reading explicitly ordered observation trajectories         |
+| [Ranged Dot](/viz/chart/points/ranged-dot)               | `ranged-dot`        | Comparing two endpoints and direction for each category     |
+| [Strip Chart](/viz/chart/points/strip)                   | `strip`             | Inspecting observation distributions within each category   |
 
 ## Pages
 
@@ -24,10 +35,34 @@ Field ownership, the authoring pipeline, chart-wide presentation, and Plot exten
       Compare two continuous variables, then add category or magnitude with color and size
     </span>
   </LinkedCard>
-  <LinkedCard href="/viz/chart/model">
-    <span className="font-semibold">Chart Model</span>
+  <LinkedCard href="/viz/chart/points/bubble">
+    <span className="font-semibold">Bubble Chart</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Reference structure and resolution rules shared by every Chart type
+      Drive bubble area with a required third field while retaining Point position semantics
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/regression">
+    <span className="font-semibold">Regression Chart</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Overlay raw observations with one or more built-in regression trends
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/connected-scatter">
+    <span className="font-semibold">Connected Scatter</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Retain observations while connecting one or more explicitly ordered trajectories
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/ranged-dot">
+    <span className="font-semibold">Ranged Dot</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Compare before and after values with one connector and two endpoints
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/chart/points/strip">
+    <span className="font-semibold">Strip Chart</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Deterministically spread observations around discrete ticks while preserving continuous values
     </span>
   </LinkedCard>
 </div>

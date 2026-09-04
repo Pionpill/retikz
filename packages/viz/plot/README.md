@@ -34,6 +34,11 @@ Only `IRPlot*` values are persisted and schema-validated. `InputPlot*`,
 `PlotSource`, and adapter inputs are TypeScript contracts owned by
 `@retikz/plot-vanilla`.
 
+The built-in mark-local `Smooth` transform supports linear, quadratic,
+polynomial, logarithmic, exponential, and power regression. It keeps fitting,
+sampling, grouping, provenance, facet data routing, and Path consumption in the
+same Plot transform pipeline.
+
 See the [plot architecture](https://github.com/Pionpill/retikz/blob/next-viz/packages/viz/_notes/architecture/plot-design.md)
 and [plot design decisions](https://github.com/Pionpill/retikz/tree/next-viz/packages/viz/_notes/decisions/plot)
 for the underlying model and design rationale.

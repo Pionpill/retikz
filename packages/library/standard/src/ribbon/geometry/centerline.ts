@@ -1,16 +1,8 @@
-import type { IRPosition, PathCommand, SegmentSample } from '@retikz/core';
-import type { Vector2 } from '@retikz/math';
+import type { IRPosition, PathCommand } from '@retikz/core';
+import type { CurveSegmentSample, Vector2 } from '@retikz/math';
 
-import {
-  arcSegmentSample,
-  cubicSegmentSample,
-  ellipseArcSegmentSample,
-  lineSegmentSample,
-  polar,
-  quadSegmentSample,
-} from '@retikz/core';
-import { isPositionTuple } from '@retikz/core';
-import { point, vector2 } from '@retikz/math';
+import { isPositionTuple, polar } from '@retikz/core';
+import { curve, point, vector2 } from '@retikz/math';
 
 import type { IRRibbonDirection } from '../types';
 import type { RibbonSegment, RibbonSegmentInput } from './types';
@@ -101,7 +93,7 @@ export const directionToTangent = (
 };
 
 /** 用固定细分估算曲线弧长，供 offset→segment 映射和采样数量选择使用 */
-export const estimateLength = (sampleAt: (t: number) => SegmentSample): number => {
+export const estimateLength = (sampleAt: (t: number) => CurveSegmentSample): number => {
   let total = 0;
   let prev = sampleAt(0).point;
   for (let i = 1; i <= LENGTH_SUBDIVISIONS; i += 1) {
@@ -151,7 +143,8 @@ export const commandsToSegmentInputs = (
       }
       case 'quad': {
         const from = assertCursor(cursor, command);
-        const sampleAt = (t: number): SegmentSample => quadSegmentSample(from, command.control, command.to, t);
+        const sampleAt = (t: number): CurveSegmentSample =>
+          curve.sampleAt({ kind: 'quadraticBezier', from, control: command.control, to: command.to }, t);
         if (estimateLength(sampleAt) > 0) {
           inputs.push({ kind: 'quad', from, control: command.control, to: command.to });
         }
@@ -160,8 +153,11 @@ export const commandsToSegmentInputs = (
       }
       case 'cubic': {
         const from = assertCursor(cursor, command);
-        const sampleAt = (t: number): SegmentSample =>
-          cubicSegmentSample(from, command.control1, command.control2, command.to, t);
+        const sampleAt = (t: number): CurveSegmentSample =>
+          curve.sampleAt(
+            { kind: 'cubicBezier', from, control1: command.control1, control2: command.control2, to: command.to },
+            t,
+          );
         if (estimateLength(sampleAt) > 0) {
           inputs.push({
             kind: 'cubic',
@@ -176,8 +172,17 @@ export const commandsToSegmentInputs = (
       }
       case 'arc': {
         assertCursor(cursor, command);
-        const sampleAt = (t: number): SegmentSample =>
-          arcSegmentSample(command.center, command.radius, command.startAngle, command.endAngle, t);
+        const sampleAt = (t: number): CurveSegmentSample =>
+          curve.sampleAt(
+            {
+              kind: 'arc',
+              center: command.center,
+              radius: command.radius,
+              startAngleDeg: command.startAngle,
+              endAngleDeg: command.endAngle,
+            },
+            t,
+          );
         if (estimateLength(sampleAt) > 0) {
           inputs.push({
             kind: 'arc',
@@ -193,13 +198,16 @@ export const commandsToSegmentInputs = (
       }
       case 'ellipseArc': {
         assertCursor(cursor, command);
-        const sampleAt = (t: number): SegmentSample =>
-          ellipseArcSegmentSample(
-            command.center,
-            command.radiusX,
-            command.radiusY,
-            command.startAngle,
-            command.endAngle,
+        const sampleAt = (t: number): CurveSegmentSample =>
+          curve.sampleAt(
+            {
+              kind: 'ellipseArc',
+              center: command.center,
+              radiusX: command.radiusX,
+              radiusY: command.radiusY,
+              startAngleDeg: command.startAngle,
+              endAngleDeg: command.endAngle,
+            },
             t,
           );
         if (estimateLength(sampleAt) > 0) {
@@ -239,11 +247,11 @@ const segmentToSampler = ({
   index,
   count,
   endpointTangents = {},
-}: SegmentToSamplerInput): ((t: number) => SegmentSample) => {
+}: SegmentToSamplerInput): ((t: number) => CurveSegmentSample) => {
   const isFirst = index === 0;
   const isLast = index === count - 1;
   if (input.kind === 'line') {
-    return (t: number): SegmentSample => lineSegmentSample(input.from, input.to, t);
+    return (t: number): CurveSegmentSample => curve.sampleAt({ kind: 'line', from: input.from, to: input.to }, t);
   }
   if (input.kind === 'quad') {
     if ((isFirst && endpointTangents.start) || (isLast && endpointTangents.end)) {
@@ -264,9 +272,11 @@ const segmentToSampler = ({
               input.to[0] + ((input.control[0] - input.to[0]) * 2) / 3,
               input.to[1] + ((input.control[1] - input.to[1]) * 2) / 3,
             ] satisfies IRPosition);
-      return (t: number): SegmentSample => cubicSegmentSample(input.from, control1, control2, input.to, t);
+      return (t: number): CurveSegmentSample =>
+        curve.sampleAt({ kind: 'cubicBezier', from: input.from, control1, control2, to: input.to }, t);
     }
-    return (t: number): SegmentSample => quadSegmentSample(input.from, input.control, input.to, t);
+    return (t: number): CurveSegmentSample =>
+      curve.sampleAt({ kind: 'quadraticBezier', from: input.from, control: input.control, to: input.to }, t);
   }
   if (input.kind === 'cubic') {
     const fallback = point.distance(input.from, input.to) / 3;
@@ -278,14 +288,34 @@ const segmentToSampler = ({
       isLast && endpointTangents.end
         ? point.against(input.to, endpointTangents.end, controlHandleLength(input.to, input.control2, fallback))
         : input.control2;
-    return (t: number): SegmentSample => cubicSegmentSample(input.from, control1, control2, input.to, t);
+    return (t: number): CurveSegmentSample =>
+      curve.sampleAt({ kind: 'cubicBezier', from: input.from, control1, control2, to: input.to }, t);
   }
   if (input.kind === 'arc') {
-    return (t: number): SegmentSample =>
-      arcSegmentSample(input.center, input.radius, input.startAngle, input.endAngle, t);
+    return (t: number): CurveSegmentSample =>
+      curve.sampleAt(
+        {
+          kind: 'arc',
+          center: input.center,
+          radius: input.radius,
+          startAngleDeg: input.startAngle,
+          endAngleDeg: input.endAngle,
+        },
+        t,
+      );
   }
-  return (t: number): SegmentSample =>
-    ellipseArcSegmentSample(input.center, input.radiusX, input.radiusY, input.startAngle, input.endAngle, t);
+  return (t: number): CurveSegmentSample =>
+    curve.sampleAt(
+      {
+        kind: 'ellipseArc',
+        center: input.center,
+        radiusX: input.radiusX,
+        radiusY: input.radiusY,
+        startAngleDeg: input.startAngle,
+        endAngleDeg: input.endAngle,
+      },
+      t,
+    );
 };
 
 /**
@@ -310,7 +340,7 @@ export const sampleAtDistance = (
   segments: ReadonlyArray<RibbonSegment>,
   totalLength: number,
   target: number,
-): SegmentSample => {
+): CurveSegmentSample => {
   let acc = 0;
   for (const segment of segments) {
     const end = acc + segment.length;

@@ -76,8 +76,11 @@ type PathKindLabelText =
       runs: Array<PathKindInlineRun<IRTextRun | IRMathRun>>;
     };
 
-/** Path kind 请求宿主标签编译时提供的已定位几何信息 */
-export type PathKindLabel = Omit<IRGeometryLabel, 'position' | 'side' | 'distance' | 'textColor' | 'text'> & {
+/** Path kind 请求宿主标签编译时提供的已定位几何信息，不包含 Stroke 专属 interruption */
+export type PathKindLabel = Omit<
+  IRGeometryLabel,
+  'position' | 'side' | 'distance' | 'textColor' | 'text' | 'interrupt'
+> & {
   position: number;
   side: NonNullable<IRGeometryLabel['side']> | 'center';
   distance: number;

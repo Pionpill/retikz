@@ -1,8 +1,15 @@
 import type { IRScene } from '@retikz/core';
 import type { FC } from 'react';
 
-import { ChartSource, ChartTitle } from '@retikz/chart-react';
-import { ScatterChart } from '@retikz/chart-react/point';
+import { ChartData, ChartLayout, ChartSource, ChartTitle } from '@retikz/chart-react';
+import {
+  BubbleChart,
+  BubbleEncodings,
+  ScatterChart,
+  ScatterEncodings,
+  StripChart,
+  StripEncodings,
+} from '@retikz/chart-react/point';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
@@ -83,19 +90,49 @@ const PlotDemo: FC = () => (
 );
 
 const ChartDemo: FC = () => (
-  <ScatterChart
-    data={[
-      { income: 1000, life: 61 },
-      { income: 4000, life: 72 },
-    ]}
-    encodings={{ x: 'income', y: 'life' }}
-    layout={{ width: 320, height: 200 }}
-    width={320}
-    height={200}
-  >
+  <ScatterChart>
+    <ChartData
+      data={[
+        { income: 1000, life: 61 },
+        { income: 4000, life: 72 },
+      ]}
+    />
+    <ChartLayout width={320} height={200} />
+    <ScatterEncodings x="income" y="life" />
     <ChartTitle>Income and life expectancy</ChartTitle>
     <ChartSource>World Bank</ChartSource>
   </ScatterChart>
+);
+
+const BubbleChartDemo: FC = () => (
+  <BubbleChart>
+    <ChartData
+      data={[
+        { income: 1000, life: 61, population: 1_000_000 },
+        { income: 4000, life: 72, population: 4_000_000 },
+      ]}
+    />
+    <ChartLayout width={320} height={200} />
+    <BubbleEncodings x="income" y="life" size="population" />
+    <ChartTitle>Income, life expectancy, and population</ChartTitle>
+  </BubbleChart>
+);
+
+const StripChartDemo: FC = () => (
+  <StripChart>
+    <ChartData
+      data={[
+        { category: 'A', value: 2 },
+        { category: 'A', value: 3 },
+        { category: 'B', value: 4 },
+      ]}
+    />
+    <ChartLayout width={320} height={200} />
+    <StripEncodings
+      x={{ field: 'category', scale: { operation: { type: 'point', name: 'category' } } }}
+      y={{ field: 'value', scale: { operation: { type: 'linear', name: 'value' } } }}
+    />
+  </StripChart>
 );
 
 const EmbeddedTableDetailDemo: FC = () => (
@@ -256,6 +293,50 @@ describe('buildPreviewSource', () => {
     expect(vanilla?.files[0]?.code).toContain("y: 'life'");
     expect(vanilla?.files[0]?.code).not.toContain('__chart.scatter.scale');
     expect(vanilla?.files[0]?.code).toContain('income: 1000');
+    expect(vanilla?.render).toBeTypeOf('function');
+    expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
+  });
+
+  it('为 Bubble composite 保留精确 Source 并生成 Bubble Vanilla factory 与真实 SVG', () => {
+    const result = buildPreviewSource(createInput({ Component: BubbleChartDemo }));
+    const vanilla = result.source?.vanilla;
+
+    expect(result.previewIr).toMatchObject({ width: 320, height: 200 });
+    expect(result.previewIr?.sourceIr.children[0]).toMatchObject({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'chart.data' },
+      layout: { width: 320, height: 200 },
+      recipe: {
+        chartType: 'bubble',
+        encodings: { x: 'income', y: 'life', size: 'population' },
+      },
+      presentation: { title: 'Income, life expectancy, and population' },
+    });
+    expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "bubble"');
+    expect(vanilla?.files[0]?.code).toContain("import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble'");
+    expect(vanilla?.files[0]?.code).toContain("size: 'population'");
+    expect(vanilla?.render).toBeTypeOf('function');
+    expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
+  });
+
+  it('为 Strip composite 保留精确 Source 并生成 Strip Vanilla factory 与真实 SVG', () => {
+    const result = buildPreviewSource(createInput({ Component: StripChartDemo }));
+    const vanilla = result.source?.vanilla;
+
+    expect(result.previewIr?.sourceIr.children[0]).toMatchObject({
+      namespace: 'chart',
+      type: 'point',
+      recipe: {
+        chartType: 'strip',
+        encodings: {
+          x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        },
+      },
+    });
+    expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "strip"');
+    expect(vanilla?.files[0]?.code).toContain("import { createStripChart } from '@retikz/chart-vanilla/point/strip'");
     expect(vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
   });

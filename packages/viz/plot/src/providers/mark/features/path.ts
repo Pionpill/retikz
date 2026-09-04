@@ -314,14 +314,14 @@ export const buildOutlinePoints = (
   frame: CoordinateFrame,
   closed: boolean,
 ): Array<[number, number]> => {
-  if (isPolarCoordinateFrame(frame) && frame.continuousAngle && !closed) {
+  if (isPolarCoordinateFrame(frame) && (mark.interpolation ?? frame.interpolation) === 'polar') {
     const vertices = ordered
       .map(row => {
         const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
         return toPolarVertex(frame, primaryValue, secondaryValue);
       })
       .filter((vertex): vertex is PolarVertex => vertex !== null);
-    return densifyPolarSegments(frame, vertices);
+    return densifyPolarSegments(frame, vertices, { closed });
   }
   if (isGenericCoordinateFrame(frame)) {
     return ordered
@@ -355,16 +355,10 @@ const pathClosureOf = (mark: IRPlotPathMark): IRPlotPathClosure | undefined => m
 type PathRowSegment = Array<ExternalRow>;
 type PathStepSegment = { rows: PathRowSegment; steps: Array<IRStep> };
 
-const projectableTopPoint = (
-  mark: IRPlotPathMark,
-  row: ExternalRow,
-  frame: CoordinateFrame,
-  closed: boolean,
-): boolean => {
+const projectableTopPoint = (mark: IRPlotPathMark, row: ExternalRow, frame: CoordinateFrame): boolean => {
   if (isGenericCoordinateFrame(frame)) return roleAnchor(mark, row, frame) !== null;
   const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
-  if (isPolarCoordinateFrame(frame) && frame.continuousAngle && !closed)
-    return toPolarVertex(frame, primaryValue, secondaryValue) !== null;
+  if (isPolarCoordinateFrame(frame)) return toPolarVertex(frame, primaryValue, secondaryValue) !== null;
   return frame.project(primaryValue, secondaryValue) !== null;
 };
 
@@ -373,9 +367,8 @@ const projectableClosurePoint = (
   row: ExternalRow,
   frame: CoordinateFrame,
   closure: IRPlotPathClosure,
-  closed: boolean,
 ): boolean => {
-  if (!projectableTopPoint(mark, row, frame, closed)) return false;
+  if (!projectableTopPoint(mark, row, frame)) return false;
   const [primaryValue] = resolveRolePosition(mark, row);
   if (closure.kind === PathClosureKind.Baseline)
     return frame.project(primaryValue, closure.baseline ?? pathDefaultBaseline(frame)) !== null;
@@ -412,14 +405,11 @@ const pathRowSegments = (
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   closure: IRPlotPathClosure | undefined,
-  closed: boolean,
 ): Array<PathRowSegment> => {
   const ordered = orderRows(rows, mark.order);
   const connectNulls = mark.connectNulls ?? false;
   const projectable = (row: ExternalRow): boolean =>
-    closure === undefined
-      ? projectableTopPoint(mark, row, frame, closed)
-      : projectableClosurePoint(mark, row, frame, closure, closed);
+    closure === undefined ? projectableTopPoint(mark, row, frame) : projectableClosurePoint(mark, row, frame, closure);
   return splitRowsByProjectability(ordered, projectable, connectNulls);
 };
 
@@ -472,7 +462,7 @@ const buildLineStepSegments = (
   frame: CoordinateFrame,
   closed: boolean,
 ): Array<PathStepSegment> =>
-  pathRowSegments(mark, rows, frame, undefined, closed).flatMap(segmentRows => {
+  pathRowSegments(mark, rows, frame, undefined).flatMap(segmentRows => {
     const steps = pointsToCurveSteps(
       buildOutlinePoints(mark, segmentRows, frame, closed),
       closed,
@@ -525,12 +515,10 @@ const buildClosureStepSegments = (
   closure: IRPlotPathClosure,
   closed: boolean,
 ): Array<PathStepSegment> =>
-  pathRowSegments(mark, rows, frame, closure, closure.kind === PathClosureKind.Cycle ? true : closed).flatMap(
-    segmentRows => {
-      const segment = buildClosureStepSegment(mark, segmentRows, frame, closure, closed);
-      return segment === null ? [] : [segment];
-    },
-  );
+  pathRowSegments(mark, rows, frame, closure).flatMap(segmentRows => {
+    const segment = buildClosureStepSegment(mark, segmentRows, frame, closure, closed);
+    return segment === null ? [] : [segment];
+  });
 
 /** 多系列 series 拆分通用：每条 series 一个 Scope，内部承载一个或多个 Path segment */
 export type SeriesPathBuilder = (seriesRows: Array<ExternalRow>) => Array<PathStepSegment>;
@@ -661,6 +649,9 @@ const lowerPath = (
   markProvenance: MarkProvenance | undefined,
 ): IRScope | null => {
   if (mark.type !== PlotMark.Path) return null;
+  if (mark.interpolation !== undefined && !isPolarCoordinateFrame(frame)) {
+    throw new RetikzPlotError('lowerPlots: path interpolation override is only supported under polar2D');
+  }
   const closure = pathClosureOf(mark);
   const closed = mark.closed ?? isPolarCoordinateFrame(frame);
   const seriesField = pathSeriesField(mark, rows);

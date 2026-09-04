@@ -15,7 +15,7 @@ alpha.3 补齐 Core 上下文颜色：具有明确主色来源的颜色槽位可
 
 | ADR                                           | 状态     | 主题       | 交付                                                               |
 | --------------------------------------------- | -------- | ---------- | ------------------------------------------------------------------ |
-| [ADR-04](./04-contextual-color-resolution.md) | Accepted | 上下文颜色 | Foundation 颜色原子、Core 最终确定化与 Tier 2 Theme 主色链统一适配 |
+| [ADR-01](./01-contextual-color-resolution.md) | Accepted | 上下文颜色 | Foundation 颜色原子、Core 最终确定化与 Tier 2 Theme 主色链统一适配 |
 
 ## 已交付边界
 

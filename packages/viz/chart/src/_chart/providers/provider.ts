@@ -68,6 +68,7 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
     recipe: eraseChartRecipeDefinition(input.recipe),
     themeDefinitions: Object.freeze([...(input.themeDefinitions ?? [])]),
     runtimeDefinitions: Object.freeze({
+      ...(input.lowerOptions?.coordinates === undefined ? {} : { coordinates: input.lowerOptions.coordinates }),
       ...(input.lowerOptions?.transformDefinitions === undefined
         ? {}
         : { transformDefinitions: input.lowerOptions.transformDefinitions }),

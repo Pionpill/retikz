@@ -21,7 +21,7 @@ import type { Rect } from '../../shared';
 
 import { guideLayerId, guideLayerMeta } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import { defaultOriginAxisTickSideOf } from '../../providers';
+import { defaultOriginAxisTickSideOf, polarFixedRadiusSteps } from '../../providers';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import {
   AxisCardinalSide,
@@ -40,7 +40,12 @@ import {
   AxisTitlePlacementKeyword,
   PlotLayerZIndex,
 } from '../../schemas';
-import { DEFAULT_AXIS_LABEL_GAP, DEFAULT_AXIS_TICK_LENGTH, estimateLabelWidth } from '../../shared';
+import {
+  DEFAULT_AXIS_LABEL_GAP,
+  DEFAULT_AXIS_TICK_LENGTH,
+  estimateLabelWidth,
+  layoutPolarAngularLabel,
+} from '../../shared';
 
 /** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 pointAtArcAngle */
 const DEG_TO_RAD = Math.PI / 180;
@@ -685,68 +690,45 @@ const gridCoordinateOf = (scale: PositionScale, value: IRDataScalarValue, bandPo
   return coordinate + ((bandPosition ?? 0.5) - 0.5) * scale.bandwidth;
 };
 
-/** 在保留既有顺序的前提下，按最终投影位置追加缺失的 scale domain 首尾值 */
-const appendMissingDomainEndpoints = (
-  scale: PositionScale,
-  ticks: TickSet,
-  coordinate: (value: IRDataScalarValue) => number,
-): TickSet => {
-  const domain = scale.domain();
-  if (domain.length === 0) return ticks;
+/** 在保留既有顺序的前提下，按最终投影位置追加缺失的 scale range 首尾边界 */
+const appendMissingScaleRangeBoundaries = (scale: PositionScale, coordinates: Array<number>): Array<number> => {
+  const range = scale.range();
+  const boundaries = range[0] === range[1] ? [range[0]] : [range[0], range[1]];
+  const result = [...coordinates];
 
-  const values = [...ticks.values];
-  const labels = [...ticks.labels];
-  const projectedCoordinates = values.map(coordinate).filter(value => Number.isFinite(value));
-  const endpoints = domain.length === 1 ? [domain[0]] : [domain[0], domain[domain.length - 1]];
-
-  endpoints.forEach(endpoint => {
-    const projected = coordinate(endpoint);
-    if (!Number.isFinite(projected)) return;
-    if (projectedCoordinates.some(existing => Math.abs(existing - projected) <= 1e-6)) return;
-
-    values.push(endpoint);
-    labels.push(String(endpoint));
-    projectedCoordinates.push(projected);
+  boundaries.forEach(boundary => {
+    if (!Number.isFinite(boundary)) return;
+    if (result.some(existing => Number.isFinite(existing) && Math.abs(existing - boundary) <= 1e-6)) return;
+    result.push(boundary);
   });
 
-  return { values, labels };
+  return result;
 };
 
-const resolveAxisGridTicks = (
+const resolveAxisGridCoordinates = (
   scale: PositionScale,
   fallbackTicks: TickSet,
   options: AxisGridTickOptions | undefined,
   coordinate: (value: IRDataScalarValue) => number,
-): TickSet => {
+): Array<number> => {
   const candidateTicks = options?.ticks === undefined ? fallbackTicks : resolveGuideTicks(scale, options.ticks);
   const visibleTicks =
     options?.density === undefined
       ? candidateTicks
       : resolveVisibleGuideTicks(candidateTicks, { density: options.density }, coordinate);
-  if (options?.includeDomain !== true) return visibleTicks;
-  return appendMissingDomainEndpoints(scale, visibleTicks, coordinate);
+  const coordinates = visibleTicks.values.map(coordinate);
+  return options?.includeDomain === true ? appendMissingScaleRangeBoundaries(scale, coordinates) : coordinates;
 };
 
-const filterOverlappingGridTicks = (
-  ticks: TickSet,
-  reference: TickSet,
-  coordinate: (value: IRDataScalarValue) => number,
-  referenceCoordinate: (value: IRDataScalarValue) => number = coordinate,
-): TickSet => {
-  const referenceCoordinates = reference.values
-    .map(value => referenceCoordinate(value))
-    .filter(value => Number.isFinite(value));
-  const indices = ticks.values
-    .map((value, index) => ({ index, projected: coordinate(value) }))
-    .filter(
-      ({ projected }) =>
-        !referenceCoordinates.some(referenceProjected => Math.abs(referenceProjected - projected) <= 1e-6),
-    )
-    .map(({ index }) => index);
-  return {
-    values: indices.map(index => ticks.values[index]),
-    labels: indices.map(index => ticks.labels[index]),
-  };
+const filterOverlappingGridCoordinates = (
+  coordinates: Array<number>,
+  referenceCoordinates: ReadonlyArray<number>,
+): Array<number> => {
+  const finiteReferenceCoordinates = referenceCoordinates.filter(value => Number.isFinite(value));
+  return coordinates.filter(
+    projected =>
+      !finiteReferenceCoordinates.some(referenceProjected => Math.abs(referenceProjected - projected) <= 1e-6),
+  );
 };
 
 /** 把若干直线段拼成一条多子路径 Path（每段一对 move/line）；空段返回 null */
@@ -1044,11 +1026,10 @@ const lowerCartesianGuide = (
   if (guide.grid) {
     const grid = axisGridTokenOf(guide);
     const majorBandPosition = grid?.bandPosition;
-    const majorTicks = resolveAxisGridTicks(project, ticks, grid, value =>
+    const majorCoordinates = resolveAxisGridCoordinates(project, ticks, grid, value =>
       gridCoordinateOf(project, value, majorBandPosition),
     );
-    const gridSegments: Array<Segment> = majorTicks.values.map(value => {
-      const p = gridCoordinateOf(project, value, majorBandPosition);
+    const gridSegments: Array<Segment> = majorCoordinates.map(p => {
       return isX
         ? [
             [p, top],
@@ -1065,19 +1046,16 @@ const lowerCartesianGuide = (
     const minorTicks =
       minorGrid === undefined
         ? null
-        : filterOverlappingGridTicks(
-            resolveAxisGridTicks(project, ticks, minorGrid, value =>
+        : filterOverlappingGridCoordinates(
+            resolveAxisGridCoordinates(project, ticks, minorGrid, value =>
               gridCoordinateOf(project, value, minorBandPosition),
             ),
-            majorTicks,
-            value => gridCoordinateOf(project, value, minorBandPosition),
-            value => gridCoordinateOf(project, value, majorBandPosition),
+            majorCoordinates,
           );
     const minorSegments: Array<Segment> =
       minorTicks === null
         ? []
-        : minorTicks.values.map(value => {
-            const p = gridCoordinateOf(project, value, minorBandPosition);
+        : minorTicks.map(p => {
             return isX
               ? [
                   [p, top],
@@ -1103,29 +1081,16 @@ const lowerCartesianGuide = (
   return { gridLayer, axisLayer };
 };
 
-/** 一条弧 Path（move 到弧起点 + arc step 扫 startAngle→endAngle，圆心 = frame.center、给定半径）；轴线与同心环复用 */
-const arcPath = (frame: PolarCoordinateFrame, radius: number): IRPath => {
-  const start = finitePolarPoint(frame.center, frame.startAngle, radius);
-  return {
-    type: 'path',
-    children: [
-      { type: 'step', kind: 'move', to: [start[0], start[1]] },
-      {
-        type: 'step',
-        kind: 'arc',
-        startAngle: frame.startAngle,
-        endAngle: frame.endAngle,
-        radius,
-        center: [frame.center[0], frame.center[1]],
-      },
-    ],
-  };
+/** frame 插值模式下的一条固定半径边界；退化 chord 骨架不产路径 */
+const fixedRadiusPath = (frame: PolarCoordinateFrame, radius: number): IRPath | null => {
+  const children = polarFixedRadiusSteps(frame, radius);
+  return children === null ? null : { type: 'path', children };
 };
 
 /**
  * polar angular axis：外圆弧轴线 + 每角向刻度短径向刻度线 + 圆周外标签
  * @description 轴线 = arc step（半径 outerRadius）；刻度 = 圆周点向外 DEFAULT_AXIS_TICK_LENGTH 短线；
- *   标签 = center + (outerRadius+gap)·(cosθ,sinθ) 处 Node text。grid:true → 每刻度一条圆心→外圆辐条
+ *   标签视觉盒从 outerRadius + tickLength + gap 锚点向对应象限外展。grid:true → 每刻度一条圆心→外圆辐条
  */
 const lowerAngularAxis = (
   guide: IRPlotAxisGuide,
@@ -1158,8 +1123,11 @@ const lowerAngularAxis = (
   const tickLineStyle = axisTickLineStyleOf(guide);
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   const tickShapeNodes = axisTickShapeNodesOf(guide, tickShapePlacements);
+  const fixedRadiusAxis = fixedRadiusPath(frame, outer);
   const axisChildren: Array<IRPath | IRNode> =
-    axisLineStyle === false ? [] : [{ ...arcPath(frame, outer), ...lineStyleProps(axisLineStyle) }];
+    axisLineStyle === false || fixedRadiusAxis === null
+      ? []
+      : [{ ...fixedRadiusAxis, ...lineStyleProps(axisLineStyle) }];
   if (tickPath) axisChildren.push(tickPath);
   axisChildren.push(...tickShapeNodes);
   const labels: Array<IRNode> = showLabels
@@ -1167,8 +1135,21 @@ const lowerAngularAxis = (
         guide,
         ticks.values.map((value, index): IRNode => {
           const theta = scale.coordinate(value);
-          const position = finitePolarPoint(frame.center, theta, outer + tickLength + tickLabelGap + fontSize / 2);
-          return { type: 'node', position, text: ticks.labels[index], ...tickLabelStyle };
+          const text = ticks.labels[index] ?? '';
+          const labelLayout = layoutPolarAngularLabel(
+            frame.center,
+            outer,
+            { angle: theta, text },
+            fontSize,
+            tickLength + tickLabelGap,
+          );
+          return {
+            type: 'node',
+            position: labelLayout.position,
+            text,
+            ...tickLabelStyle,
+            ...(tickLabelStyle.align === undefined ? { align: labelLayout.align } : {}),
+          };
         }),
         { fontSize, mode: 'generic', axis: 'both' },
       )
@@ -1210,11 +1191,10 @@ const lowerAngularAxis = (
   if (guide.grid) {
     const grid = axisGridTokenOf(guide);
     const majorBandPosition = grid?.bandPosition;
-    const majorTicks = resolveAxisGridTicks(scale, ticks, grid, value =>
+    const majorCoordinates = resolveAxisGridCoordinates(scale, ticks, grid, value =>
       gridCoordinateOf(scale, value, majorBandPosition),
     );
-    const spokes: Array<Segment> = majorTicks.values.map(value => {
-      const theta = gridCoordinateOf(scale, value, majorBandPosition);
+    const spokes: Array<Segment> = majorCoordinates.map(theta => {
       return [finitePolarPoint(frame.center, theta, frame.innerRadius), finitePolarPoint(frame.center, theta, outer)];
     });
     const gridPath = segmentsToPath(spokes, { drawOpacity: 0.15, ...axisGridStyleOf(grid) });
@@ -1223,17 +1203,16 @@ const lowerAngularAxis = (
     const minorTicks =
       minorGrid === undefined
         ? null
-        : filterOverlappingGridTicks(
-            resolveAxisGridTicks(scale, ticks, minorGrid, value => gridCoordinateOf(scale, value, minorBandPosition)),
-            majorTicks,
-            value => gridCoordinateOf(scale, value, minorBandPosition),
-            value => gridCoordinateOf(scale, value, majorBandPosition),
+        : filterOverlappingGridCoordinates(
+            resolveAxisGridCoordinates(scale, ticks, minorGrid, value =>
+              gridCoordinateOf(scale, value, minorBandPosition),
+            ),
+            majorCoordinates,
           );
     const minorSpokes: Array<Segment> =
       minorTicks === null
         ? []
-        : minorTicks.values.map(value => {
-            const theta = gridCoordinateOf(scale, value, minorBandPosition);
+        : minorTicks.map(theta => {
             return [
               finitePolarPoint(frame.center, theta, frame.innerRadius),
               finitePolarPoint(frame.center, theta, outer),
@@ -1361,37 +1340,37 @@ const lowerRadialAxis = (
   if (guide.grid) {
     const grid = axisGridTokenOf(guide);
     const majorBandPosition = grid?.bandPosition;
-    const majorTicks = resolveAxisGridTicks(scale, ticks, grid, value =>
+    const majorCoordinates = resolveAxisGridCoordinates(scale, ticks, grid, value =>
       gridCoordinateOf(scale, value, majorBandPosition),
     );
-    const rings: Array<IRPath> = majorTicks.values
-      .map(value => gridCoordinateOf(scale, value, majorBandPosition))
+    const rings: Array<IRPath> = majorCoordinates
       .filter(radius => Number.isFinite(radius) && radius > 0)
-      .map(radius => ({
-        ...arcPath(frame, radius),
-        ...lineStyleProps({ drawOpacity: 0.15, ...axisGridStyleOf(grid) }),
-      }));
+      .flatMap(radius => {
+        const path = fixedRadiusPath(frame, radius);
+        return path === null ? [] : [{ ...path, ...lineStyleProps({ drawOpacity: 0.15, ...axisGridStyleOf(grid) }) }];
+      });
     const minorGrid = axisMinorGridTokenOf(grid);
     const minorBandPosition = minorGrid?.bandPosition ?? majorBandPosition;
     const minorTicks =
       minorGrid === undefined
         ? null
-        : filterOverlappingGridTicks(
-            resolveAxisGridTicks(scale, ticks, minorGrid, value => gridCoordinateOf(scale, value, minorBandPosition)),
-            majorTicks,
-            value => gridCoordinateOf(scale, value, minorBandPosition),
-            value => gridCoordinateOf(scale, value, majorBandPosition),
+        : filterOverlappingGridCoordinates(
+            resolveAxisGridCoordinates(scale, ticks, minorGrid, value =>
+              gridCoordinateOf(scale, value, minorBandPosition),
+            ),
+            majorCoordinates,
           );
     const minorRings: Array<IRPath> =
       minorTicks === null
         ? []
-        : minorTicks.values
-            .map(value => gridCoordinateOf(scale, value, minorBandPosition))
+        : minorTicks
             .filter(radius => Number.isFinite(radius) && radius > 0)
-            .map(radius => ({
-              ...arcPath(frame, radius),
-              ...lineStyleProps({ drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) }),
-            }));
+            .flatMap(radius => {
+              const path = fixedRadiusPath(frame, radius);
+              return path === null
+                ? []
+                : [{ ...path, ...lineStyleProps({ drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) }) }];
+            });
     const gridChildren = [...rings, ...minorRings];
     if (gridChildren.length > 0) {
       gridLayer = {
@@ -1761,7 +1740,7 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
           position: symbolCenter,
           shape: 'circle',
           minimumSize: entry.radius * Math.SQRT2,
-          fill: 'currentColor',
+          fill: entry.color ?? 'currentColor',
           stroke: 'none',
           strokeWidth: 0,
         });
