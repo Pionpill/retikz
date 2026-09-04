@@ -28,14 +28,16 @@ describe('Flow Diagram documentation', () => {
       expect(basic).toContain('FlowRelations');
       expect(basic).toContain('complete');
       expect(basic).toContain(lang === 'zh' ? '追加收集器' : 'additive collectors');
-      expect(basic).toContain("kind: 'layout'");
+      expect(basic).not.toContain('### Flow Source');
+      expect(basic).not.toContain('### FlowDiagramArtifact');
       expect(basic).not.toContain("kind: 'layout' | 'visible'");
       expect(basic).not.toContain('layout-group');
       expect(basic).toContain(
         lang === 'zh'
-          ? '参考主题的 Graph 外观来自同名 Graph Theme Definition'
-          : 'Reference Graph appearance comes from the same-name Graph Theme Definition',
+          ? '`flowTheme` 让 Flow 根为全部同类对象提供统一默认样式'
+          : '`flowTheme` supplies one shared default style for each Flow object category at the root',
       );
+      expect(basic).toContain('relation.style');
     },
   );
 

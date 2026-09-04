@@ -40,19 +40,35 @@ import { FlowDiagram, FlowEntities, FlowRelations } from '@retikz/diagram-react/
   caption="编辑主文本和副标题，观察多行文本的逐行样式与块级排版；role 改变语义形状，status 改变 Graph Theme 的状态外观。"
 />
 
-### Layout、可见 Group 与跨作用域关系
+### 分组排布
 
-持久化 Source 使用平级 `entities`、`groups` 与 `layouts`；Flow 根、Group 和 Layout 的 `children` id 列表是唯一包含事实与同级顺序。React 仍允许嵌套 JSX，adapter 会把嵌套写法归一成同一个平级 Source。
+Flow 有两种分组形式：`FlowGroup` 表达有业务含义的可见边界，`FlowLayout` 只把若干元素组织成一个布局单元。两者都通过 `children` 建立包含关系，也可以相互嵌套。
 
-`FlowGroup` 始终物化为 Graph Group，可使用 `label` / `style` 并作为 Relation endpoint。`FlowLayout` 没有边框、背景或 Graph identity，用 `direction`、`gap` 与 `align` 固定排列 direct children；Relation 只在排列完成后 routing，不会改变 Layout 内部顺序。两者可以相互嵌套。示例用外层 Layout 固定左右两栏，再在服务端 Group 内嵌套纵向 Layout。
+| 差别           | `FlowGroup`                                      | `FlowLayout`                              |
+| -------------- | ------------------------------------------------ | ----------------------------------------- |
+| 主要职责       | 表达一个可命名、可设置样式的语义分组             | 固定排列 direct children                  |
+| 可见结果       | 物化为带边框、背景和可选标题的 Graph Group       | 不生成边框、背景或标题                    |
+| 内部排布       | `layout` 提供自动布局方向、同层间距与层级间距    | `direction`、`gap`、`align` 直接控制排列  |
+| Relation 端点  | 可以作为端点                                     | 不能作为端点，只能连接其中的 Entity/Group |
+| Source catalog | 存入 `groups`，`children` 保留直接成员与同级顺序 | 存入 `layouts`，`children` 保留固定顺序   |
 
-<ComponentPreview files="flow-compound" size="lg" />
+React 中的嵌套只是编写便利；adapter 会将 Group、Layout 和 Entity 归一到平级 catalog，并以各 owner 的 `children` 作为唯一包含事实。示例上半部分是可见 Group，下半部分是无外壳 Layout；从 Group 外壳到队列的关系同时展示了 Group endpoint。
 
-### Token、全局配置与局部覆盖
+<ComponentPreview
+  files="flow-compound"
+  size="lg"
+  caption="分别调整 Group 的自动布局方向与层级间距，以及 Layout 的固定方向、间距与对齐；镜头保持固定，边框只属于 Group。"
+/>
 
-同一个 Core Theme style 名称会分别交给 Diagram、Flow 与 Graph owner 解析。参考主题的 Graph 外观来自同名 Graph Theme Definition，Flow reference Definition 不复制 Entity、Relation 或 Group 外观；`flowThemeTokens`、`flowTheme`、Group layout 与单元素 style 仍依次作为更高优先级的显式作者覆盖，`0`、`false` 和透明颜色不会被当成缺省
+### 全局配置
 
-<ComponentPreview files="flow-theme" size="lg" />
+`flowTheme` 让 Flow 根为全部同类对象提供统一默认样式。`entity.style` 会作用于每个 Entity，`relation.style` 会作用于每条 Relation；这里的设置不改变 Source 的 id、包含关系、节点布局或连线路径。局部 `style` 仍可在需要时覆盖全局值，但本例只展示全局配置。
+
+<ComponentPreview
+  files="flow-theme"
+  size="sm"
+  caption="调整任一分区后，同类对象会一起更新；节点和连线的结构与相对位置保持不变。"
+/>
 
 ## 技术原理
 
@@ -62,8 +78,6 @@ import { FlowDiagram, FlowEntities, FlowRelations } from '@retikz/diagram-react/
   description="需要读取布局结果、排查 Definition 或生成 LLM 工具契约时再回来读。"
 />
 
-### 一次编译完成测量、布局与物化
-
 | 阶段 | 输入                               | 用户可见结果                                                         |
 | ---- | ---------------------------------- | -------------------------------------------------------------------- |
 | 测量 | 最终 Graph Definition 与 Theme     | 固定 leaf 尺寸、Group shell、Layout children 与 relation label 尺寸  |
@@ -71,16 +85,6 @@ import { FlowDiagram, FlowEntities, FlowRelations } from '@retikz/diagram-react/
 | 物化 | 同一份已验证几何                   | Graph Scene、`FlowDiagramArtifact` 与 world-space handles            |
 
 Layout callback 必须同步返回 JSON-safe plain data，并为每个 authored Layout 恰好调用一次 `placeLayout`。Flow 以 `@retikz/layout` 的 Flex compiler 产生固定 placement，再校验 provider 没有改写 Layout 的相对 bounds；其余 id、尺寸、containment、碰撞、route 与 label coverage 也会在 Graph/Core 渲染前验证。
-
-### Flow Source
-
-`FlowDiagramSchema` 是唯一持久化入口：`entities` 非空，`groups` / `layouts` 必填但可为空，根与每个 Group / Layout 的 `children` 都是非空 id 列表，`relations` 是可选的非空根数组。三个 catalog 已经表达类别，因此声明不再写元素 `type`，Group 也不再写 `kind`。
-
-全部 Entity / Group / Layout id 在整张 Flow 内全局唯一，并且必须恰好出现在一个 owner 的 `children` 中。未知 child / endpoint、重复 child、多个 parent、orphan、自包含、containment 环和 Layout endpoint 都会在 resolve 时带精确 Source path 失败；Flow 不猜 parent，也不自动修复。Graph Block 暂不属于 Flow Source，额外 `blocks` 或旧递归 `elements` 都会在 schema 入口被拒绝。
-
-### FlowDiagramArtifact
-
-`FlowDiagramArtifact` 保存本次布局 Definition 名称、真实存在的 Framework regions、递归 element bounds、relation routes 与 label reservations。Group artifact 使用 `kind: 'group'`；Layout artifact 使用 `kind: 'layout'` 并发布同名 inspection role，但不建立 Graph endpoint identity。artifact 不重复 Source、Theme、Scene 或 Graph 中间记录。
 
 ## API 参考
 

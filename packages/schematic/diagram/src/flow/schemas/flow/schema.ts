@@ -101,10 +101,10 @@ export const FlowDiagramSchema = strictObject({
   layouts: array(FlowLayoutSchema).describe(
     'Flat Flow Layout declaration catalog; empty when no Layouts are authored.',
   ),
-  children: array(NonBlankStringSchema)
-    .nonempty()
-    .describe('Non-empty ordered direct child references of the Flow root.'),
   relations: array(FlowRelationSchema).nonempty().optional().describe('Optional non-empty root relation collection.'),
   flowThemeTokens: FlowThemeTokenOverridesSchema.optional().describe('Optional flat Flow token overrides.'),
   flowTheme: FlowThemeSchema.optional().describe('Optional structured global Flow configuration.'),
+  children: array(NonBlankStringSchema)
+    .nonempty()
+    .describe('Non-empty ordered direct child references of the Flow root.'),
 }).describe('LLM-first Flow Diagram Source without derived geometry.');

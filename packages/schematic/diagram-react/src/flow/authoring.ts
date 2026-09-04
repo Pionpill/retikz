@@ -264,7 +264,7 @@ const collectFlowElements = (
     });
   };
   visit(children);
-  return { entities, groups, layouts, children: childIds, relations };
+  return { entities, groups, layouts, relations, children: childIds };
 };
 
 /** FlowDiagram React 编写参数 */
@@ -363,8 +363,8 @@ export const collectFlowDiagramInput = (
     entities: collected.entities,
     groups: collected.groups,
     layouts: collected.layouts,
-    children: collected.children,
     ...(collected.relations.length === 0 ? {} : { relations: collected.relations }),
+    children: collected.children,
   };
 };
 

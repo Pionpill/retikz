@@ -1,27 +1,72 @@
-import type { FC } from 'react';
+import type { FlowDirectionValue, FlowLayoutAlignmentValue } from '@retikz/diagram/flow';
+import type { ReactElement } from 'react';
 
 import { FlowEntity, FlowGroup, FlowLayout, FlowRelation } from '@retikz/diagram-react/flow';
 
-import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-const Demo: FC = () => (
-  <FlowDiagram width={430} height="auto" style={{ maxWidth: '100%', height: 'auto' }}>
-    <FlowLayout id="columns" direction="right" gap={56} align="start">
-      <FlowGroup id="client" label="客户端" layout={{ direction: 'down' }}>
-        <FlowEntity id="interaction" text="用户交互" role="event" />
-        <FlowEntity id="view" text="React View" role="state" />
+import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import { flowCompoundControls, previewControlContract } from './flow-compound.controls';
+
+/** 注册 controls 自动发现的回退导出 */
+export const previewControls = flowCompoundControls;
+
+const flowDirections: ReadonlyArray<FlowDirectionValue> = ['up', 'right', 'down', 'left'];
+const flowLayoutAlignments: ReadonlyArray<FlowLayoutAlignmentValue> = ['start', 'center', 'end'];
+
+/** 将 controls 值收窄为公开 Flow direction */
+const flowDirectionOf = (value: string): FlowDirectionValue => {
+  const direction = flowDirections.find(candidate => candidate === value);
+  if (direction === undefined) throw new Error(`Unsupported Flow direction: ${value}`);
+  return direction;
+};
+
+/** 将 controls 值收窄为公开 Flow Layout alignment */
+const flowLayoutAlignmentOf = (value: string): FlowLayoutAlignmentValue => {
+  const alignment = flowLayoutAlignments.find(candidate => candidate === value);
+  if (alignment === undefined) throw new Error(`Unsupported Flow Layout alignment: ${value}`);
+  return alignment;
+};
+
+/** 用指定 controls 值渲染中文 Flow 分组排布 */
+export const renderFlowCompoundPreview = (
+  values: PreviewControlValuesFor<typeof flowCompoundControls>,
+): ReactElement => (
+  <FlowDiagram width={400} height={460} viewBox={{ x: -100, y: -86, width: 400, height: 460 }}>
+    <FlowLayout id="sections" direction="down" gap={28} align="center">
+      <FlowGroup
+        id="service"
+        label="服务入口"
+        layout={{
+          direction: flowDirectionOf(values.groupDirection),
+          nodeGap: values.groupNodeGap,
+          rankGap: values.groupRankGap,
+        }}
+      >
+        <FlowEntity id="request" text="请求" role="gateway" />
+        <FlowEntity id="validate" text="校验" role="activity" />
+        <FlowEntity id="authorize" text="授权" role="activity" />
       </FlowGroup>
-      <FlowGroup id="server" label="服务端">
-        <FlowLayout id="application" direction="down" gap={24} align="center">
-          <FlowEntity id="api" text="API" role="activity" />
-          <FlowEntity id="database" text="Database" role="state" />
-        </FlowLayout>
-      </FlowGroup>
+      <FlowLayout
+        id="storage"
+        direction={flowDirectionOf(values.layoutDirection)}
+        gap={values.layoutGap}
+        align={flowLayoutAlignmentOf(values.layoutAlign)}
+      >
+        <FlowEntity id="queue" text="队列" role="state" />
+        <FlowEntity id="database" text="数据库" role="resource" />
+      </FlowLayout>
     </FlowLayout>
-    <FlowRelation source="interaction" target="view" />
-    <FlowRelation source="view" target="api" label="HTTPS" />
-    <FlowRelation source="api" target="database" />
+    <FlowRelation source="request" target="validate" />
+    <FlowRelation source="request" target="authorize" />
+    <FlowRelation source="service" target="queue" />
+    <FlowRelation source="queue" target="database" />
   </FlowDiagram>
 );
 
-export default Demo;
+const controlledPreview = defineControlledPreview(previewControlContract, renderFlowCompoundPreview);
+
+export const previewSource = controlledPreview.source;
+export default controlledPreview.Component;

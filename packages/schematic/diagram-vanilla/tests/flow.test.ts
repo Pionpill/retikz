@@ -84,7 +84,10 @@ describe('@retikz/diagram-vanilla/flow', () => {
     expect(normalizeFlowDiagram).toBeDefined();
     if (normalizeFlowDiagram === undefined) return;
 
-    expect(normalizeFlowDiagram(sourceInput)).toEqual(expectedSource);
+    const source = normalizeFlowDiagram(sourceInput);
+
+    expect(source).toEqual(expectedSource);
+    expect(Object.keys(source).at(-1)).toBe('children');
   });
 
   it('normalizes a Core-compatible Entity text block and existing text layout style without adapter defaults', () => {

@@ -40,19 +40,35 @@ The form submission flow starts with user input, passes through a frontend form 
   caption="Edit the main text and subtitle to observe per-line styling and block-level typography; role changes the semantic shape, while status changes the Graph Theme appearance."
 />
 
-### Layout, visible Groups, and cross-scope relations
+### Grouped layout
 
-Persistent Source uses flat `entities`, `groups`, and `layouts` catalogs. The Flow root, every Group, and every Layout own a `children` id list, which is the only containment fact and sibling order. React still permits nested JSX; the adapter normalizes that syntax to the same flat Source.
+Flow provides two forms of grouping. `FlowGroup` expresses a visible boundary with domain meaning, while `FlowLayout` only organizes several elements as one layout unit. Both establish containment through `children` and may nest each other.
 
-`FlowGroup` always materializes a Graph Group, accepts `label` / `style`, and may be a Relation endpoint. `FlowLayout` has no border, background, or Graph identity; its `direction`, `gap`, and `align` fix direct-child placement. Relations route only after placement and never reorder Layout children. The two containers may nest each other. This example fixes two outer columns, then nests a vertical Layout inside the Server Group.
+| Difference        | `FlowGroup`                                                               | `FlowLayout`                                               |
+| ----------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Primary role      | Express a named, styled semantic group                                    | Place direct children in a fixed arrangement               |
+| Visible result    | Materialize a Graph Group with a shell and optional title                 | Add no border, background, or title                        |
+| Internal layout   | `layout` controls automatic direction, peer gap, and rank gap             | `direction`, `gap`, and `align` directly control placement |
+| Relation endpoint | Allowed                                                                   | Not allowed; connect an Entity or Group inside it          |
+| Source catalog    | Stored in `groups`; `children` preserves direct members and sibling order | Stored in `layouts`; `children` preserves fixed order      |
 
-<ComponentPreview files="flow-compound" size="lg" />
+React nesting is only authoring convenience. The adapter normalizes Groups, Layouts, and Entities into flat catalogs, with each owner's `children` as the sole containment fact. The example places a visible Group above a shell-free Layout; the relation from the Group shell to the queue also demonstrates a Group endpoint.
 
-### Tokens, global configuration, and local overrides
+<ComponentPreview
+  files="flow-compound"
+  size="lg"
+  caption="Adjust the Group's automatic direction and rank spacing separately from the Layout's fixed direction, gap, and alignment. The camera stays fixed, and only the Group has a shell."
+/>
 
-The same Core Theme style name resolves independently under the Diagram, Flow, and Graph owners. Reference Graph appearance comes from the same-name Graph Theme Definition; the Flow reference Definition does not duplicate Entity, Relation, or Group appearance. `flowThemeTokens`, `flowTheme`, Group layout, and element style remain progressively higher-priority authored overrides, and `0`, `false`, and transparent colors remain authored values
+### Global configuration
 
-<ComponentPreview files="flow-theme" size="lg" />
+`flowTheme` supplies one shared default style for each Flow object category at the root. `entity.style` applies to every Entity, while `relation.style` applies to every Relation; neither setting changes Source ids, containment, node layout, or routing. Local `style` can still override a global value when needed, but this example shows global configuration only.
+
+<ComponentPreview
+  files="flow-theme"
+  size="sm"
+  caption="Changing either section updates every object of that category, while the nodes, relations, and their relative positions remain unchanged."
+/>
 
 ## How it works
 
@@ -62,8 +78,6 @@ The same Core Theme style name resolves independently under the Diagram, Flow, a
   description="Return here when consuming layout results, diagnosing Definitions, or building an LLM tool contract."
 />
 
-### One compile measures, lays out, and materializes
-
 | Stage       | Input                              | Observable result                                                         |
 | ----------- | ---------------------------------- | ------------------------------------------------------------------------- |
 | Measure     | Final Graph Definitions and Theme  | Fixed leaf sizes, Group shells, Layout children, and relation-label sizes |
@@ -71,16 +85,6 @@ The same Core Theme style name resolves independently under the Diagram, Flow, a
 | Materialize | The same validated geometry        | Graph Scene, `FlowDiagramArtifact`, and world-space handles               |
 
 The layout callback must synchronously return JSON-safe plain data and call `placeLayout` exactly once for every authored Layout. Flow uses the `@retikz/layout` Flex compiler for fixed placement, then verifies that the provider did not rewrite relative Layout bounds. It also validates ids, sizes, containment, collisions, routes, and label coverage before Graph/Core renders the result.
-
-### Flow Source
-
-`FlowDiagramSchema` is the only persistent shape: `entities` is non-empty, `groups` and `layouts` are required but may be empty, root / Group / Layout `children` are non-empty id lists, and `relations` is an optional non-empty root array. The three catalogs identify declaration categories, so declarations carry no element `type` and Groups carry no `kind`.
-
-Every Entity / Group / Layout id is globally unique and must appear in exactly one owner's `children`. Unknown children or endpoints, duplicate children, multiple parents, orphans, self-containment, containment cycles, and Layout endpoints fail during resolve with a precise Source path. Flow neither guesses a parent nor repairs containment. Graph Block is not part of Flow Source; extra `blocks` and the old recursive `elements` shape are rejected at the schema boundary.
-
-### FlowDiagramArtifact
-
-`FlowDiagramArtifact` stores the chosen layout Definition, Framework regions that actually exist, recursive element bounds, relation routes, and label reservations. Group artifacts use `kind: 'group'`; Layout artifacts use `kind: 'layout'` and publish the same inspection role, but no Graph endpoint identity. The artifact does not duplicate Source, Theme, Scene, or intermediate Graph records.
 
 ## API Reference
 

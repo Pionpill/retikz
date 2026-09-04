@@ -105,6 +105,7 @@ describe('Flow Source schema', () => {
 
     expect(parsed).toEqual(completeFlow);
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
+    expect(Object.keys(parsed).at(-1)).toBe('children');
     expect(JSON.stringify(parsed)).not.toContain('parentId');
     expect(JSON.stringify(parsed)).not.toContain('members');
   });

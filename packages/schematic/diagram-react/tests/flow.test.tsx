@@ -451,6 +451,7 @@ describe('@retikz/diagram-react/flow', () => {
     const normalized = normalizeScene(input.scene, { adapters: input.adapters });
 
     expect(normalized.ir.children).toEqual([expectedSource]);
+    expect(Object.keys(normalized.ir.children[0]).at(-1)).toBe('children');
   });
 
   it('normalizes a Core-compatible Entity text block and existing text layout props without JSX children', () => {
