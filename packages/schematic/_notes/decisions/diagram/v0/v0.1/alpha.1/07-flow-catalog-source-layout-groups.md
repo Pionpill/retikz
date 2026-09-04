@@ -90,6 +90,32 @@ Direct IR 的唯一持久化形态是三个 catalog 与引用式 `children`。Di
 
 Direct IR、Vanilla 与 React normalization 后必须逐字段相同。旧 `FlowGroupKind`、Group `kind`、布局型 Group、旧递归 `elements`、`parentId` 与兼容 fallback 全部删除。
 
+### React 批量 authoring marker
+
+Diagram React 额外提供 `FlowEntities` 与 `FlowRelations`，用于把数组形式的 authoring sugar 展开到同一份 Vanilla Input。它们只存在于 React 编写边界，不进入 Flow Source schema，不建立第二种 catalog、containment 或 Relation identity。
+
+```ts
+type FlowEntityItem = string | InputFlowEntity;
+
+type FlowEntitiesProps = Readonly<{
+  items: ReadonlyArray<FlowEntityItem>;
+  complete?: boolean;
+}>;
+
+type FlowRelationItem = readonly [source: string, target: string] | InputFlowRelation;
+
+type FlowRelationsProps = Readonly<{
+  items: ReadonlyArray<FlowRelationItem>;
+  complete?: boolean;
+}>;
+```
+
+字符串 Entity item 确定性展开为 `{ id: value, text: value }`，不 slug 化、不生成序号，也不维护隐藏 identity。需要稳定 id、国际化文本或其它字段时必须使用对象形式。Relation tuple 只表达 `source` 与 `target`；label、role、kind、status、direction、style 或 layout 使用对象形式。React 不解析 `"A -> B"` 等 Relation 字符串语法。
+
+`complete` 默认为 `false`，此时批量 marker 只是追加收集器：`FlowEntities` 可以作为 Flow 根、Group 或 Layout 的 child；每个 item 在 marker 所在位置按数组顺序加入对应 catalog 与 owner `children`。`FlowRelations` 只允许位于 Flow 根，并按数组顺序加入根 `relations`。两个批量 marker 都可与单项 marker、Fragment 和其它批量 marker 混用；整体顺序按 JSX traversal 与各 `items` 顺序确定。空 `items` 是无操作，最终 Flow Source 是否满足非空要求仍由现有 schema 与 resolve 判断。
+
+`complete: true` 表示该 marker 是当前 owner 下这一声明类别的完整清单。它不能与同一 owner 下任何同类单项或批量 marker 共存，包括另一个空批量 marker；不同 owner 的完整清单互不冲突。Entity 的 owner 可以是 Flow 根、Group 或 Layout，Relation 只有 Flow 根这一个 owner。`complete` 只约束 React authoring 组合并在收集后消失，不进入 Vanilla Input 或 Flow Source。
+
 ## 行为与失败语义
 
 - 三类 catalog 重复 id：`DIAGRAM_FLOW_DUPLICATE_ID`，path 指向后出现的声明
@@ -98,6 +124,9 @@ Direct IR、Vanilla 与 React normalization 后必须逐字段相同。旧 `Flow
 - Relation 引用 Layout：`DIAGRAM_FLOW_ENDPOINT_INVALID`，reason 为 `layout-endpoint`
 - 相同 Source、definitions、Theme 与 measurer 必须产生相同 Canonical tree、Layout placement、provider output、artifact 与 Scene
 - catalog 重排不得改变布局；owner `children` 重排会改变 Layout 的固定排列，并可改变自动 layout 的确定性 tie-break
+- React 批量 Entity 的字符串 item 同时作为 authored id 与 text；空白、重复或与其它声明冲突时沿用现有 Flow Source 诊断，不自动修复
+- React 批量 Relation 的 tuple 只在 Flow 根有效；放入 Group 或 Layout 时沿用现有 `relation-outside-root` authoring 失败
+- React `complete` marker 与当前 owner 的其它同类 marker 冲突时使用 `DIAGRAM_REACT_FLOW_CHILD_INVALID`；Entity reason 为 `complete-entities-conflict`，Relation reason 为 `complete-relations-conflict`
 - 旧 `groups[].kind` 与 `groupKind` artifact 字段为非法或不存在，不提供 migration、alias 或双轨
 
 ## 权衡与边界
@@ -106,10 +135,10 @@ Direct IR、Vanilla 与 React normalization 后必须逐字段相同。旧 `Flow
 
 W3C Flexbox 验证了一维容器和嵌套组合的成熟模型；ELK 与 Graphviz 则证明 compound graph scope 和关系布局属于另一类问题。因此 Flow 明确分开 Layout placement 与 Group / Relation layout，而不是继续用一个 Group 变体承载两者。
 
-Graph Block、Port、Layout endpoint、共享 child DAG、Editor 状态和文本 DSL 不属于本决策范围。
+Graph Block、Port、Layout endpoint、共享 child DAG、Editor 状态和可解析文本 DSL 不属于本决策范围。字符串 Entity item 是 React typed authoring shorthand，不建立 Flow 文本 grammar。
 
 ## 结果
 
-Flow 已以独立 Entity / Group / Layout catalog、引用式唯一 containment、三入口归一化和 renderer-neutral artifact 落地。Group 始终保留可见 Graph 语义与 endpoint identity；Layout 只保留作者指定 placement，并通过统一执行 context 复用 Layout owner 的固定排列能力。
+Flow 已以独立 Entity / Group / Layout catalog、引用式唯一 containment、三入口归一化和 renderer-neutral artifact 落地。Group 始终保留可见 Graph 语义与 endpoint identity；Layout 只保留作者指定 placement，并通过统一执行 context 复用 Layout owner 的固定排列能力。React 的单项与批量 marker 共同归一到同一份 Vanilla Input；批量写法不改变持久化 Source 或编译结果。
 
 递归 containment 在运行期仍需重建 Canonical tree，并继续受 Core expansion safety limit 约束；深层组合的性能预算属于后续独立议题，不改变本决策的 Source 形态与职责边界。

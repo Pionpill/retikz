@@ -6,16 +6,25 @@ description: 用平级 Flow Source 描述元素、引用式包含与关系，让
 ## 用法
 
 ```tsx
-import { FlowDiagram, FlowEntity, FlowGroup, FlowLayout, FlowRelation } from '@retikz/diagram-react/flow';
+import { FlowDiagram, FlowEntities, FlowRelations } from '@retikz/diagram-react/flow';
 ```
 
 ```tsx
 <FlowDiagram width={640} height="auto">
-  <FlowEntity id="source" text="Source" />
-  <FlowEntity id="target" text="Target" />
-  <FlowRelation source="source" target="target" />
+  <FlowEntities items={['Source', 'Validate']} />
+  <FlowEntities items={['Store']} />
+  <FlowRelations
+    items={[
+      ['Source', 'Validate'],
+      ['Validate', 'Store'],
+    ]}
+  />
 </FlowDiagram>
 ```
+
+`FlowEntities` 的字符串条目同时作为 `id` 和 `text`；`FlowRelations` 的 tuple 只写 `source` 与 `target`。需要稳定 id、国际化文本或其它字段时改用对象条目。两种批量 marker 默认都是追加收集器，可以写多个，也能和单项 `FlowEntity` / `FlowRelation` 混用；重复 Entity id 仍由 Flow Source 报错。
+
+需要明确一个批量 marker 已列出当前 owner 的全部同类声明时，设置 `complete`。`complete` 默认为 `false`；设为 `true` 后，该 marker 不能和当前 owner 的其它同类单项或批量 marker 共存。`FlowEntities` 的 owner 可以是 Flow 根、Group 或 Layout，不同 owner 互不冲突；`FlowRelations` 只能位于 Flow 根。
 
 `FlowDiagram` 既可直接复用 `Layout` 作为 standalone 宿主，也可作为外层 `Layout` 的 embed。Source 中不写 `position` 或 route；省略运行时配置时使用内置 `layered`，relation 默认采用直线 routing。需要折线时可显式选择 `orthogonal`。
 
@@ -77,20 +86,22 @@ Layout callback 必须同步返回 JSON-safe plain data，并为每个 authored 
 
 ### React authoring
 
-| 组件           | 核心属性                                                                                                                                          | 默认值                   | 描述                                                                                                                                                                                                                                                                                                     |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FlowDiagram`  | `entities` / `groups` / `layouts` / 根 `children` / `relations` 由 JSX children 收集；`presentation?`、`frame?`、`flowThemeTokens?`、`flowTheme?` | `layered` + 直线 routing | Source 根、Definition 注入和 standalone `Layout` 宿主                                                                                                                                                                                                                                                    |
-| `FlowEntity`   | `id`、`text`、`role?`、`kind?`、`status?`、`rank?`、`style?`、`layout?`                                                                           | role=`concept`           | 单一 Graph Entity。`text` 可为字符串或 TextBlock 行数组；每行可覆盖 `fill` 与 `font`，但 Flow 中至少须有一条非空文本或 TeX run。`status` 复用 Graph 的 `error`、`success`、`warning`、`disabled`，省略时不标记状态。`style.align`、`lineHeight`、`maxTextWidth` 分别控制整个文本块的对齐、行距与换行宽度 |
-| `FlowGroup`    | `id`、`label?`、`rank?`、`layout?`、`style?`、`children`                                                                                          | Graph Group              | 可见语义边界；`layout` 自动排列自身 children，Relation 不放在 Group children 中                                                                                                                                                                                                                          |
-| `FlowLayout`   | `id`、`direction`、`gap?`、`align?`、`rank?`、`children`                                                                                          | align=`center`           | 无外壳固定排列；`gap` 省略时继承有效 `nodeGap`，不能作为 Relation endpoint                                                                                                                                                                                                                               |
-| `FlowRelation` | `source`、`target`、`label?`、`role?`、`kind?`、`status?`、`direction?`、`style?`、`layout?`                                                      | role=`flow`              | 无独立 id 的根级有序关系与可选局部 routing。endpoint 可为 Entity 或 Group，不能为 Layout；Graph Theme 提供默认外观，显式 `style` 仍可覆盖外观                                                                                                                                                            |
+| 组件            | 核心属性                                                                                                                                          | 默认值                   | 描述                                                                                                                                                                                                                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FlowDiagram`   | `entities` / `groups` / `layouts` / 根 `children` / `relations` 由 JSX children 收集；`presentation?`、`frame?`、`flowThemeTokens?`、`flowTheme?` | `layered` + 直线 routing | Source 根、Definition 注入和 standalone `Layout` 宿主                                                                                                                                                                                                                                                    |
+| `FlowEntity`    | `id`、`text`、`role?`、`kind?`、`status?`、`rank?`、`style?`、`layout?`                                                                           | role=`concept`           | 单一 Graph Entity。`text` 可为字符串或 TextBlock 行数组；每行可覆盖 `fill` 与 `font`，但 Flow 中至少须有一条非空文本或 TeX run。`status` 复用 Graph 的 `error`、`success`、`warning`、`disabled`，省略时不标记状态。`style.align`、`lineHeight`、`maxTextWidth` 分别控制整个文本块的对齐、行距与换行宽度 |
+| `FlowEntities`  | `items: ReadonlyArray<string \| InputFlowEntity>`<br />`complete?: boolean`                                                                       | complete=`false`         | 在当前位置按数组顺序声明 Entity。默认可与同 owner 的其它 Entity marker 追加混用；`complete` 表示当前 owner 的唯一完整 Entity 清单                                                                                                                                                                        |
+| `FlowGroup`     | `id`、`label?`、`rank?`、`layout?`、`style?`、`children`                                                                                          | Graph Group              | 可见语义边界；`layout` 自动排列自身 children，Relation 不放在 Group children 中                                                                                                                                                                                                                          |
+| `FlowLayout`    | `id`、`direction`、`gap?`、`align?`、`rank?`、`children`                                                                                          | align=`center`           | 无外壳固定排列；`gap` 省略时继承有效 `nodeGap`，不能作为 Relation endpoint                                                                                                                                                                                                                               |
+| `FlowRelation`  | `source`、`target`、`label?`、`role?`、`kind?`、`status?`、`direction?`、`style?`、`layout?`                                                      | role=`flow`              | 无独立 id 的根级有序关系与可选局部 routing。endpoint 可为 Entity 或 Group，不能为 Layout；Graph Theme 提供默认外观，显式 `style` 仍可覆盖外观                                                                                                                                                            |
+| `FlowRelations` | `items: ReadonlyArray<readonly [string, string] \| InputFlowRelation>`<br />`complete?: boolean`                                                  | complete=`false`         | 在 Flow 根按数组顺序声明 Relation。默认可与其它 Relation marker 追加混用；`complete` 表示根级唯一完整 Relation 清单                                                                                                                                                                                      |
 
 ### 公开入口
 
 | 入口                           | 主要导出                                                                                                          | 用途                       |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `@retikz/diagram/flow`         | `FlowDiagramSchema`、`FlowDiagramArtifactSchema`、`createFlowDiagramProviderContribution`、`getFlowLayoutCatalog` | Direct IR、编译与工具发现  |
-| `@retikz/diagram-react/flow`   | `FlowDiagram`、`FlowEntity`、`FlowGroup`、`FlowLayout`、`FlowRelation`                                            | JSX authoring              |
+| `@retikz/diagram-react/flow`   | `FlowDiagram`、`FlowEntities`、`FlowEntity`、`FlowGroup`、`FlowLayout`、`FlowRelations`、`FlowRelation`           | JSX authoring              |
 | `@retikz/diagram-vanilla/flow` | `flowDiagram`、`normalizeFlowDiagram`、`FlowDiagramInputEmbedAdapter`                                             | Vanilla authoring 与 embed |
 
 ## 相关

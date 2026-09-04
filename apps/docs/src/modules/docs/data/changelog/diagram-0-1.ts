@@ -75,8 +75,8 @@ export const diagramV01: Release = {
         {
           label: { zh: '声明式 Flow 组件', en: 'Declarative Flow components' },
           content: {
-            zh: '`FlowDiagram`、`FlowEntity`、`FlowGroup`、`FlowLayout` 与 `FlowRelation` 归一化为同一 Source；standalone 复用 Layout host，embedded 只贡献 composite。',
-            en: '`FlowDiagram`, `FlowEntity`, `FlowGroup`, `FlowLayout`, and `FlowRelation` normalize into the same Source; standalone mode reuses the Layout host while embedded mode contributes only a composite.',
+            zh: '`FlowDiagram`、单项 `FlowEntity` / `FlowRelation`、可追加或用 `complete` 声明完整清单的 `FlowEntities` / `FlowRelations`、`FlowGroup` 与 `FlowLayout` 归一化为同一 Source；standalone 复用 Layout host，embedded 只贡献 composite。',
+            en: '`FlowDiagram`, individual `FlowEntity` / `FlowRelation`, additive or `complete` `FlowEntities` / `FlowRelations` lists, `FlowGroup`, and `FlowLayout` normalize into the same Source; standalone mode reuses the Layout host while embedded mode contributes only a composite.',
           },
         },
       ],

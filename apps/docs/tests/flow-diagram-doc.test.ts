@@ -24,6 +24,10 @@ describe('Flow Diagram documentation', () => {
       expect(basic).toContain('groups');
       expect(basic).toContain('layouts');
       expect(basic).toContain('FlowLayout');
+      expect(basic).toContain('FlowEntities');
+      expect(basic).toContain('FlowRelations');
+      expect(basic).toContain('complete');
+      expect(basic).toContain(lang === 'zh' ? '追加收集器' : 'additive collectors');
       expect(basic).toContain("kind: 'layout'");
       expect(basic).not.toContain("kind: 'layout' | 'visible'");
       expect(basic).not.toContain('layout-group');
@@ -61,6 +65,9 @@ describe('Flow Diagram documentation', () => {
     expect(JSON.stringify(diagramBlocks)).toContain('entities');
     expect(JSON.stringify(diagramBlocks)).toContain('layouts');
     expect(JSON.stringify(diagramBlocks)).toContain('FlowLayout');
+    expect(JSON.stringify(diagramBlocks)).toContain('FlowEntities');
+    expect(JSON.stringify(diagramBlocks)).toContain('FlowRelations');
+    expect(JSON.stringify(diagramBlocks)).toContain('complete');
     expect(JSON.stringify(diagramBlocks)).not.toContain('layout Group');
   });
 });

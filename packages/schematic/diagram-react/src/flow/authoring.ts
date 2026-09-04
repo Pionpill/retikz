@@ -12,6 +12,9 @@ import type { FC, ReactElement, ReactNode } from 'react';
 
 import { Children, Fragment, isValidElement } from 'react';
 
+import type { FlowEntitiesProps, FlowEntityItem } from './FlowEntities';
+import type { FlowRelationItem, FlowRelationsProps } from './FlowRelations';
+
 import { RetikzDiagramReactFlowError, RetikzDiagramReactFlowErrorCode } from './errors';
 
 /** Flow standalone 模式承接的完整 Layout 宿主属性 */
@@ -106,7 +109,7 @@ export const flowDiagramLayoutHostPropsOf = (props: FlowDiagramLayoutHostProps):
 };
 
 /** Flow JSX marker 的稳定语义类别 */
-export type FlowMarkerKind = 'entity' | 'group' | 'layout' | 'relation';
+export type FlowMarkerKind = 'entity' | 'entities' | 'group' | 'layout' | 'relation' | 'relations';
 
 /** 只参与 FlowDiagram authoring 收集的 JSX marker */
 export type FlowMarkerComponent<TProps> = FC<TProps> & { flowMarkerKind: FlowMarkerKind };
@@ -143,6 +146,37 @@ const invalidChild = (label: string, child: ReactNode, reason: string): never =>
   });
 };
 
+/** 当前 owner 下同类单项与批量 marker 的完整清单约束状态 */
+type FlowCollectionMarkerState = {
+  hasDeclaration: boolean;
+  hasCompleteDeclaration: boolean;
+};
+
+/** 登记同类 marker，并拒绝完整清单与其它声明共存 */
+const registerFlowCollectionMarker = (
+  state: FlowCollectionMarkerState,
+  isComplete: boolean,
+  label: string,
+  child: ReactNode,
+  reason: 'complete-entities-conflict' | 'complete-relations-conflict',
+): void => {
+  if (state.hasCompleteDeclaration || (isComplete && state.hasDeclaration)) invalidChild(label, child, reason);
+  state.hasDeclaration = true;
+  if (isComplete) state.hasCompleteDeclaration = true;
+};
+
+/** 判断批量 Relation 单项是否为 endpoint tuple */
+const isFlowRelationTuple = (relationItem: FlowRelationItem): relationItem is readonly [string, string] =>
+  Array.isArray(relationItem);
+
+/** 将批量 Entity 单项投影为现有 Vanilla Input */
+const flowEntityInputOf = (entityItem: FlowEntityItem): InputFlowEntity =>
+  typeof entityItem === 'string' ? { id: entityItem, text: entityItem } : entityItem;
+
+/** 将批量 Relation 单项投影为现有 Vanilla Input */
+const flowRelationInputOf = (relationItem: FlowRelationItem): InputFlowRelation =>
+  isFlowRelationTuple(relationItem) ? { source: relationItem[0], target: relationItem[1] } : relationItem;
+
 const collectFlowElements = (
   children: ReactNode,
   label: string,
@@ -159,6 +193,14 @@ const collectFlowElements = (
   const layouts: Array<InputFlowLayout> = [];
   const childIds: Array<string> = [];
   const relations: Array<InputFlowRelation> = [];
+  const entityMarkerState: FlowCollectionMarkerState = {
+    hasDeclaration: false,
+    hasCompleteDeclaration: false,
+  };
+  const relationMarkerState: FlowCollectionMarkerState = {
+    hasDeclaration: false,
+    hasCompleteDeclaration: false,
+  };
   const visit = (nodes: ReactNode): void => {
     Children.forEach(nodes, child => {
       if (child === null || child === undefined || typeof child === 'boolean') return;
@@ -169,9 +211,20 @@ const collectFlowElements = (
       }
       const markerKind = markerKindOf(child);
       if (markerKind === 'entity') {
+        registerFlowCollectionMarker(entityMarkerState, false, label, child, 'complete-entities-conflict');
         const entity = child.props as InputFlowEntity;
         entities.push(entity);
         childIds.push(entity.id);
+        return;
+      }
+      if (markerKind === 'entities') {
+        const { items, complete = false } = child.props as FlowEntitiesProps;
+        registerFlowCollectionMarker(entityMarkerState, complete, label, child, 'complete-entities-conflict');
+        for (const entityItem of items) {
+          const entity = flowEntityInputOf(entityItem);
+          entities.push(entity);
+          childIds.push(entity.id);
+        }
         return;
       }
       if (markerKind === 'group') {
@@ -196,7 +249,15 @@ const collectFlowElements = (
       }
       if (markerKind === 'relation') {
         if (!allowRelations) invalidChild(label, child, 'relation-outside-root');
+        registerFlowCollectionMarker(relationMarkerState, false, label, child, 'complete-relations-conflict');
         relations.push(child.props as InputFlowRelation);
+        return;
+      }
+      if (markerKind === 'relations') {
+        if (!allowRelations) invalidChild(label, child, 'relation-outside-root');
+        const { items, complete = false } = child.props as FlowRelationsProps;
+        registerFlowCollectionMarker(relationMarkerState, complete, label, child, 'complete-relations-conflict');
+        relations.push(...items.map(flowRelationInputOf));
         return;
       }
       invalidChild(label, child, 'unknown-flow-marker');

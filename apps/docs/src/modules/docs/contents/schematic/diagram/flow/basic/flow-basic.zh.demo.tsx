@@ -2,7 +2,7 @@ import type { FontSizePresetValue, IRLine, IRTextBlock } from '@retikz/core';
 import type { GraphStatusValue } from '@retikz/graph';
 import type { ReactElement } from 'react';
 
-import { FlowEntity, FlowRelation } from '@retikz/diagram-react/flow';
+import { FlowEntities, FlowRelations } from '@retikz/diagram-react/flow';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
@@ -60,43 +60,46 @@ const formTextOf = (values: PreviewControlValuesFor<typeof flowBasicControls>): 
 
 /** 用指定 controls 值渲染中文表单填写流程 */
 export const renderFlowBasicPreview = (values: PreviewControlValuesFor<typeof flowBasicControls>): ReactElement => (
-  <FlowDiagram
-    width={600}
-    height={220}
-    viewBox={{ x: 0, y: -58, width: 600, height: 220 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
-    <FlowEntity id="user-input" text="用户输入" role="participant" />
-    <FlowEntity
-      id="frontend-form"
-      text={formTextOf(values)}
-      role={values.formRole}
-      {...statusProps(values.formStatus)}
-      style={{
-        align: isTextAlign(values.formTextAlign) ? values.formTextAlign : undefined,
-        lineHeight: values.formLineHeight,
-        maxTextWidth: values.formMaxTextWidth,
-      }}
+  <FlowDiagram width={740} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+    <FlowEntities
+      items={[
+        { id: 'user-input', text: '用户输入', role: 'participant' },
+        {
+          id: 'frontend-form',
+          text: formTextOf(values),
+          role: values.formRole,
+          ...statusProps(values.formStatus),
+          style: {
+            align: isTextAlign(values.formTextAlign) ? values.formTextAlign : undefined,
+            lineHeight: values.formLineHeight,
+            maxTextWidth: values.formMaxTextWidth,
+          },
+        },
+        { id: 'backend-validation', text: '后端服务', role: 'activity' },
+        { id: 'database-input', text: '数据库输入', role: 'resource' },
+      ]}
     />
-    <FlowEntity id="backend-validation" text="后端服务" role="activity" />
-    <FlowEntity id="database-input" text="数据库输入" role="resource" />
-    <FlowRelation
-      source="user-input"
-      target="frontend-form"
-      role={values.relationRole}
-      {...statusProps(values.relationStatus)}
-    />
-    <FlowRelation
-      source="frontend-form"
-      target="backend-validation"
-      role={values.relationRole}
-      {...statusProps(values.relationStatus)}
-    />
-    <FlowRelation
-      source="backend-validation"
-      target="database-input"
-      role={values.relationRole}
-      {...statusProps(values.relationStatus)}
+    <FlowRelations
+      items={[
+        {
+          source: 'user-input',
+          target: 'frontend-form',
+          role: values.relationRole,
+          ...statusProps(values.relationStatus),
+        },
+        {
+          source: 'frontend-form',
+          target: 'backend-validation',
+          role: values.relationRole,
+          ...statusProps(values.relationStatus),
+        },
+        {
+          source: 'backend-validation',
+          target: 'database-input',
+          role: values.relationRole,
+          ...statusProps(values.relationStatus),
+        },
+      ]}
     />
   </FlowDiagram>
 );

@@ -5,6 +5,7 @@ import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
 import { createFlowDiagramProviderContribution, FlowDiagramSchema } from '@retikz/diagram/flow';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewIR } from '../src/modules/docs/components/component-preview/utils';
@@ -15,7 +16,10 @@ import { PreviewCoreThemeStyles, PreviewThemeStyle } from '../src/modules/docs/c
 import { buildPreviewIR, irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../src/modules/docs/components/component-preview/vanilla-preview';
 import IrCentricDemo from '../src/modules/docs/contents/kernel/introduction/ir-centric.zh.demo';
-import { previewSource as FlowBasicEnPreviewSource } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-basic.en.demo';
+import {
+  previewSource as FlowBasicEnPreviewSource,
+  renderFlowBasicPreview as renderFlowBasicEnPreview,
+} from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-basic.en.demo';
 import {
   previewSource as FlowBasicPreviewSource,
   renderFlowBasicPreview,
@@ -45,6 +49,13 @@ const flowBasicControlModules: Partial<Record<string, { previewControlContract: 
 
 const FlowBasicCanonicalDemo: FC = () => FlowBasicPreviewSource.canonicalRender?.() ?? null;
 const FlowBasicEnCanonicalDemo: FC = () => FlowBasicEnPreviewSource.canonicalRender?.() ?? null;
+
+/** 读取 Flow Basic demo 的输出尺寸与取景配置 */
+const flowBasicFrame = (Demo: FC) => {
+  const root = Demo({});
+  if (!isValidElement<{ viewBox?: IRScene['viewBox'] }>(root)) throw new Error('Missing Flow Basic root element');
+  return root.props;
+};
 
 describe('Flow Diagram ComponentPreview', () => {
   it('keeps the highest-level Flow Source in executable Vanilla code', () => {
@@ -337,14 +348,62 @@ describe('Flow Diagram ComponentPreview', () => {
   });
 
   it.each(['flow-basic.zh.demo.tsx', 'flow-basic.en.demo.tsx'] as const)(
-    'keeps the controlled %s vertically centered in one fixed 600 × 220 viewport',
+    'lets the controlled %s auto-fit horizontally in one 740 × 220 output',
     file => {
       const demo = readFileSync(resolve(flowBasicContentRoot, file), 'utf8');
 
-      expect(demo).toContain('width={600}');
+      expect(demo).toContain('width={740}');
       expect(demo).toContain('height={220}');
-      expect(demo).toContain('viewBox={{ x: 0, y: -58, width: 600, height: 220 }}');
+      expect(demo).not.toContain('viewBox=');
       expect(demo).toContain("style={{ maxWidth: '100%', height: 'auto' }}");
+      expect(demo).toContain('<FlowEntities');
+      expect(demo).toContain('<FlowRelations');
     },
   );
+
+  it.each([
+    ['zh', FlowBasicCanonicalDemo],
+    ['en', FlowBasicEnCanonicalDemo],
+  ] as const)('uses natural horizontal bounds for the %s basic demo', (_lang, Demo) => {
+    expect(flowBasicFrame(Demo).viewBox).toBeUndefined();
+  });
+
+  it.each([
+    [
+      'minimum geometry controls',
+      () =>
+        renderFlowBasicEnPreview({
+          formRole: 'activity',
+          formStatus: 'none',
+          formText: 'Frontend form',
+          formSubtitle: 'Complete user details',
+          formSubtitleSize: 'xs',
+          formSubtitleColor: '#6b7280',
+          formTextAlign: 'start',
+          formLineHeight: 14,
+          formMaxTextWidth: 80,
+          relationRole: 'flow',
+          relationStatus: 'none',
+        }),
+    ],
+    [
+      'maximum geometry controls',
+      () =>
+        renderFlowBasicEnPreview({
+          formRole: 'activity',
+          formStatus: 'none',
+          formText: 'Frontend form',
+          formSubtitle: 'Complete user details',
+          formSubtitleSize: 'lg',
+          formSubtitleColor: '#6b7280',
+          formTextAlign: 'end',
+          formLineHeight: 32,
+          formMaxTextWidth: 240,
+          relationRole: 'flow',
+          relationStatus: 'none',
+        }),
+    ],
+  ] as const)('keeps natural horizontal bounds with %s', (_name, Demo) => {
+    expect(flowBasicFrame(Demo).viewBox).toBeUndefined();
+  });
 });

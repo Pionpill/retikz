@@ -19,11 +19,19 @@ const componentExport = (name: string): FlowComponent | undefined => {
 
 const components = () => ({
   FlowDiagram: componentExport('FlowDiagram'),
+  FlowEntities: componentExport('FlowEntities'),
   FlowEntity: componentExport('FlowEntity'),
   FlowGroup: componentExport('FlowGroup'),
   FlowLayout: componentExport('FlowLayout'),
+  FlowRelations: componentExport('FlowRelations'),
   FlowRelation: componentExport('FlowRelation'),
 });
+
+const flowSourceFromChildren = (FlowDiagram: FlowComponent, children: ReactNode) => {
+  const input = createInputScene(createElement(FlowDiagram, null, children));
+  const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+  return normalized.ir.children[0];
+};
 
 const flowChildren = (
   FlowEntity: FlowComponent,
@@ -78,14 +86,343 @@ const expectedSource = {
 };
 
 describe('@retikz/diagram-react/flow', () => {
-  it('exports the supported Flow root, Entity, Group, Layout and Relation JSX markers', () => {
+  it('exports the supported Flow root, single and batch JSX markers', () => {
     const exported = components();
     expect(exported.FlowDiagram).toBeDefined();
+    expect(exported.FlowEntities).toBeDefined();
     expect(exported.FlowEntity).toBeDefined();
     expect(exported.FlowGroup).toBeDefined();
     expect(exported.FlowLayout).toBeDefined();
+    expect(exported.FlowRelations).toBeDefined();
     expect(exported.FlowRelation).toBeDefined();
     expect(componentExport('FlowBlock')).toBeUndefined();
+  });
+
+  it('expands batch Entity and Relation forms in mixed JSX order', () => {
+    const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations, FlowRelation } = components();
+    expect(FlowDiagram).toBeDefined();
+    expect(FlowEntities).toBeDefined();
+    expect(FlowEntity).toBeDefined();
+    expect(FlowRelations).toBeDefined();
+    expect(FlowRelation).toBeDefined();
+    if (
+      FlowDiagram === undefined ||
+      FlowEntities === undefined ||
+      FlowEntity === undefined ||
+      FlowRelations === undefined ||
+      FlowRelation === undefined
+    )
+      return;
+
+    const source = flowSourceFromChildren(
+      FlowDiagram,
+      createElement(
+        Fragment,
+        null,
+        createElement(FlowEntity, { id: 'first', text: 'First' }),
+        createElement(FlowEntities, {
+          items: ['second'],
+        }),
+        createElement(FlowEntities, {
+          items: [{ id: 'third', text: 'Third', status: 'success' }],
+          complete: false,
+        }),
+        createElement(Fragment, null, createElement(FlowEntity, { id: 'fourth', text: 'Fourth' })),
+        createElement(FlowRelations, {
+          items: [['first', 'second']],
+        }),
+        createElement(FlowRelations, {
+          items: [{ source: 'second', target: 'third', label: 'Next' }],
+          complete: false,
+        }),
+        createElement(FlowRelation, { source: 'third', target: 'fourth' }),
+      ),
+    );
+
+    expect(source).toEqual({
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [
+        { id: 'first', text: 'First' },
+        { id: 'second', text: 'second' },
+        { id: 'third', text: 'Third', status: 'success' },
+        { id: 'fourth', text: 'Fourth' },
+      ],
+      groups: [],
+      layouts: [],
+      children: ['first', 'second', 'third', 'fourth'],
+      relations: [
+        { source: 'first', target: 'second' },
+        { source: 'second', target: 'third', label: 'Next' },
+        { source: 'third', target: 'fourth' },
+      ],
+    });
+  });
+
+  it.each(['entities', 'relations'] as const)(
+    'rejects a complete %s marker beside any same-owner declaration',
+    declarationKind => {
+      const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations, FlowRelation } = components();
+      expect(FlowDiagram).toBeDefined();
+      expect(FlowEntities).toBeDefined();
+      expect(FlowEntity).toBeDefined();
+      expect(FlowRelations).toBeDefined();
+      expect(FlowRelation).toBeDefined();
+      if (
+        FlowDiagram === undefined ||
+        FlowEntities === undefined ||
+        FlowEntity === undefined ||
+        FlowRelations === undefined ||
+        FlowRelation === undefined
+      )
+        return;
+
+      const completeMarker =
+        declarationKind === 'entities'
+          ? createElement(FlowEntities, { items: ['only'], complete: true })
+          : createElement(FlowRelations, { items: [['source', 'target']], complete: true });
+      const singleMarker =
+        declarationKind === 'entities'
+          ? createElement(FlowEntity, { id: 'extra', text: 'Extra' })
+          : createElement(FlowRelation, { source: 'target', target: 'source' });
+      const emptyBatchMarker =
+        declarationKind === 'entities'
+          ? createElement(FlowEntities, { items: [] })
+          : createElement(FlowRelations, { items: [] });
+      const secondCompleteMarker =
+        declarationKind === 'entities'
+          ? createElement(FlowEntities, { items: ['other'], complete: true })
+          : createElement(FlowRelations, { items: [['target', 'source']], complete: true });
+      const reason = declarationKind === 'entities' ? 'complete-entities-conflict' : 'complete-relations-conflict';
+
+      for (const declarations of [
+        [completeMarker, singleMarker],
+        [singleMarker, completeMarker],
+        [completeMarker, emptyBatchMarker],
+        [completeMarker, secondCompleteMarker],
+      ]) {
+        expect(() => createInputScene(createElement(FlowDiagram, null, ...declarations))).toThrowError(
+          expect.objectContaining({
+            code: 'DIAGRAM_REACT_FLOW_CHILD_INVALID',
+            details: expect.objectContaining({ reason }),
+          }),
+        );
+      }
+    },
+  );
+
+  it('scopes complete Entity lists to their direct Flow, Group, or Layout owner', () => {
+    const { FlowDiagram, FlowEntities, FlowGroup, FlowLayout } = components();
+    expect(FlowDiagram).toBeDefined();
+    expect(FlowEntities).toBeDefined();
+    expect(FlowGroup).toBeDefined();
+    expect(FlowLayout).toBeDefined();
+    if (FlowDiagram === undefined || FlowEntities === undefined || FlowGroup === undefined || FlowLayout === undefined)
+      return;
+
+    const source = flowSourceFromChildren(
+      FlowDiagram,
+      createElement(
+        Fragment,
+        null,
+        createElement(FlowEntities, { items: ['root'], complete: true }),
+        createElement(
+          FlowGroup,
+          { id: 'group' },
+          createElement(FlowEntities, { items: ['group-entity'], complete: true }),
+          createElement(
+            FlowLayout,
+            { id: 'layout', direction: 'right' },
+            createElement(FlowEntities, { items: ['layout-entity'], complete: true }),
+          ),
+        ),
+      ),
+    );
+
+    expect(source).toEqual({
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [
+        { id: 'root', text: 'root' },
+        { id: 'group-entity', text: 'group-entity' },
+        { id: 'layout-entity', text: 'layout-entity' },
+      ],
+      groups: [{ id: 'group', children: ['group-entity', 'layout'] }],
+      layouts: [{ id: 'layout', direction: 'right', children: ['layout-entity'] }],
+      children: ['root', 'group'],
+    });
+  });
+
+  it('keeps duplicate ids in additive collectors on the existing Flow diagnostic path', () => {
+    const { FlowDiagram, FlowEntities, FlowEntity } = components();
+    expect(FlowDiagram).toBeDefined();
+    expect(FlowEntities).toBeDefined();
+    expect(FlowEntity).toBeDefined();
+    if (FlowDiagram === undefined || FlowEntities === undefined || FlowEntity === undefined) return;
+
+    const input = createInputScene(
+      createElement(
+        FlowDiagram,
+        null,
+        createElement(FlowEntities, { items: ['duplicate'] }),
+        createElement(FlowEntity, { id: 'duplicate', text: 'Duplicate' }),
+      ),
+    );
+
+    expect(() =>
+      processToStaticInputResult(input.scene, {
+        adapters: input.adapters,
+        compile: { measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }) },
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        code: 'CORE_LAYOUT_PROBE_RECOVERABLE',
+        cause: expect.objectContaining({ code: 'DIAGRAM_FLOW_DUPLICATE_ID' }),
+      }),
+    );
+  });
+
+  it('expands batch Entities inside Group and Layout owners', () => {
+    const { FlowDiagram, FlowEntities, FlowGroup, FlowLayout } = components();
+    expect(FlowDiagram).toBeDefined();
+    expect(FlowEntities).toBeDefined();
+    expect(FlowGroup).toBeDefined();
+    expect(FlowLayout).toBeDefined();
+    if (FlowDiagram === undefined || FlowEntities === undefined || FlowGroup === undefined || FlowLayout === undefined)
+      return;
+
+    const source = flowSourceFromChildren(
+      FlowDiagram,
+      createElement(
+        FlowGroup,
+        { id: 'group' },
+        createElement(FlowEntities, { items: [{ id: 'group-child', text: 'Group child' }] }),
+        createElement(
+          FlowLayout,
+          { id: 'row', direction: 'right' },
+          createElement(FlowEntities, { items: ['layout-a', 'layout-b'] }),
+        ),
+      ),
+    );
+
+    expect(source).toEqual({
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [
+        { id: 'group-child', text: 'Group child' },
+        { id: 'layout-a', text: 'layout-a' },
+        { id: 'layout-b', text: 'layout-b' },
+      ],
+      groups: [{ id: 'group', children: ['group-child', 'row'] }],
+      layouts: [{ id: 'row', direction: 'right', children: ['layout-a', 'layout-b'] }],
+      children: ['group'],
+    });
+  });
+
+  it.each(['group', 'layout'] as const)('rejects batch Relations inside a %s owner', ownerKind => {
+    const { FlowDiagram, FlowGroup, FlowLayout, FlowRelations } = components();
+    expect(FlowDiagram).toBeDefined();
+    expect(FlowGroup).toBeDefined();
+    expect(FlowLayout).toBeDefined();
+    expect(FlowRelations).toBeDefined();
+    if (FlowDiagram === undefined || FlowGroup === undefined || FlowLayout === undefined || FlowRelations === undefined)
+      return;
+
+    const nestedRelations = createElement(FlowRelations, { items: [['source', 'target']] });
+    const owner =
+      ownerKind === 'group'
+        ? createElement(FlowGroup, { id: 'owner' }, nestedRelations)
+        : createElement(FlowLayout, { id: 'owner', direction: 'right' }, nestedRelations);
+
+    expect(() => createInputScene(createElement(FlowDiagram, null, owner))).toThrowError(
+      expect.objectContaining({
+        code: 'DIAGRAM_REACT_FLOW_CHILD_INVALID',
+        details: expect.objectContaining({ reason: 'relation-outside-root' }),
+      }),
+    );
+  });
+
+  it('treats empty batch markers as no operations', () => {
+    const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations } = components();
+    expect(FlowDiagram).toBeDefined();
+    expect(FlowEntities).toBeDefined();
+    expect(FlowEntity).toBeDefined();
+    expect(FlowRelations).toBeDefined();
+    if (
+      FlowDiagram === undefined ||
+      FlowEntities === undefined ||
+      FlowEntity === undefined ||
+      FlowRelations === undefined
+    )
+      return;
+
+    const source = flowSourceFromChildren(
+      FlowDiagram,
+      createElement(
+        Fragment,
+        null,
+        createElement(FlowEntities, { items: [] }),
+        createElement(FlowEntity, { id: 'only', text: 'Only' }),
+        createElement(FlowRelations, { items: [] }),
+      ),
+    );
+
+    expect(source).toEqual({
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [{ id: 'only', text: 'Only' }],
+      groups: [],
+      layouts: [],
+      children: ['only'],
+    });
+  });
+
+  it('produces the same Source from batch and single markers', () => {
+    const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations, FlowRelation } = components();
+    expect(FlowDiagram).toBeDefined();
+    expect(FlowEntities).toBeDefined();
+    expect(FlowEntity).toBeDefined();
+    expect(FlowRelations).toBeDefined();
+    expect(FlowRelation).toBeDefined();
+    if (
+      FlowDiagram === undefined ||
+      FlowEntities === undefined ||
+      FlowEntity === undefined ||
+      FlowRelations === undefined ||
+      FlowRelation === undefined
+    )
+      return;
+
+    const batchSource = flowSourceFromChildren(
+      FlowDiagram,
+      createElement(
+        Fragment,
+        null,
+        createElement(FlowEntities, {
+          items: [
+            { id: 'source', text: 'Source' },
+            { id: 'target', text: 'Target', role: 'resource' },
+          ],
+          complete: true,
+        }),
+        createElement(FlowRelations, {
+          items: [{ source: 'source', target: 'target', direction: 'forward' }],
+          complete: true,
+        }),
+      ),
+    );
+    const singleSource = flowSourceFromChildren(
+      FlowDiagram,
+      createElement(
+        Fragment,
+        null,
+        createElement(FlowEntity, { id: 'source', text: 'Source' }),
+        createElement(FlowEntity, { id: 'target', text: 'Target', role: 'resource' }),
+        createElement(FlowRelation, { source: 'source', target: 'target', direction: 'forward' }),
+      ),
+    );
+
+    expect(batchSource).toEqual(singleSource);
   });
 
   it('flattens nested Group and Layout JSX with root relations to the exact Direct Source', () => {
