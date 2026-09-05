@@ -38,18 +38,15 @@ const resolveLogicFigureFrameBorder = (
 });
 
 const withLogicFigureFrameTitleDefaults = (props: LogicFigureFrameTitleProps): LogicFigureFrameTitleProps => ({
-  textColor: 'gray',
   ...props,
-  font: { size: 12, weight: 'normal', ...props.font },
+  style: { textColor: 'gray', ...props.style, font: { size: 12, weight: 'normal', ...props.style?.font } },
 });
 
 const withLogicFigureFrameDescriptionDefaults = (
   props: LogicFigureFrameDescriptionProps,
 ): LogicFigureFrameDescriptionProps => ({
-  textColor: 'gray',
-  opacity: 0.7,
   ...props,
-  font: { size: 11, ...props.font },
+  style: { textColor: 'gray', opacity: 0.7, ...props.style, font: { size: 11, ...props.style?.font } },
 });
 
 /** 把 LogicFigureFrame 的语义标题转换为 Standard Frame 可直接消费的组成部分 */

@@ -17,8 +17,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         thickness={thickness}
         style={{
           stroke: values.stroke,
-          strokeWidth: values.thickness === 'custom' ? values.strokeWidth : undefined,
-          dashPattern: values.dashed ? [18, 10] : undefined,
+          ...(values.thickness === 'custom' ? { strokeWidth: values.strokeWidth } : {}),
+          ...(values.dashed ? { dashPattern: [18, 10] } : {}),
           dashOffset: values.dashOffset,
           lineCap: values.lineCap,
           lineJoin: values.lineJoin,

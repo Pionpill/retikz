@@ -53,9 +53,9 @@ describe('颜色比例尺文档结构', () => {
 
     expect(nodeTags.length).toBeGreaterThan(0);
     for (const nodeTag of nodeTags) {
-      expect(nodeTag).toContain('stroke="gray"');
-      expect(nodeTag).toContain('fill="gray"');
-      expect(nodeTag).toContain('fillOpacity={0.08}');
+      expect(nodeTag).toContain("stroke: 'gray'");
+      expect(nodeTag).toContain("fill: 'gray'");
+      expect(nodeTag).toContain('fillOpacity: 0.08');
       expect(nodeTag).toContain('cornerRadius={4}');
     }
   });

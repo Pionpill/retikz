@@ -163,10 +163,14 @@ export const RelationStepLabelSchema = StepLabelSchema.extend({
 }).describe('Relation path step label; lowered to core StepLabelSchema after field bindings are resolved');
 
 export const RelationPathSpecificOptionsSchema = strictObject({
-  dashPattern: PathStrokeSchema.shape.dashPattern,
-  fillRule: PathFillSchema.shape.fillRule,
-  lineCap: PathStrokeSchema.shape.lineCap,
-  lineJoin: PathStrokeSchema.shape.lineJoin,
+  style: strictObject({
+    dashPattern: PathStrokeSchema.shape.dashPattern,
+    fillRule: PathFillSchema.shape.fillRule,
+    lineCap: PathStrokeSchema.shape.lineCap,
+    lineJoin: PathStrokeSchema.shape.lineJoin,
+  })
+    .partial()
+    .describe('Path-only dash, fill rule, cap and join overrides'),
   roundedCorners: PathGeometrySchema.shape.roundedCorners,
   rotate: PathGeometrySchema.shape.rotate,
   scale: PathGeometrySchema.shape.scale,

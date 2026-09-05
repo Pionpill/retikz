@@ -323,8 +323,8 @@ describe('Standard Legend documentation', () => {
       'LegendTick.offset',
       'LegendTick.children',
       'Legend.titleGap',
-      'Node.font',
-      'Node.align',
+      'Node.style.font',
+      'Node.layout.align',
       'Legend.contentAlign',
       'Legend.direction',
       'Legend.wrap',
@@ -344,15 +344,12 @@ describe('Standard Legend documentation', () => {
       titleGap: 8,
       title: {
         text: 'A–D',
-        align: 'start',
-        font: { size: 16, weight: 'bold', style: 'normal' },
-        padding: 0,
-        stroke: 'none',
-        fill: 'none',
+        style: { font: { size: 16, weight: 'bold', style: 'normal' }, stroke: 'none', fill: 'none' },
+        layout: { align: 'start', padding: 0 },
       },
       content: { kind: 'items' },
     });
-    expect(legendOf(canonical).title).not.toHaveProperty('minimumSize');
+    expect(legendOf(canonical).title).not.toHaveProperty('layout.minimumSize');
     expect(legendOf({ ...canonical, title: '' })).not.toHaveProperty('title');
     expect(legendOf({ ...canonical, title: 'Scale' })).toMatchObject({ title: { text: 'Scale' } });
     expect(
@@ -368,18 +365,18 @@ describe('Standard Legend documentation', () => {
       }),
     ).toMatchObject({
       title: {
-        align: 'end',
-        font: { size: 22, weight: 'normal', style: 'italic' },
+        layout: { align: 'end' },
+        style: { font: { size: 22, weight: 'normal', style: 'italic' } },
       },
       titleGap: 20,
       contentAlign: 'end',
     });
     expect(legendOf({ ...canonical, contentAlign: 'start' })).toMatchObject({ contentAlign: 'start' });
     expect(legendOf({ ...canonical, kind: 'ramp', direction: 'horizontal' })).toMatchObject({
-      content: { kind: 'ramp', sample: { minimumSize: { width: 160, height: 16 } } },
+      content: { kind: 'ramp', sample: { layout: { minimumSize: { width: 160, height: 16 } } } },
     });
     expect(legendOf({ ...canonical, kind: 'ramp', direction: 'vertical' })).toMatchObject({
-      content: { kind: 'ramp', sample: { minimumSize: { width: 16, height: 120 } } },
+      content: { kind: 'ramp', sample: { layout: { minimumSize: { width: 16, height: 120 } } } },
     });
   });
 
@@ -406,7 +403,7 @@ describe('Standard Legend documentation', () => {
     expect(source).toMatch(/<Legend[\s\S]*kind=\{LegendContentKind\.Ramp\}/);
     expect(source).toContain('<LegendRamp>');
     expect(source).toContain('<LegendTick');
-    expect(source).toMatch(/<LegendTitle>[\s\S]*<Node[\s\S]*font=\{/);
+    expect(source).toMatch(/<LegendTitle>[\s\S]*<Node[\s\S]*style=\{[\s\S]*font:/);
     expect(source).not.toMatch(/<Legend[^>]+title=\{/);
   });
 

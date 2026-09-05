@@ -71,7 +71,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             },
             options: {
               marks: [{ pos: 1, mark: { kind: 'arrow' } }],
-              ...lineOptions,
+              style: lineOptions,
             },
           }}
         />
@@ -96,7 +96,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             },
             options: {
               marks: [{ pos: 1, mark: { kind: 'arrow' } }],
-              ...lineOptions,
+              style: lineOptions,
             },
           }}
         />

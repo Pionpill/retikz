@@ -26,22 +26,20 @@ const Demo: FC = () => (
             [v, -210],
             [v, 140],
           ]}
-          stroke="lightgray"
-          strokeWidth={0.5}
+          style={{ stroke: 'lightgray', strokeWidth: 0.5 }}
         />
         <Draw
           way={[
             [-140, v],
             [140, v],
           ]}
-          stroke="lightgray"
-          strokeWidth={0.5}
+          style={{ stroke: 'lightgray', strokeWidth: 0.5 }}
         />
       </Fragment>
     ))}
 
     {/* 单位圆 */}
-    <Path lineCap="round">
+    <Path style={{ lineCap: 'round' }}>
       <Step kind="move" to={[0, 0]} />
       <Step kind="circlePath" radius={100} />
     </Path>
@@ -54,7 +52,7 @@ const Demo: FC = () => (
       ]}
       arrow="->"
     />
-    <Node position={[162, 0]} stroke="none" padding={0} font={MATH_FONT}>
+    <Node position={[162, 0]} style={{ stroke: 'none', font: MATH_FONT }} layout={{ padding: 0 }}>
       x
     </Node>
     <Coordinate id="x-axis" position={[150, 0]} />
@@ -65,7 +63,7 @@ const Demo: FC = () => (
       ]}
       arrow="->"
     />
-    <Node position={[0, -242]} stroke="none" padding={0} font={MATH_FONT}>
+    <Node position={[0, -242]} style={{ stroke: 'none', font: MATH_FONT }} layout={{ padding: 0 }}>
       y
     </Node>
     <Coordinate id="y-axis" position={[0, -230]} />
@@ -83,7 +81,7 @@ const Demo: FC = () => (
             [x, 3],
           ]}
         />
-        <Node position={[x - 10, 14]} stroke="none" padding={1}>
+        <Node position={[x - 10, 14]} style={{ stroke: 'none' }} layout={{ padding: 1 }}>
           {text}
         </Node>
       </Fragment>
@@ -102,19 +100,23 @@ const Demo: FC = () => (
             [3, y],
           ]}
         />
-        <Node position={[-18, y + 10]} stroke="none" padding={1}>
+        <Node position={[-18, y + 10]} style={{ stroke: 'none' }} layout={{ padding: 1 }}>
           {text}
         </Node>
       </Fragment>
     ))}
 
     {/* 30° 扇形 + α */}
-    <Path fill="lightgray" stroke="green">
+    <Path style={{ fill: 'lightgray', stroke: 'green' }}>
       <Step kind="move" to={[0, 0]} />
       <Step kind="arc" startAngle={0} endAngle={-30} radius={30} />
       <Step kind="line" to={[0, 0]} />
     </Path>
-    <Node position={{ angle: -15, radius: 22 }} stroke="none" textColor="green" padding={1} font={MATH_FONT}>
+    <Node
+      position={{ angle: -15, radius: 22 }}
+      style={{ stroke: 'none', textColor: 'green', font: MATH_FONT }}
+      layout={{ padding: 1 }}
+    >
       α
     </Node>
 
@@ -125,24 +127,24 @@ const Demo: FC = () => (
         [0, 0],
         [COT30 * 100, -100],
       ]}
-      dashPattern={[3, 3]}
+      style={{ dashPattern: [3, 3] }}
     />
 
     {/* sin α 红 / cos α 蓝 / tan α 橙；label.textColor 与线色一致 */}
     <Draw
       way={[{ angle: -30, radius: 100 }, { label: { text: 'sin α', side: 'left' } }, [COS30 * 100, 0]]}
-      stroke="red"
       thickness="thick"
+      style={{ stroke: 'red' }}
     />
     <Draw
       way={[[COS30 * 100, 0], { label: { text: 'cos α', side: 'bottom' } }, [0, 0]]}
-      stroke="dodgerblue"
       thickness="thick"
+      style={{ stroke: 'dodgerblue' }}
     />
     <Draw
       way={[[100, 0], { label: { text: 'tan α', side: 'right' } }, [100, -TAN30 * 100]]}
-      stroke="darkorange"
       thickness="thick"
+      style={{ stroke: 'darkorange' }}
     />
 
     {/* sec α 紫：切线下半段，P → x 轴截距 (sec α · 100, 0)；
@@ -153,33 +155,29 @@ const Demo: FC = () => (
         { label: { text: 'sec α', position: 'at-end', side: 'bottom' } },
         [SEC30 * 100, 0],
       ]}
-      stroke="dodgerblue"
       thickness="thick"
+      style={{ stroke: 'dodgerblue' }}
     />
 
     {/* csc α 粉：切线上半段，P → y 轴截距 (0, -csc α · 100) */}
     <Draw
       way={[{ angle: -30, radius: 100 }, { label: { text: 'csc α', side: 'left' } }, [0, -CSC30 * 100]]}
-      stroke="red"
       thickness="thick"
+      style={{ stroke: 'red' }}
     />
 
     {/* cot α 青：顶部水平切线段，(0, -100) → (cot α · 100, -100) */}
     <Draw
       way={[[0, -100], { label: { text: 'cot α', side: 'top' } }, [COT30 * 100, -100]]}
-      stroke="green"
       thickness="thick"
+      style={{ stroke: 'green' }}
     />
 
     {/* 右侧信息说明框：6 个三角函数的值 + α */}
     <Node
       position={[320, -70]}
       shape="rectangle"
-      stroke="lightgray"
-      dashed
       cornerRadius={6}
-      padding={{ x: 10, y: 4 }}
-      align="start"
       text={[
         { text: 'α = 30°', fill: 'green' },
         { text: 'sin α = 1/2', fill: 'red' },
@@ -189,6 +187,8 @@ const Demo: FC = () => (
         { text: 'csc α = 2', fill: 'red' },
         { text: 'cot α = √3', fill: 'green' },
       ]}
+      style={{ stroke: 'lightgray', dashed: true }}
+      layout={{ padding: { x: 10, y: 4 }, align: 'start' }}
     />
   </Layout>
 );

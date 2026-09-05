@@ -72,25 +72,19 @@ export const STROKE_PATH_INSPECTOR = defineInspector({
     if (context.options.controlPoints && handles.length > 0) {
       output.push({
         type: 'path',
-        stroke: context.appearance.scopeColor,
-        strokeWidth: 1,
-        strokeOpacity: 0.75,
-        dashPattern: [4, 3],
         children: handles.flatMap(handle => [
           { type: 'step' as const, kind: 'move' as const, to: handle.from },
           { type: 'step' as const, kind: 'line' as const, to: handle.to },
         ]),
+        style: { stroke: context.appearance.scopeColor, strokeWidth: 1, strokeOpacity: 0.75, dashPattern: [4, 3] },
       });
       output.push(
         ...points.map(point => ({
           type: 'node' as const,
           position: point.position,
           shape: 'circle',
-          minimumSize: 6,
-          padding: 0,
-          fill: context.appearance.scopeColor,
-          stroke: context.appearance.scopeColor,
-          strokeWidth: 1,
+          layout: { minimumSize: 6, padding: 0 },
+          style: { fill: context.appearance.scopeColor, stroke: context.appearance.scopeColor, strokeWidth: 1 },
         })),
       );
     }
@@ -100,11 +94,8 @@ export const STROKE_PATH_INSPECTOR = defineInspector({
           type: 'node' as const,
           position: [point.position[0] + 6, point.position[1] - 6] as IRPosition,
           text: point.label,
-          textColor: context.appearance.scopeColor,
-          fill: '#ffffff',
-          strokeWidth: 0,
-          padding: 2,
-          font: { size: 10 },
+          layout: { padding: 2 },
+          style: { textColor: context.appearance.scopeColor, fill: '#ffffff', strokeWidth: 0, font: { size: 10 } },
         })),
       );
     }

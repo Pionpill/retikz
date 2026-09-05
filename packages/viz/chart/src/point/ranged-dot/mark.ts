@@ -48,7 +48,7 @@ const rangePathOf = (properties: IRRangedDotRangeProperties): JsonObject | undef
   for (const name of ['lineCap', 'lineJoin', 'dashPattern'] as const) {
     if (properties[name] !== undefined) options[name] = properties[name];
   }
-  return Object.keys(options).length === 0 ? undefined : { options };
+  return Object.keys(options).length === 0 ? undefined : { options: { style: options } };
 };
 
 const fieldMappingOf = (

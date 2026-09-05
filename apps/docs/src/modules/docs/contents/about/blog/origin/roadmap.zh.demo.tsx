@@ -6,47 +6,47 @@ const ARROW_COLOR = '#9ca3af';
 
 const Demo: FC = () => (
   <Layout width={640} height={160} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node id="v01" position={[-250, -45]} stroke="none">
+    <Node id="v01" position={[-250, -45]} style={{ stroke: 'none' }}>
       v0.1（当前）
     </Node>
-    <Node id="v02" position={[-150, -45]} stroke="none">
+    <Node id="v02" position={[-150, -45]} style={{ stroke: 'none' }}>
       v0.2
     </Node>
-    <Node id="v03" position={[-50, -45]} stroke="none">
+    <Node id="v03" position={[-50, -45]} style={{ stroke: 'none' }}>
       v0.3
     </Node>
-    <Node id="v04" position={[50, -45]} stroke="none">
+    <Node id="v04" position={[50, -45]} style={{ stroke: 'none' }}>
       v0.4
     </Node>
-    <Node id="v10" position={[150, -45]} stroke="none">
+    <Node id="v10" position={[150, -45]} style={{ stroke: 'none' }}>
       v1.0
     </Node>
-    <Node id="future" position={[250, -45]} stroke="none">
+    <Node id="future" position={[250, -45]} style={{ stroke: 'none' }}>
       未来
     </Node>
 
-    <Draw way={['v01', 'v02']} arrow="->" stroke={ARROW_COLOR} />
-    <Draw way={['v02', 'v03']} arrow="->" stroke={ARROW_COLOR} />
-    <Draw way={['v03', 'v04']} arrow="->" stroke={ARROW_COLOR} />
-    <Draw way={['v04', 'v10']} arrow="->" stroke={ARROW_COLOR} />
-    <Draw way={['v10', 'future']} arrow="->" stroke={ARROW_COLOR} />
+    <Draw way={['v01', 'v02']} arrow="->" style={{ stroke: ARROW_COLOR }} />
+    <Draw way={['v02', 'v03']} arrow="->" style={{ stroke: ARROW_COLOR }} />
+    <Draw way={['v03', 'v04']} arrow="->" style={{ stroke: ARROW_COLOR }} />
+    <Draw way={['v04', 'v10']} arrow="->" style={{ stroke: ARROW_COLOR }} />
+    <Draw way={['v10', 'future']} arrow="->" style={{ stroke: ARROW_COLOR }} />
 
-    <Node position={[-250, 10]} stroke="none">
+    <Node position={[-250, 10]} style={{ stroke: 'none' }}>
       基础图元
     </Node>
-    <Node position={[-150, 10]} stroke="none">
+    <Node position={[-150, 10]} style={{ stroke: 'none' }}>
       Scope + Shape
     </Node>
-    <Node position={[-50, 10]} stroke="none">
+    <Node position={[-50, 10]} style={{ stroke: 'none' }}>
       高级定位
     </Node>
-    <Node position={[50, 10]} stroke="none">
+    <Node position={[50, 10]} style={{ stroke: 'none' }}>
       libraries
     </Node>
-    <Node position={[150, 10]} stroke="none">
+    <Node position={[150, 10]} style={{ stroke: 'none' }}>
       + canvas
     </Node>
-    <Node position={[250, 10]} stroke="none">
+    <Node position={[250, 10]} style={{ stroke: 'none' }}>
       + plot
     </Node>
   </Layout>

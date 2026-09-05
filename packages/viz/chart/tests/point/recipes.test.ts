@@ -863,7 +863,7 @@ describe('Point Chart recipe Definitions', () => {
               stroke: { kind: 'constant', value: '#64748b' },
               strokeWidth: { kind: 'constant', value: 2 },
             }),
-            path: { options: { dashPattern: [4, 2] } },
+            path: { options: { style: { dashPattern: [4, 2] } } },
             endpoints: {
               source: expect.objectContaining({
                 color: { kind: 'constant', value: '#2563eb' },

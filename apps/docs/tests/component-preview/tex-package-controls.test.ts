@@ -60,7 +60,7 @@ describe('@retikz/tex package playground controls', () => {
       'Node.text',
       'IRTexContent.tex',
       'IRTexContent.displayMode',
-      'Node.font',
+      'Node.style.font',
     ]);
     expect(texPlaygroundEnContract.relatedApis).toEqual(texPlaygroundContract.relatedApis);
   });

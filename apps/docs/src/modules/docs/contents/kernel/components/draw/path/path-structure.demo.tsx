@@ -15,7 +15,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         style={{
           stroke: values.structure === 'fill' ? values.fill : 'currentColor',
           strokeWidth: 2,
-          fill: values.structure === 'fill' ? values.fill : undefined,
+          ...(values.structure === 'fill' ? { fill: values.fill } : {}),
           fillOpacity: 0.35,
         }}
       >
