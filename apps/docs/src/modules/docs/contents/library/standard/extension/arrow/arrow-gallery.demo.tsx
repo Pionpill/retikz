@@ -53,10 +53,7 @@ const Demo: FC = () => {
           <Node
             key={`${shape}-label`}
             position={[65 + x, y]}
-            fill="none"
-            stroke="none"
-            font={{ size: 12 }}
-            textColor="gray"
+            style={{ fill: 'none', stroke: 'none', font: { size: 12 }, textColor: 'gray' }}
           >
             {shape}
           </Node>,
@@ -68,8 +65,7 @@ const Demo: FC = () => {
             ]}
             arrow="->"
             arrowDetail={{ ...detail, end: { ...detail, shape } }}
-            stroke="#94a3b8"
-            strokeWidth={2}
+            style={{ stroke: '#94a3b8', strokeWidth: 2 }}
           />,
         ];
       })}

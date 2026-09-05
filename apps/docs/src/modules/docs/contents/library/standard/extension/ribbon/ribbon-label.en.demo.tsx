@@ -18,8 +18,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       width={400}
       height={186}
       viewBox={{ x: -280, y: -130, width: 560, height: 260 }}
-      color="#172033"
       pathKinds={[RibbonPathKindDefinition]}
+      rootScope={{ style: { color: '#172033' } }}
     >
       <Path
         kind="ribbon"
@@ -29,8 +29,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           interpolation: 'smooth',
           samples: true,
         }}
-        fill="#38bdf8"
-        fillOpacity={0.62}
         label={{
           text: '128 items',
           position: values.position,
@@ -39,6 +37,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           textColor: '#0f172a',
           font: { size: 14, weight: 'bold' },
         }}
+        style={{ fill: '#38bdf8', fillOpacity: 0.62 }}
       >
         <Step kind="move" to={[-210, -48]} />
         <Step kind="cubic" control1={[-80, -100]} control2={[80, 38]} to={[210, 16]} />

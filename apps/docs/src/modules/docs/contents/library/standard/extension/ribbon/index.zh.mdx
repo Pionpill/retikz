@@ -16,7 +16,7 @@ import { Layout, Path, Step } from '@retikz/react';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 
 <Layout pathKinds={[RibbonPathKindDefinition]}>
-  <Path kind="ribbon" kindOptions={{ start: { width: 32 }, end: { width: 12 } }} fill="#60a5fa">
+  <Path kind="ribbon" kindOptions={{ start: { width: 32 }, end: { width: 12 } }} style={{ fill: '#60a5fa' }}>
     <Step kind="move" to={[-120, 0]} />
     <Step to={[120, 0]} />
   </Path>
@@ -215,13 +215,13 @@ Provider 只负责把 Definition 和 runtime profile dataset 装配成普通 Cor
 
 ### Path host 与 `kindOptions`
 
-| 字段              | 类型                                          | 说明                                                             |
-| ----------------- | --------------------------------------------- | ---------------------------------------------------------------- |
-| `kind`            | `'ribbon'`                                    | 选择 Standard Ribbon Path kind                                   |
-| `kindOptions`     | `IRRibbonPathOptions`                         | Ribbon 的 mode、width、sampling、alignment、端点和 boundary 数据 |
-| `children?`       | `Array<IRStep>`                               | `centerline` 模式的开放中心线；`boundary` 模式禁止               |
-| `label?`          | `IRGeometryLabel` \| `Array<IRGeometryLabel>` | 共享 Path 标签；当前 Ribbon 标签只支持 centerline                |
-| `fill` / `stroke` | Core Path paint fields                        | 轮廓生成后仍由共享 Path host 处理                                |
+| 字段                          | 类型                                          | 说明                                                             |
+| ----------------------------- | --------------------------------------------- | ---------------------------------------------------------------- |
+| `kind`                        | `'ribbon'`                                    | 选择 Standard Ribbon Path kind                                   |
+| `kindOptions`                 | `IRRibbonPathOptions`                         | Ribbon 的 mode、width、sampling、alignment、端点和 boundary 数据 |
+| `children?`                   | `Array<IRStep>`                               | `centerline` 模式的开放中心线；`boundary` 模式禁止               |
+| `label?`                      | `IRGeometryLabel` \| `Array<IRGeometryLabel>` | 共享 Path 标签；当前 Ribbon 标签只支持 centerline                |
+| `style.fill` / `style.stroke` | Core Path paint fields                        | 轮廓生成后仍由共享 Path host 处理                                |
 
 `kindOptions` 的核心字段包括：`mode`、`width`、`start`、`end`、`interpolation`、`align`、`samples`、`sampling`、`upper` 和 `lower`。完整字段与跨字段约束以 `RibbonPathOptionsSchema` 为准。
 

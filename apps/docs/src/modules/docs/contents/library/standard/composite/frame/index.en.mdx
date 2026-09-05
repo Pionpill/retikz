@@ -3,6 +3,8 @@ title: Frame
 description: Preserve semantic grouping and Node-like title and description parts in a JSON-safe Frame that lowers to Core Scope, Path, and Node IR.
 ---
 
+Root cascade fields use `style` and `defaults`. Title, description and body Node visual overrides use `style`, while size and text layout use `layout`. Frame-owned `padding`, `gap` and `border.style` keep their existing container and border semantics.
+
 `<Frame>` is Standard's semantic grouping container. It encloses a set of Core Nodes with a default border and `padding`, while preserving an optional title and description as distinct parts in IR. The two parts are horizontal by default and can be switched to a vertical arrangement.
 
 Frame owns only the group boundary and header arrangement; it does not rearrange the body. When Node positions or text sizes change, the border follows the final bounds without duplicate rectangle coordinates.
@@ -121,7 +123,7 @@ React, IR, and Vanilla are all validated into `IRFrame` by `FrameSchema`. React 
 | `zIndex?`              | `number`                    | —                                                       | Stacking order of the complete Frame Scope                                                      |
 | `children`             | `ReactNode`                 | —                                                       | At most one Title, one Description, and a non-empty direct Node body                            |
 
-Frame also accepts the remaining public Core `ScopeProps`, including cascading graphic style, `localNamespace`, `boundingShape`, `transforms`, `placement`, `clip`, `theme`, `nodeDefault`, `pathDefault`, `labelDefault`, `arrowDefault`, `resetStyle`, `meta`, and `animations`. These fields apply to the root Scope; they are not aliases for `border.style`. See [Scope](/kernel/components/layout/scope) for the shared contract.
+Frame also accepts the remaining public Core `ScopeProps`, including cascading graphic style, `localNamespace`, `boundingShape`, `transforms`, `placement`, `clip`, `theme`, `defaults.node`, `defaults.path`, `defaults.label`, `defaults.arrow`, `defaults.reset`, `meta`, and `animations`. These fields apply to the root Scope; they are not aliases for `border.style`. See [Scope](/kernel/components/layout/scope) for the shared contract.
 
 ### React: `FrameTitleProps` / `FrameDescriptionProps`
 
@@ -130,11 +132,11 @@ Frame also accepts the remaining public Core `ScopeProps`, including cascading g
 | `children` / `text` | `ReactNode` / `IRNode['text']` | —                                                                       | Uses Node text conversion and must produce valid Node text                                     |
 | `id?`               | `string`                       | —                                                                       | Optional explicit Node id; omission stays anonymous and cannot equal an explicit Frame root id |
 | `shape?`            | `NodeProps['shape']`           | `rectangle`                                                             | Header Node shape                                                                              |
-| `stroke?`           | `NodeProps['stroke']`          | `none`                                                                  | Header stroke                                                                                  |
-| `fill?`             | `NodeProps['fill']`            | `none`                                                                  | Header fill                                                                                    |
-| `padding?`          | `NodeProps['padding']`         | `0`                                                                     | Header Node padding                                                                            |
-| `font?`             | `NodeProps['font']`            | Title: `{ size: 'sm', weight: 600 }`<br />Description: `{ size: 'xs' }` | Shallow-merges with the default font                                                           |
-| `opacity?`          | `number`                       | Title: —<br />Description: `0.7`                                        | Opacity of the complete header Node                                                            |
+| `style.stroke?`     | `IRNodeStyle['stroke']`        | `none`                                                                  | Header stroke                                                                                  |
+| `style.fill?`       | `IRNodeStyle['fill']`          | `none`                                                                  | Header fill                                                                                    |
+| `layout.padding?`   | `IRNodeLayout['padding']`      | `0`                                                                     | Header Node padding                                                                            |
+| `style.font?`       | `IRNodeStyle['font']`          | Title: `{ size: 'sm', weight: 600 }`<br />Description: `{ size: 'xs' }` | Shallow-merges with the default font                                                           |
+| `style.opacity?`    | `number`                       | Title: —<br />Description: `0.7`                                        | Opacity of the complete header Node                                                            |
 | `zIndex?`           | `number`                       | `1`                                                                     | Header stacking order inside Frame                                                             |
 
 Both also accept public `NodeProps` except `position` and hydration event props, including margin, scale, rotate, label, meta, and animation. Explicit values keep Node semantics and override the defaults above. See [Node](/kernel/components/node/overview) for the complete shared contract.

@@ -37,9 +37,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           },
         },
       }}
-      fill={values.fill}
-      stroke="darkorange"
-      strokeWidth={1.5}
+      style={{ fill: values.fill, stroke: 'darkorange', strokeWidth: 1.5 }}
     />
   </Layout>
 ));

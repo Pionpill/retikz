@@ -13,11 +13,9 @@ const Demo: FC = () => (
       <Node
         position={[90, 145]}
         text="Body only"
-        stroke="gray"
-        fill="gray"
-        fillOpacity={0.08}
         cornerRadius={4}
-        padding={8}
+        style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+        layout={{ padding: 8 }}
       />
     </Frame>
 
@@ -30,11 +28,9 @@ const Demo: FC = () => (
       <Node
         position={[335, 145]}
         text="Body"
-        stroke="gray"
-        fill="gray"
-        fillOpacity={0.08}
         cornerRadius={4}
-        padding={8}
+        style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+        layout={{ padding: 8 }}
       />
     </Frame>
 
@@ -48,11 +44,9 @@ const Demo: FC = () => (
       <Node
         position={[580, 145]}
         text="Body"
-        stroke="gray"
-        fill="gray"
-        fillOpacity={0.08}
         cornerRadius={4}
-        padding={8}
+        style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+        layout={{ padding: 8 }}
       />
     </Frame>
   </Layout>

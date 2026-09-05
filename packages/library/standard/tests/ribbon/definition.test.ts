@@ -21,9 +21,8 @@ describe('Standard Ribbon definition', () => {
       type: 'path',
       kind: 'ribbon',
       kindOptions: { width: 4, samples: 2 },
-      color: 'crimson',
-      stroke: 'black',
       children: line,
+      style: { color: 'crimson', stroke: 'black' },
     });
     expect(scene.primitives.find(value => value.type === 'path')).toMatchObject({
       fill: 'crimson',

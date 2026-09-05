@@ -6,7 +6,7 @@ import { Grid } from '@retikz/standard-react';
 /** Grid 常见语义变体的中文并列对比 */
 const Demo: FC = () => (
   <Layout width={760} height={145} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node position={[95, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
+    <Node position={[95, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       分轴间距
     </Node>
     <Grid
@@ -17,7 +17,7 @@ const Demo: FC = () => (
       }}
     />
 
-    <Node position={[285, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
+    <Node position={[285, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       中心加尺寸
     </Node>
     <Grid
@@ -25,7 +25,7 @@ const Demo: FC = () => (
       line={{ spacing: 18, origin: 0, includeBoundary: true, style: { stroke: 'lightgray' } }}
     />
 
-    <Node position={[475, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
+    <Node position={[475, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       普通线与主线
     </Node>
     <Grid
@@ -38,7 +38,7 @@ const Demo: FC = () => (
       }}
     />
 
-    <Node position={[665, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
+    <Node position={[665, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       反向角点与外框
     </Node>
     <Grid

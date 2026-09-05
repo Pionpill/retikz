@@ -3,6 +3,8 @@ title: 分组框
 description: 用 JSON-safe Frame 保留语义分组、类 Node 标题与说明，并在编译时下沉为 Core Scope、Path 和 Node。
 ---
 
+根级联字段进入 `style` 与 `defaults`；标题、说明及内容 Node 的视觉覆盖进入 `style`，尺寸与文本排布进入 `layout`。Frame 自己的 `padding`、`gap` 与 `border.style` 仍表达原有容器和边框职责。
+
 `<Frame>` 是 Standard 的语义分组容器。它用默认边框和 `padding` 围合一组 Core Node，同时把可选的标题与说明作为独立组成部分保留在 IR 中；两者默认横向排列，也可以显式切换为纵向。
 
 Frame 只负责分组边界与标题区排布，不重排内容区。Node 的位置或文字尺寸改变时，边框会跟随最终边界，无需手工维护另一份矩形坐标。
@@ -118,7 +120,7 @@ React、IR 与 Vanilla 最终都由 `FrameSchema` 校验为 `IRFrame`。React �
 | `zIndex?`              | `number`                    | —                                                       | 整个 Frame Scope 的层级                                        |
 | `children`             | `ReactNode`                 | —                                                       | 最多一个 Title、最多一个 Description，以及非空直接 Node 内容区 |
 
-Frame 还接受 Core `ScopeProps` 的其余公开字段，包括级联 graphic style、`localNamespace`、`boundingShape`、`transforms`、`placement`、`clip`、`theme`、`nodeDefault`、`pathDefault`、`labelDefault`、`arrowDefault`、`resetStyle`、`meta` 与 `animations`。这些字段作用于整个 root Scope；不要把它们当作 `border.style` 的别名。完整共享契约见 [Scope](/kernel/components/layout/scope)。
+Frame 还接受 Core `ScopeProps` 的其余公开字段，包括级联 graphic style、`localNamespace`、`boundingShape`、`transforms`、`placement`、`clip`、`theme`、`defaults.node`、`defaults.path`、`defaults.label`、`defaults.arrow`、`defaults.reset`、`meta` 与 `animations`。这些字段作用于整个 root Scope；不要把它们当作 `border.style` 的别名。完整共享契约见 [Scope](/kernel/components/layout/scope)。
 
 ### React：`FrameTitleProps` / `FrameDescriptionProps`
 
@@ -127,11 +129,11 @@ Frame 还接受 Core `ScopeProps` 的其余公开字段，包括级联 graphic s
 | `children` / `text` | `ReactNode` / `IRNode['text']` | —                                                                       | 沿用 Node 的文本转换规则，且必须得到合法的 Node text          |
 | `id?`               | `string`                       | —                                                                       | 可选显式 Node id；省略时保持匿名，不能与显式 Frame 根 id 相同 |
 | `shape?`            | `NodeProps['shape']`           | `rectangle`                                                             | 标题区的 Node shape                                           |
-| `stroke?`           | `NodeProps['stroke']`          | `none`                                                                  | 标题区描边                                                    |
-| `fill?`             | `NodeProps['fill']`            | `none`                                                                  | 标题区填充                                                    |
-| `padding?`          | `NodeProps['padding']`         | `0`                                                                     | 标题区 Node 内边距                                            |
-| `font?`             | `NodeProps['font']`            | Title：`{ size: 'sm', weight: 600 }`<br />Description：`{ size: 'xs' }` | 与默认 font 浅合并                                            |
-| `opacity?`          | `number`                       | Title：—<br />Description：`0.7`                                        | 整个标题区 Node 的透明度                                      |
+| `style.stroke?`     | `IRNodeStyle['stroke']`        | `none`                                                                  | 标题区描边                                                    |
+| `style.fill?`       | `IRNodeStyle['fill']`          | `none`                                                                  | 标题区填充                                                    |
+| `layout.padding?`   | `IRNodeLayout['padding']`      | `0`                                                                     | 标题区 Node 内边距                                            |
+| `style.font?`       | `IRNodeStyle['font']`          | Title：`{ size: 'sm', weight: 600 }`<br />Description：`{ size: 'xs' }` | 与默认 font 浅合并                                            |
+| `style.opacity?`    | `number`                       | Title：—<br />Description：`0.7`                                        | 整个标题区 Node 的透明度                                      |
 | `zIndex?`           | `number`                       | `1`                                                                     | Frame 内部标题区层级                                          |
 
 两者还接受除 `position` 与 hydration event props 外的公开 `NodeProps`，包括 margin、scale、rotate、label、meta 与 animation；显式值保持 Node 语义并覆盖上表默认值。完整共享字段见 [Node](/kernel/components/node/overview)。

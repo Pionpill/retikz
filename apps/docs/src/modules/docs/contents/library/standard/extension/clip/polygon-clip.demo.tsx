@@ -14,19 +14,15 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <Node
       position={[100, 100]}
       shape="rectangle"
-      minimumSize={{ width: 192, height: 180 }}
-      fill="none"
-      stroke="lightgray"
-      strokeWidth={1}
-      dashPattern={[6, 4]}
+      style={{ fill: 'none', stroke: 'lightgray', strokeWidth: 1, dashPattern: [6, 4] }}
+      layout={{ minimumSize: { width: 192, height: 180 } }}
     />
     <Scope clip={{ kind: 'polygon', points: [values.top, values.right, values.left] }}>
       <Node
         position={[100, 100]}
         shape="rectangle"
-        minimumSize={{ width: 192, height: 180 }}
-        stroke="none"
-        fill={{ kind: 'pattern', shape: 'grid', color: 'darkorange', size: 14 }}
+        style={{ stroke: 'none', fill: { kind: 'pattern', shape: 'grid', color: 'darkorange', size: 14 } }}
+        layout={{ minimumSize: { width: 192, height: 180 } }}
       />
     </Scope>
   </Layout>

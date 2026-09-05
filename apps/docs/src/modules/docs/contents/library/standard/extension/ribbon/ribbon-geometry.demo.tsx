@@ -66,13 +66,15 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Path
         kind="ribbon"
         kindOptions={ribbonOf(resolvedValues)}
-        fill={resolvedValues.fill}
-        fillOpacity={resolvedValues.fillOpacity}
-        stroke={resolvedValues.stroke}
-        strokeWidth={resolvedValues.strokeWidth}
-        shadow={
-          resolvedValues.shadow ? { offsetX: 0, offsetY: 8, blur: 10, color: 'rgba(15, 23, 42, 0.35)' } : undefined
-        }
+        style={{
+          fill: resolvedValues.fill,
+          fillOpacity: resolvedValues.fillOpacity,
+          stroke: resolvedValues.stroke,
+          strokeWidth: resolvedValues.strokeWidth,
+          shadow: resolvedValues.shadow
+            ? { offsetX: 0, offsetY: 8, blur: 10, color: 'rgba(15, 23, 42, 0.35)' }
+            : undefined,
+        }}
       >
         <Step kind="move" to={[-210, 30]} />
         <Step kind="curve" control={[0, -115]} to={[210, 30]} />

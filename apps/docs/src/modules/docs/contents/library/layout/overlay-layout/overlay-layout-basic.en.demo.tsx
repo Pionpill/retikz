@@ -16,9 +16,8 @@ const Demo: FC = () => (
         <Node
           position={[0, 0]}
           text="Structural layer"
-          minimumSize={{ width: 230, height: 76 }}
-          fill="#e0f2fe"
-          stroke="#0284c7"
+          style={{ fill: '#e0f2fe', stroke: '#0284c7' }}
+          layout={{ minimumSize: { width: 230, height: 76 } }}
         />
       </LayoutItem>
       <LayoutItem
@@ -27,10 +26,16 @@ const Demo: FC = () => (
         sizeParticipation="exclude"
         zIndex={2}
       >
-        <Node position={[0, 0]} text="Top" shape="circle" minimumSize={42} fill="#fee2e2" stroke="#dc2626" />
+        <Node
+          position={[0, 0]}
+          text="Top"
+          shape="circle"
+          style={{ fill: '#fee2e2', stroke: '#dc2626' }}
+          layout={{ minimumSize: 42 }}
+        />
       </LayoutItem>
       <LayoutItem kind="overlay" alignSelf="end" offset={{ x: 0, y: -8 }} zIndex={1}>
-        <Node position={[0, 0]} text="Layers in one allocation" fill="#f8fafc" stroke="#64748b" />
+        <Node position={[0, 0]} text="Layers in one allocation" style={{ fill: '#f8fafc', stroke: '#64748b' }} />
       </LayoutItem>
     </OverlayLayout>
   </Layout>

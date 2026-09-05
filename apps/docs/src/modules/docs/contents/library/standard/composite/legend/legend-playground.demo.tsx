@@ -21,16 +21,13 @@ const sample = (id: string, color: string, height: number) => (
     id={id}
     position={[0, 0]}
     text=""
-    minimumSize={{ width: 28, height }}
-    padding={0}
-    stroke={color}
-    fill={color}
-    fillOpacity={0.14}
     cornerRadius={4}
+    style={{ stroke: color, fill: color, fillOpacity: 0.14 }}
+    layout={{ minimumSize: { width: 28, height }, padding: 0 }}
   />
 );
 
-const label = (id: string, text: string) => <Node id={id} position={[0, 0]} text={text} stroke="none" />;
+const label = (id: string, text: string) => <Node id={id} position={[0, 0]} text={text} style={{ stroke: 'none' }} />;
 
 const title = (values: LegendPlaygroundValues) =>
   values.title === '' ? null : (
@@ -39,15 +36,16 @@ const title = (values: LegendPlaygroundValues) =>
         id="legend-title"
         position={[0, 0]}
         text={values.title}
-        align={values.titleAlign}
-        font={{
-          size: values.titleFontSize,
-          weight: values.titleFontWeight,
-          style: values.titleFontStyle,
+        style={{
+          font: {
+            size: values.titleFontSize,
+            weight: values.titleFontWeight,
+            style: values.titleFontStyle,
+          },
+          stroke: 'none',
+          fill: 'none',
         }}
-        padding={0}
-        stroke="none"
-        fill="none"
+        layout={{ align: values.titleAlign, padding: 0 }}
       />
     </LegendTitle>
   );
@@ -57,17 +55,21 @@ const rampSample = (direction: 'vertical' | 'horizontal') => (
     id="ramp-sample"
     position={[0, 0]}
     text=""
-    minimumSize={direction === 'horizontal' ? { width: 160, height: 16 } : { width: 16, height: 120 }}
-    padding={0}
-    stroke="lightgray"
-    fill={{
-      kind: 'linearGradient',
-      angle: direction === 'horizontal' ? 0 : 90,
-      stops: [
-        { offset: 0, color: 'dodgerblue' },
-        { offset: 0.5, color: 'gold' },
-        { offset: 1, color: 'orangered' },
-      ],
+    style={{
+      stroke: 'lightgray',
+      fill: {
+        kind: 'linearGradient',
+        angle: direction === 'horizontal' ? 0 : 90,
+        stops: [
+          { offset: 0, color: 'dodgerblue' },
+          { offset: 0.5, color: 'gold' },
+          { offset: 1, color: 'orangered' },
+        ],
+      },
+    }}
+    layout={{
+      minimumSize: direction === 'horizontal' ? { width: 160, height: 16 } : { width: 16, height: 120 },
+      padding: 0,
     }}
   />
 );

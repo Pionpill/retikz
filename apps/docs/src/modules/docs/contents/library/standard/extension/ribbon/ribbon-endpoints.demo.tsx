@@ -64,10 +64,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           },
           samples: 64,
         }}
-        fill="#8ac926"
-        fillOpacity={0.75}
-        stroke="#386641"
-        strokeWidth={1}
+        style={{ fill: '#8ac926', fillOpacity: 0.75, stroke: '#386641', strokeWidth: 1 }}
       >
         <Step kind="move" to={[-190, 20]} />
         <Step kind="curve" control={[0, -115]} to={[190, 20]} />

@@ -282,13 +282,13 @@ describe('Ribbon label compile', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
-          opacity: 0.5,
           label: {
             text: 'styled',
             textColor: 'crimson',
             opacity: 0.5,
             font: { size: 12, weight: 'bold' },
           },
+          style: { opacity: 0.5 },
         }),
       ]),
       { padding: 0 },

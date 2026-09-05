@@ -29,8 +29,7 @@ const Demo: FC = () => (
         width: { kind: 'profile', name: 'pulse', params: { base: 10, peak: 42 } },
         sampling: { kind: 'fixed', samples: 41 },
       }}
-      fill="#a78bfa"
-      stroke="#6d28d9"
+      style={{ fill: '#a78bfa', stroke: '#6d28d9' }}
     >
       <Step kind="move" to={[-180, 20]} />
       <Step kind="curve" control={[0, -90]} to={[180, 20]} />

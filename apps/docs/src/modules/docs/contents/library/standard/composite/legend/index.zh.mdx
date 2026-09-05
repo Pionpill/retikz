@@ -22,7 +22,7 @@ import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
   <LegendItem
     itemKey="primary"
     sample={
-      <Path stroke="dodgerblue">
+      <Path style={{ stroke: 'dodgerblue' }}>
         <Step kind="move" to={[0, 0]} />
         <Step kind="line" to={[32, 0]} />
       </Path>
@@ -163,17 +163,17 @@ Core `Node`、`Path`、`Scope` 等图元可以直接作为 `IRChild`。内嵌 Ti
 
 ### 公开入口
 
-| API                    | 包                         | 职责                                                            | 默认值 |
-| ---------------------- | -------------------------- | --------------------------------------------------------------- | ------ |
-| `Legend`               | `@retikz/standard-react`   | 选择显式 form 并把 marker tree 贡献为 `IRLegend` 与 Definition  | —      |
-| `LegendTitle`          | `@retikz/standard-react`   | 声明可选标题 slot                                               | —      |
-| `LegendItem`           | `@retikz/standard-react`   | 声明离散样本、稳定 key 与可选标签                               | —      |
-| `LegendRamp`           | `@retikz/standard-react`   | 声明连续样本 slot                                               | —      |
-| `LegendTick`           | `@retikz/standard-react`   | 声明归一化刻度与可选标签                                        | —      |
-| `legend(id, input)`    | `@retikz/standard-vanilla` | 创建由 `LegendInputEmbedAdapter` 消费的 Vanilla embed           | —      |
-| `LegendInputEmbedAdapter` | `@retikz/standard-vanilla` | 经 `createLegend()` 下沉 embed，并向当前 Scene 贡献 Definition  | —      |
-| `createLegend(input)`  | `@retikz/standard`         | 校验 input、应用默认值并补固定 discriminator                    | —      |
-| `LegendDefinition`     | `@retikz/standard`         | 按需注入 Legend composite 的 Core Definition                    | —      |
+| API                       | 包                         | 职责                                                           | 默认值 |
+| ------------------------- | -------------------------- | -------------------------------------------------------------- | ------ |
+| `Legend`                  | `@retikz/standard-react`   | 选择显式 form 并把 marker tree 贡献为 `IRLegend` 与 Definition | —      |
+| `LegendTitle`             | `@retikz/standard-react`   | 声明可选标题 slot                                              | —      |
+| `LegendItem`              | `@retikz/standard-react`   | 声明离散样本、稳定 key 与可选标签                              | —      |
+| `LegendRamp`              | `@retikz/standard-react`   | 声明连续样本 slot                                              | —      |
+| `LegendTick`              | `@retikz/standard-react`   | 声明归一化刻度与可选标签                                       | —      |
+| `legend(id, input)`       | `@retikz/standard-vanilla` | 创建由 `LegendInputEmbedAdapter` 消费的 Vanilla embed          | —      |
+| `LegendInputEmbedAdapter` | `@retikz/standard-vanilla` | 经 `createLegend()` 下沉 embed，并向当前 Scene 贡献 Definition | —      |
+| `createLegend(input)`     | `@retikz/standard`         | 校验 input、应用默认值并补固定 discriminator                   | —      |
+| `LegendDefinition`        | `@retikz/standard`         | 按需注入 Legend composite 的 Core Definition                   | —      |
 
 `@retikz/standard` 还公开导出 `LegendContentKind`、`LegendDirection`、`LegendWrap` 与 `LegendSampleAlignment` 闭合集合；具体取值由下方 `LegendSchema` 展示。
 

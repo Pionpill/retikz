@@ -14,40 +14,46 @@ const Demo: FC = () => (
   >
     <Legend kind={LegendContentKind.Items} gap={{ row: 10, column: 8 }} padding={12} sampleGap={12}>
       <LegendTitle>
-        <Node id="relation-title" position={[0, 0]} text="关系" stroke="none" />
+        <Node id="relation-title" position={[0, 0]} text="关系" style={{ stroke: 'none' }} />
       </LegendTitle>
       <LegendItem
         itemKey="direct"
         sample={
-          <Path id="direct-line" stroke="dodgerblue" strokeWidth={2} lineCap="round">
+          <Path id="direct-line" style={{ stroke: 'dodgerblue', strokeWidth: 2, lineCap: 'round' }}>
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[42, 0]} />
           </Path>
         }
       >
-        <Node id="direct-label" position={[0, 0]} text="直接关系" stroke="none" />
+        <Node id="direct-label" position={[0, 0]} text="直接关系" style={{ stroke: 'none' }} />
       </LegendItem>
       <LegendItem
         itemKey="indirect"
         sample={
-          <Path id="indirect-line" stroke="dodgerblue" strokeWidth={2} lineCap="round" dashPattern={[7, 5]}>
+          <Path
+            id="indirect-line"
+            style={{ stroke: 'dodgerblue', strokeWidth: 2, lineCap: 'round', dashPattern: [7, 5] }}
+          >
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[42, 0]} />
           </Path>
         }
       >
-        <Node id="indirect-label" position={[0, 0]} text="间接关系" stroke="none" />
+        <Node id="indirect-label" position={[0, 0]} text="间接关系" style={{ stroke: 'none' }} />
       </LegendItem>
       <LegendItem
         itemKey="reference"
         sample={
-          <Path id="reference-line" stroke="dodgerblue" strokeWidth={2} lineCap="round" dashPattern={[1, 5]}>
+          <Path
+            id="reference-line"
+            style={{ stroke: 'dodgerblue', strokeWidth: 2, lineCap: 'round', dashPattern: [1, 5] }}
+          >
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[42, 0]} />
           </Path>
         }
       >
-        <Node id="reference-label" position={[0, 0]} text="参考关系" stroke="none" />
+        <Node id="reference-label" position={[0, 0]} text="参考关系" style={{ stroke: 'none' }} />
       </LegendItem>
     </Legend>
   </Layout>

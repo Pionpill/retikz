@@ -122,14 +122,14 @@ describe('GridDefinition', () => {
       [0, 15],
       [0, 20],
     ]);
-    expect(lowered[0]).toMatchObject({ stroke: '#94a3b8', strokeWidth: 2 });
-    expect(lowered[1]).toMatchObject({ stroke: '#94a3b8', strokeWidth: 0.75 });
-    expect(lowered[2]).toMatchObject({ stroke: '#94a3b8', strokeWidth: 2 });
-    expect(lowered[3]).toMatchObject({ stroke: '#64748b', strokeWidth: 3 });
-    expect(lowered[4]).toMatchObject({ stroke: '#64748b', strokeWidth: 0.5 });
-    expect(lowered[5]).toMatchObject({ stroke: '#64748b', strokeWidth: 3 });
-    expect(lowered[6]).toMatchObject({ stroke: '#64748b', strokeWidth: 0.5 });
-    expect(lowered[7]).toMatchObject({ stroke: '#64748b', strokeWidth: 3 });
+    expect(lowered[0]).toMatchObject({ style: { stroke: '#94a3b8', strokeWidth: 2 } });
+    expect(lowered[1]).toMatchObject({ style: { stroke: '#94a3b8', strokeWidth: 0.75 } });
+    expect(lowered[2]).toMatchObject({ style: { stroke: '#94a3b8', strokeWidth: 2 } });
+    expect(lowered[3]).toMatchObject({ style: { stroke: '#64748b', strokeWidth: 3 } });
+    expect(lowered[4]).toMatchObject({ style: { stroke: '#64748b', strokeWidth: 0.5 } });
+    expect(lowered[5]).toMatchObject({ style: { stroke: '#64748b', strokeWidth: 3 } });
+    expect(lowered[6]).toMatchObject({ style: { stroke: '#64748b', strokeWidth: 0.5 } });
+    expect(lowered[7]).toMatchObject({ style: { stroke: '#64748b', strokeWidth: 3 } });
   });
 
   it('disables all grid lines without disabling the border', () => {
@@ -142,7 +142,10 @@ describe('GridDefinition', () => {
     );
 
     expect(lowered).toHaveLength(1);
-    expect(lowered[0]).toMatchObject({ type: 'path', stroke: '#64748b' });
+    expect(lowered[0]).toMatchObject({
+      type: 'path',
+      style: { stroke: '#64748b' },
+    });
   });
 
   it('lowers center bounds in local coordinates inside an offset Scope', () => {
@@ -249,8 +252,8 @@ describe('GridDefinition', () => {
         if (child.type !== 'path') throw new Error('expected a path');
         const firstStep = child.children[0];
         return {
-          stroke: child.stroke,
-          strokeWidth: child.strokeWidth,
+          stroke: child.style?.stroke,
+          strokeWidth: child.style?.strokeWidth,
           from: 'to' in firstStep ? firstStep.to : undefined,
         };
       }),
@@ -278,7 +281,7 @@ describe('GridDefinition', () => {
 
     expect(lowered[0]?.type).toBe('path');
     if (lowered[0]?.type === 'path') {
-      expect(lowered[0].stroke).toBe('#64748b');
+      expect(lowered[0].style?.stroke).toBe('#64748b');
       expect(lowered[0].children).toEqual([
         {
           type: 'step',

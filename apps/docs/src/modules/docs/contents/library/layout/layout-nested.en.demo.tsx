@@ -20,7 +20,11 @@ const NestedContent: FC = () => (
     gap={10}
   >
     <LayoutItem kind="flex" itemKey="header" shrink={0}>
-      <Node position={[0, 0]} text="Layout containers compose recursively" fill="#e0f2fe" stroke="#0284c7" />
+      <Node
+        position={[0, 0]}
+        text="Layout containers compose recursively"
+        style={{ fill: '#e0f2fe', stroke: '#0284c7' }}
+      />
     </LayoutItem>
     <LayoutItem kind="flex" itemKey="body" grow={1} min={90}>
       <InspectGridLayout
@@ -31,7 +35,7 @@ const NestedContent: FC = () => (
         columnGap={10}
       >
         <LayoutItem kind="grid" itemKey="left">
-          <Node position={[0, 0]} text="Grid cell" fill="#dcfce7" stroke="#16a34a" />
+          <Node position={[0, 0]} text="Grid cell" style={{ fill: '#dcfce7', stroke: '#16a34a' }} />
         </LayoutItem>
         <LayoutItem kind="grid" itemKey="right">
           <InspectOverlayLayout size={{ y: { kind: 'fixed', value: 86 } }}>
@@ -39,9 +43,8 @@ const NestedContent: FC = () => (
               <Node
                 position={[0, 0]}
                 text="Overlay"
-                minimumSize={{ width: 150, height: 64 }}
-                fill="#f3e8ff"
-                stroke="#9333ea"
+                style={{ fill: '#f3e8ff', stroke: '#9333ea' }}
+                layout={{ minimumSize: { width: 150, height: 64 } }}
               />
             </LayoutItem>
             <LayoutItem
@@ -51,7 +54,13 @@ const NestedContent: FC = () => (
               sizeParticipation="exclude"
               zIndex={1}
             >
-              <Node position={[0, 0]} text="3" shape="circle" minimumSize={26} fill="#fee2e2" stroke="#dc2626" />
+              <Node
+                position={[0, 0]}
+                text="3"
+                shape="circle"
+                style={{ fill: '#fee2e2', stroke: '#dc2626' }}
+                layout={{ minimumSize: 26 }}
+              />
             </LayoutItem>
           </InspectOverlayLayout>
         </LayoutItem>

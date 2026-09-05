@@ -20,8 +20,7 @@ const Demo: FC = () => (
           [0, 0],
           [120, 0],
         ]}
-        stroke="#dc2626"
-        strokeWidth={18}
+        style={{ stroke: '#dc2626', strokeWidth: 18 }}
       />
     </Surface>
     <Surface
@@ -38,8 +37,7 @@ const Demo: FC = () => (
           [0, 0],
           [120, 0],
         ]}
-        stroke="#dc2626"
-        strokeWidth={18}
+        style={{ stroke: '#dc2626', strokeWidth: 18 }}
       />
     </Surface>
   </Layout>

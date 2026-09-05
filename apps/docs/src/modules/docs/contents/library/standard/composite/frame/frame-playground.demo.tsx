@@ -40,20 +40,22 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         border={{ style: borderStyle, cornerRadius: values.borderCornerRadius }}
       >
         <FrameTitle
-          padding={values.titlePadding}
-          fill="dodgerblue"
-          fillOpacity={values.titleFillOpacity}
-          font={{ size: values.titleFontSize, weight: values.titleFontWeight }}
+          style={{
+            fill: 'dodgerblue',
+            fillOpacity: values.titleFillOpacity,
+            font: { size: values.titleFontSize, weight: values.titleFontWeight },
+          }}
+          layout={{ padding: values.titlePadding }}
         >
           FrameTitle
         </FrameTitle>
-        <FrameDescription font={{ size: values.descriptionFontSize }} opacity={values.descriptionOpacity}>
+        <FrameDescription style={{ font: { size: values.descriptionFontSize }, opacity: values.descriptionOpacity }}>
           FrameDescription
         </FrameDescription>
         <Node id="A" position={[130, 165]} text={values.nodeAText} />
         <Node id="B" position={[290, 165]} text={values.nodeBText} />
       </Frame>
-      {values.connected ? <Draw way={['A', 'B']} stroke="gray" /> : null}
+      {values.connected ? <Draw way={['A', 'B']} style={{ stroke: 'gray' }} /> : null}
     </Layout>
   );
 });

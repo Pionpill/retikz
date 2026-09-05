@@ -12,11 +12,9 @@ const Demo: FC = () => (
         { text: 'Axes IR', font: { size: 14, weight: 'bold' } },
         { text: '原点 · 范围 · 分轴配置', fill: 'gray', font: { size: 12 } },
       ]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ padding: 8 }}
     />
     <Node
       id="definition"
@@ -25,11 +23,9 @@ const Demo: FC = () => (
         { text: 'AxesDefinition', font: { size: 14, weight: 'bold' } },
         { text: '识别 standard.axes', fill: 'gray', font: { size: 12 } },
       ]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+      layout={{ padding: 8 }}
     />
     <Node
       id="lowering"
@@ -38,11 +34,9 @@ const Demo: FC = () => (
         { text: 'lowering', font: { size: 14, weight: 'bold' } },
         { text: '方向换算 · 格点枚举 · 组装', fill: 'gray', font: { size: 12 } },
       ]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+      layout={{ padding: 8 }}
     />
     <Node
       id="core-ir"
@@ -51,16 +45,14 @@ const Demo: FC = () => (
         { text: 'Core IR[]', font: { size: 14, weight: 'bold' } },
         { text: 'Path[] + Node[]', fill: 'gray', font: { size: 12 } },
       ]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ padding: 8 }}
     />
 
-    <Draw way={['axes-ir', 'definition']} arrow="->" stroke="gray" />
-    <Draw way={['definition', 'lowering']} arrow="->" stroke="gray" />
-    <Draw way={['lowering', 'core-ir']} arrow="->" stroke="gray" />
+    <Draw way={['axes-ir', 'definition']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['definition', 'lowering']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['lowering', 'core-ir']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

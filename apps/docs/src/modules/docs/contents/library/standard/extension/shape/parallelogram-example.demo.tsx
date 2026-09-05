@@ -17,7 +17,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   >
     <Node
       position={[0, 0]}
-      minimumSize={{ width: 130, height: 72 }}
       shape={{
         type: 'parallelogram',
         params: {
@@ -26,9 +25,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           cornerRadius: values.cornerRadius,
         },
       }}
-      fill="#ffedd5"
-      stroke="darkorange"
-      strokeWidth={1.5}
+      style={{ fill: '#ffedd5', stroke: 'darkorange', strokeWidth: 1.5 }}
+      layout={{ minimumSize: { width: 130, height: 72 } }}
     />
   </Layout>
 ));

@@ -21,22 +21,36 @@ const createPreview = (inspecting: boolean) =>
     const children = (
       <>
         <LayoutItem kind="grid" itemKey="a">
-          <Node position={[0, 0]} text="A" minimumSize={{ width: 42, height: 32 }} fill="#dbeafe" stroke="#2563eb" />
+          <Node
+            position={[0, 0]}
+            text="A"
+            style={{ fill: '#dbeafe', stroke: '#2563eb' }}
+            layout={{ minimumSize: { width: 42, height: 32 } }}
+          />
         </LayoutItem>
         <LayoutItem kind="grid" itemKey="b">
-          <Node position={[0, 0]} text="B" minimumSize={{ width: 58, height: 42 }} fill="#dcfce7" stroke="#16a34a" />
+          <Node
+            position={[0, 0]}
+            text="B"
+            style={{ fill: '#dcfce7', stroke: '#16a34a' }}
+            layout={{ minimumSize: { width: 58, height: 42 } }}
+          />
         </LayoutItem>
         <LayoutItem kind="grid" itemKey="c" column={{ span: 2 }}>
           <Node
             position={[0, 0]}
             text="C × 2"
-            minimumSize={{ width: 78, height: 34 }}
-            fill="#fef3c7"
-            stroke="#d97706"
+            style={{ fill: '#fef3c7', stroke: '#d97706' }}
+            layout={{ minimumSize: { width: 78, height: 34 } }}
           />
         </LayoutItem>
         <LayoutItem kind="grid" itemKey="d">
-          <Node position={[0, 0]} text="D" minimumSize={{ width: 42, height: 48 }} fill="#f3e8ff" stroke="#9333ea" />
+          <Node
+            position={[0, 0]}
+            text="D"
+            style={{ fill: '#f3e8ff', stroke: '#9333ea' }}
+            layout={{ minimumSize: { width: 42, height: 48 } }}
+          />
         </LayoutItem>
       </>
     );

@@ -25,8 +25,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           color: values.color,
         },
       }}
-      stroke="#64748b"
-      strokeWidth={2}
+      style={{ stroke: '#64748b', strokeWidth: 2 }}
     />
   </Layout>
 ));

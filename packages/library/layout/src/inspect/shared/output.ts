@@ -428,9 +428,6 @@ const lowerOutline = (mark: LayoutInspectionOutlineMark): IRPath => {
   const { x, y, width, height } = mark.rect;
   return {
     type: 'path',
-    stroke: mark.color,
-    strokeWidth: 1,
-    dashPattern: [...LayoutInspectionDashPattern],
     meta: { inspectionRole: mark.role },
     children: [
       { type: 'step', kind: 'move', to: [x, y] },
@@ -439,6 +436,7 @@ const lowerOutline = (mark: LayoutInspectionOutlineMark): IRPath => {
       { type: 'step', kind: 'line', to: [x, y + height] },
       { type: 'step', kind: 'line', to: [x, y] },
     ],
+    style: { stroke: mark.color, strokeWidth: 1, dashPattern: [...LayoutInspectionDashPattern] },
   };
 };
 
@@ -448,14 +446,16 @@ const lowerLayoutInspectionMark = (mark: LayoutInspectionMark): LayoutInspection
   if (mark.kind === 'line') {
     return {
       type: 'path',
-      stroke: mark.color,
-      strokeWidth: 1,
-      ...(mark.dashed ? { dashPattern: [...LayoutInspectionDashPattern] } : {}),
       meta: { inspectionRole: mark.role },
       children: [
         { type: 'step', kind: 'move', to: [mark.x1, mark.y1] },
         { type: 'step', kind: 'line', to: [mark.x2, mark.y2] },
       ],
+      style: {
+        stroke: mark.color,
+        strokeWidth: 1,
+        ...(mark.dashed ? { dashPattern: [...LayoutInspectionDashPattern] } : {}),
+      },
     };
   }
   if (mark.kind === 'area') {
@@ -463,27 +463,26 @@ const lowerLayoutInspectionMark = (mark: LayoutInspectionMark): LayoutInspection
       type: 'node',
       position: [mark.rect.x + mark.rect.width / 2, mark.rect.y + mark.rect.height / 2],
       shape: 'rectangle',
-      minimumSize: { width: mark.rect.width, height: mark.rect.height },
-      padding: 0,
-      fill: mark.fill,
-      opacity: mark.opacity,
-      strokeWidth: 0,
       meta: { inspectionRole: mark.role },
+      style: { fill: mark.fill, opacity: mark.opacity, strokeWidth: 0 },
+      layout: { minimumSize: { width: mark.rect.width, height: mark.rect.height }, padding: 0 },
     };
   }
   return {
     type: 'node',
     position: [mark.x, mark.y],
     text: mark.text,
-    textColor: mark.color,
-    fill: 'transparent',
-    strokeWidth: 0,
-    padding: 0,
-    font: {
-      family: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
-      size: 10,
-    },
     meta: { inspectionRole: mark.role },
+    style: {
+      textColor: mark.color,
+      fill: 'transparent',
+      strokeWidth: 0,
+      font: {
+        family: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+        size: 10,
+      },
+    },
+    layout: { padding: 0 },
   };
 };
 

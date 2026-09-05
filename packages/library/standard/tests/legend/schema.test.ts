@@ -206,18 +206,18 @@ describe('Legend schema and factory', () => {
       id: 'legend',
       localNamespace: true,
       zIndex: 2,
-      stroke: '#334155',
       transforms: [{ kind: 'translate', x: 4, y: 5 }],
       meta: { source: 'test' },
       content: { kind: LegendContentKind.Items, items: [] },
+      style: { stroke: '#334155' },
     });
     expect(scoped).toMatchObject({
       id: 'legend',
       localNamespace: true,
       zIndex: 2,
-      stroke: '#334155',
       transforms: [{ kind: 'translate', x: 4, y: 5 }],
       meta: { source: 'test' },
+      style: { stroke: '#334155' },
     });
     expectIssuePath({ ...base, title: 'Legend' }, 'title');
     expectIssuePath(

@@ -18,15 +18,37 @@ const input: InputFrame = {
   padding: 12,
   border: { style: { stroke: '#0284c7', zIndex: 4 }, cornerRadius: 6 },
   headerDirection: 'vertical',
-  title: frameTitle({ text: 'Contract', font: { family: 'serif' } }),
-  description: frameDescription({ text: 'One registry contract.', maxTextWidth: 220 }),
+  title: frameTitle({
+    text: 'Contract',
+    style: { font: { family: 'serif' } },
+  }),
+  description: frameDescription({
+    text: 'One registry contract.',
+    layout: { maxTextWidth: 220 },
+  }),
   children: [{ type: 'node', position: [0, 0], text: 'A' }],
 };
 
 describe('frame()', () => {
   it('validates JSON-safe title and description builders', () => {
-    expect(frameTitle({ text: 'Title', padding: 2 })).toEqual({ text: 'Title', padding: 2 });
-    expect(frameDescription({ text: '', opacity: 0.6 })).toEqual({ text: '', opacity: 0.6 });
+    expect(
+      frameTitle({
+        text: 'Title',
+        layout: { padding: 2 },
+      }),
+    ).toEqual({
+      text: 'Title',
+      layout: { padding: 2 },
+    });
+    expect(
+      frameDescription({
+        text: '',
+        style: { opacity: 0.6 },
+      }),
+    ).toEqual({
+      text: '',
+      style: { opacity: 0.6 },
+    });
   });
 
   it('keeps Vanilla embed identity separate from optional Frame model identity', () => {
@@ -38,8 +60,8 @@ describe('frame()', () => {
       namespace: 'standard',
       type: 'frame',
       padding: 12,
-      title: { text: 'Contract', font: { family: 'serif' } },
-      description: { text: 'One registry contract.', maxTextWidth: 220 },
+      title: { text: 'Contract', style: { font: { family: 'serif' } } },
+      description: { text: 'One registry contract.', layout: { maxTextWidth: 220 } },
       children: [{ type: 'node', position: [0, 0], text: 'A' }],
     });
     expect(normalized.ir.children[0]).not.toHaveProperty('id');

@@ -14,9 +14,9 @@ const Demo: FC = () => (
       cornerRadius={12}
     >
       <Scope>
-        <Node id="provider" position={[-90, 0]} text="Provider" fill="#dbeafe" stroke="#2563eb" />
-        <Node id="definition" position={[90, 0]} text="Definition" fill="#dcfce7" stroke="#16a34a" />
-        <Draw way={['provider', 'definition']} arrow="->" stroke="#64748b" />
+        <Node id="provider" position={[-90, 0]} text="Provider" style={{ fill: '#dbeafe', stroke: '#2563eb' }} />
+        <Node id="definition" position={[90, 0]} text="Definition" style={{ fill: '#dcfce7', stroke: '#16a34a' }} />
+        <Draw way={['provider', 'definition']} arrow="->" style={{ stroke: '#64748b' }} />
       </Scope>
     </Surface>
   </Layout>

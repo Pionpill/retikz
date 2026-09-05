@@ -6,7 +6,7 @@ import { Grid } from '@retikz/standard-react';
 /** Grid common semantic variants shown side by side */
 const Demo: FC = () => (
   <Layout width={760} height={145} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node position={[95, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
+    <Node position={[95, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       Per-axis spacing
     </Node>
     <Grid
@@ -17,7 +17,7 @@ const Demo: FC = () => (
       }}
     />
 
-    <Node position={[285, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
+    <Node position={[285, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       Center plus size
     </Node>
     <Grid
@@ -25,7 +25,7 @@ const Demo: FC = () => (
       line={{ spacing: 18, origin: 0, includeBoundary: true, style: { stroke: 'lightgray' } }}
     />
 
-    <Node position={[475, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
+    <Node position={[475, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       Ordinary and major lines
     </Node>
     <Grid
@@ -38,7 +38,7 @@ const Demo: FC = () => (
       }}
     />
 
-    <Node position={[665, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
+    <Node position={[665, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       Reversed corners and border
     </Node>
     <Grid
