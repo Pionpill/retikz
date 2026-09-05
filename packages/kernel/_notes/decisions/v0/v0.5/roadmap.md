@@ -33,6 +33,7 @@ v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制�
 | Headless Interaction      | 补齐 renderer-agnostic target、behavior、intent 与 ownership                                     | [alpha.4 候选](./alpha.4/roadmap.md)                                                                                             |
 | Path 标签与端点箭头       | 居中标签产生真实描边断口；端点箭头可从默认位置推进到视觉后缘完整进入逻辑端点                     | [alpha.4 roadmap](./alpha.4/roadmap.md)                                                                                          |
 | Source IR 语义分组        | 以浅层分组区分覆盖与领域事实，保持继承并同步迁移实际 Source 消费契约                             | [alpha.4 ADR-04 Proposed](./alpha.4/04-source-ir-semantic-grouping.md)                                                           |
+| Theme Source 片段协议     | 按目标类型提供同构稀疏默认，保留 Source 覆盖与 owner 边界                                        | [alpha.4 ADR-05 Proposed](./alpha.4/05-theme-source-fragments.md)                                                                |
 
 ## alpha.1 执行批次
 

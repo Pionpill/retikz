@@ -34,7 +34,7 @@ Source IR 需要收敛同类字段时使用下列固定一级属性名；只有�
 | -------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `style`        | 当前实例的直接视觉覆盖，如 paint、stroke、字体、透明度与效果    | 不承载继承 Theme、数据通道映射、布局策略或已解析 appearance                            |
 | `layout`       | 当前对象的尺寸、间距、排列与布局策略                            | `position`、`shape`、`coordinate`、显式路径等主要领域事实保持独立                      |
-| `theme`        | 可继承的视觉环境、具名 style 或结构化 Theme 覆盖                | 稀疏领域 token 表继续使用准确的 `xxxThemeTokens`                                       |
+| `theme`        | 可继承的视觉环境、具名 style 或结构化 Theme 覆盖                | Core 环境只含 style / mode；领域片段用准确的 owner-local Theme 入口，不另设 flat token |
 | `presentation` | title、subtitle、description、note、source 等外围内容与展示结构 | 不承载 drawing core、数据 encoding 或底层图元样式                                      |
 | `encoding`     | 数据字段、常量或派生值到视觉通道的映射                          | 直接实例样式进入 `style`，数据处理进入 `transform`                                     |
 | `defaults`     | 容器向后代提供的具名默认值通道                                  | 不与当前实例 `style` 混合，不使用 `default` / `defaultStyle` 等平行总分组名            |
