@@ -31,7 +31,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 - 任务开始先按“任务规模与执行策略”判定小 / 中 / 大，再加载对应 flow；多个条件并存时取最高级。
 - 新增、移动、拆分或审查 `packages/**` 的目录、文件、导出类型、函数、枚举、registry 或组件命名时，先读 `.agents/skills/standard-name/SKILL.md`。改文件分层、依赖方向、shared / schemas / contract / providers / resolve / Vanilla normalize / pipeline / compile、define-registry 能力，或进行 Tier 2 composite 设计 / review 前，先读 `.agents/skills/standard-structure/SKILL.md`，再按实际层级读取 `standard-shared` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-resolve` / `standard-normalize` / `standard-pipeline-compile` / `standard-tier2-reuse`。
 - 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；组件页 / 示例页 / 分组页 / 概念页 / blog 再读对应 docs skill。
-- 只有大型任务在执行计划获用户确认后才读 `flow-long-task`；主模型为 Sol 且计划已授权多 agent 协作时再读 `codex-develop-flow`，最后分流到具体 flow / develop skill。中型任务不读 `flow-long-task`；只有包含可分离功能实现且计划明确授权 Sol / Luna 分工时可单独读 `codex-develop-flow`。中小型任务不因多文件、多步骤或可能多 commit 自动升级。
+- 只有大型任务在执行计划获用户确认后才读 `flow-long-task`；主模型为 Astra / Sol 且计划已授权多 agent 协作时再读 `codex-develop-flow`，最后分流到具体 flow / develop skill。中型任务不读 `flow-long-task`；只有包含可分离功能实现且计划明确授权模型角色分工时可单独读 `codex-develop-flow`。中小型任务不因多文件、多步骤或可能多 commit 自动升级。
 - 发包、alpha/beta/rc 流程、跨模型评审、文档外站转换等长流程按对应 skill 执行，不把步骤复制进 AGENTS。
 - 所有发布组发包前都必须按 `package-publish` 逐篇阅读全文审计本次 milestone ADR 的长期一致性、状态与当前公开契约；ADR 不得残留文件 scope、私有实现、测试 case / 路径 / 命令、commit 切分或 review 记录。不得以状态字段、roadmap 勾选或 commit message 代替内容检查。
 - 重构优先走 `.agents/skills/develop-refactor/SKILL.md`；纯审计仍走 `develop-review`。
@@ -43,11 +43,11 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 任务开始先按实际语义、风险和依赖判断规模；文件数与代码行数只能辅助判断，不能单独升级：
 
-| 规模 | 默认范围                                                                  | 执行策略                                                                                                                                                |
-| ---- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 小   | 局部文档改动、局部 bugfix、变量或私有命名调整、格式与机械修改             | 主 agent 直接执行，做受影响范围验证；默认不写临时 plan、不调度 subagent、不使用 `flow-long-task` / `codex-develop-flow` / `cross-review`                |
-| 中   | 临时 plan 修复、文档大调整、优化型重构、范围清楚的多文件改动              | 执行前在对话中给出一次执行计划并等待用户确认；默认由主 agent 执行，可按获批计划使用一个 subagent 做实现或循环 review                                    |
-| 大   | ADR 执行、功能型重构、新增或重塑公开能力、跨包架构 / 公开契约的大范围变更 | 执行前确认完整计划；按需使用 `flow-long-task`，Sol 主控且用户授权时使用 `codex-develop-flow`；只有最终整体 review 或用户明确要求时才使用 `cross-review` |
+| 规模 | 默认范围                                                                  | 执行策略                                                                                                                                                        |
+| ---- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 小   | 局部文档改动、局部 bugfix、变量或私有命名调整、格式与机械修改             | 主 agent 直接执行，做受影响范围验证；默认不写临时 plan、不调度 subagent、不使用 `flow-long-task` / `codex-develop-flow` / `cross-review`                        |
+| 中   | 临时 plan 修复、文档大调整、优化型重构、范围清楚的多文件改动              | 执行前在对话中给出一次执行计划并等待用户确认；默认由主 agent 执行，可按获批计划使用一个 subagent 做实现或循环 review                                            |
+| 大   | ADR 执行、功能型重构、新增或重塑公开能力、跨包架构 / 公开契约的大范围变更 | 执行前确认完整计划；按需使用 `flow-long-task`，Astra / Sol 主控且用户授权时使用 `codex-develop-flow`；只有最终整体 review 或用户明确要求时才使用 `cross-review` |
 
 局部 bugfix 若扩展为公开契约、跨包行为或功能重构，升级到中 / 大；优化型重构若改变功能或能力边界，升级为大。任务执行中发现规模判断失效、scope 超出已确认计划或需要新增外部权限时停止并重新确认。
 
