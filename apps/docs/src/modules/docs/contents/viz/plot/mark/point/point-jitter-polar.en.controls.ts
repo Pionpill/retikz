@@ -49,6 +49,26 @@ export const pointJitterPolarControls = definePreviewControls({
           visibleWhen: { controlId: POINT_JITTER_POLAR_CONTROL_IDS.scale, oneOf: ['continuous'] },
         },
         {
+          kind: 'select',
+          id: POINT_JITTER_POLAR_CONTROL_IDS.distribution,
+          label: 'Random distribution',
+          defaultValue: 'uniform',
+          options: [
+            { value: 'uniform', label: 'Uniform (even)' },
+            { value: 'normal', label: 'Normal (centered)' },
+          ],
+        },
+        {
+          kind: 'range',
+          id: POINT_JITTER_POLAR_CONTROL_IDS.sigma,
+          label: 'Normal sigma',
+          defaultValue: 0.5,
+          min: 0.1,
+          max: 1,
+          step: 0.05,
+          visibleWhen: { controlId: POINT_JITTER_POLAR_CONTROL_IDS.distribution, oneOf: ['normal'] },
+        },
+        {
           kind: 'range',
           id: POINT_JITTER_POLAR_CONTROL_IDS.seed,
           label: 'Random seed',
@@ -69,7 +89,9 @@ export const previewControlContract = {
     [POINT_JITTER_POLAR_CONTROL_IDS.scale]: 'discrete',
     [POINT_JITTER_POLAR_CONTROL_IDS.ratio]: 0.3,
     [POINT_JITTER_POLAR_CONTROL_IDS.range]: 48,
+    [POINT_JITTER_POLAR_CONTROL_IDS.distribution]: 'uniform',
+    [POINT_JITTER_POLAR_CONTROL_IDS.sigma]: 0.5,
     [POINT_JITTER_POLAR_CONTROL_IDS.seed]: 7,
   },
-  relatedApis: ['PlotScale.type', 'IRPlotJitterPositionAdjustment.span'],
+  relatedApis: ['PlotScale.type', 'IRPlotJitterPositionAdjustment.span', 'IRPlotJitterPositionAdjustment.distribution'],
 } satisfies PreviewControlContract;

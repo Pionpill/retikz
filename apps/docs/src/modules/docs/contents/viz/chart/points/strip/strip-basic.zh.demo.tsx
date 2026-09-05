@@ -38,6 +38,10 @@ const controlled = defineControlledPreview(previewControlContract, values => {
       <StripProperties
         jitter={{
           span: { kind: 'ratio', value: values[STRIP_BASIC_CONTROL_IDS.jitterSpan] },
+          distribution:
+            values[STRIP_BASIC_CONTROL_IDS.distribution] === 'normal'
+              ? { kind: 'normal', sigma: values[STRIP_BASIC_CONTROL_IDS.normalSigma] }
+              : { kind: 'uniform' },
           seed: values[STRIP_BASIC_CONTROL_IDS.seed],
         }}
         size={values[STRIP_BASIC_CONTROL_IDS.pointSize]}

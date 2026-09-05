@@ -167,7 +167,11 @@ describe('Chart Vanilla normalization', () => {
         x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
         y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
       },
-      properties: { size: 0, jitter: { span: 0, seed: 0 }, domainPadding: 0 },
+      properties: {
+        size: 0,
+        jitter: { span: 0, seed: 0, distribution: { kind: 'normal', sigma: 0.5 } },
+        domainPadding: 0,
+      },
       marks: [],
     });
 
@@ -183,7 +187,11 @@ describe('Chart Vanilla normalization', () => {
           x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
           y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
         },
-        properties: { size: 0, jitter: { span: 0, seed: 0 }, domainPadding: 0 },
+        properties: {
+          size: 0,
+          jitter: { span: 0, seed: 0, distribution: { kind: 'normal', sigma: 0.5 } },
+          domainPadding: 0,
+        },
         marks: [],
       },
     });

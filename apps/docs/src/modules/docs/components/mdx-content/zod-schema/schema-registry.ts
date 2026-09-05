@@ -1084,6 +1084,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'JitterPositionAdjustment',
     url: '/viz/plot/reference/mark#jitterpositionadjustmentschema',
   },
+  PlotRandomDistributionSchema: {
+    schema: IRPlot.PlotRandomDistributionSchema,
+    label: 'PlotRandomDistribution',
+    url: '/viz/plot/reference/mark#plotrandomdistributionschema',
+  },
   JitterRatioSpanSchema: {
     schema: IRPlot.JitterRatioSpanSchema,
     label: 'JitterRatioSpan',

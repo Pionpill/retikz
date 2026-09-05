@@ -31,6 +31,17 @@ Every mark can use `defaultColorGroup` to declare a shared fallback color. A nam
 
 <ZodSchema name="JitterPositionAdjustmentSchema" />
 
+### PlotRandomDistributionSchema
+
+<ZodSchema
+  name="PlotRandomDistributionSchema"
+  description="Built-in random-distribution union for bounded jitter."
+  descriptions={{
+    kind: 'Distribution discriminator: uniform or normal.',
+    sigma: 'Positive normal standard deviation relative to the jitter half-span; defaults to 0.5.',
+  }}
+/>
+
 ### JitterRatioSpanSchema
 
 <ZodSchema name="JitterRatioSpanSchema" />

@@ -56,7 +56,9 @@ The root `recipe` requires both x and y, with exactly one final discrete positio
 
 `x` and `y` accept direct field mappings only. A scale can be authored inline or refer to a named scale in `plotExtension.scales`. Chart reads the resolved Scale Definition `continuity`, so custom discrete scales and built-ins follow the same registry path.
 
-`jitter.span` is the **total spread width**. A number uses the current position role's output units directly. `{ kind: 'ratio', value }` uses a `0..1` fraction of the discrete tick interval. Plot defaults to `0.3` when omitted, and `seed` defaults to `0`. Identical ordered data, scale, span, and seed produce identical positions.
+`jitter.span` is the **total spread width**. A number uses the current position role's output units directly. `{ kind: 'ratio', value }` uses a `0..1` fraction of the discrete tick interval. `distribution` defaults to `{ kind: 'uniform' }`; switching to `{ kind: 'normal', sigma }` keeps the category center at zero while concentrating offsets near it and truncating them to `[-span / 2, span / 2]`. `sigma` is relative to the spread half-span and defaults to `0.5`. Plot defaults to `0.3` when omitted, and `seed` defaults to `0`. Identical ordered data, scale, span, distribution, and seed produce identical positions.
+
+Strip uses placement jitter: it changes only the plotted position on the discrete role and does not modify rows or continuous values. To derive a field before scales, use the `jitter` [Data transform](/viz/plot/transform); Strip keeps the two mechanisms separate.
 
 The default grid follows only the continuous role. `domainPadding` also applies only to the continuous position scale. At a discrete boundary, Plot placement narrows the range using half the spread width plus the actual glyph extent, so points are never clamped, shrunk, or painted outside the coordinate boundary. Insufficient space fails loudly.
 
@@ -76,11 +78,14 @@ Polar projection still happens after role-space spread: x is angle and y is radi
 
 ### `StripPropertiesProps`
 
-| Prop             | Type                                                                    | Default                         | Description                                                                   |
-| ---------------- | ----------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------- |
-| `jitter?`        | `{ span?: number \| { kind: 'ratio'; value: number }; seed?: number }`  | `{ span: ratio(0.3), seed: 0 }` | Deterministic spread along the sole discrete role; no authored `role`         |
-| `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest final Point radius      | Configures only the continuous scale; Plot placement contains discrete spread |
-| Point appearance | `IRPointProperties`                                                     | Point defaults                  | Constant `size`, `shape`, paint, stroke, opacity, and related styling         |
+| Prop                         | Type                                                                    | Default                                                | Description                                                                   |
+| ---------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| `jitter?`                    | `IRStripChartJitter`                                                    | `{ span: ratio(0.3), distribution: uniform, seed: 0 }` | Deterministic spread along the sole discrete role; no authored `role`         |
+| `jitter.distribution?`       | `IRPlotRandomDistribution`                                              | `{ kind: 'uniform' }`                                  | Select even spread or a center-concentrated truncated normal distribution     |
+| `jitter.distribution.kind`   | `'uniform' \| 'normal'`                                                 | `uniform`                                              | Distribution discriminator                                                    |
+| `jitter.distribution.sigma?` | `number`                                                                | `0.5`                                                  | Normal only; standard deviation relative to the jitter half-span, positive    |
+| `domainPadding?`             | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest final Point radius                             | Configures only the continuous scale; Plot placement contains discrete spread |
+| Point appearance             | `IRPointProperties`                                                     | Point defaults                                         | Constant `size`, `shape`, paint, stroke, opacity, and related styling         |
 
 ### `StripMarkProps`
 

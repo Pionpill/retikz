@@ -94,6 +94,100 @@ describe('Mark Placement pipeline', () => {
     }
   });
 
+  it('samples bounded normal jitter around the discrete role center', () => {
+    const sampleRows = Array.from({ length: 128 }, (_, index) => ({
+      category: index % 2 === 0 ? 'A' : 'B',
+      value: index,
+    }));
+    const normalSpec = specOf([
+      {
+        kind: 'jitter',
+        role: 'x',
+        span: { kind: 'ratio', value: 1 },
+        distribution: { kind: 'normal' },
+        seed: 11,
+      },
+    ]);
+    const uniformSpec = specOf([
+      {
+        kind: 'jitter',
+        role: 'x',
+        span: { kind: 'ratio', value: 1 },
+        distribution: { kind: 'uniform' },
+        seed: 11,
+      },
+    ]);
+    const normal = positionsOf(normalSpec, {}, sampleRows);
+    const repeated = positionsOf(normalSpec, {}, sampleRows);
+    const uniform = positionsOf(uniformSpec, {}, sampleRows);
+    const frame = defaultFrameOf(normalSpec, sampleRows);
+    const xScale = frame.roleScales?.x;
+
+    expect(xScale).toBeDefined();
+    const centers = sampleRows.map(row => xScale?.coordinate(row.category) ?? Number.NaN);
+    const normalOffsets = normal.map((position, index) => position[0] - centers[index]);
+    const uniformOffsets = uniform.map((position, index) => position[0] - centers[index]);
+    const halfStep = (xScale?.step ?? 0) / 2;
+    const centralNormal = normalOffsets.filter(offset => Math.abs(offset) <= halfStep * 0.25).length;
+    const centralUniform = uniformOffsets.filter(offset => Math.abs(offset) <= halfStep * 0.25).length;
+
+    expect(normal).toEqual(repeated);
+    expect(normal).not.toEqual(uniform);
+    expect(normalOffsets.every(offset => Math.abs(offset) <= halfStep + 1e-8)).toBe(true);
+    expect(centralNormal).toBeGreaterThan(centralUniform);
+  });
+
+  it('changes normal spread with sigma without changing the jitter envelope', () => {
+    const narrow = specOf([
+      {
+        kind: 'jitter',
+        role: 'x',
+        span: { kind: 'ratio', value: 1 },
+        distribution: { kind: 'normal', sigma: 0.25 },
+        seed: 23,
+      },
+    ]);
+    const wide = specOf([
+      {
+        kind: 'jitter',
+        role: 'x',
+        span: { kind: 'ratio', value: 1 },
+        distribution: { kind: 'normal', sigma: 1 },
+        seed: 23,
+      },
+    ]);
+
+    expect(positionsOf(narrow)).not.toEqual(positionsOf(wide));
+    expect(defaultFrameOf(narrow).roleScales?.x?.range()).toEqual(defaultFrameOf(wide).roleScales?.x?.range());
+  });
+
+  it('keeps later normal samples stable when a null target occupies an earlier random slot', () => {
+    const spec = specOf([
+      {
+        kind: 'jitter',
+        role: 'x',
+        span: { kind: 'ratio', value: 0.8 },
+        distribution: { kind: 'normal' },
+        seed: 17,
+      },
+    ]);
+    const rowsWithNullTarget = [
+      { category: 'A', value: 1 },
+      { category: null, value: 2 },
+      { category: 'B', value: 3 },
+    ];
+    const rowsWithValidPlaceholder = [
+      { category: 'A', value: 1 },
+      { category: 'A', value: 2 },
+      { category: 'B', value: 3 },
+    ];
+    const withNull = positionsOf(spec, {}, rowsWithNullTarget);
+    const withPlaceholder = positionsOf(spec, {}, rowsWithValidPlaceholder);
+
+    expect(withNull).toHaveLength(2);
+    expect(withNull[1]).toEqual(withPlaceholder[2]);
+  });
+
   it('runs custom screen-space initializers after projection', () => {
     const NudgeSchema = strictObject({ kind: literal('screen-nudge'), dx: number() });
     type Nudge = { kind: 'screen-nudge'; dx: number };

@@ -896,7 +896,7 @@ describe('Typed Point Chart React declarations', () => {
     });
   });
 
-  it('maps exact Strip declarations, preserves zero jitter values, and matches Vanilla', () => {
+  it('maps exact Strip declarations, preserves normal jitter values, and matches Vanilla', () => {
     const rows = [
       { category: 'A', value: 2 },
       { category: 'B', value: 4 },
@@ -910,7 +910,7 @@ describe('Typed Point Chart React declarations', () => {
       <>
         <ChartData data={rows} reference="strip.rows" />
         <StripEncodings {...encodings} />
-        <StripProperties jitter={{ span: 0, seed: 0 }} size={5} />
+        <StripProperties jitter={{ span: 0, seed: 0, distribution: { kind: 'normal', sigma: 0.5 } }} size={5} />
         <StripMark override properties={{ jitter: { span: { kind: 'ratio', value: 0.5 }, seed: 7 } }} />
         <StripMark encodings={{ x: 'alternateCategory' }} properties={{ opacity: 0.4 }} />
       </>,
@@ -918,7 +918,7 @@ describe('Typed Point Chart React declarations', () => {
     const vanilla = normalizeStripChart({
       data: { reference: 'strip.rows' },
       encodings,
-      properties: { jitter: { span: 0, seed: 0 }, size: 5 },
+      properties: { jitter: { span: 0, seed: 0, distribution: { kind: 'normal', sigma: 0.5 } }, size: 5 },
       marks: [
         { kind: 'strip', override: true, properties: { jitter: { span: { kind: 'ratio', value: 0.5 }, seed: 7 } } },
         { kind: 'strip', encodings: { x: 'alternateCategory' }, properties: { opacity: 0.4 } },

@@ -2,6 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-09-03
+- 修订日期：2026-09-05
 - 关联：[alpha.1 roadmap](./roadmap.md) · [Plot ADR-13 Mark Placement](../../../../plot/v0/v0.2/alpha.1/13-position-jitter.md) · [Chart 封装完备设计](../../../../../architecture/chart-encapsulation-complete.md) · [Plot 可视化完备设计](../../../../../architecture/plot-visualization-complete.md)
 
 ## 背景与目标
@@ -43,6 +44,7 @@ type IRStripChartRecipe = {
   properties?: StripPointProperties & {
     jitter?: {
       span?: PositionJitterSpan;
+      distribution?: IRPlotRandomDistribution;
       seed?: number;
     };
     domainPadding?: PointPositionDomainPadding;
@@ -57,6 +59,7 @@ type IRStripMark = {
   properties?: StripPointProperties & {
     jitter?: {
       span?: PositionJitterSpan;
+      distribution?: IRPlotRandomDistribution;
       seed?: number;
     };
   };
@@ -65,7 +68,7 @@ type IRStripMark = {
 
 recipe 的 `x` 与 `y` 只接受保持逐行观测的 direct field mapping 及对应 scale binding；聚合、bin、normalize 和数据字段 jitter 不进入这两个角色。authored Strip mark 的 `encodings` 只接受可选字段名覆盖，不声明或替换 position scale；scale binding 只属于 recipe encodings 或显式 `plotExtension.scales`。Chart 下沉的 jitter operation 省略 `role`，由 Plot 验证并选择唯一 discrete role。
 
-数值 `span` 表示离散 role 输出单位下的总散布宽度，Point 中心 offset 落在 `[-span / 2, span / 2)`；ratio 形态要求 `0 <= value <= 1`，表示最终离散 tick `step` 的比例，offset 落在 `[-value × step / 2, value × step / 2)`。默认 `span` 为 `{ kind: 'ratio', value: 0.3 }`，默认 `seed` 为 `0`。`span` 描述总宽度而不是单侧最大值，避免把 ratio 误解为向左右两侧各偏移该比例。
+数值 `span` 表示离散 role 输出单位下的总散布宽度，Point 中心 offset 落在 `[-span / 2, span / 2)`；ratio 形态要求 `0 <= value <= 1`，表示最终离散 tick `step` 的比例，offset 落在 `[-value × step / 2, value × step / 2)`。`distribution` 复用 Plot ADR-13 的 `IRPlotRandomDistribution`，省略时为均匀分布；`{ kind: 'normal' }` 为以 `[-1, 1]` 截断的零均值正态分布，`sigma` 相对于半个 `span`，省略时为 `0.5`。默认 `span` 为 `{ kind: 'ratio', value: 0.3 }`，默认 `seed` 为 `0`。`span` 描述总宽度而不是单侧最大值，避免把 ratio 误解为向左右两侧各偏移该比例。
 
 `domainPadding` 继续控制连续 position role 的 Point-family range / ratio domain 留白。离散 role 不伪造 categorical domain padding；Plot 根据 jitter 与实际 glyph 自动计算等价的 scale boundary clearance，并落实为离散 range inset / outer clearance。该自动净空不需要 Chart 暴露第二个 padding 参数。
 
@@ -79,15 +82,15 @@ React 与 Vanilla 分别提供与其它 Point chartType 对齐的 `StripChart`�
 - Cartesian：离散 x 的净空落实为左右边界，离散 y 落实为上下边界；jitter 只改变目标 role，continuous role、domain、ticks 与 guides 不变
 - Polar angle：angle offset 以 degree 在投影前合成，因此相同 ratio 在不同 radius 上产生不同屏幕弧长。360° 完整 sweep 把 angle 视为循环 role 并 wrap，不制造 seam padding；partial sweep 对每条有效 datum 计入角向 jitter 半宽 `Jθ` 与 glyph 角净空，圆形 glyph 的角净空为 `asin(G / r)`，其中 `G` 是含 stroke 的屏幕法向 extent、`r` 是该 datum 的屏幕半径。`r < G` 时单靠角度 inset 无法保证 containment，必须 fail-loud 或由作者改变内半径 / glyph，而不能伪造统一 `dx`
 - Polar radius：离散 radius role 以径向 user units 计算 jitter 与 glyph 净空；inner / outer radius 边界分别校验。自定义 coordinate 只有能提供 ADR-13 所需的 mapped-role projection 与边界度量时才支持自动 containment，否则在 Plot owner 边界 fail-loud
-- 数据与确定性：jitter 不改变 Source rows、x / y、scale domain、ticks、guide、lineage 或 datum identity。相同的 effective ordered data view、字段绑定、seed、span 与最终 step 必须得到相同结果；同一次 lowering 的 position resolution 是 renderer、provenance、locator、SSR 与 hydration 的共同事实源
+- 数据与确定性：jitter 不改变 Source rows、x / y、scale domain、ticks、guide、lineage 或 datum identity。相同的 effective ordered data view、字段绑定、seed、span、distribution、distribution 参数与最终 step 必须得到相同结果；同一次 lowering 的 position resolution 是 renderer、provenance、locator、SSR 与 hydration 的共同事实源
 - mark 继承：内建和 authored Strip mark 都继承 recipe 的 x / y、视觉 encodings、Point properties 与 jitter；mark 显式字段只覆盖自身继承结果，mark encoding 只能替换字段名，不能替换 scale。普通 mark 按 authored 顺序追加，`override: true` 原位替换内建 `strip` semantic group；coordinate 与 scale-level padding 不能由 mark 改写
 - 结构边界：Strip recipe 不提供 series、row、column 或 facet encoding，也不隐式分组、分面、聚合、碰撞避让或 beeswarm。需要屏幕空间避碰时使用 Plot ADR-13 的 screen-space initializer，而不是改变 Strip 数据或把 collision 塞进 jitter
-- 失败与诊断：缺少或使用空白 x / y、最终 scales 不满足“一个正 step discrete + 一个 continuous”、非法 span / seed、Plot 无法唯一选择离散 role、placement definition 缺失、coordinate 不具备 adjustment 或 containment 能力、未知 encoding / property / mark、重复 override、provider 缺失或依赖不闭合，均在对应 Chart schema、Chart resolve 或 Plot owner 边界 fail-loud；空数据可以产生空 mark，不因没有可消费 datum 而误报 scale compatibility
+- 失败与诊断：缺少或使用空白 x / y、最终 scales 不满足“一个正 step discrete + 一个 continuous”、非法 span / seed / distribution、normal 的 `sigma` 非有限或非正、Plot 无法唯一选择离散 role、placement definition 缺失、coordinate 不具备 adjustment 或 containment 能力、未知 encoding / property / mark、重复 override、provider 缺失或依赖不闭合，均在对应 Chart schema、Chart resolve 或 Plot owner 边界 fail-loud；空数据可以产生空 mark，不因没有可消费 datum 而误报 scale compatibility
 - 兼容性：本决策取代“Strip 不设独立 chartType”的旧结论，新增 `strip` exact Source 并依赖 Plot ADR-13；不改变现有 Scatter、Plot Data `jitter` transform 或底层 renderer 的输入和行为，不提供旧组合写法的自动识别、别名或迁移层
 - React / Vanilla 等价性：JSON、Vanilla、React 与 SSR 生成或消费同一个 `IRStripChart`，沿同一 package-internal Definition、provider、Chart resolve 与 Plot Mark Placement 主链执行；adapter 不计算随机数、step、role offset、projection 或 containment
 
 ## 最终实现与遗留风险
 
-Strip 已形成 exact Source、Chart recipe、React / Vanilla authoring、Plot placement、Cartesian / Polar 投影、边界净空与双语文档闭环。内建 point / band 及声明离散 continuity 的自定义 Scale Definition 共用同一路径；默认与显式 jitter、mark 覆盖、空数据、确定性和 provider closure 均可观察验证
+Strip 的实现已形成 exact Source、Chart recipe、React / Vanilla authoring、Plot placement、Cartesian / Polar 投影、边界净空与双语文档闭环。内建 point / band 及声明离散 continuity 的自定义 Scale Definition 共用同一路径；默认与显式 uniform / normal jitter、mark 覆盖、空数据、确定性和 provider closure 均可观察验证。本次修订已把 distribution 纳入既有 Plot placement contract，normal 行为沿同一主链完成并由 schema、pipeline、adapter 与 Docs 验证
 
 屏幕空间避碰、beeswarm、facet 与多离散角色不属于 Strip；需要这些能力时应进入独立 Plot placement operation 或其它 chartType，而不改变本 ADR 的逐行数据与唯一离散角色契约

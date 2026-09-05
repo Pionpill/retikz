@@ -6,6 +6,7 @@ import type {
   JitterRatioSpanSchema,
   JitterSpanSchema,
   MarkPlacementSchema,
+  PlotRandomDistributionSchema,
   PositionAdjustmentOperationSchema,
 } from './schema';
 
@@ -14,6 +15,9 @@ export type IRPlotJitterRatioSpan = ZodInfer<typeof JitterRatioSpanSchema>;
 
 /** jitter 总宽 */
 export type IRPlotJitterSpan = ZodInfer<typeof JitterSpanSchema>;
+
+/** jitter 使用的内置随机分布 */
+export type IRPlotRandomDistribution = ZodInfer<typeof PlotRandomDistributionSchema>;
 
 /** 内置 jitter operation */
 export type IRPlotJitterPositionAdjustment = ZodInfer<typeof JitterPositionAdjustmentSchema>;

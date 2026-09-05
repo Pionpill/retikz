@@ -89,7 +89,21 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     kind: '内置位置调整判别值 jitter。',
     role: '要散布的坐标 role；省略时要求当前 frame 恰有一个离散 role。',
     span: '总散布宽度；裸数字使用 role 输出单位，ratio 使用离散 step 比例。',
+    distribution: '随机分布；uniform 均匀散布，normal 为零均值且截断在归一化 [-1, 1] 支持域。',
+    'distribution.kind': '随机分布判别值：uniform 或 normal。',
+    'distribution.sigma': 'normal 的标准差，相对于 jitter 半宽；省略时为 0.5。',
     seed: '确定性伪随机种子；省略时为 0。',
+  }}
+/>
+
+### PlotRandomDistributionSchema
+
+<ZodSchema
+  name="PlotRandomDistributionSchema"
+  description="用于 bounded jitter 的内置随机分布联合。"
+  descriptions={{
+    kind: '随机分布判别值：uniform 或 normal。',
+    sigma: '仅 normal 使用的正数标准差，相对于 jitter 半宽；省略时为 0.5。',
   }}
 />
 
