@@ -48,6 +48,15 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - 开放式自定义字段要说明边界：provider name、custom kind，还是普通 string。
 - 同一概念在不同 schema 中保持同名同义。
 
+### 一级语义分组
+
+- 字段较多且能形成稳定关注点时，使用 `standard-name` 固定的 `style`、`layout`、`theme`、`presentation`、`encoding`、`defaults`、`routing` 分组；不得为同义概念另造一级属性名。
+- 根对象保留 discriminator、identity、主要领域事实和结构入口。`position`、`shape`、`coordinate`、`data`、`children`、显式 `route` 等高频核心语义不得只为减少一级属性数而下沉。
+- 分组保持浅层，通常不超过两至三层有意义对象；小型 leaf schema 继续扁平。只有子字段仍形成稳定、可复用且不会增加选择歧义的独立概念时才继续拆分。
+- 分组对象必须由命名 schema/type 承载并作为单一真源复用；不得同时保留扁平字段、兼容 alias、平行持久化 schema 或只供 LLM 的第二套 Source 表示。
+- 点路径 Theme token 表是稀疏覆盖契约，保留在准确的 `xxxThemeTokens` 字段下；不得仅因 token 数量多改成深层对象。
+- 一级属性数量只作审计信号，不设机械上限；是否分组只由长期语义边界、字段共变关系与复用契约决定。
+
 ## 对象字段顺序
 
 - 顶层实体判别字段用 `type`，内部子变体用 `kind`，且放对象最前面。
@@ -112,8 +121,9 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 1. 这是 IR 契约，还是 provider / compile / adapter 行为？
 2. 是否需要开放给用户自定义？如果是，先读 `standard-structure`，再读 contract / providers / pipeline 对应 skill。
 3. 字段名、判别字段和值是否 LLM 友好？
-4. `.describe(...)` 是否短而准确，且没有上下文膨胀？
-5. 对象字段顺序、shared spread、union 拆分是否符合规则？
-6. 是否能用 `BaseSchema + superRefine` 避免重复 object？
-7. `CanonicalXxx` 是否由 `IRXxx` 派生但定义在领域 `resolve/<domain>/types.ts`，且由 `resolveXxx` 结合当前 context 唯一展开紧凑 IR，避免下游重复处理等价联合？
-8. schema 改动是否需要同步 `types.ts`、docs、schema registry 和测试？
+4. 同类字段是否需要使用固定一级语义分组，主要领域事实是否仍位于正确层级？
+5. `.describe(...)` 是否短而准确，且没有上下文膨胀？
+6. 对象字段顺序、shared spread、union 拆分是否符合规则？
+7. 是否能用 `BaseSchema + superRefine` 避免重复 object？
+8. `CanonicalXxx` 是否由 `IRXxx` 派生但定义在领域 `resolve/<domain>/types.ts`，且由 `resolveXxx` 结合当前 context 唯一展开紧凑 IR，避免下游重复处理等价联合？
+9. schema 改动是否需要同步 `types.ts`、docs、schema registry 和测试？
