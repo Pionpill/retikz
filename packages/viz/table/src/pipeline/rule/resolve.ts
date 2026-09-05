@@ -128,24 +128,32 @@ const styleAppearanceOf = (
   }
   if (color !== null || family !== null || weight !== null) {
     appearance.content = {
-      ...(color === null ? {} : { color }),
+      ...(color === null
+        ? {}
+        : {
+            style: { color },
+          }),
       ...(family === null && weight === null
         ? {}
         : {
-            nodeDefault: { font: { ...(family === null ? {} : { family }), ...(weight === null ? {} : { weight }) } },
-            labelDefault: {
-              font: { ...(family === null ? {} : { family }), ...(weight === null ? {} : { weight }) },
+            defaults: {
+              node: {
+                style: { font: { ...(family === null ? {} : { family }), ...(weight === null ? {} : { weight }) } },
+              },
+              label: {
+                font: { ...(family === null ? {} : { family }), ...(weight === null ? {} : { weight }) },
+              },
             },
           }),
     };
-    if (color !== null) trace['/content/color'] = themeTokenSourceOf(colorKey, options);
+    if (color !== null) trace['/content/style/color'] = themeTokenSourceOf(colorKey, options);
     if (family !== null) {
-      trace['/content/nodeDefault/font/family'] = themeTokenSourceOf(familyKey, options);
-      trace['/content/labelDefault/font/family'] = themeTokenSourceOf(familyKey, options);
+      trace['/content/defaults/node/style/font/family'] = themeTokenSourceOf(familyKey, options);
+      trace['/content/defaults/label/font/family'] = themeTokenSourceOf(familyKey, options);
     }
     if (weight !== null) {
-      trace['/content/nodeDefault/font/weight'] = themeTokenSourceOf(weightKey, options);
-      trace['/content/labelDefault/font/weight'] = themeTokenSourceOf(weightKey, options);
+      trace['/content/defaults/node/style/font/weight'] = themeTokenSourceOf(weightKey, options);
+      trace['/content/defaults/label/font/weight'] = themeTokenSourceOf(weightKey, options);
     }
   }
   const headerBorder = header ? tokens['columnHeader.border.bottom'] : null;
@@ -214,9 +222,9 @@ const applyEncodingColor = (plan: MutableValuePlan, encoding: IRTableCellVisualE
   } else {
     plan.appearance = TableCellAppearanceSchema.parse({
       ...plan.appearance,
-      content: { ...plan.appearance.content, color },
+      content: { ...plan.appearance.content, style: { ...plan.appearance.content?.style, color } },
     });
-    plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/content/color': source };
+    plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/content/style/color': source };
   }
   plan.trace.encodingIds ??= [];
   plan.trace.encodingIds.push(encoding.id);

@@ -122,7 +122,7 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
 | 定位 | 位置 scale 映射后先执行 role-space adjustment，再投影并执行 screen-space initializer     |
 | 生成 | 普通模式每行生成一个 core `Node`；设置 `text` 后改为文本 Node，并用 `dx` / `dy` 微调位置 |
 | 装饰 | `size`、`shape`、颜色与 Node 样式写入 datum Node；`label` 保留点本身并挂到 `Node.label`  |
-| 分层 | 没有颜色通道时共享 `nodeDefault`；按字段着色时按颜色组织子层，最后附加 mark 图层信息     |
+| 分层 | 没有颜色通道时共享 `defaults.node`；按字段着色时按颜色组织子层，最后附加 mark 图层信息   |
 
 普通 glyph 模式下，字段尺寸为缺失值、`null`、`NaN` 或无穷值时，该行不会生成 Point glyph；尺寸字段 descriptor、scale identity 与可选 legend 是数据集级信息，仍会保留。负数尺寸会直接报错，不会被跳过或截断。设置 `text` 后使用既有文本 Node 路径，不受这条仅针对 glyph 的尺寸守门影响。
 

@@ -8,12 +8,9 @@ const Demo: FC = () => (
     <Node
       id="rows"
       position={[-270, 40]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Detail rows</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -23,12 +20,9 @@ const Demo: FC = () => (
     <Node
       id="group"
       position={[-150, 40]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Group by x</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -38,12 +32,9 @@ const Demo: FC = () => (
     <Node
       id="order"
       position={[-20, 40]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Order series</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -53,12 +44,9 @@ const Demo: FC = () => (
     <Node
       id="offset"
       position={[120, -40]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>offset strategy</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -68,12 +56,9 @@ const Demo: FC = () => (
     <Node
       id="bounds"
       position={[120, 40]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Compute bounds</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -83,12 +68,9 @@ const Demo: FC = () => (
     <Node
       id="output"
       position={[270, 40]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Write y0 / y1</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -100,7 +82,7 @@ const Demo: FC = () => (
     <Draw way={['group', 'order']} arrow="->" />
     <Draw way={['order', 'bounds']} arrow="->" />
     <Draw way={['bounds', 'output']} arrow="->" />
-    <Draw way={['offset', 'bounds']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['offset', 'bounds']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 

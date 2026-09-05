@@ -7,13 +7,9 @@ const structureInput = (id: string, y: number, title: string, detail: string) =>
   <Node
     id={id}
     position={[-220, y]}
-    minimumSize={{ width: 116, height: 42 }}
-    stroke="darkorange"
-    fill="darkorange"
-    fillOpacity={0.08}
     cornerRadius={4}
-    align="middle"
-    lineHeight={14}
+    style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+    layout={{ minimumSize: { width: 116, height: 42 }, align: 'middle', lineHeight: 14 }}
   >
     <Text font={{ size: 13, weight: 'bold' }}>{title}</Text>
     <Text fill="gray" font={{ size: 10 }}>
@@ -32,13 +28,9 @@ const Demo: FC = () => (
     <Node
       id="registry"
       position={[-45, 0]}
-      minimumSize={{ width: 128, height: 50 }}
-      stroke="gray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      align="middle"
-      lineHeight={15}
+      style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
+      layout={{ minimumSize: { width: 128, height: 50 }, align: 'middle', lineHeight: 15 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Structure registry</Text>
       <Text fill="gray" font={{ size: 10 }}>
@@ -49,13 +41,9 @@ const Demo: FC = () => (
     <Node
       id="semantic"
       position={[155, 0]}
-      minimumSize={{ width: 158, height: 58 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 158, height: 58 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>SemanticTableModel</Text>
       <Text fill="gray" font={{ size: 10 }}>

@@ -45,7 +45,7 @@ const intensityChannel = defineNodeChannel<number>({
     };
   },
   deliver: (node, value) => {
-    node.opacity = value;
+    node.style = { ...node.style, opacity: value };
   },
 });
 

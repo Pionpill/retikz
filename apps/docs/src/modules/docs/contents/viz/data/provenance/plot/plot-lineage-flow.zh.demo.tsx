@@ -8,13 +8,9 @@ const Demo: FC = () => (
     <Node
       id="data"
       position={[-230, 0]}
-      minimumSize={{ width: 116, height: 64 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={17}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 116, height: 64 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Data 来源</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -24,13 +20,9 @@ const Demo: FC = () => (
     <Node
       id="plot"
       position={[-70, 0]}
-      minimumSize={{ width: 160, height: 76 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 160, height: 76 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Plot 语义</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -43,13 +35,9 @@ const Demo: FC = () => (
     <Node
       id="run"
       position={[100, 0]}
-      minimumSize={{ width: 145, height: 64 }}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.07}
       cornerRadius={4}
-      align="middle"
-      lineHeight={17}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.07 }}
+      layout={{ minimumSize: { width: 145, height: 64 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>PlotLineageRun</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -59,13 +47,9 @@ const Demo: FC = () => (
     <Node
       id="tools"
       position={[240, 0]}
-      minimumSize={{ width: 92, height: 64 }}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={17}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ minimumSize: { width: 92, height: 64 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>宿主工具</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -73,9 +57,9 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <Draw way={['data', 'plot']} arrow="->" stroke="gray" />
-    <Draw way={['plot', 'run']} arrow="->" stroke="gray" />
-    <Draw way={['run', 'tools']} arrow="->" stroke="gray" />
+    <Draw way={['data', 'plot']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['plot', 'run']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['run', 'tools']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

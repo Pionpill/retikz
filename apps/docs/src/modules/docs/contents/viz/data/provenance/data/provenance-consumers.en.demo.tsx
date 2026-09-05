@@ -8,13 +8,9 @@ const Demo: FC = () => (
     <Node
       id="data"
       position={[-225, 0]}
-      minimumSize={{ width: 190, height: 82 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={17}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 190, height: 82 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Data output boundary</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -27,13 +23,9 @@ const Demo: FC = () => (
     <Node
       id="plot"
       position={[115, -82]}
-      minimumSize={{ width: 176, height: 58 }}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.07}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.07 }}
+      layout={{ minimumSize: { width: 176, height: 58 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Plot</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -43,13 +35,9 @@ const Demo: FC = () => (
     <Node
       id="table"
       position={[115, 0]}
-      minimumSize={{ width: 176, height: 58 }}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.07}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.07 }}
+      layout={{ minimumSize: { width: 176, height: 58 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Table</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -59,13 +47,9 @@ const Demo: FC = () => (
     <Node
       id="other"
       position={[115, 82]}
-      minimumSize={{ width: 176, height: 58 }}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.07}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.07 }}
+      layout={{ minimumSize: { width: 176, height: 58 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Other hosts</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -73,11 +57,15 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <Draw way={['data', 'plot']} arrow="->" stroke="gray" />
-    <Draw way={['data', 'table']} arrow="->" stroke="gray" />
-    <Draw way={['data', 'other']} arrow="->" stroke="gray" />
+    <Draw way={['data', 'plot']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['data', 'table']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['data', 'other']} arrow="->" style={{ stroke: 'gray' }} />
 
-    <Node position={[284, 0]} stroke="none" fill="none" padding={0} textColor="gray" font={{ size: 12 }}>
+    <Node
+      position={[284, 0]}
+      style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
+      layout={{ padding: 0 }}
+    >
       Presentation and interaction semantics belong to each host
     </Node>
   </Layout>

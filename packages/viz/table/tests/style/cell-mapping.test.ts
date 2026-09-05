@@ -22,26 +22,30 @@ describe('theme token Cell mapping', () => {
       appearance: {
         background: { fill: '#ffffff', fillOpacity: 1 },
         content: {
-          color: '#123456',
-          nodeDefault: { font: { family: 'sans-serif', weight: 500 } },
-          labelDefault: { font: { family: 'sans-serif', weight: 500 } },
+          style: { color: '#123456' },
+          defaults: {
+            node: {
+              style: { font: { family: 'sans-serif', weight: 500 } },
+            },
+            label: { font: { family: 'sans-serif', weight: 500 } },
+          },
         },
         borders: { bottom: { kind: 'line', stroke: '#e4e4e7', width: 1, priority: -100 } },
       },
       trace: {
         appearance: {
-          '/content/color': {
+          '/content/style/color': {
             kind: 'styleToken',
             tokenKey: 'columnHeader.content.color',
             tokenSource: 'local',
             tokenPath: '$spec/tableThemeTokens/columnHeader.content.color',
           },
-          '/content/nodeDefault/font/family': {
+          '/content/defaults/node/style/font/family': {
             kind: 'styleToken',
             tokenKey: 'columnHeader.content.font.family',
             tokenSource: 'local',
           },
-          '/content/labelDefault/font/family': {
+          '/content/defaults/label/font/family': {
             kind: 'styleToken',
             tokenKey: 'columnHeader.content.font.family',
             tokenSource: 'local',
@@ -52,9 +56,13 @@ describe('theme token Cell mapping', () => {
     expect(result.cells[1]).toMatchObject({
       appearance: {
         content: {
-          color: '#18181b',
-          nodeDefault: { font: { family: 'monospace', weight: 400 } },
-          labelDefault: { font: { family: 'monospace', weight: 400 } },
+          style: { color: '#18181b' },
+          defaults: {
+            node: {
+              style: { font: { family: 'monospace', weight: 400 } },
+            },
+            label: { font: { family: 'monospace', weight: 400 } },
+          },
         },
       },
     });

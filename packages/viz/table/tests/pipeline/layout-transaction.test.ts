@@ -131,8 +131,7 @@ describe('Table layout transaction', () => {
                 id: 'probe-node',
                 position: [10, 5],
                 shape: 'rectangle',
-                minimumSize: { width: 100, height: 20 },
-                padding: 0,
+                layout: { minimumSize: { width: 100, height: 20 }, padding: 0 },
               },
             },
           ],
@@ -318,7 +317,17 @@ describe('Table layout transaction', () => {
       type: TableComposite.Table,
       structure: {
         kind: 'manual',
-        rows: [[{ content: { type: 'node', position: [0, 0], minimumSize: 20, padding: 0 } }]],
+        rows: [
+          [
+            {
+              content: {
+                type: 'node',
+                position: [0, 0],
+                layout: { minimumSize: 20, padding: 0 },
+              },
+            },
+          ],
+        ],
       },
       layout: {
         columnSize: { kind: 'fraction' },
@@ -352,7 +361,12 @@ describe('Table layout transaction', () => {
             {
               id: 'zero',
               layout: { overflow: 'clip' },
-              content: { type: 'node', id: 'discarded', position: [0, 0], minimumSize: 20, padding: 0 },
+              content: {
+                type: 'node',
+                id: 'discarded',
+                position: [0, 0],
+                layout: { minimumSize: 20, padding: 0 },
+              },
             },
           ],
         ],

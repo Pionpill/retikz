@@ -94,7 +94,7 @@ const pathsOf = (root: IRScope): Array<IRPath> => {
 };
 
 const hasMinimumSize = (node: IRNode, width: number, height: number): boolean => {
-  const size = node.minimumSize;
+  const size = node.layout?.minimumSize;
   if (typeof size === 'number') return size === width && size === height;
   return size?.width === width && size.height === height;
 };
@@ -163,9 +163,9 @@ describe('plot theme schema and lowering', () => {
     const plotAreaCarrier = root.children[1] as IRNode;
 
     expect(background.type).toBe('node');
-    expect(background.fill).toBe('#f8fafc');
+    expect(background.style?.fill).toBe('#f8fafc');
     expect(background.position).toEqual(plotAreaCarrier.position);
-    expect(background.minimumSize).toEqual(plotAreaCarrier.minimumSize);
+    expect(background.layout?.minimumSize).toEqual(plotAreaCarrier.layout?.minimumSize);
     expect(hasMinimumSize(background, 480, 300)).toBe(false);
   });
 
@@ -182,8 +182,8 @@ describe('plot theme schema and lowering', () => {
       type: 'node',
       shape: 'circle',
       position: [240, 150],
-      minimumSize: 300,
-      fill: '#f8fafc',
+      style: { fill: '#f8fafc' },
+      layout: { minimumSize: 300 },
     });
   });
 
@@ -202,7 +202,7 @@ describe('plot theme schema and lowering', () => {
       }),
     );
 
-    expect(nodesOf(root).some(node => node.fill === fill)).toBe(false);
+    expect(nodesOf(root).some(node => node.style?.fill === fill)).toBe(false);
     expect(nodesOf(root).some(node => node.id === `${id}.plotArea`)).toBe(false);
   });
 
@@ -246,7 +246,10 @@ describe('plot theme schema and lowering', () => {
     expect(panels).toHaveLength(3);
     for (const panel of panels) {
       const background = panel.children[0] as IRNode;
-      expect(background).toMatchObject({ type: 'node', fill: '#e2e8f0' });
+      expect(background).toMatchObject({
+        type: 'node',
+        style: { fill: '#e2e8f0' },
+      });
       expect(hasMinimumSize(background, 144, 300)).toBe(false);
     }
   });
@@ -282,7 +285,7 @@ describe('plot theme schema and lowering', () => {
     );
     const markLayer = root.children[0] as IRScope;
     const colorScopes = markLayer.children as Array<IRScope>;
-    expect(colorScopes.map(scope => scope.nodeDefault?.fill)).toEqual(['#111111', '#222222']);
+    expect(colorScopes.map(scope => scope.defaults?.node?.style?.fill)).toEqual(['#111111', '#222222']);
   });
 
   it('explicit_scale_range_beats_theme_palette', () => {
@@ -298,7 +301,7 @@ describe('plot theme schema and lowering', () => {
     );
     const markLayer = root.children[0] as IRScope;
     const colorScopes = markLayer.children as Array<IRScope>;
-    expect(colorScopes.map(scope => scope.nodeDefault?.fill)).toEqual(['#aaaaaa', '#bbbbbb']);
+    expect(colorScopes.map(scope => scope.defaults?.node?.style?.fill)).toEqual(['#aaaaaa', '#bbbbbb']);
   });
 
   it('theme_palette_series_drives_marks_without_color_encoding', () => {
@@ -312,8 +315,8 @@ describe('plot theme schema and lowering', () => {
       }),
     );
     const [lineLayer, intervalLayer] = root.children as Array<IRScope>;
-    expect(lineLayer.pathDefault?.stroke).toBe('#0f766e');
-    expect(intervalLayer.nodeDefault?.fill).toBe('#f97316');
+    expect(lineLayer.defaults?.path?.style?.stroke).toBe('#0f766e');
+    expect(intervalLayer.defaults?.node?.style?.fill).toBe('#f97316');
   });
 
   it('axis_theme_tokens_merge_with_local_guide_override', () => {
@@ -337,15 +340,15 @@ describe('plot theme schema and lowering', () => {
         },
       }),
     );
-    const gridPath = pathsOf(root).find(path => path.strokeOpacity === 0.4);
-    expect(gridPath?.stroke).toBe('#ef4444');
-    expect(gridPath?.dashPattern).toEqual([4, 2]);
-    expect(gridPath?.dashOffset).toBe(2);
-    expect(pathsOf(root).some(path => path.lineCap === 'round')).toBe(true);
-    expect(nodesOf(root).some(node => node.shape === 'circle' && node.fill === '#111827')).toBe(true);
-    const labels = nodesOf(root).filter(node => node.text !== undefined && node.textColor !== undefined);
-    expect(labels.every(label => label.textColor === '#2563eb')).toBe(true);
-    expect(labels.every(label => label.font?.size === 10)).toBe(true);
+    const gridPath = pathsOf(root).find(path => path.style?.strokeOpacity === 0.4);
+    expect(gridPath?.style?.stroke).toBe('#ef4444');
+    expect(gridPath?.style?.dashPattern).toEqual([4, 2]);
+    expect(gridPath?.style?.dashOffset).toBe(2);
+    expect(pathsOf(root).some(path => path.style?.lineCap === 'round')).toBe(true);
+    expect(nodesOf(root).some(node => node.shape === 'circle' && node.style?.fill === '#111827')).toBe(true);
+    const labels = nodesOf(root).filter(node => node.text !== undefined && node.style?.textColor !== undefined);
+    expect(labels.every(label => label.style?.textColor === '#2563eb')).toBe(true);
+    expect(labels.every(label => label.style?.font?.size === 10)).toBe(true);
   });
 
   it('Axis rule 按开放 dimension 控制 line、tick、label、title 与 grid，后声明规则优先', () => {
@@ -499,14 +502,13 @@ describe('plot theme schema and lowering', () => {
     const tickLabels = textNodes.filter(node => node.text !== 'Revenue');
 
     expect(tickLabels.length).toBeGreaterThan(0);
-    expect(tickLabels.every(label => label.font?.family === 'Source Serif 4')).toBe(true);
-    expect(tickLabels.every(label => label.font?.size === 10)).toBe(true);
-    expect(tickLabels.every(label => label.textColor === '#2563eb')).toBe(true);
-    expect(tickLabels.every(label => label.lineHeight === 1.4)).toBe(true);
+    expect(tickLabels.every(label => label.style?.font?.family === 'Source Serif 4')).toBe(true);
+    expect(tickLabels.every(label => label.style?.font?.size === 10)).toBe(true);
+    expect(tickLabels.every(label => label.style?.textColor === '#2563eb')).toBe(true);
+    expect(tickLabels.every(label => label.layout?.lineHeight === 1.4)).toBe(true);
     expect(title).toMatchObject({
-      textColor: '#dc2626',
-      lineHeight: 1.4,
-      font: { family: 'Source Serif 4', size: 13, weight: 700 },
+      style: { textColor: '#dc2626', font: { family: 'Source Serif 4', size: 13, weight: 700 } },
+      layout: { lineHeight: 1.4 },
     });
   });
 
@@ -524,7 +526,7 @@ describe('plot theme schema and lowering', () => {
         },
       }),
     );
-    const labels = nodesOf(root).filter(node => node.textColor === '#0891b2');
+    const labels = nodesOf(root).filter(node => node.style?.textColor === '#0891b2');
 
     expect(labels.length).toBeGreaterThan(3);
     expect(labels.every(label => label.rotate === 0)).toBe(true);
@@ -687,6 +689,6 @@ describe('plot theme schema and lowering', () => {
       (child): child is IRNode => child.type === 'node' && child.text !== undefined,
     );
     expect(swatches.every(node => hasMinimumSize(node, 8, 8))).toBe(true);
-    expect(labels.every(node => node.textColor === '#dc2626')).toBe(true);
+    expect(labels.every(node => node.style?.textColor === '#dc2626')).toBe(true);
   });
 });

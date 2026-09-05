@@ -123,13 +123,13 @@ const renderFlowNode = (node: FlowNode) => (
     key={node.id}
     id={node.id}
     position={node.position}
-    minimumSize={{ width: node.width, height: node.height ?? 44 }}
-    stroke={node.color}
-    fill={node.color}
-    fillOpacity={0.08}
     cornerRadius={4}
-    align="middle"
-    lineHeight={node.lineHeight ?? 15}
+    style={{ stroke: node.color, fill: node.color, fillOpacity: 0.08 }}
+    layout={{
+      minimumSize: { width: node.width, height: node.height ?? 44 },
+      align: 'middle',
+      lineHeight: node.lineHeight ?? 15,
+    }}
   >
     <Text font={{ size: 14, weight: 'bold' }}>{node.title}</Text>
     <Text fill="gray" font={{ size: 12 }}>

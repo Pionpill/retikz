@@ -81,10 +81,10 @@ const collectNodes = (scope: IRScope): Array<IRNode> => [
 
 const textNodeVisualBottom = (node: IRNode): number => {
   const position = node.position as [number, number];
-  const authoredFontSize = node.font?.size;
+  const authoredFontSize = node.style?.font?.size;
   const fontSize = typeof authoredFontSize === 'number' ? authoredFontSize : DEFAULT_FONT_SIZE;
   const width = estimateLabelWidth(String(node.text), fontSize);
-  const height = typeof node.lineHeight === 'number' ? node.lineHeight : fontSize;
+  const height = typeof node.layout?.lineHeight === 'number' ? node.layout.lineHeight : fontSize;
   const radians = (Math.abs(node.rotate ?? 0) * Math.PI) / 180;
   const rotatedHeight = width * Math.abs(Math.sin(radians)) + height * Math.abs(Math.cos(radians));
   return position[1] + rotatedHeight / 2;
@@ -97,13 +97,13 @@ const scopeByLayerMeta = (root: IRScope, layer: string): IRScope => {
 };
 
 const nodeWidth = (node: IRNode): number => {
-  const size = node.minimumSize;
+  const size = node.layout?.minimumSize;
   if (typeof size === 'number') return size;
   return size?.width ?? size?.default ?? 0;
 };
 
 const nodeHeight = (node: IRNode): number => {
-  const size = node.minimumSize;
+  const size = node.layout?.minimumSize;
   if (typeof size === 'number') return size;
   return size?.height ?? size?.default ?? 0;
 };
@@ -167,7 +167,7 @@ describe('lowerPlots (contract)', () => {
     const path = layer.children[0] as IRPath;
     expect(path.type).toBe('path');
     // 样式上提到图层 pathDefault，path 本身只留几何
-    expect(layer.pathDefault?.strokeWidth).toBe(2);
+    expect(layer.defaults?.path?.style?.strokeWidth).toBe(2);
     // domain x [0,2]->[0,480]; y [9,14]->[300,0]
     expect(path.children).toEqual([
       { type: 'step', kind: 'move', to: [0, 240] },
@@ -180,8 +180,8 @@ describe('lowerPlots (contract)', () => {
     const layer = firstLayer(pointSpec(), { sales: SALES }, opts);
     expect(layer.children).toHaveLength(3);
     // 样式上提：circle / fill 在图层 nodeDefault，不重复写在每个 node
-    expect(layer.nodeDefault?.shape).toBe('circle');
-    expect(layer.nodeDefault?.fill).toBe(sharedCategorical[0]);
+    expect(layer.defaults?.node?.shape).toBe('circle');
+    expect(layer.defaults?.node?.style?.fill).toBe(sharedCategorical[0]);
     // 每个 node 是裸的（只有 type + position，无 shape/fill）
     expect(layer.children.every(c => (c as IRNode).shape === undefined)).toBe(true);
     expect((layer.children[0] as IRNode).position).toEqual([0, 240]);
@@ -221,7 +221,7 @@ describe('lowerPlots (contract)', () => {
     });
     const layers = expandOf(spec, { sales: SALES }, opts).children.filter(isScope);
 
-    expect(layers.map(layer => layer.nodeDefault?.fill)).toEqual([
+    expect(layers.map(layer => layer.defaults?.node?.style?.fill)).toEqual([
       sharedCategorical[0],
       sharedCategorical[0],
       sharedCategorical[1],
@@ -257,17 +257,18 @@ describe('lowerPlots (contract)', () => {
       ],
     });
     const layer = firstLayer(spec, { sales: SALES }, opts);
-    expect(layer.nodeDefault).toMatchObject({
+    expect(layer.defaults?.node).toMatchObject({
       shape: 'circle',
-      fill: '#f8fafc',
-      stroke: '#0f172a',
-      strokeWidth: 1.5,
-      fillOpacity: 0.7,
-      strokeOpacity: 0.9,
-      opacity: 0.8,
       rotate: 45,
-      padding: 2,
-      minimumSize: { default: 14, width: 16, height: 12 },
+      style: {
+        fill: '#f8fafc',
+        stroke: '#0f172a',
+        strokeWidth: 1.5,
+        fillOpacity: 0.7,
+        strokeOpacity: 0.9,
+        opacity: 0.8,
+      },
+      layout: { padding: 2, minimumSize: { default: 14, width: 16, height: 12 } },
     });
     expect((layer.children[0] as IRNode).zIndex).toBe(3);
   });
@@ -328,8 +329,8 @@ describe('lowerPlots (contract)', () => {
     const grids = collectScopes(root).filter(scope => scope.meta?.layer === 'grid');
 
     expect(grids.map(scope => scope.meta?.dimension)).toEqual(['x', 'y']);
-    expect(grids.every(scope => (scope.children[0] as IRPath).stroke === '#ffffff')).toBe(true);
-    expect(grids.every(scope => (scope.children[0] as IRPath).strokeOpacity === 0.15)).toBe(true);
+    expect(grids.every(scope => (scope.children[0] as IRPath).style?.stroke === '#ffffff')).toBe(true);
+    expect(grids.every(scope => (scope.children[0] as IRPath).style?.strokeOpacity === 0.15)).toBe(true);
   });
 
   it.each([
@@ -381,11 +382,19 @@ describe('lowerPlots (contract)', () => {
     const legendLayer = scopeByLayerMeta(lowered, 'legend');
     const markLayer = scopeByLayerMeta(lowered, 'mark');
 
-    expect(background).toMatchObject({ color: '#336699', fill: 0.2 });
-    expect(gridLayer).toMatchObject({ color: '#336699' });
-    expect(axisLayer).toMatchObject({ color: '#336699' });
-    expect(legendLayer).toMatchObject({ color: '#336699' });
-    expect(markLayer.color).toBeUndefined();
+    expect(background).toMatchObject({
+      style: { color: '#336699', fill: 0.2 },
+    });
+    expect(gridLayer).toMatchObject({
+      style: { color: '#336699' },
+    });
+    expect(axisLayer).toMatchObject({
+      style: { color: '#336699' },
+    });
+    expect(legendLayer).toMatchObject({
+      style: { color: '#336699' },
+    });
+    expect(markLayer.style?.color).toBeUndefined();
 
     const scene = compileToScene(
       { version: 1, type: 'scene', theme: { mode }, children: [spec] },
@@ -452,10 +461,10 @@ describe('lowerPlots (contract)', () => {
       { month: 1, revenue: 14, region: 'south', density: 30 },
     ];
     const layer = firstLayer(spec, { sales: data }, opts);
-    expect(layer.nodeDefault?.stroke).toBeUndefined();
-    expect(layer.nodeDefault?.strokeWidth).toBeUndefined();
-    expect(layer.children[0]).toMatchObject({ stroke: '#0f172a', strokeWidth: 1 });
-    expect(layer.children[1]).toMatchObject({ stroke: '#dc2626', strokeWidth: 3 });
+    expect(layer.defaults?.node?.style?.stroke).toBeUndefined();
+    expect(layer.defaults?.node?.style?.strokeWidth).toBeUndefined();
+    expect(layer.children[0]).toMatchObject({ style: { stroke: '#0f172a', strokeWidth: 1 } });
+    expect(layer.children[1]).toMatchObject({ style: { stroke: '#dc2626', strokeWidth: 3 } });
   });
 
   it('compile_line_to_scene_ok', () => {
@@ -627,10 +636,10 @@ describe('lowerPlots interval/bar (contract)', () => {
   it('bar_layer_rectangle_nodes', () => {
     const layer = firstLayer(barSpec(), { sales: SALES }, opts);
     expect(layer.children).toHaveLength(3);
-    expect(layer.nodeDefault?.shape).toBe('rectangle');
-    expect(layer.nodeDefault?.padding).toBe(0);
-    expect(layer.nodeDefault?.strokeWidth).toBe(0);
-    expect(layer.nodeDefault?.fill).toBe(sharedCategorical[0]);
+    expect(layer.defaults?.node?.shape).toBe('rectangle');
+    expect(layer.defaults?.node?.layout?.padding).toBe(0);
+    expect(layer.defaults?.node?.style?.strokeWidth).toBe(0);
+    expect(layer.defaults?.node?.style?.fill).toBe(sharedCategorical[0]);
     // 每个 node 裸（只有 type/position/minimumSize，无 shape）
     expect(layer.children.every(c => (c as IRNode).shape === undefined)).toBe(true);
   });
@@ -739,8 +748,8 @@ describe('lowerPlots interval/bar (contract)', () => {
     // 无 guides：两 mark → 两层 mark scope
     const outer = expandOf(spec, { sales: SALES }, opts);
     expect(outer.children).toHaveLength(2);
-    expect((outer.children[0] as IRScope).nodeDefault?.shape).toBe('rectangle'); // interval 层
-    expect((outer.children[1] as IRScope).nodeDefault?.shape).toBe('circle'); // point 层
+    expect((outer.children[0] as IRScope).defaults?.node?.shape).toBe('rectangle'); // interval 层
+    expect((outer.children[1] as IRScope).defaults?.node?.shape).toBe('circle'); // point 层
   });
 });
 
@@ -780,11 +789,11 @@ describe('lowerPlots color (contract)', () => {
     // 2 类别 → 2 子 Scope（Asia 先于 Europe，按数据序）
     expect(layer.children).toHaveLength(2);
     const asia = layer.children[0] as IRScope;
-    expect(asia.nodeDefault?.shape).toBe('circle');
-    expect(asia.nodeDefault?.fill).toBe('#aa');
+    expect(asia.defaults?.node?.shape).toBe('circle');
+    expect(asia.defaults?.node?.style?.fill).toBe('#aa');
     expect(asia.children).toHaveLength(2);
     const europe = layer.children[1] as IRScope;
-    expect(europe.nodeDefault?.fill).toBe('#bb');
+    expect(europe.defaults?.node?.style?.fill).toBe('#bb');
     expect(europe.children).toHaveLength(1);
   });
 
@@ -798,8 +807,8 @@ describe('lowerPlots color (contract)', () => {
       { c: COUNTRIES },
       opts,
     );
-    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe(sharedCategorical[0]);
-    expect((layer.children[1] as IRScope).nodeDefault?.fill).toBe(sharedCategorical[1]);
+    expect((layer.children[0] as IRScope).defaults?.node?.style?.fill).toBe(sharedCategorical[0]);
+    expect((layer.children[1] as IRScope).defaults?.node?.style?.fill).toBe(sharedCategorical[1]);
   });
 
   it('point_color_auto_synthesized_scale', () => {
@@ -823,7 +832,7 @@ describe('lowerPlots color (contract)', () => {
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
     expect(layer.children).toHaveLength(2);
-    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe(sharedCategorical[0]);
+    expect((layer.children[0] as IRScope).defaults?.node?.style?.fill).toBe(sharedCategorical[0]);
   });
 
   it('point_color_constant_single_subscope', () => {
@@ -846,7 +855,7 @@ describe('lowerPlots color (contract)', () => {
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
     expect(layer.children).toHaveLength(1);
-    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe('#333');
+    expect((layer.children[0] as IRScope).defaults?.node?.style?.fill).toBe('#333');
     expect((layer.children[0] as IRScope).children).toHaveLength(3);
   });
 
@@ -885,7 +894,7 @@ describe('lowerPlots color (contract)', () => {
         },
       ],
     });
-    expect(firstLayer(spec, { c: COUNTRIES }, opts).pathDefault?.stroke).toBe('tomato');
+    expect(firstLayer(spec, { c: COUNTRIES }, opts).defaults?.path?.style?.stroke).toBe('tomato');
   });
 
   it('bar_color_groups_into_subscopes', () => {
@@ -908,12 +917,12 @@ describe('lowerPlots color (contract)', () => {
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
     expect(layer.children).toHaveLength(2);
-    expect((layer.children[0] as IRScope).nodeDefault?.shape).toBe('rectangle');
+    expect((layer.children[0] as IRScope).defaults?.node?.shape).toBe('rectangle');
   });
 
   it('uncolored_point_keeps_single_scope', () => {
     // No color channel keeps the mark in one scope with node defaults.
-    expect(firstLayer(pointSpec(), { sales: SALES }, opts).nodeDefault?.shape).toBe('circle');
+    expect(firstLayer(pointSpec(), { sales: SALES }, opts).defaults?.node?.shape).toBe('circle');
   });
 });
 
@@ -938,8 +947,8 @@ describe('lowerPlots mark paint', () => {
       ],
     });
     const layer = firstLayer(spec, { sales: SALES }, opts);
-    expect(layer.nodeDefault?.fill).toEqual(paintGradient);
-    expect(layer.nodeDefault?.stroke).toEqual(paintGradient);
+    expect(layer.defaults?.node?.style?.fill).toEqual(paintGradient);
+    expect(layer.defaults?.node?.style?.stroke).toEqual(paintGradient);
 
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
@@ -962,13 +971,13 @@ describe('lowerPlots mark paint', () => {
         {
           type: 'path',
           order: 'month',
-          stroke: { kind: 'constant', value: paintGradient },
           encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
+          stroke: { kind: 'constant', value: paintGradient },
         },
       ],
     });
     const layer = firstLayer(spec, { sales: SALES }, opts);
-    expect(layer.pathDefault?.stroke).toEqual(paintGradient);
+    expect(layer.defaults?.path?.style?.stroke).toEqual(paintGradient);
 
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
@@ -997,8 +1006,8 @@ describe('lowerPlots mark paint', () => {
       ],
     });
     const layer = firstLayer(spec, { sales: SALES }, opts);
-    expect(layer.nodeDefault?.fill).toEqual(paintGradient);
-    expect(layer.nodeDefault?.stroke).toEqual(paintGradient);
+    expect(layer.defaults?.node?.style?.fill).toEqual(paintGradient);
+    expect(layer.defaults?.node?.style?.stroke).toEqual(paintGradient);
 
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
@@ -1022,15 +1031,15 @@ describe('lowerPlots mark paint', () => {
           type: 'path',
           order: 'month',
           closure: { kind: 'baseline' },
+          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
           fill: { kind: 'constant', value: paintGradient },
           stroke: { kind: 'constant', value: paintGradient },
-          encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
         },
       ],
     });
     const layer = firstLayer(spec, { sales: SALES }, opts);
-    expect(layer.pathDefault?.fill).toEqual(paintGradient);
-    expect(layer.pathDefault?.stroke).toEqual(paintGradient);
+    expect(layer.defaults?.path?.style?.fill).toEqual(paintGradient);
+    expect(layer.defaults?.path?.style?.stroke).toEqual(paintGradient);
 
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
@@ -1060,8 +1069,8 @@ describe('lowerPlots mark paint', () => {
       ],
     });
     const layer = firstLayer(spec, { sales: SALES }, opts);
-    expect(layer.nodeDefault?.fill).toEqual(paintGradient);
-    expect(layer.nodeDefault?.stroke).toEqual(paintGradient);
+    expect(layer.defaults?.node?.style?.fill).toEqual(paintGradient);
+    expect(layer.defaults?.node?.style?.stroke).toEqual(paintGradient);
 
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
@@ -1204,8 +1213,8 @@ describe('lowerPlots relation (contract)', () => {
     expect(layer.children).toHaveLength(2);
     const [seriesX, seriesY] = layer.children as Array<IRScope>;
     expect(seriesX.type).toBe('scope');
-    expect((seriesX.children[0] as IRPath).stroke).toBe('#aa');
-    expect((seriesY.children[0] as IRPath).stroke).toBe('#bb');
+    expect((seriesX.children[0] as IRPath).style?.stroke).toBe('#aa');
+    expect((seriesY.children[0] as IRPath).style?.stroke).toBe('#bb');
   });
 
   it('series_omitted_single_bar_layer', () => {
@@ -1222,7 +1231,7 @@ describe('lowerPlots relation (contract)', () => {
       marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     });
     const layer = firstLayer(spec, { s: SALES2 }, opts);
-    expect(layer.nodeDefault?.shape).toBe('rectangle');
+    expect(layer.defaults?.node?.shape).toBe('rectangle');
   });
 
   it('stacked_bar_compiles_to_scene', () => {

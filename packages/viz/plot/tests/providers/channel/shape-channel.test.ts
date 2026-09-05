@@ -164,8 +164,6 @@ describe('shape channel 类别映射', () => {
       { x: 1, y: 1, g: 'B', p: 4 },
     ];
     const nodes = collectNodes(firstLayer(spec, { d: data }));
-    expect(
-      nodes.every(n => shapeOf(n) !== undefined && (n as { minimumSize?: number }).minimumSize !== undefined),
-    ).toBe(true);
+    expect(nodes.every(n => shapeOf(n) !== undefined && n.layout?.minimumSize !== undefined)).toBe(true);
   });
 });

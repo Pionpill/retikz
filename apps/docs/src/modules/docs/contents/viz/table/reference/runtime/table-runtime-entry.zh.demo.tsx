@@ -19,13 +19,9 @@ const renderMobileNode = (node: MobileFlowNode) => (
     key={node.id}
     id={node.id}
     position={node.position}
-    minimumSize={{ width: node.width, height: 48 }}
-    stroke={node.color}
-    fill={node.color}
-    fillOpacity={0.08}
     cornerRadius={4}
-    align="middle"
-    lineHeight={15}
+    style={{ stroke: node.color, fill: node.color, fillOpacity: 0.08 }}
+    layout={{ minimumSize: { width: node.width, height: 48 }, align: 'middle', lineHeight: 15 }}
   >
     <Text font={{ size: 13, weight: 'bold' }}>{node.title}</Text>
     <Text fill="gray" font={{ size: 11 }}>
@@ -42,13 +38,9 @@ const Demo: FC = () => (
         <Node
           id="react"
           position={[-300, -76]}
-          minimumSize={{ width: 150, height: 52 }}
-          stroke="dimgray"
-          fill="dimgray"
-          fillOpacity={0.08}
           cornerRadius={4}
-          align="middle"
-          lineHeight={16}
+          style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+          layout={{ minimumSize: { width: 150, height: 52 }, align: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>React standalone</Text>
           <Text fill="gray" font={{ size: 12 }}>
@@ -58,13 +50,9 @@ const Demo: FC = () => (
         <Node
           id="vanilla"
           position={[-300, 0]}
-          minimumSize={{ width: 150, height: 52 }}
-          stroke="dimgray"
-          fill="dimgray"
-          fillOpacity={0.08}
           cornerRadius={4}
-          align="middle"
-          lineHeight={16}
+          style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+          layout={{ minimumSize: { width: 150, height: 52 }, align: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>Vanilla / direct</Text>
           <Text fill="gray" font={{ size: 12 }}>
@@ -74,13 +62,9 @@ const Demo: FC = () => (
         <Node
           id="embedded"
           position={[-300, 76]}
-          minimumSize={{ width: 150, height: 52 }}
-          stroke="dimgray"
-          fill="dimgray"
-          fillOpacity={0.08}
           cornerRadius={4}
-          align="middle"
-          lineHeight={16}
+          style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+          layout={{ minimumSize: { width: 150, height: 52 }, align: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>Embedded host</Text>
           <Text fill="gray" font={{ size: 12 }}>
@@ -93,13 +77,9 @@ const Demo: FC = () => (
           <Node
             id="runtime-input"
             position={[-105, 0]}
-            minimumSize={{ width: 142, height: 52 }}
-            stroke="darkorange"
-            fill="darkorange"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={16}
+            style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 142, height: 52 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>Table runtime</Text>
             <Text fill="gray" font={{ size: 12 }}>
@@ -109,13 +89,9 @@ const Demo: FC = () => (
           <Node
             id="table-composite"
             position={[62, 0]}
-            minimumSize={{ width: 142, height: 52 }}
-            stroke="darkorange"
-            fill="darkorange"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={16}
+            style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 142, height: 52 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>table.table</Text>
             <Text fill="gray" font={{ size: 12 }}>
@@ -127,13 +103,9 @@ const Demo: FC = () => (
         <Node
           id="core-compile"
           position={[218, 0]}
-          minimumSize={{ width: 118, height: 52 }}
-          stroke="dodgerblue"
-          fill="dodgerblue"
-          fillOpacity={0.08}
           cornerRadius={4}
-          align="middle"
-          lineHeight={16}
+          style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+          layout={{ minimumSize: { width: 118, height: 52 }, align: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>Core compile</Text>
           <Text fill="gray" font={{ size: 12 }}>
@@ -144,13 +116,9 @@ const Demo: FC = () => (
         <Node
           id="standalone-output"
           position={[352, -46]}
-          minimumSize={{ width: 142, height: 52 }}
-          stroke="dodgerblue"
-          fill="dodgerblue"
-          fillOpacity={0.08}
           cornerRadius={4}
-          align="middle"
-          lineHeight={16}
+          style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+          layout={{ minimumSize: { width: 142, height: 52 }, align: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>Standalone 输出</Text>
           <Text fill="gray" font={{ size: 12 }}>
@@ -160,13 +128,9 @@ const Demo: FC = () => (
         <Node
           id="embedded-output"
           position={[352, 46]}
-          minimumSize={{ width: 142, height: 52 }}
-          stroke="dodgerblue"
-          fill="dodgerblue"
-          fillOpacity={0.08}
           cornerRadius={4}
-          align="middle"
-          lineHeight={16}
+          style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+          layout={{ minimumSize: { width: 142, height: 52 }, align: 'middle', lineHeight: 16 }}
         >
           <Text font={{ size: 14, weight: 'bold' }}>宿主输出</Text>
           <Text fill="gray" font={{ size: 12 }}>
@@ -176,7 +140,7 @@ const Demo: FC = () => (
 
         <Draw way={['react', 'runtime-input']} arrow="->" />
         <Draw way={['vanilla', 'runtime-input']} arrow="->" />
-        <Draw way={['embedded', 'runtime-input']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+        <Draw way={['embedded', 'runtime-input']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
         <Draw way={['runtime-input', 'table-composite']} arrow="->" />
         <Draw way={['table-composite', 'core-compile']} arrow="->" />
         <Draw way={['core-compile', 'standalone-output']} arrow="->" />
@@ -258,7 +222,11 @@ const Demo: FC = () => (
 
         <Draw way={['mobile-react', 'mobile-runtime-input']} arrow="->" />
         <Draw way={['mobile-vanilla', 'mobile-runtime-input']} arrow="->" />
-        <Draw way={['mobile-embedded', 'mobile-runtime-input']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+        <Draw
+          way={['mobile-embedded', 'mobile-runtime-input']}
+          arrow="->"
+          style={{ stroke: 'gray', dashPattern: [4, 3] }}
+        />
         <Draw way={['mobile-runtime-input', 'mobile-table-composite']} arrow="->" />
         <Draw way={['mobile-table-composite', 'mobile-core-compile']} arrow="->" />
         <Draw way={['mobile-core-compile', 'mobile-standalone-output']} arrow="->" />

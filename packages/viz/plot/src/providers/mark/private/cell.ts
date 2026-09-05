@@ -10,20 +10,28 @@ import { colorGroupedScope, constantNodeStyleOverrides, DEFAULT_FILL } from '../
 /** 柱 node 样式（rectangle + padding0 + 无描边，使 minimumSize 即真实柱尺寸） */
 const barStyle = (fill: MarkPaint, stroke: MarkPaint | undefined): IRNodeDefault => ({
   shape: 'rectangle',
-  padding: 0,
-  strokeWidth: stroke === undefined ? 0 : 1,
-  ...(typeof fill === 'string' ? { color: fill } : {}),
-  fill,
-  ...(stroke !== undefined ? { stroke } : {}),
+  style: {
+    strokeWidth: stroke === undefined ? 0 : 1,
+    ...(typeof fill === 'string' ? { color: fill } : {}),
+    fill,
+    ...(stroke !== undefined ? { stroke } : {}),
+  },
+  layout: {
+    padding: 0,
+  },
 });
 
 /** sector / contour node 样式（shape 自带几何，padding0 + 无描边，纯填充） */
 const shapeStyle = (fill: MarkPaint, stroke: MarkPaint | undefined): IRNodeDefault => ({
-  padding: 0,
-  strokeWidth: stroke === undefined ? 0 : 1,
-  ...(typeof fill === 'string' ? { color: fill } : {}),
-  fill,
-  ...(stroke !== undefined ? { stroke } : {}),
+  style: {
+    strokeWidth: stroke === undefined ? 0 : 1,
+    ...(typeof fill === 'string' ? { color: fill } : {}),
+    fill,
+    ...(stroke !== undefined ? { stroke } : {}),
+  },
+  layout: {
+    padding: 0,
+  },
 });
 
 /** 某 geometry kind 对应的 node 样式工厂（rect → 矩形 barStyle；sector / contour → shapeStyle） */
@@ -32,7 +40,10 @@ export const styleForGeometry = (
   mark: IRPlotMark,
 ): ((fill: MarkPaint, stroke?: MarkPaint) => IRNodeDefault) => {
   const base = kind === 'rect' ? barStyle : shapeStyle;
-  return (fill, stroke) => ({ ...base(fill, stroke), ...constantNodeStyleOverrides(mark) });
+  return (fill, stroke) => {
+    const defaults = base(fill, stroke);
+    return { ...defaults, style: { ...defaults.style, ...constantNodeStyleOverrides(mark).style } };
+  };
 };
 
 /** 把一组「已就位 node + 其颜色」收成图层（有 color 分子 Scope、无则单层 nodeDefault；样式按 geometry kind 选） */
@@ -47,7 +58,11 @@ export const cellLayer = (
   const styleFor = styleForGeometry(kind, mark);
   return colorOf
     ? colorGroupedScope(placed, fill => styleFor(fill, defaultStroke))
-    : { type: 'scope', nodeDefault: styleFor(defaultFill, defaultStroke), children: placed.map(p => p.node) };
+    : {
+        type: 'scope',
+        children: placed.map(p => p.node),
+        defaults: { node: styleFor(defaultFill, defaultStroke) },
+      };
 };
 
 /**
@@ -60,7 +75,7 @@ export const cellGeometryNode = (geometry: CellGeometry): IRNode | null => {
     return {
       type: 'node',
       position: geometry.position,
-      minimumSize: { width: geometry.width, height: geometry.height },
+      layout: { minimumSize: { width: geometry.width, height: geometry.height } },
     };
   }
   if (geometry.kind === 'sector') {

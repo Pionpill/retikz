@@ -149,7 +149,7 @@ describe('renderTable', () => {
 
     expect(baseline.manifest).toMatchObject({
       style: { themeMode: 'light' },
-      cells: [{ appearance: { background: { fill: '#ffffff' }, content: { color: '#18181b' } } }],
+      cells: [{ appearance: { background: { fill: '#ffffff' }, content: {style: {color: '#18181b'}} } }],
     });
     expect(clean.manifest).toMatchObject({
       style: { style: 'clean', themeMode: 'light' },

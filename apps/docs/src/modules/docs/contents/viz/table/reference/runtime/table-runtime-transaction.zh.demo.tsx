@@ -19,13 +19,9 @@ const renderMobileNode = (node: MobileFlowNode) => (
     key={node.id}
     id={node.id}
     position={node.position}
-    minimumSize={{ width: node.width, height: 48 }}
-    stroke={node.color}
-    fill={node.color}
-    fillOpacity={0.08}
     cornerRadius={4}
-    align="middle"
-    lineHeight={15}
+    style={{ stroke: node.color, fill: node.color, fillOpacity: 0.08 }}
+    layout={{ minimumSize: { width: node.width, height: 48 }, align: 'middle', lineHeight: 15 }}
   >
     <Text font={{ size: 13, weight: 'bold' }}>{node.title}</Text>
     <Text fill="gray" font={{ size: 11 }}>
@@ -44,13 +40,9 @@ const Demo: FC = () => (
           <Node
             id="canonical"
             position={[-278, 0]}
-            minimumSize={{ width: 126, height: 54 }}
-            stroke="darkorange"
-            fill="darkorange"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={16}
+            style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 126, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>Canonical model</Text>
             <Text fill="gray" font={{ size: 11 }}>
@@ -60,13 +52,9 @@ const Demo: FC = () => (
           <Node
             id="intrinsic"
             position={[-140, 0]}
-            minimumSize={{ width: 120, height: 54 }}
-            stroke="dodgerblue"
-            fill="dodgerblue"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={16}
+            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 120, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>Natural probes</Text>
             <Text fill="gray" font={{ size: 11 }}>
@@ -76,13 +64,9 @@ const Demo: FC = () => (
           <Node
             id="columns"
             position={[0, 0]}
-            minimumSize={{ width: 128, height: 54 }}
-            stroke="dodgerblue"
-            fill="dodgerblue"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={16}
+            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 128, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>列求解 + wrap</Text>
             <Text fill="gray" font={{ size: 11 }}>
@@ -92,13 +76,9 @@ const Demo: FC = () => (
           <Node
             id="rows"
             position={[145, 0]}
-            minimumSize={{ width: 138, height: 54 }}
-            stroke="dodgerblue"
-            fill="dodgerblue"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={16}
+            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 138, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>行求解 + 放置</Text>
             <Text fill="gray" font={{ size: 11 }}>
@@ -108,13 +88,9 @@ const Demo: FC = () => (
           <Node
             id="publish"
             position={[295, 0]}
-            minimumSize={{ width: 132, height: 54 }}
-            stroke="dodgerblue"
-            fill="dodgerblue"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={16}
+            style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 132, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>Replay + publish</Text>
             <Text fill="gray" font={{ size: 11 }}>
@@ -126,13 +102,9 @@ const Demo: FC = () => (
         <Node
           id="runtime-inputs"
           position={[-278, 98]}
-          minimumSize={{ width: 138, height: 46 }}
-          stroke="gray"
-          fill="gray"
-          fillOpacity={0.06}
           cornerRadius={4}
-          align="middle"
-          lineHeight={15}
+          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+          layout={{ minimumSize: { width: 138, height: 46 }, align: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>运行时输入</Text>
           <Text fill="gray" font={{ size: 11 }}>
@@ -142,13 +114,9 @@ const Demo: FC = () => (
         <Node
           id="parent-constraint"
           position={[0, 98]}
-          minimumSize={{ width: 138, height: 46 }}
-          stroke="gray"
-          fill="gray"
-          fillOpacity={0.06}
           cornerRadius={4}
-          align="middle"
-          lineHeight={15}
+          style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+          layout={{ minimumSize: { width: 138, height: 46 }, align: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>父级 x proposal</Text>
           <Text fill="gray" font={{ size: 11 }}>
@@ -158,13 +126,9 @@ const Demo: FC = () => (
         <Node
           id="scene-output"
           position={[230, 98]}
-          minimumSize={{ width: 104, height: 46 }}
-          stroke="dimgray"
-          fill="dimgray"
-          fillOpacity={0.08}
           cornerRadius={4}
-          align="middle"
-          lineHeight={15}
+          style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+          layout={{ minimumSize: { width: 104, height: 46 }, align: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>Scene</Text>
           <Text fill="gray" font={{ size: 11 }}>
@@ -174,13 +138,9 @@ const Demo: FC = () => (
         <Node
           id="manifest-output"
           position={[355, 98]}
-          minimumSize={{ width: 128, height: 46 }}
-          stroke="dimgray"
-          fill="dimgray"
-          fillOpacity={0.08}
           cornerRadius={4}
-          align="middle"
-          lineHeight={15}
+          style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+          layout={{ minimumSize: { width: 128, height: 46 }, align: 'middle', lineHeight: 15 }}
         >
           <Text font={{ size: 13, weight: 'bold' }}>TableLayoutManifest</Text>
           <Text fill="gray" font={{ size: 11 }}>
@@ -192,8 +152,8 @@ const Demo: FC = () => (
         <Draw way={['intrinsic', 'columns']} arrow="->" />
         <Draw way={['columns', 'rows']} arrow="->" />
         <Draw way={['rows', 'publish']} arrow="->" />
-        <Draw way={['runtime-inputs', 'canonical']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-        <Draw way={['parent-constraint', 'columns']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+        <Draw way={['runtime-inputs', 'canonical']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+        <Draw way={['parent-constraint', 'columns']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
         <Draw way={['publish', 'scene-output']} arrow="->" />
         <Draw way={['publish', 'manifest-output']} arrow="->" />
       </Layout>
@@ -282,8 +242,16 @@ const Demo: FC = () => (
         <Draw way={['mobile-intrinsic', 'mobile-columns']} arrow="->" />
         <Draw way={['mobile-columns', 'mobile-rows']} arrow="->" />
         <Draw way={['mobile-rows', 'mobile-publish']} arrow="->" />
-        <Draw way={['mobile-runtime-inputs', 'mobile-canonical']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-        <Draw way={['mobile-parent-constraint', 'mobile-columns']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+        <Draw
+          way={['mobile-runtime-inputs', 'mobile-canonical']}
+          arrow="->"
+          style={{ stroke: 'gray', dashPattern: [4, 3] }}
+        />
+        <Draw
+          way={['mobile-parent-constraint', 'mobile-columns']}
+          arrow="->"
+          style={{ stroke: 'gray', dashPattern: [4, 3] }}
+        />
         <Draw way={['mobile-publish', 'mobile-scene-output']} arrow="->" />
         <Draw way={['mobile-publish', 'mobile-manifest-output']} arrow="->" />
       </Layout>

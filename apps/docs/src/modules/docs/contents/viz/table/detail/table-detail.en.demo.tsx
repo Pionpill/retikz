@@ -34,7 +34,11 @@ const ScoreTable: FC<ScoreTableProps> = props => {
       rules={[
         {
           selector: { fields: ['score'], value: { kind: 'compare', operator: 'lt', value: 0 } },
-          appearance: { content: { color: 'crimson' } },
+          appearance: {
+            content: {
+              style: { color: 'crimson' },
+            },
+          },
         },
       ]}
       encodings={[

@@ -11,13 +11,9 @@ const Demo: FC = () => (
     <Node
       id="data"
       position={[-215, 0]}
-      minimumSize={{ width: 106, height: 58 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={17}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 106, height: 58 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Data layer</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -27,13 +23,9 @@ const Demo: FC = () => (
     <Node
       id="root"
       position={[-80, 0]}
-      minimumSize={{ width: 120, height: 58 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={17}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 120, height: 58 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Root transform</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -43,13 +35,9 @@ const Demo: FC = () => (
     <Node
       id="shared"
       position={[60, 0]}
-      minimumSize={{ width: 106, height: 58 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={17}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 106, height: 58 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Shared rows</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -59,13 +47,9 @@ const Demo: FC = () => (
     <Node
       id="mark-a"
       position={[205, -63]}
-      minimumSize={{ width: 132, height: 58 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={17}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 132, height: 58 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Mark A data view</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -75,13 +59,9 @@ const Demo: FC = () => (
     <Node
       id="mark-b"
       position={[205, 63]}
-      minimumSize={{ width: 132, height: 58 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={17}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 132, height: 58 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Mark B data view</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -89,8 +69,8 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <Draw way={['data', 'root']} arrow="->" stroke="gray" />
-    <Draw way={['root', 'shared']} arrow="->" stroke="gray" />
+    <Draw way={['data', 'root']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['root', 'shared']} arrow="->" style={{ stroke: 'gray' }} />
     <Draw
       way={[
         'shared',
@@ -107,9 +87,9 @@ const Demo: FC = () => (
         'mark-a',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
-    <Draw way={['shared', 'mark-b']} arrow="->" stroke="gray" />
+    <Draw way={['shared', 'mark-b']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

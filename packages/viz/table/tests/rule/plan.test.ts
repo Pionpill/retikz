@@ -37,10 +37,17 @@ const rulesOf = (): Array<IRTableCellRule> => [
     appearance: {
       background: { fill: '#ff0000', fillOpacity: 0.5 },
       content: {
-        color: '#880000',
-        nodeDefault: { font: { family: 'serif', weight: 400 }, padding: 2 },
-        pathDefault: { dashPattern: [2, 1] },
-        arrowDefault: { start: { shape: 'triangle' } },
+        style: { color: '#880000' },
+        defaults: {
+          node: {
+            style: { font: { family: 'serif', weight: 400 } },
+            layout: { padding: 2 },
+          },
+          path: {
+            style: { dashPattern: [2, 1] },
+          },
+          arrow: { start: { shape: 'triangle' } },
+        },
       },
       borders: {
         top: { kind: 'line', stroke: '#ff0000', width: 2 },
@@ -54,10 +61,17 @@ const rulesOf = (): Array<IRTableCellRule> => [
     appearance: {
       background: { fill: '#0000ff' },
       content: {
-        resetStyle: ['node'],
-        nodeDefault: { font: { weight: 700 }, padding: { left: 4 } },
-        pathDefault: { dashPattern: [5] },
-        arrowDefault: { start: { shape: 'stealth' } },
+        defaults: {
+          reset: ['node'],
+          node: {
+            style: { font: { weight: 700 } },
+            layout: { padding: { left: 4 } },
+          },
+          path: {
+            style: { dashPattern: [5] },
+          },
+          arrow: { start: { shape: 'stealth' } },
+        },
       },
       borders: {
         bottom: { kind: 'line', stroke: '#00ff00', width: 3 },
@@ -80,11 +94,18 @@ describe('resolved Table Cell plans', () => {
       appearance: {
         background: { fill: '#0000ff' },
         content: {
-          color: '#880000',
-          resetStyle: ['node'],
-          nodeDefault: { font: { family: 'serif', weight: 700 }, padding: { left: 4 } },
-          pathDefault: { dashPattern: [5] },
-          arrowDefault: { start: { shape: 'stealth' } },
+          style: { color: '#880000' },
+          defaults: {
+            reset: ['node'],
+            node: {
+              style: { font: { family: 'serif', weight: 700 } },
+              layout: { padding: { left: 4 } },
+            },
+            path: {
+              style: { dashPattern: [5] },
+            },
+            arrow: { start: { shape: 'stealth' } },
+          },
         },
         borders: {
           top: { kind: 'line', stroke: '#ff0000', width: 2 },
@@ -98,13 +119,13 @@ describe('resolved Table Cell plans', () => {
         matchedRuleIndices: [0, 1],
         appearance: {
           '/background/fill': { kind: 'rootRule', ruleIndex: 1 },
-          '/content/color': { kind: 'rootRule', ruleIndex: 0 },
-          '/content/resetStyle': { kind: 'rootRule', ruleIndex: 1 },
-          '/content/nodeDefault/font/family': { kind: 'rootRule', ruleIndex: 0 },
-          '/content/nodeDefault/font/weight': { kind: 'rootRule', ruleIndex: 1 },
-          '/content/nodeDefault/padding': { kind: 'rootRule', ruleIndex: 1 },
-          '/content/pathDefault/dashPattern': { kind: 'rootRule', ruleIndex: 1 },
-          '/content/arrowDefault/start': { kind: 'rootRule', ruleIndex: 1 },
+          '/content/style/color': { kind: 'rootRule', ruleIndex: 0 },
+          '/content/defaults/reset': { kind: 'rootRule', ruleIndex: 1 },
+          '/content/defaults/node/style/font/family': { kind: 'rootRule', ruleIndex: 0 },
+          '/content/defaults/node/style/font/weight': { kind: 'rootRule', ruleIndex: 1 },
+          '/content/defaults/node/layout/padding': { kind: 'rootRule', ruleIndex: 1 },
+          '/content/defaults/path/style/dashPattern': { kind: 'rootRule', ruleIndex: 1 },
+          '/content/defaults/arrow/start': { kind: 'rootRule', ruleIndex: 1 },
           '/borders/top': { kind: 'rootRule', ruleIndex: 0 },
           '/borders/bottom': { kind: 'rootRule', ruleIndex: 1 },
           '/borders/left': { kind: 'rootRule', ruleIndex: 1 },
@@ -118,18 +139,26 @@ describe('resolved Table Cell plans', () => {
   it('does not create a winner trace for an explicitly undefined atomic appearance field', () => {
     const rule = TableCellRuleSchema.parse({
       selector: { cellIds: ['value'] },
-      appearance: { content: { fill: undefined } },
+      appearance: { content: { style: { fill: undefined } } },
     });
     const value = resolvePlans(modelOf(), [rule])[0];
 
     expect(value.appearance.content).not.toHaveProperty('fill');
-    expect(value.trace.appearance).not.toHaveProperty('/content/fill');
+    expect(value.trace.appearance).not.toHaveProperty('/content/style/fill');
   });
 
   it('treats an explicitly undefined structured appearance field as omitted', () => {
     const rule = TableCellRuleSchema.parse({
       selector: { cellIds: ['value'] },
-      appearance: { content: { nodeDefault: { font: undefined } } },
+      appearance: {
+        content: {
+          defaults: {
+            node: {
+              style: { font: undefined },
+            },
+          },
+        },
+      },
     });
 
     expect(() => resolvePlans(modelOf(), [rule])).not.toThrow();

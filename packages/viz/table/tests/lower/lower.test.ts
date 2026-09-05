@@ -145,11 +145,11 @@ describe('Table layout-aware lowering', () => {
 
       expect(result.manifest.cells[0].appearance).toMatchObject({
         background: { fill: 0.4 },
-        content: { color: '#993333' },
+        content: { style: { color: '#993333' } },
       });
       expect(result.manifest.cells[1].appearance).toMatchObject({
         background: { fill: 0.2 },
-        content: { color: '#336699' },
+        content: { style: { color: '#336699' } },
       });
       expect(headerWinner).toMatchObject({
         kind: 'line',

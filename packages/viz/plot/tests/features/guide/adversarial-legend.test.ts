@@ -592,9 +592,9 @@ describe('[adversarial] legend — 各 scale 形态退化 / 数值稳定（攻�
     const legend = legendScopes(outer)[0];
     expect(legend).toBeDefined();
     for (const swatch of swatchNodesOf(legend)) {
-      if (swatch.fillOpacity !== undefined) {
-        expect(swatch.fillOpacity).toBeGreaterThanOrEqual(0);
-        expect(swatch.fillOpacity).toBeLessThanOrEqual(1);
+      if (swatch.style?.fillOpacity !== undefined) {
+        expect(swatch.style.fillOpacity).toBeGreaterThanOrEqual(0);
+        expect(swatch.style.fillOpacity).toBeLessThanOrEqual(1);
       }
     }
   });
@@ -639,7 +639,7 @@ describe('[adversarial] legend — formatter 极值（攻击面 10）', () => {
     expect(hasNonJsonValue(legend)).toBe(false);
     // ramp 矩形 Node 的 linearGradient stops offset 必须落 [0,1]
     for (const swatch of swatchNodesOf(legend)) {
-      const fill = swatch.fill;
+      const fill = swatch.style?.fill;
       if (fill && typeof fill === 'object' && 'stops' in fill) {
         for (const stop of (fill as { stops: Array<{ offset: number }> }).stops) {
           expect(stop.offset).toBeGreaterThanOrEqual(0);

@@ -72,8 +72,8 @@ export const colorGroupedScope = (
   }
   const children: Array<IRChild> = [...groups].map(([fill, nodes]) => ({
     type: 'scope',
-    nodeDefault: styleFor(fill),
     children: nodes,
+    defaults: { node: styleFor(fill) },
   }));
   return { type: 'scope', children };
 };
@@ -87,10 +87,12 @@ export const constantNodeStyleOverrides = (mark: IRPlotMark): Partial<IRNodeDefa
     'fillOpacity' in mark && mark.fillOpacity?.kind === 'constant' ? mark.fillOpacity.value : undefined;
   const opacity = 'opacity' in mark && mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
   return {
-    ...(stroke !== undefined ? { stroke } : {}),
-    ...(strokeWidth !== undefined ? { strokeWidth } : {}),
-    ...(fillOpacity !== undefined ? { fillOpacity } : {}),
-    ...(opacity !== undefined ? { opacity } : {}),
+    style: {
+      ...(stroke === undefined ? {} : { stroke }),
+      ...(strokeWidth === undefined ? {} : { strokeWidth }),
+      ...(fillOpacity === undefined ? {} : { fillOpacity }),
+      ...(opacity === undefined ? {} : { opacity }),
+    },
   };
 };
 

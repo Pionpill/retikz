@@ -1280,6 +1280,13 @@ export const vizV01: Release = {
           },
           items: [
             {
+              label: { zh: 'BREAKING：内容 Scope 语义分组', en: 'BREAKING: grouped content Scope fields' },
+              content: {
+                zh: 'Cell appearance.content 统一使用 style 与 defaults，Node/Path 默认值进一步沿用 Core 分组，winner trace 同步指向分组后的叶子路径；背景、边框和 Table Theme token 保持原语义。',
+                en: 'Cell appearance.content now uses style and defaults, with grouped Core Node/Path defaults and matching winner-trace leaf paths. Backgrounds, borders, and Table Theme tokens retain their semantics.',
+              },
+            },
+            {
               label: { zh: 'Formatter 与 Presentation 分层', en: 'Formatter and Presentation layers' },
               content: {
                 zh: 'value Cell 先通过可注册 formatter 得到显示 scalar，再把 `rawValue`、`value`、`context` 与最终 `appearance` 交给 Presentation；content Cell fail-loud 拒绝 formatter/presentation。',

@@ -5,23 +5,14 @@ import { TableCellBordersSchema } from '../border';
 
 export const TableCellBackgroundSchema = strictObject({
   fill: PaintValueSchema.describe('Paint filling the Table Cell box.'),
-  fillOpacity: ScopeSchema.shape.fillOpacity.describe('Cell background fill opacity. Omitted fields use 1 at runtime.'),
+  fillOpacity: ScopeSchema.shape.style
+    .unwrap()
+    .shape.fillOpacity.describe('Cell background fill opacity. Omitted fields use 1 at runtime.'),
 }).describe('Background painted inside a resolved Table Cell box.');
 
-export const TableCellContentStyleSchema = strictObject({
-  color: ScopeSchema.shape.color,
-  fill: ScopeSchema.shape.fill,
-  fillOpacity: ScopeSchema.shape.fillOpacity,
-  stroke: ScopeSchema.shape.stroke,
-  strokeWidth: ScopeSchema.shape.strokeWidth,
-  strokeOpacity: ScopeSchema.shape.strokeOpacity,
-  opacity: ScopeSchema.shape.opacity,
-  nodeDefault: ScopeSchema.shape.nodeDefault,
-  pathDefault: ScopeSchema.shape.pathDefault,
-  labelDefault: ScopeSchema.shape.labelDefault,
-  arrowDefault: ScopeSchema.shape.arrowDefault,
-  resetStyle: ScopeSchema.shape.resetStyle,
-}).describe('Core Scope style defaults applied to Table Cell content before layout.');
+export const TableCellContentStyleSchema = ScopeSchema.pick({ style: true, defaults: true }).describe(
+  'Core Scope style defaults applied to Table Cell content before layout.',
+);
 
 export const TableCellAppearanceSchema = strictObject({
   background: TableCellBackgroundSchema.optional().describe('Optional paint for the resolved Table Cell box.'),

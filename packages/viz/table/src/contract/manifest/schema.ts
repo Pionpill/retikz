@@ -323,7 +323,7 @@ const validateBorderStyleTokenProvenance = (
         )
       : undefined;
   const masterColor =
-    sourceCell?.appearance.content?.color ??
+    sourceCell?.appearance.content?.style?.color ??
     (sourceCell?.location === 'columnHeader'
       ? style.tokens['columnHeader.content.color']
       : style.tokens['cell.content.color']) ??

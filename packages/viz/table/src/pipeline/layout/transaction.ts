@@ -451,7 +451,7 @@ export const resolvePresentedTableTransaction = (
   const manifestStyle = 'style' in manifestTheme ? manifestTheme.style : undefined;
   const tableThemeTokens = input.tableThemeTokens ?? resolveTableThemeTokens(manifestTheme);
   const cellContentMasterColor = (index: number): string =>
-    presented.cells[index].appearance.content?.color ??
+    presented.cells[index].appearance.content?.style?.color ??
     (semantic.cells[index].location === TableCellLocation.ColumnHeader
       ? tableThemeTokens.tokens['columnHeader.content.color']
       : tableThemeTokens.tokens['cell.content.color']) ??

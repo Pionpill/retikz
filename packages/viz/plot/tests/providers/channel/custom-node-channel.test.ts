@@ -49,7 +49,7 @@ const intensityChannel = defineNodeChannel<number>({
     };
   },
   deliver: (node, value) => {
-    node.opacity = value;
+    node.style = { ...node.style, opacity: value };
   },
 });
 
@@ -78,7 +78,7 @@ const categoryColorChannel = defineNodeChannel<string>({
     };
   },
   deliver: (node, value) => {
-    node.fill = value;
+    node.style = { ...node.style, fill: value };
   },
 });
 
@@ -122,7 +122,10 @@ const scopeTintChannel = defineScopeChannel<string>({
     return { value: String(binding.value) };
   },
   deliver: (scope, value) => {
-    scope.nodeDefault = { ...(scope.nodeDefault ?? {}), fill: value };
+    scope.defaults = {
+      ...scope.defaults,
+      node: { ...scope.defaults?.node, style: { ...scope.defaults?.node?.style, fill: value } },
+    };
   },
 });
 
@@ -141,7 +144,7 @@ const lineWeightChannel = definePathChannel<number>({
     };
   },
   deliver: (path, value) => {
-    path.strokeWidth = value;
+    path.style = { ...path.style, strokeWidth: value };
   },
 });
 
@@ -229,7 +232,7 @@ describe('custom node channel registry', () => {
   it('custom_intensity_delivers_to_node_opacity', () => {
     const spec = scatterSpec({ intensity: { field: 'score' } });
     const nodes = nodesOf(firstLayer(spec, { d: rows }, opts([intensityChannel])));
-    const opacities = nodes.map(n => (n as { opacity?: number }).opacity ?? NaN);
+    const opacities = nodes.map(n => n.style?.opacity ?? NaN);
     expect(opacities[0]).toBeCloseTo(0.3, 6);
     expect(opacities[1]).toBeCloseTo(0.65, 6);
     expect(opacities[2]).toBeCloseTo(1, 6);
@@ -239,7 +242,7 @@ describe('custom node channel registry', () => {
   it('unbound_custom_channel_not_applied', () => {
     const spec = scatterSpec();
     const nodes = nodesOf(firstLayer(spec, { d: rows }, opts([intensityChannel])));
-    expect(nodes.every(n => (n as { opacity?: number }).opacity === undefined)).toBe(true);
+    expect(nodes.every(n => n.style?.opacity === undefined)).toBe(true);
   });
 
   // 错误路径：encoding.channels 写了通道名，但没有对应 definition → fail-loud
@@ -307,14 +310,14 @@ describe('custom node channel registry', () => {
       ],
     });
     const nodes = nodesOf(firstLayer(spec, { d: rows }, opts([intensityChannel])));
-    expect(nodes.every(n => (n as { opacity?: number }).opacity !== undefined)).toBe(true);
-    expect(nodes.some(n => (n as { minimumSize?: number }).minimumSize !== undefined)).toBe(true);
+    expect(nodes.every(n => n.style?.opacity !== undefined)).toBe(true);
+    expect(nodes.some(n => n.layout?.minimumSize !== undefined)).toBe(true);
   });
 
   it('custom_scope_channel_delivers_to_layer_node_default', () => {
     const spec = scatterSpec({ scopeTint: { value: '#f66' } });
     const layer = firstLayer(spec, { d: rows }, opts([scopeTintChannel]));
-    expect(layer.nodeDefault?.fill).toBe('#f66');
+    expect(layer.defaults?.node?.style?.fill).toBe('#f66');
   });
 
   it('custom_path_channel_delivers_to_path_stroke_width', () => {
@@ -344,7 +347,7 @@ describe('custom node channel registry', () => {
       },
       opts([lineWeightChannel]),
     );
-    expect(pathsOf(layer)[0]?.strokeWidth).toBe(3);
+    expect(pathsOf(layer)[0]?.style?.strokeWidth).toBe(3);
   });
 
   // 交互：自定义 node 通道也可被 legend guide 引用；schema 不再把 channel 限死在内置 color/size/opacity/shape
@@ -371,7 +374,10 @@ describe('custom node channel registry', () => {
     expect(legend).toBeDefined();
     const ramp = legend
       ? nodesOf(legend).find(
-          node => typeof node.fill === 'object' && 'kind' in node.fill && node.fill.kind === 'linearGradient',
+          node =>
+            typeof node.style?.fill === 'object' &&
+            'kind' in node.style.fill &&
+            node.style.fill.kind === 'linearGradient',
         )
       : undefined;
     expect(ramp).toBeDefined();
@@ -405,7 +411,7 @@ describe('custom node channel registry', () => {
     const fills = legend
       ? nodesOf(legend)
           .filter(node => node.text === undefined)
-          .map(node => node.fill)
+          .map(node => node.style?.fill)
       : [];
     expect(fills).toEqual(['#dc2626', '#2563eb']);
   });
@@ -421,15 +427,15 @@ describe('custom node channel registry', () => {
     });
     const root = expandOf(spec, { d: symbolRows }, opts([symbolLegendChannel]));
     const legend = scopesOf(root).find(scope => scope.id === 'legend.symbolCode');
-    const mark = scopesOf(root).find(scope => scope.nodeDefault?.shape === 'circle');
+    const mark = scopesOf(root).find(scope => scope.defaults?.node?.shape === 'circle');
     const fills = legend
       ? nodesOf(legend)
           .filter(node => node.text === undefined)
-          .map(node => node.fill)
+          .map(node => node.style?.fill)
       : [];
 
-    expect(mark?.nodeDefault?.fill).toBeDefined();
-    expect(fills).toEqual([mark?.nodeDefault?.fill, mark?.nodeDefault?.fill]);
+    expect(mark?.defaults?.node?.style?.fill).toBeDefined();
+    expect(fills).toEqual([mark?.defaults?.node?.style?.fill, mark?.defaults?.node?.style?.fill]);
   });
 
   it('custom_channel_legend_rejects_incompatible_output_kind', () => {
@@ -454,7 +460,7 @@ describe('custom node channel registry', () => {
         };
       },
       deliver: (node, value) => {
-        node.minimumSize = value;
+        node.layout = { ...node.layout, minimumSize: value };
       },
     });
     const spec = PlotSchema.parse({

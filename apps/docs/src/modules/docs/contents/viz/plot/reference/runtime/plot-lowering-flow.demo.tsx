@@ -10,13 +10,9 @@ const Demo: FC = () => (
     <Node
       id="inputs"
       position={[-320, -10]}
-      minimumSize={{ width: 130, height: 58 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={17}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 130, height: 58 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>runtime inputs</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -29,13 +25,9 @@ const Demo: FC = () => (
       <Node
         id="prepare"
         position={[-150, -10]}
-        minimumSize={{ width: 140, height: 58 }}
-        stroke="dimgray"
-        fill="dimgray"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={17}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 140, height: 58 }, align: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>data preparation</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -45,13 +37,9 @@ const Demo: FC = () => (
       <Node
         id="lower-semantics"
         position={[20, -10]}
-        minimumSize={{ width: 150, height: 58 }}
-        stroke="dimgray"
-        fill="dimgray"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={17}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 150, height: 58 }, align: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Plot lowering</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -65,13 +53,9 @@ const Demo: FC = () => (
       <Node
         id="core-ir"
         position={[195, -10]}
-        minimumSize={{ width: 112, height: 58 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={17}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 112, height: 58 }, align: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Core IR</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -81,13 +65,9 @@ const Demo: FC = () => (
       <Node
         id="scene"
         position={[335, -10]}
-        minimumSize={{ width: 112, height: 58 }}
-        stroke="dimgray"
-        fill="dimgray"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={17}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 112, height: 58 }, align: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Scene</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -99,13 +79,9 @@ const Demo: FC = () => (
     <Node
       id="runtime-queries"
       position={[-320, 100]}
-      minimumSize={{ width: 146, height: 50 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 146, height: 50 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>runtime-only queries</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -115,13 +91,9 @@ const Demo: FC = () => (
     <Node
       id="definitions"
       position={[-150, 100]}
-      minimumSize={{ width: 132, height: 50 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 132, height: 50 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Definitions</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -129,12 +101,12 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <Draw way={['inputs', 'prepare']} arrow="->" stroke="gray" />
-    <Draw way={['prepare', 'lower-semantics']} arrow="->" stroke="gray" />
-    <Draw way={['lower-semantics', 'core-ir']} arrow="->" stroke="gray" />
-    <Draw way={['core-ir', 'scene']} arrow="->" stroke="gray" />
-    <Draw way={['definitions', 'prepare']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['inputs', 'runtime-queries']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['inputs', 'prepare']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['prepare', 'lower-semantics']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['lower-semantics', 'core-ir']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['core-ir', 'scene']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['definitions', 'prepare']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['inputs', 'runtime-queries']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 

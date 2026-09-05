@@ -78,6 +78,8 @@ These payload schemas describe canonical Structure output. Manual authoring uses
 
 ### TableCellRuleSchema
 
+Cell `appearance.content.style` sets cascading content colors and opacity. `appearance.content.defaults` contains `node`, `path`, `label`, `arrow`, and the `reset` inheritance barrier. Node defaults use `style` / `layout`; Path defaults use `style`. Label and Arrow leaves retain their structure. Fields override independently; empty groups retain inherited values, and `0` and `false` are preserved.
+
 <ZodSchema name="TableCellRuleSchema" />
 
 ### TableCellVisualEncodingSchema

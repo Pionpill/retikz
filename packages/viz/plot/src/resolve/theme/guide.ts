@@ -7,12 +7,18 @@ import { LegendSymbolFit } from '../../schemas';
 import { plotAxisThemeFromTokens } from './mapping';
 
 type GuidePathStyle = Partial<
-  Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
+  Pick<
+    NonNullable<IRPath['style']>,
+    'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'
+  >
 > & {
   drawOpacity?: number;
 };
 type GuideTextStyle = Partial<
-  Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>
+  Pick<
+    NonNullable<IRNode['style']> & NonNullable<IRNode['layout']> & Pick<IRNode, 'rotate'>,
+    'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'
+  >
 >;
 type PlotTypographyStyle = NonNullable<IRPlotTheme['typography']>;
 type AxisTicksToken = NonNullable<IRPlotAxisGuide['ticks']>;

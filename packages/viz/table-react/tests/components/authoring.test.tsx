@@ -451,7 +451,7 @@ describe('Table React composition root integration', () => {
   it('preserves every ManualTable root authoring field in rows and marker modes', () => {
     const root = {
       id: 'manual-root-fields',
-      rules: [{ selector: { locations: ['body' as const] }, appearance: { content: { color: '#b91c1c' } } }],
+      rules: [{ selector: { locations: ['body' as const] }, appearance: { content: {style: {color: '#b91c1c'}} } }],
       encodings: [
         {
           id: 'score-color',

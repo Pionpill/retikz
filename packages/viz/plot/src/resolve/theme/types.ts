@@ -3,7 +3,10 @@ import type { IRNode, IRShapeValue } from '@retikz/core';
 import type { IRPlotLegendGuide, IRPlotTheme } from '../../schemas';
 
 type GuideTextStyle = Partial<
-  Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>
+  Pick<
+    NonNullable<IRNode['style']> & NonNullable<IRNode['layout']> & Pick<IRNode, 'rotate'>,
+    'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'
+  >
 >;
 type LegendStyle = NonNullable<IRPlotLegendGuide['style']>;
 

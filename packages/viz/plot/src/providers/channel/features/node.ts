@@ -355,7 +355,7 @@ const numericNodeChannels: {
         { range: [OPACITY_MIN, 1], clamp: true },
       ),
     deliver: (node, value) => {
-      node.opacity = value;
+      node.style = { ...node.style, opacity: value };
     },
   }),
   fillOpacity: defineNodeChannel<number>({
@@ -371,7 +371,7 @@ const numericNodeChannels: {
         { range: [0.2, 1], clamp: true },
       ),
     deliver: (node, value) => {
-      node.fillOpacity = value;
+      node.style = { ...node.style, fillOpacity: value };
     },
   }),
   strokeOpacity: defineNodeChannel<number>({
@@ -387,7 +387,7 @@ const numericNodeChannels: {
         { range: [0.2, 1], clamp: true },
       ),
     deliver: (node, value) => {
-      node.strokeOpacity = value;
+      node.style = { ...node.style, strokeOpacity: value };
     },
   }),
   rotate: defineNodeChannel<number>({
@@ -434,7 +434,8 @@ const numericNodeChannels: {
         { range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },
       ),
     deliver: (node, value, context) => {
-      if (context.nodeKind === 'pointGlyph' || context.nodeKind === 'cell') node.strokeWidth = value;
+      if (context.nodeKind === 'pointGlyph' || context.nodeKind === 'cell')
+        node.style = { ...node.style, strokeWidth: value };
     },
   }),
 };
@@ -467,7 +468,7 @@ const directNodeChannels = {
     value =>
       typeof value === 'string' && textAlignValues.has(value) ? (value as 'start' | 'middle' | 'end') : undefined,
     (node, value) => {
-      node.align = value;
+      node.layout = { ...node.layout, align: value };
     },
   ),
   lineHeight: defineSimpleNodeChannel<number>(
@@ -475,7 +476,7 @@ const directNodeChannels = {
     { outputKind: 'number', range: [0, 0] },
     positiveNumber,
     (node, value) => {
-      node.lineHeight = value;
+      node.layout = { ...node.layout, lineHeight: value };
     },
   ),
   maxTextWidth: defineSimpleNodeChannel<number>(
@@ -483,7 +484,7 @@ const directNodeChannels = {
     { outputKind: 'number', range: [0, 0] },
     positiveNumber,
     (node, value) => {
-      node.maxTextWidth = value;
+      node.layout = { ...node.layout, maxTextWidth: value };
     },
   ),
   cornerRadius: defineSimpleNodeChannel<number>(
@@ -507,7 +508,7 @@ const directNodeChannels = {
     { outputKind: 'json' },
     value => boxSizeValue(value),
     (node, value) => {
-      node.minimumSize = value as number | IRBoxSize;
+      node.layout = { ...node.layout, minimumSize: value as number | IRBoxSize };
     },
   ),
   padding: defineSimpleNodeChannel<JsonValue>(
@@ -515,7 +516,7 @@ const directNodeChannels = {
     { outputKind: 'json' },
     value => boxSpacingValue(value),
     (node, value) => {
-      node.padding = value as number | IRBoxSpacing;
+      node.layout = { ...node.layout, padding: value as number | IRBoxSpacing };
     },
   ),
   margin: defineSimpleNodeChannel<JsonValue>(
@@ -523,21 +524,21 @@ const directNodeChannels = {
     { outputKind: 'json' },
     value => boxSpacingValue(value),
     (node, value) => {
-      node.margin = value as number | IRBoxSpacing;
+      node.layout = { ...node.layout, margin: value as number | IRBoxSpacing };
     },
   ),
   dashed: defineSimpleNodeChannel<boolean>('dashed', { outputKind: 'boolean' }, booleanValue, (node, value) => {
-    node.dashed = value;
+    node.style = { ...node.style, dashed: value };
   }),
   dotted: defineSimpleNodeChannel<boolean>('dotted', { outputKind: 'boolean' }, booleanValue, (node, value) => {
-    node.dotted = value;
+    node.style = { ...node.style, dotted: value };
   }),
   dashPattern: defineSimpleNodeChannel<Array<number>>(
     'dashPattern',
     { outputKind: 'array' },
     dashPatternValue,
     (node, value) => {
-      node.dashPattern = value;
+      node.style = { ...node.style, dashPattern: value };
     },
   ),
   font: defineSimpleNodeChannel<JsonValue>(
@@ -545,7 +546,7 @@ const directNodeChannels = {
     { outputKind: 'object' },
     value => schemaValue<IRFont>(FontSchema)(value),
     (node, value) => {
-      node.font = value as IRFont;
+      node.style = { ...node.style, font: value as IRFont };
     },
   ),
   boundary: defineSimpleNodeChannel<JsonValue>(
@@ -566,7 +567,7 @@ const directNodeChannels = {
           ? jsonValue(value)
           : undefined,
     (node, value) => {
-      node.shadow = value as never;
+      node.style = { ...node.style, shadow: value as never };
     },
   ),
   blendMode: defineSimpleNodeChannel<string>(
@@ -574,7 +575,7 @@ const directNodeChannels = {
     { outputKind: 'symbol', palette: [...blendModeValues] },
     value => (typeof value === 'string' && blendModeValues.has(value) ? value : undefined),
     (node, value) => {
-      node.blendMode = value as never;
+      node.style = { ...node.style, blendMode: value as never };
     },
   ),
 };
@@ -589,7 +590,7 @@ const textColorNodeChannel: NodeChannelDefinition<string> = defineNodeChannel<st
       constants: 'skip',
     }),
   deliver: (node, value, context) => {
-    if (context.nodeKind === 'pointText') node.textColor = value;
+    if (context.nodeKind === 'pointText') node.style = { ...node.style, textColor: value };
   },
 });
 
@@ -599,7 +600,7 @@ const sizeNodeChannel: NodeChannelDefinition<number> = defineNodeChannel<number>
   legend: 'size',
   resolve: resolveSizeChannel,
   deliver: (node, value, context) => {
-    if (context.nodeKind === 'pointGlyph') node.minimumSize = value * Math.SQRT2;
+    if (context.nodeKind === 'pointGlyph') node.layout = { ...node.layout, minimumSize: value * Math.SQRT2 };
   },
 });
 

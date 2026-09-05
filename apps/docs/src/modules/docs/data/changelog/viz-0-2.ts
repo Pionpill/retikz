@@ -79,6 +79,13 @@ export const vizV02: Release = {
           },
           items: [
             {
+              label: { zh: 'Core Source 语义分组', en: 'Grouped Core Source fields' },
+              content: {
+                zh: 'Plot channel 与自定义 mark 输出统一使用 Core Node 的 style/layout、Path 的 style 与 Scope 的 defaults；Plot 自有 mark 通道和 Theme token 保持原语义。',
+                en: 'Plot channels and custom marks now emit Core Node style/layout, Path style, and Scope defaults groups. Plot-owned mark channels and Theme tokens retain their semantics.',
+              },
+            },
+            {
               label: {
                 zh: 'BREAKING：domainPadding 默认改为 range 单位',
                 en: 'BREAKING: domainPadding now defaults to range units',

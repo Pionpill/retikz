@@ -47,7 +47,16 @@ describe('Table Vanilla adapter', () => {
     const spec = createManualTableIR({
       id: 'scores',
       rows: [[98]],
-      rules: [{ selector: { cellIds: ['cell.r0.c0'] }, appearance: { content: { color: '#b91c1c' } } }],
+      rules: [
+        {
+          selector: { cellIds: ['cell.r0.c0'] },
+          appearance: {
+            content: {
+              style: { color: '#b91c1c' },
+            },
+          },
+        },
+      ],
       encodings: [
         {
           id: 'score-color',

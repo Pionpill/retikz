@@ -45,13 +45,9 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
           <Node
             id="desktop-inputs"
             position={[-285, 0]}
-            minimumSize={{ width: 150, height: 54 }}
-            stroke="gray"
-            fill="gray"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={16}
+            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 150, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.inputsTitle}</Text>
             <Text fill="gray" font={{ size: 12 }}>
@@ -61,13 +57,9 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
           <Node
             id="desktop-scale"
             position={[-95, 0]}
-            minimumSize={{ width: 150, height: 54 }}
-            stroke="gray"
-            fill="gray"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={16}
+            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 150, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.scaleTitle}</Text>
             <Text fill="gray" font={{ size: 12 }}>
@@ -77,13 +69,9 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
           <Node
             id="desktop-resolve"
             position={[100, 0]}
-            minimumSize={{ width: 160, height: 54 }}
-            stroke="gray"
-            fill="gray"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={16}
+            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 160, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.resolveTitle}</Text>
             <Text fill="gray" font={{ size: 12 }}>
@@ -93,13 +81,9 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
           <Node
             id="desktop-outputs"
             position={[300, 0]}
-            minimumSize={{ width: 160, height: 54 }}
-            stroke="gray"
-            fill="gray"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={16}
+            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 160, height: 54 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.outputsTitle}</Text>
             <Text fill="gray" font={{ size: 12 }}>
@@ -166,13 +150,9 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
           <Node
             id="mobile-inputs"
             position={[-95, -30]}
-            minimumSize={{ width: 130, height: 40 }}
-            stroke="gray"
-            fill="gray"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={14}
+            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 130, height: 40 }, align: 'middle', lineHeight: 14 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.inputsTitle}</Text>
             <Text fill="gray" font={{ size: 12 }}>
@@ -182,13 +162,9 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
           <Node
             id="mobile-scale"
             position={[95, -30]}
-            minimumSize={{ width: 130, height: 40 }}
-            stroke="gray"
-            fill="gray"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={14}
+            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 130, height: 40 }, align: 'middle', lineHeight: 14 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.scaleTitle}</Text>
             <Text fill="gray" font={{ size: 12 }}>
@@ -198,13 +174,9 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
           <Node
             id="mobile-resolve"
             position={[95, 30]}
-            minimumSize={{ width: 140, height: 40 }}
-            stroke="gray"
-            fill="gray"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={14}
+            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 140, height: 40 }, align: 'middle', lineHeight: 14 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.resolveTitle}</Text>
             <Text fill="gray" font={{ size: 12 }}>
@@ -214,13 +186,9 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
           <Node
             id="mobile-outputs"
             position={[-95, 30]}
-            minimumSize={{ width: 140, height: 40 }}
-            stroke="gray"
-            fill="gray"
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={14}
+            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: 140, height: 40 }, align: 'middle', lineHeight: 14 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{labels.outputsTitle}</Text>
             <Text fill="gray" font={{ size: 12 }}>

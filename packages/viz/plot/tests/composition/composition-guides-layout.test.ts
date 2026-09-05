@@ -387,7 +387,7 @@ describe('composition guides layout lowering', () => {
     const panels = panelScopesOf(outer);
 
     expect(panels.map(panel => gridLayersOf(panel).map(layer => layer.meta?.dimension))).toEqual([['y'], ['y']]);
-    expect(panels.flatMap(gridLayersOf).every(layer => firstPathOf(layer).stroke === '#ffffff')).toBe(true);
+    expect(panels.flatMap(gridLayersOf).every(layer => firstPathOf(layer).style?.stroke === '#ffffff')).toBe(true);
   });
 
   it('facet_outer_shared_axes_can_keep_per_panel_grids', () => {

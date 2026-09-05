@@ -179,6 +179,8 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table theme t
 
 ### TableCellRuleSchema
 
+Cell 的 `appearance.content.style` 设置内容级联颜色与透明度；`appearance.content.defaults` 设置 `node`、`path`、`label`、`arrow` 默认值和 `reset` 继承屏障。Node 默认值进一步使用 `style` / `layout`，Path 默认值使用 `style`；Label 与 Arrow 的叶子结构保持不变。各字段独立覆盖，空分组不清除继承值，`0` 与 `false` 保留。
+
 <ZodSchema
   name="TableCellRuleSchema"
   description="按根 rules 声明顺序对匹配 Cell 覆盖 formatter、presentation 或 appearance。"
@@ -190,7 +192,14 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table theme t
     'appearance.background': '匹配 Cell box 的可选背景 paint。',
     'appearance.background.fill': '填充匹配 Cell box 的 paint。',
     'appearance.background.fillOpacity': 'Cell 背景 fill opacity；省略时按 1。',
-    'appearance.content': '应用于匹配 Cell 内容的 Core Scope style defaults。',
+    'appearance.content': '应用于匹配 Cell 内容的 Core Scope 样式与默认值。',
+    'appearance.content.style': '按字段覆盖内容级联颜色、描边与透明度。',
+    'appearance.content.defaults': '内容后代的默认值通道与继承屏障。',
+    'appearance.content.defaults.node': 'Node 默认值，视觉属性位于 style，尺寸与文本排布位于 layout。',
+    'appearance.content.defaults.path': 'Path 默认值，视觉属性位于 style。',
+    'appearance.content.defaults.label': 'Label 默认值，保持标签自身的叶子结构。',
+    'appearance.content.defaults.arrow': 'Arrow 默认值，保持箭头自身的叶子结构。',
+    'appearance.content.defaults.reset': '在应用本组默认值之前重置指定继承通道。',
     'appearance.borders': '匹配 Cell 四边的最终 Border Graph candidates。',
   }}
 />

@@ -240,9 +240,13 @@ describe('Table React manifest observation', () => {
             background: { fill: '#f3f4f6' },
             borders: { bottom: { kind: 'line', stroke: '#2563eb', width: 2 } },
             content: {
-              color: '#18181b',
-              nodeDefault: { font: { family: 'sans-serif', weight: 400 } },
-              labelDefault: { font: { family: 'sans-serif', weight: 400 } },
+              style: { color: '#18181b' },
+              defaults: {
+                node: {
+                  style: { font: { family: 'sans-serif', weight: 400 } },
+                },
+                label: { font: { family: 'sans-serif', weight: 400 } },
+              },
             },
           },
         }),

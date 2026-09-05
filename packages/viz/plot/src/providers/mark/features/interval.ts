@@ -508,9 +508,9 @@ const lowerCells = (
     const cellNode = cellGeometryNode(geometry);
     if (cellNode === null) continue;
     const fill = fillOf?.(row);
-    if (fill !== undefined) cellNode.fill = fill;
+    if (fill !== undefined) cellNode.style = { ...cellNode.style, fill };
     const stroke = strokeOf?.(row);
-    if (stroke !== undefined) cellNode.stroke = stroke;
+    if (stroke !== undefined) cellNode.style = { ...cellNode.style, stroke };
     applyNodeChannelDeliveries(cellNode, mark, row, channels, 'cell');
     moveSectorCornerRadiusToShapeParams(cellNode);
     const node = attachDatumLabel(

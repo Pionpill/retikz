@@ -173,7 +173,7 @@ const defaultColorPaletteIndicesOf = (marks: ReadonlyArray<IRPlotMarkOperation>)
 const plotBackgroundNode = (
   plotArea: Rect,
   frame: CoordinateFrame | undefined,
-  fill: IRNode['fill'] | undefined,
+  fill: NonNullable<IRNode['style']>['fill'] | undefined,
   masterColor: string,
 ): IRNode | null => {
   if (!supportsPlotArea(frame) || fill === undefined || fill === 'none') return null;
@@ -187,18 +187,22 @@ const plotBackgroundNode = (
         };
   return {
     type: 'node',
-    ...geometry,
-    padding: 0,
-    strokeWidth: 0,
-    color: masterColor,
-    fill,
+    position: geometry.position,
+    shape: geometry.shape,
     zIndex: PlotLayerZIndex.Background,
+    style: { strokeWidth: 0, color: masterColor, fill },
+    layout: { minimumSize: geometry.minimumSize, padding: 0 },
   };
 };
 
 /** 只把 Plot typography 主色投影到 presentation guide 图层，不污染数据 mark 图层 */
 const withGuideMasterColor = (layer: IRScope, masterColor: string): IRScope =>
-  layer.color === undefined ? { ...layer, color: masterColor } : layer;
+  layer.style?.color === undefined
+    ? {
+        ...layer,
+        style: { ...layer.style, color: masterColor },
+      }
+    : layer;
 
 const withLayerZIndex = (child: IRChild, zIndex: number): IRChild =>
   child.type === 'coordinate' ? child : { ...child, zIndex };
@@ -709,12 +713,12 @@ export const lowerPlotWithDataArtifact = (
           ? { font: { ...(resolvedTheme.typography.font ?? {}), ...(localStyle?.font ?? {}) } }
           : {}),
       };
+      const { align, lineHeight, maxTextWidth: authoredMaxTextWidth, ...nodeStyle } = style;
       const rotate = facetHeaderLabelRotateOf(facet, dimension);
-      const maxTextWidth = style.maxTextWidth ?? Math.max(1, ((rotate ?? 0) === 0 ? rect.width : rect.height) - 8);
+      const maxTextWidth = authoredMaxTextWidth ?? Math.max(1, ((rotate ?? 0) === 0 ? rect.width : rect.height) - 8);
       const position: [number, number] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
       return {
         type: 'scope',
-        color: resolvedTheme.typography.textColor ?? 'currentColor',
         zIndex: PlotLayerZIndex.FacetLabel,
         meta: {
           source: 'plot',
@@ -726,17 +730,27 @@ export const lowerPlotWithDataArtifact = (
           startIndex,
           span,
         },
-        nodeDefault: { fill: 'none', stroke: 'none', padding: 0 },
         children: [
           {
             type: 'node',
             position,
             text: facetLabelTextOf(facet, dimension, level, value),
-            ...style,
+            style: nodeStyle,
             ...(rotate !== undefined ? { rotate } : {}),
-            maxTextWidth,
+            layout: {
+              ...(align === undefined ? {} : { align }),
+              ...(lineHeight === undefined ? {} : { lineHeight }),
+              maxTextWidth,
+            },
           },
         ],
+        style: { color: resolvedTheme.typography.textColor ?? 'currentColor' },
+        defaults: {
+          node: {
+            style: { fill: 'none', stroke: 'none' },
+            layout: { padding: 0 },
+          },
+        },
       };
     };
     const facetLabelScopes: Array<IRScope> = facetLabelsEnabled
@@ -1099,9 +1113,8 @@ export const lowerPlotWithDataArtifact = (
       id: `${node.id}.plotArea`,
       position: [facetContentWidth / 2, facetContentHeight / 2],
       shape: 'rectangle',
-      minimumSize: { width: facetContentWidth, height: facetContentHeight },
-      padding: 0,
-      opacity: 0,
+      style: { opacity: 0 },
+      layout: { minimumSize: { width: facetContentWidth, height: facetContentHeight }, padding: 0 },
     };
     return { child: { type: 'scope', id: node.id, children: [innerContent, plotAreaCarrier] }, dataArtifact };
   }
@@ -1214,9 +1227,8 @@ export const lowerPlotWithDataArtifact = (
     id: `${node.id}.plotArea`,
     position: [plotArea.x + plotArea.width / 2, plotArea.y + plotArea.height / 2],
     shape: 'rectangle',
-    minimumSize: { width: plotArea.width, height: plotArea.height },
-    padding: 0,
-    opacity: 0,
+    style: { opacity: 0 },
+    layout: { minimumSize: { width: plotArea.width, height: plotArea.height }, padding: 0 },
   };
   return { child: { type: 'scope', id: node.id, children: [innerContent, plotAreaCarrier] }, dataArtifact };
 };

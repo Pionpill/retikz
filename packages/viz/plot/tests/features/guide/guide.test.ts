@@ -225,7 +225,7 @@ describe('lowerGuide (contract)', () => {
     );
     const title = nodeByText(axisLayer as IRScope, 'x');
 
-    expect(title.align).toBe('end');
+    expect(title.layout?.align).toBe('end');
     expect((title.position as [number, number])[0]).toBe(434);
     expect((title.position as [number, number])[1]).toBe(298.5);
   });
@@ -330,16 +330,16 @@ describe('lowerGuide (contract)', () => {
     const left = nodeByText(axisLayer as IRScope, 'Left');
     const top = nodeByText(axisLayer as IRScope, 'Top');
 
-    expect(right.align).toBe('start');
+    expect(right.layout?.align).toBe('start');
     expect(right.position).toEqual([325, 200]);
-    expect(diagonal.align).toBe('start');
+    expect(diagonal.layout?.align).toBe('start');
     expect((diagonal.position as [number, number])[0]).toBeCloseTo(328.927858, 6);
     expect((diagonal.position as [number, number])[1]).toBeCloseTo(274.436533, 6);
-    expect(bottom.align).toBe('middle');
+    expect(bottom.layout?.align).toBe('middle');
     expect(bottom.position).toEqual([200, 315]);
-    expect(left.align).toBe('end');
+    expect(left.layout?.align).toBe('end');
     expect(left.position).toEqual([78, 200]);
-    expect(top.align).toBe('middle');
+    expect(top.layout?.align).toBe('middle');
     expect(top.position).toEqual([200, 85]);
   });
 
@@ -364,7 +364,7 @@ describe('lowerGuide (contract)', () => {
       polarAngularGuideContext([0], ['Right']),
     );
 
-    expect(nodeByText(axisLayer as IRScope, 'Right').align).toBe('middle');
+    expect(nodeByText(axisLayer as IRScope, 'Right').layout?.align).toBe('middle');
   });
 
   it('polar_radial_axis_title_placement_samples_radius_range', () => {
@@ -460,7 +460,7 @@ describe('lowerGuide (contract)', () => {
     const gridPath = (gridLayer as IRScope).children[0] as IRPath;
 
     expect(gridPath.children).toHaveLength(6);
-    expect(gridPath.lineCap).toBe('round');
+    expect(gridPath.style?.lineCap).toBe('round');
   });
 
   it('axis_grid_density_samples_grid_ticks_without_changing_axis_ticks', () => {
@@ -655,8 +655,8 @@ describe('lowerGuide (contract)', () => {
 
     expect(majorGrid.children).toHaveLength(4);
     expect(minorGrid.children).toHaveLength(2);
-    expect(minorGrid.stroke).toBe('#e2e8f0');
-    expect(minorGrid.strokeOpacity).toBe(0.08);
+    expect(minorGrid.style?.stroke).toBe('#e2e8f0');
+    expect(minorGrid.style?.strokeOpacity).toBe(0.08);
   });
 
   it('axis_grid_band_position_offsets_grid_line_inside_band', () => {
@@ -741,7 +741,7 @@ describe('lowerGuide (contract)', () => {
     expect(majorGrid.children).toHaveLength(4);
     expect(majorGrid.children.every(step => step.kind !== 'arc')).toBe(true);
     expect(minorGrid.children).toHaveLength(2);
-    expect(minorGrid.dashPattern).toEqual([2, 2]);
+    expect(minorGrid.style?.dashPattern).toEqual([2, 2]);
   });
 
   it('polar_angular_grid_dedupes_cyclic_domain_endpoints', () => {
@@ -821,17 +821,20 @@ describe('lowerGuide (contract)', () => {
   // 错误路径 / 退化
   it('guide_styles_hoisted', () => {
     const { gridLayer, axisLayer } = lowerGuide({ type: 'axis', dimension: 'x', grid: true }, ctx);
-    expect((axisLayer as IRScope).pathDefault?.stroke).toBe('currentColor');
-    expect((axisLayer as IRScope).nodeDefault?.font?.size).toBe(11);
-    expect((axisLayer as IRScope).nodeDefault?.stroke).toBe('none');
-    expect(((gridLayer as IRScope).children[0] as IRPath).strokeOpacity).toBe(0.15);
+    expect((axisLayer as IRScope).defaults?.path?.style?.stroke).toBe('currentColor');
+    expect((axisLayer as IRScope).defaults?.node?.style?.font?.size).toBe(11);
+    expect((axisLayer as IRScope).defaults?.node?.style?.stroke).toBe('none');
+    expect(((gridLayer as IRScope).children[0] as IRPath).style?.strokeOpacity).toBe(0.15);
   });
 
   it('axis_text_nodes_inherit_no_stroke_or_fill_defaults', () => {
     const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'x', title: 'Month' }, ctx);
     const layer = axisLayer as IRScope;
 
-    expect(layer.nodeDefault).toMatchObject({ stroke: 'none', fill: 'none', padding: 0 });
+    expect(layer.defaults?.node).toMatchObject({
+      style: { stroke: 'none', fill: 'none' },
+      layout: { padding: 0 },
+    });
     expect(nodeChildren(layer).map(node => node.text)).toEqual(['0', '1', '2', 'Month']);
   });
 
@@ -850,12 +853,12 @@ describe('lowerGuide (contract)', () => {
     const tickPath = (axisLayer as IRScope).children[1] as IRPath;
     const gridPath = (gridLayer as IRScope).children[0] as IRPath;
 
-    expect(axisPath.dashPattern).toEqual([4, 2]);
-    expect(axisPath.dashOffset).toBe(1.5);
-    expect(tickPath.dashPattern).toEqual([2, 2]);
-    expect(tickPath.dashOffset).toBe(-1);
-    expect(gridPath.dashPattern).toEqual([1, 3]);
-    expect(gridPath.dashOffset).toBe(3);
+    expect(axisPath.style?.dashPattern).toEqual([4, 2]);
+    expect(axisPath.style?.dashOffset).toBe(1.5);
+    expect(tickPath.style?.dashPattern).toEqual([2, 2]);
+    expect(tickPath.style?.dashOffset).toBe(-1);
+    expect(gridPath.style?.dashPattern).toEqual([1, 3]);
+    expect(gridPath.style?.dashOffset).toBe(3);
   });
 
   it('axis_line_positive_arrow_and_line_cap_lower_to_path', () => {
@@ -872,7 +875,7 @@ describe('lowerGuide (contract)', () => {
     );
     const axisPath = (axisLayer as IRScope).children[0] as IRPath;
 
-    expect(axisPath.lineCap).toBe('round');
+    expect(axisPath.style?.lineCap).toBe('round');
     expect(axisPath.marks).toEqual([{ pos: 1, mark: { kind: 'arrow', shape: 'stealth', length: 8 } }]);
   });
 
@@ -912,9 +915,9 @@ describe('lowerGuide (contract)', () => {
     expect(paths).toHaveLength(1);
     expect(nodes).toHaveLength(3);
     expect(nodes[0].shape).toEqual({ type: 'polygon', params: { sides: 3 } });
-    expect(nodes[0].padding).toBe(0);
-    expect(nodes[0].minimumSize).toEqual({ width: 6, height: 6 });
-    expect(nodes[0].fill).toBe('#111');
+    expect(nodes[0].layout?.padding).toBe(0);
+    expect(nodes[0].layout?.minimumSize).toEqual({ width: 6, height: 6 });
+    expect(nodes[0].style?.fill).toBe('#111');
   });
 
   it('triangle_tick_marker_points_up_on_bottom_x_axis_when_inward', () => {
@@ -950,8 +953,8 @@ describe('lowerGuide (contract)', () => {
     );
 
     expect(node?.shape).toEqual({ type: 'polygon', params: { sides: 5 } });
-    expect(node?.fill).toBe('currentColor');
-    expect(node?.minimumSize).toEqual({ width: 8, height: 6 });
+    expect(node?.style?.fill).toBe('currentColor');
+    expect(node?.layout?.minimumSize).toEqual({ width: 8, height: 6 });
   });
 
   it('tick_label_auto_rotate_chooses_first_non_overlapping_angle', () => {
@@ -1338,10 +1341,10 @@ describe('lowerPlots guide orchestration (contract)', () => {
     // children = [x 网格层, y 网格层, mark 层, x 轴层, y 轴层]
     expect(outer.children).toHaveLength(5);
     // 前两个是网格层（带 strokeOpacity）
-    expect(((outer.children[0] as IRScope).children[0] as IRPath).strokeOpacity).toBe(0.15);
-    expect(((outer.children[1] as IRScope).children[0] as IRPath).strokeOpacity).toBe(0.15);
+    expect(((outer.children[0] as IRScope).children[0] as IRPath).style?.strokeOpacity).toBe(0.15);
+    expect(((outer.children[1] as IRScope).children[0] as IRPath).style?.strokeOpacity).toBe(0.15);
     // 最后一个是轴层（纯文字 nodeDefault）
-    expect((outer.children[4] as IRScope).nodeDefault?.stroke).toBe('none');
+    expect((outer.children[4] as IRScope).defaults?.node?.style?.stroke).toBe('none');
   });
 
   it('compile_with_guides_scene', () => {

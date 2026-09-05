@@ -10,13 +10,9 @@ const Demo: FC = () => (
     <Node
       id="external-rows"
       position={[0, -130]}
-      minimumSize={{ width: 132, height: 54 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 132, height: 54 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>External rows</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -27,13 +23,9 @@ const Demo: FC = () => (
     <Node
       id="data-model"
       position={[-180, -37]}
-      minimumSize={{ width: 136, height: 50 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 136, height: 50 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Data model</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -44,13 +36,9 @@ const Demo: FC = () => (
     <Node
       id="format-registry"
       position={[180, -37]}
-      minimumSize={{ width: 146, height: 50 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 146, height: 50 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>format registry</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -61,13 +49,9 @@ const Demo: FC = () => (
     <Node
       id="operations"
       position={[-180, 37]}
-      minimumSize={{ width: 136, height: 50 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 136, height: 50 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Operations</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -78,13 +62,9 @@ const Demo: FC = () => (
     <Node
       id="operation-registries"
       position={[180, 37]}
-      minimumSize={{ width: 168, height: 50 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 168, height: 50 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>operation registries</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -97,13 +77,9 @@ const Demo: FC = () => (
       <Node
         id="field-preparation"
         position={[0, -37]}
-        minimumSize={{ width: 150, height: 58 }}
-        stroke="dimgray"
-        fill="dimgray"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={17}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 150, height: 58 }, align: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>field preparation</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -113,13 +89,9 @@ const Demo: FC = () => (
       <Node
         id="transforms"
         position={[0, 37]}
-        minimumSize={{ width: 136, height: 58 }}
-        stroke="dimgray"
-        fill="dimgray"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={17}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 136, height: 58 }, align: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>transforms</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -131,13 +103,9 @@ const Demo: FC = () => (
     <Node
       id="rows"
       position={[0, 114]}
-      minimumSize={{ width: 144, height: 50 }}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ minimumSize: { width: 144, height: 50 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>rows</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -148,13 +116,9 @@ const Demo: FC = () => (
     <Node
       id="lineage"
       position={[180, 114]}
-      minimumSize={{ width: 132, height: 50 }}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ minimumSize: { width: 132, height: 50 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>lineage</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -168,10 +132,10 @@ const Demo: FC = () => (
         { id: 'field-preparation', anchor: 'top', offset: [55, 0] },
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
-    <Draw way={['field-preparation', 'transforms']} arrow="->" stroke="gray" />
-    <Draw way={['transforms', 'rows']} arrow="->" stroke="gray" />
+    <Draw way={['field-preparation', 'transforms']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['transforms', 'rows']} arrow="->" style={{ stroke: 'gray' }} />
     <Draw
       way={[
         { id: 'transforms', anchor: 'bottom', offset: [55, 0] },
@@ -181,13 +145,12 @@ const Demo: FC = () => (
         { id: 'lineage', anchor: 'left' },
       ]}
       arrow="->"
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
     />
-    <Draw way={['data-model', 'field-preparation']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['format-registry', 'field-preparation']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['operations', 'transforms']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['operation-registries', 'transforms']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['data-model', 'field-preparation']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['format-registry', 'field-preparation']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['operations', 'transforms']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['operation-registries', 'transforms']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 

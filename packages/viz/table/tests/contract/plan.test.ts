@@ -76,13 +76,13 @@ describe('Table Cell plan lineage contract', () => {
     ].map(path => TableCellAppearanceTracePathSchema.parse(path));
     expect(paths).toEqual([
       '/background/fill',
-      '/content/nodeDefault/font/weight',
-      '/content/pathDefault/dashPattern',
+      '/content/defaults/node/style/font/weight',
+      '/content/defaults/path/style/dashPattern',
       '/borders/bottom',
     ]);
     expect(() => TableCellAppearanceTracePathSchema.parse('/background')).toThrow();
     expect(() => TableCellAppearanceTracePathSchema.parse('/content')).toThrow();
-    expect(() => TableCellAppearanceTracePathSchema.parse('/content/nodeDefault/font')).toThrow();
+    expect(() => TableCellAppearanceTracePathSchema.parse('/content/defaults/node/style/font')).toThrow();
     expect(() => TableCellAppearanceTracePathSchema.parse('/content/unknown')).toThrow();
   });
 
@@ -95,28 +95,27 @@ describe('Table Cell plan lineage contract', () => {
       '/borders/bottom',
       '/borders/left',
     ]);
-    const defaultSchemas = {
-      nodeDefault: NodeDefaultSchema,
-      pathDefault: PathDefaultSchema,
-      labelDefault: LabelDefaultSchema,
-      arrowDefault: ArrowDefaultSchema,
-    } as const;
-    Object.keys(TableCellContentStyleSchema.shape).forEach(contentField => {
-      if (!(contentField in defaultSchemas)) {
-        expected.add(`/content/${contentField}`);
-        return;
-      }
-      const defaultSchema = defaultSchemas[contentField as keyof typeof defaultSchemas];
-      Object.keys(defaultSchema.shape).forEach(field => {
-        if (field === 'font' && (contentField === 'nodeDefault' || contentField === 'labelDefault')) {
-          Object.keys(FontSchema.shape).forEach(fontField => {
-            expected.add(`/content/${contentField}/font/${fontField}`);
-          });
+    const addLeaves = (prefix: string, fields: Array<string>) => {
+      fields.forEach(field => {
+        if (field === 'font') {
+          Object.keys(FontSchema.shape).forEach(fontField => expected.add(`${prefix}/font/${fontField}`));
         } else {
-          expected.add(`/content/${contentField}/${field}`);
+          expected.add(`${prefix}/${field}`);
         }
       });
-    });
+    };
+    addLeaves('/content/style', Object.keys(TableCellContentStyleSchema.shape.style.unwrap().shape));
+    expected.add('/content/defaults/reset');
+    for (const [channel, schema] of Object.entries({ node: NodeDefaultSchema, path: PathDefaultSchema })) {
+      addLeaves(
+        `/content/defaults/${channel}`,
+        Object.keys(schema.shape).filter(field => field !== 'style' && field !== 'layout'),
+      );
+      addLeaves(`/content/defaults/${channel}/style`, Object.keys(schema.shape.style.unwrap().shape));
+    }
+    addLeaves('/content/defaults/node/layout', Object.keys(NodeDefaultSchema.shape.layout.unwrap().shape));
+    addLeaves('/content/defaults/label', Object.keys(LabelDefaultSchema.shape));
+    addLeaves('/content/defaults/arrow', Object.keys(ArrowDefaultSchema.shape));
 
     expect(new Set(Object.values(TableCellAppearanceTracePath))).toEqual(expected);
   });

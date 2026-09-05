@@ -78,7 +78,7 @@ describe('color × series · B/C 收口（contract）', () => {
     });
     const paths = collectPaths(firstLayer(spec, { d: SERIES_DATA }));
     expect(paths).toHaveLength(2);
-    expect(paths[0].stroke).not.toEqual(paths[1].stroke);
+    expect(paths[0].style?.stroke).not.toEqual(paths[1].style?.stroke);
   });
 
   // Happy path：单 line + categorical color 字段（无 series）→ 隐式拆系列（修「静默丢弃」）
@@ -155,8 +155,8 @@ describe('plot theme default palette', () => {
       ],
     });
     const [lineLayer, barLayerNode] = root.children as Array<IRScope>;
-    expect(lineLayer.pathDefault?.stroke).toBe(sharedCategorical[0]);
-    expect(barLayerNode.nodeDefault?.fill).toBe(sharedCategorical[1]);
+    expect(lineLayer.defaults?.path?.style?.stroke).toBe(sharedCategorical[0]);
+    expect(barLayerNode.defaults?.node?.style?.fill).toBe(sharedCategorical[1]);
   });
 
   it('mark_without_color_uses_plot_palette_by_layer_index', () => {
@@ -183,9 +183,9 @@ describe('plot theme default palette', () => {
       ],
     });
     const [lineLayer, barLayerNode, pointLayer] = root.children as Array<IRScope>;
-    expect(lineLayer.pathDefault?.stroke).toBe('#2563eb');
-    expect(barLayerNode.nodeDefault?.fill).toBe('#f97316');
-    expect(pointLayer.nodeDefault?.fill).toBe('currentColor');
+    expect(lineLayer.defaults?.path?.style?.stroke).toBe('#2563eb');
+    expect(barLayerNode.defaults?.node?.style?.fill).toBe('#f97316');
+    expect(pointLayer.defaults?.node?.style?.fill).toBe('currentColor');
   });
 
   it('categorical_color_uses_plot_palette_as_ordinal_range', () => {
@@ -216,7 +216,7 @@ describe('plot theme default palette', () => {
       ],
     });
     const colorScopes = layer.children as Array<IRScope>;
-    expect(colorScopes.map(scope => scope.nodeDefault?.fill)).toEqual(['#2563eb', '#f97316']);
+    expect(colorScopes.map(scope => scope.defaults?.node?.style?.fill)).toEqual(['#2563eb', '#f97316']);
     expect(colorScopes.map(scope => scope.children.length)).toEqual([2, 1]);
   });
 });

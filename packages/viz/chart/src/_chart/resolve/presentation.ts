@@ -92,20 +92,24 @@ const textNodeOf = (
     type: 'node',
     ...(id === undefined ? {} : { id }),
     position: [0, 0],
-    fill: 'none',
-    stroke: 'none',
-    strokeWidth: 0,
-    padding: 0,
-    margin: 0,
     text,
-    textColor: tokens[keys.foreground],
-    font: {
-      family: tokens[ChartThemeToken.FontFamily],
-      size: tokens[keys.fontSize],
-      weight: tokens[keys.fontWeight],
+    style: {
+      fill: 'none',
+      stroke: 'none',
+      strokeWidth: 0,
+      textColor: tokens[keys.foreground],
+      font: {
+        family: tokens[ChartThemeToken.FontFamily],
+        size: tokens[keys.fontSize],
+        weight: tokens[keys.fontWeight],
+      },
     },
-    align: tokens[keys.align],
-    lineHeight: tokens[keys.lineHeight],
+    layout: {
+      padding: 0,
+      margin: 0,
+      align: tokens[keys.align],
+      lineHeight: tokens[keys.lineHeight],
+    },
   });
 };
 

@@ -60,7 +60,7 @@ const sizeSymbolNodesOf = (scope: IRScope): Array<IRNode> =>
   scope.children.filter(isNode).filter(node => node.text === undefined && node.shape === 'circle');
 
 const nodeMinimumSide = (node: IRNode): number => {
-  const size = node.minimumSize;
+  const size = node.layout?.minimumSize;
   if (typeof size === 'number') return size;
   return Math.max(size?.width ?? 0, size?.height ?? 0, size?.default ?? 0);
 };
@@ -72,21 +72,21 @@ const findLegendLayer = (outer: IRScope): IRScope | undefined => {
   if (byId) return byId;
   // 兜底：非 mark 层（无 nodeDefault.shape）且含 swatch Node + 标签 Node
   return scopes.find(
-    scope => scope.nodeDefault?.shape === undefined && swatchNodesOf(scope).length > 0 && labelsOf(scope).length > 0,
+    scope => scope.defaults?.node?.shape === undefined && swatchNodesOf(scope).length > 0 && labelsOf(scope).length > 0,
   );
 };
 
 /** mark 层（point/sector 有 nodeDefault.shape；line/area 有 pathDefault.strokeWidth） */
 const findMarkLayer = (outer: IRScope): IRScope | undefined =>
   allScopes(outer).find(
-    scope => scope.nodeDefault?.shape !== undefined || scope.pathDefault?.strokeWidth !== undefined,
+    scope => scope.defaults?.node?.shape !== undefined || scope.defaults?.path?.style?.strokeWidth !== undefined,
   );
 
 /** axis 层：纯文字 nodeDefault（stroke='none'）+ 轴线 path，无 shape */
 const axisLayersOf = (outer: IRScope): Array<IRScope> =>
   allScopes(outer).filter(scope => {
-    const nodeDefault = scope.nodeDefault;
-    return nodeDefault?.stroke === 'none' && nodeDefault.shape === undefined;
+    const nodeDefault = scope.defaults?.node;
+    return nodeDefault?.style?.stroke === 'none' && nodeDefault.shape === undefined;
   });
 
 // ── 测试数据 ───────────────────────────────────────────────────────────
@@ -324,8 +324,8 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
     const glyphs = swatchNodesOf(legend as IRScope);
 
     expect(glyphs.length).toBe(3);
-    expect(glyphs.every(node => node.stroke === 'none')).toBe(true);
-    expect(glyphs.every(node => node.strokeWidth === 0)).toBe(true);
+    expect(glyphs.every(node => node.style?.stroke === 'none')).toBe(true);
+    expect(glyphs.every(node => node.style?.strokeWidth === 0)).toBe(true);
   });
 
   it('shape_legend_glyphs_use_the_mark_fill_color', () => {
@@ -336,10 +336,10 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
     expect(mark).toBeDefined();
 
     const glyphs = swatchNodesOf(legend as IRScope);
-    const markFill = mark?.nodeDefault?.fill;
+    const markFill = mark?.defaults?.node?.style?.fill;
 
     expect(markFill).toBeDefined();
-    expect(glyphs.every(node => node.fill === markFill)).toBe(true);
+    expect(glyphs.every(node => node.style?.fill === markFill)).toBe(true);
   });
 
   it('shape_legend_symbol_size_style_controls_glyph_box', () => {
@@ -378,9 +378,9 @@ describe('lowerPlots legend — happy path（contract）', () => {
     const labels = labelsOf(legend as IRScope);
 
     expect(labels.map(node => node.text).sort()).toEqual(['A', 'B', 'C', 'Kind']);
-    expect(labels.every(node => node.stroke === 'none')).toBe(true);
-    expect(labels.every(node => node.fill === 'none')).toBe(true);
-    expect(labels.every(node => node.padding === 0)).toBe(true);
+    expect(labels.every(node => node.style?.stroke === 'none')).toBe(true);
+    expect(labels.every(node => node.style?.fill === 'none')).toBe(true);
+    expect(labels.every(node => node.layout?.padding === 0)).toBe(true);
   });
 
   // 连续 ramp：色带 + nice 刻度
@@ -401,9 +401,9 @@ describe('lowerPlots legend — happy path（contract）', () => {
     const labels = labelsOf(legend as IRScope);
 
     expect(labels.length).toBeGreaterThan(1);
-    expect(labels.every(node => node.stroke === 'none')).toBe(true);
-    expect(labels.every(node => node.fill === 'none')).toBe(true);
-    expect(labels.every(node => node.padding === 0)).toBe(true);
+    expect(labels.every(node => node.style?.stroke === 'none')).toBe(true);
+    expect(labels.every(node => node.style?.fill === 'none')).toBe(true);
+    expect(labels.every(node => node.layout?.padding === 0)).toBe(true);
   });
 
   // size 梯度符号：几档代表圈 + 值
@@ -425,8 +425,8 @@ describe('lowerPlots legend — happy path（contract）', () => {
     expect(symbols.length).toBeGreaterThanOrEqual(2);
     expect(swatches.every(node => node.shape === 'circle')).toBe(true);
     expect(Math.max(...symbols.map(nodeMinimumSide))).toBeLessThanOrEqual(14 + DEFAULT_EPSILON);
-    expect(symbols.every(node => node.stroke === 'none')).toBe(true);
-    expect(symbols.every(node => node.strokeWidth === 0)).toBe(true);
+    expect(symbols.every(node => node.style?.stroke === 'none')).toBe(true);
+    expect(symbols.every(node => node.style?.strokeWidth === 0)).toBe(true);
   });
 
   it('size_legend_symbols_use_the_mark_effective_color', () => {
@@ -437,7 +437,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
     const symbols = sizeSymbolNodesOf(legend as IRScope);
 
     expect(symbols.length).toBeGreaterThanOrEqual(2);
-    expect(symbols.every(node => node.fill === '#d946ef')).toBe(true);
+    expect(symbols.every(node => node.style?.fill === '#d946ef')).toBe(true);
   });
 
   it('size_legend_symbol_size_style_controls_fit_box', () => {

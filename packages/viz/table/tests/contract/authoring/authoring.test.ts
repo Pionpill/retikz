@@ -57,7 +57,14 @@ describe('Table plain authoring', () => {
   it('preserves and detaches detail formatter, rules, encodings, and Table tokens', () => {
     const formatter = { name: 'number', options: { maximumFractionDigits: 1 } };
     const rules: NonNullable<DetailTableInput['rules']> = [
-      { selector: { fields: ['score'] }, appearance: { content: { color: '#b91c1c' } } },
+      {
+        selector: { fields: ['score'] },
+        appearance: {
+          content: {
+            style: { color: '#b91c1c' },
+          },
+        },
+      },
     ];
     const encodings: NonNullable<DetailTableInput['encodings']> = [
       {

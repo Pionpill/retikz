@@ -32,9 +32,8 @@ describe('Cell presentation registry', () => {
       type: 'node',
       position: [0, 0],
       text,
-      stroke: 'none',
-      fill: 'none',
-      padding: 0,
+      style: { stroke: 'none', fill: 'none' },
+      layout: { padding: 0 },
     });
   });
 

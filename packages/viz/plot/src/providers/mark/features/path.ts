@@ -535,7 +535,7 @@ export const buildSeriesPathScopes = (
   rows: Array<ExternalRow>,
   seriesField: string,
   buildSteps: SeriesPathBuilder,
-  paintOf: (seriesRows: Array<ExternalRow>) => Partial<Pick<IRPath, 'fill' | 'stroke'>>,
+  paintOf: (seriesRows: Array<ExternalRow>) => Partial<Pick<NonNullable<IRPath['style']>, 'fill' | 'stroke'>>,
   channels: MarkChannels,
   markProvenance: MarkProvenance | undefined,
 ): Array<IRScope> => {
@@ -565,7 +565,7 @@ export const buildSeriesPathScopes = (
         {
           type: 'path',
           ...pathMarkOptions(mark),
-          ...paintOf(segment.rows),
+          style: paintOf(segment.rows),
           ...(label !== undefined ? { label } : {}),
           children: segment.steps,
         },
@@ -679,7 +679,15 @@ const lowerPath = (
     );
     return seriesScopes.length === 0
       ? null
-      : { type: 'scope', pathDefault: { strokeWidth: LINE_STROKE_WIDTH }, children: seriesScopes };
+      : {
+          type: 'scope',
+          children: seriesScopes,
+          defaults: {
+            path: {
+              style: { strokeWidth: LINE_STROKE_WIDTH },
+            },
+          },
+        };
   }
   const segments = closure
     ? buildClosureStepSegments(mark, rows, frame, closure, closed)
@@ -689,11 +697,6 @@ const lowerPath = (
   const stroke = colorValue !== undefined ? String(colorValue) : defaultStroke;
   return {
     type: 'scope',
-    pathDefault: {
-      stroke,
-      strokeWidth: LINE_STROKE_WIDTH,
-      ...(defaultFill !== undefined ? { fill: defaultFill } : {}),
-    },
     children: segments.map(segment => {
       const row = segment.rows[0] ?? {};
       const label = resolveGeometryMarkLabels(mark.label, row, channelValueOf<IRNodeLabel['text']>(channels, 'label'));
@@ -704,6 +707,15 @@ const lowerPath = (
         channels,
       );
     }),
+    defaults: {
+      path: {
+        style: {
+          ...(defaultFill !== undefined ? { fill: defaultFill } : {}),
+          stroke,
+          strokeWidth: LINE_STROKE_WIDTH,
+        },
+      },
+    },
   };
 };
 

@@ -11,13 +11,9 @@ const Demo: FC = () => (
     <Node
       id="input"
       position={[-225, -80]}
-      minimumSize={{ width: 100, height: 60 }}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ minimumSize: { width: 100, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>字符串 prop</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -28,13 +24,9 @@ const Demo: FC = () => (
     <Node
       id="field-candidate"
       position={[-90, -80]}
-      minimumSize={{ width: 110, height: 60 }}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ minimumSize: { width: 110, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>① 字段命中？</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -45,13 +37,9 @@ const Demo: FC = () => (
     <Node
       id="field-path"
       position={[58, -80]}
-      minimumSize={{ width: 125, height: 60 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 125, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>字段 → 逐行值</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -62,13 +50,9 @@ const Demo: FC = () => (
     <Node
       id="constant-candidate"
       position={[-90, 30]}
-      minimumSize={{ width: 110, height: 60 }}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ minimumSize: { width: 110, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>② 合法常量？</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -79,13 +63,9 @@ const Demo: FC = () => (
     <Node
       id="constant-path"
       position={[58, 30]}
-      minimumSize={{ width: 125, height: 60 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 125, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>常量 → 固定值</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -96,13 +76,9 @@ const Demo: FC = () => (
     <Node
       id="warning"
       position={[-90, 140]}
-      minimumSize={{ width: 110, height: 60 }}
-      stroke="red"
-      fill="red"
-      fillOpacity={0.05}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'red', fill: 'red', fillOpacity: 0.05 }}
+      layout={{ minimumSize: { width: 110, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>③ 警告并跳过</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -113,13 +89,9 @@ const Demo: FC = () => (
     <Node
       id="channel-consumer"
       position={[213, -25]}
-      minimumSize={{ width: 125, height: 60 }}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ minimumSize: { width: 125, height: 60 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>通道消费</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -127,8 +99,8 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <Draw way={['input', 'field-candidate']} arrow="->" stroke="gray" />
-    <Draw way={['field-candidate', 'field-path']} arrow="->" stroke="gray" />
+    <Draw way={['input', 'field-candidate']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['field-candidate', 'field-path']} arrow="->" style={{ stroke: 'gray' }} />
     <Draw
       way={[
         'field-candidate',
@@ -145,9 +117,9 @@ const Demo: FC = () => (
         'constant-candidate',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
-    <Draw way={['constant-candidate', 'constant-path']} arrow="->" stroke="gray" />
+    <Draw way={['constant-candidate', 'constant-path']} arrow="->" style={{ stroke: 'gray' }} />
     <Draw
       way={[
         'constant-candidate',
@@ -164,10 +136,10 @@ const Demo: FC = () => (
         'warning',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
-    <Draw way={['field-path', 'channel-consumer']} arrow="->" stroke="gray" />
-    <Draw way={['constant-path', 'channel-consumer']} arrow="->" stroke="gray" />
+    <Draw way={['field-path', 'channel-consumer']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['constant-path', 'channel-consumer']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 
