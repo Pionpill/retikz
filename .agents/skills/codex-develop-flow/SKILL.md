@@ -20,7 +20,18 @@ description: Use when the active main model is gpt-6-astra or gpt-5.6-sol and an
 
 小型任务、不改变功能的中小型任务、普通文档 / bugfix / 命名调整，以及计划未授权 subagent 的任务不使用本 skill。触发本 skill 不新增文件修改、subagent、review、commit、push、tag 或 publish 权限。
 
-## 模型矩阵
+## 主模型选择
+
+主模型选择在任务开始和 Plan Gate 前完成，由根 `AGENTS.md` 的难度匹配规则决定；本 skill 只提供角色适配，不自动切换模型或扩大授权。四级主模型建议为：
+
+- 高难度、大型、需要调研设计或跨包公开契约：`gpt-6-astra`
+- 中高难度、中大型、需要调研设计且边界可收敛：`gpt-5.6-sol`
+- 中等难度、中小型、任务较明确但需要判断：`gpt-5.6-terra`
+- 普通难度、小型、方案确定的任务：`gpt-5.6-luna`
+
+按需求不确定性、错误代价、设计深度、能力边界、修改范围和验证复杂度综合判断，不按代码量或文件数量单独判断。当前主模型与推荐主模型相差两个等级及以上时，必须在执行计划中说明不匹配并等待用户确认；相邻等级可在计划中说明取舍后继续。
+
+## Agent 模型矩阵
 
 只使用调度工具当轮实际暴露的名字：
 
@@ -30,6 +41,8 @@ description: Use when the active main model is gpt-6-astra or gpt-5.6-sol and an
 - 跨层疑难 bug、关键算法、难以拆分的核心链路：优先由 Astra 主控直接实现，或按计划交给 `gpt-6-astra`
 - 常规单 reviewer：优先 `gpt-5.6-terra`；计划可指定独立的 `gpt-5.6-sol` 或其他实际获批模型
 - 最终 `cross-review`：优先 fresh Luna + Terra
+
+以上 agent 分工与主模型选择是两层规则。大型任务仍保持 Astra / Sol 主控，Terra / Luna 按已确认计划承担执行或评审；新增的主模型匹配规则不替换、不削弱这套大型任务流程。
 
 按问题不确定性、错误代价和依赖选择模型，不按代码量分配。以完成任务的总成本评估效果，包括计费 token、交接、验证和返工；步骤减少不等于费用降低。
 
