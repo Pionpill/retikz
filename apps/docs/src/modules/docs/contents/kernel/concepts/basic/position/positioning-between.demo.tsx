@@ -4,9 +4,8 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 const pointStyle = {
   shape: 'circle',
-  minimumSize: 10,
-  padding: 0,
-  fill: 'white',
+  style: { fill: 'white' },
+  layout: { minimumSize: 10, padding: 0 },
 } as const;
 
 const labelFont = { size: 12 };

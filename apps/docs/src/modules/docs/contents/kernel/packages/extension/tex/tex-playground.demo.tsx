@@ -21,7 +21,12 @@ const renderTexPlayground = (values: TexPlaygroundValues, lowerTex?: LowerTex) =
 
   return (
     <Layout width={400} height={260} viewBox={{ x: -210, y: -135, width: 420, height: 270 }} lowerTex={lowerTex}>
-      <Node id="formula" position={[0, 0]} stroke="none" padding={0} font={{ size: values.fontSize }}>
+      <Node
+        id="formula"
+        position={[0, 0]}
+        style={{ stroke: 'none', font: { size: values.fontSize } }}
+        layout={{ padding: 0 }}
+      >
         {content}
       </Node>
     </Layout>

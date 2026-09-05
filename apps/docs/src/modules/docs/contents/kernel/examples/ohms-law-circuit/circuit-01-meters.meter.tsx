@@ -87,11 +87,8 @@ export const Meter: FC<{
     position={position}
     label={label}
     shape="circuit-meter"
-    minimumSize={size}
-    stroke={INK}
-    strokeWidth={3}
-    fill="none"
-    font={{ ...FONT, size: fontSize }}
+    style={{ stroke: INK, strokeWidth: 3, fill: 'none', font: { ...FONT, size: fontSize } }}
+    layout={{ minimumSize: size }}
   >
     {text}
   </Node>

@@ -25,10 +25,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Node
         position={[0, 0]}
         shape="rectangle"
-        fill="#f97316"
-        textColor="white"
-        padding={{ x: 28, y: 18 }}
         animations={[animation]}
+        style={{ fill: '#f97316', textColor: 'white' }}
+        layout={{ padding: { x: 28, y: 18 } }}
       >
         scaleIn
       </Node>

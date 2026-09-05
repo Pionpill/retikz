@@ -46,32 +46,34 @@ const controlledPreview = defineControlledPreview(previewControlContract, (value
           [-160, 0],
           [160, 0],
         ]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Draw
         way={[
           [0, -100],
           [0, 100],
         ]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
-      <Draw way={localXAxis} stroke="darkorange" dashPattern={[4, 3]} />
-      <Draw way={localYAxis} stroke="darkorange" dashPattern={[4, 3]} />
-      <Draw way={[...worldCorners, worldCorners[0]]} stroke="darkorange" strokeWidth={2} />
-      <Draw way={[[shape.x, shape.y], worldPoint]} stroke="darkorange" strokeWidth={2} arrow="->" />
-      <Circle center={[shape.x, shape.y]} radius={4} fill="darkorange" stroke="none" />
-      <Circle center={worldPoint} radius={5} fill="dodgerblue" stroke="none" />
-      <Node position={[-142, -88]} stroke="none" textColor="gray" font={{ size: 12 }}>
+      <Draw way={localXAxis} style={{ stroke: 'darkorange', dashPattern: [4, 3] }} />
+      <Draw way={localYAxis} style={{ stroke: 'darkorange', dashPattern: [4, 3] }} />
+      <Draw way={[...worldCorners, worldCorners[0]]} style={{ stroke: 'darkorange', strokeWidth: 2 }} />
+      <Draw way={[[shape.x, shape.y], worldPoint]} arrow="->" style={{ stroke: 'darkorange', strokeWidth: 2 }} />
+      <Circle center={[shape.x, shape.y]} radius={4} style={{ fill: 'darkorange', stroke: 'none' }} />
+      <Circle center={worldPoint} radius={5} style={{ fill: 'dodgerblue', stroke: 'none' }} />
+      <Node position={[-142, -88]} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}>
         World axes
       </Node>
-      <Node position={labelPositionFor(worldPoint)} stroke="none" textColor="dodgerblue" font={{ size: 12 }}>
+      <Node
+        position={labelPositionFor(worldPoint)}
+        style={{ stroke: 'none', textColor: 'dodgerblue', font: { size: 12 } }}
+      >
         World point
       </Node>
-      <Node position={localLabelPositionFor(shape)} stroke="none" textColor="darkorange" font={{ size: 12 }}>
+      <Node
+        position={localLabelPositionFor(shape)}
+        style={{ stroke: 'none', textColor: 'darkorange', font: { size: 12 } }}
+      >
         Local point [{values.localX}, {values.localY}]
       </Node>
     </Layout>

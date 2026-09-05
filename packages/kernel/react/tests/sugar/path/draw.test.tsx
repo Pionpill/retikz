@@ -28,9 +28,9 @@ describe('Draw: 基础展开', () => {
   });
 
   it('与等价 Kernel Path 产出一致——Sugar 不引入新能力', () => {
-    const sugarIR = ir(<Draw way={['a', 'b']} stroke="#f00" strokeWidth={2} arrow="->" />);
+    const sugarIR = ir(<Draw way={['a', 'b']} arrow="->" style={{ stroke: '#f00', strokeWidth: 2 }} />);
     const kernelIR = ir(
-      <Path stroke="#f00" strokeWidth={2} marks={[{ pos: 1, mark: { kind: 'arrow' } }]}>
+      <Path marks={[{ pos: 1, mark: { kind: 'arrow' } }]} style={{ stroke: '#f00', strokeWidth: 2 }}>
         <Step kind="move" to="a" />
         <Step kind="line" to="b" />
       </Path>,
@@ -59,47 +59,51 @@ describe('Draw: 基础展开', () => {
     const out = ir(
       <Draw
         way={['a', 'b']}
-        stroke="#abc"
-        strokeWidth={3}
-        dashPattern={[4, 2]}
-        dashOffset={5}
-        lineCap="round"
-        lineJoin="bevel"
         roundedCorners={6}
-        shadow="md"
-        blendMode="multiply"
         thickness="thick"
         arrow="<->"
         arrowDetail={{ shape: 'stealth' }}
-        fill="#fed"
-        fillRule="evenodd"
-        opacity={0.8}
-        fillOpacity={0.5}
-        strokeOpacity={0.7}
         zIndex={5}
+        style={{
+          stroke: '#abc',
+          strokeWidth: 3,
+          dashPattern: [4, 2],
+          dashOffset: 5,
+          lineCap: 'round',
+          lineJoin: 'bevel',
+          shadow: 'md',
+          blendMode: 'multiply',
+          fill: '#fed',
+          fillRule: 'evenodd',
+          opacity: 0.8,
+          fillOpacity: 0.5,
+          strokeOpacity: 0.7,
+        }}
       />,
     );
     expect(out.children[0]).toMatchObject({
       type: 'path',
-      stroke: '#abc',
-      strokeWidth: 3,
-      dashPattern: [4, 2],
-      dashOffset: 5,
-      lineCap: 'round',
-      lineJoin: 'bevel',
       roundedCorners: 6,
-      shadow: 'md',
-      blendMode: 'multiply',
       marks: [
         { pos: 0, mark: { kind: 'arrow', shape: 'stealth' } },
         { pos: 1, mark: { kind: 'arrow', shape: 'stealth' } },
       ],
-      fill: '#fed',
-      fillRule: 'evenodd',
-      opacity: 0.8,
-      fillOpacity: 0.5,
-      strokeOpacity: 0.7,
       zIndex: 5,
+      style: {
+        stroke: '#abc',
+        strokeWidth: 3,
+        dashPattern: [4, 2],
+        dashOffset: 5,
+        lineCap: 'round',
+        lineJoin: 'bevel',
+        shadow: 'md',
+        blendMode: 'multiply',
+        fill: '#fed',
+        fillRule: 'evenodd',
+        opacity: 0.8,
+        fillOpacity: 0.5,
+        strokeOpacity: 0.7,
+      },
     });
   });
 
@@ -111,11 +115,11 @@ describe('Draw: 基础展开', () => {
           { type: 'step', kind: 'move', to: { id: 'a' } },
           { type: 'step', kind: 'line', to: { id: 'b' } },
         ],
-        strokeWidth: 2,
+        style: { strokeWidth: 2 },
       },
     ]);
-    expect(ir(<Draw way={['a', 'b']} thickness="thick" strokeWidth={0} />).children[0]).toMatchObject({
-      strokeWidth: 0,
+    expect(ir(<Draw way={['a', 'b']} thickness="thick" style={{ strokeWidth: 0 }} />).children[0]).toMatchObject({
+      style: { strokeWidth: 0 },
     });
   });
 

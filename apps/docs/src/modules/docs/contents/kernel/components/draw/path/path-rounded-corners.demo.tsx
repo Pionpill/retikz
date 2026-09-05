@@ -11,23 +11,23 @@ export const previewControls = pathRoundedCornersControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={400} height={191} viewBox={{ x: -220, y: -105, width: 440, height: 210 }}>
-      <Path stroke="lightgray" strokeWidth={values.strokeWidth} lineJoin={values.lineJoin}>
+      <Path style={{ stroke: 'lightgray', strokeWidth: values.strokeWidth, lineJoin: values.lineJoin }}>
         <Step kind="move" to={[-170, -30]} />
         <Step to={[0, -75]} />
         <Step to={[170, -30]} />
       </Path>
-      <Path stroke="black" strokeWidth={1}>
+      <Path style={{ stroke: 'black', strokeWidth: 1 }}>
         <Step kind="move" to={[-170, -30]} />
         <Step to={[0, -75]} />
         <Step to={[170, -30]} />
       </Path>
 
-      <Path stroke="lightblue" strokeWidth={values.strokeWidth} roundedCorners={values.radius}>
+      <Path roundedCorners={values.radius} style={{ stroke: 'lightblue', strokeWidth: values.strokeWidth }}>
         <Step kind="move" to={[-170, 55]} />
         <Step to={[0, 10]} />
         <Step to={[170, 55]} />
       </Path>
-      <Path stroke="steelblue" strokeWidth={1} roundedCorners={values.radius}>
+      <Path roundedCorners={values.radius} style={{ stroke: 'steelblue', strokeWidth: 1 }}>
         <Step kind="move" to={[-170, 55]} />
         <Step to={[0, 10]} />
         <Step to={[170, 55]} />

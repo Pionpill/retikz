@@ -11,7 +11,7 @@ export const previewControls = textAttrsControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={400} height={181} viewBox={{ x: -210, y: -95, width: 420, height: 190 }}>
-      <Node id="text" position={[0, 0]} align="start" padding={18} textColor="#64748b">
+      <Node id="text" position={[0, 0]} style={{ textColor: '#64748b' }} layout={{ align: 'start', padding: 18 }}>
         继承 Node 样式
         <Text
           fill={values.fill}

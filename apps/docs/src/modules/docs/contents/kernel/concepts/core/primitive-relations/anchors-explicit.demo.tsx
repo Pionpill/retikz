@@ -33,7 +33,12 @@ const TIPS: Array<Dir> = [
 // 一组：方位源 + 锁定到对应 anchor 的 Draw（hub 节点单独写，因为 shape 写法不同）
 const ring = (tag: string, cx: number, dirs: Array<Dir>): Array<ReactElement> => [
   ...dirs.map(d => (
-    <Node key={`n-${tag}-${d.id}`} id={`${tag}-${d.id}`} position={[cx + d.pos[0], d.pos[1]]} stroke="none">
+    <Node
+      key={`n-${tag}-${d.id}`}
+      id={`${tag}-${d.id}`}
+      position={[cx + d.pos[0], d.pos[1]]}
+      style={{ stroke: 'none' }}
+    >
       {d.label}
     </Node>
   )),
@@ -44,12 +49,24 @@ const ring = (tag: string, cx: number, dirs: Array<Dir>): Array<ReactElement> =>
 
 const Demo: FC = () => (
   <Layout width={560} height={270} style={{ maxWidth: '100%', height: 'auto' }} shapes={[StarShapeDefinition]}>
-    <Node id="rect-o" position={[-185, 0]} shape="rectangle" padding={12} stroke="gray" dashPattern={[4, 3]}>
+    <Node
+      id="rect-o"
+      position={[-185, 0]}
+      shape="rectangle"
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
+      layout={{ padding: 12 }}
+    >
       Node
     </Node>
     {ring('rect', -185, WEB_ANCHORS)}
 
-    <Node id="ell-o" position={[0, 0]} shape="ellipse" padding={12} stroke="gray" dashPattern={[4, 3]}>
+    <Node
+      id="ell-o"
+      position={[0, 0]}
+      shape="ellipse"
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
+      layout={{ padding: 12 }}
+    >
       Node
     </Node>
     {ring('ell', 0, WEB_ANCHORS)}
@@ -58,20 +75,19 @@ const Demo: FC = () => (
       id="star-o"
       position={[185, 0]}
       shape={{ type: 'star', params: { points: 5, innerRadius: 15, outerRadius: 38 } }}
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
     >
       Node
     </Node>
     {ring('star', 185, TIPS)}
 
-    <Node position={[-185, 110]} stroke="none" padding={0} textColor="gray">
+    <Node position={[-185, 110]} style={{ stroke: 'none', textColor: 'gray' }} layout={{ padding: 0 }}>
       rectangle
     </Node>
-    <Node position={[0, 110]} stroke="none" padding={0} textColor="gray">
+    <Node position={[0, 110]} style={{ stroke: 'none', textColor: 'gray' }} layout={{ padding: 0 }}>
       ellipse
     </Node>
-    <Node position={[185, 110]} stroke="none" padding={0} textColor="gray">
+    <Node position={[185, 110]} style={{ stroke: 'none', textColor: 'gray' }} layout={{ padding: 0 }}>
       star · tip-N
     </Node>
   </Layout>

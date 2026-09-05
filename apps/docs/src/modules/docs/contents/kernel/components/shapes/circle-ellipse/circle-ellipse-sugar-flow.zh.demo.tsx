@@ -9,30 +9,21 @@ const Demo: FC = () => (
       id="target-input"
       position={[-275, -72]}
       text={['Circle', 'center + radius / diameter']}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="literal-input"
       position={[-275, 72]}
       text={['字面量几何', 'from / corners / box / Ellipse']}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="pass-target"
       position={[-75, -72]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13 } }}
     >
       保留 target 引用
     </Node>
@@ -40,30 +31,21 @@ const Demo: FC = () => (
       id="compute-geometry"
       position={[-75, 72]}
       text={['计算中心与半径', '只接 [x, y]']}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13 } }}
     />
     <Node
       id="path-step"
       position={[145, 0]}
       text={['Path + Step', 'circlePath / ellipsePath']}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13, weight: 'bold' }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
     />
     <Node
       id="angles"
       position={[145, 100]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 12 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 12 } }}
     >
       angles + closed
     </Node>
@@ -71,15 +53,12 @@ const Demo: FC = () => (
       id="path-output"
       position={[310, 0]}
       text={['Path 几何', '轮廓 / 部分弧']}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.08, font: { size: 13 } }}
     />
 
-    <Draw way={['target-input', 'pass-target']} arrow="->" stroke="gray" />
-    <Draw way={['literal-input', 'compute-geometry']} arrow="->" stroke="gray" />
+    <Draw way={['target-input', 'pass-target']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['literal-input', 'compute-geometry']} arrow="->" style={{ stroke: 'gray' }} />
     <Draw
       way={[
         'pass-target',
@@ -87,7 +66,7 @@ const Demo: FC = () => (
         'path-step',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
     <Draw
       way={[
@@ -96,9 +75,9 @@ const Demo: FC = () => (
         'path-step',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
-    <Draw way={['angles', 'path-step']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['angles', 'path-step']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
     <Draw
       way={[
         'path-step',
@@ -106,7 +85,7 @@ const Demo: FC = () => (
         'path-output',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
   </Layout>
 );

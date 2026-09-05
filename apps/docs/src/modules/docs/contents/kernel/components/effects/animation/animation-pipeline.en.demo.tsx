@@ -9,90 +9,66 @@ const Demo: FC = () => (
       id="preset"
       position={[-150, -145]}
       text={['Preset factory', 'fadeIn()']}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="custom-track"
       position={[150, -145]}
       text={['Hand-written track', 'JSON data']}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="track"
       position={[0, -75]}
       text={['AnimationTrack', 'keyframes + timing']}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="scene"
       position={[0, -5]}
       text={['Compile validation', 'Scene tracks']}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13 } }}
     />
     <Node
       id="route"
       position={[0, 65]}
       text={['Render routing', 'play / snapshot']}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13, weight: 'bold' }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
     />
     <Node
       id="svg"
       position={[-180, 145]}
       text={['SVG', 'CSS / WAAPI']}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="canvas"
       position={[0, 145]}
       text={['Canvas', 'rAF + evaluator']}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="snapshot"
       position={[180, 145]}
       text={['Static frame', 'snapshotAt']}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13 } }}
     />
 
-    <Draw way={['preset', 'track']} arrow="->" stroke="gray" />
-    <Draw way={['custom-track', 'track']} arrow="->" stroke="gray" />
-    <Draw way={['track', 'scene']} arrow="->" stroke="gray" />
-    <Draw way={['scene', 'route']} arrow="->" stroke="gray" />
-    <Draw way={['route', 'svg']} arrow="->" stroke="gray" />
-    <Draw way={['route', 'canvas']} arrow="->" stroke="gray" />
-    <Draw way={['route', 'snapshot']} arrow="->" stroke="gray" />
+    <Draw way={['preset', 'track']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['custom-track', 'track']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['track', 'scene']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['scene', 'route']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['route', 'svg']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['route', 'canvas']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['route', 'snapshot']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

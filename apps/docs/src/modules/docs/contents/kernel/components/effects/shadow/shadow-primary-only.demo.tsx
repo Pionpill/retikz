@@ -11,10 +11,9 @@ const Demo: FC = () => (
     <Node
       position={[0, 0]}
       shape="rectangle"
-      fill="white"
-      padding={16}
-      shadow="lg"
       label={{ text: 'label', position: 'top' }}
+      style={{ fill: 'white', shadow: 'lg' }}
+      layout={{ padding: 16 }}
     >
       text
     </Node>

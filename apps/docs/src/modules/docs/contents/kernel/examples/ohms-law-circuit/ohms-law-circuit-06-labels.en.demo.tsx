@@ -16,9 +16,16 @@ const CircuitDemo: FC = () => (
     shapes={[...circuitShapes, circuitMeter]}
   >
     <Scope
-      pathDefault={{ stroke: INK, strokeWidth: 3, lineCap: 'round', lineJoin: 'round' }}
-      nodeDefault={{ font: FONT, stroke: 'none', padding: 0 }}
-      labelDefault={{ font: { ...FONT, size: 28, style: 'italic' } }}
+      defaults={{
+        path: {
+          style: { stroke: INK, strokeWidth: 3, lineCap: 'round', lineJoin: 'round' },
+        },
+        node: {
+          style: { font: FONT, stroke: 'none' },
+          layout: { padding: 0 },
+        },
+        label: { font: { ...FONT, size: 28, style: 'italic' } },
+      }}
     >
       <Switch id="switch" position={[350, 200]} label={{ text: 'S', position: 'top' }} />
       <Meter id="ammeter" position={[625, 200]} text="A" />
@@ -64,7 +71,10 @@ const CircuitDemo: FC = () => (
       <Draw way={[at('rheostat', 'left'), [160, 440], at('battery', 'right')]} />
 
       {/* The battery is rotated, and a Node's label rotates with it, so E is a separate relative-positioned italic text Node */}
-      <Node position={{ direction: 'left', of: 'battery', distance: 72 }} font={{ ...FONT, size: 28, style: 'italic' }}>
+      <Node
+        position={{ direction: 'left', of: 'battery', distance: 72 }}
+        style={{ font: { ...FONT, size: 28, style: 'italic' } }}
+      >
         E
       </Node>
     </Scope>

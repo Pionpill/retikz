@@ -30,9 +30,10 @@ const themedBox = defineComposite({
       {
         type: 'node',
         position: [0, 0],
-        minimumSize: 20,
-        padding: 0,
-        fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+        style: {
+          fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+        },
+        layout: { minimumSize: 20, padding: 0 },
       },
     ],
   }),
@@ -90,26 +91,22 @@ const themeProbe = defineComposite({
           type: 'node',
           id: 'style',
           position: [0, 0],
-          minimumSize: 20,
-          padding: 0,
-          fill: styleColor,
+          style: { fill: styleColor },
+          layout: { minimumSize: 20, padding: 0 },
         },
         {
           type: 'node',
           id: 'palette',
           position: [30, 0],
-          minimumSize: 20,
-          padding: 0,
-          fill: context.theme.colors.categorical[0],
+          style: { fill: context.theme.colors.categorical[0] },
+          layout: { minimumSize: 20, padding: 0 },
         },
         {
           type: 'node',
           id: 'error',
           position: [60, 0],
-          minimumSize: 20,
-          padding: 0,
-          stroke: context.theme.colors.semantic.error,
-          strokeWidth: 2,
+          style: { stroke: context.theme.colors.semantic.error, strokeWidth: 2 },
+          layout: { minimumSize: 20, padding: 0 },
         },
       ],
     };
@@ -120,7 +117,7 @@ describe('<Layout theme>', () => {
   it('children 模式允许 Node textColor 使用 contextual color 权重', () => {
     const markup = renderToStaticMarkup(
       <Layout theme={{ mode: ThemeMode.Dark }} width={100} height={100}>
-        <Node position={[0, 0]} color="#336699" fill={0.2} textColor={0.8}>
+        <Node position={[0, 0]} style={{ color: '#336699', fill: 0.2, textColor: 0.8 }}>
           A
         </Node>
       </Layout>,
@@ -133,7 +130,7 @@ describe('<Layout theme>', () => {
   it('children 模式允许 Text 行级 fill 使用 contextual color 权重', () => {
     const markup = renderToStaticMarkup(
       <Layout theme={{ mode: ThemeMode.Dark }} width={100} height={100}>
-        <Node position={[0, 0]} color="#336699">
+        <Node position={[0, 0]} style={{ color: '#336699' }}>
           <Text fill={0.4}>A</Text>
         </Node>
       </Layout>,
@@ -152,8 +149,7 @@ describe('<Layout theme>', () => {
             {
               type: 'node',
               position: [0, 0],
-              color: '#336699',
-              fill: 0.2,
+              style: { color: '#336699', fill: 0.2 },
             },
           ],
         }}
@@ -240,7 +236,14 @@ describe('<Layout theme>', () => {
         ir={{
           type: 'scene',
           version: 1,
-          children: [{ type: 'node', position: [0, 0], minimumSize: 20, fill: '#fedcba' }],
+          children: [
+            {
+              type: 'node',
+              position: [0, 0],
+              style: { fill: '#fedcba' },
+              layout: { minimumSize: 20 },
+            },
+          ],
         }}
         theme={{ style: 'vibrant', mode: ThemeMode.Dark }}
         themeStyles={testThemeStyles}

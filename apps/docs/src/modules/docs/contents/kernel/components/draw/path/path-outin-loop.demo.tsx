@@ -28,19 +28,21 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       width={360}
       height={220}
       viewBox={{ x: -180, y: -110, width: 360, height: 220 }}
-      nodeDefault={{ stroke: 'gray', dashed: true }}
+      rootScope={{
+        defaults: {
+          node: {
+            style: { stroke: 'gray', dashed: true },
+          },
+        },
+      }}
     >
       <Draw
         way={[Start, guideEnd(Start, values.outAngle, guideLength)]}
-        stroke="#94a3b8"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: '#94a3b8', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Draw
         way={[incomingOrigin, guideEnd(incomingOrigin, values.inAngle, guideLength)]}
-        stroke="#94a3b8"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: '#94a3b8', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Node id="S" position={Start} shape="circle">
         S
@@ -48,7 +50,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Node id="T" position={End} shape="circle">
         T
       </Node>
-      <Path arrow="->" stroke="currentColor">
+      <Path arrow="->" style={{ stroke: 'currentColor' }}>
         <Step kind="move" to="S" />
         <Step kind="bend" to={target} outAngle={values.outAngle} inAngle={values.inAngle} looseness={looseness} />
       </Path>

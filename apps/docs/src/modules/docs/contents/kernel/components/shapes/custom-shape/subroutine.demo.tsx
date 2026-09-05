@@ -67,10 +67,8 @@ const Demo: FC = () => (
       shape="subroutine"
       position={[0, 0]}
       text="f(x)"
-      fill="lightgray"
-      stroke="darkorange"
-      strokeWidth={2}
-      padding={16}
+      style={{ fill: 'lightgray', stroke: 'darkorange', strokeWidth: 2 }}
+      layout={{ padding: 16 }}
     />
   </Layout>
 );

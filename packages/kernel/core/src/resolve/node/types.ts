@@ -8,6 +8,8 @@ import type {
   IRNode,
   IRNodeLabel,
   IRNodeLabelBoundaryPosition,
+  IRNodeLayout,
+  IRNodeStyle,
   IRPaint,
   NodeLabelPlacementValue,
   NodeLabelPositionValue,
@@ -28,13 +30,16 @@ export type ResolvedNodeLabelPin = Omit<Exclude<IRNodeLabel['pin'], boolean | un
 };
 
 /** 已把 Node 自身派生颜色确定为字符串、但尚未处理正文和 label 的中间形态 */
-export type PrimaryColorResolvedNode = Omit<IRNode, 'fill' | 'stroke' | 'textColor'> & {
-  /** 已确定的节点填充 */
-  fill?: string | IRPaint;
-  /** 已确定的节点描边 */
-  stroke?: string | IRPaint;
-  /** 已确定的节点正文主色 */
-  textColor?: string;
+export type PrimaryColorResolvedNode = Omit<IRNode, 'style'> & {
+  /** 已确定上下文颜色的节点样式 */
+  style?: Omit<IRNodeStyle, 'fill' | 'stroke' | 'textColor'> & {
+    /** 已确定的节点填充 */
+    fill?: string | IRPaint;
+    /** 已确定的节点描边 */
+    stroke?: string | IRPaint;
+    /** 已确定的节点正文主色 */
+    textColor?: string;
+  };
 };
 
 /** 所有上下文颜色均已确定为字符串的 Node Source 投影 */
@@ -74,7 +79,7 @@ export type CanonicalNodeLabel = Omit<
 
 /** 展开 Node 紧凑写法与静态默认值后的完整内部形态 */
 export type CanonicalNode = Omit<
-  ResolvedNodeSource,
+  Omit<ResolvedNodeSource, 'style' | 'layout'> & NonNullable<ResolvedNodeSource['style']> & IRNodeLayout,
   | 'padding'
   | 'margin'
   | 'minimumSize'

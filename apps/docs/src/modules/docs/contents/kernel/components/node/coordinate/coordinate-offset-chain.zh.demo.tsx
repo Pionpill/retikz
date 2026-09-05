@@ -21,17 +21,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     >
       <Draw
         way={coordinateOffsetChainFrame.xAxis}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
         zIndex={-1}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Draw
         way={coordinateOffsetChainFrame.yAxis}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
         zIndex={-1}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Coordinate id="ca" position={[values.rootX, values.rootY]} />
       <Coordinate id="cb" position={{ of: 'ca', offset: [values.stepX, 0] }} />
@@ -45,8 +41,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Node id="C" position={{ of: 'cc', offset: [0, -30] }}>
         c
       </Node>
-      <Draw way={['A', 'B']} arrow="->" stroke="gray" />
-      <Draw way={['B', 'C']} arrow="->" stroke="gray" />
+      <Draw way={['A', 'B']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['B', 'C']} arrow="->" style={{ stroke: 'gray' }} />
     </Layout>
   );
 });

@@ -38,20 +38,26 @@ describe('resolve style frame', () => {
   });
 
   it('propagates a scope master color to node and path channels', () => {
-    const frame = createStyleResolveFrame(styleScope({ color: 'red' }));
+    const frame = createStyleResolveFrame(
+      styleScope({
+        style: { color: 'red' },
+      }),
+    );
     const node = NodeSchema.parse({ type: 'node', position: [0, 0] });
 
     expect(resolveEffectiveNodeStyle(node, [frame])).toMatchObject({
-      fill: 'red',
-      stroke: 'red',
-      textColor: 'red',
+      style: { fill: 'red', stroke: 'red', textColor: 'red' },
     });
-    expect(resolveEffectivePath(pathOf(), [frame])).toMatchObject({ color: 'red' });
+    expect(resolveEffectivePath(pathOf(), [frame])).toMatchObject({
+      style: { color: 'red' },
+    });
   });
 
   it('applies label font fields by per-field priority', () => {
     const frame = createStyleResolveFrame(
-      styleScope({ labelDefault: { font: { family: 'default', size: 20, weight: 'bold' } } }),
+      styleScope({
+        defaults: { label: { font: { family: 'default', size: 20, weight: 'bold' } } },
+      }),
     );
     const label = GeometryLabelSchema.parse({ text: 'x', font: { family: 'label', size: 10 } });
     const resolved = resolveEffectivePath(pathOf({ label }), [frame]);
@@ -64,11 +70,13 @@ describe('resolve style frame', () => {
   it('applies arrow start and end overrides after shared defaults', () => {
     const frame = createStyleResolveFrame(
       styleScope({
-        arrowDefault: {
-          shape: 'stealth',
-          scale: 2,
-          start: { shape: 'triangle' },
-          end: { shape: 'circle' },
+        defaults: {
+          arrow: {
+            shape: 'stealth',
+            scale: 2,
+            start: { shape: 'triangle' },
+            end: { shape: 'circle' },
+          },
         },
       }),
     );

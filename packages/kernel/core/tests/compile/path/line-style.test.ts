@@ -13,11 +13,11 @@ describe('lineCap / lineJoin', () => {
       children: [
         {
           type: 'path',
-          lineCap: 'round',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
+          style: { lineCap: 'round' },
         },
       ],
     };
@@ -31,12 +31,12 @@ describe('lineCap / lineJoin', () => {
       children: [
         {
           type: 'path',
-          lineJoin: 'bevel',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
             { type: 'step', kind: 'line', to: [10, 10] },
           ],
+          style: { lineJoin: 'bevel' },
         },
       ],
     };

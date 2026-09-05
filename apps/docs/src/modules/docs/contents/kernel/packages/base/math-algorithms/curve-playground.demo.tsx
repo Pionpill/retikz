@@ -44,8 +44,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Layout width={400} height={260} viewBox={{ x: -175, y: -120, width: 350, height: 240 }}>
-      <Draw way={points} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" />
-      <Path stroke="darkorange" strokeWidth={2}>
+      <Draw way={points} style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }} />
+      <Path style={{ stroke: 'darkorange', strokeWidth: 2 }}>
         <Step kind="move" to={points[0]} />
         {segments.map((segment, index) => (
           <Step key={index} kind="cubic" to={segment.to} control1={segment.control1} control2={segment.control2} />
@@ -56,8 +56,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           key={`${point[0]}-${point[1]}-${index}`}
           center={point}
           radius={4}
-          fill={index === 2 ? 'seagreen' : 'dodgerblue'}
-          stroke="none"
+          style={{ fill: index === 2 ? 'seagreen' : 'dodgerblue', stroke: 'none' }}
         />
       ))}
     </Layout>

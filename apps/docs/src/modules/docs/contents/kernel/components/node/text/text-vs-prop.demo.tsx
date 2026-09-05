@@ -8,7 +8,7 @@ import { Layout, Node, Text } from '@retikz/react';
  */
 const Demo: FC = () => (
   <Layout width={420} height={140}>
-    <Node id="sugar" position={[-100, 0]} align="start">
+    <Node id="sugar" position={[-100, 0]} layout={{ align: 'start' }}>
       <Text fill="red" font={{ weight: 'bold', size: 16 }}>
         Heading
       </Text>
@@ -21,12 +21,12 @@ const Demo: FC = () => (
     <Node
       id="prop"
       position={[100, 0]}
-      align="start"
       text={[
         { text: 'Heading', fill: 'red', font: { weight: 'bold', size: 16 } },
         'body line 1',
         { text: 'note', font: { style: 'italic' }, opacity: 0.6 },
       ]}
+      layout={{ align: 'start' }}
     />
   </Layout>
 );

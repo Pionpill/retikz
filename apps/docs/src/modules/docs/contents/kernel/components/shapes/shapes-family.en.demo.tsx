@@ -17,34 +17,42 @@ const Demo: FC = () => (
     shapes={[StarShapeDefinition, ContourShapeDefinition]}
   >
     {/* Row labels */}
-    <Node id="rowPath" position={[-235, -55]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
+    <Node
+      id="rowPath"
+      position={[-235, -55]}
+      style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
+    >
       Path line
     </Node>
-    <Node id="rowNode" position={[-235, 55]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
+    <Node
+      id="rowNode"
+      position={[-235, 55]}
+      style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
+    >
       Node boundary
     </Node>
 
     {/* Top row: as Path graphics (Sugar) — pure outlines */}
-    <Circle center={[-120, -55]} radius={24} fill="none" />
-    <Rectangle center={[-25, -55]} width={52} height={40} fill="none" />
-    <RegularPolygon center={[75, -55]} radius={26} sides={6} fill="none" />
-    <Star center={[175, -55]} outerRadius={26} innerRadius={11} points={5} fill="none" />
+    <Circle center={[-120, -55]} radius={24} style={{ fill: 'none' }} />
+    <Rectangle center={[-25, -55]} width={52} height={40} style={{ fill: 'none' }} />
+    <RegularPolygon center={[75, -55]} radius={26} sides={6} style={{ fill: 'none' }} />
+    <Star center={[175, -55]} outerRadius={26} innerRadius={11} points={5} style={{ fill: 'none' }} />
 
     {/* Bottom row: as Node shapes — boundary holds text and accepts edges */}
-    <Node id="nc" position={[-120, 55]} shape="circle" fill="aliceblue">
+    <Node id="nc" position={[-120, 55]} shape="circle" style={{ fill: 'aliceblue' }}>
       circle
     </Node>
-    <Node id="nr" position={[-25, 55]} fill="aliceblue">
+    <Node id="nr" position={[-25, 55]} style={{ fill: 'aliceblue' }}>
       rect
     </Node>
-    <Node id="np" position={[75, 55]} shape={{ type: 'polygon', params: { sides: 6 } }} fill="aliceblue">
+    <Node id="np" position={[75, 55]} shape={{ type: 'polygon', params: { sides: 6 } }} style={{ fill: 'aliceblue' }}>
       polygon
     </Node>
     <Node
       id="ns"
       position={[175, 55]}
       shape={{ type: 'star', params: { points: 5, innerRadius: 11, outerRadius: 26 } }}
-      fill="gold"
+      style={{ fill: 'gold' }}
     />
     <Node
       id="ncontour"
@@ -61,11 +69,11 @@ const Demo: FC = () => (
           cornerRadius: 5,
         },
       }}
-      fill="lavender"
+      style={{ fill: 'lavender' }}
     >
       contour
     </Node>
-    <Draw way={['nc', 'nr']} arrow="->" stroke="gray" />
+    <Draw way={['nc', 'nr']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

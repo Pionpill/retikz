@@ -37,23 +37,23 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             center,
             ellipsePoint(center, values.radiusX, values.radiusY, values.endAngle),
           ]}
-          stroke="lightgray"
-          dashPattern={[1, 4]}
-          lineCap="round"
+          style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
         />
       ))}
-      <Circle center={arcCenter} radius={3} fill="gray" stroke="none" />
-      <Circle center={sectorCenter} radius={3} fill="gray" stroke="none" />
+      <Circle center={arcCenter} radius={3} style={{ fill: 'gray', stroke: 'none' }} />
+      <Circle center={sectorCenter} radius={3} style={{ fill: 'gray', stroke: 'none' }} />
       <Arc
         center={arcCenter}
         radius={radius}
         startAngle={values.startAngle}
         endAngle={values.endAngle}
         close={values.arcClose}
-        fill={values.fill}
-        fillOpacity={values.arcClose === 'open' ? 0 : 0.55}
-        stroke={values.stroke}
-        strokeWidth={2.5}
+        style={{
+          fill: values.fill,
+          fillOpacity: values.arcClose === 'open' ? 0 : 0.55,
+          stroke: values.stroke,
+          strokeWidth: 2.5,
+        }}
       />
       <Sector
         center={sectorCenter}
@@ -61,10 +61,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         innerRadius={innerRadius}
         startAngle={values.startAngle}
         endAngle={values.endAngle}
-        fill={values.fill}
-        fillOpacity={0.72}
-        stroke={values.stroke}
-        strokeWidth={2.5}
+        style={{ fill: values.fill, fillOpacity: 0.72, stroke: values.stroke, strokeWidth: 2.5 }}
       />
     </Layout>
   );

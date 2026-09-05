@@ -8,9 +8,24 @@ import { Layout, Node } from '@retikz/react';
  */
 const Demo: FC = () => (
   <Layout width={260} height={200}>
-    <Node position={[0, 0]} shape="rectangle" fill="#0f172a" minimumSize={{ width: 220, height: 160 }} stroke="none" />
-    <Node position={[-26, 0]} shape="circle" fill="#f97316" minimumSize={100} stroke="none" blendMode="screen" />
-    <Node position={[26, 0]} shape="circle" fill="#06b6d4" minimumSize={100} stroke="none" blendMode="screen" />
+    <Node
+      position={[0, 0]}
+      shape="rectangle"
+      style={{ fill: '#0f172a', stroke: 'none' }}
+      layout={{ minimumSize: { width: 220, height: 160 } }}
+    />
+    <Node
+      position={[-26, 0]}
+      shape="circle"
+      style={{ fill: '#f97316', stroke: 'none', blendMode: 'screen' }}
+      layout={{ minimumSize: 100 }}
+    />
+    <Node
+      position={[26, 0]}
+      shape="circle"
+      style={{ fill: '#06b6d4', stroke: 'none', blendMode: 'screen' }}
+      layout={{ minimumSize: 100 }}
+    />
   </Layout>
 );
 

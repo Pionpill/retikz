@@ -14,9 +14,7 @@ const Demo: FC = () => (
       radius={{ x: 70, y: 40 }}
       startAngle={0}
       endAngle={120}
-      fill="dodgerblue"
-      stroke="dimgray"
-      strokeWidth={1}
+      style={{ fill: 'dodgerblue', stroke: 'dimgray', strokeWidth: 1 }}
     />
     {/* rotate={40}：整条 path 绕包围盒中心旋转，得到倾斜椭圆扇形 */}
     <Sector
@@ -25,9 +23,7 @@ const Demo: FC = () => (
       startAngle={0}
       endAngle={120}
       rotate={40}
-      fill="darkorange"
-      stroke="dimgray"
-      strokeWidth={1}
+      style={{ fill: 'darkorange', stroke: 'dimgray', strokeWidth: 1 }}
     />
   </Layout>
 );

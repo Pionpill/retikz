@@ -21,17 +21,22 @@ const Demo: FC = () => {
 
   return (
     <Layout width={400} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
-      <Circle center={CENTER} radius={OUTER_RADIUS} stroke="lightgray" fill="none" dashPattern={[4, 4]} />
-      <Circle center={CENTER} radius={INNER_RADIUS} stroke="lightgray" fill="none" dashPattern={[4, 4]} />
+      <Circle
+        center={CENTER}
+        radius={OUTER_RADIUS}
+        style={{ stroke: 'lightgray', fill: 'none', dashPattern: [4, 4] }}
+      />
+      <Circle
+        center={CENTER}
+        radius={INNER_RADIUS}
+        style={{ stroke: 'lightgray', fill: 'none', dashPattern: [4, 4] }}
+      />
       <Star
         center={CENTER}
         outerRadius={OUTER_RADIUS}
         innerRadius={INNER_RADIUS}
         points={POINTS}
-        stroke="currentColor"
-        strokeWidth={1.5}
-        fill="lightgray"
-        fillOpacity={0.14}
+        style={{ stroke: 'currentColor', strokeWidth: 1.5, fill: 'lightgray', fillOpacity: 0.14 }}
       />
 
       <Draw
@@ -42,7 +47,7 @@ const Demo: FC = () => {
           },
           vertices[0],
         ]}
-        stroke="darkorange"
+        style={{ stroke: 'darkorange' }}
       />
       <Draw
         way={[
@@ -52,7 +57,7 @@ const Demo: FC = () => {
           },
           vertices[1],
         ]}
-        stroke="dodgerblue"
+        style={{ stroke: 'dodgerblue' }}
       />
 
       {vertices.map((vertex, index) => (
@@ -60,24 +65,23 @@ const Demo: FC = () => {
           key={index}
           center={vertex}
           radius={4}
-          stroke="none"
-          fill={index % 2 === 0 ? 'darkorange' : 'dodgerblue'}
+          style={{ stroke: 'none', fill: index % 2 === 0 ? 'darkorange' : 'dodgerblue' }}
         />
       ))}
-      <Circle center={CENTER} radius={3} stroke="none" fill="dimgray" />
+      <Circle center={CENTER} radius={3} style={{ stroke: 'none', fill: 'dimgray' }} />
 
-      <Circle center={[25, -58]} radius={4} stroke="none" fill="darkorange" />
-      <Node position={[105, -58]} stroke="none" font={{ size: 14 }}>
+      <Circle center={[25, -58]} radius={4} style={{ stroke: 'none', fill: 'darkorange' }} />
+      <Node position={[105, -58]} style={{ stroke: 'none', font: { size: 14 } }}>
         Tip / R
       </Node>
-      <Circle center={[25, -18]} radius={4} stroke="none" fill="dodgerblue" />
-      <Node position={[105, -18]} stroke="none" font={{ size: 14 }}>
+      <Circle center={[25, -18]} radius={4} style={{ stroke: 'none', fill: 'dodgerblue' }} />
+      <Node position={[105, -18]} style={{ stroke: 'none', font: { size: 14 } }}>
         Notch / r
       </Node>
-      <Node position={[105, 28]} stroke="none" font={{ size: 14 }}>
+      <Node position={[105, 28]} style={{ stroke: 'none', font: { size: 14 } }}>
         Vertices: 2p
       </Node>
-      <Node position={[105, 68]} stroke="none" font={{ size: 14 }}>
+      <Node position={[105, 68]} style={{ stroke: 'none', font: { size: 14 } }}>
         Δθ = 180° / p
       </Node>
     </Layout>

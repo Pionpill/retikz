@@ -73,44 +73,45 @@ export const resolveNodeTextColor = <TNode extends PrimaryColorResolvedNode>(
   labelDefault: EffectiveLabelDefault,
   warn: (code: string, message: string) => void,
 ): TNode => {
-  if (node.textColor !== NodeTextColor.Contrast) return node;
+  if (node.style?.textColor !== NodeTextColor.Contrast) return node;
 
   if (!hasNodeTextColorConsumer(node, labelDefault)) {
-    const resolved = { ...node };
-    delete resolved.textColor;
+    const style = { ...node.style };
+    delete style.textColor;
+    const resolved = { ...node, style };
     return resolved;
   }
 
-  const fill = node.fill;
+  const fill = node.style.fill;
   if (fill === undefined) {
     return {
       ...node,
-      textColor: fallbackTextColor('fill is missing, so the background is unknown', warn),
+      style: { ...node.style, textColor: fallbackTextColor('fill is missing, so the background is unknown', warn) },
     };
   }
   if (typeof fill !== 'string') {
     return {
       ...node,
-      textColor: fallbackTextColor(`unsupported fill paint kind '${fill.kind}'`, warn),
+      style: { ...node.style, textColor: fallbackTextColor(`unsupported fill paint kind '${fill.kind}'`, warn) },
     };
   }
   const parsedFill = parseStaticCssColor(fill);
   if (!parsedFill) {
     return {
       ...node,
-      textColor: fallbackTextColor(`unsupported fill '${fill}'`, warn),
+      style: { ...node.style, textColor: fallbackTextColor(`unsupported fill '${fill}'`, warn) },
     };
   }
-  const effectiveAlpha = parsedFill.a * (node.fillOpacity ?? 1);
+  const effectiveAlpha = parsedFill.a * (node.style.fillOpacity ?? 1);
   if (effectiveAlpha !== 1) {
     return {
       ...node,
-      textColor: fallbackTextColor(`effective fill '${fill}' is not opaque`, warn),
+      style: { ...node.style, textColor: fallbackTextColor(`effective fill '${fill}' is not opaque`, warn) },
     };
   }
 
   return {
     ...node,
-    textColor: contrastingBlackOrWhite(parsedFill),
+    style: { ...node.style, textColor: contrastingBlackOrWhite(parsedFill) },
   };
 };

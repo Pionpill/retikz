@@ -59,10 +59,20 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       viewBox={{ x: -215, y: -215, width: 430, height: 430 }}
       shapes={[SectorShapeDefinition]}
     >
-      <Draw way={[[0, 0], sourcePosition]} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-2} />
-      <Node id="target" position={[0, 0]} shape={targetShape} fill="#bfdbfe" stroke="#2563eb" />
-      <Node id="source" position={sourcePosition} shape="circle" minimumSize={18} fill="gray" stroke="none" />
-      <Draw way={[sourceTarget, targetOf(values.anchor)]} arrow="->" stroke="gray" zIndex={-1} />
+      <Draw
+        way={[[0, 0], sourcePosition]}
+        zIndex={-2}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+      />
+      <Node id="target" position={[0, 0]} shape={targetShape} style={{ fill: '#bfdbfe', stroke: '#2563eb' }} />
+      <Node
+        id="source"
+        position={sourcePosition}
+        shape="circle"
+        style={{ fill: 'gray', stroke: 'none' }}
+        layout={{ minimumSize: 18 }}
+      />
+      <Draw way={[sourceTarget, targetOf(values.anchor)]} arrow="->" zIndex={-1} style={{ stroke: 'gray' }} />
     </Layout>
   );
 });

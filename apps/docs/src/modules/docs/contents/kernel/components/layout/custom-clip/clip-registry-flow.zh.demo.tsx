@@ -8,30 +8,41 @@ const Demo: FC = () => (
     <Node
       id="operations"
       position={[-360, 0]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
     >
       Clip Definitions
     </Node>
     <Node
       id="clip-registry"
       position={[-175, 0]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
     >
       Clip Registry
     </Node>
-    <Node id="resolve" position={[20, 0]} stroke="dimgray" fill="dimgray" fillOpacity={0.08} cornerRadius={4}>
+    <Node
+      id="resolve"
+      position={[20, 0]}
+      cornerRadius={4}
+      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+    >
       schema + resolve
     </Node>
-    <Node id="lower" position={[225, 0]} stroke="dimgray" fill="dimgray" fillOpacity={0.08} cornerRadius={4}>
+    <Node
+      id="lower"
+      position={[225, 0]}
+      cornerRadius={4}
+      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+    >
       shapeSchema + lower
     </Node>
-    <Node id="path" position={[395, 0]} stroke="darkviolet" fill="darkviolet" fillOpacity={0.08} cornerRadius={4}>
+    <Node
+      id="path"
+      position={[395, 0]}
+      cornerRadius={4}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.08 }}
+    >
       SceneClipPath
     </Node>
 

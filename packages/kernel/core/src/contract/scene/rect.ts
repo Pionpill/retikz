@@ -45,9 +45,9 @@ export type RectPrim = {
   /** 描边宽度 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern（如 [4, 2]） */
-  dashPattern?: IRPathBase['dashPattern'];
+  dashPattern?: NonNullable<IRPathBase['style']>['dashPattern'];
   /** 描边 dash offset */
-  dashOffset?: IRPathBase['dashOffset'];
+  dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
   /**
    * 圆角半径（同时作用于 rx/ry）
    * @default 0

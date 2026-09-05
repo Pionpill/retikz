@@ -39,11 +39,7 @@ describe('Core contextual color compile', () => {
           {
             type: 'node',
             position: [0, 0],
-            color: '#336699',
-            fill: 0.2,
-            stroke: 0.8,
-            fillOpacity: 0.4,
-            strokeOpacity: 0.6,
+            style: { color: '#336699', fill: 0.2, stroke: 0.8, fillOpacity: 0.4, strokeOpacity: 0.6 },
           },
         ],
         mode,
@@ -61,9 +57,19 @@ describe('Core contextual color compile', () => {
       sceneOf([
         {
           type: 'scope',
-          color: '#ff0000',
-          nodeDefault: { fill: 0.2, stroke: 0.8 },
-          children: [{ type: 'node', position: [0, 0], color: '#336699' }],
+          children: [
+            {
+              type: 'node',
+              position: [0, 0],
+              style: { color: '#336699' },
+            },
+          ],
+          style: { color: '#ff0000' },
+          defaults: {
+            node: {
+              style: { fill: 0.2, stroke: 0.8 },
+            },
+          },
         },
       ]),
     );
@@ -77,10 +83,8 @@ describe('Core contextual color compile', () => {
       {
         type: 'node',
         position: [0, 0],
-        color: '#336699',
-        fill: 0.2,
-        textColor: 'contrast',
         text: 'body',
+        style: { color: '#336699', fill: 0.2, textColor: 'contrast' },
       },
     ]);
 
@@ -93,14 +97,13 @@ describe('Core contextual color compile', () => {
       {
         type: 'node',
         position: [0, 0],
-        color: '#336699',
-        textColor: 0.8,
         text: [{ text: 'line', fill: 0.5 }],
         label: {
           text: { runs: [{ text: 'label-run', fill: 0.5 }] },
           textColor: 0.4,
           pin: { stroke: 0.25 },
         },
+        style: { color: '#336699', textColor: 0.8 },
       },
     ]);
 
@@ -114,9 +117,6 @@ describe('Core contextual color compile', () => {
     const scene = sceneOf([
       {
         type: 'path',
-        color: '#336699',
-        fill: 0.4,
-        stroke: 0.2,
         marks: [
           {
             pos: 1,
@@ -132,6 +132,7 @@ describe('Core contextual color compile', () => {
             label: { text: 'edge', textColor: 0.6 },
           },
         ],
+        style: { color: '#336699', fill: 0.4, stroke: 0.2 },
       },
     ]);
     const path = pathsOf(scene).find(primitive => primitive.arrowEnd !== undefined)!;
@@ -151,12 +152,11 @@ describe('Core contextual color compile', () => {
           children: [
             {
               type: 'path',
-              color: '#336699',
-              stroke: 0.2,
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [40, 0] },
               ],
+              style: { color: '#336699', stroke: 0.2 },
             },
           ],
         },

@@ -3,6 +3,8 @@ title: Scope
 description: Scope 是 Kernel 的局部上下文容器：让一组图元共享坐标变换、样式默认、命名空间、整体引用和裁剪，但不负责绘制或自动布局。
 ---
 
+`style` 提供通用级联视觉值；`defaults.node` / `path` / `label` / `arrow` 提供各宿主默认值，`defaults.reset` 设置继承屏障。Node 默认值复用 `style` / `layout`，Path 默认值复用 `style`；label 与 arrow 的小型叶子契约保持原结构。
+
 `<Scope>` 把一组 children 放进同一个局部上下文。它不画新的图元，也不替你计算 plot / table 布局；它只管理这组内容怎样变换、怎样按自身包络定位、怎样被引用，以及怎样进入 Scene。
 
 把 Scope 当作「子图边界」：只有一组内容确实需要共享几何或运行时语义时才使用。单纯为了整理 JSX，请拆普通 React 组件。
@@ -108,11 +110,11 @@ import { Scope } from '@retikz/react';
 
 `<Scope theme>` 把稀疏的 `style` / `mode` selector 写入 `IRScope.theme`，只影响其后代 Composite。字段逐项继承：例如 `{ mode: ThemeMode.Dark }` 只切换明暗环境，仍保留外层的 `style`。编译时 Core 根据当前 style registry 重新生成 shared colors；未注册的 style 会立即报错。完整示例见 [Layout 的可继承 Theme](/kernel/components/layout/overview#可继承-theme)。
 
-Theme 与样式默认值是两条独立通道：`resetStyle` 不重置 Theme，Theme 也不直接填充 Node / Path 的颜色。省略 `style` 时使用所属包的默认基线；在嵌套 `Scope` 中省略 `style` 会继承外层风格，不能重置为基线。
+Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme，Theme 也不直接填充 Node / Path 的颜色。省略 `style` 时使用所属包的默认基线；在嵌套 `Scope` 中省略 `style` 会继承外层风格，不能重置为基线。
 
 ### 样式默认值
 
-Scope 同时提供 `color`、共享 graphic state 与 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`。这些值逐字段向内继承，元素显式值优先；`resetStyle` 只切断指定通道的外层继承。
+Scope 同时提供 `color`、共享 graphic state 与 `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`。这些值逐字段向内继承，元素显式值优先；`defaults.reset` 只切断指定通道的外层继承。
 
 样式是 Scope 的辅助职责，不改变局部坐标、引用或裁剪语义。需要查字段时直接看下方 API，不必为颜色、线宽或透明度建立额外 Scope。
 
@@ -264,13 +266,13 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
 
 ### 样式默认值
 
-| 属性                                                            | 类型                               | 默认值  | 描述                              |
-| --------------------------------------------------------------- | ---------------------------------- | ------- | --------------------------------- |
-| `color`                                                         | `string`                           | —       | 跨元素级联的主色                  |
-| `stroke` / `fill`                                               | `string` \| `IRPaint`              | —       | 跨元素逐字段级联的描边与填充      |
-| `strokeWidth` / opacity 字段                                    | `number`                           | —       | 线宽与逐字段级联的透明度          |
-| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | 对应默认值对象                     | —       | 四类元素各自独立的默认通道        |
-| `resetStyle`                                                    | `boolean` \| `Array<StyleChannel>` | `false` | 全部或按通道切断外层 Scope 的继承 |
+| 属性                                                                    | 类型                               | 默认值  | 描述                              |
+| ----------------------------------------------------------------------- | ---------------------------------- | ------- | --------------------------------- |
+| `style.color`                                                           | `string`                           | —       | 跨元素级联的主色                  |
+| `style.stroke` / `style.fill`                                           | `string` \| `IRPaint`              | —       | 跨元素逐字段级联的描边与填充      |
+| `style.strokeWidth` / opacity 字段                                      | `number`                           | —       | 线宽与逐字段级联的透明度          |
+| `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow` | 对应默认值对象                     | —       | 四类元素各自独立的默认通道        |
+| `defaults.reset`                                                        | `boolean` \| `Array<StyleChannel>` | `false` | 全部或按通道切断外层 Scope 的继承 |
 
 ## 相关
 

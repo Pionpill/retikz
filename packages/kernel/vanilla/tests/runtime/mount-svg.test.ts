@@ -64,14 +64,16 @@ describe('@retikz/vanilla mountSvg', () => {
           id: 'a',
           position: [0, 0],
           shape: 'rectangle',
-          minimumSize: { width: 40, height: 20 },
-          fill: {
-            kind: 'linearGradient',
-            stops: [
-              { offset: 0, color: '#f00' },
-              { offset: 1, color: '#00f' },
-            ],
+          style: {
+            fill: {
+              kind: 'linearGradient',
+              stops: [
+                { offset: 0, color: '#f00' },
+                { offset: 1, color: '#00f' },
+              ],
+            },
           },
+          layout: { minimumSize: { width: 40, height: 20 } },
         },
       ],
     };

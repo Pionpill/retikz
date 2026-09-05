@@ -11,20 +11,22 @@ export const previewControls = drawStyleControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={400} height={218} viewBox={{ x: -40, y: -120, width: 440, height: 240 }}>
-      <Node id="A" position={[0, -50]} stroke="gray" dashed>
+      <Node id="A" position={[0, -50]} style={{ stroke: 'gray', dashed: true }}>
         a
       </Node>
-      <Node id="B" position={[360, 50]} stroke="gray" dashed>
+      <Node id="B" position={[360, 50]} style={{ stroke: 'gray', dashed: true }}>
         b
       </Node>
       <Draw
         way={['A', [120, -50], [120, 50], [240, 50], [240, -50], 'B']}
-        stroke={values.stroke}
-        strokeWidth={values.strokeWidth}
-        dashPattern={values.dashed ? [8, 4] : undefined}
-        dashOffset={values.dashOffset}
         roundedCorners={values.roundedCorners}
         arrow={values.arrow}
+        style={{
+          stroke: values.stroke,
+          strokeWidth: values.strokeWidth,
+          dashPattern: values.dashed ? [8, 4] : undefined,
+          dashOffset: values.dashOffset,
+        }}
       />
     </Layout>
   );

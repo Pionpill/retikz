@@ -53,23 +53,22 @@ const themeCardComposite = defineComposite({
       type: 'node',
       position: [0, -8],
       text: node.label,
-      minimumSize: { width: 132, height: 54 },
-      padding: 8,
       cornerRadius: 10,
-      fill: resolveCardFill(context.theme.style, context.theme.mode),
-      stroke: colors.semantic.warning,
-      strokeWidth: 2,
-      textColor: colors.semantic.error,
+      style: {
+        fill: resolveCardFill(context.theme.style, context.theme.mode),
+        stroke: colors.semantic.warning,
+        strokeWidth: 2,
+        textColor: colors.semantic.error,
+      },
+      layout: { minimumSize: { width: 132, height: 54 }, padding: 8 },
     };
     const swatches = visibleCategorical.map(
       (color, index): IRNode => ({
         type: 'node',
         position: [swatchStartX + index * 18, 32],
         shape: 'circle',
-        minimumSize: 12,
-        padding: 0,
-        fill: color,
-        stroke: 'none',
+        style: { fill: color, stroke: 'none' },
+        layout: { minimumSize: 12, padding: 0 },
       }),
     );
     return { children: [card, ...swatches] };

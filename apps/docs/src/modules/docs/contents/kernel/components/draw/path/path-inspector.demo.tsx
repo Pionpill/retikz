@@ -23,15 +23,12 @@ const Curve: FC<{ inspect?: boolean }> = props => {
         inspector: STROKE_PATH_INSPECTOR_KEY,
         options: { controlPoints: true, labels: true },
       }}
-      stroke="dodgerblue"
-      strokeWidth={3}
+      style={{ stroke: 'dodgerblue', strokeWidth: 3 }}
     >
       {children}
     </InspectPath>
   ) : (
-    <Path stroke="dodgerblue" strokeWidth={3}>
-      {children}
-    </Path>
+    <Path style={{ stroke: 'dodgerblue', strokeWidth: 3 }}>{children}</Path>
   );
 };
 

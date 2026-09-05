@@ -15,10 +15,15 @@ const pattern = {
 /** 同一份图案规格既可填充 Node，也可填充闭合 Path */
 const Demo: FC = () => (
   <Layout width={320} height={160} viewBox={{ x: -160, y: -80, width: 320, height: 160 }}>
-    <Node position={[-82, 0]} shape="circle" minimumSize={96} fill={pattern} stroke="#7c3aed" textColor="#4c1d95">
+    <Node
+      position={[-82, 0]}
+      shape="circle"
+      style={{ fill: pattern, stroke: '#7c3aed', textColor: '#4c1d95' }}
+      layout={{ minimumSize: 96 }}
+    >
       Node
     </Node>
-    <Path fill={pattern} stroke="#7c3aed">
+    <Path style={{ fill: pattern, stroke: '#7c3aed' }}>
       <Step kind="move" to={[35, 48]} />
       <Step kind="line" to={[82, -52]} />
       <Step kind="line" to={[132, 48]} />

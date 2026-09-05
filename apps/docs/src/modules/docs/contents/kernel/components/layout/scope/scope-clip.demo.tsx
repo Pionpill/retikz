@@ -80,9 +80,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           id="grid"
           position={[0, 0]}
           shape="rectangle"
-          minimumSize={{ width: 140, height: 100 }}
-          stroke="none"
-          fill={{ kind: 'pattern', shape: 'grid', color: 'darkorange', size: 12 }}
+          style={{ stroke: 'none', fill: { kind: 'pattern', shape: 'grid', color: 'darkorange', size: 12 } }}
+          layout={{ minimumSize: { width: 140, height: 100 } }}
         />
       </Scope>
     </Layout>

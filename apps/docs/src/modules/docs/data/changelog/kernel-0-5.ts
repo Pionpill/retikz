@@ -326,6 +326,16 @@ export const kernelV05: Release = {
           items: [
             {
               label: {
+                zh: 'BREAKING：Source IR 语义分组',
+                en: 'BREAKING: semantic groups in Source IR',
+              },
+              content: {
+                zh: 'Node 的视觉字段移入 style，尺寸与文本排布移入 layout；Path 视觉字段移入 style；Scope 使用 style 与 defaults.node/path/label/arrow/reset。React Layout 使用 rootScope 提供隐式根 Scope，style 继续表示宿主 CSS。旧扁平入口删除；字段继承、Scene 输出与精确增量更新语义保持。',
+                en: 'Node visual fields move into style, with size and text layout in layout; Path visual fields move into style. Scope uses style and defaults.node/path/label/arrow/reset. React Layout uses rootScope for its implicit root Scope while style remains host CSS. Old flat inputs are removed; per-field inheritance, Scene output and precise incremental updates retain their semantics.',
+              },
+            },
+            {
+              label: {
                 zh: 'BREAKING：精确 schema 结果直接消费',
                 en: 'BREAKING: exact schema results are consumed directly',
               },

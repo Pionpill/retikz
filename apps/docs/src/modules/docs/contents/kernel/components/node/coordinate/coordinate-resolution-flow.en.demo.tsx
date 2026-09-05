@@ -8,44 +8,32 @@ const Demo: FC = () => (
     <Node
       id="coordinate-ir"
       position={[-270, -55]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.1}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.1, font: { size: 14 } }}
     >
       Coordinate IR
     </Node>
     <Node
       id="resolve-position"
       position={[-100, -55]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14 } }}
     >
       resolve position now
     </Node>
     <Node
       id="zero-layout"
       position={[75, -55]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
     >
       {'zero-size geometry record\nwidth = 0, height = 0'}
     </Node>
     <Node
       id="namespace"
       position={[255, -55]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14 } }}
     >
       current namespace
     </Node>
@@ -53,22 +41,16 @@ const Demo: FC = () => (
     <Node
       id="position-consumer"
       position={[0, 55]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14 } }}
     >
       {'Node / Coordinate\nposition reference'}
     </Node>
     <Node
       id="path-consumer"
       position={[170, 55]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14 } }}
     >
       {'Path target\nendpoint reference'}
     </Node>

@@ -66,7 +66,7 @@ export type ResolvedShapeStyle = {
    * 描边虚线起始偏移；缺省为 0
    * @default 0
    */
-  dashOffset?: IRPathBase['dashOffset'];
+  dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
   /**
    * 圆角半径
    * @default 0

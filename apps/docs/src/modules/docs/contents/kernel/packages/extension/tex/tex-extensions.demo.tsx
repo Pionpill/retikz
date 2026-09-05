@@ -70,8 +70,13 @@ const renderTexExtensions = (values: TexExtensionsValues, lowerTex?: LowerTex) =
 
   return (
     <Layout width={420} height={260} viewBox={{ x: -220, y: -135, width: 440, height: 270 }} lowerTex={lowerTex}>
-      <Node position={[0, -78]} stroke="none" padding={0} font={{ size: 14 }} text={extensionStatus} />
-      <Node position={[0, 20]} stroke="none" padding={0} font={{ size: 22 }}>
+      <Node
+        position={[0, -78]}
+        text={extensionStatus}
+        style={{ stroke: 'none', font: { size: 14 } }}
+        layout={{ padding: 0 }}
+      />
+      <Node position={[0, 20]} style={{ stroke: 'none', font: { size: 22 } }} layout={{ padding: 0 }}>
         {`$$${source}$$`}
       </Node>
     </Layout>

@@ -8,55 +8,40 @@ const Demo: FC = () => (
     <Node
       id="props"
       position={[-215, 0]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
     >
       Arc / Sector props
     </Node>
     <Node
       id="select"
       position={[-65, 0]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 13, weight: 'bold' }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13, weight: 'bold' } }}
     >
       {'角度解析\n形态选择'}
     </Node>
     <Node
       id="open"
       position={[150, -75]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 12 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
     >
       {'开放 Arc\nmove → arc'}
     </Node>
     <Node
       id="closed"
       position={[150, 0]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 12 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
     >
       {'闭合 Arc / 实心 Sector\nmove → circlePath | ellipsePath'}
     </Node>
     <Node
       id="hollow"
       position={[150, 75]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 12 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
     >
       {'空心 Sector\n外弧 → line → 内弧（反向）→ line'}
     </Node>

@@ -12,7 +12,7 @@ import { Node } from '@retikz/react';
 ```
 
 ```tsx
-<Node fill={{ kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 }} />
+<Node style={{ fill: { kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 } }} />
 ```
 
 把图案对象传给 Node 或 Path 的 `fill`；闭合 Path 会填充内部区域。需要图案描边时也可以把同一对象传给 `stroke`。
@@ -120,8 +120,8 @@ import { Node } from '@retikz/react';
 
 ### 图元属性
 
-| 属性     | 类型                      | 默认值 | 描述                   |
-| -------- | ------------------------- | ------ | ---------------------- |
+| 属性     | 类型                  | 默认值 | 描述                   |
+| -------- | --------------------- | ------ | ---------------------- |
 | `fill`   | `string` \| `IRPaint` | —      | 填充 Node 或闭合 Path  |
 | `stroke` | `string` \| `IRPaint` | —      | 描边；支持相同图案规格 |
 

@@ -24,24 +24,20 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Layout width={400} height={218} viewBox={WayRelativeViewBox}>
-      <Node id="A" position={WayRelativeStart} stroke="gray" dashed>
+      <Node id="A" position={WayRelativeStart} style={{ stroke: 'gray', dashed: true }}>
         +
       </Node>
-      <Node id="B" position={WayAccumulateStart} stroke="gray" dashed>
+      <Node id="B" position={WayAccumulateStart} style={{ stroke: 'gray', dashed: true }}>
         ++
       </Node>
 
       <Draw
         way={[WayRelativeStart, [relativeEnd[0], WayRelativeStart[1]], relativeEnd]}
-        stroke="gray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Draw
         way={[accumulateFirst, [accumulateEnd[0], accumulateFirst[1]], accumulateEnd]}
-        stroke="gray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
       />
 
       <Draw
@@ -51,8 +47,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           { position: values.offset, type: DrawWay.Relative },
         ]}
         arrow="->"
-        stroke="dodgerblue"
-        strokeWidth={2}
+        style={{ stroke: 'dodgerblue', strokeWidth: 2 }}
       />
       <Draw
         way={[
@@ -61,14 +56,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           { position: values.offset, type: DrawWay.Accumulate },
         ]}
         arrow="->"
-        stroke="darkorange"
-        strokeWidth={2}
+        style={{ stroke: 'darkorange', strokeWidth: 2 }}
       />
 
-      <Circle center={relativeFirst} radius={3} fill="white" stroke="dodgerblue" />
-      <Circle center={relativeEnd} radius={4} fill="dodgerblue" stroke="none" />
-      <Circle center={accumulateFirst} radius={3} fill="white" stroke="darkorange" />
-      <Circle center={accumulateEnd} radius={4} fill="darkorange" stroke="none" />
+      <Circle center={relativeFirst} radius={3} style={{ fill: 'white', stroke: 'dodgerblue' }} />
+      <Circle center={relativeEnd} radius={4} style={{ fill: 'dodgerblue', stroke: 'none' }} />
+      <Circle center={accumulateFirst} radius={3} style={{ fill: 'white', stroke: 'darkorange' }} />
+      <Circle center={accumulateEnd} radius={4} style={{ fill: 'darkorange', stroke: 'none' }} />
     </Layout>
   );
 });

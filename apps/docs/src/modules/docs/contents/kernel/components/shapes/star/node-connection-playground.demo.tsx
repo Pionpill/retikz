@@ -40,7 +40,11 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       viewBox={{ x: -215, y: -215, width: 430, height: 430 }}
       shapes={[StarShapeDefinition]}
     >
-      <Draw way={[[0, 0], sourcePosition]} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-2} />
+      <Draw
+        way={[[0, 0], sourcePosition]}
+        zIndex={-2}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+      />
       <Node
         id="target"
         position={[0, 0]}
@@ -48,11 +52,21 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           type: 'star',
           params: { points: 5, innerRadius: 24, outerRadius: 58, cornerRadius: values.cornerRadius },
         }}
-        fill="#bfdbfe"
-        stroke="#2563eb"
+        style={{ fill: '#bfdbfe', stroke: '#2563eb' }}
       />
-      <Node id="source" position={sourcePosition} shape="circle" minimumSize={18} fill="gray" stroke="none" />
-      <Draw way={[sourceTarget, targetOf(values.anchor, values.anchorAngle)]} arrow="->" stroke="gray" zIndex={-1} />
+      <Node
+        id="source"
+        position={sourcePosition}
+        shape="circle"
+        style={{ fill: 'gray', stroke: 'none' }}
+        layout={{ minimumSize: 18 }}
+      />
+      <Draw
+        way={[sourceTarget, targetOf(values.anchor, values.anchorAngle)]}
+        arrow="->"
+        zIndex={-1}
+        style={{ stroke: 'gray' }}
+      />
     </Layout>
   );
 });

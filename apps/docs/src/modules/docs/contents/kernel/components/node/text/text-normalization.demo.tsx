@@ -8,33 +8,24 @@ const Demo: FC = () => (
     <Node
       id="text-prop"
       position={[-225, -40]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
     >
       text prop
     </Node>
     <Node
       id="plain-child"
       position={[-225, 20]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
     >
       string / number
     </Node>
     <Node
       id="text-child"
       position={[-225, 80]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
     >
       {'<Text>'}
     </Node>
@@ -42,20 +33,14 @@ const Demo: FC = () => (
       id="normalization"
       position={[0, 20]}
       text={['Node text', 'normalization']}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14, weight: 'bold' } }}
     />
     <Node
       id="node-text"
       position={[225, 20]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14 } }}
     >
       Node.text
     </Node>

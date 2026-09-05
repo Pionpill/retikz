@@ -74,7 +74,7 @@ const highlightInspector = defineInspector({
           type: 'node',
           position: [0, 0],
           text: `${subject.commands.length} commands`,
-          textColor: context.appearance.scopeColor,
+          style: { textColor: context.appearance.scopeColor },
         }
       : [],
 });

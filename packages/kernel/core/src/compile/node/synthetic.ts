@@ -74,9 +74,7 @@ const syntheticNode = (
     id: input.id,
     shape: Object.keys(shapeParams).length === 0 ? shape : { type: shape, params: shapeParams },
     position: [rect.x, rect.y],
-    minimumSize: { width: rect.width, height: rect.height },
-    padding: 0,
-    margin: 0,
+    layout: { minimumSize: { width: rect.width, height: rect.height }, padding: 0, margin: 0 },
     rotate: ((rect.rotate ?? 0) * 180) / Math.PI,
   };
 };

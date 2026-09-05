@@ -132,7 +132,7 @@ export const previewControlContract = {
     'Sector.innerRadius',
     'Sector.startAngle',
     'Sector.endAngle',
-    'Path.fill',
-    'Path.stroke',
+    'Path.style.fill',
+    'Path.style.stroke',
   ],
 } satisfies PreviewControlContract;

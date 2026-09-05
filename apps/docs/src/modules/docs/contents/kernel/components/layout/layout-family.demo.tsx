@@ -11,17 +11,21 @@ import { Draw, Layout, Node, Scope } from '@retikz/react';
 const Demo: FC = () => (
   <Layout width={500} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
     {/* 左：直接画在 Layout 顶层坐标 */}
-    <Node id="a0" position={[-205, -15]} stroke="none" fill="none">
+    <Node id="a0" position={[-205, -15]} style={{ stroke: 'none', fill: 'none' }}>
       A
     </Node>
-    <Node id="b0" position={[-145, -15]} stroke="none" fill="none">
+    <Node id="b0" position={[-145, -15]} style={{ stroke: 'none', fill: 'none' }}>
       B
     </Node>
-    <Node id="c0" position={[-85, -15]} stroke="none" fill="none">
+    <Node id="c0" position={[-85, -15]} style={{ stroke: 'none', fill: 'none' }}>
       C
     </Node>
     <Draw way={['a0', 'b0', 'c0']} arrow="->" />
-    <Node id="capPlain" position={[-145, 35]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
+    <Node
+      id="capPlain"
+      position={[-145, 35]}
+      style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
+    >
       Layout
     </Node>
 
@@ -32,18 +36,22 @@ const Demo: FC = () => (
         { kind: 'rotate', degrees: -15 },
       ]}
     >
-      <Node id="a1" position={[0, 0]} stroke="none" fill="none">
+      <Node id="a1" position={[0, 0]} style={{ stroke: 'none', fill: 'none' }}>
         A
       </Node>
-      <Node id="b1" position={[60, 0]} stroke="none" fill="none">
+      <Node id="b1" position={[60, 0]} style={{ stroke: 'none', fill: 'none' }}>
         B
       </Node>
-      <Node id="c1" position={[120, 0]} stroke="none" fill="none">
+      <Node id="c1" position={[120, 0]} style={{ stroke: 'none', fill: 'none' }}>
         C
       </Node>
       <Draw way={['a1', 'b1', 'c1']} arrow="->" />
     </Scope>
-    <Node id="capScope" position={[135, 50]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
+    <Node
+      id="capScope"
+      position={[135, 50]}
+      style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
+    >
       Scope: translate + rotate
     </Node>
   </Layout>

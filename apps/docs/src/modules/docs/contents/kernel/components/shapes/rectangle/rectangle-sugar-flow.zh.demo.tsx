@@ -8,55 +8,40 @@ const Demo: FC = () => (
     <Node
       id="direct-form"
       position={[-115, -105]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
     >
       {'corner1 + corner2\n任意 Target'}
     </Node>
     <Node
       id="computed-form"
       position={[115, -105]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
     >
       {'center / side / size\n字面量坐标'}
     </Node>
     <Node
       id="corner-calculation"
       position={[115, -30]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14 } }}
     >
       计算两个对角
     </Node>
     <Node
       id="rectangle-step"
       position={[0, 45]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14, weight: 'bold' } }}
     >
       rectangle step
     </Node>
     <Node
       id="closed-path"
       position={[0, 115]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14 } }}
     >
       闭合 Path
     </Node>
@@ -68,9 +53,9 @@ const Demo: FC = () => (
         'rectangle-step',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
-    <Draw way={['computed-form', 'corner-calculation']} arrow="->" stroke="gray" />
+    <Draw way={['computed-form', 'corner-calculation']} arrow="->" style={{ stroke: 'gray' }} />
     <Draw
       way={[
         'corner-calculation',
@@ -78,9 +63,9 @@ const Demo: FC = () => (
         'rectangle-step',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
-    <Draw way={['rectangle-step', 'closed-path']} arrow="->" stroke="gray" />
+    <Draw way={['rectangle-step', 'closed-path']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

@@ -106,7 +106,7 @@ describe('<Layout boundaries> custom boundary passthrough', () => {
     expect(() =>
       renderToStaticMarkup(
         <Layout width={120} height={80} boundaries={[fixedBoundary()]}>
-          <Node id="A" position={[0, 0]} minimumSize={40} boundary="pin" />
+          <Node id="A" position={[0, 0]} boundary="pin" layout={{ minimumSize: 40 }} />
           <Path>
             <Step kind="move" to={[100, 0]} />
             <Step kind="line" to="A" />
@@ -120,7 +120,7 @@ describe('<Layout boundaries> custom boundary passthrough', () => {
     expect(() =>
       renderToStaticMarkup(
         <Layout width={120} height={80}>
-          <Node id="A" position={[0, 0]} minimumSize={40} boundary="pin" />
+          <Node id="A" position={[0, 0]} boundary="pin" layout={{ minimumSize: 40 }} />
           <Path>
             <Step kind="move" to={[100, 0]} />
             <Step kind="line" to="A" />

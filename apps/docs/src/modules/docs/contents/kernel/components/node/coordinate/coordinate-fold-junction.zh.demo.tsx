@@ -30,8 +30,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         汇合后
       </Node>
       {/* 两条线先各自走到 junction，再合并到 out */}
-      <Draw way={['A', 'junction', 'out']} arrow="->" stroke="gray" />
-      <Draw way={['B', 'junction']} stroke="gray" />
+      <Draw way={['A', 'junction', 'out']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['B', 'junction']} style={{ stroke: 'gray' }} />
     </Layout>
   );
 });

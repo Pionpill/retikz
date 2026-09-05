@@ -31,7 +31,7 @@ const pipeline = defineComposite({
       position: [i * STAGE_GAP, 0] as [number, number],
       shape: 'rectangle',
       text: label,
-      stroke: 'none',
+      style: { stroke: 'none' },
     }));
     // 相邻两阶段间一条带标签箭头；端点给 node id，自动裁剪到（无边框的）文本框
     const edges = node.stages.slice(1).map((_label, i) => ({

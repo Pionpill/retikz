@@ -14,17 +14,18 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Layout width={400} height={250} viewBox={{ x: -115, y: -100, width: 230, height: 200 }}>
-      <Circle center={[0, 0]} radius={values.radius} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" />
-      <Draw way={[[0, 0], firstVertex]} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" />
+      <Circle
+        center={[0, 0]}
+        radius={values.radius}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+      />
+      <Draw way={[[0, 0], firstVertex]} style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }} />
       <RegularPolygon
         center={[0, 0]}
         radius={values.radius}
         sides={values.sides}
         rotate={values.rotate}
-        fill={values.fill}
-        fillOpacity={0.65}
-        stroke={values.stroke}
-        strokeWidth={values.strokeWidth}
+        style={{ fill: values.fill, fillOpacity: 0.65, stroke: values.stroke, strokeWidth: values.strokeWidth }}
       />
     </Layout>
   );

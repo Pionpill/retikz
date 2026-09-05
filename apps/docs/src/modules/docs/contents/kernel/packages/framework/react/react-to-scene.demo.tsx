@@ -9,62 +9,47 @@ const Demo: FC = () => (
       id="jsx"
       position={[-350, 0]}
       text={['Kernel / Sugar JSX', 'React children']}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
-      font={{ size: 12 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
+      layout={{ padding: 8 }}
     />
     <Node
       id="input"
       position={[-175, 0]}
       text={['React collector', 'createInputScene']}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
-      font={{ size: 12, weight: 'bold' }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12, weight: 'bold' } }}
+      layout={{ padding: 8 }}
     />
     <Node
       id="input-scene"
       position={[0, 0]}
       text={['InputScene', 'typed authoring']}
-      stroke="mediumseagreen"
-      fill="mediumseagreen"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
-      font={{ size: 12 }}
+      style={{ stroke: 'mediumseagreen', fill: 'mediumseagreen', fillOpacity: 0.08, font: { size: 12 } }}
+      layout={{ padding: 8 }}
     />
     <Node
       id="processing"
       position={[185, 0]}
       text={['Vanilla processing', 'normalize + compile']}
-      stroke="mediumseagreen"
-      fill="mediumseagreen"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
-      font={{ size: 12 }}
+      style={{ stroke: 'mediumseagreen', fill: 'mediumseagreen', fillOpacity: 0.08, font: { size: 12 } }}
+      layout={{ padding: 8 }}
     />
     <Node
       id="scene"
       position={[370, 0]}
       text={['Scene', 'renderer-agnostic']}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
-      font={{ size: 12 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 12 } }}
+      layout={{ padding: 8 }}
     />
 
-    <Draw way={['jsx', 'input']} arrow="->" stroke="gray" />
-    <Draw way={['input', 'input-scene']} arrow="->" stroke="gray" />
-    <Draw way={['input-scene', 'processing']} arrow="->" stroke="gray" />
-    <Draw way={['processing', 'scene']} arrow="->" stroke="gray" />
+    <Draw way={['jsx', 'input']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['input', 'input-scene']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['input-scene', 'processing']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['processing', 'scene']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

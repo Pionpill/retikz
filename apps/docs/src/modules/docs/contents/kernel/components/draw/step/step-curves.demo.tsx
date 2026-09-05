@@ -61,83 +61,77 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <Layout width={380} height={260} viewBox={{ x: -150, y: -130, width: 300, height: 260 }}>
       {usesEndpoints && (
         <>
-          <Node id="A" position={[-100, 0]} stroke="gray" dashed>
+          <Node id="A" position={[-100, 0]} style={{ stroke: 'gray', dashed: true }}>
             a
           </Node>
-          <Node id="B" position={[100, 0]} stroke="gray" dashed>
+          <Node id="B" position={[100, 0]} style={{ stroke: 'gray', dashed: true }}>
             b
           </Node>
         </>
       )}
       {!usesEndpoints && !isSmooth && (
-        <Node id="C" position={CurveCenter} stroke="none">
+        <Node id="C" position={CurveCenter} style={{ stroke: 'none' }}>
           ·
         </Node>
       )}
       {values.stepKind === 'curve' && (
         <>
-          <Draw way={['A', values.control]} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
-          <Draw way={[values.control, 'B']} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
-          <Circle center={values.control} radius={4} fill="white" stroke="gray" />
+          <Draw way={['A', values.control]} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
+          <Draw way={[values.control, 'B']} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
+          <Circle center={values.control} radius={4} style={{ fill: 'white', stroke: 'gray' }} />
         </>
       )}
       {values.stepKind === 'cubic' && (
         <>
-          <Draw way={['A', values.control1]} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
-          <Draw way={[values.control2, 'B']} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
-          <Circle center={values.control1} radius={4} fill="white" stroke="gray" />
-          <Circle center={values.control2} radius={4} fill="white" stroke="gray" />
+          <Draw way={['A', values.control1]} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
+          <Draw way={[values.control2, 'B']} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
+          <Circle center={values.control1} radius={4} style={{ fill: 'white', stroke: 'gray' }} />
+          <Circle center={values.control2} radius={4} style={{ fill: 'white', stroke: 'gray' }} />
         </>
       )}
-      {values.stepKind === 'bend' && <Draw way={['A', 'B']} stroke="gray" dashPattern={[1, 4]} lineCap="round" />}
-      {values.stepKind === 'smooth' && <Draw way={SmoothPoints} stroke="gray" dashPattern={[1, 4]} lineCap="round" />}
+      {values.stepKind === 'bend' && (
+        <Draw way={['A', 'B']} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
+      )}
+      {values.stepKind === 'smooth' && (
+        <Draw way={SmoothPoints} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
+      )}
       {values.stepKind === 'arc' && (
         <>
           <Draw
             way={[CurveCenter, pointOnEllipse(CurveCenter, values.radius, values.radius, values.startAngle)]}
-            stroke="gray"
-            dashPattern={[1, 4]}
-            lineCap="round"
+            style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
           />
           <Draw
             way={[CurveCenter, pointOnEllipse(CurveCenter, values.radius, values.radius, values.endAngle)]}
-            stroke="gray"
-            dashPattern={[1, 4]}
-            lineCap="round"
+            style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
           />
         </>
       )}
       {values.stepKind === 'circlePath' && (
         <Draw
           way={[CurveCenter, pointOnEllipse(CurveCenter, values.radius, values.radius, 0)]}
-          stroke="gray"
-          dashPattern={[1, 4]}
-          lineCap="round"
+          style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
         />
       )}
       {values.stepKind === 'ellipsePath' && (
         <>
           <Draw
             way={[CurveCenter, pointOnEllipse(CurveCenter, values.radiusX, values.radiusY, 0)]}
-            stroke="gray"
-            dashPattern={[1, 4]}
-            lineCap="round"
+            style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
           />
           <Draw
             way={[CurveCenter, pointOnEllipse(CurveCenter, values.radiusX, values.radiusY, 90)]}
-            stroke="gray"
-            dashPattern={[1, 4]}
-            lineCap="round"
+            style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
           />
         </>
       )}
-      <Path stroke="dodgerblue" strokeWidth={2}>
+      <Path style={{ stroke: 'dodgerblue', strokeWidth: 2 }}>
         <Step kind="move" to={start} />
         {curveOf(values)}
       </Path>
       {isSmooth &&
         SmoothPoints.map((point, index) => (
-          <Circle key={index} center={point} radius={3} fill="dodgerblue" stroke="none" />
+          <Circle key={index} center={point} radius={3} style={{ fill: 'dodgerblue', stroke: 'none' }} />
         ))}
     </Layout>
   );

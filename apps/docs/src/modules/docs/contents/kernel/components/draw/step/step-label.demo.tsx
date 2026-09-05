@@ -19,23 +19,23 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Layout width={400} height={218} viewBox={{ x: -40, y: -120, width: 440, height: 240 }}>
-      <Node id="A" position={[0, -60]} stroke="gray" dashed>
+      <Node id="A" position={[0, -60]} style={{ stroke: 'gray', dashed: true }}>
         a
       </Node>
-      <Node id="B" position={[360, -15]} stroke="gray" dashed>
+      <Node id="B" position={[360, -15]} style={{ stroke: 'gray', dashed: true }}>
         b
       </Node>
-      <Node id="C" position={[0, 45]} stroke="gray" dashed>
+      <Node id="C" position={[0, 45]} style={{ stroke: 'gray', dashed: true }}>
         c
       </Node>
-      <Node id="D" position={[360, 90]} stroke="gray" dashed>
+      <Node id="D" position={[360, 90]} style={{ stroke: 'gray', dashed: true }}>
         d
       </Node>
       <Path arrow="->">
         <Step kind="move" to="A" />
         <Step to="B" label={label} />
       </Path>
-      <Path arrow="->" color={values.textColor}>
+      <Path arrow="->" style={{ color: values.textColor }}>
         <Step kind="move" to="C" />
         <Step to="D">
           <EdgeLabel position={values.position} side={values.side} sloped={values.sloped}>

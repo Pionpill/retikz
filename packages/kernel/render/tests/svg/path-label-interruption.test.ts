@@ -1,4 +1,4 @@
-import type { IRScene } from '@retikz/core';
+import type { IRPath, IRScene } from '@retikz/core';
 
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -12,13 +12,12 @@ const measuredLabel = () => ({ width: 20, height: 10 });
 const render = (ir: IRScene): string =>
   renderToSvgString(compileToScene(ir, { measureText: measuredLabel }).scene, { idPrefix: 'label-interruption' });
 
-const closedPath = (extra: Record<string, unknown> = {}): IRScene => ({
+const closedPath = (extra: Partial<IRPath> = {}): IRScene => ({
   version: 1,
   type: 'scene',
   children: [
     {
       type: 'path',
-      stroke: STROKE,
       label: { text: 'close', position: 0.9, sloped: true },
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
@@ -27,6 +26,7 @@ const closedPath = (extra: Record<string, unknown> = {}): IRScene => ({
         { type: 'step', kind: 'cycle' },
       ],
       ...extra,
+      style: { stroke: STROKE, ...extra.style },
     },
   ],
 });
@@ -40,12 +40,12 @@ describe('SVG Stroke Path label interruption', () => {
         {
           type: 'path',
           id: 'edge',
-          stroke: STROKE,
           label: { text: 'gap', sloped: true },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
           ],
+          style: { stroke: STROKE },
         },
       ],
     });
@@ -56,7 +56,7 @@ describe('SVG Stroke Path label interruption', () => {
   });
 
   it('serializes an interrupted closing edge without a Z command and preserves dash phase per fragment', () => {
-    const svg = render(closedPath({ dashPattern: [11, 7], dashOffset: 3 }));
+    const svg = render(closedPath({ style: { dashPattern: [11, 7], dashOffset: 3 } }));
 
     expect(svg).toContain('d="M 0 0 L 100 0 L 100 100 L 40.35 40.35"');
     expect(svg).toContain('d="M 19.65 19.65 L 0 0"');

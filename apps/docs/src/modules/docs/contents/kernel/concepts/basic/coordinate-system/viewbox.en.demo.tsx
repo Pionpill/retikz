@@ -14,32 +14,27 @@ const Demo: FC = () => (
       id="world"
       position={[-110, 0]}
       shape="rectangle"
-      minimumSize={{ width: 120, height: 110 }}
-      fill="none"
-      stroke="gray"
+      style={{ fill: 'none', stroke: 'gray' }}
+      layout={{ minimumSize: { width: 120, height: 110 } }}
     />
     <Node
       id="window"
       position={[-100, 5]}
       shape="rectangle"
-      minimumSize={{ width: 74, height: 58 }}
-      fill="none"
-      stroke="currentColor"
-      dashed
+      style={{ fill: 'none', stroke: 'currentColor', dashed: true }}
+      layout={{ minimumSize: { width: 74, height: 58 } }}
     />
     <Node
       id="content-a"
       position={[-105, 14]}
       shape="circle"
-      minimumSize={5}
-      padding={0}
-      fill="currentColor"
-      stroke="none"
+      style={{ fill: 'currentColor', stroke: 'none' }}
+      layout={{ minimumSize: 5, padding: 0 }}
     />
-    <Node id="window-label" position={[-100, -40]} stroke="none">
+    <Node id="window-label" position={[-100, -40]} style={{ stroke: 'none' }}>
       viewBox
     </Node>
-    <Node id="world-label" position={[-110, 72]} stroke="none" textColor="gray">
+    <Node id="world-label" position={[-110, 72]} style={{ stroke: 'none', textColor: 'gray' }}>
       user-unit world
     </Node>
 
@@ -48,27 +43,24 @@ const Demo: FC = () => (
       id="page"
       position={[112, 0]}
       shape="rectangle"
-      minimumSize={{ width: 104, height: 82 }}
-      fill="none"
-      stroke="gray"
+      style={{ fill: 'none', stroke: 'gray' }}
+      layout={{ minimumSize: { width: 104, height: 82 } }}
     />
     <Node
       id="content-b"
       position={[105, 13]}
       shape="circle"
-      minimumSize={5}
-      padding={0}
-      fill="currentColor"
-      stroke="none"
+      style={{ fill: 'currentColor', stroke: 'none' }}
+      layout={{ minimumSize: 5, padding: 0 }}
     />
-    <Node id="page-label" position={[112, 72]} stroke="none" textColor="gray">
+    <Node id="page-label" position={[112, 72]} style={{ stroke: 'none', textColor: 'gray' }}>
       width × height render
     </Node>
 
     <Draw
       way={['world', { label: { text: 'render', side: 'top', textColor: 'gray', font: { size: 12 } } }, 'page']}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
   </Layout>
 );

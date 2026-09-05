@@ -42,14 +42,16 @@ const stableRootNodeId = (child: IRScene['children'][number]): string | undefine
 
 /** 判断两个 Node 是否只发生无资源 fill string 变化 */
 const isFillOnlyUpdate = (previous: Readonly<IRNode>, next: Readonly<IRNode>): boolean => {
-  const previousSolidFill = previous.fill === undefined || typeof previous.fill === 'string';
-  const nextSolidFill = next.fill === undefined || typeof next.fill === 'string';
-  if (!previousSolidFill || !nextSolidFill || previous.fill === next.fill) return false;
-  const { fill: previousFill, ...previousRest } = previous;
-  const { fill: nextFill, ...nextRest } = next;
+  const previousSolidFill = previous.style?.fill === undefined || typeof previous.style.fill === 'string';
+  const nextSolidFill = next.style?.fill === undefined || typeof next.style.fill === 'string';
+  if (!previousSolidFill || !nextSolidFill || previous.style?.fill === next.style?.fill) return false;
+  const { style: previousStyle, ...previousRest } = previous;
+  const { fill: previousFill, ...previousVisual } = previousStyle ?? {};
+  const { style: nextStyle, ...nextRest } = next;
+  const { fill: nextFill, ...nextVisual } = nextStyle ?? {};
   void previousFill;
   void nextFill;
-  return jsonStructuralEquals(previousRest, nextRest);
+  return jsonStructuralEquals(previousRest, nextRest) && jsonStructuralEquals(previousVisual, nextVisual);
 };
 
 /** 创建单 primitive update 使用的相对 subtree */

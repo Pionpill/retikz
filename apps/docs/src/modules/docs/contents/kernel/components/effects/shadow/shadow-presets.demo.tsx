@@ -8,19 +8,19 @@ import { Layout, Node } from '@retikz/react';
  */
 const Demo: FC = () => (
   <Layout width={560} height={140}>
-    <Node position={[-220, 0]} shape="rectangle" fill="white" padding={12} shadow="sm">
+    <Node position={[-220, 0]} shape="rectangle" style={{ fill: 'white', shadow: 'sm' }} layout={{ padding: 12 }}>
       sm
     </Node>
-    <Node position={[-130, 0]} shape="rectangle" fill="white" padding={12} shadow="md">
+    <Node position={[-130, 0]} shape="rectangle" style={{ fill: 'white', shadow: 'md' }} layout={{ padding: 12 }}>
       md
     </Node>
-    <Node position={[-40, 0]} shape="rectangle" fill="white" padding={12} shadow="lg">
+    <Node position={[-40, 0]} shape="rectangle" style={{ fill: 'white', shadow: 'lg' }} layout={{ padding: 12 }}>
       lg
     </Node>
-    <Node position={[50, 0]} shape="rectangle" fill="white" padding={12} shadow="xl">
+    <Node position={[50, 0]} shape="rectangle" style={{ fill: 'white', shadow: 'xl' }} layout={{ padding: 12 }}>
       xl
     </Node>
-    <Node position={[150, 0]} shape="rectangle" fill="white" padding={12} shadow="2xl">
+    <Node position={[150, 0]} shape="rectangle" style={{ fill: 'white', shadow: '2xl' }} layout={{ padding: 12 }}>
       2xl
     </Node>
   </Layout>

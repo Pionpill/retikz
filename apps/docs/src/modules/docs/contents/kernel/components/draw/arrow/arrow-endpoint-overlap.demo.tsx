@@ -14,26 +14,27 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       id="B"
       position={[80, 0]}
       shape="rectangle"
-      minimumSize={{ width: 110, height: 76 }}
-      fill={{
-        kind: 'pattern',
-        shape: 'lines',
-        size: 9,
-        rotation: 45,
-        color: '#cbd5e1',
-        background: '#f8fafc',
-        lineWidth: 1,
+      style={{
+        fill: {
+          kind: 'pattern',
+          shape: 'lines',
+          size: 9,
+          rotation: 45,
+          color: '#cbd5e1',
+          background: '#f8fafc',
+          lineWidth: 1,
+        },
+        stroke: '#94a3b8',
+        strokeWidth: 1.5,
       }}
-      stroke="#94a3b8"
-      strokeWidth={1.5}
+      layout={{ minimumSize: { width: 110, height: 76 } }}
     />
     <Draw
       way={['A', 'B']}
       arrow="->"
       arrowDetail={{ shape: values.shape, length: 14, width: 14, color: '#2563eb', lineWidth: 1.5 }}
       arrowPlacement={{ overlap: values.overlap }}
-      stroke="#2563eb"
-      strokeWidth={2}
+      style={{ stroke: '#2563eb', strokeWidth: 2 }}
     />
   </Layout>
 ));

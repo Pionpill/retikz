@@ -31,16 +31,26 @@ const Demo: FC = () => (
     style={{ maxWidth: '100%', height: 'auto' }}
   >
     {/* 左：boundary = shape（默认），自动连线贴到多边形边缘 */}
-    <Rectangle center={[LX, 0]} width={BBW} height={BBH} fill="none" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={shift(LX, HEX)} stroke="darkorange" strokeWidth={2} />
-    <Rectangle center={[LX, 0]} width={IFW} height={IFH} fill="none" stroke="currentColor" dashPattern={[4, 3]} />
+    <Rectangle
+      center={[LX, 0]}
+      width={BBW}
+      height={BBH}
+      style={{ fill: 'none', stroke: 'gray', dashPattern: [4, 3] }}
+    />
+    <Draw way={shift(LX, HEX)} style={{ stroke: 'darkorange', strokeWidth: 2 }} />
+    <Rectangle
+      center={[LX, 0]}
+      width={IFW}
+      height={IFH}
+      style={{ fill: 'none', stroke: 'currentColor', dashPattern: [4, 3] }}
+    />
     <Draw
       way={[
         [LX - 84, 0],
         [LX - 54, 0],
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
     <Draw
       way={[
@@ -48,7 +58,7 @@ const Demo: FC = () => (
         [LX - 40.5, -23.39],
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
     <Draw
       way={[
@@ -56,21 +66,31 @@ const Demo: FC = () => (
         [LX - 40.5, 23.39],
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
 
     {/* 右：boundary = circle，连线改贴到圆；shape / 内框 / 外接框都不变 */}
-    <Rectangle center={[RX, 0]} width={BBW} height={BBH} fill="none" stroke="gray" dashPattern={[4, 3]} />
-    <Circle center={[RX, 0]} radius={R} fill="none" stroke="dodgerblue" dashPattern={[4, 3]} />
-    <Draw way={shift(RX, HEX)} stroke="darkorange" strokeWidth={2} />
-    <Rectangle center={[RX, 0]} width={IFW} height={IFH} fill="none" stroke="currentColor" dashPattern={[4, 3]} />
+    <Rectangle
+      center={[RX, 0]}
+      width={BBW}
+      height={BBH}
+      style={{ fill: 'none', stroke: 'gray', dashPattern: [4, 3] }}
+    />
+    <Circle center={[RX, 0]} radius={R} style={{ fill: 'none', stroke: 'dodgerblue', dashPattern: [4, 3] }} />
+    <Draw way={shift(RX, HEX)} style={{ stroke: 'darkorange', strokeWidth: 2 }} />
+    <Rectangle
+      center={[RX, 0]}
+      width={IFW}
+      height={IFH}
+      style={{ fill: 'none', stroke: 'currentColor', dashPattern: [4, 3] }}
+    />
     <Draw
       way={[
         [RX + 84, 0],
         [RX + 54, 0],
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
     <Draw
       way={[
@@ -78,7 +98,7 @@ const Demo: FC = () => (
         [RX + 46.77, -27],
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
     <Draw
       way={[
@@ -86,27 +106,27 @@ const Demo: FC = () => (
         [RX + 46.77, 27],
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
 
     {/* 中间标注：bounding box / inner frame，各自指向两边 */}
-    <Node id="bbox-lbl" position={[0, -20]} stroke="none" textColor="gray" font={{ size: 12 }}>
+    <Node id="bbox-lbl" position={[0, -20]} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}>
       bounding box
     </Node>
-    <Draw way={['bbox-lbl', [LX + BBW / 2, -20]]} arrow="->" stroke="gray" />
-    <Draw way={['bbox-lbl', [RX - BBW / 2, -20]]} arrow="->" stroke="gray" />
+    <Draw way={['bbox-lbl', [LX + BBW / 2, -20]]} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['bbox-lbl', [RX - BBW / 2, -20]]} arrow="->" style={{ stroke: 'gray' }} />
 
-    <Node id="if-lbl" position={[0, 20]} stroke="none" font={{ size: 12 }}>
+    <Node id="if-lbl" position={[0, 20]} style={{ stroke: 'none', font: { size: 12 } }}>
       inner frame
     </Node>
-    <Draw way={['if-lbl', [LX + IFW / 2, 20]]} arrow="->" stroke="currentColor" />
-    <Draw way={['if-lbl', [RX - IFW / 2, 20]]} arrow="->" stroke="currentColor" />
+    <Draw way={['if-lbl', [LX + IFW / 2, 20]]} arrow="->" style={{ stroke: 'currentColor' }} />
+    <Draw way={['if-lbl', [RX - IFW / 2, 20]]} arrow="->" style={{ stroke: 'currentColor' }} />
 
     {/* 两种 boundary 模式 */}
-    <Node id="lbl-shape" position={[LX, 78]} stroke="none" textColor="gray">
+    <Node id="lbl-shape" position={[LX, 78]} style={{ stroke: 'none', textColor: 'gray' }}>
       boundary = shape
     </Node>
-    <Node id="lbl-circle" position={[RX, 78]} stroke="none" textColor="dodgerblue">
+    <Node id="lbl-circle" position={[RX, 78]} style={{ stroke: 'none', textColor: 'dodgerblue' }}>
       boundary = circle
     </Node>
   </Layout>

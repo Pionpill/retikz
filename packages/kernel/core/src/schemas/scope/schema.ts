@@ -5,43 +5,28 @@ import { AnimationTrackSchema } from '../animation';
 import { ClipSchema } from '../clip';
 import { FontSchema } from '../font';
 import { NodeSchema } from '../node';
-import { ArrowDetailSchema, PathFillSchema, PathGeometrySchema, PathStrokeSchema } from '../path';
+import { ArrowDetailSchema, PathBaseSchema } from '../path';
 import { NodeTargetSchema, PositionSchema } from '../position';
 import { getRecursiveChildSchema } from '../recursive';
 import { ScopeSelfPointSchema } from '../scope-point';
-import {
-  CascadingGraphicStyleSchema,
-  ContextualColorSchema,
-  CssColorSchema,
-  GraphicStyleSchema,
-  OpacitySchema,
-} from '../style';
+import { CascadingGraphicStyleSchema, ContextualColorSchema, CssColorSchema, OpacitySchema } from '../style';
 import { ThemeSchema } from '../theme';
 import { TransformSchema } from '../transform';
 import { ScopeBoundingShape, ScopeStyleChannel } from './constants';
 
-// ===========================================================================
-// every-X 四通道默认 schema —— Node 继续从对应元素 schema `.omit()` 派生，Path 由原子片段显式组合
-// 全字段 optional（继承自源 schema 或原子片段）、顶层 `.strict()` 严拒未知 / 被排除字段
-// ===========================================================================
+/** 节点默认值仅继承明确允许的几何与命名分组 */
+export const NodeDefaultSchema = NodeSchema.pick({
+  shape: true,
+  boundary: true,
+  cornerRadius: true,
+  rotate: true,
+  scale: true,
+  style: true,
+  layout: true,
+});
 
-export const NodeDefaultSchema = NodeSchema.omit({
-  type: true,
-  id: true,
-  position: true,
-  text: true,
-  label: true,
-  zIndex: true,
-  meta: true,
-  animations: true,
-}).strict();
-
-export const PathDefaultSchema = strictObject({
-  ...GraphicStyleSchema.shape,
-  ...PathStrokeSchema.shape,
-  ...PathFillSchema.shape,
-  ...PathGeometrySchema.omit({ children: true }).shape,
-}).describe('Default style and path geometry applied to path-like drawables in this scope.');
+/** 路径默认值仅继承视觉与整体几何 */
+export const PathDefaultSchema = PathBaseSchema.pick({ style: true, roundedCorners: true, rotate: true, scale: true });
 
 export const LabelDefaultSchema = object({
   color: CssColorSchema.optional().describe('Master color for labels in this scope; textColor falls back to it.'),
@@ -69,8 +54,25 @@ export const ScopePlacementSchema = strictObject({
   ),
 }).describe('Placement that aligns a transformed intrinsic Scope point to a parent-frame target.');
 
+/** 后代默认通道与继承屏障 */
+export const ScopeDefaultsSchema = strictObject({
+  node: NodeDefaultSchema.optional().describe(
+    'Default style applied to nodes in this scope. Independent from the other default channels.',
+  ),
+  path: PathDefaultSchema.optional().describe(
+    'Default style applied to path-like drawables in this scope. Arrows use the separate `defaults.arrow` channel.',
+  ),
+  label: LabelDefaultSchema.optional().describe('Default style applied to node labels and step labels in this scope.'),
+  arrow: ArrowDefaultSchema.optional().describe('Default style applied to arrows in this scope.'),
+  reset: union([boolean(), array(zodEnum(ScopeStyleChannel))])
+    .optional()
+    .describe(
+      'Inheritance barrier for style defaults. Use true for all channels, or list node, path, label, and arrow channels to reset.',
+    ),
+}).describe('Named descendant defaults and their inheritance barrier.');
+
 export const ScopePropsSchema = strictObject({
-  ...CascadingGraphicStyleSchema.shape,
+  style: CascadingGraphicStyleSchema.optional().describe('Cascading graphic overrides for descendants.'),
   theme: ThemeSchema.optional().describe('Sparse Theme override inherited by this Scope descendants.'),
   id: NonBlankStringSchema.optional().describe(
     'Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.',
@@ -88,21 +90,6 @@ export const ScopePropsSchema = strictObject({
   placement: ScopePlacementSchema.optional().describe(
     'Optional final placement applied after intrinsic layout and local transforms.',
   ),
-  nodeDefault: NodeDefaultSchema.optional().describe(
-    'Default style applied to nodes in this scope. Independent from the other default channels.',
-  ),
-  pathDefault: PathDefaultSchema.optional().describe(
-    'Default style applied to path-like drawables in this scope. Arrows use the separate `arrowDefault` channel.',
-  ),
-  labelDefault: LabelDefaultSchema.optional().describe(
-    'Default style applied to node labels and step labels in this scope.',
-  ),
-  arrowDefault: ArrowDefaultSchema.optional().describe('Default style applied to arrows in this scope.'),
-  resetStyle: union([boolean(), array(zodEnum(ScopeStyleChannel))])
-    .optional()
-    .describe(
-      'Inheritance barrier for style defaults. Use true for all channels, or list node, path, label, and arrow channels to reset.',
-    ),
   zIndex: number()
     .int()
     .optional()
@@ -123,6 +110,7 @@ export const ScopePropsSchema = strictObject({
     .describe(
       'Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.',
     ),
+  defaults: ScopeDefaultsSchema.optional().describe('Named descendant defaults and their inheritance barrier.'),
 }).describe('Reusable authored properties for a Scope container.');
 
 export const ScopeSchema = strictObject({

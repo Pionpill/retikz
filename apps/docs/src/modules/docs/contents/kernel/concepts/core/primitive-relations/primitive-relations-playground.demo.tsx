@@ -43,45 +43,48 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Layout width={400} height={300} viewBox={{ x: -160, y: -140, width: 320, height: 280 }}>
-      <Draw way={[[0, 0], sourcePosition]} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-3} />
+      <Draw
+        way={[[0, 0], sourcePosition]}
+        zIndex={-3}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+      />
       <Node
         id="T"
         position={[0, 0]}
         shape="ellipse"
         boundary="rectangle"
-        minimumSize={{ width: TARGET_HALF_WIDTH * 2, height: 64 }}
-        fill="#bfdbfe"
-        stroke="#2563eb"
+        style={{ fill: '#bfdbfe', stroke: '#2563eb' }}
+        layout={{ minimumSize: { width: TARGET_HALF_WIDTH * 2, height: 64 } }}
       />
       {values.boundaryOverride === 'inherit' && (
         <Rectangle
           center={[0, 0]}
           width={TARGET_HALF_WIDTH * 2}
           height={64}
-          fill="none"
-          stroke="#64748b"
-          strokeOpacity={0.8}
-          dashPattern={[4, 3]}
           zIndex={1}
+          style={{ fill: 'none', stroke: '#64748b', strokeOpacity: 0.8, dashPattern: [4, 3] }}
         />
       )}
       {values.boundaryOverride === 'circle' && (
         <Circle
           center={[0, 0]}
           radius={TARGET_HALF_WIDTH}
-          fill="none"
-          stroke="#64748b"
-          strokeOpacity={0.8}
-          dashPattern={[4, 3]}
           zIndex={1}
+          style={{ fill: 'none', stroke: '#64748b', strokeOpacity: 0.8, dashPattern: [4, 3] }}
         />
       )}
-      <Node id="A" position={sourcePosition} shape="circle" minimumSize={16} fill="#64748b" stroke="none" />
+      <Node
+        id="A"
+        position={sourcePosition}
+        shape="circle"
+        style={{ fill: '#64748b', stroke: 'none' }}
+        layout={{ minimumSize: 16 }}
+      />
       <Draw
         way={[{ id: 'A' }, targetOf(values.anchor, values.anchorAngle, values.boundaryOverride)]}
         arrow="->"
-        stroke="#64748b"
         zIndex={-1}
+        style={{ stroke: '#64748b' }}
       />
     </Layout>
   );

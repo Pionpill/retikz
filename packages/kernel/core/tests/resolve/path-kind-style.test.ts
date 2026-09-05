@@ -9,20 +9,39 @@ describe('path kind host style', () => {
     [
       'pathDefault-only',
       { type: 'path' as const, kind: 'custom', children: [] },
-      [{ cascade: {}, pathDefault: { color: 'purple' } }],
+      [
+        {
+          cascade: {},
+          pathDefault: {
+            style: { color: 'purple' },
+          },
+        },
+      ],
       'purple',
     ],
     [
       'instance override',
-      { type: 'path' as const, kind: 'custom', color: 'teal', children: [] },
-      [{ cascade: { color: 'gold' }, pathDefault: { color: 'purple' } }],
+      {
+        type: 'path' as const,
+        kind: 'custom',
+        children: [],
+        style: { color: 'teal' },
+      },
+      [
+        {
+          cascade: { color: 'gold' },
+          pathDefault: {
+            style: { color: 'purple' },
+          },
+        },
+      ],
       'teal',
     ],
   ])('keeps %s color effective until the selected path kind consumes it', (_, path, stack, color) => {
     const resolved = resolveEffectivePath(path, stack);
 
-    expect(resolved.color).toBe(color);
-    expect(resolved.stroke).toBeUndefined();
+    expect(resolved.style?.color).toBe(color);
+    expect(resolved.style?.stroke).toBeUndefined();
   });
 
   it('uses cascaded fill before rejecting a requested label interruption', () => {
@@ -36,7 +55,16 @@ describe('path kind host style', () => {
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
         },
-        { styleStack: [{ cascade: {}, pathDefault: { fill: 'red' } }] },
+        {
+          styleStack: [
+            {
+              cascade: {},
+              pathDefault: {
+                style: { fill: 'red' },
+              },
+            },
+          ],
+        },
       ),
     ).toThrow(/label\.interrupt.*filled stroke path/i);
   });

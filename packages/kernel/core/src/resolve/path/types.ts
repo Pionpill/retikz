@@ -12,6 +12,7 @@ import type {
   IRGeometryLabel,
   IRPaint,
   IRPathBase,
+  IRPathStyle,
   IRPosition,
   IRStep,
   IRTarget,
@@ -61,11 +62,14 @@ export type ResolvedArrowMark = Omit<IRArrowMark, 'color' | 'fill'> & {
 };
 
 /** 已把所有上下文颜色确定为字符串的 Path Source 投影 */
-export type ResolvedPathSource = Omit<IRPathBase, 'fill' | 'stroke' | 'children' | 'label' | 'marks'> & {
-  /** 已确定的路径填充 */
-  fill?: string | IRPaint;
-  /** 已确定的路径描边 */
-  stroke?: string | IRPaint;
+export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label' | 'marks'> & {
+  /** 已确定上下文颜色的路径样式 */
+  style?: Omit<IRPathStyle, 'fill' | 'stroke'> & {
+    /** 已确定的路径填充 */
+    fill?: string | IRPaint;
+    /** 已确定的路径描边 */
+    stroke?: string | IRPaint;
+  };
   /** 已确定 step label 颜色的步骤 */
   children?: Array<ResolvedStepSource>;
   /** 已确定的宿主标签 */
@@ -101,7 +105,10 @@ type CompleteCanonicalStep<TStep extends ResolvedStepSource> = TStep extends {
 export type CanonicalStep = CompleteCanonicalStep<ResolvedStepSource>;
 
 /** 内置路径输出器消费的完整静态路径形态 */
-export type CanonicalPath = Omit<ResolvedPathSource, 'children' | 'label' | 'shadow'> & {
+export type CanonicalPath = Omit<
+  Omit<ResolvedPathSource, 'style'> & NonNullable<ResolvedPathSource['style']>,
+  'children' | 'label' | 'shadow'
+> & {
   /** 完整路径步骤 */
   children?: Array<CanonicalStep>;
   /** 统一为数组的宿主标签 */

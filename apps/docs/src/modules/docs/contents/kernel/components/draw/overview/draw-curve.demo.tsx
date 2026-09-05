@@ -57,75 +57,67 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <Layout width={360} height={260} viewBox={{ x: -70, y: -130, width: 340, height: 260 }}>
       {usesEndpoints ? (
         <>
-          <Node id="A" position={[0, 0]} stroke="gray" dashed>
+          <Node id="A" position={[0, 0]} style={{ stroke: 'gray', dashed: true }}>
             a
           </Node>
-          <Node id="B" position={[200, 0]} stroke="gray" dashed>
+          <Node id="B" position={[200, 0]} style={{ stroke: 'gray', dashed: true }}>
             b
           </Node>
         </>
       ) : (
-        <Node id="C" position={CurveCenter} stroke="none">
+        <Node id="C" position={CurveCenter} style={{ stroke: 'none' }}>
           ·
         </Node>
       )}
       {values.curveKind === 'curve' && (
         <>
-          <Draw way={['A', values.control]} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
-          <Draw way={[values.control, 'B']} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
-          <Circle center={values.control} radius={4} fill="white" stroke="gray" />
+          <Draw way={['A', values.control]} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
+          <Draw way={[values.control, 'B']} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
+          <Circle center={values.control} radius={4} style={{ fill: 'white', stroke: 'gray' }} />
         </>
       )}
       {values.curveKind === 'cubic' && (
         <>
-          <Draw way={['A', values.control1]} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
-          <Draw way={[values.control2, 'B']} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
-          <Circle center={values.control1} radius={4} fill="white" stroke="gray" />
-          <Circle center={values.control2} radius={4} fill="white" stroke="gray" />
+          <Draw way={['A', values.control1]} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
+          <Draw way={[values.control2, 'B']} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
+          <Circle center={values.control1} radius={4} style={{ fill: 'white', stroke: 'gray' }} />
+          <Circle center={values.control2} radius={4} style={{ fill: 'white', stroke: 'gray' }} />
         </>
       )}
-      {values.curveKind === 'bend' && <Draw way={['A', 'B']} stroke="gray" dashPattern={[1, 4]} lineCap="round" />}
+      {values.curveKind === 'bend' && (
+        <Draw way={['A', 'B']} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
+      )}
       {values.curveKind === 'arc' && (
         <>
           <Draw
             way={[CurveCenter, pointOnEllipse(CurveCenter, values.radius, values.radius, values.startAngle)]}
-            stroke="gray"
-            dashPattern={[1, 4]}
-            lineCap="round"
+            style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
           />
           <Draw
             way={[CurveCenter, pointOnEllipse(CurveCenter, values.radius, values.radius, values.endAngle)]}
-            stroke="gray"
-            dashPattern={[1, 4]}
-            lineCap="round"
+            style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
           />
         </>
       )}
       {values.curveKind === 'circle' && (
         <Draw
           way={[CurveCenter, pointOnEllipse(CurveCenter, values.radius, values.radius, 0)]}
-          stroke="gray"
-          dashPattern={[1, 4]}
-          lineCap="round"
+          style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
         />
       )}
       {values.curveKind === 'ellipse' && (
         <>
           <Draw
             way={[CurveCenter, pointOnEllipse(CurveCenter, values.radiusX, values.radiusY, 0)]}
-            stroke="gray"
-            dashPattern={[1, 4]}
-            lineCap="round"
+            style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
           />
           <Draw
             way={[CurveCenter, pointOnEllipse(CurveCenter, values.radiusX, values.radiusY, 90)]}
-            stroke="gray"
-            dashPattern={[1, 4]}
-            lineCap="round"
+            style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
           />
         </>
       )}
-      <Draw way={wayOf(values)} stroke="dodgerblue" strokeWidth={2} />
+      <Draw way={wayOf(values)} style={{ stroke: 'dodgerblue', strokeWidth: 2 }} />
     </Layout>
   );
 });

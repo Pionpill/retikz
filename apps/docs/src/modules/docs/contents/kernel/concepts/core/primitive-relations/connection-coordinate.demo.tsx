@@ -9,16 +9,16 @@ import { Circle, Coordinate, Draw, Layout, Node } from '@retikz/react';
  */
 const Demo: FC = () => (
   <Layout width={340} height={160} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node id="A" position={[-110, 25]} stroke="none">
+    <Node id="A" position={[-110, 25]} style={{ stroke: 'none' }}>
       a
     </Node>
-    <Node id="B" position={[110, 25]} stroke="none">
+    <Node id="B" position={[110, 25]} style={{ stroke: 'none' }}>
       b
     </Node>
     <Coordinate id="via" position={[0, -40]} />
     <Draw way={['A', 'via', 'B']} arrow="->" />
-    <Circle center={[0, -40]} radius={2.5} fill="gray" stroke="none" />
-    <Node position={[0, -58]} stroke="none" padding={0} textColor="gray" font={{ size: 12 }}>
+    <Circle center={[0, -40]} radius={2.5} style={{ fill: 'gray', stroke: 'none' }} />
+    <Node position={[0, -58]} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }} layout={{ padding: 0 }}>
       via
     </Node>
   </Layout>

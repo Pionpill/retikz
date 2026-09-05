@@ -22,7 +22,7 @@ const highlight = definePathKind<HighlightPath>({
     const base = context.emitStroke({
       ...strokePath,
       kind: 'stroke',
-      strokeWidth: kindOptions.strokeWidth ?? context.path.strokeWidth ?? 10,
+      style: { ...strokePath.style, strokeWidth: kindOptions.strokeWidth ?? context.path.style?.strokeWidth ?? 10 },
     });
     if (base === null) return null;
     return {
@@ -48,18 +48,18 @@ const Demo: FC = () => (
       <Step kind="line" to="core" />
       <Step kind="line" to="render" />
     </Path>
-    <Path stroke="#0f766e" strokeWidth={1.5} arrow="->">
+    <Path arrow="->" style={{ stroke: '#0f766e', strokeWidth: 1.5 }}>
       <Step kind="move" to="api" />
       <Step kind="line" to="core" />
       <Step kind="line" to="render" />
     </Path>
-    <Node id="api" position={[0, 0]} shape="rectangle" fill="white">
+    <Node id="api" position={[0, 0]} shape="rectangle" style={{ fill: 'white' }}>
       API
     </Node>
-    <Node id="core" position={[120, 0]} shape="rectangle" fill="white">
+    <Node id="core" position={[120, 0]} shape="rectangle" style={{ fill: 'white' }}>
       Core
     </Node>
-    <Node id="render" position={[240, 0]} shape="rectangle" fill="white">
+    <Node id="render" position={[240, 0]} shape="rectangle" style={{ fill: 'white' }}>
       Render
     </Node>
   </Layout>

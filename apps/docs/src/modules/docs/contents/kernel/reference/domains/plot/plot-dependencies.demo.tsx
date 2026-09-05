@@ -12,24 +12,18 @@ const Demo: FC = () => (
       <Node
         id="plot-react"
         position={[-285, -20]}
-        minimumSize={{ width: 150, height: 34 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 150, height: 34 } }}
       >
         @retikz/plot-react
       </Node>
       <Node
         id="plot-vanilla"
         position={[-285, 30]}
-        minimumSize={{ width: 150, height: 34 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 150, height: 34 } }}
       >
         @retikz/plot-vanilla
       </Node>
@@ -39,13 +33,9 @@ const Demo: FC = () => (
       id="data"
       text={['@retikz/data', { text: 'data processing', fill: 'gray', font: { size: 10 } }]}
       position={[-105, 5]}
-      minimumSize={{ width: 125, height: 42 }}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.06}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={14}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.06, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 125, height: 42 }, lineHeight: 14 }}
     />
     <LogicFigureFrame id="plot-group">
       <LogicFigureFrameTitle>@retikz/plot</LogicFigureFrameTitle>
@@ -56,45 +46,33 @@ const Demo: FC = () => (
           { text: 'visual grammar', fill: 'gray', font: { size: 10 } },
         ]}
         position={[35, 8]}
-        minimumSize={{ width: 110, height: 42 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={14}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 110, height: 42 }, lineHeight: 14 }}
       />
       <Node
         id="pipeline"
         text={['Pipeline', { text: 'lower Plot IR', fill: 'gray', font: { size: 10 } }]}
         position={[175, 8]}
-        minimumSize={{ width: 120, height: 42 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={14}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 120, height: 42 }, lineHeight: 14 }}
       />
     </LogicFigureFrame>
     <Node
       id="core"
       text={['@retikz/core', { text: 'Core IR', fill: 'gray', font: { size: 10 } }]}
       position={[310, 5]}
-      minimumSize={{ width: 120, height: 42 }}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.06}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={14}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.06, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 120, height: 42 }, lineHeight: 14 }}
     />
 
-    <Draw way={['plot-react', 'data']} arrow="->" stroke="gray" />
-    <Draw way={['plot-vanilla', 'data']} arrow="->" stroke="gray" />
-    <Draw way={['data', 'plot']} arrow="->" stroke="gray" />
-    <Draw way={['plot', 'pipeline']} arrow="->" stroke="gray" />
-    <Draw way={['pipeline', 'core']} arrow="->" stroke="gray" />
+    <Draw way={['plot-react', 'data']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['plot-vanilla', 'data']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['data', 'plot']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['plot', 'pipeline']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['pipeline', 'core']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

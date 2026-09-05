@@ -102,14 +102,21 @@ export const PathStructureSchema = strictObject({
   ),
 }).describe('Path structure fields selecting an open path kind provider.');
 
-export const PathBaseSchema = strictObject({
-  ...PathStructureSchema.shape,
-  ...DrawableInstanceSchema.shape,
+/** 路径实例视觉覆盖 */
+export const PathStyleSchema = strictObject({
   ...DrawableStyleSchema.shape,
   ...PathStrokeSchema.shape,
   ...PathFillSchema.shape,
+}).describe('Path visual overrides; fields independently override inherited defaults.');
+
+export const PathBaseSchema = strictObject({
+  ...PathStructureSchema.shape,
+  ...DrawableInstanceSchema.shape,
   ...PathGeometrySchema.shape,
   ...PathDecorationSchema.shape,
+  style: PathStyleSchema.optional().describe(
+    'Path visual overrides; fields independently override inherited defaults.',
+  ),
 }).describe('Base fields for a path-like relation before kind-specific structural refinement.');
 
 export const PathSchema = PathBaseSchema.describe(

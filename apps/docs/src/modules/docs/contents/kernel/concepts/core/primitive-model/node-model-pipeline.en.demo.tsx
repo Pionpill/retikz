@@ -9,19 +9,19 @@ const Demo: FC = () => (
     viewBox={{ x: -378, y: -40, width: 724, height: 80 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <Node id="s1" position={[-300, 0]} stroke="none">
+    <Node id="s1" position={[-300, 0]} style={{ stroke: 'none' }}>
       position + text
     </Node>
-    <Node id="s2" position={[-170, 0]} stroke="none">
+    <Node id="s2" position={[-170, 0]} style={{ stroke: 'none' }}>
       inner frame
     </Node>
-    <Node id="s3" position={[10, 0]} stroke="none">
+    <Node id="s3" position={[10, 0]} style={{ stroke: 'none' }}>
       bounding box
     </Node>
-    <Node id="s4" position={[145, 0]} stroke="none">
+    <Node id="s4" position={[145, 0]} style={{ stroke: 'none' }}>
       visual outline
     </Node>
-    <Node id="s5" position={[270, 0]} stroke="none">
+    <Node id="s5" position={[270, 0]} style={{ stroke: 'none' }}>
       boundary / anchor
     </Node>
 

@@ -27,8 +27,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         merged
       </Node>
       {/* Two lines first reach junction, then merge into out */}
-      <Draw way={['A', 'junction', 'out']} arrow="->" stroke="gray" />
-      <Draw way={['B', 'junction']} stroke="gray" />
+      <Draw way={['A', 'junction', 'out']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['B', 'junction']} style={{ stroke: 'gray' }} />
     </Layout>
   );
 });

@@ -60,8 +60,8 @@ const idIr: IRScene = {
       id: 'a',
       position: [0, 0],
       shape: 'rectangle',
-      minimumSize: { width: 40, height: 20 },
-      fill: '#0a0',
+      style: { fill: '#0a0' },
+      layout: { minimumSize: { width: 40, height: 20 } },
     },
   ],
 };

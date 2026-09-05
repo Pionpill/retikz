@@ -8,66 +8,48 @@ const Demo: FC = () => (
     <Node
       id="ir"
       position={[-330, 30]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
     >
       IR
     </Node>
     <Node
       id="lower"
       position={[-220, 30]}
-      stroke="dimgray"
-      fill="dimgray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08, font: { size: 13 } }}
     >
       composite lowering
     </Node>
     <Node
       id="layout"
       position={[-50, 30]}
-      stroke="dimgray"
-      fill="dimgray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08, font: { size: 13 } }}
     >
       node / scope layout
     </Node>
     <Node
       id="paths"
       position={[155, 30]}
-      stroke="dimgray"
-      fill="dimgray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08, font: { size: 13 } }}
     >
       path resolution
     </Node>
     <Node
       id="scene"
       position={[295, 30]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
     >
       Scene assembly
     </Node>
     <Node
       id="context"
       position={[-40, -50]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 12 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
     >
       {'compile-local context\nregistries + services'}
     </Node>
@@ -83,10 +65,10 @@ const Demo: FC = () => (
       arrow="->"
     />
     <Draw way={['paths', 'scene']} arrow="->" />
-    <Draw way={['context', 'lower']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['context', 'layout']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['context', 'paths']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['context', 'scene']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['context', 'lower']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['context', 'layout']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['context', 'paths']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['context', 'scene']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 

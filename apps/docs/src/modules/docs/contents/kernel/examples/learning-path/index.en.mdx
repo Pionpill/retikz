@@ -74,8 +74,8 @@ Step 1 places one `title` — "AI Expert in 2022" — showing the `title` varian
 Add the `Fundamentals` gray mini button and the `Choose your path` sub-header below the title, then wire them up with 2 vertical [Draw](/kernel/components/draw/overview) lines:
 
 ```tsx
-<Draw way={['title', 'fundamentals']} stroke="#1f6286" strokeWidth={2} arrow="->" />
-<Draw way={['fundamentals', 'choose']}   stroke="#1f6286" strokeWidth={2} arrow="->" />
+<Draw way={['title', 'fundamentals']} arrow="->" style={{ stroke: "#1f6286", strokeWidth: 2 }} />
+<Draw way={['fundamentals', 'choose']} arrow="->" style={{ stroke: "#1f6286", strokeWidth: 2 }} />
 ```
 
 - way array `[source id, target id]` — simplest form: two targets = one straight line
@@ -117,18 +117,17 @@ The merge curve is a 2-segment quadratic Bezier — that maps directly to **2 co
     { curve: [316, 190] },
     'data-scientist', // 2nd: control + target id
   ]}
-  stroke="#1f6286"
-  strokeWidth={2}
   arrow="->"
+  style={{ stroke: '#1f6286', strokeWidth: 2 }}
 />
 ```
 
 The last target is the node id `'data-scientist'`, which retikz auto-anchors to the node border (not raw coords). The 3 short sub-column graphConnectors also use node id refs:
 
 ```tsx
-<Draw way={['data-scientist', 'machine-learning']} stroke="#1f6286" strokeWidth={2} arrow="->" />
-<Draw way={['machine-learning', 'deep-learning']}   stroke="#1f6286" strokeWidth={2} arrow="->" />
-<Draw way={['data-engineer', 'big-data-engineer']}  stroke="#1f6286" strokeWidth={2} arrow="->" />
+<Draw way={['data-scientist', 'machine-learning']} arrow="->" style={{ stroke: "#1f6286", strokeWidth: 2 }} />
+<Draw way={['machine-learning', 'deep-learning']} arrow="->" style={{ stroke: "#1f6286", strokeWidth: 2 }} />
+<Draw way={['data-engineer', 'big-data-engineer']} arrow="->" style={{ stroke: "#1f6286", strokeWidth: 2 }} />
 ```
 
 <ComponentPreview files={{ file: 'learning-path-04-paths', diffFrom: 'learning-path-03-stacks' }} size="xxl" />
@@ -155,10 +154,8 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
     { curve: [404, 210] },
     'choose',
   ]}
-  stroke="#287fad"
-  strokeWidth={2}
-  dashPattern={[6, 6]}
   arrow="<-"
+  style={{ stroke: '#287fad', strokeWidth: 2, dashPattern: [6, 6] }}
 />
 ```
 
@@ -168,12 +165,12 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 
 ## Capabilities
 
-| Component                                     | Role in this example                                                                                                                                                             | Main steps                                                                                                                                          |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Component                                     | Role in this example                                                                                                                                                                  | Main steps                                                                                                                                          |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [Draw](/kernel/components/draw/overview)      | All 12 graphConnectors (2 spine lines / 3 short sub-column lines / 2 quadratic merges / 1 recommended dashed / 2 short dashed / 2 red X) + stroke / strokeWidth / dashPattern / arrow | [2](#step-2-center-spine--2-draw-lines), [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x) |
-| [Way operators](/kernel/components/draw/way)  | `{ curve }` infix → quadratic / `{ label }` infix → edge label / node id → auto border anchor                                                                                    | [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x)                                          |
-| [Node](/kernel/components/node/overview)      | All 16 roadmap nodes (title / header / required / optional) — 4 variants factored into `RoadmapNode`                                                                             | [1](#step-1-title--roadmapnode-4-variants), [3](#step-3-side-stacks--atposition-tight-stacking)                                                     |
-| [AtPosition](/kernel/concepts/basic/position) | Tight intra-stack stacking (`{ direction: 'bottom', of: prevId }` + global `nodeDistance`)                                                                                       | [3](#step-3-side-stacks--atposition-tight-stacking), [4](#step-4-5-path-buttons--curve-merge)                                                       |
+| [Way operators](/kernel/components/draw/way)  | `{ curve }` infix → quadratic / `{ label }` infix → edge label / node id → auto border anchor                                                                                         | [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x)                                          |
+| [Node](/kernel/components/node/overview)      | All 16 roadmap nodes (title / header / required / optional) — 4 variants factored into `RoadmapNode`                                                                                  | [1](#step-1-title--roadmapnode-4-variants), [3](#step-3-side-stacks--atposition-tight-stacking)                                                     |
+| [AtPosition](/kernel/concepts/basic/position) | Tight intra-stack stacking (`{ direction: 'bottom', of: prevId }` + global `nodeDistance`)                                                                                            | [3](#step-3-side-stacks--atposition-tight-stacking), [4](#step-4-5-path-buttons--curve-merge)                                                       |
 
 ## Limitations
 

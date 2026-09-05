@@ -81,7 +81,7 @@ import { Node, Text } from '@retikz/react';
 | --------------- | -------------------------------------------- | ---------------- |
 | 字符串 / 数字   | 相邻内容拼接，按 Node 文本规则处理 `\n`      | 普通字符串行     |
 | 无样式 `<Text>` | 先结束当前普通行，再把自身作为独立一行       | 普通字符串行     |
-| 有样式 `<Text>` | 先结束当前普通行，再保留当前行的样式覆盖字段 | IRLine 对象行  |
+| 有样式 `<Text>` | 先结束当前普通行，再保留当前行的样式覆盖字段 | IRLine 对象行    |
 
 这也解释了两个边界：`<Text>` 只能在 `<Node>` 内生效，而且它表达的是一整行，不是行内 span。
 
@@ -104,7 +104,7 @@ import { Node, Text } from '@retikz/react';
 
 ### 行颜色解析
 
-归一完成后，每一行沿同一套颜色优先级进入 Core。`<Text fill>` 是显式行色，直接覆盖 Node 默认；没有 `fill` 的行才继承 `Node.textColor`：
+归一完成后，每一行沿同一套颜色优先级进入 Core。`<Text fill>` 是显式行色，直接覆盖 Node 默认；没有 `fill` 的行才继承 `Node.style.textColor`：
 
 <ComponentPreview files="text-contrast-flow" size="sm" hideCode />
 

@@ -45,12 +45,12 @@ See [Way](/kernel/components/draw/way#single-axis-connections) for syntax constr
 
 Draw has two curve families: `curve` / `cubic` / `bend` connect the previous target to the next target, while `arc` draws a circular arc around the previous point. In Bezier curves, control points are not necessarily points the curve passes through; they are handles that pull the curve's direction and amount of bend.
 
-| Form        | Mental model                                                     | Good for                                         |
-| ----------- | ---------------------------------------------------------------- | ------------------------------------------------ |
-| `{ curve }` | One control point pulls a simple bend                            | Ordinary single-arc graphConnectors                   |
-| `{ cubic }` | Two control points shape the start and end directions separately | S-curves, complex graphConnectors, precise tangents   |
-| `{ bend }`  | Direction + angle shorthand; control points are computed for you | Quick curved links between two nodes             |
-| `{ arc }`   | Circular arc around the previous point by angles and radius      | Angle marks, circle fragments, geometry diagrams |
+| Form        | Mental model                                                     | Good for                                            |
+| ----------- | ---------------------------------------------------------------- | --------------------------------------------------- |
+| `{ curve }` | One control point pulls a simple bend                            | Ordinary single-arc graphConnectors                 |
+| `{ cubic }` | Two control points shape the start and end directions separately | S-curves, complex graphConnectors, precise tangents |
+| `{ bend }`  | Direction + angle shorthand; control points are computed for you | Quick curved links between two nodes                |
+| `{ arc }`   | Circular arc around the previous point by angles and radius      | Angle marks, circle fragments, geometry diagrams    |
 
 Use the panel to switch among quadratic / cubic Bezier, bend, arc, circle, and ellipse. Bezier control points are edited as `[x, y]` pairs and move the dashed handles on the canvas; other kinds expose only the angles or radii they actually use. Connection operations consume the targets on both sides; arc / circle / ellipse use the previous item as their center and do not consume a next target.
 
@@ -158,8 +158,8 @@ Draw forwards `way` and whole-path properties such as stroke, fill, arrows, and 
     {
       label: 'Draw forwarding input to Path',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 50,
-      endLine: 54,
+      startLine: 29,
+      endLine: 33,
     },
   ]}
 />
@@ -171,7 +171,7 @@ Draw forwards `way` and whole-path properties such as stroke, fill, arrows, and 
 | Prop             | Type                                                | Default        | Description                                                                                                                                                                                 |
 | ---------------- | --------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `way`            | `Array<WayItem>`                                    | —              | At least 2 items; first is always `move`, rest become `line` / `fold` / `cycle` and related actions based on item form                                                                      |
-| `stroke`         | `string` \| `IRPaint`                           | `currentColor` | Stroke paint: CSS color or IRPaint (gradient / pattern / image); when using IRPaint, set an explicit CSS color for arrows                                                           |
+| `stroke`         | `string` \| `IRPaint`                               | `currentColor` | Stroke paint: CSS color or IRPaint (gradient / pattern / image); when using IRPaint, set an explicit CSS color for arrows                                                                   |
 | `strokeWidth`    | `number`                                            | `1`            | Stroke width                                                                                                                                                                                |
 | `dashPattern`    | `Array<number>`                                     | —              | Dash / gap length sequence, for example `[4, 2]`                                                                                                                                            |
 | `dashOffset`     | `number`                                            | —              | Dash start offset in path user units                                                                                                                                                        |
@@ -181,7 +181,7 @@ Draw forwards `way` and whole-path properties such as stroke, fill, arrows, and 
 | `thickness`      | <ApiValues name="PathThickness" />                  | —              | Semantic stroke preset; explicit `strokeWidth` wins                                                                                                                                         |
 | `arrow`          | `'none'` \| `'->'` \| `'<-'` \| `'<->'`             | —              | Path-level arrow direction                                                                                                                                                                  |
 | `arrowDetail`    | `IRArrowDetail`                                     | —              | Detailed arrow configuration; see [Arrow](/kernel/components/draw/arrow)                                                                                                                    |
-| `fill`           | `string` \| `IRPaint`                           | `'none'`       | Fill for closed regions: plain color or IRPaint (gradient / pattern / image)                                                                                                            |
+| `fill`           | `string` \| `IRPaint`                               | `'none'`       | Fill for closed regions: plain color or IRPaint (gradient / pattern / image)                                                                                                                |
 | `fillRule`       | <ApiValues name="PathFillRule" />                   | `'nonzero'`    | Fill rule                                                                                                                                                                                   |
 | `opacity`        | `number`                                            | —              | Whole-path opacity, 0..1                                                                                                                                                                    |
 | `fillOpacity`    | `number`                                            | —              | Fill-only opacity, 0..1                                                                                                                                                                     |
@@ -217,7 +217,7 @@ Draw forwards `way` and whole-path properties such as stroke, fill, arrows, and 
 | `position`  | <ApiValues name="GeometryLabelPosition" /> \| `number` | `'midway'` | Normalized position t along the segment; keywords are sugar for t (at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1) |
 | `side`      | <ApiValues name="Side" />                              | `'top'`    | Edge-label side relative to segment direction. Compass aliases `north` / `south` / `east` / `west` are accepted                                                                        |
 | `sloped`    | `boolean`                                              | `false`    | Whether to rotate along the segment tangent                                                                                                                                            |
-| `textColor` | `string`                                               | —          | Label text color; falls back to scope `labelDefault` → host path master color → currentColor                                                                                           |
+| `textColor` | `string`                                               | —          | Label text color; falls back to scope `defaults.label` → host path master color → currentColor                                                                                         |
 | `opacity`   | `number`                                               | —          | Label-only opacity 0..1; multiplied with the owning path opacity                                                                                                                       |
 | `font`      | `IRFont`                                               | —          | Label font overrides (family / size / weight / style)                                                                                                                                  |
 

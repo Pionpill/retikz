@@ -11,7 +11,7 @@ description: Scope grouping, local namespaces, style defaults, transforms, clipp
 
 <ZodSchema name="ScopeSchema" />
 
-`Scope.theme` is a sparse overlay for descendant composites. `style`, `mode`, and token keys inherit independently; `tokens` overlays only the namespaces and keys supplied by the Scope, and the Core registry validates the namespace-specific schema. Theme is an environment handoff, not automatic coloring for Core primitives.
+`Scope.theme` contains only sparse `style` / `mode` environment selectors, inherited per field. Core resolves shared colors; descendant composites consume this environment according to their own contracts. `defaults.reset` does not reset Theme.
 
 <span id="scopeposition"></span>
 
@@ -35,14 +35,14 @@ A NodeTarget offset is added once in world user units before projection into the
 
 ### Four default channels
 
-Scope separates defaults into four independent channels. Each fills only fields omitted by the matching host; `resetStyle` can block parent-Scope inheritance per channel.
+Scope separates defaults into four independent channels. Each fills only fields omitted by the matching host; `defaults.reset` can block parent-Scope inheritance per channel.
 
-| Field          | Reused contract                                                 | Does not own                             |
-| -------------- | --------------------------------------------------------------- | ---------------------------------------- |
-| `nodeDefault`  | Visual fields from [Node](/kernel/reference/schema/entity#node) | id, position, text, labels, or metadata  |
-| `pathDefault`  | Visual fields from [Path](/kernel/reference/schema/path#path)   | kind, steps, marks, or instance metadata |
-| `labelDefault` | Label color, textColor, opacity, and font                       | Text, position, or host relation         |
-| `arrowDefault` | [ArrowDetail](/kernel/reference/schema/path#arrowdetail)        | Arrow existence or path placement        |
+| Field            | Reused contract                                                 | Does not own                             |
+| ---------------- | --------------------------------------------------------------- | ---------------------------------------- |
+| `defaults.node`  | Visual fields from [Node](/kernel/reference/schema/entity#node) | id, position, text, labels, or metadata  |
+| `defaults.path`  | Visual fields from [Path](/kernel/reference/schema/path#path)   | kind, steps, marks, or instance metadata |
+| `defaults.label` | Label color, textColor, opacity, and font                       | Text, position, or host relation         |
+| `defaults.arrow` | [ArrowDetail](/kernel/reference/schema/path#arrowdetail)        | Arrow existence or path placement        |
 
 <span id="transform"></span>
 

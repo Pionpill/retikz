@@ -70,7 +70,15 @@ const collectLayouts = (
 describe('CompileOptions.artifacts.nodeLayouts', () => {
   it('reports plain node content size from text metrics', () => {
     const { layouts, textPrims } = collectLayouts(
-      scene([{ type: 'node', id: 'plain', position: [0, 0], text: 'abc', font: { size: 10 } }]),
+      scene([
+        {
+          type: 'node',
+          id: 'plain',
+          position: [0, 0],
+          text: 'abc',
+          style: { font: { size: 10 } },
+        },
+      ]),
     );
 
     expect(layouts).toHaveLength(1);
@@ -86,7 +94,15 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
 
   it('uses the widest line and accumulated line height for multi-line content', () => {
     const { layouts } = collectLayouts(
-      scene([{ type: 'node', id: 'multi', position: [0, 0], text: ['a', 'abcd'], font: { size: 10 } }]),
+      scene([
+        {
+          type: 'node',
+          id: 'multi',
+          position: [0, 0],
+          text: ['a', 'abcd'],
+          style: { font: { size: 10 } },
+        },
+      ]),
     );
 
     expect(layouts[0].content.size).toEqual({ width: 40, height: 24 });
@@ -95,7 +111,15 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
 
   it('adds text and lowered TeX widths on mixed lines', () => {
     const { layouts, warnings } = collectLayouts(
-      scene([{ type: 'node', id: 'formula', position: [0, 0], text: 'A $x$ B', font: { size: 10 } }]),
+      scene([
+        {
+          type: 'node',
+          id: 'formula',
+          position: [0, 0],
+          text: 'A $x$ B',
+          style: { font: { size: 10 } },
+        },
+      ]),
       { withTex: true },
     );
 
@@ -106,7 +130,15 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
 
   it('measures string TeX sugar literally when lowerTex is missing', () => {
     const { layouts, warnings } = collectLayouts(
-      scene([{ type: 'node', id: 'literal', position: [0, 0], text: 'A $x$ B', font: { size: 10 } }]),
+      scene([
+        {
+          type: 'node',
+          id: 'literal',
+          position: [0, 0],
+          text: 'A $x$ B',
+          style: { font: { size: 10 } },
+        },
+      ]),
     );
 
     expect(layouts[0].content.size.width).toBe(70);
@@ -122,7 +154,7 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
           id: 'explicit',
           position: [0, 0],
           text: [{ runs: [{ text: 'A' }, { tex: 'x' }, { text: 'B' }] }],
-          font: { size: 10 },
+          style: { font: { size: 10 } },
         },
       ]),
     );
@@ -134,7 +166,15 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
 
   it('skips invalid TeX runs and preserves warnings', () => {
     const { layouts, warnings } = collectLayouts(
-      scene([{ type: 'node', id: 'invalid', position: [0, 0], text: 'A $INVALID$ B', font: { size: 10 } }]),
+      scene([
+        {
+          type: 'node',
+          id: 'invalid',
+          position: [0, 0],
+          text: 'A $INVALID$ B',
+          style: { font: { size: 10 } },
+        },
+      ]),
       { withTex: true },
     );
 
@@ -162,7 +202,15 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
         {
           type: 'scope',
           transforms: [{ kind: 'scale', x: 2, y: 3 }],
-          children: [{ type: 'node', id: 'scaled', position: [10, 0], text: 'AB', font: { size: 10 } }],
+          children: [
+            {
+              type: 'node',
+              id: 'scaled',
+              position: [10, 0],
+              text: 'AB',
+              style: { font: { size: 10 } },
+            },
+          ],
         },
       ]),
     );
@@ -178,7 +226,15 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
         {
           type: 'scope',
           transforms: [{ kind: 'rotate', degrees: 90 }],
-          children: [{ type: 'node', id: 'rotated', position: [10, 0], text: 'AB', font: { size: 10 } }],
+          children: [
+            {
+              type: 'node',
+              id: 'rotated',
+              position: [10, 0],
+              text: 'AB',
+              style: { font: { size: 10 } },
+            },
+          ],
         },
       ]),
     );
@@ -199,8 +255,8 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
           id: 'padded',
           position: [0, 0],
           text: 'A',
-          font: { size: 10 },
-          padding: { left: 0, right: 20, top: 0, bottom: 0 },
+          style: { font: { size: 10 } },
+          layout: { padding: { left: 0, right: 20, top: 0, bottom: 0 } },
         },
       ]),
     );
@@ -212,7 +268,17 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
   });
 
   it('does not include node labels in content size', () => {
-    const base = collectLayouts(scene([{ type: 'node', id: 'base', position: [0, 0], text: 'A', font: { size: 10 } }]));
+    const base = collectLayouts(
+      scene([
+        {
+          type: 'node',
+          id: 'base',
+          position: [0, 0],
+          text: 'A',
+          style: { font: { size: 10 } },
+        },
+      ]),
+    );
     const withLabel = collectLayouts(
       scene([
         {
@@ -220,8 +286,8 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
           id: 'labelled',
           position: [0, 0],
           text: 'A',
-          font: { size: 10 },
           label: { text: 'long label', position: 'top' },
+          style: { font: { size: 10 } },
         },
       ]),
     );
@@ -231,7 +297,15 @@ describe('CompileOptions.artifacts.nodeLayouts', () => {
 
   it('keeps observer measurements at double precision when Scene output is rounded', () => {
     const { layouts, textPrims } = collectLayouts(
-      scene([{ type: 'node', id: 'precise', position: [0, 0], text: 'x', font: { size: 10 } }]),
+      scene([
+        {
+          type: 'node',
+          id: 'precise',
+          position: [0, 0],
+          text: 'x',
+          style: { font: { size: 10 } },
+        },
+      ]),
       { measurer: fractionalMeasureText, precision: 0 },
     );
 

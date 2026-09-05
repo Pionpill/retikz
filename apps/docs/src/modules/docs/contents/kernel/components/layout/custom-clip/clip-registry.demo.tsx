@@ -48,27 +48,27 @@ const Demo: FC = () => (
       <Node
         position={[-88, -8]}
         shape="circle"
-        minimumSize={{ width: 160, height: 160 }}
-        fill="skyblue"
-        stroke="none"
+        style={{ fill: 'skyblue', stroke: 'none' }}
+        layout={{ minimumSize: { width: 160, height: 160 } }}
       />
       <Node
         position={[84, 8]}
         shape="circle"
-        minimumSize={{ width: 170, height: 170 }}
-        fill="darkorange"
-        stroke="none"
+        style={{ fill: 'darkorange', stroke: 'none' }}
+        layout={{ minimumSize: { width: 170, height: 170 } }}
       />
       <Node
         position={[0, 0]}
         text="custom clip"
-        minimumSize={{ width: 132, height: 42 }}
-        fill="white"
-        stroke="dodgerblue"
-        strokeWidth={2}
+        style={{ fill: 'white', stroke: 'dodgerblue', strokeWidth: 2 }}
+        layout={{ minimumSize: { width: 132, height: 42 } }}
       />
     </Scope>
-    <Node position={[0, 80]} text="rounded-rect provider" fill="none" stroke="none" textColor="dimgray" />
+    <Node
+      position={[0, 80]}
+      text="rounded-rect provider"
+      style={{ fill: 'none', stroke: 'none', textColor: 'dimgray' }}
+    />
   </Layout>
 );
 

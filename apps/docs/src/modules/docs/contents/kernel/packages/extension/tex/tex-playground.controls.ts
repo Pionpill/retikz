@@ -101,5 +101,5 @@ export const previewControlContract = {
       },
     },
   ],
-  relatedApis: ['Node.text', 'IRTexContent.tex', 'IRTexContent.displayMode', 'Node.font'],
+  relatedApis: ['Node.text', 'IRTexContent.tex', 'IRTexContent.displayMode', 'Node.style.font'],
 } satisfies PreviewControlContract;

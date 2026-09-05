@@ -1,4 +1,4 @@
-﻿import type { FC } from 'react';
+import type { FC } from 'react';
 
 import { Draw, Layout, Scope } from '@retikz/react';
 
@@ -16,9 +16,16 @@ const CircuitDemo: FC = () => (
     shapes={[...circuitShapes, circuitMeter]}
   >
     <Scope
-      pathDefault={{ stroke: INK, strokeWidth: 3, lineCap: 'round', lineJoin: 'round' }}
-      nodeDefault={{ font: FONT, stroke: 'none', padding: 0 }}
-      labelDefault={{ font: { ...FONT, size: 16 } }}
+      defaults={{
+        path: {
+          style: { stroke: INK, strokeWidth: 3, lineCap: 'round', lineJoin: 'round' },
+        },
+        node: {
+          style: { font: FONT, stroke: 'none' },
+          layout: { padding: 0 },
+        },
+        label: { font: { ...FONT, size: 16 } },
+      }}
     >
       <Switch id="switch" position={[350, 200]} />
       <Meter id="ammeter" position={[625, 200]} text="A" />

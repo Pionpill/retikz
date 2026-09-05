@@ -29,7 +29,13 @@ describe('resolvePath', () => {
       strokeDefault: 'currentColor',
     });
 
-    expect(resolvePathWithBuiltinProviders(path({ strokeWidth: 2 })).style).toEqual({
+    expect(
+      resolvePathWithBuiltinProviders(
+        path({
+          style: { strokeWidth: 2 },
+        }),
+      ).style,
+    ).toEqual({
       strokeWidth: 2,
       strokeRequested: true,
       strokeFillDefault: 'none',

@@ -53,45 +53,40 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           [-115, 0],
           [115, 0],
         ]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Draw
         way={[
           [0, -95],
           [0, 95],
         ]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Arc
         center={ARC_CENTER}
         radius={ARC_RADIUS}
         startAngle={values.arcStartAngle}
         endAngle={values.arcEndAngle}
-        stroke="dodgerblue"
-        strokeWidth={2}
+        style={{ stroke: 'dodgerblue', strokeWidth: 2 }}
       />
       <Rectangle
         center={center}
         width={rect.width}
         height={rect.height}
-        stroke="gray"
-        strokeOpacity={0.8}
-        dashPattern={[4, 4]}
-        fill="none"
+        style={{ stroke: 'gray', strokeOpacity: 0.8, dashPattern: [4, 4], fill: 'none' }}
       />
       {points.map(point => (
         <Fragment key={point.label}>
-          <Circle center={point.value} radius={4} fill="darkorange" stroke="none" />
-          <Node position={labelPositionOf(point.value)} stroke="none" textColor="darkorange">
+          <Circle center={point.value} radius={4} style={{ fill: 'darkorange', stroke: 'none' }} />
+          <Node position={labelPositionOf(point.value)} style={{ stroke: 'none', textColor: 'darkorange' }}>
             {point.label}
           </Node>
         </Fragment>
       ))}
-      <Node position={[center[0], Math.min(bounds.maxY + 20, 98)]} stroke="none" textColor="gray" font={{ size: 12 }}>
+      <Node
+        position={[center[0], Math.min(bounds.maxY + 20, 98)]}
+        style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}
+      >
         {boundsLabelOf(bounds)}
       </Node>
     </Layout>

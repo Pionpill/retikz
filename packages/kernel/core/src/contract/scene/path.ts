@@ -175,9 +175,9 @@ export type PathPrim = {
   /** 描边宽度 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
-  dashPattern?: IRPathBase['dashPattern'];
+  dashPattern?: NonNullable<IRPathBase['style']>['dashPattern'];
   /** 描边 dash offset */
-  dashOffset?: IRPathBase['dashOffset'];
+  dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
   /**
    * 端点形状
    * @default 'butt'

@@ -74,8 +74,8 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 下方加 `Fundamentals` 灰底 mini 按钮 + `Choose your path` 小标题，配 2 条竖直 [Draw](/kernel/components/draw/overview) line 连起来：
 
 ```tsx
-<Draw way={['title', 'fundamentals']} stroke="#1f6286" strokeWidth={2} arrow="->" />
-<Draw way={['fundamentals', 'choose']}   stroke="#1f6286" strokeWidth={2} arrow="->" />
+<Draw way={['title', 'fundamentals']} arrow="->" style={{ stroke: "#1f6286", strokeWidth: 2 }} />
+<Draw way={['fundamentals', 'choose']} arrow="->" style={{ stroke: "#1f6286", strokeWidth: 2 }} />
 ```
 
 - way 数组 `[源 id, 目标 id]` —— 最简形态：两个 target 就是一条直线
@@ -117,18 +117,17 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
     { curve: [316, 190] },
     'data-scientist', // 第 2 段：control + target id
   ]}
-  stroke="#1f6286"
-  strokeWidth={2}
   arrow="->"
+  style={{ stroke: '#1f6286', strokeWidth: 2 }}
 />
 ```
 
 最后一个 target 用节点 id `'data-scientist'`，retikz 自动锚到节点边框（不是裸坐标）。子列内的 3 条短竖直 line 也用节点 id 引用：
 
 ```tsx
-<Draw way={['data-scientist', 'machine-learning']} stroke="#1f6286" strokeWidth={2} arrow="->" />
-<Draw way={['machine-learning', 'deep-learning']}   stroke="#1f6286" strokeWidth={2} arrow="->" />
-<Draw way={['data-engineer', 'big-data-engineer']}  stroke="#1f6286" strokeWidth={2} arrow="->" />
+<Draw way={['data-scientist', 'machine-learning']} arrow="->" style={{ stroke: "#1f6286", strokeWidth: 2 }} />
+<Draw way={['machine-learning', 'deep-learning']} arrow="->" style={{ stroke: "#1f6286", strokeWidth: 2 }} />
+<Draw way={['data-engineer', 'big-data-engineer']} arrow="->" style={{ stroke: "#1f6286", strokeWidth: 2 }} />
 ```
 
 <ComponentPreview files={{ file: 'learning-path-04-paths', diffFrom: 'learning-path-03-stacks' }} size="xxl" />
@@ -155,10 +154,8 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
     { curve: [404, 210] },
     'choose',
   ]}
-  stroke="#287fad"
-  strokeWidth={2}
-  dashPattern={[6, 6]}
   arrow="<-"
+  style={{ stroke: '#287fad', strokeWidth: 2, dashPattern: [6, 6] }}
 />
 ```
 

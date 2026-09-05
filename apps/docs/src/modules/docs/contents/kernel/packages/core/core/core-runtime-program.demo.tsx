@@ -14,13 +14,9 @@ const Demo: FC = () => (
         { text: 'complete document', fill: 'gray', font: { size: 11 } },
       ]}
       position={[-350, 0]}
-      minimumSize={{ width: 126, height: 48 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 126, height: 48 }, lineHeight: 15 }}
     />
 
     <LogicFigureFrame id="core-group">
@@ -32,13 +28,9 @@ const Demo: FC = () => (
           { text: 'capture · equality', fill: 'gray', font: { size: 11 } },
         ]}
         position={[-185, 0]}
-        minimumSize={{ width: 154, height: 48 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 154, height: 48 }, lineHeight: 15 }}
       />
       <Node
         id="core-program"
@@ -47,13 +39,9 @@ const Demo: FC = () => (
           { text: 'compile · diagnostics', fill: 'gray', font: { size: 11 } },
         ]}
         position={[-8, 0]}
-        minimumSize={{ width: 154, height: 48 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 154, height: 48 }, lineHeight: 15 }}
       />
     </LogicFigureFrame>
 
@@ -64,13 +52,9 @@ const Demo: FC = () => (
         { text: 'atomic publish', fill: 'gray', font: { size: 11 } },
       ]}
       position={[165, 0]}
-      minimumSize={{ width: 136, height: 48 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 136, height: 48 }, lineHeight: 15 }}
     />
 
     <Node
@@ -80,19 +64,15 @@ const Demo: FC = () => (
         { text: 'result · snapshot · patch', fill: 'gray', font: { size: 11 } },
       ]}
       position={[333, 0]}
-      minimumSize={{ width: 160, height: 48 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 160, height: 48 }, lineHeight: 15 }}
     />
 
-    <Draw way={['ir-snapshot', 'core-owner']} arrow="->" stroke="gray" />
-    <Draw way={['core-owner', 'core-program']} arrow="->" stroke="gray" />
-    <Draw way={['core-program', 'runtime-session']} arrow="->" stroke="gray" />
-    <Draw way={['runtime-session', 'public-read']} arrow="->" stroke="gray" />
+    <Draw way={['ir-snapshot', 'core-owner']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['core-owner', 'core-program']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['core-program', 'runtime-session']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['runtime-session', 'public-read']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

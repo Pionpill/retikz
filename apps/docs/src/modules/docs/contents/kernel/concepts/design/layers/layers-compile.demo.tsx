@@ -4,19 +4,19 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout width={760} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node id="ir" position={[-340, 0]} stroke="none">
+    <Node id="ir" position={[-340, 0]} style={{ stroke: 'none' }}>
       IR
     </Node>
-    <Node id="nodes" position={[-230, 0]} stroke="none">
+    <Node id="nodes" position={[-230, 0]} style={{ stroke: 'none' }}>
       layout nodes
     </Node>
-    <Node id="paths" position={[-40, 0]} stroke="none">
+    <Node id="paths" position={[-40, 0]} style={{ stroke: 'none' }}>
       resolve paths
     </Node>
-    <Node id="bounds" position={[150, 0]} stroke="none">
+    <Node id="bounds" position={[150, 0]} style={{ stroke: 'none' }}>
       fit bounds
     </Node>
-    <Node id="scene" position={[340, 0]} stroke="none">
+    <Node id="scene" position={[340, 0]} style={{ stroke: 'none' }}>
       Scene
     </Node>
 

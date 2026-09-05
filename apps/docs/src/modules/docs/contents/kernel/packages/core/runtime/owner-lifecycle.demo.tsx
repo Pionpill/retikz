@@ -12,13 +12,9 @@ const Demo: FC = () => (
         { text: 'domain-owned', fill: 'gray', font: { size: 11 } },
       ]}
       position={[0, -150]}
-      minimumSize={{ width: 120, height: 46 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 120, height: 46 }, lineHeight: 15 }}
     />
     <Node
       id="capture"
@@ -27,13 +23,9 @@ const Demo: FC = () => (
         { text: 'take ownership', fill: 'gray', font: { size: 11 } },
       ]}
       position={[0, -85]}
-      minimumSize={{ width: 104, height: 46 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 104, height: 46 }, lineHeight: 15 }}
     />
     <Node
       id="candidate"
@@ -42,13 +34,9 @@ const Demo: FC = () => (
         { text: 'session-owned', fill: 'gray', font: { size: 11 } },
       ]}
       position={[0, -20]}
-      minimumSize={{ width: 126, height: 46 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 126, height: 46 }, lineHeight: 15 }}
     />
     <Node
       id="verify"
@@ -57,13 +45,9 @@ const Demo: FC = () => (
         { text: 'collect · validate', fill: 'gray', font: { size: 11 } },
       ]}
       position={[0, 45]}
-      minimumSize={{ width: 136, height: 48 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 136, height: 48 }, lineHeight: 15 }}
     />
     <Node
       id="publish"
@@ -72,13 +56,9 @@ const Demo: FC = () => (
         { text: 'pointer swap', fill: 'gray', font: { size: 11 } },
       ]}
       position={[0, 110]}
-      minimumSize={{ width: 108, height: 46 }}
-      stroke="green"
-      fill="green"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'green', fill: 'green', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 108, height: 46 }, lineHeight: 15 }}
     />
     <Node
       id="current"
@@ -87,13 +67,9 @@ const Demo: FC = () => (
         { text: 'complete Snapshot', fill: 'gray', font: { size: 11 } },
       ]}
       position={[-170, 45]}
-      minimumSize={{ width: 136, height: 46 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 136, height: 46 }, lineHeight: 15 }}
     />
     <Node
       id="retire-candidate"
@@ -102,13 +78,9 @@ const Demo: FC = () => (
         { text: 'dispose exactly once', fill: 'gray', font: { size: 11 } },
       ]}
       position={[-170, 140]}
-      minimumSize={{ width: 144, height: 46 }}
-      stroke="dimgray"
-      fill="dimgray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.06, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 144, height: 46 }, lineHeight: 15 }}
     />
     <Node
       id="retire-previous"
@@ -117,22 +89,18 @@ const Demo: FC = () => (
         { text: 'dispose exactly once', fill: 'gray', font: { size: 11 } },
       ]}
       position={[170, 140]}
-      minimumSize={{ width: 144, height: 46 }}
-      stroke="dimgray"
-      fill="dimgray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.06, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 144, height: 46 }, lineHeight: 15 }}
     />
 
-    <Draw way={['complete-input', 'capture']} arrow="->" stroke="gray" />
-    <Draw way={['capture', 'candidate']} arrow="->" stroke="gray" />
-    <Draw way={['candidate', 'verify']} arrow="->" stroke="gray" />
-    <Draw way={['verify', 'publish']} arrow="->" stroke="green" />
-    <Draw way={['current', 'verify']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['verify', 'retire-candidate']} arrow="->" stroke="red" dashPattern={[4, 3]} />
-    <Draw way={['publish', 'retire-previous']} arrow="->" stroke="gray" />
+    <Draw way={['complete-input', 'capture']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['capture', 'candidate']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['candidate', 'verify']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['verify', 'publish']} arrow="->" style={{ stroke: 'green' }} />
+    <Draw way={['current', 'verify']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['verify', 'retire-candidate']} arrow="->" style={{ stroke: 'red', dashPattern: [4, 3] }} />
+    <Draw way={['publish', 'retire-previous']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

@@ -31,13 +31,14 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         position={[0, 0]}
         shape={values.shape}
         text={text}
-        align={values.align}
-        maxTextWidth={values.maxTextWidth}
-        lineHeight={values.lineHeight}
-        minimumSize={{ width: 80, height: 48 }}
-        padding={{ x: 18, y: 12 }}
-        fill="lightgray"
-        stroke="gray"
+        style={{ fill: 'lightgray', stroke: 'gray' }}
+        layout={{
+          align: values.align,
+          maxTextWidth: values.maxTextWidth,
+          lineHeight: values.lineHeight,
+          minimumSize: { width: 80, height: 48 },
+          padding: { x: 18, y: 12 },
+        }}
       />
     </Layout>
   );

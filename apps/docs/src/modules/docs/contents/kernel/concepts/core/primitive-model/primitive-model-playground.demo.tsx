@@ -42,15 +42,16 @@ const BoundaryGuide: FC<BoundaryGuideProps> = props => {
     <Node
       position={[0, 0]}
       shape={{ type: primitiveModelBoundaryGuideShape.name, params: { shape, boundary, fit, gap } }}
-      padding={{ x: 14, y: 10 }}
-      minimumSize={{ width: 72, height: 48 }}
-      fill="none"
-      stroke="#94a3b8"
-      strokeOpacity={0.75}
-      strokeWidth={1}
-      dashPattern={[6, 4]}
-      textColor="transparent"
       zIndex={1}
+      style={{
+        fill: 'none',
+        stroke: '#94a3b8',
+        strokeOpacity: 0.75,
+        strokeWidth: 1,
+        dashPattern: [6, 4],
+        textColor: 'transparent',
+      }}
+      layout={{ padding: { x: 14, y: 10 }, minimumSize: { width: 72, height: 48 } }}
     >
       {children}
     </Node>
@@ -67,26 +68,32 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       viewBox={{ x: -175, y: -145, width: 350, height: 290 }}
       shapes={[primitiveModelBoundaryGuideShape, SectorShapeDefinition, StarShapeDefinition]}
     >
-      <Draw way={[[0, 0], sourcePosition]} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-3} />
+      <Draw
+        way={[[0, 0], sourcePosition]}
+        zIndex={-3}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+      />
       <Node
         id="T"
         position={[0, 0]}
         shape={nodeShapeOf(values.shape)}
         boundary={boundaryOf(values.boundary, values.fit, values.gap)}
-        padding={{ x: 14, y: 10 }}
-        minimumSize={{ width: 72, height: 48 }}
-        fill={values.fill}
-        stroke={values.stroke}
-        strokeWidth={values.strokeWidth}
-        textColor="#172033"
+        style={{ fill: values.fill, stroke: values.stroke, strokeWidth: values.strokeWidth, textColor: '#172033' }}
+        layout={{ padding: { x: 14, y: 10 }, minimumSize: { width: 72, height: 48 } }}
       >
         {values.content}
       </Node>
       <BoundaryGuide shape={values.shape} boundary={values.boundary} fit={values.fit} gap={values.gap}>
         {values.content}
       </BoundaryGuide>
-      <Node id="A" position={sourcePosition} shape="circle" minimumSize={16} fill="#64748b" stroke="none" />
-      <Draw way={['A', 'T']} arrow="->" stroke="#64748b" zIndex={-1} />
+      <Node
+        id="A"
+        position={sourcePosition}
+        shape="circle"
+        style={{ fill: '#64748b', stroke: 'none' }}
+        layout={{ minimumSize: 16 }}
+      />
+      <Draw way={['A', 'T']} arrow="->" zIndex={-1} style={{ stroke: '#64748b' }} />
     </Layout>
   );
 });

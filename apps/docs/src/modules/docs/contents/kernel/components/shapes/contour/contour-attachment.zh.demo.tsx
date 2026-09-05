@@ -8,33 +8,24 @@ const Demo: FC = () => (
     <Node
       id="auto-target"
       position={[-220, -45]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
     >
       {'按 id 自动连接\n或数字角度 anchor'}
     </Node>
     <Node
       id="boundary-point"
       position={[0, -45]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08, font: { size: 14 } }}
     >
       contour boundaryPoint
     </Node>
     <Node
       id="contour-hit"
       position={[220, -45]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
     >
       {'射线 ∩ 圆角轮廓\n精确贴边'}
     </Node>
@@ -42,33 +33,24 @@ const Demo: FC = () => (
     <Node
       id="named-anchor"
       position={[-220, 45]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
     >
       {'标准方位 anchor\ntop / right / …'}
     </Node>
     <Node
       id="shape-anchor"
       position={[0, 45]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08, font: { size: 14 } }}
     >
       {'contour anchor\n无对应命名点'}
     </Node>
     <Node
       id="aabb-fallback"
       position={[220, 45]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
     >
       {'外接 AABB\n矩形方位点'}
     </Node>

@@ -23,16 +23,15 @@ const Demo: FC = () => {
       <Node
         id="box"
         position={[0, 0]}
-        fill={active ? 'darkorange' : '#f1f5f9'}
-        stroke="darkorange"
         onClick={() => {
           setActive(value => !value);
           setCount(value => value + 1);
         }}
+        style={{ fill: active ? 'darkorange' : '#f1f5f9', stroke: 'darkorange' }}
       >
         Click me
       </Node>
-      <Node id="count" position={[0, -50]} stroke="none">
+      <Node id="count" position={[0, -50]} style={{ stroke: 'none' }}>
         Clicks: {count}
       </Node>
     </Layout>

@@ -54,16 +54,14 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       viewBox={{ x: -180, y: -120, width: 360, height: 250 }}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
-      <Draw way={[...hull, hull[0]]} stroke="darkorange" strokeWidth={2} />
+      <Draw way={[...hull, hull[0]]} style={{ stroke: 'darkorange', strokeWidth: 2 }} />
       {points.map((point, index) => (
         <Node
           key={`${point[0]}-${point[1]}-${index}`}
           position={point}
           shape="circle"
-          minimumSize={hullPoints.has(point) ? 8 : 6}
-          padding={0}
-          fill={hullPoints.has(point) ? 'currentColor' : 'gray'}
-          stroke="none"
+          style={{ fill: hullPoints.has(point) ? 'currentColor' : 'gray', stroke: 'none' }}
+          layout={{ minimumSize: hullPoints.has(point) ? 8 : 6, padding: 0 }}
         />
       ))}
     </Layout>

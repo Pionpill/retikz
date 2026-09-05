@@ -19,8 +19,16 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       height={coordinateAsAnchorFrame.height}
       viewBox={coordinateAsAnchorFrame.viewBox}
     >
-      <Draw way={coordinateAsAnchorFrame.xAxis} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-1} />
-      <Draw way={coordinateAsAnchorFrame.yAxis} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-1} />
+      <Draw
+        way={coordinateAsAnchorFrame.xAxis}
+        zIndex={-1}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+      />
+      <Draw
+        way={coordinateAsAnchorFrame.yAxis}
+        zIndex={-1}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+      />
       {/* 命名虚拟中心——画面里看不见，但下面 4 个 of 引用都靠它 */}
       <Coordinate id="hub" position={[values.positionX, values.positionY]} />
       <Node id="N" position={{ direction: 'top', of: 'hub', distance: values.verticalDistance }}>
@@ -36,10 +44,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         西
       </Node>
       {/* 4 条 path 终止在 hub——视觉上汇于中心点；hub 是 coordinate 不画形状 */}
-      <Draw way={['N', 'hub']} arrow="->" stroke="gray" />
-      <Draw way={['S', 'hub']} arrow="->" stroke="gray" />
-      <Draw way={['E', 'hub']} arrow="->" stroke="gray" />
-      <Draw way={['W', 'hub']} arrow="->" stroke="gray" />
+      <Draw way={['N', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['S', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['E', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['W', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
     </Layout>
   );
 });

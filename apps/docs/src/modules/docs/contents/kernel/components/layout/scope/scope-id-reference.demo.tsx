@@ -39,7 +39,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           C
         </Node>
       </Scope>
-      <Draw way={boundary} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
+      <Draw way={boundary} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
       <Draw way={['source', `cluster.${anchor}`]} arrow="->" />
     </Layout>
   );

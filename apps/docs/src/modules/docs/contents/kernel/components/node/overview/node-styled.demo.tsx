@@ -15,18 +15,20 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         id="node"
         position={[0, 0]}
         shape="rectangle"
-        fill={values.fill}
-        stroke={values.stroke}
-        strokeWidth={values.strokeWidth}
-        dashed={values.dashed}
-        opacity={values.opacity}
-        font={{
-          family: values.fontFamily,
-          size: values.fontSize,
-          weight: values.fontWeight,
-          style: values.fontStyle,
+        style={{
+          fill: values.fill,
+          stroke: values.stroke,
+          strokeWidth: values.strokeWidth,
+          dashed: values.dashed,
+          opacity: values.opacity,
+          font: {
+            family: values.fontFamily,
+            size: values.fontSize,
+            weight: values.fontWeight,
+            style: values.fontStyle,
+          },
         }}
-        padding={18}
+        layout={{ padding: 18 }}
       >
         Node
       </Node>

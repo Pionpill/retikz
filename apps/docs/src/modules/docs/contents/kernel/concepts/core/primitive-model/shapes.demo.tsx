@@ -11,9 +11,15 @@ const ROW1 = -56;
 const ROW2 = 56;
 const L1 = -2; // 第一行标签
 const L2 = 112; // 第二行标签
-const SHAPE = { fill: 'none', stroke: 'darkorange', strokeWidth: 2 } as const;
-const STROKE = { stroke: 'darkorange', strokeWidth: 2 } as const;
-const LABEL = { stroke: 'none', textColor: 'gray' } as const;
+const SHAPE = {
+  style: { fill: 'none', stroke: 'darkorange', strokeWidth: 2 },
+} as const;
+const STROKE = {
+  style: { stroke: 'darkorange', strokeWidth: 2 },
+} as const;
+const LABEL = {
+  style: { stroke: 'none', textColor: 'gray' },
+} as const;
 
 // 第一行前三个、第二行后两个；宽的 diamond 放行末
 const C = { rect: -150, ellipse: 0, diamond: 150, polygon: -75, circle: 75 };
@@ -46,10 +52,22 @@ const Demo: FC = () => (
   >
     {/* 内容盒（灰块）—— 共享 */}
     {R1.map(cx => (
-      <Rectangle key={`c1-${cx}`} center={[cx, ROW1]} width={CHW * 2} height={CHH * 2} fill="lightgray" stroke="none" />
+      <Rectangle
+        key={`c1-${cx}`}
+        center={[cx, ROW1]}
+        width={CHW * 2}
+        height={CHH * 2}
+        style={{ fill: 'lightgray', stroke: 'none' }}
+      />
     ))}
     {R2.map(cx => (
-      <Rectangle key={`c2-${cx}`} center={[cx, ROW2]} width={CHW * 2} height={CHH * 2} fill="lightgray" stroke="none" />
+      <Rectangle
+        key={`c2-${cx}`}
+        center={[cx, ROW2]}
+        width={CHW * 2}
+        height={CHH * 2}
+        style={{ fill: 'lightgray', stroke: 'none' }}
+      />
     ))}
 
     {/* shape 轮廓（darkorange），以内框为准 circumscribe */}
@@ -66,9 +84,7 @@ const Demo: FC = () => (
         center={[cx, ROW1]}
         width={IHW * 2}
         height={IHH * 2}
-        fill="none"
-        stroke="currentColor"
-        dashPattern={[4, 3]}
+        style={{ fill: 'none', stroke: 'currentColor', dashPattern: [4, 3] }}
       />
     ))}
     {R2.map(cx => (
@@ -77,9 +93,7 @@ const Demo: FC = () => (
         center={[cx, ROW2]}
         width={IHW * 2}
         height={IHH * 2}
-        fill="none"
-        stroke="currentColor"
-        dashPattern={[4, 3]}
+        style={{ fill: 'none', stroke: 'currentColor', dashPattern: [4, 3] }}
       />
     ))}
 

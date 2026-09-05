@@ -19,45 +19,35 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           [0, -86],
           [0, 86],
         ]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Draw
         way={[
           [-126, 0],
           [126, 0],
         ]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Draw
         way={[
           [-halfWidth, halfHeight + 16],
           [halfWidth, halfHeight + 16],
         ]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Draw
         way={[
           [halfWidth + 16, -halfHeight],
           [halfWidth + 16, halfHeight],
         ]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Rectangle
         center={[0, 0]}
         width={values.width}
         height={values.height}
         cornerRadius={values.cornerRadius}
-        fill={values.fill}
-        stroke={values.stroke}
-        strokeWidth={values.strokeWidth}
+        style={{ fill: values.fill, stroke: values.stroke, strokeWidth: values.strokeWidth }}
       />
     </Layout>
   );

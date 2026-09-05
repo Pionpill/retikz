@@ -40,8 +40,7 @@ const Demo: FC = () => (
       ]}
       arrow="->"
       arrowDetail={{ shape: 'bracket' }}
-      stroke="red"
-      strokeWidth={1.5}
+      style={{ stroke: 'red', strokeWidth: 1.5 }}
     />
     <Draw
       way={[
@@ -50,8 +49,7 @@ const Demo: FC = () => (
       ]}
       arrow="->"
       arrowDetail={{ shape: 'bracket' }}
-      stroke="green"
-      strokeWidth={1.5}
+      style={{ stroke: 'green', strokeWidth: 1.5 }}
     />
   </Layout>
 );

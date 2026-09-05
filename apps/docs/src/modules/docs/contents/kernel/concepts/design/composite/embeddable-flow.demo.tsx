@@ -10,16 +10,16 @@ import { Draw, Layout, Node } from '@retikz/react';
 const Demo: FC = () => (
   <Layout width={760} height={250} fontSize={14} style={{ maxWidth: '100%', height: 'auto' }}>
     {/* 顶行：从子组件到 compile 的主链路 */}
-    <Node id="child" position={[-330, -20]} stroke="none">
+    <Node id="child" position={[-330, -20]} style={{ stroke: 'none' }}>
       {'<Panel/> props'}
     </Node>
-    <Node id="contribute" position={[-125, -20]} stroke="none">
+    <Node id="contribute" position={[-125, -20]} style={{ stroke: 'none' }}>
       adapter.contribute
     </Node>
-    <Node id="resolve" position={[120, -20]} stroke="none" font={{ weight: 'bold' }}>
+    <Node id="resolve" position={[120, -20]} style={{ stroke: 'none', font: { weight: 'bold' } }}>
       resolve dependencies
     </Node>
-    <Node id="compile" position={[330, -20]} stroke="none">
+    <Node id="compile" position={[330, -20]} style={{ stroke: 'none' }}>
       compile
     </Node>
 
@@ -50,21 +50,21 @@ const Demo: FC = () => (
     />
 
     {/* 底行：node 进入 IR；roots/providers/datasets 进入 Core resolver；显式 definitions 是最终输入 */}
-    <Node id="node" position={[-220, 105]} stroke="none">
+    <Node id="node" position={[-220, 105]} style={{ stroke: 'none' }}>
       node (into IR)
     </Node>
-    <Node id="graph" position={[10, 105]} stroke="none">
+    <Node id="graph" position={[10, 105]} style={{ stroke: 'none' }}>
       roots + providers + datasets
     </Node>
-    <Node id="explicit" position={[275, 105]} stroke="none" textColor="gray">
+    <Node id="explicit" position={[275, 105]} style={{ stroke: 'none', textColor: 'gray' }}>
       explicit definitions
     </Node>
 
     <Draw way={['contribute', 'node']} arrow="->" />
     <Draw way={['contribute', 'graph']} arrow="->" />
     <Draw way={['graph', 'resolve']} arrow="->" />
-    <Draw way={['explicit', 'resolve']} arrow="->" dashPattern={[4, 3]} />
-    <Draw way={['node', 'compile']} arrow="->" dashPattern={[4, 3]} />
+    <Draw way={['explicit', 'resolve']} arrow="->" style={{ dashPattern: [4, 3] }} />
+    <Draw way={['node', 'compile']} arrow="->" style={{ dashPattern: [4, 3] }} />
   </Layout>
 );
 

@@ -18,10 +18,8 @@ const Demo: FC = () => (
       id="ell"
       position={[-165, 16]}
       shape="ellipse"
-      minimumSize={{ width: 52, height: 40 }}
-      margin={M}
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
+      layout={{ minimumSize: { width: 52, height: 40 }, margin: M }}
     />
     <Draw way={[[-165, -78], 'ell']} arrow="->" />
 
@@ -30,9 +28,8 @@ const Demo: FC = () => (
       id="star"
       position={[0, 16]}
       shape={{ type: 'star', params: { points: 5, innerRadius: 15, outerRadius: 36 } }}
-      margin={M}
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
+      layout={{ margin: M }}
     />
     <Draw way={[[0, -78], 'star']} arrow="->" />
 
@@ -41,20 +38,18 @@ const Demo: FC = () => (
       id="pent"
       position={[165, 16]}
       shape={{ type: 'polygon', params: { sides: 5, rotate: -90 } }}
-      minimumSize={{ width: 56, height: 52 }}
-      margin={M}
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
+      layout={{ minimumSize: { width: 56, height: 52 }, margin: M }}
     />
     <Draw way={[[165, -78], 'pent']} arrow="->" />
 
-    <Node position={[-165, 86]} stroke="none" padding={0} textColor="gray">
+    <Node position={[-165, 86]} style={{ stroke: 'none', textColor: 'gray' }} layout={{ padding: 0 }}>
       ellipse · gap
     </Node>
-    <Node position={[0, 86]} stroke="none" padding={0} textColor="gray">
+    <Node position={[0, 86]} style={{ stroke: 'none', textColor: 'gray' }} layout={{ padding: 0 }}>
       star · no gap
     </Node>
-    <Node position={[165, 86]} stroke="none" padding={0} textColor="gray">
+    <Node position={[165, 86]} style={{ stroke: 'none', textColor: 'gray' }} layout={{ padding: 0 }}>
       pentagon · gap
     </Node>
   </Layout>

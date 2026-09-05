@@ -77,10 +77,10 @@ These two nodes compile to identical output:
 
 An explicit `text` prop wins. When it is present, children do not participate in text collection. Without `text`, the adapter recursively reads strings, numbers, arrays, Fragments, and `<Text>` markers in JSX order:
 
-| Input             | Normalization rule                                     | `Node.text` result   |
-| ----------------- | ------------------------------------------------------ | -------------------- |
-| String / number   | Adjacent content joins; Node text rules handle `\n`    | Plain string line    |
-| Unstyled `<Text>` | Flush the current plain line, then add a separate line | Plain string line    |
+| Input             | Normalization rule                                     | `Node.text` result |
+| ----------------- | ------------------------------------------------------ | ------------------ |
+| String / number   | Adjacent content joins; Node text rules handle `\n`    | Plain string line  |
+| Unstyled `<Text>` | Flush the current plain line, then add a separate line | Plain string line  |
 | Styled `<Text>`   | Flush the current plain line and retain line overrides | IRLine object line |
 
 This also explains both boundaries: `<Text>` only works inside `<Node>`, and it represents a whole line rather than an inline span.
@@ -104,7 +104,7 @@ This also explains both boundaries: `<Text>` only works inside `<Node>`, and it 
 
 ### Line color resolution
 
-After normalization, every line enters Core through the same color precedence. An explicit `<Text fill>` overrides the Node default; only lines without `fill` inherit `Node.textColor`:
+After normalization, every line enters Core through the same color precedence. An explicit `<Text fill>` overrides the Node default; only lines without `fill` inherit `Node.style.textColor`:
 
 <ComponentPreview files="text-contrast-flow" size="sm" hideCode />
 

@@ -154,9 +154,9 @@ describe('lowerIRToKernel', () => {
         {
           type: 'scope',
           id: 'group',
-          color: '#123456',
           transforms: [{ kind: 'translate', x: 4, y: 5 }],
           children: [{ namespace: 'demo', type: 'panel', id: 'nested' }],
+          style: { color: '#123456' },
         },
       ],
     };
@@ -168,9 +168,9 @@ describe('lowerIRToKernel', () => {
         {
           type: 'scope',
           id: 'group',
-          color: '#123456',
           transforms: [{ kind: 'translate', x: 4, y: 5 }],
           children: [{ type: 'node', id: 'nested', position: [0, 0], text: 'nested' }],
+          style: { color: '#123456' },
         },
       ],
     });

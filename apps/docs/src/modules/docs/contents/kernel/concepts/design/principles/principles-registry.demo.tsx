@@ -13,34 +13,25 @@ const Demo: FC = () => (
         id="builtins"
         text="BUILTIN_*"
         position={[-250, -18]}
-        minimumSize={{ width: 150, height: 34 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 150, height: 34 } }}
       />
       <Node
         id="custom"
         text="defineXxx(custom)"
         position={[-250, 28]}
-        minimumSize={{ width: 150, height: 34 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 150, height: 34 } }}
       />
     </LogicFigureFrame>
     <Node
       id="resolver"
       text="resolveXxxRegistry"
       position={[-45, 5]}
-      stroke="dimgray"
-      fill="dimgray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="registry"
@@ -49,21 +40,15 @@ const Demo: FC = () => (
         { text: 'ReadonlyMap', fill: 'gray', font: { size: 12 } },
       ]}
       position={[150, 5]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="consumer"
       text="compile consumer"
       position={[320, 5]}
-      stroke="dimgray"
-      fill="dimgray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08, font: { size: 13 } }}
     />
 
     <Draw way={['builtins', 'resolver']} arrow="->" />

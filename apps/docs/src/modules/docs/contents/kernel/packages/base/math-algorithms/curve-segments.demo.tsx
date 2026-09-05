@@ -118,18 +118,16 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Layout width={400} height={240} viewBox={{ x: -175, y: -125, width: 350, height: 250 }}>
-      {controlPolygon && <Draw way={controlPolygon} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" />}
-      <Path stroke="lightgray" strokeWidth={2} fill="none">
-        {stepsOf(sourceSegment)}
-      </Path>
-      <Path stroke="#facc15" strokeWidth={2} fill="none">
-        {stepsOf(sliceSegment)}
-      </Path>
+      {controlPolygon && (
+        <Draw way={controlPolygon} style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }} />
+      )}
+      <Path style={{ stroke: 'lightgray', strokeWidth: 2, fill: 'none' }}>{stepsOf(sourceSegment)}</Path>
+      <Path style={{ stroke: '#facc15', strokeWidth: 2, fill: 'none' }}>{stepsOf(sliceSegment)}</Path>
       {controlPolygon?.map((point, index) => (
-        <Circle key={index} center={point} radius={3} fill="lightgray" stroke="none" />
+        <Circle key={index} center={point} radius={3} style={{ fill: 'lightgray', stroke: 'none' }} />
       ))}
-      <Draw way={tangentEndsOf(sample)} stroke="#3b82f6" strokeWidth={2} />
-      <Circle center={sample.point} radius={5} fill="#3b82f6" stroke="none" />
+      <Draw way={tangentEndsOf(sample)} style={{ stroke: '#3b82f6', strokeWidth: 2 }} />
+      <Circle center={sample.point} radius={5} style={{ fill: '#3b82f6', stroke: 'none' }} />
     </Layout>
   );
 });

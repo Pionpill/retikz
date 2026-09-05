@@ -3,7 +3,17 @@ import type { FC } from 'react';
 import { Draw, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout width={300} height={80} nodeDefault={{ stroke: 'gray', dashed: true }}>
+  <Layout
+    width={300}
+    height={80}
+    rootScope={{
+      defaults: {
+        node: {
+          style: { stroke: 'gray', dashed: true },
+        },
+      },
+    }}
+  >
     <Node id="a" position={[0, 0]}>
       A
     </Node>

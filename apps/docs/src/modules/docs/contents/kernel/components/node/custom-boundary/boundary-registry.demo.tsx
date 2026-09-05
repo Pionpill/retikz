@@ -25,19 +25,17 @@ const horizontalPorts: BoundaryDefinition = defineBoundary({
 
 const Demo: FC = () => (
   <Layout width={430} height={190} boundaries={[horizontalPorts]}>
-    <Node id="source" position={[-150, 0]} text="A" shape="circle" fill="lightgray" stroke="gray" />
+    <Node id="source" position={[-150, 0]} text="A" shape="circle" style={{ fill: 'lightgray', stroke: 'gray' }} />
     <Node
       id="controller"
       position={[0, 0]}
       text="IO"
-      minimumSize={{ width: 92, height: 56 }}
       boundary="horizontal-ports"
-      fill="white"
-      stroke="dodgerblue"
-      strokeWidth={2}
+      style={{ fill: 'white', stroke: 'dodgerblue', strokeWidth: 2 }}
+      layout={{ minimumSize: { width: 92, height: 56 } }}
     />
-    <Node id="sink" position={[145, 55]} text="B" shape="circle" fill="lightgray" stroke="gray" />
-    <Draw way={['source', 'controller', 'sink']} arrow="->" stroke="darkorange" strokeWidth={2} />
+    <Node id="sink" position={[145, 55]} text="B" shape="circle" style={{ fill: 'lightgray', stroke: 'gray' }} />
+    <Draw way={['source', 'controller', 'sink']} arrow="->" style={{ stroke: 'darkorange', strokeWidth: 2 }} />
   </Layout>
 );
 

@@ -22,7 +22,7 @@ const Demo: FC = () => {
       />
 
       {/* 单位圆（半径 100px） */}
-      <Circle center={[0, 0]} radius={100} lineCap="round" />
+      <Circle center={[0, 0]} radius={100} style={{ lineCap: 'round' }} />
 
       {/* 坐标轴 + 端点 label（`$x$` / `$y$` 行内公式）+ 命名锚 */}
       <Draw
@@ -32,7 +32,7 @@ const Demo: FC = () => {
         ]}
         arrow="->"
       />
-      <Node position={[162, 0]} stroke="none" padding={0}>
+      <Node position={[162, 0]} style={{ stroke: 'none' }} layout={{ padding: 0 }}>
         {'$x$'}
       </Node>
       <Coordinate id="x-axis" position={[150, 0]} />
@@ -44,7 +44,7 @@ const Demo: FC = () => {
         ]}
         arrow="->"
       />
-      <Node position={[0, -162]} stroke="none" padding={0}>
+      <Node position={[0, -162]} style={{ stroke: 'none' }} layout={{ padding: 0 }}>
         {'$y$'}
       </Node>
       <Coordinate id="y-axis" position={[0, -150]} />
@@ -63,7 +63,7 @@ const Demo: FC = () => {
               [x, 3],
             ]}
           />
-          <Node position={[x - 10, 14]} stroke="none" padding={1}>
+          <Node position={[x - 10, 14]} style={{ stroke: 'none' }} layout={{ padding: 1 }}>
             {tex}
           </Node>
         </Fragment>
@@ -84,7 +84,7 @@ const Demo: FC = () => {
               [3, y],
             ]}
           />
-          <Node position={[-18, y + 10]} stroke="none" padding={1}>
+          <Node position={[-18, y + 10]} style={{ stroke: 'none' }} layout={{ padding: 1 }}>
             {tex}
           </Node>
         </Fragment>

@@ -49,28 +49,22 @@ const Demo: FC = () => (
         <Node
           id={`${id}-signal`}
           position={[-160, y]}
-          minimumSize={{ width: 220, height: 34 }}
-          stroke="dimgray"
-          fill="lightgray"
-          fillOpacity={0.16}
           cornerRadius={4}
-          font={{ size: 13 }}
+          style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13 } }}
+          layout={{ minimumSize: { width: 220, height: 34 } }}
         >
           {signal}
         </Node>
         <Node
           id={`${id}-owner`}
           position={[155, y]}
-          minimumSize={{ width: 260, height: 38 }}
-          stroke="dodgerblue"
-          fill="dodgerblue"
-          fillOpacity={0.08}
           cornerRadius={4}
-          font={{ size: 13 }}
           text={[
             { text: owner, font: { size: 14, weight: 'bold' } },
             { text: anchor, fill: 'gray', font: { size: 12 } },
           ]}
+          style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+          layout={{ minimumSize: { width: 260, height: 38 } }}
         />
         <Draw way={[`${id}-signal`, `${id}-owner`]} arrow="->" />
       </Fragment>

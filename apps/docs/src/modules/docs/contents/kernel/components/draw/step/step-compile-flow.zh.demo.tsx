@@ -9,31 +9,22 @@ const Demo: FC = () => (
       id="step-ir"
       position={[-200, 0]}
       text={['IRStep', '有序序列']}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="compile-step"
       position={[0, 0]}
       text={['目标解析', '游标 + kind 降级']}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13, weight: 'bold' }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
     />
     <Node
       id="path-output"
       position={[200, 0]}
       text={['路径命令', '边标注几何']}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.08, font: { size: 13 } }}
     />
 
     <Draw

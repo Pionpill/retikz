@@ -14,7 +14,7 @@ const Demo: FC = () => {
   return (
     <Layout width={600} height={360} lowerTex={lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined}>
       {/* 单位圆（半径 100px） */}
-      <Circle center={[0, 0]} radius={100} lineCap="round" />
+      <Circle center={[0, 0]} radius={100} style={{ lineCap: 'round' }} />
 
       {/* x 轴：箭头 path + 端点 label（`$x$` 行内公式 → 数学斜体）+ 命名锚 */}
       <Draw
@@ -24,7 +24,7 @@ const Demo: FC = () => {
         ]}
         arrow="->"
       />
-      <Node position={[162, 0]} stroke="none" padding={0}>
+      <Node position={[162, 0]} style={{ stroke: 'none' }} layout={{ padding: 0 }}>
         {'$x$'}
       </Node>
       <Coordinate id="x-axis" position={[150, 0]} />
@@ -37,7 +37,7 @@ const Demo: FC = () => {
         ]}
         arrow="->"
       />
-      <Node position={[0, -162]} stroke="none" padding={0}>
+      <Node position={[0, -162]} style={{ stroke: 'none' }} layout={{ padding: 0 }}>
         {'$y$'}
       </Node>
       <Coordinate id="y-axis" position={[0, -150]} />

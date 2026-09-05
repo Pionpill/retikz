@@ -8,44 +8,32 @@ const Demo: FC = () => (
     <Node
       id="layouts"
       position={[-310, -35]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14 } }}
     >
       子树 layouts
     </Node>
     <Node
       id="envelope"
       position={[-125, -35]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.1}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.1, font: { size: 14 } }}
     >
       AABB / 最小外接圆
     </Node>
     <Node
       id="synthetic"
       position={[50, -35]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
     >
       scope.id synthetic layout
     </Node>
     <Node
       id="parent-frame"
       position={[285, -35]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14 } }}
     >
       父 namespace frame
     </Node>
@@ -53,44 +41,32 @@ const Demo: FC = () => (
     <Node
       id="clip-ir"
       position={[-310, 35]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14 } }}
     >
       clip IR
     </Node>
     <Node
       id="clip-registry"
       position={[-125, 35]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.1}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.1, font: { size: 14 } }}
     >
       provider 解析 + 去重
     </Node>
     <Node
       id="scene-clip"
       position={[50, 35]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
     >
       Scene resource + clipRef
     </Node>
     <Node
       id="adapter"
       position={[285, 35]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14 } }}
     >
       SVG / Canvas 裁切
     </Node>

@@ -24,55 +24,60 @@ const Demo: FC = () => (
       center={[0, 0]}
       width={OUTER_WIDTH}
       height={OUTER_HEIGHT}
-      fill="none"
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ fill: 'none', stroke: 'gray', dashPattern: [4, 3] }}
     />
     {/* Inner frame: content box + padding, the rectangular node's shape */}
     <Rectangle
       center={[0, 0]}
       width={INNER_WIDTH}
       height={INNER_HEIGHT}
-      fill="none"
-      stroke="currentColor"
-      dashPattern={[4, 3]}
+      style={{ fill: 'none', stroke: 'currentColor', dashPattern: [4, 3] }}
     />
     {/* Content box: base size from text measurement */}
-    <Rectangle center={[0, 0]} width={CONTENT_WIDTH} height={CONTENT_HEIGHT} fill="lightgray" stroke="none" />
+    <Rectangle
+      center={[0, 0]}
+      width={CONTENT_WIDTH}
+      height={CONTENT_HEIGHT}
+      style={{ fill: 'lightgray', stroke: 'none' }}
+    />
 
-    <Node id="content" position={[0, 0]} stroke="none" padding={0} font={FONT}>
+    <Node id="content" position={[0, 0]} style={{ stroke: 'none', font: FONT }} layout={{ padding: 0 }}>
       content
     </Node>
 
     {/* Outer frame: centered label top, one vertical arrow to the top edge, gray */}
-    <Node id="outer-label" position={[0, -85]} stroke="none" textColor="gray" font={FONT}>
+    <Node id="outer-label" position={[0, -85]} style={{ stroke: 'none', textColor: 'gray', font: FONT }}>
       outer frame
     </Node>
-    <Draw way={['outer-label', [0, -OUTER_HEIGHT / 2]]} stroke="gray" arrow="->" />
+    <Draw way={['outer-label', [0, -OUTER_HEIGHT / 2]]} arrow="->" style={{ stroke: 'gray' }} />
 
     {/* Inner frame: centered label bottom, one vertical arrow to the bottom edge, currentColor */}
-    <Node id="inner-label" position={[0, 85]} stroke="none" font={FONT}>
+    <Node id="inner-label" position={[0, 85]} style={{ stroke: 'none', font: FONT }}>
       inner frame
     </Node>
-    <Draw way={['inner-label', [0, INNER_HEIGHT / 2]]} stroke="currentColor" arrow="->" />
+    <Draw way={['inner-label', [0, INNER_HEIGHT / 2]]} arrow="->" style={{ stroke: 'currentColor' }} />
 
     {/* Content box: left label, currentColor */}
-    <Node id="content-label" position={[-145, 0]} stroke="none" font={FONT}>
+    <Node id="content-label" position={[-145, 0]} style={{ stroke: 'none', font: FONT }}>
       content box
     </Node>
-    <Draw way={['content-label', [-CONTENT_WIDTH / 2, 0]]} stroke="currentColor" arrow="->" />
+    <Draw way={['content-label', [-CONTENT_WIDTH / 2, 0]]} arrow="->" style={{ stroke: 'currentColor' }} />
 
     {/* padding: right label pointing to the padding gap, currentColor */}
-    <Node id="inner-sep-label" position={[150, -20]} stroke="none" font={FONT}>
+    <Node id="inner-sep-label" position={[150, -20]} style={{ stroke: 'none', font: FONT }}>
       padding
     </Node>
-    <Draw way={['inner-sep-label', [CONTENT_WIDTH / 2 + PADDING / 2, -20]]} stroke="currentColor" arrow="->" />
+    <Draw
+      way={['inner-sep-label', [CONTENT_WIDTH / 2 + PADDING / 2, -20]]}
+      arrow="->"
+      style={{ stroke: 'currentColor' }}
+    />
 
     {/* margin: right label pointing to the margin gap, gray */}
-    <Node id="outer-sep-label" position={[150, 20]} stroke="none" textColor="gray" font={FONT}>
+    <Node id="outer-sep-label" position={[150, 20]} style={{ stroke: 'none', textColor: 'gray', font: FONT }}>
       margin
     </Node>
-    <Draw way={['outer-sep-label', [INNER_WIDTH / 2 + MARGIN / 2, 20]]} stroke="gray" arrow="->" />
+    <Draw way={['outer-sep-label', [INNER_WIDTH / 2 + MARGIN / 2, 20]]} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

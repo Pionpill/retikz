@@ -30,13 +30,18 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
       position={position}
       shape="rectangle"
       cornerRadius={hasBox ? 4.5 : 0}
-      fill={fill}
-      stroke={hasBox ? NODE_STROKE : 'none'}
-      strokeWidth={hasBox ? 0.5 : 0}
-      textColor={hasBox ? LEAF_TEXT : TITLE_TEXT}
-      font={{ ...SANS_FONT, size: isTitle ? 24 : isHeader ? 14 : 12, weight: isTitle || isHeader ? 'bold' : 'normal' }}
-      padding={hasBox ? 5 : 4}
-      minimumSize={{ width, height }}
+      style={{
+        fill,
+        stroke: hasBox ? NODE_STROKE : 'none',
+        strokeWidth: hasBox ? 0.5 : 0,
+        textColor: hasBox ? LEAF_TEXT : TITLE_TEXT,
+        font: {
+          ...SANS_FONT,
+          size: isTitle ? 24 : isHeader ? 14 : 12,
+          weight: isTitle || isHeader ? 'bold' : 'normal',
+        },
+      }}
+      layout={{ padding: hasBox ? 5 : 4, minimumSize: { width, height } }}
     >
       {children}
     </Node>
@@ -57,8 +62,8 @@ const Demo: FC = () => (
 
     {/* Step 2: 中段 spine —— 2 条 line。
         Sugar Draw way 数组：[源 id, 目标 id]，retikz 自动用节点 id 解析锚点 */}
-    <Draw way={['title', 'fundamentals']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
-    <Draw way={['fundamentals', 'choose']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
+    <Draw way={['title', 'fundamentals']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
+    <Draw way={['fundamentals', 'choose']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
   </Layout>
 );
 

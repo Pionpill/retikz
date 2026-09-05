@@ -11,10 +11,10 @@ const Demo: FC = () => (
     viewBox={{ x: 0, y: 0, width: 200, height: 200 }}
     animations={[cameraTo({ from: [0, 0, 200, 200], to: [110, 110, 80, 80] })]}
   >
-    <Node id="a" position={[40, 40]} fill="#94a3b8">
+    <Node id="a" position={[40, 40]} style={{ fill: '#94a3b8' }}>
       a
     </Node>
-    <Node id="b" position={[150, 150]} fill="#3b82f6">
+    <Node id="b" position={[150, 150]} style={{ fill: '#3b82f6' }}>
       b
     </Node>
   </Layout>

@@ -1,25 +1,22 @@
-import type { IRLabelDefault, IRScope } from '../../schemas';
+import type { IRLabelDefault, IRScope, IRScopeDefaults } from '../../schemas';
 
 /** scope 级联 graphic state */
-export type CascadeState = Pick<
-  IRScope,
-  'color' | 'stroke' | 'fill' | 'strokeWidth' | 'opacity' | 'fillOpacity' | 'strokeOpacity'
->;
+export type CascadeState = NonNullable<IRScope['style']>;
 
 /** 单层 scope 样式解析 frame */
 export type StyleResolveFrame = {
   /** 级联 graphic state */
   cascade: CascadeState;
   /** node 样式通道 */
-  nodeDefault?: IRScope['nodeDefault'];
+  nodeDefault?: IRScopeDefaults['node'];
   /** path 样式通道 */
-  pathDefault?: IRScope['pathDefault'];
+  pathDefault?: IRScopeDefaults['path'];
   /** label 样式通道 */
   labelDefault?: IRLabelDefault;
   /** arrow 样式通道 */
-  arrowDefault?: IRScope['arrowDefault'];
+  arrowDefault?: IRScopeDefaults['arrow'];
   /** 继承屏障 */
-  resetStyle?: IRScope['resetStyle'];
+  resetStyle?: IRScopeDefaults['reset'];
 };
 
 /** label 默认值经过级联后的有效视图 */

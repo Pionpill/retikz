@@ -58,19 +58,37 @@ describe('layout-aware composite transactions and artifacts', () => {
       }),
       compile: (_, context) => {
         context.layoutChild(
-          { type: 'node', id: 'minimum-only', position: [0, 0], text: 'minimum', fill: gradient('#100', '#200') },
+          {
+            type: 'node',
+            id: 'minimum-only',
+            position: [0, 0],
+            text: 'minimum',
+            style: { fill: gradient('#100', '#200') },
+          },
           {
             x: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Minimum },
             y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
           },
         );
         context.layoutChild(
-          { type: 'node', id: 'natural-only', position: [0, 0], text: 'natural', fill: gradient('#300', '#400') },
+          {
+            type: 'node',
+            id: 'natural-only',
+            position: [0, 0],
+            text: 'natural',
+            style: { fill: gradient('#300', '#400') },
+          },
           NaturalLayoutProposal,
         );
         const exact = resolvedResultOf(
           context,
-          { type: 'node', id: 'exact-only', position: [0, 0], text: 'exact', fill: gradient('#500', '#600') },
+          {
+            type: 'node',
+            id: 'exact-only',
+            position: [0, 0],
+            text: 'exact',
+            style: { fill: gradient('#500', '#600') },
+          },
           {
             x: { kind: LayoutAxisProposalKind.Exact, value: 80 },
             y: { kind: LayoutAxisProposalKind.Exact, value: 30 },
@@ -104,14 +122,19 @@ describe('layout-aware composite transactions and artifacts', () => {
       }),
       compile: (_, context) => {
         context.layoutChild(
-          { type: 'node', position: [0, 0], text: 'discarded', fill: discarded },
+          {
+            type: 'node',
+            position: [0, 0],
+            text: 'discarded',
+            style: { fill: discarded },
+          },
           NaturalLayoutProposal,
         );
         const final = resolvedResultOf(context, {
           type: 'node',
           position: [0, 0],
           text: 'selected',
-          fill: selected,
+          style: { fill: selected },
         });
         return { children: [context.replay(final)] };
       },
@@ -182,7 +205,7 @@ describe('layout-aware composite transactions and artifacts', () => {
                 id: 'discarded-side-effects',
                 position: [0, 0],
                 text: [{ runs: [{ tex: 'x' }] }],
-                fill: gradient('#123', '#456'),
+                style: { fill: gradient('#123', '#456') },
               },
               { namespace: 'test', type: 'lateProbeFailure' },
             ],
@@ -221,7 +244,7 @@ describe('layout-aware composite transactions and artifacts', () => {
           type: 'node',
           id: 'inside',
           position: [20, 10],
-          minimumSize: 10,
+          layout: { minimumSize: 10 },
         });
         return { children: [context.replay(laid)] };
       },

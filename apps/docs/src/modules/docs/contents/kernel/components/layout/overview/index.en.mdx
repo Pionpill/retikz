@@ -297,14 +297,23 @@ These props enter `CompileOptions` together. See each extension guide for defini
 | `composites`     | `ReadonlyArray`<br />`<AnyCompositeDefinition>`  | —       | Inject Tier 2 expand / layout-aware compile; see [Composite](/kernel/concepts/design/composite)                                              |
 | `lowerTex`       | `LowerTex`                                       | —       | Inject formula lowering; see [TeX](/kernel/packages/extension/tex)                                                                           |
 
-### Whole-Figure Defaults
+### Whole-figure defaults
 
-These props reuse the [`<Scope>`](/kernel/components/layout/scope) cascade contract rather than defining another style system. In children mode, values synthesize a root Scope; direct `ir` input ignores them with a development warning.
+`rootScope` reuses the `style` and `defaults` contract of [Scope](/kernel/components/layout/scope). It creates an implicit root Scope only for JSX children. Complete `ir` takes precedence; effective authoring overrides are ignored with a development warning.
 
-| Prop                                                                                      | Type              | Default | Description                          |
-| ----------------------------------------------------------------------------------------- | ----------------- | ------- | ------------------------------------ |
-| `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `strokeOpacity` | same as `<Scope>` | —       | Whole-figure graphic-state defaults  |
-| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`                           | same as `<Scope>` | —       | Node / path / label / arrow defaults |
+| Property    | Type                                      | Description                                                                |
+| ----------- | ----------------------------------------- | -------------------------------------------------------------------------- |
+| `rootScope` | `Pick<InputScope, 'style' \| 'defaults'>` | Figure-wide visual cascade, four default channels and inheritance barriers |
+
+```tsx
+<Layout rootScope={{ style: { stroke: 'gray' }, defaults: { node: { layout: { padding: 12 } } } }}>
+  <Node position={[0, 0]} style={{ fill: 'white' }}>
+    A
+  </Node>
+</Layout>
+```
+
+Omission, empty groups, optional undefined-only overrides and isolated `defaults.reset: false` / `[]` create no wrapper or identity. Existing `font: {}` follows its font-field override contract. Explicit Scopes retain their structure; `Layout.style` always means host CSS.
 
 ### Rendering and Host Runtime
 

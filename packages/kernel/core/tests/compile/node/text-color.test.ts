@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning } from '../../../src/compile/warning';
 import type { TextPrim } from '../../../src/contract';
-import type { IRScene } from '../../../src/schemas';
+import type { IRNode, IRNodeStyle, IRScene } from '../../../src/schemas';
 
 import { CompileWarningCode } from '../../../src';
 import { compileToScene } from '../../../src/compile/compile';
@@ -11,7 +11,7 @@ import { flattenPrims } from '../../helpers/flatten';
 
 const AUTO_CONTRAST = 'contrast' as const;
 
-const sceneOf = (node: Record<string, unknown>): IRScene =>
+const sceneOf = (node: Partial<IRNode>): IRScene =>
   ({
     version: 1,
     type: 'scene',
@@ -24,15 +24,14 @@ const textPrimitives = (ir: IRScene, warnings: Array<CompileWarning> = []): Arra
   );
 
 const resolvedTextColor = (
-  fill: unknown,
-  node: Record<string, unknown> = {},
+  fill: IRNodeStyle['fill'],
+  node: Partial<IRNode> = {},
 ): { fill: TextPrim['fill'] | undefined; warnings: Array<CompileWarning> } => {
   const warnings: Array<CompileWarning> = [];
   const [text] = textPrimitives(
     sceneOf({
-      fill,
-      textColor: AUTO_CONTRAST,
       ...node,
+      style: { fill, textColor: AUTO_CONTRAST, ...node.style },
     }),
     warnings,
   );
@@ -89,7 +88,7 @@ describe('Node auto-contrast opacity boundary and contrast', () => {
   it.each([
     ['#0008', {}],
     ['rgb(0 0 0 / 50%)', {}],
-    ['#ffffff', { fillOpacity: 0.5 }],
+    ['#ffffff', { style: { fillOpacity: 0.5 } }],
     ['transparent', {}],
     ['none', {}],
     [undefined, {}],
@@ -100,7 +99,11 @@ describe('Node auto-contrast opacity boundary and contrast', () => {
   });
 
   it('node opacity 不参与背景选择', () => {
-    expect(resolvedTextColor('#ffffff', { opacity: 0 }).fill).toBe('#000000');
+    expect(
+      resolvedTextColor('#ffffff', {
+        style: { opacity: 0 },
+      }).fill,
+    ).toBe('#000000');
   });
 });
 
@@ -114,16 +117,18 @@ describe('Node auto-contrast consumers and warnings', () => {
         {
           type: 'node',
           position: [0, 0],
-          fill: {
-            kind: 'linearGradient',
-            stops: [
-              { offset: 0, color: '#000000' },
-              { offset: 1, color: '#ffffff' },
-            ],
-          },
-          textColor: AUTO_CONTRAST,
           text: [{ runs: [{ text: 'body' }, { text: 'mixed body' }] }],
           label: [{ text: 'label' }, { text: { runs: [{ text: 'mixed' }] } }],
+          style: {
+            fill: {
+              kind: 'linearGradient',
+              stops: [
+                { offset: 0, color: '#000000' },
+                { offset: 1, color: '#ffffff' },
+              ],
+            },
+            textColor: AUTO_CONTRAST,
+          },
         },
       ],
     } as unknown as IRScene;
@@ -149,8 +154,7 @@ describe('Node auto-contrast consumers and warnings', () => {
           {
             type: 'node',
             position: [0, 0],
-            fill: 'var(--surface)',
-            textColor: AUTO_CONTRAST,
+            style: { fill: 'var(--surface)', textColor: AUTO_CONTRAST },
           },
         ],
       },
@@ -169,14 +173,13 @@ describe('Node auto-contrast consumers and warnings', () => {
           {
             type: 'node',
             position: [0, 0],
-            fill: 'var(--surface)',
-            textColor: AUTO_CONTRAST,
             text: [{ text: 'body', fill: 'red' }],
             label: {
               text: { runs: [{ text: 'label', fill: 'blue' }] },
               textColor: 'green',
               pin: { stroke: 'purple' },
             },
+            style: { fill: 'var(--surface)', textColor: AUTO_CONTRAST },
           },
         ],
       },
@@ -188,13 +191,12 @@ describe('Node auto-contrast consumers and warnings', () => {
 
   it('未显式 stroke 的 pin 继承 Node 自动色并触发解析', () => {
     const ir = sceneOf({
-      fill: '#000000',
       text: [{ text: 'body', fill: 'red' }],
-      textColor: AUTO_CONTRAST,
       label: {
         text: { runs: [{ text: 'label', fill: 'blue' }] },
         pin: true,
       },
+      style: { fill: '#000000', textColor: AUTO_CONTRAST },
     });
     const paths = flattenPrims(compileToScene(ir).scene.primitives).filter(primitive => primitive.type === 'path');
     expect(paths.some(path => path.stroke === '#ffffff')).toBe(true);
@@ -209,11 +211,25 @@ describe('Node auto-contrast cascade and precedence', () => {
       children: [
         {
           type: 'scope',
-          nodeDefault: { textColor: AUTO_CONTRAST },
           children: [
-            { type: 'node', position: [0, 0], text: 'light', fill: '#ffffff' },
-            { type: 'node', position: [80, 0], text: 'dark', fill: '#000000' },
+            {
+              type: 'node',
+              position: [0, 0],
+              text: 'light',
+              style: { fill: '#ffffff' },
+            },
+            {
+              type: 'node',
+              position: [80, 0],
+              text: 'dark',
+              style: { fill: '#000000' },
+            },
           ],
+          defaults: {
+            node: {
+              style: { textColor: AUTO_CONTRAST },
+            },
+          },
         },
       ],
     };
@@ -222,10 +238,9 @@ describe('Node auto-contrast cascade and precedence', () => {
 
   it('label 与 run 显式颜色优先于 resolved Node 自动色', () => {
     const ir = sceneOf({
-      fill: '#000000',
-      textColor: AUTO_CONTRAST,
       text: [{ runs: [{ text: 'inherited' }, { text: 'explicit', fill: 'red' }] }],
       label: [{ text: 'node-color' }, { text: 'label-color', textColor: 'blue' }],
+      style: { fill: '#000000', textColor: AUTO_CONTRAST },
     });
     const fills = flattenPrims(compileToScene(ir).scene.primitives)
       .filter(primitive => primitive.type === 'text' || primitive.type === 'path')
@@ -242,17 +257,16 @@ describe('Node auto-contrast cascade and precedence', () => {
       children: [
         {
           type: 'scope',
-          labelDefault: { textColor: 'orange', color: 'green' },
           children: [
             {
               type: 'node',
               position: [0, 0],
-              fill: '#000000',
-              textColor: AUTO_CONTRAST,
               text: 'body',
               label: { text: 'label' },
+              style: { fill: '#000000', textColor: AUTO_CONTRAST },
             },
           ],
+          defaults: { label: { textColor: 'orange', color: 'green' } },
         },
       ],
     };

@@ -12,13 +12,9 @@ const Demo: FC = () => (
       <Node
         id="compile"
         position={[0, -145]}
-        minimumSize={{ width: 260, height: 54 }}
-        stroke="dimgray"
-        fill="dimgray"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Tier 2 compile</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -28,13 +24,9 @@ const Demo: FC = () => (
       <Node
         id="contribution"
         position={[0, -70]}
-        minimumSize={{ width: 260, height: 54 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>minimum / natural probe</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -44,13 +36,9 @@ const Demo: FC = () => (
       <Node
         id="solve"
         position={[0, 5]}
-        minimumSize={{ width: 260, height: 54 }}
-        stroke="dimgray"
-        fill="dimgray"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>父 solver 求解</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -60,13 +48,9 @@ const Demo: FC = () => (
       <Node
         id="allocation"
         position={[0, 80]}
-        minimumSize={{ width: 260, height: 54 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>range / exact probe</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -76,13 +60,9 @@ const Demo: FC = () => (
       <Node
         id="commit"
         position={[0, 155]}
-        minimumSize={{ width: 260, height: 54 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>选择 replay 或 raise</Text>
         <Text fill="gray" font={{ size: 12 }}>

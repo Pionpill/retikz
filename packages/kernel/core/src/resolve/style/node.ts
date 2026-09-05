@@ -1,37 +1,30 @@
-import type { IRNode } from '../../schemas';
-import type { CascadeState, StyleResolveFrame } from './types';
+import type { IRNode, IRNodeDefault, IRNodeLayout, IRNodeStyle } from '../../schemas';
+import type { StyleResolveFrame } from './types';
 
 import { cutsStyleChannel, pickDefinedKeys } from './frame';
 
-/** 级联 graphic state 投影到 node 样式字段 */
-const cascadeToNode = (c: CascadeState): Partial<IRNode> => {
-  const out: Partial<IRNode> = {};
-  if (c.color !== undefined) out.color = c.color;
-  if (c.stroke !== undefined) out.stroke = c.stroke;
-  if (c.fill !== undefined) out.fill = c.fill;
-  if (c.strokeWidth !== undefined) out.strokeWidth = c.strokeWidth;
-  if (c.opacity !== undefined) out.opacity = c.opacity;
-  if (c.fillOpacity !== undefined) out.fillOpacity = c.fillOpacity;
-  if (c.strokeOpacity !== undefined) out.strokeOpacity = c.strokeOpacity;
-  return out;
-};
-
-/** 解析 node 的最终样式 */
+/** 按各字段的原有覆盖粒度解析节点分组，复合叶子保持整体覆盖 */
 export const resolveEffectiveNodeStyle = (node: IRNode, stack: ReadonlyArray<StyleResolveFrame>): IRNode => {
-  let acc: Partial<IRNode> = {};
+  let defaults: IRNodeDefault = {};
+  let style: IRNodeStyle = {};
+  let layout: IRNodeLayout = {};
   for (const frame of stack) {
-    if (cutsStyleChannel(frame.resetStyle, 'node')) acc = {};
-    acc = { ...acc, ...pickDefinedKeys(cascadeToNode(frame.cascade)) };
-    if (frame.nodeDefault) {
-      acc = { ...acc, ...pickDefinedKeys(frame.nodeDefault) };
+    if (cutsStyleChannel(frame.resetStyle, 'node')) {
+      defaults = {};
+      style = {};
+      layout = {};
     }
+    const { style: nodeStyle, layout: nodeLayout, ...geometry } = frame.nodeDefault ?? {};
+    defaults = { ...defaults, ...pickDefinedKeys(geometry) };
+    style = { ...style, ...pickDefinedKeys(frame.cascade), ...pickDefinedKeys(nodeStyle ?? {}) };
+    layout = { ...layout, ...pickDefinedKeys(nodeLayout ?? {}) };
   }
-  acc = { ...acc, ...pickDefinedKeys(node) };
-  const master = acc.color;
-  if (master !== undefined) {
-    if (acc.stroke === undefined) acc.stroke = master;
-    if (acc.fill === undefined) acc.fill = master;
-    if (acc.textColor === undefined) acc.textColor = master;
+  style = { ...style, ...pickDefinedKeys(node.style ?? {}) };
+  layout = { ...layout, ...pickDefinedKeys(node.layout ?? {}) };
+  if (style.color !== undefined) {
+    style.stroke ??= style.color;
+    style.fill ??= style.color;
+    style.textColor ??= style.color;
   }
-  return acc as IRNode;
+  return { ...defaults, ...pickDefinedKeys(node), type: node.type, position: node.position, style, layout };
 };

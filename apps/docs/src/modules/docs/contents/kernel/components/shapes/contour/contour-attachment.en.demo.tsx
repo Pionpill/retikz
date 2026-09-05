@@ -8,33 +8,24 @@ const Demo: FC = () => (
     <Node
       id="auto-target"
       position={[-220, -45]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
     >
       {'auto-connect by id\nor numeric angle anchor'}
     </Node>
     <Node
       id="boundary-point"
       position={[0, -45]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08, font: { size: 14 } }}
     >
       contour boundaryPoint
     </Node>
     <Node
       id="contour-hit"
       position={[220, -45]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
     >
       {'ray ∩ rounded contour\nexact edge hit'}
     </Node>
@@ -42,33 +33,24 @@ const Demo: FC = () => (
     <Node
       id="named-anchor"
       position={[-220, 45]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
     >
       {'standard direction anchor\ntop / right / …'}
     </Node>
     <Node
       id="shape-anchor"
       position={[0, 45]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08, font: { size: 14 } }}
     >
       {'contour anchor\nno matching named point'}
     </Node>
     <Node
       id="aabb-fallback"
       position={[220, 45]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
     >
       {'circumscribing AABB\nrectangle direction point'}
     </Node>

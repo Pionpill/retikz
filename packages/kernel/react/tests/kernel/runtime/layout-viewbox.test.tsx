@@ -14,7 +14,7 @@ describe('<Layout viewBox> 注入显式视框', () => {
   it('viewBox prop → <svg viewBox="x y w h">', () => {
     const svg = renderToStaticMarkup(
       <Layout viewBox={{ x: -100, y: -100, width: 200, height: 200 }}>
-        <Node id="o" position={[0, 0]} shape="circle" minimumSize={40} fill="#2563eb" />
+        <Node id="o" position={[0, 0]} shape="circle" style={{ fill: '#2563eb' }} layout={{ minimumSize: 40 }} />
       </Layout>,
     );
     expect(svg).toContain('viewBox="-100 -100 200 200"');
@@ -23,7 +23,7 @@ describe('<Layout viewBox> 注入显式视框', () => {
   it('不传 viewBox 时回退自动算视框（svg 仍有 viewBox 属性）', () => {
     const svg = renderToStaticMarkup(
       <Layout>
-        <Node id="o" position={[0, 0]} shape="circle" minimumSize={40} fill="#2563eb" />
+        <Node id="o" position={[0, 0]} shape="circle" style={{ fill: '#2563eb' }} layout={{ minimumSize: 40 }} />
       </Layout>,
     );
     expect(svg).toContain('viewBox=');
@@ -36,7 +36,16 @@ describe('viewBox prop 与 IR 内置值的优先级', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'o', shape: 'circle', position: [0, 0], minimumSize: 40, fill: '#2563eb' }],
+      children: [
+        {
+          type: 'node',
+          id: 'o',
+          shape: 'circle',
+          position: [0, 0],
+          style: { fill: '#2563eb' },
+          layout: { minimumSize: 40 },
+        },
+      ],
       viewBox: { x: -50, y: -50, width: 100, height: 100 },
     };
     const svg = renderToStaticMarkup(<Layout ir={ir} />);
@@ -47,7 +56,16 @@ describe('viewBox prop 与 IR 内置值的优先级', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'o', shape: 'circle', position: [0, 0], minimumSize: 40, fill: '#2563eb' }],
+      children: [
+        {
+          type: 'node',
+          id: 'o',
+          shape: 'circle',
+          position: [0, 0],
+          style: { fill: '#2563eb' },
+          layout: { minimumSize: 40 },
+        },
+      ],
       viewBox: { x: -50, y: -50, width: 100, height: 100 },
     };
     const svg = renderToStaticMarkup(<Layout ir={ir} viewBox={{ x: -100, y: -100, width: 200, height: 200 }} />);

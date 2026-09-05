@@ -8,7 +8,14 @@ const FONT = { family: 'Arial, sans-serif' } as const;
 
 const CircuitDemo: FC = () => (
   <Layout width={600} height={300} viewBox={{ x: 0, y: 0, width: 1280, height: 760 }} shapes={[circuitMeter]}>
-    <Scope nodeDefault={{ font: FONT, stroke: 'none', padding: 0 }}>
+    <Scope
+      defaults={{
+        node: {
+          style: { font: FONT, stroke: 'none' },
+          layout: { padding: 0 },
+        },
+      }}
+    >
       <Meter position={[520, 360]} text="A" />
       <Meter position={[760, 360]} text="V" />
     </Scope>

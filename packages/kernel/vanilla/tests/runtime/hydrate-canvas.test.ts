@@ -232,8 +232,8 @@ const boxIr: IRScene = {
       id: 'box',
       position: [SCENE_SIZE / 2, SCENE_SIZE / 2],
       shape: 'rectangle',
-      minimumSize: { width: SCENE_SIZE, height: SCENE_SIZE },
-      fill: '#0a0',
+      style: { fill: '#0a0' },
+      layout: { minimumSize: { width: SCENE_SIZE, height: SCENE_SIZE } },
     },
   ],
 };
@@ -273,9 +273,9 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
           id: 'box',
           position: [SCENE_SIZE / 2, SCENE_SIZE / 2],
           shape: 'rectangle',
-          minimumSize: { width: SCENE_SIZE, height: SCENE_SIZE },
-          fill: '#0a0',
           meta: { series: 'sales', i: 3 },
+          style: { fill: '#0a0' },
+          layout: { minimumSize: { width: SCENE_SIZE, height: SCENE_SIZE } },
         },
       ],
     };
@@ -402,8 +402,6 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
           id: 'box',
           position: [SCENE_SIZE / 2, SCENE_SIZE / 2],
           shape: 'rectangle',
-          minimumSize: { width: SCENE_SIZE, height: SCENE_SIZE },
-          fill: '#0a0',
           animations: [
             {
               property: 'opacity',
@@ -415,6 +413,8 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
               trigger: { onEvent: 'click' },
             },
           ],
+          style: { fill: '#0a0' },
+          layout: { minimumSize: { width: SCENE_SIZE, height: SCENE_SIZE } },
         },
       ],
     };
@@ -455,8 +455,6 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
           id: 'box',
           position: [SCENE_SIZE / 2, SCENE_SIZE / 2],
           shape: 'rectangle',
-          minimumSize: { width: SCENE_SIZE, height: SCENE_SIZE },
-          fill: '#0a0',
           animations: [
             {
               property: 'opacity',
@@ -468,6 +466,8 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
               trigger: { onEvent: 'click' },
             },
           ],
+          style: { fill: '#0a0' },
+          layout: { minimumSize: { width: SCENE_SIZE, height: SCENE_SIZE } },
         },
       ],
     };

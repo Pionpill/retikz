@@ -8,9 +8,16 @@ const HW = 35; // 内框（shape）半宽
 const HH = 22; // 内框（shape）半高
 const CW = 22; // 内容盒半宽
 const CH = 11; // 内容盒半高
-const DOT = { radius: 2.5, fill: 'gray', stroke: 'none' } as const;
-const SHAPE = { fill: 'none', stroke: 'currentColor' } as const;
-const CONTENT = { fill: 'lightgray', stroke: 'none' } as const;
+const DOT = {
+  radius: 2.5,
+  style: { fill: 'gray', stroke: 'none' },
+} as const;
+const SHAPE = {
+  style: { fill: 'none', stroke: 'currentColor' },
+} as const;
+const CONTENT = {
+  style: { fill: 'lightgray', stroke: 'none' },
+} as const;
 
 const Demo: FC = () => (
   <Layout
@@ -24,9 +31,7 @@ const Demo: FC = () => (
       center={[-175, 0]}
       width={HW * 2 + 16}
       height={HH * 2 + 16}
-      fill="none"
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ fill: 'none', stroke: 'gray', dashPattern: [4, 3] }}
     />
     <Rectangle center={[-175, 0]} width={HW * 2} height={HH * 2} {...SHAPE} />
     <Rectangle center={[-175, 0]} width={CW * 2} height={CH * 2} {...CONTENT} />
@@ -40,9 +45,9 @@ const Demo: FC = () => (
         [-132, 0],
       ]}
       arrow="<->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
-    <Node id="cap-1" position={[-175, 76]} stroke="none" textColor="gray" font={{ size: 12 }}>
+    <Node id="cap-1" position={[-175, 76]} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}>
       shape · m=8
     </Node>
 
@@ -51,9 +56,7 @@ const Demo: FC = () => (
       center={[-5, 0]}
       width={HW * 2 + 48}
       height={HH * 2 + 48}
-      fill="none"
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ fill: 'none', stroke: 'gray', dashPattern: [4, 3] }}
     />
     <Rectangle center={[-5, 0]} width={HW * 2} height={HH * 2} {...SHAPE} />
     <Rectangle center={[-5, 0]} width={CW * 2} height={CH * 2} {...CONTENT} />
@@ -67,17 +70,17 @@ const Demo: FC = () => (
         [54, 0],
       ]}
       arrow="<->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
-    <Node id="m-lbl" position={[42, 15]} stroke="none" textColor="gray" font={{ size: 12 }}>
+    <Node id="m-lbl" position={[42, 15]} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}>
       margin
     </Node>
-    <Node id="cap-2" position={[-5, 76]} stroke="none" textColor="gray" font={{ size: 12 }}>
+    <Node id="cap-2" position={[-5, 76]} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}>
       shape · m=24
     </Node>
 
     {/* ── 列 3：boundary=circle，同样的 margin（连接面换成圆，半径 = 较长半轴 + margin） ── */}
-    <Circle center={[165, 0]} radius={HW + 24} fill="none" stroke="dodgerblue" dashPattern={[4, 3]} />
+    <Circle center={[165, 0]} radius={HW + 24} style={{ fill: 'none', stroke: 'dodgerblue', dashPattern: [4, 3] }} />
     <Rectangle center={[165, 0]} width={HW * 2} height={HH * 2} {...SHAPE} />
     <Rectangle center={[165, 0]} width={CW * 2} height={CH * 2} {...CONTENT} />
     <Circle center={[165, -59]} {...DOT} />
@@ -90,9 +93,9 @@ const Demo: FC = () => (
         [224, 0],
       ]}
       arrow="<->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
-    <Node id="cap-3" position={[165, 76]} stroke="none" textColor="dodgerblue" font={{ size: 12 }}>
+    <Node id="cap-3" position={[165, 76]} style={{ stroke: 'none', textColor: 'dodgerblue', font: { size: 12 } }}>
       circle · m=24
     </Node>
   </Layout>

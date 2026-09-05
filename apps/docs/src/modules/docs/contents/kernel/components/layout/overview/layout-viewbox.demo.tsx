@@ -26,18 +26,21 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         height: values.viewBoxHeight,
       }}
     >
-      <Node id="o" position={[0, 0]} shape="circle" minimumSize={44} fill="dodgerblue" textColor="white">
+      <Node
+        id="o"
+        position={[0, 0]}
+        shape="circle"
+        style={{ fill: 'dodgerblue', textColor: 'white' }}
+        layout={{ minimumSize: 44 }}
+      >
         0,0
       </Node>
-      <Node id="c" position={[70, 70]} shape="circle" minimumSize={24} fill="darkorange" />
+      <Node id="c" position={[70, 70]} shape="circle" style={{ fill: 'darkorange' }} layout={{ minimumSize: 24 }} />
       <Rectangle
         center={[values.viewBoxX + values.viewBoxWidth / 2, values.viewBoxY + values.viewBoxHeight / 2]}
         width={viewBoxGuideWidth}
         height={viewBoxGuideHeight}
-        fill="none"
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ fill: 'none', stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
     </Layout>
   );

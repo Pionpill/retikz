@@ -8,39 +8,43 @@ const Demo: FC = () => (
     <Node
       position={[-95, 0]}
       shape="rectangle"
-      minimumSize={{ width: 150, height: 120 }}
-      fill={{
-        kind: 'pattern',
-        shape: 'lines',
-        size: 8,
-        color: '#2563eb',
-        background: '#eff6ff',
-        lineStyleCycle: {
-          period: 5,
-          overrides: [{ index: 0, style: { lineWidth: 3 } }],
+      style={{
+        fill: {
+          kind: 'pattern',
+          shape: 'lines',
+          size: 8,
+          color: '#2563eb',
+          background: '#eff6ff',
+          lineStyleCycle: {
+            period: 5,
+            overrides: [{ index: 0, style: { lineWidth: 3 } }],
+          },
         },
+        stroke: '#2563eb',
       }}
-      stroke="#2563eb"
+      layout={{ minimumSize: { width: 150, height: 120 } }}
     />
     <Node
       position={[95, 0]}
       shape="rectangle"
-      minimumSize={{ width: 150, height: 120 }}
-      fill={{
-        kind: 'pattern',
-        shape: 'lines',
-        size: 8,
-        color: '#7c3aed',
-        background: '#faf5ff',
-        lineStyleCycle: {
-          period: 3,
-          overrides: [
-            { index: 1, style: { dotted: true, lineCap: 'round' } },
-            { index: 2, style: { dashed: true, color: '#c026d3' } },
-          ],
+      style={{
+        fill: {
+          kind: 'pattern',
+          shape: 'lines',
+          size: 8,
+          color: '#7c3aed',
+          background: '#faf5ff',
+          lineStyleCycle: {
+            period: 3,
+            overrides: [
+              { index: 1, style: { dotted: true, lineCap: 'round' } },
+              { index: 2, style: { dashed: true, color: '#c026d3' } },
+            ],
+          },
         },
+        stroke: '#7c3aed',
       }}
-      stroke="#7c3aed"
+      layout={{ minimumSize: { width: 150, height: 120 } }}
     />
   </Layout>
 );

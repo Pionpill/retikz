@@ -10,25 +10,24 @@ import { Draw, Layout, Node, Scope } from '@retikz/react';
  */
 const Demo: FC = () => (
   <Layout width={440} height={150} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node id="ext" position={[-170, 0]} stroke="none">
+    <Node id="ext" position={[-170, 0]} style={{ stroke: 'none' }}>
       ext
     </Node>
     <Scope id="cluster" transforms={[{ kind: 'translate', x: 90, y: 0 }]}>
-      <Node id="A" position={[0, -20]} stroke="none">
+      <Node id="A" position={[0, -20]} style={{ stroke: 'none' }}>
         a
       </Node>
-      <Node id="B" position={[70, -20]} stroke="none">
+      <Node id="B" position={[70, -20]} style={{ stroke: 'none' }}>
         b
       </Node>
-      <Node id="C" position={[35, 30]} stroke="none">
+      <Node id="C" position={[35, 30]} style={{ stroke: 'none' }}>
         c
       </Node>
     </Scope>
     {/* cluster 合成外接框：4 个角锚点连成轮廓，纯示意 */}
     <Draw
       way={['cluster.top-left', 'cluster.top-right', 'cluster.bottom-right', 'cluster.bottom-left', DrawWay.Cycle]}
-      stroke="lightgray"
-      dashPattern={[4, 3]}
+      style={{ stroke: 'lightgray', dashPattern: [4, 3] }}
     />
     <Draw
       way={['ext', { label: { text: 'cluster', side: 'bottom', textColor: 'gray', font: { size: 12 } } }, 'cluster']}

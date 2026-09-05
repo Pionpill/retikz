@@ -8,7 +8,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  */
 const Demo: FC = () => (
   <Layout width={360} height={150} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node id="A" position={[-120, 40]} stroke="none">
+    <Node id="A" position={[-120, 40]} style={{ stroke: 'none' }}>
       a
     </Node>
     <Draw

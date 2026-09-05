@@ -95,23 +95,26 @@ Core 另外公开五个可复用的严格 fragment，按描边、填充、几何
   name="PathSchema"
   description="路径图元：一组按顺序执行的 step 组成一条可描边、可填充、可带箭头的笔画。"
   descriptions={{
+    style: '当前实例的视觉覆盖，按字段继承与覆盖',
     type: '判别字段，标记此子节点为 path',
     kind: 'Path kind provider 名；省略时使用内置 `stroke`',
     kindOptions: '由选定 Path kind provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析',
-    color: '主色（TikZ color=）；stroke / 箭头 / step label 未单设则随它（跟主色不跟 stroke）',
-    stroke: '描边 paint：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）；默认 currentColor',
-    strokeWidth: '描边宽度（用户单位），默认 1',
-    dashPattern: 'dash/gap 长度序列（如 [4, 2]），省略 = 实线',
-    dashOffset: '虚线起点偏移（用户单位），可为正数、0 或负数；省略 = 0',
-    fill: '闭合区域填充：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）；省略 = 无填充；与 `cycle` step 配合产生封闭形状',
-    fillRule: '自交 / 嵌套子路径填充规则；`nonzero`（默认）方向缠绕，`evenodd` 交错',
-    lineCap: '描边端点形状：`butt` 默认 / `round` / `square`',
-    lineJoin: '描边拐角形状：`miter` 默认 / `round` / `bevel`',
-    opacity: '整路径不透明度 0..1，同时作用于描边与填充',
-    fillOpacity: '填充不透明度 0..1，只影响闭合区域',
-    strokeOpacity: '描边不透明度 0..1，只影响描边',
-    shadow: '主几何阴影预设或显式阴影对象',
-    blendMode: '主几何与下方内容的混合模式',
+    'style.color': '主色（TikZ color=）；stroke / 箭头 / step label 未单设则随它（跟主色不跟 stroke）',
+    'style.stroke':
+      '描边 paint：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）；默认 currentColor',
+    'style.strokeWidth': '描边宽度（用户单位），默认 1',
+    'style.dashPattern': 'dash/gap 长度序列（如 [4, 2]），省略 = 实线',
+    'style.dashOffset': '虚线起点偏移（用户单位），可为正数、0 或负数；省略 = 0',
+    'style.fill':
+      '闭合区域填充：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）；省略 = 无填充；与 `cycle` step 配合产生封闭形状',
+    'style.fillRule': '自交 / 嵌套子路径填充规则；`nonzero`（默认）方向缠绕，`evenodd` 交错',
+    'style.lineCap': '描边端点形状：`butt` 默认 / `round` / `square`',
+    'style.lineJoin': '描边拐角形状：`miter` 默认 / `round` / `bevel`',
+    'style.opacity': '整路径不透明度 0..1，同时作用于描边与填充',
+    'style.fillOpacity': '填充不透明度 0..1，只影响闭合区域',
+    'style.strokeOpacity': '描边不透明度 0..1，只影响描边',
+    'style.shadow': '主几何阴影预设或显式阴影对象',
+    'style.blendMode': '主几何与下方内容的混合模式',
     id: '可选稳定 id：供其它元素 anchor 引用，也是水合事件绑定的挂点（带 id 才能给 path 绑 onClick 等 handler）',
     meta: 'provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer），须为 JSON 对象',
     animations: '声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档',
@@ -136,7 +139,7 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 ## 可绘制几何样式
 
-`DrawableStyleSchema` 是 Path kind 共享的几何样式字段。默认 `stroke` kind 会把 `color` 映射到描边；可选的 Standard Ribbon definition 会把它映射到填充；`pathDefault` 也按这组字段给 path-like 图元分发默认样式。
+`DrawableStyleSchema` 是 Path kind 共享的几何样式字段。默认 `stroke` kind 会把 `color` 映射到描边；可选的 Standard Ribbon definition 会把它映射到填充；`defaults.path` 也按这组字段给 path-like 图元分发默认样式。
 
 <ZodSchema
   name="DrawableStyleSchema"
@@ -158,7 +161,7 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 ## 可绘制元素实例字段
 
-`DrawableInstanceSchema` 收拢 Path 共享的身份、provenance、动画和栈序字段。`id` / `meta` / `animations` 是实例元数据，不进入 `pathDefault`；`zIndex` 参与同层排序，也不作为默认样式继承。
+`DrawableInstanceSchema` 收拢 Path 共享的身份、provenance、动画和栈序字段。`id` / `meta` / `animations` 是实例元数据，不进入 `defaults.path`；`zIndex` 参与同层排序，也不作为默认样式继承。
 
 <ZodSchema
   name="DrawableInstanceSchema"
@@ -439,9 +442,9 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
     placement:
       '标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Standard Ribbon 等面状宿主在未指定 side 时放在内部',
     distance: 'side 偏移距离，默认与 Path step label 一致',
-    textColor: '标签文字色；缺省回退 scope labelDefault → 宿主 path 主色 color → currentColor（跟主色不跟 stroke）',
+    textColor: '标签文字色；缺省回退 scope defaults.label → 宿主 path 主色 color → currentColor（跟主色不跟 stroke）',
     opacity: '标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）',
-    font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 labelDefault → 渲染端默认',
+    font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 defaults.label → 渲染端默认',
   }}
 />
 
@@ -547,7 +550,7 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 ## 箭头配置
 
-`ArrowDetailSchema` 是 React `arrowDetail` sugar 和 `arrowDefault` 的视觉配置 schema。Core Path IR 不再保存 `arrow` / `arrowDetail`；端点箭头也是 `marks` 里的 `ArrowMark`。
+`ArrowDetailSchema` 是 React `arrowDetail` sugar 和 `defaults.arrow` 的视觉配置 schema。Core Path IR 不再保存 `arrow` / `arrowDetail`；端点箭头也是 `marks` 里的 `ArrowMark`。
 
 <ZodSchema
   name="ArrowDetailSchema"

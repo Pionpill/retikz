@@ -10,33 +10,24 @@ const Demo: FC = () => (
     <Node
       id="react"
       position={[-315, -42]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
     >
       @retikz/react
     </Node>
     <Node
       id="vanilla"
       position={[-315, 0]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
     >
       @retikz/vanilla
     </Node>
     <Node
       id="external-ir"
       position={[-315, 42]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
     >
       external IR
     </Node>
@@ -46,33 +37,24 @@ const Demo: FC = () => (
       <Node
         id="ir"
         position={[-185, 0]}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 14, weight: 'bold' }}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
       >
         IR
       </Node>
       <Node
         id="compile"
         position={[-55, 0]}
-        stroke="dimgray"
-        fill="dimgray"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08, font: { size: 13 } }}
       >
         compileToScene
       </Node>
       <Node
         id="scene"
         position={[70, 0]}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 14, weight: 'bold' }}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
       >
         Scene
       </Node>
@@ -81,22 +63,16 @@ const Demo: FC = () => (
     <Node
       id="math"
       position={[-110, 78]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 12 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
     >
       @retikz/math
     </Node>
     <Node
       id="tex"
       position={[10, 78]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 12 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 12 } }}
     >
       {'@retikz/tex\n(optional)'}
     </Node>
@@ -104,33 +80,24 @@ const Demo: FC = () => (
     <Node
       id="render"
       position={[210, 0]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
     >
       @retikz/render
     </Node>
     <Node
       id="svg"
       position={[315, -24]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      font={{ size: 12 }}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06, font: { size: 12 } }}
     >
       SVG
     </Node>
     <Node
       id="canvas"
       position={[315, 24]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      font={{ size: 12 }}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06, font: { size: 12 } }}
     >
       Canvas
     </Node>
@@ -143,8 +110,8 @@ const Demo: FC = () => (
     <Draw way={['scene', 'render']} arrow="->" />
     <Draw way={['render', 'svg']} arrow="->" />
     <Draw way={['render', 'canvas']} arrow="->" />
-    <Draw way={['math', 'compile']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['tex', 'compile']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['math', 'compile']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['tex', 'compile']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 

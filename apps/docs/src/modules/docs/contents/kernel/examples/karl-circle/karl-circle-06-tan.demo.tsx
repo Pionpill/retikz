@@ -26,7 +26,7 @@ const Demo: FC = () => {
       />
 
       {/* 单位圆 */}
-      <Circle center={[0, 0]} radius={100} lineCap="round" />
+      <Circle center={[0, 0]} radius={100} style={{ lineCap: 'round' }} />
 
       {/* 坐标轴 */}
       <Draw
@@ -36,7 +36,7 @@ const Demo: FC = () => {
         ]}
         arrow="->"
       />
-      <Node position={[162, 0]} stroke="none" padding={0}>
+      <Node position={[162, 0]} style={{ stroke: 'none' }} layout={{ padding: 0 }}>
         {'$x$'}
       </Node>
       <Coordinate id="x-axis" position={[150, 0]} />
@@ -47,7 +47,7 @@ const Demo: FC = () => {
         ]}
         arrow="->"
       />
-      <Node position={[0, -162]} stroke="none" padding={0}>
+      <Node position={[0, -162]} style={{ stroke: 'none' }} layout={{ padding: 0 }}>
         {'$y$'}
       </Node>
       <Coordinate id="y-axis" position={[0, -150]} />
@@ -65,7 +65,7 @@ const Demo: FC = () => {
               [x, 3],
             ]}
           />
-          <Node position={[x - 10, 14]} stroke="none" padding={1}>
+          <Node position={[x - 10, 14]} style={{ stroke: 'none' }} layout={{ padding: 1 }}>
             {tex}
           </Node>
         </Fragment>
@@ -83,28 +83,38 @@ const Demo: FC = () => {
               [3, y],
             ]}
           />
-          <Node position={[-18, y + 10]} stroke="none" padding={1}>
+          <Node position={[-18, y + 10]} style={{ stroke: 'none' }} layout={{ padding: 1 }}>
             {tex}
           </Node>
         </Fragment>
       ))}
 
       {/* 30° 扇形 + α */}
-      <Sector center={[0, 0]} radius={30} startAngle={0} endAngle={-30} fill="lightgray" stroke="green" />
-      <Node position={{ angle: -15, radius: 22 }} stroke="none" textColor="green" padding={1}>
+      <Sector
+        center={[0, 0]}
+        radius={30}
+        startAngle={0}
+        endAngle={-30}
+        style={{ fill: 'lightgray', stroke: 'green' }}
+      />
+      <Node
+        position={{ angle: -15, radius: 22 }}
+        style={{ stroke: 'none', textColor: 'green' }}
+        layout={{ padding: 1 }}
+      >
         {'$\\alpha$'}
       </Node>
 
       {/* sin α / cos α（边标注用 `$...$` 行内公式） */}
       <Draw
         way={[{ angle: -30, radius: 100 }, { label: { text: '$\\sin\\alpha$', side: 'left' } }, [COS30 * 100, 0]]}
-        stroke="red"
         thickness="thick"
+        style={{ stroke: 'red' }}
       />
       <Draw
         way={[[COS30 * 100, 0], { label: { text: '$\\cos\\alpha$', side: 'bottom' } }, [0, 0]]}
-        stroke="dodgerblue"
         thickness="thick"
+        style={{ stroke: 'dodgerblue' }}
       />
 
       {/* tan α 橙色竖线 + 辅助射线
@@ -117,8 +127,8 @@ const Demo: FC = () => {
           { label: { text: '$\\tan\\alpha = \\frac{\\sin\\alpha}{\\cos\\alpha}$', side: 'right' } },
           [100, -TAN30 * 100],
         ]}
-        stroke="darkorange"
         thickness="thick"
+        style={{ stroke: 'darkorange' }}
       />
       <Coordinate id="t" position={[100, -TAN30 * 100]} />
       {/* 原点 → t 的辅助射线 */}

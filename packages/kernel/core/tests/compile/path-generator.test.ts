@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { number, object, strictObject, string } from 'zod';
 
 import type { PathCommand, ScenePrimitive } from '../../src/contract';
@@ -389,7 +389,6 @@ describe('Path generator 注册面 — 交互', () => {
       children: [
         {
           type: 'path',
-          stroke: '#13579b',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             {
@@ -401,6 +400,7 @@ describe('Path generator 注册面 — 交互', () => {
               label: { text: 'generated', position: 0.5, sloped: true },
             },
           ],
+          style: { stroke: '#13579b' },
         },
       ],
     };

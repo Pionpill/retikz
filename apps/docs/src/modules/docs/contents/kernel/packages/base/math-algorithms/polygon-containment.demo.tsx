@@ -41,15 +41,14 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Layout width={400} height={260} viewBox={{ x: -175, y: -115, width: 350, height: 230 }}>
-      <Draw way={[...vertices, vertices[0]]} stroke="lightgray" strokeWidth={2} />
-      <Draw way={[...hull, hull[0]]} stroke="darkorange" strokeWidth={2} />
+      <Draw way={[...vertices, vertices[0]]} style={{ stroke: 'lightgray', strokeWidth: 2 }} />
+      <Draw way={[...hull, hull[0]]} style={{ stroke: 'darkorange', strokeWidth: 2 }} />
       {testPoints.map((point, index) => (
         <Circle
           key={`test-point-${index}`}
           center={point}
           radius={6}
-          fill={polygon.containsPoint(vertices, point) ? 'seagreen' : 'crimson'}
-          stroke="none"
+          style={{ fill: polygon.containsPoint(vertices, point) ? 'seagreen' : 'crimson', stroke: 'none' }}
         />
       ))}
     </Layout>

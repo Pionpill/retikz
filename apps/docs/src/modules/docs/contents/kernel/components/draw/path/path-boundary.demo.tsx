@@ -32,25 +32,27 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       width={360}
       height={220}
       viewBox={{ x: -180, y: -110, width: 360, height: 220 }}
-      nodeDefault={{ stroke: 'gray', dashed: true }}
       shapes={[StarShapeDefinition]}
+      rootScope={{
+        defaults: {
+          node: {
+            style: { stroke: 'gray', dashed: true },
+          },
+        },
+      }}
     >
       <Node
         id="star"
         position={[0, 0]}
         shape={{ type: 'star', params: { points: 5, innerRadius: 20, outerRadius: StarOuterRadius } }}
-        fill="gold"
-        stroke="none"
+        style={{ fill: 'gold', stroke: 'none' }}
       />
       {values.boundary === 'circle' && (
         <Circle
           center={[0, 0]}
           radius={circleBoundaryRadius}
-          stroke="#94a3b8"
-          fill="none"
-          dashPattern={[1, 4]}
-          lineCap="round"
           zIndex={1}
+          style={{ stroke: '#94a3b8', fill: 'none', dashPattern: [1, 4], lineCap: 'round' }}
         />
       )}
       <Node id="A" position={[-130, 80]}>

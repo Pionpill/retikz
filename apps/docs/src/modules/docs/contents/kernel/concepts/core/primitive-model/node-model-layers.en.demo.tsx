@@ -22,26 +22,36 @@ const Demo: FC = () => (
     viewBox={{ x: -250, y: -145, width: 500, height: 285 }}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <Rectangle center={[0, 0]} width={CONTENT_WIDTH} height={CONTENT_HEIGHT} fill="lightgray" stroke="none" />
+    <Rectangle
+      center={[0, 0]}
+      width={CONTENT_WIDTH}
+      height={CONTENT_HEIGHT}
+      style={{ fill: 'lightgray', stroke: 'none' }}
+    />
     <Rectangle
       center={[0, 0]}
       width={INNER_WIDTH}
       height={INNER_HEIGHT}
-      fill="none"
-      stroke="currentColor"
-      dashPattern={[4, 3]}
+      style={{ fill: 'none', stroke: 'currentColor', dashPattern: [4, 3] }}
     />
     <Ellipse
       center={[0, 0]}
       radius={{ x: BBOX_WIDTH / 2, y: BBOX_HEIGHT / 2 }}
-      fill="none"
-      stroke="darkorange"
-      strokeWidth={2}
+      style={{ fill: 'none', stroke: 'darkorange', strokeWidth: 2 }}
     />
-    <Rectangle center={[0, 0]} width={BBOX_WIDTH} height={BBOX_HEIGHT} fill="none" stroke="gray" dashPattern={[4, 3]} />
-    <Circle center={[0, 0]} radius={BOUNDARY_RADIUS} fill="none" stroke="dodgerblue" dashPattern={[4, 3]} />
+    <Rectangle
+      center={[0, 0]}
+      width={BBOX_WIDTH}
+      height={BBOX_HEIGHT}
+      style={{ fill: 'none', stroke: 'gray', dashPattern: [4, 3] }}
+    />
+    <Circle
+      center={[0, 0]}
+      radius={BOUNDARY_RADIUS}
+      style={{ fill: 'none', stroke: 'dodgerblue', dashPattern: [4, 3] }}
+    />
 
-    <Node id="content" position={[0, 0]} stroke="none" padding={0}>
+    <Node id="content" position={[0, 0]} style={{ stroke: 'none' }} layout={{ padding: 0 }}>
       content
     </Node>
 
@@ -49,64 +59,60 @@ const Demo: FC = () => (
       id="anchor-n"
       position={[0, -BOUNDARY_RADIUS]}
       shape="circle"
-      padding={0}
-      minimumSize={4}
-      fill="dodgerblue"
-      stroke="none"
+      style={{ fill: 'dodgerblue', stroke: 'none' }}
+      layout={{ padding: 0, minimumSize: 4 }}
     />
     <Node
       id="anchor-e"
       position={[BOUNDARY_RADIUS, 0]}
       shape="circle"
-      padding={0}
-      minimumSize={4}
-      fill="dodgerblue"
-      stroke="none"
+      style={{ fill: 'dodgerblue', stroke: 'none' }}
+      layout={{ padding: 0, minimumSize: 4 }}
     />
     <Node
       id="anchor-s"
       position={[0, BOUNDARY_RADIUS]}
       shape="circle"
-      padding={0}
-      minimumSize={4}
-      fill="dodgerblue"
-      stroke="none"
+      style={{ fill: 'dodgerblue', stroke: 'none' }}
+      layout={{ padding: 0, minimumSize: 4 }}
     />
     <Node
       id="anchor-w"
       position={[-BOUNDARY_RADIUS, 0]}
       shape="circle"
-      padding={0}
-      minimumSize={4}
-      fill="dodgerblue"
-      stroke="none"
+      style={{ fill: 'dodgerblue', stroke: 'none' }}
+      layout={{ padding: 0, minimumSize: 4 }}
     />
 
-    <Node id="padding-label" position={[-178, -58]} stroke="none" textColor="gray">
+    <Node id="padding-label" position={[-178, -58]} style={{ stroke: 'none', textColor: 'gray' }}>
       padding
     </Node>
-    <Node id="shape-label" position={[178, -58]} stroke="none" textColor="darkorange">
+    <Node id="shape-label" position={[178, -58]} style={{ stroke: 'none', textColor: 'darkorange' }}>
       shape
     </Node>
-    <Node id="content-label" position={[-178, 0]} stroke="none" textColor="gray">
+    <Node id="content-label" position={[-178, 0]} style={{ stroke: 'none', textColor: 'gray' }}>
       content box
     </Node>
-    <Node id="anchor-label" position={[178, 0]} stroke="none" textColor="dodgerblue">
+    <Node id="anchor-label" position={[178, 0]} style={{ stroke: 'none', textColor: 'dodgerblue' }}>
       anchors
     </Node>
-    <Node id="bbox-label" position={[-178, 58]} stroke="none" textColor="gray">
+    <Node id="bbox-label" position={[-178, 58]} style={{ stroke: 'none', textColor: 'gray' }}>
       bounding box
     </Node>
-    <Node id="boundary-label" position={[178, 58]} stroke="none" textColor="dodgerblue">
+    <Node id="boundary-label" position={[178, 58]} style={{ stroke: 'none', textColor: 'dodgerblue' }}>
       boundary
     </Node>
 
-    <Draw way={['content-label', 'content']} stroke="gray" arrow="->" />
-    <Draw way={['padding-label', [-INNER_WIDTH / 2, -INNER_HEIGHT / 2]]} stroke="gray" arrow="->" />
-    <Draw way={['shape-label', SHAPE_TARGET]} stroke="darkorange" arrow="->" />
-    <Draw way={['bbox-label', [-BBOX_WIDTH / 2, BBOX_HEIGHT / 2]]} stroke="gray" arrow="->" />
-    <Draw way={['boundary-label', [BOUNDARY_RADIUS * 0.68, BOUNDARY_RADIUS * 0.73]]} stroke="dodgerblue" arrow="->" />
-    <Draw way={['anchor-label', 'anchor-e']} stroke="dodgerblue" arrow="->" />
+    <Draw way={['content-label', 'content']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['padding-label', [-INNER_WIDTH / 2, -INNER_HEIGHT / 2]]} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['shape-label', SHAPE_TARGET]} arrow="->" style={{ stroke: 'darkorange' }} />
+    <Draw way={['bbox-label', [-BBOX_WIDTH / 2, BBOX_HEIGHT / 2]]} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw
+      way={['boundary-label', [BOUNDARY_RADIUS * 0.68, BOUNDARY_RADIUS * 0.73]]}
+      arrow="->"
+      style={{ stroke: 'dodgerblue' }}
+    />
+    <Draw way={['anchor-label', 'anchor-e']} arrow="->" style={{ stroke: 'dodgerblue' }} />
   </Layout>
 );
 

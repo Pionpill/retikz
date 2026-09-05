@@ -34,16 +34,16 @@ describe('React JSX Input 场景', () => {
   });
 
   it('将 Draw 的 way 原样交给 Vanilla Path normalizer', () => {
-    const input = createInputScene(<Draw way={['source', 'target']} stroke="#2563eb" />);
+    const input = createInputScene(<Draw way={['source', 'target']} style={{ stroke: '#2563eb' }} />);
 
     expect(normalizeScene(input.scene).ir.children).toEqual([
       {
         type: 'path',
-        stroke: '#2563eb',
         children: [
           { type: 'step', kind: 'move', to: { id: 'source' } },
           { type: 'step', kind: 'line', to: { id: 'target' } },
         ],
+        style: { stroke: '#2563eb' },
       },
     ]);
   });
@@ -121,17 +121,17 @@ describe('React JSX Input 场景', () => {
         {
           type: 'path',
           id: 'edge',
-          stroke: '#13579b',
           label: { text: 'host', sloped: true },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0], label: { text: 'step', sloped: true } },
           ],
+          style: { stroke: '#13579b' },
         },
       ],
     };
     const reactInput = createInputScene(
-      <Path id="edge" stroke="#13579b" label={{ text: 'host', sloped: true }}>
+      <Path id="edge" label={{ text: 'host', sloped: true }} style={{ stroke: '#13579b' }}>
         <Step kind="move" to={[0, 0]} />
         <Step kind="line" to={[100, 0]}>
           <EdgeLabel sloped>step</EdgeLabel>

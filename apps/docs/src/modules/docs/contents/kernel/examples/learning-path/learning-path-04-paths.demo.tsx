@@ -30,13 +30,18 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
       position={position}
       shape="rectangle"
       cornerRadius={hasBox ? 4.5 : 0}
-      fill={fill}
-      stroke={hasBox ? NODE_STROKE : 'none'}
-      strokeWidth={hasBox ? 0.5 : 0}
-      textColor={hasBox ? LEAF_TEXT : TITLE_TEXT}
-      font={{ ...SANS_FONT, size: isTitle ? 24 : isHeader ? 14 : 12, weight: isTitle || isHeader ? 'bold' : 'normal' }}
-      padding={hasBox ? 5 : 4}
-      minimumSize={{ width, height }}
+      style={{
+        fill,
+        stroke: hasBox ? NODE_STROKE : 'none',
+        strokeWidth: hasBox ? 0.5 : 0,
+        textColor: hasBox ? LEAF_TEXT : TITLE_TEXT,
+        font: {
+          ...SANS_FONT,
+          size: isTitle ? 24 : isHeader ? 14 : 12,
+          weight: isTitle || isHeader ? 'bold' : 'normal',
+        },
+      }}
+      layout={{ padding: hasBox ? 5 : 4, minimumSize: { width, height } }}
     >
       {children}
     </Node>
@@ -93,8 +98,8 @@ const Demo: FC = () => (
       Available Options
     </RoadmapNode>
 
-    <Draw way={['title', 'fundamentals']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
-    <Draw way={['fundamentals', 'choose']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
+    <Draw way={['title', 'fundamentals']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
+    <Draw way={['fundamentals', 'choose']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
 
     {/* === Step 4：5 个 Path 按钮（2 子列 3 + 2）+ 段间 / 段内连线 ===
         段头 (316, 245) / (495, 245) 绝对坐标；子列内 AtPosition 紧贴堆叠（distance 61 / 60） */}
@@ -137,23 +142,21 @@ const Demo: FC = () => (
     </RoadmapNode>
 
     {/* 子列内 3 条短直线：Draw way=[源 id, 目标 id]，retikz 自动锚到节点边框 */}
-    <Draw way={['data-scientist', 'machine-learning']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
-    <Draw way={['machine-learning', 'deep-learning']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
-    <Draw way={['data-engineer', 'big-data-engineer']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
+    <Draw way={['data-scientist', 'machine-learning']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
+    <Draw way={['machine-learning', 'deep-learning']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
+    <Draw way={['data-engineer', 'big-data-engineer']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
 
     {/* Choose → 2 子列段顶的合并曲线：way 数组中 { curve: [cx, cy] } infix 算子修饰下一段；
         2 段 quadratic 串联（对应 intro.svg path d= 里的 M ... Q ... Q ...） */}
     <Draw
       way={['choose', { curve: [404, 200] }, [360, 195], { curve: [316, 190] }, 'data-scientist']}
-      stroke={EDGE_BLUE}
-      strokeWidth={2}
       arrow="->"
+      style={{ stroke: EDGE_BLUE, strokeWidth: 2 }}
     />
     <Draw
       way={['choose', { curve: [404, 200] }, [449.5, 195], { curve: [495, 190] }, 'data-engineer']}
-      stroke={EDGE_BLUE}
-      strokeWidth={2}
       arrow="->"
+      style={{ stroke: EDGE_BLUE, strokeWidth: 2 }}
     />
   </Layout>
 );

@@ -8,33 +8,24 @@ const Demo: FC = () => (
     <Node
       id="text-size"
       position={[-115, -125]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
     >
       text measurement
     </Node>
     <Node
       id="padding"
       position={[115, -125]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
     >
       padding
     </Node>
     <Node
       id="inner-box"
       position={[0, -50]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14 } }}
     >
       inner content box
     </Node>
@@ -42,20 +33,14 @@ const Demo: FC = () => (
       id="rectangle-shape"
       position={[0, 25]}
       text={['rectangle shape', '+ cornerRadius']}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14, weight: 'bold' } }}
     />
     <Node
       id="visible-outline"
       position={[-105, 130]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14 } }}
     >
       visible rectangle
     </Node>
@@ -63,16 +48,13 @@ const Demo: FC = () => (
       id="connection-geometry"
       position={[105, 130]}
       text={['directional anchors', 'boundary intersection']}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14 } }}
     />
 
-    <Draw way={['text-size', 'inner-box']} arrow="->" stroke="gray" />
-    <Draw way={['padding', 'inner-box']} arrow="->" stroke="gray" />
-    <Draw way={['inner-box', 'rectangle-shape']} arrow="->" stroke="gray" />
+    <Draw way={['text-size', 'inner-box']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['padding', 'inner-box']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['inner-box', 'rectangle-shape']} arrow="->" style={{ stroke: 'gray' }} />
     <Draw
       way={[
         'rectangle-shape',
@@ -80,7 +62,7 @@ const Demo: FC = () => (
         'visible-outline',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
     <Draw
       way={[
@@ -89,7 +71,7 @@ const Demo: FC = () => (
         'connection-geometry',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
   </Layout>
 );

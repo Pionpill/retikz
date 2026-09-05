@@ -20,7 +20,13 @@ const boundaryIr: IRScene = {
   version: 1,
   type: 'scene',
   children: [
-    { type: 'node', id: 'a', position: [0, 0], minimumSize: 40, boundary: 'pin' },
+    {
+      type: 'node',
+      id: 'a',
+      position: [0, 0],
+      boundary: 'pin',
+      layout: { minimumSize: 40 },
+    },
     {
       type: 'path',
       children: [

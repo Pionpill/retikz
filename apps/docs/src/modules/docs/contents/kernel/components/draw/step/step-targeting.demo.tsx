@@ -43,7 +43,7 @@ const targetsOf = (values: StepTargetingValues): ReactNode => {
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout width={400} height={229} viewBox={{ x: -190, y: -120, width: 380, height: 240 }}>
-      <Node id="A" position={[-100, 40]} stroke="gray" dashed>
+      <Node id="A" position={[-100, 40]} style={{ stroke: 'gray', dashed: true }}>
         a
       </Node>
       <Path arrow="->">

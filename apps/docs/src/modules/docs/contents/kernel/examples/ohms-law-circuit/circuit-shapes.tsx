@@ -383,10 +383,8 @@ export const Battery: FC<{ id?: string; position: Position; rotate?: number; lab
     rotate={rotate}
     label={label}
     shape="circuit-battery"
-    minimumSize={{ width: 118, height: 56 }}
-    stroke={INK}
-    strokeWidth={STROKE_WIDTH}
-    fill="none"
+    style={{ stroke: INK, strokeWidth: STROKE_WIDTH, fill: 'none' }}
+    layout={{ minimumSize: { width: 118, height: 56 } }}
   />
 );
 
@@ -397,10 +395,8 @@ export const Switch: FC<{ id?: string; position: Position; label?: CircuitLabel 
     position={position}
     label={label}
     shape="circuit-switch"
-    minimumSize={{ width: 156, height: 52 }}
-    stroke={INK}
-    strokeWidth={STROKE_WIDTH}
-    fill="none"
+    style={{ stroke: INK, strokeWidth: STROKE_WIDTH, fill: 'none' }}
+    layout={{ minimumSize: { width: 156, height: 52 } }}
   />
 );
 
@@ -411,10 +407,8 @@ export const Resistor: FC<{ id?: string; position: Position; label?: CircuitLabe
     position={position}
     label={label}
     shape="circuit-resistor"
-    minimumSize={{ width: 182, height: 48 }}
-    stroke={INK}
-    strokeWidth={STROKE_WIDTH}
-    fill="none"
+    style={{ stroke: INK, strokeWidth: STROKE_WIDTH, fill: 'none' }}
+    layout={{ minimumSize: { width: 182, height: 48 } }}
   />
 );
 
@@ -425,9 +419,7 @@ export const Rheostat: FC<{ id?: string; position: Position; label?: CircuitLabe
     position={position}
     label={label}
     shape="circuit-rheostat"
-    minimumSize={{ width: 182, height: 48 }}
-    stroke={INK}
-    strokeWidth={STROKE_WIDTH}
-    fill="none"
+    style={{ stroke: INK, strokeWidth: STROKE_WIDTH, fill: 'none' }}
+    layout={{ minimumSize: { width: 182, height: 48 } }}
   />
 );

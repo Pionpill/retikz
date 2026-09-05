@@ -12,48 +12,36 @@ const Demo: FC = () => (
       <Node
         id="incremental"
         position={[-130, -105]}
-        minimumSize={{ width: 154, height: 38 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13, weight: 'bold' }}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
+        layout={{ minimumSize: { width: 154, height: 38 } }}
       >
         incremental
       </Node>
       <Node
         id="bailout"
         position={[-130, -35]}
-        minimumSize={{ width: 154, height: 38 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13, weight: 'bold' }}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
+        layout={{ minimumSize: { width: 154, height: 38 } }}
       >
         bailout
       </Node>
       <Node
         id="fallback"
         position={[-130, 35]}
-        minimumSize={{ width: 154, height: 38 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13, weight: 'bold' }}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
+        layout={{ minimumSize: { width: 154, height: 38 } }}
       >
         fallback / full
       </Node>
       <Node
         id="unrelated"
         position={[-130, 105]}
-        minimumSize={{ width: 154, height: 38 }}
-        stroke="dimgray"
-        fill="dimgray"
-        fillOpacity={0.06}
         cornerRadius={4}
-        font={{ size: 13, weight: 'bold' }}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.06, font: { size: 13, weight: 'bold' } }}
+        layout={{ minimumSize: { width: 154, height: 38 } }}
       >
         no dependency change
       </Node>
@@ -64,48 +52,36 @@ const Demo: FC = () => (
       <Node
         id="update"
         position={[130, -105]}
-        minimumSize={{ width: 170, height: 38 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13, weight: 'bold' }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
+        layout={{ minimumSize: { width: 170, height: 38 } }}
       >
         downstream.update()
       </Node>
       <Node
         id="reuse-after-bailout"
         position={[130, -35]}
-        minimumSize={{ width: 170, height: 38 }}
-        stroke="dimgray"
-        fill="dimgray"
-        fillOpacity={0.06}
         cornerRadius={4}
-        font={{ size: 13, weight: 'bold' }}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.06, font: { size: 13, weight: 'bold' } }}
+        layout={{ minimumSize: { width: 170, height: 38 } }}
       >
         reuse current artifact
       </Node>
       <Node
         id="run"
         position={[130, 35]}
-        minimumSize={{ width: 170, height: 38 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13, weight: 'bold' }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
+        layout={{ minimumSize: { width: 170, height: 38 } }}
       >
         downstream.run()
       </Node>
       <Node
         id="reuse-unrelated"
         position={[130, 105]}
-        minimumSize={{ width: 170, height: 38 }}
-        stroke="dimgray"
-        fill="dimgray"
-        fillOpacity={0.06}
         cornerRadius={4}
-        font={{ size: 13, weight: 'bold' }}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.06, font: { size: 13, weight: 'bold' } }}
+        layout={{ minimumSize: { width: 170, height: 38 } }}
       >
         reuse current artifact
       </Node>
@@ -127,7 +103,7 @@ const Demo: FC = () => (
         'update',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
     <Draw
       way={[
@@ -145,7 +121,7 @@ const Demo: FC = () => (
         'reuse-after-bailout',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
     <Draw
       way={[
@@ -163,7 +139,7 @@ const Demo: FC = () => (
         'run',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
     <Draw
       way={[
@@ -181,8 +157,7 @@ const Demo: FC = () => (
         'reuse-unrelated',
       ]}
       arrow="->"
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
     />
   </Layout>
 );

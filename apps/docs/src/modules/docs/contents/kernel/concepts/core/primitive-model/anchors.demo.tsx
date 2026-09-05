@@ -4,10 +4,16 @@ import { DrawWay } from '@retikz/core';
 import { Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
 
 const FONT = { size: 10 };
-const RECT = { fill: 'none', stroke: 'darkorange', strokeWidth: 2 } as const;
-const TITLE = { stroke: 'none', textColor: 'gray' } as const;
+const RECT = {
+  style: { fill: 'none', stroke: 'darkorange', strokeWidth: 2 },
+} as const;
+const TITLE = {
+  style: { stroke: 'none', textColor: 'gray' },
+} as const;
 // 点用蓝色（anchor 本身），标注文字统一灰色
-const TAG = { stroke: 'none', textColor: 'gray' } as const;
+const TAG = {
+  style: { stroke: 'none', textColor: 'gray' },
+} as const;
 const DEG = Math.PI / 180;
 
 const polar = (cx: number, cy: number, r: number, deg: number): [number, number] => [
@@ -61,9 +67,14 @@ const Demo: FC = () => (
   >
     {/* 第一排 · 左：8 个 Web 方位 anchor */}
     <Rectangle center={[RA.x, RA.y]} width={RA.w * 2} height={RA.h * 2} {...RECT} />
-    <Circle center={[RA.x, RA.y]} radius={3} fill="dodgerblue" stroke="none" />
+    <Circle center={[RA.x, RA.y]} radius={3} style={{ fill: 'dodgerblue', stroke: 'none' }} />
     {WEB_ANCHORS.map(({ dx, dy, l }) => (
-      <Circle key={`a-${l}`} center={[RA.x + dx * RA.w, RA.y + dy * RA.h]} radius={3} fill="dodgerblue" stroke="none" />
+      <Circle
+        key={`a-${l}`}
+        center={[RA.x + dx * RA.w, RA.y + dy * RA.h]}
+        radius={3}
+        style={{ fill: 'dodgerblue', stroke: 'none' }}
+      />
     ))}
     {WEB_ANCHORS.map(({ dx, dy, l }) => (
       <Node
@@ -71,46 +82,46 @@ const Demo: FC = () => (
         id={`al-${l}`}
         position={[RA.x + dx * (RA.w + 15), RA.y + dy * (RA.h + 12)]}
         {...TAG}
-        font={FONT}
+        style={{ ...TAG.style, font: FONT }}
       >
         {l}
       </Node>
     ))}
-    <Node id="ta" position={[RA.x, 8]} {...TITLE} font={FONT}>
+    <Node id="ta" position={[RA.x, 8]} {...TITLE} style={{ ...TITLE.style, font: FONT }}>
       web anchors + center
     </Node>
 
     {/* 第一排 · 右：角度 / 边比例 anchor */}
     <Rectangle center={[RB.x, RB.y]} width={RB.w * 2} height={RB.h * 2} {...RECT} />
-    <Circle center={[RB.x, RB.y]} radius={3} fill="dodgerblue" stroke="none" />
-    <Draw way={[[RB.x, RB.y], ANG_PT]} stroke="dodgerblue" />
-    <Circle center={ANG_PT} radius={3} fill="dodgerblue" stroke="none" />
-    <Node id="bl-ang" position={[ANG_PT[0] + 14, ANG_PT[1] + 4]} {...TAG} font={FONT}>
+    <Circle center={[RB.x, RB.y]} radius={3} style={{ fill: 'dodgerblue', stroke: 'none' }} />
+    <Draw way={[[RB.x, RB.y], ANG_PT]} style={{ stroke: 'dodgerblue' }} />
+    <Circle center={ANG_PT} radius={3} style={{ fill: 'dodgerblue', stroke: 'none' }} />
+    <Node id="bl-ang" position={[ANG_PT[0] + 14, ANG_PT[1] + 4]} {...TAG} style={{ ...TAG.style, font: FONT }}>
       {'30°'}
     </Node>
-    <Circle center={EDGE_PT} radius={3} fill="dodgerblue" stroke="none" />
-    <Node id="bl-edge" position={[EDGE_PT[0], EDGE_PT[1] - 12]} {...TAG} font={FONT}>
+    <Circle center={EDGE_PT} radius={3} style={{ fill: 'dodgerblue', stroke: 'none' }} />
+    <Node id="bl-edge" position={[EDGE_PT[0], EDGE_PT[1] - 12]} {...TAG} style={{ ...TAG.style, font: FONT }}>
       edge t=0.25
     </Node>
-    <Node id="tb" position={[RB.x, 8]} {...TITLE} font={FONT}>
+    <Node id="tb" position={[RB.x, 8]} {...TITLE} style={{ ...TITLE.style, font: FONT }}>
       angle / edge
     </Node>
 
     {/* 第二排 · star：tip-N 尖角 */}
     <Draw way={[...STAR, DrawWay.Cycle]} {...RECT} />
     {TIPS.map(([x, y], i) => (
-      <Circle key={`tip-${i}`} center={[x, y]} radius={3} fill="dodgerblue" stroke="none" />
+      <Circle key={`tip-${i}`} center={[x, y]} radius={3} style={{ fill: 'dodgerblue', stroke: 'none' }} />
     ))}
-    <Node id="ts" position={[STAR_C.x, 140]} {...TITLE} font={FONT}>
+    <Node id="ts" position={[STAR_C.x, 140]} {...TITLE} style={{ ...TITLE.style, font: FONT }}>
       star · tip-N
     </Node>
 
     {/* 第二排 · sector：apex 与外弧中点 */}
     <Draw way={[[SEC.x, SEC.y], ...arcPts(SEC.x, SEC.y, SEC.ro, SEC.a, SEC.b, 14), DrawWay.Cycle]} {...RECT} />
     {SECTOR_TIPS.map(([x, y], i) => (
-      <Circle key={`sec-${i}`} center={[x, y]} radius={3} fill="dodgerblue" stroke="none" />
+      <Circle key={`sec-${i}`} center={[x, y]} radius={3} style={{ fill: 'dodgerblue', stroke: 'none' }} />
     ))}
-    <Node id="tsec" position={[SEC.x, 140]} {...TITLE} font={FONT}>
+    <Node id="tsec" position={[SEC.x, 140]} {...TITLE} style={{ ...TITLE.style, font: FONT }}>
       sector · apex / outer-arc-mid / edge-mid
     </Node>
   </Layout>

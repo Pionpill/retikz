@@ -11,18 +11,18 @@ import { Draw, Layout, Node } from '@retikz/react';
 const Demo: FC = () => (
   <Layout width={520} height={200} style={{ maxWidth: '100%', height: 'auto' }}>
     {/* 左：auto，端点随方向落到近侧 */}
-    <Node id="A1" position={[-210, 0]} stroke="none">
+    <Node id="A1" position={[-210, 0]} style={{ stroke: 'none' }}>
       a
     </Node>
-    <Node id="T1" position={[-130, 0]} stroke="gray" dashPattern={[4, 3]}>
+    <Node id="T1" position={[-130, 0]} style={{ stroke: 'gray', dashPattern: [4, 3] }}>
       T
     </Node>
-    <Node id="B1" position={[-50, 0]} stroke="none">
+    <Node id="B1" position={[-50, 0]} style={{ stroke: 'none' }}>
       b
     </Node>
     <Draw way={['A1', 'T1']} arrow="->" />
     <Draw way={['B1', 'T1']} arrow="->" />
-    <Node position={[-130, 80]} stroke="none" padding={0} textColor="gray">
+    <Node position={[-130, 80]} style={{ stroke: 'none', textColor: 'gray' }} layout={{ padding: 0 }}>
       auto：随方向贴边
     </Node>
 
@@ -32,23 +32,22 @@ const Demo: FC = () => (
         [0, -70],
         [0, 70],
       ]}
-      stroke="lightgray"
-      dashPattern={[4, 4]}
+      style={{ stroke: 'lightgray', dashPattern: [4, 4] }}
     />
 
     {/* 右：锁定到 top，两条都钉在上边中点 */}
-    <Node id="A2" position={[50, 0]} stroke="none">
+    <Node id="A2" position={[50, 0]} style={{ stroke: 'none' }}>
       a
     </Node>
-    <Node id="T2" position={[130, 0]} stroke="gray" dashPattern={[4, 3]}>
+    <Node id="T2" position={[130, 0]} style={{ stroke: 'gray', dashPattern: [4, 3] }}>
       T
     </Node>
-    <Node id="B2" position={[210, 0]} stroke="none">
+    <Node id="B2" position={[210, 0]} style={{ stroke: 'none' }}>
       b
     </Node>
     <Draw way={['A2', 'T2.top']} arrow="->" />
     <Draw way={['B2', 'T2.top']} arrow="->" />
-    <Node position={[130, 80]} stroke="none" padding={0} textColor="gray">
+    <Node position={[130, 80]} style={{ stroke: 'none', textColor: 'gray' }} layout={{ padding: 0 }}>
       锁定 top：定死
     </Node>
   </Layout>

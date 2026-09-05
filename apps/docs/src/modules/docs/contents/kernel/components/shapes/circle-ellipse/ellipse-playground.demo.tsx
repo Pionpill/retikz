@@ -72,34 +72,30 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           [0, -92],
           [0, 92],
         ]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Draw
         way={[
           [-122, 0],
           [122, 0],
         ]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Rectangle
         center={[0, 0]}
         width={inputBox.width}
         height={inputBox.height}
-        stroke="lightgray"
-        strokeOpacity={0.5}
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', strokeOpacity: 0.5, dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Ellipse
         {...ellipsePropsOf(values)}
-        fill={values.fill}
-        fillOpacity={values.segment && values.closed === 'open' ? 0 : 0.45}
-        stroke={values.stroke}
-        strokeWidth={2.5}
+        style={{
+          ...ellipsePropsOf(values).style,
+          fill: values.fill,
+          fillOpacity: values.segment && values.closed === 'open' ? 0 : 0.45,
+          stroke: values.stroke,
+          strokeWidth: 2.5,
+        }}
       />
     </Layout>
   );

@@ -5,7 +5,7 @@ import {
   NormalizedFractionSchema,
   PositiveNumberSchema,
 } from '@retikz/foundation';
-import { array, boolean, enum as zodEnum, literal, NEVER, number, object, preprocess, union } from 'zod';
+import { array, boolean, enum as zodEnum, literal, NEVER, number, object, preprocess, strictObject, union } from 'zod';
 
 import { Side } from '../../shared';
 import { AnimationTrackSchema } from '../animation';
@@ -158,9 +158,48 @@ const NodePositionSchema = preprocess(
   union([SharedNodePositionSchema, AnchorPositionSchema]),
 );
 
-export const NodeSchema = object({
-  type: literal('node').describe('Discriminator marking this child as a node'),
+/** 节点实例视觉覆盖 */
+export const NodeStyleSchema = strictObject({
   ...GraphicStyleSchema.shape,
+  strokeWidth: NonNegativeNumberSchema.optional().describe('Border width in user units; defaults to 1 when omitted'),
+  dashed: boolean().optional().describe('Dashed border preset. `dashPattern` takes precedence.'),
+  dotted: boolean().optional().describe('Dotted border preset. `dashPattern` and `dashed` take precedence.'),
+  dashPattern: StrokeDashPatternSchema.optional().describe(
+    'Explicit stroke dash pattern lengths in user units; overrides `dashed` and `dotted`.',
+  ),
+  dashOffset: StrokeDashOffsetSchema.optional().describe(
+    'Explicit stroke dash offset in user units. Positive and negative finite values are allowed.',
+  ),
+  textColor: ContextualColorSchema.optional().describe(
+    'Node text color. A number derives from the effective node color; `contrast` selects black or white from the resolved static fill. Defaults to `currentColor`.',
+  ),
+  font: FontSchema.optional().describe('Font spec for the inner text label. Missing fields use text defaults.'),
+}).describe('Node visual overrides; fields independently override inherited defaults.');
+
+/** 节点尺寸、间距与文本布局 */
+export const NodeLayoutSchema = strictObject({
+  align: TextAlignSchema.optional().describe(
+    'Multi-line text alignment within the text block. Omitted fields use middle.',
+  ),
+  lineHeight: LineHeightSchema.optional().describe(
+    'Line height in user units; falls back to `font.size × 1.2` when omitted.',
+  ),
+  maxTextWidth: PositiveNumberSchema.optional().describe(
+    'Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.',
+  ),
+  minimumSize: BoxSizeValueSchema.optional().describe(
+    'Minimum visual border size in user units. Number applies to width and height; object width / height override default.',
+  ),
+  padding: BoxSpacingValueSchema.optional().describe(
+    'Inner spacing from content to border. Number applies to all sides; object fields resolve as side > axis > default.',
+  ),
+  margin: BoxSpacingValueSchema.optional().describe(
+    'Outer offset around the connection boundary. Number applies to all sides; object fields resolve as side > axis > default.',
+  ),
+}).describe('Node size, spacing, and text layout overrides.');
+
+export const NodeSchema = strictObject({
+  type: literal('node').describe('Discriminator marking this child as a node'),
   id: NonBlankStringSchema.optional().describe(
     'Optional unique id; required if any path needs to reference this node by string',
   ),
@@ -187,43 +226,12 @@ export const NodeSchema = object({
   text: TextBlockSchema.optional().describe(
     'Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex.',
   ),
-  align: TextAlignSchema.optional().describe(
-    'Multi-line text alignment within the text block. Omitted fields use middle.',
-  ),
-  lineHeight: LineHeightSchema.optional().describe(
-    'Line height in user units; falls back to `font.size × 1.2` when omitted.',
-  ),
-  maxTextWidth: PositiveNumberSchema.optional().describe(
-    'Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.',
-  ),
-  strokeWidth: NonNegativeNumberSchema.optional().describe('Border width in user units; defaults to 1 when omitted'),
-  dashed: boolean().optional().describe('Dashed border preset. `dashPattern` takes precedence.'),
-  dotted: boolean().optional().describe('Dotted border preset. `dashPattern` and `dashed` take precedence.'),
-  dashPattern: StrokeDashPatternSchema.optional().describe(
-    'Explicit stroke dash pattern lengths in user units; overrides `dashed` and `dotted`.',
-  ),
-  dashOffset: StrokeDashOffsetSchema.optional().describe(
-    'Explicit stroke dash offset in user units. Positive and negative finite values are allowed.',
-  ),
   cornerRadius: NonNegativeNumberSchema.optional().describe(
     'Top-level corner radius in user units. Only effective on `rectangle` shape.',
-  ),
-  minimumSize: BoxSizeValueSchema.optional().describe(
-    'Minimum visual border size in user units. Number applies to width and height; object width / height override default.',
   ),
   scale: AxisScaleValueSchema.optional().describe(
     'Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.',
   ),
-  textColor: ContextualColorSchema.optional().describe(
-    'Node text color. A number derives from the effective node color; `contrast` selects black or white from the resolved static fill. Defaults to `currentColor`.',
-  ),
-  padding: BoxSpacingValueSchema.optional().describe(
-    'Inner spacing from content to border. Number applies to all sides; object fields resolve as side > axis > default.',
-  ),
-  margin: BoxSpacingValueSchema.optional().describe(
-    'Outer offset around the connection boundary. Number applies to all sides; object fields resolve as side > axis > default.',
-  ),
-  font: FontSchema.optional().describe('Font spec for the inner text label. Missing fields use text defaults.'),
   label: union([NodeLabelSchema, array(NodeLabelSchema)])
     .optional()
     .describe(
@@ -235,6 +243,8 @@ export const NodeSchema = object({
     .describe(
       'Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.',
     ),
-})
-  .strict()
-  .describe('Node primitive: a positioned, optionally textual shape');
+  style: NodeStyleSchema.optional().describe(
+    'Node visual overrides; fields independently override inherited defaults.',
+  ),
+  layout: NodeLayoutSchema.optional().describe('Node size, spacing, and text layout overrides.'),
+}).describe('Node primitive: a positioned, optionally textual shape');

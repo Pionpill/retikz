@@ -8,42 +8,30 @@ const Demo: FC = () => (
     <Node
       id="parse"
       position={[-270, 30]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
       text={[{ text: 'parse/', font: { size: 14, weight: 'bold' } }, 'sugar → IR']}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="ir"
       position={[-115, 30]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
     >
       IR
     </Node>
     <Node
       id="compile"
       position={[70, 30]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
       text={[{ text: 'compile/', font: { size: 14, weight: 'bold' } }, 'IR → Scene']}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="scene"
       position={[255, 30]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14, weight: 'bold' }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14, weight: 'bold' } }}
     >
       Scene
     </Node>
@@ -51,44 +39,32 @@ const Demo: FC = () => (
     <Node
       id="schemas"
       position={[-115, -65]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
       text={[{ text: 'schemas/', font: { size: 14, weight: 'bold' } }, 'IR truth']}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="contract"
       position={[70, -108]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
       text={[{ text: 'contract/', font: { size: 14, weight: 'bold' } }, 'Definition protocol']}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="shared"
       position={[0, 112]}
-      minimumSize={{ width: 620, height: 42 }}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 620, height: 42 } }}
     >
       shared/ · pure vocabulary + utilities
     </Node>
     <Node
       id="providers"
       position={[70, -43]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
       text={[{ text: 'providers/', font: { size: 14, weight: 'bold' } }, 'built-ins + registry']}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
     />
 
     <Draw way={['parse', 'ir']} arrow="->" />
@@ -111,11 +87,10 @@ const Demo: FC = () => (
         'ir',
       ]}
       arrow="->"
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
     />
-    <Draw way={['contract', 'providers']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['providers', 'compile']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['contract', 'providers']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['providers', 'compile']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 

@@ -10,27 +10,21 @@ const Demo: FC = () => (
       radius={72}
       startAngle={0}
       endAngle={120}
-      fill="darkorange"
-      stroke="dimgray"
-      strokeWidth={1}
+      style={{ fill: 'darkorange', stroke: 'dimgray', strokeWidth: 1 }}
     />
     <Sector
       center={[90, 90]}
       radius={72}
       startAngle={120}
       endAngle={210}
-      fill="dodgerblue"
-      stroke="dimgray"
-      strokeWidth={1}
+      style={{ fill: 'dodgerblue', stroke: 'dimgray', strokeWidth: 1 }}
     />
     <Sector
       center={[90, 90]}
       radius={72}
       startAngle={210}
       endAngle={360}
-      fill="darkviolet"
-      stroke="dimgray"
-      strokeWidth={1}
+      style={{ fill: 'darkviolet', stroke: 'dimgray', strokeWidth: 1 }}
     />
     {/* 空心扇形（环形扇区）：三段 innerRadius 不同，凸显它控制空心半径 / 环宽 */}
     <Sector
@@ -39,9 +33,7 @@ const Demo: FC = () => (
       innerRadius={20}
       startAngle={0}
       endAngle={120}
-      fill="darkorange"
-      stroke="dimgray"
-      strokeWidth={1}
+      style={{ fill: 'darkorange', stroke: 'dimgray', strokeWidth: 1 }}
     />
     <Sector
       center={[250, 90]}
@@ -49,9 +41,7 @@ const Demo: FC = () => (
       innerRadius={42}
       startAngle={120}
       endAngle={210}
-      fill="dodgerblue"
-      stroke="dimgray"
-      strokeWidth={1}
+      style={{ fill: 'dodgerblue', stroke: 'dimgray', strokeWidth: 1 }}
     />
     <Sector
       center={[250, 90]}
@@ -59,9 +49,7 @@ const Demo: FC = () => (
       innerRadius={58}
       startAngle={210}
       endAngle={360}
-      fill="darkviolet"
-      stroke="dimgray"
-      strokeWidth={1}
+      style={{ fill: 'darkviolet', stroke: 'dimgray', strokeWidth: 1 }}
     />
   </Layout>
 );

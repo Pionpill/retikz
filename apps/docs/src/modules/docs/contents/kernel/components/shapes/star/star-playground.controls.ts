@@ -109,8 +109,8 @@ export const previewControlContract = {
     'Star.outerRadius',
     'Star.innerRatio',
     'Star.rotate',
-    'Path.fill',
-    'Path.stroke',
-    'Path.strokeWidth',
+    'Path.style.fill',
+    'Path.style.stroke',
+    'Path.style.strokeWidth',
   ],
 } satisfies PreviewControlContract;

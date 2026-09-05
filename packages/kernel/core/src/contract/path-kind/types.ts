@@ -49,7 +49,7 @@ export type MaterializedPath = Readonly<{
 export type ResolvedPathKindAppearance = Readonly<
   Readonly<{
     /** Effective host master color, retained until the selected kind consumes it */
-    color?: IRPathBase['color'];
+    color?: NonNullable<IRPathBase['style']>['color'];
   }> &
     Pick<
       PathPrim,

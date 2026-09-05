@@ -295,12 +295,21 @@ retained 路径由 Vanilla controller 在一次 transaction 中提交 Input / IR
 
 ### 全图默认值
 
-这些属性复用 [`<Scope>`](/kernel/components/layout/scope) 的级联契约，不是另一套样式系统。children 模式下有值才合成根 Scope；直接传 `ir` 时忽略并在开发环境提示。
+`rootScope` 复用 [Scope](/kernel/components/layout/scope) 的 `style` 与 `defaults` 契约。它只在 JSX children 模式下合成隐式根 Scope；完整 `ir` 优先，有效覆盖会被忽略并在开发环境提示。
 
-| 属性                                                                                      | 类型         | 默认值 | 描述                               |
-| ----------------------------------------------------------------------------------------- | ------------ | ------ | ---------------------------------- |
-| `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `strokeOpacity` | 同 `<Scope>` | —      | 全图 graphic state 默认值          |
-| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`                           | 同 `<Scope>` | —      | node / path / label / arrow 默认值 |
+| 属性        | 类型                                      | 描述                                       |
+| ----------- | ----------------------------------------- | ------------------------------------------ |
+| `rootScope` | `Pick<InputScope, 'style' \| 'defaults'>` | 全图级联视觉覆盖、四个默认值通道与继承屏障 |
+
+```tsx
+<Layout rootScope={{ style: { stroke: 'gray' }, defaults: { node: { layout: { padding: 12 } } } }}>
+  <Node position={[0, 0]} style={{ fill: 'white' }}>
+    A
+  </Node>
+</Layout>
+```
+
+省略、空组、只有 optional undefined 的覆盖，以及单独的 `defaults.reset: false` / `[]` 不会创建根 Scope 或改变 identity。已有的 `font: {}` 仍按字体字段契约产生覆盖。显式 Scope 保留原结构；`Layout.style` 始终是宿主 CSS。
 
 ### 渲染与宿主
 

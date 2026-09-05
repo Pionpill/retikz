@@ -197,7 +197,6 @@ const CardInspector = defineInspector({
   optionsSchema: z.strictObject({}),
   inspect: (artifact: CardArtifact, context) => ({
     type: 'path',
-    stroke: context.appearance.scopeColor,
     children: [
       { type: 'step', kind: 'move', to: [artifact.bounds.x, artifact.bounds.y] },
       {
@@ -206,6 +205,7 @@ const CardInspector = defineInspector({
         to: [artifact.bounds.x + artifact.bounds.width, artifact.bounds.y + artifact.bounds.height],
       },
     ],
+    style: { stroke: context.appearance.scopeColor },
   }),
 });
 

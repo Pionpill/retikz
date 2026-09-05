@@ -8,17 +8,23 @@ import { Arc, Layout } from '@retikz/react';
 const Demo: FC = () => (
   <Layout width={360} height={130}>
     {/* 箭头弧：arrow 让开放弧带箭头，常用于角度标记 / 曲线箭头 */}
-    <Arc center={[60, 25]} radius={55} startAngle={20} endAngle={160} strokeWidth={2} arrow="->" />
+    <Arc center={[60, 25]} radius={55} startAngle={20} endAngle={160} arrow="->" style={{ strokeWidth: 2 }} />
     {/* 虚线弧 */}
-    <Arc center={[180, 25]} radius={55} startAngle={20} endAngle={160} strokeWidth={2} dashPattern={[5, 3]} />
+    <Arc
+      center={[180, 25]}
+      radius={55}
+      startAngle={20}
+      endAngle={160}
+      style={{ strokeWidth: 2, dashPattern: [5, 3] }}
+    />
     {/* 中段 marks：沿弧放方向箭头，朝向随切线 */}
     <Arc
       center={[300, 25]}
       radius={55}
       startAngle={20}
       endAngle={160}
-      strokeWidth={2}
       marks={[{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }]}
+      style={{ strokeWidth: 2 }}
     />
   </Layout>
 );

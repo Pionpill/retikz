@@ -14,15 +14,17 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Node
         position={[0, 0]}
         shape="rectangle"
-        fill="white"
-        padding={{ x: 34, y: 22 }}
-        shadow={{
-          offsetX: values.offsetX,
-          offsetY: values.offsetY,
-          blur: values.blur,
-          color: values.color,
-          opacity: values.opacity,
+        style={{
+          fill: 'white',
+          shadow: {
+            offsetX: values.offsetX,
+            offsetY: values.offsetY,
+            blur: values.blur,
+            color: values.color,
+            opacity: values.opacity,
+          },
         }}
+        layout={{ padding: { x: 34, y: 22 } }}
       >
         shadow
       </Node>

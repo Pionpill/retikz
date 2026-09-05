@@ -23,14 +23,9 @@ const renderLifecycleNode = ({ id, position, title, detail, width = 116, color }
       { text: title, font: { weight: 'bold' } },
       { text: detail, fill: 'gray', font: { size: 10 } },
     ]}
-    minimumSize={{ width, height: 44 }}
-    stroke={color}
-    fill={color}
-    fillOpacity={0.08}
-    align="middle"
-    font={{ size: 12 }}
-    lineHeight={14}
     cornerRadius={4}
+    style={{ stroke: color, fill: color, fillOpacity: 0.08, font: { size: 12 } }}
+    layout={{ minimumSize: { width, height: 44 }, align: 'middle', lineHeight: 14 }}
   />
 );
 
@@ -158,19 +153,23 @@ const DesktopFigure: FC = () => (
       })}
     </LogicFigureFrame>
 
-    <Draw way={['tex-request', 'cache-key']} arrow="->" stroke="gray" />
-    <Draw way={['cache-key', 'cache-lookup']} arrow="->" stroke="gray" />
-    <Draw way={['cache-lookup', 'cached-glyphs']} arrow="->" stroke="gray" />
-    <Draw way={['cache-lookup', 'engine-parse']} arrow="->" stroke="gray" />
-    <Draw way={['engine-parse', 'write-cache']} arrow="->" stroke="gray" />
-    <Draw way={['write-cache', 'cached-glyphs']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['tex-request', 'cache-key']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['cache-key', 'cache-lookup']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['cache-lookup', 'cached-glyphs']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['cache-lookup', 'engine-parse']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['engine-parse', 'write-cache']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['write-cache', 'cached-glyphs']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
 
-    <Draw way={['profile-options', 'shared-key']} arrow="->" stroke="gray" />
-    <Draw way={['shared-key', 'shared-engine']} arrow="->" stroke="gray" />
-    <Draw way={['configuration-change', 'clear-lowerer']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['clear-lowerer', 'stale-result']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['initialization-failure', 'remove-failed-entry']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['remove-failed-entry', 'retry-mount']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['profile-options', 'shared-key']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['shared-key', 'shared-engine']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['configuration-change', 'clear-lowerer']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['clear-lowerer', 'stale-result']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw
+      way={['initialization-failure', 'remove-failed-entry']}
+      arrow="->"
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
+    />
+    <Draw way={['remove-failed-entry', 'retry-mount']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 
@@ -265,14 +264,26 @@ const MobileFigure: FC = () => (
       })}
     </LogicFigureFrame>
 
-    <Draw way={['mobile-tex-request-key', 'mobile-cache-lookup']} arrow="->" stroke="gray" />
-    <Draw way={['mobile-cache-lookup', 'mobile-cached-glyphs']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['mobile-cache-lookup', 'mobile-engine-parse']} arrow="->" stroke="gray" />
-    <Draw way={['mobile-engine-parse', 'mobile-cached-glyphs']} arrow="->" stroke="gray" />
+    <Draw way={['mobile-tex-request-key', 'mobile-cache-lookup']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw
+      way={['mobile-cache-lookup', 'mobile-cached-glyphs']}
+      arrow="->"
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
+    />
+    <Draw way={['mobile-cache-lookup', 'mobile-engine-parse']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['mobile-engine-parse', 'mobile-cached-glyphs']} arrow="->" style={{ stroke: 'gray' }} />
 
-    <Draw way={['mobile-profile-options', 'mobile-shared-engine']} arrow="->" stroke="gray" />
-    <Draw way={['mobile-configuration-change', 'mobile-reset-lowerer']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['mobile-initialization-failure', 'mobile-retry-mount']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['mobile-profile-options', 'mobile-shared-engine']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw
+      way={['mobile-configuration-change', 'mobile-reset-lowerer']}
+      arrow="->"
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
+    />
+    <Draw
+      way={['mobile-initialization-failure', 'mobile-retry-mount']}
+      arrow="->"
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
+    />
   </Layout>
 );
 

@@ -7,12 +7,12 @@ const Demo: FC = () => (
   <Layout width={480} height={280} viewBox={{ x: -240, y: -140, width: 480, height: 280 }}>
     <Path
       label={{ text: 'center: automatic gap', sloped: true, textColor: 'currentColor', font: { size: 13 } }}
-      stroke="currentColor"
+      style={{ stroke: 'currentColor' }}
     >
       <Step kind="move" to={[-210, -110]} />
       <Step kind="line" to={[210, -110]} />
     </Path>
-    <Path stroke="currentColor">
+    <Path style={{ stroke: 'currentColor' }}>
       <Step kind="move" to={[-210, -65]} />
       <Step
         kind="line"
@@ -20,7 +20,7 @@ const Demo: FC = () => (
         to={[210, -15]}
       />
     </Path>
-    <Path stroke="currentColor">
+    <Path style={{ stroke: 'currentColor' }}>
       <Step kind="move" to={[-210, 25]} />
       <Step
         kind="line"
@@ -34,7 +34,7 @@ const Demo: FC = () => (
         to={[210, 25]}
       />
     </Path>
-    <Path stroke="currentColor">
+    <Path style={{ stroke: 'currentColor' }}>
       <Step kind="move" to={[-210, 75]} />
       <Step
         kind="line"
@@ -42,7 +42,7 @@ const Demo: FC = () => (
         to={[210, 75]}
       />
     </Path>
-    <Path stroke="currentColor">
+    <Path style={{ stroke: 'currentColor' }}>
       <Step kind="move" to={[-210, 115]} />
       <Step
         kind="line"

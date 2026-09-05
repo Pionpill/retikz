@@ -35,8 +35,8 @@ const sceneOf = (values: IntersectionValues): { geometry: ReactNode; hits: Array
     return {
       geometry: (
         <>
-          <Draw way={a} stroke="darkorange" strokeWidth={2} />
-          <Draw way={b} stroke="dodgerblue" strokeWidth={2} />
+          <Draw way={a} style={{ stroke: 'darkorange', strokeWidth: 2 }} />
+          <Draw way={b} style={{ stroke: 'dodgerblue', strokeWidth: 2 }} />
         </>
       ),
       hits: hit === null ? [] : [hit],
@@ -49,8 +49,12 @@ const sceneOf = (values: IntersectionValues): { geometry: ReactNode; hits: Array
     return {
       geometry: (
         <>
-          <Draw way={[origin, lineEnd]} stroke="darkorange" strokeWidth={2} />
-          <Circle center={[0, 0]} radius={values.radius} stroke="dodgerblue" strokeWidth={2} fill="none" />
+          <Draw way={[origin, lineEnd]} style={{ stroke: 'darkorange', strokeWidth: 2 }} />
+          <Circle
+            center={[0, 0]}
+            radius={values.radius}
+            style={{ stroke: 'dodgerblue', strokeWidth: 2, fill: 'none' }}
+          />
         </>
       ),
       hits: intersect.lineCircle({ origin, direction: [1, 0], center: [0, 0], radius: values.radius }),
@@ -61,8 +65,16 @@ const sceneOf = (values: IntersectionValues): { geometry: ReactNode; hits: Array
   return {
     geometry: (
       <>
-        <Circle center={centerA} radius={values.radius} stroke="darkorange" strokeWidth={2} fill="none" />
-        <Circle center={centerB} radius={values.radius} stroke="dodgerblue" strokeWidth={2} fill="none" />
+        <Circle
+          center={centerA}
+          radius={values.radius}
+          style={{ stroke: 'darkorange', strokeWidth: 2, fill: 'none' }}
+        />
+        <Circle
+          center={centerB}
+          radius={values.radius}
+          style={{ stroke: 'dodgerblue', strokeWidth: 2, fill: 'none' }}
+        />
       </>
     ),
     hits: intersect.circleCircle({
@@ -81,9 +93,14 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <Layout width={400} height={260} viewBox={intersectionViewBox}>
       {scene.geometry}
       {scene.hits.map((hit, index) => (
-        <Circle key={`${hit[0]}-${hit[1]}-${index}`} center={hit} radius={5} fill="darkviolet" stroke="none" />
+        <Circle
+          key={`${hit[0]}-${hit[1]}-${index}`}
+          center={hit}
+          radius={5}
+          style={{ fill: 'darkviolet', stroke: 'none' }}
+        />
       ))}
-      <Node position={[0, 88]} stroke="none" textColor="gray" font={{ size: 12 }}>
+      <Node position={[0, 88]} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}>
         |I| = {scene.hits.length}
       </Node>
     </Layout>

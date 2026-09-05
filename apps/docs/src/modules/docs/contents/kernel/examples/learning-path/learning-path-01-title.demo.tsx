@@ -32,13 +32,18 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
       position={position}
       shape="rectangle"
       cornerRadius={hasBox ? 4.5 : 0}
-      fill={fill}
-      stroke={hasBox ? NODE_STROKE : 'none'}
-      strokeWidth={hasBox ? 0.5 : 0}
-      textColor={hasBox ? LEAF_TEXT : TITLE_TEXT}
-      font={{ ...SANS_FONT, size: isTitle ? 24 : isHeader ? 14 : 12, weight: isTitle || isHeader ? 'bold' : 'normal' }}
-      padding={hasBox ? 5 : 4}
-      minimumSize={{ width, height }}
+      style={{
+        fill,
+        stroke: hasBox ? NODE_STROKE : 'none',
+        strokeWidth: hasBox ? 0.5 : 0,
+        textColor: hasBox ? LEAF_TEXT : TITLE_TEXT,
+        font: {
+          ...SANS_FONT,
+          size: isTitle ? 24 : isHeader ? 14 : 12,
+          weight: isTitle || isHeader ? 'bold' : 'normal',
+        },
+      }}
+      layout={{ padding: hasBox ? 5 : 4, minimumSize: { width, height } }}
     >
       {children}
     </Node>
