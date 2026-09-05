@@ -9,7 +9,7 @@ description: Use when changing retikz Zod/IR schema code, schema-derived public 
 
 - 只有可持久化 Source IR 定义 Zod：`IRXxx = z.infer<typeof XxxSchema>`。`XxxSchema` 不加 IR 前缀，Canonical、Input 和 compile 消费态都不设平行 Zod schema
 - `CanonicalXxx` 是由 `IRXxx` 用 `Omit`、`Pick`、交叉或字段替换派生的内部完整形态，定义在纵向领域 `resolve/<domain>/types.ts`。`InputXxx` 是 Vanilla API 包的 TypeScript authoring API，不设 schema，也不作为持久化格式
-- unknown JSON 在 schema / parse 边界显式 parse 一次；公开 compile 已接收 TypeScript 约束的 `IRXxx` 时不得重复 parse。纵向领域 `resolveXxx` 负责 `IRXxx + XxxResolveContext -> CanonicalXxx / XxxResolution`
+- unknown JSON 在 owner schema / parse 边界显式 parse 一次，并直接使用 parse 结果作为 Source IR；公开 compile 已接收 TypeScript 约束的 `IRXxx` 时不得重复 parse。纵向领域 `resolveXxx` 负责 `IRXxx + XxxResolveContext -> CanonicalXxx / XxxResolution`
 
 retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序列化边界、派生 TS 类型和文档 API 表都应从 schema 出发。改 schema 前先确认这是 IR 层契约，不是 provider / compile / adapter 的运行时能力。
 
@@ -18,8 +18,8 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - IR 必须 100% JSON 可序列化，不接收函数、ReactNode、class 实例或 renderer 专属对象。
 - 公开 IR 数据类型用 `z.infer<typeof XxxSchema>` 派生，不手写平行 interface。
 - schema 负责 Source IR 契约与可在 Source IR 表达的跨字段语义校验；纵向领域 `resolve/` 负责 context lookup、优先级、默认、Canonical 化后才出现的领域不变量和领域值转换；pipeline / compile 负责 context 生命周期、阶段调度、lowering、emit 和 renderer 策略
-- JSON、持久化配置等外部数据在 schema / parse 入口完成一次 parse，得到明确的 Source IR；Vanilla API 的 `normalizeXxx` 只把 `InputXxx` 组装为 IR，纵向领域 `resolveXxx` 将 IR 与当前 context 确定为 Canonical / Resolution。不要在内部重复做 schema 已覆盖的类型判断，或为 TypeScript 已经排除的类型错误增加 `throw`
-- 只在 schema / parser 结果会直接暴露给外部或通过公开 API 返回时冻结；内部 canonical 数据和中间对象不额外使用 `Object.freeze`
+- JSON、持久化配置等外部数据只在 owner schema / parse 入口用 Zod 完成一次校验，并直接使用 `parse` / `safeParse` 的成功结果作为 Source IR；不得在 schema 前后增加通用 JSON walker、`undefined` 过滤、字段清理、结构优化、克隆、冻结或第二次通用 JSON schema 复核。Vanilla API 的 `normalizeXxx` 只把 `InputXxx` 组装为 IR，纵向领域 `resolveXxx` 将 IR 与当前 context 确定为 Canonical / Resolution。不要在内部重复做 schema 已覆盖的类型判断，或为 TypeScript 已经排除的类型错误增加 `throw`
+- 只有独立的 runtime callback 变异隔离或公开 immutable output 契约，才可在精确 schema parse 之后单独复制或冻结；这类操作不属于 Source IR 校验，内部 canonical 数据和中间对象不额外复制或冻结
 - 闭合对象 schema 优先用 `z.strictObject({...})`；不要新增 `z.object({...}).strict()`，除非已有链式组合无法直接表达。
 - 字段级约束写在字段 schema 上；跨字段、跨 kind 规则放最终 schema 的 `.superRefine(...)`。
 - schema 改动影响公开 IR / DSL / docs demo 时，同步 docs、schema registry、测试和示例。
