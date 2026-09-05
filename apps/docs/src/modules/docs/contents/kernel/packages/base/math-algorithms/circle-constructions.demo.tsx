@@ -23,7 +23,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const isTriangleScheme = values.scheme === 'circumcircle' || values.scheme === 'incircle';
 
   return (
-    <Layout width={400} height={260} viewBox={{ x: -165, y: -115, width: 330, height: 230 }}>
+    <Layout viewBox={{ x: -165, y: -115, width: 330, height: 230 }}>
       {isTriangleScheme ? (
         <Draw way={[...vertices, vertices[0]]} style={{ stroke: 'darkorange', strokeWidth: 2 }} />
       ) : null}

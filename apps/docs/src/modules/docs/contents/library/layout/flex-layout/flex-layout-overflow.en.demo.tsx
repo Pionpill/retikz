@@ -5,7 +5,7 @@ import { Layout, Node } from '@retikz/react';
 
 /** Compares visible and clipped output when fixed geometry refuses a smaller slot */
 const Demo: FC = () => (
-  <Layout width={460} height={170}>
+  <Layout>
     <FlexLayout direction="column" gap={18}>
       <LayoutItem kind="flex" itemKey="visible-row">
         <FlexLayout

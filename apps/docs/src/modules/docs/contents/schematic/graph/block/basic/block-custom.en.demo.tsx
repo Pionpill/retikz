@@ -15,7 +15,7 @@ export const previewControls = blockCustomControls;
 
 /** Composes custom Block content from open slots and an ordinary Core Node */
 export const BlockCustomPreview = (values: PreviewControlValuesFor<typeof blockCustomControls>) => (
-  <Graph width={420} height={340} viewBox={{ x: -90, y: -64, width: 420, height: 340 }}>
+  <Graph viewBox={{ x: -90, y: -64, width: 420, height: 340 }}>
     <Block id="user-service">
       <BlockHeader
         icon={

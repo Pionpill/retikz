@@ -44,8 +44,6 @@ const availabilityPredicate = defineEntityPredicate({
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Graph
-    width={420}
-    height={170}
     viewBox={{ x: 0, y: 0, width: 420, height: 170 }}
     entityRoles={[serviceRole]}
     entityKinds={[gatewayKind]}

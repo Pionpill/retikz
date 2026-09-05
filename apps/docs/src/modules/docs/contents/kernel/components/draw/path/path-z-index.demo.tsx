@@ -10,7 +10,7 @@ export const previewControls = pathZIndexControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={220} height={200} viewBox={{ x: 0, y: 0, width: 220, height: 200 }}>
+    <Layout viewBox={{ x: 0, y: 0, width: 220, height: 200 }}>
       <Path zIndex={values.zIndex} style={{ fill: 'dodgerblue', stroke: 'dodgerblue', strokeWidth: 2 }}>
         <Step kind="move" to={[20, 20]} />
         <Step kind="line" to={[120, 20]} />

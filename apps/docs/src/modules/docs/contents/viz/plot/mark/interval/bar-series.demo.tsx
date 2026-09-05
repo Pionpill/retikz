@@ -19,12 +19,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const isPolar = values[BAR_SERIES_COORDINATE_ID] === 'polar2D';
 
   return (
-    <Layout
-      width={400}
-      height={280}
-      viewBox={{ x: -16, y: -16, width: 432, height: 312 }}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Layout viewBox={{ x: -16, y: -16, width: 432, height: 312 }}>
       <Plot data={sales} width={400} height={280} coordinate={isPolar ? 'polar2D' : undefined}>
         <IntervalMark
           x="quarter"

@@ -15,8 +15,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Layout
-      width={400}
-      height={186}
       viewBox={{ x: -280, y: -130, width: 560, height: 260 }}
       pathKinds={[RibbonPathKindDefinition]}
       rootScope={{ style: { color: '#172033' } }}

@@ -7,7 +7,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  * @description 与简介页复用同一视觉语言：包名加粗、职责置于下方，实线表示主构建链，虚线表示次要直接依赖。
  */
 const Demo: FC = () => (
-  <Layout width={640} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node id="math" position={[-270, 0]} style={{ stroke: 'none', font: { size: 15, weight: 'bold' } }}>
       @retikz/math
     </Node>

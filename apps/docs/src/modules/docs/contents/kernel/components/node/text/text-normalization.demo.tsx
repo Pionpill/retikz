@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Text 与 Node 文本输入归一流程图 */
 const Demo: FC = () => (
-  <Layout width={600} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="text-prop"
       position={[-225, -40]}

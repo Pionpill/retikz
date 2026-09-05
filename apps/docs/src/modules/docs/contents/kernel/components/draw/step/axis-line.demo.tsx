@@ -42,8 +42,6 @@ const connectionOf = (values: AxisLineValues): ReactNode => {
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Layout
-    width={400}
-    height={220}
     viewBox={{ x: -150, y: -100, width: 300, height: 200 }}
     rootScope={{
       defaults: {

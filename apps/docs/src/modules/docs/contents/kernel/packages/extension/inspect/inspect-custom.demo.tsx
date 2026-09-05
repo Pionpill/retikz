@@ -36,7 +36,7 @@ const Curve: FC<{ inspect?: boolean }> = props => {
 
 /** 在同一个 registry 中组合内置控制点与第三方端点 Inspector */
 const Demo: FC = () => (
-  <InspectLayout registry={registry} width={420} height={220} viewBox={{ x: -210, y: -110, width: 420, height: 220 }}>
+  <InspectLayout registry={registry}>
     <Curve inspect />
   </InspectLayout>
 );
@@ -45,7 +45,7 @@ const Demo: FC = () => (
 export const previewSource = {
   deriveIR: false,
   canonicalRender: () => (
-    <Layout width={420} height={220} viewBox={{ x: -210, y: -110, width: 420, height: 220 }}>
+    <Layout>
       <Curve />
     </Layout>
   ),

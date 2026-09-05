@@ -5,7 +5,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 const ARROW_COLOR = '#9ca3af';
 
 const Demo: FC = () => (
-  <Layout width={640} height={160} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node id="v01" position={[-250, -45]} style={{ stroke: 'none' }}>
       v0.1 (current)
     </Node>

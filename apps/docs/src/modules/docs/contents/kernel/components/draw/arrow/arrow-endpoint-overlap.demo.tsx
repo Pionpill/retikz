@@ -8,7 +8,7 @@ import { arrowEndpointOverlapControls, previewControlContract } from './arrow-en
 
 export const previewControls = arrowEndpointOverlapControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout width={380} height={170} viewBox={{ x: -170, y: -75, width: 340, height: 150 }}>
+  <Layout viewBox={{ x: -170, y: -75, width: 340, height: 150 }}>
     <Coordinate id="A" position={[-120, 0]} />
     <Node
       id="B"

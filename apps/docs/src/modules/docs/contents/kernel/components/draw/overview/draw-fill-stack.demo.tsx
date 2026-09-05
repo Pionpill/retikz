@@ -11,7 +11,7 @@ export const previewControls = drawFillStackControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={360} height={260} viewBox={{ x: 0, y: 0, width: 220, height: 190 }}>
+    <Layout viewBox={{ x: 0, y: 0, width: 220, height: 190 }}>
       <Draw
         way={[[20, 20], [120, 20], [120, 120], [20, 120], DrawWay.Cycle]}
         zIndex={values.zIndexA}

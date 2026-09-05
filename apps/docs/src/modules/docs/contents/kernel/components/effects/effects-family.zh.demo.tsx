@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** 效果家族从图元输入到 Scene 的职责关系图 */
 const Demo: FC = () => (
-  <Layout width={700} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="inputs"
       position={[-250, -40]}

@@ -28,12 +28,7 @@ const sourceBoundary = (centerX: number) => (
 );
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    width={440}
-    height={220}
-    viewBox={{ x: -220, y: -110, width: 440, height: 220 }}
-    clips={[CircleClipDefinition, EllipseClipDefinition]}
-  >
+  <Layout viewBox={{ x: -220, y: -110, width: 440, height: 220 }} clips={[CircleClipDefinition, EllipseClipDefinition]}>
     {sourceBoundary(-105)}
     <Scope clip={{ kind: 'circle', cx: -105, cy: 0, r: values.circleRadius }}>{clippedContent(-105)}</Scope>
     {sourceBoundary(105)}

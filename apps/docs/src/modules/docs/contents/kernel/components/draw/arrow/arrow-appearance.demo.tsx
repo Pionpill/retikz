@@ -12,8 +12,6 @@ export const previewControls = arrowAppearanceControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout
-      width={400}
-      height={182}
       viewBox={{ x: -40, y: -100, width: 440, height: 200 }}
       arrows={[DiamondArrowDefinition, OpenDiamondArrowDefinition]}
     >

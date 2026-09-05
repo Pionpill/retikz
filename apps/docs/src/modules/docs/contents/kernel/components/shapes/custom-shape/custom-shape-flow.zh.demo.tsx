@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** 自定义形状从 JSON 引用与运行时定义汇合到 Scene 和连接几何的流程 */
 const Demo: FC = () => (
-  <Layout width={560} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="ref"
       position={[-190, -60]}

@@ -14,7 +14,7 @@ Block、Group、Entity 与 Relation 也是独立的 Tier 2 composite，可以直
 Graph 作为顶层 React 组件时，和 Layout、Plot、Table 一样建立一个 Scene 宿主，不需要再包一层 Layout：
 
 ```tsx
-<Graph width={420} height={160}>
+<Graph>
   <Entity id="service" role="activity" position={[120, 80]}>
     服务
   </Entity>
@@ -24,7 +24,7 @@ Graph 作为顶层 React 组件时，和 Layout、Plot、Table 一样建立一�
 如果外层已经有 Layout，Graph 只下沉为影响局部内容的一个 Scope，不创建第二个 SVG 或 Canvas：
 
 ```tsx
-<Layout width={800} height={220}>
+<Layout>
   <Graph transforms={[{ kind: 'translate', x: 80, y: 40 }]}>
     <Entity role="activity" position={[120, 80]}>
       局部内容

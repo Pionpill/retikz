@@ -24,8 +24,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Graph
-      width={420}
-      height={180}
       viewBox={{ x: 0, y: 0, width: 420, height: 180 }}
       {...(color === 'currentColor'
         ? {}

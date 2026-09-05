@@ -7,7 +7,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
  * @description A string flat style prop first matches a field name, then tries a valid constant after a miss; the fixed binding type reads either a canonical row or its constant value before reaching the channel consumer
  */
 const Demo: FC = () => (
-  <Layout width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="input"
       position={[-225, -80]}

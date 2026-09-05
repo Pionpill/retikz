@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Plot 主 lowering 与 lineage、locator 独立运行路径的关系 */
 const Demo: FC = () => (
-  <Layout width={800} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="inputs"
       position={[-320, -10]}

@@ -10,7 +10,7 @@ export const previewControls = pathStrokePaintControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={171} viewBox={{ x: -210, y: -90, width: 420, height: 180 }}>
+    <Layout viewBox={{ x: -210, y: -90, width: 420, height: 180 }}>
       <Path
         style={{
           stroke: {

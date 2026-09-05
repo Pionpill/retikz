@@ -59,12 +59,7 @@ const SECTOR_TIPS: Array<[number, number]> = [
 ];
 
 const Demo: FC = () => (
-  <Layout
-    width={520}
-    height={333}
-    viewBox={{ x: -200, y: -106, width: 400, height: 256 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     {/* 第一排 · 左：8 个 Web 方位 anchor */}
     <Rectangle center={[RA.x, RA.y]} width={RA.w * 2} height={RA.h * 2} {...RECT} />
     <Circle center={[RA.x, RA.y]} radius={3} style={{ fill: 'dodgerblue', stroke: 'none' }} />

@@ -17,7 +17,7 @@ const CSC30 = 1 / SIN30; // y 轴上的截距 = 1/sin(α)
 const COT30 = 1 / TAN30; // 顶部水平切线与原点射线的距离 = 1/tan(α)
 
 const Demo: FC = () => (
-  <Layout width={760} height={480}>
+  <Layout>
     {/* 背景网格 */}
     {[-100, -50, 0, 50, 100].map(v => (
       <Fragment key={`grid-${v}`}>

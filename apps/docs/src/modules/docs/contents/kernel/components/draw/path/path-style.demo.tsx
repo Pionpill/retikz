@@ -12,7 +12,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const thickness = values.thickness === 'custom' ? undefined : values.thickness;
 
   return (
-    <Layout width={400} height={218} viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
+    <Layout viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
       <Path
         thickness={thickness}
         style={{

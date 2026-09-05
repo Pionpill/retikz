@@ -34,7 +34,7 @@ const Curve: FC<{ inspect?: boolean }> = props => {
 
 /** 使用内置 Path Inspector 显示三次贝塞尔控制点 */
 const Demo: FC = () => (
-  <InspectLayout registry={registry} width={360} height={180} viewBox={{ x: -180, y: -90, width: 360, height: 180 }}>
+  <InspectLayout registry={registry}>
     <Curve inspect />
   </InspectLayout>
 );
@@ -43,7 +43,7 @@ const Demo: FC = () => (
 export const previewSource = {
   deriveIR: false,
   canonicalRender: () => (
-    <Layout width={360} height={180} viewBox={{ x: -180, y: -90, width: 360, height: 180 }}>
+    <Layout>
       <Curve />
     </Layout>
   ),

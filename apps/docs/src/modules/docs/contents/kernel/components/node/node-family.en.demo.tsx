@@ -8,7 +8,7 @@ import { Coordinate, Draw, Layout, Node, Text } from '@retikz/react';
  *   nothing, so two lines converging on the same point reveal its position
  */
 const Demo: FC = () => (
-  <Layout width={560} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     {/* Node: a named primitive with shape and text */}
     <Node id="nodeDemo" position={[-190, -5]} style={{ stroke: 'none', fill: 'none', font: { weight: 'bold' } }}>
       Node

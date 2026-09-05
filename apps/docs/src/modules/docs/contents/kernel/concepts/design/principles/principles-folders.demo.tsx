@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Core 源码目录的数据主线与能力依赖 */
 const Demo: FC = () => (
-  <Layout width={760} height={290} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="parse"
       position={[-270, 30]}

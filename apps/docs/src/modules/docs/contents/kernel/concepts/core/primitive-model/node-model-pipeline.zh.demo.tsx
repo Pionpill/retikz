@@ -3,12 +3,7 @@ import type { FC } from 'react';
 import { Draw, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout
-    width={610}
-    height={80}
-    viewBox={{ x: -320, y: -40, width: 610, height: 80 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     <Node id="s1" position={[-247, 0]} style={{ stroke: 'none' }}>
       position + 文本
     </Node>

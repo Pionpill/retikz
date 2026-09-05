@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** Runtime flow where Plot enriches Data lineage with visual semantics */
 const Demo: FC = () => (
-  <Layout width={600} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="data"
       position={[-230, 0]}

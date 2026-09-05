@@ -7,7 +7,7 @@ import { Legend, LegendItem, LegendTitle, Surface } from '@retikz/standard-react
 
 /** 展示 Diagram Framework 对 Presentation、绘图核心、图例与外框的统一装配 */
 const Demo: FC = () => (
-  <Layout width={640} height={350} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Surface
       id="diagram-frame"
       padding={{ x: 28, y: 24 }}

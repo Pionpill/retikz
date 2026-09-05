@@ -37,7 +37,7 @@ const cross = definePattern({
 });
 
 const Demo: FC = () => (
-  <Layout width={200} height={120} patterns={[cross]}>
+  <Layout patterns={[cross]}>
     <Node
       id="a"
       position={[0, 0]}

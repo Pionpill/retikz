@@ -43,7 +43,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const segments = curve.catmullRomToCubic(points, values.tension);
 
   return (
-    <Layout width={400} height={260} viewBox={{ x: -175, y: -120, width: 350, height: 240 }}>
+    <Layout viewBox={{ x: -175, y: -120, width: 350, height: 240 }}>
       <Draw way={points} style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }} />
       <Path style={{ stroke: 'darkorange', strokeWidth: 2 }}>
         <Step kind="move" to={points[0]} />

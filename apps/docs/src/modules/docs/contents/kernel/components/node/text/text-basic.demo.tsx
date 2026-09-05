@@ -4,7 +4,7 @@ import { Layout, Node, Text } from '@retikz/react';
 
 /** 最小 <Text> 用法：在 <Node> 里写一行带样式的行。 */
 const Demo: FC = () => (
-  <Layout width={300} height={80}>
+  <Layout>
     <Node id="a" position={[0, 0]} layout={{ align: 'start' }}>
       <Text fill="red" font={{ weight: 'bold' }}>
         Heading

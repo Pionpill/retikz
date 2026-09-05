@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { Draw, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout width={760} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node id="ir" position={[-340, 0]} style={{ stroke: 'none' }}>
       IR
     </Node>

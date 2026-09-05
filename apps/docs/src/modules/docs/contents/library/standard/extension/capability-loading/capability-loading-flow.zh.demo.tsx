@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Standard Definition 从装载到 Scene 的统一编译路径 */
 const Demo: FC = () => (
-  <Layout width={700} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="definitions"
       position={[-250, 0]}

@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -23,7 +23,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     }}
   >
     <ChartData data={messiWorldCupShots} />
-    <ChartLayout width={800} height={500} />
     <ScatterEncodings x="x" y="y" color="outcome" />
     <ChartTitle>Lionel Messi 的 2022 世界杯射门空间分布</ChartTitle>
     <ChartSubtitle>32 次常规时间与加时赛射门；StatsBomb 120 × 80 坐标；圆点为起点，细线指向射门终点</ChartSubtitle>

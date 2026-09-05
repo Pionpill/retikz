@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** 同一条 Program DAG 依赖边按上游 outcome 选择下游执行或复用 */
 const Demo: FC = () => (
-  <Layout width={520} height={330} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="upstream-outcomes">
       <LogicFigureFrameTitle>Upstream outcome</LogicFigureFrameTitle>
       <Node

@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** shadow 配置到双后端的局部管线图 */
 const Demo: FC = () => (
-  <Layout width={420} height={440} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="input"
       position={[0, -175]}

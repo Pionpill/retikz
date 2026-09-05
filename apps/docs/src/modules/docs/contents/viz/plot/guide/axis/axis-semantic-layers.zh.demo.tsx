@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Axis guide 下沉为独立 scope 后进入 Plot 语义层级的关系 */
 const Demo: FC = () => (
-  <Layout width={760} height={225} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="axis-guide"
       position={[-290, 20]}

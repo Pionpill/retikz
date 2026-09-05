@@ -5,7 +5,7 @@ import { Layout, Node, Path, Step } from '@retikz/react';
 
 // 入场合集：fadeIn / scaleIn / grow / slideIn / growUp 各一个节点 + drawOn 一条路径，加载时各播一次
 const Demo: FC = () => (
-  <Layout width={460} height={210}>
+  <Layout>
     <Node id="fade" position={[-170, -55]} animations={[fadeIn()]} style={{ fill: '#3b82f6' }}>
       fadeIn
     </Node>

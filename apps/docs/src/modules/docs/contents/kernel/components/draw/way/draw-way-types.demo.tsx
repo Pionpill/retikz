@@ -4,8 +4,6 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
   <Layout
-    width={400}
-    height={160}
     rootScope={{
       defaults: {
         node: {

@@ -14,8 +14,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Layout
-      width={400}
-      height={220}
       viewBox={{ x: -170, y: -110, width: 340, height: 220 }}
       rootScope={{
         defaults: {

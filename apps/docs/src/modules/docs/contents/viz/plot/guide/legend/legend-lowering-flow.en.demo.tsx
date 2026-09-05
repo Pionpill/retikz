@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Legend reuses channel descriptors, selects a form, and lowers into an independent scope */
 const Demo: FC = () => (
-  <Layout width={760} height={225} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="legend-guide"
       position={[-275, -50]}

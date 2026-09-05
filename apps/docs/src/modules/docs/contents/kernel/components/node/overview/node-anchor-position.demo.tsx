@@ -23,7 +23,7 @@ const targetOf = (values: NodeAnchorPositionValues, withOffset: boolean): IRNode
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const target = targetOf(values, true);
   return (
-    <Layout width={400} height={230} viewBox={{ x: -220, y: -155, width: 440, height: 310 }}>
+    <Layout viewBox={{ x: -220, y: -155, width: 440, height: 310 }}>
       <Node
         id="A"
         position={[-28, 0]}

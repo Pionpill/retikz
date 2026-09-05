@@ -5,7 +5,7 @@ import { Layout, Node } from '@retikz/react';
 
 /** 展示显式 tracks、fraction、span 与自动放置 */
 const Demo: FC = () => (
-  <Layout width={460} height={210}>
+  <Layout>
     <GridLayout
       columns={[
         { kind: 'fixed', value: 92 },

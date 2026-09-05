@@ -81,7 +81,7 @@ const Stage: FC<StageProps> = props => {
 export const TablePresentationFlow: FC<TablePresentationFlowProps> = props => {
   const { labels } = props;
   return (
-    <Layout width={540} height={620} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout>
       <Stage id="style" y={-280} label={labels.style} />
       <Stage id="cell" y={-210} label={labels.cell} />
       <Stage id="encoding" y={-140} label={labels.encoding} />

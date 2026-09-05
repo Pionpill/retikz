@@ -10,12 +10,7 @@ import { ContourShapeDefinition, StarShapeDefinition } from '@retikz/standard/sh
  *   on the bottom row hints that Node shapes are connectable. Captions / row labels use gray stroke/fill-none text.
  */
 const Demo: FC = () => (
-  <Layout
-    width={660}
-    height={240}
-    style={{ maxWidth: '100%', height: 'auto' }}
-    shapes={[StarShapeDefinition, ContourShapeDefinition]}
-  >
+  <Layout shapes={[StarShapeDefinition, ContourShapeDefinition]}>
     {/* Row labels */}
     <Node
       id="rowPath"

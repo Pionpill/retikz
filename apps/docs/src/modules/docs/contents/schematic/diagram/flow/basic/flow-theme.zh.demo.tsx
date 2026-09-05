@@ -15,10 +15,7 @@ export const previewControls = flowThemeControls;
 /** 用指定 controls 值渲染中文 Flow 全局配置 */
 export const renderFlowThemePreview = (values: PreviewControlValuesFor<typeof flowThemeControls>): ReactElement => (
   <FlowDiagram
-    width={420}
-    height={240}
     viewBox={{ x: -71, y: -82.5, width: 420, height: 240 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
     flowTheme={{
       entity: {
         style: {

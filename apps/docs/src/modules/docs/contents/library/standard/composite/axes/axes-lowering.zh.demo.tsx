@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Axes IR 下沉为 Core Path 与 Node 的中文逻辑图 */
 const Demo: FC = () => (
-  <Layout width={760} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="axes-ir"
       position={[-280, 0]}

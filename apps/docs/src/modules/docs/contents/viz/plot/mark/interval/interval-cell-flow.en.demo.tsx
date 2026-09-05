@@ -79,7 +79,7 @@ const mobileNodes: Array<FlowNode> = [
 const Demo: FC = () => (
   <>
     <div className="hidden sm:block">
-      <Layout width={860} height={230} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         {desktopNodes.map(node => (
           <Node
             key={node.id}
@@ -120,7 +120,7 @@ const Demo: FC = () => (
     </div>
 
     <div className="sm:hidden">
-      <Layout width={360} height={150} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         {mobileNodes.map(node => (
           <Node
             key={node.id}

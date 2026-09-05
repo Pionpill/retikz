@@ -8,7 +8,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  *   Shipped parts use the default color (currentColor); planned / unimplemented ones (Text DSL, adapters other than React) are dimmed to gray.
  */
 const Demo: FC = () => (
-  <Layout width={640} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node id="sugar" position={[-160, -54]} style={{ stroke: 'none' }}>
       Sugar JSX
     </Node>

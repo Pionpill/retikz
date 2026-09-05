@@ -34,7 +34,7 @@ const plotThemeTokenRules = [
 /** Plot token override 通过当前 Plot resolver 进入同一张图表 */
 export default function ThemeTokensDemo() {
   return (
-    <Layout width={440} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout>
       <Plot
         data={points}
         width={440}

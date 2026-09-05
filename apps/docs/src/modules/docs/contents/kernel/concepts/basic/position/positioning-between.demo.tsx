@@ -11,7 +11,7 @@ const pointStyle = {
 const labelFont = { size: 12 };
 
 const Demo: FC = () => (
-  <Layout width={420} height={140}>
+  <Layout>
     <Node id="a" position={[0, 0]}>
       A
     </Node>

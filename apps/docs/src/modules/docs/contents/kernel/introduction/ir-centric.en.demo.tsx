@@ -10,9 +10,6 @@ const planned = { ...textOnly, textColor: 'gray' } as const;
 /** “IR at the Center” logic figure automatically laid out from Flow Source */
 const Demo: FC = () => (
   <FlowDiagram
-    width={760}
-    height="auto"
-    style={{ maxWidth: '100%', height: 'auto' }}
     presentation={{ description: 'gray = planned, not shipped yet' }}
     diagramTheme={{ presentation: { description: { textColor: 'gray', font: { size: 12 } } } }}
     flowTheme={{

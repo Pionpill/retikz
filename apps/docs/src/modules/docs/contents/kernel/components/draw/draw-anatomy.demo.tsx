@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Draw 家族从便捷写法到 Kernel 路径的职责关系图 */
 const Demo: FC = () => (
-  <Layout width={620} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="way"
       position={[-250, -40]}

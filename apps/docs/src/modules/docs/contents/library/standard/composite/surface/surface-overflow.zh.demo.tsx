@@ -5,7 +5,7 @@ import { Surface } from '@retikz/standard-react';
 
 /** 对比 Surface visible 与 clip overflow 的中文示例 */
 const Demo: FC = () => (
-  <Layout width={520} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Surface
       id="visible-overflow"
       transforms={[{ kind: 'translate', x: -145, y: 0 }]}

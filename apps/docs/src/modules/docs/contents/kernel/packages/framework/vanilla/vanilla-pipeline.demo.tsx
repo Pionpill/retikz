@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** @retikz/vanilla 将 InputScene 归一为 Core IR，再交给 Core 编译为 Scene */
 const Demo: FC = () => (
-  <Layout width={860} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="spec"
       position={[-360, 0]}

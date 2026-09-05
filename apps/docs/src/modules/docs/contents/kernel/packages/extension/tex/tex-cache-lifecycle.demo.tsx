@@ -30,7 +30,7 @@ const renderLifecycleNode = ({ id, position, title, detail, width = 116, color }
 );
 
 const DesktopFigure: FC = () => (
-  <Layout width={760} height={430} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="cache-group">
       <LogicFigureFrameTitle>Lowerer cache</LogicFigureFrameTitle>
       {renderLifecycleNode({
@@ -175,7 +175,7 @@ const DesktopFigure: FC = () => (
 
 /** 在窄屏上合并同一规则的连续状态，避免固定高度预览裁掉首尾节点 */
 const MobileFigure: FC = () => (
-  <Layout width={360} height={380} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="mobile-cache-group">
       <LogicFigureFrameTitle>Lowerer cache</LogicFigureFrameTitle>
       {renderLifecycleNode({

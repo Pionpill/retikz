@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { Ellipse, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout width={380} height={145}>
+  <Layout>
     <Ellipse center={[52, 50]} radius={{ x: 38, y: 24 }} style={{ strokeWidth: 2 }} />
     <Node position={[52, 105]} style={{ stroke: 'none', textColor: 'gray', font: { size: 11 } }}>
       radii

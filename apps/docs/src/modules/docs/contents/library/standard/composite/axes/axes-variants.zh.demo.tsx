@@ -5,7 +5,7 @@ import { Axes } from '@retikz/standard-react';
 
 /** Axes 常见语义变体的中文并列对比 */
 const Demo: FC = () => (
-  <Layout width={760} height={145} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node position={[95, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       仅正半轴
     </Node>

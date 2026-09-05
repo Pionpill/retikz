@@ -60,7 +60,7 @@ const formTextOf = (values: PreviewControlValuesFor<typeof flowBasicControls>): 
 
 /** 用指定 controls 值渲染中文表单填写流程 */
 export const renderFlowBasicPreview = (values: PreviewControlValuesFor<typeof flowBasicControls>): ReactElement => (
-  <FlowDiagram width={740} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <FlowDiagram>
     <FlowEntities
       items={[
         { id: 'user-input', text: '用户输入', role: 'participant' },

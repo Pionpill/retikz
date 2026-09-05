@@ -35,7 +35,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           };
 
   return (
-    <Layout width={280} height={190} viewBox={{ x: -140, y: -95, width: 280, height: 190 }}>
+    <Layout viewBox={{ x: -140, y: -95, width: 280, height: 190 }}>
       <Node
         position={[0, 0]}
         shape="rectangle"

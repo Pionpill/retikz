@@ -10,12 +10,7 @@ import { crossExampleControls, previewControlContract } from './cross-example.co
 export const previewControls = crossExampleControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    width={320}
-    height={210}
-    viewBox={{ x: -100, y: -80, width: 200, height: 160 }}
-    shapes={[CrossShapeDefinition]}
-  >
+  <Layout viewBox={{ x: -100, y: -80, width: 200, height: 160 }} shapes={[CrossShapeDefinition]}>
     <Node
       position={[0, 0]}
       shape={{

@@ -7,7 +7,7 @@ import { PreviewManualTable as ManualTable } from '@/modules/docs/components/com
 import { manualRows } from './table-manual.zh.data';
 
 const Demo: FC = () => (
-  <Layout width={288} height={158} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <ManualTable
       id="status-manual"
       rows={manualRows}

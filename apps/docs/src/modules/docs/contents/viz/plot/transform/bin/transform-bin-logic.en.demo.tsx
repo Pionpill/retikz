@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** bin edge resolution, bucketing, reducer metrics, and per-bin output */
 const Demo: FC = () => (
-  <Layout width={680} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-290, 35]}

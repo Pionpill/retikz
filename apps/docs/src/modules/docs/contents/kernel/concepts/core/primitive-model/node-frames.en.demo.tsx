@@ -13,12 +13,7 @@ const OUTER_HEIGHT = INNER_HEIGHT + MARGIN * 2;
 const FONT = { size: 10 }; // match the Model Anatomy figure's visual font size (smaller viewBox)
 
 const Demo: FC = () => (
-  <Layout
-    width={480}
-    height={272}
-    viewBox={{ x: -185, y: -105, width: 370, height: 210 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     {/* Outer frame: inner frame + margin, where automatic path endpoints land */}
     <Rectangle
       center={[0, 0]}

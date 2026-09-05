@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** Row metadata and runtime events produced by Data provenance */
 const Demo: FC = () => (
-  <Layout width={700} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="pipeline"
       position={[-255, 0]}

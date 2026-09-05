@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** 保行变换与改行变换传播来源的差异 */
 const Demo: FC = () => (
-  <Layout width={700} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="single-input"
       position={[-250, -45]}

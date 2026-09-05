@@ -7,7 +7,7 @@ import { Layout, Node } from '@retikz/react';
  * @description shadow 接 Tailwind 风格预设字符串，一字直用；档位越大投影越远越柔。
  */
 const Demo: FC = () => (
-  <Layout width={560} height={140}>
+  <Layout>
     <Node position={[-220, 0]} shape="rectangle" style={{ fill: 'white', shadow: 'sm' }} layout={{ padding: 12 }}>
       sm
     </Node>

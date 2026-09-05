@@ -6,12 +6,7 @@ import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
 
 /** 使用真实线型样本解释关系语义 */
 const Demo: FC = () => (
-  <Layout
-    width={360}
-    height={190}
-    viewBox={{ x: -93.4, y: -16, width: 360, height: 190 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     <Legend kind={LegendContentKind.Items} gap={{ row: 10, column: 8 }} padding={12} sampleGap={12}>
       <LegendTitle>
         <Node id="relation-title" position={[0, 0]} text="Relationships" style={{ stroke: 'none' }} />

@@ -5,7 +5,7 @@ import { Layout, Node } from '@retikz/react';
 
 /** Demonstrates explicit tracks, fractions, spans, and auto placement */
 const Demo: FC = () => (
-  <Layout width={460} height={210}>
+  <Layout>
     <GridLayout
       columns={[
         { kind: 'fixed', value: 92 },

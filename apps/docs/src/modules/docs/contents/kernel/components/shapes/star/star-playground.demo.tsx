@@ -12,7 +12,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const innerRadius = values.outerRadius * values.innerRatio;
 
   return (
-    <Layout width={400} height={250} viewBox={{ x: -115, y: -100, width: 230, height: 200 }}>
+    <Layout viewBox={{ x: -115, y: -100, width: 230, height: 200 }}>
       <Circle
         center={[0, 0]}
         radius={values.outerRadius}

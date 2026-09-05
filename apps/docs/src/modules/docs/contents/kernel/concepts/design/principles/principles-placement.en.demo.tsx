@@ -43,7 +43,7 @@ const placementRows = [
 
 /** Capability placement decision figure for the technical principles page */
 const Demo: FC = () => (
-  <Layout width={600} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     {placementRows.map(({ id, y, signal, owner, anchor }) => (
       <Fragment key={id}>
         <Node

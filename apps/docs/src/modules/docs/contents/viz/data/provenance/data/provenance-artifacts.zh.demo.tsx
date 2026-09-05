@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** Data 来源追溯的行级元数据与运行时事件两类产物 */
 const Demo: FC = () => (
-  <Layout width={700} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="pipeline"
       position={[-255, 0]}

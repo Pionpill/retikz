@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** stack 的分组、排序、边界计算与逐行写回 */
 const Demo: FC = () => (
-  <Layout width={680} height={150} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-270, 40]}

@@ -75,9 +75,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     guides: [{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y', grid: true }, legend],
   };
 
-  return (
-    <Plot spec={spec} data={{ d: cities }} width={380} height={260} style={{ maxWidth: '100%', height: 'auto' }} />
-  );
+  return <Plot spec={spec} data={{ d: cities }} width={380} height={260} />;
 });
 
 /** canonical 状态派生的稳定源码配置 */

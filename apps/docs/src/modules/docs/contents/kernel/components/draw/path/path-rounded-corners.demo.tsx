@@ -10,7 +10,7 @@ export const previewControls = pathRoundedCornersControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={191} viewBox={{ x: -220, y: -105, width: 440, height: 210 }}>
+    <Layout viewBox={{ x: -220, y: -105, width: 440, height: 210 }}>
       <Path style={{ stroke: 'lightgray', strokeWidth: values.strokeWidth, lineJoin: values.lineJoin }}>
         <Step kind="move" to={[-170, -30]} />
         <Step to={[0, -75]} />

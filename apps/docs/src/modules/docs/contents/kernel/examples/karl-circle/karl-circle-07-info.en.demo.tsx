@@ -32,7 +32,7 @@ const LEGEND = [
 const Demo: FC = () => {
   const lowerTexState = useLowerTex();
   return (
-    <Layout width={720} height={360} lowerTex={lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined}>
+    <Layout lowerTex={lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined}>
       {/* background grid */}
       <Grid
         bounds={{ start: [-100, -100], end: [100, 100] }}

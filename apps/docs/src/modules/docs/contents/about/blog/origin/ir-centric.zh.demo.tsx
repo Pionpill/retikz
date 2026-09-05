@@ -8,7 +8,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  *   已落地的部分用默认色（currentColor），规划中 / 未实现的（Text DSL、React 以外的 adapter）用灰色弱化。
  */
 const Demo: FC = () => (
-  <Layout width={640} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node id="sugar" position={[-160, -54]} style={{ stroke: 'none' }}>
       Sugar JSX
     </Node>

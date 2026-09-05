@@ -23,7 +23,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   ];
 
   return (
-    <Layout width={400} height={218} viewBox={WayRelativeViewBox}>
+    <Layout viewBox={WayRelativeViewBox}>
       <Node id="A" position={WayRelativeStart} style={{ stroke: 'gray', dashed: true }}>
         +
       </Node>

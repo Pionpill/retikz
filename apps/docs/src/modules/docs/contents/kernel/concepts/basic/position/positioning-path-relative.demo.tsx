@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { Layout, Node, Path, Step } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout width={360} height={220}>
+  <Layout>
     <Path style={{ stroke: 'currentColor' }}>
       <Step kind="move" to={[20, 56]} />
       <Step to={{ relative: [96, 0] }} />

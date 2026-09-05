@@ -10,7 +10,7 @@ export const previewControls = nodeGeometryControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={240} viewBox={nodeGeometryFrame.viewBox}>
+    <Layout viewBox={nodeGeometryFrame.viewBox}>
       <Node id="A" position={[-150, 0]} shape="circle" style={{ stroke: 'gray', dashed: true }} layout={{ padding: 6 }}>
         a
       </Node>

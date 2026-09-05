@@ -16,12 +16,7 @@ const SHAPE_TARGET: [number, number] = [
 ];
 
 const Demo: FC = () => (
-  <Layout
-    width={520}
-    height={300}
-    viewBox={{ x: -250, y: -145, width: 500, height: 285 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     <Rectangle
       center={[0, 0]}
       width={CONTENT_WIDTH}

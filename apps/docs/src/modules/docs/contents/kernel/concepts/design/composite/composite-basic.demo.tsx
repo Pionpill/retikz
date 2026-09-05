@@ -63,6 +63,6 @@ const ir: IRScene = {
   children: [{ namespace: 'demo', type: 'barChart', data: [4, 7, 3, 8, 5, 6] }],
 };
 
-const Demo: FC = () => <Layout ir={ir} composites={[barChart]} width={260} height={140} />;
+const Demo: FC = () => <Layout ir={ir} composites={[barChart]} />;
 
 export default Demo;

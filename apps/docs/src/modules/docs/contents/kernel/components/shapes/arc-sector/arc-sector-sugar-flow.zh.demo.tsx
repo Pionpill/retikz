@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Arc / Sector Sugar 展开为 Path + Step 的局部流程图 */
 const Demo: FC = () => (
-  <Layout width={580} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="props"
       position={[-215, 0]}

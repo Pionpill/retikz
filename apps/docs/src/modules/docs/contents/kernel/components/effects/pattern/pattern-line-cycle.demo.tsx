@@ -4,7 +4,7 @@ import { Layout, Node } from '@retikz/react';
 
 /** 展示每 N 条主线与任意线型序列两种周期表达 */
 const Demo: FC = () => (
-  <Layout width={380} height={180} viewBox={{ x: -190, y: -90, width: 380, height: 180 }}>
+  <Layout>
     <Node
       position={[-95, 0]}
       shape="rectangle"

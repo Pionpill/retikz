@@ -43,7 +43,7 @@ const placementRows = [
 
 /** 技术原理页的能力归属决策图 */
 const Demo: FC = () => (
-  <Layout width={600} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     {placementRows.map(({ id, y, signal, owner, anchor }) => (
       <Fragment key={id}>
         <Node

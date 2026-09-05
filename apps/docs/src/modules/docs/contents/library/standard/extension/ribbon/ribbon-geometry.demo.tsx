@@ -57,12 +57,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const resolvedValues = values as RibbonGeometryValues;
 
   return (
-    <Layout
-      width={400}
-      height={200}
-      viewBox={{ x: -260, y: -130, width: 520, height: 260 }}
-      pathKinds={[ribbonPathKindDefinition]}
-    >
+    <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} pathKinds={[ribbonPathKindDefinition]}>
       <Path
         kind="ribbon"
         kindOptions={ribbonOf(resolvedValues)}

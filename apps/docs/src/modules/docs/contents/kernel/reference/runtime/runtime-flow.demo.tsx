@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** 从宿主适配到渲染后端的运行时主链，并标明 Parser 只是 IR 输入旁路 */
 const Demo: FC = () => (
-  <Layout width={760} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="host-group">
       <LogicFigureFrameTitle>Host adapters</LogicFigureFrameTitle>
       <Node

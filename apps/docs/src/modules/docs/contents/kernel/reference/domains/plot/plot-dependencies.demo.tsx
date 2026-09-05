@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Plot 从宿主 API 经数据处理到 Core IR 的横向主链 */
 const Demo: FC = () => (
-  <Layout width={760} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="api-group">
       <LogicFigureFrameTitle>API Layer</LogicFigureFrameTitle>
       <Node

@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** relate grouping, dual endpoint selection, projection, and relation-row output */
 const Demo: FC = () => (
-  <Layout width={780} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-330, 0]}

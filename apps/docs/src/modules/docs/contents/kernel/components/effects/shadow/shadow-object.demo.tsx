@@ -8,7 +8,7 @@ import { Layout, Node, Path, Step } from '@retikz/react';
  *   右：无 preset 的完整显式对象作用于 Path 主路径。
  */
 const Demo: FC = () => (
-  <Layout width={420} height={170}>
+  <Layout>
     {/* preset 出默认 offset/blur，color 覆盖成蓝色调 */}
     <Node
       position={[-110, 0]}

@@ -5,7 +5,7 @@ import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
 
 /** Frame header 缺省、横向与纵向组合的中文并列对比 */
 const Demo: FC = () => (
-  <Layout width={680} height={175} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Frame
       id="body-only"
       border={{ style: { stroke: 'lightgray', dashPattern: [5, 4], fill: 'lightgray', fillOpacity: 0.04 } }}

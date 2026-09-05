@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** Overall data-model flow from external rows to downstream consumers */
 const Demo: FC = () => (
-  <Layout width={700} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-245, 25]}

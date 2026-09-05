@@ -4,7 +4,7 @@ import { Layout, Node } from '@retikz/react';
 
 /** 在同一固定场景中展示全部三种内置图案 */
 const Demo: FC = () => (
-  <Layout width={360} height={140} viewBox={{ x: -180, y: -70, width: 360, height: 140 }}>
+  <Layout>
     <Node
       position={[-115, 0]}
       shape="rectangle"

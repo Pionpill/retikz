@@ -6,12 +6,7 @@ import { Legend, LegendRamp, LegendTick, LegendTitle } from '@retikz/standard-re
 
 /** 带归一化刻度的连续样本 */
 const Demo: FC = () => (
-  <Layout
-    width={430}
-    height={150}
-    viewBox={{ x: -99.6, y: -20, width: 430, height: 150 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     <Legend kind={LegendContentKind.Ramp} direction={LegendDirection.Horizontal} padding={12} sampleGap={8}>
       <LegendTitle>
         <Node id="temperature-title" position={[0, 0]} text="Temperature" style={{ stroke: 'none' }} />

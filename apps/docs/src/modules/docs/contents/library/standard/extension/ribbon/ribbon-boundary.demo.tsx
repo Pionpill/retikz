@@ -4,13 +4,7 @@ import { Layout, Path } from '@retikz/react';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 
 const Demo: FC = () => (
-  <Layout
-    width={560}
-    height={240}
-    viewBox={{ x: -280, y: -120, width: 560, height: 240 }}
-    pathKinds={[RibbonPathKindDefinition]}
-    rootScope={{ style: { color: '#172033' } }}
-  >
+  <Layout pathKinds={[RibbonPathKindDefinition]} rootScope={{ style: { color: '#172033' } }}>
     <Path
       kind="ribbon"
       kindOptions={{

@@ -1539,7 +1539,8 @@ describe('preview controls registry', () => {
       expect(previewNames).toEqual(['grid-basic', 'grid-variants', 'grid-playground', 'grid-lowering']);
       expect(pageSource).toContain('<ComponentPreview files="grid-variants" size="sm" />');
       expect(pageSource).toContain('<ComponentPreview files="grid-lowering" hideCode');
-      expect(variantsSource).toContain('<Layout width={760} height={145}');
+      expect(variantsSource).toContain('<Layout>');
+      expect(variantsSource).not.toMatch(/<Layout\b[^>]*\b(?:width|height)=/);
       expect(variantsSource?.match(/position=\{\[\d+, 18\]\}/gu)).toHaveLength(4);
     }
 

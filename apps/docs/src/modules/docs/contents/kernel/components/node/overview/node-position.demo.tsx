@@ -31,7 +31,7 @@ const positionOf = (values: NodePositionValues): NodeProps['position'] => {
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={229} viewBox={{ x: -280, y: -160, width: 560, height: 320 }}>
+    <Layout viewBox={{ x: -280, y: -160, width: 560, height: 320 }}>
       <Draw
         way={[
           [-240, 0],

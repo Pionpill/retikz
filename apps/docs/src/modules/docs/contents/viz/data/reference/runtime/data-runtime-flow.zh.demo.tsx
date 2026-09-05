@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Data 契约、运行时依赖、处理阶段与结果之间的关系图 */
 const Demo: FC = () => (
-  <Layout width={520} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="external-rows"
       position={[0, -130]}

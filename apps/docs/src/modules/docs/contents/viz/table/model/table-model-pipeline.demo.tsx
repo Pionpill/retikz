@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Table 类型共享的结构解析、呈现、布局与下沉管线 */
 const Demo: FC = () => (
-  <Layout width={740} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="table-group">
       <LogicFigureFrameTitle>@retikz/table</LogicFigureFrameTitle>
       <Node

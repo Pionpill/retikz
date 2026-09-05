@@ -5,7 +5,7 @@ import { Layout, Node } from '@retikz/react';
 
 /** 展示 aligned、positioned、anchor、exclude 与稳定 zIndex */
 const Demo: FC = () => (
-  <Layout width={440} height={210}>
+  <Layout>
     <OverlayLayout
       size={{ x: { kind: 'fixed', value: 360 }, y: { kind: 'fixed', value: 140 } }}
       padding={12}

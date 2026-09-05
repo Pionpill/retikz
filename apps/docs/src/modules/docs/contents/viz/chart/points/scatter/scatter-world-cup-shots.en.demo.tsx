@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -24,7 +24,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     }}
   >
     <ChartData data={messiWorldCupShots} />
-    <ChartLayout width={800} height={500} />
     <ScatterEncodings x="x" y="y" color="outcome" />
     <ChartTitle>Lionel Messi's 2022 World Cup shot map</ChartTitle>
     <ChartSubtitle>

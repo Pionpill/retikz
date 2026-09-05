@@ -9,7 +9,7 @@ const stage = {
 
 /** Standard Legend 从 JSON IR 到 Core IR 与类型化产物的职责链 */
 const Demo: FC = () => (
-  <Layout width={790} height={185} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="ir"
       position={[-300, 0]}

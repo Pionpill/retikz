@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Local flow from Arc / Sector Node params to geometry capabilities */
 const Demo: FC = () => (
-  <Layout width={580} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="params"
       position={[-225, -25]}

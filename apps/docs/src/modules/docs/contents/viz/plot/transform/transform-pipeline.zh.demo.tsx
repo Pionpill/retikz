@@ -7,7 +7,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
  * @description 根级 transform 先生成共享行；图元局部 transform 再从共享行派生当前图元独有的数据视图
  */
 const Demo: FC = () => (
-  <Layout width={560} height={208} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="data"
       position={[-215, 0]}

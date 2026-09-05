@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** English logic figure for lowering Frame from Standard JSON IR to Core IR */
 const Demo: FC = () => (
-  <Layout width={760} height={100} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="frame-ir"
       position={[-285, 0]}

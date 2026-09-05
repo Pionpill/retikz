@@ -5,7 +5,7 @@ import { Surface } from '@retikz/standard-react';
 
 /** Surface 包装任意单个 Core child 的基础示例 */
 const Demo: FC = () => (
-  <Layout width={460} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Surface
       id="provider-surface"
       padding={{ x: 22, y: 16 }}

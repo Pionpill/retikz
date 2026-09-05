@@ -10,7 +10,7 @@ export const previewControls = pathMarksControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={360} height={160} viewBox={{ x: -180, y: -80, width: 360, height: 160 }}>
+    <Layout viewBox={{ x: -180, y: -80, width: 360, height: 160 }}>
       <Path
         marks={[
           { pos: values.firstPosition, mark: { kind: 'arrow', shape: 'stealth' } },

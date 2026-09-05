@@ -154,9 +154,9 @@ React `<Graph>` and `<Block>` collect arbitrary Core and Tier 2 children in auth
 Standalone and embedded Graph share the same Source contract:
 
 ```tsx
-<Graph width={420} height={160}>...</Graph>
+<Graph>...</Graph>
 
-<Layout width={800} height={220}>
+<Layout>
   <Graph transforms={[{ kind: 'translate', x: 80, y: 40 }]}>...</Graph>
 </Layout>
 ```

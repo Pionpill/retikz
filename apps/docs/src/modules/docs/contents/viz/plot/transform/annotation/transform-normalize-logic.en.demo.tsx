@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** normalize grouping, group sums, zero-sum protection, and row-preserving output */
 const Demo: FC = () => (
-  <Layout width={750} height={230} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-305, 20]}

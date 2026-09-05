@@ -10,7 +10,7 @@ export const previewControls = nodeStyledControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={180} viewBox={{ x: -200, y: -90, width: 400, height: 180 }}>
+    <Layout viewBox={{ x: -200, y: -90, width: 400, height: 180 }}>
       <Node
         id="node"
         position={[0, 0]}

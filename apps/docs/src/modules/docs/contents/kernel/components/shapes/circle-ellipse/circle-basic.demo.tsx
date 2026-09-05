@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { Circle, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout width={380} height={145}>
+  <Layout>
     <Circle center={[44, 50]} radius={28} style={{ strokeWidth: 2 }} />
     <Node position={[44, 105]} style={{ stroke: 'none', textColor: 'gray', font: { size: 11 } }}>
       radius

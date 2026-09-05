@@ -34,7 +34,7 @@ const renderMobileNode = (node: MobileFlowNode) => (
 const Demo: FC = () => (
   <>
     <div className="hidden sm:block">
-      <Layout width={800} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         <Node
           id="react"
           position={[-300, -76]}
@@ -149,7 +149,7 @@ const Demo: FC = () => (
     </div>
 
     <div className="sm:hidden">
-      <Layout width={360} height={440} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         {renderMobileNode({
           id: 'mobile-react',
           position: [-88, -176],

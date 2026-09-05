@@ -283,9 +283,9 @@ React `<Graph>` 与 `<Block>` 都按作者顺序收集任意 Core/Tier 2 childre
 Graph standalone 与嵌入模式共享同一个 Source contract：
 
 ```tsx
-<Graph width={420} height={160}>...</Graph>
+<Graph>...</Graph>
 
-<Layout width={800} height={220}>
+<Layout>
   <Graph transforms={[{ kind: 'translate', x: 80, y: 40 }]}>...</Graph>
 </Layout>
 ```

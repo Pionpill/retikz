@@ -34,7 +34,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     mode === 'gradient' ? strokeGradient : { kind: 'constant' as const, value: values[LINE_PAINT_CONTROL_IDS.stroke] };
 
   return (
-    <Plot data={revenue} width={560} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Plot data={revenue} width={560} height={240}>
       {mode === 'area' ? (
         <PathMark
           x="month"

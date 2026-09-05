@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -52,17 +52,6 @@ const expectCompletePanel = (contract: PreviewControlContract): void => {
       /^(?:ChartCoordinate|ChartExtension|Plot[A-Z]\w*|Plot|PointMark|Scatter[A-Z]\w*)(?:\.|$)/u.test(api),
     ),
   ).toBe(true);
-};
-
-const canonicalChartSize = (source: PreviewSourceConfig): { width?: number; height?: number } => {
-  const layout = canonicalDeclarationProps(source, ChartLayout);
-  return { width: layout.width as number | undefined, height: layout.height as number | undefined };
-};
-
-const canonicalChartLayout = (source: PreviewSourceConfig): { width?: number; height?: number } => {
-  const layout = canonicalDeclarationProps(source, ChartLayout);
-  const explicit = layout.layout as { width?: number; height?: number } | undefined;
-  return explicit ?? { width: layout.width as number | undefined, height: layout.height as number | undefined };
 };
 
 const canonicalScatterProps = (source: PreviewSourceConfig): Record<string, unknown> => {
@@ -322,13 +311,6 @@ describe('Viz Chart scatter controls', () => {
       expect(source).not.toContain("type: 'polar2D'");
       expect(source).not.toContain('<ChartExtension');
       expect(source).toContain('Football_pitch_metric_tr.svg');
-    }
-  });
-
-  it('为预览宿主与 Source layout 同时声明 800x500 画布', () => {
-    for (const source of [fertilityWorkZhPreviewSource, fertilityWorkEnPreviewSource]) {
-      expect(canonicalChartSize(source)).toEqual({ width: 800, height: 500 });
-      expect(canonicalChartLayout(source)).toEqual({ width: 800, height: 500 });
     }
   });
 

@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** relate 的分组、双端点选择、字段投影与关系行输出 */
 const Demo: FC = () => (
-  <Layout width={780} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-330, 0]}

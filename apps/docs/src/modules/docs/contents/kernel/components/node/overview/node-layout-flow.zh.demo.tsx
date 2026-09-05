@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Node 从 props 收敛到可见图元与命名几何的流程图 */
 const Demo: FC = () => (
-  <Layout width={560} height={290} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="props"
       position={[-205, -55]}

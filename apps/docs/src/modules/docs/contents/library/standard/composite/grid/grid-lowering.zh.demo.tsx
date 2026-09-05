@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Grid IR 下沉为 Core Path 的中文逻辑图 */
 const Demo: FC = () => (
-  <Layout width={760} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="grid-ir"
       position={[-310, 0]}

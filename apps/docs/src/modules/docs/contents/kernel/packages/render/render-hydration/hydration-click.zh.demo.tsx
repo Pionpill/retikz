@@ -19,7 +19,7 @@ const Demo: FC = () => {
   const [count, setCount] = useState(0);
 
   return (
-    <Layout width={300} height={140}>
+    <Layout>
       <Node
         id="box"
         position={[0, 0]}

@@ -11,8 +11,6 @@ export const previewControls = compoundClipControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Layout
-    width={380}
-    height={220}
     viewBox={{ x: -165, y: -100, width: 330, height: 200 }}
     clips={[CompoundClipDefinition, CircleClipDefinition]}
   >

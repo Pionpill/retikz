@@ -10,7 +10,7 @@ export const previewControls = shadowPlaygroundControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={280} height={230} viewBox={{ x: -140, y: -115, width: 280, height: 230 }}>
+    <Layout viewBox={{ x: -140, y: -115, width: 280, height: 230 }}>
       <Node
         position={[0, 0]}
         shape="rectangle"

@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** Independent Plot paths for lowered metadata and runtime lineage */
 const Demo: FC = () => (
-  <Layout width={560} height={200} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="lower-options"
       position={[-185, -50]}

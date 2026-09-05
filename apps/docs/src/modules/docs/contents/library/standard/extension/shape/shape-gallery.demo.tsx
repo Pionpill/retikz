@@ -33,9 +33,6 @@ const Demo: FC = () => {
 
   return (
     <Layout
-      width={620}
-      height={410}
-      viewBox={{ x: -240, y: -145, width: 480, height: 330 }}
       shapes={[
         ContourShapeDefinition,
         CrossShapeDefinition,

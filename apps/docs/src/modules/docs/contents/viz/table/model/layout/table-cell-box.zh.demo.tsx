@@ -15,12 +15,7 @@ const NOTE_FONT = { size: 12 };
 
 /** 单元格外框、内容区、内容占位与最终可见范围的几何关系 */
 const Demo: FC = () => (
-  <Layout
-    width={540}
-    height={200}
-    viewBox={{ x: -270, y: -100, width: 540, height: 200 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     {/* 两横两竖只补足中央单元格的表格上下文 */}
     <Draw
       way={[

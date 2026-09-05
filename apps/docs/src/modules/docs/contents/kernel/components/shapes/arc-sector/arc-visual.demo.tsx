@@ -6,7 +6,7 @@ import { Arc, Layout } from '@retikz/react';
  * Arc 透传整套 Path 视觉属性：arrow（箭头弧）/ dashPattern + dashOffset（虚线弧）/ marks（中段方向标记）。
  */
 const Demo: FC = () => (
-  <Layout width={360} height={130}>
+  <Layout>
     {/* 箭头弧：arrow 让开放弧带箭头，常用于角度标记 / 曲线箭头 */}
     <Arc center={[60, 25]} radius={55} startAngle={20} endAngle={160} arrow="->" style={{ strokeWidth: 2 }} />
     {/* 虚线弧 */}

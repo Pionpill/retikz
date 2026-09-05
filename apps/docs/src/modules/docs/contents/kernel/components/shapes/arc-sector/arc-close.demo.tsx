@@ -7,7 +7,7 @@ import { Arc, Layout } from '@retikz/react';
  * 后两者闭合成区域，可直接 fill。
  */
 const Demo: FC = () => (
-  <Layout width={360} height={140}>
+  <Layout>
     {/* 默认：开放弧，不闭合、不填充 */}
     <Arc center={[60, 70]} radius={50} startAngle={-50} endAngle={50} style={{ strokeWidth: 2 }} />
     {/* 弦闭合：两端点连直线成弓形 */}

@@ -14,13 +14,7 @@ import {
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const continuous = values[POINT_JITTER_POLAR_CONTROL_IDS.scale] === 'continuous';
   return (
-    <Plot
-      data={polarJitterPoints}
-      width={360}
-      height={360}
-      coordinate={{ type: 'polar2D' }}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Plot data={polarJitterPoints} width={360} height={360} coordinate={{ type: 'polar2D' }}>
       <PointMark
         x={continuous ? 'angle' : 'group'}
         y="value"

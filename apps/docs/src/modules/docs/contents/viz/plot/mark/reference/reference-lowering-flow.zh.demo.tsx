@@ -126,7 +126,7 @@ const renderFlowNode = (node: FlowNode) => (
 const Demo: FC = () => (
   <>
     <div className="hidden sm:block">
-      <Layout width={860} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         {desktopNodes.map(renderFlowNode)}
         <LogicFigureFrame id="reference-core-primitives">
           <LogicFigureFrameTitle>Core primitives</LogicFigureFrameTitle>
@@ -159,7 +159,7 @@ const Demo: FC = () => (
     </div>
 
     <div className="sm:hidden">
-      <Layout width={360} height={154} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         {mobileNodes.map(renderFlowNode)}
         <Draw way={['mobile-reference-input', 'mobile-reference-classify']} arrow="->" />
         <Draw way={['mobile-reference-classify', 'mobile-reference-line']} arrow="->" />

@@ -117,7 +117,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const controlPolygon = controlPolygonOf(sourceSegment);
 
   return (
-    <Layout width={400} height={240} viewBox={{ x: -175, y: -125, width: 350, height: 250 }}>
+    <Layout viewBox={{ x: -175, y: -125, width: 350, height: 250 }}>
       {controlPolygon && (
         <Draw way={controlPolygon} style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }} />
       )}

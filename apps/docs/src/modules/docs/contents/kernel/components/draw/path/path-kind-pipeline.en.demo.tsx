@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Path kind provider 从组件输入分派到 Scene 输出的逻辑图 */
 const Demo: FC = () => (
-  <Layout width={760} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="path-input"
       position={[-300, 0]}

@@ -70,7 +70,8 @@ describe('位置比例尺文档结构', () => {
   it('技术原理使用统一的有边框块状流程节点', () => {
     const nodeTags = flowFigure.match(/<Node[\s\S]*?>/g) ?? [];
 
-    expect(flowFigure).toContain('<Layout width={360} height={120}');
+    expect(flowFigure).toContain('<Layout>');
+    expect(flowFigure).not.toMatch(/<Layout\b[^>]*\b(?:width|height)=/);
     expect(nodeTags.length).toBeGreaterThan(0);
     for (const nodeTag of nodeTags) {
       expect(nodeTag).toContain("stroke: 'gray'");

@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** 内置与自定义 Definition 共用协议、registry 与 compile consumer */
 const Demo: FC = () => (
-  <Layout width={760} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="definition-contract">
       <LogicFigureFrameTitle>XxxDefinition contract</LogicFigureFrameTitle>
       <Node

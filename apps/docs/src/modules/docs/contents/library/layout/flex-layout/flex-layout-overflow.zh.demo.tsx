@@ -5,7 +5,7 @@ import { Layout, Node } from '@retikz/react';
 
 /** 对比 fixed child 拒绝较小 slot 时 visible 与 clip 的表现 */
 const Demo: FC = () => (
-  <Layout width={460} height={170}>
+  <Layout>
     <FlexLayout direction="column" gap={18}>
       <LayoutItem kind="flex" itemKey="visible-row">
         <FlexLayout

@@ -9,12 +9,7 @@ import { ContourShapeDefinition, StarShapeDefinition } from '@retikz/standard/sh
  *   左侧灰标点出两副面相，下排一条灰箭头示意 Node 形状可被连接。caption / 行标用 stroke/fill none 的灰字。
  */
 const Demo: FC = () => (
-  <Layout
-    width={660}
-    height={240}
-    style={{ maxWidth: '100%', height: 'auto' }}
-    shapes={[StarShapeDefinition, ContourShapeDefinition]}
-  >
+  <Layout shapes={[StarShapeDefinition, ContourShapeDefinition]}>
     {/* 行标 */}
     <Node
       id="rowPath"

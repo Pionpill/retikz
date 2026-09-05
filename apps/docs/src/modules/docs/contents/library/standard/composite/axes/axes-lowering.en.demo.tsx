@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** English logic figure for lowering Axes IR to Core Paths and Nodes */
 const Demo: FC = () => (
-  <Layout width={760} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="axes-ir"
       position={[-280, 0]}

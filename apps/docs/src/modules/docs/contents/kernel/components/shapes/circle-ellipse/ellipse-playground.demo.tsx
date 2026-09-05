@@ -66,7 +66,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const inputBox = inputBoxOf(values);
 
   return (
-    <Layout width={400} height={260} viewBox={{ x: -130, y: -100, width: 260, height: 200 }}>
+    <Layout viewBox={{ x: -130, y: -100, width: 260, height: 200 }}>
       <Draw
         way={[
           [0, -92],

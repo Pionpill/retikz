@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Runtime 接收完整领域输入，在 registry 约束下发布 Snapshot 与 artifact */
 const Demo: FC = () => (
-  <Layout width={520} height={360} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="domain-inputs"
       text={[

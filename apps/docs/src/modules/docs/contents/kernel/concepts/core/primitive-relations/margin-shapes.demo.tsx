@@ -12,7 +12,7 @@ import { StarShapeDefinition } from '@retikz/standard/shape';
 const M = 18;
 
 const Demo: FC = () => (
-  <Layout width={520} height={200} shapes={[StarShapeDefinition]}>
+  <Layout shapes={[StarShapeDefinition]}>
     {/* 椭圆：rect 驱动，margin 外扩 → 端点退开 margin */}
     <Node
       id="ell"

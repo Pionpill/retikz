@@ -10,7 +10,7 @@ export const previewControls = relateControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Plot data={monthlyTrend} width={520} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Plot data={monthlyTrend} width={520} height={320}>
       <PlotScale dimension="x" type="linear" domain={[0.5, 6.5]} />
       <PlotScale dimension="y" type="linear" domain={[20, 62]} />
       <PathMark

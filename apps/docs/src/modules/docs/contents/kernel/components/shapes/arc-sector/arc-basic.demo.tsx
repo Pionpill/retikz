@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { Arc, Layout } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout width={300} height={150}>
+  <Layout>
     {/* 圆弧 0→90（东→南，y-down） */}
     <Arc center={[60, 30]} radius={70} startAngle={0} endAngle={90} style={{ strokeWidth: 2 }} />
     {/* 椭圆弧 */}

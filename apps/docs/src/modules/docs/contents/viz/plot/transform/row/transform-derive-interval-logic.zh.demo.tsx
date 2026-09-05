@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** derive-interval 的模式优先级、逐行派生与错误出口 */
 const Demo: FC = () => (
-  <Layout width={820} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="explicit-mode"
       position={[-300, -45]}

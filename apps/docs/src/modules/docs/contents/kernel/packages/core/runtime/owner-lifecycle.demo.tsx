@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Owner candidate 只有通过完整状态比较与校验后才能替换 current */
 const Demo: FC = () => (
-  <Layout width={520} height={420} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="complete-input"
       text={[

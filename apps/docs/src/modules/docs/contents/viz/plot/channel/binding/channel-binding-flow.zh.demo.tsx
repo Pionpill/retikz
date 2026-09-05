@@ -7,7 +7,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
  * @description 字符串扁平样式 prop 先匹配字段名，未命中才尝试合法常量，确定绑定类型后分别读取 canonical row 或固定值并交给通道消费方
  */
 const Demo: FC = () => (
-  <Layout width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="input"
       position={[-225, -80]}

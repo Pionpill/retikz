@@ -12,7 +12,7 @@ export const previewSource = {
 const Demo: FC = () => {
   const lowerTexState = useLowerTex();
   return (
-    <Layout width={600} height={360} lowerTex={lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined}>
+    <Layout lowerTex={lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined}>
       {/* 单位圆（半径 100px） */}
       <Circle center={[0, 0]} radius={100} style={{ lineCap: 'round' }} />
 

@@ -4,7 +4,7 @@ import { Layout, Path, Step } from '@retikz/react';
 
 /** 对比居中默认、显式关闭、上方默认与显式开启的标签断线 */
 const Demo: FC = () => (
-  <Layout width={480} height={280} viewBox={{ x: -240, y: -140, width: 480, height: 280 }}>
+  <Layout>
     <Path
       label={{ text: '居中：默认断线', sloped: true, textColor: 'currentColor', font: { size: 13 } }}
       style={{ stroke: 'currentColor' }}

@@ -21,7 +21,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const normalLabel = vector2.add(vector2.scale(normal, 0.62), vector2.scale(vector2.normalize(vector), 26));
 
   return (
-    <Layout width={400} height={280} viewBox={{ x: -170, y: -145, width: 340, height: 290 }}>
+    <Layout viewBox={{ x: -170, y: -145, width: 340, height: 290 }}>
       <Draw
         way={[
           [-160, 0],

@@ -67,7 +67,7 @@ const NestedContent: FC = () => (
 
 /** 展示三种布局容器可作为普通 IRChild 递归组合 */
 const Demo: FC = () => (
-  <LayoutInspectLayout width={500} height={260}>
+  <LayoutInspectLayout>
     <NestedContent />
   </LayoutInspectLayout>
 );
@@ -76,7 +76,7 @@ const Demo: FC = () => (
 export const previewSource = {
   deriveIR: false,
   canonicalRender: () => (
-    <Layout width={500} height={260}>
+    <Layout>
       <NestedContent />
     </Layout>
   ),

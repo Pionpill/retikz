@@ -90,7 +90,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const scene = sceneOf(values);
 
   return (
-    <Layout width={400} height={260} viewBox={intersectionViewBox}>
+    <Layout viewBox={intersectionViewBox}>
       {scene.geometry}
       {scene.hits.map((hit, index) => (
         <Circle

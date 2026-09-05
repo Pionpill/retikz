@@ -34,7 +34,7 @@ const renderMobileNode = (node: MobileFlowNode) => (
 const Demo: FC = () => (
   <>
     <div className="hidden sm:block">
-      <Layout width={800} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         <LogicFigureFrame id="transaction">
           <LogicFigureFrameTitle>One Table layout transaction</LogicFigureFrameTitle>
           <Node
@@ -160,7 +160,7 @@ const Demo: FC = () => (
     </div>
 
     <div className="sm:hidden">
-      <Layout width={360} height={520} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         <LogicFigureFrame id="mobile-transaction">
           <LogicFigureFrameTitle>One Table layout transaction</LogicFigureFrameTitle>
           {renderMobileNode({

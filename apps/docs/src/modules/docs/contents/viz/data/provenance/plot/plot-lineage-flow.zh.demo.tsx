@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** Plot 在 Data 链路上补充图形语义的运行时流程 */
 const Demo: FC = () => (
-  <Layout width={600} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="data"
       position={[-230, 0]}

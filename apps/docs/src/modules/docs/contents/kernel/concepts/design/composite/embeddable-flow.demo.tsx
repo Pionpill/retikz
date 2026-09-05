@@ -8,7 +8,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  *   → Core 解析 roots 的依赖闭包 → 与显式 definitions 合并后进入 compile。所有 label 为技术词，单文件共用。
  */
 const Demo: FC = () => (
-  <Layout width={760} height={250} fontSize={14} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout fontSize={14}>
     {/* 顶行：从子组件到 compile 的主链路 */}
     <Node id="child" position={[-330, -20]} style={{ stroke: 'none' }}>
       {'<Panel/> props'}

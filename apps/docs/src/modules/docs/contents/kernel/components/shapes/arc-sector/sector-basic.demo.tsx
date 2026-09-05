@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { Layout, Sector } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout width={340} height={180}>
+  <Layout>
     {/* 实心扇形拼饼图 */}
     <Sector
       center={[90, 90]}

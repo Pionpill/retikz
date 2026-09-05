@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** 来源身份从外部数据进入 Data 管线并随结果交付的主流程 */
 const Demo: FC = () => (
-  <Layout width={720} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="source"
       position={[-290, 0]}

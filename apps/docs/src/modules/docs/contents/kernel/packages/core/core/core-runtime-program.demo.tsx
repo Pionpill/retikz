@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Core 把完整 IR Snapshot 编译为由 Runtime 原子发布的 public artifact */
 const Demo: FC = () => (
-  <Layout width={860} height={150} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="ir-snapshot"
       text={[

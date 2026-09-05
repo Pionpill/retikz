@@ -51,7 +51,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
 };
 
 const Demo: FC = () => (
-  <Layout width={811} height={441}>
+  <Layout>
     {/* 标题：白底（无 fill）、24px 加粗黑字，居中顶部。
         位置 (404, 20) + 宽 200 × 高 40 完全复刻 intro.svg 的 (304, 0, 200×40) 标题框 */}
     <RoadmapNode id="title" position={[404, 20]} variant="title" width={200} height={40}>

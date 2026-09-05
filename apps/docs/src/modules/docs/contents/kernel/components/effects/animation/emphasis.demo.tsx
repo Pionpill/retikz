@@ -5,7 +5,7 @@ import { Layout, Node } from '@retikz/react';
 
 // 强调与循环合集：flash / blink / wiggle 强调，pulse / spin 循环，loop 包装 slideIn，colorShift 变色
 const Demo: FC = () => (
-  <Layout width={460} height={210}>
+  <Layout>
     <Node id="flash" position={[-170, -55]} animations={[flash()]} style={{ fill: '#f59e0b' }}>
       flash
     </Node>

@@ -12,7 +12,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const blendMode = values.mode;
 
   return (
-    <Layout width={260} height={200}>
+    <Layout>
       <Node
         position={[0, 0]}
         shape="rectangle"

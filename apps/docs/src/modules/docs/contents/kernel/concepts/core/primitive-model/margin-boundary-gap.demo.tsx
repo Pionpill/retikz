@@ -20,12 +20,7 @@ const CONTENT = {
 } as const;
 
 const Demo: FC = () => (
-  <Layout
-    width={580}
-    height={210}
-    viewBox={{ x: -235, y: -74, width: 480, height: 174 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     {/* ── 列 1：boundary=shape，margin 小 ── */}
     <Rectangle
       center={[-175, 0]}

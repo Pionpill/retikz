@@ -54,7 +54,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const usesEndpoints = values.curveKind === 'curve' || values.curveKind === 'cubic' || values.curveKind === 'bend';
 
   return (
-    <Layout width={360} height={260} viewBox={{ x: -70, y: -130, width: 340, height: 260 }}>
+    <Layout viewBox={{ x: -70, y: -130, width: 340, height: 260 }}>
       {usesEndpoints ? (
         <>
           <Node id="A" position={[0, 0]} style={{ stroke: 'gray', dashed: true }}>

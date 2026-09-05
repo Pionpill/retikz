@@ -8,7 +8,7 @@ import { Coordinate, Draw, Layout, Node, Text } from '@retikz/react';
  *   通过两条连线汇于同一点表现其位置
  */
 const Demo: FC = () => (
-  <Layout width={560} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     {/* Node：有形状、有文字的命名图元 */}
     <Node id="nodeDemo" position={[-190, -5]} style={{ stroke: 'none', fill: 'none', font: { weight: 'bold' } }}>
       Node

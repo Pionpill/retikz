@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { Layout, Node, Scope } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout width={460} height={130} viewBox={{ x: -230, y: -65, width: 460, height: 130 }}>
+  <Layout>
     <Scope
       defaults={{
         node: {

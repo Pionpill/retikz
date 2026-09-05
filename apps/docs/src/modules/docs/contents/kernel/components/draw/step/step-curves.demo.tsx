@@ -58,7 +58,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const start = isSmooth ? SmoothPoints[0] : usesEndpoints ? 'A' : 'C';
 
   return (
-    <Layout width={380} height={260} viewBox={{ x: -150, y: -130, width: 300, height: 260 }}>
+    <Layout viewBox={{ x: -150, y: -130, width: 300, height: 260 }}>
       {usesEndpoints && (
         <>
           <Node id="A" position={[-100, 0]} style={{ stroke: 'gray', dashed: true }}>

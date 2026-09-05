@@ -26,8 +26,6 @@ const priorityPredicate = defineRelationPredicate({
 /** Custom Relation kind and predicate share the Graph resolve path */
 const Demo: FC = () => (
   <Graph
-    width={460}
-    height={180}
     relationKinds={[feedbackKind]}
     relationPredicates={[priorityPredicate]}
     graphTheme={{

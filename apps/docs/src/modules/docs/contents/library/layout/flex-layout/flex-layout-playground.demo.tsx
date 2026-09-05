@@ -63,10 +63,7 @@ const createPreview = (inspecting: boolean) =>
       alignContent: 'center',
     } as const;
     const hostProps = {
-      width: 440,
-      height: 250,
       viewBox: { x: 0, y: 0, width: 440, height: 250 },
-      style: { maxWidth: '100%', height: 'auto' },
     } as const;
 
     return inspecting ? (

@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Circle / Ellipse Sugar 输入归一化到 Path Step 的局部流程图 */
 const Demo: FC = () => (
-  <Layout width={720} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="target-input"
       position={[-275, -72]}

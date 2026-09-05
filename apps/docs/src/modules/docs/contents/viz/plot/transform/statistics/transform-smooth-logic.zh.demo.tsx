@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** smooth 的有限点筛选、OLS 拟合、区间采样与预测输出 */
 const Demo: FC = () => (
-  <Layout width={720} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-295, 20]}

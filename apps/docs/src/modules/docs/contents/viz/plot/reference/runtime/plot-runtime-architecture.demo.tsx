@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** React 与 Vanilla 宿主共享 Plot lowering 和 Core 编译能力的架构图 */
 const Demo: FC = () => (
-  <Layout width={720} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="host-adapters-frame">
       <LogicFigureFrameTitle>plot-react · plot-vanilla</LogicFigureFrameTitle>
       <Node

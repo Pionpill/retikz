@@ -11,11 +11,7 @@ export const previewControls = coordinateFoldJunctionControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout
-      width={coordinateFoldJunctionFrame.width}
-      height={coordinateFoldJunctionFrame.height}
-      viewBox={coordinateFoldJunctionFrame.viewBox}
-    >
+    <Layout viewBox={coordinateFoldJunctionFrame.viewBox}>
       <Node id="A" position={[-120, -55]}>
         A
       </Node>

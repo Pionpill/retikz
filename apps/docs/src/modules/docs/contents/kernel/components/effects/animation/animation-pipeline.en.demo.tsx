@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** AnimationTrack 从声明到后端播放或静态求值的局部流程图 */
 const Demo: FC = () => (
-  <Layout width={560} height={380} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="preset"
       position={[-150, -145]}

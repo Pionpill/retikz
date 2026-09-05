@@ -87,7 +87,7 @@ const diode: ShapeDefinition = defineShape({
 });
 
 const Demo: FC = () => (
-  <Layout width={420} height={190} shapes={[diode]}>
+  <Layout shapes={[diode]}>
     <Node id="source" position={[-150, 0]} text="in" />
     <Node id="d" shape="diode" position={[0, 0]} style={{ fill: 'lightgray', stroke: 'darkorange', strokeWidth: 2 }} />
     <Node id="sink" position={[145, 55]} text="out" />

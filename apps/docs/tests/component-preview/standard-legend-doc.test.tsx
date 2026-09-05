@@ -50,9 +50,8 @@ const legendOf = (values: Parameters<typeof LegendPlaygroundPreview>[0]) => {
 
 const legendHorizontalCenterDelta = (Preview: FC): number => {
   const preview = buildPreviewIR(Preview);
-  const viewBox = preview.ir.viewBox;
-  if (viewBox === undefined) throw new Error('Expected a fixed Legend demo viewBox');
   const output = compileToScene(preview.ir, { composites: [LegendDefinition], padding: 0 });
+  const viewBox = output.scene.layout;
   const envelope = output.artifacts.find(artifact => artifact.kind === 'composite');
   if (envelope === undefined) throw new Error('Expected a Legend compile artifact');
   const artifact = LegendArtifactSchema.parse(envelope.value);

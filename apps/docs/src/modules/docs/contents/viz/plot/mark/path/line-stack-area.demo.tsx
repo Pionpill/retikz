@@ -13,7 +13,7 @@ import { stackArea } from './line-stack-area.data';
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const curve: PathCurveValue = values[LINE_STACK_AREA_CURVE_ID];
   return (
-    <Layout width={700} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout>
       <Plot
         data={stackArea}
         width={360}

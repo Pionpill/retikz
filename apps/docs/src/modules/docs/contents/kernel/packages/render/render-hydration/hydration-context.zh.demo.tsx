@@ -19,7 +19,7 @@ const Demo: FC = () => {
   const [last, setLast] = useState('—');
 
   return (
-    <Layout width={300} height={160}>
+    <Layout>
       <Node
         id="ball"
         position={[0, 0]}

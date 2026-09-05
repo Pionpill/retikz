@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Axis tick 与主 / 次网格的位置来源和分流逻辑 */
 const Demo: FC = () => (
-  <Layout width={760} height={225} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="axis-tick-group">
       <LogicFigureFrameTitle>Axis tick</LogicFigureFrameTitle>
       <Node

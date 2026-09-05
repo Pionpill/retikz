@@ -20,7 +20,7 @@ const structureInput = (id: string, y: number, title: string, detail: string) =>
 
 /** detail、manual 与 custom Structure 收敛为同一个 canonical model */
 const Demo: FC = () => (
-  <Layout width={580} height={230} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     {structureInput('detail', -62, 'detail', 'records + fields')}
     {structureInput('manual', 0, 'manual', 'explicit grid')}
     {structureInput('custom', 62, 'custom', 'domain options')}

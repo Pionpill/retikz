@@ -39,7 +39,7 @@ const renderScene = (tag: string, cx: number, shape: 'rectangle' | 'ellipse'): A
 ];
 
 const Demo: FC = () => (
-  <Layout width={520} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     {renderScene('rect', -140, 'rectangle')}
     {renderScene('ell', 140, 'ellipse')}
     <Node position={[-140, 108]} style={{ stroke: 'none', textColor: 'gray' }} layout={{ padding: 0 }}>

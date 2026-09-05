@@ -5,7 +5,7 @@ import { Grid } from '@retikz/standard-react';
 
 /** Grid common semantic variants shown side by side */
 const Demo: FC = () => (
-  <Layout width={760} height={145} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node position={[95, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       Per-axis spacing
     </Node>

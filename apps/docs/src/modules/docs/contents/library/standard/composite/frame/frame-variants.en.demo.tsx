@@ -5,7 +5,7 @@ import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
 
 /** English side-by-side comparison of absent, horizontal, and vertical Frame headers */
 const Demo: FC = () => (
-  <Layout width={680} height={175} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Frame
       id="body-only"
       border={{ style: { stroke: 'lightgray', dashPattern: [5, 4], fill: 'lightgray', fillOpacity: 0.04 } }}

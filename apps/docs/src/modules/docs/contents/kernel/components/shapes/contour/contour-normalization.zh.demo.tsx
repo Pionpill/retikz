@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** contour 顶点环从任意局部原点归一到 Node position 的流程图 */
 const Demo: FC = () => (
-  <Layout width={620} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="points"
       position={[-210, 0]}

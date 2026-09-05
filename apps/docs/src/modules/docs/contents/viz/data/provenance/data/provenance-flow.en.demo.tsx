@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** Main flow that carries source identity through the Data pipeline */
 const Demo: FC = () => (
-  <Layout width={720} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="source"
       position={[-290, 0]}

@@ -10,12 +10,7 @@ const nodeStyle = {
 
 /** 展示用户预计算路径与 core 对 math 的内部依赖 */
 const Demo: FC = () => (
-  <Layout
-    width={620}
-    height={210}
-    viewBox={{ x: -320, y: -110, width: 640, height: 220 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     <Node
       id="input"
       position={[-260, -45]}

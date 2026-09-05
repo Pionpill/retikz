@@ -65,9 +65,6 @@ const ScoreTable: FC<ScoreTableProps> = props => {
         ? {}
         : {
             theme: rootTheme,
-            width: 360,
-            height: 168,
-            containerStyle: { maxWidth: '100%', height: 'auto' },
           })}
     >
       <DetailColumn id="name" field="name" header="Name" bodyLayout={{ padding: 6, wrap: true }} />
@@ -87,7 +84,7 @@ const ScoreTable: FC<ScoreTableProps> = props => {
 /** Derives stable IR and Vanilla source from the embedded Table path */
 export const previewSource = {
   canonicalRender: () => (
-    <Layout width={360} height={168} theme={rootTheme}>
+    <Layout theme={rootTheme}>
       <ScoreTable embedded />
     </Layout>
   ),

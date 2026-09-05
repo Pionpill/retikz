@@ -27,7 +27,7 @@ const FlowNode: FC<FlowNodeProps> = ({ id, position, title, detail, stroke }) =>
 
 /** Text 行颜色覆盖与 Node contrast 解析路径 */
 const Demo: FC = () => (
-  <Layout width={560} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <FlowNode
       id="explicit-input"
       position={[-195, -65]}

@@ -48,7 +48,7 @@ const ring = (tag: string, cx: number, dirs: Array<Dir>): Array<ReactElement> =>
 ];
 
 const Demo: FC = () => (
-  <Layout width={560} height={270} style={{ maxWidth: '100%', height: 'auto' }} shapes={[StarShapeDefinition]}>
+  <Layout shapes={[StarShapeDefinition]}>
     <Node
       id="rect-o"
       position={[-185, 0]}

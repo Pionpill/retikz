@@ -22,7 +22,6 @@ export const renderCoordinatePolar = (values: CoordinatePolarValues) => (
       startAngle: values.startAngle,
       endAngle: values.startAngle + values.sweepAngle,
     }}
-    style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PlotScale dimension="y" type="linear" domainPadding={0} />
     {values.markType === 'point' ? (

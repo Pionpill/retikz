@@ -6,7 +6,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 const Demo: FC = () => (
   <>
     <div className="hidden sm:block">
-      <Layout width={780} height={160} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         <Node
           id="desktop-field"
           position={[-300, -35]}
@@ -140,7 +140,7 @@ const Demo: FC = () => (
     </div>
 
     <div className="sm:hidden">
-      <Layout width={420} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         <Node
           id="mobile-field"
           position={[-100, -38]}

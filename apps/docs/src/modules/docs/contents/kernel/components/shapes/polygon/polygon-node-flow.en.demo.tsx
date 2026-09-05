@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Node polygon 从内容内框收敛为渲染与连接轮廓的局部流程图 */
 const Demo: FC = () => (
-  <Layout width={390} height={360} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="inner-box"
       position={[0, -140]}

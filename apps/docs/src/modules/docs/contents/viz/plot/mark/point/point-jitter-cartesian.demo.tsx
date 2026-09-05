@@ -8,7 +8,7 @@ import { jitterPoints } from './point-jitter.data';
 import { cartesianJitterOperationOf, previewControlContract } from './point-jitter-cartesian.controls';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot data={jitterPoints} width={400} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Plot data={jitterPoints} width={400} height={280}>
     <PointMark
       x="group"
       y="value"

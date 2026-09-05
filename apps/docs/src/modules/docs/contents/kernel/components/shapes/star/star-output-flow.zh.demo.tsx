@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Star Sugar 与 Node shape 的几何消费路径 */
 const Demo: FC = () => (
-  <Layout width={430} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="sugar"
       position={[-135, -68]}

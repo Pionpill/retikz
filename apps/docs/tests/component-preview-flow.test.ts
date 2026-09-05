@@ -466,16 +466,8 @@ describe('Flow Diagram ComponentPreview', () => {
     };
 
     for (const [Demo, renderPreview, expectedFrame] of [
-      [
-        FlowThemeCanonicalDemo,
-        renderFlowThemePreview,
-        { width: 420, height: 240, viewBox: { x: -71, y: -82.5, width: 420, height: 240 } },
-      ],
-      [
-        FlowThemeEnCanonicalDemo,
-        renderFlowThemeEnPreview,
-        { width: 420, height: 240, viewBox: { x: -11.25, y: -64, width: 420, height: 240 } },
-      ],
+      [FlowThemeCanonicalDemo, renderFlowThemePreview, { viewBox: { x: -71, y: -82.5, width: 420, height: 240 } }],
+      [FlowThemeEnCanonicalDemo, renderFlowThemeEnPreview, { viewBox: { x: -11.25, y: -64, width: 420, height: 240 } }],
     ] as const) {
       expect(flowBasicFrame(Demo)).toMatchObject(expectedFrame);
       const bounds = flowThemeBounds(renderPreview, values);
@@ -630,8 +622,6 @@ describe('Flow Diagram ComponentPreview', () => {
     ['en', FlowCompoundEnCanonicalDemo],
   ] as const)('renders the controlled %s grouping demo at a fixed 1:1 frame', (_lang, Demo) => {
     expect(flowBasicFrame(Demo)).toMatchObject({
-      width: 400,
-      height: 460,
       viewBox: { x: -100, y: -86, width: 400, height: 460 },
     });
   });
@@ -665,14 +655,14 @@ describe('Flow Diagram ComponentPreview', () => {
   });
 
   it.each(['flow-basic.zh.demo.tsx', 'flow-basic.en.demo.tsx'] as const)(
-    'lets the controlled %s auto-fit horizontally in one 740 × 220 output',
+    'lets the controlled %s use natural content dimensions',
     file => {
       const demo = readFileSync(resolve(flowBasicContentRoot, file), 'utf8');
 
-      expect(demo).toContain('width={740}');
-      expect(demo).toContain('height={220}');
+      expect(demo).not.toMatch(/<FlowDiagram\b[^>]*\bwidth=/);
+      expect(demo).not.toMatch(/<FlowDiagram\b[^>]*\bheight=/);
       expect(demo).not.toContain('viewBox=');
-      expect(demo).toContain("style={{ maxWidth: '100%', height: 'auto' }}");
+      expect(demo).not.toContain("maxWidth: '100%'");
       expect(demo).toContain('<FlowEntities');
       expect(demo).toContain('<FlowRelations');
     },

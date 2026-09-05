@@ -50,7 +50,7 @@ export const renderPathLabelRoutePlayground = (
   values: PathLabelRoutePlaygroundValues,
   copy: PathLabelRoutePlaygroundCopy,
 ): ReactNode => (
-  <Layout width={420} height={300} viewBox={{ x: -210, y: -140, width: 420, height: 280 }}>
+  <Layout viewBox={{ x: -210, y: -140, width: 420, height: 280 }}>
     <Node
       id="A"
       position={SourcePosition}

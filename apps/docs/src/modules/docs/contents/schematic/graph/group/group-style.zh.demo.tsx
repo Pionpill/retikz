@@ -24,7 +24,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         : {};
 
   return (
-    <Graph width={440} height={220} viewBox={{ x: -90, y: -71.6, width: 440, height: 220 }}>
+    <Graph viewBox={{ x: -90, y: -71.6, width: 440, height: 220 }}>
       <Group
         id="group-style"
         padding={padding}

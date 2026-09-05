@@ -7,7 +7,7 @@ import { Layout, Node, Sector } from '@retikz/react';
  * 三段拼成一张带标签的饼图。
  */
 const Demo: FC = () => (
-  <Layout width={300} height={220}>
+  <Layout>
     {/* 圆心放在节点上：实心扇形圆心 = 游标，center 接任意 Target */}
     <Node id="hub" position={[150, 110]} style={{ stroke: 'none' }} />
     {/* sweepAngle：起角 + 扫掠角（startAngle / endAngle / sweepAngle 三选二） */}

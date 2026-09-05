@@ -14,11 +14,7 @@ export const previewControls = coordinateBetweenControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout
-      width={coordinateBetweenFrame.width}
-      height={coordinateBetweenFrame.height}
-      viewBox={coordinateBetweenFrame.viewBox}
-    >
+    <Layout viewBox={coordinateBetweenFrame.viewBox}>
       <Node
         id="A"
         position={[-140, 0]}

@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** density finite-sample filtering, bandwidth resolution, KDE sampling, and output */
 const Demo: FC = () => (
-  <Layout width={720} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-295, 20]}

@@ -20,7 +20,7 @@ const Demo: FC = () => {
   );
 
   return (
-    <Layout width={400} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout>
       <Circle
         center={CENTER}
         radius={OUTER_RADIUS}

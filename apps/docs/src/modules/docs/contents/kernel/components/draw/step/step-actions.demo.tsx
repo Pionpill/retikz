@@ -66,7 +66,7 @@ const actionOf = (values: StepActionValues): ReactNode => {
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={360} height={240} viewBox={{ x: -140, y: -120, width: 280, height: 240 }}>
+    <Layout viewBox={{ x: -140, y: -120, width: 280, height: 240 }}>
       {values.actionKind !== 'rectangle' && values.actionKind !== 'move' && (
         <>
           <Node id="A" position={[-90, -45]} style={{ stroke: 'gray', dashed: true }}>

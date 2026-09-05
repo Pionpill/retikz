@@ -4,7 +4,7 @@ import { Layout, Node } from '@retikz/react';
 
 /** 展示 grid 横纵方向可分别继承和覆盖线型 */
 const Demo: FC = () => (
-  <Layout width={300} height={170} viewBox={{ x: -150, y: -85, width: 300, height: 170 }}>
+  <Layout>
     <Node
       position={[0, 0]}
       shape="rectangle"

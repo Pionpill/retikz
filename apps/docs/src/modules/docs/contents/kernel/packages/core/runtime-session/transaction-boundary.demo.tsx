@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** publish 前失败回滚 candidate，publish 后失败只进入 diagnostics，dispose 走独立状态机 */
 const Demo: FC = () => (
-  <Layout width={500} height={480} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="transaction">
       <LogicFigureFrameTitle>Atomic transaction</LogicFigureFrameTitle>
       <Node

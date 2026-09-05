@@ -17,12 +17,7 @@ const pulseRibbonDefinition = createRibbonPathKindDefinition({ profiles: [pulseP
 
 /** 自定义 Ribbon 宽度 profile 的定义、注入与引用闭环 */
 const Demo: FC = () => (
-  <Layout
-    width={400}
-    height={180}
-    viewBox={{ x: -220, y: -100, width: 440, height: 200 }}
-    pathKinds={[pulseRibbonDefinition]}
-  >
+  <Layout pathKinds={[pulseRibbonDefinition]}>
     <Path
       kind="ribbon"
       kindOptions={{

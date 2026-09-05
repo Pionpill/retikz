@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** Data 来源产物进入不同宿主的消费边界 */
 const Demo: FC = () => (
-  <Layout width={700} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="data"
       position={[-225, 0]}

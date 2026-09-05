@@ -41,7 +41,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const arcBoundsRect = boundsToRect(arcBounds);
 
   return (
-    <Layout width={400} height={280} viewBox={{ x: -150, y: -105, width: 300, height: 220 }}>
+    <Layout viewBox={{ x: -150, y: -105, width: 300, height: 220 }}>
       <Draw
         way={[
           [-145, 0],

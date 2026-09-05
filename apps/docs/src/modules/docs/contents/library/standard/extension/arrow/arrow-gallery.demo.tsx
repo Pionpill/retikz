@@ -31,9 +31,6 @@ const Demo: FC = () => {
 
   return (
     <Layout
-      width={700}
-      height={270}
-      viewBox={{ x: 0, y: -105, width: 700, height: 210 }}
       arrows={[
         DiamondArrowDefinition,
         OpenDiamondArrowDefinition,

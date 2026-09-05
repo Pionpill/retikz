@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** 箭头端点解析、定义物化与路径收缩流程图 */
 const Demo: FC = () => (
-  <Layout width={660} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="props"
       position={[-250, 0]}

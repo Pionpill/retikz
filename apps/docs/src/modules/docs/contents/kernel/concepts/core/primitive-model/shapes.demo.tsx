@@ -44,12 +44,7 @@ const shift = (cx: number, cy: number, pts: Array<[number, number]>): Array<[num
   pts.map(([x, y]): [number, number] => [cx + x, cy + y]);
 
 const Demo: FC = () => (
-  <Layout
-    width={560}
-    height={271}
-    viewBox={{ x: -225, y: -96, width: 450, height: 218 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     {/* 内容盒（灰块）—— 共享 */}
     {R1.map(cx => (
       <Rectangle

@@ -67,12 +67,7 @@ export const closestToMeanSelectOperationOf = () =>
 
 /** 并列渲染 reducer 生成行与 selector 保留行 */
 export const renderExtensionStatisticsPreview = () => (
-  <Layout
-    width={520}
-    height={250}
-    viewBox={{ x: 0, y: 0, width: 520, height: 250 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     <Plot
       data={scoreRows}
       model={model}

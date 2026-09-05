@@ -9,7 +9,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  *   3) 同样有 margin，但用 `{ side, fraction }` 边点 → 取视觉 border、不吃 margin，仍贴死。
  */
 const Demo: FC = () => (
-  <Layout width={620} height={160}>
+  <Layout>
     {/* 无 margin：auto 端点贴视觉 border */}
     <Node id="a1" position={[-270, -10]} style={{ stroke: 'gray', dashPattern: [4, 3] }} layout={{ padding: 10 }}>
       a

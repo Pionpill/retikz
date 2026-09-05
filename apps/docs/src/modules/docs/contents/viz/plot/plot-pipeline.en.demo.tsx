@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Plot 从 authoring 到 renderer 的主流程与运行时旁路 */
 const Demo: FC = () => (
-  <Layout width={740} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="authoring"
       position={[-350, -12]}

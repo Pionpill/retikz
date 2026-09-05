@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout width={300} height={300}>
+  <Layout>
     <Node id="o" position={[0, 0]}>
       O
     </Node>

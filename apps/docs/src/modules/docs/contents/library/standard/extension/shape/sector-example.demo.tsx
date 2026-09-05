@@ -10,12 +10,7 @@ import { previewControlContract, sectorExampleControls } from './sector-example.
 export const previewControls = sectorExampleControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    width={320}
-    height={220}
-    viewBox={{ x: -105, y: -85, width: 210, height: 170 }}
-    shapes={[SectorShapeDefinition]}
-  >
+  <Layout viewBox={{ x: -105, y: -85, width: 210, height: 170 }} shapes={[SectorShapeDefinition]}>
     <Node
       position={[0, 0]}
       shape={{ type: 'sector', params: values }}

@@ -1,11 +1,10 @@
 import type { FC } from 'react';
 
-import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { resolvePointPreviewLayout } from '../point-coordinate-control';
 import { previewControlContract, SCATTER_FERTILITY_WORK_CONTROL_IDS } from './scatter-fertility-work.controls';
 import { fertilityWorkData } from './scatter-fertility-work.data';
 
@@ -30,7 +29,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     }}
   >
     <ChartData data={fertilityWorkData} />
-    <ChartLayout {...resolvePointPreviewLayout(values[SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem])} />
     <ScatterEncodings
       x="fertilityRate"
       y="femaleLaborParticipation"

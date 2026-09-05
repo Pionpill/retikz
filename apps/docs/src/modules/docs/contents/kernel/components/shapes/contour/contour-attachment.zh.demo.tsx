@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** contour 自动连接与标准方位 anchor 的两条解析路径 */
 const Demo: FC = () => (
-  <Layout width={640} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="auto-target"
       position={[-220, -45]}

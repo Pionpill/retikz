@@ -8,7 +8,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  * Bottom row shows schema / contract owners; shared/geometry is a compile helper dependency.
  */
 const Demo: FC = () => (
-  <Layout width={660} height={150} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node id="jsx" position={[-300, 0]} style={{ stroke: 'none' }}>
       JSX / DSL
     </Node>

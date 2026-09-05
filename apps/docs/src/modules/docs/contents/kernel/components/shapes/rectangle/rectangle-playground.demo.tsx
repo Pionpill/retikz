@@ -13,7 +13,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const halfHeight = values.height / 2;
 
   return (
-    <Layout width={400} height={250} viewBox={{ x: -135, y: -95, width: 270, height: 190 }}>
+    <Layout viewBox={{ x: -135, y: -95, width: 270, height: 190 }}>
       <Draw
         way={[
           [0, -86],

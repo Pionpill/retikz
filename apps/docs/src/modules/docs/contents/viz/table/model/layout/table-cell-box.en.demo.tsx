@@ -15,12 +15,7 @@ const NOTE_FONT = { size: 12 };
 
 /** Geometry of the Cell box, content area, child allocation, and final visible bounds */
 const Demo: FC = () => (
-  <Layout
-    width={540}
-    height={200}
-    viewBox={{ x: -270, y: -100, width: 540, height: 200 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     {/* Two horizontal and vertical lines provide only the central Cell's table context */}
     <Draw
       way={[

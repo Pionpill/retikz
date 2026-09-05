@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Rectangle Sugar 的点位归一与闭合 Path 生成流程图 */
 const Demo: FC = () => (
-  <Layout width={420} height={330} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="direct-form"
       position={[-115, -105]}

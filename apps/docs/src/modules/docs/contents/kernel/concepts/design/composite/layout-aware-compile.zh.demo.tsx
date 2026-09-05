@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** 双轴 proposal 在同一次 Core compile 中求值、选择并提交的闭环 */
 const Demo: FC = () => (
-  <Layout width={520} height={420} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="compile-boundary">
       <LogicFigureFrameTitle>同一次 Core compile</LogicFigureFrameTitle>
       <Node

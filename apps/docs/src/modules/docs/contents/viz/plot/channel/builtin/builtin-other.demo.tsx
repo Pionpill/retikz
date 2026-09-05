@@ -29,7 +29,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       ]}
       width={380}
       height={240}
-      style={{ maxWidth: '100%', height: 'auto' }}
     >
       <PointMark x="step" y="value" fill="fill" size={18} zIndex="zIndex" />
       <PathMark

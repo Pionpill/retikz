@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** RegularPolygon 从尺寸输入展开为闭合 Path 的局部流程图 */
 const Demo: FC = () => (
-  <Layout width={380} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="radius-input"
       position={[-105, -80]}

@@ -41,7 +41,7 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
   return (
     <>
       <div className="hidden sm:block">
-        <Layout width={780} height={160} style={{ maxWidth: '100%', height: 'auto' }}>
+        <Layout>
           <Node
             id="desktop-inputs"
             position={[-285, 0]}
@@ -146,7 +146,7 @@ export const ScalePositionFlow: FC<ScalePositionFlowProps> = props => {
       </div>
 
       <div className="sm:hidden">
-        <Layout width={360} height={120} style={{ maxWidth: '100%', height: 'auto' }}>
+        <Layout>
           <Node
             id="mobile-inputs"
             position={[-95, -30]}

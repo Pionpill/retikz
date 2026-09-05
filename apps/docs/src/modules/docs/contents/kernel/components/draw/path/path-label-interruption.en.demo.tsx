@@ -4,7 +4,7 @@ import { Layout, Path, Step } from '@retikz/react';
 
 /** Compare centered defaults with explicit continuous and forced-gap labels */
 const Demo: FC = () => (
-  <Layout width={480} height={280} viewBox={{ x: -240, y: -140, width: 480, height: 280 }}>
+  <Layout>
     <Path
       label={{ text: 'center: automatic gap', sloped: true, textColor: 'currentColor', font: { size: 13 } }}
       style={{ stroke: 'currentColor' }}

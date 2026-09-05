@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Frame 从 Standard JSON IR 下沉到 Core IR 的中文逻辑图 */
 const Demo: FC = () => (
-  <Layout width={760} height={100} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="frame-ir"
       position={[-285, 0]}

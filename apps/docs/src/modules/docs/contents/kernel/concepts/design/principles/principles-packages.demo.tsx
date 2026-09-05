@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Kernel 包级架构与主数据流总览 */
 const Demo: FC = () => (
-  <Layout width={740} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="react"
       position={[-315, -42]}

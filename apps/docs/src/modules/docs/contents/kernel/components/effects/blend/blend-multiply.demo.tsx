@@ -7,7 +7,7 @@ import { Layout, Node } from '@retikz/react';
  * @description 三个重叠实心圆，上层 blendMode="multiply"——重叠处按 W3C multiply 压暗叠色。
  */
 const Demo: FC = () => (
-  <Layout width={260} height={200}>
+  <Layout>
     <Node
       position={[-26, -18]}
       shape="circle"

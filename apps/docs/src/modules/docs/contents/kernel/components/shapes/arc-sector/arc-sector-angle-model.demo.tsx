@@ -4,7 +4,7 @@ import { Arc, Circle, Draw, Layout, Node } from '@retikz/react';
 
 /** Arc / Sector 共用的屏幕坐标角度模型 */
 const Demo: FC = () => (
-  <Layout width={460} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Draw
       way={[
         [-125, 0],

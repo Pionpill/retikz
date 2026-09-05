@@ -36,12 +36,7 @@ const Demo: FC = () => {
   return (
     <div className="flex flex-col items-center gap-3">
       <AnimationModeProvider mode="enabled">
-        <Layout
-          animationRef={animationRef}
-          width={280}
-          height={120}
-          viewBox={{ x: -140, y: -60, width: 280, height: 120 }}
-        >
+        <Layout animationRef={animationRef} viewBox={{ x: -140, y: -60, width: 280, height: 120 }}>
           <Node
             position={[0, 0]}
             shape="circle"

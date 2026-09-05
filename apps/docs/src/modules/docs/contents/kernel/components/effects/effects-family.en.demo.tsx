@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Effects family responsibilities from primitive input to Scene output */
 const Demo: FC = () => (
-  <Layout width={700} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="inputs"
       position={[-250, -40]}

@@ -40,7 +40,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         };
 
   return (
-    <Layout width={400} height={430} viewBox={{ x: -215, y: -215, width: 430, height: 430 }}>
+    <Layout viewBox={{ x: -215, y: -215, width: 430, height: 430 }}>
       <Draw
         way={[[0, 0], sourcePosition]}
         zIndex={-2}

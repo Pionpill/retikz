@@ -10,7 +10,7 @@ export const previewControls = nodeZIndexControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={300} height={190}>
+    <Layout>
       {/* 声明顺序固定为 a → b → c；面板只改变显式层级 */}
       <Node
         id="a"

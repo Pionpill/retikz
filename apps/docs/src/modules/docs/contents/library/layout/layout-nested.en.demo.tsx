@@ -71,7 +71,7 @@ const NestedContent: FC = () => (
 
 /** Demonstrates recursive composition because every layout container is an ordinary IRChild */
 const Demo: FC = () => (
-  <LayoutInspectLayout width={500} height={260}>
+  <LayoutInspectLayout>
     <NestedContent />
   </LayoutInspectLayout>
 );
@@ -80,7 +80,7 @@ const Demo: FC = () => (
 export const previewSource = {
   deriveIR: false,
   canonicalRender: () => (
-    <Layout width={500} height={260}>
+    <Layout>
       <NestedContent />
     </Layout>
   ),

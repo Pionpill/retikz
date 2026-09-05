@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** Boundary where Data provenance artifacts enter different hosts */
 const Demo: FC = () => (
-  <Layout width={700} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="data"
       position={[-225, 0]}

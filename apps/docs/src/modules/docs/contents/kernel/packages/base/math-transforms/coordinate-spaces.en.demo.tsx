@@ -40,7 +40,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, (value
   const localYAxis = [localToWorld(shape, [0, -52]), localToWorld(shape, [0, 52])];
 
   return (
-    <Layout width={400} height={280} viewBox={{ x: -170, y: -110, width: 340, height: 220 }}>
+    <Layout viewBox={{ x: -170, y: -110, width: 340, height: 220 }}>
       <Draw
         way={[
           [-160, 0],

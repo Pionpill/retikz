@@ -61,7 +61,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const inspectRight = values.target !== InspectSelectionTarget.Left;
 
   return (
-    <InspectLayout registry={registry} width={440} height={240} viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
+    <InspectLayout viewBox={{ x: -220, y: -120, width: 440, height: 240 }} registry={registry}>
       <Scope transforms={[{ kind: 'translate', x: -110, y: 0 }]}>
         <Curve inspect={inspectLeft} controlPoints={values.controlPoints} labels={values.labels} />
         <Node position={[0, 88]} style={{ stroke: 'none', textColor: 'gray' }} layout={{ padding: 0 }}>

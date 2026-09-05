@@ -7,7 +7,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
  * @description 外部数据集在运行时进入数据层，经字段模型与解析归一形成规范化行，再交给不同消费模块
  */
 const Demo: FC = () => (
-  <Layout width={640} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node id="ext" position={[-235, -16]} style={{ stroke: 'none' }} layout={{ align: 'middle', lineHeight: 16 }}>
       <Text font={{ size: 15, weight: 'bold' }}>外部数据集</Text>
       <Text fill="gray" font={{ size: 12 }}>

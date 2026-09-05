@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Plot 从 Viz 数据处理到 Kernel Scene 的分组主链 */
 const Demo: FC = () => (
-  <Layout width={760} height={200} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="viz-group">
       <LogicFigureFrameTitle>Viz</LogicFigureFrameTitle>
       <Node

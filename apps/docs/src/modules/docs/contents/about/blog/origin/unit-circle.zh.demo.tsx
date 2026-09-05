@@ -14,7 +14,7 @@ const SIN30 = Math.sin((30 * Math.PI) / 180);
 const TAN30 = SIN30 / COS30;
 
 const Demo: FC = () => (
-  <Layout width={720} height={360}>
+  <Layout>
     {/* 背景网格 */}
     {[-100, -50, 0, 50, 100].map(v => (
       <Fragment key={`grid-${v}`}>

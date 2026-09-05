@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Two-axis proposals are evaluated, selected, and committed inside one Core compile */
 const Demo: FC = () => (
-  <Layout width={520} height={420} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="compile-boundary">
       <LogicFigureFrameTitle>One Core compile</LogicFigureFrameTitle>
       <Node

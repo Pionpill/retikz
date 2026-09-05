@@ -24,12 +24,7 @@ const shift = (cx: number, pts: Array<[number, number]>): Array<[number, number]
   pts.map(([x, y]): [number, number] => [cx + x, y]);
 
 const Demo: FC = () => (
-  <Layout
-    width={600}
-    height={207}
-    viewBox={{ x: -232, y: -64, width: 464, height: 160 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     {/* 左：boundary = shape（默认），自动连线贴到多边形边缘 */}
     <Rectangle
       center={[LX, 0]}

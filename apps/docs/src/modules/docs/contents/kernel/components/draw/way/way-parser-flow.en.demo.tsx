@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** way item 按序展开为 Path + Step 的局部流程图 */
 const Demo: FC = () => (
-  <Layout width={620} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="items"
       position={[-250, -25]}

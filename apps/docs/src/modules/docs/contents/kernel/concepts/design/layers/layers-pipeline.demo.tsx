@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import { Draw, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout width={660} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node id="react_dsl" position={[-230, -24]} style={{ stroke: 'none' }}>
       React DSL
     </Node>

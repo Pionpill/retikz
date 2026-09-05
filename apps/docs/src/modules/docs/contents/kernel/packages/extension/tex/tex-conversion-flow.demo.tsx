@@ -29,7 +29,7 @@ const renderFlowNode = ({ id, position, title, detail, color, width = 136 }: Flo
 
 /** 展示公式在 Core 与 Tex 之间往返一次的完整 lowering 链路 */
 const DesktopFigure: FC = () => (
-  <Layout width={640} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="core-boundary-group">
       <LogicFigureFrameTitle>@retikz/core</LogicFigureFrameTitle>
       {renderFlowNode({
@@ -94,7 +94,7 @@ const DesktopFigure: FC = () => (
 
 /** 在窄屏上用两列蛇形布局保留可读字号与短连接线 */
 const MobileFigure: FC = () => (
-  <Layout width={360} height={230} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     {renderFlowNode({
       id: 'mobile-core-text-pipeline',
       position: [-86, -82],

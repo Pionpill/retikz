@@ -42,7 +42,7 @@ const renderFlowNode = ({ id, position, title, detail, color, width = 132 }: Flo
 const DesktopFigure: FC<{ labels: InspectCompileFlowLabels }> = props => {
   const { labels } = props;
   return (
-    <Layout width={680} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout>
       <LogicFigureFrame id="inspect-core-group">
         <LogicFigureFrameTitle>@retikz/core</LogicFigureFrameTitle>
         {renderFlowNode({
@@ -116,7 +116,7 @@ const DesktopFigure: FC<{ labels: InspectCompileFlowLabels }> = props => {
 const MobileFigure: FC<{ labels: InspectCompileFlowLabels }> = props => {
   const { labels } = props;
   return (
-    <Layout width={360} height={390} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout>
       {renderFlowNode({
         id: 'mobile-observed-compile',
         position: [0, -155],

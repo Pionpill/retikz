@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Relationship between Data contracts, runtime dependencies, processing stages, and results */
 const Demo: FC = () => (
-  <Layout width={520} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="external-rows"
       position={[0, -130]}

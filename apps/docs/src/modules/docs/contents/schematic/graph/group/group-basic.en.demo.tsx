@@ -15,7 +15,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const bodyGap = typeof values.bodyGap === 'number' ? values.bodyGap : 4;
 
   return (
-    <Graph width={320} height={150} viewBox={{ x: -50, y: -36.6, width: 320, height: 150 }}>
+    <Graph viewBox={{ x: -50, y: -36.6, width: 320, height: 150 }}>
       <Group
         id="runtime"
         caption={{

@@ -63,8 +63,6 @@ const BoundaryGuide: FC<BoundaryGuideProps> = props => {
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout
-      width={400}
-      height={185}
       viewBox={{ x: -260, y: -120, width: 520, height: 240 }}
       shapes={[boundaryGuideShape, SectorShapeDefinition, StarShapeDefinition]}
     >

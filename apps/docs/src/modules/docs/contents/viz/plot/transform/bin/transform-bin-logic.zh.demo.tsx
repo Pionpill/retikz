@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** bin 的边界解析、分桶、指标规约与每箱输出 */
 const Demo: FC = () => (
-  <Layout width={680} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-290, 35]}

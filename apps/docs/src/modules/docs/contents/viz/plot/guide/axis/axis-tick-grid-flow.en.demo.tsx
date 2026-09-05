@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Axis tick and major / minor grid position-source flow */
 const Demo: FC = () => (
-  <Layout width={760} height={225} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="axis-tick-group">
       <LogicFigureFrameTitle>Axis tick</LogicFigureFrameTitle>
       <Node

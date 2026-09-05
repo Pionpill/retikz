@@ -5,7 +5,7 @@ import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
 
 /** Minimal English Frame example with a title, description, and Core Node body */
 const Demo: FC = () => (
-  <Layout width={360} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Frame id="contract">
       <FrameTitle>Extension contract</FrameTitle>
       <FrameDescription>Builtins and extensions share one Definition</FrameDescription>

@@ -62,7 +62,7 @@ export const DataTransformShapeFigure: FC<DataTransformShapeFigureProps> = props
   ];
 
   return (
-    <Layout width={590} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout>
       <Scope id="source" transforms={[{ kind: 'translate', x: -282, y: -65 }]}>
         <DetailTable id="source-table" dataRef="source-rows" data={sourceRows} layout={TABLE_LAYOUT}>
           <DetailColumn

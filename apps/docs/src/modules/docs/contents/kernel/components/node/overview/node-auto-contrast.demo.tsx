@@ -4,7 +4,7 @@ import { NodeTextColor } from '@retikz/core';
 import { Layout, Node, Scope } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout width={520} height={150} viewBox={{ x: -260, y: -75, width: 520, height: 150 }}>
+  <Layout>
     <Scope
       defaults={{
         node: {

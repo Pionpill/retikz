@@ -34,7 +34,7 @@ const Curve: FC<{ inspect?: boolean }> = props => {
 
 /** 使用内置 stroke Path Inspector 查看最终贝塞尔控制点 */
 const Demo: FC = () => (
-  <InspectLayout registry={registry} width={420} height={220} viewBox={{ x: -210, y: -110, width: 420, height: 220 }}>
+  <InspectLayout registry={registry}>
     <Curve inspect />
   </InspectLayout>
 );
@@ -43,7 +43,7 @@ const Demo: FC = () => (
 export const previewSource = {
   deriveIR: false,
   canonicalRender: () => (
-    <Layout width={420} height={220} viewBox={{ x: -210, y: -110, width: 420, height: 220 }}>
+    <Layout>
       <Curve />
     </Layout>
   ),

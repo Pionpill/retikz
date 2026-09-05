@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Coordinate 登记与两类引用时机的编译流程图 */
 const Demo: FC = () => (
-  <Layout width={700} height={230} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="coordinate-ir"
       position={[-270, -55]}

@@ -15,13 +15,13 @@ const Demo: FC = () => {
   const lowerTexState = useLowerTex({ profile: 'math' });
 
   if (lowerTexState.status !== 'ready') {
-    return <Layout width={560} height={280} viewBox={{ x: -280, y: -140, width: 560, height: 280 }} />;
+    return <Layout />;
   }
 
   const lowerTex: LowerTex = lowerTexState.lowerTex;
 
   return (
-    <Layout width={560} height={280} viewBox={{ x: -280, y: -140, width: 560, height: 280 }} lowerTex={lowerTex}>
+    <Layout lowerTex={lowerTex}>
       <Node position={[0, -78]} style={{ stroke: 'none', font: { size: 18 } }} layout={{ padding: 0 }}>
         {'Inline formula: when $v = d/t$, displacement is $s = vt$'}
       </Node>

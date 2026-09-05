@@ -76,12 +76,7 @@ const rampSample = (direction: 'vertical' | 'horizontal') => (
 
 /** 使用控制值构造可测试的 Legend playground React authoring */
 export const LegendPlaygroundPreview = (values: LegendPlaygroundValues) => (
-  <Layout
-    width={400}
-    height={245}
-    viewBox={{ x: -50, y: -20, width: 400, height: 245 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout viewBox={{ x: -50, y: -20, width: 400, height: 245 }}>
     {values.kind === LegendContentKind.Items ? (
       <Legend
         kind={LegendContentKind.Items}

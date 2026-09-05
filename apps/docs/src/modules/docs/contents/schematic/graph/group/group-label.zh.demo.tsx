@@ -30,7 +30,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     defaultPositionValue === 'default' ? {} : { position: positionOf(defaultPositionValue) ?? 'bottom-left' };
 
   return (
-    <Graph width={360} height={190} viewBox={{ x: -52, y: -63, width: 360, height: 190 }}>
+    <Graph viewBox={{ x: -52, y: -63, width: 360, height: 190 }}>
       <Group
         id="boundary"
         labels={[

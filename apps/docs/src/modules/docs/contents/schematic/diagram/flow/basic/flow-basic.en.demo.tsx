@@ -60,7 +60,7 @@ const formTextOf = (values: PreviewControlValuesFor<typeof flowBasicControls>): 
 
 /** Render the English form submission flow with explicit controls values */
 export const renderFlowBasicPreview = (values: PreviewControlValuesFor<typeof flowBasicControls>): ReactElement => (
-  <FlowDiagram width={740} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <FlowDiagram>
     <FlowEntities
       items={[
         { id: 'user-input', text: 'User input', role: 'participant' },

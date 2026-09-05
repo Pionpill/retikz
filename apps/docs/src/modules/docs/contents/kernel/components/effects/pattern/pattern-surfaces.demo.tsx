@@ -14,7 +14,7 @@ const pattern = {
 
 /** 同一份图案规格既可填充 Node，也可填充闭合 Path */
 const Demo: FC = () => (
-  <Layout width={320} height={160} viewBox={{ x: -160, y: -80, width: 320, height: 160 }}>
+  <Layout>
     <Node
       position={[-82, 0]}
       shape="circle"

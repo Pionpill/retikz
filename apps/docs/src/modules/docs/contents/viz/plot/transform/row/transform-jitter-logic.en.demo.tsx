@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** jitter 的英文字段选择、确定性偏移与 pre-scale 数据流 */
 const Demo: FC = () => (
-  <Layout width={820} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-350, 40]}

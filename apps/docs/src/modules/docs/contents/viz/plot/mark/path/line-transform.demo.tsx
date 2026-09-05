@@ -15,7 +15,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const groupByChannel = values[LINE_TRANSFORM_GROUPING_ID] === 'channel';
 
   return (
-    <Plot data={weeklyPipeline} width={620} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Plot data={weeklyPipeline} width={620} height={280}>
       <PointMark x="day" y="value" color="channel" opacity={0.45} minimumSize={6} />
       <PathMark
         x="trendX"

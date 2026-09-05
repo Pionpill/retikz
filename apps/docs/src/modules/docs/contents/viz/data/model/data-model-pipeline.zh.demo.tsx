@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** 数据模型从外部行到下游消费者的整体流程 */
 const Demo: FC = () => (
-  <Layout width={700} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-245, 25]}

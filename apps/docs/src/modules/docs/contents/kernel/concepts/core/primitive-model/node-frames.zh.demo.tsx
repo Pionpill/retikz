@@ -13,12 +13,7 @@ const OUTER_HEIGHT = INNER_HEIGHT + MARGIN * 2;
 const FONT = { size: 10 }; // 与「模型解剖」图字号视觉一致（viewBox 更小，故缩小字号）
 
 const Demo: FC = () => (
-  <Layout
-    width={480}
-    height={272}
-    viewBox={{ x: -185, y: -105, width: 370, height: 210 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     {/* 外框：内框 + margin，自动连线端点的边界 */}
     <Rectangle
       center={[0, 0]}

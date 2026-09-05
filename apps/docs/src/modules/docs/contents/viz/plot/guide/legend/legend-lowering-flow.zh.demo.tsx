@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Legend 复用通道描述、选择形态并下沉为独立 scope 的流程 */
 const Demo: FC = () => (
-  <Layout width={760} height={225} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="legend-guide"
       position={[-275, -50]}

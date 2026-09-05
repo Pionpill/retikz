@@ -10,7 +10,7 @@ export const previewControls = pathStructureControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={218} viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
+    <Layout viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
       <Path
         style={{
           stroke: values.structure === 'fill' ? values.fill : 'currentColor',

@@ -4,7 +4,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** 同一次 Table transaction 同源生成 Scene 与 typed manifest */
 const Demo: FC = () => (
-  <Layout width={600} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="semantic"
       position={[-220, -46]}

@@ -7,7 +7,7 @@ import { Layout, Sector } from '@retikz/react';
  * rotate 让轴对齐椭圆扇形倾斜——这是目前画"斜椭圆扇形"的方式。
  */
 const Demo: FC = () => (
-  <Layout width={320} height={160}>
+  <Layout>
     {/* 原始轴对齐椭圆扇形 */}
     <Sector
       center={[80, 80]}

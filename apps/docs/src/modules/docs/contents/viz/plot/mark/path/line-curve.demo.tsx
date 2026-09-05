@@ -22,7 +22,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const showPoints = values[PATH_CURVE_SHOW_POINTS_ID];
   const x = coordinate === 'polar2D' ? 'category' : 'index';
   return (
-    <Layout width={400} height={280} viewBox={{ x: -12, y: 0, width: 420, height: 292 }}>
+    <Layout viewBox={{ x: -12, y: 0, width: 420, height: 292 }}>
       <Plot data={curveSamples} width={400} height={280} coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}>
         <PathMark
           x={x}

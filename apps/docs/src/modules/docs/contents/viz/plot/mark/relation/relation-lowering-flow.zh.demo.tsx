@@ -142,7 +142,7 @@ const renderFlowNode = (node: FlowNode) => (
 const Demo: FC = () => (
   <>
     <div className="hidden sm:block">
-      <Layout width={860} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         {desktopNodes.map(renderFlowNode)}
         <Draw way={['relation-rows', 'relation-transform']} arrow="->" />
         <Draw way={['relation-transform', 'relation-targets']} arrow="->" />
@@ -154,7 +154,7 @@ const Demo: FC = () => (
     </div>
 
     <div className="sm:hidden">
-      <Layout width={360} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         {mobileNodes.map(renderFlowNode)}
         <Draw way={['mobile-relation-rows', 'mobile-relation-targets']} arrow="->" />
         <Draw way={['mobile-relation-targets', 'mobile-relation-route']} arrow="->" />

@@ -64,8 +64,6 @@ const ir: IRScene = {
   ],
 };
 
-const Demo: FC = () => (
-  <Layout ir={ir} composites={[pipeline]} width={680} height={110} style={{ maxWidth: '100%', height: 'auto' }} />
-);
+const Demo: FC = () => <Layout ir={ir} composites={[pipeline]} />;
 
 export default Demo;

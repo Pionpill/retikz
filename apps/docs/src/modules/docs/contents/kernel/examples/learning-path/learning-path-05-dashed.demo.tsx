@@ -51,7 +51,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
 };
 
 const Demo: FC = () => (
-  <Layout width={811} height={441} nodeDistance={41}>
+  <Layout nodeDistance={41}>
     <RoadmapNode id="title" position={[404, 20]} variant="title" width={200} height={40}>
       AI Expert in 2022
     </RoadmapNode>

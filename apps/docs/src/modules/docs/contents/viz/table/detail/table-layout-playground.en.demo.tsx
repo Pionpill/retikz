@@ -39,12 +39,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     : undefined;
 
   return (
-    <Layout
-      width={440}
-      height={240}
-      viewBox={{ x: -110, y: -32, width: 660, height: 340 }}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Layout viewBox={{ x: -110, y: -32, width: 660, height: 340 }}>
       <DetailTable
         id="score-layout-playground"
         dataRef="scores"

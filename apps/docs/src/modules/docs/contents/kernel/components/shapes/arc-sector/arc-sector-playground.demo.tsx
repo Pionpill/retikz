@@ -28,7 +28,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     : undefined;
 
   return (
-    <Layout width={400} height={270} viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
+    <Layout viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
       {[arcCenter, sectorCenter].map((center, index) => (
         <Draw
           key={index}

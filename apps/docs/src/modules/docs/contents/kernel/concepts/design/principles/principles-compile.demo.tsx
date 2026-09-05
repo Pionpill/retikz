@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Core 从 IR 到 Scene 的完整编译流程 */
 const Demo: FC = () => (
-  <Layout width={720} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="ir"
       position={[-330, 30]}

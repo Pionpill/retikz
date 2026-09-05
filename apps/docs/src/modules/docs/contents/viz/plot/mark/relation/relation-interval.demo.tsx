@@ -27,12 +27,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const data = relationIntervalRowsOf(values);
 
   return (
-    <Layout
-      width={620}
-      height={366}
-      viewBox={{ x: -20, y: -50, width: 660, height: 390 }}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Layout viewBox={{ x: -20, y: -50, width: 660, height: 390 }}>
       <Plot data={data} width={620} height={320}>
         <PlotScale dimension="x" type="band" paddingOuter={0} />
         <PlotScale dimension="y" type="linear" domainPadding={{ lower: 0 }} />

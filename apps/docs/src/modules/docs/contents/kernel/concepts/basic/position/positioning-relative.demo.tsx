@@ -5,7 +5,7 @@ import { Layout, Node } from '@retikz/react';
 const labelFont = { size: 12 };
 
 const Demo: FC = () => (
-  <Layout width={420} height={260} nodeDistance={70}>
+  <Layout nodeDistance={70}>
     <Node id="center" position={[0, 0]}>
       A
     </Node>

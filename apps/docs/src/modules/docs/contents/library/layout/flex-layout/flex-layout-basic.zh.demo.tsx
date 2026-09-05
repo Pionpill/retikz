@@ -5,7 +5,7 @@ import { Layout, Node } from '@retikz/react';
 
 /** 用 React authoring 展示 FlexLayout 的 grow、gap 与 cross alignment */
 const Demo: FC = () => (
-  <Layout width={420} height={150}>
+  <Layout>
     <FlexLayout
       size={{ x: { kind: 'fixed', value: 360 }, y: { kind: 'fixed', value: 96 } }}
       padding={12}

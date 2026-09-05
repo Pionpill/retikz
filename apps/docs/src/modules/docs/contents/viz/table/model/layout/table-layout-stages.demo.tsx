@@ -39,7 +39,7 @@ const stageNode = (stage: Stage) => (
 
 /** Cell 内容从自然测量到最终 replay 的布局主链 */
 const Demo: FC = () => (
-  <Layout width={640} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     {stages.map(stageNode)}
     <Draw way={['measure', 'tracks']} arrow="->" />
     <Draw way={['tracks', 'place']} arrow="->" />

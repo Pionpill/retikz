@@ -7,7 +7,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
  * @description IRPlot 的位置绑定进入坐标投影，其余绑定与内置 / 自定义通道规则在解析器处汇合
  */
 const Demo: FC = () => (
-  <Layout width={440} height={360} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="binding"
       position={[-145, -105]}

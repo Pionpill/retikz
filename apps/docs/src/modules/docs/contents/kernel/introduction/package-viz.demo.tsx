@@ -9,7 +9,7 @@ import { Draw, Layout, Node } from '@retikz/react';
  *   包名与职责用同组 Node 承载，避免把职责说明做成额外 label；第一行强调包名，第二行灰色说明职责。
  */
 const Demo: FC = () => (
-  <Layout width={640} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node id="math" position={[-270, 0]} style={{ stroke: 'none', font: { size: 15, weight: 'bold' } }}>
       @retikz/math
     </Node>

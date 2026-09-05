@@ -7,7 +7,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
  * @description External datasets enter the data layer at runtime, become canonical rows, and then flow to independent consumer modules
  */
 const Demo: FC = () => (
-  <Layout width={640} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node id="ext" position={[-245, -16]} style={{ stroke: 'none' }} layout={{ align: 'middle', lineHeight: 16 }}>
       <Text font={{ size: 15, weight: 'bold' }}>External dataset</Text>
       <Text fill="gray" font={{ size: 12 }}>

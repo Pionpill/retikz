@@ -13,8 +13,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const detail = { color: values.color, scale: values.scale, lineWidth: values.lineWidth };
   return (
     <Layout
-      width={460}
-      height={180}
       viewBox={{ x: -210, y: -80, width: 420, height: 160 }}
       arrows={[DiamondArrowDefinition, OpenDiamondArrowDefinition]}
     >

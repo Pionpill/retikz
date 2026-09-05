@@ -10,7 +10,7 @@ import { polygonClipControls, previewControlContract } from './polygon-clip.cont
 export const previewControls = polygonClipControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout width={340} height={220} viewBox={{ x: 0, y: 0, width: 200, height: 200 }} clips={[PolygonClipDefinition]}>
+  <Layout viewBox={{ x: 0, y: 0, width: 200, height: 200 }} clips={[PolygonClipDefinition]}>
     <Node
       position={[100, 100]}
       shape="rectangle"

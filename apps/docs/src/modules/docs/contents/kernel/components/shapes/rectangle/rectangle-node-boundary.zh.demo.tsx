@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** 矩形 Node 从内容内框到可连接边界的布局流程图 */
 const Demo: FC = () => (
-  <Layout width={420} height={350} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="text-size"
       position={[-115, -125]}

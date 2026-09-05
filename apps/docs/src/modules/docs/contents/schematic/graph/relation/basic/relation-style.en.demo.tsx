@@ -21,7 +21,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const labelOpacity = typeof values.labelOpacity === 'number' ? values.labelOpacity : 1;
 
   return (
-    <Graph width={460} height={220} viewBox={{ x: 0, y: 0, width: 460, height: 220 }}>
+    <Graph viewBox={{ x: 0, y: 0, width: 460, height: 220 }}>
       <Entity
         id="source"
         role="participant"

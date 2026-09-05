@@ -4,7 +4,7 @@ import { Circle, Draw, Ellipse, Layout, Node, Rectangle } from '@retikz/react';
 
 /** 同一内容框在 proportional / equal 外接策略下的边界对照图 */
 const Demo: FC = () => (
-  <Layout width={660} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node position={[-170, -100]} style={{ stroke: 'none', fill: 'none', font: { size: 14, weight: 'bold' } }}>
       ellipse · proportional
     </Node>

@@ -1,11 +1,10 @@
 import type { FC } from 'react';
 
-import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { BubbleChart, BubbleEncodings, BubbleProperties } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { resolvePointPreviewLayout } from '../point-coordinate-control';
 import { BUBBLE_BASIC_CONTROL_IDS } from './bubble-basic.controls';
 import { gapminderBubbleData } from './bubble-basic.data';
 import { previewControlContract } from './bubble-basic.en.controls';
@@ -17,7 +16,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     }
   >
     <ChartData data={gapminderBubbleData} />
-    <ChartLayout {...resolvePointPreviewLayout(values[BUBBLE_BASIC_CONTROL_IDS.coordinateSystem])} />
     <BubbleEncodings
       x={
         values[BUBBLE_BASIC_CONTROL_IDS.xScale] === 'log'

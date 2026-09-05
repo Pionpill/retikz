@@ -12,13 +12,7 @@ import { intensityChannel } from './custom-channel.definition';
 export const previewControls = customChannelControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot
-    data={customChannelPoints}
-    channelDefinitions={[intensityChannel]}
-    width={440}
-    height={220}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Plot data={customChannelPoints} channelDefinitions={[intensityChannel]} width={440} height={220}>
     <PointMark
       x="x"
       y="y"

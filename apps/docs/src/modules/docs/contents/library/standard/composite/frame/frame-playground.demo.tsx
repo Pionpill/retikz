@@ -26,12 +26,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   };
 
   return (
-    <Layout
-      width={420}
-      height={260}
-      viewBox={{ x: 0, y: 0, width: 420, height: 260 }}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Layout viewBox={{ x: 0, y: 0, width: 420, height: 260 }}>
       <Frame
         id="frame-playground"
         padding={{ x: values.paddingX, y: values.paddingY }}

@@ -25,7 +25,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   });
 
   return (
-    <Layout width={400} height={300} viewBox={{ x: -200, y: -150, width: 400, height: 300 }}>
+    <Layout viewBox={{ x: -200, y: -150, width: 400, height: 300 }}>
       <Node
         id="Q"
         position={[0, 0]}
