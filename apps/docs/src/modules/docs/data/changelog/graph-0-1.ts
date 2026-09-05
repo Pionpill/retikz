@@ -37,6 +37,16 @@ const graphMilestones: Array<SubVersion> = [
           en: 'Graph Theme styles now own Entity, Relation, Group, and Block appearance together. Group and Block root Surfaces inherit `background`, `border`, and `cornerRadius` from the same-name Definition; explicit Source fields replace complete top-level Theme fields, while `graphTheme` remains descendant-only for Entity and Relation.',
         },
       },
+      {
+        label: {
+          zh: 'BREAKING：Graph Theme 直接使用 owner schema',
+          en: 'BREAKING: Graph Theme uses its owner schema directly',
+        },
+        content: {
+          zh: '`GraphThemeStyleDefinition.resolve()` 输出不再经过 plain-container preflight 或已知 `undefined` 清理，而是直接由 Graph owner schema 投影后进入既有 merge。optional 显式 `undefined` 因此可以覆盖默认字段；未知 token 与非法值仍由严格 schema fail-loud。',
+          en: '`GraphThemeStyleDefinition.resolve()` output no longer passes through a plain-container preflight or known-`undefined` cleanup. The Graph owner schema projects it directly before the existing merge. Optional explicit `undefined` may therefore replace a default field, while unknown tokens and invalid values still fail in the strict schema.',
+        },
+      },
     ],
   },
   {

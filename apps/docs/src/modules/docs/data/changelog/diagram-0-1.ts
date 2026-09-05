@@ -37,6 +37,16 @@ const diagramMilestones: Array<SubVersion> = [
           en: 'Compilation returns recursive `entity | group | layout` element bounds, relation routes aligned by Source order, label reservations, Foundation regions, and real spatial handles. Layouts use an independent `layout` artifact kind and handle role. Direct IR, flat Vanilla input, and nested React JSX normalize field-for-field into the same Source.',
         },
       },
+      {
+        label: {
+          zh: 'BREAKING：Source 字段遵循 Zod optional',
+          en: 'BREAKING: Source fields follow Zod optional semantics',
+        },
+        content: {
+          zh: 'Diagram foundation schema 不再单独递归拒绝已知 optional 字段中的显式 `undefined`；字段缺失与显式值完全遵循 owner schema，同时继续保留空对象、空文本和跨字段不变量。Flow Layout Definition 因没有持久化 schema，仍保留独立 plain-container guard。',
+          en: 'Diagram foundation schemas no longer recursively reject explicit `undefined` in known optional fields. Missing and explicit values follow the owner schema, while empty-object, empty-text, and cross-field invariants remain. Flow Layout Definitions have no persisted schema and retain their independent plain-container guard.',
+        },
+      },
     ],
   },
 ];

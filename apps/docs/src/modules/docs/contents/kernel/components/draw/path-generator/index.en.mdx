@@ -117,7 +117,7 @@ A generator may return `move` commands to create subpaths, but it cannot return 
 | Field          | Type                          | Default | Description                                            |
 | -------------- | ----------------------------- | ------- | ------------------------------------------------------ |
 | `name`         | `string`                      | —       | Registry key and generator Step reference              |
-| `paramsSchema` | `ZodType<IRJsonObject>`       | —       | Validates instance parameters; output must remain JSON |
+| `paramsSchema` | `ZodType<JsonObject>`         | —       | Validates instance parameters; output must remain JSON |
 | `targetParams` | `Array<string>`               | `[]`    | Top-level parameter keys resolved to local coordinates |
 | `generate`     | `(ctx) => Array<PathCommand>` | —       | Generates commands from the local context              |
 

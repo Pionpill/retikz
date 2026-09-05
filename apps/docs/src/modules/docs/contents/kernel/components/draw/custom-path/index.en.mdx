@@ -184,7 +184,7 @@ A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG
 | `owner`              | `CompileObservationOwner`        | —       | Targets the observed Path kind                            |
 | `subjectSchema`      | `ZodType<JsonValue>`             | —       | Validates the owner-output agreement                      |
 | `optionsInputSchema` | strict `ZodObject`               | —       | Validates sparse runtime input and must accept `{}`       |
-| `optionsSchema`      | `ZodType<IRJsonObject>`          | —       | Resolves sparse input into complete JSON-safe options     |
+| `optionsSchema`      | `ZodType<JsonObject>`            | —       | Resolves sparse input into complete JSON-safe options     |
 | `inspect`            | `InspectorDefinition['inspect']` | —       | Returns one ordinary Core child or a dense readonly array |
 
 ### Compile context

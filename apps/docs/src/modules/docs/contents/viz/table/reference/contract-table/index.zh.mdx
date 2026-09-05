@@ -15,7 +15,7 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table theme t
 | `type`              | <ApiValues name="TableComposite" /> | —          | 顶层 Table node type                  |
 | `id?`               | `string`                            | —          | 可选稳定 id                           |
 | `layout?`           | `IRTableLayout`                     | 轨道默认值 | 轨道、稀疏覆盖、gap 与 border         |
-| `meta?`             | `IRJsonObject`                      | —          | lowering 原样保留的 JSON-safe 元数据  |
+| `meta?`             | `JsonObject`                        | —          | lowering 原样保留的 JSON-safe 元数据  |
 | `rules?`            | `Array<IRTableCellRule>`            | `[]`       | 按声明顺序应用的 Cell 覆盖            |
 | `encodings?`        | `Array<IRTableCellVisualEncoding>`  | `[]`       | 按顺序把原始值映射到颜色通道          |
 | `tableThemeTokens?` | `IRTableThemeTokenOverrides`        | `{}`       | 当前 IRTable 的稀疏 Table token 覆盖  |
@@ -213,7 +213,7 @@ description: 查询 IRTable 根、Cell formatter、rule/encoding、Table theme t
 
 ## Table Theme token
 
-Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme })` 提供。Table 先建立当前 mode 的 owner-local 默认 preset，再按同名 `TableThemeStyleDefinition` 合并稀疏 style tokens，随后投影 Core shared `colors.categorical` 到 `data.categorical`，最后应用 IRTable 的局部 sparse `tableThemeTokens`。runtime definition 省略或显式返回 `undefined` 的 token 保留默认值；持久化 `tableThemeTokens` 仍拒绝显式 `undefined`。因此 Table style 不维护第二份 shared palette，Theme IR 也不持久化完整 token map。
+Core Theme 的 `style` / `mode` 由宿主 `Layout` 或 `renderTable(..., { theme })` 提供。Table 先建立当前 mode 的 owner-local 默认 preset，再按同名 `TableThemeStyleDefinition` 合并稀疏 style tokens，随后投影 Core shared `colors.categorical` 到 `data.categorical`，最后应用 IRTable 的局部 sparse `tableThemeTokens`。Zod optional 字段接受并保留显式 `undefined`；若它覆盖完整 token，最终 `TableThemeTokenMapSchema` 会因必填值缺失而失败，不会被通用 cleaner 当作省略。因此 Table style 不维护第二份 shared palette，Theme IR 也不持久化完整 token map。
 
 发布包不预注册命名的 Core 或 Table definitions。本站的 `academic`、`vibrant`、`clean` 与应用自定义 style 一样，必须在实际消费它的两个 owner 中注入同名 definition：standalone `compileTable` 通过 `compile.themeStyles` 注入 Core definition，并通过 `lower.tableThemeStyles` 注入 Table definition；缺少 Table 同名 definition 会在 Table resolver fail-loud。
 

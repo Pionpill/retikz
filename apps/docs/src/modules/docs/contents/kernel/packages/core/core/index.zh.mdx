@@ -9,7 +9,7 @@ description: 把完整 Core IR 编译为确定性 Scene，并通过 Core Runtime
 
 Core 公开 `ThemeMode`、`ThemeSchema`、`ResolvedTheme` 与 `ResolvedThemeColors`。`IRScene.theme` 和 `IRScope.theme` 仅保存稀疏、JSON-safe 的 `style` / `mode` selector；compile 从默认 light 基线开始按 Scene → Scope 继承，并把完整、冻结的 `ResolvedTheme` 传给 `CompositeDefinition.expand`、布局感知 `compile` 与 observation context。
 
-发布包不提供命名 style；自定义 style 用 `defineThemeStyle` 定义并经 compile 的 `themeStyles` 注入。resolver 只需返回相对当前 `mode` 默认 shared colors 的稀疏覆盖：`semantic` 按角色合并，显式 `categorical` 整体替换默认 palette；省略或显式返回 `undefined` 的已知字段继续使用该 mode 的默认值。外部 resolver 输出仍经过严格校验，未知字段、空白颜色、空 palette 与非法值立即 fail-loud。函数和解析结果不进入 IR、snapshot 或 JSON，未注册名称同样立即失败。
+发布包不提供命名 style；自定义 style 用 `defineThemeStyle` 定义并经 compile 的 `themeStyles` 注入。resolver 只需返回相对当前 `mode` 默认 shared colors 的稀疏覆盖：`semantic` 按角色合并，显式 `categorical` 整体替换默认 palette；省略或显式返回 `undefined` 的已知字段由现有 `??` fallback 继续使用该 mode 的默认值。输出只由 Core owner schema 解析一次，未知字段、空白颜色、空 palette 与非法值立即 fail-loud；不会再套通用 JSON preflight 或 snapshot。resolver 函数与运行时结果不进入 IR，未注册名称同样立即失败。
 
 ```ts
 import { defineThemeStyle, ThemeMode } from '@retikz/core';
@@ -24,7 +24,7 @@ const brand = defineThemeStyle({
 
 Core 只负责传播 selector 并生成 detached/frozen `colors` 视图，不解释领域 token。`ResolvedTheme.colors` 提供 shared semantic colors（包括 `error`、`success`、`warning` 与低强调辅助色 `guide`）以及当前 categorical palette；后者允许重复值，并由消费方按稳定 index 取余。Core primitive、最终 Scene 与 renderer 都不按 Theme 分支。契约和失败语义见[编译](/kernel/reference/runtime/compile#composite)，schema 见[场景](/kernel/reference/schema/scene#theme)。
 
-静态 CSS 颜色解析与不透明预合成原子由 [`@retikz/foundation`](/kernel/packages/base/foundation) 统一提供。Core 只拥有 Theme mode、最终主色链与派生颜色确定化，不再从根入口转发这些无领域原子。
+静态 CSS 颜色解析、不透明预合成以及通用 `JsonValue` / `JsonObject` 类型与 schema 由 [`@retikz/foundation`](/kernel/packages/base/foundation#jsonobject) 统一提供。Core 只拥有 Theme mode、最终主色链与派生颜色确定化，不再从根入口转发这些无领域原子。
 
 ## 完整 Snapshot 与 Core Program
 

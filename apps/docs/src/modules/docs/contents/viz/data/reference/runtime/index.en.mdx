@@ -32,7 +32,7 @@ The host collects the fields it consumes, chooses the dataset, and passes custom
 | `StatisticsReducerDefinition` | schema `kind` literal | Reduce a row group to an output-field fragment           |
 | `RowSelectorDefinition`       | schema `kind` literal | Select original rows and optional ranks from a row group |
 
-Each resolver starts from built-in Definitions and merges a caller-provided array. A custom key cannot replace a built-in key or appear twice. Validation differs by Definition type: a format validates its `name` and directly uses its parser; a transform first proves that the operation is a JSON object and then parses it with the matched Definition schema; reducers and selectors pass through their public operation schemas before the matched Definition schema. An unknown transform, reducer, or selector `kind` fails loudly and names the corresponding injection point.
+Each resolver starts from built-in Definitions and merges a caller-provided array. A custom key cannot replace a built-in key or appear twice. A format validates its `name` and directly uses its parser. The public Source schemas for transforms, reducers, and selectors validate open configuration through JSON catchalls, then registry dispatch runs only the matched exact Definition schema. No generic JSON-object validation wraps that exact schema. An unknown transform, reducer, or selector `kind` fails loudly and names the corresponding injection point.
 
 Inspect the built-in collections through `BUILTIN_FORMATS`, `BUILTIN_TRANSFORMS`, `BUILTIN_STATISTICS_REDUCERS`, and `BUILTIN_ROW_SELECTORS`. See [Data Model Extensions](/viz/data/model/extensions) and [Data Transform Extensions](/viz/data/transform/extensions) for complete custom-definition flows.
 

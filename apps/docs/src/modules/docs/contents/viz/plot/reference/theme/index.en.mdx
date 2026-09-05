@@ -15,7 +15,7 @@ The site's Vibrant reference preset uses a light blue-gray Plot area in Light mo
 
 ## Extensible styles
 
-Define a runtime Plot preset with `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })`, then inject it through `plotThemeStyles` on `lowerPlots`, `<Plot>`, or `renderPlot()`; React subtrees may use the ambient `PlotThemeProvider`. `tokens` may be omitted and shares the same strict sparse schema as `plotThemeTokens`; optional `tokenRules` append after the default Axis rules. Tokens the runtime definition omits or explicitly returns as `undefined` keep their current mode defaults, while persisted `plotThemeTokens` / `plotThemeTokenRules` still reject explicit `undefined`. The resolver and resolved output never enter `IRPlot`. Pass the same-named Core definition through `themeStyles` or the Core `ThemeProvider`, or Core or Plot fails loudly. Typed Chart authoring injects Chart definitions through `<ChartThemeProvider themeDefinitions={...}>` in React or the Vanilla factory's `themeDefinitions`; `lowerOptions.plotThemeStyles` remains the Plot-only definition input.
+Define a runtime Plot preset with `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })`, then inject it through `plotThemeStyles` on `lowerPlots`, `<Plot>`, or `renderPlot()`; React subtrees may use the ambient `PlotThemeProvider`. `tokens` may be omitted and shares the same strict sparse schema as `plotThemeTokens`; optional `tokenRules` append after the default Axis rules. Zod optional fields accept and preserve explicit `undefined`; if one replaces a complete token during cascade, the final `PlotThemeResolutionSchema` fails because that required value is missing instead of treating it as omitted through a generic cleaner. The resolver and resolved output never enter `IRPlot`. Pass the same-named Core definition through `themeStyles` or the Core `ThemeProvider`, or Core or Plot fails loudly. Typed Chart authoring injects Chart definitions through `<ChartThemeProvider themeDefinitions={...}>` in React or the Vanilla factory's `themeDefinitions`; `lowerOptions.plotThemeStyles` remains the Plot-only definition input.
 
 ## Cascade and atomic replacement
 
@@ -30,7 +30,7 @@ Core effective Theme
   → explicit guide / mark / scale config
 ```
 
-- `plotThemeTokens` is a strict sparse canonical map; unknown keys, explicit `undefined`, and invalid values fail
+- `plotThemeTokens` is a strict sparse canonical map; unknown keys and invalid values fail in the owner schema, while optional explicit `undefined` is preserved by Zod and judged by the later complete-token resolution
 - native `plotTheme` is closer to the formal Plot structure and may carry legal fields not represented by tokens
 - `plotThemeTokenRules` accepts Axis tokens only and matches existing axes by `select.dimension`; later matching rules at the same layer win
 - arrays, scalars, `false`, and objects whose discriminator changes replace whole values; compatible closed objects merge legal fields

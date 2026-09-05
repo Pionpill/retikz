@@ -3,6 +3,7 @@ import type { core, z } from 'zod';
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
 import * as DiagramIR from '@retikz/diagram/flow';
+import { JsonObjectSchema, JsonValueSchema } from '@retikz/foundation';
 import * as GraphIR from '@retikz/graph';
 import * as LayoutIR from '@retikz/layout';
 import * as LayoutInspectIR from '@retikz/layout/inspect';
@@ -56,14 +57,14 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/reference/schema/scene#compositenode',
   },
   JsonObjectSchema: {
-    schema: IR.JsonObjectSchema,
+    schema: JsonObjectSchema,
     label: 'JsonObject',
-    url: '/kernel/reference/schema/scene#jsonobject',
+    url: '/kernel/packages/base/foundation#jsonobject',
   },
   JsonValueSchema: {
-    schema: IR.JsonValueSchema,
+    schema: JsonValueSchema,
     label: 'JsonValue',
-    url: '/kernel/reference/schema/scene#jsonvalue',
+    url: '/kernel/packages/base/foundation#jsonvalue',
   },
 
   ScopeSchema: { schema: IR.ScopeSchema, label: 'Scope', url: '/kernel/reference/schema/scope#scope' },

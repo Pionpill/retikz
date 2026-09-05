@@ -184,7 +184,7 @@ provider 可以完全创建新的 Scene primitive，也可以调用 `emitStroke`
 | `owner`              | `CompileObservationOwner`        | —      | 指向被观察的 Path kind                        |
 | `subjectSchema`      | `ZodType<JsonValue>`             | —      | 校验 owner output 与 Inspector 的外部约定     |
 | `optionsInputSchema` | strict `ZodObject`               | —      | 校验可为空的 runtime 稀疏输入                 |
-| `optionsSchema`      | `ZodType<IRJsonObject>`          | —      | 把稀疏输入解析为完整 JSON-safe options        |
+| `optionsSchema`      | `ZodType<JsonObject>`            | —      | 把稀疏输入解析为完整 JSON-safe options        |
 | `inspect`            | `InspectorDefinition['inspect']` | —      | 返回一个普通 Core child 或稠密只读 child 数组 |
 
 ### compile 上下文

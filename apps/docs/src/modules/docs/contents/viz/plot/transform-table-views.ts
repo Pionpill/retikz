@@ -1,4 +1,4 @@
-import type { IRDataTransform } from '@retikz/data';
+import type { IRPlotTransform } from '@retikz/plot';
 
 import { resolvePlotTransformRegistry } from '@retikz/plot';
 
@@ -17,7 +17,7 @@ export const createPlotTransformResultView = <TValues extends object>(
   id: string,
   label: string,
   rows: TransformTableRows<TValues>,
-  operationsOf: (values: TValues) => IRDataTransform | ReadonlyArray<IRDataTransform>,
+  operationsOf: (values: TValues) => IRPlotTransform | ReadonlyArray<IRPlotTransform>,
   options: PlotTransformTableViewOptions = {},
 ): PreviewTableView =>
   createTransformResultView(id, label, rows, operationsOf, {
@@ -29,7 +29,7 @@ export const createPlotTransformResultView = <TValues extends object>(
 export const createPlotTransformTableViews = <TValues extends object>(
   labels: { source: string; result: string },
   rows: TransformTableRows<TValues>,
-  operationsOf: (values: TValues) => IRDataTransform | ReadonlyArray<IRDataTransform>,
+  operationsOf: (values: TValues) => IRPlotTransform | ReadonlyArray<IRPlotTransform>,
   options: PlotTransformTableViewOptions = {},
 ): ReadonlyArray<PreviewTableView> =>
   createTransformTableViews(labels, rows, operationsOf, {

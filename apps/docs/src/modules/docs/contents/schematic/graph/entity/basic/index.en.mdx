@@ -160,17 +160,17 @@ Entity performs its own registry lookup and lowers to an ordinary Core `Node`. C
 
 ## API Reference
 
-| Prop         | Type                                      | Default | Description                                                               |
-| ------------ | ----------------------------------------- | ------- | ------------------------------------------------------------------------- |
-| `id?`        | `string`                                  | —       | Optional Core target id; omission registers no reference target           |
-| `role`       | `string`                                  | —       | Registered open semantic role key                                         |
-| `kind?`      | `string`                                  | —       | Registered stable subtype within the role                                 |
-| `predicate?` | `{ name: string; params?: IRJsonObject }` | —       | Registered predicate and its JSON-safe parameters                         |
-| `status?`    | `GraphStatusValue`                        | —       | Optional closed Graph state: `error`, `success`, `warning`, or `disabled` |
-| `position?`  | `IRPosition`                              | —       | Directly reuses the Core Node position language                           |
-| `text?`      | `IRNode['text']`                          | —       | Node-compatible text                                                      |
-| `children?`  | Node-compatible text                      | —       | React text entry; it cannot host arbitrary drawing children               |
-| `meta?`      | `IRJsonObject`                            | —       | Metadata ignored by Graph semantics                                       |
+| Prop         | Type                                    | Default | Description                                                               |
+| ------------ | --------------------------------------- | ------- | ------------------------------------------------------------------------- |
+| `id?`        | `string`                                | —       | Optional Core target id; omission registers no reference target           |
+| `role`       | `string`                                | —       | Registered open semantic role key                                         |
+| `kind?`      | `string`                                | —       | Registered stable subtype within the role                                 |
+| `predicate?` | `{ name: string; params?: JsonObject }` | —       | Registered predicate and its JSON-safe parameters                         |
+| `status?`    | `GraphStatusValue`                      | —       | Optional closed Graph state: `error`, `success`, `warning`, or `disabled` |
+| `position?`  | `IRPosition`                            | —       | Directly reuses the Core Node position language                           |
+| `text?`      | `IRNode['text']`                        | —       | Node-compatible text                                                      |
+| `children?`  | Node-compatible text                    | —       | React text entry; it cannot host arbitrary drawing children               |
+| `meta?`      | `JsonObject`                            | —       | Metadata ignored by Graph semantics                                       |
 
 ## Related
 

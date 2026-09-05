@@ -9,7 +9,7 @@ description: Compile complete Core IR into a deterministic Scene, then publish c
 
 Core exports `ThemeMode`, `ThemeSchema`, `ResolvedTheme`, and `ResolvedThemeColors`. `IRScene.theme` and `IRScope.theme` persist only sparse, JSON-safe `style` / `mode` selectors. Compile starts from the default light baseline, inherits through Scene → Scope, and passes a complete frozen `ResolvedTheme` to `CompositeDefinition.expand`, layout-aware `compile`, and the observation context.
 
-Published packages do not provide named styles. Define a custom style with `defineThemeStyle` and inject it through compile `themeStyles`. The resolver returns only sparse overrides relative to the current mode's default shared colors: `semantic` merges by role, while an explicit `categorical` palette replaces the default as a whole. Known fields that are omitted or explicitly returned as `undefined` retain their mode-aware defaults. External resolver output remains strictly validated, so unknown fields, blank colors, empty palettes, and invalid values fail loudly. Functions and resolved values never enter IR, snapshots, or JSON, and an unregistered name also fails loudly.
+Published packages do not provide named styles. Define a custom style with `defineThemeStyle` and inject it through compile `themeStyles`. The resolver returns only sparse overrides relative to the current mode's default shared colors: `semantic` merges by role, while an explicit `categorical` palette replaces the default as a whole. Known fields that are omitted or explicitly returned as `undefined` retain their mode-aware defaults through the existing `??` fallback. Core parses the output once with its owner schema, so unknown fields, blank colors, empty palettes, and invalid values fail loudly without a generic JSON preflight or snapshot. Resolver functions and runtime results never enter IR, and an unregistered name also fails loudly.
 
 ```ts
 import { defineThemeStyle, ThemeMode } from '@retikz/core';
@@ -24,7 +24,7 @@ const brand = defineThemeStyle({
 
 Core only propagates selectors and creates a detached, frozen `colors` view; it does not interpret domain tokens. `ResolvedTheme.colors` exposes shared semantic colors (`error`, `success`, `warning`, and the lower-emphasis auxiliary `guide`) and the active categorical palette, whose values may repeat and are consumed with a stable modulo index. Core primitives, the final Scene, and renderers do not branch on Theme. See [Compile](/kernel/reference/runtime/compile#composites) for behavior and failures and [Scene](/kernel/reference/schema/scene#theme) for the schema.
 
-Static CSS color parsing and opaque precomposition are owned by [`@retikz/foundation`](/kernel/packages/base/foundation). Core owns Theme mode, final master-color chains, and contextual-color materialization, and no longer re-exports those domain-free atoms from its root.
+Static CSS color parsing, opaque precomposition, and the generic `JsonValue` / `JsonObject` types and schemas are owned by [`@retikz/foundation`](/kernel/packages/base/foundation#jsonobject). Core owns Theme mode, final master-color chains, and contextual-color materialization, and no longer re-exports those domain-free atoms from its root.
 
 ## Complete Snapshots And The Core Program
 

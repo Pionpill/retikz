@@ -15,7 +15,7 @@ Base Table contracts define the top-level identity and Cell content shared by ev
 | `type`              | <ApiValues name="TableComposite" /> | —              | Top-level Table node type                                |
 | `id?`               | `string`                            | —              | Optional stable id                                       |
 | `layout?`           | `IRTableLayout`                     | track defaults | Tracks, sparse overrides, gaps, and borders              |
-| `meta?`             | `IRJsonObject`                      | —              | JSON-safe metadata preserved by lowering                 |
+| `meta?`             | `JsonObject`                        | —              | JSON-safe metadata preserved by lowering                 |
 | `rules?`            | `Array<IRTableCellRule>`            | `[]`           | Declaration-ordered Cell overrides                       |
 | `encodings?`        | `Array<IRTableCellVisualEncoding>`  | `[]`           | Ordered raw-value mappings to color channels             |
 | `tableThemeTokens?` | `IRTableThemeTokenOverrides`        | `{}`           | Sparse Table token overlay for this IRTable              |
@@ -86,7 +86,7 @@ These payload schemas describe canonical Structure output. Manual authoring uses
 
 ## Table Theme tokens
 
-Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { theme })`. Table first builds the current mode's owner-local default preset, merges sparse style tokens from the same-named `TableThemeStyleDefinition`, projects Core shared `colors.categorical` into `data.categorical`, and finally applies the sparse local `tableThemeTokens` stored in IRTable. Tokens omitted or explicitly returned as `undefined` by a runtime definition retain their defaults, while persisted `tableThemeTokens` still reject explicit `undefined`. A Table style therefore owns neither a second shared palette nor a complete token map in Theme IR.
+Core Theme `style` / `mode` comes from the host `Layout` or `renderTable(..., { theme })`. Table first builds the current mode's owner-local default preset, merges sparse style tokens from the same-named `TableThemeStyleDefinition`, projects Core shared `colors.categorical` into `data.categorical`, and finally applies the sparse local `tableThemeTokens` stored in IRTable. Zod optional fields accept and preserve explicit `undefined`; if one replaces a complete token, the final `TableThemeTokenMapSchema` fails because that required value is missing instead of treating it as omitted through a generic cleaner. A Table style therefore owns neither a second shared palette nor a complete token map in Theme IR.
 
 Published packages do not pre-register named Core or Table definitions. This site's `academic`, `vibrant`, and `clean` reference styles follow the same rule as application-defined styles: inject the same name into both consuming owners. Standalone `compileTable` receives the Core definition through `compile.themeStyles` and the Table definition through `lower.tableThemeStyles`. Missing the matching Table definition fails loudly in the Table resolver.
 

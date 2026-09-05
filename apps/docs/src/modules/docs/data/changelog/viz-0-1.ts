@@ -311,6 +311,16 @@ export const vizV01: Release = {
                 en: '`@retikz/chart/point/strip` adds direct-only x/y exact schemas, deterministic jitter shorthand, sole-discrete-role validation, and a continuous-only grid. React and Vanilla entries produce the same Source, while Plot placement handles spread and glyph containment in Cartesian and Polar coordinates.',
               },
             },
+            {
+              label: {
+                zh: 'BREAKING：Theme owner slice 由精确 schema 接纳',
+                en: 'BREAKING: Exact schemas own Chart theme slices',
+              },
+              content: {
+                zh: 'Chart 命名 Theme 的 envelope 先校验 `name`、`base` 与 owner slices，再由 Chart、Plot 和 active recipe 的精确 schema 分别接纳对应 token，并把解析结果用于后续 cascade。非法 slice 统一保留 Zod cause 并报告 Chart registry 错误；optional 字段中的显式 `undefined` 完全遵循所属 schema，不再由额外 JSON 预处理拒绝或删除。',
+                en: 'Named Chart themes first validate the `name`, `base`, and owner-slice envelope, then pass each token slice to the exact Chart, Plot, or active-recipe schema and use that parsed result in the cascade. Invalid slices consistently retain the Zod cause inside a Chart registry error, while explicit `undefined` in optional fields follows the owning schema instead of a separate JSON preprocessor.',
+              },
+            },
           ],
         },
       ],
@@ -1312,6 +1322,16 @@ export const vizV01: Release = {
               content: {
                 zh: '本阶段在 JSON-safe encoding descriptor seed 处闭环，不提供 Table-local Legend、`legendLayout` 或最终 joined manifest；Standard Legend/Flex 组合计划在 Table alpha.6 接入。',
                 en: 'This phase closes at the JSON-safe encoding descriptor seed and does not expose a Table-local Legend, `legendLayout`, or final joined manifest; Standard Legend/Flex composition is planned for Table alpha.6.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：Source 与 artifact 使用各自唯一 schema 边界',
+                en: 'BREAKING: Source and artifacts use one owning schema boundary each',
+              },
+              content: {
+                zh: 'Table 根 Source 只在 Composite Definition 的 `TableSchema` 入口解析一次，内部 typed 阶段不再重复 parse；动态 formatter、presentation、structure 与 encoding 继续只运行匹配 Definition 的精确 schema。Theme optional `undefined` 遵循所属 schema；manifest builder 只构造 candidate，最终由 Core 的 `artifactSchema` 边界统一校验、脱离输入并冻结。',
+                en: 'A Table root Source is parsed once by the Composite Definition `TableSchema`, and typed internal stages no longer parse it again. Dynamic formatter, presentation, structure, and encoding values still use only the matching Definition schema. Optional `undefined` in themes follows its owning schema, while the manifest builder emits a candidate that Core validates, detaches, and freezes at the single `artifactSchema` boundary.',
               },
             },
           ],

@@ -129,7 +129,7 @@ describe('changelog data', () => {
       expect(alpha1?.date).toBe('2026-08-28');
       expect(alpha1?.items).toHaveLength(9);
       expect(alpha2?.date).toBe('2026-08-29');
-      expect(alpha2?.items).toHaveLength(4);
+      expect(alpha2?.items).toHaveLength(5);
     }
 
     expect(JSON.stringify(byPackage.get('@retikz/graph'))).toContain('IRGraph.children');

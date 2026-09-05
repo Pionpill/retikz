@@ -15,7 +15,7 @@ Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`。Plot �
 
 ## 可扩展 style
 
-用 `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })` 定义 Plot 的运行时 preset，并通过 `plotThemeStyles` 注入 `lowerPlots`、`<Plot>` 或 `renderPlot()`；React 子树也可通过 `PlotThemeProvider` ambient 注入。`tokens` 可省略，并与 `plotThemeTokens` 复用同一严格稀疏 schema；`tokenRules` 也可省略，提供时追加在默认 Axis rules 后。未返回或在 runtime definition 中显式返回 `undefined` 的 token 继续使用当前 mode 的默认值；持久化 `plotThemeTokens` / `plotThemeTokenRules` 仍拒绝显式 `undefined`。resolver 函数与解析结果不进入 `IRPlot`。在同一图中还要把同名 Core definition 传给 `themeStyles` 或 Core `ThemeProvider`，否则 Core 或 Plot 任一层都会 fail-loud。Chart typed authoring 还要通过 `<ChartThemeProvider themeDefinitions={...}>` 或 Vanilla factory 的 `themeDefinitions` 注入 Chart definitions；`lowerOptions.plotThemeStyles` 仍只负责 Plot definitions。
+用 `definePlotThemeStyle({ name: 'brand', resolve: theme => ({ tokens, tokenRules }) })` 定义 Plot 的运行时 preset，并通过 `plotThemeStyles` 注入 `lowerPlots`、`<Plot>` 或 `renderPlot()`；React 子树也可通过 `PlotThemeProvider` ambient 注入。`tokens` 可省略，并与 `plotThemeTokens` 复用同一严格稀疏 schema；`tokenRules` 也可省略，提供时追加在默认 Axis rules 后。Zod optional 字段接受并保留显式 `undefined`；若它在级联中覆盖完整 token，最终 `PlotThemeResolutionSchema` 会因必填值缺失而失败，不会先被通用 cleaner 当作省略。resolver 函数与解析结果不进入 `IRPlot`。在同一图中还要把同名 Core definition 传给 `themeStyles` 或 Core `ThemeProvider`，否则 Core 或 Plot 任一层都会 fail-loud。Chart typed authoring 还要通过 `<ChartThemeProvider themeDefinitions={...}>` 或 Vanilla factory 的 `themeDefinitions` 注入 Chart definitions；`lowerOptions.plotThemeStyles` 仍只负责 Plot definitions。
 
 ## 级联与原子替换
 
@@ -30,7 +30,7 @@ Core effective Theme
   → explicit guide / mark / scale config
 ```
 
-- `plotThemeTokens` 是严格、稀疏的 canonical token map；未知 key、显式 `undefined` 和非法值会失败
+- `plotThemeTokens` 是严格、稀疏的 canonical token map；未知 key 和非法值在 owner schema 失败，optional 显式 `undefined` 按 Zod 保留并由后续完整 token resolution 判定
 - 原生 `plotTheme` 更接近 Plot 正式结构，可以设置 token 没有表达的合法字段
 - `plotThemeTokenRules` 只接受 Axis token，并按 `select.dimension` 匹配已有 Axis；同层后声明 rule 覆盖先声明 rule
 - 数组、scalar、`false` 与 discriminator 改变的对象整体替换；同一结构的闭合对象才按合法字段合并
