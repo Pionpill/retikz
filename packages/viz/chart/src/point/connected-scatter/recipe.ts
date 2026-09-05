@@ -1,4 +1,3 @@
-import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
 
 import { PlotGuide, PlotScale } from '@retikz/plot';
@@ -15,18 +14,12 @@ import {
   pointResolutionOf,
   pointSlotsOf,
   pointSpatialResolutionOf,
-  pointThemeOf,
+  resolvePointGuideDefaults,
   resolvePointScaleDefaults,
 } from '../shared';
 import { pointRecipeId } from '../shared/plot';
 import { ConnectedScatterMarkDefinition, resolveConnectedScatterMarkGroup } from './mark';
-import {
-  ConnectedScatterChartSchema,
-  ConnectedScatterChartThemeOverridesSchema,
-  ConnectedScatterChartThemeResolutionSchema,
-} from './schema';
-
-const themeFallback: JsonObject = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
+import { ConnectedScatterChartSchema } from './schema';
 
 /** Connected Scatter exact schema、调度与消费检查共用的 encoding 顺序 */
 export const ConnectedScatterChartEncodingSlots = ['x', 'y', 'order', 'series', 'row', 'column', 'facet'] as const;
@@ -51,11 +44,6 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
   chartType: ChartType.ConnectedScatter,
   encodingSlots: ConnectedScatterChartEncodingSlots,
   schema: ConnectedScatterChartSchema,
-  theme: {
-    overridesSchema: ConnectedScatterChartThemeOverridesSchema,
-    resolutionSchema: ConnectedScatterChartThemeResolutionSchema,
-    fallback: themeFallback,
-  },
   consumes: { encodings: ConnectedScatterChartEncodingSlots, properties: propertySlots },
   marks: [
     {
@@ -69,14 +57,11 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
     return spatial === undefined ? resolution : { ...resolution, spatial };
   },
   resolve: (context: ChartRecipeResolveContext) => {
-    const theme = pointThemeOf(context.recipeThemeTokens);
     const slots = pointSlotsOf(context);
     const hasSeries = Object.hasOwn(slots.encodings, 'series');
-    const guides: Array<IRPlotGuide> =
-      hasSeries && theme.legendEnabled ? [{ type: PlotGuide.Legend, channel: 'color' }] : [];
+    const guides: Array<IRPlotGuide> = hasSeries ? [{ type: PlotGuide.Legend, channel: 'color' }] : [];
     return pointResolutionOf(
       ChartType.ConnectedScatter,
-      theme,
       [
         {
           kind: ChartType.ConnectedScatter,
@@ -90,4 +75,5 @@ export const ConnectedScatterChartDefinition: ChartRecipeDefinition<IRConnectedS
     );
   },
   resolveScaleDefaults: resolvePointScaleDefaults,
+  resolveGuideDefaults: resolvePointGuideDefaults,
 });

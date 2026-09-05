@@ -105,11 +105,8 @@ export const pointFieldConsumersOf = (
 ];
 
 /** 生成尺寸图例；size field 不存在时不创建 guide */
-export const sizeGuideOf = (
-  theme: Readonly<{ legendEnabled: boolean }>,
-  encodings: JsonObject,
-): IRPlotGuide | undefined => {
-  if (!theme.legendEnabled || !Object.hasOwn(encodings, 'size')) return undefined;
+export const sizeGuideOf = (encodings: JsonObject): IRPlotGuide | undefined => {
+  if (!Object.hasOwn(encodings, 'size')) return undefined;
   pointFieldMappingOf(encodings.size, ['recipe', 'encodings', 'size']);
   return { type: PlotGuide.Legend, channel: 'size' };
 };

@@ -180,8 +180,6 @@ export type ChartRecipeResolveContext = Readonly<{
   encodings: JsonObject;
   /** 当前 recipe 经过精确 schema 校验的常量配置 */
   properties: JsonObject;
-  /** 当前 recipe 已解析完成的主题 token */
-  recipeThemeTokens: JsonObject;
 }>;
 
 /** Chart resolver 消费的根级 encoding / property slots */
@@ -202,15 +200,6 @@ export type ChartRecipeDefinition<TSource extends IRChartSource = IRChartSource>
   encodingSlots: ReadonlyArray<ChartEncodingSlot<TSource>>;
   /** 当前 chartType 对应的完整精确 Chart Source schema */
   schema: ZodType<TSource>;
-  /** 当前 recipe 的主题校验与默认值契约 */
-  theme: Readonly<{
-    /** 当前 recipe 允许声明的稀疏主题 token schema */
-    overridesSchema: ZodType<JsonObject>;
-    /** 当前 recipe resolver 消费的完整主题 token schema */
-    resolutionSchema: ZodType<JsonObject>;
-    /** 当前 recipe 主题 token 的完整默认值 */
-    fallback: JsonObject;
-  }>;
   /** 内建 recipe resolver 消费的根级slots；encoding成员必须来自encodingSlots */
   consumes: ChartSlotConsumption<ChartEncodingSlot<TSource>>;
   /** 当前 recipe 按顺序允许使用的 authored Chart marks */

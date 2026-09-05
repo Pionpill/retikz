@@ -1,7 +1,14 @@
-import type { AnyCoordinateDefinition, IRPlot, IRPlotCoordinateOperation, IRPlotScaleOperation } from '@retikz/plot';
+import type {
+  AnyCoordinateDefinition,
+  IRPlot,
+  IRPlotCoordinateOperation,
+  IRPlotDefaults,
+  IRPlotScaleOperation,
+} from '@retikz/plot';
 
 import {
   bindCoordinateScaleNames,
+  mergePlotDefaults,
   PlotSchema,
   readCoordinateScaleNames,
   resolvePlotFacetComposition,
@@ -251,8 +258,8 @@ export const resolveChartPlot = (
   recipe: ChartRecipeResolution,
   encodings: ChartEncodingResolution,
   chartMarks: ReadonlyArray<IRPlot['marks'][number]>,
-  plotThemeTokens: IRPlot['plotThemeTokens'],
   runtime: ChartEncodingRuntime,
+  themePlotDefaults: IRPlotDefaults | undefined,
 ): IRPlot => {
   const extension = source.plotExtension;
   const spatial = resolveChartPlotSpatial(recipe, encodings, source.coordinate, extension, runtime);
@@ -286,9 +293,10 @@ export const resolveChartPlot = (
     data: source.data,
     ...(transforms.length === 0 ? {} : { transform: transforms }),
     scales,
-    ...(plotThemeTokens === undefined ? {} : { plotThemeTokens }),
-    ...(extension?.plotThemeTokenRules === undefined ? {} : { plotThemeTokenRules: extension.plotThemeTokenRules }),
-    ...(extension?.plotTheme === undefined ? {} : { plotTheme: extension.plotTheme }),
+    ...(themePlotDefaults === undefined && extension?.plotDefaults === undefined
+      ? {}
+      : { plotDefaults: mergePlotDefaults(themePlotDefaults, extension?.plotDefaults) }),
+    ...(extension?.plotRules === undefined ? {} : { plotRules: extension.plotRules }),
     ...spatial,
     marks,
     ...(guides === undefined ? {} : { guides }),

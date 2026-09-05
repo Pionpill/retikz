@@ -1,87 +1,38 @@
-import type { infer as ZodInfer, ZodType } from 'zod';
+import type { infer as ZodInfer } from 'zod';
 
-import {
-  CssColorSchema,
-  FontFamilySchema,
-  FontSizeSchema,
-  FontWeightSchema,
-  LineHeightSchema,
-  NodeTextAlign,
-  PaintValueSchema,
-} from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { LayoutContainerBoxSchema, LayoutGapSchema } from '@retikz/layout';
-import { PlotThemeTokenOverridesSchema } from '@retikz/plot';
-import { enum as zodEnum, strictObject, union } from 'zod';
+import { PlotDefaultsSchema } from '@retikz/plot';
+import { SurfaceBackgroundSchema } from '@retikz/standard';
+import { strictObject } from 'zod';
 
-import { ChartThemeToken } from '../constants';
+import { ChartPresentationDefaultsSchema } from './presentation';
 
-const PaddingTokenSchema = LayoutContainerBoxSchema.shape.padding.unwrap();
+const ChartPaddingSchema = LayoutContainerBoxSchema.shape.padding.unwrap();
 
-/** Chart shell 的 token 字段 */
-export const ChartThemeTokenFieldShape = {
-  [ChartThemeToken.CanvasFill]: PaintValueSchema.describe('Chart canvas fill'),
-  [ChartThemeToken.Padding]: PaddingTokenSchema.describe('Chart outer padding'),
-  [ChartThemeToken.Gap]: LayoutGapSchema.describe('Chart presentation slot gap'),
-  [ChartThemeToken.FontFamily]: FontFamilySchema.describe('Chart presentation font family'),
-  [ChartThemeToken.TitleForeground]: CssColorSchema.describe('Chart title foreground'),
-  [ChartThemeToken.TitleFontSize]: FontSizeSchema.describe('Chart title font size'),
-  [ChartThemeToken.TitleFontWeight]: FontWeightSchema.describe('Chart title font weight'),
-  [ChartThemeToken.TitleLineHeight]: LineHeightSchema.describe('Chart title line height'),
-  [ChartThemeToken.TitleAlign]: zodEnum(NodeTextAlign).describe('Chart title alignment'),
-  [ChartThemeToken.SubtitleForeground]: CssColorSchema.describe('Chart subtitle foreground'),
-  [ChartThemeToken.SubtitleFontSize]: FontSizeSchema.describe('Chart subtitle font size'),
-  [ChartThemeToken.SubtitleFontWeight]: FontWeightSchema.describe('Chart subtitle font weight'),
-  [ChartThemeToken.SubtitleLineHeight]: LineHeightSchema.describe('Chart subtitle line height'),
-  [ChartThemeToken.SubtitleAlign]: zodEnum(NodeTextAlign).describe('Chart subtitle alignment'),
-  [ChartThemeToken.NoteForeground]: CssColorSchema.describe('Chart note foreground'),
-  [ChartThemeToken.NoteFontSize]: FontSizeSchema.describe('Chart note font size'),
-  [ChartThemeToken.NoteFontWeight]: FontWeightSchema.describe('Chart note font weight'),
-  [ChartThemeToken.NoteLineHeight]: LineHeightSchema.describe('Chart note line height'),
-  [ChartThemeToken.NoteAlign]: zodEnum(NodeTextAlign).describe('Chart note alignment'),
-  [ChartThemeToken.SourceForeground]: CssColorSchema.describe('Chart source foreground'),
-  [ChartThemeToken.SourceFontSize]: FontSizeSchema.describe('Chart source font size'),
-  [ChartThemeToken.SourceFontWeight]: FontWeightSchema.describe('Chart source font weight'),
-  [ChartThemeToken.SourceLineHeight]: LineHeightSchema.describe('Chart source line height'),
-  [ChartThemeToken.SourceAlign]: zodEnum(NodeTextAlign).describe('Chart source alignment'),
-} as const;
+/** Chart 外部布局中允许从 defaults 提供的字段 */
+export const ChartDefaultsLayoutSchema = strictObject({
+  padding: ChartPaddingSchema.optional().describe('Chart content padding default'),
+  gap: LayoutGapSchema.optional().describe('Chart presentation slot gap default'),
+}).describe('Sparse Chart layout defaults without external dimensions');
 
-/** Chart shell 的稀疏 token 覆盖 */
-export const ChartThemeOverridesSchema = strictObject(ChartThemeTokenFieldShape)
-  .partial()
-  .describe('Sparse Chart shell token overrides');
+/** Chart Source 的稀疏默认片段，字段路径与正式 Chart Source 对齐 */
+export const ChartDefaultsSchema = strictObject({
+  background: SurfaceBackgroundSchema.optional().describe('Default Chart surface background'),
+  layout: ChartDefaultsLayoutSchema.optional().describe('Optional Chart layout defaults'),
+  presentation: ChartPresentationDefaultsSchema.optional().describe('Optional Chart presentation defaults'),
+}).describe('Sparse Chart defaults using formal Chart Source fields');
 
-/** Chart shell 的完整 token resolution */
-export const ChartThemeResolutionSchema = strictObject(ChartThemeTokenFieldShape).describe(
-  'Complete Chart shell token map after explicit fallback and cascade',
-);
+/** 注册 Chart Theme Definition 的严格声明 schema */
+export const ChartThemeDefinitionSchema = strictObject({
+  name: NonBlankStringSchema.describe('Registered Chart theme name'),
+  base: NonBlankStringSchema.optional().describe('Optional registered base Chart theme name'),
+  defaults: ChartDefaultsSchema.optional().describe('Sparse Chart Source defaults'),
+  plotDefaults: PlotDefaultsSchema.optional().describe('Sparse Plot Source defaults forwarded to Plot'),
+}).describe('Registered Chart theme Definition with Chart and Plot defaults');
 
-/** 判断 authored Theme 是否包含至少一个实际 token */
-const hasTokenSlice = (value: unknown): boolean =>
-  typeof value === 'object' && value !== null && Object.keys(value).length > 0;
+/** Chart Source 的稀疏默认片段类型 */
+export type IRChartDefaults = ZodInfer<typeof ChartDefaultsSchema>;
 
-/** 用精确 recipe schema 创建 Chart authored theme schema */
-export const createChartThemeSchema = <TRecipe extends ZodType>(recipe: TRecipe) =>
-  union([
-    NonBlankStringSchema.describe('Registered Chart theme name'),
-    strictObject({
-      base: NonBlankStringSchema.optional().describe('Registered base Chart theme name'),
-      tokens: strictObject({
-        chart: ChartThemeOverridesSchema.optional(),
-        plot: PlotThemeTokenOverridesSchema.optional(),
-        recipe: recipe.optional(),
-      }).optional(),
-    }).superRefine((theme, context) => {
-      const tokens = theme.tokens;
-      const hasAuthoredTokens =
-        tokens !== undefined &&
-        (hasTokenSlice(tokens.chart) || hasTokenSlice(tokens.plot) || hasTokenSlice(tokens.recipe));
-      if (theme.base === undefined && !hasAuthoredTokens) {
-        context.addIssue({ code: 'custom', path: [], message: 'Chart theme object requires base or tokens' });
-      }
-    }),
-  ]).describe('Named or authored Chart theme input with separated owner slices');
-
-/** Chart shell token IR 类型 */
-export type IRChartThemeOverrides = ZodInfer<typeof ChartThemeOverridesSchema>;
-export type IRChartThemeResolution = ZodInfer<typeof ChartThemeResolutionSchema>;
+/** 注册 Chart Theme Definition 的 schema 派生类型 */
+export type IRChartThemeDefinition = ZodInfer<typeof ChartThemeDefinitionSchema>;

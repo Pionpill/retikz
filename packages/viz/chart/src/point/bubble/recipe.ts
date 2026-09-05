@@ -1,5 +1,3 @@
-import type { JsonObject } from '@retikz/foundation';
-
 import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import type { IRBubbleChart } from './schema';
 
@@ -12,18 +10,12 @@ import {
   pointResolutionOf,
   pointSlotsOf,
   pointSpatialResolutionOf,
-  pointThemeOf,
+  resolvePointGuideDefaults,
   resolvePointScaleDefaults,
   sizeGuideOf,
 } from '../shared';
 import { BubbleMarkDefinition, resolveBubbleMark } from './mark';
-import { BubbleChartSchema, BubbleChartThemeOverridesSchema, BubbleChartThemeResolutionSchema } from './schema';
-
-const themeFallback: JsonObject = {
-  axisEnabled: true,
-  axisGridEnabled: true,
-  legendEnabled: true,
-};
+import { BubbleChartSchema } from './schema';
 
 /** Bubble exact schema、调度与消费检查共用的 encoding 顺序 */
 export const BubbleChartEncodingSlots = [
@@ -45,11 +37,6 @@ export const BubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defin
   chartType: ChartType.Bubble,
   encodingSlots: BubbleChartEncodingSlots,
   schema: BubbleChartSchema,
-  theme: {
-    overridesSchema: BubbleChartThemeOverridesSchema,
-    resolutionSchema: BubbleChartThemeResolutionSchema,
-    fallback: themeFallback,
-  },
   consumes: {
     encodings: BubbleChartEncodingSlots,
     properties: bubblePropertySlots,
@@ -73,13 +60,13 @@ export const BubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defin
     return spatial === undefined ? resolution : { ...resolution, spatial };
   },
   resolve: (context: ChartRecipeResolveContext) => {
-    const theme = pointThemeOf(context.recipeThemeTokens);
     const slots = pointSlotsOf(context);
     const mark = resolveBubbleMark(slots.encodings, slots.properties);
-    const sizeGuide = sizeGuideOf(theme, slots.encodings);
-    return pointResolutionOf(ChartType.Bubble, theme, [{ kind: ChartType.Bubble, plotMarks: [mark] }], {
+    const sizeGuide = sizeGuideOf(slots.encodings);
+    return pointResolutionOf(ChartType.Bubble, [{ kind: ChartType.Bubble, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
     });
   },
   resolveScaleDefaults: resolvePointScaleDefaults,
+  resolveGuideDefaults: resolvePointGuideDefaults,
 });

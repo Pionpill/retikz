@@ -35,7 +35,6 @@ import {
 import { StripChartDefinition } from '../../src/point/strip/recipe';
 import { StripChartSchema } from '../../src/point/strip/schema';
 
-const theme = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
 const runtime = resolveChartProviderRegistry([
   { family: 'point', recipe: ScatterChartDefinition, themeDefinitions: [] },
 ]).runtime;
@@ -64,7 +63,6 @@ const resolve = <TSource extends IRChartSource>(
     data: { reference: 'rows' },
     encodings,
     properties,
-    recipeThemeTokens: theme,
   });
 
 const resolveChart = <TSource extends IRChartSource>(
@@ -156,6 +154,58 @@ describe('Point Chart recipe Definitions', () => {
     ]);
     expect(resolveChart(explicit, StripChartDefinition, stripRuntime).plot.guides).toEqual([
       { type: 'axis', dimension: 'y', grid: true },
+    ]);
+  });
+
+  it('applies sparse Scatter recipe guide controls to the resolved Plot', () => {
+    const hidden = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y', size: 'size' },
+        guides: { axis: false, grid: false, legend: false },
+      },
+    });
+    const noGridOrLegend = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y', size: 'size' },
+        guides: { grid: false, legend: false },
+      },
+    });
+
+    expect(hidden.recipe.guides).toEqual({ axis: false, grid: false, legend: false });
+    expect(resolveChart(hidden, ScatterChartDefinition, runtime).plot.guides).toEqual([]);
+    expect(resolveChart(noGridOrLegend, ScatterChartDefinition, runtime).plot.guides).toEqual([
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y' },
+    ]);
+  });
+
+  it('applies sparse Strip grid controls after moving the default grid to the continuous role', () => {
+    const source = StripChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'strip',
+        encodings: {
+          x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        },
+        guides: { grid: false },
+      },
+    });
+
+    expect(source.recipe.guides).toEqual({ grid: false });
+    expect(resolveChart(source, StripChartDefinition, stripRuntime).plot.guides).toEqual([
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y' },
     ]);
   });
 
@@ -1407,7 +1457,6 @@ describe('Point Chart marks', () => {
         encodings: { x: 'income', y: 'lifeExpectancy', size: 'population' },
         properties: {},
       },
-      recipeThemeTokens: theme,
     });
 
     expect(result.marks[0]).toMatchObject({
@@ -1429,7 +1478,6 @@ describe('Point Chart marks', () => {
         encodings: { x: 'income', y: 'lifeExpectancy', size: 'population' },
         properties: {},
       },
-      recipeThemeTokens: theme,
     });
 
     expect(result.marks[0]).toMatchObject({
@@ -1447,7 +1495,6 @@ describe('Point Chart marks', () => {
         encodings: { x: 'amount', y: 'margin', opacity: 'opacityField' },
         properties: { opacity: 0.5 },
       },
-      recipeThemeTokens: theme,
     });
     expect(result.marks[0]).toMatchObject({
       type: 'point',
@@ -1468,7 +1515,6 @@ describe('Point Chart marks', () => {
         encodings: { x: 'amount', y: 'margin', opacity: 'inheritedOpacity' },
         properties: { opacity: 0.5 },
       },
-      recipeThemeTokens: theme,
     });
 
     expect(result.marks[0]).toMatchObject({

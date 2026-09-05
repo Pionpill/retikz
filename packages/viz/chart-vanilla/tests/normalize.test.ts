@@ -99,7 +99,7 @@ describe('Chart Vanilla normalization', () => {
     const source = normalizeBubbleChart({
       id: 'countries',
       data: { reference: 'rows' },
-      title: 'Income and life expectancy',
+      title: { text: 'Income and life expectancy' },
       encodings: {
         x: 'income',
         y: 'lifeExpectancy',
@@ -114,7 +114,7 @@ describe('Chart Vanilla normalization', () => {
       namespace: 'chart',
       type: 'point',
       id: 'countries',
-      presentation: { title: 'Income and life expectancy' },
+      presentation: { title: { text: 'Income and life expectancy' } },
       data: { reference: 'rows' },
       recipe: {
         chartType: 'bubble',
@@ -135,8 +135,8 @@ describe('Chart Vanilla normalization', () => {
       id: 'sales',
       data: { reference: 'rows' },
       layout: { width: 640, height: 360 },
-      title: 'Sales',
-      note: 'Source note',
+      title: { text: 'Sales' },
+      note: { text: 'Source note' },
       encodings: { x: 'amount', y: 'margin', color: 'region' },
       properties: { opacity: 0, domainPadding: 0.04 },
       marks: [{ kind: 'scatter', properties: { size: 4 } }],
@@ -146,7 +146,7 @@ describe('Chart Vanilla normalization', () => {
       namespace: 'chart',
       type: 'point',
       id: 'sales',
-      presentation: { title: 'Sales', note: 'Source note' },
+      presentation: { title: { text: 'Sales' }, note: { text: 'Source note' } },
       data: { reference: 'rows' },
       layout: { width: 640, height: 360 },
       recipe: {
@@ -156,6 +156,25 @@ describe('Chart Vanilla normalization', () => {
         marks: [{ kind: 'scatter', properties: { size: 4 } }],
       },
     });
+  });
+
+  it('preserves sparse Point recipe guide controls in Source normalization', () => {
+    const scatter = normalizeScatterChart({
+      data: { reference: 'rows' },
+      encodings: { x: 'x', y: 'y', size: 'size' },
+      guides: { axis: false, grid: false, legend: false },
+    });
+    const strip = normalizeStripChart({
+      data: { reference: 'rows' },
+      encodings: {
+        x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+        y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+      },
+      guides: { grid: false },
+    });
+
+    expect(scatter.recipe.guides).toEqual({ axis: false, grid: false, legend: false });
+    expect(strip.recipe.guides).toEqual({ grid: false });
   });
 
   it('normalizes Strip input without losing zero jitter values or empty marks', () => {
@@ -236,7 +255,7 @@ describe('Chart Vanilla normalization', () => {
     const source = normalizeRegressionChart({
       id: 'iris-regression',
       data: { reference: 'iris.rows' },
-      title: 'Iris regression',
+      title: { text: 'Iris regression' },
       encodings: {
         x: 'sepalLengthCm',
         y: 'petalLengthCm',
@@ -264,7 +283,7 @@ describe('Chart Vanilla normalization', () => {
       namespace: 'chart',
       type: 'point',
       id: 'iris-regression',
-      presentation: { title: 'Iris regression' },
+      presentation: { title: { text: 'Iris regression' } },
       data: { reference: 'iris.rows' },
       recipe: {
         chartType: 'regression',

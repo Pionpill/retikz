@@ -15,8 +15,6 @@ export type ChartMarkResolveContext = Readonly<{
     /** 从根级 recipe properties 选取的常量配置 */
     properties: JsonObject;
   }>;
-  /** 当前 recipe 已解析完成的主题 token */
-  recipeThemeTokens: JsonObject;
 }>;
 
 /** Chart mark 的确定输出 */

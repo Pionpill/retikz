@@ -7,4 +7,4 @@ export type InputBubbleChart = InputTypedChart<IRBubbleChart>;
 
 /** BubbleChart factory 的完整输入 */
 export type CreateBubbleChartInput = TypedChartCommonInput<IRBubbleChart> &
-  Pick<InputBubbleChart, 'encodings' | 'properties' | 'marks'>;
+  Pick<InputBubbleChart, 'encodings' | 'properties' | 'guides' | 'marks'>;

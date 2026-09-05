@@ -14,18 +14,12 @@ import {
   pointPositionFieldConsumersOf,
   pointSlotsOf,
   pointSpatialResolutionOf,
-  pointThemeOf,
+  resolvePointGuideDefaults,
   resolvePointScaleDefaults,
 } from '../shared';
 import { pointAxisGuidesOf, pointCartesian2DOf, pointRecipeId } from '../shared/plot';
 import { RangedDotMarkDefinition, resolveRangedDotMark } from './mark';
-import {
-  RangedDotChartSchema,
-  RangedDotChartThemeOverridesSchema,
-  RangedDotChartThemeResolutionSchema,
-} from './schema';
-
-const themeFallback: JsonObject = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
+import { RangedDotChartSchema } from './schema';
 
 /** Ranged Dot exact schema、调度与消费检查共用的 encoding 顺序 */
 export const RangedDotChartEncodingSlots = ['category', 'start', 'end', 'color', 'row', 'column', 'facet'] as const;
@@ -78,11 +72,6 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
   chartType: ChartType.RangedDot,
   encodingSlots: RangedDotChartEncodingSlots,
   schema: RangedDotChartSchema,
-  theme: {
-    overridesSchema: RangedDotChartThemeOverridesSchema,
-    resolutionSchema: RangedDotChartThemeResolutionSchema,
-    fallback: themeFallback,
-  },
   consumes: { encodings: RangedDotChartEncodingSlots, properties: propertySlots },
   marks: [
     {
@@ -101,7 +90,6 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
     return { ...resolution, encodings, ...(spatial === undefined ? {} : { spatial }) };
   },
   resolve: (context: ChartRecipeResolveContext) => {
-    const theme = pointThemeOf(context.recipeThemeTokens);
     const slots = pointSlotsOf(context);
     const hasColor = Object.hasOwn(slots.encodings, 'color');
     const cartesian = pointCartesian2DOf(ChartType.RangedDot);
@@ -111,8 +99,8 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
       ...(hasColor ? [{ value: { type: PlotScale.Ordinal, name: colorScaleName }, replaceable: true }] : []),
     ];
     const guides: Array<IRPlotGuide> = [
-      ...pointAxisGuidesOf(ChartType.RangedDot, theme),
-      ...(hasColor && theme.legendEnabled ? [{ type: PlotGuide.Legend, channel: 'color' } as const] : []),
+      ...pointAxisGuidesOf(),
+      ...(hasColor ? [{ type: PlotGuide.Legend, channel: 'color' } as const] : []),
     ];
     return {
       scaffold: {
@@ -126,4 +114,5 @@ export const RangedDotChartDefinition: ChartRecipeDefinition<IRRangedDotChart> =
     };
   },
   resolveScaleDefaults: resolvePointScaleDefaults,
+  resolveGuideDefaults: resolvePointGuideDefaults,
 });

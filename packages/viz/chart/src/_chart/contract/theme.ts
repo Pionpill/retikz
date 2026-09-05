@@ -1,37 +1,29 @@
 import type { ResolvedTheme } from '@retikz/core';
-import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotThemeTokenOverrides } from '@retikz/plot';
+import type { IRPlotDefaults } from '@retikz/plot';
 
-import type { IRChartThemeOverrides, IRChartThemeResolution } from '../schemas';
+import type { IRChartDefaults } from '../schemas';
 
-/** Chart 注册主题的声明式 owner slices */
+/** Chart 注册主题生成的 owner defaults */
 export type ChartThemeDefinition = Readonly<{
   /** 注册主题的唯一名称 */
   name: string;
   /** 可选的已注册父主题名称 */
   base?: string;
-  /** 按 owner 分隔的稀疏主题 token */
-  tokens?: Readonly<{
-    /** Chart shell 拥有的主题 token */
-    chart?: IRChartThemeOverrides;
-    /** 转交 Plot owner 的主题 token */
-    plot?: IRPlotThemeTokenOverrides;
-    /** 按 chartType 保存的 recipe 主题 token */
-    recipes?: Readonly<Record<string, JsonObject>>;
-  }>;
+  /** Chart shell 的稀疏 Source-shaped 默认片段 */
+  defaults?: IRChartDefaults;
+  /** 原样转交 Plot owner 的稀疏 Source-shaped 默认片段 */
+  plotDefaults?: IRPlotDefaults;
 }>;
 
 /** 定义一个 JSON-safe Chart named theme */
 export const defineChartTheme = (definition: ChartThemeDefinition): ChartThemeDefinition => definition;
 
-/** Theme resolver 输出的 owner slices */
+/** Theme resolver 输出的 owner defaults */
 export type ChartThemeResolution = Readonly<{
-  /** 已补全的 Chart shell 主题 token */
-  chart: IRChartThemeResolution;
-  /** 转交 Plot owner 的稀疏主题 token */
-  plot?: IRPlotThemeTokenOverrides;
-  /** 当前 chartType 已补全的 recipe 主题 token */
-  recipe: JsonObject;
+  /** 生成的完整 Chart shell 默认片段 */
+  defaults: IRChartDefaults;
+  /** 转交 Plot owner 的稀疏默认片段 */
+  plotDefaults?: IRPlotDefaults;
   /** Core 主题解析得到的显示模式 */
   mode: ResolvedTheme['mode'];
 }>;

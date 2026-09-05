@@ -12,14 +12,9 @@ import {
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
-import { createChartSourceSchema, createChartThemeSchema } from '../../_chart/schemas';
+import { createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
-import {
-  PointPositionDomainPaddingSchema,
-  PointPropertiesSchema,
-  PointRecipeThemeOverridesSchema,
-  PointRecipeThemeResolutionSchema,
-} from '../shared';
+import { PointPositionDomainPaddingSchema, PointPropertiesSchema, PointRecipeGuidesSchema } from '../shared';
 import { ConnectedScatterChartEncodingsSchema } from './encoding-schema';
 
 /** Connected Scatter Point member constants without layer ownership */
@@ -72,20 +67,14 @@ export const ConnectedScatterChartRecipeSchema = strictObject({
   chartType: literal(ChartType.ConnectedScatter),
   encodings: ConnectedScatterChartEncodingsSchema,
   properties: ConnectedScatterChartPropertiesSchema.optional(),
+  guides: PointRecipeGuidesSchema.optional(),
   marks: array(ConnectedScatterChartMarkSchema).optional(),
 }).describe('Connected Scatter Chart recipe payload');
-
-/** Connected Scatter recipe 稀疏主题 */
-export const ConnectedScatterChartThemeOverridesSchema = PointRecipeThemeOverridesSchema;
-
-/** Connected Scatter recipe 完整主题 */
-export const ConnectedScatterChartThemeResolutionSchema = PointRecipeThemeResolutionSchema;
 
 /** Connected Scatter exact Source schema */
 export const ConnectedScatterChartSchema = createChartSourceSchema(
   ChartFamily.Point,
   ConnectedScatterChartRecipeSchema,
-  createChartThemeSchema(ConnectedScatterChartThemeOverridesSchema).optional(),
 ).describe('Connected Scatter Chart Source IR');
 
 /** Connected Scatter exact Source IR */

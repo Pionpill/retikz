@@ -1,5 +1,3 @@
-import type { JsonObject } from '@retikz/foundation';
-
 import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import type { IRScatterChart } from './schema';
 
@@ -12,19 +10,13 @@ import {
   pointResolutionOf,
   pointSlotsOf,
   pointSpatialResolutionOf,
-  pointThemeOf,
+  resolvePointGuideDefaults,
   resolvePointMark,
   resolvePointScaleDefaults,
   sizeGuideOf,
 } from '../shared';
 import { ScatterMarkDefinition } from './mark';
-import { ScatterChartSchema, ScatterChartThemeOverridesSchema, ScatterChartThemeResolutionSchema } from './schema';
-
-const themeFallback: JsonObject = {
-  axisEnabled: true,
-  axisGridEnabled: true,
-  legendEnabled: true,
-};
+import { ScatterChartSchema } from './schema';
 
 /** Scatter exact schema、调度与消费检查共用的encoding顺序 */
 export const ScatterChartEncodingSlots = [
@@ -46,11 +38,6 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
   chartType: ChartType.Scatter,
   encodingSlots: ScatterChartEncodingSlots,
   schema: ScatterChartSchema,
-  theme: {
-    overridesSchema: ScatterChartThemeOverridesSchema,
-    resolutionSchema: ScatterChartThemeResolutionSchema,
-    fallback: themeFallback,
-  },
   consumes: {
     encodings: ScatterChartEncodingSlots,
     properties: scatterPropertySlots,
@@ -74,13 +61,13 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
     return spatial === undefined ? resolution : { ...resolution, spatial };
   },
   resolve: (context: ChartRecipeResolveContext) => {
-    const theme = pointThemeOf(context.recipeThemeTokens);
     const slots = pointSlotsOf(context);
     const mark = resolvePointMark(slots.encodings, slots.properties);
-    const sizeGuide = sizeGuideOf(theme, slots.encodings);
-    return pointResolutionOf(ChartType.Scatter, theme, [{ kind: ChartType.Scatter, plotMarks: [mark] }], {
+    const sizeGuide = sizeGuideOf(slots.encodings);
+    return pointResolutionOf(ChartType.Scatter, [{ kind: ChartType.Scatter, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
     });
   },
   resolveScaleDefaults: resolvePointScaleDefaults,
+  resolveGuideDefaults: resolvePointGuideDefaults,
 });

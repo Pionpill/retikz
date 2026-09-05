@@ -70,13 +70,11 @@ const resolveOneMark = (
   mark: JsonObject,
   binding: ChartMarkBinding,
   resolvedEncodings: JsonObject,
-  recipeTokens: JsonObject,
 ): ReadonlyArray<IRPlotMarkOperation> => {
   const resolution = binding.definition.resolve({
     chartType: source.recipe.chartType,
     source: mark,
     inherited: inheritedSlotsOf(source, resolvedEncodings, binding),
-    recipeThemeTokens: recipeTokens,
   });
   if (resolution.marks.length === 0) {
     throw invalidMark('Chart mark resolver must produce at least one Plot mark', ['recipe', 'marks', index]);
@@ -89,7 +87,6 @@ export const resolveChartMarks = (
   source: IRChartSource,
   recipe: Pick<ChartRecipeDefinition, 'chartType' | 'marks'>,
   resolvedEncodings: JsonObject,
-  recipeTokens: JsonObject,
 ): ChartMarksResolution => {
   const authoredMarks = source.recipe.marks ?? [];
   const marks: Array<AuthoredChartMarkResolution> = [];
@@ -128,7 +125,7 @@ export const resolveChartMarks = (
       kind,
       index,
       override,
-      plotMarks: resolveOneMark(source, index, mark, binding, resolvedEncodings, recipeTokens),
+      plotMarks: resolveOneMark(source, index, mark, binding, resolvedEncodings),
     });
   }
   return {

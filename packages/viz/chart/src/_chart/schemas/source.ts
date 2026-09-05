@@ -2,19 +2,27 @@ import type { JsonObject } from '@retikz/foundation';
 import type { infer as ZodInfer, ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
 
 import { JsonObjectSchema, JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
+import { LayoutContainerBoxSchema, LayoutGapSchema } from '@retikz/layout';
 import { PlotSchema } from '@retikz/plot';
+import { SurfaceBackgroundSchema } from '@retikz/standard';
 import { array, literal, number, object, strictObject } from 'zod';
 
 import { CHART_NAMESPACE } from '../constants';
 import { ChartPlotExtensionSchema } from './plot-extension';
 import { ChartPresentationSchema } from './presentation';
-import { createChartThemeSchema } from './theme';
+import { ChartDefaultsSchema } from './theme';
+
+const ChartPaddingSchema = LayoutContainerBoxSchema.shape.padding.unwrap();
 
 /** Chart 外部 layout 的正有限尺寸 */
 export const ChartLayoutSchema = strictObject({
   width: number().positive().optional().describe('External Chart border-box width'),
   height: number().positive().optional().describe('External Chart border-box height'),
-}).describe('External Chart layout dimensions; never copied into Plot Source IR');
+  padding: ChartPaddingSchema.optional().describe(
+    'Chart shell padding around existing presentation regions and Plot content',
+  ),
+  gap: LayoutGapSchema.optional().describe('Gap between existing Chart presentation regions and Plot content'),
+}).describe('Chart shell layout; width and height never enter Plot Source IR');
 
 /** 内部 erased recipe shell schema；仅用于推导通用 Source 类型 */
 const ChartRecipeShellSchema = object({
@@ -31,8 +39,9 @@ const ChartSourceShellSchema = strictObject({
   namespace: literal(CHART_NAMESPACE).describe('Chart namespace discriminator'),
   type: NonBlankStringSchema.describe('Registered Chart family discriminator'),
   id: NonBlankStringSchema.optional().describe('Optional Chart identity'),
+  background: SurfaceBackgroundSchema.optional().describe('Chart surface background'),
   presentation: ChartPresentationSchema.optional(),
-  theme: createChartThemeSchema(JsonObjectSchema).optional(),
+  chartDefaults: ChartDefaultsSchema.optional(),
   data: PlotSchema.shape.data.describe('Unique external dataset reference'),
   layout: ChartLayoutSchema.optional(),
   coordinate: PlotSchema.shape.coordinate,
@@ -41,12 +50,13 @@ const ChartSourceShellSchema = strictObject({
 }).describe('Common strict Chart Source shell before a recipe-specific schema is selected');
 
 /** 精确 recipe schema 组装所用的 root shape */
-type ChartSourceShape<TFamily extends string, TRecipe extends ZodType, TTheme extends ZodType> = {
+type ChartSourceShape<TFamily extends string, TRecipe extends ZodType> = {
   namespace: ZodLiteral<typeof CHART_NAMESPACE>;
   type: ZodLiteral<TFamily>;
   id: ZodOptional<ZodString>;
+  background: ZodOptional<typeof SurfaceBackgroundSchema>;
   presentation: ZodOptional<typeof ChartPresentationSchema>;
-  theme: TTheme;
+  chartDefaults: ZodOptional<typeof ChartDefaultsSchema>;
   data: typeof PlotSchema.shape.data;
   layout: ZodOptional<typeof ChartLayoutSchema>;
   coordinate: typeof PlotSchema.shape.coordinate;
@@ -54,18 +64,18 @@ type ChartSourceShape<TFamily extends string, TRecipe extends ZodType, TTheme ex
   plotExtension: ZodOptional<typeof ChartPlotExtensionSchema>;
 };
 
-/** 按 family、recipe schema 与精确 recipe Theme schema 创建 strict Source schema */
-export const createChartSourceSchema = <TFamily extends string, TRecipe extends ZodType, TTheme extends ZodType>(
+/** 按 family 与精确 recipe schema 创建 strict Source schema */
+export const createChartSourceSchema = <TFamily extends string, TRecipe extends ZodType>(
   family: TFamily,
   recipe: TRecipe,
-  theme: TTheme,
-): ZodObject<ChartSourceShape<TFamily, TRecipe, TTheme>> =>
-  strictObject({
+): ZodObject<ChartSourceShape<TFamily, TRecipe>> => {
+  return strictObject({
     namespace: literal(CHART_NAMESPACE).describe('Chart namespace discriminator'),
     type: literal(family).describe('Stable Chart family discriminator'),
     id: NonBlankStringSchema.optional().describe('Optional Chart identity'),
+    background: SurfaceBackgroundSchema.optional().describe('Chart surface background'),
     presentation: ChartPresentationSchema.optional(),
-    theme,
+    chartDefaults: ChartDefaultsSchema.optional(),
     data: PlotSchema.shape.data.describe('Unique external dataset reference'),
     layout: ChartLayoutSchema.optional(),
     coordinate: PlotSchema.shape.coordinate,
@@ -80,6 +90,7 @@ export const createChartSourceSchema = <TFamily extends string, TRecipe extends 
       });
     }
   });
+};
 
 type IRChartSourceShell = ZodInfer<typeof ChartSourceShellSchema>;
 
