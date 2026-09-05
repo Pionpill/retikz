@@ -177,6 +177,18 @@ describe('<Plot spec data> 薄包装', () => {
     expect(svg).toContain('<ellipse');
   });
 
+  it('绘图区尺寸不压缩最终内容边界，standalone 默认原尺寸显示', () => {
+    const svg = renderToStaticMarkup(<Plot spec={spec} data={data} width={480} height={300} />);
+    const root = svg.match(/^<svg\b[^>]*>/)?.[0] ?? '';
+    const bounds = root
+      .match(/viewBox="([^"]+)"/)?.[1]
+      .split(' ')
+      .map(Number);
+    expect(bounds).toBeDefined();
+    expect(Number(root.match(/\swidth="([^"]+)"/)?.[1])).toBe(bounds?.[2]);
+    expect(Number(root.match(/\sheight="([^"]+)"/)?.[1])).toBe(bounds?.[3]);
+  });
+
   it('standalone Plot 的 local token override 生效', () => {
     const svg = renderToStaticMarkup(
       <Plot spec={spec} data={data} plotThemeTokens={plotThemeTokens} width={480} height={300} />,

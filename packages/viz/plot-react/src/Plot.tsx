@@ -182,7 +182,7 @@ type InputEmbeddablePlotComponent = FC<PlotProps> & {
 
 /** Plot React 组件 */
 const PlotComponent: FC<PlotProps> = props => {
-  const { width, height, className, style, renderer, themeStyles, onLineage } = props;
+  const { className, style, renderer, themeStyles, onLineage } = props;
   const ambientPlotThemeStyles = usePlotThemeStyles();
   const effectiveProps = useMemo(() => {
     if (ambientPlotThemeStyles === undefined) return props;
@@ -202,14 +202,7 @@ const PlotComponent: FC<PlotProps> = props => {
   }, [lineage, lineageKey, onLineage]);
 
   return (
-    <Layout
-      width={width}
-      height={height}
-      className={className}
-      style={style}
-      renderer={renderer}
-      themeStyles={themeStyles}
-    >
+    <Layout className={className} style={style} renderer={renderer} themeStyles={themeStyles}>
       <PlotComponent {...contentProps} />
     </Layout>
   );
