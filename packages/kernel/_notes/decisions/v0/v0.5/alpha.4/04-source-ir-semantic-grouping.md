@@ -1,15 +1,15 @@
 # ADR-04：Source IR 浅层语义分组
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-04
 - 修订日期：2026-09-05
 - 关联：[alpha.4 roadmap](./roadmap.md) · [ADR-03](./03-json-undefined-field-contracts.md) · [v0.5 roadmap](../roadmap.md) · [Core 绘图完备设计](../../../../architecture/core-drawing-complete.md) · [包职能设计](../../../../../../../notes/architecture/package-responsibility-design.md)
 
 ## 背景与目标
 
-Core 的 Node、Path 与 Scope Source IR 把结构、identity、几何、视觉覆盖、布局参数、继承默认值和外围元数据收进同一个根对象。同类视觉字段还会在元素、Scope 级联值和 every-X 默认值之间重复出现。现有绘图原子可以复用，但最终 Source 组合仍把不同关注点展开到根层；Scope 的四个默认通道也使用四个平行一级字段。
+此前 Node、Path 与 Scope Source IR 把结构、identity、几何、视觉覆盖、布局参数与继承默认值展开到根层。同类视觉字段在元素与默认通道间重复出现，缺少稳定的关注点边界。
 
-一级属性数量本身不能作为结构质量或 LLM 生成难度的机械阈值。单纯增加包装层同样会增加路径长度、嵌套选择与无意义空对象。真正的问题是同一个根层同时暴露多个关注点，导致字段归属、同名复用、默认值通道和后续扩展缺少稳定边界。
+分组以稳定语义为依据，不以一级字段数量或 LLM 生成难度的机械阈值决定结构；无语义的包装只会增加嵌套与空对象。
 
 目标是让 Kernel 的持久化 Source IR 使用浅层、固定语义的一级分组：作者先选择关注点，再选择具体字段；discriminator、identity、主要领域事实和结构入口继续留在根层。分组改变持久化输入、authoring 和消费 Source 的公开接口；等价输入的视觉结果、继承规则、Scene 与 identity 保持稳定。
 
@@ -165,3 +165,7 @@ Scene 根保持现有字段集合。新 `style`、`layout`、`defaults` 分组�
 - Vanilla 等价性：Vanilla 仍是 authoring Input 到 Core Source IR 的唯一 normalize owner；schema-backed 视觉、布局与默认值输入映射到同名分组，既有 sugar 只能生成该 Source，不能恢复扁平持久化形态
 - React 等价性：React 把 JSX、children、事件与宿主字段映射到 Vanilla Input；Node、Path 与 Scope 语义组件复用同一分组契约。`Layout.style` 继续表示宿主 CSS，隐式根 Scope 的覆盖统一进入 `rootScope: { style?, defaults? }`；旧的扁平 Scope style / every-X props 直接删除。宿主字段不进入 Core Source
 - 跨包约束：直接组合 Core 字段的公开契约、Core Source producer 与 lowering 必须同步适配，并保留原 owner 的禁用字段与角色边界；不能因复用整组而开放原本禁止的字段。领域自己拥有的 IR 分组、Theme 稀疏同构与 selector rules 重设计另由对应 owner 决策，不借此次 Core 消费适配重塑领域能力
+
+## 实现结果
+
+Kernel、Library、Schematic、Viz 与应用侧 Source 消费方统一采用上述分组。Graph 的 style 已统一为绘图覆盖；Layout 的 CSS 与隐式根 Scope 保持独立入口。分组不改变 Scene、identity 与既有继承语义，旧扁平入口不再接受。领域 Theme 与 selector rules 的进一步设计由各 owner 独立决定。

@@ -6,7 +6,7 @@ import { CompositeBaseSchema, defineComposite, ThemeMode } from '@retikz/core';
 import { Layout, Scope } from '@retikz/react';
 import { z } from 'zod';
 
-import { PreviewCoreThemeStyles, PreviewThemeStyle } from '@/modules/docs/components/component-preview/theme';
+import { PreviewThemeStyle } from '@/modules/docs/components/component-preview/theme';
 
 type ThemeCardProps = { label: string };
 
@@ -101,7 +101,7 @@ const ThemeCard: ThemeCardComponent = Object.assign(() => null, {
 });
 
 const Demo: FC = () => (
-  <Layout theme={{ style: PreviewThemeStyle.Academic }} themeStyles={PreviewCoreThemeStyles} width={650} height={120}>
+  <Layout theme={{ style: PreviewThemeStyle.Academic }} width={650} height={120}>
     <ThemeCard label="根：学术 / 浅色" />
     <Scope transforms={[{ kind: 'translate', x: 200, y: 0 }]} theme={{ style: PreviewThemeStyle.Vibrant }}>
       <ThemeCard label="局部：活力 / 浅色" />
