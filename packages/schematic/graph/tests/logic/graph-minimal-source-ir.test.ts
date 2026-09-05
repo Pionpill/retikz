@@ -37,7 +37,8 @@ describe('Graph minimal Source IR', () => {
     expect(parsed).not.toHaveProperty('relations');
     expect(parsed).not.toHaveProperty('entityVariant');
     expect(parsed).not.toHaveProperty('theme');
-    expect(parsed).not.toHaveProperty('graphTheme');
+    expect(parsed).not.toHaveProperty('graphDefaults');
+    expect(parsed).not.toHaveProperty('graphRules');
     expect(parsed).not.toHaveProperty('children');
     expect(explicit).toMatchObject({ children: [] });
     expect(() => Graph.GraphSchema.parse({ ...minimalGraph, presentation: {} })).toThrow();

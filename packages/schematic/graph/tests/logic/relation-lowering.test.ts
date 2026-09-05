@@ -282,8 +282,7 @@ describe('Relation lowering', () => {
       const canonical = Graph.resolveRelation(relation({ status }), options);
 
       expect(Graph.resolveRelationAppearance(canonical, { ...options, theme })).toMatchObject({
-        color,
-        stroke: color,
+        style: { color, stroke: color },
         sourceMarker: { color },
         targetMarker: { color },
       });
@@ -305,8 +304,7 @@ describe('Relation lowering', () => {
 
     expect(canonical.source).toMatchObject({ status: 'warning' });
     expect(Graph.resolveRelationAppearance(canonical, { ...options, theme })).toMatchObject({
-      color: '#7c3aed',
-      stroke: '#7c3aed',
+      style: { color: '#7c3aed', stroke: '#7c3aed' },
       sourceMarker: { color: '#0f766e' },
       targetMarker: { color: '#b45309' },
     });

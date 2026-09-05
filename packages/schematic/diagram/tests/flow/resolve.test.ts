@@ -109,7 +109,7 @@ describe('Flow Source resolve', () => {
           id: 'form',
           text,
           status: 'success',
-          style: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
+          layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
         },
         { id: 'target', text: 'Target', status: 'disabled' },
       ],

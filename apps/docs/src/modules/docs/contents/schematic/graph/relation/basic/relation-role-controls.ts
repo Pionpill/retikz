@@ -140,7 +140,7 @@ export const defineRelationRoleControlContract = <const TCopy extends RelationRo
       ...(copy.kind === undefined ? [] : ['Relation.kind']),
       ...(copy.direction === undefined ? [] : ['Relation.direction']),
       'Relation.status',
-      'IRGraphRelationAppearanceTokenOverrides.stroke',
+      'Graph.graphDefaults.relation.style.stroke',
     ],
   } satisfies PreviewControlContract;
 };

@@ -3,8 +3,7 @@ import type { infer as ZodInfer } from 'zod';
 
 import type { RelationDirection } from './constants';
 import type {
-  GraphRelationAppearanceTokenOverridesSchema,
-  GraphRelationMarkerAppearanceTokenOverridesSchema,
+  GraphRelationMarkerAppearanceSchema,
   GraphRelationMarkerRecipeSchema,
   GraphRelationRoleTokenRecipeSchema,
   GraphRelationRouteStepSchema,
@@ -20,11 +19,7 @@ export type IRGraphRelationRouteStep = ZodInfer<typeof GraphRelationRouteStepSch
 
 export type IRGraphRelationMarkerRecipe = ZodInfer<typeof GraphRelationMarkerRecipeSchema>;
 
-export type IRGraphRelationMarkerAppearanceTokenOverrides = ZodInfer<
-  typeof GraphRelationMarkerAppearanceTokenOverridesSchema
->;
-
-export type IRGraphRelationAppearanceTokenOverrides = ZodInfer<typeof GraphRelationAppearanceTokenOverridesSchema>;
+export type IRGraphRelationMarkerAppearance = ZodInfer<typeof GraphRelationMarkerAppearanceSchema>;
 
 export type IRGraphRelationRoleTokenRecipe = ZodInfer<typeof GraphRelationRoleTokenRecipeSchema>;
 

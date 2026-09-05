@@ -52,7 +52,7 @@ describe('@retikz/diagram package shell', () => {
         DIAGRAM_NAMESPACE: 'diagram',
         DiagramFrameSchema: expect.any(Object),
         DiagramPresentationSchema: expect.any(Object),
-        DiagramThemeSchema: expect.any(Object),
+        DiagramDefaultsSchema: expect.any(Object),
         defineDiagramThemeStyle: expect.any(Function),
         lowerDiagramFoundation: expect.any(Function),
         resolveDiagramFoundation: expect.any(Function),

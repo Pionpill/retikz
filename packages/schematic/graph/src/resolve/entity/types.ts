@@ -1,10 +1,9 @@
 import type { JsonObject } from '@retikz/foundation';
 
 import type { EntityKindDefinition, EntityPredicateDefinition, EntityRoleDefinition } from '../../contract';
-import type { GraphEntityThemeStyleTokens } from '../../contract';
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import type { IRGraphEntity } from '../../schemas';
-import type { GraphMemberAppearanceResolveContext } from '../theme';
+import type { IRGraphEntity, IRGraphEntityDefaults } from '../../schemas';
+import type { GraphAuthorLayer, GraphMemberAppearanceResolveContext } from '../theme';
 
 /** 已校验 params 与来源 Definition 组成的 Canonical Entity predicate */
 export type CanonicalEntityPredicate = Readonly<{
@@ -29,5 +28,11 @@ export type CanonicalEntity = Readonly<{
 /** Entity appearance resolver 的 Theme、definition 与继承上下文 */
 export type EntityAppearanceResolveContext = GraphMemberAppearanceResolveContext;
 
+/** Entity 作者层投影所需的 definition 与 Graph context */
+export type EntityGraphLayerResolveContext = EntityResolveContext &
+  Readonly<{
+    layers: ReadonlyArray<GraphAuthorLayer>;
+  }>;
+
 /** Entity Theme 级联后的完整有效外观 */
-export type EffectiveEntityAppearance = GraphEntityThemeStyleTokens;
+export type EffectiveEntityAppearance = Readonly<IRGraphEntityDefaults>;

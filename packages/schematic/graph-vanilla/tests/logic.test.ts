@@ -9,6 +9,7 @@ import {
   defineRelationRole,
   EntityProviderKey,
   GraphProviderKey,
+  GraphSchema,
   GroupProviderKey,
   RelationProviderKey,
 } from '@retikz/graph';
@@ -254,15 +255,13 @@ describe('normalizeGraph', () => {
     const input: InputGraph = {
       id: 'architecture',
       theme: { mode: 'dark' as const },
-      graphTheme: {
-        rules: [
-          {
-            type: 'entity' as const,
-            selector: { role: 'participant' },
-            appearance: { fill: '#eef6ff' },
-          },
-        ],
-      },
+      graphRules: [
+        {
+          type: 'entity' as const,
+          selector: { role: 'participant' },
+          style: { fill: '#eef6ff' },
+        },
+      ],
       localNamespace: true,
       transforms: [{ kind: 'translate' as const, x: 10, y: 20 }],
       placement: { target: [30, 40], selfAnchor: 'center' },
@@ -290,6 +289,36 @@ describe('normalizeGraph', () => {
       type: 'graph',
       ...input,
     });
+  });
+
+  it('keeps graphDefaults and graphRules identical to Direct Source IR', () => {
+    const input: InputGraph = {
+      id: 'parity',
+      graphDefaults: {
+        entity: { style: { fill: '#111111' }, layout: { align: 'middle' } },
+        relation: { style: { stroke: '#222222' } },
+      },
+      graphRules: [{ type: 'entity', selector: { role: 'activity' }, style: { fill: '#ff0000' } }],
+      children: [
+        { type: 'entity', id: 'source', role: 'activity', position: [0, 0], text: 'Source' },
+        { type: 'entity', id: 'target', role: 'resource', position: [100, 0], text: 'Target' },
+        {
+          type: 'relation',
+          role: 'dependency',
+          source: { id: 'source' },
+          target: { id: 'target' },
+        },
+      ],
+    };
+
+    expect(normalizeGraph(input)).toEqual(
+      GraphSchema.parse({
+        namespace: 'graph',
+        type: 'graph',
+        ...input,
+        children: input.children?.map(child => ({ namespace: 'graph', ...child })),
+      }),
+    );
   });
 
   it('normalizes only Entity, Relation and Way authoring sugar', () => {

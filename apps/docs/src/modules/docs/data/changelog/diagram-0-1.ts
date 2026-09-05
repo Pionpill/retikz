@@ -19,8 +19,15 @@ const diagramMilestones: Array<SubVersion> = [
       {
         label: { zh: '统一主题与布局扩展', en: 'Unified theme and layout extensions' },
         content: {
-          zh: '扁平 `flowThemeTokens`、结构化 `flowTheme` 与单项 style / layout 形成确定的覆盖链。内置 `layered` 与自定义同步 Layout Definition 经过同一 registry、catalog、capability preflight 和输出校验；同名 Graph Theme 提供 Entity、Relation 与 Group 的 reference 外观，Flow Theme 只保留显式 Flow 投影与布局覆盖。',
-          en: 'Flat `flowThemeTokens`, structured `flowTheme`, and per-item style/layout values form one deterministic cascade. The built-in `layered` layout and custom synchronous Layout Definitions share one registry, catalog, capability preflight, and output validation path. The same-name Graph Theme supplies reference Entity, Relation, and Group appearance, while Flow Theme retains only explicit Flow projection and layout overrides.',
+          zh: '同名 Theme Definition 生成 Source 同构的稀疏默认，作者通过 `diagramDefaults` / `flowDefaults` 覆盖，实例字段最终优先。内置 `layered` 与自定义同步 Layout Definition 经过同一 registry、catalog、capability preflight 和输出校验；同名 Graph Theme 提供 reference 外观，Flow 只物化自己的明确覆盖。',
+          en: 'Same-name Theme Definitions generate sparse defaults shaped like Source. Authors override them through `diagramDefaults` and `flowDefaults`, with instance fields taking final priority. Built-in `layered` and custom synchronous Layout Definitions share one registry, catalog, capability preflight, and output validation path. Graph Theme supplies reference appearance, while Flow materializes only its own explicit overrides.',
+        },
+      },
+      {
+        label: { zh: 'BREAKING：Source 与默认片段对齐', en: 'BREAKING: Source and default fragments align' },
+        content: {
+          zh: '删除 `diagramTheme`、`flowTheme` 和 `flowThemeTokens`。标题与描述改用 `{ text, style?, layout? }`；Entity 文本排版移至 `layout`，Group 改用根 Surface 字段与 `caption.title`，Relation marker/label 格式回到根字段。Root/Group 的 `layout` 与 `routing` 分离，Relation 直接使用 `routing`；主题默认不再决定方向或路由。Node font 整体替换，labelFont 按字段补全，不提供旧结构兼容。',
+          en: 'Removes `diagramTheme`, `flowTheme`, and `flowThemeTokens`. Titles and descriptions use `{ text, style?, layout? }`; Entity text layout moves to `layout`, Groups use root Surface fields and `caption.title`, and Relation marker/label formatting returns to root fields. Root/Group `layout` and `routing` are separate, and Relations use `routing` directly. Theme defaults no longer choose direction or routing. Node fonts replace as a whole, labelFont fields merge, and old structures have no compatibility aliases.',
         },
       },
       {

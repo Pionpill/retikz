@@ -33,18 +33,18 @@ const graphMilestones: Array<SubVersion> = [
       {
         label: { zh: '容器继承 Graph Theme', en: 'Containers inherit Graph Theme' },
         content: {
-          zh: 'Graph Theme style 统一拥有 Entity、Relation、Group 与 Block 外观。Group / Block 根 Surface 从同名 Definition 继承 `background`、`border` 与 `cornerRadius`，显式 Source 顶层字段最终整体替换 Theme 字段；`graphTheme` 仍只作用于后代 Entity / Relation。',
-          en: 'Graph Theme styles now own Entity, Relation, Group, and Block appearance together. Group and Block root Surfaces inherit `background`, `border`, and `cornerRadius` from the same-name Definition; explicit Source fields replace complete top-level Theme fields, while `graphTheme` remains descendant-only for Entity and Relation.',
+          zh: 'Graph Theme style 统一提供 Entity、Relation、Group 与 Block 默认。`graphDefaults` 按 Source 的 `style`、`layout` 与 Surface 根字段为后代提供显式默认，`graphRules` 独立保存有序条件规则；容器自身外壳只消费进入位置的 Theme 与祖先默认，实例字段最终优先。',
+          en: 'Graph Theme styles provide defaults for Entity, Relation, Group, and Block. `graphDefaults` follows Source `style`, `layout`, and root Surface fields for descendants, while `graphRules` holds ordered conditional rules separately. A container shell uses its incoming Theme and ancestor defaults, with explicit instance fields taking final priority.',
         },
       },
       {
         label: {
-          zh: 'BREAKING：Graph Theme 直接使用 owner schema',
-          en: 'BREAKING: Graph Theme uses its owner schema directly',
+          zh: 'BREAKING：显式默认与 Theme 来源分离',
+          en: 'BREAKING: Explicit defaults are separate from Theme sources',
         },
         content: {
-          zh: '`GraphThemeStyleDefinition.resolve()` 输出不再经过 plain-container preflight 或已知 `undefined` 清理，而是直接由 Graph owner schema 投影后进入既有 merge。optional 显式 `undefined` 因此可以覆盖默认字段；未知 token 与非法值仍由严格 schema fail-loud。',
-          en: '`GraphThemeStyleDefinition.resolve()` output no longer passes through a plain-container preflight or known-`undefined` cleanup. The Graph owner schema projects it directly before the existing merge. Optional explicit `undefined` may therefore replace a default field, while unknown tokens and invalid values still fail in the strict schema.',
+          zh: '将 `graphTheme` 迁移为独立的 `graphDefaults` / `graphRules`；Definition 返回 `{ defaults?, rules? }`，删除 `tokens` 与规则 `appearance` 包装。生成值与作者默认复用同一稀疏 Source 片段。空片段和 optional `undefined` 不覆盖，合法零值保留；Node font 整体替换，Relation labelFont 按字段补全。切换 Core Theme 或 reset 不清除作者层；不提供旧入口兼容。',
+          en: 'Replace `graphTheme` with separate `graphDefaults` and `graphRules`. Definitions return `{ defaults?, rules? }`; `tokens` and rule `appearance` wrappers are removed. Generated and authored defaults reuse the same sparse Source fragments. Empty fragments and optional `undefined` do not override values, while valid zero values remain effective. Node fonts replace as a whole and Relation labelFont fields merge. Core Theme changes and reset preserve author layers; legacy entries have no compatibility aliases.',
         },
       },
     ],

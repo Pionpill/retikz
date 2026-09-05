@@ -98,12 +98,45 @@ describe('Entity lowering', () => {
       const options = Graph.resolveGraphDefinitionOptions();
       const canonical = Graph.resolveEntity(entity({ status }), options);
 
-      expect(Graph.resolveEntityAppearance(canonical, { ...options, theme })).toMatchObject({ color });
+      expect(Graph.resolveEntityAppearance(canonical, { ...options, theme })).toMatchObject({ style: { color } });
       expect(
         Graph.lowerEntity(canonical, Graph.resolveEntityAppearance(canonical, { ...options, theme })),
       ).not.toHaveProperty('status');
     },
   );
+
+  it('lets Graph author defaults outrank generated semantic status colors', () => {
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
+    });
+    const output = compileToScene(
+      {
+        type: 'scene',
+        version: 1,
+        children: [
+          Graph.GraphSchema.parse({
+            namespace: 'graph',
+            type: 'graph',
+            graphDefaults: { entity: { style: { color: '#7c3aed' } } },
+            children: [
+              {
+                namespace: 'graph',
+                type: 'entity',
+                role: 'activity',
+                status: 'error',
+                position: [0, 0],
+              },
+            ],
+          }),
+        ],
+      },
+      { ...definitions, padding: 0 },
+    );
+
+    const scene = JSON.stringify(output.scene);
+    expect(scene).toContain('#7c3aed');
+    expect(scene).not.toContain(theme.colors.semantic.error);
+  });
 
   it('lets authored Entity appearance override the status Theme while retaining the semantic status', () => {
     const options = Graph.resolveGraphDefinitionOptions();

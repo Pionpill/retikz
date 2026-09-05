@@ -3,7 +3,7 @@ title: Graph
 description: 用可选 Graph Scope、Block、Group、Entity、Relation 与任意 Core 内容建立可组合图式。
 ---
 
-Graph 是一个可选的上下文薄壳。它复用 Core `Scope` 的完整能力，并额外向可见的 Entity 与 Relation 后代提供局部 `graphTheme`；自动布局、routing 算法和 renderer 不属于 Graph。
+Graph 是一个可选的上下文薄壳。它复用 Core `Scope` 的完整能力，并通过 `graphDefaults` 为可见的 Entity、Relation、Group 与 Block 后代提供默认值，通过 `graphRules` 为 Entity / Relation 提供条件覆盖；自动布局、routing 算法和 renderer 不属于 Graph。
 
 Block、Group、Entity 与 Relation 也是独立的 Tier 2 composite，可以直接放在 Layout、Scope 或其它接受 Core child 的位置。Block 用固定 Header、Section、Row 与 Cell 表达代码和工程对象；Graph 不维护成员列表或 identity index，Relation 的引用与重复 id 诊断统一交给 Core namespace。
 
@@ -39,7 +39,7 @@ Graph 作为顶层 React 组件时，和 Layout、Plot、Table 一样建立一�
 
 | 成员       | 职责                                                       | 不负责                        |
 | ---------- | ---------------------------------------------------------- | ----------------------------- |
-| Graph      | Core Scope 公共面与局部 Graph Theme                        | 成员索引、排布、routing       |
+| Graph      | Core Scope 公共面与局部 Graph 默认值与规则                 | 成员索引、排布、routing       |
 | Block      | 结构化对象、局部 Flex 排版与可寻址 Section / Row           | Port 模型、执行、自动 routing |
 | Group      | 任意内容的可见边界、caption 与 boundary labels             | 自动排布、routing、避障       |
 | Entity     | 节点语义，并独立下沉为普通 Core Node                       | 生成 id、承载任意绘图 child   |

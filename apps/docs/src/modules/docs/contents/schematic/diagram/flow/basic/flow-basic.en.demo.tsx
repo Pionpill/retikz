@@ -69,7 +69,7 @@ export const renderFlowBasicPreview = (values: PreviewControlValuesFor<typeof fl
           text: formTextOf(values),
           role: values.formRole,
           ...statusProps(values.formStatus),
-          style: {
+          layout: {
             align: isTextAlign(values.formTextAlign) ? values.formTextAlign : undefined,
             lineHeight: values.formLineHeight,
             maxTextWidth: values.formMaxTextWidth,

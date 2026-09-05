@@ -3,7 +3,7 @@ title: Graph
 description: Compose an optional Graph Scope, Block, Group, Entity, Relation, and arbitrary Core content.
 ---
 
-Graph is an optional context shell. It reuses the complete Core `Scope` surface and adds local `graphTheme` rules for visible Entity and Relation descendants. Automatic layout, routing algorithms, and rendering remain outside Graph.
+Graph is an optional context shell. It reuses the complete Core `Scope` surface and adds `graphDefaults` for visible Entity, Relation, Group, and Block descendants, plus conditional `graphRules` for Entity and Relation. Automatic layout, routing algorithms, and rendering remain outside Graph.
 
 Block, Group, Entity, and Relation are independent Tier 2 composites that can appear directly in Layout, Scope, or any other Core-child position. Block models code and engineering objects through a fixed Header, Section, Row, and Cell structure. Graph maintains neither a member collection nor an identity index; Core namespace owns references and duplicate-id diagnostics.
 
@@ -39,7 +39,7 @@ Fields such as `theme`, `defaults.node`, `defaults.path`, `defaults.label`, `def
 
 | Member     | Responsibility                                                        | Does not own                                 |
 | ---------- | --------------------------------------------------------------------- | -------------------------------------------- |
-| Graph      | Core Scope surface and local Graph Theme                              | Member indexes, layout, or routing           |
+| Graph      | Core Scope surface and local Graph defaults and rules                 | Member indexes, layout, or routing           |
 | Block      | Structured objects, local Flex layout, and addressable Section / Row  | Port models, execution, or automatic routing |
 | Group      | Visible arbitrary-content boundary, caption, and boundary labels      | Automatic layout, routing, or avoidance      |
 | Entity     | Node semantics and independent lowering to one Core Node              | Generated ids or arbitrary drawing children  |

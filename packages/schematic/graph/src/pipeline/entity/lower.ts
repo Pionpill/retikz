@@ -59,7 +59,7 @@ export const lowerEntity = (entity: CanonicalEntity, appearance: EffectiveEntity
       },
     });
   }
-  const minimumSize = mergeMinimumSize(entity.roleDefinition.minimumSize, source.layout?.minimumSize);
+  const minimumSize = mergeMinimumSize(entity.roleDefinition.minimumSize, appearance.layout?.minimumSize);
   return {
     type: 'node',
     ...definedNodeFields(source),
@@ -68,13 +68,10 @@ export const lowerEntity = (entity: CanonicalEntity, appearance: EffectiveEntity
     ...(entity.roleDefinition.boundary === undefined ? {} : { boundary: entity.roleDefinition.boundary }),
     ...(entity.roleDefinition.cornerRadius === undefined ? {} : { cornerRadius: entity.roleDefinition.cornerRadius }),
     style: {
-      ...appearance,
-      ...Object.fromEntries(
-        Object.entries(source.style ?? {}).filter(([, value]: [string, unknown]) => value !== undefined),
-      ),
+      ...appearance.style,
     },
     layout: {
-      ...source.layout,
+      ...appearance.layout,
       padding: entity.roleDefinition.padding,
       ...(minimumSize === undefined ? {} : { minimumSize }),
     },

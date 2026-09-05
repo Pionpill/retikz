@@ -28,7 +28,7 @@ export const resolveDiagramFoundation = (
     });
   }
 
-  const theme = resolveDiagramTheme(context.theme, context.diagramThemeStyles, source.diagramTheme);
+  const theme = resolveDiagramTheme(context.theme, context.diagramThemeStyles, source.diagramDefaults);
   const frame: DiagramFoundationResolution['frame'] = {
     legendPosition: explicitFrame?.legendPosition ?? Side.Right,
     legendAlign: explicitFrame?.legendAlign ?? LayoutAlignment.Start,

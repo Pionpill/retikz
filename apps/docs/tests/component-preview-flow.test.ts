@@ -162,7 +162,7 @@ describe('Flow Diagram ComponentPreview', () => {
         { id: 'worker', text: 'Worker' },
         { id: 'api', text: 'API' },
       ],
-      groups: [{ id: 'runtime', label: 'Runtime', children: ['worker'] }],
+      groups: [{ id: 'runtime', caption: { title: { text: 'Runtime' } }, children: ['worker'] }],
       layouts: [],
       children: ['runtime', 'api'],
     });
@@ -211,16 +211,19 @@ describe('Flow Diagram ComponentPreview', () => {
   it.each([
     ['zh', FlowBasicCanonicalDemo],
     ['en', FlowBasicEnCanonicalDemo],
-  ] as const)('derives the %s basic demo with only Flow Entity elements and no inline Flow theme', (_lang, Demo) => {
-    const preview = buildPreviewIR(Demo);
-    const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
+  ] as const)(
+    'derives the %s basic demo with only Flow Entity elements and no explicit Flow defaults',
+    (_lang, Demo) => {
+      const preview = buildPreviewIR(Demo);
+      const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
 
-    expect(flow.entities).toHaveLength(4);
-    expect(flow.groups).toEqual([]);
-    expect(flow.layouts).toEqual([]);
-    expect(flow.children).toEqual(flow.entities.map(entity => entity.id));
-    expect(flow.flowTheme).toBeUndefined();
-  });
+      expect(flow.entities).toHaveLength(4);
+      expect(flow.groups).toEqual([]);
+      expect(flow.layouts).toEqual([]);
+      expect(flow.children).toEqual(flow.entities.map(entity => entity.id));
+      expect(flow.flowDefaults).toBeUndefined();
+    },
+  );
 
   it('uses bilingual controls to change the frontend form role, status, rich text, block typography, and Relation status in real Flow Source', () => {
     const chinese =
@@ -361,7 +364,7 @@ describe('Flow Diagram ComponentPreview', () => {
         text: ['前端', '表单', { text: '补充说明', fill: 'darkorange', font: { size: 'lg' } }],
         role: 'resource',
         status: 'success',
-        style: { align: 'start', lineHeight: 24, maxTextWidth: 120 },
+        layout: { align: 'start', lineHeight: 24, maxTextWidth: 120 },
       },
       { id: 'backend-validation', text: '后端服务', role: 'activity' },
       { id: 'database-input', text: '数据库输入', role: 'resource' },
@@ -438,7 +441,7 @@ describe('Flow Diagram ComponentPreview', () => {
       const preview = buildPreviewIR(Demo);
       const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
 
-      expect(flow.flowTheme).toEqual({
+      expect(flow.flowDefaults).toEqual({
         entity: { style: { color: '#334155', fillOpacity: 1, strokeWidth: 1 } },
         relation: { style: { stroke: '#64748b', strokeWidth: 1, strokeOpacity: 0.9 } },
       });

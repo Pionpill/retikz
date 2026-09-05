@@ -4,7 +4,7 @@ import { SurfaceInputSchema } from '@retikz/standard';
 import { array, enum as zodEnum, literal, strictObject } from 'zod';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
-import { GraphThemeLayerSchema } from '../theme';
+import { GraphDefaultsSchema, GraphRuleSchema } from '../theme';
 
 /** Group caption 文本可复用的 Core Node 文字字段 */
 export const GroupCaptionTextSchema = strictObject({
@@ -46,7 +46,8 @@ export const GroupSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.Group).describe('Group Source composite discriminator.'),
   ...ScopePropsSchema.shape,
-  graphTheme: GraphThemeLayerSchema.optional().describe('Optional Graph-local appearance rule layer.'),
+  graphDefaults: GraphDefaultsSchema.optional().describe('Optional sparse Graph defaults for visible descendants.'),
+  graphRules: array(GraphRuleSchema).optional().describe('Optional ordered Graph rules for visible descendants.'),
   caption: GroupCaptionSchema.optional(),
   labels: array(NodeLabelSchema)
     .nonempty()

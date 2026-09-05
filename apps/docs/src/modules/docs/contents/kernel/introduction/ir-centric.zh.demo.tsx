@@ -10,10 +10,11 @@ const planned = { ...textOnly, textColor: 'gray' } as const;
 /** 简介页由 Flow Source 自动布局的“IR 居中”逻辑图 */
 const Demo: FC = () => (
   <FlowDiagram
-    presentation={{ description: '灰色 = 计划中未支持' }}
-    diagramTheme={{ presentation: { description: { textColor: 'gray', font: { size: 12 } } } }}
-    flowTheme={{
-      layout: { direction: 'right', nodeGap: 14, rankGap: 38 },
+    presentation={{ description: { text: '灰色 = 计划中未支持' } }}
+    diagramDefaults={{ presentation: { description: { style: { textColor: 'gray', font: { size: 12 } } } } }}
+    layout={{ direction: 'right' }}
+    flowDefaults={{
+      layout: { nodeGap: 14, rankGap: 38 },
       entity: { style: textOnly },
       relation: { style: { stroke: 'gray', strokeWidth: 1 } },
     }}

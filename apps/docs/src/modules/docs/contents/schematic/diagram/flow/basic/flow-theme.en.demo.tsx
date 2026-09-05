@@ -16,7 +16,7 @@ export const previewControls = flowThemeControls;
 export const renderFlowThemePreview = (values: PreviewControlValuesFor<typeof flowThemeControls>): ReactElement => (
   <FlowDiagram
     viewBox={{ x: -11.25, y: -64, width: 420, height: 240 }}
-    flowTheme={{
+    flowDefaults={{
       entity: {
         style: {
           color: values.entityColor,

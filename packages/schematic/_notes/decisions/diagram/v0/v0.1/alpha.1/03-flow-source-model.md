@@ -4,6 +4,8 @@
 - 决策日期：2026-08-30
 - 关联：[Diagram v0.1 roadmap](../roadmap.md) · [ADR-01：Diagram Assembly 与 Presentation](./01-diagram-assembly-presentation.md) · [ADR-02：Diagram Frame、Spacing 与 Appearance](./02-diagram-frame-spacing-appearance.md) · [ADR-07：Flow 平级 Source、Group 与 Layout](./07-flow-catalog-source-layout-groups.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
+> Theme 修订：本文的文本区域、显式默认值和 Flow layout/routing 契约以 [Diagram / Flow Defaults 与 Theme 来源](./08-theme-source-fragments.md) 为准；其余装配与能力边界继续成立。
+
 ## 背景与目标
 
 Diagram Foundation 已经确定完整图示由 Presentation、Frame / Appearance 与具体 drawing core 组成，但尚未建立可实例化的 `FlowDiagram` Source。Graph 可以独立表达 Group、Block、Entity 与 Relation，并允许作者填写 Core-compatible 几何；它面向自由组合和显式绘制，不负责从关系结构推导布局

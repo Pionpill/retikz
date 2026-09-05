@@ -30,7 +30,7 @@ describe('Graph Scope and Theme compile semantics', () => {
       colors: resolveDefaultCoreThemeColors(mode),
     };
 
-    expect(Graph.getDefaultGraphThemePreset(theme).entity.tokens).toEqual({
+    expect(Graph.getDefaultGraphThemePreset(theme).defaults.entity?.style).toEqual({
       color,
       textColor: 'contrast',
       fill: 0.08,
@@ -40,12 +40,12 @@ describe('Graph Scope and Theme compile semantics', () => {
       strokeOpacity: 1,
       opacity: 1,
     });
-    expect(Graph.getDefaultGraphThemePreset(theme).group.tokens).toEqual({
+    expect(Graph.getDefaultGraphThemePreset(theme).defaults.group).toEqual({
       background: { fill: 'lightgray', fillOpacity: 0.04 },
       border: { stroke: 'lightgray', strokeWidth: 1, dashPattern: [4, 3] },
       cornerRadius: 4,
     });
-    expect(Graph.getDefaultGraphThemePreset(theme).block.tokens).toEqual({
+    expect(Graph.getDefaultGraphThemePreset(theme).defaults.block).toEqual({
       background: { fill: 'none' },
       border: { stroke: 'currentColor', strokeWidth: 1, strokeOpacity: 0.2 },
       cornerRadius: 8,
@@ -127,7 +127,7 @@ describe('Graph Scope and Theme compile semantics', () => {
   it('在最终 Entity 实例主色后解析 Graph Theme 的数值 fill', () => {
     const definition = Graph.defineGraphThemeStyle({
       name: 'contextual-entity',
-      resolve: () => ({ entity: { tokens: { fill: 0.2 } } }),
+      resolve: () => ({ defaults: { entity: { style: { fill: 0.2 } } } }),
     });
     const definitions = resolveCoreProviderDependencies({
       contributions: [
@@ -164,10 +164,12 @@ describe('Graph Scope and Theme compile semantics', () => {
     const definition = Graph.defineGraphThemeStyle({
       name: 'contextual-relation',
       resolve: () => ({
-        relation: {
-          tokens: {
-            color: '#336699',
-            stroke: 0.2,
+        defaults: {
+          relation: {
+            style: {
+              color: '#336699',
+              stroke: 0.2,
+            },
             labelTextForeground: 0.6,
             targetMarker: { color: 0.8, fill: 0.25 },
           },
@@ -210,7 +212,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     expect(scene).toContain('#d6e1eb');
   });
 
-  it('compiles Graph Core Theme/default channels and graphTheme through the emitted Scope', () => {
+  it('compiles Graph Core Theme/default channels and Graph rules through the emitted Scope', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });
@@ -224,12 +226,10 @@ describe('Graph Scope and Theme compile semantics', () => {
             namespace: 'graph',
             type: 'graph',
             theme: { mode: 'dark' },
-            graphTheme: {
-              rules: [
-                { type: 'entity', appearance: { fill: '#ef4444' } },
-                { type: 'relation', appearance: { stroke: '#22c55e' } },
-              ],
-            },
+            graphRules: [
+              { type: 'entity', style: { fill: '#ef4444' } },
+              { type: 'relation', style: { stroke: '#22c55e' } },
+            ],
             children: [
               {
                 namespace: 'graph',
@@ -277,7 +277,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('honors resetStyle on Graph instead of leaking outer Scope defaults', () => {
+  it('honors Core reset on Graph while preserving Graph author defaults', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.GraphProviderKey], providers: Graph.createGraphProviders() }],
     });
@@ -293,6 +293,7 @@ describe('Graph Scope and Theme compile semantics', () => {
                 namespace: 'graph',
                 type: 'graph',
                 children: [{ namespace: 'graph', type: 'entity', role: 'activity', position: [0, 0], text: 'reset' }],
+                graphDefaults: { entity: { style: { fill: '#ef4444' } } },
                 defaults: { reset: ['node'] },
               },
             ],
@@ -307,100 +308,92 @@ describe('Graph Scope and Theme compile semantics', () => {
       { ...definitions, padding: 0 },
     );
 
-    expect(JSON.stringify(output.scene)).not.toContain('dashPattern');
+    const scene = JSON.stringify(output.scene);
+    expect(scene).not.toContain('dashPattern');
+    expect(scene).toContain('#ef4444');
   });
 
-  it('fills omitted Entity style tokens from the mode-aware default preset', () => {
+  it('fills omitted Entity style fields from the mode-aware default preset', () => {
     const definition = Graph.defineGraphThemeStyle({
       name: 'entity-color-only',
-      resolve: () => ({ entity: { tokens: { color: '#2563eb' } } }),
+      resolve: () => ({ defaults: { entity: { style: { color: '#2563eb' } } } }),
     });
     const theme = themeWithStyle(definition.name);
     const defaults = Graph.getDefaultGraphThemePreset(theme);
+    const resolved = Graph.resolveGraphTheme(theme, styleRegistry(definition));
 
-    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition))).toEqual({
-      entity: {
-        ...defaults.entity,
-        tokens: { ...defaults.entity.tokens, color: '#2563eb' },
-      },
-      relation: defaults.relation,
-      group: defaults.group,
-      block: defaults.block,
-    });
+    expect(resolved.defaults.entity?.style).toEqual({ ...defaults.defaults.entity?.style, color: '#2563eb' });
+    expect(resolved.defaults.relation).toEqual(defaults.defaults.relation);
+    expect(resolved.defaults.group).toEqual(defaults.defaults.group);
+    expect(resolved.defaults.block).toEqual(defaults.defaults.block);
+    expect(resolved.rules).toEqual(defaults.rules);
   });
 
-  it('fills omitted Relation style tokens from the mode-aware default preset', () => {
+  it('fills omitted Relation style fields from the mode-aware default preset', () => {
     const definition = Graph.defineGraphThemeStyle({
       name: 'relation-stroke-only',
-      resolve: () => ({ relation: { tokens: { stroke: '#16a34a' } } }),
+      resolve: () => ({ defaults: { relation: { style: { stroke: '#16a34a' } } } }),
     });
     const theme = themeWithStyle(definition.name);
     const defaults = Graph.getDefaultGraphThemePreset(theme);
+    const resolved = Graph.resolveGraphTheme(theme, styleRegistry(definition));
 
-    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition))).toEqual({
-      entity: defaults.entity,
-      relation: {
-        ...defaults.relation,
-        tokens: { ...defaults.relation.tokens, stroke: '#16a34a' },
-      },
-      group: defaults.group,
-      block: defaults.block,
+    expect(resolved.defaults.entity).toEqual(defaults.defaults.entity);
+    expect(resolved.defaults.relation).toEqual({
+      ...defaults.defaults.relation,
+      style: { ...defaults.defaults.relation?.style, stroke: '#16a34a' },
     });
+    expect(resolved.defaults.group).toEqual(defaults.defaults.group);
+    expect(resolved.defaults.block).toEqual(defaults.defaults.block);
+    expect(resolved.rules).toEqual(defaults.rules);
   });
 
-  it('fills omitted Group and Block shell tokens from the Neutral preset', () => {
+  it('fills omitted Group and Block shell fields from the Neutral preset', () => {
     const definition = Graph.defineGraphThemeStyle({
       name: 'container-shells',
       resolve: () => ({
-        group: { tokens: { cornerRadius: 2 } },
-        block: { tokens: { background: { fill: '#f8fafc', fillOpacity: 0.75 } } },
+        defaults: {
+          group: { cornerRadius: 2 },
+          block: { background: { fill: '#f8fafc', fillOpacity: 0.75 } },
+        },
       }),
     });
     const theme = themeWithStyle(definition.name);
     const defaults = Graph.getDefaultGraphThemePreset(theme);
+    const resolved = Graph.resolveGraphTheme(theme, styleRegistry(definition));
 
-    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition))).toEqual({
-      entity: defaults.entity,
-      relation: defaults.relation,
-      group: {
-        tokens: {
-          ...defaults.group.tokens,
-          cornerRadius: 2,
-        },
-      },
-      block: {
-        tokens: {
-          ...defaults.block.tokens,
-          background: { fill: '#f8fafc', fillOpacity: 0.75 },
-        },
-      },
+    expect(resolved.defaults.entity).toEqual(defaults.defaults.entity);
+    expect(resolved.defaults.relation).toEqual(defaults.defaults.relation);
+    expect(resolved.defaults.group).toEqual({ ...defaults.defaults.group, cornerRadius: 2 });
+    expect(resolved.defaults.block).toEqual({
+      ...defaults.defaults.block,
+      background: { fill: '#f8fafc', fillOpacity: 0.75 },
     });
+    expect(resolved.rules).toEqual(defaults.rules);
   });
 
   it('keeps the Neutral baseline when a custom style provides an empty rule list', () => {
     const definition = Graph.defineGraphThemeStyle({
       name: 'empty-rule-list',
-      resolve: () => ({ entity: { rules: [] } }),
+      resolve: () => ({ rules: [] }),
     });
     const theme = themeWithStyle(definition.name);
     const defaults = Graph.getDefaultGraphThemePreset(theme);
 
-    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition)).entity.rules).toEqual(defaults.entity.rules);
+    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition)).rules).toEqual(defaults.rules);
   });
 
   it('applies custom Entity rules by semantic selector without a visual selector key', () => {
     const definition = Graph.defineGraphThemeStyle({
       name: 'fill-rule-override',
       resolve: () => ({
-        entity: {
-          rules: [
-            {
-              type: Graph.GraphType.Entity,
-              selector: { role: Graph.EntityRole.Activity },
-              appearance: { fill: '#f97316' },
-            },
-          ],
-        },
+        rules: [
+          {
+            type: Graph.GraphType.Entity,
+            selector: { role: Graph.EntityRole.Activity },
+            style: { fill: '#f97316' },
+          },
+        ],
       }),
     });
     const theme = themeWithStyle(definition.name);
@@ -415,44 +408,31 @@ describe('Graph Scope and Theme compile semantics', () => {
     );
 
     expect(Graph.resolveEntityAppearance(entity, { ...options, theme })).toMatchObject({
-      fill: '#f97316',
-      stroke: 1,
+      style: { fill: '#f97316', stroke: 1 },
     });
   });
 
-  it('rejects an explicitly empty style token override as a callback failure', () => {
+  it('accepts an explicitly empty style defaults fragment as no override', () => {
     const definition = Graph.defineGraphThemeStyle({
-      name: 'empty-entity-tokens',
-      resolve: () => ({ entity: { tokens: {} } }),
+      name: 'empty-entity-defaults',
+      resolve: () => ({ defaults: { entity: { style: {} } } }),
     });
 
-    try {
-      Graph.resolveGraphTheme(themeWithStyle(definition.name), styleRegistry(definition));
-      throw new Error('Expected Graph Theme style resolution to fail.');
-    } catch (error) {
-      expect(error).toMatchObject({
-        code: Graph.RetikzGraphErrorCode.DefinitionCallbackFailed,
-        details: { capability: 'graph-theme-style', key: definition.name },
-      });
-    }
+    const theme = themeWithStyle(definition.name);
+    const baseline = Graph.getDefaultGraphThemePreset(theme);
+    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition))).toEqual(baseline);
   });
 
-  it.each(['group', 'block'] as const)('rejects explicitly empty %s shell tokens as a callback failure', member => {
+  it.each(['group', 'block'] as const)('accepts explicitly empty %s defaults as no override', member => {
     const definition = {
-      name: `empty-${member}-tokens`,
-      resolve: () => ({ [member]: { tokens: {} } }),
+      name: `empty-${member}-defaults`,
+      resolve: () => ({ defaults: { [member]: {} } }),
     };
+    const theme = themeWithStyle(definition.name);
+    const baseline = Graph.getDefaultGraphThemePreset(theme);
 
-    expect(() =>
-      Reflect.apply(Graph.resolveGraphTheme, undefined, [
-        themeWithStyle(definition.name),
-        new Map([[definition.name, definition]]),
-      ]),
-    ).toThrowError(
-      expect.objectContaining({
-        code: Graph.RetikzGraphErrorCode.DefinitionCallbackFailed,
-        details: { capability: 'graph-theme-style', key: definition.name },
-      }),
+    expect(Graph.resolveGraphTheme(theme, new Map([[definition.name, definition]])).defaults[member]).toEqual(
+      baseline.defaults[member],
     );
   });
 
@@ -478,61 +458,62 @@ describe('Graph Scope and Theme compile semantics', () => {
   });
 
   it('projects Graph Theme style object outputs through the owner schema', () => {
-    class EntityTokensOutput {
+    class EntityStyleOutput {
       readonly color = '#2563eb';
     }
 
     const getterOutput = Object.defineProperty({}, 'entity', {
       enumerable: true,
-      get: () => ({ tokens: { color: '#2563eb' } }),
+      get: () => ({ style: { color: '#2563eb' } }),
     });
-    const symbolOutput = { entity: { tokens: { color: '#2563eb' } }, [Symbol('metadata')]: true };
-    const definitions = [
-      { name: 'class-tokens', resolve: () => ({ entity: { tokens: new EntityTokensOutput() } }) },
-      { name: 'getter-output', resolve: () => getterOutput },
-      { name: 'symbol-output', resolve: () => symbolOutput },
+    const symbolOutput = { defaults: { entity: { style: { color: '#2563eb' } } }, [Symbol('metadata')]: true };
+    const definitions: Array<Graph.GraphThemeStyleDefinition> = [
+      Graph.defineGraphThemeStyle({
+        name: 'class-style',
+        resolve: () => ({ defaults: { entity: { style: new EntityStyleOutput() } } }),
+      }),
+      Graph.defineGraphThemeStyle({ name: 'getter-output', resolve: () => ({ defaults: getterOutput }) }),
+      Graph.defineGraphThemeStyle({ name: 'symbol-output', resolve: () => symbolOutput }),
     ];
 
     for (const definition of definitions) {
       expect(
-        Reflect.apply(Graph.resolveGraphTheme, undefined, [
-          themeWithStyle(definition.name),
-          new Map([[definition.name, definition]]),
-        ]).entity.tokens.color,
+        Graph.resolveGraphTheme(themeWithStyle(definition.name), new Map([[definition.name, definition]])).defaults
+          .entity?.style?.color,
         definition.name,
       ).toBe('#2563eb');
     }
   });
 
-  it('preserves an explicitly undefined Graph style token through the owner schema and merge', () => {
-    const tokens = { color: '#2563eb' };
-    Object.defineProperty(tokens, 'color', { enumerable: true, value: undefined });
-    const definition = { name: 'undefined-token', resolve: () => ({ entity: { tokens } }) };
+  it('ignores an explicitly undefined Graph style field during the owner merge', () => {
+    const style = { color: undefined };
+    const definition = { name: 'undefined-style-field', resolve: () => ({ defaults: { entity: { style } } }) };
     const theme = themeWithStyle(definition.name);
 
-    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition)).entity.tokens.color).toBeUndefined();
+    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition)).defaults.entity?.style?.color).toBe(
+      Graph.getDefaultGraphThemePreset(theme).defaults.entity?.style?.color,
+    );
   });
 
-  it('preserves an explicitly undefined Group shell token through the owner schema and merge', () => {
-    const tokens = { cornerRadius: 0 };
-    Object.defineProperty(tokens, 'cornerRadius', { enumerable: true, value: undefined });
-    const definition = { name: 'undefined-group-token', resolve: () => ({ group: { tokens } }) };
+  it('ignores an explicitly undefined Group shell field during the owner merge', () => {
+    const defaults = { cornerRadius: undefined };
+    const definition = { name: 'undefined-group-field', resolve: () => ({ defaults: { group: defaults } }) };
     const theme = themeWithStyle(definition.name);
 
-    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition)).group.tokens.cornerRadius).toBeUndefined();
+    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition)).defaults.group?.cornerRadius).toBe(
+      Graph.getDefaultGraphThemePreset(theme).defaults.group?.cornerRadius,
+    );
   });
 
-  it('rejects an unknown Graph style token even when its value is undefined', () => {
+  it('rejects an unknown Graph style field even when its value is undefined', () => {
+    const style = { color: '#ffffff', unknown: undefined };
     const definition = {
-      name: 'unknown-undefined-token',
-      resolve: () => ({ entity: { tokens: { unknown: undefined } } }),
+      name: 'unknown-undefined-style-field',
+      resolve: () => ({ defaults: { entity: { style } } }),
     };
 
     expect(() =>
-      Reflect.apply(Graph.resolveGraphTheme, undefined, [
-        themeWithStyle(definition.name),
-        new Map([[definition.name, definition]]),
-      ]),
+      Graph.resolveGraphTheme(themeWithStyle(definition.name), new Map([[definition.name, definition]])),
     ).toThrowError(
       expect.objectContaining({
         code: Graph.RetikzGraphErrorCode.DefinitionCallbackFailed,
@@ -541,17 +522,15 @@ describe('Graph Scope and Theme compile semantics', () => {
     );
   });
 
-  it('rejects an unknown Group shell token even when its value is undefined', () => {
+  it('rejects an unknown Group shell field even when its value is undefined', () => {
+    const defaults = { cornerRadius: 0, unknown: undefined };
     const definition = {
-      name: 'unknown-undefined-group-token',
-      resolve: () => ({ group: { tokens: { unknown: undefined } } }),
+      name: 'unknown-undefined-group-field',
+      resolve: () => ({ defaults: { group: defaults } }),
     };
 
     expect(() =>
-      Reflect.apply(Graph.resolveGraphTheme, undefined, [
-        themeWithStyle(definition.name),
-        new Map([[definition.name, definition]]),
-      ]),
+      Graph.resolveGraphTheme(themeWithStyle(definition.name), new Map([[definition.name, definition]])),
     ).toThrowError(
       expect.objectContaining({
         code: Graph.RetikzGraphErrorCode.DefinitionCallbackFailed,

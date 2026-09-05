@@ -17,6 +17,12 @@ import { GraphPredicateRefSchema } from '../predicate';
 import { GraphStatusSchema } from '../status';
 import { RelationDirection } from './constants';
 
+const requireAtLeastOneField = (value: object, context: RefinementCtx): void => {
+  if (Object.keys(value).length === 0) {
+    context.addIssue({ code: 'custom', message: 'Relation structure overrides require at least one field.' });
+  }
+};
+
 export const RelationDirectionSchema = zodEnum(RelationDirection).describe('Semantic Relation direction.');
 
 export const RelationRoleSchema = createOpenStringSchema(RelationRole).describe(
@@ -54,46 +60,21 @@ export const GraphRelationMarkerRecipeSchema = ArrowEndDetailSchema.pick({
   })
   .describe('Structural marker recipe without appearance tokens.');
 
-export const GraphRelationMarkerAppearanceTokenOverridesSchema = ArrowEndDetailSchema.pick({
+export const GraphRelationMarkerAppearanceSchema = ArrowEndDetailSchema.pick({
   color: true,
   fill: true,
   opacity: true,
   lineWidth: true,
-}).describe('Sparse appearance-only overrides for one Relation endpoint marker.');
+}).describe('Sparse appearance fields for one Relation endpoint marker.');
 
-const requireAtLeastOneField = (value: object, context: RefinementCtx): void => {
-  if (Object.keys(value).length === 0) {
-    context.addIssue({ code: 'custom', message: 'At least one override field is required.' });
-  }
-};
+export const GraphRelationLabelTextForegroundSchema = GeometryLabelSchema.shape.textColor.describe(
+  'Relation root label text color.',
+);
 
-const GraphRelationPathAppearanceShape = PathStyleSchema.pick({
-  color: true,
-  stroke: true,
-  strokeWidth: true,
-  strokeOpacity: true,
-  opacity: true,
-  shadow: true,
-  blendMode: true,
-  lineCap: true,
-  lineJoin: true,
-  dashOffset: true,
-}).shape;
+export const GraphRelationLabelFontSchema = GeometryLabelSchema.shape.font.describe('Relation root label font.');
 
-export const GraphRelationAppearanceTokenOverridesSchema = strictObject({
-  ...GraphRelationPathAppearanceShape,
-  sourceMarker: GraphRelationMarkerAppearanceTokenOverridesSchema.optional().describe(
-    'Sparse source marker appearance overrides.',
-  ),
-  targetMarker: GraphRelationMarkerAppearanceTokenOverridesSchema.optional().describe(
-    'Sparse target marker appearance overrides.',
-  ),
-  labelTextForeground: GeometryLabelSchema.shape.textColor,
-  labelFont: GeometryLabelSchema.shape.font,
-  labelOpacity: GeometryLabelSchema.shape.opacity,
-})
-  .superRefine(requireAtLeastOneField)
-  .describe('Non-empty appearance-only Relation overrides.');
+export const GraphRelationLabelOpacitySchema =
+  GeometryLabelSchema.shape.opacity.describe('Relation root label opacity.');
 
 const RelationPathShape = PathBaseSchema.omit({
   type: true,
@@ -126,11 +107,11 @@ export const RelationSchema = strictObject({
     .min(2)
     .optional()
     .describe('Optional complete Core Path step sequence in the Graph root coordinate space.'),
-  sourceMarker: GraphRelationAppearanceTokenOverridesSchema.shape.sourceMarker,
-  targetMarker: GraphRelationAppearanceTokenOverridesSchema.shape.targetMarker,
-  labelTextForeground: GraphRelationAppearanceTokenOverridesSchema.shape.labelTextForeground,
-  labelFont: GraphRelationAppearanceTokenOverridesSchema.shape.labelFont,
-  labelOpacity: GraphRelationAppearanceTokenOverridesSchema.shape.labelOpacity,
+  sourceMarker: GraphRelationMarkerAppearanceSchema.optional().describe('Source marker appearance fields.'),
+  targetMarker: GraphRelationMarkerAppearanceSchema.optional().describe('Target marker appearance fields.'),
+  labelTextForeground: GraphRelationLabelTextForegroundSchema,
+  labelFont: GraphRelationLabelFontSchema,
+  labelOpacity: GraphRelationLabelOpacitySchema,
 }).describe('JSON-safe Graph Relation combining semantic endpoints with non-conflicting Core Path fields.');
 
 const GraphRelationMarkerRecipeValueSchema = union([literal(false), GraphRelationMarkerRecipeSchema]);

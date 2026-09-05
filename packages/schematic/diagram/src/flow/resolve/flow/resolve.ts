@@ -3,13 +3,21 @@ import type { IRGraphEntity, IRGraphRelation, IRGroup } from '@retikz/graph';
 import {
   EntityRole,
   GraphType,
+  mergeGraphDefaults,
   RelationRole,
   resolveEntity,
   resolveGraphDefinitionOptions,
   resolveRelation,
 } from '@retikz/graph';
 
-import type { IRFlowDiagram, IRFlowEntity, IRFlowGroup, IRFlowLayout, IRFlowRelation } from '../../schemas';
+import type {
+  IRFlowDefaults,
+  IRFlowDiagram,
+  IRFlowEntity,
+  IRFlowGroup,
+  IRFlowLayout,
+  IRFlowRelation,
+} from '../../schemas';
 import type {
   CanonicalFlowDiagram,
   CanonicalFlowElement,
@@ -22,7 +30,7 @@ import type {
 } from './types';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import { mergeFlowLayoutIntent, mergeFlowTheme, resolveFlowTheme } from '../theme';
+import { mergeFlowDefaults, mergeFlowLayoutIntent, resolveFlowTheme } from '../theme';
 
 type FlowContainmentOwner = Readonly<{
   id?: string;
@@ -31,7 +39,7 @@ type FlowContainmentOwner = Readonly<{
 
 type ResolveState = Readonly<{
   graph: ReturnType<typeof resolveGraphDefinitionOptions>;
-  theme: ReturnType<typeof resolveFlowTheme>;
+  defaults: IRFlowDefaults;
   ids: Map<string, FlowSourcePath>;
   entities: Map<string, IRFlowEntity>;
   groups: Map<string, IRFlowGroup>;
@@ -171,16 +179,26 @@ const assertCompleteContainment = (source: IRFlowDiagram, state: ResolveState): 
   }
 };
 
-const mergeEntityStyle = (state: ResolveState, source: IRFlowEntity) => ({
-  ...state.theme.entity?.style,
-  ...source.style,
-  font: { ...state.theme.entity?.style?.font, ...source.style?.font },
-});
+const definedFields = <T extends object>(value: T): Partial<T> =>
+  Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Partial<T>;
+
+const entityDefaultsOf = (defaults: IRFlowDefaults['entity'], source: IRFlowEntity) => {
+  const sourceOverride =
+    source.style === undefined && source.layout === undefined
+      ? undefined
+      : {
+          entity: {
+            ...(source.style === undefined ? {} : { style: source.style }),
+            ...(source.layout === undefined ? {} : { layout: source.layout }),
+          },
+        };
+  return mergeGraphDefaults(defaults === undefined ? undefined : { entity: defaults }, sourceOverride)?.entity;
+};
 
 const resolveEntityRecord = (source: IRFlowEntity, path: FlowSourcePath, state: ResolveState): CanonicalFlowEntity => {
-  const style = mergeEntityStyle(state, source);
-  const layout = { ...state.theme.entity?.layout, ...source.layout };
-  const { align, lineHeight, maxTextWidth, ...nodeStyle } = style;
+  const defaults = entityDefaultsOf(state.defaults.entity, source);
+  const style = defaults?.style ?? {};
+  const layout = defaults?.layout ?? {};
   const graph: IRGraphEntity = {
     namespace: 'graph',
     type: GraphType.Entity,
@@ -189,13 +207,8 @@ const resolveEntityRecord = (source: IRFlowEntity, path: FlowSourcePath, state: 
     role: source.role ?? EntityRole.Concept,
     ...(source.kind === undefined ? {} : { kind: source.kind }),
     ...(source.status === undefined ? {} : { status: source.status }),
-    style: nodeStyle,
-    layout: {
-      ...layout,
-      ...(align === undefined ? {} : { align }),
-      ...(lineHeight === undefined ? {} : { lineHeight }),
-      ...(maxTextWidth === undefined ? {} : { maxTextWidth }),
-    },
+    ...(Object.keys(style).length === 0 ? {} : { style }),
+    ...(Object.keys(layout).length === 0 ? {} : { layout }),
   };
   resolveEntity(graph, state.graph);
   return {
@@ -206,6 +219,69 @@ const resolveEntityRecord = (source: IRFlowEntity, path: FlowSourcePath, state: 
     ...(source.rank === undefined ? {} : { rank: source.rank }),
     style,
     layout,
+    path,
+  };
+};
+
+const groupDefaultsOverrideOf = (source: IRFlowGroup): IRFlowDefaults => {
+  const title = source.caption?.title;
+  const caption =
+    title === undefined
+      ? undefined
+      : (() => {
+          const { text: _text, ...formatting } = title;
+          void _text;
+          return { title: formatting };
+        })();
+  return {
+    group: {
+      ...(source.padding === undefined ? {} : { padding: source.padding }),
+      ...(source.background === undefined ? {} : { background: source.background }),
+      ...(source.border === undefined ? {} : { border: source.border }),
+      ...(source.cornerRadius === undefined ? {} : { cornerRadius: source.cornerRadius }),
+      ...(caption === undefined ? {} : { caption }),
+    },
+  };
+};
+
+const resolveGroupRecord = (source: IRFlowGroup, path: FlowSourcePath, state: ResolveState): CanonicalFlowGroup => {
+  const groupDefaults = mergeFlowDefaults(state.defaults, groupDefaultsOverrideOf(source)).group ?? {};
+  const sourceCaption = source.caption?.title;
+  const titleDefaults = groupDefaults.caption?.title;
+  const caption =
+    sourceCaption === undefined
+      ? undefined
+      : {
+          title: {
+            text: sourceCaption.text,
+            ...definedFields(titleDefaults ?? {}),
+          },
+        };
+  const { caption: _caption, ...groupSurface } = groupDefaults;
+  void _caption;
+  const surface = {
+    ...definedFields(groupSurface),
+    ...(source.overflow === undefined ? {} : { overflow: source.overflow }),
+  };
+  const graph: IRGroup = {
+    namespace: 'graph',
+    type: GraphType.Group,
+    id: source.id,
+    ...surface,
+    ...(caption === undefined ? {} : { caption }),
+    children: [],
+  };
+  const layout = mergeFlowLayoutIntent(undefined, source.layout);
+  const elements = source.children.map(childId => resolveElementRecord(childId, state));
+  return {
+    type: 'group',
+    id: source.id,
+    source,
+    graph,
+    ...(source.rank === undefined ? {} : { rank: source.rank }),
+    layout,
+    ...(source.routing === undefined ? {} : { routing: source.routing }),
+    elements,
     path,
   };
 };
@@ -222,7 +298,7 @@ const resolveElementRecord = (id: string, state: ResolveState): CanonicalFlowEle
       id: layoutSource.id,
       source: layoutSource,
       ...(layoutSource.rank === undefined ? {} : { rank: layoutSource.rank }),
-      layout: mergeFlowLayoutIntent(state.theme.layout, {
+      layout: mergeFlowLayoutIntent(undefined, {
         direction: layoutSource.direction,
         ...(layoutSource.gap === undefined ? {} : { nodeGap: layoutSource.gap }),
       }),
@@ -232,33 +308,21 @@ const resolveElementRecord = (id: string, state: ResolveState): CanonicalFlowEle
     return layout;
   }
 
-  const source = state.groups.get(id)!;
-  const layout = mergeFlowLayoutIntent(state.theme.layout, source.layout);
-  const elements = source.children.map(childId => resolveElementRecord(childId, state));
-  const style =
-    mergeFlowTheme({ group: { style: state.theme.group?.style } }, { group: { style: source.style } }).group?.style ??
-    {};
-  const { label: labelStyle, ...surface } = style;
-  const graph: IRGroup = {
-    namespace: 'graph',
-    type: GraphType.Group,
-    id: source.id,
-    ...surface,
-    ...(source.label === undefined ? {} : { caption: { title: { text: source.label, ...labelStyle } } }),
-    children: [],
+  return resolveGroupRecord(state.groups.get(id)!, path, state);
+};
+
+const relationDefaultsOf = (defaults: IRFlowDefaults['relation'], source: IRFlowRelation) => {
+  const sourceOverride = {
+    relation: {
+      ...(source.style === undefined ? {} : { style: source.style }),
+      ...(source.sourceMarker === undefined ? {} : { sourceMarker: source.sourceMarker }),
+      ...(source.targetMarker === undefined ? {} : { targetMarker: source.targetMarker }),
+      ...(source.labelTextForeground === undefined ? {} : { labelTextForeground: source.labelTextForeground }),
+      ...(source.labelFont === undefined ? {} : { labelFont: source.labelFont }),
+      ...(source.labelOpacity === undefined ? {} : { labelOpacity: source.labelOpacity }),
+    },
   };
-  const group: CanonicalFlowGroup = {
-    type: 'group',
-    id: source.id,
-    source,
-    graph,
-    ...(source.rank === undefined ? {} : { rank: source.rank }),
-    style,
-    layout,
-    elements,
-    path,
-  };
-  return group;
+  return mergeGraphDefaults(defaults === undefined ? undefined : { relation: defaults }, sourceOverride)?.relation;
 };
 
 const resolveRelationRecord = (source: IRFlowRelation, index: number, state: ResolveState): CanonicalFlowRelation => {
@@ -276,20 +340,12 @@ const resolveRelationRecord = (source: IRFlowRelation, index: number, state: Res
       throw new RetikzDiagramError({
         code: RetikzDiagramErrorCode.FlowEndpointInvalid,
         message: `Flow Relation at relations[${index}] ${endpoint} cannot reference Layout '${id}'.`,
-        details: {
-          path: [...path, endpoint],
-          relatedIds: [id],
-          reason: 'layout-endpoint',
-        },
+        details: { path: [...path, endpoint], relatedIds: [id], reason: 'layout-endpoint' },
       });
     }
   }
-  const style =
-    mergeFlowTheme({ relation: { style: state.theme.relation?.style } }, { relation: { style: source.style } }).relation
-      ?.style ?? {};
-  const layout = mergeFlowLayoutIntent(state.theme.relation?.layout, source.layout);
-  const { sourceMarker, targetMarker, labelTextForeground, labelFont, labelOpacity, ...pathStyle } = style;
-  const graphSource: IRGraphRelation = {
+  const defaults = relationDefaultsOf(state.defaults.relation, source);
+  const graph: IRGraphRelation = {
     namespace: 'graph',
     type: GraphType.Relation,
     source: { id: source.source },
@@ -298,23 +354,29 @@ const resolveRelationRecord = (source: IRFlowRelation, index: number, state: Res
     ...(source.kind === undefined ? {} : { kind: source.kind }),
     ...(source.status === undefined ? {} : { status: source.status }),
     ...(source.direction === undefined ? {} : { direction: source.direction }),
-    style: pathStyle,
-    ...(sourceMarker === undefined ? {} : { sourceMarker }),
-    ...(targetMarker === undefined ? {} : { targetMarker }),
-    ...(labelTextForeground === undefined ? {} : { labelTextForeground }),
-    ...(labelFont === undefined ? {} : { labelFont }),
-    ...(labelOpacity === undefined ? {} : { labelOpacity }),
+    ...(source.label === undefined ? {} : { labels: [{ text: source.label }] }),
+    ...(defaults?.style === undefined ? {} : { style: defaults.style }),
+    ...(defaults?.sourceMarker === undefined ? {} : { sourceMarker: defaults.sourceMarker }),
+    ...(defaults?.targetMarker === undefined ? {} : { targetMarker: defaults.targetMarker }),
+    ...(defaults?.labelTextForeground === undefined ? {} : { labelTextForeground: defaults.labelTextForeground }),
+    ...(defaults?.labelFont === undefined ? {} : { labelFont: defaults.labelFont }),
+    ...(defaults?.labelOpacity === undefined ? {} : { labelOpacity: defaults.labelOpacity }),
   };
-  const canonicalGraph = resolveRelation(graphSource, state.graph);
-  const graph: IRGraphRelation = { ...graphSource, direction: canonicalGraph.effectiveDirection };
-  return { source, graph, style, layout, path };
+  const canonical = resolveRelation(graph, state.graph);
+  return {
+    source,
+    graph: { ...graph, direction: canonical.effectiveDirection },
+    ...(source.routing === undefined ? {} : { routing: source.routing }),
+    path,
+  };
 };
 
 /** 把 Flow Source 与 definitions 确定为唯一 Canonical Flow */
 export const resolveFlowDiagram = (source: IRFlowDiagram, context: FlowResolveContext): CanonicalFlowDiagram => {
+  const defaults = resolveFlowTheme(context.theme, context.flowThemeStyles, source.flowDefaults);
   const state: ResolveState = {
     graph: resolveGraphDefinitionOptions(context.graph),
-    theme: resolveFlowTheme(context.theme, context.flowThemeStyles, source.flowThemeTokens, source.flowTheme),
+    defaults,
     ids: new Map(),
     entities: new Map(),
     groups: new Map(),
@@ -328,7 +390,9 @@ export const resolveFlowDiagram = (source: IRFlowDiagram, context: FlowResolveCo
   const relations = (source.relations ?? []).map((relation, index) => resolveRelationRecord(relation, index, state));
   return {
     source,
-    layout: state.theme.layout ?? {},
+    defaults,
+    layout: mergeFlowLayoutIntent(defaults.layout, source.layout),
+    ...(source.routing === undefined ? {} : { routing: source.routing }),
     elements,
     relations,
     elementPaths: state.elementPaths,

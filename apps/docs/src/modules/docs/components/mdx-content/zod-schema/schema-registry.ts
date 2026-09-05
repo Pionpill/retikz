@@ -41,7 +41,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/reference/schema/scene#theme',
     localizations: {
       zh: {
-        description: 'Scene 或 Scope 的稀疏、可序列化 Theme 覆盖；tokens 按 owner namespace 由 registry 校验',
+        description: 'Scene 或 Scope 的稀疏 Theme 环境选择；style 与 mode 分别继承',
         descriptions: {
           style: '显式视觉人格名称；省略时继承外层值，根级省略时使用 owner 默认 baseline',
           mode: '明暗环境：light 或 dark；省略时继承外层值',
@@ -578,9 +578,14 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'GraphPredicateRef',
     url: '/schematic/graph/api-reference',
   },
-  GraphThemeLayerSchema: {
-    schema: GraphIR.GraphThemeLayerSchema,
-    label: 'GraphThemeLayer',
+  GraphDefaultsSchema: {
+    schema: GraphIR.GraphDefaultsSchema,
+    label: 'GraphDefaults',
+    url: '/schematic/graph/api-reference',
+  },
+  GraphRuleSchema: {
+    schema: GraphIR.GraphRuleSchema,
+    label: 'GraphRule',
     url: '/schematic/graph/api-reference',
   },
   GraphEntityThemeSelectorSchema: {

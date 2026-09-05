@@ -2,14 +2,14 @@ import type { ResolvedTheme } from '@retikz/core';
 import type { IRSurface } from '@retikz/standard';
 
 import type { DiagramThemeStyleDefinition } from '../../contract';
-import type { IRDiagramFrame, IRDiagramPresentation, IRDiagramTheme } from '../../schemas';
+import type { IRDiagramDefaults, IRDiagramFrame, IRDiagramPresentation } from '../../schemas';
 import type { EffectiveDiagramTheme } from '../theme';
 
 /** Diagram Foundation 解析使用的持久化片段集合 */
 export type DiagramFoundationSource = Readonly<{
   presentation?: IRDiagramPresentation;
   frame?: IRDiagramFrame;
-  diagramTheme?: IRDiagramTheme;
+  diagramDefaults?: IRDiagramDefaults;
 }>;
 
 /** Diagram Foundation 解析所需的调用位置上下文 */

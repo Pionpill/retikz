@@ -1,4 +1,4 @@
-import type { IRChild, IRNode, IRScope, IRTextBlock } from '@retikz/core';
+import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import type { IRFlexLayoutItem } from '@retikz/layout';
 import type { IRSurface } from '@retikz/standard';
 
@@ -8,6 +8,8 @@ import { createSurface } from '@retikz/standard';
 
 import type { DiagramFoundationResolution } from '../../resolve';
 import type { EffectiveDiagramTextAppearance } from '../../resolve/theme';
+
+import { resolveDiagramPresentationTextAppearance } from '../../resolve/theme';
 
 const flexItem = (key: string, child: IRChild, alignSelf?: IRFlexLayoutItem['alignSelf']): IRFlexLayoutItem => ({
   kind: 'flex',
@@ -22,7 +24,7 @@ const flexItem = (key: string, child: IRChild, alignSelf?: IRFlexLayoutItem['ali
 
 /** 创建不带可见 Node 外壳的 presentation text */
 export const createDiagramPresentationTextNode = (
-  text: IRTextBlock,
+  text: NonNullable<NonNullable<DiagramFoundationResolution['presentation']>['title']>,
   appearance: EffectiveDiagramTextAppearance,
 ): IRNode => ({
   type: 'node',
@@ -30,7 +32,7 @@ export const createDiagramPresentationTextNode = (
   shape: 'rectangle',
   scale: 1,
   rotate: 0,
-  text,
+  text: text.text,
   style: {
     fill: 'none',
     stroke: 'none',
@@ -57,14 +59,23 @@ const headingContent = (resolution: DiagramFoundationResolution): IRScope | unde
   let child: IRChild;
   if (title === undefined) {
     if (description === undefined) return undefined;
-    child = createDiagramPresentationTextNode(description, resolution.presentationAppearance.description);
+    child = createDiagramPresentationTextNode(
+      description,
+      resolveDiagramPresentationTextAppearance(description, resolution.presentationAppearance.description),
+    );
   } else if (description === undefined) {
-    child = createDiagramPresentationTextNode(title, resolution.presentationAppearance.title);
+    child = createDiagramPresentationTextNode(
+      title,
+      resolveDiagramPresentationTextAppearance(title, resolution.presentationAppearance.title),
+    );
   } else {
-    const titleNode = createDiagramPresentationTextNode(title, resolution.presentationAppearance.title);
+    const titleNode = createDiagramPresentationTextNode(
+      title,
+      resolveDiagramPresentationTextAppearance(title, resolution.presentationAppearance.title),
+    );
     const descriptionNode = createDiagramPresentationTextNode(
       description,
-      resolution.presentationAppearance.description,
+      resolveDiagramPresentationTextAppearance(description, resolution.presentationAppearance.description),
     );
     child = createFlexLayout({
       direction: FlexLayoutDirection.Column,

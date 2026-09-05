@@ -90,7 +90,12 @@ const measureElements = (
     state.scopePaths.set(element.id, ancestorScopeIds);
     if (element.type !== 'entity') {
       try {
-        const effectiveLayout = resolveEffectiveFlowLayout(definition, element.layout, inheritedLayout);
+        const effectiveLayout = resolveEffectiveFlowLayout(
+          definition,
+          element.layout,
+          inheritedLayout,
+          element.type === 'group' ? element.routing : undefined,
+        );
         const shell =
           element.type === 'group'
             ? measureGroupShell(element.graph, context, graphOptions)
@@ -179,7 +184,7 @@ const relationInputs = (
     const targetScopes = state.scopePaths.get(relation.source.target) ?? [];
     const scopeId = commonScopeId(sourceScopes, targetScopes);
     const scopeLayout = scopeId === undefined ? rootLayout : (state.effectiveLayouts.get(scopeId) ?? rootLayout);
-    const routing = resolveEffectiveFlowLayout(definition, relation.layout, scopeLayout).routing;
+    const routing = resolveEffectiveFlowLayout(definition, {}, scopeLayout, relation.routing).routing;
     const labelSize = measureRelationLabel(relation, context, graphOptions);
     return {
       source: relation.source.source,
@@ -197,7 +202,7 @@ export const measureFlowDiagram = (
   definition: FlowLayoutDefinition,
   graphOptions: GraphDefinitionOptions,
 ): FlowMeasurement => {
-  const rootLayout = resolveEffectiveFlowLayout(definition, diagram.layout);
+  const rootLayout = resolveEffectiveFlowLayout(definition, diagram.layout, undefined, diagram.routing);
   const state: MeasurementState = {
     elementMeasurements: new Map(),
     effectiveLayouts: new Map(),

@@ -16,7 +16,7 @@ describe('Graph Scope lowering', () => {
       boundingShape: 'circle',
       meta: { owner: 'graph' },
       animations: [],
-      graphTheme: { rules: [{ type: 'entity', appearance: { opacity: 0.5 } }] },
+      graphRules: [{ type: 'entity', style: { opacity: 0.5 } }],
       children: [
         { namespace: 'graph', type: 'entity', id: 'first', role: 'activity', position: [0, 0] },
         { type: 'node', id: 'plain', position: [50, 0] },

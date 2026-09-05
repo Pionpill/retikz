@@ -38,7 +38,7 @@ export const renderFlowCompoundPreview = (
     <FlowLayout id="sections" direction="down" gap={28} align="center">
       <FlowGroup
         id="service"
-        label="服务入口"
+        caption={{ title: { text: '服务入口' } }}
         layout={{
           direction: flowDirectionOf(values.groupDirection),
           nodeGap: values.groupNodeGap,

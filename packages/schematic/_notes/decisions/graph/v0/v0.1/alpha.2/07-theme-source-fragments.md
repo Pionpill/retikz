@@ -1,6 +1,6 @@
 # ADR-07：Graph Defaults、Rules 与 Theme 来源
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-05
 - 主责：Graph，目标版本 0.1.0-alpha.2
 - 关联：[alpha.2 roadmap](./roadmap.md) · [容器主题](./04-container-theme-inheritance.md) · [语义状态](./06-graph-status.md) · [Core Theme 协议](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.4/05-theme-source-fragments.md)
@@ -79,3 +79,7 @@ Graph 持久化 schema 在实际嵌套路径拒绝未知字段、旧 graphTheme/
 Direct IR、Vanilla、React 使用同一个 graphDefaults/graphRules 输入与 Theme definition 注入契约；不通过 adapter 接受旧包装或补视觉默认。图元通过现有 Standard / Core lowering 进入 Scene，SVG / Canvas 不解析 Graph Theme。
 
 这是 alpha.2 的 breaking 迁移，取代此前 Theme token/appearance 作者路径及容器只具有 definition 默认的限制。旧 graphTheme、token 类型、别名、双入口与反向 projection 直接移除；此前 ADR 的 Graph 角色、容器结构与语义状态决策继续成立。
+
+## 最终契约
+
+Graph 的三种作者入口共享 graphDefaults / graphRules，Theme Definition 仅提供同形生成来源。作者层、入场 shell 环境与角色结构分别在所属边界确定，保留稀疏值直到实际消费者需要补全；该契约不扩展到未知 composite 的私有数据。

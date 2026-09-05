@@ -48,19 +48,17 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     entityRoles={[serviceRole]}
     entityKinds={[gatewayKind]}
     entityPredicates={[availabilityPredicate]}
-    graphTheme={{
-      rules: [
-        {
-          type: 'entity',
-          selector: { predicate: { name: 'service.availability' } },
-          appearance: {
-            color: statusColors[values.status],
-            stroke: statusColors[values.status],
-            strokeWidth: values.critical ? 3 : 1.5,
-          },
+    graphRules={[
+      {
+        type: 'entity',
+        selector: { predicate: { name: 'service.availability' } },
+        style: {
+          color: statusColors[values.status],
+          stroke: statusColors[values.status],
+          strokeWidth: values.critical ? 3 : 1.5,
         },
-      ],
-    }}
+      },
+    ]}
   >
     <Entity
       id="gateway"

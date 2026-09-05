@@ -1,54 +1,32 @@
-import { NodeSchema } from '@retikz/core';
-import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { SurfaceInputSchema } from '@retikz/standard';
 import { strictObject } from 'zod';
 
-const DiagramThemeFrameSchema = strictObject({
-  padding: SurfaceInputSchema.shape.padding.describe('Default Standard Surface padding for the complete Diagram.'),
-  titleDescriptionGap: NonNegativeNumberSchema.optional().describe('Default title-to-description physical gap.'),
-  headingMainGap: NonNegativeNumberSchema.optional().describe('Default heading-to-main physical gap.'),
-  drawingLegendGap: NonNegativeNumberSchema.optional().describe('Default drawing-to-Legend physical gap.'),
-  background: SurfaceInputSchema.shape.background.describe('Default Standard Surface background.'),
-  border: SurfaceInputSchema.shape.border.describe('Default Standard Surface border.'),
-  cornerRadius: SurfaceInputSchema.shape.cornerRadius.describe('Default Standard Surface corner radius.'),
-})
-  .refine(value => Object.keys(value).length > 0, {
-    message: 'Diagram theme frame slice must contain at least one field.',
-  })
-  .describe('Sparse Diagram frame appearance and spacing defaults.');
+import { DiagramFrameBaseSchema } from '../frame';
+import { DiagramPresentationTextSchema } from '../presentation';
 
-const DiagramTextAppearanceSchema = strictObject({
-  textColor: NodeSchema.shape.style.unwrap().shape.textColor.describe('Block-level presentation text color.'),
-  opacity: NodeSchema.shape.style.unwrap().shape.opacity.describe('Block-level presentation opacity.'),
-  font: NodeSchema.shape.style.unwrap().shape.font.describe('Block-level presentation font overrides.'),
-  align: NodeSchema.shape.layout.unwrap().shape.align.describe('Block-level presentation text alignment.'),
-  lineHeight: NodeSchema.shape.layout.unwrap().shape.lineHeight.describe('Block-level presentation line height.'),
-  maxTextWidth: NodeSchema.shape.layout
-    .unwrap()
-    .shape.maxTextWidth.describe('Block-level presentation wrapping width.'),
-})
-  .refine(value => Object.keys(value).length > 0, {
-    message: 'Diagram text appearance slice must contain at least one field.',
-  })
-  .describe('Sparse block-level appearance for one Diagram presentation text region.');
+/** Diagram defaults 中可主题化的 Frame 字段 */
+export const DiagramDefaultsFrameSchema = DiagramFrameBaseSchema.pick({
+  padding: true,
+  titleDescriptionGap: true,
+  headingMainGap: true,
+  drawingLegendGap: true,
+  background: true,
+  border: true,
+  cornerRadius: true,
+}).describe('Sparse Diagram frame defaults without Legend placement or overflow.');
 
-const DiagramThemePresentationSchema = strictObject({
-  title: DiagramTextAppearanceSchema.optional().describe('Optional title block appearance defaults.'),
-  description: DiagramTextAppearanceSchema.optional().describe('Optional description block appearance defaults.'),
-})
-  .refine(value => Object.keys(value).length > 0, {
-    message: 'Diagram theme presentation slice must contain at least one field.',
-  })
-  .describe('Sparse Diagram presentation appearance defaults.');
+/** Diagram defaults 中的块级文本格式字段 */
+export const DiagramDefaultsPresentationTextSchema = DiagramPresentationTextSchema.omit({ text: true }).describe(
+  'Sparse Diagram presentation text defaults without content.',
+);
 
-/** Diagram Theme 持久化片段 schema */
-export const DiagramThemeSchema = strictObject({
-  frame: DiagramThemeFrameSchema.optional().describe('Optional Diagram frame appearance defaults.'),
-  presentation: DiagramThemePresentationSchema.optional().describe(
-    'Optional Diagram presentation appearance defaults.',
-  ),
-})
-  .refine(value => Object.keys(value).length > 0, {
-    message: 'Diagram theme must contain at least one non-empty slice.',
-  })
-  .describe('Sparse Diagram-owned appearance defaults shared by concrete Diagram types.');
+/** Diagram defaults 中的 Presentation 区域字段 */
+export const DiagramDefaultsPresentationSchema = strictObject({
+  title: DiagramDefaultsPresentationTextSchema.optional().describe('Optional title text defaults.'),
+  description: DiagramDefaultsPresentationTextSchema.optional().describe('Optional description text defaults.'),
+}).describe('Sparse Diagram presentation defaults without region content.');
+
+/** Diagram 的 Source-derived 稀疏默认片段 */
+export const DiagramDefaultsSchema = strictObject({
+  frame: DiagramDefaultsFrameSchema.optional().describe('Optional Diagram frame defaults.'),
+  presentation: DiagramDefaultsPresentationSchema.optional().describe('Optional Diagram presentation defaults.'),
+}).describe('Sparse Diagram defaults using the formal Presentation and Frame Source paths.');

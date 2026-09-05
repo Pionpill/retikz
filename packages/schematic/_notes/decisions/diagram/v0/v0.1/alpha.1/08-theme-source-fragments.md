@@ -1,6 +1,6 @@
 # ADR-08：Diagram / Flow 显式 Defaults 与 Theme 来源
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-05
 - 主责：Diagram，目标版本 0.1.0-alpha.1
 - 关联：[v0.1 roadmap](../roadmap.md) · [Presentation](./01-diagram-assembly-presentation.md) · [Frame](./02-diagram-frame-spacing-appearance.md) · [Flow Source](./07-flow-catalog-source-layout-groups.md) · [Graph Theme 片段](../../../../graph/v0/v0.1/alpha.2/07-theme-source-fragments.md)
@@ -23,7 +23,7 @@ Diagram presentation 的 Source 同名区域当前只存文本，Theme 却存格
     "title": {
       "text": "服务调用",
       "style": { "textColor": "#1e293b", "font": { "size": 18 } },
-      "layout": { "align": "left", "maxTextWidth": 480 }
+      "layout": { "align": "start", "maxTextWidth": 480 }
     }
   }
 }
@@ -92,3 +92,7 @@ Core Scope style/defaults/reset 继续按现有 Flow drawing 与 Graph lowering 
 Direct IR、Vanilla、React 表达相同的区域、实例与显式 defaults 契约；Vanilla 承担已类型化 authoring 组装，React 调度同一输入。Theme style/mode 的改变不清除作者 defaults，defaults 不隐式成为 Core node/path 默认通道。平级 catalog、唯一 containment、endpoint、provider capability 与 artifact 的 identity/顺序语义保持不变。
 
 本决策替代 alpha.1 旧 token、Theme 内布局策略和 presentation 文本/格式分离契约，属于 breaking Source 迁移。旧 schema、类型、token projection、diagramTheme/flowTheme 双入口和别名直接删除；不改变 Graph / Core / Layout / Standard 的能力所有权。
+
+## 最终契约
+
+Diagram 与 Flow 的三种作者入口共享正式 Source 及其稀疏默认片段。Flow 的字体测量、有效布局与独立路由在 Graph 物化前保持一致，缺省表现继续由 Graph / Core 决定；显式默认不创建内容，也不扩展布局或路由策略。

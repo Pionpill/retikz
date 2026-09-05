@@ -3,17 +3,16 @@ import type { GraphDefinitionOptions, IRGraphEntity, IRGraphRelation, IRGroup } 
 
 import type { FlowThemeStyleDefinition } from '../../contract';
 import type {
+  IRFlowDefaults,
   IRFlowDiagram,
   IRFlowEntity,
   IRFlowEntityLayout,
   IRFlowEntityStyle,
   IRFlowGroup,
-  IRFlowGroupStyle,
   IRFlowLayout,
   IRFlowLayoutIntent,
   IRFlowRelation,
-  IRFlowRelationLayout,
-  IRFlowRelationStyle,
+  IRFlowRouting,
 } from '../../schemas';
 
 /** Flow Source 中可修复字段的 JSON path */
@@ -46,7 +45,7 @@ export type CanonicalFlowGroup = Readonly<{
   graph: IRGroup;
   rank?: number;
   layout: IRFlowLayoutIntent;
-  style: IRFlowGroupStyle;
+  routing?: IRFlowRouting;
   elements: ReadonlyArray<CanonicalFlowElement>;
   path: FlowSourcePath;
 }>;
@@ -69,15 +68,16 @@ export type CanonicalFlowElement = CanonicalFlowEntity | CanonicalFlowGroup | Ca
 export type CanonicalFlowRelation = Readonly<{
   source: IRFlowRelation;
   graph: IRGraphRelation;
-  style: IRFlowRelationStyle;
-  layout: IRFlowRelationLayout;
+  routing?: IRFlowRouting;
   path: FlowSourcePath;
 }>;
 
 /** Flow Source 与有效配置确定后的内部完整形态 */
 export type CanonicalFlowDiagram = Readonly<{
   source: IRFlowDiagram;
+  defaults: IRFlowDefaults;
   layout: IRFlowLayoutIntent;
+  routing?: IRFlowRouting;
   elements: ReadonlyArray<CanonicalFlowElement>;
   relations: ReadonlyArray<CanonicalFlowRelation>;
   elementPaths: ReadonlyMap<string, FlowSourcePath>;

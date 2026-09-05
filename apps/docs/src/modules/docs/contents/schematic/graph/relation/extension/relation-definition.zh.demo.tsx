@@ -28,15 +28,13 @@ const Demo: FC = () => (
   <Graph
     relationKinds={[feedbackKind]}
     relationPredicates={[priorityPredicate]}
-    graphTheme={{
-      rules: [
-        {
-          type: 'relation',
-          selector: { predicate: { name: 'workflow.priority', params: { urgent: true } } },
-          appearance: { stroke: '#dc2626', strokeWidth: 3 },
-        },
-      ],
-    }}
+    graphRules={[
+      {
+        type: 'relation',
+        selector: { predicate: { name: 'workflow.priority', params: { urgent: true } } },
+        style: { stroke: '#dc2626', strokeWidth: 3 },
+      },
+    ]}
   >
     <Entity id="review" role="activity" position={[110, 90]}>
       审核

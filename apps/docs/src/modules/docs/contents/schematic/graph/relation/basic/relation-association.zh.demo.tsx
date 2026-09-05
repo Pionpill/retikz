@@ -25,11 +25,11 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
             ? RelationDirection.Both
             : RelationDirection.None
       : undefined;
-  const relationTokens =
+  const relationDefaults =
     color === 'currentColor'
       ? {}
       : {
-          stroke: color,
+          style: { stroke: color },
           sourceMarker: { color, fill: color },
           targetMarker: { color, fill: color },
           labelTextForeground: color,
@@ -38,9 +38,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   return (
     <Graph
       viewBox={{ x: 0, y: 0, width: 420, height: 180 }}
-      {...(color === 'currentColor'
-        ? {}
-        : { graphTheme: { rules: [{ type: 'relation', appearance: relationTokens }] } })}
+      {...(color === 'currentColor' ? {} : { graphDefaults: { relation: relationDefaults } })}
     >
       <Entity id="source" role="concept" position={[80, 90]}>
         对象 A

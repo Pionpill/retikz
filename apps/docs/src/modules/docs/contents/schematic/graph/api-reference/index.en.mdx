@@ -7,17 +7,18 @@ description: Look up independent Graph-family Source composites, their Scope sur
 
 ## Public exports
 
-| Capability       | `@retikz/graph`                                                                                                                      | React                                                                  | Vanilla                                                            |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Graph            | `GraphSchema`, `IRGraph`, `createGraph`, `GraphDefinition`, `GraphProviderKey`                                                       | `Graph`, `GraphProps`                                                  | `graph`, `GraphInputEmbedAdapter`, `GraphInputEmbedProps`          |
-| Group            | `GroupSchema`, `IRGroup`, `createGroup`, `GroupDefinition`, `GroupProviderKey`                                                       | `Group`, `GroupProps`                                                  | `group`, `GroupInputEmbedAdapter`, `GroupInputEmbedProps`          |
-| Block            | `BlockSchema`, `IRBlock`, `createBlock`, `BlockDefinition`, `BlockProviderKey`                                                       | `Block`, `BlockProps`                                                  | `block`, `BlockInputEmbedAdapter`, `BlockInputEmbedProps`          |
-| Block structures | Header / Section / Row schemas, types, factories, Definitions, and ProviderKeys; Row accepts arbitrary direct children               | Three independent components; Row collects arbitrary children directly | Three independent builders, adapters, and normalizers              |
-| Entity           | `EntitySchema`, `IRGraphEntity`, `createEntity`, `EntityDefinition`, `EntityProviderKey`                                             | `Entity`, `EntityProps`                                                | `entity`, `EntityInputEmbedAdapter`, `EntityInputEmbedProps`       |
-| Relation         | `RelationSchema`, `IRGraphRelation`, `createRelation`, `RelationDefinition`, `RelationProviderKey`                                   | `Relation`, `RelationProps`                                            | `relation`, `RelationInputEmbedAdapter`, `RelationInputEmbedProps` |
-| Vocabularies     | Open `EntityRole`, `RelationRole`, and `RelationKind` with their schemas; `GraphStatus`, `GraphStatusSchema`, and `GraphStatusValue` | —                                                                      | —                                                                  |
-| Theme extension  | `GraphThemeStyleDefinition`, `GraphThemeStyleOverrides`, `defineGraphThemeStyle`                                                     | `graphThemeStyles` on Graph-family composites                          | The same options on Graph-family adapters                          |
-| Assembly         | `GraphDefinitionOptions`, `createGraphDefinitions`, `createGraphProviders`                                                           | Options on independent composites                                      | `createGraphVanillaAdapters`                                       |
+| Capability         | `@retikz/graph`                                                                                                                      | React                                                                  | Vanilla                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Graph              | `GraphSchema`, `IRGraph`, `createGraph`, `GraphDefinition`, `GraphProviderKey`                                                       | `Graph`, `GraphProps`                                                  | `graph`, `GraphInputEmbedAdapter`, `GraphInputEmbedProps`          |
+| Group              | `GroupSchema`, `IRGroup`, `createGroup`, `GroupDefinition`, `GroupProviderKey`                                                       | `Group`, `GroupProps`                                                  | `group`, `GroupInputEmbedAdapter`, `GroupInputEmbedProps`          |
+| Block              | `BlockSchema`, `IRBlock`, `createBlock`, `BlockDefinition`, `BlockProviderKey`                                                       | `Block`, `BlockProps`                                                  | `block`, `BlockInputEmbedAdapter`, `BlockInputEmbedProps`          |
+| Block structures   | Header / Section / Row schemas, types, factories, Definitions, and ProviderKeys; Row accepts arbitrary direct children               | Three independent components; Row collects arbitrary children directly | Three independent builders, adapters, and normalizers              |
+| Entity             | `EntitySchema`, `IRGraphEntity`, `createEntity`, `EntityDefinition`, `EntityProviderKey`                                             | `Entity`, `EntityProps`                                                | `entity`, `EntityInputEmbedAdapter`, `EntityInputEmbedProps`       |
+| Relation           | `RelationSchema`, `IRGraphRelation`, `createRelation`, `RelationDefinition`, `RelationProviderKey`                                   | `Relation`, `RelationProps`                                            | `relation`, `RelationInputEmbedAdapter`, `RelationInputEmbedProps` |
+| Vocabularies       | Open `EntityRole`, `RelationRole`, and `RelationKind` with their schemas; `GraphStatus`, `GraphStatusSchema`, and `GraphStatusValue` | —                                                                      | —                                                                  |
+| Defaults and rules | `GraphDefaultsSchema`, `IRGraphDefaults`, `GraphRuleSchema`, `IRGraphRule`                                                           | `graphDefaults` / `graphRules`                                         | The same Source fields                                             |
+| Theme extension    | `GraphThemeStyleDefinition`, `GraphThemeStyleSource`, `defineGraphThemeStyle`                                                        | `graphThemeStyles` on Graph-family composites                          | The same options on Graph-family adapters                          |
+| Assembly           | `GraphDefinitionOptions`, `createGraphDefinitions`, `createGraphProviders`                                                           | Options on independent composites                                      | `createGraphVanillaAdapters`                                       |
 
 ## Graph Source composite
 
@@ -25,7 +26,7 @@ Source IR stores authored facts only. Omitted `children`, positions, routes, tex
 
 <ZodSchema name="GraphSchema" />
 
-Graph `children` directly uses Core `ChildSchema` and may mix Entity, Relation, Node, Coordinate, Path, Scope, and other composites in author order. Core Scope semantics remain intact for `theme`, style defaults, transforms, placement, clipping, bounding shape, animations, and `meta`. Only `graphTheme` is Graph-specific
+Graph `children` directly uses Core `ChildSchema` and may mix Entity, Relation, Node, Coordinate, Path, Scope, and other composites in author order. Core Scope semantics remain intact for `theme`, style defaults, transforms, placement, clipping, bounding shape, animations, and `meta`. `graphDefaults` and `graphRules` are the Graph-specific defaults and rule inputs
 
 Entity role and Relation role / kind are open keys. Their schemas expose built-in const-object vocabularies as TypeScript and JSON Schema suggestions while still accepting arbitrary non-blank custom strings; registration is checked only during resolve. Entity kind and predicate name currently have no built-in vocabulary, so they remain ordinary non-blank strings
 
@@ -80,7 +81,7 @@ The Neutral Graph Theme supplies the Block root shell baseline: a transparent ba
 
 ## Entity schema
 
-Entity instance appearance and layout use `style` / `layout`; Relation path appearance uses `style`. Graph / Group / Block Scope cascading values use `style`, and descendant defaults use `defaults`. Graph Theme `tokens`, `appearance` and text leaf contracts retain their existing structure.
+Entity instance appearance and layout use `style` / `layout`; Relation path appearance uses `style`. Graph / Group / Block Scope cascading values use `style`, and descendant defaults use `defaults`. Graph Theme output and `graphDefaults` follow the corresponding Source paths; `graphRules` uses the same restricted appearance fields.
 
 Entity keeps semantics and Core Node instance fields in one Source record. Every Node field is available except role-owned `type`, `shape`, `boundary`, `layout.padding`, and `cornerRadius`. `id`, `position`, `text`, and closed `status` are optional. The current Core Theme and optional Graph Theme supply appearance defaults, while explicit Entity fields such as `style.fill`, `style.dashed`, and `style.textColor` take final precedence
 
@@ -115,37 +116,50 @@ Entity and Relation `style.color` values are string masters. Applicable `fill`, 
 
 <ZodSchema name="GraphPredicateRefSchema" />
 
-<ZodSchema name="GraphThemeLayerSchema" />
+<ZodSchema name="GraphDefaultsSchema" />
 
-Core `theme` selects or overrides the general Theme. `graphTheme` stores only Graph-local ordered appearance rules. Entity rules may select by role, kind, or predicate, while Relation rules may additionally select by direction. A role owns complete structure, and a kind or predicate may contribute an allowed structural delta
+Core `theme` selects the theme environment. `graphDefaults` supplies explicit descendant defaults, while `graphRules` independently stores ordered rules; either can be used alone. Defaults retain Source paths: Entity uses `style` / `layout`, Relation keeps marker and label formatting at the root, and Group / Block use root Surface fields. Defaults exclude content, identity, roles, routing, and algorithm policy.
 
-The `resolve(theme)` callback passed to `defineGraphThemeStyle()` returns `GraphThemeStyleOverrides` and declares only fields that differ from the mode-aware default preset. `entity`, `relation`, `group`, and `block` are optional slices. Entity and Relation accept `tokens` and `rules`; Group and Block use `GraphSurfaceThemeStyleTokens` for `background`, `border`, and `cornerRadius`. An explicitly `undefined` known token in the runtime callback is treated as omitted. An explicit `tokens: {}` remains invalid because a token override must contain at least one field, and the returned value may contain only plain-data containers
+| Rule contract                                        | Assignments                                           | Selectors                                      |
+| ---------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------- |
+| Entity branch of `GraphRuleSchema` / `IRGraphRule`   | `style` without `font`; no `layout`                   | `role`, `kind`, `predicate`, `status`          |
+| Relation branch of `GraphRuleSchema` / `IRGraphRule` | Restricted `style` and root marker / label formatting | The same conditions plus effective `direction` |
+
+Relation defaults and rules exclude fill and structural dashPattern. Marker appearance cannot create a marker or change its shape / size. Group and Block have no selector rules.
+
+The `resolve(theme)` callback of `defineGraphThemeStyle()` returns `GraphThemeStyleSource`: `{ defaults?, rules? }`. Its defaults share the graphDefaults fragment, and its rules share the graphRules contract. There is no tokens wrapper. Empty fragments, empty groups, and optional `undefined` known fields supply no override; valid `0`, `false`, and field-permitted `null` values remain meaningful.
 
 ```ts
 const compact = defineGraphThemeStyle({
   name: 'compact',
   resolve: () => ({
-    entity: { tokens: { strokeWidth: 1.5 } },
-    group: { tokens: { cornerRadius: 2 } },
-    block: { tokens: { border: { stroke: 'currentColor', strokeWidth: 1.5 } } },
+    defaults: {
+      entity: { style: { strokeWidth: 1.5 }, layout: { maxTextWidth: 180 } },
+      group: { cornerRadius: 2 },
+      block: { border: { stroke: 'currentColor', strokeWidth: 1.5 } },
+    },
+    rules: [{ type: 'entity', selector: { status: 'error' }, style: { strokeWidth: 3 } }],
   }),
 });
 
 const composites = createGraphDefinitions({ graphThemeStyles: [compact] });
 ```
 
-Entity and Relation resolve complete appearance in the following order, with each later source overriding only the fields it declares:
+Local precedence, from lowest to highest:
 
-1. Graph default preset tokens for the current Core Theme mode
-2. Sparse custom style tokens
-3. Default Graph rules
-4. Custom style rules
-5. Outer-to-inner Graph-local `graphTheme` rules
-6. Explicit Entity / Relation appearance fields
+1. Neutral defaults for the current Core Theme mode
+2. Defaults from the matching Graph Definition
+3. Matching Neutral and named Definition rules, in declaration order
+4. Author scopes from outer to inner, applying each layer’s graphDefaults before its matching graphRules
+5. Entity / Relation instance fields
 
-Group and Block root shells use only the Neutral baseline, same-name style Group / Block tokens, and explicit Source `background` / `border` / `cornerRadius`. An explicit object replaces the complete top-level Theme field instead of deep-merging inside it. `graphTheme` still styles only descendant Entity / Relation content, not the carrying Group or Block shell
+Inner defaults can therefore override outer rules, and instance fields always win. Empty rule arrays do not clear upstream rules. Changing `theme` or setting Core `defaults.reset` preserves author defaults and rules. Optional font/layout fields that remain absent continue using the existing Core defaults channels.
 
-Custom style rules append after the defaults. Omitting `rules` or returning `rules: []` never clears built-in rules. An unknown Core Theme style still requires a Graph Theme style Definition with the same name and fails loudly during resolve otherwise
+`style` / `layout` merge by field. A nonempty Node font replaces the whole font; Relation labelFont completes individual fields before each label.font is applied. Compound leaves such as background, border, paint, shadow, and margin replace whole values without recursive merging.
+
+A Group / Block shell uses the incoming Core Theme, ancestor author defaults, and its own explicit Surface fields. Its own graphDefaults / graphRules apply only to descendants. Projection follows existing Graph/Core content boundaries and does not enter Flow or unknown composite internals.
+
+An unregistered matching Graph Theme style reports `DefinitionNotRegistered`. Invalid callback output and callback exceptions are wrapped by the Graph owner with their cause preserved.
 
 ## React and Vanilla authoring
 

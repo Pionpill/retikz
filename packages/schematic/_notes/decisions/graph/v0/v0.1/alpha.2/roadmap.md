@@ -18,9 +18,9 @@ alpha.2 建立第五类 Graph Source composite `Block`，用于表达具有 Grap
 | [04](./04-container-theme-inheritance.md) | Group / Block 继承 Graph Theme 外观 | Graph Theme style、Standard Surface、Diagram Flow        | Accepted   |
 | [05](./05-uml-relation-kind-catalog.md)   | UML Relation kind 目录与结构默认    | Relation Definition、Core Path、Standard Arrow           | Proposed   |
 | [06](./06-graph-status.md)                | Entity / Relation 语义状态          | Graph Source、Graph Theme、Entity / Relation resolve     | Proposed   |
-| [07](./07-theme-source-fragments.md)      | Graph Defaults、Rules 与 Theme 来源 | Core Theme 协议、Graph Source、容器与语义规则            | Proposed   |
+| [07](./07-theme-source-fragments.md)      | Graph Defaults、Rules 与 Theme 来源 | Core Theme 协议、Graph Source、容器与语义规则            | Accepted   |
 
-ADR-07 冻结 graphDefaults、独立 graphRules、Theme 生成来源及作用域；其实施与 Diagram 对 Graph 的直接消费同步完成。当前 token 公开契约在该提案落地前仍以既有实现为准。
+ADR-07 冻结 graphDefaults、独立 graphRules、Theme 生成来源及作用域；其实施与 Diagram 对 Graph 的直接消费同步完成。旧 graphTheme、token 与 appearance 入口已删除，三入口采用同一 Source 片段契约。
 
 ## 完成标准
 
@@ -31,7 +31,7 @@ ADR-07 冻结 graphDefaults、独立 graphRules、Theme 生成来源及作用域
 - Header、Section、Row 是可独立进入任意 Core 内容树的 Graph composite，Row children 直接保存任意 `IRChild`；它们不得回到 `IRBlock` 固定 grammar，并保持 Direct / React / Vanilla parity
 - 类图等官方 Tier 3 与用户自定义 Tier 3 使用同一个 Core composite Definition / provider 方向并 lower 到 Block；Block 不增加 kind、role 或内置白名单
 - width / minWidth 只约束最外层 Surface 总宽度，不复制到 child，也不写入 Diagram layout result
-- Graph Theme 的 named style 为 Entity / Relation 与 Group / Block 根 shell 提供统一 Graph-owned appearance baseline；`graphTheme` Source rules 仍只影响可见 children 中的 Entity / Relation
+- Graph Theme 的 named style 为 Entity / Relation 与 Group / Block 根 shell 提供统一 Graph-owned appearance baseline；`graphRules` 仍只影响可见 children 中的 Entity / Relation
 - Direct IR、React 与 Vanilla 产生同一 Block Source；compile / renderer 只消费既有 Core / Layout / Standard 主链
 - 双语 Docs 的基础用法覆盖 Block 全部基础能力；内置实现留给官方 Tier 3，扩展用法说明用户如何构建自己的 Tier 3
 

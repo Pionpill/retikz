@@ -59,5 +59,5 @@ export const previewControlContract = {
     critical: false,
     content: 'API Gateway',
   },
-  relatedApis: ['Entity.predicate.params', 'defineEntityPredicate.paramsSchema', 'GraphThemeLayer.rules'],
+  relatedApis: ['Entity.predicate.params', 'defineEntityPredicate.paramsSchema', 'Graph.graphRules'],
 } satisfies PreviewControlContract;

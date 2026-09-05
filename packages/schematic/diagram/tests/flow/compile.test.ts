@@ -384,11 +384,11 @@ describe('Flow Diagram compile transaction', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [Flow.createFlowDiagramProviderContribution()],
     });
-    const compile = (text: IRFlowEntity['text'], style: NonNullable<IRFlowEntity['style']> = {}) => {
+    const compile = (text: IRFlowEntity['text'], layout: NonNullable<IRFlowEntity['layout']> = {}) => {
       const entity: IRFlowEntity = {
         id: 'form',
         text,
-        ...(Object.keys(style).length === 0 ? {} : { style }),
+        ...(Object.keys(layout).length === 0 ? {} : { layout }),
       };
       const source: IRChild = parseTestFlowDiagram({
         namespace: 'diagram',
@@ -527,7 +527,7 @@ describe('Flow Diagram compile transaction', () => {
       namespace: 'diagram',
       type: 'flow',
       entities: [{ id: 'worker', text: 'Worker' }],
-      groups: [{ id: 'runtime', label: 'Runtime', children: ['worker'] }],
+      groups: [{ id: 'runtime', caption: { title: { text: 'Runtime' } }, children: ['worker'] }],
       layouts: [],
       children: ['runtime'],
     });
@@ -542,8 +542,8 @@ describe('Flow Diagram compile transaction', () => {
             defineGraphThemeStyle({
               name: styleName,
               resolve: () => ({
-                group: {
-                  tokens: {
+                defaults: {
+                  group: {
                     background: { fill: '#fef3c7' },
                     border: { stroke: '#92400e', strokeWidth: 3 },
                     cornerRadius: 6,
@@ -584,8 +584,8 @@ describe('Flow Diagram compile transaction', () => {
       namespace: 'diagram',
       type: 'flow',
       presentation: {
-        title: 'Pipeline',
-        description: 'One compile transaction',
+        title: { text: 'Pipeline' },
+        description: { text: 'One compile transaction' },
       },
       entities: [{ id: 'only', text: 'Only' }],
       groups: [],
@@ -624,10 +624,10 @@ describe('Flow Diagram compile transaction', () => {
       type: 'flow',
       entities: [{ id: 'leaf', text: 'Leaf' }],
       groups: [
-        { id: 'group-0', label: 'Group 0', children: ['group-1'] },
-        { id: 'group-1', label: 'Group 1', children: ['group-2'] },
-        { id: 'group-2', label: 'Group 2', children: ['group-3'] },
-        { id: 'group-3', label: 'Group 3', children: ['leaf'] },
+        { id: 'group-0', caption: { title: { text: 'Group 0' } }, children: ['group-1'] },
+        { id: 'group-1', caption: { title: { text: 'Group 1' } }, children: ['group-2'] },
+        { id: 'group-2', caption: { title: { text: 'Group 2' } }, children: ['group-3'] },
+        { id: 'group-3', caption: { title: { text: 'Group 3' } }, children: ['leaf'] },
       ],
       layouts: [],
       children: ['group-0'],
@@ -651,14 +651,14 @@ describe('Flow Diagram compile transaction', () => {
     expect(flattenIds(artifact.elements)).toEqual(['group-0', 'group-1', 'group-2', 'group-3', 'leaf']);
   });
 
-  it('applies a standalone root routing corner-radius token to the orthogonal provider default', () => {
+  it('applies an explicit root orthogonal routing override', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [Flow.createFlowDiagramProviderContribution()],
     });
     const source: IRChild = parseTestFlowDiagram({
       namespace: 'diagram',
       type: 'flow',
-      flowThemeTokens: { 'flow.routing.cornerRadius': 0 },
+      routing: { kind: 'orthogonal', cornerRadius: 0 },
       entities: [
         { id: 'source', text: 'Source' },
         { id: 'target', text: 'Target' },
@@ -746,7 +746,7 @@ describe('Flow Diagram compile transaction', () => {
       const source: IRChild = parseTestFlowDiagram({
         namespace: 'diagram',
         type: 'flow',
-        presentation: { title: 'Architecture', legend },
+        presentation: { title: { text: 'Architecture' }, legend },
         frame: { padding: 12, legendPosition, legendAlign: 'center', drawingLegendGap: 9 },
         entities: [{ id: 'only', text: 'Only' }],
         groups: [],
@@ -1149,7 +1149,7 @@ describe('Flow Diagram compile transaction', () => {
         { id: 'nested', text: 'Nested' },
         { id: 'outside', text: 'Outside' },
       ],
-      groups: [{ id: 'group', label: 'Group', children: ['nested'] }],
+      groups: [{ id: 'group', caption: { title: { text: 'Group' } }, children: ['nested'] }],
       layouts: [],
       children: ['group', 'outside'],
       relations: [
@@ -1157,7 +1157,7 @@ describe('Flow Diagram compile transaction', () => {
           source: 'nested',
           target: 'outside',
           label: 'crosses',
-          layout: { routing: { kind: 'orthogonal', cornerRadius: 6 } },
+          routing: { kind: 'orthogonal', cornerRadius: 6 },
         },
       ],
     });

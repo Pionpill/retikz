@@ -1,5 +1,7 @@
 import type { FC, ReactNode } from 'react';
 
+import { FlowDiagramSchema } from '@retikz/diagram/flow';
+import { normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { createInputScene } from '@retikz/react';
 import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';
@@ -44,7 +46,7 @@ const flowChildren = (
     null,
     createElement(
       FlowGroup,
-      { id: 'client', label: 'Client' },
+      { id: 'client', caption: { title: { text: 'Client' } } },
       createElement(
         FlowLayout,
         { id: 'frontend', direction: 'down' },
@@ -57,7 +59,7 @@ const flowChildren = (
       target: 'kernel',
       label: 'normalize',
       status: 'warning',
-      layout: { routing: { kind: 'orthogonal', cornerRadius: 0 } },
+      routing: { kind: 'orthogonal', cornerRadius: 0 },
     }),
   );
 
@@ -70,7 +72,7 @@ const expectedSource = {
     { id: 'jsx', text: 'JSX', status: 'success', rank: 0 },
     { id: 'kernel', text: ['Kernel', 'IR compiler'] },
   ],
-  groups: [{ id: 'client', label: 'Client', children: ['frontend'] }],
+  groups: [{ id: 'client', caption: { title: { text: 'Client' } }, children: ['frontend'] }],
   layouts: [{ id: 'frontend', direction: 'down', children: ['jsx'] }],
   children: ['client', 'kernel'],
   relations: [
@@ -79,13 +81,38 @@ const expectedSource = {
       target: 'kernel',
       label: 'normalize',
       status: 'warning',
-      layout: { routing: { kind: 'orthogonal', cornerRadius: 0 } },
+      routing: { kind: 'orthogonal', cornerRadius: 0 },
     },
   ],
-  flowTheme: { layout: { nodeGap: 0, rankGap: 48 } },
+  flowDefaults: { layout: { nodeGap: 0, rankGap: 48 } },
 };
 
 describe('@retikz/diagram-react/flow', () => {
+  it('preserves Source-shaped defaults and instance paths through typed React and Vanilla authoring', () => {
+    const props = {
+      presentation: { title: { text: 'Pipeline', style: { font: { size: 21 } } } },
+      diagramDefaults: { presentation: { title: { style: { opacity: 0.8 } } } },
+      flowDefaults: { entity: { layout: { maxTextWidth: 180 } }, relation: { labelFont: { size: 11 } } },
+    } satisfies FlowReact.FlowDiagramProps;
+    const entity = { id: 'node', text: 'Node', layout: { lineHeight: 18 } };
+    const direct = FlowDiagramSchema.parse({
+      namespace: 'diagram',
+      type: 'flow',
+      ...props,
+      entities: [entity],
+      groups: [],
+      layouts: [],
+      children: ['node'],
+    });
+    const input = createInputScene(
+      createElement(FlowReact.FlowDiagram, props, createElement(FlowReact.FlowEntity, entity)),
+    );
+    const react = normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0];
+    const vanilla = normalizeFlowDiagram({ ...props, entities: [entity], groups: [], layouts: [], children: ['node'] });
+    expect(react).toEqual(direct);
+    expect(vanilla).toEqual(direct);
+  });
+
   it('exports the supported Flow root, single and batch JSX markers', () => {
     const exported = components();
     expect(exported.FlowDiagram).toBeDefined();
@@ -444,7 +471,7 @@ describe('@retikz/diagram-react/flow', () => {
     const input = createInputScene(
       createElement(
         FlowDiagram,
-        { id: 'architecture', theme: { mode: 'dark' }, flowTheme: { layout: { nodeGap: 0, rankGap: 48 } } },
+        { id: 'architecture', theme: { mode: 'dark' }, flowDefaults: { layout: { nodeGap: 0, rankGap: 48 } } },
         flowChildren(FlowEntity, FlowGroup, FlowLayout, FlowRelation),
       ),
     );
@@ -467,7 +494,7 @@ describe('@retikz/diagram-react/flow', () => {
         createElement(FlowEntity, {
           id: 'form',
           text: ['Frontend form', { text: 'Complete user details', fill: 'gray', font: { size: 'sm' } }],
-          style: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
+          layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
         }),
       ),
     );
@@ -481,7 +508,7 @@ describe('@retikz/diagram-react/flow', () => {
           {
             id: 'form',
             text: ['Frontend form', { text: 'Complete user details', fill: 'gray', font: { size: 'sm' } }],
-            style: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
+            layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
           },
         ],
         groups: [],

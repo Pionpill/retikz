@@ -1,3 +1,4 @@
+import type { InputGraph } from '@retikz/graph-vanilla';
 import type { InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 import type { FC } from 'react';
 
@@ -7,8 +8,10 @@ import {
   defineRelationRole,
   EntityProviderKey,
   GraphProviderKey,
+  GraphSchema,
   RelationProviderKey,
 } from '@retikz/graph';
+import { normalizeGraph } from '@retikz/graph-vanilla';
 import { createInputScene, Node, Step, Text } from '@retikz/react';
 import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';
@@ -432,6 +435,51 @@ describe('Entity and Relation React authoring', () => {
 });
 
 describe('Graph Source and child authoring', () => {
+  it('keeps graphDefaults and graphRules identical to Direct and Vanilla Source IR', () => {
+    const input = {
+      id: 'parity',
+      graphDefaults: {
+        entity: { style: { fill: '#111111' }, layout: { align: 'middle' } },
+        relation: { style: { stroke: '#222222' } },
+      },
+      graphRules: [{ type: 'entity' as const, selector: { role: 'activity' }, style: { fill: '#ff0000' } }],
+      children: [
+        { type: 'entity' as const, id: 'source', role: 'activity', position: [0, 0] as const, text: 'Source' },
+        { type: 'entity' as const, id: 'target', role: 'resource', position: [100, 0] as const, text: 'Target' },
+        {
+          type: 'relation' as const,
+          role: 'dependency',
+          source: { id: 'source' },
+          target: { id: 'target' },
+        },
+      ],
+    } satisfies InputGraph;
+    const direct = GraphSchema.parse({
+      namespace: 'graph',
+      type: 'graph',
+      ...input,
+      children: input.children.map(child => ({ namespace: 'graph' as const, ...child })),
+    });
+
+    const vanilla = normalizeGraph(input);
+    const react = normalizeReact(
+      createElement(
+        Graph,
+        { ...input, children: undefined },
+        createElement(Entity, { id: 'source', role: 'activity', position: [0, 0] }, 'Source'),
+        createElement(Entity, { id: 'target', role: 'resource', position: [100, 0] }, 'Target'),
+        createElement(Relation, {
+          role: 'dependency',
+          source: { id: 'source' },
+          target: { id: 'target' },
+        }),
+      ),
+    );
+
+    expect(vanilla).toEqual(direct);
+    expect(react.ir.children[0]).toEqual(direct);
+  });
+
   it('preserves the complete Graph Scope surface and keeps Theme fields disjoint', () => {
     const result = normalizeReact(
       createElement(
@@ -439,15 +487,13 @@ describe('Graph Source and child authoring', () => {
         {
           id: 'architecture',
           theme: { mode: 'dark' },
-          graphTheme: {
-            rules: [
-              {
-                type: 'entity',
-                selector: { role: 'participant' },
-                appearance: { fill: '#eef6ff' },
-              },
-            ],
-          },
+          graphRules: [
+            {
+              type: 'entity',
+              selector: { role: 'participant' },
+              style: { fill: '#eef6ff' },
+            },
+          ],
           localNamespace: true,
           transforms: [{ kind: 'translate', x: 10, y: 20 }],
           placement: { target: [30, 40], selfAnchor: 'center' },
@@ -487,15 +533,13 @@ describe('Graph Source and child authoring', () => {
         type: 'graph',
         id: 'architecture',
         theme: { mode: 'dark' },
-        graphTheme: {
-          rules: [
-            {
-              type: 'entity',
-              selector: { role: 'participant' },
-              appearance: { fill: '#eef6ff' },
-            },
-          ],
-        },
+        graphRules: [
+          {
+            type: 'entity',
+            selector: { role: 'participant' },
+            style: { fill: '#eef6ff' },
+          },
+        ],
         localNamespace: true,
         transforms: [{ kind: 'translate', x: 10, y: 20 }],
         placement: { target: [30, 40], selfAnchor: 'center' },
@@ -757,7 +801,7 @@ describe('GraphThemeProvider', () => {
     const ambient = defineGraphThemeStyle({ name: 'ambient', resolve: () => ({}) });
     const brand = defineGraphThemeStyle({
       name: 'brand',
-      resolve: () => ({ entity: { tokens: { stroke: '#2563eb', textColor: '#2563eb' } } }),
+      resolve: () => ({ defaults: { entity: { style: { stroke: '#2563eb', textColor: '#2563eb' } } } }),
     });
     const coreBrand = {
       name: 'brand',

@@ -48,9 +48,7 @@ const graph = {
   type: 'graph',
   id: 'architecture',
   theme: { mode: 'dark' },
-  graphTheme: {
-    rules: [{ type: 'entity', selector: { role: 'participant' }, appearance: { fill: '#eef6ff' } }],
-  },
+  graphRules: [{ type: 'entity', selector: { role: 'participant' }, style: { fill: '#eef6ff' } }],
   localNamespace: true,
   transforms: [{ kind: 'translate', x: 10, y: 20 }],
   placement: { target: [30, 40], selfAnchor: 'center' },
@@ -105,9 +103,11 @@ describe('Graph Source data assembly', () => {
   it('keeps Core Theme and Graph-local rules in disjoint fields', () => {
     const schema = publicSchema('GraphSchema');
 
-    expect(schema.parse(graph)).toMatchObject({ theme: { mode: 'dark' }, graphTheme: graph.graphTheme });
-    expect(() => schema.parse({ ...graph, theme: graph.graphTheme, graphTheme: undefined })).toThrow();
-    expect(() => schema.parse({ ...graph, theme: undefined, graphTheme: { mode: 'dark' } })).toThrow();
+    expect(schema.parse(graph)).toMatchObject({ theme: { mode: 'dark' }, graphRules: graph.graphRules });
+    expect(() => schema.parse({ ...graph, theme: graph.graphRules, graphRules: undefined })).toThrow();
+    expect(() =>
+      schema.parse({ ...graph, theme: undefined, graphRules: [{ type: 'entity', mode: 'dark' }] }),
+    ).toThrow();
   });
 
   it('strictly rejects the removed Variant fields in Source and Theme selectors', () => {
@@ -210,7 +210,7 @@ describe('Graph Source data assembly', () => {
   it('keeps Relation structure separate from Theme-owned appearance', () => {
     const relationRole = publicSchema('GraphRelationRoleTokenRecipeSchema');
     const relationStructure = publicSchema('GraphRelationStructureTokenOverridesSchema');
-    const relationAppearance = publicSchema('GraphRelationAppearanceTokenOverridesSchema');
+    const relationAppearance = publicSchema('GraphRelationDefaultsSchema');
 
     expect(relationRole.parse({ sourceMarker: false, targetMarker: { shape: 'kite' }, dashPattern: false })).toEqual({
       sourceMarker: false,
@@ -220,8 +220,8 @@ describe('Graph Source data assembly', () => {
     expect(relationStructure.parse({ targetMarker: { shape: 'openKite' } })).toEqual({
       targetMarker: { shape: 'openKite' },
     });
-    expect(relationAppearance.parse({ opacity: 0.8, targetMarker: { fill: 'currentColor' } })).toEqual({
-      opacity: 0.8,
+    expect(relationAppearance.parse({ style: { opacity: 0.8 }, targetMarker: { fill: 'currentColor' } })).toEqual({
+      style: { opacity: 0.8 },
       targetMarker: { fill: 'currentColor' },
     });
     expect(() =>
