@@ -164,7 +164,7 @@ describe('plot theme default palette', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      plotTheme: { palette: { series: ['#2563eb', '#f97316', 'currentColor'] } },
+      plotDefaults: { palette: { series: ['#2563eb', '#f97316', 'currentColor'] } },
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -193,7 +193,7 @@ describe('plot theme default palette', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      plotTheme: { palette: { categorical: ['#2563eb', '#f97316'] } },
+      plotDefaults: { palette: { categorical: ['#2563eb', '#f97316'] } },
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },

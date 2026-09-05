@@ -1,120 +1,112 @@
 import type { ResolvedTheme } from '@retikz/core';
 
-import { ThemeTokenSource } from '@retikz/core';
 import { strictObject } from 'zod';
 
 import type { PlotThemeStyleDefinition } from '../../contract';
-import type { IRPlot, IRPlotThemeResolution, IRPlotThemeTokenResolution } from '../../schemas';
+import type { IRPlot, IRPlotAxisRule, IRPlotAxisRules, IRPlotDefaults, IRPlotThemeResolution } from '../../schemas';
 
 import { RetikzPlotError } from '../../error';
-import { getDefaultPlotThemePreset, resolvePlotThemeStyleRegistry } from '../../providers/theme';
-import { getAxisTokenRules } from '../../providers/theme/preset';
-import {
-  PlotAxisThemeTokenRulesSchema,
-  PlotThemeResolutionSchema,
-  PlotThemeToken,
-  PlotThemeTokenOverridesSchema,
-} from '../../schemas';
-import { applyPlotThemeToTokens, mergePlotTheme, plotThemeFromTokens } from './mapping';
+import { getNeutralPlotDefaults, resolvePlotThemeStyleRegistry } from '../../providers/theme';
+import { getNeutralAxisRules } from '../../providers/theme/preset';
+import { PlotAxisRulesSchema, PlotDefaultsSchema, PlotThemeLayerKind, PlotThemeResolutionSchema } from '../../schemas';
+import { applyPlotDefaults } from './mapping';
 
-const PlotThemeStyleOverridesSchema = strictObject({
-  tokens: PlotThemeTokenOverridesSchema.optional(),
-  tokenRules: PlotAxisThemeTokenRulesSchema.optional(),
+const PlotThemeStyleSourceSchema = strictObject({
+  defaults: PlotDefaultsSchema.optional(),
+  rules: PlotAxisRulesSchema.optional(),
 });
 
-/** 按 Plot style、Plot token 与 native Plot theme 顺序解析主题 */
+type DefaultsLayer = Readonly<{
+  kind: (typeof PlotThemeLayerKind)[keyof typeof PlotThemeLayerKind];
+  path: string;
+  defaults?: IRPlotDefaults;
+  rules?: IRPlotAxisRules;
+}>;
+
+const sourceRecordsOf = (layers: ReadonlyArray<DefaultsLayer>) =>
+  layers.map(layer => ({
+    kind: layer.kind,
+    path: layer.path,
+    ...(layer.defaults === undefined ? {} : { defaults: structuredClone(layer.defaults) }),
+  }));
+
+const ruleSourcesOf = (layers: ReadonlyArray<DefaultsLayer>) =>
+  layers.flatMap(layer =>
+    (layer.rules ?? []).map((rule, index) => ({
+      kind: layer.kind,
+      sourcePath: layer.path,
+      path: layer.path + '/plotRules/' + index,
+      rule: structuredClone(rule),
+    })),
+  );
+
+/** 按 Core Theme、Plot style 与 Direct Plot Source 顺序解析 Plot defaults */
 export const resolvePlotTheme = (
   effectiveTheme: ResolvedTheme,
-  input: Pick<IRPlot, 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'> = {},
+  input: Pick<IRPlot, 'plotDefaults' | 'plotRules'> = {},
   plotThemeStyles: ReadonlyArray<PlotThemeStyleDefinition> | undefined = undefined,
 ): IRPlotThemeResolution => {
   const { style, mode } = effectiveTheme;
   const styles = resolvePlotThemeStyleRegistry(plotThemeStyles);
   const definition = style === undefined ? undefined : styles.get(style);
-  if (style !== undefined && definition === undefined)
-    throw new RetikzPlotError(`Plot theme style '${style}' is not registered.`);
-  const plotThemeTokens = input.plotThemeTokens ?? {};
-  const localTokenRules = input.plotThemeTokenRules ?? [];
-  const authoredTheme = input.plotTheme;
-  const defaultTokens = getDefaultPlotThemePreset(mode, effectiveTheme.colors.categorical);
-  const defaultTokenRules = getAxisTokenRules();
-  const styleOverrides = (() => {
-    if (definition === undefined) return {};
-    try {
-      const rawStyleOverrides = definition.resolve(effectiveTheme);
-      return PlotThemeStyleOverridesSchema.parse(rawStyleOverrides);
-    } catch (cause) {
-      throw new RetikzPlotError(`Plot theme style '${style}' resolution failed.`, { cause });
-    }
-  })();
-  const styleTokens = styleOverrides.tokens ?? {};
-  const styleTokenRules = styleOverrides.tokenRules ?? [];
-  const baseline: IRPlotThemeTokenResolution = {
-    ...defaultTokens,
-    ...structuredClone(styleTokens),
-  };
-  const tokensAfterLocal: IRPlotThemeTokenResolution = {
-    ...baseline,
-    ...structuredClone(plotThemeTokens),
-  };
-  const tokenTheme = plotThemeFromTokens(tokensAfterLocal);
-  const theme = authoredTheme === undefined ? tokenTheme : mergePlotTheme(tokenTheme, authoredTheme);
-  const nativeResult =
-    authoredTheme === undefined
-      ? { tokens: tokensAfterLocal, overrides: [] }
-      : applyPlotThemeToTokens(tokensAfterLocal, theme, authoredTheme);
-  const tokens = nativeResult.tokens;
-  const nativeSources = new Map(nativeResult.overrides.map(source => [source.token, source.path]));
-  const tokenSources = Object.values(PlotThemeToken).map(token => {
-    const nativePath = nativeSources.get(token);
-    if (nativePath !== undefined) {
-      return { token, kind: ThemeTokenSource.Local, path: nativePath };
-    }
-    if (Object.hasOwn(plotThemeTokens, token)) {
-      return { token, kind: ThemeTokenSource.Local, path: `$spec/plotThemeTokens/${token}` };
-    }
-    const styleOwnsToken = style !== undefined && Object.hasOwn(styleTokens, token);
-    return {
-      token,
-      kind: ThemeTokenSource.Local,
-      path: styleOwnsToken ? `$style/${style}/${mode}/${token}` : `$default/${mode}/${token}`,
-    };
-  });
-  const palette = {
-    categorical: [...tokens[PlotThemeToken.PlotPaletteCategorical]],
-    series: [...tokens[PlotThemeToken.PlotPaletteSeries]],
-    sector: [...tokens[PlotThemeToken.PlotPaletteSector]],
-    sequential: tokens[PlotThemeToken.PlotPaletteSequential],
-    diverging: tokens[PlotThemeToken.PlotPaletteDiverging],
-    shape: structuredClone(tokens[PlotThemeToken.PlotPaletteShape]),
-  };
-  const authoredOverrides: IRPlotThemeResolution['authoredOverrides'] =
-    authoredTheme === undefined ? [] : [{ kind: ThemeTokenSource.Local, path: '$spec/plotTheme' }];
-  const tokenRules: IRPlotThemeResolution['tokenRules'] = [
-    ...defaultTokenRules.map((rule, index) => ({
-      rule,
-      kind: ThemeTokenSource.Local,
-      path: `$default/${mode}/tokenRules/${index}`,
-    })),
-    ...styleTokenRules.map((rule, index) => ({
-      rule,
-      kind: ThemeTokenSource.Local,
-      path: `$style/${style}/${mode}/tokenRules/${index}`,
-    })),
-    ...localTokenRules.map((rule, index) => ({
-      rule,
-      kind: ThemeTokenSource.Local,
-      path: `$spec/plotThemeTokenRules/${index}`,
-    })),
+  if (style !== undefined && definition === undefined) {
+    throw new RetikzPlotError("Plot theme style '" + style + "' is not registered.");
+  }
+
+  const layers: Array<DefaultsLayer> = [
+    {
+      kind: PlotThemeLayerKind.Neutral,
+      path: '$default/' + mode,
+      defaults: getNeutralPlotDefaults(mode, effectiveTheme.colors.categorical),
+      rules: getNeutralAxisRules(),
+    },
   ];
+  if (definition !== undefined) {
+    try {
+      const source = PlotThemeStyleSourceSchema.parse(definition.resolve(effectiveTheme));
+      layers.push({
+        kind: PlotThemeLayerKind.Style,
+        path: '$style/' + style + '/' + mode,
+        ...(source.defaults === undefined ? {} : { defaults: source.defaults }),
+        ...(source.rules === undefined ? {} : { rules: source.rules }),
+      });
+    } catch (cause) {
+      throw new RetikzPlotError("Plot theme style '" + style + "' resolution failed.", { cause });
+    }
+  }
+  if (input.plotDefaults !== undefined || input.plotRules !== undefined) {
+    layers.push({
+      kind: PlotThemeLayerKind.Source,
+      path: '$spec',
+      ...(input.plotDefaults === undefined ? {} : { defaults: input.plotDefaults }),
+      ...(input.plotRules === undefined ? {} : { rules: input.plotRules }),
+    });
+  }
+
+  const defaults = layers.reduce<IRPlotDefaults>(
+    (resolvedDefaults, layer) => applyPlotDefaults(resolvedDefaults, layer.defaults),
+    {},
+  );
+  if (defaults.palette === undefined) {
+    throw new RetikzPlotError('Plot Neutral defaults must provide a complete palette.');
+  }
+
   return PlotThemeResolutionSchema.parse({
     ...(style === undefined ? {} : { style }),
     mode,
-    tokens,
-    tokenSources,
-    tokenRules,
-    authoredOverrides,
-    plotTheme: theme,
-    palette,
+    defaults,
+    layers: sourceRecordsOf(layers),
+    rules: ruleSourcesOf(layers),
+    palette: defaults.palette,
   });
 };
+
+/** 仅供 Chart 在不复制 Plot 级联语义时构造其转发 defaults 输入 */
+export type PlotDefaultsLayer = Readonly<{
+  /** Chart forwarding 在 inspection 中的稳定路径 */
+  path: string;
+  /** Chart forwarding 的 Plot-owned sparse defaults */
+  defaults?: IRPlotDefaults;
+  /** Chart forwarding 的 Plot-owned Axis rules */
+  rules?: ReadonlyArray<IRPlotAxisRule>;
+}>;

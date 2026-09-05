@@ -1,6 +1,6 @@
 import type { IRNode, IRShapeValue } from '@retikz/core';
 
-import type { IRPlotLegendGuide, IRPlotTheme } from '../../schemas';
+import type { IRPlotAxisDefaults, IRPlotDefaults, IRPlotLegendGuide } from '../../schemas';
 
 type GuideTextStyle = Partial<
   Pick<
@@ -16,8 +16,6 @@ export type EffectivePlotPalette = {
   categorical: Array<string>;
   /** 无 color 编码的 mark / series 默认颜色 */
   series: Array<string>;
-  /** sector / pie 默认颜色 */
-  sector: Array<string>;
   /** 连续单向色阶默认 scheme */
   sequential: string;
   /** 发散色阶默认 scheme */
@@ -26,7 +24,7 @@ export type EffectivePlotPalette = {
   shape: Array<IRShapeValue>;
 };
 
-/** Plot legend 解析后的视觉 token */
+/** Plot legend 解析后的视觉 defaults */
 export type EffectiveLegendGuideTokens = Required<
   Pick<
     LegendStyle,
@@ -47,16 +45,16 @@ export type EffectiveLegendGuideTokens = Required<
   label: GuideTextStyle;
 };
 
-/** Plot theme 解析结果：lowering 只消费 resolved token，不直接读原始 theme */
+/** Plot defaults 解析结果：lowering 只消费确定的视觉默认值 */
 export type EffectivePlotGuideTheme = {
   /** 绘图区视觉样式 */
-  plotArea?: IRPlotTheme['plotArea'];
+  plotArea?: IRPlotDefaults['plotArea'];
   /** 全局 guide 文本默认样式 */
-  typography: NonNullable<IRPlotTheme['typography']>;
+  typography: NonNullable<IRPlotDefaults['typography']>;
   /** 解析后的 palette */
   palette: EffectivePlotPalette;
   /** Axis 视觉默认值 */
-  axis: NonNullable<IRPlotTheme['axis']>;
+  axis: IRPlotAxisDefaults;
   /** Legend 视觉默认值 */
   legend: EffectiveLegendGuideTokens;
 };

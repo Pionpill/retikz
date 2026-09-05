@@ -371,15 +371,13 @@ describe('composition guides layout lowering', () => {
     const spec = {
       ...facetSpec,
       guides: facetSpec.guides.map(guide => ({ ...guide, grid: undefined })),
-      plotThemeTokens: {
-        'axis.grid.enabled': false,
-        'axis.grid.stroke': '#ffffff',
-        'axis.grid.drawOpacity': 0.15,
+      plotDefaults: {
+        axis: { grid: false },
       },
-      plotThemeTokenRules: [
+      plotRules: [
         {
           select: { dimension: 'y' },
-          tokens: { 'axis.grid.enabled': true },
+          axis: { grid: { stroke: '#ffffff', strokeWidth: 1, drawOpacity: 0.15, includeDomain: true } },
         },
       ],
     };

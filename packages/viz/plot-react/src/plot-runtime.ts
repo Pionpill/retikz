@@ -121,16 +121,15 @@ const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> => {
 /** 将 React spec 入口的显式展示覆盖装配到 Plot Source IR */
 const applyPlotPropsToSpec = (
   spec: IRPlot,
-  props: Pick<PlotProps, 'width' | 'height' | 'plotThemeTokens' | 'plotThemeTokenRules' | 'plotTheme'>,
+  props: Pick<PlotProps, 'width' | 'height' | 'plotDefaults' | 'plotRules'>,
 ): IRPlot => {
   const width = spec.width === undefined && props.width !== undefined ? props.width : undefined;
   const height = spec.height === undefined && props.height !== undefined ? props.height : undefined;
   if (
     width === undefined &&
     height === undefined &&
-    props.plotThemeTokens === undefined &&
-    props.plotThemeTokenRules === undefined &&
-    props.plotTheme === undefined
+    props.plotDefaults === undefined &&
+    props.plotRules === undefined
   ) {
     return spec;
   }
@@ -138,9 +137,8 @@ const applyPlotPropsToSpec = (
     ...spec,
     ...(width === undefined ? {} : { width }),
     ...(height === undefined ? {} : { height }),
-    ...(props.plotThemeTokens === undefined ? {} : { plotThemeTokens: props.plotThemeTokens }),
-    ...(props.plotThemeTokenRules === undefined ? {} : { plotThemeTokenRules: props.plotThemeTokenRules }),
-    ...(props.plotTheme === undefined ? {} : { plotTheme: props.plotTheme }),
+    ...(props.plotDefaults === undefined ? {} : { plotDefaults: props.plotDefaults }),
+    ...(props.plotRules === undefined ? {} : { plotRules: props.plotRules }),
   };
 };
 
@@ -177,9 +175,8 @@ export const resolvePlotAuthoring = (
       composition: props.composition,
       model: props.model,
       dataFieldNames: dataFieldNamesOf(props.data),
-      plotThemeTokens: props.plotThemeTokens,
-      plotThemeTokenRules: props.plotThemeTokenRules,
-      plotTheme: props.plotTheme,
+      plotDefaults: props.plotDefaults,
+      plotRules: props.plotRules,
       transforms: props.dataTransforms,
       markTransformShortcuts: props.markTransformShortcuts,
       deferPositionScaleInference: props.model === undefined,

@@ -105,12 +105,10 @@ export type BuildPlotOptions = {
   transforms?: Array<IRPlotTransform>;
   /** 把 mark 形态转换为普通 Plot-level transforms 的作者侧简写 */
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
-  /** Plot-owned canonical theme token 稀疏覆盖 */
-  plotThemeTokens?: IRPlot['plotThemeTokens'];
-  /** 按 Axis dimension 覆盖 Plot-owned token 的有序规则 */
-  plotThemeTokenRules?: IRPlot['plotThemeTokenRules'];
-  /** Plot 主题 */
-  plotTheme?: IRPlot['plotTheme'];
+  /** Plot-owned Source-shaped visual defaults 稀疏覆盖 */
+  plotDefaults?: IRPlot['plotDefaults'];
+  /** 按 Axis dimension 覆盖 Plot-owned defaults 的有序规则 */
+  plotRules?: IRPlot['plotRules'];
   /** 当前数据集可见字段名集合 */
   dataFieldNames?: ReadonlySet<string>;
   /** 是否省略未显式声明的位置比例尺绑定，让 lowering 按实际字段类型派生

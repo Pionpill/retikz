@@ -12,7 +12,7 @@ import type { IRPlot, IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation, 
 import type { DimensionRole } from './coordinate';
 import type { ChannelScaleResolution, ChannelScaleResolveContext } from './scale';
 
-/** 通道解析可见的 palette 默认值；由 IRPlot.plotTheme 在 lowering 前解析 */
+/** 通道解析可见的 palette 默认值；由 IRPlot.plotDefaults 在 lowering 前解析 */
 export type ChannelPaletteContext = {
   /** 分类 scale 默认颜色 */
   categorical: ReadonlyArray<string>;

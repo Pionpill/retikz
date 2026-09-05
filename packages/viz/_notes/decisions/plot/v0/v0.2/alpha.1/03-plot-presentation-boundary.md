@@ -4,6 +4,7 @@
 - 决策日期：2026-08-10
 - 关联：[plot v0.2-alpha.1 roadmap](./roadmap.md) · [ADR-01：Plot 主题 token 所有权与 Chart 消费边界](./01-chart-layering.md) · [Chart ADR-03：Chart presentation 与 Standard FlexLayout](../../../../chart/v0/v0.1/alpha.1/03-presentation-standard-layout.md) · [Plot 可视化完备设计](../../../../../architecture/plot-visualization-complete.md) · [Chart 封装完备设计](../../../../../architecture/chart-encapsulation-complete.md)
 - Supersedes in part：[ADR-01](./01-chart-layering.md) 中 Plot static label、`plot.label.*` token 与 `IRPlotTheme.labelText` 映射；其余 Plot 主题所有权、token cascade 与 Chart 消费边界继续有效
+- Superseded in part by：[ADR-14：Plot Source 默认片段与 Axis 规则](./14-theme-source-fragments.md) 取代本文保留的 `IRPlotTheme` / token 输入形态；Plot 绘图本体与 Chart presentation 的所有权边界继续有效
 
 ## 背景与目标
 

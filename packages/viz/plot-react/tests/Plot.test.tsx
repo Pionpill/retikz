@@ -58,9 +58,9 @@ const screenShift = definePositionAdjustment<ScreenShift>({
     })),
 });
 
-const plotThemeTokens = {
-  'plot.area.fill': '#123456',
-} satisfies NonNullable<IRPlot['plotThemeTokens']>;
+const plotDefaults = {
+  plotArea: { fill: '#123456' },
+} satisfies NonNullable<IRPlot['plotDefaults']>;
 
 const revenue = [
   { quarter: 'Q1', value: 18 },
@@ -189,36 +189,32 @@ describe('<Plot spec data> 薄包装', () => {
     expect(Number(root.match(/\sheight="([^"]+)"/)?.[1])).toBe(bounds?.[3]);
   });
 
-  it('standalone Plot 的 local token override 生效', () => {
+  it('standalone Plot 的 local defaults override 生效', () => {
     const svg = renderToStaticMarkup(
-      <Plot spec={spec} data={data} plotThemeTokens={plotThemeTokens} width={480} height={300} />,
+      <Plot spec={spec} data={data} plotDefaults={plotDefaults} width={480} height={300} />,
     );
 
     expect(svg).toContain('fill="#123456"');
   });
 
-  it('spec 与 DSL 入口都透传 PlotAxis theme token rules', () => {
-    const plotThemeTokenRules: NonNullable<IRPlot['plotThemeTokenRules']> = [
+  it('spec 与 DSL 入口都透传 PlotAxis defaults rules', () => {
+    const plotRules: NonNullable<IRPlot['plotRules']> = [
       {
         select: { dimension: 'x' },
-        tokens: {
-          'axis.grid.enabled': true,
-          'axis.grid.stroke': '#ff00ff',
-          'axis.grid.includeDomain': true,
-        },
+        axis: { grid: { stroke: '#ff00ff', includeDomain: true } },
       },
     ];
     const specSvg = renderToStaticMarkup(
       <Plot
         spec={{ ...spec, guides: [{ type: 'axis', dimension: 'x' }] }}
         data={data}
-        plotThemeTokenRules={plotThemeTokenRules}
+        plotRules={plotRules}
         width={480}
         height={300}
       />,
     );
     const dslSvg = renderToStaticMarkup(
-      <Plot data={revenue} plotThemeTokenRules={plotThemeTokenRules} width={480} height={300}>
+      <Plot data={revenue} plotRules={plotRules} width={480} height={300}>
         <PointMark x="quarter" y="value" />
         <PlotAxis dimension="x" />
       </Plot>,
@@ -228,10 +224,10 @@ describe('<Plot spec data> 薄包装', () => {
     expect(dslSvg).toContain('stroke="#ff00ff"');
   });
 
-  it('embedded Plot 的 local token override 只作用于该 Plot', () => {
+  it('embedded Plot 的 local defaults override 只作用于该 Plot', () => {
     const svg = renderToStaticMarkup(
       <Layout width={960} height={300}>
-        <Plot spec={spec} data={data} plotThemeTokens={plotThemeTokens} width={480} height={300} />
+        <Plot spec={spec} data={data} plotDefaults={plotDefaults} width={480} height={300} />
         <Plot spec={spec} data={data} x={480} width={480} height={300} />
       </Layout>,
     );

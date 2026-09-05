@@ -319,7 +319,7 @@ describe('lowerPlots (contract)', () => {
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'y' },
       ],
-      plotTheme: {
+      plotDefaults: {
         axis: {
           grid: { stroke: '#ffffff', strokeWidth: 1, drawOpacity: 0.15 },
         },
@@ -339,7 +339,7 @@ describe('lowerPlots (contract)', () => {
   ] as const)('projects the Plot typography master into presentation layers in %s mode', (mode, area, grid, line) => {
     const spec = PlotSchema.parse({
       ...pointSpec(),
-      plotTheme: {
+      plotDefaults: {
         typography: { textColor: '#336699' },
         plotArea: { fill: 0.2 },
         axis: {
@@ -607,7 +607,7 @@ describe('lowerPlots (contract)', () => {
       ],
       coordinate: { type: 'cartesian2D', x: 'xMonth', y: 'yRevenue' },
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
-      plotThemeTokens: { 'axis.grid.enabled': false },
+      plotDefaults: { axis: { grid: false } },
       guides: [
         { type: 'axis', dimension: 'x' },
         { type: 'axis', dimension: 'y' },

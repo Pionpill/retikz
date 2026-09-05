@@ -84,7 +84,6 @@ import { orderedCategoryDomain, resolveChannelScale, resolvePositionScaleContinu
 import {
   resolveAxisGuideTokens,
   resolvePlotAxisGuideTheme,
-  resolvePlotAxisThemeTokens,
   resolvePlotGuideTheme,
   resolvePlotTheme,
 } from '../../resolve/theme';
@@ -379,18 +378,16 @@ export const lowerPlotWithDataArtifact = (
   const themeResolution = resolvePlotTheme(
     effectiveTheme,
     {
-      plotThemeTokens: node.plotThemeTokens,
-      plotThemeTokenRules: node.plotThemeTokenRules,
-      plotTheme: node.plotTheme,
+      plotDefaults: node.plotDefaults,
+      plotRules: node.plotRules,
     },
     options.plotThemeStyles,
   );
-  const resolvedTheme = resolvePlotGuideTheme(themeResolution.plotTheme, themeResolution.palette);
+  const resolvedTheme = resolvePlotGuideTheme(themeResolution);
   const defaultColorPaletteIndices = defaultColorPaletteIndicesOf(node.marks);
   const themedGuides: Array<IRPlotGuide> = (node.guides ?? []).map(guide => {
     if (!isAxisGuide(guide)) return guide;
-    const axisTokens = resolvePlotAxisThemeTokens(themeResolution, guide.dimension);
-    return resolveAxisGuideTokens(resolvePlotAxisGuideTheme(resolvedTheme, axisTokens), guide);
+    return resolveAxisGuideTokens(resolvePlotAxisGuideTheme(themeResolution, guide.dimension), guide);
   });
   const allGuides: Array<IRPlotGuide> = themedGuides;
   const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);

@@ -306,11 +306,11 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
     expect(shapes.some(shape => shape !== 'rectangle')).toBe(true);
   });
 
-  it('shape_legend_preserves_structured_shape_refs_from_plot_theme', () => {
+  it('shape_legend_preserves_structured_shape_refs_from_plot_defaults', () => {
     const pentagon = { type: 'polygon', params: { sides: 5, rotate: -90 } } as const;
     const spec = PlotSchema.parse({
       ...shapeLegendSpec(),
-      plotTheme: { palette: { shape: [pentagon, 'cross', 'circle'] } },
+      plotDefaults: { palette: { shape: [pentagon, 'cross', 'circle'] } },
     });
     const legend = findLegendLayer(expandOf(spec, { d: ORDINAL_ROWS }));
     expect(legend).toBeDefined();
@@ -466,7 +466,7 @@ describe('lowerPlots legend — happy path（contract）', () => {
   it('theme_legend_symbol_size_is_overridden_by_local_style', () => {
     const themed = PlotSchema.parse({
       ...sizeLegendSpec({ style: { symbolSize: 10 } }),
-      plotTheme: { legend: { symbolSize: 18 } },
+      plotDefaults: { legend: { symbolSize: 18 } },
     });
     const outer = expandOf(themed, { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);

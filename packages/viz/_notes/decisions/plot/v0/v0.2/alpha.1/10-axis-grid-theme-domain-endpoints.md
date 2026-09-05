@@ -3,6 +3,7 @@
 - 状态：Accepted
 - 决策日期：2026-08-10
 - 关联：[plot v0.2 roadmap](../roadmap.md) · [alpha.1 roadmap](./roadmap.md) · [ADR-08：Axis 主题 Token 作用域规则](./08-axis-theme-token-rules.md) · [ADR-09：Axis grid 包含值域端点](./09-axis-grid-domain-endpoints.md) · [Plot 可视化完备设计](../../../../../architecture/plot-visualization-complete.md)
+- Superseded in part by：[ADR-14：Plot Source 默认片段与 Axis 规则](./14-theme-source-fragments.md) 把 token 形态迁为 Source-shaped Axis defaults / rules；`grid.includeDomain` 对已有 Axis 的默认语义和显式 guide 优先级继续有效
 
 ## 背景与目标
 
