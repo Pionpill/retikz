@@ -7,19 +7,19 @@
 
 ## 目标与 ADR
 
-alpha.4 收敛五项 Kernel 契约与提案：无填充 Stroke Path 的居中标签产生真实描边断口；端点箭头可以按最终视觉后缘跨过逻辑端点；Source 输入只以 owner Zod schema 的 `parse` 结果作为校验与结构投影边界，删除 schema 前后的重复 JSON 处理；Core Source IR 以浅层固定分组区分视觉覆盖、布局参数、Theme、后代默认值与主要绘图事实；Theme 以目标类型组织同构的稀疏 Source 片段，保留字段覆盖和领域 owner 边界。五项契约都保持 Scene 与 renderer 边界稳定，并由 Core 或领域 owner 继续拥有最终行为与诊断。
+alpha.4 收敛五项 Kernel 契约与提案：无填充 Stroke Path 的居中标签产生真实描边断口；端点箭头可以按最终视觉后缘跨过逻辑端点；Source 输入只以 owner Zod schema 的 `parse` 结果作为校验与结构投影边界，删除 schema 前后的重复 JSON 处理；Core Source IR 以浅层固定分组区分视觉覆盖、布局参数、Theme、后代默认值与主要绘图事实；领域 defaults 以目标类型组织同构的稀疏 Source 片段，Theme 是生成来源，保留字段覆盖和领域 owner 边界。五项契约都保持 Scene 与 renderer 边界稳定，并由 Core 或领域 owner 继续拥有最终行为与诊断。
 
 Headless Interaction 仍只保留候选边界，尚未形成 Proposed ADR，不因与上述 ADR 同属 alpha.4 而获得实现授权。
 
-| ADR                                              | 状态     | 主题                   | 交付                                                                |
-| ------------------------------------------------ | -------- | ---------------------- | ------------------------------------------------------------------- |
-| [ADR-01](./01-stroke-path-label-interruption.md) | Proposed | Stroke Path 标签断线   | 条件默认、真实几何断口、装饰连续性与不支持组合的失败语义            |
-| [ADR-02](./02-path-endpoint-arrow-overlap.md)    | Accepted | Path 端点箭头重叠比例  | 视觉后缘完整进入、实例级归一化重叠、Core 统一几何与 definition 语义 |
-| [ADR-03](./03-json-undefined-field-contracts.md) | Accepted | Source Zod 输入边界    | owner schema 单次 parse、删除重复 JSON 处理并保留独立 runtime 隔离  |
-| [ADR-04](./04-source-ir-semantic-grouping.md)    | Accepted | Source IR 浅层语义分组 | 核心事实留根、继承语义保持、Source 扩展契约与实际消费方同步迁移     |
-| [ADR-05](./05-theme-source-fragments.md)         | Proposed | Theme 稀疏 Source 片段 | 目标片段同构、字段覆盖语义、环境与默认通道分离、领域 owner 边界     |
+| ADR                                              | 状态     | 主题                     | 交付                                                                |
+| ------------------------------------------------ | -------- | ------------------------ | ------------------------------------------------------------------- |
+| [ADR-01](./01-stroke-path-label-interruption.md) | Proposed | Stroke Path 标签断线     | 条件默认、真实几何断口、装饰连续性与不支持组合的失败语义            |
+| [ADR-02](./02-path-endpoint-arrow-overlap.md)    | Accepted | Path 端点箭头重叠比例    | 视觉后缘完整进入、实例级归一化重叠、Core 统一几何与 definition 语义 |
+| [ADR-03](./03-json-undefined-field-contracts.md) | Accepted | Source Zod 输入边界      | owner schema 单次 parse、删除重复 JSON 处理并保留独立 runtime 隔离  |
+| [ADR-04](./04-source-ir-semantic-grouping.md)    | Accepted | Source IR 浅层语义分组   | 核心事实留根、继承语义保持、Source 扩展契约与实际消费方同步迁移     |
+| [ADR-05](./05-theme-source-fragments.md)         | Proposed | Theme 来源与 Source 默认 | 目标片段同构、字段覆盖语义、环境与默认通道分离、领域 owner 边界     |
 
-ADR-05 承接 ADR-04 的分组契约，冻结共同 Theme 协议；各领域精确 Source、Theme 与 rules 仍由其独立版本 ADR 决定，不因本条目进入 Kernel lockstep。
+ADR-05 承接 ADR-04 的分组契约，冻结 Theme 生成值、作者 defaults 与独立规则的共同协议；各领域精确 Source、defaults 与 rules 仍由其独立版本 ADR 决定，不因本条目进入 Kernel lockstep。
 
 ## Headless Interaction 候选
 

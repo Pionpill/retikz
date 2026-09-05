@@ -18,6 +18,9 @@ alpha.2 建立第五类 Graph Source composite `Block`，用于表达具有 Grap
 | [04](./04-container-theme-inheritance.md) | Group / Block 继承 Graph Theme 外观 | Graph Theme style、Standard Surface、Diagram Flow        | Accepted   |
 | [05](./05-uml-relation-kind-catalog.md)   | UML Relation kind 目录与结构默认    | Relation Definition、Core Path、Standard Arrow           | Proposed   |
 | [06](./06-graph-status.md)                | Entity / Relation 语义状态          | Graph Source、Graph Theme、Entity / Relation resolve     | Proposed   |
+| [07](./07-theme-source-fragments.md)      | Graph Defaults、Rules 与 Theme 来源 | Core Theme 协议、Graph Source、容器与语义规则            | Proposed   |
+
+ADR-07 冻结 graphDefaults、独立 graphRules、Theme 生成来源及作用域；其实施与 Diagram 对 Graph 的直接消费同步完成。当前 token 公开契约在该提案落地前仍以既有实现为准。
 
 ## 完成标准
 

@@ -41,6 +41,9 @@ Diagram 只拥有完整图示的区域装配语义和 Diagram 独有行为。通
 | [05](./alpha.1/05-flow-orchestration-result-artifact.md) | Flow Orchestration、Result 与 Artifact | Graph Theme 下的测量、Group / Layout 递归布局、routing、provider 结果验证、render-ready Graph、renderer-neutral artifact、diagnostics 与完整 Scene 闭环                              | Accepted |
 | [06](./alpha.1/06-flow-entity-rich-text.md)              | Flow Entity Core 富文本                | Entity `text` 对 Core TextBlock 的完整投影、非空语义与三入口 / Graph 闭环                                                                                                            | Proposed |
 | [07](./alpha.1/07-flow-catalog-source-layout-groups.md)  | Flow 平级 Source、Group 与 Layout      | 平级 Entity / Group / Layout catalog、引用式唯一 containment、可见 Group、固定 Layout、Flex placement、endpoint 与 artifact 边界                                                     | Accepted |
+| [08](./alpha.1/08-theme-source-fragments.md)             | Diagram / Flow Defaults 与 Theme 来源  | 文本区域内容与格式、独立显式 defaults、Flow layout/routing 分离、Graph 受限片段消费与字段覆盖                                                                                        | Proposed |
+
+ADR-08 承接 Core Theme 来源与稀疏 defaults 协议和 Graph alpha.2 ADR-07；两者保持各自发布版本，实施时共同闭合 Graph 到 Flow 的消费链。提案状态不表示现有 token API 已被移除。
 
 上述 ADR 只表示长期决策的依赖分区，不在 roadmap 冻结字段、默认值、算法库、测试 case、文件 scope 或实现步骤
 

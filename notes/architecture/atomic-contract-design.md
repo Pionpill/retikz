@@ -1,6 +1,6 @@
 # 原子契约与组合设计
 
-> **状态：全仓长期架构设计。** 本文定义 schema、type、contract、Theme 片段 与纯函数的原子化边界、单一真源和上层组合规则，供 Kernel、Standard、Data、Plot、Chart、Table 及未来能力域参考。本文不冻结某个版本的具体字段、文件、preset 值、实现步骤或测试路径；这些内容由所属能力域的 ADR、代码和文档维护。
+> **状态：全仓长期架构设计。** 本文定义 schema、type、contract、Source 默认片段与纯函数的原子化边界、单一真源和上层组合规则，供 Kernel、Standard、Data、Plot、Chart、Table 及未来能力域参考。本文不冻结某个版本的具体字段、文件、preset 值、实现步骤或测试路径；这些内容由所属能力域的 ADR、代码和文档维护。
 >
 > 相关设计：[`能力完备性与模块边界`](./capability-design.md) · [`IR JSON-Schema 产物设计`](./schema-design.md) · [`通用视觉主题设计`](./visual-theme-design.md) · [`Core 原子绘图契约与 Tier 2 / Tier 3 组合边界`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/10-core-atomic-contracts.md) · [`Standard Drawing Library 设计`](../../packages/library/_notes/architecture/standard-library-design.md)
 
@@ -115,28 +115,28 @@ Contract 层描述第三方作者与内置 provider 共同实现的能力协议�
 
 同一原子可以被多个上层组合，但只能有一个语义 owner。多个上层复用同一 Core 原子，不代表 Core 拥有这些上层的完整组合。
 
-## 5. Theme 片段的原子化
+## 5. 默认片段与 Theme 来源
 
 ### 5.1 环境与目标 Source
 
-Theme environment 是 Core 的 style / mode selector，负责 Scene / Scope 继承与 shared colors。领域 Theme 是按目标类型组织的稀疏 Source 默认片段；两者不合并为全仓 Theme bag。
+Theme environment 是 Core 的 style / mode selector，负责 Scene / Scope 继承与 shared colors。领域 xxxDefaults 是作者按目标类型指定的稀疏 Source 默认。Theme definition 生成同形默认片段，但保留独立来源与优先级；不把三者合并为全仓 Theme bag。
 
 外层 entity、relation、axis、cell 等选择默认作用目标，片段内部保持对应 Source 的同名字段与分组，例如 entity.style.font、entity.layout.align。实例数组、identity、内容、数据与拓扑不进入 Theme。可默认字段由 owner 明确选择，不对完整 IR 使用机械 DeepPartial。
 
 ### 5.2 单一字段契约
 
-- Theme、preset、definition 输出与规则覆盖复用正式 Source schema 的命名片段；上层保留自己的禁用字段与角色约束
+- 作者 xxxDefaults、preset、definition 生成值与独立规则覆盖复用正式 Source schema 的命名片段；上层保留自己的禁用字段与角色约束
 - Source 作者覆盖使用 style、layout 等正式分组；appearance 留给已确定的消费结果
 - Source 缺少正式表达时先由原 owner 补齐，不能从 resolved appearance 建立平行持久化模型
 - 片段内部的值域、字段路径与覆盖粒度一致；字段可省略不意味着递归放松判别联合或完整复合值
-- 内部 EffectiveXxxTheme 从 Source 类型派生，内容相关字段由目标 resolver 确定；不建立平行 required Zod schema
-- dotted path 只用于 inspection、诊断或工具导出；不维护 flat token 与结构化 Theme 双入口
+- 内部 EffectiveXxxDefaults 从 Source 类型派生，内容相关字段由目标 resolver 确定；不建立平行 required Zod schema
+- dotted path 只用于 inspection、诊断或工具导出；不维护 flat token、xxxTheme 与 xxxDefaults 多入口
 
-通用 paint、font、spacing 等原子属于原 owner，领域组合与主题默认化资格属于领域 owner。Chart 直接转发 Plot 公开 Theme；Flow 的片段不能放宽 Graph 已屏蔽的字段。
+通用 paint、font、spacing 等原子属于原 owner，领域组合与主题默认化资格属于领域 owner。Chart 直接转发 Plot 公开 defaults；Flow 的片段不能放宽 Graph 已屏蔽的字段。
 
 ### 5.3 解析与覆盖
 
-Core 先解析环境，领域使用 shared colors 形成 baseline，再应用本地 style definition 的显式片段与 owner-local Theme。显式领域 palette 高于共享 baseline，实例显式配置高于 Theme 默认。规则、Scope style、defaults 与实例输入的相遇顺序由相应 owner 冻结，沿用正式 Source 级联语义。
+Core 先解析环境，领域使用 shared colors 形成 baseline，经本地 style definition 生成主题默认，再应用作者 xxxDefaults。显式领域 palette 高于共享 baseline，实例显式配置高于 Theme 默认。规则、Scope style、defaults 与实例输入的相遇顺序由相应 owner 冻结，沿用正式 Source 级联语义。
 
 style / layout 是字段命名空间，部分覆盖保留同组其余字段。复合叶子按原契约处理：Node font 整体覆盖，label font 逐字段补全；paint、shadow、spacing、数组与判别联合不做通用递归合并。显式 palette 数组整体替换。空分组不清空继承，optional undefined 不参与覆盖，合法显式值按字段语义生效。
 
@@ -181,7 +181,7 @@ ThemeTokenSource 的 inherit / local 保留既有来源含义，不充当全链�
 - 完整聚合与原子组合不改变既有合法 / 非法边界和默认语义
 - 每个公开字段都有明确 owner、consumer 和失败诊断
 - 同义复用经过同一 JSON / IR / contract / pipeline 真源
-- Theme 的 sparse、resolved、preset 和 explicit config 遵循同一字段契约与级联规则
+- 默认值的 sparse、resolved、preset 生成值和作者 xxxDefaults 遵循同一字段契约与级联规则
 - React、Vanilla、headless 和 renderer 消费同一公开输入 / Scene 语义
 - 新增能力没有因为组合便利建立平行 vocabulary、registry 或 lowering
 

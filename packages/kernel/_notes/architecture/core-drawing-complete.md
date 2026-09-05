@@ -52,7 +52,7 @@ Core IR / schema
 | Target / Coordinate   | 支持节点、锚点、边界、局部坐标和命名引用                                                                                   | core                                                                                                                             | plot scale、geo projection                    |
 | Transform             | 表达结构化图形空间变换                                                                                                     | core 定义，render 执行                                                                                                           | 数据 transform、runtime 状态机                |
 | Constraint / Layout   | 承载跨图形通用定位和约束                                                                                                   | core；纯算法可下沉 math                                                                                                          | flow / graph / table 领域布局                 |
-| Style / Resource      | 表达 paint、marker、pattern、clip、effect，并为 Composite 提供可持久化的 Scene / Scope Theme selector 环境与 shared colors | core 定义 Theme IR、继承、style registry、shared colors 与 `InspectionAppearanceContext`，领域 owner 物化默认，render 实现或诊断 | 领域 Theme 片段、preset 具体值与私有效果      |
+| Style / Resource      | 表达 paint、marker、pattern、clip、effect，并为 Composite 提供可持久化的 Scene / Scope Theme selector 环境与 shared colors | core 定义 Theme IR、继承、style registry、shared colors 与 `InspectionAppearanceContext`，领域 owner 物化默认，render 实现或诊断 | 领域 defaults 片段、preset 具体值与私有效果   |
 | Composition           | 用 scope、group、zIndex、meta 组合复杂图形                                                                                 | core                                                                                                                             | 上层私有节点树、不可持久化组合                |
 | Capability Assembly   | 让嵌套 Tier 2 通过完整 composite key、roots 与显式依赖形成确定性 definition 闭包                                           | core 定义 provider graph 与 resolver，adapter 收集，领域 owner 发布 provider                                                     | 动态 import、package discovery、全局注册      |
 | Spatial Transparency  | 让 Composite 声明语义空间并在最终 transform 后发布 qualified、renderer-neutral 查询 sidecar                                | core 定义 declaration、owner path、world geometry、index 与 selector；领域 owner 定义 role / payload                             | renderer hit-test、DOM identity、领域查询词汇 |
@@ -77,7 +77,7 @@ Core shared colors 是跨包 value contract，不是领域 palette。Core Inspec
 - 能编译成 renderer-agnostic Scene 或同步的 headless manifest。
 - 不依赖 React、DOM、Canvas / SVG 实例或 plot 数据语义。
 - 缺失时会迫使多个上层模块复制图形、几何、target 或 renderer 语义。
-- 跨领域视觉环境需要随 Scene / Scope 持久化并按绘图树继承；Core 负责 selector 传递、Core style registry、derived shared colors 与 Inspector appearance，具体 Source 同构 Theme 片段、preset、resolver 与 rules 仍由领域 owner 拥有。Core 不传递领域 Theme bag；领域以同名 owner-local style definition 解析自己的默认值。Theme 与 Scope defaults 各自保持职责；共同协议不扩大 Core primitive 的自动主题化范围。
+- 跨领域视觉环境需要随 Scene / Scope 持久化并按绘图树继承；Core 负责 selector 传递、Core style registry、derived shared colors 与 Inspector appearance，具体 Source 同构 defaults 片段、Theme 生成器、resolver 与 rules 仍由领域 owner 拥有。Core 不传递领域 Theme bag；领域以同名 style definition 生成主题默认，再应用作者 xxxDefaults；条件规则独立，不能把作者默认放进 Core theme。Theme 与 Scope defaults 各自保持职责；共同协议不扩大 Core primitive 的自动主题化范围。
 
 不满足时优先放到 math、render、plot / domain 包或 adapter。
 
