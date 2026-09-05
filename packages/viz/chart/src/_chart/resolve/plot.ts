@@ -51,7 +51,7 @@ export const resolveChartPlotScales = (
   encodings: ChartEncodingResolution,
   extension: IRChartPlotExtension | undefined,
 ): ReadonlyArray<IRPlotScaleOperation> => {
-  const authored = extension?.scales ?? [];
+  const authored = encodings.extensionScales ?? extension?.scales ?? [];
   scaleNamesOf(authored, ['plotExtension', 'scales']);
   const recipeEntries = recipe.scaffold.scales.filter(entry => !encodings.removedRecipeScales.has(entry.value.name));
   const recipeScales = recipeEntries.map(({ value }) => value);

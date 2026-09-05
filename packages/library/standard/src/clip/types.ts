@@ -1,4 +1,5 @@
-import type { ClipShape, IRClipFillRule, IRJsonObject, IRPosition, PathCommand } from '@retikz/core';
+import type { ClipShape, IRClipFillRule, IRPosition, PathCommand } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
 import type {
@@ -20,7 +21,7 @@ export type IRPathClip = ZodInfer<typeof PathClipSchema>;
 export type IRCompoundClip = ZodInfer<typeof CompoundClipSchema>;
 
 /** 用户坐标系中的圆形裁剪形状 */
-export type CircleClipShape = IRJsonObject & {
+export type CircleClipShape = JsonObject & {
   kind: 'circle';
   cx: number;
   cy: number;
@@ -28,7 +29,7 @@ export type CircleClipShape = IRJsonObject & {
 };
 
 /** 用户坐标系中的椭圆裁剪形状 */
-export type EllipseClipShape = IRJsonObject & {
+export type EllipseClipShape = JsonObject & {
   kind: 'ellipse';
   cx: number;
   cy: number;
@@ -37,13 +38,13 @@ export type EllipseClipShape = IRJsonObject & {
 };
 
 /** 用户坐标系中的多边形裁剪形状 */
-export type PolygonClipShape = IRJsonObject & {
+export type PolygonClipShape = JsonObject & {
   kind: 'polygon';
   points: Array<IRPosition>;
 };
 
 /** 使用结构化命令描述的路径裁剪形状 */
-export type PathClipShape = IRJsonObject & {
+export type PathClipShape = JsonObject & {
   kind: 'path';
   commands: Array<PathCommand>;
   /** @default nonzero */
@@ -51,7 +52,7 @@ export type PathClipShape = IRJsonObject & {
 };
 
 /** 按 authored 顺序累积子形状的复合裁剪形状 */
-export type CompoundClipShape = IRJsonObject & {
+export type CompoundClipShape = JsonObject & {
   kind: 'compound';
   children: Array<ClipShape>;
   /** @default nonzero */

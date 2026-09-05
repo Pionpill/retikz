@@ -1,5 +1,6 @@
+import type { JsonObject } from '@retikz/foundation';
+
 import type { GroupPrim, ResolvedShapeStyle, ScenePrimitive } from '../../contract';
-import type { IRJsonObject } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { PaintResolver } from '../resource';
 import type { NodeLabelLayout, NodeLayout } from './types';
@@ -17,7 +18,7 @@ import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';
 
 /** 空 shape params */
-const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
+const EMPTY_SHAPE_PARAMS: JsonObject = {};
 
 type Round = (n: number) => number;
 

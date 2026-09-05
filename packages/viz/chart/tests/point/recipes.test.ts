@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation, IRPlotScaleOperation } from '@retikz/plot';
 
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
@@ -57,8 +57,8 @@ const stripRuntime = resolveChartProviderRegistry([
 
 const resolve = <TSource extends IRChartSource>(
   definition: ChartRecipeDefinition<TSource>,
-  encodings: IRJsonObject,
-  properties: IRJsonObject = {},
+  encodings: JsonObject,
+  properties: JsonObject = {},
 ) =>
   definition.resolve({
     data: { reference: 'rows' },
@@ -411,8 +411,8 @@ describe('Point Chart recipe Definitions', () => {
     ],
   ])('uses the maximum final radius for %s', (_name, recipeOptions, radius) => {
     const options = recipeOptions as {
-      properties?: IRJsonObject;
-      encodings?: IRJsonObject;
+      properties?: JsonObject;
+      encodings?: JsonObject;
     };
     const source = ScatterChartSchema.parse({
       namespace: 'chart',

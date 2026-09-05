@@ -1,8 +1,13 @@
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
 
-import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
+import { CompositeBaseSchema } from '@retikz/core';
 import { DataReferenceSchema } from '@retikz/data';
-import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import {
+  JsonObjectSchema,
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { array, boolean, discriminatedUnion, enum as zodEnum, literal, number, record, strictObject, union } from 'zod';
 
 import { CoordinateOperationSchema } from '../coordinate';

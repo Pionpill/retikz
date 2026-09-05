@@ -35,8 +35,6 @@ import {
   TableCellLocation,
   TableCellPayloadKind,
   TableCellPresentation,
-  TableCellRuleSchema,
-  TableCellVisualEncodingSchema,
   TableFormatterRefSchema,
   TablePresentationRefSchema,
   TableVisualChannel,
@@ -96,7 +94,7 @@ const themeTokenSourceOf = (key: AppearanceStyleTokenKey, options: ResolveTableC
 
 /** 把 style border token 物化为固定低优先级 Cell candidate */
 const themeBorderOf = (border: DeepReadonly<IRTableThemeTokenBorder>): IRTableBorder =>
-  TableBorderSchema.parse({ ...structuredClone(border), priority: -100 });
+  TableBorderSchema.parse({ ...border, priority: -100 });
 
 /** 从 resolved style tokens 构造 Cell appearance 与逐叶 winner */
 const styleAppearanceOf = (
@@ -122,7 +120,7 @@ const styleAppearanceOf = (
 
   if (fill !== null) {
     appearance.background = TableCellAppearanceSchema.shape.background.unwrap().parse({
-      fill: structuredClone(fill),
+      fill,
       ...(opacity === null ? {} : { fillOpacity: opacity }),
     });
     trace['/background/fill'] = themeTokenSourceOf(fillKey, options);
@@ -204,7 +202,7 @@ const applyEncodingColor = (plan: MutableValuePlan, encoding: IRTableCellVisualE
   const source = { kind: TableCellPlanSourceKind.Encoding, encodingId: encoding.id } as const;
   if (encoding.channel === TableVisualChannel.BackgroundFill) {
     plan.appearance = TableCellAppearanceSchema.parse({
-      ...structuredClone(plan.appearance),
+      ...plan.appearance,
       background: {
         fill: color,
         ...(plan.appearance.background?.fillOpacity === undefined
@@ -215,8 +213,8 @@ const applyEncodingColor = (plan: MutableValuePlan, encoding: IRTableCellVisualE
     plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/background/fill': source };
   } else {
     plan.appearance = TableCellAppearanceSchema.parse({
-      ...structuredClone(plan.appearance),
-      content: { ...structuredClone(plan.appearance.content ?? {}), color },
+      ...plan.appearance,
+      content: { ...plan.appearance.content, color },
     });
     plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/content/color': source };
   }
@@ -261,10 +259,8 @@ export const resolveTableCellPlans = (
   model: SemanticTableModel,
   options: ResolveTableCellPlansOptions,
 ): ResolvedTablePlan => {
-  const parsedRules = (options.rules ?? []).map(rule => TableCellRuleSchema.parse(structuredClone(rule)));
-  const parsedEncodings = (options.encodings ?? []).map(encoding =>
-    TableCellVisualEncodingSchema.parse(structuredClone(encoding)),
-  );
+  const parsedRules = options.rules ?? [];
+  const parsedEncodings = options.encodings ?? [];
   const registry = resolveCellVisualScaleRegistry(options.visualScaleDefinitions);
   const plans = model.cells.map(cell => initialPlanOf(cell, options));
   const legendDescriptors: Array<TableLegendDescriptor> = [];

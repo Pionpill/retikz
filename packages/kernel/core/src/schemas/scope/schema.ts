@@ -1,10 +1,9 @@
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { array, boolean, enum as zodEnum, lazy, literal, number, object, strictObject, union } from 'zod';
 
 import { AnimationTrackSchema } from '../animation';
 import { ClipSchema } from '../clip';
 import { FontSchema } from '../font';
-import { JsonObjectSchema } from '../json';
 import { NodeSchema } from '../node';
 import { ArrowDetailSchema, PathFillSchema, PathGeometrySchema, PathStrokeSchema } from '../path';
 import { NodeTargetSchema, PositionSchema } from '../position';

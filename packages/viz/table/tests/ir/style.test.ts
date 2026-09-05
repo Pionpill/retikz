@@ -43,17 +43,20 @@ describe('Table theme token schema', () => {
     );
   });
 
-  it('reports every unknown token at its own stable key path', () => {
+  it('rejects unknown tokens through the strict owner schema', () => {
     const invalid = { zUnknown: true, aUnknown: true };
     for (const schema of [TableThemeTokenOverridesSchema, TableThemeTokenMapSchema]) {
       const result = schema.safeParse(invalid);
       expect(result.success).toBe(false);
       if (result.success) continue;
-      expect(result.error.issues.slice(0, 2).map(issue => issue.path)).toEqual([['aUnknown'], ['zUnknown']]);
-      expect(result.error.issues.slice(0, 2).map(issue => issue.message)).toEqual([
-        'Unknown table theme token "aUnknown"',
-        'Unknown table theme token "zUnknown"',
-      ]);
+      const unknownIssue = result.error.issues.find(issue => issue.code === 'unrecognized_keys');
+      expect(unknownIssue).toEqual(
+        expect.objectContaining({
+          code: 'unrecognized_keys',
+          path: [],
+          keys: expect.arrayContaining(['aUnknown', 'zUnknown']),
+        }),
+      );
     }
   });
 
@@ -62,9 +65,8 @@ describe('Table theme token schema', () => {
       'cell.content.color': '#334155',
     });
     expect(() => TableThemeStyleTokenOverridesSchema.parse({ unknown: true })).toThrow(/unrecognized key/i);
-    expect(() => TableThemeStyleTokenOverridesSchema.parse({ 'cell.content.color': undefined })).toThrow(
-      /omit unset values/i,
-    );
+    const explicitUndefined = TableThemeStyleTokenOverridesSchema.parse({ 'cell.content.color': undefined });
+    expect(explicitUndefined).toHaveProperty('cell.content.color', undefined);
     expect(() => TableThemeStyleTokenOverridesSchema.parse({ 'data.categorical': ['#ff0000'] })).toThrow(
       /data\.categorical/i,
     );

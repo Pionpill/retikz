@@ -1,5 +1,6 @@
-import type { IRChild, IRJsonObject, IRNode, IRPath, IRScope } from '@retikz/core';
+import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { JsonObject, JsonValue } from '@retikz/foundation';
 
 import { readSourceIndex, readSourceIndices, resolveFieldPath } from '@retikz/data';
 
@@ -44,7 +45,7 @@ const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
 const isNode = (child: IRChild): child is IRNode => child.type === 'node';
 const isPath = (child: IRChild): child is IRPath => child.type === 'path';
 
-const mergeMeta = (parent: IRJsonObject, own: IRJsonObject | undefined): IRJsonObject => ({
+const mergeMeta = (parent: JsonObject, own: JsonObject | undefined): JsonObject => ({
   ...parent,
   ...(own ?? {}),
 });
@@ -76,7 +77,7 @@ const renderDatumPositionOf = (node: IRNode, offset: [number, number]): [number,
 
 const collectRenderDatumEntries = (
   child: IRChild,
-  parentMeta: IRJsonObject = {},
+  parentMeta: JsonObject = {},
   offset: [number, number] = [0, 0],
 ): Array<RenderDatumEntry> => {
   if (isNode(child)) {
@@ -105,7 +106,7 @@ const collectRenderDatumEntries = (
 /** 从已下沉 Path endpoint 收集带 series / facet context 的结构锚点 */
 const collectRenderSeriesEntries = (
   child: IRChild,
-  parentMeta: IRJsonObject = {},
+  parentMeta: JsonObject = {},
   offset: [number, number] = [0, 0],
 ): Array<RenderSeriesEntry> => {
   if (isPath(child)) {
@@ -131,10 +132,13 @@ const collectRenderSeriesEntries = (
 const hasContextOptions = (opts: PlotLocatorOptions | undefined): boolean =>
   opts?.coordinateView !== undefined || opts?.facet !== undefined || opts?.track !== undefined;
 
-const facetMatches = (meta: IRJsonObject, facet: PlotFacetLocatorOptions | undefined): boolean => {
+const isJsonObject = (value: JsonValue): value is { [key: string]: JsonValue } =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const facetMatches = (meta: JsonObject, facet: PlotFacetLocatorOptions | undefined): boolean => {
   if (facet === undefined) return true;
   const found = meta.facet;
-  if (found === null || typeof found !== 'object' || Array.isArray(found)) return false;
+  if (!isJsonObject(found)) return false;
   const facetMeta = found;
   if (facetMeta.id !== facet.id) return false;
   const valueMatches = (foundValue: unknown, expected: PlotFacetLocatorValue): boolean => {
@@ -150,12 +154,12 @@ const facetMatches = (meta: IRJsonObject, facet: PlotFacetLocatorOptions | undef
   return true;
 };
 
-const trackMatches = (meta: IRJsonObject, track: PlotLocatorOptions['track']): boolean => {
+const trackMatches = (meta: JsonObject, track: PlotLocatorOptions['track']): boolean => {
   if (track === undefined) return true;
   return meta.track === track;
 };
 
-const contextMatches = (meta: IRJsonObject, opts: PlotLocatorOptions | undefined): boolean => {
+const contextMatches = (meta: JsonObject, opts: PlotLocatorOptions | undefined): boolean => {
   if (opts?.coordinateView !== undefined && meta.coordinateView !== opts.coordinateView) return false;
   if (!trackMatches(meta, opts?.track)) return false;
   return facetMatches(meta, opts?.facet);
@@ -311,7 +315,7 @@ export const buildPlotLocatorFromDataArtifact = (
       count++;
     }
     if (count === 0) return null;
-    const meta: IRJsonObject = {
+    const meta: JsonObject = {
       source: 'plot',
       dataReference: spec.data.reference,
       mark: mark.type,

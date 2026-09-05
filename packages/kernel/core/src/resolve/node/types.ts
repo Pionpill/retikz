@@ -1,10 +1,10 @@
+import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets } from '@retikz/math';
 
 import type { BoundaryDefinition, PatternDefinition, ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type {
   IRBoundary,
-  IRJsonObject,
   IRNode,
   IRNodeLabel,
   IRNodeLabelBoundaryPosition,
@@ -117,7 +117,7 @@ export type ShapeResolution = {
   /** shape provider 定义 */
   definition: ShapeDefinition;
   /** 已校验并按节点缩放处理的实例参数 */
-  params: IRJsonObject;
+  params: JsonObject;
 };
 
 /** 已绑定 definition 与参数，但仍可按视觉 rect 解析几何的连接面引用 */
@@ -127,7 +127,7 @@ export type BoundaryReferenceResolution = {
   /** boundary 或视觉 shape provider 定义 */
   definition: BoundaryDefinition | ShapeDefinition;
   /** 已校验的实例参数 */
-  params: IRJsonObject;
+  params: JsonObject;
   /** 是否引用视觉 shape */
   isShape: boolean;
 };
@@ -147,7 +147,7 @@ export type NodeReferenceView = Readonly<{
   /** 节点视觉 shape definition */
   shapeDef: ShapeDefinition;
   /** 已校验的 shape 参数 */
-  shapeParams: IRJsonObject;
+  shapeParams: JsonObject;
   /** 节点视觉 rect */
   rect: Rect;
   /** 节点外边距 */
@@ -163,7 +163,7 @@ export type NodeReferenceView = Readonly<{
 /** 将边界引用绑定到 shape 上下文的解析回调 */
 export type BoundaryReferenceResolver = (
   boundary: IRBoundary | undefined,
-  context: Readonly<{ visualDef: ShapeDefinition; visualParams: IRJsonObject; irPath?: string }>,
+  context: Readonly<{ visualDef: ShapeDefinition; visualParams: JsonObject; irPath?: string }>,
 ) => BoundaryReferenceResolution;
 
 /** 已解析的 Node 输入、shape 与默认连接面 */

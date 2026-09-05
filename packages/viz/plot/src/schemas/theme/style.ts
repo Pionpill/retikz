@@ -1,5 +1,3 @@
-import type { core as ZodCore } from 'zod';
-
 import {
   ContextualColorSchema,
   CssColorSchema,
@@ -108,35 +106,14 @@ export const PlotAxisThemeTokenFieldShape = {
   [PlotThemeToken.AxisGridIncludeDomain]: PlotThemeTokenFieldShape[PlotThemeToken.AxisGridIncludeDomain],
 } as const;
 
-const rejectExplicitUndefined = (
-  overrides: Record<string, unknown>,
-  tokens: ReadonlyArray<string>,
-  context: ZodCore.$RefinementCtx<Record<string, unknown>>,
-): void => {
-  for (const token of tokens) {
-    if (Object.hasOwn(overrides, token) && overrides[token] === undefined) {
-      context.addIssue({
-        code: 'custom',
-        path: [token],
-        message: 'Plot theme token overrides must omit unset values instead of using undefined',
-        input: overrides,
-      });
-    }
-  }
-};
-
 /** 用户可稀疏覆盖的严格 Plot token map */
 export const PlotThemeTokenOverridesSchema = strictObject(PlotThemeTokenFieldShape)
   .partial()
-  .superRefine((overrides, context) => rejectExplicitUndefined(overrides, Object.values(PlotThemeToken), context))
   .describe('Sparse strict overrides for canonical Plot theme tokens');
 
 /** Axis scoped rule 可稀疏覆盖的严格 token map */
 export const PlotAxisThemeTokenOverridesSchema = strictObject(PlotAxisThemeTokenFieldShape)
   .partial()
-  .superRefine((overrides, context) =>
-    rejectExplicitUndefined(overrides, Object.keys(PlotAxisThemeTokenFieldShape), context),
-  )
   .describe('Sparse strict Axis token overrides for one scoped theme rule');
 
 /** preset 与用户覆盖解析后的完整 Plot token map */

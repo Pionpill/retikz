@@ -1,5 +1,5 @@
-import type { IRJsonObject } from '@retikz/core';
 import type { ExternalRow, IRDataModel, IRDataReference } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import type {
   IRPlot,
   IRPlotCoordinateOperation,
@@ -61,7 +61,7 @@ export type InputPlotCoordinate =
        */
       endAngle?: number;
     }
-  | ({ type: string } & IRJsonObject)
+  | ({ type: string } & JsonObject)
   | IRPlotCoordinateOperation;
 
 /** 2D 极坐标入口配置 */
@@ -284,7 +284,7 @@ export type PlotAuthoringDeclaration = {
   /** 稳定组件 kind */
   kind: PlotDeclarationKind;
   /** 已移除 React children 与 runtime function 的 plain props */
-  props: IRJsonObject;
+  props: JsonObject;
   /** 组件在原始 ReactNode tree 中的结构化路径 */
   path: PlotDeclarationPath;
   /** PlotFacet、PlotScaffold 或 PlotTrack 提供的声明上下文 */

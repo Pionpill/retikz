@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
 
 import { PlotGuide, PositionScaleContinuity, readCoordinateScaleNames } from '@retikz/plot';
@@ -26,7 +26,7 @@ import {
 import { resolveStripPointMark, StripMarkDefinition } from './mark';
 import { StripChartSchema, StripChartThemeOverridesSchema, StripChartThemeResolutionSchema } from './schema';
 
-const themeFallback: IRJsonObject = {
+const themeFallback: JsonObject = {
   axisEnabled: true,
   axisGridEnabled: true,
   legendEnabled: true,

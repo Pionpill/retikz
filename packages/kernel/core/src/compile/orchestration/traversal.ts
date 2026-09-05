@@ -1,3 +1,4 @@
+import type { JsonValue } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
 import { boundsToRect } from '@retikz/math';
@@ -38,7 +39,6 @@ import type {
   IRStep,
   IRTarget,
   IRTransform,
-  JsonValue,
 } from '../../schemas';
 import type { NodeLayout } from '../node';
 import type { CompositeCompileArtifact } from '../types';

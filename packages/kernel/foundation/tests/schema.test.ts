@@ -1,8 +1,10 @@
-import type { AssertEqual, OpenString, ValueOf } from '@retikz/foundation';
+import type { AssertEqual, JsonObject, JsonValue, OpenString, ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
 import {
   createOpenStringSchema,
+  JsonObjectSchema,
+  JsonValueSchema,
   NonBlankStringSchema,
   NonNegativeIntegerSchema,
   NonNegativeNumberSchema,
@@ -23,6 +25,62 @@ const testRoleTypeIsOpenString: AssertEqual<
   ZodInfer<typeof TestRoleSchema>,
   OpenString<ValueOf<typeof TestRole>>
 > = true;
+const jsonValueTypeContract: AssertEqual<ZodInfer<typeof JsonValueSchema>, JsonValue> = true;
+const jsonObjectTypeContract: AssertEqual<ZodInfer<typeof JsonObjectSchema>, JsonObject> = true;
+
+describe('JSON schemas', () => {
+  it('accepts recursive JSON values and objects', () => {
+    const object: JsonObject = {
+      scalar: 'value',
+      list: [1, true, null, { nested: ['deep'] }],
+    };
+
+    expect(jsonValueTypeContract).toBe(true);
+    expect(jsonObjectTypeContract).toBe(true);
+    expect(JsonValueSchema.parse(object)).toEqual(object);
+    expect(JsonObjectSchema.parse(object)).toEqual(object);
+    expect(JsonObjectSchema.parse({})).toEqual({});
+  });
+
+  it('accepts readonly const JSON at the unknown parse boundary', () => {
+    const source = { list: [1, { nested: ['value'] }] } as const;
+
+    expect(JsonObjectSchema.parse(source)).toEqual(source);
+  });
+
+  it.each([
+    { invalid: undefined },
+    { invalid: () => 1 },
+    { invalid: Symbol('value') },
+    { invalid: 1n },
+    { invalid: Number.NaN },
+    { invalid: Number.POSITIVE_INFINITY },
+    { nested: [0, { invalid: undefined }] },
+    { invalid: new Date(0) },
+    { invalid: new Map([['key', 'value']]) },
+  ])('rejects non-JSON input %#', value => {
+    expect(JsonObjectSchema.safeParse(value).success).toBe(false);
+  });
+
+  it('round-trips persisted JSON without changing its value', () => {
+    const original: JsonObject = {
+      coefficient: 2.5,
+      labels: ['p', 'q'],
+      nested: { samples: 8, values: [1, 2, 3], enabled: false, empty: null },
+    };
+
+    expect(JsonObjectSchema.parse(JSON.parse(JSON.stringify(original)))).toEqual(original);
+  });
+
+  it('remains convertible to JSON Schema', () => {
+    expect(toJSONSchema(JsonValueSchema)).toMatchObject({
+      $ref: '#/$defs/__schema0',
+      $defs: {
+        __schema0: { anyOf: expect.any(Array) },
+      },
+    });
+  });
+});
 
 describe('NonBlankStringSchema', () => {
   it('preserves non-blank input verbatim', () => {

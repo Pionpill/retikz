@@ -1,6 +1,6 @@
+import type { JsonObject } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
-import type { IRJsonObject } from '../../schemas';
 import type { CompileOccurrenceLocator } from '../occurrence';
 
 /** Composite 在自身 allocation coordinate 中声明的局部空间区域 */
@@ -14,7 +14,7 @@ export type SpatialHandleDeclaration = Readonly<{
   /** 无顺序匹配语义、但保留 authored order 的唯一非空标签 */
   tags?: ReadonlyArray<string>;
   /** owner 解释的 JSON-safe 领域数据 */
-  payload?: Readonly<IRJsonObject>;
+  payload?: Readonly<JsonObject>;
 }>;
 
 /** qualified handle path 中的单层 composite owner */
@@ -45,7 +45,7 @@ export type QualifiedSpatialHandle = Readonly<{
   /** 冻结的 authored tags */
   tags: ReadonlyArray<string>;
   /** owner-defined JSON-safe payload */
-  payload?: Readonly<IRJsonObject>;
+  payload?: Readonly<JsonObject>;
   /** replay / remap 后的最终 declaration occurrence */
   finalOccurrence: CompileOccurrenceLocator;
   /** declaration 首次产生时的 occurrence */

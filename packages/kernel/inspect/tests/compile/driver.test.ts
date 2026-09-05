@@ -3,7 +3,7 @@ import type { IRScene } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-import { literal, strictObject, string } from 'zod';
+import { literal, strictObject, string, ZodError } from 'zod';
 
 import {
   compileInspectionToScene,
@@ -261,7 +261,7 @@ describe('Inspection compile driver', () => {
     }
   });
 
-  it('rejects non-JSON callback data before fragment compilation', () => {
+  it('reports invalid callback data from the Core Child owner schema', () => {
     const registry = createInspectorRegistry([
       defineInspector({
         ...key,
@@ -278,8 +278,14 @@ describe('Inspection compile driver', () => {
           }) as unknown as { type: 'node'; position: [number, number]; text: string },
       }),
     ]);
-    expect(() =>
-      compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } }),
-    ).toThrow(/JSON-safe/);
+    try {
+      compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
+      throw new Error('expected compile to fail');
+    } catch (error) {
+      expect(error).toBeInstanceOf(RetikzInspectError);
+      expect((error as RetikzInspectError).code).toBe(RetikzInspectErrorCode.CompileFailed);
+      expect((error as RetikzInspectError).cause).toBeInstanceOf(ZodError);
+      expect((error as RetikzInspectError).details.origin).toMatchObject({ stage: 'output', outputIndex: 0 });
+    }
   });
 });

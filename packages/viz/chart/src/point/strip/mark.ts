@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
 
 import { PlotPositionAdjustment, PointMarkSchema } from '@retikz/plot';
@@ -12,8 +12,8 @@ import { StripChartMarkSchema } from './schema';
 
 /** 把 Strip jitter shorthand 下沉到 Plot Point placement */
 export const resolveStripPointMark = (
-  encodings: IRJsonObject,
-  properties: IRJsonObject & Readonly<{ jitter?: IRStripChartJitter }>,
+  encodings: JsonObject,
+  properties: JsonObject & Readonly<{ jitter?: IRStripChartJitter }>,
 ): IRPlotMarkOperation => {
   const point = resolvePointMark(encodings, properties);
   const jitter = properties.jitter;

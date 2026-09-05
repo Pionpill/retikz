@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotScaleOperation } from '@retikz/plot';
 
 import type { ChartEncodingResolveContext, ChartResolvedFieldMapping } from '../../contract/recipe';
@@ -7,21 +7,33 @@ import type { ChartEncodingFieldConsumer, ResolvedScaleSource } from './types';
 
 import { invalidEncoding, mappingPathOf, mappingScaleOf, objectValueOf } from './shared';
 
+type ResolvedScaleOperation = Readonly<{
+  operation: IRPlotScaleOperation;
+  source: ResolvedScaleSource;
+}>;
+
 const resolveScaleSource = (
   context: ChartEncodingResolveContext,
   operation: IRPlotScaleOperation,
   path: ReadonlyArray<string | number>,
-): ResolvedScaleSource => {
+): ResolvedScaleOperation => {
   const definition = context.runtime.scales.get(operation.type);
   if (definition === undefined) {
     throw invalidEncoding(`Chart scale type "${operation.type}" is not registered`, path);
   }
+  let parsedOperation: IRPlotScaleOperation;
   try {
-    definition.schema.parse(operation);
+    parsedOperation = definition.schema.parse(operation) as IRPlotScaleOperation;
   } catch (error) {
     throw invalidEncoding(`Chart scale "${operation.name}" is invalid`, path, error);
   }
-  return { family: definition.family, type: operation.type };
+  if (parsedOperation.type !== operation.type || parsedOperation.name !== operation.name) {
+    throw invalidEncoding(`Chart scale "${operation.name}" Definition schema must preserve type and name`, path);
+  }
+  return {
+    operation: parsedOperation,
+    source: { family: definition.family, type: parsedOperation.type },
+  };
 };
 
 const assertScaleCompatible = (
@@ -40,6 +52,7 @@ const assertScaleCompatible = (
 /** exact encoding scale declaration、reference 与 recipe fallback 的连接结果 */
 export type ChartEncodingScaleResolution = Readonly<{
   scales: ReadonlyArray<IRPlotScaleOperation>;
+  extensionScales: ReadonlyArray<IRPlotScaleOperation>;
   positionScales: Readonly<Record<string, string>>;
   removedRecipeScales: ReadonlySet<string>;
 }>;
@@ -51,10 +64,10 @@ export const resolveChartEncodingScales = <
 >(
   context: ChartEncodingResolveContext<TSource>,
   consumers: ReadonlyArray<ChartEncodingFieldConsumer<TEncodingSlot>>,
-  directEncodings: IRJsonObject,
+  directEncodings: JsonObject,
 ): ChartEncodingScaleResolution => {
-  const extensionScales = context.source.plotExtension?.scales ?? [];
-  const extensionScaleByName = new Map<string, IRPlotScaleOperation>();
+  const extensionScales = [...(context.source.plotExtension?.scales ?? [])];
+  const extensionScaleByName = new Map<string, Readonly<{ index: number; operation: IRPlotScaleOperation }>>();
   for (const [index, operation] of extensionScales.entries()) {
     if (extensionScaleByName.has(operation.name)) {
       throw invalidEncoding(`Plot scale "${operation.name}" is declared more than once`, [
@@ -64,7 +77,7 @@ export const resolveChartEncodingScales = <
         'name',
       ]);
     }
-    extensionScaleByName.set(operation.name, operation);
+    extensionScaleByName.set(operation.name, { index, operation });
   }
 
   const fallbackByName = new Map<string, Readonly<{ slot: string; source: ResolvedScaleSource }>>();
@@ -79,16 +92,18 @@ export const resolveChartEncodingScales = <
     }
   }
 
-  const encodingScaleByName = new Map<
-    string,
-    Readonly<{ slot: string; operation: IRPlotScaleOperation; source: ResolvedScaleSource }>
-  >();
+  const encodingScaleByName = new Map<string, Readonly<{ slot: string } & ResolvedScaleOperation>>();
+  const encodingScaleBySlot = new Map<string, ResolvedScaleOperation>();
   for (const consumer of consumers) {
     const value = context.encodings[consumer.slot];
     const scale = mappingScaleOf(value);
     const operation = scale === undefined ? undefined : objectValueOf(scale.operation);
     if (operation === undefined) continue;
-    const scaleOperation = operation as IRPlotScaleOperation;
+    const resolved = resolveScaleSource(context, operation as IRPlotScaleOperation, [
+      ...mappingPathOf(consumer.slot),
+      'scale',
+    ]);
+    const scaleOperation = resolved.operation;
     const path = [...mappingPathOf(consumer.slot), 'scale'];
     const existing = encodingScaleByName.get(scaleOperation.name);
     if (existing !== undefined) {
@@ -104,9 +119,9 @@ export const resolveChartEncodingScales = <
     if (fallback !== undefined && fallback.slot !== consumer.slot) {
       throw invalidEncoding(`Chart scale "${scaleOperation.name}" conflicts with another recipe fallback`, path);
     }
-    const source = resolveScaleSource(context, scaleOperation, path);
-    assertScaleCompatible(consumer, source, path);
-    encodingScaleByName.set(scaleOperation.name, { slot: consumer.slot, operation: scaleOperation, source });
+    assertScaleCompatible(consumer, resolved.source, path);
+    encodingScaleByName.set(scaleOperation.name, { slot: consumer.slot, ...resolved });
+    encodingScaleBySlot.set(consumer.slot, resolved);
   }
 
   const positionScales: Record<string, string> = {};
@@ -119,17 +134,17 @@ export const resolveChartEncodingScales = <
     if (scale === undefined) continue;
     const path = [...mappingPathOf(consumer.slot), 'scale'];
     let name: string;
-    const declaresOperation = Object.hasOwn(scale, 'operation');
-    if (declaresOperation) {
-      const operation = objectValueOf(scale.operation) as IRPlotScaleOperation;
-      name = operation.name;
-      encodingScales.push(operation);
+    const declaredScale = encodingScaleBySlot.get(consumer.slot);
+    const declaresOperation = declaredScale !== undefined;
+    if (declaredScale !== undefined) {
+      name = declaredScale.operation.name;
+      encodingScales.push(declaredScale.operation);
     } else {
       const reference = scale.reference;
       if (typeof reference !== 'string') throw invalidEncoding('Chart scale reference must be non-empty', path);
       name = reference;
       const encodingSource = encodingScaleByName.get(reference)?.source;
-      const extensionOperation = extensionScaleByName.get(reference);
+      const extensionEntry = extensionScaleByName.get(reference);
       const fallback = fallbackByName.get(reference);
       if (fallback !== undefined && fallback.slot !== consumer.slot) {
         throw invalidEncoding(
@@ -137,10 +152,13 @@ export const resolveChartEncodingScales = <
           path,
         );
       }
-      const source =
-        encodingSource ??
-        (extensionOperation === undefined ? undefined : resolveScaleSource(context, extensionOperation, path)) ??
-        fallback?.source;
+      let resolvedExtension: ResolvedScaleOperation | undefined;
+      if (extensionEntry !== undefined) {
+        resolvedExtension = resolveScaleSource(context, extensionEntry.operation, path);
+        extensionScales[extensionEntry.index] = resolvedExtension.operation;
+        name = resolvedExtension.operation.name;
+      }
+      const source = encodingSource ?? resolvedExtension?.source ?? fallback?.source;
       if (source === undefined) throw invalidEncoding(`Chart scale reference "${reference}" does not exist`, path);
       assertScaleCompatible(consumer, source, path);
     }
@@ -157,5 +175,5 @@ export const resolveChartEncodingScales = <
     }
   }
 
-  return { scales: encodingScales, positionScales, removedRecipeScales };
+  return { scales: encodingScales, extensionScales, positionScales, removedRecipeScales };
 };

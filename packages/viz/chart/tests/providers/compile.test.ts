@@ -1,5 +1,6 @@
-import type { CoreProviderContribution, IRJsonObject, IRScene } from '@retikz/core';
+import type { CoreProviderContribution, IRScene } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import type { LowerPlotsOptions } from '@retikz/plot';
 
 import {
@@ -31,7 +32,7 @@ import { createScatterChartProviderContribution, ScatterChartSchema } from '../.
 import { createStripChartProviderContribution, StripChartSchema } from '../../src/point/strip';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
-  encodings: context.encodings as IRJsonObject,
+  encodings: context.encodings as JsonObject,
   transform: [],
   scales: [],
   positionScales: {},

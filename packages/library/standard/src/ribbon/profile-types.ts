@@ -1,8 +1,8 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 /** ribbon width profile 采样上下文 */
-export type RibbonWidthProfileContext<TParams extends IRJsonObject = IRJsonObject> = {
+export type RibbonWidthProfileContext<TParams extends JsonObject = JsonObject> = {
   /** 沿中心线的归一化位置，范围 [0, 1] */
   offset: number;
   /** 中心线近似总长度（user units） */
@@ -12,7 +12,7 @@ export type RibbonWidthProfileContext<TParams extends IRJsonObject = IRJsonObjec
 };
 
 /** ribbon width profile definition 的作者侧输入形态 */
-export type RibbonWidthProfileDefinitionInput<TParams extends IRJsonObject = IRJsonObject> = {
+export type RibbonWidthProfileDefinitionInput<TParams extends JsonObject = JsonObject> = {
   /** 注册表 key，由 IR `width: { kind: "profile", name }` 引用 */
   name: string;
   /**
@@ -32,7 +32,7 @@ export type RibbonWidthProfileDefinition = {
    * 可选的 JSON-safe params schema；compile 在采样前解析 `width.params`
    * @default 不校验 params
    */
-  paramsSchema?: ZodType<IRJsonObject>;
+  paramsSchema?: ZodType<JsonObject>;
   /** 返回指定归一化位置处的非负 ribbon 宽度（user units） */
-  widthAt: (ctx: RibbonWidthProfileContext<IRJsonObject>) => number;
+  widthAt: (ctx: RibbonWidthProfileContext<JsonObject>) => number;
 };

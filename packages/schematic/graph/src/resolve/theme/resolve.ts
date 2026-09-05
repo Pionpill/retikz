@@ -1,8 +1,8 @@
-import type { IRJsonObject, JsonValue, ResolvedTheme } from '@retikz/core';
+import type { ResolvedTheme } from '@retikz/core';
+import type { JsonObject, JsonValue } from '@retikz/foundation';
 
-import { assertPlainDataContainers } from '@retikz/foundation';
 import { SurfaceInputSchema } from '@retikz/standard';
-import { array, custom, strictObject } from 'zod';
+import { array, strictObject } from 'zod';
 
 import type {
   GraphRelationThemeStyleTokens,
@@ -56,76 +56,6 @@ const GraphThemeStyleOverridesSchema = strictObject({
     }),
   }).optional(),
 });
-
-const graphThemeStyleKeys = new Set(['entity', 'relation', 'group', 'block']);
-const graphThemeStyleLayerKeys = new Set(['tokens', 'rules']);
-const graphEntityThemeTokenKeys = new Set<string>(Object.keys(GraphEntityAppearanceTokenOverridesSchema.shape));
-const graphRelationThemeTokenKeys = new Set<string>(Object.keys(GraphRelationAppearanceTokenOverridesSchema.shape));
-const graphSurfaceThemeTokenKeys = new Set(['background', 'border', 'cornerRadius']);
-
-const GraphThemeStylePlainDataSchema = custom<unknown>(
-  value => {
-    try {
-      assertPlainDataContainers(value, 'Graph theme style definition output');
-      return true;
-    } catch {
-      return false;
-    }
-  },
-  { error: 'Graph theme style definition must return plain data containers.' },
-);
-
-/** 判断 runtime provider 输出是否为可枚举的普通对象 */
-const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
-  const prototype = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
-};
-
-/** 只把 runtime style definition 中已知且显式为 undefined 的字段规范化为省略 */
-const omitKnownUndefinedProperties = (value: unknown, knownKeys: ReadonlySet<string>): unknown => {
-  if (!isPlainRecord(value)) return value;
-  return Object.fromEntries(Object.entries(value).filter(([key, item]) => item !== undefined || !knownKeys.has(key)));
-};
-
-const normalizeGraphThemeStyleLayer = (value: unknown, tokenKeys: ReadonlySet<string>): unknown => {
-  const normalized = omitKnownUndefinedProperties(value, graphThemeStyleLayerKeys);
-  if (!isPlainRecord(normalized) || !Object.hasOwn(normalized, 'tokens')) return normalized;
-  const rawTokens = normalized.tokens;
-  const tokens = omitKnownUndefinedProperties(rawTokens, tokenKeys);
-  return isPlainRecord(rawTokens) &&
-    Object.keys(rawTokens).length > 0 &&
-    isPlainRecord(tokens) &&
-    Object.keys(tokens).length === 0
-    ? Object.fromEntries(Object.entries(normalized).filter(([key]) => key !== 'tokens'))
-    : { ...normalized, tokens };
-};
-
-const normalizeGraphThemeStyleOverrides = (overrides: unknown): unknown => {
-  const normalized = omitKnownUndefinedProperties(overrides, graphThemeStyleKeys);
-  if (!isPlainRecord(normalized)) return normalized;
-  const normalizeSurfaceLayer = (key: 'group' | 'block'): unknown => {
-    const rawLayer = normalized[key];
-    const layer = normalizeGraphThemeStyleLayer(rawLayer, graphSurfaceThemeTokenKeys);
-    if (!isPlainRecord(rawLayer) || !isPlainRecord(rawLayer.tokens)) return layer;
-    return Object.keys(rawLayer.tokens).length > 0 && isPlainRecord(layer) && Object.keys(layer).length === 0
-      ? undefined
-      : layer;
-  };
-  const group = Object.hasOwn(normalized, 'group') ? normalizeSurfaceLayer('group') : undefined;
-  const block = Object.hasOwn(normalized, 'block') ? normalizeSurfaceLayer('block') : undefined;
-  return {
-    ...Object.fromEntries(Object.entries(normalized).filter(([key]) => key !== 'group' && key !== 'block')),
-    ...(Object.hasOwn(normalized, 'entity')
-      ? { entity: normalizeGraphThemeStyleLayer(normalized.entity, graphEntityThemeTokenKeys) }
-      : {}),
-    ...(Object.hasOwn(normalized, 'relation')
-      ? { relation: normalizeGraphThemeStyleLayer(normalized.relation, graphRelationThemeTokenKeys) }
-      : {}),
-    ...(group === undefined ? {} : { group }),
-    ...(block === undefined ? {} : { block }),
-  };
-};
 
 const mergeRules = <TRule>(
   defaults: ReadonlyArray<TRule> | undefined,
@@ -189,8 +119,8 @@ const jsonEqual = (left: JsonValue, right: JsonValue): boolean => {
     );
   }
   if (typeof left === 'object' && left !== null && typeof right === 'object' && right !== null) {
-    const leftObject = left as IRJsonObject;
-    const rightObject = right as IRJsonObject;
+    const leftObject = left as JsonObject;
+    const rightObject = right as JsonObject;
     const keys = Object.keys(leftObject);
     return (
       keys.length === Object.keys(rightObject).length && keys.every(key => jsonEqual(leftObject[key], rightObject[key]))
@@ -199,19 +129,15 @@ const jsonEqual = (left: JsonValue, right: JsonValue): boolean => {
   return left === right;
 };
 
+const isJsonObject = (value: JsonValue): value is JsonObject =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
 /** 判断 selector params 是否为 Canonical params 的递归子集 */
-export const matchesGraphPredicateParams = (selector: IRJsonObject, params: IRJsonObject): boolean =>
+export const matchesGraphPredicateParams = (selector: JsonObject, params: JsonObject): boolean =>
   Object.entries(selector).every(([key, expected]) => {
     if (!Object.hasOwn(params, key)) return false;
     const actual = params[key];
-    if (
-      typeof expected === 'object' &&
-      expected !== null &&
-      !Array.isArray(expected) &&
-      typeof actual === 'object' &&
-      actual !== null &&
-      !Array.isArray(actual)
-    ) {
+    if (isJsonObject(expected) && isJsonObject(actual)) {
       return matchesGraphPredicateParams(expected, actual);
     }
     return jsonEqual(expected, actual);
@@ -224,7 +150,7 @@ const selectorIncludes = (selector: string | ReadonlyArray<string> | undefined, 
 type CanonicalSelectorSubject = Readonly<{
   role: string;
   kind?: string;
-  predicate?: Readonly<{ name: string; params: IRJsonObject }>;
+  predicate?: Readonly<{ name: string; params: JsonObject }>;
   status?: string;
   direction?: string;
 }>;
@@ -308,8 +234,7 @@ export const resolveGraphTheme = (
   }
   try {
     const rawOverrides = definition.resolve(theme);
-    GraphThemeStylePlainDataSchema.parse(rawOverrides);
-    const overrides = GraphThemeStyleOverridesSchema.parse(normalizeGraphThemeStyleOverrides(rawOverrides));
+    const overrides = GraphThemeStyleOverridesSchema.parse(rawOverrides);
     return mergeGraphThemeStyle(defaults, overrides);
   } catch (cause) {
     throw new RetikzGraphError({

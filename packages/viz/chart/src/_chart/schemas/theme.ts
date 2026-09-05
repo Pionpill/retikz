@@ -49,17 +49,6 @@ export const ChartThemeTokenFieldShape = {
 /** Chart shell 的稀疏 token 覆盖 */
 export const ChartThemeOverridesSchema = strictObject(ChartThemeTokenFieldShape)
   .partial()
-  .superRefine((overrides, context) => {
-    for (const token of Object.values(ChartThemeToken)) {
-      if (Object.hasOwn(overrides, token) && overrides[token] === undefined) {
-        context.addIssue({
-          code: 'custom',
-          path: [token],
-          message: 'Chart theme token overrides must omit unset values instead of using undefined',
-        });
-      }
-    }
-  })
   .describe('Sparse Chart shell token overrides');
 
 /** Chart shell 的完整 token resolution */

@@ -1,4 +1,5 @@
-import type { IRJsonObject, IRNode } from '@retikz/core';
+import type { IRNode } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 /** Entity role 的语义与完整基础结构定义 */
@@ -30,7 +31,7 @@ export type EntityKindDefinition = Readonly<{
 }>;
 
 /** Entity predicate 作者侧的类型安全定义 */
-export type EntityPredicateDefinitionInput<TSchema extends ZodType<IRJsonObject>> = Readonly<{
+export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> = Readonly<{
   /** 全局唯一的 predicate definition name */
   name: string;
   /** predicate 所属的 Entity role */
@@ -44,4 +45,4 @@ export type EntityPredicateDefinitionInput<TSchema extends ZodType<IRJsonObject>
 }>;
 
 /** Entity predicate registry 保存的参数擦除定义 */
-export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<IRJsonObject>>;
+export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<JsonObject>>;

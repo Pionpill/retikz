@@ -1,5 +1,5 @@
 import { CssColorSchema, FontSchema, OpacitySchema, PaintValueSchema } from '@retikz/core';
-import { array, record, strictObject, string, tuple, unknown } from 'zod';
+import { array, strictObject, tuple } from 'zod';
 
 import { TableLineBorderSchema } from '../border';
 import { TableThemeToken } from './constants';
@@ -42,49 +42,18 @@ export const TableThemeTokenKeySchema = TableThemeTokenObjectSchema.keyof().desc
   'Closed Table theme token key vocabulary.',
 );
 
-const knownTokenKeys = new Set<string>(TableThemeTokenKeySchema.options);
-const themeTokenKeyPreflight = record(string(), unknown()).superRefine((tokens, context) => {
-  Object.keys(tokens)
-    .filter(key => !knownTokenKeys.has(key))
-    .sort()
-    .forEach(key => {
-      context.addIssue({ code: 'custom', path: [key], message: `Unknown table theme token "${key}"` });
-    });
-});
+export const TableThemeTokenMapSchema = TableThemeTokenObjectSchema.describe(
+  'Complete required Table theme token map.',
+);
 
-export const TableThemeTokenMapSchema = themeTokenKeyPreflight
-  .pipe(TableThemeTokenObjectSchema)
-  .describe('Complete required Table theme token map.');
-
-export const TableThemeTokenOverridesSchema = themeTokenKeyPreflight
-  .pipe(TableThemeTokenObjectSchema.partial())
-  .superRefine((overrides, context) => {
-    for (const key of TableThemeTokenKeySchema.options) {
-      if (Object.hasOwn(overrides, key) && overrides[key] === undefined) {
-        context.addIssue({
-          code: 'custom',
-          path: [key],
-          message: 'Table theme token overrides must omit unset values instead of using undefined',
-        });
-      }
-    }
-  })
-  .describe('Partial strict Table theme token overlay.');
+export const TableThemeTokenOverridesSchema = TableThemeTokenObjectSchema.partial().describe(
+  'Partial strict Table theme token overlay.',
+);
 
 export const TableThemeTokenPresetMapSchema = strictObject(TableThemeTokenShape)
   .omit({ [TableThemeToken.DataCategorical]: true })
   .describe('Complete Table preset map excluding the Core shared categorical projection.');
 
-export const TableThemeStyleTokenOverridesSchema = TableThemeTokenPresetMapSchema.partial()
-  .superRefine((overrides, context) => {
-    for (const key of Object.keys(TableThemeTokenPresetMapSchema.shape)) {
-      if (Object.hasOwn(overrides, key) && overrides[key as keyof typeof overrides] === undefined) {
-        context.addIssue({
-          code: 'custom',
-          path: [key],
-          message: 'Table theme style token overrides must omit unset values instead of using undefined',
-        });
-      }
-    }
-  })
-  .describe('Sparse strict Table style token overlay excluding the Core shared categorical projection.');
+export const TableThemeStyleTokenOverridesSchema = TableThemeTokenPresetMapSchema.partial().describe(
+  'Sparse strict Table style token overlay excluding the Core shared categorical projection.',
+);

@@ -12,11 +12,11 @@ import type {
   IRPathScale,
   IRShapeRef,
   IRStepLabel,
-  JsonValue,
   NodeTextAlignValue,
   ShadowPresetValue,
 } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
+import type { JsonValue } from '@retikz/foundation';
 import type {
   IRPlotAnchorId,
   IRPlotBlendModeStyle,

@@ -1,13 +1,13 @@
 import type {
   CompositeCompileChild,
   IRChild,
-  IRJsonObject,
   LayoutAxisProposal,
   LayoutChildProbe,
   LayoutChildResult,
   LayoutCompositeCompileContext,
 } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
 import {
@@ -23,7 +23,7 @@ import { ScalarValueSchema } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { discriminatedUnion, literal, strictObject } from 'zod';
 
-import type { PresentedTableModel, SemanticTableCell, TableLayoutManifest } from '../../contract';
+import type { PresentedTableModel, SemanticTableCell } from '../../contract';
 import type { ResolvedTableThemeTokens } from '../../providers/style';
 import type { IRTable, IRTableBorder, IRTableCellBorders, IRTableLayout, IRTableThemeTokenBorder } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
@@ -47,7 +47,6 @@ import {
   TableCellLocation,
   TableCellPayloadKind,
   TableRowKind,
-  TableSchema,
 } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { formatTable } from '../formatter';
@@ -67,8 +66,8 @@ import { solveTableTracks } from './track';
 export type ResolvedTableTransaction = Readonly<{
   /** 当前 callback 可直接提交的 output children */
   children: ReadonlyArray<IRChild | CompositeCompileChild>;
-  /** 与 output children 同源的 immutable manifest */
-  manifest: TableLayoutManifest;
+  /** 与 output children 同源、待 artifact schema 接纳的 manifest candidate */
+  manifest: ReturnType<typeof buildTableLayoutManifest>;
 }>;
 
 /** 已完成 presentation 的 Table 后半布局事务输入 */
@@ -76,7 +75,7 @@ export type PresentedTableTransactionInput = Readonly<{
   /** 可选 Table root identity */
   tableId?: string;
   /** 透传到 Table root Scope 的 JSON metadata */
-  meta?: IRJsonObject;
+  meta?: JsonObject;
   /** Table 轨道、间距与默认 border 配置 */
   layout?: IRTableLayout;
   /** 与 canonical semantic model 严格对齐的呈现结果 */
@@ -693,7 +692,7 @@ export const resolvePresentedTableTransaction = (
       ...(borderResult === undefined ? [] : [context.replay(borderResult)]),
     ],
   );
-  return deepFreeze({
+  return {
     children: [root],
     manifest: buildTableLayoutManifest(tableId, semantic, layout, graph.edges, {
       ...(manifestStyle === undefined ? {} : { style: manifestStyle }),
@@ -703,7 +702,7 @@ export const resolvePresentedTableTransaction = (
       ...(input.plan === undefined ? {} : { plans: input.plan.cells, encodings: input.plan.encodings }),
       legendDescriptors: input.plan?.legendDescriptors ?? [],
     }),
-  });
+  };
 };
 
 /** 解析 Table spec 与 definitions，并执行一次 layout-aware compile transaction */
@@ -713,16 +712,15 @@ export const resolveTableTransaction = (
   options: LowerTablesOptions,
   context: LayoutCompositeCompileContext,
 ): ResolvedTableTransaction => {
-  const parsed = TableSchema.parse(spec);
-  const semantic = normalizeTableStructure(parsed.structure, {
-    data: parsed.data,
+  const semantic = normalizeTableStructure(spec.structure, {
+    data: spec.data,
     datasets,
     structureDefinitions: options.structureDefinitions,
   });
-  const tableThemeTokens = resolveTableThemeTokens(context.theme, parsed.tableThemeTokens, options.tableThemeStyles);
+  const tableThemeTokens = resolveTableThemeTokens(context.theme, spec.tableThemeTokens, options.tableThemeStyles);
   const plan = resolveTableCellPlans(semantic, {
-    rules: parsed.rules,
-    encodings: parsed.encodings,
+    rules: spec.rules,
+    encodings: spec.encodings,
     visualScaleDefinitions: options.visualScaleDefinitions,
     tableThemeTokens,
     scaleContext: {
@@ -737,9 +735,9 @@ export const resolveTableTransaction = (
   });
   return resolvePresentedTableTransaction(
     {
-      ...(parsed.id === undefined ? {} : { tableId: parsed.id }),
-      ...(parsed.meta === undefined ? {} : { meta: parsed.meta }),
-      ...(parsed.layout === undefined ? {} : { layout: parsed.layout }),
+      ...(spec.id === undefined ? {} : { tableId: spec.id }),
+      ...(spec.meta === undefined ? {} : { meta: spec.meta }),
+      ...(spec.layout === undefined ? {} : { layout: spec.layout }),
       presented,
       theme: context.theme,
       tableThemeTokens,

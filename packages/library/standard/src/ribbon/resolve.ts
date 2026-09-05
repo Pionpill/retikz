@@ -1,6 +1,6 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 
-import { JsonObjectSchema } from '@retikz/core';
+import { JsonObjectSchema } from '@retikz/foundation';
 
 import type { RibbonWidthProfileDefinition } from './profile-types';
 import type {
@@ -18,7 +18,7 @@ import { RetikzStandardError, RetikzStandardErrorCode } from '../errors';
 export type RibbonWidthResolution = Readonly<{
   width: CanonicalRibbonWidth;
   definition?: RibbonWidthProfileDefinition;
-  params?: IRJsonObject;
+  params?: JsonObject;
   requiresSampling: boolean;
 }>;
 
@@ -81,10 +81,9 @@ export const resolveRibbonWidth = (
   }
   const paramsPath = `${irPath}.params`;
   const rawParams = width.params ?? {};
-  let params: IRJsonObject;
+  let params: JsonObject;
   try {
-    const parsed = definition.paramsSchema?.parse(rawParams) ?? JsonObjectSchema.parse(rawParams);
-    params = JsonObjectSchema.parse(parsed);
+    params = definition.paramsSchema?.parse(rawParams) ?? JsonObjectSchema.parse(rawParams);
   } catch (cause) {
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.ResolutionInvalid,

@@ -17,7 +17,7 @@ import type {
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { CHART_NAMESPACE } from '../constants';
 import { eraseChartRecipeDefinition } from '../contract';
-import { validateChartThemeBases, validateChartThemeDefinition } from './theme';
+import { parseChartThemeDefinition, validateChartThemeBases } from './theme';
 
 const invalidRegistry = (message: string, path: ReadonlyArray<string | number>, cause?: unknown): RetikzChartError =>
   new RetikzChartError({
@@ -236,6 +236,8 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
 
   const recipes = new Map<string, AnyChartRecipeDefinition>();
   const themes = new Map<string, ChartThemeDefinition>();
+  const themeSources = new Map<string, ChartThemeDefinition>();
+  const parsedThemes = new Map<ChartThemeDefinition, ChartThemeDefinition>();
   const themeDefinitions: Array<ChartThemeDefinition> = [];
   const seenContributions = new Set<ChartRecipeProviderContributionInput<TSource>>();
   for (const [index, contribution] of contributions.entries()) {
@@ -257,10 +259,14 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
 
   const recipeMap = createReadonlyMap(recipes);
   for (const theme of themeDefinitions) {
-    validateChartThemeDefinition(theme, recipeMap);
-    const existingTheme = themes.get(theme.name);
-    if (existingTheme !== undefined && existingTheme !== theme) throw duplicateDefinition('themes', theme.name);
-    themes.set(theme.name, theme);
+    const parsedTheme = parsedThemes.get(theme) ?? parseChartThemeDefinition(theme, recipeMap);
+    parsedThemes.set(theme, parsedTheme);
+    const existingThemeSource = themeSources.get(parsedTheme.name);
+    if (existingThemeSource !== undefined && existingThemeSource !== theme) {
+      throw duplicateDefinition('themes', parsedTheme.name);
+    }
+    themeSources.set(parsedTheme.name, theme);
+    themes.set(parsedTheme.name, parsedTheme);
   }
   validateChartThemeBases(themes);
 

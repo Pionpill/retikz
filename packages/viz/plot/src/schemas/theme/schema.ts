@@ -45,18 +45,7 @@ const ThemeAxisGridSchema = strictObject({
   includeDomain: boolean()
     .optional()
     .describe('Whether enabled major grid lines include effective scale-domain endpoints'),
-})
-  .superRefine((grid, context) => {
-    if (Object.hasOwn(grid, 'includeDomain') && grid.includeDomain === undefined) {
-      context.addIssue({
-        code: 'custom',
-        path: ['includeDomain'],
-        message: 'Axis grid theme fields must omit unset values instead of using undefined',
-        input: grid,
-      });
-    }
-  })
-  .describe('Theme defaults for major axis grid visibility, line style, and domain endpoint inclusion');
+}).describe('Theme defaults for major axis grid visibility, line style, and domain endpoint inclusion');
 
 export const PlotAxisThemeSchema = strictObject({
   line: union([literal(false), AxisLineStyleSchema])

@@ -1,4 +1,4 @@
-import type { IRNode, IRPath, IRScope, IRShapeValue, JsonValue } from '@retikz/core';
+import type { IRNode, IRPath, IRScope, IRShapeValue } from '@retikz/core';
 import type {
   DataFieldTypeMap,
   DataFieldTypeValue,
@@ -6,7 +6,7 @@ import type {
   IRDataFieldDefinition,
   IRDataScalarValue,
 } from '@retikz/data';
-import type { ValueOf } from '@retikz/foundation';
+import type { JsonValue, ValueOf } from '@retikz/foundation';
 
 import type { IRPlot, IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation, LegendChannelValue } from '../schemas';
 import type { DimensionRole } from './coordinate';

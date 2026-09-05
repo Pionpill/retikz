@@ -1,5 +1,5 @@
-import type { IRJsonObject } from '@retikz/core';
 import type { AnyTransformDefinition } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -8,13 +8,14 @@ import { literal, strictObject, string, undefined as zodUndefined, ZodError } fr
 import { defineChartTheme, RetikzChartErrorCode } from '../../src';
 import { defineChartRecipe, eraseChartRecipeDefinition } from '../../src/_chart/contract';
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
+import { resolveChartTheme } from '../../src/_chart/resolve';
 import { createChartSourceSchema } from '../../src/_chart/schemas';
 import { BubbleChartDefinition } from '../../src/point/bubble/recipe';
 import { RegressionChartDefinition } from '../../src/point/regression/recipe';
 import { ScatterChartDefinition } from '../../src/point/scatter/recipe';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
-  encodings: context.encodings as IRJsonObject,
+  encodings: context.encodings as JsonObject,
   transform: [],
   scales: [],
   positionScales: {},
@@ -155,8 +156,40 @@ describe('active Chart provider registry', () => {
     ).toThrow();
   });
 
-  it('rejects non-plain Chart Theme Definition containers', () => {
-    let nameGetterReadCount = 0;
+  it('stores the active recipe Theme schema transform output for the cascade', () => {
+    const transformedRecipe = defineChartRecipe({
+      ...recipe,
+      theme: {
+        overridesSchema: strictObject({ accent: string().transform(() => 'normalized') }),
+        resolutionSchema: strictObject({ accent: string() }),
+        fallback: { accent: '#000000' },
+      },
+    });
+    const themeDefinition = defineChartTheme({
+      name: 'transformed-recipe-theme',
+      tokens: { recipes: { fixture: { accent: 'authored' } } },
+    });
+    const registry = resolveChartProviderRegistry([
+      { family: 'point', recipe: transformedRecipe, themeDefinitions: [themeDefinition] },
+    ]);
+    const source = registry.schema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: { chartType: 'fixture', encodings: { x: 'x', y: 'y' } },
+    });
+    const registeredTheme = registry.themes.get(themeDefinition.name);
+
+    expect(registeredTheme).toBeDefined();
+    expect(
+      resolveChartTheme(source, transformedRecipe, {
+        theme: DEFAULT_RESOLVED_THEME,
+        themeDefinitions: registeredTheme === undefined ? [] : [registeredTheme],
+      }).recipe,
+    ).toEqual({ accent: 'normalized' });
+  });
+
+  it('projects Chart Theme Definition object containers through the owner schema', () => {
     class ThemeDefinitionOutput {
       readonly name = 'class-theme';
       readonly tokens = { chart: { 'chart.padding': 12 } };
@@ -169,7 +202,6 @@ describe('active Chart provider registry', () => {
     Object.defineProperty(nameGetterTheme, 'name', {
       enumerable: true,
       get: () => {
-        nameGetterReadCount += 1;
         return 'name-getter-theme';
       },
     });
@@ -184,14 +216,17 @@ describe('active Chart provider registry', () => {
     };
 
     for (const themeDefinition of [new ThemeDefinitionOutput(), nameGetterTheme, getterTheme, symbolTheme]) {
-      expect(() =>
-        resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [themeDefinition] }]),
-      ).toThrow();
+      const registry = resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [themeDefinition] }]);
+      const registeredTheme = registry.themes.get(themeDefinition.name);
+      expect(registeredTheme).not.toBe(themeDefinition);
+      expect(registeredTheme).toEqual({
+        name: themeDefinition.name,
+        tokens: { chart: { 'chart.padding': 12 } },
+      });
     }
-    expect(nameGetterReadCount).toBe(0);
   });
 
-  it('rejects explicit undefined in optional named Theme Definition fields', () => {
+  it('accepts explicit undefined in optional named Theme Definition fields', () => {
     const base = defineChartTheme({
       name: 'base',
       tokens: { chart: { 'chart.padding': 12 } },
@@ -205,9 +240,13 @@ describe('active Chart provider registry', () => {
     Object.defineProperty(undefinedTokens, 'tokens', { enumerable: true, value: undefined });
 
     for (const themeDefinition of [undefinedBase, undefinedTokens]) {
-      expect(() =>
-        resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [base, themeDefinition] }]),
-      ).toThrow();
+      const registry = resolveChartProviderRegistry([
+        { family: 'point', recipe, themeDefinitions: [base, themeDefinition] },
+      ]);
+      const registeredTheme = registry.themes.get(themeDefinition.name);
+      expect(registeredTheme).not.toBe(themeDefinition);
+      expect(registeredTheme).toEqual(themeDefinition);
+      expect(Object.hasOwn(registeredTheme ?? {}, themeDefinition === undefinedBase ? 'base' : 'tokens')).toBe(true);
     }
 
     for (const slice of ['chart', 'plot', 'recipes']) {
@@ -215,9 +254,12 @@ describe('active Chart provider registry', () => {
       Object.defineProperty(tokens, slice, { enumerable: true, value: undefined });
       const themeDefinition = defineChartTheme({ name: `undefined-${slice}`, base: 'base', tokens });
 
-      expect(() =>
-        resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [base, themeDefinition] }]),
-      ).toThrow();
+      const registry = resolveChartProviderRegistry([
+        { family: 'point', recipe, themeDefinitions: [base, themeDefinition] },
+      ]);
+      const registeredTokens = registry.themes.get(themeDefinition.name)?.tokens;
+      expect(registeredTokens).not.toBe(tokens);
+      expect(Object.hasOwn(registeredTokens ?? {}, slice)).toBe(true);
     }
   });
 
@@ -243,6 +285,27 @@ describe('active Chart provider registry', () => {
     }
   });
 
+  it('wraps an invalid Chart owner token slice before checking whether it is empty', () => {
+    const base = defineChartTheme({
+      name: 'base',
+      tokens: { chart: { 'chart.padding': 12 } },
+    });
+    const invalidChartTokens = defineChartTheme({ name: 'invalid-chart-tokens', base: 'base' });
+    Object.defineProperty(invalidChartTokens, 'tokens', {
+      enumerable: true,
+      value: { chart: null },
+    });
+
+    expect(() =>
+      resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [base, invalidChartTokens] }]),
+    ).toThrowError(
+      expect.objectContaining({
+        code: RetikzChartErrorCode.InvalidRegistry,
+        cause: expect.any(ZodError),
+      }),
+    );
+  });
+
   it('wraps a non-object named Theme Definition envelope failure', () => {
     expect(() =>
       Reflect.apply(resolveChartProviderRegistry, undefined, [[{ family: 'point', recipe, themeDefinitions: [null] }]]),
@@ -254,7 +317,7 @@ describe('active Chart provider registry', () => {
     );
   });
 
-  it('rejects explicit undefined inside an active recipe token slice', () => {
+  it('accepts explicit undefined inside an active recipe token slice', () => {
     const recipeTokens = {};
     Object.defineProperty(recipeTokens, 'accent', { enumerable: true, value: undefined });
     const themeDefinition = defineChartTheme({
@@ -262,9 +325,9 @@ describe('active Chart provider registry', () => {
       tokens: { recipes: { fixture: recipeTokens } },
     });
 
-    expect(() =>
-      resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [themeDefinition] }]),
-    ).toThrowError(expect.objectContaining({ code: RetikzChartErrorCode.InvalidRegistry }));
+    const registry = resolveChartProviderRegistry([{ family: 'point', recipe, themeDefinitions: [themeDefinition] }]);
+    const resolvedRecipeTokens = registry.themes.get(themeDefinition.name)?.tokens?.recipes?.fixture;
+    expect(resolvedRecipeTokens).toHaveProperty('accent', undefined);
   });
 
   it('keeps the Core theme context separate from active recipe registration', () => {

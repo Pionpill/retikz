@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 
 import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import type { IRBubbleChart } from './schema';
@@ -19,7 +19,7 @@ import {
 import { BubbleMarkDefinition, resolveBubbleMark } from './mark';
 import { BubbleChartSchema, BubbleChartThemeOverridesSchema, BubbleChartThemeResolutionSchema } from './schema';
 
-const themeFallback: IRJsonObject = {
+const themeFallback: JsonObject = {
   axisEnabled: true,
   axisGridEnabled: true,
   legendEnabled: true,

@@ -1,4 +1,5 @@
 import {
+  JsonObjectSchema,
   NonBlankStringSchema,
   NonNegativeNumberSchema,
   NormalizedFractionSchema,
@@ -10,7 +11,6 @@ import { Side } from '../../shared';
 import { AnimationTrackSchema } from '../animation';
 import { BoundarySchema } from '../boundary';
 import { FontSchema } from '../font';
-import { JsonObjectSchema } from '../json';
 import {
   AnchorPositionSchema,
   AtPositionSchema,

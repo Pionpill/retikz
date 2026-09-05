@@ -2,6 +2,7 @@ import type { infer as ZodInfer } from 'zod';
 
 import {
   createOpenStringSchema,
+  JsonObjectSchema,
   NonNegativeNumberSchema,
   NormalizedFractionSchema,
   PositiveNumberSchema,
@@ -9,7 +10,6 @@ import {
 import { array, enum as zodEnum, literal, object, strictObject, union, unknown } from 'zod';
 
 import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';
-import { JsonObjectSchema } from '../../json';
 import { AngleDegreesSchema } from '../../scalar';
 import { PathLineCapSchema, PathLineJoinSchema, StrokeStyleSchema } from '../../stroke';
 import { ArrowEndDetailSchema } from '../arrow';

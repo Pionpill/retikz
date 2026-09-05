@@ -1,5 +1,5 @@
-import type { IRJsonObject } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 import type { TableCellContext } from '../model';
@@ -13,7 +13,7 @@ export type CellFormatterInput = Readonly<{
 }>;
 
 /** Cell formatter provider 定义 */
-export type CellFormatterDefinition<TOptions extends IRJsonObject = IRJsonObject> = {
+export type CellFormatterDefinition<TOptions extends JsonObject = JsonObject> = {
   /** provider 注册名 */
   name: string;
   /** provider options 的精确运行时 schema */

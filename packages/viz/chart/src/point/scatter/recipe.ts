@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 
 import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
 import type { IRScatterChart } from './schema';
@@ -20,7 +20,7 @@ import {
 import { ScatterMarkDefinition } from './mark';
 import { ScatterChartSchema, ScatterChartThemeOverridesSchema, ScatterChartThemeResolutionSchema } from './schema';
 
-const themeFallback: IRJsonObject = {
+const themeFallback: JsonObject = {
   axisEnabled: true,
   axisGridEnabled: true,
   legendEnabled: true,

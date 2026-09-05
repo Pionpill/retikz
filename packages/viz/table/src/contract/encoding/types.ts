@@ -1,5 +1,5 @@
-import type { IRJsonObject } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import type { infer as ZodInfer, ZodType } from 'zod';
 
 import type { DeepReadonly } from '../../shared';
@@ -28,7 +28,7 @@ export type CellVisualScaleResolution = Readonly<{
 }>;
 
 /** Table Cell visual scale 作者契约 */
-export type CellVisualScaleDefinition<TOptions extends IRJsonObject = IRJsonObject> = Readonly<{
+export type CellVisualScaleDefinition<TOptions extends JsonObject = JsonObject> = Readonly<{
   /** 稳定 registry 名称 */
   name: string;
   /** definition 自有 JSON options schema */

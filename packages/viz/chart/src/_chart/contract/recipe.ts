@@ -1,6 +1,5 @@
-import type { IRJsonObject } from '@retikz/core';
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition, AnyTransformDefinition } from '@retikz/data';
-import type { NonEmptyReadonlyArray, ValueOf } from '@retikz/foundation';
+import type { JsonObject, NonEmptyReadonlyArray, ValueOf } from '@retikz/foundation';
 import type {
   AnyCoordinateDefinition,
   AnyScaleDefinition,
@@ -61,11 +60,13 @@ export type ChartEncodingSpatialResolution = Readonly<{
 /** exact encoding mapping计划的确定解析结果 */
 export type ChartEncodingResolution = Readonly<{
   /** semantic与authored Chart mark消费的direct field投影 */
-  encodings: IRJsonObject;
+  encodings: JsonObject;
   /** 按闭合phase与ordered slots排列的派生operation */
   transform: ReadonlyArray<IRPlotTransform>;
   /** encoding唯一声明的named scale operation */
   scales: ReadonlyArray<IRPlotScaleOperation>;
+  /** plotExtension 中由 encoding 引用后经 owner Definition 解析的 scale operation */
+  extensionScales?: ReadonlyArray<IRPlotScaleOperation>;
   /** position role到最终named scale的连接 */
   positionScales: Readonly<Record<string, string>>;
   /** 被encoding operation替换且无其它consumer的recipe fallback */
@@ -176,11 +177,11 @@ export type ChartRecipeResolveContext = Readonly<{
   /** Chart Source 引用的 Plot 数据 */
   data: IRPlot['data'];
   /** 当前 recipe 经过精确 schema 校验的字段绑定 */
-  encodings: IRJsonObject;
+  encodings: JsonObject;
   /** 当前 recipe 经过精确 schema 校验的常量配置 */
-  properties: IRJsonObject;
+  properties: JsonObject;
   /** 当前 recipe 已解析完成的主题 token */
-  recipeThemeTokens: IRJsonObject;
+  recipeThemeTokens: JsonObject;
 }>;
 
 /** Chart resolver 消费的根级 encoding / property slots */
@@ -204,11 +205,11 @@ export type ChartRecipeDefinition<TSource extends IRChartSource = IRChartSource>
   /** 当前 recipe 的主题校验与默认值契约 */
   theme: Readonly<{
     /** 当前 recipe 允许声明的稀疏主题 token schema */
-    overridesSchema: ZodType<IRJsonObject>;
+    overridesSchema: ZodType<JsonObject>;
     /** 当前 recipe resolver 消费的完整主题 token schema */
-    resolutionSchema: ZodType<IRJsonObject>;
+    resolutionSchema: ZodType<JsonObject>;
     /** 当前 recipe 主题 token 的完整默认值 */
-    fallback: IRJsonObject;
+    fallback: JsonObject;
   }>;
   /** 内建 recipe resolver 消费的根级slots；encoding成员必须来自encodingSlots */
   consumes: ChartSlotConsumption<ChartEncodingSlot<TSource>>;

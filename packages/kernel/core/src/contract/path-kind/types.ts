@@ -1,6 +1,7 @@
+import type { JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
-import type { IRGeometryLabel, IRMathRun, IRPathBase, IRPosition, IRStep, IRTextRun, JsonValue } from '../../schemas';
+import type { IRGeometryLabel, IRMathRun, IRPathBase, IRPosition, IRStep, IRTextRun } from '../../schemas';
 import type { CompileOwnerOutputDefinition, CompileOwnerOutputPublisher } from '../observation';
 import type { PathCommand, PathPrim, ScenePrimitive } from '../scene';
 import type { StrokePathOwnerOutput } from './owner-output';

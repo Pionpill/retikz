@@ -7,7 +7,7 @@ import type { IRTable } from '../schemas';
 import type { CompileTableOptions, CompileTableResult, TableCompileArtifact } from './types';
 
 import { RetikzTableError } from '../error';
-import { TABLE_NAMESPACE, TableComposite, TableSchema } from '../schemas';
+import { TABLE_NAMESPACE, TableComposite } from '../schemas';
 import { lowerTables } from './resolve';
 
 const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompileArtifact =>
@@ -23,7 +23,6 @@ export const compileTable = <const TComposites extends ReadonlyArray<AnyComposit
   datasets: ExternalDatasets,
   options: CompileTableOptions<TComposites> = {},
 ): CompileTableResult<TComposites> => {
-  const parsed = TableSchema.parse(spec);
   const compileOptions = options.compile ?? {};
   const tableDefinitions = lowerTables(datasets, options.lower);
   const composites = [...tableDefinitions, ...(compileOptions.composites ?? [])];
@@ -32,7 +31,7 @@ export const compileTable = <const TComposites extends ReadonlyArray<AnyComposit
       type: 'scene',
       version: 1,
       ...(options.theme === undefined ? {} : { theme: options.theme }),
-      children: [parsed],
+      children: [spec],
     },
     {
       ...compileOptions,

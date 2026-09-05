@@ -1,6 +1,6 @@
 ﻿import { describe, expect, it } from 'vitest';
 
-import { IntervalBoundsSchema, MarkOperationSchema, MarkSchema } from '../../src/schemas/mark';
+import { CustomMarkSchema, IntervalBoundsSchema, MarkOperationSchema, MarkSchema } from '../../src/schemas/mark';
 
 const gradientPaint = {
   kind: 'linearGradient',
@@ -61,6 +61,16 @@ describe('MarkSchema (contract)', () => {
     const mark = { type: 'custom-symbol', defaultColorGroup: 'observations', value: 1 };
 
     expect(MarkOperationSchema.parse(mark)).toEqual(mark);
+  });
+
+  it('custom_mark_reports_deep_non_json_leaf_path', () => {
+    const result = CustomMarkSchema.safeParse({
+      type: 'custom-symbol',
+      payload: { nested: [0, { bad: Symbol('invalid') }] },
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['payload']);
   });
 
   // 错误路径

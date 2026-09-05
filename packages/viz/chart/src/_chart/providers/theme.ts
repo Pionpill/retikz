@@ -1,9 +1,10 @@
 import type { ResolvedTheme } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
+import type { ZodType } from 'zod';
 
-import { JsonObjectSchema } from '@retikz/core';
-import { assertPlainDataContainers, NonBlankStringSchema } from '@retikz/foundation';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import { PlotThemeTokenOverridesSchema } from '@retikz/plot';
-import { record, strictObject, ZodError } from 'zod';
+import { record, strictObject, unknown, ZodError } from 'zod';
 
 import type { AnyChartRecipeDefinition, ChartThemeDefinition } from '../contract';
 import type { IRChartSource } from '../schemas';
@@ -15,9 +16,9 @@ const ChartThemeDefinitionEnvelopeSchema = strictObject({
   name: NonBlankStringSchema.describe('Registered Chart theme name'),
   base: NonBlankStringSchema.optional().describe('Optional registered base Chart theme name'),
   tokens: strictObject({
-    chart: JsonObjectSchema.optional().describe('Sparse Chart shell token slice'),
-    plot: JsonObjectSchema.optional().describe('Sparse Plot token slice'),
-    recipes: record(NonBlankStringSchema, JsonObjectSchema)
+    chart: unknown().optional().describe('Sparse Chart shell token slice'),
+    plot: unknown().optional().describe('Sparse Plot token slice'),
+    recipes: record(NonBlankStringSchema, unknown())
       .optional()
       .describe('Sparse recipe token slices keyed by chart type'),
   })
@@ -50,89 +51,82 @@ const invalidThemeDefinition = (error: ZodError): RetikzChartError =>
     cause: error,
   });
 
-const assertOptionalPropertyIsDefined = (
-  container: object,
-  field: string,
+const parseThemeSlice = <TOutput>(
+  schema: ZodType<TOutput>,
+  input: unknown,
   path: ReadonlyArray<string | number>,
-): void => {
-  const descriptor = Object.getOwnPropertyDescriptor(container, field);
-  if (descriptor === undefined || !('value' in descriptor) || descriptor.value !== undefined) return;
-  throw new RetikzChartError({
-    code: RetikzChartErrorCode.InvalidRegistry,
-    message: 'Chart theme definition must omit unset fields instead of using undefined',
-    details: { path },
-  });
+): TOutput => {
+  try {
+    return schema.parse(input);
+  } catch (error) {
+    if (error instanceof ZodError) throw invalidThemeSlice(path, error);
+    throw error;
+  }
 };
 
-/** 校验当前 active recipe 可消费的命名主题 owner slices */
-export const validateChartThemeDefinition = (
+/** 解析当前 active recipe 可消费的命名主题 owner slices */
+export const parseChartThemeDefinition = (
   theme: ChartThemeDefinition,
   recipes: ReadonlyMap<string, AnyChartRecipeDefinition>,
-): void => {
+): ChartThemeDefinition => {
+  let parsedTheme: ReturnType<typeof ChartThemeDefinitionEnvelopeSchema.parse>;
   try {
-    assertPlainDataContainers(theme, 'Chart theme definition');
-  } catch (cause) {
-    throw new RetikzChartError({
-      code: RetikzChartErrorCode.InvalidRegistry,
-      message: 'Chart theme definition must use plain data containers',
-      details: { path: ['themes'] },
-      cause,
-    });
-  }
-  try {
-    ChartThemeDefinitionEnvelopeSchema.parse(theme);
+    parsedTheme = ChartThemeDefinitionEnvelopeSchema.parse(theme);
   } catch (error) {
     if (error instanceof ZodError) throw invalidThemeDefinition(error);
     throw error;
   }
-  assertOptionalPropertyIsDefined(theme, 'base', ['themes', 'base']);
-  assertOptionalPropertyIsDefined(theme, 'tokens', ['themes', 'tokens']);
-  const tokens = theme.tokens;
-  if (tokens !== undefined) {
-    for (const slice of ['chart', 'plot', 'recipes']) {
-      assertOptionalPropertyIsDefined(tokens, slice, ['themes', theme.name, 'tokens', slice]);
-    }
-  }
+  const tokens = parsedTheme.tokens;
+  const chartTokens =
+    tokens?.chart === undefined
+      ? undefined
+      : parseThemeSlice(ChartThemeOverridesSchema, tokens.chart, ['themes', parsedTheme.name, 'tokens', 'chart']);
+  const plotTokens =
+    tokens?.plot === undefined
+      ? undefined
+      : parseThemeSlice(PlotThemeTokenOverridesSchema, tokens.plot, ['themes', parsedTheme.name, 'tokens', 'plot']);
+  const recipeTokens = Object.fromEntries(
+    Object.entries(tokens?.recipes ?? {}).map(([chartType, tokensForRecipe]) => {
+      const recipe = recipes.get(chartType);
+      return [
+        chartType,
+        recipe === undefined
+          ? (tokensForRecipe as JsonObject)
+          : parseThemeSlice(recipe.theme.overridesSchema, tokensForRecipe, [
+              'themes',
+              parsedTheme.name,
+              'tokens',
+              'recipes',
+              chartType,
+            ]),
+      ];
+    }),
+  );
   const hasTokens =
     tokens !== undefined &&
-    ((tokens.chart !== undefined && Object.keys(tokens.chart).length > 0) ||
-      (tokens.plot !== undefined && Object.keys(tokens.plot).length > 0) ||
+    ((chartTokens !== undefined && Object.keys(chartTokens).length > 0) ||
+      (plotTokens !== undefined && Object.keys(plotTokens).length > 0) ||
       (tokens.recipes !== undefined && Object.keys(tokens.recipes).length > 0));
-  if (theme.base === undefined && !hasTokens) {
+  if (parsedTheme.base === undefined && !hasTokens) {
     throw new RetikzChartError({
       code: RetikzChartErrorCode.InvalidRegistry,
-      message: `Chart theme "${theme.name}" must define a base or a non-empty token slice`,
-      details: { path: ['themes', theme.name] },
+      message: `Chart theme "${parsedTheme.name}" must define a base or a non-empty token slice`,
+      details: { path: ['themes', parsedTheme.name] },
     });
   }
-  if (tokens?.chart !== undefined) {
-    try {
-      ChartThemeOverridesSchema.parse(tokens.chart);
-    } catch (error) {
-      if (error instanceof ZodError) throw invalidThemeSlice(['themes', theme.name, 'tokens', 'chart'], error);
-      throw error;
-    }
-  }
-  if (tokens?.plot !== undefined) {
-    try {
-      PlotThemeTokenOverridesSchema.parse(tokens.plot);
-    } catch (error) {
-      if (error instanceof ZodError) throw invalidThemeSlice(['themes', theme.name, 'tokens', 'plot'], error);
-      throw error;
-    }
-  }
-  for (const [chartType, tokensForRecipe] of Object.entries(tokens?.recipes ?? {})) {
-    const recipe = recipes.get(chartType);
-    if (recipe === undefined) continue;
-    try {
-      recipe.theme.overridesSchema.parse(tokensForRecipe);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        throw invalidThemeSlice(['themes', theme.name, 'tokens', 'recipes', chartType], error);
-      }
-      throw error;
-    }
-  }
+  const parsedTokens =
+    tokens === undefined
+      ? undefined
+      : {
+          ...(Object.hasOwn(tokens, 'chart') ? { chart: chartTokens } : {}),
+          ...(Object.hasOwn(tokens, 'plot') ? { plot: plotTokens } : {}),
+          ...(Object.hasOwn(tokens, 'recipes') ? { recipes: recipeTokens } : {}),
+        };
+  return {
+    name: parsedTheme.name,
+    ...(Object.hasOwn(parsedTheme, 'base') ? { base: parsedTheme.base } : {}),
+    ...(Object.hasOwn(parsedTheme, 'tokens') ? { tokens: parsedTokens } : {}),
+  };
 };
 
 /** 校验当前 active 命名主题的 base 链与继承环 */

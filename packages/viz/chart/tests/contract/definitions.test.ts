@@ -1,3 +1,5 @@
+import type { JsonObject } from '@retikz/foundation';
+
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
@@ -8,7 +10,7 @@ import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveSelectedChart } from '../../src/_chart/resolve';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
-  encodings: context.encodings as IRJsonObject,
+  encodings: context.encodings as JsonObject,
   transform: [],
   scales: [],
   positionScales: {},
@@ -115,4 +117,3 @@ describe('Chart Definition contracts', () => {
     expect(result.plot.guides).toEqual([{ type: 'axis', dimension: 'x', grid: true }]);
   });
 });
-import type { IRJsonObject } from '@retikz/core';

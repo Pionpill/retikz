@@ -2,11 +2,11 @@ import type {
   IRAxisLineTarget,
   IRControlPoint,
   IRGeneratorStep,
-  IRJsonObject,
   IRStepAnisotropicRadius,
   IRStepRadius,
   IRTarget,
 } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { InputStepLabel } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
@@ -241,7 +241,7 @@ export type GeneratorStepProps = {
   /** 可选终点，会作为 generator context 的 `to` 传入 */
   to?: DslTarget;
   /** JSON-safe 参数对象；目标引用需写在 generator 的 `targetParams` 顶层 key 上 */
-  params: IRJsonObject;
+  params: JsonObject;
   /** 边标注 */
   label?: InputStepLabel;
   /** sugar 形态 */

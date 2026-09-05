@@ -1,4 +1,4 @@
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
 import { array, intersection, literal, number, object, strictObject, tuple } from 'zod';
 
@@ -11,7 +11,6 @@ import { defineClip, definePattern } from '../../src/contract';
 import { resolveClipRegistry } from '../../src/providers/clip';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { resolveClip, resolvePaint } from '../../src/resolve/resource';
-import { JsonObjectSchema } from '../../src/schemas';
 
 const round = createRound(3);
 

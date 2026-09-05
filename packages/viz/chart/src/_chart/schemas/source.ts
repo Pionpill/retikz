@@ -1,8 +1,7 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { infer as ZodInfer, ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
 
-import { JsonObjectSchema, JsonValueSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonObjectSchema, JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { PlotSchema } from '@retikz/plot';
 import { array, literal, number, object, strictObject } from 'zod';
 
@@ -96,9 +95,9 @@ export type IRChartSource = Omit<IRChartSourceShell, 'recipe'> &
       /** 由exact chartType schema验证的开放owner operation与字段mapping */
       encodings: Readonly<Record<string, unknown>>;
       /** 当前recipe的constant property slots */
-      properties?: IRJsonObject;
+      properties?: JsonObject;
       /** 当前recipe允许的有序Chart marks */
-      marks?: ReadonlyArray<IRJsonObject>;
+      marks?: ReadonlyArray<JsonObject>;
       /** exact recipe可拥有的其它已验证字段 */
       [key: string]: unknown;
     }>;

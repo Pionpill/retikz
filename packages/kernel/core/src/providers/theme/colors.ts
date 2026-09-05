@@ -1,5 +1,4 @@
-import { assertPlainDataContainers } from '@retikz/foundation';
-import { array, custom, strictObject } from 'zod';
+import { array, strictObject } from 'zod';
 
 import type { ThemeStyleColorOverrides } from '../../contract';
 import type {
@@ -111,57 +110,15 @@ const CORE_COLOR_PRESETS: Readonly<Record<ThemeModeValue, ResolvedThemeColors>> 
   ),
 });
 
-const semanticColorKeys = new Set(['error', 'success', 'warning', 'guide']);
-const themeStyleColorKeys = new Set(['semantic', 'categorical']);
-
-/** 判断 runtime provider 输出是否为可枚举的普通对象 */
-const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
-  const prototype = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
-};
-
-const ThemeStyleColorOverridesSchema = custom<Record<string, unknown>>(isPlainRecord, {
-  error: 'Theme style color definition must return a plain object.',
-}).pipe(
-  strictObject({
-    semantic: strictObject({
-      error: CssColorSchema.optional(),
-      success: CssColorSchema.optional(),
-      warning: CssColorSchema.optional(),
-      guide: CssColorSchema.optional(),
-    }).optional(),
-    categorical: array(CssColorSchema).min(1).optional(),
-  }),
-);
-
-const ThemeStyleColorPlainDataSchema = custom<unknown>(
-  value => {
-    try {
-      assertPlainDataContainers(value, 'Theme style color definition output');
-      return true;
-    } catch {
-      return false;
-    }
-  },
-  { error: 'Theme style color definition must return JSON-safe plain data.' },
-);
-
-/** 只把 runtime style definition 中已知且显式为 undefined 的字段规范化为省略 */
-const omitKnownUndefinedProperties = (value: unknown, knownKeys: ReadonlySet<string>): unknown => {
-  if (!isPlainRecord(value)) return value;
-  return Object.fromEntries(Object.entries(value).filter(([key, item]) => item !== undefined || !knownKeys.has(key)));
-};
-
-/** 规范化 Core runtime style 的已知 sparse 字段，同时保留未知字段交给严格 schema */
-const normalizeThemeStyleColorOverrides = (overrides: unknown): unknown => {
-  const normalized = omitKnownUndefinedProperties(overrides, themeStyleColorKeys);
-  if (!isPlainRecord(normalized) || !Object.hasOwn(normalized, 'semantic')) return normalized;
-  return {
-    ...normalized,
-    semantic: omitKnownUndefinedProperties(normalized.semantic, semanticColorKeys),
-  };
-};
+const ThemeStyleColorOverridesSchema = strictObject({
+  semantic: strictObject({
+    error: CssColorSchema.optional(),
+    success: CssColorSchema.optional(),
+    warning: CssColorSchema.optional(),
+    guide: CssColorSchema.optional(),
+  }).optional(),
+  categorical: array(CssColorSchema).min(1).optional(),
+});
 
 /** 解析默认 baseline 的完整 shared colors */
 export const resolveDefaultCoreThemeColors = (mode: ThemeModeValue): ResolvedThemeColors => {
@@ -175,9 +132,7 @@ export const resolveCoreThemeStyleColors = (
   overrides: ThemeStyleColorOverrides,
 ): ResolvedThemeColors => {
   const preset = CORE_COLOR_PRESETS[mode];
-  ThemeStyleColorPlainDataSchema.parse(overrides);
-  const normalized = normalizeThemeStyleColorOverrides(overrides);
-  const parsed = ThemeStyleColorOverridesSchema.parse(normalized);
+  const parsed = ThemeStyleColorOverridesSchema.parse(overrides);
   return freezeColorView(
     {
       error: parsed.semantic?.error ?? preset.semantic.error,

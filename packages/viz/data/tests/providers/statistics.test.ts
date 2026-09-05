@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { literal, strictObject, string, unknown } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
 import {
   applyReducerOperation,
@@ -88,30 +88,17 @@ describe('statistics provider schema boundaries', () => {
     expect(reducerOutputFields({ kind: 'custom-scalar', as: 'metric' }, registry)).toEqual(['metric']);
   });
 
-  it('rejects non-JSON custom reducer input before invoking its definition', () => {
-    const definition = defineStatisticsReducer({
-      schema: strictObject({
-        kind: literal('unsafe-input'),
-        config: unknown(),
-      }),
-      reduce: () => ({}),
-    });
-    const context = {
-      ...DEFAULT_TRANSFORM_CONTEXT,
-      statisticsReducerRegistry: resolveStatisticsReducerRegistry([definition]),
-    };
-    const operation = { kind: 'unsafe-input', config: () => 1 } as const;
-
-    expect(() => applyReducerOperation([], operation, context)).toThrow();
-  });
-
-  it('rejects non-JSON output produced by a custom definition schema', () => {
+  it('passes a custom reducer schema transform output directly to its definition', () => {
+    let observed: unknown;
     const definition = defineStatisticsReducer({
       schema: strictObject({
         kind: literal('unsafe-output'),
         stamp: string().transform(value => new Date(value)),
       }),
-      reduce: () => ({}),
+      reduce: (_rows, operation) => {
+        observed = operation.stamp;
+        return {};
+      },
     });
     const context = {
       ...DEFAULT_TRANSFORM_CONTEXT,
@@ -119,16 +106,21 @@ describe('statistics provider schema boundaries', () => {
     };
     const operation = { kind: 'unsafe-output', stamp: '2026-07-11T00:00:00.000Z' } as const;
 
-    expect(() => applyReducerOperation([], operation, context)).toThrow();
+    expect(applyReducerOperation([], operation, context)).toEqual({});
+    expect(observed).toEqual(new Date('2026-07-11T00:00:00.000Z'));
   });
 
-  it('rejects non-JSON output produced by a custom selector schema', () => {
+  it('passes a custom selector schema transform output directly to its definition', () => {
+    let observed: unknown;
     const definition = defineRowSelector({
       schema: strictObject({
         kind: literal('unsafe-selector-output'),
         stamp: string().transform(value => new Date(value)),
       }),
-      select: () => [],
+      select: (_rows, operation) => {
+        observed = operation.stamp;
+        return [];
+      },
     });
     const context = {
       ...DEFAULT_TRANSFORM_CONTEXT,
@@ -136,6 +128,7 @@ describe('statistics provider schema boundaries', () => {
     };
     const operation = { kind: 'unsafe-selector-output', stamp: '2026-07-11T00:00:00.000Z' } as const;
 
-    expect(() => applySelectorOperation([], operation, context)).toThrow();
+    expect(applySelectorOperation([], operation, context)).toEqual([]);
+    expect(observed).toEqual(new Date('2026-07-11T00:00:00.000Z'));
   });
 });

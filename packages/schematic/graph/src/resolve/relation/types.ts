@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 
 import type { RelationKindDefinition, RelationPredicateDefinition, RelationRoleDefinition } from '../../contract';
 import type { GraphRelationThemeStyleTokens } from '../../contract';
@@ -10,7 +10,7 @@ import type { GraphMemberAppearanceResolveContext } from '../theme';
 /** 已校验 params 与来源 Definition 组成的 Canonical Relation predicate */
 export type CanonicalRelationPredicate = Readonly<{
   definition: RelationPredicateDefinition;
-  params: IRJsonObject;
+  params: JsonObject;
 }>;
 
 /** Relation data resolver 的窄上下文 */

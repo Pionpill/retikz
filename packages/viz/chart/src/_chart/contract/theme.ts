@@ -1,4 +1,5 @@
-import type { IRJsonObject, ResolvedTheme } from '@retikz/core';
+import type { ResolvedTheme } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotThemeTokenOverrides } from '@retikz/plot';
 
 import type { IRChartThemeOverrides, IRChartThemeResolution } from '../schemas';
@@ -16,7 +17,7 @@ export type ChartThemeDefinition = Readonly<{
     /** 转交 Plot owner 的主题 token */
     plot?: IRPlotThemeTokenOverrides;
     /** 按 chartType 保存的 recipe 主题 token */
-    recipes?: Readonly<Record<string, IRJsonObject>>;
+    recipes?: Readonly<Record<string, JsonObject>>;
   }>;
 }>;
 
@@ -30,7 +31,7 @@ export type ChartThemeResolution = Readonly<{
   /** 转交 Plot owner 的稀疏主题 token */
   plot?: IRPlotThemeTokenOverrides;
   /** 当前 chartType 已补全的 recipe 主题 token */
-  recipe: IRJsonObject;
+  recipe: JsonObject;
   /** Core 主题解析得到的显示模式 */
   mode: ResolvedTheme['mode'];
 }>;

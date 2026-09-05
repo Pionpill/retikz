@@ -465,7 +465,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     }
   });
 
-  it('rejects non-plain Graph Theme style output containers', () => {
+  it('projects Graph Theme style object outputs through the owner schema', () => {
     class EntityTokensOutput {
       readonly color = '#2563eb';
     }
@@ -475,47 +475,39 @@ describe('Graph Scope and Theme compile semantics', () => {
       get: () => ({ tokens: { color: '#2563eb' } }),
     });
     const symbolOutput = { entity: { tokens: { color: '#2563eb' } }, [Symbol('metadata')]: true };
-    const invalidDefinitions = [
+    const definitions = [
       { name: 'class-tokens', resolve: () => ({ entity: { tokens: new EntityTokensOutput() } }) },
       { name: 'getter-output', resolve: () => getterOutput },
       { name: 'symbol-output', resolve: () => symbolOutput },
     ];
 
-    for (const definition of invalidDefinitions) {
-      expect(() =>
+    for (const definition of definitions) {
+      expect(
         Reflect.apply(Graph.resolveGraphTheme, undefined, [
           themeWithStyle(definition.name),
           new Map([[definition.name, definition]]),
-        ]),
-      ).toThrowError(
-        expect.objectContaining({
-          code: Graph.RetikzGraphErrorCode.DefinitionCallbackFailed,
-          details: { capability: 'graph-theme-style', key: definition.name },
-        }),
-      );
+        ]).entity.tokens.color,
+        definition.name,
+      ).toBe('#2563eb');
     }
   });
 
-  it('treats an explicitly undefined Graph style token as omitted', () => {
+  it('preserves an explicitly undefined Graph style token through the owner schema and merge', () => {
     const tokens = { color: '#2563eb' };
     Object.defineProperty(tokens, 'color', { enumerable: true, value: undefined });
     const definition = { name: 'undefined-token', resolve: () => ({ entity: { tokens } }) };
     const theme = themeWithStyle(definition.name);
 
-    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition)).entity.tokens.color).toBe(
-      Graph.getDefaultGraphThemePreset(theme).entity.tokens.color,
-    );
+    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition)).entity.tokens.color).toBeUndefined();
   });
 
-  it('treats an explicitly undefined Group shell token as omitted', () => {
+  it('preserves an explicitly undefined Group shell token through the owner schema and merge', () => {
     const tokens = { cornerRadius: 0 };
     Object.defineProperty(tokens, 'cornerRadius', { enumerable: true, value: undefined });
     const definition = { name: 'undefined-group-token', resolve: () => ({ group: { tokens } }) };
     const theme = themeWithStyle(definition.name);
 
-    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition)).group.tokens.cornerRadius).toBe(
-      Graph.getDefaultGraphThemePreset(theme).group.tokens.cornerRadius,
-    );
+    expect(Graph.resolveGraphTheme(theme, styleRegistry(definition)).group.tokens.cornerRadius).toBeUndefined();
   });
 
   it('rejects an unknown Graph style token even when its value is undefined', () => {

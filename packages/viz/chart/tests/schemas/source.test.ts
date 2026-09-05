@@ -167,6 +167,17 @@ describe('Chart Source schema primitives', () => {
     expect(FixtureSourceSchema.safeParse({ ...minimalSource, chartThemeTokens: {} }).success).toBe(false);
   });
 
+  it('让 Chart theme optional token 的显式 undefined 遵循 owner schema', () => {
+    const parsed = FixtureSourceSchema.parse({
+      ...minimalSource,
+      theme: { tokens: { chart: { [ChartThemeToken.TitleAlign]: undefined } } },
+    });
+    const chartTokens = typeof parsed.theme === 'string' ? undefined : parsed.theme?.tokens?.chart;
+
+    expect(Object.hasOwn(chartTokens ?? {}, ChartThemeToken.TitleAlign)).toBe(true);
+    expect(chartTokens?.[ChartThemeToken.TitleAlign]).toBeUndefined();
+  });
+
   it('accepts only the explicit Plot fragment fields', () => {
     expect(ChartPlotExtensionSchema.safeParse({ guides: [], meta: { source: 'demo' } }).success).toBe(true);
     expect(ChartPlotExtensionSchema.safeParse({ data: { reference: 'rows' } }).success).toBe(false);

@@ -1,9 +1,9 @@
 import type { infer as ZodInfer } from 'zod';
 import type { ZodType } from 'zod';
 
-import { BoxSpacingSchema, CssColorSchema, JsonObjectSchema } from '@retikz/core';
+import { BoxSpacingSchema, CssColorSchema } from '@retikz/core';
 import { ShapeNameSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { MarkNodeLabelListSchema, PlotDomainPaddingKind } from '@retikz/plot';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 

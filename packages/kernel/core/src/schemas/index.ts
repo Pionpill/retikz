@@ -6,7 +6,6 @@ export * from './coordinate';
 export * from './drawable';
 export * from './effects';
 export * from './font';
-export * from './json';
 export * from './node';
 export * from './paint';
 export * from './path';

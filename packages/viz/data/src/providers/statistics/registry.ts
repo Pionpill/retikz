@@ -1,4 +1,3 @@
-import { JsonObjectSchema } from '@retikz/core';
 import { createReadonlyMap } from '@retikz/foundation';
 
 import type {
@@ -13,7 +12,6 @@ import type { ExternalRow } from '../../shared';
 
 import { extractStatisticOperation } from '../../contract';
 import { RetikzDataError } from '../../error';
-import { ReducerOperationSchema, SelectorOperationSchema } from '../../schemas';
 import { BUILTIN_STATISTICS_REDUCERS } from './reducers';
 import { BUILTIN_ROW_SELECTORS } from './selectors';
 
@@ -56,24 +54,13 @@ export const resolveRowSelectorRegistry = (
   return registry;
 };
 
-/** 依次用公开契约与 definition schema 收窄 reducer operation，并保证解析结果仍可 JSON 序列化 */
-const parseReducerOperation = (
-  definition: AnyStatisticsReducerDefinition,
-  operation: IRDataReducerOperation,
-): never => {
-  const publicOperation = ReducerOperationSchema.parse(operation);
-  const parsed = definition.schema.parse(publicOperation) as never;
-  JsonObjectSchema.parse(parsed);
-  return parsed;
-};
+/** 用选中的 definition schema 收窄 reducer operation */
+const parseReducerOperation = (definition: AnyStatisticsReducerDefinition, operation: IRDataReducerOperation): never =>
+  definition.schema.parse(operation) as never;
 
-/** 依次用公开契约与 definition schema 收窄 selector operation，并保证解析结果仍可 JSON 序列化 */
-const parseSelectorOperation = (definition: AnyRowSelectorDefinition, operation: IRDataSelectorOperation): never => {
-  const publicOperation = SelectorOperationSchema.parse(operation);
-  const parsed = definition.schema.parse(publicOperation) as never;
-  JsonObjectSchema.parse(parsed);
-  return parsed;
-};
+/** 用选中的 definition schema 收窄 selector operation */
+const parseSelectorOperation = (definition: AnyRowSelectorDefinition, operation: IRDataSelectorOperation): never =>
+  definition.schema.parse(operation) as never;
 
 /** 从注册表解析 reducer 定义；缺失时给出注入入口提示 */
 const reducerDefinitionOf = (
@@ -142,11 +129,13 @@ export const applyReducerOperation = (
   const definition = reducerDefinitionOf(operation, registry);
   const parsed = parseReducerOperation(definition, operation);
   const out = definition.reduce(rows, parsed, context);
+  const descriptors = definition.outputs?.(parsed);
+  const outputFields = descriptors?.map(descriptor => descriptor.field) ?? definition.outputFields?.(parsed) ?? [];
   context.lineage?.recordReducerOperation({
     operation,
     rows,
     inputFields: definition.inputFields?.(parsed) ?? [],
-    outputFields: reducerOutputFields(operation, registry),
+    outputFields,
   });
   return out;
 };

@@ -1,6 +1,5 @@
 import type {
   IRChild,
-  IRJsonObject,
   IRNode,
   IRScope,
   LayoutAxisProposal,
@@ -8,6 +7,7 @@ import type {
   ResolvedTheme,
 } from '@retikz/core';
 import type { DataLineageOptions, DataLineageRun, DataView, ExternalDatasets } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 
 import {
   categoricalColorAt,
@@ -206,7 +206,7 @@ const withLayerZIndex = (child: IRChild, zIndex: number): IRChild =>
 /** 把复制进 facet panel 的 guide 图层收进 panel-local identity，避免各 panel 复用同一顶层 scope id */
 const withFacetGuideContext = (
   layer: IRScope,
-  context: IRJsonObject,
+  context: JsonObject,
   plotId: string | undefined,
   panelId: string,
 ): IRScope => {
@@ -999,10 +999,10 @@ export const lowerPlotWithDataArtifact = (
               }),
             )
           : undefined;
-      const facetContext: IRJsonObject = { id: panel.facet.id };
+      const facetContext: JsonObject = { id: panel.facet.id };
       if (panel.row !== undefined) facetContext.row = panel.row;
       if (panel.column !== undefined) facetContext.column = panel.column;
-      const panelContext: IRJsonObject = { coordinateView: panel.id, facet: facetContext };
+      const panelContext: JsonObject = { coordinateView: panel.id, facet: facetContext };
       const backgroundNode = plotBackgroundNode(
         frameResolution.plotArea,
         frameResolution.frame,
@@ -1042,7 +1042,7 @@ export const lowerPlotWithDataArtifact = (
           return layer === null ? null : withScopeContext(layer, panelContext);
         })
         .filter((layer): layer is IRChild => layer !== null);
-      const meta: IRJsonObject = { source: 'plot', layer: 'facetPanel', facet: panel.facet.id };
+      const meta: JsonObject = { source: 'plot', layer: 'facetPanel', facet: panel.facet.id };
       if (panel.row !== undefined) meta.row = panel.row;
       if (panel.column !== undefined) meta.column = panel.column;
       const base: IRScope = {

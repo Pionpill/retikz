@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
 
 import { PlotGuide, PlotScale } from '@retikz/plot';
@@ -25,7 +25,7 @@ import {
   RegressionChartThemeResolutionSchema,
 } from './schema';
 
-const themeFallback: IRJsonObject = {
+const themeFallback: JsonObject = {
   axisEnabled: true,
   axisGridEnabled: true,
   legendEnabled: true,
@@ -50,11 +50,11 @@ const regressionFieldConsumers = [
   },
 ] as const;
 
-const withSeriesFallback = (encodings: IRJsonObject): IRJsonObject => {
+const withSeriesFallback = (encodings: JsonObject): JsonObject => {
   if (!Object.hasOwn(encodings, 'series')) return encodings;
   const series = encodings.series;
   if (typeof series === 'string') return encodings;
-  const mapping = series as IRJsonObject;
+  const mapping = series as JsonObject;
   return typeof mapping.scale === 'string'
     ? encodings
     : { ...encodings, series: { ...mapping, scale: seriesScaleName } };

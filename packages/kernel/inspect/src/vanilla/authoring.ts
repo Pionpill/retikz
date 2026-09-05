@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { InputAuthoringSite } from '@retikz/vanilla';
 
 import type { InspectionSelectionRule } from '../compile';
@@ -13,7 +13,7 @@ export type InspectionVanillaRequest = Readonly<{
   /** 要请求的 Inspector key */
   inspector: InspectorKey;
   /** sparse options、true 或继承关闭 false */
-  options: false | true | IRJsonObject;
+  options: false | true | JsonObject;
 }>;
 
 /** Vanilla site 可声明一个 request、多个 request，或 barrier */

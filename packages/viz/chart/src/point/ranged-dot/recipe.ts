@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
 
 import { PlotGuide, PlotScale } from '@retikz/plot';
@@ -25,7 +25,7 @@ import {
   RangedDotChartThemeResolutionSchema,
 } from './schema';
 
-const themeFallback: IRJsonObject = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
+const themeFallback: JsonObject = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
 
 /** Ranged Dot exact schema、调度与消费检查共用的 encoding 顺序 */
 export const RangedDotChartEncodingSlots = ['category', 'start', 'end', 'color', 'row', 'column', 'facet'] as const;
@@ -65,11 +65,11 @@ const fieldConsumers: ReadonlyArray<ChartEncodingFieldConsumer<RangedDotEncoding
   },
 ];
 
-const withColorFallback = (encodings: IRJsonObject): IRJsonObject => {
+const withColorFallback = (encodings: JsonObject): JsonObject => {
   if (!Object.hasOwn(encodings, 'color')) return encodings;
   const value = encodings.color;
   if (typeof value === 'string') return { ...encodings, color: { field: value, scale: colorScaleName } };
-  const mapping = value as IRJsonObject;
+  const mapping = value as JsonObject;
   return typeof mapping.scale === 'string' ? encodings : { ...encodings, color: { ...mapping, scale: colorScaleName } };
 };
 

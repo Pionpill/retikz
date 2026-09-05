@@ -1,5 +1,5 @@
-import type { IRJsonObject } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import type {
   CollectionContext,
   PlotAuthoringDeclarations,
@@ -11,7 +11,7 @@ import type {
 } from '@retikz/plot-vanilla';
 import type { ReactElement, ReactNode } from 'react';
 
-import { JsonObjectSchema } from '@retikz/core';
+import { JsonObjectSchema } from '@retikz/foundation';
 import { Fragment, isValidElement } from 'react';
 
 import {
@@ -45,7 +45,7 @@ const declarationKindOf = (element: ReactElement): PlotDeclarationKind | undefin
   return undefined;
 };
 
-const plainPropsOf = (props: Record<string, unknown>, overrides: Record<string, unknown> = {}): IRJsonObject => {
+const plainPropsOf = (props: Record<string, unknown>, overrides: Record<string, unknown> = {}): JsonObject => {
   const plain: Record<string, unknown> = {};
   for (const [key, value] of Object.entries({ ...props, ...overrides })) {
     if (key === 'resolveLabel' || (key === 'children' && !Object.hasOwn(overrides, 'children')) || value === undefined)
@@ -70,7 +70,7 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
 
   const appendDeclaration = (
     kind: PlotDeclarationKind,
-    props: IRJsonObject,
+    props: JsonObject,
     path: PlotDeclarationPath,
     context: CollectionContext,
   ): void => {

@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
 
 import { PlotGuide, PlotScale } from '@retikz/plot';
@@ -26,7 +26,7 @@ import {
   ConnectedScatterChartThemeResolutionSchema,
 } from './schema';
 
-const themeFallback: IRJsonObject = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
+const themeFallback: JsonObject = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
 
 /** Connected Scatter exact schema、调度与消费检查共用的 encoding 顺序 */
 export const ConnectedScatterChartEncodingSlots = ['x', 'y', 'order', 'series', 'row', 'column', 'facet'] as const;

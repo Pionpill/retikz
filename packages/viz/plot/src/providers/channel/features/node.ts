@@ -1,5 +1,6 @@
-import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeValue, JsonValue } from '@retikz/core';
+import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeValue } from '@retikz/core';
 import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
+import type { JsonValue } from '@retikz/foundation';
 
 import {
   AxisScaleSchema,
@@ -8,11 +9,11 @@ import {
   BoxSpacingSchema,
   DropShadowSchema,
   FontSchema,
-  JsonValueSchema,
   ShapeRefSchema,
 } from '@retikz/core';
 import { inferCategoryDomain, inferFieldType, resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
+import { JsonValueSchema } from '@retikz/foundation';
 import { isFiniteNumber } from '@retikz/math';
 
 import type {

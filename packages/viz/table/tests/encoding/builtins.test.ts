@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 
 import { describe, expect, it } from 'vitest';
 
@@ -10,7 +10,7 @@ const context = {
   sequentialColors: ['#ffffff', '#000000'],
 } as const;
 
-const resolve = (name: string, options: IRJsonObject, values: ReadonlyArray<string | number | boolean>) =>
+const resolve = (name: string, options: JsonObject, values: ReadonlyArray<string | number | boolean>) =>
   resolveCellVisualScale({
     ref: { name, options },
     values,

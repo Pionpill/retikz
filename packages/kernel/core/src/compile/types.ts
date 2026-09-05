@@ -1,3 +1,4 @@
+import type { JsonValue } from '@retikz/foundation';
 import type { RuntimeTraceReporter } from '@retikz/runtime';
 import type { ZodType } from 'zod';
 
@@ -9,7 +10,7 @@ import type {
   SpatialHandleIndex,
 } from '../contract';
 import type { CoreProviderDefinitions, ThemeStyleDefinition } from '../contract';
-import type { IRCoordinate, IRNode, IRPathBase, IRScene, IRScope, JsonValue } from '../schemas';
+import type { IRCoordinate, IRNode, IRPathBase, IRScene, IRScope } from '../schemas';
 import type { LowerTex, TextMeasurer } from './text';
 import type { CompileWarning } from './warning';
 

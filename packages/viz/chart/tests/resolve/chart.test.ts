@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotPartitionDimension } from '@retikz/plot';
 
 import { DEFAULT_RESOLVED_THEME, NodeTextAlign, ThemeMode } from '@retikz/core';
@@ -30,7 +30,7 @@ import { chartThemeDefinitionsOf, resolveChartProviderRegistry } from '../../src
 import { resolveSelectedChart } from '../../src/_chart/resolve';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }): ChartEncodingResolution => {
-  const encodings = { ...context.encodings } as IRJsonObject;
+  const encodings = { ...context.encodings } as JsonObject;
   delete encodings.row;
   delete encodings.column;
   delete encodings.facet;

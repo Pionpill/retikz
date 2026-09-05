@@ -68,7 +68,7 @@ describe('Plot style token contract', () => {
     if (!result.success) expect(result.error.issues[0]).toMatchObject({ code: 'unrecognized_keys', keys: ['colors'] });
   });
 
-  it('对未知 token、错误原子、显式 undefined 与空 palette 给出可定位失败', () => {
+  it('对未知 token、错误原子与空 palette 给出可定位失败', () => {
     const unknown = PlotThemeTokenOverridesSchema.safeParse({ 'chart.canvas.fill': '#ffffff' });
     expect(unknown.success).toBe(false);
     if (!unknown.success) {
@@ -79,16 +79,26 @@ describe('Plot style token contract', () => {
       [{ [PlotThemeToken.AxisLineStrokeWidth]: -1 }, [PlotThemeToken.AxisLineStrokeWidth]],
       [{ [PlotThemeToken.AxisTitlePadding]: -1 }, [PlotThemeToken.AxisTitlePadding]],
       [{ [PlotThemeToken.AxisGridIncludeDomain]: 'yes' }, [PlotThemeToken.AxisGridIncludeDomain]],
-      [{ [PlotThemeToken.AxisGridIncludeDomain]: undefined }, [PlotThemeToken.AxisGridIncludeDomain]],
       [{ [PlotThemeToken.PlotPaletteSeries]: [] }, [PlotThemeToken.PlotPaletteSeries]],
       [{ [PlotThemeToken.PlotPaletteShape]: [] }, [PlotThemeToken.PlotPaletteShape]],
-      [{ [PlotThemeToken.PlotAreaFill]: undefined }, [PlotThemeToken.PlotAreaFill]],
     ] as const) {
       const result = PlotThemeTokenOverridesSchema.safeParse(value);
       expect(result.success).toBe(false);
       if (!result.success)
         expect(result.error.issues.some(issue => issue.path.join('.') === path.join('.'))).toBe(true);
     }
+  });
+
+  it('让 optional token 的显式 undefined 遵循 Zod parse 返回结构', () => {
+    const parsed = PlotThemeTokenOverridesSchema.parse({
+      [PlotThemeToken.AxisGridIncludeDomain]: undefined,
+      [PlotThemeToken.PlotAreaFill]: undefined,
+    });
+
+    expect(Object.hasOwn(parsed, PlotThemeToken.AxisGridIncludeDomain)).toBe(true);
+    expect(Object.hasOwn(parsed, PlotThemeToken.PlotAreaFill)).toBe(true);
+    expect(parsed[PlotThemeToken.AxisGridIncludeDomain]).toBeUndefined();
+    expect(parsed[PlotThemeToken.PlotAreaFill]).toBeUndefined();
   });
 
   it('shape palette 接受 string 或结构化引用并拒绝任意对象', () => {
@@ -173,15 +183,15 @@ describe('Plot style token contract', () => {
       expect(PlotThemeSchema.safeParse({ axis: { grid } }).success).toBe(false);
     }
 
-    const explicitUndefined = PlotThemeSchema.safeParse({
+    const explicitUndefined = PlotThemeSchema.parse({
       axis: { grid: { includeDomain: undefined } },
     });
-    expect(explicitUndefined.success).toBe(false);
-    if (!explicitUndefined.success) {
-      expect(explicitUndefined.error.issues[0]).toMatchObject({
-        code: 'custom',
-        path: ['axis', 'grid', 'includeDomain'],
-      });
+    const grid = explicitUndefined.axis?.grid;
+    expect(grid).not.toBe(false);
+    expect(typeof grid).toBe('object');
+    if (typeof grid === 'object') {
+      expect(Object.hasOwn(grid, 'includeDomain')).toBe(true);
+      expect(grid.includeDomain).toBeUndefined();
     }
   });
 
@@ -251,10 +261,14 @@ describe('Plot style token contract', () => {
       { select: { dimension: [] }, tokens: { [PlotThemeToken.AxisGridEnabled]: true } },
       { select: { dimension: ['x', 'x'] }, tokens: { [PlotThemeToken.AxisGridEnabled]: true } },
       { select: { dimension: 'x' }, tokens: { [PlotThemeToken.LegendSwatchSize]: 12 } },
-      { select: { dimension: 'x' }, tokens: { [PlotThemeToken.AxisGridEnabled]: undefined } },
     ]) {
       expect(PlotAxisThemeTokenRuleSchema.safeParse(rule).success).toBe(false);
     }
+    const explicitUndefinedRule = PlotAxisThemeTokenRuleSchema.parse({
+      select: { dimension: 'x' },
+      tokens: { [PlotThemeToken.AxisGridEnabled]: undefined },
+    });
+    expect(Object.hasOwn(explicitUndefinedRule.tokens, PlotThemeToken.AxisGridEnabled)).toBe(true);
     expect(PlotAxisThemeTokenOverridesSchema.safeParse({ [PlotThemeToken.AxisLineEnabled]: false }).success).toBe(true);
     expect(PlotAxisThemeTokenOverridesSchema.safeParse({ [PlotThemeToken.PlotAreaFill]: 'none' }).success).toBe(false);
   });

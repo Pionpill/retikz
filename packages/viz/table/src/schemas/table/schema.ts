@@ -1,8 +1,8 @@
 import type { RefinementCtx } from 'zod';
 
-import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
+import { CompositeBaseSchema } from '@retikz/core';
 import { DataReferenceSchema } from '@retikz/data';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { array, literal, never, union } from 'zod';
 
 import { TableCellVisualEncodingSchema } from '../encoding';

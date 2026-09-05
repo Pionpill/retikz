@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 
 import type { EntityKindDefinition, EntityPredicateDefinition, EntityRoleDefinition } from '../../contract';
 import type { GraphEntityThemeStyleTokens } from '../../contract';
@@ -9,7 +9,7 @@ import type { GraphMemberAppearanceResolveContext } from '../theme';
 /** 已校验 params 与来源 Definition 组成的 Canonical Entity predicate */
 export type CanonicalEntityPredicate = Readonly<{
   definition: EntityPredicateDefinition;
-  params: IRJsonObject;
+  params: JsonObject;
 }>;
 
 /** Entity data resolver 的窄上下文 */

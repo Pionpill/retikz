@@ -1,10 +1,12 @@
-import type { IRPathScale, JsonValue } from '@retikz/core';
+import type { IRPathScale } from '@retikz/core';
 import type { PathThicknessValue } from '@retikz/core';
 import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
+import type { JsonValue } from '@retikz/foundation';
 
-import { DropShadowSchema, JsonValueSchema, PathScaleSchema, PathThickness, THICKNESS_TO_WIDTH } from '@retikz/core';
+import { DropShadowSchema, PathScaleSchema, PathThickness, THICKNESS_TO_WIDTH } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
+import { JsonValueSchema } from '@retikz/foundation';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';

@@ -1,3 +1,5 @@
+import type { JsonObject } from '@retikz/foundation';
+
 import type {
   ClipDefinition,
   ClipShape,
@@ -5,7 +7,7 @@ import type {
   ResolvedPatternLineStyle,
   ResolvedPatternLineStyleCycle,
 } from '../../contract';
-import type { IRClip, IRJsonObject, IRPaint, IRPatternPaint } from '../../schemas';
+import type { IRClip, IRPaint, IRPatternPaint } from '../../schemas';
 
 /** 已在 resolve 阶段绑定的 pattern 线型数据 */
 export type PatternStyleResolution = Readonly<{
@@ -55,7 +57,7 @@ export type ClipResolution = Readonly<{
   /** 已绑定的 clip provider */
   definition: ClipDefinition;
   /** provider schema parse 后的 JSON params */
-  params: IRJsonObject;
+  params: JsonObject;
   /** 递归解析嵌套 clip，闭包捕获同一有效 registry */
   resolve: (clip: IRClip) => ClipResolution;
 }>;

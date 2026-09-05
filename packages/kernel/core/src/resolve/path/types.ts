@@ -1,3 +1,5 @@
+import type { JsonObject } from '@retikz/foundation';
+
 import type {
   AnyPathKindDefinition,
   ArrowDefinition,
@@ -8,7 +10,6 @@ import type {
 import type {
   IRArrowMark,
   IRGeometryLabel,
-  IRJsonObject,
   IRPaint,
   IRPathBase,
   IRPosition,
@@ -122,7 +123,7 @@ export type PathGeneratorResolution = Readonly<{
   stepIndex: number;
   name: string;
   definition: PathGeneratorDefinition;
-  params: IRJsonObject;
+  params: JsonObject;
   irPath: string;
 }>;
 

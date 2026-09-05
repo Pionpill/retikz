@@ -1,4 +1,5 @@
-import type { IRChild, IRJsonObject, IRNode, IRPathBase, IRScope } from '@retikz/core';
+import type { IRChild, IRNode, IRPathBase, IRScope } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 
 import type { IRPlotAxisGuide, IRPlotGuide } from '../../../schemas';
 
@@ -20,7 +21,7 @@ export const withEnabledAxisGrid = (guide: IRPlotAxisGuide, coordinateView: stri
   grid: guide.grid === undefined || guide.grid === false ? true : guide.grid,
 });
 
-const mergeContextMeta = (meta: IRJsonObject | undefined, context: IRJsonObject): IRJsonObject => ({
+const mergeContextMeta = (meta: JsonObject | undefined, context: JsonObject): JsonObject => ({
   ...(meta ?? {}),
   ...context,
 });
@@ -30,7 +31,7 @@ const isIRNode = (child: IRChild): child is IRNode => child.type === 'node' && '
 const isIRPath = (child: IRChild): child is IRPathBase => child.type === 'path' && 'children' in child;
 
 /** 把 coordinate scope context 递归写入 lowering 产物 metadata。 */
-export const withScopeContext = (child: IRChild, context: IRJsonObject): IRChild => {
+export const withScopeContext = (child: IRChild, context: JsonObject): IRChild => {
   if (Object.keys(context).length === 0) return child;
   if (isIRScope(child)) {
     return {

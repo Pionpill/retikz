@@ -512,6 +512,11 @@ export const applyDeclaration = (
       );
     }
     if (arrangement === 'normalize-stack') {
+      if (categoryField === undefined) {
+        throw new RetikzPlotVanillaError(
+          'buildPlotIR: <IntervalMark arrangement="normalize-stack"> requires the category field on x (vertical) or y (horizontal)',
+        );
+      }
       into.shortcutTransforms.push({
         kind: PlotTransform.Normalize,
         field: valueField,

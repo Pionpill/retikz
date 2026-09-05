@@ -6,21 +6,6 @@ import { enum as zodEnum, strictObject } from 'zod';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from './errors';
 
-const rejectUndefinedFields = (
-  value: Record<string, unknown>,
-  context: { addIssue: (issue: { code: 'custom'; path: Array<string>; message: string }) => void },
-): void => {
-  for (const key of Object.keys(value)) {
-    if (value[key] === undefined) {
-      context.addIssue({
-        code: 'custom',
-        path: [key],
-        message: `Field '${key}' must be omitted instead of undefined.`,
-      });
-    }
-  }
-};
-
 const hasTextContent = (value: unknown): boolean => {
   if (typeof value === 'string') return value.length > 0;
   if (!Array.isArray(value)) return false;
@@ -47,7 +32,6 @@ export const DiagramPresentationSchema = strictObject({
   legend: LegendSchema.optional().describe('Optional canonical Standard Legend composite.'),
 })
   .superRefine((presentation, context) => {
-    rejectUndefinedFields(presentation, context);
     if (
       presentation.title === undefined &&
       presentation.description === undefined &&
@@ -89,7 +73,6 @@ export const DiagramFrameSchema = strictObject({
   cornerRadius: SurfaceInputSchema.shape.cornerRadius.describe('Surface corner radius override.'),
 })
   .superRefine((frame, context) => {
-    rejectUndefinedFields(frame, context);
     if (Object.keys(frame).length === 0) {
       context.addIssue({ code: 'custom', path: [], message: 'Diagram Frame must contain at least one field.' });
     }
@@ -106,7 +89,6 @@ const DiagramFrameThemeSchema = strictObject({
   cornerRadius: NonNegativeNumberSchema.optional().describe('Surface corner radius default.'),
 })
   .superRefine((slice, context) => {
-    rejectUndefinedFields(slice, context);
     if (Object.keys(slice).length === 0) {
       context.addIssue({ code: 'custom', path: [], message: 'Diagram Theme frame slice must not be empty.' });
     }
@@ -122,7 +104,6 @@ const DiagramTextAppearanceSchema = strictObject({
   maxTextWidth: NodeSchema.shape.maxTextWidth.describe('Block maximum text width.'),
 })
   .superRefine((slice, context) => {
-    rejectUndefinedFields(slice, context);
     if (Object.keys(slice).length === 0) {
       context.addIssue({ code: 'custom', path: [], message: 'Diagram Theme text slice must not be empty.' });
     }
@@ -136,7 +117,6 @@ export const DiagramThemeSchema = strictObject({
   description: DiagramTextAppearanceSchema.optional(),
 })
   .superRefine((theme, context) => {
-    rejectUndefinedFields(theme, context);
     if (Object.keys(theme).length === 0) {
       context.addIssue({ code: 'custom', path: [], message: 'Diagram Theme must contain at least one slice.' });
     }

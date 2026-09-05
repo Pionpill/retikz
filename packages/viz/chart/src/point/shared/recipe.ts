@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
 
 import type {
@@ -12,7 +12,7 @@ import { PointRecipeThemeResolutionSchema } from './schema';
 
 /** 已完成 theme fallback 的 Point recipe token */
 export const pointThemeOf = (
-  tokens: IRJsonObject,
+  tokens: JsonObject,
 ): Readonly<{ axisEnabled: boolean; axisGridEnabled: boolean; legendEnabled: boolean }> =>
   PointRecipeThemeResolutionSchema.parse(tokens);
 
@@ -42,7 +42,7 @@ export const pointResolutionOf = (
 /** 由 recipe context 提取通用 Point slot */
 export const pointSlotsOf = (
   context: ChartRecipeResolveContext,
-): Readonly<{ encodings: IRJsonObject; properties: IRJsonObject }> => ({
+): Readonly<{ encodings: JsonObject; properties: JsonObject }> => ({
   encodings: context.encodings,
   properties: context.properties,
 });

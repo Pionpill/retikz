@@ -8,9 +8,18 @@ import {
   getDefaultTableThemePreset,
   resolveTableThemeTokens,
   RetikzTableErrorCode,
+  TableThemeToken,
+  TableThemeTokenOverridesSchema,
 } from '../../src';
 
 describe('Table theme token resolution', () => {
+  it('让 optional token 的显式 undefined 遵循 owner schema', () => {
+    const parsed = TableThemeTokenOverridesSchema.parse({ [TableThemeToken.CellContentColor]: undefined });
+
+    expect(Object.hasOwn(parsed, TableThemeToken.CellContentColor)).toBe(true);
+    expect(parsed[TableThemeToken.CellContentColor]).toBeUndefined();
+  });
+
   it('defaults to the light baseline and records local/inherited winners', () => {
     const resolved = resolveTableThemeTokens();
 
@@ -23,6 +32,12 @@ describe('Table theme token resolution', () => {
     ]);
     expect(Object.isFrozen(resolved)).toBe(true);
     expect(Object.isFrozen(resolved.tokens)).toBe(true);
+  });
+
+  it('lets the resolved token schema consume typed local input before immutable output handling', () => {
+    const local = new Proxy({}, {});
+
+    expect(resolveTableThemeTokens(undefined, local).tokens).toMatchObject(getDefaultTableThemePreset(ThemeMode.Light));
   });
 
   it('overlays independent leaves and atomically replaces structured tokens', () => {
@@ -115,28 +130,24 @@ describe('Table theme token resolution', () => {
     });
   });
 
-  it('把外部 style definition 的显式 undefined token 当作省略', () => {
+  it('让外部 style definition 的显式 undefined token 进入既有完整 token 校验', () => {
     const sparseTokens = { 'cell.content.color': '#123456' };
     Object.defineProperty(sparseTokens, 'cell.content.color', {
       enumerable: true,
       value: undefined,
     });
     const sparse = defineTableThemeStyle({ name: 'sparse', resolve: () => sparseTokens });
-    const resolved = resolveTableThemeTokens(
-      {
-        style: 'sparse',
-        mode: ThemeMode.Light,
-        colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
-      },
-      {},
-      [sparse],
-    );
-
-    expect(resolved.tokens['cell.content.color']).toBe('#18181b');
-    expect(resolved.sources['cell.content.color']).toEqual({
-      kind: 'local',
-      path: '$default/light/cell.content.color',
-    });
+    expect(() =>
+      resolveTableThemeTokens(
+        {
+          style: 'sparse',
+          mode: ThemeMode.Light,
+          colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
+        },
+        {},
+        [sparse],
+      ),
+    ).toThrowError(ZodError);
 
     const unknownTokens = { 'cell.content.color': '#123456' };
     Object.defineProperty(unknownTokens, 'unknown.token', { enumerable: true, value: undefined });
@@ -154,20 +165,7 @@ describe('Table theme token resolution', () => {
     ).toThrow(/unknown/i);
   });
 
-  it('拒绝已注册外部 style definition 的非法顶层输出', () => {
-    class EmptyStyleOutput {}
-    class BorderOutput {
-      readonly kind = 'line';
-      readonly stroke = '#123456';
-      readonly width = 1;
-    }
-
-    const getterOutput = Object.defineProperty({}, 'cell.content.color', {
-      enumerable: true,
-      get: () => '#123456',
-    });
-    const symbolOutput = { 'cell.content.color': '#123456', [Symbol('metadata')]: true };
-
+  it('拒绝 owner schema 无法解析的外部 style definition 输出', () => {
     const theme = {
       style: 'invalid',
       mode: ThemeMode.Light,
@@ -177,12 +175,7 @@ describe('Table theme token resolution', () => {
       { name: 'null-output', resolve: () => null },
       { name: 'undefined-output', resolve: () => undefined },
       { name: 'primitive-output', resolve: () => 42 },
-      { name: 'date-output', resolve: () => new Date(0) },
-      { name: 'class-output', resolve: () => new EmptyStyleOutput() },
-      { name: 'promise-output', resolve: () => Promise.resolve({}) },
-      { name: 'class-token-value', resolve: () => ({ 'table.border.top': new BorderOutput() }) },
-      { name: 'getter-output', resolve: () => getterOutput },
-      { name: 'symbol-output', resolve: () => symbolOutput },
+      { name: 'unknown-token', resolve: () => ({ unknown: true }) },
     ];
 
     for (const definition of invalidDefinitions) {
@@ -197,6 +190,61 @@ describe('Table theme token resolution', () => {
         }),
       );
     }
+  });
+
+  it('按 owner schema 投影外部 style definition 的对象输出', () => {
+    class EmptyStyleOutput {}
+    class BorderOutput {
+      readonly kind = 'line';
+      readonly stroke = '#123456';
+      readonly width = 1;
+    }
+
+    const getterOutput = Object.defineProperty({}, 'cell.content.color', {
+      enumerable: true,
+      get: () => '#123456',
+    });
+    const definitions = [
+      { name: 'date-output', resolve: () => new Date(0), expectedColor: '#18181b' },
+      { name: 'class-output', resolve: () => new EmptyStyleOutput(), expectedColor: '#18181b' },
+      { name: 'promise-output', resolve: () => Promise.resolve({}), expectedColor: '#18181b' },
+      { name: 'getter-output', resolve: () => getterOutput, expectedColor: '#123456' },
+      {
+        name: 'symbol-output',
+        resolve: () => ({ 'cell.content.color': '#123456', [Symbol('metadata')]: true }),
+        expectedColor: '#123456',
+      },
+    ];
+
+    for (const definition of definitions) {
+      const resolved = Reflect.apply(resolveTableThemeTokens, undefined, [
+        {
+          style: definition.name,
+          mode: ThemeMode.Light,
+          colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
+        },
+        {},
+        [definition],
+      ]);
+
+      expect(resolved.tokens['cell.content.color'], definition.name).toBe(definition.expectedColor);
+    }
+
+    const classToken = defineTableThemeStyle({
+      name: 'class-token-value',
+      resolve: () => ({ 'table.border.top': new BorderOutput() }),
+    });
+    expect(
+      resolveTableThemeTokens(
+        {
+          style: classToken.name,
+          mode: ThemeMode.Light,
+          colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
+        },
+        {},
+        [classToken],
+      ).tokens['table.border.top'],
+    ).toEqual({ kind: 'line', stroke: '#123456', width: 1 });
   });
 
   it('保留外部 style definition callback 抛出的原始 cause', () => {

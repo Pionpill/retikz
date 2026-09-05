@@ -1,5 +1,4 @@
-﻿import type { IRChild, IRJsonObject } from '@retikz/core';
-import type { ZodType } from 'zod';
+﻿import type { IRChild } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
 import { strictObject, string } from 'zod';
@@ -135,11 +134,15 @@ describe('Cell presentation registry', () => {
     );
   });
 
-  it('guards custom options and provider output at runtime', () => {
-    const nonJsonOptions = defineCellPresentation<IRJsonObject>({
-      name: 'non-json-options',
-      optionsSchema: strictObject({}).transform(() => ({ format: () => 'x' })) as unknown as ZodType<IRJsonObject>,
-      present: () => ({ type: 'node', position: [0, 0] }),
+  it('uses exact option transforms and guards provider output at runtime', () => {
+    const transformedOptions = defineCellPresentation({
+      name: 'transformed-options',
+      optionsSchema: strictObject({}).transform(() => ({ value: Number.NaN })),
+      present: (_input, options) => ({
+        type: 'node',
+        position: [0, 0],
+        text: Number.isNaN(options.value) ? 'transformed' : 'unexpected',
+      }),
     });
     const invalidOutput = defineCellPresentation({
       name: 'invalid-output',
@@ -152,9 +155,9 @@ describe('Cell presentation registry', () => {
       present: () => ({ namespace: 'custom', type: 'child', render: () => 'x' }),
     });
 
-    expect(() => presentedCellOf({ value: 1, presentation: { name: 'non-json-options' } }, [nonJsonOptions])).toThrow(
-      /table: presentation "non-json-options" for cell "cell\.r0\.c0"/,
-    );
+    expect(
+      presentedCellOf({ value: 1, presentation: { name: 'transformed-options' } }, [transformedOptions]).content,
+    ).toMatchObject({ text: 'transformed' });
     expect(() => presentedCellOf({ value: 1, presentation: { name: 'invalid-output' } }, [invalidOutput])).toThrow(
       /table: presentation "invalid-output" for cell "cell\.r0\.c0"/,
     );

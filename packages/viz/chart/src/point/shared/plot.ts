@@ -178,7 +178,9 @@ export const resolvePointScaleDefaults = (
   for (const [role, scaleName] of Object.entries(context.encodings.positionScales)) {
     if (role === 'x' || role === 'y') roleByScaleName.set(scaleName, role);
   }
-  const extensionScaleNames = new Set(context.source.plotExtension?.scales?.map(scale => scale.name) ?? []);
+  const extensionScaleNames = new Set(
+    (context.encodings.extensionScales ?? context.source.plotExtension?.scales ?? []).map(scale => scale.name),
+  );
   return context.scales.map(scale => {
     const role = roleByScaleName.get(scale.name);
     if (

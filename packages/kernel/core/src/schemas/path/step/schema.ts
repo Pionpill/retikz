@@ -1,6 +1,7 @@
 import type { RefinementCtx } from 'zod';
 
 import {
+  JsonObjectSchema,
   NonBlankStringSchema,
   NonNegativeNumberSchema,
   NormalizedFractionSchema,
@@ -9,7 +10,6 @@ import {
 import { array, boolean, discriminatedUnion, enum as zodEnum, literal, strictObject, union } from 'zod';
 
 import { Side } from '../../../shared';
-import { JsonObjectSchema } from '../../json';
 import { PositionSchema } from '../../position';
 import { AngleDegreesSchema } from '../../scalar';
 import { createLabelVisualStyleShape, LabelTextContentSchema } from '../../text';
