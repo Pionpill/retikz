@@ -25,19 +25,27 @@ const textNode = (text: IRTextBlock, appearance: ResolvedDiagramTextAppearance):
     type: 'node',
     position: [0, 0],
     shape: 'rectangle',
-    fill: 'none',
-    stroke: 'none',
-    textColor: appearance.textColor,
-    opacity: appearance.opacity,
-    padding: 0,
-    margin: 0,
     text,
-    font: appearance.font,
-    align: appearance.align,
-    lineHeight: appearance.lineHeight,
-    ...(appearance.maxTextWidth === undefined ? {} : { maxTextWidth: appearance.maxTextWidth }),
+    style: {
+      fill: 'none',
+      stroke: 'none',
+      textColor: appearance.textColor,
+      opacity: appearance.opacity,
+      font: appearance.font,
+    },
+    layout: {
+      padding: 0,
+      margin: 0,
+      align: appearance.align,
+      lineHeight: appearance.lineHeight,
+      ...(appearance.maxTextWidth === undefined ? {} : { maxTextWidth: appearance.maxTextWidth }),
+    },
   };
-  return { type: 'scope', resetStyle: ['node'], children: [node] };
+  return {
+    type: 'scope',
+    children: [node],
+    defaults: { reset: ['node'] },
+  };
 };
 
 const headingOf = (

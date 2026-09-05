@@ -26,7 +26,7 @@ import { Layout, Node } from '@retikz/react';
 
 `source` 与 `target` 是语义真源，不从 route、marker 或视觉方向反推。它们可以指向 Core Node、Coordinate、已解析 Scope，或 lower 后发布这些 target 的上层 composite。省略 `route` 时直接连接 source 与 target；`way` 是 Vanilla/React authoring sugar，会在入口归一为直接 `route`
 
-Relation 直接复用大部分 Core Path 字段。默认 Graph Theme 使用灰色、`sm` 字号的 label；role、kind、predicate 与 Theme 只提供默认，Relation 显式 `stroke`、`dashPattern` 等 Path 字段最终优先，每个 label 也可以单独设置 `textColor`、`font` 与 `opacity`
+Relation 直接复用大部分 Core Path 字段。默认 Graph Theme 使用灰色、`sm` 字号的 label；role、kind、predicate 与 Theme 只提供默认，Relation 显式 `style.stroke`、`style.dashPattern` 等 Path 字段最终优先，每个 label 也可以单独设置 `textColor`、`font` 与 `opacity`
 
 ## 例子
 
@@ -139,6 +139,8 @@ Relation resolve 只处理 role、kind、predicate、status、direction 与 Them
 
 ## API 参考
 
+路径外观使用 `style`；`style.fill`、`style.fillOpacity` 与 `style.fillRule` 不向 Relation 开放。几何、labels 和 marker 覆盖仍位于根层。
+
 | 属性                   | 类型                                                                                                                               | 默认值             | 描述                                                                                                                                                      |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id?`                  | `string`                                                                                                                           | —                  | 可选稳定 Core Path id；省略时不维护 Relation 自身 identity                                                                                                |
@@ -151,7 +153,7 @@ Relation resolve 只处理 role、kind、predicate、status、direction 与 Them
 | `direction?`           | `'none' \| 'forward' \| 'reverse' \| 'both'`                                                                                       | 由 role 决定       | 显式语义方向，必须在 role/kind 允许集合内                                                                                                                 |
 | `labels?`              | `Array<IRGeometryLabel>`                                                                                                           | —                  | 完整 Core Geometry Label；每个 label 的显式颜色、字体与透明度覆盖 Relation 默认                                                                           |
 | `route?`               | `Array<IRGraphRelationRouteStep>`                                                                                                  | source→target 直连 | 完整 Core Path step sequence；route step 不承载 label                                                                                                     |
-| `dashPattern?`         | `Array<number>`                                                                                                                    | 由 role/kind 决定  | 显式 Path dash pattern，最终覆盖关系结构默认                                                                                                              |
+| `style.dashPattern?`   | `Array<number>`                                                                                                                    | 由 role/kind 决定  | 显式 Path dash pattern，最终覆盖关系结构默认                                                                                                              |
 | `labelTextForeground?` | `string`                                                                                                                           | `gray`             | Relation labels 的默认文本颜色；Theme、Relation 或单个 label 可显式覆盖                                                                                   |
 | `labelFont?`           | `IRFont`                                                                                                                           | `{ size: 'sm' }`   | Relation labels 的默认字体；Theme、Relation 或单个 label 按子字段覆盖                                                                                     |
 | `labelOpacity?`        | `number`                                                                                                                           | 由 Theme 决定      | Relation labels 的默认不透明度；单个 label 显式值优先                                                                                                     |

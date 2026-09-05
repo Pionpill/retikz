@@ -27,10 +27,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           description: { text: '编译与渲染' },
         }}
       >
-        <Entity id="compiler" role="activity" position={[90, 110]} textColor="currentColor">
+        <Entity id="compiler" role="activity" position={[90, 110]} style={{ textColor: 'currentColor' }}>
           编译
         </Entity>
-        <Entity id="renderer" role="participant" position={[230, 110]} textColor="currentColor">
+        <Entity id="renderer" role="participant" position={[230, 110]} style={{ textColor: 'currentColor' }}>
           渲染器
         </Entity>
         <Relation role="flow" source={{ id: 'compiler' }} target={{ id: 'renderer' }} />

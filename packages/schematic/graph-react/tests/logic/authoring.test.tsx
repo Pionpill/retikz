@@ -226,7 +226,6 @@ const hostPropKeys = [
   'height',
   'viewBox',
   'className',
-  'style',
   'renderer',
   'animate',
   'snapshotAt',
@@ -340,8 +339,8 @@ describe('Entity and Relation React authoring', () => {
           status: 'warning',
           source: { id: 'source' },
           target: { id: 'target' },
-          dashPattern: [6, 2],
           labels: [{ text: 'precise', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
+          style: { dashPattern: [6, 2] },
         }),
       ),
     );
@@ -365,8 +364,8 @@ describe('Entity and Relation React authoring', () => {
         status: 'warning',
         source: { id: 'source' },
         target: { id: 'target' },
-        dashPattern: [6, 2],
         labels: [{ text: 'precise', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
+        style: { dashPattern: [6, 2] },
       },
     ]);
     expect(result.ir.children[2]).not.toHaveProperty('id');
@@ -452,23 +451,31 @@ describe('Graph Source and child authoring', () => {
           localNamespace: true,
           transforms: [{ kind: 'translate', x: 10, y: 20 }],
           placement: { target: [30, 40], selfAnchor: 'center' },
-          color: '#0f172a',
-          stroke: '#334155',
-          fill: '#e2e8f0',
-          strokeWidth: 2,
-          opacity: 0.8,
-          fillOpacity: 0.7,
-          strokeOpacity: 0.9,
-          nodeDefault: { fill: 'white' },
-          pathDefault: { stroke: 'green' },
-          labelDefault: { font: { size: 10 } },
-          arrowDefault: { shape: 'stealth', scale: 1.5 },
-          resetStyle: ['path'],
           zIndex: 2,
           clip: { kind: 'rect', x: 0, y: 0, width: 220, height: 120 },
           boundingShape: 'circle',
           meta: { source: 'architecture-catalog' },
           animations: [],
+          style: {
+            color: '#0f172a',
+            stroke: '#334155',
+            fill: '#e2e8f0',
+            strokeWidth: 2,
+            opacity: 0.8,
+            fillOpacity: 0.7,
+            strokeOpacity: 0.9,
+          },
+          defaults: {
+            node: {
+              style: { fill: 'white' },
+            },
+            path: {
+              style: { stroke: 'green' },
+            },
+            label: { font: { size: 10 } },
+            arrow: { shape: 'stealth', scale: 1.5 },
+            reset: ['path'],
+          },
         },
         createElement(Node, { id: 'child', position: [0, 0] }),
       ),
@@ -492,24 +499,32 @@ describe('Graph Source and child authoring', () => {
         localNamespace: true,
         transforms: [{ kind: 'translate', x: 10, y: 20 }],
         placement: { target: [30, 40], selfAnchor: 'center' },
-        color: '#0f172a',
-        stroke: '#334155',
-        fill: '#e2e8f0',
-        strokeWidth: 2,
-        opacity: 0.8,
-        fillOpacity: 0.7,
-        strokeOpacity: 0.9,
-        nodeDefault: { fill: 'white' },
-        pathDefault: { stroke: 'green' },
-        labelDefault: { font: { size: 10 } },
-        arrowDefault: { shape: 'stealth', scale: 1.5 },
-        resetStyle: ['path'],
         zIndex: 2,
         clip: { kind: 'rect', x: 0, y: 0, width: 220, height: 120 },
         boundingShape: 'circle',
         meta: { source: 'architecture-catalog' },
         animations: [],
         children: [{ type: 'node', id: 'child', position: [0, 0] }],
+        style: {
+          color: '#0f172a',
+          stroke: '#334155',
+          fill: '#e2e8f0',
+          strokeWidth: 2,
+          opacity: 0.8,
+          fillOpacity: 0.7,
+          strokeOpacity: 0.9,
+        },
+        defaults: {
+          node: {
+            style: { fill: 'white' },
+          },
+          path: {
+            style: { stroke: 'green' },
+          },
+          label: { font: { size: 10 } },
+          arrow: { shape: 'stealth', scale: 1.5 },
+          reset: ['path'],
+        },
       },
     ]);
   });
@@ -589,6 +604,13 @@ describe('Graph standalone and embedded host classification', () => {
     expect(markup.match(/<svg/g)).toHaveLength(1);
   });
 
+  it('standalone Graph 将 style 级联到绘图内容', () => {
+    const markup = renderToStaticMarkup(
+      createElement(Graph, { style: { fill: '#123456' } }, createElement(Node, { position: [0, 0] })),
+    );
+    expect(markup).toContain('fill="#123456"');
+  });
+
   it('forwards the complete standalone host surface without consuming Source fields', () => {
     const props = {
       authoring: undefined,
@@ -599,7 +621,7 @@ describe('Graph standalone and embedded host classification', () => {
       height: undefined,
       viewBox: undefined,
       className: undefined,
-      style: undefined,
+      style: { fill: '#123456' },
       renderer: undefined,
       animate: undefined,
       snapshotAt: undefined,
@@ -629,6 +651,7 @@ describe('Graph standalone and embedded host classification', () => {
     const hostProps = graphLayoutHostPropsOf(props);
     expect(Object.keys(hostProps)).toEqual(hostPropKeys);
     for (const key of hostPropKeys) expect(hostProps[key]).toBe(props[key]);
+    expect(hostProps).not.toHaveProperty('style');
     expect(hostProps).not.toHaveProperty('theme');
     expect(hostProps).not.toHaveProperty('animations');
   });

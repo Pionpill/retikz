@@ -180,6 +180,7 @@ const mergeEntityStyle = (state: ResolveState, source: IRFlowEntity) => ({
 const resolveEntityRecord = (source: IRFlowEntity, path: FlowSourcePath, state: ResolveState): CanonicalFlowEntity => {
   const style = mergeEntityStyle(state, source);
   const layout = { ...state.theme.entity?.layout, ...source.layout };
+  const { align, lineHeight, maxTextWidth, ...nodeStyle } = style;
   const graph: IRGraphEntity = {
     namespace: 'graph',
     type: GraphType.Entity,
@@ -188,8 +189,13 @@ const resolveEntityRecord = (source: IRFlowEntity, path: FlowSourcePath, state: 
     role: source.role ?? EntityRole.Concept,
     ...(source.kind === undefined ? {} : { kind: source.kind }),
     ...(source.status === undefined ? {} : { status: source.status }),
-    ...style,
-    ...layout,
+    style: nodeStyle,
+    layout: {
+      ...layout,
+      ...(align === undefined ? {} : { align }),
+      ...(lineHeight === undefined ? {} : { lineHeight }),
+      ...(maxTextWidth === undefined ? {} : { maxTextWidth }),
+    },
   };
   resolveEntity(graph, state.graph);
   return {
@@ -282,6 +288,7 @@ const resolveRelationRecord = (source: IRFlowRelation, index: number, state: Res
     mergeFlowTheme({ relation: { style: state.theme.relation?.style } }, { relation: { style: source.style } }).relation
       ?.style ?? {};
   const layout = mergeFlowLayoutIntent(state.theme.relation?.layout, source.layout);
+  const { sourceMarker, targetMarker, labelTextForeground, labelFont, labelOpacity, ...pathStyle } = style;
   const graphSource: IRGraphRelation = {
     namespace: 'graph',
     type: GraphType.Relation,
@@ -291,7 +298,12 @@ const resolveRelationRecord = (source: IRFlowRelation, index: number, state: Res
     ...(source.kind === undefined ? {} : { kind: source.kind }),
     ...(source.status === undefined ? {} : { status: source.status }),
     ...(source.direction === undefined ? {} : { direction: source.direction }),
-    ...style,
+    style: pathStyle,
+    ...(sourceMarker === undefined ? {} : { sourceMarker }),
+    ...(targetMarker === undefined ? {} : { targetMarker }),
+    ...(labelTextForeground === undefined ? {} : { labelTextForeground }),
+    ...(labelFont === undefined ? {} : { labelFont }),
+    ...(labelOpacity === undefined ? {} : { labelOpacity }),
   };
   const canonicalGraph = resolveRelation(graphSource, state.graph);
   const graph: IRGraphRelation = { ...graphSource, direction: canonicalGraph.effectiveDirection };

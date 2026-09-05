@@ -28,7 +28,7 @@ import { Layout } from '@retikz/react';
 
 Entity 的整体外观统一由 Theme 管理。下面每个 demo 都允许精确调整实例颜色和文本；页面顶部的 Theme selector 统一切换 Academic、Vibrant、Clean 等整体视觉风格
 
-Neutral 默认使用完整主色描边和 `fill: 0.08` 的同色轻填充。Graph Clean 在此基础上显式移除 Entity 填充，保留主色描边，并按当前 mode 使用黑色或白色正文；实例显式提供的 `fill` 与 `textColor` 仍然优先
+Neutral 默认使用完整主色描边和 `fill: 0.08` 的同色轻填充。Graph Clean 在此基础上显式移除 Entity 填充，保留主色描边，并按当前 mode 使用黑色或白色正文；实例显式提供的 `style.fill` 与 `style.textColor` 仍然优先
 
 ### participant：参与主体
 
@@ -112,7 +112,7 @@ Neutral 默认使用完整主色描边和 `fill: 0.08` 的同色轻填充。Grap
 
 `status` 为 Entity 保存可直接读取的图式状态：`error`、`success`、`warning` 与 `disabled` 分别使用当前 Core Theme 的 `semantic.error`、`semantic.success`、`semantic.warning` 与 `semantic.guide`。省略它表示没有特别标记，不写入 `normal`。这里的状态不同于 `state` role：前者说明当前图式语义，后者说明节点所表示对象是一种持续条件
 
-每个 Entity role demo 的 controls 都可在“无状态”和这四种状态之间切换。显式 `color`、`fill`、`stroke` 等 Core Node-compatible appearance 仍会覆盖 status 的默认外观，但不会删除 Source 中的 `status`。领域 predicate 的 `params.status` 仍由 predicate 定义解释，不会自动映射为 Graph status
+每个 Entity role demo 的 controls 都可在“无状态”和这四种状态之间切换。显式 `style.color`、`style.fill`、`style.stroke` 等 Core Node-compatible appearance 仍会覆盖 status 的默认外观，但不会删除 Source 中的 `status`。领域 predicate 的 `params.status` 仍由 predicate 定义解释，不会自动映射为 Graph status
 
 ### 样式调整
 
@@ -132,13 +132,15 @@ Neutral 默认使用完整主色描边和 `fill: 0.08` 的同色轻填充。Grap
   description="需要持久化 Graph data、接入 Diagram 或排查 compile 输入时再回来阅读。"
 />
 
-Entity Source record 只保存作者提供的字段。`id`、`text` 与 `position` 都可省略，不会产生空 wrapper、自动 id 或默认属性；省略 `id` 的 Entity 仍会按 role 绘制，但不会向 Core namespace 注册 target。role 在编译时提供 shape、boundary、padding、cornerRadius 与基础 minimum size；Theme 提供外观默认，Entity 显式 `color`、`fill`、`dashed`、`dashPattern`、`textColor` 等非结构 Node 字段最终覆盖 Theme
+Entity Source record 只保存作者提供的字段。`id`、`text` 与 `position` 都可省略，不会产生空 wrapper、自动 id 或默认属性；省略 `id` 的 Entity 仍会按 role 绘制，但不会向 Core namespace 注册 target。role 在编译时提供 shape、boundary、padding、cornerRadius 与基础 minimum size；Theme 提供外观默认，Entity 显式 `style.color`、`style.fill`、`style.dashed`、`style.dashPattern`、`style.textColor` 等非结构 Node 字段最终覆盖 Theme
 
-显式静态 `color` 会同时驱动默认的数值 stroke 与 fill。`currentColor` 等非静态主色如果仍需解析任一数值颜色通道，编译会明确失败；调用方应改用静态 `color`，或同时提供字符串 stroke 与不透明静态 fill，避免猜测宿主 CSS 颜色或背景
+显式静态 `style.color` 会同时驱动默认的数值 stroke 与 fill。`currentColor` 等非静态主色如果仍需解析任一数值颜色通道，编译会明确失败；调用方应改用静态 `style.color`，或同时提供字符串 stroke 与不透明静态 fill，避免猜测宿主 CSS 颜色或背景
 
 Entity 自己完成 registry lookup 并 lower 为普通 Core `Node`。Core、Scene 和 renderer 不解释 Entity role；Graph 只在存在时额外提供局部 Theme context，不是 Entity 的编译前提
 
 ## API 参考
+
+Entity 的视觉字段写入 `style`，文本排布、尺寸与间距写入 `layout`。`layout.padding` 仍由 role 独占，不能由实例设置。
 
 | 属性         | 类型                                    | 默认值 | 描述                                                        |
 | ------------ | --------------------------------------- | ------ | ----------------------------------------------------------- |

@@ -33,10 +33,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         border={{ stroke: borderColor, strokeWidth: borderWidth, strokeOpacity: borderOpacity, ...borderLineStyle }}
         caption={{ title: { text: 'Runtime' }, description: { text: 'Compile and render' } }}
       >
-        <Entity id="compiler" role="activity" position={[130, 145]} textColor="currentColor">
+        <Entity id="compiler" role="activity" position={[130, 145]} style={{ textColor: 'currentColor' }}>
           Compile
         </Entity>
-        <Entity id="renderer" role="participant" position={[310, 145]} textColor="currentColor">
+        <Entity id="renderer" role="participant" position={[310, 145]} style={{ textColor: 'currentColor' }}>
           Renderer
         </Entity>
         <Relation role="flow" source={{ id: 'compiler' }} target={{ id: 'renderer' }} />

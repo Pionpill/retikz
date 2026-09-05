@@ -29,28 +29,37 @@ const structureTextNode = (text: IRBlockText, kind: 'title' | 'description' | 's
     type: 'node',
     position: [0, 0],
     shape: 'rectangle',
-    fill: 'none',
-    stroke: 'none',
-    textColor: 'currentColor',
-    opacity: kind === 'title' ? 1 : 0.7,
-    padding: 0,
-    margin: 0,
-    minimumSize: 0,
     scale: 1,
     rotate: 0,
-    ...normalizedText,
-    font: {
-      size: kind === 'title' ? ('base' as const) : kind === 'description' ? ('xs' as const) : ('sm' as const),
-      ...(kind === 'title' ? { weight: 'bold' as const } : {}),
-      ...normalizedText.font,
+    text: normalizedText.text,
+    style: {
+      fill: 'none',
+      stroke: 'none',
+      textColor: 'currentColor',
+      opacity: kind === 'title' ? 1 : 0.7,
+      ...(normalizedText.textColor === undefined ? {} : { textColor: normalizedText.textColor }),
+      ...(normalizedText.opacity === undefined ? {} : { opacity: normalizedText.opacity }),
+      font: {
+        size: kind === 'title' ? ('base' as const) : kind === 'description' ? ('xs' as const) : ('sm' as const),
+        ...(kind === 'title' ? { weight: 'bold' as const } : {}),
+        ...normalizedText.font,
+      },
+    },
+    layout: {
+      padding: 0,
+      margin: 0,
+      minimumSize: 0,
+      ...(normalizedText.align === undefined ? {} : { align: normalizedText.align }),
+      ...(normalizedText.lineHeight === undefined ? {} : { lineHeight: normalizedText.lineHeight }),
+      ...(normalizedText.maxTextWidth === undefined ? {} : { maxTextWidth: normalizedText.maxTextWidth }),
     },
   };
 };
 
 const structureText = (text: IRBlockText, kind: 'title' | 'description' | 'section'): IRChild => ({
   type: 'scope',
-  resetStyle: ['node'],
   children: [structureTextNode(text, kind)],
+  defaults: { reset: ['node'] },
 });
 
 /** 把 Row content 文本下沉为无外框的普通 Core Node */
@@ -59,13 +68,22 @@ const rowContentNode = (text: IRBlockText): IRNode => {
   return {
     type: 'node',
     position: [0, 0],
-    padding: 0,
-    fill: 'none',
-    stroke: 'none',
-    ...normalizedText,
-    font: {
-      size: 'sm',
-      ...normalizedText.font,
+    text: normalizedText.text,
+    style: {
+      fill: 'none',
+      stroke: 'none',
+      ...(normalizedText.textColor === undefined ? {} : { textColor: normalizedText.textColor }),
+      ...(normalizedText.opacity === undefined ? {} : { opacity: normalizedText.opacity }),
+      font: {
+        size: 'sm',
+        ...normalizedText.font,
+      },
+    },
+    layout: {
+      padding: 0,
+      ...(normalizedText.align === undefined ? {} : { align: normalizedText.align }),
+      ...(normalizedText.lineHeight === undefined ? {} : { lineHeight: normalizedText.lineHeight }),
+      ...(normalizedText.maxTextWidth === undefined ? {} : { maxTextWidth: normalizedText.maxTextWidth }),
     },
   };
 };

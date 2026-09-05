@@ -26,8 +26,7 @@ const Demo: FC = () => (
                 id="diagram-title"
                 position={[0, 0]}
                 text="System Flow"
-                stroke="none"
-                font={{ size: 18, weight: 'bold' }}
+                style={{ stroke: 'none', font: { size: 18, weight: 'bold' } }}
               />
             </LayoutItem>
             <LayoutItem kind="flex" itemKey="description">
@@ -35,9 +34,7 @@ const Demo: FC = () => (
                 id="diagram-description"
                 position={[0, 0]}
                 text="Presentation: title, description, and explicit legend"
-                stroke="none"
-                textColor="gray"
-                font={{ size: 13 }}
+                style={{ stroke: 'none', textColor: 'gray', font: { size: 13 } }}
               />
             </LayoutItem>
           </FlexLayout>
@@ -52,15 +49,9 @@ const Demo: FC = () => (
               <Node
                 id="drawing-core"
                 position={[0, 0]}
-                minimumSize={{ width: 350, height: 142 }}
-                padding={{ x: 18, y: 14 }}
-                fill="lightgray"
-                fillOpacity={0.45}
-                stroke="gray"
-                strokeWidth={1.5}
-                dashPattern={[7, 5]}
                 cornerRadius={4}
-                lineHeight={19}
+                style={{ fill: 'lightgray', fillOpacity: 0.45, stroke: 'gray', strokeWidth: 1.5, dashPattern: [7, 5] }}
+                layout={{ minimumSize: { width: 350, height: 142 }, padding: { x: 18, y: 14 }, lineHeight: 19 }}
               >
                 <Text font={{ size: 14, weight: 'bold' }}>Drawing Core</Text>
                 <Text font={{ size: 13 }}>Provided by a concrete Diagram type</Text>
@@ -73,8 +64,7 @@ const Demo: FC = () => (
                     id="legend-title"
                     position={[0, 0]}
                     text="Legend"
-                    stroke="none"
-                    font={{ size: 14, weight: 'bold' }}
+                    style={{ stroke: 'none', font: { size: 14, weight: 'bold' } }}
                   />
                 </LegendTitle>
                 <LegendItem
@@ -83,10 +73,9 @@ const Demo: FC = () => (
                     <Node
                       id="legend-content-sample"
                       position={[0, 0]}
-                      minimumSize={{ width: 22, height: 12 }}
-                      fill="lightgray"
-                      stroke="gray"
                       cornerRadius={4}
+                      style={{ fill: 'lightgray', stroke: 'gray' }}
+                      layout={{ minimumSize: { width: 22, height: 12 } }}
                     />
                   }
                 >
@@ -94,8 +83,7 @@ const Demo: FC = () => (
                     id="legend-content-label"
                     position={[0, 0]}
                     text="Domain content"
-                    stroke="none"
-                    font={{ size: 13 }}
+                    style={{ stroke: 'none', font: { size: 13 } }}
                   />
                 </LegendItem>
               </Legend>

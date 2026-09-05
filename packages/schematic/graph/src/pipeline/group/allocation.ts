@@ -1,4 +1,9 @@
-import type { CompositeCoreProviderKey, CoreDependencyProvider, IRChild, LayoutCompositeDefinition } from '@retikz/core';
+import type {
+  CompositeCoreProviderKey,
+  CoreDependencyProvider,
+  IRChild,
+  LayoutCompositeDefinition,
+} from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 import type { output as ZodOutput } from 'zod';
 

@@ -51,18 +51,18 @@ const measureRelationLabel = (
       type: 'node',
       position: [0, 0],
       shape: 'rectangle',
-      fill: 'none',
-      stroke: 'none',
-      strokeWidth: 0,
-      padding: 0,
-      margin: 0,
-      minimumSize: 0,
       scale: 1,
       rotate: 0,
       text: relation.source.label,
-      textColor: appearance.labelTextForeground,
-      ...(appearance.labelFont === undefined ? {} : { font: appearance.labelFont }),
-      opacity: appearance.labelOpacity,
+      style: {
+        fill: 'none',
+        stroke: 'none',
+        strokeWidth: 0,
+        textColor: appearance.labelTextForeground,
+        ...(appearance.labelFont === undefined ? {} : { font: appearance.labelFont }),
+        opacity: appearance.labelOpacity,
+      },
+      layout: { padding: 0, margin: 0, minimumSize: 0 },
     };
     return requiredLayoutProbe(context, { child: labelNode, occurrence: 0 }, intrinsicLayoutProposal('natural'))
       .slotSize;

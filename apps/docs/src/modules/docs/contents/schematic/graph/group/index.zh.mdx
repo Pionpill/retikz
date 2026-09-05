@@ -70,7 +70,7 @@ Group 的样式调整集中在外框的背景、边框、线型、圆角和内�
 ### 内容与主题
 
 - `children` 直接使用 Core `IRChild`，可以放 Entity、Relation、Group、Node、Path、Scope、Layout、Plot 或其它已注册 composite
-- `nodeDefault`、`pathDefault`、`labelDefault`、Core `theme`、transform、placement、clip 与 namespace 都保持 Scope 语义
+- `defaults.node`、`defaults.path`、`defaults.label`、Core `theme`、transform、placement、clip 与 namespace 都保持 Scope 语义
 - 命名 Graph Theme 会为 Group 根外框提供 `background`、`border` 与 `cornerRadius` 基线；Source 显式字段最终优先，并对对应 Theme 对象执行完整顶层字段替换，不在 `border` 或 `background` 内部深合并
 - `graphTheme` 只影响 Group 中可见的 Entity / Relation，不影响外框、caption、boundary labels 或普通 Core children
 - Group 不自动堆栈 children，不做 routing、避障或 label collision；需要普通排版时，在 children 中显式放入 FlexLayout、GridLayout 或 OverlayLayout

@@ -139,6 +139,8 @@ type LayoutProps = {
 
 `rootScope` 是 React JSX authoring 的便利入口，直接复用 Vanilla `InputScope` 的字段，不新增框架私有的 Input 模型。Vanilla 使用等价的显式 Scope；完整 Direct IR 自行表达该 Scope，不增加 `Scene.rootScope`。`Layout` 同时提供完整 `ir` 与有效 `rootScope` 覆盖时，沿用完整 IR 优先、忽略 authoring 覆盖并在开发环境提示的行为。宿主 CSS `style` 继续独立生效。
 
+React `Graph` 是显式语义容器，其 `style` 与 `defaults` 直接采用 Graph Source 的绘图契约，standalone 与 embedded 行为一致。移除原 `Graph.style` 的宿主 CSS 语义，不增加 `Graph.rootScope` 或其它平行覆盖入口；宿主 CSS 由外层 DOM 或 `Layout.style` 承担。Graph 自身仍下沉为一个 Scope，不因分组增加容器或改变 identity。
+
 没有覆盖时不因 `rootScope` 包装产生新的 Scope 或 identity 层级：省略、空对象、只有空的分组或默认通道，以及只有 optional `undefined` 的覆盖都等价于没有提供；单独的 `reset: false` 或空 reset 通道数组也不建立隐式 Scope。已经显式声明的 Source Scope 保持其结构，不作空容器删除。font 等既有复合叶子是否产生覆盖仍遵循原契约，不递归清除空对象。
 
 Scene 根保持现有字段集合。新 `style`、`layout`、`defaults` 分组使用闭合对象，允许空对象表示没有该类覆盖；空组不清除继承值。缺失与 optional 显式 `undefined` 的合法性遵循 owner Zod schema，解析结果直接进入后续阶段，不在 schema 前后增加通用 JSON 快照、清理、冻结或二次校验。拒绝未知字段与真实领域非法值的责任继续属于 owner schema。

@@ -39,10 +39,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           { text: '默认下方左对齐', ...defaultLabelPosition },
         ]}
       >
-        <Entity id="input" role="resource" position={[90, 105]} textColor="currentColor">
+        <Entity id="input" role="resource" position={[90, 105]} style={{ textColor: 'currentColor' }}>
           输入
         </Entity>
-        <Entity id="output" role="resource" position={[270, 105]} textColor="currentColor">
+        <Entity id="output" role="resource" position={[270, 105]} style={{ textColor: 'currentColor' }}>
           输出
         </Entity>
         <Relation role="flow" source={{ id: 'input' }} target={{ id: 'output' }} />

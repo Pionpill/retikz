@@ -62,17 +62,17 @@ export type ResolvedDiagramFrame = Readonly<{
 /** Diagram 文本 appearance 在当前 Core Theme 下的完整默认值 */
 export type ResolvedDiagramTextAppearance = Readonly<{
   /** 块级文本颜色 */
-  textColor: NonNullable<IRNode['textColor']>;
+  textColor: NonNullable<NonNullable<IRNode['style']>['textColor']>;
   /** 块级不透明度 */
-  opacity: NonNullable<IRNode['opacity']>;
+  opacity: NonNullable<NonNullable<IRNode['style']>['opacity']>;
   /** 块级字体 */
-  font: NonNullable<IRNode['font']>;
+  font: NonNullable<NonNullable<IRNode['style']>['font']>;
   /** 多行对齐方式 */
-  align: NonNullable<IRNode['align']>;
+  align: NonNullable<NonNullable<IRNode['layout']>['align']>;
   /** 行高 */
-  lineHeight: NonNullable<IRNode['lineHeight']>;
+  lineHeight: NonNullable<NonNullable<IRNode['layout']>['lineHeight']>;
   /** 自动换行宽度 */
-  maxTextWidth?: NonNullable<IRNode['maxTextWidth']>;
+  maxTextWidth?: NonNullable<NonNullable<IRNode['layout']>['maxTextWidth']>;
 }>;
 
 /** Diagram Theme 解析结果 */

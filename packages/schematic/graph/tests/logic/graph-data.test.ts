@@ -19,9 +19,9 @@ const entity = {
   predicate: { name: 'deployment', params: { replicas: 2 } },
   position: [20, 30],
   text: 'API',
-  minimumSize: { width: 72, height: 36 },
   zIndex: 1,
   meta: { source: 'catalog' },
+  layout: { minimumSize: { width: 72, height: 36 } },
 } as const;
 
 const relation = {
@@ -54,13 +54,6 @@ const graph = {
   localNamespace: true,
   transforms: [{ kind: 'translate', x: 10, y: 20 }],
   placement: { target: [30, 40], selfAnchor: 'center' },
-  fill: 'lightblue',
-  opacity: 0.8,
-  nodeDefault: { fill: 'white' },
-  pathDefault: { stroke: 'green' },
-  labelDefault: { font: { size: 10 } },
-  arrowDefault: { shape: 'stealth', scale: 1.5 },
-  resetStyle: ['path'],
   zIndex: 2,
   clip: { kind: 'rect', x: 0, y: 0, width: 220, height: 120 },
   boundingShape: 'circle',
@@ -72,6 +65,18 @@ const graph = {
     { type: 'scope', children: [{ type: 'node', position: [0, 0], text: 'Legend' }] },
   ],
   meta: { source: 'architecture-catalog' },
+  style: { fill: 'lightblue', opacity: 0.8 },
+  defaults: {
+    node: {
+      style: { fill: 'white' },
+    },
+    path: {
+      style: { stroke: 'green' },
+    },
+    label: { font: { size: 10 } },
+    arrow: { shape: 'stealth', scale: 1.5 },
+    reset: ['path'],
+  },
 } as const;
 
 describe('Graph Source data assembly', () => {
@@ -121,20 +126,22 @@ describe('Graph Source data assembly', () => {
     const schema = publicSchema('EntitySchema');
     const nonStructuralEntity = {
       ...entity,
-      color: '#334155',
-      fill: '#e2e8f0',
-      stroke: '#475569',
-      strokeWidth: 2,
-      dashed: true,
-      dotted: false,
-      dashPattern: [6, 2],
-      dashOffset: -1,
-      textColor: '#0f172a',
-      fillOpacity: 0.8,
-      strokeOpacity: 0.7,
-      opacity: 0.9,
-      shadow: 'sm',
-      blendMode: 'multiply',
+      style: {
+        color: '#334155',
+        fill: '#e2e8f0',
+        stroke: '#475569',
+        strokeWidth: 2,
+        dashed: true,
+        dotted: false,
+        dashPattern: [6, 2],
+        dashOffset: -1,
+        textColor: '#0f172a',
+        fillOpacity: 0.8,
+        strokeOpacity: 0.7,
+        opacity: 0.9,
+        shadow: 'sm',
+        blendMode: 'multiply',
+      },
     } as const;
 
     expect(schema.parse(nonStructuralEntity)).toEqual(nonStructuralEntity);
@@ -157,17 +164,19 @@ describe('Graph Source data assembly', () => {
     const schema = publicSchema('RelationSchema');
     const pathCompatibleRelation = {
       ...relation,
-      color: '#334155',
-      stroke: '#475569',
-      strokeWidth: 2,
-      strokeOpacity: 0.7,
-      opacity: 0.9,
-      shadow: 'sm',
-      blendMode: 'multiply',
-      dashPattern: [6, 2],
-      dashOffset: -1,
-      lineCap: 'round',
-      lineJoin: 'bevel',
+      style: {
+        color: '#334155',
+        stroke: '#475569',
+        strokeWidth: 2,
+        strokeOpacity: 0.7,
+        opacity: 0.9,
+        shadow: 'sm',
+        blendMode: 'multiply',
+        dashPattern: [6, 2],
+        dashOffset: -1,
+        lineCap: 'round',
+        lineJoin: 'bevel',
+      },
       rotate: 10,
       scale: { x: 1.2, y: 0.8 },
       animations: [],

@@ -33,10 +33,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         border={{ stroke: borderColor, strokeWidth: borderWidth, strokeOpacity: borderOpacity, ...borderLineStyle }}
         caption={{ title: { text: '运行时' }, description: { text: '编译与渲染' } }}
       >
-        <Entity id="compiler" role="activity" position={[130, 145]} textColor="currentColor">
+        <Entity id="compiler" role="activity" position={[130, 145]} style={{ textColor: 'currentColor' }}>
           编译
         </Entity>
-        <Entity id="renderer" role="participant" position={[310, 145]} textColor="currentColor">
+        <Entity id="renderer" role="participant" position={[310, 145]} style={{ textColor: 'currentColor' }}>
           渲染器
         </Entity>
         <Relation role="flow" source={{ id: 'compiler' }} target={{ id: 'renderer' }} />

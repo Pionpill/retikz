@@ -96,12 +96,12 @@ const DiagramFrameThemeSchema = strictObject({
   .describe('Sparse Diagram Theme frame appearance slice.');
 
 const DiagramTextAppearanceSchema = strictObject({
-  textColor: NodeSchema.shape.textColor.describe('Block text color.'),
-  opacity: NodeSchema.shape.opacity.describe('Block opacity.'),
-  font: NodeSchema.shape.font.describe('Block font defaults.'),
-  align: NodeSchema.shape.align.describe('Block text alignment.'),
-  lineHeight: NodeSchema.shape.lineHeight.describe('Block line height.'),
-  maxTextWidth: NodeSchema.shape.maxTextWidth.describe('Block maximum text width.'),
+  textColor: NodeSchema.shape.style.unwrap().shape.textColor.describe('Block text color.'),
+  opacity: NodeSchema.shape.style.unwrap().shape.opacity.describe('Block opacity.'),
+  font: NodeSchema.shape.style.unwrap().shape.font.describe('Block font defaults.'),
+  align: NodeSchema.shape.layout.unwrap().shape.align.describe('Block text alignment.'),
+  lineHeight: NodeSchema.shape.layout.unwrap().shape.lineHeight.describe('Block line height.'),
+  maxTextWidth: NodeSchema.shape.layout.unwrap().shape.maxTextWidth.describe('Block maximum text width.'),
 })
   .superRefine((slice, context) => {
     if (Object.keys(slice).length === 0) {

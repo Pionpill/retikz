@@ -13,11 +13,11 @@ export type EntityRoleDefinition = Readonly<{
   /** 可选边界定义 */
   boundary?: IRNode['boundary'];
   /** role 独占的基础内边距 */
-  padding: NonNullable<IRNode['padding']>;
+  padding: NonNullable<NonNullable<IRNode['layout']>['padding']>;
   /** 可选圆角半径 */
   cornerRadius?: IRNode['cornerRadius'];
   /** 可选基础最小尺寸 */
-  minimumSize?: IRNode['minimumSize'];
+  minimumSize?: NonNullable<IRNode['layout']>['minimumSize'];
 }>;
 
 /** Entity kind 的稳定语义子类型定义 */

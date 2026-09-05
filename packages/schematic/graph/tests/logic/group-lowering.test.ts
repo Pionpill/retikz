@@ -123,7 +123,11 @@ describe('Group layout-aware lowering', () => {
   });
 
   it('arranges bottom caption after a non-empty body and includes bodyGap in allocation', () => {
-    const body = { type: 'node', position: [10, 5], minimumSize: { width: 20, height: 10 }, padding: 0 } as const;
+    const body = {
+      type: 'node',
+      position: [10, 5],
+      layout: { minimumSize: { width: 20, height: 10 }, padding: 0 },
+    } as const;
     const withoutGap = compileInHarness(
       Graph.createGroup({
         padding: 0,
@@ -152,9 +156,14 @@ describe('Group layout-aware lowering', () => {
     const warnings: Array<CompileWarning> = [];
     const { output } = compileInHarness(
       Graph.createGroup({
-        nodeDefault: { fill: '#ef4444', stroke: '#2563eb', textColor: 'contrast', minimumSize: 200 },
         caption: { title: { text: 'Title' } },
         labels: [{ text: 'Boundary' }],
+        defaults: {
+          node: {
+            style: { fill: '#ef4444', stroke: '#2563eb', textColor: 'contrast' },
+            layout: { minimumSize: 200 },
+          },
+        },
       }),
       naturalProposal,
       Graph.createGraphDefinitions(),
@@ -253,7 +262,12 @@ describe('Group layout-aware lowering', () => {
             graphTheme: { rules: [{ type: 'entity', appearance: { fill: '#2563eb' } }] },
             children: [
               Graph.createEntity({ role: 'activity', position: [30, 20], text: 'Nested' }),
-              { type: 'node', position: [100, 20], text: 'Core', fill: '#22c55e' },
+              {
+                type: 'node',
+                position: [100, 20],
+                text: 'Core',
+                style: { fill: '#22c55e' },
+              },
             ],
           }),
         ],

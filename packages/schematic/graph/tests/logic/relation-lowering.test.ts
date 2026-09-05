@@ -37,6 +37,19 @@ const lower = (source: Graph.IRGraphRelation) => {
 };
 
 describe('Relation lowering', () => {
+  it.each(['fill', 'fillOpacity', 'fillRule'])('style 分组继续禁止 %s', field => {
+    expect(
+      Graph.RelationSchema.safeParse({
+        namespace: 'graph',
+        type: 'relation',
+        role: 'association',
+        source: { id: 'a' },
+        target: { id: 'b' },
+        style: { [field]: field === 'fillOpacity' ? 0.5 : field === 'fillRule' ? 'evenodd' : 'red' },
+      }).success,
+    ).toBe(false);
+  });
+
   it('creates a direct source-to-target route when route is omitted and preserves omitted id', () => {
     const source = relation({
       source: { id: 'source', anchor: 'east', offset: [1, 0] },
@@ -62,6 +75,38 @@ describe('Relation lowering', () => {
       relation({
         id: 'request',
         route,
+        roundedCorners: 4,
+        rotate: 10,
+        scale: { x: 1.2, y: 0.8 },
+        zIndex: 2,
+        animations: [],
+        meta: { source: 'author' },
+        style: {
+          color: '#334155',
+          stroke: '#475569',
+          strokeWidth: 2,
+          strokeOpacity: 0.7,
+          opacity: 0.9,
+          shadow: 'sm',
+          blendMode: 'multiply',
+          dashPattern: [6, 2],
+          dashOffset: -1,
+          lineCap: 'round',
+          lineJoin: 'bevel',
+        },
+      }),
+    );
+
+    expect(lowered).toMatchObject({
+      id: 'request',
+      children: route,
+      roundedCorners: 4,
+      rotate: 10,
+      scale: { x: 1.2, y: 0.8 },
+      zIndex: 2,
+      animations: [],
+      meta: { source: 'author' },
+      style: {
         color: '#334155',
         stroke: '#475569',
         strokeWidth: 2,
@@ -73,35 +118,7 @@ describe('Relation lowering', () => {
         dashOffset: -1,
         lineCap: 'round',
         lineJoin: 'bevel',
-        roundedCorners: 4,
-        rotate: 10,
-        scale: { x: 1.2, y: 0.8 },
-        zIndex: 2,
-        animations: [],
-        meta: { source: 'author' },
-      }),
-    );
-
-    expect(lowered).toMatchObject({
-      id: 'request',
-      children: route,
-      color: '#334155',
-      stroke: '#475569',
-      strokeWidth: 2,
-      strokeOpacity: 0.7,
-      opacity: 0.9,
-      shadow: 'sm',
-      blendMode: 'multiply',
-      dashPattern: [6, 2],
-      dashOffset: -1,
-      lineCap: 'round',
-      lineJoin: 'bevel',
-      roundedCorners: 4,
-      rotate: 10,
-      scale: { x: 1.2, y: 0.8 },
-      zIndex: 2,
-      animations: [],
-      meta: { source: 'author' },
+      },
     });
   });
 
@@ -176,23 +193,23 @@ describe('Relation lowering', () => {
     {
       name: 'UML dependency',
       source: { role: 'dependency', kind: 'uml.dependency' },
-      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } }], dashPattern: [6, 4] },
+      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } }], style: { dashPattern: [6, 4] } },
     },
     {
       name: 'realization',
       source: { role: 'dependency', kind: 'uml.realization' },
-      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'open' } }], dashPattern: [6, 4] },
+      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'open' } }], style: { dashPattern: [6, 4] } },
     },
   ])('lowers UML $name to its path and endpoint structure', ({ source, expected }) => {
     const loweredRelation = lower(relation(source));
 
     expect(loweredRelation).toMatchObject(expected);
     if (source.kind === undefined && source.role === 'dependency') {
-      expect(loweredRelation).not.toHaveProperty('dashPattern');
+      expect(loweredRelation).not.toHaveProperty('style.dashPattern');
     }
     if (source.kind === 'uml.association') {
       expect(loweredRelation).not.toHaveProperty('marks');
-      expect(loweredRelation).not.toHaveProperty('dashPattern');
+      expect(loweredRelation).not.toHaveProperty('style.dashPattern');
     }
   });
 
@@ -279,9 +296,9 @@ describe('Relation lowering', () => {
     const canonical = Graph.resolveRelation(
       relation({
         status: 'warning',
-        color: '#7c3aed',
         sourceMarker: { color: '#0f766e' },
         targetMarker: { color: '#b45309' },
+        style: { color: '#7c3aed' },
       }),
       options,
     );

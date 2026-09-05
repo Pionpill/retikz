@@ -7,7 +7,12 @@ import { describe, expect, it } from 'vitest';
 
 import { assembleDiagram, resolveDiagramAppearance } from '../../src/foundation';
 
-const drawing: IRChild = { type: 'node', position: [0, 0], text: 'Drawing', padding: 0, minimumSize: 20 };
+const drawing: IRChild = {
+  type: 'node',
+  position: [0, 0],
+  text: 'Drawing',
+  layout: { padding: 0, minimumSize: 20 },
+};
 
 const legend = createLegend({
   content: {
@@ -15,8 +20,17 @@ const legend = createLegend({
     items: [
       {
         key: 'one',
-        sample: { type: 'node', position: [0, 0], minimumSize: 4 },
-        label: { type: 'node', position: [0, 0], text: 'One', padding: 0 },
+        sample: {
+          type: 'node',
+          position: [0, 0],
+          layout: { minimumSize: 4 },
+        },
+        label: {
+          type: 'node',
+          position: [0, 0],
+          text: 'One',
+          layout: { padding: 0 },
+        },
       },
     ],
   },

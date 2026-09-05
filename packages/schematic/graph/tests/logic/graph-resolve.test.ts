@@ -37,14 +37,14 @@ describe('Graph context projection', () => {
 
     expect(Graph.resolveGraph(source, Graph.resolveGraphDefinitionOptions())).toEqual([
       { type: 'node', id: 'plain', position: [0, 0] },
-      { ...entity('service'), fill: '#ef4444' },
+      { ...entity('service'), style: { fill: '#ef4444' } },
       {
         namespace: 'graph',
         type: 'relation',
         source: { id: 'plain' },
         target: { id: 'service' },
         role: 'association',
-        stroke: '#2563eb',
+        style: { stroke: '#2563eb' },
       },
     ]);
   });
@@ -63,14 +63,14 @@ describe('Graph context projection', () => {
 
     expect(projected[0]).toMatchObject({
       type: 'scope',
-      children: [{ id: 'inherited', fill: '#ef4444' }],
+      children: [{ id: 'inherited', style: { fill: '#ef4444' } }],
     });
     expect(projected[1]).toMatchObject({
       type: 'scope',
       theme: { mode: 'dark' },
       children: [{ id: 'reset' }],
     });
-    expect((projected[1] as { children: Array<Record<string, unknown>> }).children[0]).not.toHaveProperty('fill');
+    expect((projected[1] as { children: Array<Record<string, unknown>> }).children[0]).not.toHaveProperty('style.fill');
   });
 
   it('merges nested Graph context and leaves third-party composite payload opaque', () => {
@@ -89,7 +89,7 @@ describe('Graph context projection', () => {
           namespace: 'graph',
           type: 'graph',
           graphTheme: { rules: [{ type: 'entity', appearance: { fill: '#22c55e' } }] },
-          children: [entity('nested', { fill: '#ffffff' })],
+          children: [entity('nested', { style: { fill: '#ffffff' } })],
         },
       ],
     });
@@ -99,7 +99,7 @@ describe('Graph context projection', () => {
     expect(projected[1]).toMatchObject({
       namespace: 'graph',
       type: 'graph',
-      children: [{ id: 'nested', opacity: 0.5, fill: '#ffffff' }],
+      children: [{ id: 'nested', style: { opacity: 0.5, fill: '#ffffff' } }],
     });
   });
 });

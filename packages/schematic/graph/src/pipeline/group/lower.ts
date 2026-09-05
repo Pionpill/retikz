@@ -58,17 +58,26 @@ const captionNode = (text: IRGroupCaptionText, kind: 'title' | 'description'): I
     type: 'node',
     position: [0, 0],
     shape: 'rectangle',
-    fill: 'none',
-    stroke: 'none',
-    textColor: 'currentColor',
-    opacity: kind === 'description' ? 0.7 : 1,
-    padding: 0,
-    margin: 0,
-    minimumSize: 0,
     scale: 1,
     rotate: 0,
-    ...text,
-    font: { ...defaultFont, ...text.font },
+    text: text.text,
+    style: {
+      fill: 'none',
+      stroke: 'none',
+      textColor: 'currentColor',
+      opacity: kind === 'description' ? 0.7 : 1,
+      ...(text.textColor === undefined ? {} : { textColor: text.textColor }),
+      ...(text.opacity === undefined ? {} : { opacity: text.opacity }),
+      font: { ...defaultFont, ...text.font },
+    },
+    layout: {
+      padding: 0,
+      margin: 0,
+      minimumSize: 0,
+      ...(text.align === undefined ? {} : { align: text.align }),
+      ...(text.lineHeight === undefined ? {} : { lineHeight: text.lineHeight }),
+      ...(text.maxTextWidth === undefined ? {} : { maxTextWidth: text.maxTextWidth }),
+    },
   };
 };
 
@@ -97,7 +106,11 @@ const captionContent = (source: IRGroup): IRChild | undefined => {
     alignItems: LayoutAlignment.Start,
     children: items,
   });
-  return { type: 'scope', resetStyle: ['node'], children: [layout] };
+  return {
+    type: 'scope',
+    children: [layout],
+    defaults: { reset: ['node'] },
+  };
 };
 
 /** 把 Group caption 投影为 shell measurement 与最终 lowering 共用的组合片段 */
@@ -148,13 +161,6 @@ export const lowerGroupLabelHost = (source: IRGroup, width: number, height: numb
   type: 'node',
   position: [width / 2, height / 2],
   shape: 'rectangle',
-  fill: 'none',
-  stroke: 'none',
-  textColor: 'currentColor',
-  opacity: 1,
-  padding: 0,
-  margin: 0,
-  minimumSize: { width, height },
   scale: 1,
   rotate: 0,
   ...(source.labels === undefined
@@ -168,4 +174,6 @@ export const lowerGroupLabelHost = (source: IRGroup, width: number, height: numb
           position: label.position ?? DEFAULT_GROUP_LABEL_POSITION,
         })),
       }),
+  style: { fill: 'none', stroke: 'none', textColor: 'currentColor', opacity: 1 },
+  layout: { padding: 0, margin: 0, minimumSize: { width, height } },
 });

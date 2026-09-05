@@ -732,7 +732,12 @@ describe('Flow Diagram compile transaction', () => {
           items: [
             {
               key: 'active',
-              sample: { type: 'node', position: [0, 0], minimumSize: 10, fill: '#2563eb' },
+              sample: {
+                type: 'node',
+                position: [0, 0],
+                style: { fill: '#2563eb' },
+                layout: { minimumSize: 10 },
+              },
               label: { type: 'node', position: [0, 0], text: 'Active' },
             },
           ],
@@ -799,7 +804,12 @@ describe('Flow Diagram compile transaction', () => {
           items: [
             {
               key: 'active',
-              sample: { type: 'node', position: [0, 0], minimumSize: 10, fill: '#2563eb' },
+              sample: {
+                type: 'node',
+                position: [0, 0],
+                style: { fill: '#2563eb' },
+                layout: { minimumSize: 10 },
+              },
               label: { type: 'node', position: [0, 0], text: 'Active' },
             },
           ],

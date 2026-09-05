@@ -28,16 +28,25 @@ export const createDiagramPresentationTextNode = (
   type: 'node',
   position: [0, 0],
   shape: 'rectangle',
-  fill: 'none',
-  stroke: 'none',
-  strokeWidth: 0,
-  padding: 0,
-  margin: 0,
-  minimumSize: 0,
   scale: 1,
   rotate: 0,
   text,
-  ...appearance,
+  style: {
+    fill: 'none',
+    stroke: 'none',
+    strokeWidth: 0,
+    textColor: appearance.textColor,
+    font: appearance.font,
+    opacity: appearance.opacity,
+  },
+  layout: {
+    padding: 0,
+    margin: 0,
+    minimumSize: 0,
+    align: appearance.align,
+    lineHeight: appearance.lineHeight,
+    ...(appearance.maxTextWidth === undefined ? {} : { maxTextWidth: appearance.maxTextWidth }),
+  },
 });
 
 /** 创建只切断外层 Node 默认的 heading 内容 */
@@ -65,7 +74,11 @@ const headingContent = (resolution: DiagramFoundationResolution): IRScope | unde
     });
   }
 
-  return { type: 'scope', resetStyle: ['node'], children: [child] };
+  return {
+    type: 'scope',
+    children: [child],
+    defaults: { reset: ['node'] },
+  };
 };
 
 /** 创建 drawing 与可选 Legend 的固定 main 区域 */

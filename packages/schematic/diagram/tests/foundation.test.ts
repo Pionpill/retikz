@@ -22,8 +22,8 @@ const drawing: IRChild = {
   type: 'node',
   id: 'drawing',
   position: [0, 0],
-  minimumSize: { width: 80, height: 40 },
   text: 'Drawing',
+  layout: { minimumSize: { width: 80, height: 40 } },
 };
 
 const legend = LegendSchema.parse({
@@ -42,7 +42,12 @@ const legend = LegendSchema.parse({
     items: [
       {
         key: 'critical',
-        sample: { type: 'node', position: [0, 0], minimumSize: 10, fill: '#dc2626' },
+        sample: {
+          type: 'node',
+          position: [0, 0],
+          style: { fill: '#dc2626' },
+          layout: { minimumSize: 10 },
+        },
         label: { type: 'node', position: [0, 0], text: 'Critical' },
       },
     ],
@@ -56,7 +61,12 @@ const rampLegend = LegendSchema.parse({
   content: {
     kind: 'ramp',
     direction: 'horizontal',
-    sample: { type: 'node', position: [0, 0], minimumSize: { width: 60, height: 12 }, fill: '#64748b' },
+    sample: {
+      type: 'node',
+      position: [0, 0],
+      style: { fill: '#64748b' },
+      layout: { minimumSize: { width: 60, height: 12 } },
+    },
     ticks: [
       { key: 'low', offset: 0, label: { type: 'node', position: [0, 0], text: 'Low' } },
       { key: 'high', offset: 1, label: { type: 'node', position: [0, 0], text: 'High' } },
@@ -212,21 +222,15 @@ describe('Diagram Foundation lowering', () => {
     expect(outer.children).toHaveLength(2);
     const headingScope = outer.children[0]?.child;
     if (!isScope(headingScope)) throw new Error('Expected presentation reset Scope');
-    expect(headingScope.resetStyle).toEqual(['node']);
+    expect(headingScope.defaults?.reset).toEqual(['node']);
     const heading = flexOf(headingScope.children[0]);
     expect(heading.direction).toBe(FlexLayoutDirection.Column);
     expect(heading.gap).toEqual({ column: 6, row: 6 });
     expect(heading.children[0]?.child).toMatchObject({
       type: 'node',
-      fill: 'none',
-      stroke: 'none',
-      padding: 0,
-      margin: 0,
-      minimumSize: 0,
       text: presentation.title,
-      textColor: '#000000',
-      opacity: 1,
-      font: { size: 18, weight: 600 },
+      style: { fill: 'none', stroke: 'none', textColor: '#000000', opacity: 1, font: { size: 18, weight: 600 } },
+      layout: { padding: 0, margin: 0, minimumSize: 0 },
     });
     expect(heading.children[1]?.child).toMatchObject({ type: 'node', text: 'Description' });
     expect(outer.children[1]?.child).toEqual(drawing);
@@ -304,7 +308,12 @@ describe('Diagram Foundation provider integration', () => {
       },
       {
         host: {
-          nodeDefault: { fill: '#ef4444', stroke: '#2563eb', minimumSize: 200 },
+          defaults: {
+            node: {
+              style: { fill: '#ef4444', stroke: '#2563eb' },
+              layout: { minimumSize: 200 },
+            },
+          },
         },
       },
     );
@@ -389,7 +398,11 @@ describe('Diagram Foundation provider integration', () => {
   it('lets replacement drawing geometry determine the complete Scene allocation', () => {
     const compileWithSize = (width: number, height: number) =>
       compileTestDiagramFoundation({
-        drawing: { type: 'node', position: [0, 0], minimumSize: { width, height } },
+        drawing: {
+          type: 'node',
+          position: [0, 0],
+          layout: { minimumSize: { width, height } },
+        },
       }).scene.layout;
     const small = compileWithSize(20, 10);
     const large = compileWithSize(120, 70);
@@ -439,8 +452,17 @@ describe('Diagram Foundation provider integration', () => {
     expect(surfaceContent).toBeDefined();
     expect(scopePrimitives).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ type: 'path', fill: '#f8fafc', stroke: 'none' }),
-        expect.objectContaining({ type: 'path', fill: 'none', stroke: '#0f172a', strokeWidth: 2 }),
+        expect.objectContaining({
+          type: 'path',
+          fill: '#f8fafc',
+          stroke: 'none',
+        }),
+        expect.objectContaining({
+          type: 'path',
+          fill: 'none',
+          stroke: '#0f172a',
+          strokeWidth: 2,
+        }),
       ]),
     );
     expect(

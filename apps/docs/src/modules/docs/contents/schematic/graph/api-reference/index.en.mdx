@@ -33,7 +33,7 @@ Entity role and Relation role / kind are open keys. Their schemas expose built-i
 {
   "namespace": "graph",
   "type": "graph",
-  "nodeDefault": { "strokeWidth": 1.5 },
+  "defaults": { "node": { "style": { "strokeWidth": 1.5 } } },
   "children": [
     {
       "namespace": "graph",
@@ -80,7 +80,9 @@ The Neutral Graph Theme supplies the Block root shell baseline: a transparent ba
 
 ## Entity schema
 
-Entity keeps semantics and Core Node instance fields in one Source record. Every Node field is available except role-owned `type`, `shape`, `boundary`, `padding`, and `cornerRadius`. `id`, `position`, `text`, and closed `status` are optional. The current Core Theme and optional Graph Theme supply appearance defaults, while explicit Entity fields such as `fill`, `dashed`, and `textColor` take final precedence
+Entity instance appearance and layout use `style` / `layout`; Relation path appearance uses `style`. Graph / Group / Block Scope cascading values use `style`, and descendant defaults use `defaults`. Graph Theme `tokens`, `appearance` and text leaf contracts retain their existing structure.
+
+Entity keeps semantics and Core Node instance fields in one Source record. Every Node field is available except role-owned `type`, `shape`, `boundary`, `layout.padding`, and `cornerRadius`. `id`, `position`, `text`, and closed `status` are optional. The current Core Theme and optional Graph Theme supply appearance defaults, while explicit Entity fields such as `style.fill`, `style.dashed`, and `style.textColor` take final precedence
 
 <ZodSchema name="EntitySchema" />
 
@@ -107,7 +109,7 @@ When `route` is omitted, lowering emits `move(source) → line(target)`. An expl
 
 ## Master and derived colors
 
-Entity and Relation `color` values are string masters. Applicable `fill`, `stroke`, text foreground, and marker colors may also use a `0..1` number, which Core resolves only after Graph Theme, Graph-local rules, and instance fields have fully cascaded. Entity follows its final Entity master. Relation stroke, labels, and marker color follow the Relation master, while marker fill follows the resolved marker color. A number is not opacity, and palettes, gradient stops, patterns, and shadow colors remain string-only.
+Entity and Relation `style.color` values are string masters. Applicable `fill`, `stroke`, text foreground, and marker colors may also use a `0..1` number, which Core resolves only after Graph Theme, Graph-local rules, and instance fields have fully cascaded. Entity follows its final Entity master. Relation stroke, labels, and marker color follow the Relation master, while marker fill follows the resolved marker color. A number is not opacity, and palettes, gradient stops, patterns, and shadow colors remain string-only.
 
 ## Shared references and Graph Theme
 

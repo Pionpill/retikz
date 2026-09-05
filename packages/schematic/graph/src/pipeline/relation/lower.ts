@@ -1,4 +1,4 @@
-import type { IRArrowMark, IRPathBase } from '@retikz/core';
+import type { IRArrowMark, IRPathBase, IRPathStyle } from '@retikz/core';
 
 import type { CanonicalRelation, EffectiveRelationAppearance, EffectiveRelationStructure } from '../../resolve';
 import type {
@@ -50,7 +50,7 @@ const isPathAppearanceField = ([key]: [string, unknown]): boolean =>
   !RELATION_ONLY_APPEARANCE_FIELDS.has(key as keyof EffectiveRelationAppearance);
 
 /** 从有效 Relation appearance 中投影 Core Path appearance */
-const pathAppearanceOf = (appearance: EffectiveRelationAppearance): Partial<IRPathBase> =>
+const pathAppearanceOf = (appearance: EffectiveRelationAppearance): IRPathStyle =>
   Object.fromEntries(Object.entries(appearance).filter(isPathAppearanceField));
 
 /** 把 Canonical Relation、确定 structure / appearance 与唯一 route 下沉为一个 Core Path */
@@ -86,14 +86,19 @@ export const lowerRelation = (
       opacity,
     };
   });
-  const dashPattern = source.dashPattern ?? structure.dashPattern;
+  const dashPattern = source.style?.dashPattern ?? structure.dashPattern;
   return {
     type: 'path',
     ...definedPathFields(source),
-    ...pathAppearanceOf(appearance),
+    style: {
+      ...Object.fromEntries(
+        Object.entries(source.style ?? {}).filter(([, value]: [string, unknown]) => value !== undefined),
+      ),
+      ...pathAppearanceOf(appearance),
+      ...(dashPattern === false ? {} : { dashPattern }),
+    },
     children: route,
     ...(marks.length === 0 ? {} : { marks }),
     ...(labels === undefined || labels.length === 0 ? {} : { label: labels.length === 1 ? labels[0] : labels }),
-    ...(dashPattern === false ? {} : { dashPattern }),
   };
 };

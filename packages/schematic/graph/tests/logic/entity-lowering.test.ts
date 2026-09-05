@@ -24,10 +24,30 @@ const entity = (input: Record<string, unknown> = {}) =>
   });
 
 describe('Entity lowering', () => {
+  it('layout 分组保留 role 独占 padding 的限制', () => {
+    expect(
+      Graph.EntitySchema.safeParse({ namespace: 'graph', type: 'entity', role: 'participant', layout: { padding: 1 } })
+        .success,
+    ).toBe(false);
+    expect(
+      Graph.EntitySchema.safeParse({
+        namespace: 'graph',
+        type: 'entity',
+        role: 'participant',
+        layout: { minimumSize: 0 },
+        style: { opacity: 0 },
+      }).success,
+    ).toBe(true);
+  });
+
   it('resolves and lowers one independent Entity to one Core Node', () => {
     const options = Graph.resolveGraphDefinitionOptions();
     const canonical = Graph.resolveEntity(
-      entity({ id: 'service', text: 'API', minimumSize: { width: 80, height: 20 } }),
+      entity({
+        id: 'service',
+        text: 'API',
+        layout: { minimumSize: { width: 80, height: 20 } },
+      }),
       options,
     );
     const appearance = Graph.resolveEntityAppearance(canonical, { ...options, theme });
@@ -38,16 +58,17 @@ describe('Entity lowering', () => {
       position: [20, 30],
       text: 'API',
       shape: { type: 'hexagon' },
-      padding: { x: 0, y: 8 },
-      minimumSize: { width: 80, height: 36 },
-      color: '#000000',
-      textColor: 'contrast',
-      fill: 0.08,
-      stroke: 1,
-      strokeWidth: 1,
-      fillOpacity: 1,
-      strokeOpacity: 1,
-      opacity: 1,
+      layout: { padding: { x: 0, y: 8 }, minimumSize: { width: 80, height: 36 } },
+      style: {
+        color: '#000000',
+        textColor: 'contrast',
+        fill: 0.08,
+        stroke: 1,
+        strokeWidth: 1,
+        fillOpacity: 1,
+        strokeOpacity: 1,
+        opacity: 1,
+      },
     });
   });
 
@@ -86,12 +107,18 @@ describe('Entity lowering', () => {
 
   it('lets authored Entity appearance override the status Theme while retaining the semantic status', () => {
     const options = Graph.resolveGraphDefinitionOptions();
-    const canonical = Graph.resolveEntity(entity({ status: 'error', color: '#7c3aed' }), options);
+    const canonical = Graph.resolveEntity(
+      entity({
+        status: 'error',
+        style: { color: '#7c3aed' },
+      }),
+      options,
+    );
 
     expect(canonical.source).toMatchObject({ status: 'error' });
     expect(Graph.lowerEntity(canonical, Graph.resolveEntityAppearance(canonical, { ...options, theme }))).toMatchObject(
       {
-        color: '#7c3aed',
+        style: { color: '#7c3aed' },
       },
     );
   });

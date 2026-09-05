@@ -91,7 +91,7 @@ type TestFoundationSource = Readonly<{
   drawing: IRChild;
 }>;
 
-type TestFoundationHost = Pick<IRScope, 'theme' | 'nodeDefault' | 'clip'>;
+type TestFoundationHost = Pick<IRScope, 'theme' | 'defaults' | 'clip'>;
 
 /** test-only Foundation compile 选项 */
 export type TestFoundationCompileOptions = Readonly<{

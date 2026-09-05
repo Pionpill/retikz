@@ -1,7 +1,14 @@
 import type { IRStep } from '@retikz/core';
 import type { RefinementCtx, ZodType } from 'zod';
 
-import { ArrowEndDetailSchema, GeometryLabelSchema, NodeTargetSchema, PathBaseSchema, StepSchema } from '@retikz/core';
+import {
+  ArrowEndDetailSchema,
+  GeometryLabelSchema,
+  NodeTargetSchema,
+  PathBaseSchema,
+  PathStyleSchema,
+  StepSchema,
+} from '@retikz/core';
 import { createOpenStringSchema } from '@retikz/foundation';
 import { array, enum as zodEnum, literal, strictObject, union } from 'zod';
 
@@ -60,7 +67,7 @@ const requireAtLeastOneField = (value: object, context: RefinementCtx): void => 
   }
 };
 
-const GraphRelationPathAppearanceShape = PathBaseSchema.pick({
+const GraphRelationPathAppearanceShape = PathStyleSchema.pick({
   color: true,
   stroke: true,
   strokeWidth: true,
@@ -95,15 +102,16 @@ const RelationPathShape = PathBaseSchema.omit({
   children: true,
   label: true,
   marks: true,
-  fill: true,
-  fillOpacity: true,
-  fillRule: true,
+  style: true,
 }).shape;
 
 export const RelationSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.Relation).describe('Relation Source record discriminator.'),
   ...RelationPathShape,
+  style: PathStyleSchema.omit({ fill: true, fillOpacity: true, fillRule: true })
+    .optional()
+    .describe('Path visual overrides without Relation fill fields.'),
   source: NodeTargetSchema.describe('Core source target reference.'),
   target: NodeTargetSchema.describe('Core target target reference.'),
   role: RelationRoleSchema,
@@ -126,7 +134,7 @@ export const RelationSchema = strictObject({
 }).describe('JSON-safe Graph Relation combining semantic endpoints with non-conflicting Core Path fields.');
 
 const GraphRelationMarkerRecipeValueSchema = union([literal(false), GraphRelationMarkerRecipeSchema]);
-const GraphRelationDashPatternRecipeSchema = union([literal(false), PathBaseSchema.shape.dashPattern.unwrap()]);
+const GraphRelationDashPatternRecipeSchema = union([literal(false), PathStyleSchema.shape.dashPattern.unwrap()]);
 
 export const GraphRelationRoleTokenRecipeSchema = strictObject({
   sourceMarker: GraphRelationMarkerRecipeValueSchema.describe('Complete source marker recipe or explicit absence.'),

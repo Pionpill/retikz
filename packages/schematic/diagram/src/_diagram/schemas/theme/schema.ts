@@ -18,12 +18,14 @@ const DiagramThemeFrameSchema = strictObject({
   .describe('Sparse Diagram frame appearance and spacing defaults.');
 
 const DiagramTextAppearanceSchema = strictObject({
-  textColor: NodeSchema.shape.textColor.describe('Block-level presentation text color.'),
-  opacity: NodeSchema.shape.opacity.describe('Block-level presentation opacity.'),
-  font: NodeSchema.shape.font.describe('Block-level presentation font overrides.'),
-  align: NodeSchema.shape.align.describe('Block-level presentation text alignment.'),
-  lineHeight: NodeSchema.shape.lineHeight.describe('Block-level presentation line height.'),
-  maxTextWidth: NodeSchema.shape.maxTextWidth.describe('Block-level presentation wrapping width.'),
+  textColor: NodeSchema.shape.style.unwrap().shape.textColor.describe('Block-level presentation text color.'),
+  opacity: NodeSchema.shape.style.unwrap().shape.opacity.describe('Block-level presentation opacity.'),
+  font: NodeSchema.shape.style.unwrap().shape.font.describe('Block-level presentation font overrides.'),
+  align: NodeSchema.shape.layout.unwrap().shape.align.describe('Block-level presentation text alignment.'),
+  lineHeight: NodeSchema.shape.layout.unwrap().shape.lineHeight.describe('Block-level presentation line height.'),
+  maxTextWidth: NodeSchema.shape.layout
+    .unwrap()
+    .shape.maxTextWidth.describe('Block-level presentation wrapping width.'),
 })
   .refine(value => Object.keys(value).length > 0, {
     message: 'Diagram text appearance slice must contain at least one field.',

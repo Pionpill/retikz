@@ -24,8 +24,7 @@ const textNode = (text: string) => ({
   type: 'node' as const,
   position: [0, 0] as const,
   text,
-  padding: 0,
-  margin: 0,
+  layout: { padding: 0, margin: 0 },
 });
 
 const textValues = (primitives: ReturnType<typeof primitivesOf>): Array<string> =>
@@ -632,7 +631,6 @@ describe('Block-family layout-aware lowering', () => {
     const { output } = compileInHarness(
       Graph.createBlock({
         graphTheme: { rules: [{ type: 'entity', appearance: { fill: '#ef4444' } }] },
-        nodeDefault: { fill: '#2563eb' },
         children: [
           Graph.createBlockHeader({
             title: { text: 'Header' },
@@ -650,6 +648,11 @@ describe('Block-family layout-aware lowering', () => {
             ],
           }),
         ],
+        defaults: {
+          node: {
+            style: { fill: '#2563eb' },
+          },
+        },
       }),
       naturalProposal,
       Graph.createGraphDefinitions(),

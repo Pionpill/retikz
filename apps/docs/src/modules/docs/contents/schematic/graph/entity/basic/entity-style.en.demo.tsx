@@ -15,12 +15,14 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       role={values.role}
       status={values.status || undefined}
       position={[180, 90]}
-      fill={values.fill}
-      stroke={values.stroke}
-      strokeWidth={values.strokeWidth}
-      dashed={values.dashed}
-      opacity={values.opacity}
-      textColor={values.textColor}
+      style={{
+        fill: values.fill,
+        stroke: values.stroke,
+        strokeWidth: values.strokeWidth,
+        dashed: values.dashed,
+        opacity: values.opacity,
+        textColor: values.textColor,
+      }}
     >
       {values.content}
     </Entity>

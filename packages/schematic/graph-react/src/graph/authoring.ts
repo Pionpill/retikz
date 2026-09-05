@@ -19,7 +19,7 @@ import type { RelationProps } from './Relation';
 
 import { RetikzGraphReactError, RetikzGraphReactErrorCode } from '../errors';
 
-/** Graph standalone 模式承接的完整 Layout 宿主属性 */
+/** Graph standalone 模式承接的 Layout 宿主属性，style 由 Graph 绘图契约拥有 */
 export type GraphLayoutHostProps = Pick<
   LayoutProps,
   | 'authoring'
@@ -30,7 +30,6 @@ export type GraphLayoutHostProps = Pick<
   | 'height'
   | 'viewBox'
   | 'className'
-  | 'style'
   | 'renderer'
   | 'animate'
   | 'snapshotAt'
@@ -65,7 +64,6 @@ export const graphLayoutHostPropKeys = [
   'height',
   'viewBox',
   'className',
-  'style',
   'renderer',
   'animate',
   'snapshotAt',

@@ -9,12 +9,12 @@ import { GraphThemeLayerSchema } from '../theme';
 
 const BlockTextObjectSchema = strictObject({
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text content for this Block text item.'),
-  align: NodeSchema.shape.align,
-  lineHeight: NodeSchema.shape.lineHeight,
-  maxTextWidth: NodeSchema.shape.maxTextWidth,
-  textColor: NodeSchema.shape.textColor,
-  font: NodeSchema.shape.font,
-  opacity: NodeSchema.shape.opacity,
+  align: NodeSchema.shape.layout.unwrap().shape.align,
+  lineHeight: NodeSchema.shape.layout.unwrap().shape.lineHeight,
+  maxTextWidth: NodeSchema.shape.layout.unwrap().shape.maxTextWidth,
+  textColor: NodeSchema.shape.style.unwrap().shape.textColor,
+  font: NodeSchema.shape.style.unwrap().shape.font,
+  opacity: NodeSchema.shape.style.unwrap().shape.opacity,
 });
 
 export const BlockTextSchema = union([string(), BlockTextObjectSchema]).describe(

@@ -61,7 +61,8 @@ const projectEntity = (
     ...options,
     layers: context.layers,
   });
-  return { ...appearance, ...source };
+  if (Object.keys(appearance).length === 0) return source;
+  return { ...source, style: { ...appearance, ...source.style } };
 };
 
 const projectRelation = (
@@ -71,7 +72,16 @@ const projectRelation = (
 ): IRGraphRelation => {
   const relation = resolveRelation(source, options);
   const appearance = resolveRelationGraphThemeOverrides(relation, { ...options, layers: context.layers });
-  return { ...appearance, ...source };
+  const { sourceMarker, targetMarker, labelTextForeground, labelFont, labelOpacity, ...style } = appearance;
+  return {
+    ...(sourceMarker === undefined ? {} : { sourceMarker }),
+    ...(targetMarker === undefined ? {} : { targetMarker }),
+    ...(labelTextForeground === undefined ? {} : { labelTextForeground }),
+    ...(labelFont === undefined ? {} : { labelFont }),
+    ...(labelOpacity === undefined ? {} : { labelOpacity }),
+    ...source,
+    ...(Object.keys(style).length === 0 && source.style === undefined ? {} : { style: { ...style, ...source.style } }),
+  };
 };
 
 const projectBlock = (source: IRBlock, context: GraphProjectionContext, options: GraphResolveContext): IRBlock => {

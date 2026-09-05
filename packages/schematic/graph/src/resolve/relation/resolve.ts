@@ -241,7 +241,14 @@ const RELATION_APPEARANCE_FIELDS = [
 const sourceAppearanceOf = (relation: CanonicalRelation): IRGraphRelationAppearanceTokenOverrides =>
   Object.fromEntries(
     RELATION_APPEARANCE_FIELDS.flatMap(key => {
-      const value = relation.source[key];
+      const value =
+        key === 'sourceMarker' ||
+        key === 'targetMarker' ||
+        key === 'labelTextForeground' ||
+        key === 'labelFont' ||
+        key === 'labelOpacity'
+          ? relation.source[key]
+          : relation.source.style?.[key];
       return value === undefined ? [] : [[key, value]];
     }),
   );

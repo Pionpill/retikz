@@ -1,6 +1,6 @@
 import type { RefinementCtx, ZodType } from 'zod';
 
-import { NodeSchema } from '@retikz/core';
+import { NodeStyleSchema } from '@retikz/core';
 import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { array, discriminatedUnion, literal, strictObject, union } from 'zod';
 
@@ -22,7 +22,7 @@ const requireAtLeastOneField =
     }
   };
 
-const GraphEntityNodeAppearanceShape = NodeSchema.pick({
+const GraphEntityNodeAppearanceShape = NodeStyleSchema.pick({
   color: true,
   textColor: true,
   fill: true,

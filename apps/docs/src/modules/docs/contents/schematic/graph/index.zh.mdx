@@ -7,6 +7,8 @@ Graph 是一个可选的上下文薄壳。它复用 Core `Scope` 的完整能力
 
 Block、Group、Entity 与 Relation 也是独立的 Tier 2 composite，可以直接放在 Layout、Scope 或其它接受 Core child 的位置。Block 用固定 Header、Section、Row 与 Cell 表达代码和工程对象；Graph 不维护成员列表或 identity index，Relation 的引用与重复 id 诊断统一交给 Core namespace。
 
+`Graph.style` 设置后代绘图级联样式，`Graph.defaults` 设置具名默认值通道；独立渲染与嵌入使用相同契约。`style` 不接受宿主 CSS，需要 CSS 时设置外层 DOM 或 `Layout.style`。
+
 ## 两种宿主模式
 
 Graph 作为顶层 React 组件时，和 Layout、Plot、Table 一样建立一个 Scene 宿主，不需要再包一层 Layout：
@@ -31,7 +33,7 @@ Graph 作为顶层 React 组件时，和 Layout、Plot、Table 一样建立一�
 </Layout>
 ```
 
-`theme`、`nodeDefault`、`pathDefault`、`labelDefault`、`arrowDefault`、`resetStyle`、`transforms`、`placement`、`zIndex`、`clip` 等字段直接属于 `IRGraph`，并沿用 Core Scope 语义。`width`、`height`、renderer、runtime 与 DOM 属性只属于 standalone Scene 宿主；嵌入 Graph 时应把这些属性放到外层 Layout。
+`theme`、`defaults.node`、`defaults.path`、`defaults.label`、`defaults.arrow`、`defaults.reset`、`transforms`、`placement`、`zIndex`、`clip` 等字段直接属于 `IRGraph`，并沿用 Core Scope 语义。`width`、`height`、renderer、runtime 与 DOM 属性只属于 standalone Scene 宿主；嵌入 Graph 时应把这些属性放到外层 Layout。
 
 ## 职责一览
 

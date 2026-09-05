@@ -69,7 +69,7 @@ describe('Graph Scope and Theme compile semantics', () => {
             role: 'activity',
             position: [0, 0],
             text: 'Static master',
-            color: '#336699',
+            style: { color: '#336699' },
           }),
         ],
       },
@@ -93,7 +93,7 @@ describe('Graph Scope and Theme compile semantics', () => {
       role: 'activity',
       position: [0, 0],
       text: 'Inherited CSS color',
-      color: 'currentColor',
+      style: { color: 'currentColor' },
     } as const;
 
     expect(() =>
@@ -113,7 +113,9 @@ describe('Graph Scope and Theme compile semantics', () => {
       {
         type: 'scene',
         version: 1,
-        children: [Graph.EntitySchema.parse({ ...source, fill: '#f1f5f9', stroke: 'currentColor' })],
+        children: [
+          Graph.EntitySchema.parse({ ...source, style: { ...source.style, fill: '#f1f5f9', stroke: 'currentColor' } }),
+        ],
       },
       { ...definitions, padding: 0, onWarn: warning => warnings.push(warning) },
     );
@@ -147,7 +149,7 @@ describe('Graph Scope and Theme compile semantics', () => {
             type: 'entity',
             role: 'activity',
             position: [0, 0],
-            color: '#336699',
+            style: { color: '#336699' },
           }),
         ],
       },
@@ -222,10 +224,6 @@ describe('Graph Scope and Theme compile semantics', () => {
             namespace: 'graph',
             type: 'graph',
             theme: { mode: 'dark' },
-            nodeDefault: { dashed: true },
-            pathDefault: { lineCap: 'round' },
-            labelDefault: { font: { size: 11 } },
-            arrowDefault: { length: 12 },
             graphTheme: {
               rules: [
                 { type: 'entity', appearance: { fill: '#ef4444' } },
@@ -253,6 +251,16 @@ describe('Graph Scope and Theme compile semantics', () => {
                 labels: [{ text: 'link', position: 0.5 }],
               },
             ],
+            defaults: {
+              node: {
+                style: { dashed: true },
+              },
+              path: {
+                style: { lineCap: 'round' },
+              },
+              label: { font: { size: 11 } },
+              arrow: { length: 12 },
+            },
           }),
         ],
       },
@@ -280,15 +288,19 @@ describe('Graph Scope and Theme compile semantics', () => {
         children: [
           {
             type: 'scope',
-            nodeDefault: { dashed: true },
             children: [
               {
                 namespace: 'graph',
                 type: 'graph',
-                resetStyle: ['node'],
                 children: [{ namespace: 'graph', type: 'entity', role: 'activity', position: [0, 0], text: 'reset' }],
+                defaults: { reset: ['node'] },
               },
             ],
+            defaults: {
+              node: {
+                style: { dashed: true },
+              },
+            },
           },
         ],
       },

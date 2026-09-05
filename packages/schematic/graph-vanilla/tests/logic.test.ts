@@ -266,18 +266,23 @@ describe('normalizeGraph', () => {
       localNamespace: true,
       transforms: [{ kind: 'translate' as const, x: 10, y: 20 }],
       placement: { target: [30, 40], selfAnchor: 'center' },
-      fill: 'lightblue',
-      opacity: 0.8,
-      nodeDefault: { fill: 'white' },
-      pathDefault: { stroke: 'green' },
-      labelDefault: { font: { size: 10 } },
-      arrowDefault: { shape: 'stealth', scale: 1.5 },
-      resetStyle: ['path' as const],
       zIndex: 2,
       clip: { kind: 'rect' as const, x: 0, y: 0, width: 220, height: 120 },
       boundingShape: 'circle',
       animations: [],
       meta: { source: 'architecture-catalog' },
+      style: { fill: 'lightblue', opacity: 0.8 },
+      defaults: {
+        node: {
+          style: { fill: 'white' },
+        },
+        path: {
+          style: { stroke: 'green' },
+        },
+        label: { font: { size: 10 } },
+        arrow: { shape: 'stealth', scale: 1.5 },
+        reset: ['path' as const],
+      },
     };
 
     expect(normalizeGraph(input)).toEqual({
@@ -291,14 +296,14 @@ describe('normalizeGraph', () => {
     expect(
       normalizeGraph({
         children: [
-          { type: 'entity', role: 'participant', text: '', dashed: true },
+          { type: 'entity', role: 'participant', text: '', style: { dashed: true } },
           {
             type: 'relation',
             source: { id: 'service' },
             target: { id: 'database' },
             role: 'dependency',
             kind: 'uml.dependency',
-            dashPattern: [6, 2],
+            style: { dashPattern: [6, 2] },
             labels: [{ text: 'reads', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
             way: ['service', { id: 'database' }],
           },
@@ -314,7 +319,7 @@ describe('normalizeGraph', () => {
           type: 'entity',
           role: 'participant',
           text: '',
-          dashed: true,
+          style: { dashed: true },
         },
         {
           namespace: 'graph',
@@ -323,12 +328,12 @@ describe('normalizeGraph', () => {
           target: { id: 'database' },
           role: 'dependency',
           kind: 'uml.dependency',
-          dashPattern: [6, 2],
           labels: [{ text: 'reads', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
           route: [
             { type: 'step', kind: 'move', to: { id: 'service' } },
             { type: 'step', kind: 'line', to: { id: 'database' } },
           ],
+          style: { dashPattern: [6, 2] },
         },
         { type: 'node', position: [0, 120], text: 'Legend' },
       ],
