@@ -16,6 +16,26 @@ const sceneOf = (text = 'A'): ReturnType<typeof compileToScene>['scene'] => {
 };
 
 describe('@retikz/vanilla mountSvg', () => {
+  it.each(['static', 'retained'] as const)('%s 宿主默认尺寸随取景框更新', mode => {
+    const ir: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [],
+      viewBox: { x: -20, y: -10, width: 240, height: 120 },
+    };
+    const container = document.createElement('div');
+    const view =
+      mode === 'static'
+        ? mountSvg(container, ir, { runtime: { mode } })
+        : mountSvg(container, ir, { runtime: { mode } });
+    expect(view.root.getAttribute('width')).toBe('240');
+    expect(view.root.getAttribute('height')).toBe('120');
+    view.update({ ...ir, viewBox: { x: 0, y: 0, width: 300, height: 100 } });
+    expect(view.root.getAttribute('width')).toBe('300');
+    expect(view.root.getAttribute('height')).toBe('100');
+    view.dispose();
+  });
+
   it('mount-svg-builds-dom：把 scene 挂成真实 <svg> DOM', () => {
     const c = document.createElement('div');
     const view = mountSvg(c, sceneOf());

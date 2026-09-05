@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Layout ownership boundaries across React, Vanilla processing, Core, and the render host */
 const Demo: FC = () => (
-  <Layout width={800} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="react-adapter-group">
       <LogicFigureFrameTitle>@retikz/react</LogicFigureFrameTitle>
       <Node

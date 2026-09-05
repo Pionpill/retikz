@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Renderer fallback and animation host overrides are separate runtime policies */
 const Demo: FC = () => (
-  <Layout width={650} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="renderer-policy">
       <LogicFigureFrameTitle>Renderer (fallback only when missing)</LogicFigureFrameTitle>
       <Node

@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Layout chooses internal coordinates through exclusive precedence and keeps display size separate */
 const Demo: FC = () => (
-  <Layout width={620} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="coordinate-priority">
       <LogicFigureFrameTitle>Internal-coordinate precedence</LogicFigureFrameTitle>
       <Node
@@ -53,7 +53,7 @@ const Demo: FC = () => (
       style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13 } }}
       layout={{ minimumSize: { width: 118, height: 40 } }}
     >
-      width / height
+      Natural content size
     </Node>
     <Node
       id="display-size"

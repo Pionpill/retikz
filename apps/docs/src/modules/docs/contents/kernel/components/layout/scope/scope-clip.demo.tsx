@@ -64,8 +64,6 @@ const CLIP_BY_KIND: Record<ScopeClipValues['clipKind'], IRClip> = {
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout
-      width={220}
-      height={84}
       viewBox={{ x: -110, y: -60, width: 220, height: 120 }}
       clips={[
         CircleClipDefinition,

@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** One complete Clip Definition converges through one registry into a Scene path */
 const Demo: FC = () => (
-  <Layout width={900} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="operations"
       position={[-360, 0]}

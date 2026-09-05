@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Renderer 缺省回退与动画宿主覆盖是两套独立的运行时策略 */
 const Demo: FC = () => (
-  <Layout width={650} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="renderer-policy">
       <LogicFigureFrameTitle>Renderer（前项缺省时回退）</LogicFigureFrameTitle>
       <Node

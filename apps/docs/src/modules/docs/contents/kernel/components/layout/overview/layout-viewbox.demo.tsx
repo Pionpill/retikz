@@ -16,8 +16,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Layout
-      width={values.width}
-      height={values.height}
       style={{ outline: '1px dashed gray', outlineOffset: '-1px' }}
       viewBox={{
         x: values.viewBoxX,

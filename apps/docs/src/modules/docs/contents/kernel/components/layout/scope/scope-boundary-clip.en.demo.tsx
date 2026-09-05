@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** scope.id synthetic 边界与 clip 资源流程图 */
 const Demo: FC = () => (
-  <Layout width={750} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="layouts"
       position={[-310, -35]}

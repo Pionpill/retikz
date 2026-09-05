@@ -67,6 +67,34 @@ const idIr: IRScene = {
 };
 
 describe('@retikz/vanilla mountCanvas', () => {
+  it.each(['static', 'retained'] as const)('%s 默认 CSS 尺寸独立于 DPR，单轴保持比例', mode => {
+    const ir: IRScene = {
+      type: 'scene',
+      version: 1,
+      children: [],
+      viewBox: { x: -20, y: -10, width: 240, height: 120 },
+    };
+    const container = document.createElement('div');
+    const view =
+      mode === 'static'
+        ? mountCanvas(container, ir, { runtime: { mode } })
+        : mountCanvas(container, ir, { runtime: { mode } });
+    expect(view.root.style.width).toBe('240px');
+    expect(view.root.style.height).toBe('120px');
+    expect(view.root.width).toBe(480);
+    view.update({ ...ir, viewBox: { x: 0, y: 0, width: 300, height: 100 } });
+    expect(view.root.style.width).toBe('300px');
+    expect(view.root.width).toBe(600);
+    view.dispose();
+    const scaled =
+      mode === 'static'
+        ? mountCanvas(container, ir, { runtime: { mode }, output: { width: 480 } })
+        : mountCanvas(container, ir, { runtime: { mode }, output: { width: 480 } });
+    expect(scaled.root.style.height).toBe('240px');
+    expect(scaled.root.height).toBe(480);
+    scaled.dispose();
+  });
+
   it('mount-canvas-builds-dom：把含 id 的 IR 挂成真实 <canvas> DOM', () => {
     const container = document.createElement('div');
     const view = mountCanvas(container, idIr);

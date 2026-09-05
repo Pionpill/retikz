@@ -156,9 +156,9 @@ export type LayoutProps = {
   handlers?: HydrationHandlers;
   /** retained 或 static processing 模式 */
   runtime?: LayoutRuntimeOptions;
-  /** SVG 或 Canvas CSS 宽度 */
+  /** SVG 或 Canvas CSS 宽度；缺省取内容宽度，单轴数值尺寸按内容比例补齐另一轴 */
   width?: number | string;
-  /** SVG 或 Canvas CSS 高度 */
+  /** SVG 或 Canvas CSS 高度；缺省取内容高度，CSS 字符串尺寸由浏览器排版 */
   height?: number | string;
   /** 显式视框 */
   viewBox?: IRViewBox;

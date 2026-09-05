@@ -79,7 +79,7 @@ const transformOf = (values: ScopeTransformValues): InputTransform => {
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={230} viewBox={{ x: -260, y: -150, width: 520, height: 300 }}>
+    <Layout viewBox={{ x: -260, y: -150, width: 520, height: 300 }}>
       <Node id="O" position={[-100, 0]} shape="circle" style={{ stroke: 'none', fill: 'none' }} layout={{ padding: 4 }}>
         o
       </Node>

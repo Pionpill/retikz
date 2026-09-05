@@ -7,7 +7,7 @@ retikz 的坐标先描述“图里的几何世界”，再交给 `<Layout>` 显�
 
 笛卡尔坐标系是一等公民：编译阶段会把极坐标、相对定位、偏移和比例点等其它位置表达先解析成笛卡尔点，再继续计算边界、锚点和渲染结果。
 
-你写的坐标、线宽、间距、箭头尺寸都使用同一套 user units（图内部的长度单位，不是屏幕像素）；页面上看到的物理大小由 `width` / `height` 和 `viewBox` 一起决定。
+坐标、线宽、间距和箭头尺寸都使用 user units（图内部的长度单位）。默认显示时，1 个用户单位对应 1 个 CSS 像素；屏幕 DPR 只影响 Canvas 位图精度。
 
 ## 笛卡尔坐标
 
@@ -59,16 +59,16 @@ retikz 的坐标先描述“图里的几何世界”，再交给 `<Layout>` 显�
 
 ## viewBox 和显示尺寸
 
-`viewBox` 决定 `<Layout>` 看到哪一块 user-unit 世界；`width` / `height` 决定这块世界在页面上显示多大。
+`viewBox` 决定 `<Layout>` 看到哪一块 user-unit 世界。通常省略它，使用内容边界加 padding 自动取景；显示宽高默认等于最终视框宽高，不缩放图元。
 
 <ComponentPreview files="viewbox" size="md" hideCode />
 
-左边是完整的 user units 世界，虚线框是 `viewBox` 选中的窗口，它被映射成右边按 `width` / `height` 渲染的画面。
+左边是完整的 user units 世界，虚线框是 `viewBox` 选中的窗口，右边示意选中范围内的内容；默认显示尺寸跟随该范围。
 
 | 项                 | 控制什么                                     | 例子                                          |
 | ------------------ | -------------------------------------------- | --------------------------------------------- |
 | `viewBox`          | 内部坐标范围                                 | `{ x: -40, y: -45, width: 260, height: 170 }` |
-| `width` / `height` | 页面里的渲染尺寸                             | `width={430}` / `height={230}`                |
+| `width` / `height` | 页面里的渲染尺寸                             | 默认跟随视框宽高                              |
 | 自动 bounds        | 未传 `viewBox` 时，由可见图元加 padding 算出 | 普通图默认用它                                |
 
 没有显式 `viewBox` 时，retikz 会根据可见 Node / Path / Group 算出 layout bounds，再加 padding。`<Coordinate>` 只是命名点，不会自己撑大 bounds；如果远处只有一个 Coordinate，没有可见图元落在那里，画面不会自动扩过去。
@@ -76,9 +76,7 @@ retikz 的坐标先描述“图里的几何世界”，再交给 `<Layout>` 显�
 大多数图不用手写 `viewBox`。当你需要固定坐标语境、对齐多张图、故意留白或裁剪时，再把它写出来。
 
 ```tsx
-<Layout width={430} height={230} viewBox={{ x: -40, y: -45, width: 260, height: 170 }}>
-  {/* children */}
-</Layout>
+<Layout viewBox={{ x: -40, y: -45, width: 260, height: 170 }}>{/* children */}</Layout>
 ```
 
 `viewBox` 和 `width` / `height` 是正交的：改 `width` / `height` 只改变显示缩放，不改变 `[x, y]` 的含义；改 `viewBox` 才会改变哪片内部坐标被看见。

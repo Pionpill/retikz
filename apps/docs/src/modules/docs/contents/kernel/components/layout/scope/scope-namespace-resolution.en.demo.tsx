@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Scope 命名空间 lookup、注册与重复 id 处理图 */
 const Demo: FC = () => (
-  <Layout width={640} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="lookup"
       position={[-165, -105]}

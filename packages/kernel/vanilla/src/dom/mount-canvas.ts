@@ -41,6 +41,7 @@ import type {
 } from '../runtime/types';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
+import { computeDisplaySize } from '../runtime';
 import { DEFAULT_ID_PREFIX, VanillaViewMode } from '../runtime/constants';
 import { captureVanillaRuntimeOptions } from '../runtime/runtime-options';
 import { createEmptyRuntimeMeta, toSceneResult } from '../runtime/to-scene';
@@ -172,17 +173,11 @@ const mountStaticCanvas = (
     currentArtifacts = artifacts;
     currentCompileResult = compileResult;
     currentRuntimeMeta = runtimeMeta;
-    const hasNominalSize =
-      typeof output.width === 'number' &&
-      Number.isFinite(output.width) &&
-      typeof output.height === 'number' &&
-      Number.isFinite(output.height);
-    const bitmapWidth = hasNominalSize ? (output.width as number) : scene.layout.width;
-    const bitmapHeight = hasNominalSize ? (output.height as number) : scene.layout.height;
-    canvas.width = Math.max(1, Math.round(bitmapWidth * ratio));
-    canvas.height = Math.max(1, Math.round(bitmapHeight * ratio));
-    if (output.width !== undefined) canvas.style.width = `${output.width}px`;
-    if (output.height !== undefined) canvas.style.height = `${output.height}px`;
+    const size = computeDisplaySize(scene.layout, output.width, output.height);
+    canvas.width = Math.max(1, Math.round(size.width * ratio));
+    canvas.height = Math.max(1, Math.round(size.height * ratio));
+    canvas.style.width = `${size.width}px`;
+    canvas.style.height = `${size.height}px`;
     canvas.style.objectFit = 'contain';
     // 截帧（animation.snapshotAt 给定）：按该时刻烘焙一帧、不起 rAF（定格），覆盖 animation.enabled。
     // animation.snapshotAt 来自 mount options、view 生命周期内恒定，故此分支下 clock / visible bridge 始终不建。

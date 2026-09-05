@@ -101,7 +101,7 @@ const ThemeCard: ThemeCardComponent = Object.assign(() => null, {
 });
 
 const Demo: FC = () => (
-  <Layout theme={{ style: PreviewThemeStyle.Academic }} width={650} height={120}>
+  <Layout theme={{ style: PreviewThemeStyle.Academic }}>
     <ThemeCard label="Root: academic / light" />
     <Scope transforms={[{ kind: 'translate', x: 200, y: 0 }]} theme={{ style: PreviewThemeStyle.Vibrant }}>
       <ThemeCard label="Local: vibrant / light" />

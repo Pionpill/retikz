@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Scope 变换 lowering 与相对定位投影流程图 */
 const Demo: FC = () => (
-  <Layout width={680} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="ir-transforms"
       position={[-170, -45]}

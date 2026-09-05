@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Layout 在 React、Vanilla processing、Core 与渲染宿主之间的职责边界 */
 const Demo: FC = () => (
-  <Layout width={800} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="react-adapter-group">
       <LogicFigureFrameTitle>@retikz/react</LogicFigureFrameTitle>
       <Node

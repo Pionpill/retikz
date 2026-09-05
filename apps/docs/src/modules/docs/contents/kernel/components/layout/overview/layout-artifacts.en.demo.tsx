@@ -35,7 +35,7 @@ const Demo: FC = () => {
 
   return (
     <div className="grid gap-3">
-      <Layout ir={scene} width={300} height={120} artifacts={artifactOptions} onArtifacts={handleArtifacts} />
+      <Layout ir={scene} artifacts={artifactOptions} onArtifacts={handleArtifacts} />
       <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
         Node artifacts: {nodeLayouts.length}; content width:{' '}
         {measuredNode === undefined

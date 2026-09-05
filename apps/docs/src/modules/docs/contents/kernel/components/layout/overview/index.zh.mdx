@@ -9,7 +9,7 @@ description: React 绘图入口：将 JSX 收集为 Vanilla InputScene，或采�
 
 `<Layout>` 只拥有 React 侧的构造、能力注入和宿主接线，不定义 IR / Scene 语义、几何规则或自动布局算法。节点定位与通用约束由 core 表达，plot / table 等领域布局属于各自上层能力。
 
-`width` / `height` 只决定渲染结果在页面上的显示尺寸；内部坐标仍用 retikz 用户单位，可见范围由编译阶段按布局边界自动算。
+默认只写 `<Layout>`：可见范围由内容边界加 padding 自动计算，显示宽高跟随该范围，1 个用户单位对应 1 个 CSS 像素。普通图不需要设置 `width`、`height` 或 `viewBox`。
 
 ## 用法
 
@@ -18,7 +18,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 ```
 
 ```tsx
-<Layout width={300} height={80}>
+<Layout>
   <Node id="A" position={[0, 0]}>
     A
   </Node>
@@ -88,12 +88,12 @@ import { LayoutInspectLayout } from '@retikz/layout-react/inspect';
 
 ### 输出边界
 
-`viewBox` 决定内部坐标范围，`width` / `height` 决定页面显示尺寸。用面板分别调整这两类输出参数，观察它们不会改变 JSX 图形结构。
+需要固定取景、留白或裁切时才设置 `viewBox`。显示尺寸默认跟随视框宽高；操作下面的面板时，圆的大小保持不变，改变的是视框范围。
 
 <ComponentPreview
   files="layout-viewbox"
   size="md"
-  caption="外层灰色 dashed 边框表示 SVG 显示尺寸，内层浅灰 dotted 边框表示内部 viewBox；默认等比适配会保留必要留白。"
+  caption="灰色 dashed 边框表示显示范围，浅灰 dotted 边框标记 viewBox；显示尺寸与视框一致，圆不会因修改视框宽高而缩放。"
 />
 
 ### 能力注入
@@ -189,7 +189,7 @@ retained 路径由 Vanilla controller 在一次 transaction 中提交 Input / IR
 
 ### 视框如何确定
 
-上半部分决定内部坐标范围：显式 `viewBox` prop 优先，其次是 IR 自带的 `viewBox`，两者都没有时才使用内容边界加 padding。下半部分的 `width` / `height` 只控制页面显示尺寸，不参与内部坐标计算。
+上半部分决定内部坐标范围：显式 `viewBox` prop 优先，其次是 IR 自带的 `viewBox`，两者都没有时才使用内容边界加 padding。下半部分的显示尺寸默认跟随内容范围。显式数值 `width` / `height` 用于有意缩放：只给一个轴时另一轴按内容比例推导，两个轴都给时等比适配；CSS 字符串尺寸由浏览器排版，额外 CSS 约束也可能改变显示比例。
 
 <ComponentPreview files="layout-viewbox-resolution" size="sm" hideCode />
 
@@ -253,15 +253,15 @@ retained 路径由 Vanilla controller 在一次 transaction 中提交 Input / IR
 
 ### 输入与视框
 
-| 属性          | 类型                                  | 默认值 | 描述                                                |
-| ------------- | ------------------------------------- | ------ | --------------------------------------------------- |
-| `children`    | `ReactNode`                           | —      | Kernel / Sugar 组件树；未传 `ir` 时使用             |
-| `ir`          | `IRScene`                             | —      | 已构造的 Core IR；同时传 children 时采用本项        |
-| `theme`       | `IRTheme`                             | —      | 根 Theme 稀疏覆盖；`ir` 模式下逐字段覆盖 `ir.theme` |
-| `themeStyles` | `ReadonlyArray<ThemeStyleDefinition>` | —      | 运行时 Core style resolver；不写入 IR 或 JSON       |
-| `width`       | `number` \| `string`                  | —      | SVG / Canvas 在页面上的显示宽度                     |
-| `height`      | `number` \| `string`                  | —      | SVG / Canvas 在页面上的显示高度                     |
-| `viewBox`     | `IRViewBox`                           | —      | 内部坐标范围；覆盖 IR viewBox 与自动范围            |
+| 属性          | 类型                                  | 默认值   | 描述                                                 |
+| ------------- | ------------------------------------- | -------- | ---------------------------------------------------- |
+| `children`    | `ReactNode`                           | —        | Kernel / Sugar 组件树；未传 `ir` 时使用              |
+| `ir`          | `IRScene`                             | —        | 已构造的 Core IR；同时传 children 时采用本项         |
+| `theme`       | `IRTheme`                             | —        | 根 Theme 稀疏覆盖；`ir` 模式下逐字段覆盖 `ir.theme`  |
+| `themeStyles` | `ReadonlyArray<ThemeStyleDefinition>` | —        | 运行时 Core style resolver；不写入 IR 或 JSON        |
+| `width`       | `number` \| `string`                  | 内容宽度 | CSS 显示宽度；单轴数值尺寸按内容比例补齐另一轴       |
+| `height`      | `number` \| `string`                  | 内容高度 | CSS 显示高度；默认不缩放，DPR 只影响 Canvas 位图精度 |
+| `viewBox`     | `IRViewBox`                           | —        | 内部坐标范围；覆盖 IR viewBox 与自动范围             |
 
 ### 编译基础
 

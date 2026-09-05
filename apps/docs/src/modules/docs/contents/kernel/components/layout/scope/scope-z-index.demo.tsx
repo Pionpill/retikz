@@ -11,7 +11,7 @@ export const previewControls = scopeZIndexControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={360} height={220} viewBox={{ x: -180, y: -110, width: 360, height: 220 }}>
+    <Layout viewBox={{ x: -180, y: -110, width: 360, height: 220 }}>
       <Scope transforms={[{ kind: 'translate', x: -22, y: -14 }]} zIndex={values.scopeA}>
         <Node
           id="a1"

@@ -3,12 +3,7 @@ import type { FC } from 'react';
 import { Draw, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout
-    width={430}
-    height={260}
-    viewBox={{ x: -130, y: -115, width: 290, height: 230 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     <Node id="O" position={[0, 0]} style={{ stroke: 'none', textColor: 'gray' }}>
       O
     </Node>

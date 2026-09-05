@@ -7,7 +7,7 @@ retikz first describes the geometric world inside the figure, then lets `<Layout
 
 Cartesian coordinates are the first-class coordinate form. During compilation, polar coordinates, relative placement, offsets, and proportional points are all resolved into Cartesian points before bounds, anchors, and rendering are computed.
 
-Coordinates, line widths, spacing, and arrow sizes all use the same user units (the figure's internal length unit, not screen pixels); the physical size on the page comes from `width` / `height` together with `viewBox`.
+Coordinates, line widths, spacing, and arrow sizes use user units. By default, 1 user unit corresponds to 1 CSS pixel; device pixel ratio only affects Canvas bitmap resolution.
 
 ## Cartesian Coordinates
 
@@ -59,16 +59,16 @@ This page explains the coordinate context; the full position vocabulary lives in
 
 ## viewBox and Render Size
 
-`viewBox` decides which part of the user-unit world `<Layout>` sees; `width` / `height` decide how large that world appears on the page.
+`viewBox` selects the visible part of the user-unit world. Usually omit it to use content bounds plus padding. Display dimensions default to the final frame dimensions, without scaling the primitives.
 
 <ComponentPreview files="viewbox" size="md" hideCode />
 
-The left side is the full user-unit world; the dashed frame is the window `viewBox` selects, which maps to the picture rendered at `width` / `height` on the right.
+The left side is the full user-unit world; the dashed frame is the window `viewBox` selects, and the right side illustrates the selected content. Display dimensions follow that range by default.
 
 | Item               | Controls                                                                          | Example                                       |
 | ------------------ | --------------------------------------------------------------------------------- | --------------------------------------------- |
 | `viewBox`          | Internal coordinate range                                                         | `{ x: -40, y: -45, width: 260, height: 170 }` |
-| `width` / `height` | Rendered size in the page                                                         | `width={430}` / `height={230}`                |
+| `width` / `height` | Rendered size in the page                                                         | Defaults to the frame dimensions              |
 | Auto bounds        | Used when no `viewBox` is supplied; computed from visible primitives plus padding | The default for ordinary figures              |
 
 Without an explicit `viewBox`, retikz computes layout bounds from visible Nodes / Paths / Groups and adds padding. `<Coordinate>` only names a point; it does not expand bounds by itself. If a far-away Coordinate has no visible primitive near it, the final view will not automatically grow to include that point.
@@ -76,9 +76,7 @@ Without an explicit `viewBox`, retikz computes layout bounds from visible Nodes 
 Most figures do not need a manual `viewBox`. Set it when you need a fixed coordinate context, multi-figure alignment, deliberate whitespace, or clipping.
 
 ```tsx
-<Layout width={430} height={230} viewBox={{ x: -40, y: -45, width: 260, height: 170 }}>
-  {/* children */}
-</Layout>
+<Layout viewBox={{ x: -40, y: -45, width: 260, height: 170 }}>{/* children */}</Layout>
 ```
 
 `viewBox` is orthogonal to `width` / `height`: changing `width` / `height` only changes display scaling, not what `[x, y]` means. Changing `viewBox` changes which internal coordinates are visible.

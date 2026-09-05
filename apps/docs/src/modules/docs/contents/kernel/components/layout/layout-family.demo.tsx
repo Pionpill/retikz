@@ -9,7 +9,7 @@ import { Draw, Layout, Node, Scope } from '@retikz/react';
  *   纯技术 label、单文件双语共用。
  */
 const Demo: FC = () => (
-  <Layout width={500} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     {/* 左：直接画在 Layout 顶层坐标 */}
     <Node id="a0" position={[-205, -15]} style={{ stroke: 'none', fill: 'none' }}>
       A

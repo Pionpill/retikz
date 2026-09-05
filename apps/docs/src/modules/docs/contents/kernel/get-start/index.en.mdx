@@ -63,7 +63,7 @@ Three nodes joined by two arrowed lines — the static structure now matches the
 Keep four rules in mind before moving on:
 
 - Canvas coordinates grow right on x and down on y; `[0, 0]` is the origin in retikz user units
-- `<Layout width height>` controls the rendered SVG size; it does not rewrite internal coordinates into CSS pixels
+- `<Layout>` defaults to the natural content size at 1 user unit per CSS pixel; normally omit display dimensions and `viewBox`
 - A node `id` is the name used by graphConnectors, and `<Draw way={['a', 'b']}>` targets node borders rather than text centers
 - Use **View Code → IR** to inspect the compiled diagram data; it is the quickest way to debug connections
 

@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Layout 以互斥优先级决定内部坐标，并独立处理页面显示尺寸 */
 const Demo: FC = () => (
-  <Layout width={620} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="coordinate-priority">
       <LogicFigureFrameTitle>内部坐标优先级</LogicFigureFrameTitle>
       <Node
@@ -53,7 +53,7 @@ const Demo: FC = () => (
       style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13 } }}
       layout={{ minimumSize: { width: 118, height: 40 } }}
     >
-      width / height
+      默认跟随内容尺寸
     </Node>
     <Node
       id="display-size"

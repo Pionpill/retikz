@@ -6,7 +6,7 @@ import { fileShape, FileShapeName } from './layout-file-shape';
 
 /** Layout 注入自定义 ShapeDefinition 的完整闭环 */
 const Demo: FC = () => (
-  <Layout width={320} height={130} shapes={[fileShape]}>
+  <Layout shapes={[fileShape]}>
     <Node
       id="ir-file"
       position={[-90, 0]}

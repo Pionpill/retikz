@@ -3,12 +3,7 @@ import type { FC } from 'react';
 import { Draw, Layout, Node } from '@retikz/react';
 
 const Demo: FC = () => (
-  <Layout
-    width={460}
-    height={205}
-    viewBox={{ x: -190, y: -66, width: 370, height: 158 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     {/* 左：user units 世界 + viewBox 选中的窗口 */}
     <Node
       id="world"
