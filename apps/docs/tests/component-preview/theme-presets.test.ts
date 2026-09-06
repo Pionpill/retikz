@@ -1,6 +1,6 @@
 import * as corePackage from '@retikz/core';
 import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
-import { PlotThemeToken, resolvePlotTheme } from '@retikz/plot';
+import { resolvePlotTheme } from '@retikz/plot';
 import { resolveTableThemeDefaults } from '@retikz/table';
 import { globSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
@@ -127,44 +127,44 @@ describe('docs-owned theme presets', () => {
       if (core === undefined) throw new Error(`missing Core definition for ${definition.name}`);
       const colors = resolveCoreThemeStyleColors(mode, core.resolve({ mode }));
       const resolved = resolvePlotTheme({ style: definition.name, mode, colors }, {}, [definition]);
-      expect(resolved.tokens[PlotThemeToken.AxisLineEnabled]).toBe(definition.name === PreviewThemeStyle.Academic);
+      expect(resolved.defaults.axis?.line !== false).toBe(definition.name === PreviewThemeStyle.Academic);
       const expectedStyleRules =
         definition.name === PreviewThemeStyle.Academic
           ? [
               {
                 select: { dimension: ['x', 'y'] },
-                tokens: {
-                  [PlotThemeToken.AxisGridEnabled]: false,
-                  [PlotThemeToken.AxisGridIncludeDomain]: false,
-                },
+                axis: { grid: false },
               },
             ]
           : definition.name === PreviewThemeStyle.Vibrant
             ? [
                 {
                   select: { dimension: ['x', 'y'] },
-                  tokens: {
-                    [PlotThemeToken.AxisGridEnabled]: true,
-                    [PlotThemeToken.AxisGridIncludeDomain]: false,
+                  axis: {
+                    grid: {
+                      stroke: mode === ThemeMode.Light ? '#FFFFFF' : '#000000',
+                      strokeWidth: 1,
+                      drawOpacity: 1,
+                      includeDomain: false,
+                    },
                   },
                 },
               ]
             : [
                 {
                   select: { dimension: ['x', 'y'] },
-                  tokens: {
-                    [PlotThemeToken.AxisGridEnabled]: false,
-                    [PlotThemeToken.AxisGridIncludeDomain]: false,
-                  },
+                  axis: { grid: false },
                 },
                 {
                   select: { dimension: 'y' },
-                  tokens: { [PlotThemeToken.AxisGridEnabled]: true },
+                  axis: {
+                    grid: { stroke: 'currentColor', strokeWidth: 1, drawOpacity: 0.15, includeDomain: true },
+                  },
                 },
               ];
-      expect(resolved.tokenRules.slice(1).map(source => source.rule)).toEqual(expectedStyleRules);
-      expect(resolved.tokens[PlotThemeToken.PlotPaletteShape]).toHaveLength(8);
-      expect(resolved.tokens[PlotThemeToken.PlotPaletteShape][4]).toEqual({
+      expect(resolved.rules.slice(1).map(source => source.rule)).toEqual(expectedStyleRules);
+      expect(resolved.palette.shape).toHaveLength(8);
+      expect(resolved.palette.shape[4]).toEqual({
         type: 'polygon',
         params: { sides: 3, rotate: -90 },
       });

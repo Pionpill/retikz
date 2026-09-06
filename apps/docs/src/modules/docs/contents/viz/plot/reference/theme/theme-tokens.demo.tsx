@@ -1,4 +1,3 @@
-import { PlotThemeToken } from '@retikz/plot';
 import { PlotAxis, PlotLegend, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
@@ -13,35 +12,27 @@ const points = [
   { x: 3, y: 5, series: 'B' },
 ];
 
-/** Plot token override 通过 IRPlot 局部 theme cascade 进入 Plot area、axis 与 palette */
-const plotThemeTokens = {
-  [PlotThemeToken.PlotTypographyForeground]: '#2563EB',
-  [PlotThemeToken.PlotAreaFill]: 0.08,
-  [PlotThemeToken.PlotPaletteCategorical]: ['#2563EB', '#F97316'],
-  [PlotThemeToken.AxisGridEnabled]: false,
-  [PlotThemeToken.AxisGridStroke]: 0.25,
-  [PlotThemeToken.AxisGridDrawOpacity]: 0.35,
+/** Plot defaults 通过 IRPlot 局部 defaults cascade 进入 Plot area、axis 与 palette */
+const plotDefaults = {
+  typography: { textColor: '#2563EB' },
+  plotArea: { fill: 0.08 },
+  palette: { categorical: ['#2563EB', '#F97316'] },
+  axis: { grid: false as const },
 };
 
 /** PlotAxis rule 只覆盖已经存在且 dimension 匹配的 PlotAxis */
-const plotThemeTokenRules = [
+const plotRules = [
   {
     select: { dimension: 'y' },
-    tokens: { [PlotThemeToken.AxisGridEnabled]: true },
+    axis: { grid: { stroke: 0.25, strokeWidth: 1, drawOpacity: 0.35, includeDomain: true } },
   },
 ];
 
-/** Plot token override 通过当前 Plot resolver 进入同一张图表 */
+/** Plot defaults 通过当前 Plot resolver 进入同一张图表 */
 export default function ThemeTokensDemo() {
   return (
     <Layout>
-      <Plot
-        data={points}
-        width={440}
-        height={270}
-        plotThemeTokens={plotThemeTokens}
-        plotThemeTokenRules={plotThemeTokenRules}
-      >
+      <Plot data={points} width={440} height={270} plotDefaults={plotDefaults} plotRules={plotRules}>
         <PointMark x="x" y="y" color="series" size={8} />
         <PlotAxis dimension="x" />
         <PlotAxis dimension="y" />

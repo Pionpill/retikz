@@ -219,15 +219,10 @@ describe('Viz Chart scatter controls', () => {
       expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('shape');
       expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('stroke');
       expect(canonicalScatterProps(source)).toMatchObject({
-        theme: {
-          tokens: {
-            plot: {
-              'plot.palette.shape': [
-                'circle',
-                'rectangle',
-                'diamond',
-                { type: 'polygon', params: { sides: 3, rotate: -90 } },
-              ],
+        plotExtension: {
+          plotDefaults: {
+            palette: {
+              shape: ['circle', 'rectangle', 'diamond', { type: 'polygon', params: { sides: 3, rotate: -90 } }],
             },
           },
         },
@@ -270,21 +265,21 @@ describe('Viz Chart scatter controls', () => {
   it('世界杯射门示例仅在 Plot area 使用外部球场背景图', () => {
     for (const source of [worldCupZhPreviewSource, worldCupEnPreviewSource]) {
       expect(canonicalScatterProps(source)).toMatchObject({
-        theme: {
-          tokens: {
-            plot: {
-              'plot.area.fill': {
+        plotExtension: {
+          plotDefaults: {
+            plotArea: {
+              fill: {
                 kind: 'image',
                 href: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Football_pitch_metric_tr.svg',
               },
             },
-            recipe: { axisEnabled: false },
           },
         },
+        recipe: { guides: { axis: false } },
       });
-      expect(canonicalScatterProps(source)).not.toHaveProperty(['theme', 'tokens', 'plot', 'plot.area.fill', 'fit']);
-      expect(canonicalScatterProps(source)).not.toHaveProperty('theme.tokens.recipe.axisGridEnabled');
-      expect(canonicalScatterProps(source)).not.toHaveProperty('theme.tokens.chart.chart.canvas.fill');
+      expect(canonicalScatterProps(source)).not.toHaveProperty(['plotExtension', 'plotDefaults', 'plotArea', 'fit']);
+      expect(canonicalScatterProps(source)).not.toHaveProperty('recipe.guides.axisGridEnabled');
+      expect(canonicalScatterProps(source)).not.toHaveProperty('plotExtension.plotDefaults.chart.canvas.fill');
       expect(canonicalScatterPropertiesProps(source)).toMatchObject({
         size: 5,
         shape: 'circle',

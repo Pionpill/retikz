@@ -1,13 +1,7 @@
-import type { ResolvedTheme } from '@retikz/core';
-import type { IRPlotAxisThemeTokenRules, IRPlotThemeTokenOverrides } from '@retikz/plot';
+import type { ResolvedTheme, ThemeModeValue } from '@retikz/core';
+import type { IRPlotAxisRule, IRPlotDefaults } from '@retikz/plot';
 
-import {
-  definePlotThemeStyle,
-  PlotColorScheme,
-  PlotShapePaletteSchema,
-  PlotThemeToken,
-  PlotThemeTokenOverridesSchema,
-} from '@retikz/plot';
+import { definePlotThemeStyle, PlotColorScheme, PlotDefaultsSchema, PlotShapePaletteSchema } from '@retikz/plot';
 
 import { PreviewThemeStyle } from '../constants';
 
@@ -29,7 +23,7 @@ const styles = {
     area: { light: 'none', dark: 'none' },
     fontFamily: 'Inter, Helvetica Neue, Arial, sans-serif',
     fontSize: 12,
-    axis: { line: true, tick: 4, labelSize: 11, labelGap: 5, title: true, titleSize: 12, grid: false },
+    axis: { line: true, tick: 4, labelSize: 11, labelGap: 5, title: true, titleSize: 12 },
     legend: {
       titleSize: 12,
       titleWeight: 600,
@@ -49,7 +43,7 @@ const styles = {
     area: { light: '#E5ECF6', dark: '#111111' },
     fontFamily: 'Inter, Segoe UI, Arial, sans-serif',
     fontSize: 13,
-    axis: { line: false, tick: false, labelSize: 12, labelGap: 6, title: true, titleSize: 13, grid: false },
+    axis: { line: false, tick: false, labelSize: 12, labelGap: 6, title: true, titleSize: 13 },
     legend: {
       titleSize: 13,
       titleWeight: 700,
@@ -69,7 +63,7 @@ const styles = {
     area: { light: 'none', dark: 'none' },
     fontFamily: 'Inter, Helvetica Neue, Arial, sans-serif',
     fontSize: 12,
-    axis: { line: false, tick: false, labelSize: 11, labelGap: 5, title: false, titleSize: 12, grid: false },
+    axis: { line: false, tick: false, labelSize: 11, labelGap: 5, title: false, titleSize: 12 },
     legend: {
       titleSize: 12,
       titleWeight: 600,
@@ -87,76 +81,56 @@ const styles = {
   },
 } as const;
 
-const tokenRulesOf = (style: ReferenceStyle): IRPlotAxisThemeTokenRules => {
+const gridDefaultsOf = (mode: ThemeModeValue) => ({
+  stroke: mode === 'light' ? '#FFFFFF' : '#000000',
+  strokeWidth: 1,
+  drawOpacity: 1,
+  includeDomain: false,
+});
+
+const rulesOf = (style: ReferenceStyle, mode: ThemeModeValue): ReadonlyArray<IRPlotAxisRule> => {
   if (style === PreviewThemeStyle.Academic) {
-    return [
-      {
-        select: { dimension: ['x', 'y'] },
-        tokens: {
-          [PlotThemeToken.AxisGridEnabled]: false,
-          [PlotThemeToken.AxisGridIncludeDomain]: false,
-        },
-      },
-    ];
+    return [{ select: { dimension: ['x', 'y'] }, axis: { grid: false } }];
   }
   if (style === PreviewThemeStyle.Clean) {
     return [
+      { select: { dimension: ['x', 'y'] }, axis: { grid: false } },
       {
-        select: { dimension: ['x', 'y'] },
-        tokens: {
-          [PlotThemeToken.AxisGridEnabled]: false,
-          [PlotThemeToken.AxisGridIncludeDomain]: false,
-        },
+        select: { dimension: 'y' },
+        axis: { grid: { stroke: 'currentColor', strokeWidth: 1, drawOpacity: 0.15, includeDomain: true } },
       },
-      { select: { dimension: 'y' }, tokens: { [PlotThemeToken.AxisGridEnabled]: true } },
     ];
   }
-  return [
-    {
-      select: { dimension: ['x', 'y'] },
-      tokens: {
-        [PlotThemeToken.AxisGridEnabled]: true,
-        [PlotThemeToken.AxisGridIncludeDomain]: false,
-      },
-    },
-  ];
+  return [{ select: { dimension: ['x', 'y'] }, axis: { grid: gridDefaultsOf(mode) } }];
 };
 
-const tokensOf = (style: ReferenceStyle, theme: ResolvedTheme): IRPlotThemeTokenOverrides => {
+const defaultsOf = (style: ReferenceStyle, theme: ResolvedTheme): IRPlotDefaults => {
   const preset = styles[style];
   const tickMark =
     preset.axis.tick === false
-      ? false
+      ? { kind: 'line' as const, length: 0, line: false as const }
       : { kind: 'line' as const, length: preset.axis.tick, line: { stroke: 'currentColor' } };
-  return PlotThemeTokenOverridesSchema.parse({
-    ...(preset.area[theme.mode] === 'none' ? {} : { [PlotThemeToken.PlotAreaFill]: preset.area[theme.mode] }),
-    [PlotThemeToken.PlotTypographyFontFamily]: preset.fontFamily,
-    ...(preset.fontSize === 12 ? {} : { [PlotThemeToken.PlotTypographyFontSize]: preset.fontSize }),
-    ...(preset.axis.line ? {} : { [PlotThemeToken.AxisLineEnabled]: false }),
-    [PlotThemeToken.AxisTickMark]: tickMark,
-    ...(preset.axis.labelSize === 12 ? {} : { [PlotThemeToken.AxisTickLabelFontSize]: preset.axis.labelSize }),
-    [PlotThemeToken.AxisTickLabelGap]: preset.axis.labelGap,
-    ...(preset.axis.title ? {} : { [PlotThemeToken.AxisTitleEnabled]: false }),
-    ...(preset.axis.titleSize === 12 ? {} : { [PlotThemeToken.AxisTitleFontSize]: preset.axis.titleSize }),
-    ...(style === PreviewThemeStyle.Vibrant
-      ? {
-          [PlotThemeToken.AxisGridStroke]: theme.mode === 'light' ? '#FFFFFF' : '#000000',
-          [PlotThemeToken.AxisGridDrawOpacity]: 1,
-        }
-      : {}),
-    ...(preset.legend.titleSize === 12 ? {} : { [PlotThemeToken.LegendTitleFontSize]: preset.legend.titleSize }),
-    ...(preset.legend.titleWeight === 600 ? {} : { [PlotThemeToken.LegendTitleFontWeight]: preset.legend.titleWeight }),
-    ...(preset.legend.labelSize === 12 ? {} : { [PlotThemeToken.LegendLabelFontSize]: preset.legend.labelSize }),
-    ...(preset.legend.swatch === 14 ? {} : { [PlotThemeToken.LegendSwatchSize]: preset.legend.swatch }),
-    ...(preset.legend.gap === 6 ? {} : { [PlotThemeToken.LegendSwatchGap]: preset.legend.gap }),
-    ...(preset.legend.entry === 6 ? {} : { [PlotThemeToken.LegendEntryGap]: preset.legend.entry }),
-    ...(preset.legend.titleGap === 6 ? {} : { [PlotThemeToken.LegendTitleGap]: preset.legend.titleGap }),
-    ...(preset.legend.ramp === 100 ? {} : { [PlotThemeToken.LegendRampLength]: preset.legend.ramp }),
-    [PlotThemeToken.LegendRampThickness]: preset.legend.thickness,
-    ...(preset.legend.symbol === 14 ? {} : { [PlotThemeToken.LegendSymbolSize]: preset.legend.symbol }),
-    [PlotThemeToken.PlotPaletteSequential]: preset.sequential,
-    ...(preset.diverging === PlotColorScheme.RdBu ? {} : { [PlotThemeToken.PlotPaletteDiverging]: preset.diverging }),
-    [PlotThemeToken.PlotPaletteShape]: structuredClone(shapePalette),
+  return PlotDefaultsSchema.parse({
+    ...(preset.area[theme.mode] === 'none' ? {} : { plotArea: { fill: preset.area[theme.mode] } }),
+    typography: { font: { family: preset.fontFamily, size: preset.fontSize } },
+    axis: {
+      ...(preset.axis.line ? {} : { line: false }),
+      ticks: { mark: tickMark },
+      tickLabels: { font: { size: preset.axis.labelSize }, gap: preset.axis.labelGap },
+      title: preset.axis.title ? { font: { size: preset.axis.titleSize } } : false,
+    },
+    legend: {
+      title: { font: { size: preset.legend.titleSize, weight: preset.legend.titleWeight } },
+      label: { font: { size: preset.legend.labelSize } },
+      swatchSize: preset.legend.swatch,
+      swatchGap: preset.legend.gap,
+      entryGap: preset.legend.entry,
+      titleGap: preset.legend.titleGap,
+      rampLength: preset.legend.ramp,
+      rampThickness: preset.legend.thickness,
+      symbolSize: preset.legend.symbol,
+    },
+    palette: { sequential: preset.sequential, diverging: preset.diverging, shape: structuredClone(shapePalette) },
   });
 };
 
@@ -168,6 +142,6 @@ export const PreviewPlotThemeStyles = [
 ].map(style =>
   definePlotThemeStyle({
     name: style,
-    resolve: theme => ({ tokens: tokensOf(style, theme), tokenRules: tokenRulesOf(style) }),
+    resolve: theme => ({ defaults: defaultsOf(style, theme), rules: rulesOf(style, theme.mode) }),
   }),
 );

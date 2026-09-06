@@ -1480,45 +1480,60 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PlotLayer',
     url: '/viz/plot/reference/layer#plotlayerschema',
   },
-  PlotThemeTokenOverridesSchema: {
-    schema: IRPlot.PlotThemeTokenOverridesSchema,
-    label: 'PlotThemeTokenOverrides',
-    url: '/viz/plot/reference/theme#plotthemetokenoverridesschema',
+  PlotDefaultsSchema: {
+    schema: IRPlot.PlotDefaultsSchema,
+    label: 'PlotDefaults',
+    url: '/viz/plot/reference/theme#plotdefaultsschema',
   },
-  PlotAxisThemeTokenRulesSchema: {
-    schema: IRPlot.PlotAxisThemeTokenRulesSchema,
-    label: 'PlotAxisThemeTokenRules',
-    url: '/viz/plot/reference/theme#plotaxisthemetokenrulesschema',
+  PlotAreaDefaultsSchema: {
+    schema: IRPlot.PlotAreaDefaultsSchema,
+    label: 'PlotAreaDefaults',
+    url: '/viz/plot/reference/theme#plotareadefaultsschema',
   },
-  PlotThemeTokenResolutionSchema: {
-    schema: IRPlot.PlotThemeTokenResolutionSchema,
-    label: 'PlotThemeTokenResolution',
-    url: '/viz/plot/reference/theme#plotthemetokenresolutionschema',
+  PlotTypographyDefaultsSchema: {
+    schema: IRPlot.PlotTypographyDefaultsSchema,
+    label: 'PlotTypographyDefaults',
+    url: '/viz/plot/reference/theme#plottypographydefaultsschema',
+  },
+  PlotAxisDefaultsSchema: {
+    schema: IRPlot.PlotAxisDefaultsSchema,
+    label: 'PlotAxisDefaults',
+    url: '/viz/plot/reference/theme#plotaxisdefaultsschema',
+  },
+  PlotPaletteDefaultsSchema: {
+    schema: IRPlot.PlotPaletteDefaultsSchema,
+    label: 'PlotPaletteDefaults',
+    url: '/viz/plot/reference/theme#plotpalettedefaultsschema',
+  },
+  PlotAxisRuleSchema: {
+    schema: IRPlot.PlotAxisRuleSchema,
+    label: 'PlotAxisRule',
+    url: '/viz/plot/reference/theme#plotaxisruleschema',
+  },
+  PlotAxisRulesSchema: {
+    schema: IRPlot.PlotAxisRulesSchema,
+    label: 'PlotAxisRules',
+    url: '/viz/plot/reference/theme#plotaxisrulesschema',
+  },
+  PlotDefaultsSourceRecordSchema: {
+    schema: IRPlot.PlotDefaultsSourceRecordSchema,
+    label: 'PlotDefaultsSourceRecord',
+    url: '/viz/plot/reference/theme#inspection',
+  },
+  PlotAxisRuleSourceRecordSchema: {
+    schema: IRPlot.PlotAxisRuleSourceRecordSchema,
+    label: 'PlotAxisRuleSourceRecord',
+    url: '/viz/plot/reference/theme#inspection',
+  },
+  PlotPaletteResolutionSchema: {
+    schema: IRPlot.PlotPaletteResolutionSchema,
+    label: 'PlotPaletteResolution',
+    url: '/viz/plot/reference/theme#inspection',
   },
   PlotThemeResolutionSchema: {
     schema: IRPlot.PlotThemeResolutionSchema,
     label: 'PlotThemeResolution',
     url: '/viz/plot/reference/theme#inspection',
-  },
-  PlotAreaThemeSchema: {
-    schema: IRPlot.PlotAreaThemeSchema,
-    label: 'PlotAreaTheme',
-    url: '/viz/plot/reference/theme#plotareathemeschema',
-  },
-  PlotAxisThemeSchema: {
-    schema: IRPlot.PlotAxisThemeSchema,
-    label: 'PlotAxisTheme',
-    url: '/viz/plot/reference/theme#plotaxisthemeschema',
-  },
-  PlotPaletteThemeSchema: {
-    schema: IRPlot.PlotPaletteThemeSchema,
-    label: 'PlotPaletteTheme',
-    url: '/viz/plot/reference/theme#plotpalettethemeschema',
-  },
-  PlotThemeSchema: {
-    schema: IRPlot.PlotThemeSchema,
-    label: 'PlotTheme',
-    url: '/viz/plot/reference/theme#plotthemeschema',
   },
 };
 

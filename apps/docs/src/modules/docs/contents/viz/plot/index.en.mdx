@@ -86,7 +86,7 @@ Plot `width` / `height` define plot-area geometry only. Standalone display dimen
 
 If a capability does not depend on chart field mapping—general data transforms, low-level geometry, or table Cells, for example—it should not enter Plot. Conversely, a new scale, coordinate, mark, or guide should first become a registerable Definition, then use the same path as built-ins.
 
-Plot also owns canonical theme tokens for its Plot area, guides, and palettes. It consumes the Core effective Theme to select the same-named domain preset, then maps local `plotThemeTokens`, Axis `plotThemeTokenRules`, and native `plotTheme` into the same lowering path. Built-in and custom presets use the same `definePlotThemeStyle` / `plotThemeStyles` resolver. See the [theme contract](/viz/plot/reference/theme) for the complete key set and precedence.
+Plot also owns sparse defaults for its Plot area, guides, palettes, and existing axes. It consumes the Core effective Theme to select the same-named domain preset, then applies local `plotDefaults` and ordered `plotRules` through the same lowering path. Built-in and custom presets use the same `definePlotThemeStyle` / `plotThemeStyles` resolver. See the [theme contract](/viz/plot/reference/theme) for the Source-shaped fields and cascade.
 
 ## Pages
 

@@ -15,7 +15,12 @@ const palettes = {
 } as const;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot data={climate} plotTheme={{ palette: { categorical: [...palettes[values.palette]] } }} width={400} height={250}>
+  <Plot
+    data={climate}
+    plotDefaults={{ palette: { categorical: [...palettes[values.palette]] } }}
+    width={400}
+    height={250}
+  >
     <PathMark x="month" y="temp" color="city" order="month" />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />

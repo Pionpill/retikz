@@ -10,17 +10,17 @@ import { messiWorldCupShots } from './scatter-world-cup-shots.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <ScatterChart
-    theme={{
-      tokens: {
-        plot: {
-          'plot.area.fill': {
+    plotExtension={{
+      plotDefaults: {
+        plotArea: {
+          fill: {
             kind: 'image',
             href: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Football_pitch_metric_tr.svg',
           },
         },
-        recipe: { axisEnabled: false },
       },
     }}
+    recipe={{ guides: { axis: false } }}
   >
     <ChartData data={messiWorldCupShots} />
     <ScatterEncodings x="x" y="y" color="outcome" />

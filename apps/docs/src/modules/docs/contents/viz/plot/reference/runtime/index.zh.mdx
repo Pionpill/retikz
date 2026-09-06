@@ -13,7 +13,7 @@ Plot 运行时把“怎样声明图”和“怎样执行图”分开：React、V
 
 React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把 `XxxProps` / children 桥接为 Plot Vanilla 的 `InputPlotEmbed`，交给同一份 `PlotInputEmbedAdapter`；`embedPlot()` 创建可放入 Vanilla `scene()` 的 `InputEmbed`，配合 `PlotInputEmbedAdapter` 完成 `InputPlot -> IRPlot` 归一与下沉。`renderPlot()` 则保留为独立的无 DOM SSR 与 lineage 入口。
 
-`<Plot theme>` 是 Plot 面板所在 Core Scope 的局部 Theme：standalone 与 embedded 都把它包在 Plot node 外层，因此只覆盖该 Plot 的 `style`、`mode` 与 namespaced `tokens`。它不同于 Plot spec 内的 `plotThemeTokens` / `plotTheme`，后两者是 Plot owner 的视觉字段。Vanilla `renderPlot(spec, data, { theme })` 则把 `theme` 写入根 `IRScene.theme`，作为整个编译 Scene 的 Core Theme；它不会改写 `spec.plotThemeTokens` 或 `spec.plotTheme`。
+`<Plot theme>` 是 Plot 面板所在 Core Scope 的局部 Theme，只选择该 Plot 的 `style` 与 `mode`。它不同于 Plot owner 持久化的 `plotDefaults` / `plotRules`。Vanilla `renderPlot(spec, data, { theme })` 把 `theme` 写入根 `IRScene.theme`，作为整个编译 Scene 的 Core Theme；它不会改写 `spec.plotDefaults` 或 `spec.plotRules`。
 
 三条入口最终都委托 `@retikz/plot` 解析数据、比例尺、坐标系、图元与辅助，再把 Core IR 交还统一编译链。SVG、Canvas 与 SVG 字符串是输出形态；SSR 是 Vanilla 可运行的宿主场景，不是另一套 Plot 语义。
 

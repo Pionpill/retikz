@@ -15,15 +15,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         ? { type: 'polar2D' }
         : { type: 'cartesian2D' }
     }
-    theme={{
-      tokens: {
-        plot: {
-          'plot.palette.shape': [
-            'circle',
-            'rectangle',
-            'diamond',
-            { type: 'polygon', params: { sides: 3, rotate: -90 } },
-          ],
+    plotExtension={{
+      plotDefaults: {
+        palette: {
+          shape: ['circle', 'rectangle', 'diamond', { type: 'polygon', params: { sides: 3, rotate: -90 } }],
         },
       },
     }}

@@ -13,7 +13,7 @@ The Plot runtime separates how a chart is authored from how it executes. React, 
 
 React and Vanilla provide different authoring and host wiring without duplicating Plot algorithms. Standalone `<Plot>` bridges its `XxxProps` / children to a Plot Vanilla `InputPlotEmbed` and hands it to the same `PlotInputEmbedAdapter`; `embedPlot()` creates an `InputEmbed` for Vanilla `scene()`, and `PlotInputEmbedAdapter` performs the `InputPlot -> IRPlot` normalization and lowering. `renderPlot()` remains the independent DOM-free SSR and lineage entry.
 
-`<Plot theme>` is the local Core Scope Theme around the Plot panel: standalone and embedded paths both wrap the Plot node in that Scope, so it only overrides that Plot's `style`, `mode`, and namespaced `tokens`. It is distinct from the Plot-spec fields `plotThemeTokens` and `plotTheme`, which are Plot-owned visual inputs. Vanilla `renderPlot(spec, data, { theme })` instead writes `theme` to the root `IRScene.theme`, making it the Core Theme for the entire compiled Scene; it does not rewrite `spec.plotThemeTokens` or `spec.plotTheme`.
+`<Plot theme>` is the local Core Scope Theme around the Plot panel: it selects that Plot's `style` and `mode`. It is distinct from Plot-owned `plotDefaults` and `plotRules`, which are persisted Plot Source inputs. Vanilla `renderPlot(spec, data, { theme })` writes `theme` to the root `IRScene.theme` for the compiled Scene; it does not rewrite `spec.plotDefaults` or `spec.plotRules`.
 
 All three entries delegate data, scale, coordinate, mark, and guide semantics to `@retikz/plot`, then return Core IR to the shared compilation path. SVG, Canvas, and SVG strings are output forms; SSR is a host scenario supported by Vanilla, not a separate Plot semantics path.
 

@@ -16,7 +16,7 @@ const Demo: FC = () => (
     ]}
     width={560}
     height={220}
-    plotTheme={{ palette: { series: ['#2563eb', '#f97316'] } }}
+    plotDefaults={{ palette: { series: ['#2563eb', '#f97316'] } }}
   >
     <IntervalMark x="quarter" y="actual" fillOpacity={0.72} />
     <PathMark x="quarter" y="target" order="order" strokeWidth={3} zIndex={1} />

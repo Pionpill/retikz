@@ -9,9 +9,9 @@ const Demo: FC = () => (
   <ScatterChart
     rows={scatterMinimalData}
     presentation={{
-      title: 'IMDb and Rotten Tomatoes ratings broadly move together',
-      subtitle: '100 films with both ratings; IMDb on x and Rotten Tomatoes on y',
-      source: 'Vega Datasets movies.json; accessed 2026-09-01',
+      title: { text: 'IMDb and Rotten Tomatoes ratings broadly move together' },
+      subtitle: { text: '100 films with both ratings; IMDb on x and Rotten Tomatoes on y' },
+      source: { text: 'Vega Datasets movies.json; accessed 2026-09-01' },
     }}
     recipe={{ encodings: { x: 'imdbRating', y: 'rottenTomatoesRating' } }}
   />
