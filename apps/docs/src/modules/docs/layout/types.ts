@@ -1,8 +1,9 @@
-import type { I18nKey } from '@/modules/docs/data';
+import type { DocNavigationAreaId, I18nKey } from '@/modules/docs/data';
 
 /** 当前文档页的归一化位置参数。 */
 export type DocLocation = {
-  moduleId: string;
+  /** URL 的 area 前缀；包含真实模块与 home-owned About，不表示持久化 scope。 */
+  moduleId: DocNavigationAreaId;
   /** 分组 id；无分组页面时为 null。 */
   sectionId: string | null;
   /** 路由 :pageId 段；分组文档页没有该段，因此为 null。 */

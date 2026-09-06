@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import type { Section } from '@/modules/docs/data';
 
-import { getSectionsByModule } from '@/modules/docs/data';
+import { getSectionsByArea } from '@/modules/docs/data';
 import { useDocDifficultyStore } from '@/modules/docs/store';
 
 import type { DocLocation, LeafNode } from './types';
@@ -41,7 +41,7 @@ export const usePageNavigation = (): PageNavigation => {
     () =>
       resolvePageNavigation(
         loc,
-        loc ? filterSectionsByDifficulty(getSectionsByModule(loc.moduleId), maximumDifficulty) : [],
+        loc ? filterSectionsByDifficulty(getSectionsByArea(loc.moduleId), maximumDifficulty) : [],
       ),
     [loc, maximumDifficulty],
   );

@@ -6,9 +6,9 @@ import { librarySection } from './library';
 import { schematicSection } from './schematic';
 import { vizSection } from './viz';
 
-/** 按 :moduleId 查对应的 sections；未实装的模块返回空数组。 */
-export const getSectionsByModule = (moduleId: string | undefined): Array<Section> => {
-  switch (moduleId) {
+/** 按 navigation area 查对应的 sections；未知 area 返回空数组。 */
+export const getSectionsByArea = (areaId: string | undefined): Array<Section> => {
+  switch (areaId) {
     case 'kernel':
       return kernelSection;
     case 'library':

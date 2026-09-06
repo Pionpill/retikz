@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import type { ComponentProps } from 'react';
 import type { Root } from 'react-dom/client';
 import type * as ReactI18nextModule from 'react-i18next';
 
@@ -9,7 +10,8 @@ import { MemoryRouter, useNavigate } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DocDifficulty } from '@/modules/docs/data';
-import { AppSidebarMenu, AppSidebarMenuItem } from '@/modules/docs/layout/sidebar';
+import { AppSidebar, AppSidebarMenu, AppSidebarMenuItem } from '@/modules/docs/layout/sidebar';
+import { useDocDifficultyStore } from '@/modules/docs/store';
 
 vi.mock('react-i18next', async importOriginal => ({
   ...(await importOriginal<typeof ReactI18nextModule>()),
@@ -175,5 +177,98 @@ describe('<AppSidebarMenu>', () => {
 
     expect(findButton(container, 'Advanced')?.querySelector('[data-doc-difficulty-dot="advanced"]')).not.toBeNull();
     expect(findButton(container, 'Internals')?.querySelector('[data-doc-difficulty-dot="internals"]')).not.toBeNull();
+  });
+});
+
+describe('<AppSidebar>', () => {
+  it('只渲染当前 section 的页面树，并隐藏已上移的 section 标题', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    roots.push(root);
+
+    act(() => {
+      root.render(
+        <MemoryRouter initialEntries={['/viz/chart/points/scatter']}>
+          <AppSidebar
+            location={{
+              moduleId: 'viz',
+              sectionId: 'chart',
+              pageId: 'points',
+              subPageId: 'scatter',
+            }}
+          />
+        </MemoryRouter>,
+      );
+    });
+
+    expect(container.querySelector('aside')).not.toBeNull();
+    expect(container.textContent).toContain('viz.chartScatterPoints');
+    expect(container.textContent).toContain('viz.chartScatter');
+    expect(findButton(container, 'viz.chart')).toBeUndefined();
+    expect(findButton(container, 'viz.table')).toBeUndefined();
+    expect(findButton(container, 'viz.drawingGrammar')).toBeUndefined();
+    expect(findButton(container, 'viz.data')).toBeUndefined();
+  });
+
+  it('无分组文档页和 About 页面分别使用自己的 tree，模块主页不显示 Sidebar', () => {
+    const renderSidebar = (location: ComponentProps<typeof AppSidebar>['location']): HTMLElement => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = createRoot(container);
+      roots.push(root);
+      act(() => {
+        root.render(
+          <MemoryRouter initialEntries={['/docs-test']}>
+            <AppSidebar location={location} />
+          </MemoryRouter>,
+        );
+      });
+      return container;
+    };
+
+    const ungrouped = renderSidebar({ moduleId: 'kernel', sectionId: null, pageId: 'introduction' });
+    expect(ungrouped.textContent).toContain('kernel.introduction');
+    expect(ungrouped.textContent).toContain('kernel.getStart');
+
+    const about = renderSidebar({ moduleId: 'about', sectionId: null, pageId: 'overview' });
+    expect(about.textContent).toContain('about.overview');
+    expect(about.textContent).toContain('about.blog');
+    expect(about.textContent).toContain('about.blogCorePhilosophy');
+    expect(about.textContent).toContain('about.releases');
+    expect(about.textContent).toContain('about.versioning');
+    expect(about.textContent).toContain('about.developer');
+    expect(about.textContent).toContain('about.sourceCodeGuide');
+    expect(about.textContent).not.toContain('kernel.introduction');
+
+    const moduleHome = renderSidebar(null);
+    expect(moduleHome.querySelector('aside')).toBeNull();
+  });
+
+  it('按阅读难度过滤当前 section 的后代页面', () => {
+    useDocDifficultyStore.setState({ maximumDifficulty: DocDifficulty.Beginner });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    roots.push(root);
+
+    act(() => {
+      root.render(
+        <MemoryRouter initialEntries={['/kernel/concepts/basic/coordinate-system']}>
+          <AppSidebar
+            location={{
+              moduleId: 'kernel',
+              sectionId: 'concepts',
+              pageId: 'basic',
+              subPageId: 'coordinate-system',
+            }}
+          />
+        </MemoryRouter>,
+      );
+    });
+
+    expect(container.textContent).toContain('kernel.coordinateSystem');
+    expect(findButton(container, 'kernel.primitiveModel')).toBeUndefined();
+    expect(findButton(container, 'kernel.principles')).toBeUndefined();
   });
 });

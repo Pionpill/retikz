@@ -2,13 +2,15 @@ import type { FC } from 'react';
 
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router';
 
 import { cn } from '@/lib';
-import { getSectionsByModule } from '@/modules/docs/data';
+import { getSectionsByArea } from '@/modules/docs/data';
 import { useDocDifficultyStore } from '@/modules/docs/store';
 
+import type { DocLocation } from '../types';
+
 import { filterSectionsByDifficulty } from '../filter-doc-sections';
+import { useDocLocation } from '../useDocLocation';
 import { buildSidebarCategories } from '../utils';
 import { AppSidebarMenu } from './AppSidebarMenu';
 
@@ -17,30 +19,38 @@ export type AppSidebarProps = {
   className?: string;
   /** 点击具体文档入口后的回调 */
   onNavigate?: () => void;
-  /**
-   * 显式指定模块 id
-   * @description MobileNav 渲染在 `<Routes>` 外（Header 里）useParams 拿不到 :moduleId，需调用方从 pathname 解出来传进；桌面 DocLayout 走 Routes，缺省即可
-   */
-  moduleId?: string;
+  /** 当前完整文档位置；移动端从共享 pathname 上下文显式传入。 */
+  location?: DocLocation | null;
 };
 
 export const AppSidebar: FC<AppSidebarProps> = props => {
-  const { className, moduleId: moduleIdProp, onNavigate } = props;
+  const { className, location: locationProp, onNavigate } = props;
   const { t } = useTranslation();
-  const params = useParams<'moduleId'>();
-  const moduleId = moduleIdProp ?? params.moduleId;
-  const resolvedModuleId = moduleId ?? 'core';
-  const sections = getSectionsByModule(resolvedModuleId);
+  const currentLocation = useDocLocation();
+  const location = locationProp === undefined ? currentLocation : locationProp;
   const maximumDifficulty = useDocDifficultyStore(state => state.maximumDifficulty);
+  const areaId = location?.moduleId;
+  const sections = useMemo(() => (areaId ? getSectionsByArea(areaId) : []), [areaId]);
+  const selectedSection = location
+    ? location.sectionId
+      ? sections.find(section => section.id === location.sectionId)
+      : sections.find(section => !section.label)
+    : undefined;
   const visibleSections = useMemo(
-    () => filterSectionsByDifficulty(sections, maximumDifficulty),
-    [sections, maximumDifficulty],
+    () =>
+      filterSectionsByDifficulty(
+        areaId === 'about' ? sections : selectedSection ? [selectedSection] : [],
+        maximumDifficulty,
+      ),
+    [areaId, maximumDifficulty, sections, selectedSection],
   );
 
   const categories = useMemo(
-    () => buildSidebarCategories(t, resolvedModuleId, visibleSections),
-    [t, resolvedModuleId, visibleSections],
+    () => (areaId ? buildSidebarCategories(t, areaId, visibleSections) : []),
+    [areaId, t, visibleSections],
   );
+
+  if (!location || !areaId || !selectedSection || categories.length === 0) return null;
 
   return (
     <aside
@@ -57,7 +67,7 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
       )}
     >
       <div className="flex-1 overflow-y-auto px-4 py-6">
-        <AppSidebarMenu categories={categories} moduleId={resolvedModuleId} onNavigate={onNavigate} />
+        <AppSidebarMenu categories={categories} moduleId={areaId} scoped={areaId !== 'about'} onNavigate={onNavigate} />
       </div>
     </aside>
   );

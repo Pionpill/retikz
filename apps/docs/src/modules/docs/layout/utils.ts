@@ -3,7 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 
 import { ChartScatter } from 'lucide-react';
 
-import type { DocSidebarIcon, Page, Section, SubPage } from '@/modules/docs/data';
+import type { DocNavigationAreaId, DocSidebarIcon, Page, Section, SubPage } from '@/modules/docs/data';
 
 import type { SidebarCategoryData, SidebarModuleData, SidebarSubModuleData } from './sidebar';
 import type { DocLocation, LeafNode } from './types';
@@ -30,7 +30,7 @@ export const isChangelogLocation = (loc: DocLocation | null): boolean =>
 
 /** location 到 URL / 文件路径所需的 segment 数组 */
 export const docPathSegments = (loc: DocLocation): Array<string> => {
-  const parts = [loc.moduleId];
+  const parts: Array<string> = [loc.moduleId];
   if (loc.sectionId) parts.push(loc.sectionId);
   if (loc.pageId !== null) parts.push(loc.pageId);
   if (loc.subPageId) parts.push(loc.subPageId);
@@ -39,14 +39,14 @@ export const docPathSegments = (loc: DocLocation): Array<string> => {
 
 /** 组装文档页面 URL path */
 export const buildDocPath = (
-  moduleId: string,
+  moduleId: DocNavigationAreaId,
   sectionId: string | null,
   pageId: string | null,
   subPageId?: string,
 ): string => '/' + docPathSegments({ moduleId, sectionId, pageId, subPageId }).join('/');
 
 const collectFromSubPage = (
-  moduleId: string,
+  moduleId: DocNavigationAreaId,
   sectionId: string | null,
   pageId: string,
   subPage: SubPage,
@@ -68,7 +68,12 @@ const collectFromSubPage = (
   });
 };
 
-const collectFromPage = (moduleId: string, sectionId: string | null, page: Page, acc: Array<LeafNode>): void => {
+const collectFromPage = (
+  moduleId: DocNavigationAreaId,
+  sectionId: string | null,
+  page: Page,
+  acc: Array<LeafNode>,
+): void => {
   if (page.children) {
     for (const child of page.children) {
       collectFromSubPage(moduleId, sectionId, page.id, child, acc);
@@ -85,7 +90,7 @@ const collectFromPage = (moduleId: string, sectionId: string | null, page: Page,
 };
 
 /** 按 sidebar 展示顺序拍平 sections 中的所有叶子节点 */
-export const flattenLeaves = (moduleId: string, sections: Array<Section>): Array<LeafNode> => {
+export const flattenLeaves = (moduleId: DocNavigationAreaId, sections: Array<Section>): Array<LeafNode> => {
   const acc: Array<LeafNode> = [];
   for (const section of sections) {
     const sectionId = section.label ? (section.id ?? null) : null;
@@ -123,7 +128,7 @@ const mapSidebarPage = (t: TFunction, page: Page): SidebarModuleData => ({
 /** 从 docs data 构建 sidebar 视图数据 */
 export const buildSidebarCategories = (
   t: TFunction,
-  moduleId: string,
+  moduleId: DocNavigationAreaId,
   sections: Array<Section>,
 ): Array<SidebarCategoryData> =>
   sections.map((section, index) => ({

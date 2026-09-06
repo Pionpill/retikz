@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { buildSearchEntries } from '../src/modules/docs/components/docs-search/search-engine';
 import { loadSearchIndex } from '../src/modules/docs/components/docs-search/search-index';
 
 describe('docs search index frontmatter', () => {
@@ -25,5 +26,14 @@ describe('docs search index frontmatter', () => {
     );
     expect(index['/viz/chart/model/presentation']?.zh?.headings).toContain('固定槽位与 canonical 顺序');
     expect(index['/viz/chart/model/plot']?.zh?.headings).toContain('两个 owner，一张完整图形');
+  });
+
+  it('About 从模块列表移除后仍进入搜索条目', () => {
+    const entries = buildSearchEntries((key: string) => key, {}, 'zh');
+
+    expect(entries.find(entry => entry.path === '/about/overview')).toMatchObject({
+      label: 'about.overview',
+      moduleLabel: 'about.label',
+    });
   });
 });

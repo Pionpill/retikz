@@ -31,8 +31,19 @@
     "showcaseApi": "API",
     "showcaseFamilyEmpty": "There are no other primary charts in this family yet."
   },
+  "docs": {
+    "homeTitle": "retikz Docs",
+    "homeAbout": "About retikz",
+    "homeNavigationLabel": "Docs home",
+    "homeNavigationDescription": "Browse every retikz module and learn about the project.",
+    "moduleHomePlaceholder": "Documentation for this module is being organized.",
+    "modulePickerHome": "Back to docs home",
+    "moduleNavigationLabel": "Documentation modules"
+  },
   "kernel": {
     "label": "Kernel",
+    "navigationLabel": "Kernel",
+    "navigationDescription": "Build diagrams from core nodes, paths, layout, and rendering primitives.",
     "introduction": "Introduction",
     "getStart": "Get Started",
     "principles": "Architecture Principles",
@@ -131,7 +142,9 @@
     "refVisualizationPlot": "Visualization - Plot"
   },
   "library": {
-    "label": "Library",
+    "label": "Capability Library",
+    "navigationLabel": "Capability Library",
+    "navigationDescription": "Compose richer figures with reusable standard components and layout primitives.",
     "standard": "Standard",
     "standardComposite": "Presentation",
     "standardGrid": "Grid",
@@ -157,7 +170,9 @@
     "changelogV01": "v0.1"
   },
   "schematic": {
-    "label": "Schematic",
+    "label": "Structure Library",
+    "navigationLabel": "Structure Library",
+    "navigationDescription": "Model entities, relations, flows, and other structured diagrams.",
     "introduction": "Introduction",
     "graph": "Graph",
     "diagram": "Diagram",
@@ -177,6 +192,8 @@
   },
   "viz": {
     "label": "Visualization",
+    "navigationLabel": "Visualization",
+    "navigationDescription": "Turn data and encodings into explainable charts and tables.",
     "introduction": "Overview",
     "getStart": "Get Started",
     "changelog": "Changelog",
