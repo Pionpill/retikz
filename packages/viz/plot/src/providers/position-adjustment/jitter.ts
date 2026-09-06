@@ -21,6 +21,36 @@ const createRandom = (seed: number): (() => number) => {
   };
 };
 
+/** 以有限项近似标准正态分布累积分布函数，供截断正态的分位数求解使用 */
+const normalCdf = (value: number, sigma: number): number => {
+  const normalizedValue = value / sigma;
+  const sign = normalizedValue < 0 ? -1 : 1;
+  const absoluteValue = Math.abs(normalizedValue);
+  const t = 1 / (1 + 0.2316419 * absoluteValue);
+  const density = 0.3989422804014327 * Math.exp(-(absoluteValue * absoluteValue) / 2);
+  const tail = density * ((((1.330274429 * t - 1.821255978) * t + 1.781477937) * t - 0.356563782) * t + 0.31938153) * t;
+  const probability = 1 - tail;
+  return sign === 1 ? probability : 1 - probability;
+};
+
+/** 用固定次数二分求解 [-1, 1] 支持域内的截断正态分位数 */
+const truncatedNormalSample = (unit: number, sigma: number): number => {
+  const lowerProbability = normalCdf(-1, sigma);
+  const upperProbability = normalCdf(1, sigma);
+  const probability = lowerProbability + unit * (upperProbability - lowerProbability);
+  let lower = -1;
+  let upper = 1;
+  for (let iteration = 0; iteration < 32; iteration += 1) {
+    const midpoint = (lower + upper) / 2;
+    if (normalCdf(midpoint, sigma) < probability) {
+      lower = midpoint;
+    } else {
+      upper = midpoint;
+    }
+  }
+  return (lower + upper) / 2;
+};
+
 /** 解析 jitter 作用 role；省略时只允许唯一具有正 step 的离散 role */
 const jitterRoleOf = (operation: IRPlotJitterPositionAdjustment, context: RolePositionAdjustmentContext): string => {
   if (operation.role !== undefined) {
@@ -79,7 +109,12 @@ const jitterDefinition = {
         return { key: target.key, mappedRoles: target.mappedRoles };
       }
       const mappedRoles = [...target.mappedRoles];
-      mappedRoles[roleIndex] += (unit - 0.5) * span;
+      const distribution = operation.distribution ?? { kind: 'uniform' };
+      if (distribution.kind === 'uniform') {
+        mappedRoles[roleIndex] += (unit - 0.5) * span;
+      } else {
+        mappedRoles[roleIndex] += truncatedNormalSample(unit, distribution.sigma ?? 0.5) * (span / 2);
+      }
       return { key: target.key, mappedRoles };
     });
   },

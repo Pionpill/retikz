@@ -9,6 +9,8 @@ export const POINT_JITTER_CARTESIAN_CONTROL_IDS = {
   spanKind: 'point-jitter-cartesian-span-kind',
   ratio: 'point-jitter-cartesian-ratio',
   range: 'point-jitter-cartesian-range',
+  distribution: 'point-jitter-cartesian-distribution',
+  sigma: 'point-jitter-cartesian-sigma',
   seed: 'point-jitter-cartesian-seed',
 } as const;
 
@@ -17,6 +19,8 @@ export const cartesianJitterOperationOf = (values: {
   [POINT_JITTER_CARTESIAN_CONTROL_IDS.spanKind]: 'ratio' | 'range';
   [POINT_JITTER_CARTESIAN_CONTROL_IDS.ratio]: number;
   [POINT_JITTER_CARTESIAN_CONTROL_IDS.range]: number;
+  [POINT_JITTER_CARTESIAN_CONTROL_IDS.distribution]: 'uniform' | 'normal';
+  [POINT_JITTER_CARTESIAN_CONTROL_IDS.sigma]: number;
   [POINT_JITTER_CARTESIAN_CONTROL_IDS.seed]: number;
 }) => ({
   kind: 'jitter' as const,
@@ -25,6 +29,10 @@ export const cartesianJitterOperationOf = (values: {
     values[POINT_JITTER_CARTESIAN_CONTROL_IDS.spanKind] === 'ratio'
       ? { kind: 'ratio' as const, value: values[POINT_JITTER_CARTESIAN_CONTROL_IDS.ratio] }
       : values[POINT_JITTER_CARTESIAN_CONTROL_IDS.range],
+  distribution:
+    values[POINT_JITTER_CARTESIAN_CONTROL_IDS.distribution] === 'normal'
+      ? { kind: 'normal' as const, sigma: values[POINT_JITTER_CARTESIAN_CONTROL_IDS.sigma] }
+      : { kind: 'uniform' as const },
   seed: values[POINT_JITTER_CARTESIAN_CONTROL_IDS.seed],
 });
 
@@ -72,6 +80,26 @@ export const pointJitterCartesianControls = definePreviewControls({
           visibleWhen: { controlId: POINT_JITTER_CARTESIAN_CONTROL_IDS.spanKind, oneOf: ['range'] },
         },
         {
+          kind: 'select',
+          id: POINT_JITTER_CARTESIAN_CONTROL_IDS.distribution,
+          label: '随机分布',
+          defaultValue: 'uniform',
+          options: [
+            { value: 'uniform', label: '均匀（铺开）' },
+            { value: 'normal', label: '正态（靠近中心）' },
+          ],
+        },
+        {
+          kind: 'range',
+          id: POINT_JITTER_CARTESIAN_CONTROL_IDS.sigma,
+          label: '正态 sigma',
+          defaultValue: 0.5,
+          min: 0.1,
+          max: 1,
+          step: 0.05,
+          visibleWhen: { controlId: POINT_JITTER_CARTESIAN_CONTROL_IDS.distribution, oneOf: ['normal'] },
+        },
+        {
           kind: 'range',
           id: POINT_JITTER_CARTESIAN_CONTROL_IDS.seed,
           label: '随机种子',
@@ -92,6 +120,8 @@ export const previewControlContract = {
     [POINT_JITTER_CARTESIAN_CONTROL_IDS.spanKind]: 'ratio',
     [POINT_JITTER_CARTESIAN_CONTROL_IDS.ratio]: 0.3,
     [POINT_JITTER_CARTESIAN_CONTROL_IDS.range]: 80,
+    [POINT_JITTER_CARTESIAN_CONTROL_IDS.distribution]: 'uniform',
+    [POINT_JITTER_CARTESIAN_CONTROL_IDS.sigma]: 0.5,
     [POINT_JITTER_CARTESIAN_CONTROL_IDS.seed]: 7,
   },
   presets: [
@@ -102,6 +132,8 @@ export const previewControlContract = {
         [POINT_JITTER_CARTESIAN_CONTROL_IDS.spanKind]: 'ratio',
         [POINT_JITTER_CARTESIAN_CONTROL_IDS.ratio]: 0.35,
         [POINT_JITTER_CARTESIAN_CONTROL_IDS.range]: 80,
+        [POINT_JITTER_CARTESIAN_CONTROL_IDS.distribution]: 'uniform',
+        [POINT_JITTER_CARTESIAN_CONTROL_IDS.sigma]: 0.5,
         [POINT_JITTER_CARTESIAN_CONTROL_IDS.seed]: 7,
       },
     },
@@ -112,9 +144,15 @@ export const previewControlContract = {
         [POINT_JITTER_CARTESIAN_CONTROL_IDS.spanKind]: 'ratio',
         [POINT_JITTER_CARTESIAN_CONTROL_IDS.ratio]: 1,
         [POINT_JITTER_CARTESIAN_CONTROL_IDS.range]: 80,
+        [POINT_JITTER_CARTESIAN_CONTROL_IDS.distribution]: 'uniform',
+        [POINT_JITTER_CARTESIAN_CONTROL_IDS.sigma]: 0.5,
         [POINT_JITTER_CARTESIAN_CONTROL_IDS.seed]: 7,
       },
     },
   ],
-  relatedApis: ['IRPlotJitterPositionAdjustment.span', 'IRPlotJitterPositionAdjustment.seed'],
+  relatedApis: [
+    'IRPlotJitterPositionAdjustment.span',
+    'IRPlotJitterPositionAdjustment.distribution',
+    'IRPlotJitterPositionAdjustment.seed',
+  ],
 } satisfies PreviewControlContract;

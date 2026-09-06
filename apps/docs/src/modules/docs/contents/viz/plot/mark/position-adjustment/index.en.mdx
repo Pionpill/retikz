@@ -18,7 +18,9 @@ Position Adjustment covers placement logic that cannot be fully decided by a dat
 - Computation that adds or removes rows, rewrites fields, or changes lineage remains a [Data transform](/viz/plot/transform).
 - Stack changes interval baselines and bounds, so it is not an additive Position Adjustment.
 
-The only built-in algorithm is currently `jitter`, and Point is the only built-in placement-capable Mark. Screen-space initializers are executable infrastructure, but no built-in collision, beeswarm, or label-avoidance algorithm exists yet. Renderers and Core IR receive only final geometry.
+The only built-in algorithm is currently `jitter`, and Point is the only built-in placement-capable Mark. `jitter` defaults to `uniform` and also supports `normal`: it is centered at zero and truncated to normalized `[-1, 1]`; `sigma` is relative to the jitter half-span and controls how strongly points concentrate near the center. Screen-space initializers are executable infrastructure, but no built-in collision, beeswarm, or label-avoidance algorithm exists yet. Renderers and Core IR receive only final geometry.
+
+Both distributions are placement jitter: they adjust role positions after scale mapping without rewriting rows. If the requirement is to derive a new field before scales, use the `jitter` [Data transform](/viz/plot/transform) instead.
 
 ## Define the Capability
 

@@ -17,6 +17,33 @@ describe('Position Adjustment schema', () => {
     expect(JSON.parse(JSON.stringify(parsed.placement?.adjustments))).toEqual(operations);
   });
 
+  it('accepts uniform and normal jitter distributions as JSON-safe values', () => {
+    const operations = [
+      { kind: 'jitter', role: 'x', distribution: { kind: 'uniform' } },
+      { kind: 'jitter', role: 'x', distribution: { kind: 'normal' } },
+      { kind: 'jitter', role: 'x', distribution: { kind: 'normal', sigma: 0.75 } },
+    ];
+    const parsed = PointMarkSchema.parse({ ...point, placement: { adjustments: operations } });
+
+    expect(JSON.parse(JSON.stringify(parsed.placement?.adjustments))).toEqual(operations);
+  });
+
+  it('rejects unknown distribution fields, kinds, and invalid normal sigma', () => {
+    const invalidOperations = [
+      { kind: 'jitter', distribution: { kind: 'uniform', sigma: 0.5 } },
+      { kind: 'jitter', distribution: { kind: 'normal', extra: true } },
+      { kind: 'jitter', distribution: { kind: 'exponential' } },
+      { kind: 'jitter', distribution: { kind: 'normal', sigma: 0 } },
+      { kind: 'jitter', distribution: { kind: 'normal', sigma: -1 } },
+      { kind: 'jitter', distribution: { kind: 'normal', sigma: Number.NaN } },
+      { kind: 'jitter', distribution: { kind: 'normal', sigma: Number.POSITIVE_INFINITY } },
+    ];
+
+    for (const operation of invalidOperations) {
+      expect(() => PointMarkSchema.parse({ ...point, placement: { adjustments: [operation] } })).toThrow();
+    }
+  });
+
   it('rejects invalid ratio and extra built-in fields', () => {
     expect(() =>
       PointMarkSchema.parse({

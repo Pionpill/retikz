@@ -61,6 +61,9 @@ describe('Strip Chart exact Source schema', () => {
     for (const properties of [
       { jitter: { span: 0, seed: 0 } },
       { jitter: { span: 24, seed: -3.5 } },
+      { jitter: { distribution: { kind: 'uniform' } } },
+      { jitter: { distribution: { kind: 'normal' } } },
+      { jitter: { distribution: { kind: 'normal', sigma: 0.75 } } },
       { jitter: { span: { kind: 'ratio', value: 0 } } },
       { jitter: { span: { kind: 'ratio', value: 1 } } },
       { domainPadding: 0 },
@@ -73,6 +76,9 @@ describe('Strip Chart exact Source schema', () => {
       { jitter: { span: -0.01 } },
       { jitter: { span: { kind: 'ratio', value: -0.01 } } },
       { jitter: { span: { kind: 'ratio', value: 1.01 } } },
+      { jitter: { distribution: { kind: 'normal', sigma: 0 } } },
+      { jitter: { distribution: { kind: 'normal', sigma: -1 } } },
+      { jitter: { distribution: { kind: 'uniform', sigma: 0.5 } } },
       { jitter: { role: 'x' } },
       { jitter: { unknown: true } },
     ]) {
@@ -86,7 +92,7 @@ describe('Strip Chart exact Source schema', () => {
         kind: 'strip',
         override: true,
         encodings: { x: 'alternateCategory', color: 'alternateGroup' },
-        properties: { size: 0, jitter: { span: 0, seed: 0 } },
+        properties: { size: 0, jitter: { span: 0, seed: 0, distribution: { kind: 'normal', sigma: 0.5 } } },
       }).success,
     ).toBe(true);
 
