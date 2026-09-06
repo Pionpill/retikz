@@ -24,7 +24,7 @@ import { Table } from '../../src';
 const spec = createManualTableIR({ id: 'scores', rows: [[null]] });
 
 describe('Table React runtime style contract', () => {
-  it('standalone Table does not inject removed theme token definitions into Layout', () => {
+  it('standalone Table does not inject removed theme definitions into Layout', () => {
     capturedLayouts.length = 0;
 
     renderToStaticMarkup(<Table spec={spec} />);
@@ -32,7 +32,7 @@ describe('Table React runtime style contract', () => {
     expect(capturedLayouts.at(-1)).not.toHaveProperty('themeTokenDefinitions');
   });
 
-  it('Table Vanilla adapter keeps removed theme token definitions out of the contribution payload', () => {
+  it('Table Vanilla adapter keeps removed theme definitions out of the contribution payload', () => {
     const input = Table.createInputEmbedProps({ spec });
     const context: InputEmbedContext = {
       id: 'scores',
@@ -44,6 +44,8 @@ describe('Table React runtime style contract', () => {
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
     expect(contribution).not.toHaveProperty('datasets');
     expect(contribution).not.toHaveProperty('makeComposites');
-    expect(contribution.providerDependencies.roots).toEqual([{ capability: 'composite', namespace: 'table', type: 'table' }]);
+    expect(contribution.providerDependencies.roots).toEqual([
+      { capability: 'composite', namespace: 'table', type: 'table' },
+    ]);
   });
 });

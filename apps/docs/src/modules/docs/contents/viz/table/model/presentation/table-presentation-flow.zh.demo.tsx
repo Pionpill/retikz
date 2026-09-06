@@ -6,7 +6,7 @@ import { TablePresentationFlow } from './table-presentation-flow';
 
 /** 中文 Presentation 流程图文本 */
 const LABELS = {
-  style: { title: '内置 preset < 用户 tokens', detail: '外观基线' },
+  style: { title: '内置 preset < Source defaults', detail: '外观基线' },
   cell: { title: 'Cell 配置', detail: 'formatter · presentation · appearance' },
   encoding: { title: 'visual encodings', detail: '原始值颜色通道' },
   rules: { title: '有序 rules', detail: '最终匹配覆盖' },

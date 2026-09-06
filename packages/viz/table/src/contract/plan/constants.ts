@@ -2,10 +2,10 @@
 export const TableCellPlanSourceKind = {
   /** 内置默认值 */
   Default: 'default',
+  /** 正式 Source defaults 来源 */
+  Defaults: 'defaults',
   /** Structure 显式 Cell 值 */
   Structure: 'structure',
-  /** Resolved style token */
-  StyleToken: 'styleToken',
   /** Ordered visual encoding */
   Encoding: 'encoding',
   /** 按声明顺序应用的 root rule */

@@ -17,12 +17,19 @@ export const parsePresentedChild = (value: unknown): IRChild => {
   return deepFreeze(ChildSchema.parse(value));
 };
 
-/** 把非空 content style 应用为单层匿名 Core Scope */
+/** 把有实际效果的 content style 应用为单层匿名 Core Scope */
 export const applyTableCellContentStyle = (
   child: IRChild,
   style: DeepReadonly<IRTableCellContentStyle> | undefined,
 ): IRChild => {
   if (style === undefined || Object.keys(style).length === 0) return child;
+  if (
+    Object.keys(style).length === 1 &&
+    Object.keys(style.style ?? {}).length === 1 &&
+    style.style?.color === 'currentColor'
+  ) {
+    return child;
+  }
   return parsePresentedChild({ type: 'scope', ...style, children: [child] });
 };
 

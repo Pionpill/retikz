@@ -1,253 +1,152 @@
-import { defineThemeStyle, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
+import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-import { ZodError } from 'zod';
 
 import {
-  compileTable,
   defineTableThemeStyle,
-  getDefaultTableThemePreset,
-  resolveTableThemeTokens,
+  getDefaultTableDefaults,
+  mergeTableDefaults,
+  resolveTableThemeDefaults,
   RetikzTableErrorCode,
-  TableThemeToken,
-  TableThemeTokenOverridesSchema,
+  TableDefaultsSchema,
 } from '../../src';
 
-describe('Table theme token resolution', () => {
-  it('让 optional token 的显式 undefined 遵循 owner schema', () => {
-    const parsed = TableThemeTokenOverridesSchema.parse({ [TableThemeToken.CellContentColor]: undefined });
+const lightTheme = {
+  mode: ThemeMode.Light,
+  colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
+} as const;
 
-    expect(Object.hasOwn(parsed, TableThemeToken.CellContentColor)).toBe(true);
-    expect(parsed[TableThemeToken.CellContentColor]).toBeUndefined();
-  });
+describe('Table Source defaults resolution', () => {
+  it('defaults to the light baseline and records the neutral source layer', () => {
+    const resolved = resolveTableThemeDefaults();
 
-  it('defaults to the light baseline and records local/inherited winners', () => {
-    const resolved = resolveTableThemeTokens();
-
-    expect(resolved.tokens).toMatchObject(getDefaultTableThemePreset(ThemeMode.Light));
-    expect(resolved.tokens['data.categorical']).toEqual(resolveDefaultCoreThemeColors(ThemeMode.Light).categorical);
-    expect(Object.values(resolved.sources).map(source => source.kind)).toEqual([
-      ...Array.from({ length: 17 }, () => 'local'),
-      'inherit',
-      'local',
+    expect(resolved.defaults).toMatchObject(getDefaultTableDefaults(ThemeMode.Light));
+    expect(resolved.defaults.visualDefaults?.categorical).toEqual(lightTheme.colors.categorical);
+    expect(resolved.layers).toMatchObject([
+      {
+        kind: 'neutral',
+        path: '$default/light',
+        defaults: { visualDefaults: { categorical: lightTheme.colors.categorical } },
+      },
     ]);
+    expect(resolved.layers).toHaveLength(1);
     expect(Object.isFrozen(resolved)).toBe(true);
-    expect(Object.isFrozen(resolved.tokens)).toBe(true);
+    expect(Object.isFrozen(resolved.defaults)).toBe(true);
+    expect(Object.isFrozen(resolved.layers)).toBe(true);
   });
 
-  it('lets the resolved token schema consume typed local input before immutable output handling', () => {
-    const local = new Proxy({}, {});
-
-    expect(resolveTableThemeTokens(undefined, local).tokens).toMatchObject(getDefaultTableThemePreset(ThemeMode.Light));
-  });
-
-  it('overlays independent leaves and atomically replaces structured tokens', () => {
-    const categorical = ['pink', 'pink'];
-    const border = { kind: 'line' as const, stroke: 'purple', width: 3 };
-    const resolved = resolveTableThemeTokens(
-      {
-        mode: 'light',
-        colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
+  it('merges sparse Source defaults by formal groups while detaching inputs', () => {
+    const categorical = ['pink', 'purple'];
+    const patch = TableDefaultsSchema.parse({
+      appearanceDefaults: {
+        body: {
+          background: { fill: '#f8fafc' },
+          content: { style: { color: '#123456' } },
+        },
       },
-      {
-        'columnHeader.content.color': '#123456',
-        'table.border.horizontal': border,
-        'data.categorical': categorical,
-        'data.sequential': ['orange', 'purple'],
-      },
-    );
+      visualDefaults: { categorical },
+    });
+    const resolved = mergeTableDefaults(getDefaultTableDefaults(ThemeMode.Light), patch);
 
-    expect(resolved.tokens['cell.content.color']).toBe('#18181b');
-    expect(resolved.tokens['columnHeader.content.color']).toBe('#123456');
-    expect(resolved.tokens['table.border.horizontal']).toEqual(border);
-    expect(resolved.tokens['data.categorical']).toEqual(['pink', 'pink']);
-    expect(resolved.tokens['data.sequential']).toEqual(['orange', 'purple']);
-    expect(resolved.sources['columnHeader.content.color']).toMatchObject({ kind: 'local' });
-    expect(resolved.sources['cell.content.color']).toMatchObject({ kind: 'local' });
+    expect(resolved.appearanceDefaults?.body).toMatchObject({
+      background: { fill: '#f8fafc' },
+      content: { style: { color: '#123456' } },
+    });
+    expect(resolved.appearanceDefaults?.columnHeader?.content?.style?.color).toBe('#71717a');
+    expect(resolved.visualDefaults?.categorical).toEqual(['pink', 'purple']);
 
     categorical[0] = 'mutated';
-    border.width = 9;
-    expect(resolved.tokens['data.categorical']).toEqual(['pink', 'pink']);
-    expect(resolved.tokens['table.border.horizontal']).toEqual({ kind: 'line', stroke: 'purple', width: 3 });
+    expect(resolved.visualDefaults?.categorical).toEqual(['pink', 'purple']);
   });
 
-  it('通过同名自定义 style definition 解析 Table 基线并拒绝缺失或重名定义', () => {
+  it('atomically replaces same-kind borders and removes null-cleared defaults', () => {
+    const base = TableDefaultsSchema.parse({
+      appearanceDefaults: {
+        body: {
+          background: { fill: '#ffffff', fillOpacity: 0.5 },
+          content: {
+            style: { color: '#111111' },
+            defaults: { node: { layout: { padding: 2 }, style: { font: { family: 'serif', weight: 500 } } } },
+          },
+        },
+      },
+      layout: { borders: { horizontal: { kind: 'line', stroke: '#111111', width: 5 } } },
+      visualDefaults: { categorical: ['red'], sequential: ['white', 'black'] },
+    });
+    const patch = TableDefaultsSchema.parse({
+      appearanceDefaults: {
+        body: {
+          background: { fill: null, fillOpacity: 0 },
+          content: {
+            style: { color: null },
+            defaults: { node: { layout: { padding: 4 }, style: { font: { weight: null } } } },
+          },
+        },
+      },
+      layout: { borders: { horizontal: { kind: 'line', stroke: 'red' } } },
+      visualDefaults: { categorical: null },
+    });
+
+    expect(mergeTableDefaults(base, patch)).toEqual({
+      appearanceDefaults: {
+        body: {
+          background: { fillOpacity: 0 },
+          content: { defaults: { node: { layout: { padding: 4 }, style: { font: { family: 'serif' } } } } },
+        },
+      },
+      layout: { borders: { horizontal: { kind: 'line', stroke: 'red' } } },
+      visualDefaults: { sequential: ['white', 'black'] },
+    });
+  });
+
+  it('accepts an empty tableDefaults no-op but rejects empty nested defaults groups', () => {
+    expect(TableDefaultsSchema.parse({})).toEqual({});
+    for (const invalid of [
+      { appearanceDefaults: {} },
+      { appearanceDefaults: { body: {} } },
+      { appearanceDefaults: { body: { background: {} } } },
+      { layout: {} },
+      { layout: { borders: {} } },
+      { visualDefaults: {} },
+    ]) {
+      expect(() => TableDefaultsSchema.parse(invalid)).toThrow(/at least one field/i);
+    }
+  });
+
+  it('resolves a same-name style definition into a Source defaults layer', () => {
     const brand = defineTableThemeStyle({
       name: 'brand',
-      resolve: theme => ({ 'cell.content.color': theme.mode === ThemeMode.Light ? '#123456' : '#abcdef' }),
+      resolve: theme => ({
+        defaults: {
+          appearanceDefaults: {
+            body: { content: { style: { color: theme.mode === ThemeMode.Light ? '#123456' : '#abcdef' } } },
+          },
+          visualDefaults: { sequential: ['orange', 'purple'] },
+        },
+      }),
     });
     const theme = {
+      ...lightTheme,
       style: 'brand',
-      mode: ThemeMode.Light,
-      colors: {
-        ...resolveDefaultCoreThemeColors(ThemeMode.Light),
-        categorical: ['#core-brand'] as const,
-      },
+      colors: { ...lightTheme.colors, categorical: ['red'] },
     } as const;
 
-    const resolved = resolveTableThemeTokens(theme, {}, [brand]);
+    const resolved = resolveTableThemeDefaults(theme, [brand]);
 
-    expect(resolved.tokens['cell.content.color']).toBe('#123456');
-    expect(resolved.sources['cell.content.color']).toEqual({
-      kind: 'local',
-      path: '$style/brand/light/cell.content.color',
-    });
-    expect(resolved.tokens['cell.background.fill']).toBe('#ffffff');
-    expect(resolved.sources['cell.background.fill']).toEqual({
-      kind: 'local',
-      path: '$default/light/cell.background.fill',
-    });
-    expect(resolved.tokens['data.categorical']).toEqual(['#core-brand']);
-    expect(resolved.sources['data.categorical']).toEqual({
-      kind: 'inherit',
-      path: '$theme/colors/categorical',
-    });
-    expect(() => resolveTableThemeTokens(theme)).toThrow(/Table theme style 'brand'.*not registered/i);
-    expect(() =>
-      resolveTableThemeTokens(
-        {
-          mode: ThemeMode.Light,
-          colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
-        },
-        {},
-        [brand, defineTableThemeStyle({ name: 'brand', resolve: brand.resolve })],
-      ),
-    ).toThrow(/already registered/i);
-
-    const coreBrand = defineThemeStyle({ name: 'brand', resolve: () => ({ categorical: ['#core-brand'] }) });
-    const result = compileTable(
-      { namespace: 'table', type: 'table', structure: { kind: 'manual', rows: [['x']] } },
-      {},
-      {
-        theme: { style: 'brand', mode: ThemeMode.Light },
-        lower: { tableThemeStyles: [brand] },
-        compile: { themeStyles: [coreBrand], padding: 0 },
-      },
-    );
-    expect(result.manifest.style).toMatchObject({
-      style: 'brand',
-      themeMode: ThemeMode.Light,
-      tokens: { 'cell.content.color': '#123456' },
-    });
+    expect(resolved.defaults.appearanceDefaults?.body?.content?.style?.color).toBe('#123456');
+    expect(resolved.defaults.appearanceDefaults?.body?.background?.fill).toBe('#ffffff');
+    expect(resolved.defaults.visualDefaults?.categorical).toEqual(['red']);
+    expect(resolved.defaults.visualDefaults?.sequential).toEqual(['orange', 'purple']);
+    expect(resolved.layers.map(layer => ({ kind: layer.kind, path: layer.path }))).toEqual([
+      { kind: 'neutral', path: '$default/light' },
+      { kind: 'style', path: '$style/brand/light' },
+    ]);
+    expect(() => resolveTableThemeDefaults(theme)).toThrow(/Table theme style 'brand'.*not registered/i);
+    expect(() => resolveTableThemeDefaults(theme, [brand, brand])).toThrow(/already registered/i);
   });
 
-  it('让外部 style definition 的显式 undefined token 进入既有完整 token 校验', () => {
-    const sparseTokens = { 'cell.content.color': '#123456' };
-    Object.defineProperty(sparseTokens, 'cell.content.color', {
-      enumerable: true,
-      value: undefined,
-    });
-    const sparse = defineTableThemeStyle({ name: 'sparse', resolve: () => sparseTokens });
-    expect(() =>
-      resolveTableThemeTokens(
-        {
-          style: 'sparse',
-          mode: ThemeMode.Light,
-          colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
-        },
-        {},
-        [sparse],
-      ),
-    ).toThrowError(ZodError);
+  it('rejects malformed Source defaults and preserves style callback causes', () => {
+    expect(() => TableDefaultsSchema.parse({ unknown: true })).toThrow(/unknown/i);
 
-    const unknownTokens = { 'cell.content.color': '#123456' };
-    Object.defineProperty(unknownTokens, 'unknown.token', { enumerable: true, value: undefined });
-    const unknown = defineTableThemeStyle({ name: 'unknown', resolve: () => unknownTokens });
-    expect(() =>
-      resolveTableThemeTokens(
-        {
-          style: 'unknown',
-          mode: ThemeMode.Light,
-          colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
-        },
-        {},
-        [unknown],
-      ),
-    ).toThrow(/unknown/i);
-  });
-
-  it('拒绝 owner schema 无法解析的外部 style definition 输出', () => {
-    const theme = {
-      style: 'invalid',
-      mode: ThemeMode.Light,
-      colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
-    };
-    const invalidDefinitions = [
-      { name: 'null-output', resolve: () => null },
-      { name: 'undefined-output', resolve: () => undefined },
-      { name: 'primitive-output', resolve: () => 42 },
-      { name: 'unknown-token', resolve: () => ({ unknown: true }) },
-    ];
-
-    for (const definition of invalidDefinitions) {
-      expect(
-        () =>
-          Reflect.apply(resolveTableThemeTokens, undefined, [{ ...theme, style: definition.name }, {}, [definition]]),
-        definition.name,
-      ).toThrowError(
-        expect.objectContaining({
-          code: RetikzTableErrorCode.Default,
-          cause: expect.any(ZodError),
-        }),
-      );
-    }
-  });
-
-  it('按 owner schema 投影外部 style definition 的对象输出', () => {
-    class EmptyStyleOutput {}
-    class BorderOutput {
-      readonly kind = 'line';
-      readonly stroke = '#123456';
-      readonly width = 1;
-    }
-
-    const getterOutput = Object.defineProperty({}, 'cell.content.color', {
-      enumerable: true,
-      get: () => '#123456',
-    });
-    const definitions = [
-      { name: 'date-output', resolve: () => new Date(0), expectedColor: '#18181b' },
-      { name: 'class-output', resolve: () => new EmptyStyleOutput(), expectedColor: '#18181b' },
-      { name: 'promise-output', resolve: () => Promise.resolve({}), expectedColor: '#18181b' },
-      { name: 'getter-output', resolve: () => getterOutput, expectedColor: '#123456' },
-      {
-        name: 'symbol-output',
-        resolve: () => ({ 'cell.content.color': '#123456', [Symbol('metadata')]: true }),
-        expectedColor: '#123456',
-      },
-    ];
-
-    for (const definition of definitions) {
-      const resolved = Reflect.apply(resolveTableThemeTokens, undefined, [
-        {
-          style: definition.name,
-          mode: ThemeMode.Light,
-          colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
-        },
-        {},
-        [definition],
-      ]);
-
-      expect(resolved.tokens['cell.content.color'], definition.name).toBe(definition.expectedColor);
-    }
-
-    const classToken = defineTableThemeStyle({
-      name: 'class-token-value',
-      resolve: () => ({ 'table.border.top': new BorderOutput() }),
-    });
-    expect(
-      resolveTableThemeTokens(
-        {
-          style: classToken.name,
-          mode: ThemeMode.Light,
-          colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
-        },
-        {},
-        [classToken],
-      ).tokens['table.border.top'],
-    ).toEqual({ kind: 'line', stroke: '#123456', width: 1 });
-  });
-
-  it('保留外部 style definition callback 抛出的原始 cause', () => {
     const cause = new Error('custom Table style failed');
     const definition = defineTableThemeStyle({
       name: 'throwing-style',
@@ -256,21 +155,8 @@ describe('Table theme token resolution', () => {
       },
     });
 
-    expect(() =>
-      resolveTableThemeTokens(
-        {
-          style: definition.name,
-          mode: ThemeMode.Light,
-          colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
-        },
-        {},
-        [definition],
-      ),
-    ).toThrowError(
-      expect.objectContaining({
-        code: RetikzTableErrorCode.Default,
-        cause,
-      }),
+    expect(() => resolveTableThemeDefaults({ ...lightTheme, style: definition.name }, [definition])).toThrowError(
+      expect.objectContaining({ code: RetikzTableErrorCode.Default, cause }),
     );
   });
 });

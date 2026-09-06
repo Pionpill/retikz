@@ -3,7 +3,7 @@ title: 内容呈现
 description: 理解 Table 如何先解析 Cell 的 formatter、presentation 与外观胜者，再把原始值变成带样式的可渲染内容。
 ---
 
-Structure 已经决定 Cell 是谁、位于哪里，但原始标量还不是最终显示文本，也不是可测量的图形内容。Table 先从 preset/token、Cell 配置、encoding 与有序 rules 解析最终 Cell plan，再执行胜出的 formatter 与 Presentation，把值和最终外观一起转成 Core child。
+Structure 已经决定 Cell 是谁、位于哪里，但原始标量还不是最终显示文本，也不是可测量的图形内容。Table 先从 preset 与 Source defaults、Cell 配置、encoding 与有序 rules 解析最终 Cell plan，再执行胜出的 formatter 与 Presentation，把值和最终外观一起转成 Core child。
 
 <ComponentAlert
   type="tip"
@@ -15,7 +15,7 @@ Structure 已经决定 Cell 是谁、位于哪里，但原始标量还不是最�
 
 <ComponentPreview files="table-presentation-flow" hideCode size="xxxl" />
 
-图的上半部分是候选级联，而不是值的执行顺序：内置 preset 建立外观基线，用户 tokens 按叶覆盖它；Cell 配置继续提供 formatter、presentation 与局部外观，encoding 写入颜色通道，有序 rules 最后覆盖匹配项。得到包含胜出引用和最终 `appearance` 的 Cell plan 后，下半部分才用原始值执行 formatter；Presentation 随后收到 `rawValue`、格式化后的 `value`、`context` 与最终 `appearance`，生成带样式 child。
+图的上半部分是候选级联，而不是值的执行顺序：内置 preset 建立外观基线，Source defaults 按正式 IR 路径覆盖它；Cell 配置继续提供 formatter、presentation 与局部外观，encoding 写入颜色通道，有序 rules 最后覆盖匹配项。得到包含胜出引用和最终 `appearance` 的 Cell plan 后，下半部分才用原始值执行 formatter；Presentation 随后收到 `rawValue`、格式化后的 `value`、`context` 与最终 `appearance`，生成带样式 child。
 
 选择器和 encoding 始终读取 canonical raw value，而不是格式化后的文本。因此把 `-3` 显示成 `−3` 不会改变数值规则，也不会改变 scale domain。
 
@@ -41,7 +41,7 @@ Structure 已经决定 Cell 是谁、位于哪里，但原始标量还不是最�
 | `CellFormatterDefinition`    | `{ value, context }`，其中 value 是原始 scalar | JSON scalar         |
 | `CellPresentationDefinition` | `{ rawValue, value, context, appearance }`     | JSON-safe `IRChild` |
 
-`context` 始终包含 canonical 地址、角色和来源；只有作者或 Structure 显式提供时才包含 Cell、row 或 column id。Presentation 的 `value` 是 formatter 输出，`rawValue` 保留规则、诊断与业务语义使用的原值；`appearance` 已经合并 preset/token、encoding 与 rules。
+`context` 始终包含 canonical 地址、角色和来源；只有作者或 Structure 显式提供时才包含 Cell、row 或 column id。Presentation 的 `value` 是 formatter 输出，`rawValue` 保留规则、诊断与业务语义使用的原值；`appearance` 已经合并 preset defaults、encoding 与 rules。
 
 ## 内置与自定义走同一入口
 

@@ -58,15 +58,21 @@ const validateCandidate = (candidate: ResolvedTableBorderCandidate): ResolvedTab
   if (!Number.isFinite(candidate.priority) || !Number.isInteger(candidate.priority)) {
     throw new RetikzTableError('table: Border candidate priority must be a finite integer');
   }
-  if (candidate.kind === 'none') return { kind: 'none', priority: candidate.priority };
-  if (candidate.styleToken !== undefined && candidate.priority !== -100) {
-    throw new RetikzTableError('table: style token Border candidate priority must be -100');
+  if (candidate.defaults !== undefined && candidate.priority !== -100) {
+    throw new RetikzTableError('table: Source defaults Border candidate priority must be -100');
+  }
+  if (candidate.kind === 'none') {
+    return {
+      kind: 'none',
+      priority: candidate.priority,
+      ...(candidate.defaults === undefined ? {} : { defaults: structuredClone(candidate.defaults) }),
+    };
   }
   return {
     kind: 'line',
     priority: candidate.priority,
     line: ResolvedTableBorderLineSchema.parse(candidate.line),
-    ...(candidate.styleToken === undefined ? {} : { styleToken: structuredClone(candidate.styleToken) }),
+    ...(candidate.defaults === undefined ? {} : { defaults: structuredClone(candidate.defaults) }),
   };
 };
 
@@ -88,18 +94,26 @@ const contributionOf = (
     sourceOrderKey,
   };
   if (candidate.kind === 'none') {
-    return { kind: 'none', origin: TableBorderContributionOrigin.Explicit, ...base };
+    return candidate.defaults === undefined
+      ? { kind: 'none', origin: TableBorderContributionOrigin.Explicit, ...base }
+      : {
+          kind: 'none',
+          origin: TableBorderContributionOrigin.Defaults,
+          ...base,
+          priority: -100,
+          defaults: candidate.defaults,
+        };
   }
-  if (candidate.styleToken === undefined) {
+  if (candidate.defaults === undefined) {
     return { kind: 'line', origin: TableBorderContributionOrigin.Explicit, ...base, line: candidate.line };
   }
   return {
     kind: 'line',
-    origin: TableBorderContributionOrigin.StyleToken,
+    origin: TableBorderContributionOrigin.Defaults,
     ...base,
     priority: -100,
     line: candidate.line,
-    styleToken: candidate.styleToken,
+    defaults: candidate.defaults,
   };
 };
 
@@ -356,7 +370,9 @@ export const buildTableBorderGraph = (input: BuildTableBorderGraphInput): TableB
   if (input.defaults.horizontal !== undefined) validateCandidate(input.defaults.horizontal);
   if (input.defaults.vertical !== undefined) validateCandidate(input.defaults.vertical);
   cells.forEach(cell => Object.values(cell.borders ?? {}).forEach(candidate => validateCandidate(candidate)));
-  if (input.rows.length === 0 || input.columns.length === 0) return deepFreeze({ atoms: [], edges: [] });
+  if (input.rows.length === 0 || input.columns.length === 0 || input.cells.length === 0) {
+    return deepFreeze({ atoms: [], edges: [] });
+  }
   const rawAtoms = input.mode === 'collapse' ? buildCollapseAtoms(input, occupancy) : buildSeparateAtoms(input, cells);
   const atoms = resolveTableBorderAtoms(rawAtoms);
   const edges = mergeTableBorderAtoms(atoms, input.mode);

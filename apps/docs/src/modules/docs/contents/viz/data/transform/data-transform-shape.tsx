@@ -14,7 +14,12 @@ const TABLE_LAYOUT = {
   rowSize: { kind: 'fixed', value: ROW_HEIGHT },
   headerRowSize: { kind: 'fixed', value: ROW_HEIGHT },
   borders: {
-    outer: { kind: 'line', stroke: 'gray' },
+    outer: {
+      top: { kind: 'line', stroke: 'gray' },
+      right: { kind: 'line', stroke: 'gray' },
+      bottom: { kind: 'line', stroke: 'gray' },
+      left: { kind: 'line', stroke: 'gray' },
+    },
     horizontal: { kind: 'line', stroke: 'lightgray' },
     vertical: { kind: 'line', stroke: 'lightgray' },
   },

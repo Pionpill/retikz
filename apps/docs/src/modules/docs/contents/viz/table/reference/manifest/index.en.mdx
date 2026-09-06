@@ -11,7 +11,7 @@ description: Look up the track, Cell, visual-encoding, Legend-descriptor, border
 
 <ZodSchema name="TableLayoutManifestSchema" />
 
-The manifest `style` region also records effective Core `style`, `themeMode`, the complete resolved Table `tokens` map, and one `sources` entry per token. Here `themeMode` is output metadata from the same compile, identifying the selected preset; IRTable inputs remain the host `theme` and local `tableThemeTokens`, which belong to a different layer.
+The manifest `style` region also records effective Core `style`, `themeMode`, complete resolved Table `defaults`, and the `layers` in their actual cascade order. Here `themeMode` is output metadata from the same compile, identifying the selected baseline; IRTable inputs remain the host `theme`, `tableDefaults`, `appearanceDefaults`, `visualDefaults`, and explicit `layout`, which belong to different layers.
 
 ## Visual encoding and Legend descriptor seeds
 

@@ -17,10 +17,8 @@ describe('Table Cell plan lineage contract', () => {
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Default }),
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Structure }),
       TableCellPlanSourceSchema.parse({
-        kind: TableCellPlanSourceKind.StyleToken,
-        tokenKey: 'cell.content.color',
-        tokenSource: 'local',
-        tokenPath: '$default/light/cell.content.color',
+        kind: TableCellPlanSourceKind.Defaults,
+        path: '$default/light',
       }),
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Encoding, encodingId: 'status-color' }),
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.RootRule, ruleIndex: 0 }),
@@ -28,42 +26,16 @@ describe('Table Cell plan lineage contract', () => {
     expect(sources).toEqual([
       { kind: 'default' },
       { kind: 'structure' },
-      {
-        kind: 'styleToken',
-        tokenKey: 'cell.content.color',
-        tokenSource: 'local',
-        tokenPath: '$default/light/cell.content.color',
-      },
+      { kind: 'defaults', path: '$default/light' },
       { kind: 'encoding', encodingId: 'status-color' },
       { kind: 'rootRule', ruleIndex: 0 },
     ]);
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'rootRule', ruleIndex: -1 })).toThrow(/ruleIndex/i);
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'encoding', encodingId: '' })).toThrow(/encodingId/i);
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'encoding', encodingIndex: 0 })).toThrow();
-    expect(() => TableCellPlanSourceSchema.parse({ kind: 'styleToken' })).toThrow(/tokenKey|tokenSource/i);
-    expect(() =>
-      TableCellPlanSourceSchema.parse({
-        kind: 'styleToken',
-        tokenKey: 'data.categorical',
-        tokenSource: 'foreign',
-      }),
-    ).toThrow(/tokenKey/i);
-    expect(() =>
-      TableCellPlanSourceSchema.parse({
-        kind: 'styleToken',
-        tokenKey: 'cell.content.color',
-        tokenSource: 'inherit',
-        tokenPath: '$theme/colors/categorical',
-      }),
-    ).toThrow(/source|path/i);
-    expect(() =>
-      TableCellPlanSourceSchema.parse({
-        kind: 'styleToken',
-        tokenKey: 'cell.content.color',
-        tokenSource: 'local',
-        tokenPath: '$spec/tableThemeTokens/cell.background.fill',
-      }),
-    ).toThrow(/source|path/i);
+    expect(() => TableCellPlanSourceSchema.parse({ kind: 'defaults' })).toThrow(/path/i);
+    expect(() => TableCellPlanSourceSchema.parse({ kind: 'defaults', path: '' })).toThrow(/path/i);
+    expect(() => TableCellPlanSourceSchema.parse({ kind: 'defaults', source: 'local' })).toThrow();
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'default', ruleIndex: 0 })).toThrow();
   });
 

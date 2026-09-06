@@ -8,9 +8,9 @@ import type { TableLegendDescriptorSchema } from './schema';
 /** Visual scale 解析时可用的同次 Table style palette */
 export type CellVisualScaleResolveContext = Readonly<{
   /** 分类颜色序列 */
-  categoricalColors: ReadonlyArray<string>;
+  categoricalColors?: ReadonlyArray<string>;
   /** 连续颜色端点 */
-  sequentialColors: readonly [string, string];
+  sequentialColors?: readonly [string, string];
 }>;
 
 /** 单个 visual scale 的运行时解析结果 */

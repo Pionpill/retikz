@@ -48,15 +48,19 @@ export const cascadeTableCellAppearance = (
   const trace: MutableAppearanceTrace = structuredClone(currentTrace);
 
   if (patch.background !== undefined) {
-    next.background = {
-      fill: structuredClone(patch.background.fill),
-      ...(patch.background.fillOpacity === undefined
-        ? {}
-        : { fillOpacity: structuredClone(patch.background.fillOpacity) }),
-    };
-    removeTraceSubtree(trace, '/background');
+    const background = structuredClone(next.background ?? {}) as Record<string, unknown>;
+    background.fill = structuredClone(patch.background.fill);
     setTrace(trace, '/background/fill', source);
-    if (patch.background.fillOpacity !== undefined) setTrace(trace, '/background/fillOpacity', source);
+    if (Object.hasOwn(patch.background, 'fillOpacity')) {
+      if (patch.background.fillOpacity === undefined) {
+        delete background.fillOpacity;
+        removeTraceSubtree(trace, '/background/fillOpacity');
+      } else {
+        background.fillOpacity = structuredClone(patch.background.fillOpacity);
+        setTrace(trace, '/background/fillOpacity', source);
+      }
+    }
+    next.background = background as IRTableCellAppearance['background'];
   }
 
   if (patch.content !== undefined) {

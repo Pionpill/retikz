@@ -1,7 +1,7 @@
 import * as corePackage from '@retikz/core';
 import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
 import { PlotThemeToken, resolvePlotTheme } from '@retikz/plot';
-import { resolveTableThemeTokens } from '@retikz/table';
+import { resolveTableThemeDefaults } from '@retikz/table';
 import { globSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -186,22 +186,24 @@ describe('docs-owned theme presets', () => {
     if (academic === undefined || vibrant === undefined || clean === undefined)
       throw new Error('missing Table definition');
 
-    const academicTokens = resolveTableThemeTokens(themeOf(PreviewThemeStyle.Academic), {}, [academic]).tokens;
-    expect(academicTokens['cell.content.font.family']).toBe('serif');
-    expect(academicTokens['table.border.top']).toEqual({
+    const academicDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Academic), [academic]).defaults;
+    expect(academicDefaults.appearanceDefaults?.body?.content?.defaults?.node?.style?.font?.family).toBe('serif');
+    expect(academicDefaults.layout?.borders?.outer?.top).toEqual({
       kind: 'line',
       stroke: mode === ThemeMode.Light ? '#111111' : '#f5f5f5',
       width: 1.2,
     });
 
-    const vibrantTokens = resolveTableThemeTokens(themeOf(PreviewThemeStyle.Vibrant), {}, [vibrant]).tokens;
-    expect(vibrantTokens['cell.background.fill']).toBe(mode === ThemeMode.Light ? '#e5ecf6' : '#111827');
-    expect(vibrantTokens['table.border.horizontal']).toMatchObject({ kind: 'line', width: 1 });
+    const vibrantDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Vibrant), [vibrant]).defaults;
+    expect(vibrantDefaults.appearanceDefaults?.body?.background?.fill).toBe(
+      mode === ThemeMode.Light ? '#e5ecf6' : '#111827',
+    );
+    expect(vibrantDefaults.layout?.borders?.horizontal).toMatchObject({ kind: 'line', width: 1 });
 
-    const cleanTokens = resolveTableThemeTokens(themeOf(PreviewThemeStyle.Clean), {}, [clean]).tokens;
-    expect(cleanTokens['cell.background.fill']).toBeNull();
-    expect(cleanTokens['table.border.horizontal']).toBeNull();
-    expect(cleanTokens['data.sequential']).toEqual(
+    const cleanDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Clean), [clean]).defaults;
+    expect(cleanDefaults.appearanceDefaults?.body?.background?.fill).toBe('none');
+    expect(cleanDefaults.layout?.borders?.horizontal).toEqual({ kind: 'none' });
+    expect(cleanDefaults.visualDefaults?.sequential).toEqual(
       mode === ThemeMode.Light ? ['#eff6ff', '#1d4ed8'] : ['#172554', '#60a5fa'],
     );
   });

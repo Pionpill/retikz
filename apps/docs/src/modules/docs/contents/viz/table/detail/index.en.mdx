@@ -37,7 +37,7 @@ For JSX-local column declarations, use `DetailColumn` children:
 
 Choose either `columns` or `DetailColumn` children. Both forms produce the same detail-table spec, and every `DetailTable` root prop other than `columns` is available in both forms.
 
-Table first resolves the final plan for each Cell. The host `theme.mode` establishes the Table owner-local default preset; an explicit `theme.style` then applies the injected sparse Table definition with the same name. Shared `colors.categorical` supplies the common categorical palette, and spec-local `tableThemeTokens` override Table tokens. Column configuration supplies formatter/presentation references and local appearance; `encodings` map raw data to color; and declaration-ordered `rules` apply the final matching overrides, including formatter or presentation winners. Only then does the winning formatter turn a raw field value into its display value. Only `tableThemeTokens` enters the JSON-safe IRTable; the host `theme` propagates through the Core Scene / Scope.
+Table first resolves the final plan for each Cell. The host `theme.mode` establishes the Table owner-local default preset; an explicit `theme.style` then applies the injected sparse Table defaults with the same name. Shared `colors.categorical` supplies the common categorical palette, and Source `tableDefaults`, `appearanceDefaults`, `visualDefaults`, and explicit `layout.borders` override those defaults in order. Column configuration supplies formatter/presentation references and local appearance; `encodings` map raw data to color; and declaration-ordered `rules` apply the final matching overrides, including formatter or presentation winners. Only then does the winning formatter turn a raw field value into its display value. These defaults and layout fields enter the JSON-safe IRTable; the host `theme` propagates through the Core Scene / Scope.
 
 ## Examples
 
@@ -47,7 +47,7 @@ Header strings become value Cells automatically. The three external records belo
 
 <ComponentPreview files={['table-detail', 'table-detail.data.ts']} size="sm" />
 
-The site's preview Provider injects same-named Core and Table Academic definitions. The example then selects the `academic/light` environment through a standalone root `theme` or an outer `<Layout theme>` in embedded mode, while `tableThemeTokens` remains a spec-local overlay and `containerStyle` remains standalone host CSS. `legend: false` means the encoding changes Cell appearance without requesting a Legend descriptor.
+The site's preview Provider injects same-named Core and Table Academic definitions. The example then selects the `academic/light` environment through a standalone root `theme` or an outer `<Layout theme>` in embedded mode, while `appearanceDefaults` remains a spec-local Cell appearance overlay and `containerStyle` remains standalone host CSS. `legend: false` means the encoding changes Cell appearance without requesting a Legend descriptor.
 
 The example gives body and header Cells separate string content masters, then derives their backgrounds with `0.08` and `0.12`. Numeric strokes on the outer and horizontal borders follow the body Cell master. These numbers are master-color weights and do not alter the independent background or border opacity.
 
@@ -55,7 +55,7 @@ The example gives body and header Cells separate string content masters, then de
   type="tip"
   title="Keep Theme and host CSS separate"
   description={
-    'The host theme.mode establishes the Table owner-local default preset, an explicit theme.style applies the injected sparse Table definition with the same name, tableThemeTokens provides the final local Table token overlay, and React standalone host CSS continues to use containerStyle.'
+    'The host theme.mode establishes the Table owner-local default preset, an explicit theme.style applies the injected sparse Table definition with the same name, Source defaults provide the final local default fragments, and React standalone host CSS continues to use containerStyle.'
   }
 />
 
@@ -236,7 +236,9 @@ result.manifest;
 | `rules?`                         | `DetailTableProps['rules']`                                               | `[]`           | Declaration-ordered formatter, presentation, or appearance overrides              |
 | `encodings?`                     | `DetailTableProps['encodings']`                                           | `[]`           | Maps selected value-Cell raw values to background or content colors               |
 | `theme?`                         | `DetailTableProps['theme']`                                               | —              | Standalone root Core Theme; embedded mode uses the outer `<Layout>`               |
-| `tableThemeTokens?`              | `DetailTableProps['tableThemeTokens']`                                    | `{}`           | Sparse IRTable token overlay above the Table style baseline                       |
+| `appearanceDefaults?`            | `DetailTableProps['appearanceDefaults']`                                  | `{}`           | Sparse appearance defaults for existing body / header Cells                       |
+| `visualDefaults?`                | `DetailTableProps['visualDefaults']`                                      | `{}`           | Default categorical and sequential ranges for existing encodings                  |
+| `tableDefaults?`                 | `DetailTableProps['tableDefaults']`                                       | `{}`           | Sparse Table defaults fragment below explicit Source fields                       |
 | `meta?`                          | `DetailTableProps['meta']`                                                | —              | JSON metadata stored in IRTable                                                   |
 | `formatterDefinitions?`          | `DetailTableProps['formatterDefinitions']`                                | `[]`           | Custom Cell formatter definitions                                                 |
 | `structureDefinitions?`          | `DetailTableProps['structureDefinitions']`                                | `[]`           | Custom structure definitions                                                      |

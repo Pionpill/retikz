@@ -22,16 +22,13 @@ const cleanCoreTheme = defineThemeStyle({
 const cleanTableTheme = defineTableThemeStyle({
   name: 'clean',
   resolve: () => ({
-    'cell.background.fill': null,
-    'cell.content.color': null,
-    'cell.content.font.family': null,
-    'cell.content.font.weight': null,
-    'columnHeader.background.fill': null,
-    'columnHeader.content.color': null,
-    'columnHeader.content.font.family': null,
-    'columnHeader.content.font.weight': null,
-    'table.border.horizontal': null,
-    'columnHeader.border.bottom': null,
+    defaults: {
+      appearanceDefaults: {
+        body: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
+        columnHeader: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
+      },
+      layout: { borders: { horizontal: { kind: 'none' } } },
+    },
   }),
 });
 
@@ -87,21 +84,21 @@ describe('renderTable', () => {
     expect(renderTable(spec, { lowerOptions: { formatterDefinitions: [prefix] } })).toContain('#7');
   });
 
-  it('keeps Core Theme, Table tokens, encodings, and custom visual scales in Vanilla SSR artifacts', () => {
+  it('keeps Core Theme, Table defaults, encodings, and custom visual scales in Vanilla SSR artifacts', () => {
     const visualScale = defineCellVisualScale({
       name: 'vanilla-palette',
       optionsSchema: strictObject({}),
       resolve: (_options, _values, context) => ({
-        of: () => context.categoricalColors[0],
+        of: () => context.categoricalColors?.[0] ?? '#000000',
         legendForm: 'swatch',
         domain: [1],
-        range: [context.categoricalColors[0]],
+        range: [context.categoricalColors?.[0] ?? '#000000'],
       }),
     });
     const spec = manualTable({
       id: 'table',
       rows: [[1]],
-      tableThemeTokens: { 'data.categorical': ['#123456'] },
+      visualDefaults: { categorical: ['#123456'] },
       encodings: [
         {
           id: 'palette',
@@ -149,11 +146,18 @@ describe('renderTable', () => {
 
     expect(baseline.manifest).toMatchObject({
       style: { themeMode: 'light' },
-      cells: [{ appearance: { background: { fill: '#ffffff' }, content: {style: {color: '#18181b'}} } }],
+      cells: [{ appearance: { background: { fill: '#ffffff' }, content: { style: { color: '#18181b' } } } }],
     });
     expect(clean.manifest).toMatchObject({
       style: { style: 'clean', themeMode: 'light' },
-      cells: [{ appearance: {} }],
+      cells: [
+        {
+          appearance: {
+            background: { fill: 'none' },
+            content: { style: { color: 'currentColor' } },
+          },
+        },
+      ],
       borders: [],
     });
   });

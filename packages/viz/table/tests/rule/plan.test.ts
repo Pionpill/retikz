@@ -132,8 +132,8 @@ describe('resolved Table Cell plans', () => {
         },
       },
     });
-    expect(value.appearance.background).not.toHaveProperty('fillOpacity');
-    expect(value.trace.appearance).not.toHaveProperty('/background/fillOpacity');
+    expect(value.appearance.background).toMatchObject({ fillOpacity: 0.5 });
+    expect(value.trace.appearance).toHaveProperty('/background/fillOpacity', { kind: 'rootRule', ruleIndex: 0 });
   });
 
   it('does not create a winner trace for an explicitly undefined atomic appearance field', () => {

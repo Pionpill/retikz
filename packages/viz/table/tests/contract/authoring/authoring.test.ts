@@ -54,7 +54,7 @@ describe('Table plain authoring', () => {
     expect(TableSchema.parse(spec)).toEqual(spec);
   });
 
-  it('preserves and detaches detail formatter, rules, encodings, and Table tokens', () => {
+  it('preserves and detaches detail formatter, rules, encodings, and Source defaults', () => {
     const formatter = { name: 'number', options: { maximumFractionDigits: 1 } };
     const rules: NonNullable<DetailTableInput['rules']> = [
       {
@@ -75,13 +75,13 @@ describe('Table plain authoring', () => {
         legend: false,
       },
     ];
-    const tableThemeTokens = { 'cell.content.color': '#27272a' } as const;
+    const tableDefaults = { appearanceDefaults: { body: { content: { style: { color: '#27272a' } } } } } as const;
     const input: DetailTableInput = {
       dataRef: 'scores',
       columns: [{ id: 'score', field: 'score', formatter }],
       rules,
       encodings,
-      tableThemeTokens,
+      tableDefaults,
     };
     const spec = createDetailTableIR(input);
 
@@ -89,12 +89,12 @@ describe('Table plain authoring', () => {
       structure: { columns: [{ id: 'score', field: 'score', formatter }] },
       rules,
       encodings,
-      tableThemeTokens,
+      tableDefaults,
     });
     expect(spec.structure.columns[0]).not.toBe(input.columns[0]);
     expect(spec.rules).not.toBe(rules);
     expect(spec.encodings).not.toBe(encodings);
-    expect(spec.tableThemeTokens).not.toBe(tableThemeTokens);
+    expect(spec.tableDefaults).not.toBe(tableDefaults);
 
     formatter.options.maximumFractionDigits = 3;
     rules[0].selector.fields!.push('ignored');
@@ -136,7 +136,7 @@ describe('Table plain authoring', () => {
     expect(TableSchema.parse(spec)).toEqual(spec);
   });
 
-  it('preserves and detaches manual formatter, rules, encodings, and Table tokens', () => {
+  it('preserves and detaches manual formatter, rules, encodings, and Source defaults', () => {
     const rows: ManualTableInput['rows'] = [
       [{ value: 98, formatter: { name: 'number', options: { maximumFractionDigits: 0 } } }],
     ];
@@ -152,12 +152,12 @@ describe('Table plain authoring', () => {
         legend: false,
       },
     ];
-    const tableThemeTokens = { 'cell.background.fill': '#18181b' } as const;
+    const tableDefaults = { appearanceDefaults: { body: { background: { fill: '#18181b' } } } } as const;
     const input: ManualTableInput = {
       rows,
       rules,
       encodings,
-      tableThemeTokens,
+      tableDefaults,
     };
     const spec = createManualTableIR(input);
 
@@ -165,13 +165,13 @@ describe('Table plain authoring', () => {
       structure: { rows },
       rules,
       encodings,
-      tableThemeTokens,
+      tableDefaults,
     });
     expect(spec.structure.rows).not.toBe(rows);
     expect(spec.structure.rows[0]?.[0]).not.toBe(rows[0]?.[0]);
     expect(spec.rules).not.toBe(rules);
     expect(spec.encodings).not.toBe(encodings);
-    expect(spec.tableThemeTokens).not.toBe(tableThemeTokens);
+    expect(spec.tableDefaults).not.toBe(tableDefaults);
 
     const inputCell = rows[0]?.[0];
     if (typeof inputCell !== 'object' || inputCell === null || !('formatter' in inputCell)) {

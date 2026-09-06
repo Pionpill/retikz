@@ -1069,6 +1069,7 @@ export const compileChildrenToPrimitives = (
     let scopeTransforms: Array<Transform> = [];
     try {
       const scopeFrame: TraversalFrame = {
+        childProposal: frame.childProposal,
         scopeChain: preliminaryScopeChain,
         primitiveSink: scopePrimitiveSink,
         locatorPrefix: `${locatorPrefix}children[${index}].scope.`,

@@ -12,7 +12,7 @@ import {
   TableComposite,
   TableLayoutManifestSchema,
 } from '../../src';
-import { CLEAN_TABLE_THEME_TOKENS } from '../fixtures/clean-theme-tokens';
+import { CLEAN_TABLE_DEFAULTS } from '../fixtures/clean-table-defaults';
 
 const manualSpec = (id?: string): IRTable => ({
   namespace: TABLE_NAMESPACE,
@@ -79,7 +79,7 @@ describe('Table layout-aware lowering', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
+      tableDefaults: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],
@@ -96,7 +96,7 @@ describe('Table layout-aware lowering', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
+      tableDefaults: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [
@@ -129,12 +129,15 @@ describe('Table layout-aware lowering', () => {
         type: TableComposite.Table,
         data: { reference: 'people' },
         structure: { kind: 'detail', columns: [{ id: 'name', field: 'name' }] },
-        tableThemeTokens: {
-          'cell.content.color': '#336699',
-          'cell.background.fill': 0.2,
-          'columnHeader.content.color': '#993333',
-          'columnHeader.background.fill': 0.4,
-          'columnHeader.border.bottom': { kind: 'line', stroke: 0.6, width: 2 },
+        tableDefaults: {
+          appearanceDefaults: {
+            body: { background: { fill: 0.2 }, content: { style: { color: '#336699' } } },
+            columnHeader: {
+              background: { fill: 0.4 },
+              content: { style: { color: '#993333' } },
+              borders: { bottom: { kind: 'line', stroke: 0.6, width: 2 } },
+            },
+          },
         },
       };
       const result = compileTable(spec, { people: [{ name: 'Ada' }] }, { theme: { mode }, compile: { padding: 0 } });

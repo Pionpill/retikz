@@ -1,7 +1,6 @@
 import type { FC } from 'react';
 
 import { Layout } from '@retikz/react';
-import { TableThemeToken } from '@retikz/table';
 import { DetailColumn } from '@retikz/table-react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
@@ -13,12 +12,27 @@ import { scoreRows } from './table-detail.data';
 type ScoreTableProps = { embedded?: boolean };
 
 const rootTheme = { style: 'academic', mode: 'light' } as const;
-const tableThemeTokens = {
-  [TableThemeToken.CellContentFontFamily]: 'serif',
-  [TableThemeToken.CellContentColor]: '#1e3a8a',
-  [TableThemeToken.CellBackgroundFill]: 0.08,
-  [TableThemeToken.ColumnHeaderContentColor]: '#7c2d12',
-  [TableThemeToken.ColumnHeaderBackgroundFill]: 0.12,
+const appearanceDefaults = {
+  body: {
+    background: { fill: 0.08 },
+    content: {
+      style: { color: '#1e3a8a' },
+      defaults: {
+        node: { style: { font: { family: 'serif', weight: 400 } } },
+        label: { font: { family: 'serif', weight: 400 } },
+      },
+    },
+  },
+  columnHeader: {
+    background: { fill: 0.12 },
+    content: {
+      style: { color: '#7c2d12' },
+      defaults: {
+        node: { style: { font: { family: 'serif', weight: 500 } } },
+        label: { font: { family: 'serif', weight: 500 } },
+      },
+    },
+  },
 };
 
 /** 复用同一张表的 standalone 展示与 embedded 源码派生 */
@@ -30,7 +44,7 @@ const ScoreTable: FC<ScoreTableProps> = props => {
       id="score-detail"
       dataRef="scores"
       data={scoreRows}
-      tableThemeTokens={tableThemeTokens}
+      appearanceDefaults={appearanceDefaults}
       rules={[
         {
           selector: { fields: ['score'], value: { kind: 'compare', operator: 'lt', value: 0 } },
@@ -57,7 +71,12 @@ const ScoreTable: FC<ScoreTableProps> = props => {
         columnGap: 6,
         rowGap: 4,
         borders: {
-          outer: { kind: 'line', stroke: 0.45, width: 1 },
+          outer: {
+            top: { kind: 'line', stroke: 0.45, width: 1 },
+            right: { kind: 'line', stroke: 0.45, width: 1 },
+            bottom: { kind: 'line', stroke: 0.45, width: 1 },
+            left: { kind: 'line', stroke: 0.45, width: 1 },
+          },
           horizontal: { kind: 'line', stroke: 0.18, width: 1 },
         },
       }}

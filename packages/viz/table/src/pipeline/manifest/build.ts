@@ -8,12 +8,10 @@ import type {
   TableLayoutManifestSchema,
   TableLegendDescriptor,
 } from '../../contract';
-import type { ResolvedTableThemeTokens } from '../../providers/style';
 import type { TableBorderEdge, TableLayout } from '../layout';
-import type { ResolvedTableCellPlan, ResolvedTableEncoding } from '../rule';
+import type { ResolvedTableCellPlan, ResolvedTableDefaults, ResolvedTableEncoding } from '../rule';
 
 import { RetikzTableError } from '../../error';
-import { TableThemeTokenKeySchema } from '../../schemas';
 
 /** manifest 中的 style、plan 与 encoding lineage 输入 */
 export type BuildTableManifestContext = Readonly<{
@@ -21,8 +19,8 @@ export type BuildTableManifestContext = Readonly<{
   style?: ThemeStyleValue;
   /** 当前有效 Core Theme 的 mode */
   themeMode: ThemeModeValue;
-  /** 同次 resolved tokens */
-  tableThemeTokens: ResolvedTableThemeTokens;
+  /** 同次 resolved Table defaults */
+  tableDefaults: ResolvedTableDefaults;
   /** 同次 presented model */
   presented: PresentedTableModel;
   /** 可选同次 resolved Cell plans */
@@ -107,12 +105,8 @@ export const buildTableLayoutManifest = (
     style: {
       ...(manifestContext.style === undefined ? {} : { style: manifestContext.style }),
       themeMode: manifestContext.themeMode,
-      tokens: manifestContext.tableThemeTokens.tokens,
-      sources: TableThemeTokenKeySchema.options.map(key => ({
-        key,
-        source: manifestContext.tableThemeTokens.sources[key].kind,
-        path: manifestContext.tableThemeTokens.sources[key].path,
-      })),
+      defaults: structuredClone(manifestContext.tableDefaults.defaults),
+      layers: structuredClone(manifestContext.tableDefaults.layers),
     },
     encodings: [...(manifestContext.encodings ?? [])],
     legendDescriptors: [...manifestContext.legendDescriptors],

@@ -97,9 +97,16 @@ Border candidate kinds are <ApiValues name="TableBorderKind" />; table-wide topo
 
 <ZodSchema name="TableCellBordersSchema" />
 
+### TableOuterBordersSchema
+
+<ZodSchema name="TableOuterBordersSchema" />
+
 ### TableBordersSchema
 
-<ZodSchema name="TableBordersSchema" />
+<ZodSchema
+  name="TableBordersSchema"
+  descriptions={{ outer: 'Sparse object of independent top, right, bottom, and left outer-border candidates.' }}
+/>
 
 Cell-side candidates outrank table defaults. Shared atomic edges compare `priority`, source specificity, and canonical source order. `kind: 'none'` explicitly suppresses lower-priority lines.
 

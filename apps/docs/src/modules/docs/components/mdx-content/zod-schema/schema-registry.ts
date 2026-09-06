@@ -663,25 +663,35 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'TableCellVisualEncoding',
     url: '/viz/table/reference/contract-table#tablecellvisualencodingschema',
   },
-  TableThemeTokenOverridesSchema: {
-    schema: IRTable.TableThemeTokenOverridesSchema,
-    label: 'TableThemeTokenOverrides',
-    url: '/viz/table/reference/contract-table#tablethemetokenoverridesschema',
+  TableCellBackgroundDefaultsSchema: {
+    schema: IRTable.TableCellBackgroundDefaultsSchema,
+    label: 'TableCellBackgroundDefaults',
+    url: '/viz/table/reference/contract-table#tablecellbackgrounddefaultsschema',
   },
-  TableThemeTokenMapSchema: {
-    schema: IRTable.TableThemeTokenMapSchema,
-    label: 'TableThemeTokenMap',
-    url: '/viz/table/reference/contract-table#tablethemetokenmapschema',
+  TableCellAppearanceDefaultsSchema: {
+    schema: IRTable.TableCellAppearanceDefaultsSchema,
+    label: 'TableCellAppearanceDefaults',
+    url: '/viz/table/reference/contract-table#tablecellappearancedefaultsschema',
   },
-  TableThemeTokenPresetMapSchema: {
-    schema: IRTable.TableThemeTokenPresetMapSchema,
-    label: 'TableThemeTokenPresetMap',
-    url: '/viz/table/reference/contract-table#tablethemetokenpresetmapschema',
+  TableAppearanceDefaultsSchema: {
+    schema: IRTable.TableAppearanceDefaultsSchema,
+    label: 'TableAppearanceDefaults',
+    url: '/viz/table/reference/contract-table#tableappearancedefaultsschema',
   },
-  TableThemeStyleTokenOverridesSchema: {
-    schema: IRTable.TableThemeStyleTokenOverridesSchema,
-    label: 'TableThemeStyleTokenOverrides',
-    url: '/viz/table/reference/contract-table#tablethemestyletokenoverridesschema',
+  TableVisualDefaultsSchema: {
+    schema: IRTable.TableVisualDefaultsSchema,
+    label: 'TableVisualDefaults',
+    url: '/viz/table/reference/contract-table#tablevisualdefaultsschema',
+  },
+  TableLayoutDefaultsSchema: {
+    schema: IRTable.TableLayoutDefaultsSchema,
+    label: 'TableLayoutDefaults',
+    url: '/viz/table/reference/contract-table#tablelayoutdefaultsschema',
+  },
+  TableDefaultsSchema: {
+    schema: IRTable.TableDefaultsSchema,
+    label: 'TableDefaults',
+    url: '/viz/table/reference/contract-table#tabledefaultsschema',
   },
   TableCellSpanSchema: {
     schema: IRTable.TableCellSpanSchema,
@@ -762,6 +772,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IRTable.TableCellBordersSchema,
     label: 'TableCellBorders',
     url: '/viz/table/reference/contract-layout#tablecellbordersschema',
+  },
+  TableOuterBordersSchema: {
+    schema: IRTable.TableOuterBordersSchema,
+    label: 'TableOuterBorders',
+    url: '/viz/table/reference/contract-layout#tableouterbordersschema',
   },
   TableBordersSchema: {
     schema: IRTable.TableBordersSchema,

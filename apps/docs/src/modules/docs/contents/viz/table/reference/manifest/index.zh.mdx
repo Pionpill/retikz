@@ -28,13 +28,13 @@ description: 查询 Table compile 产出的轨道、Cell、视觉编码、图例
     columns: '按 canonical 顺序保存的列轨道几何。',
     cells: '按 canonical 顺序保存的 Cell 几何与来源。',
     borders: '可见 border edge 的几何与冲突解析来源。',
-    style: 'resolved Table style。',
+    style: 'resolved Table defaults 与 cascade layers。',
     encodings: '有序 visual encoding lineage。',
     legendDescriptors: '有序 Legend descriptor seeds。',
   }}
 />
 
-Manifest 的 `style` 区域还保存 effective Core `style`、`themeMode`、完整 resolved Table `tokens` 与逐 key `sources`。这里的 `themeMode` 是同次 compile 的输出元数据，用于说明选择了哪一份 preset；IRTable 的输入字段仍是 host `theme` 与 `tableThemeTokens`，二者不是同一个层级。
+Manifest 的 `style` 区域还保存 effective Core `style`、`themeMode`、完整 resolved Table `defaults` 与按实际顺序排列的 `layers`。这里的 `themeMode` 是同次 compile 的输出元数据，用于说明选择了哪一份 baseline；IRTable 的输入字段仍是 host `theme`、`tableDefaults`、`appearanceDefaults`、`visualDefaults` 与显式 `layout`，它们属于不同层级。
 
 ## 视觉编码与图例描述
 

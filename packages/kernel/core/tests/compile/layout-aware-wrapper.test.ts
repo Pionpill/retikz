@@ -80,6 +80,52 @@ const fade: IRAnimationTrack = {
 };
 
 describe('layout-aware composite runtime wrapper tree', () => {
+  it('forwards a parent proposal through a single Scope wrapper to its layout-aware child', () => {
+    let receivedProposal: LayoutProposal | undefined;
+    const leaf = defineComposite({
+      namespace: 'test',
+      type: 'proposalLeaf',
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('proposalLeaf') }),
+      compile: (_value, context) => {
+        receivedProposal = context.proposal;
+        return { children: [] };
+      },
+    });
+    const wrapper = defineComposite({
+      namespace: 'test',
+      type: 'proposalWrapper',
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('proposalWrapper') }),
+      compile: (_value, context) => {
+        const probe = context.layoutChild(
+          {
+            type: 'scope',
+            defaults: { label: { font: { size: 12 } } },
+            children: [{ namespace: 'test', type: 'proposalLeaf' }],
+          },
+          {
+            x: { kind: LayoutAxisProposalKind.Range, min: 0, max: 40 },
+            y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
+          },
+        );
+        if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+        return { children: [context.replay(probe.result)] };
+      },
+    });
+
+    compileToScene(scene([{ namespace: 'test', type: 'proposalWrapper' }]), {
+      composites: [leaf, wrapper],
+      padding: 0,
+    });
+
+    expect(receivedProposal).toEqual({
+      x: { kind: LayoutAxisProposalKind.Range, min: 0, max: 40 },
+      y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
+    });
+    expect(Object.isFrozen(receivedProposal)).toBe(true);
+    expect(Object.isFrozen(receivedProposal?.x)).toBe(true);
+    expect(Object.isFrozen(receivedProposal?.y)).toBe(true);
+  });
+
   it('keeps an outer clip/meta frame separate from the inner numeric placement frame', () => {
     const definition = defineComposite({
       namespace: 'test',

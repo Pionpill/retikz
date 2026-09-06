@@ -63,16 +63,16 @@ describe('Table React manifest observation', () => {
       name: 'react-manifest-palette',
       optionsSchema: strictObject({}),
       resolve: (_options, _values, context) => ({
-        of: () => context.categoricalColors[0],
+        of: () => context.categoricalColors?.[0] ?? '#000000',
         legendForm: 'swatch',
         domain: [1],
-        range: [context.categoricalColors[0]],
+        range: [context.categoricalColors?.[0] ?? '#000000'],
       }),
     });
     const spec = createManualTableIR({
       id: 'encoded',
       rows: [[1]],
-      tableThemeTokens: { 'data.categorical': ['#123456'] },
+      visualDefaults: { categorical: ['#123456'] },
       encodings: [
         {
           id: 'palette',
@@ -236,19 +236,25 @@ describe('Table React manifest observation', () => {
           rawValue: 2,
           value: '2.0',
           context: expect.objectContaining({ cellId: 'ruled' }),
-          appearance: {
-            background: { fill: '#f3f4f6' },
-            borders: { bottom: { kind: 'line', stroke: '#2563eb', width: 2 } },
-            content: {
-              style: { color: '#18181b' },
-              defaults: {
-                node: {
-                  style: { font: { family: 'sans-serif', weight: 400 } },
-                },
-                label: { font: { family: 'sans-serif', weight: 400 } },
-              },
-            },
-          },
+          appearance: expect.objectContaining({
+            background: expect.objectContaining({ fill: '#f3f4f6' }),
+            borders: expect.objectContaining({
+              bottom: expect.objectContaining({ kind: 'line', stroke: '#2563eb', width: 2 }),
+            }),
+            content: expect.objectContaining({
+              style: expect.objectContaining({ color: '#18181b' }),
+              defaults: expect.objectContaining({
+                node: expect.objectContaining({
+                  style: expect.objectContaining({
+                    font: expect.objectContaining({ family: 'sans-serif', weight: 400 }),
+                  }),
+                }),
+                label: expect.objectContaining({
+                  font: expect.objectContaining({ family: 'sans-serif', weight: 400 }),
+                }),
+              }),
+            }),
+          }),
         }),
       ]),
     );

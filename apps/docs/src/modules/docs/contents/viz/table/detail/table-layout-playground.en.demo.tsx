@@ -59,7 +59,12 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           rowGap: values.rowGap,
           borders: {
             mode: values.borderMode,
-            outer: { kind: 'line', stroke: 'currentColor', width: values.gridWidth },
+            outer: {
+              top: { kind: 'line', stroke: 'currentColor', width: values.gridWidth },
+              right: { kind: 'line', stroke: 'currentColor', width: values.gridWidth },
+              bottom: { kind: 'line', stroke: 'currentColor', width: values.gridWidth },
+              left: { kind: 'line', stroke: 'currentColor', width: values.gridWidth },
+            },
             horizontal: { kind: 'line', stroke: 'lightgray', width: values.gridWidth },
             vertical: { kind: 'line', stroke: 'lightgray', width: values.gridWidth },
           },

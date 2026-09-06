@@ -1,15 +1,16 @@
-import type { RefinementCtx } from 'zod';
+import type { infer as ZodInfer,RefinementCtx, ZodType } from 'zod';
 
 import { CompositeBaseSchema } from '@retikz/core';
 import { DataReferenceSchema } from '@retikz/data';
 import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { array, literal, never, union } from 'zod';
 
+import { TableAppearanceDefaultsSchema } from '../appearance';
 import { TableCellVisualEncodingSchema } from '../encoding';
 import { TableLayoutSchema } from '../layout';
 import { TableCellRuleSchema } from '../rule';
 import { CustomTableStructureSchema, DetailTableStructureSchema, ManualTableStructureSchema } from '../structure';
-import { TableThemeTokenOverridesSchema } from '../style';
+import { TableDefaultsSchema, TableVisualDefaultsSchema } from '../style';
 import { TABLE_NAMESPACE, TableComposite } from './constants';
 
 const TableBaseSchema = CompositeBaseSchema.extend({
@@ -18,6 +19,9 @@ const TableBaseSchema = CompositeBaseSchema.extend({
   ),
   type: literal(TableComposite.Table).describe('Composite type for the top-level Table specification.'),
   id: NonBlankStringSchema.optional().describe('Optional stable Table id used by the lowered root Scope.'),
+  appearanceDefaults: TableAppearanceDefaultsSchema.optional().describe(
+    'Sparse appearance defaults for existing body and column-header Cells.',
+  ),
   layout: TableLayoutSchema.optional().describe(
     'Two-dimensional Table track, gap, and border layout options. Omitted fields use the pipeline defaults.',
   ),
@@ -26,8 +30,11 @@ const TableBaseSchema = CompositeBaseSchema.extend({
   encodings: array(TableCellVisualEncodingSchema)
     .optional()
     .describe('Ordered Table Cell visual encodings. Omission is runtime-equivalent to an empty array.'),
-  tableThemeTokens: TableThemeTokenOverridesSchema.optional().describe(
-    'Partial strict Table token overlay applied after inherited Theme tokens.',
+  visualDefaults: TableVisualDefaultsSchema.optional().describe(
+    'Sparse default ranges for existing Table builtin visual encodings.',
+  ),
+  tableDefaults: TableDefaultsSchema.optional().describe(
+    'Sparse Table defaults fragment restricted to appearance, border layout, and visual ranges.',
   ),
 });
 
@@ -70,6 +77,13 @@ export const CustomTableSchema = TableBaseSchema.extend({
   .superRefine(validateTableRoot)
   .describe('JSON-safe custom Table composite specification resolved by a structure definition.');
 
-export const TableSchema = union([DetailTableSchema, ManualTableSchema, CustomTableSchema]).describe(
-  'JSON-safe Table composite specification covering the supported precise root variants.',
-);
+type TableSchemaOutput =
+  | ZodInfer<typeof DetailTableSchema>
+  | ZodInfer<typeof ManualTableSchema>
+  | ZodInfer<typeof CustomTableSchema>;
+
+export const TableSchema: ZodType<TableSchemaOutput> = union([
+  DetailTableSchema,
+  ManualTableSchema,
+  CustomTableSchema,
+]).describe('JSON-safe Table composite specification covering the supported precise root variants.');
