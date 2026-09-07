@@ -114,6 +114,7 @@ pnpm --filter <pkg> test:run # 仅大范围重构或功能大改
 - 改 `*.ts` / `*.tsx` / `*.json` / 配置等结构化文件：先跑受影响包 `eslint --fix`，再跑对应 `tsc --noEmit` 和必要测试。
 - 只改纯 MDX 正文、表格、站内链接：先跑 Prettier，再至少跑 `git diff --check`，并验证关键链接 / 页面可访问。
 - 改 docs demo / data / i18n / sidebar / schema registry / MDX import：按 `apps/docs/AGENTS.md` 和 docs skills 的分级规则验证，通常需要 docs 包类型检查。
+- 提交 `apps/docs` 改动前必须运行 `pnpm --filter @retikz/docs run check:static`；完成后询问用户是否运行 `check:build` 和 `check:runtime`，仅在用户明确要求时执行。用户明确要求运行时巡检时，包含其所需的生产构建。
 - 类型检查只用 `tsc --noEmit`。不要在 packages 下运行会 emit 的 `tsc` / `tsc -b`；若已污染源码树，先清理生成物。
 - ESLint / TS 报错要修干净。不要用 `eslint-disable`、`@ts-ignore`、`as any` 绕过；确实不可避时写最小作用域和原因。
 
