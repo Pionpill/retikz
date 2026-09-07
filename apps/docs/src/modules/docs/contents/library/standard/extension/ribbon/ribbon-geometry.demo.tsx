@@ -66,9 +66,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           fillOpacity: resolvedValues.fillOpacity,
           stroke: resolvedValues.stroke,
           strokeWidth: resolvedValues.strokeWidth,
-          shadow: resolvedValues.shadow
-            ? { offsetX: 0, offsetY: 8, blur: 10, color: 'rgba(15, 23, 42, 0.35)' }
-            : undefined,
+          ...(resolvedValues.shadow
+            ? { shadow: { offsetX: 0, offsetY: 8, blur: 10, color: 'rgba(15, 23, 42, 0.35)' } }
+            : {}),
         }}
       >
         <Step kind="move" to={[-210, 30]} />

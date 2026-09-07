@@ -44,15 +44,14 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     scale: 'legendColor',
     title: form === 'swatch' ? 'Region' : form === 'ramp' ? 'Population' : 'Population range',
     position: values.position,
-    orient: form === 'swatch' && values.orient !== 'auto' ? values.orient : undefined,
-    ticks: form === 'ramp' ? { count: values.tickCount } : undefined,
+    ...(form === 'swatch' && values.orient !== 'auto' ? { orient: values.orient } : {}),
+    ...(form === 'ramp' ? { ticks: { count: values.tickCount } } : {}),
     tickLabels: values.showLabels ? (form === 'ramp' ? { format: values.format } : {}) : false,
-    style:
-      form === 'swatch'
-        ? { swatchSize: values.swatchSize }
-        : form === 'ramp'
-          ? { rampLength: values.rampLength, rampThickness: values.rampThickness }
-          : undefined,
+    ...(form === 'swatch'
+      ? { style: { swatchSize: values.swatchSize } }
+      : form === 'ramp'
+        ? { style: { rampLength: values.rampLength, rampThickness: values.rampThickness } }
+        : {}),
   };
   const spec: IRPlot = {
     namespace: 'plot',

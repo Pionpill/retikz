@@ -24,7 +24,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         style={{
           stroke: values.stroke,
           strokeWidth: values.strokeWidth,
-          dashPattern: values.dashed ? [8, 4] : undefined,
+          ...(values.dashed ? { dashPattern: [8, 4] } : {}),
           dashOffset: values.dashOffset,
         }}
       />

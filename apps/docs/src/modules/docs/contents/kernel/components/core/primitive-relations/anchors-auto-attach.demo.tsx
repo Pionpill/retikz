@@ -30,7 +30,7 @@ const renderScene = (tag: string, cx: number, shape: 'rectangle' | 'ellipse'): A
       key={`${tag}-${d.id}`}
       id={`${tag}-${d.id}`}
       position={[cx + d.pos[0], d.pos[1]]}
-      style={{ stroke: 'none', font: d.label.length > 1 ? { size: 12 } : undefined }}
+      style={{ stroke: 'none', ...(d.label.length > 1 ? { font: { size: 12 } } : {}) }}
     >
       {d.label}
     </Node>
