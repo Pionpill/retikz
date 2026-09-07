@@ -9,8 +9,6 @@ import { MemoryRouter } from 'react-router';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { Header } from '@/app/header/Header';
-import { DocsHome } from '@/app/home/DocsHome';
-import { DocsModuleHome } from '@/app/module/DocsModuleHome';
 import i18n from '@/i18n';
 import { demoModuleLoaders } from '@/modules/docs/components/component-preview/registry';
 import { AppSidebar } from '@/modules/docs/layout/sidebar';
@@ -43,7 +41,7 @@ const renderAt = (path: string, node: ReactNode): void => {
 };
 
 describe('module navigation does not preload preview demos', () => {
-  it('首页、模块主页和 scoped Sidebar 不调用任何 demo module loader', () => {
+  it('scoped Sidebar 不调用任何 demo module loader', () => {
     const original = new Map(Object.entries(demoModuleLoaders));
     const watched = Object.entries(demoModuleLoaders).flatMap(([key, loader]) => {
       if (!loader) return [];
@@ -53,20 +51,6 @@ describe('module navigation does not preload preview demos', () => {
     });
 
     try {
-      renderAt(
-        '/',
-        <>
-          <Header />
-          <DocsHome />
-        </>,
-      );
-      renderAt(
-        '/viz',
-        <>
-          <Header />
-          <DocsModuleHome moduleId="viz" />
-        </>,
-      );
       renderAt(
         '/viz/chart/points/scatter',
         <>

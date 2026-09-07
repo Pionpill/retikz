@@ -32,10 +32,14 @@
     "showcaseFamilyEmpty": "There are no other primary charts in this family yet."
   },
   "docs": {
-    "homeTitle": "retikz Docs",
-    "homeAbout": "About retikz",
+    "homeTitle": "AI-Friendly Declarative Graphics Framework",
+    "homeDescription": "Build graphics, diagrams, and data visualizations with React, JavaScript, or JSON. Give developers and AI one structured format to create, edit, and reuse graphics.",
+    "homeAbout": "Learn more",
     "homeNavigationLabel": "Docs home",
     "homeNavigationDescription": "Browse every retikz module and learn about the project.",
+    "homeFooterBuiltBy": "Built by",
+    "homeFooterSourcePrefix": ". The source code is available on",
+    "homeFooterSourceSuffix": ".",
     "moduleHomePlaceholder": "Documentation for this module is being organized.",
     "modulePickerHome": "Back to docs home",
     "moduleNavigationLabel": "Documentation modules"
@@ -44,6 +48,8 @@
     "label": "Kernel",
     "navigationLabel": "Kernel",
     "navigationDescription": "Build diagrams from core nodes, paths, layout, and rendering primitives.",
+    "homeTitle": "The Foundation for AI-Native Graphics",
+    "homeDescription": "Build composable declarative graphics with React, JavaScript, or JSON, from nodes and paths to layout and rendering.",
     "introduction": "Introduction",
     "getStart": "Get Started",
     "principles": "Architecture Principles",
@@ -142,9 +148,11 @@
     "refVisualizationPlot": "Visualization - Plot"
   },
   "library": {
-    "label": "Capability Library",
-    "navigationLabel": "Capability Library",
+    "label": "Library",
+    "navigationLabel": "Library",
     "navigationDescription": "Compose richer figures with reusable standard components and layout primitives.",
+    "homeTitle": "Composable Building Blocks for Graphics",
+    "homeDescription": "Compose reusable visual and layout capabilities to keep complex graphics clear, consistent, and easy to reuse.",
     "standard": "Standard",
     "standardComposite": "Presentation",
     "standardGrid": "Grid",
@@ -170,9 +178,11 @@
     "changelogV01": "v0.1"
   },
   "schematic": {
-    "label": "Structure Library",
-    "navigationLabel": "Structure Library",
+    "label": "Schematic",
+    "navigationLabel": "Schematic",
     "navigationDescription": "Model entities, relations, flows, and other structured diagrams.",
+    "homeTitle": "Model Ideas as Structured Diagrams",
+    "homeDescription": "Organize complex information with entities, relations, blocks, and flows, then turn domain models into clear structured diagrams.",
     "introduction": "Introduction",
     "graph": "Graph",
     "diagram": "Diagram",
@@ -194,6 +204,8 @@
     "label": "Visualization",
     "navigationLabel": "Visualization",
     "navigationDescription": "Turn data and encodings into explainable charts and tables.",
+    "homeTitle": "Turn Data into Explainable Visualizations",
+    "homeDescription": "Combine data, encodings, and graphics grammar into explainable charts, tables, and coordinate systems.",
     "introduction": "Overview",
     "getStart": "Get Started",
     "changelog": "Changelog",

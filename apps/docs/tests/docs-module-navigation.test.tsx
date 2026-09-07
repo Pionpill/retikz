@@ -15,7 +15,8 @@ import { DOC_MODULE_IDS, isDocScopeId, modules } from '../src/modules/docs/data'
 import { useDocModuleStore } from '../src/modules/docs/store';
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string) => key, i18n: { resolvedLanguage: 'zh' } }),
+  initReactI18next: { type: '3rdParty', init: () => undefined },
 }));
 
 vi.mock('../src/app/AppLayout', () => ({
@@ -24,6 +25,7 @@ vi.mock('../src/app/AppLayout', () => ({
 
 vi.mock('@/modules/docs/layout', () => ({
   DocLayout: () => <Outlet />,
+  useDocLocation: () => null,
   DocPage: () => {
     const { pathname } = useLocation();
     return <div data-doc-page>{pathname}</div>;
@@ -82,7 +84,7 @@ describe('Docs module navigation domain', () => {
     expect(useDocModuleStore.getState().scope).toBe('home');
   });
 
-  it('首页提供固定的 About overview 入口', () => {
+  it('首页展示 retikz 总定位、模块入口、Kernel 演示与底部署名', () => {
     const container = render(
       <MemoryRouter>
         <DocsHome />
@@ -90,15 +92,51 @@ describe('Docs module navigation domain', () => {
     );
 
     expect(container.textContent).toContain('docs.homeTitle');
-    expect(container.querySelector('a[href="/about/overview"]')).not.toBeNull();
+    expect(container.textContent).toContain('docs.homeDescription');
+    expect(container.textContent).not.toContain('docs.homeDemosTitle');
+    expect(container.textContent).not.toContain('docs.homeDemosDescription');
+    expect(container.querySelector('[data-slot="module-landing-eyebrow"]')).toBeNull();
+    expect(container.querySelector('a[href="/kernel"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/library"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/schematic"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/viz"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/about/overview"][data-variant="default"]')?.textContent).toBe(
+      'docs.homeAbout',
+    );
+    expect(
+      container.querySelector('[data-slot="module-landing-navigation"] [data-slot="button-group"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelectorAll(
+        '[data-slot="module-landing-navigation"] [data-slot="button-group"] [data-slot="button"]',
+      ),
+    ).toHaveLength(4);
+    expect(
+      container.querySelectorAll('[data-slot="module-landing-navigation"] [data-slot="tooltip-trigger"]'),
+    ).toHaveLength(4);
+    expect(container.querySelector('[data-slot="module-landing-navigation"]')?.textContent).not.toContain(
+      'kernel.navigationDescription',
+    );
+    expect(container.querySelectorAll('[data-slot="module-landing-demo"]')).toHaveLength(6);
+    expect(container.querySelector('[data-slot="module-landing-demo"] h3')).toBeNull();
+    expect(container.querySelector('[data-slot="module-landing-demo"] > p')).toBeNull();
+    expect(container.querySelector('footer')?.textContent).toContain('docs.homeFooterBuiltBy');
+    expect(container.querySelector('footer')?.textContent).toContain('docs.homeFooterSourcePrefix');
+    expect(container.querySelector('main > div > footer')).not.toBeNull();
   });
 
-  it('模块主页只显示占位文案，不挂载 Sidebar 或 ComponentPreview', () => {
-    const container = render(<DocsModuleHome moduleId="viz" />);
+  it('模块主页展示模块定位、入口和代表性 Demo', () => {
+    const container = render(
+      <MemoryRouter>
+        <DocsModuleHome moduleId="viz" />
+      </MemoryRouter>,
+    );
 
-    expect(container.textContent).toContain('docs.moduleHomePlaceholder');
+    expect(container.textContent).toContain('viz.homeTitle');
+    expect(container.textContent).toContain('viz.homeDescription');
+    expect(container.querySelector('a[href="/viz/get-start"]')).not.toBeNull();
+    expect(container.querySelectorAll('[data-slot="module-landing-demo"]')).toHaveLength(5);
     expect(container.querySelector('aside')).toBeNull();
-    expect(container.querySelector('[data-component-preview]')).toBeNull();
   });
 
   it('非法 scope 不是可恢复的文档 scope', async () => {
@@ -118,7 +156,7 @@ describe('Docs module navigation domain', () => {
     useDocModuleStore.setState({ scope: 'viz' });
 
     const moduleHome = renderRoutes('/');
-    expect(moduleHome.textContent).toContain('docs.moduleHomePlaceholder');
+    expect(moduleHome.textContent).toContain('viz.homeDescription');
     expect(moduleHome.querySelector('[data-location]')?.textContent).toBe('/viz');
   });
 
