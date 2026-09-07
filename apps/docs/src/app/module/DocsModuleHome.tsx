@@ -47,7 +47,7 @@ const MODULE_HOME_CONFIGURATIONS: Record<DocModuleId, ModuleHomeConfiguration> =
       {
         id: 'karl-circle',
         layout: 'compact',
-        location: ['kernel', 'examples', 'karl-circle'],
+        location: ['kernel', 'galleries', 'karl-circle'],
         preview: { files: 'karl-circle-06-tan', size: 'md', ...MODULE_LANDING_PREVIEW },
       },
       {

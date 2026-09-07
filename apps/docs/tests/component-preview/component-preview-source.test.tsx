@@ -519,7 +519,7 @@ describe('ComponentPreview localized controls', () => {
 describe('ComponentPreview files source', () => {
   it('将主文件对象的 diffFrom 用作 React 主源码 baseline', async () => {
     const props = await renderPreview(
-      ['kernel', 'examples', 'learning-path'],
+      ['kernel', 'galleries', 'learning-path'],
       <ComponentPreview files={{ file: 'learning-path-02-spine', diffFrom: 'learning-path-01-title' }} />,
     );
 
@@ -533,7 +533,7 @@ describe('ComponentPreview files source', () => {
 
   it('将附加文件对象的 diffFrom 用作该文件自己的 baseline', async () => {
     const props = await renderPreview(
-      ['kernel', 'examples', 'ohms-law-circuit'],
+      ['kernel', 'galleries', 'ohms-law-circuit'],
       <ComponentPreview
         files={['circuit-01-meters', { file: 'circuit-01-meters.meter.tsx', diffFrom: 'circuit-01-meters.meter.tsx' }]}
       />,
@@ -547,7 +547,7 @@ describe('ComponentPreview files source', () => {
 
   it('主文件有 baseline 时继续为同前缀附加文件推导 baseline 文件名', async () => {
     const props = await renderPreview(
-      ['kernel', 'examples', 'ohms-law-circuit'],
+      ['kernel', 'galleries', 'ohms-law-circuit'],
       <ComponentPreview
         files={[{ file: 'circuit-01-meters', diffFrom: 'circuit-01-meters' }, 'circuit-01-meters.meter.tsx']}
       />,

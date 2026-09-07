@@ -288,13 +288,13 @@ export const kernelSection: Array<Section> = [
     ],
   },
   {
-    id: 'examples',
-    label: 'kernel.examples',
+    id: 'galleries',
+    label: 'kernel.gallery',
     document: true,
     pages: [
-      { id: 'karl-circle', label: 'kernel.examplesKarlCircle', difficulty: DocDifficulty.Beginner },
-      { id: 'learning-path', label: 'kernel.examplesLearningPath', difficulty: DocDifficulty.Advanced },
-      { id: 'ohms-law-circuit', label: 'kernel.examplesOhmsLawCircuit', difficulty: DocDifficulty.Advanced },
+      { id: 'karl-circle', label: 'kernel.galleryKarlCircle', difficulty: DocDifficulty.Beginner },
+      { id: 'learning-path', label: 'kernel.galleryLearningPath', difficulty: DocDifficulty.Advanced },
+      { id: 'ohms-law-circuit', label: 'kernel.galleryOhmsLawCircuit', difficulty: DocDifficulty.Advanced },
     ],
   },
 ];

@@ -114,7 +114,7 @@ Coordinate = {
 - IR：\`/kernel/reference/schema/scene\` · \`.../entity\` · \`.../path\`
 - 组件：\`/kernel/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
 - 形状 sugar：\`/kernel/components/shapes/circle-ellipse\`
-- 完整范例：\`/kernel/examples/karl-circle\`
+- 完整范例：\`/kernel/galleries/karl-circle\`
 
 这些页面已经收录在 prompt 末尾的 llms.txt 索引里。Schema 不熟时**务必参照上面速查 + 引用页面**，不要凭记忆瞎写——产出非法 IR 会被自动校验拦下，比一次写对成本高得多。`;
 
@@ -220,7 +220,7 @@ For polar coordinates / multi-segment paths / Node anchors / Draw way DSL / Edge
 - IR: \`/kernel/reference/schema/scene\` · \`.../entity\` · \`.../path\`
 - Components: \`/kernel/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
 - Shape sugar: \`/kernel/components/shapes/circle-ellipse\`
-- Worked example: \`/kernel/examples/karl-circle\`
+- Worked example: \`/kernel/galleries/karl-circle\`
 
 These pages are already indexed in the llms.txt at the end of this prompt. When unsure about the schema, **follow the cheatsheet + cite the relevant page** — don't improvise. Invalid IR will be rejected by automated validation, costing more than getting it right once.`;
 

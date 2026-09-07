@@ -165,11 +165,11 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 ## 能力
 
-| 组件                                          | 在本例中扮演的角色                                                                                                                                   | 主要 step                                                                                                                    |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| [Draw](/kernel/components/draw/overview)      | 全部 12 条连线（2 spine line / 3 子列短 line / 2 quadratic 合并 / 1 推荐虚线 / 2 short dashed / 2 红 X）+ stroke / strokeWidth / dashPattern / arrow | [2](#步骤-2中段-spine--2-条-draw-line), [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x) |
-| [Way 算子](/kernel/components/draw/way)       | `{ curve }` infix 走 quadratic / `{ label }` infix 挂边标注 / 节点 id 自动锚 border                                                                  | [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x)                                         |
-| [Node](/kernel/components/node/overview)      | 全部 16 个 roadmap 节点（title / header / required / optional）—— 4 variant 抽成 `RoadmapNode`                                                       | [1](#步骤-1title--roadmapnode-4-variant), [3](#步骤-3两侧色块条--atposition-紧贴堆叠)                                        |
+| 组件                                            | 在本例中扮演的角色                                                                                                                                   | 主要 step                                                                                                                    |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| [Draw](/kernel/components/draw/overview)        | 全部 12 条连线（2 spine line / 3 子列短 line / 2 quadratic 合并 / 1 推荐虚线 / 2 short dashed / 2 红 X）+ stroke / strokeWidth / dashPattern / arrow | [2](#步骤-2中段-spine--2-条-draw-line), [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x) |
+| [Way 算子](/kernel/components/draw/way)         | `{ curve }` infix 走 quadratic / `{ label }` infix 挂边标注 / 节点 id 自动锚 border                                                                  | [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x)                                         |
+| [Node](/kernel/components/node/overview)        | 全部 16 个 roadmap 节点（title / header / required / optional）—— 4 variant 抽成 `RoadmapNode`                                                       | [1](#步骤-1title--roadmapnode-4-variant), [3](#步骤-3两侧色块条--atposition-紧贴堆叠)                                        |
 | [AtPosition](/kernel/components/basic/position) | 三个色块段内的紧贴堆叠（`{ direction: 'bottom', of: prevId }` + 全局 `nodeDistance`）                                                                | [3](#步骤-3两侧色块条--atposition-紧贴堆叠), [4](#步骤-45-路径按钮--curve-合并曲线)                                          |
 
 ## 限制
@@ -184,5 +184,5 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 ## 扩展阅读
 
 - [Draw](/kernel/components/draw/overview) · [Way 算子](/kernel/components/draw/way) · [Node](/kernel/components/node/overview) · [定位](/kernel/components/basic/position)
-- [Karl 单位圆](/kernel/examples/karl-circle) —— 另一个综合示例，几何 / 三角函数题材
+- [Karl 单位圆](/kernel/galleries/karl-circle) —— 另一个综合示例，几何 / 三角函数题材
 - 原始出处：[AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)（MIT License）

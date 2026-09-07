@@ -48,7 +48,7 @@ export const DocsHome: FC = () => {
     {
       id: 'karl-circle',
       layout: 'compact' as const,
-      location: ['kernel', 'examples', 'karl-circle'],
+      location: ['kernel', 'galleries', 'karl-circle'],
       preview: {
         files: 'karl-circle-06-tan',
         size: 'md' as const,

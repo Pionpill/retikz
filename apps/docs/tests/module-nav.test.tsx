@@ -172,13 +172,13 @@ describe('<SectionNav>', () => {
       'kernel.components',
       'kernel.packages',
       'kernel.reference',
-      'kernel.examples',
+      'kernel.gallery',
     ]);
     expect(links.map(link => link.getAttribute('href'))).toEqual([
       '/kernel/components',
       '/kernel/packages',
       '/kernel/reference',
-      '/kernel/examples',
+      '/kernel/galleries',
     ]);
   });
 
