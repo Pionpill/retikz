@@ -1305,8 +1305,8 @@ describe('preview controls registry', () => {
   });
 
   it('Primitive Model playground 用同源虚线轮廓显示规则 boundary', () => {
-    const segments = ['kernel', 'concepts', 'core', 'primitive-model'];
-    const contentRoot = resolve('src/modules/docs/contents/kernel/concepts/core/primitive-model');
+    const segments = ['kernel', 'components', 'core', 'primitive-model'];
+    const contentRoot = resolve('src/modules/docs/contents/kernel/components/core/primitive-model');
     const helperPath = resolve(contentRoot, 'primitive-model-playground-boundary.ts');
     const source = demoSources[buildKey(segments, 'primitive-model-playground')];
     const helperSource = existsSync(helperPath) ? readFileSync(helperPath, 'utf8') : '';

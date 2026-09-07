@@ -42,7 +42,7 @@ describe('Flow Diagram documentation', () => {
   );
 
   it.each(['zh', 'en'] as const)('%s migrates the IR-centric figure to automatic Flow layout', lang => {
-    const demo = readContent(`src/modules/docs/contents/kernel/introduction/ir-centric.${lang}.demo.tsx`);
+    const demo = readContent(`src/modules/docs/contents/kernel/components/introduction/ir-centric.${lang}.demo.tsx`);
 
     expect(demo).toContain('FlowDiagram');
     expect(demo).toContain('FlowEntity');

@@ -31,7 +31,7 @@ export const Diagram = () => (
 );
 ```
 
-`<Layout>` 默认输出 SVG；需要像素位图时传 `renderer="canvas"`。组件用法从[快速开始](/kernel/get-start)进入，完整宿主选项见 [Layout](/kernel/components/layout/overview)。
+`<Layout>` 默认输出 SVG；需要像素位图时传 `renderer="canvas"`。组件用法从[快速开始](/kernel/components/get-start)进入，完整宿主选项见 [Layout](/kernel/components/layout/overview)。
 
 `<Layout theme>` 写入根 `IRScene.theme`，`<Scope theme>` 写入局部 `IRScope.theme`。Theme 是稀疏的 `style / mode` 覆盖；`themeStyles` 是 Layout 的 runtime-only compile 选项，用 `defineThemeStyle` 注册自定义 Core style。`ir` 与显式 `theme` 同时使用时，prop 逐字段覆盖 `ir.theme`，不会修改输入对象。完整示例见 [Layout 的可继承 Theme](/kernel/components/layout/overview#可继承-theme)。
 
@@ -275,7 +275,7 @@ Scene 已经没有 React 组件语义。Vanilla processing 负责保留或静态
 ## 继续阅读
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/get-start">
+  <LinkedCard href="/kernel/components/get-start">
     <span className="font-semibold">快速开始</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">安装并完成第一张 React 图形</span>
   </LinkedCard>

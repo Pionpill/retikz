@@ -5,7 +5,7 @@ description: Query how React, Vanilla, and direct Plot IR converge on one loweri
 
 The Plot runtime separates how a chart is authored from how it executes. React, Vanilla, or generated tools first produce the same `IRPlot`; datasets and function-bearing Definitions are injected at execution time; then `@retikz/plot` lowers high-level chart semantics to Core IR. Core compiles the Scene, and renderers consume only the Scene.
 
-> This page explains the overall runtime contract rather than repeating schema fields. Use the contract pages in this group for JSON shapes, and see [Design Principles](/kernel/concepts/design/principles) for the complete Kernel compilation boundary.
+> This page explains the overall runtime contract rather than repeating schema fields. Use the contract pages in this group for JSON shapes, and see [Design Principles](/kernel/components/design/principles) for the complete Kernel compilation boundary.
 
 ## Hosts and Package Boundaries
 
@@ -151,7 +151,7 @@ One lowering produces both Core IR and the execution's data artifact: root / mar
       Understand runtime audits, host metadata, and interaction trace-back.
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/concepts/design/principles">
+  <LinkedCard href="/kernel/components/design/principles">
     <span className="font-semibold">Kernel Design Principles</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Continue into the global boundaries between Core IR, Scene, and renderers.

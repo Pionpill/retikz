@@ -26,7 +26,7 @@ const DeepLinkNavigator = () => {
   const navigate = useNavigate();
 
   return (
-    <button type="button" onClick={() => navigate('/kernel/concepts/design/principles/')}>
+    <button type="button" onClick={() => navigate('/kernel/components/design/principles/')}>
       Navigate to principles
     </button>
   );
@@ -40,11 +40,11 @@ const renderMenuItem = (): HTMLElement => {
 
   act(() => {
     root.render(
-      <MemoryRouter initialEntries={['/kernel/concepts/design']}>
+      <MemoryRouter initialEntries={['/kernel/components/design']}>
         <DeepLinkNavigator />
         <AppSidebarMenuItem
           item={{ value: 'design', label: 'Design', children: [{ value: 'principles', label: 'Principles' }] }}
-          path="/kernel/concepts/design"
+          path="/kernel/components/design"
         />
       </MemoryRouter>,
     );
@@ -211,7 +211,7 @@ describe('<AppSidebar>', () => {
     expect(findButton(container, 'viz.data')).toBeUndefined();
   });
 
-  it('无分组文档页和 About 页面分别使用自己的 tree，模块主页不显示 Sidebar', () => {
+  it('组件组和 About 页面分别使用自己的 tree，模块主页不显示 Sidebar', () => {
     const renderSidebar = (location: ComponentProps<typeof AppSidebar>['location']): HTMLElement => {
       const container = document.createElement('div');
       document.body.appendChild(container);
@@ -227,9 +227,12 @@ describe('<AppSidebar>', () => {
       return container;
     };
 
-    const ungrouped = renderSidebar({ moduleId: 'kernel', sectionId: null, pageId: 'introduction' });
-    expect(ungrouped.textContent).toContain('kernel.introduction');
-    expect(ungrouped.textContent).toContain('kernel.getStart');
+    const components = renderSidebar({ moduleId: 'kernel', sectionId: 'components', pageId: 'introduction' });
+    expect(components.textContent).toContain('kernel.introduction');
+    expect(components.textContent).toContain('kernel.getStart');
+    expect(components.textContent).toContain('kernel.concepts');
+    expect(components.textContent).toContain('kernel.components');
+    expect(components.querySelectorAll('[data-slot="separator"]')).toHaveLength(2);
 
     const about = renderSidebar({ moduleId: 'about', sectionId: null, pageId: 'overview' });
     expect(about.textContent).toContain('about.overview');
@@ -254,11 +257,11 @@ describe('<AppSidebar>', () => {
 
     act(() => {
       root.render(
-        <MemoryRouter initialEntries={['/kernel/concepts/basic/coordinate-system']}>
+        <MemoryRouter initialEntries={['/kernel/components/basic/coordinate-system']}>
           <AppSidebar
             location={{
               moduleId: 'kernel',
-              sectionId: 'concepts',
+              sectionId: 'components',
               pageId: 'basic',
               subPageId: 'coordinate-system',
             }}

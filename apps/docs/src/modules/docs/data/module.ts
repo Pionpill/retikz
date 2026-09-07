@@ -32,6 +32,18 @@ export type ModuleEntry = {
   navigationLabel: I18nKey;
   /** 模块导航项的简短说明 i18n key。 */
   navigationDescription: I18nKey;
+  /** 模块首页与 Header 共用的快捷入口。 */
+  quickLinks: ReadonlyArray<ModuleQuickLink>;
+};
+
+/** 模块首页与 Header 共用的快捷入口。 */
+export type ModuleQuickLink = {
+  /** 显示文字的 i18n key。 */
+  label: I18nKey;
+  /** 入口目标地址。 */
+  path: string;
+  /** 首页中以主要操作样式展示。 */
+  primary?: true;
 };
 
 /** 文档站当前可切换的四个真实模块。 */
@@ -41,23 +53,43 @@ export const modules: ReadonlyArray<ModuleEntry> = [
     label: 'kernel.label',
     navigationLabel: 'kernel.navigationLabel',
     navigationDescription: 'kernel.navigationDescription',
+    quickLinks: [
+      { label: 'kernel.components', path: '/kernel/components/node/overview' },
+      { label: 'kernel.examples', path: '/kernel/examples/karl-circle' },
+    ],
   },
   {
     id: 'library',
     label: 'library.label',
     navigationLabel: 'library.navigationLabel',
     navigationDescription: 'library.navigationDescription',
+    quickLinks: [
+      { label: 'library.standard', path: '/library/standard/composite/grid', primary: true },
+      { label: 'library.layout', path: '/library/layout/flex-layout' },
+      { label: 'library.standardGrid', path: '/library/standard/composite/grid' },
+      { label: 'library.standardSurface', path: '/library/standard/composite/surface' },
+    ],
   },
   {
     id: 'schematic',
     label: 'schematic.label',
     navigationLabel: 'schematic.navigationLabel',
     navigationDescription: 'schematic.navigationDescription',
+    quickLinks: [
+      { label: 'schematic.graph', path: '/schematic/graph', primary: true },
+      { label: 'schematic.diagram', path: '/schematic/diagram' },
+    ],
   },
   {
     id: 'viz',
     label: 'viz.label',
     navigationLabel: 'viz.navigationLabel',
     navigationDescription: 'viz.navigationDescription',
+    quickLinks: [
+      { label: 'viz.data', path: '/viz/data' },
+      { label: 'viz.chart', path: '/viz/chart' },
+      { label: 'viz.table', path: '/viz/table' },
+      { label: 'viz.drawingGrammar', path: '/viz/plot' },
+    ],
   },
 ];

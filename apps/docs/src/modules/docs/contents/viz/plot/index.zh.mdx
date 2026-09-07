@@ -79,7 +79,7 @@ Plot 的 `width` / `height` 只决定绘图区几何尺寸，standalone 显示�
 | Plot 负责                               | 交给其它模块                                                            |
 | --------------------------------------- | ----------------------------------------------------------------------- |
 | Plot IR、领域主题 token 与图形语法契约  | 字段模型、解析、通用变换与来源追溯交给 [Data](/viz/data)                |
-| channel、scale、coordinate、mark、guide | Core IR、布局、引用解析与 Scene 编译交给 [Kernel](/kernel/introduction) |
+| channel、scale、coordinate、mark、guide | Core IR、布局、引用解析与 Scene 编译交给 [Kernel](/kernel/components/introduction) |
 | composition 与 Plot → Core lowering     | SVG / Canvas 输出交给 renderer                                          |
 | Definition、registry、resolver 与诊断   | React / Vanilla 生命周期与宿主接线交给 adapter                          |
 | 面向图表的语义映射与主题 lowering       | 行列结构、Cell 语义与表格布局交给独立的 [Table](/viz/table)             |

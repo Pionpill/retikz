@@ -134,7 +134,7 @@ describe('Docs module navigation domain', () => {
 
     expect(container.textContent).toContain('viz.homeTitle');
     expect(container.textContent).toContain('viz.homeDescription');
-    expect(container.querySelector('a[href="/viz/get-start"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/viz/chart"]')).not.toBeNull();
     expect(container.querySelectorAll('[data-slot="module-landing-demo"]')).toHaveLength(5);
     expect(container.querySelector('aside')).toBeNull();
   });

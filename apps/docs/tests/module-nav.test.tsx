@@ -78,7 +78,7 @@ describe('<ModuleNav>', () => {
 
     act(() => {
       root.render(
-        <MemoryRouter initialEntries={['/kernel/concepts/design/principles']}>
+        <MemoryRouter initialEntries={['/kernel/components/design/principles']}>
           <Routes>
             <Route path=":moduleId/*" element={<ModuleNav />} />
           </Routes>
@@ -157,6 +157,31 @@ describe('<ModulePicker>', () => {
 });
 
 describe('<SectionNav>', () => {
+  it('模块 Header 保留完整的 section 导航顺序', () => {
+    const container = renderInRouter(
+      <NavigationMenu>
+        <NavigationMenuList>
+          <SectionNav areaId="kernel" sectionId="components" withinNavigationMenu />
+        </NavigationMenuList>
+      </NavigationMenu>,
+      '/kernel',
+    );
+
+    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));
+    expect(links.map(link => link.textContent)).toEqual([
+      'kernel.components',
+      'kernel.packages',
+      'kernel.reference',
+      'kernel.examples',
+    ]);
+    expect(links.map(link => link.getAttribute('href'))).toEqual([
+      '/kernel/components',
+      '/kernel/packages',
+      '/kernel/reference',
+      '/kernel/examples',
+    ]);
+  });
+
   it('展示当前 area 的分组入口并标记当前 section', () => {
     const container = renderInRouter(
       <NavigationMenu>
@@ -173,12 +198,6 @@ describe('<SectionNav>', () => {
     expect(container.querySelector('a[href="/viz/chart"]')?.classList.contains('px-2.5')).toBe(true);
     expect(container.querySelector('a[href="/viz/chart"]')?.classList.contains('font-medium')).toBe(true);
     expect(container.querySelector('li[data-slot="navigation-menu-item"]')?.classList.contains('flex')).toBe(true);
-  });
-
-  it('无分组页面直接显示并激活页面入口', () => {
-    const container = renderInRouter(<SectionNav areaId="viz" sectionId={null} />, '/viz/get-start');
-
-    expect(container.querySelector('a[href="/viz/get-start"][data-active]')?.textContent).toBe('viz.getStart');
   });
 });
 
@@ -206,10 +225,10 @@ describe('<Header>', () => {
     expect(home.querySelector('a[href="/schematic"]')?.textContent).toBe('schematic.navigationLabel');
     expect(home.querySelector('a[href="/viz"]')?.textContent).toBe('viz.navigationLabel');
 
-    const page = renderInRouter(<Header />, '/viz/get-start');
+    const page = renderInRouter(<Header />, '/viz/chart');
     expect(page.querySelector('a[aria-label="retikz home"]')).toBeNull();
     expect(page.querySelector('button[aria-label="docs.modulePickerHome"]')?.textContent).toContain('retikz.viz');
-    expect(page.querySelector('a[href="/viz/get-start"][data-active]')?.textContent).toBe('viz.getStart');
+    expect(page.querySelector('a[href="/viz/chart"][data-active]')?.textContent).toBe('viz.chart');
 
     const about = renderInRouter(<Header />, '/about/overview');
     expect(about.querySelector('button[aria-label="docs.modulePickerHome"]')?.textContent).toContain('retikz');

@@ -39,7 +39,11 @@ export const SectionNav: FC<SectionNavProps> = props => {
   const { t } = useTranslation();
   const currentPath = normalizePath(pathname);
   const sections = getSectionsByArea(areaId);
-  const links: Array<SectionNavLink> = sections.flatMap(section => {
+  const navigationSections = sections
+    .map((section, index) => ({ section, order: section.navigationOrder ?? index }))
+    .sort((left, right) => left.order - right.order)
+    .map(({ section }) => section);
+  const links: Array<SectionNavLink> = navigationSections.flatMap(section => {
     if (!section.label) {
       return section.pages.map(page => ({
         id: page.id,

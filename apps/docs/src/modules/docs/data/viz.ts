@@ -13,12 +13,6 @@ const extensionGuide = (capability: string): DocPageMetadataOverride => ({
 /** viz module sections + pages tree. */
 export const vizSection: Array<Section> = [
   {
-    pages: [
-      { id: 'introduction', label: 'viz.introduction', difficulty: DocDifficulty.Beginner },
-      { id: 'get-start', label: 'viz.getStart', difficulty: DocDifficulty.Beginner },
-    ],
-  },
-  {
     id: 'data',
     label: 'viz.data',
     document: true,

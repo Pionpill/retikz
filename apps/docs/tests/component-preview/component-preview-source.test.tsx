@@ -160,7 +160,10 @@ describe('ComponentPreview Vanilla source', () => {
   });
 
   it('viz 文档按内容路由自动开启单预览主题切换', async () => {
-    const vizProps = await renderPreview(['viz', 'get-start'], <ComponentPreview files="time-axis" />);
+    const vizProps = await renderPreview(
+      ['viz', 'plot', 'coordinate', '2d'],
+      <ComponentPreview files="coordinate-cartesian" />,
+    );
     const kernelProps = await renderPreview(
       ['kernel', 'components', 'node', 'overview'],
       <ComponentPreview files="node-styled" />,
@@ -171,16 +174,22 @@ describe('ComponentPreview Vanilla source', () => {
   });
 
   it('Tier 2 Plot composite 自动生成 Vanilla 源码与真实 SVG', async () => {
-    const props = await renderPreview(['viz', 'get-start'], <ComponentPreview files="time-axis" />);
+    const props = await renderPreview(
+      ['viz', 'plot', 'coordinate', '2d'],
+      <ComponentPreview files="coordinate-cartesian" />,
+    );
 
     expect(props.source?.vanilla?.files[0]?.code).toContain("from '@retikz/plot-vanilla'");
     expect(props.source?.vanilla?.render).toBeTypeOf('function');
   });
 
   it('原手写 Plot 示例改由统一管线自动生成 Vanilla', async () => {
-    const props = await renderPreview(['viz', 'get-start'], <ComponentPreview files="line-scatter" />);
+    const props = await renderPreview(
+      ['viz', 'plot', 'coordinate', '2d'],
+      <ComponentPreview files="coordinate-cartesian" />,
+    );
 
-    expect(props.source?.vanilla?.files[0].filename).toBe('line-scatter.vanilla.ts');
+    expect(props.source?.vanilla?.files[0].filename).toBe('coordinate-cartesian.vanilla.ts');
     expect(props.source?.vanilla?.files[0].code).toContain("import { renderPlot } from '@retikz/plot-vanilla'");
     expect(props.source?.vanilla?.render).toBeTypeOf('function');
   });

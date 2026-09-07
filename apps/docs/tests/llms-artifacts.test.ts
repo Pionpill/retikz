@@ -18,7 +18,7 @@ describe('LLM documentation artifacts', () => {
     const manifest = collectDocManifest(docsRoot);
     const byPath = new Map(manifest.map(entry => [entry.path, entry]));
 
-    expect(byPath.get('/kernel/concepts')).toMatchObject({ pageType: 'group', audience: 'user' });
+    expect(byPath.get('/kernel/components')).toMatchObject({ pageType: 'group', audience: 'user' });
     expect(byPath.get('/kernel/components/layout')).toMatchObject({ pageType: 'group' });
     expect(byPath.get('/kernel/components/shapes/custom-shape')).toMatchObject({
       pageType: 'extension',
@@ -71,7 +71,7 @@ describe('LLM documentation artifacts', () => {
 
     const manifestPath = path.join(outDir, 'manifest.json');
     const rawPath = path.join(outDir, 'kernel', 'components', 'layout', 'index.en.mdx');
-    const demoPath = path.join(outDir, 'kernel', 'concepts', 'design', 'principles', 'principles-compile.demo.tsx');
+    const demoPath = path.join(outDir, 'kernel', 'components', 'design', 'principles', 'principles-compile.demo.tsx');
     expect(existsSync(manifestPath)).toBe(true);
     expect(existsSync(rawPath)).toBe(true);
     expect(existsSync(demoPath)).toBe(true);

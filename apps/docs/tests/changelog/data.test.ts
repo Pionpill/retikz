@@ -52,9 +52,9 @@ describe('changelog data', () => {
   });
 
   it('当前 kernel 里程碑注册详情路由', () => {
-    const releases = kernelSection.find(section => section.id === 'releases');
-    const changelogPage = releases?.pages.find(page => page.id === 'changelog');
-    const currentKernelRelease = changelogForModule('kernel')[0];
+    const packages = kernelSection.find(section => section.id === 'packages');
+    const changelogPage = packages?.pages.find(page => page.id === 'changelog');
+    const currentKernelRelease = changelogForModule('kernel', 'packages')[0];
     expect(currentKernelRelease).toBeDefined();
     const currentReleaseId = changelogVersionSlug(currentKernelRelease.minor);
 
@@ -100,24 +100,34 @@ describe('changelog data', () => {
     );
   });
 
-  it('当前 Schematic 里程碑注册详情路由并覆盖 Graph 与 Diagram 包族', () => {
-    const releases = schematicSection.find(section => section.id === 'releases');
-    const changelogPage = releases?.pages.find(page => page.id === 'changelog');
-    const currentRelease = changelogForModule('schematic')[0];
-    expect(currentRelease).toBeDefined();
-    expect(currentRelease.packages.map(block => block.pkg)).toEqual([
+  it('Graph 与 Diagram 分别注册各自包族的当前里程碑', () => {
+    const graph = schematicSection.find(section => section.id === 'graph');
+    const diagram = schematicSection.find(section => section.id === 'diagram');
+    const graphChangelogPage = graph?.pages.find(page => page.id === 'changelog');
+    const diagramChangelogPage = diagram?.pages.find(page => page.id === 'changelog');
+    const graphRelease = changelogForModule('schematic', 'graph')[0];
+    const diagramRelease = changelogForModule('schematic', 'diagram')[0];
+
+    expect(graphRelease).toBeDefined();
+    expect(graphRelease.packages.map(block => block.pkg)).toEqual([
       '@retikz/graph',
       '@retikz/graph-react',
       '@retikz/graph-vanilla',
+    ]);
+    expect(diagramRelease).toBeDefined();
+    expect(diagramRelease.packages.map(block => block.pkg)).toEqual([
       '@retikz/diagram',
       '@retikz/diagram-react',
       '@retikz/diagram-vanilla',
     ]);
-    expect(changelogPage?.children?.some(page => page.id === changelogVersionSlug(currentRelease.minor))).toBe(true);
+    expect(graphChangelogPage?.children?.some(page => page.id === changelogVersionSlug(graphRelease.minor))).toBe(true);
+    expect(diagramChangelogPage?.children?.some(page => page.id === changelogVersionSlug(diagramRelease.minor))).toBe(
+      true,
+    );
   });
 
   it('Graph 更新日志保留 alpha.1 完整契约并登记 alpha.2 Block、Entity 与容器主题', () => {
-    const release = changelogForModule('schematic')[0];
+    const release = changelogForModule('schematic', 'graph')[0];
     const byPackage = new Map(release.packages.map(block => [block.pkg, block]));
     const graphBlocks = release.packages.filter(block => block.pkg.startsWith('@retikz/graph'));
     const serialized = JSON.stringify(graphBlocks);

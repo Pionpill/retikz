@@ -45,7 +45,7 @@ For everyday authoring, pass children directly. `<Layout>` collects the componen
 
 <ComponentPreview files="layout-from-ir" size="sm" />
 
-`ir` and `children` are two entry modes; if both are present, `ir` is used. For IR generation, persistence, and conversion, continue with [Architecture](/kernel/concepts/design/principles) and [Composite](/kernel/concepts/design/composite).
+`ir` and `children` are two entry modes; if both are present, `ir` is used. For IR generation, persistence, and conversion, continue with [Architecture](/kernel/components/design/principles) and [Composite](/kernel/components/design/composite).
 
 ### Inherited Theme
 
@@ -122,7 +122,7 @@ The default `retained + auto` combines local updates with transactional rollback
   description="Revisit when you hit input, viewport, or host-policy edge cases."
 />
 
-This section zooms in on React wiring, viewport, and host-policy decisions owned by `<Layout>`. See [Architecture Principles](/kernel/concepts/design/principles) for package-level responsibilities.
+This section zooms in on React wiring, viewport, and host-policy decisions owned by `<Layout>`. See [Architecture Principles](/kernel/components/design/principles) for package-level responsibilities.
 
 ### How Responsibilities Close the Loop
 
@@ -294,7 +294,7 @@ These props enter `CompileOptions` together. See each extension guide for defini
 | ---------------- | ------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pathGenerators` | `ReadonlyArray`<br />`<PathGeneratorDefinition>` | —       | Inject path generators; see [Path Generators](/kernel/components/draw/path-generator)                                                        |
 | `pathKinds`      | `ReadonlyArray`<br />`<PathKindDefinition>`      | —       | Inject Path kinds; see [Custom Paths](/kernel/components/draw/custom-path) or optional [Standard Ribbon](/library/standard/extension/ribbon) |
-| `composites`     | `ReadonlyArray`<br />`<AnyCompositeDefinition>`  | —       | Inject Tier 2 expand / layout-aware compile; see [Composite](/kernel/concepts/design/composite)                                              |
+| `composites`     | `ReadonlyArray`<br />`<AnyCompositeDefinition>`  | —       | Inject Tier 2 expand / layout-aware compile; see [Composite](/kernel/components/design/composite)                                              |
 | `lowerTex`       | `LowerTex`                                       | —       | Inject formula lowering; see [TeX](/kernel/packages/extension/tex)                                                                           |
 
 ### Whole-figure defaults

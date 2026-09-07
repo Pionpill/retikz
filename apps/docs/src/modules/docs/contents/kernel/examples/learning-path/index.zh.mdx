@@ -87,7 +87,7 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 ### 步骤 3：两侧色块条 — AtPosition 紧贴堆叠
 
-加左右两个独立的色块条——左侧 4 个蓝色「必修」按钮、右侧 2 个图例按钮（1 蓝 1 灰）。每列**段头**先用绝对坐标落点，剩余节点再用 [AtPosition](/kernel/concepts/basic/position) `{ direction: 'bottom', of: 'prev-id' }` 紧贴堆叠：先定骨架，再让同列内容自动往下长，这样最容易读，也最容易改。
+加左右两个独立的色块条——左侧 4 个蓝色「必修」按钮、右侧 2 个图例按钮（1 蓝 1 灰）。每列**段头**先用绝对坐标落点，剩余节点再用 [AtPosition](/kernel/components/basic/position) `{ direction: 'bottom', of: 'prev-id' }` 紧贴堆叠：先定骨架，再让同列内容自动往下长，这样最容易读，也最容易改。
 
 - `<Layout ... nodeDistance={41}>` 在容器一次性设全局节点间距
 - 段内每个 AtPosition 节点都引用上一个节点 id；视觉上紧贴成"色块条"
@@ -170,7 +170,7 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 | [Draw](/kernel/components/draw/overview)      | 全部 12 条连线（2 spine line / 3 子列短 line / 2 quadratic 合并 / 1 推荐虚线 / 2 short dashed / 2 红 X）+ stroke / strokeWidth / dashPattern / arrow | [2](#步骤-2中段-spine--2-条-draw-line), [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x) |
 | [Way 算子](/kernel/components/draw/way)       | `{ curve }` infix 走 quadratic / `{ label }` infix 挂边标注 / 节点 id 自动锚 border                                                                  | [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x)                                         |
 | [Node](/kernel/components/node/overview)      | 全部 16 个 roadmap 节点（title / header / required / optional）—— 4 variant 抽成 `RoadmapNode`                                                       | [1](#步骤-1title--roadmapnode-4-variant), [3](#步骤-3两侧色块条--atposition-紧贴堆叠)                                        |
-| [AtPosition](/kernel/concepts/basic/position) | 三个色块段内的紧贴堆叠（`{ direction: 'bottom', of: prevId }` + 全局 `nodeDistance`）                                                                | [3](#步骤-3两侧色块条--atposition-紧贴堆叠), [4](#步骤-45-路径按钮--curve-合并曲线)                                          |
+| [AtPosition](/kernel/components/basic/position) | 三个色块段内的紧贴堆叠（`{ direction: 'bottom', of: prevId }` + 全局 `nodeDistance`）                                                                | [3](#步骤-3两侧色块条--atposition-紧贴堆叠), [4](#步骤-45-路径按钮--curve-合并曲线)                                          |
 
 ## 限制
 
@@ -183,6 +183,6 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 ## 扩展阅读
 
-- [Draw](/kernel/components/draw/overview) · [Way 算子](/kernel/components/draw/way) · [Node](/kernel/components/node/overview) · [定位](/kernel/concepts/basic/position)
+- [Draw](/kernel/components/draw/overview) · [Way 算子](/kernel/components/draw/way) · [Node](/kernel/components/node/overview) · [定位](/kernel/components/basic/position)
 - [Karl 单位圆](/kernel/examples/karl-circle) —— 另一个综合示例，几何 / 三角函数题材
 - 原始出处：[AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)（MIT License）

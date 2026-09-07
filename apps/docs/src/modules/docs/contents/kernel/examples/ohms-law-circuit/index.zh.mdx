@@ -131,5 +131,5 @@ description: '高中物理欧姆定律实验电路示例：用自定义形状、
 - **更多扩展点**：除自定义形状（[Shape Registry](/kernel/components/shapes/custom-shape)）外，retikz 还开放了[自定义箭头](/kernel/components/draw/custom-arrow)、[自定义图案](/kernel/components/effects/custom-pattern)、[自定义路径生成器](/kernel/components/draw/path-generator)。
 - **进阶 / 优化**：本页只是一个使用用例；反复画这类电路时，把它封装成专门的（更高 tier 的）组件，既能减少重复代码，也能精简 IR 持久化的内容。
 - **让 AI 更懂图**：在 IR 里给节点 / 路径的 `meta` 字段补上语义元数据，能让 AI 更准确地理解图的语义内容。
-- **相关组件 / 概念**：[Node](/kernel/components/node/overview) / [Scope](/kernel/components/layout/scope) / [Draw](/kernel/components/draw/overview)，以及[定位](/kernel/concepts/basic/position)（E 标签用到的 `of` 关系定位）。
+- **相关组件 / 概念**：[Node](/kernel/components/node/overview) / [Scope](/kernel/components/layout/scope) / [Draw](/kernel/components/draw/overview)，以及[定位](/kernel/components/basic/position)（E 标签用到的 `of` 关系定位）。
 - [Karl 单位圆](/kernel/examples/karl-circle) - 另一个由多种基础组件拼成完整图的示例。

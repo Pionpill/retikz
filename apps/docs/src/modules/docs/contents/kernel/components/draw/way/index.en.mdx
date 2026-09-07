@@ -66,7 +66,7 @@ The second `+` offset still uses the start as its base, while `++` continues fro
   description="Revisit this section when debugging operator order, label attachment, or relative-coordinate accumulation."
 />
 
-This section zooms in on the local expansion from `way` to `<Path>` / `<Step>`. See [Architecture Principles](/kernel/concepts/design/principles) for the complete JSX → IR (intermediate representation) → Scene pipeline.
+This section zooms in on the local expansion from `way` to `<Path>` / `<Step>`. See [Architecture Principles](/kernel/components/design/principles) for the complete JSX → IR (intermediate representation) → Scene pipeline.
 
 ### How a WayItem becomes a Step
 
@@ -148,7 +148,7 @@ Finally, `<Draw>` passes `way`, stroke, fill, arrows, and related visual props t
 | Node id                 | `'a'`                                                                                           | Reference a Node in the same diagram; endpoint auto-attaches to border                   |
 | Explicit anchor         | `{ id: 'a', anchor: 'top' }` or `'a.top'`                                                       | Lock to a named anchor / angle / edge proportional point; object form is the IR contract |
 | Cartesian               | `[120, 0]`                                                                                      | Literal coordinate                                                                       |
-| Polar                   | `{ origin: 'a', angle: 60, radius: 80 }`                                                        | Polar coordinate; see [Positioning](/kernel/concepts/basic/position)                     |
+| Polar                   | `{ origin: 'a', angle: 60, radius: 80 }`                                                        | Polar coordinate; see [Positioning](/kernel/components/basic/position)                     |
 | Offset placement        | `{ of: 'a', offset: [10, 5] }`                                                                  | Base + `(dx, dy)`, same offset form as `<Node position>`                                 |
 | Proportional placement  | `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }`                                        | Proportional point along A → B                                                           |
 | Relative                | `{ position: [10, 0], type: DrawWay.Relative }` or `'+10,0'`                                    | Offset from the previous step endpoint without updating prevEnd                          |

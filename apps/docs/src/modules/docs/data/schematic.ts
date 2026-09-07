@@ -5,9 +5,6 @@ import { DocDifficulty } from './types';
 /** Schematic 图式元素与后续图结构能力的文档导航 */
 export const schematicSection: Array<Section> = [
   {
-    pages: [{ id: 'introduction', label: 'schematic.introduction', difficulty: DocDifficulty.Beginner }],
-  },
-  {
     id: 'graph',
     label: 'schematic.graph',
     document: true,
@@ -59,6 +56,17 @@ export const schematicSection: Array<Section> = [
       },
       { id: 'group', label: 'schematic.group', difficulty: DocDifficulty.Beginner },
       { id: 'api-reference', label: 'schematic.graphApiReference' },
+      {
+        id: 'changelog',
+        label: 'schematic.changelog',
+        children: [{ id: 'v0-1', label: 'schematic.changelogV01' }],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'graph.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
     ],
   },
   {
@@ -72,16 +80,16 @@ export const schematicSection: Array<Section> = [
         label: 'schematic.flowDiagram',
         children: [{ id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner }],
       },
-    ],
-  },
-  {
-    id: 'releases',
-    label: 'schematic.releases',
-    pages: [
       {
         id: 'changelog',
         label: 'schematic.changelog',
         children: [{ id: 'v0-1', label: 'schematic.changelogV01' }],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'diagram.release',
+          sourceOfTruth: 'changelog',
+        },
       },
     ],
   },

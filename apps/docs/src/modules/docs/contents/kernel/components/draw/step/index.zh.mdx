@@ -285,10 +285,10 @@ import { Path, Step } from '@retikz/react';
 
 | 形态                          | 例                                                                                        | 行为                                                                                                       |
 | ----------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| 节点 id                       | `'a'`                                                                                     | 自动贴 Node 边界（参看 [图元关系](/kernel/concepts/core/primitive-relations)）                             |
+| 节点 id                       | `'a'`                                                                                     | 自动贴 Node 边界（参看 [图元关系](/kernel/components/core/primitive-relations)）                             |
 | 节点 + 连接面                 | `{ id: 'a', boundary: 'circle' }`                                                         | 单边覆盖目标节点 [连接面](/kernel/components/node/overview#视觉形状与连接几何)（贴边形状），不改节点占位   |
 | 笛卡尔                        | `[60, 0]`                                                                                 | 直接坐标                                                                                                   |
-| 极坐标                        | `{ origin: 'a', angle: 30, radius: 50 }`                                                  | 极坐标（参看 [定位](/kernel/concepts/basic/position)）                                                     |
+| 极坐标                        | `{ origin: 'a', angle: 30, radius: 50 }`                                                  | 极坐标（参看 [定位](/kernel/components/basic/position)）                                                     |
 | 偏移定位                      | `{ of: 'a', offset: [10, 5] }`                                                            | 基准 + `(dx, dy)`；`of` 三态——节点 id / 笛卡尔字面值 / PolarPosition                                       |
 | 比例定位                      | `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }`                                  | A 到 B 连线上的比例点；端点必须是可独立解析的 absolute target（`{ id, anchor? }` 形态，或笛卡尔 / 极坐标） |
 | 比例定位（显式锚点）          | `{ between: [{ id: 'a', anchor: 'right' }, { id: 'b', anchor: 'left' }], fraction: 0.5 }` | 端点可带显式 `anchor`，从锚点而非自动贴边解析                                                              |

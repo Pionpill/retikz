@@ -38,7 +38,7 @@ export const DocsHome: FC = () => {
     {
       id: 'primitive-model',
       layout: 'compact' as const,
-      location: ['kernel', 'concepts', 'core', 'primitive-model'],
+      location: ['kernel', 'components', 'core', 'primitive-model'],
       preview: {
         files: 'node-model-layers',
         size: 'md' as const,

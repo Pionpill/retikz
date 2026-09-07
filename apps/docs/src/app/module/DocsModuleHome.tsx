@@ -10,22 +10,13 @@ import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { cn } from '@/lib/utils';
 import { MODULE_LANDING_PREVIEW, ModuleLandingPage } from '@/modules/docs/components';
-type ModuleHomeAction = {
-  /** 入口按钮的翻译键。 */
-  label: I18nKey;
-  /** 入口目标地址。 */
-  href: string;
-};
+import { modules } from '@/modules/docs/data';
 
 type ModuleHomeConfiguration = {
   /** 模块首页的定位标题。 */
   title: I18nKey;
   /** 模块首页的简短定位文案。 */
   description: I18nKey;
-  /** 左侧主要入口。 */
-  primaryAction: ModuleHomeAction;
-  /** 右侧按钮组入口。 */
-  actions: ReadonlyArray<ModuleHomeAction>;
   /** 模块的代表性演示。 */
   demos: ReadonlyArray<ModuleLandingDemo>;
 };
@@ -34,29 +25,23 @@ const MODULE_HOME_CONFIGURATIONS: Record<DocModuleId, ModuleHomeConfiguration> =
   kernel: {
     title: 'kernel.homeTitle',
     description: 'kernel.homeDescription',
-    primaryAction: { label: 'kernel.getStart', href: '/kernel/get-start' },
-    actions: [
-      { label: 'kernel.concepts', href: '/kernel/concepts/basic/coordinate-system' },
-      { label: 'kernel.components', href: '/kernel/components/node/overview' },
-      { label: 'kernel.examples', href: '/kernel/examples/karl-circle' },
-    ],
     demos: [
       {
         id: 'architecture',
         layout: 'feature',
-        location: ['kernel', 'concepts', 'design', 'principles'],
+        location: ['kernel', 'components', 'design', 'principles'],
         preview: { files: 'principles-packages', size: 'md', ...MODULE_LANDING_PREVIEW },
       },
       {
         id: 'primitive-model',
         layout: 'compact',
-        location: ['kernel', 'concepts', 'core', 'primitive-model'],
+        location: ['kernel', 'components', 'core', 'primitive-model'],
         preview: { files: 'node-model-layers', size: 'md', ...MODULE_LANDING_PREVIEW },
       },
       {
         id: 'coordinate-system',
         layout: 'compact',
-        location: ['kernel', 'concepts', 'basic', 'coordinate-system'],
+        location: ['kernel', 'components', 'basic', 'coordinate-system'],
         preview: { files: 'coordinate-system', size: 'md', ...MODULE_LANDING_PREVIEW },
       },
       {
@@ -76,12 +61,6 @@ const MODULE_HOME_CONFIGURATIONS: Record<DocModuleId, ModuleHomeConfiguration> =
   library: {
     title: 'library.homeTitle',
     description: 'library.homeDescription',
-    primaryAction: { label: 'library.standard', href: '/library/standard/composite/grid' },
-    actions: [
-      { label: 'library.layout', href: '/library/layout/flex-layout' },
-      { label: 'library.standardGrid', href: '/library/standard/composite/grid' },
-      { label: 'library.standardSurface', href: '/library/standard/composite/surface' },
-    ],
     demos: [
       {
         id: 'nested-layout',
@@ -118,12 +97,6 @@ const MODULE_HOME_CONFIGURATIONS: Record<DocModuleId, ModuleHomeConfiguration> =
   schematic: {
     title: 'schematic.homeTitle',
     description: 'schematic.homeDescription',
-    primaryAction: { label: 'schematic.introduction', href: '/schematic/introduction' },
-    actions: [
-      { label: 'schematic.graph', href: '/schematic/graph/entity/basic' },
-      { label: 'schematic.block', href: '/schematic/graph/block/basic' },
-      { label: 'schematic.flowDiagram', href: '/schematic/diagram/flow/basic' },
-    ],
     demos: [
       {
         id: 'entity',
@@ -160,13 +133,6 @@ const MODULE_HOME_CONFIGURATIONS: Record<DocModuleId, ModuleHomeConfiguration> =
   viz: {
     title: 'viz.homeTitle',
     description: 'viz.homeDescription',
-    primaryAction: { label: 'viz.getStart', href: '/viz/get-start' },
-    actions: [
-      { label: 'viz.data', href: '/viz/data/model/contract' },
-      { label: 'viz.chart', href: '/viz/chart/points/bubble' },
-      { label: 'viz.table', href: '/viz/table/detail' },
-      { label: 'viz.drawingGrammar', href: '/viz/plot/coordinate/2d' },
-    ],
     demos: [
       {
         id: 'bubble-chart',
@@ -212,23 +178,25 @@ export const DocsModuleHome: FC<DocsModuleHomeProps> = props => {
   const { moduleId } = props;
   const { t } = useTranslation();
   const configuration = MODULE_HOME_CONFIGURATIONS[moduleId];
+  const quickLinks = modules.find(module => module.id === moduleId)?.quickLinks ?? [];
+  const primaryAction = quickLinks.find(link => link.primary);
+  const actions = quickLinks.filter(link => !link.primary);
   const navigation = (
     <>
-      <Button asChild variant="default">
-        <Link to={configuration.primaryAction.href}>{t(configuration.primaryAction.label)}</Link>
-      </Button>
+      {primaryAction ? (
+        <Button asChild variant="default">
+          <Link to={primaryAction.path}>{t(primaryAction.label)}</Link>
+        </Button>
+      ) : null}
       <ButtonGroup>
-        {configuration.actions.map((action, index) => (
+        {actions.map((action, index) => (
           <Button
-            key={action.href}
+            key={action.path}
             asChild
             variant="outline"
-            className={cn(
-              index > 0 && 'rounded-l-none border-l-0',
-              index < configuration.actions.length - 1 && 'rounded-r-none',
-            )}
+            className={cn(index > 0 && 'rounded-l-none border-l-0', index < actions.length - 1 && 'rounded-r-none')}
           >
-            <Link to={action.href}>{t(action.label)}</Link>
+            <Link to={action.path}>{t(action.label)}</Link>
           </Button>
         ))}
       </ButtonGroup>

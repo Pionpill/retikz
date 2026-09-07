@@ -88,14 +88,14 @@ describe('resolveDocNavigationContext', () => {
       sectionId: null,
       location: null,
     });
-    expect(resolveDocNavigationContext('/viz/get-start')).toEqual({
+    expect(resolveDocNavigationContext('/viz/chart')).toEqual({
       areaId: 'viz',
       moduleId: 'viz',
-      sectionId: null,
+      sectionId: 'chart',
       location: {
         moduleId: 'viz',
-        sectionId: null,
-        pageId: 'get-start',
+        sectionId: 'chart',
+        pageId: null,
       },
     });
     expect(resolveDocNavigationContext('/about/overview')).toEqual({
