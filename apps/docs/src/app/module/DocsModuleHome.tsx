@@ -207,6 +207,7 @@ export const DocsModuleHome: FC<DocsModuleHomeProps> = props => {
     <ModuleLandingPage
       title={t(configuration.title)}
       description={t(configuration.description)}
+      dev
       navigationLabel={t('docs.moduleNavigationLabel')}
       navigation={navigation}
       demos={configuration.demos}

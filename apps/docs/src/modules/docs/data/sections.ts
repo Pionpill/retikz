@@ -23,3 +23,10 @@ export const getSectionsByArea = (areaId: string | undefined): Array<Section> =>
       return [];
   }
 };
+
+/** 按顶栏导航顺序返回 area 下的分组。 */
+export const getNavigationSectionsByArea = (areaId: string | undefined): Array<Section> =>
+  getSectionsByArea(areaId)
+    .map((section, index) => ({ section, order: section.navigationOrder ?? index }))
+    .sort((left, right) => left.order - right.order)
+    .map(({ section }) => section);

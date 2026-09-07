@@ -111,6 +111,7 @@ export const DocsHome: FC = () => {
     <ModuleLandingPage
       title={t('docs.homeTitle')}
       description={t('docs.homeDescription')}
+      dev
       navigationLabel={t('docs.moduleNavigationLabel')}
       navigation={navigation}
       demos={demos}

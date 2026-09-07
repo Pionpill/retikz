@@ -67,10 +67,11 @@ const renderInRouter = (node: ReactNode, initialEntry: string): HTMLElement => {
 afterEach(() => {
   roots.splice(0).forEach(root => act(() => root.unmount()));
   document.body.replaceChildren();
+  localStorage.clear();
 });
 
 describe('<ModuleNav>', () => {
-  it('当前模块使用选中文字色', () => {
+  it('当前模块使用选中文字色，并展示含图标的 Header 分组', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -82,19 +83,60 @@ describe('<ModuleNav>', () => {
           <Routes>
             <Route path=":moduleId/*" element={<ModuleNav />} />
           </Routes>
+          <LocationProbe />
         </MemoryRouter>,
       );
     });
-    const activeLink = container.querySelector<HTMLAnchorElement>('a[data-active][href="/kernel"]');
+    const triggers = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('button[data-slot="header-navigation-trigger"]'),
+    );
+    const activeTrigger = triggers.find(trigger => trigger.textContent.includes('kernel.navigationLabel'));
 
-    expect(activeLink).not.toBeNull();
-    expect(activeLink?.textContent).toBe('kernel.navigationLabel');
-    expect(activeLink?.classList.contains('text-foreground')).toBe(true);
-    expect(activeLink?.classList.contains('text-muted-foreground')).toBe(false);
+    expect(activeTrigger).not.toBeUndefined();
+    expect(activeTrigger?.classList.contains('text-foreground')).toBe(true);
+    expect(activeTrigger?.classList.contains('text-muted-foreground')).toBe(false);
+
+    act(() => {
+      activeTrigger?.click();
+    });
+
+    const components = container.querySelector<HTMLAnchorElement>('a[data-module-nav-section="components"]');
+    const packages = container.querySelector<HTMLAnchorElement>('a[data-module-nav-section="packages"]');
+    const gallery = container.querySelector<HTMLAnchorElement>('a[data-module-nav-section="galleries"]');
+
+    expect(components?.getAttribute('href')).toBe('/kernel/components');
+    expect(packages?.getAttribute('href')).toBe('/kernel/packages');
+    expect(gallery?.getAttribute('href')).toBe('/kernel/galleries');
+    expect(container.querySelector('a[data-module-nav-section="reference"]')).toBeNull();
+    expect(components?.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    expect(components?.querySelector('[data-module-nav-description]')?.textContent).toBe(
+      'kernel.componentsNavigationDescription',
+    );
+
+    const libraryTrigger = triggers.find(trigger => trigger.textContent.includes('library.navigationLabel'));
+    act(() => {
+      libraryTrigger?.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    });
+
+    expect(container.querySelector('[data-location]')?.textContent).toBe('/library');
   });
 });
 
 describe('<ModulePicker>', () => {
+  it('仅在首次点击选择器前展示 ping 提示', () => {
+    const container = renderInRouter(<ModulePicker value="kernel" />, '/kernel');
+    const trigger = container.querySelector<HTMLButtonElement>('button[data-slot="header-navigation-trigger"]');
+
+    expect(container.querySelector('[data-module-picker-hint] .animate-ping')).not.toBeNull();
+
+    act(() => {
+      trigger?.click();
+    });
+
+    expect(container.querySelector('[data-module-picker-hint]')).toBeNull();
+    expect(localStorage.getItem('retikz-doc-module-picker-hint-dismissed')).toBe('true');
+  });
+
   it('每个模块项展示人类可读标签、scope 名称和简短说明', () => {
     const container = renderInRouter(<ModulePicker value="kernel" />, '/kernel');
 
@@ -113,7 +155,9 @@ describe('<ModulePicker>', () => {
 
     expect(kernel?.classList.contains('hover:bg-accent')).toBe(true);
     expect(kernel?.classList.contains('focus:bg-accent')).toBe(true);
-    expect(kernel?.classList.contains('flex-col')).toBe(true);
+    expect(kernel?.classList.contains('flex-row')).toBe(true);
+    expect(home?.querySelector('[data-module-picker-icon]')?.classList.contains('size-8')).toBe(true);
+    expect(kernel?.querySelector('[data-module-picker-icon] svg[aria-hidden="true"]')).not.toBeNull();
     expect(home?.querySelector('[data-module-picker-title]')?.textContent).toBe('docs.homeNavigationLabel');
     expect(home?.querySelector('[data-module-picker-scope]')?.textContent).toBe('retikz');
     expect(home?.querySelector('[data-module-picker-description]')?.textContent).toBe('docs.homeNavigationDescription');
@@ -123,6 +167,19 @@ describe('<ModulePicker>', () => {
     expect(viz?.querySelector('[data-module-picker-title]')?.textContent).toBe('viz.navigationLabel');
     expect(viz?.querySelector('[data-module-picker-scope]')?.textContent).toBe('retikz.viz');
     expect(viz?.querySelector('[data-module-picker-description]')?.textContent).toBe('viz.navigationDescription');
+  });
+
+  it('鼠标点击当前模块选择器时返回模块首页', () => {
+    useDocModuleStore.setState({ scope: 'home' });
+    const container = renderInRouter(<ModulePicker value="kernel" />, '/kernel/packages');
+    const trigger = container.querySelector<HTMLButtonElement>('button[data-slot="header-navigation-trigger"]');
+
+    act(() => {
+      trigger?.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    });
+
+    expect(useDocModuleStore.getState().scope).toBe('kernel');
+    expect(container.querySelector('[data-location]')?.textContent).toBe('/kernel');
   });
 
   it('选择首页或模块时更新 scope 并导航到对应根路径', () => {
@@ -202,7 +259,7 @@ describe('<SectionNav>', () => {
 });
 
 describe('<Header>', () => {
-  it('首页使用模块选择器、翻译后的模块入口，并将 About 作为普通链接展示', () => {
+  it('首页使用模块选择器、带分组面板的模块入口，并将 About 作为普通链接展示', () => {
     const home = renderInRouter(<Header />, '/');
     const header = home.querySelector('header');
     expect(header?.firstElementChild?.classList.contains('lg:gap-2')).toBe(true);
@@ -220,10 +277,17 @@ describe('<Header>', () => {
     expect(aboutLink?.classList.contains('hover:bg-accent')).toBe(true);
     expect(aboutLink?.classList.contains('h-8')).toBe(true);
     expect(home.querySelector('[data-slot="header-navigation-content"]')).toBeNull();
-    expect(home.querySelector('a[href="/kernel"]')?.textContent).toBe('kernel.navigationLabel');
-    expect(home.querySelector('a[href="/library"]')?.textContent).toBe('library.navigationLabel');
-    expect(home.querySelector('a[href="/schematic"]')?.textContent).toBe('schematic.navigationLabel');
-    expect(home.querySelector('a[href="/viz"]')?.textContent).toBe('viz.navigationLabel');
+    expect(
+      Array.from(home.querySelectorAll<HTMLButtonElement>('button[data-slot="header-navigation-trigger"]')).map(
+        button => button.textContent,
+      ),
+    ).toEqual([
+      'retikz',
+      'kernel.navigationLabel',
+      'library.navigationLabel',
+      'schematic.navigationLabel',
+      'viz.navigationLabel',
+    ]);
 
     const page = renderInRouter(<Header />, '/viz/chart');
     expect(page.querySelector('a[aria-label="retikz home"]')).toBeNull();
@@ -232,10 +296,17 @@ describe('<Header>', () => {
 
     const about = renderInRouter(<Header />, '/about/overview');
     expect(about.querySelector('button[aria-label="docs.modulePickerHome"]')?.textContent).toContain('retikz');
-    expect(about.querySelector('a[href="/kernel"]')?.textContent).toBe('kernel.navigationLabel');
-    expect(about.querySelector('a[href="/library"]')?.textContent).toBe('library.navigationLabel');
-    expect(about.querySelector('a[href="/schematic"]')?.textContent).toBe('schematic.navigationLabel');
-    expect(about.querySelector('a[href="/viz"]')?.textContent).toBe('viz.navigationLabel');
+    expect(
+      Array.from(about.querySelectorAll<HTMLButtonElement>('button[data-slot="header-navigation-trigger"]')).map(
+        button => button.textContent,
+      ),
+    ).toEqual([
+      'retikz',
+      'kernel.navigationLabel',
+      'library.navigationLabel',
+      'schematic.navigationLabel',
+      'viz.navigationLabel',
+    ]);
     expect(about.querySelector('a[href="/about/overview"]')?.textContent).toBe('about.label');
     expect(about.querySelector('a[href="/about/blog"]')).toBeNull();
   });

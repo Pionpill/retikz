@@ -7,7 +7,7 @@ import type { DocNavigationAreaId, I18nKey } from '@/modules/docs/data';
 
 import { NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib';
-import { getSectionsByArea } from '@/modules/docs/data';
+import { getNavigationSectionsByArea } from '@/modules/docs/data';
 import { buildDocPath } from '@/modules/docs/layout';
 
 export type SectionNavProps = {
@@ -38,11 +38,7 @@ export const SectionNav: FC<SectionNavProps> = props => {
   const { pathname } = useLocation();
   const { t } = useTranslation();
   const currentPath = normalizePath(pathname);
-  const sections = getSectionsByArea(areaId);
-  const navigationSections = sections
-    .map((section, index) => ({ section, order: section.navigationOrder ?? index }))
-    .sort((left, right) => left.order - right.order)
-    .map(({ section }) => section);
+  const navigationSections = getNavigationSectionsByArea(areaId);
   const links: Array<SectionNavLink> = navigationSections.flatMap(section => {
     if (!section.label) {
       return section.pages.map(page => ({

@@ -14,6 +14,7 @@ export const kernelSection: Array<Section> = [
   {
     id: 'components',
     label: 'kernel.components',
+    navigationDescription: 'kernel.componentsNavigationDescription',
     document: true,
     pages: [
       { id: 'introduction', label: 'kernel.introduction', difficulty: DocDifficulty.Beginner },
@@ -210,6 +211,7 @@ export const kernelSection: Array<Section> = [
   {
     id: 'packages',
     label: 'kernel.packages',
+    navigationDescription: 'kernel.packagesNavigationDescription',
     navigationOrder: 1,
     document: true,
     pages: [
@@ -290,6 +292,7 @@ export const kernelSection: Array<Section> = [
   {
     id: 'galleries',
     label: 'kernel.gallery',
+    navigationDescription: 'kernel.galleryNavigationDescription',
     document: true,
     pages: [
       { id: 'karl-circle', label: 'kernel.galleryKarlCircle', difficulty: DocDifficulty.Beginner },

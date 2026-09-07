@@ -1,5 +1,9 @@
 import type { FC, ReactNode } from 'react';
 
+import { TriangleAlert } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 import type { ComponentPreviewProps } from '../component-preview';
@@ -24,6 +28,8 @@ export type ModuleLandingPageProps = {
   title: string;
   /** 页面主说明。 */
   description: string;
+  /** 是否显示开发中提示。 */
+  dev?: boolean;
   /** 模块入口区域的无障碍标签。 */
   navigationLabel?: string;
   /** 标题下方的模块入口内容，由页面按自身模块组合。 */
@@ -36,7 +42,8 @@ export type ModuleLandingPageProps = {
 
 /** 由介绍、模块入口、能力演示和底部说明组成的可复用落地页。 */
 export const ModuleLandingPage: FC<ModuleLandingPageProps> = props => {
-  const { eyebrow, title, description, navigationLabel, navigation, demos, footer } = props;
+  const { eyebrow, title, description, dev = false, navigationLabel, navigation, demos, footer } = props;
+  const { t } = useTranslation();
 
   return (
     <main data-slot="module-landing-page" className="flex min-h-full flex-1 flex-col">
@@ -48,8 +55,19 @@ export const ModuleLandingPage: FC<ModuleLandingPageProps> = props => {
                 {eyebrow}
               </p>
             ) : null}
+            {dev ? (
+              <Badge variant="secondary" className="mb-4 text-sm text-muted-foreground">
+                <TriangleAlert />
+                {t('docs.developmentNotice')}
+              </Badge>
+            ) : null}
             <h1 className={cn('text-5xl font-bold tracking-tight text-balance', eyebrow && 'mt-4')}>{title}</h1>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-pretty text-muted-foreground sm:text-lg">
+            <p
+              className={cn(
+                'mx-auto max-w-2xl text-base leading-7 text-pretty text-muted-foreground sm:text-lg',
+                dev ? 'mt-4' : 'mt-6',
+              )}
+            >
               {description}
             </p>
           </section>

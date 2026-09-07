@@ -103,6 +103,8 @@ export type Page = SubPage & {
 export type Section = {
   id?: string;
   label?: I18nKey;
+  /** 模块导航面板中用于解释分组职责的简短说明。 */
+  navigationDescription?: I18nKey;
   /** 顶部模块导航中的显示顺序；缺省时沿用声明顺序。 */
   navigationOrder?: number;
   /**

@@ -15,6 +15,7 @@ export const vizSection: Array<Section> = [
   {
     id: 'data',
     label: 'viz.data',
+    navigationDescription: 'viz.dataNavigationDescription',
     document: true,
     pages: [
       {
@@ -122,6 +123,7 @@ export const vizSection: Array<Section> = [
   {
     id: 'chart',
     label: 'viz.chart',
+    navigationDescription: 'viz.chartNavigationDescription',
     document: true,
     pages: [
       {
@@ -277,6 +279,7 @@ export const vizSection: Array<Section> = [
   {
     id: 'table',
     label: 'viz.table',
+    navigationDescription: 'viz.tableNavigationDescription',
     document: true,
     pages: [
       { id: 'detail', label: 'viz.detailTable', difficulty: DocDifficulty.Beginner },
@@ -323,6 +326,7 @@ export const vizSection: Array<Section> = [
   {
     id: 'plot',
     label: 'viz.drawingGrammar',
+    navigationDescription: 'viz.plotNavigationDescription',
     document: true,
     pages: [
       {
