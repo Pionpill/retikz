@@ -1,63 +1,9 @@
 ---
 title: '@retikz/foundation'
-description: 为所有包提供类型、JSON、标量 schema、静态颜色计算与结构化错误等无领域基础契约。
+description: 为所有包提供类型、JSON、标量 schema、静态颜色计算与只读集合快照等无领域基础契约。
 ---
 
-`@retikz/foundation` 是为所有包提供基础能力的纯工具模块，用于统一复用类型、JSON 与结构只读集合快照、标量校验、空白语义和错误骨架；Zod 是它唯一的 production dependency。
-
-## 安装与使用
-
-<PackageManagerInstall packages="@retikz/react react react-dom" />
-
-```ts
-import {
-  assertPlainDataContainers,
-  assertNonEmptyString,
-  assertPositiveNumber,
-  cloneAndFreezeJson,
-  compositeOpaqueColor,
-  createOpenStringSchema,
-  createReadonlyMap,
-  JsonObjectSchema,
-  JsonValueSchema,
-  NonBlankStringSchema,
-  NormalizedFractionSchema,
-  parseStaticCssColor,
-  PositiveNumberSchema,
-  RetikzError,
-  RetikzFoundationError,
-} from '@retikz/foundation';
-import type {
-  AssertEqual,
-  JsonObject,
-  JsonValue,
-  NonEmptyReadonlyArray,
-  OpenString,
-  ParsedCssColor,
-  RetikzErrorOptions,
-  ValueOf,
-  WithRequiredProperties,
-} from '@retikz/foundation';
-```
-
-开发者通常不需要直接使用 `@retikz/foundation`；它是一个为包之间复用基础能力而提供的纯内部工具包。
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Foundation 根入口',
-      path: 'packages/kernel/foundation/src/index.ts',
-      startLine: 1,
-      endLine: 7,
-    },
-    {
-      label: '根入口与 subpath 契约测试',
-      path: 'packages/kernel/foundation/tests/public-surface.test.ts',
-      startLine: 1,
-      endLine: 66,
-    },
-  ]}
-/>
+`@retikz/foundation` 是为所有包提供基础能力的纯工具模块，用于统一复用类型、JSON 与结构只读集合快照、标量校验和空白语义；Zod 是它唯一的 production dependency。
 
 ## 内容
 
@@ -165,51 +111,6 @@ compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
 
 Foundation 只拥有静态解析与纯计算，不知道 Theme mode 或图形字段。非法颜色、非不透明背景和越界权重会抛出 `RetikzFoundationError`，code 为 `FOUNDATION_COLOR_ERROR`；Core 根据最终样式与 Theme mode 决定何时调用这些原子。
 
-### 断言工具
-
-`assertNonEmptyString(value, label)` 和 `assertPositiveNumber(value, label)` 的参数分别已经由调用方约束为 `string` 和 `number`。前者拒绝空串和运行时标准空白串，后者拒绝 `0`、负数和非有限数；成功时都返回 `void`。
-
-```ts
-assertNonEmptyString('layer/main', 'owner');
-// ''、' '、'\t'、'\n' 和 Unicode 空白都会抛出：
-// owner must be a non-empty string.
-assertPositiveNumber(1.5, 'SVG font size');
-// 0、负数、Infinity、-Infinity 和 NaN 都会抛出：
-// SVG font size must be a positive finite number.
-```
-
-失败时会直接抛出 `RetikzFoundationError`：字符串断言的 `code` 为 `FOUNDATION_NON_EMPTY_STRING_REQUIRED`，正数断言的 `code` 为 `FOUNDATION_POSITIVE_NUMBER_REQUIRED`；`details` 都保留 `label` 和原始 `value`，`cause` 同样指向被拒绝的值。它们都不是 `unknown` 类型收窄器；需要 schema 结果时直接使用对应 schema，调用方也不应捕获后把同一原子失败重复包装成领域错误。
-
-### 错误处理
-
-`RetikzErrorOptions`、`RetikzError` 与 `isRetikzError` 为领域 owner 提供统一的最小形态。`RetikzFoundationError` 统一承载 Foundation 自己拥有的原子错误，并通过参数区分具体失败；其它 owner 继续决定自己的 code、details 字段和恢复语义：
-
-```ts
-import { RetikzError, type ValueOf } from '@retikz/foundation';
-
-type Details = Readonly<{ source: string }>;
-
-const RetikzDomainErrorCode = {
-  Failed: 'DOMAIN_FAILED',
-} as const;
-
-type RetikzDomainErrorCodeValue = ValueOf<typeof RetikzDomainErrorCode>;
-
-class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details> {
-  constructor(details: Details, cause?: unknown) {
-    super({ code: RetikzDomainErrorCode.Failed, message: 'Domain failed', details, cause });
-  }
-}
-```
-
-| 成员              | 类型                                       | 语义                                                                                                                         |
-| ----------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| `code`            | `TCode`                                    | 结构化错误的分类代码，由 owner 定义                                                                                          |
-| `message`         | `string`                                   | 面向调用方的错误消息                                                                                                         |
-| `details`         | `TDetails`                                 | owner 提供的结构化错误详情；保留对象身份，不会自动深拷贝或冻结                                                               |
-| `cause`           | `unknown`，可选                            | 导致当前错误的原始异常或值；省略时仍创建值为 `undefined` 的 own property                                                     |
-| `isRetikzError()` | `(value: unknown) => value is RetikzError` | 判断值是否属于正常的 `RetikzError` class hierarchy，不作为 hostile object、跨 realm 或 Runtime/Core 私有 identity 的安全边界 |
-
 <SourceLinks
   sources={[
     {
@@ -237,34 +138,10 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       endLine: 92,
     },
     {
-      label: '标量断言实现',
-      path: 'packages/kernel/foundation/src/assert.ts',
-      startLine: 1,
-      endLine: 26,
-    },
-    {
       label: '标量 schema 测试',
       path: 'packages/kernel/foundation/tests/schema.test.ts',
       startLine: 1,
       endLine: 71,
-    },
-    {
-      label: '结构化错误实现',
-      path: 'packages/kernel/foundation/src/error.ts',
-      startLine: 1,
-      endLine: 67,
-    },
-    {
-      label: '标量断言测试',
-      path: 'packages/kernel/foundation/tests/assert.test.ts',
-      startLine: 1,
-      endLine: 75,
-    },
-    {
-      label: '结构化错误测试',
-      path: 'packages/kernel/foundation/tests/error.test.ts',
-      startLine: 8,
-      endLine: 70,
     },
     {
       label: '只读 Map 浅快照测试',

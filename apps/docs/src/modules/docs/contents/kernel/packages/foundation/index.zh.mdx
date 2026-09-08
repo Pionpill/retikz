@@ -5,15 +5,61 @@ description: 浏览 @retikz/foundation 为全仓提供的基础契约与通用�
 
 `@retikz/foundation` 提供不属于特定绘图领域、但可被所有包复用的基础契约。
 
+## 安装与使用
+
+<PackageManagerInstall packages="@retikz/foundation" />
+
+```ts
+import { cloneAndFreezeJson } from '@retikz/foundation';
+
+const source = { id: 'diagram', settings: { grid: true } };
+const snapshot = cloneAndFreezeJson(source, 'diagram config');
+
+source.settings.grid = false;
+snapshot.settings.grid; // true
+Object.isFrozen(snapshot.settings); // true
+```
+
+上面的代码只是一个示例。Foundation 提供 Retikz 生态内可复用、与业务领域无关的基础能力。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Foundation 根入口',
+      path: 'packages/kernel/foundation/src/index.ts',
+      startLine: 1,
+      endLine: 7,
+    },
+    {
+      label: '根入口与 subpath 契约测试',
+      path: 'packages/kernel/foundation/tests/public-surface.test.ts',
+      startLine: 1,
+      endLine: 66,
+    },
+  ]}
+/>
+
+<ComponentAlert
+  type="tip"
+  title="面向 Retikz 内部与扩展作者"
+  description="Foundation 仅服务于 Retikz 内部包和社区扩展作者；它不是通用业务工具库，也不承诺对 Retikz 生态之外的场景提供兼容性或维护支持。"
+/>
+
 ## 职责一览
 
-| 文档 | 职责                            | 适合何时查阅           |
-| ---- | ------------------------------- | ---------------------- |
-| 概览 | 类型、JSON、schema 与结构化错误 | 需要复用跨包基础能力时 |
+| 文档       | 职责                          | 适合何时查阅           |
+| ---------- | ----------------------------- | ---------------------- |
+| 概览       | 类型、JSON、schema 与通用工具 | 需要复用跨包基础能力时 |
+| 校验与错误 | 结构化错误与标量断言          | 需要确定失败边界时     |
 
 ## 文档
 
 <LinkedCard href="/kernel/packages/foundation/overview">
   <span className="font-semibold">概览</span>
   <span className="mt-1 text-center text-sm text-muted-foreground">基础契约与通用工具</span>
+</LinkedCard>
+
+<LinkedCard href="/kernel/packages/foundation/validation-errors">
+  <span className="font-semibold">校验与错误</span>
+  <span className="mt-1 text-center text-sm text-muted-foreground">结构化错误与标量断言</span>
 </LinkedCard>

@@ -1,63 +1,9 @@
 ---
 title: '@retikz/foundation'
-description: Domain-free type, JSON, scalar-schema, static-color, and structured-error contracts shared across packages.
+description: Domain-free type, JSON, scalar-schema, static-color, and readonly-collection contracts shared across packages.
 ---
 
-`@retikz/foundation` is a pure utility package that provides foundational capabilities for all packages, keeping shared types, JSON and structurally readonly collection snapshots, scalar validation, blank-string semantics, and error shape in one place. Zod is its only production dependency.
-
-## Install and use
-
-<PackageManagerInstall packages="@retikz/react react react-dom" />
-
-```ts
-import {
-  assertPlainDataContainers,
-  assertNonEmptyString,
-  assertPositiveNumber,
-  cloneAndFreezeJson,
-  compositeOpaqueColor,
-  createOpenStringSchema,
-  createReadonlyMap,
-  JsonObjectSchema,
-  JsonValueSchema,
-  NonBlankStringSchema,
-  NormalizedFractionSchema,
-  parseStaticCssColor,
-  PositiveNumberSchema,
-  RetikzError,
-  RetikzFoundationError,
-} from '@retikz/foundation';
-import type {
-  AssertEqual,
-  JsonObject,
-  JsonValue,
-  NonEmptyReadonlyArray,
-  OpenString,
-  ParsedCssColor,
-  RetikzErrorOptions,
-  ValueOf,
-  WithRequiredProperties,
-} from '@retikz/foundation';
-```
-
-Developers usually do not need to use `@retikz/foundation` directly; it is a pure internal utility package created to share foundational capabilities across packages.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Foundation root entry',
-      path: 'packages/kernel/foundation/src/index.ts',
-      startLine: 1,
-      endLine: 7,
-    },
-    {
-      label: 'Root-only and subpath contract tests',
-      path: 'packages/kernel/foundation/tests/public-surface.test.ts',
-      startLine: 1,
-      endLine: 66,
-    },
-  ]}
-/>
+`@retikz/foundation` is a pure utility package that provides foundational capabilities for all packages, keeping shared types, JSON and structurally readonly collection snapshots, scalar validation, and blank-string semantics in one place. Zod is its only production dependency.
 
 ## Contents
 
@@ -165,51 +111,6 @@ compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
 
 Foundation owns only static parsing and pure color math; it knows nothing about Theme modes or drawing fields. Invalid colors, translucent backdrops, and out-of-range weights throw `RetikzFoundationError` with code `FOUNDATION_COLOR_ERROR`. Core decides when to call these atoms from the final style and Theme mode.
 
-### Assertion utilities
-
-`assertNonEmptyString(value, label)` and `assertPositiveNumber(value, label)` expect values already narrowed to `string` and `number`. The first rejects empty and runtime-standard whitespace-only strings; the second rejects `0`, negative, and non-finite numbers. Both return `void` on success.
-
-```ts
-assertNonEmptyString('layer/main', 'owner');
-// '', ' ', '\t', '\n', and Unicode whitespace throw:
-// owner must be a non-empty string.
-assertPositiveNumber(1.5, 'SVG font size');
-// 0, negative, Infinity, -Infinity, and NaN throw:
-// SVG font size must be a positive finite number.
-```
-
-Failures directly throw `RetikzFoundationError`: the string assertion uses `FOUNDATION_NON_EMPTY_STRING_REQUIRED`, while the positive-number assertion uses `FOUNDATION_POSITIVE_NUMBER_REQUIRED`. Both retain the `label` and original `value` in `details`, and point `cause` to the rejected value. Neither assertion is an `unknown` type guard; use the corresponding schema when a schema result is required, and do not catch and redundantly wrap the same atomic failure as a domain error.
-
-### Error handling
-
-`RetikzErrorOptions`, `RetikzError`, and `isRetikzError` provide the smallest common shape for domain owners. `RetikzFoundationError` uniformly carries Foundation-owned atomic errors and distinguishes failures through constructor parameters; other owners still decide their codes, details fields, and recovery semantics:
-
-```ts
-import { RetikzError, type ValueOf } from '@retikz/foundation';
-
-type Details = Readonly<{ source: string }>;
-
-const RetikzDomainErrorCode = {
-  Failed: 'DOMAIN_FAILED',
-} as const;
-
-type RetikzDomainErrorCodeValue = ValueOf<typeof RetikzDomainErrorCode>;
-
-class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details> {
-  constructor(details: Details, cause?: unknown) {
-    super({ code: RetikzDomainErrorCode.Failed, message: 'Domain failed', details, cause });
-  }
-}
-```
-
-| Member            | Type                                       | Semantics                                                                                                                                                                |
-| ----------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `code`            | `TCode`                                    | Structured-error classification code chosen by the owner                                                                                                                 |
-| `message`         | `string`                                   | Error message presented to the caller                                                                                                                                    |
-| `details`         | `TDetails`                                 | Structured details supplied by the owner; object identity is preserved and the value is not deep-copied or frozen automatically                                          |
-| `cause`           | `unknown`, optional                        | Original exception or value that caused the error; omitting it still creates an own property whose value is `undefined`                                                  |
-| `isRetikzError()` | `(value: unknown) => value is RetikzError` | Tests whether a value belongs to the ordinary `RetikzError` class hierarchy; it is not a hostile-object, cross-realm, or Core/Runtime private-identity security boundary |
-
 <SourceLinks
   sources={[
     {
@@ -237,34 +138,10 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
       endLine: 92,
     },
     {
-      label: 'Scalar assertion implementation',
-      path: 'packages/kernel/foundation/src/assert.ts',
-      startLine: 1,
-      endLine: 26,
-    },
-    {
       label: 'Scalar schema tests',
       path: 'packages/kernel/foundation/tests/schema.test.ts',
       startLine: 1,
       endLine: 71,
-    },
-    {
-      label: 'Structured error implementation',
-      path: 'packages/kernel/foundation/src/error.ts',
-      startLine: 1,
-      endLine: 67,
-    },
-    {
-      label: 'Scalar assertion tests',
-      path: 'packages/kernel/foundation/tests/assert.test.ts',
-      startLine: 1,
-      endLine: 75,
-    },
-    {
-      label: 'Structured error tests',
-      path: 'packages/kernel/foundation/tests/error.test.ts',
-      startLine: 8,
-      endLine: 70,
     },
     {
       label: 'Readonly Map shallow snapshot tests',

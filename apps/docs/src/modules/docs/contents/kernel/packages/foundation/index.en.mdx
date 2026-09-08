@@ -5,15 +5,61 @@ description: Browse the foundational contracts and shared utilities provided by 
 
 `@retikz/foundation` provides domain-neutral contracts that every package can reuse.
 
+## Install and use
+
+<PackageManagerInstall packages="@retikz/foundation" />
+
+```ts
+import { cloneAndFreezeJson } from '@retikz/foundation';
+
+const source = { id: 'diagram', settings: { grid: true } };
+const snapshot = cloneAndFreezeJson(source, 'diagram config');
+
+source.settings.grid = false;
+snapshot.settings.grid; // true
+Object.isFrozen(snapshot.settings); // true
+```
+
+The example above illustrates one utility. Foundation provides reusable, business-domain-neutral capabilities for the Retikz ecosystem.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Foundation root entry',
+      path: 'packages/kernel/foundation/src/index.ts',
+      startLine: 1,
+      endLine: 7,
+    },
+    {
+      label: 'Root-only and subpath contract tests',
+      path: 'packages/kernel/foundation/tests/public-surface.test.ts',
+      startLine: 1,
+      endLine: 66,
+    },
+  ]}
+/>
+
+<ComponentAlert
+  type="tip"
+  title="For Retikz packages and extension authors"
+  description="Foundation serves Retikz internal packages and community extension authors. It is not a general-purpose business utility library and makes no compatibility or maintenance commitment for use outside the Retikz ecosystem."
+/>
+
 ## Responsibilities
 
-| Document | Responsibility                              | Reach for it when                 |
-| -------- | ------------------------------------------- | --------------------------------- |
-| Overview | Types, JSON, schemas, and structured errors | Reusing cross-package foundations |
+| Document            | Responsibility                             | Reach for it when                 |
+| ------------------- | ------------------------------------------ | --------------------------------- |
+| Overview            | Types, JSON, schemas, and shared utilities | Reusing cross-package foundations |
+| Validation & Errors | Structured errors and scalar assertions    | Defining a failure boundary       |
 
 ## Documentation
 
 <LinkedCard href="/kernel/packages/foundation/overview">
   <span className="font-semibold">Overview</span>
   <span className="mt-1 text-center text-sm text-muted-foreground">Foundational contracts and shared utilities</span>
+</LinkedCard>
+
+<LinkedCard href="/kernel/packages/foundation/validation-errors">
+  <span className="font-semibold">Validation & Errors</span>
+  <span className="mt-1 text-center text-sm text-muted-foreground">Structured errors and scalar assertions</span>
 </LinkedCard>

@@ -1,0 +1,97 @@
+---
+title: 校验与错误
+description: 使用 Foundation 的标量断言和结构化错误骨架，明确基础契约与领域包各自拥有的失败边界
+---
+
+Foundation 将通用标量校验和错误形态放在一起：断言复用最小规则，错误类型则让每个包保留自己的错误语义。
+
+## 结构化错误
+
+`RetikzErrorOptions`、`RetikzError` 与 `isRetikzError` 提供所有包共享的最小错误骨架。领域包（即拥有这次失败语义的 owner）应继承 `RetikzError` 并定义自己的错误码、详情和恢复语义；`RetikzFoundationError` 只承载 Foundation 自己拥有的原子失败。
+
+```ts
+import { RetikzError, type ValueOf } from '@retikz/foundation';
+
+type Details = Readonly<{ source: string }>;
+
+const RetikzDomainErrorCode = {
+  Failed: 'DOMAIN_FAILED',
+} as const;
+
+type RetikzDomainErrorCodeValue = ValueOf<typeof RetikzDomainErrorCode>;
+
+class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details> {
+  constructor(details: Details, cause?: unknown) {
+    super({ code: RetikzDomainErrorCode.Failed, message: 'Domain failed', details, cause });
+  }
+}
+```
+
+| 成员              | 类型                                       | 语义                                                                                                                       |
+| ----------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `code`            | `TCode`                                    | 结构化错误分类，由 owner 定义                                                                                              |
+| `message`         | `string`                                   | 面向调用方的错误消息                                                                                                       |
+| `details`         | `TDetails`                                 | owner 提供的结构化详情；保留对象身份，不自动深拷贝或冻结                                                                   |
+| `cause`           | `unknown`，可选                            | 原始异常或值；省略时仍创建值为 `undefined` 的 own property                                                                 |
+| `isRetikzError()` | `(value: unknown) => value is RetikzError` | 判断值是否属于正常 `RetikzError` class hierarchy；不作为 hostile object、跨 realm 或 Runtime/Core 私有 identity 的安全边界 |
+
+## 标量断言
+
+Foundation 内置少量用于基础契约失败的标量断言。它们只接收调用方已约束好 TypeScript 标量类型的值，成功时返回 `void`；未指定 owner 错误时，失败会抛出对应的 `RetikzFoundationError`。
+
+### 内置断言
+
+| 方法                                              | 作用                                   | 默认错误码                             |
+| ------------------------------------------------- | -------------------------------------- | -------------------------------------- |
+| `assertNonEmptyString(value, label, ownerError?)` | 拒绝空串和只包含运行时标准空白的字符串 | `FOUNDATION_NON_EMPTY_STRING_REQUIRED` |
+| `assertPositiveNumber(value, label, ownerError?)` | 拒绝 `0`、负数和非有限数               | `FOUNDATION_POSITIVE_NUMBER_REQUIRED`  |
+
+### 指定 owner 错误
+
+第三个参数 `ownerError` 接收已构造的上层 `RetikzError`。传入后，断言失败时直接原样抛出它；Foundation 不改写其 `code`、`message`、`details` 或 `cause`。
+
+```ts
+const fontSize = 0;
+const error = new RetikzDomainError({ source: 'svg' });
+
+assertPositiveNumber(fontSize, 'SVG font size', error);
+// 抛出 RetikzDomainError，而不是 RetikzFoundationError
+```
+
+没有传入 `ownerError` 时，断言仍抛 `RetikzFoundationError`。字符串断言使用 `FOUNDATION_NON_EMPTY_STRING_REQUIRED`，正数断言使用 `FOUNDATION_POSITIVE_NUMBER_REQUIRED`，并在 `details` 与 `cause` 中保留原子失败信息。
+
+<SourceLinks
+  sources={[
+    {
+      label: '标量断言实现',
+      path: 'packages/kernel/foundation/src/assert.ts',
+      startLine: 1,
+      endLine: 38,
+    },
+    {
+      label: '结构化错误实现',
+      path: 'packages/kernel/foundation/src/error.ts',
+      startLine: 3,
+      endLine: 73,
+    },
+    {
+      label: '标量断言测试',
+      path: 'packages/kernel/foundation/tests/assert.test.ts',
+      startLine: 1,
+      endLine: 95,
+    },
+    {
+      label: '结构化错误测试',
+      path: 'packages/kernel/foundation/tests/error.test.ts',
+      startLine: 8,
+      endLine: 70,
+    },
+  ]}
+/>
+
+## 相关
+
+<LinkedCard href="/kernel/packages/foundation/overview">
+  <span className="font-semibold">概览</span>
+  <span className="mt-1 text-center text-sm text-muted-foreground">Foundation 的其它基础契约与通用工具</span>
+</LinkedCard>
