@@ -1,0 +1,57 @@
+---
+title: 数学 · math
+description: 浏览 @retikz/math 的几何原语、坐标变换与计算算法
+---
+
+`@retikz/math` 负责零依赖的数学和几何计算，不包含绘图领域语义或渲染逻辑。
+
+## 安装与使用
+
+<PackageManagerInstall packages="@retikz/math" />
+
+```ts
+import { point, vector2, type Position, type Vector2 } from '@retikz/math';
+
+const start: Position = [20, 10];
+const offset: Vector2 = [40, -15];
+const end = vector2.add(start, offset); // [60, -5]
+const distance = point.distance(start, end); // 约为 42.7
+```
+
+上面的代码展示了根入口提供的点和向量运算。几何原语、坐标变换与算法的具体语义和边界，请继续阅读对应文档。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Math 根入口',
+      path: 'packages/kernel/math/src/index.ts',
+      startLine: 1,
+      endLine: 4,
+    },
+  ]}
+/>
+
+## 职责一览
+
+| 文档     | 职责                           | 适合何时查阅         |
+| -------- | ------------------------------ | -------------------- |
+| 几何原语 | 点、向量、边界和曲线的基本表示 | 构造或读取几何数据时 |
+| 坐标变换 | 在坐标空间之间变换几何数据     | 处理布局或变换时     |
+| 几何算法 | 相交、裁切和构造等算法         | 需要派生几何结果时   |
+
+## 文档
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/math/primitives">
+    <span className="font-semibold">几何原语</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">点、向量、边界与曲线</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/math/transforms">
+    <span className="font-semibold">坐标变换</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">不同坐标空间之间的换算</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/math/algorithms">
+    <span className="font-semibold">几何算法</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">相交、裁切与几何构造</span>
+  </LinkedCard>
+</div>

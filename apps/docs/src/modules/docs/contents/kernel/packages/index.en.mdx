@@ -1,47 +1,83 @@
 ---
 title: Kernel packages
-description: Choose among the Kernel base, core, extension, framework, and rendering groups, then start with the relevant group overview
+description: Browse the Kernel base, core, extension, framework, and rendering groups, then enter a package's documentation
 ---
 
-Kernel packages are organized into five responsibility groups. Choose the problem you are solving first, then use the group overview to understand package boundaries, dependencies, and the recommended reading order
+Kernel packages are organized into five responsibility groups. Choose the problem you are solving first, then enter the relevant package to understand its boundaries, dependencies, and documentation
 
 ## Groups at a glance
 
-| Group     | Responsibility                                       | Reach for it when                                           |
-| --------- | ---------------------------------------------------- | ----------------------------------------------------------- |
-| Base      | Cross-package contracts and dependency-free geometry | Reusing foundational types, schemas, or geometry algorithms |
-| Core      | IR, Scene compilation, and incremental runtime       | Understanding compilation, execution, and state ownership   |
-| Extension | Optional formula and inspection capabilities         | Adding TeX formulas or a runtime Inspector                  |
-| Framework | React and framework-free host adapters               | Using Kernel from React or plain JavaScript                 |
-| Rendering | SVG, Canvas, and hydration materialization           | Choosing a backend or binding client-side interaction       |
+| Group     | Responsibility                                       | Packages         |
+| --------- | ---------------------------------------------------- | ---------------- |
+| Base      | Cross-package contracts and dependency-free geometry | foundation, math |
+| Core      | IR, Scene compilation, and incremental runtime       | core, runtime    |
+| Extension | Optional formula and inspection capabilities         | tex, inspect     |
+| Framework | React and framework-free host adapters               | vanilla, react   |
+| Rendering | SVG, Canvas, and hydration materialization           | render           |
 
-## Start with a group
+## Base packages
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/base">
-    <span className="font-semibold">Base</span>
+  <LinkedCard href="/kernel/packages/foundation">
+    <span className="font-semibold">Foundation · foundation</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Cross-package contracts and shared utilities</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/math">
+    <span className="font-semibold">Math · math</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Foundational contracts and geometry from foundation and math
+      Dependency-free geometry primitives, transforms, and algorithms
     </span>
   </LinkedCard>
+</div>
+
+## Core packages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/kernel/packages/core">
-    <span className="font-semibold">Core</span>
+    <span className="font-semibold">Compilation Core · core</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">IR, Definitions, and Scene compilation</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/runtime">
+    <span className="font-semibold">Incremental Execution · runtime</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
-      Compilation and incremental execution from core and runtime
+      State ownership, Programs, and synchronous Sessions
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/packages/extension">
-    <span className="font-semibold">Extension</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Optional capabilities from tex and inspect</span>
+</div>
+
+## Extension packages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/tex">
+    <span className="font-semibold">LaTeX Math · tex</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Formula lowering and runtime integration</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/packages/framework">
-    <span className="font-semibold">Framework</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Host adapters from vanilla and react</span>
+  <LinkedCard href="/kernel/packages/inspect">
+    <span className="font-semibold">Compilation Inspection · inspect</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Selection, inspection, and auxiliary compilation
+    </span>
   </LinkedCard>
+</div>
+
+## Framework packages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/vanilla">
+    <span className="font-semibold">Vanilla Adapter · vanilla</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Plain JavaScript authoring APIs</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/react">
+    <span className="font-semibold">React Adapter · react</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">React JSX authoring APIs</span>
+  </LinkedCard>
+</div>
+
+## Rendering packages
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
   <LinkedCard href="/kernel/packages/render">
-    <span className="font-semibold">Rendering</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Backend materialization and hydration from render
-    </span>
+    <span className="font-semibold">Rendering Backends · render</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">SVG, Canvas, and hydration</span>
   </LinkedCard>
 </div>

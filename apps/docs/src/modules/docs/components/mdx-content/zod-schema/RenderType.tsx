@@ -75,6 +75,17 @@ export const RenderType: FC<RenderTypeProps> = props => {
         </span>
       );
 
+    case 'record':
+      return (
+        <span className={cn('inline-flex items-baseline gap-1', codeClassName, className)}>
+          <span>Record&lt;</span>
+          <RenderType repr={repr.key} plain />
+          <span>,</span>
+          <RenderType repr={repr.value} plain />
+          <span>&gt;</span>
+        </span>
+      );
+
     case 'union':
       return (
         <span className={cn('inline-flex flex-wrap items-baseline gap-1', className)}>

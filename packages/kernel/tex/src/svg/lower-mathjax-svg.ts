@@ -371,7 +371,11 @@ const lowerSvgNode = (node: SvgNode, context: SvgLoweringContext, matrix: Affine
 /** 将 MathJax SVG 降解为 LoweredTex，并保留失败分类 */
 export const lowerMathJaxSvg = (svg: string, fontSize: number, texSource = ''): TexLoweringResult<LoweredTex> => {
   try {
-    assertPositiveNumber(fontSize, 'SVG font size');
+    assertPositiveNumber(
+      fontSize,
+      'SVG font size',
+      new RetikzTexError(RetikzTexErrorCode.SvgMalformed, 'SVG font size must be a positive finite number.'),
+    );
     const document = parseXml(svg);
     const rootSvg = findRootSvg(document);
     if (!rootSvg) throw new RetikzTexError(RetikzTexErrorCode.SvgMalformed, 'MathJax SVG root is missing');

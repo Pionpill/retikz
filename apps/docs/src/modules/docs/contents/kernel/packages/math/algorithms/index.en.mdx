@@ -1,0 +1,135 @@
+---
+title: Geometric algorithms
+description: Compute relationships between geometric objects and derive intersections, circles, convex hulls, point-fitting curves, and sampleable curve segments from existing data with @retikz/math.
+---
+
+Primitives describe points, vectors, circles, and arcs. Algorithms combine those values to answer questions such as “where do they intersect?”, “which circle covers these points?”, or “how can I make a smooth curve through them?”. They handle mathematical and geometric relationships only; they do not create IR or depend on a renderer.
+
+## Intersections
+
+Intersection algorithms find the points shared by two lines, two segments, a line and a circle, or two circles. Results are coordinate points; no intersection or degenerate input is expressed as `null` or an empty array.
+
+Use the panel to switch between lines, segments, line/circle, and circle/circle cases. Choose “Line intersection beyond strokes” to see that the solid strokes are only finite visual excerpts: `lineLine` still computes the intersection of the infinitely extended lines, so it can return a purple point even when the two visible strokes do not touch. “Disjoint segments” provides the contrasting finite-range `segmentSegment` result.
+
+<ComponentPreview
+  files="intersection-playground"
+  size="md"
+  caption="Switch the geometric relation and observe intersections and degenerate cases"
+/>
+
+### API reference
+
+The input types are `LineLineInput` (two lines or segments defined by endpoints), `LineCircleInput` (a line and a circle), and `CircleCircleInput` (two circles). The table lists the intersection methods
+
+| API                        | Complexity            | Purpose                                                                                                |
+| -------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------ |
+| `intersect.lineLine`       | Time O(1), space O(1) | Find the intersection of two infinite lines; return `null` if parallel or collinear                    |
+| `intersect.segmentSegment` | Time O(1), space O(1) | Find the intersection of two segments; return `null` if disjoint, parallel, collinear, or overlapping  |
+| `intersect.lineCircle`     | Time O(1), space O(1) | Find line/circle intersections; return 0 or 2 points and keep two coincident points for tangency       |
+| `intersect.circleCircle`   | Time O(1), space O(1) | Find circle/circle intersections; return an empty array for disjoint, contained, or coincident circles |
+
+## Ray-arc intersections
+
+Ray-arc input includes a circle center, radius, start angle, and end angle. `intersectRayWithArc` returns a ray parameter `s`; the actual point is `origin + s * direction`. Only intersections in the ray's forward direction are kept.
+
+<ComponentPreview files="ray-arc" size="md" caption="Purple points mark the intersections between the arc and ray" />
+
+### Ray-arc API
+
+The `RayArcIntersectionInput` type describes the ray origin, direction, and arc range. The table lists the intersection method
+
+| API                   | Complexity            | Purpose                                                                |
+| --------------------- | --------------------- | ---------------------------------------------------------------------- |
+| `intersectRayWithArc` | Time O(1), space O(1) | Return forward ray parameters for arc intersections in ascending order |
+
+## Circles and triangles
+
+These algorithms construct circles from a triangle or a point set. Use the “Construction” control to view one scheme at a time: a circumcircle passes through the triangle's three vertices, an incircle touches all three sides, and a minimal enclosing circle covers a point set. The panel's point controls are the algorithm inputs, so moving them shows how the result follows the geometry. Collinear or otherwise degenerate triangles return `null`.
+
+The demo shows only the selected construction, keeping these different geometric questions separate.
+
+<ComponentPreview
+  files="circle-constructions"
+  size="md"
+  caption="Compare a triangle's circumcircle and incircle with a point set's minimal enclosing circle"
+/>
+
+### API reference
+
+The `Circle` type represents a circle with a center and radius. The table lists the three circle-construction methods
+
+| API                       | Complexity                    | Purpose                                                                                 |
+| ------------------------- | ----------------------------- | --------------------------------------------------------------------------------------- |
+| `triangle.circumCircle`   | Time O(1), space O(1)         | Construct a circumcircle; return `null` for collinear or degenerate points              |
+| `triangle.incircle`       | Time O(1), space O(1)         | Construct an incircle; return `null` for a degenerate triangle                          |
+| `circle.minimalEnclosing` | Average time O(n), space O(1) | Construct the smallest circle covering all input points; return `null` for an empty set |
+
+## Polygons and convex hulls
+
+Polygon containment asks whether a point lies inside a polygon and supports concave polygons and either vertex winding. A convex hull keeps only the outermost points and returns a counter-clockwise convex polygon. The two operations serve different purposes: containment preserves the original polygon, while a hull covers its concave regions.
+
+The demo uses a light-gray line for the original polygon and an orange line for its convex hull. The panel provides multiple movable test points: points turn green inside the polygon and red outside. The default set includes an ordinary interior point, an exterior point, and a point outside the concave indentation.
+
+<ComponentPreview
+  files="polygon-containment"
+  size="md"
+  caption="Observe polygon containment and the convex-hull boundary together"
+/>
+
+The result for a boundary point from `polygon.containsPoint` is undefined; add an explicit point-on-segment test when boundary ownership matters. `convexHull` de-duplicates points and drops collinear middle points. With fewer than three points or an all-collinear set, it returns the sorted endpoint set.
+
+### API reference
+
+| API                     | Complexity                  | Purpose                                                                  |
+| ----------------------- | --------------------------- | ------------------------------------------------------------------------ |
+| `polygon.containsPoint` | Time O(n), space O(1)       | Use the even-odd rule to test whether a point is inside a simple polygon |
+| `convexHull`            | Time O(n log n), space O(n) | Build a counter-clockwise convex hull and remove collinear middle points |
+
+## Curve slicing
+
+When a route is not straight, common jobs include placing a label, arrow, or animated object at 40%, finding where a travelled distance lands, or taking a middle section for highlighting, a gap, or a local redraw. `CurveSegment` gives lines, quadratic and cubic Béziers, circular arcs, and elliptical arcs one shared way to sample points and directions and to take shape-preserving slices.
+
+Use the panel to switch curve kinds and move the sample position and slice bounds. Light gray is the complete curve; the highlighted yellow portion comes from `curve.slice`. The blue dot and short line show the current point and direction. Every slice retains its original curve kind instead of degrading into a polyline.
+
+<ComponentPreview
+  files="curve-segments"
+  size="md"
+  caption="Switch among five curve segments and observe parameter sampling, direction, and shape-preserving slices"
+/>
+
+`sampleAt` accepts `0–1`: `0` is the start and `1` is the end. It returns both the point and direction of travel. `approximateLength` answers “how long is this route?” Lines and circular arcs are calculated directly; Béziers and elliptical arcs use a fixed number of sample points. The default `sampleCount` is 32; a higher value is more accurate but costs more work.
+
+`parameterAtDistance` answers “where do I land after travelling this far?” For Béziers and elliptical arcs, inversion uses at most 32 bisection steps by default. If a midpoint's sampled travelled distance is within the default geometric tolerance of the target distance, it returns early. A cached `totalLength` must use the same sampling budget.
+
+`slice` also clamps and orders its two parameters. Quadratic and cubic Béziers use De Casteljau subdivision; circular and elliptical arcs retain their directed sweep, center, radii, and ellipse rotation. Zero-length or zero-derivative segments still return a deterministic point and `[1, 0]` tangent, while distance inversion returns the start parameter.
+
+### API reference
+
+| API                         | Complexity              | Purpose                                                                                                                |
+| --------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `CurveSegment`              | —                       | Closed plain-geometry union: `line`, `quadraticBezier`, `cubicBezier`, `arc`, and `ellipseArc`                         |
+| `CurveSegmentSample`        | —                       | A parameter sample with `point` and a unit forward `tangent`                                                           |
+| `curve.sampleAt`            | Time O(1), space O(1)   | Sample a point and unit tangent at a clamped `0–1` parameter                                                           |
+| `curve.approximateLength`   | Time O(n), space O(1)   | Approximate Bézier / elliptical-arc length with a fixed budget; use analytic length for lines and circular arcs        |
+| `curve.parameterAtDistance` | Time O(b·n), space O(1) | Invert distance with the same discrete model; `b` is the maximum bisection count, with early exit at default tolerance |
+| `curve.slice`               | Time O(1), space O(1)   | Take a parameter-range subcurve without changing its curve kind                                                        |
+
+Drawing semantics remain in Core: it maps final `PathCommand`s into these mathematical segments, then decides labels, gaps, dashes, arrows, and hit testing. To control automatic label gaps, use `interrupt` on [Path labels and stroke gaps](/kernel/components/draw/path#label-interruption); Math is not a drawing or label API.
+
+## Curves through points
+
+The point-fitting curve algorithm turns a sequence of knots into connected cubic Bézier segments. The curve passes through the input knots rather than merely approaching them; `tension` controls handle length and bend strength. This is also the algorithm behind `<Step kind="smooth">`.
+
+Use the panel to compare uneven spacing, zigzags, and coincident points, then move the control point to see the curve update. The expandable source view shows `CubicSegment` as two control points and an endpoint for each segment.
+
+<ComponentPreview files="curve-playground" size="md" caption="Compare point sets, tension, and cubic Bézier segments" />
+
+At least two knots are required. The function returns `knots.length - 1` segments, and each segment ends exactly at the next knot. Open ends use one-sided tangents; coincident knots still produce finite output, but arbitrary inputs are not guaranteed to be self-intersection-free.
+
+### API reference
+
+The `CubicSegment` type represents two control points and an endpoint of a cubic Bézier segment. The table lists the point-fitting curve conversion method
+
+| API                       | Complexity            | Purpose                                                          |
+| ------------------------- | --------------------- | ---------------------------------------------------------------- |
+| `curve.catmullRomToCubic` | Time O(n), space O(n) | Convert a sequence of knots into connected cubic Bézier segments |

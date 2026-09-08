@@ -15,6 +15,7 @@ import { ComponentAlert } from './component-alert';
 import { ExamplePrompt } from './example-prompt';
 import { PackageManagerInstall } from './package-manager-install';
 import { SourceLinks } from './source-links';
+import { StaticCssColorCatalog } from './static-css-color-catalog';
 import { ZodSchema } from './zod-schema';
 
 const linkClass = 'font-medium underline underline-offset-4';
@@ -174,6 +175,7 @@ export const mdxComponents: MDXComponents = {
   LinkedCard,
   PackageManagerInstall,
   SourceLinks,
+  StaticCssColorCatalog,
   ShowcaseGallery,
   ShowcaseTabs,
   ZodSchema,

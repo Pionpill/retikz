@@ -11,7 +11,11 @@ export const resolveCellFormatterRegistry = (
 ): ReadonlyMap<string, AnyCellFormatterDefinition> => {
   const registry = new Map<string, AnyCellFormatterDefinition>();
   for (const definition of [...BUILTIN_CELL_FORMATTERS, ...(custom ?? [])]) {
-    assertNonEmptyString(definition.name, 'cell formatter provider key');
+    assertNonEmptyString(
+      definition.name,
+      'cell formatter provider key',
+      new RetikzTableError('cell formatter provider key must be a non-empty string.'),
+    );
     if (registry.has(definition.name)) {
       throw new RetikzTableError(`duplicate cell formatter registration: "${definition.name}"`);
     }

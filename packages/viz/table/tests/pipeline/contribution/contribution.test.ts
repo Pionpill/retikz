@@ -7,7 +7,6 @@ import {
   defineThemeStyle,
   resolveCoreProviderDependencies,
 } from '@retikz/core';
-import { RetikzFoundationError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
@@ -20,6 +19,7 @@ import {
   defineCellVisualScale,
   defineTableStructure,
   defineTableThemeStyle,
+  RetikzTableError,
   TABLE_NAMESPACE,
   TableComposite,
   TableRowKind,
@@ -116,7 +116,7 @@ describe('Table runtime contribution', () => {
   });
 
   it.each(['', '  ', '\u2003', '\ufeff'])('rejects blank references with the Table prefix (%j)', reference => {
-    expect(() => createTableRuntimeContribution({ reference })).toThrowError(RetikzFoundationError);
+    expect(() => createTableRuntimeContribution({ reference })).toThrowError(RetikzTableError);
     expect(() => createTableRuntimeContribution({ reference })).toThrowError(
       'table runtime contribution reference must be a non-empty string.',
     );

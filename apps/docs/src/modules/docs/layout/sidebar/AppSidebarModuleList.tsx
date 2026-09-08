@@ -73,7 +73,7 @@ export const AppSidebarModuleList: FC<AppSidebarModuleListProps> = props => {
                 >
                   {ModuleIcon && <ModuleIcon className="mr-1.5 size-3.5 shrink-0" />}
                   <span className="min-w-0 flex-1 truncate text-left">{module.label}</span>
-                  <DocDifficultyDot difficulty={module.difficulty} />
+                  <DocDifficultyDot difficulty={module.difficulty} isActive={isActive} />
                 </button>
               </li>
             </Fragment>

@@ -1,30 +1,19 @@
 ---
-title: 核心包
-description: 核心包拥有 Kernel 的编译契约与增量执行基础，负责把输入转成可消费的 Scene 和运行结果。
+title: 编译核心 · core
+description: 浏览 @retikz/core 的 IR、Definition、编译与 Scene 语义
 ---
 
-核心包解决的是“图形语义如何被编译和执行”。`@retikz/core` 拥有领域中立的 IR、解析与编译契约；`@retikz/runtime` 管理 identity、Program、Session、revision 和 transaction。上层 API 通过这些公开契约接入，而不是各自维护平行执行路径。
+`@retikz/core` 把作者输入编译为确定性的 Scene，并拥有核心 IR 与扩展契约。
 
 ## 职责一览
 
-| 包 | 职责 | 适合何时查阅 |
-| --- | --- | --- |
-| `@retikz/core` | IR、编译、Scene 和领域中立的 lowering | 需要理解图元如何编译成 Scene 时 |
-| `@retikz/runtime` | Program、Session、revision 和 transaction | 需要管理增量执行或状态所有权时 |
+| 文档 | 职责                                   | 适合何时查阅             |
+| ---- | -------------------------------------- | ------------------------ |
+| 概览 | IR、Definition、registry 与 Scene 编译 | 接入或扩展核心绘图能力时 |
 
-## 从哪里开始
+## 文档
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/core/core">
-    <span className="font-semibold">core</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">IR、编译和 Scene 契约</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/core/runtime">
-    <span className="font-semibold">runtime</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">执行所有权与 revision 生命周期</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/core/runtime-session">
-    <span className="font-semibold">runtime · Program 与同步 Session</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">原子发布与增量执行</span>
-  </LinkedCard>
-</div>
+<LinkedCard href="/kernel/packages/core/overview">
+  <span className="font-semibold">概览</span>
+  <span className="mt-1 text-center text-sm text-muted-foreground">Core 的编译语义与运行程序集成</span>
+</LinkedCard>

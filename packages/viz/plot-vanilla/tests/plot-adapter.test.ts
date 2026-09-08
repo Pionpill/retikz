@@ -1,10 +1,17 @@
 import type { InputEmbedContext } from '@retikz/vanilla';
 
-import { RetikzFoundationError } from '@retikz/foundation';
 import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { createPlotProvider, embedPlot, plot, PlotInputEmbedAdapter, plotIROf, resolvePlotContribution } from '../src';
+import {
+  createPlotProvider,
+  embedPlot,
+  plot,
+  PlotInputEmbedAdapter,
+  plotIROf,
+  resolvePlotContribution,
+  RetikzPlotVanillaError,
+} from '../src';
 
 const contextOf = (id: string): InputEmbedContext => ({
   id,
@@ -218,7 +225,7 @@ describe('Plot Vanilla Tier2 adapter', () => {
   it.each(['', '   ', '\u2003', '\ufeff'])(
     'helper rejects blank runtime ids while the adapter does not copy them into model identity %j',
     id => {
-      expect(() => embedPlot(id, { spec: salesSpec() }, datasets)).toThrowError(RetikzFoundationError);
+      expect(() => embedPlot(id, { spec: salesSpec() }, datasets)).toThrowError(RetikzPlotVanillaError);
       expect(() => embedPlot(id, { spec: salesSpec() }, datasets)).toThrowError(
         'plot vanilla embed id must be a non-empty string.',
       );

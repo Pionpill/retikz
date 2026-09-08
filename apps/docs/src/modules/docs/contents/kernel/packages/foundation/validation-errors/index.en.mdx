@@ -1,0 +1,90 @@
+---
+title: Validation & Errors
+description: Use Foundation scalar assertions and structured error primitives while keeping failure ownership with the domain package
+---
+
+Foundation keeps generic scalar validation and error shape together: assertions reuse small rules, while each package retains its own error semantics.
+
+## Structured errors
+
+`RetikzErrorOptions`, `RetikzError`, and `isRetikzError` provide the smallest shared error shape. The domain package that owns a failure should extend `RetikzError` and define its own error codes, details, and recovery semantics. `RetikzFoundationError` carries only Foundation-owned atomic failures.
+
+```ts
+import { RetikzError, type ValueOf } from '@retikz/foundation';
+
+type Details = Readonly<{ source: string }>;
+
+const RetikzDomainErrorCode = {
+  Failed: 'DOMAIN_FAILED',
+} as const;
+
+type RetikzDomainErrorCodeValue = ValueOf<typeof RetikzDomainErrorCode>;
+
+class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details> {
+  constructor(details: Details, cause?: unknown) {
+    super({ code: RetikzDomainErrorCode.Failed, message: 'Domain failed', details, cause });
+  }
+}
+```
+
+| Member            | Type                                       | Semantics                                                                                                                                     |
+| ----------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `code`            | `TCode`                                    | Structured error category defined by the owner                                                                                                |
+| `message`         | `string`                                   | Error message presented to the caller                                                                                                         |
+| `details`         | `TDetails`                                 | Structured details supplied by the owner; object identity is preserved and the value is not deep-copied or frozen automatically               |
+| `cause`           | `unknown`, optional                        | Original exception or value; omitting it still creates an own property with value `undefined`                                                 |
+| `isRetikzError()` | `(value: unknown) => value is RetikzError` | Tests the ordinary `RetikzError` class hierarchy; it is not a hostile-object, cross-realm, or Runtime/Core private-identity security boundary |
+
+## Scalar assertions
+
+Foundation includes a small set of scalar assertions for basic contract failures. They accept values whose TypeScript scalar types are already constrained by the caller and return `void` on success. Without an owner error, failures throw the corresponding `RetikzFoundationError`.
+
+### Built-in assertions
+
+| Method                                            | Purpose                                               | Default error code                     |
+| ------------------------------------------------- | ----------------------------------------------------- | -------------------------------------- |
+| `assertNonEmptyString(value, label, ownerError?)` | Reject an empty or runtime-standard whitespace string | `FOUNDATION_NON_EMPTY_STRING_REQUIRED` |
+| `assertPositiveNumber(value, label, ownerError?)` | Reject `0`, negative, and non-finite numbers          | `FOUNDATION_POSITIVE_NUMBER_REQUIRED`  |
+
+### Supplying an owner error
+
+The third parameter, `ownerError`, accepts an already constructed owner `RetikzError`. When supplied, a failed assertion throws that exact error; Foundation does not alter its `code`, `message`, `details`, or `cause`.
+
+```ts
+const fontSize = 0;
+const error = new RetikzDomainError({ source: 'svg' });
+
+assertPositiveNumber(fontSize, 'SVG font size', error);
+// Throws RetikzDomainError rather than RetikzFoundationError.
+```
+
+Without `ownerError`, assertions continue to throw `RetikzFoundationError`. The string assertion uses `FOUNDATION_NON_EMPTY_STRING_REQUIRED`; the positive-number assertion uses `FOUNDATION_POSITIVE_NUMBER_REQUIRED`. Both retain atomic failure information in `details` and `cause`.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Scalar assertion implementation',
+      path: 'packages/kernel/foundation/src/assert.ts',
+      startLine: 1,
+      endLine: 38,
+    },
+    {
+      label: 'Structured error implementation',
+      path: 'packages/kernel/foundation/src/error.ts',
+      startLine: 3,
+      endLine: 73,
+    },
+    {
+      label: 'Scalar assertion tests',
+      path: 'packages/kernel/foundation/tests/assert.test.ts',
+      startLine: 1,
+      endLine: 95,
+    },
+    {
+      label: 'Structured error tests',
+      path: 'packages/kernel/foundation/tests/error.test.ts',
+      startLine: 8,
+      endLine: 70,
+    },
+  ]}
+/>

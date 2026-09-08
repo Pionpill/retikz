@@ -1,9 +1,16 @@
+import type { RetikzError } from './error';
+
 import { RetikzFoundationError, RetikzFoundationErrorCode } from './error';
 import { NonBlankStringSchema, PositiveNumberSchema } from './schema';
 
 /** 拒绝空串和全空白字符串 */
-export const assertNonEmptyString = (value: string, label: string): void => {
+export const assertNonEmptyString = (
+  value: string,
+  label: string,
+  ownerError: RetikzError | undefined = undefined,
+): void => {
   if (!NonBlankStringSchema.safeParse(value).success) {
+    if (ownerError) throw ownerError;
     throw new RetikzFoundationError({
       code: RetikzFoundationErrorCode.NonEmptyStringRequired,
       message: `${label} must be a non-empty string.`,
@@ -14,8 +21,13 @@ export const assertNonEmptyString = (value: string, label: string): void => {
 };
 
 /** 拒绝不是严格大于零的有限数值 */
-export const assertPositiveNumber = (value: number, label: string): void => {
+export const assertPositiveNumber = (
+  value: number,
+  label: string,
+  ownerError: RetikzError | undefined = undefined,
+): void => {
   if (!PositiveNumberSchema.safeParse(value).success) {
+    if (ownerError) throw ownerError;
     throw new RetikzFoundationError({
       code: RetikzFoundationErrorCode.PositiveNumberRequired,
       message: `${label} must be a positive finite number.`,
