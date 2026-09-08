@@ -69,7 +69,7 @@ import { Path, Step } from '@retikz/react';
 
 任意有效 `fill`（包括 `fill="transparent"` 或 `fillOpacity={0}`）都会关闭自动断线，且 `interrupt: true` 会 fail-loud。Ribbon、custom Path kind 与其它非内置 Stroke Path 上的任意显式布尔值同样 fail-loud。断口不移动标签、marks、dash 或端点箭头，也不处理标签与箭头 / mark 的碰撞。
 
-曲线在参数处取点、按距离反解参数和保形裁切是 [`@retikz/math` 的曲线段算法](/kernel/packages/base/math-algorithms#曲线切片)。它只处理 plain geometry；标签是否断线、断口间距和 Path 输出仍由 Core 决定。
+曲线在参数处取点、按距离反解参数和保形裁切是 [`@retikz/math` 的曲线段算法](/kernel/packages/math/algorithms#曲线切片)。它只处理 plain geometry；标签是否断线、断口间距和 Path 输出仍由 Core 决定。
 
 ### 端点与连接
 
@@ -126,7 +126,7 @@ import { Path, Step } from '@retikz/react';
 
 #### 控制点检查
 
-安装 `@retikz/inspect` 后，用 `InspectLayout` 和 `InspectPath` 为当前 Path occurrence 声明运行时选择。内置 stroke Path Inspector 从最终 settled commands 读取二次 / 三次贝塞尔控制点，输出普通 Path 控制柄与 Node 标记；`labels` 可额外显示控制点编号。选择不进入 Core IR，也不改变主路径边界、资源、命中测试或动画。注册表与宿主接线见 [`@retikz/inspect`](/kernel/packages/extension/inspect)。
+安装 `@retikz/inspect` 后，用 `InspectLayout` 和 `InspectPath` 为当前 Path occurrence 声明运行时选择。内置 stroke Path Inspector 从最终 settled commands 读取二次 / 三次贝塞尔控制点，输出普通 Path 控制柄与 Node 标记；`labels` 可额外显示控制点编号。选择不进入 Core IR，也不改变主路径边界、资源、命中测试或动画。注册表与宿主接线见 [`@retikz/inspect`](/kernel/packages/inspect/overview)。
 
 <ComponentPreview files="path-inspector" size="sm" />
 
@@ -248,8 +248,8 @@ import { Path, Step } from '@retikz/react';
 
 | 属性                  | 类型                                                | 默认值         | 描述                                                                                                                                                                                                              |
 | --------------------- | --------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                  | `string`                                            | —              | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/kernel/packages/render/render-hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler）                                                            |
-| `on<Event>`           | `PathProps['onClick']`                              | —              | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/render-hydration)                                                                                            |
+| `id`                  | `string`                                            | —              | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/kernel/packages/render/hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler）                                                            |
+| `on<Event>`           | `PathProps['onClick']`                              | —              | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/hydration)                                                                                            |
 | `meta`                | `IRPathBase['meta']`                                | —              | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中后反查来源。须为 JSON 可序列化对象 |
 | `kind`                | <ApiValues name="PathKind" /> \| `string`           | `'stroke'`     | 开放的 Path kind provider 名称；Core 内置 `'stroke'`，其它 kind 通过 Path kind contract 显式注册；可选 Standard Ribbon 见 [Ribbon Path kind](/library/standard/extension/ribbon)                                  |
 | `kindOptions`         | `IRPathBase['kindOptions']`                         | —              | 选定 Path kind 的 JSON-safe 参数；Core host 先接受该对象，注册 definition 的完整 subject schema 在后续解析阶段校验                                                                                                |

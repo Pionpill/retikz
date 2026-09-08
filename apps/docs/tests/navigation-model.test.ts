@@ -7,7 +7,6 @@ import type { Section } from '@/modules/docs/data';
 import { DocDifficulty, vizSection } from '@/modules/docs/data';
 import {
   buildSidebarCategories,
-  filterSectionsByDifficulty,
   flattenLeaves,
   isChangelogLocation,
   resolvePageNavigation,
@@ -54,14 +53,14 @@ describe('layout utils', () => {
     expect(categories[1]?.modules[0]?.children?.[1]?.difficulty).toBe(DocDifficulty.Internals);
   });
 
-  it('当前页面被难度过滤时不提供上一篇或下一篇', () => {
-    const filtered = filterSectionsByDifficulty(sections, DocDifficulty.Beginner);
+  it('当前内部页在完整文档树中提供上一篇', () => {
     const navigation = resolvePageNavigation(
       { moduleId: 'kernel', sectionId: 'guide', pageId: 'group', subPageId: 'b' },
-      filtered,
+      sections,
     );
 
-    expect(navigation).toEqual({ prev: null, next: null });
+    expect(navigation.prev?.path).toBe('/kernel/guide/group/a');
+    expect(navigation.next).toBeNull();
   });
 
   it('将 Showcase 图标放在一级页面条目而非分组标题', () => {
@@ -183,6 +182,11 @@ describe('layout utils', () => {
 
   it.each(['data', 'table', 'plot'])('识别 Viz %s 的数据驱动更新日志路由', sectionId => {
     expect(isChangelogLocation({ moduleId: 'viz', sectionId, pageId: 'changelog' })).toBe(true);
+  });
+
+  it('将 Kernel 更新日志归入参考分区', () => {
+    expect(isChangelogLocation({ moduleId: 'kernel', sectionId: 'reference', pageId: 'changelog' })).toBe(true);
+    expect(isChangelogLocation({ moduleId: 'kernel', sectionId: 'packages', pageId: 'changelog' })).toBe(false);
   });
 
   it('不再识别旧 Viz 发布更新日志路由', () => {

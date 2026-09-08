@@ -1,0 +1,57 @@
+---
+title: Math · math
+description: Browse @retikz/math geometry primitives, coordinate transforms, and algorithms
+---
+
+`@retikz/math` owns dependency-free math and geometry computation, without drawing-domain or rendering semantics.
+
+## Install and use
+
+<PackageManagerInstall packages="@retikz/math" />
+
+```ts
+import { point, vector2, type Position, type Vector2 } from '@retikz/math';
+
+const start: Position = [20, 10];
+const offset: Vector2 = [40, -15];
+const end = vector2.add(start, offset); // [60, -5]
+const distance = point.distance(start, end); // approximately 42.7
+```
+
+The example uses the root entry's point and vector operations. Read the corresponding documents for the concrete semantics and boundaries of primitives, transforms, and algorithms.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Math root entry',
+      path: 'packages/kernel/math/src/index.ts',
+      startLine: 1,
+      endLine: 4,
+    },
+  ]}
+/>
+
+## Responsibilities
+
+| Document   | Responsibility                            | Reach for it when                 |
+| ---------- | ----------------------------------------- | --------------------------------- |
+| Primitives | Points, vectors, bounds, and curves       | Constructing or reading geometry  |
+| Transforms | Moving geometry between coordinate spaces | Working with layout or transforms |
+| Algorithms | Intersection, clipping, and construction  | Deriving geometric results        |
+
+## Documentation
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/math/primitives">
+    <span className="font-semibold">Primitives</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Points, vectors, bounds, and curves</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/math/transforms">
+    <span className="font-semibold">Transforms</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Conversion between coordinate spaces</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/math/algorithms">
+    <span className="font-semibold">Algorithms</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Intersection, clipping, and construction</span>
+  </LinkedCard>
+</div>

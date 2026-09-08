@@ -1,36 +1,36 @@
 ---
-title: 渲染包
-description: 渲染包把统一的 Scene 落到 SVG、Canvas 和水合宿主，并保持不同后端共享同一份图形语义。
+title: 渲染后端 · render
+description: 浏览 @retikz/render 的 Scene 物化、后端与水合能力
 ---
 
-渲染包解决的是“编译后的 Scene 如何在宿主中物化”。`@retikz/render` 拥有 SVG、Canvas、事件和水合等后端契约；包内各文档分别说明通用渲染入口、具体后端和客户端水合边界。它不负责定义上层组件或领域 IR。
+`@retikz/render` 将 renderer-agnostic Scene 物化为具体图形，并承载交互水合。
 
 ## 职责一览
 
-| 文档 | 职责 | 适合何时查阅 |
-| --- | --- | --- |
-| `render` | 渲染入口、Scene 物化和通用 runtime | 需要理解后端共同契约时 |
-| `render · SVG` | Scene 到 SVG DOM 或 SVG 字符串 | 需要默认矢量后端时 |
-| `render · Canvas` | Scene 到 Canvas 位图和命中查询 | 需要高频重绘或大量图元时 |
-| `render · 水合` | 静态输出后的事件与客户端绑定 | 需要给图元添加交互时 |
+| 文档   | 职责                     | 适合何时查阅             |
+| ------ | ------------------------ | ------------------------ |
+| 概览   | 共享渲染运行时与提交模型 | 理解后端共用的渲染语义时 |
+| SVG    | 物化为 SVG DOM 或字符串  | 需要可检查的矢量输出时   |
+| Canvas | 即时位图绘制与命中查询   | 需要高频或大量图元绘制时 |
+| 水合   | 绑定客户端事件与动画状态 | 需要为静态结果增加交互时 |
 
-## 从哪里开始
+## 文档
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/render/render">
-    <span className="font-semibold">render</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">通用渲染与 Scene 物化</span>
+  <LinkedCard href="/kernel/packages/render/overview">
+    <span className="font-semibold">概览</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">共享运行时与提交模型</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/packages/render/render-svg">
-    <span className="font-semibold">render · SVG</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">默认矢量后端</span>
+  <LinkedCard href="/kernel/packages/render/svg">
+    <span className="font-semibold">SVG</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">矢量 DOM 与字符串输出</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/packages/render/render-canvas">
-    <span className="font-semibold">render · Canvas</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">位图后端与高频重绘</span>
+  <LinkedCard href="/kernel/packages/render/canvas">
+    <span className="font-semibold">Canvas</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">即时绘制与命中查询</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/packages/render/render-hydration">
-    <span className="font-semibold">render · 水合</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">事件与宿主绑定</span>
+  <LinkedCard href="/kernel/packages/render/hydration">
+    <span className="font-semibold">水合</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">事件和动画绑定</span>
   </LinkedCard>
 </div>

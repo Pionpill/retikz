@@ -1,0 +1,84 @@
+---
+title: Utilities
+description: Reuse @retikz/foundation readonly collections, JSON snapshots, and static CSS color tools within their explicit static boundary.
+---
+
+These utilities carry no drawing-domain semantics and can be reused by Retikz internal packages and extensions.
+
+## Readonly collection snapshots
+
+`createReadonlyMap(entries)` copies input entries into an independent shallow snapshot. The result preserves native Map lookup, iteration, and insertion order without exposing `set`, `delete`, or `clear`; entry values retain their original identity and are not deep-copied or frozen.
+
+```ts
+const definition = { kind: 'point' };
+const source = new Map([['point', definition]]);
+const definitions = createReadonlyMap(source);
+
+source.clear();
+definitions.has('point'); // true
+```
+
+## JSON data snapshots
+
+`cloneAndFreezeJson(value, path)` validates JSON-safe plain data and returns a detached deeply frozen copy. Cycles, accessors, symbol keys, sparse arrays, extra array properties, non-finite numbers, and class instances throw `RetikzFoundationError`.
+
+```ts
+const snapshot = cloneAndFreezeJson({ filters: [{ field: 'age', value: 18 }] });
+
+Object.isFrozen(snapshot); // true
+Object.isFrozen(snapshot.filters); // true
+```
+
+`assertPlainDataContainers(value, path)` checks container structure without copying data or reading accessors. It is reserved for runtime Definition boundaries that have no persisted schema but still need plain-container isolation. Source inputs with an owner schema consume the Zod `parse()` result directly instead of using this assertion as a generic preflight.
+
+## Static CSS colors
+
+`parseStaticCssColor(input)` parses a CSS color that needs no host environment into normalized sRGB channels `{ r, g, b, a }`; `compositeOpaqueColor(foreground, backdrop, weight)` precomposes a static foreground at a `0..1` weight over an opaque backdrop and returns lowercase `#rrggbb`.
+
+```ts
+parseStaticCssColor('darkorange');
+compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
+```
+
+The normal path validates the weight, parses foreground and backdrop, requires an opaque backdrop, then uses `foreground.a × weight` as the effective alpha for source-over sRGB precomposition. Any validation or parsing failure throws `RetikzFoundationError`.
+
+<ComponentPreview files="opaque-color-flow" size="xs" hideCode />
+
+`StaticCssNamedColorHexByName` is the named-color manifest supported by the parser. The catalog below consumes that public manifest directly. Search by color name or hex value, or enter a static hex, `rgb()`, or `hsl()` value supported by Foundation to preview it.
+
+<StaticCssColorCatalog
+  searchLabel="Search named colors or CSS values"
+  emptyMessage="No named colors match this query."
+  previewLabel="Static color preview"
+/>
+
+Dynamic `currentColor`, CSS variables, system colors, and host colors such as P3 are outside this boundary. Foundation neither reads Theme modes nor interprets drawing fields.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Readonly Map shallow snapshot implementation',
+      path: 'packages/kernel/foundation/src/collections.ts',
+      startLine: 1,
+      endLine: 27,
+    },
+    {
+      label: 'Plain-data container assertion and JSON deep-freeze implementation',
+      path: 'packages/kernel/foundation/src/json.ts',
+      startLine: 1,
+      endLine: 92,
+    },
+    {
+      label: 'Named-color manifest',
+      path: 'packages/kernel/foundation/src/color.ts',
+      startLine: 168,
+      endLine: 180,
+    },
+    {
+      label: 'Static CSS color parser and precomposition',
+      path: 'packages/kernel/foundation/src/color.ts',
+      startLine: 312,
+      endLine: 380,
+    },
+  ]}
+/>

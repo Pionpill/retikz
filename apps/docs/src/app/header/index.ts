@@ -1,5 +1,4 @@
 export * from './AboutNav';
-export * from './DocDifficultyFilter';
 export * from './Header';
 export * from './HeaderActions';
 export * from './HeaderNavigation';

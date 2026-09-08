@@ -22,7 +22,7 @@ const jsonObjectContract: AssertEqual<JsonObject, ExpectedJsonObject> = true;
 const parsedCssColorContract: ParsedCssColor = { r: 0, g: 0.5, b: 1, a: 1 };
 
 describe('foundation public surface', () => {
-  it('exports only the twenty runtime symbols from its root', () => {
+  it('exports only the twenty-one runtime symbols from its root', () => {
     expect(Object.keys(foundation).sort()).toEqual(
       [
         'NonBlankStringSchema',
@@ -34,6 +34,7 @@ describe('foundation public surface', () => {
         'RetikzError',
         'RetikzFoundationError',
         'RetikzFoundationErrorCode',
+        'StaticCssNamedColorHexByName',
         'JsonObjectSchema',
         'JsonValueSchema',
         'assertPlainDataContainers',

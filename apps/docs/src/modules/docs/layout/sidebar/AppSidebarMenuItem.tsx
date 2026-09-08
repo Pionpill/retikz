@@ -74,7 +74,7 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
         >
           {ItemIcon && <ItemIcon className="mr-1.5 size-3.5 shrink-0" />}
           <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
-          <DocDifficultyDot difficulty={item.difficulty} />
+          <DocDifficultyDot difficulty={item.difficulty} isActive={isActive} />
         </button>
       </li>
     );
