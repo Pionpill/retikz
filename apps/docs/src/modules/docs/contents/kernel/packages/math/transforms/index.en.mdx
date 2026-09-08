@@ -7,13 +7,7 @@ When a shape moves or rotates, the points that describe the shape can stay the s
 
 This page starts with the common case of local and world coordinates, then introduces two-dimensional affine matrices for composing translation, scaling, and rotation. On a first read, start with the first section and come back to affine matrices when you need them.
 
-## Install
-
-<PackageManagerInstall packages="@retikz/math" />
-
-## Contents
-
-### Local and world coordinates
+## Local and world coordinates
 
 Imagine a shape with its own orientation inside a larger canvas. The canvas has a fixed coordinate system, while the shape has another one: its center is the local origin, and its local `x` and `y` axes rotate with the shape.
 
@@ -49,7 +43,7 @@ Choose the function from the data you already have:
 
 The two functions are inverses. Both return a new point and leave the input tuple unchanged.
 
-#### API reference
+### API reference
 
 | API             | Category | Purpose                                                    |
 | --------------- | -------- | ---------------------------------------------------------- |
@@ -57,7 +51,7 @@ The two functions are inverses. Both return a new point and leave the input tupl
 | `localToWorld`  | Method   | Convert a shape-local point into world coordinates         |
 | `worldToLocal`  | Method   | Convert a world point into shape-local coordinates         |
 
-### Two-dimensional affine matrices
+## Two-dimensional affine matrices
 
 When a transform is more than “rotate around a shape center”—for example, when it also includes scaling, reflection, or shear—or when several transforms need to be composed, use a two-dimensional affine matrix. Think of it as a recipe for calculating a new point: give it `[x, y]`, and it produces `[x', y']`.
 
@@ -91,7 +85,7 @@ Choose between the two capabilities this way: use `localToWorld` / `worldToLocal
 
 When a consumer needs to check a matrix before using it, `isFiniteNonSingularAffine` verifies that it contains finite values and is invertible. For cases such as stroke scaling that require one uniform scale, `getAffineSimilarityScale` returns the scale factor and returns `undefined` for other matrices.
 
-#### API reference
+### API reference
 
 | API                         | Category | Purpose                                                                   |
 | --------------------------- | -------- | ------------------------------------------------------------------------- |
@@ -101,9 +95,3 @@ When a consumer needs to check a matrix before using it, `isFiniteNonSingularAff
 | `applyAffine`               | Method   | Map a point using the affine-matrix formula                               |
 | `isFiniteNonSingularAffine` | Method   | Check that a matrix has finite values and is invertible                   |
 | `getAffineSimilarityScale`  | Method   | Get the uniform scale of a similarity transform, or `undefined` otherwise |
-
-## Related
-
-- [Base packages overview](/kernel/packages/math)
-- [Geometric primitives](/kernel/packages/math/primitives)
-- [Geometric algorithms](/kernel/packages/math/algorithms)

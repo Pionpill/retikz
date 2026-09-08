@@ -5,9 +5,7 @@ description: Compute relationships between geometric objects and derive intersec
 
 Primitives describe points, vectors, circles, and arcs. Algorithms combine those values to answer questions such as “where do they intersect?”, “which circle covers these points?”, or “how can I make a smooth curve through them?”. They handle mathematical and geometric relationships only; they do not create IR or depend on a renderer.
 
-## Contents
-
-### Intersections
+## Intersections
 
 Intersection algorithms find the points shared by two lines, two segments, a line and a circle, or two circles. Results are coordinate points; no intersection or degenerate input is expressed as `null` or an empty array.
 
@@ -19,7 +17,7 @@ Use the panel to switch between lines, segments, line/circle, and circle/circle 
   caption="Switch the geometric relation and observe intersections and degenerate cases"
 />
 
-#### API reference
+### API reference
 
 The input types are `LineLineInput` (two lines or segments defined by endpoints), `LineCircleInput` (a line and a circle), and `CircleCircleInput` (two circles). The table lists the intersection methods
 
@@ -30,13 +28,13 @@ The input types are `LineLineInput` (two lines or segments defined by endpoints)
 | `intersect.lineCircle`     | Time O(1), space O(1) | Find line/circle intersections; return 0 or 2 points and keep two coincident points for tangency       |
 | `intersect.circleCircle`   | Time O(1), space O(1) | Find circle/circle intersections; return an empty array for disjoint, contained, or coincident circles |
 
-### Ray-arc intersections
+## Ray-arc intersections
 
 Ray-arc input includes a circle center, radius, start angle, and end angle. `intersectRayWithArc` returns a ray parameter `s`; the actual point is `origin + s * direction`. Only intersections in the ray's forward direction are kept.
 
 <ComponentPreview files="ray-arc" size="md" caption="Purple points mark the intersections between the arc and ray" />
 
-#### Ray-arc API
+### Ray-arc API
 
 The `RayArcIntersectionInput` type describes the ray origin, direction, and arc range. The table lists the intersection method
 
@@ -44,7 +42,7 @@ The `RayArcIntersectionInput` type describes the ray origin, direction, and arc 
 | --------------------- | --------------------- | ---------------------------------------------------------------------- |
 | `intersectRayWithArc` | Time O(1), space O(1) | Return forward ray parameters for arc intersections in ascending order |
 
-### Circles and triangles
+## Circles and triangles
 
 These algorithms construct circles from a triangle or a point set. Use the “Construction” control to view one scheme at a time: a circumcircle passes through the triangle's three vertices, an incircle touches all three sides, and a minimal enclosing circle covers a point set. The panel's point controls are the algorithm inputs, so moving them shows how the result follows the geometry. Collinear or otherwise degenerate triangles return `null`.
 
@@ -56,7 +54,7 @@ The demo shows only the selected construction, keeping these different geometric
   caption="Compare a triangle's circumcircle and incircle with a point set's minimal enclosing circle"
 />
 
-#### API reference
+### API reference
 
 The `Circle` type represents a circle with a center and radius. The table lists the three circle-construction methods
 
@@ -66,7 +64,7 @@ The `Circle` type represents a circle with a center and radius. The table lists 
 | `triangle.incircle`       | Time O(1), space O(1)         | Construct an incircle; return `null` for a degenerate triangle                          |
 | `circle.minimalEnclosing` | Average time O(n), space O(1) | Construct the smallest circle covering all input points; return `null` for an empty set |
 
-### Polygons and convex hulls
+## Polygons and convex hulls
 
 Polygon containment asks whether a point lies inside a polygon and supports concave polygons and either vertex winding. A convex hull keeps only the outermost points and returns a counter-clockwise convex polygon. The two operations serve different purposes: containment preserves the original polygon, while a hull covers its concave regions.
 
@@ -80,14 +78,14 @@ The demo uses a light-gray line for the original polygon and an orange line for 
 
 The result for a boundary point from `polygon.containsPoint` is undefined; add an explicit point-on-segment test when boundary ownership matters. `convexHull` de-duplicates points and drops collinear middle points. With fewer than three points or an all-collinear set, it returns the sorted endpoint set.
 
-#### API reference
+### API reference
 
 | API                     | Complexity                  | Purpose                                                                  |
 | ----------------------- | --------------------------- | ------------------------------------------------------------------------ |
 | `polygon.containsPoint` | Time O(n), space O(1)       | Use the even-odd rule to test whether a point is inside a simple polygon |
 | `convexHull`            | Time O(n log n), space O(n) | Build a counter-clockwise convex hull and remove collinear middle points |
 
-### Curve slicing
+## Curve slicing
 
 When a route is not straight, common jobs include placing a label, arrow, or animated object at 40%, finding where a travelled distance lands, or taking a middle section for highlighting, a gap, or a local redraw. `CurveSegment` gives lines, quadratic and cubic Béziers, circular arcs, and elliptical arcs one shared way to sample points and directions and to take shape-preserving slices.
 
@@ -105,7 +103,7 @@ Use the panel to switch curve kinds and move the sample position and slice bound
 
 `slice` also clamps and orders its two parameters. Quadratic and cubic Béziers use De Casteljau subdivision; circular and elliptical arcs retain their directed sweep, center, radii, and ellipse rotation. Zero-length or zero-derivative segments still return a deterministic point and `[1, 0]` tangent, while distance inversion returns the start parameter.
 
-#### API reference
+### API reference
 
 | API                         | Complexity              | Purpose                                                                                                                |
 | --------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -118,7 +116,7 @@ Use the panel to switch curve kinds and move the sample position and slice bound
 
 Drawing semantics remain in Core: it maps final `PathCommand`s into these mathematical segments, then decides labels, gaps, dashes, arrows, and hit testing. To control automatic label gaps, use `interrupt` on [Path labels and stroke gaps](/kernel/components/draw/path#label-interruption); Math is not a drawing or label API.
 
-### Curves through points
+## Curves through points
 
 The point-fitting curve algorithm turns a sequence of knots into connected cubic Bézier segments. The curve passes through the input knots rather than merely approaching them; `tension` controls handle length and bend strength. This is also the algorithm behind `<Step kind="smooth">`.
 
@@ -128,17 +126,10 @@ Use the panel to compare uneven spacing, zigzags, and coincident points, then mo
 
 At least two knots are required. The function returns `knots.length - 1` segments, and each segment ends exactly at the next knot. Open ends use one-sided tangents; coincident knots still produce finite output, but arbitrary inputs are not guaranteed to be self-intersection-free.
 
-#### API reference
+### API reference
 
 The `CubicSegment` type represents two control points and an endpoint of a cubic Bézier segment. The table lists the point-fitting curve conversion method
 
 | API                       | Complexity            | Purpose                                                          |
 | ------------------------- | --------------------- | ---------------------------------------------------------------- |
 | `curve.catmullRomToCubic` | Time O(n), space O(n) | Convert a sequence of knots into connected cubic Bézier segments |
-
-## Related
-
-- [Base packages overview](/kernel/packages/math)
-- [Foundation](/kernel/packages/foundation/overview)
-- [Geometric primitives](/kernel/packages/math/primitives)
-- [Coordinate transforms](/kernel/packages/math/transforms)

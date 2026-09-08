@@ -23,9 +23,9 @@ export const coordinateSpacesControls = definePreviewControls({
           kind: 'range',
           id: CoordinateSpacesControlId.CenterX,
           label: '中心 x',
-          defaultValue: 70,
-          min: 30,
-          max: 100,
+          defaultValue: 50,
+          min: -50,
+          max: 50,
           step: 5,
         },
         {
@@ -77,22 +77,22 @@ export const coordinateSpacesControls = definePreviewControls({
 /** 坐标空间 playground 的稳定状态与 API 覆盖 */
 export const previewControlContract = {
   controls: coordinateSpacesControls,
-  canonicalValues: { centerX: 70, centerY: 35, rotation: 30, localX: 40, localY: 0 },
+  canonicalValues: { centerX: 50, centerY: 35, rotation: 30, localX: 40, localY: 0 },
   presets: [
     {
       id: 'axis-aligned',
       label: '未旋转',
-      values: { centerX: 70, centerY: 35, rotation: 0, localX: 40, localY: 0 },
+      values: { centerX: 50, centerY: 35, rotation: 0, localX: 40, localY: 0 },
     },
     {
       id: 'rotated',
       label: '旋转图形',
-      values: { centerX: 70, centerY: 35, rotation: 30, localX: 40, localY: 0 },
+      values: { centerX: 50, centerY: 35, rotation: 30, localX: 40, localY: 0 },
     },
     {
       id: 'offset-point',
       label: '偏移局部点',
-      values: { centerX: 70, centerY: 35, rotation: 30, localX: 25, localY: -25 },
+      values: { centerX: 50, centerY: 35, rotation: 30, localX: 25, localY: -25 },
     },
   ],
   relatedApis: ['CenteredShape', 'localToWorld'],

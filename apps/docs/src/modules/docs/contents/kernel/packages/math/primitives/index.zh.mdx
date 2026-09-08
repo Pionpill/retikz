@@ -5,9 +5,7 @@ description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
 
 几何原语用于描述点、向量和基本几何图形。`@retikz/math` 只负责数学与几何关系的计算。
 
-## 内容
-
-### 向量运算
+## 向量运算
 
 二维几何数据可以表示为坐标点或向量：点表示位置，向量表示方向与位移。`Position` 与 `Vector2` 都使用 `[x, y]` 形式，但应根据语义选择对应的方法集合。
 
@@ -22,7 +20,7 @@ description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
 
 <ComponentPreview files="vector-normal" size="sm" caption="向量与左手法向量" />
 
-#### API 参考
+### API 参考
 
 | API                                                                                    | 类别 | 作用                           |
 | -------------------------------------------------------------------------------------- | ---- | ------------------------------ |
@@ -33,7 +31,7 @@ description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
 | `vector2.fromAngleDegrees`、`vector2.normal`                                           | 方法 | 由角度构造向量和计算左手法向量 |
 | `lerp`                                                                                 | 方法 | 在两个坐标点之间进行线性插值   |
 
-### 边界计算
+## 边界计算
 
 边界计算用于得到一组几何数据所占据的轴对齐矩形。它虽然直接从 `Position` 点集计算，但椭圆、圆弧等一般图元也会先转换为边界候选点，再间接纳入同一套 bounds 计算。
 
@@ -45,7 +43,7 @@ description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
   caption="修改点坐标或圆弧角度，观察点集与圆弧共同影响轴对齐边界"
 />
 
-#### API 参考
+### API 参考
 
 | API                                                                 | 类别 | 作用                         |
 | ------------------------------------------------------------------- | ---- | ---------------------------- |
@@ -56,7 +54,7 @@ description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
 | `centerOfBounds`、`halfAxesOfBounds`                                | 方法 | 取得边界中心和半轴           |
 | `expandBounds`、`cornersOfBounds`                                   | 方法 | 外扩边界和取得四个角点       |
 
-### 椭圆与圆弧
+## 椭圆与圆弧
 
 **椭圆边界。** `ellipse` 统一处理椭圆中心、内接 / 外接关系、包含判断和朝向某点的边界交点。
 
@@ -68,7 +66,7 @@ description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
 
 `collectArcBoundingCandidates` / `collectEllipseArcBoundingCandidates` 取得端点与轴向极值等边界候选点。椭圆弧方法只处理轴对齐椭圆弧；旋转椭圆应先在局部坐标计算，再用[坐标变换](/kernel/packages/math/transforms)映射到世界坐标。
 
-#### API 参考
+### API 参考
 
 | API                                                                                                                  | 类别 | 作用                               |
 | -------------------------------------------------------------------------------------------------------------------- | ---- | ---------------------------------- |
@@ -79,10 +77,3 @@ description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
 | `pointAtArcAngle`、`pointAtEllipseArcAngle`                                                                          | 方法 | 取得圆弧或椭圆弧上的点             |
 | `collectArcBoundingCandidates`、`collectEllipseArcBoundingCandidates`                                                | 方法 | 取得弧段的边界候选点               |
 | `isAngleWithinArcSweep`                                                                                              | 方法 | 判断角度是否落在有向圆弧区间内     |
-
-## 相关
-
-- [基础包总览](/kernel/packages/math)
-- [Foundation](/kernel/packages/foundation/overview)
-- [坐标变换](/kernel/packages/math/transforms)
-- [几何算法](/kernel/packages/math/algorithms)
