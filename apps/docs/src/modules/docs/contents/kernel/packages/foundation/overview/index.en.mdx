@@ -1,31 +1,11 @@
 ---
 title: '@retikz/foundation'
-description: Domain-free type, JSON, scalar-schema, static-color, and readonly-collection contracts shared across packages.
+description: Domain-free readonly-collection, JSON snapshot, and static-color contracts shared across packages.
 ---
 
-`@retikz/foundation` is a pure utility package that provides foundational capabilities for all packages, keeping shared types, JSON and structurally readonly collection snapshots, scalar validation, and blank-string semantics in one place. Zod is its only production dependency.
+`@retikz/foundation` is a pure utility package that provides foundational capabilities for all packages, keeping structurally readonly collection snapshots, JSON data snapshots, and static color computation in one place. Zod is its only production dependency.
 
 ## Contents
-
-### Type utilities
-
-These utilities work only at compile time. They emit no runtime code and carry no IR or domain model.
-
-| Export                            | Semantics                                                                  |
-| --------------------------------- | -------------------------------------------------------------------------- |
-| `ValueOf<T>`                      | Derive the union of an object's values                                     |
-| `AssertEqual<TActual, TExpected>` | Return `true` only for bidirectionally assignable types                    |
-| `OpenString<T>`                   | Keep built-in literal hints while accepting custom strings                 |
-| `WithRequiredProperties<T, TKey>` | Make only selected keys required while preserving other and readonly props |
-| `NonEmptyReadonlyArray<T>`        | Readonly array with at least one element                                   |
-| `JsonValue`                       | Any recursive JSON value                                                   |
-| `JsonObject`                      | String-keyed object of recursive JSON values                               |
-
-For example, `name` becomes required while `note` remains optional:
-
-```ts
-type Named = WithRequiredProperties<Readonly<{ name?: string; note?: string }>, 'name'>;
-```
 
 ### Readonly collection snapshots
 
@@ -39,20 +19,6 @@ const definitions = createReadonlyMap(source);
 source.clear();
 definitions.has('point'); // true
 ```
-
-<span id="jsonobject"></span>
-
-### Generic JSON schemas
-
-`JsonObjectSchema` represents a string-keyed object of recursive JSON values. `JsonValueSchema` accepts strings, finite numbers, booleans, null, arrays, and objects. Foundation owns both contracts for reuse by metadata, custom-provider parameters, and open composite fields:
-
-<ZodSchema name="JsonObjectSchema" />
-
-<span id="jsonvalue"></span>
-
-<ZodSchema name="JsonValueSchema" />
-
-Both schemas use Zod's recursive JSON validation directly. The array branch of `JsonValue` is readonly so an `as const` Source can enter the unknown parse boundary directly. Validation adds no walker, `undefined` filter, structural optimization, clone, freeze, or second generic pass. Domain Source inputs still use their precise owner schema rather than replacing it with a generic JSON schema.
 
 ### JSON data snapshots
 
@@ -71,35 +37,6 @@ Object.isFrozen(snapshot.filters); // true
 assertPlainDataContainers({ supportsRouting: true }, 'Flow Layout Definition capabilities');
 ```
 
-### General contracts
-
-The six fixed scalar schemas validate without coercion, trimming, transforms, or defaults. Consumers still compose domain objects, domain ranges, and cross-field relations:
-
-| Export                     | Accepted values                                                   |
-| -------------------------- | ----------------------------------------------------------------- |
-| `NonBlankStringSchema`     | At least one non-whitespace character; preserves successful input |
-| `PositiveNumberSchema`     | Finite numbers greater than `0`                                   |
-| `NonNegativeNumberSchema`  | Finite numbers greater than or equal to `0`                       |
-| `PositiveIntegerSchema`    | Positive safe integers                                            |
-| `NonNegativeIntegerSchema` | Non-negative safe integers                                        |
-| `NormalizedFractionSchema` | Finite numbers in the inclusive `0..1` range                      |
-
-```ts
-NonBlankStringSchema.parse(' layer/main '); // returned unchanged
-PositiveNumberSchema.parse(1.5);
-NormalizedFractionSchema.parse(0.5);
-```
-
-`createOpenStringSchema(values)` accepts a const object enum while preserving both built-in literal suggestions and arbitrary non-blank custom strings. It does not query a registry or turn extension keys into a whitelist. Generated JSON Schema retains both the known enum branch and the open string branch:
-
-```ts
-const Role = { Participant: 'participant', Activity: 'activity' } as const;
-const RoleSchema = createOpenStringSchema(Role);
-
-RoleSchema.parse('participant');
-RoleSchema.parse('custom.role');
-```
-
 ### Static color atoms
 
 `parseStaticCssColor(input)` parses a statically knowable CSS color into normalized sRGB channels `{ r, g, b, a }`; dynamic values such as `currentColor` and CSS variables return `null`. `compositeOpaqueColor(foreground, backdrop, weight)` precomposes a static foreground at a `0..1` weight over an opaque backdrop and returns lowercase `#rrggbb`:
@@ -114,18 +51,6 @@ Foundation owns only static parsing and pure color math; it knows nothing about 
 <SourceLinks
   sources={[
     {
-      label: 'Scalar schema implementation',
-      path: 'packages/kernel/foundation/src/schema.ts',
-      startLine: 1,
-      endLine: 31,
-    },
-    {
-      label: 'Type utility implementation',
-      path: 'packages/kernel/foundation/src/types.ts',
-      startLine: 1,
-      endLine: 15,
-    },
-    {
       label: 'Readonly Map shallow snapshot implementation',
       path: 'packages/kernel/foundation/src/collections.ts',
       startLine: 1,
@@ -136,12 +61,6 @@ Foundation owns only static parsing and pure color math; it knows nothing about 
       path: 'packages/kernel/foundation/src/json.ts',
       startLine: 1,
       endLine: 92,
-    },
-    {
-      label: 'Scalar schema tests',
-      path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 1,
-      endLine: 71,
     },
     {
       label: 'Readonly Map shallow snapshot tests',
@@ -174,11 +93,3 @@ Any new Foundation capability must satisfy all four conditions:
 4. It does not make an upper package obtain a capability through Foundation that belongs to Core, Math, Runtime, or a domain owner
 
 `createOpenStringSchema(values)` is the only permitted parameterized schema factory and only combines a const object enum with Foundation's existing non-blank string boundary. Except for the domain-free generic JSON value and object schemas, other object or array schemas, range factories, geometry algorithms, Diagnostics, error catalogs, and domain resolvers remain with their current owner. When repetition appears, reassess the semantic owner instead of collecting code in Foundation.
-
-## Related
-
-- [Packages overview](/kernel/packages)
-- [Core](/kernel/packages/core/overview)
-- [Runtime](/kernel/packages/runtime/overview)
-- [Math](/kernel/packages/math)
-- [Render](/kernel/packages/render/overview)

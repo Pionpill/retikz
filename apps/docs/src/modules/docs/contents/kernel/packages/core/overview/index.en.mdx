@@ -24,7 +24,7 @@ const brand = defineThemeStyle({
 
 Core only propagates selectors and creates a detached, frozen `colors` view; it does not interpret domain tokens. `ResolvedTheme.colors` exposes shared semantic colors (`error`, `success`, `warning`, and the lower-emphasis auxiliary `guide`) and the active categorical palette, whose values may repeat and are consumed with a stable modulo index. Core primitives, the final Scene, and renderers do not branch on Theme. See [Compile](/kernel/reference/runtime/compile#composites) for behavior and failures and [Scene](/kernel/reference/schema/scene#theme) for the schema.
 
-Static CSS color parsing, opaque precomposition, and the generic `JsonValue` / `JsonObject` types and schemas are owned by [`@retikz/foundation`](/kernel/packages/foundation/overview#jsonobject). Core owns Theme mode, final master-color chains, and contextual-color materialization, and no longer re-exports those domain-free atoms from its root.
+Static CSS color parsing, opaque precomposition, and the generic `JsonValue` / `JsonObject` types and schemas are owned by [`@retikz/foundation`](/kernel/packages/foundation/types-schemas#jsonobject). Core owns Theme mode, final master-color chains, and contextual-color materialization, and no longer re-exports those domain-free atoms from its root.
 
 ## Complete Snapshots And The Core Program
 

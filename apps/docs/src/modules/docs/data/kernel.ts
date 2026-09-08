@@ -243,6 +243,7 @@ export const kernelSection: Array<Section> = [
             label: 'kernel.pkgFoundationValidationErrors',
             difficulty: DocDifficulty.Internals,
           },
+          { id: 'types-schemas', label: 'kernel.pkgFoundationTypesSchemas', difficulty: DocDifficulty.Internals },
         ],
       },
       {

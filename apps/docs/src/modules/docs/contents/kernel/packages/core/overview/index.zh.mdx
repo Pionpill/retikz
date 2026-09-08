@@ -24,7 +24,7 @@ const brand = defineThemeStyle({
 
 Core 只负责传播 selector 并生成 detached/frozen `colors` 视图，不解释领域 token。`ResolvedTheme.colors` 提供 shared semantic colors（包括 `error`、`success`、`warning` 与低强调辅助色 `guide`）以及当前 categorical palette；后者允许重复值，并由消费方按稳定 index 取余。Core primitive、最终 Scene 与 renderer 都不按 Theme 分支。契约和失败语义见[编译](/kernel/reference/runtime/compile#composite)，schema 见[场景](/kernel/reference/schema/scene#theme)。
 
-静态 CSS 颜色解析、不透明预合成以及通用 `JsonValue` / `JsonObject` 类型与 schema 由 [`@retikz/foundation`](/kernel/packages/foundation/overview#jsonobject) 统一提供。Core 只拥有 Theme mode、最终主色链与派生颜色确定化，不再从根入口转发这些无领域原子。
+静态 CSS 颜色解析、不透明预合成以及通用 `JsonValue` / `JsonObject` 类型与 schema 由 [`@retikz/foundation`](/kernel/packages/foundation/types-schemas#jsonobject) 统一提供。Core 只拥有 Theme mode、最终主色链与派生颜色确定化，不再从根入口转发这些无领域原子。
 
 ## 完整 Snapshot 与 Core Program
 

@@ -1,31 +1,11 @@
 ---
 title: '@retikz/foundation'
-description: 为所有包提供类型、JSON、标量 schema、静态颜色计算与只读集合快照等无领域基础契约。
+description: 为所有包提供只读集合快照、JSON 数据快照与静态颜色计算等无领域基础契约。
 ---
 
-`@retikz/foundation` 是为所有包提供基础能力的纯工具模块，用于统一复用类型、JSON 与结构只读集合快照、标量校验和空白语义；Zod 是它唯一的 production dependency。
+`@retikz/foundation` 是为所有包提供基础能力的纯工具模块，用于统一复用结构只读集合快照、JSON 数据快照与静态颜色计算；Zod 是它唯一的 production dependency。
 
 ## 内容
-
-### 类型工具
-
-这些工具只在编译期工作，不产生运行时代码，也不表达任何 IR 或领域模型。
-
-| 导出                              | 语义                                             |
-| --------------------------------- | ------------------------------------------------ |
-| `ValueOf<T>`                      | 取得对象所有 value 的联合类型                    |
-| `AssertEqual<TActual, TExpected>` | 只有双向可赋值时才得到 `true`                    |
-| `OpenString<T>`                   | 保留内置字面量提示，同时接受自定义字符串         |
-| `WithRequiredProperties<T, TKey>` | 只把指定 key 收窄为必填，保留其余属性及 readonly |
-| `NonEmptyReadonlyArray<T>`        | 至少包含一个元素的只读数组                       |
-| `JsonValue`                       | 任意递归 JSON value                              |
-| `JsonObject`                      | 字符串键与递归 JSON value 组成的对象             |
-
-例如，下面的 `name` 会变为必填，而 `note` 仍保持可选：
-
-```ts
-type Named = WithRequiredProperties<Readonly<{ name?: string; note?: string }>, 'name'>;
-```
 
 ### 只读集合快照
 
@@ -39,20 +19,6 @@ const definitions = createReadonlyMap(source);
 source.clear();
 definitions.has('point'); // true
 ```
-
-<span id="jsonobject"></span>
-
-### 通用 JSON schema
-
-`JsonObjectSchema` 表示字符串键与递归 JSON value 组成的对象，`JsonValueSchema` 接受 string、有限 number、boolean、null、数组或对象。它们由 Foundation 统一提供，供 `meta`、自定义 provider 参数与开放 composite 字段复用：
-
-<ZodSchema name="JsonObjectSchema" />
-
-<span id="jsonvalue"></span>
-
-<ZodSchema name="JsonValueSchema" />
-
-这两个 schema 直接使用 Zod 的递归 JSON 校验；`JsonValue` 的数组分支使用 readonly 类型，因此 `as const` Source 也能直接进入 unknown parse 边界。校验前后不会增加 walker、`undefined` 过滤、结构优化、clone、freeze 或第二次通用校验。领域 Source 仍应使用自己的精确 owner schema，不能用通用 JSON schema 代替。
 
 ### JSON 数据快照
 
@@ -71,35 +37,6 @@ Object.isFrozen(snapshot.filters); // true
 assertPlainDataContainers({ supportsRouting: true }, 'Flow Layout Definition capabilities');
 ```
 
-### 通用契约
-
-六个固定标量 schema 不 coercion、不 trim、不填默认值。领域对象、领域区间和跨字段关系仍由消费包组合：
-
-| 导出                       | 接受范围                                 |
-| -------------------------- | ---------------------------------------- |
-| `NonBlankStringSchema`     | 至少含一个非空白字符；成功时保留原字符串 |
-| `PositiveNumberSchema`     | 大于 `0` 的有限数                        |
-| `NonNegativeNumberSchema`  | 大于等于 `0` 的有限数                    |
-| `PositiveIntegerSchema`    | 大于 `0` 的 safe integer                 |
-| `NonNegativeIntegerSchema` | 大于等于 `0` 的 safe integer             |
-| `NormalizedFractionSchema` | `0..1` 闭区间内的有限数，包含两个端点    |
-
-```ts
-NonBlankStringSchema.parse(' layer/main '); // 原样返回
-PositiveNumberSchema.parse(1.5);
-NormalizedFractionSchema.parse(0.5);
-```
-
-`createOpenStringSchema(values)` 接受 const object enum，同时保留内置字面量提示与任意非空白自定义字符串。它不会查询 registry，也不会把扩展 key 收窄成白名单；生成的 JSON Schema 会同时包含已知 enum 分支与开放字符串分支：
-
-```ts
-const Role = { Participant: 'participant', Activity: 'activity' } as const;
-const RoleSchema = createOpenStringSchema(Role);
-
-RoleSchema.parse('participant');
-RoleSchema.parse('custom.role');
-```
-
 ### 静态颜色原子
 
 `parseStaticCssColor(input)` 把可静态确定的 CSS color 解析为归一化 sRGB 通道 `{ r, g, b, a }`；动态的 `currentColor`、CSS variable 等返回 `null`。`compositeOpaqueColor(foreground, backdrop, weight)` 则按 `0..1` 权重把静态前景色预合成到不透明背景，并返回小写 `#rrggbb`：
@@ -114,18 +51,6 @@ Foundation 只拥有静态解析与纯计算，不知道 Theme mode 或图形字
 <SourceLinks
   sources={[
     {
-      label: '标量 schema 实现',
-      path: 'packages/kernel/foundation/src/schema.ts',
-      startLine: 1,
-      endLine: 31,
-    },
-    {
-      label: '类型工具实现',
-      path: 'packages/kernel/foundation/src/types.ts',
-      startLine: 1,
-      endLine: 15,
-    },
-    {
       label: '只读 Map 浅快照实现',
       path: 'packages/kernel/foundation/src/collections.ts',
       startLine: 1,
@@ -136,12 +61,6 @@ Foundation 只拥有静态解析与纯计算，不知道 Theme mode 或图形字
       path: 'packages/kernel/foundation/src/json.ts',
       startLine: 1,
       endLine: 92,
-    },
-    {
-      label: '标量 schema 测试',
-      path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 1,
-      endLine: 71,
     },
     {
       label: '只读 Map 浅快照测试',
@@ -174,11 +93,3 @@ Foundation 只拥有静态解析与纯计算，不知道 Theme mode 或图形字
 4. 不迫使上层包经由 Foundation 获得本应由 Core、Math、Runtime 或领域 owner 承担的能力
 
 `createOpenStringSchema(values)` 是唯一允许的参数化 schema factory，只组合 const object enum 与 Foundation 已有的非空白字符串边界。除无领域的通用 JSON value / object schema 外，其它对象 / 数组 schema、range factory、几何算法、Diagnostic、错误目录和领域 resolver 应留在当前 owner。重复出现时先重新判断语义 owner，而不是把逻辑汇总进 Foundation。
-
-## 相关
-
-- [内核包总览](/kernel/packages)
-- [Core](/kernel/packages/core/overview)
-- [Runtime](/kernel/packages/runtime/overview)
-- [Math](/kernel/packages/math)
-- [Render](/kernel/packages/render/overview)

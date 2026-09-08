@@ -101,6 +101,14 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
     };
   }
 
+  if (schema instanceof z.ZodRecord) {
+    return {
+      kind: 'record',
+      key: walkTypeImpl(schema.keyType, false, next),
+      value: walkTypeImpl(schema.valueType, false, next),
+    };
+  }
+
   if (schema instanceof z.ZodObject) {
     return {
       kind: 'object',
