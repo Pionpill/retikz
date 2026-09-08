@@ -32,23 +32,24 @@
 
 ## 任务与候选 ADR
 
-以下为任务分解与候选 ADR 主题，尚未创建或确认 ADR。
+ADR-01/02/03 已建立 Proposed 草案，包含共享内容与有限主题 token；其余仍为候选主题。Graph alpha.2 发布独立推进，本目录归档位置不改变当前 package 版本。
 
-| 顺序 | 候选主题                                 | 交付目标                                                                                     | 依赖               |
-| ---- | ---------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------ |
-| 01   | 代码实体 Tier 3 归属与共享内容边界       | 明确包归属、namespace、发布协作与共享内容职责；核对现有 capability，并参考成熟代码结构图设计 | alpha.2 开放 Block |
-| 02   | InterfaceBlock 与 FunctionBlock 最小闭环 | 通过两个实体验证 Header、属性、签名、可调用成员与逻辑段，形成独立 Source 到 Tier 2 的闭环    | 01                 |
-| 03   | ObjectBlock 与 ClassBlock 组合           | 复用既有内容，补齐实际值、初始值、构造与成员信息；仅按实体需求丰富共享构件                   | 02                 |
-| 04   | ModuleBlock 组合                         | 建立模块组成内容并完成实体组合；保持模块划分与成员结构的区别                                 | 02                 |
-| 05   | 实体呈现与局部关系                       | 统一 icon、trail、分区与文字层级；验证整体及显式成员寻址、命名空间与既有 Relation 的协作     | 03、04             |
-| 06   | 扩展、三入口与文档收口                   | 完成官方／自定义同路径、Direct IR／React／Vanilla 等价、双语实体用法与源码讲解图             | 02～05             |
+| 顺序 | 候选主题                                                  | 交付目标                                                                                     | 依赖               |
+| ---- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------ |
+| 01   | [代码实体 Tier 3 与共享内容](./01-code-block-contract.md) | 明确包归属、namespace、发布协作与共享内容职责；核对现有 capability，并参考成熟代码结构图设计 | alpha.2 开放 Block |
+| 02   | [InterfaceBlock](./02-interface-block.md)                 | 验证 Header、属性与方法契约及成员逻辑，形成接口 Source 到 Tier 2 的闭环                      | 01                 |
+| 03   | [FunctionBlock](./03-function-block.md)                   | 验证签名与逻辑段，明确参数缺省、空签名和逻辑标题语义，形成函数 Source 到 Tier 2 的闭环       | 01                 |
+| 04   | ObjectBlock 与 ClassBlock 组合                            | 复用既有内容，补齐实际值、初始值、构造与成员信息；仅按实体需求丰富共享构件                   | 02、03             |
+| 05   | ModuleBlock 组合                                          | 建立模块组成内容并完成实体组合；保持模块划分与成员结构的区别                                 | 02、03             |
+| 06   | 实体呈现与局部关系                                        | 统一 icon、trail、分区与文字层级；验证整体及显式成员寻址、命名空间与既有 Relation 的协作     | 04、05             |
+| 07   | 扩展、三入口与文档收口                                    | 完成官方／自定义同路径、Direct IR／React／Vanilla 等价、双语实体用法与源码讲解图             | 02～06             |
 
-02～04 均随实体完成对应入口与基本文档，06 负责整体收口。先验证最小闭环，再扩大组合，不在 01 一次性构建尚无消费者的完整内容框架。上述顺序只表达依赖，不授权并行 agent 或实现。
+02～05 均随实体完成对应入口与基本文档，07 负责整体收口。02 与 03 分别依赖 01，不互相依赖。先验证最小闭环，再扩大组合，不在 01 一次性构建尚无消费者的完整内容框架。上述顺序只表达依赖，不授权并行 agent 或实现。
 
 ## 能力边界
 
 - 各实体拥有独立 discriminator、schema、Definition、provider、默认与诊断；官方和用户扩展经过同一 Core composite 路径，下沉到公开 Tier 2 能力
-- Tier 3 的具体包归属由 01 确定；列在 Graph roadmap 下不代表自动并入 Graph 基础包，不提前创建新包或冻结 namespace
+- Tier 3 实体作为 @retikz/graph 内的 Block 组合能力，沿用 graph namespace、graph-react/graph-vanilla 与 Graph release group；不新增 Code 包家族，主题沿用 Graph Theme registry，通过有限 codeBlockTokens 配置内部视觉，不提供 presentation
 - 不增加 Block kind／role 白名单、第二套 registry、固定 child grammar 或平行内容渲染器
 - 内容是 JSON-safe 的代码说明数据，不承载真实函数、class 实例或 ReactNode；adapter 只暴露同一领域模型
 - 局部连接复用显式 identity、Core NodeTarget、anchor／boundary 与 namespace；不按字段名称或数组下标推断连接目标
