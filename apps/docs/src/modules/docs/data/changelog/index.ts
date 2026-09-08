@@ -58,6 +58,12 @@ const TABLE_PACKAGES = new Set<PackageId>(['@retikz/table', '@retikz/table-react
 /** Plot 分组更新日志包含的三个 lockstep 包 */
 const PLOT_PACKAGES = new Set<PackageId>(['@retikz/plot', '@retikz/plot-react', '@retikz/plot-vanilla']);
 
+/** Graph 分组更新日志包含的三个 lockstep 包。 */
+const GRAPH_PACKAGES = new Set<PackageId>(['@retikz/graph', '@retikz/graph-react', '@retikz/graph-vanilla']);
+
+/** Diagram 分组更新日志包含的三个 lockstep 包。 */
+const DIAGRAM_PACKAGES = new Set<PackageId>(['@retikz/diagram', '@retikz/diagram-react', '@retikz/diagram-vanilla']);
+
 /** Standard 分组更新日志包含的三个 lockstep 包 */
 const STANDARD_PACKAGES = new Set<PackageId>([
   '@retikz/standard',
@@ -82,6 +88,12 @@ const VIZ_SECTION_PACKAGES = new Map<string, ReadonlySet<PackageId>>([
   ['plot', PLOT_PACKAGES],
 ]);
 
+/** Schematic 文档分区到更新日志包集合。 */
+const SCHEMATIC_SECTION_PACKAGES = new Map<string, ReadonlySet<PackageId>>([
+  ['graph', GRAPH_PACKAGES],
+  ['diagram', DIAGRAM_PACKAGES],
+]);
+
 /** 中版本号 → URL slug（`v0.3` → `v0-3`），概览页链接与详情页 subPage id 共用 */
 export const changelogVersionSlug = (minor: string): string => minor.replaceAll('.', '-');
 
@@ -101,7 +113,7 @@ const stableDateForPackages = (release: Release, packages: Array<Release['packag
 
 /**
  * 按文档模块与可选分组取 changelog 切片
- * @description Library 的 Standard / Layout 与 Viz 的 Data / Table / Plot 分区分别只返回所属包；其余位置按模块包组过滤。过滤后无包块的里程碑会被丢弃，入参不会被修改
+ * @description Library、Schematic 与 Viz 的各分区分别只返回所属包；其余位置按模块包组过滤。过滤后无包块的里程碑会被丢弃，入参不会被修改
  */
 export const changelogForModule = (moduleId: string, sectionId?: string): Array<Release> => {
   const group = MODULE_GROUP.get(moduleId);
@@ -111,11 +123,15 @@ export const changelogForModule = (moduleId: string, sectionId?: string): Array<
   if (!group && !librarySectionPackages) return [];
   const vizSectionPackages = moduleId === 'viz' && sectionId ? VIZ_SECTION_PACKAGES.get(sectionId) : undefined;
   if (moduleId === 'viz' && sectionId && !vizSectionPackages) return [];
+  const schematicSectionPackages =
+    moduleId === 'schematic' && sectionId ? SCHEMATIC_SECTION_PACKAGES.get(sectionId) : undefined;
+  if (moduleId === 'schematic' && sectionId && !schematicSectionPackages) return [];
   return changelog
     .map(release => {
       const packages = release.packages.filter(block => {
         if (librarySectionPackages) return librarySectionPackages.has(block.pkg);
         if (vizSectionPackages) return vizSectionPackages.has(block.pkg);
+        if (schematicSectionPackages) return schematicSectionPackages.has(block.pkg);
         return groupOfPackage(block.pkg) === group;
       });
       return {

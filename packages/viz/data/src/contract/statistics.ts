@@ -13,9 +13,12 @@ import { RetikzDataError } from '../error';
  * 统计 reducer 运行时定义。
  * @description 定义对象只存在于运行时，不进入 JSON IR；IR 只保存 `{ kind, ...config }` 形态的 IRDataReducerOperation
  */
-export type StatisticsReducerDefinition<TReducerOperation extends IRDataReducerOperation = IRDataReducerOperation> = {
+export type StatisticsReducerDefinition<
+  TReducerSource extends IRDataReducerOperation = IRDataReducerOperation,
+  TReducerOperation = TReducerSource,
+> = {
   /** 完整 reducer operation schema；必须含非空 z.literal('kind') 供注册表提取注册键 */
-  schema: ZodType<TReducerOperation>;
+  schema: ZodType<TReducerOperation, TReducerSource>;
   /** 该 reducer 消费的源字段名；参与 data.model strict 校验 */
   inputFields?: (operation: TReducerOperation) => Array<string>;
   /** 该 reducer 产出的派生字段名；用于 data.model strict 源字段排除与运行时输出冲突检查，提供时必须完整声明 reduce 可能写入的字段 */
@@ -31,9 +34,12 @@ export type StatisticsReducerDefinition<TReducerOperation extends IRDataReducerO
  * @description 保留 schema / inputFields / outputFields / reduce 之间的泛型关联；内置与自定义 reducer 都经同一 registry 入口分派。
  * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook
  */
-export const defineStatisticsReducer = <TReducerOperation extends IRDataReducerOperation>(
-  def: StatisticsReducerDefinition<TReducerOperation>,
-): StatisticsReducerDefinition<TReducerOperation> => def;
+export const defineStatisticsReducer = <
+  TReducerSource extends IRDataReducerOperation,
+  TReducerOperation = TReducerSource,
+>(
+  def: StatisticsReducerDefinition<TReducerSource, TReducerOperation>,
+): StatisticsReducerDefinition<TReducerSource, TReducerOperation> => def;
 
 /**
  * 注册表内部使用的 reducer 宽类型。
@@ -59,9 +65,12 @@ export type RowSelection = {
  * row selector 运行时定义。
  * @description 自定义 selector 供 `select` 与明确声明支持它的宿主 transform（如 Plot `relate`）复用；Data `annotate` 只接受内置单行 selector 子集。定义对象不进入 JSON IR
  */
-export type RowSelectorDefinition<TSelectorOperation extends IRDataSelectorOperation = IRDataSelectorOperation> = {
+export type RowSelectorDefinition<
+  TSelectorSource extends IRDataSelectorOperation = IRDataSelectorOperation,
+  TSelectorOperation = TSelectorSource,
+> = {
   /** 完整 selector operation schema；必须含非空 z.literal('kind') 供注册表提取注册键 */
-  schema: ZodType<TSelectorOperation>;
+  schema: ZodType<TSelectorOperation, TSelectorSource>;
   /** 该 selector 消费的源字段名；参与 data.model strict 校验 */
   inputFields?: (operation: TSelectorOperation) => Array<string>;
   /** 对一组 rows 执行 selector；返回被选原始行与可选排名 */
@@ -73,9 +82,12 @@ export type RowSelectorDefinition<TSelectorOperation extends IRDataSelectorOpera
  * @description 保留 schema / inputFields / select 之间的泛型关联；内置与自定义 selector 都经同一 registry 入口分派。
  * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook
  */
-export const defineRowSelector = <TSelectorOperation extends IRDataSelectorOperation>(
-  def: RowSelectorDefinition<TSelectorOperation>,
-): RowSelectorDefinition<TSelectorOperation> => def;
+export const defineRowSelector = <
+  TSelectorSource extends IRDataSelectorOperation,
+  TSelectorOperation = TSelectorSource,
+>(
+  def: RowSelectorDefinition<TSelectorSource, TSelectorOperation>,
+): RowSelectorDefinition<TSelectorSource, TSelectorOperation> => def;
 
 /**
  * 注册表内部使用的 selector 宽类型。

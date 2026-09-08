@@ -120,6 +120,20 @@ describe('ComponentPreviewCard dialog boundary', () => {
     act(() => root.unmount());
   });
 
+  it('正文预览卡由自身提供外框', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(<ComponentPreviewCard name="preview-frame" Component={Demo} />);
+    });
+
+    expect(container.querySelector('[data-slot="component-preview-frame"]')?.classList.contains('border')).toBe(true);
+
+    act(() => root.unmount());
+  });
+
   it('将 previewClassName 合并到 inline 预览容器', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

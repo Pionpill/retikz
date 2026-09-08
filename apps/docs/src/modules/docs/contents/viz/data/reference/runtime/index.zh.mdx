@@ -32,7 +32,7 @@ Data schema 只保存配置；外部 rows、字段 parser、Definition、registr
 | `StatisticsReducerDefinition` | schema 的 `kind` literal | 对一组 rows 计算输出字段片段              |
 | `RowSelectorDefinition`       | schema 的 `kind` literal | 从一组 rows 选择原始行及可选排名          |
 
-四类 resolver 都先装入内置 Definition，再合并调用方数组；自定义键不能覆盖内置键，也不能重复。校验路径按 Definition 类型区分：format 直接校验 `name` 并使用其 parser；transform 先确认 operation 是 JSON object，再用命中的 Definition schema 解析；reducer 与 selector 先通过公开 operation schema，再用命中的 Definition schema 精确解析。未知 transform、reducer 或 selector `kind` 会 fail-loud 并提示对应注入入口。
+四类 resolver 都先装入内置 Definition，再合并调用方数组；自定义键不能覆盖内置键，也不能重复。format 直接校验 `name` 并使用其 parser；transform、reducer 与 selector 的公开 Source schema 以 JSON catchall 校验开放配置，registry dispatch 后只运行命中的精确 Definition schema。不会在精确 schema 前后再套通用 JSON object 校验。未知 transform、reducer 或 selector `kind` 会 fail-loud 并提示对应注入入口。
 
 内置集合可通过 `BUILTIN_FORMATS`、`BUILTIN_TRANSFORMS`、`BUILTIN_STATISTICS_REDUCERS` 与 `BUILTIN_ROW_SELECTORS` 检查。完整自定义流程见[数据模型扩展](/viz/data/model/extensions)和[数据变换扩展](/viz/data/transform/extensions)。
 

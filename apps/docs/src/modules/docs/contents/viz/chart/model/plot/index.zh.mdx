@@ -9,11 +9,11 @@ Chart 复用 Plot，而不是包住一份不可扩展的绘图结果。封装类
 
 <ComponentPreview files="chart-plot-ownership" hideCode size="md" />
 
-| Chart 拥有                               | Plot 拥有                                   |
-| ---------------------------------------- | ------------------------------------------- |
-| `namespace`、family 与 `recipe` envelope | data、transform、scale 与 coordinate        |
-| title、subtitle、note、source            | marks、axes、legends 与其它 guides          |
-| 画布尺寸、整图 Surface 与 Chart tokens   | Plot theme、图形语法的解析、lowering 与诊断 |
+| Chart 拥有                               | Plot 拥有                                      |
+| ---------------------------------------- | ---------------------------------------------- |
+| `namespace`、family 与 `recipe` envelope | data、transform、scale 与 coordinate           |
+| title、subtitle、note、source            | marks、axes、legends 与其它 guides             |
+| 画布尺寸、整图 Surface 与 Chart defaults | Plot defaults、图形语法的解析、lowering 与诊断 |
 
 当 Scatter recipe 根据 `recipe.encodings` 生成主 Point 图元时，它是在构造 Plot，不是在 Chart 中实现另一套 Point。recipe 还会生成一个内建 semantic mark；用户通过 `recipe.marks` 注入可继承 Chart context 的 mark，通过 `plotExtension` 写入完全独立的 Plot fragment。两者仍由各自的 schema、provider 与 pipeline 消费。
 
@@ -28,7 +28,7 @@ Chart 复用 Plot，而不是包住一份不可扩展的绘图结果。封装类
 
 ## 运行时主题协作
 
-Core、Chart、Plot 与当前 recipe 分别拥有自己的 Theme token slice。主题可以是注册名称，也可以携带 `tokens.chart`、`tokens.plot` 与 `tokens.recipe`；每个 owner 只消费自己的 slice，同名只是选择协作，不合并 owner。
+Core、Chart、Plot 与当前 recipe 分别拥有独立契约。Core 的 `theme` 选择 style 与 mode；Chart Definition 提供 Chart `defaults` 与转发给 Plot 的 `plotDefaults`；本地 Chart Source 使用 `chartDefaults` 与 `plotExtension`。每个 owner 只消费自己的字段，同名只用于选择协作，不合并 owner。
 
 React 中，Chart Source 的 `theme` 负责持久化的 owner slices；`ChartThemeProvider` 通过 `themeDefinitions` 注入当前具体 chartType provider，`PlotThemeProvider` 通过 `plotThemeStyles` 注入 Plot definition。Vanilla 创建函数分别保留 `themeDefinitions` 与 `lowerOptions.plotThemeStyles`，在一次编译中消费它们。嵌入 `<Layout>` 时，Core definition 来自父 Layout，Chart 与 Plot definition 仍由对应 provider 贡献。
 

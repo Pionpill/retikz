@@ -48,7 +48,7 @@ const chartModelContentPath = (
 const pointContentPath = (lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/plot/mark/point/index.${lang}.mdx`);
 const compositeConceptPath = (lang: 'zh' | 'en') =>
-  resolve(process.cwd(), `src/modules/docs/contents/kernel/concepts/design/composite/index.${lang}.mdx`);
+  resolve(process.cwd(), `src/modules/docs/contents/kernel/components/design/composite/index.${lang}.mdx`);
 
 const compileOptions: CompileOptions = {
   outputFormat: 'function-body',

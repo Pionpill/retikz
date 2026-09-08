@@ -1,0 +1,129 @@
+---
+title: Primitive Relations
+description: Continue from the primitive model to choose dynamic or explicit path endpoints, then organize lines, folds, curves, waypoints, and group connections.
+---
+
+[Primitive Model](/kernel/components/core/primitive-model) owns a single primitive's content, shape, boundary, and anchors. This page only covers relationships between primitives: how a path chooses an endpoint and how multiple targets form a maintainable route.
+
+## Dynamic attach and explicit position
+
+The same relationship can adapt its endpoint to layout or lock it to one stable position:
+
+<ComponentPreview files="relation-dynamic-vs-locked" size="sm" hideCode />
+
+| Mode           | Form                         | Behavior                               |
+| -------------- | ---------------------------- | -------------------------------------- |
+| Dynamic attach | `'T'` / `{ id: 'T' }`        | Hits the boundary toward adjacent step |
+| Explicit point | `'T.top'` / `{ id, anchor }` | Stays on the selected anchor           |
+
+Prefer dynamic attachment for flowcharts, DAGs, and relationships that should follow layout. Specify an anchor only for a fixed exit side, alignment, or reproduction of an existing composition.
+
+### Dynamic attach
+
+When a target supplies only an id, compilation reads the adjacent step's direction and intersects the target's connection boundary from its center. The same target therefore chooses different endpoints as the source moves:
+
+<ComponentPreview files="anchors-auto-attach" size="sm" hideCode />
+
+The boundary selects which surface the line stops on. [Primitive Model · Outer Boundaries](/kernel/components/core/primitive-model#outer-boundaries) owns how shape, boundary, and `margin` form that geometry, so this page does not repeat box-model exceptions.
+
+### Explicit position
+
+Once an anchor is specified, the endpoint no longer reads the adjacent step's direction. Rectangles and ellipses use standard anchors, while complex shapes may expose semantic points of their own:
+
+<ComponentPreview files="anchors-explicit" size="sm" hideCode />
+
+The mental rule is simply “omit anchor for dynamic, provide anchor for fixed.” See [Path Schema · Target](/kernel/reference/schema/path#target) for the complete target union, `offset`, angles, and edge proportions; see [Node Geometry](/kernel/components/node/overview) and [Shapes](/kernel/components/shapes) for standard anchors, boundaries, and shape-specific names.
+
+`axis-line` is an intentional exception: it takes the target center or explicit anchor, then projects it onto one local axis, so an omitted anchor does not dynamically attach on the target side. The source still clips normally toward the projected endpoint; see [Step · Orthogonal connections](/kernel/components/draw/step#orthogonal-connections).
+
+## Lines and routing
+
+Endpoint mode decides where a connection lands; path steps decide how it travels between endpoints. The same pair below uses a straight line, curve, and orthogonal fold:
+
+<ComponentPreview files="connection-styles" size="xs" hideCode />
+
+| Route           | Common form              | Best for                      |
+| --------------- | ------------------------ | ----------------------------- |
+| Straight        | `['a', 'b']`             | Default relationship          |
+| Orthogonal fold | `'-\|'` / `'\|-'`        | Flowcharts and structure maps |
+| Curve           | `{ bend }` / `{ curve }` | Avoidance and parallel edges  |
+
+Complete step and path-kind parameters belong to [Draw](/kernel/components/draw/overview) and [Path Schema](/kernel/reference/schema/path). This concept page gives selection guidance instead of duplicating an API dictionary.
+
+A path can move relative to its previous endpoint: `{ relative }` applies a temporary offset without advancing the accumulated base, while `{ relativeAccumulate }` advances it. React Sugar also accepts `'+dx,dy'` / `'++dx,dy'`:
+
+<ComponentPreview files="connection-relative" size="xs" hideCode />
+
+For a stable waypoint, declare a non-rendering `<Coordinate>` and route the path through it:
+
+<ComponentPreview files="connection-coordinate" size="xs" hideCode />
+
+[Positioning](/kernel/components/basic/position) owns the valid contexts for entity positions, offsets, between points, and path-relative targets.
+
+## Group connections
+
+`<Scope id="cluster">` registers its subtree bounds as a referenceable group boundary. An external path may use `'cluster'` for dynamic attachment or `'cluster.top'` for an explicit position:
+
+<ComponentPreview files="relation-scope" size="sm" hideCode />
+
+The light-gray dashed outline is the cluster's combined bounds. Group connections reuse the same auto / explicit choice as Nodes; see [Scope](/kernel/components/layout/scope) for namespaces, bbox modes, and transforms.
+
+## Try it yourself
+
+The target Node uses an ellipse as its visual shape and a rectangle as its default boundary. Keep `anchor="auto"` and move the source angle: the endpoint continually intersects the target boundary toward the source. Then lock `top`, `right`, or a numeric angle; the source keeps moving while the target endpoint stays fixed. The `boundary` control overrides only this edge's target endpoint. Returning to “Inherit rectangle” leaves the target Node's own default untouched.
+
+<ComponentPreview
+  files="primitive-relations-playground"
+  size="sm"
+  caption="The light-gray dotted radius is only an orbit guide. The gray dashed outline is the active non-shape boundary; choose “Visual shape” to attach directly to the blue ellipse."
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Clip dynamic targets or resolve explicit anchors',
+      path: 'packages/kernel/core/src/compile/path/host/target.ts',
+      startLine: 17,
+      endLine: 36,
+    },
+    {
+      label: 'Define the complete path-target union',
+      path: 'packages/kernel/core/src/schemas/path/target/schema.ts',
+      startLine: 27,
+      endLine: 34,
+    },
+    {
+      label: 'Register and replace referenceable Scope layouts',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 309,
+      endLine: 352,
+    },
+  ]}
+/>
+
+## Further reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/components/core/primitive-model">
+    <span className="font-semibold">Primitive Model</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Geometry ownership for content, shape, boundary, anchors, and margin
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/basic/position">
+    <span className="font-semibold">Positioning</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Entity placement, target forms, and reference order
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/draw/overview">
+    <span className="font-semibold">Draw</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Step, path kind, arrow, and routing APIs</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/layout/scope">
+    <span className="font-semibold">Scope</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Grouping, namespaces, and referenceable group boundaries
+    </span>
+  </LinkedCard>
+</div>

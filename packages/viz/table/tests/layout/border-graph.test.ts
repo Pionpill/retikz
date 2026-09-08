@@ -612,11 +612,7 @@ describe('Table Border Graph', () => {
               kind: 'line' as const,
               priority: 0,
               line: line(),
-              styleToken: {
-                key: 'table.border.top' as const,
-                source: 'local' as const,
-                path: '$default/light/table.border.top',
-              },
+              defaults: { path: '$spec/tableDefaults' },
             },
           },
         },

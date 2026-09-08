@@ -79,19 +79,15 @@ const mobileNodes: Array<FlowNode> = [
 const Demo: FC = () => (
   <>
     <div className="hidden sm:block">
-      <Layout width={860} height={230} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         {desktopNodes.map(node => (
           <Node
             key={node.id}
             id={node.id}
             position={node.position}
-            minimumSize={{ width: node.width, height: 50 }}
-            stroke={node.color}
-            fill={node.color}
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={16}
+            style={{ stroke: node.color, fill: node.color, fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: node.width, height: 50 }, align: 'middle', lineHeight: 16 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{node.title}</Text>
             <Text fill="gray" font={{ size: 12 }}>
@@ -109,12 +105,9 @@ const Demo: FC = () => (
               key={kind}
               id={`desktop-${kind}`}
               position={[350, -60 + index * 60]}
-              minimumSize={{ width: 130, height: 40 }}
-              stroke="gray"
-              fill="gray"
-              fillOpacity={0.06}
               cornerRadius={4}
-              align="middle"
+              style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+              layout={{ minimumSize: { width: 130, height: 40 }, align: 'middle' }}
             >
               {kind}
             </Node>
@@ -127,19 +120,15 @@ const Demo: FC = () => (
     </div>
 
     <div className="sm:hidden">
-      <Layout width={360} height={150} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         {mobileNodes.map(node => (
           <Node
             key={node.id}
             id={node.id}
             position={node.position}
-            minimumSize={{ width: node.width, height: 32 }}
-            stroke={node.color}
-            fill={node.color}
-            fillOpacity={0.08}
             cornerRadius={4}
-            align="middle"
-            lineHeight={13}
+            style={{ stroke: node.color, fill: node.color, fillOpacity: 0.08 }}
+            layout={{ minimumSize: { width: node.width, height: 32 }, align: 'middle', lineHeight: 13 }}
           >
             <Text font={{ size: 14, weight: 'bold' }}>{node.title}</Text>
             <Text fill="gray" font={{ size: 12 }}>

@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import {
   ConnectedScatterChart,
   ConnectedScatterEncodings,
@@ -9,7 +9,6 @@ import {
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { resolvePointPreviewLayout } from '../point-coordinate-control';
 import { CONNECTED_SCATTER_CONTROL_IDS, previewControlContract } from './connected-scatter-basic.controls';
 import { connectedScatterData } from './connected-scatter-basic.data';
 
@@ -22,7 +21,6 @@ const controlled = defineControlledPreview(previewControlContract, values => (
     }
   >
     <ChartData data={connectedScatterData} />
-    <ChartLayout {...resolvePointPreviewLayout(values[CONNECTED_SCATTER_CONTROL_IDS.coordinateSystem])} />
     <ConnectedScatterEncodings
       x="urbanization"
       y="lifeExpectancy"

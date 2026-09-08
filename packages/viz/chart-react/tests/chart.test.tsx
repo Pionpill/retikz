@@ -243,6 +243,46 @@ describe('Typed Point Chart React declarations', () => {
     expect(root.datasets['root.rows']).toBe(rows);
   });
 
+  it('preserves sparse Point recipe guide controls and matches Vanilla normalization', () => {
+    const scatter = inputFromProps(ScatterChart, {
+      rows: [{ x: 1, y: 2, size: 3 }],
+      data: { reference: 'guide.scatter' },
+      recipe: {
+        encodings: { x: 'x', y: 'y', size: 'size' },
+        guides: { axis: false, grid: false, legend: false },
+      },
+    });
+    const vanillaScatter = normalizeScatterChart({
+      data: { reference: 'guide.scatter' },
+      encodings: { x: 'x', y: 'y', size: 'size' },
+      guides: { axis: false, grid: false, legend: false },
+    });
+    const strip = inputFromProps(StripChart, {
+      rows: [{ category: 'A', value: 2 }],
+      data: { reference: 'guide.strip' },
+      recipe: {
+        encodings: {
+          x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        },
+        guides: { grid: false },
+      },
+    });
+    const vanillaStrip = normalizeStripChart({
+      data: { reference: 'guide.strip' },
+      encodings: {
+        x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+        y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+      },
+      guides: { grid: false },
+    });
+
+    expect(scatter.source).toEqual(vanillaScatter);
+    expect(scatter.source.recipe.guides).toEqual({ axis: false, grid: false, legend: false });
+    expect(strip.source).toEqual(vanillaStrip);
+    expect(strip.source.recipe.guides).toEqual({ grid: false });
+  });
+
   it('keeps declaration-only authoring equal to structured root authoring', () => {
     const rows = [{ x: 1, y: 2 }];
     const root = inputFromProps(ScatterChart, {
@@ -281,7 +321,7 @@ describe('Typed Point Chart React declarations', () => {
       ),
     });
 
-    expect(input.source.presentation).toEqual({ title: 'Child title', subtitle: 'Root subtitle' });
+    expect(input.source.presentation).toEqual({ title: { text: 'Child title' }, subtitle: { text: 'Root subtitle' } });
     expect(input.source.recipe).toMatchObject({
       encodings: { x: 'x', y: 'y' },
       properties: { opacity: 0.25 },
@@ -834,10 +874,10 @@ describe('Typed Point Chart React declarations', () => {
     );
 
     expect(input.source.presentation).toEqual({
-      title: [{ text: 'Title', font: { weight: 'bold' } }],
-      subtitle: 'Subtitle',
-      note: 'Note',
-      source: 'Source',
+      title: { text: [{ text: 'Title', font: { weight: 'bold' } }] },
+      subtitle: { text: 'Subtitle' },
+      note: { text: 'Note' },
+      source: { text: 'Source' },
     });
   });
 

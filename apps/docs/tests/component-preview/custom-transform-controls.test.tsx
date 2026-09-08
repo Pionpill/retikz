@@ -44,6 +44,6 @@ describe('Plot custom transform documentation', () => {
     expect(zeroMarkup).not.toBe(hundredMarkup);
     expect(zeroMarkup).toContain('viewBox="-15 -15 450 290"');
     expect(hundredMarkup).toContain('viewBox="-15 -15 450 290"');
-    expect(zeroMarkup).toMatch(/^<svg[^>]*width="450" height="250"/);
+    expect(zeroMarkup).toMatch(/^<svg[^>]*width="450" height="290"/);
   });
 });

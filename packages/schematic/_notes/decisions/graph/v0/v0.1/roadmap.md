@@ -4,7 +4,7 @@
 
 ## 目标
 
-建立独立 Graph package family 和 release group，以 Graph、Entity、Relation、Group 与 Block 五类可组合 Source composite 验证领域 resolve、Core lowering、直接 IR、React、Vanilla、docs 与 renderer-neutral 输出闭环。Entity / Relation 可以独立出现；Graph 组合完整 Core Scope surface，并提供可选 `graphTheme`；Group 表达任意内容的可见包含；Block 表达具有 Header / Section / Row / Cell 的结构化图节点。standalone Graph 复用 Layout 建立 Scene，embedded Graph 只贡献局部 Scope。Entity / Relation 使用 `role → kind → predicate(params)`、各自 Definition / registry 与 appearance-only Theme rules；不建立平行 Variant、Port 或 geometry 视觉轴。
+建立独立 Graph package family 和 release group，以 Graph、Entity、Relation、Group 与 Block 五类可组合 Source composite 验证领域 resolve、Core lowering、直接 IR、React、Vanilla、docs 与 renderer-neutral 输出闭环。Entity / Relation 可以独立出现；Graph 组合完整 Core Scope surface，并提供可选 `graphDefaults` / `graphRules`；Group 表达任意内容的可见包含；Block 表达具有 Header / Section / Row / Cell 的结构化图节点。standalone Graph 复用 Layout 建立 Scene，embedded Graph 只贡献局部 Scope。Entity / Relation 使用 `role → kind → predicate(params)`、各自 Definition / registry 与 appearance-only Theme rules；不建立平行 Variant、Port 或 geometry 视觉轴。
 
 ## Milestone
 

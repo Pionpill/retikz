@@ -25,7 +25,7 @@ export const BlockBuiltinPreview = (values: PreviewControlValuesFor<typeof block
     rowItemCount === '1' ? ['email'] : rowItemCount === '3' ? ['email', 'string', '可选'] : ['email', 'string'];
 
   return (
-    <Graph width={260} height="auto">
+    <Graph>
       <Block id="user" {...(blockGap === 8 ? {} : { gap: blockGap })}>
         <BlockHeader
           title="User"

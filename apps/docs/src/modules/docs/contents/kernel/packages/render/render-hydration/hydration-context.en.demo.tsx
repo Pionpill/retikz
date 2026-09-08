@@ -20,23 +20,22 @@ const Demo: FC = () => {
   const [last, setLast] = useState('—');
 
   return (
-    <Layout width={300} height={160}>
+    <Layout>
       <Node
         id="ball"
         position={[0, 0]}
         shape="circle"
-        fill="darkorange"
-        stroke="none"
         meta={{ label: 'ball' }}
         animations={[{ ...pulse({ peak: 1.4, duration: 500 }), trigger: 'manual', iterations: 1 }]}
         onClick={(event, context) => {
           setLast(String(context.meta?.label ?? context.id));
           context.animation.restart();
         }}
+        style={{ fill: 'darkorange', stroke: 'none' }}
       >
         click me
       </Node>
-      <Node id="hint" position={[0, -55]} stroke="none">
+      <Node id="hint" position={[0, -55]} style={{ stroke: 'none' }}>
         context.meta.label: {last}
       </Node>
     </Layout>

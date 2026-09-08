@@ -14,12 +14,7 @@ import {
 import { sankeyData } from './relation-sankey.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    width={620}
-    height={360}
-    viewBox={{ x: 0, y: 0, width: 620, height: 360 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout viewBox={{ x: 0, y: 0, width: 620, height: 360 }}>
     <Plot data={sankeyData} width={620} height={320} y={42}>
       <RelationMark
         kind="ribbon"

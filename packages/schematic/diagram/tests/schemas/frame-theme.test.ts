@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { DiagramFrameSchema, DiagramThemeSchema } from '../../src/_diagram';
+import { DiagramDefaultsSchema, DiagramFrameSchema } from '../../src/_diagram';
 
 describe('Diagram Frame schema', () => {
   it('parses the complete fixed arrangement and preserves Surface input fields', () => {
@@ -53,7 +53,7 @@ describe('Diagram Frame schema', () => {
 
 describe('Diagram Theme schema', () => {
   it('parses non-empty frame and presentation appearance slices', () => {
-    const theme = DiagramThemeSchema.parse({
+    const theme = DiagramDefaultsSchema.parse({
       frame: {
         padding: 14,
         titleDescriptionGap: 5,
@@ -65,45 +65,45 @@ describe('Diagram Theme schema', () => {
       },
       presentation: {
         title: {
-          textColor: '#0f172a',
-          opacity: 0.95,
-          font: { family: 'Inter', size: 20, weight: 700, style: 'normal' },
-          align: 'start',
-          lineHeight: 24,
-          maxTextWidth: 320,
+          style: {
+            textColor: '#0f172a',
+            opacity: 0.95,
+            font: { family: 'Inter', size: 20, weight: 700, style: 'normal' },
+          },
+          layout: { align: 'start', lineHeight: 24, maxTextWidth: 320 },
         },
         description: {
-          textColor: 'gray',
-          opacity: 0.8,
-          font: { size: 14 },
-          align: 'middle',
-          lineHeight: 20,
-          maxTextWidth: 360,
+          style: { textColor: 'gray', opacity: 0.8, font: { size: 14 } },
+          layout: { align: 'middle', lineHeight: 20, maxTextWidth: 360 },
         },
       },
     });
 
     expect(theme.frame?.padding).toBe(14);
-    expect(theme.presentation?.title?.font).toEqual({ family: 'Inter', size: 20, weight: 700, style: 'normal' });
+    expect(theme.presentation?.title?.style?.font).toEqual({ family: 'Inter', size: 20, weight: 700, style: 'normal' });
     expect(JSON.parse(JSON.stringify(theme))).toEqual(theme);
   });
 
   it.each([
-    {},
     { unknown: true },
-    { frame: {} },
-    { presentation: {} },
-    { presentation: { title: {} } },
-    { presentation: { description: {} } },
     { frame: { overflow: 'clip' } },
     { frame: { legendPosition: 'left' } },
     { frame: { legendAlign: 'center' } },
     { presentation: { title: { padding: 4 } } },
     { presentation: { title: { position: [0, 0] } } },
     { presentation: { description: { stroke: '#000000' } } },
-    { title: { opacity: 1 } },
-    { description: { opacity: 1 } },
-  ])('rejects empty slices and fields outside Diagram appearance ownership: %j', input => {
-    expect(() => DiagramThemeSchema.parse(input)).toThrow();
+    { title: { style: { opacity: 1 } } },
+    { description: { style: { opacity: 1 } } },
+  ])('rejects fields outside Diagram appearance ownership: %j', input => {
+    expect(() => DiagramDefaultsSchema.parse(input)).toThrow();
+  });
+  it.each([
+    {},
+    { frame: {} },
+    { presentation: {} },
+    { presentation: { title: {} } },
+    { presentation: { description: { style: {}, layout: {} } } },
+  ])('accepts sparse empty defaults: %j', input => {
+    expect(DiagramDefaultsSchema.parse(input)).toEqual(input);
   });
 });

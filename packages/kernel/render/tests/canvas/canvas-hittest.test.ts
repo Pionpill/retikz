@@ -322,12 +322,12 @@ describe('Canvas hitTest', () => {
           {
             type: 'path',
             id: 'edge',
-            stroke: '#13579b',
             label: { text: 'gap', sloped: true },
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [100, 0] },
             ],
+            style: { stroke: '#13579b' },
           },
         ],
       },
@@ -357,7 +357,6 @@ describe('Canvas hitTest', () => {
             {
               type: 'path',
               id: 'edge',
-              stroke: '#13579b',
               marks: [
                 {
                   pos: 1,
@@ -369,6 +368,7 @@ describe('Canvas hitTest', () => {
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [100, 0] },
               ],
+              style: { stroke: '#13579b' },
             },
           ],
         },

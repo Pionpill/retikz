@@ -3,6 +3,8 @@ title: Path
 description: 用有序 Step 描述一条 Kernel 路径，并统一承载描边、填充、箭头、标记与整体变换。
 ---
 
+描边、填充与效果写入 `style`；路径步骤、`kind`、`label`、`marks`、`rotate` 与 `scale` 保持根层。
+
 ## 用法
 
 ```tsx
@@ -10,7 +12,7 @@ import { Path, Step } from '@retikz/react';
 ```
 
 ```tsx
-<Path stroke="currentColor">
+<Path style={{ stroke: 'currentColor' }}>
   <Step kind="move" to="a" />
   <Step kind="line" to="b" />
 </Path>
@@ -18,12 +20,12 @@ import { Path, Step } from '@retikz/react';
 
 `<Draw>` 编译后就是 `<Path>`，覆盖日常连线的 step / 折角 / 曲线 / 弧形需求；但 `<Path>` 还多出 `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` 等元素级能力，`<Draw>` 不暴露这些。日常连线用 `<Draw>` 一行 way 数组更省，需要显式 Step 序列、多次 `move`、逐段混用 `kind` / label / 控制点，或要用上述 Path 专属能力时用 `<Path>`：
 
-|                                                                       | `<Draw>`      | `<Path>` + `<Step>`        |
-| --------------------------------------------------------------------- | ------------- | -------------------------- |
-| 写法                                                                  | 一行 way 数组 | 容器 + 子节点              |
-| step / 曲线 / 折角 / 弧形                                             | 支持          | 支持                       |
-| `color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` | 不暴露        | 支持                       |
-| 适用                                                                  | 90% 连线场景  | 显式 Step 序列、元素级能力 |
+|                                                                             | `<Draw>`      | `<Path>` + `<Step>`        |
+| --------------------------------------------------------------------------- | ------------- | -------------------------- |
+| 写法                                                                        | 一行 way 数组 | 容器 + 子节点              |
+| step / 曲线 / 折角 / 弧形                                                   | 支持          | 支持                       |
+| `style.color` / `rotate` / `scale` / `marks` / `id` / `meta` / `animations` | 不暴露        | 支持                       |
+| 适用                                                                        | 90% 连线场景  | 显式 Step 序列、元素级能力 |
 
 ### Path 与 Step
 
@@ -150,14 +152,14 @@ import { Path, Step } from '@retikz/react';
 
 <Comparison target="tikz" title="Path 写法映射">
 
-| retikz                       | TikZ 对照                    |
-| ---------------------------- | ---------------------------- |
-| `lineCap` / `lineJoin`       | `line cap` / `line join`     |
-| `ultraThin` … `ultraThick`   | `ultra thin` … `ultra thick` |
-| `outAngle` / `inAngle`       | `out=` / `in=`               |
-| `marks` 与端点箭头随线宽缩放 | 标记与端点箭头随线宽缩放     |
-| `roundedCorners={r}`         | `rounded corners=<r>`        |
-| `color`                      | `color=`                     |
+| retikz                             | TikZ 对照                    |
+| ---------------------------------- | ---------------------------- |
+| `style.lineCap` / `style.lineJoin` | `line cap` / `line join`     |
+| `ultraThin` … `ultraThick`         | `ultra thin` … `ultra thick` |
+| `outAngle` / `inAngle`             | `out=` / `in=`               |
+| `marks` 与端点箭头随线宽缩放       | 标记与端点箭头随线宽缩放     |
+| `roundedCorners={r}`               | `rounded corners=<r>`        |
+| `style.color`                      | `color=`                     |
 
 </Comparison>
 
@@ -169,7 +171,7 @@ import { Path, Step } from '@retikz/react';
   description="遇到端点引用、Path kind、几何圆角或箭头的边界问题时再回来读。"
 />
 
-本节只说明 `<Path>` 从 step 序列到 Scene 图元的局部机制；完整的 JSX → IR → Scene 管线见[架构](/kernel/concepts/design/principles)。
+本节只说明 `<Path>` 从 step 序列到 Scene 图元的局部机制；完整的 JSX → IR → Scene 管线见[架构](/kernel/components/design/principles)。
 
 ### 端点引用为什么支持后定义
 
@@ -244,39 +246,39 @@ import { Path, Step } from '@retikz/react';
 
 ## API 参考
 
-| 属性             | 类型                                                | 默认值         | 描述                                                                                                                                                                                                              |
-| ---------------- | --------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`             | `string`                                            | —              | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/kernel/packages/render/render-hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler）                                                            |
-| `on<Event>`      | `PathProps['onClick']`                              | —              | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/render-hydration)                                                                                            |
-| `meta`           | `IRPathBase['meta']`                                | —              | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中后反查来源。须为 JSON 可序列化对象 |
-| `kind`           | <ApiValues name="PathKind" /> \| `string`           | `'stroke'`     | 开放的 Path kind provider 名称；Core 内置 `'stroke'`，其它 kind 通过 Path kind contract 显式注册；可选 Standard Ribbon 见 [Ribbon Path kind](/library/standard/extension/ribbon)                                  |
-| `kindOptions`    | `IRPathBase['kindOptions']`                         | —              | 选定 Path kind 的 JSON-safe 参数；Core host 先接受该对象，注册 definition 的完整 subject schema 在后续解析阶段校验                                                                                                |
-| `color`          | `string`                                            | —              | 主色；`stroke` / 箭头 / step label 未单设则随它（跟主色不跟 `stroke`）                                                                                                                                            |
-| `stroke`         | `string` \| `IRPaint`                               | `currentColor` | 描边 paint：CSS 颜色或 IRPaint（渐变 / pattern / image）；箭头继承时需给箭头显式纯色                                                                                                                              |
-| `strokeWidth`    | `number`                                            | `1`            | 描边宽度                                                                                                                                                                                                          |
-| `dashPattern`    | `Array<number>`                                     | —              | dash/gap 长度序列（如 `[4, 2]`）                                                                                                                                                                                  |
-| `dashOffset`     | `number`                                            | —              | 虚线起点偏移，单位同路径 user units                                                                                                                                                                               |
-| `lineCap`        | <ApiValues name="PathLineCap" />                    | `'butt'`       | 描边端点形状                                                                                                                                                                                                      |
-| `lineJoin`       | <ApiValues name="PathLineJoin" />                   | `'miter'`      | 描边拐点形状（仅视觉，不改几何）                                                                                                                                                                                  |
-| `roundedCorners` | `number`（≥0）                                      | —              | 几何圆角半径：把每个 line↔line 内拐角倒成相切圆弧，改路径几何（区别于 `lineJoin`）；非 line 接缝保持尖，逐拐角按段长夹紧；省略 = 尖角                                                                             |
-| `thickness`      | <ApiValues name="PathThickness" />                  | —              | 组件 / builder 语法糖：生成 IR 前解析成 `strokeWidth`；显式 `strokeWidth` 始终优先                                                                                                                                |
-| `arrow`          | `'none'` \| `'->'` \| `'<-'` \| `'<->'`             | —              | 路径级箭头方向（详见 [Arrow](/kernel/components/draw/arrow)）                                                                                                                                                     |
-| `arrowDetail`    | `IRArrowDetail`                                     | —              | 箭头视觉详细配置；字段详见 [Arrow](/kernel/components/draw/arrow)                                                                                                                                                 |
-| `arrowPlacement` | `InputPathArrowPlacement`                           | —              | 箭头端点重叠配置；比例 `1` 让最终视觉后缘对齐逻辑端点，共享与逐端覆盖详见 [Arrow](/kernel/components/draw/arrow#端点重叠)                                                                                         |
-| `fill`           | `string` \| `IRPaint`                               | `'none'`       | 闭合区域填充：任意 CSS 颜色，或 IRPaint（渐变 / 图案 / 图片）                                                                                                                                                     |
-| `fillRule`       | <ApiValues name="PathFillRule" />                   | `'nonzero'`    | 填充规则；环形 / 孔洞场景用 `'evenodd'`                                                                                                                                                                           |
-| `opacity`        | `number`                                            | —              | 整 path 透明度 0~1（同时作用于 stroke 与 fill）                                                                                                                                                                   |
-| `fillOpacity`    | `number`                                            | —              | 仅 fill 透明度 0~1                                                                                                                                                                                                |
-| `strokeOpacity`  | `number`                                            | —              | 仅 stroke 透明度 0~1                                                                                                                                                                                              |
-| `shadow`         | <ApiValues name="ShadowPreset" /> \| `IRDropShadow` | —              | 主路径投影：预设字符串或对象；图元级，端点箭头随主路径一起投影。详见 [视觉效果](/kernel/components/effects)                                                                                                       |
-| `blendMode`      | <ApiValues name="BlendMode" />                      | `'normal'`     | 主路径与其下方已绘内容的混合模式；图元级，端点箭头随主路径一起混合。详见 [视觉效果](/kernel/components/effects)                                                                                                   |
-| `zIndex`         | `number`（整数）                                    | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效                                                                                                                                                        |
-| `rotate`         | `number`                                            | —              | 整条 path 旋转角（度，绕包围盒中心）                                                                                                                                                                              |
-| `scale`          | `IRPathScale`                                       | —              | 整条 path 缩放（数字等比 / `{ x, y }` 非等比，绕包围盒中心）                                                                                                                                                      |
-| `label`          | `IRGeometryLabel` \| `Array<IRGeometryLabel>`       | —              | 宿主标签：单个或多个标签按整条 Path 定位；无填充内置 Stroke 的居中标签默认断线，详见[路径标签与描边断口](#label-interruption)                                                                                     |
-| `marks`          | `IRPathBase['marks']`                               | —              | 沿路径标记：`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线                                                                                                                                       |
-| `animations`     | `IRPathBase['animations']`                          | —              | 时间轴动画 tracks，透传进本 path emit 的图元，renderer 播放或降级静态；见 [动画](/kernel/components/effects/animation)                                                                                            |
-| `children`       | `PathProps['children']`                             | —              | 默认 `stroke` kind 必填；首个非 `move` 时编译器会强制改成 `move`。其它 kind 的结构约束由各自 definition schema 负责                                                                                               |
+| 属性                  | 类型                                                | 默认值         | 描述                                                                                                                                                                                                              |
+| --------------------- | --------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                  | `string`                                            | —              | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/kernel/packages/render/render-hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler）                                                            |
+| `on<Event>`           | `PathProps['onClick']`                              | —              | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/render-hydration)                                                                                            |
+| `meta`                | `IRPathBase['meta']`                                | —              | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中后反查来源。须为 JSON 可序列化对象 |
+| `kind`                | <ApiValues name="PathKind" /> \| `string`           | `'stroke'`     | 开放的 Path kind provider 名称；Core 内置 `'stroke'`，其它 kind 通过 Path kind contract 显式注册；可选 Standard Ribbon 见 [Ribbon Path kind](/library/standard/extension/ribbon)                                  |
+| `kindOptions`         | `IRPathBase['kindOptions']`                         | —              | 选定 Path kind 的 JSON-safe 参数；Core host 先接受该对象，注册 definition 的完整 subject schema 在后续解析阶段校验                                                                                                |
+| `style.color`         | `string`                                            | —              | 主色；`stroke` / 箭头 / step label 未单设则随它（跟主色不跟 `stroke`）                                                                                                                                            |
+| `style.stroke`        | `string` \| `IRPaint`                               | `currentColor` | 描边 paint：CSS 颜色或 IRPaint（渐变 / pattern / image）；箭头继承时需给箭头显式纯色                                                                                                                              |
+| `style.strokeWidth`   | `number`                                            | `1`            | 描边宽度                                                                                                                                                                                                          |
+| `style.dashPattern`   | `Array<number>`                                     | —              | dash/gap 长度序列（如 `[4, 2]`）                                                                                                                                                                                  |
+| `style.dashOffset`    | `number`                                            | —              | 虚线起点偏移，单位同路径 user units                                                                                                                                                                               |
+| `style.lineCap`       | <ApiValues name="PathLineCap" />                    | `'butt'`       | 描边端点形状                                                                                                                                                                                                      |
+| `style.lineJoin`      | <ApiValues name="PathLineJoin" />                   | `'miter'`      | 描边拐点形状（仅视觉，不改几何）                                                                                                                                                                                  |
+| `roundedCorners`      | `number`（≥0）                                      | —              | 几何圆角半径：把每个 line↔line 内拐角倒成相切圆弧，改路径几何（区别于 `lineJoin`）；非 line 接缝保持尖，逐拐角按段长夹紧；省略 = 尖角                                                                             |
+| `thickness`           | <ApiValues name="PathThickness" />                  | —              | 组件 / builder 语法糖：生成 IR 前解析成 `strokeWidth`；显式 `strokeWidth` 始终优先                                                                                                                                |
+| `arrow`               | `'none'` \| `'->'` \| `'<-'` \| `'<->'`             | —              | 路径级箭头方向（详见 [Arrow](/kernel/components/draw/arrow)）                                                                                                                                                     |
+| `arrowDetail`         | `IRArrowDetail`                                     | —              | 箭头视觉详细配置；字段详见 [Arrow](/kernel/components/draw/arrow)                                                                                                                                                 |
+| `arrowPlacement`      | `InputPathArrowPlacement`                           | —              | 箭头端点重叠配置；比例 `1` 让最终视觉后缘对齐逻辑端点，共享与逐端覆盖详见 [Arrow](/kernel/components/draw/arrow#端点重叠)                                                                                         |
+| `style.fill`          | `string` \| `IRPaint`                               | `'none'`       | 闭合区域填充：任意 CSS 颜色，或 IRPaint（渐变 / 图案 / 图片）                                                                                                                                                     |
+| `style.fillRule`      | <ApiValues name="PathFillRule" />                   | `'nonzero'`    | 填充规则；环形 / 孔洞场景用 `'evenodd'`                                                                                                                                                                           |
+| `style.opacity`       | `number`                                            | —              | 整 path 透明度 0~1（同时作用于 stroke 与 fill）                                                                                                                                                                   |
+| `style.fillOpacity`   | `number`                                            | —              | 仅 fill 透明度 0~1                                                                                                                                                                                                |
+| `style.strokeOpacity` | `number`                                            | —              | 仅 stroke 透明度 0~1                                                                                                                                                                                              |
+| `style.shadow`        | <ApiValues name="ShadowPreset" /> \| `IRDropShadow` | —              | 主路径投影：预设字符串或对象；图元级，端点箭头随主路径一起投影。详见 [视觉效果](/kernel/components/effects)                                                                                                       |
+| `style.blendMode`     | <ApiValues name="BlendMode" />                      | `'normal'`     | 主路径与其下方已绘内容的混合模式；图元级，端点箭头随主路径一起混合。详见 [视觉效果](/kernel/components/effects)                                                                                                   |
+| `zIndex`              | `number`（整数）                                    | `0`            | 显式栈序：大者在上；同值保持声明顺序；只在同层子节点间生效                                                                                                                                                        |
+| `rotate`              | `number`                                            | —              | 整条 path 旋转角（度，绕包围盒中心）                                                                                                                                                                              |
+| `scale`               | `IRPathScale`                                       | —              | 整条 path 缩放（数字等比 / `{ x, y }` 非等比，绕包围盒中心）                                                                                                                                                      |
+| `label`               | `IRGeometryLabel` \| `Array<IRGeometryLabel>`       | —              | 宿主标签：单个或多个标签按整条 Path 定位；无填充内置 Stroke 的居中标签默认断线，详见[路径标签与描边断口](#label-interruption)                                                                                     |
+| `marks`               | `IRPathBase['marks']`                               | —              | 沿路径标记：`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线                                                                                                                                       |
+| `animations`          | `IRPathBase['animations']`                          | —              | 时间轴动画 tracks，透传进本 path emit 的图元，renderer 播放或降级静态；见 [动画](/kernel/components/effects/animation)                                                                                            |
+| `children`            | `PathProps['children']`                             | —              | 默认 `stroke` kind 必填；首个非 `move` 时编译器会强制改成 `move`。其它 kind 的结构约束由各自 definition schema 负责                                                                                               |
 
 ## 相关
 

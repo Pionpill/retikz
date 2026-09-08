@@ -27,7 +27,7 @@ role 必须覆盖允许的 direction；kind 只能收窄不能扩大。自定义
 
 ## 注入宿主
 
-React 可以把 `relationRoles`、`relationKinds` 与 `relationPredicates` 直接传给使用它们的 `<Relation>`；多个后代共享 definitions 与局部 `graphTheme` 时，再由 `<Graph>` 统一提供。Vanilla 可把相同 arrays 传给 `relation(id, input)` 或 `graph(id, input)`；直接 IR compile 使用 `createGraphDefinitions(options)` 或 `createGraphProviders(options)`
+React 可以把 `relationRoles`、`relationKinds` 与 `relationPredicates` 直接传给使用它们的 `<Relation>`；多个后代共享 definitions 与局部 `graphRules` 时，再由 `<Graph>` 统一提供。Vanilla 可把相同 arrays 传给 `relation(id, input)` 或 `graph(id, input)`；直接 IR compile 使用 `createGraphDefinitions(options)` 或 `createGraphProviders(options)`
 
 ```tsx
 <Graph relationKinds={[feedbackKind]} relationPredicates={[priorityPredicate]}>

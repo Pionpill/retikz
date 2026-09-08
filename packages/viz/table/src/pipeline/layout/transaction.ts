@@ -1,13 +1,13 @@
 import type {
   CompositeCompileChild,
   IRChild,
-  IRJsonObject,
   LayoutAxisProposal,
   LayoutChildProbe,
   LayoutChildResult,
   LayoutCompositeCompileContext,
 } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
 import {
@@ -23,10 +23,10 @@ import { ScalarValueSchema } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { discriminatedUnion, literal, strictObject } from 'zod';
 
-import type { PresentedTableModel, SemanticTableCell, TableLayoutManifest } from '../../contract';
-import type { ResolvedTableThemeTokens } from '../../providers/style';
-import type { IRTable, IRTableBorder, IRTableCellBorders, IRTableLayout, IRTableThemeTokenBorder } from '../../schemas';
+import type { PresentedTableModel, SemanticTableCell } from '../../contract';
+import type { IRTable, IRTableBorder, IRTableCellBorders, IRTableDefaults, IRTableLayout } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
+import type { ResolvedTableDefaults } from '../rule';
 import type { ResolvedTablePlan, TableCellAppearanceTrace } from '../rule';
 import type { LowerTablesOptions } from '../types';
 import type { ResolvedTableBorderCandidate, TableBorderSide } from './border';
@@ -39,7 +39,7 @@ import type {
 } from './types';
 
 import { RetikzTableError, RetikzTableErrorCode } from '../../error';
-import { resolveTableThemeTokens } from '../../providers/style';
+import { mergeTableDefaults, resolveTableThemeDefaults } from '../../providers/style';
 import {
   TableBorderKind,
   TableBorderMode,
@@ -47,7 +47,6 @@ import {
   TableCellLocation,
   TableCellPayloadKind,
   TableRowKind,
-  TableSchema,
 } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { formatTable } from '../formatter';
@@ -67,8 +66,8 @@ import { solveTableTracks } from './track';
 export type ResolvedTableTransaction = Readonly<{
   /** 当前 callback 可直接提交的 output children */
   children: ReadonlyArray<IRChild | CompositeCompileChild>;
-  /** 与 output children 同源的 immutable manifest */
-  manifest: TableLayoutManifest;
+  /** 与 output children 同源、待 artifact schema 接纳的 manifest candidate */
+  manifest: ReturnType<typeof buildTableLayoutManifest>;
 }>;
 
 /** 已完成 presentation 的 Table 后半布局事务输入 */
@@ -76,14 +75,14 @@ export type PresentedTableTransactionInput = Readonly<{
   /** 可选 Table root identity */
   tableId?: string;
   /** 透传到 Table root Scope 的 JSON metadata */
-  meta?: IRJsonObject;
+  meta?: JsonObject;
   /** Table 轨道、间距与默认 border 配置 */
   layout?: IRTableLayout;
   /** 与 canonical semantic model 严格对齐的呈现结果 */
   presented: PresentedTableModel;
   /** 同次 style resolution 与选择值 */
   theme?: LayoutCompositeCompileContext['theme'];
-  tableThemeTokens?: ResolvedTableThemeTokens;
+  tableDefaults?: ResolvedTableDefaults;
   /** 同次 Cell/encoding plan bundle */
   plan?: ResolvedTablePlan;
 }>;
@@ -227,6 +226,54 @@ const trackLayoutsOf = (
   });
 };
 
+/** 从 Core Theme 与 Table Source 片段构造同次 defaults resolution */
+const resolveTableDefaults = (
+  theme: LayoutCompositeCompileContext['theme'],
+  spec: Pick<IRTable, 'appearanceDefaults' | 'layout' | 'visualDefaults' | 'tableDefaults'> | undefined,
+  tableThemeStyles: LowerTablesOptions['tableThemeStyles'] | undefined,
+): ResolvedTableDefaults => {
+  const base = resolveTableThemeDefaults(theme, tableThemeStyles);
+  const layers: Array<ResolvedTableDefaults['layers'][number]> = [...base.layers];
+  const append = (path: string, defaults: IRTableDefaults): void => {
+    layers.push({ kind: 'source', path, defaults: structuredClone(defaults) });
+  };
+  if (spec?.tableDefaults !== undefined) append('$spec/tableDefaults', spec.tableDefaults);
+  if (spec?.appearanceDefaults !== undefined) {
+    append('$spec/appearanceDefaults', { appearanceDefaults: spec.appearanceDefaults });
+  }
+  if (spec?.layout?.borders !== undefined) {
+    append('$spec/layout/borders', { layout: { borders: spec.layout.borders } });
+  }
+  if (spec?.visualDefaults !== undefined) append('$spec/visualDefaults', { visualDefaults: spec.visualDefaults });
+  const defaults = layers.reduce<IRTableDefaults>(
+    (resolvedDefaults, layer) => mergeTableDefaults(resolvedDefaults, layer.defaults),
+    {},
+  );
+  return deepFreeze({
+    ...(base.style === undefined ? {} : { style: base.style }),
+    mode: base.mode,
+    defaults,
+    layers,
+  });
+};
+
+/** 从 resolved defaults 找到某个字段最终采用的 Source 层 */
+const defaultsSourcePathOf = (defaults: ResolvedTableDefaults, path: ReadonlyArray<string>): string | undefined => {
+  for (let index = defaults.layers.length - 1; index >= 0; index -= 1) {
+    const layer = defaults.layers[index];
+    let current: unknown = layer.defaults;
+    for (const segment of path) {
+      if (current === null || typeof current !== 'object' || !Object.hasOwn(current, segment)) {
+        current = undefined;
+        break;
+      }
+      current = Reflect.get(current, segment);
+    }
+    if (current !== undefined) return layer.path;
+  }
+  return undefined;
+};
+
 /** 把 IR border 候选物化为 graph 消费态 */
 const resolveBorderCandidate = (
   border: DeepReadonly<IRTableBorder>,
@@ -249,34 +296,15 @@ const resolveBorderCandidate = (
   };
 };
 
-/** 把 style border token 物化为带 provenance 的低优先级 graph candidate */
-const resolveStyleBorderCandidate = (
-  key:
-    | 'table.border.top'
-    | 'table.border.right'
-    | 'table.border.bottom'
-    | 'table.border.left'
-    | 'table.border.horizontal'
-    | 'table.border.vertical'
-    | 'columnHeader.border.bottom',
-  border: DeepReadonly<IRTableThemeTokenBorder>,
-  tokens: ResolvedTableThemeTokens,
-): ResolvedTableBorderCandidate => {
-  const masterColor =
-    (key === 'columnHeader.border.bottom'
-      ? tokens.tokens['columnHeader.content.color']
-      : tokens.tokens['cell.content.color']) ?? 'currentColor';
-  const resolved = resolveBorderCandidate({ ...structuredClone(border), priority: -100 }, masterColor);
-  if (resolved.kind !== 'line') throw new RetikzTableError('table: internal style border must resolve to a line');
-  return {
-    ...resolved,
-    styleToken: {
-      key,
-      source: tokens.sources[key].kind,
-      path: tokens.sources[key].path,
-    },
-  };
-};
+/** 把 Table defaults border 物化为带 Source provenance 的低优先级 graph candidate */
+const resolveDefaultBorderCandidate = (
+  border: DeepReadonly<IRTableBorder>,
+  masterColor: string,
+  sourcePath: string,
+): ResolvedTableBorderCandidate => ({
+  ...resolveBorderCandidate({ ...structuredClone(border), priority: -100 }, masterColor),
+  defaults: { path: sourcePath },
+});
 
 /** 把 Cell 四侧 border 按固定物理顺序物化为 Border Graph 输入 */
 const resolveCellBorders = (
@@ -293,12 +321,7 @@ const resolveCellBorders = (
       return [
         [
           side,
-          source?.kind === 'styleToken' && resolved.kind === 'line'
-            ? {
-                ...resolved,
-                styleToken: { key: source.tokenKey, source: source.tokenSource, path: source.tokenPath },
-              }
-            : resolved,
+          source?.kind === 'defaults' ? resolveDefaultBorderCandidate(border, masterColor, source.path) : resolved,
         ],
       ];
     }),
@@ -446,18 +469,18 @@ export const resolvePresentedTableTransaction = (
     input.theme ??
     ({
       mode: ThemeMode.Light,
-      tokens: {},
       colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
     } as const);
-  const manifestStyle = 'style' in manifestTheme ? manifestTheme.style : undefined;
-  const tableThemeTokens = input.tableThemeTokens ?? resolveTableThemeTokens(manifestTheme);
+  const tableDefaults = input.tableDefaults ?? resolveTableDefaults(manifestTheme, undefined, undefined);
+  const manifestStyle = tableDefaults.style;
   const cellContentMasterColor = (index: number): string =>
-    presented.cells[index].appearance.content?.color ??
+    presented.cells[index].appearance.content?.style?.color ??
     (semantic.cells[index].location === TableCellLocation.ColumnHeader
-      ? tableThemeTokens.tokens['columnHeader.content.color']
-      : tableThemeTokens.tokens['cell.content.color']) ??
+      ? tableDefaults.defaults.appearanceDefaults?.columnHeader?.content?.style?.color
+      : tableDefaults.defaults.appearanceDefaults?.body?.content?.style?.color) ??
     'currentColor';
-  const tableContentMasterColor = tableThemeTokens.tokens['cell.content.color'] ?? 'currentColor';
+  const tableContentMasterColor =
+    tableDefaults.defaults.appearanceDefaults?.body?.content?.style?.color ?? 'currentColor';
 
   const intrinsic = presented.cells.map((cell, index) => {
     const semanticCell = semantic.cells[index];
@@ -585,6 +608,50 @@ export const resolvePresentedTableTransaction = (
     } satisfies TableCellLayout;
   });
 
+  const defaultBorders = tableDefaults.defaults.layout?.borders;
+  const explicitHorizontalBorder = resolved.borders?.horizontal;
+  const defaultHorizontalBorder = defaultBorders?.horizontal ?? undefined;
+  const explicitVerticalBorder = resolved.borders?.vertical;
+  const defaultVerticalBorder = defaultBorders?.vertical ?? undefined;
+  const resolveDefaultBorder = (border: DeepReadonly<IRTableBorder>, path: ReadonlyArray<string>) => {
+    const sourcePath = defaultsSourcePathOf(tableDefaults, path);
+    return sourcePath === undefined
+      ? resolveBorderCandidate(border, tableContentMasterColor)
+      : resolveDefaultBorderCandidate(border, tableContentMasterColor, sourcePath);
+  };
+  const horizontalBorder =
+    explicitHorizontalBorder === undefined
+      ? defaultHorizontalBorder === undefined
+        ? undefined
+        : resolveDefaultBorder(defaultHorizontalBorder, ['layout', 'borders', 'horizontal'])
+      : resolveBorderCandidate(explicitHorizontalBorder, tableContentMasterColor);
+  const verticalBorder =
+    explicitVerticalBorder === undefined
+      ? defaultVerticalBorder === undefined
+        ? undefined
+        : resolveDefaultBorder(defaultVerticalBorder, ['layout', 'borders', 'vertical'])
+      : resolveBorderCandidate(explicitVerticalBorder, tableContentMasterColor);
+  const defaults = {
+    outer: Object.fromEntries(
+      (['top', 'right', 'bottom', 'left'] as const).flatMap(side => {
+        const explicit = resolved.borders?.outer?.[side];
+        const border = explicit ?? defaultBorders?.outer?.[side] ?? undefined;
+        if (border === undefined) return [];
+        if (explicit !== undefined) return [[side, resolveBorderCandidate(explicit, tableContentMasterColor)] as const];
+        const path = defaultsSourcePathOf(tableDefaults, ['layout', 'borders', 'outer', side]);
+        return [
+          [
+            side,
+            path === undefined
+              ? resolveBorderCandidate(border, tableContentMasterColor)
+              : resolveDefaultBorderCandidate(border, tableContentMasterColor, path),
+          ],
+        ];
+      }),
+    ),
+    ...(horizontalBorder === undefined ? {} : { horizontal: horizontalBorder }),
+    ...(verticalBorder === undefined ? {} : { vertical: verticalBorder }),
+  };
   const graph = buildTableBorderGraph({
     rows,
     columns,
@@ -604,50 +671,8 @@ export const resolvePresentedTableTransaction = (
             ),
           }),
     })),
-    mode: resolved.borders?.mode ?? TableBorderMode.Collapse,
-    defaults: {
-      ...(() => {
-        if (resolved.borders?.outer !== undefined) {
-          const candidate = resolveBorderCandidate(resolved.borders.outer, tableContentMasterColor);
-          return { outer: { top: candidate, right: candidate, bottom: candidate, left: candidate } };
-        }
-        const keys = {
-          top: 'table.border.top',
-          right: 'table.border.right',
-          bottom: 'table.border.bottom',
-          left: 'table.border.left',
-        } as const;
-        const outer = Object.fromEntries(
-          Object.entries(keys).flatMap(([side, key]) => {
-            const border = tableThemeTokens.tokens[key];
-            return border === null ? [] : [[side, resolveStyleBorderCandidate(key, border, tableThemeTokens)]];
-          }),
-        );
-        return Object.keys(outer).length === 0 ? {} : { outer };
-      })(),
-      ...(resolved.borders?.horizontal === undefined
-        ? tableThemeTokens.tokens['table.border.horizontal'] === null
-          ? {}
-          : {
-              horizontal: resolveStyleBorderCandidate(
-                'table.border.horizontal',
-                tableThemeTokens.tokens['table.border.horizontal'],
-                tableThemeTokens,
-              ),
-            }
-        : { horizontal: resolveBorderCandidate(resolved.borders.horizontal, tableContentMasterColor) }),
-      ...(resolved.borders?.vertical === undefined
-        ? tableThemeTokens.tokens['table.border.vertical'] === null
-          ? {}
-          : {
-              vertical: resolveStyleBorderCandidate(
-                'table.border.vertical',
-                tableThemeTokens.tokens['table.border.vertical'],
-                tableThemeTokens,
-              ),
-            }
-        : { vertical: resolveBorderCandidate(resolved.borders.vertical, tableContentMasterColor) }),
-    },
+    mode: resolved.borders?.mode ?? defaultBorders?.mode ?? TableBorderMode.Collapse,
+    defaults,
   });
   const borderResult =
     graph.edges.length === 0
@@ -693,17 +718,17 @@ export const resolvePresentedTableTransaction = (
       ...(borderResult === undefined ? [] : [context.replay(borderResult)]),
     ],
   );
-  return deepFreeze({
+  return {
     children: [root],
     manifest: buildTableLayoutManifest(tableId, semantic, layout, graph.edges, {
       ...(manifestStyle === undefined ? {} : { style: manifestStyle }),
       themeMode: manifestTheme.mode,
-      tableThemeTokens,
+      tableDefaults,
       presented,
       ...(input.plan === undefined ? {} : { plans: input.plan.cells, encodings: input.plan.encodings }),
       legendDescriptors: input.plan?.legendDescriptors ?? [],
     }),
-  });
+  };
 };
 
 /** 解析 Table spec 与 definitions，并执行一次 layout-aware compile transaction */
@@ -713,21 +738,27 @@ export const resolveTableTransaction = (
   options: LowerTablesOptions,
   context: LayoutCompositeCompileContext,
 ): ResolvedTableTransaction => {
-  const parsed = TableSchema.parse(spec);
-  const semantic = normalizeTableStructure(parsed.structure, {
-    data: parsed.data,
+  const semantic = normalizeTableStructure(spec.structure, {
+    data: spec.data,
     datasets,
     structureDefinitions: options.structureDefinitions,
   });
-  const tableThemeTokens = resolveTableThemeTokens(context.theme, parsed.tableThemeTokens, options.tableThemeStyles);
+  const tableDefaults = resolveTableDefaults(context.theme, spec, options.tableThemeStyles);
+  const categoricalPalette = tableDefaults.defaults.visualDefaults?.categorical;
+  const sequentialPalette = tableDefaults.defaults.visualDefaults?.sequential;
+  const categoricalColors = categoricalPalette === null ? undefined : categoricalPalette;
+  const sequentialColors =
+    sequentialPalette === undefined || sequentialPalette === null
+      ? undefined
+      : ([sequentialPalette[0], sequentialPalette[1]] as const);
   const plan = resolveTableCellPlans(semantic, {
-    rules: parsed.rules,
-    encodings: parsed.encodings,
+    rules: spec.rules,
+    encodings: spec.encodings,
     visualScaleDefinitions: options.visualScaleDefinitions,
-    tableThemeTokens,
+    tableDefaults,
     scaleContext: {
-      categoricalColors: tableThemeTokens.tokens['data.categorical'],
-      sequentialColors: [tableThemeTokens.tokens['data.sequential'][0], tableThemeTokens.tokens['data.sequential'][1]],
+      ...(categoricalColors === undefined ? {} : { categoricalColors }),
+      ...(sequentialColors === undefined ? {} : { sequentialColors }),
     },
   });
   const formatted = formatTable(semantic, { cells: plan.cells, formatterDefinitions: options.formatterDefinitions });
@@ -737,12 +768,12 @@ export const resolveTableTransaction = (
   });
   return resolvePresentedTableTransaction(
     {
-      ...(parsed.id === undefined ? {} : { tableId: parsed.id }),
-      ...(parsed.meta === undefined ? {} : { meta: parsed.meta }),
-      ...(parsed.layout === undefined ? {} : { layout: parsed.layout }),
+      ...(spec.id === undefined ? {} : { tableId: spec.id }),
+      ...(spec.meta === undefined ? {} : { meta: spec.meta }),
+      ...(spec.layout === undefined ? {} : { layout: spec.layout }),
       presented,
       theme: context.theme,
-      tableThemeTokens,
+      tableDefaults,
       plan,
     },
     context,

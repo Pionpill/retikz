@@ -19,7 +19,8 @@ export type TypedChartParts<TSource extends IRChartSource> = Readonly<{
     data: TSource['data'];
     layout?: TSource['layout'];
     coordinate?: InputChartCoordinate;
-    theme?: TSource['theme'];
+    background?: TSource['background'];
+    chartDefaults?: TSource['chartDefaults'];
     plotExtension?: TSource['plotExtension'];
   }>;
   datasets: Readonly<Record<string, Array<ExternalRow>>>;
@@ -43,14 +44,13 @@ export const typedChartPartsOf = <TSource extends IRChartSource>(
     id,
     theme,
     themeDefinitions,
+    background,
+    chartDefaults,
     lowerOptions,
     panel,
     themeStyles,
   } = input;
-  const isCoreTheme = (value: TypedChartCommonInput<TSource>['theme']): value is IRScene['theme'] =>
-    typeof value === 'object' && (Object.hasOwn(value, 'style') || Object.hasOwn(value, 'mode'));
-  const sourceTheme = isCoreTheme(theme) ? undefined : theme;
-  const hostTheme = isCoreTheme(theme) ? theme : undefined;
+  const hostTheme = theme;
   const reference = dataRef ?? DEFAULT_CHART_DATA_REFERENCE;
   return {
     root: {
@@ -61,7 +61,8 @@ export const typedChartPartsOf = <TSource extends IRChartSource>(
       },
       ...(layout === undefined ? {} : { layout }),
       ...(coordinate === undefined ? {} : { coordinate }),
-      ...(sourceTheme === undefined ? {} : { theme: sourceTheme }),
+      ...(background === undefined ? {} : { background }),
+      ...(chartDefaults === undefined ? {} : { chartDefaults }),
       ...(input.plotExtension === undefined ? {} : { plotExtension: input.plotExtension }),
     },
     datasets: { [reference]: data },

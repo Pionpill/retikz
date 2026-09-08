@@ -11,27 +11,23 @@ export const previewControls = scopeZIndexControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={360} height={220} viewBox={{ x: -180, y: -110, width: 360, height: 220 }}>
+    <Layout viewBox={{ x: -180, y: -110, width: 360, height: 220 }}>
       <Scope transforms={[{ kind: 'translate', x: -22, y: -14 }]} zIndex={values.scopeA}>
         <Node
           id="a1"
           position={[0, 0]}
-          fill="tomato"
-          stroke="darkred"
-          strokeWidth={1}
-          minimumSize={76}
           zIndex={values.nodeA1}
+          style={{ fill: 'tomato', stroke: 'darkred', strokeWidth: 1 }}
+          layout={{ minimumSize: 76 }}
         >
           A1
         </Node>
         <Node
           id="a2"
           position={[40, 0]}
-          fill="gold"
-          stroke="darkorange"
-          strokeWidth={1}
-          minimumSize={76}
           zIndex={values.nodeA2}
+          style={{ fill: 'gold', stroke: 'darkorange', strokeWidth: 1 }}
+          layout={{ minimumSize: 76 }}
         >
           A2
         </Node>
@@ -40,22 +36,18 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         <Node
           id="b1"
           position={[0, 0]}
-          fill="dodgerblue"
-          stroke="darkblue"
-          strokeWidth={1}
-          minimumSize={76}
           zIndex={values.nodeB1}
+          style={{ fill: 'dodgerblue', stroke: 'darkblue', strokeWidth: 1 }}
+          layout={{ minimumSize: 76 }}
         >
           B1
         </Node>
         <Node
           id="b2"
           position={[40, 0]}
-          fill="mediumseagreen"
-          stroke="darkgreen"
-          strokeWidth={1}
-          minimumSize={76}
           zIndex={values.nodeB2}
+          style={{ fill: 'mediumseagreen', stroke: 'darkgreen', strokeWidth: 1 }}
+          layout={{ minimumSize: 76 }}
         >
           B2
         </Node>

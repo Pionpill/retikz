@@ -1,4 +1,4 @@
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
 import { array, intersection, literal, number, object, strictObject, tuple } from 'zod';
 
@@ -11,7 +11,6 @@ import { defineClip, definePattern } from '../../src/contract';
 import { resolveClipRegistry } from '../../src/providers/clip';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { resolveClip, resolvePaint } from '../../src/resolve/resource';
-import { JsonObjectSchema } from '../../src/schemas';
 
 const round = createRound(3);
 
@@ -24,7 +23,13 @@ const patternContext = (patterns: ReadonlyArray<PatternDefinition> = []) => ({
 const sceneWithPaint = (paint: IRPaint): IRScene => ({
   version: 1,
   type: 'scene',
-  children: [{ type: 'node', position: [0, 0], fill: paint }],
+  children: [
+    {
+      type: 'node',
+      position: [0, 0],
+      style: { fill: paint },
+    },
+  ],
 });
 
 describe('resolve/resource paint', () => {
@@ -80,8 +85,16 @@ describe('resolve/resource paint', () => {
     const scene = compileToScene({
       ...sceneWithPaint(paint),
       children: [
-        { type: 'node', position: [0, 0], fill: paint },
-        { type: 'node', position: [40, 0], fill: paint },
+        {
+          type: 'node',
+          position: [0, 0],
+          style: { fill: paint },
+        },
+        {
+          type: 'node',
+          position: [40, 0],
+          style: { fill: paint },
+        },
       ],
     }).scene;
     expect(scene.resources).toHaveLength(1);
@@ -95,8 +108,16 @@ describe('resolve/resource paint', () => {
         version: 1,
         type: 'scene',
         children: [
-          { type: 'node', position: [0, 0], fill: { kind: 'pattern', shape: 'dedupe-pattern' } },
-          { type: 'node', position: [40, 0], fill: { kind: 'pattern', shape: 'dedupe-pattern' } },
+          {
+            type: 'node',
+            position: [0, 0],
+            style: { fill: { kind: 'pattern', shape: 'dedupe-pattern' } },
+          },
+          {
+            type: 'node',
+            position: [40, 0],
+            style: { fill: { kind: 'pattern', shape: 'dedupe-pattern' } },
+          },
         ],
       },
       { patterns: [pattern] },

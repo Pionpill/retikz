@@ -79,20 +79,33 @@ const transformOf = (values: ScopeTransformValues): InputTransform => {
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={230} viewBox={{ x: -260, y: -150, width: 520, height: 300 }}>
-      <Node id="O" position={[-100, 0]} shape="circle" padding={4} stroke="none" fill="none">
+    <Layout viewBox={{ x: -260, y: -150, width: 520, height: 300 }}>
+      <Node id="O" position={[-100, 0]} shape="circle" style={{ stroke: 'none', fill: 'none' }} layout={{ padding: 4 }}>
         o
       </Node>
-      <Node id="T" position={[100, 0]} shape="circle" padding={4} stroke="none" fill="none">
+      <Node id="T" position={[100, 0]} shape="circle" style={{ stroke: 'none', fill: 'none' }} layout={{ padding: 4 }}>
         t
       </Node>
-      <Circle center={{ id: 'O' }} radius={14} stroke="gray" fill="none" dashPattern={[1, 4]} lineCap="round" />
-      <Circle center={{ id: 'T' }} radius={14} stroke="gray" fill="none" dashPattern={[1, 4]} lineCap="round" />
-      <Draw way={['O', 'T']} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
+      <Circle
+        center={{ id: 'O' }}
+        radius={14}
+        style={{ stroke: 'gray', fill: 'none', dashPattern: [1, 4], lineCap: 'round' }}
+      />
+      <Circle
+        center={{ id: 'T' }}
+        radius={14}
+        style={{ stroke: 'gray', fill: 'none', dashPattern: [1, 4], lineCap: 'round' }}
+      />
+      <Draw way={['O', 'T']} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
 
       <Scope placement={placementOf(values)} transforms={[transformOf(values)]}>
-        <Circle center={[0, 0]} radius={3} fill="gray" stroke="none" />
-        <Node id="Q" position={[30, -20]} minimumSize={{ width: 80, height: 80 }} padding={0} fill="none">
+        <Circle center={[0, 0]} radius={3} style={{ fill: 'gray', stroke: 'none' }} />
+        <Node
+          id="Q"
+          position={[30, -20]}
+          style={{ fill: 'none' }}
+          layout={{ minimumSize: { width: 80, height: 80 }, padding: 0 }}
+        >
           q
         </Node>
       </Scope>

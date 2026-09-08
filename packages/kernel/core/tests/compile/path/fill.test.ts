@@ -32,13 +32,13 @@ describe('compile path: fill / fillRule', () => {
       children: [
         {
           type: 'path',
-          fill: '#3b82f6',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
             { type: 'step', kind: 'line', to: [10, 10] },
             { type: 'step', kind: 'cycle' },
           ],
+          style: { fill: '#3b82f6' },
         },
       ],
     };
@@ -53,12 +53,11 @@ describe('compile path: fill / fillRule', () => {
       children: [
         {
           type: 'path',
-          fill: 'red',
-          fillRule: 'evenodd',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 10] },
           ],
+          style: { fill: 'red', fillRule: 'evenodd' },
         },
       ],
     };

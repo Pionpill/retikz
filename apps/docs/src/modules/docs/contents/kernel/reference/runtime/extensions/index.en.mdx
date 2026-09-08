@@ -3,7 +3,7 @@ title: Extension Mechanisms
 description: Look up capability families, injection points, selection keys, and guides for definitions, registries, and host lowerers.
 ---
 
-This page is an extension-point dictionary. Use it to decide which mechanism owns a custom capability, where it is injected, and what remains in IR. Step-by-step implementations live in the extension guide at the end of each capability group. See [Architecture Principles](/kernel/concepts/design/principles) for ownership and completeness checks.
+This page is an extension-point dictionary. Use it to decide which mechanism owns a custom capability, where it is injected, and what remains in IR. Step-by-step implementations live in the extension guide at the end of each capability group. See [Architecture Principles](/kernel/components/design/principles) for ownership and completeness checks.
 
 > Extension functions and registries never enter IR. IR stores serializable keys and parameters; the host injects behavior during compile or runtime.
 
@@ -100,7 +100,7 @@ Core's generic path-kind slot is `CompileOptions.pathKinds`, and Core supplies o
       RibbonPathKindDefinition and provider contribution for optional band paths
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/concepts/design/composite">
+  <LinkedCard href="/kernel/components/design/composite">
     <span className="font-semibold">Tier 2 Composites</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       CompositeDefinition: lightweight Theme-context expansion or layout-aware compile

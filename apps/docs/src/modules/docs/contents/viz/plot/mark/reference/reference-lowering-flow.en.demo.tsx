@@ -107,13 +107,13 @@ const renderFlowNode = (node: FlowNode) => (
     key={node.id}
     id={node.id}
     position={node.position}
-    minimumSize={{ width: node.width, height: node.height ?? 50 }}
-    stroke={node.color}
-    fill={node.color}
-    fillOpacity={0.08}
     cornerRadius={4}
-    align="middle"
-    lineHeight={node.lineHeight ?? 16}
+    style={{ stroke: node.color, fill: node.color, fillOpacity: 0.08 }}
+    layout={{
+      minimumSize: { width: node.width, height: node.height ?? 50 },
+      align: 'middle',
+      lineHeight: node.lineHeight ?? 16,
+    }}
   >
     <Text font={{ size: 14, weight: 'bold' }}>{node.title}</Text>
     <Text fill="gray" font={{ size: 12 }}>
@@ -126,31 +126,25 @@ const renderFlowNode = (node: FlowNode) => (
 const Demo: FC = () => (
   <>
     <div className="hidden sm:block">
-      <Layout width={860} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         {desktopNodes.map(renderFlowNode)}
         <LogicFigureFrame id="reference-core-primitives">
           <LogicFigureFrameTitle>Core primitives</LogicFigureFrameTitle>
           <Node
             id="reference-core-path"
             position={[370, -65]}
-            minimumSize={{ width: 130, height: 42 }}
-            stroke="gray"
-            fill="gray"
-            fillOpacity={0.06}
             cornerRadius={4}
-            align="middle"
+            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+            layout={{ minimumSize: { width: 130, height: 42 }, align: 'middle' }}
           >
             Core Path
           </Node>
           <Node
             id="reference-core-node"
             position={[370, 65]}
-            minimumSize={{ width: 130, height: 42 }}
-            stroke="gray"
-            fill="gray"
-            fillOpacity={0.06}
             cornerRadius={4}
-            align="middle"
+            style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+            layout={{ minimumSize: { width: 130, height: 42 }, align: 'middle' }}
           >
             Core Node
           </Node>
@@ -165,7 +159,7 @@ const Demo: FC = () => (
     </div>
 
     <div className="sm:hidden">
-      <Layout width={360} height={154} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         {mobileNodes.map(renderFlowNode)}
         <Draw way={['mobile-reference-input', 'mobile-reference-classify']} arrow="->" />
         <Draw way={['mobile-reference-classify', 'mobile-reference-line']} arrow="->" />

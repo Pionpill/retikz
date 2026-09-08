@@ -18,7 +18,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     ]}
     width={360}
     height={260}
-    style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PointMark x="lng" y="lat" size="pop" />
     <PlotLegend

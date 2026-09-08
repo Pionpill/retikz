@@ -7,17 +7,18 @@ description: 查询 Graph family 的独立 Source composite、Scope 公共面与
 
 ## 公开导出
 
-| 能力       | `@retikz/graph`                                                                                                        | React                                              | Vanilla                                                            |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
-| Graph      | `GraphSchema`、`IRGraph`、`createGraph`、`GraphDefinition`、`GraphProviderKey`                                         | `Graph`、`GraphProps`                              | `graph`、`GraphInputEmbedAdapter`、`GraphInputEmbedProps`          |
-| Group      | `GroupSchema`、`IRGroup`、`createGroup`、`GroupDefinition`、`GroupProviderKey`                                         | `Group`、`GroupProps`                              | `group`、`GroupInputEmbedAdapter`、`GroupInputEmbedProps`          |
-| Block      | `BlockSchema`、`IRBlock`、`createBlock`、`BlockDefinition`、`BlockProviderKey`                                         | `Block`、`BlockProps`                              | `block`、`BlockInputEmbedAdapter`、`BlockInputEmbedProps`          |
-| Block 结构 | Header / Section / Row 的 schema、类型、factory、Definition 与 ProviderKey；Row 接受任意直接 children                  | 三个独立组件，Row children 直接收集任意子元素      | 三个独立 builder、adapter 与 normalize                             |
-| Entity     | `EntitySchema`、`IRGraphEntity`、`createEntity`、`EntityDefinition`、`EntityProviderKey`                               | `Entity`、`EntityProps`                            | `entity`、`EntityInputEmbedAdapter`、`EntityInputEmbedProps`       |
-| Relation   | `RelationSchema`、`IRGraphRelation`、`createRelation`、`RelationDefinition`、`RelationProviderKey`                     | `Relation`、`RelationProps`                        | `relation`、`RelationInputEmbedAdapter`、`RelationInputEmbedProps` |
-| 词汇       | `EntityRole`、`RelationRole`、`RelationKind` 及对应开放 schema；`GraphStatus`、`GraphStatusSchema`、`GraphStatusValue` | —                                                  | —                                                                  |
-| Theme 扩展 | `GraphThemeStyleDefinition`、`GraphThemeStyleOverrides`、`defineGraphThemeStyle`                                       | `graphThemeStyles` 可声明在 Graph family composite | 同一 options 可传给 Graph family adapter                           |
-| 装配       | `GraphDefinitionOptions`、`createGraphDefinitions`、`createGraphProviders`                                             | options 可声明在独立 composite                     | `createGraphVanillaAdapters`                                       |
+| 能力         | `@retikz/graph`                                                                                                        | React                                              | Vanilla                                                            |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
+| Graph        | `GraphSchema`、`IRGraph`、`createGraph`、`GraphDefinition`、`GraphProviderKey`                                         | `Graph`、`GraphProps`                              | `graph`、`GraphInputEmbedAdapter`、`GraphInputEmbedProps`          |
+| Group        | `GroupSchema`、`IRGroup`、`createGroup`、`GroupDefinition`、`GroupProviderKey`                                         | `Group`、`GroupProps`                              | `group`、`GroupInputEmbedAdapter`、`GroupInputEmbedProps`          |
+| Block        | `BlockSchema`、`IRBlock`、`createBlock`、`BlockDefinition`、`BlockProviderKey`                                         | `Block`、`BlockProps`                              | `block`、`BlockInputEmbedAdapter`、`BlockInputEmbedProps`          |
+| Block 结构   | Header / Section / Row 的 schema、类型、factory、Definition 与 ProviderKey；Row 接受任意直接 children                  | 三个独立组件，Row children 直接收集任意子元素      | 三个独立 builder、adapter 与 normalize                             |
+| Entity       | `EntitySchema`、`IRGraphEntity`、`createEntity`、`EntityDefinition`、`EntityProviderKey`                               | `Entity`、`EntityProps`                            | `entity`、`EntityInputEmbedAdapter`、`EntityInputEmbedProps`       |
+| Relation     | `RelationSchema`、`IRGraphRelation`、`createRelation`、`RelationDefinition`、`RelationProviderKey`                     | `Relation`、`RelationProps`                        | `relation`、`RelationInputEmbedAdapter`、`RelationInputEmbedProps` |
+| 词汇         | `EntityRole`、`RelationRole`、`RelationKind` 及对应开放 schema；`GraphStatus`、`GraphStatusSchema`、`GraphStatusValue` | —                                                  | —                                                                  |
+| 默认值与规则 | `GraphDefaultsSchema`、`IRGraphDefaults`、`GraphRuleSchema`、`IRGraphRule`                                             | `graphDefaults` / `graphRules`                     | 同一 Source 字段                                                   |
+| Theme 扩展   | `GraphThemeStyleDefinition`、`GraphThemeStyleSource`、`defineGraphThemeStyle`                                          | `graphThemeStyles` 可声明在 Graph family composite | 同一 options 可传给 Graph family adapter                           |
+| 装配         | `GraphDefinitionOptions`、`createGraphDefinitions`、`createGraphProviders`                                             | options 可声明在独立 composite                     | `createGraphVanillaAdapters`                                       |
 
 ## Graph Source composite
 
@@ -27,36 +28,32 @@ Source IR 只保存作者提供的事实。省略可选 `children`、位置、ro
   name="GraphSchema"
   description="组合完整 Core Scope 公共面与 Graph-local context 的 JSON-safe Graph Source composite。"
   descriptions={{
+    style: '当前实例的视觉覆盖，按字段继承与覆盖',
+    defaults: '后代默认值通道及继承屏障',
     namespace: 'Graph semantic owner namespace。',
     type: 'Graph Source composite discriminator。',
-    color: '后代图元继承的主颜色。',
-    fill: '后代图元继承的填充画笔。',
-    stroke: '后代图元继承的描边画笔。',
-    fillOpacity: '后代图元继承的填充不透明度。',
-    strokeWidth: '后代图元继承的描边宽度。',
-    strokeOpacity: '后代图元继承的描边不透明度。',
-    opacity: '后代图元继承的整体不透明度。',
     theme: '后代继承的稀疏 Core Theme 覆盖。',
     id: '可选 Core Scope target id。',
     localNamespace: '是否让后代 id 保持在 Graph 局部 namespace。',
     transforms: '作用于整个 Graph Scope 的局部变换。',
     placement: '在局部变换后把 Graph 包络放到父坐标系。',
-    nodeDefault: 'Graph Scope 内 Node 的默认样式。',
-    pathDefault: 'Graph Scope 内 Path-like 图元的默认样式与几何。',
-    labelDefault: 'Graph Scope 内 Node/Step label 的默认样式。',
-    arrowDefault: 'Graph Scope 内 Arrow 的默认样式。',
-    resetStyle: 'Scope 样式默认通道的继承屏障。',
+    'defaults.node': 'Graph Scope 内 Node 的默认样式。',
+    'defaults.path': 'Graph Scope 内 Path-like 图元的默认样式与几何。',
+    'defaults.label': 'Graph Scope 内 Node/Step label 的默认样式。',
+    'defaults.arrow': 'Graph Scope 内 Arrow 的默认样式。',
+    'defaults.reset': 'Scope 样式默认通道的继承屏障。',
     zIndex: 'Graph Scope 在 sibling 中的绘制层级。',
     clip: 'Graph Scope 局部坐标中的裁剪区域。',
     boundingShape: 'Graph id 使用的 synthetic bounding envelope。',
     meta: 'Core compiler 保留而 Graph semantic resolve 忽略的 JSON-safe 元信息。',
     animations: '作用于 Graph Scope group 的动画声明。',
-    graphTheme: '可选 Graph-local ordered appearance rules。',
+    graphDefaults: '可见后代的稀疏 Source 默认片段',
+    graphRules: '可见 Entity / Relation 的有序条件覆盖规则',
     children: '按作者顺序排列的任意 Core child 与 Tier 2 composite。',
   }}
 />
 
-Graph `children` 直接使用 Core `ChildSchema`，可以混合 Entity、Relation、Node、Coordinate、Path、Scope 及其它 composite。`theme`、样式默认、transform、placement、clip、bounding shape、animation 与 `meta` 都保留 Core Scope 语义；Graph-only 字段只有 `graphTheme`
+Graph `children` 直接使用 Core `ChildSchema`，可以混合 Entity、Relation、Node、Coordinate、Path、Scope 及其它 composite。`theme`、样式默认、transform、placement、clip、bounding shape、animation 与 `meta` 都保留 Core Scope 语义；Graph 专属默认入口为 `graphDefaults` 与 `graphRules`
 
 Entity role、Relation role / kind 都是开放 key。schema 会把内置 const object 词汇作为 TypeScript 和 JSON Schema 提示，但仍接受任意非空白自定义字符串；是否已注册只在 resolve 阶段校验。Entity kind 与 predicate name 当前没有内置词汇，因此继续显示为普通非空白字符串
 
@@ -64,7 +61,7 @@ Entity role、Relation role / kind 都是开放 key。schema 会把内置 const 
 {
   "namespace": "graph",
   "type": "graph",
-  "nodeDefault": { "strokeWidth": 1.5 },
+  "defaults": { "node": { "style": { "strokeWidth": 1.5 } } },
   "children": [
     {
       "namespace": "graph",
@@ -111,44 +108,48 @@ Neutral Graph Theme 为 Block 根外框提供透明 background、`currentColor /
 
 ## Entity schema
 
-Entity 把语义与 Core Node 实例字段放在同一个 Source record。除了由 role 决定的 `type`、`shape`、`boundary`、`padding`、`cornerRadius`，其余 Node 字段都可直接使用；`id`、`position`、`text` 与闭合 `status` 都可省略。当前位置的 Core Theme 与可选 Graph Theme 提供外观默认，Entity 上显式编写的 `fill`、`dashed`、`textColor` 等字段最终覆盖 Theme
+Entity 的实例视觉与布局分别使用 `style` / `layout`；Relation 的路径外观使用 `style`；Graph / Group / Block 的 Scope 级联值使用 `style`，后代默认值使用 `defaults`。Graph Theme 生成片段与 `graphDefaults` 按对应 Source 路径对齐；`graphRules` 使用相同的受限外观字段。
+
+Entity 把语义与 Core Node 实例字段放在同一个 Source record。除了由 role 决定的 `type`、`shape`、`boundary`、`layout.padding`、`cornerRadius`，其余 Node 字段都可直接使用；`id`、`position`、`text` 与闭合 `status` 都可省略。当前位置的 Core Theme 与可选 Graph Theme 提供外观默认，Entity 上显式编写的 `style.fill`、`style.dashed`、`style.textColor` 等字段最终覆盖 Theme
 
 <ZodSchema
   name="EntitySchema"
   description="拥有 role-owned structure 与非结构 Core Node 公共面的 JSON-safe Entity Source composite。"
   descriptions={{
+    style: '当前实例的视觉覆盖，按字段继承与覆盖',
+    layout: '尺寸、间距与文本排布参数',
     namespace: 'Graph semantic owner namespace。',
     type: 'Entity Source discriminator。',
     role: '由 Entity role registry 解析的开放 key。',
     kind: 'role 内可选稳定子类型 key。',
     predicate: '可选精确 predicate reference。',
-    color: '主图形颜色及未单独覆盖时的继承颜色。',
-    fill: '节点填充画笔；显式值覆盖 Theme 默认。',
-    stroke: '节点描边画笔；显式值覆盖 Theme 默认。',
-    fillOpacity: '节点填充不透明度。',
-    strokeWidth: '节点描边宽度。',
-    strokeOpacity: '节点描边不透明度。',
-    opacity: '整个节点图形的不透明度。',
-    shadow: '节点阴影 preset 或显式投影。',
-    blendMode: '节点与下方内容的混合模式。',
+    'style.color': '主图形颜色及未单独覆盖时的继承颜色。',
+    'style.fill': '节点填充画笔；显式值覆盖 Theme 默认。',
+    'style.stroke': '节点描边画笔；显式值覆盖 Theme 默认。',
+    'style.fillOpacity': '节点填充不透明度。',
+    'style.strokeWidth': '节点描边宽度。',
+    'style.strokeOpacity': '节点描边不透明度。',
+    'style.opacity': '整个节点图形的不透明度。',
+    'style.shadow': '节点阴影 preset 或显式投影。',
+    'style.blendMode': '节点与下方内容的混合模式。',
     id: '可选 Core Node target id。',
     meta: 'Graph 不解释的 JSON-safe 元信息。',
     animations: '可选动画声明。',
     position: '可选 Core Node placement；绘制前必须可解析。',
     rotate: '可选旋转角度。',
     text: '可选 Node-compatible text。',
-    align: '可选文本对齐。',
-    lineHeight: '可选文本行高。',
-    maxTextWidth: '可选文本最大宽度。',
-    dashed: '可选虚线描边 preset；显式 dashPattern 优先。',
-    dotted: '可选点线描边 preset；dashPattern 与 dashed 优先。',
-    dashPattern: '可选显式描边虚线长度序列。',
-    dashOffset: '可选描边虚线偏移。',
-    minimumSize: '可选最小节点尺寸；与 role minimum size 按轴取较大值。',
+    'layout.align': '可选文本对齐。',
+    'layout.lineHeight': '可选文本行高。',
+    'layout.maxTextWidth': '可选文本最大宽度。',
+    'style.dashed': '可选虚线描边 preset；显式 dashPattern 优先。',
+    'style.dotted': '可选点线描边 preset；dashPattern 与 dashed 优先。',
+    'style.dashPattern': '可选显式描边虚线长度序列。',
+    'style.dashOffset': '可选描边虚线偏移。',
+    'layout.minimumSize': '可选最小节点尺寸；与 role minimum size 按轴取较大值。',
     scale: '可选节点缩放。',
-    textColor: '可选节点文本颜色；显式值覆盖 Theme 默认。',
-    margin: '可选节点外边距。',
-    font: '可选字体配置。',
+    'style.textColor': '可选节点文本颜色；显式值覆盖 Theme 默认。',
+    'layout.margin': '可选节点外边距。',
+    'style.font': '可选字体配置。',
     label: '可选 Core Node label。',
     zIndex: '可选绘制层级。',
   }}
@@ -164,6 +165,7 @@ Relation 同时保存 Core `IRNodeTarget` endpoint、语义、可选闭合 `stat
   name="RelationSchema"
   description="组合语义 endpoint 与非冲突 Core Path instance fields 的 JSON-safe Relation Source composite。"
   descriptions={{
+    style: '当前实例的视觉覆盖，按字段继承与覆盖',
     namespace: 'Graph semantic owner namespace。',
     type: 'Relation Source discriminator。',
     id: '可选稳定 Core Path id。',
@@ -189,17 +191,17 @@ Relation 同时保存 Core `IRNodeTarget` endpoint、语义、可选闭合 `stat
     zIndex: '可选绘制层级。',
     animations: '可选动画声明。',
     meta: 'Graph 不解释的 JSON-safe 元信息。',
-    color: '关系主颜色。',
-    stroke: '关系路径描边画笔。',
-    strokeWidth: '关系路径描边宽度。',
-    strokeOpacity: '关系路径描边不透明度。',
-    opacity: '整个关系图形的不透明度。',
-    shadow: '关系路径阴影。',
-    blendMode: '关系路径与下方内容的混合模式。',
-    lineCap: '路径端点样式。',
-    lineJoin: '路径折角样式。',
-    dashPattern: '可选显式描边虚线序列；覆盖 role、kind 或 predicate 提供的结构默认。',
-    dashOffset: '描边虚线偏移。',
+    'style.color': '关系主颜色。',
+    'style.stroke': '关系路径描边画笔。',
+    'style.strokeWidth': '关系路径描边宽度。',
+    'style.strokeOpacity': '关系路径描边不透明度。',
+    'style.opacity': '整个关系图形的不透明度。',
+    'style.shadow': '关系路径阴影。',
+    'style.blendMode': '关系路径与下方内容的混合模式。',
+    'style.lineCap': '路径端点样式。',
+    'style.lineJoin': '路径折角样式。',
+    'style.dashPattern': '可选显式描边虚线序列；覆盖 role、kind 或 predicate 提供的结构默认。',
+    'style.dashOffset': '描边虚线偏移。',
     sourceMarker: '可选起点 marker appearance 覆盖。',
     targetMarker: '可选终点 marker appearance 覆盖。',
     labelTextForeground: 'Relation label 文本颜色。',
@@ -223,7 +225,7 @@ Theme 是 Relation 的默认来源，不是可用字段白名单。Relation 显�
 
 ## 主色与派生颜色
 
-Entity / Relation 的 `color` 是字符串主色。适用的 `fill`、`stroke`、文字前景与 marker 颜色也可写 `0..1` 数值，由 Core 在 Graph Theme、Graph-local rule 与实例字段全部级联后解析。Entity 跟随最终 Entity 主色；Relation 的 stroke、label 与 marker color 跟随 Relation 主色，marker fill 再跟随已解析 marker color。数值不是透明度，opacity 字段继续独立生效；palette、gradient stop、pattern 与 shadow color 保持字符串。
+Entity / Relation 的 `style.color` 是字符串主色。适用的 `fill`、`stroke`、文字前景与 marker 颜色也可写 `0..1` 数值，由 Core 在 Graph Theme、Graph-local rule 与实例字段全部级联后解析。Entity 跟随最终 Entity 主色；Relation 的 stroke、label 与 marker color 跟随 Relation 主色，marker fill 再跟随已解析 marker color。数值不是透明度，opacity 字段继续独立生效；palette、gradient stop、pattern 与 shadow color 保持字符串。
 
 ## 共享 reference 与 Graph Theme
 
@@ -234,40 +236,132 @@ Entity / Relation 的 `color` 是字符串主色。适用的 `fill`、`stroke`�
 />
 
 <ZodSchema
-  name="GraphThemeLayerSchema"
-  description="至少包含一条 appearance rule 的 Graph-local Theme layer。"
-  descriptions={{ rules: '按声明顺序匹配 Canonical Entity 或 Relation semantics 的 appearance rules。' }}
+  name="GraphDefaultsSchema"
+  description="与目标 Source 路径一致的稀疏 Graph 默认片段。"
+  descriptions={{
+    entity: 'Entity 默认值',
+    'entity.style': '节点外观默认值',
+    'entity.layout': '节点文本与尺寸默认值',
+    relation: 'Relation 默认值',
+    'relation.style': '路径外观默认值',
+    group: '后代 Group 根外框默认值',
+    block: '后代 Block 根外框默认值',
+    'group.background': '整体替换的背景',
+    'group.border': '整体替换的边框',
+    'group.cornerRadius': '外框圆角',
+    'block.background': '整体替换的背景',
+    'block.border': '整体替换的边框',
+    'block.cornerRadius': '外框圆角',
+    'entity.style.color': '节点主色',
+    'entity.style.textColor': '文字颜色',
+    'entity.style.fill': '填充画笔',
+    'entity.style.stroke': '描边画笔',
+    'entity.style.fillOpacity': '填充不透明度',
+    'entity.style.strokeWidth': '描边宽度',
+    'entity.style.strokeOpacity': '描边不透明度',
+    'entity.style.opacity': '节点不透明度',
+    'entity.style.shadow': '阴影',
+    'entity.style.blendMode': '混合模式',
+    'entity.style.dashed': '虚线预设',
+    'entity.style.dotted': '点线预设',
+    'entity.style.dashPattern': '虚线长度序列',
+    'entity.style.dashOffset': '虚线偏移',
+    'entity.style.font': '非空时整体替换的 Node 字体',
+    'entity.layout.align': '文字对齐',
+    'entity.layout.lineHeight': '行高',
+    'entity.layout.maxTextWidth': '最大文字宽度',
+    'entity.layout.minimumSize': '最小尺寸，仍受 role 的逐轴下限约束',
+    'entity.layout.margin': '整体替换的外边距',
+    'relation.style.color': '关系主色',
+    'relation.style.stroke': '描边画笔',
+    'relation.style.strokeWidth': '描边宽度',
+    'relation.style.strokeOpacity': '描边不透明度',
+    'relation.style.opacity': '关系不透明度',
+    'relation.style.shadow': '阴影',
+    'relation.style.blendMode': '混合模式',
+    'relation.style.lineCap': '端点样式',
+    'relation.style.lineJoin': '折角样式',
+    'relation.style.dashOffset': '虚线偏移',
+    'relation.sourceMarker': '已有起点 marker 的外观',
+    'relation.targetMarker': '已有终点 marker 的外观',
+    'relation.sourceMarker.color': 'marker 主色',
+    'relation.sourceMarker.fill': 'marker 填充颜色',
+    'relation.sourceMarker.opacity': 'marker 不透明度',
+    'relation.sourceMarker.lineWidth': 'marker 描边宽度',
+    'relation.targetMarker.color': 'marker 主色',
+    'relation.targetMarker.fill': 'marker 填充颜色',
+    'relation.targetMarker.opacity': 'marker 不透明度',
+    'relation.targetMarker.lineWidth': 'marker 描边宽度',
+    'relation.labelTextForeground': '标签文字颜色',
+    'relation.labelFont': '按字段补全的标签字体',
+    'relation.labelOpacity': '标签不透明度',
+    'group.background.fill': '背景填充画笔',
+    'group.background.fillOpacity': '背景填充不透明度',
+    'group.border.color': '边框主色',
+    'group.border.stroke': '边框描边画笔',
+    'group.border.strokeWidth': '边框描边宽度',
+    'group.border.strokeOpacity': '边框描边不透明度',
+    'group.border.opacity': '边框不透明度',
+    'group.border.dashPattern': '虚线长度序列',
+    'group.border.dashOffset': '虚线偏移',
+    'group.border.lineCap': '路径端点样式',
+    'group.border.lineJoin': '路径折角样式',
+    'block.background.fill': '背景填充画笔',
+    'block.background.fillOpacity': '背景填充不透明度',
+    'block.border.color': '边框主色',
+    'block.border.stroke': '边框描边画笔',
+    'block.border.strokeWidth': '边框描边宽度',
+    'block.border.strokeOpacity': '边框描边不透明度',
+    'block.border.opacity': '边框不透明度',
+    'block.border.dashPattern': '虚线长度序列',
+    'block.border.dashOffset': '虚线偏移',
+    'block.border.lineCap': '路径端点样式',
+    'block.border.lineJoin': '路径折角样式',
+  }}
 />
 
-Core `theme` 选择或覆盖通用 Theme；`graphTheme` 只保存 Graph-local ordered appearance rules。Entity rule 可按 role / kind / predicate 匹配，Relation rule 可按 role / kind / predicate / direction 匹配；role 持有完整结构，kind / predicate 只能提供允许的结构 delta
+Core `theme` 选择主题环境；`graphDefaults` 显式指定后代默认值，`graphRules` 独立保存有序规则，二者都可单独使用。默认片段保留正式 Source 的路径：Entity 使用 `style` / `layout`，Relation 的 marker 与标签格式位于根，Group / Block 使用根 Surface 字段。默认值不包含内容、identity、role、路由或算法策略。
 
-`defineGraphThemeStyle()` 的 `resolve(theme)` 返回 `GraphThemeStyleOverrides`，只写相对当前明暗模式默认 preset 需要改变的字段。`entity`、`relation`、`group` 与 `block` 都是可选 slice；Entity / Relation 可提供 `tokens` 与 `rules`，Group / Block 使用 `GraphSurfaceThemeStyleTokens` 的 `background`、`border` 与 `cornerRadius`。runtime callback 中已知 token 显式为 `undefined` 时按省略处理。显式 `tokens: {}` 仍无效，因为 token override 必须至少包含一个字段；返回值只能包含 plain-data 容器
+| 规则契约                                           | 允许的赋值                            | 匹配条件                              |
+| -------------------------------------------------- | ------------------------------------- | ------------------------------------- |
+| `GraphRuleSchema` / `IRGraphRule` 的 Entity 分支   | `style`，不含 `font`；不允许 `layout` | `role`、`kind`、`predicate`、`status` |
+| `GraphRuleSchema` / `IRGraphRule` 的 Relation 分支 | 受限 `style` 与根 marker / 标签格式   | 上述条件及有效 `direction`            |
+
+Relation 默认与规则不接受 fill 或结构性 dashPattern；marker 外观不会创建 marker，也不能改变其 shape / size。Group / Block 不提供 selector rules。
+
+`defineGraphThemeStyle()` 的 `resolve(theme)` 返回 `GraphThemeStyleSource`，即 `{ defaults?, rules? }`。`defaults` 与 `graphDefaults` 复用同一片段，`rules` 与 `graphRules` 复用同一规则；callback 不再返回 tokens 包装。空片段、空组、已知字段的 optional `undefined` 表示没有覆盖，合法的 `0`、`false` 与字段允许的 `null` 保持有效。
 
 ```ts
 const compact = defineGraphThemeStyle({
   name: 'compact',
   resolve: () => ({
-    entity: { tokens: { strokeWidth: 1.5 } },
-    group: { tokens: { cornerRadius: 2 } },
-    block: { tokens: { border: { stroke: 'currentColor', strokeWidth: 1.5 } } },
+    defaults: {
+      entity: { style: { strokeWidth: 1.5 }, layout: { maxTextWidth: 180 } },
+      group: { cornerRadius: 2 },
+      block: { border: { stroke: 'currentColor', strokeWidth: 1.5 } },
+    },
+    rules: [{ type: 'entity', selector: { status: 'error' }, style: { strokeWidth: 3 } }],
   }),
 });
 
 const composites = createGraphDefinitions({ graphThemeStyles: [compact] });
 ```
 
-Entity / Relation resolver 按以下顺序形成完整外观，后面的来源只覆盖自己声明的字段：
+局部级联从低到高：
 
-1. 当前 Core Theme mode 对应的 Graph 默认 preset tokens
-2. 自定义 style 的稀疏 tokens
-3. Graph 默认 rules
-4. 自定义 style rules
-5. 从外到内的 Graph-local `graphTheme` rules
-6. Entity / Relation 显式 appearance 字段
+1. 当前 Core Theme mode 对应的 Neutral defaults
+2. 同名 Graph Definition 的 defaults
+3. Neutral 与同名 Definition 中按顺序匹配的 rules
+4. 作者作用域从外到内，每一层先应用 graphDefaults，再应用匹配的 graphRules
+5. Entity / Relation 实例字段
 
-Group / Block 根外框只使用 Neutral baseline、同名 style 的 Group / Block tokens 与显式 Source `background` / `border` / `cornerRadius`。显式对象作为完整顶层字段替换 Theme 对象，不在对象内部深合并；`graphTheme` 仍只样式化后代 Entity / Relation，不作用于承载它的 Group / Block shell
+因此近层 defaults 可以覆盖远层 rules，实例字段始终优先。空 rules 数组不清除上游规则；切换 `theme` 或设置 Core `defaults.reset` 也不清除作者默认值与规则。未物化的可选 font/layout 仍使用原 Core defaults 通道。
 
-自定义 style rules 追加在默认 rules 后；省略 `rules` 或提供 `rules: []` 都不会清空内置规则。未知 Core Theme style 仍要求注册同名 Graph Theme style Definition，否则 resolve 会 fail-loud
+`style` / `layout` 按字段覆盖；Node font 非空时整体替换，Relation labelFont 按字段补全，再应用单个 label.font。background、border、paint、shadow、margin 等复合叶子整体替换，不递归混合。
+
+Group / Block 自身外框使用传入的 Core Theme、祖先作者 defaults 与当前显式 Surface 字段；自身 graphDefaults / graphRules 只作用于后代。遍历只沿已有 Graph/Core 内容边界，不进入 Flow 或未知 composite 的私有数据。
+
+未注册同名 Graph Theme style 时继续报告 `DefinitionNotRegistered`；非法 callback 输出或 callback 异常由 Graph owner 包装并保留 cause。
 
 ## React 与 Vanilla authoring
 
@@ -276,9 +370,9 @@ React `<Graph>` 与 `<Block>` 都按作者顺序收集任意 Core/Tier 2 childre
 Graph standalone 与嵌入模式共享同一个 Source contract：
 
 ```tsx
-<Graph width={420} height={160}>...</Graph>
+<Graph>...</Graph>
 
-<Layout width={800} height={220}>
+<Layout>
   <Graph transforms={[{ kind: 'translate', x: 80, y: 40 }]}>...</Graph>
 </Layout>
 ```

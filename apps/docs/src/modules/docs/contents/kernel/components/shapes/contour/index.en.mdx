@@ -33,7 +33,7 @@ import { ContourShapeDefinition } from '@retikz/standard/shape';
         cornerRadius: 8,
       },
     }}
-    fill="steelblue"
+    style={{ fill: 'steelblue' }}
   />
 </Layout>
 ```
@@ -68,7 +68,7 @@ The playground combines point-set normalization, rounding, and connection bounda
   description="Revisit when you want to understand auto-centering or anchor fallback."
 />
 
-This section focuses only on the vertex normalization and attachment resolution owned by `contour`. See [Architecture Principles](/kernel/concepts/design/principles) for the full JSX → IR (intermediate representation) → Scene pipeline.
+This section focuses only on the vertex normalization and attachment resolution owned by `contour`. See [Architecture Principles](/kernel/components/design/principles) for the full JSX → IR (intermediate representation) → Scene pipeline.
 
 ### How any local origin is normalized to the node position
 
@@ -112,8 +112,8 @@ Standard direction names such as `top` / `right` ask for a fixed canonical point
     {
       label: 'Automatic attachment endpoint resolution',
       path: 'packages/kernel/core/src/compile/path/host/target.ts',
-      startLine: 107,
-      endLine: 127,
+      startLine: 17,
+      endLine: 36,
     },
     {
       label: 'Standard direction and numeric angle anchor resolution',

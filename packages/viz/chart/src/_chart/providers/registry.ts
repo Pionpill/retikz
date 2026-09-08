@@ -3,7 +3,7 @@ import type { ZodType } from 'zod';
 import { resolveRowSelectorRegistry, resolveStatisticsReducerRegistry } from '@retikz/data';
 import { createReadonlyMap } from '@retikz/foundation';
 import { resolveCoordinateRegistry, resolvePlotTransformRegistry, resolveScaleRegistry } from '@retikz/plot';
-import { union, ZodError, ZodLiteral, ZodObject } from 'zod';
+import { union, ZodLiteral, ZodObject } from 'zod';
 
 import type { AnyChartRecipeDefinition, ChartEncodingRuntime, ChartThemeDefinition } from '../contract';
 import type { IRChartSource } from '../schemas';
@@ -17,7 +17,7 @@ import type {
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { CHART_NAMESPACE } from '../constants';
 import { eraseChartRecipeDefinition } from '../contract';
-import { validateChartThemeBases, validateChartThemeDefinition } from './theme';
+import { parseChartThemeDefinition, validateChartThemeBases } from './theme';
 
 const invalidRegistry = (message: string, path: ReadonlyArray<string | number>, cause?: unknown): RetikzChartError =>
   new RetikzChartError({
@@ -26,9 +26,6 @@ const invalidRegistry = (message: string, path: ReadonlyArray<string | number>, 
     details: { path },
     ...(cause === undefined ? {} : { cause }),
   });
-
-const zodPathOf = (path: ReadonlyArray<PropertyKey>): ReadonlyArray<string | number> =>
-  path.map(segment => (typeof segment === 'symbol' ? String(segment) : segment));
 
 const duplicateDefinition = (label: string, key: string): RetikzChartError =>
   new RetikzChartError({
@@ -169,18 +166,6 @@ const validateRecipe = (recipe: AnyChartRecipeDefinition, family: string, index:
   if (recipe.chartType.length === 0) throw invalidRegistry('Chart recipe chartType must be non-empty', path);
   validateRecipeSchemaIdentity(recipe, family, [...path, 'schema']);
   validateSlots(recipe, [...path]);
-  try {
-    recipe.theme.resolutionSchema.parse(recipe.theme.fallback);
-  } catch (error) {
-    if (error instanceof ZodError) {
-      throw invalidRegistry(
-        `Chart recipe "${recipe.chartType}" has an invalid theme fallback`,
-        [...path, 'theme', 'fallback', ...zodPathOf(error.issues[0]?.path ?? [])],
-        error,
-      );
-    }
-    throw error;
-  }
 };
 
 const runtimeDefinitionKeys = [
@@ -236,6 +221,8 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
 
   const recipes = new Map<string, AnyChartRecipeDefinition>();
   const themes = new Map<string, ChartThemeDefinition>();
+  const themeSources = new Map<string, ChartThemeDefinition>();
+  const parsedThemes = new Map<ChartThemeDefinition, ChartThemeDefinition>();
   const themeDefinitions: Array<ChartThemeDefinition> = [];
   const seenContributions = new Set<ChartRecipeProviderContributionInput<TSource>>();
   for (const [index, contribution] of contributions.entries()) {
@@ -257,10 +244,14 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
 
   const recipeMap = createReadonlyMap(recipes);
   for (const theme of themeDefinitions) {
-    validateChartThemeDefinition(theme, recipeMap);
-    const existingTheme = themes.get(theme.name);
-    if (existingTheme !== undefined && existingTheme !== theme) throw duplicateDefinition('themes', theme.name);
-    themes.set(theme.name, theme);
+    const parsedTheme = parsedThemes.get(theme) ?? parseChartThemeDefinition(theme, recipeMap);
+    parsedThemes.set(theme, parsedTheme);
+    const existingThemeSource = themeSources.get(parsedTheme.name);
+    if (existingThemeSource !== undefined && existingThemeSource !== theme) {
+      throw duplicateDefinition('themes', parsedTheme.name);
+    }
+    themeSources.set(parsedTheme.name, theme);
+    themes.set(parsedTheme.name, parsedTheme);
   }
   validateChartThemeBases(themes);
 

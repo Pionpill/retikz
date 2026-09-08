@@ -148,7 +148,9 @@ const detailTableOf = (props: DetailTableProps): InputDetailTable => {
       ...(props.meta === undefined ? {} : { meta: props.meta }),
       ...(props.rules === undefined ? {} : { rules: props.rules }),
       ...(props.encodings === undefined ? {} : { encodings: props.encodings }),
-      ...(props.tableThemeTokens === undefined ? {} : { tableThemeTokens: props.tableThemeTokens }),
+      ...(props.appearanceDefaults === undefined ? {} : { appearanceDefaults: props.appearanceDefaults }),
+      ...(props.visualDefaults === undefined ? {} : { visualDefaults: props.visualDefaults }),
+      ...(props.tableDefaults === undefined ? {} : { tableDefaults: props.tableDefaults }),
     },
   };
 };
@@ -165,7 +167,9 @@ const manualTableOf = (props: ManualTableProps): InputManualTable => {
       ...(props.meta === undefined ? {} : { meta: props.meta }),
       ...(props.rules === undefined ? {} : { rules: props.rules }),
       ...(props.encodings === undefined ? {} : { encodings: props.encodings }),
-      ...(props.tableThemeTokens === undefined ? {} : { tableThemeTokens: props.tableThemeTokens }),
+      ...(props.appearanceDefaults === undefined ? {} : { appearanceDefaults: props.appearanceDefaults }),
+      ...(props.visualDefaults === undefined ? {} : { visualDefaults: props.visualDefaults }),
+      ...(props.tableDefaults === undefined ? {} : { tableDefaults: props.tableDefaults }),
     },
   };
 };

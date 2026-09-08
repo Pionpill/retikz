@@ -5,7 +5,7 @@ description: Query how React, Vanilla, and direct Plot IR converge on one loweri
 
 The Plot runtime separates how a chart is authored from how it executes. React, Vanilla, or generated tools first produce the same `IRPlot`; datasets and function-bearing Definitions are injected at execution time; then `@retikz/plot` lowers high-level chart semantics to Core IR. Core compiles the Scene, and renderers consume only the Scene.
 
-> This page explains the overall runtime contract rather than repeating schema fields. Use the contract pages in this group for JSON shapes, and see [Design Principles](/kernel/concepts/design/principles) for the complete Kernel compilation boundary.
+> This page explains the overall runtime contract rather than repeating schema fields. Use the contract pages in this group for JSON shapes, and see [Design Principles](/kernel/components/design/principles) for the complete Kernel compilation boundary.
 
 ## Hosts and Package Boundaries
 
@@ -13,7 +13,7 @@ The Plot runtime separates how a chart is authored from how it executes. React, 
 
 React and Vanilla provide different authoring and host wiring without duplicating Plot algorithms. Standalone `<Plot>` bridges its `XxxProps` / children to a Plot Vanilla `InputPlotEmbed` and hands it to the same `PlotInputEmbedAdapter`; `embedPlot()` creates an `InputEmbed` for Vanilla `scene()`, and `PlotInputEmbedAdapter` performs the `InputPlot -> IRPlot` normalization and lowering. `renderPlot()` remains the independent DOM-free SSR and lineage entry.
 
-`<Plot theme>` is the local Core Scope Theme around the Plot panel: standalone and embedded paths both wrap the Plot node in that Scope, so it only overrides that Plot's `style`, `mode`, and namespaced `tokens`. It is distinct from the Plot-spec fields `plotThemeTokens` and `plotTheme`, which are Plot-owned visual inputs. Vanilla `renderPlot(spec, data, { theme })` instead writes `theme` to the root `IRScene.theme`, making it the Core Theme for the entire compiled Scene; it does not rewrite `spec.plotThemeTokens` or `spec.plotTheme`.
+`<Plot theme>` is the local Core Scope Theme around the Plot panel: it selects that Plot's `style` and `mode`. It is distinct from Plot-owned `plotDefaults` and `plotRules`, which are persisted Plot Source inputs. Vanilla `renderPlot(spec, data, { theme })` writes `theme` to the root `IRScene.theme` for the compiled Scene; it does not rewrite `spec.plotDefaults` or `spec.plotRules`.
 
 All three entries delegate data, scale, coordinate, mark, and guide semantics to `@retikz/plot`, then return Core IR to the shared compilation path. SVG, Canvas, and SVG strings are output forms; SSR is a host scenario supported by Vanilla, not a separate Plot semantics path.
 
@@ -151,7 +151,7 @@ One lowering produces both Core IR and the execution's data artifact: root / mar
       Understand runtime audits, host metadata, and interaction trace-back.
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/concepts/design/principles">
+  <LinkedCard href="/kernel/components/design/principles">
     <span className="font-semibold">Kernel Design Principles</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Continue into the global boundaries between Core IR, Scene, and renderers.

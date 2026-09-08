@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MarkOperationSchema, PointMarkSchema } from '../../src/schemas';
+import { CustomPositionAdjustmentSchema, MarkOperationSchema, PointMarkSchema } from '../../src/schemas';
 
 const point = {
   type: 'point',
@@ -71,6 +71,16 @@ describe('Position Adjustment schema', () => {
         placement: { adjustments: [{ kind: 'screen-nudge', callback: () => 1 }] },
       }),
     ).toThrow();
+  });
+
+  it('reports a custom non-JSON leaf through the native Zod catchall path', () => {
+    const result = CustomPositionAdjustmentSchema.safeParse({
+      kind: 'screen-nudge',
+      payload: { nested: [0, { bad: BigInt(1) }] },
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['payload']);
   });
 
   it('does not add placement to unsupported built-in marks', () => {

@@ -1,5 +1,6 @@
-import type { IRChild, JsonValue } from '@retikz/core';
+import type { IRChild } from '@retikz/core';
 import type { DataLineageOptions, DataLineageRun, DataSourceIdentity, ExternalRow } from '@retikz/data';
+import type { JsonValue } from '@retikz/foundation';
 
 import type { PlotAnchorResolution, PlotLocatorOptions } from './locator';
 

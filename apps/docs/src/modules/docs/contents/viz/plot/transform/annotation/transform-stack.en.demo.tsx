@@ -18,7 +18,7 @@ const yDomainByOffset: Record<string, [number, number]> = {
 export const previewControls = stackControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot data={productRevenue} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Plot data={productRevenue} width={420} height={260}>
     <PlotTransform {...stackOperationOf(values)} />
     <PlotScale dimension="y" type="linear" domain={yDomainByOffset[values.offset]} />
     <IntervalMark

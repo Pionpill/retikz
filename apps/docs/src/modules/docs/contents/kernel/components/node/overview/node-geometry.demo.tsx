@@ -10,26 +10,26 @@ export const previewControls = nodeGeometryControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={240} viewBox={nodeGeometryFrame.viewBox}>
-      <Node id="A" position={[-150, 0]} shape="circle" padding={6} stroke="gray" dashed>
+    <Layout viewBox={nodeGeometryFrame.viewBox}>
+      <Node id="A" position={[-150, 0]} shape="circle" style={{ stroke: 'gray', dashed: true }} layout={{ padding: 6 }}>
         a
       </Node>
       <Node
         id="Q"
         position={[...nodeGeometryFrame.subjectPosition]}
-        padding={{ x: values.paddingX, y: values.paddingY }}
-        margin={values.margin}
-        minimumSize={{ width: values.minimumWidth, height: values.minimumHeight }}
         cornerRadius={values.cornerRadius}
         scale={values.scale}
         rotate={values.rotate}
-        fill="#f97316"
-        stroke="#c2410c"
-        textColor="white"
+        style={{ fill: '#f97316', stroke: '#c2410c', textColor: 'white' }}
+        layout={{
+          padding: { x: values.paddingX, y: values.paddingY },
+          margin: values.margin,
+          minimumSize: { width: values.minimumWidth, height: values.minimumHeight },
+        }}
       >
         q
       </Node>
-      <Draw way={['A', 'Q']} arrow="->" stroke="gray" zIndex={-1} />
+      <Draw way={['A', 'Q']} arrow="->" zIndex={-1} style={{ stroke: 'gray' }} />
     </Layout>
   );
 });

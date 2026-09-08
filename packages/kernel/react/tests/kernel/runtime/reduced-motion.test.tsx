@@ -89,8 +89,8 @@ describe('React SVG reduced motion', () => {
     stubReducedMotion(true);
     const container = await mount(
       <Layout width={100} height={100}>
-        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
-        <Node id="b" position={[20, 0]} stroke="#000" minimumSize={2} animations={MANUAL} />
+        <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
+        <Node id="b" position={[20, 0]} animations={MANUAL} style={{ stroke: '#000' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
 
@@ -102,7 +102,7 @@ describe('React SVG reduced motion', () => {
     const reducedMotion = stubReducedMotion(false);
     const container = await mount(
       <Layout width={100} height={100}>
-        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+        <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
     expect(container.querySelector('style') !== null).toBe(true);
@@ -116,8 +116,8 @@ describe('React SVG reduced motion', () => {
     stubReducedMotion(true);
     const container = await mount(
       <Layout width={100} height={100} animate={true}>
-        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
-        <Node id="b" position={[20, 0]} stroke="#000" minimumSize={2} animations={MANUAL} />
+        <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
+        <Node id="b" position={[20, 0]} animations={MANUAL} style={{ stroke: '#000' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
 
@@ -129,7 +129,7 @@ describe('React SVG reduced motion', () => {
     const reducedMotion = stubReducedMotion(false);
     const container = await mount(
       <Layout width={100} height={100} animate={true}>
-        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+        <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
 
@@ -142,7 +142,7 @@ describe('React SVG reduced motion', () => {
     const reducedMotion = stubReducedMotion(true);
     const container = await mount(
       <Layout width={100} height={100} animate={false}>
-        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+        <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
 

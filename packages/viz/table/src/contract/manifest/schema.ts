@@ -1,6 +1,6 @@
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
 
-import { CssColorSchema, OpacitySchema, PaintValueSchema, ThemeMode, ThemeTokenSource } from '@retikz/core';
+import { CssColorSchema, OpacitySchema, PaintValueSchema, ThemeMode } from '@retikz/core';
 import {
   NonBlankStringSchema,
   NonNegativeIntegerSchema,
@@ -11,12 +11,7 @@ import {
 import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import { TableCellLocationSchema, TableCellRoleSchema } from '../../schemas';
-import {
-  TableCellAppearanceSchema,
-  TableThemeTokenKeySchema,
-  TableThemeTokenMapSchema,
-  TableVisualChannel,
-} from '../../schemas';
+import { TableCellAppearanceSchema, TableDefaultsSchema, TableVisualChannel } from '../../schemas';
 import { TableLegendDescriptorSchema } from '../encoding';
 import { TableCellAppearanceTracePathSchema, TableCellPlanSourceSchema } from '../plan';
 import { TableCellSourceSchema } from '../structure';
@@ -28,21 +23,9 @@ const TableBorderPrioritySchema = number().refine(Number.isInteger, {
   message: 'Border priority must be a finite integer.',
 });
 
-export const TableBorderStyleTokenKeySchema = zodEnum([
-  'table.border.top',
-  'table.border.right',
-  'table.border.bottom',
-  'table.border.left',
-  'table.border.horizontal',
-  'table.border.vertical',
-  'columnHeader.border.bottom',
-]).describe('Closed border-producing Table style token key.');
-
-const TableBorderStyleTokenProvenanceSchema = strictObject({
-  key: TableBorderStyleTokenKeySchema.describe('Border style token mapped to this geometric source.'),
-  source: zodEnum(ThemeTokenSource).describe('Border token source relation to the Table owner.'),
-  path: NonBlankStringSchema.describe('Stable effective Theme or IRTable source path.'),
-});
+const TableDefaultsProvenanceSchema = strictObject({
+  path: NonBlankStringSchema.describe('Stable Table Source defaults path.'),
+}).describe('Source defaults provenance attached to a resolved border contribution.');
 
 const TableBorderVertexSchema = strictObject({
   x: number().describe('Finite Table-local x coordinate.'),
@@ -106,6 +89,14 @@ export const TableNoBorderContributionSchema = strictObject({
   ...TableBorderContributionBaseShape,
 });
 
+const TableDefaultsNoBorderContributionSchema = strictObject({
+  kind: literal('none').describe('Discriminator for a resolved hidden default border candidate.'),
+  origin: literal(TableBorderContributionOrigin.Defaults).describe('Table Source defaults border origin.'),
+  ...TableBorderContributionBaseShape,
+  priority: literal(-100).describe('Closed Source defaults border priority.'),
+  defaults: TableDefaultsProvenanceSchema.describe('Required Source defaults provenance.'),
+});
+
 const TableExplicitLineBorderContributionSchema = strictObject({
   kind: literal('line').describe('Discriminator for a resolved visible-capable line candidate.'),
   origin: literal(TableBorderContributionOrigin.Explicit).describe('Explicit Table, Cell, or rule border origin.'),
@@ -113,22 +104,23 @@ const TableExplicitLineBorderContributionSchema = strictObject({
   line: ResolvedTableBorderLineSchema.describe('Complete resolved Core-compatible line style.'),
 });
 
-const TableStyleTokenLineBorderContributionSchema = strictObject({
+const TableDefaultsLineBorderContributionSchema = strictObject({
   kind: literal('line').describe('Discriminator for a resolved visible-capable line candidate.'),
-  origin: literal(TableBorderContributionOrigin.StyleToken).describe('Resolved Table style token border origin.'),
+  origin: literal(TableBorderContributionOrigin.Defaults).describe('Resolved Table Source defaults border origin.'),
   ...TableBorderContributionBaseShape,
-  priority: literal(-100).describe('Closed style token border priority.'),
+  priority: literal(-100).describe('Closed Source defaults border priority.'),
   line: ResolvedTableBorderLineSchema.describe('Complete resolved Core-compatible line style.'),
-  styleToken: TableBorderStyleTokenProvenanceSchema.describe('Required style token provenance.'),
+  defaults: TableDefaultsProvenanceSchema.describe('Required Source defaults provenance.'),
 });
 
 export const TableLineBorderContributionSchema = discriminatedUnion('origin', [
   TableExplicitLineBorderContributionSchema,
-  TableStyleTokenLineBorderContributionSchema,
-]).describe('Explicit or style-token-origin resolved line contribution.');
+  TableDefaultsLineBorderContributionSchema,
+]).describe('Explicit or Source-defaults-origin resolved line contribution.');
 
 export const TableBorderContributionSchema = union([
   TableNoBorderContributionSchema,
+  TableDefaultsNoBorderContributionSchema,
   TableLineBorderContributionSchema,
 ]);
 
@@ -206,135 +198,148 @@ export const TableCellManifestEntrySchema = strictObject({
   ).describe('Canonical path-sorted appearance winner lineage.'),
 }).describe('Resolved Table Cell geometry, identity, and provenance.');
 
-const TableThemeTokenSourceRecordSchema = strictObject({
-  key: TableThemeTokenKeySchema.describe('Canonical Table theme token key.'),
-  source: zodEnum(ThemeTokenSource).describe('Resolved token source relation to the Table owner.'),
-  path: NonBlankStringSchema.describe('Stable effective Theme or IRTable source path.'),
-});
+const TableDefaultsLayerKindSchema = zodEnum(['neutral', 'style', 'source']).describe(
+  'Kind of Table Source defaults layer.',
+);
 
-const TableManifestStyleSchema = strictObject({
+export const TableDefaultsSourceRecordSchema = strictObject({
+  kind: TableDefaultsLayerKindSchema.describe('Resolved Table defaults source kind.'),
+  path: NonBlankStringSchema.describe('Stable resolved Table defaults source path.'),
+  defaults: TableDefaultsSchema.optional().describe('Sparse defaults contributed by this source.'),
+}).describe('One Table defaults source preserved in effective cascade order.');
+
+export const TableManifestStyleSchema = strictObject({
   style: NonBlankStringSchema.optional().describe(
     'Optional Core Theme style selecting a host-injected Table definition.',
   ),
   themeMode: zodEnum(ThemeMode).describe('Effective Core Theme mode selecting the Table style baseline.'),
-  tokens: TableThemeTokenMapSchema.describe('Complete resolved Table theme token map.'),
-  sources: array(TableThemeTokenSourceRecordSchema).length(19).describe('Token winners in canonical schema key order.'),
+  defaults: TableDefaultsSchema.describe('Complete resolved Table Source defaults.'),
+  layers: array(TableDefaultsSourceRecordSchema)
+    .min(1)
+    .describe('Table defaults sources in their actual cascade order.'),
 })
   .superRefine((style, context) => {
-    TableThemeTokenKeySchema.options.forEach((key, index) => {
-      const source = style.sources[index];
-      if (source.key !== key) {
+    const neutral = style.layers[0];
+    if (neutral.kind !== 'neutral' || neutral.path !== `$default/${style.themeMode}`) {
+      context.addIssue({
+        code: 'custom',
+        path: ['layers', 0],
+        message: 'Table defaults cascade must begin with the effective neutral source',
+      });
+    }
+    const seen = new Set<string>();
+    style.layers.forEach((layer, index) => {
+      if (seen.has(layer.path)) {
         context.addIssue({
           code: 'custom',
-          path: ['sources', index, 'key'],
-          message: `Style token sources must use canonical key order; expected "${key}"`,
+          path: ['layers', index, 'path'],
+          message: 'Table defaults source paths must be unique',
         });
-        return;
       }
-      const localPaths = [
-        `$default/${style.themeMode}/${key}`,
-        ...(style.style === undefined ? [] : [`$style/${style.style}/${style.themeMode}/${key}`]),
-        `$spec/tableThemeTokens/${key}`,
-      ];
-      const valid =
-        key === 'data.categorical'
-          ? (source.source === ThemeTokenSource.Inherit && source.path === '$theme/colors/categorical') ||
-            (source.source === ThemeTokenSource.Local && source.path === `$spec/tableThemeTokens/${key}`)
-          : source.source === ThemeTokenSource.Local && localPaths.includes(source.path);
-      if (!valid) {
+      seen.add(layer.path);
+      if (layer.kind === 'style') {
+        const expected = style.style === undefined ? undefined : `$style/${style.style}/${style.themeMode}`;
+        if (expected === undefined || layer.path !== expected) {
+          context.addIssue({
+            code: 'custom',
+            path: ['layers', index, 'path'],
+            message: 'Table style defaults source path must identify the selected Core style',
+          });
+        }
+      }
+      if (layer.kind === 'source' && !layer.path.startsWith('$spec/')) {
         context.addIssue({
           code: 'custom',
-          path: ['sources', index, 'path'],
-          message: `Style token source and path must identify the canonical winner for "${key}"`,
+          path: ['layers', index, 'path'],
+          message: 'Table Source defaults path must start with $spec/',
         });
       }
     });
   })
-  .describe('Resolved Table style metadata.');
+  .describe('Resolved Table defaults metadata.');
 
-type ManifestLineContribution = ZodInfer<typeof TableLineBorderContributionSchema>;
-type ManifestCell = ZodInfer<typeof TableCellManifestEntrySchema>;
+type ManifestContribution = ZodInfer<typeof TableBorderContributionSchema>;
 type ManifestStyle = ZodInfer<typeof TableManifestStyleSchema>;
 
-/** 比较 resolved line 是否精确来自同一 style border token */
-const matchesStyleBorderToken = (
-  line: ZodInfer<typeof ResolvedTableBorderLineSchema>,
-  token: NonNullable<ManifestStyle['tokens'][ZodInfer<typeof TableBorderStyleTokenKeySchema>]>,
-  masterColor: string,
-): boolean =>
-  line.color === masterColor &&
-  JSON.stringify(line.stroke) === JSON.stringify(token.stroke ?? 'currentColor') &&
-  line.width === (token.width ?? 1) &&
-  line.strokeOpacity === (token.strokeOpacity ?? 1) &&
-  JSON.stringify(line.dashPattern) === JSON.stringify(token.dashPattern) &&
-  line.dashOffset === (token.dashOffset ?? 0);
+const hasOwnPath = (value: unknown, path: ReadonlyArray<string>): boolean => {
+  let current: unknown = value;
+  for (const segment of path) {
+    if (current === null || typeof current !== 'object' || !Object.hasOwn(current, segment)) return false;
+    current = Reflect.get(current, segment);
+  }
+  return current !== undefined;
+};
 
-/** 校验 style token provenance 与 Border Graph 几何来源严格对应 */
-const validateBorderStyleTokenProvenance = (
-  contribution: ManifestLineContribution,
-  cells: ReadonlyArray<ManifestCell>,
+/** 将 Cell appearance pointer 映射回正式 defaults Source 中的叶路径 */
+const defaultsPathOfAppearanceTrace = (
+  cell: ZodInfer<typeof TableCellManifestEntrySchema>,
+  tracePath: string,
+): Array<string> => {
+  const location = cell.location === 'columnHeader' ? 'columnHeader' : 'body';
+  return ['appearanceDefaults', location, ...tracePath.split('/').filter(Boolean)];
+};
+
+/** 校验 Cell defaults trace 指向实际贡献最终叶的来源层 */
+const validateAppearanceDefaultsProvenance = (
+  cell: ZodInfer<typeof TableCellManifestEntrySchema>,
+  trace: ZodInfer<typeof TableCellManifestEntrySchema>['appearanceTrace'][number],
   style: ManifestStyle,
   context: RefinementCtx,
   path: ReadonlyArray<string | number>,
 ): void => {
-  if (contribution.origin !== TableBorderContributionOrigin.StyleToken) return;
-  const token = contribution.styleToken;
+  if (trace.source.kind !== 'defaults') return;
+  const defaultsPath = defaultsPathOfAppearanceTrace(cell, trace.path);
+  const winner = [...style.layers]
+    .reverse()
+    .find(layer => layer.defaults !== undefined && hasOwnPath(layer.defaults, defaultsPath));
+  if (winner?.path === trace.source.path) return;
+  context.addIssue({
+    code: 'custom',
+    path: [...path, 'source', 'path'],
+    message: 'Cell defaults source must match the effective defaults layer for its appearance leaf',
+  });
+};
 
-  let expectedKey: ZodInfer<typeof TableBorderStyleTokenKeySchema> | undefined;
-  if (contribution.source.kind === 'default') {
-    expectedKey =
-      contribution.source.scope === 'outer'
-        ? `table.border.${contribution.source.side}`
-        : `table.border.${contribution.source.scope}`;
-  } else {
-    const source = contribution.source;
-    const cell = cells.find(candidate => candidate.rowIndex === source.row && candidate.columnIndex === source.column);
-    if (
-      source.side === 'bottom' &&
-      cell?.location === 'columnHeader' &&
-      cell.rowIndex === source.row &&
-      cell.columnIndex === source.column
-    ) {
-      expectedKey = 'columnHeader.border.bottom';
+/** 校验 Source defaults provenance 与有效 defaults layer 严格对应 */
+const validateBorderDefaultsProvenance = (
+  contribution: ManifestContribution,
+  cells: ReadonlyArray<ZodInfer<typeof TableCellManifestEntrySchema>>,
+  style: ManifestStyle,
+  context: RefinementCtx,
+  path: ReadonlyArray<string | number>,
+): void => {
+  if (contribution.origin !== TableBorderContributionOrigin.Defaults) return;
+  if (!('defaults' in contribution)) {
+    context.addIssue({
+      code: 'custom',
+      path: [...path, 'defaults', 'path'],
+      message: 'Border defaults source must match an effective Table defaults layer',
+    });
+    return;
+  }
+  const source = contribution.source;
+  const defaultsPath = (() => {
+    if (source.kind === 'cell') {
+      const cell = cells.find(
+        candidate => candidate.rowIndex === source.row && candidate.columnIndex === source.column,
+      );
+      const location = cell?.location === 'columnHeader' ? 'columnHeader' : 'body';
+      return ['appearanceDefaults', location, 'borders', source.side];
     }
-  }
-  if (token.key !== expectedKey) {
-    context.addIssue({
-      code: 'custom',
-      path: [...path, 'styleToken', 'key'],
-      message: 'Border style token key must match its geometric source and Cell location',
-    });
-  }
-  const expectedSource = style.sources.find(entry => entry.key === token.key);
-  if (expectedSource === undefined || token.source !== expectedSource.source || token.path !== expectedSource.path) {
-    context.addIssue({
-      code: 'custom',
-      path: [...path, 'styleToken', 'source'],
-      message: 'Border style token source must match the resolved style winner',
-    });
-  }
-  const styleBorder = style.tokens[token.key];
-  const contributionSource = contribution.source;
-  const sourceCell =
-    contributionSource.kind === 'cell'
-      ? cells.find(
-          candidate =>
-            candidate.rowIndex === contributionSource.row && candidate.columnIndex === contributionSource.column,
-        )
-      : undefined;
-  const masterColor =
-    sourceCell?.appearance.content?.color ??
-    (sourceCell?.location === 'columnHeader'
-      ? style.tokens['columnHeader.content.color']
-      : style.tokens['cell.content.color']) ??
-    'currentColor';
-  if (styleBorder === null || !matchesStyleBorderToken(contribution.line, styleBorder, masterColor)) {
-    context.addIssue({
-      code: 'custom',
-      path: [...path, 'line'],
-      message: 'Border style token line must match the resolved style token value',
-    });
-  }
+    if (source.scope === 'outer') {
+      return ['layout', 'borders', 'outer', source.side];
+    }
+    return ['layout', 'borders', source.scope];
+  })();
+  const winner = [...style.layers]
+    .reverse()
+    .find(layer => layer.defaults !== undefined && hasOwnPath(layer.defaults, defaultsPath));
+  if (winner?.path === contribution.defaults.path) return;
+  context.addIssue({
+    code: 'custom',
+    path: [...path, 'defaults', 'path'],
+    message: 'Border defaults source must match the effective defaults layer for its border leaf',
+  });
 };
 
 export const TableLayoutManifestSchema = strictObject({
@@ -374,6 +379,14 @@ export const TableLayoutManifestSchema = strictObject({
       encodingOrder.set(encoding.id, index);
     });
     manifest.cells.forEach((cell, cellIndex) => {
+      cell.appearanceTrace.forEach((trace, traceIndex) => {
+        validateAppearanceDefaultsProvenance(cell, trace, manifest.style, context, [
+          'cells',
+          cellIndex,
+          'appearanceTrace',
+          traceIndex,
+        ]);
+      });
       let previousOrder = -1;
       cell.encodingIds.forEach((encodingId, encodingIndex) => {
         const order = encodingOrder.get(encodingId);
@@ -462,18 +475,15 @@ export const TableLayoutManifestSchema = strictObject({
             message: 'Border atom winner must exactly match one contributor',
           });
         }
-        if (atom.winner.kind === 'line') {
-          validateBorderStyleTokenProvenance(atom.winner, manifest.cells, manifest.style, context, [
-            'borders',
-            borderIndex,
-            'atoms',
-            atomIndex,
-            'winner',
-          ]);
-        }
+        validateBorderDefaultsProvenance(atom.winner, manifest.cells, manifest.style, context, [
+          'borders',
+          borderIndex,
+          'atoms',
+          atomIndex,
+          'winner',
+        ]);
         atom.contributors.forEach((contribution, contributionIndex) => {
-          if (contribution.kind !== 'line') return;
-          validateBorderStyleTokenProvenance(contribution, manifest.cells, manifest.style, context, [
+          validateBorderDefaultsProvenance(contribution, manifest.cells, manifest.style, context, [
             'borders',
             borderIndex,
             'atoms',

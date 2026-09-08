@@ -21,7 +21,7 @@ import { getPreviewControlFields } from '../src/modules/docs/components/componen
 import { PreviewCoreThemeStyles, PreviewThemeStyle } from '../src/modules/docs/components/component-preview/theme';
 import { buildPreviewIR, irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../src/modules/docs/components/component-preview/vanilla-preview';
-import IrCentricDemo from '../src/modules/docs/contents/kernel/introduction/ir-centric.zh.demo';
+import IrCentricDemo from '../src/modules/docs/contents/kernel/components/introduction/ir-centric.zh.demo';
 import {
   previewSource as FlowBasicEnPreviewSource,
   renderFlowBasicPreview as renderFlowBasicEnPreview,
@@ -162,7 +162,7 @@ describe('Flow Diagram ComponentPreview', () => {
         { id: 'worker', text: 'Worker' },
         { id: 'api', text: 'API' },
       ],
-      groups: [{ id: 'runtime', label: 'Runtime', children: ['worker'] }],
+      groups: [{ id: 'runtime', caption: { title: { text: 'Runtime' } }, children: ['worker'] }],
       layouts: [],
       children: ['runtime', 'api'],
     });
@@ -211,16 +211,19 @@ describe('Flow Diagram ComponentPreview', () => {
   it.each([
     ['zh', FlowBasicCanonicalDemo],
     ['en', FlowBasicEnCanonicalDemo],
-  ] as const)('derives the %s basic demo with only Flow Entity elements and no inline Flow theme', (_lang, Demo) => {
-    const preview = buildPreviewIR(Demo);
-    const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
+  ] as const)(
+    'derives the %s basic demo with only Flow Entity elements and no explicit Flow defaults',
+    (_lang, Demo) => {
+      const preview = buildPreviewIR(Demo);
+      const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
 
-    expect(flow.entities).toHaveLength(4);
-    expect(flow.groups).toEqual([]);
-    expect(flow.layouts).toEqual([]);
-    expect(flow.children).toEqual(flow.entities.map(entity => entity.id));
-    expect(flow.flowTheme).toBeUndefined();
-  });
+      expect(flow.entities).toHaveLength(4);
+      expect(flow.groups).toEqual([]);
+      expect(flow.layouts).toEqual([]);
+      expect(flow.children).toEqual(flow.entities.map(entity => entity.id));
+      expect(flow.flowDefaults).toBeUndefined();
+    },
+  );
 
   it('uses bilingual controls to change the frontend form role, status, rich text, block typography, and Relation status in real Flow Source', () => {
     const chinese =
@@ -361,7 +364,7 @@ describe('Flow Diagram ComponentPreview', () => {
         text: ['前端', '表单', { text: '补充说明', fill: 'darkorange', font: { size: 'lg' } }],
         role: 'resource',
         status: 'success',
-        style: { align: 'start', lineHeight: 24, maxTextWidth: 120 },
+        layout: { align: 'start', lineHeight: 24, maxTextWidth: 120 },
       },
       { id: 'backend-validation', text: '后端服务', role: 'activity' },
       { id: 'database-input', text: '数据库输入', role: 'resource' },
@@ -438,7 +441,7 @@ describe('Flow Diagram ComponentPreview', () => {
       const preview = buildPreviewIR(Demo);
       const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
 
-      expect(flow.flowTheme).toEqual({
+      expect(flow.flowDefaults).toEqual({
         entity: { style: { color: '#334155', fillOpacity: 1, strokeWidth: 1 } },
         relation: { style: { stroke: '#64748b', strokeWidth: 1, strokeOpacity: 0.9 } },
       });
@@ -466,16 +469,8 @@ describe('Flow Diagram ComponentPreview', () => {
     };
 
     for (const [Demo, renderPreview, expectedFrame] of [
-      [
-        FlowThemeCanonicalDemo,
-        renderFlowThemePreview,
-        { width: 420, height: 240, viewBox: { x: -71, y: -82.5, width: 420, height: 240 } },
-      ],
-      [
-        FlowThemeEnCanonicalDemo,
-        renderFlowThemeEnPreview,
-        { width: 420, height: 240, viewBox: { x: -11.25, y: -64, width: 420, height: 240 } },
-      ],
+      [FlowThemeCanonicalDemo, renderFlowThemePreview, { viewBox: { x: -71, y: -82.5, width: 420, height: 240 } }],
+      [FlowThemeEnCanonicalDemo, renderFlowThemeEnPreview, { viewBox: { x: -11.25, y: -64, width: 420, height: 240 } }],
     ] as const) {
       expect(flowBasicFrame(Demo)).toMatchObject(expectedFrame);
       const bounds = flowThemeBounds(renderPreview, values);
@@ -630,8 +625,6 @@ describe('Flow Diagram ComponentPreview', () => {
     ['en', FlowCompoundEnCanonicalDemo],
   ] as const)('renders the controlled %s grouping demo at a fixed 1:1 frame', (_lang, Demo) => {
     expect(flowBasicFrame(Demo)).toMatchObject({
-      width: 400,
-      height: 460,
       viewBox: { x: -100, y: -86, width: 400, height: 460 },
     });
   });
@@ -665,14 +658,14 @@ describe('Flow Diagram ComponentPreview', () => {
   });
 
   it.each(['flow-basic.zh.demo.tsx', 'flow-basic.en.demo.tsx'] as const)(
-    'lets the controlled %s auto-fit horizontally in one 740 × 220 output',
+    'lets the controlled %s use natural content dimensions',
     file => {
       const demo = readFileSync(resolve(flowBasicContentRoot, file), 'utf8');
 
-      expect(demo).toContain('width={740}');
-      expect(demo).toContain('height={220}');
+      expect(demo).not.toMatch(/<FlowDiagram\b[^>]*\bwidth=/);
+      expect(demo).not.toMatch(/<FlowDiagram\b[^>]*\bheight=/);
       expect(demo).not.toContain('viewBox=');
-      expect(demo).toContain("style={{ maxWidth: '100%', height: 'auto' }}");
+      expect(demo).not.toContain("maxWidth: '100%'");
       expect(demo).toContain('<FlowEntities');
       expect(demo).toContain('<FlowRelations');
     },

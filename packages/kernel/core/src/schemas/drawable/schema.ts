@@ -1,8 +1,7 @@
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { array, number, object } from 'zod';
 
 import { AnimationTrackSchema } from '../animation';
-import { JsonObjectSchema } from '../json';
 import { GraphicStyleSchema } from '../style';
 
 export const DrawableStyleSchema = GraphicStyleSchema.describe(

@@ -13,25 +13,27 @@ description: Scope 的分组、局部命名空间、样式默认值、变换、�
   name="ScopeSchema"
   description="作用域容器：组织子树，并提供局部变换、样式默认值与裁剪。"
   descriptions={{
+    style: '当前实例的视觉覆盖，按字段继承与覆盖',
+    defaults: '后代默认值通道及继承屏障',
     type: '判别字段，标记此子节点为 scope',
     theme:
       '当前子树的稀疏 Theme 覆盖；style、mode 与 owner namespace token key 分别继承，只传给后代 Composite；Core 图元不会自动着色',
-    color: '作用域级主色；可向 node、path、label 与 arrow 的对应颜色字段级联',
-    fill: '作用域级默认填充；CSS color 字符串或 IRPaint',
-    fillOpacity: '作用域级默认填充不透明度 0..1',
-    stroke: '作用域级默认描边；CSS color 字符串或 IRPaint',
-    strokeWidth: '作用域级默认描边宽度（用户单位）',
-    strokeOpacity: '作用域级默认描边不透明度 0..1',
-    opacity: '作用域级默认整体不透明度 0..1',
+    'style.color': '作用域级主色；可向 node、path、label 与 arrow 的对应颜色字段级联',
+    'style.fill': '作用域级默认填充；CSS color 字符串或 IRPaint',
+    'style.fillOpacity': '作用域级默认填充不透明度 0..1',
+    'style.stroke': '作用域级默认描边；CSS color 字符串或 IRPaint',
+    'style.strokeWidth': '作用域级默认描边宽度（用户单位）',
+    'style.strokeOpacity': '作用域级默认描边不透明度 0..1',
+    'style.opacity': '作用域级默认整体不透明度 0..1',
     id: '可选引用 id；始终注册到父级命名空间',
     localNamespace: '为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级',
     transforms: '依次作用于所有 children 的局部变换；相对位移在编译期解析',
     placement: '在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target',
-    nodeDefault: '只作用于 node 的默认样式；不包含 id、position、text 等结构字段',
-    pathDefault: '只作用于 path-like drawable 的默认样式；箭头使用独立 arrowDefault 通道',
-    labelDefault: 'node label 与 step / geometry label 共用的默认文字样式',
-    arrowDefault: '箭头默认外观，字段与 ArrowDetailSchema 相同',
-    resetStyle: '样式继承屏障：true 重置全部通道，或列出 node / path / label / arrow 中需要重置的通道',
+    'defaults.node': '只作用于 node 的默认样式；不包含 id、position、text 等结构字段',
+    'defaults.path': '只作用于 path-like drawable 的默认样式；箭头使用独立 defaults.arrow 通道',
+    'defaults.label': 'node label 与 step / geometry label 共用的默认文字样式',
+    'defaults.arrow': '箭头默认外观，字段与 ArrowDetailSchema 相同',
+    'defaults.reset': '样式继承屏障：true 重置全部通道，或列出 node / path / label / arrow 中需要重置的通道',
     zIndex: 'scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序',
     clip: '以 scope 局部坐标描述的裁剪区域',
     boundingShape: '给 scope id 生成的合成引用边界：rectangle 或 circle',
@@ -41,7 +43,7 @@ description: Scope 的分组、局部命名空间、样式默认值、变换、�
   }}
 />
 
-`Scope.theme` 是传给后代 Composite 的稀疏覆盖。`style`、`mode` 与 token key 分别继承；`tokens` 只覆盖 Scope 声明的 namespace/key，并由 Core registry 按 owner schema 校验。Theme 是环境交接，不会自动给 Core 图元着色。
+`Scope.theme` 只包含稀疏的 `style` / `mode` 环境选择器，逐字段继承。Core 解析共享颜色，后代 Composite 按自身契约消费该环境；`defaults.reset` 不重置 Theme。
 
 <span id="scopeposition"></span>
 
@@ -72,14 +74,14 @@ NodeTarget 的 `offset` 先按世界 user-units 叠加，再投影回父 frame�
 
 ### 四个默认值通道
 
-Scope 把默认值拆成四个互不混用的通道。它们只覆盖对应宿主未显式设置的字段；`resetStyle` 可以按通道阻断父 Scope 的继承。
+Scope 把默认值拆成四个互不混用的通道。它们只覆盖对应宿主未显式设置的字段；`defaults.reset` 可以按通道阻断父 Scope 的继承。
 
-| 字段           | 复用的契约                                               | 不负责                           |
-| -------------- | -------------------------------------------------------- | -------------------------------- |
-| `nodeDefault`  | [Node](/kernel/reference/schema/entity#node) 的视觉字段  | id、位置、文字、标签与实例元数据 |
-| `pathDefault`  | [Path](/kernel/reference/schema/path#path) 的视觉字段    | kind、step、mark 与实例元数据    |
-| `labelDefault` | label 的 color、textColor、opacity、font                 | 文本、位置与宿主关系             |
-| `arrowDefault` | [ArrowDetail](/kernel/reference/schema/path#arrowdetail) | 箭头是否存在与沿路径的位置       |
+| 字段             | 复用的契约                                               | 不负责                           |
+| ---------------- | -------------------------------------------------------- | -------------------------------- |
+| `defaults.node`  | [Node](/kernel/reference/schema/entity#node) 的视觉字段  | id、位置、文字、标签与实例元数据 |
+| `defaults.path`  | [Path](/kernel/reference/schema/path#path) 的视觉字段    | kind、step、mark 与实例元数据    |
+| `defaults.label` | label 的 color、textColor、opacity、font                 | 文本、位置与宿主关系             |
+| `defaults.arrow` | [ArrowDetail](/kernel/reference/schema/path#arrowdetail) | 箭头是否存在与沿路径的位置       |
 
 <span id="transform"></span>
 

@@ -1,19 +1,16 @@
 import type { EntityPredicateDefinition } from '../../contract';
-import type {
-  IRGraphEntity,
-  IRGraphEntityAppearanceTokenOverrides,
-  IRGraphEntityThemeRule,
-  IRGraphThemeLayer,
-} from '../../schemas';
+import type { IRGraphEntity, IRGraphEntityDefaults, IRGraphEntityRule } from '../../schemas';
 import type {
   CanonicalEntity,
   CanonicalEntityPredicate,
   EffectiveEntityAppearance,
   EntityAppearanceResolveContext,
+  EntityGraphLayerResolveContext,
   EntityResolveContext,
 } from './types';
 
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
+import { mergeGraphDefaults } from '../theme';
 import { matchesGraphThemeSelector, resolveGraphTheme, validateGraphThemeSelector } from '../theme';
 
 const requiredDefinition = <T>(registry: ReadonlyMap<string, T>, key: string, capability: string): T => {
@@ -81,77 +78,88 @@ export const resolveEntity = (source: IRGraphEntity, context: EntityResolveConte
   };
 };
 
-const mergeMatchingRules = (
-  appearance: EffectiveEntityAppearance,
-  rules: ReadonlyArray<IRGraphEntityThemeRule>,
+const mergeEntityAppearance = (
+  current: EffectiveEntityAppearance | undefined,
+  override: IRGraphEntityDefaults | undefined,
+): EffectiveEntityAppearance =>
+  mergeGraphDefaults(
+    current === undefined ? undefined : { entity: current },
+    override === undefined ? undefined : { entity: override },
+  )?.entity ?? {};
+
+const sourceAppearanceOf = (source: IRGraphEntity): IRGraphEntityDefaults => ({
+  ...(source.style === undefined ? {} : { style: source.style }),
+  ...(source.layout === undefined ? {} : { layout: source.layout }),
+});
+
+const selectorContextOf = (context: EntityResolveContext) => ({
+  member: 'Entity' as const,
+  roles: context.entityRoles,
+  kinds: context.entityKinds,
+  predicates: context.entityPredicates,
+});
+
+const entitySubjectOf = (entity: CanonicalEntity) => ({
+  role: entity.source.role,
+  ...(entity.source.kind === undefined ? {} : { kind: entity.source.kind }),
+  ...(entity.source.status === undefined ? {} : { status: entity.source.status }),
+  ...(entity.predicate === undefined
+    ? {}
+    : { predicate: { name: entity.predicate.definition.name, params: entity.predicate.params } }),
+});
+
+const matchingEntityRule = (
+  rule: IRGraphEntityRule,
   subject: Parameters<typeof matchesGraphThemeSelector>[1],
 ): EffectiveEntityAppearance =>
-  rules.reduce<EffectiveEntityAppearance>(
-    (current, rule) =>
-      matchesGraphThemeSelector(rule.selector, subject) ? { ...current, ...rule.appearance } : current,
-    appearance,
-  );
+  rule.style === undefined || !matchesGraphThemeSelector(rule.selector, subject) ? {} : { style: rule.style };
 
-type EntityGraphThemeOverrideContext = EntityResolveContext &
-  Readonly<{
-    layers: ReadonlyArray<IRGraphThemeLayer>;
-  }>;
-
-/** 只投影 Graph-local layer 对当前 Entity 的稀疏 appearance，不解析 Core Theme baseline */
-export const resolveEntityGraphThemeOverrides = (
+const resolveEntityAuthorAppearance = (
   entity: CanonicalEntity,
-  context: EntityGraphThemeOverrideContext,
-): IRGraphEntityAppearanceTokenOverrides => {
-  const selectorContext = {
-    member: 'Entity' as const,
-    roles: context.entityRoles,
-    kinds: context.entityKinds,
-    predicates: context.entityPredicates,
-  };
-  const rules = context.layers.flatMap(layer =>
-    layer.rules.filter((rule): rule is IRGraphEntityThemeRule => rule.type === 'entity'),
-  );
-  for (const rule of rules) validateGraphThemeSelector(rule.selector, selectorContext);
-  const subject = {
-    role: entity.source.role,
-    ...(entity.source.kind === undefined ? {} : { kind: entity.source.kind }),
-    ...(entity.source.status === undefined ? {} : { status: entity.source.status }),
-    ...(entity.predicate === undefined
-      ? {}
-      : { predicate: { name: entity.predicate.definition.name, params: entity.predicate.params } }),
-  };
-  return rules.reduce<IRGraphEntityAppearanceTokenOverrides>(
-    (current, rule) =>
-      matchesGraphThemeSelector(rule.selector, subject) ? { ...current, ...rule.appearance } : current,
-    {},
-  );
+  context: EntityGraphLayerResolveContext,
+): EffectiveEntityAppearance => {
+  const selectorContext = selectorContextOf(context);
+  const subject = entitySubjectOf(entity);
+  let appearance: EffectiveEntityAppearance = {};
+  for (const layer of context.layers) {
+    appearance = mergeEntityAppearance(appearance, layer.defaults?.entity);
+    for (const rule of layer.rules ?? []) {
+      if (rule.type !== 'entity') continue;
+      validateGraphThemeSelector(rule.selector, selectorContext);
+      appearance = mergeEntityAppearance(appearance, matchingEntityRule(rule, subject));
+    }
+  }
+  return appearance;
 };
 
-/** 把 Canonical Entity 与当前位置 Theme rules 确定为唯一有效外观 */
+/** 把作者 Graph defaults/rules 按层投影到 Entity Source */
+export const projectEntityGraphLayers = (
+  entity: CanonicalEntity,
+  context: EntityGraphLayerResolveContext,
+): IRGraphEntity => {
+  const authorAppearance = resolveEntityAuthorAppearance(entity, context);
+  if (Object.keys(authorAppearance).length === 0) return entity.source;
+  const projected = mergeEntityAppearance(authorAppearance, sourceAppearanceOf(entity.source));
+  return {
+    ...entity.source,
+    ...(projected.style === undefined ? {} : { style: projected.style }),
+    ...(projected.layout === undefined ? {} : { layout: projected.layout }),
+  };
+};
+
+/** 把 Canonical Entity 与当前 Core Theme rules 确定为有效外观 */
 export const resolveEntityAppearance = (
   entity: CanonicalEntity,
   context: EntityAppearanceResolveContext,
 ): EffectiveEntityAppearance => {
   const graphTheme = resolveGraphTheme(context.theme, context.graphThemeStyles);
-  const selectorContext = {
-    member: 'Entity' as const,
-    roles: context.entityRoles,
-    kinds: context.entityKinds,
-    predicates: context.entityPredicates,
-  };
-  const styleRules = graphTheme.entity.rules ?? [];
-  const layerRules = (context.layers ?? []).flatMap(layer =>
-    layer.rules.filter((rule): rule is IRGraphEntityThemeRule => rule.type === 'entity'),
-  );
-  for (const rule of [...styleRules, ...layerRules]) validateGraphThemeSelector(rule.selector, selectorContext);
-  const subject = {
-    role: entity.source.role,
-    ...(entity.source.kind === undefined ? {} : { kind: entity.source.kind }),
-    ...(entity.source.status === undefined ? {} : { status: entity.source.status }),
-    ...(entity.predicate === undefined
-      ? {}
-      : { predicate: { name: entity.predicate.definition.name, params: entity.predicate.params } }),
-  };
-  const styled = mergeMatchingRules(graphTheme.entity.tokens, styleRules, subject);
-  return mergeMatchingRules(styled, layerRules, subject);
+  const selectorContext = selectorContextOf(context);
+  const subject = entitySubjectOf(entity);
+  let appearance: EffectiveEntityAppearance = graphTheme.defaults.entity ?? {};
+  for (const rule of graphTheme.rules) {
+    if (rule.type !== 'entity') continue;
+    validateGraphThemeSelector(rule.selector, selectorContext);
+    appearance = mergeEntityAppearance(appearance, matchingEntityRule(rule, subject));
+  }
+  return mergeEntityAppearance(appearance, sourceAppearanceOf(entity.source));
 };

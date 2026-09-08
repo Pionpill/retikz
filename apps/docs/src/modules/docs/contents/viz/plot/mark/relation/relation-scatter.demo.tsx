@@ -22,7 +22,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         : ({ kind: 'line' } as const);
 
   return (
-    <Plot data={scatterRelations} width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Plot data={scatterRelations} width={620} height={320}>
       <PointMark
         id="scatter-nodes"
         x="x"

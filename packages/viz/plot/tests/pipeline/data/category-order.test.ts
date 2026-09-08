@@ -311,7 +311,7 @@ describe('IRDataFieldDefinition.order — 交互', () => {
     for (const scope of subScopes) {
       const node = scope.children[0] as IRNode;
       const category = categoryByX.get((node.position as [number, number])[0]);
-      if (category !== undefined) fillByCategory.set(category, scope.nodeDefault?.fill);
+      if (category !== undefined) fillByCategory.set(category, scope.defaults?.node?.style?.fill);
     }
     expect(fillByCategory.get('S')).toBe(sharedCategorical[0]);
     expect(fillByCategory.get('M')).toBe(sharedCategorical[1]);

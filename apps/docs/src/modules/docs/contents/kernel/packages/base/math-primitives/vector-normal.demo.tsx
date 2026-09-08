@@ -21,37 +21,38 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const normalLabel = vector2.add(vector2.scale(normal, 0.62), vector2.scale(vector2.normalize(vector), 26));
 
   return (
-    <Layout width={400} height={280} viewBox={{ x: -170, y: -145, width: 340, height: 290 }}>
+    <Layout viewBox={{ x: -170, y: -145, width: 340, height: 290 }}>
       <Draw
         way={[
           [-160, 0],
           [160, 0],
         ]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Draw
         way={[
           [0, -135],
           [0, 135],
         ]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
 
-      <Draw way={[Origin, vectorEnd]} arrow="->" stroke="darkorange" strokeWidth={2} />
-      <Draw way={[Origin, normalEnd]} arrow="->" stroke="dodgerblue" strokeWidth={2} />
+      <Draw way={[Origin, vectorEnd]} arrow="->" style={{ stroke: 'darkorange', strokeWidth: 2 }} />
+      <Draw way={[Origin, normalEnd]} arrow="->" style={{ stroke: 'dodgerblue', strokeWidth: 2 }} />
 
-      <Node position={Origin} shape="circle" minimumSize={7} padding={0} fill="currentColor" stroke="none" />
-      <Node position={vectorLabel} stroke="none" textColor="darkorange">
+      <Node
+        position={Origin}
+        shape="circle"
+        style={{ fill: 'currentColor', stroke: 'none' }}
+        layout={{ minimumSize: 7, padding: 0 }}
+      />
+      <Node position={vectorLabel} style={{ stroke: 'none', textColor: 'darkorange' }}>
         v
       </Node>
-      <Node position={normalLabel} stroke="none" textColor="dodgerblue">
+      <Node position={normalLabel} style={{ stroke: 'none', textColor: 'dodgerblue' }}>
         normal(v)
       </Node>
-      <Node position={[0, 125]} stroke="none" textColor="gray" font={{ size: 12 }}>
+      <Node position={[0, 125]} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}>
         dot(v, normal(v)) = 0
       </Node>
     </Layout>

@@ -3,7 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { createSurface, IRSurfaceSchema, SurfaceSchema } from '../../../src';
 import { fullScopeProps } from '../presentation/scope-props';
 
-const node = { type: 'node', position: [0, 0], minimumSize: { width: 20, height: 10 } } as const;
+const node = {
+  type: 'node',
+  position: [0, 0],
+  layout: { minimumSize: { width: 20, height: 10 } },
+} as const;
 
 const surface = (overrides: Record<string, unknown> = {}) => ({
   namespace: 'standard' as const,

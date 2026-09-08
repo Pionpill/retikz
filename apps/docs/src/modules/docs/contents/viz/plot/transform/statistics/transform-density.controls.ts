@@ -1,3 +1,5 @@
+import type { IRPlotDensityTransform } from '@retikz/plot';
+
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
@@ -10,7 +12,7 @@ export const densityOperationOf = (values: {
   bandwidthMode: 'silverman' | 'value';
   bandwidth: number;
   sampleCount: number;
-}) => ({
+}): IRPlotDensityTransform => ({
   kind: 'density',
   field: 'value',
   groupBy: ['group'],

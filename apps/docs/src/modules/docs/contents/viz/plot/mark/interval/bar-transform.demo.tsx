@@ -8,7 +8,7 @@ import { BAR_TRANSFORM_GAP_ID, barTransformOperationOf, previewControlContract }
 import { storeRevenue } from './bar-transform.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot data={storeRevenue} width={620} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Plot data={storeRevenue} width={620} height={280}>
     <PointMark x="segment" y="revenue" fill="#94a3b8" opacity={0.45} minimumSize={6} />
     <IntervalMark
       x="segment"

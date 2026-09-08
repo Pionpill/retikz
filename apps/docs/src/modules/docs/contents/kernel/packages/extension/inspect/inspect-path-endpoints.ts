@@ -23,11 +23,12 @@ export const PATH_ENDPOINTS_INSPECTOR = defineInspector({
               type: 'node' as const,
               position: command.to,
               shape: 'circle',
-              minimumSize: 10,
-              padding: 0,
-              fill: context.appearance.scopeColor,
-              stroke: context.appearance.scopeColor,
-              strokeWidth: 1,
+              layout: { minimumSize: 10, padding: 0 },
+              style: {
+                fill: context.appearance.scopeColor,
+                stroke: context.appearance.scopeColor,
+                strokeWidth: 1,
+              },
             },
           ]
         : [],

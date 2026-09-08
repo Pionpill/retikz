@@ -14,7 +14,7 @@ const SIN30 = Math.sin((30 * Math.PI) / 180);
 const TAN30 = SIN30 / COS30;
 
 const Demo: FC = () => (
-  <Layout width={720} height={360}>
+  <Layout>
     {/* 背景网格 */}
     {[-100, -50, 0, 50, 100].map(v => (
       <Fragment key={`grid-${v}`}>
@@ -23,22 +23,20 @@ const Demo: FC = () => (
             [v, -140],
             [v, 140],
           ]}
-          stroke="lightgray"
-          strokeWidth={0.5}
+          style={{ stroke: 'lightgray', strokeWidth: 0.5 }}
         />
         <Draw
           way={[
             [-140, v],
             [140, v],
           ]}
-          stroke="lightgray"
-          strokeWidth={0.5}
+          style={{ stroke: 'lightgray', strokeWidth: 0.5 }}
         />
       </Fragment>
     ))}
 
     {/* 单位圆 */}
-    <Path lineCap="round">
+    <Path style={{ lineCap: 'round' }}>
       <Step kind="move" to={[0, 0]} />
       <Step kind="circlePath" radius={100} />
     </Path>
@@ -51,7 +49,7 @@ const Demo: FC = () => (
       ]}
       arrow="->"
     />
-    <Node position={[162, 0]} stroke="none" padding={0} font={MATH_FONT}>
+    <Node position={[162, 0]} style={{ stroke: 'none', font: MATH_FONT }} layout={{ padding: 0 }}>
       x
     </Node>
     <Coordinate id="x-axis" position={[150, 0]} />
@@ -62,7 +60,7 @@ const Demo: FC = () => (
       ]}
       arrow="->"
     />
-    <Node position={[0, -162]} stroke="none" padding={0} font={MATH_FONT}>
+    <Node position={[0, -162]} style={{ stroke: 'none', font: MATH_FONT }} layout={{ padding: 0 }}>
       y
     </Node>
     <Coordinate id="y-axis" position={[0, -150]} />
@@ -80,7 +78,7 @@ const Demo: FC = () => (
             [x, 3],
           ]}
         />
-        <Node position={[x - 10, 14]} stroke="none" padding={1}>
+        <Node position={[x - 10, 14]} style={{ stroke: 'none' }} layout={{ padding: 1 }}>
           {text}
         </Node>
       </Fragment>
@@ -98,37 +96,41 @@ const Demo: FC = () => (
             [3, y],
           ]}
         />
-        <Node position={[-18, y + 10]} stroke="none" padding={1}>
+        <Node position={[-18, y + 10]} style={{ stroke: 'none' }} layout={{ padding: 1 }}>
           {text}
         </Node>
       </Fragment>
     ))}
 
     {/* 30° 扇形 + α */}
-    <Path fill="lightgray" stroke="green">
+    <Path style={{ fill: 'lightgray', stroke: 'green' }}>
       <Step kind="move" to={[0, 0]} />
       <Step kind="arc" startAngle={0} endAngle={-30} radius={30} />
       <Step kind="line" to={[0, 0]} />
     </Path>
-    <Node position={{ angle: -15, radius: 22 }} stroke="none" textColor="green" padding={1} font={MATH_FONT}>
+    <Node
+      position={{ angle: -15, radius: 22 }}
+      style={{ stroke: 'none', textColor: 'green', font: MATH_FONT }}
+      layout={{ padding: 1 }}
+    >
       α
     </Node>
 
     {/* sin α / cos α / tan α */}
     <Draw
       way={[{ angle: -30, radius: 100 }, { label: { text: 'sin α', side: 'left' } }, [COS30 * 100, 0]]}
-      stroke="red"
       thickness="thick"
+      style={{ stroke: 'red' }}
     />
     <Draw
       way={[[COS30 * 100, 0], { label: { text: 'cos α', side: 'bottom' } }, [0, 0]]}
-      stroke="dodgerblue"
       thickness="thick"
+      style={{ stroke: 'dodgerblue' }}
     />
     <Draw
       way={[[100, 0], { label: { text: 'tan α = sin α / cos α', side: 'right' } }, [100, -TAN30 * 100]]}
-      stroke="darkorange"
       thickness="thick"
+      style={{ stroke: 'darkorange' }}
     />
     <Coordinate id="t" position={[100, -TAN30 * 100]} />
     <Draw way={[[0, 0], 't']} />
@@ -140,11 +142,7 @@ const Demo: FC = () => (
     <Node
       position={[320, 10]}
       shape="rectangle"
-      stroke="lightgray"
-      dashed
       cornerRadius={6}
-      padding={{ x: 10, y: 4 }}
-      align="start"
       text={[
         { text: '角 α = 30°', fill: 'green' },
         '即 π/6 弧度',
@@ -155,6 +153,8 @@ const Demo: FC = () => (
         { text: 'tan α = 1/√3', fill: 'darkorange' },
         '（橙线长度）',
       ]}
+      style={{ stroke: 'lightgray', dashed: true }}
+      layout={{ padding: { x: 10, y: 4 }, align: 'start' }}
     />
   </Layout>
 );

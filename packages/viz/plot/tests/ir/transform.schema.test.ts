@@ -1,4 +1,4 @@
-import { PlotBuiltinTransformSchema, TransformSchema } from '@retikz/plot';
+import { ExternalPlotTransformSchema, PlotBuiltinTransformSchema, TransformSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { PlotSchema } from '../../src/schemas';
@@ -101,12 +101,18 @@ describe('TransformSchema external operations', () => {
   });
 
   it.each([
-    ['function', { kind: 'regression', fn: () => 1 }],
-    ['undefined', { kind: 'regression', value: undefined }],
-    ['NaN', { kind: 'regression', value: Number.NaN }],
-    ['Infinity', { kind: 'regression', value: Infinity }],
-  ])('external_operation_rejects_non_json_value: %s', (_name, operation) => {
-    expect(() => TransformSchema.parse(operation)).toThrow(/JSON-serializable/i);
+    ['function', () => 1],
+    ['undefined', undefined],
+    ['NaN', Number.NaN],
+    ['Infinity', Infinity],
+  ])('external_operation_reports_deep_non_json_value_path: %s', (_name, value) => {
+    const result = ExternalPlotTransformSchema.safeParse({
+      kind: 'regression',
+      payload: { nested: [0, { bad: value }] },
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['payload']);
   });
 
   it('plot_spec_transform_accepts_custom_operation', () => {

@@ -46,7 +46,7 @@ Graph 先用该 Definition 的 Zod schema 解析 params，再让 Theme selector 
 
 ## 注入宿主
 
-React 可以把 definitions 直接传给使用它们的 `<Entity>`。多个后代共享同一组 definitions 和局部 `graphTheme` 时，再由 `<Graph>` 统一提供：
+React 可以把 definitions 直接传给使用它们的 `<Entity>`。多个后代共享同一组 definitions 和局部 `graphRules` 时，再由 `<Graph>` 统一提供：
 
 ```tsx
 <Graph entityRoles={[serviceRole]} entityKinds={[gatewayKind]} entityPredicates={[availabilityPredicate]}>
@@ -93,7 +93,7 @@ Vanilla 可把相同 options 传给 `entity(id, input)` 或 `graph(id, input)`�
 | `defineEntityKind` / `EntityKindDefinition`                | 定义 role 内稳定子类型                          |
 | `defineEntityPredicate` / `EntityPredicateDefinitionInput` | 定义带类型安全 JSON params 的 predicate         |
 | `EntityRole`                                               | 查询内置开放 role key                           |
-| `GraphThemeLayerSchema` / `IRGraphThemeLayer`              | 编写非空 ordered appearance rules               |
+| `GraphRuleSchema` / `IRGraphRule`                          | 编写单条有序外观规则；graphRules 接受数组       |
 | `GraphDefinitionOptions`                                   | 在 Graph assembly 中装配三类 Entity definitions |
 
 ## 相关

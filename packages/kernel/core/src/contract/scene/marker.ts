@@ -39,9 +39,9 @@ export type MarkerPathPrim = {
   /** 描边宽度（marker 局部坐标） */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
-  dashPattern?: IRPathBase['dashPattern'];
+  dashPattern?: NonNullable<IRPathBase['style']>['dashPattern'];
   /** 描边 dash offset */
-  dashOffset?: IRPathBase['dashOffset'];
+  dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
   /**
    * 端点形状
    * @default 'butt'
@@ -91,9 +91,9 @@ export type MarkerEllipsePrim = {
   /** 描边宽度 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
-  dashPattern?: IRPathBase['dashPattern'];
+  dashPattern?: NonNullable<IRPathBase['style']>['dashPattern'];
   /** 描边 dash offset */
-  dashOffset?: IRPathBase['dashOffset'];
+  dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
 };
 
 /**
@@ -128,9 +128,9 @@ export type MarkerRectPrim = {
   /** 描边宽度 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
-  dashPattern?: IRPathBase['dashPattern'];
+  dashPattern?: NonNullable<IRPathBase['style']>['dashPattern'];
   /** 描边 dash offset */
-  dashOffset?: IRPathBase['dashOffset'];
+  dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
   /**
    * 圆角半径（同时作用于 rx/ry）
    * @default 0

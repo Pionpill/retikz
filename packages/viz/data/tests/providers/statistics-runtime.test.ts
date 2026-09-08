@@ -195,7 +195,7 @@ describe('statistics provider runtime', () => {
   });
 
   it('computes quantile-band points, spread fences, whiskers and extent metadata', () => {
-    const operation = {
+    const operation: IRDataReducerOperation = {
       kind: ReducerOperationKind.QuantileBand,
       field: 'value',
       lowerP: 0.25,
@@ -213,8 +213,8 @@ describe('statistics provider runtime', () => {
         max: 'max',
         count: 'count',
       },
-      whisker: { kind: 'spread' as const, factor: 1.5 },
-    } as const;
+      whisker: { kind: 'spread', factor: 1.5 },
+    };
 
     expect(
       applyReducerOperation(
@@ -253,13 +253,13 @@ describe('statistics provider runtime', () => {
   });
 
   it('reports reducer input and output fields through the registry contract', () => {
-    const quantileBand = {
+    const quantileBand: IRDataReducerOperation = {
       kind: ReducerOperationKind.QuantileBand,
       field: 'value',
       lowerP: 0.25,
       upperP: 0.75,
       outputs: { lower: 'q1', upper: 'q3', points: [{ p: 0.5, as: 'median' }], count: 'count' },
-    } as const;
+    };
 
     expect(reducerInputFields({ kind: ReducerOperationKind.Count, as: 'rows' })).toEqual([]);
     expect(reducerInputFields(quantileBand)).toEqual(['value']);

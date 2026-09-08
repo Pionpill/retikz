@@ -1,5 +1,4 @@
-﻿import { JsonObjectSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { array, discriminatedUnion, enum as zodEnum, literal, looseObject, strictObject, union } from 'zod';
 
 import { DataSortOrder, DataTransform, RESERVED_TRANSFORM_KINDS, RowSelectorTie } from './constants';
@@ -106,22 +105,15 @@ export const BuiltinTransformSchema = discriminatedUnion('kind', [
   AnnotateTransformSchema,
 ]).describe('Built-in data transform operation');
 
-export const ExternalTransformSchema = looseObject({
+const ExternalTransformObjectSchema = looseObject({
   kind: DataTransformKindSchema.refine(kind => !RESERVED_TRANSFORM_KINDS.has(kind), {
     message: 'external transform kind must not collide with a built-in or removed transform kind',
   }).describe('Discriminator: custom transform kind'),
-})
-  .superRefine((operation, ctx) => {
-    const result = JsonObjectSchema.safeParse(operation);
-    if (!result.success) {
-      ctx.addIssue({
-        code: 'custom',
-        message:
-          'external transform operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
-      });
-    }
-  })
-  .describe('Custom transform operation with JSON config');
+});
+
+export const ExternalTransformSchema = ExternalTransformObjectSchema.catchall(JsonValueSchema).describe(
+  'Custom transform operation with JSON config',
+);
 
 export const TransformSchema = union([BuiltinTransformSchema, ExternalTransformSchema]).describe(
   'Built-in or custom data transform operation',

@@ -45,14 +45,18 @@ const textStyle = (textColor: string, mark: IRPlotPointMark): IRNodeDefault => {
   const opacity = mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
   const rotate = mark.rotate?.kind === 'constant' ? mark.rotate.value : undefined;
   return {
-    padding: padding ?? 0,
-    fill: 'none',
-    stroke: 'none',
-    strokeWidth: 0,
-    color: textColor,
-    textColor,
-    ...(opacity !== undefined ? { opacity } : {}),
     ...(rotate !== undefined ? { rotate } : {}),
+    style: {
+      fill: 'none',
+      stroke: 'none',
+      strokeWidth: 0,
+      color: textColor,
+      textColor,
+      ...(opacity !== undefined ? { opacity } : {}),
+    },
+    layout: {
+      padding: padding ?? 0,
+    },
   };
 };
 
@@ -126,9 +130,9 @@ export const lowerPoint = (
     if (deliveries.some(({ entry, value }) => entry.channel === 'size' && value === undefined)) continue;
     const base: IRNode = { type: 'node', position: point };
     const fill = fillOf?.(row);
-    if (fill !== undefined) base.fill = fill;
+    if (fill !== undefined) base.style = { ...base.style, fill };
     const stroke = strokeOf?.(row);
-    if (stroke !== undefined) base.stroke = stroke;
+    if (stroke !== undefined) base.style = { ...base.style, stroke };
     applyChannelDeliveries(base, 'pointGlyph', deliveries);
     const node = attachDatumLabel(
       attachDatumAnchor(
@@ -150,10 +154,12 @@ export const lowerPoint = (
   const layer: IRScope = !colorOf
     ? {
         type: 'scope',
-        nodeDefault: isText
-          ? textStyle(textColorConstant ?? (typeof fillConstant === 'string' ? fillConstant : defaultColor), mark)
-          : pointGlyphStyle(fillConstant ?? defaultColor, mark),
         children: placed.map(p => p.node),
+        defaults: {
+          node: isText
+            ? textStyle(textColorConstant ?? (typeof fillConstant === 'string' ? fillConstant : defaultColor), mark)
+            : pointGlyphStyle(fillConstant ?? defaultColor, mark),
+        },
       }
     : colorGroupedScope(placed, fill =>
         isText ? textStyle(textColorConstant ?? fill, mark) : pointGlyphStyle(fill, mark),

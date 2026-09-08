@@ -19,8 +19,20 @@ const source = (fill: string): IRScene => ({
   version: 1,
   type: 'scene',
   children: [
-    { type: 'node', id: 'a', position: [0, 0], text: 'A', fill },
-    { type: 'node', id: 'b', position: [80, 0], text: 'B', fill: '#3b82f6' },
+    {
+      type: 'node',
+      id: 'a',
+      position: [0, 0],
+      text: 'A',
+      style: { fill },
+    },
+    {
+      type: 'node',
+      id: 'b',
+      position: [80, 0],
+      text: 'B',
+      style: { fill: '#3b82f6' },
+    },
   ],
 });
 

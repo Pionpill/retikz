@@ -18,7 +18,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, () => 
     ]}
     width={400}
     height={250}
-    style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PathMark x="date" y="value" order="date" />
     <PointMark x="date" y="value" />

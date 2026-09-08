@@ -3,6 +3,7 @@
  * 准入：零 `CanvasRenderingContext2D`、零 SVG 依赖的纯几何/数学；canvas 专属共享放 `canvas/internal`
  */
 export * from './color';
+export * from './display-size';
 export * from './gradient';
 export * from './path-bounds';
 export * from './path-command';

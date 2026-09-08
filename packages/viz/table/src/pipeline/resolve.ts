@@ -32,7 +32,7 @@ export const lowerTables = (
       const transaction = resolveTableTransaction(spec, datasets, options, context);
       return {
         children: transaction.children,
-        artifact: TableLayoutManifestSchema.parse(transaction.manifest),
+        artifact: transaction.manifest,
       };
     },
   }),

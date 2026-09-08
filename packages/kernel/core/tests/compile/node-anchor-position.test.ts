@@ -35,13 +35,17 @@ describe('Node anchor-to-anchor position', () => {
   it('Node → Node 默认以双方 center 对齐', () => {
     const layouts = compileLayouts(
       scene([
-        { type: 'node', id: 'target', position: [30, 40], minimumSize: 20, padding: 0 },
+        {
+          type: 'node',
+          id: 'target',
+          position: [30, 40],
+          layout: { minimumSize: 20, padding: 0 },
+        },
         {
           type: 'node',
           id: 'current',
           position: { kind: 'anchor', target: { id: 'target' } },
-          minimumSize: 40,
-          padding: 0,
+          layout: { minimumSize: 40, padding: 0 },
         },
       ]),
     );
@@ -57,8 +61,7 @@ describe('Node anchor-to-anchor position', () => {
           type: 'node',
           id: 'current',
           position: { kind: 'anchor', target: { id: 'target' } },
-          minimumSize: 20,
-          padding: 0,
+          layout: { minimumSize: 20, padding: 0 },
         },
       ]),
     );
@@ -69,7 +72,12 @@ describe('Node anchor-to-anchor position', () => {
   it('target bottom-left → self top-left，再叠加世界坐标 offset', () => {
     const layouts = compileLayouts(
       scene([
-        { type: 'node', id: 'target', position: [0, 0], minimumSize: 20, padding: 0 },
+        {
+          type: 'node',
+          id: 'target',
+          position: [0, 0],
+          layout: { minimumSize: 20, padding: 0 },
+        },
         {
           type: 'node',
           id: 'current',
@@ -78,8 +86,7 @@ describe('Node anchor-to-anchor position', () => {
             target: { id: 'target', anchor: 'bottom-left', offset: [5, -2] },
             selfAnchor: 'top-left',
           },
-          minimumSize: 20,
-          padding: 0,
+          layout: { minimumSize: 20, padding: 0 },
         },
       ]),
     );
@@ -101,10 +108,9 @@ describe('Node anchor-to-anchor position', () => {
           id: 'target',
           position: [25, 35],
           text: 'target',
-          padding: { left: 3, right: 9, top: 4, bottom: 10 },
-          margin,
           scale: { x: 1.5, y: 0.75 },
           rotate: 25,
+          layout: { padding: { left: 3, right: 9, top: 4, bottom: 10 }, margin },
         },
         {
           type: 'node',
@@ -115,10 +121,9 @@ describe('Node anchor-to-anchor position', () => {
             selfAnchor: 'top-left',
           },
           text: 'current node',
-          padding: { left: 8, right: 2, top: 6, bottom: 12 },
-          margin,
           scale: { x: 0.8, y: 1.4 },
           rotate: -30,
+          layout: { padding: { left: 8, right: 2, top: 6, bottom: 12 }, margin },
         },
       ]),
     );
@@ -134,7 +139,12 @@ describe('Node anchor-to-anchor position', () => {
   it('在嵌套 Scope transform 中仍按全局锚点对齐', () => {
     const layouts = compileLayouts(
       scene([
-        { type: 'node', id: 'target', position: [15, -25], minimumSize: 20, padding: 0 },
+        {
+          type: 'node',
+          id: 'target',
+          position: [15, -25],
+          layout: { minimumSize: 20, padding: 0 },
+        },
         {
           type: 'scope',
           transforms: [{ kind: 'translate', x: 30, y: 10 }],
@@ -150,8 +160,7 @@ describe('Node anchor-to-anchor position', () => {
                   type: 'node',
                   id: 'current',
                   position: { kind: 'anchor', target: { id: 'target' } },
-                  minimumSize: 30,
-                  padding: 0,
+                  layout: { minimumSize: 30, padding: 0 },
                 },
               ],
             },
@@ -170,14 +179,19 @@ describe('Node anchor-to-anchor position', () => {
         {
           type: 'scope',
           id: 'resolved',
-          children: [{ type: 'node', position: [60, 45], minimumSize: 20, padding: 0 }],
+          children: [
+            {
+              type: 'node',
+              position: [60, 45],
+              layout: { minimumSize: 20, padding: 0 },
+            },
+          ],
         },
         {
           type: 'node',
           id: 'current',
           position: { kind: 'anchor', target: { id: 'resolved' } },
-          minimumSize: 10,
-          padding: 0,
+          layout: { minimumSize: 10, padding: 0 },
         },
       ]),
     );
@@ -198,8 +212,7 @@ describe('Node anchor-to-anchor position', () => {
           type: 'node',
           id: 'current',
           position: { kind: 'anchor', target: { id: 'empty' } },
-          minimumSize: 10,
-          padding: 0,
+          layout: { minimumSize: 10, padding: 0 },
         },
       ]),
     );
@@ -210,7 +223,12 @@ describe('Node anchor-to-anchor position', () => {
   it('连续 A → B → C 不读取 provisional anchor 缓存', () => {
     const layouts = compileLayouts(
       scene([
-        { type: 'node', id: 'A', position: [0, 0], minimumSize: 20, padding: 0 },
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          layout: { minimumSize: 20, padding: 0 },
+        },
         {
           type: 'node',
           id: 'B',
@@ -219,8 +237,7 @@ describe('Node anchor-to-anchor position', () => {
             target: { id: 'A', anchor: 'right' },
             selfAnchor: 'left',
           },
-          minimumSize: 30,
-          padding: 0,
+          layout: { minimumSize: 30, padding: 0 },
         },
         {
           type: 'node',
@@ -230,8 +247,7 @@ describe('Node anchor-to-anchor position', () => {
             target: { id: 'B', anchor: 'right' },
             selfAnchor: 'left',
           },
-          minimumSize: 40,
-          padding: 0,
+          layout: { minimumSize: 40, padding: 0 },
         },
       ]),
     );
@@ -250,13 +266,17 @@ describe('Node anchor-to-anchor position', () => {
     });
     const layouts = compileLayouts(
       scene([
-        { type: 'node', id: 'target', position: [0, 0], minimumSize: 20, padding: 0 },
+        {
+          type: 'node',
+          id: 'target',
+          position: [0, 0],
+          layout: { minimumSize: 20, padding: 0 },
+        },
         {
           type: 'node',
           id: 'current',
           position: { kind: 'anchor', target: { id: 'target', anchor: 'right', boundary: 'wide' } },
-          minimumSize: 20,
-          padding: 0,
+          layout: { minimumSize: 20, padding: 0 },
         },
       ]),
       { boundaries: [wideBoundary] },
@@ -268,12 +288,16 @@ describe('Node anchor-to-anchor position', () => {
   it('当前 Node 无 id 时仍可对齐已完成 target', () => {
     const result = compileToScene(
       scene([
-        { type: 'node', id: 'target', position: [18, 27], minimumSize: 20, padding: 0 },
+        {
+          type: 'node',
+          id: 'target',
+          position: [18, 27],
+          layout: { minimumSize: 20, padding: 0 },
+        },
         {
           type: 'node',
           position: { kind: 'anchor', target: { id: 'target' } },
-          minimumSize: 10,
-          padding: 0,
+          layout: { minimumSize: 10, padding: 0 },
         },
       ]),
       { artifacts: { nodeLayouts: true } },
@@ -287,18 +311,27 @@ describe('Node anchor-to-anchor position', () => {
   it('local namespace 的同名 resolved target 遮蔽外层 target', () => {
     const layouts = compileLayouts(
       scene([
-        { type: 'node', id: 'target', position: [0, 0], minimumSize: 20, padding: 0 },
+        {
+          type: 'node',
+          id: 'target',
+          position: [0, 0],
+          layout: { minimumSize: 20, padding: 0 },
+        },
         {
           type: 'scope',
           localNamespace: true,
           children: [
-            { type: 'node', id: 'target', position: [90, 55], minimumSize: 20, padding: 0 },
+            {
+              type: 'node',
+              id: 'target',
+              position: [90, 55],
+              layout: { minimumSize: 20, padding: 0 },
+            },
             {
               type: 'node',
               id: 'current',
               position: { kind: 'anchor', target: { id: 'target' } },
-              minimumSize: 10,
-              padding: 0,
+              layout: { minimumSize: 10, padding: 0 },
             },
           ],
         },
@@ -311,13 +344,17 @@ describe('Node anchor-to-anchor position', () => {
   it('Scene primitive、observer 与自动 viewBox 只看到最终几何', () => {
     const result = compileToScene(
       scene([
-        { type: 'node', id: 'target', position: [100, 50], minimumSize: 20, padding: 0 },
+        {
+          type: 'node',
+          id: 'target',
+          position: [100, 50],
+          layout: { minimumSize: 20, padding: 0 },
+        },
         {
           type: 'node',
           id: 'current',
           position: { kind: 'anchor', target: { id: 'target' } },
-          minimumSize: 20,
-          padding: 0,
+          layout: { minimumSize: 20, padding: 0 },
         },
       ]),
       { padding: 0, artifacts: { nodeLayouts: true } },

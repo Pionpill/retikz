@@ -4,6 +4,8 @@
 - 决策日期：2026-08-30
 - 关联：[Diagram v0.1 roadmap](../roadmap.md) · [ADR-03：Flow Source 模型与 LLM-first Authoring](./03-flow-source-model.md) · [ADR-07：Flow 平级 Source、Group 与 Layout](./07-flow-catalog-source-layout-groups.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
+> Theme 修订：本文的文本区域、显式默认值和 Flow layout/routing 契约以 [Diagram / Flow Defaults 与 Theme 来源](./08-theme-source-fragments.md) 为准；其余装配与能力边界继续成立。
+
 ## 背景与目标
 
 ADR-03/07 已冻结唯一、LLM-first 的 Flow Source：Entity / Group / Layout 在平级 catalog 中声明，根与各 scope 的 `children` 引用是包含真源；根 relations 可以连接任意层级 Entity 或 Group，rank、自动布局与 routing 只表达 provider-neutral 意图，Layout 的 direction / gap / align 则表达必须保留的固定 placement。它们尚未决定谁执行这些意图、如何开放替换算法、缺省值从哪里产生，以及不同算法能力不等价时怎样在调用前诊断

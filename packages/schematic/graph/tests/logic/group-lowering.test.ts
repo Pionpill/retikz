@@ -43,13 +43,13 @@ describe('Group layout-aware lowering', () => {
     ).toBe(true);
   });
 
-  it('applies named Graph Theme tokens to the Group root shell', () => {
+  it('applies named Graph Theme defaults to the Group root shell', () => {
     const styleName = 'group-shell';
     const graphStyle = Graph.defineGraphThemeStyle({
       name: styleName,
       resolve: () => ({
-        group: {
-          tokens: {
+        defaults: {
+          group: {
             background: { fill: '#fed7aa', fillOpacity: 0.6 },
             border: { stroke: '#9a3412', strokeWidth: 3, dashPattern: [1, 2] },
             cornerRadius: 7,
@@ -90,8 +90,8 @@ describe('Group layout-aware lowering', () => {
     const graphStyle = Graph.defineGraphThemeStyle({
       name: styleName,
       resolve: () => ({
-        group: {
-          tokens: {
+        defaults: {
+          group: {
             background: { fill: '#fef3c7' },
             border: { stroke: '#92400e', strokeWidth: 4, strokeOpacity: 0.3, dashPattern: [2, 2] },
             cornerRadius: 10,
@@ -123,7 +123,11 @@ describe('Group layout-aware lowering', () => {
   });
 
   it('arranges bottom caption after a non-empty body and includes bodyGap in allocation', () => {
-    const body = { type: 'node', position: [10, 5], minimumSize: { width: 20, height: 10 }, padding: 0 } as const;
+    const body = {
+      type: 'node',
+      position: [10, 5],
+      layout: { minimumSize: { width: 20, height: 10 }, padding: 0 },
+    } as const;
     const withoutGap = compileInHarness(
       Graph.createGroup({
         padding: 0,
@@ -152,9 +156,14 @@ describe('Group layout-aware lowering', () => {
     const warnings: Array<CompileWarning> = [];
     const { output } = compileInHarness(
       Graph.createGroup({
-        nodeDefault: { fill: '#ef4444', stroke: '#2563eb', textColor: 'contrast', minimumSize: 200 },
         caption: { title: { text: 'Title' } },
         labels: [{ text: 'Boundary' }],
+        defaults: {
+          node: {
+            style: { fill: '#ef4444', stroke: '#2563eb', textColor: 'contrast' },
+            layout: { minimumSize: 200 },
+          },
+        },
       }),
       naturalProposal,
       Graph.createGraphDefinitions(),
@@ -243,17 +252,22 @@ describe('Group layout-aware lowering', () => {
     expect(text[0]?.x).toBeCloseTo(result.allocationBounds.x);
   });
 
-  it('stacks nested Group graphTheme only onto visible Entity and Relation descendants', () => {
+  it('stacks nested Group Graph rules only onto visible Entity and Relation descendants', () => {
     const { output } = compileInHarness(
       Graph.createGroup({
-        graphTheme: { rules: [{ type: 'entity', appearance: { fill: '#ef4444' } }] },
+        graphRules: [{ type: 'entity', style: { fill: '#ef4444' } }],
         caption: { title: { text: 'Outer' } },
         children: [
           Graph.createGroup({
-            graphTheme: { rules: [{ type: 'entity', appearance: { fill: '#2563eb' } }] },
+            graphRules: [{ type: 'entity', style: { fill: '#2563eb' } }],
             children: [
               Graph.createEntity({ role: 'activity', position: [30, 20], text: 'Nested' }),
-              { type: 'node', position: [100, 20], text: 'Core', fill: '#22c55e' },
+              {
+                type: 'node',
+                position: [100, 20],
+                text: 'Core',
+                style: { fill: '#22c55e' },
+              },
             ],
           }),
         ],

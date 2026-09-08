@@ -1,7 +1,7 @@
+import type { JsonObject } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-import type { IRJsonObject } from '../../schemas';
 import type { AnchorValue, Rect } from '../../shared';
 import type { ConnectionEnvelopeKind } from '../shape';
 
@@ -20,7 +20,7 @@ export type BoundaryFitContext = {
 };
 
 /** boundary definition 的作者侧输入形态 */
-export type BoundaryDefinitionInput<TParams extends IRJsonObject> = {
+export type BoundaryDefinitionInput<TParams extends JsonObject> = {
   /** 注册表 key，由 IR `boundary` 引用 */
   name: string;
   /** 运行时连接面参数的 schema */
@@ -40,4 +40,4 @@ export type BoundaryDefinitionInput<TParams extends IRJsonObject> = {
 };
 
 /** Boundary 定义的擦除形态：registry 存这个 */
-export type BoundaryDefinition = BoundaryDefinitionInput<IRJsonObject>;
+export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;

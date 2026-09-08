@@ -4,7 +4,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Grid IR 下沉为 Core Path 的英文逻辑图 */
 const Demo: FC = () => (
-  <Layout width={760} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="grid-ir"
       position={[-310, 0]}
@@ -12,11 +12,9 @@ const Demo: FC = () => (
         { text: 'Grid IR', font: { size: 14, weight: 'bold' } },
         { text: 'bounds · line · position', fill: 'gray', font: { size: 12 } },
       ]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ padding: 8 }}
     />
     <Node
       id="normalize"
@@ -25,11 +23,9 @@ const Demo: FC = () => (
         { text: 'Normalize input', font: { size: 14, weight: 'bold' } },
         { text: 'sort corners · local center', fill: 'gray', font: { size: 12 } },
       ]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+      layout={{ padding: 8 }}
     />
     <Node
       id="lattice"
@@ -38,11 +34,9 @@ const Demo: FC = () => (
         { text: 'Enumerate lattice', font: { size: 14, weight: 'bold' } },
         { text: 'x / y values and indices', fill: 'gray', font: { size: 12 } },
       ]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+      layout={{ padding: 8 }}
     />
     <Node
       id="assemble"
@@ -51,11 +45,9 @@ const Demo: FC = () => (
         { text: 'Classify and assemble', font: { size: 14, weight: 'bold' } },
         { text: 'line · major · border', fill: 'gray', font: { size: 12 } },
       ]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.08 }}
+      layout={{ padding: 8 }}
     />
     <Node
       id="paths"
@@ -64,17 +56,15 @@ const Demo: FC = () => (
         { text: 'Core Path[] / Scope', font: { size: 14, weight: 'bold' } },
         { text: 'Core resolves center position', fill: 'gray', font: { size: 12 } },
       ]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      padding={8}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ padding: 8 }}
     />
 
-    <Draw way={['grid-ir', 'normalize']} arrow="->" stroke="gray" />
-    <Draw way={['normalize', 'lattice']} arrow="->" stroke="gray" />
-    <Draw way={['lattice', 'assemble']} arrow="->" stroke="gray" />
-    <Draw way={['assemble', 'paths']} arrow="->" stroke="gray" />
+    <Draw way={['grid-ir', 'normalize']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['normalize', 'lattice']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['lattice', 'assemble']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['assemble', 'paths']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

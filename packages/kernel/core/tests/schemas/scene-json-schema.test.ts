@@ -24,11 +24,18 @@ describe('SceneSchema 可导出 JSON Schema（喂 LLM / 工具链的结构化 sc
     const source: IRScene = SceneSchema.parse({
       type: 'scene',
       version: 1,
-      children: [{ type: 'node', position: [0, 0], color: '#336699', fill: 0.2, textColor: 0.8, text: 'A' }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          text: 'A',
+          style: { color: '#336699', fill: 0.2, textColor: 0.8 },
+        },
+      ],
     });
     const compiled = compileToScene(source).scene;
 
-    expect(source.children[0]).toMatchObject({ fill: 0.2, textColor: 0.8 });
+    expect(source.children[0]).toMatchObject({ style: { fill: 0.2, textColor: 0.8 } });
     expect(JSON.stringify(compiled)).toContain('#d6e0eb');
     expect(JSON.stringify(compiled)).toContain('#5c85ad');
     expect(JSON.stringify(compiled)).not.toContain('"fill":0.2');

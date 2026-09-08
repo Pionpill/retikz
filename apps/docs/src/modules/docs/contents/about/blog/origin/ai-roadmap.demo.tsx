@@ -32,13 +32,18 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
       position={position}
       shape="rectangle"
       cornerRadius={hasBox ? 4.5 : 0}
-      fill={fill}
-      stroke={hasBox ? NODE_STROKE : 'none'}
-      strokeWidth={hasBox ? 0.5 : 0}
-      textColor={hasBox ? LEAF_TEXT : TITLE_TEXT}
-      font={{ ...SANS_FONT, size: isTitle ? 24 : isHeader ? 14 : 12, weight: isTitle || isHeader ? 'bold' : 'normal' }}
-      padding={hasBox ? 5 : 4}
-      minimumSize={{ width, height }}
+      style={{
+        fill,
+        stroke: hasBox ? NODE_STROKE : 'none',
+        strokeWidth: hasBox ? 0.5 : 0,
+        textColor: hasBox ? LEAF_TEXT : TITLE_TEXT,
+        font: {
+          ...SANS_FONT,
+          size: isTitle ? 24 : isHeader ? 14 : 12,
+          weight: isTitle || isHeader ? 'bold' : 'normal',
+        },
+      }}
+      layout={{ padding: hasBox ? 5 : 4, minimumSize: { width, height } }}
     >
       {children}
     </Node>
@@ -46,7 +51,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
 };
 
 const Demo: FC = () => (
-  <Layout width={811} height={441} nodeDistance={41}>
+  <Layout nodeDistance={41}>
     <RoadmapNode id="title" position={[404, 20]} variant="title" width={200} height={40}>
       AI Expert in 2022
     </RoadmapNode>
@@ -129,22 +134,20 @@ const Demo: FC = () => (
       Big Data Engineer
     </RoadmapNode>
 
-    <Draw way={['title', 'fundamentals']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
-    <Draw way={['fundamentals', 'choose']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
-    <Draw way={['data-scientist', 'machine-learning']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
-    <Draw way={['machine-learning', 'deep-learning']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
-    <Draw way={['data-engineer', 'big-data-engineer']} stroke={EDGE_BLUE} strokeWidth={2} arrow="->" />
+    <Draw way={['title', 'fundamentals']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
+    <Draw way={['fundamentals', 'choose']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
+    <Draw way={['data-scientist', 'machine-learning']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
+    <Draw way={['machine-learning', 'deep-learning']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
+    <Draw way={['data-engineer', 'big-data-engineer']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
     <Draw
       way={['choose', { curve: [404, 200] }, [360, 195], { curve: [316, 190] }, 'data-scientist']}
-      stroke={EDGE_BLUE}
-      strokeWidth={2}
       arrow="->"
+      style={{ stroke: EDGE_BLUE, strokeWidth: 2 }}
     />
     <Draw
       way={['choose', { curve: [404, 200] }, [449.5, 195], { curve: [495, 190] }, 'data-engineer']}
-      stroke={EDGE_BLUE}
-      strokeWidth={2}
       arrow="->"
+      style={{ stroke: EDGE_BLUE, strokeWidth: 2 }}
     />
 
     {/* === Step 5：装饰层 ===
@@ -161,10 +164,8 @@ const Demo: FC = () => (
         { curve: [404, 210] },
         'choose',
       ]}
-      stroke={EDGE_RECOMMEND}
-      strokeWidth={2}
-      dashPattern={[6, 6]}
       arrow="<-"
+      style={{ stroke: EDGE_RECOMMEND, strokeWidth: 2, dashPattern: [6, 6] }}
     />
 
     {/* 2) "more below" 短虚线 — 4px 粗 + dashPattern [4,4] */}
@@ -173,18 +174,14 @@ const Demo: FC = () => (
         [315.21, 387],
         [315.21, 437],
       ]}
-      stroke={EDGE_BLUE}
-      strokeWidth={4}
-      dashPattern={[4, 4]}
+      style={{ stroke: EDGE_BLUE, strokeWidth: 4, dashPattern: [4, 4] }}
     />
     <Draw
       way={[
         [494.21, 321],
         [494.21, 371],
       ]}
-      stroke={EDGE_BLUE}
-      strokeWidth={4}
-      dashPattern={[4, 4]}
+      style={{ stroke: EDGE_BLUE, strokeWidth: 4, dashPattern: [4, 4] }}
     />
 
     {/* 3) 红色 X — 2 条 4px 粗交叉线 */}
@@ -193,16 +190,14 @@ const Demo: FC = () => (
         [194, 258],
         [244, 308],
       ]}
-      stroke={EDGE_RED}
-      strokeWidth={4}
+      style={{ stroke: EDGE_RED, strokeWidth: 4 }}
     />
     <Draw
       way={[
         [194, 308],
         [244, 258],
       ]}
-      stroke={EDGE_RED}
-      strokeWidth={4}
+      style={{ stroke: EDGE_RED, strokeWidth: 4 }}
     />
   </Layout>
 );

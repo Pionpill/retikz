@@ -5,7 +5,7 @@ import { Layout, Node } from '@retikz/react';
 
 /** 对比 fixed child 拒绝较小 slot 时 visible 与 clip 的表现 */
 const Demo: FC = () => (
-  <Layout width={460} height={170}>
+  <Layout>
     <FlexLayout direction="column" gap={18}>
       <LayoutItem kind="flex" itemKey="visible-row">
         <FlexLayout
@@ -17,9 +17,8 @@ const Demo: FC = () => (
             <Node
               position={[0, 0]}
               text="可见溢出：固定宽度"
-              minimumSize={{ width: 220, height: 32 }}
-              fill="#dbeafe"
-              stroke="#2563eb"
+              style={{ fill: '#dbeafe', stroke: '#2563eb' }}
+              layout={{ minimumSize: { width: 220, height: 32 } }}
             />
           </LayoutItem>
         </FlexLayout>
@@ -34,9 +33,8 @@ const Demo: FC = () => (
             <Node
               position={[0, 0]}
               text="裁切溢出：固定宽度"
-              minimumSize={{ width: 220, height: 32 }}
-              fill="#fee2e2"
-              stroke="#dc2626"
+              style={{ fill: '#fee2e2', stroke: '#dc2626' }}
+              layout={{ minimumSize: { width: 220, height: 32 } }}
             />
           </LayoutItem>
         </FlexLayout>

@@ -237,24 +237,28 @@ describe('contract priority-2 兜底自由 TextMark（新建带 text 的 Node）
     });
     const layer = expandOf(spec, POINT_ROWS);
     // 子 Scope 的 nodeDefault 带 textColor、不带 fill
-    const scopes: Array<{ nodeDefault?: Record<string, unknown> }> = [];
+    const scopes: Array<{ defaults?: { node?: { style?: Record<string, unknown> } } }> = [];
     const walk = (children: ReadonlyArray<unknown>): void => {
       for (const child of children) {
-        const c = child as { type?: string; nodeDefault?: Record<string, unknown>; children?: ReadonlyArray<unknown> };
+        const c = child as {
+          type?: string;
+          defaults?: { node?: { style?: Record<string, unknown> } };
+          children?: ReadonlyArray<unknown>;
+        };
         if (c.type === 'scope') {
-          if (c.nodeDefault) scopes.push(c);
+          if (c.defaults?.node?.style) scopes.push(c);
           if (c.children) walk(c.children);
         }
       }
     };
     walk(layer.children);
-    const withDefault = scopes.filter(s => s.nodeDefault !== undefined);
+    const withDefault = scopes.filter(s => s.defaults?.node?.style !== undefined);
     expect(withDefault.length).toBeGreaterThanOrEqual(2);
     for (const s of withDefault) {
-      expect(s.nodeDefault).toHaveProperty('textColor');
-      expect(s.nodeDefault).toHaveProperty('fill', 'none');
-      expect(s.nodeDefault).toHaveProperty('stroke', 'none');
-      expect(s.nodeDefault).toHaveProperty('strokeWidth', 0);
+      expect(s.defaults?.node?.style).toHaveProperty('textColor');
+      expect(s.defaults?.node?.style).toHaveProperty('fill', 'none');
+      expect(s.defaults?.node?.style).toHaveProperty('stroke', 'none');
+      expect(s.defaults?.node?.style).toHaveProperty('strokeWidth', 0);
     }
   });
 

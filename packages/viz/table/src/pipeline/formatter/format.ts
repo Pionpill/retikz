@@ -1,4 +1,4 @@
-import { ChildSchema, JsonObjectSchema } from '@retikz/core';
+import { ChildSchema } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
 
 import type {
@@ -54,12 +54,10 @@ const formatCell = (
   const prefix = `table: formatter "${name}" for cell ${cellLabel}`;
   try {
     const definition = cellFormatterDefinitionOf(name, registry);
-    const rawOptions = JsonObjectSchema.parse(plan.formatter.options ?? {});
-    const parsedOptions = definition.optionsSchema.parse(rawOptions);
-    const guardedOptions = JsonObjectSchema.parse(parsedOptions);
+    const parsedOptions = deepFreeze(definition.optionsSchema.parse(plan.formatter.options ?? {}));
     const context = formatterContextOf(cell);
     const value = ScalarValueSchema.parse(
-      definition.format({ value: parsedPayload.value, context }, guardedOptions as never),
+      definition.format({ value: parsedPayload.value, context }, parsedOptions as never),
     );
     return deepFreeze({
       kind: TableCellPayloadKind.Value,

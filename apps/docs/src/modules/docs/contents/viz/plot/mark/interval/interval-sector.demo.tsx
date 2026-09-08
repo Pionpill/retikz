@@ -19,7 +19,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       width={340}
       height={270}
       coordinate={{ type: 'polar2D', innerRadius: values[INTERVAL_SECTOR_CONTROL_IDS.innerRadius] }}
-      style={{ maxWidth: '100%', height: 'auto' }}
     >
       <IntervalMark
         angle="value"

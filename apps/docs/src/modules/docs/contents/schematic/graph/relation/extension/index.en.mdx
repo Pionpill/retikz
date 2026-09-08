@@ -27,7 +27,7 @@ A role must cover every allowed direction, while a kind may only narrow that set
 
 ## Inject into a host
 
-React can pass `relationRoles`, `relationKinds`, and `relationPredicates` directly to the `<Relation>` that consumes them. Use `<Graph>` when several descendants share definitions and local `graphTheme`. Vanilla can pass the same arrays to `relation(id, input)` or `graph(id, input)`, while direct IR compilation uses `createGraphDefinitions(options)` or `createGraphProviders(options)`
+React can pass `relationRoles`, `relationKinds`, and `relationPredicates` directly to the `<Relation>` that consumes them. Use `<Graph>` when several descendants share definitions and local `graphRules`. Vanilla can pass the same arrays to `relation(id, input)` or `graph(id, input)`, while direct IR compilation uses `createGraphDefinitions(options)` or `createGraphProviders(options)`
 
 ```tsx
 <Graph relationKinds={[feedbackKind]} relationPredicates={[priorityPredicate]}>

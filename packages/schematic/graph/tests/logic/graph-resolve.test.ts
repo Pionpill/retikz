@@ -16,12 +16,10 @@ describe('Graph context projection', () => {
     const source = Graph.GraphSchema.parse({
       namespace: 'graph',
       type: 'graph',
-      graphTheme: {
-        rules: [
-          { type: 'entity', appearance: { fill: '#ef4444' } },
-          { type: 'relation', appearance: { stroke: '#2563eb' } },
-        ],
-      },
+      graphRules: [
+        { type: 'entity', style: { fill: '#ef4444' } },
+        { type: 'relation', style: { stroke: '#2563eb' } },
+      ],
       children: [
         { type: 'node', id: 'plain', position: [0, 0] },
         entity('service'),
@@ -37,23 +35,23 @@ describe('Graph context projection', () => {
 
     expect(Graph.resolveGraph(source, Graph.resolveGraphDefinitionOptions())).toEqual([
       { type: 'node', id: 'plain', position: [0, 0] },
-      { ...entity('service'), fill: '#ef4444' },
+      { ...entity('service'), style: { fill: '#ef4444' } },
       {
         namespace: 'graph',
         type: 'relation',
         source: { id: 'plain' },
         target: { id: 'service' },
         role: 'association',
-        stroke: '#2563eb',
+        style: { stroke: '#2563eb' },
       },
     ]);
   });
 
-  it('crosses ordinary Scope and resets graphTheme at Core Theme boundaries', () => {
+  it('crosses ordinary Scope while preserving Graph author layers at Core Theme boundaries', () => {
     const source = Graph.GraphSchema.parse({
       namespace: 'graph',
       type: 'graph',
-      graphTheme: { rules: [{ type: 'entity', appearance: { fill: '#ef4444' } }] },
+      graphRules: [{ type: 'entity', style: { fill: '#ef4444' } }],
       children: [
         { type: 'scope', children: [entity('inherited')] },
         { type: 'scope', theme: { mode: 'dark' }, children: [entity('reset')] },
@@ -63,14 +61,17 @@ describe('Graph context projection', () => {
 
     expect(projected[0]).toMatchObject({
       type: 'scope',
-      children: [{ id: 'inherited', fill: '#ef4444' }],
+      children: [{ id: 'inherited', style: { fill: '#ef4444' } }],
     });
     expect(projected[1]).toMatchObject({
       type: 'scope',
       theme: { mode: 'dark' },
-      children: [{ id: 'reset' }],
+      children: [{ id: 'reset', style: { fill: '#ef4444' } }],
     });
-    expect((projected[1] as { children: Array<Record<string, unknown>> }).children[0]).not.toHaveProperty('fill');
+    expect((projected[1] as { children: Array<Record<string, unknown>> }).children[0]).toHaveProperty(
+      'style.fill',
+      '#ef4444',
+    );
   });
 
   it('merges nested Graph context and leaves third-party composite payload opaque', () => {
@@ -82,14 +83,14 @@ describe('Graph context projection', () => {
     const source = Graph.GraphSchema.parse({
       namespace: 'graph',
       type: 'graph',
-      graphTheme: { rules: [{ type: 'entity', appearance: { opacity: 0.5 } }] },
+      graphRules: [{ type: 'entity', style: { opacity: 0.5 } }],
       children: [
         opaque,
         {
           namespace: 'graph',
           type: 'graph',
-          graphTheme: { rules: [{ type: 'entity', appearance: { fill: '#22c55e' } }] },
-          children: [entity('nested', { fill: '#ffffff' })],
+          graphRules: [{ type: 'entity', style: { fill: '#22c55e' } }],
+          children: [entity('nested', { style: { fill: '#ffffff' } })],
         },
       ],
     });
@@ -99,7 +100,30 @@ describe('Graph context projection', () => {
     expect(projected[1]).toMatchObject({
       namespace: 'graph',
       type: 'graph',
-      children: [{ id: 'nested', opacity: 0.5, fill: '#ffffff' }],
+      children: [{ id: 'nested', style: { opacity: 0.5, fill: '#ffffff' } }],
+    });
+  });
+
+  it('lets an inner Graph default outrank an outer Graph rule', () => {
+    const source = Graph.GraphSchema.parse({
+      namespace: 'graph',
+      type: 'graph',
+      graphRules: [{ type: 'entity', style: { fill: '#ef4444' } }],
+      children: [
+        {
+          namespace: 'graph',
+          type: 'graph',
+          graphDefaults: { entity: { style: { fill: '#2563eb' } } },
+          children: [entity('nested')],
+        },
+      ],
+    });
+    const projected = Graph.resolveGraph(source, Graph.resolveGraphDefinitionOptions());
+
+    expect(projected[0]).toMatchObject({
+      namespace: 'graph',
+      type: 'graph',
+      children: [{ id: 'nested', style: { fill: '#2563eb' } }],
     });
   });
 });

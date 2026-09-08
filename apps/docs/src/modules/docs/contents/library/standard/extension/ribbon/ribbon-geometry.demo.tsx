@@ -57,22 +57,19 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const resolvedValues = values as RibbonGeometryValues;
 
   return (
-    <Layout
-      width={400}
-      height={200}
-      viewBox={{ x: -260, y: -130, width: 520, height: 260 }}
-      pathKinds={[ribbonPathKindDefinition]}
-    >
+    <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} pathKinds={[ribbonPathKindDefinition]}>
       <Path
         kind="ribbon"
         kindOptions={ribbonOf(resolvedValues)}
-        fill={resolvedValues.fill}
-        fillOpacity={resolvedValues.fillOpacity}
-        stroke={resolvedValues.stroke}
-        strokeWidth={resolvedValues.strokeWidth}
-        shadow={
-          resolvedValues.shadow ? { offsetX: 0, offsetY: 8, blur: 10, color: 'rgba(15, 23, 42, 0.35)' } : undefined
-        }
+        style={{
+          fill: resolvedValues.fill,
+          fillOpacity: resolvedValues.fillOpacity,
+          stroke: resolvedValues.stroke,
+          strokeWidth: resolvedValues.strokeWidth,
+          ...(resolvedValues.shadow
+            ? { shadow: { offsetX: 0, offsetY: 8, blur: 10, color: 'rgba(15, 23, 42, 0.35)' } }
+            : {}),
+        }}
       >
         <Step kind="move" to={[-210, 30]} />
         <Step kind="curve" control={[0, -115]} to={[210, 30]} />

@@ -1,9 +1,10 @@
+import type { JsonObject } from '@retikz/foundation';
+
 import type {
   ArrowShapeValue,
   BlendModeValue,
   IRAnimationTrack,
   IRGraphicStyle,
-  IRJsonObject,
   IRPathBase,
   IRPosition,
   PathFillRuleValue,
@@ -147,7 +148,7 @@ export type PathPrim = {
   /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
   id?: string;
   /** provenance 元数据：compile 从 IR 元素（node / path / scope）的 `meta` 原样 stamp，renderer 忽略（不进 DOM），交互层 / 工具链从 Scene 读 */
-  meta?: IRJsonObject;
+  meta?: JsonObject;
   /** 时间轴动画 tracks：compile 从 IR 元素的 animations 原样 stamp；renderer 能播则播、不能则渲染 settled 静态态并 warn（不丢图） */
   animations?: Array<IRAnimationTrack>;
   /** 结构化路径命令序列，按数组顺序绘制 */
@@ -174,9 +175,9 @@ export type PathPrim = {
   /** 描边宽度 */
   strokeWidth?: IRGraphicStyle['strokeWidth'];
   /** 描边 dash pattern */
-  dashPattern?: IRPathBase['dashPattern'];
+  dashPattern?: NonNullable<IRPathBase['style']>['dashPattern'];
   /** 描边 dash offset */
-  dashOffset?: IRPathBase['dashOffset'];
+  dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
   /**
    * 端点形状
    * @default 'butt'

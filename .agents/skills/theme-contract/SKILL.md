@@ -5,7 +5,7 @@ description: Use when designing, implementing, reviewing, or documenting shared 
 
 # Theme Contract
 
-为 Retikz 内置 Neutral 与宿主维护的参考 style 提供公共且与具体包无关的主题设计契约。具体主题 skill 在此契约之上定义自己的视觉语言，具体包的 `_notes/theme` 负责记录包内 token 映射与实现细节。
+为 Retikz 内置 Neutral 与宿主维护的参考 style 提供公共且与具体包无关的主题设计契约。具体主题 skill 在此契约之上定义自己的视觉语言，具体包的 `_notes/theme` 负责记录 Source 片段消费与实现细节。
 
 ## Categorical Hue Contract
 
@@ -58,5 +58,5 @@ description: Use when designing, implementing, reviewing, or documenting shared 
 - 用户显式传入的 palette 保持原始顺序和值，不重排、不调色、不补全
 - Core 是内置 Neutral shared categorical palette 的单一真源；宿主只通过公开 definition 维护额外 style
 - 领域包默认只把 Core effective categorical palette 映射到本包视觉角色，不复制内建 categorical 色值
-- 领域 style definition 可以显式提供本包 palette；它高于 Core baseline，之后仍可被本包 token 或结构化 theme 覆盖
-- 具体包的 token 映射、领域 palette 角色、sequential / diverging 选择与覆盖顺序记录在对应包的 `_notes/theme` 中
+- 领域 style definition 可以提供本包 palette；它高于 Core baseline，之后仍可被作者 `xxxDefaults` 和实例配置覆盖
+- Theme 是默认值来源；领域 `xxxDefaults` 与 definition 生成值复用正式 Source 片段，条件规则独立；palette 角色与覆盖顺序记录在对应包的 `_notes/theme` 中

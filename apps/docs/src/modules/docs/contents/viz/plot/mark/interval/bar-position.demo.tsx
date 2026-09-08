@@ -18,12 +18,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     : undefined;
 
   return (
-    <Layout
-      width={380}
-      height={280}
-      viewBox={{ x: -16, y: -16, width: 412, height: 312 }}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Layout viewBox={{ x: -16, y: -16, width: 412, height: 312 }}>
       <Plot data={revenue} width={380} height={280} coordinate={isPolar ? 'polar2D' : undefined}>
         <IntervalMark
           x={isHorizontal ? 'value' : 'quarter'}

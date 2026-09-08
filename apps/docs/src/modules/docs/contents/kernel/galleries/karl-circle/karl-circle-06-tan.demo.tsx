@@ -1,0 +1,140 @@
+import type { FC } from 'react';
+
+import { Circle, Coordinate, Draw, Layout, Node, Sector } from '@retikz/react';
+import { Grid } from '@retikz/standard-react';
+import { useLowerTex } from '@retikz/tex/react';
+import { Fragment } from 'react';
+
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
+
+const COS30 = Math.cos((30 * Math.PI) / 180);
+const SIN30 = Math.sin((30 * Math.PI) / 180);
+const TAN30 = SIN30 / COS30;
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
+
+const Demo: FC = () => {
+  const lowerTexState = useLowerTex();
+  return (
+    <Layout lowerTex={lowerTexState.status === 'ready' ? lowerTexState.lowerTex : undefined}>
+      {/* 背景网格 */}
+      <Grid
+        bounds={{ start: [-100, -100], end: [100, 100] }}
+        line={{ spacing: 50, style: { stroke: 'lightgray', strokeWidth: 0.5 } }}
+      />
+
+      {/* 单位圆 */}
+      <Circle center={[0, 0]} radius={100} style={{ lineCap: 'round' }} />
+
+      {/* 坐标轴 */}
+      <Draw
+        way={[
+          [-150, 0],
+          [150, 0],
+        ]}
+        arrow="->"
+      />
+      <Node position={[162, 0]} style={{ stroke: 'none' }} layout={{ padding: 0 }}>
+        {'$x$'}
+      </Node>
+      <Coordinate id="x-axis" position={[150, 0]} />
+      <Draw
+        way={[
+          [0, 150],
+          [0, -150],
+        ]}
+        arrow="->"
+      />
+      <Node position={[0, -162]} style={{ stroke: 'none' }} layout={{ padding: 0 }}>
+        {'$y$'}
+      </Node>
+      <Coordinate id="y-axis" position={[0, -150]} />
+
+      {/* 刻度 */}
+      {[
+        { x: -100, tex: '$-1$' },
+        { x: -50, tex: '$-\\frac{1}{2}$' },
+        { x: 100, tex: '$1$' },
+      ].map(({ x, tex }) => (
+        <Fragment key={`tx-${x}`}>
+          <Draw
+            way={[
+              [x, -3],
+              [x, 3],
+            ]}
+          />
+          <Node position={[x - 10, 14]} style={{ stroke: 'none' }} layout={{ padding: 1 }}>
+            {tex}
+          </Node>
+        </Fragment>
+      ))}
+      {[
+        { y: 100, tex: '$-1$' },
+        { y: 50, tex: '$-\\frac{1}{2}$' },
+        { y: -50, tex: '$\\frac{1}{2}$' },
+        { y: -100, tex: '$1$' },
+      ].map(({ y, tex }) => (
+        <Fragment key={`ty-${y}`}>
+          <Draw
+            way={[
+              [-3, y],
+              [3, y],
+            ]}
+          />
+          <Node position={[-18, y + 10]} style={{ stroke: 'none' }} layout={{ padding: 1 }}>
+            {tex}
+          </Node>
+        </Fragment>
+      ))}
+
+      {/* 30° 扇形 + α */}
+      <Sector
+        center={[0, 0]}
+        radius={30}
+        startAngle={0}
+        endAngle={-30}
+        style={{ fill: 'lightgray', stroke: 'green' }}
+      />
+      <Node
+        position={{ angle: -15, radius: 22 }}
+        style={{ stroke: 'none', textColor: 'green' }}
+        layout={{ padding: 1 }}
+      >
+        {'$\\alpha$'}
+      </Node>
+
+      {/* sin α / cos α（边标注用 `$...$` 行内公式） */}
+      <Draw
+        way={[{ angle: -30, radius: 100 }, { label: { text: '$\\sin\\alpha$', side: 'left' } }, [COS30 * 100, 0]]}
+        thickness="thick"
+        style={{ stroke: 'red' }}
+      />
+      <Draw
+        way={[[COS30 * 100, 0], { label: { text: '$\\cos\\alpha$', side: 'bottom' } }, [0, 0]]}
+        thickness="thick"
+        style={{ stroke: 'dodgerblue' }}
+      />
+
+      {/* tan α 橙色竖线 + 辅助射线
+          原 TikZ 用 name path + name intersections 求交点；IR 没建模，几何上
+          x=100 竖线与原点 30° 射线交于 (100, -TAN30·100)（screen y），直接喂坐标。
+          Coordinate t 命名供下方 ray 引用 */}
+      <Draw
+        way={[
+          [100, 0],
+          { label: { text: '$\\tan\\alpha = \\frac{\\sin\\alpha}{\\cos\\alpha}$', side: 'right' } },
+          [100, -TAN30 * 100],
+        ]}
+        thickness="thick"
+        style={{ stroke: 'darkorange' }}
+      />
+      <Coordinate id="t" position={[100, -TAN30 * 100]} />
+      {/* 原点 → t 的辅助射线 */}
+      <Draw way={[[0, 0], 't']} />
+    </Layout>
+  );
+};
+
+export default Demo;

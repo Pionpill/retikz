@@ -51,7 +51,14 @@ describe('emitNodePrimitives：带文本 Node 包 <g>', () => {
 
   // 结构不变量（无 schema 拒绝路径，用判据守卫替代）
   it('纯几何带样式 Node 仍不包 group（仅 lines 触发，样式不触发）', () => {
-    const ir = scene([{ type: 'node', position: [0, 0], fill: '#eee', minimumSize: 2 }]);
+    const ir = scene([
+      {
+        type: 'node',
+        position: [0, 0],
+        style: { fill: '#eee' },
+        layout: { minimumSize: 2 },
+      },
+    ]);
     expect(compileToScene(ir, silent).scene.primitives.map(p => p.type)).toEqual(['rect']);
   });
 

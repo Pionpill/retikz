@@ -13,7 +13,7 @@ import type {
 } from '../src/modules/docs/data';
 
 import { en, zh } from '../src/i18n/locales';
-import { getSectionsByModule, modules } from '../src/modules/docs/data';
+import { getSectionsByArea, modules } from '../src/modules/docs/data';
 // Vite config 在 `@` alias 建立前加载生成器，因此构建工具直接导入纯函数 owner 文件
 import { parseDocSource } from '../src/modules/docs/lib/frontmatter';
 
@@ -136,7 +136,7 @@ const toPosix = (value: string): string => value.replaceAll(path.sep, '/');
 export const collectDocManifest = (rootDir: string): Array<DocManifestEntry> => {
   const entries: Array<DocManifestEntry> = [];
   for (const module of modules) {
-    const documents = collectRouteDocuments(module.id, getSectionsByModule(module.id));
+    const documents = collectRouteDocuments(module.id, getSectionsByArea(module.id));
     for (const document of documents) {
       const content: Partial<Record<DocLanguage, DocLanguageEntry>> = {};
       for (const lang of ['zh', 'en'] as const) {

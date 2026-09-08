@@ -84,12 +84,12 @@ describe('marks → 中段 marker primitive', () => {
       children: [
         {
           type: 'path',
-          stroke: '#13579b',
           label: { text: 'gap', sloped: true },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
           ],
+          style: { stroke: '#13579b' },
         },
       ],
     };
@@ -99,13 +99,13 @@ describe('marks → 中段 marker primitive', () => {
       children: [
         {
           type: 'path',
-          stroke: '#13579b',
           label: { text: 'gap', sloped: true },
           marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }],
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
           ],
+          style: { stroke: '#13579b' },
         },
       ],
     };
@@ -128,7 +128,7 @@ describe('marks → 中段 marker 随 strokeWidth 缩放（与端点箭头一致
     children: [
       {
         type: 'path',
-        ...(strokeWidth !== undefined ? { strokeWidth } : {}),
+        ...(strokeWidth !== undefined ? { style: { strokeWidth } } : {}),
         marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'stealth' } }],
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },

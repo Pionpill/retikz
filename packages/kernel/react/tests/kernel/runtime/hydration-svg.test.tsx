@@ -37,11 +37,10 @@ describe('SVG 水合', () => {
               id="ball"
               position={[0, 0]}
               shape="circle"
-              fill="darkorange"
-              stroke="none"
               meta={{ label: 'ball' }}
               animations={[{ ...pulse({ peak: 1.4, duration: 500 }), trigger: 'manual', iterations: 1 }]}
               onClick={(_event, context) => context.animation.restart()}
+              style={{ fill: 'darkorange', stroke: 'none' }}
             />
           </Layout>
         </StrictMode>,
@@ -62,7 +61,7 @@ describe('SVG 水合', () => {
     await act(() => {
       root.render(
         <Layout renderer="svg" width={200} height={200}>
-          <Node id="a" position={[0, 0]} fill="red" minimumSize={2} onClick={onClick} />
+          <Node id="a" position={[0, 0]} onClick={onClick} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
         </Layout>,
       );
     });
@@ -89,7 +88,7 @@ describe('SVG 水合', () => {
     await act(() => {
       root.render(
         <Layout renderer="svg" width={200} height={200} runtime={{ mode: 'static' }}>
-          <Node id="a" position={[0, 0]} fill="red" minimumSize={2} onClick={onClick} />
+          <Node id="a" position={[0, 0]} onClick={onClick} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
         </Layout>,
       );
     });
@@ -115,12 +114,12 @@ describe('SVG 水合', () => {
           <Node
             id="a"
             position={[0, 0]}
-            fill="red"
-            minimumSize={2}
             meta={{ series: 'sales', i: 3 }}
             onClick={(_event, received) => {
               context = received;
             }}
+            style={{ fill: 'red' }}
+            layout={{ minimumSize: 2 }}
           />
         </Layout>,
       );
@@ -151,8 +150,8 @@ describe('SVG 水合', () => {
     await act(() => {
       root.render(
         <Layout renderer="svg" width={200} height={200}>
-          <Node id="a" position={[0, 0]} fill="red" minimumSize={2} onClick={onClick} />
-          <Node id="b" position={[4, 0]} fill="blue" minimumSize={2} />
+          <Node id="a" position={[0, 0]} onClick={onClick} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
+          <Node id="b" position={[4, 0]} style={{ fill: 'blue' }} layout={{ minimumSize: 2 }} />
         </Layout>,
       );
     });

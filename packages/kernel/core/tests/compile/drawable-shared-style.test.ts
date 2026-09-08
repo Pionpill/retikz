@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { IRScene, PathPrim, ScenePrimitive } from '../../src';
 
@@ -42,20 +42,6 @@ describe('Drawable shared style resolution', () => {
       scene([
         {
           type: 'scope',
-          pathDefault: {
-            color: '#0f766e',
-            fill: '#ccfbf1',
-            stroke: '#134e4a',
-            strokeWidth: 2,
-            dashPattern: [4, 2],
-            dashOffset: 1,
-            lineCap: 'round',
-            lineJoin: 'bevel',
-            fillRule: 'evenodd',
-            roundedCorners: 5,
-            rotate: 30,
-            scale: 2,
-          },
           children: [
             linePath({
               children: [
@@ -65,6 +51,24 @@ describe('Drawable shared style resolution', () => {
               ],
             }),
           ],
+          defaults: {
+            path: {
+              roundedCorners: 5,
+              rotate: 30,
+              scale: 2,
+              style: {
+                color: '#0f766e',
+                fill: '#ccfbf1',
+                stroke: '#134e4a',
+                strokeWidth: 2,
+                dashPattern: [4, 2],
+                dashOffset: 1,
+                lineCap: 'round',
+                lineJoin: 'bevel',
+                fillRule: 'evenodd',
+              },
+            },
+          },
         },
       ]),
       { padding: 0 },
@@ -105,14 +109,13 @@ describe('Drawable shared style resolution', () => {
       scene([
         {
           type: 'scope',
-          pathDefault: {
-            color: '#2563eb',
-            dashPattern: [4, 2],
-            lineCap: 'round',
-            lineJoin: 'round',
-            roundedCorners: 5,
-          },
           children: [linePath()],
+          defaults: {
+            path: {
+              roundedCorners: 5,
+              style: { color: '#2563eb', dashPattern: [4, 2], lineCap: 'round', lineJoin: 'round' },
+            },
+          },
         },
       ]),
     );
@@ -135,8 +138,12 @@ describe('Drawable shared style resolution', () => {
       scene([
         {
           type: 'scope',
-          pathDefault: { color: 'crimson' },
           children: [linePath()],
+          defaults: {
+            path: {
+              style: { color: 'crimson' },
+            },
+          },
         },
       ]),
     );
@@ -149,14 +156,18 @@ describe('Drawable shared style resolution', () => {
       scene([
         {
           type: 'scope',
-          pathDefault: { color: 'red', strokeWidth: 5 },
           children: [
             {
               type: 'scope',
-              resetStyle: ['path'],
               children: [linePath()],
+              defaults: { reset: ['path'] },
             },
           ],
+          defaults: {
+            path: {
+              style: { color: 'red', strokeWidth: 5 },
+            },
+          },
         },
       ]),
     );
@@ -168,25 +179,33 @@ describe('Drawable shared style resolution', () => {
   it('drawable-shared-label-default-independent：labelDefault 不进入 drawable geometry style', () => {
     const parsed = ScopeSchema.parse({
       type: 'scope',
-      pathDefault: { color: 'red' },
-      labelDefault: { textColor: 'blue' },
       children: [linePath({ label: { text: 'flow' } })],
+      defaults: {
+        path: {
+          style: { color: 'red' },
+        },
+        label: { textColor: 'blue' },
+      },
     });
 
-    expect(parsed.pathDefault).toEqual({ color: 'red' });
-    expect(parsed.labelDefault).toEqual({ textColor: 'blue' });
+    expect(parsed.defaults?.path).toEqual({ style: { color: 'red' } });
+    expect(parsed.defaults?.label).toEqual({ textColor: 'blue' });
   });
 
   it('drawable-shared-arrow-default-independent：arrowDefault 不进入 pathDefault 默认样式', () => {
     const parsed = ScopeSchema.parse({
       type: 'scope',
-      pathDefault: { color: 'red' },
-      arrowDefault: { shape: 'circle' },
       children: [linePath()],
+      defaults: {
+        path: {
+          style: { color: 'red' },
+        },
+        arrow: { shape: 'circle' },
+      },
     });
 
-    expect(parsed.pathDefault).toEqual({ color: 'red' });
-    expect(parsed.arrowDefault).toEqual({ shape: 'circle' });
+    expect(parsed.defaults?.path).toEqual({ style: { color: 'red' } });
+    expect(parsed.defaults?.arrow).toEqual({ shape: 'circle' });
     expect(PathDefaultSchema.safeParse({ marks: arrowMarks('->') }).success).toBe(false);
   });
 

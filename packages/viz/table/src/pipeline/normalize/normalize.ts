@@ -1,7 +1,7 @@
-import { JsonObjectSchema, resolveBoxSpacing } from '@retikz/core';
+import { resolveBoxSpacing } from '@retikz/core';
 
 import type { SemanticTableModel, TableStructureOutput } from '../../contract';
-import type { IRTableStructureOperation } from '../../schemas';
+import type { IRManualTableStructure, IRTableStructureOperation } from '../../schemas';
 import type { NormalizeTableStructureOptions } from './types';
 
 import { TableStructureOutputSchema } from '../../contract/structure';
@@ -11,7 +11,7 @@ import {
   TableCellFit,
   TableCellOverflow,
   TableHorizontalAlignment,
-  TableStructureSchema,
+  TableStructureKind,
   TableVerticalAlignment,
 } from '../../schemas';
 import { deepFreeze } from '../../shared';
@@ -58,17 +58,22 @@ export const normalizeTableStructure = (
   const kind = operation.kind;
   const prefix = `table: structure "${kind}"`;
   try {
-    const jsonOperation = JsonObjectSchema.parse(operation);
-    const parsedOperation = TableStructureSchema.parse(jsonOperation);
     const registry = resolveTableStructureRegistry(options.structureDefinitions);
-    const definition = tableStructureDefinitionOf(parsedOperation.kind, registry);
-    const preciseOperation = definition.schema.parse(jsonOperation);
-    JsonObjectSchema.parse(preciseOperation);
+    const definition = tableStructureDefinitionOf(operation.kind, registry);
+    const preciseOperation = definition.schema.parse(operation) as IRTableStructureOperation;
     const context = createTableStructureContext(options.data, options.datasets ?? {});
     const providerOutput = definition.build(preciseOperation as never, context);
-    const jsonOutput = JsonObjectSchema.parse(providerOutput);
-    const output = deepFreeze(TableStructureOutputSchema.parse(jsonOutput));
-    validateTableStructureOutput(output, parsedOperation, context);
+    const output = deepFreeze(TableStructureOutputSchema.parse(providerOutput));
+    const manualRows =
+      operation.kind === TableStructureKind.Manual ? (operation as IRManualTableStructure).rows : undefined;
+    validateTableStructureOutput(
+      output,
+      {
+        kind: preciseOperation.kind,
+        ...(manualRows === undefined ? {} : { manualRows }),
+      },
+      context,
+    );
     return createSemanticTableModel(output);
   } catch (error) {
     throw new RetikzTableError(`${prefix}: ${errorMessageOf(error)}`, { cause: error });

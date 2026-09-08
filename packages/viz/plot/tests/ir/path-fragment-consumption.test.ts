@@ -3,10 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { RelationMarkSchema, RelationPathGeometrySchema, RelationPathSpecificOptionsSchema } from '../../src';
 
 const options = {
-  dashPattern: [4, 2],
-  fillRule: 'evenodd' as const,
-  lineCap: 'round' as const,
-  lineJoin: 'bevel' as const,
+  style: { dashPattern: [4, 2], fillRule: 'evenodd' as const, lineCap: 'round' as const, lineJoin: 'bevel' as const },
   roundedCorners: 2,
   rotate: 15,
   scale: 1.25,
@@ -16,7 +13,7 @@ const options = {
 describe('Plot atomic path fragment consumption', () => {
   it('keeps relation path options field set and strict behavior', () => {
     expect(RelationPathSpecificOptionsSchema.parse(options)).toEqual(options);
-    expect(RelationPathSpecificOptionsSchema.safeParse({ dashOffset: 1 }).success).toBe(false);
+    expect(RelationPathSpecificOptionsSchema.safeParse({ style: { dashOffset: 1 } }).success).toBe(false);
     expect(RelationPathSpecificOptionsSchema.safeParse({ ...options, kind: 'stroke' }).success).toBe(false);
     expect(RelationPathSpecificOptionsSchema.safeParse({ ...options, label: { text: 'edge' } }).success).toBe(false);
   });

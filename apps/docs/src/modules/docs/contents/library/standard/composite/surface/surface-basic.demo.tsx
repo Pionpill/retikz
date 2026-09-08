@@ -5,7 +5,7 @@ import { Surface } from '@retikz/standard-react';
 
 /** Surface 包装任意单个 Core child 的基础示例 */
 const Demo: FC = () => (
-  <Layout width={460} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Surface
       id="provider-surface"
       padding={{ x: 22, y: 16 }}
@@ -14,9 +14,9 @@ const Demo: FC = () => (
       cornerRadius={12}
     >
       <Scope>
-        <Node id="provider" position={[-90, 0]} text="Provider" fill="#dbeafe" stroke="#2563eb" />
-        <Node id="definition" position={[90, 0]} text="Definition" fill="#dcfce7" stroke="#16a34a" />
-        <Draw way={['provider', 'definition']} arrow="->" stroke="#64748b" />
+        <Node id="provider" position={[-90, 0]} text="Provider" style={{ fill: '#dbeafe', stroke: '#2563eb' }} />
+        <Node id="definition" position={[90, 0]} text="Definition" style={{ fill: '#dcfce7', stroke: '#16a34a' }} />
+        <Draw way={['provider', 'definition']} arrow="->" style={{ stroke: '#64748b' }} />
       </Scope>
     </Surface>
   </Layout>

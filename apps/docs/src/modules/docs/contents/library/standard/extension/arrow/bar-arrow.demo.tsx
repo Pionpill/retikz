@@ -9,7 +9,7 @@ import { barArrowControls, previewControlContract } from './bar-arrow.controls';
 
 export const previewControls = barArrowControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout width={420} height={180} viewBox={{ x: -160, y: -70, width: 320, height: 140 }} arrows={[BarArrowDefinition]}>
+  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} arrows={[BarArrowDefinition]}>
     <Draw
       way={[
         [-120, 0],
@@ -25,8 +25,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           color: values.color,
         },
       }}
-      stroke="#64748b"
-      strokeWidth={2}
+      style={{ stroke: '#64748b', strokeWidth: 2 }}
     />
   </Layout>
 ));

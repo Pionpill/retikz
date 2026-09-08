@@ -54,8 +54,6 @@ const loadIr: IRScene = {
       id: 'a',
       position: [0, 0],
       shape: 'rectangle',
-      minimumSize: { width: 40, height: 20 },
-      fill: '#0a0',
       animations: [
         {
           property: 'opacity',
@@ -66,6 +64,8 @@ const loadIr: IRScene = {
           duration: 400,
         },
       ],
+      style: { fill: '#0a0' },
+      layout: { minimumSize: { width: 40, height: 20 } },
     },
   ],
 };
@@ -78,8 +78,6 @@ const manualIr: IRScene = {
       id: 'a',
       position: [0, 0],
       shape: 'rectangle',
-      minimumSize: { width: 40, height: 20 },
-      stroke: '#000',
       animations: [
         {
           property: 'strokeWidth',
@@ -91,6 +89,8 @@ const manualIr: IRScene = {
           trigger: 'manual',
         },
       ],
+      style: { stroke: '#000' },
+      layout: { minimumSize: { width: 40, height: 20 } },
     },
   ],
 };
@@ -209,8 +209,6 @@ describe('mountCanvas visible-trigger 监听合帧', () => {
         id: 'a',
         position: [0, 0],
         shape: 'rectangle',
-        minimumSize: { width: 40, height: 20 },
-        fill: '#0a0',
         animations: [
           {
             property: 'opacity',
@@ -222,6 +220,8 @@ describe('mountCanvas visible-trigger 监听合帧', () => {
             trigger: 'visible',
           },
         ],
+        style: { fill: '#0a0' },
+        layout: { minimumSize: { width: 40, height: 20 } },
       },
     ],
   };

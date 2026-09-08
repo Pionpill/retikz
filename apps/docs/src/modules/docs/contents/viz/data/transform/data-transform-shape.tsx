@@ -14,7 +14,12 @@ const TABLE_LAYOUT = {
   rowSize: { kind: 'fixed', value: ROW_HEIGHT },
   headerRowSize: { kind: 'fixed', value: ROW_HEIGHT },
   borders: {
-    outer: { kind: 'line', stroke: 'gray' },
+    outer: {
+      top: { kind: 'line', stroke: 'gray' },
+      right: { kind: 'line', stroke: 'gray' },
+      bottom: { kind: 'line', stroke: 'gray' },
+      left: { kind: 'line', stroke: 'gray' },
+    },
     horizontal: { kind: 'line', stroke: 'lightgray' },
     vertical: { kind: 'line', stroke: 'lightgray' },
   },
@@ -31,12 +36,8 @@ const headerCell = (text: string): IRTableCellPayload => ({
     type: 'node',
     position: [0, 0],
     text,
-    minimumSize: { width: COLUMN_WIDTH, height: ROW_HEIGHT },
-    padding: 0,
-    stroke: 'none',
-    fill: 'lightgray',
-    fillOpacity: 0.3,
-    font: { size: 12, weight: 'bold' },
+    style: { stroke: 'none', fill: 'lightgray', fillOpacity: 0.3, font: { size: 12, weight: 'bold' } },
+    layout: { minimumSize: { width: COLUMN_WIDTH, height: ROW_HEIGHT }, padding: 0 },
   },
 });
 
@@ -66,7 +67,7 @@ export const DataTransformShapeFigure: FC<DataTransformShapeFigureProps> = props
   ];
 
   return (
-    <Layout width={590} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout>
       <Scope id="source" transforms={[{ kind: 'translate', x: -282, y: -65 }]}>
         <DetailTable id="source-table" dataRef="source-rows" data={sourceRows} layout={TABLE_LAYOUT}>
           <DetailColumn
@@ -95,11 +96,8 @@ export const DataTransformShapeFigure: FC<DataTransformShapeFigureProps> = props
       <Node
         id="source-caption"
         position={[-186, 82]}
-        stroke="none"
-        fill="none"
-        padding={0}
-        textColor="gray"
-        font={{ size: 12 }}
+        style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
+        layout={{ padding: 0 }}
       >
         {sourceTitle}
       </Node>
@@ -107,13 +105,9 @@ export const DataTransformShapeFigure: FC<DataTransformShapeFigureProps> = props
       <Node
         id="operation"
         position={[0, 0]}
-        minimumSize={{ width: 108, height: 52 }}
-        stroke="gray"
-        fill="lightgray"
-        fillOpacity={0.16}
         cornerRadius={4}
-        align="middle"
-        lineHeight={17}
+        style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
+        layout={{ minimumSize: { width: 108, height: 52 }, align: 'middle', lineHeight: 17 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>summarize</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -149,17 +143,14 @@ export const DataTransformShapeFigure: FC<DataTransformShapeFigureProps> = props
       <Node
         id="result-caption"
         position={[186, 56]}
-        stroke="none"
-        fill="none"
-        padding={0}
-        textColor="gray"
-        font={{ size: 12 }}
+        style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
+        layout={{ padding: 0 }}
       >
         {resultTitle}
       </Node>
 
-      <Draw way={['source', 'operation']} arrow="->" stroke="gray" />
-      <Draw way={['operation', 'result']} arrow="->" stroke="gray" />
+      <Draw way={['source', 'operation']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['operation', 'result']} arrow="->" style={{ stroke: 'gray' }} />
     </Layout>
   );
 };

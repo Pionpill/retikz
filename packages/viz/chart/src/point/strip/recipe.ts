@@ -1,4 +1,3 @@
-import type { IRJsonObject } from '@retikz/core';
 import type { IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
 
 import { PlotGuide, PositionScaleContinuity, readCoordinateScaleNames } from '@retikz/plot';
@@ -19,18 +18,12 @@ import {
   pointPropertySlots,
   pointResolutionOf,
   pointSlotsOf,
-  pointThemeOf,
+  resolvePointGuideDefaults,
   resolvePointScaleDefaults,
   sizeGuideOf,
 } from '../shared';
 import { resolveStripPointMark, StripMarkDefinition } from './mark';
-import { StripChartSchema, StripChartThemeOverridesSchema, StripChartThemeResolutionSchema } from './schema';
-
-const themeFallback: IRJsonObject = {
-  axisEnabled: true,
-  axisGridEnabled: true,
-  legendEnabled: true,
-};
+import { StripChartSchema } from './schema';
 
 /** Strip exact schema、调度与消费检查共用的 encoding 顺序 */
 export const StripChartEncodingSlots = ['x', 'y', 'color', 'size', 'opacity', 'shape'] as const;
@@ -112,8 +105,9 @@ export const resolveStripGuideDefaults = (context: ChartGuideDefaultsResolveCont
   if (context.source.plotExtension?.guides !== undefined) return context.guides;
 
   const continuousRole = continuousRoles[0];
-  const hasDefaultGrid = context.guides.some(guide => guide.type === PlotGuide.Axis && guide.grid === true);
-  return context.guides.map(guide => {
+  const guides = resolvePointGuideDefaults(context);
+  const hasDefaultGrid = guides.some(guide => guide.type === PlotGuide.Axis && guide.grid === true);
+  return guides.map(guide => {
     if (guide.type !== PlotGuide.Axis || (guide.dimension !== 'x' && guide.dimension !== 'y')) return guide;
     const { grid: previousGrid, ...guideWithoutGrid } = guide;
     void previousGrid;
@@ -128,11 +122,6 @@ export const StripChartDefinition: ChartRecipeDefinition<IRStripChart> = defineC
   chartType: ChartType.Strip,
   encodingSlots: StripChartEncodingSlots,
   schema: StripChartSchema,
-  theme: {
-    overridesSchema: StripChartThemeOverridesSchema,
-    resolutionSchema: StripChartThemeResolutionSchema,
-    fallback: themeFallback,
-  },
   consumes: {
     encodings: StripChartEncodingSlots,
     properties: stripPropertySlots,
@@ -149,12 +138,11 @@ export const StripChartDefinition: ChartRecipeDefinition<IRStripChart> = defineC
   resolveEncodings: context =>
     resolveChartEncodingMappings(context, StripChartEncodingSlots, pointFieldConsumersOf(ChartType.Strip)),
   resolve: (context: ChartRecipeResolveContext) => {
-    const theme = pointThemeOf(context.recipeThemeTokens);
     const slots = pointSlotsOf(context);
     const properties = slots.properties as IRStripChartProperties;
     const mark = resolveStripPointMark(slots.encodings, properties);
-    const sizeGuide = sizeGuideOf(theme, slots.encodings);
-    return pointResolutionOf(ChartType.Strip, theme, [{ kind: ChartType.Strip, plotMarks: [mark] }], {
+    const sizeGuide = sizeGuideOf(slots.encodings);
+    return pointResolutionOf(ChartType.Strip, [{ kind: ChartType.Strip, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
     });
   },

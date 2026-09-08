@@ -7,18 +7,26 @@ describe('Table Cell appearance schema', () => {
     const input = {
       background: { fill: '#fff4e5', fillOpacity: 0.75 },
       content: {
-        color: '#9a4d00',
-        fill: 'currentColor',
-        fillOpacity: 0.5,
-        stroke: '#7c2d12',
-        strokeWidth: 2,
-        strokeOpacity: 0.8,
-        opacity: 0.9,
-        nodeDefault: { textColor: '#9a4d00', font: { weight: 600 } },
-        pathDefault: { lineCap: 'round' },
-        labelDefault: { textColor: '#7c2d12' },
-        arrowDefault: { fill: '#7c2d12' },
-        resetStyle: ['node', 'label'],
+        style: {
+          color: '#9a4d00',
+          fill: 'currentColor',
+          fillOpacity: 0.5,
+          stroke: '#7c2d12',
+          strokeWidth: 2,
+          strokeOpacity: 0.8,
+          opacity: 0.9,
+        },
+        defaults: {
+          node: {
+            style: { textColor: '#9a4d00', font: { weight: 600 } },
+          },
+          path: {
+            style: { lineCap: 'round' },
+          },
+          label: { textColor: '#7c2d12' },
+          arrow: { fill: '#7c2d12' },
+          reset: ['node', 'label'],
+        },
       },
       borders: { top: { kind: 'none', priority: 4 }, bottom: { kind: 'line', width: 2 } },
     };
@@ -50,16 +58,22 @@ describe('Table Cell appearance schema', () => {
   it('uses the same closed content vocabulary as the public Core Scope style channels', () => {
     expect(
       TableCellContentStyleSchema.parse({
-        color: 'currentColor',
-        strokeWidth: 1.5,
-        nodeDefault: { font: { family: 'serif', size: 12 } },
-        resetStyle: true,
+        style: { color: 'currentColor', strokeWidth: 1.5 },
+        defaults: {
+          node: {
+            style: { font: { family: 'serif', size: 12 } },
+          },
+          reset: true,
+        },
       }),
     ).toEqual({
-      color: 'currentColor',
-      strokeWidth: 1.5,
-      nodeDefault: { font: { family: 'serif', size: 12 } },
-      resetStyle: true,
+      style: { color: 'currentColor', strokeWidth: 1.5 },
+      defaults: {
+        node: {
+          style: { font: { family: 'serif', size: 12 } },
+        },
+        reset: true,
+      },
     });
   });
 
@@ -73,6 +87,10 @@ describe('Table Cell appearance schema', () => {
       background: { fill: 0.2 },
       borders: { bottom: { kind: 'line', stroke: 0.8 } },
     });
-    expect(() => TableCellContentStyleSchema.parse({ color: 0.8 })).toThrow();
+    expect(() =>
+      TableCellContentStyleSchema.parse({
+        style: { color: 0.8 },
+      }),
+    ).toThrow();
   });
 });

@@ -120,13 +120,25 @@ describe('Core Runtime Program initial full run', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'changed', position: [0, 0], text: 'A', fill: '#ef4444' },
-        { type: 'node', id: 'stable', position: [80, 0], text: 'B', fill: '#ffffff' },
+        {
+          type: 'node',
+          id: 'changed',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: '#ef4444' },
+        },
+        {
+          type: 'node',
+          id: 'stable',
+          position: [80, 0],
+          text: 'B',
+          style: { fill: '#ffffff' },
+        },
       ],
     };
     const next: IRScene = {
       ...initial,
-      children: [{ ...initial.children[0], fill: '#22c55e' }, initial.children[1]],
+      children: [{ ...initial.children[0], style: { fill: '#22c55e' } }, initial.children[1]],
     };
     const measureText = () => ({ width: measuredWidth, height: 10 });
     const program = createCoreProgram({ measureText }, { invalidationOwners: [invalidationOwner] });
@@ -209,13 +221,25 @@ describe('Core Runtime Program initial full run', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'changed', position: [0, 0], text: 'A', fill: '#ef4444' },
-        { type: 'node', id: 'stable', position: [80, 0], text: 'B', fill: '#ffffff' },
+        {
+          type: 'node',
+          id: 'changed',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: '#ef4444' },
+        },
+        {
+          type: 'node',
+          id: 'stable',
+          position: [80, 0],
+          text: 'B',
+          style: { fill: '#ffffff' },
+        },
       ],
     };
     const next: IRScene = {
       ...initial,
-      children: [{ ...initial.children[0], fill: '#22c55e' }, initial.children[1]],
+      children: [{ ...initial.children[0], style: { fill: '#22c55e' } }, initial.children[1]],
     };
     const program = createCoreProgram({}, { invalidationOwners: [invalidationOwner] });
     const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, invalidationOwner] });
@@ -609,7 +633,7 @@ describe('Core Runtime Program observed output', () => {
     const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
     const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
     const initial = sceneWithText('A');
-    const next: IRScene = { ...initial, children: [{ ...initial.children[0], fill: '#22c55e' }] };
+    const next: IRScene = { ...initial, children: [{ ...initial.children[0], style: { fill: '#22c55e' } }] };
     const session = createRuntimeSession({
       owners,
       programs,
@@ -977,19 +1001,65 @@ describe('Core Runtime Program full fallback update', () => {
 });
 
 describe('Core Runtime Program incremental style update', () => {
+  it('填充与其它样式同时变化时保留完整输出', () => {
+    const initial: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'node', id: 'a', position: [0, 0], style: { fill: 'red', stroke: 'black' } }],
+    };
+    const next: IRScene = {
+      ...initial,
+      children: [{ type: 'node', id: 'a', position: [0, 0], style: { fill: 'blue', stroke: 'green', strokeWidth: 4 } }],
+    };
+    const program = createCoreProgram({ onWarn: () => {} });
+    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const session = createRuntimeSession({
+      owners,
+      programs,
+      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+    });
+    session.update({
+      baseRevision: session.revision(),
+      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+    });
+    expect(session.artifact(program).value.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
+  });
+
   it('只重编单个 stable root Node，并发布原子 primitive update Patch', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const initial: IRScene = {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'a', position: [0, 0], text: 'A', fill: '#ef4444' },
-        { type: 'node', id: 'b', position: [80, 0], text: 'B', fill: '#3b82f6' },
+        {
+          type: 'node',
+          id: 'a',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: '#ef4444' },
+        },
+        {
+          type: 'node',
+          id: 'b',
+          position: [80, 0],
+          text: 'B',
+          style: { fill: '#3b82f6' },
+        },
       ],
     };
     const next: IRScene = {
       ...initial,
-      children: [{ type: 'node', id: 'a', position: [0, 0], text: 'A', fill: '#22c55e' }, initial.children[1]],
+      children: [
+        {
+          type: 'node',
+          id: 'a',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: '#22c55e' },
+        },
+        initial.children[1],
+      ],
     };
     const program = createCoreProgram({ onWarn: () => {} });
     const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
@@ -1048,13 +1118,25 @@ describe('Core Runtime Program incremental style update', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'a', position: [0, 0], text: 'A', fill: '#ef4444' },
-        { type: 'node', id: 'b', position: [80, 0], text: 'B', fill: '#3b82f6' },
+        {
+          type: 'node',
+          id: 'a',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: '#ef4444' },
+        },
+        {
+          type: 'node',
+          id: 'b',
+          position: [80, 0],
+          text: 'B',
+          style: { fill: '#3b82f6' },
+        },
       ],
     };
     const next: IRScene = {
       ...initial,
-      children: [{ ...initial.children[0], fill: '#22c55e' }, initial.children[1]],
+      children: [{ ...initial.children[0], style: { fill: '#22c55e' } }, initial.children[1]],
     };
     const program = createCoreProgram({ onWarn: () => {} });
     const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
@@ -1106,13 +1188,19 @@ describe('Core Runtime Program incremental style update', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'a', position: [0, 0], text: 'A', fill: '#ef4444' },
+        {
+          type: 'node',
+          id: 'a',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: '#ef4444' },
+        },
         { type: 'node', id: 'b', position: { kind: 'anchor', target: { id: 'a' } }, text: 'B' },
       ],
     };
     const next: IRScene = {
       ...initial,
-      children: [{ ...initial.children[0], fill: '#22c55e' }, initial.children[1]],
+      children: [{ ...initial.children[0], style: { fill: '#22c55e' } }, initial.children[1]],
     };
     const program = createCoreProgram({ onWarn: () => {} });
     const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
@@ -1168,11 +1256,11 @@ describe('Core Runtime Program incremental style update', () => {
           shape: 'fill-sensitive',
           position: [0, 0],
           text: 'A',
-          fill: '#ef4444',
+          style: { fill: '#ef4444' },
         },
       ],
     };
-    const next: IRScene = { ...initial, children: [{ ...initial.children[0], fill: '#22c55e' }] };
+    const next: IRScene = { ...initial, children: [{ ...initial.children[0], style: { fill: '#22c55e' } }] };
     const options = { shapes: [fillSensitiveShape], onWarn: () => {} } as const;
     const program = createCoreProgram(options);
     const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });

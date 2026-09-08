@@ -1,16 +1,17 @@
+import type { JsonObject } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
-import type { IRClip, IRJsonObject } from '../../schemas';
+import type { IRClip } from '../../schemas';
 import type { SceneClipPath } from '../scene';
 
 /** Clip Definition 解析并降低的开放 JSON 裁剪形状 */
-export type ClipShape = IRJsonObject & {
+export type ClipShape = JsonObject & {
   /** 与 definition、spec 和 registry 一致的判别字段 */
   kind: string;
 };
 
 /** 用户坐标系中的矩形裁剪形状 */
-export type RectClipShape = IRJsonObject & {
+export type RectClipShape = JsonObject & {
   kind: 'rect';
   x: number;
   y: number;

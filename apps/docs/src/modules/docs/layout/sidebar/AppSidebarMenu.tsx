@@ -16,6 +16,8 @@ export type AppSidebarMenuProps = {
   categories: Array<SidebarCategoryData>;
   /** 当前激活的一级 module id（路由首段） */
   moduleId: string;
+  /** 是否已由上层选定单个 section；为 true 时隐藏 section 标题与分隔线。 */
+  scoped?: boolean;
   /** 点击具体文档入口后的回调 */
   onNavigate?: () => void;
 };
@@ -25,7 +27,7 @@ export type AppSidebarMenuProps = {
  * @description 一级 module 无 children 即叶子链接，有 children 交给 AppSidebarMenuItem（Collapsible）；一级始终铺开不做 Plus/Minus 折叠
  */
 export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
-  const { categories, moduleId, onNavigate } = props;
+  const { categories, moduleId, onNavigate, scoped = false } = props;
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -38,6 +40,18 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
       <nav className="flex flex-col">
         {categories.map((category, idx) => {
           const categoryPath = category.path;
+          if (scoped) {
+            return (
+              <AppSidebarModuleList
+                key={category.value}
+                modules={category.modules}
+                moduleId={moduleId}
+                categoryValue={category.value}
+                ungrouped={category.ungrouped}
+                onNavigate={onNavigate}
+              />
+            );
+          }
           return (
             <Fragment key={category.value}>
               {idx > 0 && <Separator className="my-3" />}

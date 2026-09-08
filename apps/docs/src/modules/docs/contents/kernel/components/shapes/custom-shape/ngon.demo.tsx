@@ -107,21 +107,31 @@ const ngon = defineShape({
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={250} viewBox={{ x: -230, y: -125, width: 460, height: 250 }} shapes={[ngon]}>
-      <Node id="source" position={[-155, 0]} shape="circle" minimumSize={18} fill="gray" stroke="none" />
+    <Layout viewBox={{ x: -230, y: -125, width: 460, height: 250 }} shapes={[ngon]}>
+      <Node
+        id="source"
+        position={[-155, 0]}
+        shape="circle"
+        style={{ fill: 'gray', stroke: 'none' }}
+        layout={{ minimumSize: 18 }}
+      />
       <Node
         id="shape"
         shape={{ type: 'ngon', params: { sides: values.sides } }}
         position={[0, 0]}
         text={String(values.sides)}
         scale={values.scale}
-        fill={values.fill}
-        stroke={values.stroke}
-        strokeWidth={values.strokeWidth}
-        padding={12}
+        style={{ fill: values.fill, stroke: values.stroke, strokeWidth: values.strokeWidth }}
+        layout={{ padding: 12 }}
       />
-      <Node id="sink" position={[155, 0]} shape="circle" minimumSize={18} fill="gray" stroke="none" />
-      <Draw way={['source', 'shape', 'sink']} arrow="->" stroke="gray" />
+      <Node
+        id="sink"
+        position={[155, 0]}
+        shape="circle"
+        style={{ fill: 'gray', stroke: 'none' }}
+        layout={{ minimumSize: 18 }}
+      />
+      <Draw way={['source', 'shape', 'sink']} arrow="->" style={{ stroke: 'gray' }} />
     </Layout>
   );
 });

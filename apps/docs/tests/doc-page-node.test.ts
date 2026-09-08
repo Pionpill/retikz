@@ -4,9 +4,9 @@ import { DocDifficulty } from '@/modules/docs/data';
 import { resolveDocPageNode } from '@/modules/docs/layout/useDocPageNode';
 
 describe('resolveDocPageNode', () => {
-  it('解析无分组页面', () => {
-    const node = resolveDocPageNode({ moduleId: 'kernel', sectionId: null, pageId: 'get-start' });
-    expect(node.section?.label).toBeUndefined();
+  it('解析组件组内的入门页面', () => {
+    const node = resolveDocPageNode({ moduleId: 'kernel', sectionId: 'components', pageId: 'get-start' });
+    expect(node.section?.label).toBe('kernel.components');
     expect(node.target?.id).toBe('get-start');
     expect(node.target?.difficulty).toBe(DocDifficulty.Beginner);
   });

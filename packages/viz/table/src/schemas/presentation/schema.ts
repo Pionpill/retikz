@@ -1,5 +1,4 @@
-import { JsonObjectSchema } from '@retikz/core';
-import { createOpenStringSchema } from '@retikz/foundation';
+import { createOpenStringSchema, JsonObjectSchema } from '@retikz/foundation';
 import { strictObject } from 'zod';
 
 import { TableCellPresentation } from './constants';

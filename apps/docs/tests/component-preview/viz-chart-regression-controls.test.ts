@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { RegressionEncodings, RegressionProperties } from '@retikz/chart-react/point';
 import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -250,7 +250,6 @@ describe('Viz Chart Regression controls', () => {
         point: { opacity: 0.55 },
         trend: { strokeWidth: 2, strokeOpacity: 0.9 },
       });
-      expect(canonicalDeclarationProps(source, ChartLayout)).toMatchObject({ width: 800, height: 500 });
       expect(source.datasetImports).toEqual({
         'chart.data': { name: 'irisRegressionData', from: './regression-basic.data' },
       });

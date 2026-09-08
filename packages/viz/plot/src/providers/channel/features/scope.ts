@@ -1,4 +1,4 @@
-﻿import type { AnyChannelDefinition, ScopeChannelDefinition } from '../../../contract';
+import type { AnyChannelDefinition, ScopeChannelDefinition } from '../../../contract';
 import type { IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
 
 import { defineScopeChannel } from '../../../contract';
@@ -45,14 +45,14 @@ export const BUILTIN_SCOPE_CHANNELS = {
     'strokeWidth',
     { outputKind: 'number', range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },
     (scope, value) => {
-      scope.strokeWidth = value;
+      scope.style = { ...scope.style, strokeWidth: value };
     },
   ),
   opacity: numericScopeChannel(
     'opacity',
     { outputKind: 'number', range: [OPACITY_MIN, 1], clamp: true },
     (scope, value) => {
-      scope.opacity = value;
+      scope.style = { ...scope.style, opacity: value };
     },
     'ramp',
   ),
@@ -60,14 +60,14 @@ export const BUILTIN_SCOPE_CHANNELS = {
     'fillOpacity',
     { outputKind: 'number', range: [0.2, 1], clamp: true },
     (scope, value) => {
-      scope.fillOpacity = value;
+      scope.style = { ...scope.style, fillOpacity: value };
     },
   ),
   strokeOpacity: numericScopeChannel(
     'strokeOpacity',
     { outputKind: 'number', range: [0.2, 1], clamp: true },
     (scope, value) => {
-      scope.strokeOpacity = value;
+      scope.style = { ...scope.style, strokeOpacity: value };
     },
   ),
 };

@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Runtime 接收完整领域输入，在 registry 约束下发布 Snapshot 与 artifact */
 const Demo: FC = () => (
-  <Layout width={520} height={360} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="domain-inputs"
       text={[
@@ -14,13 +14,9 @@ const Demo: FC = () => (
         { text: 'complete state', fill: 'gray', font: { size: 11 } },
       ]}
       position={[0, -145]}
-      minimumSize={{ width: 126, height: 48 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 126, height: 48 }, lineHeight: 15 }}
     />
 
     <LogicFigureFrame id="runtime-group">
@@ -32,13 +28,9 @@ const Demo: FC = () => (
           { text: 'ownership contract', fill: 'gray', font: { size: 11 } },
         ]}
         position={[-150, -55]}
-        minimumSize={{ width: 138, height: 46 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 138, height: 46 }, lineHeight: 15 }}
       />
       <Node
         id="program-registry"
@@ -47,13 +39,9 @@ const Demo: FC = () => (
           { text: 'dependency DAG', fill: 'gray', font: { size: 11 } },
         ]}
         position={[150, -55]}
-        minimumSize={{ width: 138, height: 46 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 138, height: 46 }, lineHeight: 15 }}
       />
       <Node
         id="session"
@@ -62,13 +50,9 @@ const Demo: FC = () => (
           { text: 'transaction · revision', fill: 'gray', font: { size: 11 } },
         ]}
         position={[0, 20]}
-        minimumSize={{ width: 146, height: 50 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 146, height: 50 }, lineHeight: 15 }}
       />
       <Node
         id="observation"
@@ -77,13 +61,9 @@ const Demo: FC = () => (
           { text: 'isolated observation', fill: 'gray', font: { size: 11 } },
         ]}
         position={[150, 65]}
-        minimumSize={{ width: 146, height: 44 }}
-        stroke="dimgray"
-        fill="dimgray"
-        fillOpacity={0.06}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.06, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 146, height: 44 }, lineHeight: 15 }}
       />
     </LogicFigureFrame>
 
@@ -94,13 +74,9 @@ const Demo: FC = () => (
         { text: 'published revision', fill: 'gray', font: { size: 11 } },
       ]}
       position={[0, 145]}
-      minimumSize={{ width: 154, height: 48 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 154, height: 48 }, lineHeight: 15 }}
     />
 
     <Draw
@@ -119,10 +95,10 @@ const Demo: FC = () => (
         'session',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
-    <Draw way={['owner-registry', 'session']} arrow="->" stroke="gray" />
-    <Draw way={['program-registry', 'session']} arrow="->" stroke="gray" />
+    <Draw way={['owner-registry', 'session']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['program-registry', 'session']} arrow="->" style={{ stroke: 'gray' }} />
     <Draw
       way={[
         'session',
@@ -139,9 +115,9 @@ const Demo: FC = () => (
         'published-output',
       ]}
       arrow="->"
-      stroke="gray"
+      style={{ stroke: 'gray' }}
     />
-    <Draw way={['session', 'observation']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['session', 'observation']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 

@@ -8,15 +8,15 @@ export const kernelV05: Release = {
       pkg: '@retikz/foundation',
       version: 'v0.5',
       description: {
-        zh: '新增 Foundation 基础契约包，为 Kernel、Standard、Viz 与 adapter 提供统一的类型工具、Zod 标量 schema、typed non-empty string 断言和结构化错误骨架。',
-        en: 'Adds the Foundation contract package with shared type utilities, Zod scalar schemas, a typed non-empty string assertion, and a structured error skeleton for Kernel, Standard, Viz, and adapters.',
+        zh: '新增 Foundation 基础契约包，为 Kernel、Standard、Viz 与 adapter 提供统一的类型工具、Zod 标量与通用 JSON schema、typed non-empty string 断言和结构化错误骨架。',
+        en: 'Provides shared type utilities, Zod scalar and generic JSON schemas, a typed non-empty string assertion, and structured errors for Kernel, Standard, Viz, and adapters.',
       },
       highlights: [
         {
-          label: { zh: '十八个 runtime 根导出', en: 'Eighteen runtime root exports' },
+          label: { zh: '二十个 runtime 根导出', en: 'Twenty runtime root exports' },
           content: {
-            zh: '`@retikz/foundation` 从根入口公开无领域的 type-only 契约与十八个 runtime symbol，包括 `WithRequiredProperties<T, TKey>`、六个非变换 Zod 标量 schema、`createOpenStringSchema(values)` 以及静态颜色原子；不提供 subpath、IR、对象 schema 或 Diagnostic。',
-            en: '`@retikz/foundation` exposes domain-free type-only contracts and eighteen runtime symbols from its root, including `WithRequiredProperties<T, TKey>`, six non-transforming Zod scalar schemas, `createOpenStringSchema(values)`, and static color atoms. It provides no subpaths, IR, object schemas, or Diagnostics.',
+            zh: '`@retikz/foundation` 从根入口公开无领域的 type-only 契约与二十个 runtime symbol，包括 `JsonValue` / `JsonObject`、通用递归 JSON schema、六个非变换 Zod 标量 schema、`createOpenStringSchema(values)` 以及静态颜色原子；不提供 subpath、IR、领域对象 schema 或 Diagnostic。',
+            en: '`@retikz/foundation` exposes domain-free type-only contracts and twenty runtime symbols from its root, including `JsonValue` / `JsonObject`, generic recursive JSON schemas, six non-transforming Zod scalar schemas, `createOpenStringSchema(values)`, and static color atoms. It provides no subpaths, IR, domain object schemas, or Diagnostics.',
           },
         },
         {
@@ -38,6 +38,26 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.4',
+          date: '2026-09-05',
+          summary: {
+            zh: '统一通用 JSON 契约归属，并移除重复的递归解析路径。',
+            en: 'Consolidates generic JSON contract ownership and removes duplicate recursive parsing paths.',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：通用 JSON 契约归属 Foundation',
+                en: 'BREAKING: generic JSON contracts move to Foundation',
+              },
+              content: {
+                zh: '`JsonValue`、`JsonObject`、`JsonValueSchema` 与 `JsonObjectSchema` 统一从 `@retikz/foundation` 根入口导入；Core 删除旧 `IRJsonObject` 名称、JSON schema 转发与手写递归 parser，不保留兼容 alias。递归校验完全遵循 Zod 原生 JSON schema。',
+                en: "Import `JsonValue`, `JsonObject`, `JsonValueSchema`, and `JsonObjectSchema` from the `@retikz/foundation` root. Core removes the old `IRJsonObject` name, JSON-schema forwarding, and handwritten recursive parser without compatibility aliases. Recursive validation now follows Zod's native JSON schema.",
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.5',
           date: '2026-09-02',
@@ -297,6 +317,36 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.4',
+          date: '2026-09-05',
+          summary: {
+            zh: '统一 Core Source 与开放 Definition 的 Zod owner 边界，删除同一输入上的通用 JSON 复核。',
+            en: 'Unifies Core Source and open Definition boundaries around their owning Zod schemas and removes generic JSON revalidation of the same input.',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：Source IR 语义分组',
+                en: 'BREAKING: semantic groups in Source IR',
+              },
+              content: {
+                zh: 'Node 的视觉字段移入 style，尺寸与文本排布移入 layout；Path 视觉字段移入 style；Scope 使用 style 与 defaults.node/path/label/arrow/reset。React Layout 使用 rootScope 提供隐式根 Scope，style 继续表示宿主 CSS。旧扁平入口删除；字段继承、Scene 输出与精确增量更新语义保持。',
+                en: 'Node visual fields move into style, with size and text layout in layout; Path visual fields move into style. Scope uses style and defaults.node/path/label/arrow/reset. React Layout uses rootScope for its implicit root Scope while style remains host CSS. Old flat inputs are removed; per-field inheritance, Scene output and precise incremental updates retain their semantics.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：精确 schema 结果直接消费',
+                en: 'BREAKING: exact schema results are consumed directly',
+              },
+              content: {
+                zh: 'Theme Source、Path Generator、Clip 与 Shape 只使用各自 owner 或 Definition schema 的解析结果，不再额外执行 plain-container、通用 JSON 或显式 `undefined` 规则。Definition schema transform 可以产出 runtime-only callback 参数；Scene provider output 的独立快照契约保持不变。',
+                en: 'Theme Sources, Path Generators, Clips, and Shapes now consume only their owner or Definition schema results without extra plain-container, generic JSON, or explicit-`undefined` rules. Definition schema transforms may produce runtime-only callback parameters, while the independent Scene provider-output snapshot contract is unchanged.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.5',
           date: '2026-09-03',
           summary: {
@@ -459,6 +509,23 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.4',
+          date: '2026-09-05',
+          summary: {
+            zh: 'Inspector callback output 先由 Child schema 解析，再为公开只读结果执行一次独立冻结。',
+            en: 'Inspector callback output is parsed by the Child schema before one independent freeze for the public readonly result.',
+          },
+          items: [
+            {
+              label: { zh: 'Child owner 错误与只读输出', en: 'Child-owned errors and readonly output' },
+              content: {
+                zh: '非法 Inspector child 由 `ChildSchema` 的 Zod cause 报告；合法结果仍与 callback 原对象脱离并递归冻结，不再经历 snapshot → schema → snapshot 的重复链。',
+                en: 'Invalid Inspector children report the `ChildSchema` Zod cause. Valid output remains detached from the callback object and deeply frozen without the former snapshot → schema → snapshot chain.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.3',
           date: '2026-08-28',

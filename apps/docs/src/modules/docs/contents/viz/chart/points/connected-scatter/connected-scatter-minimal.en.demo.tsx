@@ -9,9 +9,9 @@ const Demo: FC = () => (
   <ConnectedScatterChart
     rows={connectedScatterMinimalData}
     presentation={{
-      title: 'The monthly trajectory of construction unemployment',
-      subtitle: '100 consecutive months; month index on x and unemployment rate (%) on y',
-      source: 'Vega Datasets unemployment-across-industries.json; accessed 2026-09-01',
+      title: { text: 'The monthly trajectory of construction unemployment' },
+      subtitle: { text: '100 consecutive months; month index on x and unemployment rate (%) on y' },
+      source: { text: 'Vega Datasets unemployment-across-industries.json; accessed 2026-09-01' },
     }}
     recipe={{ encodings: { x: 'month', y: 'unemploymentRate', order: 'month' } }}
   />

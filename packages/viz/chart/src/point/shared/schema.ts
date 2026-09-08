@@ -1,9 +1,9 @@
 import type { infer as ZodInfer } from 'zod';
 import type { ZodType } from 'zod';
 
-import { BoxSpacingSchema, CssColorSchema, JsonObjectSchema } from '@retikz/core';
+import { BoxSpacingSchema, CssColorSchema } from '@retikz/core';
 import { ShapeNameSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { MarkNodeLabelListSchema, PlotDomainPaddingKind } from '@retikz/plot';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
@@ -112,19 +112,12 @@ export const PointPropertiesWithoutSizeSchema = PointPropertiesSchema.omit({ siz
   'Point Chart constant properties without size',
 );
 
-/** Point recipe theme 的稀疏覆盖 schema */
-export const PointRecipeThemeOverridesSchema = strictObject({
-  axisEnabled: boolean().optional(),
-  axisGridEnabled: boolean().optional(),
-  legendEnabled: boolean().optional(),
-}).describe('Sparse Point recipe theme overrides');
-
-/** Point recipe theme 的完整消费 schema */
-export const PointRecipeThemeResolutionSchema = strictObject({
-  axisEnabled: boolean(),
-  axisGridEnabled: boolean(),
-  legendEnabled: boolean(),
-}).describe('Complete Point recipe theme tokens');
+/** Point recipe 生成默认 guide 的稀疏控制项 */
+export const PointRecipeGuidesSchema = strictObject({
+  axis: boolean().optional().describe('Whether the recipe generates default axis guides'),
+  grid: boolean().optional().describe('Whether generated axis guides include grid lines'),
+  legend: boolean().optional().describe('Whether the recipe generates default legend guides'),
+}).describe('Sparse Point recipe guide generation controls');
 
 /** 为具体 chartType 创建精确的 Point authored mark schema */
 export const createPointChartMarkSchema = <
@@ -147,3 +140,4 @@ export type IRPointEncoding = ZodInfer<typeof PointEncodingSchema>;
 export type IRPointMarkEncoding = ZodInfer<typeof PointMarkEncodingSchema>;
 export type IRPointProperties = ZodInfer<typeof PointPropertiesSchema>;
 export type IRPointPositionDomainPadding = ZodInfer<typeof PointPositionDomainPaddingSchema>;
+export type IRPointRecipeGuides = ZodInfer<typeof PointRecipeGuidesSchema>;

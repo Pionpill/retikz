@@ -10,29 +10,6 @@ export const layoutViewboxControls = definePreviewControls({
   title: 'Layout Output Boundary',
   sections: [
     {
-      label: 'Display size',
-      controls: [
-        {
-          kind: 'range',
-          id: LayoutViewBoxControlId.Width,
-          label: 'Display width',
-          defaultValue: 300,
-          min: 180,
-          max: 400,
-          step: 10,
-        },
-        {
-          kind: 'range',
-          id: LayoutViewBoxControlId.Height,
-          label: 'Display height',
-          defaultValue: 200,
-          min: 160,
-          max: 320,
-          step: 10,
-        },
-      ],
-    },
-    {
       label: 'Internal viewBox',
       controls: [
         {
@@ -80,12 +57,10 @@ export const layoutViewboxControls = definePreviewControls({
 export const previewControlContract = {
   controls: layoutViewboxControls,
   canonicalValues: {
-    width: 300,
-    height: 200,
     viewBoxX: -120,
     viewBoxY: -120,
     viewBoxWidth: 240,
     viewBoxHeight: 240,
   },
-  relatedApis: ['Layout.width', 'Layout.height', 'Layout.viewBox'],
+  relatedApis: ['Layout.viewBox'],
 } satisfies PreviewControlContract;

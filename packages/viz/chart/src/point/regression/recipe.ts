@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
 
 import { PlotGuide, PlotScale } from '@retikz/plot';
@@ -14,22 +14,12 @@ import {
   pointResolutionOf,
   pointSlotsOf,
   pointSpatialResolutionOf,
-  pointThemeOf,
+  resolvePointGuideDefaults,
   resolvePointScaleDefaults,
 } from '../shared';
 import { pointRecipeId } from '../shared/plot';
 import { RegressionMarkDefinition, resolveRegressionMarkGroup } from './mark';
-import {
-  RegressionChartSchema,
-  RegressionChartThemeOverridesSchema,
-  RegressionChartThemeResolutionSchema,
-} from './schema';
-
-const themeFallback: IRJsonObject = {
-  axisEnabled: true,
-  axisGridEnabled: true,
-  legendEnabled: true,
-};
+import { RegressionChartSchema } from './schema';
 
 /** Regression exact schema、调度与消费检查共用的 encoding 顺序 */
 export const RegressionChartEncodingSlots = ['x', 'y', 'series', 'row', 'column', 'facet'] as const;
@@ -50,11 +40,11 @@ const regressionFieldConsumers = [
   },
 ] as const;
 
-const withSeriesFallback = (encodings: IRJsonObject): IRJsonObject => {
+const withSeriesFallback = (encodings: JsonObject): JsonObject => {
   if (!Object.hasOwn(encodings, 'series')) return encodings;
   const series = encodings.series;
   if (typeof series === 'string') return encodings;
-  const mapping = series as IRJsonObject;
+  const mapping = series as JsonObject;
   return typeof mapping.scale === 'string'
     ? encodings
     : { ...encodings, series: { ...mapping, scale: seriesScaleName } };
@@ -65,11 +55,6 @@ export const RegressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
   chartType: ChartType.Regression,
   encodingSlots: RegressionChartEncodingSlots,
   schema: RegressionChartSchema,
-  theme: {
-    overridesSchema: RegressionChartThemeOverridesSchema,
-    resolutionSchema: RegressionChartThemeResolutionSchema,
-    fallback: themeFallback,
-  },
   consumes: {
     encodings: RegressionChartEncodingSlots,
     properties: regressionPropertySlots,
@@ -90,14 +75,11 @@ export const RegressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
     };
   },
   resolve: (context: ChartRecipeResolveContext) => {
-    const theme = pointThemeOf(context.recipeThemeTokens);
     const slots = pointSlotsOf(context);
     const hasSeries = Object.hasOwn(slots.encodings, 'series');
-    const guides: Array<IRPlotGuide> =
-      hasSeries && theme.legendEnabled ? [{ type: PlotGuide.Legend, channel: 'color' }] : [];
+    const guides: Array<IRPlotGuide> = hasSeries ? [{ type: PlotGuide.Legend, channel: 'color' }] : [];
     return pointResolutionOf(
       ChartType.Regression,
-      theme,
       [{ kind: ChartType.Regression, plotMarks: resolveRegressionMarkGroup(slots.encodings, slots.properties) }],
       {
         scales: hasSeries ? [{ type: PlotScale.Ordinal, name: seriesScaleName }] : [],
@@ -106,4 +88,5 @@ export const RegressionChartDefinition: ChartRecipeDefinition<IRRegressionChart>
     );
   },
   resolveScaleDefaults: resolvePointScaleDefaults,
+  resolveGuideDefaults: resolvePointGuideDefaults,
 });

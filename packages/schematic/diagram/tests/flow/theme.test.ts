@@ -24,7 +24,7 @@ describe('Flow Theme Definition and registry', () => {
   it('keeps the exact Definition object as a typed identity', () => {
     const definition = {
       name: 'brand',
-      resolve: () => ({ tokens: { 'flow.entity.opacity': 0.8 } }),
+      resolve: () => ({ entity: { style: { opacity: 0.8 } } }),
     } satisfies FlowThemeStyleDefinition;
 
     expect(defineFlowThemeStyle(definition)).toBe(definition);
@@ -33,7 +33,7 @@ describe('Flow Theme Definition and registry', () => {
   it('deduplicates the same identity and rejects blank or conflicting names', () => {
     const brand = defineFlowThemeStyle({
       name: 'brand',
-      resolve: () => ({ tokens: { 'flow.entity.opacity': 0.8 } }),
+      resolve: () => ({ entity: { style: { opacity: 0.8 } } }),
     });
 
     expect([...resolveFlowThemeStyleRegistry([brand, brand]).keys()]).toEqual(['brand']);
@@ -80,8 +80,8 @@ describe('Flow Theme Definition and registry', () => {
         throw new Error('external callback failed');
       },
     ],
-    ['empty tokens', () => ({ tokens: {} })],
-    ['unknown token', () => ({ tokens: { 'flow.entity.shape': 'circle' } })],
+    ['removed tokens wrapper', () => ({ entity: {}, tokens: {} })],
+    ['structural field', () => ({ entity: { style: { opacity: 1, shape: 'circle' } } })],
   ])('wraps invalid %s output with the Definition as cause', (_label, resolve) => {
     const source = parseTestFlowDiagram({
       namespace: 'diagram',
@@ -109,32 +109,20 @@ describe('Flow Theme Definition and registry', () => {
 });
 
 describe('Flow Theme cascade', () => {
-  it('applies named tokens, Source tokens, global config, Group layout and item overrides in order', () => {
+  it('applies named defaults, author defaults, Group layout and item overrides in order', () => {
     const brand = defineFlowThemeStyle({
       name: 'brand',
       resolve: () => ({
-        tokens: {
-          'flow.layout.nodeGap': 8,
-          'flow.entity.opacity': 0.4,
-          'flow.entity.dashed': true,
-          'flow.entity.fill': '#fef3c7',
-          'flow.entity.font': { family: 'Inter', size: 12 },
-        },
+        layout: { nodeGap: 8 },
+        entity: { style: { opacity: 0.4, dashed: true, fill: '#fef3c7', font: { family: 'Inter', size: 12 } } },
       }),
     });
     const source = parseTestFlowDiagram({
       namespace: 'diagram',
       type: 'flow',
-      flowThemeTokens: {
-        'flow.layout.nodeGap': 0,
-        'flow.entity.opacity': 0,
-        'flow.entity.dashed': false,
-        'flow.entity.fill': 'transparent',
-        'flow.entity.font': { weight: 600 },
-      },
-      flowTheme: {
+      flowDefaults: {
         layout: { nodeGap: 12, rankGap: 24 },
-        entity: { style: { opacity: 0.7, font: { size: 16 } }, layout: { margin: 2 } },
+        entity: { style: { fill: 'transparent', opacity: 0.7, font: { size: 16 } }, layout: { margin: 2 } },
       },
       entities: [
         {
@@ -159,12 +147,12 @@ describe('Flow Theme cascade', () => {
     if (entity.type !== 'entity') throw new Error('Expected Entity');
 
     expect(resolved.layout).toMatchObject({ nodeGap: 12, rankGap: 24 });
-    expect(group.layout).toMatchObject({ nodeGap: 20, rankGap: 24 });
+    expect(group.layout).toEqual({ nodeGap: 20 });
     expect(entity.style).toMatchObject({
       opacity: 0,
       dashed: false,
       fill: 'transparent',
-      font: { family: 'Inter', size: 16, weight: 700 },
+      font: { weight: 700 },
     });
     expect(entity.layout).toMatchObject({ margin: 0 });
   });

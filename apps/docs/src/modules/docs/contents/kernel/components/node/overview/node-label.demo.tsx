@@ -27,14 +27,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       : undefined;
 
   return (
-    <Layout width={400} height={320} viewBox={{ x: -260, y: -160, width: 520, height: 320 }}>
+    <Layout viewBox={{ x: -260, y: -160, width: 520, height: 320 }}>
       <Node
         id="Q"
         position={[0, 0]}
-        minimumSize={{ width: 120, height: 76 }}
-        padding={{ x: 18, y: 12 }}
-        fill="lightgray"
-        stroke="gray"
         label={{
           text: values.labelText,
           position,
@@ -47,6 +43,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           opacity: values.labelOpacity,
           pin,
         }}
+        style={{ fill: 'lightgray', stroke: 'gray' }}
+        layout={{ minimumSize: { width: 120, height: 76 }, padding: { x: 18, y: 12 } }}
       >
         q
       </Node>

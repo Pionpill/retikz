@@ -242,7 +242,7 @@ describe('clip providers', () => {
     expect(lower).not.toHaveBeenCalled();
   });
 
-  it('rejects non-JSON provider schema output before resolve', () => {
+  it('passes provider schema transform output directly to resolve', () => {
     const resolve = vi.fn(() => ({ kind: 'nonJsonSpec' }));
     const definition = defineClip({
       kind: 'nonJsonSpec',
@@ -261,10 +261,11 @@ describe('clip providers', () => {
       }),
     });
 
-    expect(() => compileToScene(clippedIr({ kind: 'nonJsonSpec' }), { clips: [definition] })).toThrow(
-      /JSON-safe|non-JSON/i,
+    expect(() => compileToScene(clippedIr({ kind: 'nonJsonSpec' }), { clips: [definition] })).not.toThrow();
+    expect(resolve).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'nonJsonSpec', callback: expect.any(Function) }),
+      expect.any(Object),
     );
-    expect(resolve).not.toHaveBeenCalled();
   });
 
   it('rejects non-JSON resolved shape output before shape parsing and lower', () => {
@@ -289,7 +290,7 @@ describe('clip providers', () => {
     expect(lower).not.toHaveBeenCalled();
   });
 
-  it('rejects non-JSON shape schema output before lower', () => {
+  it('passes shape schema transform output directly to lower', () => {
     const lower = vi.fn(() => ({
       commands: [
         { kind: 'move' as const, to: [0, 0] as [number, number] },
@@ -308,9 +309,10 @@ describe('clip providers', () => {
       lower,
     });
 
-    expect(() => compileToScene(clippedIr({ kind: 'nonJsonParsedShape' }), { clips: [definition] })).toThrow(
-      /shapeSchema.*non-JSON/i,
+    expect(() => compileToScene(clippedIr({ kind: 'nonJsonParsedShape' }), { clips: [definition] })).not.toThrow();
+    expect(lower).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'nonJsonParsedShape', callback: expect.any(Function) }),
+      expect.any(Object),
     );
-    expect(lower).not.toHaveBeenCalled();
   });
 });

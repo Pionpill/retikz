@@ -1,4 +1,3 @@
-import type { IRJsonObject } from '@retikz/core';
 import type {
   DataTransformOutputDescriptor,
   DataTransformOutputModel,
@@ -6,6 +5,7 @@ import type {
   IRDataReducerOperation,
   TransformContext,
 } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotTransform } from '@retikz/plot';
 
 import {
@@ -58,7 +58,7 @@ const assertOutputType = (descriptor: DataTransformOutputDescriptor, consumer: C
 const parseAggregateMapping = (
   context: ChartEncodingResolveContext,
   consumer: ChartEncodingFieldConsumer,
-  value: IRJsonObject,
+  value: JsonObject,
 ): Readonly<{
   operation: IRDataReducerOperation;
   descriptor: DataTransformOutputDescriptor;
@@ -100,7 +100,7 @@ const transformContextOf = (context: ChartEncodingResolveContext): TransformCont
 const parseDerivedMapping = (
   context: ChartEncodingResolveContext,
   consumer: ChartEncodingFieldConsumer,
-  value: IRJsonObject,
+  value: JsonObject,
   slotIndex: number,
 ): Readonly<{ record: TransformOperationRecord; descriptor: DataTransformOutputDescriptor }> => {
   const operation = objectValueOf(value.transform) as IRPlotTransform | undefined;
@@ -309,7 +309,7 @@ const assertRowShapeAvailability = (
 
 /** transform mapping 解析、依赖检查与 phase 调度结果 */
 export type ChartEncodingTransformResolution = Readonly<{
-  encodings: IRJsonObject;
+  encodings: JsonObject;
   records: ReadonlyArray<TransformOperationRecord>;
 }>;
 
@@ -324,7 +324,7 @@ export const resolveChartEncodingTransforms = <
   consumers: ReadonlyArray<ChartEncodingFieldConsumer<TConsumerSlot>>,
 ): ChartEncodingTransformResolution => {
   const slotOrder = new Map(encodingSlots.map((slot, index) => [slot, index] as const));
-  const directEncodings: IRJsonObject = {};
+  const directEncodings: JsonObject = {};
   const aggregateMappings: Array<
     Readonly<{
       slot: string;
@@ -355,7 +355,7 @@ export const resolveChartEncodingTransforms = <
       directEncodings[slot] = { field: fields[0] } satisfies ChartResolvedFieldMapping;
       continue;
     }
-    const mapping = objectValueOf(value) as IRJsonObject;
+    const mapping = objectValueOf(value) as JsonObject;
     if (kind === 'aggregate') {
       const resolved = parseAggregateMapping(context, consumer, mapping);
       aggregateMappings.push({ slot, slotIndex, ...resolved });

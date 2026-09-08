@@ -58,7 +58,8 @@ const LABEL_POSITION: Record<string, number> = {
 const isBuiltinStrokePath = (path: ResolvedPathSource): boolean => (path.kind ?? PathKind.Stroke) === PathKind.Stroke;
 
 /** 判断 Path 是否没有有效填充 */
-const hasNoEffectivePathFill = (path: ResolvedPathSource): boolean => path.fill === undefined || path.fill === 'none';
+const hasNoEffectivePathFill = (path: ResolvedPathSource): boolean =>
+  path.style?.fill === undefined || path.style.fill === 'none';
 
 /** 验证显式 label interruption 是否可以由当前 Path 承载 */
 const assertGeometryLabelInterruption = (
@@ -164,17 +165,21 @@ const canonicalizeSteps = (
   canAutomaticallyInterrupt: boolean,
 ): Array<CanonicalStep> | undefined => steps?.map(step => canonicalizeStep(step, canAutomaticallyInterrupt));
 
-const canonicalizePath = (path: ResolvedPathSource, canAutomaticallyInterrupt: boolean): CanonicalPath => ({
-  ...path,
-  children: canonicalizeSteps(path.children, canAutomaticallyInterrupt),
-  label:
-    path.label === undefined
-      ? undefined
-      : (Array.isArray(path.label) ? path.label : [path.label]).map(label =>
-          canonicalizeLabel(label, canAutomaticallyInterrupt),
-        ),
-  shadow: resolveDropShadow(path.shadow),
-});
+const canonicalizePath = (path: ResolvedPathSource, canAutomaticallyInterrupt: boolean): CanonicalPath => {
+  const { style, ...source } = path;
+  return {
+    ...source,
+    ...style,
+    children: canonicalizeSteps(path.children, canAutomaticallyInterrupt),
+    label:
+      path.label === undefined
+        ? undefined
+        : (Array.isArray(path.label) ? path.label : [path.label]).map(label =>
+            canonicalizeLabel(label, canAutomaticallyInterrupt),
+          ),
+    shadow: resolveDropShadow(style?.shadow),
+  };
+};
 
 /** 将 contextual paint 的 number 分支确定为字符串，paint object 保持不变 */
 const resolvePathPaint = (
@@ -300,8 +305,9 @@ const resolvePathContextualColors = (
   irPath: string,
   labelMasterColor: string | undefined,
 ): ResolvedPathSource => {
-  const { fill, stroke, children, label, marks, ...source } = path;
-  const masterColor = path.color;
+  const { style, children, label, marks, ...source } = path;
+  const { fill, stroke, ...visual } = style ?? {};
+  const masterColor = path.style?.color;
   const resolvedHostLabel =
     label === undefined
       ? undefined
@@ -312,8 +318,13 @@ const resolvePathContextualColors = (
         : resolveGeometryLabelColors(label, labelMasterColor, context, `${irPath}.label`);
   return {
     ...source,
-    ...(fill === undefined ? {} : { fill: resolvePathPaint(fill, masterColor, context, `${irPath}.fill`) }),
-    ...(stroke === undefined ? {} : { stroke: resolvePathPaint(stroke, masterColor, context, `${irPath}.stroke`) }),
+    style: {
+      ...visual,
+      ...(fill === undefined ? {} : { fill: resolvePathPaint(fill, masterColor, context, `${irPath}.style.fill`) }),
+      ...(stroke === undefined
+        ? {}
+        : { stroke: resolvePathPaint(stroke, masterColor, context, `${irPath}.style.stroke`) }),
+    },
     ...(children === undefined
       ? {}
       : {
@@ -474,7 +485,7 @@ export const resolvePath = (path: IRPathBase, context: PathResolveContext): Path
   const styled = context.styleStack === undefined ? path : resolveEffectivePath(path, context.styleStack);
   const irPath = context.irPath ?? 'path';
   const labelDefault = resolveEffectiveLabelDefault(context.styleStack ?? []);
-  const labelMasterColor = labelDefault.color ?? styled.color;
+  const labelMasterColor = labelDefault.color ?? styled.style?.color;
   const colorsResolved = resolvePathContextualColors(styled, context, irPath, labelMasterColor);
   const canAutomaticallyInterrupt = isBuiltinStrokePath(colorsResolved) && hasNoEffectivePathFill(colorsResolved);
   assertPathEndpointOverlapHost(colorsResolved, irPath);

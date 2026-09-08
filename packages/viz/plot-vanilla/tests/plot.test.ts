@@ -89,7 +89,7 @@ describe('plot', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('透传 theme 与 legend style', () => {
+  it('透传 Plot defaults 与 legend style', () => {
     const spec = plot({
       data: { reference: 'cities' },
       scales: [
@@ -97,7 +97,7 @@ describe('plot', () => {
         { type: 'linear', name: 'y' },
       ],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-      plotTheme: {
+      plotDefaults: {
         plotArea: { fill: '#ffffff' },
         palette: { categorical: ['#2563eb', '#dc2626'], sequential: 'magma' },
         legend: { swatchSize: 12, label: { textColor: '#475569' } },
@@ -120,7 +120,7 @@ describe('plot', () => {
       ],
     });
 
-    expect(spec.plotTheme).toMatchObject({
+    expect(spec.plotDefaults).toMatchObject({
       plotArea: { fill: '#ffffff' },
       palette: { categorical: ['#2563eb', '#dc2626'], sequential: 'magma' },
       legend: { swatchSize: 12, label: { textColor: '#475569' } },
@@ -135,18 +135,18 @@ describe('plot', () => {
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
-  it('透传 Plot plotThemeTokens', () => {
+  it('透传 Plot plotDefaults', () => {
     const spec = plot({
       data: { reference: 'sales' },
       scales: [],
       coordinate: { type: 'cartesian2D' },
-      plotThemeTokens: { 'plot.palette.series': ['#2563eb'] },
+      plotDefaults: { palette: { series: ['#2563eb'] } },
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
-    expect(spec.plotThemeTokens).toEqual({ 'plot.palette.series': ['#2563eb'] });
+    expect(spec.plotDefaults).toEqual({ palette: { series: ['#2563eb'] } });
   });
 
-  it('plain IRPlot 透传 Axis theme token rules', () => {
+  it('plain IRPlot 透传 Axis rules', () => {
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -158,24 +158,18 @@ describe('plot', () => {
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
       guides: [{ type: 'axis', dimension: 'x' }],
-      plotThemeTokenRules: [
+      plotRules: [
         {
           select: { dimension: 'x' },
-          tokens: {
-            'axis.grid.enabled': true,
-            'axis.grid.includeDomain': true,
-          },
+          axis: { grid: { includeDomain: true } },
         },
       ],
     });
 
-    expect(spec.plotThemeTokenRules).toEqual([
+    expect(spec.plotRules).toEqual([
       {
         select: { dimension: 'x' },
-        tokens: {
-          'axis.grid.enabled': true,
-          'axis.grid.includeDomain': true,
-        },
+        axis: { grid: { includeDomain: true } },
       },
     ]);
   });

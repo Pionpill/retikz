@@ -5,7 +5,7 @@ import type { IRGraphEntity } from '../../schemas';
 
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 
-type NodeMinimumSize = IRNode['minimumSize'];
+type NodeMinimumSize = NonNullable<IRNode['layout']>['minimumSize'];
 
 const sizeAxis = (size: NodeMinimumSize | undefined, axis: 'width' | 'height'): number | undefined =>
   typeof size === 'number' ? size : (size?.[axis] ?? size?.default);
@@ -59,16 +59,21 @@ export const lowerEntity = (entity: CanonicalEntity, appearance: EffectiveEntity
       },
     });
   }
-  const minimumSize = mergeMinimumSize(entity.roleDefinition.minimumSize, source.minimumSize);
+  const minimumSize = mergeMinimumSize(entity.roleDefinition.minimumSize, appearance.layout?.minimumSize);
   return {
     type: 'node',
-    ...appearance,
     ...definedNodeFields(source),
     position: source.position,
     shape: entity.roleDefinition.shape,
     ...(entity.roleDefinition.boundary === undefined ? {} : { boundary: entity.roleDefinition.boundary }),
-    padding: entity.roleDefinition.padding,
     ...(entity.roleDefinition.cornerRadius === undefined ? {} : { cornerRadius: entity.roleDefinition.cornerRadius }),
-    ...(minimumSize === undefined ? {} : { minimumSize }),
+    style: {
+      ...appearance.style,
+    },
+    layout: {
+      ...appearance.layout,
+      padding: entity.roleDefinition.padding,
+      ...(minimumSize === undefined ? {} : { minimumSize }),
+    },
   };
 };

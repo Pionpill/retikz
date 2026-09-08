@@ -37,12 +37,24 @@ const resolve = (source: IRNode, styleFrames: ReadonlyArray<StyleResolveFrame> =
 
 describe('resolveNode', () => {
   it('expands numeric and CSS-like box spacing while preserving explicit zero', () => {
-    expect(resolve(node({ padding: 3, margin: { y: 5, bottom: 0 } })).node).toMatchObject({
+    expect(
+      resolve(
+        node({
+          layout: { padding: 3, margin: { y: 5, bottom: 0 } },
+        }),
+      ).node,
+    ).toMatchObject({
       padding: { top: 3, right: 3, bottom: 3, left: 3 },
       margin: { top: 5, right: 0, bottom: 0, left: 0 },
     });
 
-    expect(resolve(node({ padding: { default: 2, x: 4, left: 1 } })).node.padding).toEqual({
+    expect(
+      resolve(
+        node({
+          layout: { padding: { default: 2, x: 4, left: 1 } },
+        }),
+      ).node.padding,
+    ).toEqual({
       top: 2,
       right: 4,
       bottom: 2,
@@ -51,12 +63,26 @@ describe('resolveNode', () => {
   });
 
   it('expands node size and scale shorthand while preserving explicit zero', () => {
-    expect(resolve(node({ minimumSize: 12, scale: 2 })).node).toMatchObject({
+    expect(
+      resolve(
+        node({
+          scale: 2,
+          layout: { minimumSize: 12 },
+        }),
+      ).node,
+    ).toMatchObject({
       minimumSize: { width: 12, height: 12 },
       scale: { x: 2, y: 2 },
     });
 
-    expect(resolve(node({ minimumSize: { default: 10, width: 0 }, scale: { default: 3, y: 1 } })).node).toMatchObject({
+    expect(
+      resolve(
+        node({
+          scale: { default: 3, y: 1 },
+          layout: { minimumSize: { default: 10, width: 0 } },
+        }),
+      ).node,
+    ).toMatchObject({
       minimumSize: { width: 0, height: 10 },
       scale: { x: 3, y: 1 },
     });
@@ -91,11 +117,13 @@ describe('resolveNode', () => {
     const frame = createStyleResolveFrame({
       type: 'scope',
       children: [],
-      color: 'red',
-      labelDefault: {
-        textColor: 'blue',
-        opacity: 0.5,
-        font: { family: 'default', size: 20, weight: 'bold' },
+      style: { color: 'red' },
+      defaults: {
+        label: {
+          textColor: 'blue',
+          opacity: 0.5,
+          font: { family: 'default', size: 20, weight: 'bold' },
+        },
       },
     });
     const resolved = resolve(node({ label: { text: 'x', font: { size: 10 } } }), [frame]).node;
@@ -171,11 +199,41 @@ describe('resolveNode', () => {
     const defaults = resolve(node()).node;
     expect(defaults.align).toBe('middle');
     expect(defaults.rotate).toBe(0);
-    expect(resolve(node({ dashed: true, dotted: true })).node.dashPattern).toEqual([4, 2]);
-    expect(resolve(node({ dashPattern: [0, 2], dashed: true, dotted: true })).node.dashPattern).toEqual([0, 2]);
-    expect(resolve(node({ dashed: true, dotted: true })).node).not.toHaveProperty('dashed');
-    expect(resolve(node({ dashed: true, dotted: true })).node).not.toHaveProperty('dotted');
-    expect(resolve(node({ shadow: { offsetX: 0, offsetY: 0, opacity: 0 } })).node.shadow).toEqual({
+    expect(
+      resolve(
+        node({
+          style: { dashed: true, dotted: true },
+        }),
+      ).node.dashPattern,
+    ).toEqual([4, 2]);
+    expect(
+      resolve(
+        node({
+          style: { dashPattern: [0, 2], dashed: true, dotted: true },
+        }),
+      ).node.dashPattern,
+    ).toEqual([0, 2]);
+    expect(
+      resolve(
+        node({
+          style: { dashed: true, dotted: true },
+        }),
+      ).node,
+    ).not.toHaveProperty('dashed');
+    expect(
+      resolve(
+        node({
+          style: { dashed: true, dotted: true },
+        }),
+      ).node,
+    ).not.toHaveProperty('dotted');
+    expect(
+      resolve(
+        node({
+          style: { shadow: { offsetX: 0, offsetY: 0, opacity: 0 } },
+        }),
+      ).node.shadow,
+    ).toEqual({
       offsetX: 0,
       offsetY: 0,
       opacity: 0,
@@ -196,18 +254,22 @@ describe('resolveNode', () => {
     const compact = node({
       id: 'equivalent',
       text: 'A',
-      padding: { default: 2, x: 4, left: 0 },
-      margin: { default: 3, y: 5, bottom: 0 },
-      minimumSize: { default: 10, width: 0 },
       scale: { default: 2, y: 1 },
+      layout: {
+        padding: { default: 2, x: 4, left: 0 },
+        margin: { default: 3, y: 5, bottom: 0 },
+        minimumSize: { default: 10, width: 0 },
+      },
     });
     const expanded = node({
       id: 'equivalent',
       text: 'A',
-      padding: { top: 2, right: 4, bottom: 2, left: 0 },
-      margin: { top: 5, right: 3, bottom: 0, left: 3 },
-      minimumSize: { width: 0, height: 10 },
       scale: { x: 2, y: 1 },
+      layout: {
+        padding: { top: 2, right: 4, bottom: 2, left: 0 },
+        margin: { top: 5, right: 3, bottom: 0, left: 3 },
+        minimumSize: { width: 0, height: 10 },
+      },
     });
 
     expect(compileToScene(sceneWith(compact)).scene).toEqual(compileToScene(sceneWith(expanded)).scene);
@@ -217,16 +279,14 @@ describe('resolveNode', () => {
     const compact = node({
       text: 'A',
       label: { text: 'L' },
-      dashed: true,
-      shadow: { offsetX: 0, offsetY: 0, opacity: 0 },
+      style: { dashed: true, shadow: { offsetX: 0, offsetY: 0, opacity: 0 } },
     });
     const expanded = node({
       text: ['A'],
       label: [{ text: 'L', position: 'top', placement: 'outside' }],
-      align: 'middle',
       rotate: 0,
-      dashPattern: [4, 2],
-      shadow: { offsetX: 0, offsetY: 0, opacity: 0, color: 'rgba(0,0,0,0.5)' },
+      style: { dashPattern: [4, 2], shadow: { offsetX: 0, offsetY: 0, opacity: 0, color: 'rgba(0,0,0,0.5)' } },
+      layout: { align: 'middle' },
     });
 
     expect(compileToScene(sceneWith(compact)).scene).toEqual(compileToScene(sceneWith(expanded)).scene);

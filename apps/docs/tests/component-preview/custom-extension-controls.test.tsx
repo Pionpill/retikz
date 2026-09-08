@@ -28,6 +28,18 @@ const renderWithValues = (
     </PreviewControlStateContext.Provider>,
   );
 
+/** 默认输出尺寸始终等于内容视框 */
+const expectNaturalSize = (markup: string): void => {
+  const root = markup.match(/^<svg\b[^>]*>/)?.[0] ?? '';
+  const bounds = root
+    .match(/viewBox="([^"]+)"/)?.[1]
+    .split(' ')
+    .map(Number);
+  expect(bounds).toBeDefined();
+  expect(Number(root.match(/\swidth="([^"]+)"/)?.[1])).toBe(bounds?.[2]);
+  expect(Number(root.match(/\sheight="([^"]+)"/)?.[1])).toBe(bounds?.[3]);
+};
+
 describe('custom extension demo controls', () => {
   it('切换自定义通道的字段绑定与常量绑定会改变输出', () => {
     const canonical = {
@@ -42,7 +54,7 @@ describe('custom extension demo controls', () => {
     expect(fieldMarkup).not.toBe(constantMarkup);
     expect(fieldMarkup).toContain('<linearGradient');
     expect(constantMarkup).not.toContain('<linearGradient');
-    expect(fieldMarkup).toMatch(/^<svg[^>]*width="440" height="220"/);
+    expectNaturalSize(fieldMarkup);
   });
 
   it('调整自定义坐标系的拱高会在固定相机下改变投影结果', () => {
@@ -53,7 +65,7 @@ describe('custom extension demo controls', () => {
     expect(flatMarkup).not.toBe(archedMarkup);
     expect(flatMarkup).toContain('viewBox="-30 -80 480 340"');
     expect(archedMarkup).toContain('viewBox="-30 -80 480 340"');
-    expect(flatMarkup).toMatch(/^<svg[^>]*width="480" height="250"/);
+    expectNaturalSize(flatMarkup);
   });
 
   it('调整自定义图元的最小尺寸会改变输出', () => {
@@ -64,7 +76,7 @@ describe('custom extension demo controls', () => {
     expect(minimumMarkup).not.toBe(maximumMarkup);
     expect(minimumMarkup).toContain('viewBox="-15 -15 450 290"');
     expect(maximumMarkup).toContain('viewBox="-15 -15 450 290"');
-    expect(minimumMarkup).toMatch(/^<svg[^>]*width="450" height="250"/);
+    expectNaturalSize(minimumMarkup);
   });
 
   it('调整自定义图元的填充颜色会改变输出', () => {
@@ -81,6 +93,6 @@ describe('custom extension demo controls', () => {
     const compactMarkup = renderWithValues(CustomScaleDemo, canonical, { 'custom-scale-exponent': 3 });
 
     expect(expandedMarkup).not.toBe(compactMarkup);
-    expect(expandedMarkup).toMatch(/^<svg[^>]*width="420" height="220"/);
+    expectNaturalSize(expandedMarkup);
   });
 });

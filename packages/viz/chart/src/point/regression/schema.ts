@@ -16,14 +16,9 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { SmoothTransformSchema } from '@retikz/plot';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
-import { createChartSourceSchema, createChartThemeSchema } from '../../_chart/schemas';
+import { createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
-import {
-  PointPositionDomainPaddingSchema,
-  PointPropertiesSchema,
-  PointRecipeThemeOverridesSchema,
-  PointRecipeThemeResolutionSchema,
-} from '../shared';
+import { PointPositionDomainPaddingSchema, PointPropertiesSchema, PointRecipeGuidesSchema } from '../shared';
 import { RegressionChartEncodingsSchema } from './encoding-schema';
 
 /** Regression 原始观测点的完整常量 properties */
@@ -99,25 +94,14 @@ export const RegressionChartRecipeSchema = strictObject({
   chartType: literal(ChartType.Regression).describe('Globally unique Regression recipe key'),
   encodings: RegressionChartEncodingsSchema,
   properties: RegressionChartPropertiesSchema.optional(),
+  guides: PointRecipeGuidesSchema.optional(),
   marks: array(RegressionChartMarkSchema).optional(),
 }).describe('Regression Chart recipe payload');
 
-/** Regression recipe 的稀疏主题 schema */
-export const RegressionChartThemeOverridesSchema = PointRecipeThemeOverridesSchema.describe(
-  'Regression Chart recipe theme overrides',
-);
-
-/** Regression recipe 的完整主题 schema */
-export const RegressionChartThemeResolutionSchema = PointRecipeThemeResolutionSchema.describe(
-  'Regression Chart recipe theme resolution',
-);
-
 /** Regression Chart 精确 Source schema */
-export const RegressionChartSchema = createChartSourceSchema(
-  ChartFamily.Point,
-  RegressionChartRecipeSchema,
-  createChartThemeSchema(RegressionChartThemeOverridesSchema).optional(),
-).describe('Regression Chart Source IR');
+export const RegressionChartSchema = createChartSourceSchema(ChartFamily.Point, RegressionChartRecipeSchema).describe(
+  'Regression Chart Source IR',
+);
 
 /** Regression Chart 精确 Source IR */
 export type IRRegressionChart = ZodInfer<typeof RegressionChartSchema>;

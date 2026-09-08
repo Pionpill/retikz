@@ -126,20 +126,22 @@ plotExtension: {
 
 `presentation` 只有四个可选槽位。解析时始终按 `title → subtitle → plot → note → source` 组成固定内容；JSON 属性出现顺序、Vanilla 对象构造顺序和 React marker 出现顺序都没有语义。需要可组合自由顺序时，使用后续独立能力，不在当前 Source 中猜测。
 
-Theme 入口可以是注册主题名（如 `'clean'`），也可以是带 `base` 和 token slices 的 authored 对象：
+Core Theme 入口选择 style 与 mode；Chart owner 与 Plot owner 的 defaults 保留在各自的 Source 分组中：
 
 ```ts
 theme: {
-  base: 'clean',
-  tokens: {
-    chart: { 'chart.gap': 12 },
-    plot: { /* 交给 Plot owner */ },
-    recipe: { axisGridEnabled: false },
-  },
+  style: 'clean',
+  mode: 'dark',
+},
+chartDefaults: {
+  layout: { gap: 12 },
+},
+plotExtension: {
+  plotDefaults: { palette: { series: ['#2563EB'] } },
 }
 ```
 
-Chart shell 的 cascade 是 mode fallback → Core style chain → authored named/base chain → inline `tokens.chart`；当前 recipe 的 cascade 是 recipe fallback → Core style chain → authored chain → inline `tokens.recipe` → `properties` → `encodings`。Chart 只解析 canvas、padding 和 presentation token，Plot slice 由 Plot owner 消费，recipe slice 由当前 chartType 的精确 schema 校验。完整 resolved map 不写回 Source。
+Chart shell 的 cascade 是 mode fallback → 注册的 Chart definitions → local `chartDefaults`。Chart 转发给 Plot 的 defaults 继续沿 Plot 级联解析，recipe 控制仍由精确的 `recipe` schema 负责。Chart 解析自己的 canvas、layout 与 presentation defaults；Plot 解析 `plotExtension.plotDefaults` 与 `plotExtension.plotRules`。完整 resolved 值不会写回 Source。
 
 ## 延伸阅读
 

@@ -123,5 +123,12 @@ export const previewControlContract = {
     dashed: false,
     opacity: 1,
   },
-  relatedApis: ['Node.font', 'Node.fill', 'Node.stroke', 'Node.strokeWidth', 'Node.dashed', 'Node.opacity'],
+  relatedApis: [
+    'Node.style.font',
+    'Node.style.fill',
+    'Node.style.stroke',
+    'Node.style.strokeWidth',
+    'Node.style.dashed',
+    'Node.style.opacity',
+  ],
 } satisfies PreviewControlContract;

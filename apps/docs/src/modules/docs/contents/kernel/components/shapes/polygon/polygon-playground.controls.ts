@@ -97,8 +97,8 @@ export const previewControlContract = {
     'RegularPolygon.sides',
     'RegularPolygon.radius',
     'RegularPolygon.rotate',
-    'Path.fill',
-    'Path.stroke',
-    'Path.strokeWidth',
+    'Path.style.fill',
+    'Path.style.stroke',
+    'Path.style.strokeWidth',
   ],
 } satisfies PreviewControlContract;

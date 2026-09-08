@@ -317,7 +317,12 @@ describe('smooth step：交互', () => {
     // 回归：smooth 不属 hasTo，prev.anchor 仍指 smooth 前的 move；line 终点须朝 smooth 末点 [100,0] 裁剪
     // T 右边界（x>0），而非朝 move 起点 [-100,0] 裁到左边界（x<0）。
     const ir: IRScene = scene([
-      { type: 'node', id: 'T', position: [0, 0], minimumSize: 20 },
+      {
+        type: 'node',
+        id: 'T',
+        position: [0, 0],
+        layout: { minimumSize: 20 },
+      },
       {
         type: 'path',
         children: [
@@ -338,7 +343,6 @@ describe('smooth step：JSON round-trip', () => {
   it('含 smooth step 的 IRPath → parse(JSON.parse(stringify)) 与原 parse 深等', () => {
     const ir = {
       type: 'path' as const,
-      stroke: 'steelblue',
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         {
@@ -353,6 +357,7 @@ describe('smooth step：JSON round-trip', () => {
           label: { text: 'flow' },
         },
       ],
+      style: { stroke: 'steelblue' },
     };
     const parsed = PathSchema.parse(ir);
     const roundTripped = PathSchema.parse(JSON.parse(JSON.stringify(ir)));

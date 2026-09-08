@@ -16,8 +16,8 @@ import { Circle, Ellipse } from '@retikz/react';
 ```
 
 ```tsx
-<Circle center={[0, 0]} radius={32} fill="none" />
-<Ellipse center={[0, 0]} radius={{ x: 48, y: 28 }} fill="none" />
+<Circle center={[0, 0]} radius={32} style={{ fill: "none" }} />
+<Ellipse center={[0, 0]} radius={{ x: 48, y: 28 }} style={{ fill: "none" }} />
 ```
 
 ### 例子
@@ -150,9 +150,9 @@ import { Node } from '@retikz/react';
   sources={[
     {
       label: 'circle preset 解析为 equal ellipse',
-      path: 'packages/kernel/core/src/compile/node/shape.ts',
-      startLine: 41,
-      endLine: 48,
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 36,
+      endLine: 107,
     },
     {
       label: 'ellipse 外接、anchor 与图元生成',

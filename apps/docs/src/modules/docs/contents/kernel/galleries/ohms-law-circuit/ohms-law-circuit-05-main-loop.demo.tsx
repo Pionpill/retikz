@@ -1,0 +1,57 @@
+import type { FC } from 'react';
+
+import { Draw, Layout, Scope } from '@retikz/react';
+
+import { circuitMeter, Meter } from './circuit-01-meters.meter';
+import { at, Battery, circuitShapes, Resistor, Rheostat, Switch } from './circuit-shapes';
+
+const INK = 'currentColor';
+const FONT = { family: 'Arial, sans-serif' } as const;
+
+const CircuitDemo: FC = () => (
+  <Layout shapes={[...circuitShapes, circuitMeter]}>
+    <Scope
+      defaults={{
+        path: {
+          style: { stroke: INK, strokeWidth: 3, lineCap: 'round', lineJoin: 'round' },
+        },
+        node: {
+          style: { font: FONT, stroke: 'none' },
+          layout: { padding: 0 },
+        },
+        label: { font: { ...FONT, size: 16 } },
+      }}
+    >
+      <Switch id="switch" position={[350, 200]} />
+      <Meter id="ammeter" position={[625, 200]} text="A" />
+      <Battery id="battery" position={[160, 320]} rotate={90} />
+      <Rheostat id="rheostat" position={[460, 440]} />
+
+      {/* 测量单元：一段电阻 + 正下方电压表，两端各用折线竖直相连，整组收进一个 Scope */}
+      <Scope>
+        <Resistor id="cell1-resistor" position={[900, 200]} />
+        <Meter id="cell1-voltmeter" position={[900, 320]} text="V" />
+        <Draw way={[at('cell1-resistor', 'left'), [809, 320], at('cell1-voltmeter', 'left')]} />
+        <Draw way={[at('cell1-resistor', 'right'), [991, 320], at('cell1-voltmeter', 'right')]} />
+      </Scope>
+
+      {/* 第二组不重写，靠 Scope 平移复制（左移 60、下移 240），只换 id 前缀 */}
+      <Scope transforms={[{ kind: 'translate', x: -60, y: 240 }]}>
+        <Resistor id="cell2-resistor" position={[900, 200]} />
+        <Meter id="cell2-voltmeter" position={[900, 320]} text="V" />
+        <Draw way={[at('cell2-resistor', 'left'), [809, 320], at('cell2-voltmeter', 'left')]} />
+        <Draw way={[at('cell2-resistor', 'right'), [991, 320], at('cell2-voltmeter', 'right')]} />
+      </Scope>
+
+      {/* 主回路：用折角把元件依次连成一个闭合回路 */}
+      <Draw way={[at('battery', 'left'), [160, 200], at('switch', 'left')]} />
+      <Draw way={[at('switch', 'right'), at('ammeter', 'left')]} />
+      <Draw way={[at('ammeter', 'right'), at('cell1-resistor', 'left')]} />
+      <Draw way={[at('cell1-resistor', 'right'), [1040, 200], [1040, 440], at('cell2-resistor', 'right')]} />
+      <Draw way={[at('cell2-resistor', 'left'), at('rheostat', 'right')]} />
+      <Draw way={[at('rheostat', 'left'), [160, 440], at('battery', 'right')]} />
+    </Scope>
+  </Layout>
+);
+
+export default CircuitDemo;

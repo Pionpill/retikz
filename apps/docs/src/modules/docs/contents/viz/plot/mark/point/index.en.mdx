@@ -121,12 +121,12 @@ PointMark creates a core Node at every position rather than a fixed circle. `sha
 
 `<PointMark>` declares a data-to-point mapping; it does not render DOM. Once collected into `IRPlot`, the mark registry dispatches it to point lowering, which reuses the active coordinate frame and core `Node`.
 
-| Stage    | Observable behavior                                                                                                             |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Place    | Position scales map roles, role-space adjustments run, then projection and screen-space initializers produce the final position |
-| Generate | Ordinary mode creates one core `Node` per row; setting `text` creates a text Node instead and applies `dx` / `dy`               |
-| Decorate | `size`, `shape`, color, and Node styles decorate the datum Node; `label` preserves the point and attaches `Node.label`          |
-| Layer    | Rows share `nodeDefault` without a color channel; field-driven colors form color groups before mark layer metadata is attached  |
+| Stage    | Observable behavior                                                                                                              |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Place    | Position scales map roles, role-space adjustments run, then projection and screen-space initializers produce the final position  |
+| Generate | Ordinary mode creates one core `Node` per row; setting `text` creates a text Node instead and applies `dx` / `dy`                |
+| Decorate | `size`, `shape`, color, and Node styles decorate the datum Node; `label` preserves the point and attaches `Node.label`           |
+| Layer    | Rows share `defaults.node` without a color channel; field-driven colors form color groups before mark layer metadata is attached |
 
 In ordinary glyph mode, a row whose field-bound size is missing, `null`, `NaN`, or infinite produces no Point glyph. The size field descriptor, scale identity, and optional legend are dataset-level information and remain available. A negative size raises an error instead of being skipped or clamped. Setting `text` keeps the existing text-Node path and is not filtered by this glyph-only size gate.
 

@@ -4,6 +4,8 @@
 - 决策日期：2026-08-22
 - 关联：[Graph alpha.1 roadmap](./roadmap.md) · [Entity contract](./07-entity-data-geometry.md) · [Relation contract](./08-relation-data-geometry.md)
 
+> Theme 修订：本文的旧作者输入、生成片段和 Theme 切层语义由 [Graph Defaults、Rules 与 Theme 来源](../alpha.2/07-theme-source-fragments.md) 取代；其余能力与结构边界继续成立。
+
 ## 背景与目标
 
 Entity 与 Relation 可以独立下沉为 Core Node 与 Path，但旧 Graph Source 把它们限制为 Graph root 的直接成员，并由 Graph 建立 Entity identity 索引。这让 Graph 变成成员数据库，也阻止 Relation 连接普通 Core Node 或其它已经通过 Core namespace 发布引用几何的内容

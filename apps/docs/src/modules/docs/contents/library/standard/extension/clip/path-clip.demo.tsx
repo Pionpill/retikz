@@ -10,15 +10,12 @@ import { pathClipControls, previewControlContract } from './path-clip.controls';
 export const previewControls = pathClipControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout width={360} height={220} viewBox={{ x: -125, y: -100, width: 250, height: 200 }} clips={[PathClipDefinition]}>
+  <Layout viewBox={{ x: -125, y: -100, width: 250, height: 200 }} clips={[PathClipDefinition]}>
     <Node
       position={[0, 0]}
       shape="rectangle"
-      minimumSize={{ width: 220, height: 170 }}
-      fill="none"
-      stroke="lightgray"
-      strokeWidth={1}
-      dashPattern={[6, 4]}
+      style={{ fill: 'none', stroke: 'lightgray', strokeWidth: 1, dashPattern: [6, 4] }}
+      layout={{ minimumSize: { width: 220, height: 170 } }}
     />
     <Scope
       clip={{
@@ -43,9 +40,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Node
         position={[0, 0]}
         shape="rectangle"
-        minimumSize={{ width: 220, height: 170 }}
-        stroke="none"
-        fill={{ kind: 'pattern', shape: 'grid', color: 'darkorange', size: 14 }}
+        style={{ stroke: 'none', fill: { kind: 'pattern', shape: 'grid', color: 'darkorange', size: 14 } }}
+        layout={{ minimumSize: { width: 220, height: 170 } }}
       />
     </Scope>
   </Layout>

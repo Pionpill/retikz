@@ -236,7 +236,14 @@ describe('Graph renderer integration', () => {
                 {
                   type: 'blockRow',
                   id: 'user.name',
-                  children: [{ type: 'node', position: [0, 0], text: 'name', padding: 0, margin: 0 }],
+                  children: [
+                    {
+                      type: 'node',
+                      position: [0, 0],
+                      text: 'name',
+                      layout: { padding: 0, margin: 0 },
+                    },
+                  ],
                 },
               ],
             },

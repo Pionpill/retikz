@@ -1,5 +1,4 @@
-import { JsonObjectSchema } from '@retikz/core';
-import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import { JsonValueSchema, NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { array, literal, looseObject, number, strictObject, union } from 'zod';
 
 import { BUILTIN_POSITION_ADJUSTMENT_KINDS, PlotPositionAdjustment } from './constants';
@@ -42,20 +41,15 @@ export const JitterPositionAdjustmentSchema = strictObject({
 }).describe('Role-space deterministic jitter applied after position scale mapping and before coordinate projection');
 
 /** 自定义 JSON-safe position adjustment operation */
-export const CustomPositionAdjustmentSchema = looseObject({
+const CustomPositionAdjustmentObjectSchema = looseObject({
   kind: NonBlankStringSchema.refine(kind => !BUILTIN_POSITION_ADJUSTMENT_KINDS.has(kind), {
     message: 'custom position adjustment kind must not collide with a built-in kind',
   }).describe('Custom adjustment discriminator resolved through LowerPlotsOptions.positionAdjustmentDefinitions'),
-})
-  .superRefine((operation, ctx) => {
-    if (!JsonObjectSchema.safeParse(operation).success) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'custom position adjustment must be a JSON-serializable object',
-      });
-    }
-  })
-  .describe('Custom JSON-safe position adjustment operation validated by a runtime definition');
+});
+
+export const CustomPositionAdjustmentSchema = CustomPositionAdjustmentObjectSchema.catchall(JsonValueSchema).describe(
+  'Custom JSON-safe position adjustment operation validated by a runtime definition',
+);
 
 /** 内置与自定义 position adjustment operation */
 export const PositionAdjustmentOperationSchema = union([

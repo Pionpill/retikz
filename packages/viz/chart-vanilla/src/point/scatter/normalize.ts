@@ -8,19 +8,19 @@ import { chartSourceOf, normalizePointPartitionEncodings } from '../shared';
 
 /** 将 Scatter Chart Vanilla Input 组装为精确 Source IR */
 export const normalizeScatterChart = (input: InputScatterChart): IRScatterChart => {
-  const { title, subtitle, note, source, encodings, properties, marks, ...root } = input;
+  const { title, subtitle, note, source, encodings, properties, guides, marks, ...root } = input;
   return ScatterChartSchema.parse(
     chartSourceOf({ title, subtitle, note, source }, root, {
       type: 'point',
       data: root.data,
       ...(root.id === undefined ? {} : { id: root.id }),
-      ...(root.theme === undefined ? {} : { theme: root.theme }),
       ...(root.layout === undefined ? {} : { layout: root.layout }),
       ...(root.plotExtension === undefined ? {} : { plotExtension: root.plotExtension }),
       recipe: {
         chartType: 'scatter',
         encodings: normalizePointPartitionEncodings(encodings),
         ...(properties === undefined ? {} : { properties }),
+        ...(guides === undefined ? {} : { guides }),
         ...(marks === undefined ? {} : { marks }),
       },
     }),

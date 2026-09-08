@@ -30,11 +30,12 @@ const nodeFills = (layer: IRScope): Array<string | undefined> => {
       const node = child as {
         type?: string;
         children?: ReadonlyArray<unknown>;
-        nodeDefault?: { fill?: string };
-        fill?: string;
+        defaults?: { node?: { style?: { fill?: string } } };
+        style?: { fill?: string };
       };
-      if (node.type === 'node') out.push(node.fill ?? inheritedFill);
-      else if (node.type === 'scope' && node.children) walk(node.children, node.nodeDefault?.fill ?? inheritedFill);
+      if (node.type === 'node') out.push(node.style?.fill ?? inheritedFill);
+      else if (node.type === 'scope' && node.children)
+        walk(node.children, node.defaults?.node?.style?.fill ?? inheritedFill);
     }
   };
   walk(layer.children, undefined);

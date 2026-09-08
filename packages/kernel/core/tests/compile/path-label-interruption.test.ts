@@ -24,12 +24,12 @@ const horizontalHostLabelPath = (label: IRPath['label']): IRScene => ({
     {
       type: 'path',
       id: 'edge',
-      stroke: STROKE,
       label,
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },
       ],
+      style: { stroke: STROKE },
     },
   ],
 });
@@ -111,12 +111,12 @@ describe('Stroke Path label interruption', () => {
           id: 'logical-edge',
           meta: { source: 'interruption' },
           animations: [animation],
-          stroke: STROKE,
           label: { text: 'owner', sloped: true },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
           ],
+          style: { stroke: STROKE },
         },
       ],
     });
@@ -151,11 +151,11 @@ describe('Stroke Path label interruption', () => {
       children: [
         {
           type: 'path',
-          stroke: STROKE,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0], label: { text: 'step', sloped: true } },
           ],
+          style: { stroke: STROKE },
         },
       ],
     });
@@ -190,12 +190,12 @@ describe('Stroke Path label interruption', () => {
       children: [
         {
           type: 'path',
-          stroke: STROKE,
           label: { text: 'wide label', sloped: true },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
+          style: { stroke: STROKE },
         },
       ],
     });
@@ -213,11 +213,11 @@ describe('Stroke Path label interruption', () => {
         children: [
           {
             type: 'path',
-            stroke: STROKE,
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'curve', control: [50, -80], to: [100, 0], label: { text: 'q', sloped: true } },
             ],
+            style: { stroke: STROKE },
           },
         ],
       } satisfies IRScene,
@@ -231,7 +231,6 @@ describe('Stroke Path label interruption', () => {
         children: [
           {
             type: 'path',
-            stroke: STROKE,
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               {
@@ -243,6 +242,7 @@ describe('Stroke Path label interruption', () => {
                 label: { text: 'c', sloped: true },
               },
             ],
+            style: { stroke: STROKE },
           },
         ],
       } satisfies IRScene,
@@ -256,7 +256,6 @@ describe('Stroke Path label interruption', () => {
         children: [
           {
             type: 'path',
-            stroke: STROKE,
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               {
@@ -268,6 +267,7 @@ describe('Stroke Path label interruption', () => {
                 label: { text: 'a', sloped: true },
               },
             ],
+            style: { stroke: STROKE },
           },
         ],
       } satisfies IRScene,
@@ -281,7 +281,6 @@ describe('Stroke Path label interruption', () => {
         children: [
           {
             type: 'path',
-            stroke: STROKE,
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               {
@@ -291,6 +290,7 @@ describe('Stroke Path label interruption', () => {
                 label: { text: 'e', sloped: true },
               },
             ],
+            style: { stroke: STROKE },
           },
         ],
       } satisfies IRScene,
@@ -309,7 +309,6 @@ describe('Stroke Path label interruption', () => {
       children: [
         {
           type: 'path',
-          stroke: STROKE,
           label: { text: 'close', position: 0.9, sloped: true },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
@@ -317,6 +316,7 @@ describe('Stroke Path label interruption', () => {
             { type: 'step', kind: 'line', to: [100, 100] },
             { type: 'step', kind: 'cycle' },
           ],
+          style: { stroke: STROKE },
         },
       ],
     });
@@ -333,13 +333,13 @@ describe('Stroke Path label interruption', () => {
       children: [
         {
           type: 'path',
-          stroke: STROKE,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0], label: { text: 'first', position: 0.25, sloped: true } },
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0], label: { text: 'second', position: 0.75, sloped: true } },
           ],
+          style: { stroke: STROKE },
         },
       ],
     });
@@ -369,7 +369,6 @@ describe('Stroke Path label interruption', () => {
         children: [
           {
             type: 'path',
-            stroke: STROKE,
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               {
@@ -381,6 +380,7 @@ describe('Stroke Path label interruption', () => {
                 label: { text: 'generator', position: 0.5, sloped: true },
               },
             ],
+            style: { stroke: STROKE },
           },
         ],
       },

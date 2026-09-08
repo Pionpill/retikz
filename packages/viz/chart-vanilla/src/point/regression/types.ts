@@ -7,4 +7,4 @@ export type InputRegressionChart = InputTypedChart<IRRegressionChart>;
 
 /** RegressionChart factory 的完整输入 */
 export type CreateRegressionChartInput = TypedChartCommonInput<IRRegressionChart> &
-  Pick<InputRegressionChart, 'encodings' | 'properties' | 'marks'>;
+  Pick<InputRegressionChart, 'encodings' | 'properties' | 'guides' | 'marks'>;

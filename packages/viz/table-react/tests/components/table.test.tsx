@@ -32,16 +32,13 @@ const cleanCoreTheme = defineThemeStyle({
 const cleanTableTheme = defineTableThemeStyle({
   name: 'clean',
   resolve: () => ({
-    'cell.background.fill': null,
-    'cell.content.color': null,
-    'cell.content.font.family': null,
-    'cell.content.font.weight': null,
-    'columnHeader.background.fill': null,
-    'columnHeader.content.color': null,
-    'columnHeader.content.font.family': null,
-    'columnHeader.content.font.weight': null,
-    'table.border.horizontal': null,
-    'columnHeader.border.bottom': null,
+    defaults: {
+      appearanceDefaults: {
+        body: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
+        columnHeader: { background: { fill: 'none' }, content: { style: { color: 'currentColor' } } },
+      },
+      layout: { borders: { horizontal: { kind: 'none' } } },
+    },
   }),
 });
 
@@ -114,21 +111,21 @@ describe('Table React components', () => {
     );
   });
 
-  it('keeps Table tokens, encodings, and custom visual scales equal in standalone and embedded runtimes', () => {
+  it('keeps Table defaults, encodings, and custom visual scales equal in standalone and embedded runtimes', () => {
     const visualScale = defineCellVisualScale({
       name: 'react-palette',
       optionsSchema: strictObject({}),
       resolve: (_options, _values, context) => ({
-        of: () => context.categoricalColors[0],
+        of: () => context.categoricalColors?.[0] ?? '#000000',
         legendForm: 'swatch',
         domain: [1],
-        range: [context.categoricalColors[0]],
+        range: [context.categoricalColors?.[0] ?? '#000000'],
       }),
     });
     const spec = createManualTableIR({
       id: 'encoded',
       rows: [[1]],
-      tableThemeTokens: { 'data.categorical': ['#123456'] },
+      visualDefaults: { categorical: ['#123456'] },
       encodings: [
         {
           id: 'palette',

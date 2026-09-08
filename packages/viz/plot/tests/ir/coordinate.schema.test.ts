@@ -4,6 +4,7 @@ import {
   BUILTIN_COORDINATE_TYPES,
   CoordinateOperationSchema,
   CoordinateSchema,
+  CustomCoordinateSchema,
   PlotCoordinate,
   PolarInterpolation,
 } from '../../src/schemas/coordinate';
@@ -260,11 +261,19 @@ describe('CoordinateOperationSchema coordinate registry 占位（contract）', (
   });
 
   it('[adversarial] 自定义 coordinate operation 拒绝非 JSON 配置值', () => {
-    expect(() => CoordinateOperationSchema.parse({ type: 'arch', project: () => [0, 0] })).toThrow(/JSON-serializable/);
-    expect(() => CoordinateOperationSchema.parse({ type: 'arch', extra: undefined })).toThrow(/JSON-serializable/);
-    expect(() => CoordinateOperationSchema.parse({ type: 'arch', archHeight: Number.NaN })).toThrow(
-      /JSON-serializable/,
-    );
-    expect(() => CoordinateOperationSchema.parse({ type: 'arch', archHeight: Infinity })).toThrow(/JSON-serializable/);
+    expect(CustomCoordinateSchema.safeParse({ type: 'arch', project: () => [0, 0] }).success).toBe(false);
+    expect(CustomCoordinateSchema.safeParse({ type: 'arch', extra: undefined }).success).toBe(false);
+    expect(CustomCoordinateSchema.safeParse({ type: 'arch', archHeight: Number.NaN }).success).toBe(false);
+    expect(CustomCoordinateSchema.safeParse({ type: 'arch', archHeight: Infinity }).success).toBe(false);
+  });
+
+  it('把自定义 coordinate 的非法 JSON 叶子定位到实际字段', () => {
+    const result = CustomCoordinateSchema.safeParse({
+      type: 'arch',
+      payload: { nested: [0, { bad: () => [0, 0] }] },
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['payload']);
   });
 });

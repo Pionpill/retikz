@@ -54,7 +54,12 @@ describe('lowerAxes', () => {
 
     expect(lowered).toHaveLength(26);
     expect(lowered.slice(0, 10)).toEqual(
-      expect.arrayContaining([expect.objectContaining({ type: 'path', stroke: '#e2e8f0' })]),
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'path',
+          style: { stroke: '#e2e8f0' },
+        }),
+      ]),
     );
 
     const xAxis = lowered[10] as IRPath;
@@ -87,16 +92,50 @@ describe('lowerAxes', () => {
         type: 'node',
         position: [80, 87],
         text: '−1',
-        textColor: '#0f172a',
-        strokeWidth: 0,
-        padding: 0,
         zIndex: 1,
+        style: { textColor: '#0f172a', strokeWidth: 0 },
+        layout: { padding: 0 },
       },
-      { type: 'node', position: [140, 87], text: '2', textColor: '#0f172a', strokeWidth: 0, padding: 0, zIndex: 1 },
-      { type: 'node', position: [93, 60], text: '1', strokeWidth: 0, padding: 0, zIndex: 1 },
-      { type: 'node', position: [168, 80], text: 'x', strokeWidth: 0, padding: 0, zIndex: 1 },
-      { type: 'node', position: [100, 110], text: 'y', strokeWidth: 0, padding: 0, zIndex: 1 },
-      { type: 'node', position: [90, 90], text: '0', strokeWidth: 0, padding: 0, zIndex: 1 },
+      {
+        type: 'node',
+        position: [140, 87],
+        text: '2',
+        zIndex: 1,
+        style: { textColor: '#0f172a', strokeWidth: 0 },
+        layout: { padding: 0 },
+      },
+      {
+        type: 'node',
+        position: [93, 60],
+        text: '1',
+        zIndex: 1,
+        style: { strokeWidth: 0 },
+        layout: { padding: 0 },
+      },
+      {
+        type: 'node',
+        position: [168, 80],
+        text: 'x',
+        zIndex: 1,
+        style: { strokeWidth: 0 },
+        layout: { padding: 0 },
+      },
+      {
+        type: 'node',
+        position: [100, 110],
+        text: 'y',
+        zIndex: 1,
+        style: { strokeWidth: 0 },
+        layout: { padding: 0 },
+      },
+      {
+        type: 'node',
+        position: [90, 90],
+        text: '0',
+        zIndex: 1,
+        style: { strokeWidth: 0 },
+        layout: { padding: 0 },
+      },
     ] satisfies Array<IRNode>);
   });
 
@@ -215,8 +254,8 @@ describe('lowerAxes', () => {
         [120, 65],
       ],
     ]);
-    expect(lowered[0].stroke).toBe('#ef4444');
-    expect(lowered[4].stroke).toBe('#3b82f6');
+    expect(lowered[0].style?.stroke).toBe('#ef4444');
+    expect(lowered[4].style?.stroke).toBe('#3b82f6');
   });
 
   it('supports a single number line and keeps ticks when its line is hidden', () => {
@@ -247,7 +286,7 @@ describe('lowerAxes', () => {
 
     expect(numberLine.filter(child => child.type === 'path')).toHaveLength(4);
     expect(numberLine.filter(child => child.type === 'node')).toEqual([
-      { type: 'node', position: [88, 40], text: 't', strokeWidth: 0, padding: 0, zIndex: 1 },
+      { type: 'node', position: [88, 40], text: 't', style: { strokeWidth: 0 }, layout: { padding: 0 }, zIndex: 1 },
     ]);
     expect(hiddenLine).toHaveLength(2);
     expect((hiddenLine[0] as IRPath).marks).toBeUndefined();
@@ -291,8 +330,22 @@ describe('lowerAxes', () => {
       [50, 30],
     ]);
     expect(lowered.slice(2)).toEqual([
-      { type: 'node', position: [60, 44], text: 'x', strokeWidth: 0, padding: 0, zIndex: 1 },
-      { type: 'node', position: [40, 30], text: 'y', strokeWidth: 0, padding: 0, zIndex: 1 },
+      {
+        type: 'node',
+        position: [60, 44],
+        text: 'x',
+        zIndex: 1,
+        style: { strokeWidth: 0 },
+        layout: { padding: 0 },
+      },
+      {
+        type: 'node',
+        position: [40, 30],
+        text: 'y',
+        zIndex: 1,
+        style: { strokeWidth: 0 },
+        layout: { padding: 0 },
+      },
     ] satisfies Array<IRNode>);
   });
 
@@ -359,7 +412,14 @@ describe('lowerAxes', () => {
     );
 
     expect(lowered).toEqual([
-      { type: 'node', position: [40, 50], text: '0', strokeWidth: 0, padding: 0, zIndex: 1 },
+      {
+        type: 'node',
+        position: [40, 50],
+        text: '0',
+        zIndex: 1,
+        style: { strokeWidth: 0 },
+        layout: { padding: 0 },
+      },
     ] satisfies Array<IRNode>);
   });
 

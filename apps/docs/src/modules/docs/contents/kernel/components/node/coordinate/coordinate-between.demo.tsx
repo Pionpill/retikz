@@ -14,26 +14,33 @@ export const previewControls = coordinateBetweenControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout
-      width={coordinateBetweenFrame.width}
-      height={coordinateBetweenFrame.height}
-      viewBox={coordinateBetweenFrame.viewBox}
-    >
-      <Node id="A" position={[-140, 0]} shape="circle" minimumSize={32} fill="dodgerblue" textColor="white">
+    <Layout viewBox={coordinateBetweenFrame.viewBox}>
+      <Node
+        id="A"
+        position={[-140, 0]}
+        shape="circle"
+        style={{ fill: 'dodgerblue', textColor: 'white' }}
+        layout={{ minimumSize: 32 }}
+      >
         a
       </Node>
-      <Node id="B" position={[140, 0]} shape="circle" minimumSize={32} fill="green" textColor="white">
+      <Node
+        id="B"
+        position={[140, 0]}
+        shape="circle"
+        style={{ fill: 'green', textColor: 'white' }}
+        layout={{ minimumSize: 32 }}
+      >
         b
       </Node>
-      <Draw way={['A', 'B']} stroke="lightgray" zIndex={-1} />
+      <Draw way={['A', 'B']} zIndex={-1} style={{ stroke: 'lightgray' }} />
       <Coordinate id="Q" position={{ between: [{ id: 'A' }, { id: 'B' }], fraction: values.fraction }} />
       <Node
         id="marker"
         position={{ of: 'Q', offset: [0, 0] }}
         shape="circle"
-        minimumSize={24}
-        fill="darkorange"
-        textColor="white"
+        style={{ fill: 'darkorange', textColor: 'white' }}
+        layout={{ minimumSize: 24 }}
       >
         q
       </Node>

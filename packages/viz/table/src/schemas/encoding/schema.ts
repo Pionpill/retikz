@@ -1,5 +1,4 @@
-import { JsonObjectSchema } from '@retikz/core';
-import { createOpenStringSchema, NonBlankStringSchema } from '@retikz/foundation';
+import { createOpenStringSchema, JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { enum as zodEnum, literal, strictObject, string, union } from 'zod';
 
 import { TableCellSelectorSchema } from '../rule';

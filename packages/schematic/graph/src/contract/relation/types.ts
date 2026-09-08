@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { output as ZodOutput, ZodType } from 'zod';
 
 import type {
@@ -38,7 +38,7 @@ export type RelationKindDefinition = Readonly<{
 }>;
 
 /** Relation predicate 作者侧的类型安全定义 */
-export type RelationPredicateDefinitionInput<TSchema extends ZodType<IRJsonObject>> = Readonly<{
+export type RelationPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> = Readonly<{
   /** 全局唯一的 predicate definition name */
   name: string;
   /** predicate 所属的 Relation role */
@@ -54,4 +54,4 @@ export type RelationPredicateDefinitionInput<TSchema extends ZodType<IRJsonObjec
 }>;
 
 /** Relation predicate registry 保存的参数擦除定义 */
-export type RelationPredicateDefinition = RelationPredicateDefinitionInput<ZodType<IRJsonObject>>;
+export type RelationPredicateDefinition = RelationPredicateDefinitionInput<ZodType<JsonObject>>;

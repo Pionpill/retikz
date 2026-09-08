@@ -1,17 +1,10 @@
+import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets, Position } from '@retikz/math';
 
 import type { ConnectionEnvelopeKind, ShapeDefinition, TextLine } from '../../contract';
 import type { BoundaryReferenceResolution, CanonicalNode, CanonicalNodeLabel } from '../../resolve';
 import type { PaintResolutionInput } from '../../resolve/resource';
-import type {
-  BlendModeValue,
-  IRAnimationTrack,
-  IRBoundary,
-  IRFont,
-  IRJsonObject,
-  IRPaint,
-  ResolvedDropShadow,
-} from '../../schemas';
+import type { BlendModeValue, IRAnimationTrack, IRBoundary, IRFont, IRPaint, ResolvedDropShadow } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { LaidLine, LowerTex, TextFont, TextMeasurer } from '../text';
 import type { CompileWarningCodeValue } from '../warning';
@@ -24,9 +17,9 @@ export type BoundaryGeometryDefinition = {
   /** provider 名称 */
   name: string;
   /** 按方向求连接点 */
-  boundaryPoint: (rect: Rect, toward: Position, params: IRJsonObject) => Position;
+  boundaryPoint: (rect: Rect, toward: Position, params: JsonObject) => Position;
   /** 求命名 anchor */
-  anchor?: (rect: Rect, name: string, params: IRJsonObject) => Position | undefined;
+  anchor?: (rect: Rect, name: string, params: JsonObject) => Position | undefined;
 };
 
 /** 已按视觉 rect 解析出的连接面几何 */
@@ -36,7 +29,7 @@ export type BoundaryGeometryResolution = {
   /** provider 使用的连接面 rect */
   rect: Rect;
   /** 已校验参数 */
-  params: IRJsonObject;
+  params: JsonObject;
 };
 
 /** 连接面几何解析所需的布局上下文 */
@@ -46,7 +39,7 @@ export type BoundaryGeometryResolveContext = {
   /** 节点视觉 shape rect */
   visualRect: Rect;
   /** 节点视觉 shape 参数 */
-  visualParams: IRJsonObject;
+  visualParams: JsonObject;
   /** 当前 node 的 IR 路径 */
   irPath?: string;
   /** shape-aware envelope 缓存 */
@@ -85,7 +78,7 @@ export type NodeLayout = {
   /** 已解析的 shape 定义 */
   shapeDef: ShapeDefinition;
   /** 已校验的 per-instance shape 参数 */
-  shapeParams?: IRJsonObject;
+  shapeParams?: JsonObject;
   /** 节点视觉边界框 */
   rect: Rect;
   /** 文本内容块中心；非对称 padding 时与视觉 rect 中心不同 */
@@ -188,7 +181,7 @@ export type NodeLayout = {
    */
   boundary?: IRBoundary;
   /** provenance 元数据 */
-  meta?: IRJsonObject;
+  meta?: JsonObject;
   /** 时间轴动画 tracks */
   animations?: Array<IRAnimationTrack>;
   /** 已绑定的默认连接面 provider 与参数 */

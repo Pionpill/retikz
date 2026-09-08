@@ -48,14 +48,11 @@ describe('LogicFigureFrame', () => {
       padding: 10,
       title: {
         text: 'Core',
-        textColor: 'gray',
-        font: { size: 12, weight: 'normal' },
+        style: { textColor: 'gray', font: { size: 12, weight: 'normal' } },
       },
       description: {
         text: 'IR → Scene',
-        textColor: 'gray',
-        opacity: 0.7,
-        font: { size: 11 },
+        style: { textColor: 'gray', opacity: 0.7, font: { size: 11 } },
       },
     });
   });
@@ -75,10 +72,10 @@ describe('LogicFigureFrame', () => {
         }}
         padding={{ x: 16, y: 8 }}
       >
-        <LogicFigureFrameTitle textColor="currentColor" font={{ weight: 700 }}>
+        <LogicFigureFrameTitle style={{ textColor: 'currentColor', font: { weight: 700 } }}>
           Custom
         </LogicFigureFrameTitle>
-        <LogicFigureFrameDescription opacity={0.9} font={{ family: 'serif' }}>
+        <LogicFigureFrameDescription style={{ opacity: 0.9, font: { family: 'serif' } }}>
           Description
         </LogicFigureFrameDescription>
         <Node position={[0, 0]}>Body</Node>
@@ -96,12 +93,10 @@ describe('LogicFigureFrame', () => {
       },
       padding: { x: 16, y: 8 },
       title: {
-        textColor: 'currentColor',
-        font: { size: 12, weight: 700 },
+        style: { textColor: 'currentColor', font: { size: 12, weight: 700 } },
       },
       description: {
-        opacity: 0.9,
-        font: { family: 'serif', size: 11 },
+        style: { opacity: 0.9, font: { family: 'serif', size: 11 } },
       },
     });
     expect(frame.border.style.dashPattern).toBeUndefined();

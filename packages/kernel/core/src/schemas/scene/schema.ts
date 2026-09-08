@@ -39,7 +39,7 @@ export const SceneSchema = strictObject({
   version: literal(1).describe('IR major version number; bump only on breaking schema changes'),
   theme: ThemeSchema.optional().describe('Sparse root Theme inherited by every Scene child.'),
   children: array(ChildSchema).describe('Top-level children of the scene; nodes register ids that paths can reference'),
-  viewBox: ViewBoxSchema.optional().describe('Explicit viewBox. Omitted fields use automatic bounds plus padding.'),
+  viewBox: ViewBoxSchema.optional().describe('Explicit viewBox. Omitting viewBox uses automatic bounds plus padding.'),
   animations: array(AnimationTrackSchema)
     .optional()
     .describe(

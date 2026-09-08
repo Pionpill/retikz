@@ -1,4 +1,4 @@
-import type { IRJsonObject, JsonValue } from '@retikz/core';
+import type { JsonObject, JsonValue } from '@retikz/foundation';
 
 import { assertNonEmptyString } from '@retikz/foundation';
 
@@ -25,8 +25,8 @@ export const sealInspectorDefinition = (definition: AnyInspectorDefinition): Any
 /** 校验并冻结一个独立 Inspector Definition */
 export const defineInspector = <
   TSubject extends JsonValue,
-  TOptionsInput extends IRJsonObject,
-  TResolvedOptions extends IRJsonObject,
+  TOptionsInput extends JsonObject,
+  TResolvedOptions extends JsonObject,
 >(
   definition: InspectorDefinition<TSubject, TOptionsInput, TResolvedOptions>,
 ): InspectorDefinition<TSubject, TOptionsInput, TResolvedOptions> => {

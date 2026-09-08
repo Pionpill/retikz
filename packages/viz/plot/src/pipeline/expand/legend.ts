@@ -1,6 +1,7 @@
 import type { IRScope } from '@retikz/core';
-import type { IRShapeValue, JsonValue } from '@retikz/core';
+import type { IRShapeValue } from '@retikz/core';
 import type { DataFieldTypeValue } from '@retikz/data';
+import type { JsonValue } from '@retikz/foundation';
 
 import { categoricalColorAt } from '@retikz/core';
 import { DataFieldType } from '@retikz/data';

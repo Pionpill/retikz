@@ -5,7 +5,7 @@ import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
 
 /** Frame 标题、说明与 Core Node body 的最小中文示例 */
 const Demo: FC = () => (
-  <Layout width={360} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Frame id="contract">
       <FrameTitle>扩展契约</FrameTitle>
       <FrameDescription>内置能力与自定义能力共用 Definition</FrameDescription>

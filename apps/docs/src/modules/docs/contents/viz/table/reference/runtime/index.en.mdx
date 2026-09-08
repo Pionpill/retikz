@@ -9,7 +9,7 @@ IRTable stores only JSON-safe structure. Datasets, Definitions, Core compile opt
 
 ## How entries converge
 
-React standalone, Vanilla SSR, direct `compileTable()`, and embedded Tables use different authoring and host surfaces, but they do not duplicate Table normalization, Theme-token cascade, presentation, or layout algorithms.
+React standalone, Vanilla SSR, direct `compileTable()`, and embedded Tables use different authoring and host surfaces, but they do not duplicate Table normalization, defaults cascade, presentation, or layout algorithms.
 
 <div className="hidden sm:block">
   <ComponentPreview files="table-runtime-entry" hideCode size="sm" previewClassName="p-3" />
@@ -33,7 +33,7 @@ Standalone `theme` writes the root Core Scene Theme. An embedded Table does not 
   <ComponentPreview files="table-runtime-transaction" hideCode size="xxxl" previewClassName="p-3" />
 </div>
 
-1. **Canonical model**: Table schema validation runs first and a Structure definition normalizes one semantic model. Each Cell starts from the Table owner-local default preset selected by the host `theme.mode`; an explicit `theme.style` then applies the injected sparse Table definition with the same name. Shared categorical colors, local `tableThemeTokens`, Cell configuration, encodings, and ordered rules complete the final plan. Value Cells then run the winning formatter/Presentation; content Cells bypass both and apply their resolved content style.
+1. **Canonical model**: Table schema validation runs first and a Structure definition normalizes one semantic model. Each Cell starts from the Table owner-local default preset selected by the host `theme.mode`; an explicit `theme.style` then applies the injected sparse Table defaults with the same name. Source `tableDefaults`, `appearanceDefaults`, `visualDefaults`, explicit `layout.borders`, Cell configuration, encodings, and ordered rules complete the final plan. Value Cells then run the winning formatter/Presentation; content Cells bypass both and apply their resolved content style.
 2. **Natural proposal probes**: every Cell calls `layoutChild` with `NaturalLayoutProposal` to obtain allocation and visual bounds. These probes measure content but do not commit output.
 3. **Columns and wrap**: natural width, spans, gaps, track configuration, and the parent x-axis `exact.value` or finite `range.max` feed the column solver. Only wrapping Cells issue another `x: range(0, contentWidth)` probe.
 4. **Rows and placement**: final probe heights feed the row solver. The transaction then computes Cell boxes, padding-reduced content boxes, fit / align / overflow placement, and the border conflict graph.
@@ -135,13 +135,15 @@ The five definition categories and composites merge by stable key and object ide
 
 ### Theme inputs
 
-| Input               | Type                          | Default | Purpose                                                                     |
-| ------------------- | ----------------------------- | ------- | --------------------------------------------------------------------------- |
-| `theme?`            | `IRScene['theme']`            | —       | Standalone root Core Theme; embedded mode uses the outer `<Layout theme>`   |
-| `themeStyles?`      | `LayoutProps['themeStyles']`  | `[]`    | Standalone Core style definitions; supplied by the outer host when embedded |
-| `tableThemeTokens?` | `IRTable['tableThemeTokens']` | `{}`    | Local IRTable token overlay above the Table style baseline                  |
+| Input                 | Type                            | Default | Purpose                                                                   |
+| --------------------- | ------------------------------- | ------- | ------------------------------------------------------------------------- |
+| `theme?`              | `IRScene['theme']`              | —       | Standalone root Core Theme; embedded mode uses the outer `<Layout theme>` |
+| `themeStyles?`        | `LayoutProps['themeStyles']`    | `[]`    | Standalone Core style definitions; supplied by the outer host             |
+| `appearanceDefaults?` | `IRTable['appearanceDefaults']` | `{}`    | Sparse appearance defaults for existing Cells                             |
+| `visualDefaults?`     | `IRTable['visualDefaults']`     | `{}`    | Default color ranges for existing visual encodings                        |
+| `tableDefaults?`      | `IRTable['tableDefaults']`      | `{}`    | Sparse defaults below explicit Source fields                              |
 
-`theme.style` / `theme.mode` select the Core environment and the same-named Table style definition. Core `colors.categorical` projects into Table `data.categorical`, after which local `tableThemeTokens` can replace leaves. Host `containerStyle` remains CSS and is outside this cascade. Custom styles enter standalone mode through `themeStyles` and `tableThemeStyles`; React subtrees may instead combine the Core `ThemeProvider` with `TableThemeProvider`. In embedded mode the outer Layout supplies the Core definition.
+`theme.style` / `theme.mode` select the Core environment and the same-named Table style definition. Core `colors.categorical` projects into Table `visualDefaults.categorical`, after which Source defaults and explicit layout fields can replace default leaves. Host `containerStyle` remains CSS and is outside this cascade. Custom styles enter standalone mode through `themeStyles` and `tableThemeStyles`; React subtrees may instead combine the Core `ThemeProvider` with `TableThemeProvider`. In embedded mode the outer Layout supplies the Core definition.
 
 ### Embedded
 
@@ -261,7 +263,7 @@ The manifest is a JSON-safe, detached, recursively frozen typed-artifact payload
 | `renderTable(..., { composites })` | `renderTable(..., { compile: { composites } })` |
 | Embedded Table `onManifest`        | Outer `<Layout onArtifacts>`                    |
 
-Table always establishes its owner-local default preset from host `theme.mode`. Omitting `theme.style` uses that baseline directly. Selecting a style requires the host to inject a same-named `TableThemeStyleDefinition` through `tableThemeStyles`; an unregistered name fails loudly. The definition returns only sparse tokens, missing fields continue to inherit the default preset, and local IRTable `tableThemeTokens` override that result. Core `themeStyles` independently supplies the same-named Core definition, while host CSS remains in `containerStyle`; neither enters IRTable. The resolved manifest records `style` only when one was selected, together with `themeMode`, the complete token map, and token sources.
+Table always establishes its owner-local default preset from host `theme.mode`. Omitting `theme.style` uses that baseline directly. Selecting a style requires the host to inject a same-named `TableThemeStyleDefinition` through `tableThemeStyles`; an unregistered name fails loudly. The definition returns `{ defaults?: TableDefaults }`, missing fields continue to inherit the default preset, and Source `tableDefaults`, `appearanceDefaults`, `visualDefaults`, and explicit `layout.borders` override that result in order. Core `themeStyles` independently supplies the same-named Core definition, while host CSS remains in `containerStyle`; neither enters IRTable. The resolved manifest records `style`, `themeMode`, complete defaults, and defaults source layers.
 
 ## Related
 

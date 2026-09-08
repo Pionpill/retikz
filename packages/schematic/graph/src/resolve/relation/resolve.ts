@@ -1,10 +1,10 @@
 import type { RelationPredicateDefinition } from '../../contract';
 import type {
   IRGraphRelation,
-  IRGraphRelationAppearanceTokenOverrides,
+  IRGraphRelationDefaults,
+  IRGraphRelationDefaultsStyle,
+  IRGraphRelationRule,
   IRGraphRelationStructureTokenOverrides,
-  IRGraphRelationThemeRule,
-  IRGraphThemeLayer,
 } from '../../schemas';
 import type {
   CanonicalRelation,
@@ -12,11 +12,13 @@ import type {
   EffectiveRelationAppearance,
   EffectiveRelationStructure,
   RelationAppearanceResolveContext,
+  RelationGraphLayerResolveContext,
   RelationResolveContext,
 } from './types';
 
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { GraphRelationStructureTokenOverridesSchema } from '../../schemas';
+import { mergeGraphDefaults } from '../theme';
 import { matchesGraphThemeSelector, resolveGraphTheme, validateGraphThemeSelector } from '../theme';
 
 const requiredDefinition = <T>(registry: ReadonlyMap<string, T>, key: string, capability: string): T => {
@@ -136,39 +138,23 @@ export const resolveRelationStructure = (relation: CanonicalRelation): Effective
   return applyStructure(applyStructure(roleStructure, kindStructure), resolvePredicateStructure(relation));
 };
 
-const mergeMarkerAppearance = (
-  current: IRGraphRelationAppearanceTokenOverrides['sourceMarker'],
-  override: IRGraphRelationAppearanceTokenOverrides['sourceMarker'],
-): IRGraphRelationAppearanceTokenOverrides['sourceMarker'] =>
-  current === undefined && override === undefined ? undefined : { ...current, ...override };
-
-const mergeAppearance = (
-  current: EffectiveRelationAppearance,
-  override: IRGraphRelationAppearanceTokenOverrides,
-): EffectiveRelationAppearance => ({
-  ...current,
-  ...override,
-  ...(current.sourceMarker === undefined && override.sourceMarker === undefined
-    ? {}
-    : { sourceMarker: mergeMarkerAppearance(current.sourceMarker, override.sourceMarker) }),
-  ...(current.targetMarker === undefined && override.targetMarker === undefined
-    ? {}
-    : { targetMarker: mergeMarkerAppearance(current.targetMarker, override.targetMarker) }),
-});
-
-const mergeMatchingRules = (
-  appearance: EffectiveRelationAppearance,
-  rules: ReadonlyArray<IRGraphRelationThemeRule>,
-  subject: Parameters<typeof matchesGraphThemeSelector>[1],
+const mergeRelationAppearance = (
+  current: EffectiveRelationAppearance | undefined,
+  override: IRGraphRelationDefaults | undefined,
 ): EffectiveRelationAppearance =>
-  rules.reduce<EffectiveRelationAppearance>(
-    (current, rule) =>
-      matchesGraphThemeSelector(rule.selector, subject) ? mergeAppearance(current, rule.appearance) : current,
-    appearance,
-  );
+  mergeGraphDefaults(
+    current === undefined ? undefined : { relation: current },
+    override === undefined ? undefined : { relation: override },
+  )?.relation ?? {};
 
-type RelationGraphThemeOverrideContext = RelationResolveContext &
-  Readonly<{ layers: ReadonlyArray<IRGraphThemeLayer> }>;
+const relationRuleAppearance = (rule: IRGraphRelationRule): IRGraphRelationDefaults => ({
+  ...(rule.style === undefined ? {} : { style: rule.style }),
+  ...(rule.sourceMarker === undefined ? {} : { sourceMarker: rule.sourceMarker }),
+  ...(rule.targetMarker === undefined ? {} : { targetMarker: rule.targetMarker }),
+  ...(rule.labelTextForeground === undefined ? {} : { labelTextForeground: rule.labelTextForeground }),
+  ...(rule.labelFont === undefined ? {} : { labelFont: rule.labelFont }),
+  ...(rule.labelOpacity === undefined ? {} : { labelOpacity: rule.labelOpacity }),
+});
 
 const relationSubject = (relation: CanonicalRelation) => ({
   role: relation.source.role,
@@ -180,115 +166,117 @@ const relationSubject = (relation: CanonicalRelation) => ({
   direction: relation.effectiveDirection,
 });
 
-/** 合并两组稀疏 Relation appearance，并对 marker 子对象逐字段叠加 */
-const mergeSparseAppearance = (
-  current: IRGraphRelationAppearanceTokenOverrides,
-  override: IRGraphRelationAppearanceTokenOverrides,
-): IRGraphRelationAppearanceTokenOverrides => ({
-  ...current,
-  ...override,
-  ...(current.sourceMarker === undefined && override.sourceMarker === undefined
-    ? {}
-    : { sourceMarker: mergeMarkerAppearance(current.sourceMarker, override.sourceMarker) }),
-  ...(current.targetMarker === undefined && override.targetMarker === undefined
-    ? {}
-    : { targetMarker: mergeMarkerAppearance(current.targetMarker, override.targetMarker) }),
+const selectorContextOf = (context: RelationResolveContext) => ({
+  member: 'Relation' as const,
+  roles: context.relationRoles,
+  kinds: context.relationKinds,
+  predicates: context.relationPredicates,
 });
 
-/** 只投影 Graph-local layer 对当前 Relation 的稀疏 appearance，不解析 Core Theme baseline */
-export const resolveRelationGraphThemeOverrides = (
+const resolveRelationAuthorAppearance = (
   relation: CanonicalRelation,
-  context: RelationGraphThemeOverrideContext,
-): IRGraphRelationAppearanceTokenOverrides => {
-  const selectorContext = {
-    member: 'Relation' as const,
-    roles: context.relationRoles,
-    kinds: context.relationKinds,
-    predicates: context.relationPredicates,
-  };
-  const rules = context.layers.flatMap(layer =>
-    layer.rules.filter((rule): rule is IRGraphRelationThemeRule => rule.type === 'relation'),
-  );
-  for (const rule of rules) validateGraphThemeSelector(rule.selector, selectorContext);
-  return rules.reduce<IRGraphRelationAppearanceTokenOverrides>(
-    (current, rule) =>
-      matchesGraphThemeSelector(rule.selector, relationSubject(relation))
-        ? mergeSparseAppearance(current, rule.appearance)
-        : current,
-    {},
-  );
+  context: RelationGraphLayerResolveContext,
+): EffectiveRelationAppearance => {
+  const selectorContext = selectorContextOf(context);
+  const subject = relationSubject(relation);
+  let appearance: EffectiveRelationAppearance = {};
+  for (const layer of context.layers) {
+    appearance = mergeRelationAppearance(appearance, layer.defaults?.relation);
+    for (const rule of layer.rules ?? []) {
+      if (rule.type !== 'relation') continue;
+      validateGraphThemeSelector(rule.selector, selectorContext);
+      if (matchesGraphThemeSelector(rule.selector, subject)) {
+        appearance = mergeRelationAppearance(appearance, relationRuleAppearance(rule));
+      }
+    }
+  }
+  return appearance;
 };
 
-const RELATION_APPEARANCE_FIELDS = [
-  'color',
-  'stroke',
-  'strokeWidth',
-  'strokeOpacity',
-  'opacity',
-  'shadow',
-  'blendMode',
-  'lineCap',
-  'lineJoin',
-  'dashOffset',
-  'sourceMarker',
-  'targetMarker',
-  'labelTextForeground',
-  'labelFont',
-  'labelOpacity',
-] as const satisfies ReadonlyArray<keyof IRGraphRelationAppearanceTokenOverrides>;
+const relationSourceAppearanceOf = (source: IRGraphRelation): IRGraphRelationDefaults => {
+  const style = source.style;
+  const sourceStyle: IRGraphRelationDefaultsStyle | undefined =
+    style === undefined
+      ? undefined
+      : {
+          color: style.color,
+          stroke: style.stroke,
+          strokeWidth: style.strokeWidth,
+          strokeOpacity: style.strokeOpacity,
+          opacity: style.opacity,
+          shadow: style.shadow,
+          blendMode: style.blendMode,
+          lineCap: style.lineCap,
+          lineJoin: style.lineJoin,
+          dashOffset: style.dashOffset,
+        };
+  return {
+    ...(sourceStyle === undefined ? {} : { style: sourceStyle }),
+    ...(source.sourceMarker === undefined ? {} : { sourceMarker: source.sourceMarker }),
+    ...(source.targetMarker === undefined ? {} : { targetMarker: source.targetMarker }),
+    ...(source.labelTextForeground === undefined ? {} : { labelTextForeground: source.labelTextForeground }),
+    ...(source.labelFont === undefined ? {} : { labelFont: source.labelFont }),
+    ...(source.labelOpacity === undefined ? {} : { labelOpacity: source.labelOpacity }),
+  };
+};
 
-/** 从 Relation generated/source record 中提取作者优先的 appearance 字段 */
-const sourceAppearanceOf = (relation: CanonicalRelation): IRGraphRelationAppearanceTokenOverrides =>
-  Object.fromEntries(
-    RELATION_APPEARANCE_FIELDS.flatMap(key => {
-      const value = relation.source[key];
-      return value === undefined ? [] : [[key, value]];
-    }),
-  );
+const projectDefinedFields = <T extends object>(value: T | undefined): Partial<T> =>
+  value === undefined
+    ? {}
+    : (Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Partial<T>);
 
-/**
- * 把未由 Source 或 Theme 显式指定的 `currentColor` 路径描边绑定到 Relation 主色
- *
- * Graph Theme 以 `color` 作为 Relation 路径、箭头与标签共用的主色。Core Path 只有在
- * `stroke` 缺省时才会采用该主色，因此这里在所有 Theme rule 与 Source appearance 合并后
- * 确定实际描边，同时保留显式 `stroke` 的优先级
- */
+/** 把作者 Graph defaults/rules 按层投影到 Relation Source */
+export const projectRelationGraphLayers = (
+  relation: CanonicalRelation,
+  context: RelationGraphLayerResolveContext,
+): IRGraphRelation => {
+  const authorAppearance = resolveRelationAuthorAppearance(relation, context);
+  if (Object.keys(authorAppearance).length === 0) return relation.source;
+  const projected = mergeRelationAppearance(authorAppearance, relationSourceAppearanceOf(relation.source));
+  const style = {
+    ...projectDefinedFields(projected.style),
+    ...projectDefinedFields(relation.source.style),
+  };
+  return {
+    ...relation.source,
+    ...(projected.sourceMarker === undefined ? {} : { sourceMarker: projected.sourceMarker }),
+    ...(projected.targetMarker === undefined ? {} : { targetMarker: projected.targetMarker }),
+    ...(projected.labelTextForeground === undefined ? {} : { labelTextForeground: projected.labelTextForeground }),
+    ...(projected.labelFont === undefined ? {} : { labelFont: projected.labelFont }),
+    ...(projected.labelOpacity === undefined ? {} : { labelOpacity: projected.labelOpacity }),
+    ...(Object.keys(style).length === 0 ? {} : { style }),
+  };
+};
+
 const resolveRelationStroke = (
   appearance: EffectiveRelationAppearance,
-  sourceAppearance: IRGraphRelationAppearanceTokenOverrides,
+  sourceAppearance: IRGraphRelationDefaults,
 ): EffectiveRelationAppearance => {
-  if (
-    sourceAppearance.stroke !== undefined ||
-    appearance.stroke !== 'currentColor' ||
-    typeof appearance.color !== 'string'
-  ) {
+  const sourceStroke = sourceAppearance.style?.stroke;
+  const stroke = appearance.style?.stroke;
+  const color = appearance.style?.color;
+  if (sourceStroke !== undefined || stroke !== 'currentColor' || typeof color !== 'string') {
     return appearance;
   }
-  return { ...appearance, stroke: appearance.color };
+  return { ...appearance, style: { ...appearance.style, stroke: color } };
 };
 
-/** 把 Canonical Relation 与当前位置 Theme rules 确定为唯一有效外观 */
+/** 把 Canonical Relation 与当前 Core Theme rules 确定为有效外观 */
 export const resolveRelationAppearance = (
   relation: CanonicalRelation,
   context: RelationAppearanceResolveContext,
 ): EffectiveRelationAppearance => {
   const graphTheme = resolveGraphTheme(context.theme, context.graphThemeStyles);
-  const selectorContext = {
-    member: 'Relation' as const,
-    roles: context.relationRoles,
-    kinds: context.relationKinds,
-    predicates: context.relationPredicates,
-  };
-  const styleRules = graphTheme.relation.rules ?? [];
-  const layerRules = (context.layers ?? []).flatMap(layer =>
-    layer.rules.filter((rule): rule is IRGraphRelationThemeRule => rule.type === 'relation'),
-  );
-  for (const rule of [...styleRules, ...layerRules]) validateGraphThemeSelector(rule.selector, selectorContext);
+  const selectorContext = selectorContextOf(context);
   const subject = relationSubject(relation);
-  const styled = mergeMatchingRules(graphTheme.relation.tokens, styleRules, subject);
-  const sourceAppearance = sourceAppearanceOf(relation);
-  return resolveRelationStroke(
-    mergeAppearance(mergeMatchingRules(styled, layerRules, subject), sourceAppearance),
-    sourceAppearance,
-  );
+  let appearance: EffectiveRelationAppearance = graphTheme.defaults.relation ?? {};
+  for (const rule of graphTheme.rules) {
+    if (rule.type !== 'relation') continue;
+    validateGraphThemeSelector(rule.selector, selectorContext);
+    if (matchesGraphThemeSelector(rule.selector, subject)) {
+      appearance = mergeRelationAppearance(appearance, relationRuleAppearance(rule));
+    }
+  }
+  const sourceAppearance = relationSourceAppearanceOf(relation.source);
+  return resolveRelationStroke(mergeRelationAppearance(appearance, sourceAppearance), sourceAppearance);
 };

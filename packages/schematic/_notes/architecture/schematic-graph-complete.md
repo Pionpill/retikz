@@ -10,7 +10,7 @@ Graph 解决的是：
 
 > 用稳定、JSON-safe、renderer-neutral 的数据表达可组合节点、关系与局部 Graph 呈现上下文，使作者、工具与 LLM 能直接理解“对象是什么、如何关联”，并通过 Core-compatible 实例字段直接进入绘图链路
 
-Graph 是 Schematic foundation，长期拥有 Group / Block family / Entity / Relation 语义、领域 resolve、可选 `graphTheme` context 与可独立绘制的 semantic composite。Graph、Group、Block、Section 与 Row Source 组合完整 Core Scope surface。位置、路径、尺寸、内容和 NodeTarget endpoint 直接复用 Core 契约；Group 表达任意内容的可见包含，Block 表达具有 Graph identity 的开放内容纵向布局容器，Header / Section / Row 是可选的独立组合，Row 直接接受任意 children。Graph 不建立独立 Port、geometry、reference、成员集合、Variant 视觉轴或按 identity 分离的 appearance 模型。`IRGraph` 不是必需模型根，只是可选上下文；Graph family composite 可以出现在任意 Core 内容树位置
+Graph 是 Schematic foundation，长期拥有 Group / Block family / Entity / Relation 语义、领域 resolve、可选 `graphDefaults` / `graphRules` context 与可独立绘制的 semantic composite。Graph、Group、Block、Section 与 Row Source 组合完整 Core Scope surface。位置、路径、尺寸、内容和 NodeTarget endpoint 直接复用 Core 契约；Group 表达任意内容的可见包含，Block 表达具有 Graph identity 的开放内容纵向布局容器，Header / Section / Row 是可选的独立组合，Row 直接接受任意 children。Graph 不建立独立 Port、geometry、reference、成员集合、Variant 视觉轴或按 identity 分离的 appearance 模型。`IRGraph` 不是必需模型根，只是可选上下文；Graph family composite 可以出现在任意 Core 内容树位置
 
 Graph 不拥有 Diagram 自动布局、自动 routing、Editor 或 renderer。Graph 支持自由布局仅表示作者可以显式提供位置与连接方式；拖拽、selection、viewport、history 和交互 session 仍归 Editor
 
@@ -23,7 +23,7 @@ Graph 不拥有 Diagram 自动布局、自动 routing、Editor 或 renderer。Gr
 | 通用绘图拓展   | `@retikz/standard`          | Surface 等领域无关绘图 composite                                                                                                    | Graph / Diagram 数据和算法                                           |
 | 图形表达与编译 | Core / Math                 | IRChild、Node、Path、NodeTarget、namespace、shape、Scene 与几何                                                                     | Graph / Diagram 领域语义                                             |
 | authoring      | graph-react / graph-vanilla | 构造对应 Graph / Group / Block / Entity / Relation Source IR 并接入宿主                                                             | Graph schema、resolve、lowering、布局算法                            |
-| 自动图示布局   | 未来 `@retikz/diagram`      | LLM-first Flow Source、扁平 token、全局与单项配置、布局意图、Graph 语义投影、约束确定化、provider、自动 layout / routing 与结果交付 | Graph 基础语义、屏蔽字段、Editor、renderer                           |
+| 自动图示布局   | 未来 `@retikz/diagram`      | LLM-first Flow Source、显式 defaults、实例配置、布局意图、Graph 语义投影、约束确定化、provider、自动 layout / routing 与结果交付    | Graph 基础语义、屏蔽字段、Editor、renderer                           |
 
 ```text
 Graph / Group / Block / Entity / Relation direct IR / React / Vanilla
@@ -47,7 +47,7 @@ Graph Theme style 与 Core、Plot、Table 使用同一个 Core `theme.style` 名
 | ----------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | Relationship data | JSON-safe 地表达独立 Group / Block / Entity / Relation、metadata、NodeTarget endpoint 与 Core-compatible 实例字段 | 不混入函数、renderer 或 Editor 状态 |
 | Domain resolve    | 分别确定 Entity / Relation Definition、Theme、metadata 与补全后不变量                                             | 不收集 Graph 成员或复制 Core 引用   |
-| Graph context     | Graph / Group / Block 用完整 Scope，并用 `graphTheme` 为可见 Graph 后代提供 appearance 默认                       | 不成为必需父节点或隐式 namespace    |
+| Graph context     | Graph / Group / Block 用完整 Scope，并用 `graphDefaults` / `graphRules` 为可见 Graph 后代提供 appearance 默认     | 不成为必需父节点或隐式 namespace    |
 | Semantic identity | 正式元素由 schema / describe / discriminator 表达                                                                 | 不由 shape、颜色或位置代替          |
 | Lower surface     | Node / Path / Scope 字段保持 Core 名称、默认、校验与几何语义；Block / Section / Row 复用完整 Scope                | 不建立 Graph geometry / style 投影  |
 | Core Sugar        | 无独立持久化语义的便捷写法直接输出基础 Core IR                                                                    | 不为命名一致性强造 composite        |
@@ -64,7 +64,7 @@ Graph Theme style 与 Core、Plot、Table 使用同一个 Core `theme.style` 名
 
 Graph Data 由独立 Group / Block family / Entity / Relation record、对应 Core lower target 的实例字段与各类图自己的 JSON-safe 扩展组合而成。Relation source / target 直接使用 Core NodeTarget；领域执行状态、任意回调和运行时对象不进入 Graph IR。Entity 以排除结构字段的方式复用 Core Node：`type`、`shape`、`boundary`、`padding`、`cornerRadius` 由 Graph role / lower target 决定。Relation 以同样方式复用 Core Path，只排除与 Relation discriminator、语义 kind、route、labels、endpoint markers 和开放连线冲突的字段。Group、Graph、Block、Section 与 Row 完整复用 `IRScopeProps`。Group 额外组合 Surface 呈现、caption、Core Node labels 与任意 children；Block 组合 Surface 与纵向 FlexLayout，并按 authored order 接受任意 children；Header、Section 与 Row 是独立可选 composite，Row children 直接保存任意 `IRChild`。它们都不保存自动布局结果
 
-Entity / Relation resolve 分别消费自身 Source IR 与窄上下文，处理领域默认、Definition lookup、Theme appearance rules、metadata 解释及补全后不变量。Graph / Group resolve 建立局部 Graph context 并保留有序 children，Group 同时解析根 Surface appearance；Block family resolve 保留 authored order、确定组合默认，并为 Block 根 Surface 解析 appearance。它们都不收集成员、校验 membership 或建立 endpoint 索引；Group / Block family lowering 只组合既有 Surface、Layout 与 Core 能力。Theme rules 只按 role、kind、predicate 与 direction 等真实语义为 Entity / Relation 提供默认，不使用纯视觉 Variant selector；Group / Block 不增加 rule selector，只消费同名 Graph Theme 的闭合 `background`、`border` 与 `cornerRadius` baseline，显式 Source 顶层字段最终替换。namespace、重复 id、NodeTarget、anchor 与 unresolved reference 由 Core 统一处理；Graph 不负责自动布局、routing、Scene 输出或 Editor 状态
+Entity / Relation resolve 分别消费自身 Source IR 与窄上下文，处理领域默认、Definition lookup、Theme appearance rules、metadata 解释及补全后不变量。Graph / Group resolve 建立局部 Graph context 并保留有序 children，Group 同时解析根 Surface appearance；Block family resolve 保留 authored order、确定组合默认，并为 Block 根 Surface 解析 appearance。它们都不收集成员、校验 membership 或建立 endpoint 索引；Group / Block family lowering 只组合既有 Surface、Layout 与 Core 能力。Theme rules 只按 role、kind、predicate 与 direction 等真实语义为 Entity / Relation 提供默认，不使用纯视觉 Variant selector；Group / Block 不增加 rule selector，消费同名 Graph Theme 与祖先 graphDefaults 的闭合 `background`、`border` 与 `cornerRadius`，显式 Source 顶层字段最终替换；自身 defaults/rules 只作用后代，theme/reset 不清除作者层。namespace、重复 id、NodeTarget、anchor 与 unresolved reference 由 Core 统一处理；Graph 不负责自动布局、routing、Scene 输出或 Editor 状态
 
 Graph 不复制 Plot 的 Transform、Encoding、Scale 或 Coordinate 分层。根据任意字段声明视觉 channel 的能力只有在真实 Graph 数据可视化需求出现后才单独设计；固定 kind、predicate、metadata 与 Theme style 的确定化属于 Graph resolve
 
@@ -88,7 +88,7 @@ Graph 提供“图中有什么、对象如何关联以及如何显式呈现”�
 Diagram -> Graph
 ```
 
-Diagram 用自己的高层 Flow Source 平级声明 Entity / Group / Layout，以根、Group 与 Layout 的 `children` 引用组织唯一 containment，并保存显式 relations、rank、扁平 token、结构化 flowTheme、单项 style / layout、spacing 与 routing intent。resolve 校验引用与 owner 后重建递归 Canonical tree，再确定性生成 Graph semantic records。当前 Flow style 只投影 Entity / Relation / Group 已公开字段，不复制 Graph namespace、通用 NodeTarget、position、route、完整 lower-facing surface 或 Graph 特意屏蔽的 role-owned 结构。Group 始终下沉为可见 Graph Group并保留 endpoint identity；独立 Layout 复用 Layout Flex compiler 形成无外壳固定排列、artifact 与 inspection handle，不产生 Graph identity。Graph Block 及其 Section / Row endpoint 投影延期到 Block 契约稳定后的独立 Diagram 设计，当前 Flow 不预留字段或兼容入口。Entity / Group / Layout 保留 authored identity，Flow relation 由根 `relations` 集合和数组顺序确定，不重复保存 discriminator 或 id。Diagram resolve 确定 Graph 投影、token 到全局再到单项配置的级联、布局默认、约束与 provider；Diagram layout 结合 Kernel 的 measurement / geometry capability 计算节点位置、分组边界、边线路径和标签位置，并按 element id 与 relation Source 顺序产出 renderer-neutral artifact
+Diagram 用自己的高层 Flow Source 平级声明 Entity / Group / Layout，以根、Group 与 Layout 的 `children` 引用组织唯一 containment，并保存显式 relations、rank、flowDefaults、单项 style / layout、spacing 与 routing intent。resolve 校验引用与 owner 后重建递归 Canonical tree，再确定性生成 Graph semantic records。当前 Flow style 只投影 Entity / Relation / Group 已公开字段，不复制 Graph namespace、通用 NodeTarget、position、route、完整 lower-facing surface 或 Graph 特意屏蔽的 role-owned 结构。Group 始终下沉为可见 Graph Group并保留 endpoint identity；独立 Layout 复用 Layout Flex compiler 形成无外壳固定排列、artifact 与 inspection handle，不产生 Graph identity。Graph Block 及其 Section / Row endpoint 投影延期到 Block 契约稳定后的独立 Diagram 设计，当前 Flow 不预留字段或兼容入口。Entity / Group / Layout 保留 authored identity，Flow relation 由根 `relations` 集合和数组顺序确定，不重复保存 discriminator 或 id。Diagram resolve 确定 Graph 投影、Theme 生成片段到显式 defaults 再到实例配置的级联、布局默认、约束与 provider；Diagram layout 结合 Kernel 的 measurement / geometry capability 计算节点位置、分组边界、边线路径和标签位置，并按 element id 与 relation Source 顺序产出 renderer-neutral artifact
 
 Graph 不保存 Diagram Source、layout provider、算法内部状态、geometry result、endpoint 所属索引或来源标记。Diagram 的 Flow element 是一次窄高层投影，不重新定义 Graph role、Theme、Core identity / namespace 或 canonical lowering；当前也不投影尚未稳定的 Block family。它如何调度计算并把最终位置、路径或尺寸交付给 Graph 或其它下游，由 Diagram ADR 明确，不得把裁决协议反向加入 Graph
 

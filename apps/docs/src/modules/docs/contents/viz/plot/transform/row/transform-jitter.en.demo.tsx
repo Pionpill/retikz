@@ -10,7 +10,7 @@ import { jitterControls, previewControlContract } from './transform-jitter.en.co
 export const previewControls = jitterControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot data={samples} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Plot data={samples} width={420} height={260}>
     <PlotTransform {...jitterOperationOf(values)} />
     <PlotScale dimension="x" type="linear" domain={[0.5, 3.5]} />
     <PlotScale dimension="y" type="linear" domain={[10, 32]} />

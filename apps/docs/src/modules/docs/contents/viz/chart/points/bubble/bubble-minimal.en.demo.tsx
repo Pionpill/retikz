@@ -9,9 +9,9 @@ const Demo: FC = () => (
   <BubbleChart
     rows={bubbleMinimalData}
     presentation={{
-      title: 'Higher-magnitude earthquakes are usually more significant',
-      subtitle: '100 valid records; depth (km) on x, magnitude on y, and significance by bubble area',
-      source: 'Vega Datasets earthquakes.json; accessed 2026-09-01',
+      title: { text: 'Higher-magnitude earthquakes are usually more significant' },
+      subtitle: { text: '100 valid records; depth (km) on x, magnitude on y, and significance by bubble area' },
+      source: { text: 'Vega Datasets earthquakes.json; accessed 2026-09-01' },
     }}
     recipe={{ encodings: { x: 'depthKm', y: 'magnitude', size: 'significance' } }}
   />

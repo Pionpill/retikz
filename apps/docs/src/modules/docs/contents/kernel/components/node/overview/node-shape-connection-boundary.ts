@@ -1,12 +1,5 @@
-import type {
-  ConnectionEnvelopeKind,
-  IRJsonObject,
-  IRNode,
-  PathPrim,
-  Rect,
-  ScenePrimitive,
-  ShapeDefinition,
-} from '@retikz/core';
+import type { ConnectionEnvelopeKind, IRNode, PathPrim, Rect, ScenePrimitive, ShapeDefinition } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 
 import { boundsConnectionEnvelope, defineShape, ellipseShape, polygon, rectangle } from '@retikz/core';
 import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/standard/shape';
@@ -26,7 +19,7 @@ export type NodeBoundaryChoice = z.infer<typeof boundaryChoiceSchema>;
 
 type ResolvedVisualShape = {
   definition: ShapeDefinition;
-  params: IRJsonObject;
+  params: JsonObject;
 };
 
 /** 返回 playground 中与 Node shape 完全相同的 definition 与参数 */

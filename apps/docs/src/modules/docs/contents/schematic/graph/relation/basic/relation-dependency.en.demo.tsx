@@ -12,11 +12,11 @@ export const previewControls = relationDependencyControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const kindValue = typeof values.kind === 'string' ? values.kind : '';
   const color = typeof values.color === 'string' ? values.color : 'currentColor';
-  const relationTokens =
+  const relationDefaults =
     color === 'currentColor'
       ? {}
       : {
-          stroke: color,
+          style: { stroke: color },
           sourceMarker: { color, fill: color },
           targetMarker: { color, fill: color },
           labelTextForeground: color,
@@ -24,12 +24,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Graph
-      width={420}
-      height={180}
       viewBox={{ x: 0, y: 0, width: 420, height: 180 }}
-      {...(color === 'currentColor'
-        ? {}
-        : { graphTheme: { rules: [{ type: 'relation', appearance: relationTokens }] } })}
+      {...(color === 'currentColor' ? {} : { graphDefaults: { relation: relationDefaults } })}
     >
       <Entity id="source" role="activity" position={[80, 90]}>
         Dependent

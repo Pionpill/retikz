@@ -23,27 +23,28 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const background = values.background === 'transparent' ? undefined : values.background;
 
   return (
-    <Layout width={260} height={110} patterns={[dotsGrid]}>
+    <Layout patterns={[dotsGrid]}>
       <Node
         id="a"
         position={[0, 0]}
-        minimumSize={{ width: 90, height: 80 }}
-        fill={{ kind: 'pattern', shape: 'dotsGrid', size: 6, color: 'green' }}
-        stroke="green"
+        style={{ fill: { kind: 'pattern', shape: 'dotsGrid', size: 6, color: 'green' }, stroke: 'green' }}
+        layout={{ minimumSize: { width: 90, height: 80 } }}
       />
       <Node
         id="b"
         position={[120, 0]}
-        minimumSize={{ width: 90, height: 80 }}
-        fill={{
-          kind: 'pattern',
-          shape: 'dotsGrid',
-          size: values.size,
-          rotation: values.rotation,
-          color: values.color,
-          ...(background === undefined ? {} : { background }),
+        style={{
+          fill: {
+            kind: 'pattern',
+            shape: 'dotsGrid',
+            size: values.size,
+            rotation: values.rotation,
+            color: values.color,
+            ...(background === undefined ? {} : { background }),
+          },
+          stroke: values.color,
         }}
-        stroke={values.color}
+        layout={{ minimumSize: { width: 90, height: 80 } }}
       />
     </Layout>
   );

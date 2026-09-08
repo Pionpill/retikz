@@ -9,9 +9,9 @@ const Demo: FC = () => (
   <StripChart
     rows={stripPalmerPenguinsData}
     presentation={{
-      title: 'Flipper lengths across three penguin species',
-      subtitle: '90 penguins from the Palmer Archipelago; 30 per species, flipper length in millimetres',
-      source: 'Palmer Penguins (CC0); after removing missing flipper lengths, first 30 rows per species',
+      title: { text: 'Flipper lengths across three penguin species' },
+      subtitle: { text: '90 penguins from the Palmer Archipelago; 30 per species, flipper length in millimetres' },
+      source: { text: 'Palmer Penguins (CC0); after removing missing flipper lengths, first 30 rows per species' },
     }}
     recipe={{
       encodings: {

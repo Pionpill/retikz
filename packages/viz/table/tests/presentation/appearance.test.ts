@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';
@@ -16,8 +16,7 @@ const formatted = () =>
               type: 'node',
               position: [0, 0],
               text: 'direct',
-              color: '#ffffff',
-              strokeWidth: 3,
+              style: { color: '#ffffff', strokeWidth: 3 },
             },
           },
         ],
@@ -35,10 +34,8 @@ describe('Table Cell content appearance', () => {
 
   it('wraps value and direct content in one anonymous Core Scope with exact style defaults', () => {
     const content = {
-      color: '#9a4d00',
-      strokeWidth: 2,
-      nodeDefault: { font: { weight: 600 } },
-      resetStyle: ['path' as const],
+      style: { color: '#9a4d00', strokeWidth: 2 },
+      defaults: { node: { style: { font: { weight: 600 } } }, reset: ['path' as const] },
     };
     const presented = presentTable(formatted(), {
       cells: [
@@ -50,10 +47,13 @@ describe('Table Cell content appearance', () => {
     for (const cell of presented.cells) {
       expect(cell.content).toMatchObject({
         type: 'scope',
-        color: '#9a4d00',
-        strokeWidth: 2,
-        nodeDefault: { font: { weight: 600 } },
-        resetStyle: ['path'],
+        style: { color: '#9a4d00', strokeWidth: 2 },
+        defaults: {
+          node: {
+            style: { font: { weight: 600 } },
+          },
+          reset: ['path'],
+        },
       });
       expect(cell.content).not.toHaveProperty('id');
       expect(cell.content).not.toHaveProperty('meta');
@@ -63,8 +63,7 @@ describe('Table Cell content appearance', () => {
 
     expect((presented.cells[1].content as { children: Array<Record<string, unknown>> }).children[0]).toMatchObject({
       type: 'node',
-      color: '#ffffff',
-      strokeWidth: 3,
+      style: { color: '#ffffff', strokeWidth: 3 },
     });
     expect(Object.isFrozen(content)).toBe(false);
     expect(Object.isFrozen(presented.cells[0].content)).toBe(true);

@@ -37,6 +37,7 @@ import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import { InputLayerCache } from '../normalize';
 import { createEmptyInputRuntimeMetaSnapshot } from '../normalize/scene/runtime-meta';
 import { createDomProcessingController } from '../processing/internal/controller';
+import { computeDisplaySize } from '../runtime';
 import { captureRetainedUpdateOptions } from '../runtime/retained-update-options';
 
 /** 捕获 mount-lifetime composite definition record，保留 schema 与 callback identity */
@@ -320,6 +321,22 @@ const createRetainedProcessingControllerImplementation = (
     render.factory,
   );
   state = Object.freeze({ ...state, runtimeMeta: processing.read().runtimeMeta });
+  // 只在 processing 成功发布后同步宿主尺寸，失败事务保留原显示尺寸
+  const updateHostSize = (): void => {
+    const size = computeDisplaySize(
+      processing.read().scene.layout,
+      fixedOptions.output?.width,
+      fixedOptions.output?.height,
+    );
+    if (options.backend === 'svg') {
+      options.host.setAttribute('width', String(size.width));
+      options.host.setAttribute('height', String(size.height));
+    } else {
+      options.host.style.width = `${size.width}px`;
+      options.host.style.height = `${size.height}px`;
+    }
+  };
+  updateHostSize();
 
   return Object.freeze({
     update: (next, updateOptions = {}) => {
@@ -332,6 +349,7 @@ const createRetainedProcessingControllerImplementation = (
       });
       try {
         processing.update(next);
+        updateHostSize();
         state = Object.freeze({ ...state, runtimeMeta: processing.read().runtimeMeta });
       } catch (cause) {
         state = previousState;

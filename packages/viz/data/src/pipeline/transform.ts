@@ -1,5 +1,3 @@
-import { JsonObjectSchema } from '@retikz/core';
-
 import type {
   AnyTransformDefinition,
   DataLineageOptions,
@@ -27,10 +25,7 @@ export const DEFAULT_TRANSFORM_CONTEXT: Readonly<TransformContext> = Object.free
 
 /** 解析并校验单个 transform operation；返回可安全传给对应 definition 的宽类型 */
 const parseTransformOperation = (definition: AnyTransformDefinition, operation: IRDataTransform): never => {
-  JsonObjectSchema.parse(operation);
-  const parsed = definition.schema.parse(operation) as never;
-  JsonObjectSchema.parse(parsed);
-  return parsed;
+  return definition.schema.parse(operation) as never;
 };
 
 /** 查找 transform definition；未知 kind 必须 fail-loud，避免静默跳过结构性数据变换 */

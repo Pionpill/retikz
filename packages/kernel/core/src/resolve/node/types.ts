@@ -1,13 +1,15 @@
+import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets } from '@retikz/math';
 
 import type { BoundaryDefinition, PatternDefinition, ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
 import type {
   IRBoundary,
-  IRJsonObject,
   IRNode,
   IRNodeLabel,
   IRNodeLabelBoundaryPosition,
+  IRNodeLayout,
+  IRNodeStyle,
   IRPaint,
   NodeLabelPlacementValue,
   NodeLabelPositionValue,
@@ -28,13 +30,16 @@ export type ResolvedNodeLabelPin = Omit<Exclude<IRNodeLabel['pin'], boolean | un
 };
 
 /** 已把 Node 自身派生颜色确定为字符串、但尚未处理正文和 label 的中间形态 */
-export type PrimaryColorResolvedNode = Omit<IRNode, 'fill' | 'stroke' | 'textColor'> & {
-  /** 已确定的节点填充 */
-  fill?: string | IRPaint;
-  /** 已确定的节点描边 */
-  stroke?: string | IRPaint;
-  /** 已确定的节点正文主色 */
-  textColor?: string;
+export type PrimaryColorResolvedNode = Omit<IRNode, 'style'> & {
+  /** 已确定上下文颜色的节点样式 */
+  style?: Omit<IRNodeStyle, 'fill' | 'stroke' | 'textColor'> & {
+    /** 已确定的节点填充 */
+    fill?: string | IRPaint;
+    /** 已确定的节点描边 */
+    stroke?: string | IRPaint;
+    /** 已确定的节点正文主色 */
+    textColor?: string;
+  };
 };
 
 /** 所有上下文颜色均已确定为字符串的 Node Source 投影 */
@@ -74,7 +79,7 @@ export type CanonicalNodeLabel = Omit<
 
 /** 展开 Node 紧凑写法与静态默认值后的完整内部形态 */
 export type CanonicalNode = Omit<
-  ResolvedNodeSource,
+  Omit<ResolvedNodeSource, 'style' | 'layout'> & NonNullable<ResolvedNodeSource['style']> & IRNodeLayout,
   | 'padding'
   | 'margin'
   | 'minimumSize'
@@ -117,7 +122,7 @@ export type ShapeResolution = {
   /** shape provider 定义 */
   definition: ShapeDefinition;
   /** 已校验并按节点缩放处理的实例参数 */
-  params: IRJsonObject;
+  params: JsonObject;
 };
 
 /** 已绑定 definition 与参数，但仍可按视觉 rect 解析几何的连接面引用 */
@@ -127,7 +132,7 @@ export type BoundaryReferenceResolution = {
   /** boundary 或视觉 shape provider 定义 */
   definition: BoundaryDefinition | ShapeDefinition;
   /** 已校验的实例参数 */
-  params: IRJsonObject;
+  params: JsonObject;
   /** 是否引用视觉 shape */
   isShape: boolean;
 };
@@ -147,7 +152,7 @@ export type NodeReferenceView = Readonly<{
   /** 节点视觉 shape definition */
   shapeDef: ShapeDefinition;
   /** 已校验的 shape 参数 */
-  shapeParams: IRJsonObject;
+  shapeParams: JsonObject;
   /** 节点视觉 rect */
   rect: Rect;
   /** 节点外边距 */
@@ -163,7 +168,7 @@ export type NodeReferenceView = Readonly<{
 /** 将边界引用绑定到 shape 上下文的解析回调 */
 export type BoundaryReferenceResolver = (
   boundary: IRBoundary | undefined,
-  context: Readonly<{ visualDef: ShapeDefinition; visualParams: IRJsonObject; irPath?: string }>,
+  context: Readonly<{ visualDef: ShapeDefinition; visualParams: JsonObject; irPath?: string }>,
 ) => BoundaryReferenceResolution;
 
 /** 已解析的 Node 输入、shape 与默认连接面 */

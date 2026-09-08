@@ -35,6 +35,7 @@ import type {
 } from '../runtime/types';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
+import { computeDisplaySize } from '../runtime';
 import { DEFAULT_ID_PREFIX, VanillaViewMode } from '../runtime/constants';
 import { captureVanillaRuntimeOptions } from '../runtime/runtime-options';
 import { createEmptyRuntimeMeta, toSceneResult } from '../runtime/to-scene';
@@ -85,8 +86,9 @@ const mountStaticSvg = (
     while (root.firstChild) root.removeChild(root.firstChild);
     for (const attr of [...root.attributes]) root.removeAttribute(attr.name);
     applyAttrs(root, doc);
-    if (output.width !== undefined) root.setAttribute('width', String(output.width));
-    if (output.height !== undefined) root.setAttribute('height', String(output.height));
+    const size = computeDisplaySize(scene.layout, output.width, output.height);
+    root.setAttribute('width', String(size.width));
+    root.setAttribute('height', String(size.height));
     for (const child of doc.children ?? []) {
       root.appendChild(typeof child === 'string' ? document.createTextNode(child) : svgNodeToDom(child));
     }

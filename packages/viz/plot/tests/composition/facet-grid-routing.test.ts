@@ -439,14 +439,14 @@ describe('facet grid data routing lowering', () => {
 
     expect(rowLabelNodes.map(node => node.text)).toEqual(['online', 'store']);
     expect(rowLabelNodes.map(node => node.rotate)).toEqual([0, 0]);
-    expect(rowLabelNodes.map(node => node.maxTextWidth)).toEqual([84, 84]);
-    expect(rowLabelNodes.map(node => node.textColor)).toEqual(['#334155', '#334155']);
+    expect(rowLabelNodes.map(node => node.layout?.maxTextWidth)).toEqual([84, 84]);
+    expect(rowLabelNodes.map(node => node.style?.textColor)).toEqual(['#334155', '#334155']);
   });
 
   it('typography_supplies_facet_header_defaults_beneath_local_header_style', () => {
     const spec = {
       ...baseFacetSpec,
-      plotTheme: {
+      plotDefaults: {
         typography: {
           font: { family: 'Source Serif 4', size: 15 },
           textColor: '#0f766e',
@@ -478,17 +478,22 @@ describe('facet grid data routing lowering', () => {
       .flatMap(allNodes);
 
     expect(rowNodes.length).toBeGreaterThan(0);
-    expect(rowNodes.every(node => node.textColor === '#0f766e')).toBe(true);
-    expect(rowNodes.every(node => node.font?.family === 'Source Serif 4' && node.font.size === 15)).toBe(true);
-    expect(rowNodes.every(node => node.lineHeight === 1.4)).toBe(true);
+    expect(rowNodes.every(node => node.style?.textColor === '#0f766e')).toBe(true);
+    expect(rowNodes.every(node => node.style?.font?.family === 'Source Serif 4' && node.style.font.size === 15)).toBe(
+      true,
+    );
+    expect(rowNodes.every(node => node.layout?.lineHeight === 1.4)).toBe(true);
     expect(columnNodes.length).toBeGreaterThan(0);
-    expect(columnNodes.every(node => node.textColor === '#2563eb')).toBe(true);
+    expect(columnNodes.every(node => node.style?.textColor === '#2563eb')).toBe(true);
     expect(
       columnNodes.every(
-        node => node.font?.family === 'Source Serif 4' && node.font.size === 15 && node.font.weight === 700,
+        node =>
+          node.style?.font?.family === 'Source Serif 4' &&
+          node.style.font.size === 15 &&
+          node.style.font.weight === 700,
       ),
     ).toBe(true);
-    expect(columnNodes.every(node => node.lineHeight === 1.4)).toBe(true);
+    expect(columnNodes.every(node => node.layout?.lineHeight === 1.4)).toBe(true);
   });
 
   it('facet_dimension_labels_override_header_text_blocks', () => {
@@ -537,7 +542,7 @@ describe('facet grid data routing lowering', () => {
       ],
       'store',
     ]);
-    expect(rowLabelNodes.map(node => node.textColor)).toEqual(['#334155', '#334155']);
+    expect(rowLabelNodes.map(node => node.style?.textColor)).toEqual(['#334155', '#334155']);
   });
 
   it('row_column_facet_treats_width_height_as_total_chart_size', () => {

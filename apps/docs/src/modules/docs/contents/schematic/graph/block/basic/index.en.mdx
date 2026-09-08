@@ -93,7 +93,7 @@ Block supports the complete Core Scope, including `localNamespace`; Section and 
 
 A named Graph Theme supplies the Block root shell `background`, `border`, and `cornerRadius` baseline. Explicit Source fields on Block win through complete top-level field replacement, so an authored `border` does not deep-merge Theme dash, opacity, or width fields
 
-`graphTheme` crosses only known Graph, Group, Block, Header, Section, Row, and Core Scope content boundaries before projecting into visible Entities and Relations. It does not directly style structure shells, ordinary Core children, or unknown Tier 2 composites
+`graphRules` crosses only known Graph, Group, Block, Header, Section, Row, and Core Scope content boundaries before projecting into visible Entities and Relations. `graphDefaults` follows the same boundaries to supply defaults to descendant Entities / Relations and Group / Block root shells. Neither affects this Block’s own shell, ordinary Core children, or unknown Tier 2 composites; changing theme preserves author layers
 
 <SourceLinks
   sources={[
@@ -126,18 +126,19 @@ A direct string is equivalent to setting only `text`. The object exposes text co
 
 ### Block
 
-| Prop            | Type                         | Default                      | Description                                                           |
-| --------------- | ---------------------------- | ---------------------------- | --------------------------------------------------------------------- |
-| `children?`     | `ReadonlyArray<IRChild>`     | —                            | Arbitrary ordered children; `ReactNode` in React authoring            |
-| `graphTheme?`   | `IRGraphThemeLayer`          | —                            | Local Graph Theme layer                                               |
-| `width?`        | `number`                     | —                            | Fixed outer width including horizontal padding                        |
-| `minWidth?`     | `number`                     | `240`                        | Minimum outer width including horizontal padding; omitted from Source |
-| `gap?`          | `number`                     | `8`                          | Vertical space between children                                       |
-| `padding?`      | `SurfaceInput['padding']`    | `8`                          | Outer shell padding                                                   |
-| `background?`   | `SurfaceInput['background']` | transparent                  | Outer shell background                                                |
-| `border?`       | `SurfaceInput['border']`     | `currentColor` / `0.2` / `1` | Outer shell border                                                    |
-| `cornerRadius?` | `number`                     | `8`                          | Outer shell corner radius                                             |
-| `overflow?`     | `'visible' \| 'clip'`        | `'visible'`                  | Surface overflow semantics                                            |
+| Prop             | Type                         | Default                      | Description                                                           |
+| ---------------- | ---------------------------- | ---------------------------- | --------------------------------------------------------------------- |
+| `children?`      | `ReadonlyArray<IRChild>`     | —                            | Arbitrary ordered children; `ReactNode` in React authoring            |
+| `graphDefaults?` | `IRGraphDefaults`            | —                            | Sparse defaults for descendant Entity / Relation / Group / Block      |
+| `graphRules?`    | `Array<IRGraphRule>`         | —                            | Ordered rules for descendant Entities and Relations                   |
+| `width?`         | `number`                     | —                            | Fixed outer width including horizontal padding                        |
+| `minWidth?`      | `number`                     | `240`                        | Minimum outer width including horizontal padding; omitted from Source |
+| `gap?`           | `number`                     | `8`                          | Vertical space between children                                       |
+| `padding?`       | `SurfaceInput['padding']`    | `8`                          | Outer shell padding                                                   |
+| `background?`    | `SurfaceInput['background']` | transparent                  | Outer shell background                                                |
+| `border?`        | `SurfaceInput['border']`     | `currentColor` / `0.2` / `1` | Outer shell border                                                    |
+| `cornerRadius?`  | `number`                     | `8`                          | Outer shell corner radius                                             |
+| `overflow?`      | `'visible' \| 'clip'`        | `'visible'`                  | Surface overflow semantics                                            |
 
 ### BlockHeader
 

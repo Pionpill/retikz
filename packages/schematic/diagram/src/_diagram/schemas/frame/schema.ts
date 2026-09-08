@@ -4,8 +4,8 @@ import { LayoutAlignment } from '@retikz/layout';
 import { SurfaceInputSchema } from '@retikz/standard';
 import { enum as zodEnum, strictObject } from 'zod';
 
-/** Diagram Frame 持久化片段 schema */
-export const DiagramFrameSchema = strictObject({
+/** Diagram Frame 的字段契约，供完整 Frame 与 defaults 片段复用 */
+export const DiagramFrameBaseSchema = strictObject({
   legendPosition: zodEnum(Side).optional().describe('Physical side where the explicit Legend is docked.'),
   legendAlign: zodEnum([LayoutAlignment.Start, LayoutAlignment.Center, LayoutAlignment.End])
     .optional()
@@ -26,6 +26,9 @@ export const DiagramFrameSchema = strictObject({
     'Standard Surface corner radius for the complete Diagram.',
   ),
   overflow: SurfaceInputSchema.shape.overflow.describe('Standard Surface content overflow policy.'),
-})
-  .refine(value => Object.keys(value).length > 0, { message: 'Diagram frame must contain at least one field.' })
-  .describe('Diagram instance-level arrangement, spacing, and Surface overrides.');
+});
+
+/** Diagram Frame 持久化片段 schema */
+export const DiagramFrameSchema = DiagramFrameBaseSchema.refine(value => Object.keys(value).length > 0, {
+  message: 'Diagram frame must contain at least one field.',
+}).describe('Diagram instance-level arrangement, spacing, and Surface overrides.');

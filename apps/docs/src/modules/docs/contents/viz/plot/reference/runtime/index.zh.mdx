@@ -5,7 +5,7 @@ description: 查询 React、Vanilla 与直接 Plot IR 如何汇入同一 lowerin
 
 Plot 运行时把“怎样声明图”和“怎样执行图”分开：React、Vanilla 或生成式工具先形成同一份 `IRPlot`，datasets 与带函数的 Definition 在执行时注入，`@retikz/plot` 再把高层图表语义下沉为 Core IR。Core 负责编译 Scene，renderer 只消费 Scene。
 
-> 这里解释整体运行契约，不重复 schema 字段。JSON 形状请查本组的契约页；完整 Kernel 编译边界见[设计原则](/kernel/concepts/design/principles)。
+> 这里解释整体运行契约，不重复 schema 字段。JSON 形状请查本组的契约页；完整 Kernel 编译边界见[设计原则](/kernel/components/design/principles)。
 
 ## 宿主与包边界
 
@@ -13,7 +13,7 @@ Plot 运行时把“怎样声明图”和“怎样执行图”分开：React、V
 
 React 与 Vanilla 提供不同的 authoring 和宿主接线，但不复制 Plot 算法。Standalone `<Plot>` 把 `XxxProps` / children 桥接为 Plot Vanilla 的 `InputPlotEmbed`，交给同一份 `PlotInputEmbedAdapter`；`embedPlot()` 创建可放入 Vanilla `scene()` 的 `InputEmbed`，配合 `PlotInputEmbedAdapter` 完成 `InputPlot -> IRPlot` 归一与下沉。`renderPlot()` 则保留为独立的无 DOM SSR 与 lineage 入口。
 
-`<Plot theme>` 是 Plot 面板所在 Core Scope 的局部 Theme：standalone 与 embedded 都把它包在 Plot node 外层，因此只覆盖该 Plot 的 `style`、`mode` 与 namespaced `tokens`。它不同于 Plot spec 内的 `plotThemeTokens` / `plotTheme`，后两者是 Plot owner 的视觉字段。Vanilla `renderPlot(spec, data, { theme })` 则把 `theme` 写入根 `IRScene.theme`，作为整个编译 Scene 的 Core Theme；它不会改写 `spec.plotThemeTokens` 或 `spec.plotTheme`。
+`<Plot theme>` 是 Plot 面板所在 Core Scope 的局部 Theme，只选择该 Plot 的 `style` 与 `mode`。它不同于 Plot owner 持久化的 `plotDefaults` / `plotRules`。Vanilla `renderPlot(spec, data, { theme })` 把 `theme` 写入根 `IRScene.theme`，作为整个编译 Scene 的 Core Theme；它不会改写 `spec.plotDefaults` 或 `spec.plotRules`。
 
 三条入口最终都委托 `@retikz/plot` 解析数据、比例尺、坐标系、图元与辅助，再把 Core IR 交还统一编译链。SVG、Canvas 与 SVG 字符串是输出形态；SSR 是 Vanilla 可运行的宿主场景，不是另一套 Plot 语义。
 
@@ -149,7 +149,7 @@ React DSL 只收集 JSX / props 并调度 Plot Vanilla；Vanilla 的 `plot()` �
     <span className="font-semibold">Plot 溯源</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">理解运行审计、宿主元数据与交互回查。</span>
   </LinkedCard>
-  <LinkedCard href="/kernel/concepts/design/principles">
+  <LinkedCard href="/kernel/components/design/principles">
     <span className="font-semibold">Kernel 设计原则</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       继续理解 Core IR、Scene 与 renderer 的全局边界。

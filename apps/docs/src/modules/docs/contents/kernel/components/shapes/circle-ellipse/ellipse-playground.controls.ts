@@ -212,7 +212,7 @@ export const previewControlContract = {
     'Ellipse.startAngle',
     'Ellipse.endAngle',
     'Ellipse.closed',
-    'Path.fill',
-    'Path.stroke',
+    'Path.style.fill',
+    'Path.style.stroke',
   ],
 } satisfies PreviewControlContract;

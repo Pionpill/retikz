@@ -3,6 +3,7 @@ import type { core, z } from 'zod';
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
 import * as DiagramIR from '@retikz/diagram/flow';
+import { JsonObjectSchema, JsonValueSchema } from '@retikz/foundation';
 import * as GraphIR from '@retikz/graph';
 import * as LayoutIR from '@retikz/layout';
 import * as LayoutInspectIR from '@retikz/layout/inspect';
@@ -40,7 +41,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/reference/schema/scene#theme',
     localizations: {
       zh: {
-        description: 'Scene 或 Scope 的稀疏、可序列化 Theme 覆盖；tokens 按 owner namespace 由 registry 校验',
+        description: 'Scene 或 Scope 的稀疏 Theme 环境选择；style 与 mode 分别继承',
         descriptions: {
           style: '显式视觉人格名称；省略时继承外层值，根级省略时使用 owner 默认 baseline',
           mode: '明暗环境：light 或 dark；省略时继承外层值',
@@ -56,14 +57,14 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/reference/schema/scene#compositenode',
   },
   JsonObjectSchema: {
-    schema: IR.JsonObjectSchema,
+    schema: JsonObjectSchema,
     label: 'JsonObject',
-    url: '/kernel/reference/schema/scene#jsonobject',
+    url: '/kernel/packages/base/foundation#jsonobject',
   },
   JsonValueSchema: {
-    schema: IR.JsonValueSchema,
+    schema: JsonValueSchema,
     label: 'JsonValue',
-    url: '/kernel/reference/schema/scene#jsonvalue',
+    url: '/kernel/packages/base/foundation#jsonvalue',
   },
 
   ScopeSchema: { schema: IR.ScopeSchema, label: 'Scope', url: '/kernel/reference/schema/scope#scope' },
@@ -577,9 +578,14 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'GraphPredicateRef',
     url: '/schematic/graph/api-reference',
   },
-  GraphThemeLayerSchema: {
-    schema: GraphIR.GraphThemeLayerSchema,
-    label: 'GraphThemeLayer',
+  GraphDefaultsSchema: {
+    schema: GraphIR.GraphDefaultsSchema,
+    label: 'GraphDefaults',
+    url: '/schematic/graph/api-reference',
+  },
+  GraphRuleSchema: {
+    schema: GraphIR.GraphRuleSchema,
+    label: 'GraphRule',
     url: '/schematic/graph/api-reference',
   },
   GraphEntityThemeSelectorSchema: {
@@ -657,25 +663,35 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'TableCellVisualEncoding',
     url: '/viz/table/reference/contract-table#tablecellvisualencodingschema',
   },
-  TableThemeTokenOverridesSchema: {
-    schema: IRTable.TableThemeTokenOverridesSchema,
-    label: 'TableThemeTokenOverrides',
-    url: '/viz/table/reference/contract-table#tablethemetokenoverridesschema',
+  TableCellBackgroundDefaultsSchema: {
+    schema: IRTable.TableCellBackgroundDefaultsSchema,
+    label: 'TableCellBackgroundDefaults',
+    url: '/viz/table/reference/contract-table#tablecellbackgrounddefaultsschema',
   },
-  TableThemeTokenMapSchema: {
-    schema: IRTable.TableThemeTokenMapSchema,
-    label: 'TableThemeTokenMap',
-    url: '/viz/table/reference/contract-table#tablethemetokenmapschema',
+  TableCellAppearanceDefaultsSchema: {
+    schema: IRTable.TableCellAppearanceDefaultsSchema,
+    label: 'TableCellAppearanceDefaults',
+    url: '/viz/table/reference/contract-table#tablecellappearancedefaultsschema',
   },
-  TableThemeTokenPresetMapSchema: {
-    schema: IRTable.TableThemeTokenPresetMapSchema,
-    label: 'TableThemeTokenPresetMap',
-    url: '/viz/table/reference/contract-table#tablethemetokenpresetmapschema',
+  TableAppearanceDefaultsSchema: {
+    schema: IRTable.TableAppearanceDefaultsSchema,
+    label: 'TableAppearanceDefaults',
+    url: '/viz/table/reference/contract-table#tableappearancedefaultsschema',
   },
-  TableThemeStyleTokenOverridesSchema: {
-    schema: IRTable.TableThemeStyleTokenOverridesSchema,
-    label: 'TableThemeStyleTokenOverrides',
-    url: '/viz/table/reference/contract-table#tablethemestyletokenoverridesschema',
+  TableVisualDefaultsSchema: {
+    schema: IRTable.TableVisualDefaultsSchema,
+    label: 'TableVisualDefaults',
+    url: '/viz/table/reference/contract-table#tablevisualdefaultsschema',
+  },
+  TableLayoutDefaultsSchema: {
+    schema: IRTable.TableLayoutDefaultsSchema,
+    label: 'TableLayoutDefaults',
+    url: '/viz/table/reference/contract-table#tablelayoutdefaultsschema',
+  },
+  TableDefaultsSchema: {
+    schema: IRTable.TableDefaultsSchema,
+    label: 'TableDefaults',
+    url: '/viz/table/reference/contract-table#tabledefaultsschema',
   },
   TableCellSpanSchema: {
     schema: IRTable.TableCellSpanSchema,
@@ -756,6 +772,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IRTable.TableCellBordersSchema,
     label: 'TableCellBorders',
     url: '/viz/table/reference/contract-layout#tablecellbordersschema',
+  },
+  TableOuterBordersSchema: {
+    schema: IRTable.TableOuterBordersSchema,
+    label: 'TableOuterBorders',
+    url: '/viz/table/reference/contract-layout#tableouterbordersschema',
   },
   TableBordersSchema: {
     schema: IRTable.TableBordersSchema,
@@ -1464,45 +1485,60 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PlotLayer',
     url: '/viz/plot/reference/layer#plotlayerschema',
   },
-  PlotThemeTokenOverridesSchema: {
-    schema: IRPlot.PlotThemeTokenOverridesSchema,
-    label: 'PlotThemeTokenOverrides',
-    url: '/viz/plot/reference/theme#plotthemetokenoverridesschema',
+  PlotDefaultsSchema: {
+    schema: IRPlot.PlotDefaultsSchema,
+    label: 'PlotDefaults',
+    url: '/viz/plot/reference/theme#plotdefaultsschema',
   },
-  PlotAxisThemeTokenRulesSchema: {
-    schema: IRPlot.PlotAxisThemeTokenRulesSchema,
-    label: 'PlotAxisThemeTokenRules',
-    url: '/viz/plot/reference/theme#plotaxisthemetokenrulesschema',
+  PlotAreaDefaultsSchema: {
+    schema: IRPlot.PlotAreaDefaultsSchema,
+    label: 'PlotAreaDefaults',
+    url: '/viz/plot/reference/theme#plotareadefaultsschema',
   },
-  PlotThemeTokenResolutionSchema: {
-    schema: IRPlot.PlotThemeTokenResolutionSchema,
-    label: 'PlotThemeTokenResolution',
-    url: '/viz/plot/reference/theme#plotthemetokenresolutionschema',
+  PlotTypographyDefaultsSchema: {
+    schema: IRPlot.PlotTypographyDefaultsSchema,
+    label: 'PlotTypographyDefaults',
+    url: '/viz/plot/reference/theme#plottypographydefaultsschema',
+  },
+  PlotAxisDefaultsSchema: {
+    schema: IRPlot.PlotAxisDefaultsSchema,
+    label: 'PlotAxisDefaults',
+    url: '/viz/plot/reference/theme#plotaxisdefaultsschema',
+  },
+  PlotPaletteDefaultsSchema: {
+    schema: IRPlot.PlotPaletteDefaultsSchema,
+    label: 'PlotPaletteDefaults',
+    url: '/viz/plot/reference/theme#plotpalettedefaultsschema',
+  },
+  PlotAxisRuleSchema: {
+    schema: IRPlot.PlotAxisRuleSchema,
+    label: 'PlotAxisRule',
+    url: '/viz/plot/reference/theme#plotaxisruleschema',
+  },
+  PlotAxisRulesSchema: {
+    schema: IRPlot.PlotAxisRulesSchema,
+    label: 'PlotAxisRules',
+    url: '/viz/plot/reference/theme#plotaxisrulesschema',
+  },
+  PlotDefaultsSourceRecordSchema: {
+    schema: IRPlot.PlotDefaultsSourceRecordSchema,
+    label: 'PlotDefaultsSourceRecord',
+    url: '/viz/plot/reference/theme#inspection',
+  },
+  PlotAxisRuleSourceRecordSchema: {
+    schema: IRPlot.PlotAxisRuleSourceRecordSchema,
+    label: 'PlotAxisRuleSourceRecord',
+    url: '/viz/plot/reference/theme#inspection',
+  },
+  PlotPaletteResolutionSchema: {
+    schema: IRPlot.PlotPaletteResolutionSchema,
+    label: 'PlotPaletteResolution',
+    url: '/viz/plot/reference/theme#inspection',
   },
   PlotThemeResolutionSchema: {
     schema: IRPlot.PlotThemeResolutionSchema,
     label: 'PlotThemeResolution',
     url: '/viz/plot/reference/theme#inspection',
-  },
-  PlotAreaThemeSchema: {
-    schema: IRPlot.PlotAreaThemeSchema,
-    label: 'PlotAreaTheme',
-    url: '/viz/plot/reference/theme#plotareathemeschema',
-  },
-  PlotAxisThemeSchema: {
-    schema: IRPlot.PlotAxisThemeSchema,
-    label: 'PlotAxisTheme',
-    url: '/viz/plot/reference/theme#plotaxisthemeschema',
-  },
-  PlotPaletteThemeSchema: {
-    schema: IRPlot.PlotPaletteThemeSchema,
-    label: 'PlotPaletteTheme',
-    url: '/viz/plot/reference/theme#plotpalettethemeschema',
-  },
-  PlotThemeSchema: {
-    schema: IRPlot.PlotThemeSchema,
-    label: 'PlotTheme',
-    url: '/viz/plot/reference/theme#plotthemeschema',
   },
 };
 

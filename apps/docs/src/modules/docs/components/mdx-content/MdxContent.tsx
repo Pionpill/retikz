@@ -46,7 +46,7 @@ const compileOptions: CompileOptions = {
 
 /** 首次加载尚无任何内容可显示时的占位骨架 */
 const ContentSkeleton: FC = () => (
-  <div className="flex flex-col gap-3" aria-hidden>
+  <div className="flex flex-col gap-3" aria-hidden data-doc-content-state="loading">
     <Skeleton className="h-4 w-[92%]" />
     <Skeleton className="h-4 w-[96%]" />
     <Skeleton className="h-4 w-[78%]" />
@@ -116,15 +116,21 @@ export const MdxContent: FC<MdxContentProps> = props => {
   }, [state.Content, hash]);
 
   if (error) {
-    return <pre className="text-sm whitespace-pre-wrap text-red-500">{error}</pre>;
+    return (
+      <pre className="text-sm whitespace-pre-wrap text-red-500" data-doc-content-state="error">
+        {error}
+      </pre>
+    );
   }
 
   const { Content } = state;
   if (!Content) return <ContentSkeleton />;
 
   return (
-    <DemoLocationContext.Provider value={state.segments}>
-      <Content components={mdxComponents} />
-    </DemoLocationContext.Provider>
+    <div data-doc-content-state="ready">
+      <DemoLocationContext.Provider value={state.segments}>
+        <Content components={mdxComponents} />
+      </DemoLocationContext.Provider>
+    </div>
   );
 };

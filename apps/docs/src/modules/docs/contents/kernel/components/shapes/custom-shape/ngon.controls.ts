@@ -81,8 +81,8 @@ export const previewControlContract = {
     'ShapeDefinition.scaleParams',
     'Node.shape.params',
     'Node.scale',
-    'Node.fill',
-    'Node.stroke',
-    'Node.strokeWidth',
+    'Node.style.fill',
+    'Node.style.stroke',
+    'Node.style.strokeWidth',
   ],
 } satisfies PreviewControlContract;
