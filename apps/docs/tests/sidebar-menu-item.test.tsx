@@ -256,13 +256,13 @@ describe('<AppSidebar>', () => {
 
     act(() => {
       root.render(
-        <MemoryRouter initialEntries={['/kernel/packages/foundation/overview']}>
+        <MemoryRouter initialEntries={['/kernel/packages/foundation/utilities']}>
           <AppSidebar
             location={{
               moduleId: 'kernel',
               sectionId: 'packages',
               pageId: 'foundation',
-              subPageId: 'overview',
+              subPageId: 'utilities',
             }}
           />
         </MemoryRouter>,
@@ -272,6 +272,19 @@ describe('<AppSidebar>', () => {
     expect(container.textContent).toContain('kernel.pkgGroupBase');
     expect(findButton(container, 'kernel.pkgFoundation')).toBeDefined();
     expect(findButton(container, 'kernel.pkgMath')).toBeDefined();
+    expect(
+      Array.from(container.querySelectorAll('button'), button => button.textContent.trim()).filter(label =>
+        [
+          'kernel.pkgFoundationValidationErrors',
+          'kernel.pkgFoundationTypesSchemas',
+          'kernel.pkgFoundationUtilities',
+        ].includes(label),
+      ),
+    ).toEqual([
+      'kernel.pkgFoundationValidationErrors',
+      'kernel.pkgFoundationTypesSchemas',
+      'kernel.pkgFoundationUtilities',
+    ]);
     expect(container.textContent).toContain('kernel.pkgGroupCore');
     expect(container.textContent).toContain('kernel.pkgGroupExtension');
     expect(container.textContent).toContain('kernel.pkgGroupFramework');

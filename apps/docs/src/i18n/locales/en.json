@@ -120,6 +120,7 @@
     "pkgRenderCanvas": "render · Canvas",
     "pkgHydration": "render · Hydration",
     "pkgOverview": "Overview",
+    "pkgFoundationUtilities": "Utilities",
     "pkgFoundationTypesSchemas": "Types & Schemas",
     "pkgFoundationValidationErrors": "Validation & Errors",
     "basicConcepts": "Basic Concepts",

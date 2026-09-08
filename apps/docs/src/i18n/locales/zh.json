@@ -120,6 +120,7 @@
     "pkgRenderCanvas": "Canvas",
     "pkgHydration": "水合",
     "pkgOverview": "概览",
+    "pkgFoundationUtilities": "通用工具",
     "pkgFoundationTypesSchemas": "类型与契约",
     "pkgFoundationValidationErrors": "校验与错误",
     "basicConcepts": "基础概念",

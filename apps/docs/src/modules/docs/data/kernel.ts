@@ -237,13 +237,13 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.pkgFoundation',
         sidebarGroup: 'kernel.pkgGroupBase',
         children: [
-          { id: 'overview', label: 'kernel.pkgOverview', difficulty: DocDifficulty.Internals },
           {
             id: 'validation-errors',
             label: 'kernel.pkgFoundationValidationErrors',
             difficulty: DocDifficulty.Internals,
           },
           { id: 'types-schemas', label: 'kernel.pkgFoundationTypesSchemas', difficulty: DocDifficulty.Internals },
+          { id: 'utilities', label: 'kernel.pkgFoundationUtilities', difficulty: DocDifficulty.Internals },
         ],
       },
       {
