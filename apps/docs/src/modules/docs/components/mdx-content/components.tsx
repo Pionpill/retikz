@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components -- 此文件导出 MDX 元素映射表（对象），不是 fast-refresh 边界 */
 import type { MDXComponents } from 'mdx/types';
-import type { ComponentPropsWithoutRef, FC, ReactNode } from 'react';
+import type { ComponentPropsWithoutRef, FC } from 'react';
 
 import { Link } from 'react-router';
 
@@ -13,6 +13,8 @@ import { ApiValues } from './api-values';
 import { Comparison } from './comparison';
 import { ComponentAlert } from './component-alert';
 import { ExamplePrompt } from './example-prompt';
+import { LinkedCard } from './linked-card';
+import { LinkedSections } from './linked-sections';
 import { PackageManagerInstall } from './package-manager-install';
 import { SourceLinks } from './source-links';
 import { StaticCssColorCatalog } from './static-css-color-catalog';
@@ -39,28 +41,6 @@ const A: FC<ComponentPropsWithoutRef<'a'>> = ({ href, className, children, ...re
     <a href={href} className={cn(linkClass, className)} {...rest}>
       {children}
     </a>
-  );
-};
-
-/**
- * 卡片化的 Link，照搬 shadcn 同名组件
- * @description href 以 `/` 开头走 react-router，以 `http(s)://` 开头走新窗口；shadcn 用的 bg-surface token 不存在，用 muted 替代
- */
-const linkedCardClass =
-  'flex w-full flex-col items-center rounded-xl bg-muted p-6 text-foreground no-underline transition-colors hover:bg-muted/80 sm:p-10';
-
-const LinkedCard: FC<{ className?: string; href: string; children?: ReactNode }> = ({ className, href, children }) => {
-  if (/^https?:\/\//i.test(href)) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={cn(linkedCardClass, className)}>
-        {children}
-      </a>
-    );
-  }
-  return (
-    <Link to={href} className={cn(linkedCardClass, className)}>
-      {children}
-    </Link>
   );
 };
 
@@ -173,6 +153,7 @@ export const mdxComponents: MDXComponents = {
   ComponentPreview,
   ExamplePrompt,
   LinkedCard,
+  LinkedSections,
   PackageManagerInstall,
   SourceLinks,
   StaticCssColorCatalog,
