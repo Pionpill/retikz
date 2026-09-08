@@ -38,6 +38,16 @@ describe('assertNonEmptyString', () => {
   it('preserves the caller label in the structured error message', () => {
     expect(() => assertNonEmptyString('', 'Theme owner')).toThrowError('Theme owner must be a non-empty string.');
   });
+
+  it('throws the owner error passed for an invalid value', () => {
+    const ownerError = new RetikzError({
+      code: 'OWNER_INVALID',
+      message: 'Owner name is invalid.',
+      details: { field: 'name' },
+    });
+
+    expect(() => assertNonEmptyString('', 'Owner name', ownerError)).toThrowError(ownerError);
+  });
 });
 
 describe('assertPositiveNumber', () => {
@@ -71,5 +81,15 @@ describe('assertPositiveNumber', () => {
     expect(() => assertPositiveNumber(0, 'SVG font size')).toThrowError(
       'SVG font size must be a positive finite number.',
     );
+  });
+
+  it('throws the owner error passed for an invalid value', () => {
+    const ownerError = new RetikzError({
+      code: 'OWNER_INVALID',
+      message: 'Owner size is invalid.',
+      details: { field: 'size' },
+    });
+
+    expect(() => assertPositiveNumber(0, 'Owner size', ownerError)).toThrowError(ownerError);
   });
 });

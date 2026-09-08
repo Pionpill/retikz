@@ -6,8 +6,8 @@ import type {
 } from '../../src/modules/docs/components/component-preview/types';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
-import { previewControlContract as texPlaygroundContract } from '../../src/modules/docs/contents/kernel/packages/extension/tex/tex-playground.controls';
-import { previewControlContract as texPlaygroundEnContract } from '../../src/modules/docs/contents/kernel/packages/extension/tex/tex-playground.en.controls';
+import { previewControlContract as texPlaygroundContract } from '../../src/modules/docs/contents/kernel/packages/tex/overview/tex-playground.controls';
+import { previewControlContract as texPlaygroundEnContract } from '../../src/modules/docs/contents/kernel/packages/tex/overview/tex-playground.en.controls';
 
 const fieldContractOf = (definition: PreviewControlsDefinition) => {
   const fields = getPreviewControlFields(definition);

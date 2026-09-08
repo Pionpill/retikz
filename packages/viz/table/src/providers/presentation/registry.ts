@@ -11,7 +11,11 @@ export const resolveCellPresentationRegistry = (
 ): ReadonlyMap<string, AnyCellPresentationDefinition> => {
   const registry = new Map<string, AnyCellPresentationDefinition>();
   for (const definition of [...BUILTIN_CELL_PRESENTATIONS, ...(custom ?? [])]) {
-    assertNonEmptyString(definition.name, 'cell presentation provider key');
+    assertNonEmptyString(
+      definition.name,
+      'cell presentation provider key',
+      new RetikzTableError('cell presentation provider key must be a non-empty string.'),
+    );
     if (registry.has(definition.name)) {
       throw new RetikzTableError(`duplicate cell presentation registration: "${definition.name}"`);
     }

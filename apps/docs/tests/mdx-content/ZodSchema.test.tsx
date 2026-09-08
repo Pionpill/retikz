@@ -49,6 +49,18 @@ afterEach(() => {
 });
 
 describe('ZodSchema deep expansion', () => {
+  it('renders JsonObjectSchema as a string-keyed JsonValue record', () => {
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <ZodSchema name="JsonObjectSchema" />
+      </MemoryRouter>,
+    );
+
+    expect(markup).toContain('Record&lt;');
+    expect(markup).toContain('JsonValue');
+    expect(markup).not.toContain('unhandled: record');
+  });
+
   it('round-trips typed paths without collisions for reserved keys and discriminator types', () => {
     const paths = [
       [field('meta./[]<>=~'), field('rows'), { kind: 'array' as const }, caseOf('1'), field('label')],

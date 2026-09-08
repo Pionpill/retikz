@@ -15,7 +15,15 @@ const profileDatasetsOf = (
 ): Readonly<Record<string, RibbonWidthProfileDefinition>> => {
   const datasets = Object.create(null) as Record<string, RibbonWidthProfileDefinition>;
   for (const profile of profiles) {
-    assertNonEmptyString(profile.name, 'Ribbon width profile name');
+    assertNonEmptyString(
+      profile.name,
+      'Ribbon width profile name',
+      new RetikzStandardError({
+        code: RetikzStandardErrorCode.AuthoringInvalid,
+        message: 'Ribbon width profile name must be a non-empty string.',
+        details: { name: profile.name },
+      }),
+    );
     if (Object.hasOwn(datasets, profile.name) && datasets[profile.name] !== profile) {
       throw new RetikzStandardError({
         code: RetikzStandardErrorCode.RegistryConflict,

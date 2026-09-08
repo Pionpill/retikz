@@ -19,14 +19,25 @@ const missingDefinition = (capability: string, key: string, availableKeys: Itera
     details: { capability, key, availableKeys: [...availableKeys] },
   });
 
+const invalidDefinition = (label: string, value: string): RetikzGraphError =>
+  new RetikzGraphError({
+    code: RetikzGraphErrorCode.DefinitionConflict,
+    message: `${label} must be a non-empty string.`,
+    details: { capability: 'entity-registry', key: value, reason: `${label} must be a non-empty string.` },
+  });
+
 /** 合并内置与自定义 Entity roles，并拒绝重复 key */
 export const resolveEntityRoleRegistry = (
   custom: ReadonlyArray<EntityRoleDefinition> | undefined = undefined,
 ): ReadonlyMap<string, EntityRoleDefinition> => {
   const registry = new Map<string, EntityRoleDefinition>();
   for (const definition of [...BUILTIN_ENTITY_ROLE_DEFINITIONS, ...(custom ?? [])]) {
-    assertNonEmptyString(definition.role, 'Entity role');
-    assertNonEmptyString(definition.description, `Entity role '${definition.role}' description`);
+    assertNonEmptyString(definition.role, 'Entity role', invalidDefinition('Entity role', definition.role));
+    assertNonEmptyString(
+      definition.description,
+      `Entity role '${definition.role}' description`,
+      invalidDefinition(`Entity role '${definition.role}' description`, definition.description),
+    );
     if (registry.has(definition.role)) throw duplicateDefinition('entity-role', definition.role);
     registry.set(definition.role, definition);
   }
@@ -40,9 +51,17 @@ export const resolveEntityKindRegistry = (
 ): ReadonlyMap<string, EntityKindDefinition> => {
   const registry = new Map<string, EntityKindDefinition>();
   for (const definition of custom ?? []) {
-    assertNonEmptyString(definition.kind, 'Entity kind');
-    assertNonEmptyString(definition.role, `Entity kind '${definition.kind}' role`);
-    assertNonEmptyString(definition.description, `Entity kind '${definition.kind}' description`);
+    assertNonEmptyString(definition.kind, 'Entity kind', invalidDefinition('Entity kind', definition.kind));
+    assertNonEmptyString(
+      definition.role,
+      `Entity kind '${definition.kind}' role`,
+      invalidDefinition(`Entity kind '${definition.kind}' role`, definition.role),
+    );
+    assertNonEmptyString(
+      definition.description,
+      `Entity kind '${definition.kind}' description`,
+      invalidDefinition(`Entity kind '${definition.kind}' description`, definition.description),
+    );
     if (!roles.has(definition.role)) {
       throw missingDefinition(`Entity kind '${definition.kind}' parent role`, definition.role, roles.keys());
     }
@@ -60,9 +79,17 @@ export const resolveEntityPredicateRegistry = (
 ): ReadonlyMap<string, EntityPredicateDefinition> => {
   const registry = new Map<string, EntityPredicateDefinition>();
   for (const definition of custom ?? []) {
-    assertNonEmptyString(definition.name, 'Entity predicate');
-    assertNonEmptyString(definition.role, `Entity predicate '${definition.name}' role`);
-    assertNonEmptyString(definition.description, `Entity predicate '${definition.name}' description`);
+    assertNonEmptyString(definition.name, 'Entity predicate', invalidDefinition('Entity predicate', definition.name));
+    assertNonEmptyString(
+      definition.role,
+      `Entity predicate '${definition.name}' role`,
+      invalidDefinition(`Entity predicate '${definition.name}' role`, definition.role),
+    );
+    assertNonEmptyString(
+      definition.description,
+      `Entity predicate '${definition.name}' description`,
+      invalidDefinition(`Entity predicate '${definition.name}' description`, definition.description),
+    );
     if (!roles.has(definition.role)) {
       throw missingDefinition(`Entity predicate '${definition.name}' parent role`, definition.role, roles.keys());
     }

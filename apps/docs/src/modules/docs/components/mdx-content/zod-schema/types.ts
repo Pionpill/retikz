@@ -7,6 +7,7 @@ export type TypeRepr =
   | { kind: 'tuple'; elements: Array<TypeRepr> }
   | { kind: 'default'; inner: TypeRepr }
   | { kind: 'nullable'; inner: TypeRepr }
+  | { kind: 'record'; key: TypeRepr; value: TypeRepr }
   | {
       kind: 'union';
       members: Array<TypeRepr>;

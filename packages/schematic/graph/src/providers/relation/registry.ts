@@ -27,6 +27,9 @@ const conflictingDefinition = (capability: string, key: string, reason: string):
     details: { capability, key, reason },
   });
 
+const invalidDefinition = (label: string, value: string): RetikzGraphError =>
+  conflictingDefinition('relation-registry', value, `${label} must be a non-empty string.`);
+
 const uniqueDirections = (
   capability: string,
   key: string,
@@ -44,8 +47,12 @@ export const resolveRelationRoleRegistry = (
 ): ReadonlyMap<string, RelationRoleDefinition> => {
   const registry = new Map<string, RelationRoleDefinition>();
   for (const definition of [...BUILTIN_RELATION_ROLE_DEFINITIONS, ...(custom ?? [])]) {
-    assertNonEmptyString(definition.role, 'Relation role');
-    assertNonEmptyString(definition.description, `Relation role '${definition.role}' description`);
+    assertNonEmptyString(definition.role, 'Relation role', invalidDefinition('Relation role', definition.role));
+    assertNonEmptyString(
+      definition.description,
+      `Relation role '${definition.role}' description`,
+      invalidDefinition(`Relation role '${definition.role}' description`, definition.description),
+    );
     if (registry.has(definition.role)) throw duplicateDefinition('relation-role', definition.role);
     const allowed = uniqueDirections('Relation role', definition.role, definition.allowedDirections);
     if (!allowed.has(definition.defaultDirection)) {
@@ -77,9 +84,17 @@ export const resolveRelationKindRegistry = (
 ): ReadonlyMap<string, RelationKindDefinition> => {
   const registry = new Map<string, RelationKindDefinition>();
   for (const definition of [...BUILTIN_RELATION_KIND_DEFINITIONS, ...(custom ?? [])]) {
-    assertNonEmptyString(definition.kind, 'Relation kind');
-    assertNonEmptyString(definition.role, `Relation kind '${definition.kind}' role`);
-    assertNonEmptyString(definition.description, `Relation kind '${definition.kind}' description`);
+    assertNonEmptyString(definition.kind, 'Relation kind', invalidDefinition('Relation kind', definition.kind));
+    assertNonEmptyString(
+      definition.role,
+      `Relation kind '${definition.kind}' role`,
+      invalidDefinition(`Relation kind '${definition.kind}' role`, definition.role),
+    );
+    assertNonEmptyString(
+      definition.description,
+      `Relation kind '${definition.kind}' description`,
+      invalidDefinition(`Relation kind '${definition.kind}' description`, definition.description),
+    );
     if (registry.has(definition.kind)) throw duplicateDefinition('relation-kind', definition.kind);
     const role = roles.get(definition.role);
     if (role === undefined) {
@@ -123,9 +138,21 @@ export const resolveRelationPredicateRegistry = (
 ): ReadonlyMap<string, RelationPredicateDefinition> => {
   const registry = new Map<string, RelationPredicateDefinition>();
   for (const definition of custom ?? []) {
-    assertNonEmptyString(definition.name, 'Relation predicate');
-    assertNonEmptyString(definition.role, `Relation predicate '${definition.name}' role`);
-    assertNonEmptyString(definition.description, `Relation predicate '${definition.name}' description`);
+    assertNonEmptyString(
+      definition.name,
+      'Relation predicate',
+      invalidDefinition('Relation predicate', definition.name),
+    );
+    assertNonEmptyString(
+      definition.role,
+      `Relation predicate '${definition.name}' role`,
+      invalidDefinition(`Relation predicate '${definition.name}' role`, definition.role),
+    );
+    assertNonEmptyString(
+      definition.description,
+      `Relation predicate '${definition.name}' description`,
+      invalidDefinition(`Relation predicate '${definition.name}' description`, definition.description),
+    );
     if (registry.has(definition.name)) throw duplicateDefinition('relation-predicate', definition.name);
     if (!roles.has(definition.role)) {
       throw missingDefinition(`Relation predicate '${definition.name}' parent role`, definition.role, roles.keys());

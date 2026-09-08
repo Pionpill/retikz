@@ -52,9 +52,9 @@ describe('changelog data', () => {
   });
 
   it('当前 kernel 里程碑注册详情路由', () => {
-    const packages = kernelSection.find(section => section.id === 'packages');
-    const changelogPage = packages?.pages.find(page => page.id === 'changelog');
-    const currentKernelRelease = changelogForModule('kernel', 'packages')[0];
+    const reference = kernelSection.find(section => section.id === 'reference');
+    const changelogPage = reference?.pages.find(page => page.id === 'changelog');
+    const currentKernelRelease = changelogForModule('kernel', 'reference')[0];
     expect(currentKernelRelease).toBeDefined();
     const currentReleaseId = changelogVersionSlug(currentKernelRelease.minor);
 

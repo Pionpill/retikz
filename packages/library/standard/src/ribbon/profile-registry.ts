@@ -11,7 +11,15 @@ export const resolveRibbonWidthProfileRegistry = (
 ): ReadonlyMap<string, RibbonWidthProfileDefinition> => {
   const registry = new Map<string, RibbonWidthProfileDefinition>();
   for (const definition of [...builtins, ...custom]) {
-    assertNonEmptyString(definition.name, 'Ribbon width profile name');
+    assertNonEmptyString(
+      definition.name,
+      'Ribbon width profile name',
+      new RetikzStandardError({
+        code: RetikzStandardErrorCode.AuthoringInvalid,
+        message: 'Ribbon width profile name must be a non-empty string.',
+        details: { name: definition.name },
+      }),
+    );
     const previous = registry.get(definition.name);
     if (previous !== undefined && previous !== definition) {
       throw new RetikzStandardError({

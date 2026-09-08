@@ -1,11 +1,9 @@
-import { RetikzFoundationError, RetikzFoundationErrorCode } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
-
-import type { RetikzRuntimeError } from '../../src';
 
 import {
   createRuntimeIdentity,
   createRuntimeIdentityLookup,
+  RetikzRuntimeError,
   RetikzRuntimeErrorCode,
   runtimeIdentityEquals,
 } from '../../src';
@@ -31,11 +29,11 @@ describe('runtime identity', () => {
   );
 
   it.each([() => createRuntimeIdentity('', ['node']), () => createRuntimeIdentity('core', [''])])(
-    '直接复用 Foundation 非空字符串错误',
+    '以 Runtime identity 错误拒绝空白文本',
     createInvalid => {
       expect(createInvalid).toThrowError(
-        expect.objectContaining<Partial<RetikzFoundationError>>({
-          code: RetikzFoundationErrorCode.NonEmptyStringRequired,
+        expect.objectContaining<Partial<RetikzRuntimeError>>({
+          code: RetikzRuntimeErrorCode.IdentityInvalid,
         }),
       );
     },
@@ -43,16 +41,16 @@ describe('runtime identity', () => {
 
   it('拒绝空 lookup owner', () => {
     expect(() => createRuntimeIdentityLookup('', [])).toThrowError(
-      expect.objectContaining<Partial<RetikzFoundationError>>({
-        code: RetikzFoundationErrorCode.NonEmptyStringRequired,
+      expect.objectContaining<Partial<RetikzRuntimeError>>({
+        code: RetikzRuntimeErrorCode.IdentityInvalid,
       }),
     );
   });
 
   it.each([
-    [{ owner: ' \t', path: ['node'] as ReadonlyArray<string> }, ' \t'],
-    [{ owner: 'owner', path: ['\u2003'] as ReadonlyArray<string> }, '\u2003'],
-  ] as const)('rejects blank identity text with the original value as cause', (input, rejectedValue) => {
+    { owner: ' \t', path: ['node'] as ReadonlyArray<string> },
+    { owner: 'owner', path: ['\u2003'] as ReadonlyArray<string> },
+  ] as const)('rejects blank identity text as a Runtime identity error', input => {
     const create = () => createRuntimeIdentity(input.owner, input.path);
 
     let failure: unknown;
@@ -62,17 +60,15 @@ describe('runtime identity', () => {
       failure = error;
     }
 
-    expect(failure).toBeInstanceOf(RetikzFoundationError);
+    expect(failure).toBeInstanceOf(RetikzRuntimeError);
     expect(failure).toBeInstanceOf(Error);
     expect(failure).toMatchObject({
-      name: 'RetikzFoundationError',
-      code: RetikzFoundationErrorCode.NonEmptyStringRequired,
-      cause: rejectedValue,
+      name: 'RetikzRuntimeError',
+      code: RetikzRuntimeErrorCode.IdentityInvalid,
     });
-    expect((failure as RetikzFoundationError).cause).toBe(rejectedValue);
   });
 
-  it('rejects a Unicode-whitespace path segment with the segment as cause', () => {
+  it('rejects a Unicode-whitespace path segment as a Runtime identity error', () => {
     const rejectedValue = '\u00a0';
     let failure: unknown;
     try {
@@ -81,12 +77,11 @@ describe('runtime identity', () => {
       failure = error;
     }
 
-    expect(failure).toBeInstanceOf(RetikzFoundationError);
+    expect(failure).toBeInstanceOf(RetikzRuntimeError);
     expect(failure).toMatchObject({
-      name: 'RetikzFoundationError',
-      code: RetikzFoundationErrorCode.NonEmptyStringRequired,
+      name: 'RetikzRuntimeError',
+      code: RetikzRuntimeErrorCode.IdentityInvalid,
     });
-    expect((failure as RetikzFoundationError).cause).toBe(rejectedValue);
   });
 
   it('按 segment 精确比较，不规范化 Unicode 或特殊字符', () => {

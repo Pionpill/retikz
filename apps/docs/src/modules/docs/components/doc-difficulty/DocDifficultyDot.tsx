@@ -12,11 +12,13 @@ import { DocDifficultyVisuals } from './doc-difficulty-config';
 export type DocDifficultyDotProps = {
   /** 叶子文档难度；空值不渲染。 */
   difficulty?: DocDifficultyValue;
+  /** 当前文档选中时始终显示圆点。 */
+  isActive?: boolean;
 };
 
 /** 侧栏叶子文档的难度圆点。 */
 export const DocDifficultyDot: FC<DocDifficultyDotProps> = props => {
-  const { difficulty } = props;
+  const { difficulty, isActive = false } = props;
   const { t } = useTranslation();
 
   if (difficulty === undefined) return null;
@@ -31,7 +33,10 @@ export const DocDifficultyDot: FC<DocDifficultyDotProps> = props => {
           role="img"
           aria-label={tooltip}
           data-doc-difficulty-slot={difficulty}
-          className="pointer-events-none ml-1 inline-flex size-6 shrink-0 items-center justify-center opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100"
+          className={cn(
+            'pointer-events-none ml-1 inline-flex size-6 shrink-0 items-center justify-center opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100',
+            isActive && 'pointer-events-auto opacity-100',
+          )}
         >
           <span
             aria-hidden

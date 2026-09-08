@@ -155,7 +155,7 @@ Control: <human-directed|llm-autonomous>
 
 - subject 只写改动内容，不写版本号、ADR 编号或“按 ADR 实现”；追溯信息放 footer。release / tag commit 可写版本。
 - `scope` 用包或分组名，不带 `@retikz/`：`core` / `render` / `react` / `vanilla` / `tex` / `plot` / `docs`。
-- 常用 emoji：🚧 开发、✨ 功能、🐛 修复、♻️ 重构、🚚 移动、📝 文档、🔧 工程、🤖 LLM / Agent 流程、📦 打包、➕ 依赖、🔥 删除、🔖 发布、✅ 测试。
+- 常用 emoji：🚧 开发、✨ 功能、🐛 修复、♻️ 重构、🚚 移动、📝 使用文档、📐 设计与规范（ADR、roadmap、架构设计与规范文档）、🔧 工程、🤖 LLM / Agent 流程、📦 打包、➕ 依赖、🔥 删除、🔖 发布、✅ 测试。
 
 ## 分支策略
 
