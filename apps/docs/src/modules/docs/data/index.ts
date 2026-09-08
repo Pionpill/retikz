@@ -5,6 +5,7 @@ export * from './doc-difficulty';
 export * from './kernel';
 export * from './library';
 export * from './module';
+export * from './package-version';
 export * from './schematic';
 export * from './sections';
 export * from './types';
