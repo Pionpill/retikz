@@ -1,0 +1,84 @@
+---
+title: 通用工具
+description: 复用 @retikz/foundation 的只读集合、JSON 快照与静态 CSS 颜色工具，并明确它们的静态边界。
+---
+
+这些工具不携带绘图领域语义，可被 Retikz 内部包和扩展按需复用。
+
+## 只读集合快照
+
+`createReadonlyMap(entries)` 将输入条目复制为独立的浅快照。结果保持原生 Map 的查询、迭代和插入顺序，但不暴露 `set`、`delete` 或 `clear`；entry value 保持原对象身份，不会被深拷贝或冻结。
+
+```ts
+const definition = { kind: 'point' };
+const source = new Map([['point', definition]]);
+const definitions = createReadonlyMap(source);
+
+source.clear();
+definitions.has('point'); // true
+```
+
+## JSON 数据快照
+
+`cloneAndFreezeJson(value, path)` 校验 JSON-safe plain data，并返回与原输入脱离的深冻结副本。循环引用、访问器、symbol key、稀疏数组、数组额外属性、非有限数和 class 实例都会抛出 `RetikzFoundationError`。
+
+```ts
+const snapshot = cloneAndFreezeJson({ filters: [{ field: 'age', value: 18 }] });
+
+Object.isFrozen(snapshot); // true
+Object.isFrozen(snapshot.filters); // true
+```
+
+`assertPlainDataContainers(value, path)` 只检查容器结构，不复制数据，也不读取访问器。它用于没有持久化 schema、但仍需隔离 runtime Definition 容器的边界；已有 owner schema 的 Source 输入直接消费 Zod `parse()` 结果，不再把该断言作为通用前置校验。
+
+## 静态 CSS 颜色
+
+`parseStaticCssColor(input)` 把无需宿主环境即可确定的 CSS color 解析为归一化 sRGB 通道 `{ r, g, b, a }`；`compositeOpaqueColor(foreground, backdrop, weight)` 则按 `0..1` 权重把静态前景色预合成到不透明背景，并返回小写 `#rrggbb`。
+
+```ts
+parseStaticCssColor('darkorange');
+compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
+```
+
+正常路径按下面的顺序运行：先校验权重，再解析前景与背景色，确认背景不透明后，才以 `foreground.a × weight` 作为有效 alpha 做 source-over sRGB 预合成。任一校验或解析失败都会抛出 `RetikzFoundationError`。
+
+<ComponentPreview files="opaque-color-flow" size="xs" hideCode />
+
+`StaticCssNamedColorHexByName` 是解析器支持的命名颜色清单。下面的目录直接使用该公开清单；可按颜色名或十六进制值搜索，也可以输入 Foundation 支持的静态 hex、`rgb()` 或 `hsl()` 色值预览。
+
+<StaticCssColorCatalog
+  searchLabel="搜索颜色名或 CSS 色值"
+  emptyMessage="没有匹配的命名颜色"
+  previewLabel="静态颜色预览"
+/>
+
+动态的 `currentColor`、CSS variable、系统色和 P3 等宿主颜色不在范围内；Foundation 不读取 Theme mode，也不判断任何图形字段。
+
+<SourceLinks
+  sources={[
+    {
+      label: '只读 Map 浅快照实现',
+      path: 'packages/kernel/foundation/src/collections.ts',
+      startLine: 1,
+      endLine: 27,
+    },
+    {
+      label: 'plain-data 容器断言与 JSON 深冻结实现',
+      path: 'packages/kernel/foundation/src/json.ts',
+      startLine: 1,
+      endLine: 92,
+    },
+    {
+      label: '命名颜色清单',
+      path: 'packages/kernel/foundation/src/color.ts',
+      startLine: 168,
+      endLine: 180,
+    },
+    {
+      label: '静态 CSS 颜色解析与预合成',
+      path: 'packages/kernel/foundation/src/color.ts',
+      startLine: 312,
+      endLine: 380,
+    },
+  ]}
+/>

@@ -4,7 +4,7 @@ import {
   getRequiredTexExtensionControlId,
   isTexExtensionControlActive,
   TexExtensionsControlId,
-} from '../../src/modules/docs/contents/kernel/packages/extension/tex/tex-extensions.controls';
+} from '../../src/modules/docs/contents/kernel/packages/tex/overview/tex-extensions.controls';
 
 describe('TeX 拓展示例所需扩展', () => {
   it('基础示例不要求追加扩展，拓展示例映射到对应开关', () => {

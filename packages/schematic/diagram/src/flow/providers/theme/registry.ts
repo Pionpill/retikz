@@ -10,16 +10,15 @@ export const resolveFlowThemeStyleRegistry = (
 ): ReadonlyMap<string, FlowThemeStyleDefinition> => {
   const registry = new Map<string, FlowThemeStyleDefinition>();
   for (const definition of custom ?? []) {
-    try {
-      assertNonEmptyString(definition.name, 'Flow theme style');
-    } catch (cause) {
-      throw new RetikzDiagramError({
+    assertNonEmptyString(
+      definition.name,
+      'Flow theme style',
+      new RetikzDiagramError({
         code: RetikzDiagramErrorCode.DefinitionInvalid,
         message: 'Flow theme style name must be a non-empty string.',
         details: { capability: 'flow-theme-style', key: definition.name },
-        cause,
-      });
-    }
+      }),
+    );
     const existing = registry.get(definition.name);
     if (existing === definition) continue;
     if (existing !== undefined) {

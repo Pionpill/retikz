@@ -11,7 +11,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DocDifficulty } from '@/modules/docs/data';
 import { AppSidebar, AppSidebarMenu, AppSidebarMenuItem } from '@/modules/docs/layout/sidebar';
-import { useDocDifficultyStore } from '@/modules/docs/store';
 
 vi.mock('react-i18next', async importOriginal => ({
   ...(await importOriginal<typeof ReactI18nextModule>()),
@@ -167,6 +166,7 @@ describe('<AppSidebarMenu>', () => {
     expect(introDifficultySlot?.classList.contains('size-6')).toBe(true);
     expect(groupExpandButton?.classList.contains('size-6')).toBe(true);
     expect(introDifficultySlot?.classList.contains('ml-1')).toBe(true);
+    expect(introDifficultySlot?.classList.contains('opacity-100')).toBe(true);
     expect(groupExpandButton?.classList.contains('ml-1')).toBe(true);
     expect(api?.querySelector('[data-doc-difficulty-dot]')).toBeNull();
     expect(group?.querySelector('[data-doc-difficulty-dot]')).toBeNull();
@@ -248,8 +248,7 @@ describe('<AppSidebar>', () => {
     expect(moduleHome.querySelector('aside')).toBeNull();
   });
 
-  it('按阅读难度过滤当前 section 的后代页面', () => {
-    useDocDifficultyStore.setState({ maximumDifficulty: DocDifficulty.Beginner });
+  it('无论阅读难度偏好为何都展示当前 section 的完整页面树', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -257,21 +256,39 @@ describe('<AppSidebar>', () => {
 
     act(() => {
       root.render(
-        <MemoryRouter initialEntries={['/kernel/components/basic/coordinate-system']}>
+        <MemoryRouter initialEntries={['/kernel/packages/foundation/utilities']}>
           <AppSidebar
             location={{
               moduleId: 'kernel',
-              sectionId: 'components',
-              pageId: 'basic',
-              subPageId: 'coordinate-system',
+              sectionId: 'packages',
+              pageId: 'foundation',
+              subPageId: 'utilities',
             }}
           />
         </MemoryRouter>,
       );
     });
 
-    expect(container.textContent).toContain('kernel.coordinateSystem');
-    expect(findButton(container, 'kernel.primitiveModel')).toBeUndefined();
-    expect(findButton(container, 'kernel.principles')).toBeUndefined();
+    expect(container.textContent).toContain('kernel.pkgGroupBase');
+    expect(findButton(container, 'kernel.pkgFoundation')).toBeDefined();
+    expect(findButton(container, 'kernel.pkgMath')).toBeDefined();
+    expect(
+      Array.from(container.querySelectorAll('button'), button => button.textContent.trim()).filter(label =>
+        [
+          'kernel.pkgFoundationValidationErrors',
+          'kernel.pkgFoundationTypesSchemas',
+          'kernel.pkgFoundationUtilities',
+        ].includes(label),
+      ),
+    ).toEqual([
+      'kernel.pkgFoundationValidationErrors',
+      'kernel.pkgFoundationTypesSchemas',
+      'kernel.pkgFoundationUtilities',
+    ]);
+    expect(container.textContent).toContain('kernel.pkgGroupCore');
+    expect(container.textContent).toContain('kernel.pkgGroupExtension');
+    expect(container.textContent).toContain('kernel.pkgGroupFramework');
+    expect(container.textContent).toContain('kernel.pkgGroupRender');
+    expect(findButton(container, 'kernel.changelog')).toBeUndefined();
   });
 });

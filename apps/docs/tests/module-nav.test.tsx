@@ -9,6 +9,9 @@ import { act } from 'react-dom/test-utils';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import corePackage from '../../../packages/kernel/core/package.json';
+import layoutPackage from '../../../packages/library/layout/package.json';
+import standardPackage from '../../../packages/library/standard/package.json';
 import { Header } from '../src/app/header/Header';
 import { ModuleNav } from '../src/app/header/ModuleNav';
 import { ModulePicker } from '../src/app/header/ModulePicker';
@@ -40,6 +43,7 @@ vi.mock('../src/app/header/MobileNav', () => ({
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const roots: Array<Root> = [];
+const getLinkLabel = (link: HTMLAnchorElement | null): string | undefined => link?.firstChild?.textContent ?? undefined;
 
 const LocationProbe = () => {
   const { pathname } = useLocation();
@@ -214,6 +218,64 @@ describe('<ModulePicker>', () => {
 });
 
 describe('<SectionNav>', () => {
+  it('在 Library 包分组入口的 Tooltip 中提供实际 package 版本', () => {
+    const container = renderInRouter(
+      <NavigationMenu>
+        <NavigationMenuList>
+          <SectionNav areaId="library" sectionId="standard" withinNavigationMenu />
+        </NavigationMenuList>
+      </NavigationMenu>,
+      '/library/standard',
+    );
+
+    const standard = container.querySelector<HTMLAnchorElement>('a[href="/library/standard"]');
+    const layout = container.querySelector<HTMLAnchorElement>('a[href="/library/layout"]');
+
+    expect(getLinkLabel(standard)).toBe('library.standard');
+    expect(standard?.getAttribute('aria-label')).toBe(`library.standard ${standardPackage.version}`);
+    expect(getLinkLabel(layout)).toBe('library.layout');
+    expect(layout?.getAttribute('aria-label')).toBe(`library.layout ${layoutPackage.version}`);
+  });
+
+  it('包分组入口内含悬浮和键盘聚焦均可显示的版本 Tooltip', () => {
+    const container = renderInRouter(
+      <NavigationMenu>
+        <NavigationMenuList>
+          <SectionNav areaId="library" sectionId="standard" withinNavigationMenu />
+        </NavigationMenuList>
+      </NavigationMenu>,
+      '/library/standard',
+    );
+    const standard = container.querySelector<HTMLAnchorElement>('a[href="/library/standard"]');
+
+    const tooltip = standard?.querySelector<HTMLSpanElement>('[data-slot="package-version-tooltip"]');
+
+    expect(tooltip?.textContent).toBe(standardPackage.version);
+    expect(tooltip?.classList.contains('group-hover/package-link:opacity-100')).toBe(true);
+    expect(tooltip?.classList.contains('group-focus-visible/package-link:opacity-100')).toBe(true);
+    expect(tooltip?.classList.contains('group-hover/package-link:delay-500')).toBe(true);
+    expect(tooltip?.classList.contains('group-focus-visible/package-link:delay-500')).toBe(true);
+  });
+
+  it('在 Kernel Packages 顶栏入口的 Tooltip 中提供 lockstep 版本', () => {
+    const container = renderInRouter(
+      <NavigationMenu>
+        <NavigationMenuList>
+          <SectionNav areaId="kernel" sectionId="packages" withinNavigationMenu />
+        </NavigationMenuList>
+      </NavigationMenu>,
+      '/kernel/packages',
+    );
+
+    const packages = container.querySelector<HTMLAnchorElement>('a[href="/kernel/packages"]');
+    const components = container.querySelector<HTMLAnchorElement>('a[href="/kernel/components"]');
+
+    expect(getLinkLabel(packages)).toBe('kernel.packages');
+    expect(packages?.getAttribute('aria-label')).toBe(`kernel.packages ${corePackage.version}`);
+    expect(getLinkLabel(components)).toBe('kernel.components');
+    expect(components?.getAttribute('aria-label')).toBeNull();
+  });
+
   it('模块 Header 保留完整的 section 导航顺序', () => {
     const container = renderInRouter(
       <NavigationMenu>
@@ -225,7 +287,7 @@ describe('<SectionNav>', () => {
     );
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));
-    expect(links.map(link => link.textContent)).toEqual([
+    expect(links.map(link => getLinkLabel(link))).toEqual([
       'kernel.components',
       'kernel.packages',
       'kernel.reference',
@@ -249,8 +311,8 @@ describe('<SectionNav>', () => {
       '/viz/chart/points/scatter',
     );
 
-    expect(container.querySelector('a[href="/viz/chart"][data-active]')?.textContent).toBe('viz.chart');
-    expect(container.querySelector('a[href="/viz/data"]')?.textContent).toBe('viz.data');
+    expect(getLinkLabel(container.querySelector('a[href="/viz/chart"][data-active]'))).toBe('viz.chart');
+    expect(getLinkLabel(container.querySelector('a[href="/viz/data"]'))).toBe('viz.data');
     expect(container.querySelector('a[href="/viz/chart"]')?.classList.contains('h-8')).toBe(true);
     expect(container.querySelector('a[href="/viz/chart"]')?.classList.contains('px-2.5')).toBe(true);
     expect(container.querySelector('a[href="/viz/chart"]')?.classList.contains('font-medium')).toBe(true);
@@ -292,7 +354,7 @@ describe('<Header>', () => {
     const page = renderInRouter(<Header />, '/viz/chart');
     expect(page.querySelector('a[aria-label="retikz home"]')).toBeNull();
     expect(page.querySelector('button[aria-label="docs.modulePickerHome"]')?.textContent).toContain('retikz.viz');
-    expect(page.querySelector('a[href="/viz/chart"][data-active]')?.textContent).toBe('viz.chart');
+    expect(getLinkLabel(page.querySelector('a[href="/viz/chart"][data-active]'))).toBe('viz.chart');
 
     const about = renderInRouter(<Header />, '/about/overview');
     expect(about.querySelector('button[aria-label="docs.modulePickerHome"]')?.textContent).toContain('retikz');

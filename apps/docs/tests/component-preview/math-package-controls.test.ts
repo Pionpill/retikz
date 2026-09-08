@@ -13,17 +13,17 @@ import { getPreviewControlFields } from '../../src/modules/docs/components/compo
 import {
   curveSegmentsControls,
   previewControlContract as curveSegmentsContract,
-} from '../../src/modules/docs/contents/kernel/packages/base/math-algorithms/curve-segments.controls';
-import CurveSegmentsDemo from '../../src/modules/docs/contents/kernel/packages/base/math-algorithms/curve-segments.demo';
+} from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-segments.controls';
+import CurveSegmentsDemo from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-segments.demo';
 import {
   curveSegmentsControls as englishCurveSegmentsControls,
   previewControlContract as englishCurveSegmentsContract,
-} from '../../src/modules/docs/contents/kernel/packages/base/math-algorithms/curve-segments.en.controls';
-import { previewControlContract as intersectionContract } from '../../src/modules/docs/contents/kernel/packages/base/math-algorithms/intersection-playground.controls';
+} from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-segments.en.controls';
+import { previewControlContract as intersectionContract } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/intersection-playground.controls';
 import {
   circleCircleCenters,
   intersectionViewBox,
-} from '../../src/modules/docs/contents/kernel/packages/base/math-algorithms/intersection-playground.data';
+} from '../../src/modules/docs/contents/kernel/packages/math/algorithms/intersection-playground.data';
 
 describe('@retikz/math package controls', () => {
   it('circle-circle control extremes remain inside the fixed viewport', () => {

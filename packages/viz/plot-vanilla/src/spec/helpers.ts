@@ -9,6 +9,7 @@ import { embed } from '@retikz/vanilla';
 import type { InputPlot } from '../normalize/plot';
 import type { InputPlotEmbed, PlotSource } from './types';
 
+import { RetikzPlotVanillaError } from '../error';
 import { normalizePlot } from '../normalize/plot';
 
 /** 从 plain authoring input 创建 Plot Source IR */
@@ -25,7 +26,11 @@ export const embedPlot = (
   datasets: ExternalDatasets,
   lowerOptions?: LowerPlotsOptions,
 ): InputEmbed<InputPlotEmbed> => {
-  assertNonEmptyString(id, 'plot vanilla embed id');
+  assertNonEmptyString(
+    id,
+    'plot vanilla embed id',
+    new RetikzPlotVanillaError('plot vanilla embed id must be a non-empty string.'),
+  );
   return embed(PLOT_NAMESPACE, id, {
     ...source,
     datasets,

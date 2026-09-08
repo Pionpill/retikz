@@ -9,18 +9,11 @@ import { act } from 'react-dom/test-utils';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { DocDifficultyFilter } from '@/app/header/DocDifficultyFilter';
 import { HeaderActions } from '@/app/header/HeaderActions';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import {
-  DocDifficultyDot,
-  DocDifficultyIndicator,
-  DocDifficultyMenuItems,
-} from '@/modules/docs/components/doc-difficulty';
+import { DocDifficultyDot, DocDifficultyIndicator } from '@/modules/docs/components/doc-difficulty';
 import { DocDifficulty } from '@/modules/docs/data';
 import { DocPageActions } from '@/modules/docs/layout/DocPageActions';
-import { useDocDifficultyStore } from '@/modules/docs/store';
 
 vi.mock('react-i18next', async importOriginal => ({
   ...(await importOriginal<typeof ReactI18nextModule>()),
@@ -55,7 +48,6 @@ const render = (node: ReactNode): HTMLElement => {
 afterEach(() => {
   roots.splice(0).forEach(root => act(() => root.unmount()));
   document.body.replaceChildren();
-  useDocDifficultyStore.getState().setMaximumDifficulty(DocDifficulty.Internals);
 });
 
 describe('<DocDifficultyIndicator>', () => {
@@ -97,47 +89,8 @@ describe('<DocDifficultyDot>', () => {
   });
 });
 
-describe('<DocDifficultyMenuItems>', () => {
-  it('renders all three localized cumulative reading levels', () => {
-    render(
-      <DropdownMenu open modal={false}>
-        <DropdownMenuTrigger>Difficulty</DropdownMenuTrigger>
-        <DropdownMenuContent forceMount>
-          <DocDifficultyMenuItems />
-        </DropdownMenuContent>
-      </DropdownMenu>,
-    );
-
-    expect(document.body.textContent).toContain('difficulty.beginner');
-    expect(document.body.textContent).toContain('difficulty.advanced');
-    expect(document.body.textContent).toContain('difficulty.internals');
-  });
-});
-
-describe('<DocDifficultyFilter>', () => {
-  it('shows the selected level and opens the three-level menu', () => {
-    useDocDifficultyStore.getState().setMaximumDifficulty(DocDifficulty.Beginner);
-    const container = render(<DocDifficultyFilter />);
-    const trigger = container.querySelector<HTMLButtonElement>('button[aria-label="difficulty.label"]');
-
-    expect(trigger?.querySelector('svg')?.classList.contains('lucide-smile')).toBe(true);
-    expect(trigger?.querySelector('svg')?.getAttribute('class')).toContain('text-green');
-
-    expect(trigger).not.toBeNull();
-    if (!trigger) throw new Error('Difficulty trigger not found');
-    act(() => {
-      trigger.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0 }));
-    });
-
-    expect(trigger.getAttribute('data-state')).toBe('open');
-    expect(document.body.textContent).toContain('difficulty.beginner');
-    expect(document.body.textContent).toContain('difficulty.advanced');
-    expect(document.body.textContent).toContain('difficulty.internals');
-  });
-});
-
 describe('<HeaderActions>', () => {
-  it('places the desktop difficulty control immediately after the language switch', () => {
+  it('does not render a document-difficulty filter control', () => {
     const container = render(
       <MemoryRouter>
         <HeaderActions />
@@ -148,10 +101,8 @@ describe('<HeaderActions>', () => {
     const more = container.querySelector('button:has(svg.lucide-ellipsis)');
 
     expect(language).not.toBeNull();
-    expect(difficulty).not.toBeNull();
     expect(more).not.toBeNull();
-    expect(language?.nextElementSibling?.contains(difficulty)).toBe(true);
-    expect(difficulty?.parentElement?.nextElementSibling?.contains(more)).toBe(true);
+    expect(difficulty).toBeNull();
   });
 });
 

@@ -39,7 +39,6 @@ import { useDocLocation } from '@/modules/docs/layout';
 import { useComparisonStore, useComponentPreviewStore, useTocStore } from '@/modules/docs/store';
 import { useLayoutStore } from '@/store';
 
-import { DocDifficultyFilter, DocDifficultyMenuSub } from './DocDifficultyFilter';
 import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
 
 // TooltipTrigger 默认即 `<button>`，直接套 buttonVariants；不用 `<Button asChild>` 包，避免 React 18 下 asChild → 自定义函数组件 ref 转发不到，触发不到 Popper 锚点
@@ -170,7 +169,6 @@ export const HeaderActions: FC = () => {
               {t('common.switchLanguage')} · {i18n.resolvedLanguage?.toUpperCase()}
             </TooltipContent>
           </Tooltip>
-          <DocDifficultyFilter className="hidden lg:inline-flex" />
           {/* modal={false}：避免 Radix 模态层给 body 加 data-scroll-locked（overflow:hidden + position:relative），
               否则窗口级滚动 + sticky 顶栏会在页面已下滑时把 header 顶出视口（详见滚动容器是 window 而非 body） */}
           <DropdownMenu modal={false}>
@@ -195,7 +193,6 @@ export const HeaderActions: FC = () => {
                   {t('common.switchLanguage')}
                   <DropdownMenuShortcut>{i18n.resolvedLanguage?.toUpperCase()}</DropdownMenuShortcut>
                 </DropdownMenuItem>
-                <DocDifficultyMenuSub />
                 <DropdownMenuItem asChild className="cursor-pointer">
                   <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
                     <GitHubIcon className="size-4" />

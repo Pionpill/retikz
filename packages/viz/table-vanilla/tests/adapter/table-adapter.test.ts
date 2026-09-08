@@ -2,8 +2,7 @@ import type { IRDetailTable } from '@retikz/table';
 import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
-import { RetikzFoundationError } from '@retikz/foundation';
-import { createManualTableIR, TableSchema } from '@retikz/table';
+import { createManualTableIR, RetikzTableError, TableSchema } from '@retikz/table';
 import { embed, layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
@@ -36,7 +35,7 @@ describe('Table Vanilla adapter', () => {
       id: 'scores',
     });
     expect(() => TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf(''))).toThrowError(
-      RetikzFoundationError,
+      RetikzTableError,
     );
     expect(() => TableInputEmbedAdapter.lower({ table: inputTableFromIR(anonymous) }, contextOf(''))).toThrow(
       'table runtime contribution reference must be a non-empty string.',
@@ -140,7 +139,7 @@ describe('Table Vanilla adapter', () => {
     const handwritten = embed('table', '', { table: inputTableFromIR(spec) });
 
     expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrowError(
-      RetikzFoundationError,
+      RetikzTableError,
     );
     expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrow(
       'table runtime contribution reference must be a non-empty string.',

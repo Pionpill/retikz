@@ -178,7 +178,7 @@ A layout-aware definition with `artifactSchema` may return a JSON-safe `artifact
 
 A Composite reuses its `artifactSchema` and `artifact` compile result. A Path kind explicitly declares `ownerOutput: { schema }` and calls `publish(value)` only when `context.ownerOutput.requested` is true. A selected owner that omits output, publishes twice, or fails schema validation throws. Failed and discarded probes never trigger `observe()`, and final events are stably ordered by occurrence and owner.
 
-`context.compileFragment(children)` compiles ordinary Core children in the current occurrence's Theme, Scope style, and provider environment. The fragment returns an isolated `scene`, artifacts, and diagnostics without writing into the primary result. Public identity references into the primary figure or another fragment fail. Core does not prescribe the shape returned by `complete()`, so statistics, analysis, and [`@retikz/inspect`](/kernel/packages/extension/inspect) can all reuse this capability.
+`context.compileFragment(children)` compiles ordinary Core children in the current occurrence's Theme, Scope style, and provider environment. The fragment returns an isolated `scene`, artifacts, and diagnostics without writing into the primary result. Public identity references into the primary figure or another fragment fail. Core does not prescribe the shape returned by `complete()`, so statistics, analysis, and [`@retikz/inspect`](/kernel/packages/inspect/overview) can all reuse this capability.
 
 ## Text Measuring
 

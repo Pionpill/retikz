@@ -10,7 +10,19 @@ export const resolveGraphThemeStyleRegistry = (
 ): ReadonlyMap<string, GraphThemeStyleDefinition> => {
   const registry = new Map<string, GraphThemeStyleDefinition>();
   for (const definition of custom ?? []) {
-    assertNonEmptyString(definition.name, 'Graph theme style');
+    assertNonEmptyString(
+      definition.name,
+      'Graph theme style',
+      new RetikzGraphError({
+        code: RetikzGraphErrorCode.DefinitionConflict,
+        message: 'Graph theme style name must be a non-empty string.',
+        details: {
+          capability: 'graph-theme-style',
+          key: definition.name,
+          reason: 'Graph theme style name must be a non-empty string.',
+        },
+      }),
+    );
     if (registry.has(definition.name)) {
       throw new RetikzGraphError({
         code: RetikzGraphErrorCode.DefinitionDuplicate,

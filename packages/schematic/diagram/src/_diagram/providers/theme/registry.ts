@@ -10,16 +10,15 @@ export const resolveDiagramThemeStyleRegistry = (
 ): ReadonlyMap<string, DiagramThemeStyleDefinition> => {
   const registry = new Map<string, DiagramThemeStyleDefinition>();
   for (const definition of custom ?? []) {
-    try {
-      assertNonEmptyString(definition.name, 'Diagram theme style');
-    } catch (cause) {
-      throw new RetikzDiagramError({
+    assertNonEmptyString(
+      definition.name,
+      'Diagram theme style',
+      new RetikzDiagramError({
         code: RetikzDiagramErrorCode.DefinitionInvalid,
         message: 'Diagram theme style name must be a non-empty string.',
         details: { capability: 'diagram-theme-style', key: definition.name },
-        cause,
-      });
-    }
+      }),
+    );
     if (registry.has(definition.name)) {
       throw new RetikzDiagramError({
         code: RetikzDiagramErrorCode.DefinitionDuplicate,

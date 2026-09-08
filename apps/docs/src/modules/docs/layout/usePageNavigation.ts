@@ -3,11 +3,9 @@ import { useMemo } from 'react';
 import type { Section } from '@/modules/docs/data';
 
 import { getSectionsByArea } from '@/modules/docs/data';
-import { useDocDifficultyStore } from '@/modules/docs/store';
 
 import type { DocLocation, LeafNode } from './types';
 
-import { filterSectionsByDifficulty } from './filter-doc-sections';
 import { useDocLocation } from './useDocLocation';
 import { flattenLeaves } from './utils';
 
@@ -35,14 +33,6 @@ export const resolvePageNavigation = (loc: DocLocation | null, sections: Array<S
 /** 基于当前路由参数，按 sidebar 顺序计算上 / 下一篇。 */
 export const usePageNavigation = (): PageNavigation => {
   const loc = useDocLocation();
-  const maximumDifficulty = useDocDifficultyStore(state => state.maximumDifficulty);
 
-  return useMemo(
-    () =>
-      resolvePageNavigation(
-        loc,
-        loc ? filterSectionsByDifficulty(getSectionsByArea(loc.moduleId), maximumDifficulty) : [],
-      ),
-    [loc, maximumDifficulty],
-  );
+  return useMemo(() => resolvePageNavigation(loc, loc ? getSectionsByArea(loc.moduleId) : []), [loc]);
 };

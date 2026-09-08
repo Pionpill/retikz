@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 type ParseStaticCssColor = (input: string) => Readonly<{ r: number; g: number; b: number; a: number }> | null;
 type CompositeOpaqueColor = (foreground: string, backdrop: string, weight: number) => `#${string}`;
+type StaticCssNamedColorHexByName = Readonly<Record<string, `#${string}`>>;
 
 const parseStaticCssColor = (input: string): ReturnType<ParseStaticCssColor> => {
   const candidate = (foundation as Record<string, unknown>).parseStaticCssColor;
@@ -15,6 +16,12 @@ const compositeOpaqueColor = (foreground: string, backdrop: string, weight: numb
   const candidate = (foundation as Record<string, unknown>).compositeOpaqueColor;
   expect(candidate).toEqual(expect.any(Function));
   return (candidate as CompositeOpaqueColor)(foreground, backdrop, weight);
+};
+
+const staticCssNamedColorHexByName = (): StaticCssNamedColorHexByName => {
+  const candidate = (foundation as Record<string, unknown>).StaticCssNamedColorHexByName;
+  expect(candidate).toEqual(expect.any(Object));
+  return candidate as StaticCssNamedColorHexByName;
 };
 
 const captureFoundationError = (operation: () => unknown): RetikzFoundationError => {
@@ -46,6 +53,20 @@ describe('parseStaticCssColor', () => {
       expect(parseStaticCssColor(input)).toBeNull();
     },
   );
+});
+
+describe('StaticCssNamedColorHexByName', () => {
+  it('exposes a frozen manifest derived from the named-color parser source', () => {
+    const namedColorHexByName = staticCssNamedColorHexByName();
+
+    expect(Object.isFrozen(namedColorHexByName)).toBe(true);
+    expect(namedColorHexByName).toMatchObject({
+      darkorange: '#ff8c00',
+      rebeccapurple: '#663399',
+    });
+    expect(namedColorHexByName).not.toHaveProperty('transparent');
+    expect(Object.keys(namedColorHexByName)).toHaveLength(148);
+  });
 });
 
 describe('compositeOpaqueColor', () => {

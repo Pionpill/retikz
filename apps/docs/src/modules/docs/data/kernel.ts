@@ -206,70 +206,6 @@ export const kernelSection: Array<Section> = [
           },
         ],
       },
-    ],
-  },
-  {
-    id: 'packages',
-    label: 'kernel.packages',
-    navigationDescription: 'kernel.packagesNavigationDescription',
-    navigationOrder: 1,
-    document: true,
-    pages: [
-      {
-        id: 'base',
-        label: 'kernel.pkgGroupBase',
-        children: [
-          { id: 'foundation', label: 'kernel.pkgFoundation', difficulty: DocDifficulty.Internals },
-          { id: 'math-transforms', label: 'kernel.pkgMathTransforms', difficulty: DocDifficulty.Internals },
-          { id: 'math-primitives', label: 'kernel.pkgMathPrimitives', difficulty: DocDifficulty.Internals },
-          { id: 'math-algorithms', label: 'kernel.pkgMathAlgorithms', difficulty: DocDifficulty.Internals },
-        ],
-      },
-      {
-        id: 'core',
-        label: 'kernel.pkgGroupCore',
-        children: [
-          { id: 'core', label: 'kernel.pkgCore', difficulty: DocDifficulty.Internals },
-          { id: 'runtime', label: 'kernel.pkgRuntime', difficulty: DocDifficulty.Internals },
-          { id: 'runtime-session', label: 'kernel.pkgRuntimeSession', difficulty: DocDifficulty.Internals },
-        ],
-      },
-      {
-        id: 'extension',
-        label: 'kernel.pkgGroupExtension',
-        children: [
-          {
-            id: 'tex',
-            label: 'kernel.pkgTex',
-            difficulty: DocDifficulty.Internals,
-            meta: extensionGuide('kernel.tex'),
-          },
-          {
-            id: 'inspect',
-            label: 'kernel.pkgInspect',
-            difficulty: DocDifficulty.Internals,
-            meta: extensionGuide('kernel.inspect'),
-          },
-        ],
-      },
-      {
-        id: 'framework',
-        label: 'kernel.pkgGroupFramework',
-        children: [
-          { id: 'vanilla', label: 'kernel.pkgVanilla', difficulty: DocDifficulty.Internals },
-          { id: 'react', label: 'kernel.pkgReact', difficulty: DocDifficulty.Internals },
-        ],
-      },
-      {
-        id: 'render',
-        label: 'kernel.pkgGroupRender',
-        children: [
-          { id: 'render', label: 'kernel.pkgRender', difficulty: DocDifficulty.Internals },
-          { id: 'render-svg', label: 'kernel.pkgRenderSvg', difficulty: DocDifficulty.Internals },
-          { id: 'render-canvas', label: 'kernel.pkgRenderCanvas', difficulty: DocDifficulty.Internals },
-          { id: 'render-hydration', label: 'kernel.pkgHydration', difficulty: DocDifficulty.Internals },
-        ],
-      },
       {
         id: 'changelog',
         label: 'kernel.changelog',
@@ -286,6 +222,103 @@ export const kernelSection: Array<Section> = [
           capability: 'kernel.release',
           sourceOfTruth: 'changelog',
         },
+      },
+    ],
+  },
+  {
+    id: 'packages',
+    label: 'kernel.packages',
+    navigationDescription: 'kernel.packagesNavigationDescription',
+    navigationOrder: 1,
+    document: true,
+    pages: [
+      {
+        id: 'foundation',
+        label: 'kernel.pkgFoundation',
+        sidebarGroup: 'kernel.pkgGroupBase',
+        children: [
+          {
+            id: 'validation-errors',
+            label: 'kernel.pkgFoundationValidationErrors',
+            difficulty: DocDifficulty.Internals,
+          },
+          { id: 'types-schemas', label: 'kernel.pkgFoundationTypesSchemas', difficulty: DocDifficulty.Internals },
+          { id: 'utilities', label: 'kernel.pkgFoundationUtilities', difficulty: DocDifficulty.Internals },
+        ],
+      },
+      {
+        id: 'math',
+        label: 'kernel.pkgMath',
+        sidebarGroup: 'kernel.pkgGroupBase',
+        children: [
+          { id: 'transforms', label: 'kernel.pkgMathTransforms', difficulty: DocDifficulty.Internals },
+          { id: 'primitives', label: 'kernel.pkgMathPrimitives', difficulty: DocDifficulty.Internals },
+          { id: 'algorithms', label: 'kernel.pkgMathAlgorithms', difficulty: DocDifficulty.Internals },
+        ],
+      },
+      {
+        id: 'core',
+        label: 'kernel.pkgCore',
+        sidebarGroup: 'kernel.pkgGroupCore',
+        children: [{ id: 'overview', label: 'kernel.pkgOverview', difficulty: DocDifficulty.Internals }],
+      },
+      {
+        id: 'runtime',
+        label: 'kernel.pkgRuntime',
+        sidebarGroup: 'kernel.pkgGroupCore',
+        children: [
+          { id: 'overview', label: 'kernel.pkgOverview', difficulty: DocDifficulty.Internals },
+          { id: 'session', label: 'kernel.pkgRuntimeSession', difficulty: DocDifficulty.Internals },
+        ],
+      },
+      {
+        id: 'tex',
+        label: 'kernel.pkgTex',
+        sidebarGroup: 'kernel.pkgGroupExtension',
+        children: [
+          {
+            id: 'overview',
+            label: 'kernel.pkgOverview',
+            difficulty: DocDifficulty.Internals,
+            meta: extensionGuide('kernel.tex'),
+          },
+        ],
+      },
+      {
+        id: 'inspect',
+        label: 'kernel.pkgInspect',
+        sidebarGroup: 'kernel.pkgGroupExtension',
+        children: [
+          {
+            id: 'overview',
+            label: 'kernel.pkgOverview',
+            difficulty: DocDifficulty.Internals,
+            meta: extensionGuide('kernel.inspect'),
+          },
+        ],
+      },
+      {
+        id: 'vanilla',
+        label: 'kernel.pkgVanilla',
+        sidebarGroup: 'kernel.pkgGroupFramework',
+        children: [{ id: 'overview', label: 'kernel.pkgOverview', difficulty: DocDifficulty.Internals }],
+      },
+      {
+        id: 'react',
+        label: 'kernel.pkgReact',
+        sidebarGroup: 'kernel.pkgGroupFramework',
+        children: [{ id: 'overview', label: 'kernel.pkgOverview', difficulty: DocDifficulty.Internals }],
+      },
+      {
+        id: 'render',
+        label: 'kernel.pkgRender',
+        sidebarGroup: 'kernel.pkgGroupRender',
+        children: [
+          { id: 'overview', label: 'kernel.pkgOverview', difficulty: DocDifficulty.Internals },
+          { id: 'svg', label: 'kernel.pkgRenderSvg', difficulty: DocDifficulty.Internals },
+          { id: 'canvas', label: 'kernel.pkgRenderCanvas', difficulty: DocDifficulty.Internals },
+          { id: 'hydration', label: 'kernel.pkgHydration', difficulty: DocDifficulty.Internals },
+        ],
       },
     ],
   },

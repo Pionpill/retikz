@@ -1,8 +1,7 @@
-import { RetikzFoundationError } from '@retikz/foundation';
 import { createDetailTableIR, createManualTableIR, TableSchema } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
 
-import { detailTable, embedTable, manualTable } from '../../src';
+import { detailTable, embedTable, manualTable, RetikzTableVanillaError } from '../../src';
 
 describe('Table Vanilla plain authoring', () => {
   it('delegates detail and manual helpers to the shared Table constructors without modifying inputs', () => {
@@ -52,7 +51,7 @@ describe('Table Vanilla plain authoring', () => {
       props: { table: { kind: 'manual', input: { rows: [[null]] } }, data: {} },
     });
     for (const id of ['', '   ', '\u2003', '\ufeff']) {
-      expect(() => embedTable(id, spec)).toThrowError(RetikzFoundationError);
+      expect(() => embedTable(id, spec)).toThrowError(RetikzTableVanillaError);
       expect(() => embedTable(id, spec)).toThrowError('table vanilla embed id must be a non-empty string.');
     }
   });

@@ -1,22 +1,19 @@
-import { RetikzFoundationError, RetikzFoundationErrorCode } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { null as zodNull, number, strictObject, string } from 'zod';
 
-import { defineInspector } from '../../src';
+import { defineInspector, RetikzInspectError, RetikzInspectErrorCode } from '../../src';
 
-const expectFoundationNonEmptyError = (action: () => unknown, label: string, value: string): void => {
+const expectInspectNonEmptyError = (action: () => unknown, label: string): void => {
   let caught: unknown;
   try {
     action();
   } catch (error) {
     caught = error;
   }
-  expect(caught).toBeInstanceOf(RetikzFoundationError);
+  expect(caught).toBeInstanceOf(RetikzInspectError);
   expect(caught).toMatchObject({
-    code: RetikzFoundationErrorCode.NonEmptyStringRequired,
+    code: RetikzInspectErrorCode.Contract,
     message: `${label} must be a non-empty string.`,
-    details: { label, value },
-    cause: value,
   });
 };
 
@@ -43,7 +40,7 @@ describe('Inspector definition', () => {
     ['type', '\u2003'],
   ] as const)('rejects a blank %s with the established error text', (field, value) => {
     const label = `Inspector ${field}`;
-    expectFoundationNonEmptyError(
+    expectInspectNonEmptyError(
       () =>
         defineInspector({
           namespace: field === 'namespace' ? value : 'test',
@@ -55,16 +52,15 @@ describe('Inspector definition', () => {
           inspect: () => [],
         }),
       label,
-      value,
     );
   });
 
   it.each([
-    ['pathKind name', 'Inspector owner name', '\ufeff', { kind: 'pathKind', name: '\ufeff' }],
-    ['composite namespace', 'Inspector owner namespace', ' ', { kind: 'composite', namespace: ' ', type: 'box' }],
-    ['composite type', 'Inspector owner type', '\u2003', { kind: 'composite', namespace: 'demo', type: '\u2003' }],
-  ] as const)('rejects a blank %s owner field', (_field, label, value, owner) => {
-    expectFoundationNonEmptyError(
+    ['pathKind name', 'Inspector owner name', { kind: 'pathKind', name: '\ufeff' }],
+    ['composite namespace', 'Inspector owner namespace', { kind: 'composite', namespace: ' ', type: 'box' }],
+    ['composite type', 'Inspector owner type', { kind: 'composite', namespace: 'demo', type: '\u2003' }],
+  ] as const)('rejects a blank %s owner field', (_field, label, owner) => {
+    expectInspectNonEmptyError(
       () =>
         defineInspector({
           namespace: 'test',
@@ -76,7 +72,6 @@ describe('Inspector definition', () => {
           inspect: () => [],
         }),
       label,
-      value,
     );
   });
 });
